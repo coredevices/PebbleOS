@@ -307,7 +307,7 @@ status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
   }
 
   *is_dirty_out = false;
-  rv = settings_file_each(&file, sync_util_is_dirty_cb, is_dirty_out);
+  settings_file_each(&file, sync_util_is_dirty_cb, is_dirty_out);
 
   prv_file_close_and_unlock(&file);
 

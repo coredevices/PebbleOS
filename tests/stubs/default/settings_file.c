@@ -23,9 +23,7 @@ PBL_WEAK status_t settings_file_set(SettingsFile *file, const void *key, size_t 
   return S_SUCCESS;
 }
 
-PBL_WEAK status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb,
-                                     void *context) {
-  return S_SUCCESS;
+PBL_WEAK void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context) {
 }
 
 PBL_WEAK int settings_file_get_len(SettingsFile *file, const void *key, size_t key_len) {

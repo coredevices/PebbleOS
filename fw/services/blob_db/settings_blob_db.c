@@ -286,8 +286,8 @@ static void prv_deferred_sync_callback(void *data) {
 //!
 //! This callback is coalesced - multiple setting changes result in at most one
 //! queued callback, preventing system task queue overflow.
-static void prv_settings_change_callback(SettingsFile *file, const void *key, int key_len,
-                                         time_t last_modified) {
+static void prv_settings_change_callback(SettingsFile *file, const void *key, size_t key_len,
+                                         uint32_t last_modified) {
   // Skip callback if suppressed (during phone-originated INSERTs)
   if (s_suppress_change_callback) {
     return;

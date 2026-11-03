@@ -279,8 +279,8 @@ bool activity_algorithm_dump_minute_data_to_log(void) {
 
   // Feed in the saved data, reading chunks out of the saved minute data and compressing
   // it into algorithm sleep minute structures.
-  status_t status = settings_file_each(file, prv_log_minute_file_minutes_cb, &context);
-  success = (status == S_SUCCESS);
+  settings_file_each(file, prv_log_minute_file_minutes_cb, &context);
+  success = true;
 
 exit:
   if (file) {
@@ -1221,9 +1221,7 @@ static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_reque
   context->last_record_idx_written = -1;
 
   // Read the minute data from flash
-  if (settings_file_each(file, prv_read_minute_history_file_cb, context) != S_SUCCESS) {
-    goto exit;
-  }
+  settings_file_each(file, prv_read_minute_history_file_cb, context);
 
   // Fill in any data we have in RAM as well
   prv_read_minute_history_buffer(context);
@@ -1307,10 +1305,7 @@ bool activity_algorithm_minute_file_info(bool compact_first, uint32_t *num_recor
   // Count # of records in minute file
   AlgMinuteFileInfoContext context = (AlgMinuteFileInfoContext){};
 
-  status_t status = settings_file_each(file, prv_read_minute_file_info_cb, &context);
-  if (status != S_SUCCESS) {
-    goto exit;
-  }
+  settings_file_each(file, prv_read_minute_file_info_cb, &context);
   success = true;
 
 exit:

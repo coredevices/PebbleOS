@@ -5,9 +5,8 @@
 
 #include "settings_raw_iter.h"
 
-#include <time.h>
-
-#include <pbl/util/units.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @defgroup settings Settings files
@@ -36,13 +35,6 @@
  * @endcode
  * @{
  */
-
-/**
- * @brief Minimum time in seconds a deleted record is kept before compaction drops it.
- *
- * Keeping the key around gives the deletion time to propagate to synchronized devices.
- */
-#define DELETED_LIFETIME (0 * PBL_SEC_PER_DAY)
 
 /**
  * @brief Open settings file.
@@ -197,22 +189,6 @@ status_t settings_file_set(SettingsFile *file, const void *key, size_t key_len, 
                            size_t val_len);
 
 /**
- * @brief Write a value with a given timestamp instead of the current time.
- *
- * Used when rewriting files to preserve the original timestamps.
- *
- * @param file Settings file.
- * @param key Key.
- * @param key_len Length of @p key in bytes.
- * @param val Value.
- * @param val_len Length of @p val in bytes.
- * @param timestamp Modification time to record.
- * @return Same as settings_file_set().
- */
-status_t settings_file_set_with_timestamp(SettingsFile *file, const void *key, size_t key_len,
-                                          const void *val, size_t val_len, uint32_t timestamp);
-
-/**
  * @brief Mark a record as synced.
  *
  * The flag stays until the record is overwritten.
@@ -244,8 +220,8 @@ status_t settings_file_mark_all_dirty(SettingsFile *file);
  * @param key_len Length of @p key in bytes.
  * @param last_modified Timestamp of the change.
  */
-typedef void (*SettingsFileChangeCallback)(SettingsFile *file, const void *key, int key_len,
-                                           time_t last_modified);
+typedef void (*SettingsFileChangeCallback)(SettingsFile *file, const void *key, size_t key_len,
+                                           uint32_t last_modified);
 
 /**
  * @brief Register the callback invoked after any record of any settings file is written.
@@ -319,9 +295,8 @@ typedef bool (*SettingsFileEachCallback)(SettingsFile *file, SettingsRecordInfo 
  * @param file Settings file.
  * @param cb Callback.
  * @param context Context passed to @p cb.
- * @retval S_SUCCESS Always.
  */
-status_t settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context);
+void settings_file_each(SettingsFile *file, SettingsFileEachCallback cb, void *context);
 
 /**
  * @brief Callback for settings_file_rewrite().
