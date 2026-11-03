@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -58,6 +59,14 @@ ssize_t pbl_fs_read(struct pbl_fs_file *file, void *buf, size_t len) {
   memcpy(buf, &s_image[s_read_offset], len);
   s_read_offset += len;
   return (ssize_t)len;
+}
+
+off_t pbl_fs_seek(struct pbl_fs_file *file, off_t offset, int whence) {
+  if ((whence != PBL_FS_SEEK_SET) || (offset < 0) || ((size_t)offset > s_image_len)) {
+    return -EINVAL;
+  }
+  s_read_offset = (size_t)offset;
+  return offset;
 }
 
 int pbl_fs_close(struct pbl_fs_file *file) {

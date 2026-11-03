@@ -340,6 +340,9 @@ pbl_clar_test(test_process_loader_storage
     fw/services/process_management/app_storage.c
     fw/services/process_management/process_loader_storage.c
     fw/process_management/process_runtime.c
+    subsys/loader/loader.c
+  DEFINES
+    CONFIG_LOADER_LOG_LEVEL=0
   OVERRIDES dummy_board
 )
 

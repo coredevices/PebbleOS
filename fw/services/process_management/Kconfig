@@ -3,6 +3,7 @@
 
 config SERVICE_PROCESS_MANAGEMENT
     bool "Process management"
+    select LOADER
     help
       App/process management and app storage.
 
