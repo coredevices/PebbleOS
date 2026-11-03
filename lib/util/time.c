@@ -99,7 +99,11 @@ time_t pbl_time_from_time32(pbl_time32_t t, time_t reference) {
   if (reference <= INT32_MAX) {
     return t;
   }
+  return pbl_time_from_low32((uint32_t)t, reference);
+}
+
+time_t pbl_time_from_low32(uint32_t t, time_t reference) {
   // The signed difference of the low 32 bits is the offset to the closest match.
-  const int32_t delta = (int32_t)((uint32_t)t - (uint32_t)reference);
+  const int32_t delta = (int32_t)(t - (uint32_t)reference);
   return reference + delta;
 }
