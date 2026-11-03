@@ -5,12 +5,12 @@
 
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/panel.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -71,7 +71,7 @@ static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / siz
 #define DISPLAY_IRQ_LOG_ENTRIES 32
 
 typedef struct {
-  uint32_t timestamp;    // rtc_get_ticks() low 32 bits
+  uint32_t timestamp;    // pbl_uptime_ticks() low 32 bits
   uint32_t irq_before;   // LCD_IF.IRQ as the handler reads it
   uint32_t irq_after;    // LCD_IF.IRQ after the handler cleared bits
   uint32_t jdi_par_ctrl; // LCD_IF.JDI_PAR_CTRL before the handler (INT_LINE_NUM)
@@ -421,7 +421,7 @@ void pbl_display_sf32lb_lcdc_irq_handler(const struct pbl_display_sf32lb_lcdc *l
 
   volatile DisplayIrqLogEntry *entry =
       &s_lcdc_irq_log.entries[s_lcdc_irq_log.write_count % DISPLAY_IRQ_LOG_ENTRIES];
-  entry->timestamp = (uint32_t)rtc_get_ticks();
+  entry->timestamp = (uint32_t)pbl_uptime_ticks();
   entry->irq_before = irq;
   entry->jdi_par_ctrl = prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET);
   entry->status = prv_read(lcdc, SF32LB52_LCDC_STATUS_OFFSET);

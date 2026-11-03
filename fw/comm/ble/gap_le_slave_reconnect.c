@@ -7,7 +7,7 @@
 #include "gap_le_connect.h"
 
 #include <pbl/btutil/bt_uuid.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/regular_timer.h>
@@ -38,12 +38,12 @@ typedef enum {
 #define RECONNECT_CHURN_THRESHOLD   (3)
 
 //! bt_lock() needs to be taken before accessing these variables.
-static RtcTicks s_churn_window_start_ticks;
+static uint64_t s_churn_window_start_ticks;
 static uint32_t s_churn_count;
 
 static bool prv_should_skip_short_interval(void) {
-  const RtcTicks now = rtc_get_ticks();
-  if ((now - s_churn_window_start_ticks) > (RECONNECT_CHURN_WINDOW_SECS * RTC_TICKS_HZ)) {
+  const uint64_t now = pbl_uptime_ticks();
+  if ((now - s_churn_window_start_ticks) > (RECONNECT_CHURN_WINDOW_SECS * PBL_TICK_HZ)) {
     s_churn_window_start_ticks = now;
     s_churn_count = 0;
   }

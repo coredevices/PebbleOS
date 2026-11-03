@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/app.h>
 #include <applib/app_logging.h>
@@ -27,7 +27,7 @@ typedef struct {
   bool confirm;
   bool error_dialogs;
   uint32_t sessions;
-  RtcTicks started_at;
+  uint64_t started_at;
   char info[96];
   char result[TRANSCRIPTION_BUFFER_SIZE + 32];
 } VoiceDemoData;
@@ -66,7 +66,7 @@ static void prv_dictation_cb(DictationSession *session, DictationSessionStatus s
                              char *transcription, void *context) {
   VoiceDemoData *data = context;
   const uint32_t elapsed_ms =
-      (uint32_t)((rtc_get_ticks() - data->started_at) * 1000 / RTC_TICKS_HZ);
+      (uint32_t)((pbl_uptime_ticks() - data->started_at) * 1000 / PBL_TICK_HZ);
 
   if (status == DictationSessionStatusSuccess) {
     snprintf(data->result, sizeof(data->result), "\"%s\"\n(%" PRIu32 " ms)", transcription,
@@ -82,7 +82,7 @@ static void prv_dictation_cb(DictationSession *session, DictationSessionStatus s
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   VoiceDemoData *data = context;
   data->sessions++;
-  data->started_at = rtc_get_ticks();
+  data->started_at = pbl_uptime_ticks();
   prv_update_info(data);
   text_layer_set_text(&data->result_layer, "Listening...");
   const DictationSessionStatus status = dictation_session_start(data->session);

@@ -9,10 +9,10 @@
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_transport.h>
@@ -147,7 +147,7 @@ typedef struct PPoGATTClient {
   CommSession *session;
 
   //! Tick count when this client was created, for measuring handshake duration
-  RtcTicks created_ticks;
+  uint64_t created_ticks;
 } PPoGATTClient;
 
 // -------------------------------------------------------------------------------------------------
@@ -421,7 +421,7 @@ static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry
   client->app_uuid = UUID_INVALID;
   client->rx_ack_timer = rx_ack_timer;
   client->send_retry_timer = send_retry_timer;
-  client->created_ticks = rtc_get_ticks();
+  client->created_ticks = pbl_uptime_ticks();
   s_ppogatt_head = (PPoGATTClient *)list_prepend((ListNode *)s_ppogatt_head, &client->node);
   return client;
 }
@@ -429,7 +429,7 @@ static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry
 // -------------------------------------------------------------------------------------------------
 
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
-  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
   PBL_LOG_INFO("PPoGATT client deleted: role=%u state=%u reason=%u disconnected=%u after %" PRIu32
                "ms",
                client->role, client->state, reason, is_disconnected, elapsed_ms);
@@ -682,7 +682,7 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   }
 
   {
-    const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+    const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
     PBL_LOG_INFO("PPoGATT Session is opened (%s, Vers: %d TXW: %d RXW: %d) after %" PRIu32 "ms!",
                  (client->role == PPoGATTRoleReversed) ? "reversed" : "forward", client->version,
                  client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
@@ -887,7 +887,7 @@ static void prv_meta_read_retry_timer_cb(void *data) {
 
 static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, size_t value_length,
                                  enum pbl_bt_gatt_error error) {
-  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
   if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("PPoGATT meta read failed: err=0x%x after %" PRIu32 "ms (retry %u/%u)", error,
@@ -1334,7 +1334,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
     }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
     if (error) {
-      const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_ERR("PPoGATT subscribe failed: err=0x%x after %" PRIu32 "ms", error, elapsed_ms);
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_SubscribeFailure);
       goto unlock;
@@ -1344,7 +1344,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
       goto unlock;
     }
     {
-      const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_INFO("PPoGATT subscribed to Data after %" PRIu32 "ms, sending ResetRequest",
                    elapsed_ms);
     }

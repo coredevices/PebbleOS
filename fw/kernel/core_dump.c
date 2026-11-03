@@ -25,6 +25,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/comm_session/session.h>
@@ -510,7 +511,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
 
   prv_debug_str("Starting core dump");
 
-  // Save the current time now because rtc_get_ticks() disables and then re-enables interrupts
+  // Save the current time now because pbl_uptime_ticks() disables and then re-enables interrupts
   s_time_stamp = rtc_get_time();
 
   prv_debug_str("CD: starting");

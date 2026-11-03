@@ -9,7 +9,7 @@
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/util/bitops.h>
@@ -76,7 +76,7 @@ typedef struct {
   bool leak_received;
   bool ctr_passed;
   bool leak_passed;
-  RtcTicks result_start_time;
+  uint64_t result_start_time;
 } AppData;
 
 static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
@@ -145,7 +145,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
         bool passed = app_data->ctr_passed && app_data->leak_passed;
         mfg_test_result_report(MfgTestId_HrmCtrLeakage, passed, 0);
         snprintf(app_data->status_string, STATUS_STRING_LEN, passed ? "PASS" : "FAIL");
-        app_data->result_start_time = rtc_get_ticks();
+        app_data->result_start_time = pbl_uptime_ticks();
       }
     }
     layer_mark_dirty(&app_data->window.layer);
@@ -156,7 +156,7 @@ static void prv_result_timer_callback(void *cb_data) {
   AppData *data = app_state_get_user_data();
 
   if (data->result_start_time != 0) {
-    uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->result_start_time);
+    uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->result_start_time);
     if (elapsed >= RESULT_DISPLAY_MS) {
       app_window_stack_pop(false);
       return;

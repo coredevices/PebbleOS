@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/phone_call_util.h>
@@ -806,7 +807,7 @@ void test_ancs__pre_existing_window_ends_after_10_s(void) {
   prv_send_pre_existing_complete_dict();
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 0);
 
-  fake_rtc_increment_ticks(10 * RTC_TICKS_HZ);
+  fake_rtc_increment_ticks(10 * PBL_TICK_HZ);
   prv_send_pre_existing_complete_dict();
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
 }

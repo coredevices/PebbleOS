@@ -12,7 +12,6 @@
 // Wall time follows the host clock, plus whatever offset the firmware sets.
 
 static int64_t s_offset_s;
-static struct timeval s_boot;
 static TimezoneInfo s_tzinfo;
 static bool s_tz_set;
 
@@ -27,13 +26,9 @@ uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
 }
 
 void rtc_init(void) {
-  gettimeofday(&s_boot, nullptr);
 }
 
 void rtc_calibrate_frequency(uint32_t frequency) {
-}
-
-void rtc_init_timers(void) {
 }
 
 void rtc_set_time(time_t time) {
@@ -82,27 +77,6 @@ bool rtc_sanitize_time_t(time_t *t) {
   const bool result = rtc_sanitize_struct_tm(&time_struct);
   *t = pbl_mktime(&time_struct);
   return result;
-}
-
-RtcTicks rtc_get_ticks(void) {
-  struct timeval now;
-  gettimeofday(&now, nullptr);
-  int64_t us = (int64_t)(now.tv_sec - s_boot.tv_sec) * 1000000 + (now.tv_usec - s_boot.tv_usec);
-  return (RtcTicks)(us * RTC_TICKS_HZ / 1000000);
-}
-
-void rtc_alarm_init(void) {
-}
-
-void rtc_alarm_set(RtcTicks num_ticks) {
-}
-
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
-
-bool rtc_alarm_is_initialized(void) {
-  return true;
 }
 
 void rtc_set_timezone(TimezoneInfo *tzinfo) {

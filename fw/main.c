@@ -124,9 +124,6 @@ static void init_drivers(void) {
 #ifdef CONFIG_MIC
   mic_init(MIC);
 #endif
-
-  rtc_init_timers();
-  rtc_alarm_init();
 }
 
 static void clear_reset_loop_detection_bits(void) {

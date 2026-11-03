@@ -3,7 +3,7 @@
 
 #include "menu_text_scroll.h"
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 
 #include <applib/app_timer.h>
@@ -35,7 +35,7 @@ static MenuTextScroll *prv_get_scroll(void) {
 }
 
 static uint32_t prv_now_ms(void) {
-  return (uint32_t)((sys_get_ticks() * 1000 + RTC_TICKS_HZ / 2) / RTC_TICKS_HZ);
+  return (uint32_t)((sys_get_ticks() * 1000 + PBL_TICK_HZ / 2) / PBL_TICK_HZ);
 }
 
 static void prv_timer_cb(void *data) {

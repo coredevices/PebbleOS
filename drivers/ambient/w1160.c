@@ -6,8 +6,8 @@
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -173,9 +173,9 @@ static int prv_read_data_polled(const struct pbl_w1160 *dev, uint16_t *level) {
 
 // Sampling has been on long enough for DATA_ALS to hold a real sample
 static bool prv_sampling_has_settled(const struct pbl_w1160 *dev) {
-  const RtcTicks elapsed = rtc_get_ticks() - dev->state->sampling_started_ticks;
+  const uint64_t elapsed = pbl_uptime_ticks() - dev->state->sampling_started_ticks;
 
-  return elapsed >= ((RtcTicks)W1160_SETTLE_AFTER_ENABLE_MS * RTC_TICKS_HZ / 1000U);
+  return elapsed >= ((uint64_t)W1160_SETTLE_AFTER_ENABLE_MS * PBL_TICK_HZ / 1000U);
 }
 
 static int prv_read_cached(const struct pbl_w1160 *dev, uint32_t *level, bool polled) {
@@ -284,7 +284,7 @@ static int prv_set_state(const struct pbl_als *als, bool active, bool sampling) 
 
     state->sampling = sampling;
     if (sampling) {
-      state->sampling_started_ticks = rtc_get_ticks();
+      state->sampling_started_ticks = pbl_uptime_ticks();
     }
   }
 

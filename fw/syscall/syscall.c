@@ -8,6 +8,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
@@ -37,8 +38,8 @@ PBL_SYSCALL(void, sys_get_time_ms, (OUT, time_t *, t), (OUT, uint16_t *, out_ms)
   rtc_get_time_ms(t, out_ms);
 }
 
-PBL_SYSCALL(RtcTicks, sys_get_ticks) {
-  return rtc_get_ticks();
+PBL_SYSCALL(uint64_t, sys_get_ticks) {
+  return pbl_uptime_ticks();
 }
 
 PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uint32_t, flags)) {

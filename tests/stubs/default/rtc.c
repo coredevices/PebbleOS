@@ -3,12 +3,10 @@
 
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/time.h>
 
 PBL_WEAK void rtc_init(void) {
-}
-
-PBL_WEAK void rtc_init_timers(void) {
 }
 
 PBL_WEAK bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
@@ -50,9 +48,9 @@ PBL_WEAK bool rtc_is_timezone_set(void) {
   return false;
 }
 
-// RTC ticks
+// Uptime
 ///////////////////////////////////////////////////////////////////////////////
 
-PBL_WEAK RtcTicks rtc_get_ticks(void) {
+PBL_WEAK uint64_t pbl_uptime_ticks(void) {
   return 0;
 }

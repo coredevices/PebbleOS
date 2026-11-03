@@ -10,40 +10,18 @@
 /**
  * @defgroup drivers_rtc RTC
  * @ingroup drivers
- * @brief Real-time clock: wall clock time, tick counter, wake-up alarm and timezone storage.
+ * @brief Real-time clock: wall clock time and timezone storage.
  *
- * Wall clock time is UTC, limited to years 2000 to 2037. Ticks count at @ref RTC_TICKS_HZ
- * since system start.
+ * Wall clock time is UTC, limited to years 2000 to 2037.
  *
  * @code{.c}
  * char buf[TIME_STRING_BUFFER_SIZE];
  * time_t now = rtc_get_time();
  *
  * PBL_LOG_DBG("%s", time_t_to_string(buf, now));
- *
- * RtcTicks start = rtc_get_ticks();
- * do_work();
- * uint32_t elapsed_ms = (rtc_get_ticks() - start) * 1000 / RTC_TICKS_HZ;
  * @endcode
  * @{
  */
-
-/** @brief RTC tick count. */
-typedef uint64_t RtcTicks;
-
-#if defined(CONFIG_QEMU)
-/** @brief Tick frequency in Hz (QEMU 1000 Hz counter). */
-#define RTC_TICKS_HZ (1000u)
-#elifdef CONFIG_SOC_POSIX
-/** @brief Tick frequency in Hz (host monotonic clock). */
-#define RTC_TICKS_HZ (1000u)
-#elifdef CONFIG_SOC_SF32LB52
-/** @brief Tick frequency in Hz (SF32LB52 LPTIM clocked by RC10K). */
-#define RTC_TICKS_HZ (1000u)
-#else
-/** @brief Tick frequency in Hz. */
-#define RTC_TICKS_HZ (1024u)
-#endif
 
 /**
  * @brief Initialize the RTC.
@@ -60,13 +38,6 @@ void rtc_init(void);
  * @param frequency Measured crystal frequency in mHz.
  */
 void rtc_calibrate_frequency(uint32_t frequency);
-
-/**
- * @brief Start the timers the RTC driver needs.
- *
- * Separate from rtc_init() because the timer system is not available that early.
- */
-void rtc_init_timers(void);
 
 /**
  * @brief Clamp the year of a broken-down time to 2000-2037.
@@ -165,43 +136,8 @@ bool rtc_is_timezone_set(void);
  */
 const char *rtc_get_time_string(char *buffer);
 
-/**
- * @brief Get the tick count.
- *
- * @return Ticks since system start.
- */
-RtcTicks rtc_get_ticks(void);
-
-/**
- * @brief Initialize the RTC alarm, used to wake from stop mode.
- */
-void rtc_alarm_init(void);
-
-/**
- * @brief Arm the alarm.
- *
- * @param num_ticks Ticks from now until the alarm fires.
- */
-void rtc_alarm_set(RtcTicks num_ticks);
-
 /** @brief Clear the stored timezone, as part of a factory reset. */
 void rtc_timezone_clear(void);
-
-/**
- * @brief Get the ticks elapsed since the alarm was last set.
- *
- * @return Ticks since the last rtc_alarm_set().
- */
-RtcTicks rtc_alarm_get_elapsed_ticks(void);
-
-/**
- * @brief Check whether the alarm is initialized.
- *
- * Used to avoid entering stop mode before the alarm can wake the system.
- *
- * @return true if initialized.
- */
-bool rtc_alarm_is_initialized(void);
 
 /**
  * @brief Format a time as local time.

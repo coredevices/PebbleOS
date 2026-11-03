@@ -7,34 +7,17 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/time.h>
 
-static RtcTicks s_rtc_tick_count;
-static RtcTicks s_rtc_auto_increment = 0;
+static uint64_t s_rtc_tick_count;
+static uint64_t s_rtc_auto_increment = 0;
 
 // Defined identically to the static variables in rtc.c
 static time_t s_time_base = 0;
 static int16_t s_time_ms_base = 0;
 static int64_t s_time_tick_base = 0;
 static TimezoneInfo s_tzinfo = {};
-
-/*
-// TODO: Unused right now
-void rtc_init(void);
-void rtc_init_timers(void);
-void rtc_set_time_tm(struct pbl_tm* time_tm);
-
-
-void rtc_next_tick_alarm_init(void);
-void rtc_set_next_tick_alarm(RtcTicks tick);
-void rtc_disable_next_tick_alarm(void);
-bool rtc_is_tick_alarm_initialized(void);
-
-bool rtc_is_lse_started(void);
-
-//! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
-const char* time_t_to_string(char* buffer, time_t t);
-*/
 
 // Stubs
 ////////////////////////////////////
@@ -102,20 +85,20 @@ time_t sys_get_time(void) {
 }
 
 //! @return Absolute number of ticks since system start.
-RtcTicks rtc_get_ticks(void) {
-  RtcTicks result = s_rtc_tick_count;
+uint64_t pbl_uptime_ticks(void) {
+  uint64_t result = s_rtc_tick_count;
   s_rtc_tick_count += s_rtc_auto_increment;
   return result;
 }
 
-RtcTicks sys_get_ticks(void) {
-  return rtc_get_ticks();
+uint64_t sys_get_ticks(void) {
+  return pbl_uptime_ticks();
 }
 
 //
 // Fake Functions!
 //
-void fake_rtc_init(RtcTicks initial_ticks, time_t initial_time) {
+void fake_rtc_init(uint64_t initial_ticks, time_t initial_time) {
   s_rtc_tick_count = initial_ticks;
   s_time_tick_base = initial_ticks;
   s_time_base = initial_time;
@@ -134,14 +117,14 @@ void fake_rtc_increment_time_ms(uint32_t inc) {
   s_time_ms_base = new_ms % 1000;
 }
 
-void fake_rtc_set_ticks(RtcTicks new_ticks) {
+void fake_rtc_set_ticks(uint64_t new_ticks) {
   s_rtc_tick_count = new_ticks;
 }
 
-void fake_rtc_increment_ticks(RtcTicks tick_increment) {
+void fake_rtc_increment_ticks(uint64_t tick_increment) {
   s_rtc_tick_count += tick_increment;
 }
 
-void fake_rtc_auto_increment_ticks(RtcTicks auto_increment) {
+void fake_rtc_auto_increment_ticks(uint64_t auto_increment) {
   s_rtc_auto_increment = auto_increment;
 }

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
@@ -50,17 +50,17 @@ static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t 
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / PBL_MSEC_PER_SEC);
 }
 
 // SWIPE_MAX_DURATION_MS (300) / SWIPE_MIN_LENGTH_PX (30) are private to swipe.c;
 // the caps are part of the swipe contract these tests pin. swipe.c floors
 // ticks -> ms, so to land the floored duration exactly on a target ms we round
-// the tick count UP (ceil), keeping the boundary exact for any RTC_TICKS_HZ.
+// the tick count UP (ceil), keeping the boundary exact for any PBL_TICK_HZ.
 #define SWIPE_CAP_MS (300)
 #define SWIPE_MIN_PX (30)
-static RtcTicks prv_ticks_for_floored_ms(uint32_t ms) {
-  return ((RtcTicks)ms * RTC_TICKS_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
+static uint64_t prv_ticks_for_floored_ms(uint32_t ms) {
+  return ((uint64_t)ms * PBL_TICK_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
 }
 
 // Drive a single straight swipe from (sx, sy) to (ex, ey) over a fast duration, with the liftoff

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/light.h>
 #include <pbl/services/touch/touch_session.h>
@@ -15,20 +15,20 @@ PBL_LOG_MODULE_DECLARE(service_touch, CONFIG_SERVICE_TOUCH_LOG_LEVEL);
 //! The session lasts exactly as long as the backlight would stay on: arming
 //! behaves as if the light had come on, even when ALS or DnD kept it dark.
 //! Sampled per arm/extend so a pref change applies immediately.
-static RtcTicks prv_timeout_ticks(void) {
-  return ((RtcTicks)backlight_get_timeout_ms() * RTC_TICKS_HZ) / 1000;
+static uint64_t prv_timeout_ticks(void) {
+  return ((uint64_t)backlight_get_timeout_ms() * PBL_TICK_HZ) / 1000;
 }
 
-static RtcTicks s_armed_until;
+static uint64_t s_armed_until;
 
 void touch_session_arm(TouchSessionArmSource source) {
-  s_armed_until = rtc_get_ticks() + prv_timeout_ticks();
+  s_armed_until = pbl_uptime_ticks() + prv_timeout_ticks();
   PBL_LOG_DBG("Touch session armed (source %d)", (int)source);
 }
 
 void touch_session_extend(void) {
   if (touch_session_is_active()) {
-    s_armed_until = rtc_get_ticks() + prv_timeout_ticks();
+    s_armed_until = pbl_uptime_ticks() + prv_timeout_ticks();
   }
 }
 
@@ -38,7 +38,7 @@ bool touch_session_is_active(void) {
   // behavior unconditional.
   return true;
 #else
-  if (rtc_get_ticks() < s_armed_until) {
+  if (pbl_uptime_ticks() < s_armed_until) {
     return true;
   }
   // Any UI the user deliberately entered is not guarded; only the idle

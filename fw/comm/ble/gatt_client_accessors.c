@@ -6,6 +6,7 @@
 #include "gap_le_connection.h"
 
 #include <pbl/btutil/bt_uuid.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/bt_lock.h>
@@ -26,7 +27,7 @@
 
 static uintptr_t prv_get_generation(const GAPLEConnection *connection) {
   const uintptr_t mask = ~MACHINE_WORD_MSB;
-  const uint32_t timestamp = (connection->ticks_since_connection / RTC_TICKS_HZ);
+  const uint32_t timestamp = (connection->ticks_since_connection / PBL_TICK_HZ);
   return mask & ((uintptr_t)timestamp);
 }
 

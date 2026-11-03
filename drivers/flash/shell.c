@@ -7,8 +7,8 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/shell/shell.h>
@@ -450,7 +450,7 @@ static int prv_cmd_stress(const struct pbl_shell *sh, size_t argc, char **argv) 
 
 static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
   const uint32_t window = 2U * FLASH->geometry->subsector_size;
-  RtcTicks elapsed;
+  uint64_t elapsed;
   uint32_t iters = BENCH_START_ITERS / 2U;
   void *buf;
 
@@ -461,7 +461,7 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
   }
 
   do {
-    RtcTicks start = rtc_get_ticks();
+    uint64_t start = pbl_uptime_ticks();
     uint32_t offset = 0U;
 
     iters *= 2U;
@@ -470,12 +470,12 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
       offset = (offset + size) % window;
     }
 
-    elapsed = rtc_get_ticks() - start;
+    elapsed = pbl_uptime_ticks() - start;
   } while (elapsed < BENCH_MIN_TICKS);
 
   pbl_shell_print(sh, "%u bytes: %" PRIu32 " iters in %" PRIu64 " ticks = %" PRIu32 " us/iter",
                   (unsigned int)size, iters, elapsed,
-                  (uint32_t)((elapsed * 1000000U) / ((uint64_t)iters * RTC_TICKS_HZ)));
+                  (uint32_t)((elapsed * 1000000U) / ((uint64_t)iters * PBL_TICK_HZ)));
 
   pbl_free(buf);
   pbl_task_wdt_feed_self();

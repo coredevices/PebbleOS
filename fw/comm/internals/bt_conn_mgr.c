@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/responsiveness.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -29,7 +29,7 @@
 
 typedef struct {
   ListNode list_node;
-  uint32_t timeout; // time to stop this request (in rtc ticks)
+  uint32_t timeout; // time to stop this request (in uptime ticks)
   enum pbl_bt_response_time_state req_state;
   enum pbl_bt_consumer consumer;
   pbl_bt_responsiveness_granted_cb_t granted_handler;
@@ -121,9 +121,9 @@ static enum pbl_bt_response_time_state prv_determine_latency_for_connection(
   }
 
   if (secs_to_wait) {
-    uint32_t curr_ticks = rtc_get_ticks();
+    uint32_t curr_ticks = pbl_uptime_ticks();
     if (curr_ticks < timeout) {
-      uint16_t wait_time = (timeout - curr_ticks) / RTC_TICKS_HZ;
+      uint16_t wait_time = (timeout - curr_ticks) / PBL_TICK_HZ;
       *secs_to_wait = MAX(1, wait_time);
     } else {
       *secs_to_wait = 0;
@@ -222,7 +222,7 @@ static void prv_bt_le_gateway_response_latency_watchdog_handler(void *data) {
   // selected state so check and see what consumer timeouts have expired
 
   ConnectionStateRequest *curr_request = conn_mgr_info->requests;
-  uint32_t curr_ticks = rtc_get_ticks();
+  uint32_t curr_ticks = pbl_uptime_ticks();
   while (curr_request != nullptr) {
     ConnectionStateRequest *next =
         (ConnectionStateRequest *)list_get_next(&curr_request->list_node);
@@ -315,7 +315,7 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
   }
 
   // populate node with new info. If it was previously set we override it
-  consumer_request->timeout = rtc_get_ticks() + max_period_secs * RTC_TICKS_HZ;
+  consumer_request->timeout = pbl_uptime_ticks() + max_period_secs * PBL_TICK_HZ;
   consumer_request->req_state = state;
   consumer_request->consumer = consumer;
   consumer_request->granted_handler = is_already_granted ? nullptr : granted_handler;

@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/als.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/light.h>
@@ -59,7 +59,7 @@ typedef struct {
   char ambient_reading[AMBIENT_READING_STR_LEN];
 
   ALSTestState test_state;
-  RtcTicks state_start_time;
+  uint64_t state_start_time;
   uint64_t als_sum;
   uint32_t als_sample_count;
   uint32_t als_average;
@@ -67,7 +67,7 @@ typedef struct {
 
 static void prv_update_display(void *context) {
   AmbientLightAppData *data = context;
-  uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
+  uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->state_start_time);
 
   switch (data->test_state) {
     case ALSStateWaitForStart:
@@ -82,7 +82,7 @@ static void prv_update_display(void *context) {
       if (elapsed >= COUNTDOWN_MS) {
         // Start sampling
         data->test_state = ALSStateSampling;
-        data->state_start_time = rtc_get_ticks();
+        data->state_start_time = pbl_uptime_ticks();
         data->als_sum = 0;
         data->als_sample_count = 0;
         PBL_LOG_INFO("ALS sampling started");
@@ -123,7 +123,7 @@ static void prv_update_display(void *context) {
           PBL_LOG_ERR("ALS test FAILED - Average %" PRIu32 " outside range %d-%d",
                       data->als_average, ALS_MIN_VALUE, ALS_MAX_VALUE);
         }
-        data->state_start_time = rtc_get_ticks();
+        data->state_start_time = pbl_uptime_ticks();
       }
       break;
     }
@@ -151,7 +151,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
   if (data->test_state == ALSStateWaitForStart) {
     // Start countdown
     data->test_state = ALSStateCountdown;
-    data->state_start_time = rtc_get_ticks();
+    data->state_start_time = pbl_uptime_ticks();
 
     PBL_LOG_INFO("ALS test started - countdown %d ms", COUNTDOWN_MS);
   }
@@ -193,7 +193,7 @@ static void prv_handle_init(void) {
 
   // Initialize state
   data->test_state = ALSStateWaitForStart;
-  data->state_start_time = rtc_get_ticks();
+  data->state_start_time = pbl_uptime_ticks();
   data->als_sum = 0;
   data->als_sample_count = 0;
   data->als_average = 0;

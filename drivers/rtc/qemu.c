@@ -57,10 +57,6 @@ void rtc_calibrate_frequency(uint32_t frequency) {
   (void)frequency;
 }
 
-void rtc_init_timers(void) {
-  // No additional timers needed for QEMU RTC
-}
-
 void rtc_set_time(time_t time) {
   REG32(QEMU_RTC_BASE + RTC_TIME_LO) = (uint32_t)time;
 }
@@ -106,29 +102,6 @@ bool rtc_sanitize_time_t(time_t *t) {
   *t = pbl_mktime(&time_struct);
 
   return result;
-}
-
-RtcTicks rtc_get_ticks(void) {
-  // Read 32-bit tick counter from QEMU (1000Hz)
-  return (RtcTicks)REG32(QEMU_RTC_BASE + RTC_TICKS_REG);
-}
-
-void rtc_alarm_init(void) {
-  // Enable alarm interrupt support
-}
-
-void rtc_alarm_set(RtcTicks num_ticks) {
-  RtcTicks current = rtc_get_ticks();
-  REG32(QEMU_RTC_BASE + RTC_ALARM) = (uint32_t)(current + num_ticks);
-  REG32(QEMU_RTC_BASE + RTC_CTRL) |= CTRL_ALARM_IE;
-}
-
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
-
-bool rtc_alarm_is_initialized(void) {
-  return true;
 }
 
 // Timezone uses backup registers 11-15 to avoid conflicts with bootbits (0-10)

@@ -14,6 +14,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -121,7 +122,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 
 //! Analytics: Track time-weighted average intensity
 static uint64_t s_intensity_time_product_sum;  // Sum of (intensity_pct × time_ms)
-static RtcTicks s_last_intensity_sample_ticks; // Timestamp of last sample
+static uint64_t s_last_intensity_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_intensity_pct;   // Last intensity percentage sampled
 static uint32_t s_total_on_time_ms;            // Total backlight on time tracked internally
 
@@ -131,8 +132,8 @@ static uint32_t s_total_on_time_ms;            // Total backlight on time tracke
 static uint32_t s_als_cached_level;
 //! Same sample without screen compensation; see prv_get_als_gate_level().
 static uint32_t s_als_cached_gate_level;
-static RtcTicks s_als_cached_ticks;        // 0 = invalid
-#define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ) // 1 second
+static uint64_t s_als_cached_ticks;       // 0 = invalid
+#define ALS_CACHE_TTL_TICKS (PBL_TICK_HZ) // 1 second
 
 //! Ambient light level below which the backlight turns on, in lux
 static uint32_t s_dark_threshold;
@@ -216,7 +217,7 @@ static void prv_als_prime_for_interaction(void) {
 }
 
 static void prv_als_sample(void) {
-  RtcTicks now = rtc_get_ticks();
+  uint64_t now = pbl_uptime_ticks();
   const bool cache_valid =
       s_als_cached_ticks != 0 &&
       (s_current_brightness > 0 || (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS);
@@ -338,11 +339,11 @@ static uint8_t prv_backlight_get_intensity(void) {
 }
 
 static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
-  RtcTicks now_ticks = rtc_get_ticks();
+  uint64_t now_ticks = pbl_uptime_ticks();
 
   // Calculate time delta in ms since last sample
   if (s_last_intensity_sample_ticks > 0) {
-    uint32_t time_delta_ms = ((now_ticks - s_last_intensity_sample_ticks) * 1000) / RTC_TICKS_HZ;
+    uint32_t time_delta_ms = ((now_ticks - s_last_intensity_sample_ticks) * 1000) / PBL_TICK_HZ;
 
     // Accumulate intensity × time for weighted average calculation
     // Use last sampled intensity for the period that just elapsed
@@ -956,7 +957,7 @@ void pbl_analytics_external_collect_backlight_stats(void) {
   // Reset accumulators for next period
   s_intensity_time_product_sum = 0;
   s_total_on_time_ms = 0;
-  s_last_intensity_sample_ticks = rtc_get_ticks();
+  s_last_intensity_sample_ticks = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_mutex);
 }

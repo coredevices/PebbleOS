@@ -52,8 +52,8 @@ typedef struct CommSession {
   /** Inbound message parser state. */
   ReceiveRouter recv_router;
 
-  /** RTC ticks when the session was opened. */
-  RtcTicks open_ticks;
+  /** Uptime in ticks when the session was opened. */
+  uint64_t open_ticks;
 } CommSession;
 
 /** @} */

@@ -9,6 +9,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -317,7 +318,7 @@ static bool prv_sensor_enable(HRMFeature features, bool low_latency) {
   s_manager_state.enable_failure_count = 0;
   s_manager_state.active_features = features;
   s_manager_state.enabled_features = features;
-  s_manager_state.sensor_on_since_ticks = rtc_get_ticks();
+  s_manager_state.sensor_on_since_ticks = pbl_uptime_ticks();
   s_manager_state.unserved_timeout_logged = false;
   // Re-apply the current activity scene so a sensor power-cycle never drops back to the default
   // (least motion-tolerant) HR model while an activity is in progress.
@@ -364,7 +365,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {
-    const RtcTicks cur_ticks = rtc_get_ticks();
+    const uint64_t cur_ticks = pbl_uptime_ticks();
     const int64_t spin_up_ticks = pbl_ms_to_ticks(HRM_SENSOR_SPIN_UP_SEC * PBL_MSEC_PER_SEC);
     const int64_t unserved_timeout_ticks =
         pbl_ms_to_ticks(HRM_MAX_UNSERVED_TIME_SEC * PBL_MSEC_PER_SEC);
@@ -374,7 +375,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     int64_t next_check_ticks = INT64_MAX;
     // Earliest time a periodic subscriber still waiting for a reading became due.
     bool serve_pending = false;
-    RtcTicks serve_due_since_ticks = cur_ticks;
+    uint64_t serve_due_since_ticks = cur_ticks;
     // Union of the features requested by the subscribers that are due for a reading now. This
     // tells the driver which PPG functions to sample (e.g. enable the SpO2/IR path only when a
     // SpO2 subscriber is actually due, so HR-only sessions stay on the low-power green path).
@@ -495,7 +496,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
       next_check_ticks = MIN(next_check_ticks, spin_up_ticks);
     } else if (serve_pending && hrm_is_enabled(HRM)) {
       // Defer the waiting subscriber even if the driver goes silent
-      const RtcTicks window_start_ticks =
+      const uint64_t window_start_ticks =
           MAX(serve_due_since_ticks, s_manager_state.sensor_on_since_ticks);
       next_check_ticks =
           MIN(next_check_ticks, (int64_t)(window_start_ticks - cur_ticks) + unserved_timeout_ticks);
@@ -713,7 +714,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
 #endif
 
   time_t utc_now = rtc_get_time();
-  RtcTicks cur_ticks = rtc_get_ticks();
+  uint64_t cur_ticks = pbl_uptime_ticks();
   HRMFeature kernel_bg_features_sent = 0;
 
   HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;

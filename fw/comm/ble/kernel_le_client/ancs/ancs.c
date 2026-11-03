@@ -10,11 +10,11 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
@@ -612,20 +612,20 @@ static void prv_is_ancs_alive_cb(void *data) {
 //! iOS re-sends the whole notification center as pre-existing right after (re)subscribing. Those
 //! are only handed over as recovered (missed while disconnected) for a bit after reconnection.
 //! Without a previous session to compare against, they are dropped.
-#define POST_CONNECTION_IGNORE_TICKS (10 * RTC_TICKS_HZ)
-static RtcTicks s_connected_ticks;
+#define POST_CONNECTION_IGNORE_TICKS (10 * PBL_TICK_HZ)
+static uint64_t s_connected_ticks;
 static bool s_connected_ticks_valid;
 static bool s_session_active = false;
 static bool s_had_session = false;
 
 static void prv_start_post_connection_ignore_window(void) {
-  s_connected_ticks = rtc_get_ticks();
+  s_connected_ticks = pbl_uptime_ticks();
   s_connected_ticks_valid = true;
 }
 
 static bool prv_just_connected(void) {
   return s_connected_ticks_valid &&
-         (rtc_get_ticks() - s_connected_ticks) < POST_CONNECTION_IGNORE_TICKS;
+         (pbl_uptime_ticks() - s_connected_ticks) < POST_CONNECTION_IGNORE_TICKS;
 }
 
 // -----------------------------------------------------------------------------

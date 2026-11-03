@@ -8,12 +8,12 @@
 #include "gatt_service_changed.h"
 
 #include <pbl/bluetooth/gatt.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/circular_buffer.h>
@@ -128,7 +128,7 @@ static bool prv_find_subscription_by_att_handle(ListNode *node, void *data) {
 static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
                                                  size_t required_length, uint32_t timeout_ms) {
   bool did_stall = false;
-  const RtcTicks timeout_end_ticks = rtc_get_ticks() + pbl_ms_to_ticks(timeout_ms);
+  const uint64_t timeout_end_ticks = pbl_uptime_ticks() + pbl_ms_to_ticks(timeout_ms);
   while (true) {
     prv_lock();
     // bt_lock() is held when this function is called. Unsubscribing also requires taking bt_lock(),
@@ -139,12 +139,12 @@ static bool prv_wait_until_write_space_available(const CircularBuffer *buffer,
     if (PBL_LIKELY(write_space >= required_length)) {
       if (PBL_UNLIKELY(did_stall)) {
         PBL_LOG_DBG("GATT notification stalled for %d ms...",
-                    (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - rtc_get_ticks())));
+                    (int)(timeout_ms - pbl_ticks_to_ms(timeout_end_ticks - pbl_uptime_ticks())));
       }
       return true;
     }
 
-    const RtcTicks now_ticks = rtc_get_ticks();
+    const uint64_t now_ticks = pbl_uptime_ticks();
     if (now_ticks > timeout_end_ticks) {
       // Timeout expired.
       return false;

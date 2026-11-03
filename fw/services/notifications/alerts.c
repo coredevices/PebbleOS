@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/firmware_update.h>
@@ -16,16 +16,16 @@
 PBL_LOG_MODULE_DEFINE(service_alerts, CONFIG_SERVICE_ALERTS_LOG_LEVEL);
 
 static const int NOTIFICATION_VIBE_HOLDOFF_MS = 3000;
-static RtcTicks s_notification_vibe_tick_timestamp = 0;
+static uint64_t s_notification_vibe_tick_timestamp = 0;
 
 //////////////////
 // Private Functions
 //////////////////
 
 static int64_t prv_get_ms_since_last_notification_vibe(void) {
-  RtcTicks current_ticks = rtc_get_ticks();
+  uint64_t current_ticks = pbl_uptime_ticks();
   int64_t millis_since_last_vibe =
-      (current_ticks - s_notification_vibe_tick_timestamp) * 1000 / RTC_TICKS_HZ; // x1000 for ms
+      (current_ticks - s_notification_vibe_tick_timestamp) * 1000 / PBL_TICK_HZ; // x1000 for ms
   return millis_since_last_vibe;
 }
 
@@ -126,7 +126,7 @@ void alerts_set_dnd_mask(AlertMask mask) {
 
 void alerts_set_notification_vibe_timestamp() {
   // if we do vibrate, update timestamp of last vibration
-  s_notification_vibe_tick_timestamp = rtc_get_ticks();
+  s_notification_vibe_tick_timestamp = pbl_uptime_ticks();
 }
 
 void alerts_set_notification_window_timeout_ms(uint32_t timeout_ms) {

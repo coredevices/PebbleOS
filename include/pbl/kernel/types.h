@@ -27,7 +27,7 @@
 /** @brief Kernel tick count. Wraps around; compare differences, not absolute values. */
 typedef uint32_t pbl_tick_t;
 
-/** @brief Tick rate in Hz, from @c CONFIG_KERNEL_TICK_HZ. Matches the RTC tick rate. */
+/** @brief Tick rate in Hz, from @c CONFIG_KERNEL_TICK_HZ. */
 #define PBL_TICK_HZ CONFIG_KERNEL_TICK_HZ
 /** @brief Tick count that stands for an infinite timeout. */
 #define PBL_TICK_FOREVER UINT32_MAX

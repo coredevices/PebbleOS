@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/layer.h>
 #include <applib/ui/recognizer/pan.h>
@@ -109,7 +109,7 @@ static void prv_dispatch(RecognizerManager *manager, TouchEventType type, int16_
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / PBL_MSEC_PER_SEC);
 }
 
 typedef struct CompetitionScene {

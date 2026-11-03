@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/framebuffer.h>
@@ -518,7 +519,7 @@ void test_menu_layer_system_cells__scrolling_text(void) {
                   &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
 
     // Past the 800 ms pause
-    fake_rtc_set_ticks(RTC_TICKS_HZ * 3 / 2);
+    fake_rtc_set_ticks(PBL_TICK_HZ * 3 / 2);
     cell_bounds.origin.x += cell_width + GRID_CELL_PADDING;
     prv_draw_cell(MenuCellType_Basic, &cell_bounds, &rows[i],
                   &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);

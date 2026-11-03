@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -34,7 +34,7 @@
 
 typedef struct PanVelocitySample {
   GPoint point;
-  RtcTicks ticks;
+  uint64_t ticks;
 } PanVelocitySample;
 
 struct PanRecognizerData {
@@ -67,11 +67,11 @@ static const RecognizerImpl s_pan_recognizer_impl = {
   .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
 };
 
-static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
-  return (uint32_t)((ticks * PBL_MSEC_PER_SEC) / RTC_TICKS_HZ);
+static uint32_t prv_ticks_to_ms(uint64_t ticks) {
+  return (uint32_t)((ticks * PBL_MSEC_PER_SEC) / PBL_TICK_HZ);
 }
 
-static void prv_record_sample(PanRecognizerData *data, GPoint point, RtcTicks ticks) {
+static void prv_record_sample(PanRecognizerData *data, GPoint point, uint64_t ticks) {
   const uint8_t next = (data->state.sample_count == 0)
                            ? 0
                            : (uint8_t)((data->state.sample_head + 1) % PAN_VELOCITY_SAMPLE_COUNT);
@@ -140,7 +140,7 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
   switch (touch_event->type) {
     case TouchEvent_Touchdown: {
       const GPoint point = GPoint(touch_event->x, touch_event->y);
-      const RtcTicks now = sys_get_ticks();
+      const uint64_t now = sys_get_ticks();
       data->state.touch_down_point = point;
       data->state.start_point = point;
       data->state.prev_point = point;
@@ -153,7 +153,7 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
 
     case TouchEvent_PositionUpdate: {
       const GPoint point = GPoint(touch_event->x, touch_event->y);
-      const RtcTicks now = sys_get_ticks();
+      const uint64_t now = sys_get_ticks();
       prv_record_sample(data, point, now);
       // prev_point lags one event behind last_point so delta_since_prev is the delta between the
       // two most-recent events.

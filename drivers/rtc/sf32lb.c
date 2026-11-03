@@ -204,9 +204,6 @@ void rtc_init(void) {
   s_initialized = true;
 }
 
-void rtc_init_timers(void) {
-}
-
 // Internal function to set RTC time without resetting calibration state.
 // Used by the calibration code when applying corrections.
 static void prv_rtc_set_time_no_cal_reset(time_t time) {
@@ -295,24 +292,6 @@ time_t rtc_get_time(void) {
   rtc_get_time_ms(&seconds, &ms);
 
   return seconds;
-}
-
-RtcTicks rtc_get_ticks(void) {
-  return pbl_uptime_ticks();
-}
-
-void rtc_alarm_init(void) {
-}
-
-void rtc_alarm_set(RtcTicks num_ticks) {
-}
-
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
-
-bool rtc_alarm_is_initialized(void) {
-  return true;
 }
 
 bool rtc_sanitize_struct_tm(struct pbl_tm *t) {

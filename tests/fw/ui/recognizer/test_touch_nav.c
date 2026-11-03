@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/layer.h>
 #include <applib/ui/recognizer/pan.h>
@@ -201,7 +201,7 @@ static void prv_dispatch(TouchEventType type, int16_t x, int16_t y, bool non_nav
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / PBL_MSEC_PER_SEC);
 }
 
 // Drive a straight fast flick from (sx, sy) to (ex, ey) through the dispatcher. The route is

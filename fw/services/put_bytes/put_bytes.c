@@ -10,6 +10,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
@@ -139,7 +140,7 @@ typedef struct {
   PutBytesStorage storage;
 
   //! the time in ticks at which the put bytes init request completed
-  RtcTicks start_ticks;
+  uint64_t start_ticks;
   struct pbl_bt_slave_conn_event_stats conn_event_stats;
 
   //! Holds PB commands. Will enqueue multiple PutRequests when pre-acking is enabled
@@ -730,7 +731,7 @@ static void prv_do_init(void) {
 
   success = prv_setup_storage_for_init_request(request, index);
 
-  s_pb_state.start_ticks = rtc_get_ticks();
+  s_pb_state.start_ticks = pbl_uptime_ticks();
 
   if (!success) {
     PBL_LOG_WRN("Failed to init storage");
@@ -791,7 +792,7 @@ static bool prv_do_put(const PutRequest *request, uint32_t request_size, uint32_
 }
 
 static void prv_do_commit(void) {
-  uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - s_pb_state.start_ticks);
+  uint32_t elapsed_time_ms = pbl_ticks_to_ms(pbl_uptime_ticks() - s_pb_state.start_ticks);
 
   const CommitRequest *request = (const CommitRequest *)s_pb_state.receiver.buffer;
 

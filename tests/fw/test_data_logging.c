@@ -40,10 +40,6 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-uint64_t pbl_uptime_ticks(void) {
-  return 1337;
-}
-
 #include <kernel/memory_layout.h>
 const MpuRegion *memory_layout_get_app_region(void) {
   return nullptr;

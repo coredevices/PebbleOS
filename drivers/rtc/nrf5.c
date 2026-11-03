@@ -8,7 +8,7 @@
 #include <board/board.h>
 
 //! How frequently we save the time state to the retained registers, in ticks.
-#define SAVE_TIME_FREQUENCY (30 * RTC_TICKS_HZ)
+#define SAVE_TIME_FREQUENCY (30 * PBL_TICK_HZ)
 
 /***
  * The RTC counter is reset with the rest of the chip, so the tick count is the kernel uptime and
@@ -20,15 +20,15 @@ static bool s_did_init_rtc = false;
 //! UNIX timestamp of the wall clock time at tick s_time_tick_base.
 static time_t s_time_base = 0;
 //! Tick at which the wall clock time was s_time_base.
-static RtcTicks s_time_tick_base = 0;
+static uint64_t s_time_tick_base = 0;
 //! Tick at which the time state was last saved.
-static RtcTicks s_last_save_ticks = 0;
+static uint64_t s_last_save_ticks = 0;
 
-static time_t prv_ticks_to_time(RtcTicks ticks) {
-  return s_time_base + (time_t)((ticks - s_time_tick_base) / RTC_TICKS_HZ);
+static time_t prv_ticks_to_time(uint64_t ticks) {
+  return s_time_base + (time_t)((ticks - s_time_tick_base) / PBL_TICK_HZ);
 }
 
-static void prv_save_rtc_time_state(RtcTicks ticks) {
+static void prv_save_rtc_time_state(uint64_t ticks) {
   if (!s_did_init_rtc) {
     return;
   }
@@ -37,8 +37,8 @@ static void prv_save_rtc_time_state(RtcTicks ticks) {
   s_last_save_ticks = ticks;
 }
 
-RtcTicks rtc_get_ticks(void) {
-  RtcTicks ticks = pbl_uptime_ticks();
+static uint64_t prv_get_ticks(void) {
+  uint64_t ticks = pbl_uptime_ticks();
 
   if (ticks - s_last_save_ticks > SAVE_TIME_FREQUENCY) {
     prv_save_rtc_time_state(ticks);
@@ -55,14 +55,14 @@ void rtc_set_time(time_t time) {
 }
 
 time_t rtc_get_time(void) {
-  return prv_ticks_to_time(rtc_get_ticks());
+  return prv_ticks_to_time(prv_get_ticks());
 }
 
 void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  RtcTicks ticks_since_time_base = rtc_get_ticks() - s_time_tick_base;
+  uint64_t ticks_since_time_base = prv_get_ticks() - s_time_tick_base;
 
-  *out_seconds = s_time_base + (time_t)(ticks_since_time_base / RTC_TICKS_HZ);
-  *out_ms = (uint16_t)(((ticks_since_time_base % RTC_TICKS_HZ) * 1000) / RTC_TICKS_HZ);
+  *out_seconds = s_time_base + (time_t)(ticks_since_time_base / PBL_TICK_HZ);
+  *out_ms = (uint16_t)(((ticks_since_time_base % PBL_TICK_HZ) * 1000) / PBL_TICK_HZ);
 }
 
 /*** Logic that ought be refactored into rtc_common, were it not stm32-only. ***/
@@ -169,21 +169,4 @@ void rtc_init(void) {
   s_time_base = retained_read(CURRENT_TIME_REGISTER);
   s_time_tick_base = pbl_uptime_ticks();
   s_did_init_rtc = true;
-}
-
-void rtc_init_timers(void) {
-}
-
-void rtc_alarm_init(void) {
-}
-
-void rtc_alarm_set(RtcTicks num_ticks) {
-}
-
-RtcTicks rtc_alarm_get_elapsed_ticks(void) {
-  return 0;
-}
-
-bool rtc_alarm_is_initialized(void) {
-  return true;
 }

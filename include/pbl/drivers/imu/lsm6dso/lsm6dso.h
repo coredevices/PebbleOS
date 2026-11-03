@@ -70,7 +70,7 @@ typedef struct LSM6DSOState {
   /** Watchdog timer detecting a stalled INT1 stream. */
   RegularTimerInfo int1_wdt_timer;
   /** Time of the last FIFO read. */
-  RtcTicks last_fifo_read_tick;
+  uint64_t last_fifo_read_tick;
   /** Expected INT1 period in milliseconds. */
   uint32_t int1_period_ms;
   /** Number of stream recoveries performed. */
