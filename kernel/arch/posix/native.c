@@ -6,7 +6,6 @@
 #include <errno.h>
 
 #include <pbl/kernel/idle.h>
-#include <pbl/kernel/init.h>
 
 #include <kernel.h>
 #include <pbl_arch_posix.h>
@@ -27,10 +26,7 @@ void posix_add_zombie(pthread_t tid) {
 static void *prv_boot(void *arg) {
   int (*entry)(void) = arg;
   pthread_mutex_lock(&posix_cpu);
-  pbl_soc_early_init();
-  entry();
-  PBL_ASSERTN(false);
-  return nullptr;
+  kernel_init(entry);
 }
 
 void pbl_posix_start(int (*entry)(void)) {

@@ -376,8 +376,6 @@ static void prv_idle_entry(void *arg) {
 // ---- public scheduler API ---------------------------------------------------
 
 void sched_start_prepare(void) {
-  arch_init();
-
   struct pbl_thread_attr attr = {
     .name = "IDLE",
     .entry = prv_idle_entry,
