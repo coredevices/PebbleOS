@@ -8,7 +8,6 @@
 #define BT_VENDOR_ID   0x0EEA
 #define BT_VENDOR_NAME "Core Devices LLC"
 
-extern const struct pbl_uart *const DBG_UART;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern const struct pbl_uart *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY

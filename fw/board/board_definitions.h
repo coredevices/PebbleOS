@@ -21,3 +21,6 @@
 #else
 #error "Unknown board definition"
 #endif
+
+//! Console port.
+extern const struct pbl_uart *const CONSOLE_UART;

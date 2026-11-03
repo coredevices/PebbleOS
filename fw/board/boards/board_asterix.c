@@ -52,7 +52,7 @@ const struct pbl_flash *const FLASH = &s_flash.flash;
 
 PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(NRF5_GPIO_P0, 27, 0),
                      PBL_GPIO(NRF5_GPIO_P0, 5, 0), 2, nullptr);
-const struct pbl_uart *const DBG_UART = &s_uart0.uart;
+const struct pbl_uart *const CONSOLE_UART = &s_uart0.uart;
 PBL_IRQ_CONNECT(UART0_UARTE0, 7, pbl_uart_nrf5_irq_handler, &s_uart0, 0);
 /* PERIPHERAL ID 8 */
 

@@ -20,7 +20,7 @@
 #include <pbl/drivers/uart/qemu.h>
 
 PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
-const struct pbl_uart *const DBG_UART = &s_uart2.uart;
+const struct pbl_uart *const CONSOLE_UART = &s_uart2.uart;
 
 // QEMU control protocol UART (UART1)
 PBL_UART_QEMU_DEFINE(s_uart1, "uart1", QEMU_UART1_BASE, PBL_IRQN(UART1), 115200);
