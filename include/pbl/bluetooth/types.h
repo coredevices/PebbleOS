@@ -318,8 +318,8 @@ struct PBL_PACKED pbl_bt_device_internal {
     struct PBL_PACKED {
       /** Device address. */
       struct pbl_bt_addr address;
-      /** True for a BR/EDR device, false for an LE device. */
-      bool is_classic : 1;
+      /** Reserved, zero. */
+      uint8_t rsvd : 1;
       /** True if @ref address is a random address, false if it is a public address. */
       bool is_random_address : 1;
       /**

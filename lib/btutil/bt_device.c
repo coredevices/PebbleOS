@@ -10,7 +10,6 @@
 struct pbl_bt_device bt_device_init_with_address(struct pbl_bt_addr address, bool is_random) {
   struct pbl_bt_device_internal device = {
     .address = address,
-    .is_classic = false,
     .is_random_address = is_random,
   };
   return device.opaque;
@@ -40,8 +39,7 @@ bool bt_device_internal_equal(const struct pbl_bt_device_internal *device1_int,
   if (device1_int == nullptr || device2_int == nullptr) {
     return false;
   }
-  return (device1_int->is_classic == device2_int->is_classic &&
-          device1_int->is_random_address == device2_int->is_random_address &&
+  return (device1_int->is_random_address == device2_int->is_random_address &&
           bt_device_address_equal(&device1_int->address, &device2_int->address));
 }
 
