@@ -7,6 +7,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 
+PBL_DEVICE_CLASS_DEFINE(pbl_clk_controller_class, "clk");
+
 static struct pbl_clk_notifier *s_notifiers;
 
 int pbl_clk_enable(const struct pbl_clk *clk) {

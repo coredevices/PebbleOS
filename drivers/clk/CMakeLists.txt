@@ -3,6 +3,9 @@
 
 pbl_library()
 set(sources clk.c)
+if(CONFIG_CLK_SHELL)
+  list(APPEND sources shell.c)
+endif()
 if(CONFIG_CLK_SF32LB)
   list(APPEND sources sf32lb.c)
 endif()
