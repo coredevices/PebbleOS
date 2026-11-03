@@ -27,6 +27,7 @@
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
 #include <process_management/app_install_manager.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
@@ -161,7 +162,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 static bool prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE);
+  status_t rv = status_from_errno(pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE));
   bool success = rv == S_SUCCESS;
   if (!success) {
     pbl_mutex_unlock(&s_mutex);
@@ -224,7 +225,7 @@ static bool prv_timeline_remove_alarm(struct pbl_settings_file *fd, AlarmId id) 
     return false;
   } else { // size <= ALARM_ENTRY_SIZE
     uint8_t buffer[size];
-    if (pbl_settings_get(fd, &key, sizeof(key), buffer, size) == S_SUCCESS) {
+    if (pbl_settings_get(fd, &key, sizeof(key), buffer, size) == 0) {
       for (int i = 0; i < size / UUID_SIZE; i++) {
         Uuid *pinid = (Uuid *)&buffer[UUID_SIZE * i];
         if (uuid_is_invalid(pinid)) {
@@ -296,8 +297,8 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
-  status_t rv =
-      pbl_settings_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds);
+  status_t rv = status_from_errno(
+      pbl_settings_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Could not save alarm %u pin IDs: %" PRId32, alarm->id, rv);
     for (int i = 0; i < num_pin_adds; ++i) {
@@ -382,7 +383,7 @@ static void prv_persist_armed_alarm(struct pbl_settings_file *file) {
     return;
   }
   if (pbl_settings_set(file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &record,
-                       sizeof(record)) == S_SUCCESS) {
+                       sizeof(record)) == 0) {
     s_armed_record = record;
   }
 }
@@ -403,7 +404,8 @@ static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) 
     if (size == 0 || size > ALARM_ENTRY_SIZE || size % UUID_SIZE != 0) {
       continue;
     }
-    rv = pbl_settings_get(file, &key, sizeof(key), &tracked[tracked_count], size);
+    rv =
+        status_from_errno(pbl_settings_get(file, &key, sizeof(key), &tracked[tracked_count], size));
     if (rv != S_SUCCESS) {
       break;
     }
@@ -607,7 +609,7 @@ static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
 
   AlarmConfig config = {};
   const int load_size = MIN(size, (int)sizeof(config));
-  if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) == S_SUCCESS) {
+  if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) == 0) {
     if (config.hour > 23 || config.minute > 59) {
       PBL_LOG_DBG(
           "Invalid config for id %u! Blowing it out! "
@@ -1364,13 +1366,13 @@ void alarm_init(void) {
 
   uint16_t snooze_delay_value;
   if (pbl_settings_get(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
-                       &snooze_delay_value, sizeof(snooze_delay_value)) == S_SUCCESS) {
+                       &snooze_delay_value, sizeof(snooze_delay_value)) == 0) {
     s_snooze_delay_m = snooze_delay_value;
   }
 
   AlarmArmedRecord armed;
   if (pbl_settings_get(&file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &armed,
-                       sizeof(armed)) == S_SUCCESS) {
+                       sizeof(armed)) == 0) {
     s_armed_record = armed;
 
     // An alarm which was armed for a time we have already passed never got the chance to fire:

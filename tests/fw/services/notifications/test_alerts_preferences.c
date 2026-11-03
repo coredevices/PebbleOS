@@ -22,8 +22,8 @@
 static void prv_set(const char *file_name, int file_len, const char *key, size_t key_len,
                     const void *val, size_t val_len) {
   struct pbl_settings_file file = {};
-  cl_assert_equal_i(pbl_settings_open(&file, file_name, file_len), S_SUCCESS);
-  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_open(&file, file_name, file_len), 0);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), 0);
   pbl_settings_close(&file);
 }
 
@@ -40,8 +40,7 @@ static void prv_set_notification_text_size(PreferredContentSize size) {
 
 static bool prv_notification_text_size_stored(void) {
   struct pbl_settings_file file = {};
-  cl_assert_equal_i(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN), 0);
   const bool exists =
       pbl_settings_exists(&file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE));
   pbl_settings_close(&file);

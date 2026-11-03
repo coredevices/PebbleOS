@@ -186,11 +186,11 @@ static void prv_migrate_notification_content_size(struct pbl_settings_file *file
 
   s_notification_content_size = PreferredContentSizeDefault;
   struct pbl_settings_file shell_prefs = {};
-  if (pbl_settings_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+  if (pbl_settings_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
     uint8_t text_style;
     // Shell pref keys are stored with their NUL terminator.
     if (pbl_settings_get(&shell_prefs, SHELL_PREF_KEY_TEXT_STYLE, sizeof(SHELL_PREF_KEY_TEXT_STYLE),
-                         &text_style, sizeof(text_style)) == S_SUCCESS &&
+                         &text_style, sizeof(text_style)) == 0 &&
         text_style < NumPreferredContentSizes) {
       s_notification_content_size = text_style;
     }
@@ -311,11 +311,11 @@ static void prv_migrate_legacy_first_use_settings(struct pbl_settings_file *file
   bool smart_dnd_first_use_complete;
 
   // Migrate the old first use dialog prefs
-#define RESTORE_AND_DELETE_PREF(key, var)                                           \
-  do {                                                                              \
-    if (pbl_settings_get(file, key, strlen(key), &var, sizeof(var)) == S_SUCCESS) { \
-      pbl_settings_delete(file, key, strlen(key));                                  \
-    }                                                                               \
+#define RESTORE_AND_DELETE_PREF(key, var)                                   \
+  do {                                                                      \
+    if (pbl_settings_get(file, key, strlen(key), &var, sizeof(var)) == 0) { \
+      pbl_settings_delete(file, key, strlen(key));                          \
+    }                                                                       \
   } while (0)
 
   RESTORE_AND_DELETE_PREF(PREF_KEY_LEGACY_DND_MANUAL_FIRST_USE, manual_dnd_first_use_complete);
@@ -418,7 +418,7 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(struct pbl_settings_file *
 
 void alerts_preferences_init(void) {
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     return;
   }
 
@@ -427,13 +427,13 @@ void alerts_preferences_init(void) {
   // canonicalised the key length). Settings file lookups match key_len exactly,
   // so probe both lengths to remain backwards compatible with records written
   // by older firmware.
-#define RESTORE_PREF(key, var)                                                             \
-  do {                                                                                     \
-    typeof(var) _tmp;                                                                      \
-    if (pbl_settings_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS ||     \
-        pbl_settings_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-      var = _tmp;                                                                          \
-    }                                                                                      \
+#define RESTORE_PREF(key, var)                                                     \
+  do {                                                                             \
+    typeof(var) _tmp;                                                              \
+    if (pbl_settings_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == 0 ||     \
+        pbl_settings_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == 0) { \
+      var = _tmp;                                                                  \
+    }                                                                              \
   } while (0)
 
   RESTORE_PREF(PREF_KEY_MASK, s_mask);
@@ -518,7 +518,7 @@ void alerts_preferences_init(void) {
 static void prv_set_pref(const void *key, size_t key_len, const void *value, size_t value_len) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     goto cleanup;
   }
   pbl_settings_set(&file, key, key_len, value, value_len);
@@ -803,7 +803,7 @@ void alerts_preferences_dnd_set_schedule_slot(unsigned int index,
     s_dnd_schedule_slots[index].legacy = false;
   }
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) == S_SUCCESS) {
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) == 0) {
     pbl_settings_set(&file, s_dnd_schedule_slot_keys[index],
                      strlen(s_dnd_schedule_slot_keys[index]), &s_dnd_schedule_slots[index],
                      sizeof(s_dnd_schedule_slots[index]));
@@ -907,7 +907,7 @@ static void prv_reload_schedule_slot(struct pbl_settings_file *file, unsigned in
                                      const uint8_t *key, int key_len) {
   DoNotDisturbScheduleSlot slot;
   if (pbl_settings_get_len(file, key, key_len) != sizeof(slot) ||
-      pbl_settings_get(file, key, key_len, &slot, sizeof(slot)) != S_SUCCESS ||
+      pbl_settings_get(file, key, key_len, &slot, sizeof(slot)) != 0 ||
       (slot.used && !do_not_disturb_schedule_slot_is_valid(&slot))) {
     PBL_LOG_WRN("Rejecting invalid DND schedule slot %u", index);
     pbl_settings_set(file, key, key_len, &s_dnd_schedule_slots[index],
@@ -943,7 +943,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   struct pbl_settings_file file = {};
-  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     pbl_mutex_unlock(&s_mutex);
     return;
   }
@@ -952,18 +952,18 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   // key_len may or may not include the null terminator depending on BlobDB protocol
   // IMPORTANT: pbl_settings_get uses exact key_len matching, so we must use the same
   // key_len that was used when writing the record (i.e., key_len from the event)
-#define RELOAD_IF_MATCH(pref_key, var)                                               \
-  do {                                                                               \
-    size_t _pref_strlen = strlen(pref_key);                                          \
-    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) &&      \
-        memcmp(key, pref_key, _pref_strlen) == 0) {                                  \
-      typeof(var) _tmp;                                                              \
-      if (pbl_settings_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-        var = _tmp;                                                                  \
-        matched_key = pref_key;                                                      \
-      }                                                                              \
-      goto done;                                                                     \
-    }                                                                                \
+#define RELOAD_IF_MATCH(pref_key, var)                                          \
+  do {                                                                          \
+    size_t _pref_strlen = strlen(pref_key);                                     \
+    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) && \
+        memcmp(key, pref_key, _pref_strlen) == 0) {                             \
+      typeof(var) _tmp;                                                         \
+      if (pbl_settings_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == 0) {    \
+        var = _tmp;                                                             \
+        matched_key = pref_key;                                                 \
+      }                                                                         \
+      goto done;                                                                \
+    }                                                                           \
   } while (0)
 
   RELOAD_IF_MATCH(PREF_KEY_MASK, s_mask);

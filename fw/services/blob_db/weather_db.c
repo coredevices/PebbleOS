@@ -11,6 +11,8 @@
 #include <pbl/settings/settings.h>
 #include <pbl/util/units.h>
 
+#include <system/status_errno.h>
+
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_NAME "/weatherdb"
@@ -33,8 +35,8 @@ typedef struct WeatherDBIteratorData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  status_t rv = pbl_settings_open_growable(&s_weather_db.settings_file, SETTINGS_FILE_NAME,
-                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_weather_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_weather_db.mutex);
   }
@@ -142,7 +144,7 @@ status_t weather_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&s_weather_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_weather_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }
@@ -178,7 +180,7 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
     return rv;
   }
 
-  rv = pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len);
+  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -206,7 +208,8 @@ status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int 
 
   PBL_ASSERTN(key_len == sizeof(WeatherDBKey));
 
-  rv = pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len);
+  rv = status_from_errno(
+      pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len));
   if ((rv == S_SUCCESS) && !weather_db_entry_is_supported((WeatherDBEntry *)val_out)) {
     // We might as well clear out the unparseable entry
     PBL_LOG_WRN("Read an unsupported weather DB entry");
@@ -236,7 +239,7 @@ status_t weather_db_delete(const uint8_t *key, int key_len) {
     return E_DOES_NOT_EXIST;
   }
 
-  rv = pbl_settings_delete(&s_weather_db.settings_file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&s_weather_db.settings_file, key, key_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -313,7 +316,7 @@ status_t weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t 
     return rv;
   }
 
-  rv = pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len);
+  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;

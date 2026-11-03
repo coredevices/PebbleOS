@@ -25,6 +25,7 @@
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
@@ -295,21 +296,21 @@ status_t app_cache_app_launched(AppInstallId app_id) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
     AppCacheEntry entry = {};
-    rv = pbl_settings_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                          sizeof(AppCacheEntry));
+    rv = status_from_errno(pbl_settings_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                            (uint8_t *)&entry, sizeof(AppCacheEntry)));
 
     if (rv == S_SUCCESS) {
       entry.last_launch = rtc_get_time();
       entry.launch_count += 1;
 
-      rv = pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                            sizeof(AppCacheEntry));
+      rv = status_from_errno(pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                              (uint8_t *)&entry, sizeof(AppCacheEntry)));
     } else {
       app_storage_delete_app(app_id);
       pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
@@ -333,7 +334,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -417,7 +418,8 @@ static void prv_app_cache_find_and_delete_orphans(FileListEntry **resource_list)
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
 
   struct pbl_settings_file file;
-  status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+  status_t rv =
+      status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_cache_mutex);
     return;
@@ -482,7 +484,7 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -494,8 +496,8 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
       .total_size = total_size,
     };
 
-    rv = pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                          sizeof(AppCacheEntry));
+    rv = status_from_errno(pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                            (uint8_t *)&entry, sizeof(AppCacheEntry)));
 
     pbl_settings_close(&file);
 
@@ -513,7 +515,8 @@ bool app_cache_entry_exists(AppInstallId app_id) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -538,12 +541,12 @@ status_t app_cache_remove_entry(AppInstallId app_id) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
-    rv = pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    rv = status_from_errno(pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId)));
     if (rv == S_SUCCESS) {
       // Will delete an app from the filesystem.
       app_storage_delete_app(app_id);
@@ -601,7 +604,8 @@ uint32_t app_cache_get_size(void) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -650,7 +654,8 @@ AppInstallId app_cache_get_next_eviction(void) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file;
-    status_t rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }

@@ -18,6 +18,7 @@
 
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -382,7 +383,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
   prv_lock_for_file(is_notif_pref);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif_pref);
     return status;
@@ -392,7 +393,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = pbl_settings_set(&file, key, key_len, val, val_len);
+  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
 
   if (PASSED(status)) {
     // Mark as synced - the record came from the phone so it's already in sync
@@ -444,7 +445,7 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
@@ -479,13 +480,13 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = pbl_settings_get(&file, key, key_len, val_out, val_len);
+  status = status_from_errno(pbl_settings_get(&file, key, key_len, val_out, val_len));
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
@@ -516,13 +517,13 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = pbl_settings_delete(&file, key, key_len);
+  status = status_from_errno(pbl_settings_delete(&file, key, key_len));
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
@@ -583,7 +584,8 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
   // Iterate shell prefs file
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
     pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
     pbl_settings_close(&file);
@@ -592,7 +594,7 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
 
   // Iterate notif prefs file
   alerts_preferences_lock();
-  status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
   if (PASSED(status)) {
     pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
     pbl_settings_close(&file);
@@ -622,13 +624,13 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = pbl_settings_mark_synced(&file, key, key_len);
+  status = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
@@ -670,7 +672,8 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   // Check shell prefs file
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
     pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
     pbl_settings_close(&file);
@@ -680,7 +683,8 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   // If already found dirty, no need to check notif prefs
   if (!ctx.found_dirty) {
     alerts_preferences_lock();
-    status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+    status =
+        status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
     if (PASSED(status)) {
       pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
       pbl_settings_close(&file);
@@ -714,9 +718,10 @@ status_t settings_blob_db_mark_all_dirty(void) {
   // Mark shell prefs file dirty
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    status = pbl_settings_mark_all_dirty(&file);
+    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
     pbl_settings_close(&file);
     if (FAILED(status)) {
       result = status;
@@ -728,9 +733,9 @@ status_t settings_blob_db_mark_all_dirty(void) {
 
   // Mark notif prefs file dirty
   alerts_preferences_lock();
-  status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    status = pbl_settings_mark_all_dirty(&file);
+    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
     pbl_settings_close(&file);
     if (FAILED(status) && PASSED(result)) {
       result = status;
@@ -794,7 +799,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   prv_lock_for_file(is_notif_pref);
 
   struct pbl_settings_file file;
-  status_t status = pbl_settings_open(&file, file_name, file_len);
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif_pref);
     return status;
@@ -823,7 +828,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = pbl_settings_set(&file, key, key_len, val, val_len);
+  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
 
   if (PASSED(status)) {
     // Mark as synced - the record came from the phone so it's already in sync

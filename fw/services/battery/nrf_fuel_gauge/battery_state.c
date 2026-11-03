@@ -30,6 +30,7 @@
 #endif
 
 #include <nrf_fuel_gauge.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -157,7 +158,8 @@ static void prv_erase_state(void) {
   struct pbl_settings_file file;
   status_t ret;
 
-  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     return;
   }
@@ -172,7 +174,8 @@ static bool prv_load_state(void *state, size_t size) {
   struct pbl_settings_file file;
   status_t ret;
 
-  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     return false;
   }
@@ -183,7 +186,8 @@ static bool prv_load_state(void *state, size_t size) {
     return false;
   }
 
-  ret = pbl_settings_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size);
+  ret = status_from_errno(
+      pbl_settings_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size));
   pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {
@@ -205,14 +209,15 @@ static void prv_save_state(void) {
     return;
   }
 
-  ret = pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open fuel gauge settings file");
     return;
   }
 
-  ret = pbl_settings_set(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), buf,
-                         sizeof(buf));
+  ret = status_from_errno(pbl_settings_set(&file, &FUEL_GAUGE_STATE_KEY,
+                                           sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf)));
   pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {

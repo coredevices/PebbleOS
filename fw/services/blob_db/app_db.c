@@ -16,6 +16,7 @@
 
 #include <process_management/app_install_manager_private.h>
 #include <system/status_codes.h>
+#include <system/status_errno.h>
 
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
 #include <pbl/services/mic_capture.h>
@@ -47,8 +48,8 @@ struct AppDBInitData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_db.mutex, PBL_FOREVER);
-  status_t rv = pbl_settings_open_growable(&s_app_db.settings_file, SETTINGS_FILE_NAME,
-                                           SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_app_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_db.mutex);
   }
@@ -69,7 +70,7 @@ static bool prv_entry_len_valid(size_t len) {
 // its key isn't an AppInstallId.
 static uint32_t prv_read_permissions(struct pbl_settings_file *file, const Uuid *uuid) {
   uint32_t permissions;
-  if (pbl_settings_get(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions)) != S_SUCCESS) {
+  if (pbl_settings_get(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions)) != 0) {
     return 0;
   }
   return permissions;
@@ -78,10 +79,11 @@ static uint32_t prv_read_permissions(struct pbl_settings_file *file, const Uuid 
 static status_t prv_write_permissions(struct pbl_settings_file *file, const Uuid *uuid,
                                       uint32_t permissions) {
   if (permissions) {
-    return pbl_settings_set(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions));
+    return status_from_errno(
+        pbl_settings_set(file, uuid, sizeof(*uuid), &permissions, sizeof(permissions)));
   }
   if (pbl_settings_exists(file, uuid, sizeof(*uuid))) {
-    return pbl_settings_delete(file, uuid, sizeof(*uuid));
+    return status_from_errno(pbl_settings_delete(file, uuid, sizeof(*uuid)));
   }
   return S_SUCCESS;
 }
@@ -95,7 +97,8 @@ static status_t prv_read_entry(struct pbl_settings_file *file, AppInstallId id, 
     return E_INVALID_ARGUMENT;
   // Reads only the legacy part, as records written before the permissions moved can be longer.
   // The permissions are a separate lookup, done only where they're needed.
-  return pbl_settings_get(file, &id, sizeof(id), entry, APP_DB_LEGACY_ENTRY_SIZE);
+  return status_from_errno(
+      pbl_settings_get(file, &id, sizeof(id), entry, APP_DB_LEGACY_ENTRY_SIZE));
 }
 
 //! A null uuid means every app's permissions changed.
@@ -367,8 +370,8 @@ status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int 
   }
 
   if ((rv == S_SUCCESS) && !permissions_only) {
-    rv = pbl_settings_set(&s_app_db.settings_file, &app_id, sizeof(app_id), &incoming,
-                          APP_DB_LEGACY_ENTRY_SIZE);
+    rv = status_from_errno(pbl_settings_set(&s_app_db.settings_file, &app_id, sizeof(app_id),
+                                            &incoming, APP_DB_LEGACY_ENTRY_SIZE));
   }
   if ((rv == S_SUCCESS) && has_permissions) {
     rv = prv_write_permissions(&s_app_db.settings_file, &incoming.uuid, incoming.permissions);
@@ -444,7 +447,8 @@ status_t app_db_delete(const uint8_t *key, int key_len) {
   }
 
   if (rv == S_SUCCESS) {
-    rv = pbl_settings_delete(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    rv = status_from_errno(
+        pbl_settings_delete(&s_app_db.settings_file, (uint8_t *)&app_id, sizeof(AppInstallId)));
   }
   if (rv == S_SUCCESS) {
     prv_write_permissions(&s_app_db.settings_file, (const Uuid *)key, 0);
@@ -504,7 +508,7 @@ status_t app_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&s_app_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_app_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }

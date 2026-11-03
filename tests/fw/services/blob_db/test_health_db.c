@@ -10,6 +10,7 @@
 
 #include <clar.h>
 #include <fake_settings.h>
+#include <system/status_errno.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -23,7 +24,7 @@ int pbl_fs_unlink(const char *path) {
 
 status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
                         int val_len) {
-  return pbl_settings_set(nullptr, key, key_len, val, val_len);
+  return status_from_errno(pbl_settings_set(nullptr, key, key_len, val, val_len));
 }
 
 RtcTicks rtc_get_ticks(void) {

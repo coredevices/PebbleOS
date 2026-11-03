@@ -22,6 +22,7 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 
@@ -192,7 +193,7 @@ static void prv_wakeup_timer_next_pending(void) {
   {
     // Find the next event to occur
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Reset wakeup state to use for the search
       s_wakeup_state.current_wakeup_id = -1;
       s_wakeup_state.timestamp = 0;
@@ -354,7 +355,7 @@ void wakeup_init(void) {
   s_wakeup_state.timestamp = -1;
 
   struct pbl_settings_file wakeup_settings;
-  if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != S_SUCCESS) {
+  if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) != 0) {
     PBL_LOG_ERR("Error: could not open wakeup settings");
     return;
   }
@@ -434,7 +435,7 @@ static void prv_wakeup_settings_delete_entry(WakeupId wakeup_id) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       pbl_settings_delete(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId));
       pbl_settings_close(&wakeup_settings);
     }
@@ -448,7 +449,7 @@ static WakeupEntry prv_wakeup_settings_get_entry(WakeupId wakeup_id) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId), (uint8_t *)&entry,
                        sizeof(WakeupEntry));
       pbl_settings_close(&wakeup_settings);
@@ -525,7 +526,7 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Check if current app already has MAX_WAKEUP_EVENTS_PER_APP scheduled
       // or if the minute event window is already occupied
       struct prv_check_app_and_wakeup_event_s check = {
@@ -540,8 +541,9 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
         status = E_OUT_OF_RESOURCES;
       } else {
         WakeupId wakeup_id = prv_wakeup_id_alloc(&wakeup_settings);
-        status = pbl_settings_set(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
-                                  (uint8_t *)&entry, sizeof(WakeupEntry));
+        status = status_from_errno(pbl_settings_set(&wakeup_settings, (uint8_t *)&wakeup_id,
+                                                    sizeof(WakeupId), (uint8_t *)&entry,
+                                                    sizeof(WakeupEntry)));
         if (status == S_SUCCESS) {
           status = wakeup_id;
         }
@@ -589,7 +591,7 @@ PBL_SYSCALL(void, sys_wakeup_cancel_all_for_app) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Update settings file removing all events with UUID = uuid
       pbl_settings_rewrite(&wakeup_settings, prv_delete_events_by_uuid_callback, nullptr);
       pbl_settings_close(&wakeup_settings);
@@ -612,10 +614,11 @@ PBL_SYSCALL(time_t, sys_wakeup_query, (VAL, WakeupId, wakeup_id)) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Check if the wakeup id is valid by seeing if it is in the wakeup settings_file
-      status = pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
-                                (uint8_t *)&entry, sizeof(WakeupEntry));
+      status = status_from_errno(pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id,
+                                                  sizeof(WakeupId), (uint8_t *)&entry,
+                                                  sizeof(WakeupEntry)));
       pbl_settings_close(&wakeup_settings);
     } else {
       status = E_INTERNAL;
@@ -662,7 +665,7 @@ void wakeup_migrate_timezone(int utc_diff) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       pbl_settings_rewrite(&wakeup_settings, prv_migrate_events_callback, (void *)&utc_diff);
       pbl_settings_close(&wakeup_settings);
     } else {
@@ -679,7 +682,7 @@ static void prv_wakeup_rewrite_kernel_bg_cb(void *data) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file wakeup_settings;
-    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == S_SUCCESS) {
+    if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Update each wakeup entry via prv_update_events_callback and record any missed events
       pbl_settings_rewrite(&wakeup_settings, prv_update_events_callback, &missed_events);
       pbl_settings_close(&wakeup_settings);

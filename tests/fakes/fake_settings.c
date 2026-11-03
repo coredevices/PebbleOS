@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -32,20 +33,20 @@ void fake_settings_reset(void) {
   s_settings_file.open = false;
 }
 
-status_t pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len,
-                          void *val_out, size_t val_out_len) {
+int pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len, void *val_out,
+                     size_t val_out_len) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     memcpy(val_out, s_settings_file.values[key_crc8], val_out_len);
-    return S_SUCCESS;
+    return 0;
   }
 
   memset(val_out, 0, val_out_len);
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
-                          const void *val, size_t val_len) {
+int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                     const void *val, size_t val_len) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -63,7 +64,7 @@ status_t pbl_settings_set(struct pbl_settings_file *file, const void *key, size_
   s_settings_file.val_lens[key_crc8] = val_len;
   s_settings_file.key_lens[key_crc8] = key_len;
   s_settings_file.dirty[key_crc8] = true;
-  return S_SUCCESS;
+  return 0;
 }
 
 size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
@@ -75,7 +76,7 @@ size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, siz
   return 0;
 }
 
-status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len) {
+int pbl_settings_delete(struct pbl_settings_file *file, const void *key, size_t key_len) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     free(s_settings_file.values[key_crc8]);
@@ -85,30 +86,30 @@ status_t pbl_settings_delete(struct pbl_settings_file *file, const void *key, si
     s_settings_file.val_lens[key_crc8] = 0;
     s_settings_file.key_lens[key_crc8] = 0;
     s_settings_file.dirty[key_crc8] = false;
-    return S_SUCCESS;
+    return 0;
   } else {
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
 }
 
-status_t pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space) {
+int pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space) {
   if (s_settings_file.open) {
-    return E_BUSY;
+    return -EBUSY;
   } else {
     *file = (struct pbl_settings_file){};
     s_settings_file.open = true;
-    return S_SUCCESS;
+    return 0;
   }
 }
 
-status_t pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
-                                    int max_used_space, int initial_alloc_size) {
+int pbl_settings_open_growable(struct pbl_settings_file *file, const char *name, int max_used_space,
+                               int initial_alloc_size) {
   return pbl_settings_open(file, name, max_used_space);
 }
 
-status_t pbl_settings_compact(struct pbl_settings_file *file) {
+int pbl_settings_compact(struct pbl_settings_file *file) {
   cl_assert(s_settings_file.open);
-  return S_SUCCESS;
+  return 0;
 }
 
 void pbl_settings_close(struct pbl_settings_file *file) {
@@ -122,24 +123,24 @@ bool pbl_settings_exists(struct pbl_settings_file *file, const void *key, size_t
           memcmp(s_settings_file.keys[key_crc8], key, key_len) == 0);
 }
 
-status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len) {
+int pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     s_settings_file.dirty[key_crc8] = false;
-    return S_SUCCESS;
+    return 0;
   }
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
-                               size_t offset, uint8_t byte) {
+int pbl_settings_set_byte(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          size_t offset, uint8_t byte) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
     uint8_t *val_bytes = s_settings_file.values[key_crc8];
     val_bytes[offset] &= byte;
-    return S_SUCCESS;
+    return 0;
   } else {
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
 }
 
@@ -170,15 +171,15 @@ void pbl_settings_each(struct pbl_settings_file *file, pbl_settings_each_cb_t cb
   }
 }
 
-status_t pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
-                              void *context) {
+int pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb_t cb,
+                         void *context) {
   // TODO
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
-                                       pbl_settings_filter_cb_t filter_cb, void *context) {
+int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                  pbl_settings_filter_cb_t filter_cb, void *context) {
   for (unsigned i = 0; i < UINT8_MAX; ++i) {
     if (s_settings_file.keys[i] == nullptr || s_settings_file.values[i] == nullptr) {
       continue;
@@ -195,5 +196,5 @@ status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
     s_settings_file.key_lens[i] = 0;
     s_settings_file.dirty[i] = false;
   }
-  return S_SUCCESS;
+  return 0;
 }

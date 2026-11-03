@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/services/comm_session/app_session_capabilities.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/settings/settings.h>
@@ -28,15 +30,15 @@ CommSessionCapability comm_session_get_capabilities(CommSession *session) {
 }
 
 FAKE_VALUE_FUNC(CommSession *, comm_session_get_current_app_session);
-FAKE_VALUE_FUNC(status_t, pbl_settings_open, struct pbl_settings_file *, const char *, int);
+FAKE_VALUE_FUNC(int, pbl_settings_open, struct pbl_settings_file *, const char *, int);
 FAKE_VOID_FUNC(pbl_settings_close, struct pbl_settings_file *);
-FAKE_VALUE_FUNC(status_t, pbl_settings_get, struct pbl_settings_file *, const void *, size_t,
-                void *, size_t);
-FAKE_VALUE_FUNC(status_t, pbl_settings_set, struct pbl_settings_file *, const void *, size_t,
+FAKE_VALUE_FUNC(int, pbl_settings_get, struct pbl_settings_file *, const void *, size_t, void *,
+                size_t);
+FAKE_VALUE_FUNC(int, pbl_settings_set, struct pbl_settings_file *, const void *, size_t,
                 const void *, size_t);
-FAKE_VALUE_FUNC(status_t, pbl_settings_delete, struct pbl_settings_file *, const void *, size_t);
-FAKE_VALUE_FUNC(status_t, pbl_settings_rewrite, struct pbl_settings_file *,
-                pbl_settings_rewrite_cb_t, void *);
+FAKE_VALUE_FUNC(int, pbl_settings_delete, struct pbl_settings_file *, const void *, size_t);
+FAKE_VALUE_FUNC(int, pbl_settings_rewrite, struct pbl_settings_file *, pbl_settings_rewrite_cb_t,
+                void *);
 
 #define FAKES(FAKE)                          \
   FAKE(comm_session_get_current_app_session) \
@@ -48,18 +50,18 @@ FAKE_VALUE_FUNC(status_t, pbl_settings_rewrite, struct pbl_settings_file *,
   FAKE(pbl_settings_rewrite)
 
 static uint64_t s_get_value;
-static status_t prv_settings_file_get(struct pbl_settings_file *file, const void *key,
-                                      size_t key_len, void *val_out, size_t val_out_len) {
+static int prv_settings_file_get(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                 void *val_out, size_t val_out_len) {
   *((uint64_t *)val_out) = s_get_value;
-  return S_SUCCESS;
+  return 0;
 }
 
 static uint64_t s_set_value;
-static status_t prv_settings_file_set(struct pbl_settings_file *file, const void *key,
-                                      size_t key_len, const void *val, size_t val_len) {
+static int prv_settings_file_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                 const void *val, size_t val_len) {
   cl_assert_equal_i(val_len, sizeof(uint64_t));
   s_set_value = *(uint64_t *)val;
-  return S_SUCCESS;
+  return 0;
 }
 
 static void prv_set_cache(uint64_t value) {
@@ -78,7 +80,7 @@ static CommSession *s_fake_app_session = (CommSession *)~0;
 void test_app_session_capabilities__initialize(void) {
   FAKES(RESET_FAKE);
   FFF_RESET_HISTORY();
-  pbl_settings_get_fake.return_val = E_DOES_NOT_EXIST;
+  pbl_settings_get_fake.return_val = -ENOENT;
   pbl_settings_set_fake.custom_fake = prv_settings_file_set;
   s_app_md = (PebbleProcessMd){};
 }

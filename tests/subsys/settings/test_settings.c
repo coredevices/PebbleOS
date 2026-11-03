@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -21,7 +22,7 @@
 
 // Tests
 ////////////////////////////////////
-extern status_t pbl_settings_compact(struct pbl_settings_file *file);
+extern int pbl_settings_compact(struct pbl_settings_file *file);
 
 void test_settings__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
@@ -59,7 +60,7 @@ static void verify(struct pbl_settings_file *file, uint8_t *key, int key_len, ui
   const bool is_immediate_delete = (val_len == 0);
   uint8_t *val_out = malloc(val_len_out);
   cl_assert_equal_i(pbl_settings_get(file, key, key_len, val_out, val_len_out),
-                    is_immediate_delete ? E_DOES_NOT_EXIST : S_SUCCESS);
+                    is_immediate_delete ? -ENOENT : 0);
   if (!is_immediate_delete) {
     cl_assert_equal_m(val, val_out, val_len);
   }
@@ -225,11 +226,11 @@ void test_settings__max_storage(void) {
   printf("Making sure we handle running out of storage gracefully...\n");
   memcpy(key, "k255", 5);
   memcpy(val, "v255", 5);
-  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), -ENOSPC);
   int val_len_out = pbl_settings_get_len(&file, key, key_len);
   cl_must_pass(val_len_out);
   uint8_t *val_out = malloc(val_len_out);
-  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), -ENOENT);
   free(val_out);
   printf("Making sure we can delete when at max storage...\n");
   memcpy(key, "k000", 5);
@@ -260,11 +261,11 @@ void test_settings__max_storage_with_delete(void) {
   printf("Making sure we handle running out of storage gracefully...\n");
   memcpy(key, "k255", 5);
   memcpy(val, "v255", 5);
-  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), E_OUT_OF_STORAGE);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), -ENOSPC);
   int val_len_out = pbl_settings_get_len(&file, key, key_len);
   cl_must_pass(val_len_out);
   uint8_t *val_out = malloc(val_len_out);
-  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pbl_settings_get(&file, key, key_len, val_out, val_len_out), -ENOENT);
   free(val_out);
 }
 
@@ -449,8 +450,8 @@ static bool prv_each_cb(struct pbl_settings_file *file, struct pbl_settings_reco
   uint8_t *counts = (uint8_t *)context;
   counts[key_i]++;
 
-  status_t result = pbl_settings_get(file, key, info->key_len, val, info->val_len);
-  cl_assert_equal_i(result, S_SUCCESS);
+  int result = pbl_settings_get(file, key, info->key_len, val, info->val_len);
+  cl_assert_equal_i(result, 0);
 
   int val_i = atoi((char *)val + 1);
   cl_assert_equal_i(key_i, val_i);
@@ -636,7 +637,7 @@ void test_settings__growable_auto_growth(void) {
   pbl_settings_close(&file);
 }
 
-// Test that a growable file returns E_OUT_OF_STORAGE when the enforcement cap is hit.
+// Test that a growable file returns -ENOSPC when the enforcement cap is hit.
 void test_settings__growable_enforces_cap(void) {
   printf("\nTesting growable file cap enforcement...\n");
 
@@ -657,12 +658,12 @@ void test_settings__growable_enforces_cap(void) {
   for (i = 0; i < 100; i++) {
     snprintf((char *)key, sizeof(key), "k%03d", i);
     val[0] = (uint8_t)i;
-    status_t status = pbl_settings_set(&file, key, key_len, val, val_len);
-    if (status == E_OUT_OF_STORAGE) {
+    int ret = pbl_settings_set(&file, key, key_len, val, val_len);
+    if (ret == -ENOSPC) {
       printf("Hit storage cap at record %d\n", i);
       break;
     }
-    cl_must_pass(status);
+    cl_must_pass(ret);
   }
 
   // We should have hit the cap before writing 100 records
@@ -958,7 +959,7 @@ void test_settings__rewrite_filtered_oom(void) {
   // Compaction under OOM must fail without crashing and without touching
   // the on-disk file.
   stub_pbl_malloc_set_should_fail(true);
-  cl_assert_equal_i(E_OUT_OF_MEMORY, pbl_settings_compact(&file));
+  cl_assert_equal_i(-ENOMEM, pbl_settings_compact(&file));
   stub_pbl_malloc_set_should_fail(false);
 
   // The file must still be open and intact.

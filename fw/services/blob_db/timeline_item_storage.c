@@ -7,6 +7,8 @@
 #include <pbl/services/blob_db/timeline_item_storage.h>
 #include <pbl/util/units.h>
 
+#include <system/status_errno.h>
+
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define MAX_CHILDREN_PER_PIN 3
@@ -202,7 +204,7 @@ status_t timeline_item_storage_delete_with_parent(
   status_t rv = S_SUCCESS;
   for (int i = 0; i < info.num_children; ++i) {
     const void *key = &info.children_ids[i];
-    rv = pbl_settings_delete(&storage->file, key, sizeof(Uuid));
+    rv = status_from_errno(pbl_settings_delete(&storage->file, key, sizeof(Uuid)));
 
     if (rv != S_SUCCESS) {
       goto cleanup;
@@ -235,8 +237,8 @@ void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, ui
     .max_item_age = max_age,
   };
   pbl_mutex_init(&storage->mutex);
-  status_t rv =
-      pbl_settings_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8));
+  status_t rv = status_from_errno(
+      pbl_settings_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8)));
   if (FAILED(rv)) {
     PBL_LOG_ERR("Unable to create settings file %s, rv = %" PRId32 "!", filename, rv);
   }
@@ -248,7 +250,7 @@ void timeline_item_storage_deinit(TimelineItemStorage *storage) {
 
 status_t timeline_item_storage_compact(TimelineItemStorage *storage) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = pbl_settings_compact(&storage->file);
+  status_t rv = status_from_errno(pbl_settings_compact(&storage->file));
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
@@ -282,7 +284,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
   hdr->common.status = ~hdr->common.status;
 
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = pbl_settings_set(&storage->file, key, key_len, val, val_len);
+  status_t rv = status_from_errno(pbl_settings_set(&storage->file, key, key_len, val, val_len));
 
   // Restore flags & status
   hdr->common.flags = ~hdr->common.flags;
@@ -313,7 +315,7 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t 
 
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = pbl_settings_get(&storage->file, key, key_len, val_out, val_len);
+  status_t rv = status_from_errno(pbl_settings_get(&storage->file, key, key_len, val_out, val_len));
 
   // Restore flags & status
   SerializedTimelineItemHeader *hdr = (SerializedTimelineItemHeader *)val_out;
@@ -352,7 +354,8 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, con
   int offset = offsetof(SerializedTimelineItemHeader, common.status);
   // Invert status to store on flash
   status = ~status;
-  status_t rv = pbl_settings_set_byte(&storage->file, key, key_len, offset, status);
+  status_t rv =
+      status_from_errno(pbl_settings_set_byte(&storage->file, key, key_len, offset, status));
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
@@ -366,7 +369,7 @@ status_t timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_
 
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = pbl_settings_delete(&storage->file, key, key_len);
+  status_t rv = status_from_errno(pbl_settings_delete(&storage->file, key, key_len));
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
@@ -380,7 +383,7 @@ status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const u
 
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = pbl_settings_mark_synced(&storage->file, key, key_len);
+  status_t rv = status_from_errno(pbl_settings_mark_synced(&storage->file, key, key_len));
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
@@ -399,7 +402,8 @@ static bool prv_flush_filter_cb(void *key, size_t key_len, void *val, size_t val
 
 status_t timeline_item_storage_flush(TimelineItemStorage *storage) {
   RtcTicks lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = pbl_settings_rewrite_filtered(&storage->file, prv_flush_filter_cb, nullptr);
+  status_t rv = status_from_errno(
+      pbl_settings_rewrite_filtered(&storage->file, prv_flush_filter_cb, nullptr));
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }

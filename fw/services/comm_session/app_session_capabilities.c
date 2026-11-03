@@ -8,6 +8,7 @@
 
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
+#include <system/status_errno.h>
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILENAME "/app_comm"
 
@@ -16,8 +17,8 @@
 static PBL_MUTEX_DEFINE(s_mutex);
 
 static status_t prv_open(struct pbl_settings_file *settings_file) {
-  return pbl_settings_open(settings_file, APP_SESSION_CAPABILITIES_CACHE_FILENAME,
-                           APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE);
+  return status_from_errno(pbl_settings_open(settings_file, APP_SESSION_CAPABILITIES_CACHE_FILENAME,
+                                             APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE));
 }
 
 static status_t prv_open_locked(struct pbl_settings_file *settings_file) {

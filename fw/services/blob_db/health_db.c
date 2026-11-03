@@ -87,8 +87,8 @@ static_assert(sizeof(HeartRateZoneData) % sizeof(uint32_t) == 0,
 static status_t prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv =
-      pbl_settings_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, PBL_KIB(8));
+  status_t rv = status_from_errno(
+      pbl_settings_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, PBL_KIB(8)));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open settings file");
     pbl_mutex_unlock(&s_mutex);
@@ -196,7 +196,8 @@ bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, in
 
   // We cheat a bit here because the only typical values we store are sleep related
   SleepData data;
-  status_t s = pbl_settings_get(&file, key, key_len, (uint8_t *)&data, sizeof(data));
+  status_t s =
+      status_from_errno(pbl_settings_get(&file, key, key_len, (uint8_t *)&data, sizeof(data)));
 
   prv_file_close_and_unlock(&file);
 
@@ -258,7 +259,8 @@ bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_o
       (metric == ActivityMetricStepCount) ? STEP_AVERAGE_KEY_SUFFIX : SLEEP_AVERAGE_KEY_SUFFIX);
   const int key_len = strlen(key);
 
-  status_t s = pbl_settings_get(&file, key, key_len, value_out, sizeof(uint32_t));
+  status_t s =
+      status_from_errno(pbl_settings_get(&file, key, key_len, value_out, sizeof(uint32_t)));
 
   prv_file_close_and_unlock(&file);
   return (s == S_SUCCESS);
@@ -284,7 +286,8 @@ bool health_db_get_typical_step_averages(enum pbl_weekday day, ActivityMetricAve
   snprintf(key, HEALTH_DB_MAX_KEY_LEN, "%s%s", WEEKDAY_NAMES[day], STEP_TYPICALS_KEY_SUFFIX);
   const int key_len = strlen(key);
 
-  status_t s = pbl_settings_get(&file, key, key_len, averages->average, sizeof(averages->average));
+  status_t s = status_from_errno(
+      pbl_settings_get(&file, key, key_len, averages->average, sizeof(averages->average)));
 
   prv_file_close_and_unlock(&file);
   return (s == S_SUCCESS);
@@ -337,7 +340,7 @@ status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, i
       return rv;
     }
 
-    rv = pbl_settings_set(&file, key, key_len, val, val_len);
+    rv = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
     prv_file_close_and_unlock(&file);
   }
 
@@ -375,7 +378,7 @@ status_t health_db_read(const uint8_t *key, int key_len, uint8_t *value_out, int
     return rv;
   }
 
-  rv = pbl_settings_get(&file, key, key_len, value_out, value_out_len);
+  rv = status_from_errno(pbl_settings_get(&file, key, key_len, value_out, value_out_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -393,7 +396,7 @@ status_t health_db_delete(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  rv = pbl_settings_delete(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -413,7 +416,7 @@ status_t health_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = pbl_settings_compact(&file);
+  rv = status_from_errno(pbl_settings_compact(&file));
   prv_file_close_and_unlock(&file);
   return rv;
 }
