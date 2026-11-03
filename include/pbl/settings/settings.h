@@ -277,24 +277,39 @@ status_t pbl_settings_mark_synced(struct pbl_settings_file *file, const void *ke
 status_t pbl_settings_mark_all_dirty(struct pbl_settings_file *file);
 
 /**
- * @brief Callback invoked after a record is written.
+ * @brief Callback invoked after a record of a watched file is written.
  *
- * @param file Settings file that was modified.
+ * Runs with the file still open: it must not open the same file again.
+ *
  * @param key Key that was written.
  * @param key_len Length of @p key in bytes.
  * @param last_modified Timestamp of the change.
+ * @param user_data User data of the watch.
  */
-typedef void (*pbl_settings_change_cb_t)(struct pbl_settings_file *file, const void *key,
-                                         size_t key_len, uint32_t last_modified);
+typedef void (*pbl_settings_change_cb_t)(const void *key, size_t key_len, uint32_t last_modified,
+                                         void *user_data);
+
+/** @brief Watch on the changes to a settings file. */
+struct pbl_settings_watch {
+  /** Name of the watched file, as passed to pbl_settings_open(). */
+  const char *name;
+  /** Callback. */
+  pbl_settings_change_cb_t cb;
+  /** User data passed to @ref cb. */
+  void *user_data;
+  /** Next watch, internal. */
+  struct pbl_settings_watch *next;
+};
 
 /**
- * @brief Register the callback invoked after any record of any settings file is written.
+ * @brief Register a watch on the changes to a settings file.
  *
- * Only one callback is supported; registering replaces the previous one.
+ * Meant to be called at initialization, before the file is written. The watch must stay valid
+ * forever. Several watches may be registered, also on the same file.
  *
- * @param callback Callback, or NULL to unregister.
+ * @param watch Watch, with @ref pbl_settings_watch::name and @ref pbl_settings_watch::cb set.
  */
-void pbl_settings_set_change_callback(pbl_settings_change_cb_t callback);
+void pbl_settings_watch_add(struct pbl_settings_watch *watch);
 
 /**
  * @brief Write a single byte of a value in place.
