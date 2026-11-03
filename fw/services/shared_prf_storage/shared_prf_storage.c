@@ -657,39 +657,6 @@ void shared_prf_storage_set_getting_started_complete(bool set) {
 }
 
 //!
-//! Legacy Stubs for BT Classic - Should never be called so assert if they are!
-//!
-
-bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
-                                                    char *device_name_out,
-                                                    struct pbl_bt_sm_key *link_key_out,
-                                                    uint8_t *platform_bits) {
-  pbl_panic();
-}
-
-void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr,
-                                                      const char *device_name,
-                                                      struct pbl_bt_sm_key *link_key,
-                                                      uint8_t platform_bits) {
-  pbl_panic();
-}
-
-void shared_prf_storage_store_platform_bits(uint8_t platform_bits) {
-  pbl_panic();
-}
-
-void shared_prf_storage_erase_bt_classic_pairing_data(void) {
-  pbl_panic();
-}
-
-void shared_prf_store_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info,
-                                   const char *device_name_ble, struct pbl_bt_addr *addr,
-                                   const char *device_name_classic, struct pbl_bt_sm_key *link_key,
-                                   uint8_t platform_bits) {
-  pbl_panic();
-}
-
-//!
 //! Unit test functions
 //!
 
