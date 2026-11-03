@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config LOADER
+    bool "Loader"
+    help
+      Loader for position-independent images with absolute
+      relocations.
+
+if LOADER
+
+module = LOADER
+module-str = Loader
+source "subsys/logging/Kconfig.template.log_level"
+
+endif
