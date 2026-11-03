@@ -975,3 +975,42 @@ void test_settings__rewrite_filtered_oom(void) {
   verify(&file, key, key_len, val, val_len);
   pbl_settings_close(&file);
 }
+
+static int s_watch_calls;
+static uint8_t s_watch_key[8];
+static size_t s_watch_key_len;
+
+static void prv_watch_cb(const void *key, size_t key_len, uint32_t last_modified, void *user_data) {
+  cl_assert_equal_p(user_data, &s_watch_calls);
+  memcpy(s_watch_key, key, key_len);
+  s_watch_key_len = key_len;
+  s_watch_calls++;
+}
+
+void test_settings__watch(void) {
+  static struct pbl_settings_watch watch = {
+    .name = "/test_watch",
+    .cb = prv_watch_cb,
+    .user_data = &s_watch_calls,
+  };
+  pbl_settings_watch_add(&watch);
+
+  struct pbl_settings_file watched, other;
+  cl_must_pass(pbl_settings_open(&watched, "/test_watch", 4096));
+  cl_must_pass(pbl_settings_open(&other, "/test_watch_other", 4096));
+
+  uint8_t val = 1;
+  cl_must_pass(pbl_settings_set(&other, "key", 3, &val, sizeof(val)));
+  cl_assert_equal_i(s_watch_calls, 0);
+
+  cl_must_pass(pbl_settings_set(&watched, "key", 3, &val, sizeof(val)));
+  cl_assert_equal_i(s_watch_calls, 1);
+  cl_assert_equal_i(s_watch_key_len, 3);
+  cl_assert_equal_m(s_watch_key, "key", 3);
+
+  cl_must_pass(pbl_settings_delete(&watched, "key", 3));
+  cl_assert_equal_i(s_watch_calls, 2);
+
+  pbl_settings_close(&other);
+  pbl_settings_close(&watched);
+}

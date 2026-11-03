@@ -22,8 +22,7 @@
 
 PBL_LOG_MODULE_DEFINE(settings, CONFIG_SETTINGS_LOG_LEVEL);
 
-// Callback for settings changes (used by settings_sync)
-static pbl_settings_change_cb_t s_change_callback = nullptr;
+static struct pbl_settings_watch *s_watches;
 
 static status_t bootup_check(struct pbl_settings_file *file);
 static void compute_stats(struct pbl_settings_file *file);
@@ -319,8 +318,9 @@ status_t pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
   return status;
 }
 
-void pbl_settings_set_change_callback(pbl_settings_change_cb_t callback) {
-  s_change_callback = callback;
+void pbl_settings_watch_add(struct pbl_settings_watch *watch) {
+  watch->next = s_watches;
+  s_watches = watch;
 }
 
 status_t pbl_settings_compact(struct pbl_settings_file *file) {
@@ -591,9 +591,10 @@ static status_t prv_settings_file_set_internal(struct pbl_settings_file *file, c
     file->used_space -= record_size(&file->iter.hdr);
   }
 
-  // Notify change callback if registered (for settings sync)
-  if (s_change_callback) {
-    s_change_callback(file, key, key_len, new_hdr.last_modified);
+  for (struct pbl_settings_watch *w = s_watches; w != nullptr; w = w->next) {
+    if (strcmp(w->name, file->name) == 0) {
+      w->cb(key, key_len, new_hdr.last_modified, w->user_data);
+    }
   }
 
   return S_SUCCESS;

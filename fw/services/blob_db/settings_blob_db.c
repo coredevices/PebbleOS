@@ -162,6 +162,11 @@ static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_p
 
 static bool s_initialized = false;
 
+struct prv_syncable_keys {
+  const char **keys;
+  size_t num_keys;
+};
+
 //! Check if the connected phone supports Settings BlobDB sync
 //! Returns true if the phone advertises settings_sync_support capability
 bool settings_blob_db_phone_supports_sync(void) {
@@ -286,15 +291,17 @@ static void prv_deferred_sync_callback(void *data) {
 //!
 //! This callback is coalesced - multiple setting changes result in at most one
 //! queued callback, preventing system task queue overflow.
-static void prv_settings_change_callback(struct pbl_settings_file *file, const void *key,
-                                         size_t key_len, uint32_t last_modified) {
+static void prv_settings_change_callback(const void *key, size_t key_len, uint32_t last_modified,
+                                         void *user_data) {
+  const struct prv_syncable_keys *syncable = user_data;
+
   // Skip callback if suppressed (during phone-originated INSERTs)
   if (s_suppress_change_callback) {
     return;
   }
 
   // Only sync whitelisted settings
-  if (!prv_is_syncable((const uint8_t *)key, key_len)) {
+  if (!prv_is_key_in_list((const uint8_t *)key, key_len, syncable->keys, syncable->num_keys)) {
     return;
   }
 
@@ -307,6 +314,28 @@ static void prv_settings_change_callback(struct pbl_settings_file *file, const v
   system_task_add_callback(prv_deferred_sync_callback, nullptr);
 }
 
+static const struct prv_syncable_keys s_shell_prefs_keys = {
+  .keys = s_syncable_settings,
+  .num_keys = ARRAY_LENGTH(s_syncable_settings),
+};
+
+static const struct prv_syncable_keys s_notif_prefs_keys = {
+  .keys = s_syncable_notif_prefs,
+  .num_keys = ARRAY_LENGTH(s_syncable_notif_prefs),
+};
+
+static struct pbl_settings_watch s_shell_prefs_watch = {
+  .name = SHELL_PREFS_FILE_NAME,
+  .cb = prv_settings_change_callback,
+  .user_data = (void *)&s_shell_prefs_keys,
+};
+
+static struct pbl_settings_watch s_notif_prefs_watch = {
+  .name = NOTIF_PREFS_FILE_NAME,
+  .cb = prv_settings_change_callback,
+  .user_data = (void *)&s_notif_prefs_keys,
+};
+
 // BlobDB Interface Implementation
 
 void settings_blob_db_init(void) {
@@ -314,8 +343,9 @@ void settings_blob_db_init(void) {
     return;
   }
 
-  // Register callback to sync settings immediately when they change
-  pbl_settings_set_change_callback(prv_settings_change_callback);
+  // Sync settings as soon as they change
+  pbl_settings_watch_add(&s_shell_prefs_watch);
+  pbl_settings_watch_add(&s_notif_prefs_watch);
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
