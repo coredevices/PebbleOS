@@ -117,53 +117,6 @@ bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_o
 void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address);
 
 /**
- * @brief Get a BT Classic pairing.
- *
- * BT Classic is not supported: asserts if called.
- *
- * @param[out] addr_out Remote address.
- * @param[out] device_name_out Remote device name.
- * @param[out] link_key_out Link key.
- * @param[out] platform_bits Remote platform bits.
- * @return Does not return.
- */
-bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
-                                                    char *device_name_out,
-                                                    struct pbl_bt_sm_key *link_key_out,
-                                                    uint8_t *platform_bits);
-
-/**
- * @brief Store a BT Classic pairing.
- *
- * BT Classic is not supported: asserts if called.
- *
- * @param addr Remote address.
- * @param device_name Remote device name.
- * @param link_key Link key.
- * @param platform_bits Remote platform bits.
- */
-void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr,
-                                                      const char *device_name,
-                                                      struct pbl_bt_sm_key *link_key,
-                                                      uint8_t platform_bits);
-
-/**
- * @brief Store the BT Classic remote platform bits.
- *
- * BT Classic is not supported: asserts if called.
- *
- * @param platform_bits Remote platform bits.
- */
-void shared_prf_storage_store_platform_bits(uint8_t platform_bits);
-
-/**
- * @brief Erase the BT Classic pairing.
- *
- * BT Classic is not supported: asserts if called.
- */
-void shared_prf_storage_erase_bt_classic_pairing_data(void);
-
-/**
  * @brief Check whether onboarding (getting started) has been completed.
  *
  * @return true if completed.

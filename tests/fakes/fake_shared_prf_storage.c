@@ -69,27 +69,6 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//! BT Classic Pairing Data
-
-bool shared_prf_storage_get_bt_classic_pairing_data(struct pbl_bt_addr *addr_out,
-                                                    char *device_name_out,
-                                                    struct pbl_bt_sm_key *link_key_out,
-                                                    uint8_t *platform_bits) {
-  return false;
-}
-
-void shared_prf_storage_store_bt_classic_pairing_data(struct pbl_bt_addr *addr, char *device_name,
-                                                      struct pbl_bt_sm_key *link_key,
-                                                      uint8_t platform_bits) {
-}
-
-void shared_prf_storage_store_platform_bits(uint8_t platform_bits) {
-}
-
-void shared_prf_storage_erase_bt_classic_pairing_data(void) {
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Getting Started Is Complete
 
 bool shared_prf_storage_get_getting_started_complete(void) {
