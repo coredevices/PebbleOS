@@ -70,6 +70,9 @@ jobs:
         # not hide the rest. The job still fails if anything failed.
         run: pbl test
 
+      - name: Run console host tests
+        run: python -m pytest tools/libs/pbl-console/tests
+
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v6
         if: (!cancelled())
