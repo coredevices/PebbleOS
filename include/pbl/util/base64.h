@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * @defgroup util_base64 Base64
@@ -26,5 +27,20 @@
  * @return Length of the encoding, excluding the NUL terminator.
  */
 size_t pbl_base64_encode(char *out, size_t out_len, const void *data, size_t data_len);
+
+/**
+ * @brief Decode standard (RFC 4648) padded base64.
+ *
+ * @p out may be the same buffer as @p data, as decoding never gets ahead of its input.
+ *
+ * @param[out] out Output buffer.
+ * @param out_len Size of @p out in bytes.
+ * @param data Text to decode.
+ * @param data_len Length of @p data, a multiple of 4.
+ * @return Number of bytes decoded.
+ * @retval -EINVAL @p data is not valid base64.
+ * @retval -ENOSPC @p out is too small.
+ */
+int pbl_base64_decode(uint8_t *out, size_t out_len, const char *data, size_t data_len);
 
 /** @} */
