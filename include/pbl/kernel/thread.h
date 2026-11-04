@@ -88,7 +88,7 @@ struct pbl_thread_attr {
   void *stack;
   /** Stack size in bytes, at least 128. */
   size_t stack_size;
-  /** MPU regions switched in with the thread. NULL entries are ignored. */
+  /** MPU regions switched in with the thread. NULL entries take the default region. */
   const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS];
 #ifdef CONFIG_USERSPACE
   /**
@@ -260,12 +260,25 @@ static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
 /**
  * @brief Replace the MPU regions of a thread.
  *
- * Used for the idle thread, whose regions cannot be passed at creation.
+ * Used for threads whose regions cannot be passed at creation. A running thread gets them when
+ * it is next switched in.
  *
  * @param t Thread.
- * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions; NULL entries are ignored.
+ * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions; NULL entries take the default
+ *                region.
  */
 void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
+
+/**
+ * @brief Set the regions of threads that do not specify their own.
+ *
+ * Must be called from the first thread, before it creates any other: the idle thread and the
+ * caller get these regions too, the caller when it is next switched in.
+ *
+ * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions, which must stay valid; NULL
+ *                entries leave the slot empty.
+ */
+void pbl_thread_regions_default_set(const MpuRegion *const *regions);
 
 /**
  * @brief Read a thread-local pointer slot.

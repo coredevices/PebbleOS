@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/kernel/thread.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
@@ -269,6 +270,15 @@ const MpuRegion *memory_layout_get_kernel_main_stack_guard_region(void) {
 
 const MpuRegion *memory_layout_get_kernel_bg_stack_guard_region(void) {
   return &s_kernel_bg_stack_guard_region;
+}
+
+void memory_layout_thread_regions_init(void) {
+  // SF32LB52 caches this memory through the background map but not through these
+  // inner-shareable regions, so an access without them can leave dirty lines the
+  // process never sees, or read stale ones. Every thread has to use them, as ISRs
+  // inherit the regions of the thread they interrupt.
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&s_app_region, &s_worker_region};
+  pbl_thread_regions_default_set(regions);
 }
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {

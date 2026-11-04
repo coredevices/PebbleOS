@@ -8,6 +8,15 @@
 #define STACK_FILL 0xa5a5a5a5u
 
 static uint32_t s_next_id;
+static const MpuRegion *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
+
+static void prv_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
+  const MpuRegion *merged[PBL_THREAD_MAX_MEM_REGIONS];
+  for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
+    merged[i] = (regions != nullptr && regions[i] != nullptr) ? regions[i] : s_default_regions[i];
+  }
+  arch_thread_regions_set(t, merged);
+}
 
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) {
   PBL_ASSERTN(attr->stack != nullptr && attr->stack_size >= 128);
@@ -36,7 +45,7 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   }
 
   arch_thread_init(t, attr->entry, attr->arg);
-  arch_thread_regions_set(t, attr->regions);
+  prv_regions_set(t, attr->regions);
 
   pbl_irq_lock();
   sched_thread_start(t);
@@ -97,6 +106,18 @@ enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
 
 void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
   pbl_irq_lock();
-  arch_thread_regions_set(t, regions);
+  prv_regions_set(t, regions);
+  pbl_irq_unlock();
+}
+
+void pbl_thread_regions_default_set(const MpuRegion *const *regions) {
+  pbl_irq_lock();
+  for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
+    s_default_regions[i] = regions[i];
+  }
+  for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
+    PBL_ASSERTN(t == pbl_cur || t == sched_idle_thread());
+    prv_regions_set(t, nullptr);
+  }
   pbl_irq_unlock();
 }

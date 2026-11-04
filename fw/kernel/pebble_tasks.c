@@ -390,25 +390,6 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
   return thread;
 }
 
-void pebble_task_configure_idle_task(void) {
-  // The idle thread exists before we can hand it regions, so configure it
-  // after the fact. This only matters on platforms with a cache, where
-  // altering the base address, length or cacheability attributes of MPU
-  // regions during context switches causes cache incoherency for memory
-  // covered by the regions; ISRs inherit the MPU configuration of the
-  // thread that is running at the time.
-  MpuRegion app_region;
-  MpuRegion worker_region;
-  mpu_init_region_from_region(&app_region, memory_layout_get_app_region(),
-                              false /* allow_user_access */);
-  mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(),
-                              false /* allow_user_access */);
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
-    &app_region, &worker_region, nullptr, nullptr
-  };
-  pbl_thread_regions_set(pbl_thread_idle(), regions);
-}
-
 void pbl_thread_stack_overflow(struct pbl_thread *thread, const char *name) {
   PebbleTask task = pebble_task_get_task_for_thread(thread);
 
