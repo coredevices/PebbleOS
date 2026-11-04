@@ -374,11 +374,13 @@ static void prv_update_state(void *force_update) {
   }
 #endif
 
-  PBL_LOG_VERBOSE(
-      "Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td_ms: %lu, fg: %d, soc: %u, tte: %lu, "
-      "ttf: %lu",
-      constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)(delta * 1000.0f), (int)fg_state,
-      s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
+  // Hashed logging takes at most 7 arguments, so the estimate goes on its own
+  // line.
+  PBL_LOG_VERBOSE("Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td_ms: %lu, fg: %d",
+                  constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)(delta * 1000.0f),
+                  (int)fg_state);
+  PBL_LOG_VERBOSE("Battery estimate: soc: %u, tte: %lu, ttf: %lu", s_last_battery_charge_state.pct,
+                  s_last_tte, s_last_ttf);
 
   if (update || (((now - s_last_log) / PBL_TICK_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
