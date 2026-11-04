@@ -10,6 +10,7 @@ pbl_library_sources(
 pbl_library_sources_ifdef(CONFIG_SHELL console_shell.c)
 pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_UART
   console_frame.c
+  console_imaging.c
   console_pp.c
 )
 if(CONFIG_PULSE_EVERYWHERE)

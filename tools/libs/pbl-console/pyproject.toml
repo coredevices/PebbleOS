@@ -1,0 +1,13 @@
+[project]
+name = "pbl-console"
+version = "1.0.0"
+description = "Host side of the PebbleOS text console: logs, shell and frames"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["pyserial"]
+
+[project.optional-dependencies]
+protocol = ["libpebble2"]
+
+[tool.setuptools]
+packages = ["pblconsole"]
