@@ -13,8 +13,6 @@
 #include <kernel/pebble_tasks.h>
 #include <resource/resource.h>
 
-#define APP_TASK_PRIORITY (PBL_PRIO_IDLE + 2)
-
 typedef enum {
   AppTaskCtxIdxLauncher = 0,
   AppTaskCtxIdxApp,

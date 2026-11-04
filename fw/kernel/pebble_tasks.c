@@ -30,7 +30,7 @@ static uint32_t s_dead_task_cycles[NumPebbleTask];
 // process dies) instead of rebooting the system. ARMv8-M bounds them with
 // PSPLIM; ARMv7-M plants a no-access MPU guard below each. Plain .bss statics
 // land in the privileged-only .kernel_bss output.
-#define SYSCALL_STACK_WORDS 512u // 2 KiB each; size against measured high-water.
+#define SYSCALL_STACK_WORDS (CONFIG_PROCESS_SYSCALL_STACK_SIZE / sizeof(uint32_t))
 #ifdef CONFIG_ARMV8_M_MAINLINE
 #define SYSCALL_STACK_GUARD_WORDS 0u
 #else

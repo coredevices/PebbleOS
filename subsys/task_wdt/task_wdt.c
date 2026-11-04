@@ -297,7 +297,7 @@ void pbl_task_wdt_init(void) {
   struct pbl_thread_attr attr = {
     .name = "TaskWDT",
     .entry = prv_thread_entry,
-    .prio = PBL_PRIO_MAX,
+    .prio = CONFIG_TASK_WDT_THREAD_PRIO,
     .privileged = true,
     .stack = s_stack,
     .stack_size = sizeof(s_stack),
