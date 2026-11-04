@@ -6,7 +6,6 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -19,7 +18,6 @@
 #endif
 
 #include <bf0_hal.h>
-#include <ipc_queue.h>
 
 enum {
   IDLE_WFI,
@@ -27,7 +25,6 @@ enum {
   IDLE_DEEPSLEEP,
 };
 
-static uint32_t s_ipc_not_idle_count;
 static bool s_force_wfi;
 
 static uint32_t s_iser_bak[16];
@@ -144,11 +141,6 @@ PBL_SECTION_RAM int pbl_soc_idle_state_limit(void) {
     return -1;
   }
 
-  if (!ipc_queue_check_idle()) {
-    s_ipc_not_idle_count++;
-    return -1;
-  }
-
   // The debug flag forces plain WFI (deep WFI and deep sleep disabled).
   if (s_force_wfi) {
     return IDLE_WFI;
@@ -166,11 +158,6 @@ PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   status = HAL_HPAON_GET_WSR();
   status &= ~HPSYS_AON_WSR_PIN_ALL;
   HAL_HPAON_CLEAR_WSR(status);
-}
-
-void pbl_soc_idle_collect_analytics(void) {
-  PBL_ANALYTICS_SET_UNSIGNED(sifli_ipc_not_idle_count, s_ipc_not_idle_count);
-  s_ipc_not_idle_count = 0;
 }
 
 #ifdef CONFIG_SHELL

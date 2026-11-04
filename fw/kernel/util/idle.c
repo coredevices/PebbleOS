@@ -71,9 +71,6 @@ void pbl_analytics_external_collect_cpu_stats(void) {
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, prv_pct100(delta.idle_us[0], delta.total_us));
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, prv_pct100(delta.idle_us[1], delta.total_us));
   PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, prv_pct100(delta.idle_us[2], delta.total_us));
-#ifdef CONFIG_SOC_HAS_IDLE_ANALYTICS
-  pbl_soc_idle_collect_analytics();
-#endif
 
   prv_snapshot(&s_last);
 }
