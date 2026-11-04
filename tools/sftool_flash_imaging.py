@@ -6,7 +6,7 @@
 # directly via sftool to the correct flash addresses. No PULSE descriptor is
 # prepended, so recovery (PRF) stays in PBLBOOT format for the bootloader.
 #
-# Same CLI as pulse_flash_imaging so callers can
+# Same CLI as console_flash_imaging so callers can
 # select this tool via _get_pulse_flash_tool() for MICRO_FAMILY == 'SF32LB52'.
 
 
