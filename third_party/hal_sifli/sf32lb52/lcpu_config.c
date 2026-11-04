@@ -14,7 +14,7 @@ static const uint8_t s_ble_slp_default[] = {
 #ifdef LXT_DISABLE
   0x0D,
   0x02,
-  0x19,
+  0x94,
   0x11,
 #else
   0x0D,
