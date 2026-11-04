@@ -71,6 +71,20 @@ void menu_text_scroll_draw_text(GContext *ctx, const char *text, GFont font, con
   ctx->draw_state.clip_box = saved_clip_box;
 }
 
+#if PBL_RECT
+//! Draws non-scrolling text directly so legacy apps, whose stack is only 2 KiB, don't pay for the
+//! scroll helper's frame on every menu cell.
+static PBL_ALWAYS_INLINE void prv_draw_cell_text(GContext *ctx, const char *text, GFont font,
+                                                 const GRect *box, GTextOverflowMode overflow_mode,
+                                                 int16_t overflow, int16_t offset) {
+  if (overflow <= 0 || offset <= 0) {
+    graphics_draw_text(ctx, text, font, *box, overflow_mode, GTextAlignmentLeft, nullptr);
+  } else {
+    menu_text_scroll_draw_text(ctx, text, font, box, overflow_mode, overflow, offset);
+  }
+}
+#endif
+
 int16_t menu_cell_basic_cell_height(void) {
   const SystemThemeMenuCellStyle *style = prv_get_cell_style();
   return prv_use_platform_default_size() ? style->app_basic_cell_height : style->basic_cell_height;
@@ -242,15 +256,15 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
   }
 
   if (config->title) {
-    menu_text_scroll_draw_text(ctx, config->title, title_font, &box, config->overflow_mode,
-                               title_overflow, scroll_offset);
+    prv_draw_cell_text(ctx, config->title, title_font, &box, config->overflow_mode, title_overflow,
+                       scroll_offset);
   }
 
   if (config->subtitle) {
     box.origin.y += title_height;
     box.size.h = subtitle_height + 4;
-    menu_text_scroll_draw_text(ctx, config->subtitle, subtitle_font, &box, config->overflow_mode,
-                               subtitle_overflow, scroll_offset);
+    prv_draw_cell_text(ctx, config->subtitle, subtitle_font, &box, config->overflow_mode,
+                       subtitle_overflow, scroll_offset);
   }
 }
 #endif // PBL_RECT
