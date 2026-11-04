@@ -648,7 +648,9 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
 #endif
 
   notify_system_ready_for_communication();
+#ifdef CONFIG_CONSOLE
   serial_console_enable_prompt();
+#endif
 }
 
 void launcher_main_loop(void) {

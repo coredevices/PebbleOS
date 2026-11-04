@@ -12,7 +12,6 @@
 
 #include <pbl/kernel/compiler.h>
 
-#include <console/dbgserial.h>
 #include <system/die.h>
 #include <system/reboot_reason.h>
 #include <system/status_codes.h>

@@ -103,10 +103,12 @@ static void init_drivers(void) {
   pbl_device_init_all();
   board_init();
 
+#ifdef CONFIG_CONSOLE
   // Console input needs timers, so it starts long after the early console.
   dbgserial_input_init();
 
   serial_console_init();
+#endif
 
   battery_init();
 

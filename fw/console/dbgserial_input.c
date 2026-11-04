@@ -8,8 +8,6 @@
 #include <pbl/drivers/uart.h>
 // clang-format on
 
-#if !defined(CONFIG_RELEASE) || defined(CONFIG_MFG)
-
 static DbgSerialCharacterCallback s_character_callback;
 
 static void prv_rx(const struct pbl_uart *uart, uint8_t c, void *arg) {
@@ -33,14 +31,3 @@ void dbgserial_set_input_enabled(bool enabled) {
     (void)pbl_uart_rx_disable(CONSOLE_UART);
   }
 }
-
-#else
-void dbgserial_input_init(void) {
-}
-
-void dbgserial_register_character_callback(DbgSerialCharacterCallback callback) {
-}
-
-void dbgserial_set_input_enabled(bool enabled) {
-}
-#endif

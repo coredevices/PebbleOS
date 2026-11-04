@@ -62,15 +62,24 @@ config LOG_BOOT_BUFFER_SIZE
       started with pbl_log_backend_start(), e.g. the flash backend, so
       their log begins with the boot banner. 0 disables it.
 
+config CONSOLE
+    bool "Serial console"
+    default y if !RELEASE || MFG
+    help
+      Text console on the board's console port, CONSOLE_UART: logs and
+      the shell. Off on release firmware, which leaves the port unused.
+
 config PULSE_EVERYWHERE
     bool "PULSE everywhere"
-    default y if !RELEASE || MFG
+    default y
+    depends on CONSOLE
     help
       Use the PULSE protocol for logs and the prompt. Disable to fall
       back to legacy logs and prompt.
 
 config CONSOLE_BAUDRATE
     int "Console baud rate"
+    depends on CONSOLE
     default 1000000 if PULSE_EVERYWHERE
     default 115200
     help

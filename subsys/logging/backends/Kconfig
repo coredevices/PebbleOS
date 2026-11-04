@@ -23,7 +23,7 @@ endif
 config LOG_BACKEND_UART
     bool "UART backend"
     default y
-    depends on !PULSE_EVERYWHERE
+    depends on CONSOLE && !PULSE_EVERYWHERE
     help
       Write log messages as text lines to the serial console.
 
