@@ -111,15 +111,19 @@ static void prv_chaining_window_load(Window *window) {
                              .select_click = prv_select_callback,
                            });
 
-  menu_layer_set_highlight_colors(&data->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorIslamicGreen, GColorBlack), GColorWhite);
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(&data->menu_layer, GColorIslamicGreen, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
 #if PBL_RECT
   status_bar_layer_init(&data->status_layer);
-  status_bar_layer_set_colors(&data->status_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
-                              PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+#if PBL_COLOR
+  status_bar_layer_set_colors_follow_theme(&data->status_layer, false /* transparent_background */);
+#else
+  status_bar_layer_set_colors(&data->status_layer, GColorBlack, GColorWhite);
+#endif
   status_bar_layer_set_title(&data->status_layer, data->title, false /* revert */,
                              false /* animated */);
   status_bar_layer_set_separator_mode(&data->status_layer, StatusBarLayerSeparatorModeDotted);

@@ -27,6 +27,7 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 #define SEND_TEXT_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(SMS_REPLY_COLOR, GColorBlack)
 
@@ -250,7 +251,8 @@ static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *ce
   const GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
   GRect box = cell_layer->bounds;
   box.origin.y -= 2;
-  graphics_context_set_text_color(ctx, GColorDarkGray);
+  graphics_context_set_text_color(ctx,
+                                  system_theme_is_dark_mode() ? GColorLightGray : GColorDarkGray);
   graphics_draw_text(ctx, i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
                      GTextAlignmentCenter, nullptr);
 }
@@ -316,7 +318,9 @@ static void prv_init(void) {
                                .select_click = prv_contact_list_select_callback,
                              });
 
+#if PBL_COLOR
     menu_layer_set_highlight_colors(&data->menu_layer, SEND_TEXT_APP_HIGHLIGHT_COLOR, GColorWhite);
+#endif
     menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
     menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                       shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -329,7 +333,7 @@ static void prv_init(void) {
 
     StatusBarLayer *status_layer = &data->status_layer;
     status_bar_layer_init(status_layer);
-    status_bar_layer_set_colors(status_layer, GColorClear, GColorBlack);
+    status_bar_layer_set_colors_follow_theme(status_layer, true /* transparent_background */);
     // On rect we show the "Select Contact" text in the status bar, but on round the status bar
     // shows the clock time and we use a menu cell header to display "Select Contact" (see above)
 #if PBL_RECT

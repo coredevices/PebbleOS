@@ -188,6 +188,10 @@ GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
 }
 
+GColor system_theme_get_highlight_color(void) {
+  return shell_prefs_get_theme_highlight_color();
+}
+
 bool alerts_preferences_get_notification_alternative_design(void) {
   return false;
 }

@@ -132,7 +132,7 @@ Window *health_hr_detail_card_create(HealthData *health_data, const HealthHrChar
     .num_headings = card_data->num_headings,
     .headings = card_data->headings,
     .weekly_max = max_progress,
-    .bg_color = system_theme_get_bg_color(),
+    .bg_follows_theme = true,
     .num_zones = card_data->num_zones,
     .zones = card_data->zones,
     .chart = &chart,

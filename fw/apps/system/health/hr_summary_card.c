@@ -45,7 +45,7 @@ typedef struct HealthHrSummaryCardData {
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
 #define PROGRESS_OUTLINE_COLOR    (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
 
-#define TEXT_COLOR (PBL_IF_COLOR_ELSE(GColorBulgarianRose, system_theme_get_fg_color()))
+#define TEXT_COLOR            (PBL_IF_COLOR_ELSE(GColorBulgarianRose, system_theme_get_fg_color()))
 #define CARD_BACKGROUND_COLOR (system_theme_get_bg_color())
 
 static void prv_pulsing_heart_timer_cb(void *context) {
@@ -79,6 +79,19 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
                            HEALTH_PROGRESS_BAR_MAX_VALUE);
 }
 
+static void prv_recolor_pulsing_heart_for_dark_mode(GDrawCommandProcessor *processor,
+                                                    GDrawCommand *processed_command,
+                                                    size_t processed_command_max_size,
+                                                    const GDrawCommandList *list,
+                                                    const GDrawCommand *command) {
+  if (gcolor_equal(gdraw_command_get_stroke_color((GDrawCommand *)command), GColorBlack)) {
+    gdraw_command_set_stroke_color(processed_command, GColorWhite);
+  }
+  if (gcolor_equal(gdraw_command_get_fill_color((GDrawCommand *)command), GColorWhite)) {
+    gdraw_command_set_fill_color(processed_command, GColorClear);
+  }
+}
+
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
 
@@ -86,7 +99,14 @@ static void prv_render_icon(GContext *ctx, Layer *base_layer) {
       data->pulsing_heart, data->pulsing_heart_frame_index);
   if (frame) {
     const GPoint offset = GPoint(-1 + HEALTH_X_OFFSET, -23 + HEALTH_Y_OFFSET);
-    gdraw_command_frame_draw(ctx, data->pulsing_heart, frame, offset);
+    if (system_theme_is_dark_mode()) {
+      GDrawCommandProcessor processor = {
+        .command = prv_recolor_pulsing_heart_for_dark_mode,
+      };
+      gdraw_command_frame_draw_processed(ctx, data->pulsing_heart, frame, offset, &processor);
+    } else {
+      gdraw_command_frame_draw(ctx, data->pulsing_heart, frame, offset);
+    }
     return;
   }
 }
@@ -192,19 +212,6 @@ static void prv_hr_detail_card_unload_callback(Window *window) {
 // API Functions
 //
 
-static bool prv_recolor_pulsing_heart_cb(GDrawCommand *command, uint32_t index, void *context) {
-  GColor stroke = gdraw_command_get_stroke_color(command);
-  GColor fill = gdraw_command_get_fill_color(command);
-
-  if (gcolor_equal(stroke, GColorBlack)) {
-    gdraw_command_set_stroke_color(command, GColorWhite);
-  }
-  if (gcolor_equal(fill, GColorWhite)) {
-    gdraw_command_set_fill_color(command, GColorClear);
-  }
-  return true;
-}
-
 Layer *health_hr_summary_card_create(HealthData *health_data) {
   // create base layer
   Layer *base_layer = layer_create_with_data(GRectZero, sizeof(HealthHrSummaryCardData));
@@ -232,23 +239,6 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
 #endif
     .timestamp_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
   };
-
-  if (system_theme_is_dark_mode() && data->pulsing_heart) {
-    GDrawCommandSequence *clone = gdraw_command_sequence_clone(data->pulsing_heart);
-    if (clone) {
-      gdraw_command_sequence_destroy(data->pulsing_heart);
-      data->pulsing_heart = clone;
-
-      const uint32_t num_frames = gdraw_command_sequence_get_num_frames(data->pulsing_heart);
-      for (uint32_t i = 0; i < num_frames; i++) {
-        GDrawCommandFrame *f = gdraw_command_sequence_get_frame_by_index(data->pulsing_heart, i);
-        if (f) {
-          gdraw_command_list_iterate(gdraw_command_frame_get_command_list(f),
-                                     prv_recolor_pulsing_heart_cb, NULL);
-        }
-      }
-    }
-  }
 
   data->pulsing_heart_timer = app_timer_register(0, prv_pulsing_heart_timer_cb, base_layer);
 

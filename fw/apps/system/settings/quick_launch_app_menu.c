@@ -186,13 +186,14 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap,
     .choice = prv_choice(install_id, app_index),
     .status_colors =
         {
-          system_theme_get_bg_color(),
-          system_theme_get_fg_color(),
+          GColorWhite,
+          GColorBlack,
         },
     .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
     .icons_enabled = true,
   };
   option_menu_configure(option_menu, &config);
+  option_menu_set_colors_follow_theme(option_menu);
   option_menu_set_callbacks(option_menu,
                             &(OptionMenuCallbacks){
                               .select = prv_menu_select,

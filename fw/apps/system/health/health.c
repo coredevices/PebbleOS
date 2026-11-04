@@ -82,6 +82,7 @@ static void prv_show_insights_onboarding_dialog(void) {
       "Insights Onboarding", RESOURCE_ID_HEALTH_ICON_MOON, text, system_theme_get_fg_color(),
       system_theme_get_bg_color(), nullptr, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
       expandable_dialog_close_cb);
+  dialog_set_colors_follow_theme(expandable_dialog_get_dialog(dialog), false /* dimmed */);
   app_expandable_dialog_push(dialog);
 }
 

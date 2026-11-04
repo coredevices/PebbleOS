@@ -266,8 +266,9 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
       false /* icons_enabled */, s_type_labels, data);
   PBL_ASSERTN(option_menu);
   data->alarm_type_menu = option_menu;
-  option_menu_set_highlight_colors(option_menu, ALARMS_APP_HIGHLIGHT_COLOR,
-                                   PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
+#if PBL_COLOR
+  option_menu_set_highlight_colors(option_menu, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

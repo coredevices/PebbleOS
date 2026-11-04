@@ -53,6 +53,8 @@ static void prv_push_first_use_dialog(void) {
       WINDOW_NAME("Quick Launch First Use"), RESOURCE_ID_SUNNY_DAY_TINY, text,
       system_theme_get_fg_color(), system_theme_get_bg_color(), nullptr,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, prv_handle_quick_launch_confirm);
+  dialog_set_colors_follow_theme(expandable_dialog_get_dialog(expandable_dialog),
+                                 false /* dimmed */);
   expandable_dialog_set_header(expandable_dialog, header);
 #if PBL_ROUND
   expandable_dialog_set_header_font(expandable_dialog,

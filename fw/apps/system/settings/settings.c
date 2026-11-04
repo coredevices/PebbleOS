@@ -18,7 +18,6 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/prefs.h>
-#include <shell/system_theme.h>
 
 #define SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING 14
 
@@ -171,15 +170,6 @@ static void prv_window_load(Window *window) {
   event_service_client_subscribe(&data->pref_change_event_info);
 }
 
-static void prv_window_appear(Window *window) {
-  SettingsAppData *data = window_get_user_data(window);
-  // Refresh background and menu colors in case dark mode changed while away
-  window_set_background_color(window, system_theme_get_bg_color());
-  menu_layer_set_normal_colors(&data->menu_layer, system_theme_get_bg_color(),
-                               system_theme_get_fg_color());
-  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
-}
-
 static void prv_window_unload(Window *window) {
   SettingsAppData *data = window_get_user_data(window);
 
@@ -206,10 +196,8 @@ static void handle_init(void) {
   window_set_user_data(window, data);
   window_set_window_handlers(window, &(WindowHandlers){
                                        .load = prv_window_load,
-                                       .appear = prv_window_appear,
                                        .unload = prv_window_unload,
                                      });
-  window_set_background_color(window, system_theme_get_bg_color());
   app_window_stack_push(window, true);
 }
 
