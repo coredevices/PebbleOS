@@ -9,6 +9,7 @@
 #include "applib/app.h"
 #include "applib/app_timer.h"
 #include "applib/battery_state_service.h"
+#include "applib/ui/qr_code.h"
 #include "applib/ui/ui.h"
 #include "applib/ui/window_private.h"
 #include "applib/tick_timer_service.h"
@@ -16,8 +17,10 @@
 #include "drivers/battery.h"
 #include "drivers/touch/touch_sensor.h"
 #include "kernel/pbl_malloc.h"
+#include "mfg/mfg_serials.h"
 #include "process_state/app_state/app_state.h"
 #include "services/common/bluetooth/bluetooth_ctl.h"
+#include "services/common/bluetooth/local_id.h"
 #include "services/common/light.h"
 #include "system/logging.h"
 #include "util/bitset.h"
@@ -29,6 +32,7 @@
 #define SETTLE_DURATION_S (2 * SECONDS_PER_HOUR)
 #define MAX_DURATION_S (10 * SECONDS_PER_HOUR)
 #define MAX_PERCENT_DROP 3
+#define RESULT_HEIGHT 30
 
 typedef enum {
   DischargeStateChargeTo100 = 0,
@@ -62,6 +66,9 @@ typedef struct {
 
   TextLayer details;
   char details_string[256];
+
+  QRCode qr_code;
+  char qr_string[128];
 
   DischargeTestState test_state;
   DischargeFailReason fail_reason;
@@ -217,6 +224,43 @@ static void prv_start_discharge_phase(AppData *data) {
   prv_render(data);
 }
 
+// QR fields: serial;MAC;result;mV;percent;mV drop;percent drop;charge failure
+static void prv_show_result(AppData *data, const BatteryConstants *battery_const,
+                            const BatteryChargeState *charge_state) {
+  char mac[BT_DEVICE_ADDRESS_FMT_BUFFER_SIZE];
+  bt_local_id_copy_address_mac_string(mac);
+
+  size_t len = sniprintf(data->qr_string, sizeof(data->qr_string),
+                         "%s;%s;%s;%" PRId32 ";%" PRIu8, mfg_get_serial_number(), mac,
+                         status_text[data->test_state], battery_const->v_mv,
+                         charge_state->charge_percent);
+  char *suffix = data->qr_string + len;
+  size_t suffix_size = sizeof(data->qr_string) - len;
+
+  switch (data->fail_reason) {
+    case DischargeFailReasonChargeError:
+      sniprintf(suffix, suffix_size, ";;;CHG_ERR:0x%02" PRIx32, data->charge_error);
+      break;
+    case DischargeFailReasonChargeTimeout:
+      sniprintf(suffix, suffix_size, ";;;CHG_TIMEOUT");
+      break;
+    case DischargeFailReasonNone:
+      sniprintf(suffix, suffix_size, ";%" PRId32 ";%" PRId8 ";",
+                data->initial_voltage_mv - battery_const->v_mv,
+                (int8_t)((int8_t)data->initial_percent - (int8_t)charge_state->charge_percent));
+      break;
+  }
+
+  qr_code_set_data(&data->qr_code, data->qr_string, strlen(data->qr_string));
+  layer_set_hidden(&data->qr_code.layer, false);
+  layer_set_hidden(&data->details.layer, true);
+
+  const GRect *bounds = &data->window.layer.bounds;
+  const int16_t result_y = bounds->size.h - RESULT_HEIGHT - PBL_IF_RECT_ELSE(0, 8);
+  layer_set_frame(&data->status.layer, &GRect(0, result_y, bounds->size.w, RESULT_HEIGHT));
+  text_layer_set_text(&data->status, status_text[data->test_state]);
+}
+
 static void prv_render(AppData *data) {
   // Get battery state
   BatteryConstants battery_const;
@@ -302,32 +346,16 @@ static void prv_render(AppData *data) {
     } break;
 
     case DischargeStatePass:
-    case DischargeStateFail: {
-      if (data->fail_reason == DischargeFailReasonChargeError) {
-        sniprintf(data->details_string, sizeof(data->details_string),
-                  "Charge error\n0x%02" PRIx32 "\n%s%s", data->charge_error,
-                  prv_charge_error_name(data->charge_error),
-                  prv_can_retry_charge(data) ? "\n\nSelect: retry" : "");
-        break;
+    case DischargeStateFail:
+      if (!prv_can_retry_charge(data)) {
+        prv_show_result(data, &battery_const, &charge_state);
+        return;
       }
-
-      if (data->fail_reason == DischargeFailReasonChargeTimeout) {
-        sniprintf(data->details_string, sizeof(data->details_string),
-                  "Charge timeout\n%" PRIu8 "%%", charge_state.charge_percent);
-        break;
-      }
-
-      int32_t voltage_drop = data->initial_voltage_mv - battery_const.v_mv;
-      int8_t percent_drop = (int8_t)data->initial_percent - (int8_t)charge_state.charge_percent;
 
       sniprintf(data->details_string, sizeof(data->details_string),
-                "Final:\n"
-                "%" PRId32 "mV %" PRIu8 "%%\n"
-                "Drop:\n"
-                "%" PRId32 "mV  %" PRId8 "%%",
-                battery_const.v_mv, charge_state.charge_percent,
-                voltage_drop, percent_drop);
-    } break;
+                "Charge error\n0x%02" PRIx32 "\n%s\n\nSelect: retry", data->charge_error,
+                prv_charge_error_name(data->charge_error));
+      break;
   }
 
   // Update status display
@@ -438,6 +466,18 @@ static void app_init(void) {
   text_layer_set_font(details, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(details, GTextAlignmentCenter);
   layer_add_child(&window->layer, &details->layer);
+
+  const int16_t w = window->layer.bounds.size.w;
+  const int16_t h = window->layer.bounds.size.h;
+#if PBL_ROUND
+  const int16_t qr_size = (w * 10) / 14;
+  const GRect qr_frame = GRect((w - qr_size) / 2, (h - qr_size) / 2, qr_size, qr_size);
+#else
+  const GRect qr_frame = GRect(10, 5, w - 20, h - RESULT_HEIGHT - 5);
+#endif
+  qr_code_init(&data->qr_code, &qr_frame);
+  layer_set_hidden(&data->qr_code.layer, true);
+  layer_add_child(&window->layer, &data->qr_code.layer);
 
   window_set_click_config_provider(window, prv_config_provider);
   window_set_fullscreen(window, true);
