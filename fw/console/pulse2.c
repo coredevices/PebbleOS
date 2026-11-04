@@ -30,7 +30,7 @@
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/dbgserial.h>
-#include <console/console_internal.h>
+#include <console/dbgserial_input.h>
 #include <kernel/pebble_tasks.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
@@ -336,7 +336,7 @@ void pulse_start(void) {
 #undef ON_INIT
 #undef ON_LINK_STATE_CHANGE
 
-  serial_console_set_state(SERIAL_CONSOLE_STATE_PULSE);
+  dbgserial_register_character_callback(pulse_handle_character);
   ppp_control_protocol_lower_layer_is_up(PULSE2_LCP);
   ppp_control_protocol_open(PULSE2_LCP);
 }

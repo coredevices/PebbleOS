@@ -3,15 +3,24 @@
 
 #pragma once
 
+#include <stddef.h>
+
 void serial_console_init(void);
 
-bool serial_console_is_logging_enabled(void);
-bool serial_console_is_prompt_enabled(void);
-
-//! Allow the prompt to be started. By default the prompt is disabled it at system boot, and needs
-//! to be enabled once the rest of the system is ready to handle prompt commands.
-//! FIXME: This is probably in the wrong place, but we're reworking prompt in general once PULSEv2
-//! lands so no need to rearrange the deck chairs on the titanic.
+//! Start taking input, once the system can handle commands.
 void serial_console_enable_prompt(void);
 
-void serial_console_write_log_message(const char *msg);
+//! Write to the port without taking the lock, for use in fault handlers and between
+//! serial_console_log_begin() and serial_console_log_end().
+void serial_console_write_raw(const char *data, size_t len);
+
+//! Write to the port under the lock.
+void serial_console_write(const char *data, size_t len);
+
+//! Start a log line, moving the shell's input line out of the way.
+void serial_console_log_begin(void);
+
+//! End a log line, bringing the shell's input line back.
+void serial_console_log_end(void);
+
+void serial_console_set_rx_enabled(bool enabled);

@@ -19,13 +19,17 @@
 #include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
 
+static void prv_write(const char *str) {
+  serial_console_write_raw(str, strlen(str));
+}
+
 #define TIMESTAMP_BUFFER_SIZE 40
 static void prv_log_timestamp(void) {
   // Enough stack space to use sprintfs?
   uint32_t stack_space = stack_free_bytes();
   if (stack_space < LOGGING_MIN_STACK_FOR_SPRINTF) {
-    serial_console_write_log_message(LOGGING_STACK_FULL_MSG);
-    serial_console_write_log_message(" ");
+    prv_write(LOGGING_STACK_FULL_MSG);
+    prv_write(" ");
     return;
   }
 
@@ -40,15 +44,11 @@ static void prv_log_timestamp(void) {
   sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", time_seconds_calendar.tm_hour,
             time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);
 
-  serial_console_write_log_message(buffer);
+  prv_write(buffer);
 }
 
 static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_line_number,
                            const char *message) {
-  if (!serial_console_is_logging_enabled() && log_level != LOG_LEVEL_ALWAYS) {
-    return;
-  }
-
   // Log the log level and the current task+privilege level
   {
 #ifdef CONFIG_LOG_TASK_PREFIX
@@ -61,7 +61,7 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
 #endif
 
     char buffer[] = {pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0};
-    serial_console_write_log_message(buffer);
+    prv_write(buffer);
   }
 
   // Start out with the timestamp
@@ -69,33 +69,35 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
 
   // Write out the filename
   src_filename = GET_FILE_NAME(src_filename);
-  serial_console_write_log_message(src_filename);
+  prv_write(src_filename);
 
   // Write out the line number
   {
     char line_number_buffer[12];
     itoa_int(src_line_number, line_number_buffer, 10);
-    serial_console_write_log_message(":");
-    serial_console_write_log_message(line_number_buffer);
-    serial_console_write_log_message("> ");
+    prv_write(":");
+    prv_write(line_number_buffer);
+    prv_write("> ");
   }
 
   // Write the actual log message.
-  serial_console_write_log_message(message);
+  prv_write(message);
 
   // Append our newlines and our trailing null
-  serial_console_write_log_message("\r\n");
+  prv_write("\r\n");
 }
 
 static void prv_backend_process(const struct pbl_log_backend *backend,
                                 const struct pbl_log_msg *msg) {
   if (msg->flags & PBL_LOG_MSG_FAULT) {
-    serial_console_write_log_message(msg->text);
-    serial_console_write_log_message("\r\n");
+    prv_write(msg->text);
+    prv_write("\r\n");
     return;
   }
 
+  serial_console_log_begin();
   prv_log_serial(msg->level, msg->file, msg->line, msg->text);
+  serial_console_log_end();
 }
 
 static void prv_backend_early_init(const struct pbl_log_backend *backend) {

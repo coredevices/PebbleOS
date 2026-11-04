@@ -31,7 +31,7 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #ifdef CONFIG_CONSOLE
-#include <console/console_internal.h>
+#include <console/serial_console.h>
 #endif
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>

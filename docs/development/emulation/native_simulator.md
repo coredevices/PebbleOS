@@ -86,9 +86,8 @@ and feeds phone data over the Pebble protocol port, as with the emulator.
 
 ### Console
 
-The terminal is the watch's serial console: logs go there, and as on the
-watch, `Ctrl-C` opens the shell prompt and `Ctrl-D` leaves it. `Ctrl-\`
-quits.
+The terminal is the watch's serial console: logs go there, and the shell is
+always listening, with log lines printing above its prompt. `Ctrl-\` quits.
 
 ### Options
 
