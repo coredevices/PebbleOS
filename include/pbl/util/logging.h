@@ -32,11 +32,4 @@ void util_log(const char *filename, int line, const char *string);
     util_log(__FILE_NAME__, __LINE__, string); \
   } while (0)
 
-/**
- * @brief Write a line straight to the debug serial port.
- *
- * @param string Line, without line terminator.
- */
-void util_dbgserial_str(const char *string);
-
 /** @} */

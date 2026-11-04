@@ -262,12 +262,22 @@ void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *fre
                     unsigned int *max_free);
 
 /**
- * @brief Dump every block and the heap totals to the debug serial port.
+ * @brief Receives one line of a heap dump, with the heap locked.
+ *
+ * @param line Line, without line terminator.
+ * @param arg Argument given to pbl_heap_dump().
+ */
+typedef void (*pbl_heap_dump_cb_t)(const char *line, void *arg);
+
+/**
+ * @brief Dump every block and the heap totals, one line at a time.
  *
  * Only available with @c CONFIG_MALLOC_INSTRUMENTATION.
  *
  * @param heap Heap.
+ * @param cb Called for each line.
+ * @param arg Passed to @p cb.
  */
-void pbl_heap_dump(struct pbl_heap *heap);
+void pbl_heap_dump(struct pbl_heap *heap, pbl_heap_dump_cb_t cb, void *arg);
 
 /** @} */

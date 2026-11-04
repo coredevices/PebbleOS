@@ -66,7 +66,6 @@ LogState *kernel_applib_get_log_state(void) {
     use_mutex = false;
   } else if (!s_log_state_mutex_ready) {
     // phase 2
-    dbgserial_putstr("LOGGING DISABLED");
     goto exit_fail;
   } else {
     // phase 3
@@ -79,7 +78,6 @@ LogState *kernel_applib_get_log_state(void) {
     // trying to log from flash code)
     bool success = (pbl_mutex_lock(&s_log_state_mutex, PBL_MSEC(1000)) == 0);
     if (!success) {
-      dbgserial_putstr("kernel_applib_get_log_state timeout error");
       goto exit_fail;
     }
   }

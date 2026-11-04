@@ -49,8 +49,12 @@ PBL_SHELL_SUBCMD_ADD(sub_sys, runlevel, nullptr, "Set the runlevel <n|list>", pr
                      0);
 
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
+static void prv_heap_dump_line(const char *line, void *arg) {
+  pbl_shell_print(arg, "%s", line);
+}
+
 static int prv_cmd_heap_kernel(const struct pbl_shell *sh, size_t argc, char **argv) {
-  pbl_heap_dump(pbl_malloc_heap());
+  pbl_heap_dump(pbl_malloc_heap(), prv_heap_dump_line, (void *)sh);
   return 0;
 }
 
