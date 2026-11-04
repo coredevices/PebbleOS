@@ -55,4 +55,9 @@ config NIMBLE_BLE_SVC_DIS_DEFAULT_READ_PERM
 config NIMBLE_BLE_GATT_MAX_PROCS
     default 8
 
+# 247 makes a full ATT packet (247 + 4 bytes of L2CAP header) fill one 251-byte link-layer
+# packet exactly. With 256, every full packet needs a second, 9-byte link-layer packet.
+config NIMBLE_BLE_ATT_PREFERRED_MTU
+    default 247
+
 endif # BT
