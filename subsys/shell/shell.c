@@ -147,23 +147,38 @@ void pbl_shell_fprintf(const struct pbl_shell *sh, const char *fmt, ...) {
   va_end(args);
 }
 
+static void prv_vprintln(const struct pbl_shell *sh, const char *prefix, const char *fmt,
+                         va_list args) {
+  char buf[CONFIG_SHELL_PRINTF_BUFF_SIZE];
+  size_t pos = strlen(prefix);
+  size_t space = sizeof(buf) - pos - 2U;
+  int len;
+
+  memcpy(buf, prefix, pos);
+  len = vsniprintf(&buf[pos], space, fmt, args);
+  if (len > 0) {
+    pos += ((size_t)len < space) ? (size_t)len : space - 1U;
+  }
+  buf[pos++] = '\r';
+  buf[pos++] = '\n';
+
+  prv_write(sh, buf, pos);
+}
+
 void pbl_shell_print(const struct pbl_shell *sh, const char *fmt, ...) {
   va_list args;
 
   va_start(args, fmt);
-  pbl_shell_vfprintf(sh, fmt, args);
+  prv_vprintln(sh, "", fmt, args);
   va_end(args);
-  prv_puts(sh, "\r\n");
 }
 
 void pbl_shell_error(const struct pbl_shell *sh, const char *fmt, ...) {
   va_list args;
 
-  prv_puts(sh, "error: ");
   va_start(args, fmt);
-  pbl_shell_vfprintf(sh, fmt, args);
+  prv_vprintln(sh, "error: ", fmt, args);
   va_end(args);
-  prv_puts(sh, "\r\n");
 }
 
 void pbl_shell_hexdump(const struct pbl_shell *sh, const void *data, size_t len) {
@@ -310,6 +325,18 @@ static int prv_execute(const struct pbl_shell *sh) {
   return cmd->handler(sh, argc, args);
 }
 
+static void prv_lock(const struct pbl_shell *sh) {
+  if (sh->api->lock != nullptr) {
+    sh->api->lock(sh);
+  }
+}
+
+static void prv_unlock(const struct pbl_shell *sh) {
+  if (sh->api->unlock != nullptr) {
+    sh->api->unlock(sh);
+  }
+}
+
 static void prv_print_prompt(const struct pbl_shell *sh) {
   prv_puts(sh, sh->prompt);
 }
@@ -319,6 +346,7 @@ static void prv_rx_process(void *data);
 static void prv_finish(const struct pbl_shell *sh, int ret) {
   struct pbl_shell_ctx *ctx = sh->ctx;
 
+  prv_lock(sh);
   ctx->len = 0;
   ctx->busy = false;
 
@@ -328,6 +356,10 @@ static void prv_finish(const struct pbl_shell *sh, int ret) {
 
   if (sh->prompt != nullptr && ctx->active) {
     prv_print_prompt(sh);
+  }
+  prv_unlock(sh);
+
+  if (sh->prompt != nullptr && ctx->active) {
     if (ctx->rx_head != ctx->rx_tail && !ctx->rx_scheduled) {
       ctx->rx_scheduled = true;
       if (!system_task_add_callback(prv_rx_process, (void *)sh)) {
@@ -493,8 +525,11 @@ static void prv_handle_char(const struct pbl_shell *sh, char c) {
   switch (c) {
     case '\r':
     case '\n':
+      ctx->busy = true;
       prv_puts(sh, "\r\n");
+      prv_unlock(sh);
       prv_run(sh);
+      prv_lock(sh);
       break;
     case 0x03:
       prv_puts(sh, "^C\r\n");
@@ -530,12 +565,13 @@ static void prv_rx_process(void *data) {
 
   ctx->rx_scheduled = false;
 
+  prv_lock(sh);
   if (!ctx->active) {
-    ctx->active = true;
     ctx->len = 0;
     ctx->esc = ESC_NONE;
     prv_puts(sh, "\r\n");
     prv_print_prompt(sh);
+    ctx->active = true;
   }
 
   while (!ctx->busy && ctx->rx_tail != ctx->rx_head) {
@@ -543,6 +579,7 @@ static void prv_rx_process(void *data) {
     ctx->rx_tail = (ctx->rx_tail + 1) % CONFIG_SHELL_RX_BUFF_SIZE;
     prv_handle_char(sh, c);
   }
+  prv_unlock(sh);
 }
 
 static void prv_schedule_from_isr(const struct pbl_shell *sh) {
@@ -558,15 +595,20 @@ static void prv_schedule_from_isr(const struct pbl_shell *sh) {
   }
 }
 
-void pbl_shell_start_from_isr(const struct pbl_shell *sh) {
-  sh->ctx->rx_tail = sh->ctx->rx_head;
-  sh->ctx->active = false;
-  prv_schedule_from_isr(sh);
+void pbl_shell_start(const struct pbl_shell *sh) {
+  sh->ctx->rx_scheduled = true;
+  if (!system_task_add_callback(prv_rx_process, (void *)sh)) {
+    sh->ctx->rx_scheduled = false;
+  }
 }
 
-void pbl_shell_stop(const struct pbl_shell *sh) {
-  sh->ctx->active = false;
-  sh->ctx->rx_tail = sh->ctx->rx_head;
+bool pbl_shell_at_prompt(const struct pbl_shell *sh) {
+  return sh->ctx->active && !sh->ctx->busy;
+}
+
+void pbl_shell_redraw(const struct pbl_shell *sh) {
+  prv_print_prompt(sh);
+  prv_write(sh, sh->ctx->line, sh->ctx->len);
 }
 
 void pbl_shell_input_from_isr(const struct pbl_shell *sh, char c) {

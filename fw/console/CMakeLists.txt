@@ -7,10 +7,7 @@ pbl_library_sources(
   dbgserial_input.c
   serial_console.c
 )
-pbl_library_sources_ifdef(CONFIG_SHELL
-  console_shell.c
-  shell_dbgserial.c
-)
+pbl_library_sources_ifdef(CONFIG_SHELL console_shell.c)
 if(CONFIG_PULSE_EVERYWHERE)
   file(GLOB pulse_sources CONFIGURE_DEPENDS
     best_effort_transport.c

@@ -11,32 +11,34 @@ from harness.errors import HarnessError, PromptError, WatchTimeout
 DEFAULT_BAUDRATE = 115200
 # "<level> <task> <time> <file>:<line>> <message>"; hashed lines have no file.
 LOG_LINE = re.compile(r"^(\S) (\S+) (\S+) (\S*:\d+)> (.*)$")
+PROMPT = "pebble> "
 CTRL_C = b"\x03"
-# The next prompt, at the start of a line: ">" or a shell's "pebble> ".
-PROMPT_END = re.compile(r"\n\S*> ?$")
-# A prompt on a line of its own, which log lines (with "file:line> ") are not.
-PROMPT_LINE = re.compile(r"(^|\n)\S*> ?(\r?\n|$)")
-CTRL_D = b"\x04"
+# Printed by the firmware to clear the input line before a log line.
+CLEAR_LINE = "\x1b[K"
+PROMPT_RETRY_S = 0.5
+PROMPT_READY_S = 5
 
 
 class SerialConnection(Connection):
-    """The legacy text console (firmware without PULSE): log lines, and the
-    prompt entered with Ctrl-C. The address is ``TTY[@BAUDRATE]`` or a
-    ``socket://`` URL."""
+    """The text console: log lines mixed with the shell. The address is
+    ``TTY[@BAUDRATE]`` or a ``socket://`` URL."""
 
     scheme = "serial"
     capabilities = Capability.PROMPT | Capability.LOGS
-    help = "the legacy text console on TTY[@BAUDRATE] or socket://HOST:PORT"
+    help = "the text console on TTY[@BAUDRATE] or socket://HOST:PORT"
 
     def __init__(self, address, dehasher=None):
         super().__init__(address, dehasher)
         self._serial = None
         self._reader = None
         self._closing = False
-        self._in_prompt = False
-        self._prompt_buf = ""
         self._cond = threading.Condition()
         self._prompt_lock = threading.Lock()
+        # The line being received, which is the prompt when waiting at it.
+        self._partial = ""
+        self._command = None
+        self._echoed = False
+        self._output = []
 
     def open(self, timeout):
         import serial
@@ -66,7 +68,6 @@ class SerialConnection(Connection):
             self._serial = None
 
     def _read(self):
-        line = ""
         while not self._closing:
             try:
                 data = self._serial.read(256)
@@ -75,82 +76,74 @@ class SerialConnection(Connection):
                 return
             if not data:
                 continue
-            text = data.decode(errors="replace")
             with self._cond:
-                if self._in_prompt:
-                    self._prompt_buf += text
-                    self._cond.notify_all()
-                    continue
-            for char in text:
-                if char == "\n":
-                    line = line.strip()
-                    if line and line != "^D":
-                        self._emit_line(line)
-                    line = ""
-                elif char != "\r":
-                    line += char
+                self._partial += data.decode(errors="replace").replace(CLEAR_LINE, "")
+                *lines, self._partial = self._partial.split("\n")
+                for line in lines:
+                    self._handle_line(line)
+                self._cond.notify_all()
 
-    def _emit_line(self, line):
-        match = LOG_LINE.match(line)
-        if match is None:
-            self.emit_log(line)
+    def _handle_line(self, line):
+        # A carriage return restarts the line: the input line was cleared.
+        line = line.rstrip("\r").rpartition("\r")[2].strip()
+        if not line:
             return
-        level, task, _time, source, message = match.groups()
-        source = "" if source.startswith(":") else source
-        self.emit_log(message, level=level, task=task, source=source)
+        match = LOG_LINE.match(line)
+        if match is not None:
+            level, task, _time, source, message = match.groups()
+            source = "" if source.startswith(":") else source
+            self.emit_log(message, level=level, task=task, source=source)
+        elif self._command is None:
+            if not line.startswith(PROMPT.strip()):
+                self.emit_log(line)
+        elif not self._echoed:
+            self._echoed = line == f"{PROMPT}{self._command}".strip()
+        else:
+            self._output.append(line)
 
-    def _wait_prompt_until(self, done, timeout, what):
+    def _at_prompt(self):
+        return self._partial.rpartition("\r")[2] == PROMPT
+
+    def _wait_prompt(self, timeout):
+        """Get to an empty prompt, which needs the firmware to have booted."""
         deadline = time.monotonic() + timeout
-        with self._cond:
-            while not done(self._prompt_buf):
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise WatchTimeout(f"{what} timed out")
-                self._cond.wait(remaining)
-            return self._prompt_buf
+        while True:
+            self._serial.write(CTRL_C)
+            with self._cond:
+                self._cond.wait_for(self._at_prompt, PROMPT_RETRY_S)
+                if self._at_prompt():
+                    return
+            if time.monotonic() > deadline:
+                raise WatchTimeout("the shell prompt did not appear")
 
     def prompt_no_reply(self, command):
         with self._prompt_lock:
-            with self._cond:
-                self._in_prompt = True
-                self._prompt_buf = ""
-            self._serial.write(CTRL_C)
-            self._wait_prompt_until(
-                lambda b: PROMPT_LINE.search(b) is not None,
-                5,
-                "entering the prompt",
-            )
+            self._wait_prompt(PROMPT_READY_S)
             self._serial.write(command.encode() + b"\r")
 
     def prompt(self, command, timeout):
         if self._serial is None:
             raise HarnessError(f"{self!r} is not open")
         with self._prompt_lock:
+            self._wait_prompt(PROMPT_READY_S)
             with self._cond:
-                self._in_prompt = True
-                self._prompt_buf = ""
+                self._command = command
+                self._echoed = False
+                self._output = []
             try:
-                self._serial.write(CTRL_C)
-                self._wait_prompt_until(
-                    lambda b: PROMPT_LINE.search(b) is not None,
-                    5,
-                    "entering the prompt",
-                )
-                with self._cond:
-                    self._prompt_buf = ""
                 self._serial.write(command.encode() + b"\r")
-                output = self._wait_prompt_until(
-                    lambda b: PROMPT_END.search(b) is not None,
-                    timeout,
-                    f"prompt command {command!r}",
-                )
-            finally:
-                self._serial.write(CTRL_D)
                 with self._cond:
-                    self._in_prompt = False
+                    done = self._cond.wait_for(
+                        lambda: self._echoed and self._at_prompt(), timeout
+                    )
+                    if not done:
+                        raise WatchTimeout(f"prompt command {command!r} timed out")
+                    lines = self._output
+            finally:
+                with self._cond:
+                    self._command = None
 
-        lines = [line.strip() for line in output.split("\n")[1:-1]]
-        lines = [line for line in lines if line]
-        if lines and lines[0].startswith("Invalid command"):
+        # Other errors are the command's output, for the caller to read.
+        if lines and "command not found" in lines[0]:
             raise PromptError(lines[0])
         return lines

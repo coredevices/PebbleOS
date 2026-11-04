@@ -42,6 +42,13 @@ struct pbl_shell_backend_api {
   void (*write)(const struct pbl_shell *sh, const char *data, size_t len);
   /** Optional. A submitted command finished with @p ret. */
   void (*done)(const struct pbl_shell *sh, int ret);
+  /**
+   * Optional. Hold back other users of the transport while the prompt and the line being edited
+   * change, for backends that print over them. Must be recursive. Not held while commands run.
+   */
+  void (*lock)(const struct pbl_shell *sh);
+  /** Optional. Undoes @ref lock. */
+  void (*unlock)(const struct pbl_shell *sh);
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -93,20 +100,26 @@ struct pbl_shell {
   }
 
 /**
- * @brief Start a session of an interactive shell.
- *
- * Drops pending input; the prompt is printed from KernelBG. Call from an interrupt handler.
+ * @brief Start an interactive shell; the prompt is printed from KernelBG.
  *
  * @param sh Interactive shell.
  */
-void pbl_shell_start_from_isr(const struct pbl_shell *sh);
+void pbl_shell_start(const struct pbl_shell *sh);
 
 /**
- * @brief End the session of an interactive shell, dropping pending input.
+ * @brief Check whether an interactive shell is waiting at its prompt.
+ *
+ * @param sh Interactive shell.
+ * @return true if the shell is started and no command is running.
+ */
+bool pbl_shell_at_prompt(const struct pbl_shell *sh);
+
+/**
+ * @brief Print the prompt and the line being edited again, e.g. after other output.
  *
  * @param sh Interactive shell.
  */
-void pbl_shell_stop(const struct pbl_shell *sh);
+void pbl_shell_redraw(const struct pbl_shell *sh);
 
 /**
  * @brief Queue a character received by an interactive shell.

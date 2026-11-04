@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console_internal.h"
+#include "serial_console.h"
 
 #include <errno.h>
 #include <stdint.h>

@@ -31,7 +31,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <board/board.h>
-#include <console/dbgserial_input.h>
 #include <console/pulse.h>
 #include <console/serial_console.h>
 #include <debug/debug.h>
@@ -105,8 +104,6 @@ static void init_drivers(void) {
 
 #ifdef CONFIG_CONSOLE
   // Console input needs timers, so it starts long after the early console.
-  dbgserial_input_init();
-
   serial_console_init();
 #endif
 

@@ -117,7 +117,7 @@ offering some of: the debug prompt, the log stream, and the Pebble protocol
 (what the phone app speaks, used for input, screenshots and blob DB). Each
 is served by the first connection that has it. By default the harness uses
 the debug console, over PULSE when `CONFIG_PULSE_EVERYWHERE` is set and as
-the legacy text console otherwise; `--connection` replaces the default and
+the text console otherwise; `--connection` replaces the default and
 may be repeated:
 
 | Connection                  | Prompt | Logs     | Pebble protocol |

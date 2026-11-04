@@ -95,7 +95,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--device-serial-baud",
         type=int,
-        help="Baudrate of the legacy (non-PULSE) console (default: 115200)",
+        help="Baudrate of the text (non-PULSE) console (default: 115200)",
     )
     group.addoption(
         "--connection",

@@ -67,9 +67,14 @@ every instance run on KernelBG.
   `pbl_shell_execute_line()`, and get a `done` callback when the command
   finishes.
 
-The firmware has two backends, both in `fw/console/`:
+The firmware has two backends, both in `fw/console/`, of which a build has
+one:
 
-- `shell_dbgserial.c`: interactive, on the debug serial. Ctrl-C switches
-  the serial port from logs to the shell, Ctrl-D back to logs.
+- `serial_console.c`: interactive, on the text console, without
+  `CONFIG_PULSE_EVERYWHERE`. The shell is always listening, and log lines
+  print above the prompt, which comes back with the line being edited.
 - `shell_pulse.c`: line-based, on the PULSE prompt protocol, which is what
   `pbl console` talks to. Each output line is one prompt message.
+
+Release firmware has no shell: it needs `CONFIG_CONSOLE`, which is off there
+unless it is manufacturing firmware.

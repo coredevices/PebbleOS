@@ -237,6 +237,9 @@ class QemuAdapter(DeviceAdapter):
         console = f"socket://127.0.0.1:{self.console_port}"
         if self.build.config.get("CONFIG_PULSE_EVERYWHERE"):
             return [f"pulse:{console}"]
+        # With a Bluetooth controller, the phone holds the protocol session.
+        if self.build.config.get("CONFIG_BT_HCI_UART"):
+            return [f"serial:{console}"]
         return [f"serial:{console}", f"qemu:127.0.0.1:{self.pebble_port}"]
 
     def set_battery(self, percent, charging=False):
