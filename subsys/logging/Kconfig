@@ -71,7 +71,6 @@ config CONSOLE
 
 config PULSE_EVERYWHERE
     bool "PULSE everywhere"
-    default y
     depends on CONSOLE
     help
       Use the PULSE protocol for logs and the prompt. Disable to fall

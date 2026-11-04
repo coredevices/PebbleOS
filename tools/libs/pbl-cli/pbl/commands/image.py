@@ -19,17 +19,17 @@ class _ImageCommand(PblCommand):
         parser = self.add_subparser(parser_adder)
         parser.add_argument("--tty", help="tty for serial imaging (default: the lab's)")
         parser.add_argument(
-            "--force-pulse",
+            "--force-console",
             action="store_true",
-            help="Force PULSE-based imaging even where sftool would be used",
+            help="Force imaging over the console even where sftool would be used",
         )
         return parser
 
     def _tool(self, build, args):
         """The imaging tool this build's SoC and protocol call for."""
-        if build.config.CONFIG_SOC_SF32LB52 and not args.force_pulse:
+        if build.config.CONFIG_SOC_SF32LB52 and not args.force_console:
             return "sftool_flash_imaging"
-        return "pulse_flash_imaging"
+        return "console_flash_imaging"
 
     def _image(self, build, args, path):
         tty = args.tty

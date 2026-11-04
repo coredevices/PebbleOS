@@ -8,8 +8,8 @@ runner cannot write resources itself.
 pbl image_resources --tty /dev/ttyACM0
 ```
 
-The transfer uses sftool on SF32LB52 boards and PULSE flash imaging
-elsewhere; `--force-pulse` forces the latter.
+The transfer uses sftool on SF32LB52 boards and imaging over the console
+elsewhere; `--force-console` forces the latter.
 
 ## Options
 
