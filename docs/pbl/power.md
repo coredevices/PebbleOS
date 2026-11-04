@@ -36,6 +36,10 @@ minute with a PPK2.
 The background process holds the supply's lock, so an {doc}`itest` session
 on the watch fails right away, naming it, until `pbl power off`.
 
+`on`, `off`, `cycle` and the rest talk to whichever process holds the
+supply, even one from another session. `--wait` (see {ref}`pbl-lab-locks`)
+makes them wait for a session in another checkout to finish first.
+
 ## Supplies
 
 | Type | Supply | Measures |

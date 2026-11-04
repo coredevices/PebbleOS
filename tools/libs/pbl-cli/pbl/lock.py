@@ -22,6 +22,9 @@ import time
 ENV = "PBL_LOCK_DIR"
 #: The locks this process and its parents hold, for nested commands.
 HELD_ENV = "PBL_LOCKS_HELD"
+#: How many seconds to wait for a lock in use; nested commands inherit it.
+WAIT_ENV = "PBL_LOCK_WAIT"
+POLL_S = 1.0
 
 
 class LockError(Exception):
@@ -80,6 +83,50 @@ def holder(key):
         os.close(fd)
 
 
+def wait_s():
+    """How long to wait for a lock in use, in seconds: 0 fails right away."""
+    return float(os.environ.get(WAIT_ENV) or 0)
+
+
+class _Waiter:
+    """Waits for one lock, up to :func:`wait_s`, saying so once."""
+
+    def __init__(self, what):
+        self.what = what
+        self.deadline = time.monotonic() + wait_s()
+        self.announced = False
+
+    def wait(self, info):
+        """Sleep while ``info`` holds the lock. Raises LockError on timeout."""
+        if time.monotonic() >= self.deadline:
+            raise LockError(f"{self.what} is in use by {describe(info)}")
+        if not self.announced:
+            print(
+                f"waiting for {self.what}, in use by {describe(info)}",
+                file=sys.stderr,
+                flush=True,
+            )
+            self.announced = True
+        time.sleep(POLL_S)
+
+
+def wait_for_others(key, what, topdir):
+    """Wait, up to :func:`wait_s`, until no session outside the checkout at
+    ``topdir`` holds ``key``, without taking it: for a lock its holder keeps
+    across commands. Raises LockError on timeout."""
+    if not wait_s():
+        return
+    top = os.path.realpath(topdir) + os.sep
+    waiter = _Waiter(what)
+    while True:
+        info = holder(key)
+        if info is None or (os.path.realpath(info.get("cwd", "")) + os.sep).startswith(
+            top
+        ):
+            return
+        waiter.wait(info)
+
+
 def _program():
     path = sys.argv[0]
     # python -m runs a package's __main__.py
@@ -97,22 +144,28 @@ class Lock:
     def acquire(self):
         os.makedirs(lock_dir(), exist_ok=True)
         fd = os.open(_path(self.key), os.O_RDWR | os.O_CREAT, 0o644)
-        for _ in range(5):
+        waiter = _Waiter(self.what)
+        looked = 0
+        while True:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 break
             except BlockingIOError:
                 info = holder(self.key)
-                if info is not None:
+                if info is None:
+                    # Someone only looked at the lock
+                    looked += 1
+                    if looked >= 5:
+                        os.close(fd)
+                        raise LockError(f"cannot lock {self.what}") from None
+                    time.sleep(0.05)
+                    continue
+                looked = 0
+                try:
+                    waiter.wait(info)
+                except LockError:
                     os.close(fd)
-                    raise LockError(
-                        f"{self.what} is in use by {describe(info)}"
-                    ) from None
-                # Someone only looked at the lock
-                time.sleep(0.05)
-        else:
-            os.close(fd)
-            raise LockError(f"cannot lock {self.what}")
+                    raise
         os.ftruncate(fd, 0)
         os.write(
             fd,
@@ -121,7 +174,9 @@ class Lock:
                     "pid": os.getpid(),
                     "command": " ".join([_program()] + sys.argv[1:]),
                     "cwd": os.getcwd(),
-                    "since": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
+                    "since": datetime.datetime.now()
+                    .astimezone()
+                    .isoformat(timespec="seconds"),
                 }
             ).encode(),
         )

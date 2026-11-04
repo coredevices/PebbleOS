@@ -98,7 +98,8 @@ def start(key, type, port, name, voltage_mv=None):
             env=env,
             start_new_session=True,
         )
-    deadline = time.monotonic() + START_TIMEOUT_S
+    # The daemon waits for the supply's lock as well.
+    deadline = time.monotonic() + START_TIMEOUT_S + lock.wait_s()
     while time.monotonic() < deadline:
         if running(key):
             return True

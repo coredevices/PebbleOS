@@ -60,6 +60,14 @@ def global_options():
         default=argparse.SUPPRESS,
         help="The lab's watch to use, when several run the build",
     )
+    group.add_argument(
+        "--wait",
+        metavar="SECONDS",
+        type=float,
+        default=argparse.SUPPRESS,
+        help="Wait this long for a port or watch another session is using, "
+        "instead of failing right away",
+    )
     return parser
 
 
@@ -101,6 +109,11 @@ class PblCommand(ABC):
             self.parser.error(f"unrecognized arguments: {' '.join(unknown)}")
         self.workspace = workspace
         self.args = args
+        wait = getattr(args, "wait", None)
+        if wait is not None:
+            from pbl import lock
+
+            os.environ[lock.WAIT_ENV] = str(wait)
         return self.do_run(args, unknown) or 0
 
     @abstractmethod
@@ -169,9 +182,29 @@ class PblCommand(ABC):
         name = getattr(self.args, "watch", None)
         try:
             if name is None and tty is not None:
-                return lab.watch_on(tty)
-            return lab.watch_for(build.board, name)
+                watch = lab.watch_on(tty)
+            else:
+                watch = lab.watch_for(build.board, name)
         except labs.LabError as e:
+            self.die(str(e))
+        if watch is not None and watch.supply is not None:
+            self.wait_for_supply(lab.supplies[watch.supply])
+        return watch
+
+    def wait_for_supply(self, supply):
+        """With --wait, wait until no other checkout keeps ``supply``, and
+        with it the watch, powered: its session is between commands."""
+        from pbl import lock, power
+
+        if self.dry_run:
+            return
+        try:
+            lock.wait_for_others(
+                power.lock_key(supply.type, supply.port),
+                f"supply {supply.name}",
+                self.topdir,
+            )
+        except lock.LockError as e:
             self.die(str(e))
 
     @contextlib.contextmanager
@@ -195,9 +228,7 @@ class PblCommand(ABC):
         if self.dry_run:
             util.inf("[dry-run]", shlex.join(str(a) for a in cmd), color="yellow")
             return 0
-        return subprocess.call(
-            [str(a) for a in cmd], cwd=cwd or self.topdir, **kwargs
-        )
+        return subprocess.call([str(a) for a in cmd], cwd=cwd or self.topdir, **kwargs)
 
     def run_shell(self, cmd, cwd=None, **kwargs):
         """Run a shell command string from the workspace root."""
