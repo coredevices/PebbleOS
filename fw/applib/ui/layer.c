@@ -325,6 +325,14 @@ GRect layer_get_bounds_by_value(const Layer *layer) {
   return bounds;
 }
 
+//! Converts a point from screen coordinates to layer coordinates, including the layer's own offset
+//! within its parent. A root layer is at the screen origin.
+static void prv_screen_point_to_layer(const Layer *layer, GPoint *point) {
+  if (layer->parent) {
+    gpoint_sub_eq(point, layer_convert_point_to_screen(layer->parent, layer->frame.origin));
+  }
+}
+
 void layer_get_unobstructed_bounds(const Layer *layer, GRect *bounds_out) {
   PBL_ASSERT_TASK(PebbleTask_App);
   if (!layer || !bounds_out) {
@@ -332,8 +340,7 @@ void layer_get_unobstructed_bounds(const Layer *layer, GRect *bounds_out) {
   }
   GRect area;
   unobstructed_area_service_get_area(app_state_get_unobstructed_area_state(), &area);
-  // Convert the area from screen coordinates to layer coordinates
-  gpoint_sub_eq(&area.origin, layer_convert_point_to_screen(layer->parent, GPointZero));
+  prv_screen_point_to_layer(layer, &area.origin);
   layer_get_bounds(layer, bounds_out);
   grect_clip(bounds_out, &area);
 }

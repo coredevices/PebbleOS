@@ -6,12 +6,19 @@
 #include <applib/ui/layer.h>
 #include <applib/ui/layer_private.h>
 #include <applib/ui/window.h>
+#include <applib/unobstructed_area_service_private.h>
 #include <clar.h>
 #include <pebble_asserts.h>
 
 // Stubs
 ////////////////////////////////////
 #include <stubs_app_state.h>
+
+static GRect s_unobstructed_area;
+
+void unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area_out) {
+  *area_out = s_unobstructed_area;
+}
 
 // Setup
 ////////////////////////////////////
@@ -470,4 +477,23 @@ void test_layer__convert_rect_to_screen(void) {
   GRect global_frame;
   layer_get_global_frame(&child, &global_frame);
   cl_assert_equal_grect(global_frame, GRect(15, 26, 50, 50));
+}
+
+void test_layer__get_unobstructed_bounds(void) {
+  // The bottom 38 rows of a 200x228 screen are obstructed
+  s_unobstructed_area = GRect(0, 0, 200, 190);
+  Window window = {};
+  layer_init(&window.layer, &GRect(0, 0, 200, 228));
+  window.layer.window = &window;
+  Layer content, inner;
+  layer_init(&content, &GRect(0, 20, 200, 208));
+  layer_init(&inner, &GRect(10, 30, 100, 178));
+  layer_add_child(&window.layer, &content);
+  layer_add_child(&content, &inner);
+
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&window.layer),
+                        GRect(0, 0, 200, 190));
+  // Bounds are in the layer's own coordinates, so its offset within its parent counts
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&content), GRect(0, 0, 200, 170));
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&inner), GRect(0, 0, 100, 140));
 }
