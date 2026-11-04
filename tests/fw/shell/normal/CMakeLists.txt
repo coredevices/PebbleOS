@@ -37,3 +37,9 @@ pbl_clar_test(test_battery_ui_fsm_percent
     CONFIG_SERVICE_BATTERY_CAPACITY_HOURS=144
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_dark_mode_updater
+  SOURCES
+    fw/shell/normal/dark_mode_updater.c
+    tests/fakes/fake_rtc.c
+)
