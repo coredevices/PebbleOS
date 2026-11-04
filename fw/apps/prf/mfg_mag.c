@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include <pbl/drivers/mag.h>
 #include <pbl/kernel/time.h>
