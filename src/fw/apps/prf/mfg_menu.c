@@ -222,6 +222,7 @@ static void prv_load_prf_confirmed(ClickRecognizerRef recognizer, void *context)
 
   bool confirmed = (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP);
   if (confirmed) {
+    bt_persistent_storage_delete_all_pairings();
     boot_bit_set(BOOT_BIT_FORCE_PRF);
     system_reset();
   }
