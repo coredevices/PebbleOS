@@ -47,6 +47,8 @@
 #define PBL_THREAD_NAME_LEN 16
 /** @brief Number of MPU regions switched in with each thread. */
 #define PBL_THREAD_MAX_MEM_REGIONS 4
+/** @brief Index in the thread's MPU regions the kernel uses for the stack guard, if any. */
+#define PBL_THREAD_REGION_STACK_GUARD 2
 
 /**
  * @brief Thread entry function.
@@ -84,11 +86,22 @@ struct pbl_thread_attr {
    * @c CONFIG_USERSPACE every thread runs privileged.
    */
   bool privileged;
-  /** Lowest address of the stack; the caller owns the memory. */
+  /**
+   * The thread only uses @ref stack unprivileged once it has started, with nothing it can write
+   * below the stack, so it takes the smaller @c CONFIG_KERNEL_USER_STACK_GUARD_SIZE guard.
+   */
+  bool user_stack;
+  /**
+   * Lowest address of the stack buffer, aligned to its guard size; the caller owns the memory. The
+   * guard takes the bottom of it.
+   */
   void *stack;
-  /** Stack size in bytes, at least 128. */
+  /** Stack buffer size in bytes, guard included; the rest must be at least 128. */
   size_t stack_size;
-  /** MPU regions switched in with the thread. NULL entries take the default region. */
+  /**
+   * MPU regions switched in with the thread. NULL entries take the default region. The stack guard
+   * replaces @ref PBL_THREAD_REGION_STACK_GUARD.
+   */
   const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS];
 #ifdef CONFIG_USERSPACE
   /**
@@ -121,10 +134,12 @@ struct pbl_thread {
   pbl_prio_t prio;
   /** Runs in privileged mode. */
   bool privileged;
-  /** Lowest address of the stack. */
+  /** Lowest address of the usable stack, above the guard. */
   void *stack;
-  /** Stack size in bytes. */
+  /** Usable stack size in bytes. */
   size_t stack_size;
+  /** Size in bytes of the guard below @ref stack. */
+  size_t stack_guard_size;
   /** Thread-local pointer slots, see pbl_thread_tls_get(). */
   void *tls[CONFIG_KERNEL_THREAD_TLS_SLOTS];
 #ifdef CONFIG_USERSPACE
@@ -140,15 +155,17 @@ struct pbl_thread {
 };
 
 /**
- * @brief Define a thread stack with the alignment the MPU port needs for a guard region.
+ * @brief Define a thread stack, with room for its guard.
  *
- * Expands to a @c static array; @c CONFIG_KERNEL_STACK_ALIGN gives the alignment.
+ * Expands to a @c static array. Pass it and its @c sizeof to pbl_thread_create() through
+ * @ref pbl_thread_attr.
  *
  * @param name Name of the stack array.
- * @param size Stack size in bytes.
+ * @param size Usable stack size in bytes.
  */
-#define PBL_THREAD_STACK_DEFINE(name, size) \
-  static uint8_t name[size] PBL_ALIGNED(CONFIG_KERNEL_STACK_ALIGN)
+#define PBL_THREAD_STACK_DEFINE(name, size)                                 \
+  static uint8_t name[(size) + CONFIG_KERNEL_STACK_GUARD_SIZE] PBL_ALIGNED( \
+      CONFIG_KERNEL_STACK_ALIGN)
 
 /**
  * @brief Create and start a thread.
@@ -256,18 +273,6 @@ static inline const char *pbl_thread_name(const struct pbl_thread *t) {
 static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
   return t->id;
 }
-
-/**
- * @brief Replace the MPU regions of a thread.
- *
- * Used for threads whose regions cannot be passed at creation. A running thread gets them when
- * it is next switched in.
- *
- * @param t Thread.
- * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions; NULL entries take the default
- *                region.
- */
-void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
 
 /**
  * @brief Set the regions of threads that do not specify their own.

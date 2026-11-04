@@ -11,8 +11,6 @@ if SERVICE_SYSTEM_TASK
 config SERVICE_SYSTEM_TASK_THREAD_STACK_SIZE
     int "System task thread stack size in bytes"
     default 4096
-    help
-      Includes the stack guard.
 
 config SERVICE_SYSTEM_TASK_THREAD_PRIO
     int "System task thread priority"

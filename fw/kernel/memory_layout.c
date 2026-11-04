@@ -71,7 +71,6 @@ void memory_layout_dump_mpu_regions(void) {
 #if defined(UNITTEST) || defined(CONFIG_ARCH_POSIX)
 static const uint32_t __unpriv_ro_bss_start__ = 0;
 static const uint32_t __unpriv_ro_bss_size__ = 0;
-static const uint32_t __isr_stack_start__ = 0;
 
 static const uint32_t __APP_RAM__ = 0;
 static const uint32_t __APP_RAM_size__ = 0;
@@ -104,7 +103,10 @@ static const MpuRegion s_readonly_bss_region = {
   .permissions = MpuPermissions_PrivRW_UserRO,
 };
 
-#ifndef CONFIG_SOC_SF32LB52
+static_assert(MemoryRegion_TaskStackGuard - MemoryRegion_AppRAM == PBL_THREAD_REGION_STACK_GUARD,
+              "the kernel owns this region");
+
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
 // ISR stack guard
 static const MpuRegion s_isr_stack_guard_region = {
   .region_num = MemoryRegion_IsrStackGuard,
@@ -115,24 +117,6 @@ static const MpuRegion s_isr_stack_guard_region = {
   .permissions = MpuPermissions_NoAccess,
 };
 #endif
-
-static const MpuRegion s_app_stack_guard_region = {
-  .region_num = MemoryRegion_TaskStackGuard,
-  .enabled = true,
-  .base_address = (uint32_t)__APP_RAM__,
-  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
-
-static const MpuRegion s_worker_stack_guard_region = {
-  .region_num = MemoryRegion_TaskStackGuard,
-  .enabled = true,
-  .base_address = (uint32_t)__WORKER_RAM__,
-  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
 
 static const MpuRegion s_app_region = {
   .region_num = MemoryRegion_AppRAM,
@@ -203,11 +187,7 @@ void memory_layout_setup_mpu(void) {
   // enable access to unprivileged code.
 
   mpu_set_region(&s_readonly_bss_region);
-  // ARMv8-M tracks per-task stack overflow via PSPLIM in the FreeRTOS CM33
-  // port, so the dedicated ISR stack guard region (no-access) is redundant
-  // and the AP encoding can't even express "no access" precisely. Skip it
-  // on SF32LB52 to reclaim the slot.
-#ifndef CONFIG_SOC_SF32LB52
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   mpu_set_region(&s_isr_stack_guard_region);
 #endif
 
@@ -222,16 +202,8 @@ const MpuRegion *memory_layout_get_readonly_bss_region(void) {
   return &s_readonly_bss_region;
 }
 
-const MpuRegion *memory_layout_get_app_stack_guard_region(void) {
-  return &s_app_stack_guard_region;
-}
-
 const MpuRegion *memory_layout_get_worker_region(void) {
   return &s_worker_region;
-}
-
-const MpuRegion *memory_layout_get_worker_stack_guard_region(void) {
-  return &s_worker_stack_guard_region;
 }
 
 const MpuRegion *memory_layout_get_microflash_region(void) {
@@ -245,24 +217,6 @@ void memory_layout_thread_regions_init(void) {
   // inherit the regions of the thread they interrupt.
   const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&s_app_region, &s_worker_region};
   pbl_thread_regions_default_set(regions);
-}
-
-const MpuRegion *memory_layout_stack_guard_region_init(MpuRegion *guard, const void *stack) {
-#ifdef CONFIG_ARMV8_M_MAINLINE
-  // PSPLIM catches overflows, and the ARMv8-M AP encoding can't express "no
-  // access" anyway.
-  return nullptr;
-#else
-  *guard = (MpuRegion){
-    .region_num = MemoryRegion_TaskStackGuard,
-    .enabled = true,
-    .base_address = (uintptr_t)stack - CONFIG_KERNEL_STACK_GUARD_SIZE,
-    .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
-    .cache_policy = MpuCachePolicy_NotCacheable,
-    .permissions = MpuPermissions_NoAccess,
-  };
-  return guard;
-#endif
 }
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {

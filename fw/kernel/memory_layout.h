@@ -35,8 +35,6 @@ enum MemoryRegionAssignments {
   MemoryRegion_Task4
 };
 
-//! Index of the stack guard in pbl_thread_attr::regions.
-#define MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD (MemoryRegion_TaskStackGuard - MemoryRegion_AppRAM)
 //! Index of the process syscall stack guard in pbl_thread_attr::regions.
 #define MEMORY_LAYOUT_THREAD_REGION_SYSCALL_GUARD (MemoryRegion_Task4 - MemoryRegion_AppRAM)
 
@@ -45,21 +43,14 @@ void memory_layout_dump_mpu_regions(void);
 void memory_layout_setup_mpu(void);
 
 const MpuRegion *memory_layout_get_app_region(void);
-const MpuRegion *memory_layout_get_app_stack_guard_region(void);
 
 const MpuRegion *memory_layout_get_readonly_bss_region(void);
 const MpuRegion *memory_layout_get_microflash_region(void);
 
 const MpuRegion *memory_layout_get_worker_region(void);
-const MpuRegion *memory_layout_get_worker_stack_guard_region(void);
 
 //! Gives every thread that does not set its own the kernel view of App and Worker RAM.
 void memory_layout_thread_regions_init(void);
-
-//! Sets up the guard for the stack starting at @p stack, with @c CONFIG_KERNEL_STACK_GUARD_SIZE
-//! bytes reserved below it.
-//! @return @p guard, or NULL if the target needs no region to catch overflows.
-const MpuRegion *memory_layout_stack_guard_region_init(MpuRegion *guard, const void *stack);
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr);
 bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length);

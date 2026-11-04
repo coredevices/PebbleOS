@@ -121,6 +121,14 @@ static size_t prv_get_worker_stack_size(const PebbleProcessMd *app_md) {
   return 1400;
 }
 
+static bool prv_has_user_stack(const PebbleProcessMd *app_md) {
+#ifdef CONFIG_USERSPACE
+  return app_md->is_unprivileged;
+#else
+  return false;
+#endif
+}
+
 // ------------------------------------------------------------------------------------------------
 bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, const void *args) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
@@ -165,9 +173,10 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // Set up the worker's memory and load the binary into it.
   const size_t worker_segment_size = prv_get_worker_segment_size(app_md);
   // The stack guard is counted as part of the app segment size...
-  const size_t stack_guard_size = CONFIG_KERNEL_STACK_GUARD_SIZE;
-  // ...and is carved out of the stack.
-  const size_t stack_size = prv_get_worker_stack_size(app_md) - stack_guard_size;
+  const size_t stack_guard_size = prv_has_user_stack(app_md) ? CONFIG_KERNEL_USER_STACK_GUARD_SIZE
+                                                             : CONFIG_KERNEL_STACK_GUARD_SIZE;
+  // ...and the smaller one is carved out of the stack, so all workers keep the same usable size.
+  const size_t stack_size = prv_get_worker_stack_size(app_md) - CONFIG_KERNEL_USER_STACK_GUARD_SIZE;
 
   MemorySegment worker_ram = {__WORKER_RAM__, __WORKER_RAM_end__};
   memset((char *)worker_ram.start + stack_guard_size, 0,
@@ -225,8 +234,9 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
     .arg = entry_point,
     .prio = CONFIG_WORKER_THREAD_PRIO,
     .privileged = true,
-    .stack = stack,
-    .stack_size = stack_size,
+    .user_stack = prv_has_user_stack(app_md),
+    .stack = (char *)stack - stack_guard_size,
+    .stack_size = stack_size + stack_guard_size,
   };
 
   PBL_LOG_DBG("Starting %s", task_name);
