@@ -75,6 +75,7 @@ typedef struct {
   LogState log_state;
 
   BatteryStateServiceState battery_state_service_state;
+  DarkModeServiceState dark_mode_service_state;
 
   BacklightServiceState backlight_service_state;
 
@@ -308,6 +309,8 @@ PBL_NOINLINE void app_state_init(void) {
 
   battery_state_service_state_init(app_state_get_battery_state_service_state());
 
+  dark_mode_service_state_init(app_state_get_dark_mode_service_state());
+
   backlight_service_state_init(app_state_get_backlight_service_state());
 
   connection_service_state_init(app_state_get_connection_service_state());
@@ -426,6 +429,10 @@ LogState *app_state_get_log_state(void) {
 
 BatteryStateServiceState *app_state_get_battery_state_service_state(void) {
   return &s_app_state_ptr->battery_state_service_state;
+}
+
+DarkModeServiceState *app_state_get_dark_mode_service_state(void) {
+  return &s_app_state_ptr->dark_mode_service_state;
 }
 
 BacklightServiceState *app_state_get_backlight_service_state(void) {

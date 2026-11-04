@@ -99,6 +99,10 @@ PBL_SYSCALL(bool, system_theme_is_dark_mode) {
   return s_dark_mode && prv_is_system_app();
 }
 
+PBL_SYSCALL(bool, sys_dark_mode_is_active) {
+  return s_dark_mode;
+}
+
 GColor system_theme_get_bg_color(void) {
   return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
 }

@@ -179,9 +179,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x6c -- Add mic_stream_to_phone_start() (rev 110)
 // sdk.major:0x5 .minor:0x6d -- Permission-gated local microphone PCM capture (rev 111)
 // sdk.major:0x5 .minor:0x6e -- Add layer_get_mic_accessory_bounds() (rev 112)
+// sdk.major:0x5 .minor:0x6f -- Add the dark mode service (rev 113)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6e
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x6f
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4

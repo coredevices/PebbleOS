@@ -296,6 +296,10 @@ WatchInfoColor sys_watch_info_get_color(void);
 //! choice and avoid disturbing actions such as vibration if quiet time is active.
 //! @return True, if Quiet Time is currently active.
 bool sys_do_not_disturb_is_active(void);
+
+//! @return true if dark mode is on. Unlike system_theme_is_dark_mode(), this also answers for
+//! third-party apps.
+bool sys_dark_mode_is_active(void);
 //! @} // end addtogroup Preferences
 
 //! Get the time of the next enabled alarm.
