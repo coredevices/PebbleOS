@@ -16,10 +16,11 @@
 //!
 //! It is for watchapps only: a watchface can never stream. While the microphone runs, the system
 //! shows a "Listening" banner at the bottom of the screen which reduces your unobstructed area
-//! (see \ref layer_get_unobstructed_bounds). The phone decides whether to accept a stream and can
-//! end it at any time. The stream also ends on its own, with a \ref MicStreamStopReason, whenever
-//! your app loses focus (a notification, alert, or the dictation UI) or the system needs the
-//! microphone.
+//! (see \ref layer_get_unobstructed_bounds). On rectangular displays the banner shrinks into the
+//! bottom-left corner after a few seconds; \ref layer_get_mic_accessory_bounds gives the space next
+//! to it for your own content. The phone decides whether to accept a stream and can end it at any
+//! time. The stream also ends on its own, with a \ref MicStreamStopReason, whenever your app loses
+//! focus (a notification, alert, or the dictation UI) or the system needs the microphone.
 //!   @{
 
 //! Result of \ref mic_stream_to_phone_start.

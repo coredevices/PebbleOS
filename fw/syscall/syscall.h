@@ -111,6 +111,9 @@ bool sys_mic_capture_is_active(uint32_t session);
 uint8_t sys_mic_stream_start(uint32_t *stream_id);
 void sys_mic_stream_stop(void);
 
+//! The part of the Listening banner's bar left to the app. See layer_get_mic_accessory_bounds.
+bool sys_mic_banner_get_accessory_area(GRect *area_out);
+
 void sys_get_app_uuid(Uuid *uuid);
 bool sys_app_is_watchface(void);
 AppInstallId sys_app_manager_get_current_app_id(void);

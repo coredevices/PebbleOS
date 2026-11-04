@@ -16,6 +16,7 @@
 #include <board/board.h>
 #include <kernel/events.h>
 #include <popups/crashed_ui.h>
+#include <popups/mic_banner.h>
 #include <popups/notifications/notification_window.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_md.h>
@@ -321,6 +322,11 @@ int16_t timeline_peek_get_obstruction_origin_y(void) {
 
 int16_t mic_banner_get_obstruction_origin_y(void) {
   return DISP_ROWS;
+}
+
+bool mic_banner_get_accessory_area(GRect *area_out) {
+  *area_out = GRectZero;
+  return false;
 }
 
 void mic_banner_handle_process_kill(void) {

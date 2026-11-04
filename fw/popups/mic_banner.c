@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/mic_manager.h>
 #include <pbl/util/math.h>
 
 #include <applib/fonts/fonts.h>
@@ -170,6 +171,49 @@ static int16_t prv_compose(int16_t banner_y) {
 
 int16_t mic_banner_get_obstruction_origin_y(void) {
   return prv_obstruction_for_shape_y(s_banner.shape.frame.origin.y);
+}
+
+#if PBL_RECT
+//! Whether an app holds the mic, so the banner is showing or about to
+static bool prv_app_uses_mic(void) {
+#ifdef CONFIG_SERVICE_MIC_MANAGER
+  const MicClient owner = mic_manager_get_owner();
+  return (owner != MicClientNone) && (owner != MicClientVoiceDictation);
+#else
+  return false;
+#endif
+}
+#endif
+
+bool mic_banner_get_accessory_area(GRect *area_out) {
+  *area_out = GRectZero;
+#if PBL_RECT
+  GSize fb_size;
+  app_manager_get_framebuffer_size(&fb_size);
+  if (prv_obstruction_for_shape_y(prv_frame(true).origin.y) >= fb_size.h) {
+    return false; // Never overlaps the app
+  }
+  // Only the top moves. Read it once: apps call this from their own task.
+  int16_t top = prv_obstruction_for_shape_y(s_banner.shape.frame.origin.y);
+  if (top >= fb_size.h) {
+    // Off screen. Once the app has the mic it is about to slide in, so report it just below the
+    // screen: the app never sees it missing while it uses the mic.
+    if (!s_banner.visible && !prv_app_uses_mic()) {
+      return false;
+    }
+    top = fb_size.h;
+  }
+  GRect area = GRect(SQUARE_SIZE, top, DISP_COLS - SQUARE_SIZE, MIC_BANNER_HEIGHT);
+  if (prv_is_upscaled_app(&fb_size)) {
+    area.origin.x = (SQUARE_SIZE * fb_size.w) / DISP_COLS;
+    area.size.w = fb_size.w - area.origin.x;
+    area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / DISP_ROWS;
+  }
+  *area_out = area;
+  return true;
+#else
+  return false;
+#endif
 }
 
 // Slide animation (mirrors Timeline Peek)

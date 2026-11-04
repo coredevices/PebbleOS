@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "111",
+  "revision" : "112",
   "version" : "2.0",
   "files": [
     "include/pbl/drivers/button_id.h",
@@ -4477,6 +4477,11 @@
               "type": "function",
               "name": "mic_capture_is_active",
               "addedRevision": "111"
+            }, {
+              "type": "function",
+              "name": "layer_get_mic_accessory_bounds",
+              "addedRevision": "112",
+              "stubReturn": "false"
             }
           ]
         }, {

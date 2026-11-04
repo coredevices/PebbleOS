@@ -65,3 +65,8 @@ AppInstallId PBL_WEAK sys_process_manager_get_current_process_id(void) {
 
 void PBL_WEAK sys_get_app_uuid(Uuid *uuid) {
 }
+
+bool PBL_WEAK sys_mic_banner_get_accessory_area(GRect *area_out) {
+  *area_out = GRectZero;
+  return false;
+}

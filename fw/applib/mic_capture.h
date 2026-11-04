@@ -14,7 +14,8 @@
 
 //! Local 16 kHz mono signed 16-bit PCM capture. Requires an explicit Microphone
 //! grant synced from the phone. Grants persist offline until updated by the phone.
-//! Only foreground watchapps can capture. The system displays its Listening banner.
+//! Only foreground watchapps can capture. The system displays its Listening banner (see
+//! \ref layer_get_mic_accessory_bounds).
 //! Capture and \ref mic_stream_to_phone_start cannot run at the same time.
 #define MIC_CAPTURE_SAMPLE_RATE 16000
 
