@@ -1,2 +1,12 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
+
+if FUEL_GAUGE_THEVENIN
+
+config FUEL_GAUGE_THEVENIN_RC_MILLIOHM
+    default 1857
+
+config FUEL_GAUGE_THEVENIN_RC_TAU_MS
+    default 64900
+
+endif
