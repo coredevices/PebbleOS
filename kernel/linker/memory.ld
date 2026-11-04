@@ -60,7 +60,6 @@ __APP_RAM_size__ = PBL_APP_RAM_SIZE;
 __APP_RAM_end__ = __APP_RAM__ + __APP_RAM_size__;
 
 REGION_ALIAS("REGION_ISR_STACK", RAM);
-REGION_ALIAS("REGION_KERNEL_STACKS", RAM);
 REGION_ALIAS("REGION_KERNEL_HEAP", RAM);
 
 /* The process loader enforces eight-byte alignment on all segments. */

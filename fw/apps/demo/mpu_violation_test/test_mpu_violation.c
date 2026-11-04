@@ -38,8 +38,7 @@
 extern const uint32_t __WORKER_RAM__[];
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __APP_RAM__[];
-extern const uint32_t __kernel_main_stack_start__[];
-extern const uint32_t __stack_guard_size__[];
+extern const uint32_t _heap_start[];
 #ifdef CONFIG_SOC_SF32LB52
 extern const uint32_t __ramfunc_start[];
 #endif
@@ -134,7 +133,7 @@ static uint32_t PBL_NOINLINE prv_overflow_recurse(uint32_t depth) {
 // stack guard while privileged, which reboots the system.
 static void PBL_NOINLINE prv_syscall_near_limit(size_t headroom) {
   volatile uint8_t marker;
-  const uintptr_t stack_base = (uintptr_t)__APP_RAM__ + (uintptr_t)__stack_guard_size__;
+  const uintptr_t stack_base = (uintptr_t)__APP_RAM__ + CONFIG_KERNEL_STACK_GUARD_SIZE;
   const uintptr_t sp = (uintptr_t)&marker;
   const size_t burn = (sp > stack_base + headroom) ? (sp - stack_base - headroom) : 1;
   volatile uint8_t pad[burn];
@@ -161,14 +160,14 @@ static void prv_run_test(TestKind kind) {
       break;
     }
     case TestKind_KernelRamWrite: {
-      // Bottom of the kernel main stack -- well inside kernel RAM and
-      // not covered by any region the App task can see.
-      volatile uint32_t *p = (volatile uint32_t *)__kernel_main_stack_start__;
+      // Bottom of the kernel heap -- well inside kernel RAM and not covered
+      // by any region the App task can see.
+      volatile uint32_t *p = (volatile uint32_t *)_heap_start;
       *p = 0xDEADBEEF;
       break;
     }
     case TestKind_KernelRamRead: {
-      volatile uint32_t *p = (volatile uint32_t *)__kernel_main_stack_start__;
+      volatile uint32_t *p = (volatile uint32_t *)_heap_start;
       volatile uint32_t v = *p;
       (void)v;
       break;

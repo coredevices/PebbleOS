@@ -7,6 +7,28 @@ config KERNEL_IDLE_STACK_SIZE
 	int "Idle thread stack size in bytes"
 	default 1024
 
+config KERNEL_MAIN_STACK_SIZE
+	int "Main thread stack size in bytes"
+	default 4096
+	help
+	  Stack main() runs on, including its guard.
+
+config KERNEL_MAIN_THREAD_PRIO
+	int "Main thread priority"
+	default 3
+
+config KERNEL_ISR_STACK_SIZE
+	int "ISR stack size in bytes"
+	default 1024
+
+config KERNEL_STACK_GUARD_SIZE
+	int "Stack guard size in bytes"
+	default 32 if CPU_CORTEX_M
+	default 0
+	help
+	  Bytes reserved below the stacks that have an overflow guard. A power
+	  of two the target's MPU can cover with one region.
+
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
 	default 1000 if QEMU || SOC_SF32LB52 || SOC_POSIX

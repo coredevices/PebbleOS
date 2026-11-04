@@ -26,14 +26,11 @@ PBL_WEAK const MpuRegion *memory_layout_get_worker_stack_guard_region(void) {
   return nullptr;
 }
 
-PBL_WEAK const MpuRegion *memory_layout_get_kernel_main_stack_guard_region(void) {
-  return nullptr;
-}
-PBL_WEAK const MpuRegion *memory_layout_get_kernel_bg_stack_guard_region(void) {
-  return nullptr;
-}
-
 PBL_WEAK void memory_layout_thread_regions_init(void) {
+}
+PBL_WEAK const MpuRegion *memory_layout_stack_guard_region_init(MpuRegion *guard,
+                                                                const void *stack) {
+  return nullptr;
 }
 
 PBL_WEAK bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {

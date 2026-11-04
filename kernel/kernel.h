@@ -51,6 +51,9 @@ void sched_disinherit(struct pbl_thread *owner);
 //! Brings up the SoC, interrupts, faults and the heap, then runs @p entry.
 [[noreturn]] void kernel_init(int (*entry)(void));
 
+//! Starts the scheduler: creates the idle thread and switches to the highest priority thread.
+[[noreturn]] void pbl_kernel_start(void);
+
 //! Resets the interrupt lock nesting when the first thread starts.
 void irq_reset(void);
 

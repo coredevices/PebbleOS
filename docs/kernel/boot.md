@@ -18,14 +18,16 @@ Both continue in `kernel_init()`, which:
 6. prints the boot banner, with the version from `pbl/version.h`. Backends
    that start later, like the flash one, get it replayed from the logging
    boot buffer;
-7. calls `main()`.
+7. creates the main thread, whose stack and priority come from
+   `CONFIG_KERNEL_MAIN_STACK_SIZE` and `CONFIG_KERNEL_MAIN_THREAD_PRIO`, and
+   starts the scheduler, which runs `main()` on it.
 
 ```{mermaid}
 flowchart LR
   reset["Reset_Handler()"]
   prep["kernel_prep_c()<br/>.data, .ramfunc, .bss"]
   init["kernel_init()<br/>SoC, IRQs, faults, heap,<br/>console, banner"]
-  main["main()<br/>fw/main.c"]
+  main["main()<br/>main thread"]
   reset --> prep --> init --> main
 
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff

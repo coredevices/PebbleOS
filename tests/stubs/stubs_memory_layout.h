@@ -14,9 +14,8 @@ const MpuRegion *memory_layout_get_microflash_region(void);
 const MpuRegion *memory_layout_get_worker_region(void);
 const MpuRegion *memory_layout_get_worker_stack_guard_region(void);
 
-const MpuRegion *memory_layout_get_kernel_main_stack_guard_region(void);
-const MpuRegion *memory_layout_get_kernel_bg_stack_guard_region(void);
 void memory_layout_thread_regions_init(void);
+const MpuRegion *memory_layout_stack_guard_region_init(MpuRegion *guard, const void *stack);
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr);
 bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length);

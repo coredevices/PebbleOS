@@ -10,7 +10,8 @@
  *
  * The kernel owns the reset vector: it copies @c .data (and @c .ramfunc with
  * @c CONFIG_RAMFUNC), zeroes @c .bss and calls pbl_soc_early_init(). It then sets up interrupts,
- * faults, the heap and the early console, prints the boot banner and calls main().
+ * faults, the heap and the early console, prints the boot banner and starts the scheduler with
+ * main() on the main thread.
  * @{
  */
 

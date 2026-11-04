@@ -36,6 +36,7 @@ static_assert((1 << (8 * sizeof(PebbleTaskBitset))) >= (1 << NumPebbleTask),
               "The type of PebbleTaskBitset is not wide enough to "
               "track all tasks in the PebbleTask enum");
 
+//! Makes @p thread the one running @p task.
 void pebble_task_register(PebbleTask task, struct pbl_thread *thread);
 void pebble_task_unregister(PebbleTask task);
 

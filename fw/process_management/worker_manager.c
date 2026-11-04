@@ -45,7 +45,6 @@ static PBL_MSGQ_DEFINE(s_to_worker_event_queue, sizeof(PebbleEvent), MAX_TO_WORK
 
 extern char __WORKER_RAM__[];
 extern char __WORKER_RAM_end__[];
-extern char __stack_guard_size__[];
 
 //! Used by the "pebble gdb" command to locate the loaded worker in memory.
 void *volatile g_worker_load_address;
@@ -166,7 +165,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   // Set up the worker's memory and load the binary into it.
   const size_t worker_segment_size = prv_get_worker_segment_size(app_md);
   // The stack guard is counted as part of the app segment size...
-  const size_t stack_guard_size = MEMORY_LAYOUT_STACK_GUARD_SIZE;
+  const size_t stack_guard_size = CONFIG_KERNEL_STACK_GUARD_SIZE;
   // ...and is carved out of the stack.
   const size_t stack_size = prv_get_worker_stack_size(app_md) - stack_guard_size;
 

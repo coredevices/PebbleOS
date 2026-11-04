@@ -72,7 +72,6 @@ void memory_layout_dump_mpu_regions(void) {
 static const uint32_t __unpriv_ro_bss_start__ = 0;
 static const uint32_t __unpriv_ro_bss_size__ = 0;
 static const uint32_t __isr_stack_start__ = 0;
-static const uint32_t __stack_guard_size__ = 0;
 
 static const uint32_t __APP_RAM__ = 0;
 static const uint32_t __APP_RAM_size__ = 0;
@@ -81,14 +80,10 @@ static const uint32_t __WORKER_RAM_size__ = 0;
 
 static const uint32_t __FLASH_start__ = 0;
 static const uint32_t __FLASH_size__ = 0;
-
-static const uint32_t __kernel_main_stack_start__ = 0;
-static const uint32_t __kernel_bg_stack_start__ = 0;
 #else
 extern const uint32_t __unpriv_ro_bss_start__[];
 extern const uint32_t __unpriv_ro_bss_size__[];
 extern const uint32_t __isr_stack_start__[];
-extern const uint32_t __stack_guard_size__[];
 
 extern const uint32_t __APP_RAM__[];
 extern const uint32_t __APP_RAM_size__[];
@@ -97,9 +92,6 @@ extern const uint32_t __WORKER_RAM_size__[];
 
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
-
-extern const uint32_t __kernel_main_stack_start__[];
-extern const uint32_t __kernel_bg_stack_start__[];
 #endif
 
 // Kernel read only RAM. Parts of RAM that it's kosher for unprivileged apps to read
@@ -118,7 +110,7 @@ static const MpuRegion s_isr_stack_guard_region = {
   .region_num = MemoryRegion_IsrStackGuard,
   .enabled = true,
   .base_address = (uint32_t)__isr_stack_start__,
-  .size = (uint32_t)__stack_guard_size__,
+  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
   .cache_policy = MpuCachePolicy_NotCacheable,
   .permissions = MpuPermissions_NoAccess,
 };
@@ -128,7 +120,7 @@ static const MpuRegion s_app_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
   .enabled = true,
   .base_address = (uint32_t)__APP_RAM__,
-  .size = (uint32_t)__stack_guard_size__,
+  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
   .cache_policy = MpuCachePolicy_NotCacheable,
   .permissions = MpuPermissions_NoAccess,
 };
@@ -137,7 +129,7 @@ static const MpuRegion s_worker_stack_guard_region = {
   .region_num = MemoryRegion_TaskStackGuard,
   .enabled = true,
   .base_address = (uint32_t)__WORKER_RAM__,
-  .size = (uint32_t)__stack_guard_size__,
+  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
   .cache_policy = MpuCachePolicy_NotCacheable,
   .permissions = MpuPermissions_NoAccess,
 };
@@ -191,24 +183,6 @@ static const MpuRegion s_resource_banks_region = {
   .permissions = MpuPermissions_PrivRO_UserRO,
 };
 #endif
-
-static const MpuRegion s_kernel_main_stack_guard_region = {
-  .region_num = MemoryRegion_TaskStackGuard,
-  .enabled = true,
-  .base_address = (uint32_t)__kernel_main_stack_start__,
-  .size = (uint32_t)__stack_guard_size__,
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
-
-static const MpuRegion s_kernel_bg_stack_guard_region = {
-  .region_num = MemoryRegion_TaskStackGuard,
-  .enabled = true,
-  .base_address = (uint32_t)__kernel_bg_stack_start__,
-  .size = (uint32_t)__stack_guard_size__,
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
-};
 
 void memory_layout_setup_mpu(void) {
   // Flash parts...
@@ -264,14 +238,6 @@ const MpuRegion *memory_layout_get_microflash_region(void) {
   return &s_microflash_region;
 }
 
-const MpuRegion *memory_layout_get_kernel_main_stack_guard_region(void) {
-  return &s_kernel_main_stack_guard_region;
-}
-
-const MpuRegion *memory_layout_get_kernel_bg_stack_guard_region(void) {
-  return &s_kernel_bg_stack_guard_region;
-}
-
 void memory_layout_thread_regions_init(void) {
   // SF32LB52 caches this memory through the background map but not through these
   // inner-shareable regions, so an access without them can leave dirty lines the
@@ -279,6 +245,24 @@ void memory_layout_thread_regions_init(void) {
   // inherit the regions of the thread they interrupt.
   const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&s_app_region, &s_worker_region};
   pbl_thread_regions_default_set(regions);
+}
+
+const MpuRegion *memory_layout_stack_guard_region_init(MpuRegion *guard, const void *stack) {
+#ifdef CONFIG_ARMV8_M_MAINLINE
+  // PSPLIM catches overflows, and the ARMv8-M AP encoding can't express "no
+  // access" anyway.
+  return nullptr;
+#else
+  *guard = (MpuRegion){
+    .region_num = MemoryRegion_TaskStackGuard,
+    .enabled = true,
+    .base_address = (uintptr_t)stack - CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .cache_policy = MpuCachePolicy_NotCacheable,
+    .permissions = MpuPermissions_NoAccess,
+  };
+  return guard;
+#endif
 }
 
 bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {
