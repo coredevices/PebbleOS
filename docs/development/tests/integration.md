@@ -123,7 +123,7 @@ may be repeated:
 | Connection                  | Prompt | Logs     | Pebble protocol |
 | --------------------------- | ------ | -------- | --------------- |
 | `pulse:TTY` / `pulse:socket://HOST:PORT` | yes | yes | yes (tunneled) |
-| `serial:TTY[@BAUD]`         | yes    | yes      | no              |
+| `serial:TTY[@BAUD]`         | yes    | yes      | yes (in frames) |
 | `ble:WATCH[@CONTROLLER]`    | no     | no       | yes             |
 | `devconn:HOST[:PORT]`       | no     | app only | yes             |
 | `qemu:HOST:PORT`            | no     | no       | yes             |

@@ -8,6 +8,10 @@ pbl_library_sources(
   serial_console.c
 )
 pbl_library_sources_ifdef(CONFIG_SHELL console_shell.c)
+pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_UART
+  console_frame.c
+  console_pp.c
+)
 if(CONFIG_PULSE_EVERYWHERE)
   file(GLOB pulse_sources CONFIGURE_DEPENDS
     best_effort_transport.c
