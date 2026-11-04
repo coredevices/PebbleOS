@@ -40,29 +40,13 @@
     } >RAM
 
     .stack (NOLOAD) : {
-        . = ALIGN(__stack_guard_size__);
+        . = ALIGN(CONFIG_KERNEL_STACK_GUARD_SIZE);
         __isr_stack_start__ = .;
 
-        . = . + 1024;
+        . = . + CONFIG_KERNEL_ISR_STACK_SIZE;
 
         _estack = .;
     } >REGION_ISR_STACK
-
-    .kernel_main_stack (NOLOAD) : {
-        . = ALIGN(__stack_guard_size__);
-        __kernel_main_stack_start__ = .;
-
-        . = . + 4096;
-    } >REGION_KERNEL_STACKS
-    __kernel_main_stack_size__ = . - __kernel_main_stack_start__;
-
-    .kernel_bg_stack (NOLOAD) : {
-        . = ALIGN(__stack_guard_size__);
-        __kernel_bg_stack_start__ = .;
-
-        . = . + 4096;
-    } >REGION_KERNEL_STACKS
-    __kernel_bg_stack_size__ = . - __kernel_bg_stack_start__;
 
     /* The heap gets whatever is left. Keep the section empty so the memory
        usage report shows static usage only. */

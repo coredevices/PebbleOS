@@ -102,7 +102,7 @@ static uint16_t prv_syscall_stack_free_bytes(PebbleTask task) {
 }
 #endif
 
-static void prv_task_register(PebbleTask task, struct pbl_thread *thread) {
+void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
   g_task_threads[task] = thread;
 }
 
@@ -361,12 +361,7 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
     case PebbleTask_Worker:
       stack_guard_region = memory_layout_get_worker_stack_guard_region();
       break;
-    case PebbleTask_KernelMain:
-      stack_guard_region = memory_layout_get_kernel_main_stack_guard_region();
-      break;
     case PebbleTask_KernelBackground:
-      stack_guard_region = memory_layout_get_kernel_bg_stack_guard_region();
-      break;
     case PebbleTask_BTHost:
     case PebbleTask_BTController:
     case PebbleTask_BTHCI:
@@ -379,14 +374,16 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
 
   attr->regions[0] = &app_region;
   attr->regions[1] = &worker_region;
-  attr->regions[2] = stack_guard_region;
+  if (stack_guard_region != nullptr) {
+    attr->regions[2] = stack_guard_region;
+  }
 #if defined(CONFIG_USERSPACE) && SYSCALL_STACK_GUARD_WORDS
   attr->regions[3] = prv_syscall_stack_guard_region(pebble_task, attr);
 #endif
 
   struct pbl_thread *thread = &s_threads[pebble_task];
   PBL_ASSERT(pbl_thread_create(thread, attr) == 0, "Could not start task %s", attr->name);
-  prv_task_register(pebble_task, thread);
+  pebble_task_register(pebble_task, thread);
   return thread;
 }
 

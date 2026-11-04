@@ -86,7 +86,6 @@
 
 extern char __APP_RAM__[];
 extern char __APP_RAM_end__[];
-extern char __stack_guard_size__[];
 
 //! Used by the "pebble gdb" command to locate the loaded app in memory.
 void *volatile g_app_load_address;
@@ -260,7 +259,7 @@ PBL_T_STATIC MemorySegment prv_get_app_ram_segment(void) {
 }
 
 PBL_T_STATIC size_t prv_get_stack_guard_size(void) {
-  return MEMORY_LAYOUT_STACK_GUARD_SIZE;
+  return CONFIG_KERNEL_STACK_GUARD_SIZE;
 }
 
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)

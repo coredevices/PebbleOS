@@ -11,12 +11,6 @@ PBL_WEAK const uint32_t __app_stack_end__;
 
 PBL_WEAK const uint32_t __isr_stack_start__;
 
-PBL_WEAK const uint32_t __kernel_bg_stack_start__;
-
-PBL_WEAK const uint32_t __kernel_main_stack_start__;
-
-PBL_WEAK const uint32_t __stack_guard_size__;
-
 PBL_WEAK const uint32_t __worker_stack_start__;
 
 PBL_WEAK const uint32_t __privileged_functions_start__;
@@ -42,6 +36,10 @@ PBL_WEAK const uint32_t __WORKER_RAM_size__;
 PBL_WEAK const uint32_t __FLASH_start__;
 
 PBL_WEAK const uint32_t __FLASH_size__;
+
+PBL_WEAK void mpu_init_region_from_region(MpuRegion *copy, const MpuRegion *from,
+                                          bool allow_user_access) {
+}
 
 PBL_WEAK void mpu_enable(void) {
 }

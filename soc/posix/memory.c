@@ -26,9 +26,7 @@ PRV_REGION(_heap_start, _heap_end, PRV_KERNEL_HEAP_SIZE);
 PRV_REGION(__WORKER_RAM__, __WORKER_RAM_end__, PRV_WORKER_RAM_SIZE);
 PRV_REGION(__APP_RAM__, __APP_RAM_end__, PRV_APP_RAM_SIZE);
 
-uint32_t __kernel_main_stack_start__[4096 / sizeof(uint32_t)];
-uint32_t __kernel_bg_stack_start__[4096 / sizeof(uint32_t)];
-uint32_t __isr_stack_start__[1024 / sizeof(uint32_t)];
+uint32_t __isr_stack_start__[CONFIG_KERNEL_ISR_STACK_SIZE / sizeof(uint32_t)];
 
 const struct {
   uint32_t name_length;

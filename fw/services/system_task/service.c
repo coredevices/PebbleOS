@@ -151,24 +151,25 @@ static void system_task_main(void *paramater) {
   }
 }
 
+PBL_THREAD_STACK_DEFINE(s_stack, 4096);
+
 void system_task_init(void) {
   s_raised_priority_refcount = 0;
   pbl_poll_group_add(&s_system_task_queue_set, &s_system_task_queue);
   pbl_poll_group_add(&s_system_task_queue_set, &s_from_app_system_task_queue);
   s_initialized = true;
 
-  extern uint32_t __kernel_bg_stack_start__[];
-  extern uint32_t __kernel_bg_stack_size__[];
-  extern uint32_t __stack_guard_size__[];
-
+  MpuRegion stack_guard;
   struct pbl_thread_attr attr = {
     .name = "KernelBG",
     .entry = system_task_main,
     .prio = SYSTEM_TASK_PRIORITY,
     .privileged = true,
-    .stack = (void *)((uintptr_t)__kernel_bg_stack_start__ + MEMORY_LAYOUT_STACK_GUARD_SIZE),
-    .stack_size = MEMORY_LAYOUT_KERNEL_BG_STACK_SIZE - MEMORY_LAYOUT_STACK_GUARD_SIZE,
+    .stack = s_stack + CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .stack_size = sizeof(s_stack) - CONFIG_KERNEL_STACK_GUARD_SIZE,
   };
+  attr.regions[MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
+      memory_layout_stack_guard_region_init(&stack_guard, attr.stack);
 
   pebble_task_create(PebbleTask_KernelBackground, &attr);
 }

@@ -12,6 +12,14 @@
 #include <pbl/logging/logging.h>
 #include <pbl/version.h>
 
+static struct pbl_thread s_main_thread;
+PBL_THREAD_STACK_DEFINE(s_main_stack, CONFIG_KERNEL_MAIN_STACK_SIZE);
+
+static void prv_main_entry(void *arg) {
+  int (*entry)(void) = arg;
+  entry();
+}
+
 void kernel_init(int (*entry)(void)) {
   pbl_soc_early_init();
   pbl_irq_init();
@@ -21,9 +29,18 @@ void kernel_init(int (*entry)(void)) {
 
   PBL_LOG_ALWAYS("*** Booting PebbleOS %s ***", PBL_VERSION_TAG);
 
-  entry();
+  const struct pbl_thread_attr attr = {
+    .name = "KernelMain",
+    .entry = prv_main_entry,
+    .arg = (void *)entry,
+    .prio = CONFIG_KERNEL_MAIN_THREAD_PRIO,
+    .privileged = true,
+    .stack = s_main_stack + CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .stack_size = sizeof(s_main_stack) - CONFIG_KERNEL_STACK_GUARD_SIZE,
+  };
+  PBL_ASSERTN(pbl_thread_create(&s_main_thread, &attr) == 0);
 
-  PBL_ASSERTN(false);
+  pbl_kernel_start();
 }
 
 #ifndef CONFIG_ARCH_POSIX

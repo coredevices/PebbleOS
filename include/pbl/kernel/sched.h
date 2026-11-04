@@ -24,17 +24,9 @@
  */
 
 /**
- * @brief Start the scheduler.
- *
- * Creates the idle thread and switches to the highest priority thread. Called once from main(),
- * after the first threads have been created.
- */
-[[noreturn]] void pbl_kernel_start(void);
-
-/**
  * @brief Check whether the scheduler has started.
  *
- * @return true once pbl_kernel_start() has run.
+ * @return true once the scheduler is running threads.
  */
 bool pbl_kernel_is_started(void);
 

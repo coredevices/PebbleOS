@@ -15,4 +15,3 @@ cannot move location counter backwards (from 0000000008011754 to 000000000801080
 If you see this, you need to bump the size to the next power of two.
 */
 __unpriv_ro_bss_size__ = 2K;
-__stack_guard_size__ = 32;

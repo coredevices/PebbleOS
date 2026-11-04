@@ -13,7 +13,6 @@
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/backend_flash.h>
@@ -55,7 +54,6 @@ static TimerID s_lowpower_timer = TIMER_INVALID_ID;
 #ifndef CONFIG_MFG
 static TimerID s_uptime_timer = TIMER_INVALID_ID;
 #endif
-static void main_task(void *parameter);
 
 static void print_splash_screen(void) {
 #if defined(CONFIG_MFG)
@@ -68,32 +66,6 @@ static void print_splash_screen(void) {
   }
   PBL_LOG_ALWAYS("(c) 2013-2026 The PebbleOS contributors");
   PBL_LOG_ALWAYS(" ");
-}
-
-int main(void) {
-  print_splash_screen();
-
-  clock_restore_time();
-
-#ifdef CONFIG_RECOVERY_FW
-  boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
-#endif
-
-  extern uint32_t __kernel_main_stack_start__[];
-  extern uint32_t __kernel_main_stack_size__[];
-  extern uint32_t __stack_guard_size__[];
-  struct pbl_thread_attr attr = {
-    .name = "KernelMain",
-    .entry = main_task,
-    .prio = PBL_PRIO_IDLE + 3,
-    .privileged = true,
-    .stack = (void *)((uintptr_t)__kernel_main_stack_start__ + MEMORY_LAYOUT_STACK_GUARD_SIZE),
-    .stack_size = MEMORY_LAYOUT_KERNEL_MAIN_STACK_SIZE - MEMORY_LAYOUT_STACK_GUARD_SIZE,
-  };
-
-  pebble_task_create(PebbleTask_KernelMain, &attr);
-
-  pbl_kernel_start();
 }
 
 static void init_drivers(void) {
@@ -137,14 +109,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
   pbl_log_init();
-
-  memory_layout_thread_regions_init();
-#ifndef CONFIG_ARMV8_M_MAINLINE
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
-    [2] = memory_layout_get_kernel_main_stack_guard_region(),
-  };
-  pbl_thread_regions_set(pbl_thread_current(), regions);
-#endif
 
   task_init();
 
@@ -249,7 +213,27 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   pbl_task_wdt_resume();
 }
 
-static void main_task(void *parameter) {
+int main(void) {
+  struct pbl_thread *self = pbl_thread_current();
+  pebble_task_register(PebbleTask_KernelMain, self);
+
+  memory_layout_thread_regions_init();
+  MpuRegion stack_guard;
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
+    [MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
+        memory_layout_stack_guard_region_init(&stack_guard, self->stack),
+  };
+  pbl_thread_regions_set(self, regions);
+
+  print_splash_screen();
+
+  clock_restore_time();
+
+#ifdef CONFIG_RECOVERY_FW
+  boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
+#endif
+
   prv_main_task_init();
   launcher_main_loop();
+  return 0;
 }
