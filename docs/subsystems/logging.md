@@ -1,7 +1,7 @@
 # Logging
 
 `subsys/logging/` passes leveled log messages to backends, such as the
-serial console (or PULSE) and a circular buffer in flash. Its public API is
+serial console and a circular buffer in flash. Its public API is
 `include/pbl/logging/logging.h`; the {apidoc}`API reference <logging>`
 covers every macro.
 
@@ -74,8 +74,7 @@ or sets a level.
 
 | Backend | Option | Writes |
 |---|---|---|
-| `pulse` | `CONFIG_LOG_BACKEND_PULSE` | PULSE log packets, with `CONFIG_PULSE_EVERYWHERE` |
-| `uart` | `CONFIG_LOG_BACKEND_UART` | Text lines on the serial console, above the shell prompt, without `CONFIG_PULSE_EVERYWHERE` |
+| `uart` | `CONFIG_LOG_BACKEND_UART` | Text lines on the serial console, above the shell prompt |
 | `flash` | `CONFIG_LOG_BACKEND_FLASH` | The debug flash region, one generation per boot; not app or fault messages |
 | `app_log` | `CONFIG_SERVICE_APP_LOG_ENDPOINT` | App messages to the phone, while it asks for them |
 

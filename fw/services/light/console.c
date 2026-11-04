@@ -172,7 +172,7 @@ static void prv_als_frozen_cb(void *unused) {
 }
 
 // Runs on KernelMain (the compositor's task): push the staged system framebuffer
-// to the panel, the same way the PULSE framebuffer domain does.
+// to the panel.
 static void prv_als_flush_cb(void *unused) {
   FrameBuffer *fb = compositor_get_framebuffer();
   framebuffer_dirty_all(fb);

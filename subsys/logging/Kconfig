@@ -69,13 +69,6 @@ config CONSOLE
       Text console on the board's console port, CONSOLE_UART: logs and
       the shell. Off on release firmware, which leaves the port unused.
 
-config PULSE_EVERYWHERE
-    bool "PULSE everywhere"
-    depends on CONSOLE
-    help
-      Use the PULSE protocol for logs and the prompt. Disable to fall
-      back to legacy logs and prompt.
-
 config CONSOLE_BAUDRATE
     int "Console baud rate"
     depends on CONSOLE

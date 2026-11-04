@@ -73,7 +73,6 @@ The firmware runs a fixed set of tasks, each a kernel thread:
 | Worker | The app's background worker, if it has one |
 | Bluetooth host, controller, HCI | The Bluetooth stack |
 | NewTimers | Timer callbacks |
-| PULSE | The serial link to development tools |
 
 Services and drivers post events to KernelMain, which handles them and
 forwards what concerns the app to the app's own event queue. Only one app

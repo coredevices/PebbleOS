@@ -12,9 +12,7 @@
 #include <console/dbgserial.h>
 #include <console/dbgserial_input.h>
 
-#if defined(CONFIG_LOG_BACKEND_UART) && defined(CONFIG_SHELL)
-#define TEXT_SHELL 1
-
+#ifdef CONFIG_SHELL
 #include <pbl/shell/backend.h>
 #include <pbl/shell/shell.h>
 
@@ -58,7 +56,7 @@ void serial_console_write(const char *data, size_t len) {
 
 void serial_console_log_begin(void) {
   serial_console_lock();
-#ifdef TEXT_SHELL
+#ifdef CONFIG_SHELL
   if (pbl_shell_at_prompt(&shell_uart)) {
     serial_console_write_raw("\r\033[K", 4);
     return;
@@ -70,7 +68,7 @@ void serial_console_log_begin(void) {
 }
 
 void serial_console_log_end(void) {
-#ifdef TEXT_SHELL
+#ifdef CONFIG_SHELL
   if (pbl_shell_at_prompt(&shell_uart)) {
     pbl_shell_redraw(&shell_uart);
   }
@@ -78,7 +76,7 @@ void serial_console_log_end(void) {
   serial_console_unlock();
 }
 
-#ifdef TEXT_SHELL
+#ifdef CONFIG_SHELL
 static void prv_shell_write(const struct pbl_shell *sh, const char *data, size_t len) {
   serial_console_write(data, len);
 }
@@ -101,9 +99,8 @@ PBL_SHELL_DEFINE(shell_uart, "pebble> ", &s_shell_api, nullptr);
 
 #endif
 
-#ifdef CONFIG_LOG_BACKEND_UART
 static void prv_text_input(char c) {
-#ifdef TEXT_SHELL
+#ifdef CONFIG_SHELL
   pbl_shell_input_from_isr(&shell_uart, c);
 #endif
 }
@@ -111,17 +108,14 @@ static void prv_text_input(char c) {
 static void prv_rx(char c) {
   console_frame_input_from_isr(c, prv_text_input);
 }
-#endif
 
 void serial_console_init(void) {
   dbgserial_input_init();
 }
 
 void serial_console_enable_prompt(void) {
-#ifdef CONFIG_LOG_BACKEND_UART
   dbgserial_register_character_callback(prv_rx);
-#endif
-#ifdef TEXT_SHELL
+#ifdef CONFIG_SHELL
   pbl_shell_start(&shell_uart);
 #endif
 }

@@ -67,14 +67,11 @@ class Console(PblCommand):
             self.die("no console to attach to: pass --tty, or add the watch to a lab")
 
         python = shlex.quote(sys.executable)
-        if build.config.CONFIG_PULSE_EVERYWHERE:
-            console = f"{python} {self.script('tools', 'pulse_console.py')} -t {tty}"
-        else:
-            terminal = self.script("tools", "console.py")
-            console = f"{python} {terminal} {tty} --baudrate {baudrate}"
-            log_dict = os.path.join(build.path, "fw", "loghash_dict.json")
-            if os.path.exists(log_dict):
-                console += f" --dict {shlex.quote(log_dict)}"
+        terminal = self.script("tools", "console.py")
+        console = f"{python} {terminal} {tty} --baudrate {baudrate}"
+        log_dict = os.path.join(build.path, "fw", "loghash_dict.json")
+        if os.path.exists(log_dict):
+            console += f" --dict {shlex.quote(log_dict)}"
 
         if args.reconnect:
             keepalive = self.script("tools", "console_keepalive.py")

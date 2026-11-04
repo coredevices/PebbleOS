@@ -235,8 +235,6 @@ class QemuAdapter(DeviceAdapter):
 
     def default_connections(self):
         console = f"socket://127.0.0.1:{self.console_port}"
-        if self.build.config.get("CONFIG_PULSE_EVERYWHERE"):
-            return [f"pulse:{console}"]
         return [f"serial:{console}"]
 
     def set_battery(self, percent, charging=False):

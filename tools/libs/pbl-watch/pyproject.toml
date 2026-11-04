@@ -6,7 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
 	"pebble_tool>=5.0.18",
-	"libpebble2[pulse]>=0.0.23",
+	"libpebble2>=0.0.23",
+	"pbl-console[protocol]",
 ]
 
 [project.scripts]

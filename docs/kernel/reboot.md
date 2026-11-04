@@ -37,7 +37,6 @@ The firmware's handlers:
 | Handler | Mode | Priority |
 |---------|------|----------|
 | services to `RunLevel_BareMinimum` (Bluetooth off) | prepare | high |
-| PULSE link close | prepare | default |
 | wait for flash erases, then hold flash | prepare | default |
 | mark the reboot reason as a safe restart | prepare | low |
 | core dump after a software failure | restart | high |

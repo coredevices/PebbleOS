@@ -10,7 +10,7 @@
  *
  * A message is a header, whose version byte says which optional fields follow, and a body:
  * hashed (a message ID and its parameters), unhashed (file, line and text) or a plain string.
- * Without PULSE, messages are SLIP framed as END, message, CRC-32, END.
+ * Messages are SLIP framed as END, message, CRC-32, END.
  * @{
  */
 

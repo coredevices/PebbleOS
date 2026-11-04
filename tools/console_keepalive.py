@@ -3,7 +3,7 @@
 
 """Keep-alive wrapper for the serial console.
 
-The underlying console tools (`pulse_console.py`, `miniterm_co.py`) open
+The underlying console tools (`console.py`) open
 their transport exactly once at startup and exit with a SerialException
 if it isn't reachable.  This wrapper waits for the transport to come up,
 runs the inner console, and restarts it if the transport goes away.
@@ -64,7 +64,7 @@ def main() -> int:
         nargs=argparse.REMAINDER,
         help=(
             "inner console command and args (default: "
-            "tools/pulse_console.py -t TTY). The default command is run if "
+            "tools/console.py TTY). The default command is run if "
             "none is supplied."
         ),
     )
@@ -79,8 +79,7 @@ def main() -> int:
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         inner_cmd = [
             sys.executable,
-            os.path.join(repo_root, "tools", "pulse_console.py"),
-            "-t",
+            os.path.join(repo_root, "tools", "console.py"),
             args.tty,
         ]
 

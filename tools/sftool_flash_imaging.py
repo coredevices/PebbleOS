@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Flash imaging for SF32LB52 (Obelix/Getafix): writes firmware or resources
-# directly via sftool to the correct flash addresses. No PULSE descriptor is
-# prepended, so recovery (PRF) stays in PBLBOOT format for the bootloader.
+# directly via sftool to the correct flash addresses, so recovery (PRF) stays
+# in PBLBOOT format for the bootloader.
 #
-# Same CLI as console_flash_imaging so callers can
-# select this tool via _get_pulse_flash_tool() for MICRO_FAMILY == 'SF32LB52'.
+# Same CLI as console_flash_imaging.
 
 
 import argparse

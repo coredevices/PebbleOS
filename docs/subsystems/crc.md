@@ -6,8 +6,8 @@ public API is `include/pbl/crc/crc.h`:
 | Function | Algorithm | Used by |
 | --- | --- | --- |
 | `pbl_crc8()`, `pbl_crc8_reversed()` | CRC-8, polynomial 0x2F (CRC-8/OPENSAFETY) | PFS page chaining, settings file key hashes |
-| `pbl_crc32()` | CRC-32/ISO-HDLC, zlib-compatible | PULSE2, flash CRC, shared PRF storage, boot bits |
-| `pbl_crc32_legacy_*()` | CRC-32/MPEG-2 over little-endian words | PFS, app images, resources, data logging, PULSE, put bytes |
+| `pbl_crc32()` | CRC-32/ISO-HDLC, zlib-compatible | Console frames, flash CRC, shared PRF storage, boot bits |
+| `pbl_crc32_legacy_*()` | CRC-32/MPEG-2 over little-endian words | PFS, app images, resources, data logging, put bytes |
 
 The legacy checksum reproduces what the STM32F2/F4 CRC unit computed when the
 firmware fed it 32-bit words, including the zero padding of a trailing partial

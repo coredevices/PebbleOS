@@ -25,8 +25,6 @@ typedef enum PebbleTask {
 
   PebbleTask_NewTimers,
 
-  PebbleTask_PULSE,
-
   NumPebbleTask,
 
   PebbleTask_Unknown

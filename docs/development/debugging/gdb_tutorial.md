@@ -43,8 +43,6 @@ Each kernel thread is a GDB thread, with its name and state:
   Id   Target Id                                               Frame
 * 1    Thread 1.1 (IDLE 0x2001E8B0: Running)                   pbl_soc_idle (max_ticks=max_ticks@entry=33)
     at ./soc/qemu/idle.c:19
-  3    Thread 1.536990144 (PULSE 0x2001D1C0: Blocked)          0x00143666 in arch_irq_enable ()
-    at ./kernel/arch/arm/arch.c:213
   4    Thread 1.536989952 (NewTimer 0x2001D100: Blocked)       0x00143666 in arch_irq_enable ()
     at ./kernel/arch/arm/arch.c:213
   5    Thread 1.536989376 (NimbleHost 0x2001CEC0: Blocked)     0x00143666 in arch_irq_enable ()

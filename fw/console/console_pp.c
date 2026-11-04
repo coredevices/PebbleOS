@@ -67,7 +67,7 @@ static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_
 }
 
 static CommSessionTransportType prv_get_type(struct Transport *transport) {
-  return CommSessionTransportType_PULSE;
+  return CommSessionTransportType_Console;
 }
 
 static void prv_send_job(void *data) {
@@ -87,7 +87,7 @@ static bool prv_is_current_task_schedule_task(struct Transport *transport) {
 extern void comm_session_set_capabilities(CommSession *session,
                                           CommSessionCapability capability_flags);
 
-static const TransportImplementation s_implementation = {
+static const TransportImplementation s_console_transport_implementation = {
   .send_next = prv_send_next,
   .reset = prv_reset,
   .set_connection_responsiveness = prv_set_connection_responsiveness,
@@ -101,8 +101,9 @@ static void prv_set_connected(bool connected) {
 
   if ((s_transport.session != nullptr) != connected) {
     if (connected) {
-      s_transport.session = comm_session_open((Transport *)&s_transport, &s_implementation,
-                                              TransportDestinationHybrid);
+      s_transport.session =
+          comm_session_open((Transport *)&s_transport, &s_console_transport_implementation,
+                            TransportDestinationHybrid);
     } else {
       comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
       s_transport.session = nullptr;
