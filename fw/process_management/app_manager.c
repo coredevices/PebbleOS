@@ -258,8 +258,18 @@ PBL_T_STATIC MemorySegment prv_get_app_ram_segment(void) {
   return (MemorySegment){__APP_RAM__, __APP_RAM_end__};
 }
 
-PBL_T_STATIC size_t prv_get_stack_guard_size(void) {
-  return CONFIG_KERNEL_STACK_GUARD_SIZE;
+// System apps run privileged, and a Moddable app runs its VM in a syscall on this stack.
+static bool prv_has_user_stack(const PebbleProcessMd *app_md) {
+#ifdef CONFIG_USERSPACE
+  return app_md->is_unprivileged && !app_md->is_moddable_app;
+#else
+  return false;
+#endif
+}
+
+PBL_T_STATIC size_t prv_get_stack_guard_size(const PebbleProcessMd *app_md) {
+  return prv_has_user_stack(app_md) ? CONFIG_KERNEL_USER_STACK_GUARD_SIZE
+                                    : CONFIG_KERNEL_STACK_GUARD_SIZE;
 }
 
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
@@ -300,9 +310,9 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   // Set up the app's memory and load the app into it.
   size_t app_segment_size = prv_get_app_segment_size(app_md);
   // The stack guard is counted as part of the app segment size...
-  const size_t stack_guard_size = prv_get_stack_guard_size();
-  // ...and is carved out of the stack.
-  const size_t stack_size = prv_get_app_stack_size(app_md) - stack_guard_size;
+  const size_t stack_guard_size = prv_get_stack_guard_size(app_md);
+  // ...and the smaller one is carved out of the stack, so all apps keep the same usable size.
+  const size_t stack_size = prv_get_app_stack_size(app_md) - CONFIG_KERNEL_USER_STACK_GUARD_SIZE;
 
   MemorySegment app_ram = prv_get_app_ram_segment();
 
@@ -397,8 +407,9 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
     .arg = entry_point,
     .prio = CONFIG_APP_THREAD_PRIO,
     .privileged = true,
-    .stack = stack,
-    .stack_size = stack_size,
+    .user_stack = prv_has_user_stack(app_md),
+    .stack = (char *)stack - stack_guard_size,
+    .stack_size = stack_size + stack_guard_size,
   };
 
   PBL_LOG_DBG("Starting %s", task_name);

@@ -4,6 +4,7 @@
 config CPU_CORTEX_M
 	bool
 	select ARCH_HAS_DEBUGGER_DETECT
+	select ARCH_HAS_STACK_GUARD
 	select ARCH_HAS_USERSPACE
 	help
 	  ARM Cortex-M core. Selected through the CPU the SoC selects.

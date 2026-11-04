@@ -30,22 +30,18 @@ static uint32_t s_dead_task_cycles[NumPebbleTask];
 // process dies) instead of rebooting the system. ARMv8-M bounds them with
 // PSPLIM; ARMv7-M plants a no-access MPU guard below each. Plain .bss statics
 // land in the privileged-only .kernel_bss output.
-#define SYSCALL_STACK_WORDS (CONFIG_PROCESS_SYSCALL_STACK_SIZE / sizeof(uint32_t))
-#ifdef CONFIG_ARMV8_M_MAINLINE
-#define SYSCALL_STACK_GUARD_WORDS 0u
-#else
-#define SYSCALL_STACK_GUARD_WORDS 8u // smallest ARMv7-M MPU region, naturally aligned
-#endif
+#define SYSCALL_STACK_WORDS       (CONFIG_PROCESS_SYSCALL_STACK_SIZE / sizeof(uint32_t))
+#define SYSCALL_STACK_GUARD_WORDS (CONFIG_KERNEL_STACK_GUARD_SIZE / sizeof(uint32_t))
 
 struct syscall_stack {
-#if SYSCALL_STACK_GUARD_WORDS
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   uint32_t guard[SYSCALL_STACK_GUARD_WORDS];
 #endif
   uint32_t words[SYSCALL_STACK_WORDS];
 };
 
-static struct syscall_stack s_app_syscall_stack PBL_ALIGNED(32);
-static struct syscall_stack s_worker_syscall_stack PBL_ALIGNED(32);
+static struct syscall_stack s_app_syscall_stack PBL_ALIGNED(CONFIG_KERNEL_STACK_ALIGN);
+static struct syscall_stack s_worker_syscall_stack PBL_ALIGNED(CONFIG_KERNEL_STACK_ALIGN);
 
 static struct syscall_stack *prv_syscall_stack(PebbleTask task) {
   switch (task) {
@@ -62,7 +58,7 @@ void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr 
   struct syscall_stack *stack = prv_syscall_stack(task);
   attr->syscall_stack = stack->words;
   attr->syscall_stack_size = sizeof(stack->words);
-#if SYSCALL_STACK_GUARD_WORDS
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   static MpuRegion s_guards[NumPebbleTask];
   s_guards[task] = (MpuRegion){
     .region_num = MemoryRegion_Task4,

@@ -37,3 +37,9 @@ flowchart LR
   class init system
   class main app
 ```
+
+With `CONFIG_KERNEL_STACK_GUARD`, a thread or the ISR overflowing its stack
+faults instead of corrupting the memory below it. Cores with stack limit
+registers use those; others get a no-access MPU region below every stack, in
+room `PBL_THREAD_STACK_DEFINE` adds on top of the size it is given. Stack sizes
+always mean usable space.

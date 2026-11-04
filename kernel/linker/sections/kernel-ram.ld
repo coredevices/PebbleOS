@@ -40,10 +40,10 @@
     } >RAM
 
     .stack (NOLOAD) : {
-        . = ALIGN(CONFIG_KERNEL_STACK_GUARD_SIZE);
+        . = ALIGN(CONFIG_KERNEL_STACK_ALIGN);
         __isr_stack_start__ = .;
 
-        . = . + CONFIG_KERNEL_ISR_STACK_SIZE;
+        . = . + CONFIG_KERNEL_STACK_GUARD_SIZE + CONFIG_KERNEL_ISR_STACK_SIZE;
 
         _estack = .;
     } >REGION_ISR_STACK

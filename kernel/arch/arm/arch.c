@@ -132,7 +132,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
 #else
   ctx->control = CONTROL_PRIVILEGED;
 #endif
-#if HAS_PSPLIM
+#if HAS_PSPLIM && defined(CONFIG_KERNEL_STACK_GUARD)
   ctx->psplim = (uint32_t)t->stack;
 #endif
   ctx->exc_return = INITIAL_EXC_RETURN;
@@ -149,8 +149,23 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
 // an RBAR write with VALID clear lands on whatever region RNR last selected,
 // i.e. it would wipe the slot programmed just before it.
 void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
+  const MpuRegion stack_guard = {
+    .region_num = FIRST_MPU_REGION + PBL_THREAD_REGION_STACK_GUARD,
+    .enabled = true,
+    .base_address = (uintptr_t)t->stack - t->stack_guard_size,
+    .size = t->stack_guard_size,
+    .cache_policy = MpuCachePolicy_NotCacheable,
+    .permissions = MpuPermissions_NoAccess,
+  };
+#endif
   for (unsigned int i = 0; i < NUM_MPU_REGIONS; i++) {
     const MpuRegion *r = regions ? regions[i] : nullptr;
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
+    if (i == PBL_THREAD_REGION_STACK_GUARD) {
+      r = &stack_guard;
+    }
+#endif
     uint32_t rbar = 0;
     uint32_t attr = 0;
 #ifndef CONFIG_ARMV8_M_MAINLINE
@@ -354,7 +369,7 @@ static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_ret
   memcpy(dst, frame, frame_words * sizeof(uint32_t));
   dst[7] &= ~XPSR_STACK_PADDING;
 
-#if HAS_PSPLIM
+#if HAS_PSPLIM && defined(CONFIG_KERNEL_STACK_GUARD)
   __set_PSPLIM(base);
 #else
   (void)base;

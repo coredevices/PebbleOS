@@ -35,8 +35,8 @@ void kernel_init(int (*entry)(void)) {
     .arg = (void *)entry,
     .prio = CONFIG_KERNEL_MAIN_THREAD_PRIO,
     .privileged = true,
-    .stack = s_main_stack + CONFIG_KERNEL_STACK_GUARD_SIZE,
-    .stack_size = sizeof(s_main_stack) - CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .stack = s_main_stack,
+    .stack_size = sizeof(s_main_stack),
   };
   PBL_ASSERTN(pbl_thread_create(&s_main_thread, &attr) == 0);
 

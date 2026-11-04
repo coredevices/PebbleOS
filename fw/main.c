@@ -214,16 +214,8 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 }
 
 int main(void) {
-  struct pbl_thread *self = pbl_thread_current();
-  pebble_task_register(PebbleTask_KernelMain, self);
-
+  pebble_task_register(PebbleTask_KernelMain, pbl_thread_current());
   memory_layout_thread_regions_init();
-  MpuRegion stack_guard;
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
-    [MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
-        memory_layout_stack_guard_region_init(&stack_guard, self->stack),
-  };
-  pbl_thread_regions_set(self, regions);
 
   print_splash_screen();
 

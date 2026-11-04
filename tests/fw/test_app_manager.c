@@ -126,7 +126,7 @@ MemorySegment prv_get_app_ram_segment(void) {
   return (MemorySegment){__APP_RAM__, &__APP_RAM__[1024 * 128]};
 }
 
-size_t prv_get_stack_guard_size(void) {
+size_t prv_get_stack_guard_size(const PebbleProcessMd *app_md) {
   return 32;
 }
 

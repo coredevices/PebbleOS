@@ -12,7 +12,7 @@ uint32_t stack_free_bytes(void) {
   uintptr_t cur_sp = (uintptr_t)&marker;
 
   // Default stack
-  uintptr_t start = (uintptr_t)__isr_stack_start__;
+  uintptr_t start = (uintptr_t)__isr_stack_start__ + CONFIG_KERNEL_STACK_GUARD_SIZE;
 
   // On ISR stack?
   if (!mcu_state_is_isr()) {

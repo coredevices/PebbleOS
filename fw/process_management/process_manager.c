@@ -544,12 +544,6 @@ struct pbl_thread *process_manager_thread_create(PebbleTask task, struct pbl_thr
   attr->regions[MemoryRegion_AppRAM - MemoryRegion_AppRAM] = &app_region;
   attr->regions[MemoryRegion_WorkerRAM - MemoryRegion_AppRAM] = &worker_region;
 
-#ifndef CONFIG_ARMV8_M_MAINLINE
-  attr->regions[MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
-      is_app ? memory_layout_get_app_stack_guard_region()
-             : memory_layout_get_worker_stack_guard_region();
-#endif
-
 #ifdef CONFIG_USERSPACE
   const MpuRegion *user_region =
       is_app ? memory_layout_get_app_region() : memory_layout_get_worker_region();

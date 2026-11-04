@@ -158,17 +158,14 @@ void system_task_init(void) {
   pbl_poll_group_add(&s_system_task_queue_set, &s_from_app_system_task_queue);
   s_initialized = true;
 
-  MpuRegion stack_guard;
-  struct pbl_thread_attr attr = {
+  const struct pbl_thread_attr attr = {
     .name = "KernelBG",
     .entry = system_task_main,
     .prio = CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO,
     .privileged = true,
-    .stack = s_stack + CONFIG_KERNEL_STACK_GUARD_SIZE,
-    .stack_size = sizeof(s_stack) - CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .stack = s_stack,
+    .stack_size = sizeof(s_stack),
   };
-  attr.regions[MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
-      memory_layout_stack_guard_region_init(&stack_guard, attr.stack);
 
   PBL_ASSERTN(pbl_thread_create(&s_thread, &attr) == 0);
   pebble_task_register(PebbleTask_KernelBackground, &s_thread);

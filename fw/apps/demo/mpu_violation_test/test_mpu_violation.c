@@ -43,7 +43,7 @@ extern const uint32_t _heap_start[];
 extern const uint32_t __ramfunc_start[];
 #endif
 
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
 #endif
 
@@ -60,11 +60,11 @@ typedef enum {
   TestKind_ResourceBankRead,
 #endif
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_RoBssWrite,
 #endif
   TestKind_FlashWrite,
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_StackGuardWrite,
 #endif
   TestKind_StackOverflow,
@@ -85,11 +85,11 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_ResourceBankRead] = "Resource bank R",
 #endif
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_RoBssWrite] = "RO BSS W",
 #endif
   [TestKind_FlashWrite] = "Flash W",
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_StackGuardWrite] = "Stack guard W",
 #endif
   [TestKind_StackOverflow] = "Stack overflow",
@@ -133,7 +133,7 @@ static uint32_t PBL_NOINLINE prv_overflow_recurse(uint32_t depth) {
 // stack guard while privileged, which reboots the system.
 static void PBL_NOINLINE prv_syscall_near_limit(size_t headroom) {
   volatile uint8_t marker;
-  const uintptr_t stack_base = (uintptr_t)__APP_RAM__ + CONFIG_KERNEL_STACK_GUARD_SIZE;
+  const uintptr_t stack_base = (uintptr_t)__APP_RAM__ + CONFIG_KERNEL_USER_STACK_GUARD_SIZE;
   const uintptr_t sp = (uintptr_t)&marker;
   const size_t burn = (sp > stack_base + headroom) ? (sp - stack_base - headroom) : 1;
   volatile uint8_t pad[burn];
@@ -199,7 +199,7 @@ static void prv_run_test(TestKind kind) {
     }
 #endif
 #endif
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
     case TestKind_RoBssWrite: {
       // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
       volatile uint32_t *p = &s_ro_bss_probe;
@@ -212,7 +212,7 @@ static void prv_run_test(TestKind kind) {
       *p = 0xDEADBEEF;
       break;
     }
-#ifndef CONFIG_ARMV8_M_MAINLINE
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
     case TestKind_StackGuardWrite: {
       // Direct store to the bottom 32 B of App RAM. On ARMv7-M the per-task
       // stack-guard MPU region blocks this; ARMv8-M uses PSPLIM instead, so

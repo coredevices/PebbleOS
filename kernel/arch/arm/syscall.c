@@ -163,7 +163,11 @@ PBL_USED uint64_t arch_syscall_stack_restore(void) {
   const uintptr_t base = (uintptr_t)t->syscall_stack;
   if (t->syscall_stack != nullptr && psp > base && psp <= base + t->syscall_stack_size) {
     const uint32_t sp = (uint32_t)t->backend.arch.syscall_sp;
+#ifdef CONFIG_KERNEL_STACK_GUARD
     const uint32_t psplim = (uint32_t)t->stack;
+#else
+    const uint32_t psplim = 0;
+#endif
     return ((uint64_t)psplim << 32) | sp;
   }
   return 0;

@@ -10,8 +10,6 @@ config KERNEL_IDLE_STACK_SIZE
 config KERNEL_MAIN_STACK_SIZE
 	int "Main thread stack size in bytes"
 	default 4096
-	help
-	  Stack main() runs on, including its guard.
 
 config KERNEL_MAIN_THREAD_PRIO
 	int "Main thread priority"
@@ -21,13 +19,39 @@ config KERNEL_ISR_STACK_SIZE
 	int "ISR stack size in bytes"
 	default 1024
 
+config ARCH_HAS_STACK_GUARD
+	bool
+	help
+	  The architecture can trap a thread overflowing its stack.
+
+config KERNEL_STACK_GUARD
+	bool "Trap stack overflows"
+	default y
+	depends on ARCH_HAS_STACK_GUARD
+	help
+	  Fault as soon as a thread or the ISR stack overflows, instead of
+	  corrupting the memory below it. Uses the stack limit registers where
+	  the core has them, and otherwise a no-access MPU region below each
+	  stack.
+
 config KERNEL_STACK_GUARD_SIZE
-	int "Stack guard size in bytes"
-	default 32 if CPU_CORTEX_M
+	int
+	default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
 	default 0
 	help
-	  Bytes reserved below the stacks that have an overflow guard. A power
-	  of two the target's MPU can cover with one region.
+	  Bytes reserved below a stack for its MPU guard, on top of the size the
+	  stack is defined with. An exception frame with FP state takes 104 bytes
+	  and lazy stacking only writes its lowest 32, so a smaller guard can be
+	  skipped without a fault.
+
+config KERNEL_USER_STACK_GUARD_SIZE
+	int
+	default 32 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
+	default 0
+	help
+	  MPU guard of a stack only used unprivileged, see
+	  pbl_thread_attr::user_stack. Frames that skip it still fault, as they
+	  land in memory the thread can't write.
 
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
@@ -71,11 +95,11 @@ config KERNEL_THREAD_TLS_SLOTS
 
 config KERNEL_STACK_ALIGN
 	int "Thread stack alignment"
-	default 32 if ARMV8_M_MAINLINE
-	default 256
+	default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
+	default 32
 	help
-	  Alignment that lets the bottom of a stack be covered by an MPU
-	  guard region on the target core.
+	  Must be a multiple of the stack guard size, which an MPU region can
+	  only cover when naturally aligned.
 
 config KERNEL_MUTEX_LOCK_LR
 	bool "Record the caller of the outermost mutex lock"

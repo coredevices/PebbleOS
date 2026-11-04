@@ -7,6 +7,10 @@
 
 #define STACK_FILL 0xa5a5a5a5u
 
+static_assert(CONFIG_KERNEL_STACK_GUARD_SIZE == 0 ||
+                  CONFIG_KERNEL_STACK_ALIGN % CONFIG_KERNEL_STACK_GUARD_SIZE == 0,
+              "stacks must be aligned to their guard");
+
 static uint32_t s_next_id;
 static const MpuRegion *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
 
@@ -19,7 +23,12 @@ static void prv_regions_set(struct pbl_thread *t, const MpuRegion *const *region
 }
 
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) {
-  PBL_ASSERTN(attr->stack != nullptr && attr->stack_size >= 128);
+  const size_t guard_size =
+      attr->user_stack ? CONFIG_KERNEL_USER_STACK_GUARD_SIZE : CONFIG_KERNEL_STACK_GUARD_SIZE;
+  PBL_ASSERTN(attr->stack != nullptr && attr->stack_size >= 128 + guard_size);
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
+  PBL_ASSERTN(((uintptr_t)attr->stack % guard_size) == 0);
+#endif
   PBL_ASSERTN(attr->prio <= PBL_PRIO_MAX);
 
   // A struct is only reusable once its previous thread is gone.
@@ -30,8 +39,9 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   strncpy(t->name, attr->name, sizeof(t->name) - 1);
   t->prio = attr->prio;
   t->privileged = attr->privileged;
-  t->stack = attr->stack;
-  t->stack_size = attr->stack_size;
+  t->stack = (uint8_t *)attr->stack + guard_size;
+  t->stack_size = attr->stack_size - guard_size;
+  t->stack_guard_size = guard_size;
 #ifdef CONFIG_USERSPACE
   t->user_start = attr->user_start;
   t->user_end = attr->user_end;
@@ -39,8 +49,8 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   t->syscall_stack_size = attr->syscall_stack_size;
 #endif
 
-  uint32_t *words = attr->stack;
-  for (size_t i = 0; i < attr->stack_size / sizeof(uint32_t); i++) {
+  uint32_t *words = t->stack;
+  for (size_t i = 0; i < t->stack_size / sizeof(uint32_t); i++) {
     words[i] = STACK_FILL;
   }
 
@@ -102,12 +112,6 @@ pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t) {
 
 enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
   return (enum pbl_thread_state)t->backend.state;
-}
-
-void pbl_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
-  pbl_irq_lock();
-  prv_regions_set(t, regions);
-  pbl_irq_unlock();
 }
 
 void pbl_thread_regions_default_set(const MpuRegion *const *regions) {
