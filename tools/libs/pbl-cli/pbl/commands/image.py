@@ -29,8 +29,6 @@ class _ImageCommand(PblCommand):
         """The imaging tool this build's SoC and protocol call for."""
         if build.config.CONFIG_SOC_SF32LB52 and not args.force_pulse:
             return "sftool_flash_imaging"
-        if build.config.CONFIG_PULSE_EVERYWHERE or args.force_pulse:
-            return "pulse_flash_imaging"
         return "pulse_flash_imaging"
 
     def _image(self, build, args, path):

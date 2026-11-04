@@ -15,8 +15,9 @@
 #include <pbl/logging/logging.h>
 
 #include <console/dbgserial_input.h>
+#ifdef CONFIG_PULSE_EVERYWHERE
 #include <console/pulse_internal.h>
-#include <console/pulse_protocol_impl.h>
+#endif
 
 _Atomic SerialConsoleState s_serial_console_state = SERIAL_CONSOLE_STATE_LOGGING;
 static bool s_serial_console_initialized;
@@ -100,9 +101,11 @@ void serial_console_set_state(SerialConsoleState new_state) {
     case SERIAL_CONSOLE_STATE_LOGGING:
       dbgserial_register_character_callback(logging_handle_character);
       break;
+#ifdef CONFIG_PULSE_EVERYWHERE
     case SERIAL_CONSOLE_STATE_PULSE:
       dbgserial_register_character_callback(pulse_handle_character);
       break;
+#endif
     default:
       pbl_panic(); // Don't know this state
   }

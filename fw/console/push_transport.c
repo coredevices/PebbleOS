@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 #include "pulse_protocol_impl.h"
 
 #include <stddef.h>
@@ -39,5 +37,3 @@ void pulse_push_send(void *buf, size_t length) {
   packet->length = pbl_be16_make(packet_size);
   pulse_link_send(packet, packet_size);
 }
-
-#endif

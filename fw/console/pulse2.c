@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 #include "pulse.h"
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse2_transport_impl.h"
@@ -29,10 +27,10 @@
 #include <pbl/util/size.h>
 
 #include <console/cobs.h>
-#include <console/console_internal.h>
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/dbgserial.h>
+#include <console/console_internal.h>
 #include <kernel/pebble_tasks.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
@@ -421,5 +419,3 @@ void pulse_link_send_cancel(void *buf) {
 size_t pulse_link_max_send_size(void) {
   return FRAME_MAX_SEND_SIZE - LINK_HEADER_LEN;
 }
-
-#endif

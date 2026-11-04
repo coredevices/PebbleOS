@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 #include "pulse2_reliable_retransmit_timer.h"
 #include "pulse_protocol_impl.h"
 
@@ -382,5 +380,3 @@ static void prv_bounce_ncp_state(void) {
   ppp_control_protocol_lower_layer_is_down(PULSE2_TRAINCP);
   ppp_control_protocol_lower_layer_is_up(PULSE2_TRAINCP);
 }
-
-#endif
