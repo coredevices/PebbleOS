@@ -25,6 +25,7 @@
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 void layer_init(Layer *layer, const GRect *frame) {
   *layer = (Layer){};
@@ -343,6 +344,32 @@ void layer_get_unobstructed_bounds(const Layer *layer, GRect *bounds_out) {
   prv_screen_point_to_layer(layer, &area.origin);
   layer_get_bounds(layer, bounds_out);
   grect_clip(bounds_out, &area);
+}
+
+bool layer_get_mic_accessory_bounds(const Layer *layer, GRect *bounds_out) {
+  PBL_ASSERT_TASK(PebbleTask_App);
+  if (!bounds_out) {
+    return false;
+  }
+  *bounds_out = GRectZero;
+  GRect area;
+  if (!layer || !sys_mic_banner_get_accessory_area(&area)) {
+    return false;
+  }
+  prv_screen_point_to_layer(layer, &area.origin);
+  // Clip only the sides: the area keeps the bar's height as it slides, so what is laid out in it
+  // moves with the indicator instead of squashing
+  GRect bounds;
+  layer_get_bounds(layer, &bounds);
+  const int16_t left = MAX(area.origin.x, bounds.origin.x);
+  const int16_t right = MIN(grect_get_max_x(&area), grect_get_max_x(&bounds));
+  if (right <= left) {
+    return false;
+  }
+  area.origin.x = left;
+  area.size.w = right - left;
+  *bounds_out = area;
+  return true;
 }
 
 GRect layer_get_unobstructed_bounds_by_value(const Layer *layer) {
