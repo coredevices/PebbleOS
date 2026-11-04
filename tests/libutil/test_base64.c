@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/util/base64.h>
@@ -49,4 +50,38 @@ void test_base64__no_room_for_terminator(void) {
   cl_assert_equal_i(pbl_base64_encode(out, 4, "abc", 3), 4);
   cl_assert(memcmp(out, "YWJj", 4) == 0);
   cl_assert_equal_i(out[4], 'x');
+}
+
+static void prv_assert_decodes(const char *text, const char *expected) {
+  uint8_t out[32];
+  const size_t expected_len = strlen(expected);
+
+  cl_assert_equal_i(pbl_base64_decode(out, sizeof(out), text, strlen(text)), expected_len);
+  cl_assert(memcmp(out, expected, expected_len) == 0);
+}
+
+void test_base64__decode(void) {
+  prv_assert_decodes("", "");
+  prv_assert_decodes("Zg==", "f");
+  prv_assert_decodes("Zm8=", "fo");
+  prv_assert_decodes("Zm9v", "foo");
+  prv_assert_decodes("Zm9vYg==", "foob");
+  prv_assert_decodes("Zm9vYmE=", "fooba");
+  prv_assert_decodes("Zm9vYmFy", "foobar");
+}
+
+void test_base64__decode_in_place(void) {
+  char buf[] = "Zm9vYmFy";
+
+  cl_assert_equal_i(pbl_base64_decode((uint8_t *)buf, sizeof(buf), buf, 8), 6);
+  cl_assert(memcmp(buf, "foobar", 6) == 0);
+}
+
+void test_base64__decode_errors(void) {
+  uint8_t out[3];
+
+  cl_assert_equal_i(pbl_base64_decode(out, sizeof(out), "Zm9", 3), -EINVAL);
+  cl_assert_equal_i(pbl_base64_decode(out, sizeof(out), "Zm!v", 4), -EINVAL);
+  cl_assert_equal_i(pbl_base64_decode(out, sizeof(out), "Zm==Zm9v", 8), -EINVAL);
+  cl_assert_equal_i(pbl_base64_decode(out, 2, "Zm9v", 4), -ENOSPC);
 }
