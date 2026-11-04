@@ -19,13 +19,13 @@
 #define CONSOLE_FRAME_CHANNEL_IMAGING 'B'
 
 //! Feed a received character, passing those outside frames to @p text_input.
-void console_frame_input_from_isr(char c, void (*text_input)(char c));
+void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c));
 
 //! Send a frame of at most CONSOLE_FRAME_MTU bytes. Not for interrupt context.
-void console_frame_send(char channel, const void *data, size_t len);
+void pbl_console__frame_send(char channel, const void *data, size_t len);
 
 //! Handle a frame on the Pebble protocol channel, on KernelBG.
-void console_pp_handle_frame(const void *data, size_t len);
+void pbl_console__pp_handle_frame(const void *data, size_t len);
 
 //! Handle a frame on the flash imaging channel, on KernelBG.
-void console_imaging_handle_frame(const void *data, size_t len);
+void pbl_console__imaging_handle_frame(const void *data, size_t len);

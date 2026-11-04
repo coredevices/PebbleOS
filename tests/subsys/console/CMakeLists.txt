@@ -3,7 +3,7 @@
 
 pbl_clar_test(test_console_frame
   SOURCES
-    fw/console/console_frame.c
+    subsys/console/frame.c
     lib/util/base64.c
     subsys/crc/crc32.c
 )

@@ -3,7 +3,7 @@
 The console is one serial port, the board's `CONSOLE_UART`, at
 `CONFIG_CONSOLE_BAUDRATE`. It is plain text, so any terminal works: log lines
 print above the shell's prompt, and the shell is always listening. Its code is
-in `fw/console/`, and `tools/libs/pbl-console` is the host side.
+in `subsys/console/`, and `tools/libs/pbl-console` is the host side.
 
 Release firmware has no console (`CONFIG_CONSOLE`), unless it is manufacturing
 firmware: no shell, no serial logs, and nothing listening on the port.
@@ -66,3 +66,11 @@ not used. The payload starts with an opcode, and integers are little-endian:
 
 Regions are 1 for the recovery firmware and 2 for the resources. Any command
 can respond with 193 if it fails.
+
+## Reading from the watch
+
+There is no bulk transfer channel. The Pebble protocol's GetBytes endpoint
+serves the newest coredump on any build, and files and flash ranges on
+non-release builds, which also reaches the other coredump slots. On the host,
+`libpebble2.services.getbytes.GetBytesService` works over this channel as it
+does over Bluetooth. Reading RAM takes a debugger.

@@ -67,7 +67,7 @@ every instance run on KernelBG.
   `pbl_shell_execute_line()`, and get a `done` callback when the command
   finishes.
 
-The firmware's backend is `fw/console/serial_console.c`, interactive, on the
+The firmware's backend is `subsys/console/console.c`, interactive, on the
 {doc}`console`: the shell is always listening, and log lines print above the
 prompt, which comes back with the line being edited.
 

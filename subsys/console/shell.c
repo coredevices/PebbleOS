@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "serial_console.h"
-
 #include <errno.h>
 #include <stdint.h>
 
+#include <pbl/console/console.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/shell/shell.h>
 
 static TimerID s_rx_disable_timer = TIMER_INVALID_ID;
 
 static void prv_rx_disable_timer_cb(void *data) {
-  serial_console_set_rx_enabled(true);
+  pbl_console_set_rx_enabled(true);
 }
 
 static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -27,7 +26,7 @@ static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **ar
     s_rx_disable_timer = new_timer_create();
   }
 
-  serial_console_set_rx_enabled(false);
+  pbl_console_set_rx_enabled(false);
 
   pbl_shell_print(sh, "console RX disabled for %lu seconds", seconds);
 

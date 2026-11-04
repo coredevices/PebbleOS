@@ -11,9 +11,9 @@ The public interfaces under @c include are grouped in
 - @ref soc — @c pbl/soc
 - @ref drivers — @c pbl/drivers
 - @ref services — @c pbl/services
-- @ref subsys — @c pbl/bluetooth, @c pbl/crc, @c pbl/cron, @c pbl/input,
-  @c pbl/loader, @c pbl/logging, @c pbl/profiler, @c pbl/settings, @c pbl/shell,
-  @c pbl/task_wdt
+- @ref subsys — @c pbl/bluetooth, @c pbl/console, @c pbl/crc, @c pbl/cron,
+  @c pbl/input, @c pbl/loader, @c pbl/logging, @c pbl/profiler, @c pbl/settings,
+  @c pbl/shell, @c pbl/task_wdt
 - @ref lib — @c pbl/util, @c pbl/btutil
 - @ref pebbleos — @c pebbleos
 
