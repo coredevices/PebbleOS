@@ -20,7 +20,6 @@ config SOC_SF32LB52
     select CPU_HAS_FPU
     select RAMFUNC
     select SOC_HAS_RESET
-    select SOC_HAS_IDLE_ANALYTICS
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -40,12 +39,6 @@ config SOC_HAS_RESET
     help
       The SoC implements pbl_soc_reset(), which the kernel uses instead
       of the architecture's reset.
-
-config SOC_HAS_IDLE_ANALYTICS
-    bool
-    help
-      The SoC implements pbl_soc_idle_collect_analytics(), to report
-      idle statistics of its own along with the CPU ones.
 
 config SOC
     string

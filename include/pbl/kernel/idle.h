@@ -71,13 +71,6 @@ extern const size_t pbl_soc_num_idle_states;
 int pbl_soc_idle_state_limit(void);
 
 /**
- * @brief Report the SoC's own idle statistics to analytics.
- *
- * Implemented by SoCs with @c CONFIG_SOC_HAS_IDLE_ANALYTICS; called with the CPU ones.
- */
-void pbl_soc_idle_collect_analytics(void);
-
-/**
  * @brief Get the time spent in an idle state since boot.
  *
  * @param state Index in @ref pbl_soc_idle_states.
