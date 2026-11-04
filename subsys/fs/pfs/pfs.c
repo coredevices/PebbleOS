@@ -653,7 +653,13 @@ static PBL_NOINLINE void prv_update_last_written_page(uint16_t next_page) {
 //! @param use_gc_allocator - should be true iff the page should be allocated
 //!      from the region dedicated for garbage collection handling
 //! @param use_page - should be true iff the page is about to be used in a file.
-static status_t find_free_page(uint16_t *free_page, bool use_gc_allocator, bool use_page) {
+//! @param collected - if not NULL, set to whether a sector had to be garbage collected
+static status_t find_free_page(uint16_t *free_page, bool use_gc_allocator, bool use_page,
+                               bool *collected) {
+  if (collected != nullptr) {
+    *collected = false;
+  }
+
   // if we are allocating a file from the garbage collection region,
   // we don't need to search for free pages since we know what ones to use
   if (use_gc_allocator) {
@@ -714,6 +720,9 @@ static status_t find_free_page(uint16_t *free_page, bool use_gc_allocator, bool 
         // we can erase this region and have at least 1 free page after
         uint16_t sector_start_pg = curr_region * PFS_PAGES_PER_ERASE_SECTOR;
         garbage_collect_sector(&next_page, sector_start_pg, sectors_active);
+        if (collected != nullptr) {
+          *collected = true;
+        }
         break;
       }
     }
@@ -747,12 +756,13 @@ static void pfs_prepare_for_file_creation(uint32_t file_size, uint32_t max_elaps
 
   uint16_t last_written_page = s_last_page_written;
   while ((pages_to_find > 0) && (free_page != INVALID_PAGE)) {
+    bool collected;
     pbl_mutex_lock(&s_pfs_mutex, PBL_FOREVER);
-    find_free_page(&free_page, false, false);
+    find_free_page(&free_page, false, false, &collected);
     pbl_mutex_unlock(&s_pfs_mutex);
-    // TODO: might be nice to only sleep here if we had to perform GC as part
-    // of finding a free page
-    if ((pages_to_find % 4) == 0) {
+    // Garbage collection erases a sector, which takes a while, so let other
+    // tasks run after one. Pages that are already erased are found quickly.
+    if (collected) {
       pbl_sleep_ms(2);
     }
     pages_to_find--;
@@ -832,7 +842,7 @@ static status_t create_flash_file(File *f) {
 
   bool use_gc_allocator = (strcmp(f->name, GC_FILE_NAME) == 0);
 
-  if ((rv = find_free_page(&start_page, use_gc_allocator, true)) != S_SUCCESS) {
+  if ((rv = find_free_page(&start_page, use_gc_allocator, true, nullptr)) != S_SUCCESS) {
     return (rv);
   }
 
@@ -852,7 +862,7 @@ static status_t create_flash_file(File *f) {
                     prv_page_to_flash_offset(curr_page) + offsetof(PageHeader, page_flags));
 
     if (pgs_needed > 0) { // do we need to find a free page
-      if ((rv = find_free_page(&next_page, use_gc_allocator, true)) != S_SUCCESS) {
+      if ((rv = find_free_page(&next_page, use_gc_allocator, true, nullptr)) != S_SUCCESS) {
         unlink_flash_file(start_page); // on failure, unallocate
         return (rv);
       }
