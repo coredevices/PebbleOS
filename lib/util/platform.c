@@ -21,10 +21,6 @@ PBL_WEAK void util_log(const char *filename, int line, const char *string) {
   printf("%s:%d %s\n", filename, line, string);
 }
 
-PBL_WEAK void util_dbgserial_str(const char *string) {
-  printf("%s\n", string);
-}
-
 [[noreturn]] PBL_WEAK void util_assertion_failed(const char *filename, int line) {
   util_log(filename, line, "*** UTIL ASSERT FAILED");
   exit(EXIT_FAILURE);

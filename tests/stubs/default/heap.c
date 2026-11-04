@@ -6,7 +6,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/heap.h>
 
-PBL_WEAK void pbl_heap_dump(struct pbl_heap *heap) {
+PBL_WEAK void pbl_heap_dump(struct pbl_heap *heap, pbl_heap_dump_cb_t cb, void *arg) {
 }
 
 PBL_WEAK size_t pbl_heap_size(const struct pbl_heap *heap) {

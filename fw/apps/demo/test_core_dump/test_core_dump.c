@@ -53,7 +53,7 @@ void OTG_FS_WKUP_IRQHandler(void) {
   if (s_call_core_dump_from_isr) {
     core_dump_reset(false /* don't force overwrite */);
   } else {
-    dbgserial_putstr("Entering infinite loop in ISR");
+    PBL_LOG_SYNC_ALWAYS("Entering infinite loop in ISR");
     while (true)
       ;
   }

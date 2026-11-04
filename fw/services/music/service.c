@@ -628,17 +628,6 @@ void music_album_art_unlock(void) {
   pbl_mutex_unlock(&s_music_ctx.mutex);
 }
 
-void command_print_now_playing(void) {
-  char title[MUSIC_BUFFER_LENGTH];
-  char artist[MUSIC_BUFFER_LENGTH];
-  char album[MUSIC_BUFFER_LENGTH];
-
-  music_get_now_playing(title, artist, album);
-
-  char buffer[128];
-  dbgserial_putstr_fmt(buffer, 128, "title=%s; artist=%s; album=%s", title, artist, album);
-}
-
 #ifdef CONFIG_SHELL
 #include <inttypes.h>
 
