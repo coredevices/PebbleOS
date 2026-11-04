@@ -127,6 +127,9 @@ WindowStack *modal_manager_get_window_stack(ModalPriority priority);
 //! @returns Pointer to a \ref Window
 Window *modal_manager_get_top_window(void);
 
+//! Redraws the top window of every modal stack, e.g. after the system theme changed.
+void modal_manager_mark_dirty(void);
+
 //! Handles a button press event for the Modal Window. Raises an
 //! assertion if the event is not a click event.
 //! @param event The \ref PebbleEvent to handle.

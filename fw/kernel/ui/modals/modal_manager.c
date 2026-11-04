@@ -277,6 +277,15 @@ WindowStack *modal_manager_get_window_stack(ModalPriority priority) {
   return &context->window_stack;
 }
 
+void modal_manager_mark_dirty(void) {
+  for (ModalPriority idx = ModalPriorityMin; idx < NumModalPriorities; idx++) {
+    Window *window = window_stack_get_top_window(&s_modal_window_stacks[idx].window_stack);
+    if (window) {
+      layer_mark_dirty(window_get_root_layer(window));
+    }
+  }
+}
+
 Window *modal_manager_get_top_window(void) {
   WindowStack *stack = prv_find_window_stack(prv_has_visible_window, nullptr);
   return window_stack_get_top_window(stack);
