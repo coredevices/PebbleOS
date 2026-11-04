@@ -10,7 +10,6 @@
 #include <pbl/services/system_task.h>
 #include <pbl/util/base64.h>
 
-#include <console/dbgserial.h>
 #include <console/serial_console.h>
 
 #define ESC 0x1b
@@ -43,10 +42,6 @@ static uint32_t prv_crc(char channel, const void *data, size_t len) {
   return pbl_crc32(pbl_crc32(0, &channel, 1), data, len);
 }
 
-static void prv_put(char c) {
-  dbgserial_putchar_lazy(c);
-}
-
 void console_frame_send(char channel, const void *data, size_t len) {
   serial_console_lock();
 
@@ -58,15 +53,15 @@ void console_frame_send(char channel, const void *data, size_t len) {
   const size_t b64_len =
       pbl_base64_encode(s_tx_b64, sizeof(s_tx_b64), s_tx_raw, body_len + CRC_LEN);
 
-  prv_put(ESC);
-  prv_put('_');
-  prv_put(channel);
+  serial_console_putchar(ESC);
+  serial_console_putchar('_');
+  serial_console_putchar(channel);
   for (size_t i = 0; i < b64_len; i++) {
-    prv_put(s_tx_b64[i]);
+    serial_console_putchar(s_tx_b64[i]);
   }
-  prv_put(ESC);
-  prv_put('\\');
-  dbgserial_flush();
+  serial_console_putchar(ESC);
+  serial_console_putchar('\\');
+  serial_console_flush();
 
   serial_console_unlock();
 }

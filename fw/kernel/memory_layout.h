@@ -47,7 +47,7 @@ enum MemoryRegionAssignments {
   MemoryRegion_Task4
 };
 
-void memory_layout_dump_mpu_regions_to_dbgserial(void);
+void memory_layout_dump_mpu_regions(void);
 
 void memory_layout_setup_mpu(void);
 

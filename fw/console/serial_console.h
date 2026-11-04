@@ -5,8 +5,6 @@
 
 #include <stddef.h>
 
-void serial_console_init(void);
-
 //! Start taking input, once the system can handle commands.
 void serial_console_enable_prompt(void);
 
@@ -14,6 +12,12 @@ void serial_console_enable_prompt(void);
 //! interrupts or the scheduler locked.
 void serial_console_lock(void);
 void serial_console_unlock(void);
+
+//! Write a character to the port without waiting for it to go out, without taking the lock.
+void serial_console_putchar(char c);
+
+//! Wait for what was written to go out.
+void serial_console_flush(void);
 
 //! Write to the port without taking the lock, for use in fault handlers and between
 //! serial_console_log_begin() and serial_console_log_end().

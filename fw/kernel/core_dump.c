@@ -34,7 +34,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/util/size.h>
 
 #ifdef CONFIG_CONSOLE
-#include <console/dbgserial.h>
+#include <console/serial_console.h>
 #endif
 #include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
@@ -163,7 +163,7 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
 
 [[noreturn]] static void prv_reset(void) {
 #ifdef CONFIG_CONSOLE
-  dbgserial_flush();
+  serial_console_flush();
 #endif
   pbl_reboot_emergency();
 }
