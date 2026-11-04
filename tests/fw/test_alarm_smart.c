@@ -362,6 +362,33 @@ void test_alarm_smart__clock_change_still_force_triggers_sleep_poll(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
 }
 
+void test_alarm_smart__clock_change_after_fire_does_not_refire(void) {
+  // A smart alarm that already fired at the end of its window must not fire again on a later
+  // time zone change.
+  alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
+
+  s_sleep_state = ActivitySleepStateRestfulSleep;
+  s_sleep_state_seconds = 0;
+  s_last_vmc = 0;
+
+  prv_set_time(s_current_day, 10, 0);
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+
+  // Sleep through the whole window so the guaranteed fire happens at the max counter
+  for (int i = 1; i <= SMART_ALARM_MAX_SMART_SNOOZE + 1 && s_num_alarm_events_put == 0; i++) {
+    prv_set_time(s_current_day, 10, i);
+    stub_new_timer_invoke(1);
+  }
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+
+  // Hours later the user crosses into another time zone
+  prv_set_time(s_current_day, 16, 30);
+  alarm_handle_clock_change();
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
 void test_alarm_smart__across_midnight_boundary(void) {
   prv_set_time(s_sunday, 22, 0);
 
