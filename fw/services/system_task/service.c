@@ -151,6 +151,7 @@ static void system_task_main(void *paramater) {
   }
 }
 
+static struct pbl_thread s_thread;
 PBL_THREAD_STACK_DEFINE(s_stack, 4096);
 
 void system_task_init(void) {
@@ -171,7 +172,8 @@ void system_task_init(void) {
   attr.regions[MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
       memory_layout_stack_guard_region_init(&stack_guard, attr.stack);
 
-  pebble_task_create(PebbleTask_KernelBackground, &attr);
+  PBL_ASSERTN(pbl_thread_create(&s_thread, &attr) == 0);
+  pebble_task_register(PebbleTask_KernelBackground, &s_thread);
 }
 
 void system_task_timer_init(void) {
@@ -359,6 +361,7 @@ bool system_task_is_ready_to_run(void) {
 
 #if UNITTEST
 void system_task_reset_for_test(void) {
+  memset(&s_thread, 0, sizeof(s_thread));
   pbl_msgq_init(&s_system_task_queue, s_system_task_queue.buf, sizeof(SystemTaskEvent),
                 SYSTEM_TASK_QUEUE_LENGTH);
   pbl_msgq_init(&s_from_app_system_task_queue, s_from_app_system_task_queue.buf,

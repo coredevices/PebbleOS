@@ -246,10 +246,6 @@ const char *pebble_task_get_name(PebbleTask task) {
   return "?";
 }
 
-struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  return nullptr;
-}
-
 void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task, MemorySegment *segment) {
   if (app_md == (PebbleProcessMd *)&s_borked_app) {
     return nullptr;

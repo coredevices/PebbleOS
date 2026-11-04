@@ -55,10 +55,6 @@ const char *pebble_task_get_name(PebbleTask task) {
 void pebble_task_unregister(PebbleTask task) {
 }
 
-struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  return nullptr;
-}
-
 //! System install ids are negative, app-db (third-party) install ids are positive
 static AppInstallId s_current_process_id = (AppInstallId)(-1);
 

@@ -235,7 +235,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   pebble_task_attr_set_syscall_stack(PebbleTask_Worker, &attr);
 #endif
 
-  s_worker_task_context.task_handle = pebble_task_create(PebbleTask_Worker, &attr);
+  s_worker_task_context.task_handle = process_manager_thread_create(PebbleTask_Worker, &attr);
 
   // If no default yet, set as the default so that it can be relaunched upon system reset
   if (worker_manager_get_default_install_id() == INSTALL_ID_INVALID) {

@@ -29,6 +29,7 @@ static PBL_SEM_DEFINE(s_wake_srv_loop, 1, 1);
 #define WORK_QUEUE_SIZE       5
 #define TASK_STACK_SIZE_BYTES 1380
 
+static struct pbl_thread s_new_timer_thread;
 PBL_THREAD_STACK_DEFINE(s_new_timer_stack, TASK_STACK_SIZE_BYTES);
 static PBL_MSGQ_DEFINE(s_work_queue, sizeof(NewTimerWorkItem), WORK_QUEUE_SIZE);
 
@@ -125,7 +126,8 @@ void new_timer_service_init(void) {
     .stack_size = sizeof(s_new_timer_stack),
   };
 
-  pebble_task_create(PebbleTask_NewTimers, &attr);
+  PBL_ASSERTN(pbl_thread_create(&s_new_timer_thread, &attr) == 0);
+  pebble_task_register(PebbleTask_NewTimers, &s_new_timer_thread);
 }
 
 // -----------------------------------------------------------------------------------------------------

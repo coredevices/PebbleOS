@@ -57,10 +57,6 @@ void pebble_task_suspend(PebbleTask task);
 //! @return The queue handle to send events to the given task.
 struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task);
 
-//! Creates the thread for @p pebble_task with the memory regions it needs;
-//! @p attr->regions is filled in here.
-struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr);
-
 #ifdef CONFIG_USERSPACE
 //! Runs the syscalls of @p task (App or Worker) on its dedicated privileged
 //! stack instead of the caller's.

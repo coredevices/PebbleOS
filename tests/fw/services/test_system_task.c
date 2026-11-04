@@ -18,9 +18,8 @@
 void system_task_reset_for_test(void);
 void stub_pbl_malloc_set_should_fail(bool should_fail);
 
-static struct pbl_thread s_bg;
+static struct pbl_thread *s_bg;
 static struct pbl_thread s_main;
-static uint8_t s_bg_stack[4096] __attribute__((aligned(8)));
 static uint8_t s_main_stack[4096] __attribute__((aligned(8)));
 
 static RebootReason s_reason;
@@ -39,20 +38,16 @@ void task_init(void) {
 void mcu_fpu_cleanup(void) {
 }
 
-struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_attr *attr) {
-  struct pbl_thread_attr bg = *attr;
-  bg.stack = s_bg_stack;
-  bg.stack_size = sizeof(s_bg_stack);
-  cl_assert_equal_i(pbl_thread_create(&s_bg, &bg), 0);
-  return &s_bg;
+void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
+  s_bg = thread;
 }
 
 PebbleTask pebble_task_get_current(void) {
-  return pbl_thread_current() == &s_bg ? PebbleTask_KernelBackground : PebbleTask_KernelMain;
+  return pbl_thread_current() == s_bg ? PebbleTask_KernelBackground : PebbleTask_KernelMain;
 }
 
 struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return task == PebbleTask_KernelBackground ? &s_bg : nullptr;
+  return task == PebbleTask_KernelBackground ? s_bg : nullptr;
 }
 
 void reboot_reason_set(RebootReason *reason) {
@@ -105,7 +100,7 @@ static void prv_run(void) {
 }
 
 void test_system_task__initialize(void) {
-  memset(&s_bg, 0, sizeof(s_bg));
+  s_bg = nullptr;
   memset(&s_main, 0, sizeof(s_main));
   memset(&s_reason, 0, sizeof(s_reason));
   memset(s_ran, 0, sizeof(s_ran));
