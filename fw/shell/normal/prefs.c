@@ -341,11 +341,9 @@ static bool s_als_threshold_migrated_v2 = false;
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
-#ifdef CONFIG_THEMING
 #define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
 
 static GColor s_theme_highlight_color = GColorVividCerulean;
-#endif
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND    "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR  "menuScrollVibeBehavior"
@@ -922,7 +920,6 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
-#ifdef CONFIG_THEMING
 // Valid theme colors (unified scheme)
 // Must match s_color_definitions in settings_themes.h
 static bool prv_is_valid_theme_color(GColor color) {
@@ -960,7 +957,6 @@ static bool prv_set_s_theme_highlight_color(GColor *color) {
   s_theme_highlight_color = *color;
   return true;
 }
-#endif
 
 static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
   s_menu_scroll_wrap_around = *enabled;
@@ -2339,17 +2335,11 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 #endif
 
 GColor shell_prefs_get_theme_highlight_color(void) {
-#ifdef CONFIG_THEMING
   return s_theme_highlight_color;
-#else
-  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
-#endif
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {
-#ifdef CONFIG_THEMING
   prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
-#endif
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {

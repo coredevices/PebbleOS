@@ -6,16 +6,14 @@
 #include "activity_tracker.h"
 #include "bluetooth.h"
 #include "display.h"
+#include "health.h"
 #include "notifications.h"
 #include "quick_launch.h"
 #include "quiet_time.h"
 #include "system.h"
+#include "themes.h"
 #include "time.h"
 #include "timeline.h"
-#ifdef CONFIG_THEMING
-#include "themes.h"
-#endif
-#include "health.h"
 #include "vibe_patterns.h"
 
 #include <pbl/kernel/assert.h>
@@ -33,9 +31,7 @@ static const SettingsModuleGetMetadata s_submodule_registry[] = {
   [SettingsMenuItemQuickLaunch] = settings_quick_launch_get_info,
   [SettingsMenuItemDateTime] = settings_time_get_info,
   [SettingsMenuItemDisplay] = settings_display_get_info,
-#ifdef CONFIG_THEMING
   [SettingsMenuItemThemes] = settings_themes_get_info,
-#endif
   [SettingsMenuItemSystem] = settings_system_get_info,
 };
 

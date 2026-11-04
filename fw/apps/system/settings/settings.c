@@ -40,9 +40,7 @@ static const uint32_t SETTINGS_MENU_ICON_RESOURCES[SettingsMenuItem_Count] = {
   [SettingsMenuItemDateTime] = RESOURCE_ID_SETTINGS_MENU_ICON_DATE_TIME,
   [SettingsMenuItemDisplay] = RESOURCE_ID_SETTINGS_MENU_ICON_DISPLAY,
   [SettingsMenuItemHealth] = RESOURCE_ID_SETTINGS_MENU_ICON_HEALTH,
-#ifdef CONFIG_THEMING
   [SettingsMenuItemThemes] = RESOURCE_ID_SETTINGS_MENU_ICON_THEMES,
-#endif
   [SettingsMenuItemActivity] = RESOURCE_ID_SETTINGS_MENU_ICON_BACKGROUND_APP,
   [SettingsMenuItemSystem] = RESOURCE_ID_SETTINGS_MENU_ICON_SYSTEM,
 };

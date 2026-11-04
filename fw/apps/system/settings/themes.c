@@ -6,7 +6,6 @@
 #include "menu.h"
 #include "option_menu.h"
 
-#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
@@ -15,8 +14,6 @@
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/menu_layer.h>
 #include <shell/prefs.h>
-
-#ifdef CONFIG_THEMING
 
 #define DEFAULT_THEME_HIGHLIGHT_COLOR GColorVividCerulean
 
@@ -128,16 +125,10 @@ static OptionMenu *prv_push_color_menu(void) {
 
   return option_menu;
 }
-#endif // CONFIG_THEMING
 
 static Window *prv_create_color_menu(void) {
-#ifdef CONFIG_THEMING
   OptionMenu *option_menu = prv_push_color_menu();
   return option_menu ? &option_menu->window : nullptr;
-#else
-  pbl_panic();
-  return nullptr;
-#endif
 }
 
 static Window *prv_init(void) {

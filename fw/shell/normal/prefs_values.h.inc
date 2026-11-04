@@ -71,9 +71,7 @@
   PREFS_MACRO(PREF_KEY_LEGACY_APP_RENDER_MODE, s_legacy_app_render_mode)
 #endif
 
-#ifdef CONFIG_THEMING
   PREFS_MACRO(PREF_KEY_THEME_HIGHLIGHT_COLOR, s_theme_highlight_color)
-#endif
 
   PREFS_MACRO(PREF_KEY_MENU_SCROLL_WRAP_AROUND, s_menu_scroll_wrap_around)
   PREFS_MACRO(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, s_menu_scroll_vibe_behavior)
