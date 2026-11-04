@@ -6,15 +6,22 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//! OS-owned "listening" banner shown while an app uses the microphone.
+//! OS-owned "listening" indicator shown while an app uses the microphone.
 //!
-//! A transparent, unfocusable modal strip at the bottom of the screen. It reserves part of the
-//! app's screen through the unobstructed area service, the same way Timeline Peek does, so an app
-//! can lay out around it. The app cannot cover or dismiss it: the microphone stops as soon as the
-//! app loses focus to any other modal window.
+//! A transparent, unfocusable modal at the bottom of the screen. On round displays it is a dome
+//! rising from the bottom edge. On rectangular ones a full-width "Listening..." bar slides up, then
+//! after a few seconds shrinks into a box in the bottom-left corner that stays while listening.
+//! It reserves the bottom of the app's screen through the unobstructed area service, the same way
+//! Timeline Peek does, so an app can lay out around it. The reserved height does not change when
+//! the bar shrinks. The app cannot cover or dismiss it: the microphone stops as soon as the app
+//! loses focus to any other modal window.
 
-// Round displays need a taller strip so the chord is wide enough for the centred content
-#define MIC_BANNER_HEIGHT (PBL_IF_RECT_ELSE(24, 40))
+#if PBL_ROUND
+//! Visible height of the dome
+#define MIC_BANNER_HEIGHT (36)
+//! Radius of the circle the dome is cut from
+#define MIC_BANNER_RADIUS (82)
+#endif
 
 void mic_banner_init(void);
 
