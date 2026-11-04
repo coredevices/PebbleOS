@@ -12,11 +12,6 @@ config SETTINGS_ICONS
     help
       Show icons next to entries in the system Settings menu.
 
-config THEMING
-    bool "Color theming"
-    help
-      Expose the highlight-color theming UI under Settings.
-
 config BACKLIGHT_STANDARD_INTENSITY
     int "Standard backlight preset intensity (%)"
     range 1 100
