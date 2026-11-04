@@ -37,6 +37,11 @@
     },
     {
       "type": "pdc",
+      "name": "MIC_BANNER_ICON",
+      "file": "normal/base/images/Pebble_25x25_Mic_banner.svg"
+    },
+    {
+      "type": "pdc",
       "name": "BATTERY_NEEDS_CHARGING",
       "file": "normal/base/images/Pebble_50x50_Needs_Charging.svg"
     },
