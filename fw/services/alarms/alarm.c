@@ -507,6 +507,8 @@ static void prv_process_most_recent_alarm(void) {
     }
   }
   if (trigger) {
+    // The smart window is over; a stale counter would let a later clock change re-fire it.
+    s_smart_snooze_counter = 0;
     prv_put_alarm_event();
     // Alarm events are triggered for both the initial alarm time and subsequent user snoozes
     // Ensure that we only record the first alarm time
