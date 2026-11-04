@@ -126,6 +126,7 @@ static void prv_simple_dialog_load(Window *window) {
   TextLayer *text_layer = &dialog->text_layer;
   text_layer_init_with_parameters(text_layer, &text_box, dialog->buffer, TEXT_FONT,
                                   dialog->text_color, GColorClear, TEXT_ALIGNMENT, TEXT_OVERFLOW);
+  dialog_apply_text_color(dialog, text_layer);
   layer_add_child(&window->layer, &text_layer->layer);
 
 #if PBL_ROUND

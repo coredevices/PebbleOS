@@ -7,3 +7,7 @@
 
 PBL_WEAK void window_schedule_render(Window *window) {
 }
+
+PBL_WEAK GColor window_get_drawn_background_color(const Window *window) {
+  return window->background_color;
+}

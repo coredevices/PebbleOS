@@ -123,6 +123,11 @@ void text_layer_set_background_color(TextLayer *text_layer, GColor color);
 //! @see text_layer_set_background_color
 void text_layer_set_text_color(TextLayer *text_layer, GColor color);
 
+//! @internal
+//! Draws the text in the system theme's foreground color, resolved when drawing so it follows
+//! dark mode flips. Undone by \ref text_layer_set_text_color.
+void text_layer_set_text_color_follows_theme(TextLayer *text_layer);
+
 //! Sets the line break mode of the TextLayer
 //! @param text_layer The TextLayer of which to set the overflow mode
 //! @param line_mode The new \ref GTextOverflowMode to set

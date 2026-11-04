@@ -312,6 +312,12 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
 
 static void prv_draw_selection_layer(Layer *layer, GContext *ctx) {
   SelectionLayer *selection_layer = (SelectionLayer *)layer;
+#if PBL_BW
+  if (system_theme_is_system_ui()) {
+    // Highlights invert the system theme on black and white displays
+    selection_layer->active_background_color = system_theme_get_fg_color();
+  }
+#endif
   // The first thing that is drawn is the background for each cell
   prv_draw_cell_backgrounds(selection_layer, ctx);
 

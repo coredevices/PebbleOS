@@ -81,6 +81,7 @@ static void prv_actionable_dialog_load(Window *window) {
   text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, dialog_text_font,
                                   dialog->text_color, GColorClear, text_alignment,
                                   GTextOverflowModeWordWrap);
+  dialog_apply_text_color(dialog, text_layer);
   if (text_attributes) {
     text_layer->should_cache_layout = true;
     text_layer->layout_cache = text_attributes;

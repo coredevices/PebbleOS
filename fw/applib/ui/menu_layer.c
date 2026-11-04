@@ -104,6 +104,19 @@ static void prv_scrollbar_kick(MenuLayer *menu_layer) {
 }
 #endif // CONFIG_TOUCH
 
+//! Copies the current theme colors into the colors that follow the theme
+static void prv_refresh_theme_colors(MenuLayer *menu_layer) {
+  if (menu_layer->normal_colors_follow_theme) {
+    menu_layer->normal_colors[MenuLayerColorBackground] = system_theme_get_bg_color();
+    menu_layer->normal_colors[MenuLayerColorForeground] = system_theme_get_fg_color();
+  }
+  if (menu_layer->highlight_colors_follow_theme) {
+    const GColor highlight_bg = system_theme_get_highlight_color();
+    menu_layer->highlight_colors[MenuLayerColorBackground] = highlight_bg;
+    menu_layer->highlight_colors[MenuLayerColorForeground] = gcolor_legible_over(highlight_bg);
+  }
+}
+
 #if PBL_ROUND
 //! Curved scrollbar (Wear OS style): the track is an arc hugging the bezel, spanning
 //! ±30° around the 3 o'clock position.
@@ -864,6 +877,7 @@ static void PBL_NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ct
 void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
   MenuLayer *menu_layer = (MenuLayer *)(((uint8_t *)scroll_content_layer) -
                                         offsetof(MenuLayer, scroll_layer.content_sublayer));
+  prv_refresh_theme_colors(menu_layer);
   const GSize frame_size = menu_layer->scroll_layer.layer.frame.size;
   const int16_t content_top_y = -scroll_layer_get_content_offset(&menu_layer->scroll_layer).y;
   const int16_t content_bottom_y = content_top_y + frame_size.h;
@@ -979,10 +993,9 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
   scroll_layer_set_context(scroll_layer, menu_layer);
 
   if (system_theme_is_system_ui()) {
-    menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(),
-                                 system_theme_get_fg_color());
-    const GColor highlight_bg = system_theme_get_highlight_color();
-    menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
+    menu_layer->normal_colors_follow_theme = true;
+    menu_layer->highlight_colors_follow_theme = true;
+    prv_refresh_theme_colors(menu_layer);
   } else {
     // Third-party apps keep the documented defaults, without the system accent
     menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
@@ -1686,11 +1699,20 @@ bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
 void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->normal_colors[MenuLayerColorBackground] = background;
   menu_layer->normal_colors[MenuLayerColorForeground] = foreground;
+  menu_layer->normal_colors_follow_theme = false;
+}
+
+void menu_layer_set_colors_follow_theme(MenuLayer *menu_layer) {
+  menu_layer->normal_colors_follow_theme = true;
+  menu_layer->highlight_colors_follow_theme = true;
+  prv_refresh_theme_colors(menu_layer);
+  layer_mark_dirty(menu_layer_get_layer(menu_layer));
 }
 
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->highlight_colors[MenuLayerColorBackground] = background;
   menu_layer->highlight_colors[MenuLayerColorForeground] = foreground;
+  menu_layer->highlight_colors_follow_theme = false;
 }
 
 bool menu_layer_get_center_focused(MenuLayer *menu_layer) {

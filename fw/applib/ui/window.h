@@ -154,6 +154,16 @@ typedef struct Window {
   bool is_unfocusable : 1;
 
   //! @internal
+  //! If set, the background is the system theme's background color, resolved when drawing so the
+  //! window follows dark mode flips. Set by default for system UI, cleared by
+  //! \ref window_set_background_color().
+  bool background_follows_theme : 1;
+
+  //! @internal
+  //! With \ref background_follows_theme, use the theme's dimmed background on color displays.
+  bool background_theme_dimmed : 1;
+
+  //! @internal
   //! Back pointer to the window stack that this Window is residing on.
   //! @see \ref WindowStack
   struct WindowStack *parent_window_stack;
@@ -353,6 +363,16 @@ struct Layer *window_get_root_layer(const Window *window);
 //! @see \ref window_get_root_layer()
 void window_set_background_color(Window *window, GColor background_color);
 void window_set_background_color_2bit(Window *window, GColor2 background_color);
+
+//! @internal
+//! Uses the system theme's background color, resolved when drawing so the window follows dark mode
+//! flips. Undone by \ref window_set_background_color().
+//! @param dimmed Use the dimmed background on color displays (light or dark gray), as dialogs do
+void window_set_background_color_follows_theme(Window *window, bool dimmed);
+
+//! @internal
+//! @return The background color the window draws with, resolving the theme's if it follows it
+GColor window_get_drawn_background_color(const Window *window);
 
 //! Sets whether or not the window is fullscreen, consequently hiding the system status bar.
 //! @note This needs to be called before pushing a window to the window stack.

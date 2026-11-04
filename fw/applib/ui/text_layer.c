@@ -34,7 +34,9 @@ void text_layer_update_proc(Layer *layer, GContext *ctx) {
     graphics_fill_rect(ctx, &text_layer->layer.bounds);
   }
   if (text_layer->text && strlen(text_layer->text) > 0) {
-    graphics_context_set_text_color(ctx, text_layer->text_color);
+    graphics_context_set_text_color(ctx, text_layer->layer.follows_theme
+                                             ? system_theme_get_fg_color()
+                                             : text_layer->text_color);
     graphics_draw_text(ctx, text_layer->text, text_layer->font, text_layer->layer.bounds,
                        text_layer->overflow_mode, text_layer->text_alignment,
                        prv_text_layer_get_cache_handle(text_layer));
@@ -144,10 +146,18 @@ void text_layer_set_background_color(TextLayer *text_layer, GColor color) {
 void text_layer_set_text_color(TextLayer *text_layer, GColor color) {
   PBL_ASSERTN(text_layer);
   const GColor text_color = text_layer->text_color;
-  if (gcolor_equal(color, text_color)) {
+  if (gcolor_equal(color, text_color) && !text_layer->layer.follows_theme) {
     return;
   }
   text_layer->text_color = color;
+  text_layer->layer.follows_theme = false;
+  layer_mark_dirty(&(text_layer->layer));
+}
+
+void text_layer_set_text_color_follows_theme(TextLayer *text_layer) {
+  PBL_ASSERTN(text_layer);
+  text_layer->text_color = system_theme_get_fg_color();
+  text_layer->layer.follows_theme = true;
   layer_mark_dirty(&(text_layer->layer));
 }
 
