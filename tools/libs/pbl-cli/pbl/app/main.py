@@ -9,7 +9,7 @@ import signal
 import sys
 
 from pbl import __version__, util
-from pbl.command import GROUPS, global_options
+from pbl.command import GROUPS, global_options, normalize_wait
 from pbl.commands import builtin_commands
 from pbl.errors import CommandError
 from pbl.workspace import Workspace, WorkspaceError
@@ -117,7 +117,7 @@ def _run(argv):
 
 
 def main(argv=None):
-    argv = list(sys.argv[1:] if argv is None else argv)
+    argv = normalize_wait(sys.argv[1:] if argv is None else argv)
     try:
         return _run(argv)
     except CommandError as e:

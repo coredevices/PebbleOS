@@ -72,8 +72,8 @@ CLI, one page per command, and `extending.md` for how to extend it),
   `pbl power measure --json`, or `start`/`stop` around other work, measure
   its current. Power it off when done: it blocks itest on that watch. See
   `docs/pbl/power.md`.
-- A port held by another session is in use: wait or ask, never kill the
-  holder. See `docs/pbl/lab.md`.
+- A port held by another session is in use: wait, with `--wait [SECONDS]` on
+  the command, or ask, never kill the holder. See `docs/pbl/lab.md`.
 
 ## Submodules in agent workspaces
 

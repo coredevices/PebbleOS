@@ -67,6 +67,22 @@ Another command that needs the port fails right away, naming who holds it:
 error: serial port /dev/tty.wchusbserial5B7A1355001 is in use by pid 4242 (pbl console, since 2026-11-02T10:12:03+01:00, in /home/me/pebbleos)
 ```
 
+With `--wait`, it waits for the port instead, saying who it waits for, until
+it is free or the command is canceled. With `--wait SECONDS`, it waits that
+long for each port, and fails the same way if the port stays in use. Nested
+commands, such as the flash of an {doc}`itest` session, inherit it.
+
+```shell
+pbl run --wait
+pbl run --wait 1800
+```
+
+A session keeps a watch across its commands by keeping its supply on (see
+{doc}`power`), while the serial port is free between them. So `--wait` also
+waits while another checkout holds the watch's supply; the supply your own
+checkout holds does not count, as sessions are told apart by their
+checkouts. Use one checkout per session.
+
 Serial ports are locked by their device path, whether given with `--tty` or
 taken from the lab, so a `pbl console` on the debug UART blocks the `sftool`
 runner, which needs the same port, but not an `openocd` flash over the
