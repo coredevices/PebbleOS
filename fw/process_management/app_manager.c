@@ -415,7 +415,7 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   }
 #endif
 
-  s_app_task_context.task_handle = pebble_task_create(PebbleTask_App, &attr);
+  s_app_task_context.task_handle = process_manager_thread_create(PebbleTask_App, &attr);
 
   // Always notify the phone that the application is running
   app_run_state_send_update(&app_md->uuid, RUNNING);

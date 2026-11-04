@@ -20,7 +20,5 @@ PBL_WEAK const char *pebble_task_get_name(PebbleTask task) {
 PBL_WEAK void pebble_task_unregister(PebbleTask task) {
 }
 
-PBL_WEAK struct pbl_thread *pebble_task_create(PebbleTask pebble_task,
-                                               struct pbl_thread_attr *attr) {
-  return nullptr;
+PBL_WEAK void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
 }

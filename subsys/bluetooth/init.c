@@ -31,10 +31,10 @@ extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
-static struct pbl_thread *s_ll_task_handle;
+static struct pbl_thread s_ll_thread;
 PBL_THREAD_STACK_DEFINE(s_ll_task_stack, 1384);
 #endif
-static struct pbl_thread *s_host_task_handle;
+static struct pbl_thread s_host_thread;
 PBL_THREAD_STACK_DEFINE(s_host_task_stack, 5000);
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
@@ -130,8 +130,8 @@ void pbl_bt_init(void) {
     .stack_size = sizeof(s_host_task_stack),
   };
 
-  s_host_task_handle = pebble_task_create(PebbleTask_BTHost, &host_attr);
-  PBL_ASSERTN(s_host_task_handle);
+  PBL_ASSERTN(pbl_thread_create(&s_host_thread, &host_attr) == 0);
+  pebble_task_register(PebbleTask_BTHost, &s_host_thread);
 
 #if NIMBLE_CFG_CONTROLLER
   struct pbl_thread_attr ll_attr = {
@@ -143,8 +143,8 @@ void pbl_bt_init(void) {
     .stack_size = sizeof(s_ll_task_stack),
   };
 
-  s_ll_task_handle = pebble_task_create(PebbleTask_BTController, &ll_attr);
-  PBL_ASSERTN(s_ll_task_handle);
+  PBL_ASSERTN(pbl_thread_create(&s_ll_thread, &ll_attr) == 0);
+  pebble_task_register(PebbleTask_BTController, &s_ll_thread);
 #endif
 }
 

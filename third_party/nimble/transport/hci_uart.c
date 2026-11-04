@@ -28,7 +28,7 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 #define RX_RING_SIZE     1024U
 #define EVT_POOL_POLL_MS 5U
 
-static struct pbl_thread *s_hci_task_handle;
+static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, 1024);
 static PBL_SEM_DEFINE(s_rx_ready, 0, 1);
 static PBL_SEM_DEFINE(s_acl_pool_avail, 0, 1);
@@ -160,8 +160,8 @@ void ble_transport_ll_init(void) {
     .stack_size = sizeof(s_hci_task_stack),
   };
 
-  s_hci_task_handle = pebble_task_create(PebbleTask_BTHCI, &attr);
-  PBL_ASSERTN(s_hci_task_handle);
+  PBL_ASSERTN(pbl_thread_create(&s_hci_thread, &attr) == 0);
+  pebble_task_register(PebbleTask_BTHCI, &s_hci_thread);
 
   PBL_ASSERTN(pbl_uart_rx_enable(BT_HCI_UART, prv_rx, nullptr) == 0);
 }

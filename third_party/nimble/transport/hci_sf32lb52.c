@@ -88,7 +88,7 @@ static_assert(sizeof(struct ring) == 20U);
 #define RX_RING_BASE      SF32LB52_LPSYS_MBOX_BUF_BASE
 #define RX_RING_POOL_SIZE RING_POOL_SIZE(SF32LB52_MBOX_BUF_SIZE)
 
-static struct pbl_thread *s_hci_task_handle;
+static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, 1024);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
 /* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
@@ -539,8 +539,8 @@ void ble_transport_ll_init(void) {
     .stack_size = sizeof(s_hci_task_stack),
   };
 
-  s_hci_task_handle = pebble_task_create(PebbleTask_BTHCI, &attr);
-  PBL_ASSERTN(s_hci_task_handle);
+  PBL_ASSERTN(pbl_thread_create(&s_hci_thread, &attr) == 0);
+  pebble_task_register(PebbleTask_BTHCI, &s_hci_thread);
 }
 
 void ble_transport_ll_deinit(void) {

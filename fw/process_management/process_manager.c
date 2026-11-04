@@ -530,6 +530,40 @@ void process_manager_process_setup(PebbleTask task) {
 }
 
 // ---------------------------------------------------------------------------------------------
+struct pbl_thread *process_manager_thread_create(PebbleTask task, struct pbl_thread_attr *attr) {
+  static struct pbl_thread s_app_thread;
+  static struct pbl_thread s_worker_thread;
+
+  const bool is_app = (task == PebbleTask_App);
+  PBL_ASSERTN(is_app || task == PebbleTask_Worker);
+
+  MpuRegion app_region;
+  MpuRegion worker_region;
+  mpu_init_region_from_region(&app_region, memory_layout_get_app_region(), is_app);
+  mpu_init_region_from_region(&worker_region, memory_layout_get_worker_region(), !is_app);
+  attr->regions[MemoryRegion_AppRAM - MemoryRegion_AppRAM] = &app_region;
+  attr->regions[MemoryRegion_WorkerRAM - MemoryRegion_AppRAM] = &worker_region;
+
+#ifndef CONFIG_ARMV8_M_MAINLINE
+  attr->regions[MEMORY_LAYOUT_THREAD_REGION_STACK_GUARD] =
+      is_app ? memory_layout_get_app_stack_guard_region()
+             : memory_layout_get_worker_stack_guard_region();
+#endif
+
+#ifdef CONFIG_USERSPACE
+  const MpuRegion *user_region =
+      is_app ? memory_layout_get_app_region() : memory_layout_get_worker_region();
+  attr->user_start = user_region->base_address;
+  attr->user_end = user_region->base_address + user_region->size;
+#endif
+
+  struct pbl_thread *thread = is_app ? &s_app_thread : &s_worker_thread;
+  PBL_ASSERTN(pbl_thread_create(thread, attr) == 0);
+  pebble_task_register(task, thread);
+  return thread;
+}
+
+// ---------------------------------------------------------------------------------------------
 //! Kills the process, giving it no chance to clean things up or exit gracefully. The process must
 //! already be in a state where it's safe to exit, so the caller must call
 //! process_manager_make_process_safe_to_kill() first and only call this method if
