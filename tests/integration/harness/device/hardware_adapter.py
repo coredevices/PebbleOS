@@ -36,7 +36,8 @@ class HardwareAdapter(DeviceAdapter):
         tty = self.config.serial[0]
         if self.build.config.get("CONFIG_PULSE_EVERYWHERE"):
             return [f"pulse:{tty}"]
-        return [f"serial:{tty}@{self.config.serial_baud}"]
+        baud = self.build.config.get("CONFIG_CONSOLE_BAUDRATE", self.config.serial_baud)
+        return [f"serial:{tty}@{baud}"]
 
     def _flash_command(self):
         if self.config.flash_command:

@@ -52,7 +52,9 @@ class Console(PblCommand):
         emulated = bool(build.config.CONFIG_QEMU or build.config.CONFIG_SOC_POSIX)
 
         watch = self.lab_watch(build, args.tty)
-        baudrate = args.baudrate or (watch.serial_baud if watch else DEFAULT_BAUDRATE)
+        baudrate = (
+            args.baudrate or build.config.CONFIG_CONSOLE_BAUDRATE or DEFAULT_BAUDRATE
+        )
         if emulated:
             tty = f"socket://{args.qemu_host}"
         elif args.tty:
