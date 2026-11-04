@@ -3,14 +3,14 @@
 
 #include "serial_console.h"
 
+#include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/mcu/interrupts.h>
 
+#include <board/board.h>
 #include <console/console_frame.h>
-#include <console/dbgserial.h>
-#include <console/dbgserial_input.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/backend.h>
@@ -39,10 +39,19 @@ void serial_console_unlock(void) {
   }
 }
 
+void serial_console_putchar(char c) {
+  pbl_uart_poll_out(CONSOLE_UART, c);
+}
+
+void serial_console_flush(void) {
+  pbl_uart_flush(CONSOLE_UART);
+}
+
 void serial_console_write_raw(const char *data, size_t len) {
   for (size_t i = 0; i < len; i++) {
-    dbgserial_putchar(data[i]);
+    serial_console_putchar(data[i]);
   }
+  serial_console_flush();
   if (len > 0) {
     s_last_char = data[len - 1];
   }
@@ -105,16 +114,12 @@ static void prv_text_input(char c) {
 #endif
 }
 
-static void prv_rx(char c) {
-  console_frame_input_from_isr(c, prv_text_input);
-}
-
-void serial_console_init(void) {
-  dbgserial_input_init();
+static void prv_rx(const struct pbl_uart *uart, uint8_t c, void *arg) {
+  console_frame_input_from_isr((char)c, prv_text_input);
 }
 
 void serial_console_enable_prompt(void) {
-  dbgserial_register_character_callback(prv_rx);
+  (void)pbl_uart_rx_enable(CONSOLE_UART, prv_rx, nullptr);
 #ifdef CONFIG_SHELL
   pbl_shell_start(&shell_uart);
 #endif
@@ -122,6 +127,10 @@ void serial_console_enable_prompt(void) {
 
 void serial_console_set_rx_enabled(bool enabled) {
   pbl_irq_lock();
-  dbgserial_set_input_enabled(enabled);
+  if (enabled) {
+    (void)pbl_uart_rx_enable(CONSOLE_UART, prv_rx, nullptr);
+  } else {
+    (void)pbl_uart_rx_disable(CONSOLE_UART);
+  }
   pbl_irq_unlock();
 }

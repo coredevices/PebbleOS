@@ -364,7 +364,7 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
 
   char buffer[80];
   PBL_LOG_FROM_FAULT_HANDLER("Configured Regions: ");
-  memory_layout_dump_mpu_regions_to_dbgserial();
+  memory_layout_dump_mpu_regions();
   PBL_LOG_FROM_FAULT_HANDLER("");
 
   // If if we faulted in a stack guard region, this indicates a stack overflow

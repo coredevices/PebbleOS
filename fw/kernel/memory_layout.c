@@ -49,7 +49,7 @@ static const char *prv_permissions_str(MpuPermissions p) {
   return "?";
 }
 
-void memory_layout_dump_mpu_regions_to_dbgserial(void) {
+void memory_layout_dump_mpu_regions(void) {
   char buffer[90];
 
   for (size_t i = 0; i < ARRAY_LENGTH(MEMORY_REGION_NAMES); ++i) {

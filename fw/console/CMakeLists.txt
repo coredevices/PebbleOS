@@ -3,8 +3,6 @@
 
 pbl_library()
 pbl_library_sources(
-  dbgserial.c
-  dbgserial_input.c
   console_frame.c
   console_imaging.c
   console_pp.c
