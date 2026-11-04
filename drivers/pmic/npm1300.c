@@ -547,23 +547,6 @@ int battery_get_constants(BatteryConstants *constants) {
   uint16_t raw;
   uint8_t reg;
 
-  // Obtain IBAT full scale
-  ret = prv_read_register(NPM1300_ADCIBATMEASSTATUS, &ibat_status);
-  if (ret != 0) {
-    return ret;
-  }
-
-  if (PBL_FIELD_GET(NPM1300_ADCIBATMEASSTATUS_MODE_MASK, ibat_status) ==
-      NPM1300_ADCIBATMEASSTATUS_MODE_CHRG) {
-    full_scale_ua = ((int32_t)NPM1300_CHARGER->cfg->chg_current_ma * 1000 *
-                     NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
-                    NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
-  } else {
-    full_scale_ua = ((int32_t)NPM1300_CHARGER->state->dischg_limit_ma * 1000 *
-                     NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
-                    NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
-  }
-
   // Clear the ADC ready events for VBAT, IBAT, and NTC
   ret = prv_write_register(NPM1300_EVENTSADCCLR, NPM1300_EVENTSADC_VBATRDY |
                                                      NPM1300_EVENTSADC_IBATRDY |
@@ -629,6 +612,24 @@ int battery_get_constants(BatteryConstants *constants) {
       pbl_sleep_ms(ADC_POLL_DELAY_MS);
       elapsed += ADC_POLL_DELAY_MS;
     }
+  }
+
+  // The status holds the mode of the last measurement, so read it only once
+  // this one is done.
+  ret = prv_read_register(NPM1300_ADCIBATMEASSTATUS, &ibat_status);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (PBL_FIELD_GET(NPM1300_ADCIBATMEASSTATUS_MODE_MASK, ibat_status) ==
+      NPM1300_ADCIBATMEASSTATUS_MODE_CHRG) {
+    full_scale_ua = ((int32_t)NPM1300_CHARGER->cfg->chg_current_ma * 1000 *
+                     NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
+                    NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
+  } else {
+    full_scale_ua = ((int32_t)NPM1300_CHARGER->state->dischg_limit_ma * 1000 *
+                     NPM1300_BCHARGER_ADC_CALC_DISCHARGE_MUL) /
+                    NPM1300_BCHARGER_ADC_CALC_DISCHARGE_DIV;
   }
 
   ret = prv_read_register(NPM1300_ADCVBAT2RESULTMSB, &msb);
