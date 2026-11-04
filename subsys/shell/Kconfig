@@ -4,6 +4,7 @@
 menuconfig SHELL
     bool "Shell"
     default y
+    depends on CONSOLE
     help
       Command shell. Commands register themselves with
       PBL_SHELL_CMD_REGISTER() and run on KernelBG, one shell instance per

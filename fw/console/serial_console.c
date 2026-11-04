@@ -14,6 +14,7 @@
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 
+#include <console/dbgserial.h>
 #include <console/dbgserial_input.h>
 #ifdef CONFIG_PULSE_EVERYWHERE
 #include <console/pulse_internal.h>
