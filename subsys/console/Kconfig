@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CONSOLE
+    bool "Serial console"
+    default y if !RELEASE || MFG
+    help
+      Text console on the board's console port, CONSOLE_UART: logs and
+      the shell. Off on release firmware, which leaves the port unused.
+
+config CONSOLE_BAUDRATE
+    int "Console baud rate"
+    depends on CONSOLE
+    default 1000000
+    help
+      Line rate of the board's console port, CONSOLE_UART.

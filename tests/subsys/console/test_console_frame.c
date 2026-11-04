@@ -5,12 +5,12 @@
 
 #include <string.h>
 
+#include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/base64.h>
 
-#include <console/console_frame.h>
-#include <console/serial_console.h>
+#include <console/console_private.h>
 
 static char s_text[512];
 static size_t s_text_len;
@@ -25,17 +25,17 @@ static size_t s_tx_len;
 static bool s_task_queue_full;
 static SystemTaskEventCallback s_task_cb;
 
-void serial_console_lock(void) {
+void pbl_console_lock(void) {
 }
 
-void serial_console_unlock(void) {
+void pbl_console_unlock(void) {
 }
 
-void serial_console_putchar(char c) {
+void pbl_console_putchar(char c) {
   s_tx[s_tx_len++] = c;
 }
 
-void serial_console_flush(void) {
+void pbl_console_flush(void) {
 }
 
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
@@ -46,13 +46,13 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-void console_pp_handle_frame(const void *data, size_t len) {
+void pbl_console__pp_handle_frame(const void *data, size_t len) {
   memcpy(s_pp, data, len);
   s_pp_len = len;
   s_pp_count++;
 }
 
-void console_imaging_handle_frame(const void *data, size_t len) {
+void pbl_console__imaging_handle_frame(const void *data, size_t len) {
 }
 
 static void prv_text_input(char c) {
@@ -63,7 +63,7 @@ static void prv_text_input(char c) {
 
 static void prv_feed(const char *data, size_t len) {
   for (size_t i = 0; i < len; i++) {
-    console_frame_input_from_isr(data[i], prv_text_input);
+    pbl_console__frame_input_from_isr(data[i], prv_text_input);
   }
 }
 
@@ -284,7 +284,7 @@ void test_console_frame__full_task_queue_drops_the_frame(void) {
 void test_console_frame__sends_decodable_frame(void) {
   char expected[64];
 
-  console_frame_send(CONSOLE_FRAME_CHANNEL_PP, "abc", 3);
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, "abc", 3);
 
   const size_t len = prv_encode(expected, CONSOLE_FRAME_CHANNEL_PP, 0, "abc", 3);
   cl_assert_equal_i(s_tx_len, len);

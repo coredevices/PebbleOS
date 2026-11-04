@@ -10,7 +10,7 @@
 #include <pbl/util/math.h>
 
 #include <comm/bt_lock.h>
-#include <console/console_frame.h>
+#include <console/console_private.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 
@@ -30,7 +30,7 @@ static struct {
 static uint8_t s_tx_buf[CONSOLE_FRAME_MTU];
 
 static void prv_send_opcode(uint8_t opcode) {
-  console_frame_send(CONSOLE_FRAME_CHANNEL_PP, &opcode, sizeof(opcode));
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, &opcode, sizeof(opcode));
 }
 
 static void prv_send_next(Transport *transport) {
@@ -42,7 +42,7 @@ static void prv_send_next(Transport *transport) {
 
     s_tx_buf[0] = OPCODE_DATA;
     comm_session_send_queue_copy(session, 0, len, &s_tx_buf[OPCODE_LEN]);
-    console_frame_send(CONSOLE_FRAME_CHANNEL_PP, s_tx_buf, OPCODE_LEN + len);
+    pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, s_tx_buf, OPCODE_LEN + len);
     comm_session_send_queue_consume(session, len);
     remaining -= len;
   }
@@ -134,7 +134,7 @@ static void prv_set_connected(bool connected) {
   bt_unlock();
 }
 
-void console_pp_handle_frame(const void *data, size_t len) {
+void pbl_console__pp_handle_frame(const void *data, size_t len) {
   const uint8_t *bytes = data;
 
   if (len < OPCODE_LEN) {

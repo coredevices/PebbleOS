@@ -31,7 +31,7 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #ifdef CONFIG_CONSOLE
-#include <console/serial_console.h>
+#include <pbl/console/console.h>
 #endif
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
@@ -645,7 +645,7 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context)
   tick_timer_service_unsubscribe();
 
 #ifdef CONFIG_CONSOLE
-  serial_console_set_rx_enabled(true);
+  pbl_console_set_rx_enabled(true);
 #endif
   bt_ctl_set_enabled(true);
   prf_idle_watchdog_start();
@@ -673,7 +673,7 @@ static void prv_handle_init(void) {
 
   // Disable power consumers and idle watchdog for the entire test
 #ifdef CONFIG_CONSOLE
-  serial_console_set_rx_enabled(false);
+  pbl_console_set_rx_enabled(false);
 #endif
   bt_ctl_set_enabled(false);
   prf_idle_watchdog_stop();

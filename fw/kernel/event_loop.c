@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/console/console.h>
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/time.h>
 #include <pbl/mcu/fpu.h>
@@ -35,7 +36,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/ui/ui.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
-#include <console/serial_console.h>
 #include <kernel/core_dump.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
@@ -649,7 +649,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
 
   notify_system_ready_for_communication();
 #ifdef CONFIG_CONSOLE
-  serial_console_enable_prompt();
+  pbl_console_enable_prompt();
 #endif
 }
 

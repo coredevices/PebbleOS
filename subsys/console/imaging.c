@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console_frame.h"
+#include "console_private.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -45,7 +45,7 @@ typedef struct PBL_PACKED {
 } ImagingCrcResponse;
 
 static void prv_send(const void *data, size_t len) {
-  console_frame_send(CONSOLE_FRAME_CHANNEL_IMAGING, data, len);
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_IMAGING, data, len);
 }
 
 static void prv_send_opcode(uint8_t opcode) {
@@ -142,7 +142,7 @@ static void prv_handle_finalize_region(uint8_t region) {
   prv_send_opcode(RESP_FINALIZED);
 }
 
-void console_imaging_handle_frame(const void *data, size_t len) {
+void pbl_console__imaging_handle_frame(const void *data, size_t len) {
   const uint8_t *bytes = data;
 
   if (len < 1U) {

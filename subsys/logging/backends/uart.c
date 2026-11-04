@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/console/console.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
@@ -20,14 +21,13 @@
 #include <pbl/util/string.h>
 
 #include <board/board.h>
-#include <console/serial_console.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
 
 static void prv_write(const char *str) {
-  serial_console_write_raw(str, strlen(str));
+  pbl_console_write_raw(str, strlen(str));
 }
 
 #define TIMESTAMP_BUFFER_SIZE 40
@@ -96,9 +96,9 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
 
 static void prv_log_line(uint8_t log_level, const char *src_filename, int src_line_number,
                          const char *message) {
-  serial_console_log_begin();
+  pbl_console_log_begin();
   prv_log_serial(log_level, src_filename, src_line_number, message);
-  serial_console_log_end();
+  pbl_console_log_end();
 }
 
 // Messages from where the port can't be locked wait here for KernelMain, as writing them right

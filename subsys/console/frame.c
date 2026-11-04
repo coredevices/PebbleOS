@@ -1,16 +1,15 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "console_frame.h"
+#include "console_private.h"
 
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/base64.h>
-
-#include <console/serial_console.h>
 
 #define ESC 0x1b
 
@@ -42,8 +41,8 @@ static uint32_t prv_crc(char channel, const void *data, size_t len) {
   return pbl_crc32(pbl_crc32(0, &channel, 1), data, len);
 }
 
-void console_frame_send(char channel, const void *data, size_t len) {
-  serial_console_lock();
+void pbl_console__frame_send(char channel, const void *data, size_t len) {
+  pbl_console_lock();
 
   s_tx_raw[0] = 0U;
   memcpy(&s_tx_raw[SEQ_LEN], data, len);
@@ -53,17 +52,17 @@ void console_frame_send(char channel, const void *data, size_t len) {
   const size_t b64_len =
       pbl_base64_encode(s_tx_b64, sizeof(s_tx_b64), s_tx_raw, body_len + CRC_LEN);
 
-  serial_console_putchar(ESC);
-  serial_console_putchar('_');
-  serial_console_putchar(channel);
+  pbl_console_putchar(ESC);
+  pbl_console_putchar('_');
+  pbl_console_putchar(channel);
   for (size_t i = 0; i < b64_len; i++) {
-    serial_console_putchar(s_tx_b64[i]);
+    pbl_console_putchar(s_tx_b64[i]);
   }
-  serial_console_putchar(ESC);
-  serial_console_putchar('\\');
-  serial_console_flush();
+  pbl_console_putchar(ESC);
+  pbl_console_putchar('\\');
+  pbl_console_flush();
 
-  serial_console_unlock();
+  pbl_console_unlock();
 }
 
 static void prv_process_frame(void *unused) {
@@ -83,16 +82,16 @@ static void prv_process_frame(void *unused) {
     const size_t payload_len = (size_t)raw_len - SEQ_LEN - CRC_LEN;
 
     if (channel == CONSOLE_FRAME_CHANNEL_PP) {
-      console_pp_handle_frame(payload, payload_len);
+      pbl_console__pp_handle_frame(payload, payload_len);
     } else if (channel == CONSOLE_FRAME_CHANNEL_IMAGING) {
-      console_imaging_handle_frame(payload, payload_len);
+      pbl_console__imaging_handle_frame(payload, payload_len);
     }
     s_last_seq = (seq == 0U) ? -1 : seq;
   }
 
   // Before acknowledging, as the host's next frame follows right away.
   s_rx_pending = false;
-  console_frame_send(CONSOLE_FRAME_CHANNEL_ACK, &seq, sizeof(seq));
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_ACK, &seq, sizeof(seq));
 }
 
 static bool prv_is_frame_char(char c) {
@@ -100,7 +99,7 @@ static bool prv_is_frame_char(char c) {
          c == '/' || c == '=';
 }
 
-void console_frame_input_from_isr(char c, void (*text_input)(char c)) {
+void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
   switch (s_rx_state) {
     case RX_TEXT:
       if (c == ESC) {
