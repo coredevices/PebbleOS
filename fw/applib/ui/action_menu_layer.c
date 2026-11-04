@@ -239,9 +239,11 @@ static void prv_draw_glyph_columns(GContext *ctx, const GRect *bounds, GFont fon
   }
 }
 
-static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
-                                 ActionMenuLayer *aml, ActionMenuItem *items, int num_items,
-                                 int sel_idx) {
+// Kept out of line so its locals don't grow prv_draw_row's frame on the item path, which legacy
+// apps' 2 KiB stack can't afford
+static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
+                                              ActionMenuLayer *aml, ActionMenuItem *items,
+                                              int num_items, int sel_idx) {
   const GFont font = aml->layout_cache.font;
   const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
