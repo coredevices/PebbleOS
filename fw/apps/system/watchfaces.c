@@ -137,11 +137,6 @@ static void prv_reload_menu_data(void *data) {
 static void prv_window_load(Window *window) {
   SettingsWatchfacesData *data = window_get_user_data(window);
 
-#if PBL_BW
-  const GColor bg_color = system_theme_get_bg_color();
-  const GColor fg_color = system_theme_get_fg_color();
-#endif
-
   MenuLayer *menu_layer = &data->menu_layer;
   const GRect menu_layer_frame = PBL_IF_RECT_ELSE(
       window->layer.bounds, grect_inset_internal(window->layer.bounds, 0, STATUS_BAR_LAYER_HEIGHT));
@@ -166,9 +161,9 @@ static void prv_window_load(Window *window) {
                              .draw_row = draw_row_callback,
                              .select_click = select_callback,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorJazzberryJam, fg_color),
-                                  PBL_IF_COLOR_ELSE(GColorWhite, bg_color));
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(&data->menu_layer, GColorJazzberryJam, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(

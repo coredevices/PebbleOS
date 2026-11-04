@@ -327,11 +327,9 @@ static void prv_group_window_load(Window *window) {
                              .draw_row = prv_group_window_draw_row,
                              .select_click = prv_group_window_select,
                            });
-  menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(),
-                               system_theme_get_fg_color());
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, system_theme_get_fg_color()),
-      PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(menu_layer, DEFAULT_NOTIFICATION_COLOR, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, false);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
@@ -988,11 +986,9 @@ static void prv_window_load(Window *window) {
                              .select_click = prv_select_callback,
                            });
 
-  menu_layer_set_normal_colors(menu_layer, system_theme_get_bg_color(),
-                               system_theme_get_fg_color());
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, system_theme_get_fg_color()),
-      PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(menu_layer, DEFAULT_NOTIFICATION_COLOR, GColorWhite);
+#endif
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -1010,17 +1006,15 @@ static void prv_window_load(Window *window) {
       text_layer,
       &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
              window->layer.bounds.size.w - horizontal_margin, window->layer.bounds.size.h / 2),
-      i18n_get("No notifications", data), font, system_theme_get_fg_color(),
-      system_theme_get_bg_color(), GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
+      i18n_get("No notifications", data), font, GColorBlack, GColorClear, GTextAlignmentCenter,
+      GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text_color_follows_theme(text_layer);
   layer_add_child(&window->layer, text_layer_get_layer(text_layer));
 
 #if PBL_ROUND
-  GColor bg_color = GColorClear;
-  GColor fg_color = system_theme_get_fg_color();
-
   StatusBarLayer *status_bar = &data->status_bar_layer;
   status_bar_layer_init(status_bar);
-  status_bar_layer_set_colors(status_bar, bg_color, fg_color);
+  status_bar_layer_set_colors_follow_theme(status_bar, true /* transparent_background */);
   layer_add_child(&window->layer, &status_bar->layer);
 #endif
 

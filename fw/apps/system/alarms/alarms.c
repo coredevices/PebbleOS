@@ -353,6 +353,8 @@ static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
       header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, system_theme_get_fg_color(),
       system_theme_get_bg_color(), nullptr, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
       prv_alarms_app_opened_click_handler);
+  dialog_set_colors_follow_theme(expandable_dialog_get_dialog(expandable_dialog),
+                                 false /* dimmed */);
 
   expandable_dialog_set_action_bar_background_color(
       expandable_dialog, PBL_IF_COLOR_ELSE(ALARMS_APP_HIGHLIGHT_COLOR, GColorBlack));
@@ -395,8 +397,9 @@ static void prv_handle_init(void) {
                              .selection_changed = prv_alarm_list_selection_changed_callback
                            });
 
-  menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR,
-                                  PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(&data->menu_layer, ALARMS_APP_HIGHLIGHT_COLOR, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());

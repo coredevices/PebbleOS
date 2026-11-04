@@ -47,21 +47,11 @@ typedef struct SettingsData {
 // Pref change handler
 ///////////////////////
 
-static void prv_refresh_theme_colors(SettingsData *data) {
-  const GColor bg = system_theme_get_bg_color();
-  const GColor fg = system_theme_get_fg_color();
-  window_set_background_color(&data->window, bg);
-  status_bar_layer_set_colors(&data->status_layer, bg, fg);
-  menu_layer_set_normal_colors(&data->menu_layer, bg, fg);
-  layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
-}
-
 static void prv_pref_change_handler(PebbleEvent *event, void *context) {
   SettingsData *data = context;
   // Reload the menu when any pref changes: cell heights are cached by the menu
   // layer and can change with the preferred content size. Re-anchor the
   // selection afterwards so the scroll offset stays within the new geometry.
-  prv_refresh_theme_colors(data);
   menu_layer_reload_data(&data->menu_layer);
   menu_layer_set_selected_index(&data->menu_layer, menu_layer_get_selected_index(&data->menu_layer),
                                 MenuRowAlignCenter, false /* animated */);
@@ -181,8 +171,7 @@ static void prv_settings_window_load(Window *window) {
   const char *title = data->title_override ? data->title_override
                                            : settings_menu_get_status_name(data->current_category);
   status_bar_layer_set_title(status_layer, i18n_get(title, data), false, false);
-  status_bar_layer_set_colors(status_layer, system_theme_get_bg_color(),
-                              system_theme_get_fg_color());
+  status_bar_layer_set_colors_follow_theme(status_layer, false /* transparent_background */);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
   layer_add_child(&data->window.layer, status_bar_layer_get_layer(status_layer));
 
@@ -234,8 +223,6 @@ static void prv_settings_window_load(Window *window) {
 
 static void prv_settings_window_appear(Window *window) {
   SettingsData *data = window_get_user_data(window);
-  // Refresh colors in case the theme changed while this window was hidden
-  prv_refresh_theme_colors(data);
   SettingsCallbacks *callbacks = prv_get_current_callbacks(data);
   if (callbacks->appear) {
     callbacks->appear(data->callbacks);
@@ -314,7 +301,7 @@ void settings_window_destroy(Window *window) {
 void settings_menu_mark_dirty(SettingsMenuItem category) {
   SettingsData *data = app_state_get_user_data();
   if (data->current_category == category) {
-    prv_refresh_theme_colors(data);
+    layer_mark_dirty(menu_layer_get_layer(&data->menu_layer));
   }
 }
 

@@ -50,11 +50,12 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
     .title = i18n_get(i18n_title_key, option_menu),
     .content_type = content_type,
     .choice = choice,
-    .status_colors = {system_theme_get_bg_color(), system_theme_get_fg_color()},
+    .status_colors = {GColorWhite, GColorBlack},
     .highlight_colors = {highlight_bg, gcolor_legible_over(highlight_bg)},
     .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
+  option_menu_set_colors_follow_theme(option_menu);
   SettingsOptionMenuData *data = app_malloc_check(sizeof(SettingsOptionMenuData));
   OptionMenuCallbacks callbacks = *callbacks_ref;
   *data = (SettingsOptionMenuData){
