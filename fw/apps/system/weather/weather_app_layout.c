@@ -2334,6 +2334,16 @@ void weather_app_layout_set_fin_allowed(WeatherAppLayout *layout, bool fin_allow
   prv_restore_fin_rest(layout);
 }
 
+void weather_app_layout_handle_dark_mode_change(WeatherAppLayout *layout) {
+#if PBL_RECT
+  // Both were recolored once when loaded; the swap is its own inverse
+  weather_invert_pdc_image(layout->fin_pdc);
+#if WEATHER_APP_LAYOUT_USE_PDC_WEATHER_ICONS
+  weather_invert_pdc_sequence(layout->weather_icon_pdc_sequence);
+#endif
+#endif
+}
+
 void weather_app_layout_deinit(WeatherAppLayout *layout) {
   i18n_free_all(layout);
   if (layout->icon_animation) {

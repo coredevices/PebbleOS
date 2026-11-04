@@ -26,3 +26,6 @@ bool weather_report_is_showing(void);
 
 // Re-point the borrowed days array after a data refresh. No-op when the view isn't showing.
 void weather_report_update_data(const WeatherLocationForecast *days, size_t num_days);
+
+// Recolors the report for the new theme after dark mode flipped. No-op when it isn't showing.
+void weather_report_handle_dark_mode_change(void);

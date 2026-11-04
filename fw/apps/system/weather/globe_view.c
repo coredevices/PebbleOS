@@ -2262,7 +2262,7 @@ static void show_intro_canvas(GlobeView *view) {
     return;
 
   if (view->window) {
-    window_set_background_color(view->window, system_theme_get_bg_color());
+    window_set_background_color_follows_theme(view->window, false /* dimmed */);
   }
   if (view->canvas_layer)
     layer_set_hidden(view->canvas_layer, false);
@@ -3579,7 +3579,7 @@ GlobeView *globe_view_create(void) {
 
   // Configure window
   window_set_user_data(view->window, view);
-  window_set_background_color(view->window, system_theme_get_bg_color());
+  window_set_background_color_follows_theme(view->window, false /* dimmed */);
   window_set_click_config_provider_with_context(view->window, window_click_provider, view);
   window_set_window_handlers(view->window, (WindowHandlers){
                                              .appear = window_appear_handler,
