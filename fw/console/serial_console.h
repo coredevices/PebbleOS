@@ -10,6 +10,11 @@ void serial_console_init(void);
 //! Start taking input, once the system can handle commands.
 void serial_console_enable_prompt(void);
 
+//! Hold other users of the port back, recursively. Does nothing in interrupt context, or with
+//! interrupts or the scheduler locked.
+void serial_console_lock(void);
+void serial_console_unlock(void);
+
 //! Write to the port without taking the lock, for use in fault handlers and between
 //! serial_console_log_begin() and serial_console_log_end().
 void serial_console_write_raw(const char *data, size_t len);

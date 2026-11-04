@@ -119,8 +119,4 @@ class NativeAdapter(DeviceAdapter):
         return True
 
     def default_connections(self):
-        console = f"serial:socket://127.0.0.1:{self.console_port}"
-        # With a Bluetooth controller, the phone holds the protocol session.
-        if self.build.config.get("CONFIG_BT_HCI_UART"):
-            return [console]
-        return [console, f"qemu:127.0.0.1:{self.pebble_port}"]
+        return [f"serial:socket://127.0.0.1:{self.console_port}"]
