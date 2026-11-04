@@ -624,7 +624,12 @@ static int prv_cmd_otp_erase(const struct pbl_shell *sh, size_t argc, char **arg
     return ret;
   }
 
-  return pbl_flash_otp_erase(FLASH, region);
+  ret = pbl_flash_otp_erase(FLASH, region);
+  if (ret != 0) {
+    pbl_shell_error(sh, "erase failed (%d)", ret);
+  }
+
+  return ret;
 }
 
 static int prv_cmd_otp_lock(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -641,7 +646,12 @@ static int prv_cmd_otp_lock(const struct pbl_shell *sh, size_t argc, char **argv
     return ret;
   }
 
-  return pbl_flash_otp_lock(FLASH, region);
+  ret = pbl_flash_otp_lock(FLASH, region);
+  if (ret != 0) {
+    pbl_shell_error(sh, "lock failed (%d)", ret);
+  }
+
+  return ret;
 }
 
 static const struct pbl_shell_cmd sub_flash_otp[] = {
