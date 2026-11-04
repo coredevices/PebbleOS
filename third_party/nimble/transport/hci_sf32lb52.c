@@ -89,7 +89,7 @@ static_assert(sizeof(struct ring) == 20U);
 #define RX_RING_POOL_SIZE RING_POOL_SIZE(SF32LB52_MBOX_BUF_SIZE)
 
 static struct pbl_thread s_hci_thread;
-PBL_THREAD_STACK_DEFINE(s_hci_task_stack, 1024);
+PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_BT_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
 /* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
  * to the transport pool; taken by the HCI RX task when an alloc fails so we
@@ -533,7 +533,7 @@ void ble_transport_ll_init(void) {
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
     .entry = prv_hci_task_main,
-    .prio = PBL_PRIO_IDLE + 3,
+    .prio = CONFIG_BT_HCI_THREAD_PRIO,
     .privileged = true,
     .stack = s_hci_task_stack,
     .stack_size = sizeof(s_hci_task_stack),

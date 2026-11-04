@@ -5,3 +5,15 @@ config SERVICE_BOOT_SPLASH
     bool "Boot splash"
     help
       Boot splash screen service.
+
+if SERVICE_BOOT_SPLASH
+
+config SERVICE_BOOT_SPLASH_THREAD_STACK_SIZE
+    int "Boot splash thread stack size in bytes"
+    default 2048
+
+config SERVICE_BOOT_SPLASH_THREAD_PRIO
+    int "Boot splash thread priority"
+    default 3
+
+endif

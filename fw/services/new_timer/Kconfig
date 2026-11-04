@@ -8,6 +8,14 @@ config SERVICE_NEW_TIMER
 
 if SERVICE_NEW_TIMER
 
+config SERVICE_NEW_TIMER_THREAD_STACK_SIZE
+    int "Timer thread stack size in bytes"
+    default 1380
+
+config SERVICE_NEW_TIMER_THREAD_PRIO
+    int "Timer thread priority"
+    default 4
+
 module = SERVICE_NEW_TIMER
 module-str = New timer
 source "subsys/logging/Kconfig.template.log_level"

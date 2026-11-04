@@ -35,12 +35,9 @@ static const uint8_t s_argb2222[] = {
 #define PROGRESS_FRAME_DELAY_MS  100
 #define PROGRESS_TOTAL_FRAMES    20
 
-#define BOOT_SPLASH_TASK_STACK_SIZE 2048
-#define BOOT_SPLASH_TASK_PRIORITY   (PBL_PRIO_MAX - 1)
-
 // Boot splash state
 static struct pbl_thread s_boot_splash_thread;
-PBL_THREAD_STACK_DEFINE(s_boot_splash_stack, BOOT_SPLASH_TASK_STACK_SIZE);
+PBL_THREAD_STACK_DEFINE(s_boot_splash_stack, CONFIG_SERVICE_BOOT_SPLASH_THREAD_STACK_SIZE);
 static struct pbl_thread *s_boot_splash_task;
 static volatile bool s_boot_splash_running;
 static struct pbl_display_buffer s_boot_splash_fb;
@@ -190,7 +187,7 @@ void boot_splash_start(void) {
   struct pbl_thread_attr attr = {
     .name = "BootSplash",
     .entry = prv_boot_splash_task,
-    .prio = BOOT_SPLASH_TASK_PRIORITY,
+    .prio = CONFIG_SERVICE_BOOT_SPLASH_THREAD_PRIO,
     .privileged = true,
     .stack = s_boot_splash_stack,
     .stack_size = sizeof(s_boot_splash_stack),

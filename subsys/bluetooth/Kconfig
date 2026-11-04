@@ -13,6 +13,30 @@ config BT
 
 if BT
 
+config BT_HOST_THREAD_STACK_SIZE
+    int "Host thread stack size in bytes"
+    default 5000
+
+config BT_HOST_THREAD_PRIO
+    int "Host thread priority"
+    default 3
+
+config BT_LL_THREAD_STACK_SIZE
+    int "Link layer thread stack size in bytes"
+    default 1384
+
+config BT_LL_THREAD_PRIO
+    int "Link layer thread priority"
+    default 4
+
+config BT_HCI_THREAD_STACK_SIZE
+    int "HCI transport thread stack size in bytes"
+    default 1024
+
+config BT_HCI_THREAD_PRIO
+    int "HCI transport thread priority"
+    default 3
+
 choice BT_HCI
     prompt "HCI transport"
     default BT_HCI_FAKE

@@ -32,10 +32,10 @@ extern void nimble_gattc_op_queue_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
 static struct pbl_thread s_ll_thread;
-PBL_THREAD_STACK_DEFINE(s_ll_task_stack, 1384);
+PBL_THREAD_STACK_DEFINE(s_ll_task_stack, CONFIG_BT_LL_THREAD_STACK_SIZE);
 #endif
 static struct pbl_thread s_host_thread;
-PBL_THREAD_STACK_DEFINE(s_host_task_stack, 5000);
+PBL_THREAD_STACK_DEFINE(s_host_task_stack, CONFIG_BT_HOST_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
 static struct ble_hs_stop_listener s_listener;
@@ -134,7 +134,7 @@ void pbl_bt_init(void) {
   struct pbl_thread_attr host_attr = {
     .name = "NimbleHost",
     .entry = prv_host_task_main,
-    .prio = PBL_PRIO_MAX - 1,
+    .prio = CONFIG_BT_HOST_THREAD_PRIO,
     .privileged = true,
     .stack = s_host_task_stack,
     .stack_size = sizeof(s_host_task_stack),
@@ -147,7 +147,7 @@ void pbl_bt_init(void) {
   struct pbl_thread_attr ll_attr = {
     .name = "NimbleLL",
     .entry = nimble_port_ll_task_func,
-    .prio = PBL_PRIO_MAX,
+    .prio = CONFIG_BT_LL_THREAD_PRIO,
     .privileged = true,
     .stack = s_ll_task_stack,
     .stack_size = sizeof(s_ll_task_stack),

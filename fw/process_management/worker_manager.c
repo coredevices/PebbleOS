@@ -223,7 +223,7 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
     .name = task_name,
     .entry = prv_worker_task_main,
     .arg = entry_point,
-    .prio = PBL_PRIO_IDLE + 1,
+    .prio = CONFIG_WORKER_THREAD_PRIO,
     .privileged = true,
     .stack = stack,
     .stack_size = stack_size,

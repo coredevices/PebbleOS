@@ -24,8 +24,6 @@
 
 PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL);
 
-#define SYSTEM_TASK_PRIORITY (PBL_PRIO_IDLE + 1)
-
 #define APP_THROTTLE_TIME_MS 300
 
 typedef struct {
@@ -68,7 +66,7 @@ static bool prv_is_accepting_callbacks() {
 static void prv_app_throttle_end(void *data) {
   struct pbl_thread *app = pebble_task_get_thread(PebbleTask_App);
   if (app) {
-    pbl_thread_prio_set(app, APP_TASK_PRIORITY);
+    pbl_thread_prio_set(app, CONFIG_APP_THREAD_PRIO);
   }
   PBL_LOG_DBG("Ending App Throttling");
 }
@@ -152,7 +150,7 @@ static void system_task_main(void *paramater) {
 }
 
 static struct pbl_thread s_thread;
-PBL_THREAD_STACK_DEFINE(s_stack, 4096);
+PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_SERVICE_SYSTEM_TASK_THREAD_STACK_SIZE);
 
 void system_task_init(void) {
   s_raised_priority_refcount = 0;
@@ -164,7 +162,7 @@ void system_task_init(void) {
   struct pbl_thread_attr attr = {
     .name = "KernelBG",
     .entry = system_task_main,
-    .prio = SYSTEM_TASK_PRIORITY,
+    .prio = CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO,
     .privileged = true,
     .stack = s_stack + CONFIG_KERNEL_STACK_GUARD_SIZE,
     .stack_size = sizeof(s_stack) - CONFIG_KERNEL_STACK_GUARD_SIZE,
@@ -327,8 +325,6 @@ void *system_task_get_current_callback(void) {
 }
 
 void system_task_enable_raised_priority(bool is_raised) {
-  const pbl_prio_t raised_priority_level = PBL_PRIO_IDLE + 3; // Same as KernelMain / BT tasks
-
   pbl_irq_lock();
   if (is_raised) {
     PBL_ASSERTN(s_raised_priority_refcount < UINT32_MAX);
@@ -338,7 +334,7 @@ void system_task_enable_raised_priority(bool is_raised) {
     }
     if (s_raised_priority_refcount++ == 0) {
       pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
-                          raised_priority_level);
+                          CONFIG_SERVICE_SYSTEM_TASK_THREAD_RAISED_PRIO);
     }
   } else {
     PBL_ASSERTN(s_raised_priority_refcount > 0);
@@ -348,7 +344,7 @@ void system_task_enable_raised_priority(bool is_raised) {
     }
     if (--s_raised_priority_refcount == 0) {
       pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
-                          SYSTEM_TASK_PRIORITY);
+                          CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO);
     }
   }
   pbl_irq_unlock();

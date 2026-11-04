@@ -1,6 +1,22 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config APP_THREAD_PRIO
+    int "App thread priority"
+    default 2
+
+config WORKER_THREAD_PRIO
+    int "Worker thread priority"
+    default 1
+
+config PROCESS_SYSCALL_STACK_SIZE
+    int "App and worker syscall stack size in bytes"
+    default 2048
+    depends on USERSPACE
+    help
+      Privileged stack each process runs its syscalls on. Size it against
+      the measured high-water, reported by analytics.
+
 config TASK_TIMER_POOL_SIZE
     int "TaskTimer slab pool size"
     default 192

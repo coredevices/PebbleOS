@@ -29,7 +29,7 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 #define EVT_POOL_POLL_MS 5U
 
 static struct pbl_thread s_hci_thread;
-PBL_THREAD_STACK_DEFINE(s_hci_task_stack, 1024);
+PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_BT_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_rx_ready, 0, 1);
 static PBL_SEM_DEFINE(s_acl_pool_avail, 0, 1);
 static PBL_MUTEX_DEFINE(s_tx_mutex);
@@ -154,7 +154,7 @@ void ble_transport_ll_init(void) {
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
     .entry = prv_hci_task_main,
-    .prio = PBL_PRIO_IDLE + 3,
+    .prio = CONFIG_BT_HCI_THREAD_PRIO,
     .privileged = true,
     .stack = s_hci_task_stack,
     .stack_size = sizeof(s_hci_task_stack),
