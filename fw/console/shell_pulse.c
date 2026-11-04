@@ -30,25 +30,18 @@ static char s_line[LINE_BUFF_SIZE];
 static size_t s_line_len;
 
 static void prv_send(int message_type, const char *msg, size_t len) {
-#ifdef CONFIG_PULSE_EVERYWHERE
   PromptResponseContents *contents = pulse_reliable_send_begin(PULSE2_RELIABLE_PROMPT_PROTOCOL);
   if (contents == nullptr) {
     return;
   }
-#else
-  PromptResponseContents *contents = pulse_best_effort_send_begin(PULSE_PROTOCOL_PROMPT);
-#endif
+
   contents->message_type = message_type;
   contents->time_ms = pbl_realtime_ms();
   if (len > 0) {
     memcpy(contents->message, msg, len);
   }
 
-#ifdef CONFIG_PULSE_EVERYWHERE
   pulse_reliable_send(contents, sizeof(*contents) + len);
-#else
-  pulse_best_effort_send(contents, sizeof(*contents) + len);
-#endif
 }
 
 static void prv_flush(void) {
@@ -86,46 +79,9 @@ static const struct pbl_shell_backend_api s_api = {
 
 PBL_SHELL_DEFINE(shell_pulse, nullptr, &s_api, nullptr);
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 void pulse2_prompt_packet_handler(void *packet, size_t length) {
   int ret = pbl_shell_execute_line(&shell_pulse, packet, length);
   if (ret < 0) {
     PBL_LOG_WRN("Dropping shell command (%d)", ret);
   }
 }
-
-#else
-
-typedef struct PBL_PACKED PromptCommand {
-  uint8_t cookie;
-  char command[];
-} PromptCommand;
-
-static uint16_t s_latest_cookie = UINT16_MAX;
-
-void pulse_prompt_handler(void *packet, size_t length) {
-  PromptCommand *command = packet;
-
-  if (s_latest_cookie == command->cookie) {
-    prv_send(pbl_shell_is_busy(&shell_pulse) ? PROMPT_RESP_ACK : PROMPT_RESP_DONE, nullptr, 0);
-    return;
-  }
-
-  prv_send(PROMPT_RESP_ACK, nullptr, 0);
-  s_latest_cookie = command->cookie;
-
-  int ret = pbl_shell_execute_line(&shell_pulse, command->command, length - sizeof(*command));
-  if (ret < 0) {
-    PBL_LOG_WRN("Dropping shell command (%d)", ret);
-    prv_send(PROMPT_RESP_DONE, nullptr, 0);
-  }
-}
-
-void pulse_prompt_link_state_handler(PulseLinkState link_state) {
-  if (link_state == PulseLinkState_Open) {
-    s_latest_cookie = UINT16_MAX;
-  }
-}
-
-#endif

@@ -38,7 +38,7 @@ PebbleTask pebble_task_get_current(void) {
   return PebbleTask_Unknown;
 }
 
-void *pulse_best_effort_send_begin(uint16_t protocol) {
+void *pulse_push_send_begin(uint16_t protocol) {
   static char buffer[1024];
   return buffer;
   // todo
@@ -47,7 +47,7 @@ void *pulse_best_effort_send_begin(uint16_t protocol) {
 static int s_num_packets_sent = 0;
 static int s_num_bytes_sent = 0;
 static char s_log_message_buffer[256];
-void pulse_best_effort_send(void *buf, size_t length) {
+void pulse_push_send(void *buf, size_t length) {
   ++s_num_packets_sent;
   s_num_bytes_sent += length;
 

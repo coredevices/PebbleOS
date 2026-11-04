@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 #include "pulse_control_message_protocol.h"
 
 #include <stdint.h>
@@ -64,5 +62,3 @@ void pulse_control_message_protocol_send_port_closed_message(PulseControlMessage
   memcpy(message->information, &port, sizeof(port));
   this->send_fn(message, sizeof(PCMPPacket) + sizeof(port));
 }
-
-#endif

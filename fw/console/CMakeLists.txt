@@ -1,14 +1,25 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-set(excl)
-if(NOT CONFIG_SHELL)
-  list(APPEND excl
-    shell_dbgserial.c
-    shell_pulse.c
-  )
-endif()
 pbl_library()
-file(GLOB sources CONFIGURE_DEPENDS *.c)
-pbl_filter_sources(sources EXCLUDE ${excl})
-pbl_library_sources(${sources})
+pbl_library_sources(
+  dbgserial.c
+  dbgserial_input.c
+  serial_console.c
+)
+pbl_library_sources_ifdef(CONFIG_SHELL
+  console_shell.c
+  shell_dbgserial.c
+)
+if(CONFIG_PULSE_EVERYWHERE)
+  file(GLOB pulse_sources CONFIGURE_DEPENDS
+    best_effort_transport.c
+    cobs.c
+    control_protocol.c
+    pulse*.c
+    push_transport.c
+    reliable_transport.c
+  )
+  pbl_library_sources(${pulse_sources})
+  pbl_library_sources_ifdef(CONFIG_SHELL shell_pulse.c)
+endif()

@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-
 #include "pulse_protocol_impl.h"
 
 #include <stddef.h>
@@ -140,5 +138,3 @@ void pulse2_best_effort_init(void) {
   ppp_control_protocol_init(PULSE2_BECP);
   ppp_control_protocol_open(PULSE2_BECP);
 }
-
-#endif

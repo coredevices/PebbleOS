@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_SHELL
-
 #include "console_internal.h"
 
 #include <errno.h>
@@ -40,5 +38,3 @@ static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **ar
 
 PBL_SHELL_SUBCMD_ADD(sub_sys, rx_disable, nullptr, "Disable the console RX <seconds>",
                      prv_cmd_rx_disable, 2, 0);
-
-#endif
