@@ -166,7 +166,7 @@ static uint16_t prv_ntc_threshold_code(const Npm1300Config *cfg, uint8_t celsius
   // Ref: PS v1.1 Section 6.2.5: K_NTCTEMP = round(1024 * R_T / (R_T + R_B))
   float t_k = (float)celsius + 273.15f;
   float exponent = (float)cfg->thermistor_beta * ((1.f / 298.15f) - (1.f / t_k));
-  return (uint16_t)((1024.0f / (1.0f + exp(exponent))) + 0.5f);
+  return (uint16_t)((1024.0f / (1.0f + expf(exponent))) + 0.5f);
 }
 
 static int prv_vterm_code(uint16_t mv, uint8_t *code) {
