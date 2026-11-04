@@ -144,6 +144,9 @@ class DeviceAdapter(ABC):
         """Have the firmware stop listening on its console for ``seconds``
         (so it can sleep as it would unplugged) and drop every connection
         meanwhile; reconnect once it listens again."""
+        # A session can't close once nothing is listening.
+        for connection in self.connections:
+            connection.end_protocol_session()
         self._connection(Capability.PROMPT).prompt_no_reply(
             self.command("rx_disable", seconds=int(seconds))
         )

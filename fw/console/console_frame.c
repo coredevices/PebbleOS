@@ -84,8 +84,13 @@ static void prv_process_frame(void *unused) {
 
   const uint8_t seq = (uint8_t)s_rx_buf[1];
   if (seq == 0U || seq != s_last_seq) {
+    const void *payload = &s_rx_buf[1 + SEQ_LEN];
+    const size_t payload_len = (size_t)raw_len - SEQ_LEN - CRC_LEN;
+
     if (channel == CONSOLE_FRAME_CHANNEL_PP) {
-      console_pp_handle_frame(&s_rx_buf[1 + SEQ_LEN], (size_t)raw_len - SEQ_LEN - CRC_LEN);
+      console_pp_handle_frame(payload, payload_len);
+    } else if (channel == CONSOLE_FRAME_CHANNEL_IMAGING) {
+      console_imaging_handle_frame(payload, payload_len);
     }
     s_last_seq = (seq == 0U) ? -1 : seq;
   }

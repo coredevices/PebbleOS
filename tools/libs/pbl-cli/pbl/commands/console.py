@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import shlex
 import sys
 
@@ -69,11 +70,11 @@ class Console(PblCommand):
         if build.config.CONFIG_PULSE_EVERYWHERE:
             console = f"{python} {self.script('tools', 'pulse_console.py')} -t {tty}"
         else:
-            miniterm = self.script("tools", "log_hashing", "miniterm_co.py")
-            console = f"{python} {miniterm} {tty}"
-            if not emulated:
-                # Force RTS de-asserted: on some boards RTS resets the SoC.
-                console += f" {baudrate} --rts 0"
+            terminal = self.script("tools", "console.py")
+            console = f"{python} {terminal} {tty} --baudrate {baudrate}"
+            log_dict = os.path.join(build.path, "fw", "loghash_dict.json")
+            if os.path.exists(log_dict):
+                console += f" --dict {shlex.quote(log_dict)}"
 
         if args.reconnect:
             keepalive = self.script("tools", "console_keepalive.py")

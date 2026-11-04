@@ -14,8 +14,9 @@
 
 #define CONSOLE_FRAME_MTU 512
 
-#define CONSOLE_FRAME_CHANNEL_ACK 'A'
-#define CONSOLE_FRAME_CHANNEL_PP  'P'
+#define CONSOLE_FRAME_CHANNEL_ACK     'A'
+#define CONSOLE_FRAME_CHANNEL_PP      'P'
+#define CONSOLE_FRAME_CHANNEL_IMAGING 'B'
 
 //! Feed a received character, passing those outside frames to @p text_input.
 void console_frame_input_from_isr(char c, void (*text_input)(char c));
@@ -25,3 +26,6 @@ void console_frame_send(char channel, const void *data, size_t len);
 
 //! Handle a frame on the Pebble protocol channel, on KernelBG.
 void console_pp_handle_frame(const void *data, size_t len);
+
+//! Handle a frame on the flash imaging channel, on KernelBG.
+void console_imaging_handle_frame(const void *data, size_t len);
