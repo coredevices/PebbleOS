@@ -18,7 +18,7 @@
  * Each supported part has its timing and size here, for the JDI LPM015M135A and the Sharp
  * LS013B7DD02. The panel has two supplies: VLCD, raised first, and VDDP. Its VCOM is inverted by a
  * PWM output at the VCOM frequency, 50% duty cycle, while the image is on. Once powered down, the
- * panel is kept off for 500 ms before it is powered again.
+ * panel is kept off for 100 ms before it is powered again.
  *
  * @code{.c}
  * PBL_PANEL_JDI_LPM015M135A_DEFINE(s_panel, "panel", &s_vddp, &s_vlcd,
