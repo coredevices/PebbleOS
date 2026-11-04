@@ -16,6 +16,10 @@ PBL_WEAK void status_bar_layer_set_colors(StatusBarLayer *status_bar_layer, GCol
                                           GColor foreground) {
 }
 
+PBL_WEAK void status_bar_layer_set_colors_follow_theme(StatusBarLayer *status_bar_layer,
+                                                       bool transparent_background) {
+}
+
 PBL_WEAK void status_bar_layer_deinit(StatusBarLayer *status_bar_layer) {
 }
 

@@ -175,6 +175,13 @@ GColor status_bar_layer_get_background_color(const StatusBarLayer *status_bar_la
 void status_bar_layer_set_colors(StatusBarLayer *status_bar_layer, GColor background,
                                  GColor foreground);
 
+//! @internal
+//! Uses the system theme's colors, resolved when drawing so the status bar follows dark mode
+//! flips. Undone by \ref status_bar_layer_set_colors.
+//! @param transparent_background Keep the background transparent instead of the theme's
+void status_bar_layer_set_colors_follow_theme(StatusBarLayer *status_bar_layer,
+                                              bool transparent_background);
+
 //! Gets foreground color of StatusBarLayer
 //! @param status_bar_layer The StatusBarLayer of which to get the color
 //! @return GColor of foreground color property

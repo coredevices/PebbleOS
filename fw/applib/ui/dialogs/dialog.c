@@ -7,6 +7,7 @@
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/window.h>
+#include <shell/system_theme.h>
 
 void dialog_set_fullscreen(Dialog *dialog, bool is_fullscreen) {
   window_set_fullscreen(&dialog->window, is_fullscreen);
@@ -35,11 +36,23 @@ void dialog_set_text_buffer(Dialog *dialog, char *buffer, bool take_ownership) {
 
 void dialog_set_text_color(Dialog *dialog, GColor text_color) {
   dialog->text_color = PBL_IF_COLOR_ELSE(text_color, GColorBlack);
+  dialog->text_follows_theme = false;
   text_layer_set_text_color(&dialog->text_layer, dialog->text_color);
 }
 
 void dialog_set_background_color(Dialog *dialog, GColor background_color) {
   window_set_background_color(&dialog->window, PBL_IF_COLOR_ELSE(background_color, GColorWhite));
+  if (dialog->text_follows_theme) {
+    // A custom background keeps the default dark text
+    dialog_set_text_color(dialog, GColorBlack);
+  }
+}
+
+void dialog_set_colors_follow_theme(Dialog *dialog, bool dimmed) {
+  window_set_background_color_follows_theme(&dialog->window, dimmed);
+  dialog->text_color = system_theme_get_fg_color();
+  dialog->text_follows_theme = true;
+  text_layer_set_text_color_follows_theme(&dialog->text_layer);
 }
 
 void dialog_set_icon(Dialog *dialog, uint32_t icon_id) {

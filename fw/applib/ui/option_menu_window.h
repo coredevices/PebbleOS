@@ -96,6 +96,11 @@ void option_menu_set_highlight_colors(OptionMenu *option_menu, GColor background
                                       GColor foreground);
 
 //! @internal
+//! Uses the system theme's colors for the status bar and the menu, resolved when drawing so the
+//! option menu follows dark mode flips.
+void option_menu_set_colors_follow_theme(OptionMenu *option_menu);
+
+//! @internal
 //! This is currently the only way to set callbacks, which follows (calling it now) 4.x conventions.
 //! If option menu must be exported to 3.x, a pass-by value wrapper must be created.
 void option_menu_set_callbacks(OptionMenu *option_menu, const OptionMenuCallbacks *callbacks,

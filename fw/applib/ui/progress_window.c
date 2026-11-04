@@ -267,9 +267,7 @@ void progress_window_init(ProgressWindow *data) {
   // Create and set up the window
   Window *window = &data->window;
   window_init(window, WINDOW_NAME("Progress Window"));
-  window_set_background_color(
-      window, PBL_IF_COLOR_ELSE(system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray,
-                                system_theme_get_bg_color()));
+  window_set_background_color_follows_theme(window, true /* dimmed */);
 
   const GRect *bounds = &window->layer.bounds;
   GPoint center = grect_center_point(bounds);

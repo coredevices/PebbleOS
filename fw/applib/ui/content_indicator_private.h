@@ -12,6 +12,11 @@
 typedef struct {
   ContentIndicatorDirection direction : 2;
   bool content_available : 1;
+  //! The arrow is drawn over the background of the layer's window, resolved when drawing so it
+  //! follows dark mode flips
+  bool background_follows_window : 1;
+  //! The arrow uses the theme's foreground, resolved when drawing
+  bool foreground_follows_theme : 1;
   AppTimer *timeout_timer;
   ContentIndicatorConfig config;
   LayerUpdateProc original_update_proc;

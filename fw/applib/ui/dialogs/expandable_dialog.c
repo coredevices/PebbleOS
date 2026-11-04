@@ -161,6 +161,7 @@ static void prv_expandable_dialog_load(Window *window) {
     text_layer_init_with_parameters(header_layer, &GRect(x, y, w, header_content_height),
                                     expandable_dialog->header, header_font, dialog->text_color,
                                     GColorClear, alignment, GTextOverflowModeWordWrap);
+    dialog_apply_text_color(dialog, header_layer);
     // layer must be added immediately to scroll layer for perimeter and paging
     scroll_layer_add_child(scroll_layer, &header_layer->layer);
 
@@ -190,6 +191,7 @@ static void prv_expandable_dialog_load(Window *window) {
   text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, font,
                                   dialog->text_color, GColorClear, alignment,
                                   GTextOverflowModeWordWrap);
+  dialog_apply_text_color(dialog, text_layer);
   // layer must be added immediately to scroll layer for perimeter and paging
   scroll_layer_add_child(scroll_layer, &text_layer->layer);
 
@@ -286,6 +288,10 @@ static void prv_expandable_dialog_load(Window *window) {
             .colors.foreground = dialog->text_color,
             .colors.background = dialog->window.background_color,
           });
+      if (dialog->text_follows_theme) {
+        content_indicator_set_colors_follow_theme(indicator, ContentIndicatorDirectionUp, true);
+        content_indicator_set_colors_follow_theme(indicator, ContentIndicatorDirectionDown, true);
+      }
     }
   }
 

@@ -100,6 +100,10 @@ typedef struct Layer {
       bool hidden : 1;
       bool has_data : 1;
       bool is_highlighted : 1; //!< Indicates the highlight status of a \ref MenuLayer cell
+      //! @internal
+      //! The layer's colors come from the system theme and are resolved when drawing, so it
+      //! follows dark mode flips. Which colors depends on the layer type.
+      bool follows_theme : 1;
     };
   };
 

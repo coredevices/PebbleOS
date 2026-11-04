@@ -498,10 +498,21 @@ typedef struct MenuLayer {
   //! \ref touch_fling_active's byte.
   bool touch_center_pin : 1;
 
+  //! @internal
+  //! If true, the normal colors are the system theme's background and foreground, refreshed on
+  //! every redraw so the menu follows dark mode flips. Set by default for system UI, cleared by
+  //! \ref menu_layer_set_normal_colors. Starts a new byte, carved from \ref padding.
+  bool normal_colors_follow_theme : 1;
+
+  //! @internal
+  //! Same as \ref normal_colors_follow_theme for the highlight colors, cleared by
+  //! \ref menu_layer_set_highlight_colors.
+  bool highlight_colors_follow_theme : 1;
+
   //! Add some padding to keep track of the \ref MenuLayer size budget.
   //! As long as the size stays within this budget, 2.x apps can safely use the 3.x MenuLayer type.
   //! The actual size check is generated from applib_malloc.json, not asserted here.
-  uint8_t padding[15];
+  uint8_t padding[14];
 } MenuLayer;
 
 //! Padding used below the last item in pixels
@@ -690,6 +701,12 @@ void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GCol
 //! @param foreground The color to be used for the foreground and text of the cell.
 //! @see \ref menu_layer_set_normal_colors
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground);
+
+//! @internal
+//! Uses the system theme's normal and highlight colors, resolved when drawing so the menu follows
+//! dark mode flips. This is the default for system UI. Undone by \ref menu_layer_set_normal_colors
+//! and \ref menu_layer_set_highlight_colors.
+void menu_layer_set_colors_follow_theme(MenuLayer *menu_layer);
 
 //! True, if the \ref MenuLayer generally scrolls such that the selected row is in the center.
 //! @see \ref menu_layer_set_center_focused
