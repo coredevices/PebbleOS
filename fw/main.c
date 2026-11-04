@@ -138,7 +138,13 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   pbl_log_init();
 
-  pebble_task_configure_idle_task();
+  memory_layout_thread_regions_init();
+#ifndef CONFIG_ARMV8_M_MAINLINE
+  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
+    [2] = memory_layout_get_kernel_main_stack_guard_region(),
+  };
+  pbl_thread_regions_set(pbl_thread_current(), regions);
+#endif
 
   task_init();
 

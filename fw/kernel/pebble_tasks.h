@@ -66,8 +66,6 @@ struct pbl_thread *pebble_task_create(PebbleTask pebble_task, struct pbl_thread_
 void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr *attr);
 #endif
 
-void pebble_task_configure_idle_task(void);
-
 #if UNITTEST
 #define PBL_ASSERT_TASK(task)
 #define PBL_ASSERT_NOT_TASK(task)
