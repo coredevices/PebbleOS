@@ -88,6 +88,9 @@ Additional requirements:
   meter or detailed battery usage logs.
 - User experience changes are accompanied by pictures or videos clearly showing the feature. When
   an existing feature changes, show it before and after the change.
+- **Every change touching public-facing APIs must be tested to not affect third-party apps**,
+  whether they are legacy SDK 2.x apps, SDK 3.x apps or apps built with the current SDK. Run existing apps of
+  each kind against the change and state in the pull request which apps were tested and how.
 - New behaviour comes with tests where feasible: unit tests, or integration tests for system-level
   behaviour. See {doc}`../development/tests/index`.
 - Run the checks CI runs before submitting: `pbl test`, clang-format, ruff and gitlint. See
