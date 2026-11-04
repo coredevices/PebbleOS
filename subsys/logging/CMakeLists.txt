@@ -4,7 +4,6 @@
 pbl_library()
 file(GLOB sources CONFIGURE_DEPENDS *.c)
 pbl_library_sources(${sources})
-pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_PULSE backends/pulse.c)
 pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_UART backends/uart.c)
 pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_FLASH
   backends/flash.c

@@ -19,7 +19,7 @@
 /**
  * @defgroup logging Logging
  * @ingroup subsys
- * @brief Leveled logging to the serial console (or PULSE) and to flash.
+ * @brief Leveled logging to the serial console and to flash.
  *
  * Use the level-named macros: PBL_LOG_ERR() and PBL_LOG_WRN() for errors and warnings,
  * PBL_LOG_DBG() for routine lifecycle and state-transition messages, and PBL_LOG_INFO() only for

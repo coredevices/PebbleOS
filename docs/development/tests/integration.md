@@ -116,13 +116,11 @@ The harness reaches the watch through one or more connections, each
 offering some of: the debug prompt, the log stream, and the Pebble protocol
 (what the phone app speaks, used for input, screenshots and blob DB). Each
 is served by the first connection that has it. By default the harness uses
-the debug console, over PULSE when `CONFIG_PULSE_EVERYWHERE` is set and as
-the text console otherwise; `--connection` replaces the default and
+the debug console; `--connection` replaces the default and
 may be repeated:
 
 | Connection                  | Prompt | Logs     | Pebble protocol |
 | --------------------------- | ------ | -------- | --------------- |
-| `pulse:TTY` / `pulse:socket://HOST:PORT` | yes | yes | yes (tunneled) |
 | `serial:TTY[@BAUD]`         | yes    | yes      | yes (in frames) |
 | `ble:WATCH[@CONTROLLER]`    | no     | no       | yes             |
 | `devconn:HOST[:PORT]`       | no     | app only | yes             |
@@ -158,7 +156,7 @@ the controller is a dongle's serial port, or `--ble-controller`:
 
 ```shell
 pbl itest --connection ble:auto@/dev/cu.usbmodem1101 \
-    --connection pulse:/dev/tty.usbserial-1
+    --connection serial:/dev/tty.usbserial-1
 ```
 
 Pairing has to be confirmed on the watch; the harness does it with the

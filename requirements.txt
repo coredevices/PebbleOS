@@ -42,6 +42,4 @@ bumble>=0.0.235
 
 -e tools/libs/pbl-cli
 -e tools/libs/pbl-console[protocol]
--e tools/libs/pebble-commander
--e tools/libs/pulse2
 -e tools/libs/pebble-loghash

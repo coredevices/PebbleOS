@@ -41,7 +41,7 @@ typedef enum {
   /** QEMU emulator transport. */
   CommSessionTransportType_QEMU = 3,
   /** PULSE serial transport. */
-  CommSessionTransportType_PULSE = 4,
+  CommSessionTransportType_Console = 4,
 } CommSessionTransportType;
 
 /**

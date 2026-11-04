@@ -6,8 +6,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
 
-#include <console/pulse_internal.h>
-
 #if !UNITTEST
 static void prv_emit_ready_log(void *unused) {
   pbl_log(LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, "Ready for communication.");
@@ -16,13 +14,6 @@ static void prv_emit_ready_log(void *unused) {
 
 void notify_system_ready_for_communication(void) {
 #if !UNITTEST
-#ifdef CONFIG_PULSE_EVERYWHERE
-  static bool s_pulse_started = false;
-  if (!s_pulse_started) {
-    pulse_start();
-    s_pulse_started = true;
-  }
-#endif
   // Defer the "Ready for communication" log briefly.  pebble-tool's emulator
   // wait loop polls for this string and starts the install immediately when
   // it appears — but at this point the first app's task has only just been

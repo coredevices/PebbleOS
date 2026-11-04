@@ -3,7 +3,6 @@
 
 """pytest plugin: options, test classification and reporting."""
 
-import logging
 import os
 import re
 
@@ -95,7 +94,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--device-serial-baud",
         type=int,
-        help="Baudrate of the text (non-PULSE) console (default: 115200)",
+        help="Baudrate of the console (default: the build's)",
     )
     group.addoption(
         "--connection",
@@ -103,7 +102,7 @@ def pytest_addoption(parser):
         default=[],
         metavar="SCHEME:ADDRESS",
         help="Connect with this backend instead of the device's default; may "
-        "be repeated (pulse:TTY, serial:TTY[@BAUD], devconn:HOST[:PORT], "
+        "be repeated (serial:TTY[@BAUD], devconn:HOST[:PORT], "
         "qemu:HOST:PORT)",
     )
     group.addoption(
@@ -187,10 +186,6 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
-    # The PULSE state machines log every transition.
-    for name in ("transitions", "pebble.pulse2"):
-        logging.getLogger(name).setLevel(logging.WARNING)
-
     for name, help in SCOPE_MARKERS.items():
         config.addinivalue_line("markers", f"{name}: {help}")
 

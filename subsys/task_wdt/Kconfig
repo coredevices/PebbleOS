@@ -14,8 +14,8 @@ config TASK_WDT_TIMEOUT_MS
     int "System thread timeout in milliseconds"
     default 5000
     help
-      Timeout the system threads (KernelMain, KernelBackground, NewTimers,
-      PULSE) register their channels with.
+      Timeout the system threads (KernelMain, KernelBackground, NewTimers)
+      register their channels with.
 
 config TASK_WDT_CHECK_PERIOD_MS
     int "Check period in milliseconds"

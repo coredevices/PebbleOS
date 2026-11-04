@@ -37,6 +37,7 @@ DLS_SEND_ENABLE = 0x0A
 DLS_SET_SEND_ENABLE = 0x8B
 # Data logging's tag for native analytics heartbeats.
 DLS_TAG_HEARTBEAT = 87
+HEARTBEAT_LOGGED_TIMEOUT_S = 5
 
 GET_BYTES_FILE = 0x03
 GET_BYTES_INFO = 0x01
@@ -95,10 +96,18 @@ def test_data_logging(prompt, phone):
     """What the watch logs goes to the phone, session by session, and is
     dropped from the watch once the phone has it."""
     prompt("analytics heartbeat")
-    sessions = _dls_sessions(prompt)
-    pending = {
-        s for s, (tag, size) in sessions.items() if tag == DLS_TAG_HEARTBEAT and size
-    }
+    # The heartbeat gets to data logging after the command returns.
+    deadline = time.monotonic() + HEARTBEAT_LOGGED_TIMEOUT_S
+    while True:
+        sessions = _dls_sessions(prompt)
+        pending = {
+            s
+            for s, (tag, size) in sessions.items()
+            if tag == DLS_TAG_HEARTBEAT and size
+        }
+        if pending or time.monotonic() > deadline:
+            break
+        time.sleep(0.1)
     assert pending, f"no heartbeat logged: {sessions}"
     (session,) = pending
 

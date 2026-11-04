@@ -28,8 +28,7 @@
         builtins.concatStringsSep "\n" (map builtins.readFile [
           ./requirements.txt
           ./tools/libs/pbl-cli/pyproject.toml
-          ./tools/libs/pebble-commander/pyproject.toml
-          ./tools/libs/pulse2/pyproject.toml
+          ./tools/libs/pbl-console/pyproject.toml
           ./tools/libs/pebble-loghash/pyproject.toml
         ])
       );

@@ -53,7 +53,6 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
 - `fw/services/system_task/service.c` owns the KernelBackground
   channel. Its callback throttles the app thread to the idle priority for a
   short time when the system task is ready to run but starved.
-- `fw/console/pulse2.c` owns the PULSE channel.
 - `subsys/bluetooth/init.c` owns the NimBLE host channel, waiting while the
   host has no events to run.
 - Flash, filesystem and console code feeds the calling thread's channel from

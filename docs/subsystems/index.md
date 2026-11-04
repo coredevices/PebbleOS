@@ -15,6 +15,7 @@ input.md
 logging.md
 profiler.md
 shell.md
+console.md
 task_watchdog.md
 ```
 

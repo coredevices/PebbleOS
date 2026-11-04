@@ -30,7 +30,7 @@ def phone(watch, phones):
 def only_phone(dut, phone):
     """Skips unless ``phone`` is the only Pebble protocol session: the
     watch sends some messages to whichever session it takes for the phone,
-    and the harness's own (e.g. PULSE on the emulator) can be that one."""
+    and the harness's own (e.g. the console's) can be that one."""
     if dut.has(Capability.PROTOCOL):
         pytest.skip("the harness's own protocol session competes with the phone")
     return phone

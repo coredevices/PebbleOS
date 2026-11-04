@@ -168,13 +168,13 @@ CommSession *comm_session_open(Transport *transport, const TransportImplementati
   if (is_system) {
     CommSession *existing_system_session = comm_session_get_system_session();
     if (existing_system_session) {
-      // Allow PULSE transport to be opened alongside any other transport
-      // Actually using PULSE at the same time as another transport may cause
+      // Allow the console transport to be opened alongside any other transport
+      // Actually using the console at the same time as another transport may cause
       // undesirable behaviour however.
       if (!prv_is_transport_type(existing_system_session->transport,
                                  existing_system_session->transport_imp,
-                                 CommSessionTransportType_PULSE) &&
-          !prv_is_transport_type(transport, implementation, CommSessionTransportType_PULSE)) {
+                                 CommSessionTransportType_Console) &&
+          !prv_is_transport_type(transport, implementation, CommSessionTransportType_Console)) {
         if (!existing_system_session->transport_imp->close) {
           // iAP sessions cannot be closed from the watch' side :(
           PBL_LOG_ERR("System session already exists and cannot be closed");
@@ -422,7 +422,7 @@ static bool prv_find_session_is_system_filter(ListNode *found_node, void *data) 
          !prv_is_transport_type(session->transport, session->transport_imp,
                                 CommSessionTransportType_QEMU) &&
          !prv_is_transport_type(session->transport, session->transport_imp,
-                                CommSessionTransportType_PULSE);
+                                CommSessionTransportType_Console);
 }
 
 static bool prv_find_session_is_type_filter(ListNode *found_node, void *data) {
@@ -437,15 +437,15 @@ static CommSession *prv_find_session_by_type(CommSessionTransportType session_ty
 }
 
 static CommSession *prv_get_system_session(void) {
-  // Attempt to explicitly find and return a session that isn't QEMU or PULSE
+  // Attempt to explicitly find and return a session that isn't QEMU or the console
   CommSession *session = (CommSession *)list_find((ListNode *)s_session_head,
                                                   prv_find_session_is_system_filter, nullptr);
   if (session) {
     return session;
   }
 
-  // If we don't find one, try to find a PULSE session
-  session = prv_find_session_by_type(CommSessionTransportType_PULSE);
+  // If we don't find one, try to find a console session
+  session = prv_find_session_by_type(CommSessionTransportType_Console);
   if (session) {
     return session;
   }

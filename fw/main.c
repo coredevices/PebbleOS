@@ -31,7 +31,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <board/board.h>
-#include <console/pulse.h>
 #include <console/serial_console.h>
 #include <debug/debug.h>
 #include <flash_region/flash_region.h>
@@ -143,9 +142,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   static McuRebootReason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_init();
-#endif
   pbl_log_init();
 
   pebble_task_configure_idle_task();
