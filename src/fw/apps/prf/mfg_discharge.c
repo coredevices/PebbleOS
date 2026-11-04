@@ -424,9 +424,11 @@ static void app_init(void) {
   window_init(window, "Discharge Test");
 
   TextLayer *status = &data->status;
-  text_layer_init(status, &window->layer.bounds);
+  text_layer_init(status, &GRect(0, 0, window->layer.bounds.size.w, 65));
   text_layer_set_font(status, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(status, GTextAlignmentCenter);
+  text_layer_set_background_color(status, GColorBlack);
+  text_layer_set_text_color(status, GColorWhite);
   text_layer_set_text(status, status_text[data->test_state]);
   layer_add_child(&window->layer, &status->layer);
 
