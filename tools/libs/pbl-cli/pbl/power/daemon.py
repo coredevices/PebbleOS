@@ -76,6 +76,12 @@ def start(key, type, port, name, voltage_mv=None):
     """Start the daemon for a supply, unless one runs already."""
     if running(key):
         return False
+    # Wait here: the daemon outlives this process, and must not take the supply
+    # long after whoever asked for it is gone.
+    try:
+        lock.wait_free(key, f"supply {name}")
+    except lock.LockError as e:
+        raise DaemonError(str(e)) from None
     os.makedirs(lock.lock_dir(), exist_ok=True)
     cmd = [sys.executable, "-m", "pbl.power.daemon", key, type, port, name]
     if voltage_mv is not None:
@@ -89,6 +95,7 @@ def start(key, type, port, name, voltage_mv=None):
     )
     # Whatever the caller holds is not the daemon's to skip.
     env.pop(lock.HELD_ENV, None)
+    env.pop(lock.WAIT_ENV, None)
     with open(log_path(key), "w") as log:
         proc = subprocess.Popen(
             cmd,

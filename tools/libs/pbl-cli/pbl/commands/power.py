@@ -108,6 +108,7 @@ class Power(PblCommand):
         if self.dry_run:
             return 0
 
+        self.wait_for_supply(entry)
         key = power.lock_key(entry.type, entry.port)
         try:
             if args.action in ("on", "cycle"):
