@@ -38,6 +38,7 @@
 typedef struct WeatherAppData {
   GlobeView *globe_view;
   EventServiceInfo weather_event_info;
+  EventServiceInfo dark_mode_event_info;
 
   int location_count;
   int active_index; // which configured location is shown
@@ -683,6 +684,18 @@ static void prv_handle_weather(PebbleEvent *event, void *context) {
   prv_refresh(s_data);
 }
 
+static void prv_handle_dark_mode_change(PebbleEvent *event, void *context) {
+  WeatherAppData *data = s_data;
+  // The icons are recolored for the theme when loaded: reload them through the data refresh
+  if (data->days_received > 0) {
+    forecast_list_update_data(data->days, data->days_received);
+    expanded_view_update_data(&data->days[0], data->latitude_e2, data->longitude_e2,
+                              data->utc_offset_min);
+  }
+  weather_report_handle_dark_mode_change();
+  clock_face_handle_dark_mode_change();
+}
+
 static PBL_NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches
   // unload — clear every module's launch-persistent state first.
@@ -736,6 +749,11 @@ static PBL_NOINLINE void prv_init(void) {
     .handler = prv_handle_weather,
   };
   event_service_client_subscribe(&data->weather_event_info);
+  data->dark_mode_event_info = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_handle_dark_mode_change,
+  };
+  event_service_client_subscribe(&data->dark_mode_event_info);
 
   // Push the animated forecast as the carousel base window.
   prv_on_list_transition_done(data);
@@ -745,6 +763,9 @@ static void prv_deinit(void) {
   if (s_data) {
     if (s_data->weather_event_info.handler) {
       event_service_client_unsubscribe(&s_data->weather_event_info);
+    }
+    if (s_data->dark_mode_event_info.handler) {
+      event_service_client_unsubscribe(&s_data->dark_mode_event_info);
     }
     i18n_free_all(s_data);
     clock_face_set_wrap_callback(nullptr, nullptr);

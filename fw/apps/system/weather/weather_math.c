@@ -442,8 +442,8 @@ void weather_recolor_gbitmap_for_dark_mode(GBitmap *bmp) {
   }
 }
 
-void weather_recolor_pdc_image_for_dark_mode(GDrawCommandImage *image) {
-  if (!image || !system_theme_is_dark_mode())
+void weather_invert_pdc_image(GDrawCommandImage *image) {
+  if (!image)
     return;
   GDrawCommandList *list = gdraw_command_image_get_command_list(image);
   if (list) {
@@ -451,8 +451,20 @@ void weather_recolor_pdc_image_for_dark_mode(GDrawCommandImage *image) {
   }
 }
 
+void weather_recolor_pdc_image_for_dark_mode(GDrawCommandImage *image) {
+  if (system_theme_is_dark_mode()) {
+    weather_invert_pdc_image(image);
+  }
+}
+
 void weather_recolor_pdc_sequence_for_dark_mode(GDrawCommandSequence *sequence) {
-  if (!sequence || !system_theme_is_dark_mode())
+  if (system_theme_is_dark_mode()) {
+    weather_invert_pdc_sequence(sequence);
+  }
+}
+
+void weather_invert_pdc_sequence(GDrawCommandSequence *sequence) {
+  if (!sequence)
     return;
   const uint32_t nframes = gdraw_command_sequence_get_num_frames(sequence);
   for (uint32_t i = 0; i < nframes; i++) {

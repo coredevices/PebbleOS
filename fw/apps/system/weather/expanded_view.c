@@ -803,7 +803,7 @@ static void prv_window_appear(Window *window) {
 static void prv_window_load(Window *window) {
   if (!s_ev)
     return;
-  window_set_background_color(window, system_theme_get_bg_color());
+  window_set_background_color_follows_theme(window, false /* dimmed */);
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   GRect frame = bounds;
   // Globe-BACK entrance (BOTH shapes): start the whole card off-screen to the left so its first

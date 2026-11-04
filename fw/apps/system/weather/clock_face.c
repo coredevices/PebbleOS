@@ -1337,7 +1337,11 @@ static void prv_window_load(Window *window) {
   // window with the bg colour every frame unless transparent, and prv_canvas_draw always
   // paints every pixel (its own white fill / the squash resample). See forecast_list's
   // matching change. The !s_cf early-return keeps a white guard.
-  window_set_background_color(window, PBL_IF_ROUND_ELSE(GColorClear, system_theme_get_bg_color()));
+#if PBL_ROUND
+  window_set_background_color(window, GColorClear);
+#else
+  window_set_background_color_follows_theme(window, false /* dimmed */);
+#endif
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   s_cf->canvas = layer_create(bounds);
   layer_set_update_proc(s_cf->canvas, prv_canvas_draw);
@@ -1443,6 +1447,15 @@ static void prv_window_unload(Window *window) {
 }
 
 // ---- Public API ----
+
+void clock_face_handle_dark_mode_change(void) {
+  if (!s_cf || !s_cf->canvas) {
+    return;
+  }
+  // The dial icons are recolored for the theme when loaded
+  prv_load_bitmaps();
+  layer_mark_dirty(s_cf->canvas);
+}
 
 void clock_face_set_wrap_callback(ClockFaceWrapCallback callback, void *context) {
   s_wrap_callback = callback;

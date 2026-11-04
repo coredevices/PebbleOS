@@ -13,6 +13,9 @@ void clock_face_reset(void);
 
 void clock_face_set_wrap_callback(ClockFaceWrapCallback callback, void *context);
 
+//! Reloads the theme dependent resources after dark mode flipped. No-op when not showing.
+void clock_face_handle_dark_mode_change(void);
+
 bool clock_face_is_showing(void);
 
 // Push the clock face window onto the stack.

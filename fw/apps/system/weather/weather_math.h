@@ -91,3 +91,8 @@ void weather_render_squash_cached(GContext *ctx, const uint8_t *scratch, Animati
 void weather_recolor_gbitmap_for_dark_mode(GBitmap *bitmap);
 void weather_recolor_pdc_image_for_dark_mode(GDrawCommandImage *image);
 void weather_recolor_pdc_sequence_for_dark_mode(GDrawCommandSequence *sequence);
+
+//! Swaps black and white in a PDC image, as the dark mode recolor does. Applying it twice restores
+//! the original colors, so it also undoes the recolor when dark mode flips back.
+void weather_invert_pdc_image(GDrawCommandImage *image);
+void weather_invert_pdc_sequence(GDrawCommandSequence *sequence);

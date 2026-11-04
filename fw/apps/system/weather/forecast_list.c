@@ -3209,7 +3209,7 @@ void forecast_list_start_select_exit(void (*done_cb)(void *ctx), void *ctx) {
   // The slide moves the CANVAS FRAME, exposing window pixels nobody paints now that the
   // window bg is transparent (step 3) — the vacated strip would smear stale frames. Restore
   // the bg for just this rare 115ms fallback; prv_select_exit_stopped re-clears it.
-  window_set_background_color(s_list->window, system_theme_get_bg_color());
+  window_set_background_color_follows_theme(s_list->window, false /* dimmed */);
 #endif
   s_select_exit_anim = prv_start_anim(interpolate_moook_duration() / 2, // 115ms (Timeline)
                                       AnimationCurveLinear,             // moook is the shaping
@@ -3804,8 +3804,11 @@ static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t n
   // on the 260px glass), and every branch of prv_canvas_draw already paints every pixel
   // (scene white-fill first / report white card / squash resample full-coverage), so the
   // window fill was pure duplicate work. The !s_list early-return keeps a white guard.
-  window_set_background_color(s_list->window,
-                              PBL_IF_ROUND_ELSE(GColorClear, system_theme_get_bg_color()));
+#if PBL_ROUND
+  window_set_background_color(s_list->window, GColorClear);
+#else
+  window_set_background_color_follows_theme(s_list->window, false /* dimmed */);
+#endif
   window_set_window_handlers(s_list->window, (WindowHandlers){
                                                .load = prv_window_load,
                                                .appear = prv_window_appear,
