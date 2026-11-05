@@ -102,6 +102,9 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_N
                              false, true);
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck2, "npm1300_buck2", &s_npm1300, PBL_NPM1300_BUCK2, 3000,
                              false, true);
+// Codec and microphone supply
+PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
+                             true, true);
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 1800,
                              true, true);
 
@@ -118,7 +121,7 @@ PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2.bus, 0x44, nullptr, .always_on = true)
 
 const struct pbl_als *const ALS = &s_opt3001.als;
 
-PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c_iic2.bus, 0x1A);
+PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c_iic2.bus, 0x1A, &s_npm1300_ldsw1.reg);
 
 const struct pbl_i2c_dev *const I2C_DA7212 = &s_da7212.i2c;
 

@@ -1,8 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/util/misc.h>
 
 int pbl_regulator_dev_init(const struct pbl_device *dev) {
@@ -79,6 +82,26 @@ int pbl_regulator_disable(const struct pbl_regulator *reg) {
 
   pbl_mutex_lock(&reg->state->mutex, PBL_FOREVER);
   ret = prv_disable_locked(reg);
+  pbl_mutex_unlock(&reg->state->mutex);
+
+  return ret;
+}
+
+int pbl_regulator_power_cycle(const struct pbl_regulator *reg, uint32_t off_ms) {
+  int ret;
+
+  PBL_ASSERTN(pbl_device_is_ready(&reg->dev));
+
+  pbl_mutex_lock(&reg->state->mutex, PBL_FOREVER);
+  if (reg->state->use_count > 0) {
+    ret = -EBUSY;
+  } else {
+    ret = reg->ops->disable(reg);
+    if (ret == 0) {
+      pbl_sleep_ms(off_ms);
+      ret = reg->ops->enable(reg);
+    }
+  }
   pbl_mutex_unlock(&reg->state->mutex);
 
   return ret;
