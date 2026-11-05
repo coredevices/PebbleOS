@@ -80,3 +80,4 @@ Trust section of [Local microphone capture](local-microphone.md).
 | Bit | Permission |
 |---|---|
 | 0 | Microphone, see [Local microphone capture](local-microphone.md) |
+| 1 | AppInstall. Listing installed apps, launching one, and selecting a watchface all require it. Absent means denied. |
