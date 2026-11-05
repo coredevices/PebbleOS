@@ -123,9 +123,11 @@ static bool prv_decode_next(ColorGlyphDecoder *d, uint8_t *value) {
   return true;
 }
 
-static void prv_render_color_glyph(GContext *ctx, const GlyphData *glyph,
-                                   const GlyphLocation *location, const GRect *target,
-                                   const GRect *clipped) {
+// Kept out of line so its decode buffers aren't on render_glyph's frame while the glyph loads,
+// which legacy apps' 2 KiB stack can't afford
+static PBL_NOINLINE void prv_render_color_glyph(GContext *ctx, const GlyphData *glyph,
+                                                const GlyphLocation *location, const GRect *target,
+                                                const GRect *clipped) {
   ColorGlyphDecoder d = {
     .reader = {
       .font_res = location->font_res,
