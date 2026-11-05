@@ -18,6 +18,10 @@ bool PBL_WEAK process_manager_compiled_with_legacy3_sdk(void) {
   return false;
 }
 
+bool PBL_WEAK process_manager_expects_legacy_tm_gmtoff(void) {
+  return false;
+}
+
 PlatformType PBL_WEAK process_manager_current_platform(void) {
   return PBL_PLATFORM_TYPE_CURRENT;
 }

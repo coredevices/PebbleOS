@@ -15,6 +15,7 @@
 
 #include <applib/app_logging.h>
 #include <logging/logging_private.h>
+#include <process_management/process_manager.h>
 #include <process_management/worker_manager.h>
 
 PBL_SYSCALL(int, sys_test, (VAL, int, arg)) {
@@ -82,7 +83,11 @@ PBL_SYSCALL(struct pbl_tm *, sys_gmtime_r, (IN, const time_t *, timep),
 
 PBL_SYSCALL(struct pbl_tm *, sys_localtime_r, (IN, const time_t *, timep),
             (OUT_BUF, struct pbl_tm *, result, sizeof(*result))) {
-  return pbl_localtime_r(timep, result);
+  pbl_localtime_r(timep, result);
+  if (result->tm_isdst > 0 && process_manager_expects_legacy_tm_gmtoff()) {
+    result->tm_gmtoff -= time_get_dstoffset();
+  }
+  return result;
 }
 
 //! System call to exit an application gracefully.

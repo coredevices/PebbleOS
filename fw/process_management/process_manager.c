@@ -806,6 +806,20 @@ PBL_SYSCALL(bool, process_manager_compiled_with_legacy3_sdk) {
   return sdk_type == ProcessAppSDKType_Legacy3x;
 }
 
+// -------------------------------------------------------------------------------------------
+PBL_SYSCALL(bool, process_manager_expects_legacy_tm_gmtoff) {
+  PebbleTask task = pebble_task_get_current();
+  if (task != PebbleTask_App && task != PebbleTask_Worker) {
+    return false;
+  }
+
+  // SDK rev 89, the last frozen revision
+  const Version last_legacy_version = {.major = 0x5, .minor = 0x56};
+  const Version sdk_version =
+      process_metadata_get_sdk_version(sys_process_manager_get_current_process_md());
+  return version_compare(sdk_version, last_legacy_version) <= 0;
+}
+
 PBL_SYSCALL(Version, sys_get_current_process_sdk_version) {
   return process_metadata_get_sdk_version(sys_process_manager_get_current_process_md());
 }
