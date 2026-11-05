@@ -31,7 +31,7 @@ class Console(PblCommand):
         parser.add_argument(
             "--baudrate",
             type=int,
-            help="Baudrate for the target's uart (default: the lab's, else "
+            help="Baudrate for the target's uart (default: the build's, else "
             f"{DEFAULT_BAUDRATE})",
         )
         parser.add_argument(

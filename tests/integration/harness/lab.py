@@ -19,7 +19,7 @@ command line. Tests only see the setup, so they run unchanged on any of:
 
 import dataclasses
 
-from pbl.lab import DEFAULT_SERIAL_BAUD, Lab, LabError
+from pbl.lab import Lab, LabError
 
 from harness.errors import HarnessError
 
@@ -63,7 +63,7 @@ class Setup:
     device_type: str
     watch: str = None
     serial: list = dataclasses.field(default_factory=list)
-    serial_baud: int = DEFAULT_SERIAL_BAUD
+    serial_baud: int = None
     #: The supply powering the watch: a :mod:`pbl.power` type, and its port.
     supply_type: str = None
     supply_port: str = None
@@ -142,7 +142,6 @@ def resolve(build, device_type, options, lab=None):
         if watch is not None:
             setup.watch = watch.name
             setup.serial = [watch.serial] if watch.serial else []
-            setup.serial_baud = watch.serial_baud
             if watch.supply is not None:
                 supply = lab.supplies[watch.supply]
                 setup.supply_type, setup.supply_port = supply.type, supply.port
