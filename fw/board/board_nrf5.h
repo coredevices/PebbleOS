@@ -23,5 +23,5 @@ void board_init(void);
 
 // clang-format off
 #include <pbl/drivers/i2c/nrf5.h>
-#include "board_definitions.h"
+#include <board/boards/board_asterix.h>
 // clang-format on

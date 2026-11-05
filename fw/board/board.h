@@ -3,6 +3,9 @@
 
 #pragma once
 
+//! Console port.
+extern const struct pbl_uart *const CONSOLE_UART;
+
 #if defined(CONFIG_QEMU)
 #include "board_qemu.h"
 #elifdef CONFIG_SOC_NRF52

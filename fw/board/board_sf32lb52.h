@@ -21,4 +21,10 @@ typedef const struct HRMDevice HRMDevice;
 void board_early_init(void);
 void board_init(void);
 
-#include "board_definitions.h"
+#ifdef CONFIG_BOARD_OBELIX
+#include <board/boards/board_obelix.h>
+#elifdef CONFIG_BOARD_GETAFIX
+#include <board/boards/board_getafix.h>
+#else
+#error "Unknown board definition"
+#endif
