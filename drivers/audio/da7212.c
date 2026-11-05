@@ -41,7 +41,10 @@ PBL_LOG_MODULE_DEFINE(driver_audio_da7212, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 #define DA7212_SYSTEM_ACTIVE_ON           0x01U
 #define DA7212_REFERENCES_BIAS_EN         0x08U
 #define DA7212_LDO_CTRL_EN                0x80U
-#define DA7212_PLL_STATUS_LOCKED          0x07U
+#define DA7212_PLL_CTRL_EN                0x80U
+#define DA7212_PLL_STATUS_LOCK            0x01U
+#define DA7212_PLL_STATUS_MCLK            0x04U
+#define DA7212_PLL_STATUS_LOCKED          (DA7212_PLL_STATUS_LOCK | DA7212_PLL_STATUS_MCLK)
 #define DA7212_SR_16KHZ                   0x05U
 #define DA7212_DAC_FILTERS5_SOFTMUTE      0x80U
 #define DA7212_DAI_CTRL_EN_16BIT          0x80U
@@ -77,7 +80,7 @@ static const struct prv_reg_seq s_power_up[] = {
   {DA7212_PLL_FRAC_TOP, 0x04U, 0U},
   {DA7212_PLL_FRAC_BOT, 0xddU, 0U},
   {DA7212_PLL_INTEGER, 0x31U, 0U},
-  {DA7212_PLL_CTRL, 0xc0U, 0U},
+  {DA7212_PLL_CTRL, DA7212_PLL_CTRL_EN, 0U},
   {DA7212_TEST_UNLOCK, 0x8bU, 0U},
   {DA7212_TEST_PLL, 0x03U, 0U},
   {DA7212_TEST_UNLOCK, 0x00U, PLL_LOCK_MS},
@@ -165,7 +168,7 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
     return ret;
   }
 
-  if (status != DA7212_PLL_STATUS_LOCKED) {
+  if ((status & DA7212_PLL_STATUS_LOCKED) != DA7212_PLL_STATUS_LOCKED) {
     PBL_LOG_ERR("PLL not locked (0x%02x)", status);
     return -EIO;
   }
