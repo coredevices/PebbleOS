@@ -57,7 +57,6 @@ class ConsoleLink:
         self.url = url
         self.baudrate = baudrate
         self.on_log = on_log
-        self.on_bad_frame = None
         self._channels = {}
         self._serial = None
         self._reader = None
@@ -75,6 +74,8 @@ class ConsoleLink:
         self._raw = b""
         self._seq = 0
         self._acked = None
+        # The last frame handled per channel, as a lost acknowledgment repeats it.
+        self._last_seq = {}
 
     def open(self):
         import serial
@@ -109,6 +110,7 @@ class ConsoleLink:
         """Have ``handler(payload)`` get the frames of ``channel``, from the
         reader thread; None stops it."""
         self._channels[channel] = handler
+        self._last_seq.pop(channel, None)
 
     def _read(self):
         while not self._closing:
@@ -145,7 +147,6 @@ class ConsoleLink:
                 if len(self._raw) >= (
                     len(FRAME_START) + FRAME_MAX_ENCODED + len(FRAME_END)
                 ):
-                    self._handle_bad_frame()
                     self._raw = self._raw[len(FRAME_START) :]
                     continue
                 return
@@ -183,25 +184,28 @@ class ConsoleLink:
         try:
             raw = base64.b64decode(frame[1:], validate=True)
         except ValueError:
-            self._handle_bad_frame()
             return
         if len(raw) < 5 or struct.unpack("<I", raw[-4:])[0] != frame_crc(
             channel, raw[:-4]
         ):
-            self._handle_bad_frame()
             return
+        seq = raw[0]
         payload = raw[1:-4]
         if channel == CHANNEL_ACK:
             if payload:
                 self._acked = payload[0]
             return
+        if seq != 0:
+            try:
+                self._write(encode_frame(CHANNEL_ACK, 0, bytes([seq])))
+            except OSError:
+                return
+            if self._last_seq.get(channel) == seq:
+                return
+            self._last_seq[channel] = seq
         handler = self._channels.get(channel)
         if handler is not None:
             handler(payload)
-
-    def _handle_bad_frame(self):
-        if self.on_bad_frame is not None:
-            self.on_bad_frame()
 
     def _write(self, data):
         with self._write_lock:
