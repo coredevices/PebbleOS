@@ -6,17 +6,14 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
 
 #include <board/display.h>
 #include <resource/resource.h>
-
-#if !(defined(SDK) || defined(UNITTEST))
-#endif
-
-#include <stdint.h>
 
 //! @addtogroup Graphics
 //! @{
@@ -771,6 +768,14 @@ typedef struct {
   //! grect_get_max_x(bitmap_bounds) - 1 and the physical data boundary.
   int16_t max_x;
 } GBitmapDataRowInfo;
+
+//! @internal
+//! data type that's used to store row data infos in a space-efficient manner
+typedef struct {
+  uint32_t offset; // uint32_t needed for rectangular framebuffers > 65535 bytes
+  uint16_t min_x;
+  uint16_t max_x;
+} GBitmapDataRowInfoInternal;
 
 typedef struct BitmapInfo {
   //! Is .addr heap allocated? Do we need to free .addr in gbitmap_deinit?

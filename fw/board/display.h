@@ -5,14 +5,6 @@
 
 #include <stdint.h>
 
-//! @internal
-//! data type that's used to store row data infos in a space-efficient manner
-typedef struct {
-  uint32_t offset; // uint32_t needed for rectangular framebuffers > 65535 bytes
-  uint16_t min_x;
-  uint16_t max_x;
-} GBitmapDataRowInfoInternal;
-
 // The SDK exporter can't crawl the framebuffer headers.
 #if !defined(SDK)
 
