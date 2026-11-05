@@ -13,6 +13,10 @@ choice NIMBLE_BLE_TRANSPORT_LL_CHOICE
     default NIMBLE_BLE_TRANSPORT_LL_CUSTOM
 endchoice
 
+# The largest MTU that fits one 251-byte LL PDU, with its 4-byte L2CAP header.
+config NIMBLE_BLE_ATT_PREFERRED_MTU
+    default 247
+
 # The Bluetooth subsystem starts the host itself, once the controller is up.
 config NIMBLE_BLE_HS_AUTO_START
     default n
