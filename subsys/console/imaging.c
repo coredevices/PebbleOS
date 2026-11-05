@@ -45,7 +45,7 @@ typedef struct PBL_PACKED {
 } ImagingCrcResponse;
 
 static void prv_send(const void *data, size_t len) {
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_IMAGING, data, len);
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_IMAGING, 0U, data, len);
 }
 
 static void prv_send_opcode(uint8_t opcode) {

@@ -17,12 +17,12 @@ DATA = 1
 OPEN = 2
 CLOSE = 3
 OPEN_TIMEOUT_S = 10.0
+OPEN_RETRY_S = 1.0
 CLOSE_TIMEOUT_S = 2.0
 
 
 class FrameTransport(BaseTransport):
-    """Sessions on an open :class:`ConsoleLink`. A bad frame from the firmware
-    ends the session, as frames are not repeated and the stream has a hole."""
+    """Sessions on an open :class:`ConsoleLink`."""
 
     must_initialise = True
 
@@ -34,18 +34,18 @@ class FrameTransport(BaseTransport):
 
     def connect(self):
         self._link.set_channel(CHANNEL, self._feed)
-        self._link.on_bad_frame = self.lost
-        # Repeats do no harm: seq 0.
-        self._link.send_frame(CHANNEL, bytes([OPEN]), seq=0)
         deadline = time.monotonic() + OPEN_TIMEOUT_S
-        while True:
+        while time.monotonic() < deadline:
+            # Repeats do no harm: seq 0. So can its answer get lost, though.
+            self._link.send_frame(CHANNEL, bytes([OPEN]), seq=0)
             try:
-                item = self._received.get(timeout=max(deadline - time.monotonic(), 0))
+                item = self._received.get(timeout=OPEN_RETRY_S)
             except queue.Empty:
-                raise PebbleConnectionError("no answer to the session open") from None
+                continue
             if item is not None and item[0] == OPEN:
                 self._open = True
                 return
+        raise PebbleConnectionError("no answer to the session open")
 
     def disconnect(self):
         if self._open:

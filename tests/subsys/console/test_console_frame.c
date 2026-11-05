@@ -7,6 +7,7 @@
 
 #include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/base64.h>
 
@@ -19,11 +20,14 @@ static uint8_t s_pp[CONSOLE_FRAME_MTU];
 static size_t s_pp_len;
 static int s_pp_count;
 
+static int s_acked = -1;
+
 static char s_tx[2048];
 static size_t s_tx_len;
 
 static bool s_task_queue_full;
 static SystemTaskEventCallback s_task_cb;
+static NewTimerWorkCallback s_timer_work_cb;
 
 void pbl_console_lock(void) {
 }
@@ -46,10 +50,18 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
+void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
+  s_timer_work_cb = cb;
+}
+
 void pbl_console__pp_handle_frame(const void *data, size_t len) {
   memcpy(s_pp, data, len);
   s_pp_len = len;
   s_pp_count++;
+}
+
+void pbl_console__pp_handle_ack(uint8_t seq) {
+  s_acked = seq;
 }
 
 void pbl_console__imaging_handle_frame(const void *data, size_t len) {
@@ -72,6 +84,11 @@ static void prv_feed_str(const char *str) {
 }
 
 static void prv_run_task(void) {
+  if (s_timer_work_cb != nullptr) {
+    NewTimerWorkCallback cb = s_timer_work_cb;
+    s_timer_work_cb = nullptr;
+    cb(nullptr);
+  }
   if (s_task_cb != nullptr) {
     SystemTaskEventCallback cb = s_task_cb;
     s_task_cb = nullptr;
@@ -121,6 +138,7 @@ void test_console_frame__initialize(void) {
   s_tx_len = 0;
   s_task_queue_full = false;
   s_task_cb = nullptr;
+  s_acked = -1;
   // Leaves the sequence number state from the previous test behind.
   prv_feed_frame(0, "reset");
   s_pp_count = 0;
@@ -284,9 +302,64 @@ void test_console_frame__full_task_queue_drops_the_frame(void) {
 void test_console_frame__sends_decodable_frame(void) {
   char expected[64];
 
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, "abc", 3);
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, 9, "abc", 3);
 
-  const size_t len = prv_encode(expected, CONSOLE_FRAME_CHANNEL_PP, 0, "abc", 3);
+  const size_t len = prv_encode(expected, CONSOLE_FRAME_CHANNEL_PP, 9, "abc", 3);
   cl_assert_equal_i(s_tx_len, len);
   cl_assert(memcmp(s_tx, expected, len) == 0);
+}
+
+static size_t prv_encode_ack(char *out, uint8_t seq) {
+  return prv_encode(out, CONSOLE_FRAME_CHANNEL_ACK, 0, &seq, sizeof(seq));
+}
+
+void test_console_frame__ack_reaches_the_transport_unacknowledged(void) {
+  char ack[64];
+  const size_t len = prv_encode_ack(ack, 42);
+
+  s_tx_len = 0;
+  prv_feed(ack, len);
+  prv_run_task();
+
+  cl_assert_equal_i(s_acked, 42);
+  cl_assert_equal_i(s_tx_len, 0);
+}
+
+void test_console_frame__ack_gets_through_while_a_frame_waits(void) {
+  char frame[64];
+  char ack[64];
+  const size_t frame_len = prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 3, "abc", 3);
+  const size_t ack_len = prv_encode_ack(ack, 42);
+
+  prv_feed(frame, frame_len);
+  SystemTaskEventCallback frame_cb = s_task_cb;
+  prv_feed(ack, ack_len);
+  prv_run_task();
+  cl_assert_equal_i(s_acked, 42);
+
+  frame_cb(nullptr);
+  cl_assert_equal_i(s_pp_count, 1);
+}
+
+void test_console_frame__damaged_ack_is_ignored(void) {
+  char ack[64];
+  const size_t len = prv_encode_ack(ack, 42);
+
+  // Flip a base64 character.
+  ack[3] = (ack[3] == 'A') ? 'B' : 'A';
+  prv_feed(ack, len);
+  prv_run_task();
+
+  cl_assert_equal_i(s_acked, -1);
+}
+
+void test_console_frame__short_ack_is_ignored(void) {
+  char ack[64];
+  const size_t len = prv_encode_ack(ack, 42);
+
+  memmove(&ack[3], &ack[7], len - 7);
+  prv_feed(ack, len - 4);
+  prv_run_task();
+
+  cl_assert_equal_i(s_acked, -1);
 }

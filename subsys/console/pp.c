@@ -7,6 +7,7 @@
 #include <pbl/bluetooth/comm.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
 #include <comm/bt_lock.h>
@@ -21,31 +22,60 @@
 #define OPCODE_LEN 1U
 #define MSS        (CONSOLE_FRAME_MTU - OPCODE_LEN)
 
-// Only the session's handle is needed to identify the transport.
+#define TX_RETRY_MS  200U
+#define TX_MAX_TRIES 25U
+
+// Under bt_lock.
 static struct {
   CommSession *session;
+  TimerID tx_timer;
+  // Bytes at the head of the send queue in the frame being acknowledged.
+  size_t tx_len;
+  uint8_t tx_seq;
+  uint8_t tx_tries;
 } s_transport;
 
 // Under bt_lock.
 static uint8_t s_tx_buf[CONSOLE_FRAME_MTU];
 
 static void prv_send_opcode(uint8_t opcode) {
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, &opcode, sizeof(opcode));
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, 0U, &opcode, sizeof(opcode));
+}
+
+static void prv_retry_timer_cb(void *unused);
+
+static void prv_send_frame(void) {
+  s_tx_buf[0] = OPCODE_DATA;
+  comm_session_send_queue_copy(s_transport.session, 0, s_transport.tx_len, &s_tx_buf[OPCODE_LEN]);
+  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, s_transport.tx_seq, s_tx_buf,
+                          OPCODE_LEN + s_transport.tx_len);
+  new_timer_start(s_transport.tx_timer, TX_RETRY_MS, prv_retry_timer_cb, nullptr, 0);
 }
 
 static void prv_send_next(Transport *transport) {
-  CommSession *session = s_transport.session;
-  size_t remaining = comm_session_send_queue_get_length(session);
-
-  while (remaining > 0U) {
-    const size_t len = MIN(remaining, MSS);
-
-    s_tx_buf[0] = OPCODE_DATA;
-    comm_session_send_queue_copy(session, 0, len, &s_tx_buf[OPCODE_LEN]);
-    pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, s_tx_buf, OPCODE_LEN + len);
-    comm_session_send_queue_consume(session, len);
-    remaining -= len;
+  if (s_transport.tx_len > 0U) {
+    return;
   }
+
+  const size_t len = MIN(comm_session_send_queue_get_length(s_transport.session), MSS);
+
+  if (len > 0U) {
+    s_transport.tx_len = len;
+    s_transport.tx_seq = (s_transport.tx_seq % UINT8_MAX) + 1U;
+    s_transport.tx_tries = 0U;
+    prv_send_frame();
+  }
+}
+
+void pbl_console__pp_handle_ack(uint8_t seq) {
+  bt_lock();
+  if (s_transport.tx_len > 0U && seq == s_transport.tx_seq) {
+    new_timer_stop(s_transport.tx_timer);
+    comm_session_send_queue_consume(s_transport.session, s_transport.tx_len);
+    s_transport.tx_len = 0U;
+    comm_session_send_next(s_transport.session);
+  }
+  bt_unlock();
 }
 
 static void prv_reset(Transport *transport) {
@@ -101,10 +131,16 @@ static void prv_set_connected(bool connected) {
 
   if ((s_transport.session != nullptr) != connected) {
     if (connected) {
+      if (s_transport.tx_timer == TIMER_INVALID_ID) {
+        s_transport.tx_timer = new_timer_create();
+      }
+      s_transport.tx_seq = 0U;
       s_transport.session =
           comm_session_open((Transport *)&s_transport, &s_console_transport_implementation,
                             TransportDestinationHybrid);
     } else {
+      new_timer_stop(s_transport.tx_timer);
+      s_transport.tx_len = 0U;
       comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
       s_transport.session = nullptr;
     }
@@ -132,6 +168,24 @@ static void prv_set_connected(bool connected) {
   }
 
   bt_unlock();
+}
+
+static void prv_retry_timer_cb(void *unused) {
+  bool give_up = false;
+
+  bt_lock();
+  if (s_transport.tx_len > 0U) {
+    give_up = (++s_transport.tx_tries >= TX_MAX_TRIES);
+    if (!give_up) {
+      prv_send_frame();
+    }
+  }
+  bt_unlock();
+
+  if (give_up) {
+    PBL_LOG_WRN("Host not acknowledging, closing the session");
+    prv_set_connected(false);
+  }
 }
 
 void pbl_console__pp_handle_frame(const void *data, size_t len) {
