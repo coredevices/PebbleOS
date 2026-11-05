@@ -153,6 +153,7 @@ static const char *s_syncable_notif_prefs[] = {
   "notifVibeDelay",
   "notifBacklight",
   "notifRespectPhoneSilence",
+  "notifDismissalSync",
   "dndMotionBacklight",
   "dndTouchBacklight",
   "dndNotificationBacklight",

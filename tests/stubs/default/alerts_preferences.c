@@ -32,6 +32,10 @@ bool PBL_WEAK alerts_preferences_get_notification_respect_phone_silence(void) {
   return false;
 }
 
+bool PBL_WEAK alerts_preferences_get_notification_dismissal_sync(void) {
+  return false;
+}
+
 NotificationStatusBarStyle PBL_WEAK alerts_preferences_get_notification_status_bar_style(void) {
   return NotificationStatusBarStyle_Default;
 }
