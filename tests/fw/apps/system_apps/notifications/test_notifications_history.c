@@ -9,6 +9,11 @@
 #include <fake_pbl_malloc.h>
 
 static NotificationHistory s_history;
+static bool s_dismissal_sync;
+
+bool alerts_preferences_get_notification_dismissal_sync(void) {
+  return s_dismissal_sync;
+}
 
 const char *attribute_get_string(const AttributeList *attr_list, AttributeId id,
                                  char *default_value) {
@@ -87,6 +92,7 @@ static void prv_assert_id(const Uuid *id, uint8_t expected) {
 
 void test_notifications_history__initialize(void) {
   fake_pbl_malloc_clear_tracking();
+  s_dismissal_sync = false;
   notifications_history_init(&s_history, true, 0);
 }
 
@@ -288,4 +294,75 @@ void test_notifications_history__only_notifications_within_range_are_grouped(voi
   prv_assert_id(notifications_history_row_get_latest_id(prv_row(0)), 3);
   cl_assert(!prv_row(1)->is_group);
   prv_assert_id(&prv_row(1)->notification.id, 1);
+}
+
+static void prv_add_acted_on_headers(void) {
+  notifications_history_deinit(&s_history);
+  notifications_history_init(&s_history, false, 0);
+
+  CommonTimelineItemHeader kept = {
+    .id = prv_id(1),
+    .timestamp = 100,
+  };
+  CommonTimelineItemHeader actioned = {
+    .id = prv_id(2),
+    .timestamp = 200,
+    .status = TimelineItemStatusActioned,
+  };
+  CommonTimelineItemHeader dismissed = {
+    .id = prv_id(3),
+    .timestamp = 300,
+    .status = TimelineItemStatusDismissed,
+  };
+  notifications_history_add_header(&s_history, &kept);
+  notifications_history_add_header(&s_history, &actioned);
+  notifications_history_add_header(&s_history, &dismissed);
+}
+
+void test_notifications_history__actioned_and_dismissed_notifications_are_skipped(void) {
+  s_dismissal_sync = true;
+  prv_add_acted_on_headers();
+
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
+  prv_assert_id(&prv_row(0)->notification.id, 1);
+}
+
+void test_notifications_history__actioned_and_dismissed_notifications_kept_without_sync(void) {
+  prv_add_acted_on_headers();
+
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 3);
+}
+
+void test_notifications_history__actioned_and_dismissed_notifications_are_not_grouped(void) {
+  s_dismissal_sync = true;
+  Attribute sender = {
+    .id = AttributeIdSender,
+    .cstring = "Anna",
+  };
+  TimelineItem item = {
+    .header =
+        {
+          .id = prv_id(3),
+          .timestamp = 300,
+          .type = TimelineItemTypeNotification,
+          .status = TimelineItemStatusDismissed,
+        },
+    .attr_list = {
+      .num_attributes = 1,
+      .attributes = &sender,
+    },
+  };
+
+  prv_add(1, 100, "Anna");
+  prv_add(2, 200, "Anna");
+  notifications_history_add_item(&s_history, &item);
+  item.header.id = prv_id(4);
+  item.header.timestamp = 400;
+  item.header.status = TimelineItemStatusActioned;
+  notifications_history_add_item(&s_history, &item);
+
+  cl_assert_equal_i(notifications_history_get_row_count(&s_history), 1);
+  cl_assert(prv_row(0)->is_group);
+  cl_assert_equal_i(prv_row(0)->group.count, 2);
+  prv_assert_id(notifications_history_row_get_latest_id(prv_row(0)), 2);
 }
