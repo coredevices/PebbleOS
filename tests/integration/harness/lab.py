@@ -83,9 +83,8 @@ class Setup:
                 return "CoreApp phones are not supported yet"
             if self.phone.controller is None and self.bt_hci != VIRTUAL:
                 return "no Bluetooth controller for the phone"
-        elif need == "power":
-            if self.supply_port is None:
-                return "no power supply in this setup"
+        elif need == "power" and self.supply_port is None:
+            return "no power supply in this setup"
         return None
 
     def locks(self):
