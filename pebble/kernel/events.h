@@ -24,6 +24,7 @@
 #include <pbl/services/touch/gesture_event.h>
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/voice/voice.h>
+#include <pbl/services/voice_endpoint.h>
 #include <pbl/services/wakeup.h>
 
 #include <applib/accel_service.h>
@@ -525,7 +526,8 @@ typedef enum {
   VoiceEventTypeSessionSetup,
   VoiceEventTypeSessionResult,
   VoiceEventTypeSilenceDetected,
-  VoiceEventTypeSpeechDetected
+  VoiceEventTypeSpeechDetected,
+  VoiceEventTypeServiceRetry,
 } VoiceEventType;
 
 typedef struct {
@@ -533,9 +535,10 @@ typedef struct {
   char sentence[];
 } PebbleVoiceServiceEventData;
 
-typedef struct PBL_PACKED { // 6 bytes
+typedef struct PBL_PACKED { // 7 bytes
   VoiceEventType type : 8;
   VoiceStatus status : 8;
+  VoiceEndpointService service : 8; //!< Set for VoiceEventTypeServiceRetry
   PebbleVoiceServiceEventData *data;
 } PebbleVoiceServiceEvent;
 

@@ -143,6 +143,14 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
   voice_handle_nlp_result(msg->result, msg->session_id, reminder_str, timestamp);
   pbl_free(reminder_str);
 }
+
+static void prv_handle_service_retry(ServiceRetryMsg *msg) {
+  if (msg->service >= VoiceEndpointServiceCount) {
+    PBL_LOG_WRN("Unknown service %u in service retry message", (unsigned)msg->service);
+    return;
+  }
+  voice_handle_service_retry(msg->session_id, msg->service);
+}
 #endif
 
 #ifdef CONFIG_MIC
@@ -195,6 +203,15 @@ void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
         prv_handle_nlp_result(msg, size);
       } else {
         PBL_LOG_WRN("Invalid size for dictation result message %zu", size);
+      }
+      break;
+    }
+    case MsgIdServiceRetry: {
+      if (size >= sizeof(ServiceRetryMsg)) {
+        ServiceRetryMsg *msg = (ServiceRetryMsg *)data;
+        prv_handle_service_retry(msg);
+      } else {
+        PBL_LOG_WRN("Invalid size for service retry message %zu", size);
       }
       break;
     }
