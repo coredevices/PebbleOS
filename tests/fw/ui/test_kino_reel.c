@@ -37,7 +37,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_kino_reel__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  fb->size = (GSize){DISP_COLS, DISP_ROWS};
+  fb->size = (GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT};
 }
 
 // Teardown

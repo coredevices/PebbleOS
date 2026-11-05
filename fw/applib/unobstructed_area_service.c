@@ -58,7 +58,7 @@ static void prv_clip_area(GRect *area_out) {
 static void prv_origin_y_to_area(int16_t origin_y, GRect *area_out) {
   PBL_ASSERTN(area_out);
   *area_out = (GRect){
-    .size = {DISP_COLS, origin_y},
+    .size = {PBL_DISPLAY_WIDTH, origin_y},
   };
   prv_clip_area(area_out);
 }

@@ -35,7 +35,7 @@
 #define GLYPH_PAGE_SETTLE_MAX_MS 160
 
 // The enlarged glyph grid needs a color framebuffer and a large display.
-#if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8 && DISP_COLS >= 200
+#if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8 && PBL_DISPLAY_WIDTH >= 200
 #define GLYPH_GRID_SUPPORTED 1
 #else
 #define GLYPH_GRID_SUPPORTED 0

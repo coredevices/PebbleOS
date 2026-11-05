@@ -79,7 +79,7 @@ static int16_t get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex 
     return focused_cell_height;
   }
 #if PBL_DISPLAY_HEIGHT >= 200
-  return ((DISP_ROWS - STATUS_BAR_LAYER_HEIGHT * 2) - focused_cell_height) / 4;
+  return ((PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT * 2) - focused_cell_height) / 4;
 #else
   return MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT;
 #endif

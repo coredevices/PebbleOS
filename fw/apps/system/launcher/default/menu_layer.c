@@ -29,7 +29,7 @@ const LauncherMenuLayerStyle *launcher_menu_layer_get_style(void) {
 
 #if PBL_ROUND
 static int prv_num_unfocused_rows_per_side(const LauncherMenuLayerStyle *style) {
-  return (DISP_ROWS - style->focused_cell_height) / (2 * style->unfocused_cell_height);
+  return (PBL_DISPLAY_HEIGHT - style->focused_cell_height) / (2 * style->unfocused_cell_height);
 }
 #endif
 

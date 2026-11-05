@@ -19,11 +19,11 @@
 #include <resource/resource_ids.auto.h>
 
 // Compile-time display offset calculations
-#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
-#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+#define HEALTH_X_OFFSET ((PBL_DISPLAY_WIDTH - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((PBL_DISPLAY_HEIGHT - LEGACY_2X_DISP_ROWS) / 2)
 
 // Use larger font for taller displays
-#if DISP_ROWS > LEGACY_2X_DISP_ROWS
+#if PBL_DISPLAY_HEIGHT > LEGACY_2X_DISP_ROWS
 #define HEALTH_STEPS_FONT FONT_KEY_LECO_32_BOLD_NUMBERS
 #else
 #define HEALTH_STEPS_FONT FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM
@@ -127,7 +127,7 @@ static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {
     snprintf(daily_buffer, sizeof(daily_buffer), EM_DASH);
   }
 
-#if DISP_COLS >= 200
+#if PBL_DISPLAY_WIDTH >= 200
   // Wide displays break the typical data into a two-column split: the bin-aware
   // count under its bin time on the left, the full-day total under a "TOTAL"
   // label on the right. With no typical data to break down, fall through to the

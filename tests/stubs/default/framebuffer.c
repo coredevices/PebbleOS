@@ -5,9 +5,9 @@
 
 #include <applib/graphics/framebuffer.h>
 
-PBL_WEAK volatile const int FrameBuffer_MaxX = DISP_COLS;
+PBL_WEAK volatile const int FrameBuffer_MaxX = PBL_DISPLAY_WIDTH;
 
-PBL_WEAK volatile const int FrameBuffer_MaxY = DISP_ROWS;
+PBL_WEAK volatile const int FrameBuffer_MaxY = PBL_DISPLAY_HEIGHT;
 
 void PBL_WEAK framebuffer_mark_dirty_rect(FrameBuffer *f, GRect rect) {
 }

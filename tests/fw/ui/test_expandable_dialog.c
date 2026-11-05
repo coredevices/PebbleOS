@@ -80,7 +80,7 @@ static FrameBuffer *fb = nullptr;
 
 void test_expandable_dialog__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   // Must use System init mode to enable orphan avoidance algorithm
   const GContextInitializationMode context_init_mode = GContextInitializationMode_System;
   graphics_context_init(&s_ctx, fb, context_init_mode);

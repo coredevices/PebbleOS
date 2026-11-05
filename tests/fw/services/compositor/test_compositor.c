@@ -70,7 +70,7 @@ FrameBuffer *app_state_get_framebuffer(void) {
 }
 
 void app_manager_get_framebuffer_size(GSize *size) {
-  *size = (GSize){DISP_COLS, DISP_ROWS};
+  *size = (GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT};
 }
 
 static int s_count_bitblt;
@@ -81,8 +81,8 @@ void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, 
   s_last_bitblt_rect = (GRect){dest_offset, src_bitmap->bounds.size};
   // The compositor must never copy outside the display
   cl_assert(dest_offset.x >= 0 && dest_offset.y >= 0);
-  cl_assert(dest_offset.x + src_bitmap->bounds.size.w <= DISP_COLS);
-  cl_assert(dest_offset.y + src_bitmap->bounds.size.h <= DISP_ROWS);
+  cl_assert(dest_offset.x + src_bitmap->bounds.size.w <= PBL_DISPLAY_WIDTH);
+  cl_assert(dest_offset.y + src_bitmap->bounds.size.h <= PBL_DISPLAY_HEIGHT);
   // Copy the pixels too, so the system framebuffer really holds the frame afterwards
   for (int16_t y = 0; y < src_bitmap->bounds.size.h; y++) {
     memcpy((uint8_t *)dest_bitmap->addr + (dest_offset.y + y) * dest_bitmap->row_size_bytes +
@@ -96,7 +96,7 @@ void bitblt_bitmap_into_bitmap(GBitmap *dest_bitmap, const GBitmap *src_bitmap, 
 
 GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) {
   // The compositor must never compare rows outside the display
-  cl_assert(y < DISP_ROWS);
+  cl_assert(y < PBL_DISPLAY_HEIGHT);
   return (GBitmapDataRowInfo){
     .data = (uint8_t *)bitmap->addr + y * bitmap->row_size_bytes,
     .min_x = 0,
@@ -119,14 +119,14 @@ void framebuffer_reset_dirty(FrameBuffer *fb) {
 // Back the framebuffer bitmaps with real buffers sized for the display, one for the app and
 // one for the system framebuffer. compositor_render_app() memsets framebuffer_get_size_bytes()
 // bytes through the system one's addr, and compares and copies rows between the two.
-static uint8_t s_framebuffer_data[DISP_COLS * DISP_ROWS];
-static uint8_t s_app_framebuffer_data[DISP_COLS * DISP_ROWS];
+static uint8_t s_framebuffer_data[PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT];
+static uint8_t s_app_framebuffer_data[PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT];
 
 // A transparent modal that paints a strip at the bottom of the screen, like the timeline peek
-static const GRect s_modal_strip = {{0, 200}, {DISP_COLS, 28}};
+static const GRect s_modal_strip = {{0, 200}, {PBL_DISPLAY_WIDTH, 28}};
 static void prv_modal_render_strip(GContext *ctx) {
-  memset(s_framebuffer_data + s_modal_strip.origin.y * DISP_COLS, 0x5a,
-         s_modal_strip.size.h * DISP_COLS);
+  memset(s_framebuffer_data + s_modal_strip.origin.y * PBL_DISPLAY_WIDTH, 0x5a,
+         s_modal_strip.size.h * PBL_DISPLAY_WIDTH);
   framebuffer_mark_dirty_rect(compositor_get_framebuffer(), s_modal_strip);
 }
 
@@ -168,7 +168,7 @@ void framebuffer_dirty_all(FrameBuffer *fb) {
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *fb, const GSize *size) {
   return (GBitmap){
     .addr = (fb == &s_app_framebuffer) ? s_app_framebuffer_data : s_framebuffer_data,
-    .row_size_bytes = DISP_COLS,
+    .row_size_bytes = PBL_DISPLAY_WIDTH,
     .bounds = GRect(0, 0, size->w, size->h),
   };
 }
@@ -294,7 +294,7 @@ void test_compositor__initialize(void) {
 
   s_app_window_render_count = 0;
   s_app_framebuffer_fetched = false;
-  s_app_framebuffer = (FrameBuffer){.size = {DISP_COLS, DISP_ROWS}};
+  s_app_framebuffer = (FrameBuffer){.size = {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT}};
   memset(s_framebuffer_data, 0, sizeof(s_framebuffer_data));
   memset(s_app_framebuffer_data, 0, sizeof(s_app_framebuffer_data));
   s_count_bitblt = 0;
@@ -433,10 +433,10 @@ void test_compositor__app_no_animation(void) {
 static void prv_paint_app_framebuffer(GRect rect) {
   static uint8_t s_paint;
   ++s_paint;
-  const GRect display_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect display_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   grect_clip(&rect, &display_rect);
   for (int16_t y = rect.origin.y; y < grect_get_max_y(&rect); y++) {
-    memset(s_app_framebuffer_data + y * DISP_COLS + rect.origin.x, s_paint, rect.size.w);
+    memset(s_app_framebuffer_data + y * PBL_DISPLAY_WIDTH + rect.origin.x, s_paint, rect.size.w);
   }
 }
 
@@ -448,7 +448,7 @@ static void prv_mark_app_framebuffer_dirty(GRect rect) {
 }
 
 void test_compositor__app_frame_copies_dirty_rect(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   // Nothing mirrors the app framebuffer yet, so the first frame is copied in full and the
@@ -470,10 +470,10 @@ void test_compositor__app_frame_copies_dirty_rect(void) {
   cl_assert(!s_app_framebuffer.is_dirty);
 
   // A rect from app memory is clipped to the display before it is used
-  prv_mark_app_framebuffer_dirty(GRect(-10, DISP_ROWS - 5, 50, 100));
+  prv_mark_app_framebuffer_dirty(GRect(-10, PBL_DISPLAY_HEIGHT - 5, 50, 100));
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_bitblt, 3);
-  const GRect clipped_rect = GRect(0, DISP_ROWS - 5, 40, 5);
+  const GRect clipped_rect = GRect(0, PBL_DISPLAY_HEIGHT - 5, 40, 5);
   cl_assert(grect_equal(&s_last_bitblt_rect, &clipped_rect));
   cl_assert(grect_equal(&s_last_marked_rect, &clipped_rect));
 
@@ -483,7 +483,7 @@ void test_compositor__app_frame_copies_dirty_rect(void) {
 }
 
 void test_compositor__app_frame_copies_changed_rows_only(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
 
   compositor_app_render_ready();
   cl_assert(grect_equal(&s_last_bitblt_rect, &full_rect));
@@ -494,7 +494,7 @@ void test_compositor__app_frame_copies_changed_rows_only(void) {
   prv_paint_app_framebuffer(GRect(50, 100, 20, 11));
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_bitblt, 2);
-  const GRect changed_rows = GRect(0, 100, DISP_COLS, 11);
+  const GRect changed_rows = GRect(0, 100, PBL_DISPLAY_WIDTH, 11);
   cl_assert(grect_equal(&s_last_bitblt_rect, &changed_rows));
   cl_assert(grect_equal(&s_last_marked_rect, &changed_rows));
 
@@ -506,7 +506,7 @@ void test_compositor__app_frame_copies_changed_rows_only(void) {
 }
 
 void test_compositor__app_frame_ignores_alpha_bits(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
 
   // An opaque frame, every pixel with its alpha bits set
   memset(s_app_framebuffer_data, 0xff, sizeof(s_app_framebuffer_data));
@@ -526,15 +526,15 @@ void test_compositor__app_frame_ignores_alpha_bits(void) {
   // A real change in the colour bits still is one
   s_app_framebuffer.dirty_rect = full_rect;
   s_app_framebuffer.is_dirty = true;
-  prv_paint_app_framebuffer(GRect(0, 30, DISP_COLS, 2));
+  prv_paint_app_framebuffer(GRect(0, 30, PBL_DISPLAY_WIDTH, 2));
   compositor_app_render_ready();
   cl_assert_equal_i(s_count_bitblt, 2);
-  const GRect changed_rows = GRect(0, 30, DISP_COLS, 2);
+  const GRect changed_rows = GRect(0, 30, PBL_DISPLAY_WIDTH, 2);
   cl_assert(grect_equal(&s_last_bitblt_rect, &changed_rows));
 }
 
 void test_compositor__app_frame_full_after_modal(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   compositor_app_render_ready();
@@ -557,7 +557,7 @@ void test_compositor__app_frame_full_after_modal(void) {
 }
 
 void test_compositor__app_frame_under_transparent_modal(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   // A transparent modal sits over the app, drawing a strip at the bottom
@@ -590,7 +590,7 @@ void test_compositor__app_frame_under_transparent_modal(void) {
 }
 
 void test_compositor__app_frame_full_after_transition(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   compositor_app_render_ready();
@@ -626,7 +626,7 @@ void test_compositor__app_frame_rejects_wrapped_rect(void) {
 }
 
 void test_compositor__app_frame_full_after_mirror_invalidate(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   compositor_app_render_ready();
@@ -644,7 +644,7 @@ void test_compositor__app_frame_full_after_mirror_invalidate(void) {
 }
 
 void test_compositor__app_frame_full_after_failed_flush(void) {
-  const GRect full_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect full_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   const GRect dirty_rect = GRect(10, 20, 30, 40);
 
   compositor_app_render_ready();

@@ -85,8 +85,8 @@ static void init(void) {
 #else
   const int text_pos_y_adjust = -20;
 #endif
-  const int text_pos_y = (DISP_ROWS / 2) - (font_height / 2) + text_pos_y_adjust;
-  const GRect text_container_rect = GRect(0, text_pos_y, DISP_COLS, font_height);
+  const int text_pos_y = (PBL_DISPLAY_HEIGHT / 2) - (font_height / 2) + text_pos_y_adjust;
+  const GRect text_container_rect = GRect(0, text_pos_y, PBL_DISPLAY_WIDTH, font_height);
   GRect text_frame = (GRect){.size = text_size};
   grect_align(&text_frame, &text_container_rect, GAlignTop, false);
 
@@ -119,7 +119,7 @@ static void init(void) {
   const int time_bottom_y = text_frame.origin.y + text_frame.size.h;
   const GRect date_frame = (GRect){
     .origin = {0, time_bottom_y + (icon_top_y - time_bottom_y - (int)date_font_height) / 2 - 3},
-    .size = {DISP_COLS, date_font_height},
+    .size = {PBL_DISPLAY_WIDTH, date_font_height},
   };
   text_layer_init_with_parameters(&s_low_power_data->low_power_date_layer, &date_frame, nullptr,
                                   date_font, GColorBlack, GColorClear, text_alignment,

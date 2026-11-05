@@ -22,7 +22,8 @@
 #include <process_management/app_manager.h>
 #include <shell/prefs.h>
 
-#define TIMELINE_PEEK_FRAME_HIDDEN         GRect(0, DISP_ROWS, DISP_COLS, TIMELINE_PEEK_HEIGHT)
+#define TIMELINE_PEEK_FRAME_HIDDEN \
+  GRect(0, PBL_DISPLAY_HEIGHT, PBL_DISPLAY_WIDTH, TIMELINE_PEEK_HEIGHT)
 #define TIMELINE_PEEK_OUTER_BORDER_WIDTH   PBL_IF_RECT_ELSE(2, 1)
 #define TIMELINE_PEEK_MULTI_BORDER_WIDTH   (1)
 #define TIMELINE_PEEK_MULTI_CONTENT_HEIGHT PBL_IF_RECT_ELSE(2, 1)
@@ -46,14 +47,14 @@ static void prv_draw_background(GContext *ctx, const GRect *frame_orig,
   GRect frame = *frame_orig;
 #if PBL_RECT
   // Fill all the way to the bottom of the screen
-  frame.size.h = DISP_ROWS - frame.origin.y;
+  frame.size.h = PBL_DISPLAY_HEIGHT - frame.origin.y;
 #endif
   const GColor background_color = system_theme_get_bg_color();
   graphics_context_set_fill_color(ctx, background_color);
   graphics_fill_rect(ctx, &frame);
 
   // Draw the icon background
-  frame.origin.x += DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+  frame.origin.x += PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH;
   frame.size.w = TIMELINE_PEEK_ICON_BOX_WIDTH;
   graphics_context_set_fill_color(ctx, TIMELINE_FUTURE_COLOR);
   graphics_fill_rect(ctx, &frame);
@@ -138,7 +139,7 @@ static PeekLayout *prv_create_layout(TimelineItem *item, unsigned int num_concur
   timeline_layout_init_info(&layout->info, item, time_util_get_midnight_of(pbl_realtime()));
   layout->info.num_concurrent = num_concurrent;
   const LayoutLayerConfig config = {
-    .frame = &GRect(0, 0, DISP_COLS, TIMELINE_PEEK_HEIGHT),
+    .frame = &GRect(0, 0, PBL_DISPLAY_WIDTH, TIMELINE_PEEK_HEIGHT),
     .attributes = &item->attr_list,
     .mode = LayoutLayerModePeek,
     .app_id = &item->header.parent_id,
@@ -164,7 +165,7 @@ static void prv_unschedule_animation(TimelinePeek *peek) {
 static bool prv_is_upscaled_app(void) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
-  if (app_framebuffer_size.h == DISP_ROWS) {
+  if (app_framebuffer_size.h == PBL_DISPLAY_HEIGHT) {
     return false; // Native app, not upscaled
   }
 #if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
@@ -184,7 +185,7 @@ static bool prv_should_use_unobstructed_area(void) {
   if (prv_is_upscaled_app()) {
     return true;
   }
-  return (DISP_ROWS - app_framebuffer_size.h) < TIMELINE_PEEK_HEIGHT;
+  return (PBL_DISPLAY_HEIGHT - app_framebuffer_size.h) < TIMELINE_PEEK_HEIGHT;
 }
 
 //! Scales a display Y coordinate to framebuffer coordinates for upscaled apps.
@@ -196,7 +197,7 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
   // Scale from display coordinates to framebuffer coordinates
-  return (display_y * app_framebuffer_size.h) / DISP_ROWS;
+  return (display_y * app_framebuffer_size.h) / PBL_DISPLAY_HEIGHT;
 }
 
 static int16_t prv_compose_obstruction_y(int16_t peek_y) {

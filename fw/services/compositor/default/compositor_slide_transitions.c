@@ -29,7 +29,7 @@ static void prv_copy_framebuffer_rows(GBitmap *dest_bitmap, GBitmap *src_bitmap,
   for (int16_t dest_row = start_row; dest_row != end_row; dest_row += delta) {
     src_bitmap->bounds = (GRect){
       .origin.y = (dupe_row >= 0 ? dupe_row : dest_row) - shift_amount,
-      .size = {DISP_COLS, 1},
+      .size = {PBL_DISPLAY_WIDTH, 1},
     };
     bitblt_bitmap_into_bitmap(dest_bitmap, src_bitmap, GPoint(0, dest_row), GCompOpAssign,
                               GColorWhite);
@@ -47,7 +47,7 @@ static void prv_duplicate_framebuffer_row(GBitmap *dest_bitmap, int16_t start_ro
   const int16_t delta = start_row > end_row ? -1 : 1;
   for (int16_t dest_row = start_row; dest_row != end_row; dest_row += delta) {
     int16_t offset_y = (dupe_row >= 0 ? dupe_row : dest_row) - dest_row;
-    compositor_scaled_app_fb_copy_offset(GRect(0, dest_row, DISP_COLS, 1),
+    compositor_scaled_app_fb_copy_offset(GRect(0, dest_row, PBL_DISPLAY_WIDTH, 1),
                                          false /* copy_relative_to_origin */, offset_y);
   }
 }
@@ -56,12 +56,12 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
                                                   uint32_t distance_normalized) {
   const AnimationProgress progress = distance_normalized;
   const int last_offset_y = s_data.offset_y;
-  const int delta_rows = s_data.slide_up ? -DISP_ROWS : DISP_ROWS;
+  const int delta_rows = s_data.slide_up ? -PBL_DISPLAY_HEIGHT : PBL_DISPLAY_HEIGHT;
   s_data.offset_y = interpolate_int16(progress, 0, delta_rows);
   // Advance one line to give movement from the very start only for the full curve
   const int advance = s_data.timeline_is_destination ? 0 : 1;
 
-  // Whether shifting should occur. offset_y starts at 0, and |delta_rows| is DISP_ROWS
+  // Whether shifting should occur. offset_y starts at 0, and |delta_rows| is PBL_DISPLAY_HEIGHT
   const bool should_shift =
       s_data.slide_up ? (s_data.offset_y > delta_rows) : (s_data.offset_y < delta_rows);
   // Horizontal framebuffer lines are shifted vertically, these indicate the start and end of the
@@ -80,19 +80,19 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
   if (s_data.slide_up) {
     s_data.offset_y -= advance;
     shift_start_row = 0;
-    shift_end_row = DISP_ROWS + s_data.offset_y;
+    shift_end_row = PBL_DISPLAY_HEIGHT + s_data.offset_y;
     fill_offset_y = shift_end_row;
-    fill_height = DISP_ROWS - shift_end_row;
+    fill_height = PBL_DISPLAY_HEIGHT - shift_end_row;
     app_offset_y = shift_end_row;
     app_should_dupe = (app_offset_y < 0);
-    app_dupe_row = DISP_ROWS - 1;
+    app_dupe_row = PBL_DISPLAY_HEIGHT - 1;
   } else {
     s_data.offset_y += advance;
-    shift_start_row = DISP_ROWS;
+    shift_start_row = PBL_DISPLAY_HEIGHT;
     shift_end_row = s_data.offset_y;
     fill_offset_y = 0;
     fill_height = shift_end_row;
-    app_offset_y = shift_end_row - DISP_ROWS + 1;
+    app_offset_y = shift_end_row - PBL_DISPLAY_HEIGHT + 1;
     app_should_dupe = (app_offset_y > 0);
     app_dupe_row = 0;
   }
@@ -105,17 +105,17 @@ static void prv_slide_transition_animation_update(GContext *ctx, Animation *anim
   if (s_data.timeline_is_destination) {
     if (!s_data.timeline_is_empty) {
       graphics_context_set_fill_color(ctx, GColorWhite);
-      const int content_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+      const int content_width = PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH;
       graphics_fill_rect(ctx, &GRect(0, fill_offset_y, content_width, fill_height));
       graphics_context_set_fill_color(ctx, s_data.fill_color);
       graphics_fill_rect(
           ctx, &GRect(content_width, fill_offset_y, TIMELINE_PEEK_ICON_BOX_WIDTH, fill_height));
     } else {
       graphics_context_set_fill_color(ctx, s_data.fill_color);
-      graphics_fill_rect(ctx, &GRect(0, fill_offset_y, DISP_COLS, fill_height));
+      graphics_fill_rect(ctx, &GRect(0, fill_offset_y, PBL_DISPLAY_WIDTH, fill_height));
     }
   } else {
-    compositor_scaled_app_fb_copy(GRect(0, app_offset_y, DISP_COLS, DISP_ROWS),
+    compositor_scaled_app_fb_copy(GRect(0, app_offset_y, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
                                   false /* copy_relative_to_origin */);
     if (app_should_dupe) {
       GBitmap app_bitmap = compositor_get_app_framebuffer_as_bitmap();

@@ -1556,9 +1556,9 @@ static void prv_draw_flying_content(GContext *ctx) {
 #define R5_STAT_PILL_H 18 // thinner than Health's ~35px pill
 static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, GColor fill) {
   // Pebble Health's pill geometry EXACTLY: a full-width rect inset on each side by
-  // HEALTH_INSET = 18 + HEALTH_X_OFFSET/5, where HEALTH_X_OFFSET = (DISP_COLS - 144)/2 — i.e. 23px
-  // on emery's 200px width (health/ui.c). Corner radius 3, GCornersAll. `fill` is per-metric
-  // (grey for wind, light blue for precip); black bold label.
+  // HEALTH_INSET = 18 + HEALTH_X_OFFSET/5, where HEALTH_X_OFFSET = (PBL_DISPLAY_WIDTH - 144)/2 —
+  // i.e. 23px on emery's 200px width (health/ui.c). Corner radius 3, GCornersAll. `fill` is
+  // per-metric (grey for wind, light blue for precip); black bold label.
   const int inset = 18 + (W - 144) / 2 / 5;
   const GRect pill = GRect(inset, y, W - 2 * inset, R5_STAT_PILL_H);
   graphics_context_set_fill_color(ctx, fill);

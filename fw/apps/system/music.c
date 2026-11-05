@@ -51,14 +51,14 @@
 // hugs the action bar, a centred artist / title / times stack across the widest band of the
 // circle, and the state icon anchoring the bottom.
 #define ART_ROUND_CLOCK_Y  10
-#define ART_ROUND_ARTIST_Y (DISP_ROWS / 2 - 76)
-#define ART_ROUND_TITLE_Y  (DISP_ROWS / 2 - 42)
+#define ART_ROUND_ARTIST_Y (PBL_DISPLAY_HEIGHT / 2 - 76)
+#define ART_ROUND_TITLE_Y  (PBL_DISPLAY_HEIGHT / 2 - 42)
 #define ART_ROUND_TITLE_H  90 // up to three Gothic 28 Bold lines, ellipsised beyond
-#define ART_ROUND_TIMES_Y  (DISP_ROWS / 2 + 58)
+#define ART_ROUND_TIMES_Y  (PBL_DISPLAY_HEIGHT / 2 + 58)
 // Symmetric side margin for the text stack: centred on the true display centre, and wide lines
 // still clear the action bar's crescent on the right.
 #define ART_ROUND_TEXT_MARGIN    48
-#define ART_ROUND_ICON_CENTER_Y  (DISP_ROWS - 26)
+#define ART_ROUND_ICON_CENTER_Y  (PBL_DISPLAY_HEIGHT - 26)
 #define ART_ROUND_RING_THICKNESS 7
 // Progress arc endpoints, degrees clockwise from 12 o'clock: it runs from the bottom edge of the
 // action bar around the bottom, left and top of the circle to the action bar's top edge. The
@@ -195,7 +195,7 @@ static const MusicAppSizeConfig *prv_config(void) {
 }
 
 static int prv_content_width(void) {
-  return DISP_COLS - ACTION_BAR_WIDTH - (prv_config()->horizontal_margin * 2);
+  return PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH - (prv_config()->horizontal_margin * 2);
 }
 
 static int prv_text_layer_width(void) {
@@ -902,8 +902,8 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
   bitmap_layer_set_bitmap(&window->bitmap_layer, &window->bitmap);
   bitmap_layer_set_compositing_mode(&window->bitmap_layer, GCompOpSet);
 
-  const GRect NO_MUSIC_TEXT_RECT =
-      GRect(0, config->no_music_text_field.origin_y, DISP_COLS, config->no_music_text_field.size_h);
+  const GRect NO_MUSIC_TEXT_RECT = GRect(0, config->no_music_text_field.origin_y, PBL_DISPLAY_WIDTH,
+                                         config->no_music_text_field.size_h);
 
   text_layer_init_with_parameters(
       &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
@@ -1079,13 +1079,13 @@ static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buf
 // screens it stops left of the action bar; on round screens it spans the full display and the
 // action bar overlaps its right edge, so the round cover reaches edge to edge.
 static int16_t prv_art_width(void) {
-  return PBL_IF_RECT_ELSE(DISP_COLS - ACTION_BAR_WIDTH, DISP_COLS);
+  return PBL_IF_RECT_ELSE(PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH, PBL_DISPLAY_WIDTH);
 }
 
 static GRect prv_album_art_rect(void) {
   // Rect: a square band from the top down to just above the times row. Round: the cover fills the
   // whole display (it is already fetched at the full width) and the circle masks it.
-  const int16_t art_h = PBL_IF_RECT_ELSE(prv_config()->time_field.origin_y - 2, DISP_ROWS);
+  const int16_t art_h = PBL_IF_RECT_ELSE(prv_config()->time_field.origin_y - 2, PBL_DISPLAY_HEIGHT);
   return GRect(0, 0, prv_art_width(), art_h);
 }
 
@@ -1099,21 +1099,21 @@ static GRect prv_art_title_rect(void) {
   const GRect tape = prv_cassette_rect();
   // Clear the tape frame plus a gap: the widest state icon (volume) fills the whole frame.
   const int16_t x = tape.origin.x + tape.size.w + 2;
-  const int16_t right = DISP_COLS - ACTION_BAR_WIDTH - 7;
+  const int16_t right = PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH - 7;
   // Single line, vertically centred in the band between the progress bar and the bottom of screen,
   // nudged up slightly since the glyph sits a touch low within the line box.
   const int16_t bar_bottom = config->track_field.origin_y + config->track_field.size_h;
-  const int16_t y = bar_bottom + (DISP_ROWS - bar_bottom - h) / 2 - 5;
+  const int16_t y = bar_bottom + (PBL_DISPLAY_HEIGHT - bar_bottom - h) / 2 - 5;
 #else
   // Round: the centrepiece block across the middle of the circle. Clamp to the visible chord at
   // the block's lowest row so a full-height title never starts behind the bezel.
   const int16_t h = ART_ROUND_TITLE_H;
   const int16_t y = ART_ROUND_TITLE_Y;
-  const int16_t radius = DISP_COLS / 2;
+  const int16_t radius = PBL_DISPLAY_WIDTH / 2;
   const int32_t dy = (y + h - 2) - radius;
   const int16_t half_chord = integer_sqrt((int64_t)radius * radius - (int64_t)dy * dy);
   const int16_t x = MAX(radius - half_chord + 4, ART_ROUND_TEXT_MARGIN);
-  const int16_t right = DISP_COLS - x;
+  const int16_t right = PBL_DISPLAY_WIDTH - x;
 #endif
   return GRect(x, y, right - x, h);
 }
@@ -1122,12 +1122,12 @@ static GRect prv_art_title_rect(void) {
 // centred text stack in the lower half.
 static GRect prv_art_artist_rect(void) {
 #if PBL_RECT
-  const int16_t content_w = DISP_COLS - ACTION_BAR_WIDTH;
+  const int16_t content_w = PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH;
   const int16_t art_bottom = prv_config()->time_field.origin_y - 2;
   return GRect(0, art_bottom - 26, content_w, 26);
 #else
-  return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN,
-               30);
+  return GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_ARTIST_Y,
+               PBL_DISPLAY_WIDTH - 2 * ART_ROUND_TEXT_MARGIN, 30);
 #endif
 }
 
@@ -1267,8 +1267,8 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
   if (data->position_buffer[0] && data->length_buffer[0]) {
     char times[2 * (sizeof(MUSIC_TIME_STR_MAX) - 1) + sizeof(" / ")];
     snprintf(times, sizeof(times), "%s / %s", data->position_buffer, data->length_buffer);
-    const GRect box =
-        GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y, DISP_COLS - 2 * ART_ROUND_TEXT_MARGIN, 30);
+    const GRect box = GRect(ART_ROUND_TEXT_MARGIN, ART_ROUND_TIMES_Y,
+                            PBL_DISPLAY_WIDTH - 2 * ART_ROUND_TEXT_MARGIN, 30);
     GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
     if (data->has_album_art) {
       prv_draw_outlined_text(ctx, times, font, box, GTextOverflowModeFill, GTextAlignmentCenter);
@@ -1431,7 +1431,7 @@ static void prv_title_marquee_setup(MusicAppData *data) {
 #else
   text_layer_set_text_alignment(&data->title_text_layer, GTextAlignmentLeft);
   // Wide, one-line bounds: measure here and keep it wide so the scroll proc never wraps a copy.
-  layer_set_bounds(&data->title_text_layer.layer, &GRect(0, 0, DISP_COLS * 3, vis.size.h));
+  layer_set_bounds(&data->title_text_layer.layer, &GRect(0, 0, PBL_DISPLAY_WIDTH * 3, vis.size.h));
   const GSize text_size = app_text_layer_get_content_size(&data->title_text_layer);
   // The layout measurer can report a slightly wider box than graphics_draw_text inks; back that
   // out (~2px per glyph) only for the overflow decision so a barely-fitting title doesn't scroll.
@@ -1558,7 +1558,7 @@ static void prv_apply_art_appearance(MusicAppData *data) {
 #endif
   status_bar_layer_set_mode(&data->status_layer, clock_mode);
 #if MUSIC_ROUND_MEDIA_LAYOUT
-  const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, DISP_COLS, 30);
+  const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, PBL_DISPLAY_WIDTH, 30);
   layer_set_frame(&data->status_layer.layer, &clock_frame);
 #endif
   layer_mark_dirty(&data->window.layer);
@@ -1645,7 +1645,8 @@ static void prv_init_ui(Window *window) {
   text_layer_set_text_alignment(&data->title_text_layer, GTextAlignmentCenter);
   GRect tape_frame =
       GRect(0, WINDOW_SIZE.h - horizontal_margin - 24, WINDOW_SIZE.w - ACTION_BAR_WIDTH, 24);
-  tape_frame.origin.x += DISP_COLS / 2 - (cassette_rect.origin.x + cassette_rect.size.w / 2);
+  tape_frame.origin.x +=
+      PBL_DISPLAY_WIDTH / 2 - (cassette_rect.origin.x + cassette_rect.size.w / 2);
   tape_frame.origin.y = ART_ROUND_ICON_CENTER_Y - cassette_rect.origin.y - cassette_rect.size.h / 2;
   layer_set_frame(&data->cassette_container, &tape_frame);
   bitmap_layer_set_alignment(&data->cassette_layer, GAlignCenter);

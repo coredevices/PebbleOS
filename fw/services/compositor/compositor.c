@@ -120,7 +120,7 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
 void compositor_init(void) {
   compositor_display_init();
 
-  const GSize fb_size = GSize(DISP_COLS, DISP_ROWS);
+  const GSize fb_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   framebuffer_init(&s_framebuffer, &fb_size);
   framebuffer_clear(&s_framebuffer);
 
@@ -268,7 +268,7 @@ static bool prv_render_app_dirty_rect(const AppFrameFit *fit) {
   prv_reset_app_framebuffer_dirty(app_framebuffer);
 
   // The rectangle comes from app memory and is not trusted until clipped
-  const GRect display_rect = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GRect display_rect = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   grect_standardize(&rect);
   grect_clip(&rect, &display_rect);
   if (rect.size.w <= 0 || rect.size.h <= 0) {
@@ -318,8 +318,8 @@ void compositor_render_app(void) {
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
   memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
 
-  prv_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS), false /* copy_relative_to_origin */,
-                         0 /* offset_y */, &fit);
+  prv_scaled_app_fb_copy(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
+                         false /* copy_relative_to_origin */, 0 /* offset_y */, &fit);
   prv_reset_app_framebuffer_dirty(app_state_get_framebuffer());
 
   if (s_state == CompositorState_AppAndModal) {
@@ -732,7 +732,7 @@ static TimelinePeekUnsupportedFaceMode prv_get_unsupported_face_mode_for_timelin
   }
 
   const int16_t obstruction_y = timeline_peek_get_origin_y();
-  return ((obstruction_y > 0) && (obstruction_y < DISP_ROWS))
+  return ((obstruction_y > 0) && (obstruction_y < PBL_DISPLAY_HEIGHT))
              ? mode
              : TimelinePeekUnsupportedFaceMode_None;
 }
@@ -795,8 +795,9 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
                                : GRect(0, 0, disp_width, disp_height);
 
     if (shift_scaled_watchface_for_peek) {
-      int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
-      int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+      int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+      int16_t last_row =
+          CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
       for (int16_t y = first_row; y < last_row; y++) {
         GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
         const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
@@ -932,8 +933,9 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
     const GRect shifted_region = GRect(app_offset_x, app_offset_y, app_width, app_height);
     const GRect unobstructed_region = GRect(0, 0, disp_width, timeline_peek_get_origin_y());
 
-    int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
-    int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+    int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+    int16_t last_row =
+        CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
     for (int16_t y = first_row; y < last_row; y++) {
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
@@ -959,15 +961,16 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
 #endif
   {
     // Original bezel mode - center with black bezel
-    const int16_t bezel_width = (DISP_COLS - app_width) / 2;
-    const int16_t bezel_height = (DISP_ROWS - app_height) / 2;
+    const int16_t bezel_width = (PBL_DISPLAY_WIDTH - app_width) / 2;
+    const int16_t bezel_height = (PBL_DISPLAY_HEIGHT - app_height) / 2;
     const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
     const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
     PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
 
     // memset the entire region to be updated to black
-    int16_t first_row = CLIP(update_rect.origin.y, 0, DISP_ROWS - 1);
-    int16_t last_row = CLIP(update_rect.origin.y + update_rect.size.h, first_row, DISP_ROWS);
+    int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+    int16_t last_row =
+        CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
     for (int16_t y = first_row; y < last_row; y++) {
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
       const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);

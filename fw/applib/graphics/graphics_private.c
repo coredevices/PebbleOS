@@ -552,7 +552,7 @@ void graphics_patch_trace_of_moving_rect(GContext *ctx, int16_t *prev_x, GRect c
     // move to left
     src_x = new_x + current.size.w - 1;
     dst_x1 = src_x + 1;
-    dst_x2 = DISP_COLS - 1;
+    dst_x2 = PBL_DISPLAY_WIDTH - 1;
   } else if (*prev_x < new_x) {
     src_x = new_x;
     dst_x1 = 0;

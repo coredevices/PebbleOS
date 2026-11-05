@@ -559,7 +559,8 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   const bool has_secondary =
       (((is_peek || is_fat || thin_can_have_secondary) && !IS_EMPTY_STRING(secondary_text)) ||
        (is_peek && (pbl_realtime() < layout->info->timestamp)));
-  const int peek_text_width = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
+  const int peek_text_width =
+      PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
   const GPoint peek_text_offset = GPoint(TIMELINE_PEEK_MARGIN, PBL_IF_RECT_ELSE(-5, -6));
   const GTextOverflowMode overflow =
       (has_secondary && !is_peek) ? GTextOverflowModeTrailingEllipsis : GTextOverflowModeFill;
@@ -649,7 +650,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   }
 
   if (is_peek) {
-    vertical_node->container.size.w = DISP_COLS - TIMELINE_PEEK_ICON_BOX_WIDTH;
+    vertical_node->container.size.w = PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH;
     const size_t num_horizontal_nodes = 2;
     GTextNodeHorizontal *horizontal_node =
         graphics_text_node_create_horizontal(num_horizontal_nodes);
@@ -730,7 +731,7 @@ static void prv_render_view(TimelineLayout *layout, GContext *ctx, bool render, 
                                            : system_theme_get_fg_color()));
   static const GRect page_frame_on_screen = {
     {0, STATUS_BAR_LAYER_HEIGHT},
-    {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT}
+    {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT}
   };
   const GTextNodeDrawConfig config = {
     .page_frame = is_peek ? &GRectZero : &page_frame_on_screen,

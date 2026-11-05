@@ -178,9 +178,10 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
   // the menu's position on screen).
   GRect global_frame;
   layer_get_global_frame(&menu_layer->scroll_layer.layer, &global_frame);
-  const GPoint center = GPoint((DISP_COLS / 2) - global_frame.origin.x,
-                               content_top_y + ((DISP_ROWS / 2) - global_frame.origin.y));
-  const uint16_t radius_outer = (MIN(DISP_COLS, DISP_ROWS) / 2) - MENU_LAYER_SCROLLBAR_MARGIN;
+  const GPoint center = GPoint((PBL_DISPLAY_WIDTH / 2) - global_frame.origin.x,
+                               content_top_y + ((PBL_DISPLAY_HEIGHT / 2) - global_frame.origin.y));
+  const uint16_t radius_outer =
+      (MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2) - MENU_LAYER_SCROLLBAR_MARGIN;
   // The full track first, subdued, so the thumb reads as a position within it; the track also
   // provides the contrast backing for the thumb, so no halo is needed.
   const int32_t track_start = DEG_TO_TRIGANGLE(90) - (MENU_LAYER_SCROLLBAR_TRACK_SWEEP / 2);

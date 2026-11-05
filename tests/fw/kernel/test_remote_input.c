@@ -450,8 +450,8 @@ void test_remote_input__swipe_stays_on_screen(void) {
     cl_assert_equal_i(RemoteInputResult_Ok, remote_input_swipe(directions[d], 150));
     prv_run_sequence();
     for (int i = 0; i < s_touch_count; i++) {
-      cl_assert(s_touches[i].x >= 0 && s_touches[i].x < DISP_COLS);
-      cl_assert(s_touches[i].y >= 0 && s_touches[i].y < DISP_ROWS);
+      cl_assert(s_touches[i].x >= 0 && s_touches[i].x < PBL_DISPLAY_WIDTH);
+      cl_assert(s_touches[i].y >= 0 && s_touches[i].y < PBL_DISPLAY_HEIGHT);
     }
   }
 }
@@ -507,8 +507,9 @@ void test_remote_input__touch_takes_the_requested_duration(void) {
 
 void test_remote_input__rejects_touch_off_screen(void) {
   cl_assert_equal_i(RemoteInputResult_Invalid, remote_input_touch(-1, 0, 0, 0, 100));
-  cl_assert_equal_i(RemoteInputResult_Invalid, remote_input_touch(0, 0, DISP_COLS, 0, 100));
-  cl_assert_equal_i(RemoteInputResult_Invalid, remote_input_touch(0, 0, 0, DISP_ROWS, 100));
+  cl_assert_equal_i(RemoteInputResult_Invalid, remote_input_touch(0, 0, PBL_DISPLAY_WIDTH, 0, 100));
+  cl_assert_equal_i(RemoteInputResult_Invalid,
+                    remote_input_touch(0, 0, 0, PBL_DISPLAY_HEIGHT, 100));
   cl_assert_equal_i(0, s_touch_count);
 }
 

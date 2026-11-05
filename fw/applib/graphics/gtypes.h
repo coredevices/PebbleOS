@@ -502,7 +502,7 @@ typedef GRect GRectReturn;
 #define GRECT_PRINTF_FORMAT            "{ %" PRId16 ", %" PRId16 " } { %" PRId16 ", %" PRId16 " }"
 #define GRECT_PRINTF_FORMAT_EXPLODE(r) (r).origin.x, (r).origin.y, (r).size.w, (r).size.h
 
-#define DISP_FRAME (GRect(0, 0, DISP_COLS, DISP_ROWS))
+#define DISP_FRAME (GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT))
 
 //! @internal
 static inline GRect grect_scalar_lshift(const GRect rect, int8_t s) {

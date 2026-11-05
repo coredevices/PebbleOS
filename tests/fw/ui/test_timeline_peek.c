@@ -324,7 +324,7 @@ void test_timeline_peek__peek_visibility(void) {
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Peek service shows the peek UI. Not animated for this unit test.
   prv_set_timeline_item(
@@ -336,12 +336,12 @@ void test_timeline_peek__peek_visibility(void) {
       },
       false /* animated */);
   // Peek should now be on-screen.
-  cl_assert(layer->frame.origin.y < DISP_ROWS);
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
 
   // Peek service hides the peek UI. Not animated for this unit test.
   prv_set_timeline_item(nullptr, false /* animated */);
   // Peek should now be off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 }
 
 void test_timeline_peek__peek_visible_to_hidden_outside_of_watchface(void) {
@@ -356,25 +356,25 @@ void test_timeline_peek__peek_visible_to_hidden_outside_of_watchface(void) {
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
-  cl_assert(layer->frame.origin.y < DISP_ROWS);
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
 
   // Transition away from the watchface
   s_is_watchface_running = false;
   timeline_peek_set_visible(false, false /* animated */);
   // For simplicity, the implementation also moves the layer even though it is not necessary.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Peek service hides the peek UI using the animated code path.
   prv_set_timeline_item(nullptr, true /* animated */);
   // This time we set the item to NULL, not just request invisibility. Since we're not in the
   // watchface, even though `animated` was requested, it should immediately move the position.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition back to the watchface
   s_is_watchface_running = true;
   timeline_peek_set_visible(true, false /* animated */);
   // Peek should be visible again, but it should still be off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
   timeline_item_destroy(item);
 }
 
@@ -383,13 +383,13 @@ void test_timeline_peek__peek_hidden_to_visible_outside_of_watchface(void) {
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition away from the watchface
   s_is_watchface_running = false;
   timeline_peek_set_visible(false, false /* animated */);
   // For simplicity, the implementation also moves the layer even though it is not necessary.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Peek service shows the peek UI using the animated code path.
   TimelineItem *item = prv_set_timeline_item(
@@ -401,13 +401,13 @@ void test_timeline_peek__peek_hidden_to_visible_outside_of_watchface(void) {
       },
       true /* animated */);
   // Since we're not in the watchface, the peek remains off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition back to the watchface
   s_is_watchface_running = true;
   timeline_peek_set_visible(true, false /* animated */);
   // Peek should be visible again and now on-screen.
-  cl_assert(layer->frame.origin.y < DISP_ROWS);
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
   timeline_item_destroy(item);
 }
 
@@ -423,19 +423,19 @@ void test_timeline_peek__peek_visible_leaving_and_entering_watchface(void) {
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Normally it is animated, but for this unit test, we don't request `animated`
-  cl_assert(layer->frame.origin.y < DISP_ROWS);
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
 
   // Transition away from the watchface
   s_is_watchface_running = false;
   timeline_peek_set_visible(false, false /* animated */);
   // For simplicity, the implementation also moves the layer even though it is not necessary.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition back to the watchface
   s_is_watchface_running = true;
   timeline_peek_set_visible(true, false /* animated */);
   // Peek should be visible again and on-screen.
-  cl_assert(layer->frame.origin.y < DISP_ROWS);
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
   timeline_item_destroy(item);
 }
 
@@ -444,17 +444,17 @@ void test_timeline_peek__peek_hidden_leaving_and_entering_watchface(void) {
   TimelinePeek *peek = timeline_peek_get_peek();
   const Layer *layer = &peek->layout_layer;
   // Peek should be off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition away from the watchface
   s_is_watchface_running = false;
   timeline_peek_set_visible(false, false /* animated */);
   // Peek should be hidden and off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 
   // Transition back to the watchface
   s_is_watchface_running = true;
   timeline_peek_set_visible(true, false /* animated */);
   // Peek should be visible again, but it should still be off-screen.
-  cl_assert(layer->frame.origin.y >= DISP_ROWS);
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
 }

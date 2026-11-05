@@ -104,10 +104,10 @@ static void prv_assert_title_centered(Window *window, TimelineLayout *layout) {
   }
   window_render(window, fake_graphics_context_get_context());
   const GBitmap *bitmap = &fake_graphics_context_get_context()->dest_bitmap;
-  int16_t top = DISP_ROWS;
+  int16_t top = PBL_DISPLAY_HEIGHT;
   int16_t bottom = 0;
-  const int16_t right = DISP_COLS - timeline_layer_get_ideal_sidebar_width() - 15;
-  for (int16_t y = DISP_ROWS / 4; y < 3 * DISP_ROWS / 4; y++) {
+  const int16_t right = PBL_DISPLAY_WIDTH - timeline_layer_get_ideal_sidebar_width() - 15;
+  for (int16_t y = PBL_DISPLAY_HEIGHT / 4; y < 3 * PBL_DISPLAY_HEIGHT / 4; y++) {
     const GBitmapDataRowInfo row = gbitmap_get_data_row_info(bitmap, y);
     for (int16_t x = row.min_x; x < MIN(row.max_x + 1, right); x++) {
       if (row.data[x] == GColorBlackARGB8) {
@@ -117,7 +117,7 @@ static void prv_assert_title_centered(Window *window, TimelineLayout *layout) {
     }
   }
   cl_assert(top <= bottom);
-  cl_assert(ABS(top + bottom - DISP_ROWS) <= 4);
+  cl_assert(ABS(top + bottom - PBL_DISPLAY_HEIGHT) <= 4);
   for (size_t i = 0; i < num_other_text; i++) {
     other_text[i]->color = colors[i];
   }
@@ -153,7 +153,7 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
 #if PBL_ROUND
   GRect icon_frame;
   timeline_layer_get_icon_frame(&timeline_layer, TIMELINE_LAYER_FIRST_VISIBLE_LAYOUT, &icon_frame);
-  cl_assert_equal_i(icon_frame.origin.y + icon_frame.size.h / 2, DISP_ROWS / 2);
+  cl_assert_equal_i(icon_frame.origin.y + icon_frame.size.h / 2, PBL_DISPLAY_HEIGHT / 2);
 #endif
 
   if (config->day_separator) {

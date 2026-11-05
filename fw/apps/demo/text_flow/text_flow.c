@@ -41,7 +41,7 @@ static void prv_window_load(Window *window) {
   int16_t page_height = 85; // height of scroll layer, also used for paging height
 
   // Initialize the scroll layer
-  const GRect scroll_bounds = GRect(0, y_offset, DISP_ROWS, page_height);
+  const GRect scroll_bounds = GRect(0, y_offset, PBL_DISPLAY_HEIGHT, page_height);
   scroll_layer_init(&data->scroll_layer, &scroll_bounds);
 
   // Use a text layer to show the Scroll Layer background area

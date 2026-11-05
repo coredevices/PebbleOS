@@ -146,7 +146,7 @@ static void prv_reset(void) {
 // setup and teardown
 void test_graphics_gpath_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   s_house_path = gpath_create(&s_house_path_info);
   s_bolt_path = gpath_create(&s_bolt_path_info);
   s_duplicates_path = gpath_create(&s_duplicates_path_info);

@@ -472,7 +472,8 @@ void test_touch__physical_touch_is_still_rotated(void) {
   touch_set_rotated(true);
   touch_handle_update(TouchState_FingerDown, 10, 20);
   // Mirrored against the display bounds, unlike the injected path above.
-  prv_assert_touch_event(TouchEvent_Touchdown, DISP_COLS - 1 - 10, DISP_ROWS - 1 - 20);
+  prv_assert_touch_event(TouchEvent_Touchdown, PBL_DISPLAY_WIDTH - 1 - 10,
+                         PBL_DISPLAY_HEIGHT - 1 - 20);
 
   touch_handle_update(TouchState_FingerUp, 10, 20);
   touch_set_rotated(false);

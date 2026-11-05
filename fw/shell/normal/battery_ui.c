@@ -438,7 +438,7 @@ static void prv_display_modal(WindowStack *stack, DialogUpdateFn update_fn, void
         (font_height + text_cap_height) * num_lines + line_spacing_delta * (num_lines - 1);
     const int text_flow_inset = 6; // Modify to allow longer central lines
     text_layer_enable_screen_text_flow_and_paging(text_layer, text_flow_inset);
-    text_layer_set_size(text_layer, GSize(DISP_COLS, text_box_height));
+    text_layer_set_size(text_layer, GSize(PBL_DISPLAY_WIDTH, text_box_height));
     text_layer->layer.frame.origin.y += text_shift_y;
     text_layer_set_line_spacing_delta(text_layer, line_spacing_delta);
   }

@@ -28,8 +28,8 @@
 
 static FrameBuffer *fb = nullptr;
 
-#define CLIP_RECT_DRAW_BOX GRect(0, 0, DISP_COLS, DISP_ROWS)
-#define CLIP_RECT_CLIP_BOX GRect(0, 0, DISP_COLS, DISP_ROWS)
+#define CLIP_RECT_DRAW_BOX GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
+#define CLIP_RECT_CLIP_BOX GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
 
 // Setup and Teardown
 ////////////////////////////////////
@@ -37,7 +37,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_graphics_draw_core__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   // Enable fake data row handling which will override the gbitmap_get_data_row_xxx() functions
   // with their fake counterparts in fake_gbitmap_get_data_row.c
   s_fake_data_row_handling = true;

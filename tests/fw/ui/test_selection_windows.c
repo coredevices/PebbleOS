@@ -82,7 +82,7 @@ GContext *graphics_context_get_current_context(void) {
 
 void test_selection_windows__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
 
@@ -110,8 +110,9 @@ static void prv_prepare_canvas_and_render_for_each_size(RenderCallback callback)
 
   const unsigned int num_columns = SettingsContentSizeCount;
 
-  const int16_t bitmap_width = (DISP_COLS * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
-  const int16_t bitmap_height = DISP_ROWS;
+  const int16_t bitmap_width =
+      (PBL_DISPLAY_WIDTH * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
+  const int16_t bitmap_height = PBL_DISPLAY_HEIGHT;
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
   s_dest_bitmap = gbitmap_create_blank(bitmap_size, CANVAS_GBITMAP_FORMAT);
 
@@ -152,7 +153,8 @@ static const TimeSelectionWindowConfig s_time_config = {
 };
 
 static void prv_render_time_selection_window(GContext *ctx, SettingsContentSize content_size) {
-  const int16_t x_offset = GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + DISP_COLS));
+  const int16_t x_offset =
+      GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + PBL_DISPLAY_WIDTH));
   ctx->draw_state.drawing_box.origin = GPoint(x_offset, 0);
 
   TimeSelectionWindowData selection_window;
@@ -170,7 +172,8 @@ static void prv_render_time_selection_window(GContext *ctx, SettingsContentSize 
 
 static void prv_render_time_range_selection_window(GContext *ctx,
                                                    SettingsContentSize content_size) {
-  const int16_t x_offset = GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + DISP_COLS));
+  const int16_t x_offset =
+      GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + PBL_DISPLAY_WIDTH));
   ctx->draw_state.drawing_box.origin = GPoint(x_offset, 0);
 
   TimeRangeSelectionWindowData selection_window;

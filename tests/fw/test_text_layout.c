@@ -33,7 +33,7 @@
 void test_text_layout__ellipsis_overflow(void) {
   GContext gcontext;
   FrameBuffer *fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
   framebuffer_clear(fb);
@@ -220,7 +220,7 @@ void test_text_layout__cache_vert_overflow_with_newline(void) {
 void test_text_layout__pathological_1(void) {
   GContext gcontext;
   FrameBuffer *fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 
   GFont font = (GFont){};
   GRect box = (GRect){(GPoint){0, 0}, (GSize){40, 250 * FONT_HEIGHT}};
@@ -436,7 +436,7 @@ void test_text_layout__delta(void) {
 void test_text_layout__special_codepoints(void) {
   GContext gcontext;
   FrameBuffer *fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 
   graphics_context_init(&gcontext, fb, GContextInitializationMode_App);
   framebuffer_clear(fb);

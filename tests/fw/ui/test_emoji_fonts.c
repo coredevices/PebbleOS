@@ -47,7 +47,7 @@ void test_emoji_fonts__initialize(void) {
   resource_init();
 
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);

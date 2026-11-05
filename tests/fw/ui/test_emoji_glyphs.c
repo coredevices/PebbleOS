@@ -76,7 +76,7 @@ size_t sys_resource_load_range(ResAppNum app_num, uint32_t resource_id, uint32_t
 
 void test_emoji_glyphs__initialize(void) {
   s_fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(s_fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, s_fb);
   framebuffer_clear(s_fb);
 }

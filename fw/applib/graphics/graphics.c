@@ -608,7 +608,7 @@ GSize graphics_context_get_framebuffer_size(GContext *ctx) {
   if (ctx && ctx->parent_framebuffer) {
     return ctx->parent_framebuffer->size;
   } else {
-    return GSize(DISP_COLS, DISP_ROWS);
+    return GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   }
 }
 

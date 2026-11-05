@@ -46,7 +46,7 @@ extern GColor get_bitmap_color(GBitmap *bmp, int x, int y);
 void test_graphics_draw_rotated_bitmap__initialize(void) {
   s_fake_data_row_handling = false;
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_image_bw = get_gbitmap_from_pbi("test_rotated_bitmap_no_litter.Xbit.pbi");
   cl_assert(test_image_bw != nullptr);
 
@@ -85,7 +85,7 @@ static void setup_test_rotate_bitmap(GContext *ctx, FrameBuffer *fb, GRect clip_
       &draw_state, nullptr);
 }
 
-#define ORIGIN_RECT_NO_CLIP GRect(0, 0, DISP_COLS, DISP_ROWS)
+#define ORIGIN_RECT_NO_CLIP GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
 
 // Tests
 ////////////////////////////////////
@@ -306,7 +306,7 @@ void test_graphics_draw_rotated_bitmap__data_row_handling(void) {
   cl_assert(test_image != nullptr);
 
   // One pixel up/left of grect_center_point()
-  GPoint center = GPoint(DISP_COLS / 2 - 1, DISP_ROWS / 2 - 1);
+  GPoint center = GPoint(PBL_DISPLAY_WIDTH / 2 - 1, PBL_DISPLAY_HEIGHT / 2 - 1);
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);

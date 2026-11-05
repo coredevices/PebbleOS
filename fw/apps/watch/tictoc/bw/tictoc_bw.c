@@ -105,13 +105,15 @@ static void prv_init(void) {
   window_init(&data->window, WINDOW_NAME("TicToc"));
   window_set_background_color(&data->window, GColorBlack);
 
-  text_layer_init(&data->text_date_layer, &GRect(8, 68, DISP_COLS - 8, DISP_ROWS - 68));
+  text_layer_init(&data->text_date_layer,
+                  &GRect(8, 68, PBL_DISPLAY_WIDTH - 8, PBL_DISPLAY_HEIGHT - 68));
   text_layer_set_text_color(&data->text_date_layer, GColorWhite);
   text_layer_set_background_color(&data->text_date_layer, GColorClear);
   text_layer_set_font(&data->text_date_layer, fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
   layer_add_child(&data->window.layer, &data->text_date_layer.layer);
 
-  text_layer_init(&data->text_time_layer, &GRect(7, 92, DISP_COLS - 7, DISP_ROWS - 92));
+  text_layer_init(&data->text_time_layer,
+                  &GRect(7, 92, PBL_DISPLAY_WIDTH - 7, PBL_DISPLAY_HEIGHT - 92));
   text_layer_set_text_color(&data->text_time_layer, GColorWhite);
   text_layer_set_background_color(&data->text_time_layer, GColorClear);
   text_layer_set_font(&data->text_time_layer,

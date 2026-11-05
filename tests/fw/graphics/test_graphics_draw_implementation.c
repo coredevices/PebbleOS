@@ -44,7 +44,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_graphics_draw_implementation__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   memset(s_raw_drawing_function_counters, 0, sizeof(s_raw_drawing_function_counters));
 }
 
@@ -87,8 +87,8 @@ static void prv_fake_raw_assign_horizontal_line_delta(GContext *ctx, int16_t y, 
 // Tests
 ////////////////////////////////////
 
-#define CLIP_RECT_DRAW_BOX GRect(0, 0, DISP_COLS, DISP_ROWS)
-#define CLIP_RECT_CLIP_BOX GRect(0, 0, DISP_COLS, DISP_ROWS)
+#define CLIP_RECT_DRAW_BOX GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
+#define CLIP_RECT_CLIP_BOX GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
 
 void test_graphics_draw_implementation__fill_circle_aa(void) {
   GContext ctx;

@@ -210,7 +210,7 @@ static bool prv_should_enlarge_emoji(NotificationLayout *layout) {
 //! Round cards page in fixed steps and the usable width narrows towards the top and bottom of the
 //! circle, so the image takes a page of its own and sits centred in it.
 #define NOTIFICATION_IMAGE_CIRCLE_INSET (8)
-#define NOTIFICATION_IMAGE_RADIUS       (DISP_ROWS / 2 - NOTIFICATION_IMAGE_CIRCLE_INSET)
+#define NOTIFICATION_IMAGE_RADIUS       (PBL_DISPLAY_HEIGHT / 2 - NOTIFICATION_IMAGE_CIRCLE_INSET)
 //! Centre of the page the image gets, which sits between the status bar and the paging arrow and so
 //! is a couple of pixels below the circle's own centre.
 #define NOTIFICATION_IMAGE_PAGE_CENTRE_Y (STATUS_BAR_LAYER_HEIGHT + LAYOUT_HEIGHT / 2)
@@ -223,7 +223,7 @@ static bool prv_should_enlarge_emoji(NotificationLayout *layout) {
 static bool prv_image_fits_circle(int16_t width, uint8_t aspect) {
   const int32_t half_w = width / 2;
   const int32_t half_h = ((int32_t)width * aspect) / 32;
-  const int32_t dy = ABS(NOTIFICATION_IMAGE_PAGE_CENTRE_Y - DISP_ROWS / 2) + half_h;
+  const int32_t dy = ABS(NOTIFICATION_IMAGE_PAGE_CENTRE_Y - PBL_DISPLAY_HEIGHT / 2) + half_h;
   const int32_t r = NOTIFICATION_IMAGE_RADIUS;
   return (half_w * half_w) + (dy * dy) <= (r * r);
 }
@@ -316,7 +316,7 @@ bool notification_layout_get_image_size(const LayoutLayer *layout_ref, GSize *si
   if (!prv_image_aspect(layout)) {
     return false;
   }
-  *size_out = prv_image_size(layout, DISP_COLS - 2 * CARD_MARGIN);
+  *size_out = prv_image_size(layout, PBL_DISPLAY_WIDTH - 2 * CARD_MARGIN);
   return true;
 }
 #endif
@@ -548,17 +548,17 @@ static int16_t prv_notif_status_bar_height(void) {
 static void prv_draw_banner_round(NotificationLayout *notification_layout, GContext *ctx,
                                   const GRect *const notification_layout_frame,
                                   LayoutColors colors) {
-  // We use DISP_ROWS and DISP_COLS instead of the layer's frame or bounds because the
-  // notification layout's frame is not the same size as the display
-  const int32_t half_screen_width = DISP_COLS / 2;
+  // We use PBL_DISPLAY_HEIGHT and PBL_DISPLAY_WIDTH instead of the layer's frame or bounds because
+  // the notification layout's frame is not the same size as the display
+  const int32_t half_screen_width = PBL_DISPLAY_WIDTH / 2;
   const int16_t status_bar_height = prv_notif_status_bar_height();
   // The y-position of a layout frame when its banner is peeking
-  const int32_t banner_peek_static_y = DISP_ROWS - status_bar_height;
+  const int32_t banner_peek_static_y = PBL_DISPLAY_HEIGHT - status_bar_height;
   graphics_context_set_fill_color(ctx, colors.bg_color);
   const int32_t saved_clip_box_size_h = ctx->draw_state.clip_box.size.h;
   const int32_t saved_clip_box_origin_y = ctx->draw_state.clip_box.origin.y;
   ctx->draw_state.clip_box.origin.y = MAX(ctx->draw_state.clip_box.origin.y - status_bar_height, 0);
-  ctx->draw_state.clip_box.size.h = DISP_ROWS;
+  ctx->draw_state.clip_box.size.h = PBL_DISPLAY_HEIGHT;
   grect_clip(&ctx->draw_state.clip_box, &DISP_FRAME);
 
   const int32_t banner_movement_raw_offset =
@@ -596,7 +596,7 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
     // work around the clip box and smaller layout_height for circular text paging
     ctx->draw_state.clip_box.size.h = MIN(ctx->draw_state.clip_box.size.h, LAYOUT_HEIGHT);
 #else
-    static const GRect banner_box = {.size = {DISP_COLS, LAYOUT_BANNER_HEIGHT_RECT}};
+    static const GRect banner_box = {.size = {PBL_DISPLAY_WIDTH, LAYOUT_BANNER_HEIGHT_RECT}};
     graphics_fill_rect(ctx, &banner_box);
 #endif
   }
@@ -611,11 +611,11 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
 #endif
   static const GRect box = {
     .origin = {CARD_MARGIN, LAYOUT_TOP_BANNER_HEIGHT},
-    .size = {DISP_COLS - 2 * CARD_MARGIN, LAYOUT_MAX_HEIGHT},
+    .size = {PBL_DISPLAY_WIDTH - 2 * CARD_MARGIN, LAYOUT_MAX_HEIGHT},
   };
   static const GRect page_frame_on_screen = {
     .origin = {0, STATUS_BAR_LAYER_HEIGHT},
-    .size = {DISP_COLS, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT}
+    .size = {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT}
   };
   static const GTextNodeDrawConfig config = {
     .page_frame = &page_frame_on_screen,

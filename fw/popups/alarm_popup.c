@@ -367,7 +367,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     pbl_strftime_r(display_time, 16, "%I:%M %p", &alarm_tm);
   }
   dialog_set_text(dialog, display_time);
-  if (DISP_ROWS > 180) {
+  if (PBL_DISPLAY_HEIGHT > 180) {
     actionable_dialog_set_text_font(s_alarm_popup_data->alarm_popup,
                                     fonts_get_system_font(FONT_KEY_GOTHIC_36_BOLD));
   }

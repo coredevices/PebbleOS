@@ -15,8 +15,8 @@
 #include <board/display.h>
 
 // Compile-time display offset calculations
-#define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
-#define HEALTH_Y_OFFSET ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+#define HEALTH_X_OFFSET ((PBL_DISPLAY_WIDTH - LEGACY_2X_DISP_COLS) / 2)
+#define HEALTH_Y_OFFSET ((PBL_DISPLAY_HEIGHT - LEGACY_2X_DISP_ROWS) / 2)
 #define HEALTH_INSET    (18 + HEALTH_X_OFFSET / 5)
 
 void health_ui_draw_text_in_box(GContext *ctx, const char *text, const GRect drawing_bounds,

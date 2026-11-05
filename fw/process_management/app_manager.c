@@ -874,7 +874,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
 
   if (!s_app_task_context.app_md) {
     // No app has been started yet, so just use the default system size
-    *size = GSize(DISP_COLS, DISP_ROWS);
+    *size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
     return;
   }
 
@@ -883,7 +883,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
       process_metadata_get_app_sdk_platform(s_app_task_context.app_md);
 
   if (sdk_platform == PBL_PLATFORM_TYPE_CURRENT) {
-    *size = GSize(DISP_COLS, DISP_ROWS);
+    *size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
     return;
   }
 
@@ -904,7 +904,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
     case PlatformTypeEmery:
     case PlatformTypeFlint:
     case PlatformTypeGabbro:
-      *size = GSize(DISP_COLS, DISP_ROWS);
+      *size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
       return;
   }
   pbl_panic();

@@ -28,7 +28,7 @@ typedef struct HealthHrDetailCard {
 } HealthHrDetailCardData;
 
 #define DEFAULT_MAX_PROGRESS (10 * PBL_SEC_PER_MIN)
-#define CHART_HEIGHT         PBL_IF_RECT_ELSE((DISP_ROWS * 4) / 9, (DISP_ROWS * 2) / 5)
+#define CHART_HEIGHT PBL_IF_RECT_ELSE((PBL_DISPLAY_HEIGHT * 4) / 9, (PBL_DISPLAY_HEIGHT * 2) / 5)
 
 static void prv_draw_chart(GContext *ctx, const GRect *bounds, void *context) {
   HealthHrDetailCardData *card_data = context;

@@ -100,7 +100,7 @@ bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
 
 void test_action_menu_window__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
 
@@ -222,9 +222,11 @@ static void prv_prepare_canvas_and_render_for_each_size(RenderCallback callback,
 
   const unsigned int num_columns = SettingsContentSizeCount;
 
-  const int16_t bitmap_width = (DISP_COLS * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
+  const int16_t bitmap_width =
+      (PBL_DISPLAY_WIDTH * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
   const int16_t bitmap_height =
-      (num_rows == 1) ? DISP_ROWS : ((DISP_ROWS * num_rows) + (GRID_CELL_PADDING * (num_rows + 1)));
+      (num_rows == 1) ? PBL_DISPLAY_HEIGHT
+                      : ((PBL_DISPLAY_HEIGHT * num_rows) + (GRID_CELL_PADDING * (num_rows + 1)));
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
   s_dest_bitmap = gbitmap_create_blank(bitmap_size, CANVAS_GBITMAP_FORMAT);
 
@@ -247,7 +249,8 @@ static void prv_render_action_menus_static(SettingsContentSize content_size,
                                            const ActionMenuLevel *root_level,
                                            unsigned int selected_index,
                                            unsigned int additional_crumbs) {
-  const int16_t x_offset = GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + DISP_COLS));
+  const int16_t x_offset =
+      GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + PBL_DISPLAY_WIDTH));
   s_ctx.draw_state.drawing_box.origin = GPoint(x_offset, 0);
 
   prv_render_action_menu_window(root_level, selected_index,
@@ -259,12 +262,13 @@ static void prv_render_action_menus_animated(SettingsContentSize content_size,
                                              const ActionMenuLevel *root_level,
                                              unsigned int selected_index,
                                              unsigned int additional_crumbs) {
-  const int16_t x_offset = GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + DISP_COLS));
+  const int16_t x_offset =
+      GRID_CELL_PADDING + (content_size * (GRID_CELL_PADDING + PBL_DISPLAY_WIDTH));
 
   for (ActionMenuLayerLongLabelScrollingAnimationState animation_state = 0;
        animation_state < ActionMenuLayerLongLabelScrollingAnimationStateCount; animation_state++) {
     const int16_t y_offset =
-        GRID_CELL_PADDING + (animation_state * (GRID_CELL_PADDING + DISP_ROWS));
+        GRID_CELL_PADDING + (animation_state * (GRID_CELL_PADDING + PBL_DISPLAY_HEIGHT));
     s_ctx.draw_state.drawing_box.origin = GPoint(x_offset, y_offset);
     prv_render_action_menu_window(root_level, selected_index, animation_state, additional_crumbs);
   }

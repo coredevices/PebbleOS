@@ -65,18 +65,18 @@ typedef struct PathDefinition {
   }
 #define PATH_INTERP_DEF_TR_CORNER \
   {                               \
-    {DISP_COLS, 0},               \
-    {DISP_COLS, 0},               \
+    {PBL_DISPLAY_WIDTH, 0},       \
+    {PBL_DISPLAY_WIDTH, 0},       \
   }
 #define PATH_INTERP_DEF_BL_CORNER \
   {                               \
-    {0, DISP_ROWS},               \
-    {0, DISP_ROWS},               \
+    {0, PBL_DISPLAY_HEIGHT},      \
+    {0, PBL_DISPLAY_HEIGHT},      \
   }
-#define PATH_INTERP_DEF_BR_CORNER \
-  {                               \
-    {DISP_COLS, DISP_ROWS},       \
-    {DISP_COLS, DISP_ROWS},       \
+#define PATH_INTERP_DEF_BR_CORNER            \
+  {                                          \
+    {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT}, \
+    {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT}, \
   }
 
 // These factors are based on getting pixel coordinates from the videos, then dividing them by
@@ -89,13 +89,13 @@ static const PathDefinition s_path_defs[4] = {
             {
               // BL: 0,M -> 0,109 (0.65)
               {
-                {0, DISP_ROWS},
-                {0, DISP_ROWS * 0.65},
+                {0, PBL_DISPLAY_HEIGHT},
+                {0, PBL_DISPLAY_HEIGHT * 0.65},
               },
               // BM: 72,M (0.5) -> 115,M (0.8)
               {
-                {DISP_COLS * 0.5, DISP_ROWS},
-                {DISP_COLS * 0.8, DISP_ROWS},
+                {PBL_DISPLAY_WIDTH * 0.5, PBL_DISPLAY_HEIGHT},
+                {PBL_DISPLAY_WIDTH * 0.8, PBL_DISPLAY_HEIGHT},
               },
               PATH_INTERP_DEF_BL_CORNER,
             },
@@ -103,13 +103,13 @@ static const PathDefinition s_path_defs[4] = {
             {
               // TR: M,0 -> M,52 (0.31)
               {
-                {DISP_COLS, 0},
-                {DISP_COLS, DISP_ROWS * 0.31},
+                {PBL_DISPLAY_WIDTH, 0},
+                {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT * 0.31},
               },
               // TL: 0,0 -> 0,30 (0.18)
               {
                 {0, 0},
-                {0, DISP_ROWS * 0.18},
+                {0, PBL_DISPLAY_HEIGHT * 0.18},
               },
               PATH_INTERP_DEF_TL_CORNER,
               PATH_INTERP_DEF_TR_CORNER,
@@ -123,12 +123,12 @@ static const PathDefinition s_path_defs[4] = {
               // TL: 0,0 -> 0,59 (0.35)
               {
                 {0, 0},
-                {0, DISP_ROWS * 0.35},
+                {0, PBL_DISPLAY_HEIGHT * 0.35},
               },
               // TM: 72,0 (0.5) -> 115,0 (0.8)
               {
-                {DISP_COLS * 0.5, 0},
-                {DISP_COLS * 0.8, 0},
+                {PBL_DISPLAY_WIDTH * 0.5, 0},
+                {PBL_DISPLAY_WIDTH * 0.8, 0},
               },
               PATH_INTERP_DEF_TL_CORNER,
             },
@@ -136,13 +136,13 @@ static const PathDefinition s_path_defs[4] = {
             {
               // BR: M,M -> M,116 (0.69)
               {
-                {DISP_COLS, DISP_ROWS},
-                {DISP_COLS, DISP_ROWS * 0.69},
+                {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT},
+                {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT * 0.69},
               },
               // BL: 0,M -> 0,138 (0.82)
               {
-                {0, DISP_ROWS},
-                {0, DISP_ROWS * 0.82},
+                {0, PBL_DISPLAY_HEIGHT},
+                {0, PBL_DISPLAY_HEIGHT * 0.82},
               },
               PATH_INTERP_DEF_BL_CORNER,
               PATH_INTERP_DEF_BR_CORNER,
@@ -155,25 +155,25 @@ static const PathDefinition s_path_defs[4] = {
           // TL: 0,0 -> 50,0 (0.35)
           {
             {0, 0},
-            {DISP_COLS * 0.35, 0},
+            {PBL_DISPLAY_WIDTH * 0.35, 0},
           },
           // ML: 0,50 (0.3) -> 0,117 (0.7)
           {
-            {0, DISP_ROWS * 0.3},
-            {0, DISP_ROWS * 0.7},
+            {0, PBL_DISPLAY_HEIGHT * 0.3},
+            {0, PBL_DISPLAY_HEIGHT * 0.7},
           },
           PATH_INTERP_DEF_TL_CORNER,
         },
     .quad_verts = {
       // BR: M,M -> 93,M (0.65)
       {
-        {DISP_COLS, DISP_ROWS},
-        {DISP_COLS * 0.65, DISP_ROWS},
+        {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT},
+        {PBL_DISPLAY_WIDTH * 0.65, PBL_DISPLAY_HEIGHT},
       },
       // TR: M,0 -> 119,0 (0.83)
       {
-        {DISP_COLS, 0},
-        {DISP_COLS * 0.83, 0},
+        {PBL_DISPLAY_WIDTH, 0},
+        {PBL_DISPLAY_WIDTH * 0.83, 0},
       },
       PATH_INTERP_DEF_TR_CORNER,
       PATH_INTERP_DEF_BR_CORNER,
@@ -245,7 +245,7 @@ static void prv_draw_in(GContext *ctx, int move_size, uint32_t distance, bool ve
   graphics_context_set_fill_color(ctx, s_data.sampled_color);
   graphics_fill_rect(ctx, &DISP_FRAME);
 
-  compositor_scaled_app_fb_copy(GRect(point.x, point.y, DISP_COLS, DISP_ROWS),
+  compositor_scaled_app_fb_copy(GRect(point.x, point.y, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
                                 false /* copy_relative_to_origin */);
 
   const GPoint drawing_box_origin = ctx->draw_state.drawing_box.origin;
@@ -254,9 +254,9 @@ static void prv_draw_in(GContext *ctx, int move_size, uint32_t distance, bool ve
   ctx->draw_state.drawing_box.origin = drawing_box_origin;
 }
 
-const int32_t s_small_movement_size = DISP_COLS * 0.042;   // 6 on snowy
-const int32_t s_large_movement_size = DISP_COLS * 0.14;    // 20 on snowy
-const int32_t s_vertical_movement_size = DISP_ROWS * 0.18; // 30 on snowy
+const int32_t s_small_movement_size = PBL_DISPLAY_WIDTH * 0.042;    // 6 on snowy
+const int32_t s_large_movement_size = PBL_DISPLAY_WIDTH * 0.14;     // 20 on snowy
+const int32_t s_vertical_movement_size = PBL_DISPLAY_HEIGHT * 0.18; // 30 on snowy
 
 static void prv_transition_animation_update(GContext *ctx, Animation *animation,
                                             uint32_t progress) {

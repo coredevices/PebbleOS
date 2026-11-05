@@ -225,7 +225,7 @@ static void prv_update_arrow(SwapLayer *swap_layer) {
     const GRect *layer_frame = &swap_layer->layer.frame;
     const bool viewing_entire_notif = (cur_frame->size.h == layer_frame->size.h);
 #if PBL_ROUND
-    const bool at_bottom = (cur_frame->origin.y < (-cur_frame->size.h + DISP_ROWS));
+    const bool at_bottom = (cur_frame->origin.y < (-cur_frame->size.h + PBL_DISPLAY_HEIGHT));
     const bool text_visible =
         WITHIN(cur_frame->origin.y, TEXT_VISIBLE_LOWER_THRESHOLD(cur_frame->size.h),
                TEXT_VISIBLE_UPPER_THRESHOLD);
@@ -616,7 +616,7 @@ PBL_T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection dire
         return;
       }
 #else
-      if (offset >= swap_layer->current->layer.bounds.size.h - DISP_ROWS) {
+      if (offset >= swap_layer->current->layer.bounds.size.h - PBL_DISPLAY_HEIGHT) {
         prv_handle_swap_attempt(swap_layer, direction, is_repeating);
         return;
       }

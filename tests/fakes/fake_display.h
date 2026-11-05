@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#define DISP_BYTES_LINE DISP_COLS / 8
+#define DISP_BYTES_LINE PBL_DISPLAY_WIDTH / 8
 // Bytes_per_line + 1 byte for the line address + 1 byte for a null trailer + 1 optional byte for a
 // write command
 #define DISP_DMA_BUFFER_SIZE (DISP_BYTES_LINE + 3)

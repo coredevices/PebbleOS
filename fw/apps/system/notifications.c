@@ -694,7 +694,7 @@ static int16_t prv_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell
   }
 #if PBL_DISPLAY_HEIGHT >= 200
   // Larger round displays fit two unfocused rows on each side of the focused row
-  return ((DISP_ROWS - STATUS_BAR_LAYER_HEIGHT * 2) - focused_cell_height) / 4;
+  return ((PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT * 2) - focused_cell_height) / 4;
 #endif
 #endif
   return ((int16_t[NumPreferredContentSizes]){

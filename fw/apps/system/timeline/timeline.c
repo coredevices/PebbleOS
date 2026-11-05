@@ -248,9 +248,9 @@ static void prv_get_icon_animation_frame(TimelineAppData *data, GRect *icon_fram
   }
   if (shift_offscreen) {
     if (data->timeline_model.direction == TimelineIterDirectionPast) {
-      icon_frame.origin.y -= DISP_ROWS;
+      icon_frame.origin.y -= PBL_DISPLAY_HEIGHT;
     } else {
-      icon_frame.origin.y += DISP_ROWS;
+      icon_frame.origin.y += PBL_DISPLAY_HEIGHT;
     }
   }
   *icon_frame_out = icon_frame;
@@ -991,7 +991,7 @@ static void PBL_NOINLINE prv_setup_peek(TimelineAppData *data) {
     GRect frame;
     layer_get_frame(&data->timeline_layer.day_separator.layer, &frame);
     const bool is_future = (s_app_data->timeline_model.direction == TimelineIterDirectionFuture);
-    frame.origin.y += is_future ? DISP_ROWS : -DISP_ROWS;
+    frame.origin.y += is_future ? PBL_DISPLAY_HEIGHT : -PBL_DISPLAY_HEIGHT;
     timeline_layer_set_day_sep_frame(&data->timeline_layer, &frame);
 #endif
     focus_handler = prv_open_did_focus_handler;

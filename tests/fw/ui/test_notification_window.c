@@ -326,10 +326,12 @@ static void prv_prepare_canvas_and_render_notification_windows(unsigned int num_
   const unsigned int num_columns = SettingsContentSizeCount;
   const unsigned int num_rows = num_down_scrolls + 1;
 
-  const int16_t bitmap_width = (DISP_COLS * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
+  const int16_t bitmap_width =
+      (PBL_DISPLAY_WIDTH * num_columns) + (GRID_CELL_PADDING * (num_columns + 1));
   const int16_t bitmap_height =
-      (int16_t)((num_rows == 1) ? DISP_ROWS
-                                : ((DISP_ROWS * num_rows) + (GRID_CELL_PADDING * (num_rows + 1))));
+      (int16_t)((num_rows == 1)
+                    ? PBL_DISPLAY_HEIGHT
+                    : ((PBL_DISPLAY_HEIGHT * num_rows) + (GRID_CELL_PADDING * (num_rows + 1))));
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
   GBitmap *canvas_bitmap = gbitmap_create_blank(bitmap_size, CANVAS_GBITMAP_FORMAT);
   PBL_ASSERTN(canvas_bitmap);
@@ -352,13 +354,14 @@ static void prv_prepare_canvas_and_render_notification_windows(unsigned int num_
     system_theme_set_content_size(content_size);
 
     const int16_t x_offset =
-        (int16_t)(GRID_CELL_PADDING + (settings_content_size * (GRID_CELL_PADDING + DISP_COLS)));
+        (int16_t)(GRID_CELL_PADDING +
+                  (settings_content_size * (GRID_CELL_PADDING + PBL_DISPLAY_WIDTH)));
 
     for (int down_scrolls = 0; down_scrolls <= num_down_scrolls; down_scrolls++) {
       const int16_t y_offset =
-          (int16_t)((num_rows == 1)
-                        ? 0
-                        : GRID_CELL_PADDING + (down_scrolls * (GRID_CELL_PADDING + DISP_ROWS)));
+          (int16_t)((num_rows == 1) ? 0
+                                    : GRID_CELL_PADDING + (down_scrolls * (GRID_CELL_PADDING +
+                                                                           PBL_DISPLAY_HEIGHT)));
       // Set the GContext bitmap's data pointer to the position in the larger bitmap where we
       // want to draw this particular notification window
       ctx->dest_bitmap.addr = saved_bitmap_addr + (y_offset * ctx->dest_bitmap.row_size_bytes) +

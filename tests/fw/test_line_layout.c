@@ -35,7 +35,7 @@ size_t framebuffer_get_size_bytes(FrameBuffer *f) {
 // Tests
 
 void test_line_layout__initialize(void) {
-  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
 }
 

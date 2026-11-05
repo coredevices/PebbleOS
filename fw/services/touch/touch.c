@@ -46,8 +46,8 @@ static bool s_injecting = false;
 
 static void prv_apply_rotation(int16_t *x, int16_t *y) {
   if (s_rotated) {
-    *x = (DISP_COLS - 1) - *x;
-    *y = (DISP_ROWS - 1) - *y;
+    *x = (PBL_DISPLAY_WIDTH - 1) - *x;
+    *y = (PBL_DISPLAY_HEIGHT - 1) - *y;
   }
 }
 
@@ -438,9 +438,9 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
       break;
     case PBL_INPUT_EV_ABS:
       if (evt->code == PBL_INPUT_ABS_X) {
-        s_report.x = prv_scale(evt->value, prv_range_x(), DISP_COLS);
+        s_report.x = prv_scale(evt->value, prv_range_x(), PBL_DISPLAY_WIDTH);
       } else if (evt->code == PBL_INPUT_ABS_Y) {
-        s_report.y = prv_scale(evt->value, prv_range_y(), DISP_ROWS);
+        s_report.y = prv_scale(evt->value, prv_range_y(), PBL_DISPLAY_HEIGHT);
       } else {
         return;
       }

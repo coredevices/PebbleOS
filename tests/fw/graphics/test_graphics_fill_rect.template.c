@@ -31,7 +31,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_graphics_fill_rect_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 }
 
 // Teardown
@@ -199,7 +199,7 @@ void test_graphics_fill_rect_${BIT_DEPTH_NAME}__color(void) {
 void test_graphics_fill_rect_8bit__transparency(void) {
   GContext ctx;
   FrameBuffer fb;
-  framebuffer_init(&fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&ctx, &fb);
 
   // AA = true, SW has no effect, all corners

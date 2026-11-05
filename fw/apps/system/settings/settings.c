@@ -108,7 +108,7 @@ static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *ce
 
   const int16_t focused_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT;
   const int16_t unfocused_cell_height =
-      (((DISP_ROWS - focused_cell_height) / 2) -
+      (((PBL_DISPLAY_HEIGHT - focused_cell_height) / 2) -
        SETTINGS_CATEGORY_MENU_CELL_UNFOCUSED_ROUND_VERTICAL_PADDING) /
       SETTINGS_CATEGORY_MENU_NUM_UNFOCUSED_ROWS_PER_SIDE;
   return menu_layer_is_index_selected(menu_layer, cell_index) ? focused_cell_height

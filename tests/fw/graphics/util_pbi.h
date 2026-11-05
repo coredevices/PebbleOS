@@ -53,7 +53,8 @@ bool write_gbitmap_to_pbi(GBitmap *bmp, const char *filepath, const char *pbi2pn
 #if PBL_ROUND
   if (bmp->info.format == GBitmapFormat8BitCircular) {
     for (int y = 0; y < entire_bounds.size.h; ++y) {
-      // 8-Bit circular buffer is centered in padded rows, so just grab row and write DISP_COLS
+      // 8-Bit circular buffer is centered in padded rows, so just grab row and write
+      // PBL_DISPLAY_WIDTH
       const GBitmapDataRowInfo dest_row_info = prv_gbitmap_get_data_row_info(bmp, y);
       uint8_t *bmp_row = dest_row_info.data;
       int x = 0;

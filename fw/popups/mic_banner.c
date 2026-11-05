@@ -25,7 +25,7 @@
 #define ICON_MIN_TOP (4)
 
 #if PBL_RECT
-#define LARGE_DISPLAY (DISP_COLS >= 200)
+#define LARGE_DISPLAY (PBL_DISPLAY_WIDTH >= 200)
 //! Black border on the top edge, and on the right edge once shrunk, as Timeline Peek's. Only in
 //! black and white, where the white bar needs it to stand out.
 #define BORDER            PBL_IF_COLOR_ELSE(0, 2)
@@ -66,13 +66,14 @@ static int16_t prv_shape_width(void) {
 }
 #else
 static int16_t prv_shape_width(void) {
-  return DISP_COLS;
+  return PBL_DISPLAY_WIDTH;
 }
 #endif
 
 static GRect prv_frame(bool visible) {
   const int16_t w = prv_shape_width();
-  return GRect((DISP_COLS - w) / 2, visible ? DISP_ROWS - MIC_BANNER_HEIGHT : DISP_ROWS, w,
+  return GRect((PBL_DISPLAY_WIDTH - w) / 2,
+               visible ? PBL_DISPLAY_HEIGHT - MIC_BANNER_HEIGHT : PBL_DISPLAY_HEIGHT, w,
                SHAPE_HEIGHT);
 }
 
@@ -94,9 +95,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, &bounds);
 
   // Shrinking from the bar into the square, 0 to 1; the mic moves to the square's centre
-  const int32_t progress =
-      CLIP(((DISP_COLS - bounds.size.w) * ANIMATION_NORMALIZED_MAX) / (DISP_COLS - SQUARE_SIZE), 0,
-           ANIMATION_NORMALIZED_MAX);
+  const int32_t progress = CLIP(((PBL_DISPLAY_WIDTH - bounds.size.w) * ANIMATION_NORMALIZED_MAX) /
+                                    (PBL_DISPLAY_WIDTH - SQUARE_SIZE),
+                                0, ANIMATION_NORMALIZED_MAX);
   const int16_t square_margin = (SQUARE_SIZE - BORDER - ICON_SIZE) / 2;
   const GPoint icon_origin =
       GPoint(ICON_MARGIN + (((square_margin - ICON_MARGIN) * progress) / ANIMATION_NORMALIZED_MAX),
@@ -109,7 +110,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   const int16_t text_top =
       BORDER + ((MIC_BANNER_HEIGHT - BORDER - line_h) / 2) - (LARGE_DISPLAY ? 4 : 3);
   const GRect text_box =
-      GRect(text_start - (DISP_COLS - bounds.size.w), text_top, DISP_COLS, line_h);
+      GRect(text_start - (PBL_DISPLAY_WIDTH - bounds.size.w), text_top, PBL_DISPLAY_WIDTH, line_h);
   graphics_context_set_text_color(ctx, GColorBlack);
   graphics_draw_text(ctx, i18n_get("Listening...", &s_banner), fonts_get_system_font(FONT_KEY),
                      text_box, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
@@ -119,7 +120,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
 #if !PBL_COLOR
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, &GRect(0, 0, bounds.size.w, BORDER));
-  if (bounds.size.w < DISP_COLS) {
+  if (bounds.size.w < PBL_DISPLAY_WIDTH) {
     graphics_fill_rect(ctx, &GRect(bounds.size.w - BORDER, 0, BORDER, bounds.size.h));
   }
 #endif
@@ -142,7 +143,7 @@ static void prv_release(MicBanner *banner) {
 
 //! Whether a smaller app is scaled up to the display, as Timeline Peek checks.
 static bool prv_is_upscaled_app(const GSize *fb_size) {
-  if (fb_size->h == DISP_ROWS) {
+  if (fb_size->h == PBL_DISPLAY_HEIGHT) {
     return false;
   }
 #if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
@@ -158,9 +159,9 @@ static bool prv_is_upscaled_app(const GSize *fb_size) {
 static int16_t prv_obstruction_for_shape_y(int16_t shape_y) {
   GSize fb_size;
   app_manager_get_framebuffer_size(&fb_size);
-  int16_t y = MIN(shape_y, DISP_ROWS);
+  int16_t y = MIN(shape_y, PBL_DISPLAY_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
-    y = (y * fb_size.h) / DISP_ROWS;
+    y = (y * fb_size.h) / PBL_DISPLAY_HEIGHT;
   }
   return MIN(y, fb_size.h);
 }
@@ -203,11 +204,11 @@ bool mic_banner_get_accessory_area(GRect *area_out) {
     }
     top = fb_size.h;
   }
-  GRect area = GRect(SQUARE_SIZE, top, DISP_COLS - SQUARE_SIZE, MIC_BANNER_HEIGHT);
+  GRect area = GRect(SQUARE_SIZE, top, PBL_DISPLAY_WIDTH - SQUARE_SIZE, MIC_BANNER_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
-    area.origin.x = (SQUARE_SIZE * fb_size.w) / DISP_COLS;
+    area.origin.x = (SQUARE_SIZE * fb_size.w) / PBL_DISPLAY_WIDTH;
     area.size.w = fb_size.w - area.origin.x;
-    area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / DISP_ROWS;
+    area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / PBL_DISPLAY_HEIGHT;
   }
   *area_out = area;
   return true;
@@ -283,7 +284,7 @@ static void prv_slide_stopped(Animation *animation, bool finished, void *context
     prv_release(banner);
   }
 #if PBL_RECT
-  else if (banner->shape.frame.size.w == DISP_COLS) {
+  else if (banner->shape.frame.size.w == PBL_DISPLAY_WIDTH) {
     prv_schedule_collapse(banner);
   }
 #endif
@@ -332,9 +333,10 @@ static void prv_collapse_update(Animation *animation, AnimationProgress progress
   const int32_t bounce_end = (max * 78) / 100;
   int16_t w;
   if (progress < wind_up_end) {
-    w = prv_segment(progress, 0, wind_up_end, DISP_COLS, DISP_COLS + WIND_UP_PX, false);
+    w = prv_segment(progress, 0, wind_up_end, PBL_DISPLAY_WIDTH, PBL_DISPLAY_WIDTH + WIND_UP_PX,
+                    false);
   } else if (progress < snap_end) {
-    w = prv_segment(progress, wind_up_end, snap_end, DISP_COLS + WIND_UP_PX,
+    w = prv_segment(progress, wind_up_end, snap_end, PBL_DISPLAY_WIDTH + WIND_UP_PX,
                     SQUARE_SIZE - OVERSHOOT_PX, true);
   } else if (progress < bounce_end) {
     w = prv_segment(progress, snap_end, bounce_end, SQUARE_SIZE - OVERSHOOT_PX,
@@ -411,7 +413,7 @@ void mic_banner_hide(void) {
   }
   banner->visible = false;
   GRect hidden = banner->shape.frame;
-  hidden.origin.y = DISP_ROWS;
+  hidden.origin.y = PBL_DISPLAY_HEIGHT;
   prv_slide_to(banner, &hidden);
 }
 

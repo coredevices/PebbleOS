@@ -27,15 +27,15 @@ void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
                                                              GColor flip_lid_color) {
   graphics_context_set_fill_color(ctx, flip_lid_color);
 
-  const int16_t circle_radius = DISP_COLS * 3 / 4;
-  const GPoint display_center = GPoint(DISP_COLS / 2, DISP_ROWS / 2);
+  const int16_t circle_radius = PBL_DISPLAY_WIDTH * 3 / 4;
+  const GPoint display_center = GPoint(PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_HEIGHT / 2);
   // The flip overlap region is the intersection of the two large circles (think of a Venn diagram)
-  const uint16_t flip_overlap_region_width = DISP_COLS / 4;
+  const uint16_t flip_overlap_region_width = PBL_DISPLAY_WIDTH / 4;
 
   // Flip halfway through the animation
   const uint32_t flip_distance = ANIMATION_NORMALIZED_MAX / 2;
   if (distance_normalized < flip_distance) {
-    const int16_t flip_boundary_from_x = DISP_COLS;
+    const int16_t flip_boundary_from_x = PBL_DISPLAY_WIDTH;
     const int16_t flip_boundary_to_x = display_center.x - (flip_overlap_region_width / 2);
     const int16_t current_flip_boundary_x =
         interpolate_int16(distance_normalized, flip_boundary_from_x, flip_boundary_to_x);
@@ -44,7 +44,7 @@ void compositor_round_flip_transitions_flip_animation_update(GContext *ctx,
         GPoint(current_flip_boundary_x - circle_radius + 1, display_center.y);
     if (dir == CompositorTransitionDirectionLeft) {
       graphics_fill_radial_internal(ctx, circle_center, circle_radius,
-                                    DISP_COLS - circle_center.x + 1, 0, TRIG_MAX_ANGLE);
+                                    PBL_DISPLAY_WIDTH - circle_center.x + 1, 0, TRIG_MAX_ANGLE);
     } else {
       graphics_fill_circle(ctx, circle_center, circle_radius);
     }

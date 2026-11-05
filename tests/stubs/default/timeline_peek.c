@@ -12,11 +12,11 @@ unsigned int PBL_WEAK timeline_peek_get_concurrent_height(unsigned int num_concu
 }
 
 int16_t PBL_WEAK timeline_peek_get_origin_y(void) {
-  return DISP_ROWS;
+  return PBL_DISPLAY_HEIGHT;
 }
 
 int16_t PBL_WEAK timeline_peek_get_obstruction_origin_y(void) {
-  return DISP_ROWS;
+  return PBL_DISPLAY_HEIGHT;
 }
 
 void PBL_WEAK timeline_peek_handle_process_start(void) {

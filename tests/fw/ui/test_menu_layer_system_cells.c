@@ -118,7 +118,7 @@ void test_menu_layer_system_cells__initialize(void) {
   process_manager_set_compiled_with_legacy2_sdk(false);
 
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
@@ -728,7 +728,7 @@ void test_menu_layer_system_cells__single_line_content_sizes(void) {
         .title = (char *)titles[i],
         .icon_align = DEFAULT_ICON_ALIGN,
       };
-      const GRect cell_bounds = GRect(0, y_offset, DISP_COLS, row_height);
+      const GRect cell_bounds = GRect(0, y_offset, PBL_DISPLAY_WIDTH, row_height);
       prv_draw_cell(MenuCellType_Basic, &cell_bounds, &row_data,
                     &s_menu_system_basic_cell_test_column_data[0], i == 0 /* is_selected */);
       y_offset += row_height;

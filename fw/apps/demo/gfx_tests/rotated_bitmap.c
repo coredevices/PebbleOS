@@ -8,20 +8,20 @@
 static GBitmap *s_gfx_rotated_bitmap_bitmap;
 static GBitmap *s_gfx_rotated_bitmap_64_bitmap;
 
-static GPoint bitmap_center = {DISP_COLS / 2, DISP_ROWS / 2};
+static GPoint bitmap_center = {PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_HEIGHT / 2};
 static GPoint bitmap_64_center = {64 / 2, 64 / 2};
 
 static void prv_setup(Window *window) {
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 1
   s_gfx_rotated_bitmap_bitmap =
-      gbitmap_create_blank(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat1Bit);
+      gbitmap_create_blank(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT), GBitmapFormat1Bit);
   s_gfx_rotated_bitmap_64_bitmap = gbitmap_create_blank(GSize(64, 64), GBitmapFormat1Bit);
-  uint32_t size_full = (DISP_COLS * DISP_ROWS) / 8;
+  uint32_t size_full = (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT) / 8;
 #else
   s_gfx_rotated_bitmap_bitmap =
-      gbitmap_create_blank(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat8Bit);
+      gbitmap_create_blank(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT), GBitmapFormat8Bit);
   s_gfx_rotated_bitmap_64_bitmap = gbitmap_create_blank(GSize(64, 64), GBitmapFormat8Bit);
-  uint32_t size_full = (DISP_COLS * DISP_ROWS);
+  uint32_t size_full = (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT);
 #endif
   uint8_t *s_gfx_rotated_bitmap_pixels = s_gfx_rotated_bitmap_bitmap->addr;
   // Init images

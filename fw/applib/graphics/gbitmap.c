@@ -104,9 +104,9 @@ GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t
     if (!bitmap->data_row_infos) {
       const uint16_t inset = display_round_mask_inset(y);
       return (GBitmapDataRowInfo){
-        .data = (uint8_t *)bitmap->addr + y * DISP_COLS,
+        .data = (uint8_t *)bitmap->addr + y * PBL_DISPLAY_WIDTH,
         .min_x = inset,
-        .max_x = DISP_COLS - 1 - inset,
+        .max_x = PBL_DISPLAY_WIDTH - 1 - inset,
       };
     }
 #endif
@@ -214,8 +214,9 @@ static GColor *prv_allocate_palette(GBitmapFormat format) {
   return palette;
 }
 
-#define BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format) \
-  ((format) == GBitmapFormat8BitCircular && (size).w == DISP_COLS && (size).h == DISP_ROWS)
+#define BITMAP_FORMAT_IS_CIRCULAR_FULL_SCREEN(size, format)                  \
+  ((format) == GBitmapFormat8BitCircular && (size).w == PBL_DISPLAY_WIDTH && \
+   (size).h == PBL_DISPLAY_HEIGHT)
 
 PBL_T_STATIC size_t prv_gbitmap_size_for_data(GSize size, GBitmapFormat format) {
 #if PBL_ROUND

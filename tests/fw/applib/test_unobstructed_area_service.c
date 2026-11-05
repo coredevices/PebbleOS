@@ -59,7 +59,7 @@ void test_unobstructed_area_service__initialize(void) {
   fake_event_service_init();
   s_app_state_framebuffer = &(FrameBuffer){.size = DISP_FRAME.size};
 
-  unobstructed_area_service_init(app_state_get_unobstructed_area_state(), DISP_ROWS);
+  unobstructed_area_service_init(app_state_get_unobstructed_area_state(), PBL_DISPLAY_HEIGHT);
 }
 
 void test_unobstructed_area_service__cleanup(void) {
@@ -114,12 +114,12 @@ void test_unobstructed_area_service__will_change(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.will_change, prv_will_change);
 
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_will_change_calls, 1);
-  const GRect to_area_expected = GRect(0, 0, DISP_COLS, MIN(200, DISP_ROWS));
+  const GRect to_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, MIN(200, PBL_DISPLAY_HEIGHT));
   cl_assert_equal_grect(s_data.last_will_change_final_area, to_area_expected);
 }
 
@@ -132,8 +132,8 @@ void test_unobstructed_area_service__will_change_twice(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.will_change, prv_will_change);
 
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_will_change_calls, 1);
@@ -143,7 +143,7 @@ void test_unobstructed_area_service__will_change_twice(void) {
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_did_change_calls, 1);
   cl_assert_equal_i(s_data.num_will_change_calls, 2);
-  const GRect from_area_expected = GRect(0, 0, DISP_COLS, MIN(400, DISP_ROWS));
+  const GRect from_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, MIN(400, PBL_DISPLAY_HEIGHT));
   cl_assert_equal_grect(s_data.last_will_change_final_area, from_area_expected);
 
   unobstructed_area_service_did_change(from_area.size.h);
@@ -160,12 +160,12 @@ void test_unobstructed_area_service__change(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.change, prv_change);
 
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
   fake_event_service_handle_last();
 
-  const GRect area = GRect(0, 0, DISP_COLS, 200);
+  const GRect area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   const AnimationProgress progress = ANIMATION_NORMALIZED_MAX / 2;
   unobstructed_area_service_change(area.size.h, to_area.size.h, progress);
   fake_event_service_handle_last();
@@ -174,8 +174,8 @@ void test_unobstructed_area_service__change(void) {
 }
 
 void test_unobstructed_area_service__change_after_subscribe(void) {
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
 
   UnobstructedAreaHandlers handlers = {
@@ -186,7 +186,7 @@ void test_unobstructed_area_service__change_after_subscribe(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.change, prv_change);
 
-  const GRect area = GRect(0, 0, DISP_COLS, 200);
+  const GRect area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   const AnimationProgress progress = ANIMATION_NORMALIZED_MAX / 2;
   unobstructed_area_service_change(area.size.h, to_area.size.h, progress);
   fake_event_service_handle_last();
@@ -204,8 +204,8 @@ void test_unobstructed_area_service__change_no_will(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.change, prv_change);
 
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
-  const GRect area = GRect(0, 0, DISP_COLS, 200);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
+  const GRect area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   const AnimationProgress progress = ANIMATION_NORMALIZED_MAX / 2;
   unobstructed_area_service_change(area.size.h, to_area.size.h, progress);
   fake_event_service_handle_last();
@@ -222,8 +222,8 @@ void test_unobstructed_area_service__did_change(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.did_change, prv_did_change);
 
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
   fake_event_service_handle_last();
 
@@ -233,8 +233,8 @@ void test_unobstructed_area_service__did_change(void) {
 }
 
 void test_unobstructed_area_service__did_change_after_subscribe(void) {
-  const GRect from_area = GRect(0, 0, DISP_COLS, 400);
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect from_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 400);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
 
   UnobstructedAreaHandlers handlers = {
@@ -260,7 +260,7 @@ void test_unobstructed_area_service__did_change_no_will(void) {
   cl_assert(fake_event_service_get_info(PEBBLE_UNOBSTRUCTED_AREA_EVENT)->handler);
   cl_assert_equal_p(app_state_get_unobstructed_area_state()->handlers.did_change, prv_did_change);
 
-  const GRect to_area = GRect(0, 0, DISP_COLS, 200);
+  const GRect to_area = GRect(0, 0, PBL_DISPLAY_WIDTH, 200);
   unobstructed_area_service_did_change(to_area.size.h);
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_will_change_calls, 1);

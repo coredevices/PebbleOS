@@ -20,7 +20,7 @@ typedef struct {
 
 static CompositorModalSlideTransitionData s_data;
 
-static const int32_t DISP_ROWS_LAST_INDEX = DISP_ROWS - 1;
+static const int32_t DISP_ROWS_LAST_INDEX = PBL_DISPLAY_HEIGHT - 1;
 
 static void prv_modal_transition_push_update(GContext *ctx, uint32_t distance_normalized) {
   const int16_t new_modal_offset_y =
@@ -29,8 +29,8 @@ static void prv_modal_transition_push_update(GContext *ctx, uint32_t distance_no
   // The modal overshoots its destination by a few pixels. When this happens, fill in the pixels
   // at the bottom of the screen with black.
   if (new_modal_offset_y < 0) {
-    graphics_fill_rect(ctx,
-                       &GRect(0, DISP_ROWS + new_modal_offset_y, DISP_COLS, -new_modal_offset_y));
+    graphics_fill_rect(ctx, &GRect(0, PBL_DISPLAY_HEIGHT + new_modal_offset_y, PBL_DISPLAY_WIDTH,
+                                   -new_modal_offset_y));
   }
 
   gpoint_add_eq(&ctx->draw_state.drawing_box.origin, GPoint(0, new_modal_offset_y));

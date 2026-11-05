@@ -136,7 +136,7 @@ static void prv_update_scroll_offset(TimelineItemLayer *item_layer, int16_t new_
 }
 
 //! Maybe make this part of the style and smaller for smaller text sizes?
-static const int SCROLL_AMOUNT = PBL_IF_RECT_ELSE(48, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT);
+static const int SCROLL_AMOUNT = PBL_IF_RECT_ELSE(48, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT);
 static const int SCROLL_FUDGE_AMOUNT = PBL_IF_RECT_ELSE(10, 0);
 
 /////////////////////////////////////////
@@ -157,7 +157,7 @@ PBL_T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *con
   } else if (current_scroll + SCROLL_AMOUNT + SCROLL_FUDGE_AMOUNT >= max_scroll) {
 #if PBL_ROUND
     // scroll down to page aligned end of content
-    max_scroll = ROUND_TO_MOD_CEIL(max_scroll, DISP_ROWS - STATUS_BAR_LAYER_HEIGHT);
+    max_scroll = ROUND_TO_MOD_CEIL(max_scroll, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT);
 #endif
     prv_update_scroll_offset(item_layer, max_scroll, false);
   } else {

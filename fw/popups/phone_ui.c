@@ -74,12 +74,12 @@
   PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, ACTION_BAR_WIDTH + RIGHTSIDE_PADDING - TEXT_MARGIN_WIDTH)
 #define ICON_WIDTH 80
 // Center icon horizontally in content area (display width minus action bar)
-#define ICON_POSITION_X                                               \
-  PBL_IF_RECT_ELSE(((DISP_COLS - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), \
-                   DISP_ROWS - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
+#define ICON_POSITION_X                                                       \
+  PBL_IF_RECT_ELSE(((PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), \
+                   PBL_DISPLAY_HEIGHT - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
 
 #if PBL_ROUND
-#define ICON_POSITION_CENTERED_X (DISP_ROWS / 2 - ICON_WIDTH / 2)
+#define ICON_POSITION_CENTERED_X (PBL_DISPLAY_HEIGHT / 2 - ICON_WIDTH / 2)
 #endif
 
 static const int16_t DOT_SIZE = 8;
@@ -184,8 +184,8 @@ typedef struct {
 // - Caller ID text area
 // - Status text area
 // Extra vertical space on larger displays is distributed to improve spacing
-#define PHONE_EXTRA_HEIGHT     PBL_IF_RECT_ELSE((DISP_ROWS - 168), 0)
-#define PHONE_ICON_POS_Y_ROUND (22 + ((DISP_ROWS > 180) ? 10 : 0))
+#define PHONE_EXTRA_HEIGHT     PBL_IF_RECT_ELSE((PBL_DISPLAY_HEIGHT - 168), 0)
+#define PHONE_ICON_POS_Y_ROUND (22 + ((PBL_DISPLAY_HEIGHT > 180) ? 10 : 0))
 
 // Default style: icon near top, text below
 #define PHONE_ICON_POS_Y_DEFAULT \
@@ -430,14 +430,14 @@ static void prv_set_caller_id_text(PebblePhoneCaller *caller) {
   }
   const int16_t content_height = lines * fonts_get_font_height(caller_id_font);
 #if PBL_ROUND
-  if (DISP_ROWS > 180) {
+  if (PBL_DISPLAY_HEIGHT > 180) {
     // Bounds origin shifts both the layer and its text box.
     const int16_t text_offset = fonts_get_font_cap_offset(caller_id_font) +
                                 2 * s_phone_ui_data->caller_id_text_layer.layer.bounds.origin.y;
     s_phone_ui_data->caller_id_text_layer.layer.frame.origin.y =
         prv_has_long_name(caller_id_font)
             ? s_phone_ui_data->style->caller_id_pos_y
-            : (DISP_ROWS - fonts_get_font_height(caller_id_font)) / 2 - text_offset;
+            : (PBL_DISPLAY_HEIGHT - fonts_get_font_height(caller_id_font)) / 2 - text_offset;
   }
 #endif
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.h = content_height;

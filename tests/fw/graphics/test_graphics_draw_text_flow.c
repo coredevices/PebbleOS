@@ -46,7 +46,7 @@ void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   // These are off-screen, tiled scratch buffers for side-by-side comparison, not
   // the real display framebuffer. On a round platform GBITMAP_NATIVE_FORMAT is
   // GBitmapFormat8BitCircular, whose rows are laid out as the display's, so it
-  // only exists in full-screen (DISP_COLS x DISP_ROWS) size.
+  // only exists in full-screen (PBL_DISPLAY_WIDTH x PBL_DISPLAY_HEIGHT) size.
   // Use a plain rectangular 8-bit format, which addresses rows by row_size_bytes.
   s_dest_bitmap =
       gbitmap_create_blank(GSize(size.w * steps_x, size.h * steps_y), GBitmapFormat8Bit);
@@ -64,7 +64,7 @@ void prv_prepare_fb_steps(GSize size) {
 
 void test_graphics_draw_text_flow__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   ctx = (GContext){};
 
   // Setup resources
@@ -84,7 +84,7 @@ void test_graphics_draw_text_flow__initialize(void) {
 
   setup_test_aa_sw(&ctx, fb, ctx.dest_bitmap.bounds, ctx.dest_bitmap.bounds, false, 1);
 
-  prv_prepare_fb_steps(GSize(DISP_COLS, DISP_ROWS));
+  prv_prepare_fb_steps(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
 }
 
 void test_graphics_draw_text_flow__cleanup(void) {
@@ -93,7 +93,7 @@ void test_graphics_draw_text_flow__cleanup(void) {
   s_dest_bitmap = nullptr;
 }
 
-#define RECT_TEXT_0_0 GRect(0, 0, DISP_COLS, DISP_ROWS)
+#define RECT_TEXT_0_0 GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT)
 GRangeHorizontal perimeter_for_display_round(const GPerimeter *perimeter, const GSize *ctx_size,
                                              GRangeVertical vertical_range, uint16_t inset);
 
@@ -127,7 +127,7 @@ void render_steps(TextLayoutExtended *layout, RenderMoveMode mode, int delta, in
       // simply adjust the draw_box to accomplish a side-by-side comparison
       ctx.dest_bitmap.addr = prv_bitmap_offset_for_steps(s_dest_bitmap, sx, sy, steps_x, steps_y);
 
-      GRect box = {.size = GSize(DISP_COLS, height)};
+      GRect box = {.size = GSize(PBL_DISPLAY_WIDTH, height)};
       const GPoint origin = GPoint(delta * sx, delta * sy);
       if (mode == RenderMoveTextBox) {
         box.origin = origin;
@@ -157,7 +157,7 @@ void test_graphics_draw_text_flow__flow_no_paging(void) {
       .perimeter.inset = 8,
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
+  render_steps(&layout, RenderMoveTextBox, DELTA, PBL_DISPLAY_HEIGHT, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -168,7 +168,7 @@ void test_graphics_draw_text_flow__flow_no_paging_draw_box(void) {
       .perimeter.inset = 8,
     },
   };
-  render_steps(&layout, RenderMoveDrawBox, DELTA, DISP_ROWS, nullptr);
+  render_steps(&layout, RenderMoveDrawBox, DELTA, PBL_DISPLAY_HEIGHT, nullptr);
   // should result in the very same output as if you did a placement via text box
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, "test_graphics_draw_text_flow__flow_no_paging.pbi"));
 }
@@ -178,11 +178,12 @@ void test_graphics_draw_text_flow__with_origin_zero(void) {
     .flow_data = {
       .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
       .perimeter.inset = 8,
-      .paging.page_on_screen.size_h = DISP_ROWS, // setting a page height != enables positioning
+      .paging.page_on_screen.size_h =
+          PBL_DISPLAY_HEIGHT, // setting a page height != enables positioning
       .paging.origin_on_screen = {0, 0},
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
+  render_steps(&layout, RenderMoveTextBox, DELTA, PBL_DISPLAY_HEIGHT, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -191,16 +192,17 @@ void test_graphics_draw_text_flow__with_origin_non_zero(void) {
     .flow_data = {
       .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},
       .perimeter.inset = 8,
-      .paging.page_on_screen.size_h = DISP_ROWS, // setting a page height != enables positioning
+      .paging.page_on_screen.size_h =
+          PBL_DISPLAY_HEIGHT, // setting a page height != enables positioning
       .paging.origin_on_screen = {DELTA, 2 * DELTA},
     },
   };
-  render_steps(&layout, RenderMoveTextBox, DELTA, DISP_ROWS, nullptr);
+  render_steps(&layout, RenderMoveTextBox, DELTA, PBL_DISPLAY_HEIGHT, nullptr);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_graphics_draw_text_flow__with_paging(void) {
-  prv_prepare_fb_steps(GSize(DISP_COLS, 2 * DISP_ROWS));
+  prv_prepare_fb_steps(GSize(PBL_DISPLAY_WIDTH, 2 * PBL_DISPLAY_HEIGHT));
   TextLayoutExtended layout = {
     .flow_data = {
       .perimeter.impl = &(GPerimeter){.callback = perimeter_for_display_round},

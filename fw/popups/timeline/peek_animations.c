@@ -37,7 +37,8 @@ void peek_animations_draw_compositor_foreground_speed_lines(GContext *ctx, GPoin
 }
 
 void peek_animations_draw_compositor_background_speed_lines(GContext *ctx, GPoint offset) {
-  static const uint16_t s_heights[] = {0, DISP_ROWS, DISP_ROWS, 0, 0, 0, DISP_ROWS};
+  static const uint16_t s_heights[] = {0, PBL_DISPLAY_HEIGHT, PBL_DISPLAY_HEIGHT, 0, 0,
+                                       0, PBL_DISPLAY_HEIGHT};
   prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_heights), nullptr /* offsets_y */, s_heights,
                           LINE_WIDTH, LINE_SPACING, offset);
 }
