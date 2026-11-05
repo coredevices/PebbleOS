@@ -143,6 +143,25 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
   voice_handle_nlp_result(msg->result, msg->session_id, reminder_str, timestamp);
   pbl_free(reminder_str);
 }
+
+static void prv_handle_service_retry(ServiceRetryMsg *msg, size_t size) {
+  const size_t attr_list_size =
+      size - sizeof(ServiceRetryMsg) + sizeof(struct pbl_generic_attr_list);
+
+  struct pbl_generic_attr *name_attr =
+      pbl_generic_attr_find(&msg->attr_list, VEAttributeIdServiceName, attr_list_size);
+  if (!name_attr || name_attr->length == 0) {
+    PBL_LOG_WRN("No service name attribute found in service retry message");
+    return;
+  }
+
+  char *service_name = pbl_zalloc_check(name_attr->length + 1);
+  memcpy(service_name, name_attr->data, name_attr->length);
+  service_name[name_attr->length] = '\0';
+
+  voice_handle_service_retry(msg->session_id, service_name);
+  pbl_free(service_name);
+}
 #endif
 
 #ifdef CONFIG_MIC
@@ -194,6 +213,15 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
         prv_handle_nlp_result(msg, size);
       } else {
         PBL_LOG_WRN("Invalid size for dictation result message %zu", size);
+      }
+      break;
+    }
+    case MsgIdServiceRetry: {
+      if (size >= sizeof(ServiceRetryMsg)) {
+        ServiceRetryMsg *msg = (ServiceRetryMsg *)data;
+        prv_handle_service_retry(msg, size);
+      } else {
+        PBL_LOG_WRN("Invalid size for service retry message %zu", size);
       }
       break;
     }
