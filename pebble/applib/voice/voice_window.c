@@ -70,6 +70,7 @@ static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
 static void prv_cancel_dictation(VoiceUiData *data);
 static void prv_set_mic_window_state(VoiceUiData *data, VoiceUiState state);
+static void prv_show_retry_text(VoiceUiData *data, PebbleVoiceServiceEvent *event);
 static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to, uint32_t duration,
                                                      const PropertyAnimationImplementation *impl,
                                                      void *subject);
@@ -499,6 +500,10 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
       if (event->type == VoiceEventTypeSessionResult) {
         prv_handle_dictation_result(data, event);
       }
+      if (event->type == VoiceEventTypeServiceRetry) {
+        // The voice service has already restarted its timeout; just tell the user
+        prv_show_retry_text(data, event);
+      }
       break;
 
     case StateRecording:
@@ -669,6 +674,21 @@ static void prv_show_mic_text(VoiceUiData *data, const char *msg) {
   layer_set_hidden((Layer *)&data->mic_window.text_layer, false);
   sys_i18n_get_with_buffer(msg, data->mic_window.text_buffer, sizeof(data->mic_window.text_buffer));
   text_layer_set_text(&data->mic_window.text_layer, data->mic_window.text_buffer);
+}
+
+// Show which service the phone is retrying dictation with
+static void prv_show_retry_text(VoiceUiData *data, PebbleVoiceServiceEvent *event) {
+  switch (event->service) {
+    case VoiceEndpointServiceOnline:
+      prv_show_mic_text(data, pbl_i18n_noop("Retrying"));
+      break;
+    case VoiceEndpointServiceOffline:
+      prv_show_mic_text(data, pbl_i18n_noop("Retrying offline"));
+      break;
+    default:
+      PBL_LOG_DBG("Service retry event with unknown service %u", (unsigned)event->service);
+      break;
+  }
 }
 
 static void prv_kino_reel_stopped_handler(KinoLayer *layer, bool finished, void *context) {
@@ -1131,12 +1151,14 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
 
     case StateStopWaitForResponse:
       // shrink progress bar
+      prv_hide_mic_text(data);
       prv_shrink_progress_bar(data);
       break;
 
     case StateTransitionToText:
       // fly dot out
       prv_hide_unfold_animation(data);
+      prv_hide_mic_text(data);
       prv_hide_progress_bar(data);
       prv_hide_mic_dot(data);
       prv_fly_dot(data, false /* fly out */);

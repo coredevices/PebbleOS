@@ -44,7 +44,7 @@ typedef struct VoiceUiData {
     Layer mic_dot_layer;
     int16_t mic_dot_radius;
     TextLayer text_layer;
-    char text_buffer[20]; // Larger than needed because i18n
+    char text_buffer[48]; // Fits "Retrying offline" with room for i18n
     StatusBarLayer status_bar;
     LoadingLayer progress_bar;
     PropertyAnimation *progress_anim;
