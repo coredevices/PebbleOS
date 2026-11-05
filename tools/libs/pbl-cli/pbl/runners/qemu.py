@@ -174,8 +174,8 @@ class QemuRunner(Runner):
             "-qmp", f"unix:{qmp},server=on,wait=off",
             "-s",
             "-serial", "file:uart1.log",
-            "-serial", f"tcp::{emulator.PEBBLE_TOOL_PORT},server=on,wait=off",
-            "-serial", f"tcp::{emulator.CONSOLE_PORT},server=on,wait=off",
+            "-serial", f"tcp::{emulator.PEBBLE_TOOL_PORT},server=on,wait=off,nodelay=on",
+            "-serial", f"tcp::{emulator.CONSOLE_PORT},server=on,wait=off,nodelay=on",
         ]
         if self.bt_hci:
             launch += ["-serial", self.bt_hci]
