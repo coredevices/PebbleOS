@@ -42,10 +42,10 @@ config SRAM_SIZE
 config FIRMWARE_OFFSET
     default 4096
 
-# Raised to prevent ACL mbuf allocation failures during high-throughput
-# operations (e.g. firmware update over BLE on iOS).
+# Sized over the peak measured under load (22 blocks). Exhaustion blocks the
+# HCI RX task, it does not drop data.
 config NIMBLE_BLE_TRANSPORT_ACL_COUNT
-    default 60
+    default 36
 
 
 config NUM_IRQS
