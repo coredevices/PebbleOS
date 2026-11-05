@@ -63,7 +63,7 @@ static inline void prv_unlock(void) {
 // Takes LPSYS, the counter and the reference clock. Returns 0, -EBUSY if the LCPU holds the
 // counter, or another negative errno.
 static int prv_acquire(void) {
-  uint32_t csr;
+  uintptr_t csr_addr = SF32LB52_LPSYS_RCC_BASE + SF32LB52_LPSYS_RCC_CSR_OFFSET;
   int ret;
 
   soc_sf32lb52_lpsys_wake();
@@ -75,13 +75,6 @@ static int prv_acquire(void) {
     return -EBUSY;
   }
 
-  // The LPSYS clock must run from the crystal; the LCPU owns it, so it is not switched here.
-  csr = pbl_readl(SF32LB52_LPSYS_RCC_BASE + SF32LB52_LPSYS_RCC_CSR_OFFSET);
-  if (PBL_FIELD_GET(LPSYS_RCC_CSR_SEL_SYS_MASK, csr) != LPSYS_RCC_CSR_SEL_SYS_HXT48) {
-    ret = -ENODEV;
-    goto unlock;
-  }
-
   s_hxt48_requested = (pbl_readl(SF32LB52_LPSYS_AON_BASE + SF32LB52_LPSYS_AON_ACR_OFFSET) &
                        LPSYS_AON_ACR_HXT48_REQ) == 0U;
   if (s_hxt48_requested) {
@@ -91,13 +84,19 @@ static int prv_acquire(void) {
                           LPSYS_AON_ACR_HXT48_RDY) != 0U,
                          10U, HXT48_TIMEOUT_US);
   if (ret == 0) {
+    // The LCPU may not be running. Not restored: it may start during the gate and needs this too.
+    if (PBL_FIELD_GET(LPSYS_RCC_CSR_SEL_SYS_MASK, pbl_readl(csr_addr)) !=
+        LPSYS_RCC_CSR_SEL_SYS_HXT48) {
+      pbl_modifyl(LPSYS_RCC_CSR_SEL_SYS_MASK,
+                  PBL_FIELD_PREP(LPSYS_RCC_CSR_SEL_SYS_MASK, LPSYS_RCC_CSR_SEL_SYS_HXT48),
+                  csr_addr);
+    }
     return 0;
   }
 
   if (s_hxt48_requested) {
     prv_acr_modify(LPSYS_AON_ACR_HXT48_REQ, 0U);
   }
-unlock:
   prv_unlock();
   soc_sf32lb52_lpsys_release();
   return ret;

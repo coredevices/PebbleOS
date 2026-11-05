@@ -21,18 +21,16 @@ Bluetooth sleep timing, and never uses this estimate. A mailbox mutex
 serializes the two: the driver retries a second later if the LCPU holds it,
 and the LCPU, finding it taken, retries from its next idle hook. For the
 duration of a gate the driver keeps the low-power domain awake and the
-crystal requested, and lets the CPU sleep. The LCPU owns the low-power
-domain's clock selection: the driver only checks that it runs from the
-crystal, as it does with Bluetooth on and in airplane mode.
+crystal requested, and lets the CPU sleep. Calibration does not depend on
+Bluetooth: if the LCPU has not moved the low-power domain to the crystal, the
+driver does, and leaves it there, as the LCPU may start during the gate.
 
-At init, the low-power domain does not run from the crystal yet, so the
-rate starts at a nominal 10 kHz and gates are retried every second until one
-succeeds, about 3 s into boot, after the LCPU has started. That first gate
-replaces the nominal rate outright, however far from it: the nominal rate is
-only a placeholder, and results are never judged against it. On one watch,
-the RC10K ran at 9658 Hz before a power cycle and 9555 Hz after it. A gate
-is timed in kernel time, itself counted on the RC10K, so it lasts the right
-number of cycles whatever rate is assumed.
+The rate starts at a nominal 10 kHz and gates are retried every second until
+one succeeds. That first gate replaces the nominal rate outright, however far
+from it: the nominal rate is only a placeholder, and results are never judged
+against it. On one watch, the RC10K ran at 9658 Hz before a power cycle and
+9555 Hz after it. A gate is timed in kernel time, itself counted on the RC10K,
+so it lasts the right number of cycles whatever rate is assumed.
 
 The system clock source and the RTC follow the rate through notifiers; the
 RTC prescaler can be rewritten while the calendar runs, so the calendar keeps
