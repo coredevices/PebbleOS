@@ -21,9 +21,5 @@ else()
   message(FATAL_ERROR "Unknown board ${PBL_BOARD}")
 endif()
 
-if(CONFIG_PLATFORM_GABBRO)
-  list(APPEND sources displays/display_gabbro.c)
-endif()
-
 pbl_library()
 pbl_library_sources(${sources})

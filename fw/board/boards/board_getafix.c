@@ -13,6 +13,7 @@
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
 #include <pbl/drivers/panel/jdi_mip.h>
+#include <pbl/drivers/panel/ls013b7dd02.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
@@ -134,7 +135,8 @@ PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IR
                                PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
                                &s_panel.panel, 260, 260, true,
                                PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
-                               ARRAY_LENGTH(s_display_discharge));
+                               ARRAY_LENGTH(s_display_discharge),
+                               .round_mask = pbl_panel_ls013b7dd02_round_mask);
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);

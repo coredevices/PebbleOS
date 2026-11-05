@@ -141,6 +141,9 @@ void compositor_display_init(void) {
 
   PBL_ASSERTN((DISPLAY->width == PBL_DISPLAY_WIDTH) && (DISPLAY->height == PBL_DISPLAY_HEIGHT) &&
               (DISPLAY->format == format));
+#if PBL_ROUND
+  PBL_ASSERTN(DISPLAY->round_mask != nullptr);
+#endif
 
   uint8_t max_width = 0;
   for (uint8_t i = 0; i < DISPLAY->num_corners; i++) {

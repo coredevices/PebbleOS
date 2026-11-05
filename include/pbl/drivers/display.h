@@ -126,10 +126,26 @@ struct pbl_display {
   const uint8_t *corners;
   /** Number of @ref corners entries. */
   uint8_t num_corners;
+  /**
+   * Pixels hidden at each end of the rows of the top half of a round panel, mirrored in the bottom
+   * half, or NULL.
+   */
+  const uint8_t *round_mask;
 };
 
 /** @brief The display, defined by the board. */
 extern const struct pbl_display *const DISPLAY;
+
+/**
+ * @brief Get the pixels hidden at each end of a row of a round panel.
+ *
+ * @param disp Display, with a @ref pbl_display.round_mask.
+ * @param y Row.
+ * @return Pixels hidden at each end of the row.
+ */
+static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, uint16_t y) {
+  return disp->round_mask[(y < disp->height / 2) ? y : (disp->height - 1 - y)];
+}
 
 /**
  * @brief Define the class state of display @p sym, for the @c PBL_*_DEFINE() macro of a driver.

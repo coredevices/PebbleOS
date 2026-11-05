@@ -187,7 +187,7 @@ pbl_clar_test(test_gbitmap_formats
     tests/fakes/fake_gbitmap_png.c
     tests/fakes/fake_resource_syscalls.c
     fw/applib/graphics/gbitmap.c
-    fw/board/displays/display_gabbro.c
+    tests/fakes/fake_round_display.c
   PLATFORMS emery gabbro
 )
 
@@ -290,7 +290,7 @@ pbl_clar_test(test_gbitmap_sequence
   SOURCES
     fw/applib/graphics/gbitmap_sequence.c
     fw/applib/graphics/8_bit/bitblt_private.c
-    fw/board/displays/display_gabbro.c
+    tests/fakes/fake_round_display.c
     tests/fakes/fake_resource_syscalls.c
   PLATFORMS gabbro
   TEST_IMAGES
@@ -346,7 +346,7 @@ pbl_clar_test(test_framebuffer_duma
   SOURCES
     fw/applib/graphics/8_bit/framebuffer.c
     fw/applib/graphics/8_bit/bitblt_private.c
-    fw/board/displays/display_gabbro.c
+    tests/fakes/fake_round_display.c
   PLATFORMS emery gabbro
   TEST_IMAGES
 )
@@ -356,7 +356,7 @@ pbl_clar_test(test_framebuffer_legacy
   SOURCES
     fw/applib/graphics/8_bit/framebuffer.c
     fw/applib/graphics/8_bit/bitblt_private.c
-    fw/board/displays/display_gabbro.c
+    tests/fakes/fake_round_display.c
   PLATFORMS gabbro
   TEST_IMAGES
 )

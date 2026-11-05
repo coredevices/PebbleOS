@@ -26,11 +26,12 @@ extern const struct pbl_display_ops pbl_display_sdl_ops;
  * @param _width Width, in pixels.
  * @param _height Height, in pixels.
  * @param _format Framebuffer format.
+ * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
  */
-#define PBL_DISPLAY_SDL_DEFINE(sym, _name, _width, _height, _format)                         \
-  PBL_DISPLAY_STATE_DEFINE(sym);                                                             \
-  const struct pbl_display sym = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sdl_ops, nullptr, \
-                                                  _width, _height, _format, false);          \
+#define PBL_DISPLAY_SDL_DEFINE(sym, _name, _width, _height, _format, ...)                        \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                 \
+  const struct pbl_display sym = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sdl_ops, nullptr,     \
+                                                  _width, _height, _format, false, __VA_ARGS__); \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 /** @} */
