@@ -135,6 +135,20 @@ bool alerts_preferences_get_notification_respect_phone_silence(void);
  */
 void alerts_preferences_set_notification_respect_phone_silence(bool enable);
 
+/**
+ * @brief Get whether acted-on and dismissed notifications are hidden from history.
+ *
+ * @return true if enabled, false if they stay in history (default).
+ */
+bool alerts_preferences_get_notification_dismissal_sync(void);
+
+/**
+ * @brief Set whether acted-on and dismissed notifications are hidden from history.
+ *
+ * @param enable true to enable.
+ */
+void alerts_preferences_set_notification_dismissal_sync(bool enable);
+
 /** @brief Age range within which notifications from the same sender are grouped. */
 typedef enum {
   /** Grouping disabled (default). */
