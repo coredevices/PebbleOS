@@ -15,4 +15,4 @@ typedef const struct HRMDevice HRMDevice;
 void board_early_init(void);
 void board_init(void);
 
-#include "board_definitions.h"
+#include <board/boards/board_native.h>
