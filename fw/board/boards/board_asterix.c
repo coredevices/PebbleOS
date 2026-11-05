@@ -23,13 +23,11 @@
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
 #include <board/board.h>
 #include <board/otp_layout.h>
 #include <flash_region/flash_region.h>
-#include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
 
 PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(NRF5_GPIO_P0, 19, 0),
@@ -180,18 +178,6 @@ const Npm1300Config NPM1300_CONFIG = {
 };
 
 void board_early_init(void) {
-  PBL_LOG_ERR("asterix early init");
-
-  nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
-  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
-  nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
-  /* TODO: Add timeout, report failure if LFCLK does not start. For now,
-   * WDT should trigger a reboot. Calibrated RC may be used as a fallback,
-   * provided we can adjust BLE SCA settings at runtime.
-   */
-  while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED)) {
-  }
-  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
 }
 
 void board_init(void) {
