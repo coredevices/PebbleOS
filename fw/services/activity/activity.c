@@ -143,14 +143,17 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
       return;
     }
 
-    // Check to see if the watch is face up or face down. If it is assume the watch is off wrist
+    // A face up or face down watch is often lying on a table, but a wrist resting flat on a desk
+    // reads the same. Only skip the measurement when the HRM also recently reported off-wrist.
     // The z-axis is encoded in the 4 most significant bits of the orientation
     const uint8_t z_axis = s_activity_state.last_orientation >> 4;
     const bool watch_is_flat = z_axis == 0 || z_axis == 8;
+    const bool likely_off_wrist =
+        watch_is_flat && activity_metrics_prv_is_hrm_offwrist(pbl_realtime());
 
-    const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !watch_is_flat;
-    if (!s_activity_state.hr.currently_sampling && watch_is_flat) {
-      PBL_LOG_DBG("Not subscribing to HRM: watch is flat(ish)");
+    const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !likely_off_wrist;
+    if (!s_activity_state.hr.currently_sampling && likely_off_wrist) {
+      PBL_LOG_DBG("Not subscribing to HRM: watch is flat and off wrist");
     }
 
     // Pick the subscription rate (essentially ON and OFF)

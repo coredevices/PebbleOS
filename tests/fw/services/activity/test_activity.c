@@ -2507,8 +2507,27 @@ void test_activity__hrm_sampling_period(void) {
   // Should be back to no sampling by now (very large sampling period)
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
-  // Advance to our next sampling period, but the watch is flat so we shouldn't start sampling
+  // A flat watch that the HRM last saw on the wrist (e.g. a wrist resting on a desk) must still
+  // be sampled.
   s_test_alg_state.orientation = 0x00; // Flat
+  for (uint32_t i = 0; i < (10 * PBL_SEC_PER_MIN); i++) {
+    prv_advance_time_hr(1, 100 /*bpm*/, CONF_ACCEPTABLE, false /*force_continuous*/);
+    if (s_hrm_manager_update_interval == 1) {
+      break;
+    }
+  }
+  cl_assert_equal_i(s_hrm_manager_update_interval, 1);
+
+  // Finish that window with off-wrist readings, so the HRM now reports the watch off the wrist.
+  for (uint32_t i = 0; i < ACTIVITY_DEFAULT_HR_ON_TIME_SEC; i++) {
+    prv_advance_time_hr(1, 0 /*bpm*/, OFF_WRIST, false /*force_continuous*/);
+    if (s_hrm_manager_update_interval != 1) {
+      break;
+    }
+  }
+  cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
+
+  // Flat and off-wrist: the next sampling period must not start a measurement.
   prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
