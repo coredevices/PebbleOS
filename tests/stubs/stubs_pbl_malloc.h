@@ -4,5 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 void stub_pbl_malloc_set_should_fail(bool should_fail);
+void stub_pbl_malloc_set_max_size(size_t max_size);
