@@ -462,6 +462,46 @@ void test_weather_app_layout__render_heavy_snow_rain_snow(void) {
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
+void test_weather_app_layout__render_light_rain_summary(void) {
+  // A light rain day with no other warning must not sign off with "All clear"
+  s_units_distance = UnitsDistance_KM;
+  s_units_wind = UnitsWind_KmH;
+  s_units_temperature = UnitsTemperature_Celsius;
+  WeatherLocationForecast today = {
+    .location_name = "TOKYO",
+    .today_wmo = 61,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP,
+    .today_high = 22,
+    .today_low = 18,
+    .today_uv = 0,
+    .today_uv_now = 0,
+    .today_precip_mm = 93,
+    .today_wind_mph = 7,
+    .today_wind_dir_deg = 45,
+    .today_feels = WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP,
+    .current_weather_type = WeatherType_LightRain,
+    .current_weather_phrase = "Light Rain",
+  };
+  WeatherLocationForecast next = {
+    .location_name = "TOKYO",
+    .today_wmo = -1,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = 23,
+    .today_high = 23,
+    .today_low = 16,
+    .current_weather_type = WeatherType_Sun,
+    .current_weather_phrase = "Sunny",
+  };
+
+  prv_create_layout_and_render(&today, &next);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
 void test_weather_app_layout__render_no_next_forecast(void) {
   WeatherLocationForecast today = {
     .location_name = "PALO ALTO",
