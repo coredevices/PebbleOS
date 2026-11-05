@@ -46,6 +46,8 @@ typedef union PBL_PACKED {
   struct {
     /** The session was started by an app. */
     uint32_t app_initiated : 1;
+    /** The watch accepts #MsgIdServiceRetry for this session. Zero on older firmware. */
+    uint32_t service_retry_support : 1;
   };
   /** All flags. */
   uint32_t all;
