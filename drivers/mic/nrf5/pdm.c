@@ -50,20 +50,23 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   // The kernel heap fragments over time, so a single 10 KB contiguous alloc
   // can fail even when plenty of memory is free. Shrink the request in 32 ms
   // steps until it fits or we hit the 128 ms floor.
+  // The heap must also serve the Bluetooth packets that carry the audio.
+  unsigned int used, free_bytes, max_free;
   uint16_t try_size = CIRCULAR_BUF_SIZE_BYTES;
   uint8_t *storage = nullptr;
 
+  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
   while (try_size >= CIRCULAR_BUF_MIN_SIZE_BYTES) {
-    storage = pbl_malloc(try_size);
-    if (storage) {
-      break;
+    if ((unsigned int)try_size + CIRCULAR_BUF_HEAP_RESERVE_BYTES <= max_free) {
+      storage = pbl_malloc(try_size);
+      if (storage) {
+        break;
+      }
     }
     try_size -= CIRCULAR_BUF_STEP_BYTES;
   }
 
   if (!storage) {
-    unsigned int used, free_bytes, max_free;
-    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)",
                 (unsigned)CIRCULAR_BUF_MIN_SIZE_BYTES, max_free);
     prv_free_buffers(state);
@@ -71,8 +74,6 @@ static bool prv_allocate_buffers(MicDeviceState *state) {
   }
 
   if (try_size < CIRCULAR_BUF_SIZE_BYTES) {
-    unsigned int used, free_bytes, max_free;
-    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
                 (unsigned)try_size, (unsigned)CIRCULAR_BUF_SIZE_BYTES, max_free);
   }

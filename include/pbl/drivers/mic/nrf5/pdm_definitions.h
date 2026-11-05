@@ -55,6 +55,9 @@
 /** @brief Queue shrink per allocation retry, in bytes. */
 #define CIRCULAR_BUF_STEP_BYTES (CIRCULAR_BUF_STEP_SAMPLES * sizeof(int16_t))
 
+/** @brief Heap left free after allocating the queue, in bytes. */
+#define CIRCULAR_BUF_HEAP_RESERVE_BYTES (2048)
+
 /** @cond INTERNAL_HIDDEN */
 typedef struct {
   nrfx_pdm_config_t pdm_config;
