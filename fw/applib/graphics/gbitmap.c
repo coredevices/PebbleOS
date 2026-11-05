@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/drivers/display.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/testing.h>
@@ -102,7 +103,7 @@ GBitmapDataRowInfo prv_gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t
   if (bitmap->info.format == GBitmapFormat8BitCircular) {
 #if PBL_ROUND
     if (!bitmap->data_row_infos) {
-      const uint16_t inset = display_round_mask_inset(y);
+      const uint16_t inset = pbl_display_round_inset(DISPLAY, y);
       return (GBitmapDataRowInfo){
         .data = (uint8_t *)bitmap->addr + y * PBL_DISPLAY_WIDTH,
         .min_x = inset,

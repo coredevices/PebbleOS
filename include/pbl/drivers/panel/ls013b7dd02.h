@@ -2,12 +2,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#pragma once
+
 #include <stdint.h>
 
-#include <board/display.h>
-
-// LS013B7DD02 datasheet, table 6-6-2
-const uint8_t g_display_round_mask[] = {
+/** Round mask of the LS013B7DD02 panel, from table 6-6-2 of its datasheet. */
+static const uint8_t pbl_panel_ls013b7dd02_round_mask[] = {
   113, 107, 102, 98, 94, 90, 87, 85, 82, 80, 77, 75, 73, 71, 69, 67, 65, 64, 62, 60, 59, 57,
   56,  54,  53,  52, 50, 49, 48, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32,
   31,  30,  29,  29, 28, 27, 26, 26, 25, 24, 23, 23, 22, 21, 21, 20, 19, 19, 18, 18, 17, 16,

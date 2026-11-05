@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/display.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -48,7 +49,7 @@ static void prv_draw_solid(Layer *layer, GContext *ctx, GColor color) {
 
 static void prv_draw_round_border(Layer *layer, GContext *ctx, uint8_t radial_padding_size) {
   for (int i = 0; i < layer->bounds.size.h / 2 - radial_padding_size; ++i) {
-    const int16_t mask = display_round_mask_inset(i) + radial_padding_size;
+    const int16_t mask = pbl_display_round_inset(DISPLAY, i) + radial_padding_size;
     const int offset = i + radial_padding_size;
     // Draw both row-wise and column-wise to fill in any discontinuities
     // in the border circle.

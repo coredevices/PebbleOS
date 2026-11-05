@@ -8,6 +8,7 @@
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/panel/ls013b7dd02.h>
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/touch/qemu.h>
@@ -34,7 +35,8 @@ const struct pbl_uart *const BT_HCI_UART = &s_uart3.uart;
 
 // Display device - QEMU framebuffer
 PBL_DISPLAY_QEMU_DEFINE(s_display, "display", QEMU_DISPLAY_BASE, QEMU_DISPLAY_FB_BASE, 260, 260,
-                        PBL_DISPLAY_FORMAT_ARGB2222);
+                        PBL_DISPLAY_FORMAT_ARGB2222,
+                        .round_mask = pbl_panel_ls013b7dd02_round_mask);
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 

@@ -41,12 +41,13 @@ extern const struct pbl_display_ops pbl_display_qemu_ops;
  * @param _width Width, in pixels.
  * @param _height Height, in pixels.
  * @param _format Framebuffer format.
+ * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
  */
-#define PBL_DISPLAY_QEMU_DEFINE(sym, _name, _base, _fb, _width, _height, _format)                  \
+#define PBL_DISPLAY_QEMU_DEFINE(sym, _name, _base, _fb, _width, _height, _format, ...)             \
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
   const struct pbl_display_qemu sym = {                                                            \
     .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_qemu_ops, nullptr, _width, _height, _format, \
-                             false),                                                               \
+                             false, __VA_ARGS__),                                                  \
     .base = (_base),                                                                               \
     .fb = (_fb),                                                                                   \
   };                                                                                               \

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/display.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
@@ -100,7 +101,7 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
     }
 
 #if PBL_ROUND
-    const size_t framebuffer_row_min_pixel = display_round_mask_inset(state->row);
+    const size_t framebuffer_row_min_pixel = pbl_display_round_inset(DISPLAY, state->row);
     const size_t framebuffer_row_max_pixel = PBL_DISPLAY_WIDTH - 1 - framebuffer_row_min_pixel;
     for (uint32_t i = 0; i < remaining_framebuffer_row_bytes; i++) {
       const uint32_t i_with_offset = i + framebuffer_current_column;
