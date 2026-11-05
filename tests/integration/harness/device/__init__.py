@@ -38,7 +38,7 @@ class DeviceConfig:
     base_timeout: float = 60.0
     connections: list = field(default_factory=list)
     serial: list = field(default_factory=list)
-    serial_baud: int = 115200
+    serial_baud: int = None
     flash_before: bool = False
     erase_fs: bool = False
     flash_command: str = None

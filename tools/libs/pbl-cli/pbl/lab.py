@@ -17,7 +17,6 @@ from pbl import power
 
 ENV = "PBL_LAB"
 LEGACY_ENV = "PBL_ITEST_LAB"
-DEFAULT_SERIAL_BAUD = 115200
 
 
 class LabError(Exception):
@@ -37,7 +36,6 @@ class Watch:
     name: str
     board: str
     serial: str = None
-    serial_baud: int = DEFAULT_SERIAL_BAUD
     probe: str = None
     supply: str = None
 

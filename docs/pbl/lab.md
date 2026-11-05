@@ -43,7 +43,7 @@ else. `pbl` reads it from `--lab`, else `$PBL_LAB`, else
 Commands that reach a watch take the ports the command line leaves out
 from the lab's watch for the build: {doc}`run`, {doc}`erase`,
 {doc}`debug` and {doc}`debugserver` (`--tty`, `--probe`), {doc}`console`
-(`--tty`, `--baudrate`), {doc}`image_resources` and {doc}`image_recovery`
+(`--tty`), {doc}`image_resources` and {doc}`image_recovery`
 (`--tty`), and {doc}`itest`, which takes its whole setup from it. The watch
 is the one given with `--watch`, else the one on the port given with
 `--tty`, else the one running the build's board; when several do, `--watch`

@@ -63,7 +63,6 @@ class Lab(PblCommand):
                     "board": watch.board,
                     "runs_build": bool(board) and watch.matches(board),
                     "serial": _port(watch.serial) if watch.serial else None,
-                    "serial_baud": watch.serial_baud,
                     "probe": watch.probe,
                     "probe_locked_by": lock.holder(lock.probe_key(watch.name)),
                     "supply": watch.supply,
