@@ -3,255 +3,152 @@
 
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/backlight/aw2016.h>
+#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/drivers/display/sf32lb_lcdc.h>
+#include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/mbox/sf32lb52.h>
+#include <pbl/drivers/panel/jdi_mip.h>
+#include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
-#include <pbl/drivers/sf32lb52/debounced_button_definitions.h>
+#include <pbl/drivers/remoteproc/sf32lb52.h>
+#include <pbl/drivers/reset/sf32lb.h>
+#include <pbl/drivers/rtc/sf32lb.h>
+#include <pbl/drivers/sf32lb52/hxt.h>
+#include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/drivers/temperature/sf32lb.h>
+#include <pbl/drivers/touch/cst816.h>
+#include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/kernel/irq.h>
 
 #include <board/board.h>
-#include <board/splash.h>
+#include <board/otp_layout.h>
+#include <hardware/sf32lb52_memorymap.h>
 
-static UARTDeviceState s_dbg_uart_state = {
-  .huart =
-      {
-        .Instance = USART1,
-        .Init =
-            {
-              .BaudRate = 1000000,
-              .WordLength = UART_WORDLENGTH_8B,
-              .StopBits = UART_STOPBITS_1,
-              .Parity = UART_PARITY_NONE,
-              .HwFlowCtl = UART_HWCONTROL_NONE,
-              .OverSampling = UART_OVERSAMPLING_16,
-            },
-      },
-  .hdma = {
-    .Instance = DMA1_Channel1,
-    .Init = {
-      .Request = DMA_REQUEST_5,
-      .IrqPrio = 5,
-    },
-  },
+PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA19_USART1_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA18_USART1_RXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
+
+static const struct pbl_dma_chan s_dbg_uart_rx_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
+
+PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_dbg_uart_default, &s_dbg_uart_rx_dma,
+                           nullptr);
+const struct pbl_uart *const CONSOLE_UART = &s_uart1.uart;
+
+PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
+PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_dbg_uart_rx_dma, 0);
+
+PBL_PINCTRL_STATE_DEFINE(
+    s_display_default, SF32LB52_PINCTRL,
+    SF32LB52_PA40_LCDC1_JDI_XRST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA08_LCDC1_JDI_VST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA39_LCDC1_JDI_VCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA07_LCDC1_JDI_ENB | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA06_LCDC1_JDI_HST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA41_LCDC1_JDI_HCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA05_LCDC1_JDI_R1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA42_LCDC1_JDI_R2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
+    SF32LB52_PA04_LCDC1_JDI_G1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA43_LCDC1_JDI_G2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA03_LCDC1_JDI_B1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+
+PBL_PINCTRL_STATE_DEFINE(s_lptim2_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", 2, &s_lptim2_default, nullptr);
+
+static const struct pbl_gpio s_display_discharge[] = {
+  PBL_GPIO(SF32LB_GPIO1, 3, 0),  PBL_GPIO(SF32LB_GPIO1, 39, 0), PBL_GPIO(SF32LB_GPIO1, 40, 0),
+  PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
 };
 
-static UARTDevice DBG_UART_DEVICE = {
-  .state = &s_dbg_uart_state,
-  .tx =
-      {
-        .pad = PAD_PA19,
-        .func = USART1_TXD,
-        .flags = PIN_NOPULL,
-      },
-  .rx =
-      {
-        .pad = PAD_PA18,
-        .func = USART1_RXD,
-        .flags = PIN_PULLUP,
-      },
-  .irqn = USART1_IRQn,
-  .dma_irqn = DMAC1_CH1_IRQn,
+static const struct pbl_panel_timing s_panel_timing = {
+  .clock_hz = 746268,
+  .hactive = 200,
+  .hback_porch = 2,
+  .hfront_porch = 6,
+  .vactive = 228,
+  .vback_porch = 0,
+  .vfront_porch = 6,
+  .enable_start = 3,
+  .enable_end = 99,
 };
 
-UARTDevice *const DBG_UART = &DBG_UART_DEVICE;
+PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO1, 28, 0),
+                         PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
+                         PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0));
 
-PBL_IRQ_CONNECT(USART1, 5, uart_irq_handler, DBG_UART, 0);
-PBL_IRQ_CONNECT(DMAC1_CH1, 5, uart_dma_irq_handler, DBG_UART, 0);
+// Tinted rounded corners on the glass
+static const uint8_t s_display_corners[] = {3, 3, 2, 1};
 
-static DisplayJDIState s_display_state = {
-  .hlcdc = {
-    .Instance = LCDC1,
-    .Init = {
-      .lcd_itf = LCDC_INTF_JDI_PARALLEL,
-      .color_mode = LCDC_PIXEL_FORMAT_RGB332,
-      .freq = 746268, // HCK frequency
-      .cfg = {
-        .jdi = {
-          .bank_col_head = 2,
-          .valid_columns = PBL_DISPLAY_WIDTH,
-          .bank_col_tail = 6,
-          .bank_row_head = 0,
-          .valid_rows = PBL_DISPLAY_HEIGHT,
-          .bank_row_tail = 6,
-          .enb_start_col = 3,
-          .enb_end_col = 99,
-        },
-      },
-    },
-  },
-};
+PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
+                               PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
+                               PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
+                               &s_panel.panel, 200, 228, false,
+                               PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
+                               ARRAY_LENGTH(s_display_discharge), .corners = s_display_corners,
+                               .num_corners = ARRAY_LENGTH(s_display_corners));
 
-static DisplayJDIDevice s_display = {
-  .state = &s_display_state,
-  .irqn = LCDC1_IRQn,
-  .vcom =
-      {
-        .lptim = hwp_lptim2,
-        .freq_hz = 60U,
-      },
-  .pinmux =
-      {
-        .xrst =
-            {
-              .pad = PAD_PA40,
-              .func = LCDC1_JDI_XRST,
-              .flags = PIN_NOPULL,
-            },
-        .vst =
-            {
-              .pad = PAD_PA08,
-              .func = LCDC1_JDI_VST,
-              .flags = PIN_NOPULL,
-            },
-        .vck =
-            {
-              .pad = PAD_PA39,
-              .func = LCDC1_JDI_VCK,
-              .flags = PIN_NOPULL,
-            },
-        .enb =
-            {
-              .pad = PAD_PA07,
-              .func = LCDC1_JDI_ENB,
-              .flags = PIN_NOPULL,
-            },
-        .hst =
-            {
-              .pad = PAD_PA06,
-              .func = LCDC1_JDI_HST,
-              .flags = PIN_NOPULL,
-            },
-        .hck =
-            {
-              .pad = PAD_PA41,
-              .func = LCDC1_JDI_HCK,
-              .flags = PIN_NOPULL,
-            },
-        .r1 =
-            {
-              .pad = PAD_PA05,
-              .func = LCDC1_JDI_R1,
-              .flags = PIN_NOPULL,
-            },
-        .r2 =
-            {
-              .pad = PAD_PA42,
-              .func = LCDC1_JDI_R2,
-              .flags = PIN_NOPULL,
-            },
-        .g1 =
-            {
-              .pad = PAD_PA04,
-              .func = LCDC1_JDI_G1,
-              .flags = PIN_NOPULL,
-            },
-        .g2 =
-            {
-              .pad = PAD_PA43,
-              .func = LCDC1_JDI_G2,
-              .flags = PIN_NOPULL,
-            },
-        .b1 =
-            {
-              .pad = PAD_PA03,
-              .func = LCDC1_JDI_B1,
-              .flags = PIN_NOPULL,
-            },
-        .b2 =
-            {
-              .pad = PAD_PA02,
-              .func = LCDC1_JDI_B2,
-              .flags = PIN_NOPULL,
-            },
-        .vcom_frp =
-            {
-              .pad = PAD_PA24,
-              .func = PBR_LPTIM2_OUT,
-              .flags = PIN_NOPULL,
-            },
-        .xfrp =
-            {
-              .pad = PAD_PA25,
-              .func = PBR_LPTIM2_INV_OUT,
-              .flags = PIN_NOPULL,
-            },
-      },
-  .vddp = PBL_GPIO(SF32LB_GPIO1, 28, 0),
-  .vlcd = PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
-  .splash = {
-    .data = splash_bits,
-    .width = splash_width,
-    .height = splash_height,
-  },
-};
+const struct pbl_display *const DISPLAY = &s_display.disp;
+PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);
 
-DisplayJDIDevice *const DISPLAY = &s_display;
-PBL_IRQ_CONNECT(LCDC1, 5, display_jdi_irq_handler, DISPLAY, 0);
+PBL_MBOX_SF32LB52_DEFINE(s_mailbox1, "mailbox1", SF32LB52_MAILBOX1_BASE, PBL_MBOX_SF32LB52_NO_IRQ,
+                         PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MAILBOX1), nullptr);
+PBL_MBOX_SF32LB52_DEFINE(s_mailbox2, "mailbox2", SF32LB52_MAILBOX2_BASE, PBL_IRQN(LCPU2HCPU),
+                         PBL_CLK(nullptr, 0), nullptr);
+PBL_IRQ_CONNECT(LCPU2HCPU, 5, pbl_mbox_sf32lb52_irq_handler, &s_mailbox2, 0);
+
+#ifdef CONFIG_REMOTEPROC_SF32LB52
+PBL_RPROC_SF32LB52_DEFINE(s_lcpu, "lcpu", PBL_MBOX_CHAN(&s_mailbox1.ctrl, 0),
+                          PBL_MBOX_CHAN(&s_mailbox2.ctrl, 0),
+                          PBL_MEM_REGION(SF32LB52_HPSYS_MBOX_BUF_BASE, SF32LB52_MBOX_BUF_SIZE));
+const struct pbl_rproc_sf32lb52 *const LCPU = &s_lcpu;
+#endif // CONFIG_REMOTEPROC_SF32LB52
 
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-static UARTDeviceState s_hci_trace_uart_state = {
-  .huart = {
-    .Instance = USART3,
-    .Init = {
-      .WordLength = UART_WORDLENGTH_8B,
-      .StopBits = UART_STOPBITS_1,
-      .Parity = UART_PARITY_NONE,
-      .HwFlowCtl = UART_HWCONTROL_NONE,
-      .OverSampling = UART_OVERSAMPLING_16,
-    },
-  },
-};
+PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA20_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
 
-static UARTDevice HCI_TRACE_UART_DEVICE = {
-  .state = &s_hci_trace_uart_state,
-  .tx = {
-    .pad = PAD_PA20,
-    .func = USART3_TXD,
-    .flags = PIN_NOPULL,
-  },
-};
-UARTDevice *const HCI_TRACE_UART = &HCI_TRACE_UART_DEVICE;
+PBL_UART_SF32LB_DEFINE(s_uart3, "uart3", 3, 1000000, &s_hci_trace_uart_default, nullptr);
+const struct pbl_uart *const HCI_TRACE_UART = &s_uart3.uart;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
-static QSPIPortState s_qspi_port_state = {
-  .cfg =
-      {
-        .Instance = FLASH2,
-        .line = HAL_FLASH_QMODE,
-        .base = FLASH2_BASE_ADDR,
-        .msize = 16,
-        .SpiMode = SPI_MODE_NOR,
-      },
-  .dma =
-      {
-        .Instance = DMA1_Channel2,
-        .dma_irq = DMAC1_CH2_IRQn,
-        .request = DMA_REQUEST_1,
-      },
-  .t_enter_deep_us = 3,
-  .t_exit_deep_us = 20,
-};
+PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 2, 16U * 1024U * 1024U,
+                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2), PBL_SPI_MEM_XIP,
+                                nullptr);
 
-static QSPIPort QSPI_PORT = {
-  .state = &s_qspi_port_state,
-  .clk_div = 0U,
+static const struct pbl_flash_otp_cell s_otp_cells[] = {
+  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
 };
-QSPIPort *const QSPI = &QSPI_PORT;
+static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
+PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &pbl_flash_nor_gd25q256e,
+                         SF32LB52_MPI2_MEM_BASE, &s_otp_layout);
 
-static QSPIFlashState s_qspi_flash_state;
-static QSPIFlash QSPI_FLASH_DEVICE = {
-  .state = &s_qspi_flash_state,
-  .qspi = &QSPI_PORT,
-};
-QSPIFlash *const QSPI_FLASH = &QSPI_FLASH_DEVICE;
+PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
 
-PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", I2C1, 400000, PAD_PA31, I2C1_SCL, PAD_PA30, I2C1_SDA,
-                      nullptr);
+const struct pbl_flash *const FLASH = &s_flash.flash;
+
+PBL_PINCTRL_STATE_DEFINE(s_i2c1_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA31_I2C1_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA30_I2C1_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", 1, 400000, &s_i2c1_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
 
@@ -278,11 +175,16 @@ PBL_AW2016_DEFINE(s_aw2016, &s_i2c1.bus, 0x64);
 
 const struct pbl_backlight *const BACKLIGHT = &s_aw2016.backlight;
 
-PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", I2C2, 400000, PAD_PA32, I2C2_SCL, PAD_PA33, I2C2_SDA,
-                          DMA1_Channel6, DMA_REQUEST_23, DMAC1_CH6, 5, nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c2_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA32_I2C2_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA33_I2C2_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+static const struct pbl_dma_chan s_i2c2_dma =
+    PBL_DMA_CHAN(SF32LB52_DMAC1, 5, SF32LB52_DMA_REQ_I2C2, SF32LB52_DMA_PL_HIGH);
+PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", 2, 400000, &s_i2c2_default, &s_i2c2_dma, nullptr);
 
 PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
-PBL_IRQ_CONNECT(DMAC1_CH6, 5, pbl_i2c_sf32lb_dma_irq_handler, &s_i2c2, 0);
 
 #ifdef CONFIG_IS_BIGBOARD
 #define LSM6DSO_AXIS_DIR_Y   (-1)
@@ -308,26 +210,27 @@ PBL_MMC5603NJ_DEFINE(
 
 const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
 
-PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", I2C3, 400000, PAD_PA11, I2C3_SCL, PAD_PA10, I2C3_SDA,
-                      nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c3_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA11_I2C3_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA10_I2C3_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", 3, 400000, &s_i2c3_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
 
-static const struct pbl_i2c_dev s_i2c_cst816 = PBL_I2C_DEV(&s_i2c3.bus, 0x15);
+PBL_CST816_DEFINE(s_cst816, &s_i2c3.bus, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
+                  PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
+                  .size_x = 200, .size_y = 228);
 
-static const struct pbl_i2c_dev s_i2c_cst816_boot = PBL_I2C_DEV(&s_i2c3.bus, 0x6A);
+const struct pbl_touch *const TOUCH = &s_cst816.touch;
 
-static const TouchSensor touch_cst816 = {
-  .i2c = &s_i2c_cst816,
-  .i2c_boot = &s_i2c_cst816_boot,
-  .int_gpio = PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
-  .reset = PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
-};
-
-const TouchSensor *CST816 = &touch_cst816;
-
-PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", I2C4, 400000, PAD_PA09, I2C4_SCL, PAD_PA20, I2C4_SDA,
-                      nullptr);
+PBL_PINCTRL_STATE_DEFINE(s_i2c4_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA09_I2C4_SCL | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA20_I2C4_SDA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
+PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", 4, 400000, &s_i2c4_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
 
@@ -362,36 +265,15 @@ PBL_W1160_DEFINE(s_w1160, &s_i2c1.bus, 0x48, &s_w1160_scale);
 
 const struct pbl_als *const ALS = &s_w1160.als;
 
-const BoardConfigPower BOARD_CONFIG_POWER = {
-  .low_power_threshold = 4U,
-  .battery_capacity_hours = 400U,
-};
-
-const BoardConfig BOARD_CONFIG = {
-  .backlight_on_percent = 45,
-  .ambient_light_dark_threshold = 800,
-  .ambient_k_delta_threshold = 100,
-  .backlight_default_color = BACKLIGHT_COLOR_WARM_WHITE,
-};
-
-const BoardConfigButton BOARD_CONFIG_BUTTON = {
-  .buttons =
-      {
-        [BUTTON_ID_BACK] = {"Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK},
-        [BUTTON_ID_UP] =
-            {"Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_UP},
-        [BUTTON_ID_SELECT] =
-            {"Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_SELECT},
-        [BUTTON_ID_DOWN] =
-            {"Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-             PBL_INPUT_KEY_DOWN},
-      },
-  .timer = GPTIM2,
-  .timer_irqn = GPTIM2_IRQn,
-};
-PBL_IRQ_CONNECT(GPTIM2, 7, debounced_button_irq_handler, GPTIM2, 0);
+PBL_GPIO_KEYS_DEFINE(
+    BUTTONS, "buttons",
+    PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK, 40),
+    PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(SF32LB_GPIO1, 35, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_UP, 40),
+    PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(SF32LB_GPIO1, 36, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_SELECT, 40),
+    PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(SF32LB_GPIO1, 37, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                      PBL_INPUT_KEY_DOWN, 40));
 
 static MicDeviceState mic_state = {
   .hdma = {
@@ -402,21 +284,16 @@ static MicDeviceState mic_state = {
     },
   },
 };
+PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
+                         SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
+                         SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
+                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
+
 static const MicDevice mic_device = {
   .state = &mic_state,
   .pdm_instance = hwp_pdm1,
-  .clk_gpio =
-      {
-        .pad = PAD_PA22,
-        .func = PDM1_CLK,
-        .flags = PIN_NOPULL,
-      },
-  .data_gpio =
-      {
-        .pad = PAD_PA23,
-        .func = PDM1_DATA,
-        .flags = PIN_PULLDOWN,
-      },
+  .pinctrl = PBL_PINCTRL(&s_mic_default, nullptr, 0),
   .pdm_dma_irq = DMAC1_CH5_IRQn,
   .pdm_irq = PDM1_IRQn,
 #ifdef CONFIG_RECOVERY_FW
@@ -463,10 +340,6 @@ static const AudioDevice audio_device = {
 const AudioDevice *AUDIO = &audio_device;
 PBL_IRQ_CONNECT(DMAC1_CH4, 5, audec_dac0_dma_irq_handler, AUDIO, 0);
 
-uint32_t BSP_GetOtpBase(void) {
-  return MPI2_MEM_BASE;
-}
-
 void board_early_init(void) {
 }
 
@@ -476,3 +349,5 @@ void board_init(void) {
 }
 
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
+
+const struct pbl_rtc *const RTC = SF32LB_RTC;

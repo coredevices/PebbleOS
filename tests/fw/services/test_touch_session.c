@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/touch/touch_session.h>
 
 #include <clar.h>
@@ -40,7 +41,7 @@ uint32_t backlight_get_timeout_ms(void) {
   return s_backlight_timeout_ms;
 }
 
-#define MS_TO_TICKS(ms) (((ms) * (RtcTicks)RTC_TICKS_HZ) / 1000)
+#define MS_TO_TICKS(ms) (((ms) * (uint64_t)PBL_TICK_HZ) / 1000)
 #define TIMEOUT_TICKS   MS_TO_TICKS(s_backlight_timeout_ms)
 
 // setup and teardown

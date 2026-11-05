@@ -4,20 +4,21 @@
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_calculators.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
-#include <pbl/services/activity/workout_service.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/blob_db/health_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_hr.h>
@@ -33,9 +34,9 @@
 #include <applib/data_logging.h>
 #include <applib/health_service.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -85,10 +86,6 @@ static uint32_t prv_get_hrm_period_sec(void) {
 }
 #endif
 
-#ifdef CONFIG_HRM
-static void prv_activity_spo2_schedule_update(void); // defined below; used by the HR callback
-#endif
-
 // ------------------------------------------------------------------------------------------------
 // If necessary, change the sampling period of our heart rate subscription
 // @param[in] now_ts number of seconds the system has been running (from time_get_uptime_seconds())
@@ -113,13 +110,10 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
   if (s_activity_state.hr.currently_sampling) {
     // If we are currently sampling, turn off when:
     // - We reach the end of our maximum time on, ACTIVITY_DEFAULT_HR_ON_TIME_SEC
-    // - We get ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT good quality samples
-    // - We get ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT excellent quality samples
+    // - We get ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT high-confidence samples
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_HR_ON_TIME_SEC;
-    const bool good_samples_req_met = (s_activity_state.hr.num_good_quality_samples >=
-                                       ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT);
-    const bool excellent_samples_req_met = (s_activity_state.hr.num_excellent_samples >=
-                                            ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT);
+    const bool samples_req_met = (s_activity_state.hr.num_high_confidence_samples >=
+                                  ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT);
     // Doomed-case early abort: no valid reading at all by the cutoff means the signal isn't
     // converging (off-wrist / no contact), so stop wasting green-LED time on the back half of the
     // window. Keyed on last_sample_ts (uptime of the last valid BPM) vs the window start, NOT the
@@ -130,8 +124,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     // short-circuit.
     const bool early_abort = (now_ts >= last_toggled_ts + ACTIVITY_HR_EARLY_ABORT_SEC) &&
                              (s_activity_state.hr.last_sample_ts < last_toggled_ts);
-    if ((turn_off_at <= now_ts) || good_samples_req_met || excellent_samples_req_met ||
-        early_abort) {
+    if ((turn_off_at <= now_ts) || samples_req_met || early_abort) {
       should_toggle = true;
     }
   } else {
@@ -146,10 +139,7 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     // Don't start a measurement while SpO2 is mid-measurement: HR and SpO2 share one optical path,
     // so overlapping windows make the manager ping-pong between them and re-pay the sensor spin-up,
     // which stops either from converging. Defer and retry next tick (without resetting the period).
-    // Also yield to an in-progress activity-triggered SpO2 attempt for the same reason.
-    if (!s_activity_state.hr.currently_sampling &&
-        (s_activity_state.spo2.currently_sampling ||
-         s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling)) {
+    if (!s_activity_state.hr.currently_sampling && s_activity_state.spo2.currently_sampling) {
       return;
     }
 
@@ -185,12 +175,11 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
 PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   PBL_LOG_DBG("Got HR event: %d", (int)hrm_event->event_type);
   if (hrm_event->event_type == HRMEvent_BPM) {
-    PBL_LOG_DBG("HR bpm: %" PRIu8 ", qual: %" PRId8 " ", hrm_event->bpm.bpm,
-                (int8_t)hrm_event->bpm.quality);
+    PBL_LOG_DBG("HR bpm: %" PRIu8 ", conf: %" PRIu8 ", off wrist: %d", hrm_event->bpm.bpm,
+                hrm_event->bpm.confidence, hrm_event->bpm.off_wrist);
 
     // Perform a basic validity check so we only proceed with reasonable data
-    // TODO: Use quality to filter out some readings,
-    // TODO: Use HRMQuality_OffWrist as a special case to slow down the HRM subscription
+    // TODO: Use off-wrist as a special case to slow down the HRM subscription
     bool valid_hr_reading = true;
     if (hrm_event->bpm.bpm < ACTIVITY_DEFAULT_MIN_HR ||
         hrm_event->bpm.bpm > ACTIVITY_DEFAULT_MAX_HR) {
@@ -198,12 +187,11 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
     }
 
     uint32_t now_uptime_ts = time_get_uptime_seconds();
-    time_t now_utc = rtc_get_time();
+    time_t now_utc = pbl_realtime();
 
     // Cache the worn-status from this event so sleep tracking can use it as a strong off-wrist
     // signal (PPG off-wrist detection is far more reliable than the accel-only heuristics).
-    activity_metrics_prv_set_hrm_worn_status(now_utc,
-                                             hrm_event->bpm.quality == HRMQuality_OffWrist);
+    activity_metrics_prv_set_hrm_worn_status(now_utc, hrm_event->bpm.off_wrist);
 
     if (valid_hr_reading) {
       // Update the heart rate metrics
@@ -211,10 +199,10 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
 
       // Log it to the mobile
       protobuf_log_hr_add_sample(s_activity_state.hr.log_session, now_utc, hrm_event->bpm.bpm,
-                                 hrm_event->bpm.quality);
+                                 hrm_event->bpm.confidence, hrm_event->bpm.off_wrist);
     }
 
-    if (valid_hr_reading || hrm_event->bpm.quality == HRMQuality_OffWrist) {
+    if (valid_hr_reading || hrm_event->bpm.off_wrist) {
       pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
       {
         // Post a health service heart rate changed event
@@ -223,11 +211,11 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
           .health_event = {
             .type = HealthEventHeartRateUpdate,
             .data.heart_rate_update = {
-              .current_bpm =
-                  (hrm_event->bpm.quality == HRMQuality_OffWrist) ? 0 : hrm_event->bpm.bpm,
+              .current_bpm = hrm_event->bpm.off_wrist ? 0 : hrm_event->bpm.bpm,
               .resting_bpm = s_activity_state.hr.metrics.resting_bpm,
-              .quality = hrm_event->bpm.quality,
+              .off_wrist = hrm_event->bpm.off_wrist,
               .is_filtered = false,
+              .confidence = hrm_event->bpm.confidence,
             },
           },
         };
@@ -240,10 +228,6 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
     // NOTE: Must be kept at the bottom of the function, or at least below
     //   `activity_metrics_prv_add_median_hr_sample`
     prv_heart_rate_subscription_update(now_uptime_ts);
-
-    // HR flows at 1 Hz while an activity is in progress, so this is where the activity SpO2 reader
-    // counts down its Wait / Backoff phases.
-    prv_activity_spo2_schedule_update();
   }
 }
 #endif // CONFIG_HRM
@@ -308,9 +292,18 @@ static void prv_spo2_set_sampling(bool sampling, uint32_t now_ts) {
   s_activity_state.spo2.currently_sampling = sampling;
   s_activity_state.spo2.toggled_sampling_at_ts = now_ts;
   if (sampling) {
-    s_activity_state.spo2.num_good_quality_samples = 0;
+    s_activity_state.spo2.num_valid_samples = 0;
+    s_activity_state.spo2.num_high_confidence_samples = 0;
   }
   PBL_LOG_DBG("Changed SpO2 sampling period to %" PRIu32 " sec", interval_sec);
+}
+#endif // CONFIG_HRM
+
+// ------------------------------------------------------------------------------------------------
+// SpO2 needs static conditions: the wearer must not have been walking in the last minute.
+#ifdef CONFIG_HRM
+static bool prv_spo2_wearer_is_still(void) {
+  return s_activity_state.last_minute_steps <= ACTIVITY_SPO2_MAX_STEPS_PER_MIN;
 }
 #endif // CONFIG_HRM
 
@@ -333,15 +326,15 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
 
   bool should_toggle = false;
   if (s_activity_state.spo2.currently_sampling) {
-    // Turn off when we hit the max on-time or collect enough good-quality samples
+    // Turn off when we hit the max on-time or collect enough high-confidence samples
     const uint32_t turn_off_at = last_toggled_ts + ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC;
-    const bool good_samples_req_met = (s_activity_state.spo2.num_good_quality_samples >=
-                                       ACTIVITY_MIN_NUM_GOOD_SPO2_SAMPLES_SHORT_CIRCUIT);
+    const bool samples_req_met = (s_activity_state.spo2.num_high_confidence_samples >=
+                                  ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SPO2_SAMPLES_SHORT_CIRCUIT);
     // Doomed-case early abort: the algorithm has accepted nothing by the cutoff, so the red/IR LED
     // is burning for a reading that isn't going to converge. Bail instead of running to ON_TIME.
     const bool early_abort = (now_ts >= last_toggled_ts + ACTIVITY_SPO2_EARLY_ABORT_SEC) &&
-                             (s_activity_state.spo2.num_good_quality_samples == 0);
-    if ((turn_off_at <= now_ts) || good_samples_req_met || early_abort) {
+                             (s_activity_state.spo2.num_valid_samples == 0);
+    if ((turn_off_at <= now_ts) || samples_req_met || early_abort) {
       should_toggle = true;
     }
   } else {
@@ -357,12 +350,14 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
     // prv_heart_rate_subscription _update). HR runs first each tick so it wins ties; SpO2 takes its
     // turn once HR finishes. Likewise defer while a live consumer (workout HR, the BLE relay, a
     // foreground app) keeps the green path on: the manager would hand the path to us for the whole
-    // window, blanking their live HR for a background reading. Also yield to an in-progress
-    // activity-triggered SpO2 attempt. Retry on the next tick.
+    // window, blanking their live HR for a background reading. Retry on the next tick.
     if (!s_activity_state.spo2.currently_sampling &&
-        (s_activity_state.hr.currently_sampling ||
-         s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling ||
-         hrm_manager_has_continuous_green_subscriber())) {
+        (s_activity_state.hr.currently_sampling || hrm_manager_has_continuous_green_subscriber())) {
+      return;
+    }
+
+    // SpO2 needs the wearer to be still; wait for a minute without walking.
+    if (!s_activity_state.spo2.currently_sampling && !prv_spo2_wearer_is_still()) {
       return;
     }
 
@@ -376,7 +371,7 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
     // algorithm rejects it. is_hrm_offwrist fails open (only true on fresh positive off-wrist
     // evidence), so this never blocks a genuine on-wrist reading or a config where HR sampling
     // isn't running.
-    const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(rtc_get_time());
+    const bool hrm_offwrist = activity_metrics_prv_is_hrm_offwrist(pbl_realtime());
 
     const bool should_be_sampling =
         !s_activity_state.spo2.currently_sampling && !watch_is_flat && !hrm_offwrist;
@@ -384,30 +379,6 @@ static void prv_spo2_subscription_update(uint32_t now_ts) {
   }
 #endif // CONFIG_HRM
 }
-
-// ------------------------------------------------------------------------------------------------
-// Map the sensor's HRMQuality onto the 0-7 HeartRateQuality scale stored in the minute record
-// (0=none, 1=OffWrist, 3=Worst .. 7=Excellent), matching how heart rate quality is reported.
-#ifdef CONFIG_HRM
-static uint8_t prv_spo2_health_quality(HRMQuality quality) {
-  switch (quality) {
-    case HRMQuality_Excellent:
-      return 7;
-    case HRMQuality_Good:
-      return 6;
-    case HRMQuality_Acceptable:
-      return 5;
-    case HRMQuality_Poor:
-      return 4;
-    case HRMQuality_Worst:
-      return 3;
-    case HRMQuality_OffWrist:
-      return 1;
-    default:
-      return 0;
-  }
-}
-#endif // CONFIG_HRM
 
 // ------------------------------------------------------------------------------------------------
 // Kernel BG callback called by the Heart Rate Manager when new SpO2 data arrives
@@ -418,18 +389,24 @@ PBL_T_STATIC void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *cont
   }
 
   const uint8_t pct = hrm_event->spo2.percent;
-  const HRMQuality quality = hrm_event->spo2.quality;
-  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, qual: %d", pct, (int)quality);
+  const uint8_t confidence = hrm_event->spo2.confidence;
+  PBL_LOG_DBG("SpO2: %" PRIu8 "%%, conf: %" PRIu8 ", off wrist: %d", pct, confidence,
+              hrm_event->spo2.off_wrist);
 
-  // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is a usable
-  // measurement: count it toward the short-circuit AND stash it for the next minute record. The
-  // algorithm's own invalid flag is the right gate - the confidence-derived quality grade is a
-  // relative score, and requiring "Good" left algorithm-valid readings uncounted, so the sensor
-  // never stopped firing even while it was handing us readings.
-  if (!hrm_event->spo2.invalid && quality != HRMQuality_OffWrist && pct > 0) {
-    s_activity_state.spo2.num_good_quality_samples++;
-    s_activity_state.spo2.pending_percent = pct;
-    s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
+  // A reading the algorithm accepted (not invalid), on-wrist, with a plausible percent is usable.
+  // Stash the latest one for the next minute record, so a window that never reaches high
+  // confidence still yields its last reading. Once a high-confidence reading came in, lower ones
+  // no longer replace it, and enough high-confidence readings end the window early.
+  if (!hrm_event->spo2.invalid && !hrm_event->spo2.off_wrist && pct > 0) {
+    const bool high_confidence = (confidence >= HRM_CONFIDENCE_HIGH);
+    s_activity_state.spo2.num_valid_samples++;
+    if (high_confidence || (s_activity_state.spo2.num_high_confidence_samples == 0)) {
+      s_activity_state.spo2.pending_percent = pct;
+      s_activity_state.spo2.pending_quality = protobuf_log_hr_quality(confidence, false);
+    }
+    if (high_confidence) {
+      s_activity_state.spo2.num_high_confidence_samples++;
+    }
   }
 
   // Modify our sampling period now if necessary
@@ -459,190 +436,12 @@ static void prv_spo2_deinit(void) {
 #endif // CONFIG_HRM
 }
 
-// ------------------------------------------------------------------------------------------------
-// Activity-triggered SpO2: while HR-during-activities is sampling continuously, periodically pause
-// HR and grab one SpO2 point. Independent of the daily SpO2 schedule and the daily SpO2 toggle.
-#ifdef CONFIG_HRM
-// Pause the continuous activity HR and turn our dedicated SpO2 session on (sampling), or the
-// reverse (resume HR, idle SpO2). Pauses both the auto-activity HR and a manual workout's HR (each
-// a no-op if that one isn't running) so SpO2 owns the optical path for the attempt.
-static void prv_activity_spo2_set_sampling(bool sampling) {
-  activity_algorithm_activity_hrm_set_paused(sampling);
-  workout_service_set_hrm_paused(sampling);
-  // A dormant session asks for no features so the manager never treats it as due (see
-  // prv_spo2_set_sampling()).
-  sys_hrm_manager_set_features(s_activity_state.activity_spo2.hrm_session,
-                               sampling ? HRMFeature_SpO2 : (HRMFeature)0);
-  const uint32_t interval =
-      sampling ? ACTIVITY_HRM_SUBSCRIPTION_ON_PERIOD_SEC : ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC;
-  sys_hrm_manager_set_update_interval(s_activity_state.activity_spo2.hrm_session, interval,
-                                      0 /*expire_sec*/);
-}
-
-static void prv_activity_spo2_start_attempt(uint32_t now_ts) {
-  ActivitySpO2ActivitySupport *as = &s_activity_state.activity_spo2;
-  as->got_reading = false;
-  as->phase = ActivitySpO2ActPhase_Sampling;
-  as->phase_started_ts = now_ts;
-  prv_activity_spo2_set_sampling(true);
-}
-
-// Red/IR SpO2 is more motion-sensitive than green HR, so only attempt it while the optical signal
-// is clean enough that a reading can plausibly succeed. When the green HR signal is poor (motion,
-// poor contact) a SpO2 attempt would just burn the red/IR LED and force HR to re-converge for
-// nothing, so we defer until a calmer moment. This only trims the during-activity bonus points; the
-// independent daily SpO2 schedule is unaffected.
-static bool prv_activity_spo2_signal_clean_enough(void) {
-  return s_activity_state.hr.metrics.current_quality >= HRMQuality_Acceptable;
-}
-
-// Whether we may open an attempt now. Mirrors the deferral the two daily readers already apply to
-// us: they share the one optical path, so starting on top of an open daily window would take the
-// path away from it mid-measurement. Defer instead and retry on the next tick.
-static bool prv_activity_spo2_can_start_attempt(void) {
-  return !s_activity_state.hr.currently_sampling && !s_activity_state.spo2.currently_sampling &&
-         prv_activity_spo2_signal_clean_enough();
-}
-
-// Drive the activity SpO2 state machine. Scheduled (see prv_activity_spo2_schedule_update) from the
-// minute handler (backstop) and from the HR / SpO2 data callbacks (1 Hz while the relevant sensor
-// is on, giving precise sub-minute timing).
-static void prv_activity_spo2_update(uint32_t now_ts) {
-  ActivitySpO2ActivitySupport *as = &s_activity_state.activity_spo2;
-
-  // Run while the SpO2-during-activities opt-in is on AND we're in an activity: either an
-  // auto-detected one with a running HR session (which needs HR-during-activities), or a manually
-  // started workout. The manual workout path only needs the SpO2 opt-in.
-  const bool auto_active = activity_prefs_hrm_activity_tracking_is_enabled() &&
-                           activity_algorithm_activity_hrm_is_active();
-  const bool workout_active = workout_service_is_workout_ongoing();
-  const bool eligible =
-      activity_prefs_spo2_activity_tracking_is_enabled() && (auto_active || workout_active);
-
-  if (!eligible) {
-    if (as->phase != ActivitySpO2ActPhase_Idle) {
-      if (as->phase == ActivitySpO2ActPhase_Sampling) {
-        prv_activity_spo2_set_sampling(false); // resume HR, idle our session
-      }
-      as->phase = ActivitySpO2ActPhase_Idle;
-    }
-    return;
-  }
-
-  switch (as->phase) {
-    case ActivitySpO2ActPhase_Idle:
-      // Activity just became eligible: begin the wait window.
-      as->phase = ActivitySpO2ActPhase_Wait;
-      as->phase_started_ts = now_ts;
-      break;
-    case ActivitySpO2ActPhase_Wait:
-      // Wait until the interval elapses AND the signal is clean enough to attempt; if it stays
-      // noisy we defer (re-checked each 1 Hz tick) rather than burn the red/IR LED for nothing.
-      if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC &&
-          prv_activity_spo2_can_start_attempt()) {
-        prv_activity_spo2_start_attempt(now_ts);
-      }
-      break;
-    case ActivitySpO2ActPhase_Sampling:
-      if (as->got_reading) {
-        // Success: resume HR and wait the full interval before the next point.
-        prv_activity_spo2_set_sampling(false);
-        workout_service_handle_spo2(as->percent);
-        as->phase = ActivitySpO2ActPhase_Wait;
-        as->phase_started_ts = now_ts;
-      } else if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC) {
-        // Timed out with no valid reading: resume HR for a breather, then retry.
-        prv_activity_spo2_set_sampling(false);
-        as->phase = ActivitySpO2ActPhase_Backoff;
-        as->phase_started_ts = now_ts;
-      }
-      break;
-    case ActivitySpO2ActPhase_Backoff:
-      // Retry only once the signal is clean enough too, so a sustained noisy spell doesn't keep
-      // re-paying the red/IR LED + HR re-convergence for doomed attempts.
-      if (now_ts - as->phase_started_ts >= ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC &&
-          prv_activity_spo2_can_start_attempt()) {
-        prv_activity_spo2_start_attempt(now_ts);
-      }
-      break;
-  }
-}
-
-static void prv_activity_spo2_update_system_cb(void *unused) {
-  s_activity_state.activity_spo2.update_pending = false;
-  prv_activity_spo2_update(time_get_uptime_seconds());
-}
-
-// Run the state machine from its own KernelBG callback rather than inline. The HRM data callbacks
-// run with the HRM manager lock held, and the state machine takes the activity algorithm and
-// workout mutexes, which the App task takes before the manager lock (starting a workout resets the
-// algorithm's HRM session and sets the HR scene), so running it inline would invert the lock order
-// and deadlock. The minute handler schedules it too, so it never runs under the activity mutex
-// either.
-static void prv_activity_spo2_schedule_update(void) {
-  if (s_activity_state.activity_spo2.update_pending) {
-    return;
-  }
-  s_activity_state.activity_spo2.update_pending = true;
-  system_task_add_callback(prv_activity_spo2_update_system_cb, nullptr);
-}
-
-// Kernel BG callback for the activity SpO2 session. Only fires while we are sampling (our session
-// is idle otherwise).
-PBL_T_STATIC void prv_activity_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
-  if (hrm_event->event_type != HRMEvent_SpO2) {
-    return;
-  }
-  const uint8_t pct = hrm_event->spo2.percent;
-  const HRMQuality quality = hrm_event->spo2.quality;
-
-  // Any reading the algorithm accepts counts: stash it for the next minute record (same channel as
-  // the daily SpO2 reader) and mark the attempt successful.
-  if (!hrm_event->spo2.invalid && quality != HRMQuality_OffWrist && pct > 0) {
-    s_activity_state.spo2.pending_percent = pct;
-    s_activity_state.spo2.pending_quality = prv_spo2_health_quality(quality);
-    s_activity_state.activity_spo2.got_reading = true;
-    s_activity_state.activity_spo2.percent = pct;
-  }
-
-  prv_activity_spo2_schedule_update();
-}
-#endif // CONFIG_HRM
-
-// ---------------------------------------------------------------------------------------
-// Init / de-init activity-triggered SpO2 support
-static void prv_activity_spo2_init(void) {
-#ifdef CONFIG_HRM
-  s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
-  s_activity_state.activity_spo2.update_pending = false;
-  // Dormant until an attempt starts (see prv_activity_spo2_set_sampling).
-  s_activity_state.activity_spo2.hrm_session = hrm_manager_subscribe_with_callback(
-      INSTALL_ID_INVALID, ACTIVITY_HRM_SUBSCRIPTION_OFF_PERIOD_SEC, 0 /*expire_s*/, (HRMFeature)0,
-      false /*low_latency*/, prv_activity_spo2_subscription_cb, nullptr);
-  PBL_ASSERTN(s_activity_state.activity_spo2.hrm_session != HRM_INVALID_SESSION_REF);
-#endif // CONFIG_HRM
-}
-
-static void prv_activity_spo2_deinit(void) {
-#ifdef CONFIG_HRM
-  // Make sure HR isn't left paused if we tear down mid-attempt. Mirror set_sampling(): an attempt
-  // pauses both the auto-activity HR and a manual workout's HR, so resume both here too.
-  if (s_activity_state.activity_spo2.phase == ActivitySpO2ActPhase_Sampling) {
-    activity_algorithm_activity_hrm_set_paused(false);
-    workout_service_set_hrm_paused(false);
-  }
-  sys_hrm_manager_unsubscribe(s_activity_state.activity_spo2.hrm_session);
-  s_activity_state.activity_spo2.phase = ActivitySpO2ActPhase_Idle;
-#endif // CONFIG_HRM
-}
-
 // ----------------------------------------------------------------------------------------------
 // Open the settings file and malloc space for the file struct
-SettingsFile *activity_private_settings_open(void) {
-  SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
-  if (settings_file_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) !=
-      S_SUCCESS) {
-    kernel_free(file);
+struct pbl_settings_file *activity_private_settings_open(void) {
+  struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
+  if (pbl_settings_open(file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN) != 0) {
+    pbl_free(file);
     PBL_LOG_ERR("No settings file");
     return nullptr;
   }
@@ -651,9 +450,9 @@ SettingsFile *activity_private_settings_open(void) {
 
 // ------------------------------------------------------------------------------------------------
 // Close the settings file and free the file struct
-void activity_private_settings_close(SettingsFile *file) {
-  settings_file_close(file);
-  kernel_free(file);
+void activity_private_settings_close(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
+  pbl_free(file);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -702,20 +501,21 @@ static bool prv_settings_key_is_metric_scalar(ActivitySettingsKey key) {
 // records grew from uint16_t to uint32_t values, so history and scalar metric records get
 // expanded; everything else is copied verbatim. This also handles the version 1 to 2 change,
 // which only made the file bigger.
-static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_file,
-                                    SettingsRecordInfo *info, void *context) {
+static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
+                                    struct pbl_settings_file *new_file,
+                                    struct pbl_settings_record *info, void *context) {
   if (info->key_len != sizeof(ActivitySettingsKey)) {
     PBL_LOG_WRN("Unexpected key len: %" PRIu32 " ", (uint32_t)info->key_len);
     return;
   }
 
   ActivitySettingsKey key;
-  info->get_key(old_file, &key, info->key_len);
+  pbl_settings_read_key(old_file, &key, info->key_len);
 
   if (prv_settings_key_is_metric_history(key) &&
       (info->val_len == sizeof(ActivitySettingsValueHistoryV2))) {
     ActivitySettingsValueHistoryV2 old_history;
-    info->get_val(old_file, &old_history, sizeof(old_history));
+    pbl_settings_read_val(old_file, &old_history, sizeof(old_history));
 
     ActivitySettingsValueHistory new_history = {
       .utc_sec = old_history.utc_sec,
@@ -723,42 +523,44 @@ static void prv_settings_rewrite_cb(SettingsFile *old_file, SettingsFile *new_fi
     for (int i = 0; i < ACTIVITY_HISTORY_DAYS; i++) {
       new_history.values[i] = old_history.values[i];
     }
-    settings_file_set(new_file, &key, info->key_len, &new_history, sizeof(new_history));
+    pbl_settings_set(new_file, &key, info->key_len, &new_history, sizeof(new_history));
     return;
   }
 
   if (prv_settings_key_is_metric_scalar(key) && (info->val_len == sizeof(uint16_t))) {
     uint16_t old_value;
-    info->get_val(old_file, &old_value, sizeof(old_value));
+    pbl_settings_read_val(old_file, &old_value, sizeof(old_value));
 
     const ActivityScalarStore new_value = old_value;
-    settings_file_set(new_file, &key, info->key_len, &new_value, sizeof(new_value));
+    pbl_settings_set(new_file, &key, info->key_len, &new_value, sizeof(new_value));
     return;
   }
 
   // rewrite this entry unmodified
-  void *data = kernel_malloc_check(info->val_len);
-  info->get_val(old_file, data, info->val_len);
+  void *data = pbl_malloc_check(info->val_len);
+  pbl_settings_read_val(old_file, data, info->val_len);
 
-  settings_file_set(new_file, &key, info->key_len, data, info->val_len);
+  pbl_settings_set(new_file, &key, info->key_len, data, info->val_len);
 
-  kernel_free(data);
+  pbl_free(data);
 }
 
 // ----------------------------------------------------------------------------------------------
 // Migrate settings from an earlier version now if necessary
-static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_version) {
+static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *file,
+                                                      uint16_t *written_version) {
   status_t result = E_ERROR;
 
   ActivitySettingsKey key = ActivitySettingsKeyStepCountHistory;
-  if (!settings_file_exists(file, &key, sizeof(key))) {
+  if (!pbl_settings_exists(file, &key, sizeof(key))) {
     // If this settings file is empty, no migration necessary
     return file;
   }
 
   // See which version we are on
   key = ActivitySettingsKeyVersion;
-  result = settings_file_get(file, &key, sizeof(key), written_version, sizeof(*written_version));
+  result = status_from_errno(
+      pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version)));
   if (result != S_SUCCESS) {
     // Version 1 had no settings key in it.
     *written_version = 1;
@@ -776,7 +578,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
   if ((version == 1) || (version == 2)) {
     // Both older versions store metric values as uint16_t, so re-create the file (at the new,
     // bigger size in the version 1 case) while widening metric records to uint32_t.
-    result = settings_file_rewrite(file, prv_settings_rewrite_cb, nullptr);
+    result = status_from_errno(pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr));
     if (result != S_SUCCESS) {
       PBL_LOG_ERR("Failure %" PRIi32 " while re-writing setting file", (int32_t)result);
     }
@@ -788,7 +590,7 @@ static SettingsFile *prv_settings_migrate(SettingsFile *file, uint16_t *written_
   if (result != S_SUCCESS) {
     // Delete the old file and create a new one if migration failed
     activity_private_settings_close(file);
-    pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
+    pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
     file = activity_private_settings_open();
     *written_version = ACTIVITY_SETTINGS_CURRENT_VERSION;
   }
@@ -808,7 +610,7 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
   // so we need to surround it with mutex ownership
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
 
     if (file && (s_activity_state.update_settings_counter <= 0)) {
       // Periodically save current stats into settings, so that if watch resets or crashes we
@@ -822,15 +624,15 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
 
         if (m_info.has_history) {
           ActivitySettingsValueHistory history;
-          settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                            sizeof(history));
+          pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                           sizeof(history));
           history.values[0] = *m_info.value_p;
-          settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                            sizeof(history));
+          pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                           sizeof(history));
         } else {
           if (m_info.settings_key != ActivitySettingsKeyInvalid) {
-            settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
-                              m_info.value_p, sizeof(*m_info.value_p));
+            pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key),
+                             m_info.value_p, sizeof(*m_info.value_p));
           }
         }
       }
@@ -838,8 +640,8 @@ static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
       if (s_activity_state.need_activities_saved) {
         // Save stored activities
         ActivitySettingsKey key = ActivitySettingsKeyStoredActivities;
-        settings_file_set(file, &key, sizeof(key), s_activity_state.activity_sessions,
-                          sizeof(s_activity_state.activity_sessions));
+        pbl_settings_set(file, &key, sizeof(key), s_activity_state.activity_sessions,
+                         sizeof(s_activity_state.activity_sessions));
         s_activity_state.need_activities_saved = false;
       }
 
@@ -896,12 +698,6 @@ static void PBL_NOINLINE prv_process_minute_data_tail(time_t utc_sec) {
 
     // Update the SpO2 sampling period if necessary
     prv_spo2_subscription_update(time_get_uptime_seconds());
-
-#ifdef CONFIG_HRM
-    // Drive the activity-triggered SpO2 reader (backstop; the data callbacks drive it
-    // finer-grained)
-    prv_activity_spo2_schedule_update();
-#endif
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
 
@@ -941,6 +737,7 @@ static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
   activity_algorithm_minute_handler(utc_sec, &minute_record);
 
   s_activity_state.last_vmc = minute_record.data.base.vmc;
+  s_activity_state.last_minute_steps = minute_record.data.base.steps;
   s_activity_state.last_orientation = minute_record.data.base.orientation;
 
   // The rest of the minute handling is separated into another method to decrease the stack
@@ -958,7 +755,7 @@ PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
   PBL_LOG_DBG("running minute system task");
 
   // Get the current time
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
 
   // Do our minute processing
   prv_process_minute_data(utc_sec);
@@ -1017,7 +814,7 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
         .version = ACTIVITY_RAW_SAMPLES_VERSION,
         .session_id = s_activity_state.sample_collection_session_id,
         .len = sizeof(ActivityRawSamplesRecord),
-        .time_local = time_utc_to_local(rtc_get_time()),
+        .time_local = time_utc_to_local(pbl_realtime()),
         .num_samples = data->run_size,
       };
       if (data->first_record) {
@@ -1165,14 +962,11 @@ static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t time
 static void prv_feed_samples_system_cb(void *context_in) {
   ActivityFeedSamples *context = (ActivityFeedSamples *)context_in;
 
-  time_t time_s;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_s, &time_ms);
-  uint64_t timestamp = ((uint64_t)time_s) * PBL_MSEC_PER_SEC + time_ms;
+  uint64_t timestamp = pbl_realtime_ms();
 
   // Feed samples into the algorithm
   prv_accel_cb(context->data, context->num_samples, timestamp);
-  kernel_free(context);
+  pbl_free(context);
 
   s_activity_state.pending_test_cb = false;
 }
@@ -1191,7 +985,7 @@ static void prv_stop_tracking_early(void) {
 
   // Update storage before we close down
   s_activity_state.update_settings_counter = -1;
-  prv_update_storage(rtc_get_time());
+  prv_update_storage(pbl_realtime());
 
   PBL_LOG_DBG("Updated and persisted sessions before stopping activity tracking");
 }
@@ -1224,7 +1018,6 @@ static void prv_start_tracking_cb(void *context) {
       // session if an hrm is present
       prv_heart_rate_init();
       prv_spo2_init();
-      prv_activity_spo2_init();
     }
 
     // Set the user data
@@ -1268,7 +1061,6 @@ static void prv_stop_tracking_cb(void *context) {
   // Close down heart rate support
   prv_heart_rate_deinit();
   prv_spo2_deinit();
-  prv_activity_spo2_deinit();
 
   PBL_ASSERTN(activity_algorithm_deinit());
   s_activity_state.started = false;
@@ -1367,7 +1159,7 @@ static void prv_bg_request_system_cb(void *data) {
   pbl_mutex_unlock(&s_activity_state.mutex);
 
   if (abandoned) {
-    kernel_free(req);
+    pbl_free(req);
   } else {
     pbl_sem_give(&s_activity_state.bg_wait_semaphore);
   }
@@ -1383,15 +1175,15 @@ static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler 
 
   req->handler = handler;
   if (!system_task_add_callback(prv_bg_request_system_cb, req)) {
-    kernel_free(req);
+    pbl_free(req);
     return false;
   }
 
-  const RtcTicks end_ticks = rtc_get_ticks() + timeout_sec * PBL_TICK_HZ;
+  const uint64_t end_ticks = pbl_uptime_ticks() + timeout_sec * PBL_TICK_HZ;
   while (true) {
     pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
     const bool completed = req->completed;
-    if (!completed && rtc_get_ticks() > end_ticks) {
+    if (!completed && pbl_uptime_ticks() > end_ticks) {
       req->abandoned = true;
     }
     pbl_mutex_unlock(&s_activity_state.mutex);
@@ -1419,7 +1211,7 @@ bool activity_init(void) {
   pbl_sem_init(&s_activity_state.bg_wait_semaphore, 0, 1);
 
   // Open up our settings file so that we can init our state
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (!file) {
     return false;
   }
@@ -1435,11 +1227,11 @@ bool activity_init(void) {
   ActivitySettingsKey key = ActivitySettingsKeyVersion;
   const uint16_t version = ACTIVITY_SETTINGS_CURRENT_VERSION;
   if (version != written_version) {
-    settings_file_set(file, &key, sizeof(key), &version, sizeof(version));
+    pbl_settings_set(file, &key, sizeof(key), &version, sizeof(version));
   }
 
   // Init the current day index
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
   s_activity_state.cur_day_index = time_util_get_day(utc_now);
 
   // Roll back the history if needed and init each of the metrics for today
@@ -1457,17 +1249,17 @@ bool activity_init(void) {
   s_activity_state.resting_calories = activity_private_compute_resting_calories(minute_of_day);
 
   key = ActivitySettingsKeyLastSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_sleep_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_sleep_activity_exit_at_utc));
 
   key = ActivitySettingsKeyLastRestfulSleepActivityUTC;
-  settings_file_get(file, &key, sizeof(key),
-                    &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key),
+                   &s_activity_state.logged_restful_sleep_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_restful_sleep_activity_exit_at_utc));
 
   key = ActivitySettingsKeyLastStepActivityUTC;
-  settings_file_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
-                    sizeof(s_activity_state.logged_step_activity_exit_at_utc));
+  pbl_settings_get(file, &key, sizeof(key), &s_activity_state.logged_step_activity_exit_at_utc,
+                   sizeof(s_activity_state.logged_step_activity_exit_at_utc));
 
   // Clean up
   activity_private_settings_close(file);
@@ -1631,8 +1423,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
   // Fetch in bounded chunks into kernel memory, padding gaps between chunks with invalid records
   while (written < requested) {
     const uint32_t chunk = MIN(requested - written, ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS);
-    ActivityMinuteHistoryRequest *req =
-        kernel_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
+    ActivityMinuteHistoryRequest *req = pbl_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
     if (!req) {
       success = (written > 0);
       break;
@@ -1667,7 +1458,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
         next_utc = first_utc + (time_t)written * PBL_SEC_PER_MIN;
       }
     }
-    kernel_free(req);
+    pbl_free(req);
 
     if (done) {
       break;
@@ -1704,7 +1495,7 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
     return false;
   }
 
-  ActivityMinuteHeartRateRequest *req = kernel_zalloc(sizeof(*req) + num_minutes);
+  ActivityMinuteHeartRateRequest *req = pbl_zalloc(sizeof(*req) + num_minutes);
   if (!req) {
     return false;
   }
@@ -1719,7 +1510,7 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
   if (success) {
     memcpy(heart_rate_bpm, req->heart_rate_bpm, num_minutes);
   }
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1790,12 +1581,11 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
     if (enable && !s_activity_state.sample_collection_enabled) {
-      ActivitySampleCollectionData *data =
-          kernel_zalloc_check(sizeof(ActivitySampleCollectionData));
+      ActivitySampleCollectionData *data = pbl_zalloc_check(sizeof(ActivitySampleCollectionData));
       s_activity_state.sample_collection_data = data;
       data->first_record = true;
       s_activity_state.sample_collection_session_id++;
-      s_activity_state.sample_collection_seconds = rtc_get_time();
+      s_activity_state.sample_collection_seconds = pbl_realtime();
       s_activity_state.sample_collection_num_samples = 0;
       s_activity_state.sample_collection_enabled = true;
     }
@@ -1807,16 +1597,16 @@ bool activity_raw_sample_collection(bool enable, bool disable, bool *enabled, ui
       if (data->dls_session) {
         dls_finish(data->dls_session);
       }
-      kernel_free(data);
+      pbl_free(data);
       s_activity_state.sample_collection_data = nullptr;
       s_activity_state.sample_collection_seconds =
-          rtc_get_time() - s_activity_state.sample_collection_seconds;
+          pbl_realtime() - s_activity_state.sample_collection_seconds;
     }
     *enabled = s_activity_state.sample_collection_enabled;
     *session_id = s_activity_state.sample_collection_session_id;
     *num_samples = s_activity_state.sample_collection_num_samples;
     if (*enabled) {
-      *seconds = rtc_get_time() - s_activity_state.sample_collection_seconds;
+      *seconds = pbl_realtime() - s_activity_state.sample_collection_seconds;
     } else {
       *seconds = s_activity_state.sample_collection_seconds;
     }
@@ -1835,7 +1625,7 @@ bool activity_dump_sleep_log(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  ActivityBgRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -1843,7 +1633,7 @@ bool activity_dump_sleep_log(void) {
     return false;
   }
   const bool success = req->success;
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1868,7 +1658,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
 
     // Allocate space for the samples
     uint16_t req_size = sizeof(ActivityFeedSamples) + chunk_size * sizeof(AccelRawData);
-    ActivityFeedSamples *context = kernel_malloc(req_size);
+    ActivityFeedSamples *context = pbl_malloc(req_size);
     if (!context) {
       PBL_LOG_ERR("Not enough memory");
       return false;
@@ -1897,9 +1687,9 @@ bool activity_test_run_minute_callback(void) {
 // Writes history to settings file
 static void prv_write_metric_history(ActivitySettingsKey key,
                                      const ActivitySettingsValueHistory *history) {
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (file) {
-    settings_file_set(file, &key, sizeof(key), history, sizeof(*history));
+    pbl_settings_set(file, &key, sizeof(key), history, sizeof(*history));
     activity_private_settings_close(file);
   }
 }
@@ -1923,7 +1713,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
   pbl_cron_job_unschedule(&s_activity_job);
   pbl_mutex_deinit(&s_activity_state.mutex);
   if (reset_settings) {
-    pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
+    pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
   }
 
   if (sleep_history) {
@@ -1969,7 +1759,7 @@ bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, u
   if (!s_activity_initialized) {
     return false;
   }
-  ActivitySleepFileInfoRequest *req = kernel_zalloc(sizeof(*req));
+  ActivitySleepFileInfoRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -1983,7 +1773,7 @@ bool activity_test_minute_file_info(bool compact_first, uint32_t *num_records, u
     *data_bytes = req->data_bytes;
     *minutes = req->minutes;
   }
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -1997,7 +1787,7 @@ bool activity_test_fill_minute_file(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  ActivityBgRequest *req = kernel_zalloc(sizeof(*req));
+  ActivityBgRequest *req = pbl_zalloc(sizeof(*req));
   if (!req) {
     return false;
   }
@@ -2005,7 +1795,7 @@ bool activity_test_fill_minute_file(void) {
     return false;
   }
   const bool success = req->success;
-  kernel_free(req);
+  pbl_free(req);
   return success;
 }
 
@@ -2013,7 +1803,7 @@ bool activity_test_fill_minute_file(void) {
 // Send a fake data logging records
 static void prv_send_fake_dls_records_system_cb(void *context_param) {
   // Send a fake legacy sleep logging record
-  time_t utc_now = rtc_get_time();
+  time_t utc_now = pbl_realtime();
   time_t session_start_utc = utc_now - (4 * PBL_SEC_PER_HOUR);
 
   // Send one of each activity type
@@ -2055,7 +1845,7 @@ void activity_test_set_steps_and_avg(int32_t new_steps, int32_t current_avg, int
     // The first key is set to the current_avg so that the current step average will always be at
     // current_avg. The last key is set to daily_avg - current_avg so that the total daily_avg will
     // always be at daily_avg
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     struct pbl_tm local_tm;
     pbl_localtime_r(&now, &local_tm);
     enum pbl_weekday day_of_week = local_tm.tm_wday;
@@ -2079,7 +1869,7 @@ void activity_test_set_steps_history() {
     return;
   }
   ActivitySettingsValueHistory step_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       1000, 750, 1250, 500, 2000, 3000
@@ -2095,7 +1885,7 @@ void activity_test_set_sleep_history() {
     return;
   }
   ActivitySettingsValueHistory sleep_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       400,

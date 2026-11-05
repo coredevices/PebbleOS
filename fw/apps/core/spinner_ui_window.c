@@ -3,6 +3,7 @@
 
 #include "spinner_ui_window.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/trig.h>
 
 #include <applib/graphics/graphics.h>
@@ -10,7 +11,6 @@
 #include <applib/ui/animation.h>
 #include <applib/ui/layer.h>
 #include <applib/ui/property_animation.h>
-#include <kernel/pbl_malloc.h>
 
 ////////////////////////////////////////////////////////////
 // Data structures
@@ -115,7 +115,7 @@ static void prv_window_unload_handler(Window *window) {
   if (data) {
     data->should_cancel_animation = true;
     property_animation_destroy(data->spinner_animation);
-    kernel_free(data);
+    pbl_free(data);
   }
 }
 
@@ -163,7 +163,7 @@ static void prv_window_load_handler(Window *window) {
 }
 
 Window *spinner_ui_window_get(GColor spinner_color) {
-  SpinnerUIData *data = kernel_malloc_check(sizeof(SpinnerUIData));
+  SpinnerUIData *data = pbl_malloc_check(sizeof(SpinnerUIData));
   *data = (SpinnerUIData){};
 
   data->spinner_color = spinner_color;

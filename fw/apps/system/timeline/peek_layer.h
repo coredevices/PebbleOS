@@ -69,6 +69,10 @@ void peek_layer_set_icon_with_invert(PeekLayer *peek_layer,
                                      const TimelineResourceInfo *timeline_res, bool invert);
 void peek_layer_set_icon_with_size(PeekLayer *peek_layer, const TimelineResourceInfo *timeline_res,
                                    TimelineResourceSize res_size, GRect icon_from);
+void peek_layer_set_icon_with_size_invert(PeekLayer *peek_layer,
+                                          const TimelineResourceInfo *timeline_res,
+                                          TimelineResourceSize res_size, GRect icon_from,
+                                          bool invert);
 
 //! Set the peek layer to have a stretching animation to a frame.
 void peek_layer_set_scale_to(PeekLayer *peek_layer, GRect icon_to);
@@ -97,6 +101,9 @@ ImmutableAnimation *peek_layer_create_play_section_animation(PeekLayer *peek_lay
 
 //! Set the background color of the peek layer.
 void peek_layer_set_background_color(PeekLayer *peek_layer, GColor color);
+
+//! Set the text color of all peek layer text fields.
+void peek_layer_set_text_color(PeekLayer *peek_layer, GColor color);
 
 //! Sets the text of the peek layer text fields. The text is copied over.
 //! See the individual text field setters for more information about each field.

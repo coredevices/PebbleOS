@@ -46,27 +46,6 @@ config DEFAULT_LOG_LEVEL
     default 200 if DEFAULT_LOG_LEVEL_DEBUG
     default 255 if DEFAULT_LOG_LEVEL_DEBUG_VERBOSE
 
-choice
-    prompt "Flash log level"
-    default FLASH_LOG_LEVEL_INFO
-
-config FLASH_LOG_LEVEL_ERROR
-    bool "Error"
-
-config FLASH_LOG_LEVEL_WARNING
-    bool "Warning"
-
-config FLASH_LOG_LEVEL_INFO
-    bool "Info"
-
-config FLASH_LOG_LEVEL_DEBUG
-    bool "Debug"
-
-config FLASH_LOG_LEVEL_DEBUG_VERBOSE
-    bool "Debug verbose"
-
-endchoice
-
 config LOG_TASK_PREFIX
     bool "Task prefix"
     depends on LOG
@@ -74,11 +53,29 @@ config LOG_TASK_PREFIX
       Prefix log messages with the originating task identifier char
       (uppercase when logged from privileged mode).
 
+config LOG_BOOT_BUFFER_SIZE
+    int "Boot buffer size"
+    default 512
+    help
+      Messages that a disabled backend would write are kept in a buffer
+      of this many bytes, until it is full, and replayed to the backends
+      started with pbl_log_backend_start(), e.g. the flash backend, so
+      their log begins with the boot banner. 0 disables it.
+
 config PULSE_EVERYWHERE
     bool "PULSE everywhere"
     default y if !RELEASE || MFG
     help
       Use the PULSE protocol for logs and the prompt. Disable to fall
       back to legacy logs and prompt.
+
+config CONSOLE_BAUDRATE
+    int "Console baud rate"
+    default 1000000 if PULSE_EVERYWHERE
+    default 115200
+    help
+      Line rate of the board's console port, CONSOLE_UART.
+
+rsource "backends/Kconfig"
 
 endmenu

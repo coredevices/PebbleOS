@@ -17,6 +17,21 @@ config NRF_FUEL_GAUGE
 
 if SERVICE_BATTERY
 
+config SERVICE_BATTERY_LOW_POWER_PERCENT
+    int "Low power threshold (%)"
+    range 1 100
+    default 2
+    help
+      Battery percentage below which the watch enters low power mode.
+
+config SERVICE_BATTERY_CAPACITY_HOURS
+    int "Battery life (hours)"
+    range 1 65535
+    default 168
+    help
+      Approximate hours of battery life on a full charge, used to convert
+      between charge percentage and remaining time.
+
 config BATTERY_WARNING_FIRST_PERCENT
     int "First battery warning threshold (%)"
     range 0 100

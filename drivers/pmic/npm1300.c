@@ -13,6 +13,9 @@
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/kernel/sched.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/bits.h>
@@ -163,7 +166,7 @@ static uint16_t prv_ntc_threshold_code(const Npm1300Config *cfg, uint8_t celsius
   // Ref: PS v1.1 Section 6.2.5: K_NTCTEMP = round(1024 * R_T / (R_T + R_B))
   float t_k = (float)celsius + 273.15f;
   float exponent = (float)cfg->thermistor_beta * ((1.f / 298.15f) - (1.f / t_k));
-  return (uint16_t)((1024.0f / (1.0f + exp(exponent))) + 0.5f);
+  return (uint16_t)((1024.0f / (1.0f + expf(exponent))) + 0.5f);
 }
 
 static int prv_vterm_code(uint16_t mv, uint8_t *code) {
@@ -433,25 +436,35 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
   return 0;
 }
 
-int pmic_power_off(void) {
+// Ship mode: everything but the RTC loses power until a button press
+static void prv_power_off(enum pbl_sys_off_mode mode, void *user_data) {
   int ret;
+
+  // I2C transfers need the scheduler
+  if (pbl_in_isr() || pbl_irq_is_locked() || !pbl_kernel_is_running()) {
+    return;
+  }
 
   // Ship mode exits as soon as VBUS is present
   if (pmic_is_usb_connected()) {
-    return -EBUSY;
+    PBL_LOG_ERR("Cannot power off, USB is connected");
+    return;
   }
 
   ret = prv_write_register(NPM1300_TASKENTERSHIPMODE, 1);
   if (ret != 0) {
     PBL_LOG_ERR("Failed to enter ship mode (%d)", ret);
-    return ret;
+    return;
   }
 
   // tPWRDN is 100 ms
   pbl_busy_wait_us(100000);
 
-  return -ETIMEDOUT;
+  PBL_LOG_ERR("Still powered after entering ship mode");
 }
+
+PBL_SYS_OFF_HANDLER_DEFINE(npm1300_power_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_power_off, nullptr);
 
 uint16_t pmic_get_vsys(void) {
   if (prv_write_register(NPM1300_EVENTSADCCLR, NPM1300_EVENTSADC_VSYSRDY) != 0) {

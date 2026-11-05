@@ -5,21 +5,22 @@
 #include <stddef.h>
 
 #include <pbl/drivers/accel.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
 
@@ -72,7 +73,7 @@ static void prv_vibe_history_clear(uint64_t cutoff) {
       break;
     }
     s_vibe_history = (VibeHistory *)list_get_next((ListNode *)vibe);
-    kernel_free(vibe);
+    pbl_free(vibe);
   }
 }
 
@@ -95,17 +96,14 @@ static void prv_vibe_history_start_event(void) {
     pbl_mutex_unlock(&s_vibe_history_mutex);
     return;
   }
-  VibeHistory *vibe = kernel_malloc(sizeof(VibeHistory));
+  VibeHistory *vibe = pbl_malloc(sizeof(VibeHistory));
   if (vibe == nullptr) {
     s_vibe_history_enabled = false;
     pbl_mutex_unlock(&s_vibe_history_mutex);
     return;
   }
   list_init((ListNode *)vibe);
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  vibe->time_start = ((uint64_t)s) * 1000 + ms;
+  vibe->time_start = pbl_realtime_ms();
   vibe->time_end = END_NOT_SET;
 
   if (s_vibe_history == nullptr) {
@@ -126,13 +124,11 @@ static void prv_vibe_history_end_event(void) {
     return;
   }
 
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
+  uint64_t now_ms = pbl_realtime_ms();
 
   VibeHistory *vibe = (VibeHistory *)list_get_tail((ListNode *)s_vibe_history);
   if (vibe->time_end == END_NOT_SET) {
-    vibe->time_end = ((uint64_t)s) * 1000 + ms;
+    vibe->time_end = now_ms;
   }
   pbl_mutex_unlock(&s_vibe_history_mutex);
 }
@@ -158,13 +154,13 @@ static VibePatternOwner s_pending_owner = VibePatternOwner_Other;
 // timeout is computed against an absolute deadline so per-callback scheduling
 // jitter does not accumulate across long patterns (the Reveille score, for
 // example, expands to ~180 chained steps).
-static RtcTicks s_pattern_start_ticks = 0;
+static uint64_t s_pattern_start_ticks = 0;
 static uint64_t s_pattern_deadline_ms = 0;
 // s_vibe_strength is the current vibration strength setting of the motor
 static int32_t s_vibe_strength = VIBE_STRENGTH_OFF;
 // Tick at which the motor was last active (turned on or last transitioned off).
 // Used to suppress vibration-induced false shake/tap detections. 0 = never.
-static RtcTicks s_last_vibe_active_tick = 0;
+static uint64_t s_last_vibe_active_tick = 0;
 // s_vibe_strength_default is the vibrations strength of the motor used when one is not specified
 // explicitly, and can be changed in the notification vibration strength setting.
 static int32_t s_vibe_strength_default = VIBE_STRENGTH_MAX;
@@ -174,7 +170,7 @@ static VibePatternStep *s_vibe_queue_head = nullptr;
 
 //! Analytics: Track time-weighted average strength
 static uint64_t s_strength_time_product_sum;  // Sum of (strength_pct × time_ms)
-static RtcTicks s_last_strength_sample_ticks; // Timestamp of last sample
+static uint64_t s_last_strength_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_strength_pct;   // Last strength percentage sampled
 static uint32_t s_total_vibe_on_time_ms;      // Total vibe on time tracked internally
 
@@ -190,11 +186,11 @@ void vibes_init() {
 }
 
 static void prv_update_strength_analytics(uint8_t new_strength_pct) {
-  RtcTicks now_ticks = rtc_get_ticks();
+  uint64_t now_ticks = pbl_uptime_ticks();
 
   // Calculate time delta in ms since last sample
   if (s_last_strength_sample_ticks > 0) {
-    uint32_t time_delta_ms = ((now_ticks - s_last_strength_sample_ticks) * 1000) / RTC_TICKS_HZ;
+    uint32_t time_delta_ms = ((now_ticks - s_last_strength_sample_ticks) * 1000) / PBL_TICK_HZ;
 
     // Accumulate strength × time for weighted average calculation
     // Use last sampled strength for the period that just elapsed
@@ -230,7 +226,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
 
   if (new_strength != VIBE_STRENGTH_OFF) {
     (void)pbl_vibe_start(VIBE, new_strength);
-    s_last_vibe_active_tick = rtc_get_ticks();
+    s_last_vibe_active_tick = pbl_uptime_ticks();
     if (s_vibe_strength == VIBE_STRENGTH_OFF) {
       // Transitioning from off to on
       PBL_ANALYTICS_TIMER_START(vibrator_on_time_ms);
@@ -241,7 +237,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
     if (s_vibe_strength != VIBE_STRENGTH_OFF) {
       // Transitioning from on to off; stamp the end so the shake holdoff runs
       // from when the motor actually stopped.
-      s_last_vibe_active_tick = rtc_get_ticks();
+      s_last_vibe_active_tick = pbl_uptime_ticks();
       PBL_ANALYTICS_TIMER_STOP(vibrator_on_time_ms);
       prv_vibe_history_end_event();
     }
@@ -265,8 +261,8 @@ void vibe_service_set_enabled(bool enable) {
 //! Caller must hold s_vibe_pattern_mutex.
 static uint32_t prv_next_timeout_ms(uint32_t step_duration_ms) {
   s_pattern_deadline_ms += step_duration_ms;
-  const RtcTicks elapsed_ticks = rtc_get_ticks() - s_pattern_start_ticks;
-  const uint64_t elapsed_ms = (elapsed_ticks * 1000) / RTC_TICKS_HZ;
+  const uint64_t elapsed_ticks = pbl_uptime_ticks() - s_pattern_start_ticks;
+  const uint64_t elapsed_ms = (elapsed_ticks * 1000) / PBL_TICK_HZ;
   if (s_pattern_deadline_ms <= elapsed_ms) {
     // Already late — fire as soon as the timer service can. The deadline
     // accumulator preserves the planned schedule so subsequent steps still
@@ -287,7 +283,7 @@ static void prv_timer_callback(void *data) {
   // remove the event I've finished
   VibePatternStep *removed_node = s_vibe_queue_head;
   s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
-  kernel_free(removed_node);
+  pbl_free(removed_node);
 
   if (s_vibe_queue_head != nullptr) {
     // move to the next step
@@ -329,8 +325,8 @@ uint32_t vibes_get_time_since_last_vibe_ms(void) {
     // Motor has never run this boot.
     return UINT32_MAX;
   }
-  RtcTicks elapsed = rtc_get_ticks() - s_last_vibe_active_tick;
-  uint64_t elapsed_ms = (uint64_t)elapsed * 1000 / RTC_TICKS_HZ;
+  uint64_t elapsed = pbl_uptime_ticks() - s_last_vibe_active_tick;
+  uint64_t elapsed_ms = (uint64_t)elapsed * 1000 / PBL_TICK_HZ;
   return (elapsed_ms > UINT32_MAX) ? UINT32_MAX : (uint32_t)elapsed_ms;
 }
 
@@ -343,7 +339,7 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
     return false;
   }
 
-  VibePatternStep *step = kernel_malloc(sizeof(VibePatternStep));
+  VibePatternStep *step = pbl_malloc(sizeof(VibePatternStep));
   if (step == nullptr) {
     PBL_LOG_ERR("Couldn't malloc for a vibe step");
     pbl_mutex_unlock(&s_vibe_pattern_mutex);
@@ -418,7 +414,7 @@ PBL_SYSCALL(void, sys_vibe_pattern_trigger_start) {
   }
 #endif
 
-  s_pattern_start_ticks = rtc_get_ticks();
+  s_pattern_start_ticks = pbl_uptime_ticks();
   s_pattern_deadline_ms = 0;
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
@@ -437,7 +433,7 @@ static void prv_clear_pattern_locked(void) {
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;
     s_vibe_queue_head = (VibePatternStep *)list_pop_head((ListNode *)s_vibe_queue_head);
-    kernel_free(removed_node);
+    pbl_free(removed_node);
     dropped_steps++;
   }
   // Log whether a pattern was still live and whether the motor was on: a
@@ -496,7 +492,7 @@ void pbl_analytics_external_collect_vibe_stats(void) {
   // Reset accumulators for next period
   s_strength_time_product_sum = 0;
   s_total_vibe_on_time_ms = 0;
-  s_last_strength_sample_ticks = rtc_get_ticks();
+  s_last_strength_sample_ticks = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }

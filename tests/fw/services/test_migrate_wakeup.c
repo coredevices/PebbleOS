@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/wakeup.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
@@ -17,6 +17,7 @@
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -25,7 +26,7 @@
 // Stubs
 //////////////////////////////////////////////////////////
 
-#define SETTINGS_FILE_NAME "wakeup"
+#define SETTINGS_FILE_NAME "/wakeup"
 #define SETTINGS_FILE_SIZE 2048
 
 #define WAKEUP_REASON 0x1337
@@ -86,12 +87,12 @@ bool clock_is_timezone_set(void) {
 // Helpers
 ////////////////////////////////////
 
-void open_settings_file(SettingsFile *file) {
-  cl_must_pass(settings_file_open(file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE));
+void open_settings_file(struct pbl_settings_file *file) {
+  cl_must_pass(pbl_settings_open(file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE));
 }
 
-void close_settings_file(SettingsFile *file) {
-  settings_file_close(file);
+void close_settings_file(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
 }
 
 // Tests
@@ -99,11 +100,11 @@ void close_settings_file(SettingsFile *file) {
 
 void test_migrate_wakeup__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   // Load pre-migration wakeup entry onto pfs
-  SettingsFile file;
+  struct pbl_settings_file file;
   const int32_t timestamp = TIMESTAMP;
 
   // Create the Migration Entry
@@ -117,21 +118,21 @@ void test_migrate_wakeup__initialize(void) {
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_set(&file, (uint8_t *)&timestamp, sizeof(timestamp),
-                                 (uint8_t *)&w_entry, sizeof(w_entry)));
+  cl_must_pass(pbl_settings_set(&file, (uint8_t *)&timestamp, sizeof(timestamp),
+                                (uint8_t *)&w_entry, sizeof(w_entry)));
 
   close_settings_file(&file);
 }
 
 void test_migrate_wakeup__test_migration_of_wakeup_entries(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   WakeupId wakeup_id = TIMESTAMP;
   WakeupEntryV1 wakeup_entry_v1;
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
-                                 (uint8_t *)&wakeup_entry_v1, sizeof(wakeup_entry_v1)));
+  cl_must_pass(pbl_settings_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
+                                (uint8_t *)&wakeup_entry_v1, sizeof(wakeup_entry_v1)));
   cl_assert_equal_i(wakeup_entry_v1.reason, WAKEUP_REASON);
   cl_assert_equal_i(wakeup_entry_v1.repeat_hours_missed, 0);
   cl_assert(!wakeup_entry_v1.repeating);
@@ -148,11 +149,11 @@ void test_migrate_wakeup__test_migration_of_wakeup_entries(void) {
 
   open_settings_file(&file);
 
-  cl_must_pass(settings_file_exists(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)));
-  cl_assert_equal_i(settings_file_get_len(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)),
+  cl_must_pass(pbl_settings_exists(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)));
+  cl_assert_equal_i(pbl_settings_get_len(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id)),
                     sizeof(WakeupEntryV2));
-  cl_must_pass(settings_file_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
-                                 (uint8_t *)&wakeup_entry_v2, sizeof(wakeup_entry_v2)));
+  cl_must_pass(pbl_settings_get(&file, (uint8_t *)&wakeup_id, sizeof(wakeup_id),
+                                (uint8_t *)&wakeup_entry_v2, sizeof(wakeup_entry_v2)));
 
   cl_assert_equal_i(wakeup_entry_v2.reason, wakeup_entry_v1.reason);
   cl_assert_equal_i(wakeup_entry_v2.repeat_hours_missed, wakeup_entry_v1.repeat_hours_missed);

@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SETTINGS
+    bool "Settings files"
+    depends on FS
+    help
+      Atomic key-value store kept in a single file.
+
+if SETTINGS
+
+module = SETTINGS
+module-str = Settings
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

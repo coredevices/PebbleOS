@@ -6,11 +6,11 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/pbl_std/timelocal.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/day_picker.h>
 #include <applib/ui/menu_layer.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 
@@ -142,11 +142,11 @@ static void prv_day_picker_window_unload(Window *window) {
   DayPickerData *data = (DayPickerData *)window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
   i18n_free_all(&data->window);
-  task_free(data);
+  applib_free(data);
 }
 
 void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *context) {
-  DayPickerData *data = task_malloc_check(sizeof(DayPickerData));
+  DayPickerData *data = applib_malloc(sizeof(DayPickerData));
   *data = (DayPickerData){
     .initial = config.initial,
     .callback = callback,
@@ -172,7 +172,9 @@ void day_picker_push(DayPickerConfig config, DayPickerCallback callback, void *c
                              .draw_row = prv_day_picker_draw_row,
                              .select_click = prv_day_picker_handle_selection,
                            });
+#if PBL_COLOR
   menu_layer_set_highlight_colors(&data->menu_layer, config.highlight_color, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -310,12 +312,12 @@ static void prv_custom_day_picker_window_unload(Window *window) {
   gbitmap_deinit(&data->deselected_icon);
   gbitmap_deinit(&data->checkmark_icon);
   i18n_free_all(&data->window);
-  task_free(data);
+  applib_free(data);
 }
 
 void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallback callback,
                             void *context, GColor highlight_color) {
-  CustomDayPickerData *data = task_malloc_check(sizeof(CustomDayPickerData));
+  CustomDayPickerData *data = applib_malloc(sizeof(CustomDayPickerData));
   *data = (CustomDayPickerData){
     .callback = callback,
     .callback_context = context,
@@ -343,7 +345,9 @@ void custom_day_picker_push(bool initial_days[PBL_DAY_PER_WEEK], DayPickerCallba
                              .select_click = prv_custom_day_picker_handle_selection,
                              .selection_changed = prv_custom_day_picker_selection_changed,
                            });
+#if PBL_COLOR
   menu_layer_set_highlight_colors(&data->menu_layer, highlight_color, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(&data->menu_layer,
                                     shell_prefs_get_menu_scroll_wrap_around_enable());

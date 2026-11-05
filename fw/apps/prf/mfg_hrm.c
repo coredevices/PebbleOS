@@ -10,11 +10,11 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -45,11 +45,11 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
     snprintf(app_data->status_string, STATUS_STRING_LEN, "Sampling...");
 
     if (e->hrm.event_type == HRMEvent_BPM) {
-      snprintf(app_data->bpm_string, BPM_STRING_LEN, "HR:%d (quality:%d)", e->hrm.bpm.bpm,
-               e->hrm.bpm.quality);
+      snprintf(app_data->bpm_string, BPM_STRING_LEN, "HR:%d (conf:%d)", e->hrm.bpm.bpm,
+               e->hrm.bpm.confidence);
     } else if (e->hrm.event_type == HRMEvent_SpO2) {
-      snprintf(app_data->spo2_string, SPO2_STRING_LEN, "SpO2:%d (quality:%d)", e->hrm.spo2.percent,
-               e->hrm.spo2.quality);
+      snprintf(app_data->spo2_string, SPO2_STRING_LEN, "SpO2:%d (conf:%d)", e->hrm.spo2.percent,
+               e->hrm.spo2.confidence);
     }
 
     layer_mark_dirty(&app_data->window.layer);
@@ -57,7 +57,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 }
 
 static void prv_handle_init(void) {
-  AppData *data = task_zalloc(sizeof(*data));
+  AppData *data = app_zalloc(sizeof(*data));
   app_state_set_user_data(data);
 
   Window *window = &data->window;

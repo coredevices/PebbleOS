@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/animation_private.h>
 #include <applib/ui/content_indicator_private.h>
@@ -13,10 +13,13 @@
 #include <applib/ui/recognizer/recognizer_manager.h>
 #include <applib/ui/recognizer/touch_nav.h>
 #include <applib/ui/scroll_layer_private.h>
+#include <applib/ui/window_private.h>
 #include <clar.h>
 #include <fake_app_timer.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <shell/prefs.h>
+#include <shell/system_theme.h>
 #include <stubs_app_state.h>
 #include <stubs_compiled_with_legacy2_sdk.h>
 
@@ -1060,9 +1063,9 @@ void test_menu_layer__touch_double_tap_during_center_focused_jump(void) {
   prv_reset_touch_counters();
   menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68)); // row 2 (content_y 110), row 0 centred
   cl_assert_equal_i(s_select_click_count, 0);
-  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);   // commit still pending
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // within the 300ms window
-  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));         // same spot, mid-jump
+  cl_assert_equal_i(menu_layer_get_selected_index(&l).row, 0);  // commit still pending
+  fake_rtc_increment_ticks((uint64_t)100 * PBL_TICK_HZ / 1000); // within the 300ms window
+  menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));        // same spot, mid-jump
   cl_assert_equal_i(s_select_click_count, 1);
   cl_assert_equal_i(s_select_click_index.row, 2); // the jump target, not the stale row 0
 }
@@ -1086,7 +1089,7 @@ void test_menu_layer__touch_tap_each_tap_activates(void) {
   cl_assert_equal_i(s_select_click_index.row, 3);
   cl_assert(!l.double_tap_armed); // plain taps never arm the window
 
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // a fast second tap...
+  fake_rtc_increment_ticks((uint64_t)100 * PBL_TICK_HZ / 1000); // a fast second tap...
   menu_layer_touch_handle_tap(&l, GPoint(72, 3 * 44 + 22)); // ...same spot (the row never moved)
   cl_assert_equal_i(s_select_click_count, 2);               // ...simply activates again
   cl_assert_equal_i(s_select_click_index.row, 3);
@@ -1114,7 +1117,7 @@ void test_menu_layer__touch_double_tap_records_clamped_selection(void) {
 
   // Tap 2 inside the window: priority 1 activates the RECORDED index, which must be the clamped
   // row, never the out-of-range 999 the client redirect asked for.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
+  fake_rtc_increment_ticks((uint64_t)100 * PBL_TICK_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   menu_layer_touch_handle_tap(&l, GPoint(72, 110 + 68));
   cl_assert_equal_i(s_select_click_count, 1);
@@ -1173,7 +1176,7 @@ void test_menu_layer__touch_button_nav_disarms_double_tap(void) {
 
   // A tap within the 300ms window on a not-selected row: with the arm gone it is an ordinary
   // carousel tap-select (no activation). A stale arm would have activated the recorded row here.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
+  fake_rtc_increment_ticks((uint64_t)100 * PBL_TICK_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   const int16_t off = scroll_layer_get_content_offset(&l.scroll_layer).y;
   menu_layer_touch_handle_tap(&l, GPoint(72, 154 + off)); // row 3 (content_y 154)
@@ -1203,7 +1206,7 @@ void test_menu_layer__touch_reload_disarms_double_tap(void) {
   cl_assert(!l.double_tap_armed);
 
   // A tap within the window must NOT activate the stale (now out-of-range) row 2.
-  fake_rtc_increment_ticks((RtcTicks)100 * RTC_TICKS_HZ / 1000); // +100ms < 300ms
+  fake_rtc_increment_ticks((uint64_t)100 * PBL_TICK_HZ / 1000); // +100ms < 300ms
   prv_reset_touch_counters();
   const int16_t off = scroll_layer_get_content_offset(&l.scroll_layer).y;
   menu_layer_touch_handle_tap(&l, GPoint(72, 66 + off)); // row 1 (content_y 66)
@@ -1384,7 +1387,7 @@ static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / 1000);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / 1000);
 }
 
 void test_menu_layer__touch_deinit_mid_gesture_cancels(void) {

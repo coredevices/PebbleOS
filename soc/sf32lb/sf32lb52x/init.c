@@ -1,11 +1,17 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "syscfg.h"
+
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
+#include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 
 #include <bf0_hal.h>
 #include <drivers/watchdog.h>
+#include <hardware/sf32lb52_wdt.h>
 
 #define HCPU_FREQ_MHZ    240
 #define PWRKEY_RESET_CNT (32000 * 15)
@@ -16,9 +22,9 @@ void pbl_soc_early_init(void) {
 
   SystemInit();
 
-  // Adjust bootrom pull-up/down delays on PA21 (flash power control pin) so
-  // that the flash is properly power cycled on reset. A flash power cycle is
-  // needed if left in 4-byte addressing mode, as bootrom does not support it.
+  // Make the boot ROM power cycle the flash through PA21 on reset: the
+  // bootloader leaves it in 4-byte address mode, which the ROM cannot read,
+  // and a reset can come before the flash driver takes it out.
   bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
   bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
   bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
@@ -38,15 +44,22 @@ void pbl_soc_early_init(void) {
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
   HAL_RCC_Reset_and_Halt_LCPU(1);
 
-  // Load system configuration from EFUSE
-  BSP_System_Config();
+  soc_sf32lb52_syscfg_init();
 
   HAL_HPAON_StartGTimer();
 
   HAL_PMU_EnableRC32K(1);
 
+#ifdef CONFIG_WATCHDOG
   // Stop and restart WDT in case it was clocked by RC10K before
   watchdog_stop();
+#else
+  // The bootloader leaves its watchdog running
+  pbl_writel(WDT_CCR_STOP, SF32LB52_WDT1_BASE + SF32LB52_WDT_CCR_OFFSET);
+  (void)PBL_POLL_BUSY_US(
+      (pbl_readl(SF32LB52_WDT1_BASE + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U,
+      48000U);
+#endif
 
   HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
 
@@ -106,4 +119,15 @@ void pbl_soc_early_init(void) {
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LPTIM1, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_GPIO1, AON_PIN_MODE_HIGH);
+
+  // Deep WFI clocks: HCLK = 48 MHz / 12 = 4 MHz, PCLK1 = 4 MHz, PCLK2 = 2 MHz.
+  // TODO(SF32LB52): to use deep WFI when audio is ON, HCLK needs to remain
+  // at 48MHz (div=1). Also, clock needs to be forced ON during deep WFI
+  // (FORCE_HP bit in HPSYS_RCC_DBGR register)
+  HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
+}
+
+// HAL timeouts count kernel uptime.
+uint32_t HAL_GetTick(void) {
+  return (uint32_t)pbl_uptime_ms();
 }

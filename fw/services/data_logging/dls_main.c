@@ -5,10 +5,11 @@
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -17,13 +18,13 @@
 #include <pbl/services/data_logging/dls_storage.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/util/list.h>
 #include <pbl/util/string.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/data_logging.h>
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
@@ -66,7 +67,7 @@ static void prv_send_next_session_system_task_cb(void *data);
 
 static bool prv_add_send_entry_cb(DataLoggingSession *session, void *data) {
   DataLoggingSendBuildCtx *ctx = (DataLoggingSendBuildCtx *)data;
-  DataLoggingSendEntry *entry = kernel_malloc(sizeof(DataLoggingSendEntry));
+  DataLoggingSendEntry *entry = pbl_malloc(sizeof(DataLoggingSendEntry));
   if (!entry) {
     // OOM: send what we already queued; the next 5-minute tick will retry.
     PBL_LOG_WRN("OOM building DLS flush list; truncating pass");
@@ -87,7 +88,7 @@ static void prv_drain_send_list(DataLoggingSendEntry *head) {
   while (head) {
     DataLoggingSendEntry *entry = head;
     head = (DataLoggingSendEntry *)list_pop_head((ListNode *)head);
-    kernel_free(entry);
+    pbl_free(entry);
   }
 }
 
@@ -108,7 +109,7 @@ static void prv_send_next_session_system_task_cb(void *data) {
       entry->tag == entry->session->tag) {
     dls_private_send_session(entry->session, entry->empty);
   }
-  kernel_free(entry);
+  pbl_free(entry);
 
   if (!new_head) {
     s_flush_in_progress = false;
@@ -217,7 +218,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   }
 
   bool success = false;
-  uint8_t *buffer = kernel_malloc_check(DLS_ENDPOINT_MAX_PAYLOAD);
+  uint8_t *buffer = pbl_malloc_check(DLS_ENDPOINT_MAX_PAYLOAD);
   unsigned int num_bytes = DLS_ENDPOINT_MAX_PAYLOAD;
   PBL_ASSERTN(logging_session->item_size <= num_bytes);
   num_bytes -= (num_bytes % logging_session->item_size);
@@ -240,7 +241,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   success = dls_endpoint_send_data(logging_session, buffer, read_bytes);
 
 exit:
-  kernel_free(buffer);
+  pbl_free(buffer);
   return (success);
 }
 
@@ -321,7 +322,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
       // freeing the data->buffer_storage because it was allocated on the client's heap, and the
       // client is being destroyed.
       if (session->data->buffer_in_kernel_heap) {
-        kernel_free(session->data->buffer_storage);
+        pbl_free(session->data->buffer_storage);
       }
 
       // All the lock/unlock session calls are made from privileged mode, so it is impossible
@@ -331,7 +332,7 @@ static bool prv_inactivate_sessions_each_cb(DataLoggingSession *session, void *d
       session->status = DataLoggingStatusInactive;
       // Free up the data and mutex for this session
       pbl_mutex_deinit(&session->data->mutex);
-      kernel_free(session->data);
+      pbl_free(session->data);
       session->data = nullptr;
     }
   }
@@ -380,7 +381,7 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
   }
 
   if (logging_session == nullptr) {
-    logging_session = dls_list_create_session(tag, item_type, item_size, uuid, rtc_get_time(),
+    logging_session = dls_list_create_session(tag, item_type, item_size, uuid, pbl_realtime(),
                                               DataLoggingStatusActive);
     if (logging_session == nullptr) {
       // No need to log again here, dls_list_create_session will log on our behalf
@@ -401,7 +402,7 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
         PebbleTask task = pebble_task_get_current();
         PBL_ASSERTN(task == PebbleTask_Worker || task == PebbleTask_KernelMain ||
                     task == PebbleTask_KernelBackground);
-        buffer = kernel_malloc_check(buf_size);
+        buffer = pbl_malloc_check(buf_size);
         logging_session->data->buffer_in_kernel_heap = true;
       }
       logging_session->data->buffer_storage = buffer;

@@ -1,20 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdatomic.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/services/timeline/peek.h>
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <system/status_codes.h>
 
@@ -40,17 +42,17 @@ static TimelineEventState s_states[TimelineEventServiceCount];
 
 static TimerID s_timer;
 
-static bool s_cb_scheduled;
+static atomic_flag s_cb_scheduled;
 
 static void prv_update_status(void);
 
 static void prv_update_status_system_task_callback(void *unused) {
-  __atomic_clear(&s_cb_scheduled, __ATOMIC_RELAXED);
+  atomic_flag_clear_explicit(&s_cb_scheduled, memory_order_relaxed);
   prv_update_status();
 }
 
 static void prv_update_status_async(void) {
-  if (__atomic_test_and_set(&s_cb_scheduled, __ATOMIC_RELAXED)) {
+  if (atomic_flag_test_and_set_explicit(&s_cb_scheduled, memory_order_relaxed)) {
     return; // we already have a cb scheduled
   }
 
@@ -62,7 +64,7 @@ static void prv_new_timer_callback(void *unused) {
 }
 
 static uint32_t prv_calc_timeout(const TimelineItem *item) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t start = item->header.timestamp;
   const time_t end = start + (item->header.duration * PBL_SEC_PER_MIN);
   if (now >= end) {
@@ -113,7 +115,7 @@ static void prv_update_status(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   new_timer_stop(s_timer);
   SerializedTimelineItemHeader *filter_headers =
-      kernel_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
+      pbl_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
 
   // Will update
   for (unsigned int i = 0; i < TimelineEventServiceCount; i++) {
@@ -165,7 +167,7 @@ static void prv_update_status(void) {
   }
 
   prv_set_timer(timeout_ms);
-  kernel_free(filter_headers);
+  pbl_free(filter_headers);
   pbl_mutex_unlock(&s_mutex);
 }
 

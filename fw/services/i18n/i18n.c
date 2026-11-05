@@ -29,16 +29,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
 #include <pbl/util/list.h>
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/language_pack.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
@@ -227,7 +227,7 @@ static bool prv_parse_metadata(const char *header, char *iso_locale, char *lang_
 
 static bool prv_get_metadata(struct DomainBinding *db) {
   // malloc a comfortable amount of RAM to save the header in
-  char *header = kernel_malloc_check(HEADER_BUFFER_SIZE);
+  char *header = pbl_malloc_check(HEADER_BUFFER_SIZE);
   size_t header_len = 0;
   bool success = false;
 
@@ -241,14 +241,14 @@ static bool prv_get_metadata(struct DomainBinding *db) {
   success = prv_parse_metadata(header, db->iso_locale, db->lang_name, &db->lang_version);
 
 cleanup:
-  kernel_free(header);
+  pbl_free(header);
   return (success);
 }
 
 static int prv_unmapit(struct DomainBinding *db) {
   MoHandle *mohandle = &db->mohandle;
 
-  kernel_free(mohandle->mo.mo_htable);
+  pbl_free(mohandle->mo.mo_htable);
   mohandle->mo.mo_htable = nullptr;
   mohandle->mo = (Mo){};
   strcpy(db->iso_locale, "en_US");
@@ -301,7 +301,7 @@ static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
     goto fail;
   }
   // A corrupt pack can claim an htable close to its own size
-  uint32_t *htable = kernel_malloc(htable_size);
+  uint32_t *htable = pbl_malloc(htable_size);
   if (!htable) {
     goto fail;
   }
@@ -338,7 +338,7 @@ void prv_list_flush(void) {
   ListNode *cur = (ListNode *)s_system_domain.strings_list;
   while (cur) {
     ListNode *next = list_get_next(cur);
-    kernel_free(cur);
+    pbl_free(cur);
     cur = next;
   }
   s_system_domain.strings_list = nullptr;
@@ -382,7 +382,7 @@ static const char *prv_list_add_string(const char *original_string, const char *
   // Allocate enough space to hold the original and translated strings. The translated string
   // is stored at i18n_string->translated and the original string immediately after that.
   I18nString *i18n_string =
-      kernel_malloc_check(sizeof(I18nString) + translated_len + 1 + strlen(original_string) + 1);
+      pbl_malloc_check(sizeof(I18nString) + translated_len + 1 + strlen(original_string) + 1);
 
   list_init(&i18n_string->node);
   i18n_string->owner = owner;
@@ -406,7 +406,7 @@ static const char *prv_list_add_string(const char *original_string, const char *
 
 static void prv_list_remove_string(I18nString *i18n_string) {
   list_remove(&i18n_string->node, (ListNode **)&s_system_domain.strings_list, nullptr);
-  kernel_free(i18n_string);
+  pbl_free(i18n_string);
 }
 
 static bool prv_check_domain(struct DomainBinding *db) {
@@ -677,7 +677,7 @@ bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
                                       sizeof(translation)) != sizeof(translation)) {
     return false;
   }
-  char *header = kernel_malloc_check(HEADER_BUFFER_SIZE);
+  char *header = pbl_malloc_check(HEADER_BUFFER_SIZE);
   const size_t length = MIN(translation.len, HEADER_BUFFER_SIZE - 1);
   bool valid = resource_load_byte_range_system(SYSTEM_APP, resource_id, translation.off,
                                                (uint8_t *)header, length) == length;
@@ -687,7 +687,7 @@ bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
     *info = (I18nPackInfo){};
     valid = prv_parse_metadata(header, info->locale, info->name, &info->version);
   }
-  kernel_free(header);
+  pbl_free(header);
   return valid;
 #else
   return false;
@@ -713,7 +713,7 @@ bool i18n_remove_pack(uint8_t slot) {
     return false;
   }
   // PFS croaks when deleting a file that a transfer still holds open
-  if (slot == s_install_slot || pfs_remove(filename) != S_SUCCESS) {
+  if (slot == s_install_slot || pbl_fs_unlink(filename) != 0) {
     return false;
   }
   prv_deselect_pack(slot);

@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/blob_db/sync.h>
@@ -11,13 +13,11 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
-
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define REMINDER_DB_FILE_NAME "reminderdb"
+#define REMINDER_DB_FILE_NAME "/reminderdb"
 #define REMINDER_DB_MAX_SIZE  PBL_KIB(40)
-#define MAX_REMINDER_SIZE     SETTINGS_VAL_MAX_LEN
+#define MAX_REMINDER_SIZE     PBL_SETTINGS_VAL_MAX_LEN
 #define MAX_REMINDER_AGE      (15 * PBL_SEC_PER_MIN)
 
 typedef struct {
@@ -52,7 +52,7 @@ status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
   if (size == 0) {
     return E_DOES_NOT_EXIST;
   }
-  uint8_t *read_buf = kernel_malloc_check(size);
+  uint8_t *read_buf = pbl_malloc_check(size);
   status_t rv = reminder_db_read((uint8_t *)id, sizeof(TimelineItemId), read_buf, size);
   if (rv != S_SUCCESS) {
     goto cleanup;
@@ -65,11 +65,11 @@ status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
     goto cleanup;
   }
 
-  kernel_free(read_buf);
+  pbl_free(read_buf);
   return S_SUCCESS;
 
 cleanup:
-  kernel_free(read_buf);
+  pbl_free(read_buf);
   return rv;
 }
 
@@ -89,8 +89,8 @@ status_t reminder_db_next_item_header(TimelineItem *next_item_out) {
   return rv;
 }
 
-static bool prv_timestamp_title_compare_func(SettingsFile *file, SettingsRecordInfo *info,
-                                             void *context) {
+static bool prv_timestamp_title_compare_func(struct pbl_settings_file *file,
+                                             struct pbl_settings_record *info, void *context) {
   // Check entry is valid
   if (info->key_len != UUID_SIZE || info->val_len == 0) {
     return true; // continue iteration
@@ -99,7 +99,7 @@ static bool prv_timestamp_title_compare_func(SettingsFile *file, SettingsRecordI
   // Compare timestamps (this should omit most reminders)
   ReminderInfo *reminder_info = (ReminderInfo *)context;
   SerializedTimelineItemHeader header;
-  info->get_val(file, (uint8_t *)&header, sizeof(SerializedTimelineItemHeader));
+  pbl_settings_read_val(file, (uint8_t *)&header, sizeof(SerializedTimelineItemHeader));
   if (reminder_info->timestamp != header.common.timestamp) {
     return true; // continue iteration
   }
@@ -170,7 +170,7 @@ status_t reminder_db_insert_item(TimelineItem *item) {
   }
 
   size_t payload_size = timeline_item_get_serialized_payload_size(item);
-  uint8_t *buffer = kernel_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
+  uint8_t *buffer = pbl_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
   timeline_item_serialize_header(item, (SerializedTimelineItemHeader *)buffer);
   timeline_item_serialize_payload(item, buffer + sizeof(SerializedTimelineItemHeader),
                                   payload_size);
@@ -183,9 +183,9 @@ status_t reminder_db_insert_item(TimelineItem *item) {
                           sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
 
   blob_db_sync_record(BlobDBIdReminders, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
-                      rtc_get_time());
+                      pbl_realtime());
 
-  kernel_free(buffer);
+  pbl_free(buffer);
   return rv;
 }
 

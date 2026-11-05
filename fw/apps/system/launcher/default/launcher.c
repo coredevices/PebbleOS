@@ -6,13 +6,14 @@
 #include "menu_layer.h"
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
+#include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
 #include <applib/ui/app_window_stack.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/prefs.h>
@@ -26,7 +27,7 @@ typedef struct LauncherAppWindowData {
 
 typedef struct LauncherAppPersistedData {
   bool valid;
-  RtcTicks leave_time;
+  uint64_t leave_time;
   LauncherMenuLayerSelectionState selection_state;
   LauncherDrawState draw_state;
 } LauncherAppPersistedData;
@@ -134,7 +135,7 @@ static void prv_window_unload(Window *window) {
   // Save the current state of the launcher so we can know its draw state and restore it later
   s_launcher_app_persisted_data = (LauncherAppPersistedData){
     .valid = true,
-    .leave_time = rtc_get_ticks(),
+    .leave_time = pbl_uptime_ticks(),
     .draw_state.selection_vertical_range = launcher_selection_vertical_range,
     .draw_state.selection_background_color = shell_prefs_get_theme_highlight_color(),
   };
@@ -171,7 +172,7 @@ static void prv_main(void) {
   // Reset the selection state of the launcher if we're visiting it for the first time or if
   // it has been more than RETURN_TIMEOUT_TICKS since we were last in the launcher
   if (args && args->reset_scroll) {
-    if ((s_launcher_app_persisted_data.leave_time + RETURN_TIMEOUT_TICKS) <= rtc_get_ticks()) {
+    if ((s_launcher_app_persisted_data.leave_time + RETURN_TIMEOUT_TICKS) <= pbl_uptime_ticks()) {
       s_launcher_app_persisted_data.valid = false;
     }
   }

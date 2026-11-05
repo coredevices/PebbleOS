@@ -7,7 +7,7 @@
       <pdc:highlight y="4.70" x="21.05" height="0.00" width="1.90"/>
       <pdc:highlight y="4.70" x="22.95" height="1.90" width="0.00"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="8.50" x="21.05" details="Invalid point: (21.05, 8.50). Used closest supported coordinate: (21.0, 8.5)"/>
       <pdc:highlight y="8.50" x="19.15" details="Invalid point: (19.15, 8.50). Used closest supported coordinate: (19.125, 8.5)"/>
       <pdc:highlight y="6.60" x="19.15" details="Invalid point: (19.15, 6.60). Used closest supported coordinate: (19.125, 6.625)"/>
@@ -24,7 +24,7 @@
       <pdc:highlight y="8.10" x="4.15" height="5.30" width="7.50"/>
       <pdc:highlight y="8.10" x="11.65" height="5.30" width="7.50"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="13.40" x="16.25" details="Invalid point: (16.25, 13.40). Used closest supported coordinate: (16.25, 13.375)"/>
       <pdc:highlight y="10.70" x="11.65" details="Invalid point: (11.65, 10.70). Used closest supported coordinate: (11.625, 10.75)"/>
       <pdc:highlight y="13.40" x="7.05" details="Invalid point: (7.05, 13.40). Used closest supported coordinate: (7.0, 13.375)"/>
@@ -41,7 +41,7 @@
       <pdc:highlight y="0.10" x="11.65" height="1.30" width="1.30"/>
       <pdc:highlight y="4.10" x="11.65" height="1.30" width="1.30"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="5.40" x="11.65" details="Invalid point: (11.65, 5.40). Used closest supported coordinate: (11.625, 5.375)"/>
       <pdc:highlight y="4.10" x="10.35" details="Invalid point: (10.35, 4.10). Used closest supported coordinate: (10.375, 4.125)"/>
       <pdc:highlight y="1.40" x="10.35" details="Invalid point: (10.35, 1.40). Used closest supported coordinate: (10.375, 1.375)"/>
@@ -58,7 +58,7 @@
       <pdc:highlight y="6.60" x="4.15" height="1.90" width="0.00"/>
       <pdc:highlight y="8.50" x="2.25" height="0.00" width="1.90"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="6.60" x="0.35" details="Invalid point: (0.35, 6.60). Used closest supported coordinate: (0.375, 6.625)"/>
       <pdc:highlight y="4.70" x="0.35" details="Invalid point: (0.35, 4.70). Used closest supported coordinate: (0.375, 4.75)"/>
       <pdc:highlight y="4.70" x="2.25" details="Invalid point: (2.25, 4.70). Used closest supported coordinate: (2.25, 4.75)"/>
@@ -73,7 +73,7 @@
       <pdc:highlight y="17.30" x="3.65" height="1.30" width="1.30"/>
       <pdc:highlight y="16.00" x="3.65" height="1.30" width="1.30"/>
     </pdc:annotation>
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="16.00" x="4.95" details="Invalid point: (4.95, 16.00). Used closest supported coordinate: (5.0, 16.0)"/>
       <pdc:highlight y="17.30" x="19.55" details="Invalid point: (19.55, 17.30). Used closest supported coordinate: (19.5, 17.25)"/>
       <pdc:highlight y="18.60" x="18.25" details="Invalid point: (18.25, 18.60). Used closest supported coordinate: (18.25, 18.625)"/>

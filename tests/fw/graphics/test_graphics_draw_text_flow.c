@@ -18,6 +18,7 @@
 // Helper Functions
 ////////////////////////////////////
 #include "8bit/test_framebuffer.h"
+#include "fake_pfs.h"
 #include "test_graphics.h"
 #include "util.h"
 
@@ -44,10 +45,8 @@ void prv_prepare_fb_steps_xy(GSize size, int16_t steps_x, int16_t steps_y) {
   gbitmap_destroy(s_dest_bitmap);
   // These are off-screen, tiled scratch buffers for side-by-side comparison, not
   // the real display framebuffer. On a round platform GBITMAP_NATIVE_FORMAT is
-  // GBitmapFormat8BitCircular, whose data is addressed through a per-row offset
-  // table (g_gbitmap_data_row_infos) that is only attached to a full-screen
-  // (DISP_COLS x DISP_ROWS) bitmap. A non-full-screen circular bitmap has no row
-  // table, so reading a data row dereferences an unset pointer and segfaults.
+  // GBitmapFormat8BitCircular, whose rows are laid out as the display's, so it
+  // only exists in full-screen (DISP_COLS x DISP_ROWS) size.
   // Use a plain rectangular 8-bit format, which addresses rows by row_size_bytes.
   s_dest_bitmap =
       gbitmap_create_blank(GSize(size.w * steps_x, size.h * steps_y), GBitmapFormat8Bit);
@@ -70,8 +69,8 @@ void test_graphics_draw_text_flow__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 

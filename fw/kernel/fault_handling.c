@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
@@ -9,7 +10,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/system_task.h>
-#include <pbl/util/heap.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
@@ -31,24 +31,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-
-void enable_fault_handlers(void) {
-#ifndef CONFIG_ARCH_POSIX
-  // NVIC_SetPriority() takes the unshifted priority; PBL_IRQ_PRIO_* are register values.
-  const uint32_t prio = PBL_IRQ_PRIO_MAX_SYSCALL >> (8U - __NVIC_PRIO_BITS);
-  NVIC_SetPriority(MemoryManagement_IRQn, prio);
-  NVIC_SetPriority(BusFault_IRQn, prio);
-  NVIC_SetPriority(UsageFault_IRQn, prio);
-
-  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
-  SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
-  SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
-
-  SCB->CCR &= ~SCB_CCR_DIV_0_TRP_Msk;
-  __DSB();
-  __ISB();
-#endif
-}
 
 typedef struct CrashInfo {
   PebbleTask task;
@@ -152,7 +134,7 @@ extern void sys_app_fault(uint32_t lr);
   trigger_fault(RebootReasonCode_Assert, lr);
 }
 
-[[noreturn]] void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr) {
+[[noreturn]] void pbl_heap_oom_handler(struct pbl_heap *heap_ptr, size_t bytes, uintptr_t lr) {
   // OOM on a process's own heap is the app's fault, not the kernel's: kill just
   // that process even when privileged (Moddable apps run privileged inside the
   // moddable_createMachine syscall). Only kernel-heap OOM reboots.

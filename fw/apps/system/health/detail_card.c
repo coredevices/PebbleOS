@@ -3,16 +3,20 @@
 
 #include "detail_card.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <board/display.h>
-#include <kernel/pbl_malloc.h>
+#include <kernel/events.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 // Compile-time display offset calculations
 #define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
@@ -496,6 +500,37 @@ static void prv_health_detail_scroll_layer_update_proc(Layer *layer, GContext *c
 }
 #endif // PBL_RECT
 
+#if PBL_ROUND
+static void prv_set_menu_colors(HealthDetailCard *detail_card) {
+  menu_layer_set_normal_colors(&detail_card->menu_layer, detail_card->bg_color, GColorWhite);
+  menu_layer_set_highlight_colors(&detail_card->menu_layer, detail_card->bg_color, GColorBlack);
+}
+
+static void prv_configure_content_indicators(HealthDetailCard *detail_card) {
+  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
+    .layer = &detail_card->up_arrow_layer,
+    .colors.foreground = gcolor_legible_over(detail_card->bg_color),
+    .colors.background = detail_card->bg_color,
+  };
+  content_indicator_configure_direction(&detail_card->up_indicator, ContentIndicatorDirectionUp,
+                                        &content_indicator_config);
+  content_indicator_config.layer = &detail_card->down_arrow_layer;
+  content_indicator_configure_direction(&detail_card->down_indicator, ContentIndicatorDirectionDown,
+                                        &content_indicator_config);
+  prv_refresh_content_indicators(detail_card);
+}
+#endif
+
+static void prv_dark_mode_change_handler(PebbleEvent *event, void *context) {
+  HealthDetailCard *detail_card = context;
+  detail_card->bg_color = system_theme_get_bg_color();
+  window_set_background_color(&detail_card->window, detail_card->bg_color);
+#if PBL_ROUND
+  prv_set_menu_colors(detail_card);
+  prv_configure_content_indicators(detail_card);
+#endif
+}
+
 HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config) {
   HealthDetailCard *detail_card = app_zalloc_check(sizeof(HealthDetailCard));
   window_init(&detail_card->window, WINDOW_NAME("Health Detail Card"));
@@ -512,8 +547,7 @@ HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config
                              .draw_row = prv_draw_row_callback,
                              .selection_changed = prv_selection_changed_callback,
                            });
-  menu_layer_set_normal_colors(menu_layer, detail_card->bg_color, GColorWhite);
-  menu_layer_set_highlight_colors(menu_layer, detail_card->bg_color, GColorBlack);
+  prv_set_menu_colors(detail_card);
   menu_layer_set_click_config_onto_window(menu_layer, &detail_card->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -536,17 +570,7 @@ HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config
   layer_add_child(&detail_card->window.layer, &detail_card->up_arrow_layer);
   content_indicator_init(&detail_card->up_indicator);
 
-  ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
-    .layer = &detail_card->up_arrow_layer,
-    .colors.foreground = gcolor_legible_over(detail_card->bg_color),
-    .colors.background = detail_card->bg_color,
-  };
-  content_indicator_configure_direction(&detail_card->up_indicator, ContentIndicatorDirectionUp,
-                                        &content_indicator_config);
-  content_indicator_config.layer = &detail_card->down_arrow_layer;
-  content_indicator_configure_direction(&detail_card->down_indicator, ContentIndicatorDirectionDown,
-                                        &content_indicator_config);
-  prv_refresh_content_indicators(detail_card);
+  prv_configure_content_indicators(detail_card);
 #else  // PBL_RECT
   // setup scroll layer
   scroll_layer_init(&detail_card->scroll_layer, &window_frame);
@@ -568,6 +592,9 @@ void health_detail_card_destroy(HealthDetailCard *detail_card) {
   if (!detail_card) {
     return;
   }
+  if (detail_card->dark_mode_event_info.handler) {
+    event_service_client_unsubscribe(&detail_card->dark_mode_event_info);
+  }
   gdraw_command_image_destroy(detail_card->icon_crown);
 #if PBL_ROUND
   menu_layer_deinit(&detail_card->menu_layer);
@@ -585,8 +612,16 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
   if (!detail_card || !config) {
     return;
   }
-  detail_card->bg_color = config->bg_color;
+  detail_card->bg_color = config->bg_follows_theme ? system_theme_get_bg_color() : config->bg_color;
   window_set_background_color(&detail_card->window, detail_card->bg_color);
+  if (config->bg_follows_theme && !detail_card->dark_mode_event_info.handler) {
+    detail_card->dark_mode_event_info = (EventServiceInfo){
+      .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+      .handler = prv_dark_mode_change_handler,
+      .context = detail_card,
+    };
+    event_service_client_subscribe(&detail_card->dark_mode_event_info);
+  }
   if (config->num_headings) {
     detail_card->num_headings = config->num_headings;
     detail_card->headings = config->headings;
@@ -615,7 +650,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
                                              bool show_crown, GColor fill_color,
                                              GColor today_fill_color, int32_t *day_data,
                                              void *i18n_owner) {
-  time_t time_utc = rtc_get_time();
+  time_t time_utc = pbl_realtime();
   struct pbl_tm time_tm;
 
   int max_data = 0;

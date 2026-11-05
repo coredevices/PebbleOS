@@ -13,8 +13,8 @@
 #include <pbl/util/string.h>
 #include <pbl/util/testing.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
@@ -624,7 +624,7 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
     .text_flow = PBL_IF_ROUND_ELSE(true, false),
     .paging = PBL_IF_ROUND_ELSE(true, false),
   };
-  graphics_context_set_text_color(ctx, GColorBlack);
+  graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   (text_visible ? graphics_text_node_draw : graphics_text_node_get_size)(
       layout->view_node, ctx, &box, &config, &layout->view_size);
 
@@ -672,7 +672,7 @@ static void prv_layout_update_proc(Layer *layer, GContext *ctx) {
 static void prv_layout_init(NotificationLayout *layout, const LayoutLayerConfig *config);
 
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config) {
-  NotificationLayout *layout = task_zalloc_check(sizeof(NotificationLayout));
+  NotificationLayout *layout = applib_zalloc(sizeof(NotificationLayout));
   if (!layout) {
     return nullptr;
   }
@@ -749,7 +749,7 @@ static void prv_layout_destroy(LayoutLayer *layout) {
   // skipping it leaks attached recognizers and frees a layer the touch system may still
   // reference.
   layer_deinit(&notification_layout->layout.layer);
-  task_free(notification_layout);
+  applib_free(notification_layout);
 }
 
 static void prv_layout_init(NotificationLayout *layout, const LayoutLayerConfig *config) {

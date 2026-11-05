@@ -59,7 +59,7 @@ and has no such limitation.
 ### On a real watch
 
 Give the debug console's serial port, and optionally have the harness flash
-the build first (with `pbl flash --resources`, or `--flash-command`):
+the build first (with `pbl run --resources`, or `--flash-command`):
 
 ```shell
 pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
@@ -76,7 +76,8 @@ reachable only at random.
 
 `--erase-fs` erases the watch's filesystem first (bondings, settings, apps
 and data) and the bonding kept for PRF, for a known starting point, with
-{doc}`../../pbl/erase` and the board's runner.
+{doc}`../../pbl/erase` and the board's runner. It also clears the timezone,
+which the firmware keeps outside the filesystem.
 
 The integration tests run debug builds, including the current measurements
 (see below): release builds have no usable console.
@@ -93,20 +94,18 @@ what plays the phone. The same tests run on any of:
 | Watch, serial console | Bumble, on a dongle | the lab's watch, and its first dongle for the phone |
 | Watch, serial console | CoreApp | `--phone coreapp` (not supported yet) |
 
-A lab file describes the hardware wired to this host, and nothing else:
-watches (board, serial port, the supply powering them), power supplies and
-Bluetooth dongles. Pass it with `--lab` (or `$PBL_ITEST_LAB`), and the
-harness takes the setup for the build from it: the watch running its
-board (`--lab-watch` picks another), its supply, and a dongle for the
-phone. Options on the command line override it.
-`tests/integration/lab.example.yaml` describes the format:
+The setup comes from the {doc}`lab file <../../pbl/lab>`, which describes
+the hardware wired to this host and the rest of `pbl` uses too: the watch
+running the build's board (`--watch` picks another), its supply, and a dongle for the phone. Options on the
+command line override it. A session on a watch holds the locks on all of
+those ports while it runs.
 
 ```shell
 pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before
 ```
 
 The report starts with the setup, e.g. `setup: getafix, serial
-/dev/tty.wchusbserial1, PPK2 auto at 3800 mV, phone bumble on
+/dev/tty.wchusbserial1, ppk2 auto at 3800 mV, phone bumble on
 /dev/cu.usbmodem1101`. Tests that need what the setup lacks are skipped
 with the reason, without touching the device: a test needs a phone when it
 takes `phones`, and a power supply when it takes `power`.
@@ -138,6 +137,11 @@ pbl itest --connection serial:/dev/tty.usbserial-1 --connection devconn:192.168.
 
 Tests that need something no connection offers are skipped, e.g. the
 `prompt` fixture without a prompt.
+
+The harness's own sessions tell the watch that the phone app supports
+every protocol capability but settings sync, since nothing would answer
+the watch's settings write-backs. `dut.set_phone_settings_sync(True)`
+turns it on, for tests that answer them themselves.
 
 ### Bluetooth
 
@@ -242,6 +246,8 @@ Everything a run produces goes to `BUILD/itest` (or `--results-dir`):
 - `<test>/failure.png`: the screen when a test failed; the tail of the log
   is added to the failure report too
 - `<test>/<name>.json`, `<name>.csv`: current measurements
+- `<test>/rerun1/`, ...: the same files for each rerun of a test marked
+  `flaky` (pytest-rerunfailures)
 - `qemu.log`, `uart1.log`, `flash.log`: the emulator's and the flasher's
   output
 - with `-n`, the session-wide files are in a directory per worker (`gw0`,
@@ -384,6 +390,9 @@ def test_idle(ui, power):
     assert m.mean_ua < LIMIT_UA, m
 ```
 
+The harness drives the supply through `pbl.power` (see {doc}`/pbl/power`),
+so a lab's supply of any type that measures serves the power tests.
+
 `power.measure(name)` measures the duration of a `with` block instead,
 connections and all. A measurement has `mean_ua`, `min_ua`, `max_ua`,
 `percentile_ua(q)`, `charge_uah` and `energy_uwh`, and is saved in the
@@ -396,7 +405,8 @@ The power tests measure TicToc idling while advertising fast and slow for
 discovery, and in airplane mode. They wipe the watch first (`dut.wipe()`),
 so run them on a test watch, with no phone bonded to it nearby. Each passes
 within 10% of the board's nominal figure in `power/test_idle.py`, measured
-at 3.8 V; update the nominals when a change moves them on purpose. Boards
+at 3.8 V, and one out of range is rerun once; update the nominals when a
+change moves them on purpose. Boards
 without nominals record their figures with a warning.
 
 ## Recovery firmware

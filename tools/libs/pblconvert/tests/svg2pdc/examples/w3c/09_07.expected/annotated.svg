@@ -4,7 +4,7 @@
   <rect x="1" y="1" width="1198" height="398" fill="none" stroke="blue" stroke-width="2"/>
   <polygon fill="red" stroke="blue" stroke-width="10" points="350,75  379,161 469,161 397,215                     423,301 350,250 277,301 303,215                     231,161 321,161"/>
   <polygon fill="lime" stroke="blue" stroke-width="10" points="850,75  958,137.5 958,262.5                     850,325 742,262.6 742,137.5">
-    <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+    <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
       <pdc:highlight y="262.60" x="742.00" details="Invalid point: (742.00, 262.60). Used closest supported coordinate: (742.0, 262.625)"/>
     </pdc:annotation>
   </polygon>

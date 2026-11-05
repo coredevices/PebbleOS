@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/time.h>
 #include <pbl/util/pstring.h>
@@ -79,7 +79,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
   time_tm.tm_year = atoi(timestamp.year) - PBL_TM_YEAR_ORIGIN;
 
   // We have to assume that the timezone of the phone matches the timezone of the watch
-  time_t sys_time = rtc_get_time();
+  time_t sys_time = pbl_realtime();
   time_tm.tm_isdst = time_get_isdst(sys_time);
   time_tm.tm_gmtoff = time_get_gmtoffset() + (time_tm.tm_isdst ? time_get_dstoffset() : 0);
   time_get_timezone_abbr(time_tm.tm_zone, sys_time);

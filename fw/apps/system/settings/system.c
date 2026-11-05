@@ -27,6 +27,7 @@
 #include <pbl/util/size.h>
 #include <pbl/util/time.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
@@ -38,7 +39,6 @@
 #include <applib/ui/ui.h>
 #include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
@@ -176,7 +176,7 @@ static void prv_init_status_bar(StatusBarLayer *status_layer, Window *window, co
   status_bar_layer_init(status_layer);
   status_bar_layer_set_title(status_layer, text, false, false);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
-  status_bar_layer_set_colors(status_layer, GColorWhite, GColorBlack);
+  status_bar_layer_set_colors_follow_theme(status_layer, false /* transparent_background */);
   layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 }
 
@@ -273,8 +273,6 @@ static void prv_information_window_load(Window *window) {
                              .get_cell_height = prv_information_get_cell_height_callback,
                              .draw_row = prv_information_draw_row_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -622,8 +620,6 @@ static void prv_debugging_window_load(Window *window) {
                              .draw_row = prv_debugging_draw_row_callback,
                              .select_click = prv_debugging_select_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -783,7 +779,9 @@ static void prv_draw_fcc_cell_round(GContext *ctx, const GRect *cell_layer_bound
   const uint8_t fcc_number_subtitle_height = fonts_get_font_height(fcc_number_subtitle_font);
   const GTextOverflowMode text_overflow_mode = GTextOverflowModeFill;
 
-  graphics_context_set_text_color(ctx, cell_is_highlighted ? GColorWhite : GColorBlack);
+  graphics_context_set_text_color(
+      ctx, cell_is_highlighted ? PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color())
+                               : system_theme_get_fg_color());
 
   // Calculate the container of the FCC cell content and center it within the cell
   const int16_t title_and_icon_width = 50;
@@ -1139,8 +1137,6 @@ static void prv_certification_window_load(Window *window) {
                              .draw_row = prv_certification_draw_row_callback,
                              .select_click = prv_certification_select_callback,
                            });
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(
@@ -1219,6 +1215,7 @@ static void prv_kcc_window_load(Window *window) {
   text_layer_init_with_parameters(&data->title_text, &title_text_frame, title, title_text_font,
                                   GColorBlack, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text_color_follows_theme(&data->title_text);
   layer_add_child(window_layer, text_layer_get_layer(&data->title_text));
 
   GRect info_text_frame = (GRect){.size = info_text_size};
@@ -1226,6 +1223,7 @@ static void prv_kcc_window_load(Window *window) {
   text_layer_init_with_parameters(&data->info_text, &info_text_frame, prv_get_korea_kcc_id(),
                                   info_text_font, GColorBlack, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text_color_follows_theme(&data->info_text);
   layer_add_child(window_layer, text_layer_get_layer(&data->info_text));
 }
 

@@ -17,4 +17,5 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/timer.h>
 #include <pbl/kernel/types.h>

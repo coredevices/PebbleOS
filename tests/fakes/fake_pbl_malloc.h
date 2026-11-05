@@ -8,7 +8,8 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/heap.h>
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
@@ -53,11 +54,6 @@ static void prv_pointer_list_remove(void *ptr) {
 }
 
 static size_t s_max_size_allowed = ~0;
-
-static Heap s_heap;
-Heap *task_heap_get_for_current_task(void) {
-  return &s_heap;
-}
 
 static void *malloc_and_track(size_t bytes, void *lr) {
   if (bytes >= s_max_size_allowed) {
@@ -124,44 +120,6 @@ void fake_pbl_malloc_clear_tracking(void) {
   s_max_size_allowed = ~0;
 }
 
-void *task_malloc(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_zalloc(size_t bytes) {
-  void *ptr = task_malloc(bytes);
-  if (ptr) {
-    memset(ptr, 0, bytes);
-  }
-  return ptr;
-}
-
-void *task_zalloc_check(size_t bytes) {
-  void *ptr = task_malloc_check(bytes);
-  memset(ptr, 0, bytes);
-  return ptr;
-}
-
-void *task_calloc(size_t count, size_t size) {
-  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
-}
-
-void *task_calloc_check(size_t count, size_t size) {
-  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
-}
-
-void task_free(void *ptr) {
-  free_and_track(ptr);
-}
-
 void *applib_zalloc(size_t bytes) {
   return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
 }
@@ -182,50 +140,53 @@ void app_free(void *ptr) {
   free_and_track(ptr);
 }
 
-void *kernel_malloc(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
+static struct pbl_heap s_heap;
+struct pbl_heap *pbl_malloc_heap(void) {
+  return &s_heap;
 }
 
-void *kernel_zalloc(size_t bytes) {
-  return calloc_and_track(1, bytes, PBL_RETURN_ADDRESS(0));
+void *pbl_malloc(size_t size) {
+  return malloc_and_track(size, PBL_RETURN_ADDRESS(0));
 }
 
-void *kernel_zalloc_check(size_t bytes) {
-  return kernel_zalloc(bytes);
+void *pbl_malloc_check(size_t size) {
+  return malloc_and_track(size, PBL_RETURN_ADDRESS(0));
 }
 
-void *kernel_malloc_check(size_t bytes) {
-  return malloc_and_track(bytes, PBL_RETURN_ADDRESS(0));
+void *pbl_zalloc(size_t size) {
+  return calloc_and_track(1, size, PBL_RETURN_ADDRESS(0));
 }
 
-void *kernel_realloc(void *ptr, size_t bytes) {
-  return realloc_and_track(ptr, bytes, PBL_RETURN_ADDRESS(0));
+void *pbl_zalloc_check(size_t size) {
+  return calloc_and_track(1, size, PBL_RETURN_ADDRESS(0));
 }
 
-void kernel_free(void *ptr) {
-  free_and_track(ptr);
-}
-
-void *kernel_calloc(size_t count, size_t size) {
+void *pbl_calloc(size_t count, size_t size) {
   return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
 }
 
-char *kernel_strdup(const char *s) {
-  char *r = malloc_and_track(strlen(s) + 1, PBL_RETURN_ADDRESS(0));
-  if (!r) {
-    return nullptr;
-  }
+void *pbl_calloc_check(size_t count, size_t size) {
+  return calloc_and_track(count, size, PBL_RETURN_ADDRESS(0));
+}
 
-  strcpy(r, s);
+void *pbl_realloc(void *ptr, size_t size) {
+  return realloc_and_track(ptr, size, PBL_RETURN_ADDRESS(0));
+}
+
+char *pbl_strdup(const char *s) {
+  char *r = malloc_and_track(strlen(s) + 1, PBL_RETURN_ADDRESS(0));
+  if (r) {
+    strcpy(r, s);
+  }
   return r;
 }
 
-char *kernel_strdup_check(const char *s) {
-  return kernel_strdup(s);
+char *pbl_strdup_check(const char *s) {
+  return pbl_strdup(s);
 }
 
-char *task_strdup(const char *s) {
-  return kernel_strdup(s);
+void pbl_free(void *ptr) {
+  free_and_track(ptr);
 }
 
 void smart_free(void *ptr) {

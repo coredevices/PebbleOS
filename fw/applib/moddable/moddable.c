@@ -14,8 +14,10 @@
 #include <syscall/syscall.h>
 
 #if defined(CONFIG_MODDABLE_XS) && !defined(CONFIG_RECOVERY_FW)
+#include <pbl/kernel/malloc.h>
+
+#include <applib/app_malloc.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <moddableAppState.h>
 #include <process_management/app_manager.h>
@@ -38,7 +40,7 @@ static ExpandableDialog *prv_create_fatal_dialog(const char *message) {
 
 static void prv_watchface_fatal_error(void *data) {
   ExpandableDialog *dialog = prv_create_fatal_dialog(data);
-  kernel_free(data);
+  pbl_free(data);
   // Keep the warning above the safe watchface until it is dismissed.
   expandable_dialog_push(dialog, modal_manager_get_window_stack(ModalPriorityAlert));
   watchface_set_default_install_id(INSTALL_ID_INVALID);
@@ -60,11 +62,11 @@ void moddable_cleanup(void) {
   while (state->debugFragments) {
     DebugFragment f = state->debugFragments;
     state->debugFragments = f->next;
-    kernel_free(f);
+    pbl_free(f);
   }
 
   app_state_set_js_memory_api_context(nullptr);
-  task_free(state);
+  app_free(state);
 }
 
 typedef struct {
@@ -115,7 +117,7 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
     }
   }
 
-  ModdablePebbleAppState state = task_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
+  ModdablePebbleAppState state = app_zalloc_check(sizeof(ModdablePebbleAppStateRecord));
   app_state_set_js_memory_api_context((void *)state);
 
   // Read flags if the record is large enough to include them
@@ -202,7 +204,7 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
   if ((xsNormalExit != exitStatus) && (xsDebuggerExit != exitStatus)) {
     const char *message = abortReason ? abortReason : fxAbortString(exitStatus);
     if (sys_app_is_watchface()) {
-      char *warning = kernel_strdup_check(message);
+      char *warning = pbl_strdup_check(message);
       if (abortReason)
         c_free(abortReason);
       launcher_task_add_callback(prv_watchface_fatal_error, warning);

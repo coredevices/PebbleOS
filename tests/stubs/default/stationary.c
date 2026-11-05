@@ -5,3 +5,6 @@
 
 void PBL_WEAK stationary_handle_prefs_changed(void) {
 }
+
+void PBL_WEAK stationary_wake_up(void) {
+}

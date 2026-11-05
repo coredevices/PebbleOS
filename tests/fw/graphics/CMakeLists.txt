@@ -83,18 +83,20 @@ set(graphics_draw_text_sources
   fw/applib/graphics/arabic_shaping.c
   fw/applib/graphics/perimeter.c
   fw/applib/graphics/text_resources.c
-  fw/flash_region/flash_region.c
   fw/flash_region/filesystem_regions.c
-  fw/system/hexdump.c
+  subsys/logging/hexdump.c
   fw/applib/fonts/codepoint.c
   fw/resource/resource.c
   fw/resource/resource_storage.c
   fw/resource/resource_storage_builtin.c
   fw/resource/resource_storage_file.c
   fw/resource/resource_storage_flash.c
-  fw/services/filesystem/flash_translation.c
-  fw/services/filesystem/pfs.c
-  fw/services/filesystem/app_file.c
+  subsys/fs/pfs/flash_translation.c
+  subsys/fs/pfs/pfs.c
+  subsys/fs/fs.c
+  subsys/fs/pfs/pfs_fs.c
+  tests/fakes/fake_pfs.c
+  fw/services/process_management/app_file.c
   drivers/flash/flash_crc.c
   tests/fakes/fake_fonts.c
   tests/fakes/fake_rtc.c
@@ -141,7 +143,7 @@ pbl_clar_test(test_graphics_draw_text_flow
     tests/fakes/fake_gbitmap_png.c
     tests/fakes/fake_display.c
     fw/applib/graphics/text_resources.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
   PLATFORMS gabbro
   OVERRIDES dummy_board

@@ -9,11 +9,11 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/process_management/app_storage.h>
 
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 
 // TODO: this may be replaced once apps become more dynamic
@@ -118,7 +118,7 @@ uint32_t resource_get_and_cache(ResAppNum app_num, uint32_t resource_id) {
   CachedResource *cached_resource = (CachedResource *)list_find(
       (ListNode *)s_resource_list, prv_resource_filter, (void *)(uintptr_t)resource_id);
   if (cached_resource == nullptr) {
-    cached_resource = kernel_malloc_check(sizeof(CachedResource));
+    cached_resource = pbl_malloc_check(sizeof(CachedResource));
     *cached_resource = (CachedResource){};
     cached_resource->id = resource_id;
     s_resource_list =
@@ -138,7 +138,7 @@ void resource_uncache(uint32_t first_id, uint32_t last_id) {
     const uint32_t id = ((CachedResource *)node)->id;
     if (id >= first_id && id <= last_id) {
       list_remove(node, (ListNode **)&s_resource_list, nullptr);
-      kernel_free(node);
+      pbl_free(node);
     }
     node = next;
   }
@@ -193,7 +193,7 @@ bool resource_bytes_are_readonly(void *bytes) {
 }
 
 const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_id,
-                                           size_t *num_bytes_out, bool has_privileged_access) {
+                                           size_t *num_bytes_out) {
   // we don't support memory-mapping for resources that don't belong to the system
   if (app_num != SYSTEM_APP) {
     return nullptr;
@@ -213,7 +213,7 @@ const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_
     return nullptr;
   }
 
-  return resource.impl->readonly_bytes(&resource, has_privileged_access);
+  return resource.impl->readonly_bytes(&resource);
 }
 
 ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {

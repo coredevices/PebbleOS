@@ -7,12 +7,12 @@
 
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/switch_worker_ui.h>
 #include <process_management/app_menu_data_source.h>
 #include <process_management/worker_manager.h>
@@ -233,10 +233,7 @@ static Window *prv_init(void) {
   option_menu_init(&data->option_menu);
   // Not using option_menu_configure because prv_reload_menu_data already sets
   // icons_enabled and chosen row index
-  option_menu_set_status_colors(&data->option_menu, GColorWhite, GColorBlack);
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  option_menu_set_highlight_colors(&data->option_menu, highlight_bg,
-                                   gcolor_legible_over(highlight_bg));
+  option_menu_set_colors_follow_theme(&data->option_menu);
   option_menu_set_title(&data->option_menu, i18n_get("Background App", data));
   option_menu_set_content_type(&data->option_menu, OptionMenuContentType_SingleLine);
   option_menu_set_callbacks(&data->option_menu, &option_menu_callbacks, data);

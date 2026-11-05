@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/pebble_pairing_service.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connect_params.h>
@@ -9,7 +10,6 @@
 #include <comm/ble/kernel_le_client/app_launch/app_launch.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -43,8 +43,7 @@ static void prv_handle_set_remote_param_mgmt_settings(
   if (settings_length >= PBL_BT_PPS_REMOTE_PARAM_MGMT_SETTINGS_SIZE_WITH_PARAM_SETS) {
     if (!connection->connection_parameter_sets) {
       const size_t size = sizeof(GAPLEConnectRequestParams) * PBL_BT_RESPONSE_TIME_NUM;
-      connection->connection_parameter_sets =
-          (GAPLEConnectRequestParams *)kernel_zalloc_check(size);
+      connection->connection_parameter_sets = (GAPLEConnectRequestParams *)pbl_zalloc_check(size);
     }
     for (enum pbl_bt_response_time_state s = PBL_BT_RESPONSE_TIME_MAX; s < PBL_BT_RESPONSE_TIME_NUM;
          ++s) {

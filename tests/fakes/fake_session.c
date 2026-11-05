@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -14,8 +15,6 @@
 
 #include <clar_asserts.h>
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 extern void fake_system_task_callbacks_invoke_pending(void);
 
@@ -84,17 +83,17 @@ CommSession *comm_session_get_current_app_session(void) {
 void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   cl_assert(list_contains((const ListNode *)s_session_head, &session->node));
   if (session->temp_write_buffer) {
-    kernel_free(session->temp_write_buffer);
+    pbl_free(session->temp_write_buffer);
   }
   list_remove(&session->node, (ListNode **)&s_session_head, nullptr);
-  kernel_free(session);
+  pbl_free(session);
   ++s_session_close_call_count;
 }
 
 void comm_session_receive_router_write(CommSession *session, const uint8_t *received_data,
                                        size_t num_bytes_to_copy) {
   PBL_LOG_DBG("Received Data:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, received_data, num_bytes_to_copy);
+  PBL_LOG_HEXDUMP_DBG(received_data, num_bytes_to_copy);
 }
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
@@ -112,7 +111,7 @@ CommSession *comm_session_open(Transport *transport, const TransportImplementati
                                TransportDestination destination) {
   ++s_session_open_call_count;
 
-  CommSession *session = kernel_malloc(sizeof(CommSession));
+  CommSession *session = pbl_malloc(sizeof(CommSession));
   memset(session, 0, sizeof(*session));
   *session = (const CommSession){
     .transport = transport,
@@ -206,7 +205,7 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
     // Already writing, fake doesn't support multiple tasks trying to write at the same time
     return nullptr;
   }
-  session->temp_write_buffer = (uint8_t *)kernel_malloc(session->max_out_payload_length);
+  session->temp_write_buffer = (uint8_t *)pbl_malloc(session->max_out_payload_length);
   session->bytes_written = 0;
   session->endpoint_id = endpoint_id;
   return (SendBuffer *)session;
@@ -243,7 +242,7 @@ void comm_session_send_buffer_end_write(SendBuffer *sb) {
   circular_buffer_write(&session->send_buffer, (const uint8_t *)&pp_header, sizeof(pp_header));
   circular_buffer_write(&session->send_buffer, session->temp_write_buffer, session->bytes_written);
 
-  kernel_free(session->temp_write_buffer);
+  pbl_free(session->temp_write_buffer);
   session->temp_write_buffer = nullptr;
   session->endpoint_id = ~0;
   session->bytes_written = 0;
@@ -337,7 +336,7 @@ static void prv_fake_transport_send_next(Transport *transport) {
       true);
   CommSession *session = fake_transport->session;
   PebbleProtocolHeader pp_header;
-  uint8_t *buffer = kernel_malloc(1024);
+  uint8_t *buffer = pbl_malloc(1024);
   while (circular_buffer_copy(&session->send_buffer, (uint8_t *)&pp_header, sizeof(pp_header)) ==
          sizeof(pp_header)) {
     circular_buffer_copy_offset(&session->send_buffer, sizeof(pp_header), buffer, pp_header.length);
@@ -346,9 +345,9 @@ static void prv_fake_transport_send_next(Transport *transport) {
     } else {
       PBL_LOG_DBG("Sending Data to PP endpoint %u (0x%x):", pp_header.endpoint_id,
                   pp_header.endpoint_id);
-      PBL_HEXDUMP(LOG_LEVEL_DEBUG, buffer, pp_header.length);
+      PBL_LOG_HEXDUMP_DBG(buffer, pp_header.length);
 
-      DataNode *data_node = kernel_malloc(sizeof(DataNode) + pp_header.length);
+      DataNode *data_node = pbl_malloc(sizeof(DataNode) + pp_header.length);
       list_init(&data_node->node);
       data_node->endpoint_id = pp_header.endpoint_id;
       data_node->length = pp_header.length;
@@ -358,7 +357,7 @@ static void prv_fake_transport_send_next(Transport *transport) {
     }
     circular_buffer_consume(&session->send_buffer, sizeof(pp_header) + pp_header.length);
   }
-  kernel_free(buffer);
+  pbl_free(buffer);
 }
 
 static void prv_fake_transport_reset(Transport *transport) {
@@ -381,7 +380,7 @@ Transport *fake_transport_create(TransportDestination destination, const Uuid *a
                    TransportDestinationHybrid == TransportDestinationSystem,
                "When passing an app_uuid, the destination can only be App or Hybrid");
   }
-  FakeTransport *transport = (FakeTransport *)kernel_malloc(sizeof(FakeTransport));
+  FakeTransport *transport = (FakeTransport *)pbl_malloc(sizeof(FakeTransport));
   *transport = (const FakeTransport){
     .destination = destination,
     .sent_cb = sent_cb,
@@ -454,10 +453,10 @@ void fake_transport_destroy(Transport *transport) {
   DataNode *data_node = fake_transport->sent_data;
   while (data_node) {
     DataNode *next_data_node = (DataNode *)data_node->node.next;
-    kernel_free(data_node);
+    pbl_free(data_node);
     data_node = next_data_node;
   }
-  kernel_free(fake_transport);
+  pbl_free(fake_transport);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

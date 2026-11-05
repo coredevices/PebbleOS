@@ -8,7 +8,9 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
@@ -25,7 +27,6 @@
 
 #include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
 #include <resource/resource_storage_file.h>
@@ -116,6 +117,7 @@ typedef struct {
 typedef struct {
   bool enable_preack;
   bool need_to_ack_later;
+  bool process_scheduled;
   uint8_t num_allocated_pb_jobs;
   PutBytesJob job[MAX_BATCHED_PB_PUT_OPS];
   uint8_t read_idx;
@@ -138,7 +140,7 @@ typedef struct {
   PutBytesStorage storage;
 
   //! the time in ticks at which the put bytes init request completed
-  RtcTicks start_ticks;
+  uint64_t start_ticks;
   struct pbl_bt_slave_conn_event_stats conn_event_stats;
 
   //! Holds PB commands. Will enqueue multiple PutRequests when pre-acking is enabled
@@ -271,7 +273,7 @@ static void prv_pre_ack_if_space_in_put_job_queue(void) {
 static void prv_deinit_put_job_queue(void) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   for (int i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
-    kernel_free(put_jobs->job[i].buffer);
+    pbl_free(put_jobs->job[i].buffer);
     put_jobs->job[i].buffer = nullptr;
   }
 }
@@ -290,7 +292,7 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   for (i = 0; i < MAX_BATCHED_PB_PUT_OPS; i++) {
     // Note: If heap pressure becomes an issue, we could also consider only
     // using pre-acking if there is a certain amount of space free in the heap
-    uint8_t *buffer = (uint8_t *)kernel_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
+    uint8_t *buffer = (uint8_t *)pbl_zalloc(PUT_BYTES_PP_BUFFER_SIZE);
     if (!buffer) {
       if (i == 0) {
         PBL_LOG_ERR("Not enough memory to service PB request, abort!");
@@ -633,8 +635,9 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
 #ifndef CONFIG_RECOVERY_FW
     case ObjectFile: {
       storage_info =
-          kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(request->filename) + 1);
-      strcpy(storage_info->filename, request->filename);
+          pbl_malloc_check(sizeof(PutBytesStorageInfo) + sizeof("/") + strlen(request->filename));
+      strcpy(storage_info->filename, "/");
+      strcat(storage_info->filename, request->filename);
       break;
     }
     case ObjectWatchApp:
@@ -642,7 +645,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       PebbleTask task = (request->type == ObjectWatchApp) ? PebbleTask_App : PebbleTask_Worker;
       char filename[APP_FILENAME_MAX_LENGTH + 1];
       app_storage_get_file_name(filename, sizeof(filename), index, task);
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
       strcpy(storage_info->filename, filename);
       break;
     }
@@ -651,7 +654,7 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       // The +1 is to make up for the fact that app banks start at 0, res banks start at 1. Fixing
       // in D641
       resource_storage_get_file_name(filename, sizeof(filename), index);
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo) + strlen(filename) + 1);
       strcpy(storage_info->filename, filename);
       break;
     }
@@ -668,14 +671,14 @@ static bool prv_setup_storage_for_init_request(const InitRequest *request, uint3
       s_ready_to_install[request->type - 1].type = 0;
       [[fallthrough]];
     default: {
-      storage_info = kernel_malloc_check(sizeof(PutBytesStorageInfo));
+      storage_info = pbl_malloc_check(sizeof(PutBytesStorageInfo));
       storage_info->index = request->index;
     }
   }
 
   const bool success = pb_storage_init(&s_pb_state.storage, s_pb_state.type, s_pb_state.total_size,
                                        storage_info, s_pb_state.append_offset);
-  kernel_free(storage_info);
+  pbl_free(storage_info);
   return success;
 }
 
@@ -728,7 +731,7 @@ static void prv_do_init(void) {
 
   success = prv_setup_storage_for_init_request(request, index);
 
-  s_pb_state.start_ticks = rtc_get_ticks();
+  s_pb_state.start_ticks = pbl_uptime_ticks();
 
   if (!success) {
     PBL_LOG_WRN("Failed to init storage");
@@ -789,7 +792,7 @@ static bool prv_do_put(const PutRequest *request, uint32_t request_size, uint32_
 }
 
 static void prv_do_commit(void) {
-  uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - s_pb_state.start_ticks);
+  uint32_t elapsed_time_ms = pbl_ticks_to_ms(pbl_uptime_ticks() - s_pb_state.start_ticks);
 
   const CommitRequest *request = (const CommitRequest *)s_pb_state.receiver.buffer;
 
@@ -883,6 +886,7 @@ static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
 static void prv_process_put_requests_system_task_cb(void *unused) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   prv_lock_pb_job_state();
+  put_jobs->process_scheduled = false;
   uint8_t num_put_jobs = put_jobs->num_ops_pending;
   uint8_t read_idx = put_jobs->read_idx;
   uint32_t initial_remaining_bytes = s_pb_state.remaining_bytes;
@@ -954,6 +958,25 @@ static void prv_process_put_requests_system_task_cb(void *unused) {
 
   if (do_ack) { // If we did not pre-ack, we need to ack the packet now!
     prv_send_response(ResponseAck, token);
+  }
+}
+
+//! One callback processes every pending PutRequest, so only queue one at a time: a callback per
+//! request piles up on the system task while the sender keeps pace with the flash writes.
+static void prv_schedule_put_requests_processing(void) {
+  PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
+  bool schedule;
+  prv_lock_pb_job_state();
+  {
+    schedule = !put_jobs->process_scheduled;
+    put_jobs->process_scheduled = true;
+  }
+  prv_unlock_pb_job_state();
+
+  if (schedule && !system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr)) {
+    prv_lock_pb_job_state();
+    put_jobs->process_scheduled = false;
+    prv_unlock_pb_job_state();
   }
 }
 
@@ -1234,7 +1257,7 @@ void prv_receiver_finish(Receiver *receiver) {
   if (prv_receiver_contains_put_request()) {
     // The PutRequest handler has no reliance on the receiver struct so mark processing as done
     prv_receiver_reset();
-    system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr);
+    prv_schedule_put_requests_processing();
   } else {
     system_task_add_callback(prv_process_msg_system_task_callback, nullptr);
   }

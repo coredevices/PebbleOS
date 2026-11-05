@@ -2,16 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/logging/backend.h>
 
+#include <kernel/core_dump.h>
 #include <logging/logging_private.h>
-#include <logging/pulse_logging.h>
 #include <system/bootbits.h>
-#include <system/reset.h>
 
 void prepare_for_software_failure(void) {
-#ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_logging_log_buffer_flush();
-#endif
+  pbl_log_panic();
 
 #ifndef CONFIG_MFG
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
@@ -31,5 +30,14 @@ void prepare_for_software_failure(void) {
 #endif
 
   PBL_LOG_FROM_FAULT_HANDLER("Resetting!");
-  system_reset();
+  pbl_reboot();
 }
+
+static void prv_restart(enum pbl_sys_off_mode mode, void *user_data) {
+  if (boot_bit_test(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED)) {
+    core_dump_reset(false /* is_forced */);
+  }
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(core_dump, PBL_SYS_OFF_RESTART, PBL_SYS_OFF_PRIO_HIGH, prv_restart,
+                           nullptr);

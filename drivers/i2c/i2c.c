@@ -4,7 +4,6 @@
 #include <errno.h>
 
 #include <pbl/drivers/i2c.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
@@ -16,274 +15,107 @@
 
 PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
 
-#define I2C_ERROR_TIMEOUT_MS (1000)
+#define TRANSFER_TIMEOUT_MS 1000U
 
-static const char *prv_name(const struct pbl_i2c_bus *bus) {
-  return bus->dev.name;
-}
-
-//! Caller must hold the bus mutex
-static void prv_bus_reset(const struct pbl_i2c_bus *bus) {
-  bus->ops->disable(bus);
-  bus->ops->enable(bus);
-}
+PBL_DEVICE_CLASS_DEFINE(pbl_i2c_bus_class, "i2c");
 
 int pbl_i2c_bus_init(const struct pbl_device *dev) {
   const struct pbl_i2c_bus *bus = container_of(dev, const struct pbl_i2c_bus, dev);
 
   *bus->state = (struct pbl_i2c_bus_state){0};
-  pbl_sem_init(&bus->state->event_sem, 1, 1);
+  pbl_sem_init(&bus->state->done, 0, 1);
   pbl_mutex_init(&bus->state->mutex);
 
   return bus->ops->init(bus);
 }
 
-void pbl_i2c_bus_event(const struct pbl_i2c_bus *bus, enum pbl_i2c_event event) {
-  bus->state->event = event;
-  pbl_sem_give(&bus->state->event_sem);
+void pbl_i2c_bus_complete(const struct pbl_i2c_bus *bus, int status) {
+  bus->state->status = status;
+  pbl_sem_give(&bus->state->done);
 }
 
-void pbl_i2c_use(const struct pbl_i2c_dev *dev) {
-  const struct pbl_i2c_bus *bus = dev->bus;
-
-  PBL_ASSERTN(pbl_device_is_ready(&bus->dev));
-
-  pbl_mutex_lock(&bus->state->mutex, PBL_FOREVER);
-
-  if (bus->state->user_count == 0) {
-    bus->ops->enable(bus);
-  }
-  bus->state->user_count++;
-
-  pbl_mutex_unlock(&bus->state->mutex);
-}
-
-void pbl_i2c_release(const struct pbl_i2c_dev *dev) {
-  const struct pbl_i2c_bus *bus = dev->bus;
-
-  pbl_mutex_lock(&bus->state->mutex, PBL_FOREVER);
-
-  if (bus->state->user_count == 0) {
-    PBL_LOG_ERR("Attempted release of disabled bus %s", prv_name(bus));
-    pbl_mutex_unlock(&bus->state->mutex);
-    return;
+static int prv_validate(const struct pbl_i2c_msg *msgs, uint8_t num_msgs) {
+  if (num_msgs == 0U || (msgs[0].flags & PBL_I2C_MSG_NOSTART) != 0U) {
+    return -EINVAL;
   }
 
-  bus->state->user_count--;
-  if (bus->state->user_count == 0) {
-    bus->ops->disable(bus);
-  }
+  for (uint8_t i = 0U; i < num_msgs; i++) {
+    if ((msgs[i].flags & PBL_I2C_MSG_DMA_SAFE) != 0U &&
+        ((uintptr_t)msgs[i].buf & (DCACHE_LINE_SIZE_MAX - 1U)) != 0U) {
+      return -EINVAL;
+    }
 
-  pbl_mutex_unlock(&bus->state->mutex);
-}
-
-//! Wait a short amount of time for the busy flag to clear
-static int prv_wait_for_not_busy(const struct pbl_i2c_bus *bus) {
-  static const int WAIT_DELAY = 10; // milliseconds
-
-  if (bus->ops->is_busy(bus)) {
-    pbl_sleep_ms(WAIT_DELAY);
-    if (bus->ops->is_busy(bus)) {
-      PBL_LOG_ERR("Timed out waiting for bus %s to become non-busy", prv_name(bus));
-      return -EBUSY;
+    if ((msgs[i].flags & PBL_I2C_MSG_NOSTART) != 0U &&
+        ((msgs[i].flags & PBL_I2C_MSG_READ) != 0U ||
+         (msgs[i - 1U].flags & PBL_I2C_MSG_READ) != 0U)) {
+      return -EINVAL;
     }
   }
 
   return 0;
 }
 
-//! Start the current transfer and wait for its outcome
-static int prv_run_transfer(const struct pbl_i2c_bus *bus) {
+static int prv_transfer_locked(const struct pbl_i2c_bus *bus, uint16_t addr,
+                               struct pbl_i2c_msg *msgs, uint8_t num_msgs) {
   struct pbl_i2c_bus_state *state = bus->state;
+  int ret;
 
-  bus->ops->start_transfer(bus);
+  ret = bus->ops->start(bus, addr, msgs, num_msgs);
+  if (ret != 0) {
+    return ret;
+  }
 
-  if (pbl_sem_take(&state->event_sem, PBL_TICKS(pbl_ms_to_ticks(I2C_ERROR_TIMEOUT_MS))) != 0) {
-    bus->ops->abort_transfer(bus);
-    PBL_LOG_ERR("Transfer timed out on bus %s", prv_name(bus));
-    PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
+  if (pbl_sem_take(&state->done, PBL_TICKS(pbl_ms_to_ticks(TRANSFER_TIMEOUT_MS))) != 0) {
+    bus->ops->abort(bus);
+    // The transfer may have completed between the timeout and the abort
+    (void)pbl_sem_take(&state->done, PBL_NO_WAIT);
     return -ETIMEDOUT;
   }
 
-  if (state->event != PBL_I2C_EVENT_COMPLETE) {
-    PBL_LOG_ERR("I2C Error on bus %s", prv_name(bus));
+  return state->status;
+}
+
+int pbl_i2c_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_msg *msgs, uint8_t num_msgs) {
+  const struct pbl_i2c_bus *bus = dev->bus;
+  int ret;
+
+  if (!pbl_device_is_ready(&bus->dev)) {
+    return -ENODEV;
+  }
+
+  ret = prv_validate(msgs, num_msgs);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_mutex_lock(&bus->state->mutex, PBL_FOREVER);
+  bus->ops->enable(bus);
+  ret = prv_transfer_locked(bus, dev->addr, msgs, num_msgs);
+  bus->ops->disable(bus);
+  pbl_mutex_unlock(&bus->state->mutex);
+
+  if (ret != 0) {
     PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
-    return -EIO;
-  }
-
-  return 0;
-}
-
-//! Set up and start a transfer, wait for it to finish and clean up after it.
-//! Caller must hold the bus mutex
-static int prv_do_transfer_locked(const struct pbl_i2c_bus *bus,
-                                  const struct pbl_i2c_transfer *transfer) {
-  struct pbl_i2c_bus_state *state = bus->state;
-  int ret;
-
-  if (state->user_count == 0) {
-    PBL_LOG_ERR("Attempted access to disabled bus %s", prv_name(bus));
-    return -EPERM;
-  }
-
-  // The bus should not be busy, as every transfer waits for it to become idle before returning.
-  // If it is, reset it, and give up if that does not help.
-  if (bus->ops->is_busy(bus)) {
-    prv_bus_reset(bus);
-
-    ret = prv_wait_for_not_busy(bus);
-    if (ret != 0) {
-      PBL_LOG_ERR("I2C bus did not recover after reset (%s)", prv_name(bus));
-      return ret;
-    }
-  }
-
-  // Take the token so that the next take blocks until the transfer ends
-  PBL_ASSERT(pbl_sem_take(&state->event_sem, PBL_NO_WAIT) == 0,
-             "Could not acquire semaphore token");
-
-  state->transfer = *transfer;
-  ret = prv_run_transfer(bus);
-
-  // Return the token so another transfer can be started
-  pbl_sem_give(&state->event_sem);
-
-  // A transfer could complete successfully while the busy flag never clears, which would make the
-  // next transfer fail: reset the bus if that happens
-  if (prv_wait_for_not_busy(bus) != 0) {
-    prv_bus_reset(bus);
+    PBL_LOG_DBG("Transfer to 0x%02x on %s failed (%d)", dev->addr, bus->dev.name, ret);
   }
 
   return ret;
 }
 
-static int prv_do_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_transfer *transfer) {
-  const struct pbl_i2c_bus *bus = dev->bus;
+int pbl_i2c_reg_update_byte(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t mask, uint8_t val) {
+  uint8_t old;
+  uint8_t new;
   int ret;
 
-  transfer->addr = dev->addr;
-
-  pbl_mutex_lock(&bus->state->mutex, PBL_FOREVER);
-  ret = prv_do_transfer_locked(bus, transfer);
-  pbl_mutex_unlock(&bus->state->mutex);
-
+  ret = pbl_i2c_reg_read_byte(dev, reg, &old);
   if (ret != 0) {
-    PBL_LOG_ERR("%s failed on bus %s (%d)", (transfer->dir == PBL_I2C_READ) ? "Read" : "Write",
-                prv_name(bus), ret);
+    return ret;
   }
 
-  return ret;
-}
-
-int pbl_i2c_read_register(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t *result) {
-  return pbl_i2c_read_register_block(dev, reg, 1, result);
-}
-
-int pbl_i2c_read_register_block(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                uint8_t *result) {
-  PBL_ASSERTN(result);
-
-  struct pbl_i2c_transfer transfer = {
-    .dir = PBL_I2C_READ,
-    .with_reg = true,
-    .reg = reg,
-    .size = size,
-    .data = result,
-  };
-
-  return prv_do_transfer(dev, &transfer);
-}
-
-int pbl_i2c_read_register_block_dma(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                    uint8_t *result) {
-  PBL_ASSERTN(((uintptr_t)result & (DCACHE_LINE_SIZE_MAX - 1U)) == 0U);
-
-  struct pbl_i2c_transfer transfer = {
-    .dir = PBL_I2C_READ,
-    .with_reg = true,
-    .reg = reg,
-    .size = size,
-    .data = result,
-    .dma = true,
-  };
-
-  return prv_do_transfer(dev, &transfer);
-}
-
-int pbl_i2c_write_register(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t value) {
-  return pbl_i2c_write_register_block(dev, reg, 1, &value);
-}
-
-int pbl_i2c_write_register_block(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                 const uint8_t *data) {
-  PBL_ASSERTN(data);
-
-  struct pbl_i2c_transfer transfer = {
-    .dir = PBL_I2C_WRITE,
-    .with_reg = true,
-    .reg = reg,
-    .size = size,
-    .data = (uint8_t *)data,
-  };
-
-  return prv_do_transfer(dev, &transfer);
-}
-
-int pbl_i2c_read_block(const struct pbl_i2c_dev *dev, uint32_t size, uint8_t *result) {
-  PBL_ASSERTN(result);
-
-  struct pbl_i2c_transfer transfer = {
-    .dir = PBL_I2C_READ,
-    .size = size,
-    .data = result,
-  };
-
-  return prv_do_transfer(dev, &transfer);
-}
-
-int pbl_i2c_write_block(const struct pbl_i2c_dev *dev, uint32_t size, const uint8_t *data) {
-  PBL_ASSERTN(data);
-
-  struct pbl_i2c_transfer transfer = {
-    .dir = PBL_I2C_WRITE,
-    .size = size,
-    .data = (uint8_t *)data,
-  };
-
-  return prv_do_transfer(dev, &transfer);
-}
-
-int pbl_i2c_write_read_block(const struct pbl_i2c_dev *dev, uint32_t write_size,
-                             const uint8_t *write_data, uint32_t read_size, uint8_t *read_data) {
-  PBL_ASSERTN(write_data);
-  PBL_ASSERTN(read_data);
-
-  const struct pbl_i2c_bus *bus = dev->bus;
-  const struct pbl_i2c_transfer write = {
-    .addr = dev->addr,
-    .dir = PBL_I2C_WRITE,
-    .size = write_size,
-    .data = (uint8_t *)write_data,
-  };
-  const struct pbl_i2c_transfer read = {
-    .addr = dev->addr,
-    .dir = PBL_I2C_READ,
-    .size = read_size,
-    .data = read_data,
-  };
-
-  int ret;
-
-  pbl_mutex_lock(&bus->state->mutex, PBL_FOREVER);
-  ret = prv_do_transfer_locked(bus, &write);
-  if (ret == 0) {
-    ret = prv_do_transfer_locked(bus, &read);
-  }
-  pbl_mutex_unlock(&bus->state->mutex);
-
-  if (ret != 0) {
-    PBL_LOG_ERR("Write-read block failed on bus %s (%d)", prv_name(bus), ret);
+  new = (old & ~mask) | (val & mask);
+  if (new == old) {
+    return 0;
   }
 
-  return ret;
+  return pbl_i2c_reg_write_byte(dev, reg, new);
 }

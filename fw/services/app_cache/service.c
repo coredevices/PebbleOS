@@ -1,26 +1,32 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
+#include <process_management/app_manager.h>
+#include <process_management/worker_manager.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
@@ -43,7 +49,7 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 //! on the platform. The only time when this isn't true is the time between "add_entry" and the
 //! callback to clean up the cache.
 
-#define APP_CACHE_FILE_NAME "appcache"
+#define APP_CACHE_FILE_NAME "/appcache"
 
 //! each cache entry is ~16 bytes, 4000 / 16 = 250 apps
 #define APP_CACHE_MAX_SIZE 4000
@@ -53,8 +59,15 @@ PBL_LOG_MODULE_DEFINE(service_app_cache, CONFIG_SERVICE_APP_CACHE_LOG_LEVEL);
 
 #define MAX_PRIORITY ((uint32_t)~0)
 
+//! Grace earned per launch, capped so a once-popular app cannot become unevictable.
+#define LAUNCH_BONUS_PER_LAUNCH_S (24 * 60 * 60)
+#define LAUNCH_BONUS_MAX_LAUNCHES (30)
+
 // 8 quick launch apps, 1 default watchface, 1 default worker
 #define DO_NOT_EVICT_LIST_SIZE (10)
+
+// the running app and worker
+#define NEVER_EVICT_LIST_SIZE (2)
 
 static PBL_MUTEX_DEFINE(s_app_cache_mutex);
 
@@ -77,15 +90,22 @@ typedef struct {
   EvictListNode *list;
   uint32_t bytes_needed;
   uint32_t bytes_in_list;
+  //! Evicted only if nothing else can make room.
   const AppInstallId do_not_evict[DO_NOT_EVICT_LIST_SIZE];
+  //! Never evicted: their binaries are open, and PFS croaks on removing an open file.
+  const AppInstallId never_evict[NEVER_EVICT_LIST_SIZE];
 } EachEvictData;
 
 //! Takes the information given in entry and calculates a new priority for the app.
 //!
 //! Policy rules:
-//! 1. App that has least recently launched or been installed app is evicted.
+//! 1. The least recently launched (or installed) app is evicted first.
+//! 2. Each launch earns the app a day of grace, up to LAUNCH_BONUS_MAX_LAUNCHES, so an app used
+//!    regularly outlives one installed more recently but never opened.
 static uint32_t prv_calculate_priority(AppCacheEntry *entry) {
-  return (uint32_t)MAX(entry->last_launch, entry->install_date);
+  const uint32_t last_used = (uint32_t)MAX(entry->last_launch, entry->install_date);
+  const uint32_t launches = MIN(entry->launch_count, LAUNCH_BONUS_MAX_LAUNCHES);
+  return last_used + (launches * LAUNCH_BONUS_PER_LAUNCH_S);
 }
 
 //! Comparator for EvictListNode
@@ -118,7 +138,7 @@ static void prv_trim_top_priorities(EvictListNode **list_node, uint32_t *bytes_i
     if (node->size <= (*bytes_in_list - bytes_needed)) {
       *bytes_in_list -= node->size;
       node = (EvictListNode *)list_pop_head((ListNode *)node);
-      kernel_free(temp);
+      pbl_free(temp);
     } else {
       break;
     }
@@ -128,7 +148,12 @@ static void prv_trim_top_priorities(EvictListNode **list_node, uint32_t *bytes_i
 
 //! Check if we need to free up some space in the cache. If so, do it.
 static void prv_cleanup_app_cache_if_needed(void *data) {
-  uint32_t pfs_space = get_available_pfs_space();
+  struct pbl_fs_statvfs stat;
+  if (pbl_fs_statvfs("/", &stat) < 0) {
+    return;
+  }
+
+  uint32_t pfs_space = stat.f_bfree * stat.f_frsize;
 
   if (pfs_space < APP_SPACE_BUFFER) {
     const uint32_t to_free = (APP_SPACE_BUFFER - pfs_space);
@@ -142,8 +167,59 @@ static void prv_delete_cache_callback(void *data) {
   app_cache_flush();
 }
 
+typedef struct {
+  ListNode list_node;
+  char name[];
+} FileListEntry;
+
+static FileListEntry *prv_create_file_list(bool (*filter)(const char *name)) {
+  struct pbl_fs_dir dir;
+  if (pbl_fs_opendir(&dir, APP_FILE_DIR) < 0) {
+    return nullptr;
+  }
+
+  ListNode *head = nullptr;
+  struct pbl_fs_dirent *entry = pbl_malloc_check(sizeof(*entry));
+  while ((pbl_fs_readdir(&dir, entry) == 0) && (entry->name[0] != '\0')) {
+    if (!filter(entry->name)) {
+      continue;
+    }
+
+    size_t len = strlen(entry->name);
+    FileListEntry *node = pbl_malloc_check(sizeof(*node) + len + 1);
+    *node = (FileListEntry){};
+    memcpy(node->name, entry->name, len + 1);
+    head = list_insert_before(head, &node->list_node);
+  }
+
+  pbl_free(entry);
+  pbl_fs_closedir(&dir);
+
+  return (FileListEntry *)head;
+}
+
+static void prv_delete_file_list(FileListEntry *head) {
+  ListNode *node = (ListNode *)head;
+  while (node) {
+    ListNode *next = list_get_next(node);
+    pbl_free(node);
+    node = next;
+  }
+}
+
+static void prv_remove_file(const char *name) {
+  char path[sizeof(APP_FILE_DIR) + PBL_FS_NAME_MAX];
+  snprintf(path, sizeof(path), APP_FILE_DIR "%s", name);
+  pbl_fs_unlink(path);
+}
+
 static void prv_delete_cached_files(void) {
-  pfs_remove_files(is_app_file_name);
+  FileListEntry *files = prv_create_file_list(is_app_file_name);
+  for (FileListEntry *iter = files; iter != nullptr;
+       iter = (FileListEntry *)list_get_next(&iter->list_node)) {
+    prv_remove_file(iter->name);
+  }
+  prv_delete_file_list(files);
 }
 
 static bool prv_is_in_list(AppInstallId id, const AppInstallId list[], uint8_t len) {
@@ -160,11 +236,12 @@ static bool prv_is_in_list(AppInstallId id, const AppInstallId list[], uint8_t l
 //////////////////////
 
 //! Settings iterator function that finds the entry with the lowest calculated priority
-static bool prv_each_free_up_space(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_free_up_space(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                   void *context) {
   // check entry is valid
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
-    PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing", info->key_len,
-                info->val_len);
+    PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing",
+                (unsigned)info->key_len, (unsigned)info->val_len);
     system_task_add_callback(prv_delete_cache_callback, nullptr);
     return false; // stop iterating, delete the file and binaries
   }
@@ -174,11 +251,15 @@ static bool prv_each_free_up_space(SettingsFile *file, SettingsRecordInfo *info,
   AppInstallId id;
   AppCacheEntry entry;
 
-  info->get_key(file, (uint8_t *)&id, info->key_len);
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
+
+  if (prv_is_in_list(id, data->never_evict, NEVER_EVICT_LIST_SIZE)) {
+    return true; // continue iterating
+  }
 
   // create node
-  EvictListNode *node = kernel_malloc_check(sizeof(EvictListNode));
+  EvictListNode *node = pbl_malloc_check(sizeof(EvictListNode));
   list_init((ListNode *)node);
 
   // give them an extremely high priority so that we only remove them if we really NEED to
@@ -215,28 +296,28 @@ status_t app_cache_app_launched(AppInstallId app_id) {
   status_t rv;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
     AppCacheEntry entry = {};
-    rv = settings_file_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                           sizeof(AppCacheEntry));
+    rv = status_from_errno(pbl_settings_get(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                            (uint8_t *)&entry, sizeof(AppCacheEntry)));
 
     if (rv == S_SUCCESS) {
-      entry.last_launch = rtc_get_time();
+      entry.last_launch = pbl_realtime();
       entry.launch_count += 1;
 
-      rv = settings_file_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                             sizeof(AppCacheEntry));
+      rv = status_from_errno(pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                              (uint8_t *)&entry, sizeof(AppCacheEntry)));
     } else {
       app_storage_delete_app(app_id);
-      settings_file_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
+      pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
     }
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
   }
 unlock:
   pbl_mutex_unlock(&s_app_cache_mutex);
@@ -253,8 +334,8 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
   status_t rv;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -262,24 +343,29 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
     // we don't want to remove any default apps or quick launch apps, so keep them in a list.
     EachEvictData evict_data = (EachEvictData){
       .bytes_needed = bytes_needed,
-      .do_not_evict = {
+      .do_not_evict =
+          {
 #ifndef CONFIG_SHELL_SDK
-        quick_launch_get_app(BUTTON_ID_UP),
-        quick_launch_get_app(BUTTON_ID_SELECT),
-        quick_launch_get_app(BUTTON_ID_DOWN),
-        quick_launch_get_app(BUTTON_ID_BACK),
-        quick_launch_single_click_get_app(BUTTON_ID_UP),
-        quick_launch_single_click_get_app(BUTTON_ID_DOWN),
-        quick_launch_combo_back_up_get_app(),
-        quick_launch_combo_up_down_get_app(),
+            quick_launch_get_app(BUTTON_ID_UP),
+            quick_launch_get_app(BUTTON_ID_SELECT),
+            quick_launch_get_app(BUTTON_ID_DOWN),
+            quick_launch_get_app(BUTTON_ID_BACK),
+            quick_launch_single_click_get_app(BUTTON_ID_UP),
+            quick_launch_single_click_get_app(BUTTON_ID_DOWN),
+            quick_launch_combo_back_up_get_app(),
+            quick_launch_combo_up_down_get_app(),
 #endif
-        watchface_get_default_install_id(),
-        worker_preferences_get_default_worker(),
+            watchface_get_default_install_id(),
+            worker_preferences_get_default_worker(),
+          },
+      .never_evict = {
+        app_manager_get_current_app_id(),
+        worker_manager_get_current_worker_id(),
       },
     };
 
-    settings_file_each(&file, prv_each_free_up_space, &evict_data);
-    settings_file_close(&file);
+    pbl_settings_each(&file, prv_each_free_up_space, &evict_data);
+    pbl_settings_close(&file);
 
     // remove all nodes found
     EvictListNode *node = evict_data.list;
@@ -289,7 +375,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed) {
                   node->size);
       app_cache_remove_entry(node->id);
       node = (EvictListNode *)list_pop_head((ListNode *)node);
-      kernel_free(temp);
+      pbl_free(temp);
     }
   }
 unlock:
@@ -301,26 +387,27 @@ unlock:
 // AppCache Helpers
 //////////////////////
 
-// Remove the filename entry in the PFSFileList (via context) that corresponds to the
+// Remove the filename entry in the file list (via context) that corresponds to the
 // app install id passed in via info
-static bool prv_remove_matching_resource_file_callback(SettingsFile *file, SettingsRecordInfo *info,
+static bool prv_remove_matching_resource_file_callback(struct pbl_settings_file *file,
+                                                       struct pbl_settings_record *info,
                                                        void *context) {
   AppInstallId id;
-  // examine the SettingsRecordInfo and extract the AppInstallId from it
-  info->get_key(file, (uint8_t *)&id, info->key_len);
+  // examine the struct pbl_settings_record and extract the AppInstallId from it
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
   // the context passed in is really a pointer to the resource_list
-  PFSFileListEntry **resource_list = context;
-  PFSFileListEntry *iter = *resource_list;
+  FileListEntry **resource_list = context;
+  FileListEntry *iter = *resource_list;
   while (iter) {
     // grab the next entry right now since we may delete the node we're looking at
-    PFSFileListEntry *next = (PFSFileListEntry *)iter->list_node.next;
+    FileListEntry *next = (FileListEntry *)iter->list_node.next;
     if (app_file_parse_app_id(iter->name) == id) {
       // the AppInstallId of the file matches the one in the cache so we can remove this
       // entry from the resource_list (since we don't want to delete it)
       // note: resource_list may be updated if we happen to remove the first entry in the list
       list_remove(&(iter->list_node), (ListNode **)resource_list, nullptr);
-      kernel_free(iter); // free up the memory for the node we just removed
-      break;             // we can quit now that we've found a match for this id
+      pbl_free(iter); // free up the memory for the node we just removed
+      break;          // we can quit now that we've found a match for this id
     }
     iter = next;
   }
@@ -328,11 +415,12 @@ static bool prv_remove_matching_resource_file_callback(SettingsFile *file, Setti
 }
 
 // Delete files from resource_list that don't correspond to entries in the app cache
-static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_list) {
+static void prv_app_cache_find_and_delete_orphans(FileListEntry **resource_list) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
 
-  SettingsFile file;
-  status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+  struct pbl_settings_file file;
+  status_t rv =
+      status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_app_cache_mutex);
     return;
@@ -342,18 +430,18 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
   // to items in the app cache...
   // prv_remove_matching_resource_file_callback scans resource_list and removes the entry
   // corresponding to the passed-in application's id
-  settings_file_each(&file, prv_remove_matching_resource_file_callback, resource_list);
-  settings_file_close(&file);
+  pbl_settings_each(&file, prv_remove_matching_resource_file_callback, resource_list);
+  pbl_settings_close(&file);
 
   pbl_mutex_unlock(&s_app_cache_mutex);
 
   // resource_list now only contains filenames of resource files that don't have corresponding
   // entries in the app cache. We can safely delete these files.
-  PFSFileListEntry *iter = *resource_list;
+  FileListEntry *iter = *resource_list;
   while (iter) {
     PBL_LOG_INFO("Orphaned resource file removed: %s", iter->name);
-    pfs_remove(iter->name);
-    iter = (PFSFileListEntry *)iter->list_node.next;
+    prv_remove_file(iter->name);
+    iter = (FileListEntry *)iter->list_node.next;
   }
 }
 
@@ -361,10 +449,10 @@ static void prv_app_cache_find_and_delete_orphans(PFSFileListEntry **resource_li
 // behind after the associated application had been deleted.
 static void prv_purge_orphaned_resource_files(void) {
   // create a list of all app resource files in the filesystem
-  PFSFileListEntry *resource_files = pfs_create_file_list(is_app_resource_file_name);
+  FileListEntry *resource_files = prv_create_file_list(is_app_resource_file_name);
   // delete app resource files that don't correspond to entries in the app cache
   prv_app_cache_find_and_delete_orphans(&resource_files);
-  pfs_delete_file_list(resource_files);
+  prv_delete_file_list(resource_files);
 }
 
 //////////////////////////
@@ -376,12 +464,13 @@ void app_cache_init(void) {
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
     // if no cache file exists, then we should go ahead and clean up any files that are left over
-    int fd = pfs_open(APP_CACHE_FILE_NAME, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-    if (fd < 0) {
+    struct pbl_fs_dirent *entry = pbl_malloc_check(sizeof(*entry));
+    int ret = pbl_fs_stat(APP_CACHE_FILE_NAME, entry);
+    pbl_free(entry);
+    if (ret < 0) {
       prv_delete_cached_files();
       goto unlock;
     }
-    pfs_close(fd);
   }
 
 unlock:
@@ -395,23 +484,23 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
   status_t rv;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
     AppCacheEntry entry = {
-      .install_date = rtc_get_time(),
+      .install_date = pbl_realtime(),
       .last_launch = 0,
       .launch_count = 0,
       .total_size = total_size,
     };
 
-    rv = settings_file_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId), (uint8_t *)&entry,
-                           sizeof(AppCacheEntry));
+    rv = status_from_errno(pbl_settings_set(&file, (uint8_t *)&app_id, sizeof(AppInstallId),
+                                            (uint8_t *)&entry, sizeof(AppCacheEntry)));
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
 
     // cleanup the cache if we need to
     system_task_add_callback(prv_cleanup_app_cache_if_needed, nullptr);
@@ -426,20 +515,21 @@ bool app_cache_entry_exists(AppInstallId app_id) {
   bool exists = false;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
-    exists = settings_file_exists(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    exists = pbl_settings_exists(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
 
     if (exists && !app_storage_app_exists(app_id)) {
-      settings_file_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
+      pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
       exists = false;
     }
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
   }
 unlock:
   pbl_mutex_unlock(&s_app_cache_mutex);
@@ -451,19 +541,19 @@ status_t app_cache_remove_entry(AppInstallId app_id) {
   status_t rv;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    rv = status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
-    rv = settings_file_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId));
+    rv = status_from_errno(pbl_settings_delete(&file, (uint8_t *)&app_id, sizeof(AppInstallId)));
     if (rv == S_SUCCESS) {
       // Will delete an app from the filesystem.
       app_storage_delete_app(app_id);
     }
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
   }
 
   if (rv == S_SUCCESS) {
@@ -486,7 +576,7 @@ void app_cache_flush(void) {
 
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    pfs_remove(APP_CACHE_FILE_NAME);
+    pbl_fs_unlink(APP_CACHE_FILE_NAME);
     prv_delete_cached_files();
   }
   pbl_mutex_unlock(&s_app_cache_mutex);
@@ -496,14 +586,15 @@ void app_cache_flush(void) {
 // Testing only
 ////////////////////////////////
 
-static bool prv_each_get_size(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_get_size(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                              void *context) {
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
     return true; // continue iterating
   }
 
   uint32_t *cache_size = (uint32_t *)context;
   AppCacheEntry entry;
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
   *cache_size += entry.total_size;
 
   return true; // continue iterating
@@ -513,14 +604,15 @@ uint32_t app_cache_get_size(void) {
   uint32_t cache_size = 0;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
 
-    settings_file_each(&file, prv_each_get_size, &cache_size);
-    settings_file_close(&file);
+    pbl_settings_each(&file, prv_each_get_size, &cache_size);
+    pbl_settings_close(&file);
   }
 unlock:
   pbl_mutex_unlock(&s_app_cache_mutex);
@@ -533,7 +625,8 @@ typedef struct {
 } AppCacheEachData;
 
 //! Settings iterator function that finds the entry with the lowest calculated priority
-static bool prv_each_min_priority(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_min_priority(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                  void *context) {
   // check entry is valid
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
     return true; // continue iterating
@@ -544,8 +637,8 @@ static bool prv_each_min_priority(SettingsFile *file, SettingsRecordInfo *info, 
   AppInstallId id;
   AppCacheEntry entry;
 
-  info->get_key(file, (uint8_t *)&id, info->key_len);
-  info->get_val(file, (uint8_t *)&entry, info->val_len);
+  pbl_settings_read_key(file, (uint8_t *)&id, info->key_len);
+  pbl_settings_read_val(file, (uint8_t *)&entry, info->val_len);
 
   uint32_t entry_priority = prv_calculate_priority(&entry);
   if (entry_priority < to_evict->priority) {
@@ -561,8 +654,9 @@ AppInstallId app_cache_get_next_eviction(void) {
   AppInstallId ret_value = INSTALL_ID_INVALID;
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {
-    SettingsFile file;
-    status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+    struct pbl_settings_file file;
+    status_t rv =
+        status_from_errno(pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE));
     if (rv != S_SUCCESS) {
       goto unlock;
     }
@@ -572,9 +666,9 @@ AppInstallId app_cache_get_next_eviction(void) {
       .id = INSTALL_ID_INVALID,
       .priority = MAX_PRIORITY,
     };
-    settings_file_each(&file, prv_each_min_priority, (void *)&to_evict);
+    pbl_settings_each(&file, prv_each_min_priority, (void *)&to_evict);
 
-    settings_file_close(&file);
+    pbl_settings_close(&file);
     ret_value = to_evict.id;
   }
 unlock:

@@ -8,7 +8,6 @@
 //! For now this will just be woefully incomplete.
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/app_session_capabilities.h>
@@ -77,14 +76,6 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
     .set_enable_fn = bt_ctl_set_enabled,
     .enable_mask = R_FirmwareUpdate | R_Normal,
   },
-#if defined(CONFIG_TOUCH) && defined(CONFIG_RECOVERY_FW)
-  // Only keep touch enabled on recovery (and so manufacturing as well)
-  // Once supported in main firmware, this should be removed.
-  {
-    .set_enable_fn = touch_sensor_set_enabled,
-    .enable_mask = R_Normal,
-  },
-#endif
 #ifdef CONFIG_HRM
   {
     .set_enable_fn = hrm_manager_enable,

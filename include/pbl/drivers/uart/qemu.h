@@ -6,45 +6,60 @@
 #include <stdint.h>
 
 #include <pbl/drivers/uart.h>
-
-#include <board/board.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_uart_qemu QEMU
  * @ingroup drivers_uart
- * @brief QEMU UART device definition.
+ * @brief @ref drivers_uart driver for the QEMU simple UART.
+ *
+ * The port has no line settings: any baud rate is accepted. While reception is disabled, QEMU
+ * holds the incoming bytes back. The interrupt is connected by the board:
+ *
+ * @code{.c}
+ * PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
+ * PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
+ * @endcode
  * @{
  */
 
-/** @brief QEMU UART state, owned by the driver. */
-typedef struct UARTDeviceState {
-  /** Receive handler. */
-  UARTRXInterruptHandler rx_irq_handler;
-  /** Transmit handler. */
-  UARTTXInterruptHandler tx_irq_handler;
-  /** Receive interrupt enabled. */
-  bool rx_int_enabled;
-  /** Transmit interrupt enabled. */
-  bool tx_int_enabled;
-} UARTDeviceState;
-
-/**
- * @brief QEMU UART device.
- *
- * Completes the UARTDevice type forward-declared by the board header.
- */
-struct UARTDevice {
-  /** Driver state. */
-  UARTDeviceState *state;
+/** @brief QEMU serial port. */
+struct pbl_uart_qemu {
+  /** Serial port. */
+  struct pbl_uart uart;
   /** Register base address. */
-  uint32_t base_addr;
-  /** Interrupt number. */
-  int irqn;
+  uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irqn;
 };
 
 /** @cond INTERNAL_HIDDEN */
-/* UART interrupt handler, documented with the nRF5 backend. */
-void uart_irq_handler(UARTDevice *dev);
+extern const struct pbl_uart_ops pbl_uart_qemu_ops;
 /** @endcond */
+
+/**
+ * @brief Define a QEMU serial port.
+ *
+ * @param sym Symbol of the port.
+ * @param _name Name.
+ * @param _base Register base address.
+ * @param _irqn Interrupt line, from PBL_IRQN().
+ * @param _baudrate Initial baud rate, in bits per second.
+ */
+#define PBL_UART_QEMU_DEFINE(sym, _name, _base, _irqn, _baudrate)              \
+  PBL_UART_STATE_DEFINE(sym);                                                  \
+  const struct pbl_uart_qemu sym = {                                           \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_qemu_ops, _baudrate, nullptr), \
+    .base = (_base),                                                           \
+    .irqn = (_irqn),                                                           \
+  };                                                                           \
+  PBL_DEVICE_REGISTER(sym, &sym.uart.dev)
+
+/**
+ * @brief Interrupt handler, to connect with PBL_IRQ_CONNECT().
+ *
+ * @param uart Port.
+ */
+void pbl_uart_qemu_irq_handler(const struct pbl_uart_qemu *uart);
 
 /** @} */

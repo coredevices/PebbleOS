@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_APP_LOG_ENDPOINT
+    bool "App log endpoint"
+    help
+      Log backend that forwards app log messages to the phone, when it
+      asks for them.
+
+if SERVICE_APP_LOG_ENDPOINT
+
+module = SERVICE_APP_LOG_ENDPOINT
+module-str = App log endpoint
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

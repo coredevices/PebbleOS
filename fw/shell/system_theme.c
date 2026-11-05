@@ -13,7 +13,10 @@
 #include <pbl/util/testing.h>
 
 #include <applib/fonts/fonts.h>
+#include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
+#include <shell/prefs.h>
+#include <syscall/syscall.h>
 
 ////////////////////
 // Helpers
@@ -67,6 +70,52 @@ GFont system_theme_get_font_for_size(PreferredContentSize size, TextStyleFont fo
 GFont system_theme_get_font_for_default_size(TextStyleFont font) {
   return fonts_get_system_font(
       system_theme_get_font_key_for_size(PreferredContentSizeDefault, font));
+}
+
+//! Returns true if the current (system) app context should render in dark mode.
+static bool prv_is_system_app(void) {
+  const PebbleTask task = pebble_task_get_current();
+  if (task != PebbleTask_App && task != PebbleTask_Worker) {
+    // Kernel / other tasks are always treated as system
+    return true;
+  }
+  const ProcessAppSDKType sdk_type =
+      process_metadata_get_app_sdk_type(sys_process_manager_get_current_process_md());
+  return sdk_type == ProcessAppSDKType_System;
+}
+
+PBL_SYSCALL(bool, system_theme_is_system_ui) {
+  return prv_is_system_app();
+}
+
+//! Effective dark mode, kept up to date by the dark mode updater
+static bool s_dark_mode;
+
+void system_theme_set_dark_mode(bool dark_mode) {
+  s_dark_mode = dark_mode;
+}
+
+PBL_SYSCALL(bool, system_theme_is_dark_mode) {
+  return s_dark_mode && prv_is_system_app();
+}
+
+PBL_SYSCALL(bool, sys_dark_mode_is_active) {
+  return s_dark_mode;
+}
+
+GColor system_theme_get_bg_color(void) {
+  return system_theme_is_dark_mode() ? GColorBlack : GColorWhite;
+}
+
+GColor system_theme_get_fg_color(void) {
+  return system_theme_is_dark_mode() ? GColorWhite : GColorBlack;
+}
+
+PBL_SYSCALL(GColor, system_theme_get_highlight_color) {
+  if (!prv_is_system_app()) {
+    return GColorBlack;
+  }
+  return shell_prefs_get_theme_highlight_color();
 }
 
 static const PreferredContentSize s_platform_default_content_sizes[] = {

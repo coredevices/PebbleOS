@@ -11,8 +11,9 @@
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/alerts_preferences.h>
@@ -23,7 +24,6 @@
 
 #include <board/board.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 
@@ -49,7 +49,7 @@ typedef struct {
 
   // Note sequence source
   NoteSequenceState note_seq;
-  SpeakerNote *note_buf; // kernel_malloc'd copy of notes
+  SpeakerNote *note_buf; // pbl_malloc'd copy of notes
 
   // Single tone source (raw frequency, no MIDI quantization)
   uint32_t tone_samples_remaining;
@@ -109,7 +109,7 @@ static uint8_t s_silence_reasons;
 
 //! Analytics: time-weighted average volume, reset on heartbeat.
 static uint64_t s_volume_time_product_sum;  // Sum of (volume_pct × time_ms)
-static RtcTicks s_last_volume_sample_ticks; // Timestamp of last sample
+static uint64_t s_last_volume_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_volume_pct;   // Last volume percentage sampled
 static uint32_t s_total_speaker_on_time_ms; // Total speaker on-time tracked
 
@@ -118,18 +118,18 @@ static void prv_audio_trans_cb(uint32_t *free_size);
 static void prv_refill_locked(void);
 static void prv_refill_realtime_locked(void);
 
-static bool prv_is_speaker_muted(void) {
-  if (alerts_preferences_get_speaker_muted()) {
-    return true;
-  }
-  if (alerts_preferences_dnd_get_mute_speaker() && do_not_disturb_is_active()) {
-    return true;
-  }
-  return false;
+//! Quiet Time does not silence critical sounds (alarms), like it does not stop their vibration.
+static bool prv_is_muted_by_quiet_time(SpeakerPriority pri) {
+  return pri < SpeakerPriorityCritical && alerts_preferences_dnd_get_mute_speaker() &&
+         do_not_disturb_is_active();
+}
+
+static bool prv_is_speaker_muted(SpeakerPriority pri) {
+  return alerts_preferences_get_speaker_muted() || prv_is_muted_by_quiet_time(pri);
 }
 
 static uint8_t prv_effective_volume(uint8_t vol) {
-  if (prv_is_speaker_muted()) {
+  if (prv_is_speaker_muted(s_state.priority)) {
     return 0;
   }
   if (s_state.volume_absolute) {
@@ -140,10 +140,10 @@ static uint8_t prv_effective_volume(uint8_t vol) {
 }
 
 static void prv_update_volume_analytics(uint8_t new_volume_pct) {
-  RtcTicks now_ticks = rtc_get_ticks();
+  uint64_t now_ticks = pbl_uptime_ticks();
 
   if (s_last_volume_sample_ticks > 0) {
-    uint32_t time_delta_ms = ((now_ticks - s_last_volume_sample_ticks) * 1000) / RTC_TICKS_HZ;
+    uint32_t time_delta_ms = ((now_ticks - s_last_volume_sample_ticks) * 1000) / PBL_TICK_HZ;
 
     s_volume_time_product_sum += (uint64_t)s_last_sampled_volume_pct * time_delta_ms;
 
@@ -181,7 +181,7 @@ static void prv_log_silence(uint8_t vol, uint8_t effective_vol) {
     if (alerts_preferences_get_speaker_muted()) {
       reasons |= SPEAKER_SILENT_BY_MUTE;
     }
-    if (alerts_preferences_dnd_get_mute_speaker() && do_not_disturb_is_active()) {
+    if (prv_is_muted_by_quiet_time(s_state.priority)) {
       reasons |= SPEAKER_SILENT_BY_DND;
     }
   }
@@ -223,11 +223,11 @@ static void prv_free_tracks(void) {
   for (uint32_t i = 0; i < s_state.num_tracks; i++) {
     track_deinit(&s_state.tracks[i]);
     if (s_state.track_notes_buf[i]) {
-      kernel_free(s_state.track_notes_buf[i]);
+      pbl_free(s_state.track_notes_buf[i]);
       s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
-      kernel_free(s_state.track_sample_data[i]);
+      pbl_free(s_state.track_sample_data[i]);
       s_state.track_sample_data[i] = nullptr;
     }
   }
@@ -276,7 +276,7 @@ static void prv_stop_internal(SpeakerFinishReason reason) {
   if (source_type == SpeakerSourceNoteSeq) {
     note_seq_deinit(&s_state.note_seq);
     if (s_state.note_buf) {
-      kernel_free(s_state.note_buf);
+      pbl_free(s_state.note_buf);
       s_state.note_buf = nullptr;
     }
   } else if (source_type == SpeakerSourceStream) {
@@ -545,7 +545,7 @@ bool speaker_service_play_note_seq_owned(const SpeakerNote *notes, uint32_t num_
 
   // Copy notes to kernel memory so they persist
   size_t notes_size = num_notes * sizeof(SpeakerNote);
-  s_state.note_buf = kernel_malloc(notes_size);
+  s_state.note_buf = pbl_malloc(notes_size);
   if (!s_state.note_buf) {
     PBL_LOG_ERR("Failed to allocate note buffer");
     pbl_mutex_unlock(&s_lock);
@@ -683,7 +683,7 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
   for (uint32_t i = 0; i < num_tracks; i++) {
     const SpeakerTrack *t = &tracks[i];
     size_t notes_size = (size_t)t->num_notes * sizeof(SpeakerNote);
-    s_state.track_notes_buf[i] = kernel_malloc(notes_size);
+    s_state.track_notes_buf[i] = pbl_malloc(notes_size);
     if (!s_state.track_notes_buf[i]) {
       PBL_LOG_ERR("Failed to allocate track notes");
       goto alloc_fail;
@@ -694,7 +694,7 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
     kernel_tracks[i].num_notes = t->num_notes;
 
     if (t->sample) {
-      s_state.track_sample_data[i] = kernel_malloc(t->sample->num_bytes);
+      s_state.track_sample_data[i] = pbl_malloc(t->sample->num_bytes);
       if (!s_state.track_sample_data[i]) {
         PBL_LOG_ERR("Failed to allocate sample data");
         goto alloc_fail;
@@ -727,11 +727,11 @@ bool speaker_service_play_tracks_owned(const SpeakerTrack *tracks, uint32_t num_
 alloc_fail:
   for (uint32_t i = 0; i < num_tracks; i++) {
     if (s_state.track_notes_buf[i]) {
-      kernel_free(s_state.track_notes_buf[i]);
+      pbl_free(s_state.track_notes_buf[i]);
       s_state.track_notes_buf[i] = nullptr;
     }
     if (s_state.track_sample_data[i]) {
-      kernel_free(s_state.track_sample_data[i]);
+      pbl_free(s_state.track_sample_data[i]);
       s_state.track_sample_data[i] = nullptr;
     }
   }
@@ -885,7 +885,7 @@ void speaker_service_set_volume_owned(PebbleTask owner, uint8_t vol) {
 }
 
 bool speaker_service_is_muted(void) {
-  return prv_is_speaker_muted();
+  return prv_is_speaker_muted(SpeakerPriorityApp);
 }
 
 void speaker_service_handle_audio_prefs_changed(void) {
@@ -937,7 +937,7 @@ void pbl_analytics_external_collect_speaker_stats(void) {
 
   s_volume_time_product_sum = 0;
   s_total_speaker_on_time_ms = 0;
-  s_last_volume_sample_ticks = rtc_get_ticks();
+  s_last_volume_sample_ticks = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_lock);
 }

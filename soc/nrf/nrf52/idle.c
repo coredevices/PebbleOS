@@ -1,129 +1,45 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <inttypes.h>
-
-#include <pbl/services/analytics/analytics.h>
+#include <pbl/drivers/flash.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/soc/nrf/sleep.h>
+#include <pbl/util/size.h>
 
-#include <drivers/flash.h>
-#include <drivers/rtc.h>
+#include <board/board.h>
+#include <cmsis_core.h>
 #include <kernel/util/idle.h>
 
-#ifdef CONFIG_SHELL
-#include <pbl/shell/shell.h>
-#endif
+enum {
+  IDLE_WFI,
+  IDLE_FULL,
+};
 
-#include <pbl/kernel/idle.h>
+static void prv_wfi(void) {
+  __DSB();
+  __WFI();
+  __ISB();
+}
 
-#include <cmsis_core.h>
+static void prv_wfi_cb(void *arg) {
+  prv_wfi();
+}
 
-static RtcTicks s_analytics_sleep_ticks = 0;
-static RtcTicks s_analytics_full_sleep_ticks = 0;
+// WFI with the external flash powered down.
+static void prv_full_sleep(void) {
+  pbl_flash_power_down(FLASH, prv_wfi_cb, nullptr);
+}
 
-static const RtcTicks EARLY_WAKEUP_TICKS = 2;
-static const RtcTicks MIN_FULL_SLEEP_TICKS = 5;
+const struct pbl_idle_state pbl_soc_idle_states[] = {
+  [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+  [IDLE_FULL] = {.name = "full", .min_ticks = 5, .exit_ticks = 2, .enter = prv_full_sleep},
+};
+const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
-void pbl_soc_idle(pbl_tick_t max_ticks) {
-  if (!rtc_alarm_is_initialized() || !idle_is_allowed()) {
-    return;
+int pbl_soc_idle_state_limit(void) {
+  if (!idle_is_allowed()) {
+    return -1;
   }
 
-  __disable_irq();
-
-  if (pbl_idle_confirm()) {
-    if (max_ticks < MIN_FULL_SLEEP_TICKS || !soc_nrf_sleep_full_is_allowed()) {
-      RtcTicks sleep_start_ticks = rtc_get_ticks();
-
-      __DSB();
-      __WFI();
-      __ISB();
-
-      s_analytics_sleep_ticks += rtc_get_ticks() - sleep_start_ticks;
-    } else {
-      const RtcTicks sleep_ticks = max_ticks - EARLY_WAKEUP_TICKS;
-      RtcTicks elapsed_ticks;
-
-      flash_power_down_for_stop_mode();
-
-      rtc_alarm_set(sleep_ticks);
-      rtc_systick_pause();
-
-      __DSB();
-      __WFI();
-      __ISB();
-
-      rtc_systick_resume();
-      elapsed_ticks = rtc_alarm_get_elapsed_ticks();
-      pbl_idle_slept(elapsed_ticks);
-
-      flash_power_up_after_stop_mode();
-
-      s_analytics_full_sleep_ticks += elapsed_ticks;
-    }
-  }
-
-  __enable_irq();
+  return soc_nrf_sleep_full_is_allowed() ? IDLE_FULL : IDLE_WFI;
 }
-
-bool pbl_soc_tick_enable(void) {
-  rtc_enable_synthetic_systick();
-  return true;
-}
-
-// CPU analytics
-///////////////////////////////////////////////////////////
-
-static uint32_t s_last_ticks = 0;
-
-void pbl_analytics_external_collect_cpu_stats(void) {
-  uint32_t full_sleep_ticks = s_analytics_full_sleep_ticks;
-  uint32_t sleep_ticks = s_analytics_sleep_ticks;
-
-  RtcTicks now_ticks = rtc_get_ticks();
-  uint32_t total_ticks = (uint32_t)(now_ticks - s_last_ticks);
-  uint32_t running_ticks = total_ticks - full_sleep_ticks - sleep_ticks;
-
-  // Calculate percentages
-  uint16_t running_pct = 0;
-  uint16_t full_sleep_pct = 0;
-  uint16_t sleep_pct = 0;
-
-  if (total_ticks > 0) {
-    running_pct = (uint16_t)((running_ticks * 10000ULL) / total_ticks);
-    full_sleep_pct = (uint16_t)((full_sleep_ticks * 10000ULL) / total_ticks);
-    sleep_pct = (uint16_t)((sleep_ticks * 10000ULL) / total_ticks);
-  }
-
-  PBL_ANALYTICS_SET_UNSIGNED(cpu_running_pct, running_pct);
-  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep0_pct, sleep_pct);
-  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep1_pct, full_sleep_pct);
-  PBL_ANALYTICS_SET_UNSIGNED(cpu_sleep2_pct, 0);
-
-  s_last_ticks = now_ticks;
-  s_analytics_sleep_ticks = 0;
-  s_analytics_full_sleep_ticks = 0;
-}
-
-#ifdef CONFIG_SHELL
-static int prv_cmd_cpustats(const struct pbl_shell *sh, size_t argc, char **argv) {
-  uint32_t sleep_ticks = s_analytics_sleep_ticks;
-  uint32_t full_sleep_ticks = s_analytics_full_sleep_ticks;
-
-  uint32_t now_ticks = rtc_get_ticks();
-  uint32_t total_ticks = now_ticks - s_last_ticks;
-  uint32_t running_ticks = total_ticks - full_sleep_ticks - sleep_ticks;
-
-  pbl_shell_print(sh, "Run:     %" PRIu32 " ticks (%" PRIu32 " %%)", running_ticks,
-                  (running_ticks * 100) / total_ticks);
-  pbl_shell_print(sh, "Sleep 0: %" PRIu32 " ticks (%" PRIu32 " %%)", sleep_ticks,
-                  (sleep_ticks * 100) / total_ticks);
-  pbl_shell_print(sh, "Sleep 1: %" PRIu32 " ticks (%" PRIu32 " %%)", full_sleep_ticks,
-                  (full_sleep_ticks * 100) / total_ticks);
-  pbl_shell_print(sh, "Total:   %" PRIu32 " ticks", total_ticks);
-  return 0;
-}
-
-PBL_SHELL_SUBCMD_ADD(sub_sys, cpustats, nullptr, "Show CPU sleep statistics", prv_cmd_cpustats, 0,
-                     0);
-#endif

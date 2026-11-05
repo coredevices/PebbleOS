@@ -6,11 +6,11 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_management/app_menu_data_source.h>
 #include <process_state/app_state/app_state.h>
@@ -161,8 +161,9 @@ static void prv_window_load(Window *window) {
                              .draw_row = draw_row_callback,
                              .select_click = select_callback,
                            });
-  menu_layer_set_highlight_colors(&data->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorJazzberryJam, GColorBlack), GColorWhite);
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(&data->menu_layer, GColorJazzberryJam, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(

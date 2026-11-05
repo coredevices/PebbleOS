@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -19,11 +20,11 @@
 
 #include <applib/app.h>
 #include <applib/app_logging.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/health_service.h>
 #include <applib/ui/simple_menu_layer.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <services/activity/activity.h>
 
@@ -238,7 +239,7 @@ static void prv_feed_steps_min(uint32_t minutes) {
       step_sample_idx = step_sample_idx % num_step_samples;
     }
     activity_test_feed_samples(data, chunk_size);
-    rtc_set_time(rtc_get_time() + 1);
+    clock_set_time(pbl_realtime() + 1);
 
     samples_remaining -= chunk_size;
     if (minute_idx != samples_remaining / (60 * SAMPLES_PER_SECOND)) {
@@ -263,7 +264,7 @@ static void prv_feed_light_sleep_min(uint32_t minutes) {
       prv_feed_idle_movement_sec(60);
     }
     activity_test_run_minute_callback();
-    rtc_set_time(rtc_get_time() + PBL_SEC_PER_MIN);
+    clock_set_time(pbl_realtime() + PBL_SEC_PER_MIN);
     prv_clear_event_queue();
   }
 }
@@ -282,7 +283,7 @@ static void prv_feed_deep_sleep_min(uint32_t minutes) {
       prv_feed_idle_movement_sec(60);
     }
     activity_test_run_minute_callback();
-    rtc_set_time(rtc_get_time() + PBL_SEC_PER_MIN);
+    clock_set_time(pbl_realtime() + PBL_SEC_PER_MIN);
     prv_clear_event_queue();
   }
 }
@@ -446,20 +447,20 @@ static void prv_test_sleep_time_change(void *context) {
   prv_feed_steps_min(15);
 
   // Get us into sleep mode
-  time_t start_sleep_time = rtc_get_time();
+  time_t start_sleep_time = pbl_realtime();
   PBL_LOG_DBG("Start sleep: %d", (int)start_sleep_time);
   prv_feed_light_sleep_min(80);
   prv_feed_steps_min(2);
   prv_feed_light_sleep_min(1);
 
   // Shift UTC time back by 75 days
-  rtc_set_time(rtc_get_time() - 75 * PBL_SEC_PER_DAY - 6 * PBL_SEC_PER_HOUR);
+  clock_set_time(pbl_realtime() - 75 * PBL_SEC_PER_DAY - 6 * PBL_SEC_PER_HOUR);
 
   // Sleep a little more
   prv_feed_light_sleep_min(10);
 
   // Restore time to just after we started sleeping before
-  rtc_set_time(start_sleep_time + 5 * PBL_SEC_PER_MIN);
+  clock_set_time(start_sleep_time + 5 * PBL_SEC_PER_MIN);
 
   // Sleep a little more, should not crash
   prv_feed_steps_min(90);
@@ -516,7 +517,7 @@ static void prv_test_nap(void *context) {
 
   activity_prefs_sleep_insights_set_enabled(true);
 
-  const time_t now_utc = rtc_get_time();
+  const time_t now_utc = pbl_realtime();
   PBL_LOG_DBG("test start time: %d", (int)now_utc);
 
   const time_t midnight_utc = time_util_get_midnight_of(now_utc);
@@ -528,10 +529,10 @@ static void prv_test_nap(void *context) {
     const time_t next_nap_time =
         (nap_time_start < now_utc ? nap_time_start + PBL_SEC_PER_DAY : nap_time_start) +
         PBL_SEC_PER_HOUR;
-    rtc_set_time(next_nap_time);
+    clock_set_time(next_nap_time);
   }
 
-  time_t test_start_utc = rtc_get_time();
+  time_t test_start_utc = pbl_realtime();
   PBL_LOG_DBG("test start time changed to: %d", (int)test_start_utc);
 
   // Reset all stored data
@@ -581,14 +582,14 @@ static void prv_test_sleep_reward(void *context) {
   const ActivityScalarStore GOOD_SLEEP = 2 * PBL_MIN_PER_HOUR;
 
   // Hack to get around midnight rollover bug (only affects tests)
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()));
+  clock_set_time(time_util_get_midnight_of(pbl_realtime()));
 
   bool prev_insights_enabled = activity_prefs_sleep_insights_are_enabled();
   activity_prefs_sleep_insights_set_enabled(true);
 
   // History with low median but good sleep over the past few days
   ActivitySettingsValueHistory sleep_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       GOOD_SLEEP, GOOD_SLEEP, GOOD_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP,
@@ -612,7 +613,7 @@ static void prv_test_sleep_reward(void *context) {
     prv_feed_steps_min((2.5 * PBL_MIN_PER_HOUR) + ACTIVITY_SESSION_UPDATE_MIN);
 
     // Fast forward time
-    rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 4 * PBL_SEC_PER_DAY);
+    clock_set_time(time_util_get_midnight_of(pbl_realtime()) + 4 * PBL_SEC_PER_DAY);
   }
 
   activity_prefs_sleep_insights_set_enabled(prev_insights_enabled);
@@ -625,7 +626,7 @@ static void prv_test_activity_reward(void *context) {
 
   // TODO: is this needed here?
   // Hack to get around midnight rollover bug (only affects tests)
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()));
+  clock_set_time(time_util_get_midnight_of(pbl_realtime()));
 
   bool prev_insights_enabled = activity_prefs_activity_insights_are_enabled();
   activity_prefs_activity_insights_set_enabled(true);
@@ -634,7 +635,7 @@ static void prv_test_activity_reward(void *context) {
 
   // History with low median
   ActivitySettingsValueHistory step_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS, AVERAGE_STEPS,
@@ -652,7 +653,7 @@ static void prv_test_activity_reward(void *context) {
   prv_feed_steps_min(k_num_minutes);
 
   // Fast forward a day and check that we update the settings cache when the file changes
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * PBL_SEC_PER_DAY);
+  clock_set_time(time_util_get_midnight_of(pbl_realtime()) + 1 * PBL_SEC_PER_DAY);
 
   ActivityInsightSettings original_settings;
   activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD, &original_settings);
@@ -673,7 +674,7 @@ static void prv_test_sleep_summary(void *context) {
   bool passed = true;
 
   // Start at 1am to make sure it doesn't get registered as a nap
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + 1 * PBL_SEC_PER_HOUR);
+  clock_set_time(time_util_get_midnight_of(pbl_realtime()) + 1 * PBL_SEC_PER_HOUR);
 
   activity_prefs_sleep_insights_set_enabled(true);
 
@@ -681,7 +682,7 @@ static void prv_test_sleep_summary(void *context) {
 
   // History with low median but good sleep over the past few days
   ActivitySettingsValueHistory sleep_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {
       0, // This ends up overwritten anyway by the current sleep value
       AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP, AVERAGE_SLEEP
@@ -715,11 +716,11 @@ static void prv_test_activity_summary(void *context) {
 
   // Set to the trigger time
   struct pbl_tm time_tm = {};
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   pbl_localtime_r(&now, &time_tm);
   time_tm.tm_hour = 20;
   time_tm.tm_min = 25;
-  rtc_set_time(pbl_mktime(&time_tm));
+  clock_set_time(pbl_mktime(&time_tm));
 
   // Set the step history
   activity_test_set_steps_history();

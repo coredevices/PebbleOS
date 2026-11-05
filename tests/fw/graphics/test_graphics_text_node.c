@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
+
 #include <apps/system/timeline/text_node.h>
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 #include <pebble_asserts.h>
 #include <stubs_app_state.h>
 
@@ -170,7 +171,7 @@ void test_graphics_text_node__destroy(void) {
   cl_assert(text_a->node.free_on_destroy);
   strcpy((char *)text_a->text, str_a);
 
-  const char *str_b = task_strdup("B");
+  const char *str_b = pbl_strdup("B");
   GTextNodeText *text_b = graphics_text_node_create_text(0);
   cl_assert(text_b->node.free_on_destroy);
   text_b->text = (char *)str_b;
@@ -206,7 +207,7 @@ void test_graphics_text_node__destroy(void) {
 
   graphics_text_node_destroy(&vertical_a->container.node);
 
-  task_free((char *)str_b);
+  pbl_free((char *)str_b);
 }
 
 static void prv_draw_custom_clip(GContext *ctx, const GRect *box, const GTextNodeDrawConfig *config,

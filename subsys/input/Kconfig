@@ -10,7 +10,7 @@ if INPUT
 
 config INPUT_SHELL
     bool "Shell commands"
-    default y
+    default SUBSYS_SHELL
     depends on SHELL
     help
       The input command: dump and report events.

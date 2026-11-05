@@ -46,6 +46,8 @@ class Connection(ABC):
         self.dehasher = dehasher
         #: The phone OS its Pebble protocol sessions say the app runs on.
         self.platform = PHONE_OS_ANDROID
+        #: Whether its sessions say the app supports settings sync.
+        self.settings_sync = False
         #: The device this connection belongs to, set before it is opened.
         self.device = None
         self._listeners = []
@@ -114,8 +116,8 @@ class Connection(ABC):
 
 # The version response the harness answers with: a phone app (on Android
 # unless a test's phone is connected), with every protocol capability but
-# settings sync, whose write-backs it would leave unanswered and the watch
-# retry for minutes.
+# settings sync unless asked for: the harness leaves the watch's write-backs
+# unanswered, and the watch would retry them for minutes.
 PHONE_OS_UNKNOWN = 0
 PHONE_OS_IOS = 1
 PHONE_OS_ANDROID = 2
@@ -123,9 +125,10 @@ SETTINGS_SYNC_SUPPORT = 1 << 23
 PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT
 
 
-def _phone_app_version(platform):
+def _phone_app_version(platform, settings_sync=False):
     from libpebble2.protocol.system import AppVersionResponse, PhoneAppVersion
 
+    caps = PHONE_CAPABILITIES | (SETTINGS_SYNC_SUPPORT if settings_sync else 0)
     return PhoneAppVersion(
         message=AppVersionResponse(
             protocol_version=0xFFFFFFFF,
@@ -137,27 +140,37 @@ def _phone_app_version(platform):
             bugfix_version=0,
             # The firmware reads the flags little-endian; libpebble2 packs
             # them big-endian.
-            protocol_caps=int.from_bytes(PHONE_CAPABILITIES.to_bytes(8, "little")),
+            protocol_caps=int.from_bytes(caps.to_bytes(8, "little")),
         )
     )
 
 
-def start_protocol(transport, platform=PHONE_OS_ANDROID):
+def start_protocol(transport, platform=PHONE_OS_ANDROID, settings_sync=False):
     """A running libpebble2 connection over ``transport``, identified to the
-    firmware as the phone app (on ``platform``) so private endpoints
-    answer."""
+    firmware as the phone app (on ``platform``, supporting settings sync if
+    ``settings_sync``) so private endpoints answer."""
     from libpebble2.communication import PebbleConnection
 
     class PhoneConnection(PebbleConnection):
+        def announce(self):
+            self.send_packet(_phone_app_version(platform, self.settings_sync))
+
+        def set_settings_sync(self, enabled):
+            """Say the app supports settings sync, or not; the firmware
+            takes the capabilities of every version response."""
+            self.settings_sync = enabled
+            self.announce()
+
         # libpebble2 answers the firmware's request with its own capabilities.
         def _app_version_response(self, packet):
-            self.send_packet(_phone_app_version(platform))
+            self.announce()
 
     pebble = PhoneConnection(transport)
+    pebble.settings_sync = settings_sync
     pebble.connect()
     pebble.run_async()
     # The firmware asks only once per session, which outlives host connections.
-    pebble.send_packet(_phone_app_version(platform))
+    pebble.announce()
     return pebble
 
 

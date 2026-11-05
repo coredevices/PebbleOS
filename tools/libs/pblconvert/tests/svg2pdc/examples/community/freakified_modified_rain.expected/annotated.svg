@@ -6,7 +6,7 @@
     <path d="M19,41L19,37" style="fill:white;fill-rule:nonzero;stroke-width:2px;stroke:black;"/>
     <path d="M9,47L9,43" style="fill:white;fill-rule:nonzero;stroke-width:2px;stroke:black;"/>
     <path d="M30.9307,21.0882L44.6746,21.5L44.6746,15.5L40.9203,11.5L29.6574,11.5L25.9031,7.5L13.7015,7.5L9.00863,12.5L5.25432,12.5L1.5,16.5L1.5,21.5L5.25432,25.5L30.9307,21.0882Z" style="fill:white;fill-rule:nonzero;stroke-width:2.91px;stroke:black;">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="21.09" x="30.93" details="Invalid point: (30.93, 21.09). Used closest supported coordinate: (30.875, 21.125)"/>
         <pdc:highlight y="21.50" x="44.68" details="Invalid point: (44.68, 21.50). Used closest supported coordinate: (44.625, 21.5)"/>
         <pdc:highlight y="15.50" x="44.68" details="Invalid point: (44.68, 15.50). Used closest supported coordinate: (44.625, 15.5)"/>

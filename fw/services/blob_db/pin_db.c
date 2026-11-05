@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/api.h>
@@ -14,13 +16,12 @@
 #include <pbl/util/uuid.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define PIN_DB_MAX_AGE   (3 * PBL_SEC_PER_DAY) // so we get at two full past days in there
-#define PIN_DB_FILE_NAME "pindb"
+#define PIN_DB_FILE_NAME "/pindb"
 #define PIN_DB_MAX_SIZE  PBL_KIB(40) // TODO [FBO] variable size / reasonable value
 
 static TimelineItemStorage s_pin_db_storage;
@@ -34,7 +35,7 @@ status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
-status_t pin_db_each(SettingsFileEachCallback each, void *data) {
+status_t pin_db_each(pbl_settings_each_cb_t each, void *data) {
   return timeline_item_storage_each(&s_pin_db_storage, each, data);
 }
 
@@ -59,10 +60,10 @@ static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, cons
     // can't add a pin for a not installed app!
     if (install_id == INSTALL_ID_INVALID) {
       // String initialized on the heap to reduce stack usage
-      char *parent_id_string = kernel_malloc_check(UUID_STRING_BUFFER_LENGTH);
+      char *parent_id_string = pbl_malloc_check(UUID_STRING_BUFFER_LENGTH);
       uuid_to_string(&parent_id, parent_id_string);
       PBL_LOG_ERR("Pin insert for a pin with no app installed, parent id: %s", parent_id_string);
-      kernel_free(parent_id_string);
+      pbl_free(parent_id_string);
       goto done;
     }
     // Bump the app's priority by telling the cache we're using it
@@ -97,7 +98,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
 
   // allocate a buffer big enough for serialized item
   size_t payload_size = timeline_item_get_serialized_payload_size(item);
-  uint8_t *buffer = kernel_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
+  uint8_t *buffer = pbl_malloc_check(sizeof(SerializedTimelineItemHeader) + payload_size);
   uint8_t *write_ptr = buffer;
 
   // serialize the header
@@ -124,11 +125,11 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
 
   if (!mark_synced) {
     blob_db_sync_record(BlobDBIdPins, (uint8_t *)&item->header.id, sizeof(TimelineItemId),
-                        rtc_get_time());
+                        pbl_realtime());
   }
 
 cleanup:
-  kernel_free(buffer);
+  pbl_free(buffer);
   return rv;
 }
 
@@ -149,7 +150,7 @@ status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
   if (size <= 0) {
     return E_DOES_NOT_EXIST;
   }
-  uint8_t *read_buf = task_malloc_check(size);
+  uint8_t *read_buf = pbl_malloc_check(size);
   status_t status = pin_db_read((uint8_t *)id, UUID_SIZE, read_buf, size);
   if (status != S_SUCCESS) {
     goto cleanup;
@@ -162,11 +163,11 @@ status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
     goto cleanup;
   }
 
-  task_free(read_buf);
+  pbl_free(read_buf);
   return (S_SUCCESS);
 
 cleanup:
-  task_free(read_buf);
+  pbl_free(read_buf);
   return status;
 }
 
@@ -211,7 +212,7 @@ status_t pin_db_compact(void) {
 }
 
 bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
-  return (pin_end_timestamp < (rtc_get_time() - PIN_DB_MAX_AGE));
+  return (pin_end_timestamp < (pbl_realtime() - PIN_DB_MAX_AGE));
 }
 
 status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {

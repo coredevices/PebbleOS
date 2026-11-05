@@ -7,7 +7,7 @@
 
 #include <pbl/services/i18n/i18n.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 
 static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   SettingsOptionMenuData *data = context;
@@ -16,7 +16,7 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
   }
   option_menu_destroy(option_menu);
   i18n_free_all(option_menu);
-  task_free(context);
+  app_free(context);
 }
 
 static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
@@ -55,7 +55,8 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
     .icons_enabled = icons_enabled,
   };
   option_menu_configure(option_menu, &config);
-  SettingsOptionMenuData *data = task_malloc_check(sizeof(SettingsOptionMenuData));
+  option_menu_set_colors_follow_theme(option_menu);
+  SettingsOptionMenuData *data = app_malloc_check(sizeof(SettingsOptionMenuData));
   OptionMenuCallbacks callbacks = *callbacks_ref;
   *data = (SettingsOptionMenuData){
     .callbacks = callbacks,

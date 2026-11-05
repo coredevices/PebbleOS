@@ -109,6 +109,10 @@ void weather_app_layout_set_data(WeatherAppLayout *layout,
                                  const WeatherLocationForecast *today_forecast,
                                  const WeatherLocationForecast *next_forecast);
 
+//! Recolors the resources loaded once for the new theme. The icons that depend on the data are
+//! reloaded by \ref weather_app_layout_set_data.
+void weather_app_layout_handle_dark_mode_change(WeatherAppLayout *layout);
+
 #define weather_app_layout_set_down_arrow_visible(layout, is_down_visible) \
   do {                                                                     \
     (void)(layout);                                                        \

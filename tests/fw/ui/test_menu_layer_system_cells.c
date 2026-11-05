@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/framebuffer.h>
@@ -21,6 +22,7 @@
 // Fakes
 /////////////////////
 
+#include <fake_pfs.h>
 #include <fake_resource_syscalls.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
@@ -123,8 +125,8 @@ void test_menu_layer_system_cells__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 
@@ -517,7 +519,7 @@ void test_menu_layer_system_cells__scrolling_text(void) {
                   &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);
 
     // Past the 800 ms pause
-    fake_rtc_set_ticks(RTC_TICKS_HZ * 3 / 2);
+    fake_rtc_set_ticks(PBL_TICK_HZ * 3 / 2);
     cell_bounds.origin.x += cell_width + GRID_CELL_PADDING;
     prv_draw_cell(MenuCellType_Basic, &cell_bounds, &rows[i],
                   &s_menu_system_basic_cell_test_column_data[0], true /* is_selected */);

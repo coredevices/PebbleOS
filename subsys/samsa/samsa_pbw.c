@@ -7,21 +7,22 @@
 
 #include "samsa_pbw_bottom.h"
 
+#include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/size.h>
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <pbl_arch_posix.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -128,21 +129,28 @@ static bool prv_zip_find(const uint8_t *zip, size_t len, const char *name, ZipEn
 
 //! Inflate or copy a zip entry into a new file, in chunks.
 static bool prv_write_file(const char *name, const ZipEntry *entry) {
-  pfs_remove(name);
-  const int fd = pfs_open(name, OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC, entry->size);
-  if (fd < 0) {
-    PBL_LOG_ERR("Could not create %s: %d", name, fd);
+  pbl_fs_unlink(name);
+  struct pbl_fs_file file;
+  int ret = pbl_fs_open(&file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE);
+  if (ret == 0) {
+    ret = (entry->size > 0) ? pbl_fs_truncate(&file, entry->size) : -EINVAL;
+    if (ret < 0) {
+      pbl_fs_close(&file);
+    }
+  }
+  if (ret < 0) {
+    PBL_LOG_ERR("Could not create %s: %d", name, ret);
     return false;
   }
   bool ok = true;
   if (entry->method == 0) {
-    ok = pfs_write(fd, entry->data, entry->size) == (int)entry->size;
+    ok = pbl_fs_write(&file, entry->data, entry->size) == (int)entry->size;
   } else {
     // Deflate refers back up to 32 KiB, which the dictionary ring keeps.
     const size_t dict_size = 32 * 1024, chunk_size = 1024;
-    uint8_t *dict = kernel_malloc(dict_size);
-    uint8_t *chunk = kernel_malloc(chunk_size);
-    TINF_DATA *d = kernel_malloc(sizeof(*d));
+    uint8_t *dict = pbl_malloc(dict_size);
+    uint8_t *chunk = pbl_malloc(chunk_size);
+    TINF_DATA *d = pbl_malloc(sizeof(*d));
     ok = dict && chunk && d;
     if (ok) {
       uzlib_init();
@@ -156,7 +164,7 @@ static bool prv_write_file(const char *name, const ZipEntry *entry) {
         d->dest_limit = chunk + chunk_size;
         const int res = uzlib_uncompress(d);
         const size_t n = d->dest - chunk;
-        if (n && pfs_write(fd, chunk, n) != (int)n) {
+        if (n && pbl_fs_write(&file, chunk, n) != (int)n) {
           ok = false;
           break;
         }
@@ -171,15 +179,14 @@ static bool prv_write_file(const char *name, const ZipEntry *entry) {
       }
       ok = ok && written == entry->size;
     }
-    kernel_free(d);
-    kernel_free(chunk);
-    kernel_free(dict);
+    pbl_free(d);
+    pbl_free(chunk);
+    pbl_free(dict);
   }
-  if (ok) {
-    pfs_close(fd);
-  } else {
+  pbl_fs_close(&file);
+  if (!ok) {
     PBL_LOG_ERR("Could not write %s", name);
-    pfs_close_and_remove(fd);
+    pbl_fs_unlink(name);
   }
   return ok;
 }
@@ -254,8 +261,8 @@ static void prv_install(void *data) {
   if (ok && head.method == 0) {
     memcpy(header, head.data, sizeof(header));
   } else if (ok) {
-    uint8_t *dict = kernel_malloc(32 * 1024);
-    TINF_DATA *d = kernel_malloc(sizeof(*d));
+    uint8_t *dict = pbl_malloc(32 * 1024);
+    TINF_DATA *d = pbl_malloc(sizeof(*d));
     ok = dict && d;
     if (ok) {
       uzlib_init();
@@ -267,8 +274,8 @@ static void prv_install(void *data) {
       d->dest_limit = header + sizeof(header);
       ok = uzlib_uncompress(d) >= 0 && d->dest == d->dest_limit;
     }
-    kernel_free(d);
-    kernel_free(dict);
+    pbl_free(d);
+    pbl_free(dict);
   }
   memcpy(&install->info, header, sizeof(install->info));
   if (!ok || strncmp(install->info.header, "PBLAPP", sizeof(install->info.header)) != 0) {

@@ -4,6 +4,8 @@
 #pragma once
 #include <time.h>
 
+#include <pbl/services/time.h>
+
 struct pbl_tm *pbl_override_localtime(const time_t *timep) {
   static struct pbl_tm local_tm;
   pbl_localtime_r(timep, &local_tm);

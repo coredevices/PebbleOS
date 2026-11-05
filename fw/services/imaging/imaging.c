@@ -4,17 +4,16 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
-#include <pbl/util/heap.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
-#include <kernel/kernel_heap.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
 
@@ -56,8 +55,8 @@ static struct {
 } s_rx;
 
 static void prv_rx_reset(void) {
-  kernel_free(s_rx.pixels);
-  kernel_free(s_rx.palette);
+  pbl_free(s_rx.pixels);
+  pbl_free(s_rx.palette);
   s_rx = (typeof(s_rx)){};
 }
 
@@ -80,7 +79,7 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
   unsigned int used;
   unsigned int free_bytes;
   unsigned int largest_free;
-  heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &largest_free);
+  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &largest_free);
   PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
 
   prv_rx_reset();
@@ -104,9 +103,9 @@ static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
   if (handler) {
     handler(token, bitmap);
   } else if (bitmap) {
-    kernel_free(bitmap->addr);
-    kernel_free(bitmap->palette);
-    kernel_free(bitmap);
+    pbl_free(bitmap->addr);
+    pbl_free(bitmap->palette);
+    pbl_free(bitmap);
   }
 }
 
@@ -266,13 +265,13 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       will_receive(hdr->token);
     }
 
-    s_rx.pixels = kernel_zalloc(total);
+    s_rx.pixels = pbl_zalloc(total);
     if (!s_rx.pixels) {
       prv_drop(type, hdr->token, total, "pixel allocation failed");
       return;
     }
     if (max_palette > 0) {
-      s_rx.palette = kernel_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
+      s_rx.palette = pbl_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
       if (!s_rx.palette) {
         prv_drop(type, hdr->token, total, "palette allocation failed");
         return;
@@ -319,7 +318,7 @@ void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, siz
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
       return;
     }
-    GBitmap *bmp = kernel_zalloc(sizeof(GBitmap));
+    GBitmap *bmp = pbl_zalloc(sizeof(GBitmap));
     if (!bmp) {
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "bitmap allocation failed");
       return;

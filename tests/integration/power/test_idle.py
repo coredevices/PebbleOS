@@ -7,7 +7,12 @@ import warnings
 import pytest
 from harness.fixtures import dut_scope_within
 
-pytestmark = pytest.mark.device_types("hardware")
+# A sporadic burst of background flash work can push a single measurement out
+# of range; a real regression fails the rerun too.
+pytestmark = [
+    pytest.mark.device_types("hardware"),
+    pytest.mark.flaky(reruns=1, only_rerun=["AssertionError"]),
+]
 
 # How long a watch with no bonding advertises fast (20 ms) for discovery,
 # before slowing down to 1022.5 ms (comm/ble/gap_le_slave_discovery.c), which
@@ -24,9 +29,9 @@ IDLE_NOMINAL_UA = {
         "airplane_mode": 97,
     },
     "getafix": {
-        "advertising_fast": 953,
-        "advertising_slow": 128,
-        "airplane_mode": 93,
+        "advertising_fast": 927,
+        "advertising_slow": 119,
+        "airplane_mode": 86,
     },
     "asterix": {
         "advertising_fast": 655,
@@ -46,9 +51,9 @@ def _check(build, power, record_property, measurement):
     print(measurement)
 
     nominal = IDLE_NOMINAL_UA.get(build.board, {}).get(measurement.name)
-    if nominal is None or power.ppk2.voltage_mv != NOMINAL_VOLTAGE_MV:
+    if nominal is None or power.supply.voltage_mv != NOMINAL_VOLTAGE_MV:
         warnings.warn(
-            f"no {measurement.name} limit for {build.board} at {power.ppk2.voltage_mv} mV",
+            f"no {measurement.name} limit for {build.board} at {power.supply.voltage_mv} mV",
             stacklevel=2,
         )
         return

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/vibe.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/size.h>
 
@@ -83,21 +84,18 @@ uint32_t pbl_accel_get_max_num_samples(const struct pbl_accel *accel) {
 
 // helpers
 static uint64_t prv_get_current_time() {
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  return ((uint64_t)s * 1000) + ms;
+  return pbl_realtime_ms();
 }
 
 //! Snap the fake RTC's tick counter to the smallest value whose floored
-//! conversion `(ticks * 1000) / RTC_TICKS_HZ` matches the current wall ms.
+//! conversion `(ticks * 1000) / PBL_TICK_HZ` matches the current wall ms.
 //! vibe_pattern's drift-compensating scheduler runs that floor on the elapsed
 //! tick delta; if we leave ticks unaligned, each step's converted elapsed_ms
 //! drifts by ±1 from the wall clock the timer fires against and `prv_confirm_history`
 //! starts mis-attributing segment boundaries.
 static void prv_snap_ticks_to_wall(void) {
   const uint64_t wall_ms = prv_get_current_time();
-  fake_rtc_set_ticks((wall_ms * RTC_TICKS_HZ + 999) / 1000);
+  fake_rtc_set_ticks((wall_ms * PBL_TICK_HZ + 999) / 1000);
 }
 
 static void prv_run_vibes() {

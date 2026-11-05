@@ -10,9 +10,10 @@ from sdk_helpers import (
     append_to_attr,
     find_sdk_component,
     get_node_from_abspath,
+    warn_undeclared_microphone,
     wrap_task_name_with_platform,
 )
-from waflib import Logs
+from waflib import Logs, Utils
 from waflib.Configure import conf
 from waflib.Errors import WafError
 from waflib.Task import Task
@@ -46,6 +47,7 @@ def options(opt):
     :return: N/A
     """
     opt.load("gcc")
+    opt.load("pebble_sdk_clangdb")
     opt.add_option(
         "-d",
         "--debug",
@@ -431,6 +433,15 @@ def pbl_build(self, *k, **kw):
             "The pbl_build method requires that a valid bin_type attribute be specified. "
             f"Valid options are {valid_bin_types}"
         )
+
+    if bin_type == "app" and not getattr(self, "microphone_checked", False):
+        # Once per build, not per platform.
+        self.microphone_checked = True
+        sources = [
+            s if hasattr(s, "read") else self.path.find_resource(s)
+            for s in Utils.to_list(kw.get("source", []))
+        ]
+        warn_undeclared_microphone(self.env.PROJECT_INFO, [s for s in sources if s])
 
     if bin_type in ("app", "worker"):
         kw["features"] = "c cprogram pebble_cprogram memory_usage"

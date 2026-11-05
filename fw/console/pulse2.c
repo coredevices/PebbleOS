@@ -12,15 +12,16 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/time.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/byteorder.h>
@@ -32,7 +33,6 @@
 #include <console/control_protocol.h>
 #include <console/control_protocol_impl.h>
 #include <console/dbgserial.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 #define LCP_PROTOCOL_NUMBER (0xC021)
@@ -151,7 +151,7 @@ static char s_tx_buffer[MAX_SIZE_AFTER_COBS_ENCODING(FRAME_MAX_SEND_SIZE + PULSE
 // Lock for exclusive access to the reliable timer state.
 static PBL_MUTEX_DEFINE(s_reliable_timer_state_lock);
 // Ticks since boot for timer expiry if timer is pending, or 0 if not pending.
-static volatile RtcTicks s_reliable_timer_expiry_time_tick;
+static volatile uint64_t s_reliable_timer_expiry_time_tick;
 static volatile uint8_t s_reliable_timer_sequence_number;
 
 static void prv_process_received_frame(size_t frame_length) {
@@ -189,8 +189,8 @@ static void prv_process_received_frame(size_t frame_length) {
 
 void pulse2_reliable_retransmit_timer_start(unsigned int timeout_ms, uint8_t sequence_number) {
   pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
-  RtcTicks timeout_ticks = timeout_ms * RTC_TICKS_HZ / 1000;
-  s_reliable_timer_expiry_time_tick = rtc_get_ticks() + timeout_ticks;
+  uint64_t timeout_ticks = timeout_ms * PBL_TICK_HZ / 1000;
+  s_reliable_timer_expiry_time_tick = pbl_uptime_ticks() + timeout_ticks;
   s_reliable_timer_sequence_number = sequence_number;
   // Wake up the PULSE task to get it to notice the newly-started timer.
   pbl_sem_give(&s_pulse_task_service_semaphore);
@@ -217,18 +217,18 @@ void pulse2_reliable_retransmit_timer_cancel(void) {
 // filled with the sequence number of the expired timer, and 0 is returned.
 static pbl_tick_t prv_poll_timer(uint8_t *const sequence_number) {
   pbl_mutex_lock(&s_reliable_timer_state_lock, PBL_FOREVER);
-  RtcTicks timer_expiry_tick = s_reliable_timer_expiry_time_tick;
+  uint64_t timer_expiry_tick = s_reliable_timer_expiry_time_tick;
   pbl_tick_t timeout = PBL_TICK_FOREVER;
   if (timer_expiry_tick) { // A timer is pending
-    RtcTicks now = rtc_get_ticks();
+    uint64_t now = pbl_uptime_ticks();
     if (now >= timer_expiry_tick) { // Timer has expired
       // Clear the timer pending state.
       s_reliable_timer_expiry_time_tick = 0;
       timeout = 0;
       *sequence_number = s_reliable_timer_sequence_number;
     } else {
-      static_assert(1000 * RTC_TICKS_HZ / 1000 == RTC_TICKS_HZ,
-                    "RtcTicks uses different units than FreeRTOS ticks");
+      static_assert(1000 * PBL_TICK_HZ / 1000 == PBL_TICK_HZ,
+                    "uint64_t uses different units than FreeRTOS ticks");
       timeout = timer_expiry_tick - now;
     }
   }
@@ -346,6 +346,15 @@ void pulse_start(void) {
 void pulse_end(void) {
   ppp_control_protocol_close(PULSE2_LCP, PPPCPCloseWait_WaitForClosed);
 }
+
+static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
+  pulse_end();
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(pulse_restart, PBL_SYS_OFF_RESTART_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
+PBL_SYS_OFF_HANDLER_DEFINE(pulse_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE, PBL_SYS_OFF_PRIO_DEFAULT,
+                           prv_sys_off_prepare, nullptr);
 
 static void prv_assert_tx_buffer(void *buf) {
   // Ensure the buffer is actually a PULSE transmit buffer

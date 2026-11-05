@@ -15,8 +15,6 @@ uint32_t SystemCoreClock = 48000000UL;
 
 extern uint8_t __ramfunc_start[];
 extern uint8_t __ramfunc_end[];
-extern const uint32_t __FLASH_start__[];
-extern const uint32_t __FLASH_size__[];
 
 void SystemCoreClockUpdate(void) {
 }
@@ -46,10 +44,12 @@ static void prv_mpu_config(void) {
   ARM_MPU_SetMemAttr(ATTR_RAM_IDX, ATTR_RAM);
   ARM_MPU_SetMemAttr(ATTR_DEVICE_IDX, ATTR_DEVICE);
 
-  // Flash code, region 1
+  // Firmware image. The rest of the flash holds user data, so it is left to
+  // the privileged background map.
   // Non-shareable, RO, any privilege, executable
-  rbar = ARM_MPU_RBAR((uint32_t)__FLASH_start__, ARM_MPU_SH_NON, 1, 1, 0);
-  rlar = ARM_MPU_RLAR((uint32_t)__FLASH_start__ + (uint32_t)__FLASH_size__ - 1U, ATTR_CODE_IDX);
+  rbar = ARM_MPU_RBAR(CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET, ARM_MPU_SH_NON, 1, 1, 0);
+  rlar = ARM_MPU_RLAR(CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET + CONFIG_FW_FLASH_SIZE - 1U,
+                      ATTR_CODE_IDX);
   ARM_MPU_SetRegion(0U, rbar, rlar);
 
   // Peripheral space

@@ -112,9 +112,13 @@ void test_codepoint__should_skip_controls(void) {
   cl_assert(codepoint_should_skip(0xE007F)); // cancel tag
 
   // Supplementary Private Use Area-B (Apple SF Symbols) should be skipped
-  cl_assert(codepoint_should_skip(0xF0000));
   cl_assert(codepoint_should_skip(0x100000)); // start of typical SF Symbols range
   cl_assert(codepoint_should_skip(0x10FFFD));
+
+  // Supplementary Private Use Area-A is used by icon fonts (e.g. Nerd Fonts)
+  cl_assert(!codepoint_should_skip(0xF0000));
+  cl_assert(!codepoint_should_skip(0xF0084)); // nf-md-battery_charging
+  cl_assert(!codepoint_should_skip(0xFFFFD));
 
   // Boundary characters around C1 must NOT be skipped
   cl_assert(!codepoint_should_skip(0x7F)); // DEL — handled by formatting indicator

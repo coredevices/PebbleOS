@@ -52,9 +52,7 @@ static const struct pbl_aw2016 *prv_get(const struct pbl_backlight *bl) {
 static int prv_read_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t *val) {
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_read_register_block(&dev->i2c, reg, 1, val);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_reg_read_byte(&dev->i2c, reg, val);
 
   return ret;
 }
@@ -62,9 +60,7 @@ static int prv_read_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t 
 static int prv_write_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t val) {
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_write_register_block(&dev->i2c, reg, 1, &val);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_reg_write_byte(&dev->i2c, reg, val);
 
   return ret;
 }

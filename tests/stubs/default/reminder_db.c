@@ -4,7 +4,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 PBL_WEAK void reminder_db_init(void) {
   return;
@@ -41,7 +41,7 @@ PBL_WEAK status_t reminder_db_flush(void) {
   return S_SUCCESS;
 }
 
-PBL_WEAK status_t reminder_db_each(SettingsFileEachCallback each, void *data) {
+PBL_WEAK status_t reminder_db_each(pbl_settings_each_cb_t each, void *data) {
   return S_SUCCESS;
 }
 

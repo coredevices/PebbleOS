@@ -2,7 +2,6 @@
 
 Erase parts of the flash of a watch connected through a development kit:
 regions of the board's flash layout, by name, or address ranges in it.
-{doc}`bork` erases everything instead.
 
 ```{warning}
 Erasing `FILESYSTEM` wipes the pairings, apps and settings stored on the

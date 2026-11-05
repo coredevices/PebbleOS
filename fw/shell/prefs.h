@@ -67,6 +67,18 @@ typedef enum UnitsWind {
 UnitsWind shell_prefs_get_units_wind(void);
 void shell_prefs_set_units_wind(UnitsWind newUnit);
 
+// Temperature has its own unit so the UK (Celsius, but miles) is expressible. FromDistance is
+// the default, so a phone that never sets this follows the distance unit.
+typedef enum UnitsTemperature {
+  UnitsTemperature_FromDistance,
+  UnitsTemperature_Celsius,
+  UnitsTemperature_Fahrenheit,
+  UnitsTemperatureCount
+} UnitsTemperature;
+
+UnitsTemperature shell_prefs_get_units_temperature(void);
+void shell_prefs_set_units_temperature(UnitsTemperature newUnit);
+
 // The backlight preferences are required in all shells, but the settings are
 // hardcoded when running PRF.
 
@@ -304,3 +316,23 @@ void shell_prefs_set_music_show_progress_bar(bool enable);
 
 bool shell_prefs_get_music_show_album_art(void);
 void shell_prefs_set_music_show_album_art(bool enable);
+
+typedef struct DarkModeSchedule {
+  uint8_t from_hour;
+  uint8_t from_minute;
+  uint8_t to_hour;
+  uint8_t to_minute;
+} DarkModeSchedule;
+
+typedef enum DarkMode {
+  DarkModeOff = 0,
+  DarkModeOn = 1,
+  DarkModeScheduled = 2, // Follows the configured start/end time schedule
+  DarkModeCount
+} DarkMode;
+
+DarkMode shell_prefs_get_dark_mode(void);
+void shell_prefs_set_dark_mode(DarkMode mode);
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out);
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule);

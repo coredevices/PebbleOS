@@ -16,6 +16,7 @@
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics.h>
 #include <kernel/ui/kernel_ui.h>
+#include <shell/system_theme.h>
 
 //! Signature for callbacks provided to prv_content_indicator_iterate()
 //! @param content_indicator The current ContentIndicator in the iteration.
@@ -233,6 +234,14 @@ bool content_indicator_configure_direction(ContentIndicator *content_indicator,
   return true;
 }
 
+void content_indicator_set_colors_follow_theme(ContentIndicator *content_indicator,
+                                               ContentIndicatorDirection direction,
+                                               bool foreground) {
+  ContentIndicatorDirectionData *direction_data = &content_indicator->direction_data[direction];
+  direction_data->background_follows_window = true;
+  direction_data->foreground_follows_theme = foreground;
+}
+
 static bool prv_content_indicator_find_direction_data_cb(ContentIndicator *content_indicator,
                                                          size_t buffer_offset_bytes,
                                                          void *input_context,
@@ -305,6 +314,12 @@ PBL_T_STATIC void prv_content_indicator_update_proc(Layer *layer, GContext *ctx)
   }
 
   ContentIndicatorConfig *config = &direction_data->config;
+  if (direction_data->foreground_follows_theme) {
+    config->colors.foreground = system_theme_get_fg_color();
+  }
+  if (direction_data->background_follows_window && layer->window) {
+    config->colors.background = window_get_drawn_background_color(layer->window);
+  }
   content_indicator_draw_arrow(ctx, &layer->bounds, direction_data->direction,
                                config->colors.foreground, config->colors.background,
                                config->alignment);

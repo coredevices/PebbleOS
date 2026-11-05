@@ -7,3 +7,6 @@ qemu:
   decorations:
     - pt2-br
     - pt2-sb
+
+runners:
+  - qemu

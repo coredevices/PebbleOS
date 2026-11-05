@@ -6,6 +6,7 @@
 #include <pbl/bluetooth/dis.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 
 /**
  * @defgroup bluetooth Bluetooth
@@ -34,12 +35,12 @@
  * @code{.c}
  * pbl_bt_init(); // once, at boot
  *
- * struct pbl_bt_config *config = kernel_zalloc_check(sizeof(*config));
+ * struct pbl_bt_config *config = pbl_zalloc_check(sizeof(*config));
  * dis_get_info(&config->dis_info);
  * // Bondings registered before starting are restored by the host.
  * bt_persistent_storage_register_existing_ble_bondings();
  * bool running = pbl_bt_start(config);
- * kernel_free(config);
+ * pbl_free(config);
  *
  * // ...
  *

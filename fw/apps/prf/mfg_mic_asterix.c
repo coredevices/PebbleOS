@@ -9,13 +9,13 @@
 #include <pbl/kernel/sem.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <board/board.h>
 #include <console/dbgserial.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <nrfx_i2s.h>
 #include <nrfx_pdm.h>
 #include <process_management/pebble_process_md.h>
@@ -95,25 +95,18 @@ static void da7212_register_write(uint8_t reg, uint8_t value) {
   uint8_t data[2] = {reg, value};
   bool ret;
 
-  pbl_i2c_use(I2C_DA7212);
   PBL_LOG_DBG("Writing DA7212 register 0x%02x with value 0x%02x", reg, value);
 
-  ret = pbl_i2c_write_block(I2C_DA7212, 2, data) == 0;
+  ret = pbl_i2c_write(I2C_DA7212, data, 2) == 0;
   PBL_ASSERTN(ret);
-
-  pbl_i2c_release(I2C_DA7212);
 }
 
 static uint8_t da7212_register_read(uint8_t reg) {
   uint8_t data;
   bool ret;
 
-  pbl_i2c_use(I2C_DA7212);
-
-  ret = pbl_i2c_read_register(I2C_DA7212, reg, &data) == 0;
+  ret = pbl_i2c_reg_read_byte(I2C_DA7212, reg, &data) == 0;
   PBL_ASSERTN(ret);
-
-  pbl_i2c_release(I2C_DA7212);
 
   return data;
 }
@@ -238,7 +231,7 @@ static void prv_mic_capture(void) {
   err = nrfx_pdm_init(&s_pdm, &s_pdm_cfg, prv_pdm_evt_handler);
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 
   err = nrfx_pdm_start(&s_pdm);
   PBL_ASSERTN(err == NRFX_SUCCESS);
@@ -247,7 +240,7 @@ static void prv_mic_capture(void) {
   for (unsigned int i = 0U; i < RECORDING_MS / CAPTURE_MS; i++) {
     pbl_sem_take(&s_data_ready, PBL_FOREVER);
 
-    flash_write_bytes((uint8_t *)s_buf_rd, flash_addr, BLOCK_SIZE);
+    pbl_flash_write(FLASH, flash_addr, (uint8_t *)s_buf_rd, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
   }
 
@@ -262,7 +255,7 @@ static void prv_mic_capture(void) {
   flash_addr = FLASH_START;
   dbgserial_putstr("S");
   for (unsigned int i = 0U; i < RECORDING_MS / CAPTURE_MS; i++) {
-    flash_read_bytes((uint8_t *)s_buf_rd, flash_addr, BLOCK_SIZE);
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf_rd, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
 
     for (unsigned int j = 0U; j < N_SAMPLES; j++) {
@@ -291,7 +284,7 @@ static void prv_playback(void) {
   PBL_ASSERTN(err == NRFX_SUCCESS);
 
   flash_addr = FLASH_START;
-  flash_read_bytes((uint8_t *)s_buf[0], flash_addr, BLOCK_SIZE);
+  pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf[0], BLOCK_SIZE);
   flash_addr += BLOCK_SIZE;
 
   s_buf_idx = 1U;
@@ -305,7 +298,7 @@ static void prv_playback(void) {
   prv_codec_setup();
 
   for (unsigned int i = 0U; i < (RECORDING_MS / CAPTURE_MS) - 1U; i++) {
-    flash_read_bytes((uint8_t *)s_buf_wr, flash_addr, BLOCK_SIZE);
+    pbl_flash_read(FLASH, flash_addr, (uint8_t *)s_buf_wr, BLOCK_SIZE);
     flash_addr += BLOCK_SIZE;
 
     pbl_sem_take(&s_need_data, PBL_FOREVER);
@@ -320,7 +313,7 @@ static void prv_playback(void) {
 
   pbl_sem_deinit(&s_need_data);
 
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 }
 #else
 static void prv_playback(void) {

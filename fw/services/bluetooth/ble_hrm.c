@@ -5,6 +5,7 @@
 #include <pbl/bluetooth/hrm_service.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
@@ -19,7 +20,6 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/ble_hrm/ble_hrm_reminder_popup.h>
 #include <popups/ble_hrm/ble_hrm_sharing_popup.h>
 
@@ -62,7 +62,7 @@ bool ble_hrm_is_supported_and_enabled(void) {
 static void prv_reset_subscriptions(void);
 
 static bool prv_free_permission_for_each_cb(ListNode *node, void *unused) {
-  kernel_free(node);
+  pbl_free(node);
   return true; // continue iteration
 }
 
@@ -87,7 +87,7 @@ static void prv_upsert_permission(const struct pbl_bt_device_internal *device,
                                   HrmSharingPermission permission) {
   BLEHRMSharingPermission *p = prv_find_permission_by_device(device);
   if (!p) {
-    p = kernel_zalloc_check(sizeof(*p));
+    p = pbl_zalloc_check(sizeof(*p));
     p->device = *device;
     s_permissions_head =
         (BLEHRMSharingPermission *)list_prepend((ListNode *)s_permissions_head, (ListNode *)p);
@@ -174,7 +174,7 @@ static void prv_ble_hrm_handle_hrm_data(PebbleEvent *e, void *context) {
   }
   const struct pbl_bt_hrm_service_measurement measurement = {
     .bpm = hrm_event->bpm.bpm,
-    .is_on_wrist = (hrm_event->bpm.quality >= HRMQuality_Worst),
+    .is_on_wrist = !hrm_event->bpm.off_wrist,
   };
 
   struct pbl_bt_device_internal sharing_to_devices[4];
@@ -217,7 +217,7 @@ static void prv_push_sharing_request_window_kernel_main_cb(void *ctx) {
 
 static void prv_request_sharing_permission(GAPLEConnection *const connection) {
   PBL_LOG_INFO("Requesting BLE HRM sharing permission");
-  BLEHRMSharingRequest *const sharing_request = kernel_zalloc_check(sizeof(*sharing_request));
+  BLEHRMSharingRequest *const sharing_request = pbl_zalloc_check(sizeof(*sharing_request));
   sharing_request->connection = connection;
   launcher_task_add_callback(prv_push_sharing_request_window_kernel_main_cb, sharing_request);
 }
@@ -398,7 +398,7 @@ void ble_hrm_handle_sharing_request_response(bool is_granted,
   }
   bt_unlock();
 
-  kernel_free(sharing_request);
+  pbl_free(sharing_request);
 }
 
 void pbl_bt_cb_hrm_service_update_subscription(const struct pbl_bt_device_internal *device,

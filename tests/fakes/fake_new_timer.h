@@ -7,8 +7,9 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/list.h>
 
@@ -95,7 +96,7 @@ static int prv_timer_expire_compare_func(void *a, void *b) {
 }
 
 static int stub_new_timer_create(void) {
-  StubTimer *timer = (StubTimer *)kernel_malloc(sizeof(StubTimer));
+  StubTimer *timer = (StubTimer *)pbl_malloc(sizeof(StubTimer));
   static int s_next_timer_id = 1;
   *timer = (StubTimer){
     .id = s_next_timer_id++,
@@ -160,7 +161,7 @@ void stub_new_timer_delete(TimerID timer_id) {
 
   if (!timer->executing) {
     list_remove(&timer->list_node, &s_idle_timers /* &head */, nullptr /* &tail */);
-    kernel_free(timer);
+    pbl_free(timer);
   } else {
     timer->defer_delete = true;
   }
@@ -220,7 +221,7 @@ bool stub_new_timer_fire(TimerID timer_id) {
   if (timer->defer_delete) {
     // Timer was deleted from the callback, clean it up now:
     list_remove(&timer->list_node, &s_idle_timers /* &head */, nullptr /* &tail */);
-    kernel_free(timer);
+    pbl_free(timer);
     return true;
   }
 
@@ -236,7 +237,7 @@ void stub_new_timer_cleanup(void) {
   while (node) {
     StubTimer *next = (StubTimer *)list_get_next(&node->list_node);
     list_remove(&node->list_node, &s_running_timers, nullptr);
-    kernel_free(node);
+    pbl_free(node);
     node = next;
   }
   PBL_ASSERTN(s_running_timers == nullptr);
@@ -245,7 +246,7 @@ void stub_new_timer_cleanup(void) {
   while (node) {
     StubTimer *next = (StubTimer *)list_get_next(&node->list_node);
     list_remove(&node->list_node, &s_idle_timers, nullptr);
-    kernel_free(node);
+    pbl_free(node);
     node = next;
   }
   PBL_ASSERTN(s_idle_timers == nullptr);

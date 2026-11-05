@@ -157,7 +157,7 @@ typedef struct PBL_PACKED ActivitySpO2Settings {
   bool enabled;
   /** @ref HRMonitoringInterval value. */
   uint8_t measurement_interval;
-  /** SpO2 sampling during detected activities and workouts. */
+  /** Unused; kept so the stored and synced layout doesn't change. */
   bool activity_tracking_enabled;
 } ActivitySpO2Settings;
 
@@ -254,8 +254,8 @@ typedef enum {
 
   /** Most recent heart rate reading, in beats per minute. */
   ActivityMetricHeartRateRawBPM,
-  /** Quality of the most recent heart rate reading, an @c HRMQuality value. */
-  ActivityMetricHeartRateRawQuality,
+  /** Algorithm confidence of the most recent heart rate reading, 0-100. */
+  ActivityMetricHeartRateRawConfidence,
   /** UTC time of the most recent heart rate reading. */
   ActivityMetricHeartRateRawUpdatedTimeUTC,
   /** Most recent stable heart rate (median over a minute), in beats per minute. */
@@ -778,16 +778,6 @@ bool activity_prefs_heart_rate_is_enabled(void);
  */
 bool activity_prefs_spo2_is_enabled(void);
 
-/**
- * @brief Check whether SpO2 sampling during detected activities is enabled.
- *
- * Opt-in, only meaningful with heart rate tracking during activities. Allows the SpO2 path even
- * when background SpO2 monitoring is off. Declared regardless of @c CONFIG_HRM.
- *
- * @return true if enabled.
- */
-bool activity_prefs_spo2_activity_tracking_is_enabled(void);
-
 #ifdef CONFIG_HRM
 /**
  * @brief Get the background heart rate measurement interval.
@@ -825,13 +815,6 @@ void activity_prefs_set_hrm_activity_tracking_enabled(bool enabled);
  * @param enabled If true, enable it.
  */
 void activity_prefs_set_spo2_enabled(bool enabled);
-
-/**
- * @brief Enable or disable SpO2 sampling during detected activities.
- *
- * @param enabled If true, enable it.
- */
-void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled);
 
 /**
  * @brief Get the background SpO2 measurement interval.

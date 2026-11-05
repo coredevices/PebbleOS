@@ -49,7 +49,9 @@
 
 #define _BASE_YEAR        70L
 #define _LEAP_YEAR_ADJUST 17L // leap years between 1900 and 1970
-#define _MAX_YEAR         138L
+// Years since 1900, minus one, up to which tm_year is accepted: 2039 for a 32-bit time_t
+// (overflow checks catch the rest), otherwise 2099, the last year the leap rule below holds.
+#define _MAX_YEAR (sizeof(time_t) > 4 ? 198L : 138L)
 
 time_t pbl_mktime(struct pbl_tm *tb) {
   const int16_t _days[] = {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364};

@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/services/hrm/hrm_manager.h>
 
@@ -40,7 +41,7 @@
  * ProtobufLogRef log = protobuf_log_create(&config, NULL, 0);
  *
  * uint32_t values[] = { bpm, quality };
- * protobuf_log_session_add_measurements(log, rtc_get_time(), ARRAY_LENGTH(values), values);
+ * protobuf_log_session_add_measurements(log, pbl_realtime(), ARRAY_LENGTH(values), values);
  *
  * protobuf_log_session_delete(log);
  * @endcode

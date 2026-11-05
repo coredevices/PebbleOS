@@ -121,6 +121,20 @@ bool alerts_preferences_get_notification_backlight(void);
  */
 void alerts_preferences_set_notification_backlight(bool enable);
 
+/**
+ * @brief Get whether notifications silenced on the phone are delivered quietly.
+ *
+ * @return true if enabled, false if they alert as usual (default).
+ */
+bool alerts_preferences_get_notification_respect_phone_silence(void);
+
+/**
+ * @brief Set whether notifications silenced on the phone are delivered quietly.
+ *
+ * @param enable true to enable.
+ */
+void alerts_preferences_set_notification_respect_phone_silence(bool enable);
+
 /** @brief Age range within which notifications from the same sender are grouped. */
 typedef enum {
   /** Grouping disabled (default). */

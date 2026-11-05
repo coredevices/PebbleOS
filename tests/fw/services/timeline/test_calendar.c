@@ -20,7 +20,7 @@
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fake_spi_flash.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
@@ -170,7 +170,7 @@ static TimelineItem item6 = {
 
 void test_calendar__initialize(void) {
   s_in_calendar_event = false;
-  rtc_set_time(0);
+  pbl_realtime_set(0);
   fake_event_init();
   pin_db_init();
 }
@@ -178,7 +178,7 @@ void test_calendar__initialize(void) {
 void test_calendar__cleanup(void) {
   timeline_event_deinit();
   stub_new_timer_cleanup();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Tests
@@ -231,7 +231,7 @@ void test_calendar_handle__future_event_added_and_removed(void) {
 void test_calendar__init_with_ongoing_event(void) {
   cl_assert(timeline_add(&item1));
   timeline_event_handle_blobdb_event();
-  rtc_set_time(15 * 60);
+  pbl_realtime_set(15 * 60);
 
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
@@ -243,7 +243,7 @@ void test_calendar__init_with_ongoing_event(void) {
 }
 
 void test_calendar_handle__ongoing_event_added_and_removed(void) {
-  rtc_set_time(15 * 60);
+  pbl_realtime_set(15 * 60);
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
@@ -268,7 +268,7 @@ void test_calendar_handle__ongoing_event_added_and_removed(void) {
 void test_calendar__init_with_past_event(void) {
   cl_assert(timeline_add(&item1));
   timeline_event_handle_blobdb_event();
-  rtc_set_time(30 * 60);
+  pbl_realtime_set(30 * 60);
 
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
@@ -279,7 +279,7 @@ void test_calendar__init_with_past_event(void) {
 }
 
 void test_calendar_handle__past_event_added_and_removed(void) {
-  rtc_set_time(30 * 60);
+  pbl_realtime_set(30 * 60);
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
@@ -318,35 +318,35 @@ void test_calendar__timer_test(void) {
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
 
-  rtc_set_time(10 * 60);
+  pbl_realtime_set(10 * 60);
   cl_assert(stub_new_timer_fire(timer_id));
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(prv_get_calendar_ongoing());
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
 
-  rtc_set_time(20 * 60);
+  pbl_realtime_set(20 * 60);
   cl_assert(stub_new_timer_fire(timer_id));
   cl_assert_equal_i(fake_event_get_count(), 3);
   cl_assert(prv_get_calendar_ongoing());
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(15 * 60, stub_new_timer_timeout(timer_id) / 1000);
 
-  rtc_set_time(35 * 60);
+  pbl_realtime_set(35 * 60);
   cl_assert(stub_new_timer_fire(timer_id));
   cl_assert_equal_i(fake_event_get_count(), 4);
   cl_assert(!prv_get_calendar_ongoing());
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(65 * 60, stub_new_timer_timeout(timer_id) / 1000);
 
-  rtc_set_time(100 * 60);
+  pbl_realtime_set(100 * 60);
   cl_assert(stub_new_timer_fire(timer_id));
   cl_assert_equal_i(fake_event_get_count(), 5);
   cl_assert(prv_get_calendar_ongoing());
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
 
-  rtc_set_time(110 * 60);
+  pbl_realtime_set(110 * 60);
   cl_assert(stub_new_timer_fire(timer_id));
   cl_assert_equal_i(fake_event_get_count(), 6);
   cl_assert(!prv_get_calendar_ongoing());

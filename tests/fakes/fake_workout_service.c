@@ -15,19 +15,10 @@ static int32_t s_current_hr_zone;
 static int32_t s_active_kcal;
 static int32_t s_avg_bpm;
 static int32_t s_hr_samples;
-static int32_t s_spo2;
-static int32_t s_spo2_min;
-static bool s_spo2_measuring;
 static int32_t s_hr_zone_time_s[HRZoneCount];
 
 void workout_service_set_hr_zone_time(const int32_t *hr_zone_time_s) {
   memcpy(s_hr_zone_time_s, hr_zone_time_s, sizeof(s_hr_zone_time_s));
-}
-
-void workout_service_set_spo2(int32_t last_pct, int32_t min_pct, bool measuring) {
-  s_spo2 = last_pct;
-  s_spo2_min = min_pct;
-  s_spo2_measuring = measuring;
 }
 
 void workout_service_set_avg_hr(int32_t bpm) {
@@ -108,9 +99,6 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
     .hr_samples = s_hr_samples,
     .avg_bpm = s_avg_bpm,
     .active_kcal = s_active_kcal,
-    .spo2_pct = s_spo2,
-    .spo2_min_pct = s_spo2_min,
-    .spo2_measuring = s_spo2_measuring,
   };
   memcpy(metrics_out->hr_zone_time_s, s_hr_zone_time_s, sizeof(s_hr_zone_time_s));
   return true;

@@ -8,11 +8,11 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #define SPO2_TEST_PERCENT_LEN 12
@@ -33,27 +33,8 @@ typedef struct {
   char detail_string[SPO2_TEST_DETAIL_LEN];
 } AppData;
 
-static const char *prv_get_quality_string(HRMQuality quality) {
-  switch (quality) {
-    case HRMQuality_OffWrist:
-      return "Off Wrist";
-    case HRMQuality_Worst:
-      return "Worst";
-    case HRMQuality_Poor:
-      return "Poor";
-    case HRMQuality_Acceptable:
-      return "Acceptable";
-    case HRMQuality_Good:
-      return "Good";
-    case HRMQuality_Excellent:
-      return "Excellent";
-    default:
-      return "None";
-  }
-}
-
 static void prv_update_display(AppData *app_data, const HRMSpO2Data *spo2) {
-  const bool off_wrist = spo2->quality == HRMQuality_OffWrist;
+  const bool off_wrist = spo2->off_wrist;
   text_layer_set_text(&app_data->title_layer, off_wrist       ? "Off wrist"
                                               : spo2->invalid ? "Rejected estimate"
                                                               : "SpO2 Test");
@@ -66,15 +47,14 @@ static void prv_update_display(AppData *app_data, const HRMSpO2Data *spo2) {
   }
 
   snprintf(app_data->detail_string, sizeof(app_data->detail_string),
-           "Quality: %s\n"
            "Confidence: %" PRIu8
            "\n"
            "Valid lvl: %" PRIu8
            "\n"
            "Invalid: %s\n"
            "Samples: %" PRIu32,
-           prv_get_quality_string(spo2->quality), spo2->confidence, spo2->valid_level,
-           spo2->invalid ? "yes" : "no", app_data->sample_count);
+           spo2->confidence, spo2->valid_level, spo2->invalid ? "yes" : "no",
+           app_data->sample_count);
 
   text_layer_set_text(&app_data->percent_layer, app_data->percent_string);
   text_layer_set_text(&app_data->detail_layer, app_data->detail_string);
@@ -154,8 +134,7 @@ static void prv_init(void) {
 
   if (!sys_hrm_manager_is_hrm_present()) {
     text_layer_set_text(detail_tl, "No HRM present");
-  } else if (!activity_prefs_heart_rate_is_enabled() && !activity_prefs_spo2_is_enabled() &&
-             !activity_prefs_spo2_activity_tracking_is_enabled()) {
+  } else if (!activity_prefs_heart_rate_is_enabled() && !activity_prefs_spo2_is_enabled()) {
     // A foreground app's subscription bypasses the per-feature pref mask, but the HRM manager
     // still won't power the sensor on at all with every monitoring pref off.
     text_layer_set_text(detail_tl, "Enable heart rate or\nSpO2 monitoring");

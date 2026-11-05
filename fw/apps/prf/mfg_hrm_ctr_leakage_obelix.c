@@ -9,7 +9,7 @@
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/util/bitops.h>
@@ -18,6 +18,7 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
@@ -25,7 +26,6 @@
 #include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
 #include <gh_demo.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
 #include <process_management/process_manager.h>
@@ -76,7 +76,7 @@ typedef struct {
   bool leak_received;
   bool ctr_passed;
   bool leak_passed;
-  RtcTicks result_start_time;
+  uint64_t result_start_time;
 } AppData;
 
 static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
@@ -88,15 +88,15 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
         snprintf(app_data->status_string, STATUS_STRING_LEN, "HR Sampling... %d",
                  HRM->state->is_wear);
         memset(app_data->ctr_string, 0, CTR_STRING_LEN);
-        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d Q:%d", e->hrm.bpm.bpm,
-                 e->hrm.bpm.quality);
+        snprintf(app_data->ctr_string, CTR_STRING_LEN, "HR:%d C:%d", e->hrm.bpm.bpm,
+                 e->hrm.bpm.confidence);
         PBL_LOG_DBG("%s", app_data->ctr_string);
       } else if (e->hrm.event_type == HRMEvent_SpO2) {
         snprintf(app_data->status_string, STATUS_STRING_LEN, "SPO2 Sampling... %d",
                  HRM->state->is_wear);
         memset(app_data->leak_string, 0, LEAKAGE_STRING_LEN);
-        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d Q:%d", e->hrm.spo2.percent,
-                 e->hrm.spo2.quality);
+        snprintf(app_data->leak_string, CTR_STRING_LEN, "SPO2:%d C:%d", e->hrm.spo2.percent,
+                 e->hrm.spo2.confidence);
         PBL_LOG_DBG("%s", app_data->leak_string);
       }
     } else {
@@ -145,7 +145,7 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
         bool passed = app_data->ctr_passed && app_data->leak_passed;
         mfg_test_result_report(MfgTestId_HrmCtrLeakage, passed, 0);
         snprintf(app_data->status_string, STATUS_STRING_LEN, passed ? "PASS" : "FAIL");
-        app_data->result_start_time = rtc_get_ticks();
+        app_data->result_start_time = pbl_uptime_ticks();
       }
     }
     layer_mark_dirty(&app_data->window.layer);
@@ -156,7 +156,7 @@ static void prv_result_timer_callback(void *cb_data) {
   AppData *data = app_state_get_user_data();
 
   if (data->result_start_time != 0) {
-    uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->result_start_time);
+    uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->result_start_time);
     if (elapsed >= RESULT_DISPLAY_MS) {
       app_window_stack_pop(false);
       return;
@@ -223,7 +223,7 @@ static void prv_config_provider(void *data) {
 }
 
 static void prv_handle_init(void) {
-  AppData *data = task_zalloc(sizeof(*data));
+  AppData *data = app_zalloc(sizeof(*data));
   app_state_set_user_data(data);
 
   Window *window = &data->window;

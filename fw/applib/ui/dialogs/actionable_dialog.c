@@ -28,7 +28,9 @@ static void prv_actionable_dialog_load(Window *window) {
   const uint16_t left_margin_px = PBL_IF_RECT_ELSE(5, 0);
   const uint16_t content_and_action_bar_horizontal_spacing = PBL_IF_RECT_ELSE(5, 7);
   const uint16_t right_margin_px = ACTION_BAR_WIDTH + content_and_action_bar_horizontal_spacing;
-  const GFont dialog_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+  const GFont dialog_text_font = actionable_dialog->text_font
+                                     ? actionable_dialog->text_font
+                                     : fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
   const uint16_t icon_text_spacing_px = 4;
 
@@ -79,6 +81,7 @@ static void prv_actionable_dialog_load(Window *window) {
   text_layer_init_with_parameters(text_layer, &GRect(x, y, w, h), dialog->buffer, dialog_text_font,
                                   dialog->text_color, GColorClear, text_alignment,
                                   GTextOverflowModeWordWrap);
+  dialog_apply_text_color(dialog, text_layer);
   if (text_attributes) {
     text_layer->should_cache_layout = true;
     text_layer->layout_cache = text_attributes;
@@ -219,6 +222,10 @@ void actionable_dialog_set_action_bar_type(ActionableDialog *actionable_dialog,
 void actionable_dialog_set_click_config_provider(ActionableDialog *actionable_dialog,
                                                  ClickConfigProvider click_config_provider) {
   actionable_dialog->config_provider = click_config_provider;
+}
+
+void actionable_dialog_set_text_font(ActionableDialog *actionable_dialog, GFont font) {
+  actionable_dialog->text_font = font;
 }
 
 void actionable_dialog_set_user_data(ActionableDialog *actionable_dialog, void *user_data) {

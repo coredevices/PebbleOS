@@ -42,6 +42,10 @@ void dialog_unload(Dialog *dialog);
 //! @param status_layer_frame The frame of the status layer
 void dialog_add_status_bar_layer(Dialog *dialog, const GRect *status_layer_frame);
 
+// Applies the dialog's text color to a text layer of the dialog, following the theme if the
+// dialog does.
+void dialog_apply_text_color(Dialog *dialog, TextLayer *text_layer);
+
 //! Create the icon for the dialog.
 //! @param dialog Pointer to a \ref Dialog from which to grab the icon id
 //! @return the \ref KinoReel for the dialog's icon

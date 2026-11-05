@@ -3,121 +3,68 @@
 
 #include "fake_rtc.h"
 
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
-#include <pbl/services/time.h>
+static uint64_t s_tick_count;
+static uint64_t s_tick_auto_increment;
 
-static RtcTicks s_rtc_tick_count;
-static RtcTicks s_rtc_auto_increment = 0;
+static time_t s_time_base;
+static uint16_t s_time_ms_base;
+static TimezoneInfo s_tzinfo;
 
-// Defined identically to the static variables in rtc.c
-static time_t s_time_base = 0;
-static int16_t s_time_ms_base = 0;
-static int64_t s_time_tick_base = 0;
-static TimezoneInfo s_tzinfo = {};
-
-/*
-// TODO: Unused right now
-void rtc_init(void);
-void rtc_init_timers(void);
-void rtc_set_time_tm(struct pbl_tm* time_tm);
-
-
-void rtc_next_tick_alarm_init(void);
-void rtc_set_next_tick_alarm(RtcTicks tick);
-void rtc_disable_next_tick_alarm(void);
-bool rtc_is_tick_alarm_initialized(void);
-
-bool rtc_is_lse_started(void);
-
-//! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
-const char* time_t_to_string(char* buffer, time_t t);
-*/
-
-// Stubs
+// Kernel wall clock and uptime
 ////////////////////////////////////
-//! @param buffer Buffer used to write the string into. Must be at least TIME_STRING_BUFFER_SIZE
-const char *rtc_get_time_string(char *buffer) {
-  return nullptr;
-}
 
-void rtc_get_time_tm(struct pbl_tm *time_tm) {
-  if (time_tm) {
-    time_t temp = rtc_get_time();
-    pbl_gmtime_r(&temp, time_tm);
-  }
-}
-
-void rtc_set_time(time_t time) {
-  s_time_base = time;
-}
-
-void rtc_set_timezone(TimezoneInfo *tzinfo) {
-  s_tzinfo = *tzinfo;
-}
-
-bool rtc_is_timezone_set(void) {
-  // The actual driver checks for the first 4 chars as a uint32_t being 0
-  return memcmp(s_tzinfo.tm_zone, "\0\0\0\0", 4) != 0;
-}
-
-void rtc_get_timezone(TimezoneInfo *tzinfo) {
-  *tzinfo = s_tzinfo;
-}
-
-void rtc_timezone_clear(void) {
-  memset(&s_tzinfo, 0, sizeof(s_tzinfo));
-}
-
-bool rtc_sanitize_struct_tm(struct pbl_tm *t) {
-  return false;
-}
-
-bool rtc_sanitize_time_t(time_t *t) {
-  return rtc_sanitize_struct_tm(nullptr);
-}
-
-uint16_t rtc_get_timezone_id(void) {
-  if (rtc_is_timezone_set()) {
-    return s_tzinfo.timezone_id;
-  }
-  return -1;
-}
-
-//! @return millisecond port of the current second.
-void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  *out_ms = s_time_ms_base;
-  *out_seconds = s_time_base;
-}
-
-// @return a unix timestamp from the host machine
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return s_time_base;
 }
 
-time_t sys_get_time(void) {
-  return rtc_get_time();
+uint64_t pbl_realtime_ms(void) {
+  return (uint64_t)s_time_base * 1000U + s_time_ms_base;
 }
 
-//! @return Absolute number of ticks since system start.
-RtcTicks rtc_get_ticks(void) {
-  RtcTicks result = s_rtc_tick_count;
-  s_rtc_tick_count += s_rtc_auto_increment;
+void pbl_realtime_set(time_t t) {
+  s_time_base = t;
+}
+
+uint64_t pbl_uptime_ticks(void) {
+  uint64_t result = s_tick_count;
+  s_tick_count += s_tick_auto_increment;
   return result;
 }
 
-RtcTicks sys_get_ticks(void) {
-  return rtc_get_ticks();
+time_t sys_get_time(void) {
+  return pbl_realtime();
 }
 
-//
-// Fake Functions!
-//
-void fake_rtc_init(RtcTicks initial_ticks, time_t initial_time) {
-  s_rtc_tick_count = initial_ticks;
-  s_time_tick_base = initial_ticks;
+uint64_t sys_get_ticks(void) {
+  return pbl_uptime_ticks();
+}
+
+// Timezone storage
+////////////////////////////////////
+
+void tz_storage_save(const TimezoneInfo *tz_info) {
+  s_tzinfo = *tz_info;
+}
+
+void tz_storage_load(TimezoneInfo *tz_info) {
+  *tz_info = s_tzinfo;
+}
+
+bool tz_storage_is_set(void) {
+  return memcmp(s_tzinfo.tm_zone, "\0\0\0\0", 4) != 0;
+}
+
+void tz_storage_clear(void) {
+  memset(&s_tzinfo, 0, sizeof(s_tzinfo));
+}
+
+// Fake functions
+////////////////////////////////////
+
+void fake_rtc_init(uint64_t initial_ticks, time_t initial_time) {
+  s_tick_count = initial_ticks;
   s_time_base = initial_time;
   s_time_ms_base = 0;
 }
@@ -134,14 +81,14 @@ void fake_rtc_increment_time_ms(uint32_t inc) {
   s_time_ms_base = new_ms % 1000;
 }
 
-void fake_rtc_set_ticks(RtcTicks new_ticks) {
-  s_rtc_tick_count = new_ticks;
+void fake_rtc_set_ticks(uint64_t new_ticks) {
+  s_tick_count = new_ticks;
 }
 
-void fake_rtc_increment_ticks(RtcTicks tick_increment) {
-  s_rtc_tick_count += tick_increment;
+void fake_rtc_increment_ticks(uint64_t tick_increment) {
+  s_tick_count += tick_increment;
 }
 
-void fake_rtc_auto_increment_ticks(RtcTicks auto_increment) {
-  s_rtc_auto_increment = auto_increment;
+void fake_rtc_auto_increment_ticks(uint64_t auto_increment) {
+  s_tick_auto_increment = auto_increment;
 }

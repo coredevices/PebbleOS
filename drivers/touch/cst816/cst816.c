@@ -1,484 +1,525 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/gpio.h>
-#include <pbl/drivers/i2c.h>
-#include <pbl/drivers/intc.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/drivers/touch/touch_sensor.h>
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/drivers/touch/cst816.h>
 #include <pbl/input/input.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
-#include <pbl/kernel/types.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
-#include <board/board.h>
 #include <cst816_fw.h>
-#include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(driver_touch_cst816, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
-#define CST816_RESET_CYCLE_TIME     10  /* ms */
-#define CST816_POR_DELAY_TIME       110 /* ms */
-#define CST816_REG_WR_DELAY_TIME    2   /* ms */
-#define CST816_FW_CHECKSUM_CAL_TIME 500 /* ms */
+#define CST816_RESET_CYCLE_TIME_MS     10
+#define CST816_POR_DELAY_TIME_MS       110
+#define CST816_REG_WR_DELAY_TIME_MS    2
+#define CST816_FW_CHECKSUM_CAL_TIME_MS 500
 
-#define CST816_POWER_MODE_REG       0xE5
-#define CST816_POWER_MODE_SLEEP     0x03
-#define CST816_CHIP_ID_REG          0xA7
-#define CST816_FW_VERSION_REG       0xA9
+#define CST816_GESTURE_ID_REG       0x01
+#define CST816_GESTURE_CLICK        0x05
+#define CST816_GESTURE_DOUBLE_CLICK 0x0B
+#define CST816_GESTURE_PALM         0xAA
 #define CST816_TOUCH_DATA_REG       0x02
 #define CST816_TOUCH_DATA_SIZE      5
 #define CST816_FINGER_NUM_MASK      PBL_GENMASK(3, 0)
 #define CST816_POS_H_MASK           PBL_GENMASK(3, 0)
-#define CST816_GESTURE_ID           0x01
-#define CST816_GESTURE_NONE         0x00
-#define CST816_GESTURE_RIGHT        0x01
-#define CST816_GESTURE_LEFT         0x02
-#define CST816_GESTURE_DOWN         0x03
-#define CST816_GESTURE_UP           0x04
-#define CST816_GESTURE_CLICK        0x05
-#define CST816_GESTURE_DOUBLE_CLICK 0x0B
-#define CST816_GESTURE_LONG_PRESS   0x0C
-#define CST816_GESTURE_PALM         0xAA
+#define CST816_CHIP_ID_REG          0xA7
+#define CST816_FW_VERSION_REG       0xA9
+#define CST816_POWER_MODE_REG       0xE5
+#define CST816_POWER_MODE_SLEEP     0x03
 
-#define CST816_BOOT_MODE_REG     0xA001
-#define CST816_BOOT_MODE_CMD     0xAB
-#define CST816_BOOT_FLAG_REG     0xA003
-#define CST816_BOOT_FLAG_VAL     0xC1
-#define CST816_FW_START_ADDR_REG 0xA014
-#define CST816_FW_PAGE_REG       0xA018
-#define CST816_FW_PAGE_SIZE      512
-#define CST816_FW_PAGE_DONE      0xA004
-#define CST816_FW_PAGE_STATE     0xA005
-#define CST816_BOOT_EXIT_REG     0xA006
-#define CST816_BOOT_EXIT_VAL     0xEE
-#define CST816_FW_PAGE_READY     0x55
-#define CST816_FW_WR_TIME        100 /* ms */
-#define CST816_FW_CHECKSUM_REG   0xA008
+#define CST816_BOOT_MODE_REG         0xA001
+#define CST816_BOOT_MODE_CMD         0xAB
+#define CST816_BOOT_FLAG_REG         0xA003
+#define CST816_BOOT_FLAG_VAL         0xC1
+#define CST816_BOOT_MODE_RETRIES     10
+#define CST816_FW_PAGE_DONE_REG      0xA004
+#define CST816_FW_PAGE_DONE_CMD      0xEE
+#define CST816_FW_PAGE_STATE_REG     0xA005
+#define CST816_FW_PAGE_READY         0x55
+#define CST816_FW_PAGE_READY_RETRIES 50
+#define CST816_BOOT_EXIT_REG         0xA006
+#define CST816_BOOT_EXIT_CMD         0xEE
+#define CST816_FW_CHECKSUM_REG       0xA008
+#define CST816_FW_START_ADDR_REG     0xA014
+#define CST816_FW_PAGE_REG           0xA018
+#define CST816_FW_PAGE_SIZE          512
+#define CST816_FW_WR_TIME_MS         100
+
+#define CST816_FW_HEADER_SIZE    6
 #define CST816_FW_VER_INFO_INDEX (-11)
 
-/* Workaround: the CST816 occasionally wedges and stops asserting its INT line.
- * If no touch activity is seen between two watchdog checks, hard-reset it. */
-#define CST816_WATCHDOG_PERIOD_MIN 30
-
-/* The chip stays awake for 2s after a wake; an interrupt seen >=2s after the
- * previous one therefore marks a fresh sleep->awake transition. */
+/* The chip stays awake for 2 s after a wake, so an interrupt at least that long after the previous
+ * one is a sleep to awake transition. */
 #define CST816_WAKE_SPACING_MS 2000
 
-static struct pbl_irq_spec s_int_irq;
-static bool s_callback_scheduled = false;
-static bool s_palm_down = false;
-static bool s_palm_click_pending = false;
-static bool s_enabled = false;
-static bool s_reset_scheduled = false;
-static bool s_activity_since_check = false;
-static RtcTicks s_last_irq_ticks = 0;
-static PBL_MUTEX_DEFINE(s_i2c_lock);
-
-static void prv_int_handler(void *arg);
-
-// Not connected until the line is requested
-static void prv_int_set_enabled(bool enabled) {
-  if (!pbl_irq_spec_is_connected(&s_int_irq)) {
-    return;
-  }
-
-  if (enabled) {
-    (void)pbl_intc_enable(&s_int_irq);
-  } else {
-    (void)pbl_intc_disable(&s_int_irq);
-  }
-}
-static void cst816_hw_reset(void);
-static void prv_watchdog_cb(void *data);
-
-static RegularTimerInfo s_watchdog_timer = {
-  .cb = prv_watchdog_cb,
-};
-
-static bool prv_read_data(uint16_t register_address, uint8_t *result, uint16_t size,
-                          bool is_work_mode) {
-  pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  const struct pbl_i2c_dev *port = CST816->i2c;
-  uint8_t addr_size = 1;
-  if (!is_work_mode) {
-    port = CST816->i2c_boot;
-    addr_size = 2;
-  }
-  pbl_i2c_use(port);
-  uint8_t regad[2] = {register_address >> 8, register_address & 0xFF};
-  bool rv = pbl_i2c_write_block(port, addr_size, is_work_mode ? regad + 1 : regad) == 0;
-  if (rv) {
-    rv = pbl_i2c_read_block(port, size, result) == 0;
-  }
-  pbl_i2c_release(port);
-  pbl_mutex_unlock(&s_i2c_lock);
-  return rv;
+static inline const struct pbl_cst816 *prv_from_touch(const struct pbl_touch *touch) {
+  return container_of(touch, const struct pbl_cst816, touch);
 }
 
-static bool prv_write_data(uint16_t register_address, const uint8_t *datum, uint16_t size,
-                           bool is_work_mode) {
-  pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  const struct pbl_i2c_dev *port = CST816->i2c;
-  uint8_t addr_size = 1;
-  if (!is_work_mode) {
-    port = CST816->i2c_boot;
-    addr_size = 2;
-  }
-  pbl_i2c_use(port);
-  uint8_t data[size + sizeof(register_address)];
-  data[0] = register_address >> 8;
-  data[1] = register_address & 0xFF;
-  memcpy(data + sizeof(register_address), datum, size);
-  bool rv = pbl_i2c_write_block(port, size + addr_size, is_work_mode ? data + 1 : data) == 0;
-  pbl_i2c_release(port);
-  pbl_mutex_unlock(&s_i2c_lock);
-  return rv;
-}
-
-static bool cst816_enter_bootmode(void) {
-  pbl_gpio_set(&CST816->reset, true);
-  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
-  pbl_gpio_set(&CST816->reset, false);
-  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
-
-  uint8_t retry_cnt = 10;
-  while (retry_cnt--) {
-    uint8_t cmd = CST816_BOOT_MODE_CMD;
-    bool rv = prv_write_data(CST816_BOOT_MODE_REG, &cmd, 1, 0);
-    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
-    rv &= prv_read_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
-    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
-
-    if (cmd == CST816_BOOT_FLAG_VAL) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static uint16_t cst816_read_checksum(void) {
-  uint8_t cmd = 0;
-  bool rv = prv_write_data(CST816_BOOT_FLAG_REG, &cmd, 1, 0);
-  pbl_sleep_ms(CST816_FW_CHECKSUM_CAL_TIME);
-
-  uint8_t data[2];
-  rv &= prv_read_data(CST816_FW_CHECKSUM_REG, data, 2, 0);
-  PBL_ASSERT(rv, "get checksum error");
-  uint16_t checksum = (((uint16_t)(data[1] & 0xFF)) << 8) | data[0];
-
-  return checksum;
-}
-
-static bool cst816_fw_update(void) {
-  if (sizeof(app_bin) > 10) {
-    uint16_t start_addr = (((uint16_t)(app_bin[1] & 0xFF)) << 8) | app_bin[0];
-    uint16_t length = (((uint16_t)(app_bin[3] & 0xFF)) << 8) | app_bin[2];
-    uint16_t checksum = (((uint16_t)(app_bin[5] & 0xFF)) << 8) | app_bin[4];
-    uint16_t fw_offset = 6;
-
-    while (length) {
-      PBL_LOG_DBG("fw start_addr:%d length:%d", start_addr, length);
-      uint8_t addr[2] = {start_addr & 0xff, start_addr >> 8};
-      bool rv = prv_write_data(CST816_FW_START_ADDR_REG, addr, 2, 0);
-      pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
-      if (!prv_write_data(CST816_FW_PAGE_REG, app_bin + fw_offset,
-                          length >= CST816_FW_PAGE_SIZE ? CST816_FW_PAGE_SIZE : length, 0)) {
-        PBL_LOG_ERR("cst816 update fw error by iic");
-        return false;
-      }
-      pbl_sleep_ms(CST816_REG_WR_DELAY_TIME);
-      uint8_t cmd = 0xEE;
-      rv = prv_write_data(CST816_FW_PAGE_DONE, &cmd, 1, 0);
-      pbl_sleep_ms(CST816_FW_WR_TIME);
-      for (int t = 0;; t++) {
-        if (t > 50) {
-          PBL_LOG_ERR("cst816 update fw error by writing timeout");
-          return false;
-        }
-        pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
-        uint8_t ready;
-        rv = prv_read_data(CST816_FW_PAGE_STATE, &ready, 1, 0);
-        if (rv && ready == CST816_FW_PAGE_READY) {
-          break;
-        }
-      }
-      fw_offset += CST816_FW_PAGE_SIZE;
-      start_addr += CST816_FW_PAGE_SIZE;
-      length -= length >= CST816_FW_PAGE_SIZE ? CST816_FW_PAGE_SIZE : length;
-    }
-
-    uint16_t checksum_read = cst816_read_checksum();
-    if (checksum_read == checksum) {
-      uint8_t boot_exit_cmd = CST816_BOOT_EXIT_VAL;
-      bool rv = prv_write_data(CST816_BOOT_EXIT_REG, &boot_exit_cmd, 1, 0);
-      if (!rv) {
-        PBL_LOG_ERR("exit boot failed");
-        return false;
-      }
-
-      PBL_LOG_INFO("Updated firmware to version 0x%02X (0x%04X)",
-                   app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX], checksum_read);
-
-      cst816_hw_reset();
-      return true;
-    }
-    PBL_LOG_ERR("cst816 update fw error by checksum:%x read:%x", checksum, checksum_read);
-  }
-
-  return false;
-}
-
-static void cst816_hw_reset(void) {
-  pbl_mutex_lock(&s_i2c_lock, PBL_FOREVER);
-  pbl_gpio_set(&CST816->reset, true);
-  pbl_sleep_ms(CST816_RESET_CYCLE_TIME);
-  pbl_gpio_set(&CST816->reset, false);
-  pbl_sleep_ms(CST816_POR_DELAY_TIME);
-  pbl_mutex_unlock(&s_i2c_lock);
-}
-
-void touch_sensor_init(void) {
-  uint8_t chip_id;
-  uint8_t fw_version;
-  struct pbl_irq_spec irq;
-  bool rv;
+static int prv_read(const struct pbl_cst816 *cst, uint8_t reg, uint8_t *buf, uint32_t len) {
   int ret;
 
-  pbl_gpio_configure(&CST816->reset, PBL_GPIO_OUTPUT);
+  ret = pbl_i2c_write(&cst->i2c, &reg, sizeof(reg));
+  if (ret != 0) {
+    return ret;
+  }
 
-  cst816_hw_reset();
+  return pbl_i2c_read(&cst->i2c, buf, len);
+}
 
-  rv = prv_read_data(CST816_CHIP_ID_REG, &chip_id, 1, 1);
-  if (!rv) {
-    PBL_LOG_ERR("Could not read CST816 chip ID");
-  } else {
-    rv = prv_read_data(CST816_FW_VERSION_REG, &fw_version, 1, 1);
-    if (!rv) {
-      PBL_LOG_ERR("Could not read CST816 firmware version");
-    } else {
-      PBL_LOG_DBG("CST816 firmware: 0x%02X", fw_version);
+static int prv_write(const struct pbl_cst816 *cst, uint8_t reg, uint8_t val) {
+  const uint8_t buf[] = {reg, val};
+
+  return pbl_i2c_write(&cst->i2c, buf, sizeof(buf));
+}
+
+static int prv_boot_read(const struct pbl_cst816 *cst, uint16_t reg, uint8_t *buf, uint32_t len) {
+  const uint8_t addr[] = {reg >> 8, reg & 0xFF};
+  int ret;
+
+  ret = pbl_i2c_write(&cst->i2c_boot, addr, sizeof(addr));
+  if (ret != 0) {
+    return ret;
+  }
+
+  return pbl_i2c_read(&cst->i2c_boot, buf, len);
+}
+
+static int prv_boot_write(const struct pbl_cst816 *cst, uint16_t reg, const uint8_t *data,
+                          uint32_t len) {
+  uint8_t buf[sizeof(reg) + CST816_FW_PAGE_SIZE];
+
+  if (len > CST816_FW_PAGE_SIZE) {
+    return -EINVAL;
+  }
+
+  buf[0] = reg >> 8;
+  buf[1] = reg & 0xFF;
+  memcpy(&buf[sizeof(reg)], data, len);
+
+  return pbl_i2c_write(&cst->i2c_boot, buf, sizeof(reg) + len);
+}
+
+static int prv_boot_write_byte(const struct pbl_cst816 *cst, uint16_t reg, uint8_t val) {
+  return prv_boot_write(cst, reg, &val, sizeof(val));
+}
+
+static int prv_hw_reset(const struct pbl_cst816 *cst, uint32_t release_delay_ms) {
+  int ret;
+
+  ret = pbl_gpio_set(&cst->reset, true);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(CST816_RESET_CYCLE_TIME_MS);
+
+  ret = pbl_gpio_set(&cst->reset, false);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(release_delay_ms);
+
+  return 0;
+}
+
+static int prv_enter_bootmode(const struct pbl_cst816 *cst) {
+  uint8_t flag;
+  int ret;
+
+  ret = prv_hw_reset(cst, CST816_RESET_CYCLE_TIME_MS);
+  if (ret != 0) {
+    return ret;
+  }
+
+  for (uint8_t i = 0U; i < CST816_BOOT_MODE_RETRIES; i++) {
+    ret = prv_boot_write_byte(cst, CST816_BOOT_MODE_REG, CST816_BOOT_MODE_CMD);
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME_MS);
+    if (ret != 0) {
+      continue;
+    }
+
+    ret = prv_boot_read(cst, CST816_BOOT_FLAG_REG, &flag, sizeof(flag));
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME_MS);
+    if (ret == 0 && flag == CST816_BOOT_FLAG_VAL) {
+      return 0;
     }
   }
 
-  uint8_t target_ver = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
+  return -ENODEV;
+}
 
-  // A chip stranded in boot mode by an interrupted update stops answering at
-  // the work-mode address; only a reflash brings it back, so attempt the
-  // update even when the probe above failed.
-  if (!rv || target_ver != fw_version) {
-    if (!cst816_enter_bootmode()) {
-      PBL_LOG_ERR("Could not enter CST816 boot mode");
-      return;
+static int prv_read_checksum(const struct pbl_cst816 *cst, uint16_t *checksum) {
+  uint8_t data[sizeof(*checksum)];
+  int ret;
+
+  ret = prv_boot_write_byte(cst, CST816_BOOT_FLAG_REG, 0U);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(CST816_FW_CHECKSUM_CAL_TIME_MS);
+
+  ret = prv_boot_read(cst, CST816_FW_CHECKSUM_REG, data, sizeof(data));
+  if (ret != 0) {
+    return ret;
+  }
+
+  *checksum = ((uint16_t)data[1] << 8) | data[0];
+
+  return 0;
+}
+
+static int prv_wait_page_ready(const struct pbl_cst816 *cst) {
+  uint8_t state;
+  int ret;
+
+  pbl_sleep_ms(CST816_FW_WR_TIME_MS);
+
+  for (uint8_t i = 0U; i < CST816_FW_PAGE_READY_RETRIES; i++) {
+    pbl_sleep_ms(CST816_RESET_CYCLE_TIME_MS);
+    ret = prv_boot_read(cst, CST816_FW_PAGE_STATE_REG, &state, sizeof(state));
+    if (ret == 0 && state == CST816_FW_PAGE_READY) {
+      return 0;
     }
-    rv = cst816_fw_update();
-    if (!rv) {
-      return;
+  }
+
+  return -ETIMEDOUT;
+}
+
+static int prv_fw_update(const struct pbl_cst816 *cst) {
+  uint16_t start_addr = ((uint16_t)app_bin[1] << 8) | app_bin[0];
+  uint16_t length = ((uint16_t)app_bin[3] << 8) | app_bin[2];
+  const uint16_t checksum = ((uint16_t)app_bin[5] << 8) | app_bin[4];
+  const uint8_t *page = &app_bin[CST816_FW_HEADER_SIZE];
+  uint16_t checksum_read;
+  uint16_t page_len;
+  int ret;
+
+  while (length > 0U) {
+    const uint8_t addr[] = {start_addr & 0xFF, start_addr >> 8};
+
+    page_len = MIN(length, CST816_FW_PAGE_SIZE);
+    PBL_LOG_DBG("Writing 0x%04x, %u bytes", start_addr, page_len);
+
+    ret = prv_boot_write(cst, CST816_FW_START_ADDR_REG, addr, sizeof(addr));
+    if (ret != 0) {
+      return ret;
+    }
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME_MS);
+
+    ret = prv_boot_write(cst, CST816_FW_PAGE_REG, page, page_len);
+    if (ret != 0) {
+      return ret;
+    }
+    pbl_sleep_ms(CST816_REG_WR_DELAY_TIME_MS);
+
+    ret = prv_boot_write_byte(cst, CST816_FW_PAGE_DONE_REG, CST816_FW_PAGE_DONE_CMD);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = prv_wait_page_ready(cst);
+    if (ret != 0) {
+      return ret;
+    }
+
+    page += page_len;
+    start_addr += page_len;
+    length -= page_len;
+  }
+
+  ret = prv_read_checksum(cst, &checksum_read);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (checksum_read != checksum) {
+    PBL_LOG_ERR("Firmware checksum 0x%04x, expected 0x%04x", checksum_read, checksum);
+    return -EIO;
+  }
+
+  ret = prv_boot_write_byte(cst, CST816_BOOT_EXIT_REG, CST816_BOOT_EXIT_CMD);
+  if (ret != 0) {
+    return ret;
+  }
+
+  PBL_LOG_INFO("Updated firmware to version 0x%02X (0x%04X)",
+               app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX], checksum_read);
+
+  return prv_hw_reset(cst, CST816_POR_DELAY_TIME_MS);
+}
+
+static int prv_update_if_needed(const struct pbl_cst816 *cst) {
+  const uint8_t target_version = app_bin[sizeof(app_bin) + CST816_FW_VER_INFO_INDEX];
+  uint8_t chip_id;
+  uint8_t version;
+  int ret;
+
+  ret = prv_read(cst, CST816_CHIP_ID_REG, &chip_id, sizeof(chip_id));
+  if (ret == 0) {
+    ret = prv_read(cst, CST816_FW_VERSION_REG, &version, sizeof(version));
+  }
+
+  if (ret == 0) {
+    PBL_LOG_DBG("Chip ID 0x%02X, firmware 0x%02X", chip_id, version);
+    if (version == target_version) {
+      return 0;
     }
   }
 
-  ret = pbl_gpio_configure(&CST816->int_gpio, PBL_GPIO_INPUT);
+  // A chip stranded in boot mode by an interrupted update stops answering at the normal address;
+  // only a reflash brings it back, so update even when the probe failed.
+  ret = prv_enter_bootmode(cst);
   if (ret != 0) {
-    PBL_LOG_ERR("Could not configure the interrupt input (%d)", ret);
-    return;
+    return ret;
   }
 
-  ret = pbl_gpio_to_irq(&CST816->int_gpio, PBL_IRQ_TYPE_EDGE_FALLING, &irq);
-  if (ret != 0) {
-    PBL_LOG_ERR("Interrupt input cannot interrupt (%d)", ret);
-    return;
-  }
-
-  ret = pbl_device_init(&irq.intc->dev);
-  if (ret != 0) {
-    PBL_LOG_ERR("Interrupt controller unavailable");
-    return;
-  }
-
-  ret = pbl_intc_request(&irq, prv_int_handler, nullptr);
-  if (ret != 0) {
-    PBL_LOG_ERR("Could not request the interrupt (%d)", ret);
-    return;
-  }
-
-  s_int_irq = irq;
-
-  touch_sensor_set_enabled(false);
+  return prv_fw_update(cst);
 }
 
-static void prv_report_sample(bool down, int16_t x, int16_t y) {
-  pbl_input_report_key(PBL_INPUT_BTN_TOUCH, down, false);
-  pbl_input_report_abs(PBL_INPUT_ABS_X, x, false);
-  pbl_input_report_abs(PBL_INPUT_ABS_Y, y, true);
-}
+static void prv_count_irq(struct pbl_cst816_state *state) {
+  const uint64_t now = pbl_uptime_ticks();
+  const uint64_t wake_spacing = pbl_ms_to_ticks(CST816_WAKE_SPACING_MS);
+  const uint64_t gap = now - state->last_irq_ticks;
 
-static void prv_report_gesture(uint16_t gesture, int16_t x, int16_t y) {
-  pbl_input_report_abs(PBL_INPUT_ABS_X, x, false);
-  pbl_input_report_abs(PBL_INPUT_ABS_Y, y, false);
-  pbl_input_report_ges(gesture, true);
-}
-
-static void prv_process_pending_messages(void *context) {
-  bool rv;
-  s_callback_scheduled = false;
-
-  // Any interrupt means the chip is alive; pet the idle watchdog.
-  s_activity_since_check = true;
-
-  // Count interrupts spaced >=2s apart as sleep->awake transitions.
-  RtcTicks now = rtc_get_ticks();
-  const RtcTicks wake_spacing = pbl_ms_to_ticks(CST816_WAKE_SPACING_MS);
-  const RtcTicks gap = now - s_last_irq_ticks;
   if (gap >= wake_spacing) {
     PBL_ANALYTICS_ADD(touch_driver_wake_cnt, 1);
   }
+
   // Each interrupt keeps the chip in active scan for the wake window.
-  if (s_last_irq_ticks != 0) {
+  if (state->last_irq_ticks != 0U) {
     PBL_ANALYTICS_ADD(touch_driver_awake_time_ms, pbl_ticks_to_ms(MIN(gap, wake_spacing)));
   }
-  s_last_irq_ticks = now;
 
-  uint8_t id;
-  rv = prv_read_data(CST816_GESTURE_ID, &id, 1, 1);
-  if (!rv) {
-    PBL_LOG_ERR("Failed to read gesture ID, trying to recover");
-    prv_report_sample(false, 0, 0);
-    prv_int_set_enabled(false);
-    touch_sensor_set_enabled(true);
-    return;
-  }
-
-  uint8_t data[CST816_TOUCH_DATA_SIZE] = {};
-  rv = prv_read_data(CST816_TOUCH_DATA_REG, data, CST816_TOUCH_DATA_SIZE, 1);
-  if (!rv) {
-    PBL_LOG_ERR("Failed to read touch data, trying to recover");
-    prv_report_sample(false, 0, 0);
-    prv_int_set_enabled(false);
-    touch_sensor_set_enabled(true);
-    return;
-  }
-
-  uint8_t press = PBL_FIELD_GET(CST816_FINGER_NUM_MASK, data[0]);
-  GPoint point = {
-    .x = (PBL_FIELD_GET(CST816_POS_H_MASK, data[1]) << 8) | data[2],
-    .y = (PBL_FIELD_GET(CST816_POS_H_MASK, data[3]) << 8) | data[4],
-  };
-
-  if (CST816->invert_x_axis) {
-    point.x = CST816->max_x - point.x;
-  }
-
-  if (CST816->invert_y_axis) {
-    point.y = CST816->max_y - point.y;
-  }
-
-  // The chip reports a click well after a palm lifts; drop it unless a new
-  // contact started in between.
-  if (press == 0x01 && id != CST816_GESTURE_PALM) {
-    s_palm_click_pending = false;
-  } else if (s_palm_click_pending &&
-             (id == CST816_GESTURE_CLICK || id == CST816_GESTURE_DOUBLE_CLICK)) {
-    s_palm_click_pending = false;
-    id = 0;
-  }
-
-  switch (id) {
-    case CST816_GESTURE_CLICK:
-      prv_report_gesture(PBL_INPUT_GES_TAP, point.x, point.y);
-      break;
-    case CST816_GESTURE_DOUBLE_CLICK:
-      prv_report_gesture(PBL_INPUT_GES_DOUBLE_TAP, point.x, point.y);
-      break;
-    default:
-      break;
-  }
-
-  // The gesture register holds its last value, so a palm reads back as one on
-  // every sample it produces, its liftoff included; latch it instead.
-  if (press != 0x01) {
-    s_palm_down = false;
-  } else if (id == CST816_GESTURE_PALM && !s_palm_down) {
-    s_palm_down = true;
-    s_palm_click_pending = true;
-    prv_report_gesture(PBL_INPUT_GES_PALM, point.x, point.y);
-  }
-
-  // A palm also reports a contact at its centroid, which would otherwise land
-  // as a tap on whatever is underneath it.
-  if (press == 0x01 && !s_palm_down) {
-    prv_report_sample(true, point.x, point.y);
-  } else {
-    prv_report_sample(false, point.x, point.y);
-  }
+  state->last_irq_ticks = now;
 }
 
-static void prv_int_handler(void *arg) {
-  if (s_callback_scheduled) {
-    return;
+static int prv_wake(const struct pbl_cst816 *cst) {
+  struct pbl_cst816_state *state = cst->state;
+  int ret;
+
+  ret = prv_hw_reset(cst, CST816_POR_DELAY_TIME_MS);
+  if (ret != 0) {
+    return ret;
   }
 
-  s_callback_scheduled = true;
-  if (!system_task_add_callback_from_isr_droppable_raised(prv_process_pending_messages, nullptr)) {
-    s_callback_scheduled = false;
-  }
+  state->palm_down = false;
+  state->palm_click_pending = false;
+  return pbl_intc_enable(&state->irq);
 }
 
-// Runs on the system task: the actual recovery reset (cst816_hw_reset() sleeps
-// ~120ms, so it must not run on the regular-timer task).
-static void prv_idle_reset_worker(void *context) {
-  s_reset_scheduled = false;
-  if (!s_enabled) {
+static void prv_work(void *arg) {
+  const struct pbl_cst816 *cst = arg;
+  struct pbl_cst816_state *state = cst->state;
+  uint8_t data[CST816_TOUCH_DATA_SIZE];
+  uint16_t gesture_code = 0U;
+  bool report_gesture = false;
+  bool report_palm = false;
+  uint8_t gesture;
+  uint16_t x;
+  uint16_t y;
+  bool down;
+  int ret;
+
+  pbl_touch_lock(&cst->touch);
+
+  state->work_pending = false;
+  if (!state->enabled) {
+    pbl_touch_unlock(&cst->touch);
     return;
   }
 
-  prv_int_set_enabled(false);
-  cst816_hw_reset();
-  s_callback_scheduled = false;
-  s_activity_since_check = true;
-  prv_int_set_enabled(true);
-}
+  prv_count_irq(state);
 
-// Runs on the regular-timer (NewTimers) task; keep it cheap, just offload.
-static void prv_watchdog_cb(void *data) {
-  if (!s_enabled || s_reset_scheduled) {
-    return;
+  ret = prv_read(cst, CST816_GESTURE_ID_REG, &gesture, sizeof(gesture));
+  if (ret == 0) {
+    ret = prv_read(cst, CST816_TOUCH_DATA_REG, data, sizeof(data));
   }
 
-  if (s_activity_since_check) {
-    s_activity_since_check = false;
-    return;
-  }
-
-  s_reset_scheduled = true;
-  system_task_add_callback(prv_idle_reset_worker, nullptr);
-}
-
-void touch_sensor_set_enabled(bool enabled) {
-  cst816_hw_reset();
-  s_palm_down = false;
-  s_palm_click_pending = false;
-
-  if (enabled) {
-    prv_int_set_enabled(true);
-    s_enabled = true;
-    s_activity_since_check = true;
-    if (!regular_timer_is_scheduled(&s_watchdog_timer)) {
-      regular_timer_add_multiminute_callback(&s_watchdog_timer, CST816_WATCHDOG_PERIOD_MIN);
+  if (ret != 0) {
+    // ESD and other transients can leave the chip deaf to I2C until it is reset.
+    PBL_LOG_ERR("Read failed (%d), resetting", ret);
+    (void)pbl_intc_disable(&state->irq);
+    ret = prv_wake(cst);
+    if (ret != 0) {
+      PBL_LOG_ERR("Reset failed (%d)", ret);
     }
-  } else {
-    s_enabled = false;
-    if (regular_timer_is_scheduled(&s_watchdog_timer)) {
-      regular_timer_remove_callback(&s_watchdog_timer);
-    }
-    uint8_t data = CST816_POWER_MODE_SLEEP;
-    prv_write_data(CST816_POWER_MODE_REG, &data, 1, 1);
-    prv_int_set_enabled(false);
+    pbl_touch_unlock(&cst->touch);
+    pbl_touch_report(&cst->touch, false, 0U, 0U);
+    return;
+  }
+
+  down = PBL_FIELD_GET(CST816_FINGER_NUM_MASK, data[0]) == 1U;
+  x = (PBL_FIELD_GET(CST816_POS_H_MASK, data[1]) << 8) | data[2];
+  y = (PBL_FIELD_GET(CST816_POS_H_MASK, data[3]) << 8) | data[4];
+
+  // The chip reports a click well after a palm lifts; drop it unless a new contact started in
+  // between.
+  if (down && gesture != CST816_GESTURE_PALM) {
+    state->palm_click_pending = false;
+  } else if (state->palm_click_pending &&
+             (gesture == CST816_GESTURE_CLICK || gesture == CST816_GESTURE_DOUBLE_CLICK)) {
+    state->palm_click_pending = false;
+    gesture = 0U;
+  }
+
+  if (gesture == CST816_GESTURE_CLICK) {
+    gesture_code = PBL_INPUT_GES_TAP;
+    report_gesture = true;
+  } else if (gesture == CST816_GESTURE_DOUBLE_CLICK) {
+    gesture_code = PBL_INPUT_GES_DOUBLE_TAP;
+    report_gesture = true;
+  }
+
+  // The gesture register holds its last value, so a palm reads back as one on every sample it
+  // produces, its liftoff included; latch it instead.
+  if (!down) {
+    state->palm_down = false;
+  } else if (gesture == CST816_GESTURE_PALM && !state->palm_down) {
+    state->palm_down = true;
+    state->palm_click_pending = true;
+    report_palm = true;
+  }
+
+  // A palm also reports a contact at its centroid, which would otherwise land as a tap on whatever
+  // is underneath it.
+  down = down && !state->palm_down;
+
+  pbl_touch_unlock(&cst->touch);
+
+  if (report_gesture) {
+    pbl_touch_report_gesture(&cst->touch, gesture_code, x, y);
+  }
+
+  if (report_palm) {
+    pbl_touch_report_gesture(&cst->touch, PBL_INPUT_GES_PALM, x, y);
+  }
+
+  pbl_touch_report(&cst->touch, down, x, y);
+}
+
+static void prv_irq_handler(void *arg) {
+  const struct pbl_cst816 *cst = arg;
+  struct pbl_cst816_state *state = cst->state;
+
+  if (state->work_pending) {
+    return;
+  }
+
+  state->work_pending = true;
+  if (!system_task_add_callback_from_isr_droppable_raised(prv_work, arg)) {
+    state->work_pending = false;
   }
 }
+
+static int prv_sleep(const struct pbl_cst816 *cst, bool awake) {
+  struct pbl_cst816_state *state = cst->state;
+  int ret;
+
+  state->enabled = false;
+
+  ret = pbl_intc_disable(&state->irq);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // The chip only takes the command while awake.
+  if (!awake) {
+    ret = prv_hw_reset(cst, CST816_POR_DELAY_TIME_MS);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  return prv_write(cst, CST816_POWER_MODE_REG, CST816_POWER_MODE_SLEEP);
+}
+
+static int prv_init(const struct pbl_touch *touch) {
+  const struct pbl_cst816 *cst = prv_from_touch(touch);
+  struct pbl_cst816_state *state = cst->state;
+  int ret;
+
+  ret = pbl_device_init(&cst->reset.port->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_gpio_configure(&cst->reset, PBL_GPIO_OUTPUT);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_device_init(&cst->int_gpio.port->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_gpio_configure(&cst->int_gpio, PBL_GPIO_INPUT);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_gpio_to_irq(&cst->int_gpio, PBL_IRQ_TYPE_EDGE_FALLING, &state->irq);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_device_init(&state->irq.intc->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_hw_reset(cst, CST816_POR_DELAY_TIME_MS);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_update_if_needed(cst);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_intc_request(&state->irq, prv_irq_handler, (void *)cst);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_sleep(cst, true);
+}
+
+static int prv_enable(const struct pbl_touch *touch) {
+  const struct pbl_cst816 *cst = prv_from_touch(touch);
+  struct pbl_cst816_state *state = cst->state;
+  int ret;
+
+  ret = prv_wake(cst);
+  if (ret != 0) {
+    return ret;
+  }
+
+  state->enabled = true;
+
+  return 0;
+}
+
+static int prv_disable(const struct pbl_touch *touch) {
+  return prv_sleep(prv_from_touch(touch), false);
+}
+
+const struct pbl_touch_ops pbl_cst816_ops = {
+  .init = prv_init,
+  .enable = prv_enable,
+  .disable = prv_disable,
+};

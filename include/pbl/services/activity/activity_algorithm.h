@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 
 /**
@@ -28,7 +29,7 @@
  *
  * // Once a minute
  * AlgMinuteRecord rec;
- * activity_algorithm_minute_handler(rtc_get_time(), &rec);
+ * activity_algorithm_minute_handler(pbl_realtime(), &rec);
  *
  * uint32_t steps;
  * activity_algorithm_get_steps(&steps);
@@ -265,24 +266,6 @@ bool activity_algorithm_get_steps(uint32_t *steps);
  * @param enable true to detect sessions, false to stop.
  */
 void activity_algorithm_enable_activity_tracking(bool enable);
-
-/**
- * @brief Check whether a continuous heart rate session is active for a detected activity.
- *
- * Drives SpO2 sampling during activities.
- *
- * @return true if heart rate is being sampled for a detected walk or run.
- */
-bool activity_algorithm_activity_hrm_is_active(void);
-
-/**
- * @brief Pause or resume the heart rate session of a detected activity.
- *
- * Frees the optical path for a SpO2 reading. No-op without an activity heart rate session.
- *
- * @param paused true to pause, false to resume.
- */
-void activity_algorithm_activity_hrm_set_paused(bool paused);
 
 /**
  * @brief Get the most recent stepping rate.

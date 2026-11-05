@@ -11,15 +11,12 @@ if UART
 config UART_NRF5
     bool "Nordic nRF5 UART Controller"
     default y if SOC_NRF52
-    select HAL_NORDIC
     help
       Support for the Nordic nRF5 UART controller.
 
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
     default y if SOC_SF32LB52
-    select HAL_SIFLI
-    select HAL_SIFLI_UART
     help
       Support for the SiFli SF32LB UART controller.
 
@@ -34,6 +31,14 @@ config UART_POSIX
     default y if SOC_POSIX
     help
       UART backed by a host file descriptor.
+
+config UART_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The uart shell command, to list the ports, change their line
+      settings and send text.
 
 module = DRIVER_UART
 module-str = UART

@@ -11,7 +11,7 @@ from libpebble2.exceptions import PebbleError
 from pebble.pulse2.exceptions import SocketClosed
 
 from harness.connections import Capability, Connection, start_protocol
-from harness.errors import HarnessError, PromptError, WatchTimeout
+from harness.errors import HarnessError, LinkClosed, PromptError, WatchTimeout
 
 LINK_PROBE_S = 5.0
 LINK_RETRY_S = 0.5
@@ -123,7 +123,9 @@ class PulseConnection(Connection):
                     ) from None
                 except SocketClosed:
                     if attempt:
-                        raise
+                        raise LinkClosed(
+                            f"the PULSE link closed during {command!r}"
+                        ) from None
                     self._relink(timeout)
         if lines and lines[0].startswith("Invalid command"):
             raise PromptError(lines[0])
@@ -142,5 +144,7 @@ class PulseConnection(Connection):
                 self._relink(10)
             from libpebble2.communication.transports.pulse import PULSETransport
 
-            self._pebble = start_protocol(PULSETransport(self._link), self.platform)
+            self._pebble = start_protocol(
+                PULSETransport(self._link), self.platform, self.settings_sync
+            )
         return self._pebble

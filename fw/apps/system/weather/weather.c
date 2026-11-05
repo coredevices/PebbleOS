@@ -27,15 +27,19 @@
 #include "weather_report.h"
 #include "weather_types.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
 #include <pbl/util/units.h>
+
+#include <applib/app_malloc.h>
 
 #define WX_MAX_DAYS 7
 
 typedef struct WeatherAppData {
   GlobeView *globe_view;
   EventServiceInfo weather_event_info;
+  EventServiceInfo dark_mode_event_info;
 
   int location_count;
   int active_index; // which configured location is shown
@@ -142,7 +146,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
       i18n_noop("Sunday"),   i18n_noop("Monday"), i18n_noop("Tuesday"),  i18n_noop("Wednesday"),
       i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
     };
-    time_t t = rtc_get_time() + (time_t)day_offset * PBL_SEC_PER_DAY;
+    time_t t = pbl_realtime() + (time_t)day_offset * PBL_SEC_PER_DAY;
     struct pbl_tm *lt = localtime(&t); // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
     i18n_get_with_buffer(kWday[w], buf, bufsize);
@@ -154,7 +158,7 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
 // linked into the firmware, so UTC is derived from localtime + the watch's own offset (the
 // same pair the sunset computation uses).
 static int prv_location_local_hour(const WxDsForecast *ds) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   struct pbl_tm *lt = localtime(&now);
   if (!lt)
     return -1;
@@ -245,7 +249,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     // hour — using the location-shifted hour here made header and clock disagree by the tz
     // delta on the same city. Consistency with the clock outranks the saved-city refinement
     // (which the clock doesn't have either).
-    time_t now_t = rtc_get_time();
+    time_t now_t = pbl_realtime();
     struct pbl_tm *lt_h = localtime(&now_t);
     const int hour = lt_h ? lt_h->tm_hour : -1;
     if (ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
@@ -681,6 +685,18 @@ static void prv_handle_weather(PebbleEvent *event, void *context) {
   prv_refresh(s_data);
 }
 
+static void prv_handle_dark_mode_change(PebbleEvent *event, void *context) {
+  WeatherAppData *data = s_data;
+  // The icons are recolored for the theme when loaded: reload them through the data refresh
+  if (data->days_received > 0) {
+    forecast_list_update_data(data->days, data->days_received);
+    expanded_view_update_data(&data->days[0], data->latitude_e2, data->longitude_e2,
+                              data->utc_offset_min);
+  }
+  weather_report_handle_dark_mode_change();
+  clock_face_handle_dark_mode_change();
+}
+
 static PBL_NOINLINE void prv_init(void) {
   // System-app statics survive across launches and a crashed run never reaches
   // unload — clear every module's launch-persistent state first.
@@ -734,6 +750,11 @@ static PBL_NOINLINE void prv_init(void) {
     .handler = prv_handle_weather,
   };
   event_service_client_subscribe(&data->weather_event_info);
+  data->dark_mode_event_info = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_handle_dark_mode_change,
+  };
+  event_service_client_subscribe(&data->dark_mode_event_info);
 
   // Push the animated forecast as the carousel base window.
   prv_on_list_transition_done(data);
@@ -743,6 +764,9 @@ static void prv_deinit(void) {
   if (s_data) {
     if (s_data->weather_event_info.handler) {
       event_service_client_unsubscribe(&s_data->weather_event_info);
+    }
+    if (s_data->dark_mode_event_info.handler) {
+      event_service_client_unsubscribe(&s_data->dark_mode_event_info);
     }
     i18n_free_all(s_data);
     clock_face_set_wrap_callback(nullptr, nullptr);

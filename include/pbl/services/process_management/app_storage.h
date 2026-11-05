@@ -15,9 +15,9 @@
  * @ingroup services
  * @brief Storage of installed app and worker binaries.
  *
- * App and worker binaries are stored in PFS as app files (see @ref services_filesystem_app_file)
- * with the suffixes @ref APP_FILE_NAME_SUFFIX and @ref WORKER_FILE_NAME_SUFFIX; resources are
- * kept separately by the resource storage.
+ * App and worker binaries are stored in PFS as app files, see
+ * @ref services_process_management_app_file, with the suffixes @ref APP_FILE_NAME_SUFFIX and
+ * @ref WORKER_FILE_NAME_SUFFIX; resources are kept separately by the resource storage.
  * @{
  */
 
@@ -79,14 +79,5 @@ bool app_storage_app_exists(AppInstallId id);
  * @param task @c PebbleTask_App or @c PebbleTask_Worker.
  */
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id, PebbleTask task);
-
-/**
- * @brief Compute the size of the process image plus its relocation table.
- *
- * @param info Process metadata.
- * @param[out] load_size_out Load size in bytes, set on success.
- * @return true on success, false if the size overflows.
- */
-bool app_storage_get_process_load_size(const PebbleProcessInfo *info, size_t *load_size_out);
 
 /** @} */

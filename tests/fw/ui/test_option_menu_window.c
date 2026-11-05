@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/timeline/timeline_resources.h>
 
 #include <applib/ui/option_menu_window.h>
@@ -40,7 +41,7 @@ void test_option_menu_window__initialize(void) {
   load_system_resources_fixture();
 
   s_data = (OptionMenuTestData){};
-  rtc_set_time(3 * PBL_SEC_PER_DAY);
+  pbl_realtime_set(3 * PBL_SEC_PER_DAY);
 }
 
 void test_option_menu_window__cleanup(void) {
@@ -255,7 +256,7 @@ void test_option_menu_window__long_title_single_line_scrolled(void) {
     s_data = (OptionMenuTestData){};
     prv_create_menu_and_render(&config);
     screen_grid_add(&grid, ctx, size, 0);
-    fake_rtc_increment_ticks(RTC_TICKS_HZ * 3 / 2);
+    fake_rtc_increment_ticks(PBL_TICK_HZ * 3 / 2);
     window_render(&s_data.option_menu.window, ctx);
     screen_grid_add(&grid, ctx, size, 1);
     // Ends the scroll so the next size starts from the beginning

@@ -10,6 +10,8 @@
 /* Register offsets */
 
 #define SF32LB52_HPSYS_CFG_SYSCR_OFFSET   0x0010
+#define SF32LB52_HPSYS_CFG_RTC_TR_OFFSET  0x0014
+#define SF32LB52_HPSYS_CFG_RTC_DR_OFFSET  0x0018
 #define SF32LB52_HPSYS_CFG_ANAU_CR_OFFSET 0x0088
 
 /* Register bit definitions */

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Backend level template. Include with:
+#
+#   backend = MYBACKEND
+#   backend-str = My backend
+#   source "subsys/logging/Kconfig.template.backend_level"
+#
+# Defines CONFIG_LOG_BACKEND_<backend>_LEVEL, the initial highest level the
+# backend writes, changeable at runtime. It defaults to info; to give a backend
+# a different default, extend the named choice before sourcing the template:
+#
+#   choice "LOG_BACKEND_MYBACKEND_LEVEL_CHOICE"
+#       default LOG_BACKEND_MYBACKEND_LEVEL_DEBUG
+#   endchoice
+
+choice "LOG_BACKEND_$(backend)_LEVEL_CHOICE"
+    prompt "$(backend-str) backend log level"
+    default LOG_BACKEND_$(backend)_LEVEL_INFO
+
+config LOG_BACKEND_$(backend)_LEVEL_ERROR
+    bool "Error"
+
+config LOG_BACKEND_$(backend)_LEVEL_WARNING
+    bool "Warning"
+
+config LOG_BACKEND_$(backend)_LEVEL_INFO
+    bool "Info"
+
+config LOG_BACKEND_$(backend)_LEVEL_DEBUG
+    bool "Debug"
+
+config LOG_BACKEND_$(backend)_LEVEL_DEBUG_VERBOSE
+    bool "Debug verbose"
+
+endchoice
+
+config LOG_BACKEND_$(backend)_LEVEL
+    int
+    default 1 if LOG_BACKEND_$(backend)_LEVEL_ERROR
+    default 50 if LOG_BACKEND_$(backend)_LEVEL_WARNING
+    default 100 if LOG_BACKEND_$(backend)_LEVEL_INFO
+    default 200 if LOG_BACKEND_$(backend)_LEVEL_DEBUG
+    default 255 if LOG_BACKEND_$(backend)_LEVEL_DEBUG_VERBOSE

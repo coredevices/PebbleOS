@@ -8,8 +8,6 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/button_id.h>
-
 //! @addtogroup UI
 //! @{
 //!   @addtogroup Clicks
@@ -118,6 +116,21 @@
 //! overview of clicks and relevant code examples.
 //!
 //!   @{
+
+//! Button ID values
+//! @see \ref click_recognizer_get_button_id()
+typedef enum {
+  //! Back button
+  BUTTON_ID_BACK = 0,
+  //! Up button
+  BUTTON_ID_UP,
+  //! Select (middle) button
+  BUTTON_ID_SELECT,
+  //! Down button
+  BUTTON_ID_DOWN,
+  //! Total number of buttons
+  NUM_BUTTONS
+} ButtonId;
 
 //! Reference to opaque click recognizer
 //! When a \ref ClickHandler callback is called, the recognizer that fired the handler is passed in.

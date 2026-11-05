@@ -3,14 +3,15 @@
 
 #include <time.h>
 
+#include <pbl/services/clock.h>
 #include <pbl/util/trig.h>
 
 #include <applib/app.h>
 #include <applib/app_focus_service.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 #if PBL_ROUND
@@ -137,7 +138,7 @@ static void prv_init() {
   app_window_stack_push(&data->window, true);
 
   struct pbl_tm time_struct;
-  rtc_get_time_tm(&time_struct);
+  clock_get_time_tm(&time_struct);
   prv_minute_tick_handler(&time_struct, MINUTE_UNIT);
 
   tick_timer_service_subscribe(MINUTE_UNIT, prv_minute_tick_handler);

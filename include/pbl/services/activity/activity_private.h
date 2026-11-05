@@ -13,13 +13,12 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
 #include <applib/event_service_client.h>
 #include <kernel/events.h>
-#include <system/hexdump.h>
 
 /**
  * @defgroup services_activity_activity_private Activity service internals
@@ -80,26 +79,34 @@ typedef uint32_t ActivityScalarStore;
  */
 #define ACTIVITY_HR_EARLY_ABORT_SEC (40)
 
-/** @brief Good quality heart rate samples after which the window ends early. */
-#define ACTIVITY_MIN_NUM_GOOD_SAMPLES_SHORT_CIRCUIT (10)
-
-/** @brief Excellent quality heart rate samples after which the window ends early. */
-#define ACTIVITY_MIN_NUM_EXCELLENT_SAMPLES_SHORT_CIRCUIT (5)
+/**
+ * @brief High-confidence (@ref HRM_CONFIDENCE_HIGH) heart rate samples after which the window
+ * ends early.
+ */
+#define ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SAMPLES_SHORT_CIRCUIT (10)
 
 /**
- * @brief Good quality SpO2 samples after which the window ends early.
+ * @brief High-confidence (@ref HRM_CONFIDENCE_HIGH) SpO2 samples after which the window ends
+ * early.
  *
- * Kept low: good readings are hard to get on the wrist.
+ * Kept low: high-confidence readings are hard to get on the wrist.
  */
-#define ACTIVITY_MIN_NUM_GOOD_SPO2_SAMPLES_SHORT_CIRCUIT (2)
+#define ACTIVITY_MIN_NUM_HIGH_CONFIDENCE_SPO2_SAMPLES_SHORT_CIRCUIT (2)
 
 /**
  * @brief Maximum length of a background SpO2 measurement window, in seconds.
  *
- * Longer than the heart rate window since SpO2 typically needs about 30 s to converge; bounds
- * the high-current red/IR LED on-time when no reading comes.
+ * SpO2 typically needs about 30 s to converge; bounds the high-current red/IR LED on-time when
+ * no high-confidence reading comes.
  */
-#define ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC (90)
+#define ACTIVITY_DEFAULT_SPO2_ON_TIME_SEC (60)
+
+/**
+ * @brief Steps in the last minute above which a background SpO2 window is deferred.
+ *
+ * SpO2 needs the wearer to be still; tolerates a few stray steps.
+ */
+#define ACTIVITY_SPO2_MAX_STEPS_PER_MIN (10)
 
 /**
  * @brief Time into a SpO2 window after which it is aborted if no sample was accepted, in
@@ -109,13 +116,6 @@ typedef uint32_t ActivityScalarStore;
  * off-wrist.
  */
 #define ACTIVITY_SPO2_EARLY_ABORT_SEC (45)
-
-/** @brief Interval between SpO2 attempts during a detected activity, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_INTERVAL_SEC (5 * PBL_SEC_PER_MIN)
-/** @brief Duration of a SpO2 attempt during a detected activity, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_ATTEMPT_SEC (35)
-/** @brief Heart rate time after a failed SpO2 attempt before retrying, in seconds. */
-#define ACTIVITY_SPO2_ACTIVITY_BACKOFF_SEC (PBL_SEC_PER_MIN)
 
 /** @brief Minimum heart rate samples in a minute to report a zone above zone 0. */
 #define ACTIVITY_MIN_NUM_SAMPLES_FOR_HR_ZONE (5)
@@ -141,7 +141,7 @@ typedef uint32_t ActivityScalarStore;
 #define ACTIVITY_DAG_PER_KG 100
 
 /** @brief Name of the activity settings file. */
-#define ACTIVITY_SETTINGS_FILE_NAME "activity"
+#define ACTIVITY_SETTINGS_FILE_NAME "/activity"
 /** @brief Size of the activity settings file, in bytes. */
 #define ACTIVITY_SETTINGS_FILE_LEN 0x4000
 
@@ -220,9 +220,9 @@ typedef enum {
   /** Unused. */
   ActivitySettingsKeyUnused5,
 
-  /** time_t: last time the sleep reward was shown, 0 if never. */
+  /** uint32_t: last time the sleep reward was shown, 0 if never. */
   ActivitySettingsKeyInsightSleepRewardTime,
-  /** time_t: last time the activity reward was shown, 0 if never. */
+  /** uint32_t: last time the activity reward was shown, 0 if never. */
   ActivitySettingsKeyInsightActivityRewardTime,
   /** SummaryPinLastState: UUID and last time the activity summary pin was added. */
   ActivitySettingsKeyInsightActivitySummaryState,
@@ -232,17 +232,17 @@ typedef enum {
   ActivitySettingsKeyRestingKCaloriesHistory,
   /** Active kcal (@ref ActivitySettingsValueHistory). */
   ActivitySettingsKeyActiveKCaloriesHistory,
-  /** time_t: UTC time of the last sleep activity logged to analytics. */
+  /** uint32_t: UTC time of the last sleep activity logged to analytics. */
   ActivitySettingsKeyLastSleepActivityUTC,
-  /** time_t: UTC time of the last restful sleep activity logged to analytics. */
+  /** uint32_t: UTC time of the last restful sleep activity logged to analytics. */
   ActivitySettingsKeyLastRestfulSleepActivityUTC,
-  /** time_t: UTC time of the last step activity logged to analytics. */
+  /** uint32_t: UTC time of the last step activity logged to analytics. */
   ActivitySettingsKeyLastStepActivityUTC,
   /** @ref ActivitySession[@ref ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT]: stored sessions. */
   ActivitySettingsKeyStoredActivities,
-  /** time_t: last time the nap pin was shown. */
+  /** uint32_t: last time the nap pin was shown. */
   ActivitySettingsKeyInsightNapSessionTime,
-  /** time_t: last time the activity session pin was shown. */
+  /** uint32_t: last time the activity session pin was shown. */
   ActivitySettingsKeyInsightActivitySessionTime,
   /** VMC of the last processed minute (@ref ActivityScalarStore). */
   ActivitySettingsKeyLastVMC,
@@ -309,8 +309,8 @@ typedef struct {
   ActivityScalarStore current_hr_zone;
   /** Resting heart rate, in beats per minute. */
   ActivityScalarStore resting_bpm;
-  /** Quality of the most recent reading, an @c HRMQuality value. */
-  ActivityScalarStore current_quality;
+  /** Algorithm confidence of the most recent reading, 0-100. */
+  ActivityScalarStore current_confidence;
   /** Last stable (median) heart rate, in beats per minute. */
   ActivityScalarStore last_stable_bpm;
   /** UTC time of the last stable heart rate. */
@@ -467,10 +467,8 @@ typedef struct {
 
   /** Samples in the past minute. */
   uint16_t num_samples;
-  /** Good quality samples in the past minute. */
-  uint16_t num_good_quality_samples;
-  /** Excellent quality samples in the past minute. */
-  uint16_t num_excellent_samples;
+  /** High-confidence samples in the past minute. */
+  uint16_t num_high_confidence_samples;
   /** Stored samples, in beats per minute. */
   uint8_t samples[ACTIVITY_MAX_HR_SAMPLES];
   /** Weights of the stored samples. */
@@ -491,8 +489,10 @@ typedef struct {
   bool currently_sampling;
   /** Uptime, in seconds, of the last sampling toggle. */
   uint32_t toggled_sampling_at_ts;
-  /** Good quality samples in the current window. */
-  uint16_t num_good_quality_samples;
+  /** Valid samples in the current window. */
+  uint16_t num_valid_samples;
+  /** High-confidence samples in the current window. */
+  uint16_t num_high_confidence_samples;
 
   // Latest valid reading waiting to be written into the next minute record (0 = none pending).
   // The minute handler consumes and clears these, so each measurement is logged exactly once.
@@ -501,34 +501,6 @@ typedef struct {
   /** Pending quality on the 0-7 @c HeartRateQuality scale, 0 if none. */
   uint8_t pending_quality;
 } ActivitySpO2Support;
-
-/** @brief Phases of the SpO2 reader during detected activities. */
-typedef enum {
-  /** Not in an eligible activity. */
-  ActivitySpO2ActPhase_Idle = 0,
-  /** Sampling heart rate, waiting for the next attempt. */
-  ActivitySpO2ActPhase_Wait,
-  /** Heart rate paused, sampling SpO2 within the attempt budget. */
-  ActivitySpO2ActPhase_Sampling,
-  /** Last attempt failed; heart rate resumed before retrying. */
-  ActivitySpO2ActPhase_Backoff,
-} ActivitySpO2ActPhase;
-
-/** @brief SpO2 reader state during detected activities. */
-typedef struct {
-  /** Dedicated SpO2 session, only sampled during an attempt. */
-  HRMSessionRef hrm_session;
-  /** Current phase. */
-  ActivitySpO2ActPhase phase;
-  /** Uptime, in seconds, at which the current phase began. */
-  uint32_t phase_started_ts;
-  /** A valid reading arrived during this attempt. */
-  bool got_reading;
-  /** SpO2 of the last valid reading, in percent. */
-  uint8_t percent;
-  /** A KernelBG callback running the state machine is queued. */
-  bool update_pending;
-} ActivitySpO2ActivitySupport;
 
 /** @brief Activity service state. */
 typedef struct {
@@ -559,6 +531,8 @@ typedef struct {
   uint32_t resting_calories;
   /** VMC of the last minute. */
   ActivityScalarStore last_vmc;
+  /** Steps in the last minute. */
+  uint16_t last_minute_steps;
   /** Orientation of the last minute. */
   uint8_t last_orientation;
   /** UTC time of the last rate update. */
@@ -578,9 +552,6 @@ typedef struct {
   /** Background SpO2 support. */
   ActivitySpO2Support spo2;
 
-  /** SpO2 during detected activities. */
-  ActivitySpO2ActivitySupport activity_spo2;
-
   /** Current day index. */
   uint16_t cur_day_index;
 
@@ -599,12 +570,13 @@ typedef struct {
 
   // Exit time for the last sleep/step activities we logged. Used to prevent logging the same event
   // more than once.
+  // Stored in the settings file as 32 bits.
   /** End time of the last logged sleep activity, UTC. */
-  time_t logged_sleep_activity_exit_at_utc;
+  uint32_t logged_sleep_activity_exit_at_utc;
   /** End time of the last logged restful sleep activity, UTC. */
-  time_t logged_restful_sleep_activity_exit_at_utc;
+  uint32_t logged_restful_sleep_activity_exit_at_utc;
   /** End time of the last logged step activity, UTC. */
-  time_t logged_step_activity_exit_at_utc;
+  uint32_t logged_step_activity_exit_at_utc;
 
   /** Data logging session for activity sessions. */
   DataLoggingSession *activity_dls_session;
@@ -664,7 +636,7 @@ bool activity_is_hrm_present(void);
  *
  * @return Settings file, NULL on failure.
  */
-SettingsFile *activity_private_settings_open(void);
+struct pbl_settings_file *activity_private_settings_open(void);
 
 /**
  * @brief Close the activity settings file.
@@ -673,7 +645,7 @@ SettingsFile *activity_private_settings_open(void);
  *
  * @param file File returned by activity_private_settings_open().
  */
-void activity_private_settings_close(SettingsFile *file);
+void activity_private_settings_close(struct pbl_settings_file *file);
 
 /**
  * @brief Reinitialize the activity service (test apps).
@@ -694,7 +666,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
  * @param file Activity settings file.
  * @param utc_now Current UTC time.
  */
-void activity_sessions_prv_init(SettingsFile *file, time_t utc_now);
+void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now);
 
 /**
  * @brief Get the start of the sleep day containing a time.
@@ -779,7 +751,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
  * @param file Activity settings file.
  * @param utc_now Current UTC time.
  */
-void activity_metrics_prv_init(SettingsFile *file, time_t utc_now);
+void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now);
 
 /**
  * @brief Get the storage information of a metric.

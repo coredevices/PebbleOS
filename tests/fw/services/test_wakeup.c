@@ -3,11 +3,11 @@
 
 #include <time.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/wakeup.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
@@ -21,6 +21,7 @@
 #include <fake_app_manager.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -42,10 +43,10 @@ typedef struct PBL_PACKED {
 
 static void prv_store_entry(WakeupId wakeup_id, Uuid uuid, time_t timestamp) {
   TestWakeupEntry entry = {.uuid = uuid, .timestamp = timestamp};
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "wakeup", 8 * 1024));
-  cl_must_pass(settings_file_set(&file, &wakeup_id, sizeof(wakeup_id), &entry, sizeof(entry)));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/wakeup", 8 * 1024));
+  cl_must_pass(pbl_settings_set(&file, &wakeup_id, sizeof(wakeup_id), &entry, sizeof(entry)));
+  pbl_settings_close(&file);
 }
 
 // Stubs
@@ -70,6 +71,11 @@ bool clock_is_timezone_set(void) {
   return false;
 }
 
+static int s_stationary_wake_up_count;
+void stationary_wake_up(void) {
+  s_stationary_wake_up_count++;
+}
+
 // Tests
 ///////////////////////////////////////////////////////////
 void test_wakeup__initialize(void) {
@@ -78,14 +84,15 @@ void test_wakeup__initialize(void) {
   fake_rtc_init(0, 1388563200);
 
   // Init fake filesystem used to load/store wakeup events
-  fake_spi_flash_init(0, 0x1000000); // from test_settings_file.c
-  pfs_init(false);
+  fake_spi_flash_init(0, 0x1000000); // from test_settings.c
+  fake_pfs_mount();
 
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   stub_app_init();
 
   // Reset variable due to previous callbacks
   s_popup_occurred = false;
+  s_stationary_wake_up_count = 0;
 
   wakeup_init();
   wakeup_enable(true);
@@ -170,7 +177,7 @@ void test_wakeup__out_of_order_schedule(void) {
   cl_assert_equal_i(early_wakeup_id, wakeup_get_next_scheduled());
 
   // Set time 5 minutes into the future, early_event should fire
-  rtc_set_time(early_event);
+  pbl_realtime_set(early_event);
 
   // Force wakeup to check for current wakeup event.
   wakeup_enable(false);
@@ -188,7 +195,7 @@ void test_wakeup__out_of_order_schedule(void) {
   cl_assert_equal_i(late_wakeup_id, wakeup_get_next_scheduled());
 
   // Set time 10 minutes into the future, late_event should fire
-  rtc_set_time(late_event);
+  pbl_realtime_set(late_event);
 
   // Force wakeup to check for current wakeup event.
   wakeup_enable(false);
@@ -233,7 +240,7 @@ void test_wakeup__time_jump(void) {
   cl_assert_equal_i(sys_wakeup_query(fourth_wakeup_id), fourth_event);
 
   // Jump to the future right before the 3rd event
-  rtc_set_time(sys_get_time() + 170);
+  pbl_realtime_set(sys_get_time() + 170);
 
   // Force wakeup to check for current wakeup event
   wakeup_enable(false);
@@ -256,7 +263,7 @@ void test_wakeup__time_jump(void) {
   gap_timer = wakeup_get_current();
   cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
-  rtc_set_time(third_event); // manually move time forward to after third event
+  pbl_realtime_set(third_event); // manually move time forward to after third event
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)third_wakeup_id);
 
@@ -287,7 +294,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   // Jump 30 seconds in the future
   uint32_t initial_timeout = stub_new_timer_timeout(first_timer);
   uint32_t time_jump_seconds = 30;
-  rtc_set_time(sys_get_time() + time_jump_seconds);
+  pbl_realtime_set(sys_get_time() + time_jump_seconds);
 
   // Notify clock change and record change in new timer
   wakeup_handle_clock_change();
@@ -299,7 +306,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   cl_assert_equal_b(s_popup_occurred, false);
 
   // Jump the remainder plus an offset (missing the event)
-  rtc_set_time(sys_get_time() + final_timeout / 1000 + time_jump_seconds);
+  pbl_realtime_set(sys_get_time() + final_timeout / 1000 + time_jump_seconds);
   // A large jump that misses an event is a significant clock change: that is
   // the path that deletes past events and raises the missed-event popup.
   wakeup_handle_significant_clock_change();
@@ -353,13 +360,13 @@ void test_wakeup__invalid_ids_dropped_at_boot(void) {
   prv_store_entry(0, TEST_UUID, sys_get_time() + 2 * WAKEUP_EVENT_WINDOW);
   wakeup_init();
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   WakeupId key = -5;
-  cl_must_pass(settings_file_open(&file, "wakeup", 8 * 1024));
-  cl_assert(!settings_file_exists(&file, &key, sizeof(key)));
+  cl_must_pass(pbl_settings_open(&file, "/wakeup", 8 * 1024));
+  cl_assert(!pbl_settings_exists(&file, &key, sizeof(key)));
   key = 0;
-  cl_assert(!settings_file_exists(&file, &key, sizeof(key)));
-  settings_file_close(&file);
+  cl_assert(!pbl_settings_exists(&file, &key, sizeof(key)));
+  pbl_settings_close(&file);
 }
 
 void test_wakeup__gap_only_within_app(void) {
@@ -392,7 +399,7 @@ void test_wakeup__simultaneous_events_spaced(void) {
   WakeupId wakeup_id = sys_wakeup_schedule(event_time, 0, false);
   cl_assert(wakeup_id > 0);
 
-  rtc_set_time(event_time);
+  pbl_realtime_set(event_time);
   wakeup_enable(false);
   wakeup_enable(true);
 
@@ -421,11 +428,29 @@ void test_wakeup__far_future_not_early(void) {
   cl_assert(timeout_s < event_time - start_time);
 
   // The timer expiring before the event is due re-arms it instead of firing
-  rtc_set_time(start_time + timeout_s);
+  pbl_realtime_set(start_time + timeout_s);
   stub_new_timer_fire(wakeup_get_current());
   wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
 
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), event_time);
   cl_assert_equal_i(wakeup_get_next_scheduled(), wakeup_id);
   cl_assert(stub_new_timer_timeout(wakeup_get_current()) / 1000 > 0);
+}
+
+void test_wakeup__dispatch_leaves_stationary(void) {
+  const time_t event_time = sys_get_time() + 31 * 60;
+  stub_app_set_install_id(1);
+
+  WakeupId wakeup_id = sys_wakeup_schedule(event_time, 0, false);
+  cl_assert(wakeup_id > 0);
+
+  // Not yet due, stays in stationary
+  pbl_realtime_set(event_time - 1);
+  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  cl_assert_equal_i(s_stationary_wake_up_count, 0);
+
+  pbl_realtime_set(event_time);
+  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  cl_assert_equal_i(s_stationary_wake_up_count, 1);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }

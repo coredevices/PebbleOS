@@ -35,9 +35,7 @@ static int prv_read_register(const struct pbl_opt3001 *dev, uint8_t reg, uint16_
   uint8_t buf[2];
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_read_register_block(&dev->i2c, reg, sizeof(buf), buf);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_burst_read(&dev->i2c, reg, buf, sizeof(buf));
   if (ret != 0) {
     return ret;
   }
@@ -51,9 +49,7 @@ static int prv_write_register(const struct pbl_opt3001 *dev, uint8_t reg, uint16
   const uint8_t buf[2] = {val >> 8, val & 0xFFU};
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_write_register_block(&dev->i2c, reg, sizeof(buf), buf);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_burst_write(&dev->i2c, reg, buf, sizeof(buf));
 
   return ret;
 }

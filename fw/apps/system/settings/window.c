@@ -11,14 +11,15 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
+#include <shell/system_theme.h>
 
 typedef struct SettingsData {
   Window window;
@@ -73,8 +74,8 @@ static void prv_set_sub_menu_colors(GContext *ctx, const Layer *cell_layer, bool
     graphics_context_set_fill_color(ctx, highlight_bg);
     graphics_context_set_text_color(ctx, gcolor_legible_over(highlight_bg));
   } else {
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_context_set_text_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+    graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   }
   graphics_fill_rect(ctx, &cell_layer->bounds);
 }
@@ -170,7 +171,7 @@ static void prv_settings_window_load(Window *window) {
   const char *title = data->title_override ? data->title_override
                                            : settings_menu_get_status_name(data->current_category);
   status_bar_layer_set_title(status_layer, i18n_get(title, data), false, false);
-  status_bar_layer_set_colors(status_layer, GColorWhite, GColorBlack);
+  status_bar_layer_set_colors_follow_theme(status_layer, false /* transparent_background */);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
   layer_add_child(&data->window.layer, status_bar_layer_get_layer(status_layer));
 
@@ -192,9 +193,6 @@ static void prv_settings_window_load(Window *window) {
                              .selection_changed = prv_selection_changed_callback,
                              .selection_will_change = prv_selection_will_change_callback,
                            });
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  GColor highlight_bg = shell_prefs_get_theme_highlight_color();
-  menu_layer_set_highlight_colors(menu_layer, highlight_bg, gcolor_legible_over(highlight_bg));
   menu_layer_set_click_config_onto_window(menu_layer, &data->window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
   menu_layer_set_scroll_vibe_on_wrap(

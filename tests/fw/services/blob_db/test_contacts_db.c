@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/uuid.h>
 
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
@@ -15,6 +15,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_kernel_services_notifications.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
@@ -127,7 +128,7 @@ static const uint8_t s_contact_1[] = {
 
 void test_contacts_db__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   contacts_db_init();
 }
 
@@ -145,11 +146,11 @@ void test_contacts_db__insert(void) {
       contacts_db_insert((uint8_t *)&contact, UUID_SIZE, (uint8_t *)&contact, sizeof(contact)), 0);
   cl_assert_equal_i(contacts_db_get_len((uint8_t *)&contact, UUID_SIZE), sizeof(contact));
 
-  uint8_t *contact_out = kernel_malloc(sizeof(contact));
+  uint8_t *contact_out = pbl_malloc(sizeof(contact));
   cl_assert_equal_i(contacts_db_read((uint8_t *)&contact, UUID_SIZE, contact_out, sizeof(contact)),
                     0);
   cl_assert_equal_m((uint8_t *)s_contact_1, contact_out, sizeof(contact));
-  kernel_free(contact_out);
+  pbl_free(contact_out);
 }
 
 void test_contacts_db__insert_remove(void) {

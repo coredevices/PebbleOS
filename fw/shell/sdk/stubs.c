@@ -9,7 +9,6 @@
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <board/board.h>
 #include <process_management/pebble_process_md.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
@@ -42,7 +41,7 @@ uint8_t backlight_get_intensity(void) {
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 uint32_t backlight_get_default_color(void) {
-  return BOARD_CONFIG.backlight_default_color;
+  return CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 }
 
 void backlight_set_default_color(uint32_t rgb_color) {
@@ -56,7 +55,7 @@ void backlight_day_night_color_set_enabled(bool enabled) {
 }
 
 uint32_t backlight_get_night_color(void) {
-  return BOARD_CONFIG.backlight_default_color;
+  return CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 }
 
 void backlight_set_night_color(uint32_t rgb_color) {

@@ -8,7 +8,6 @@
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/button_id.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/services/battery/battery_monitor.h>
@@ -129,6 +128,9 @@ typedef enum {
   PEBBLE_LANGUAGE_CHANGE_EVENT,
   PEBBLE_MIC_STREAM_EVENT,
   PEBBLE_MIC_CAPTURE_EVENT,
+  //! Emitted when the effective dark mode flips, whether the cause is the mode pref or the
+  //! schedule. Only emitted on changes of \ref system_theme_is_dark_mode.
+  PEBBLE_DARK_MODE_CHANGE_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -193,8 +195,10 @@ typedef struct PBL_PACKED { // 6 bytes
   };
 } PebbleSysNotificationEvent;
 
+// Event times are 32-bit seconds since the epoch (good until 2106) to keep PebbleEvent small.
+
 typedef struct PBL_PACKED { // 4 bytes
-  time_t tick_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
+  uint32_t tick_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
 } PebbleTickEvent;
 
 typedef struct PBL_PACKED { // 4 bytes
@@ -431,7 +435,7 @@ typedef struct PBL_PACKED { // 8 bytes
 } PebbleLaunchAppEvent;
 
 typedef struct PBL_PACKED { // 8 bytes
-  time_t alarm_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
+  uint32_t alarm_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
   const char *alarm_label;
 } PebbleAlarmClockEvent;
 
@@ -538,7 +542,7 @@ typedef struct PBL_PACKED { // 6 bytes
 
 typedef struct PBL_PACKED { // 9 bytes
   DictationSessionStatus result;
-  time_t timestamp;
+  uint32_t timestamp;
   char *text;
 } PebbleDictationEvent;
 
@@ -628,20 +632,22 @@ typedef struct PBL_PACKED PebbleWeatherEvent {
   WeatherEventType type : 8;
 } PebbleWeatherEvent;
 
-typedef struct HRMBPMData { // 2 bytes
+typedef struct HRMBPMData { // 3 bytes
   uint8_t bpm;
-  HRMQuality quality : 8;
+  uint8_t confidence; //!< algorithm confidence, 0-100
+  bool off_wrist;
 } HRMBPMData;
 
-typedef struct HRMHRVData { // 3 bytes
+typedef struct HRMHRVData { // 4 bytes
   uint16_t ppi_ms;          //!< Peak-to-peak interval (ms)
-  HRMQuality quality : 8;
+  uint8_t confidence;       //!< algorithm confidence, 0-100
+  bool off_wrist;
 } HRMHRVData;
 
 typedef struct HRMSpO2Data { // 4 bytes
   uint8_t percent;
-  HRMQuality quality : 8;
-  uint8_t confidence;      //!< raw algorithm confidence coefficient (debug)
+  uint8_t confidence; //!< algorithm confidence, 0-100
+  bool off_wrist;
   uint8_t valid_level : 7; //!< raw algorithm valid level (debug)
   uint8_t invalid : 1;     //!< raw algorithm invalid flag (debug)
 } HRMSpO2Data;
@@ -837,9 +843,8 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
   PebbleEventType type : 8;
 } PebbleEvent;
 
-// Guard the on-target size. The bound assumes 4-byte pointers and the
-// firmware C library's 32-bit time_t, so it only applies to the firmware
-// target; host builds have wider pointers or time_t.
+// Guard the on-target size. The bound assumes 4-byte pointers, so it only
+// applies to the firmware target.
 #if __SIZEOF_POINTER__ == 4 && !defined(CONFIG_LIBC_HOST)
 static_assert(sizeof(PebbleEvent) <= 12, "PebbleEvent grew; check the event union layout");
 #endif

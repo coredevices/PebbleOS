@@ -10,13 +10,13 @@
 #include "window_stack_private.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/util/struct.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
 
@@ -506,7 +506,7 @@ size_t window_stack_dump(WindowStack *stack, WindowStackDump **dump) {
   size_t count = window_stack_count(stack);
   size_t idx = 0;
   if (count > 0) {
-    *dump = kernel_calloc(count, sizeof(WindowStackDump));
+    *dump = pbl_calloc(count, sizeof(WindowStackDump));
     if (*dump) {
       WindowStackItem *item = (WindowStackItem *)stack->list_head;
       while (item) {

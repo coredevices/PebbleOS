@@ -11,6 +11,8 @@
 #include <time.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -41,7 +43,6 @@
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/ui/system_icons.h>
@@ -230,6 +231,9 @@ static void prv_window_pop_with_delay(uint32_t delay_ms);
 static void prv_action_bar_setup(PhoneCallActions actions);
 
 static void prv_set_answer_window(void) {
+#ifdef CONFIG_TOUCH
+  window_set_touch_bridge_disabled(&s_phone_ui_data->window, true);
+#endif
   modal_window_push(&s_phone_ui_data->window, ModalPriorityPhone, false /* don't animate */);
 }
 
@@ -460,7 +464,7 @@ static void prv_ring(void *unused) {
     // if we detect this bad state.
     return;
   }
-  if ((rtc_get_time() - s_phone_ui_data->ring_start_time) > MAX_RING_DURATION_S) {
+  if ((pbl_realtime() - s_phone_ui_data->ring_start_time) > MAX_RING_DURATION_S) {
     // The call-ended event never arrived (e.g. an ANCS removal lost across a
     // re-subscription); don't vibe until the user dismisses the window.
     PBL_LOG_WRN("Still ringing after %ds; stopping the vibe loop", MAX_RING_DURATION_S);
@@ -483,7 +487,7 @@ static void prv_start_ringing(void) {
   s_phone_ui_data->ring_timer = (const RegularTimerInfo){
     .cb = prv_ring,
   };
-  s_phone_ui_data->ring_start_time = rtc_get_time();
+  s_phone_ui_data->ring_start_time = pbl_realtime();
   unsigned int vibe_repeat_interval_sec;
   s_phone_ui_data->vibe_score = vibe_client_get_score(VibeClient_PhoneCalls);
   if (!s_phone_ui_data->vibe_score) {
@@ -537,7 +541,7 @@ static void prv_update_call_time(void *unused) {
   if (layer_get_hidden(&s_phone_ui_data->call_status_text_layer.layer)) {
     prv_show_call_status();
   }
-  const time_t duration = rtc_get_time() - s_phone_ui_data->call_start_time;
+  const time_t duration = pbl_realtime() - s_phone_ui_data->call_start_time;
   const int seconds = duration % PBL_SEC_PER_MIN;
   int minutes = (duration - seconds) / PBL_SEC_PER_MIN;
   if (minutes >= PBL_MIN_PER_HOUR) {
@@ -555,7 +559,7 @@ static void prv_update_call_time(void *unused) {
 
 static void prv_start_call_duration_timer(void) {
   if (s_phone_ui_data->call_start_time == 0) {
-    s_phone_ui_data->call_start_time = rtc_get_time();
+    s_phone_ui_data->call_start_time = pbl_realtime();
   }
 
   evented_timer_cancel(s_phone_ui_data->call_duration_timer);
@@ -934,7 +938,7 @@ static void prv_phone_ui_deinit(void) {
 
   timeline_item_destroy(s_phone_ui_data->call_response_item);
 
-  kernel_free(s_phone_ui_data);
+  pbl_free(s_phone_ui_data);
 
   s_phone_ui_data = nullptr;
 }
@@ -981,7 +985,7 @@ static void prv_window_pop_with_delay(uint32_t delay_ms) {
 static void prv_phone_ui_init(void) {
   PBL_ASSERTN(s_phone_ui_data == nullptr);
 
-  s_phone_ui_data = kernel_zalloc_check(sizeof(PhoneUIData));
+  s_phone_ui_data = pbl_zalloc_check(sizeof(PhoneUIData));
   s_phone_ui_data->hid_action_bar = false;
 
   s_phone_ui_data->style = s_phone_styles[system_theme_get_content_size()];

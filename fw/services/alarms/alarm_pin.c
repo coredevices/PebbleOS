@@ -1,14 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
-
-#include <kernel/pbl_malloc.h>
 
 #define ALARM_PIN_REMOVE_BATCH_SIZE 8
 
@@ -20,15 +19,15 @@ typedef struct {
   size_t count;
 } UntrackedAlarmPins;
 
-static bool prv_collect_untracked_future_pin(SettingsFile *file, SettingsRecordInfo *info,
-                                             void *context) {
+static bool prv_collect_untracked_future_pin(struct pbl_settings_file *file,
+                                             struct pbl_settings_record *info, void *context) {
   UntrackedAlarmPins *pins = context;
-  if (info->key_len != UUID_SIZE || info->val_len < (int)sizeof(SerializedTimelineItemHeader)) {
+  if (info->key_len != UUID_SIZE || info->val_len < sizeof(SerializedTimelineItemHeader)) {
     return true;
   }
 
   SerializedTimelineItemHeader header;
-  info->get_val(file, &header, sizeof(header));
+  pbl_settings_read_val(file, &header, sizeof(header));
   const Uuid alarm_source = UUID_ALARMS_DATA_SOURCE;
   if (header.common.type != TimelineItemTypePin ||
       !uuid_equal(&header.common.parent_id, &alarm_source) ||
@@ -37,7 +36,7 @@ static bool prv_collect_untracked_future_pin(SettingsFile *file, SettingsRecordI
   }
 
   Uuid id;
-  info->get_key(file, &id, sizeof(id));
+  pbl_settings_read_key(file, &id, sizeof(id));
   for (size_t i = 0; i < pins->tracked_count; ++i) {
     if (uuid_equal(&id, &pins->tracked[i])) {
       return true;
@@ -95,7 +94,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
   const unsigned num_actions = 1; // We are just supporting "edit" for now
   TimelineItemActionGroup action_group = {
     .num_actions = num_actions,
-    .actions = task_zalloc_check(sizeof(TimelineItemAction) * num_actions),
+    .actions = pbl_zalloc_check(sizeof(TimelineItemAction) * num_actions),
   };
 
   AttributeList edit_attr_list = {};
@@ -115,7 +114,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
     i18n_free_all(&edit_attr_list);
     attribute_list_destroy_list(&pin_attr_list);
     attribute_list_destroy_list(&edit_attr_list);
-    task_free(action_group.actions);
+    pbl_free(action_group.actions);
     return E_OUT_OF_MEMORY;
   }
   item->header.from_watch = true;
@@ -127,7 +126,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
   i18n_free_all(&edit_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
   attribute_list_destroy_list(&edit_attr_list);
-  task_free(action_group.actions);
+  pbl_free(action_group.actions);
 
   if (rv == S_SUCCESS && uuid_out) {
     *uuid_out = item->header.id;

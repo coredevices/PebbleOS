@@ -7,75 +7,9 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/button_id.h>
 #include <pbl/input/input.h>
 
 #include <cmsis_core.h>
-
-// Compatibility type for gpio.h (QEMU has no real GPIO peripheral struct)
-typedef void GPIO_TypeDef;
-
-#define GPIO_Port_NULL nullptr
-#define GPIO_Pin_NULL  0U
-
-typedef enum {
-  GPIO_PuPd_NOPULL,
-  GPIO_PuPd_UP,
-  GPIO_PuPd_DOWN,
-} GPIOPuPd_TypeDef;
-
-typedef struct {
-  int pad;
-  int func;
-  int flags;
-} Pinmux;
-
-typedef struct {
-  uint16_t value;
-  uint16_t resolution;
-  int enabled;
-  uint16_t channel;
-} PwmState;
-
-typedef struct {
-  Pinmux pwm_pin;
-  PwmState *state;
-} PwmConfig;
-
-typedef struct {
-  uint8_t backlight_on_percent;
-  uint32_t ambient_light_dark_threshold;
-  uint32_t ambient_k_delta_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  // Default RGB backlight color (packed 0x00RRGGBB), applied when no app
-  // override is set. User-preference overrides this via backlight_set_color().
-  uint32_t backlight_default_color;
-#endif
-} BoardConfig;
-
-typedef struct {
-  const char *name;
-  void *const port;
-  uint8_t pin;
-  GPIOPuPd_TypeDef pull;
-  bool active_high;
-  uint16_t code;
-} ButtonConfig;
-
-typedef struct {
-  ButtonConfig buttons[NUM_BUTTONS];
-  void *timer;
-  int timer_irqn;
-} BoardConfigButton;
-
-typedef struct {
-  const uint8_t low_power_threshold;
-  const uint16_t battery_capacity_hours;
-} BoardConfigPower;
-
-typedef struct {
-  uint8_t default_motion_sensitivity;
-} BoardConfigAccel;
 
 // QEMU MMIO peripheral base addresses
 #define QEMU_UART0_BASE      0x40000000
@@ -97,23 +31,10 @@ typedef struct {
 #define QEMU_EXTFLASH_XIP_BASE 0x10000000
 
 // Forward-declare device types
-typedef const struct UARTDevice UARTDevice;
-typedef const struct QSPIPort QSPIPort;
-typedef const struct QSPIFlash QSPIFlash;
+struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
 typedef const struct MicDevice MicDevice;
 typedef const struct AudioDevice AudioDevice;
-
-// QEMU display device
-typedef struct QemuDisplayDevice {
-  uint32_t base_addr;
-  uint32_t fb_addr;
-  uint16_t width;
-  uint16_t height;
-  uint8_t bpp;
-  int irqn;
-} QemuDisplayDevice;
-typedef const QemuDisplayDevice DisplayDevice;
 
 extern AudioDevice *const AUDIO;
 

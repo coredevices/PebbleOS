@@ -128,7 +128,7 @@ pbl/index.md
 development/build_system/index.md
 development/emulation/index.md
 development/tests/index.md
-development/debugging.md
+development/debugging/index.md
 development/conventions.md
 ```
 
@@ -167,5 +167,5 @@ community/contributing.md
 
 reference/index.md
 reference/kconfig.md
-API reference <https://pebbleos.readthedocs.io/en/latest/apidoc/index.html>
+API reference <apidoc://>
 ```

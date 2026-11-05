@@ -20,13 +20,15 @@
 extern char *itoa(int value, char *str, int base);
 
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/mpu.h>
 #include <pbl/services/comm_session/session.h>
+#include <pbl/services/time.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -35,13 +37,10 @@ extern char *itoa(int value, char *str, int base);
 #include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
 #include <kernel/core_dump_private.h>
-#include <kernel/pbl_malloc.h>
 #include <logging/logging_private.h>
-#include <logging/pulse_logging.h>
 #include <mfg/mfg_serials.h>
 #include <pebbleos/chip_id.h>
 #include <system/bootbits.h>
-#include <system/reset.h>
 #include <system/version.h>
 
 #ifdef CONFIG_SOC_NRF52
@@ -64,11 +63,6 @@ extern const ElfExternalNote TINTIN_BUILD_ID;
 
 extern uint8_t __RAM_start__;
 extern uint8_t __RAM_size__;
-
-void cd_flash_init(void);
-uint32_t cd_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
-void cd_flash_erase_region(uint32_t start_addr, uint32_t total_bytes);
-void cd_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size);
 
 // ----------------------------------------------------------------------------------------
 // Private globals
@@ -111,34 +105,22 @@ static const MemoryRegion LCPU_MEMORY_REGION = {
 #endif
 
 // -------------------------------------------------------------------------------------------------
-// Flash driver dual-API.
-static bool s_use_cd_flash_driver = true;
+// Flash access, without OS services once pbl_flash_coredump_init() has run.
 
 static uint32_t prv_flash_write_bytes(const void *buffer_ptr, uint32_t start_addr,
                                       uint32_t buffer_size) {
-  if (s_use_cd_flash_driver) {
-    return cd_flash_write_bytes(buffer_ptr, start_addr, buffer_size);
-  } else {
-    flash_write_bytes(buffer_ptr, start_addr, buffer_size);
-    return buffer_size;
-  }
+  CD_ASSERTN(((start_addr + buffer_size) <= CORE_DUMP_FLASH_END) &&
+             (start_addr >= CORE_DUMP_FLASH_START));
+  CD_ASSERTN(pbl_flash_write(FLASH, start_addr, buffer_ptr, buffer_size) == 0);
+  return buffer_size;
 }
 
 static void prv_flash_erase_region(uint32_t start_addr, uint32_t total_bytes) {
-  if (s_use_cd_flash_driver) {
-    cd_flash_erase_region(start_addr, total_bytes);
-  } else {
-    uint32_t end = start_addr + total_bytes;
-    flash_region_erase_optimal_range_no_watchdog(start_addr, start_addr, end, end);
-  }
+  CD_ASSERTN(pbl_flash_erase(FLASH, start_addr, total_bytes) == 0);
 }
 
 static void prv_flash_read_bytes(void *buffer_ptr, uint32_t start_addr, uint32_t buffer_size) {
-  if (s_use_cd_flash_driver) {
-    cd_flash_read_bytes(buffer_ptr, start_addr, buffer_size);
-  } else {
-    flash_read_bytes(buffer_ptr, start_addr, buffer_size);
-  }
+  CD_ASSERTN(pbl_flash_read(FLASH, start_addr, buffer_ptr, buffer_size) == 0);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -152,19 +134,12 @@ static void prv_debug_str(const char *msg) {
 // NOTE: We are explicitly avoiding use of vsniprintf and cohorts to reduce our stack
 // requirements
 static void prv_debug_str_str(const char *msg, const char *s) {
-#ifdef CONFIG_PULSE_EVERYWHERE
-  void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
-  pulse_logging_log_sync_append(ctx, msg);
-  pulse_logging_log_sync_append(ctx, s);
-  pulse_logging_log_sync_send(ctx);
-#else
-  int max_length = 256;
-  while (*msg && max_length--) {
-    dbgserial_putchar(*msg);
-    ++msg;
-  }
-  dbgserial_putstr(s);
-#endif
+  char buffer[64];
+
+  strncpy(buffer, msg, sizeof(buffer) - 1);
+  buffer[sizeof(buffer) - 1] = '\0';
+  strncat(buffer, s, sizeof(buffer) - strlen(buffer) - 1);
+  prv_debug_str(buffer);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -181,24 +156,12 @@ static void prv_debug_str_int(const char *msg, uint32_t i, int base) {
     itoa(i, buffer, base);
   }
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-  void *ctx = pulse_logging_log_sync_begin(LOG_LEVEL_ALWAYS, __FILE_NAME__, 0);
-  pulse_logging_log_sync_append(ctx, msg);
-  pulse_logging_log_sync_append(ctx, buffer);
-  pulse_logging_log_sync_send(ctx);
-#else
-  int max_length = 256;
-  while (*msg && max_length--) {
-    dbgserial_putchar(*msg);
-    ++msg;
-  }
-  dbgserial_putstr(buffer);
-#endif
+  prv_debug_str_str(msg, buffer);
 }
 
 [[noreturn]] static void prv_reset(void) {
   dbgserial_flush();
-  system_hard_reset();
+  pbl_reboot_emergency();
 }
 
 // -----------------------------------------------------------------------------------------
@@ -548,17 +511,18 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
 
   prv_debug_str("Starting core dump");
 
-  // Save the current time now because rtc_get_ticks() disables and then re-enables interrupts
-  s_time_stamp = rtc_get_time();
+  // Save the current time now because pbl_uptime_ticks() disables and then re-enables interrupts
+  s_time_stamp = pbl_realtime();
 
   prv_debug_str("CD: starting");
 
   // Feed the watchdog so that we don't get watchdog reset in the middle of dumping the core
   watchdog_feed();
 
-  // Init the flash and SPI bus
-  s_use_cd_flash_driver = true;
-  cd_flash_init();
+  // Re-initialize the flash, which must not rely on OS services from now on
+  CD_ASSERTN(pbl_flash_coredump_init(FLASH) == 0);
+  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
   // If there is a fairly recent unread core image already present, don't replace it. Once it is
   // read through the get_bytes_protocol_msg_callback(), the unread flag gets cleared out.
@@ -677,7 +641,8 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size) {
   uint32_t current_offset = sizeof(CoreDumpImageHeader);
 
   while (true) {
-    flash_read_bytes((uint8_t *)&chunk_hdr, core_dump_base + current_offset, sizeof(chunk_hdr));
+    pbl_flash_read(FLASH, core_dump_base + current_offset, (uint8_t *)&chunk_hdr,
+                   sizeof(chunk_hdr));
     if (chunk_hdr.key == CORE_DUMP_CHUNK_KEY_TERMINATOR) {
       current_offset += sizeof(chunk_hdr);
       break;
@@ -702,17 +667,18 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size) {
 
 void core_dump_mark_read(uint32_t flash_base) {
   CoreDumpFlashRegionHeader region_hdr;
-  flash_read_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
+  pbl_flash_read(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
   region_hdr.unread = 0;
-  flash_write_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
+  pbl_flash_write(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
 }
 
 bool core_dump_is_unread_available(uint32_t flash_base) {
   if (flash_base != CORE_DUMP_FLASH_INVALID_ADDR) { // a coredump is on flash
     CoreDumpFlashRegionHeader region_hdr;
     CoreDumpImageHeader image_hdr;
-    flash_read_bytes((uint8_t *)&region_hdr, flash_base, sizeof(region_hdr));
-    flash_read_bytes((uint8_t *)&image_hdr, flash_base + sizeof(region_hdr), sizeof(image_hdr));
+    pbl_flash_read(FLASH, flash_base, (uint8_t *)&region_hdr, sizeof(region_hdr));
+    pbl_flash_read(FLASH, flash_base + sizeof(region_hdr), (uint8_t *)&image_hdr,
+                   sizeof(image_hdr));
     return ((image_hdr.magic == CORE_DUMP_MAGIC) && (region_hdr.unread != 0));
   }
 
@@ -729,9 +695,6 @@ bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
   bool status = true;
   uint32_t flash_addr, flash_addr_base;
 
-  // Use the standard flash driver
-  s_use_cd_flash_driver = false;
-
   flash_addr_base = prv_flash_start_address(true /*new*/);
   if (flash_addr_base == CORE_DUMP_FLASH_INVALID_ADDR) {
     status = false;
@@ -739,13 +702,12 @@ bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
   }
 
   flash_addr = flash_addr_base + sizeof(CoreDumpFlashRegionHeader);
-  flash_addr += prv_write_image_header(flash_addr, CORE_ID_BLE, build_id, rtc_get_time());
+  flash_addr += prv_write_image_header(flash_addr, CORE_ID_BLE, build_id, pbl_realtime());
 
   *flash_base = flash_addr;
   *max_size = CORE_DUMP_MAX_SIZE - (flash_addr - flash_addr_base);
 
 cleanup:
-  s_use_cd_flash_driver = true;
   return status;
 }
 

@@ -8,18 +8,18 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/timeline.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 
 #include <applib/event_service_client.h>
@@ -110,17 +110,6 @@ typedef struct {
 } FakePinRecord;
 
 static FakePinRecord s_fake_pin_records[4];
-static FakePinRecord *s_current_fake_pin_record;
-
-static void prv_fake_pin_get_key(SettingsFile *file, void *buf, size_t len) {
-  (void)file;
-  memcpy(buf, &s_current_fake_pin_record->id, len);
-}
-
-static void prv_fake_pin_get_val(SettingsFile *file, void *buf, size_t len) {
-  (void)file;
-  memcpy(buf, &s_current_fake_pin_record->header, len);
-}
 
 static inline void prv_fake_pin_record_add(Uuid id, Uuid parent, time_t timestamp,
                                            LayoutId layout) {
@@ -201,22 +190,18 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
 }
 
 status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/fakepins", 4096));
   for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
-    if (!s_fake_pin_records[i].exists) {
-      continue;
-    }
-    s_current_fake_pin_record = &s_fake_pin_records[i];
-    SettingsRecordInfo info = {
-      .get_key = prv_fake_pin_get_key,
-      .key_len = UUID_SIZE,
-      .get_val = prv_fake_pin_get_val,
-      .val_len = sizeof(SerializedTimelineItemHeader),
-    };
-    if (!each(nullptr, &info, data)) {
-      break;
+    if (s_fake_pin_records[i].exists) {
+      cl_must_pass(pbl_settings_set(&file, &s_fake_pin_records[i].id, UUID_SIZE,
+                                    &s_fake_pin_records[i].header,
+                                    sizeof(SerializedTimelineItemHeader)));
     }
   }
-  s_current_fake_pin_record = nullptr;
+  pbl_settings_each(&file, each, data);
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_fs_unlink("/fakepins"));
   return S_SUCCESS;
 }
 
@@ -236,19 +221,19 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 //! Helper Functions
 
 void prv_assert_settings_key_absent(const void *key, size_t key_len) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
-  cl_assert(settings_file_get_len(&file, key, key_len) == 0);
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  cl_assert(pbl_settings_get_len(&file, key, key_len) == 0);
+  pbl_settings_close(&file);
 }
 
 void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
                                size_t value_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   char buffer[value_len];
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
-  cl_must_pass(settings_file_get(&file, key, key_len, buffer, value_len));
-  settings_file_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  cl_must_pass(pbl_settings_get(&file, key, key_len, buffer, value_len));
+  pbl_settings_close(&file);
   cl_assert_equal_m(expected_value, buffer, value_len);
 }
 

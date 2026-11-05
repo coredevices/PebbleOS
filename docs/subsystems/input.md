@@ -18,9 +18,25 @@ An event is a type, a code and a value:
 - `PBL_INPUT_EV_GES`: a gesture recognized by the device (tap, double tap,
   palm), located at the report's `ABS_X` and `ABS_Y`.
 
+Key and axis codes have the values of the Linux input event codes
+(`KEY_BACK` is 158, `ABS_X` is 0, ...), so a devicetree `linux,code`
+property is a code as is.
+
 Events are grouped in reports, the last one carrying `sync`. A touch sample
 is `BTN_TOUCH`, `ABS_X`, `ABS_Y` (sync); a gesture is `ABS_X`, `ABS_Y`,
 `GES` (sync); a button is a single `KEY` event with `sync`.
+
+## Touchscreens
+
+A touchscreen is a device of the touch class (`include/pbl/drivers/touch.h`).
+Its driver reports through the class, with `pbl_touch_report()` and
+`pbl_touch_report_gesture()`, which map the controller coordinates to the
+display with the board's touchscreen properties (`touchscreen-size-x/y`,
+`touchscreen-inverted-x/y`, `touchscreen-swapped-x-y`) and report the
+events above. The touchscreen is powered while it has users:
+`pbl_touch_enable()` and `pbl_touch_disable()` count them, and the touch
+service is one while it has subscribers. The `touch` shell command shows
+the properties, the users and the last sample.
 
 ## Delivery
 
@@ -42,17 +58,18 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
 PBL_INPUT_CALLBACK_DEFINE(prv_input_cb, NULL);
 ```
 
-The firmware has two listeners:
+The firmware has three listeners:
 
 - `fw/kernel/input_buttons.c` turns key events into
   `PEBBLE_BUTTON_DOWN_EVENT` / `PEBBLE_BUTTON_UP_EVENT`, so the click
-  recognizers and everything above them are unchanged.
+  recognizers and everything above them are unchanged. It also tracks the
+  held buttons and swaps up and down while the watch is rotated.
 - The touch service (`fw/services/touch/touch.c`) collects each report and
   passes it to `touch_handle_update()` and `touch_handle_gesture()`.
-
-The SELECT+BACK hard reset stays in the button drivers: it has to work when
-every thread is wedged, so it runs in the debounce timer ISR that also times
-how long the buttons are held.
+- `fw/system/reset_keys.c` hard resets the watch when BACK and SELECT are
+  held for 5 seconds, into PRF if UP is held too, except in MFG builds. It
+  has to work when every thread is wedged, so it times the hold with a
+  kernel timer, which expires in the tick interrupt.
 
 ## Injection
 

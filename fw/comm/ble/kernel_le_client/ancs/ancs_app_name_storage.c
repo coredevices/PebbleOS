@@ -6,9 +6,8 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/circular_cache.h>
-
-#include <kernel/pbl_malloc.h>
 
 static const unsigned ANCS_APP_NAME_STORAGE_SIZE = 30;
 
@@ -37,16 +36,15 @@ static int prv_comparator(void *a, void *b) {
 static void prv_destructor(void *item) {
   if (item) {
     AncsAppNameStorageEntry *entry = item;
-    kernel_free(entry->app_id);
-    kernel_free(entry->app_name);
+    pbl_free(entry->app_id);
+    pbl_free(entry->app_name);
   }
 }
 
 void ancs_app_name_storage_init(void) {
   PBL_ASSERTN(!s_cache);
-  s_cache = kernel_zalloc_check(sizeof(*s_cache));
-  uint8_t *buffer =
-      kernel_zalloc_check(sizeof(AncsAppNameStorageEntry) * ANCS_APP_NAME_STORAGE_SIZE);
+  s_cache = pbl_zalloc_check(sizeof(*s_cache));
+  uint8_t *buffer = pbl_zalloc_check(sizeof(AncsAppNameStorageEntry) * ANCS_APP_NAME_STORAGE_SIZE);
   circular_cache_init(s_cache, buffer, sizeof(AncsAppNameStorageEntry), ANCS_APP_NAME_STORAGE_SIZE,
                       prv_comparator);
   circular_cache_set_item_destructor(s_cache, prv_destructor);
@@ -55,8 +53,8 @@ void ancs_app_name_storage_init(void) {
 void ancs_app_name_storage_deinit(void) {
   if (s_cache) {
     circular_cache_flush(s_cache);
-    kernel_free(s_cache->cache);
-    kernel_free(s_cache);
+    pbl_free(s_cache->cache);
+    pbl_free(s_cache);
     s_cache = nullptr;
   }
 }
@@ -67,11 +65,11 @@ void ancs_app_name_storage_store(const ANCSAttribute *app_id, const ANCSAttribut
   }
 
   // copy app id
-  ANCSAttribute *app_id_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_id->length);
+  ANCSAttribute *app_id_copy = pbl_zalloc_check(sizeof(ANCSAttribute) + app_id->length);
   ;
   memcpy(app_id_copy, app_id, sizeof(ANCSAttribute) + app_id->length);
   // copy app name
-  ANCSAttribute *app_name_copy = kernel_zalloc_check(sizeof(ANCSAttribute) + app_name->length);
+  ANCSAttribute *app_name_copy = pbl_zalloc_check(sizeof(ANCSAttribute) + app_name->length);
   ;
   memcpy(app_name_copy, app_name, sizeof(ANCSAttribute) + app_name->length);
   AncsAppNameStorageEntry entry = {

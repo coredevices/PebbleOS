@@ -75,3 +75,30 @@ void test_mktime__leap(void) {
   };
   cl_assert_equal_i(pbl_mktime(&real_leap), 1330509600);
 }
+
+void test_mktime__after_2038(void) {
+  struct pbl_tm tm = {
+    .tm_mday = 1,
+    .tm_mon = 0,
+    .tm_year = 150,
+  };
+  if (sizeof(time_t) > 4) {
+    // 2050-01-01T00:00:00Z
+    cl_assert(pbl_mktime(&tm) == (time_t)2524608000LL);
+    cl_assert_equal_i(tm.tm_year, 150);
+    cl_assert_equal_i(tm.tm_wday, PBL_SATURDAY);
+  } else {
+    cl_assert(pbl_mktime(&tm) == -1);
+  }
+}
+
+void test_mktime__before_2100(void) {
+  struct pbl_tm last =
+      {.tm_sec = 59, .tm_min = 59, .tm_hour = 23, .tm_mday = 31, .tm_mon = 11, .tm_year = 199};
+  struct pbl_tm too_late = {.tm_mday = 1, .tm_year = 201};
+  if (sizeof(time_t) > 4) {
+    // 2099-12-31T23:59:59Z
+    cl_assert(pbl_mktime(&last) == (time_t)4102444799LL);
+  }
+  cl_assert(pbl_mktime(&too_late) == -1);
+}

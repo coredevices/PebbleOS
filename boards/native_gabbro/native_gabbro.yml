@@ -3,3 +3,7 @@
 
 variants:
   - wasm
+
+runners:
+  - native
+  - wasm

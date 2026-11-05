@@ -3,8 +3,8 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/services/time.h>
 #include <pbl/util/time.h>
@@ -16,6 +16,9 @@ static int32_t s_timezone_gmtoffset = 0;
 static int32_t s_dst_adjust = PBL_SEC_PER_HOUR;
 static time_t s_dst_start = 0;
 static time_t s_dst_end = 0;
+// DST period before s_dst_start, for past timestamps
+static time_t s_prev_dst_start = 0;
+static time_t s_prev_dst_end = 0;
 
 int32_t time_get_gmtoffset(void) {
   return s_timezone_gmtoffset;
@@ -27,7 +30,8 @@ bool time_get_isdst(time_t utc_time) {
     return false;
   }
 
-  return ((s_dst_start <= utc_time) && (utc_time < s_dst_end));
+  return ((s_dst_start <= utc_time) && (utc_time < s_dst_end)) ||
+         ((s_prev_dst_start <= utc_time) && (utc_time < s_prev_dst_end));
 }
 
 int32_t time_get_dstoffset(void) {
@@ -88,12 +92,15 @@ struct pbl_tm *pbl_localtime_r(const time_t *timep, struct pbl_tm *result) {
   return result;
 }
 
-void time_util_update_timezone(const TimezoneInfo *tz_info) {
+void time_util_update_timezone(const TimezoneInfo *tz_info, time_t prev_dst_start,
+                               time_t prev_dst_end) {
   strncpy(s_timezone_abbr, tz_info->tm_zone, sizeof(tz_info->tm_zone) + 0);
   s_timezone_abbr[PBL_TZ_LEN - 1] = '\0';
   s_timezone_gmtoffset = tz_info->tm_gmtoff;
   s_dst_start = tz_info->dst_start;
   s_dst_end = tz_info->dst_end;
+  s_prev_dst_start = prev_dst_start;
+  s_prev_dst_end = prev_dst_end;
   // Lord Howe Island has a half-hour DST
   if (tz_info->dst_id == DSTID_LORDHOWE) {
     s_dst_adjust = PBL_SEC_PER_HOUR / 2;
@@ -116,7 +123,7 @@ bool time_util_range_spans_day(time_t start, time_t end, time_t start_of_day) {
 }
 
 time_t time_util_utc_to_local_offset(void) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   return (time_utc_to_local(now) - now);
 }
 
@@ -145,7 +152,7 @@ int time_util_get_minute_of_day(time_t utc_sec) {
 
 // ---------------------------------------------------------------------------------------
 time_t time_start_of_today(void) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   return time_util_get_midnight_of(now);
 }
 
@@ -155,6 +162,6 @@ PBL_SYSCALL(time_t, sys_time_start_of_today) {
 
 // ---------------------------------------------------------------------------------------
 uint32_t time_get_uptime_seconds(void) {
-  RtcTicks ticks = rtc_get_ticks();
+  uint64_t ticks = pbl_uptime_ticks();
   return ticks / PBL_TICK_HZ;
 }

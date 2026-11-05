@@ -12,10 +12,11 @@
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
+#include <applib/app_malloc.h>
+#include <applib/event_service_client.h>
 #include <applib/ui/action_button.h>
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
-#include <kernel/pbl_malloc.h>
 
 #define BACK_TO_WATCHFACE (-1)
 
@@ -44,6 +45,7 @@ typedef struct HealthCardView {
   GColor select_indicator_color;
   bool cycle_cards;
   bool reverse_order;
+  EventServiceInfo dark_mode_event_info;
 } HealthCardView;
 
 static Layer *(*s_card_view_create[CardCount])(HealthData *health_data) = {
@@ -182,6 +184,18 @@ static void prv_set_window_background_color(HealthCardView *health_card_view) {
   window_set_background_color(
       &health_card_view->window,
       s_card_view_get_bg_color[health_card_view->current_card_index](card_layer));
+}
+
+// The heart rate card follows the system theme
+static void prv_dark_mode_change_handler(PebbleEvent *event, void *context) {
+  HealthCardView *health_card_view = context;
+  if (animation_is_scheduled(health_card_view->slide_animation)) {
+    // The cards are being switched, which applies the colors when done
+    return;
+  }
+  prv_set_window_background_color(health_card_view);
+  prv_refresh_select_indicator(health_card_view);
+  prv_refresh_content_indicators(health_card_view);
 }
 
 #define NUM_MID_FRAMES 1
@@ -389,10 +403,18 @@ HealthCardView *health_card_view_create(HealthData *health_data) {
   prv_refresh_select_indicator(health_card_view);
   prv_refresh_content_indicators(health_card_view);
 
+  health_card_view->dark_mode_event_info = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_dark_mode_change_handler,
+    .context = health_card_view,
+  };
+  event_service_client_subscribe(&health_card_view->dark_mode_event_info);
+
   return health_card_view;
 }
 
 void health_card_view_destroy(HealthCardView *health_card_view) {
+  event_service_client_unsubscribe(&health_card_view->dark_mode_event_info);
   // destroy cards
   health_activity_summary_card_destroy(health_card_view->card_layers[Card_ActivitySummary]);
   health_sleep_summary_card_destroy(health_card_view->card_layers[Card_SleepSummary]);

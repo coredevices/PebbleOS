@@ -45,8 +45,11 @@ struct pbl_thread *waitq_pop(struct pbl_waitq *wq);
 void sched_inherit(struct pbl_thread *owner, pbl_prio_t prio);
 void sched_disinherit(struct pbl_thread *owner);
 
-//! C entry from the reset vector: sets up RAM, then the SoC, then main().
+//! C entry from the reset vector: sets up RAM, then kernel_init().
 [[noreturn]] void kernel_prep_c(void);
+
+//! Brings up the SoC, interrupts, faults and the heap, then runs @p entry.
+[[noreturn]] void kernel_init(int (*entry)(void));
 
 //! Resets the interrupt lock nesting when the first thread starts.
 void irq_reset(void);
@@ -56,8 +59,25 @@ void sched_start_prepare(void);
 
 //! Arch entry points into the scheduler.
 struct pbl_thread *sched_switch_in(void); // picks and accounts the next thread
-void sched_tick(void);
+//! Advances the tick count by @p ticks and expires the timeouts that fell due.
+void sched_announce(uint64_t ticks);
 bool sched_idle_confirm(void);
-void sched_idle_slept(pbl_tick_t elapsed);
 struct pbl_thread *sched_idle_thread(void);
+//! Current tick count; call with the interrupt lock held.
+pbl_tick_t sched_ticks(void);
+//! Current tick count in 64 bits; call with the interrupt lock held.
+uint64_t sched_uptime_ticks(void);
+
+//! Starts the system timer, when the scheduler starts.
+void timekeeping_start(void);
+//! Catches the tick count up with the system clock source.
+void timekeeping_announce(void);
+//! Idles the CPU for up to @p ticks; call with every interrupt masked and idle confirmed.
+void timekeeping_idle(pbl_tick_t ticks);
+
+//! Runs the callbacks of the expired timers, from the tick ISR.
+void timer_expire(void);
+//! Ticks from @p now until the next timer expires, PBL_TICK_FOREVER if none.
+pbl_tick_t timer_ticks_until_next(pbl_tick_t now);
+void timer_reset_for_test(void);
 extern struct pbl_thread *pbl_all_threads;

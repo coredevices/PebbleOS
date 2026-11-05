@@ -7,3 +7,6 @@ qemu:
   decorations:
     - p2d-bk
     - p2d-wh
+
+runners:
+  - qemu

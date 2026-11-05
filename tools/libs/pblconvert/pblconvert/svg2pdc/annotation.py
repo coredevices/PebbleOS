@@ -14,15 +14,12 @@ def to_str(value):
 
 
 class Annotation:
-    def __init__(self, node, text, transformed=False, link=None):
+    def __init__(self, node, text, transformed=False):
         self.node = node
         self.text = text
-        self.href = link
         self.element = ElementTree.SubElement(self.node.node, TAG_ANNOTATION)
         if text is not None:
             self.element.set("description", text)
-        if link is not None:
-            self.element.set("href", link)
         self.highlights = []
         self.transformed = transformed
         self.node.annotations.append(self)

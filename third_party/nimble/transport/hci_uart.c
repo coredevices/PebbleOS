@@ -89,7 +89,7 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
-static void prv_rx_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorFlags *err_flags) {
+static void prv_rx(const struct pbl_uart *uart, uint8_t data, void *arg) {
   uint32_t head = s_rx_head;
   uint32_t next = (head + 1U) % RX_RING_SIZE;
 
@@ -100,7 +100,7 @@ static void prv_rx_irq_handler(UARTDevice *dev, uint8_t data, const UARTRXErrorF
 
   if ((next + 1U) % RX_RING_SIZE == s_rx_tail) {
     s_rx_paused = true;
-    uart_set_rx_interrupt_enabled(dev, false);
+    (void)pbl_uart_rx_disable(uart);
   }
 
   pbl_sem_give(&s_rx_ready);
@@ -124,7 +124,7 @@ static void prv_hci_task_main(void *unused) {
 
       if (s_rx_paused) {
         s_rx_paused = false;
-        uart_set_rx_interrupt_enabled(BT_HCI_UART, true);
+        (void)pbl_uart_rx_enable(BT_HCI_UART, prv_rx, nullptr);
       }
     }
   }
@@ -132,7 +132,7 @@ static void prv_hci_task_main(void *unused) {
 
 static void prv_write(const uint8_t *data, size_t len) {
   for (size_t i = 0U; i < len; i++) {
-    uart_write_byte(BT_HCI_UART, data[i]);
+    pbl_uart_poll_out(BT_HCI_UART, data[i]);
   }
 }
 
@@ -163,9 +163,7 @@ void ble_transport_ll_init(void) {
   s_hci_task_handle = pebble_task_create(PebbleTask_BTHCI, &attr);
   PBL_ASSERTN(s_hci_task_handle);
 
-  uart_init(BT_HCI_UART);
-  uart_set_rx_interrupt_handler(BT_HCI_UART, prv_rx_irq_handler);
-  uart_set_rx_interrupt_enabled(BT_HCI_UART, true);
+  PBL_ASSERTN(pbl_uart_rx_enable(BT_HCI_UART, prv_rx, nullptr) == 0);
 }
 
 int ble_transport_to_ll_cmd_impl(void *buf) {

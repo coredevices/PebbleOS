@@ -16,7 +16,8 @@
  *
  * @code{.c}
  * PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
- *                          .pwm = {...}, .max_duty_cycle_percent = 67);
+ *                          .pwm = PBL_PWM(&s_pwm0.ctrl, 0, PBL_PWM_HZ(256), 0),
+ *                          .max_duty_cycle_percent = 67);
  *
  * const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
  * @endcode
@@ -29,8 +30,8 @@ struct pbl_backlight_pwm {
   struct pbl_backlight backlight;
   /** Optional enable output, active while the backlight is on. */
   struct pbl_gpio enable;
-  /** PWM output. */
-  PwmConfig pwm;
+  /** PWM output, with the period to run it at. */
+  struct pbl_pwm pwm;
   /** Duty cycle at full brightness, in percent. */
   uint8_t max_duty_cycle_percent;
 };

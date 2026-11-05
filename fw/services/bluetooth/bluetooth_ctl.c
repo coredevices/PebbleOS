@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 
 #include <comm/ble/gap_le.h>
@@ -11,6 +12,7 @@
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/transport.h>
 #endif
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
@@ -24,7 +26,6 @@
 #include <pbl/services/system_task.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -72,7 +73,7 @@ static void prv_comm_start(void) {
     return;
   }
   // Heap allocated to reduce stack usage
-  struct pbl_bt_config *config = kernel_zalloc_check(sizeof(struct pbl_bt_config));
+  struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
 #ifdef CONFIG_SERVICE_BLE_HRM
   config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
@@ -84,7 +85,7 @@ static void prv_comm_start(void) {
   bt_persistent_storage_register_existing_ble_bondings();
 
   s_comm_is_running = pbl_bt_start(config);
-  kernel_free(config);
+  pbl_free(config);
 
   if (s_comm_is_running) {
     bt_local_addr_init();
@@ -197,10 +198,10 @@ void bt_ctl_set_override_mode(BtCtlModeOverride override) {
 
 static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currently_on) {
   // Track when coming out of airplane mode and we've gone into airplane mode less than 30 secs ago:
-  static RtcTicks s_airplane_mode_last_toggle_ticks;
-  const RtcTicks now_ticks = rtc_get_ticks();
+  static uint64_t s_airplane_mode_last_toggle_ticks;
+  const uint64_t now_ticks = pbl_uptime_ticks();
   const uint64_t max_interval_secs = 30;
-  if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * RTC_TICKS_HZ)) &&
+  if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * PBL_TICK_HZ)) &&
       is_airplane_mode_currently_on) {
     PBL_LOG_DBG("Quick airplane mode toggle detected!");
   }

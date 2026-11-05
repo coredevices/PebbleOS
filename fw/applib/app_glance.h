@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <pbl/services/app_glances/app_glance_service.h>
+#include <pbl/util/time.h>
 
 //! @addtogroup Foundation
 //! @{
@@ -60,7 +61,7 @@
 typedef uint32_t PublishedId;
 
 //! Can be used for the expiration_time of an \ref AppGlanceSlice so that the slice never expires.
-#define APP_GLANCE_SLICE_NO_EXPIRATION ((time_t)0)
+#define APP_GLANCE_SLICE_NO_EXPIRATION ((pbl_time32_t)0)
 
 //! Can be used for the icon of an \ref AppGlanceSlice so that the slice displays the app's default
 //! icon.
@@ -84,7 +85,7 @@ typedef struct AppGlanceSlice {
   AppGlanceSliceLayout layout;
   //! The UTC time after which this slice should no longer be shown in the app's glance. Use \ref
   //! APP_GLANCE_SLICE_NO_EXPIRATION if the slice should never expire.
-  time_t expiration_time;
+  pbl_time32_t expiration_time;
 } AppGlanceSlice;
 
 //! Bitfield enum describing the result of trying to add an AppGlanceSlice to an app's glance.

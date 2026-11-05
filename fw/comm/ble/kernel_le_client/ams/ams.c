@@ -12,6 +12,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/units.h>
@@ -23,9 +24,7 @@
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -368,7 +367,7 @@ static void prv_handle_player_playback_info_update(const AMSEntityUpdateNotifica
     music_update_player_playback_state(&state);
   } else {
     PBL_LOG_ERR("Expected CSV with 3 values:");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *)update->value_str, value_length);
+    PBL_LOG_HEXDUMP_ERR((const uint8_t *)update->value_str, value_length);
   }
 }
 
@@ -376,7 +375,7 @@ static bool prv_float_string_parse(const char *value, const uint16_t value_lengt
                                    int32_t multiplier, int32_t *value_in_out) {
   if (value_length && !ams_util_float_string_parse(value, value_length, multiplier, value_in_out)) {
     PBL_LOG_ERR("AMS float failed to parse:");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, (const uint8_t *)value, value_length);
+    PBL_LOG_HEXDUMP_ERR((const uint8_t *)value, value_length);
     return false;
   }
   return true;
@@ -539,7 +538,7 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
 
 void ams_create(void) {
   PBL_ASSERTN(!s_ams_client);
-  s_ams_client = (AMSClient *)kernel_zalloc_check(sizeof(AMSClient));
+  s_ams_client = (AMSClient *)pbl_zalloc_check(sizeof(AMSClient));
 }
 
 void ams_invalidate_all_references(void) {
@@ -666,7 +665,7 @@ void ams_destroy(void) {
   }
   prv_set_connected(false);
 
-  kernel_free(s_ams_client);
+  pbl_free(s_ams_client);
   s_ams_client = nullptr;
 }
 

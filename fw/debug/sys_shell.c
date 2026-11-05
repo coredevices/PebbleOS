@@ -11,6 +11,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/shell/shell.h>
@@ -21,18 +22,17 @@
 #include <process_management/worker_manager.h>
 #include <system/bootbits.h>
 #include <system/reboot_reason.h>
-#include <system/reset.h>
 
 static int prv_cmd_reset(const struct pbl_shell *sh, size_t argc, char **argv) {
   RebootReason reason = {RebootReasonCode_Serial, 0};
   reboot_reason_set(&reason);
-  system_reset();
+  pbl_reboot();
 }
 
 static int prv_cmd_crash(const struct pbl_shell *sh, size_t argc, char **argv) {
   RebootReason reason = {RebootReasonCode_LauncherPanic, 0};
   reboot_reason_set(&reason);
-  system_reset();
+  pbl_reboot();
 }
 
 static int prv_cmd_crash_hard(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -41,7 +41,7 @@ static int prv_cmd_crash_hard(const struct pbl_shell *sh, size_t argc, char **ar
   boot_bit_set(BOOT_BIT_FW_START_FAIL_STRIKE_TWO);
   boot_bit_set(BOOT_BIT_SOFTWARE_FAILURE_OCCURRED);
   boot_bit_clear(BOOT_BIT_FW_STABLE);
-  system_hard_reset();
+  pbl_reboot_emergency();
 }
 
 static int prv_cmd_panic(const struct pbl_shell *sh, size_t argc, char **argv) {

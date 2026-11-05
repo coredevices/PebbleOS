@@ -15,7 +15,7 @@ pbl_clar_test(test_kickstart
     fw/applib/graphics/text_resources.c
     fw/applib/ui/status_bar_layer.c
     fw/applib/ui/layer.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_applib_resource.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c

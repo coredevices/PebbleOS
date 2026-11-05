@@ -6,12 +6,26 @@
 #include <applib/ui/layer.h>
 #include <applib/ui/layer_private.h>
 #include <applib/ui/window.h>
+#include <applib/unobstructed_area_service_private.h>
 #include <clar.h>
 #include <pebble_asserts.h>
 
 // Stubs
 ////////////////////////////////////
 #include <stubs_app_state.h>
+
+static GRect s_unobstructed_area;
+
+void unobstructed_area_service_get_area(UnobstructedAreaState *state, GRect *area_out) {
+  *area_out = s_unobstructed_area;
+}
+
+static GRect s_mic_accessory_area;
+
+bool sys_mic_banner_get_accessory_area(GRect *area_out) {
+  *area_out = s_mic_accessory_area;
+  return !grect_is_empty(&s_mic_accessory_area);
+}
 
 // Setup
 ////////////////////////////////////
@@ -470,4 +484,64 @@ void test_layer__convert_rect_to_screen(void) {
   GRect global_frame;
   layer_get_global_frame(&child, &global_frame);
   cl_assert_equal_grect(global_frame, GRect(15, 26, 50, 50));
+}
+
+void test_layer__get_unobstructed_bounds(void) {
+  // The bottom 38 rows of a 200x228 screen are obstructed
+  s_unobstructed_area = GRect(0, 0, 200, 190);
+  Window window = {};
+  layer_init(&window.layer, &GRect(0, 0, 200, 228));
+  window.layer.window = &window;
+  Layer content, inner;
+  layer_init(&content, &GRect(0, 20, 200, 208));
+  layer_init(&inner, &GRect(10, 30, 100, 178));
+  layer_add_child(&window.layer, &content);
+  layer_add_child(&content, &inner);
+
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&window.layer),
+                        GRect(0, 0, 200, 190));
+  // Bounds are in the layer's own coordinates, so its offset within its parent counts
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&content), GRect(0, 0, 200, 170));
+  cl_assert_equal_grect(layer_get_unobstructed_bounds_by_value(&inner), GRect(0, 0, 100, 140));
+}
+
+void test_layer__get_mic_accessory_bounds(void) {
+  Window window = {};
+  layer_init(&window.layer, &GRect(0, 0, 200, 228));
+  window.layer.window = &window;
+  Layer side, content, inner;
+  layer_init(&side, &GRect(0, 0, 30, 228));
+  layer_init(&content, &GRect(0, 20, 200, 208));
+  layer_init(&inner, &GRect(10, 30, 100, 178));
+  layer_add_child(&window.layer, &side);
+  layer_add_child(&window.layer, &content);
+  layer_add_child(&content, &inner);
+  GRect bounds;
+
+  // Hidden
+  s_mic_accessory_area = GRectZero;
+  cl_assert(!layer_get_mic_accessory_bounds(&content, &bounds));
+  cl_assert_equal_grect(bounds, GRectZero);
+
+  // Next to a 38px corner square on a 200x228 screen
+  s_mic_accessory_area = GRect(38, 190, 162, 38);
+  cl_assert(layer_get_mic_accessory_bounds(&window.layer, &bounds));
+  cl_assert_equal_grect(bounds, GRect(38, 190, 162, 38));
+  cl_assert(layer_get_mic_accessory_bounds(&content, &bounds));
+  cl_assert_equal_grect(bounds, GRect(38, 170, 162, 38));
+  // Clipped to the layer's sides
+  cl_assert(layer_get_mic_accessory_bounds(&inner, &bounds));
+  cl_assert_equal_grect(bounds, GRect(28, 140, 72, 38));
+  // A layer left of the area has none
+  cl_assert(!layer_get_mic_accessory_bounds(&side, &bounds));
+  cl_assert_equal_grect(bounds, GRectZero);
+
+  // Sliding out, it keeps the bar's height past the bottom of the layer
+  s_mic_accessory_area = GRect(38, 220, 162, 38);
+  cl_assert(layer_get_mic_accessory_bounds(&content, &bounds));
+  cl_assert_equal_grect(bounds, GRect(38, 200, 162, 38));
+  // About to slide in, it is just below the screen
+  s_mic_accessory_area = GRect(38, 228, 162, 38);
+  cl_assert(layer_get_mic_accessory_bounds(&content, &bounds));
+  cl_assert_equal_grect(bounds, GRect(38, 208, 162, 38));
 }

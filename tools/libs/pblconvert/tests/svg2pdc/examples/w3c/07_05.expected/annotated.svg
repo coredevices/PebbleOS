@@ -11,12 +11,12 @@
     <g transform="rotate(30)">
       <g fill="none" stroke="red" stroke-width="3">
         <line x1="0" y1="0" x2="50" y2="0">
-          <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+          <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
             <pdc:highlight y="55.00" x="93.30" details="Invalid point: (93.30, 55.00). Used closest supported coordinate: (93.25, 55.0)"/>
           </pdc:annotation>
         </line>
         <line x1="0" y1="0" x2="0" y2="50">
-          <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+          <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
             <pdc:highlight y="73.30" x="25.00" details="Invalid point: (25.00, 73.30). Used closest supported coordinate: (25.0, 73.25)"/>
           </pdc:annotation>
         </line>

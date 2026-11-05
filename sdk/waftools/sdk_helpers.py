@@ -445,6 +445,46 @@ def bundled_file_paths(project_info):
 MANIFEST_V2_KEYS = ("plugin", "usesPermissions", "configPage")
 
 
+# What the phone app calls the watch microphone, in usesPermissions.
+WATCH_MICROPHONE = "WatchMicrophone"
+_MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
+
+
+def warn_undeclared_microphone(project_info, sources):
+    """
+    Warn when the app's C code starts the microphone without the permission the phone app needs to
+    allow it: without it, every start is refused (mic_capture_start returns
+    MicCaptureStartErrPermissionDenied, and the phone refuses streams).
+    :param project_info: the project info appinfo.json is written from
+    :param sources: the app's C source nodes
+    :return: N/A
+    """
+    declared = {
+        p if isinstance(p, str) else p.get("name")
+        for p in project_info.get("usesPermissions") or []
+        if isinstance(p, (str, dict))
+    }
+    legacy = project_info.get("manifestVersion", 2) < 2
+    if WATCH_MICROPHONE in declared and not legacy:
+        return
+    for node in sources:
+        match = _MICROPHONE_CALL.search(node.read())
+        if match is None:
+            continue
+        if legacy:
+            Logs.warn(
+                f"{node.name} calls {match.group(1)}(), but the phone app denies the microphone to "
+                f"manifestVersion 1 apps: remove '\"manifestVersion\": 1' and declare "
+                f"'{WATCH_MICROPHONE}' in usesPermissions"
+            )
+        else:
+            Logs.warn(
+                f"{node.name} calls {match.group(1)}(), but package.json doesn't declare "
+                f"'{WATCH_MICROPHONE}' in usesPermissions, so the phone app will deny the microphone"
+            )
+        return
+
+
 def validate_manifest_version(ctx, project_info):
     """
     Check the project's manifestVersion, which defaults to 2. The phone app treats a version 1 pbw

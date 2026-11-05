@@ -112,6 +112,7 @@ pbl_clar_test(test_battery_monitor
     fw/services/battery/battery_monitor.c
     tests/fakes/fake_battery.c
     tests/fakes/fake_rtc.c
+  DEFINES CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT=5 CONFIG_SERVICE_BATTERY_CAPACITY_HOURS=144
   OVERRIDES dummy_board
 )
 
@@ -130,15 +131,7 @@ pbl_clar_test(test_tick)
 pbl_clar_test(test_heap
   SOURCES
     fw/applib/app_heap_util.c
-)
-
-pbl_clar_test(test_flash_logging
-  SOURCES
-    fw/debug/flash_logging.c
-    fw/flash_region/flash_region.c
-    tests/fakes/fake_spi_flash.c
-  DEFINES DUMA_DISABLED
-  OVERRIDES dummy_board
+    kernel/heap.c
 )
 
 pbl_clar_test(test_data_logging
@@ -173,6 +166,7 @@ pbl_clar_test(test_app_manager
     fw/process_management/process_runtime.c
     fw/kernel/memory_layout.c
     fw/kernel/util/segment.c
+    kernel/heap.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

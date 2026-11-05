@@ -5,7 +5,10 @@ pbl_library()
 pbl_include_directories(.)
 pbl_library_sources(
   init.c
+  reset.c
   sleep.c
+  syscfg.c
   idle.c
+  lpsys.c
 )
 pbl_linker_sources(ramfunc ramfunc.ld)

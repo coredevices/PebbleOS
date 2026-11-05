@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/filesystem/pfs.h>
 
 #include <clar.h>
 
@@ -27,7 +27,7 @@ bool activity_is_initialized(void) {
 #include <fake_kernel_services_notifications.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static struct pbl_tm s_init_time_tm = {
@@ -150,7 +150,7 @@ void prv_add_sleep_or_nap_session(ActivitySessionType session_type, double offse
 
   int prev = s_data.num_sessions - 1;
 
-  time_t midnight = time_util_get_midnight_of(rtc_get_time());
+  time_t midnight = time_util_get_midnight_of(pbl_realtime());
   time_t previous_exit_utc;
   if (s_data.num_sessions > 0) {
     previous_exit_utc = s_data.activity_sessions[prev].start_utc +
@@ -160,14 +160,14 @@ void prv_add_sleep_or_nap_session(ActivitySessionType session_type, double offse
   }
 
   time_t start_utc = previous_exit_utc + offset_sec;
-  if (start_utc > rtc_get_time()) {
-    printf("now_utc: %ld, start_utc: %ld\n", rtc_get_time(), start_utc);
+  if (start_utc > pbl_realtime()) {
+    printf("now_utc: %ld, start_utc: %ld\n", pbl_realtime(), start_utc);
   }
-  cl_assert(start_utc <= rtc_get_time());
-  if (start_utc + length_sec > rtc_get_time()) {
-    printf("now_utc: %ld, end_utc: %ld\n", rtc_get_time(), start_utc + length_sec);
+  cl_assert(start_utc <= pbl_realtime());
+  if (start_utc + length_sec > pbl_realtime()) {
+    printf("now_utc: %ld, end_utc: %ld\n", pbl_realtime(), start_utc + length_sec);
   }
-  cl_assert(start_utc + length_sec <= rtc_get_time());
+  cl_assert(start_utc + length_sec <= pbl_realtime());
   s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession){
     .type = session_type,
     .length_min = length_min,
@@ -196,7 +196,7 @@ void prv_add_walk_session(double offset_hours, double length_hours) {
   s_data.activity_sessions[s_data.num_sessions++] = (ActivitySession){
     .type = ActivitySessionType_Walk,
     .length_min = length_min,
-    .start_utc = rtc_get_time(),
+    .start_utc = pbl_realtime(),
     .step_data = {
       .steps = length_min * 60,
       .active_kcalories = length_min * 2,
@@ -208,7 +208,7 @@ void prv_add_walk_session(double offset_hours, double length_hours) {
 
 bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions) {
   // Only return the sleep sessions that belong to "today"
-  time_t start_of_today_utc = time_util_get_midnight_of(rtc_get_time());
+  time_t start_of_today_utc = time_util_get_midnight_of(pbl_realtime());
   int last_sleep_second_of_day = ACTIVITY_LAST_SLEEP_MINUTE_OF_DAY * PBL_SEC_PER_MIN;
   time_t sleep_earliest_end_utc = start_of_today_utc - (PBL_SEC_PER_DAY - last_sleep_second_of_day);
 
@@ -229,12 +229,12 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
   return true;
 }
 
-SettingsFile *activity_private_settings_open(void) {
-  static SettingsFile file = {};
+struct pbl_settings_file *activity_private_settings_open(void) {
+  static struct pbl_settings_file file = {};
   return &file;
 }
 
-void activity_private_settings_close(SettingsFile *file) {
+void activity_private_settings_close(struct pbl_settings_file *file) {
   return;
 }
 
@@ -272,14 +272,14 @@ ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
 
 // =========================================================================================
 // PFS stubs
-static PFSFileChangedCallback pfs_watch_cb = nullptr;
-PFSCallbackHandle pfs_watch_file(const char *filename, PFSFileChangedCallback callback,
-                                 uint8_t event_flags, void *data) {
-  pfs_watch_cb = callback;
+static pbl_fs_watch_cb_t pfs_watch_cb = nullptr;
+struct pbl_fs_watch *pbl_fs_watch_add(const char *path, uint32_t events, pbl_fs_watch_cb_t cb,
+                                      void *user_data) {
+  pfs_watch_cb = cb;
   return nullptr;
 }
 
-void pfs_unwatch_file(PFSCallbackHandle cb_handle) {
+void pbl_fs_watch_remove(struct pbl_fs_watch *watch) {
   pfs_watch_cb = nullptr;
 }
 
@@ -362,7 +362,7 @@ void notification_storage_store(TimelineItem *notification) {
 static void prv_set_time(const struct pbl_tm *input) {
   struct pbl_tm time_tm = *input;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   s_activity_activation_delay_insight_bitmask = 0;
   s_activation_time = 0;
@@ -383,7 +383,7 @@ void test_activity_insights__initialize(void) {
 
 // ---------------------------------------------------------------------------------------
 void test_activity_insights__cleanup(void) {
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -435,80 +435,80 @@ void test_activity_insights__sleep_reward(void) {
   memcpy(&s_data.metric_history[ActivityMetricSleepTotalSeconds], sleep_history,
          sizeof(sleep_history));
 
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure we don't trigger while still asleep
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateLightSleep;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // Make sure we don't trigger as soon as we're awake
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 1 * PBL_SEC_PER_HOUR;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // Make sure we do not trigger, the insights are disabled
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 2 * PBL_SEC_PER_HOUR;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // Advance the clock some and make sure we still don't get notifications
   for (int i = 0; i < 100; ++i) {
-    rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_MIN);
-    activity_insights_process_sleep_data(rtc_get_time());
+    pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_MIN);
+    activity_insights_process_sleep_data(pbl_realtime());
     cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
   }
 
   //  // These tests only make sense if the insights are enabled
   //  // Now we shouldn't see another notification for the next 6 days
   //  for (int i = 0; i < 6; ++i) {
-  //    rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
+  //    pbl_realtime_set(pbl_realtime() + SECONDS_PER_DAY);
   //    activity_insights_recalculate_stats();
-  //    activity_insights_process_sleep_data(rtc_get_time());
+  //    activity_insights_process_sleep_data(pbl_realtime());
   //    cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
   //  }
   //
-  //  rtc_set_time(rtc_get_time() + SECONDS_PER_DAY);
+  //  pbl_realtime_set(pbl_realtime() + SECONDS_PER_DAY);
   //  activity_insights_recalculate_stats();
-  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  activity_insights_process_sleep_data(pbl_realtime());
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
   //
   //  // Make sure we don't trigger if we didn't get enough sleep
-  //  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
+  //  pbl_realtime_set(pbl_realtime() + 7 * SECONDS_PER_DAY);
   //  activity_insights_recalculate_stats();
   //  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = AVERAGE_SLEEP;
-  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  activity_insights_process_sleep_data(pbl_realtime());
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
   //
   //  // Fall back asleep, make sure we get the reward
   //  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateLightSleep;
-  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  activity_insights_process_sleep_data(pbl_realtime());
   //  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   //  s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = GOOD_SLEEP;
-  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  activity_insights_process_sleep_data(pbl_realtime());
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
   //
   //  // Make sure setting enable to false actually disables things
-  //  rtc_set_time(rtc_get_time() + 7 * SECONDS_PER_DAY);
+  //  pbl_realtime_set(pbl_realtime() + 7 * SECONDS_PER_DAY);
   //  activity_insights_recalculate_stats();
   //  ActivityInsightSettings disabled_sleep;
   //  activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD, &disabled_sleep);
   //  disabled_sleep.enabled = false,
-  //  settings_file_set(NULL, /* fake settings file don't care */
+  //  pbl_settings_set(NULL, /* fake settings file don't care */
   //                    ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD,
   //                    strlen(ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD), &disabled_sleep,
   //                    sizeof(disabled_sleep));
   //  pfs_watch_cb(NULL); // Update the settings cache
-  //  activity_insights_process_sleep_data(rtc_get_time());
+  //  activity_insights_process_sleep_data(pbl_realtime());
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 3);
 }
 
 static void prv_minute_update(int iterations) {
   for (; iterations > 0; --iterations) {
-    rtc_set_time(rtc_get_time() + PBL_SEC_PER_MIN);
-    activity_insights_process_minute_data(rtc_get_time());
+    pbl_realtime_set(pbl_realtime() + PBL_SEC_PER_MIN);
+    activity_insights_process_minute_data(pbl_realtime());
   }
 }
 
@@ -540,7 +540,7 @@ void prv_set_sleep_history_avg() {
 // Test that the activity reward triggers when it should, and doesn't trigger when it shouldn't
 void test_activity_insights__activity_reward_no_trigger_default_state(void) {
   prv_set_step_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure we don't trigger in the default state (not above median, not active)
   s_data.steps_per_minute = 0;
@@ -551,7 +551,7 @@ void test_activity_insights__activity_reward_no_trigger_default_state(void) {
 
 void test_activity_insights__activity_reward_no_trigger_below_avg(void) {
   prv_set_step_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure that when we are active, we don't trigger without being above average
   s_data.steps_per_minute = 80;
@@ -562,7 +562,7 @@ void test_activity_insights__activity_reward_no_trigger_below_avg(void) {
 
 void test_activity_insights__activity_reward_no_trigger_not_active(void) {
   prv_set_step_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure that being above average but not active doesn't trigger
   s_data.steps_per_minute = 0;
@@ -573,7 +573,7 @@ void test_activity_insights__activity_reward_no_trigger_not_active(void) {
 
 void test_activity_insights__activity_reward_trigger(void) {
   prv_set_step_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // This would trigger the insights if they weren't disabled
   s_data.steps_per_minute = 80;
@@ -584,7 +584,7 @@ void test_activity_insights__activity_reward_trigger(void) {
   //  // This tests multi day triggers if insights are enabled
   //  prv_minute_update(ACTIVE_MINUTES);
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
-  //  rtc_set_time(rtc_get_time() + 1 * SECONDS_PER_DAY);
+  //  pbl_realtime_set(pbl_realtime() + 1 * SECONDS_PER_DAY);
   //  activity_insights_recalculate_stats();
   //  prv_minute_update(ACTIVE_MINUTES);
   //  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
@@ -592,7 +592,7 @@ void test_activity_insights__activity_reward_trigger(void) {
 
 void test_activity_insights__disable_activity_reward(void) {
   prv_set_step_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Set up criteria to trigger reward
   s_data.steps_per_minute = 80;
@@ -603,10 +603,10 @@ void test_activity_insights__disable_activity_reward(void) {
   ActivityInsightSettings disabled_activity;
   activity_insights_settings_read(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD, &disabled_activity);
   disabled_activity.enabled = false,
-  settings_file_set(nullptr, /* fake settings file don't care */
-                    ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
-                    strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
-                    sizeof(disabled_activity));
+  pbl_settings_set(nullptr, /* fake settings file don't care */
+                   ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD,
+                   strlen(ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD), &disabled_activity,
+                   sizeof(disabled_activity));
   pfs_watch_cb(nullptr); // Update the settings cache
   prv_minute_update(ACTIVE_MINUTES);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
@@ -618,13 +618,13 @@ void test_activity_insights__activity_summary_no_history(void) {
   // Tests init with zero history
 
   // Set time to be after 8:30PM
-  rtc_set_time((20 * PBL_SEC_PER_HOUR) + (40 * PBL_SEC_PER_MIN));
+  pbl_realtime_set((20 * PBL_SEC_PER_HOUR) + (40 * PBL_SEC_PER_MIN));
 
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Provide non-zero step count
   s_data.metric_history[ActivityMetricStepCount][0] = 500;
-  activity_insights_process_minute_data(rtc_get_time());
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 0);
 }
 
@@ -643,11 +643,11 @@ void test_activity_insights__sleep_summary(void) {
     .tm_year = 115
   };
   prv_set_time(&start_tm);
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure we don't trigger while still asleep
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateLightSleep;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 0);
 
   // Put in a 1 hour sleep session that ends at 11pm. This is after
@@ -655,21 +655,21 @@ void test_activity_insights__sleep_summary(void) {
   prv_add_sleep_session(22, 1); // Starting 22 hours from midnight of today
 
   // Awake until 11:45pm
-  rtc_set_time(rtc_get_time() + 15 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 15 * PBL_SEC_PER_MIN);
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 15 * PBL_SEC_PER_MIN;
 
   // Should generate a pin
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
   Uuid orig_id = s_last_timeline_id;
 
   // Advance to midnight and perform the midnight rollover logic
-  rtc_set_time(rtc_get_time() + 15 * PBL_SEC_PER_MIN); // Puts us at midnight
-  activity_insights_recalculate_stats();               // Process the midnight rollover logic
+  pbl_realtime_set(pbl_realtime() + 15 * PBL_SEC_PER_MIN); // Puts us at midnight
+  activity_insights_recalculate_stats();                   // Process the midnight rollover logic
 
   // Advance to 7:05am and add a sleep session from midnight to 7am
-  rtc_set_time(rtc_get_time() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN); // Puts us at 7:05
+  pbl_realtime_set(pbl_realtime() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN); // Puts us at 7:05
   prv_add_sleep_session(0, 7);
 
   // Make sure we update the existing pin as soon as we are awake. We shouldn't add another pin
@@ -677,14 +677,14 @@ void test_activity_insights__sleep_summary(void) {
   // day.
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 5 * PBL_SEC_PER_MIN;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   // Pin added should have been called again, but with the same UUID
   cl_assert_equal_i(s_data.pins_added, 2);
   cl_assert(uuid_equal(&orig_id, &s_last_timeline_id));
 
   // Make sure we don't trigger again for the same sleep session
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 60 * PBL_SEC_PER_MIN;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
 }
 
@@ -697,12 +697,12 @@ void test_activity_insights__sleep_summary_midnight_timezone(void) {
   static TimezoneInfo tz = {
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR, // PST
   };
-  time_util_update_timezone(&tz);
-  rtc_set_time(time_util_get_midnight_of(rtc_get_time()) + tz.tm_gmtoff);
+  time_util_update_timezone(&tz, 0, 0);
+  pbl_realtime_set(time_util_get_midnight_of(pbl_realtime()) + tz.tm_gmtoff);
 
   prv_set_sleep_history_avg();
 
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // At midnight, enter/exit get set to midnight UTC (for PST, this is 4PM), total sleep is 0
   uint32_t midnight_local = ((24 + tz.tm_gmtoff) % 24) * PBL_SEC_PER_HOUR;
@@ -712,12 +712,12 @@ void test_activity_insights__sleep_summary_midnight_timezone(void) {
   s_data.metric_history[ActivityMetricSleepExitAtSeconds][0] = midnight_local;
   s_data.metric_history[ActivityMetricSleepEnterAtSeconds][0] = midnight_local;
   s_data.metric_history[ActivityMetricSleepTotalSeconds][0] = 0;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 0);
 
   // Make sure pin is pushed once we have slept some
   prv_add_sleep_session(0, 7);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 }
 
@@ -725,7 +725,7 @@ void test_activity_insights__sleep_summary_midnight_timezone(void) {
 // Make sure that if you wake up for a short period of time, we'll move the sleep pin
 void test_activity_insights__sleep_summary_merge(void) {
   prv_set_sleep_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Common metrics
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
@@ -734,21 +734,21 @@ void test_activity_insights__sleep_summary_merge(void) {
 
   // First session should always produce a pin
   prv_add_sleep_session(0, 7);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
   Uuid orig_id = s_last_timeline_id;
 
   // Next session, < 1h after should move the pin
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
   prv_add_sleep_session(0.5, 1.5);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
   cl_assert(uuid_equal(&orig_id, &s_last_timeline_id));
 
   // Nap sessions shouldn't be added
-  rtc_set_time(rtc_get_time() + 3 * PBL_SEC_PER_HOUR);
+  pbl_realtime_set(pbl_realtime() + 3 * PBL_SEC_PER_HOUR);
   prv_add_nap_session(2, 1);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
 }
 
@@ -756,7 +756,7 @@ void test_activity_insights__sleep_summary_merge(void) {
 // Make sure that when the watch resets, we retain state properly
 void test_activity_insights__sleep_summary_power_cycle(void) {
   prv_set_sleep_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Common metrics
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
@@ -764,21 +764,21 @@ void test_activity_insights__sleep_summary_power_cycle(void) {
   s_data.metric_history[ActivityMetricSleepEnterAtSeconds][0] = 0;
 
   // Push a pin
-  rtc_set_time(rtc_get_time() + 5 * PBL_SEC_PER_HOUR);
+  pbl_realtime_set(pbl_realtime() + 5 * PBL_SEC_PER_HOUR);
   prv_add_sleep_session(0, 7);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 
   // Re-init (simulates power cycle) and make sure we don't add a pin again
-  activity_insights_init(rtc_get_time());
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_init(pbl_realtime());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 
   // Make sure we still merge properly after a power cycle
-  activity_insights_init(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
   prv_add_sleep_session(0.5, 1.5);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
 }
 
@@ -787,13 +787,13 @@ void test_activity_insights__sleep_summary_power_cycle(void) {
 void test_activity_insights__sleep_summary_no_history(void) {
   // Tests init with zero history
 
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Make sure we don't trigger as soon as we're awake
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepExitAtSeconds][0] = 7 * PBL_SEC_PER_HOUR;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 0);
 }
 
@@ -814,29 +814,29 @@ void test_activity_insights__activation_delay_insights_time_trigger(void) {
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += PBL_SEC_PER_DAY; // Jan 2 @ 10:00am
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += 8 * PBL_SEC_PER_HOUR; // Jan 2 @ 6:00pm - used to fire the day 1 nag
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += (3 * PBL_SEC_PER_DAY) + (2 * PBL_SEC_PER_HOUR); // Jan 5 @ 8:00pm
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   s_health_app_opened_version = 1;
 
   now += 30 * PBL_SEC_PER_MIN; // Jan 5 @ 8:30pm - used to fire the day 4 nag
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += 6 * PBL_SEC_PER_DAY; // Jan 11 @ 8:30pm - used to fire the day 10 nag
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
@@ -852,12 +852,12 @@ void test_activity_insights__activation_delay_insights_fifteen_interval_trigger(
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += PBL_SEC_PER_DAY + (8 * PBL_SEC_PER_HOUR) + (5 * PBL_SEC_PER_MIN); // Jan 2 @ 6:05pm
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   now += (10 * PBL_SEC_PER_MIN); // Jan 2 @ 6:15pm
-  rtc_set_time(now);
+  pbl_realtime_set(now);
   activity_insights_process_minute_data(now);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }
@@ -867,7 +867,7 @@ void test_activity_insights__nap_session_power_cycle(void) {
   // Enable this unit test when re-enabling nap session notifications
 #if 0
   prv_set_sleep_history_avg();
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
 
   // Common metrics
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
@@ -875,50 +875,50 @@ void test_activity_insights__nap_session_power_cycle(void) {
   s_data.metric_history[ActivityMetricSleepEnterAtSeconds][0] = 0;
 
   // Push a pin
-  rtc_set_time(rtc_get_time() + 5 * PBL_SEC_PER_HOUR);
+  pbl_realtime_set(pbl_realtime() + 5 * PBL_SEC_PER_HOUR);
   prv_add_nap_session(0, 1);
-  activity_insights_process_minute_data(rtc_get_time());
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 
   // Re-init (simulates power cycle) and make sure we don't add a pin again
-  activity_insights_init(rtc_get_time());
-  activity_insights_process_minute_data(rtc_get_time());
+  activity_insights_init(pbl_realtime());
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 
   // Make sure we still trigger properly after a power cycle
-  activity_insights_init(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
   prv_add_nap_session(0.5, 1.5);
-  activity_insights_process_minute_data(rtc_get_time());
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
 #endif
 }
 
 // Make sure that when the watch resets, we retain state properly
 void test_activity_insights__walk_session_power_cycle(void) {
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
   // Common metrics
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
   s_data.metric_history[ActivityMetricSleepEnterAtSeconds][0] = 0;
 
   // Push a pin
-  rtc_set_time(rtc_get_time() + 5 * PBL_SEC_PER_HOUR);
+  pbl_realtime_set(pbl_realtime() + 5 * PBL_SEC_PER_HOUR);
   prv_add_walk_session(0, 1);
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
-  activity_insights_process_minute_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.notifs_shown, 1);
 
   // Re-init (simulates power cycle) and make sure we don't add a pin again
-  activity_insights_init(rtc_get_time());
-  activity_insights_process_minute_data(rtc_get_time());
+  activity_insights_init(pbl_realtime());
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.notifs_shown, 1);
 
   // Make sure we still trigger properly after a power cycle
-  activity_insights_init(rtc_get_time());
+  activity_insights_init(pbl_realtime());
   prv_add_walk_session(0, 1);
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR);
-  activity_insights_process_minute_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.notifs_shown, 2);
 }
 
@@ -928,7 +928,7 @@ static void prv_use_utc_timezone(void) {
   static TimezoneInfo tz = {
     .tm_gmtoff = 0,
   };
-  time_util_update_timezone(&tz);
+  time_util_update_timezone(&tz, 0, 0);
   prv_set_time(&s_init_time_tm);
 }
 
@@ -942,24 +942,24 @@ void test_activity_insights__sleep_summary_no_renotify_same_window(void) {
 
   // Init at Thursday 10:00am, then advance to 11:30pm - past the 9pm cutoff, so Thursday
   // night's sleep window has started
-  activity_insights_init(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   // Sleep 10pm-11pm, awake at 11:30pm: pushes tonight's pin, no notification yet
   prv_add_sleep_session(22, 1);
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
   Uuid orig_id = s_last_timeline_id;
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // Advance past midnight, sleep midnight-7am, awake at 7:05am Friday - same sleep window
-  rtc_set_time(rtc_get_time() + 30 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 30 * PBL_SEC_PER_MIN);
   activity_insights_recalculate_stats();
-  rtc_set_time(rtc_get_time() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(1, 7);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
   cl_assert(uuid_equal(&orig_id, &s_last_timeline_id));
 
@@ -967,21 +967,71 @@ void test_activity_insights__sleep_summary_no_renotify_same_window(void) {
   // notification fires exactly once
   s_data.steps_per_minute = 80;
   prv_minute_update(2);
-  rtc_set_time(rtc_get_time() + 28 * PBL_SEC_PER_MIN);
-  activity_insights_process_sleep_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 
   // Same window, hours later: a false sleep session 4:30pm-5:30pm extends the bounds. The
   // pin updates in place but no second notification may fire.
-  rtc_set_time(rtc_get_time() + 10 * PBL_SEC_PER_HOUR + 25 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 10 * PBL_SEC_PER_HOUR + 25 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(9.5, 1);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 3);
   cl_assert(uuid_equal(&orig_id, &s_last_timeline_id));
 
   // Stay active past the 30 minute post-exit mark - still only one notification
   prv_minute_update(2);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+}
+
+// ---------------------------------------------------------------------------------------
+// A time zone change (travel or DST) shifts the local 9pm cutoff, but it is still the same
+// sleep window: the summary notification must not fire again
+void test_activity_insights__sleep_summary_no_renotify_timezone_change(void) {
+  prv_use_utc_timezone();
+  prv_set_sleep_history_avg();
+
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+
+  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
+  s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
+
+  // Sleep 10pm-11pm Thursday and midnight-7am Friday, notification at 7:35am
+  prv_add_sleep_session(22, 1);
+  activity_insights_process_sleep_data(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 30 * PBL_SEC_PER_MIN);
+  activity_insights_recalculate_stats();
+  pbl_realtime_set(pbl_realtime() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN);
+  prv_add_sleep_session(1, 7);
+  activity_insights_process_sleep_data(pbl_realtime());
+  s_data.steps_per_minute = 80;
+  prv_minute_update(2);
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+
+  // Travel one time zone west, later that morning
+  static TimezoneInfo tz = {
+    .tm_gmtoff = -1 * PBL_SEC_PER_HOUR,
+  };
+  time_util_update_timezone(&tz, 0, 0);
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_process_sleep_data(pbl_realtime());
+  prv_minute_update(2);
+  pbl_realtime_set(pbl_realtime() + 30 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+
+  // And back east again
+  tz.tm_gmtoff = 0;
+  time_util_update_timezone(&tz, 0, 0);
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_process_sleep_data(pbl_realtime());
+  prv_minute_update(2);
+  pbl_realtime_set(pbl_realtime() + 30 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 }
 
@@ -992,41 +1042,41 @@ void test_activity_insights__sleep_summary_notify_next_window(void) {
   prv_use_utc_timezone();
   prv_set_sleep_history_avg();
 
-  activity_insights_init(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
 
   // Night 1: sleep 10pm-11pm Thursday and midnight-7am Friday, notification at 7:35am
   prv_add_sleep_session(22, 1);
-  activity_insights_process_sleep_data(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 30 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 30 * PBL_SEC_PER_MIN);
   activity_insights_recalculate_stats();
-  rtc_set_time(rtc_get_time() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 7 * PBL_SEC_PER_HOUR + 5 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(1, 7);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   s_data.steps_per_minute = 80;
   prv_minute_update(2);
-  rtc_set_time(rtc_get_time() + 28 * PBL_SEC_PER_MIN);
-  activity_insights_process_sleep_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
   Uuid night1_id = s_last_timeline_id;
 
   // Night 2: 11pm-11:30pm Friday is past the 9pm cutoff, starting a new sleep window with
   // a new pin
-  rtc_set_time(rtc_get_time() + 16 * PBL_SEC_PER_HOUR + 15 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 16 * PBL_SEC_PER_HOUR + 15 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(16, 0.5);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert(!uuid_equal(&night1_id, &s_last_timeline_id));
 
   // Sleep midnight-6:30am Saturday; the notification fires again for the new window
-  rtc_set_time(rtc_get_time() + 6 * PBL_SEC_PER_HOUR + 45 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 6 * PBL_SEC_PER_HOUR + 45 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(0.5, 6.5);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   prv_minute_update(2);
-  rtc_set_time(rtc_get_time() + 28 * PBL_SEC_PER_MIN);
-  activity_insights_process_sleep_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
 }
 
@@ -1037,37 +1087,37 @@ void test_activity_insights__sleep_summary_notification_wake_window_gate(void) {
   prv_use_utc_timezone();
   prv_set_sleep_history_avg();
 
-  activity_insights_init(rtc_get_time());
-  rtc_set_time(rtc_get_time() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+  activity_insights_init(pbl_realtime());
+  pbl_realtime_set(pbl_realtime() + 13 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
 
   s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
   s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
 
   // Sleep 10pm-11pm Thursday, awake at 11:30pm
   prv_add_sleep_session(22, 1);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 1);
 
   // Sleep midnight-2am, awake at 2:05am with some activity: exit is outside the wake
   // window, so no notification
-  rtc_set_time(rtc_get_time() + 2 * PBL_SEC_PER_HOUR + 35 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR + 35 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(1, 2);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 2);
   s_data.steps_per_minute = 80;
   prv_minute_update(2);
-  rtc_set_time(rtc_get_time() + 28 * PBL_SEC_PER_MIN);
-  activity_insights_process_sleep_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   // Back to sleep 3am-7am; the real morning wake-up still notifies
-  rtc_set_time(rtc_get_time() + 4 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+  pbl_realtime_set(pbl_realtime() + 4 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
   prv_add_sleep_session(1, 4);
-  activity_insights_process_sleep_data(rtc_get_time());
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(s_data.pins_added, 3);
   prv_minute_update(2);
-  rtc_set_time(rtc_get_time() + 28 * PBL_SEC_PER_MIN);
-  activity_insights_process_sleep_data(rtc_get_time());
+  pbl_realtime_set(pbl_realtime() + 28 * PBL_SEC_PER_MIN);
+  activity_insights_process_sleep_data(pbl_realtime());
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 }
 
@@ -1076,7 +1126,7 @@ void test_activity_insights__sleep_summary_notification_wake_window_gate(void) {
 static void prv_push_session_notification(ActivitySessionType type, int32_t active_kcalories) {
   ActivitySession session = {
     .type = type,
-    .start_utc = rtc_get_time(),
+    .start_utc = pbl_realtime(),
     .length_min = 30,
     .step_data = {
       .steps = 3000,
@@ -1085,7 +1135,7 @@ static void prv_push_session_notification(ActivitySessionType type, int32_t acti
       .distance_meters = 2000,
     },
   };
-  activity_insights_push_activity_session_notification(rtc_get_time(), &session, 120, nullptr);
+  activity_insights_push_activity_session_notification(pbl_realtime(), &session, 120, nullptr);
 }
 
 // A manual "Workout" (Open) session should report its active calories, just like Run and Walk.

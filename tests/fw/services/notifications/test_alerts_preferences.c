@@ -3,16 +3,17 @@
 
 #include <string.h>
 
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/units.h>
 
 #include <clar.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <shell/prefs_private.h>
 
-#define NOTIF_PREFS_FILE_NAME         "notifpref"
+#define NOTIF_PREFS_FILE_NAME         "/notifpref"
 #define NOTIF_PREFS_FILE_LEN          1024
 #define PREF_KEY_NOTIF_TEXT_SIZE      "notifTextSize"
 #define PREF_KEY_TEXT_STYLE           "textStyle"
@@ -20,10 +21,10 @@
 
 static void prv_set(const char *file_name, int file_len, const char *key, size_t key_len,
                     const void *val, size_t val_len) {
-  SettingsFile file = {};
-  cl_assert_equal_i(settings_file_open(&file, file_name, file_len), S_SUCCESS);
-  cl_assert_equal_i(settings_file_set(&file, key, key_len, val, val_len), S_SUCCESS);
-  settings_file_close(&file);
+  struct pbl_settings_file file = {};
+  cl_assert_equal_i(pbl_settings_open(&file, file_name, file_len), 0);
+  cl_assert_equal_i(pbl_settings_set(&file, key, key_len, val, val_len), 0);
+  pbl_settings_close(&file);
 }
 
 // Shell pref keys are stored with their NUL terminator, notification pref keys without.
@@ -38,19 +39,18 @@ static void prv_set_notification_text_size(PreferredContentSize size) {
 }
 
 static bool prv_notification_text_size_stored(void) {
-  SettingsFile file = {};
-  cl_assert_equal_i(settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN),
-                    S_SUCCESS);
+  struct pbl_settings_file file = {};
+  cl_assert_equal_i(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN), 0);
   const bool exists =
-      settings_file_exists(&file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE));
-  settings_file_close(&file);
+      pbl_settings_exists(&file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE));
+  pbl_settings_close(&file);
   return exists;
 }
 
 void test_alerts_preferences__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 }
 
 void test_alerts_preferences__cleanup(void) {

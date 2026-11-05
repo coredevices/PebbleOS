@@ -12,7 +12,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 
 typedef struct HealthSleepDetailCard {
   int32_t daily_avg;

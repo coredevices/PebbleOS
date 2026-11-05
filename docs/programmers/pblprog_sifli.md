@@ -8,7 +8,7 @@ watch's debug UART, a reset line and, optionally, power to charge it.
 :Boards: {doc}`obelix <../boards/obelix/index>`, {doc}`getafix <../boards/getafix/index>`
 :Host interface: USB-C: serial port (WCH CH343P)
 :Target interfaces: Debug UART, reset, VBUS
-:Runners: `sftool`
+:Runners: `sftool`, `probe-rs`
 :Design files: [coredevices/pblprog-sifli](https://github.com/coredevices/pblprog-sifli) (MIT)
 
 ::::{grid} 1 1 2 2

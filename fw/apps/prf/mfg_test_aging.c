@@ -19,6 +19,7 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
@@ -28,7 +29,6 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #include <console/console_internal.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 

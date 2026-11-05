@@ -6,12 +6,13 @@
 #include "animation_private_legacy2.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/order.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/animation_timing.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 ///////////////////
@@ -79,7 +80,7 @@ static AnimationCurveFunction prv_custom_curve_ptr_unpack(uintptr_t bits) {
 }
 
 struct AnimationLegacy2 *animation_legacy2_create(void) {
-  AnimationLegacy2 *animation = task_malloc(sizeof(AnimationLegacy2));
+  AnimationLegacy2 *animation = applib_malloc(sizeof(AnimationLegacy2));
   if (animation) {
     animation_legacy2_init(animation);
   }
@@ -91,7 +92,7 @@ void animation_legacy2_destroy(AnimationLegacy2 *animation) {
     return;
   }
   animation_legacy2_unschedule(animation);
-  task_free(animation);
+  applib_free(animation);
 }
 
 void animation_legacy2_init(struct AnimationLegacy2 *animation) {
@@ -127,7 +128,7 @@ static AnimationLegacy2Scheduler *get_current_scheduler(void) {
 }
 
 inline static uint32_t animation_legacy2_get_ms_since_system_start(void) {
-  return (sys_get_ticks() * 1000 / RTC_TICKS_HZ);
+  return (sys_get_ticks() * 1000 / PBL_TICK_HZ);
 }
 
 static void animation_legacy2_timer_callback(void *data) {

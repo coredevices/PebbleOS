@@ -6,6 +6,7 @@
 #include "data.h"
 #include "progress.h"
 
+#include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/ui/content_indicator_private.h>
@@ -50,6 +51,8 @@ typedef struct HealthDetailChart {
 
 typedef struct HealthDetailCardConfig {
   GColor bg_color;
+  //! Use the system theme's background instead of bg_color, following dark mode flips
+  bool bg_follows_theme;
   int16_t num_headings;
   HealthDetailHeading *headings;
   int16_t num_subtitles;
@@ -75,6 +78,7 @@ typedef struct HealthDetailCard {
 #endif
 
   GColor bg_color;
+  EventServiceInfo dark_mode_event_info; //!< Only subscribed if the background follows the theme
 
   int16_t num_headings;
   HealthDetailHeading *headings;

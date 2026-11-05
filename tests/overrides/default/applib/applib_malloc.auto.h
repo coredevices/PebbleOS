@@ -14,8 +14,12 @@ static inline void *applib_zalloc(size_t size) {
   return result;
 }
 
-#define applib_type_zalloc(Type) applib_zalloc(sizeof(Type))
-#define applib_type_malloc(Type) malloc(sizeof(Type))
-#define applib_type_size(Type)   sizeof(Type)
-#define applib_malloc(size)      malloc(size)
-#define applib_free(ptr)         free(ptr)
+#define applib_type_zalloc(Type)  applib_zalloc(sizeof(Type))
+#define applib_type_malloc(Type)  malloc(sizeof(Type))
+#define applib_type_size(Type)    sizeof(Type)
+#define applib_malloc(size)       malloc(size)
+#define applib_malloc_try(size)   malloc(size)
+#define applib_zalloc_try(size)   applib_zalloc(size)
+#define applib_calloc(n, size)    calloc(n, size)
+#define applib_realloc(ptr, size) realloc(ptr, size)
+#define applib_free(ptr)          free(ptr)

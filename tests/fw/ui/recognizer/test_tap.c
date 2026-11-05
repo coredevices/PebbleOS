@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
@@ -47,16 +47,16 @@ static void prv_dispatch(Recognizer *r, TouchEventType type, int16_t x, int16_t 
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / PBL_MSEC_PER_SEC);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / PBL_MSEC_PER_SEC);
 }
 
 // TAP_MAX_DURATION_MS (300) is private to tap.c; the cap is part of the tap
 // contract this test pins. tap.c floors ticks -> ms, so to land the floored
 // duration exactly on a target ms we round the tick count UP (ceil). This keeps
-// the boundary exact regardless of RTC_TICKS_HZ (1000 or 1024 by board).
+// the boundary exact regardless of PBL_TICK_HZ (1000 or 1024 by board).
 #define TAP_CAP_MS (300)
-static RtcTicks prv_ticks_for_floored_ms(uint32_t ms) {
-  return ((RtcTicks)ms * RTC_TICKS_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
+static uint64_t prv_ticks_for_floored_ms(uint32_t ms) {
+  return ((uint64_t)ms * PBL_TICK_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
 }
 
 // tests

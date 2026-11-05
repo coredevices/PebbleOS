@@ -1,17 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
@@ -24,7 +23,7 @@
 ////////////////////////////////////////////////////////////////
 
 #include <fake_rtc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 void sys_get_app_uuid(Uuid *uuid) {
   if (uuid) {
@@ -56,8 +55,8 @@ void sys_timeline_resources_get_id(const TimelineResourceInfo *timeline_res,
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-status_t pfs_remove(const char *name) {
-  fake_settings_file_reset();
+int pbl_fs_unlink(const char *path) {
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -66,7 +65,7 @@ status_t pfs_remove(const char *name) {
 
 void test_app_glance__initialize(void) {
   fake_rtc_init(0, 1337);
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
   app_glance_service_init();
 
@@ -84,14 +83,14 @@ void prv_basic_reload_cb(AppGlanceReloadSession *session, size_t limit, void *co
 
   s_test_state.resource_is_valid = true;
   AppGlanceSlice slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() + 10,
+    .expiration_time = pbl_realtime() + 10,
     .layout.icon = TIMELINE_RESOURCE_HOTEL_RESERVATION,
     .layout.subtitle_template_string = "Test subtitle",
   };
   cl_assert_equal_i(app_glance_add_slice(session, slice), APP_GLANCE_RESULT_SUCCESS);
 
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() + 20,
+    .expiration_time = pbl_realtime() + 20,
     .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
   };
   cl_assert_equal_i(app_glance_add_slice(session, slice), APP_GLANCE_RESULT_SUCCESS);
@@ -111,13 +110,13 @@ void test_app_glance__basic_reload(void) {
     .num_slices = 2,
     .slices = {
       {
-        .expiration_time = rtc_get_time() + 10,
+        .expiration_time = pbl_realtime() + 10,
         .type = AppGlanceSliceType_IconAndSubtitle,
         .icon_and_subtitle.icon_resource_id = TIMELINE_RESOURCE_HOTEL_RESERVATION,
         .icon_and_subtitle.template_string = "Test subtitle",
       },
       {
-        .expiration_time = rtc_get_time() + 20,
+        .expiration_time = pbl_realtime() + 20,
         .type = AppGlanceSliceType_IconAndSubtitle,
         .icon_and_subtitle.icon_resource_id = APP_GLANCE_SLICE_DEFAULT_ICON,
       }
@@ -195,7 +194,7 @@ void prv_reload_with_validation_cb(AppGlanceReloadSession *session, size_t limit
 
   // Check that adding a slice that expires in the past fails
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() - 10,
+    .expiration_time = pbl_realtime() - 10,
     .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
     .layout.subtitle_template_string = "Test subtitle",
   };
@@ -215,7 +214,7 @@ void prv_reload_with_validation_cb(AppGlanceReloadSession *session, size_t limit
   // Check that we can get reports of multiple kinds of failures at the same time
   s_test_state.resource_is_valid = false;
   slice = (AppGlanceSlice){
-    .expiration_time = rtc_get_time() - 10,
+    .expiration_time = pbl_realtime() - 10,
     .layout.icon = RESOURCE_ID_SETTINGS_ICON_AIRPLANE,
     .layout.subtitle_template_string = really_long_subtitle,
   };

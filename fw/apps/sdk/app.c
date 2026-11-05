@@ -3,10 +3,12 @@
 
 #include "app.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/perimeter.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
@@ -14,7 +16,6 @@
 #include <apps/system/launcher/launcher.h>
 #include <apps/system/timeline/timeline.h>
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -50,7 +51,7 @@ static void prv_update_info(SdkAppData *data) {
   const unsigned int tip_delay_s = 5;
   if ((app_id == INSTALL_ID_INVALID) || shell_sdk_last_installed_app_is_watchface()) {
     text = "Install an app to continue";
-  } else if ((rtc_get_time() / tip_delay_s) & 1) {
+  } else if ((pbl_realtime() / tip_delay_s) & 1) {
     // Show the launcher help on every odd set of five seconds since the epoch
     text = "Press Select to access Launcher";
   } else {

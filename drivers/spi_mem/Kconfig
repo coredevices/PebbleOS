@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SPI_MEM
+    bool "SPI memory controllers"
+    help
+      Controllers running command, address, dummy and data operations
+      against SPI memories.
+
+if SPI_MEM
+
+config SPI_MEM_NRF5_QSPI
+    bool "Nordic nRF5 QSPI"
+    default y if SOC_NRF52
+    depends on SOC_NRF52
+    help
+      Support for the Nordic nRF5 QSPI peripheral.
+
+config SPI_MEM_SF32LB52_MPI
+    bool "SiFli SF32LB52 MPI"
+    default y if SOC_SF32LB52
+    depends on SOC_SF32LB52
+    help
+      Support for the SiFli SF32LB52 MPI controller in NOR mode.
+
+module = DRIVER_SPI_MEM
+module-str = SPI memory
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SPI_MEM

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <pbl/drivers/display/display.h> // FIXME: Need display dimensions
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
 
+#include <board/display.h>
 #include <resource/resource.h>
 
 #if !(defined(SDK) || defined(UNITTEST))
@@ -816,7 +816,8 @@ typedef struct GBitmap {
     GColor *palette;
 
     //! On GBitmapFormat8BitCircular, this points to a circular_map that's addressed according to
-    //! .bounds (so it must consist of at least .bounds.origin.y + .bounds.size.h entries)
+    //! .bounds (so it must consist of at least .bounds.origin.y + .bounds.size.h entries), or is
+    //! nullptr for rows laid out as the display's.
     const GBitmapDataRowInfoInternal *data_row_infos;
   };
 

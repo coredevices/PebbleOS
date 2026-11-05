@@ -3,9 +3,9 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/backend.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -170,7 +170,7 @@ static int32_t s_integer_values[NATIVE_INTEGER_COUNT];
 static struct {
   uint32_t value_ms;
   bool running;
-  RtcTicks start_ticks;
+  uint64_t start_ticks;
 } s_timers[NATIVE_TIMER_COUNT];
 
 /* Per-string dedicated buffers (sized to declared length) */
@@ -233,16 +233,16 @@ static void prv_record_metrics(struct native_heartbeat_record *record, bool rese
   memset(record, 0, sizeof(*record));
 
   record->version = NATIVE_HEARTBEAT_RECORD_VERSION;
-  record->timestamp = rtc_get_time();
+  record->timestamp = pbl_realtime();
   memcpy(record->build_id, &TINTIN_BUILD_ID.data[TINTIN_BUILD_ID.name_length],
          MIN(BUILD_ID_EXPECTED_LEN, TINTIN_BUILD_ID.data_length));
 
-  RtcTicks now = rtc_get_ticks();
+  uint64_t now = pbl_uptime_ticks();
   for (size_t i = 0; i < NATIVE_TIMER_COUNT; i++) {
     timer_value_ms[i] = s_timers[i].value_ms;
     if (s_timers[i].running) {
-      RtcTicks elapsed = now - s_timers[i].start_ticks;
-      timer_value_ms[i] += (elapsed * 1000) / RTC_TICKS_HZ;
+      uint64_t elapsed = now - s_timers[i].start_ticks;
+      timer_value_ms[i] += (elapsed * 1000) / PBL_TICK_HZ;
       if (reset) {
         s_timers[i].value_ms = timer_value_ms[i];
         s_timers[i].start_ticks = now;
@@ -352,7 +352,7 @@ static void prv_timer_start(enum pbl_analytics_key key) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (!s_timers[idx].running) {
     s_timers[idx].running = true;
-    s_timers[idx].start_ticks = rtc_get_ticks();
+    s_timers[idx].start_ticks = pbl_uptime_ticks();
   }
   pbl_mutex_unlock(&s_mutex);
 }
@@ -364,8 +364,8 @@ static void prv_timer_stop(enum pbl_analytics_key key) {
   }
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (s_timers[idx].running) {
-    RtcTicks elapsed = rtc_get_ticks() - s_timers[idx].start_ticks;
-    s_timers[idx].value_ms += (int32_t)((elapsed * 1000) / RTC_TICKS_HZ);
+    uint64_t elapsed = pbl_uptime_ticks() - s_timers[idx].start_ticks;
+    s_timers[idx].value_ms += (int32_t)((elapsed * 1000) / PBL_TICK_HZ);
     s_timers[idx].running = false;
   }
   pbl_mutex_unlock(&s_mutex);

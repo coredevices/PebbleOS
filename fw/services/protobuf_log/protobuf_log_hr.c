@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include <pbl/kernel/fatal.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_hr.h>
@@ -13,24 +12,19 @@
 #include <measurements.pb.h>
 
 // -----------------------------------------------------------------------------------------
-// Convert HRMQuality to the internal protobuf representation.
-PBL_T_STATIC uint32_t prv_hr_quality_int(HRMQuality quality) {
-  switch (quality) {
-    case HRMQuality_OffWrist:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_OffWrist;
-    case HRMQuality_Worst:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_Worst;
-    case HRMQuality_Poor:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_Poor;
-    case HRMQuality_Acceptable:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_Acceptable;
-    case HRMQuality_Good:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_Good;
-    case HRMQuality_Excellent:
-      return pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent;
+uint8_t protobuf_log_hr_quality(uint8_t confidence, bool off_wrist) {
+  if (off_wrist) {
+    return pebble_pipeline_MeasurementSet_HeartRateQuality_OffWrist;
+  } else if (confidence >= 90) {
+    return pebble_pipeline_MeasurementSet_HeartRateQuality_Excellent;
+  } else if (confidence >= HRM_CONFIDENCE_HIGH) {
+    return pebble_pipeline_MeasurementSet_HeartRateQuality_Good;
+  } else if (confidence >= 60) {
+    return pebble_pipeline_MeasurementSet_HeartRateQuality_Acceptable;
+  } else if (confidence >= 40) {
+    return pebble_pipeline_MeasurementSet_HeartRateQuality_Poor;
   }
-  pbl_panic(); // Should never get here
-  return 0;
+  return pebble_pipeline_MeasurementSet_HeartRateQuality_Worst;
 }
 
 ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
@@ -52,7 +46,7 @@ ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
 }
 
 bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t sample_utc, uint8_t bpm,
-                                HRMQuality quality) {
-  uint32_t values[] = {bpm, prv_hr_quality_int(quality)};
+                                uint8_t confidence, bool off_wrist) {
+  uint32_t values[] = {bpm, protobuf_log_hr_quality(confidence, off_wrist)};
   return protobuf_log_session_add_measurements(ref, sample_utc, ARRAY_LENGTH(values), values);
 }

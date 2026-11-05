@@ -69,10 +69,11 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
     }
 
     cnf |= GPIO_PIN_CNF_DIR_OUTPUT;
-    cnf |= PBL_FIELD_PREP(GPIO_PIN_CNF_DRIVE_MASK, ((flags & PBL_GPIO_OPEN_DRAIN) != 0U)
-                                                       ? GPIO_PIN_CNF_DRIVE_S0D1
-                                                       : GPIO_PIN_CNF_DRIVE_S0S1);
   }
+
+  cnf |= PBL_FIELD_PREP(GPIO_PIN_CNF_DRIVE_MASK, ((flags & PBL_GPIO_OPEN_DRAIN) != 0U)
+                                                     ? GPIO_PIN_CNF_DRIVE_S0D1
+                                                     : GPIO_PIN_CNF_DRIVE_S0S1);
 
   if ((flags & PBL_GPIO_INPUT) == 0U) {
     cnf |= GPIO_PIN_CNF_INPUT_DISCONNECT;

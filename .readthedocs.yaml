@@ -19,6 +19,9 @@ build:
     - librsvg2-bin
   jobs:
     post_checkout:
+      # The version comes from git describe, which needs the tags and the
+      # history down to them
+      - git fetch --unshallow --tags || git fetch --tags
       # The playground (docs/_ext/pbl_playground.py) builds the firmware as
       # WebAssembly; pull requests get it with the ci:docs-playground label.
       - sh docs/_scripts/pbl_playground_check_rtd.sh
@@ -27,7 +30,7 @@ build:
       # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
       - |
         if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && [ ! -e .pbl_playground ] &&
-           git diff --quiet origin/main -- docs/ include/ Doxyfile Doxyfile.rtd .readthedocs.yaml;
+           git diff --quiet origin/main -- docs/ include/ .readthedocs.yaml;
         then
           exit 183;
         fi
@@ -37,7 +40,7 @@ build:
       # v2.4.2, pinned by commit
       - git clone https://github.com/jothepro/doxygen-awesome-css.git &&
         git -C doxygen-awesome-css checkout d52eafe3e9303399fda15661f3d7bb8fe3d7eabc
-      - doxygen Doxyfile.rtd
+      - PBL_DOCS_VERSION=$(git describe) doxygen docs/_doxygen/Doxyfile.rtd
       - if [ -e .pbl_playground ]; then sh docs/_scripts/pbl_playground_setup_rtd.sh; fi
 
 sphinx:

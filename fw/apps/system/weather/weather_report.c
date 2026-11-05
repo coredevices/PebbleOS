@@ -380,7 +380,7 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
     s_report = nullptr;
     return;
   }
-  window_set_background_color(s_report->window, GColorWhite);
+  window_set_background_color_follows_theme(s_report->window, false /* dimmed */);
   window_set_window_handlers(s_report->window, (WindowHandlers){
                                                  .load = prv_window_load,
                                                  .appear = prv_window_appear,
@@ -714,7 +714,7 @@ void weather_report_push(const WeatherLocationForecast *days, size_t num_days,
     s_report = nullptr;
     return;
   }
-  window_set_background_color(s_report->window, GColorWhite);
+  window_set_background_color_follows_theme(s_report->window, false /* dimmed */);
   window_set_window_handlers(s_report->window, (WindowHandlers){
                                                  .load = prv_window_load,
                                                  .appear = prv_window_appear,
@@ -746,3 +746,11 @@ void weather_report_update_data(const WeatherLocationForecast *days, size_t num_
 }
 
 #endif // PBL_ROUND
+
+void weather_report_handle_dark_mode_change(void) {
+  if (!s_report || !s_report->layout.root_layer) {
+    return;
+  }
+  weather_app_layout_handle_dark_mode_change(&s_report->layout);
+  weather_report_update_data(s_report->days, s_report->num_days);
+}

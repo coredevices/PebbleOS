@@ -5,9 +5,6 @@
 
 #include <errno.h>
 
-#include <pbl/kernel/idle.h>
-#include <pbl/kernel/init.h>
-
 #include <kernel.h>
 #include <pbl_arch_posix.h>
 #include <pthread.h>
@@ -27,10 +24,7 @@ void posix_add_zombie(pthread_t tid) {
 static void *prv_boot(void *arg) {
   int (*entry)(void) = arg;
   pthread_mutex_lock(&posix_cpu);
-  pbl_soc_early_init();
-  entry();
-  PBL_ASSERTN(false);
-  return nullptr;
+  kernel_init(entry);
 }
 
 void pbl_posix_start(int (*entry)(void)) {
@@ -49,6 +43,14 @@ void pbl_posix_irq_run(void (*isr)(void *), void *arg) {
 }
 
 void pbl_posix_cpu_wait(uint64_t timeout_us) {
+  if (timeout_us == UINT64_MAX) {
+    uint64_t count = s_irq_count;
+    while (s_irq_count == count) {
+      pthread_cond_wait(&s_irq_cond, &posix_cpu);
+    }
+    return;
+  }
+
   struct timeval now;
   gettimeofday(&now, nullptr);
   uint64_t ns = (uint64_t)now.tv_usec * 1000 + timeout_us * 1000;
@@ -66,7 +68,9 @@ void pbl_posix_cpu_wait(uint64_t timeout_us) {
 }
 
 void arch_idle(pbl_tick_t max_ticks) {
-  pbl_soc_idle(max_ticks);
+  if (sched_idle_confirm()) {
+    timekeeping_idle(max_ticks);
+  }
 }
 
 void arch_start(void) {

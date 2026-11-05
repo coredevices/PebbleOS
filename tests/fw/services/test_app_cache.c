@@ -3,13 +3,13 @@
 
 #include <stdio.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
-#include <pbl/services/filesystem/app_file.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
@@ -22,6 +22,7 @@
 // Fakes
 ////////////////////////////////////
 #include <fake_events.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 
@@ -29,9 +30,9 @@
 ////////////////////////////////////
 
 void app_storage_delete_app(AppInstallId id) {
-  char buffer[30];
-  itoa_int(id, buffer, 10);
-  pfs_remove(buffer);
+  char buffer[30] = "/";
+  itoa_int(id, buffer + strlen(buffer), 10);
+  pbl_fs_unlink(buffer);
 }
 
 bool app_storage_app_exists(AppInstallId id) {
@@ -75,6 +76,17 @@ AppInstallId worker_preferences_get_default_worker(void) {
   return s_test_id_worker;
 }
 
+AppInstallId s_test_id_running_app;
+AppInstallId s_test_id_running_worker;
+
+AppInstallId app_manager_get_current_app_id(void) {
+  return s_test_id_running_app;
+}
+
+AppInstallId worker_manager_get_current_worker_id(void) {
+  return s_test_id_running_worker;
+}
+
 extern AppInstallId app_cache_get_next_eviction(void);
 
 /* Start of test */
@@ -101,10 +113,10 @@ static const AppData app3 = {
 };
 
 void test_app_cache__initialize(void) {
-  rtc_set_time(1478397600);
+  pbl_realtime_set(1478397600);
   fake_spi_flash_init(0, 0x1000000);
   fake_event_init();
-  pfs_init(false);
+  fake_pfs_mount();
   app_cache_init();
   app_cache_flush();
 }
@@ -116,6 +128,8 @@ void test_app_cache__cleanup(void) {
   s_test_id_ql_down = 0;
   s_test_id_watchface = 0;
   s_test_id_worker = 0;
+  s_test_id_running_app = 0;
+  s_test_id_running_worker = 0;
 }
 
 /*************************************
@@ -166,8 +180,8 @@ void test_app_cache__add_update_evict(void) {
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
 
-  time_t now = rtc_get_time();
-  rtc_set_time(now + 2);
+  time_t now = pbl_realtime();
+  pbl_realtime_set(now + 2);
 
   // remove 2
   cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app1.id));
@@ -223,12 +237,37 @@ void test_app_cache__update_all_lots_evict_one(void) {
     }
 
     // increment time so everything won't happen in the same second
-    time_t now = rtc_get_time();
-    rtc_set_time(now + 2);
+    time_t now = pbl_realtime();
+    pbl_realtime_set(now + 2);
   }
 
   // ensure the one that is evicted is INVALID_ID
   cl_assert_equal_i(DESIRED_EVICT_ID, app_cache_get_next_eviction());
+}
+
+/*************************************
+ * A regularly used app outlives a newer, never launched one *
+ *************************************/
+
+void test_app_cache__frequent_app_outlives_newer_idle_app(void) {
+  const time_t day = 24 * 60 * 60;
+  time_t now = pbl_realtime();
+
+  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
+  for (int i = 0; i < 5; i++) {
+    cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app1.id));
+  }
+
+  // app2 is installed 3 days later but never opened
+  pbl_realtime_set(now + 3 * day);
+  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(app2.id, app_cache_get_next_eviction());
+
+  // ...but it does win against an app last used much longer ago than its launches cover
+  pbl_realtime_set(now + 40 * day);
+  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app2.id));
+  cl_assert_equal_i(app1.id, app_cache_get_next_eviction());
 }
 
 void test_app_cache__clear(void) {
@@ -244,7 +283,7 @@ void test_app_cache__clear(void) {
   cl_assert_equal_b(false, app_cache_entry_exists(app3.id));
 }
 
-#define APP_CACHE_FILE_NAME "appcache"
+#define APP_CACHE_FILE_NAME "/appcache"
 #define APP_CACHE_MAX_SIZE  4000
 
 typedef struct PBL_PACKED {
@@ -261,25 +300,25 @@ void test_app_cache__corrupt_key(void) {
   cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
 
   // add one with a key value of length 3
-  // Raw SettingsFile calls
-  SettingsFile file;
-  status_t rv = settings_file_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
+  // Raw struct pbl_settings_file calls
+  struct pbl_settings_file file;
+  int rv = pbl_settings_open(&file, APP_CACHE_FILE_NAME, APP_CACHE_MAX_SIZE);
 
-  cl_assert_equal_i(S_SUCCESS, rv);
+  cl_assert_equal_i(0, rv);
 
   AppCacheEntry entry = {
-    .install_date = rtc_get_time(),
+    .install_date = pbl_realtime(),
     .last_launch = 0,
     .launch_count = 0,
     .total_size = 17,
   };
 
   int rand_id = 1717;
-  rv = settings_file_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1), (uint8_t *)&entry,
-                         sizeof(AppCacheEntry));
+  rv = pbl_settings_set(&file, (uint8_t *)&rand_id, (sizeof(AppInstallId) - 1), (uint8_t *)&entry,
+                        sizeof(AppCacheEntry));
 
-  settings_file_close(&file);
-  // End Raw SettingsFile calls
+  pbl_settings_close(&file);
+  // End Raw struct pbl_settings_file calls
 
   // force iteration on the app_cache. This will find the corrupted entry, and delete the app cache
   app_cache_free_up_space(1);
@@ -350,7 +389,7 @@ extern uint32_t app_cache_get_size(void);
 void prv_load_lotta_apps(void) {
   for (int i = 0; i < 50; i++) {
     // time is the basis of the priority. Set the time so we know what priority.
-    rtc_set_time(t_data[i].priority);
+    pbl_realtime_set(t_data[i].priority);
     cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(t_data[i].id, t_data[i].size));
     cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(t_data[i].id));
     // increment time so everything won't happen in the same second
@@ -366,6 +405,23 @@ void prv_load_lotta_apps(void) {
 void prv_cleanup(void) {
   app_cache_flush();
   prv_load_lotta_apps();
+}
+
+/*************************************
+ * The running app and worker are never evicted *
+ *************************************/
+
+void test_app_cache__free_up_space_keeps_running_processes(void) {
+  s_test_id_running_app = 17;
+  s_test_id_running_worker = 50;
+
+  prv_cleanup();
+  // ask for everything: only the two running processes may survive
+  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(SIZE_SUM));
+  fake_system_task_callbacks_invoke_pending();
+  cl_assert_equal_b(true, app_cache_entry_exists(17));
+  cl_assert_equal_b(true, app_cache_entry_exists(50));
+  cl_assert_equal_i(t_data[16].size + t_data[49].size, app_cache_get_size());
 }
 
 void test_app_cache__free_up_space_lots_apps(void) {
@@ -444,24 +500,33 @@ void test_app_cache__free_up_space_lots_apps(void) {
   cl_assert_equal_i(after_size, 0);
 }
 
+static bool prv_file_exists(const char *name) {
+  char path[64];
+  snprintf(path, sizeof(path), "/%s", name);
+
+  struct pbl_fs_dirent entry;
+  return pbl_fs_stat(path, &entry) == 0;
+}
+
+static void prv_file_create(const char *name, size_t size) {
+  char path[64];
+  snprintf(path, sizeof(path), "/%s", name);
+
+  struct pbl_fs_file file;
+  cl_assert_equal_i(fake_pfs_create(&file, path, size), 0);
+  pbl_fs_close(&file);
+}
+
 static bool prv_file_for_id_exists(AppInstallId id) {
   char buffer[30];
   itoa_int(id, buffer, 10);
-
-  int fd = pfs_open(buffer, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-  if (fd < 0) {
-    return false;
-  }
-  pfs_close(fd);
-  return true;
+  return prv_file_exists(buffer);
 }
 
 static void prv_create_file_for_id(AppInstallId id) {
   char buffer[30];
   itoa_int(id, buffer, 10);
-
-  int fd = pfs_open(buffer, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
-  pfs_close(fd);
+  prv_file_create(buffer, 10);
 }
 
 void test_app_cache__delete_binaries_for_id_with_no_entry(void) {
@@ -543,12 +608,6 @@ static struct file_description descriptions[] = {
 
 };
 
-static void prv_file_create(const char *name, size_t size) {
-  int fd = pfs_open(name, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
-}
-
 static void prv_app_filename(char *filename, size_t size, int id) {
   app_file_name_make(filename, size, id, APP_FILE_NAME_SUFFIX, strlen(APP_FILE_NAME_SUFFIX));
 }
@@ -571,9 +630,7 @@ static void prv_app_files_create(int id) {
 }
 
 static void prv_check_file_exists(const char *filename) {
-  int fd = pfs_open(filename, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-  cl_assert(fd >= 0);
-  pfs_close(fd);
+  cl_assert(prv_file_exists(filename));
 }
 
 void test_app_cache__purge_orphaned_files(void) {
@@ -592,9 +649,9 @@ void test_app_cache__purge_orphaned_files(void) {
   // re-initialize the app-cache (which should purge the above 3 files)
   app_cache_init();
   // let's see if the three files we should have deleted are indeed gone
-  cl_assert(pfs_open("@00000000/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
-  cl_assert(pfs_open("@00000001/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
-  cl_assert(pfs_open("@ffffffff/res", OP_FLAG_READ, FILE_TYPE_STATIC, 0) < 0);
+  cl_assert(!prv_file_exists("@00000000/res"));
+  cl_assert(!prv_file_exists("@00000001/res"));
+  cl_assert(!prv_file_exists("@ffffffff/res"));
   // let's make sure the app and res files in the cache weren't deleted
   for (uint32_t i = 0; i < 15; ++i) {
     char filename[15];

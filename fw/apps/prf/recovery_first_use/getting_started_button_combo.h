@@ -28,8 +28,7 @@
 typedef void (*GettingStartedButtonComboCallback)(void *data);
 
 typedef struct {
-  //! Track which buttons are held. Use this instead of the driver function button_get_state_bits
-  //! because that value isn't debounced.
+  //! Track which buttons are held.
   uint8_t buttons_held_bitset;
 
   //! Timer for how long the combination has been held for. We use new_timer instead of app_timer

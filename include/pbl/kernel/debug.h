@@ -172,4 +172,14 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
  */
 size_t pbl_thread_count(void);
 
+#ifdef CONFIG_ARCH_HAS_DEBUGGER_DETECT
+/**
+ * @brief Check whether a debugger is attached.
+ *
+ * @return true from the moment a debugger enables halting debug until it
+ *         detaches.
+ */
+bool pbl_debugger_attached(void);
+#endif
+
 /** @} */

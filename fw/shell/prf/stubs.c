@@ -16,6 +16,7 @@
 #include <board/board.h>
 #include <kernel/events.h>
 #include <popups/crashed_ui.h>
+#include <popups/mic_banner.h>
 #include <popups/notifications/notification_window.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_md.h>
@@ -76,7 +77,7 @@ void persist_service_client_open(const Uuid *uuid) {
 void persist_service_client_close(const Uuid *uuid) {
 }
 
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
+struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   return nullptr;
 }
 
@@ -256,7 +257,7 @@ uint8_t backlight_get_intensity(void) {
 
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
 uint32_t backlight_get_default_color(void) {
-  return BOARD_CONFIG.backlight_default_color;
+  return CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 }
 
 void backlight_set_default_color(uint32_t rgb_color) {
@@ -270,7 +271,7 @@ void backlight_day_night_color_set_enabled(bool enabled) {
 }
 
 uint32_t backlight_get_night_color(void) {
-  return BOARD_CONFIG.backlight_default_color;
+  return CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 }
 
 void backlight_set_night_color(uint32_t rgb_color) {
@@ -307,6 +308,27 @@ uint32_t shell_prefs_get_language_resource_id(void) {
 void shell_prefs_set_language(ShellLanguage language) {
 }
 
+GColor shell_prefs_get_theme_highlight_color(void) {
+  return GColorBlack;
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return DarkModeOff;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+}
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
+  if (schedule_out) {
+    *schedule_out =
+        (DarkModeSchedule){.from_hour = 19, .from_minute = 0, .to_hour = 7, .to_minute = 0};
+  }
+}
+
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
+}
+
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   return nullptr;
 }
@@ -321,6 +343,11 @@ int16_t timeline_peek_get_obstruction_origin_y(void) {
 
 int16_t mic_banner_get_obstruction_origin_y(void) {
   return DISP_ROWS;
+}
+
+bool mic_banner_get_accessory_area(GRect *area_out) {
+  *area_out = GRectZero;
+  return false;
 }
 
 void mic_banner_handle_process_kill(void) {

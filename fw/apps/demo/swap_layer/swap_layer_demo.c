@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/notification_layout.h>
@@ -14,6 +15,7 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
@@ -22,7 +24,6 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/phone_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
@@ -231,7 +232,7 @@ static void handle_init(void) {
       attribute_list_add_cstring(&attr_list, AttributeIdLocationName, notif.location);
     }
 
-    uint32_t timestamp = (rtc_get_time() + notif.time_offset);
+    uint32_t timestamp = (pbl_realtime() + notif.time_offset);
 
     TimelineItem *notification = timeline_item_create_with_attributes(
         timestamp, 0, notif.type, notif.layout_id, &attr_list, nullptr);

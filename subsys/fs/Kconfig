@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig FS
+    bool "File system"
+    help
+      Access to files on mounted file systems, regardless of their
+      format.
+
+if FS
+
+config FS_PFS
+    bool "Pebble File System (PFS)"
+    default y
+    help
+      PFS, the wear-leveled file system on the external NOR flash.
+
+module = FS
+module-str = File system
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

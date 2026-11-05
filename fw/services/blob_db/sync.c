@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
@@ -8,8 +9,6 @@
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/list.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -104,20 +103,20 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
   }
 
   // read item into a temporary buffer
-  void *item_buf = kernel_malloc_check(item_size);
+  void *item_buf = pbl_malloc_check(item_size);
   status_t status =
       blob_db_read(session->db_id, dirty_item->key, dirty_item->key_len, item_buf, item_size);
   // Both blob_db_sync_next() and blob_db_sync_cancel() can free the session, so
   // neither it nor dirty_item may be touched after calling them.
   if (status == E_DOES_NOT_EXIST) {
     // item was removed
-    kernel_free(item_buf);
+    pbl_free(item_buf);
     blob_db_sync_next(session);
     return;
   } else if (!PASSED(status)) {
     // something went terribly wrong
     PBL_LOG_ERR("Failed to read blob DB during sync. Error code: 0x%" PRIx32, status);
-    kernel_free(item_buf);
+    pbl_free(item_buf);
     blob_db_sync_cancel(session);
     return;
   }
@@ -137,12 +136,12 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
                                     dirty_item->key_len, item_buf, item_size);
   }
 
-  kernel_free(item_buf);
+  pbl_free(item_buf);
 }
 
 BlobDBSyncSession *prv_create_sync_session(BlobDBId db_id, BlobDBDirtyItem *dirty_list,
                                            BlobDBSyncSessionType session_type) {
-  BlobDBSyncSession *session = kernel_zalloc_check(sizeof(BlobDBSyncSession));
+  BlobDBSyncSession *session = pbl_zalloc_check(sizeof(BlobDBSyncSession));
   session->state = BlobDBSyncSessionStateIdle;
   session->db_id = db_id;
   session->dirty_list = dirty_list;
@@ -216,7 +215,7 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
   buffer[key_len] = '\0';
   PBL_LOG_DBG("Starting BlobDB record sync: <%s>", buffer);
 
-  BlobDBDirtyItem *dirty_list = kernel_zalloc_check(sizeof(BlobDBDirtyItem) + key_len);
+  BlobDBDirtyItem *dirty_list = pbl_zalloc_check(sizeof(BlobDBDirtyItem) + key_len);
   list_init((ListNode *)dirty_list);
   dirty_list->last_updated = last_updated;
   dirty_list->key_len = key_len;
@@ -239,7 +238,7 @@ void blob_db_sync_cancel(BlobDBSyncSession *session) {
   }
   blob_db_util_free_dirty_list(session->dirty_list);
   list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, nullptr);
-  kernel_free(session);
+  pbl_free(session);
 }
 
 void blob_db_sync_next(BlobDBSyncSession *session) {
@@ -255,7 +254,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
 
   // we're done with this item, we pop it off the stack
   list_remove((ListNode *)dirty_item, (ListNode **)&session->dirty_list, nullptr);
-  kernel_free(dirty_item);
+  pbl_free(dirty_item);
 
   if (session->dirty_list) {
     prv_send_writeback(session);
@@ -280,7 +279,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
         blob_db_endpoint_send_sync_done(session->db_id);
       }
       list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, nullptr);
-      kernel_free(session);
+      pbl_free(session);
     }
   }
 }

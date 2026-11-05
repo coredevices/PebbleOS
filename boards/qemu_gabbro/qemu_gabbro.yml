@@ -7,3 +7,6 @@ qemu:
   decorations:
     - pr2-bk20
     - pr2-gd14
+
+runners:
+  - qemu

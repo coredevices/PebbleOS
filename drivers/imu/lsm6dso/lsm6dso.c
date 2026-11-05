@@ -7,8 +7,8 @@
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
@@ -17,6 +17,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
 #include <board/board.h>
 
@@ -179,35 +180,23 @@ static const struct pbl_lsm6dso *s_dev;
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool prv_lsm6dso_write(uint8_t reg, const uint8_t *data, uint16_t len) {
-  bool ret;
-
-  pbl_i2c_use(&s_dev->i2c);
-  ret = pbl_i2c_write_register_block(&s_dev->i2c, reg, len, data) == 0;
-  pbl_i2c_release(&s_dev->i2c);
-
-  return ret;
+  return pbl_i2c_burst_write(&s_dev->i2c, reg, data, len) == 0;
 }
 
 static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
-  bool ret;
-
-  pbl_i2c_use(&s_dev->i2c);
-  ret = pbl_i2c_read_register_block(&s_dev->i2c, reg, len, data) == 0;
-  pbl_i2c_release(&s_dev->i2c);
-
-  return ret;
+  return pbl_i2c_burst_read(&s_dev->i2c, reg, data, len) == 0;
 }
 
 static bool prv_lsm6dso_read_fifo(uint16_t samples) {
-  bool ret;
+  uint8_t reg = LSM6DSO_FIFO_DATA_OUT_TAG;
+  struct pbl_i2c_msg msgs[] = {
+    {.buf = &reg, .len = 1U, .flags = PBL_I2C_MSG_WRITE},
+    {.buf = s_dev->state->raw_sample_buf,
+     .len = samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
+     .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
+  };
 
-  pbl_i2c_use(&s_dev->i2c);
-  ret = pbl_i2c_read_register_block_dma(&s_dev->i2c, LSM6DSO_FIFO_DATA_OUT_TAG,
-                                        samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
-                                        s_dev->state->raw_sample_buf) == 0;
-  pbl_i2c_release(&s_dev->i2c);
-
-  return ret;
+  return pbl_i2c_transfer(&s_dev->i2c, msgs, ARRAY_LENGTH(msgs)) == 0;
 }
 
 static uint8_t prv_fs_bits(void) {
@@ -253,12 +242,7 @@ static void prv_raw_to_mg(const uint8_t *raw, AccelDriverSample *sample) {
 }
 
 static uint64_t prv_get_curr_system_time_us(void) {
-  time_t time_s;
-  uint16_t time_ms;
-
-  rtc_get_time_ms(&time_s, &time_ms);
-
-  return (((uint64_t)time_s) * 1000 + time_ms) * 1000ULL;
+  return pbl_realtime_ms() * 1000ULL;
 }
 
 // Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
@@ -378,7 +362,7 @@ static void prv_lsm6dso_drain_fifo(void) {
   }
 
   prv_lsm6dso_process_samples(samples, prv_get_curr_system_time_us());
-  s_dev->state->last_fifo_read_tick = rtc_get_ticks();
+  s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
 }
 
 static void prv_lsm6dso_recover(void);
@@ -463,7 +447,7 @@ static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) 
           return false;
         }
         timestamp_us = prv_get_curr_system_time_us();
-        s_dev->state->last_fifo_read_tick = rtc_get_ticks();
+        s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
       }
     }
   }
@@ -719,12 +703,12 @@ static void prv_lsm6dso_recover(void) {
   }
 
   s_dev->state->wu_active = false;
-  s_dev->state->last_fifo_read_tick = rtc_get_ticks();
+  s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
 }
 
 static uint32_t prv_ms_since_last_fifo_read(void) {
-  RtcTicks ticks = rtc_get_ticks() - s_dev->state->last_fifo_read_tick;
-  return (uint32_t)((ticks * 1000) / RTC_TICKS_HZ);
+  uint64_t ticks = pbl_uptime_ticks() - s_dev->state->last_fifo_read_tick;
+  return (uint32_t)((ticks * 1000) / PBL_TICK_HZ);
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
@@ -738,7 +722,7 @@ static void prv_update_int1_watchdog(void) {
   s_dev->state->shake_stuck_passes = 0U;
 
   if (s_dev->state->num_samples > 0U) {
-    s_dev->state->last_fifo_read_tick = rtc_get_ticks();
+    s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
     s_dev->state->int1_period_ms =
         (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
     regular_timer_add_multisecond_callback(

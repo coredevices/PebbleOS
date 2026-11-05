@@ -5,10 +5,13 @@
 
 #include "fps_test_bitmaps.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/text.h>
@@ -16,9 +19,7 @@
 #include <applib/ui/bitmap_layer.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
-#include <system/profiler.h>
 
 typedef struct AppData {
   Window window;
@@ -33,10 +34,7 @@ typedef struct AppData {
 } AppData;
 
 static int64_t prv_time_64(void) {
-  time_t s;
-  uint16_t ms;
-  rtc_get_time_ms(&s, &ms);
-  return (int64_t)s * 1000 + ms;
+  return (int64_t)pbl_realtime_ms();
 }
 
 static void prv_redraw_timer_cb(void *cb_data) {
@@ -78,8 +76,7 @@ static void prv_redraw_timer_cb(void *cb_data) {
 static void prv_pop_all_windows_cb(void *cb_data) {
   // Print profiler stats which include the time spent copying the app frame buffer to the
   // system frame buffer and the time spent sending the system frame buffer to the display.
-  PROFILER_STOP;
-  PROFILER_PRINT_STATS;
+  pbl_profiler_print_stats();
 
   AppData *data = app_state_get_user_data();
   int64_t time_rendered = prv_time_64() - data->time_started;
@@ -143,8 +140,8 @@ static void prv_window_update_proc(struct Layer *layer, GContext *ctx) {
   AppData *data = app_state_get_user_data();
   if (data->rendered_frames == 0) {
     data->time_started = prv_time_64();
-    PROFILER_INIT;
-    PROFILER_START;
+    pbl_profiler_reset();
+    pbl_profiler_start();
   }
   data->rendered_frames++;
 }
@@ -245,8 +242,8 @@ static void s_main(void) {
 
   app_window_stack_push(window, true);
 
-  PROFILER_INIT;
-  PROFILER_START;
+  pbl_profiler_reset();
+  pbl_profiler_start();
   app_event_loop();
 }
 

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#define _GNU_SOURCE
+
 #include "posix.h"
 
 #include <string.h>
@@ -24,10 +26,10 @@ pthread_mutex_t posix_cpu = PTHREAD_MUTEX_INITIALIZER;
 bool posix_switch_pending;
 bool posix_in_isr;
 
+// The cleanup handler pushed in prv_thread_main() gives posix_cpu back.
 static void prv_exit(struct posix_thread *pt) {
   pthread_cond_destroy(&pt->wake);
   free(pt);
-  pthread_mutex_unlock(&posix_cpu);
   pthread_exit(nullptr);
 }
 
@@ -40,7 +42,8 @@ void posix_park(struct posix_thread *pt) {
   }
 }
 
-// A cancelled thread leaves its condition wait owning posix_cpu; give it back.
+// Gives posix_cpu back whenever a kernel pthread ends, cancelled or exited.
+// Nothing else may unlock it on the way out, or the next owner loses it.
 static void prv_release_cpu(void *arg) {
   (void)arg;
   pthread_mutex_unlock(&posix_cpu);
@@ -48,6 +51,11 @@ static void prv_release_cpu(void *arg) {
 
 static void *prv_thread_main(void *arg) {
   struct posix_thread *pt = arg;
+#ifdef __APPLE__
+  pthread_setname_np(pt->name);
+#else
+  pthread_setname_np(pthread_self(), pt->name);
+#endif
   pthread_mutex_lock(&posix_cpu);
   pthread_cleanup_push(prv_release_cpu, nullptr);
   posix_park(pt);
@@ -66,6 +74,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   pthread_cond_init(&pt->wake, nullptr);
   pt->entry = entry;
   pt->arg = arg;
+  strncpy(pt->name, t->name, sizeof(pt->name) - 1);
   t->backend.arch.pt = pt;
 }
 
@@ -109,7 +118,6 @@ void arch_switch_request(void) {
 
 void arch_thread_exit(void) {
   // pbl_thread_abort() already switched away and ended this pthread.
-  pthread_mutex_unlock(&posix_cpu);
   pthread_exit(nullptr);
 }
 
@@ -133,6 +141,13 @@ bool arch_in_isr(void) {
 
 uint32_t arch_cycles_per_sec(void) {
   return 1000000000U;
+}
+
+// Threads only yield the CPU when they block, which no heap operation does.
+void arch_heap_lock(void) {
+}
+
+void arch_heap_unlock(void) {
 }
 
 void arch_irq_disable(void) {

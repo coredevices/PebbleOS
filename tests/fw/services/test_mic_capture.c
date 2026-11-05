@@ -3,8 +3,9 @@
 
 #include <string.h>
 
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/mic_capture.h>
 #include <pbl/services/mic_manager.h>
 
@@ -12,7 +13,7 @@
 #include <fake_events.h>
 #include <fake_mutex.h>
 #include <fake_pbl_malloc.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <kernel/events.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager_private.h>
@@ -49,8 +50,8 @@ ModalProperty modal_manager_get_properties(void) {
   return s_modal ? ModalProperty_Exists : ModalPropertyDefault;
 }
 
-status_t pfs_remove(const char *name) {
-  fake_settings_file_reset();
+int pbl_fs_unlink(const char *path) {
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -90,7 +91,7 @@ void app_fetch_cancel_from_system_task(void) {
 bool app_install_do_callbacks(InstallEventType type, AppInstallId id, Uuid *uuid,
                               InstallCallbackDoneCallback cb, void *data) {
   s_install_callbacks++;
-  kernel_free(uuid);
+  pbl_free(uuid);
   return true;
 }
 
@@ -131,7 +132,7 @@ static void prv_stopped(uint32_t session, MicCaptureStopReason reason) {
 void test_mic_capture__initialize(void) {
   fake_event_init();
   fake_mutex_reset(false);
-  fake_settings_file_reset();
+  fake_settings_reset();
   fake_pbl_malloc_clear_tracking();
   s_md = (PebbleProcessMd){.uuid = s_app, .is_unprivileged = true};
   s_have_md = true;
@@ -149,7 +150,7 @@ void test_mic_capture__initialize(void) {
 void test_mic_capture__cleanup(void) {
   mic_capture_service_stop_for_task(PebbleTask_App);
   mic_manager_release(MicClientVoiceDictation);
-  fake_settings_file_reset();
+  fake_settings_reset();
   fake_mutex_assert_all_unlocked();
   fake_pbl_malloc_check_net_allocs();
 }

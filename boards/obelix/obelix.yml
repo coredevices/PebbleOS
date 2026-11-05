@@ -8,3 +8,5 @@ revisions:
 
 runners:
   - sftool
+  - probe-rs
+  - phone

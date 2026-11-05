@@ -3,8 +3,10 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -21,7 +23,6 @@
 #include <applib/data_logging.h>
 #include <applib/health_service.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -112,8 +113,8 @@ void activity_metrics_prv_get_metric_info(ActivityMetric metric, ActivityMetricI
     case ActivityMetricHeartRateRawBPM:
       info->value_p = &state->hr.metrics.current_bpm;
       break;
-    case ActivityMetricHeartRateRawQuality:
-      info->value_p = &state->hr.metrics.current_quality;
+    case ActivityMetricHeartRateRawConfidence:
+      info->value_p = &state->hr.metrics.current_confidence;
       break;
     case ActivityMetricHeartRateRawUpdatedTimeUTC:
       info->value_u32p = &state->hr.metrics.current_update_time_utc;
@@ -173,7 +174,7 @@ static void prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t
 
   ActivityMetricInfo m_info = {};
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(pbl_realtime());
 
   bool current_value_updated = false;
 
@@ -188,20 +189,20 @@ static void prv_set_metric(ActivityMetric metric, enum pbl_weekday wday, int32_t
     }
   } else if (m_info.has_history) {
     // This update is for a day in the past. Modify the copy stored in the settings file
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (!file) {
       goto unlock;
     }
     ActivitySettingsValueHistory history;
-    settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                      sizeof(history));
+    pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                     sizeof(history));
 
     int day = positive_modulo(cur_wday - wday, PBL_DAY_PER_WEEK);
     if ((int32_t)history.values[day] != value) {
       history.values[day] = value;
 
-      settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                        sizeof(history));
+      pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                       sizeof(history));
     }
     activity_private_settings_close(file);
   }
@@ -243,7 +244,7 @@ void activity_metrics_prv_set_metric(ActivityMetric metric, enum pbl_weekday wda
 // Force the current day's value of a metric to an exact value (may also decrease it). Intended for
 // QEMU/test injection of health data.
 void activity_metrics_set_metric_exact(ActivityMetric metric, int32_t value) {
-  prv_set_metric(metric, time_util_get_day_in_week(rtc_get_time()), value, true /* force */);
+  prv_set_metric(metric, time_util_get_day_in_week(pbl_realtime()), value, true /* force */);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -254,7 +255,7 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
   PBL_LOG_INFO("resetting metrics for new day");
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (!file) {
       goto unlock;
     }
@@ -267,8 +268,8 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
       // Shift the history
       if (m_info.has_history) {
         PBL_ASSERTN(m_info.value_p);
-        settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                          sizeof(history));
+        pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                         sizeof(history));
 
         for (int i = ACTIVITY_HISTORY_DAYS - 1; i >= 1; i--) {
           history.values[i] = history.values[i - 1];
@@ -280,8 +281,8 @@ static void PBL_NOINLINE prv_shift_history(time_t utc_now) {
         history.values[0] = 0;
         history.utc_sec = utc_now;
 
-        settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
-                          sizeof(history));
+        pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &history,
+                         sizeof(history));
       }
     }
     activity_private_settings_close(file);
@@ -374,8 +375,8 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
     int32_t median, total_weight;
 
     // Stats requires an int32_t array and we need one for both the samples and the weights
-    int32_t *sample_buf = task_zalloc_check(num_hr_samples * sizeof(int32_t));
-    int32_t *weight_buf = task_zalloc_check(num_hr_samples * sizeof(int32_t));
+    int32_t *sample_buf = pbl_zalloc_check(num_hr_samples * sizeof(int32_t));
+    int32_t *weight_buf = pbl_zalloc_check(num_hr_samples * sizeof(int32_t));
     for (size_t i = 0; i < num_hr_samples; i++) {
       sample_buf[i] = hr->samples[i];
       weight_buf[i] = hr->weights[i];
@@ -387,11 +388,11 @@ static void prv_update_median_hr_bpm(ActivityState *state) {
 
     // Calculate the weighted median
     median = pbl_stats_weighted_median(sample_buf, weight_buf, num_hr_samples);
-    task_free(sample_buf);
-    task_free(weight_buf);
+    pbl_free(sample_buf);
+    pbl_free(weight_buf);
 
     state->hr.metrics.last_stable_bpm = (uint8_t)median;
-    state->hr.metrics.last_stable_bpm_update_time_utc = rtc_get_time();
+    state->hr.metrics.last_stable_bpm_update_time_utc = pbl_realtime();
     state->hr.metrics.previous_median_bpm = (uint8_t)median;
     state->hr.metrics.previous_median_total_weight_x100 = total_weight;
 
@@ -413,15 +414,15 @@ static void prv_write_hr_zone_info_to_flash(HRZone zone) {
     return;
   }
 
-  SettingsFile *file = activity_private_settings_open();
+  struct pbl_settings_file *file = activity_private_settings_open();
   if (!file) {
     return;
   }
 
   ActivityMetricInfo m_info;
   activity_metrics_prv_get_metric_info(metric, &m_info);
-  settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
-                    sizeof(*m_info.value_p));
+  pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
+                   sizeof(*m_info.value_p));
   activity_private_settings_close(file);
 }
 
@@ -521,21 +522,14 @@ uint32_t activity_metrics_prv_get_steps(void) {
   return state->step_data.steps;
 }
 
-static uint8_t prv_get_hr_quality_weight(HRMQuality quality) {
-  static const struct {
-    HRMQuality quality;
-    uint8_t weight_x100;
-  } s_hr_quality_weights_x100[] = {
-    {HRMQuality_OffWrist, 0},    {HRMQuality_Worst, 1}, {HRMQuality_Poor, 1},
-    {HRMQuality_Acceptable, 60}, {HRMQuality_Good, 65}, {HRMQuality_Excellent, 85},
-  };
-
-  for (size_t i = 0; i < ARRAY_LENGTH(s_hr_quality_weights_x100); i++) {
-    if (quality == s_hr_quality_weights_x100[i].quality) {
-      return s_hr_quality_weights_x100[i].weight_x100;
-    }
+// Weight of a sample in the minute median, x100. Squaring the algorithm confidence lets
+// high-confidence samples dominate while low-confidence ones still count.
+static uint8_t prv_get_hr_confidence_weight(HRMBPMData bpm) {
+  if (bpm.off_wrist) {
+    return 0;
   }
-  return 0;
+  const uint32_t confidence = MIN(bpm.confidence, 100U);
+  return (uint8_t)((confidence * confidence) / 100);
 }
 
 // --------------------------------------------------------------------------------------------
@@ -578,8 +572,7 @@ void activity_metrics_prv_reset_hr_stats(void) {
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
     state->hr.num_samples = 0;
-    state->hr.num_good_quality_samples = 0;
-    state->hr.num_excellent_samples = 0;
+    state->hr.num_high_confidence_samples = 0;
     memset(state->hr.samples, 0, sizeof(state->hr.samples));
     memset(state->hr.weights, 0, sizeof(state->hr.weights));
 
@@ -627,12 +620,9 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
       // is terribly wrong.
       PBL_ASSERT(state->hr.num_samples <= ACTIVITY_MAX_HR_SAMPLES, "Too many samples");
       state->hr.samples[state->hr.num_samples] = hrm_event->bpm.bpm;
-      state->hr.weights[state->hr.num_samples] = prv_get_hr_quality_weight(hrm_event->bpm.quality);
-      if (hrm_event->bpm.quality >= HRMQuality_Good) {
-        state->hr.num_good_quality_samples++;
-      }
-      if (hrm_event->bpm.quality >= HRMQuality_Excellent) {
-        state->hr.num_excellent_samples++;
+      state->hr.weights[state->hr.num_samples] = prv_get_hr_confidence_weight(hrm_event->bpm);
+      if (hrm_event->bpm.confidence >= HRM_CONFIDENCE_HIGH) {
+        state->hr.num_high_confidence_samples++;
       }
 
       state->hr.num_samples++;
@@ -642,16 +632,16 @@ void activity_metrics_prv_add_median_hr_sample(PebbleHRMEvent *hrm_event, time_t
     // UTC time on us.
     state->hr.last_sample_ts = now_uptime;
 
-    // Save the BPM, quality, and update time (UTC) of the last reading for activity_get_metric()
+    // Save the BPM, confidence, and update time (UTC) of the last reading for activity_get_metric()
     state->hr.metrics.current_bpm = hrm_event->bpm.bpm;
-    state->hr.metrics.current_quality = hrm_event->bpm.quality;
+    state->hr.metrics.current_confidence = hrm_event->bpm.confidence;
     state->hr.metrics.current_update_time_utc = now_utc;
   }
   pbl_mutex_unlock(&state->mutex);
 }
 
 // ------------------------------------------------------------------------------------------------
-void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
+void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now) {
   ActivityState *state = activity_private_state();
   // Roll back the history if needed and init each of the metrics for today
   for (ActivityMetric metric = ActivityMetricFirst; metric < ActivityMetricNumMetrics; metric++) {
@@ -663,11 +653,11 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       ActivitySettingsValueHistory new_history = {};
 
       // In case we change the length of the history, fetch the old size
-      int fetch_size = sizeof(old_history);
-      fetch_size = MIN(fetch_size, settings_file_get_len(file, &m_info.settings_key,
-                                                         sizeof(m_info.settings_key)));
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
-                        fetch_size);
+      size_t fetch_size =
+          MIN(sizeof(old_history),
+              pbl_settings_get_len(file, &m_info.settings_key, sizeof(m_info.settings_key)));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
+                       fetch_size);
 
       uint16_t day = time_util_get_day(old_history.utc_sec);
       int old_age = state->cur_day_index - day;
@@ -707,15 +697,15 @@ void activity_metrics_prv_init(SettingsFile *file, time_t utc_now) {
       if (memcmp(old_history.values, new_history.values, sizeof(old_history.values)) != 0 ||
           old_age != 0) {
         // Write out the updated history
-        settings_file_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &new_history,
-                          sizeof(new_history));
+        pbl_settings_set(file, &m_info.settings_key, sizeof(m_info.settings_key), &new_history,
+                         sizeof(new_history));
       }
 
     } else if (m_info.settings_key != ActivitySettingsKeyInvalid) {
       // Metric with no history, just init current value
       PBL_ASSERTN(m_info.value_p);
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
-                        sizeof(*m_info.value_p));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), m_info.value_p,
+                       sizeof(*m_info.value_p));
     }
   }
 }
@@ -761,14 +751,14 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
     if (history_len > 1) {
       // Read from the history stored in settings
       ActivitySettingsValueHistory setting_history = {};
-      SettingsFile *file = activity_private_settings_open();
+      struct pbl_settings_file *file = activity_private_settings_open();
       if (!file) {
         PBL_LOG_ERR("Settings file DNE. No need to continue getting metric");
         success = false;
         goto unlock;
       }
-      settings_file_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &setting_history,
-                        sizeof(setting_history));
+      pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &setting_history,
+                       sizeof(setting_history));
       for (uint32_t i = 1; i < history_len; i++) {
         history[i] = m_info.converter(setting_history.values[i]);
         PBL_LOG_DBG("get metric %" PRIi32 " %" PRIu32 " days ago: %" PRIi32 "", (int32_t)metric, i,

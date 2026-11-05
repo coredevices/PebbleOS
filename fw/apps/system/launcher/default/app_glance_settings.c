@@ -19,12 +19,12 @@
 #include <pbl/util/size.h>
 #include <pbl/util/struct.h>
 
+#include <applib/app_malloc.h>
 #include <applib/battery_state_service.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/text_resources.h>
 #include <apps/system/timeline/text_node.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 

@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REMOTEPROC
+    bool
+    help
+      Remote processor class (pbl/drivers/remoteproc.h), selected by the
+      remote processor drivers.
+
+config REMOTEPROC_SF32LB52
+    bool "SiFli SF32LB52 LCPU"
+    default y if SOC_SF32LB52
+    depends on MBOX_SF32LB52 && HAL_SIFLI_SF32LB52
+    select REMOTEPROC
+    select HAL_SIFLI_LCPU
+    help
+      The SF32LB52 low-power CPU, running the Bluetooth controller from
+      ROM: configuration, ROM patches and radio calibration on boot.
+
+config REMOTEPROC_SHELL
+    bool "Remote processor shell commands"
+    default DRIVER_SHELL
+    depends on REMOTEPROC && SHELL
+    help
+      The rproc shell command, to list the remote processors and boot or
+      shut them down.

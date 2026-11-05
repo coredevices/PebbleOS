@@ -11,13 +11,13 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/i18n/i18n.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <resource/resource_ids.auto.h>
@@ -66,8 +66,8 @@ static void prv_remote_menu_cleanup(ActionMenu *action_menu, const ActionMenuIte
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   SettingsRemoteData *data = (SettingsRemoteData *)context;
   i18n_free_all(data);
-  task_free((void *)root_level);
-  task_free(data);
+  app_free((void *)root_level);
+  app_free(data);
 }
 
 static void prv_forget_item(ActionMenu *action_menu, const ActionMenuItem *item, void *context) {
@@ -114,7 +114,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
   const size_t num_items = RemoteMenu_Count;
 #endif
   ActionMenuLevel *level =
-      task_zalloc_check(sizeof(ActionMenuLevel) + num_items * sizeof(ActionMenuItem));
+      app_zalloc_check(sizeof(ActionMenuLevel) + num_items * sizeof(ActionMenuItem));
   *level = (ActionMenuLevel){
     .num_items = num_items,
     .display_mode = ActionMenuLevelDisplayModeWide,

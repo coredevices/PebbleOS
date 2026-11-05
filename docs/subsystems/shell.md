@@ -32,7 +32,11 @@ negative errno; `-EINPROGRESS` keeps the shell busy until
 
 Shell code is wrapped in `#ifdef CONFIG_SHELL`, and modules with a group of
 commands can gate them further; for example `drivers/imu/shell.c`
-builds with `CONFIG_IMU_SHELL`.
+builds with `CONFIG_IMU_SHELL`. Such options are off by default, as most of
+these commands are bring-up tools; only the commands the integration tests
+rely on are built with `CONFIG_SHELL` alone. `CONFIG_DRIVER_SHELL` and
+`CONFIG_SUBSYS_SHELL` turn on every driver or subsystem command group at
+once, e.g. `pbl configure --board obelix@pvt -DCONFIG_DRIVER_SHELL=y`.
 
 ```c
 static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) {

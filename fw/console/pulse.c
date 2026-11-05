@@ -11,6 +11,7 @@
 #include <pbl/crc/crc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
@@ -24,7 +25,6 @@
 #include <console/pulse_internal.h>
 #include <console/pulse_llc.h>
 #include <console/pulse_protocol_impl.h>
-#include <kernel/pbl_malloc.h>
 
 #define FRAME_POOL_SIZE (3)
 
@@ -103,15 +103,12 @@ static void prv_handlers_notify_state_changed(PulseLinkState link_state) {
   }
 }
 
-void pulse_early_init(void) {
-}
-
 void pulse_init(void) {
 }
 
 void pulse_start(void) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_receive_buffers); ++i) {
-    s_receive_buffers[i] = kernel_malloc_check(sizeof(IncomingPulseFrame));
+    s_receive_buffers[i] = pbl_malloc_check(sizeof(IncomingPulseFrame));
     prv_return_receive_buffer(s_receive_buffers[i]);
   }
   s_current_receive_buffer = prv_take_receive_buffer();
@@ -132,7 +129,7 @@ void pulse_end(void) {
   prv_handlers_notify_state_changed(PulseLinkState_Closed);
   pulse_llc_send_link_closed_msg();
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_receive_buffers); ++i) {
-    kernel_free(s_receive_buffers[i]);
+    pbl_free(s_receive_buffers[i]);
   }
   s_current_receive_buffer = nullptr;
 

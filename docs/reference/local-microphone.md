@@ -22,7 +22,7 @@ MicCaptureStartResult result = mic_capture_start((MicCaptureHandlers) {
 // Later: mic_capture_stop();
 ```
 
-Declare `manifestVersion: 2` and `usesPermissions: ["Microphone"]` in
+Declare `manifestVersion: 2` and `usesPermissions: ["WatchMicrophone"]` in
 the `pebble` block of `package.json`. The updated phone app syncs only
 explicitly allowed Microphone decisions for installed apps while its
 experimental permission system is enabled. Permission granted automatically
@@ -94,3 +94,22 @@ the revision 111 function table entries. The existing
 `mic_stream_to_phone_*` API remains unchanged. Frozen SDK platforms expose
 unavailable stubs: start returns `MicCaptureStartErrUnavailable`, stop is a
 no-op and is-active returns false.
+
+## In the emulator
+
+The QEMU boards capture what the host sends over QEMU protocol 14
+(`QemuProtocol_MicAudio`, 16 kHz mono signed 16-bit little-endian PCM),
+and silence when it sends nothing. The firmware queues up to 250 ms of it
+while an app captures or streams, and drops it otherwise.
+`pebble emu-mic` sends a tone, white noise or a WAV file, paced to real time.
+
+The SDK emulator's phone, pypkjs, stands in for CoreApp. It grants the
+microphone to every app that declares `WatchMicrophone` with manifestVersion 2,
+as if the user had allowed it, and refuses it to the rest with a log line
+saying why. It sends the grant in the app's AppDB entry at install and
+answers streams to the running app's PebbleKit JS with the same
+`audiostreamstart`, `audiostream` and `audiostreamstop` events.
+`pebble emu-permission WatchMicrophone --deny` refuses it as a user would,
+including mid-capture or mid-stream, and `--reset` undoes that. A watch
+emulator without pypkjs, such as `pbl qemu` with `pebble install --qemu`,
+gets no grant and has no phone to stream to.

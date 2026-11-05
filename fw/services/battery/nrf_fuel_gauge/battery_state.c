@@ -6,9 +6,9 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_state.h>
@@ -20,7 +20,7 @@
 #include <kernel/events.h>
 
 #ifndef CONFIG_RECOVERY_FW
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #endif
 
 #ifdef CONFIG_MFG
@@ -30,6 +30,7 @@
 #endif
 
 #include <nrf_fuel_gauge.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -87,7 +88,7 @@ static void prv_track_soc_min(void) {
 }
 static uint32_t s_last_tte;
 static uint32_t s_last_ttf;
-static RtcTicks s_last_log;
+static uint64_t s_last_log;
 static bool s_charger_enabled;
 
 #if FUEL_GAUGE_STATEFUL
@@ -98,7 +99,7 @@ static uint32_t s_save_counter;
 #ifdef CONFIG_MFG
 // In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
+  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
@@ -107,7 +108,7 @@ static bool prv_load_state(void *state, size_t size) {
     return false;
   }
 
-  flash_read_bytes(state, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, size);
+  pbl_flash_read(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, state, size);
 
   // Check if the flash region contains valid data (not all 0xFF)
   uint8_t *bytes = (uint8_t *)state;
@@ -141,50 +142,53 @@ static void prv_save_state(void) {
     return;
   }
 
-  flash_erase_subsector_blocking(FLASH_REGION_MFG_BATTERY_STATE_BEGIN);
-  flash_write_bytes(buf, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, sizeof(buf));
+  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_write(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, buf, sizeof(buf));
 
   PBL_LOG_DBG("Fuel gauge state saved");
 }
 #else
 // In normal firmware, use settings file
-#define FUEL_GAUGE_SETTINGS_FILE_NAME "fgs"
+#define FUEL_GAUGE_SETTINGS_FILE_NAME "/fgs"
 #define FUEL_GAUGE_SETTINGS_MAX_SIZE  2048
 
 static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
 
 static void prv_erase_state(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     return;
   }
 
-  settings_file_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
-  settings_file_close(&file);
+  pbl_settings_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
+  pbl_settings_close(&file);
 
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
 static bool prv_load_state(void *state, size_t size) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     return false;
   }
 
-  int len = settings_file_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
+  int len = pbl_settings_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
   if (len != (int)size) {
-    settings_file_close(&file);
+    pbl_settings_close(&file);
     return false;
   }
 
-  ret = settings_file_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size);
-  settings_file_close(&file);
+  ret = status_from_errno(
+      pbl_settings_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size));
+  pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {
     return false;
@@ -197,7 +201,7 @@ static bool prv_load_state(void *state, size_t size) {
 
 static void prv_save_state(void) {
   uint8_t buf[nrf_fuel_gauge_state_size];
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t ret;
 
   if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
@@ -205,15 +209,16 @@ static void prv_save_state(void) {
     return;
   }
 
-  ret = settings_file_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE);
+  ret = status_from_errno(
+      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open fuel gauge settings file");
     return;
   }
 
-  ret = settings_file_set(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), buf,
-                          sizeof(buf));
-  settings_file_close(&file);
+  ret = status_from_errno(pbl_settings_set(&file, &FUEL_GAUGE_STATE_KEY,
+                                           sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf)));
+  pbl_settings_close(&file);
 
   if (ret != S_SUCCESS) {
     PBL_LOG_ERR("Failed to save fuel gauge state");
@@ -300,7 +305,7 @@ static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) 
 static void prv_update_state(void *force_update) {
   BatteryChargeStatus chg_status;
   BatteryConstants constants;
-  RtcTicks now, delta;
+  uint64_t now, delta;
   uint8_t pct_int;
   bool is_plugged;
   bool is_charging;
@@ -360,8 +365,8 @@ static void prv_update_state(void *force_update) {
   s_last_voltage_mv = constants.v_mv;
   s_last_temp_mc = constants.t_mc;
 
-  now = rtc_get_ticks();
-  delta = (now - prv_ref_time) / RTC_TICKS_HZ;
+  now = pbl_uptime_ticks();
+  delta = (now - prv_ref_time) / PBL_TICK_HZ;
   prv_ref_time = now;
 
   pct = nrf_fuel_gauge_process((float)constants.v_mv / 1000.0f, (float)constants.i_ua / 1000000.0f,
@@ -408,7 +413,7 @@ static void prv_update_state(void *force_update) {
       constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)delta,
       s_last_battery_charge_state.pct, s_last_tte, s_last_ttf);
 
-  if (update || (((now - s_last_log) / RTC_TICKS_HZ > LOG_MIN_SEC) &&
+  if (update || (((now - s_last_log) / PBL_TICK_HZ > LOG_MIN_SEC) &&
                  (s_last_battery_charge_state.is_charging || (pct < ALWAYS_UPDATE_PCT)))) {
     PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32
                  " uA, "
@@ -521,7 +526,7 @@ void battery_state_init(void) {
   }
 #endif
 
-  prv_ref_time = rtc_get_ticks();
+  prv_ref_time = pbl_uptime_ticks();
 
   s_last_soc_cpct = (uint32_t)(pct * 100.0f);
   prv_track_soc_min();

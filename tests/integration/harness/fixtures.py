@@ -8,6 +8,7 @@ import pytest
 from harness.connections import Capability
 from harness.device import DeviceConfig
 from harness.device.factory import get_device
+from harness.errors import HarnessError
 from harness.logs import LogFile
 from harness.plugin import results_dir_for
 
@@ -58,14 +59,32 @@ def lab_setup(request):
 
 
 @pytest.fixture(scope="session")
-def ppk2(lab_setup):
-    """The PPK2 powering the watch, if the setup has one."""
-    if lab_setup.ppk2 is None:
+def lab_locks(lab_setup):
+    """Hold the ports the setup uses, against other sessions."""
+    from pbl import lock
+
+    try:
+        with lock.holding(lab_setup.locks()):
+            yield
+    except lock.LockError as e:
+        pytest.exit(str(e), returncode=pytest.ExitCode.USAGE_ERROR)
+
+
+@pytest.fixture(scope="session")
+def supply(lab_setup, lab_locks):
+    """The supply powering the watch (:class:`pbl.power.Supply`), if the
+    setup has one."""
+    if lab_setup.supply_port is None:
         yield None
         return
-    from harness.helpers.power import Ppk2
+    from pbl import power
 
-    supply = Ppk2(lab_setup.ppk2, lab_setup.voltage_mv)
+    try:
+        supply = power.open_supply(
+            lab_setup.supply_type, lab_setup.supply_port, lab_setup.voltage_mv
+        )
+    except power.PowerError as e:
+        raise HarnessError(str(e)) from None
     try:
         yield supply
     finally:
@@ -73,7 +92,7 @@ def ppk2(lab_setup):
 
 
 @pytest.fixture(scope="session")
-def device_object(request, build, results_dir, lab_setup, ppk2):
+def device_object(request, build, results_dir, lab_setup, lab_locks, supply):
     """The device, not launched."""
     from harness.build import Build
 
@@ -94,7 +113,7 @@ def device_object(request, build, results_dir, lab_setup, ppk2):
             qemu_rtc=config.getoption("qemu_rtc"),
             bt_hci=lab_setup.bt_hci,
             ble_controller=lab_setup.phone.controller if lab_setup.phone else None,
-            power_supply=ppk2,
+            power_supply=supply,
             main_build=Build(main_build) if main_build else None,
         )
     )
@@ -123,8 +142,12 @@ def dut(unlaunched_dut):
 
 @pytest.fixture
 def test_results_dir(request):
-    """This test's own results directory."""
+    """This test's own results directory, a ``rerunN`` one inside it for
+    each rerun."""
     path = results_dir_for(request.config, request.node.nodeid)
+    reruns = getattr(request.node, "execution_count", 1) - 1
+    if reruns > 0:
+        path = os.path.join(path, f"rerun{reruns}")
     os.makedirs(path, exist_ok=True)
     return path
 
@@ -200,13 +223,15 @@ def snapshot(request, build, test_results_dir):
 
 
 @pytest.fixture
-def power(ppk2, dut, test_results_dir):
-    """Current measurement through the PPK2."""
-    if ppk2 is None:
+def power(supply, dut, test_results_dir):
+    """Current measurement through the supply powering the watch."""
+    if supply is None:
         pytest.skip("no power supply: add one to the lab, or pass --ppk2 PORT")
+    if not supply.measures:
+        pytest.skip(f"a {type(supply).__name__} cannot measure current")
     from harness.helpers.power import Power
 
-    return Power(ppk2, dut, test_results_dir)
+    return Power(supply, dut, test_results_dir)
 
 
 @pytest.fixture

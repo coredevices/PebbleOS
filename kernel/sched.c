@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/kernel/idle.h>
 
 #define NUM_PRIO CONFIG_KERNEL_NUM_PRIORITIES
 static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
@@ -327,8 +326,8 @@ struct pbl_thread *sched_switch_in(void) {
   return next;
 }
 
-void sched_tick(void) {
-  s_ticks++;
+void sched_announce(uint64_t ticks) {
+  s_ticks += ticks;
   prv_expire_timeouts();
   // Round-robin among threads sharing the running priority.
   if (s_ready_head[pbl_cur->prio] && s_ready_head[pbl_cur->prio]->backend.next) {
@@ -341,10 +340,12 @@ bool sched_idle_confirm(void) {
   return prv_pick() == &s_idle_thread && !s_switch_deferred;
 }
 
-void sched_idle_slept(pbl_tick_t elapsed) {
-  s_ticks += elapsed;
-  prv_expire_timeouts();
-  sched_request_switch();
+pbl_tick_t sched_ticks(void) {
+  return (pbl_tick_t)s_ticks;
+}
+
+uint64_t sched_uptime_ticks(void) {
+  return s_ticks;
 }
 
 struct pbl_thread *sched_idle_thread(void) {
@@ -360,6 +361,10 @@ static void prv_idle_entry(void *arg) {
       sched_yield_current();
     }
     pbl_tick_t idle_ticks = prv_ticks_until_next_timeout();
+    pbl_tick_t timer_ticks = timer_ticks_until_next((pbl_tick_t)s_ticks);
+    if (timer_ticks < idle_ticks) {
+      idle_ticks = timer_ticks;
+    }
     pbl_irq_unlock();
     arch_idle(idle_ticks);
   }
@@ -368,8 +373,6 @@ static void prv_idle_entry(void *arg) {
 // ---- public scheduler API ---------------------------------------------------
 
 void sched_start_prepare(void) {
-  arch_init();
-
   struct pbl_thread_attr attr = {
     .name = "IDLE",
     .entry = prv_idle_entry,
@@ -390,6 +393,7 @@ void sched_start_prepare(void) {
 
 void pbl_kernel_start(void) {
   sched_start_prepare();
+  timekeeping_start();
   arch_start();
 }
 
@@ -444,24 +448,6 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
   pbl_irq_unlock();
 }
 
-// ---- idle interface ---------------------------------------------------------
-
-bool pbl_idle_confirm(void) {
-  return sched_idle_confirm();
-}
-
-void pbl_idle_slept(pbl_tick_t elapsed) {
-  pbl_irq_lock();
-  sched_idle_slept(elapsed);
-  pbl_irq_unlock();
-}
-
-void pbl_kernel_tick_isr(void) {
-  pbl_irq_lock();
-  sched_tick();
-  pbl_irq_unlock();
-}
-
 void sched_reset_for_test(void) {
   memset(&s_idle_thread, 0, sizeof(s_idle_thread));
   pbl_cur = nullptr;
@@ -476,4 +462,5 @@ void sched_reset_for_test(void) {
   s_switch_deferred = false;
   s_started = false;
   s_next_number = 0;
+  timer_reset_for_test();
 }

@@ -15,7 +15,7 @@ from harness.ble import FORWARD, PPOG_FORWARD_META, REVERSED
 from harness.ble.ppogatt import SN_MOD, LateAcks
 from harness.errors import Unsupported, WatchTimeout
 from harness.helpers.ui import Ui
-from harness.helpers.voice import VoicePhone
+from harness.helpers.voice import VoicePhone, assert_session_ends, start
 
 pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 BOTH = pytest.mark.variants("normal", "prf")
@@ -138,7 +138,7 @@ def test_dictation_with_late_acks(dut, prompt, watch, phones, ppogatt):
     phone = _settled(phones(ppogatt=ppogatt, late_acks=IDLE_LINK).connect())
     voice = VoicePhone(phone.pebble)
     since = dut.logs.mark()
-    prompt("voice start dictation")
+    start(prompt)
     session = voice.wait_session()
     voice.wait_frames(session, 1)
     time.sleep(DICTATION_S)
@@ -149,6 +149,7 @@ def test_dictation_with_late_acks(dut, prompt, watch, phones, ppogatt):
     dropped = dut.logs.find(DROPPED_FRAMES, since)
     assert dropped is None, str(dropped)
     assert len(session.frames) >= 0.9 * DICTATION_S / FRAME_S
+    assert_session_ends(prompt, voice)
 
 
 @BOTH

@@ -8,13 +8,14 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
@@ -23,6 +24,7 @@
 
 #include <applib/app.h>
 #include <applib/app_exit_reason.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_list.h>
@@ -32,7 +34,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/menu_cell_layer.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/notifications/notification_window.h>
 #include <process_state/app_state/app_state.h>
@@ -215,7 +216,7 @@ static void prv_notifications_history_init(NotificationsData *data) {
   }
 
   if (window > 0) {
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     cutoff = (now > window) ? now - window : 0;
   }
 
@@ -327,9 +328,9 @@ static void prv_group_window_load(Window *window) {
                              .draw_row = prv_group_window_draw_row,
                              .select_click = prv_group_window_select,
                            });
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack), GColorWhite);
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(menu_layer, DEFAULT_NOTIFICATION_COLOR, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, false);
   layer_add_child(&window->layer, menu_layer_get_layer(menu_layer));
@@ -457,7 +458,6 @@ static void prv_settings_clear_history_window_push(NotificationsData *data) {
   data->actionable_dialog = actionable_dialog;
 }
 
-#if PBL_BW
 static GColor prv_invert_bw_color(GColor color) {
   if (gcolor_equal(color, GColorBlack)) {
     return GColorWhite;
@@ -484,7 +484,24 @@ static void prv_draw_pdc_bw_inverted(GContext *ctx, GDrawCommandImage *image, GP
   };
   gdraw_command_image_draw_processed(ctx, image, offset, &processor);
 }
-#endif // PBL_BW
+
+static void prv_draw_notification_icon(GContext *ctx, const Layer *cell_layer,
+                                       GDrawCommandImage *icon, GPoint origin) {
+  void (*draw_func)(GContext *, GDrawCommandImage *, GPoint) = gdraw_command_image_draw;
+  if (system_theme_is_dark_mode()) {
+    if (!menu_cell_layer_is_highlighted(cell_layer)) {
+      draw_func = prv_draw_pdc_bw_inverted;
+    }
+  }
+#if PBL_BW
+  else {
+    if (menu_cell_layer_is_highlighted(cell_layer)) {
+      draw_func = prv_draw_pdc_bw_inverted;
+    }
+  }
+#endif
+  draw_func(ctx, icon, origin);
+}
 
 //////////////
 // MenuLayer callbacks
@@ -497,13 +514,6 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
   const GSize icon_size = gdraw_command_image_get_bounds_size(icon);
   const int16_t icon_left_margin = menu_cell_basic_horizontal_inset();
   if (icon) {
-    void (*draw_func)(GContext *, GDrawCommandImage *, GPoint) = gdraw_command_image_draw;
-#if PBL_BW
-    if (menu_cell_layer_is_highlighted(cell_layer)) {
-      draw_func = prv_draw_pdc_bw_inverted;
-    }
-#endif
-
     // Inset the draw box from the left to leave some margin on the icon's left side
     GRect box = cell_layer_bounds;
     box.origin.x += icon_left_margin;
@@ -512,7 +522,7 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
     GRect icon_rect = (GRect){.size = gdraw_command_image_get_bounds_size(icon)};
     grect_align(&icon_rect, &box, GAlignLeft, false /* clip */);
 
-    draw_func(ctx, icon, icon_rect.origin);
+    prv_draw_notification_icon(ctx, cell_layer, icon, icon_rect.origin);
   }
 
   // Temporarily inset the cell layer's bounds from the left so the text doesn't draw over any
@@ -563,7 +573,7 @@ void prv_draw_notification_cell_round(GContext *ctx, const Layer *cell_layer, GR
     grect_align(&icon_rect, box, GAlignTop, true);
     icon_rect.origin.y += 4;
 
-    gdraw_command_image_draw(ctx, icon, icon_rect.origin);
+    prv_draw_notification_icon(ctx, cell_layer, icon, icon_rect.origin);
 
     // more box by icon + some margin
     const int16_t icon_space = icon_rect.origin.y + icon_rect.size.h - 12;
@@ -977,9 +987,9 @@ static void prv_window_load(Window *window) {
                              .select_click = prv_select_callback,
                            });
 
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(
-      menu_layer, PBL_IF_COLOR_ELSE(DEFAULT_NOTIFICATION_COLOR, GColorBlack), GColorWhite);
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(menu_layer, DEFAULT_NOTIFICATION_COLOR, GColorWhite);
+#endif
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
   menu_layer_set_scroll_wrap_around(menu_layer, shell_prefs_get_menu_scroll_wrap_around_enable());
@@ -997,17 +1007,15 @@ static void prv_window_load(Window *window) {
       text_layer,
       &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
              window->layer.bounds.size.w - horizontal_margin, window->layer.bounds.size.h / 2),
-      i18n_get("No notifications", data), font, GColorBlack, GColorWhite, GTextAlignmentCenter,
+      i18n_get("No notifications", data), font, GColorBlack, GColorClear, GTextAlignmentCenter,
       GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text_color_follows_theme(text_layer);
   layer_add_child(&window->layer, text_layer_get_layer(text_layer));
 
 #if PBL_ROUND
-  GColor bg_color = GColorClear;
-  GColor fg_color = GColorBlack;
-
   StatusBarLayer *status_bar = &data->status_bar_layer;
   status_bar_layer_init(status_bar);
-  status_bar_layer_set_colors(status_bar, bg_color, fg_color);
+  status_bar_layer_set_colors_follow_theme(status_bar, true /* transparent_background */);
   layer_add_child(&window->layer, &status_bar->layer);
 #endif
 

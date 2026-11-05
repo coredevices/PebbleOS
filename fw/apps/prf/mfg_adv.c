@@ -4,11 +4,11 @@
 #include <string.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/qr_code.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <services/bluetooth/bluetooth_ctl.h>

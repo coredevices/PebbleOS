@@ -1,7 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_calculators.h>
@@ -20,7 +22,6 @@
 #include <applib/health_service.h>
 #include <apps/system/workout/utils.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
@@ -55,10 +56,6 @@ typedef struct CurrentWorkoutData {
   int32_t hr_samples_sum;
   int32_t hr_samples_count;
 
-  uint8_t spo2_last_pct;
-  uint8_t spo2_min_pct;
-  bool spo2_measuring;
-
   // Ring of recent raw BPMs used to median-filter the live HR for display during movement.
   uint8_t bpm_ring[WORKOUT_HR_SMOOTH_N];
   uint8_t bpm_ring_count;
@@ -81,9 +78,6 @@ typedef struct WorkoutServiceData {
   time_t last_workout_end_ts;
   time_t frontend_last_opened_ts;
   HRMSessionRef hrm_session;
-  //! An SpO2 attempt owns the optical path. Kept without a workout too, so one that starts
-  //! mid-attempt joins it.
-  bool hrm_paused;
 
   CurrentWorkoutData *current_workout;
 } WorkoutServiceData;
@@ -126,7 +120,7 @@ static void prv_update_duration(void) {
     return;
   }
 
-  time_t now_utc = rtc_get_time();
+  time_t now_utc = pbl_realtime();
 
   time_t total_paused_time_s = s_workout_data.current_workout->duration_completed_pauses_s;
   if (workout_service_is_paused()) {
@@ -223,18 +217,19 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
     return;
   }
 
-  if (event->quality == HRMQuality_OffWrist) {
+  if (event->off_wrist) {
     // Reset to zero for OffWrist readings
     prv_reset_hr_data();
-  } else if (event->quality >= HRMQuality_Acceptable) {
+  } else {
     const int prev_bpm_timestamp_ts = wrkt_data->current_bpm_timestamp_ts;
     const uint8_t raw_bpm = event->current_bpm;
 
-    // The live displayed HR is median-filtered over the last few samples to reject motion spikes,
-    // which are the main source of jitter during a workout. When the signal is clean we take the
-    // raw value directly (and clear the ring) so we don't lag genuine rapid changes like interval
-    // surges. The session average below still accumulates the raw value for accuracy.
-    if (event->quality >= HRMQuality_Good) {
+    // Every reading the algorithm outputs is used: confidence tends to stay low during motion,
+    // so gating on it stalls the display for the whole workout. Low-confidence readings are
+    // median-filtered over the last few samples to reject motion spikes; high-confidence ones
+    // are taken directly (clearing the ring) so we don't lag rapid changes like interval surges.
+    // The session average below still accumulates the raw value.
+    if (event->confidence >= HRM_CONFIDENCE_HIGH) {
       wrkt_data->bpm_ring_count = 0;
       wrkt_data->bpm_ring_head = 0;
       wrkt_data->current_bpm = raw_bpm;
@@ -358,35 +353,6 @@ void workout_service_init(void) {
   pbl_mutex_init(&s_workout_data.s_workout_mutex);
 }
 
-// ---------------------------------------------------------------------------------------
-// Pause / resume the workout's HR sampling so the optical path is free for a periodic SpO2 reading
-// during a manual workout (mirrors the auto-activity HR pause). Uses set_features rather than
-// set_update_interval so the session's interval/expiration are preserved. KernelBG-safe.
-void workout_service_set_hrm_paused(bool paused) {
-#ifdef CONFIG_HRM
-  prv_lock();
-  {
-    s_workout_data.hrm_paused = paused;
-    sys_hrm_manager_set_features(s_workout_data.hrm_session, paused ? 0 : HRMFeature_BPM);
-    if (s_workout_data.current_workout) {
-      s_workout_data.current_workout->spo2_measuring = paused;
-      // No HR updates arrive while paused (a whole SpO2 attempt, shorter than the staleness
-      // expiry), so drop the live value rather than show it as current, and restart the zone-time
-      // clock so the gap isn't attributed to the zone of the first sample after resuming.
-      prv_reset_hr_data();
-    }
-  }
-  prv_unlock();
-#endif // CONFIG_HRM
-}
-
-// ---------------------------------------------------------------------------------------
-#ifdef CONFIG_HRM
-static HRMFeature prv_hrm_features(void) {
-  return s_workout_data.hrm_paused ? (HRMFeature)0 : HRMFeature_BPM;
-}
-#endif // CONFIG_HRM
-
 // FIXME: We should probably handle this on KernelBG and not use the official app subscription
 void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
@@ -394,7 +360,7 @@ void workout_service_frontend_opened(void) {
   {
 #ifdef CONFIG_HRM
     s_workout_data.hrm_session =
-        sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, prv_hrm_features());
+        sys_hrm_manager_app_subscribe(app_get_app_id(), 1, 0, HRMFeature_BPM);
 #endif // CONFIG_HRM
     s_workout_data.frontend_last_opened_ts = time_get_uptime_seconds();
     prv_put_event(PebbleWorkoutEvent_FrontendOpened);
@@ -437,7 +403,7 @@ void workout_service_frontend_closed(void) {
     if (hr_time_left > 0) {
       // Still some time left. Set a subscription with an expiration
       s_workout_data.hrm_session =
-          sys_hrm_manager_app_subscribe(app_get_app_id(), 1, hr_time_left, prv_hrm_features());
+          sys_hrm_manager_app_subscribe(app_get_app_id(), 1, hr_time_left, HRMFeature_BPM);
     } else {
       // No time left. Kill the subscription
       sys_hrm_manager_unsubscribe(s_workout_data.hrm_session);
@@ -468,7 +434,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
     // Before starting this new session we need to deal with any in progress sessions
     uint32_t num_sessions = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
     ActivitySession *sessions =
-        kernel_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
+        pbl_zalloc_check(sizeof(ActivitySession) * ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT);
     activity_get_sessions(&num_sessions, sessions);
     for (unsigned i = 0; i < num_sessions; i++) {
       // End and save any automatically detected ongoing sessions
@@ -477,13 +443,12 @@ bool workout_service_start_workout(ActivitySessionType type) {
         activity_sessions_prv_add_activity_session(&sessions[i]);
       }
     }
-    kernel_free(sessions);
+    pbl_free(sessions);
 
-    s_workout_data.current_workout = kernel_zalloc_check(sizeof(CurrentWorkoutData));
+    s_workout_data.current_workout = pbl_zalloc_check(sizeof(CurrentWorkoutData));
     s_workout_data.current_workout->type = type;
-    s_workout_data.current_workout->start_utc = rtc_get_time();
+    s_workout_data.current_workout->start_utc = pbl_realtime();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
-    s_workout_data.current_workout->spo2_measuring = s_workout_data.hrm_paused;
     // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
     // API function call
     s_workout_data.second_timer = (RegularTimerInfo){
@@ -534,10 +499,10 @@ bool workout_service_pause_workout(bool should_be_paused) {
 
     if (wrkt_data->paused) {
       // We are paused and want to unpause. Add the in progress pause time to the total
-      wrkt_data->duration_completed_pauses_s += (rtc_get_time() - wrkt_data->last_paused_utc);
+      wrkt_data->duration_completed_pauses_s += (pbl_realtime() - wrkt_data->last_paused_utc);
     } else {
       // We are unpaused and want to pause. Set the last_paused_utc timestamp
-      wrkt_data->last_paused_utc = rtc_get_time();
+      wrkt_data->last_paused_utc = pbl_realtime();
     }
 
     wrkt_data->paused = should_be_paused;
@@ -612,14 +577,14 @@ bool workout_service_stop_workout(void) {
     PBL_LOG_INFO("Stopping a workout with type: %d", wrkt->type);
     prv_put_event(PebbleWorkoutEvent_Stopped);
 
-    kernel_free(s_workout_data.current_workout);
+    pbl_free(s_workout_data.current_workout);
     s_workout_data.current_workout = nullptr;
   }
   prv_unlock();
 
   if (save_session) {
     activity_sessions_prv_add_activity_session(&session_to_save);
-    activity_insights_push_activity_session_notification(rtc_get_time(), &session_to_save,
+    activity_insights_push_activity_session_notification(pbl_realtime(), &session_to_save,
                                                          avg_hr_to_save, hr_zone_time_s_to_save);
   }
 
@@ -739,28 +704,11 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
       .hr_samples = wrkt->hr_samples_count,
       .avg_bpm = prv_get_avg_hr(),
       .active_kcal = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
-      .spo2_pct = wrkt->spo2_last_pct,
-      .spo2_min_pct = wrkt->spo2_min_pct,
-      .spo2_measuring = wrkt->spo2_measuring,
     };
     memcpy(metrics_out->hr_zone_time_s, wrkt->hr_zone_time_s, sizeof(wrkt->hr_zone_time_s));
   }
   prv_unlock();
   return wrkt != nullptr;
-}
-
-void workout_service_handle_spo2(uint8_t percent) {
-  prv_lock();
-  {
-    CurrentWorkoutData *wrkt = s_workout_data.current_workout;
-    if (wrkt && !wrkt->paused && percent > 0) {
-      wrkt->spo2_last_pct = percent;
-      if (!wrkt->spo2_min_pct || percent < wrkt->spo2_min_pct) {
-        wrkt->spo2_min_pct = percent;
-      }
-    }
-  }
-  prv_unlock();
 }
 
 #if UNITTEST
@@ -797,7 +745,7 @@ void workout_service_get_active_kcalories(int32_t *active) {
 
 void workout_service_reset(void) {
   if (s_workout_data.current_workout) {
-    kernel_free(s_workout_data.current_workout);
+    pbl_free(s_workout_data.current_workout);
   }
   s_workout_data = (WorkoutServiceData){};
 }

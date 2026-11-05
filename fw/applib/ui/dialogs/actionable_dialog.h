@@ -60,6 +60,9 @@ void app_actionable_dialog_push(ActionableDialog *actionable_dialog);
 //! @param actionable_dialog Pointer to a \ref ActionableDialog to pop
 void actionable_dialog_pop(ActionableDialog *actionable_dialog);
 
+//! Overrides the font of the dialog text. Must be called before the dialog is pushed.
+void actionable_dialog_set_text_font(ActionableDialog *actionable_dialog, GFont font);
+
 //! Attaches user data to an \ref ActionableDialog, since the \ref
 //! ActionableDialog already uses the \ref Window 's user_data field.
 void actionable_dialog_set_user_data(ActionableDialog *actionable_dialog, void *context);

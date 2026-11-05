@@ -18,6 +18,7 @@
 
 #include <applib/accel_service.h>
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
@@ -26,7 +27,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/system_icons.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
@@ -884,7 +884,11 @@ static void prv_no_music_window_click_config(void *context) {
 static MusicNoMusicWindow *prv_create_no_music_window(void) {
   MusicNoMusicWindow *window = app_malloc_check(sizeof(MusicNoMusicWindow));
   window_init(&window->window, WINDOW_NAME("NoMusicWindow"));
-  window_set_background_color(&window->window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+#if PBL_COLOR
+  window_set_background_color_follows_theme(&window->window, true /* dimmed */);
+#else
+  window_set_background_color(&window->window, GColorWhite);
+#endif
   window_set_window_handlers(&window->window,
                              &(WindowHandlers){.unload = prv_unload_no_music_window});
 
@@ -905,6 +909,9 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
       &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
       fonts_get_system_font(config->no_music_font_key), GColorBlack, GColorClear,
       GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
+#if PBL_COLOR
+  text_layer_set_text_color_follows_theme(&window->text_layer);
+#endif
   layer_add_child(&window->window.layer, &window->bitmap_layer.layer);
   layer_add_child(&window->window.layer, &window->text_layer.layer);
   window_set_click_config_provider(&window->window, prv_no_music_window_click_config);
@@ -1061,6 +1068,9 @@ static void prv_configure_music_text_layer(TextLayer *text_layer, char *text_buf
                                            GTextAlignment align, GFont font) {
   text_layer_init_with_parameters(text_layer, rect, text_buffer, font, GColorBlack, GColorClear,
                                   align, GTextOverflowModeFill);
+#if PBL_COLOR
+  text_layer_set_text_color_follows_theme(text_layer);
+#endif
   layer_set_bounds(&text_layer->layer, &GRect(0, -y_offset, rect->size.w, rect->size.h + y_offset));
   layer_set_clips(&text_layer->layer, false);
 }
@@ -1537,8 +1547,15 @@ static void prv_apply_art_appearance(MusicAppData *data) {
     clock_mode = StatusBarLayerModeClockLargeBold;
   }
 #endif
+  // Over album art the clock is drawn with a dark outline, so it stays white in every theme
   status_bar_layer_set_colors(&data->status_layer, GColorClear,
                               data->has_album_art ? GColorWhite : GColorBlack);
+#if PBL_COLOR
+  if (!data->has_album_art) {
+    status_bar_layer_set_colors_follow_theme(&data->status_layer,
+                                             true /* transparent_background */);
+  }
+#endif
   status_bar_layer_set_mode(&data->status_layer, clock_mode);
 #if MUSIC_ROUND_MEDIA_LAYOUT
   const GRect clock_frame = GRect(0, ART_ROUND_CLOCK_Y, DISP_COLS, 30);
@@ -1550,7 +1567,11 @@ static void prv_apply_art_appearance(MusicAppData *data) {
 static void prv_init_ui(Window *window) {
   MusicAppData *data = window_get_user_data(window);
 
-  window_set_background_color(window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+#if PBL_COLOR
+  window_set_background_color_follows_theme(window, true /* dimmed */);
+#else
+  window_set_background_color(window, GColorWhite);
+#endif
 
   const GSize WINDOW_SIZE = window->layer.bounds.size;
 

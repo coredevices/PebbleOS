@@ -5,12 +5,12 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/button_id.h>
 #include <pbl/kernel/compiler.h>
 
 #include <applib/accel_service.h>
 #include <applib/compass_service.h>
 #include <applib/preferred_content_size.h>
+#include <applib/ui/click.h>
 
 /**
  * @defgroup comm_qemu QEMU host channel
@@ -55,6 +55,8 @@ typedef enum {
   QemuProtocol_HealthMetric = 12,
   /** Heart rate reading, @ref QemuProtocolHeartRateHeader. */
   QemuProtocol_HeartRate = 13,
+  /** Microphone audio from the host: 16 kHz mono signed 16-bit little-endian PCM. */
+  QemuProtocol_MicAudio = 14,
 } QemuProtocol;
 
 /** @brief @ref QemuProtocol_Tap payload. */
@@ -176,7 +178,7 @@ typedef struct PBL_PACKED {
 typedef struct PBL_PACKED {
   /** Heart rate in beats per minute. */
   uint8_t bpm;
-  /** Reading quality, an HRMQuality value (signed: off-wrist is -1). */
+  /** Reading grade: -1 off wrist, 0 (worst) to 4 (excellent). */
   int8_t quality;
 } QemuProtocolHeartRateHeader;
 

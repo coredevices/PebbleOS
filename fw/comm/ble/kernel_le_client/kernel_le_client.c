@@ -19,6 +19,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connect.h>
@@ -29,7 +31,6 @@
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 #define MAX_SERVICE_INSTANCES (8)
 
@@ -292,7 +293,7 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
 
   if (value_length) {
     // TODO: avoid double-copying the data
-    buffer = (uint8_t *)kernel_malloc(value_length);
+    buffer = (uint8_t *)pbl_malloc(value_length);
     if (PBL_UNLIKELY(!buffer)) {
       PBL_LOG_ERR("OOM for GATT read response - %d bytes", (int)value_length);
       return;
@@ -303,19 +304,19 @@ static void prv_consume_read_response(const PebbleBLEGATTClientEvent *event,
   if (client->handle_read_or_notification) {
     client->handle_read_or_notification(event->object_ref, buffer, value_length, event->gatt_error);
   }
-  kernel_free(buffer);
+  pbl_free(buffer);
 }
 
 static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
   GATTBufferedNotificationHeader header = {};
   bool has_more = gatt_client_subscriptions_get_notification_header(&header);
-  const RtcTicks start_ticks = rtc_get_ticks();
+  const uint64_t start_ticks = pbl_uptime_ticks();
   while (has_more) {
-    const uint32_t ticks_spent = rtc_get_ticks() - start_ticks;
+    const uint32_t ticks_spent = pbl_uptime_ticks() - start_ticks;
 
     // Don't spend more than ~33ms (or one 30fps animation frame interval) processing the pending
     // GATT notifications, and let KernelMain drain the events posted by the handlers:
-    if ((ticks_spent >= ((RTC_TICKS_HZ * 33) / 1000)) ||
+    if ((ticks_spent >= ((PBL_TICK_HZ * 33) / 1000)) ||
         (event_kernel_to_kernel_num_free() < NOTIFICATION_MIN_FREE_KERNEL_EVENTS)) {
       // Doing this might actually cause an issue if the characteristic(s) for which there are still
       // notifications pending in the buffer become invalid before the time they are processed.
@@ -325,7 +326,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
     }
 
     // TODO: avoid double-copying the data
-    uint8_t *buffer = (uint8_t *)kernel_malloc(header.value_length);
+    uint8_t *buffer = (uint8_t *)pbl_malloc(header.value_length);
     if (PBL_UNLIKELY(header.value_length && !buffer)) {
       PBL_LOG_ERR("OOM for GATT notification");
       return;
@@ -346,7 +347,7 @@ static void prv_consume_notifications(const PebbleBLEGATTClientEvent *event) {
       PBL_LOG_DBG("No client to handle GATT notification from characteristic %p",
                   (void *)header.characteristic);
     }
-    kernel_free(buffer);
+    pbl_free(buffer);
     header.value_length = next_value_length;
   }
 }

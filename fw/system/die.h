@@ -7,6 +7,5 @@
 
 void prepare_for_software_failure(void);
 
-//! Does not call reboot_reason_set, only calls reboot_reason_set_restarted_safely if we were
-//! able shut everything down nicely before rebooting.
+//! Does not call reboot_reason_set.
 [[noreturn]] void reset_due_to_software_failure(void);

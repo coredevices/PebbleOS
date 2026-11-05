@@ -1,14 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
-#include <kernel/pbl_malloc.h>
 
 // -----------------------------------------------------------------------------------------
 void qemu_serial_private_init_state(QemuSerialGlobals *state) {
@@ -18,12 +19,12 @@ void qemu_serial_private_init_state(QemuSerialGlobals *state) {
 
   // Allocate buffer for received characters from the ISR
   uint32_t buffer_size = QEMU_ISR_RECV_BUFFER_SIZE;
-  uint8_t *buffer_data = kernel_malloc_check(buffer_size);
+  uint8_t *buffer_data = pbl_malloc_check(buffer_size);
   pbl_shared_cbuf_init(&state->isr_buffer, buffer_data, buffer_size);
   pbl_shared_cbuf_add_client(&state->isr_buffer, &state->isr_buffer_client);
 
   // Allocate buffer for the received message
-  state->msg_buffer = kernel_malloc_check(QEMU_MAX_DATA_LEN);
+  state->msg_buffer = pbl_malloc_check(QEMU_MAX_DATA_LEN);
   state->msg_buffer_bytes = 0;
 }
 
@@ -46,7 +47,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
   uint8_t byte;
   bool exit = false;
   bool got_msg = false;
-  time_t cur_time = rtc_get_time();
+  time_t cur_time = pbl_realtime();
 
   // Reset our state if too much time has passed since we detected start of a packet
   if (state->recv_state != QemuRecvState_WaitingHdrSignatureMSB &&

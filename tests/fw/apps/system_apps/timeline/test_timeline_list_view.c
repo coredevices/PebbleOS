@@ -9,7 +9,7 @@
 #include <pbl/util/units.h>
 
 #include <apps/system/timeline/timeline.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fixtures/screen_grid.h>
 #include <resource/resource.h>
 #include <resource/resource_ids.auto.h>
@@ -28,7 +28,7 @@ void test_timeline_list_view__initialize(void) {
   load_system_resources_fixture();
 
   s_data = (TimelineTestData){};
-  rtc_set_time(3 * PBL_SEC_PER_DAY);
+  pbl_realtime_set(3 * PBL_SEC_PER_DAY);
 }
 
 void test_timeline_list_view__cleanup(void) {
@@ -56,7 +56,7 @@ typedef struct ListViewConfig {
 static void prv_add_timeline_item(const TimelineItemConfig *config, bool past, uint8_t pin_index) {
   PBL_ASSERTN(config);
   TimelineItem *item = nullptr;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t timestamp = now + ((past ? -1 : 1) * config->relative_timestamp);
   if (config) {
     AttributeList list;
@@ -135,7 +135,7 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
 
   s_data.model = (TimelineModel){};
   s_data.model.direction = config->past ? TimelineIterDirectionPast : TimelineIterDirectionFuture;
-  timeline_model_init(rtc_get_time(), &s_data.model);
+  timeline_model_init(pbl_realtime(), &s_data.model);
 
   Window window;
   window_init(&window, "Timeline");
@@ -183,7 +183,7 @@ static void prv_create_list_view_and_render(ListViewConfig *config) {
   timeline_layer_deinit(&timeline_layer);
   timeline_model_deinit();
   pin_db_flush();
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 // Content size grids

@@ -37,4 +37,16 @@ config SHELL_RX_BUFF_SIZE
       Characters an interactive shell queues from its backend before they
       are processed.
 
+config DRIVER_SHELL
+    bool "Driver shell commands"
+    help
+      Default every driver class shell command on, e.g. gpio, i2c or flash.
+      Each one can still be turned off on its own.
+
+config SUBSYS_SHELL
+    bool "Subsystem shell commands"
+    help
+      Default every subsystem shell command on, e.g. input. Each one can
+      still be turned off on its own.
+
 endif # SHELL

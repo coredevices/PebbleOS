@@ -1,12 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""A lab: the hardware wired to the host running the tests, and the setup a
-build gets from it.
+"""The setup a build gets from the lab (:mod:`pbl.lab`), the hardware wired
+to the host running the tests, and the command line.
 
-A lab file (YAML) describes the wiring only: watches (board, debug serial
-port, the supply powering them), power supplies and Bluetooth dongles. The
-setup for a build is what the tests run with: the device, how it is
+The setup for a build is what the tests run with: the device, how it is
 reached and powered, and what plays the phone, from the lab and the
 command line. Tests only see the setup, so they run unchanged on any of:
 
@@ -20,7 +18,8 @@ command line. Tests only see the setup, so they run unchanged on any of:
 """
 
 import dataclasses
-import os
+
+from pbl.lab import DEFAULT_SERIAL_BAUD, Lab, LabError
 
 from harness.errors import HarnessError
 
@@ -35,110 +34,14 @@ PHONE_BUMBLE = "bumble"
 PHONE_COREAPP = "coreapp"
 PHONE_TYPES = (PHONE_BUMBLE, PHONE_COREAPP)
 
-SUPPLY_PPK2 = "ppk2"
 DEFAULT_VOLTAGE_MV = 3800
-DEFAULT_SERIAL_BAUD = 115200
 
 
-@dataclasses.dataclass
-class Watch:
-    name: str
-    board: str
-    serial: str
-    serial_baud: int = DEFAULT_SERIAL_BAUD
-    supply: str = None
-
-    def matches(self, build):
-        """Whether it runs ``build``: the board with its revision, or any
-        revision when the lab gives none."""
-        if "@" in self.board:
-            return self.board == build.board_target
-        return self.board == build.board
-
-
-@dataclasses.dataclass
-class Supply:
-    name: str
-    type: str
-    port: str = "auto"
-
-
-@dataclasses.dataclass
-class Dongle:
-    """A Bluetooth controller: an nRF52840 dongle running Zephyr's hci_uart,
-    by serial port, or any Bumble transport."""
-
-    name: str
-    port: str
-
-
-@dataclasses.dataclass
-class Lab:
-    path: str = None
-    watches: dict = dataclasses.field(default_factory=dict)
-    supplies: dict = dataclasses.field(default_factory=dict)
-    dongles: dict = dataclasses.field(default_factory=dict)
-
-    @classmethod
-    def load(cls, path):
-        import yaml
-
-        with open(path) as f:
-            data = yaml.safe_load(f) or {}
-        try:
-            return cls.parse(data, path)
-        except (KeyError, TypeError, ValueError) as e:
-            raise HarnessError(f"{path}: invalid lab file: {e}") from None
-
-    @classmethod
-    def parse(cls, data, path=None):
-        unknown = set(data) - {"watches", "supplies", "dongles"}
-        if unknown:
-            raise ValueError(f"unknown sections {sorted(unknown)}")
-        lab = cls(path=path)
-        for name, entry in (data.get("supplies") or {}).items():
-            lab.supplies[name] = Supply(name=name, **entry)
-            if lab.supplies[name].type != SUPPLY_PPK2:
-                raise ValueError(f"supply {name}: unknown type {entry['type']!r}")
-        for name, entry in (data.get("dongles") or {}).items():
-            lab.dongles[name] = Dongle(name=name, **entry)
-        for name, entry in (data.get("watches") or {}).items():
-            lab.watches[name] = Watch(name=name, **entry)
-        lab._check()
-        return lab
-
-    def _check(self):
-        powered = {}
-        for watch in self.watches.values():
-            if watch.supply is None:
-                continue
-            if watch.supply not in self.supplies:
-                raise ValueError(f"watch {watch.name}: no supply {watch.supply!r}")
-            if watch.supply in powered:
-                raise ValueError(
-                    f"supply {watch.supply} powers both {powered[watch.supply]} "
-                    f"and {watch.name}"
-                )
-            powered[watch.supply] = watch.name
-
-    def watch_for(self, build, name=None):
-        if name is not None:
-            if name not in self.watches:
-                raise HarnessError(f"{self.path}: no watch {name!r}")
-            watch = self.watches[name]
-            if not watch.matches(build):
-                raise HarnessError(
-                    f"watch {name} is a {watch.board}, the build is for "
-                    f"{build.board_target}"
-                )
-            return watch
-        for watch in self.watches.values():
-            if watch.matches(build):
-                return watch
-        return None
-
-    def dongle_ports(self):
-        return [dongle.port for dongle in self.dongles.values()]
+def load(path):
+    try:
+        return Lab.load(path)
+    except LabError as e:
+        raise HarnessError(str(e)) from None
 
 
 @dataclasses.dataclass
@@ -161,7 +64,9 @@ class Setup:
     watch: str = None
     serial: list = dataclasses.field(default_factory=list)
     serial_baud: int = DEFAULT_SERIAL_BAUD
-    ppk2: str = None
+    #: The supply powering the watch: a :mod:`pbl.power` type, and its port.
+    supply_type: str = None
+    supply_port: str = None
     voltage_mv: int = DEFAULT_VOLTAGE_MV
     #: An emulated watch's Bluetooth: VIRTUAL, or a dongle's serial port
     #: (for QEMU, any -serial spec).
@@ -179,16 +84,36 @@ class Setup:
             if self.phone.controller is None and self.bt_hci != VIRTUAL:
                 return "no Bluetooth controller for the phone"
         elif need == "power":
-            if self.ppk2 is None:
+            if self.supply_port is None:
                 return "no power supply in this setup"
         return None
+
+    def locks(self):
+        """The locks (:mod:`pbl.lock`) on the ports the setup uses."""
+        from pbl import lock
+
+        locks = [(lock.serial_key(port), f"serial port {port}") for port in self.serial]
+        if self.watch:
+            locks.append(
+                (lock.probe_key(self.watch), f"watch {self.watch}'s debug probe")
+            )
+        if self.supply_port:
+            from pbl import power
+
+            key = power.lock_key(self.supply_type, self.supply_port)
+            locks.append((key, f"{self.supply_type} {self.supply_port}"))
+        for port in (self.bt_hci, self.phone.controller if self.phone else None):
+            locks.append((lock.serial_key(port), f"Bluetooth controller {port}"))
+        return locks
 
     def describe(self):
         parts = [self.watch or self.device_type]
         if self.serial:
             parts.append(f"serial {', '.join(self.serial)}")
-        if self.ppk2:
-            parts.append(f"PPK2 {self.ppk2} at {self.voltage_mv} mV")
+        if self.supply_port:
+            parts.append(
+                f"{self.supply_type} {self.supply_port} at {self.voltage_mv} mV"
+            )
         if self.bt_hci:
             parts.append(f"Bluetooth {self.bt_hci}")
         if self.phone:
@@ -210,13 +135,17 @@ def resolve(build, device_type, options, lab=None):
     phone_controller = None
 
     if device_type == "hardware" and build is not None:
-        watch = lab.watch_for(build, options.get("watch"))
+        try:
+            watch = lab.watch_for(build.board_target, options.get("watch"))
+        except LabError as e:
+            raise HarnessError(str(e)) from None
         if watch is not None:
             setup.watch = watch.name
-            setup.serial = [watch.serial]
+            setup.serial = [watch.serial] if watch.serial else []
             setup.serial_baud = watch.serial_baud
             if watch.supply is not None:
-                setup.ppk2 = lab.supplies[watch.supply].port
+                supply = lab.supplies[watch.supply]
+                setup.supply_type, setup.supply_port = supply.type, supply.port
         phone_controller = dongles[0] if dongles else None
     elif device_type in ("qemu", "native") and build is not None:
         if build.config.get("CONFIG_BT_HCI_UART"):
@@ -234,7 +163,7 @@ def resolve(build, device_type, options, lab=None):
     if options.get("serial_baud"):
         setup.serial_baud = options["serial_baud"]
     if options.get("ppk2"):
-        setup.ppk2 = options["ppk2"]
+        setup.supply_type, setup.supply_port = "ppk2", options["ppk2"]
     if options.get("voltage_mv"):
         setup.voltage_mv = options["voltage_mv"]
     phone_controller = options.get("ble_controller") or phone_controller
@@ -244,8 +173,3 @@ def resolve(build, device_type, options, lab=None):
             controller=phone_controller if phone_type == PHONE_BUMBLE else None,
         )
     return setup
-
-
-def default_lab_path():
-    """The lab file of $PBL_ITEST_LAB, if set."""
-    return os.environ.get("PBL_ITEST_LAB") or None

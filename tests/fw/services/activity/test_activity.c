@@ -3,10 +3,11 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/drivers/vibe.h>
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
@@ -14,7 +15,6 @@
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/time.h>
@@ -39,6 +39,8 @@
 // Stubs
 #include <pbl/util/testing.h>
 
+#include <stubs_dark_mode_updater.h>
+
 void prefs_sync_init(void) {
 }
 
@@ -48,6 +50,7 @@ void prefs_sync_init(void) {
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_std.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -74,6 +77,7 @@ void health_tracking_ui_feature_show_disabled(void) {
 
 // These are declared as PBL_T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
+void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_minute_system_task_cb(void *data);
 
 void hrm_manager_handle_prefs_changed(void) {
@@ -131,22 +135,14 @@ bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
   return true;
 }
 
+static HRMFeature s_hrm_manager_last_features;
 bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
+  s_hrm_manager_last_features = features;
   return true;
 }
 
 bool hrm_manager_has_continuous_green_subscriber(void) {
   return false;
-}
-
-// Activity-SpO2 / HR-pause APIs referenced by activity.c. Stubbed to keep the auto-activity HR
-// path idle so these tests exercise only the daily HR/SpO2 schedulers.
-bool activity_algorithm_activity_hrm_is_active(void) {
-  return false;
-}
-
-void activity_algorithm_activity_hrm_set_paused(bool paused) {
-  (void)paused;
 }
 
 bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
@@ -289,9 +285,13 @@ bool protobuf_log_session_delete(ProtobufLogRef session) {
   return true;
 }
 
-bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t now_utc, uint8_t bpm,
-                                HRMQuality quality) {
+bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t now_utc, uint8_t bpm, uint8_t confidence,
+                                bool off_wrist) {
   return true;
+}
+
+uint8_t protobuf_log_hr_quality(uint8_t confidence, bool off_wrist) {
+  return 0;
 }
 
 // =============================================================================================
@@ -404,7 +404,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   // Preserve the minute data from the last boot
   s_test_alg_state = (AlgorithmState){
     .minute_data = minute_data,
-    .rate_last_update_time = rtc_get_time(),
+    .rate_last_update_time = pbl_realtime(),
   };
 
   return true;
@@ -428,7 +428,7 @@ bool activity_algorithm_deinit(void) {
 void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
   // For testing purposes, we'll use the x movement as the steps and y as the sleep state
   ActivitySleepState prior_state = s_test_alg_state.minute_data.sleep_state;
-  time_t now_secs = rtc_get_time();
+  time_t now_secs = pbl_realtime();
   s_test_alg_state.minute_data.last_captured_utc = now_secs;
 
   for (int i = 0; i < num_samples; i++) {
@@ -564,7 +564,7 @@ bool activity_algorithm_get_step_rate(uint16_t *steps, uint32_t *elapsed_ms, tim
 bool activity_algorithm_metrics_changed_notification(void) {
   s_test_alg_state.steps = 0;
   s_test_alg_state.rate_last_steps = 0;
-  s_test_alg_state.rate_last_update_time = rtc_get_time();
+  s_test_alg_state.rate_last_update_time = pbl_realtime();
   return true;
 }
 
@@ -617,12 +617,6 @@ bool activity_algorithm_test_fill_minute_file(void) {
   return true;
 }
 
-// Activity-SpO2 / HR-pause APIs referenced by activity.c. Stubbed to keep the auto-activity HR
-// path idle so these tests exercise only the daily HR/SpO2 schedulers.
-void workout_service_set_hrm_paused(bool paused) {
-  (void)paused;
-}
-
 // We simulate the activity_algorithm_get_minute_history() call to return data that reflects
 // that we record chunks of ALG_MINUTES_PER_RECORD minutes at a time. If we don't ask on a
 // ALG_MINUTES_PER_RECORD minute boundary, we will have up to ALG_MINUTES_PER_RECORD minutes
@@ -631,7 +625,7 @@ void workout_service_set_hrm_paused(bool paused) {
 bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                            time_t *utc_start) {
   // Get the current time
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
 
   // Get the minute index
   uint32_t minute_idx = now / PBL_SEC_PER_MIN;
@@ -670,7 +664,7 @@ static int s_minute_heart_rate_calls;
 bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
                                               time_t utc_start) {
   s_minute_heart_rate_calls++;
-  const uint32_t minute_idx = rtc_get_time() / PBL_SEC_PER_MIN;
+  const uint32_t minute_idx = pbl_realtime() / PBL_SEC_PER_MIN;
   const time_t last_second_available =
       (minute_idx - (minute_idx % ALG_MINUTES_PER_FILE_RECORD)) * PBL_SEC_PER_MIN;
 
@@ -710,10 +704,8 @@ static void prv_feed_canned_accel_data(uint32_t num_sec, uint32_t steps_per_minu
   }
   int need_step_ctr = samples_per_step;
 
-  time_t utc_secs;
-  uint16_t ms;
-  rtc_get_time_ms(&utc_secs, &ms);
-  uint64_t start_ms = utc_secs * 1000 + ms;
+  uint64_t start_ms = pbl_realtime_ms();
+  time_t utc_secs = (time_t)(start_ms / 1000U);
   uint64_t ms_per_sample = 1000 / ALGORITHM_SAMPLING_RATE;
 
   for (int i = 0; i < num_samples;) {
@@ -755,10 +747,8 @@ static void prv_feed_canned_accel_data(uint32_t num_sec, uint32_t steps_per_minu
 // ---------------------------------------------------------------------------------------
 // Feed in X seconds of raw data
 static void prv_feed_raw_accel_data(AccelRawData *samples, uint32_t num_samples) {
-  time_t utc_secs;
-  uint16_t ms;
-  rtc_get_time_ms(&utc_secs, &ms);
-  uint64_t start_ms = utc_secs * 1000 + ms;
+  uint64_t start_ms = pbl_realtime_ms();
+  time_t utc_secs = (time_t)(start_ms / 1000U);
 
   for (int i = 0; i < num_samples;) {
     AccelData accel_data[ALGORITHM_SAMPLING_RATE];
@@ -861,8 +851,8 @@ static ActivitySession *s_health_sessions;
 static time_t s_health_sessions_sleep_time;
 static time_t s_health_sessions_awake_time;
 
-static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, time_t time_end,
-                                    void *context) {
+static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_start,
+                                    pbl_time32_t time_end, void *context) {
   if (s_health_sessions_count >= s_health_sessions_max) {
     return false;
   }
@@ -877,12 +867,14 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
     }
   }
 
+  const time_t start = time_start;
+  const time_t end = time_end;
   char time_start_text[64];
-  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
+  struct pbl_tm *local_tm = pbl_override_localtime(&start);
   pbl_strftime_r(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
-  local_tm = pbl_override_localtime(&time_end);
+  local_tm = pbl_override_localtime(&end);
   pbl_strftime_r(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   PBL_LOG_DBG("Got activity: %d %s to %s (%d min)", (int)activity, time_start_text, time_end_text,
@@ -911,7 +903,7 @@ static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, 
 static void prv_sleep_sessions_using_health_service(uint32_t *session_entries,
                                                     ActivitySession *sessions,
                                                     HealthIterationDirection direction) {
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   s_health_sessions_count = 0;
   s_health_sessions_max = *session_entries;
   s_health_sessions = sessions;
@@ -952,14 +944,14 @@ void test_activity__initialize(void) {
     .tm_zone = "UTC",
     .tm_gmtoff = 0,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
   fake_rtc_init(100 /*initial_ticks*/, utc_sec);
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   prv_activity_algorithm_erase_minute_data();
   prv_activity_init_and_set_enabled(true);
@@ -1014,7 +1006,7 @@ void test_activity__init_history(void) {
   prv_feed_canned_accel_data(60, 0, ActivitySleepStateRestfulSleep);
 
   // Put in a stepping activity
-  time_t day_start = time_util_get_midnight_of(rtc_get_time());
+  time_t day_start = time_util_get_midnight_of(pbl_realtime());
   ActivitySession walk_activity = {
     .start_utc = day_start + 12 * PBL_SEC_PER_HOUR,
     .length_min = 120,
@@ -1108,7 +1100,7 @@ void test_activity__init_history(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
                               ((const uint32_t[ACTIVITY_HISTORY_DAYS]){0, 100, 0, 0, 0, 0, 0}));
@@ -1229,7 +1221,7 @@ void test_activity__day_rollover(void) {
 
   // Put in 2 activities, one of which should drop off on a new day because it's old and the
   // other which drop off because it is in the future (invalid)
-  time_t day_start = time_util_get_midnight_of(rtc_get_time());
+  time_t day_start = time_util_get_midnight_of(pbl_realtime());
   ActivitySession old_activity = {
     .start_utc = day_start + 12 * PBL_SEC_PER_HOUR,
     .length_min = 120,
@@ -1319,7 +1311,7 @@ void test_activity__step_derived_metrics(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
@@ -1384,7 +1376,7 @@ void test_activity__step_derived_metrics(void) {
 
   // Another day
   utc_sec += PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
@@ -1711,7 +1703,7 @@ void test_activity__get_minute_history(void) {
 
   // The last ALG_MINUTES_PER_RECORD of minutes may not be available yet, so start
   // well enough before that
-  time_t utc_start = rtc_get_time() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
+  time_t utc_start = pbl_realtime() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
   const time_t exp_utc_start = utc_start;
 
   stub_pebble_tasks_set_current(PebbleTask_App);
@@ -1736,14 +1728,14 @@ void test_activity__get_minute_history(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
-  time_t oldest_to_fetch = rtc_get_time() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
+  time_t oldest_to_fetch = pbl_realtime() - (ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN);
   for (int i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++) {
     // Ask for the last ALG_MINUTES_PER_RECORD minutes of data
     num_records = ALG_MINUTES_PER_FILE_RECORD;
-    time_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
-    time_t end_time = utc_sec;
+    pbl_time32_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
+    pbl_time32_t end_time = utc_sec;
     HealthMinuteData received_records[ALG_MINUTES_PER_FILE_RECORD];
     num_records =
         health_service_get_minute_history(received_records, num_records, &start_time, &end_time);
@@ -1762,7 +1754,7 @@ void test_activity__get_minute_history(void) {
     }
 
     // Advance another minute.
-    rtc_set_time(utc_sec + (i * PBL_SEC_PER_MIN));
+    pbl_realtime_set(utc_sec + (i * PBL_SEC_PER_MIN));
   }
 }
 
@@ -1776,7 +1768,7 @@ void test_activity__get_minute_history_chunked(void) {
   HealthMinuteData minutes[exp_num_records];
 
   time_t utc_start =
-      rtc_get_time() - (exp_num_records + ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN;
+      pbl_realtime() - (exp_num_records + ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN;
   utc_start -= utc_start % PBL_SEC_PER_MIN;
   const time_t exp_utc_start = utc_start;
 
@@ -1801,7 +1793,7 @@ void test_activity__get_minute_history_timeout(void) {
   HealthMinuteData exp_minutes[10];
   memset(exp_minutes, 0xA5, sizeof(exp_minutes));
 
-  time_t utc_start = rtc_get_time() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
+  time_t utc_start = pbl_realtime() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_system_task_stalled = true;
@@ -1825,7 +1817,7 @@ void test_activity__get_minute_heart_rate(void) {
   const uint32_t num_minutes = PBL_MIN_PER_DAY;
   uint8_t bpm[num_minutes];
   memset(bpm, 0xA5, sizeof(bpm));
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t utc_start = now - (now % PBL_SEC_PER_MIN) - (num_minutes - 1) * PBL_SEC_PER_MIN;
 
   stub_pebble_tasks_set_current(PebbleTask_App);
@@ -1846,7 +1838,7 @@ void test_activity__get_minute_heart_rate_too_long(void) {
 
   static uint8_t bpm[ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES + 1];
   stub_pebble_tasks_set_current(PebbleTask_App);
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
 }
 
@@ -1863,7 +1855,7 @@ void test_activity__get_minute_heart_rate_timeout(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_system_task_stalled = true;
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), rtc_get_time()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
 
   s_system_task_stalled = false;
@@ -1891,7 +1883,7 @@ int prv_expected_steps_per_min(int slot, int multiplier) {
 void prv_assert_known_settings(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   prv_activity_init_and_set_enabled(true);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
@@ -1916,7 +1908,7 @@ void prv_assert_known_settings(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_t utc_sec = pbl_mktime(&time_tm);
   utc_sec -= 2 * PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   prv_activity_init_and_set_enabled(true);
   activity_start_tracking(false /*test_mode*/);
@@ -1963,14 +1955,13 @@ void prv_assert_known_settings(void) {
   sprintf(out_path, "%s/%s/%s", CLAR_FIXTURE_PATH, ACTIVITY_FIXTURE_PATH, filename);
 
   // Open and read the settings file from PFS
-  int fd = pfs_open(ACTIVITY_SETTINGS_FILE_NAME, OP_FLAG_READ, FILE_TYPE_STATIC,
-                    ACTIVITY_SETTINGS_FILE_LEN);
-  cl_assert(fd >= S_SUCCESS);
-  size_t size = pfs_get_file_size(fd);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(pbl_fs_open(&pfs_file, ACTIVITY_SETTINGS_FILE_NAME, PBL_FS_O_READ), 0);
+  size_t size = pbl_fs_size(&pfs_file);
   uint8_t *buf = malloc(size);
   cl_assert(buf != nullptr);
-  cl_assert(pfs_read(fd, buf, size) == size);
-  pfs_close(fd);
+  cl_assert(pbl_fs_read(&pfs_file, buf, size) == size);
+  pbl_fs_close(&pfs_file);
 
   // Save it to the local file system
   FILE *file = fopen(out_path, "wb");
@@ -1999,12 +1990,12 @@ static void prv_load_settings_file_onto_pfs(const char *filename, const char *pf
   // copy file to fake flash storage
   cl_assert(fread(buf, 1, st.st_size, file) > 0);
 
-  pfs_remove(pfs_name);
-  int fd = pfs_open(pfs_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, st.st_size);
-  cl_assert(fd >= 0);
-  int bytes_written = pfs_write(fd, buf, st.st_size);
+  pbl_fs_unlink(pfs_name);
+  struct pbl_fs_file pfs_file;
+  cl_assert_equal_i(fake_pfs_create(&pfs_file, pfs_name, st.st_size), 0);
+  int bytes_written = pbl_fs_write(&pfs_file, buf, st.st_size);
   cl_assert(st.st_size == bytes_written);
-  pfs_close(fd);
+  pbl_fs_close(&pfs_file);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -2034,34 +2025,31 @@ void test_activity__migrate_settings_v2(void) {
   } ActivitySettingsValueHistoryV2;
 
   // Build a version 2 settings file by hand
-  pfs_remove(ACTIVITY_SETTINGS_FILE_NAME);
-  SettingsFile file;
+  pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
+  struct pbl_settings_file file;
   cl_assert_equal_i(
-      settings_file_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN),
-      S_SUCCESS);
+      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), 0);
 
   ActivitySettingsKey key = ActivitySettingsKeyVersion;
   const uint16_t version = 2;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), &version, sizeof(version)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)), 0);
 
   const ActivitySettingsValueHistoryV2 step_history = {
-    .utc_sec = rtc_get_time(),
+    .utc_sec = pbl_realtime(),
     .values = {60000, 65535, 300, 200, 100},
   };
   key = ActivitySettingsKeyStepCountHistory;
-  cl_assert_equal_i(
-      settings_file_set(&file, &key, sizeof(key), &step_history, sizeof(step_history)), S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &step_history, sizeof(step_history)),
+                    0);
 
   const uint16_t last_vmc = 1234;
   key = ActivitySettingsKeyLastVMC;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &last_vmc, sizeof(last_vmc)), 0);
 
   // Stored sessions are not metric records; the migration must copy them verbatim
   ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT] = {};
   sessions[0] = (ActivitySession){
-    .start_utc = rtc_get_time() - PBL_SEC_PER_HOUR,
+    .start_utc = pbl_realtime() - PBL_SEC_PER_HOUR,
     .length_min = 42,
     .type = ActivitySessionType_Walk,
     .step_data = {
@@ -2072,10 +2060,9 @@ void test_activity__migrate_settings_v2(void) {
     },
   };
   key = ActivitySettingsKeyStoredActivities;
-  cl_assert_equal_i(settings_file_set(&file, &key, sizeof(key), sessions, sizeof(sessions)),
-                    S_SUCCESS);
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), sessions, sizeof(sessions)), 0);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Initializing triggers the migration
   prv_activity_init_and_set_enabled(true);
@@ -2215,7 +2202,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "EST",
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
@@ -2230,7 +2217,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "PST",
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Walk some more until 11pm PST
   prv_feed_canned_accel_data(8 * PBL_SEC_PER_HOUR, 50, ActivitySleepStateAwake);
@@ -2266,7 +2253,7 @@ void test_activity__sleep_after_timezone_change(void) {
     .tm_zone = "EST",
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Starting at 2am EST: 2 Cycles of 3 hrs each light (165 min), awake (15 min)
   for (int i = 0; i < 2; i++) {
@@ -2298,7 +2285,7 @@ void test_activity__health_service_interpolation(void) {
     .tm_zone = "PST",
     .tm_gmtoff = -8 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
@@ -2327,11 +2314,11 @@ void test_activity__health_service_interpolation(void) {
 
   // If we ask for the sum from latter half of yesterday till now, we should get 2500
   steps = health_service_sum(HealthMetricStepCount, time_start_of_today() - (12 * PBL_SEC_PER_HOUR),
-                             rtc_get_time());
+                             pbl_realtime());
   cl_assert_equal_i(steps, 2500);
 
   // If we ask for the sum from latter half of yesterday till half of today, we should get 1500
-  time_t elapsed_today = rtc_get_time() - time_start_of_today();
+  time_t elapsed_today = pbl_realtime() - time_start_of_today();
   steps = health_service_sum(HealthMetricStepCount, time_start_of_today() - (12 * PBL_SEC_PER_HOUR),
                              time_start_of_today() + (elapsed_today / 2));
   cl_assert_equal_i(steps, 1500);
@@ -2371,7 +2358,7 @@ void test_activity__distance(void) {
   struct pbl_tm time_tm = s_init_time_tm;
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   fake_system_task_callbacks_invoke_pending();
 
   int act_distance[ARRAY_LENGTH(tests)];
@@ -2383,7 +2370,7 @@ void test_activity__distance(void) {
 
     // Advance to new day to reset the distance
     utc_sec += PBL_SEC_PER_DAY;
-    rtc_set_time(utc_sec);
+    pbl_realtime_set(utc_sec);
     prv_activity_init_and_set_enabled(true);
 
     // Set the user's dimensions
@@ -2452,24 +2439,31 @@ void test_activity__distance(void) {
 // --------------------------------------------------------------------------------------------
 // Advance through time simulating the heart rate manager calls
 static int s_num_hrm_callbacks;
-static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, HRMQuality quality,
+// Algorithm confidence of the simulated readings, or OFF_WRIST.
+#define CONF_EXCELLENT  (95)
+#define CONF_GOOD       (85)
+#define CONF_ACCEPTABLE (70)
+#define CONF_WORST      (20)
+#define OFF_WRIST       (-1)
+static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
                                 bool force_continuous) {
   // Call the minute handler, which computes the minute stats and saves them to data logging
   // as well as the sleep PFS file.
   for (int i = 0; i < num_sec; i++) {
-    fake_rtc_set_ticks(rtc_get_ticks() + PBL_TICK_HZ);
-    rtc_set_time(rtc_get_time() + 1);
+    fake_rtc_set_ticks(pbl_uptime_ticks() + PBL_TICK_HZ);
+    pbl_realtime_set(pbl_realtime() + 1);
 
     if ((s_hrm_manager_update_interval == 1) || force_continuous) {
       PebbleHRMEvent hrm_event = {
         .event_type = HRMEvent_BPM,
         .bpm.bpm = bpm,
-        .bpm.quality = quality,
+        .bpm.confidence = (confidence == OFF_WRIST) ? 0 : confidence,
+        .bpm.off_wrist = (confidence == OFF_WRIST),
       };
       prv_hrm_subscription_cb(&hrm_event, nullptr);
       s_num_hrm_callbacks++;
     }
-    if ((rtc_get_time() % PBL_SEC_PER_MIN) == 0) {
+    if ((pbl_realtime() % PBL_SEC_PER_MIN) == 0) {
       prv_minute_system_task_cb(nullptr);
     }
   }
@@ -2484,8 +2478,7 @@ void test_activity__hrm_sampling_period(void) {
   fake_system_task_callbacks_invoke_pending();
   s_test_alg_state.orientation = 0x11; // Not flat
 
-  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, HRMQuality_Good,
-                      false /*force_continuous*/);
+  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
 
   // Should be 1 second sampling when we start up
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
@@ -2496,27 +2489,27 @@ void test_activity__hrm_sampling_period(void) {
   cl_assert_equal_i(last_update_utc, 0);
 
   // Simulate callbacks one second away from turning down the sampling rate
-  // Use Acceptable because of the short circuiting in `prv_heart_rate_subscription_update`
-  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_ON_TIME_SEC - 1, 100 /*bpm*/, HRMQuality_Acceptable,
+  // Use Acceptable (low confidence) because of the short circuiting in
+  // `prv_heart_rate_subscription_update`
+  prv_advance_time_hr(ACTIVITY_DEFAULT_HR_ON_TIME_SEC - 1, 100 /*bpm*/, CONF_ACCEPTABLE,
                       false /*force_continuous*/);
 
   // The last update time should be within a second
   activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1, &last_update_utc);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 
   // Should still be sampling every 1 second
   cl_assert_equal_i(s_hrm_manager_update_interval, 1);
 
   // Tick one more second, should trigger slow sampling
-  prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+  prv_advance_time_hr(1, 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   // Should be back to no sampling by now (very large sampling period)
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
   // Advance to our next sampling period, but the watch is flat so we shouldn't start sampling
   s_test_alg_state.orientation = 0x00; // Flat
-  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, HRMQuality_Good,
-                      false /*force_continuous*/);
+  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
   // Advance to our next sampling period, the watch is no longer flat so we should be sampling.
@@ -2524,7 +2517,7 @@ void test_activity__hrm_sampling_period(void) {
   // the next minute boundary triggers the subscription update and starts sampling.
   s_test_alg_state.orientation = 0x22; // Not flat
   for (uint32_t i = 0; i < (10 * PBL_SEC_PER_MIN); i++) {
-    prv_advance_time_hr(1, 100 /*bpm*/, HRMQuality_Good, false /*force_continuous*/);
+    prv_advance_time_hr(1, 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
     if (s_hrm_manager_update_interval == 1) {
       break;
     }
@@ -2554,7 +2547,7 @@ void test_activity__hrm_median(void) {
   cl_assert_equal_i(last_update_utc, 0);
 
   // Simulate some HRM callbacks with no heart rate, should get 0 median
-  prv_advance_time_hr(10 /*sec*/, 0 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(10 /*sec*/, 0 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 0);
   cl_assert_equal_i(total_weight, 0);
@@ -2566,10 +2559,10 @@ void test_activity__hrm_median(void) {
   cl_assert_equal_i(last_update_utc, 0);
 
   // Simulate some HRM callbacks with non-zero heart rate
-  prv_advance_time_hr(3 /*sec*/, 50 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
-  prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, HRMQuality_Worst, true /*force_continuous*/);
+  prv_advance_time_hr(3 /*sec*/, 50 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, CONF_GOOD, true /*force_continuous*/);
+  prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, CONF_WORST, true /*force_continuous*/);
   prv_minute_system_task_cb(nullptr);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 51);
@@ -2578,8 +2571,8 @@ void test_activity__hrm_median(void) {
   activity_get_metric(ActivityMetricHeartRateFilteredBPM, 1, &last_median);
   activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &last_update_utc);
   cl_assert_equal_i(last_median, 51);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 
   // Reset the stats, the median should be 0
   activity_metrics_prv_reset_hr_stats();
@@ -2590,8 +2583,8 @@ void test_activity__hrm_median(void) {
   activity_get_metric(ActivityMetricHeartRateFilteredBPM, 1, &last_median);
   activity_get_metric(ActivityMetricHeartRateFilteredUpdatedTimeUTC, 1, &last_update_utc);
   cl_assert_equal_i(last_median, 51);
-  cl_assert(last_update_utc >= rtc_get_time() - 1);
-  cl_assert(last_update_utc <= rtc_get_time());
+  cl_assert(last_update_utc >= pbl_realtime() - 1);
+  cl_assert(last_update_utc <= pbl_realtime());
 }
 
 static uint32_t s_num_hr_events;
@@ -2615,34 +2608,110 @@ void test_activity__hrm_ignore(void) {
   fake_event_set_callback(prv_fake_hr_event_handler);
 
   // Should not fire off an event. Bad HR reading
-  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 0);
 
   // Should fire off an event. Good HR and Good quality
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_Good, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 1);
 
   // Should fire off an event. OffWrist, tell clients
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_OffWrist, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, OFF_WRIST, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 2);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_OffWrist);
+  cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
 
   // Should fire off an event. OffWrist, tell clients
-  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, HRMQuality_OffWrist, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, OFF_WRIST, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 3);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_OffWrist);
+  cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
 
   // Should fire off an event. Good HR and Good Quality
-  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, HRMQuality_Excellent, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 4);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 120);
-  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.quality, HRMQuality_Excellent);
+  cl_assert(!s_last_hr_event.data.heart_rate_update.off_wrist);
+  cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.confidence, CONF_EXCELLENT);
 
   // Should not fire off an event. Bad HR reading
-  prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, HRMQuality_Excellent, true /*force_continuous*/);
+  prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 4);
+}
+
+// ---------------------------------------------------------------------------------------
+static void prv_put_spo2(uint8_t percent, uint8_t confidence, bool invalid) {
+  PebbleHRMEvent hrm_event = {
+    .event_type = HRMEvent_SpO2,
+    .spo2 = {
+      .percent = percent,
+      .confidence = confidence,
+      .invalid = invalid,
+    },
+  };
+  prv_spo2_subscription_cb(&hrm_event, nullptr);
+}
+
+static uint8_t prv_take_spo2_percent(void) {
+  uint8_t percent, quality;
+  activity_metrics_prv_get_spo2_sample(&percent, &quality);
+  return percent;
+}
+
+// Without a high-confidence reading the latest valid one is kept; once one came in, lower ones
+// no longer replace it.
+void test_activity__spo2_prefers_high_confidence(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+  ActivitySpO2Support *spo2 = &activity_private_state()->spo2;
+  spo2->num_valid_samples = 0;
+  spo2->num_high_confidence_samples = 0;
+
+  prv_put_spo2(95, 60, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 95);
+
+  prv_put_spo2(96, 70, false);
+  prv_put_spo2(97, HRM_CONFIDENCE_HIGH, false);
+  prv_put_spo2(94, 60, false);
+  prv_put_spo2(98, 90, true /*invalid*/);
+  cl_assert_equal_i(prv_take_spo2_percent(), 97);
+
+  prv_put_spo2(93, 60, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 0);
+
+  prv_put_spo2(99, 90, false);
+  cl_assert_equal_i(prv_take_spo2_percent(), 99);
+
+  cl_assert_equal_i(spo2->num_valid_samples, 6);
+  cl_assert_equal_i(spo2->num_high_confidence_samples, 2);
+}
+
+// ---------------------------------------------------------------------------------------
+// The background SpO2 window waits for a minute without walking.
+void test_activity__spo2_deferred_while_walking(void) {
+  activity_prefs_set_spo2_enabled(true);
+  activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval_10Min);
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  ActivityState *state = activity_private_state();
+  state->hr.currently_sampling = false;
+  state->last_orientation = 0x11; // Not flat
+  state->spo2.currently_sampling = false;
+  state->spo2.toggled_sampling_at_ts = time_get_uptime_seconds();
+  fake_rtc_set_ticks(pbl_uptime_ticks() + (11 * PBL_SEC_PER_MIN * PBL_TICK_HZ));
+
+  s_hrm_manager_last_features = 0;
+  state->last_minute_steps = ACTIVITY_SPO2_MAX_STEPS_PER_MIN + 1;
+  prv_put_spo2(0, 0, true /*invalid*/);
+  cl_assert_equal_b(state->spo2.currently_sampling, false);
+
+  state->last_minute_steps = ACTIVITY_SPO2_MAX_STEPS_PER_MIN;
+  prv_put_spo2(0, 0, true /*invalid*/);
+  cl_assert_equal_b(state->spo2.currently_sampling, true);
+  cl_assert_equal_i(s_hrm_manager_last_features, HRMFeature_SpO2);
+
+  activity_prefs_set_spo2_enabled(false);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -2757,7 +2826,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   // Add a run session
   const time_t time_elapsed = (20 * PBL_SEC_PER_MIN);
@@ -2775,7 +2844,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
 
   // Finish the run session
   utc_sec += (10 * PBL_SEC_PER_MIN);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   run_activity.ongoing = false;
 
   // Update session
@@ -2807,7 +2876,7 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   // Add a Sleep session
   const time_t time_elapsed = (120 * PBL_SEC_PER_MIN);
@@ -2860,7 +2929,7 @@ void test_activity__activity_sessions_ongoing_multiple(void) {
     .tm_year = 115
   };
   time_t utc_sec = pbl_mktime(&start_tm);
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
 
   const time_t time_elapsed = (20 * PBL_SEC_PER_MIN);
 
@@ -2999,9 +3068,9 @@ void test_activity__update_time_in_hr_zones(void) {
   cl_assert_equal_i(zone3_minutes, 2);
 
   // Advance to a new day. The HR zone stats should get reset
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   utc_sec += PBL_SEC_PER_DAY;
-  rtc_set_time(utc_sec);
+  pbl_realtime_set(utc_sec);
   prv_minute_system_task_cb(nullptr);
   cl_assert_equal_b(prv_is_hr_elevated(), true); // stays elevated
   activity_get_metric(ActivityMetricHeartRateZone1Minutes, 1, &zone1_minutes);
@@ -3106,4 +3175,99 @@ void test_activity__activity_sessions_add_delete_sessions(void) {
   cl_assert_equal_i(activity_private_state()->activity_sessions_count, 2);
   cl_assert_equal_m(&activity_private_state()->activity_sessions[0], &a1, sizeof(ActivitySession));
   cl_assert_equal_m(&activity_private_state()->activity_sessions[1], &a3, sizeof(ActivitySession));
+}
+
+// ---------------------------------------------------------------------------------------
+// Test that sessions are still logged after the clock was set into the future and corrected
+void test_activity__activity_sessions_logged_after_future_clock(void) {
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+
+  struct pbl_tm start_tm = {
+    // Jan 1, 2015, 10am
+    .tm_hour = 10,
+    .tm_mday = 1,
+    .tm_mon = 0,
+    .tm_year = 115
+  };
+  time_t utc_sec = pbl_mktime(&start_tm);
+  pbl_realtime_set(utc_sec);
+
+  // Sessions were logged while the clock was two years ahead
+  const time_t future_utc = utc_sec + 2 * 365 * PBL_SEC_PER_DAY;
+  ActivityState *state = activity_private_state();
+  state->logged_sleep_activity_exit_at_utc = future_utc;
+  state->logged_restful_sleep_activity_exit_at_utc = future_utc;
+  state->logged_step_activity_exit_at_utc = future_utc;
+
+  ActivitySession stale_walk = {
+    .start_utc = future_utc - 60 * PBL_SEC_PER_MIN,
+    .length_min = 30,
+    .type = ActivitySessionType_Walk,
+  };
+  activity_sessions_prv_add_activity_session(&stale_walk);
+
+  ActivitySession sleep_session = {
+    .start_utc = utc_sec - 10 * PBL_SEC_PER_HOUR,
+    .length_min = 7 * PBL_MIN_PER_HOUR,
+    .type = ActivitySessionType_Sleep,
+  };
+  activity_sessions_prv_add_activity_session(&sleep_session);
+
+  ActivitySession walk_session = {
+    .start_utc = utc_sec - 60 * PBL_SEC_PER_MIN,
+    .length_min = 30,
+    .type = ActivitySessionType_Walk,
+  };
+  activity_sessions_prv_add_activity_session(&walk_session);
+
+  state->sleep_data.cur_state = ActivitySleepStateAwake;
+  prv_reset_captured_dls_data();
+  prv_minute_system_task_cb(nullptr);
+
+  // Only the sessions that ended before now are logged
+  cl_assert_equal_i(s_num_dls_activity_records, 2);
+  cl_assert_equal_i(s_dls_activity_records[0].activity, ActivitySessionType_Sleep);
+  cl_assert_equal_i(s_dls_activity_records[1].activity, ActivitySessionType_Walk);
+  cl_assert_equal_i(state->logged_sleep_activity_exit_at_utc,
+                    sleep_session.start_utc + sleep_session.length_min * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(state->logged_step_activity_exit_at_utc,
+                    walk_session.start_utc + walk_session.length_min * PBL_SEC_PER_MIN);
+  cl_assert_equal_i(state->logged_restful_sleep_activity_exit_at_utc, 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Rebooting on the day DST ends, after the change, must keep today's metrics in today's slot.
+void test_activity__reboot_after_dst_end_keeps_today(void) {
+  // America/Toronto, 2026 DST period: 2026-03-08 07:00Z .. 2026-11-01 06:00Z
+  TimezoneInfo tz_info = {
+    .tm_zone = "E*T",
+    .dst_id = 1,
+    .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
+    .dst_start = 1772953200,
+    .dst_end = 1793512800,
+  };
+  time_util_update_timezone(&tz_info, 0, 0);
+
+  // 2026-11-01 00:30 EDT: the day's history is stamped while DST is still in effect
+  activity_stop_tracking();
+  fake_system_task_callbacks_invoke_pending();
+  pbl_realtime_set(1793507400);
+  prv_activity_init_and_set_enabled(true);
+  activity_start_tracking(false /*test_mode*/);
+  fake_system_task_callbacks_invoke_pending();
+  activity_metrics_set_metric_exact(ActivityMetricStepCount, 1234);
+  activity_stop_tracking();
+  fake_system_task_callbacks_invoke_pending();
+
+  // After the change the stored period is 2027's, the clock service keeps 2026's as previous
+  tz_info.dst_start = 1805007600;
+  tz_info.dst_end = 1825567200;
+  time_util_update_timezone(&tz_info, 1772953200, 1793512800);
+
+  // 2026-11-01 14:22 EST: reboot
+  pbl_realtime_set(1793560920);
+  prv_activity_init_and_set_enabled(true);
+  ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
+                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){1234, 0, 0, 0, 0, 0, 0}));
 }

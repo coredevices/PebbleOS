@@ -8,7 +8,6 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/rtc.h>
 
 /**
  * @defgroup drivers_als_w1160 W1160
@@ -35,7 +34,7 @@ struct pbl_w1160_state {
   /** Continuous sampling enabled. */
   bool sampling;
   /** Time continuous sampling was enabled. */
-  RtcTicks sampling_started_ticks;
+  uint64_t sampling_started_ticks;
   /** Last level read. */
   uint16_t cached_level;
   /** cached_level holds a reading from the current window. */

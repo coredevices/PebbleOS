@@ -41,7 +41,7 @@ bool accel_is_idle(void) {
   return false;
 }
 
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return 0;
 }
 

@@ -9,7 +9,7 @@ config INTC
 
 config INTC_SHELL
     bool "Interrupt controller shell commands"
-    default y
+    default DRIVER_SHELL
     depends on INTC && SHELL
     help
       The irq shell command, to list the lines of every interrupt

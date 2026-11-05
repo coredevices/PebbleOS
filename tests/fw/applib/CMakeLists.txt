@@ -38,7 +38,7 @@ pbl_clar_test(test_persist
   SOURCES
     fw/applib/dict.c
     fw/applib/persist.c
-    fw/services/filesystem/app_file.c
+    fw/services/process_management/app_file.c
     fw/services/persist/service.c
     tests/fakes/fake_rtc.c
     tests/fixtures/resources/builtin_resources.auto.c
@@ -47,7 +47,6 @@ pbl_clar_test(test_persist
 
 pbl_clar_test(test_pbl_std
   SOURCES
-    fw/flash_region/flash_region.c
     fw/applib/pbl_std/pbl_std.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -56,7 +55,6 @@ pbl_clar_test(test_pbl_std
 
 pbl_clar_test(test_strftime
   SOURCES
-    fw/flash_region/flash_region.c
     fw/applib/pbl_std/pbl_std.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
@@ -78,7 +76,7 @@ pbl_clar_test(test_text_render
 pbl_clar_test(test_text_resources
   MODULES resources
   SOURCES
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c
     fw/applib/graphics/text_resources.c
@@ -89,9 +87,8 @@ pbl_clar_test(test_text_resources
 
 pbl_clar_test(test_system_resource_language_fonts
   SOURCES
-    fw/flash_region/flash_region.c
     fw/flash_region/filesystem_regions.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c
     fw/applib/graphics/text_resources.c
@@ -101,9 +98,12 @@ pbl_clar_test(test_system_resource_language_fonts
     fw/resource/resource_storage_file.c
     fw/resource/resource_storage_flash.c
     fw/resource/system_resource.c
-    fw/services/filesystem/flash_translation.c
-    fw/services/filesystem/pfs.c
-    fw/services/filesystem/app_file.c
+    subsys/fs/pfs/flash_translation.c
+    subsys/fs/pfs/pfs.c
+    subsys/fs/fs.c
+    subsys/fs/pfs/pfs_fs.c
+    tests/fakes/fake_pfs.c
+    fw/services/process_management/app_file.c
     drivers/flash/flash_crc.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_spi_flash.c
@@ -136,6 +136,12 @@ pbl_clar_test(test_touch_service
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_dark_mode_service
+  SOURCES
+    fw/applib/dark_mode_service.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_accel_service
   SOURCES
     fw/applib/accel_service.c
@@ -150,7 +156,7 @@ pbl_clar_test(test_app_glance
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 

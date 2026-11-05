@@ -10,14 +10,14 @@
 #include <inttypes.h>
 
 #include <pbl/bluetooth/gatt_discovery.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/core_dump.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 // TODO: virtualize the gatt_client_discovery_discover_all() call
 
@@ -50,7 +50,7 @@ typedef struct DiscoveryJobQueue {
 // Assumes we are holding the BT lock
 static void prv_add_discovery_job(GAPLEConnection *connection,
                                   struct pbl_bt_att_handle_range *hdl_range) {
-  DiscoveryJobQueue *node = kernel_zalloc_check(sizeof(DiscoveryJobQueue));
+  DiscoveryJobQueue *node = pbl_zalloc_check(sizeof(DiscoveryJobQueue));
   if (hdl_range) {
     node->hdl = *hdl_range;
   } else { // discover everything
@@ -106,7 +106,7 @@ static enum pbl_bt_errno prv_run_next_job(GAPLEConnection *connection) {
   if (rv == PBL_BT_ERRNO_OK) {
     if (!connection->gatt_is_service_discovery_in_progress) {
       // Fresh job (not a transparent watchdog retry), record the start time
-      connection->gatt_discovery_start_ticks = rtc_get_ticks();
+      connection->gatt_discovery_start_ticks = pbl_uptime_ticks();
     }
     // if we are back here because a timeout occurred, let the
     // driver handle resetting the watchdog timer (cc2564x issue)
@@ -204,7 +204,7 @@ static void prv_send_services_added_event(const GAPLEConnection *connection,
   size_t space_needed = num_services_changed * sizeof(PebbleBLEGATTClientServiceHandles) +
                         sizeof(PebbleBLEGATTClientServiceEventInfo);
 
-  PebbleBLEGATTClientServiceEventInfo *info = kernel_zalloc_check(space_needed);
+  PebbleBLEGATTClientServiceEventInfo *info = pbl_zalloc_check(space_needed);
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
     .type = PebbleServicesAdded,
@@ -223,7 +223,7 @@ static void prv_send_services_added_event(const GAPLEConnection *connection,
 static void prv_send_services_invalidate_all_event(const GAPLEConnection *connection,
                                                    enum pbl_bt_errno status) {
   PebbleBLEGATTClientServiceEventInfo *info =
-      kernel_zalloc_check(sizeof(PebbleBLEGATTClientServiceEventInfo));
+      pbl_zalloc_check(sizeof(PebbleBLEGATTClientServiceEventInfo));
 
   *info = (PebbleBLEGATTClientServiceEventInfo){
     .type = PebbleServicesInvalidateAll,
@@ -255,7 +255,7 @@ void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connecti
   memory_needed +=
       sizeof(PebbleBLEGATTClientServiceEventInfo) + sizeof(PebbleBLEGATTClientServiceHandles);
 
-  PebbleBLEGATTClientServiceEventInfo *info = kernel_zalloc_check(memory_needed);
+  PebbleBLEGATTClientServiceEventInfo *info = pbl_zalloc_check(memory_needed);
   *info = (PebbleBLEGATTClientServiceEventInfo){
     .type = PebbleServicesRemoved,
     .device = connection->device,
@@ -278,9 +278,9 @@ void gatt_client_discovery_handle_service_range_change(GAPLEConnection *connecti
   gatt_client_subscription_cleanup_by_att_handle_range(connection, range);
   ListNode **head = (ListNode **)&connection->gatt_remote_services;
   list_remove((ListNode *)service_node, head, nullptr);
-  kernel_free(service_node->service);
+  pbl_free(service_node->service);
   service_node->service = nullptr;
-  kernel_free(service_node);
+  pbl_free(service_node);
 
   prv_send_event(info);
 }
@@ -289,9 +289,9 @@ static void prv_free_service_nodes(GAPLEConnection *connection) {
   GATTServiceNode *node = connection->gatt_remote_services;
   while (node) {
     GATTServiceNode *next = (GATTServiceNode *)node->node.next;
-    kernel_free(node->service);
+    pbl_free(node->service);
     node->service = nullptr;
-    kernel_free(node);
+    pbl_free(node);
     node = next;
   }
   connection->gatt_remote_services = nullptr;
@@ -304,7 +304,7 @@ static void prv_remove_current_discovery_job(GAPLEConnection *connection) {
   }
   list_remove((ListNode *)connection->discovery_jobs, (ListNode **)&connection->discovery_jobs,
               nullptr);
-  kernel_free(node);
+  pbl_free(node);
 
   // Handle the case where we are have received service change indication
   // messages for the same range in quick succession and have multiple jobs
@@ -376,7 +376,7 @@ void pbl_bt_cb_gatt_client_discovery_handle_indication(GAPLEConnection *connecti
     return;
   }
 
-  GATTServiceNode *node = kernel_zalloc_check(sizeof(GATTServiceNode));
+  GATTServiceNode *node = pbl_zalloc_check(sizeof(GATTServiceNode));
   node->service = service;
   // tag the service with the generation it was discovered as a part of
   node->service->discovery_generation = connection->gatt_service_discovery_generation;
@@ -413,7 +413,7 @@ bool pbl_bt_cb_gatt_client_discovery_complete(GAPLEConnection *connection,
 
     if (errno == PBL_BT_ERRNO_OK) {
       const uint32_t discovery_ms =
-          (rtc_get_ticks() - connection->gatt_discovery_start_ticks) * 1000 / RTC_TICKS_HZ;
+          (pbl_uptime_ticks() - connection->gatt_discovery_start_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_INFO("GATT service discovery completed in %" PRIu32 "ms", discovery_ms);
       // Completion of service discovery implies we are about to have more BLE
       // traffic (for example, ANCS notifications, PPoG communication). Keep the

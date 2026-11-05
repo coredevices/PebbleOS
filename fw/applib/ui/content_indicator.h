@@ -82,6 +82,14 @@ bool content_indicator_configure_direction(ContentIndicator *content_indicator,
                                            ContentIndicatorDirection direction,
                                            const ContentIndicatorConfig *config);
 
+//! @internal
+//! Draws the arrow of a configured direction over the background of the layer's window, resolved
+//! when drawing so it follows dark mode flips.
+//! @param foreground Also draw the arrow in the system theme's foreground color
+void content_indicator_set_colors_follow_theme(ContentIndicator *content_indicator,
+                                               ContentIndicatorDirection direction,
+                                               bool foreground);
+
 //! Retrieves the availability status of content in the given direction.
 //! @param content_indicator The ContentIndicator for which to get the content availability.
 //! @param direction The direction for which to get the content availability.

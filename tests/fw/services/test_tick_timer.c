@@ -32,7 +32,7 @@ void event_put(PebbleEvent *event) {
   }
 }
 
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return 0;
 }
 

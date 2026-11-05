@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_analytics.h>
 #include <pbl/services/comm_session/session_internal.h>
@@ -16,7 +16,7 @@ void comm_session_analytics_open_session(CommSession *session) {
     PBL_ANALYTICS_TIMER_START(connectivity_expected_time_ms);
     PBL_ANALYTICS_TIMER_START(connectivity_connected_time_ms);
   }
-  session->open_ticks = rtc_get_ticks();
+  session->open_ticks = pbl_uptime_ticks();
 }
 
 void comm_session_analytics_close_session(CommSession *session, CommSessionCloseReason reason) {

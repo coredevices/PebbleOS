@@ -100,6 +100,10 @@ typedef struct Layer {
       bool hidden : 1;
       bool has_data : 1;
       bool is_highlighted : 1; //!< Indicates the highlight status of a \ref MenuLayer cell
+      //! @internal
+      //! The layer's colors come from the system theme and are resolved when drawing, so it
+      //! follows dark mode flips. Which colors depends on the layer type.
+      bool follows_theme : 1;
     };
   };
 
@@ -350,6 +354,28 @@ void layer_get_global_frame(const Layer *layer, GRect *global_frame_out);
 //! @see UnobstructedArea
 GRect layer_get_unobstructed_bounds_by_value(const Layer *layer);
 void layer_get_unobstructed_bounds(const Layer *layer, GRect *bounds_out);
+
+//! Get the area next to the system Listening indicator, for the app's own content while it uses
+//! the microphone. On rectangular displays the indicator is a bar along the bottom of the screen
+//! that shrinks into a square in the bottom-left corner after a few seconds. The bar's height stays
+//! obstructed (see \ref layer_get_unobstructed_bounds) and this is the rest of it, to the right of
+//! the square: a place for a timer, a level meter or a hint.
+//!
+//! Draw in it whenever this returns true. The bar covers it at first and uncovers it as it shrinks,
+//! so there is nothing to time. It keeps the bar's height while the indicator slides in and out,
+//! so what is drawn in it moves with the indicator. The app redraws whenever it moves, as for the
+//! unobstructed area.
+//!
+//! It is true from when the app starts using the microphone until the indicator has slid away.
+//! On round displays the indicator is a small dome that leaves no room, so this is always false:
+//! show that content in the unobstructed area instead.
+//! @param layer The layer for which to get the area, in its coordinates. The area is clipped to
+//! the layer's sides, but not to its top or bottom.
+//! @param bounds_out The area, or an empty rectangle when there is none.
+//! @return false when the app is not using the microphone, on round displays and when the area is
+//! beside the layer.
+//! @see UnobstructedArea
+bool layer_get_mic_accessory_bounds(const Layer *layer, GRect *bounds_out);
 
 //! Return whether a point is contained within the bounds of a layer. Can be overridden by
 //! \ref layer_set_contains_point_override. Default behavior is to check that the point is within

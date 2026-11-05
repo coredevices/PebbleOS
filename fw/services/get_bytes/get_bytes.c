@@ -6,7 +6,8 @@
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -19,7 +20,6 @@
 
 #include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
 
@@ -78,7 +78,7 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
 }
 
 static void prv_gather_and_record_stats(GetBytesState *state) {
-  uint32_t elapsed_time_ms = pbl_ticks_to_ms(rtc_get_ticks() - state->start_ticks);
+  uint32_t elapsed_time_ms = pbl_ticks_to_ms(pbl_uptime_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * PBL_MSEC_PER_SEC) / elapsed_time_ms);
   PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %" PRIu32 " bytes/sec", bytes_per_sec);
   bluetooth_analytics_handle_get_bytes_stats(state->object_type, state->num_bytes, elapsed_time_ms,
@@ -128,7 +128,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
                                                        packet_len, COMM_SESSION_DEFAULT_TIMEOUT))) {
     if (comm_session_send_buffer_get_max_payload_length(state->session) == 0) {
       gb_storage_cleanup(&state->storage, false /* unsuccessful */);
-      kernel_free(state);
+      pbl_free(state);
       s_get_bytes_in_progress = false;
       prv_put_status_event(DebugInfoStateFinished);
       return;
@@ -140,7 +140,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
   if (state->sent_header) {
     // Send next chunk of data
-    GetBytesRspObjectData *rsp = (GetBytesRspObjectData *)kernel_zalloc_check(packet_len);
+    GetBytesRspObjectData *rsp = (GetBytesRspObjectData *)pbl_zalloc_check(packet_len);
     *rsp = (GetBytesRspObjectData){
       .hdr.cmd_id = GET_BYTES_CMD_OBJECT_DATA,
       .hdr.transaction_id = state->transaction_id,
@@ -151,7 +151,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     gb_storage_read_next_chunk(&state->storage, rsp->data, data_len);
 
     comm_session_send_buffer_write(sb, (const uint8_t *)rsp, packet_len);
-    kernel_free(rsp);
+    pbl_free(rsp);
     PBL_LOG_DBG("GET_BYTES: sending next %d bytes. %d remaining", (int)data_len,
                 (int)(remaining_bytes - data_len));
   } else {
@@ -173,7 +173,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
     // If all done, mark the image as "read" and free up our state structure
     gb_storage_cleanup(&state->storage, true /* successful  */);
-    kernel_free(state);
+    pbl_free(state);
 
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
@@ -191,7 +191,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
 cleanup:
   gb_storage_cleanup(&state->storage, false /* unsuccessful  */);
-  kernel_free(state);
+  pbl_free(state);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_da
     return;
   }
 
-  GetBytesState *state = kernel_zalloc_check(sizeof(*state));
+  GetBytesState *state = pbl_zalloc_check(sizeof(*state));
   *state = (GetBytesState){
     .session = session,
     .transaction_id = hdr->transaction_id,
@@ -281,14 +281,14 @@ void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_da
 
   // let the other types of pushes setup the state.
   if (!prv_setup_state_for_command(hdr->cmd_id, state, msg_data, msg_len)) {
-    kernel_free(state);
+    pbl_free(state);
     prv_protocol_send_err_response(session, hdr->transaction_id, GET_BYTES_MALFORMED_COMMAND);
     return;
   }
 
   s_get_bytes_in_progress = true;
   prv_put_status_event(DebugInfoStateStarted);
-  state->start_ticks = rtc_get_ticks();
+  state->start_ticks = pbl_uptime_ticks();
 
   prv_protocol_send_next_chunk(state);
 }

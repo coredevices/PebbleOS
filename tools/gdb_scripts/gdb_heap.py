@@ -59,8 +59,8 @@ class Heap:
     def __init__(self, heap, show_progress=False):
         self.heap_ptr = gdb.parse_and_eval(heap)
 
-        if self.heap_ptr.type != gdb.lookup_type("Heap").pointer():
-            raise HeapException("Error: argument must be of type (Heap *)")
+        if self.heap_ptr.type != gdb.lookup_type("struct pbl_heap").pointer():
+            raise HeapException("Error: argument must be of type (struct pbl_heap *)")
 
         self.alignment_type = gdb.lookup_type("Alignment_t")
         self.alignment_size = int(self.alignment_type.sizeof)

@@ -10,8 +10,10 @@ it at link time, and a Kconfig option selects the backend.
 
 bluetooth.md
 crc.md
+fs.md
 input.md
 logging.md
+profiler.md
 shell.md
 task_watchdog.md
 ```

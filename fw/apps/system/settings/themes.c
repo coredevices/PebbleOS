@@ -3,22 +3,27 @@
 
 #include "themes.h"
 
+#include "dark_mode_menu.h"
 #include "menu.h"
 #include "option_menu.h"
+#include "window.h"
 
-#include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
+#include <applib/app_malloc.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/menu_layer.h>
 #include <shell/prefs.h>
 
-#ifdef CONFIG_THEMING
-
 #define DEFAULT_THEME_HIGHLIGHT_COLOR GColorVividCerulean
+
+typedef struct SettingsThemesData {
+  SettingsCallbacks callbacks;
+  DarkModeMenu dark_mode_menu;
+} SettingsThemesData;
 
 typedef struct ColorDefinition {
   const char *name;
@@ -33,9 +38,9 @@ static const ColorDefinition s_color_definitions[11] = {
   {"Green", GColorGreen},
   {"Cyan", GColorCyan},
   {"Light Blue", GColorVividCerulean},
-  {"Royal Blue", GColorVeryLightBlue},
+  {"Periwinkle", GColorBabyBlueEyes},
   {"Purple", GColorLavenderIndigo},
-  {"Magenta", GColorMagenta},
+  {"Magenta", GColorShockingPink},
   {"Pink", GColorBrilliantRose},
 };
 static const char *color_names[ARRAY_LENGTH(s_color_definitions)];
@@ -79,6 +84,8 @@ static void prv_color_menu_select(OptionMenu *option_menu, int selection, void *
 
   /* Set the theme highlight color */
   shell_prefs_set_theme_highlight_color(color);
+  settings_menu_reload_data(SettingsMenuItemThemes);
+  settings_menu_mark_dirty(SettingsMenuItemThemes);
 
   app_window_stack_remove(&option_menu->window, true /* animated */);
 }
@@ -112,7 +119,7 @@ static OptionMenu *prv_push_color_menu(void) {
     PBL_LOG_WRN("Invalid menu color, using default");
     selected = 0;
   }
-  OptionMenu *const option_menu = settings_option_menu_create(
+  OptionMenu *const option_menu = settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
       ARRAY_LENGTH(s_color_definitions), true /* icons_enabled */, color_names, nullptr);
 
@@ -128,16 +135,68 @@ static OptionMenu *prv_push_color_menu(void) {
 
   return option_menu;
 }
-#endif // CONFIG_THEMING
+
+static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
+  SettingsThemesData *data = (SettingsThemesData *)context;
+  const bool has_schedule = (shell_prefs_get_dark_mode() == DarkModeScheduled);
+  if (row == 0) {
+    dark_mode_menu_push(&data->dark_mode_menu);
+  } else if (has_schedule && row == 1) {
+    dark_mode_menu_schedule_push(&data->dark_mode_menu);
+  } else {
+    prv_push_color_menu();
+  }
+}
+
+static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
+                            uint16_t row, bool selected) {
+  const char *title = nullptr;
+  const char *subtitle = nullptr;
+  char time_buf[32];
+  const bool has_schedule = (shell_prefs_get_dark_mode() == DarkModeScheduled);
+  if (row == 0) {
+    title = i18n_noop("Dark Mode");
+    subtitle = dark_mode_menu_get_mode_label();
+  } else if (has_schedule && row == 1) {
+    title = i18n_noop("Schedule Time");
+    dark_mode_menu_format_schedule(time_buf, sizeof(time_buf));
+    subtitle = time_buf;
+  } else {
+    int idx =
+        prv_color_to_index(shell_prefs_get_theme_highlight_color(), DEFAULT_THEME_HIGHLIGHT_COLOR);
+    title = i18n_noop("Accent Color");
+    subtitle = s_color_definitions[idx < 0 ? 0 : idx].name;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, context), i18n_get(subtitle, context),
+                       nullptr);
+}
+
+static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
+  // Accent colors need a color display
+  const uint16_t num_accent_rows = PBL_IF_COLOR_ELSE(1, 0);
+  return ((shell_prefs_get_dark_mode() == DarkModeScheduled) ? 2 : 1) + num_accent_rows;
+}
+
+static void prv_deinit_cb(SettingsCallbacks *context) {
+  SettingsThemesData *data = (SettingsThemesData *)context;
+  dark_mode_menu_deinit(&data->dark_mode_menu);
+  i18n_free_all(context);
+  app_free(context);
+}
 
 static Window *prv_create_color_menu(void) {
-#ifdef CONFIG_THEMING
-  OptionMenu *option_menu = prv_push_color_menu();
-  return option_menu ? &option_menu->window : nullptr;
-#else
-  pbl_panic();
-  return nullptr;
-#endif
+  SettingsThemesData *data = app_malloc_check(sizeof(*data));
+  *data = (SettingsThemesData){
+    .callbacks = {
+      .deinit = prv_deinit_cb,
+      .draw_row = prv_draw_row_cb,
+      .select_click = prv_select_click_cb,
+      .num_rows = prv_num_rows_cb,
+    },
+  };
+  dark_mode_menu_init(&data->dark_mode_menu, SettingsMenuItemThemes,
+                      shell_prefs_get_theme_highlight_color);
+  return settings_window_create(SettingsMenuItemThemes, &data->callbacks);
 }
 
 static Window *prv_init(void) {

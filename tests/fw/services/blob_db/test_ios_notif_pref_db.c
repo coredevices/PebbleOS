@@ -3,19 +3,19 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 
 // Fixture
 ////////////////////////////////////////////////////////////////
 
 // Fakes
 ////////////////////////////////////////////////////////////////
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 #include <fake_system_task.h>
 
 // Stubs
@@ -63,7 +63,7 @@ void test_ios_notif_pref_db__initialize(void) {
 }
 
 void test_ios_notif_pref_db__cleanup(void) {
-  fake_settings_file_reset();
+  fake_settings_reset();
 }
 
 void test_ios_notif_pref_db__insert_inverts_flags(void) {
@@ -73,18 +73,18 @@ void test_ios_notif_pref_db__insert_inverts_flags(void) {
 
   ios_notif_pref_db_insert(key, sizeof(key), val, sizeof(val));
 
-  SettingsFile file;
-  settings_file_open(&file, iOS_NOTIF_PREF_DB_FILE_NAME, iOS_NOTIF_PREF_MAX_SIZE);
+  struct pbl_settings_file file;
+  pbl_settings_open(&file, iOS_NOTIF_PREF_DB_FILE_NAME, iOS_NOTIF_PREF_MAX_SIZE);
 
-  const unsigned prefs_len = settings_file_get_len(&file, key, sizeof(key));
-  void *prefs_out = kernel_zalloc(prefs_len);
-  settings_file_get(&file, key, sizeof(key), prefs_out, prefs_len);
-  settings_file_close(&file);
+  const unsigned prefs_len = pbl_settings_get_len(&file, key, sizeof(key));
+  void *prefs_out = pbl_zalloc(prefs_len);
+  pbl_settings_get(&file, key, sizeof(key), prefs_out, prefs_len);
+  pbl_settings_close(&file);
 
   uint32_t flags = *((uint32_t *)prefs_out);
   cl_assert_equal_i(flags, ~0);
 
-  kernel_free(prefs_out);
+  pbl_free(prefs_out);
 }
 
 void test_ios_notif_pref_db__read_flags(void) {

@@ -9,7 +9,9 @@
 // Pebble stuff
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
@@ -25,7 +27,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/segment.h>
@@ -74,7 +75,7 @@
 #include <pbl/shell/shell.h>
 #endif
 
-#define RETURN_CRASH_TIMEOUT_TICKS (60 * RTC_TICKS_HZ)
+#define RETURN_CRASH_TIMEOUT_TICKS (60 * PBL_TICK_HZ)
 
 //! Behold! The file that manages applications!
 //!
@@ -105,7 +106,7 @@ typedef struct NextApp {
 
 typedef struct {
   AppInstallId install_id;
-  RtcTicks crash_ticks;
+  uint64_t crash_ticks;
 } AppCrashInfo;
 
 static NextApp s_next_app;
@@ -353,16 +354,14 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
   }
   // The remaining space in app_segment is assigned to the app's heap.
   // app_state needs to be configured before initializing the app heap
-  // as the AppState struct holds the app heap's Heap object.
+  // as the AppState struct holds the app heap.
 
   // Don't fuzz 3rd party app heaps because likely many of them rely on accessing free'd memory
   bool enable_heap_fuzzing = (sdk_type == ProcessAppSDKType_System);
-  Heap *app_heap = app_state_get_heap();
+  struct pbl_heap *app_heap = app_state_get_heap();
   PBL_LOG_DBG("App heap init %p %p", app_segment.start, app_segment.end);
-  heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
-  heap_set_lock_impl(app_heap, (HeapLockImpl){
-                                 .lock_function = prv_heap_lock,
-                               });
+  pbl_heap_init(app_heap, app_segment.start, app_segment.end, enable_heap_fuzzing);
+  pbl_heap_set_lock(app_heap, (struct pbl_heap_lock){.lock = prv_heap_lock});
   process_heap_set_exception_handlers(app_heap, app_md);
 
   // We're now going to start the app. We can't abort the app now without calling prv_app_cleanup.
@@ -508,10 +507,10 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   // the dialog and show us the default system watch face.
   PBL_ASSERTN(install_id != INSTALL_ID_INVALID);
   if (crash_info.install_id != install_id ||
-      (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < rtc_get_ticks()) {
+      (crash_info.crash_ticks + RETURN_CRASH_TIMEOUT_TICKS) < pbl_uptime_ticks()) {
     PBL_LOG_ERR("Watchface crashed (id=%" PRId32 "); relaunching", install_id);
     PBL_ANALYTICS_ADD(watchface_crash_count, 1);
-    crash_info = (AppCrashInfo){.install_id = install_id, .crash_ticks = rtc_get_ticks()};
+    crash_info = (AppCrashInfo){.install_id = install_id, .crash_ticks = pbl_uptime_ticks()};
     // Re-launch immediately
     watchface_launch_default(nullptr);
     return;
@@ -555,7 +554,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   i18n_free_all(crash_dialog);
 
-  const uint32_t elapsed_ms = (rtc_get_ticks() - crash_info.crash_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - crash_info.crash_ticks) * 1000 / PBL_TICK_HZ;
   PBL_LOG_WRN("Watchface crashed twice in %" PRIu32 "ms (id=%" PRId32
               "); "
               "reverting to default",
@@ -693,7 +692,7 @@ static const CompositorTransition *prv_get_transition(const LaunchConfigCommon *
 void app_manager_put_launch_app_event(const AppLaunchEventConfig *config) {
   PBL_ASSERTN(config->id != INSTALL_ID_INVALID);
 
-  PebbleLaunchAppEventExtended *data = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
+  PebbleLaunchAppEventExtended *data = pbl_malloc_check(sizeof(PebbleLaunchAppEventExtended));
   *data = (PebbleLaunchAppEventExtended){.common = config->common};
   data->common.transition = prv_get_transition(&config->common, config->id);
 

@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/ancs/ancs_filtering.h>
@@ -18,11 +19,11 @@
 ////////////////////////////////////////////////////////////////
 
 static time_t s_now;
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return s_now;
 }
 
-RtcTicks rtc_get_ticks(void) {
+uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 

@@ -21,11 +21,11 @@
 #include <applib/ui/click.h>
 #include <applib/ui/menu_text_scroll.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/process_manager.h>
+#include <shell/system_theme.h>
 
 #ifdef CONFIG_TOUCH
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 
 #include <applib/ui/recognizer/pan.h>
 #include <applib/ui/recognizer/recognizer_manager.h>
@@ -103,6 +103,19 @@ static void prv_scrollbar_kick(MenuLayer *menu_layer) {
   }
 }
 #endif // CONFIG_TOUCH
+
+//! Copies the current theme colors into the colors that follow the theme
+static void prv_refresh_theme_colors(MenuLayer *menu_layer) {
+  if (menu_layer->normal_colors_follow_theme) {
+    menu_layer->normal_colors[MenuLayerColorBackground] = system_theme_get_bg_color();
+    menu_layer->normal_colors[MenuLayerColorForeground] = system_theme_get_fg_color();
+  }
+  if (menu_layer->highlight_colors_follow_theme) {
+    const GColor highlight_bg = system_theme_get_highlight_color();
+    menu_layer->highlight_colors[MenuLayerColorBackground] = highlight_bg;
+    menu_layer->highlight_colors[MenuLayerColorForeground] = gcolor_legible_over(highlight_bg);
+  }
+}
 
 #if PBL_ROUND
 //! Curved scrollbar (Wear OS style): the track is an arc hugging the bezel, spanning
@@ -864,6 +877,7 @@ static void PBL_NOINLINE prv_draw_background(MenuLayer *menu_layer, GContext *ct
 void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
   MenuLayer *menu_layer = (MenuLayer *)(((uint8_t *)scroll_content_layer) -
                                         offsetof(MenuLayer, scroll_layer.content_sublayer));
+  prv_refresh_theme_colors(menu_layer);
   const GSize frame_size = menu_layer->scroll_layer.layer.frame.size;
   const int16_t content_top_y = -scroll_layer_get_content_offset(&menu_layer->scroll_layer).y;
   const int16_t content_bottom_y = content_top_y + frame_size.h;
@@ -939,7 +953,7 @@ void menu_layer_update_proc(Layer *scroll_content_layer, GContext *ctx) {
   // Assign the new cache:
   menu_layer->cache.cursor = render_iter->new_cache;
 
-  task_free(render_iter);
+  applib_free(render_iter);
 
   if (menu_layer->scrollbar_visible) {
     prv_scrollbar_draw(menu_layer, ctx, content_top_y);
@@ -978,8 +992,15 @@ void menu_layer_init(MenuLayer *menu_layer, const GRect *frame) {
   scroll_layer_set_shadow_hidden(scroll_layer, true);
   scroll_layer_set_context(scroll_layer, menu_layer);
 
-  menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
-  menu_layer_set_highlight_colors(menu_layer, GColorBlack, GColorWhite);
+  if (system_theme_is_system_ui()) {
+    menu_layer->normal_colors_follow_theme = true;
+    menu_layer->highlight_colors_follow_theme = true;
+    prv_refresh_theme_colors(menu_layer);
+  } else {
+    // Third-party apps keep the documented defaults, without the system accent
+    menu_layer_set_normal_colors(menu_layer, GColorWhite, GColorBlack);
+    menu_layer_set_highlight_colors(menu_layer, GColorBlack, GColorWhite);
+  }
 
   InverterLayer *inverter = &menu_layer->inverter;
   inverter_layer_init(inverter, &GRectZero);
@@ -1678,11 +1699,20 @@ bool menu_cell_layer_is_highlighted(const Layer *cell_layer) {
 void menu_layer_set_normal_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->normal_colors[MenuLayerColorBackground] = background;
   menu_layer->normal_colors[MenuLayerColorForeground] = foreground;
+  menu_layer->normal_colors_follow_theme = false;
+}
+
+void menu_layer_set_colors_follow_theme(MenuLayer *menu_layer) {
+  menu_layer->normal_colors_follow_theme = true;
+  menu_layer->highlight_colors_follow_theme = true;
+  prv_refresh_theme_colors(menu_layer);
+  layer_mark_dirty(menu_layer_get_layer(menu_layer));
 }
 
 void menu_layer_set_highlight_colors(MenuLayer *menu_layer, GColor background, GColor foreground) {
   menu_layer->highlight_colors[MenuLayerColorBackground] = background;
   menu_layer->highlight_colors[MenuLayerColorForeground] = foreground;
+  menu_layer->highlight_colors_follow_theme = false;
 }
 
 bool menu_layer_get_center_focused(MenuLayer *menu_layer) {
@@ -1961,11 +1991,11 @@ static void prv_menu_activate_selected(MenuLayer *menu_layer) {
 }
 
 // Reassemble/store the split-half tap timestamp (see the field comment in menu_layer.h).
-static RtcTicks prv_menu_get_last_select_ticks(const MenuLayer *menu_layer) {
-  return ((RtcTicks)menu_layer->last_select_ticks_hi << 32) | menu_layer->last_select_ticks_lo;
+static uint64_t prv_menu_get_last_select_ticks(const MenuLayer *menu_layer) {
+  return ((uint64_t)menu_layer->last_select_ticks_hi << 32) | menu_layer->last_select_ticks_lo;
 }
 
-static void prv_menu_set_last_select_ticks(MenuLayer *menu_layer, RtcTicks ticks) {
+static void prv_menu_set_last_select_ticks(MenuLayer *menu_layer, uint64_t ticks) {
   menu_layer->last_select_ticks_hi = (uint32_t)(ticks >> 32);
   menu_layer->last_select_ticks_lo = (uint32_t)ticks;
 }
@@ -2258,15 +2288,15 @@ void menu_layer_touch_handle_tap(MenuLayer *menu_layer, GPoint point_on_screen) 
     return;
   }
 
-  const RtcTicks now = sys_get_ticks();
-  const RtcTicks window_ticks = (RtcTicks)DOUBLE_TAP_WINDOW_MS * RTC_TICKS_HZ / 1000;
+  const uint64_t now = sys_get_ticks();
+  const uint64_t window_ticks = (uint64_t)DOUBLE_TAP_WINDOW_MS * PBL_TICK_HZ / 1000;
 
   // Priority 1 — fast double tap: a second tap within the window after a tap-select activates the
   // row that select committed, WITHOUT re-hit-testing. The just-selected row may have animated to
   // the centre, so the current tap can hit-test a neighbour; the recorded index is the source of
   // truth. Guarded by an explicit arm flag so it never fires on the first tap.
   if (menu_layer->double_tap_armed &&
-      (RtcTicks)(now - prv_menu_get_last_select_ticks(menu_layer)) <= window_ticks) {
+      (uint64_t)(now - prv_menu_get_last_select_ticks(menu_layer)) <= window_ticks) {
     prv_cancel_selection_animation(menu_layer);
     prv_menu_activate_index(menu_layer, &menu_layer->last_selected_index);
     menu_layer->double_tap_armed = false; // disarm so a third tap does not re-fire

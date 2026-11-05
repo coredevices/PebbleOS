@@ -7,17 +7,18 @@
 #include <string.h>
 
 #include <pbl/drivers/battery.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/progress_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -70,7 +71,7 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
 
   // Allocate and initialize the data that would have been sent to the app originally before the
   // fetch request.
-  PebbleLaunchAppEventExtended *ext = kernel_malloc_check(sizeof(PebbleLaunchAppEventExtended));
+  PebbleLaunchAppEventExtended *ext = pbl_malloc_check(sizeof(PebbleLaunchAppEventExtended));
   *ext = (PebbleLaunchAppEventExtended){
     .common = data->next_app_args.common,
     .wakeup = data->next_app_args.wakeup_info
@@ -252,7 +253,7 @@ static void handle_init(void) {
   // get app args, copy them to app memory, and free the kernel buffer
   AppFetchUIArgs *temp_fetch_args = (AppFetchUIArgs *)process_manager_get_current_process_args();
   memcpy(&data->next_app_args, temp_fetch_args, sizeof(AppFetchUIArgs));
-  kernel_free(temp_fetch_args);
+  pbl_free(temp_fetch_args);
 
   // Create and set up window
   progress_window_init(&data->window);

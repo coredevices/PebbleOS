@@ -15,9 +15,11 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_line.h>
 #include <applib/graphics/text.h>
+#include <applib/graphics/utf8.h>
 #include <applib/ui/window_stack.h>
 #include <kernel/ui/kernel_ui.h>
 #include <process_state/app_state/app_state.h>
+#include <shell/system_theme.h>
 #include <syscall/syscall.h>
 
 typedef struct StatusBarTextFormat {
@@ -108,8 +110,19 @@ static void prv_status_bar_property_changed(struct Layer *layer) {
   }
 }
 
+static void prv_refresh_theme_colors(StatusBarLayer *status_bar_layer) {
+  if (status_bar_layer->layer.follows_theme) {
+    StatusBarLayerConfig *config = &status_bar_layer->config;
+    config->foreground_color = system_theme_get_fg_color();
+    if (!gcolor_is_transparent(config->background_color)) {
+      config->background_color = system_theme_get_bg_color();
+    }
+  }
+}
+
 static void prv_status_bar_layer_render(Layer *layer, GContext *ctx) {
   StatusBarLayer *status_bar_layer = (StatusBarLayer *)layer;
+  prv_refresh_theme_colors(status_bar_layer);
   // During a window transition with fixed status bars, ignore horizontal offset of the window.
   // For two windows with a status bar at (0,0), this will make sure that both status bars share the
   // same screen coordinates despite the window movement - the clip_box prevents overdrawing.
@@ -150,11 +163,15 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   };
   event_service_client_subscribe(&(status_bar_layer->tick_event));
 
+  // Third-party apps keep the documented white-on-black defaults. System UI follows the system
+  // theme on color displays.
   status_bar_layer->config = (StatusBarLayerConfig){
     .foreground_color = GColorWhite,
     .background_color = GColorBlack,
     .separator.mode = StatusBarLayerSeparatorModeNone,
   };
+  status_bar_layer->layer.follows_theme = PBL_IF_COLOR_ELSE(system_theme_is_system_ui(), false);
+  prv_refresh_theme_colors(status_bar_layer);
 
   status_bar_layer->title_timer_id = TIMER_INVALID_ID;
 }
@@ -195,6 +212,7 @@ void status_bar_layer_set_colors(StatusBarLayer *status_bar_layer, GColor backgr
                                  GColor foreground) {
   PBL_ASSERTN(status_bar_layer);
 
+  status_bar_layer->layer.follows_theme = false;
   if (gcolor_equal(status_bar_layer->config.background_color, background) &&
       gcolor_equal(status_bar_layer->config.foreground_color, foreground)) {
     return;
@@ -203,6 +221,16 @@ void status_bar_layer_set_colors(StatusBarLayer *status_bar_layer, GColor backgr
   status_bar_layer->config.background_color = background;
   status_bar_layer->config.foreground_color = foreground;
   layer_mark_dirty(&(status_bar_layer->layer));
+}
+
+void status_bar_layer_set_colors_follow_theme(StatusBarLayer *status_bar_layer,
+                                              bool transparent_background) {
+  PBL_ASSERTN(status_bar_layer);
+  status_bar_layer->config.background_color =
+      transparent_background ? GColorClear : system_theme_get_bg_color();
+  status_bar_layer->layer.follows_theme = true;
+  prv_refresh_theme_colors(status_bar_layer);
+  layer_mark_dirty(&status_bar_layer->layer);
 }
 
 GColor status_bar_layer_get_background_color(const StatusBarLayer *status_bar_layer) {
@@ -217,8 +245,10 @@ GColor status_bar_layer_get_foreground_color(const StatusBarLayer *status_bar_la
 
 void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *text, bool revert,
                                 bool animated) {
-  // copies the contents at text into title_text_buffer for display
-  strncpy(status_bar_layer->config.title_text_buffer, text, TITLE_TEXT_BUFFER_SIZE);
+  // copies the contents at text into title_text_buffer for display, truncating on a codepoint
+  // boundary so multi-byte titles stay valid UTF-8
+  utf8_truncate_with_ellipsis(text, status_bar_layer->config.title_text_buffer,
+                              TITLE_TEXT_BUFFER_SIZE);
   if (revert) { // revert title text back to clock time after STATUS_BAR_LAYER_TITLE_TIMEOUT
     if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
       app_timer_cancel(status_bar_layer->title_timer_id);

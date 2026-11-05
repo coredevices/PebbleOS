@@ -3,12 +3,12 @@
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_unittest_impl.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <flash_region/flash_region.h>
@@ -22,6 +22,7 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_events.h>
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_shared_prf_storage.h>
 #include <fake_spi_flash.h>
@@ -114,7 +115,7 @@ void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigne
 void test_bluetooth_persistent_storage__initialize(void) {
   bonding_sync_init();
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
 
   s_ble_bonding_change_add_count = 0;
   s_ble_bonding_change_update_count = 0;
@@ -158,7 +159,6 @@ void test_bluetooth_persistent_storage__ble_address_pinning(void) {
               (struct pbl_bt_addr){
                 .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -208,7 +208,6 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
               (struct pbl_bt_addr){
                 .octets = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16},
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -270,7 +269,6 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
                       0x26,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -350,7 +348,6 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
                       0x96,
                     },
               },
-          .is_classic = true,
           .is_random_address = true,
         },
     .is_remote_identity_info_valid = true,
@@ -426,7 +423,6 @@ void test_bluetooth_persistent_storage__get_ble_by_addr(void) {
                       0x16,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -488,7 +484,6 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
                       0x16,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -584,7 +579,6 @@ void test_bluetooth_persistent_storage__ble_ancs_bonding(void) {
                       0x16,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -658,7 +652,6 @@ void test_bluetooth_persistent_storage__ble_device_name(void) {
                       0x16,
                     },
               },
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -719,7 +712,6 @@ void test_bluetooth_persistent_storage__delete_all(void) {
     .identity =
         (struct pbl_bt_device_internal){
           .address = (struct pbl_bt_addr){{0x11, 0x12, 0x13, 0x14, 0x15, 0x16}},
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -738,7 +730,6 @@ void test_bluetooth_persistent_storage__delete_all(void) {
     .identity =
         (struct pbl_bt_device_internal){
           .address = (struct pbl_bt_addr){{0x22, 0x12, 0x13, 0x14, 0x15, 0x16}},
-          .is_classic = false,
           .is_random_address = false,
         },
     .is_remote_identity_info_valid = true,
@@ -859,7 +850,6 @@ void test_bluetooth_persistent_storage__ble_serialized_data(void) {
     .identity = {{
       {
         .address = {.octets = {0x5, 0x1b, 0x85, 0xe3, 0xb8, 0x98}},
-        .is_classic = 0x0,
         .is_random_address = 0x0,
         .zero = 0x0,
       },

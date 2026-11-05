@@ -9,12 +9,12 @@
 #include "workout.h"
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window_manager.h>
 #include <apps/system/timeline/text_node.h>
-#include <kernel/pbl_malloc.h>
 #ifdef CONFIG_TOUCH
 #include <applib/touch_service.h>
 #endif
@@ -73,7 +73,6 @@ typedef struct WorkoutActiveWindow {
   AnimationProgress hr_plot_progress;
   AnimationProgress hr_plot_start;
   bool hr_plot_visible;
-  bool has_spo2;
 
   AppTimer *beat_timer;
   bool beat;
@@ -393,8 +392,6 @@ static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
     case WorkoutMetricType_AvgCadence:
     case WorkoutMetricType_ActiveCalories:
     case WorkoutMetricType_AvgHr:
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
     case WorkoutMetricType_HrZone0Time:
     case WorkoutMetricType_HrZone1Time:
     case WorkoutMetricType_HrZone2Time:
@@ -949,9 +946,6 @@ static GColor prv_metric_color(WorkoutMetricType metric) {
     case WorkoutMetricType_Hr:
     case WorkoutMetricType_AvgHr:
       return GColorRed;
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
-      return GColorVividCerulean;
     default:
       break;
   }
@@ -1223,9 +1217,7 @@ static void prv_draw_grid(GContext *ctx, WorkoutActiveWindow *window, GSize size
   DashboardField last = {
     WorkoutMetricType_Duration, window->finished ? i18n_noop("TOTAL TIME") : i18n_noop("TIMER")
   };
-  if (window->finished && window->has_spo2) {
-    last = (DashboardField){WorkoutMetricType_SpO2Min, i18n_noop("LOW SPO2 %")};
-  } else if (window->has_hrm) {
+  if (window->has_hrm) {
     last = (DashboardField){WorkoutMetricType_AvgHr, i18n_noop("AVG BPM")};
   }
   const DashboardField fields[] = {
@@ -1421,15 +1413,9 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
   const HRZone zone = hr_util_get_hr_zone(bpm);
   prv_draw_gauge_ring(ctx, window, ring, bpm);
 
-  const bool spo2_measuring = !window->finished && window->has_spo2 &&
-                              window->workout_controller->get_metric_value(
-                                  WorkoutMetricType_SpO2, window->workout_data) < 0;
   char heading[24];
   GColor heading_color = bpm > 0 ? prv_zone_color(zone, false) : DIM_COLOR;
-  if (spo2_measuring) {
-    snprintf(heading, sizeof(heading), "%s", i18n_get(i18n_noop("READING SPO2"), window));
-    heading_color = prv_metric_color(WorkoutMetricType_SpO2);
-  } else if (bpm > 0) {
+  if (bpm > 0) {
     snprintf(heading, sizeof(heading), i18n_get("ZONE %d", window), (int)zone + 1);
   } else {
     snprintf(heading, sizeof(heading), "%s",
@@ -1473,9 +1459,7 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
   const DashboardField pair[] = {
     window->finished ? (DashboardField){WorkoutMetricType_Duration, i18n_noop("TOTAL TIME")}
                      : (DashboardField){WorkoutMetricType_AvgHr, i18n_noop("AVG BPM")},
-    window->has_spo2
-        ? (DashboardField){window->finished ? WorkoutMetricType_SpO2Min : WorkoutMetricType_SpO2, window->finished ? i18n_noop("LOW SPO2 %") : i18n_noop("SPO2 %")}
-        : (DashboardField){WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")},
+    (DashboardField){WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")},
   };
   const int pair_w = PBL_IF_ROUND_ELSE(150, 124);
   prv_draw_field_row(ctx, window, GRect((w - pair_w) / 2, pair_y, pair_w, pair_h), pair, 2,
@@ -1980,10 +1964,6 @@ WorkoutActiveWindow *workout_active_create_for_activity_type(
   active_window->has_hrm = activity_is_hrm_present() && activity_prefs_heart_rate_is_enabled();
   active_window->num_scrollable_metrics =
       (type == ActivitySessionType_Open ? 1 : 2) + (active_window->has_hrm ? 2 : 0);
-#ifdef CONFIG_HRM
-  active_window->has_spo2 =
-      active_window->has_hrm && activity_prefs_spo2_activity_tracking_is_enabled();
-#endif
   active_window->bars_progress = ANIMATION_NORMALIZED_MAX;
   if (active_window->has_hrm) {
     active_window->hr_history = app_zalloc_check(sizeof(WorkoutHrHistory));

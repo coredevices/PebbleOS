@@ -17,6 +17,7 @@ boot.md
 idle.md
 memory.md
 fatal.md
+reboot.md
 compiler.md
 internals.md
 ```
@@ -28,7 +29,7 @@ block-beta
   columns 2
   api["Public API · include/pbl/kernel/<br/>threads, mutexes, semaphores, queues, poll, IRQs"]:2
   core["Kernel · kernel/<br/>scheduler, objects, ticks"]:2
-  arm["Cortex-M port · kernel/arch/arm/<br/>context switch, SVC, MPU, SysTick"] posix["Host port · kernel/arch/posix/<br/>native simulator, unit tests"]
+  arm["Cortex-M port · kernel/arch/arm/<br/>context switch, SVC, MPU"] posix["Host port · kernel/arch/posix/<br/>native simulator, unit tests"]
 
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
   classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717

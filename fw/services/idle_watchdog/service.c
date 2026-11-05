@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdatomic.h>
+
 #include <pbl/services/idle_watchdog.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -15,7 +17,7 @@ static RegularTimerInfo s_is_idle_timer;
 static EventServiceInfo s_bt_event_info;
 static EventServiceInfo s_battery_event_info;
 static EventServiceInfo s_button_event_info;
-static bool s_running;
+static atomic_bool s_running;
 
 static void prv_handle_watchdog_timeout_cb(void *not_used) {
   GAPLEConnection *le_connection = gap_le_connection_any();
@@ -39,7 +41,7 @@ static void prv_handle_watchdog_timeout(void *not_used) {
 }
 
 static void prv_watchdog_feed(PebbleEvent *e, void *context) {
-  if (__atomic_load_n(&s_running, __ATOMIC_RELAXED)) {
+  if (atomic_load_explicit(&s_running, memory_order_relaxed)) {
     regular_timer_add_multiminute_callback(&s_is_idle_timer, PRF_IDLE_TIMEOUT_MINUTES);
   }
 }
@@ -69,10 +71,10 @@ void prf_idle_watchdog_start(void) {
     .cb = prv_handle_watchdog_timeout,
   };
   regular_timer_add_multiminute_callback(&s_is_idle_timer, PRF_IDLE_TIMEOUT_MINUTES);
-  __atomic_store_n(&s_running, true, __ATOMIC_RELAXED);
+  atomic_store_explicit(&s_running, true, memory_order_relaxed);
 }
 
 void prf_idle_watchdog_stop(void) {
-  __atomic_store_n(&s_running, false, __ATOMIC_RELAXED);
+  atomic_store_explicit(&s_running, false, memory_order_relaxed);
   regular_timer_remove_callback(&s_is_idle_timer);
 }

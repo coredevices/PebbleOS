@@ -2,29 +2,22 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/idle.h>
+#include <pbl/util/size.h>
 
 #include <cmsis_core.h>
 #include <kernel/util/idle.h>
 
-void pbl_soc_idle(pbl_tick_t max_ticks) {
-  if (!idle_is_allowed()) {
-    return;
-  }
-
-  __disable_irq();
-
-  if (pbl_idle_confirm()) {
-    __DSB();
-    __WFI();
-    __ISB();
-  }
-
-  __enable_irq();
+static void prv_wfi(void) {
+  __DSB();
+  __WFI();
+  __ISB();
 }
 
-bool pbl_soc_tick_enable(void) {
-  return false;
-}
+const struct pbl_idle_state pbl_soc_idle_states[] = {
+  {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+};
+const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
-void pbl_analytics_external_collect_cpu_stats(void) {
+int pbl_soc_idle_state_limit(void) {
+  return idle_is_allowed() ? 0 : -1;
 }

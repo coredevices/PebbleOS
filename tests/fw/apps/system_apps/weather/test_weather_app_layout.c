@@ -29,6 +29,7 @@
 
 #include <fake_content_indicator.h>
 #include <fake_pbl_std.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
 
@@ -79,9 +80,20 @@ UnitsWind shell_prefs_get_units_wind(void) {
   return s_units_wind;
 }
 
+static UnitsTemperature s_units_temperature;
+
+UnitsTemperature shell_prefs_get_units_temperature(void) {
+  if (s_units_temperature == UnitsTemperature_FromDistance) {
+    return (s_units_distance == UnitsDistance_Miles) ? UnitsTemperature_Fahrenheit
+                                                     : UnitsTemperature_Celsius;
+  }
+  return s_units_temperature;
+}
+
 void test_weather_app_layout__initialize(void) {
   s_units_distance = UnitsDistance_Miles;
   s_units_wind = UnitsWind_Mph;
+  s_units_temperature = UnitsTemperature_FromDistance;
 
   fb = malloc(sizeof(FrameBuffer));
   framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
@@ -96,8 +108,8 @@ void test_weather_app_layout__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 
@@ -211,6 +223,44 @@ void test_weather_app_layout__render_wind_meters_per_second(void) {
     .current_temp = 19,
     .today_high = 22,
     .today_low = 16,
+    .current_weather_type = WeatherType_Sun,
+    .current_weather_phrase = "Sunny",
+  };
+
+  prv_create_layout_and_render(&today, &next);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_weather_app_layout__render_celsius_with_miles(void) {
+  s_units_distance = UnitsDistance_Miles;
+  s_units_temperature = UnitsTemperature_Celsius;
+  WeatherLocationForecast today = {
+    .location_name = "LONDON",
+    .today_wmo = -1,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = 22,
+    .today_high = 24,
+    .today_low = 15,
+    .today_uv = 5,
+    .today_uv_now = 5,
+    .today_precip_mm = 20,
+    .today_wind_mph = 8,
+    .today_wind_dir_deg = 270,
+    .today_feels = 22,
+    .current_weather_type = WeatherType_PartlyCloudy,
+    .current_weather_phrase = "Partly Cloudy",
+  };
+  WeatherLocationForecast next = {
+    .location_name = "LONDON",
+    .today_wmo = -1,
+    .today_humidity = -1,
+    .today_visibility_m = -1,
+    .today_precip_sum_mm = -1,
+    .current_temp = 20,
+    .today_high = 21,
+    .today_low = 14,
     .current_weather_type = WeatherType_Sun,
     .current_weather_phrase = "Sunny",
   };

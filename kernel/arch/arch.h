@@ -15,6 +15,7 @@
 //! threads may read it: pbl_thread_current() runs without privilege.
 extern struct pbl_thread *pbl_cur;
 
+//! Early arch setup, before main(): fault exceptions.
 void arch_init(void);
 
 //! Builds the initial context so that the first switch to @p t runs
@@ -44,9 +45,16 @@ uint32_t arch_cycles_per_sec(void);
 void arch_irq_disable(void);
 void arch_irq_enable(void);
 
+//! Lock of the kernel heap, usable before the kernel runs. Not nestable.
+void arch_heap_lock(void);
+void arch_heap_unlock(void);
+
 void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs);
 void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_REG_COUNT]);
 
 //! Idle-thread hook: nothing is runnable for up to @p max_ticks (0 when a
 //! timeout is already due, PBL_TICK_FOREVER when none is pending).
 void arch_idle(pbl_tick_t max_ticks);
+
+//! Resets the core and its peripherals; called with interrupts locked.
+[[noreturn]] void arch_reset(void);

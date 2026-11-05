@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/timeline/reminders.h>
 
 #include <clar.h>
@@ -19,16 +20,17 @@
 #include <fake_cron.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
+#include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 static time_t now = 0;
 static int num_events_put = 0;
 
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return now;
 }
 
-RtcTicks rtc_get_ticks(void) {
+uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 
@@ -109,7 +111,7 @@ void test_reminders__initialize(void) {
   num_events_put = 0;
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   reminder_db_init();
 
   cl_assert_equal_i(reminders_init(), S_SUCCESS);
@@ -254,7 +256,7 @@ static TimelineItem s_reminder_before_all_day_reminder = {
 };
 
 void test_reminders__all_day(void) {
-  time_util_update_timezone(&s_tz);
+  time_util_update_timezone(&s_tz, 0, 0);
   cl_assert_equal_i(reminders_insert(&s_all_day_reminder), S_SUCCESS);
   cl_assert_equal_i(reminders_insert(&s_reminder_before_all_day_reminder), S_SUCCESS);
 
@@ -273,7 +275,7 @@ void test_reminders__all_day(void) {
 }
 
 void test_reminders__stale_all_day(void) {
-  time_util_update_timezone(&s_tz);
+  time_util_update_timezone(&s_tz, 0, 0);
   // set time to 21:00 PST March 5, when s_all_day_reminder should be rejected for being stale
   now = 1425618000;
   cl_assert_equal_i(reminders_insert(&s_all_day_reminder), E_INVALID_OPERATION);

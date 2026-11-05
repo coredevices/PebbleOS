@@ -1,8 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/display/display.h>
-#include <pbl/drivers/touch/touch_sensor.h>
+#include <pbl/drivers/touch.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
@@ -14,6 +13,7 @@
 #include <pbl/services/touch/touch_event.h>
 #include <pbl/services/touch/touch_session.h>
 
+#include <board/display.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
@@ -38,6 +38,7 @@ static bool s_system_hold_subscribed = false;
 static bool s_nav_enabled = false;
 static bool s_app_nav_active = false;
 static bool s_globally_enabled = true;
+static bool s_sensor_enabled = false;
 static bool s_rotated = false;
 //! Set while an injected gesture owns the sensor, between its touchdown and liftoff. Physical
 //! samples are ignored for its duration so the synthetic path cannot be corrupted mid-swipe.
@@ -50,13 +51,33 @@ static void prv_apply_rotation(int16_t *x, int16_t *y) {
   }
 }
 
+//! Powers the sensor while touch is globally enabled and has subscribers. Caller must hold
+//! s_touch_mutex.
+static void prv_update_sensor(void) {
+  const bool enable = s_globally_enabled && (s_subscriber_count > 0);
+  int ret;
+
+  if (enable == s_sensor_enabled) {
+    return;
+  }
+
+  if (enable) {
+    ret = pbl_touch_enable(TOUCH);
+    if (ret != 0) {
+      PBL_LOG_WRN("Touch: could not enable the touchscreen (%d)", ret);
+      return;
+    }
+  } else {
+    (void)pbl_touch_disable(TOUCH);
+  }
+
+  s_sensor_enabled = enable;
+}
+
 static void prv_add_subscriber_cb(PebbleTask task) {
   pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);
-  // Honor the global kill switch: when touch is globally disabled, track the
-  // subscriber count but don't power up the sensor.
-  if (++s_subscriber_count == 1 && s_globally_enabled) {
-    touch_sensor_set_enabled(true);
-  }
+  s_subscriber_count++;
+  prv_update_sensor();
   PBL_LOG_DBG("Touch: subscriber added, count=%" PRIu8, s_subscriber_count);
   pbl_mutex_unlock(&s_touch_mutex);
 }
@@ -64,9 +85,8 @@ static void prv_add_subscriber_cb(PebbleTask task) {
 static void prv_remove_subscriber_cb(PebbleTask task) {
   pbl_mutex_lock(&s_touch_mutex, PBL_FOREVER);
   PBL_ASSERTN(s_subscriber_count > 0);
-  if (--s_subscriber_count == 0 && s_globally_enabled) {
-    touch_sensor_set_enabled(false);
-  }
+  s_subscriber_count--;
+  prv_update_sensor();
   // An app whose shared touch subscription disappears (task exit, or both
   // slots emptied) cannot have a live raw handler or nav dispatcher anymore;
   // drop its raw-slot mark and the app-nav-active flag so a crashed app cannot
@@ -137,10 +157,9 @@ void touch_service_set_globally_enabled(bool enabled) {
     return;
   }
   s_globally_enabled = enabled;
-  const bool sensor_enabled = enabled && (s_subscriber_count > 0);
+  prv_update_sensor();
   pbl_mutex_unlock(&s_touch_mutex);
 
-  touch_sensor_set_enabled(sensor_enabled);
   if (!enabled) {
     // A finger down when touch is torn down never gets a Liftoff otherwise, so
     // the backlight hold counter stays pinned. Synthesize one before the reset
@@ -384,6 +403,20 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
   pbl_mutex_unlock(&s_touch_mutex);
 }
 
+// Reported X and Y ranges, after the touchscreen's axis swap.
+static uint16_t prv_range_x(void) {
+  return TOUCH->props.swapped_x_y ? TOUCH->props.size_y : TOUCH->props.size_x;
+}
+
+static uint16_t prv_range_y(void) {
+  return TOUCH->props.swapped_x_y ? TOUCH->props.size_x : TOUCH->props.size_y;
+}
+
+// Maps a coordinate from the touchscreen's range to the framebuffer's.
+static int16_t prv_scale(int32_t value, uint16_t range, int16_t fb_range) {
+  return (int16_t)(value * fb_range / range);
+}
+
 // Input reports are built by a single driver context, so the pending report needs no lock.
 static struct {
   bool has_sample;
@@ -405,9 +438,9 @@ static void prv_input_cb(const struct pbl_input_event *evt, void *user_data) {
       break;
     case PBL_INPUT_EV_ABS:
       if (evt->code == PBL_INPUT_ABS_X) {
-        s_report.x = (int16_t)evt->value;
+        s_report.x = prv_scale(evt->value, prv_range_x(), DISP_COLS);
       } else if (evt->code == PBL_INPUT_ABS_Y) {
-        s_report.y = (int16_t)evt->value;
+        s_report.y = prv_scale(evt->value, prv_range_y(), DISP_ROWS);
       } else {
         return;
       }

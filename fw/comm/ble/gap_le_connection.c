@@ -7,12 +7,13 @@
 
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 
 //! About this module
 //! -----------------
@@ -96,11 +97,11 @@ GAPLEConnection *gap_le_connection_find_by_irk(const struct pbl_bt_sm_key *irk) 
 //! bt_lock() is expected to be taken by the caller
 void gap_le_connection_set_irk(GAPLEConnection *connection, const struct pbl_bt_sm_key *irk) {
   if (connection->irk) {
-    kernel_free(connection->irk);
+    pbl_free(connection->irk);
   }
   struct pbl_bt_sm_key *irk_copy = nullptr;
   if (irk) {
-    irk_copy = kernel_zalloc_check(sizeof(*irk_copy));
+    irk_copy = pbl_zalloc_check(sizeof(*irk_copy));
     memcpy(irk_copy, irk, sizeof(*irk_copy));
   }
   connection->irk = irk_copy;
@@ -114,14 +115,14 @@ GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *devi
   bt_lock_assert_held(true /* is_held */);
   PBL_ASSERTN(!gap_le_connection_is_connected(device));
 
-  GAPLEConnection *connection = kernel_zalloc_check(sizeof(GAPLEConnection));
+  GAPLEConnection *connection = pbl_zalloc_check(sizeof(GAPLEConnection));
 
   *connection = (const GAPLEConnection){
     .device = *device,
     .local_is_master = local_is_master,
     .conn_mgr_info = bt_conn_mgr_info_init(),
     .bonding_id = PBL_BT_BONDING_ID_INVALID,
-    .ticks_since_connection = rtc_get_ticks(),
+    .ticks_since_connection = pbl_uptime_ticks(),
     .is_remote_device_managing_connection_parameters = false,
     .connection_parameter_sets = nullptr,
   };
@@ -146,11 +147,11 @@ void prv_destroy_connection(GAPLEConnection *connection) {
 
   list_remove(&connection->node, (ListNode **)&s_connections, nullptr);
   bt_conn_mgr_info_deinit(&connection->conn_mgr_info);
-  kernel_free(connection->connection_parameter_sets);
-  kernel_free(connection->pairing_state);
-  kernel_free(connection->device_name);
-  kernel_free(connection->irk);
-  kernel_free(connection);
+  pbl_free(connection->connection_parameter_sets);
+  pbl_free(connection->pairing_state);
+  pbl_free(connection->device_name);
+  pbl_free(connection->irk);
+  pbl_free(connection);
 }
 
 void gap_le_connection_remove(const struct pbl_bt_device_internal *device) {

@@ -3,61 +3,81 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/touch/touch_sensor.h>
-#include <pbl/input/input.h>
+#include <pbl/drivers/touch.h>
+#include <pbl/drivers/touch/qemu.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/services/system_task.h>
+#include <pbl/util/bits.h>
 
 #include <board/board.h>
-#include <cmsis_core.h>
 
-#define REG32(addr) (*(volatile uint32_t *)(addr))
-
-// QEMU touch register offsets (must match pebble-touch device)
 #define TOUCH_STATE   0x00
 #define TOUCH_X       0x04
 #define TOUCH_Y       0x08
 #define TOUCH_INTCTRL 0x0C
 #define TOUCH_INTSTAT 0x10
 
-#define INT_TOUCH_EVENT (1u << 0)
+#define TOUCH_STATE_DOWN PBL_BIT(0)
+#define TOUCH_INT_EVENT  PBL_BIT(0)
 
-static bool s_callback_scheduled = false;
+static bool s_work_pending;
 
-static void prv_process_touch_update(void *unused) {
-  s_callback_scheduled = false;
+static void prv_work(void *arg) {
+  uint32_t state;
+  uint16_t x;
+  uint16_t y;
 
-  const uint32_t base = QEMU_TOUCH_BASE;
-  const uint32_t state = REG32(base + TOUCH_STATE);
-  const int16_t x = (int16_t)REG32(base + TOUCH_X);
-  const int16_t y = (int16_t)REG32(base + TOUCH_Y);
+  s_work_pending = false;
 
-  pbl_input_report_key(PBL_INPUT_BTN_TOUCH, (state & INT_TOUCH_EVENT) != 0, false);
-  pbl_input_report_abs(PBL_INPUT_ABS_X, x, false);
-  pbl_input_report_abs(PBL_INPUT_ABS_Y, y, true);
+  state = pbl_readl(QEMU_TOUCH_BASE + TOUCH_STATE);
+  x = (uint16_t)pbl_readl(QEMU_TOUCH_BASE + TOUCH_X);
+  y = (uint16_t)pbl_readl(QEMU_TOUCH_BASE + TOUCH_Y);
+
+  pbl_touch_report(QEMU_TOUCH, (state & TOUCH_STATE_DOWN) != 0U, x, y);
 }
 
-static void prv_touch_irq_handler(void) {
-  REG32(QEMU_TOUCH_BASE + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
+static void prv_irq_handler(void) {
+  pbl_writel(TOUCH_INT_EVENT, QEMU_TOUCH_BASE + TOUCH_INTSTAT);
 
-  if (!s_callback_scheduled) {
-    if (system_task_add_callback_from_isr(prv_process_touch_update, nullptr)) {
-      s_callback_scheduled = true;
-    }
+  if (s_work_pending) {
+    return;
   }
+
+  s_work_pending = system_task_add_callback_from_isr(prv_work, nullptr);
 }
 
-PBL_IRQ_CONNECT(TOUCH, 6, prv_touch_irq_handler, , 0);
+PBL_IRQ_CONNECT(TOUCH, 6, prv_irq_handler, , 0);
 
-void touch_sensor_init(void) {
-  const uint32_t base = QEMU_TOUCH_BASE;
-
-  REG32(base + TOUCH_INTSTAT) = INT_TOUCH_EVENT;
-  REG32(base + TOUCH_INTCTRL) = INT_TOUCH_EVENT;
+static int prv_init(const struct pbl_touch *touch) {
+  pbl_writel(0U, QEMU_TOUCH_BASE + TOUCH_INTCTRL);
+  pbl_writel(TOUCH_INT_EVENT, QEMU_TOUCH_BASE + TOUCH_INTSTAT);
 
   pbl_irq_enable(PBL_IRQN(TOUCH));
+
+  return 0;
 }
 
-void touch_sensor_set_enabled(bool enabled) {
-  REG32(QEMU_TOUCH_BASE + TOUCH_INTCTRL) = enabled ? INT_TOUCH_EVENT : 0;
+static int prv_enable(const struct pbl_touch *touch) {
+  pbl_writel(TOUCH_INT_EVENT, QEMU_TOUCH_BASE + TOUCH_INTCTRL);
+
+  return 0;
 }
+
+static int prv_disable(const struct pbl_touch *touch) {
+  pbl_writel(0U, QEMU_TOUCH_BASE + TOUCH_INTCTRL);
+
+  return 0;
+}
+
+static const struct pbl_touch_ops s_ops = {
+  .init = prv_init,
+  .enable = prv_enable,
+  .disable = prv_disable,
+};
+
+PBL_TOUCH_STATE_DEFINE(pbl_touch_qemu);
+const struct pbl_touch pbl_touch_qemu =
+    PBL_TOUCH_INIT(pbl_touch_qemu, "touch", nullptr, &s_ops, .size_x = CONFIG_TOUCH_QEMU_SIZE_X,
+                   .size_y = CONFIG_TOUCH_QEMU_SIZE_Y);
+PBL_DEVICE_REGISTER(pbl_touch_qemu, &pbl_touch_qemu.dev);

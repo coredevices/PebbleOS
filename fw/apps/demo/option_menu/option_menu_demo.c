@@ -10,7 +10,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 

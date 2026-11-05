@@ -12,7 +12,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/applib/ui/layer.c
     fw/applib/ui/shadows.c
     fw/applib/ui/window.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
     fw/applib/template_string.c
     fw/applib/ui/content_indicator.c
@@ -39,7 +39,7 @@ pbl_clar_test(test_launcher_menu_layer
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
     tests/fakes/fake_fonts.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     tests/fixtures/resources/timeline_resource_table.auto.c
     tests/fixtures/screen_grid.c
     tests/stubs/stubs_animation.c

@@ -8,6 +8,7 @@
 
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/light_level.h>
+#include <pbl/util/time.h>
 
 //! @addtogroup Foundation
 //! @{
@@ -74,7 +75,7 @@ typedef struct HealthMetricAlert HealthMetricAlert;
 //! @param time_start UTC time of the earliest data item to incorporate into the sum.
 //! @param time_end UTC time of the most recent data item to incorporate into the sum.
 //! @return The sum of that metric over the given time range, if available.
-HealthValue health_service_sum(HealthMetric metric, time_t time_start, time_t time_end);
+HealthValue health_service_sum(HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end);
 
 //! Convenience wrapper for \ref health_service_sum() that returns the sum for today.
 //! @param metric The metric to query.
@@ -133,8 +134,8 @@ typedef enum {
 //! @param time_end UTC time of the end of the query interval.
 //! @param scope \ref HealthServiceTimeScope value describing how the average should be computed.
 //! @return The average of the sum of the given metric over the given time range, if available.
-HealthValue health_service_sum_averaged(HealthMetric metric, time_t time_start, time_t time_end,
-                                        HealthServiceTimeScope scope);
+HealthValue health_service_sum_averaged(HealthMetric metric, pbl_time32_t time_start,
+                                        pbl_time32_t time_end, HealthServiceTimeScope scope);
 
 //! Used by \ref health_service_aggregate_averaged() to specify what type of aggregation to perform.
 //! This aggregation is applied to the metric before the average is computed.
@@ -197,8 +198,8 @@ typedef enum {
 //!  Use `HealthServiceTimeScopeOnce` to not compute an average.
 //! @return The average of the aggregation performed on the given metric over the given time range,
 //!  if available.
-HealthValue health_service_aggregate_averaged(HealthMetric metric, time_t time_start,
-                                              time_t time_end, HealthAggregation aggregation,
+HealthValue health_service_aggregate_averaged(HealthMetric metric, pbl_time32_t time_start,
+                                              pbl_time32_t time_end, HealthAggregation aggregation,
                                               HealthServiceTimeScope scope);
 
 //! Health-related activities that can be accessed using
@@ -236,8 +237,8 @@ HealthActivityMask health_service_peek_current_activities(void);
 //! @param context The `context` parameter initially passed
 //!     to \ref health_service_activities_iterate().
 //! @return `true` if you are interested in more activities, or `false` to stop iterating.
-typedef bool (*HealthActivityIteratorCB)(HealthActivity activity, time_t time_start,
-                                         time_t time_end, void *context);
+typedef bool (*HealthActivityIteratorCB)(HealthActivity activity, pbl_time32_t time_start,
+                                         pbl_time32_t time_end, void *context);
 
 //! Iteration direction, passed to \ref health_service_activities_iterate().
 //! When iterating backwards (`HealthIterationDirectionPast`), activities that have a greater value
@@ -261,8 +262,8 @@ typedef enum {
 //! @param direction The direction in which to iterate.
 //! @param callback Developer-supplied callback that is called for each activity iterated over.
 //! @param context Developer-supplied context pointer that is passed to the callback.
-void health_service_activities_iterate(HealthActivityMask activity_mask, time_t time_start,
-                                       time_t time_end, HealthIterationDirection direction,
+void health_service_activities_iterate(HealthActivityMask activity_mask, pbl_time32_t time_start,
+                                       pbl_time32_t time_end, HealthIterationDirection direction,
                                        HealthActivityIteratorCB callback, void *context);
 
 //! Possible values returned by \ref health_service_metric_accessible().
@@ -295,7 +296,8 @@ typedef enum {
 //! @return A \ref HealthServiceAccessibilityMask representing the accessible metrics
 //! in this time range.
 HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric metric,
-                                                                time_t time_start, time_t time_end);
+                                                                pbl_time32_t time_start,
+                                                                pbl_time32_t time_end);
 
 //! Check if a certain combination of metric, time span, and scope is accessible for calculating
 //! summed, averaged data by returning a value of \ref HealthServiceAccessibilityMask. Developers
@@ -313,7 +315,8 @@ HealthServiceAccessibilityMask health_service_metric_accessible(HealthMetric met
 //! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is
 //! available.
 HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
-    HealthMetric metric, time_t time_start, time_t time_end, HealthServiceTimeScope scope);
+    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
+    HealthServiceTimeScope scope);
 
 //! Check if a certain combination of metric, time span, aggregation operation, and scope is
 //! accessible for calculating aggregated, averaged data by returning a value of
@@ -328,8 +331,8 @@ HealthServiceAccessibilityMask health_service_metric_averaged_accessible(
 //! @return A \ref HealthServiceAccessibilityMask value describing whether averaged data is
 //! available.
 HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible(
-    HealthMetric metric, time_t time_start, time_t time_end, HealthAggregation aggregation,
-    HealthServiceTimeScope scope);
+    HealthMetric metric, pbl_time32_t time_start, pbl_time32_t time_end,
+    HealthAggregation aggregation, HealthServiceTimeScope scope);
 
 //! Check if a certain combination of metric, \ref HealthActivityMask and time span is
 //! accessible. Developers should check if the return value is
@@ -341,7 +344,7 @@ HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessib
 //! @return A \ref HealthServiceAccessibilityMask representing which of the
 //! passed \ref HealthActivityMask values are available under the given constraints.
 HealthServiceAccessibilityMask health_service_any_activity_accessible(
-    HealthActivityMask activity_mask, time_t time_start, time_t time_end);
+    HealthActivityMask activity_mask, pbl_time32_t time_start, pbl_time32_t time_end);
 
 //! Health event enum. Passed into the \ref HealthEventHandler.
 typedef enum {
@@ -498,7 +501,7 @@ typedef struct {
 //!      greater than zero. Check `HealthMinuteData.is_invalid` to see if a given record contains
 //!      valid data.
 uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32_t max_records,
-                                           time_t *time_start, time_t *time_end);
+                                           pbl_time32_t *time_start, pbl_time32_t *time_end);
 
 //! Types of measurement system a \ref HealthMetric may be measured in.
 typedef enum {
@@ -542,14 +545,15 @@ typedef struct {
 typedef struct {
   uint8_t current_bpm;
   uint8_t resting_bpm;
-  HRMQuality quality : 8;
+  bool off_wrist;
   bool is_filtered;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HealthEventHeartRateUpdateData;
 
 //! @internal
 typedef struct {
   uint16_t ppi_ms;
-  HRMQuality quality : 8;
+  uint8_t confidence; //!< algorithm confidence, 0-100
 } HealthEventHRVUpdateData;
 
 //! @internal

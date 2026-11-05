@@ -235,6 +235,12 @@ void option_menu_set_highlight_colors(OptionMenu *option_menu, GColor background
                                   option_menu->highlight_colors.foreground);
 }
 
+void option_menu_set_colors_follow_theme(OptionMenu *option_menu) {
+  status_bar_layer_set_colors_follow_theme(&option_menu->status_layer,
+                                           false /* transparent_background */);
+  menu_layer_set_colors_follow_theme(&option_menu->menu_layer);
+}
+
 void option_menu_set_callbacks(OptionMenu *option_menu, const OptionMenuCallbacks *callbacks,
                                void *context) {
   option_menu->callbacks = *callbacks;

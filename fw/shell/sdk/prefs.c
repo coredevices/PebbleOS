@@ -5,7 +5,7 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <applib/preferred_content_size.h>
 #include <apps/system_app_ids.h>
@@ -14,6 +14,7 @@
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -37,36 +38,38 @@ static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 
 void shell_prefs_init(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  SettingsFile file = {};
-  if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != 0) {
     goto cleanup;
   }
-  if (settings_file_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H), &s_is_24h_style,
-                        sizeof(s_is_24h_style)) != S_SUCCESS) {
+  if (pbl_settings_get(&file, PREF_KEY_CLOCK_24H, sizeof(PREF_KEY_CLOCK_24H), &s_is_24h_style,
+                       sizeof(s_is_24h_style)) != 0) {
     // The setting likely doesn't exist yet so set it to the default (true)
     s_is_24h_style = true;
   }
-  if (settings_file_get(&file, PREF_KEY_DEFAULT_WATCHFACE, sizeof(PREF_KEY_DEFAULT_WATCHFACE),
-                        &s_default_watchface, sizeof(s_default_watchface)) != S_SUCCESS) {
+  if (pbl_settings_get(&file, PREF_KEY_DEFAULT_WATCHFACE, sizeof(PREF_KEY_DEFAULT_WATCHFACE),
+                       &s_default_watchface, sizeof(s_default_watchface)) != 0) {
     s_default_watchface = UUID_INVALID;
   }
-  if (settings_file_get(&file, PREF_KEY_CONTENT_SIZE, sizeof(PREF_KEY_CONTENT_SIZE),
-                        &s_content_size, sizeof(s_content_size)) != S_SUCCESS) {
+  if (pbl_settings_get(&file, PREF_KEY_CONTENT_SIZE, sizeof(PREF_KEY_CONTENT_SIZE), &s_content_size,
+                       sizeof(s_content_size)) != 0) {
     s_content_size = PreferredContentSizeDefault;
   }
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 cleanup:
   pbl_mutex_unlock(&s_mutex);
 }
 
 static bool prv_pref_set(const char *key, const void *val, size_t val_len) {
-  SettingsFile file = {};
+  struct pbl_settings_file file = {};
   status_t rv;
-  if ((rv = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN)) != S_SUCCESS) {
+  if ((rv = status_from_errno(
+           pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN))) != S_SUCCESS) {
     goto cleanup;
   }
-  rv = settings_file_set(&file, key, strnlen(key, SETTINGS_KEY_MAX_LEN) + 1, val, val_len);
-  settings_file_close(&file);
+  rv = status_from_errno(
+      pbl_settings_set(&file, key, strnlen(key, PBL_SETTINGS_KEY_MAX_LEN) + 1, val, val_len));
+  pbl_settings_close(&file);
 cleanup:
   return (rv == S_SUCCESS);
 }
@@ -259,13 +262,6 @@ bool activity_prefs_spo2_is_enabled(void) {
 void activity_prefs_set_spo2_enabled(bool enabled) {
 }
 
-bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return false;
-}
-
-void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled) {
-}
-
 HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
   return HRMonitoringInterval_10Min;
 }
@@ -305,11 +301,34 @@ UnitsWind shell_prefs_get_units_wind(void) {
   return UnitsWind_Mph;
 }
 
+UnitsTemperature shell_prefs_get_units_temperature(void) {
+  return UnitsTemperature_Fahrenheit;
+}
+
 GColor shell_prefs_get_theme_highlight_color(void) {
   return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {
+  // Not used in SDK shell
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return DarkModeOff;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  // Not used in SDK shell
+}
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
+  if (schedule_out) {
+    *schedule_out =
+        (DarkModeSchedule){.from_hour = 19, .from_minute = 0, .to_hour = 7, .to_minute = 0};
+  }
+}
+
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
   // Not used in SDK shell
 }
 

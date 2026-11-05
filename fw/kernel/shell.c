@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/size.h>
@@ -45,5 +47,17 @@ static int prv_cmd_runlevel(const struct pbl_shell *sh, size_t argc, char **argv
 
 PBL_SHELL_SUBCMD_ADD(sub_sys, runlevel, nullptr, "Set the runlevel <n|list>", prv_cmd_runlevel, 2,
                      0);
+
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
+static int prv_cmd_heap_kernel(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_heap_dump(pbl_malloc_heap());
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_SET_CREATE(sub_sys_heap);
+PBL_SHELL_SUBCMD_ADD(sub_sys, heap, sub_sys_heap, "Dump heap allocations", nullptr, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_sys_heap, kernel, nullptr, "Dump the kernel heap", prv_cmd_heap_kernel, 0,
+                     0);
+#endif
 
 #endif

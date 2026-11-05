@@ -3,7 +3,7 @@
 
 #include "ble_hrm_reminder_popup.h"
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -44,7 +44,7 @@ void ble_hrm_push_reminder_popup(void) {
   };
 
   TimelineItem *item =
-      timeline_item_create_with_attributes(rtc_get_time(), 0, TimelineItemTypeNotification,
+      timeline_item_create_with_attributes(pbl_realtime(), 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &attr_list, &action_group);
   i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);

@@ -8,6 +8,7 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/layer.h>
+#include <shell/system_theme.h>
 
 static int16_t scale_progress_bar_width_px(unsigned int progress_percent, int16_t rect_width_px) {
   return ((progress_percent * (rect_width_px)) / 100);
@@ -27,6 +28,11 @@ void progress_layer_update_proc(Layer *layer, GContext *ctx) {
       scale_progress_bar_width_px(progress_layer->progress_percent, bounds->size.w);
   const GRect progress_bar =
       GRect(bounds->origin.x, bounds->origin.y, progress_bar_width_px, bounds->size.h);
+
+  if (progress_layer->layer.follows_theme) {
+    progress_layer->foreground_color = system_theme_get_fg_color();
+    progress_layer->background_color = system_theme_get_bg_color();
+  }
 
   const int16_t corner_radius = progress_layer->corner_radius;
   graphics_context_set_fill_color(ctx, progress_layer->background_color);
@@ -49,6 +55,7 @@ void progress_layer_init(ProgressLayer *progress_layer, const GRect *frame) {
   progress_layer->layer.update_proc = progress_layer_update_proc;
   progress_layer->foreground_color = GColorBlack;
   progress_layer->background_color = GColorWhite;
+  progress_layer->layer.follows_theme = system_theme_is_system_ui();
   progress_layer->corner_radius = 1;
 }
 
@@ -58,10 +65,12 @@ void progress_layer_deinit(ProgressLayer *progress_layer) {
 
 void progress_layer_set_foreground_color(ProgressLayer *progress_layer, GColor color) {
   progress_layer->foreground_color = color;
+  progress_layer->layer.follows_theme = false;
 }
 
 void progress_layer_set_background_color(ProgressLayer *progress_layer, GColor color) {
   progress_layer->background_color = color;
+  progress_layer->layer.follows_theme = false;
 }
 
 void progress_layer_set_corner_radius(ProgressLayer *progress_layer, uint16_t corner_radius) {

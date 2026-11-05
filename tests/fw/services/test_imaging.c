@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/imaging.h>
-#include <pbl/util/heap.h>
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 #include <stubs_pbl_malloc.h>
 
 // Stubs & Fakes
@@ -48,13 +48,13 @@ static uint8_t s_last_token;
 static uint8_t s_last_failure_token;
 static GBitmap *s_last_bitmap;
 
-Heap *kernel_heap_get(void) {
-  static Heap heap;
+struct pbl_heap *pbl_malloc_heap(void) {
+  static struct pbl_heap heap;
   return &heap;
 }
 
-void heap_calc_totals(Heap *heap, unsigned int *used, unsigned int *free_bytes,
-                      unsigned int *max_free) {
+void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *free_bytes,
+                    unsigned int *max_free) {
   *used = 0;
   *free_bytes = 0;
   *max_free = 64 * 1024;
@@ -62,9 +62,9 @@ void heap_calc_totals(Heap *heap, unsigned int *used, unsigned int *free_bytes,
 
 static void prv_free_last_bitmap(void) {
   if (s_last_bitmap) {
-    kernel_free(s_last_bitmap->addr);
-    kernel_free(s_last_bitmap->palette);
-    kernel_free(s_last_bitmap);
+    pbl_free(s_last_bitmap->addr);
+    pbl_free(s_last_bitmap->palette);
+    pbl_free(s_last_bitmap);
     s_last_bitmap = nullptr;
   }
 }
@@ -175,7 +175,7 @@ void test_imaging__initialize(void) {
   s_last_token = 0;
   s_last_failure_token = 0;
   s_last_bitmap = nullptr;
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
 }
 
 void test_imaging__cleanup(void) {
@@ -214,9 +214,9 @@ void test_imaging__multi_chunk_image(void) {
 }
 
 void test_imaging__allocation_failure_notifies_and_resets(void) {
-  stub_pbl_malloc_set_kernel_malloc_should_fail(true);
+  stub_pbl_malloc_set_should_fail(true);
   prv_receive_valid_image(TEST_TOKEN);
-  stub_pbl_malloc_set_kernel_malloc_should_fail(false);
+  stub_pbl_malloc_set_should_fail(false);
 
   cl_assert_equal_i(s_will_receives, 1);
   cl_assert_equal_i(s_failures, 1);

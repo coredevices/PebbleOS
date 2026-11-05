@@ -3,72 +3,79 @@
 
 #pragma once
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <pbl/kernel/types.h>
 
 /**
- * @defgroup kernel_idle Idle and tick
+ * @defgroup kernel_idle Idle states
  * @ingroup kernel
- * @brief Interface between the kernel and the SoC's tickless idle code.
+ * @brief Low-power states the CPU idles in, provided by the SoC.
  *
- * The SoC implements pbl_soc_idle() and pbl_soc_tick_enable(); the kernel provides the rest.
- * A typical pbl_soc_idle():
+ * When nothing is runnable, the kernel picks the deepest state that is allowed now and worth
+ * entering for the time until the next timeout, programs the system clock event device to wake
+ * the CPU up early enough, enters the state, and accounts for the time spent in it from the
+ * system clock source. The SoC only puts the CPU to sleep.
  *
  * @code{.c}
- * void pbl_soc_idle(pbl_tick_t max_ticks) {
- *   __disable_irq();
- *   if (pbl_idle_confirm()) {
- *     prv_timer_stop_tick();
- *     prv_sleep_until(max_ticks);
- *     pbl_idle_slept(prv_ticks_elapsed());
- *     prv_timer_start_tick();
- *   }
- *   __enable_irq();
+ * static void prv_wfi(void) {
+ *   __DSB();
+ *   __WFI();
+ *   __ISB();
+ * }
+ *
+ * const struct pbl_idle_state pbl_soc_idle_states[] = {
+ *   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+ * };
+ * const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
+ *
+ * int pbl_soc_idle_state_limit(void) {
+ *   return 0;
  * }
  * @endcode
  * @{
  */
 
-/**
- * @brief Idle the CPU.
- *
- * Implemented by the SoC. Runs on the idle thread when nothing is runnable, only for gaps of at
- * least two ticks; may sleep. Once interrupts are masked it must check pbl_idle_confirm() before
- * sleeping, and report through pbl_idle_slept() any ticks that passed while the tick interrupt
- * was off.
- *
- * @param max_ticks Ticks until the next timeout, @ref PBL_TICK_FOREVER if none.
- */
-void pbl_soc_idle(pbl_tick_t max_ticks);
+/** @brief Maximum number of idle states. */
+#define PBL_IDLE_STATES_MAX 4
+
+/** @brief Idle state. */
+struct pbl_idle_state {
+  /** Name, for statistics. */
+  const char *name;
+  /** Shortest time until the next timeout worth entering the state for, in ticks. */
+  pbl_tick_t min_ticks;
+  /** Time the state takes to wake up from, in ticks; the CPU is woken up this early. */
+  pbl_tick_t exit_ticks;
+  /**
+   * Enter the state. Called with every interrupt masked; returns once one is pending, with
+   * interrupts still masked.
+   */
+  void (*enter)(void);
+};
+
+/** @brief Idle states, shallowest first. Defined by the SoC. */
+extern const struct pbl_idle_state pbl_soc_idle_states[];
+
+/** @brief Number of entries in @ref pbl_soc_idle_states. Defined by the SoC. */
+extern const size_t pbl_soc_num_idle_states;
 
 /**
- * @brief Set up the tick interrupt.
+ * @brief Get the deepest idle state allowed now.
  *
- * Implemented by the SoC; called when the scheduler starts. A SoC that drives the tick itself
- * calls pbl_kernel_tick_isr() from its handler.
+ * Implemented by the SoC. Called with every interrupt masked.
  *
- * @return true if the SoC set up the tick, false to let the kernel program SysTick itself.
+ * @return Index in @ref pbl_soc_idle_states, or -1 to keep the CPU running.
  */
-bool pbl_soc_tick_enable(void);
+int pbl_soc_idle_state_limit(void);
 
 /**
- * @brief Confirm that the CPU may still go to sleep.
+ * @brief Get the time spent in an idle state since boot.
  *
- * Call with interrupts masked.
- *
- * @return false if something became runnable since the idle thread decided to sleep.
+ * @param state Index in @ref pbl_soc_idle_states.
+ * @return Microseconds.
  */
-bool pbl_idle_confirm(void);
-
-/**
- * @brief Account for a sleep during which no tick interrupt ran.
- *
- * Advances the tick count and expires the timeouts that fell due.
- *
- * @param elapsed Ticks slept.
- */
-void pbl_idle_slept(pbl_tick_t elapsed);
-
-/** @brief Tick interrupt body, for SoCs that own the SysTick handler. */
-void pbl_kernel_tick_isr(void);
+uint64_t pbl_idle_residency_us(size_t state);
 
 /** @} */

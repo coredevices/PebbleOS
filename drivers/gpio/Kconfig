@@ -18,7 +18,7 @@ config GPIO_NRF5
 config GPIO_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
-    depends on CLK_SF32LB
+    depends on CLK_SF32LB && PINCTRL_SF32LB52
     select INTC
     help
       Support for the SiFli SF32LB GPIO controller.
@@ -26,6 +26,7 @@ config GPIO_SF32LB
 config GPIO_QEMU
     bool "QEMU GPIO"
     default y if SOC_QEMU
+    select INTC
     help
       Support for the QEMU GPIO peripheral.
 
@@ -38,7 +39,7 @@ config GPIO_NPM1300
 
 config GPIO_SHELL
     bool "Shell commands"
-    default y
+    default DRIVER_SHELL
     depends on SHELL
     help
       The gpio shell command, to list the ports and to read, drive,

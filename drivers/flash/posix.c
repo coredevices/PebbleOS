@@ -1,30 +1,34 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/drivers/flash.h>
-#include <pbl/drivers/flash/flash_impl.h>
-#include <pbl/kernel/assert.h>
+#include <pbl/drivers/flash/posix.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
 
 #include <fcntl.h>
 #include <flash_region/flash_region.h>
 #include <posix_host.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <system/status_codes.h>
 #include <unistd.h>
 
-// External flash, as a file mapped into memory. Writes and erases land in
-// the file right away, so its contents survive a restart.
+PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 
-#define PRV_CAPACITY       0x2000000
-#define PRV_SECTOR_SIZE    0x10000
-#define PRV_SUBSECTOR_SIZE 0x1000
-#define PRV_PAGE_SIZE      256
+#define ERASED_BYTE 0xFFU
+
+static const struct pbl_flash_geometry s_geometry = {
+  .size = BOARD_NOR_FLASH_SIZE,
+  .page_size = PAGE_SIZE_BYTES,
+  .sector_size = SECTOR_SIZE_BYTES,
+  .subsector_size = SUBSECTOR_SIZE_BYTES,
+  .sector_erase_ms = 1U,
+  .subsector_erase_ms = 1U,
+};
 
 static uint8_t *s_flash;
 static const char *s_flash_path = "pebbleos-flash.bin";
@@ -45,201 +49,109 @@ POSIX_HOST_OPTION(.flag = 'r', .arg = "res.pbpack",
                   .help = "system resources to install at boot (default: the build's)",
                   .set = prv_set_resources_path)
 
-static uint8_t *prv_ptr(FlashAddress addr) {
-  return &s_flash[addr & (PRV_CAPACITY - 1)];
+static uint8_t *prv_ptr(const struct pbl_flash *flash, uint32_t addr) {
+  return &s_flash[addr - flash->base];
 }
 
-static void prv_install_resources(void) {
-  // The build's resources sit next to the executable.
+static void prv_install_resources(const struct pbl_flash *flash) {
+  const size_t bank_size =
+      FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
   char default_path[PATH_MAX];
   const char *path = s_resources_path;
+  uint8_t *bank;
+  size_t len;
+  FILE *f;
+
+  // The build's resources sit next to the executable
   if (path == nullptr) {
     snprintf(default_path, sizeof(default_path), "%s/system_resources.pbpack",
              posix_host_exe_dir());
     path = default_path;
   }
-  FILE *f = fopen(path, "rb");
+
+  f = fopen(path, "rb");
   if (f == nullptr) {
     PBL_LOG_WRN("cannot open resources %s", path);
     return;
   }
-  const size_t bank_size =
-      FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
-  uint8_t *bank = prv_ptr(FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN);
-  size_t len = fread(bank, 1, bank_size, f);
+
+  bank = prv_ptr(flash, FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN);
+  len = fread(bank, 1, bank_size, f);
   fclose(f);
-  memset(bank + len, 0xff, bank_size - len);
+  memset(bank + len, ERASED_BYTE, bank_size - len);
 }
 
-status_t flash_impl_init(bool coredump_mode) {
-  if (s_flash != nullptr) {
-    return S_SUCCESS;
-  }
-  int fd = open(s_flash_path, O_RDWR | O_CREAT, 0644);
-  PBL_ASSERT(fd >= 0, "cannot open flash file");
-
+static int prv_init(const struct pbl_flash *flash) {
+  const size_t size = flash->geometry->size;
   struct stat st;
-  fstat(fd, &st);
-  bool blank = st.st_size == 0;
-  PBL_ASSERT(ftruncate(fd, PRV_CAPACITY) == 0, "cannot size flash file");
+  bool blank;
+  int fd;
 
-  s_flash = mmap(nullptr, PRV_CAPACITY, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  close(fd);
-  PBL_ASSERT(s_flash != MAP_FAILED, "cannot map flash file");
-  if (blank) {
-    memset(s_flash, 0xff, PRV_CAPACITY);
+  if (s_flash != nullptr) {
+    return 0;
   }
 
-  prv_install_resources();
-  return S_SUCCESS;
+  fd = open(s_flash_path, O_RDWR | O_CREAT, 0644);
+  if (fd < 0) {
+    PBL_LOG_ERR("cannot open flash file %s", s_flash_path);
+    return -EIO;
+  }
+
+  if (fstat(fd, &st) != 0 || ftruncate(fd, size) != 0) {
+    close(fd);
+    return -EIO;
+  }
+  blank = st.st_size == 0;
+
+  s_flash = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  close(fd);
+  if (s_flash == MAP_FAILED) {
+    s_flash = nullptr;
+    return -EIO;
+  }
+
+  if (blank) {
+    memset(s_flash, ERASED_BYTE, size);
+  }
+
+  prv_install_resources(flash);
+
+  return 0;
 }
 
-status_t flash_impl_set_burst_mode(bool enable) {
-  return S_SUCCESS;
+static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
+  memcpy(buf, prv_ptr(flash, addr), len);
+
+  return 0;
 }
 
-FlashAddress flash_impl_get_sector_base_address(FlashAddress addr) {
-  return addr & ~(PRV_SECTOR_SIZE - 1);
-}
+static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *buf, size_t len) {
+  uint8_t *dst = prv_ptr(flash, addr);
+  const uint8_t *src = buf;
 
-FlashAddress flash_impl_get_subsector_base_address(FlashAddress addr) {
-  return addr & ~(PRV_SUBSECTOR_SIZE - 1);
-}
-
-size_t flash_impl_get_capacity(void) {
-  return PRV_CAPACITY;
-}
-
-status_t flash_impl_enter_low_power_mode(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_exit_low_power_mode(void) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_read_sync(void *buffer, FlashAddress addr, size_t len) {
-  memcpy(buffer, prv_ptr(addr), len);
-  return S_SUCCESS;
-}
-
-void flash_impl_enable_write_protection(void) {
-}
-
-status_t flash_impl_write_protect(FlashAddress start_sector, FlashAddress end_sector) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_unprotect(void) {
-  return S_SUCCESS;
-}
-
-int flash_impl_write_page_begin(const void *buffer, FlashAddress addr, size_t len) {
-  size_t page_remaining = PRV_PAGE_SIZE - (addr & (PRV_PAGE_SIZE - 1));
-  size_t write_len = len < page_remaining ? len : page_remaining;
-  uint8_t *dst = prv_ptr(addr);
-  const uint8_t *src = buffer;
-  // NOR flash only clears bits.
-  for (size_t i = 0; i < write_len; i++) {
+  // NOR flash only clears bits
+  for (size_t i = 0U; i < len; i++) {
     dst[i] &= src[i];
   }
-  return (int)write_len;
+
+  return 0;
 }
 
-status_t flash_impl_get_write_status(void) {
-  return S_SUCCESS;
+static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size) {
+  memset(prv_ptr(flash, addr), ERASED_BYTE, size);
+
+  return 0;
 }
 
-status_t flash_impl_write_suspend(FlashAddress addr) {
-  return S_SUCCESS;
-}
+static const struct pbl_flash_ops s_ops = {
+  .init = prv_init,
+  .read = prv_read,
+  .write = prv_write,
+  .erase = prv_erase,
+};
 
-status_t flash_impl_write_resume(FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_subsector_begin(FlashAddress subsector_addr) {
-  memset(prv_ptr(flash_impl_get_subsector_base_address(subsector_addr)), 0xff, PRV_SUBSECTOR_SIZE);
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_sector_begin(FlashAddress sector_addr) {
-  memset(prv_ptr(flash_impl_get_sector_base_address(sector_addr)), 0xff, PRV_SECTOR_SIZE);
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_bulk_begin(void) {
-  memset(s_flash, 0xff, PRV_CAPACITY);
-  return S_SUCCESS;
-}
-
-status_t flash_impl_get_erase_status(void) {
-  return S_SUCCESS;
-}
-
-uint32_t flash_impl_get_typical_subsector_erase_duration_ms(void) {
-  return 1;
-}
-
-uint32_t flash_impl_get_typical_sector_erase_duration_ms(void) {
-  return 1;
-}
-
-status_t flash_impl_erase_suspend(FlashAddress addr) {
-  return S_NO_ACTION_REQUIRED;
-}
-
-status_t flash_impl_erase_resume(FlashAddress addr) {
-  return S_SUCCESS;
-}
-
-static status_t prv_blank_check(FlashAddress base, size_t size) {
-  const uint8_t *p = prv_ptr(base);
-  for (size_t i = 0; i < size; i++) {
-    if (p[i] != 0xff) {
-      return S_FALSE;
-    }
-  }
-  return S_TRUE;
-}
-
-status_t flash_impl_blank_check_subsector(FlashAddress addr) {
-  return prv_blank_check(flash_impl_get_subsector_base_address(addr), PRV_SUBSECTOR_SIZE);
-}
-
-status_t flash_impl_blank_check_sector(FlashAddress addr) {
-  return prv_blank_check(flash_impl_get_sector_base_address(addr), PRV_SECTOR_SIZE);
-}
-
-void flash_impl_use(void) {
-}
-
-void flash_impl_release(void) {
-}
-
-void flash_impl_release_many(uint32_t num_locks) {
-}
-
-status_t flash_impl_read_security_register(uint32_t addr, uint8_t *val) {
-  *val = 0xff;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_security_register_is_locked(uint32_t address, bool *locked) {
-  *locked = false;
-  return S_SUCCESS;
-}
-
-status_t flash_impl_erase_security_register(uint32_t addr) {
-  return S_SUCCESS;
-}
-
-status_t flash_impl_write_security_register(uint32_t addr, uint8_t val) {
-  return S_SUCCESS;
-}
-
-static const FlashSecurityRegisters s_security_regs = {};
-
-const FlashSecurityRegisters *flash_impl_security_registers_info(void) {
-  return &s_security_regs;
-}
+PBL_FLASH_STATE_DEFINE(pbl_flash_posix);
+const struct pbl_flash pbl_flash_posix =
+    PBL_FLASH_INIT(pbl_flash_posix, "flash", nullptr, nullptr, &s_ops, FLASH_REGION_BASE_ADDRESS,
+                   &s_geometry, nullptr, nullptr);
+PBL_DEVICE_REGISTER(pbl_flash_posix, &pbl_flash_posix.dev);

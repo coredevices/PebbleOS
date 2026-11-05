@@ -3,6 +3,7 @@
 
 #include "timeline_pins_demo.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/i18n/i18n.h>
@@ -47,7 +48,7 @@ static void prv_set_timeline_icon(AttributeList *list, TimelineResourceId timeli
 #define ARRAY_RAND(arr) arr[rand() % ARRAY_LENGTH(arr)]
 
 static void prv_add_notification(int32_t delta_time_s) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   AttributeList list = {};
 
@@ -80,7 +81,7 @@ static void prv_add_notification(int32_t delta_time_s) {
 
 static void prv_add_weather_pin_with_params(int32_t delta_time_s, bool has_timestamp,
                                             bool has_short_title, bool has_short_subtitle) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   AttributeList list = {};
   prv_set_timeline_icon(&list, TIMELINE_RESOURCE_TIMELINE_WEATHER, 0);
@@ -116,7 +117,7 @@ static void prv_add_weather_pin(int32_t delta_time_s) {
 
 static void prv_add_sports_pin(int32_t delta_time_s, GColor secondary_color, bool is_ingame,
                                bool has_broadcaster) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   AttributeList list = {};
   prv_set_timeline_icon(&list, TIMELINE_RESOURCE_TIMELINE_SPORTS, 0);
@@ -148,7 +149,7 @@ static void prv_add_sports_pin(int32_t delta_time_s, GColor secondary_color, boo
 static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool is_all_day,
                                  bool recurring, TimelineResourceId icon,
                                  TimelineResourceId card_icon) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   time_t target = now + delta_time_s;
   if (is_all_day) {
     target = time_util_get_midnight_of(target);
@@ -183,7 +184,7 @@ static void prv_add_calendar_pin(int32_t delta_time_s, int32_t duration_m, bool 
 }
 
 static void prv_add_generic_pin(int32_t delta_time_s, bool has_subtitle) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   AttributeList list = {};
   prv_set_timeline_icon(&list, TIMELINE_RESOURCE_NOTIFICATION_FLAG, 0);
@@ -210,7 +211,7 @@ static void prv_add_generic_pin(int32_t delta_time_s, bool has_subtitle) {
 }
 
 static void prv_add_activity_session_pin(int32_t delta_time_s, int32_t duration_m) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
 
   AttributeList list = {};
   attribute_list_add_uint32(&list, AttributeIdIconPin, TIMELINE_RESOURCE_RUN);

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/util/math.h>
@@ -13,7 +14,6 @@
 #include <comm/qemu/transport.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   CommSession *session;
@@ -40,7 +40,7 @@ static void prv_send_next(Transport *transport) {
   }
 
   const size_t temp_buffer_size = MIN(bytes_remaining, QEMU_MAX_DATA_LEN);
-  uint8_t *temp_buffer = kernel_malloc_check(temp_buffer_size);
+  uint8_t *temp_buffer = pbl_malloc_check(temp_buffer_size);
   while (bytes_remaining) {
     const size_t bytes_to_copy = MIN(bytes_remaining, temp_buffer_size);
     comm_session_send_queue_copy(session, 0 /* start_offset */, bytes_to_copy, temp_buffer);
@@ -48,7 +48,7 @@ static void prv_send_next(Transport *transport) {
     comm_session_send_queue_consume(session, bytes_to_copy);
     bytes_remaining -= bytes_to_copy;
   }
-  kernel_free(temp_buffer);
+  pbl_free(temp_buffer);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_
                                               uint16_t max_period_secs,
                                               pbl_bt_responsiveness_granted_cb_t granted_handler) {
   // PutBytes calls this every single packet — at INFO it pushes ~76 bytes/packet
-  // into the 1200-byte advanced_logging ring buffer, which fills in ~16 packets
+  // into the 1200-byte flash log backend ring buffer, which fills in ~16 packets
   // and forces inline flash-logging flushes on KernelMain.  That starves
   // SystemTask's PutBytes callback (it's competing for s_flash_write_mutex) and
   // wedges the install with no watchdog reboot.  CLAUDE.md is explicit that
@@ -205,6 +205,9 @@ unlock:
 static bool prv_default_connected(void) {
 #ifdef CONFIG_QEMU
   return qemu_setting_get(QemuSetting_DefaultConnected);
+#elif defined(CONFIG_POSIX_EMSCRIPTEN)
+  // In a browser the page may never be a phone: it connects when it is one.
+  return false;
 #else
   return true;
 #endif

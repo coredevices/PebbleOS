@@ -30,20 +30,18 @@ typedef struct {
 //! Return a single character representing the current log level. Used in serial logging.
 char pbl_log_get_level_char(const uint8_t log_level);
 
-//! Log a message to whatever specific channels are appropriate based on context and configuration.
-//! Internally calls kernel_pbl_log_serial and kernel_pbl_log_flash.
+//! Pass a message to the backends.
 void kernel_pbl_log(LogBinaryMessage *log_message, uint32_t flags);
+
+//! Pass a message logged by the app with the 16-byte @p app_uuid to the backends.
+void kernel_pbl_log_app(LogBinaryMessage *log_message, const uint8_t *app_uuid);
 
 //! Kill the caller of the syscall in progress unless @p log_message, with its
 //! message and filename terminated, is in its memory.
 void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message);
 
-//! Force a log message out the serial channel.
-void kernel_pbl_log_serial(LogBinaryMessage *log_message, uint32_t flags);
-
-//! Force a log message out the serial channel from a fault handler or
-//! other context where OS services are unavailable or can't be trusted,
-//! and where stack space is at a premium.
+//! Pass a message to the backends from a fault handler or other context where OS services are
+//! unavailable or can't be trusted, and where stack space is at a premium.
 void kernel_pbl_log_from_fault_handler(const char *src_filename, uint16_t src_line_number,
                                        const char *message);
 

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/action_menu_layer.h>
@@ -15,6 +15,7 @@
 #include <clar.h>
 #include <fake_rtc.h>
 #include <pebble_asserts.h>
+#include <shell/prefs.h>
 #include <shell/system_theme.h>
 #include <stubs_app_state.h>
 #include <stubs_fonts.h>
@@ -307,7 +308,7 @@ static void prv_init_aml_with_wide_items(void) {
 }
 
 static void prv_advance_past_double_tap_window(void) {
-  fake_rtc_increment_ticks((RtcTicks)400 * RTC_TICKS_HZ / 1000);
+  fake_rtc_increment_ticks((uint64_t)400 * PBL_TICK_HZ / 1000);
 }
 
 // Setup and Teardown
@@ -501,7 +502,7 @@ void test_action_menu_layer__glyph_grid_touch_dispatch_reaches_bottom_row(void) 
   const TouchEvent up = {.type = TouchEvent_Liftoff};
   prv_reset_counters();
   touch_nav_dispatch(&down, &s_touch_nav_state);
-  fake_rtc_increment_ticks(RTC_TICKS_HZ / 20);
+  fake_rtc_increment_ticks(PBL_TICK_HZ / 20);
   touch_nav_dispatch(&up, &s_touch_nav_state);
   cl_assert_equal_i(s_aml.selected_index, index);
   cl_assert_equal_i(s_select_count, 1);
@@ -522,10 +523,10 @@ void test_action_menu_layer__glyph_grid_touch_dispatch_reaches_bottom_row(void) 
     .y = swipe_down.y - 20,
   };
   touch_nav_dispatch(&swipe_down, &s_touch_nav_state);
-  fake_rtc_increment_ticks(RTC_TICKS_HZ / 20);
+  fake_rtc_increment_ticks(PBL_TICK_HZ / 20);
   touch_nav_dispatch(&move, &s_touch_nav_state);
   move.y -= 80;
-  fake_rtc_increment_ticks(RTC_TICKS_HZ / 20);
+  fake_rtc_increment_ticks(PBL_TICK_HZ / 20);
   touch_nav_dispatch(&move, &s_touch_nav_state);
   cl_assert_equal_i(scroll_layer_get_content_offset(&s_aml.menu_layer.scroll_layer).y, -80);
   touch_nav_dispatch(&up, &s_touch_nav_state);

@@ -3,6 +3,7 @@
 
 #include "reboot_reason.h"
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -78,7 +79,7 @@ void reboot_reason_set(RebootReason *reason) {
 #endif
 }
 
-void reboot_reason_set_restarted_safely(void) {
+static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
   RebootReason reason;
   reboot_reason_get(&reason);
   reason.restarted_safely = true;
@@ -94,6 +95,11 @@ void reboot_reason_set_restarted_safely(void) {
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
 #endif
 }
+
+PBL_SYS_OFF_HANDLER_DEFINE(reboot_reason_restart, PBL_SYS_OFF_RESTART_PREPARE, PBL_SYS_OFF_PRIO_LOW,
+                           prv_sys_off_prepare, nullptr);
+PBL_SYS_OFF_HANDLER_DEFINE(reboot_reason_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE,
+                           PBL_SYS_OFF_PRIO_LOW, prv_sys_off_prepare, nullptr);
 
 void reboot_reason_get(RebootReason *reason) {
 #ifdef CONFIG_SOC_NRF52

@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imaging.h>
@@ -12,7 +13,6 @@
 #include <applib/graphics/gtypes.h>
 #include <apps/system/music.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
@@ -50,7 +50,7 @@ struct MusicServiceContext {
   uint32_t track_pos_ms;
 
   //! The time when track_pos_ms was last updated.
-  RtcTicks track_pos_updated_at;
+  uint64_t track_pos_updated_at;
 
   //! The current playback rate in percent units.
   //! Example values:
@@ -67,7 +67,7 @@ struct MusicServiceContext {
   bool skip_seeks_within_track;
 
   //! Album art for the current track, or NULL if none. Owned by the service; freed with
-  //! kernel_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
+  //! pbl_free. Deliberately kept (up to ~34 KB of kernel heap on the largest displays) even
   //! while the Music app is closed, so reopening it shows the cover instantly; a track change,
   //! NoArt reply or server disconnect replaces or frees it.
   GBitmap *album_art;
@@ -146,9 +146,9 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
   if (s_music_ctx.album_art) {
-    kernel_free(s_music_ctx.album_art->addr);
-    kernel_free(s_music_ctx.album_art->palette);
-    kernel_free(s_music_ctx.album_art);
+    pbl_free(s_music_ctx.album_art->addr);
+    pbl_free(s_music_ctx.album_art->palette);
+    pbl_free(s_music_ctx.album_art);
     s_music_ctx.album_art = nullptr;
   }
 }
@@ -320,7 +320,7 @@ void music_update_track_position(uint32_t track_pos_ms) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
   s_music_ctx.track_pos_ms = track_pos_ms;
-  s_music_ctx.track_pos_updated_at = rtc_get_ticks();
+  s_music_ctx.track_pos_updated_at = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
@@ -379,7 +379,7 @@ bool music_has_now_playing(void) {
 
 uint32_t music_get_ms_since_pos_last_updated(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
-  const RtcTicks time_elapsed_ticks = rtc_get_ticks() - s_music_ctx.track_pos_updated_at;
+  const uint64_t time_elapsed_ticks = pbl_uptime_ticks() - s_music_ctx.track_pos_updated_at;
   const uint32_t time_elapsed_ms = pbl_ticks_to_ms(time_elapsed_ticks);
   pbl_mutex_unlock(&s_music_ctx.mutex);
   return time_elapsed_ms;
@@ -430,7 +430,7 @@ void music_update_player_playback_state(const MusicPlayerStateUpdate *state) {
   s_music_ctx.playback_state = state->playback_state;
   s_music_ctx.playback_rate_percent = state->playback_rate_percent;
   s_music_ctx.track_pos_ms = state->elapsed_time_ms;
-  s_music_ctx.track_pos_updated_at = rtc_get_ticks();
+  s_music_ctx.track_pos_updated_at = pbl_uptime_ticks();
   s_music_ctx.skip_seeks_within_track = state->skip_seeks_within_track;
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
@@ -578,9 +578,9 @@ void music_set_album_art(GBitmap *bitmap, uint8_t token) {
     PBL_LOG_DBG("Drop stale album art token=%u current=%u", token,
                 s_music_ctx.now_playing_generation);
     if (bitmap) {
-      kernel_free(bitmap->addr);
-      kernel_free(bitmap->palette);
-      kernel_free(bitmap);
+      pbl_free(bitmap->addr);
+      pbl_free(bitmap->palette);
+      pbl_free(bitmap);
     }
     pbl_mutex_unlock(&s_music_ctx.mutex);
     return;

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/drivers/timer.h>
 #include <pbl/kernel/idle.h>
 
 #include <kernel.h>
@@ -29,6 +30,55 @@ void posix_add_zombie(pthread_t tid) {
 static pthread_cond_t s_stop_cond = PTHREAD_COND_INITIALIZER;
 static bool s_stopped;
 
+// A counter at the tick rate, advanced by the harness; events are raised by pbl_test_tick().
+static uint32_t s_fake_counter;
+
+static uint32_t prv_fake_read(const struct pbl_clocksource *cs) {
+  return s_fake_counter;
+}
+
+static void prv_fake_set_next(const struct pbl_clockevent *ce, uint32_t delta) {
+}
+
+static void prv_fake_shutdown(const struct pbl_clockevent *ce) {
+}
+
+static int prv_fake_cs_init(const struct pbl_device *dev);
+static int prv_fake_ce_init(const struct pbl_device *dev);
+
+static const struct pbl_clocksource_ops s_fake_cs_ops = {.read = prv_fake_read};
+static const struct pbl_clockevent_ops s_fake_ce_ops = {
+  .set_next = prv_fake_set_next,
+  .shutdown = prv_fake_shutdown,
+};
+
+PBL_DEVICE_STATE_DEFINE(s_fake_cs);
+static const struct pbl_clocksource s_fake_cs =
+    PBL_CLOCKSOURCE_INIT(s_fake_cs, "fake", prv_fake_cs_init, &s_fake_cs_ops, 32);
+PBL_DEVICE_STATE_DEFINE(s_fake_ce);
+static const struct pbl_clockevent s_fake_ce =
+    PBL_CLOCKEVENT_INIT(s_fake_ce, "fake", prv_fake_ce_init, &s_fake_ce_ops, 1, UINT32_MAX);
+
+const struct pbl_clocksource *const pbl_system_clocksource = &s_fake_cs;
+const struct pbl_clockevent *const pbl_system_clockevent = &s_fake_ce;
+
+static int prv_fake_cs_init(const struct pbl_device *dev) {
+  pbl_clocksource_set_hz(&s_fake_cs, PBL_TICK_HZ);
+  return 0;
+}
+
+static int prv_fake_ce_init(const struct pbl_device *dev) {
+  pbl_clockevent_set_hz(&s_fake_ce, PBL_TICK_HZ);
+  return 0;
+}
+
+const struct pbl_idle_state pbl_soc_idle_states[] = {};
+const size_t pbl_soc_num_idle_states = 0;
+
+int pbl_soc_idle_state_limit(void) {
+  return -1;
+}
+
 // Idle means nothing can run until the next timeout: jump the clock there.
 void arch_idle(pbl_tick_t max_ticks) {
   if (s_stopped) {
@@ -43,9 +93,12 @@ void arch_idle(pbl_tick_t max_ticks) {
     fprintf(stderr, "kernel test: every thread is blocked forever\n");
     abort();
   }
-  pbl_irq_lock();
-  sched_idle_slept(max_ticks);
-  pbl_irq_unlock();
+  // The last tick is an interrupt, so that timers expire in ISR context.
+  if (max_ticks > 1) {
+    s_fake_counter += max_ticks - 1;
+    timekeeping_announce();
+  }
+  pbl_test_tick(1);
 }
 
 static void prv_run_until_stopped(void) {
@@ -76,6 +129,7 @@ void pbl_test_kernel_run(void) {
   posix_switch_pending = false;
   posix_in_isr = false;
   sched_start_prepare();
+  timekeeping_start();
   irq_reset();
   prv_run_until_stopped();
   for (size_t i = 0; i < s_num_zombies; i++) {
@@ -108,8 +162,9 @@ void pbl_test_isr_exit(void) {
 
 void pbl_test_tick(uint32_t ticks) {
   for (uint32_t i = 0; i < ticks; i++) {
+    s_fake_counter++;
     pbl_test_isr_enter();
-    pbl_kernel_tick_isr();
+    pbl_clockevent_handler(&s_fake_ce);
     pbl_test_isr_exit();
   }
 }

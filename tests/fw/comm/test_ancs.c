@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/phone_call_util.h>
@@ -33,6 +34,7 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 #include <fake_new_timer.h>
 #include <fake_notification_storage.h>
 #include <fake_pbl_malloc.h>
+#include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
 bool shell_prefs_get_language_english(void) {
@@ -286,6 +288,7 @@ void test_ancs__initialize(void) {
   fake_notification_storage_reset();
   fake_event_init();
   fake_gatt_client_subscriptions_set_subscribe_return_value(PBL_BT_ERRNO_OK);
+  fake_rtc_init(0, 0);
 
   ancs_create();
   ancs_handle_service_discovered(s_characteristics);
@@ -591,6 +594,23 @@ void test_ancs__notification_parsing(void) {
   prv_cmp_last_received_notification(&s_unknown_app_unique_title_parsed_item);
 }
 
+// EventFlagSilent must be propagated as ANCSProperty_Silent and end up as
+// header.silent on the stored notification
+void test_ancs__silent_event_flag(void) {
+  // Without the Silent flag the stored notification must not be marked silent
+  prv_send_notification((uint8_t *)&s_complete_dict);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+  TimelineItem *notification = fake_notification_storage_get_last_notification();
+  cl_assert_equal_i(notification->header.silent, 0);
+
+  // With the Silent flag the stored notification must be marked silent
+  prv_send_notification_with_event_flags((uint8_t *)&s_complete_dict, EventFlagSilent);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
+  notification = fake_notification_storage_get_last_notification();
+  cl_assert_equal_i(notification->header.silent, 1);
+  cl_assert_equal_i(notification->header.ancs_notif, 1);
+}
+
 // Make sure we send an ANCS_DISCONNECTED event whenever our session goes away
 void test_ancs__disconnection(void) {
   // Simulate a disconnection/reconnection
@@ -730,6 +750,66 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
   prv_is_ancs_alive_launcher_task_cb(nullptr);
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
   cl_assert_equal_i(prv_get_queue_depth(), 0);
+}
+
+// s_complete_dict is dated 2013-11-05T18:19:28
+#define COMPLETE_DICT_TIME 1383675568
+
+static void prv_subscribe_data_source(void) {
+  ancs_handle_subscribe(s_characteristics[ANCSCharacteristicData], BLESubscriptionNotifications,
+                        PBL_BT_GATT_ERROR_SUCCESS);
+}
+
+// Establish a session, lose it at lost_time and reconnect at now.
+static void prv_reconnect(time_t lost_time, time_t now) {
+  prv_subscribe_data_source();
+  pbl_realtime_set(lost_time);
+  ancs_invalidate_all_references();
+  pbl_realtime_set(now);
+  ancs_handle_service_discovered(s_characteristics);
+  prv_subscribe_data_source();
+}
+
+static void prv_send_pre_existing_complete_dict(void) {
+  prv_send_notification_with_event_flags((uint8_t *)&s_complete_dict, EventFlagPreExisting);
+}
+
+// Posted while disconnected and still fresh: alert as if it just arrived.
+void test_ancs__recovered_recent_notification_alerts(void) {
+  prv_reconnect(COMPLETE_DICT_TIME - 120, COMPLETE_DICT_TIME + 60);
+  prv_send_pre_existing_complete_dict();
+
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
+}
+
+// Posted while disconnected but a while ago: keep it, but don't alert.
+void test_ancs__recovered_old_notification_stored_silently(void) {
+  prv_reconnect(COMPLETE_DICT_TIME - 120, COMPLETE_DICT_TIME + 30 * 60);
+  prv_send_pre_existing_complete_dict();
+
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+}
+
+// Posted before the session was lost: already seen, ignore it.
+void test_ancs__pre_existing_from_before_disconnection_ignored(void) {
+  prv_reconnect(COMPLETE_DICT_TIME + 10 * 60, COMPLETE_DICT_TIME + 20 * 60);
+  prv_send_pre_existing_complete_dict();
+
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 0);
+  cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
+}
+
+// The window is 10 s from the subscribe; after it, pre-existing ones are new.
+void test_ancs__pre_existing_window_ends_after_10_s(void) {
+  prv_reconnect(COMPLETE_DICT_TIME + 10 * 60, COMPLETE_DICT_TIME + 20 * 60);
+  prv_send_pre_existing_complete_dict();
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 0);
+
+  fake_rtc_increment_ticks(10 * PBL_TICK_HZ);
+  prv_send_pre_existing_complete_dict();
+  cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
 }
 
 // No Longer Supported

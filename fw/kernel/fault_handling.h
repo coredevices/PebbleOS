@@ -7,9 +7,5 @@
 
 #include <system/reboot_reason.h>
 
-typedef struct Heap Heap;
-
-[[noreturn]] void trigger_oom_fault(size_t bytes, uint32_t lr, Heap *heap_ptr);
 [[noreturn]] void trigger_fault(RebootReasonCode reason_code, uint32_t lr);
-void enable_fault_handlers(void);
 bool fault_handling_hit_stack_guard(const unsigned int *stacked_args, unsigned int exc_return);

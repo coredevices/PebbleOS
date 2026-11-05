@@ -1,25 +1,26 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/weather/weather_service.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/units.h>
 
-#include <kernel/pbl_malloc.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-#define SETTINGS_FILE_NAME "weatherdb"
+#define SETTINGS_FILE_NAME "/weatherdb"
 
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
 static struct {
-  SettingsFile settings_file;
+  struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
 } s_weather_db;
 
@@ -34,8 +35,8 @@ typedef struct WeatherDBIteratorData {
 
 static status_t prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  status_t rv = settings_file_open_growable(&s_weather_db.settings_file, SETTINGS_FILE_NAME,
-                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(
+      &s_weather_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_weather_db.mutex);
   }
@@ -43,7 +44,7 @@ static status_t prv_lock_mutex_and_open_file(void) {
 }
 
 static void prv_close_file_and_unlock_mutex(void) {
-  settings_file_close(&s_weather_db.settings_file);
+  pbl_settings_close(&s_weather_db.settings_file);
   pbl_mutex_unlock(&s_weather_db.mutex);
 }
 
@@ -77,17 +78,17 @@ static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_
   return true;
 }
 
-static bool prv_weather_db_for_each_cb(SettingsFile *file, SettingsRecordInfo *info,
-                                       void *context) {
+static bool prv_weather_db_for_each_cb(struct pbl_settings_file *file,
+                                       struct pbl_settings_record *info, void *context) {
   if ((info->val_len < (int)MIN_ENTRY_SIZE) || (info->key_len != sizeof(WeatherDBKey))) {
     return true;
   }
 
   WeatherDBKey key;
-  info->get_key(file, &key, info->key_len);
+  pbl_settings_read_key(file, &key, info->key_len);
 
-  WeatherDBEntry *entry = task_zalloc_check(info->val_len);
-  info->get_val(file, entry, info->val_len);
+  WeatherDBEntry *entry = pbl_zalloc_check(info->val_len);
+  pbl_settings_read_val(file, entry, info->val_len);
   if (!weather_db_entry_is_supported(entry)) {
     PBL_LOG_WRN("Unsupported weather entry version: %" PRIu8, entry->version);
     goto cleanup;
@@ -97,7 +98,7 @@ static bool prv_weather_db_for_each_cb(SettingsFile *file, SettingsRecordInfo *i
   cb_data->cb(&key, entry, cb_data->cb_ctx);
 
 cleanup:
-  task_free(entry);
+  pbl_free(entry);
   return true;
 }
 
@@ -109,7 +110,7 @@ status_t weather_db_for_each(WeatherDBIteratorCallback callback, void *context) 
 
   WeatherDBIteratorData data = (WeatherDBIteratorData){.cb = callback, .cb_ctx = context};
 
-  settings_file_each(&s_weather_db.settings_file, prv_weather_db_for_each_cb, &data);
+  pbl_settings_each(&s_weather_db.settings_file, prv_weather_db_for_each_cb, &data);
 
   prv_close_file_and_unlock_mutex();
   return S_SUCCESS;
@@ -132,7 +133,7 @@ status_t weather_db_flush(void) {
     return E_RANGE;
   }
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  pfs_remove(SETTINGS_FILE_NAME);
+  pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_weather_db.mutex);
 
   return S_SUCCESS;
@@ -143,7 +144,7 @@ status_t weather_db_compact(void) {
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&s_weather_db.settings_file);
+  rv = status_from_errno(pbl_settings_compact(&s_weather_db.settings_file));
   prv_close_file_and_unlock_mutex();
   return rv;
 }
@@ -179,7 +180,7 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
     return rv;
   }
 
-  rv = settings_file_set(&s_weather_db.settings_file, key, key_len, val, val_len);
+  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -193,7 +194,7 @@ int weather_db_get_len(const uint8_t *key, int key_len) {
 
   PBL_ASSERTN(key_len == sizeof(WeatherDBKey));
 
-  int entry_len = settings_file_get_len(&s_weather_db.settings_file, key, key_len);
+  int entry_len = pbl_settings_get_len(&s_weather_db.settings_file, key, key_len);
 
   prv_close_file_and_unlock_mutex();
   return entry_len;
@@ -207,11 +208,12 @@ status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int 
 
   PBL_ASSERTN(key_len == sizeof(WeatherDBKey));
 
-  rv = settings_file_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len);
+  rv = status_from_errno(
+      pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len));
   if ((rv == S_SUCCESS) && !weather_db_entry_is_supported((WeatherDBEntry *)val_out)) {
     // We might as well clear out the unparseable entry
     PBL_LOG_WRN("Read an unsupported weather DB entry");
-    settings_file_delete(&s_weather_db.settings_file, key, key_len);
+    pbl_settings_delete(&s_weather_db.settings_file, key, key_len);
     rv = E_DOES_NOT_EXIST;
   }
 
@@ -232,12 +234,12 @@ status_t weather_db_delete(const uint8_t *key, int key_len) {
     return rv;
   }
 
-  if (!settings_file_exists(&s_weather_db.settings_file, key, key_len)) {
+  if (!pbl_settings_exists(&s_weather_db.settings_file, key, key_len)) {
     prv_close_file_and_unlock_mutex();
     return E_DOES_NOT_EXIST;
   }
 
-  rv = settings_file_delete(&s_weather_db.settings_file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&s_weather_db.settings_file, key, key_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -247,13 +249,14 @@ status_t weather_db_delete(const uint8_t *key, int key_len) {
 // Testing code only
 
 #if UNITTEST
-// SettingsFile Helpers
+// struct pbl_settings_file Helpers
 typedef struct {
   uint16_t key_count;
   WeatherDBKey *keys;
 } SettingsFileEachKeyHelper;
 
-static bool prv_each_inspect_keys(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_each_inspect_keys(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                  void *context) {
   if ((info->val_len == 0) || (info->key_len != sizeof(WeatherDBKey))) {
     // Invalid key, continue iterating
     return true;
@@ -262,7 +265,8 @@ static bool prv_each_inspect_keys(SettingsFile *file, SettingsRecordInfo *info, 
   SettingsFileEachKeyHelper *key_helper = context;
 
   if (key_helper->keys != nullptr) {
-    info->get_key(file, (uint8_t *)&key_helper->keys[key_helper->key_count], sizeof(WeatherDBKey));
+    pbl_settings_read_key(file, (uint8_t *)&key_helper->keys[key_helper->key_count],
+                          sizeof(WeatherDBKey));
   }
 
   key_helper->key_count++;
@@ -281,7 +285,7 @@ status_t weather_db_get_num_keys(uint16_t *val_out) {
     .key_count = 0,
     .keys = nullptr,
   };
-  settings_file_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
+  pbl_settings_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
   *val_out = key_helper.key_count;
 
   prv_close_file_and_unlock_mutex();
@@ -298,7 +302,7 @@ status_t weather_db_get_keys(WeatherDBKey *keys) {
     .key_count = 0,
     .keys = keys,
   };
-  settings_file_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
+  pbl_settings_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
 
   prv_close_file_and_unlock_mutex();
   return S_SUCCESS;
@@ -312,7 +316,7 @@ status_t weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t 
     return rv;
   }
 
-  rv = settings_file_set(&s_weather_db.settings_file, key, key_len, val, val_len);
+  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
 
   prv_close_file_and_unlock_mutex();
   return rv;

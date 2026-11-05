@@ -1,13 +1,11 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import contextlib
 import errno
 import os
 import re
 import socket
 import subprocess
-import sys
 
 from .core import Runner, RunnerCaps, RunnerError, UnsupportedOperation
 
@@ -29,14 +27,20 @@ def _is_openocd_running():
 
 class OpenOcdRunner(Runner):
     name = "openocd"
+    lab_ports = ("probe",)
 
     @classmethod
     def capabilities(cls):
         return RunnerCaps(
-            commands={"flash", "run", "reset", "erase", "debug", "debugserver"},
+            commands={"flash", "erase", "debug", "debugserver"},
             flash_resources=True,
-            erase_ranges=True,
         )
+
+    def locks(self, command):
+        # 'pbl debug' attaches to a running 'pbl debugserver', which holds them
+        if command == "debug" and _is_openocd_running():
+            return []
+        return super().locks(command)
 
     @property
     def _cfg_file(self):
@@ -86,52 +90,16 @@ class OpenOcdRunner(Runner):
                 expect=["Programming Started", "Programming Finished", "shutdown"],
                 enforce_expect=True,
             )
-        elif command == "run":
-            self._run_command("init; reset run;", expect=["found"])
-        elif command == "reset":
-            self._run_command("init; reset;", expect=["found"])
-        elif command == "erase" and self.cfg.erase_ranges:
-            self._erase_ranges()
         elif command == "erase":
-            self._run_command("init; reset halt;", ignore_fail=True)
-            self._run_command("init; flash erase_sector 0 0 1;", ignore_fail=True)
-        elif command == "debugserver":
-            self._run_command("init; reset", shutdown=False)
+            self._erase_ranges()
         elif command == "debug":
-            self._debug()
+            port = self.gdb_port(OPENOCD_GDB_PORT)
+            return self.run_server_and_gdb(self._server(port), port)
+        elif command == "debugserver":
+            return self.run_program(self._server(self.gdb_port(OPENOCD_GDB_PORT)))
 
-    def _debug(self):
-        from tools.gdb_driver import find_gdb_path
-
-        gdb = self.cfg.gdb or find_gdb_path()
-        if gdb is None:
-            raise RunnerError("pebble-gdb not found!")
-
-        with self._daemon():
-            cmd = f'{gdb} {self.cfg.elf_file} --init-command=".gdbinit" --ex="target remote :{OPENOCD_GDB_PORT}"'
-            if self.cfg.dry_run:
-                print("[dry-run] " + cmd)
-            else:
-                os.system(cmd)
-
-    @contextlib.contextmanager
-    def _daemon(self):
-        if _is_openocd_running():
-            yield
-            return
-
-        import pexpect
-
-        proc = pexpect.spawn(
-            "openocd", ["-f", self._cfg_file], encoding="utf-8", logfile=sys.stdout
-        )
-        result = proc.expect(["Listening on port", pexpect.TIMEOUT], timeout=10)
-        if result != 0:
-            raise RunnerError("Timed out connecting OpenOCD to development board...")
-        try:
-            yield
-        finally:
-            proc.close()
+    def _server(self, port):
+        return ["openocd", "-f", self._cfg_file, "-c", f"gdb_port {port}"]
 
     def _run_command(
         self, cmd, ignore_fail=False, expect=(), shutdown=True, enforce_expect=False

@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SPI
+    bool "SPI"
+    help
+      SPI Drivers
+
+if SPI
+
+config SPI_NRF5
+    bool "Nordic nRF5 SPI Controller"
+    default y if SOC_NRF52
+    help
+      Support for the Nordic nRF5 SPIM controller.
+
+config SPI_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The spi shell command, to list the buses and run transfers.
+
+module = DRIVER_SPI
+module-str = SPI
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SPI

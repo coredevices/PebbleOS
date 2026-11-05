@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "System timer"
+
+config TIMER_ARM_SYSTICK
+    bool "Arm SysTick"
+    default y if SOC_QEMU
+    depends on CPU_CORTEX_M
+    help
+      Clock event device on the Arm SysTick timer, counting CPU cycles. It
+      stops in deep sleep.
+
+config TIMER_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU
+    help
+      Clock source on the 1 kHz counter of the QEMU RTC.
+
+config TIMER_NRF5_RTC
+    bool "Nordic nRF5 RTC"
+    default y if SOC_NRF52
+    help
+      Clock source and clock event device on RTC1, counting the 32.768 kHz
+      low-frequency clock. It keeps running in every sleep mode.
+
+config TIMER_SF32LB_LPTIM
+    bool "SiFli SF32LB LPTIM"
+    default y if SOC_SF32LB52
+    help
+      Clock source and clock event device on LPTIM1, counting the calibrated
+      RC10K low-power clock. It keeps running and wakes the CPU up in deep
+      sleep.
+
+config TIMER_POSIX
+    bool "POSIX"
+    default y if SOC_POSIX
+    help
+      Clock source and clock event device on the host monotonic clock.
+
+endmenu

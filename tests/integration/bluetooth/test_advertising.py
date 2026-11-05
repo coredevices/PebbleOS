@@ -69,6 +69,8 @@ def local_address(dut):
 
 def scan(dut, duration=SCAN_S, link=None):
     """The watch's advertising heard within ``duration``, or None."""
+    if link is None and not dut.ble_controller:
+        pytest.skip("no controller to scan from")
     scanner = Scanner(link=link) if link else Scanner(dut.ble_controller)
     return scanner.scan(duration).get(local_address(dut))
 

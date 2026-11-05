@@ -10,6 +10,7 @@
 #include "summary.h"
 #include "utils.h"
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_util.h>
@@ -17,10 +18,10 @@
 #include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/health_tracking_ui.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
@@ -130,7 +131,7 @@ static void prv_show_workout_detected_dialog(WorkoutAppData *data) {
   workout_dialog_set_text(workout_dialog, dialog_text);
 
   char text_buffer[32];
-  const uint32_t length_s = rtc_get_time() - data->ongoing_session.start_utc;
+  const uint32_t length_s = pbl_realtime() - data->ongoing_session.start_utc;
   health_util_format_hours_minutes_seconds(text_buffer, sizeof(text_buffer), length_s, true,
                                            workout_dialog);
 

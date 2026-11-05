@@ -3,11 +3,10 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/util/math.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 
@@ -92,9 +91,9 @@ static int32_t sphere_determinant4x4(int32_t **m, int32_t down_samp) {
 static bool sphere_fit(int16_t *solution) {
   bool rv = false;
 
-  int32_t **matrix = kernel_malloc(sizeof(int32_t *) * N_SAMPS);
+  int32_t **matrix = pbl_malloc(sizeof(int32_t *) * N_SAMPS);
   for (int i = 0; i < N_SAMPS; i++) {
-    matrix[i] = kernel_malloc(sizeof(int32_t) * N_AXIS);
+    matrix[i] = pbl_malloc(sizeof(int32_t) * N_AXIS);
   }
 
   // determine average value of x, y, & z coordinates
@@ -154,9 +153,9 @@ static bool sphere_fit(int16_t *solution) {
   rv = true;
 cleanup:
   for (int i = 0; i < N_SAMPS; i++) {
-    kernel_free(matrix[i]);
+    pbl_free(matrix[i]);
   }
-  kernel_free(matrix);
+  pbl_free(matrix);
   return (rv);
 }
 

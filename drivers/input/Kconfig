@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Input"
+
+config INPUT_GPIO_KEYS
+    bool "GPIO keys"
+    depends on GPIO
+    select INPUT
+    help
+      Keys on GPIOs with interrupts, debounced in software.
+
+config INPUT_SDL
+    bool "SDL keyboard"
+    default y if SOC_POSIX
+    select SDL
+    select INPUT
+    help
+      Watch buttons driven by the keyboard, through SDL, in a native build.
+
+endmenu

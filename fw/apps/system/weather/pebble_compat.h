@@ -38,7 +38,7 @@
 #include <applib/persist.h>
 
 // --- Process / app state / heap ---
-#include <kernel/pbl_malloc.h>
+#include <applib/app_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 // --- Resources (real generated ids; replaces the stored-app pinned header) ---
@@ -58,6 +58,8 @@
 #include <pbl/services/clock.h>
 #include <pbl/util/trig.h> // sin_lookup / cos_lookup / TRIG_MAX_ANGLE / TRIG_MAX_RATIO
 
+#include <shell/system_theme.h>
+
 // --- Window-stack call-site shims: the SDK names map 1:1 to the app-window
 //     variants firmware apps must use. ---
 #define window_stack_push(window, animated)   app_window_stack_push((window), (animated))
@@ -75,7 +77,7 @@
 // after all firmware headers are included (their declarations are processed
 // before these function-like macros become active).
 // ===========================================================================
-#include <pbl/drivers/rtc.h> // rtc_get_time
+#include <pbl/kernel/time.h> // pbl_realtime
 
 #define layer_get_bounds(layer)     layer_get_bounds_by_value(layer)
 #define layer_get_frame(layer)      layer_get_frame_by_value(layer)
@@ -114,6 +116,6 @@
 #define free(p)        app_free(p)
 
 // Current wall-clock epoch (ported code calls time(NULL)).
-#define time(p) ((void)(p), rtc_get_time())
+#define time(p) ((void)(p), pbl_realtime())
 // localtime isn't linked for apps; the applib provides the override.
 #define localtime(t) pbl_override_localtime(t)

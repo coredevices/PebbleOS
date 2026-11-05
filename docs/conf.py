@@ -7,6 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "_ext"))
@@ -17,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "_ext"))
 project = "PebbleOS"
 copyright = "2026, The PebbleOS Contributors"
 author = "The PebbleOS Contributors"
-release = "0.1.0"
+release = subprocess.check_output(["git", "describe"], text=True).strip()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -60,10 +61,7 @@ html_theme_options = {
         {"title": "Getting started", "url": "getting_started/index"},
         {"title": "Architecture", "url": "architecture/index"},
         {"title": "Boards", "url": "boards/index"},
-        {
-            "title": "API reference",
-            "url": "https://pebbleos.readthedocs.io/en/latest/apidoc/index.html",
-        },
+        {"title": "API reference", "url": "apidoc/index.html", "resource": True},
     ],
 }
 html_context = {
@@ -87,32 +85,8 @@ pbl_playground_boards = {
     "native_flint/wasm": "Pebble 2 Duo",
 }
 
-# Pages that moved, served as redirects from their old URL
-pbl_redirects = {
-    "development/quickstart": "getting_started/index",
-    "development/getting_started": "getting_started/index",
-    "development/options": "pbl/configure",
-    "development/building_fw": "pbl/flash",
-    "development/pbl": "pbl/index",
-    "development/build_system": "development/build_system/index",
-    "development/qemu": "development/emulation/emulator",
-    "development/native": "development/emulation/native_simulator",
-    "development/testing": "development/tests/unit",
-    "development/integration_tests": "development/tests/integration",
-    "development/sdk_export": "sdk/exporting",
-    "reference/recognizers": "sdk/recognizers",
-    "development/sbom": "third_party/sbom",
-    "development/moddable": "third_party/moddable",
-    "development/contributing": "community/contributing",
-    "architecture/kernel": "kernel/index",
-    "architecture/kernel_internals": "kernel/internals",
-    "architecture/crc": "subsystems/crc",
-    "architecture/input": "subsystems/input",
-    "architecture/shell": "subsystems/shell",
-    "architecture/task_watchdog": "subsystems/task_watchdog",
-    "architecture/device": "drivers/device_model",
-    "architecture/activity/index": "services/activity/index",
-}
+# Toctree entries only take URLs: placeholders for paths of the build
+pbl_docs_toctree_links = {"apidoc://": "apidoc/index.html"}
 
 # -- Options for the matplotlib plot directive ---------------------------------
 

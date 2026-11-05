@@ -7,13 +7,13 @@
   ``@defgroup`` comments in ``include/``.
 - ``pbl-command`` renders the usage and options of a ``pbl`` command
   from its own argument parser.
-- ``pbl_redirects`` keeps moved pages reachable at their old URL.
+- ``pbl_docs_toctree_links`` maps placeholders of toctree entries, which
+  only take URLs (``scheme://``), to paths of the same build, such as the
+  Doxygen reference.
 """
 
 import argparse
 import hashlib
-import os
-import posixpath
 import re
 import sys
 from pathlib import Path
@@ -82,17 +82,21 @@ def pbl_subparsers():
 
 
 class PblCommandDirective(SphinxDirective):
-    """Usage line and options of a ``pbl`` command, without the shared
-    options every command takes."""
+    """Usage line and options of a ``pbl`` command, or of one of its
+    subcommands (``emulator touch``), without the shared options every
+    command takes."""
 
     required_arguments = 1
+    final_argument_whitespace = True
 
     def run(self):
         name = self.arguments[0]
         commands = self.env.app.pbl_commands
-        if name not in commands:
-            raise self.error(f"unknown pbl command {name!r}")
-        parser = commands[name]
+        for word in name.split():
+            if word not in commands:
+                raise self.error(f"unknown pbl command {name!r}")
+            parser = commands[word]
+            commands = self._subcommands(parser)
         formatter = parser._get_formatter()
 
         usage = formatter._format_usage(
@@ -121,6 +125,13 @@ class PblCommandDirective(SphinxDirective):
         return result
 
     @staticmethod
+    def _subcommands(parser):
+        for action in parser._actions:
+            if isinstance(action, argparse._SubParsersAction):
+                return action.choices
+        return {}
+
+    @staticmethod
     def _invocation(formatter, action):
         if not action.option_strings:
             return formatter._metavar_formatter(action, action.dest)(1)[0]
@@ -137,46 +148,31 @@ class PblCommandDirective(SphinxDirective):
         return item
 
 
-REDIRECT_TEMPLATE = """<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Redirecting</title>
-<link rel="canonical" href="{uri}">
-<meta http-equiv="refresh" content="0; url={uri}">
-</head>
-<body><a href="{uri}">This page has moved.</a></body>
-</html>
-"""
-
-
-def write_redirects(app, exception):
-    if exception or app.builder.format != "html":
-        return
-    for old, new in app.config.pbl_redirects.items():
-        if old in app.env.found_docs:
-            raise ValueError(f"redirect source {old!r} is still a page")
-        if new not in app.env.found_docs:
-            raise ValueError(f"redirect target {new!r} is not a page")
-        uri = (
-            posixpath.relpath(new, posixpath.dirname(old) or ".")
-            + app.builder.out_suffix
-        )
-        path = os.path.join(app.outdir, old + app.builder.out_suffix)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            f.write(REDIRECT_TEMPLATE.format(uri=uri))
-
-
 def builder_inited(app):
     app.pbl_groups = scan_groups()
     app.pbl_commands = pbl_subparsers()
 
 
+def html_page_context(app, pagename, templatename, context, doctree):
+    toctree = context.get("toctree")
+    links = app.config.pbl_docs_toctree_links
+    if toctree is None or not links:
+        return
+    pathto = context["pathto"]
+
+    def toctree_links(**kwargs):
+        html = toctree(**kwargs)
+        for placeholder, path in links.items():
+            html = html.replace(placeholder, pathto(path, 1))
+        return html
+
+    context["toctree"] = toctree_links
+
+
 def setup(app):
-    app.add_config_value("pbl_redirects", {}, "html")
     app.add_role("apidoc", ApidocRole())
     app.add_directive("pbl-command", PblCommandDirective)
+    app.add_config_value("pbl_docs_toctree_links", {}, "html", types=[dict])
     app.connect("builder-inited", builder_inited)
-    app.connect("build-finished", write_redirects)
+    app.connect("html-page-context", html_page_context)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

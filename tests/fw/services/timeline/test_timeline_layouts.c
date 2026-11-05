@@ -14,11 +14,13 @@
 #include <applib/ui/window_private.h>
 #include <apps/system/timeline/pin_window.h>
 #include <clar.h>
+#include <shell/system_theme.h>
 
 // Fakes
 /////////////////////
 
 #include <fake_content_indicator.h>
+#include <fake_pfs.h>
 #include <fixtures/load_test_resources.h>
 #include <fixtures/screen_grid.h>
 
@@ -101,8 +103,8 @@ void test_timeline_layouts__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
 
@@ -138,7 +140,7 @@ static void prv_render_layout(LayoutId layout_id, time_t timestamp, uint16_t dur
   };
 
   TimelinePinWindow pin_window = (TimelinePinWindow){};
-  timeline_pin_window_init(&pin_window, &item, rtc_get_time());
+  timeline_pin_window_init(&pin_window, &item, pbl_realtime());
   Window *window = &pin_window.window;
 
   window_set_on_screen(window, true, true);

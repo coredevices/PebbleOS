@@ -28,6 +28,7 @@
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
@@ -70,9 +71,9 @@ void test_timeline_peek__initialize(void) {
   TimezoneInfo tz_info = {
     .tm_zone = "UTC",
   };
-  time_util_update_timezone(&tz_info);
-  rtc_set_timezone(&tz_info);
-  rtc_set_time(PBL_SEC_PER_DAY);
+  time_util_update_timezone(&tz_info, 0, 0);
+  tz_storage_save(&tz_info);
+  pbl_realtime_set(PBL_SEC_PER_DAY);
 
   // We start time out at 5pm on Jan 1, 2015 for all of these tests
   struct pbl_tm time_tm = {
@@ -93,8 +94,8 @@ void test_timeline_peek__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0 /* offset */, 0x1000000 /* length */);
-  pfs_init(false /* run filesystem check */);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
   resource_init();
@@ -144,7 +145,7 @@ typedef struct TimelinePeekItemConfig {
 
 static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config, bool animated) {
   TimelineItem *item = nullptr;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t timestamp = config ? (config->timestamp ?: now) : now;
   if (config) {
     AttributeList list;
@@ -269,7 +270,7 @@ void test_timeline_peek__peek_title_only_concurrent_2(void) {
 
 void test_timeline_peek__peek_in_5_minutes(void) {
   prv_render_timeline_peek(&(TimelinePeekItemConfig){
-    .timestamp = rtc_get_time() + (5 * PBL_SEC_PER_MIN),
+    .timestamp = pbl_realtime() + (5 * PBL_SEC_PER_MIN),
     .title = "Stock for party 🍺",
     .subtitle = "Pebble Pad on Park",
     .icon = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,

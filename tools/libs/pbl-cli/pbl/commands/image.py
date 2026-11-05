@@ -5,6 +5,7 @@ import os
 import shlex
 import sys
 
+from pbl import lock
 from pbl.command import PblCommand
 
 
@@ -16,7 +17,7 @@ class _ImageCommand(PblCommand):
 
     def do_add_parser(self, parser_adder):
         parser = self.add_subparser(parser_adder)
-        parser.add_argument("--tty", help="tty for serial imaging")
+        parser.add_argument("--tty", help="tty for serial imaging (default: the lab's)")
         parser.add_argument(
             "--force-pulse",
             action="store_true",
@@ -33,16 +34,22 @@ class _ImageCommand(PblCommand):
         return "pulse_flash_imaging"
 
     def _image(self, build, args, path):
-        if not args.tty:
-            self.die("no device to image: pass --tty")
+        tty = args.tty
+        if not tty:
+            watch = self.lab_watch(build)
+            if watch is None or not watch.serial:
+                self.die("no device to image: pass --tty, or add the watch to a lab")
+            tty = watch.serial
+            self.inf(f"lab: watch {watch.name} ({watch.board})")
 
         tool = self.script("tools", self._tool(build, args) + ".py")
-        self.inf(f'writing "{path}" to {args.tty}')
-        self.check_shell(
-            f"{shlex.quote(sys.executable)} {tool} -t {shlex.quote(args.tty)} "
-            f"-p {self.partition} {shlex.quote(path)}",
-            "imaging failed",
-        )
+        self.inf(f'writing "{path}" to {tty}')
+        with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
+            self.check_shell(
+                f"{shlex.quote(sys.executable)} {tool} -t {shlex.quote(tty)} "
+                f"-p {self.partition} {shlex.quote(path)}",
+                "imaging failed",
+            )
 
 
 class ImageResources(_ImageCommand):

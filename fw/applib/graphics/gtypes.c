@@ -381,10 +381,10 @@ BitmapInfo gbitmap_get_info(const GBitmap *bitmap) {
   // For a legacy2 app, zero out all info fields except for bitmap heap allocation, and assume
   // that if the flag is set and the bitmap is allocated on the heap, the flag is valid.
   if (process_manager_compiled_with_legacy2_sdk()) {
-    Heap *heap = app_state_get_heap();
+    struct pbl_heap *heap = app_state_get_heap();
     return (BitmapInfo){
       .is_bitmap_heap_allocated =
-          bitmap->info.is_bitmap_heap_allocated && heap_is_allocated(heap, bitmap->addr),
+          bitmap->info.is_bitmap_heap_allocated && pbl_heap_is_allocated(heap, bitmap->addr),
     };
   }
   return bitmap->info;

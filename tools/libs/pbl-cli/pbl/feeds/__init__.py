@@ -6,7 +6,7 @@
 A feed writes what the phone app would into the running emulator, so a
 feature that depends on the phone can be exercised without one. Every
 module in this package that defines :class:`Feed` subclasses contributes a
-``pbl feed <name>`` subcommand; adding a feed is adding a file here.
+``pbl emulator feed <name>`` subcommand; adding a feed is adding a file here.
 """
 
 import importlib
@@ -105,7 +105,7 @@ class Watch:
 
 
 class Feed(ABC):
-    #: The ``pbl feed <name>`` subcommand.
+    #: The ``pbl emulator feed <name>`` subcommand.
     name = None
     help = None
     description = None

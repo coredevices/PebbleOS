@@ -9,8 +9,8 @@ pbl_clar_test(test_timeline
     fw/services/blob_db/timeline_item_storage.c
     fw/services/timeline/timeline.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
-  OVERRIDES dummy_board
+    tests/fakes/fake_settings.c
+  OVERRIDES dummy_board applib_malloc
 )
 
 pbl_clar_test(test_pin_db
@@ -23,7 +23,7 @@ pbl_clar_test(test_pin_db
     tests/fakes/fake_blobdb.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     tests/fakes/ram_storage.c
     tests/fakes/test_db.c
 )
@@ -67,7 +67,7 @@ pbl_clar_test(test_app_glance_db
     fw/services/blob_db/app_glance_db.c
     fw/services/timeline/attribute.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     tests/fakes/fake_events.c
   OVERRIDES dummy_board
 )
@@ -93,7 +93,7 @@ pbl_clar_test(test_reminder_db
   SOURCES
     tests/fakes/fake_rtc.c
     fw/services/blob_db/timeline_item_storage.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     fw/services/blob_db/reminder_db.c
     fw/services/blob_db/sync_util.c
   OVERRIDES dummy_board
@@ -126,6 +126,7 @@ pbl_clar_test(test_prefs_db
     tests/stubs/stubs_system_resource.c
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_rtc.c
+  DEFINES CONFIG_SERVICE_LIGHT_DARK_THRESHOLD=0 CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY=55
   OVERRIDES dummy_board
 )
 
@@ -134,7 +135,7 @@ pbl_clar_test(test_ios_notif_pref_db
   SOURCES
     lib/util/uuid.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     fw/services/blob_db/sync_util.c
     fw/services/blob_db/ios_notif_pref_db.c
   OVERRIDES dummy_board
@@ -143,7 +144,7 @@ pbl_clar_test(test_ios_notif_pref_db
 pbl_clar_test(test_health_db
   MODULES time
   SOURCES
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     fw/services/blob_db/health_db.c
   OVERRIDES dummy_board
 )

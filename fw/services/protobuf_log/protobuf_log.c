@@ -3,10 +3,11 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
@@ -17,7 +18,6 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/data_logging.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_serials.h>
 #include <pb.h>
 #include <pb_encode.h>
@@ -139,7 +139,7 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
                     },
               },
         },
-    .send_time_utc = rtc_get_time(),
+    .send_time_utc = pbl_realtime(),
   };
 
   // NOTE: A Payload is the master protobuf struct that we send to the phone.
@@ -172,9 +172,9 @@ static bool prv_populate_payload(ProtobufLogConfig *config, size_t buffer_len, u
 // -----------------------------------------------------------------------------------------
 // Free all memory associated with a session
 static void prv_session_free(PLogSession *session) {
-  kernel_free(session->msg_buffer);
-  kernel_free(session->data_buffer);
-  kernel_free(session);
+  pbl_free(session->msg_buffer);
+  pbl_free(session->data_buffer);
+  pbl_free(session);
 }
 
 bool protobuf_log_init(void) {
@@ -238,7 +238,7 @@ static bool prv_session_encode_start(PLogSession *session) {
   const ProtobufLogConfig *config = &session->config;
 
   // New session start time
-  session->start_utc = rtc_get_time();
+  session->start_utc = pbl_realtime();
 
   // Create a new stream, reserving space for the header in front
   session->data_stream = pb_ostream_from_buffer(session->data_buffer, session->max_data_size);
@@ -282,7 +282,7 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config, ProtobufLogTranspo
 
   // Create a buffer for the final fully-formed record. Since we send it out through data logging,
   // make it the size of a data logging record
-  uint8_t *msg_buffer = kernel_zalloc(PLOG_DLS_RECORD_SIZE);
+  uint8_t *msg_buffer = pbl_zalloc(PLOG_DLS_RECORD_SIZE);
   if (!msg_buffer) {
     return nullptr;
   }
@@ -297,19 +297,19 @@ ProtobufLogRef protobuf_log_create(ProtobufLogConfig *config, ProtobufLogTranspo
   // data blob portion of the payload that's formed in msg_buffer.
   uint32_t max_data_size = max_msg_size - payload_hdr_size - sizeof(PLogMessageHdr);
   PBL_LOG_DBG("Max data buffer size: %" PRIu32, max_data_size);
-  uint8_t *data_buffer = kernel_zalloc(max_data_size);
+  uint8_t *data_buffer = pbl_zalloc(max_data_size);
   if (!data_buffer) {
-    kernel_free(msg_buffer);
+    pbl_free(msg_buffer);
     return nullptr;
   }
 
   // Extra space needed for each config to store some variables and information.
   // e.g. Measurement needs to store an array of types.
   const size_t extra_size = prv_session_extra_space_needed(config);
-  PLogSession *session = kernel_zalloc(sizeof(PLogSession) + extra_size);
+  PLogSession *session = pbl_zalloc(sizeof(PLogSession) + extra_size);
   if (!session) {
-    kernel_free(msg_buffer);
-    kernel_free(data_buffer);
+    pbl_free(msg_buffer);
+    pbl_free(data_buffer);
     return nullptr;
   }
 
@@ -413,7 +413,7 @@ bool protobuf_log_session_add_event(ProtobufLogRef session_ref, pebble_pipeline_
 
   // Don't use {} notation because we won't want to overwrite the data that is already set in
   // the event.
-  event->created_time_utc = rtc_get_time();
+  event->created_time_utc = pbl_realtime();
   event->has_created_time_utc = true;
   event->utc_to_local = time_util_utc_to_local_offset();
   event->uuid = (pb_callback_t){

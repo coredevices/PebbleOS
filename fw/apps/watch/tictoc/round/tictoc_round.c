@@ -4,13 +4,13 @@
 #include "watch_model.h"
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics_circle.h>
 #include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 typedef struct {
@@ -25,7 +25,7 @@ static GPath *prv_pointed_hand_path(GContext *ctx, ClockHand *hand) {
   if (hand->backwards_extension > 0)
     num_points = 9;
 
-  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  GPoint *points = (GPoint *)app_malloc(num_points * sizeof(GPoint));
   if (!points)
     return nullptr;
 
@@ -57,7 +57,7 @@ static GPath *prv_square_hand_path(GContext *ctx, ClockHand *hand) {
   if (hand->backwards_extension > 0)
     num_points = 8;
 
-  GPoint *points = (GPoint *)malloc(num_points * sizeof(GPoint));
+  GPoint *points = (GPoint *)app_malloc(num_points * sizeof(GPoint));
   if (!points)
     return nullptr;
 

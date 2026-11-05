@@ -7,14 +7,14 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
 #include <kernel/panic.h>
-#include <kernel/pbl_malloc.h>
+#include <pbl/kernel/malloc.h>
 #include <kernel/util/fw_reset.h>
 #include <resource/resource.h>
 #include <resource/language_pack.h>
@@ -53,7 +53,7 @@ bool system_resource_is_valid(void) {
 
 // Total number of fonts = NUM_SYSTEM_FONTS + 1 for the fallback font
 FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
-uint32_t g_font_language_generation KERNEL_READONLY_DATA;
+_Atomic uint32_t g_font_language_generation KERNEL_READONLY_DATA;
 
 #ifndef CONFIG_RECOVERY_FW
 #define NUM_LANGUAGE_FONTS \
@@ -91,7 +91,7 @@ static void prv_invalidate_system_fonts(void) {
   }
   // Publish last: a renderer that sees the new generation must find the fonts unloaded, or it
   // would refill its cache from the old ones under the new generation.
-  __atomic_store_n(&g_font_language_generation, g_font_language_generation + 1, __ATOMIC_RELEASE);
+  atomic_fetch_add_explicit(&g_font_language_generation, 1, memory_order_release);
 }
 
 static void prv_language_changed(void *data) {
@@ -106,7 +106,7 @@ static void prv_language_pack_changed(void *data) {
                    language_pack_resource_id(slot, RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM_EXTENDED,
                                              RESOURCE_ID_STRINGS));
   pbl_mutex_lock(&s_language_fonts_mutex, PBL_FOREVER);
-  kernel_free(s_language_fonts[slot]);
+  pbl_free(s_language_fonts[slot]);
   s_language_fonts[slot] = NULL;
   s_language_pack_state[slot] = LanguagePackUnknown;
   ++s_language_pack_changes[slot];
@@ -128,7 +128,7 @@ static LanguageFonts *prv_get_language_fonts(uint8_t slot) {
     return NULL;
   }
   if (!s_language_fonts[slot]) {
-    s_language_fonts[slot] = kernel_zalloc(sizeof(LanguageFonts));
+    s_language_fonts[slot] = pbl_zalloc(sizeof(LanguageFonts));
   }
   return s_language_fonts[slot];
 }
@@ -159,8 +159,8 @@ static void prv_watch_language_packs(void) {
 #ifndef CONFIG_RECOVERY_FW
   pbl_mutex_init(&s_language_fonts_mutex);
   for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    pfs_watch_file(language_pack_filename(slot), prv_language_pack_file_changed,
-                   FILE_CHANGED_EVENT_ALL, (void *)(uintptr_t)slot);
+    pbl_fs_watch_add(language_pack_filename(slot), PBL_FS_WATCH_ALL, prv_language_pack_file_changed,
+                     (void *)(uintptr_t)slot);
   }
 #endif
 }

@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
 
@@ -11,12 +12,13 @@
 #include <pbl/drivers/backlight.h>
 #endif
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -121,7 +123,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 
 //! Analytics: Track time-weighted average intensity
 static uint64_t s_intensity_time_product_sum;  // Sum of (intensity_pct × time_ms)
-static RtcTicks s_last_intensity_sample_ticks; // Timestamp of last sample
+static uint64_t s_last_intensity_sample_ticks; // Timestamp of last sample
 static uint8_t s_last_sampled_intensity_pct;   // Last intensity percentage sampled
 static uint32_t s_total_on_time_ms;            // Total backlight on time tracked internally
 
@@ -131,8 +133,8 @@ static uint32_t s_total_on_time_ms;            // Total backlight on time tracke
 static uint32_t s_als_cached_level;
 //! Same sample without screen compensation; see prv_get_als_gate_level().
 static uint32_t s_als_cached_gate_level;
-static RtcTicks s_als_cached_ticks;        // 0 = invalid
-#define ALS_CACHE_TTL_TICKS (RTC_TICKS_HZ) // 1 second
+static uint64_t s_als_cached_ticks;       // 0 = invalid
+#define ALS_CACHE_TTL_TICKS (PBL_TICK_HZ) // 1 second
 
 //! Ambient light level below which the backlight turns on, in lux
 static uint32_t s_dark_threshold;
@@ -216,7 +218,7 @@ static void prv_als_prime_for_interaction(void) {
 }
 
 static void prv_als_sample(void) {
-  RtcTicks now = rtc_get_ticks();
+  uint64_t now = pbl_uptime_ticks();
   const bool cache_valid =
       s_als_cached_ticks != 0 &&
       (s_current_brightness > 0 || (now - s_als_cached_ticks) < ALS_CACHE_TTL_TICKS);
@@ -272,7 +274,7 @@ void light_set_dark_threshold(uint32_t threshold) {
 }
 
 AmbientLightLevel light_level_to_enum(uint32_t lux) {
-  const uint32_t delta = BOARD_CONFIG.ambient_k_delta_threshold;
+  const uint32_t delta = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD_DELTA;
 
   if (!pbl_device_is_ready(&ALS->dev)) {
     return AmbientLightLevelUnknown;
@@ -338,11 +340,11 @@ static uint8_t prv_backlight_get_intensity(void) {
 }
 
 static void prv_update_intensity_analytics(uint8_t new_intensity_pct) {
-  RtcTicks now_ticks = rtc_get_ticks();
+  uint64_t now_ticks = pbl_uptime_ticks();
 
   // Calculate time delta in ms since last sample
   if (s_last_intensity_sample_ticks > 0) {
-    uint32_t time_delta_ms = ((now_ticks - s_last_intensity_sample_ticks) * 1000) / RTC_TICKS_HZ;
+    uint32_t time_delta_ms = ((now_ticks - s_last_intensity_sample_ticks) * 1000) / PBL_TICK_HZ;
 
     // Accumulate intensity × time for weighted average calculation
     // Use last sampled intensity for the period that just elapsed
@@ -387,7 +389,7 @@ static uint32_t prv_get_system_color(void) {
   }
 
   struct pbl_tm now;
-  rtc_get_time_tm(&now);
+  clock_get_time_tm(&now);
   return prv_is_daytime(&now) ? backlight_get_default_color() : backlight_get_night_color();
 }
 
@@ -440,7 +442,7 @@ void light_handle_clock_change(void) {
 static void prv_change_brightness(uint8_t new_brightness) {
   // Scale the 0-100% to the maximum value allowed in hardware
   uint8_t scaled_brightness =
-      DIVIDE_CEIL(new_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U);
+      DIVIDE_CEIL(new_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
 
   // Bleed-through gate around backlight 0↔on edges: while the LED is
   // illuminating the cover glass, the W1160 photodiode would latch
@@ -479,7 +481,8 @@ static void prv_change_brightness(uint8_t new_brightness) {
 //! Hardware backlight level a given intensity would produce.
 static uint8_t prv_hw_level(uint8_t intensity) {
   return pbl_backlight_get_level(
-      BACKLIGHT, DIVIDE_CEIL(intensity * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U));
+      BACKLIGHT,
+      DIVIDE_CEIL(intensity * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U));
 }
 
 //! Build the descending ladder of intensities below `from` that each produce
@@ -601,7 +604,7 @@ static bool prv_light_allowed(void) {
 }
 
 void light_init(void) {
-  s_dark_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
+  s_dark_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
   s_light_state = LIGHT_STATE_OFF;
   s_current_brightness = 0;
   s_num_buttons_down = 0;
@@ -955,7 +958,7 @@ void pbl_analytics_external_collect_backlight_stats(void) {
   // Reset accumulators for next period
   s_intensity_time_product_sum = 0;
   s_total_on_time_ms = 0;
-  s_last_intensity_sample_ticks = rtc_get_ticks();
+  s_last_intensity_sample_ticks = pbl_uptime_ticks();
 
   pbl_mutex_unlock(&s_mutex);
 }

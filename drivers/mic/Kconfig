@@ -15,6 +15,15 @@ config MIC_NRF5
     help
       Support for the Nordic nRF5 PDM microphone interface.
 
+config MIC_NRF5_GAIN
+    int "PDM gain"
+    depends on MIC_NRF5
+    range 0 80
+    default 40
+    help
+      PDM gain in 0.5 dB steps, where 0 is -20 dB, 40 is 0 dB and 80 is
+      +20 dB.
+
 config MIC_SF32LB
     bool "SiFli SF32LB PDM"
     default y if SOC_SF32LB52
@@ -29,10 +38,9 @@ config MIC_QEMU
     bool "QEMU stub"
     default y if SOC_QEMU || SOC_POSIX
     help
-      Software-only microphone stub for QEMU and native builds. Delivers silence at
-      MIC_SAMPLE_RATE so the voice service can run end-to-end against
-      `pebble transcribe`, which ignores audio frames and replies with
-      a canned transcription on a timer.
+      Software-only microphone for QEMU and native builds. Delivers audio the
+      host sends over the QEMU channel (`pebble emu-mic`) at MIC_SAMPLE_RATE,
+      and silence when there is none.
 
 config MIC_POLLING
     bool

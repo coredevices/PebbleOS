@@ -3,11 +3,13 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/device.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/util/bits.h>
 
 /**
  * @defgroup drivers_i2c I2C
@@ -15,97 +17,96 @@
  * @brief I2C controller class.
  *
  * An I2C controller is a struct pbl_i2c_bus device, and a peripheral on it a struct pbl_i2c_dev:
- * bus plus 7-bit address. A bus is powered while it has users: bracket transfers with
- * pbl_i2c_use() and pbl_i2c_release(). Transfers block the calling task, are serialized per bus
- * and must not be issued from ISRs.
+ * bus plus 7-bit address. A transfer is a list of messages, each a read or a write, sent as one
+ * bus transaction: a START, a repeated START between messages and a STOP after the last one. A
+ * write flagged @ref PBL_I2C_MSG_NOSTART continues the previous write instead, e.g. data after a
+ * register address. Transfers block the calling task, are serialized per bus and must not be
+ * issued from ISRs. The controller is powered for the duration of each transfer.
  *
  * @code{.c}
  * static const struct pbl_i2c_dev s_accel = PBL_I2C_DEV(&s_i2c2.bus, 0x6a);
  *
  * uint8_t id;
- * uint8_t fifo[6];
- *
+ * uint8_t xyz[6];
  * int ret;
  *
- * pbl_i2c_use(&s_accel);
- * ret = pbl_i2c_read_register(&s_accel, REG_WHO_AM_I, &id);
- * if (ret == 0) {
- *   ret = pbl_i2c_read_register_block(&s_accel, REG_OUT_X_L, sizeof(fifo), fifo);
+ * ret = pbl_i2c_reg_read_byte(&s_accel, REG_WHO_AM_I, &id);
+ * if (ret != 0) {
+ *   return ret;
  * }
- * pbl_i2c_release(&s_accel);
+ *
+ * return pbl_i2c_burst_read(&s_accel, REG_OUT_X_L, xyz, sizeof(xyz));
  * @endcode
+ *
+ * Calls return 0 or a negative errno: @c -ENXIO when the address is not acknowledged, @c -EIO on a
+ * data NACK or a bus error, @c -ETIMEDOUT when the transfer does not finish, @c -ENOTSUP when the
+ * controller cannot issue the message sequence and @c -EINVAL for an invalid one.
  * @{
  */
 
-/** @brief Transfer outcome reported by a bus driver. */
-enum pbl_i2c_event {
-  /** Transfer completed. */
-  PBL_I2C_EVENT_COMPLETE,
-  /** Transfer failed. */
-  PBL_I2C_EVENT_ERROR,
-};
+/**
+ * @name Message flags
+ * @{
+ */
+/** Write to the device. */
+#define PBL_I2C_MSG_WRITE 0U
+/** Read from the device. */
+#define PBL_I2C_MSG_READ PBL_BIT(0)
+/** Continue the previous write without a repeated START or address. Writes only. */
+#define PBL_I2C_MSG_NOSTART PBL_BIT(1)
+/**
+ * The buffer may be accessed through DMA: aligned to @ref DCACHE_LINE_SIZE_MAX and owning the
+ * whole cache lines it covers, @c DCACHE_ROUND_UP(len) bytes. Declare it with
+ * @c PBL_ALIGNED(DCACHE_LINE_SIZE_MAX) and that size.
+ */
+#define PBL_I2C_MSG_DMA_SAFE PBL_BIT(2)
+/** @} */
 
-/** @brief Transfer direction. */
-enum pbl_i2c_dir {
-  /** Read from the device. */
-  PBL_I2C_READ,
-  /** Write to the device. */
-  PBL_I2C_WRITE,
-};
-
-/** @brief Transfer in progress on a bus. */
-struct pbl_i2c_transfer {
-  /** 7-bit device address. */
-  uint16_t addr;
-  /** Direction. */
-  enum pbl_i2c_dir dir;
-  /** Send @ref reg first; a read then continues after a repeated start. */
-  bool with_reg;
-  /** Register address, with @ref with_reg. */
-  uint8_t reg;
-  /** Number of data bytes. */
-  uint32_t size;
+/** @brief A message of a transfer. */
+struct pbl_i2c_msg {
   /** Data to write or buffer to read into. */
-  uint8_t *data;
-  /** @ref data follows the pbl_i2c_read_register_block_dma() rules, so DMA may be used. */
-  bool dma;
+  uint8_t *buf;
+  /** Number of bytes. */
+  uint32_t len;
+  /** Message flags. */
+  uint32_t flags;
 };
 
-/** @brief Bus runtime state, owned by the class layer. */
+/** @brief Class of the I2C buses. */
+extern const struct pbl_device_class pbl_i2c_bus_class;
+
+/** @cond INTERNAL_HIDDEN */
 struct pbl_i2c_bus_state {
-  /** Current transfer. */
-  struct pbl_i2c_transfer transfer;
-  /** Outcome of the current transfer. */
-  enum pbl_i2c_event event;
-  /** Number of pbl_i2c_use() users. */
-  int user_count;
-  /** Signaled when the current transfer ends. */
-  struct pbl_sem event_sem;
-  /** Serializes bus access. */
+  int status;
+  struct pbl_sem done;
   struct pbl_mutex mutex;
 };
+/** @endcond */
 
 struct pbl_i2c_bus;
 
 /**
  * @brief Bus driver operations.
  *
- * Called with the bus lock held. The class layer owns locking, retries and timeouts; the driver
- * moves the current transfer over the wire and reports its outcome with pbl_i2c_bus_event().
+ * Called with the bus lock held. The class layer owns locking, power and timeouts; the driver
+ * moves a transfer over the wire and reports its outcome with pbl_i2c_bus_complete().
  */
 struct pbl_i2c_bus_ops {
   /** Configure the controller, leaving it disabled. Returns 0 or a negative errno. */
   int (*init)(const struct pbl_i2c_bus *bus);
-  /** Enable the controller. */
+  /** Power the controller up. */
   void (*enable)(const struct pbl_i2c_bus *bus);
-  /** Disable the controller. */
+  /** Power the controller down. */
   void (*disable)(const struct pbl_i2c_bus *bus);
-  /** Check whether the controller is busy. */
-  bool (*is_busy)(const struct pbl_i2c_bus *bus);
-  /** Start the current transfer. */
-  void (*start_transfer)(const struct pbl_i2c_bus *bus);
-  /** Abort the current transfer. */
-  void (*abort_transfer)(const struct pbl_i2c_bus *bus);
+  /**
+   * Start a transfer of @p num_msgs validated messages to @p addr. Returns 0 if
+   * pbl_i2c_bus_complete() will be called, or a negative errno, e.g. @c -ENOTSUP for a sequence
+   * the controller cannot issue.
+   */
+  int (*start)(const struct pbl_i2c_bus *bus, uint16_t addr, struct pbl_i2c_msg *msgs,
+               uint8_t num_msgs);
+  /** Stop the transfer in flight, which then never completes, and reset the controller. */
+  void (*abort)(const struct pbl_i2c_bus *bus);
 };
 
 /** @brief An I2C controller. */
@@ -151,11 +152,12 @@ struct pbl_i2c_dev {
  * @param _ops Driver operations.
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_I2C_BUS_INIT(sym, _name, _ops, _deps)                         \
-  {                                                                       \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_i2c_bus_init, nullptr, _deps), \
-    .ops = (_ops),                                                        \
-    .state = &sym##_i2c_state,                                            \
+#define PBL_I2C_BUS_INIT(sym, _name, _ops, _deps)                                                \
+  {                                                                                              \
+    .dev =                                                                                       \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_i2c_bus_init, nullptr, _deps, &pbl_i2c_bus_class), \
+    .ops = (_ops),                                                                               \
+    .state = &sym##_i2c_state,                                                                   \
   }
 
 /**
@@ -167,130 +169,144 @@ struct pbl_i2c_dev {
 int pbl_i2c_bus_init(const struct pbl_device *dev);
 
 /**
- * @brief Report the outcome of the current transfer.
+ * @brief Report the outcome of the transfer in flight.
  *
  * Called by the bus driver, typically from its interrupt handler.
  *
  * @param bus Bus.
- * @param event Transfer outcome.
+ * @param status 0 or a negative errno, see @ref drivers_i2c.
  */
-void pbl_i2c_bus_event(const struct pbl_i2c_bus *bus, enum pbl_i2c_event event);
+void pbl_i2c_bus_complete(const struct pbl_i2c_bus *bus, int status);
 
 /**
- * @brief Start using the bus a device is on.
- *
- * Reference counted per bus; the bus is enabled on the first user. Must be called before any
- * transfer to the device.
+ * @brief Transfer messages to or from a device.
  *
  * @param dev Device.
+ * @param msgs Messages.
+ * @param num_msgs Number of messages.
+ * @return 0 or a negative errno.
  */
-void pbl_i2c_use(const struct pbl_i2c_dev *dev);
+int pbl_i2c_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_msg *msgs, uint8_t num_msgs);
 
 /**
- * @brief Stop using the bus a device is on.
- *
- * The bus is disabled when its last user releases it.
+ * @brief Write data.
  *
  * @param dev Device.
+ * @param buf Data.
+ * @param len Number of bytes.
+ * @return 0 or a negative errno.
  */
-void pbl_i2c_release(const struct pbl_i2c_dev *dev);
+static inline int pbl_i2c_write(const struct pbl_i2c_dev *dev, const void *buf, uint32_t len) {
+  struct pbl_i2c_msg msg = {.buf = (uint8_t *)buf, .len = len, .flags = PBL_I2C_MSG_WRITE};
+
+  return pbl_i2c_transfer(dev, &msg, 1U);
+}
 
 /**
- * @brief Read a register.
+ * @brief Read data.
  *
  * @param dev Device.
- * @param reg Register address.
- * @param[out] result Register value.
- * @return 0 on success, or a negative errno.
+ * @param[out] buf Buffer.
+ * @param len Number of bytes.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_read_register(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t *result);
+static inline int pbl_i2c_read(const struct pbl_i2c_dev *dev, void *buf, uint32_t len) {
+  struct pbl_i2c_msg msg = {.buf = buf, .len = len, .flags = PBL_I2C_MSG_READ};
+
+  return pbl_i2c_transfer(dev, &msg, 1U);
+}
+
+/**
+ * @brief Write data, then read data after a repeated START.
+ *
+ * @param dev Device.
+ * @param wbuf Data to write.
+ * @param wlen Number of bytes to write.
+ * @param[out] rbuf Buffer to read into.
+ * @param rlen Number of bytes to read.
+ * @return 0 or a negative errno.
+ */
+static inline int pbl_i2c_write_read(const struct pbl_i2c_dev *dev, const void *wbuf, uint32_t wlen,
+                                     void *rbuf, uint32_t rlen) {
+  struct pbl_i2c_msg msgs[] = {
+    {.buf = (uint8_t *)wbuf, .len = wlen, .flags = PBL_I2C_MSG_WRITE},
+    {.buf = rbuf, .len = rlen, .flags = PBL_I2C_MSG_READ},
+  };
+
+  return pbl_i2c_transfer(dev, msgs, 2U);
+}
 
 /**
  * @brief Read consecutive registers.
  *
- * Sends the start register address, then reads after a repeated start.
- *
  * @param dev Device.
  * @param reg First register address.
- * @param size Number of bytes to read.
- * @param[out] result Destination buffer of at least @p size bytes.
- * @return 0 on success, or a negative errno.
+ * @param[out] buf Buffer.
+ * @param len Number of bytes.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_read_register_block(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                uint8_t *result);
-
-/**
- * @brief Read consecutive registers into a buffer the controller may fill through DMA.
- *
- * Like pbl_i2c_read_register_block(), but the bus may use DMA and let the CPU sleep through the
- * transfer. The buffer must be aligned to @ref DCACHE_LINE_SIZE_MAX and own the whole cache lines
- * it covers, @c DCACHE_ROUND_UP(size) bytes: declare it with @c PBL_ALIGNED(DCACHE_LINE_SIZE_MAX)
- * and that size.
- *
- * @param dev Device.
- * @param reg First register address.
- * @param size Number of bytes to read.
- * @param[out] result Destination buffer, see above.
- * @return 0 on success, or a negative errno.
- */
-int pbl_i2c_read_register_block_dma(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                    uint8_t *result);
-
-/**
- * @brief Write a register.
- *
- * @param dev Device.
- * @param reg Register address.
- * @param value Value to write.
- * @return 0 on success, or a negative errno.
- */
-int pbl_i2c_write_register(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t value);
+static inline int pbl_i2c_burst_read(const struct pbl_i2c_dev *dev, uint8_t reg, void *buf,
+                                     uint32_t len) {
+  return pbl_i2c_write_read(dev, &reg, 1U, buf, len);
+}
 
 /**
  * @brief Write consecutive registers.
  *
  * @param dev Device.
  * @param reg First register address.
- * @param size Number of bytes to write.
- * @param data Data to write.
- * @return 0 on success, or a negative errno.
+ * @param buf Data.
+ * @param len Number of bytes.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_write_register_block(const struct pbl_i2c_dev *dev, uint8_t reg, uint32_t size,
-                                 const uint8_t *data);
+static inline int pbl_i2c_burst_write(const struct pbl_i2c_dev *dev, uint8_t reg, const void *buf,
+                                      uint32_t len) {
+  struct pbl_i2c_msg msgs[] = {
+    {.buf = &reg, .len = 1U, .flags = PBL_I2C_MSG_WRITE},
+    {.buf = (uint8_t *)buf, .len = len, .flags = PBL_I2C_MSG_WRITE | PBL_I2C_MSG_NOSTART},
+  };
+
+  return pbl_i2c_transfer(dev, msgs, 2U);
+}
 
 /**
- * @brief Read data without sending a register address.
+ * @brief Read a register.
  *
  * @param dev Device.
- * @param size Number of bytes to read.
- * @param[out] result Destination buffer of at least @p size bytes.
- * @return 0 on success, or a negative errno.
+ * @param reg Register address.
+ * @param[out] val Register value.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_read_block(const struct pbl_i2c_dev *dev, uint32_t size, uint8_t *result);
+static inline int pbl_i2c_reg_read_byte(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t *val) {
+  return pbl_i2c_burst_read(dev, reg, val, 1U);
+}
 
 /**
- * @brief Write data without sending a register address.
+ * @brief Write a register.
  *
  * @param dev Device.
- * @param size Number of bytes to write.
- * @param data Data to write.
- * @return 0 on success, or a negative errno.
+ * @param reg Register address.
+ * @param val Value.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_write_block(const struct pbl_i2c_dev *dev, uint32_t size, const uint8_t *data);
+static inline int pbl_i2c_reg_write_byte(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t val) {
+  uint8_t buf[] = {reg, val};
+
+  return pbl_i2c_write(dev, buf, sizeof(buf));
+}
 
 /**
- * @brief Write data, then read data, with no other transfer on the bus in between.
+ * @brief Update bits of a register.
  *
- * The read is skipped if the write fails.
+ * Reads the register and writes it back, if it changes, with the @p mask bits set to @p val.
+ * Not atomic with respect to other users of the device.
  *
  * @param dev Device.
- * @param write_size Number of bytes to write.
- * @param write_data Data to write.
- * @param read_size Number of bytes to read.
- * @param[out] read_data Destination buffer of at least @p read_size bytes.
- * @return 0 if both transfers succeeded, or a negative errno.
+ * @param reg Register address.
+ * @param mask Bits to update.
+ * @param val New value of the @p mask bits.
+ * @return 0 or a negative errno.
  */
-int pbl_i2c_write_read_block(const struct pbl_i2c_dev *dev, uint32_t write_size,
-                             const uint8_t *write_data, uint32_t read_size, uint8_t *read_data);
+int pbl_i2c_reg_update_byte(const struct pbl_i2c_dev *dev, uint8_t reg, uint8_t mask, uint8_t val);
 
 /** @} */

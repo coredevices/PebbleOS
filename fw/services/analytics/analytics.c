@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/analytics/backend.h>
@@ -22,7 +24,6 @@ extern void pbl_analytics_external_collect_cpu_stats(void);
 extern void pbl_analytics_external_collect_task_cpu_stats(void);
 extern void pbl_analytics_external_collect_stack_free(void);
 extern void pbl_analytics_external_collect_pfs_stats(void);
-extern void pbl_analytics_external_collect_kernel_heap_stats(void);
 extern void pbl_analytics_external_collect_backlight_stats(void);
 extern void pbl_analytics_external_collect_vibe_stats(void);
 extern void pbl_analytics_external_collect_speaker_stats(void);
@@ -51,6 +52,23 @@ static const struct pbl_analytics_backend_ops *s_backend_ops[] = {
   &pbl_analytics__native_ops,
 };
 
+static void prv_collect_kernel_heap_stats(void) {
+  struct pbl_heap *heap = pbl_malloc_heap();
+  size_t total_size = pbl_heap_size(heap);
+  size_t headroom = pbl_heap_min_headroom(heap);
+  uint32_t headroom_pct = (total_size > 0) ? (headroom * 100) / total_size : 0;
+  PBL_ANALYTICS_SET_UNSIGNED(memory_pct_max, headroom_pct);
+
+  // Peak usage alone hides fragmentation
+  unsigned int used, free_bytes, max_free;
+  pbl_heap_stats(heap, &used, &free_bytes, &max_free);
+  uint32_t largest_free_pct = (total_size > 0) ? ((uint32_t)max_free * 100) / total_size : 0;
+  PBL_ANALYTICS_SET_UNSIGNED(memory_largest_free_pct, largest_free_pct);
+
+  // Restart the peak so heavy periods stand out
+  pbl_heap_reset_high_water_mark(heap);
+}
+
 static void prv_heartbeat_system_task_cb(void *data) {
   static bool s_reboot_reason_counted = false;
 
@@ -70,7 +88,7 @@ static void prv_heartbeat_system_task_cb(void *data) {
   pbl_analytics_external_collect_task_cpu_stats();
   pbl_analytics_external_collect_stack_free();
   pbl_analytics_external_collect_pfs_stats();
-  pbl_analytics_external_collect_kernel_heap_stats();
+  prv_collect_kernel_heap_stats();
   pbl_analytics_external_collect_backlight_stats();
   pbl_analytics_external_collect_vibe_stats();
   pbl_analytics_external_collect_speaker_stats();

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
@@ -97,6 +98,25 @@ struct pbl_device {
   /** Runtime state. */
   struct pbl_device_state *state;
 };
+
+/**
+ * @brief Memory region reserved for a device, what a devicetree @c memory-region entry points to
+ * (a @c reserved-memory node).
+ */
+struct pbl_mem_region {
+  /** Base address. */
+  uintptr_t base;
+  /** Size in bytes. */
+  size_t size;
+};
+
+/**
+ * @brief Initializer of a struct pbl_mem_region.
+ *
+ * @param _base Base address.
+ * @param _size Size in bytes.
+ */
+#define PBL_MEM_REGION(_base, _size) {.base = (_base), .size = (_size)}
 
 /** @brief Static dependency list for struct pbl_device::deps. */
 #define PBL_DEVICE_DEPS(...) ((const struct pbl_device *const[]){__VA_ARGS__, nullptr})

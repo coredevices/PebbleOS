@@ -215,4 +215,8 @@ typedef enum {
   ANCSProperty_VoiceMail = (1 << 2),
   ANCSProperty_MultiMedia = (1 << 3),
   ANCSProperty_iOS9 = (1 << 4),
+  //! Pre-existing notification seen right after reconnecting, possibly missed while disconnected
+  ANCSProperty_Recovered = (1 << 5),
+  //! Notification silenced on the phone (EventFlagSilent)
+  ANCSProperty_Silent = (1 << 6),
 } ANCSProperty;

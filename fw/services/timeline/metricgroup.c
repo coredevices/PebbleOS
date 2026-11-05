@@ -5,15 +5,15 @@
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/metricgroup.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 MetricGroup *metric_group_create(int max_num_items, size_t max_item_string_size) {
   const size_t max_list_size = PBL_STRING_LIST_SIZE(max_num_items, max_item_string_size);
-  MetricGroup *metric = task_zalloc_check(sizeof(MetricGroup));
+  MetricGroup *metric = applib_zalloc(sizeof(MetricGroup));
   *metric = (MetricGroup){
-    .names = task_zalloc_check(max_list_size),
-    .values = task_zalloc_check(max_list_size),
-    .icons = task_zalloc_check(Uint32ListSize(max_num_items)),
+    .names = applib_zalloc(max_list_size),
+    .values = applib_zalloc(max_list_size),
+    .icons = applib_zalloc(Uint32ListSize(max_num_items)),
     .max_num_items = max_num_items,
     .max_item_string_size = max_item_string_size,
   };
@@ -24,10 +24,10 @@ void metric_group_destroy(MetricGroup *metric_group) {
   if (!metric_group) {
     return;
   }
-  task_free(metric_group->names);
-  task_free(metric_group->values);
-  task_free(metric_group->icons);
-  task_free(metric_group);
+  applib_free(metric_group->names);
+  applib_free(metric_group->values);
+  applib_free(metric_group->icons);
+  applib_free(metric_group);
 }
 
 bool metric_group_add_item(MetricGroup *metric_group, const char *name_i18n, const char *value,

@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
@@ -16,18 +17,26 @@
 #include <pbl/services/notifications/ancs/nexmo.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/pstring.h>
 
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 static const Uuid uuid_reminders_data_source = UUID_REMINDERS_DATA_SOURCE;
 static const Uuid uuid_calendar_data_source = UUID_CALENDAR_DATA_SOURCE;
+
+// Recovered notifications posted before the session was lost (minus some slack for ones in
+// flight) were already delivered or deliberately dropped.
+#define RECOVERED_SESSION_LOST_SLACK_S 60
+// Recovered notifications older than this are stored without alerting.
+#define RECOVERED_ALERT_MAX_AGE_S (5 * 60)
+
+static time_t s_session_lost_time;
 
 static void prv_dismiss_notification(const TimelineItem *notification) {
   const TimelineItemAction *action = timeline_item_find_dismiss_action(notification);
@@ -41,9 +50,13 @@ static void prv_dismiss_notification(const TimelineItem *notification) {
   }
 }
 
-static void prv_handle_new_ancs_notif(TimelineItem *notification) {
+static void prv_handle_new_ancs_notif(TimelineItem *notification, bool alert) {
   uuid_generate(&notification->header.id);
-  notifications_add_notification(notification);
+  if (alert) {
+    notifications_add_notification(notification);
+  } else {
+    notification_storage_store(notification);
+  }
   timeline_item_destroy(notification);
 }
 
@@ -74,7 +87,7 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
     // Another ANCS / iOS quirk, some apps (i.e. the Phone app)
     // send an invalid-length string as date...
     // Apple rdar://19639333
-    timestamp = rtc_get_time();
+    timestamp = pbl_realtime();
 
     // copy out app ID to a char buffer
     char app_id_buffer[app_id->length + 1];
@@ -206,7 +219,7 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   static const time_t MAXIMUM_NOTIFY_TIME = 2 * 60 * 60; // 2 hours
   static const time_t INVALID_TIME = ~0;
 
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   // Ignore notifications older than 2 hours (Mail.app Fetch can be set to hourly). Location based
   // reminders come with an invalid timestamp.
   if (timestamp < (now - MAXIMUM_NOTIFY_TIME) && timestamp != INVALID_TIME) {
@@ -215,6 +228,14 @@ static bool prv_should_ignore_because_stale(time_t timestamp) {
   }
 
   return false;
+}
+
+static bool prv_should_ignore_because_not_missed(bool has_valid_date, time_t timestamp) {
+  // Without a date the notification can't be placed relative to the disconnection.
+  if (!has_valid_date || s_session_lost_time == 0) {
+    return true;
+  }
+  return timestamp < (s_session_lost_time - RECOVERED_SESSION_LOST_SLACK_S);
 }
 
 static bool prv_should_ignore_because_muted(const iOSNotifPrefs *app_notif_prefs) {
@@ -309,6 +330,15 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     goto cleanup;
   }
 
+  const bool is_recovered = (properties & ANCSProperty_Recovered);
+  if (is_recovered) {
+    const bool has_valid_date = date && (ancs_notifications_util_parse_timestamp(date) != 0);
+    if (prv_should_ignore_because_not_missed(has_valid_date, timestamp)) {
+      PBL_LOG_DBG("Ignoring pre-existing ANCS notification: %" PRIu32, uid);
+      goto cleanup;
+    }
+  }
+
   // If this is an incoming call, let the phone service handle it
   // It would be nice to handle FaceTime calls with the phone service but it doesn't look like we
   // can.
@@ -340,6 +370,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   notification->header.type = TimelineItemTypeNotification;
   notification->header.layout = LayoutIdNotification;
   notification->header.ancs_notif = true;
+  notification->header.silent = ((properties & ANCSProperty_Silent) != 0);
 
   notification_storage_lock();
   // filter out duplicate notifications
@@ -354,8 +385,10 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     PBL_LOG_DBG("Updating ANCS notification: %" PRIu32, uid);
     prv_handle_ancs_update(notification, &existing_header);
   } else {
-    PBL_LOG_DBG("New ANCS notification: %" PRIu32, uid);
-    prv_handle_new_ancs_notif(notification);
+    const bool alert = !is_recovered || (timestamp >= (pbl_realtime() - RECOVERED_ALERT_MAX_AGE_S));
+    PBL_LOG_DBG("New ANCS notification: %" PRIu32 " (recovered=%d, alert=%d)", uid, is_recovered,
+                alert);
+    prv_handle_new_ancs_notif(notification, alert);
   }
 
   notification_storage_unlock();
@@ -375,6 +408,10 @@ cleanup:
   ios_notif_pref_db_free_prefs(app_notif_prefs);
 }
 
+void ancs_notifications_handle_session_lost(void) {
+  s_session_lost_time = pbl_realtime();
+}
+
 void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSProperty properties) {
   // Dismissal from phone is only properly supported on iOS 9 and up
   // The presence of the DIS service tells us we have at least iOS 9
@@ -383,7 +420,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
     return;
   }
 
-  Uuid *notification_id = kernel_malloc_check(sizeof(Uuid));
+  Uuid *notification_id = pbl_malloc_check(sizeof(Uuid));
 
   if (notification_storage_find_ancs_notification_id(ancs_uid, notification_id)) {
     PBL_LOG_DBG("Notification removed from notification centre: (UID: %" PRIu32 ")", ancs_uid);
@@ -393,7 +430,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
   } else {
     // notification_id is passed into an event if a matching notification was found, so it will
     // be freed by the system later
-    kernel_free(notification_id);
+    pbl_free(notification_id);
   }
 
   if (properties & ANCSProperty_IncomingCall) {
@@ -415,7 +452,7 @@ void ancs_notifications_handle_access_denied(void) {
   attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
 
   TimelineItem *item = timeline_item_create_with_attributes(
-      rtc_get_time(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
+      pbl_realtime(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
   i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);
   if (!item) {

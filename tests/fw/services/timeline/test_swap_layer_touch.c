@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/timeline/layout_layer.h>
 #include <pbl/services/timeline/swap_layer.h>
 
@@ -15,6 +15,7 @@
 #include <applib/ui/window.h>
 #include <clar.h>
 #include <fake_rtc.h>
+#include <shell/system_theme.h>
 
 // Stubs
 
@@ -202,7 +203,7 @@ static void prv_drive(TouchEventType type, int16_t x, int16_t y) {
 }
 
 static void prv_advance_ms(uint32_t ms) {
-  fake_rtc_increment_ticks((RtcTicks)ms * RTC_TICKS_HZ / 1000);
+  fake_rtc_increment_ticks((uint64_t)ms * PBL_TICK_HZ / 1000);
 }
 
 void test_swap_layer_touch__initialize(void) {

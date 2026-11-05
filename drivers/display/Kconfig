@@ -8,20 +8,21 @@ menuconfig DISPLAY
 
 if DISPLAY
 
-config DISPLAY_JDI_SF32LB
-    bool "JDI (SiFli SF32LB)"
+config DISPLAY_SF32LB_LCDC
+    bool "SiFli SF32LB LCD controller"
     default y if SOC_SF32LB52
-    select HAL_SIFLI
-    select HAL_SIFLI_LCD
+    depends on CLK_SF32LB && PINCTRL && RESET_SF32LB
+    select PANEL
     help
-      Support for JDI display via SiFli SF32LB.
+      Support for the SiFli SF32LB LCD controller, driving a JDI
+      memory-in-pixel panel.
 
-config DISPLAY_SHARP_LS013B7DH01_NRF5
-    bool "Sharp LS013B7DH01 (nRF5)"
+config DISPLAY_SHARP_LS013B7DH01
+    bool "Sharp LS013B7DH01"
     default y if SOC_NRF52
-    select HAL_NORDIC
+    depends on PWM && SPI
     help
-      Support for the Sharp LS013B7DH01 display via nRF5.
+      Support for the Sharp LS013B7DH01 memory LCD.
 
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
@@ -35,6 +36,33 @@ config DISPLAY_SDL
     select SDL
     help
       Display shown in an SDL window on the host of a native build.
+
+if DISPLAY_SDL
+
+config DISPLAY_SDL_WIDTH
+    int "SDL display width"
+    help
+      Width of the SDL display, in pixels.
+
+config DISPLAY_SDL_HEIGHT
+    int "SDL display height"
+    help
+      Height of the SDL display, in pixels.
+
+config DISPLAY_SDL_MONO
+    bool "SDL display is monochrome"
+    help
+      The SDL display takes a 1-bit framebuffer, 8-bit color otherwise.
+
+endif # DISPLAY_SDL
+
+config DISPLAY_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The display shell command, to show the display and turn its panel on
+      or off.
 
 module = DRIVER_DISPLAY
 module-str = Display

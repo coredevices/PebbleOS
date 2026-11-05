@@ -7,21 +7,17 @@
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/debounced_button.h>
-#include <pbl/drivers/display/display.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/otp.h>
-#include <pbl/drivers/rtc.h>
-#include <pbl/drivers/sf32lb52/rc10k.h>
-#include <pbl/drivers/touch/touch_sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/logging/backend.h>
+#include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/boot_splash.h>
@@ -36,20 +32,18 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <board/board.h>
-#include <console/dbgserial.h>
 #include <console/dbgserial_input.h>
 #include <console/pulse.h>
 #include <console/serial_console.h>
 #include <debug/debug.h>
+#include <flash_region/flash_region.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/fault_handling.h>
+#include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/kernel_heap.h>
 #include <kernel/memory_layout.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
-#include <logging/pulse_logging.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <resource/resource.h>
@@ -69,32 +63,21 @@ static void main_task(void *parameter);
 
 static void print_splash_screen(void) {
 #if defined(CONFIG_MFG)
-  PBL_LOG_ALWAYS("PebbleOS - MANUFACTURING MODE");
+  PBL_LOG_ALWAYS("Manufacturing mode");
 #elifdef CONFIG_RECOVERY_FW
-  PBL_LOG_ALWAYS("PebbleOS - RECOVERY MODE");
-#else
-  PBL_LOG_ALWAYS("PebbleOS");
+  PBL_LOG_ALWAYS("Recovery mode");
 #endif
-  PBL_LOG_ALWAYS("%s%s", TINTIN_METADATA.version_tag,
-                 (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware)
-                     ? (TINTIN_METADATA.is_slot_0 ? " (slot0)" : " (slot1)")
-                     : "");
+  if (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) {
+    PBL_LOG_ALWAYS("Slot %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
+  }
   PBL_LOG_ALWAYS("(c) 2013-2026 The PebbleOS contributors");
   PBL_LOG_ALWAYS(" ");
 }
 
 int main(void) {
-  pbl_irq_init();
-
-  enable_fault_handlers();
-
-  kernel_heap_init();
-
-  dbgserial_init();
-  pulse_early_init();
   print_splash_screen();
 
-  rtc_init();
+  clock_restore_time();
 
 #ifdef CONFIG_RECOVERY_FW
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
@@ -121,18 +104,15 @@ static void init_drivers(void) {
   pbl_device_init_all();
   board_init();
 
-  // The dbgserial input support requires timer support, so it is initialized here, much later
-  // than the core dbgserial_init().
+  // Console input needs timers, so it starts long after the early console.
   dbgserial_input_init();
 
   serial_console_init();
 
   battery_init();
 
-  flash_init();
-  flash_sleep_when_idle(true);
-  flash_enable_write_protection();
-  flash_prf_set_protection(true);
+  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {
@@ -142,13 +122,6 @@ static void init_drivers(void) {
 #ifdef CONFIG_MIC
   mic_init(MIC);
 #endif
-
-#ifdef CONFIG_TOUCH
-  touch_sensor_init();
-#endif
-
-  rtc_init_timers();
-  rtc_alarm_init();
 }
 
 static void clear_reset_loop_detection_bits(void) {
@@ -178,8 +151,8 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
 #ifdef CONFIG_PULSE_EVERYWHERE
   pulse_init();
-  pulse_logging_init();
 #endif
+  pbl_log_init();
 
   pebble_task_configure_idle_task();
 
@@ -189,8 +162,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   board_early_init();
 
-  boot_splash_start();
-
   kernel_applib_init();
 
   system_task_init();
@@ -199,6 +170,9 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   new_timer_service_init();
   regular_timer_init();
+
+  // After the timer service, which the display may use
+  boot_splash_start();
 
   // Suspend the task watchdog while the rest of the system comes up.
   pbl_task_wdt_init();
@@ -218,6 +192,10 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
 #if defined(CONFIG_MFG)
   mfg_info_update_constant_data();
+#endif
+
+#ifdef CONFIG_LOG_BACKEND_FLASH
+  pbl_log_flash_init();
 #endif
 
   debug_init(s_mcu_reboot_reason);
@@ -245,12 +223,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   hrm_init(HRM);
 #endif
 
-  // The display has to be initialized before bluetooth because on Snowy the
-  // display FPGA shares the 32 kHz clock signal with bluetooth. If the FPGA is
-  // not programmed when we attempt to initialize bluetooth, it prevents the
-  // clock from reaching the bluetooth module and initialization fails.
-  display_init();
-
   // Stop boot splash before initializing compositor
   boot_splash_stop();
   // Can't use the compositor framebuffer until the compositor is initialized
@@ -263,13 +235,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   pbl_bt_init();
 
   services_init();
-
-  // The RTC needs be calibrated after the mfg registry service has been initialized so we can
-  // load the measured frequency.
-#if defined(CONFIG_SOC_SF32LB52) && !defined(SF32LB52_USE_LXT)
-  rc10k_init();
-#endif
-  rtc_calibrate_frequency(mfg_info_get_rtc_freq());
 
   clear_reset_loop_detection_bits();
 
@@ -289,9 +254,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   boot_bit_set(BOOT_BIT_FW_STABLE);
 #endif
 
-  // Initialize button driver at the last moment to prevent "system on" button press from
-  // entering the kernel event queue.
-  debounced_button_init();
+  input_buttons_enable();
 
   pbl_task_wdt_resume();
 }

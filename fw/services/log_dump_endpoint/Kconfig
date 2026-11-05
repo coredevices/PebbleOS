@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_LOG_DUMP_ENDPOINT
+    bool "Log dump endpoint"
+    depends on LOG_BACKEND_FLASH
+    help
+      Endpoint the phone uses to fetch flash log generations.
+
+if SERVICE_LOG_DUMP_ENDPOINT
+
+module = SERVICE_LOG_DUMP_ENDPOINT
+module-str = Log dump endpoint
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

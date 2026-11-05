@@ -1,303 +1,301 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-// clang-format off
+#include <errno.h>
+
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/uart/sf32lb.h>
-#include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
-#include <bf0_hal_dma.h>
-#include <bf0_hal_uart.h>
-#include <pbl/kernel/assert.h>
-#include <pbl/kernel/fatal.h>
-// clang-format on
+#include <hardware/sf32lb52_usart.h>
 
-static void prv_init(UARTDevice *dev, uint32_t mode) {
-  HAL_StatusTypeDef ret;
+// The USART kernel clock is always 48 MHz on the SF32LB52
+#define USART_CLK_HZ 48000000U
 
-  dev->state->huart.Init.Mode = mode;
-  dev->state->dev = dev;
-  ret = HAL_UART_Init(&dev->state->huart);
-  PBL_ASSERTN(ret == HAL_OK);
+#define ICR_ERRORS (UART_ICR_PECF | UART_ICR_FECF | UART_ICR_NCF | UART_ICR_ORECF)
 
-  switch (mode) {
-    case UART_MODE_TX_RX:
-      HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
-      HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
+static const struct {
+  uintptr_t base;
+  struct pbl_clk clk;
+  pbl_irq_t irqn;
+} s_instances[] = {
+  {SF32LB52_USART1_BASE, PBL_CLK(nullptr, 0), PBL_IRQN(USART1)},
+  {SF32LB52_USART2_BASE, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART2), PBL_IRQN(USART2)},
+  {SF32LB52_USART3_BASE, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART3), PBL_IRQN(USART3)},
+};
+
+static const struct pbl_uart_sf32lb *prv_sf32lb(const struct pbl_uart *uart) {
+  return container_of(uart, const struct pbl_uart_sf32lb, uart);
+}
+
+static inline uintptr_t prv_reg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {
+  return s_instances[usart->index - 1U].base + offset;
+}
+
+static inline uint32_t prv_getreg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {
+  return pbl_readl(prv_reg(usart, offset));
+}
+
+static inline void prv_putreg(const struct pbl_uart_sf32lb *usart, uint32_t offset,
+                              uint32_t value) {
+  pbl_writel(value, prv_reg(usart, offset));
+}
+
+// TC reads clear after power-on until a byte has been sent
+static void prv_flush(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+
+  if (!usart->state->tx_pending) {
+    return;
+  }
+
+  while ((prv_getreg(usart, SF32LB52_USART_ISR_OFFSET) & UART_ISR_TC) == 0U) {
+  }
+  usart->state->tx_pending = false;
+}
+
+static int prv_early_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+  const struct pbl_clk *clk;
+  int ret;
+
+  if (usart->index == 0U || usart->index > ARRAY_LENGTH(s_instances) ||
+      (usart->rx_dma != nullptr) != (usart->rx_buf != nullptr)) {
+    return -EINVAL;
+  }
+
+  clk = &s_instances[usart->index - 1U].clk;
+  if (clk->ctrl != nullptr) {
+    ret = pbl_device_init(&clk->ctrl->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_clk_enable(clk);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = pbl_pinctrl_select_state(&usart->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0) {
+    return ret;
+  }
+
+  prv_flush(uart);
+
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR2_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR3_OFFSET, 0U);
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_UE);
+
+  return 0;
+}
+
+static int prv_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+  int ret;
+
+  ret = prv_early_init(uart);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (usart->rx_dma != nullptr) {
+    const struct pbl_dma_slave_config cfg = {
+      .src_addr = prv_reg(usart, SF32LB52_USART_RDR_OFFSET),
+      .src_addr_width = PBL_DMA_SLAVE_BUSWIDTH_1_BYTE,
+    };
+
+    ret = pbl_device_init(&usart->rx_dma->ctrl->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_dma_slave_config(usart->rx_dma, &cfg);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  pbl_irq_enable(s_instances[usart->index - 1U].irqn);
+
+  return 0;
+}
+
+// Frame settings need the USART disabled, the baud rate only takes once it is enabled
+static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+  uint32_t brr = USART_CLK_HZ / cfg->baudrate;
+  uint32_t cr1 = PBL_FIELD_PREP(UART_CR1_M_MASK, UART_CR1_M_8BIT);
+  uint32_t cr3 = 0U;
+  uint32_t smplini = UART_MISCR_SMPLINI_16X;
+
+  switch (cfg->parity) {
+    case PBL_UART_PARITY_NONE:
       break;
-    case UART_MODE_TX:
-      HAL_PIN_Set(dev->tx.pad, dev->tx.func, dev->tx.flags, 1);
+    case PBL_UART_PARITY_ODD:
+      cr1 = PBL_FIELD_PREP(UART_CR1_M_MASK, UART_CR1_M_9BIT) | UART_CR1_PCE | UART_CR1_PS;
       break;
-    case UART_MODE_RX:
-      HAL_PIN_Set(dev->rx.pad, dev->rx.func, dev->rx.flags, 1);
+    case PBL_UART_PARITY_EVEN:
+      cr1 = PBL_FIELD_PREP(UART_CR1_M_MASK, UART_CR1_M_9BIT) | UART_CR1_PCE;
       break;
     default:
-      pbl_panic();
+      return -ENOTSUP;
+  }
+
+  switch (cfg->flow_ctrl) {
+    case PBL_UART_FLOW_CTRL_NONE:
       break;
+    case PBL_UART_FLOW_CTRL_RTS_CTS:
+      cr3 = UART_CR3_RTSE | UART_CR3_CTSE;
+      break;
+    default:
+      return -ENOTSUP;
   }
 
-  dev->state->initialized = true;
-
-  if (dev->state->hdma.Instance != nullptr) {
-    __HAL_LINKDMA(&dev->state->huart, hdmarx, dev->state->hdma);
-
-    pbl_irq_enable(dev->dma_irqn);
-
-    __HAL_UART_ENABLE_IT(&dev->state->huart, UART_IT_IDLE);
+  if (brr < USART_BRR_MIN) {
+    brr = (2U * USART_CLK_HZ) / cfg->baudrate;
+    cr1 |= UART_CR1_OVER8;
+    smplini = UART_MISCR_SMPLINI_8X;
   }
-}
 
-void uart_init(UARTDevice *dev) {
-  prv_init(dev, UART_MODE_TX_RX);
-}
-
-void uart_init_open_drain(UARTDevice *dev) {
-  pbl_panic();
-}
-
-void uart_init_tx_only(UARTDevice *dev) {
-  prv_init(dev, UART_MODE_TX);
-}
-
-void uart_init_rx_only(UARTDevice *dev) {
-  prv_init(dev, UART_MODE_RX);
-}
-
-void uart_deinit(UARTDevice *dev) {
-  HAL_UART_DeInit(&dev->state->huart);
-}
-
-void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
-  HAL_StatusTypeDef ret;
-
-  PBL_ASSERTN(dev->state->initialized);
-
-  HAL_UART_DeInit(&dev->state->huart);
-
-  dev->state->huart.Init.BaudRate = baud_rate;
-  ret = HAL_UART_Init(&dev->state->huart);
-  PBL_ASSERTN(ret == HAL_OK);
-}
-
-// Read / Write APIs
-////////////////////////////////////////////////////////////////////////////////
-
-void uart_write_byte(UARTDevice *dev, uint8_t data) {
-  HAL_UART_Transmit(&dev->state->huart, &data, 1, HAL_MAX_DELAY);
-}
-
-uint8_t uart_read_byte(UARTDevice *dev) {
-  return __HAL_UART_GETC(&dev->state->huart);
-}
-
-bool uart_is_rx_ready(UARTDevice *dev) {
-  return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_RXNE;
-}
-
-bool uart_has_rx_overrun(UARTDevice *dev) {
-  return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_ORE;
-}
-
-bool uart_has_rx_framing_error(UARTDevice *dev) {
-  return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_FE;
-}
-
-bool uart_is_tx_ready(UARTDevice *dev) {
-  return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_TXE;
-}
-
-bool uart_is_tx_complete(UARTDevice *dev) {
-  return READ_REG(dev->state->huart.Instance->ISR) & USART_ISR_TC;
-}
-
-void uart_wait_for_tx_complete(UARTDevice *dev) {
-  while (!uart_is_tx_complete(dev))
-    continue;
-}
-
-// Interrupts
-////////////////////////////////////////////////////////////////////////////////
-
-static void prv_set_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  if (enabled) {
-    PBL_ASSERTN(dev->state->tx_irq_handler || dev->state->rx_irq_handler);
-    pbl_irq_enable(dev->irqn);
-  } else {
-    pbl_irq_disable(dev->irqn);
+  if (brr < USART_BRR_MIN) {
+    return -ENOTSUP;
   }
+
+  prv_flush(uart);
+
+  pbl_modifyl(UART_CR1_UE, 0U, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+  pbl_modifyl(UART_CR1_M_MASK | UART_CR1_PCE | UART_CR1_PS | UART_CR1_OVER8, cr1,
+              prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+  pbl_modifyl(UART_CR3_RTSE | UART_CR3_CTSE, cr3, prv_reg(usart, SF32LB52_USART_CR3_OFFSET));
+  pbl_modifyl(0U, UART_CR1_UE, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+
+  pbl_modifyl(UART_MISCR_SMPLINI_MASK, PBL_FIELD_PREP(UART_MISCR_SMPLINI_MASK, smplini),
+              prv_reg(usart, SF32LB52_USART_MISCR_OFFSET));
+  prv_putreg(usart, SF32LB52_USART_BRR_OFFSET, brr);
+
+  return 0;
 }
 
-void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
-  PBL_ASSERTN(dev->state->initialized);
-  dev->state->rx_irq_handler = irq_handler;
-}
+static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
 
-void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
-  PBL_ASSERTN(dev->state->initialized);
-  dev->state->tx_irq_handler = irq_handler;
-}
-
-void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  PBL_ASSERTN(dev->state->initialized);
-  if (enabled) {
-    soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
-    dev->state->rx_int_enabled = true;
-    SET_BIT(dev->state->huart.Instance->CR1, USART_CR1_RXNEIE);
-    prv_set_interrupt_enabled(dev, true);
-  } else {
-    // disable interrupt if TX is also disabled
-    prv_set_interrupt_enabled(dev, dev->state->tx_int_enabled);
-    CLEAR_BIT(dev->state->huart.Instance->CR1, USART_CR1_RXNEIE);
-    dev->state->rx_int_enabled = false;
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
+  while ((prv_getreg(usart, SF32LB52_USART_ISR_OFFSET) & UART_ISR_TXE) == 0U) {
   }
+  prv_putreg(usart, SF32LB52_USART_TDR_OFFSET, c);
+  usart->state->tx_pending = true;
 }
 
-void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  PBL_ASSERTN(dev->state->initialized);
-  if (enabled) {
-    dev->state->tx_int_enabled = true;
-    SET_BIT(dev->state->huart.Instance->CR1, USART_CR1_TXEIE);
-    prv_set_interrupt_enabled(dev, true);
-  } else {
-    // disable interrupt if RX is also disabled
-    prv_set_interrupt_enabled(dev, dev->state->rx_int_enabled);
-    CLEAR_BIT(dev->state->huart.Instance->CR1, USART_CR1_TXEIE);
-    dev->state->tx_int_enabled = false;
+static void prv_dma_drain(const struct pbl_uart_sf32lb *usart) {
+  struct pbl_uart_sf32lb_state *state = usart->state;
+  size_t residue;
+  uint32_t head;
+
+  pbl_irq_lock();
+
+  if (!usart->uart.state->rx_enabled || pbl_dma_tx_status(usart->rx_dma, &residue) != 0) {
+    pbl_irq_unlock();
+    return;
   }
-}
 
-void uart_irq_handler(UARTDevice *dev) {
-  PBL_ASSERTN(dev->state->initialized);
-  uint32_t idx;
+  head = (PBL_UART_SF32LB_RX_BUF_SIZE - residue) % PBL_UART_SF32LB_RX_BUF_SIZE;
+  dcache_invalidate(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
 
-  if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
-    const UARTRXErrorFlags err_flags = {
-      .overrun_error = uart_has_rx_overrun(dev),
-      .framing_error = uart_has_rx_framing_error(dev),
-    };
-    // DMA
-    if (dev->state->rx_dma_buffer &&
-        (__HAL_UART_GET_FLAG(&dev->state->huart, UART_FLAG_IDLE) != RESET) &&
-        (__HAL_UART_GET_IT_SOURCE(&dev->state->huart, UART_IT_IDLE) != RESET)) {
-      // process bytes from the DMA buffer
-      const uint32_t dma_length = dev->state->rx_dma_length;
-      dcache_invalidate(dev->state->rx_dma_buffer, dma_length);
-      const uint32_t recv_total_index = dma_length - __HAL_DMA_GET_COUNTER(&dev->state->hdma);
-      int32_t recv_len = recv_total_index - dev->state->rx_dma_index;
-      if (recv_len < 0) {
-        recv_len += dma_length;
-      }
+  while (state->rx_pos != head) {
+    uint8_t c = usart->rx_buf[state->rx_pos];
 
-      idx = dev->state->rx_dma_index;
-      for (int32_t i = 0; i < recv_len; i++) {
-        uint8_t data;
-        data = dev->state->rx_dma_buffer[idx];
-        dev->state->rx_irq_handler(dev, data, &err_flags);
-        idx++;
-        if (idx >= dma_length) {
-          idx = 0;
-        }
-      }
-      dev->state->rx_dma_index = recv_total_index;
-      if (dev->state->rx_dma_index >= dma_length) {
-        dev->state->rx_dma_index = 0;
-      }
-      uart_clear_all_interrupt_flags(dev);
-      __HAL_UART_CLEAR_IDLEFLAG(&dev->state->huart);
-    } else {
-      const bool has_byte = uart_is_rx_ready(dev);
-      // read the data register regardless to clear the error flags
-      const uint8_t data = uart_read_byte(dev);
-      if (has_byte) {
-        dev->state->rx_irq_handler(dev, data, &err_flags);
-      }
+    state->rx_pos = (state->rx_pos + 1U) % PBL_UART_SF32LB_RX_BUF_SIZE;
+    if (!pbl_uart_receive(&usart->uart, c)) {
+      break;
     }
   }
-  if (dev->state->tx_irq_handler && dev->state->tx_int_enabled && uart_is_tx_ready(dev)) {
-    dev->state->tx_irq_handler(dev);
-  }
+
+  pbl_irq_unlock();
 }
 
-void uart_clear_all_interrupt_flags(UARTDevice *dev) {
-  UART_HandleTypeDef *uart = &dev->state->huart;
-  if (__HAL_UART_GET_FLAG(uart, UART_FLAG_ORE) != RESET) {
-    __HAL_UART_CLEAR_OREFLAG(uart);
-  }
-  if (__HAL_UART_GET_FLAG(uart, UART_FLAG_NE) != RESET) {
-    __HAL_UART_CLEAR_NEFLAG(uart);
-  }
-  if (__HAL_UART_GET_FLAG(uart, UART_FLAG_FE) != RESET) {
-    __HAL_UART_CLEAR_FEFLAG(uart);
-  }
-  if (__HAL_UART_GET_FLAG(uart, UART_FLAG_PE) != RESET) {
-    __HAL_UART_CLEAR_PEFLAG(uart);
-  }
+static void prv_dma_callback(void *arg, int status) {
+  prv_dma_drain(arg);
 }
 
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
-  size_t recv_len;
-  size_t recv_total_index;
-  uint32_t idx;
+static int prv_rx_enable(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+  uint32_t cr1 = UART_CR1_RE | UART_CR1_RXNEIE;
+  int ret;
 
-  UARTDeviceState *state = container_of(huart, UARTDeviceState, huart);
-  UARTDevice *dev = (UARTDevice *)state->dev;
+  (void)prv_getreg(usart, SF32LB52_USART_RDR_OFFSET);
+  prv_putreg(usart, SF32LB52_USART_ICR_OFFSET, ICR_ERRORS | UART_ICR_IDLECF);
 
-  dcache_invalidate(state->rx_dma_buffer, state->rx_dma_length);
-  recv_total_index = state->rx_dma_length - __HAL_DMA_GET_COUNTER(&state->hdma);
-  if (recv_total_index < state->rx_dma_index)
-    recv_len = state->rx_dma_length + recv_total_index - state->rx_dma_index;
-  else
-    recv_len = recv_total_index - state->rx_dma_index;
+  if (usart->rx_dma != nullptr) {
+    // The buffer is invalidated whole, so it must not share cache lines with anything else
+    dcache_flush_invalidate(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
+    usart->state->rx_pos = 0U;
 
-  idx = state->rx_dma_index;
-  state->rx_dma_index = recv_total_index;
-  if (recv_len) {
-    for (size_t i = 0; i < recv_len; i++) {
-      uint8_t data;
-      data = state->rx_dma_buffer[idx];
-      state->rx_irq_handler(dev, data, nullptr);
-      idx++;
-      if (idx >= state->rx_dma_length) {
-        idx = 0;
-      }
+    ret = pbl_dma_prep_dma_cyclic(usart->rx_dma, usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE,
+                                  PBL_UART_SF32LB_RX_BUF_SIZE / 2U, PBL_DMA_DEV_TO_MEM,
+                                  prv_dma_callback, (void *)usart);
+    if (ret != 0) {
+      return ret;
+    }
+
+    pbl_modifyl(0U, UART_CR3_DMAR, prv_reg(usart, SF32LB52_USART_CR3_OFFSET));
+    cr1 = UART_CR1_RE | UART_CR1_IDLEIE;
+  }
+
+  pbl_modifyl(0U, cr1, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+
+  // The USART does not receive in deep sleep
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
+
+  return 0;
+}
+
+static void prv_rx_disable(const struct pbl_uart *uart) {
+  const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
+
+  pbl_modifyl(UART_CR1_RE | UART_CR1_RXNEIE | UART_CR1_IDLEIE, 0U,
+              prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+
+  if (usart->rx_dma != nullptr) {
+    (void)pbl_dma_terminate(usart->rx_dma);
+    pbl_modifyl(UART_CR3_DMAR, 0U, prv_reg(usart, SF32LB52_USART_CR3_OFFSET));
+  }
+
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
+}
+
+void pbl_uart_sf32lb_irq_handler(const struct pbl_uart_sf32lb *usart) {
+  uint32_t isr = prv_getreg(usart, SF32LB52_USART_ISR_OFFSET);
+  uint32_t cr1 = prv_getreg(usart, SF32LB52_USART_CR1_OFFSET);
+
+  if ((cr1 & UART_CR1_IDLEIE) != 0U && (isr & UART_ISR_IDLE) != 0U) {
+    prv_putreg(usart, SF32LB52_USART_ICR_OFFSET, ICR_ERRORS | UART_ICR_IDLECF);
+    prv_dma_drain(usart);
+  }
+
+  if ((cr1 & UART_CR1_RXNEIE) != 0U && (isr & (UART_ISR_RXNE | UART_ISR_ORE)) != 0U) {
+    uint8_t c = PBL_FIELD_GET(USART_RDR_MASK, prv_getreg(usart, SF32LB52_USART_RDR_OFFSET));
+
+    prv_putreg(usart, SF32LB52_USART_ICR_OFFSET, ICR_ERRORS);
+    if ((isr & UART_ISR_RXNE) != 0U) {
+      (void)pbl_uart_receive(&usart->uart, c);
     }
   }
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  HAL_UART_RxHalfCpltCallback(huart);
-}
-
-// DMA
-////////////////////////////////////////////////////////////////////////////////
-
-void uart_dma_irq_handler(UARTDevice *dev) {
-  HAL_DMA_IRQHandler(&dev->state->hdma);
-}
-
-void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
-  // The DMA buffer is invalidated whole from the IRQ paths, so it must not
-  // share cache lines with anything else.
-  const uintptr_t line_mask = dcache_line_size() - 1;
-  PBL_ASSERTN(((uintptr_t)buffer & line_mask) == 0 && (length & line_mask) == 0);
-  dcache_flush_invalidate(buffer, length);
-  dev->state->rx_dma_buffer = buffer;
-  dev->state->rx_dma_length = length;
-  dev->state->rx_dma_index = 0;
-  __HAL_UART_ENABLE_IT(&dev->state->huart, UART_IT_IDLE);
-  HAL_UART_DmaTransmit(&dev->state->huart, buffer, length, DMA_PERIPH_TO_MEMORY);
-}
-
-void uart_stop_rx_dma(UARTDevice *dev) {
-  dev->state->rx_dma_buffer = nullptr;
-  dev->state->rx_dma_length = 0;
-  HAL_UART_DMAPause(&dev->state->huart);
-}
-
-void uart_clear_rx_dma_buffer(UARTDevice *dev) {
-  dev->state->rx_dma_index = dev->state->rx_dma_length - __HAL_DMA_GET_COUNTER(&dev->state->hdma);
-}
+const struct pbl_uart_ops pbl_uart_sf32lb_ops = {
+  .init = prv_init,
+  .early_init = prv_early_init,
+  .configure = prv_configure,
+  .poll_out = prv_poll_out,
+  .flush = prv_flush,
+  .rx_enable = prv_rx_enable,
+  .rx_disable = prv_rx_disable,
+};

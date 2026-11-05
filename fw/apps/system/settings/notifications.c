@@ -14,12 +14,12 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
 #include <applib/ui/action_menu_window_private.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 
 // Offset between vibe intensity menu item index and vibe intensity enum values
 #define INTENSITY_ROW_OFFSET 1

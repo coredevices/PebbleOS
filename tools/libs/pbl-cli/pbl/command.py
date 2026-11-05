@@ -10,6 +10,7 @@ directory and the shared options.
 """
 
 import argparse
+import contextlib
 import os
 import shlex
 import subprocess
@@ -18,10 +19,16 @@ from abc import ABC, abstractmethod
 from pbl import util
 from pbl.errors import CommandContextError, CommandError
 
-__all__ = ["CommandContextError", "CommandError", "PblCommand", "global_options"]
+__all__ = [
+    "CommandContextError",
+    "CommandError",
+    "PblCommand",
+    "global_options",
+    "normalize_wait",
+]
 
 # Command groups, in the order the top-level help lists them.
-GROUPS = ("build", "device", "emulator", "other")
+GROUPS = ("build", "device", "other")
 
 
 def global_options():
@@ -46,7 +53,50 @@ def global_options():
         default=argparse.SUPPRESS,
         help="Print the commands that would run instead of running them",
     )
+    group.add_argument(
+        "--lab",
+        metavar="FILE",
+        default=argparse.SUPPRESS,
+        help="Lab file: the hardware wired to this host (default: $PBL_LAB, "
+        "else ~/.config/pbl/lab.yaml)",
+    )
+    group.add_argument(
+        "--watch",
+        metavar="NAME",
+        default=argparse.SUPPRESS,
+        help="The lab's watch to use, when several run the build",
+    )
+    group.add_argument(
+        "--wait",
+        metavar="SECONDS",
+        nargs="?",
+        const=float("inf"),
+        type=float,
+        default=argparse.SUPPRESS,
+        help="Wait for a port or watch another session is using, instead of "
+        "failing right away: this long, or until canceled",
+    )
     return parser
+
+
+def _is_number(arg):
+    try:
+        float(arg)
+    except ValueError:
+        return False
+    return True
+
+
+def normalize_wait(argv):
+    """Spell a --wait without seconds as ``--wait=inf``, as argparse would
+    otherwise take the argument after it for them: ``--wait run``."""
+    out = list(argv)
+    for i, arg in enumerate(out):
+        if arg == "--":
+            break
+        if arg == "--wait" and (i + 1 == len(out) or not _is_number(out[i + 1])):
+            out[i] = "--wait=inf"
+    return out
 
 
 class PblCommand(ABC):
@@ -61,6 +111,7 @@ class PblCommand(ABC):
         self.parser = None
         self.workspace = None
         self.args = None
+        self._lab = False
 
     # --- wiring -----------------------------------------------------------
 
@@ -86,6 +137,11 @@ class PblCommand(ABC):
             self.parser.error(f"unrecognized arguments: {' '.join(unknown)}")
         self.workspace = workspace
         self.args = args
+        wait = getattr(args, "wait", None)
+        if wait is not None:
+            from pbl import lock
+
+            os.environ[lock.WAIT_ENV] = str(wait)
         return self.do_run(args, unknown) or 0
 
     @abstractmethod
@@ -123,6 +179,76 @@ class PblCommand(ABC):
         """The unit tests' build directory, a CMake project of its own."""
         return self._build_dir(self.workspace.test_dir)
 
+    def lab(self):
+        """The lab (:class:`pbl.lab.Lab`), or None without a lab file."""
+        if self._lab is False:
+            from pbl import lab as labs
+
+            path = getattr(self.args, "lab", None) or labs.default_path()
+            if path is None:
+                if getattr(self.args, "watch", None):
+                    self.die("--watch needs a lab file: pass --lab or set $PBL_LAB")
+                self._lab = None
+            else:
+                try:
+                    self._lab = labs.Lab.load(path)
+                except labs.LabError as e:
+                    self.die(str(e))
+        return self._lab
+
+    def lab_watch(self, build, tty=None):
+        """The lab's watch for ``build``: the one given with --watch, the one
+        on ``tty`` when a port is given, else the one running the build.
+        None on the emulator, without a lab, or when no watch matches."""
+        from pbl import lab as labs
+
+        if build.config.CONFIG_QEMU or build.config.CONFIG_SOC_POSIX:
+            return None
+        lab = self.lab()
+        if lab is None:
+            return None
+        name = getattr(self.args, "watch", None)
+        try:
+            if name is None and tty is not None:
+                watch = lab.watch_on(tty)
+            else:
+                watch = lab.watch_for(build.board, name)
+        except labs.LabError as e:
+            self.die(str(e))
+        if watch is not None and watch.supply is not None:
+            self.wait_for_supply(lab.supplies[watch.supply])
+        return watch
+
+    def wait_for_supply(self, supply):
+        """With --wait, wait until no other checkout keeps ``supply``, and
+        with it the watch, powered: its session is between commands."""
+        from pbl import lock, power
+
+        if self.dry_run:
+            return
+        try:
+            lock.wait_free(
+                power.lock_key(supply.type, supply.port),
+                f"supply {supply.name}",
+                self.topdir,
+            )
+        except lock.LockError as e:
+            self.die(str(e))
+
+    @contextlib.contextmanager
+    def holding(self, locks):
+        """Hold the locks (:mod:`pbl.lock`) on the ports a command uses."""
+        from pbl import lock
+
+        if self.dry_run:
+            yield
+            return
+        try:
+            with lock.holding(locks):
+                yield
+        except lock.LockError as e:
+            self.die(str(e))
+
     # --- running things ---------------------------------------------------
 
     def run_cmd(self, cmd, cwd=None, **kwargs):
@@ -130,9 +256,7 @@ class PblCommand(ABC):
         if self.dry_run:
             util.inf("[dry-run]", shlex.join(str(a) for a in cmd), color="yellow")
             return 0
-        return subprocess.call(
-            [str(a) for a in cmd], cwd=cwd or self.topdir, **kwargs
-        )
+        return subprocess.call([str(a) for a in cmd], cwd=cwd or self.topdir, **kwargs)
 
     def run_shell(self, cmd, cwd=None, **kwargs):
         """Run a shell command string from the workspace root."""

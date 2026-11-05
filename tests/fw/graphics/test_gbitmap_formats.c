@@ -29,22 +29,33 @@ void test_gbitmap_formats__create_blank(void) {
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat1BitPalette);
   cl_assert(nullptr != bmp);
-  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(nullptr != bmp->palette);
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat2BitPalette);
   cl_assert(nullptr != bmp);
-  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(nullptr != bmp->palette);
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat4BitPalette);
   cl_assert(nullptr != bmp);
-  cl_assert(g_gbitmap_data_row_infos != bmp->data_row_infos); // union with .palette
+  cl_assert(nullptr != bmp->palette);
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat8BitCircular);
   cl_assert(nullptr == bmp);
 
   bmp = gbitmap_create_blank(s_full, GBitmapFormat8BitCircular);
   cl_assert(nullptr != bmp);
-  cl_assert(g_gbitmap_data_row_infos == bmp->data_row_infos);
+  cl_assert(nullptr == bmp->data_row_infos);
+  GBitmapDataRowInfo info = gbitmap_get_data_row_info(bmp, 0);
+  cl_assert_equal_p(bmp->addr, info.data);
+  cl_assert_equal_i(113, info.min_x);
+  cl_assert_equal_i(146, info.max_x);
+  info = gbitmap_get_data_row_info(bmp, DISP_ROWS / 2);
+  cl_assert_equal_p((uint8_t *)bmp->addr + DISP_ROWS / 2 * DISP_COLS, info.data);
+  cl_assert_equal_i(0, info.min_x);
+  cl_assert_equal_i(DISP_COLS - 1, info.max_x);
+  info = gbitmap_get_data_row_info(bmp, DISP_ROWS - 1);
+  cl_assert_equal_i(113, info.min_x);
+  cl_assert_equal_i(146, info.max_x);
 #endif
 }
 

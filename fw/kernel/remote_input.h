@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/drivers/button_id.h>
 #include <pbl/services/comm_session/session.h>
+
+#include <applib/ui/click.h>
 
 //! Result of an injected input request. Doubles as the status byte of the
 //! remote input endpoint's ack.
@@ -28,6 +29,9 @@ typedef enum RemoteInputSwipeDirection {
 
 //! Default swipe duration, comfortably inside the swipe recognizer's limit.
 #define REMOTE_INPUT_SWIPE_DEFAULT_DURATION_MS 150
+
+//! Default touch path duration: a tap when the finger stays put.
+#define REMOTE_INPUT_TOUCH_DEFAULT_DURATION_MS 100
 
 //! Initialize the injected input service.
 void remote_input_init(void);
@@ -58,6 +62,12 @@ RemoteInputResult remote_input_button_set(uint8_t buttons);
 //! @param duration_ms Touchdown-to-liftoff duration. Anything above the swipe recognizer's
 //!        maximum is Invalid: the recognizer would read it as a pan and never report a swipe.
 RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16_t duration_ms);
+
+//! Synthesize a finger put down at (@p x1, @p y1), dragged in a straight line to (@p x2, @p y2)
+//! and lifted. The same start and end is a tap. Coordinates are the screen pixels the UI sees.
+//! @param duration_ms Touchdown-to-liftoff duration
+RemoteInputResult remote_input_touch(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
+                                     uint16_t duration_ms);
 
 //! Remote input endpoint handler. Answers every message with a {command, RemoteInputResult} ack.
 void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);

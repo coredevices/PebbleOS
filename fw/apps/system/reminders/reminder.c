@@ -8,22 +8,25 @@
 #include <time.h>
 
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/ui.h>
 #include <applib/voice/transcription_dialog.h>
 #include <applib/voice/voice_window.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
@@ -195,7 +198,7 @@ static void prv_handle_dictation_event(PebbleEvent *e, void *context) {
       // If the user didn't specify a time set it to be 1 hour from the current time,
       // rounded up to the nearest 15 min.
       // Ex: a reminder created at 10:08 AM with no specified time is due at 11:15 AM
-      time_t utc_sec = rtc_get_time() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
+      time_t utc_sec = pbl_realtime() + PBL_SEC_PER_HOUR + (15 * PBL_SEC_PER_MIN);
       struct pbl_tm local_tm;
       pbl_localtime_r(&utc_sec, &local_tm);
       local_tm.tm_min -= (local_tm.tm_min % 15);
@@ -290,7 +293,7 @@ const PebbleProcessMd *reminder_app_get_info(void) {
       capabilities.reminders_app_support &&
       (prefs ? (prefs->appState == ReminderAppState_Enabled) : false);
 
-  task_free(prefs);
+  pbl_free(prefs);
 
   static const PebbleProcessMdSystem s_reminder_app_info = {
     .common =

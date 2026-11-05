@@ -9,6 +9,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
@@ -25,7 +26,6 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/ui/system_icons.h>
@@ -474,7 +474,7 @@ static void prv_window_unload(Window *window) {
     prv_deinitialize_info_text(data);
     property_animation_destroy(data->info_text_in_animation);
     property_animation_destroy(data->info_text_out_animation);
-    kernel_free(data);
+    pbl_free(data);
   }
 
   s_data_ptr = nullptr;
@@ -545,7 +545,7 @@ static void prv_create_new_pairing_data(void) {
     window_stack_remove(&s_data_ptr->window, true /* animated */);
   }
 
-  BTPairingUIData *data = kernel_malloc_check(sizeof(BTPairingUIData));
+  BTPairingUIData *data = pbl_malloc_check(sizeof(BTPairingUIData));
   *data = (BTPairingUIData){};
   data->ui_state = BTPairingUIStateAwaitingUserConfirmation;
   s_data_ptr = data;
@@ -650,7 +650,7 @@ void pbl_bt_cb_pairing_confirm_handle_request(const struct pbl_bt_pairing_confir
   size_t device_name_len = device_name ? (strlen(device_name) + 1) : 0;
   size_t token_len = confirmation_token ? (strlen(confirmation_token) + 1) : 0;
   size_t info_len = (sizeof(PebbleBluetoothPairingConfirmationInfo) + device_name_len + token_len);
-  uint8_t *cursor = (uint8_t *)kernel_zalloc_check(info_len);
+  uint8_t *cursor = (uint8_t *)pbl_zalloc_check(info_len);
 
   PebbleBluetoothPairingConfirmationInfo *confirmation_info =
       (PebbleBluetoothPairingConfirmationInfo *)cursor;

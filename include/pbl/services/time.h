@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/time.h>
 
 /**
@@ -106,7 +107,7 @@ int32_t time_get_dstoffset(void);
 time_t time_get_dst_start(void);
 
 /**
- * @brief Convert UTC time, as returned by rtc_get_time(), to local time.
+ * @brief Convert UTC time, as returned by pbl_realtime(), to local time.
  *
  * @param utc_time UTC time.
  * @return Local time.
@@ -127,8 +128,11 @@ time_t time_local_to_utc(time_t local_time);
  * @brief Set the current timezone.
  *
  * @param tz_info New timezone, including its DST period.
+ * @param prev_dst_start UTC start of the DST period before tz_info's, 0 if none.
+ * @param prev_dst_end UTC end of the DST period before tz_info's, 0 if none.
  */
-void time_util_update_timezone(const TimezoneInfo *tz_info);
+void time_util_update_timezone(const TimezoneInfo *tz_info, time_t prev_dst_start,
+                               time_t prev_dst_end);
 
 /**
  * @brief Get the local midnight starting the day of a time.

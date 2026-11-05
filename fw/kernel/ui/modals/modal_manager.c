@@ -5,7 +5,9 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 
 #include <applib/touch_service.h>
@@ -22,11 +24,9 @@
 #include <applib/ui/window_stack_private.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
-#include <system/profiler.h>
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
@@ -39,6 +39,8 @@
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
 #include <pbl/services/mic_capture.h>
 #endif
+
+PBL_PROFILER_NODE_DEFINE(render_modal);
 
 typedef struct ModalContext {
   WindowStack window_stack;
@@ -273,6 +275,15 @@ WindowStack *modal_manager_get_window_stack(ModalPriority priority) {
   PBL_ASSERTN((priority > ModalPriorityInvalid) && (priority < NumModalPriorities));
   ModalContext *context = &s_modal_window_stacks[priority];
   return &context->window_stack;
+}
+
+void modal_manager_mark_dirty(void) {
+  for (ModalPriority idx = ModalPriorityMin; idx < NumModalPriorities; idx++) {
+    Window *window = window_stack_get_top_window(&s_modal_window_stacks[idx].window_stack);
+    if (window) {
+      layer_mark_dirty(window_get_root_layer(window));
+    }
+  }
 }
 
 Window *modal_manager_get_top_window(void) {
@@ -548,9 +559,9 @@ static bool prv_render_modal_stack_callback(ModalContext *modal, IterContext *it
     WindowTransitioningContext *const transition_context = &stack->transition_context;
     transition_context->implementation->render(transition_context, ctx);
   } else {
-    PROFILER_NODE_START(render_modal);
+    PBL_PROFILER_NODE_START(render_modal);
     window_render(window, ctx);
-    PROFILER_NODE_STOP(render_modal);
+    PBL_PROFILER_NODE_STOP(render_modal);
   }
 
   return true;
@@ -701,7 +712,7 @@ static int prv_cmd_modals(const struct pbl_shell *sh, size_t argc, char **argv) 
                         info.dumps[priority][i].name);
       }
     }
-    kernel_free(info.dumps[priority]);
+    pbl_free(info.dumps[priority]);
   }
   return 0;
 }

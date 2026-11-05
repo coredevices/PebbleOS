@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/comm_session/session.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/generic_attr.h>
 #include <pbl/util/uuid.h>
 
-#include <kernel/pbl_malloc.h>
 #include <sys/types.h>
 
 #ifdef CONFIG_SERVICE_MIC_STREAM
@@ -136,12 +136,12 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
     voice_handle_nlp_result(VoiceEndpointResultFailInvalidMessage, msg->session_id, nullptr, 0);
     return;
   }
-  char *reminder_str = kernel_zalloc_check(reminder_attr->length + 1);
+  char *reminder_str = pbl_zalloc_check(reminder_attr->length + 1);
   memcpy(reminder_str, reminder_attr->data, reminder_attr->length);
   reminder_str[reminder_attr->length] = '\0';
 
   voice_handle_nlp_result(msg->result, msg->session_id, reminder_str, timestamp);
-  kernel_free(reminder_str);
+  pbl_free(reminder_str);
 }
 #endif
 
@@ -220,7 +220,7 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
   size_t size = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +
                 sizeof(AudioTransferInfoSpeex) +
                 (app_uuid ? (sizeof(Uuid) + sizeof(struct pbl_generic_attr)) : 0);
-  SessionSetupMsg *msg = kernel_malloc_check(size);
+  SessionSetupMsg *msg = pbl_malloc_check(size);
   *msg = (SessionSetupMsg){
     .msg_id = MsgIdSessionSetup,
     .session_type = session_type,
@@ -249,5 +249,5 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
 
   comm_session_send_data(comm_session, VOICE_CONTROL_ENDPOINT, (uint8_t *)msg, size,
                          COMM_SESSION_DEFAULT_TIMEOUT);
-  kernel_free(msg);
+  pbl_free(msg);
 }

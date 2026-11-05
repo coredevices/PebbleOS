@@ -9,6 +9,7 @@
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/text_layer.h>
@@ -17,7 +18,6 @@
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
 #include <flash_region/flash_region.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -76,8 +76,8 @@ static void prv_audio_trans_handler(uint32_t *free_size) {
   } mic_id = MIC1;
 
   while (available_size > PCM_BUFFER_SIZE * sizeof(int16_t)) {
-    flash_read_bytes((uint8_t *)app_data->pcm, app_data->flash_addr,
-                     PCM_BUFFER_SIZE * sizeof(int16_t));
+    pbl_flash_read(FLASH, app_data->flash_addr, (uint8_t *)app_data->pcm,
+                   PCM_BUFFER_SIZE * sizeof(int16_t));
     app_data->flash_addr += PCM_BUFFER_SIZE * sizeof(int16_t);
     prv_interleaved_to_non_interleaved(app_data->pcm, PCM_BUFFER_SIZE / 2);
     if (mic_id == MIC1) {
@@ -121,14 +121,14 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
     prv_start_playback();
     return;
   }
-  flash_write_bytes((uint8_t *)samples, app_data->flash_addr, sample_count * sizeof(int16_t));
+  pbl_flash_write(FLASH, app_data->flash_addr, (uint8_t *)samples, sample_count * sizeof(int16_t));
   app_data->flash_addr += sample_count * sizeof(int16_t);
 }
 
 static void prv_recording_start(void) {
   AppData *app_data = app_state_get_user_data();
   app_data->flash_addr = FLASH_START;
-  flash_region_erase_optimal_range(FLASH_START, FLASH_START, FLASH_END, FLASH_END);
+  pbl_flash_erase(FLASH, FLASH_START, FLASH_END - FLASH_START);
 
   // Disable back button during recording/playback
   window_set_overrides_back_button(&app_data->window, true);

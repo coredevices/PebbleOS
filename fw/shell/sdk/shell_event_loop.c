@@ -9,7 +9,6 @@
 #include <apps/system/timeline/timeline.h>
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <popups/mic_banner.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/timeline/peek.h>

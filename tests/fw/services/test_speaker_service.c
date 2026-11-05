@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/speaker/speaker_service.h>
 
 #include <clar.h>
@@ -14,15 +14,22 @@
 #include <fake_pebble_tasks.h>
 #include <fake_system_task.h>
 
-// Alerts preferences: speaker unmuted, no volume cap
+// Alerts preferences: speaker unmuted by default, no volume cap
+static bool s_speaker_muted;
+static bool s_dnd_mute_speaker;
+static bool s_dnd_active;
+
 bool alerts_preferences_get_speaker_muted(void) {
-  return false;
+  return s_speaker_muted;
 }
 uint8_t alerts_preferences_get_speaker_volume(void) {
   return 100;
 }
 bool alerts_preferences_dnd_get_mute_speaker(void) {
-  return false;
+  return s_dnd_mute_speaker;
+}
+bool do_not_disturb_is_active(void) {
+  return s_dnd_active;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +103,10 @@ void test_speaker_service__initialize(void) {
   s_nonzero_samples = 0;
   s_driver_space = 4096;
   s_output_count = 0;
+  s_volume = -1;
+  s_speaker_muted = false;
+  s_dnd_mute_speaker = false;
+  s_dnd_active = false;
   speaker_service_init();
 }
 
@@ -479,4 +490,31 @@ void test_speaker_service__refill_catches_up_to_driver_capacity(void) {
   space = 1024 * sizeof(int16_t);
   s_trans_cb(&space);
   cl_assert_equal_i(s_samples_written, 1536);
+}
+
+void test_speaker_service__quiet_time_mutes_non_critical_sounds(void) {
+  s_dnd_mute_speaker = true;
+  s_dnd_active = true;
+
+  cl_assert(speaker_service_play_tone(1000, 500, 0, 0, SpeakerPriorityNotification, 80));
+  cl_assert_equal_i(s_volume, 0);
+  cl_assert(speaker_service_is_muted());
+}
+
+void test_speaker_service__quiet_time_does_not_mute_alarms(void) {
+  s_dnd_mute_speaker = true;
+  s_dnd_active = true;
+
+  cl_assert(speaker_service_play_tone(1000, 500, 0, 0, SpeakerPriorityCritical, 80));
+  cl_assert_equal_i(s_volume, 80);
+
+  speaker_service_handle_audio_prefs_changed();
+  cl_assert_equal_i(s_volume, 80);
+}
+
+void test_speaker_service__speaker_mute_still_mutes_alarms(void) {
+  s_speaker_muted = true;
+
+  cl_assert(speaker_service_play_tone(1000, 500, 0, 0, SpeakerPriorityCritical, 80));
+  cl_assert_equal_i(s_volume, 0);
 }

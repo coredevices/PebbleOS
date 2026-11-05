@@ -45,8 +45,8 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/imu/qemu.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -75,10 +75,7 @@ static TimerID s_timer_id; // timer used to copy data from s_rcv_samples into
                            // s_latest_reading.
 
 static void prv_construct_driver_sample(AccelDriverSample *sample) {
-  time_t time_s;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_s, &time_ms);
-  uint64_t timestamp_ms = ((uint64_t)time_s) * 1000 + time_ms;
+  uint64_t timestamp_ms = pbl_realtime_ms();
 
   *sample = (AccelDriverSample){
     .timestamp_us = timestamp_ms * 1000,

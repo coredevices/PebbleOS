@@ -3,8 +3,9 @@
 
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 
 #include <kernel/events.h>
@@ -22,7 +23,7 @@ static void prv_put_calendar_event(void) {
 }
 
 static bool prv_calendar_filter(SerializedTimelineItemHeader *header, void **context) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   return ((header->common.layout == LayoutIdCalendar) &&
           !timeline_event_is_all_day(&header->common) &&
           (timeline_event_is_ongoing(now, header->common.timestamp, header->common.duration) ||
@@ -30,7 +31,7 @@ static bool prv_calendar_filter(SerializedTimelineItemHeader *header, void **con
 }
 
 static uint32_t prv_calendar_update(TimelineItem *item, void **context) {
-  s_event_ongoing = item ? timeline_event_is_ongoing(rtc_get_time(), item->header.timestamp,
+  s_event_ongoing = item ? timeline_event_is_ongoing(pbl_realtime(), item->header.timestamp,
                                                      item->header.duration)
                          : false;
   prv_put_calendar_event();

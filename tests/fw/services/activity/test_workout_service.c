@@ -118,7 +118,7 @@ bool sys_hrm_manager_set_features(HRMSessionRef session, HRMFeature features) {
 }
 
 uint32_t time_get_uptime_seconds(void) {
-  return PBL_SEC_PER_DAY + rtc_get_time();
+  return PBL_SEC_PER_DAY + pbl_realtime();
 }
 
 static uint32_t s_total_step_count;
@@ -149,18 +149,32 @@ static void prv_inc_steps_and_put_event(int steps) {
 }
 
 // ---------------------------------------------------------------------------------------
-static void prv_put_bpm_event(int bpm, HRMQuality quality) {
+// Algorithm confidence values used by the tests
+#define CONF_HIGH (90)
+#define CONF_LOW  (75)
+#define CONF_POOR (40)
+
+static void prv_put_hr_event(int bpm, bool off_wrist, uint8_t confidence) {
   PebbleEvent event = {
     .type = PEBBLE_HEALTH_SERVICE_EVENT,
     .health_event = {
       .type = HealthEventHeartRateUpdate,
       .data.heart_rate_update.current_bpm = bpm,
-      .data.heart_rate_update.quality = quality,
+      .data.heart_rate_update.off_wrist = off_wrist,
+      .data.heart_rate_update.confidence = confidence,
     },
   };
   event_put(&event);
 
   workout_service_health_event_handler(&event.health_event);
+}
+
+static void prv_put_bpm_event(int bpm, uint8_t confidence) {
+  prv_put_hr_event(bpm, false /*off_wrist*/, confidence);
+}
+
+static void prv_put_offwrist_event(void) {
+  prv_put_hr_event(0, true /*off_wrist*/, 0);
 }
 
 static void prv_inc_time(int seconds) {
@@ -230,7 +244,7 @@ void test_workout_service__basic(void) {
   cl_assert_equal_i(duration_s, 5 * PBL_SEC_PER_MIN);
 
   // Get some HR info
-  prv_put_bpm_event(100, HRMQuality_Good);
+  prv_put_bpm_event(100, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
@@ -248,7 +262,7 @@ void test_workout_service__basic(void) {
 
   // Get some more HR info
   prv_inc_time(10);
-  prv_put_bpm_event(180, HRMQuality_Good);
+  prv_put_bpm_event(180, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 180);
@@ -342,7 +356,7 @@ void test_workout_service__pause_resume(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(100, HRMQuality_Good);
+  prv_put_bpm_event(100, CONF_HIGH);
 
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
@@ -355,7 +369,7 @@ void test_workout_service__pause_resume(void) {
   // Get some new data but out stats shouldn't change (except HR)
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(110, HRMQuality_Good);
+  prv_put_bpm_event(110, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
@@ -365,7 +379,7 @@ void test_workout_service__pause_resume(void) {
   // Get some more new data and out stats still shouldn't change (except HR)
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(190, HRMQuality_Good);
+  prv_put_bpm_event(190, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 10);
@@ -376,7 +390,7 @@ void test_workout_service__pause_resume(void) {
   cl_assert(workout_service_pause_workout(false));
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(80, HRMQuality_Good);
+  prv_put_bpm_event(80, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(steps, 20);
@@ -393,7 +407,7 @@ void test_workout_service__pause_resume(void) {
 
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(117, HRMQuality_Good);
+  prv_put_bpm_event(117, CONF_HIGH);
 
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
@@ -406,7 +420,7 @@ void test_workout_service__pause_resume(void) {
 
   prv_inc_time(10);
   prv_inc_steps_and_put_event(10);
-  prv_put_bpm_event(113, HRMQuality_Good);
+  prv_put_bpm_event(113, CONF_HIGH);
 
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
@@ -423,7 +437,7 @@ void test_workout_service__expire_hr_reading(void) {
   HRZone hr_zone;
 
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_put_bpm_event(100, HRMQuality_Good);
+  prv_put_bpm_event(100, CONF_HIGH);
 
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
@@ -455,20 +469,20 @@ void test_workout_service__receive_offwrist_reading(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
 
   // Put a good quality reading. Verify it was accepted.
-  prv_put_bpm_event(100, HRMQuality_Good);
+  prv_put_bpm_event(100, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
 
   // Put an OffWrist reading. Verify we received it.
-  prv_put_bpm_event(50, HRMQuality_OffWrist);
+  prv_put_offwrist_event();
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 0);
   cl_assert_equal_i(hr_zone, HRZone_Zone0);
 
   // Put a good quality reading. Verify it was accepted.
-  prv_put_bpm_event(100, HRMQuality_Good);
+  prv_put_bpm_event(100, CONF_HIGH);
   cl_assert(
       workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &hr_zone));
   cl_assert_equal_i(bpm, 100);
@@ -477,120 +491,108 @@ void test_workout_service__receive_offwrist_reading(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_service__reject_low_quality_hr(void) {
+// Confidence often stays below HRM_CONFIDENCE_HIGH for a whole run; the display must keep up.
+void test_workout_service__low_confidence_hr_is_used(void) {
   int32_t avg_hr;
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
 
-  prv_put_bpm_event(120, HRMQuality_Worst);
-  prv_put_bpm_event(110, HRMQuality_Poor);
-  prv_assert_current_hr(0, HRZone_Zone0);
-  cl_assert(workout_service_get_avg_hr(&avg_hr));
-  cl_assert_equal_i(avg_hr, 0);
+  prv_put_bpm_event(120, CONF_LOW);
+  prv_assert_current_hr(120, HRZone_Zone0);
+  prv_put_bpm_event(150, CONF_LOW);
+  prv_assert_current_hr(150, HRZone_Zone1);
+  prv_put_bpm_event(160, CONF_LOW);
+  prv_assert_current_hr(150, HRZone_Zone1);
+  prv_put_bpm_event(170, CONF_LOW);
+  prv_assert_current_hr(160, HRZone_Zone2);
 
-  prv_put_bpm_event(168, HRMQuality_Good);
-  prv_put_bpm_event(120, HRMQuality_Worst);
-  prv_put_bpm_event(110, HRMQuality_Poor);
-  prv_assert_current_hr(168, HRZone_Zone2);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
-  cl_assert_equal_i(avg_hr, 168);
+  cl_assert_equal_i(avg_hr, 150);
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_service__low_quality_hr_does_not_extend_expiry(void) {
+void test_workout_service__low_confidence_hr_extends_expiry(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_put_bpm_event(168, HRMQuality_Good);
+  prv_put_bpm_event(168, CONF_HIGH);
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     prv_inc_time(15);
-    prv_put_bpm_event(120, HRMQuality_Worst);
-    prv_put_bpm_event(110, HRMQuality_Poor);
-    prv_assert_current_hr(168, HRZone_Zone2);
+    prv_put_bpm_event(166, CONF_POOR);
+    prv_assert_current_hr(166, HRZone_Zone2);
   }
-  prv_inc_time(14);
-  prv_put_bpm_event(120, HRMQuality_Worst);
-  prv_assert_current_hr(168, HRZone_Zone2);
+  prv_inc_time(59);
+  prv_assert_current_hr(166, HRZone_Zone2);
 
   prv_inc_time(1);
   prv_assert_current_hr(0, HRZone_Zone0);
-  prv_put_bpm_event(110, HRMQuality_Poor);
-  prv_assert_current_hr(0, HRZone_Zone0);
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_service__acceptable_hr_median_and_good_recovery(void) {
+void test_workout_service__low_confidence_hr_median_and_high_recovery(void) {
   int32_t avg_hr;
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
 
-  prv_put_bpm_event(160, HRMQuality_Acceptable);
+  prv_put_bpm_event(160, CONF_LOW);
   prv_assert_current_hr(160, HRZone_Zone2);
-  prv_put_bpm_event(180, HRMQuality_Acceptable);
+  prv_put_bpm_event(180, CONF_LOW);
   prv_assert_current_hr(180, HRZone_Zone3);
-  prv_put_bpm_event(100, HRMQuality_Poor);
-  prv_assert_current_hr(180, HRZone_Zone3);
-  prv_put_bpm_event(170, HRMQuality_Acceptable);
+  prv_put_bpm_event(100, CONF_POOR);
+  prv_assert_current_hr(160, HRZone_Zone2);
+  prv_put_bpm_event(170, CONF_LOW);
   prv_assert_current_hr(170, HRZone_Zone2);
-  prv_put_bpm_event(80, HRMQuality_Worst);
-  prv_assert_current_hr(170, HRZone_Zone2);
-  prv_put_bpm_event(150, HRMQuality_Acceptable);
-  prv_assert_current_hr(170, HRZone_Zone2);
-  prv_put_bpm_event(140, HRMQuality_Acceptable);
+  prv_put_bpm_event(150, CONF_LOW);
+  prv_assert_current_hr(150, HRZone_Zone1);
+  prv_put_bpm_event(140, CONF_LOW);
   prv_assert_current_hr(150, HRZone_Zone1);
 
-  // The average uses accepted raw samples, rather than the displayed medians.
+  // The average uses raw samples, rather than the displayed medians.
   cl_assert(workout_service_get_avg_hr(&avg_hr));
-  cl_assert_equal_i(avg_hr, 160);
+  cl_assert_equal_i(avg_hr, 150);
 
-  prv_put_bpm_event(200, HRMQuality_Good);
+  prv_put_bpm_event(200, CONF_HIGH);
   prv_assert_current_hr(200, HRZone_Zone3);
-  prv_put_bpm_event(130, HRMQuality_Acceptable);
+  prv_put_bpm_event(130, CONF_LOW);
   prv_assert_current_hr(130, HRZone_Zone1);
 }
 
 // ---------------------------------------------------------------------------------------
 void test_workout_service__hr_resets_clear_median(void) {
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_put_bpm_event(140, HRMQuality_Acceptable);
-  prv_put_bpm_event(160, HRMQuality_Acceptable);
-  prv_put_bpm_event(150, HRMQuality_Acceptable);
+  prv_put_bpm_event(140, CONF_LOW);
+  prv_put_bpm_event(160, CONF_LOW);
+  prv_put_bpm_event(150, CONF_LOW);
   prv_assert_current_hr(150, HRZone_Zone1);
 
-  prv_put_bpm_event(0, HRMQuality_OffWrist);
+  prv_put_offwrist_event();
   prv_assert_current_hr(0, HRZone_Zone0);
-  prv_put_bpm_event(100, HRMQuality_Acceptable);
+  prv_put_bpm_event(100, CONF_LOW);
   prv_assert_current_hr(100, HRZone_Zone0);
-  prv_put_bpm_event(120, HRMQuality_Acceptable);
+  prv_put_bpm_event(120, CONF_LOW);
   prv_assert_current_hr(120, HRZone_Zone0);
 
   prv_inc_time(60);
   prv_assert_current_hr(0, HRZone_Zone0);
-  prv_put_bpm_event(80, HRMQuality_Acceptable);
+  prv_put_bpm_event(80, CONF_LOW);
   prv_assert_current_hr(80, HRZone_Zone0);
-
-  workout_service_set_hrm_paused(true);
-  prv_assert_current_hr(0, HRZone_Zone0);
-  workout_service_set_hrm_paused(false);
-  prv_put_bpm_event(60, HRMQuality_Acceptable);
-  prv_assert_current_hr(60, HRZone_Zone0);
 }
 
 // ---------------------------------------------------------------------------------------
-void test_workout_service__hr_quality_and_paused_statistics(void) {
+void test_workout_service__hr_confidence_and_paused_statistics(void) {
   int32_t avg_hr;
   int32_t hr_zone_time_s[HRZoneCount];
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  prv_put_bpm_event(140, HRMQuality_Good);
+  prv_put_bpm_event(140, CONF_HIGH);
   prv_inc_time(10);
-  prv_put_bpm_event(140, HRMQuality_Good);
+  prv_put_bpm_event(140, CONF_HIGH);
 
   cl_assert(workout_service_pause_workout(true));
   prv_inc_time(10);
-  prv_put_bpm_event(160, HRMQuality_Acceptable);
+  prv_put_bpm_event(160, CONF_LOW);
   prv_assert_current_hr(160, HRZone_Zone2);
-  prv_put_bpm_event(100, HRMQuality_Worst);
-  prv_put_bpm_event(180, HRMQuality_Poor);
+  prv_put_bpm_event(100, CONF_POOR);
+  prv_put_bpm_event(180, CONF_POOR);
   prv_assert_current_hr(160, HRZone_Zone2);
   prv_inc_time(10);
-  prv_put_bpm_event(180, HRMQuality_Good);
+  prv_put_bpm_event(180, CONF_HIGH);
   prv_assert_current_hr(180, HRZone_Zone3);
 
   cl_assert(workout_service_get_avg_hr(&avg_hr));
@@ -602,12 +604,12 @@ void test_workout_service__hr_quality_and_paused_statistics(void) {
 
   cl_assert(workout_service_pause_workout(false));
   prv_inc_time(10);
-  prv_put_bpm_event(160, HRMQuality_Acceptable);
-  prv_put_bpm_event(100, HRMQuality_Worst);
-  prv_put_bpm_event(200, HRMQuality_Poor);
+  prv_put_bpm_event(160, CONF_LOW);
+  prv_put_bpm_event(100, CONF_POOR);
+  prv_put_bpm_event(200, CONF_POOR);
   prv_assert_current_hr(160, HRZone_Zone2);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
-  cl_assert_equal_i(avg_hr, 147);
+  cl_assert_equal_i(avg_hr, 148);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone2], 10);
@@ -836,9 +838,9 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone2], 0);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 0);
 
-  prv_put_bpm_event(ZONE_1_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_1_HR, CONF_HIGH);
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_1_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_1_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 0);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 10);
@@ -846,7 +848,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 0);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_2_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_2_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 0);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 10);
@@ -854,7 +856,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 0);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_3_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_3_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 0);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 10);
@@ -862,7 +864,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 10);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_0_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_0_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 10);
@@ -870,7 +872,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 10);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_1_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_1_HR, CONF_HIGH);
   workout_service_get_current_workout_hr_zone_time(hr_zone_time_s);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 20);
@@ -881,7 +883,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert(workout_service_pause_workout(true));
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_3_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_3_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 20);
@@ -889,7 +891,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 10);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_1_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_1_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 20);
@@ -899,7 +901,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   // Unpause workout
   cl_assert(workout_service_pause_workout(false));
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_3_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_3_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 20);
@@ -907,7 +909,7 @@ void test_workout_service__heart_rate_zone_time(void) {
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone3], 20);
 
   prv_inc_time(10);
-  prv_put_bpm_event(ZONE_2_HR, HRMQuality_Good);
+  prv_put_bpm_event(ZONE_2_HR, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_hr_zone_time(hr_zone_time_s));
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone0], 10);
   cl_assert_equal_i(hr_zone_time_s[HRZone_Zone1], 20);
@@ -926,27 +928,27 @@ void test_workout_service__avg_hr(void) {
 
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
 
-  prv_put_bpm_event(140, HRMQuality_Good);
-  prv_put_bpm_event(140, HRMQuality_Good);
+  prv_put_bpm_event(140, CONF_HIGH);
+  prv_put_bpm_event(140, CONF_HIGH);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 140);
 
-  prv_put_bpm_event(160, HRMQuality_Good);
-  prv_put_bpm_event(160, HRMQuality_Good);
+  prv_put_bpm_event(160, CONF_HIGH);
+  prv_put_bpm_event(160, CONF_HIGH);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 150);
 
   cl_assert(workout_service_pause_workout(true));
 
-  prv_put_bpm_event(200, HRMQuality_Good);
-  prv_put_bpm_event(200, HRMQuality_Good);
+  prv_put_bpm_event(200, CONF_HIGH);
+  prv_put_bpm_event(200, CONF_HIGH);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 150);
 
   cl_assert(workout_service_pause_workout(false));
 
-  prv_put_bpm_event(180, HRMQuality_Good);
-  prv_put_bpm_event(180, HRMQuality_Good);
+  prv_put_bpm_event(180, CONF_HIGH);
+  prv_put_bpm_event(180, CONF_HIGH);
   cl_assert(workout_service_get_avg_hr(&avg_hr));
   cl_assert_equal_i(avg_hr, 160);
 }
@@ -994,9 +996,9 @@ void test_workout_service__metrics(void) {
 
   cl_assert(workout_service_start_workout(ActivitySessionType_Run));
   prv_inc_time(60);
-  prv_put_bpm_event(140, HRMQuality_Good);
-  prv_put_bpm_event(140, HRMQuality_Good);
-  prv_put_bpm_event(160, HRMQuality_Good);
+  prv_put_bpm_event(140, CONF_HIGH);
+  prv_put_bpm_event(140, CONF_HIGH);
+  prv_put_bpm_event(160, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_metrics(&metrics));
   cl_assert_equal_i(160, metrics.current_bpm);
   cl_assert_equal_i(3, metrics.hr_samples);
@@ -1018,66 +1020,7 @@ void test_workout_service__metrics(void) {
   cl_assert_equal_m(hr_zone_time_s, metrics.hr_zone_time_s, sizeof(hr_zone_time_s));
 
   cl_assert(workout_service_pause_workout(true));
-  prv_put_bpm_event(150, HRMQuality_Good);
+  prv_put_bpm_event(150, CONF_HIGH);
   cl_assert(workout_service_get_current_workout_metrics(&metrics));
   cl_assert_equal_i(3, metrics.hr_samples);
-}
-
-void test_workout_service__spo2(void) {
-  WorkoutServiceMetrics metrics;
-  workout_service_handle_spo2(95);
-  cl_assert(!workout_service_get_current_workout_metrics(&metrics));
-
-  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert_equal_i(0, metrics.spo2_pct);
-  cl_assert_equal_i(0, metrics.spo2_min_pct);
-  cl_assert(!metrics.spo2_measuring);
-
-  workout_service_set_hrm_paused(true);
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert(metrics.spo2_measuring);
-  workout_service_set_hrm_paused(false);
-  workout_service_handle_spo2(97);
-  workout_service_handle_spo2(94);
-  workout_service_handle_spo2(96);
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert_equal_i(96, metrics.spo2_pct);
-  cl_assert_equal_i(94, metrics.spo2_min_pct);
-  cl_assert(!metrics.spo2_measuring);
-
-  cl_assert(workout_service_pause_workout(true));
-  workout_service_handle_spo2(90);
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert_equal_i(96, metrics.spo2_pct);
-  cl_assert_equal_i(94, metrics.spo2_min_pct);
-}
-
-void test_workout_service__spo2_attempt_before_start(void) {
-  WorkoutServiceMetrics metrics;
-  workout_service_set_hrm_paused(true);
-  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert(metrics.spo2_measuring);
-  cl_assert_equal_i(0, s_hrm_features);
-
-  workout_service_set_hrm_paused(false);
-  cl_assert(workout_service_get_current_workout_metrics(&metrics));
-  cl_assert(!metrics.spo2_measuring);
-  cl_assert_equal_i(HRMFeature_BPM, s_hrm_features);
-}
-
-void test_workout_service__spo2_attempt_across_frontend_open_close(void) {
-  workout_service_set_hrm_paused(true);
-  workout_service_frontend_opened();
-  cl_assert_equal_i(0, s_hrm_features);
-  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
-  workout_service_frontend_closed();
-  cl_assert(s_hrm_subscribed);
-  cl_assert_equal_i(0, s_hrm_features);
-
-  workout_service_set_hrm_paused(false);
-  cl_assert_equal_i(HRMFeature_BPM, s_hrm_features);
-  workout_service_frontend_opened();
-  cl_assert_equal_i(HRMFeature_BPM, s_hrm_features);
 }

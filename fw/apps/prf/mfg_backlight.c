@@ -5,12 +5,12 @@
 #include <pbl/services/light.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <process_state/app_state/app_state.h>
 
@@ -108,7 +108,7 @@ static void prv_config_provider(void *data) {
 
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
-  *data = (AppData){.test_pattern = (TestPattern)app_manager_get_task_context()->args};
+  *data = (AppData){.test_pattern = (TestPattern)(uintptr_t)app_manager_get_task_context()->args};
 
   app_state_set_user_data(data);
 

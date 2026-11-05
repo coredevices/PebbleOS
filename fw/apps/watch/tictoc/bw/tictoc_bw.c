@@ -6,12 +6,13 @@
 
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/time.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/ui.h>
 #include <applib/unobstructed_area_service.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 typedef struct {
@@ -124,7 +125,7 @@ static void prv_init(void) {
   tick_timer_service_subscribe(MINUTE_UNIT, prv_minute_tick_handler);
 
   struct pbl_tm time_struct;
-  rtc_get_time_tm(&time_struct);
+  clock_get_time_tm(&time_struct);
   prv_minute_tick_handler(&time_struct, MINUTE_UNIT);
 
   app_window_stack_push(&data->window, true);

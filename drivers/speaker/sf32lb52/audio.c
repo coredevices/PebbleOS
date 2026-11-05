@@ -38,8 +38,10 @@ void audio_set_volume(AudioDevice *audio_device, int volume) {
 }
 
 void audio_stop(AudioDevice *audio_device) {
-  audec_stop(audio_device);
+  // mute the amplifier before the DAC powers down, so it does not amplify the click
   pbl_gpio_set(&audio_device->pa_ctrl, false);
+  pbl_busy_wait_us(PA_POWER_DELAY_TIME);
+  audec_stop(audio_device);
 
   if (audio_device->power_ops && audio_device->power_ops->power_down) {
     audio_device->power_ops->power_down();

@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/bluetooth/hci_types.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/bluetooth/types.h>
 
@@ -30,5 +31,7 @@ void nimble_conn_params_to_pebble(struct ble_gap_conn_desc *desc,
 
 void pebble_conn_update_to_nimble(const struct pbl_bt_conn_params_update_req *req,
                                   struct ble_gap_upd_params *params);
+
+enum pbl_bt_hci_status nimble_hs_status_to_hci(int status);
 
 void nimble_uuid_to_pebble(const ble_uuid_any_t *stack_uuid, Uuid *uuid);

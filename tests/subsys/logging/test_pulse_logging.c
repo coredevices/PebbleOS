@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/uart.h>
 #include <pbl/logging/logging.h>
 
 #include <clar.h>
-#include <logging/pulse_logging.h>
+#include <logging/backends/pulse.h>
 
 // How many bytes are in a log message before the actual message content in pulse log messages
 const int LOG_METADATA_LENGTH = 29;
@@ -55,13 +56,19 @@ void pulse_best_effort_send(void *buf, size_t length) {
   s_log_message_buffer[message_length] = '\0';
 }
 
+int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  return 0;
+}
+
+void pulse_early_init(void) {
+}
+
 bool pulse_is_started(void) {
   return true;
 }
 
-void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  *out_seconds = 0;
-  *out_ms = 0;
+uint64_t pbl_realtime_ms(void) {
+  return 0;
 }
 
 void pbl_irq_lock(void) {

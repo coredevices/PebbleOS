@@ -11,6 +11,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -19,7 +20,9 @@
 #include <resource/resource_ids.auto.h>
 #include <resource/system_resource.h>
 #include <syscall/syscall.h>
-#include <system/profiler.h>
+
+PBL_PROFILER_NODE_DEFINE(text_render_flash);
+PBL_PROFILER_NODE_DEFINE(text_render_compress);
 
 #define RLE4_UNITS_BIT_WIDTH (4)
 #define RLE4_UNITS_PER_BYTE  (8 / RLE4_UNITS_BIT_WIDTH)
@@ -96,10 +99,10 @@ static int prv_load_offset_table(Codepoint codepoint, FontCache *font_cache,
     PBL_LOG_DBG("HTE read: table_id:%d, cp:%" PRIx32 ", offset:%" PRIx32, table_id, codepoint,
                 hash_entry_offset);
 
-    SYS_PROFILER_NODE_START(text_render_flash);
+    PBL_PROFILER_NODE_START(text_render_flash);
     sys_resource_load_range(font_res->app_num, font_res->resource_id, hash_entry_offset,
                             (uint8_t *)&table_entry, sizeof(FontHashTableEntry));
-    SYS_PROFILER_NODE_STOP(text_render_flash);
+    PBL_PROFILER_NODE_STOP(text_render_flash);
 
     offset = s_font_md_size[version] + (sizeof(FontHashTableEntry) * font_res->md.hash_table_size) +
              table_entry.offset;
@@ -110,10 +113,10 @@ static int prv_load_offset_table(Codepoint codepoint, FontCache *font_cache,
   }
 
   PBL_LOG_DBG("HT read: offset: %zx, bytes: %zu", offset, num_bytes);
-  SYS_PROFILER_NODE_START(text_render_flash);
+  PBL_PROFILER_NODE_START(text_render_flash);
   sys_resource_load_range(font_res->app_num, font_res->resource_id, offset,
                           (uint8_t *)font_cache->offsets_buffer_4_4, num_bytes);
-  SYS_PROFILER_NODE_STOP(text_render_flash);
+  PBL_PROFILER_NODE_STOP(text_render_flash);
   font_cache->offset_table_id = table_id;
   font_cache->offset_table_size = num_entries;
 
@@ -329,10 +332,10 @@ static bool prv_load_glyph_bitmap(Codepoint codepoint, const FontResource *font_
     } else {
       target = (uint8_t *)g->data;
     }
-    SYS_PROFILER_NODE_START(text_render_flash);
+    PBL_PROFILER_NODE_START(text_render_flash);
     size_t num_bytes_loaded = sys_resource_load_range(font_res->app_num, font_res->resource_id,
                                                       bitmap_addr, target, glyph_size_bytes);
-    SYS_PROFILER_NODE_STOP(text_render_flash);
+    PBL_PROFILER_NODE_STOP(text_render_flash);
     if (glyph_size_bytes && !num_bytes_loaded) {
       PBL_LOG_WRN("Failed to load glyph bitmap from resources; cp: %" PRIx32 ", addr: %" PRIx32,
                   codepoint, bitmap_addr);
@@ -340,9 +343,9 @@ static bool prv_load_glyph_bitmap(Codepoint codepoint, const FontResource *font_
     }
 
     if (HAS_FEATURE(font_res->md.version, VERSION_FIELD_FEATURE_RLE4)) {
-      SYS_PROFILER_NODE_START(text_render_compress);
+      PBL_PROFILER_NODE_START(text_render_compress);
       g = prv_decompress_glyph_data(g, target);
-      SYS_PROFILER_NODE_STOP(text_render_compress);
+      PBL_PROFILER_NODE_STOP(text_render_compress);
     }
   }
 
@@ -414,11 +417,11 @@ static PBL_ALWAYS_INLINE const GlyphData *prv_get_glyph_metadata_from_spi(
     GlyphHeaderDataV1 header;
     PBL_LOG_DBG("LGMD READ: offset: %" PRIx32 ", bytes: %zu", data->resource_offset,
                 sizeof(header));
-    SYS_PROFILER_NODE_START(text_render_flash);
+    PBL_PROFILER_NODE_START(text_render_flash);
     num_bytes_loaded =
         sys_resource_load_range(font_res->app_num, font_res->resource_id, data->resource_offset,
                                 (uint8_t *)&header, sizeof(header));
-    SYS_PROFILER_NODE_STOP(text_render_flash);
+    PBL_PROFILER_NODE_STOP(text_render_flash);
 
     // convert to a GlyphHeaderData struct
     memcpy(&g->header, &header, sizeof(GlyphHeaderData));
@@ -426,11 +429,11 @@ static PBL_ALWAYS_INLINE const GlyphData *prv_get_glyph_metadata_from_spi(
   } else {
     PBL_LOG_DBG("GMD read: cp: %" PRIx32 ", offset: %" PRId32 ", bytes: %zu", codepoint,
                 data->resource_offset, sizeof(GlyphHeaderData));
-    SYS_PROFILER_NODE_START(text_render_flash);
+    PBL_PROFILER_NODE_START(text_render_flash);
     num_bytes_loaded =
         sys_resource_load_range(font_res->app_num, font_res->resource_id, data->resource_offset,
                                 (uint8_t *)&g->header, sizeof(GlyphHeaderData));
-    SYS_PROFILER_NODE_STOP(text_render_flash);
+    PBL_PROFILER_NODE_STOP(text_render_flash);
   }
 
   if (!num_bytes_loaded) {
@@ -492,10 +495,10 @@ static bool prv_load_font_res(ResAppNum app_num, uint32_t resource_id, FontResou
   PBL_LOG_DBG("FMD read: bytes:%d", (int)sizeof(FontMetaDataV3));
 
   FontMetaDataV3 header;
-  SYS_PROFILER_NODE_START(text_render_flash);
+  PBL_PROFILER_NODE_START(text_render_flash);
   uint32_t bytes_read =
       sys_resource_load_range(app_num, resource_id, 0, (uint8_t *)&header, sizeof(FontMetaDataV3));
-  SYS_PROFILER_NODE_STOP(text_render_flash);
+  PBL_PROFILER_NODE_STOP(text_render_flash);
   if (bytes_read != sizeof(FontMetaDataV3)) {
     PBL_LOG_ERR("Tried to load resource too small to have metadata for res %" PRId32, resource_id);
     return false;
@@ -680,22 +683,42 @@ static FontInfo *prv_get_language_font(FontCache *font_cache, uint32_t base_reso
   return font->loaded ? font : NULL;
 }
 
-static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
-                                      FontInfo *font_info, bool need_bitmap,
-                                      GlyphLocation *location_out) {
-  if (location_out) {
-    *location_out = (GlyphLocation){};
-  }
+// Letterlike Symbols (U+2100-U+214F) that are styled Latin letters, by NFKC
+static const uint8_t s_letterlike_latin[] = {
+  [0x02] = 'C', [0x0a] = 'g', [0x0b] = 'H', [0x0c] = 'H', [0x0d] = 'H', [0x0e] = 'h',  [0x10] = 'I',
+  [0x11] = 'I', [0x12] = 'L', [0x13] = 'l', [0x15] = 'N', [0x19] = 'P', [0x1a] = 'Q',  [0x1b] = 'R',
+  [0x1c] = 'R', [0x1d] = 'R', [0x24] = 'Z', [0x28] = 'Z', [0x2a] = 'K', [0x2b] = 0xc5, [0x2c] = 'B',
+  [0x2d] = 'C', [0x2f] = 'e', [0x30] = 'E', [0x31] = 'F', [0x33] = 'M', [0x34] = 'o',  [0x39] = 'i',
+  [0x45] = 'D', [0x46] = 'd', [0x47] = 'e', [0x48] = 'i', [0x49] = 'j',
+};
 
-  if (font_cache->language_generation !=
-      __atomic_load_n(&g_font_language_generation, __ATOMIC_ACQUIRE)) {
-    text_resources_reset_cache(font_cache);
+// Maps a styled Latin codepoint (mathematical, letterlike or fullwidth) to its plain form, or
+// returns it unchanged.
+static Codepoint prv_plain_latin_codepoint(Codepoint codepoint) {
+  // Mathematical Alphanumeric Symbols: 13 styles of A-Z followed by a-z
+  if (codepoint >= 0x1d400 && codepoint < 0x1d6a4) {
+    const uint32_t offset = (codepoint - 0x1d400) % 52;
+    return (offset < 26) ? 'A' + offset : 'a' + offset - 26;
   }
-
-  if (!font_info->loaded) {
-    sys_font_reload_font(font_info);
+  // Mathematical Alphanumeric Symbols: 5 styles of 0-9
+  if (codepoint >= 0x1d7ce && codepoint < 0x1d800) {
+    return '0' + (codepoint - 0x1d7ce) % 10;
   }
+  // Halfwidth and Fullwidth Forms: fullwidth ASCII
+  if (codepoint >= 0xff01 && codepoint <= 0xff5e) {
+    return codepoint - 0xff01 + '!';
+  }
+  if (codepoint >= 0x2100 && codepoint < 0x2100 + ARRAY_LENGTH(s_letterlike_latin) &&
+      s_letterlike_latin[codepoint - 0x2100] != 0) {
+    return s_letterlike_latin[codepoint - 0x2100];
+  }
+  return codepoint;
+}
 
+// Looks codepoint up in the primary font, the language packs and the system fallback font.
+static const GlyphData *prv_find_glyph(FontCache *font_cache, Codepoint codepoint,
+                                       FontInfo *font_info, bool need_bitmap,
+                                       GlyphLocation *location_out) {
   const FontInfo *owner = nullptr;
   const FontResource *font_res = nullptr;
 
@@ -743,11 +766,47 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     }
   }
 
-  // (c) Absent everywhere: fall back to the wildcard (square box) then ' ', looked up in the
+  return nullptr;
+}
+
+static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint,
+                                      FontInfo *font_info, bool need_bitmap,
+                                      GlyphLocation *location_out) {
+  if (location_out) {
+    *location_out = (GlyphLocation){};
+  }
+
+  if (font_cache->language_generation !=
+      atomic_load_explicit(&g_font_language_generation, memory_order_acquire)) {
+    text_resources_reset_cache(font_cache);
+  }
+
+  if (!font_info->loaded) {
+    sys_font_reload_font(font_info);
+  }
+
+  const GlyphData *data =
+      prv_find_glyph(font_cache, codepoint, font_info, need_bitmap, location_out);
+  if (data) {
+    return data;
+  }
+
+  // (c) Missing styled Latin letter or digit: draw its plain form, which is still readable.
+  const Codepoint plain = prv_plain_latin_codepoint(codepoint);
+  if (plain != codepoint) {
+    data = prv_find_glyph(font_cache, plain, font_info, need_bitmap, location_out);
+    if (data) {
+      return data;
+    }
+  }
+
+  // (d) Absent everywhere: fall back to the wildcard (square box) then ' ', looked up in the
   //     PRIMARY font, so a glyph missing from every font still yields the primary font's box or
   //     space. We use the wildcard codepoint from the base font in case the extension pack has
   //     been deleted. The fallback font's own wildcard is deliberately never used: a single
   //     missing-glyph box is the correct indicator.
+  const FontInfo *owner = nullptr;
+  const FontResource *font_res = nullptr;
   const Codepoint substitutes[] = {font_info->base.md.wildcard_codepoint, ' '};
   for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
     data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap, &owner,
@@ -804,5 +863,6 @@ void text_resources_reset_cache(FontCache *font_cache) {
   font_cache->offset_table_id = -1;
   font_cache->cached_font = NULL;
   font_cache->language_fetched = 0;
-  font_cache->language_generation = __atomic_load_n(&g_font_language_generation, __ATOMIC_ACQUIRE);
+  font_cache->language_generation =
+      atomic_load_explicit(&g_font_language_generation, memory_order_acquire);
 }

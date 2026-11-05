@@ -5,6 +5,7 @@
 
 #include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -612,9 +613,9 @@ void test_put_bytes__chunk_too_large(void) {
   prv_process_and_reset_test_counters();
 
   size_t chunk_size = 1024 * 1024;
-  uint8_t *chunk = kernel_malloc(chunk_size);
+  uint8_t *chunk = pbl_malloc(chunk_size);
   prv_receive_put(s_last_response_cookie, chunk, chunk_size);
-  kernel_free(chunk);
+  pbl_free(chunk);
 
   assert_ack_count(0);
   assert_nack_count(1);
@@ -698,6 +699,27 @@ void test_put_bytes__receive_batched_messages(void) {
   }
 
   fake_pb_storage_mem_assert_contents_written(buffer, sizeof(buffer));
+}
+
+void test_put_bytes__batched_messages_share_one_callback(void) {
+  if (prv_put_bytes_get_max_batched_pb_ops() < 3) {
+    return;
+  }
+
+  prv_receive_init_fw_object();
+  prv_process_and_reset_test_counters();
+
+  const uint8_t chunks[] = {0xaa, 0xbb, 0xcc, 0xdd};
+  prv_receive_put(s_last_response_cookie, &chunks[0], 2);
+  prv_receive_put(s_last_response_cookie, &chunks[2], 2);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+
+  fake_system_task_callbacks_invoke_pending();
+  assert_ack_count(2);
+  fake_pb_storage_mem_assert_contents_written(chunks, sizeof(chunks));
+
+  prv_receive_put(s_last_response_cookie, chunks, 2);
+  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

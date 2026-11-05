@@ -6,6 +6,8 @@
 #include <pbl/crc/crc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -17,8 +19,6 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
-
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
 
@@ -57,7 +57,7 @@ typedef struct PBL_PACKED {
 
 static const uint16_t ENDPOINT_ID_DATA_LOGGING = 0x1a7a;
 
-#define ACK_NACK_TIMEOUT_TICKS (30 * RTC_TICKS_HZ)
+#define ACK_NACK_TIMEOUT_TICKS (30 * PBL_TICK_HZ)
 
 static const uint8_t MAX_NACK_COUNT = 20;
 
@@ -79,7 +79,7 @@ static void update_session_state(DataLoggingSession *session, DataLoggingSession
     case DataLoggingSessionCommStateOpening:
     case DataLoggingSessionCommStateSending:
       // These states need an ack from the phone.
-      session->comm.ack_timeout = rtc_get_ticks() + ACK_NACK_TIMEOUT_TICKS;
+      session->comm.ack_timeout = pbl_uptime_ticks() + ACK_NACK_TIMEOUT_TICKS;
       break;
     case DataLoggingSessionCommStateIdle:
       session->comm.ack_timeout = 0;
@@ -114,7 +114,7 @@ static void send_timeout_msg(void *session_id_param) {
 }
 
 static bool check_ack_timeout_for_session(DataLoggingSession *session, void *data) {
-  RtcTicks *current_ticks = (RtcTicks *)data;
+  uint64_t *current_ticks = (uint64_t *)data;
 
   if (session->comm.ack_timeout != 0 && session->comm.ack_timeout <= *current_ticks) {
     PBL_LOG_DBG("session %" PRIu8 " timeout", session->comm.session_id);
@@ -134,7 +134,7 @@ static bool check_ack_timeout_for_session(DataLoggingSession *session, void *dat
 }
 
 static void check_ack_timeout(void) {
-  RtcTicks current_ticks = rtc_get_ticks();
+  uint64_t current_ticks = pbl_uptime_ticks();
 
   dls_list_for_each_session(check_ack_timeout_for_session, &current_ticks);
 
@@ -154,7 +154,7 @@ static void ack_timer_cb(void *cb_data) {
 }
 
 static bool find_soonest_ack_timeout_cb(DataLoggingSession *session, void *data) {
-  RtcTicks *soonest_ack_timeout = (RtcTicks *)data;
+  uint64_t *soonest_ack_timeout = (uint64_t *)data;
   if (session->comm.ack_timeout != 0 &&
       (session->comm.ack_timeout < *soonest_ack_timeout || *soonest_ack_timeout == 0)) {
     *soonest_ack_timeout = session->comm.ack_timeout;
@@ -163,7 +163,7 @@ static bool find_soonest_ack_timeout_cb(DataLoggingSession *session, void *data)
 }
 
 static void reschedule_ack_timeout(void) {
-  RtcTicks soonest_ack_timeout = 0;
+  uint64_t soonest_ack_timeout = 0;
   dls_list_for_each_session(find_soonest_ack_timeout_cb, &soonest_ack_timeout);
 
   if (soonest_ack_timeout == 0) {
@@ -172,7 +172,7 @@ static void reschedule_ack_timeout(void) {
     return;
   }
 
-  RtcTicks current_ticks = rtc_get_ticks();
+  uint64_t current_ticks = pbl_uptime_ticks();
   if (soonest_ack_timeout < current_ticks) {
     // Handle the timeout immediately. This will result the in the timer being rescheduled if we're
     // still waiting for an ack.
@@ -181,8 +181,8 @@ static void reschedule_ack_timeout(void) {
   }
 
   // Convert from ticks to ms for the timer
-  RtcTicks ticks_until_timeout = soonest_ack_timeout - current_ticks;
-  uint32_t ms_until_timeout = ((uint64_t)ticks_until_timeout * 1000) / RTC_TICKS_HZ;
+  uint64_t ticks_until_timeout = soonest_ack_timeout - current_ticks;
+  uint32_t ms_until_timeout = ((uint64_t)ticks_until_timeout * 1000) / PBL_TICK_HZ;
 
   bool success = new_timer_start(s_endpoint_data.ack_timer, ms_until_timeout, ack_timer_cb, nullptr,
                                  0 /*flags*/);
@@ -298,7 +298,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
   comm_session_send_buffer_end_write(sb);
 
   dls_endpoint_print_message((uint8_t *)&header, num_bytes);
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, MIN(num_bytes, 64));
+  PBL_LOG_HEXDUMP_DBG(data, MIN(num_bytes, 64));
 
   logging_session->comm.num_bytes_pending = num_bytes;
 
@@ -415,7 +415,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
     // created and now. This ideally shouldn't happen.
     success = true;
   }
-  kernel_free(entry);
+  pbl_free(entry);
 
   if (success) {
     // Schedule next one
@@ -432,7 +432,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
     while (new_head) {
       DataLoggingReopenEntry *entry = new_head;
       new_head = (DataLoggingReopenEntry *)list_pop_head((ListNode *)new_head);
-      kernel_free(entry);
+      pbl_free(entry);
     }
   }
 }
@@ -441,7 +441,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
 //! open. On entry, 'data' points to the variable holding the head of the list.
 static bool dls_endpoint_add_reopen_sessions_cb(DataLoggingSession *session, void *data) {
   DataLoggingReopenEntry **head_ptr = (DataLoggingReopenEntry **)data;
-  DataLoggingReopenEntry *entry = kernel_malloc_check(sizeof(DataLoggingReopenEntry));
+  DataLoggingReopenEntry *entry = pbl_malloc_check(sizeof(DataLoggingReopenEntry));
   *entry = (DataLoggingReopenEntry){
     .session = session,
     .app_uuid = session->app_uuid,

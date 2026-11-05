@@ -3,6 +3,7 @@
 
 #include <pbl/util/list.h>
 
+#include <applib/graphics/utf8.h>
 #include <applib/ui/status_bar_layer.h>
 #include <clar.h>
 #include <resource/resource.h>
@@ -14,6 +15,7 @@
 
 // Stubs
 ////////////////////////////////////
+#include <shell/system_theme.h>
 
 // Stubs
 ////////////////////////////////////
@@ -86,4 +88,27 @@ void test_status_bar_layer__large_bold_height(void) {
 
   status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClock);
   cl_assert_status_bar_height(status_bar); // back to default
+}
+
+//! Short titles are copied as is.
+void test_status_bar_layer__set_title_short(void) {
+  StatusBarLayer status_bar;
+  status_bar_layer_init(&status_bar);
+
+  status_bar_layer_set_title(&status_bar, "Settings", false, false);
+  cl_assert_equal_s(status_bar_layer_get_title(&status_bar), "Settings");
+}
+
+//! Long multi-byte titles are cut on a codepoint boundary, ellipsized and NUL-terminated.
+void test_status_bar_layer__set_title_utf8_truncated(void) {
+  StatusBarLayer status_bar;
+  status_bar_layer_init(&status_bar);
+
+  // 11 Cyrillic letters, 2 bytes each
+  status_bar_layer_set_title(&status_bar, "ПІДСВІЧЕННЯ", false, false);
+
+  const char *title = status_bar_layer_get_title(&status_bar);
+  cl_assert(strlen(title) < TITLE_TEXT_BUFFER_SIZE);
+  cl_assert_equal_s(title, "ПІДСВІЧЕ…");
+  cl_assert(utf8_is_valid_string(title));
 }

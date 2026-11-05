@@ -7,9 +7,9 @@
 // This huge list is mainly due to the inclusion of timeline_actions.c which handles both UI and
 // a large portion of action logic, which will hopefully be fixed eventually
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/phone_call_util.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/timeline.h>

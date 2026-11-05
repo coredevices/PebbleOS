@@ -23,6 +23,7 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
+#include <shell/system_theme.h>
 #include <syscall/syscall.h>
 
 typedef enum {
@@ -32,10 +33,24 @@ typedef enum {
   WindowHandlerOffsetUnload = offsetof(WindowHandlers, unload),
 } WindowHandlerOffset;
 
+static GColor prv_get_theme_background_color(const Window *window) {
+#if PBL_COLOR
+  if (window->background_theme_dimmed) {
+    return system_theme_is_dark_mode() ? GColorDarkGray : GColorLightGray;
+  }
+#endif
+  return system_theme_get_bg_color();
+}
+
+GColor window_get_drawn_background_color(const Window *window) {
+  return window->background_follows_theme ? prv_get_theme_background_color(window)
+                                          : window->background_color;
+}
+
 void window_do_layer_update_proc(Layer *layer, GContext *ctx) {
   Window *window = layer_get_window(layer);
 
-  const GColor bg_color = window->background_color;
+  const GColor bg_color = window_get_drawn_background_color(window);
   if (!gcolor_is_transparent(bg_color)) {
     GDrawState prev_state = graphics_context_get_drawing_state(ctx);
     graphics_context_set_fill_color(ctx, bg_color);
@@ -182,7 +197,8 @@ void window_init(Window *window, const char *debug_name) {
   window->is_fullscreen = fullscreen;
   window->layer.window = window;
   window->layer.update_proc = window_do_layer_update_proc;
-  window->background_color = GColorWhite;
+  window->background_color = system_theme_get_bg_color();
+  window->background_follows_theme = system_theme_is_system_ui();
   window->in_click_config_provider = false;
   window->is_waiting_for_click_config = false;
   window->parent_window_stack = nullptr;
@@ -464,10 +480,18 @@ void window_set_on_screen(Window *window, bool new_on_screen, bool call_window_a
 
 void window_set_background_color(Window *window, GColor background_color) {
   const GColor window_bg_color = window->background_color;
-  if (gcolor_equal(background_color, window_bg_color)) {
+  if (gcolor_equal(background_color, window_bg_color) && !window->background_follows_theme) {
     return;
   }
   window->background_color = background_color;
+  window->background_follows_theme = false;
+  layer_mark_dirty(&window->layer);
+}
+
+void window_set_background_color_follows_theme(Window *window, bool dimmed) {
+  window->background_follows_theme = true;
+  window->background_theme_dimmed = dimmed;
+  window->background_color = prv_get_theme_background_color(window);
   layer_mark_dirty(&window->layer);
 }
 

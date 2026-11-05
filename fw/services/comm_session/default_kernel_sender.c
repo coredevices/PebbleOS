@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/protocol.h>
 #include <pbl/services/comm_session/session_send_buffer.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/testing.h>
 
 #include <comm/bt_lock.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(service_comm_session, CONFIG_SERVICE_COMM_SESSION_LOG_LEVEL);
 
@@ -101,9 +101,9 @@ void comm_default_kernel_sender_init(void) {
 // -------------------------------------------------------------------------------------------------
 // Helpers
 
-static uint32_t prv_remaining_ms(uint32_t timeout_ms_in, RtcTicks start_ticks) {
-  const RtcTicks now = rtc_get_ticks();
-  const uint32_t elapsed_ms = (((now - start_ticks) * 1000) / RTC_TICKS_HZ);
+static uint32_t prv_remaining_ms(uint32_t timeout_ms_in, uint64_t start_ticks) {
+  const uint64_t now = pbl_uptime_ticks();
+  const uint32_t elapsed_ms = (((now - start_ticks) * 1000) / PBL_TICK_HZ);
   if (timeout_ms_in > elapsed_ms) {
     return timeout_ms_in - elapsed_ms;
   }
@@ -132,7 +132,7 @@ static SendBuffer *prv_create_send_buffer(CommSession *session, uint16_t endpoin
   s_default_kernel_sender_bytes_allocated[cls] = class_bytes_after;
   // Use ...alloc_check() here. If this appears to be an issue, we could consider giving this
   // module its own Heap:
-  SendBuffer *sb = (SendBuffer *)kernel_zalloc_check(allocation_size);
+  SendBuffer *sb = (SendBuffer *)pbl_zalloc_check(allocation_size);
   *sb = (const SendBuffer){
     .payload_buffer_length = payload_buffer_length,
     .consumed_length = 0,
@@ -150,7 +150,7 @@ static void prv_destroy_send_buffer(SendBuffer *sb) {
   bt_lock_assert_held(true /* assert_is_held */);
   s_default_kernel_sender_bytes_allocated[sb->cls] -=
       (sizeof(PebbleProtocolHeader) + sb->payload_buffer_length);
-  kernel_free(sb);
+  pbl_free(sb);
   pbl_sem_give(&s_default_kernel_sender_write_semaphore);
   pbl_sem_give(&s_default_kernel_sender_bulk_write_semaphore);
 }
@@ -231,7 +231,7 @@ static SendBuffer *prv_begin_write(CommSession *session, uint16_t endpoint_id,
     return nullptr;
   }
 
-  RtcTicks start_ticks = rtc_get_ticks();
+  uint64_t start_ticks = pbl_uptime_ticks();
   SendBuffer *sb = nullptr;
 
   while (true) {

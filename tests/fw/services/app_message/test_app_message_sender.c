@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/app_message/app_message_sender.h>
 #include <pbl/services/app_outbox_service.h>
 #include <pbl/services/comm_session/protocol.h>
@@ -9,10 +10,10 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
+#include <applib/app_malloc.h>
 #include <applib/app_message/app_message_internal.h>
 #include <clar.h>
 #include <fff.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 
 extern const SessionSendJobImpl s_app_message_send_job_impl;
@@ -34,7 +35,7 @@ const PebbleProcessMd *app_manager_get_current_app_md(void) {
 
 FAKE_VOID_FUNC(app_outbox_service_consume_message, AppOutboxMessage *, AppOutboxStatus);
 static void prv_consume_message(AppOutboxMessage *message, AppOutboxStatus status) {
-  kernel_free(message);
+  pbl_free(message);
 }
 
 FAKE_VOID_FUNC(app_outbox_service_register, AppOutboxServiceTag, AppOutboxMessageHandler,
@@ -90,7 +91,7 @@ void comm_session_sanitize_app_session(CommSession **session_in_out) {
 
 static void prv_send_outbox_raw_data(const uint8_t *data, size_t length) {
   AppOutboxMessage *outbox_message =
-      kernel_zalloc(sizeof(AppOutboxMessage) + app_outbox_service_register_fake.arg3_val);
+      pbl_zalloc(sizeof(AppOutboxMessage) + app_outbox_service_register_fake.arg3_val);
   cl_assert(outbox_message);
   outbox_message->data = data;
   outbox_message->length = length;

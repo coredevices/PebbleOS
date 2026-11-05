@@ -11,7 +11,6 @@
 #include <pbl/util/ratio.h>
 #include <pbl/util/testing.h>
 
-#include <board/board.h>
 #include <kernel/low_power.h>
 #include <kernel/util/standby.h>
 
@@ -155,7 +154,7 @@ static void prv_log_battery_state(PreciseBatteryChargeState state) {
     .is_plugged = state.is_plugged,
   };
 
-  if ((percent < BOARD_CONFIG_POWER.low_power_threshold) ||
+  if ((percent < CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT) ||
       (s_prev_batt_state.all != new_batt_state.all) || s_first_run) {
     s_prev_batt_state.all = new_batt_state.all;
   }
@@ -185,7 +184,7 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
 
 #ifndef CONFIG_RECOVERY_FW
   const uint32_t LOW_POWER_PERCENT =
-      pbl_ratio32_from_percent(BOARD_CONFIG_POWER.low_power_threshold);
+      pbl_ratio32_from_percent(CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT);
 
   bool low_power = !state.is_charging && (state.charge_percent <= LOW_POWER_PERCENT);
   if (low_power && s_first_run && !state.is_plugged) {

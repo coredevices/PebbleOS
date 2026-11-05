@@ -20,7 +20,7 @@ pbl_clar_test(test_calendar
     fw/services/timeline/timeline.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 
@@ -34,7 +34,7 @@ pbl_clar_test(test_timeline_peek_event
     fw/services/timeline/timeline.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
   OVERRIDES dummy_board
 )
 
@@ -94,7 +94,7 @@ pbl_clar_test(test_timeline_layouts
     fw/applib/ui/status_bar_layer.c
     fw/applib/ui/window.c
     fw/apps/system/timeline/text_node.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_clock.c
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c

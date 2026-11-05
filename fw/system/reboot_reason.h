@@ -76,8 +76,6 @@ typedef struct PBL_PACKED {
 
 void reboot_reason_set(RebootReason *reason);
 
-void reboot_reason_set_restarted_safely(void);
-
 void reboot_reason_get(RebootReason *reason);
 
 void reboot_reason_clear(void);

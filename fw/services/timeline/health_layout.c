@@ -5,7 +5,7 @@
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline_layout.h>
 
-#include <kernel/pbl_malloc.h>
+#include <applib/applib_malloc.auto.h>
 
 //////////////////////////////////////////
 //  Card Mode
@@ -33,7 +33,7 @@ bool health_layout_verify(bool existing_attributes[]) {
 }
 
 LayoutLayer *health_layout_create(const LayoutLayerConfig *config) {
-  HealthLayout *layout = task_zalloc_check(sizeof(HealthLayout));
+  HealthLayout *layout = applib_zalloc(sizeof(HealthLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
     .attributes = {AttributeIdTitle, AttributeIdSubtitle},

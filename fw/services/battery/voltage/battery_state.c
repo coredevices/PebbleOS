@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/battery/battery_state.h>
 
 #ifdef CONFIG_QEMU
@@ -18,7 +19,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
@@ -116,7 +116,7 @@ static void battery_state_put_change_event(PreciseBatteryChargeState state) {
 void battery_state_reset_filter(void) {
   s_last_battery_state.voltage = battery_get_millivolts();
   // Reset the stabilization timer in case we encountered a current spike during the reset
-  s_last_battery_state.init_time = rtc_get_ticks();
+  s_last_battery_state.init_time = pbl_uptime_ticks();
 }
 
 static uint32_t prv_filter_voltage(uint32_t avg_mv, uint32_t battery_mv) {
@@ -132,8 +132,8 @@ static bool prv_is_stable(const BatteryState *state) {
   // After a reboot, we typically source a lot of current which can drastically impact
   // our mV readings due to the internal resistance of the battery. We use the
   // system_likely_stabilized flag as an indicator of how trustworthy our readings are
-  const uint64_t STABLE_TICKS = 3 * 60 * RTC_TICKS_HZ;
-  uint64_t elapsed_ticks = rtc_get_ticks() - state->init_time;
+  const uint64_t STABLE_TICKS = 3 * 60 * PBL_TICK_HZ;
+  uint64_t elapsed_ticks = pbl_uptime_ticks() - state->init_time;
   return elapsed_ticks > STABLE_TICKS;
 }
 
@@ -282,8 +282,8 @@ BatteryChargeState battery_get_charge_state(void) {
   int32_t percent = pbl_ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
-  int32_t percent_normalized = MAX((percent - BOARD_CONFIG_POWER.low_power_threshold +
-                                    percent / (100 / BOARD_CONFIG_POWER.low_power_threshold)),
+  int32_t percent_normalized = MAX((percent - CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT +
+                                    percent / (100 / CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT)),
                                    0);
 
   // massage rounding factor so that between 100% to 50% charge the SOC reported is biased to a

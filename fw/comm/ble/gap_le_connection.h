@@ -10,7 +10,6 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/new_timer/new_timer.h>
 
 #include <comm/bt_conn_mgr_impl.h>
@@ -118,12 +117,13 @@ typedef struct GAPLEConnection {
   DiscoveryJobQueue *discovery_jobs;
 
   //! Tick at which the current discovery job started, used by gatt_client_discovery.c
-  RtcTicks gatt_discovery_start_ticks;
+  uint64_t gatt_discovery_start_ticks;
 
   //! @see gap_le_connect_params.c
   struct {
     TimerID watchdog_timer;
     uint8_t attempts;
+    uint8_t collisions;
     bool is_request_pending;
   } param_update_info;
 
@@ -139,7 +139,7 @@ typedef struct GAPLEConnection {
   //! remote through the Pebble Pairing Service. Can be NULL if the remote has never written any.
   GAPLEConnectRequestParams *connection_parameter_sets;
 
-  RtcTicks ticks_since_connection;
+  uint64_t ticks_since_connection;
 } GAPLEConnection;
 
 GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *device,

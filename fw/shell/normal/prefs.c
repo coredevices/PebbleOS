@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/i18n/i18n.h>
@@ -16,12 +17,12 @@
 #include <applib/graphics/gtypes.h>
 #include <apps/system/timeline/timeline.h>
 #include <apps/system/toggle/quiet_time.h>
-#include <board/board.h>
 #include <popups/timeline/peek.h>
 #include <process_management/app_install_manager.h>
 #include <resource/language_pack.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/system_resource.h>
+#include <shell/normal/dark_mode_updater.h>
 #include <shell/normal/prefs_sync.h>
 #include <shell/normal/quick_launch.h>
 #include <shell/normal/watchface.h>
@@ -38,14 +39,15 @@
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
+#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -66,6 +68,9 @@ static uint8_t s_units_distance = UnitsDistance_Miles;
 
 #define PREF_KEY_UNITS_WIND "unitsWind"
 static uint8_t s_units_wind = UnitsWind_FromDistance;
+
+#define PREF_KEY_UNITS_TEMPERATURE "unitsTemperature"
+static uint8_t s_units_temperature = UnitsTemperature_FromDistance;
 
 #define PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED "lightBehaviour"
 #define PREF_KEY_BACKLIGHT_ENABLED              "lightEnabled"
@@ -88,11 +93,11 @@ static uint8_t s_backlight_intensity; // default set in shell_prefs_init()
 #define BACKLIGHT_COLOR_DEFAULT_SUNSET_MINUTE  (18 * PBL_MIN_PER_HOUR)
 
 #define PREF_KEY_BACKLIGHT_COLOR "lightColor"
-static uint32_t s_backlight_color; // default pulled from BOARD_CONFIG in shell_prefs_init()
+static uint32_t s_backlight_color = CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 #define PREF_KEY_BACKLIGHT_COLOR_DAY_NIGHT_ENABLED "lightColorDayNightEnabled"
 static bool s_backlight_color_day_night_enabled = false;
 #define PREF_KEY_BACKLIGHT_COLOR_NIGHT "lightColorNight"
-static uint32_t s_backlight_color_night; // default pulled from BOARD_CONFIG in shell_prefs_init()
+static uint32_t s_backlight_color_night = CONFIG_SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR;
 #define PREF_KEY_BACKLIGHT_COLOR_SUNRISE_MINUTE "lightColorSunriseMinute"
 static uint16_t s_backlight_color_sunrise_minute = BACKLIGHT_COLOR_DEFAULT_SUNRISE_MINUTE;
 #define PREF_KEY_BACKLIGHT_COLOR_SUNSET_MINUTE "lightColorSunsetMinute"
@@ -112,7 +117,7 @@ static bool s_touch_enabled = true;
 static bool s_touch_navigation_menu_enabled = true;
 
 #define PREF_KEY_MOTION_SENSITIVITY "motionSensitivity"
-static uint8_t s_motion_sensitivity = 55; // Default to Medium
+static uint8_t s_motion_sensitivity = CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY;
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 #define PREF_KEY_BACKLIGHT_DYNAMIC_MODE "lightDynamicMode"
@@ -181,8 +186,7 @@ static bool s_display_orientation_left = false;
 #endif
 
 #define PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD "lightAmbientThreshold"
-static uint32_t s_backlight_ambient_threshold =
-    0; // default set from board config in shell_prefs_init()
+static uint32_t s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
@@ -275,7 +279,8 @@ static uint8_t s_welcome_version = 0;
 static ActivitySettings s_activity_preferences = ACTIVITY_DEFAULT_PREFERENCES;
 
 #define PREF_KEY_ACTIVITY_ACTIVATED_TIMESTAMP "activityActivated"
-static time_t s_activity_activation_timestamp = 0;
+// Stored on flash as 32 bits.
+static uint32_t s_activity_activation_timestamp = 0;
 
 #define PREF_KEY_ACTIVITY_ACTIVATION_DELAY_INSIGHT "activityActivationDelayInsights"
 static uint32_t s_activity_activation_delay_insight = 0;
@@ -342,11 +347,16 @@ static bool s_als_threshold_migrated_v2 = false;
 static uint8_t s_legacy_app_render_mode = 1; // Default to scaled mode
 #endif
 
-#ifdef CONFIG_THEMING
 #define PREF_KEY_THEME_HIGHLIGHT_COLOR "themeHighlightColor"
 
 static GColor s_theme_highlight_color = GColorVividCerulean;
-#endif
+
+#define PREF_KEY_DARK_MODE          "darkMode"
+#define PREF_KEY_DARK_MODE_SCHEDULE "darkModeSchedule"
+
+static uint8_t s_dark_mode = DarkModeOff;
+#define DEFAULT_DARK_MODE_SCHEDULE {.from_hour = 19, .from_minute = 0, .to_hour = 7, .to_minute = 0}
+static DarkModeSchedule s_dark_mode_schedule = DEFAULT_DARK_MODE_SCHEDULE;
 
 #define PREF_KEY_MENU_SCROLL_WRAP_AROUND    "menuScrollWrapAround"
 #define PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR  "menuScrollVibeBehavior"
@@ -381,7 +391,7 @@ static bool prv_set_s_clock_24h(bool *new_value) {
     // Fire a tick event so watchfaces re-render with the new time format
     PebbleEvent e = {
       .type = PEBBLE_TICK_EVENT,
-      .clock_tick.tick_time = rtc_get_time(),
+      .clock_tick.tick_time = pbl_realtime(),
     };
     event_put(&e);
   } else {
@@ -420,6 +430,15 @@ static bool prv_set_s_units_wind(uint8_t *new_unit) {
     return false;
   }
   s_units_wind = *new_unit;
+  return true;
+};
+
+static bool prv_set_s_units_temperature(uint8_t *new_unit) {
+  if (*new_unit >= UnitsTemperatureCount) {
+    s_units_temperature = UnitsTemperature_FromDistance;
+    return false;
+  }
+  s_units_temperature = *new_unit;
   return true;
 };
 
@@ -775,7 +794,7 @@ static bool prv_set_s_activity_preferences(ActivitySettings *new_settings) {
   return !invalid_data;
 }
 
-static bool prv_set_s_activity_activation_timestamp(time_t *timestamp) {
+static bool prv_set_s_activity_activation_timestamp(uint32_t *timestamp) {
   s_activity_activation_timestamp = *timestamp;
   return true;
 }
@@ -923,7 +942,6 @@ static bool prv_set_s_legacy_app_render_mode(uint8_t *mode) {
 }
 #endif
 
-#ifdef CONFIG_THEMING
 // Valid theme colors (unified scheme)
 // Must match s_color_definitions in settings_themes.h
 static bool prv_is_valid_theme_color(GColor color) {
@@ -939,9 +957,9 @@ static bool prv_is_valid_theme_color(GColor color) {
     GColorGreenARGB8,          // Green
     GColorCyanARGB8,           // Cyan
     GColorVividCeruleanARGB8,  // Light Blue
-    GColorVeryLightBlueARGB8,  // Royal Blue
+    GColorBabyBlueEyesARGB8,   // Periwinkle
     GColorLavenderIndigoARGB8, // Purple
-    GColorMagentaARGB8,        // Magenta
+    GColorShockingPinkARGB8,   // Magenta
     GColorBrilliantRoseARGB8,  // Pink
   };
   for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
@@ -961,7 +979,6 @@ static bool prv_set_s_theme_highlight_color(GColor *color) {
   s_theme_highlight_color = *color;
   return true;
 }
-#endif
 
 static bool prv_set_s_menu_scroll_wrap_around(bool *enabled) {
   s_menu_scroll_wrap_around = *enabled;
@@ -992,6 +1009,29 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
   return true;
 }
 
+static bool prv_set_s_dark_mode(uint8_t *mode) {
+  if (*mode >= DarkModeCount) {
+    s_dark_mode = DarkModeOff;
+    dark_mode_updater_prefs_changed();
+    return false;
+  }
+  s_dark_mode = *mode;
+  dark_mode_updater_prefs_changed();
+  return true;
+}
+
+static bool prv_set_s_dark_mode_schedule(DarkModeSchedule *schedule) {
+  if (schedule->from_hour >= 24 || schedule->from_minute >= 60 || schedule->to_hour >= 24 ||
+      schedule->to_minute >= 60) {
+    s_dark_mode_schedule = (DarkModeSchedule)DEFAULT_DARK_MODE_SCHEDULE;
+    dark_mode_updater_prefs_changed();
+    return false;
+  }
+  s_dark_mode_schedule = *schedule;
+  dark_mode_updater_prefs_changed();
+  return true;
+}
+
 // ------------------------------------------------------------------------------------
 // Table of all prefs
 typedef bool (*PrefSetHandler)(const void *value, size_t val_len);
@@ -1016,45 +1056,46 @@ typedef struct {
 #define PREFS_MACRO(key, var) {key, &var, sizeof(var), prv_set_##var##_cb},
 static const PrefsTableEntry s_prefs_table[] = {
 #include "prefs_values.h.inc"
+
 };
 #undef PREFS_MACRO
 
 // ------------------------------------------------------------------------------------
-static void prv_convert_deprecated_backlight_behaviour_key(SettingsFile *file) {
+static void prv_convert_deprecated_backlight_behaviour_key(struct pbl_settings_file *file) {
   // if present, convert deprecated BACKLIGHT_BEHAVIOUR key to the two new separate keys
-  if (settings_file_exists(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                           sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED))) {
+  if (pbl_settings_exists(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                          sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED))) {
     bool temp;
     BacklightBehaviour backlight_behaviour = BacklightBehaviour_Auto;
-    settings_file_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
-                      sizeof(backlight_behaviour));
+    pbl_settings_get(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                     sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED), &backlight_behaviour,
+                     sizeof(backlight_behaviour));
     temp = (backlight_behaviour != BacklightBehaviour_Off);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
-                      sizeof(temp));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_ENABLED, sizeof(PREF_KEY_BACKLIGHT_ENABLED), &temp,
+                     sizeof(temp));
     temp = (backlight_behaviour != BacklightBehaviour_On);
-    settings_file_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
-                      sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
-    settings_file_delete(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
-                         sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED,
+                     sizeof(PREF_KEY_BACKLIGHT_AMBIENT_SENSOR_ENABLED), &temp, sizeof(temp));
+    pbl_settings_delete(file, PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED,
+                        sizeof(PREF_KEY_BACKLIGHT_BEHAVIOUR_DEPRECATED));
   }
 }
 
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
+static void prv_convert_deprecated_dynamic_intensity_key(struct pbl_settings_file *file) {
   // If present, convert the deprecated dynamic-intensity bool to the mode enum:
   // enabled -> Standard, disabled -> Off.
-  if (settings_file_exists(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                           sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
+  if (pbl_settings_exists(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                          sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED))) {
     bool enabled = true;
-    settings_file_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
-                      sizeof(enabled));
+    pbl_settings_get(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                     sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED), &enabled,
+                     sizeof(enabled));
     const uint8_t mode = enabled ? BacklightDynamicMode_Standard : BacklightDynamicMode_Off;
-    settings_file_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE,
-                      sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE), &mode, sizeof(mode));
-    settings_file_delete(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
-                         sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED));
+    pbl_settings_set(file, PREF_KEY_BACKLIGHT_DYNAMIC_MODE, sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_MODE),
+                     &mode, sizeof(mode));
+    pbl_settings_delete(file, PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED,
+                        sizeof(PREF_KEY_BACKLIGHT_DYNAMIC_INTENSITY_DEPRECATED));
   }
 }
 #endif
@@ -1064,43 +1105,43 @@ static void prv_convert_deprecated_dynamic_intensity_key(SettingsFile *file) {
 // silently replacing the user's settings with the defaults (HR on, 10 minute interval).
 // Fields have only ever been appended, so a short record is a valid prefix of the
 // current struct and the trailing fields keep their defaults.
-static void prv_migrate_activity_hrm_prefs(SettingsFile *file) {
+static void prv_migrate_activity_hrm_prefs(struct pbl_settings_file *file) {
   const size_t key_len = sizeof(PREF_KEY_ACTIVITY_HRM_PREFERENCES);
-  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len);
+  const int stored_len = pbl_settings_get_len(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len);
   if (stored_len <= 0 || stored_len >= (int)sizeof(ActivityHRMSettings)) {
     return;
   }
 
   ActivityHRMSettings settings = ACTIVITY_HRM_DEFAULT_PREFERENCES;
-  if (settings_file_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
-      S_SUCCESS) {
+  if (pbl_settings_get(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, stored_len) !=
+      0) {
     return;
   }
 
   PBL_LOG_INFO("Widening %d byte hrmPreferences record", stored_len);
-  settings_file_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
+  pbl_settings_set(file, PREF_KEY_ACTIVITY_HRM_PREFERENCES, key_len, &settings, sizeof(settings));
 }
 
 // Locally written keys include the null terminator, phone-originated BlobDB writes may not.
-static bool prv_take_legacy_bool(SettingsFile *file, const char *key, bool *value) {
+static bool prv_take_legacy_bool(struct pbl_settings_file *file, const char *key, bool *value) {
   bool found = false;
   for (size_t key_len = strlen(key); key_len <= strlen(key) + 1; key_len++) {
-    if (settings_file_get_len(file, key, key_len) != (int)sizeof(*value)) {
+    if (pbl_settings_get_len(file, key, key_len) != sizeof(*value)) {
       continue;
     }
-    if (settings_file_get(file, key, key_len, value, sizeof(*value)) == S_SUCCESS) {
+    if (pbl_settings_get(file, key, key_len, value, sizeof(*value)) == 0) {
       found = true;
     }
-    settings_file_delete(file, key, key_len);
+    pbl_settings_delete(file, key, key_len);
   }
   return found;
 }
 
 // spo2Preferences started as a 1 byte interval-only record, with the on/off and
 // during-activities toggles stored under keys of their own.
-static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
+static void prv_migrate_activity_spo2_prefs(struct pbl_settings_file *file) {
   const size_t key_len = sizeof(PREF_KEY_ACTIVITY_SPO2_PREFERENCES);
-  const int stored_len = settings_file_get_len(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len);
+  const int stored_len = pbl_settings_get_len(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len);
   if (stored_len >= (int)sizeof(ActivitySpO2Settings)) {
     return;
   }
@@ -1108,9 +1149,9 @@ static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
   ActivitySpO2Settings settings = ACTIVITY_SPO2_DEFAULT_PREFERENCES;
   bool migrate = false;
   if (stored_len == (int)sizeof(settings.measurement_interval)) {
-    migrate = settings_file_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
-                                &settings.measurement_interval,
-                                sizeof(settings.measurement_interval)) == S_SUCCESS;
+    migrate = pbl_settings_get(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len,
+                               &settings.measurement_interval,
+                               sizeof(settings.measurement_interval)) == 0;
   }
   migrate |= prv_take_legacy_bool(file, "bloodOxygenPreferences", &settings.enabled);
   migrate |= prv_take_legacy_bool(file, "bloodOxygenActivityPreferences",
@@ -1120,7 +1161,7 @@ static void prv_migrate_activity_spo2_prefs(SettingsFile *file) {
   }
 
   PBL_LOG_INFO("Migrating %d byte spo2Preferences record", stored_len);
-  settings_file_set(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len, &settings, sizeof(settings));
+  pbl_settings_set(file, PREF_KEY_ACTIVITY_SPO2_PREFERENCES, key_len, &settings, sizeof(settings));
 }
 
 // ------------------------------------------------------------------------------------
@@ -1133,18 +1174,9 @@ void shell_prefs_init(void) {
   // Match the Standard preset so fresh devices report Mode: Standard.
   s_backlight_intensity = s_backlight_preset_settings[BacklightPreset_Standard].intensity;
 #endif
-  s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-#ifdef CONFIG_BACKLIGHT_HAS_COLOR
-  s_backlight_color = BOARD_CONFIG.backlight_default_color;
-  s_backlight_color_night = BOARD_CONFIG.backlight_default_color;
-#endif
-  // Use board-specific default motion sensitivity if provided (non-zero)
-  if (BOARD_CONFIG_ACCEL.default_motion_sensitivity != 0) {
-    s_motion_sensitivity = BOARD_CONFIG_ACCEL.default_motion_sensitivity;
-  }
 
-  SettingsFile file = {};
-  if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) != 0) {
     return;
   }
 
@@ -1162,9 +1194,9 @@ void shell_prefs_init(void) {
     // phone-originated BlobDB writes may not.
     static const char *const fit_key = "timelineQuickViewWatchfaceFit";
     for (size_t key_len = strlen(fit_key); key_len <= strlen(fit_key) + 1; key_len++) {
-      if (settings_file_get_len(&file, fit_key, key_len) > 0) {
+      if (pbl_settings_get_len(&file, fit_key, key_len) > 0) {
         PBL_LOG_INFO("Discarding unsupported pref: %s", fit_key);
-        settings_file_delete(&file, fit_key, key_len);
+        pbl_settings_delete(&file, fit_key, key_len);
       }
     }
   }
@@ -1176,12 +1208,12 @@ void shell_prefs_init(void) {
   for (uint32_t i = 0; i < num_entries; i++, entry++) {
     // Keys in the backing store include the null terminator, so we add 1 to key_len
     size_t key_len = strlen(entry->key) + 1;
-    if (settings_file_get_len(&file, entry->key, key_len) == entry->value_len) {
-      settings_file_get(&file, entry->key, key_len, entry->value, entry->value_len);
+    if (pbl_settings_get_len(&file, entry->key, key_len) == entry->value_len) {
+      pbl_settings_get(&file, entry->key, key_len, entry->value, entry->value_len);
     }
   }
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Loading preferences bypasses their setters.
   prv_set_s_vibe_log_info_enabled(&s_vibe_log_info_enabled);
@@ -1200,12 +1232,12 @@ void shell_prefs_init(void) {
   // current readings (backlight stuck off). Drop any stored override so the
   // device follows the new board default.
   if (!s_als_threshold_migrated_v1) {
-    s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile mfile = {};
-    if (settings_file_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      settings_file_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
-                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
-      settings_file_close(&mfile);
+    s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
+    struct pbl_settings_file mfile = {};
+    if (pbl_settings_open(&mfile, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
+      pbl_settings_delete(&mfile, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
+                          sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
+      pbl_settings_close(&mfile);
     }
     const bool migrated = true;
     prv_pref_set(PREF_KEY_ALS_THRESHOLD_MIGRATED_V1, &migrated, sizeof(migrated));
@@ -1215,17 +1247,17 @@ void shell_prefs_init(void) {
   // threshold overrides are in the wrong unit (~5x too high). Drop them so
   // the device follows the new lux board defaults.
   if (!s_als_threshold_migrated_v2) {
-    s_backlight_ambient_threshold = BOARD_CONFIG.ambient_light_dark_threshold;
-    SettingsFile v2file = {};
-    if (settings_file_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
-      settings_file_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
-                           sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
+    s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESHOLD;
+    struct pbl_settings_file v2file = {};
+    if (pbl_settings_open(&v2file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
+      pbl_settings_delete(&v2file, PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD,
+                          sizeof(PREF_KEY_BACKLIGHT_AMBIENT_THRESHOLD));
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
       // Scrub the removed dyn-backlight-min-threshold pref while we're here.
-      settings_file_delete(&v2file, PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD,
-                           sizeof(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD));
+      pbl_settings_delete(&v2file, PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD,
+                          sizeof(PREF_KEY_DYNAMIC_BACKLIGHT_MIN_THRESHOLD));
 #endif
-      settings_file_close(&v2file);
+      pbl_settings_close(&v2file);
     }
     const bool migrated_v2 = true;
     prv_pref_set(PREF_KEY_ALS_THRESHOLD_MIGRATED_V2, &migrated_v2, sizeof(migrated_v2));
@@ -1283,14 +1315,15 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
   status_t rv = E_ERROR;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {};
-    if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    struct pbl_settings_file file = {};
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
-      rv = settings_file_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
+      rv = status_from_errno(
+          pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len));
       if (rv != S_SUCCESS) {
         PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
       }
-      settings_file_close(&file);
+      pbl_settings_close(&file);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -1367,14 +1400,14 @@ bool prefs_private_read_backing(const uint8_t *key, size_t key_len, void *value,
   bool success = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
-    SettingsFile file = {};
-    if (settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+    struct pbl_settings_file file = {};
+    if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       // Keys in the backing store include the null terminator
       // Use strlen(entry->key) + 1 to match how it was written, since key_len from
       // BlobDB may or may not include the null terminator
-      success = (settings_file_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) ==
-                 S_SUCCESS);
-      settings_file_close(&file);
+      success =
+          (pbl_settings_get(&file, entry->key, strlen(entry->key) + 1, value, value_len) == 0);
+      pbl_settings_close(&file);
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -1457,6 +1490,19 @@ UnitsWind shell_prefs_get_units_wind(void) {
 void shell_prefs_set_units_wind(UnitsWind new_unit) {
   uint8_t uint_new_unit = new_unit;
   prv_pref_set(PREF_KEY_UNITS_WIND, &uint_new_unit, sizeof(uint_new_unit));
+}
+
+UnitsTemperature shell_prefs_get_units_temperature(void) {
+  if (s_units_temperature == UnitsTemperature_FromDistance) {
+    return (shell_prefs_get_units_distance() == UnitsDistance_Miles) ? UnitsTemperature_Fahrenheit
+                                                                     : UnitsTemperature_Celsius;
+  }
+  return s_units_temperature;
+}
+
+void shell_prefs_set_units_temperature(UnitsTemperature new_unit) {
+  uint8_t uint_new_unit = new_unit;
+  prv_pref_set(PREF_KEY_UNITS_TEMPERATURE, &uint_new_unit, sizeof(uint_new_unit));
 }
 
 void shell_prefs_set_clock_24h_style(bool is24h) {
@@ -2063,7 +2109,7 @@ time_t activity_prefs_get_activation_time(void) {
 
 void activity_prefs_set_activated(void) {
   if (s_activity_activation_timestamp == 0) {
-    s_activity_activation_timestamp = rtc_get_time();
+    s_activity_activation_timestamp = pbl_realtime();
     prv_pref_set(PREF_KEY_ACTIVITY_ACTIVATED_TIMESTAMP, &s_activity_activation_timestamp,
                  sizeof(s_activity_activation_timestamp));
   }
@@ -2243,17 +2289,6 @@ void activity_prefs_set_spo2_enabled(bool enabled) {
   }
 }
 
-bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return s_activity_spo2_preferences.activity_tracking_enabled;
-}
-
-void activity_prefs_set_spo2_activity_tracking_enabled(bool enabled) {
-  if (s_activity_spo2_preferences.activity_tracking_enabled != enabled) {
-    s_activity_spo2_preferences.activity_tracking_enabled = enabled;
-    prv_activity_spo2_prefs_store();
-  }
-}
-
 HRMonitoringInterval activity_prefs_get_spo2_measurement_interval(void) {
   uint8_t interval = s_activity_spo2_preferences.measurement_interval;
   if (interval >= HRMonitoringIntervalCount) {
@@ -2360,17 +2395,16 @@ void shell_prefs_set_legacy_app_render_mode(LegacyAppRenderMode mode) {
 #endif
 
 GColor shell_prefs_get_theme_highlight_color(void) {
-#ifdef CONFIG_THEMING
-  return s_theme_highlight_color;
+#if PBL_BW
+  // No accent on black and white displays: highlights invert the theme colors
+  return system_theme_get_fg_color();
 #else
-  return PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack);
+  return s_theme_highlight_color;
 #endif
 }
 
 void shell_prefs_set_theme_highlight_color(GColor color) {
-#ifdef CONFIG_THEMING
   prv_pref_set(PREF_KEY_THEME_HIGHLIGHT_COLOR, &color, sizeof(GColor));
-#endif
 }
 
 bool shell_prefs_get_menu_scroll_wrap_around_enable(void) {
@@ -2427,4 +2461,25 @@ bool shell_prefs_get_music_show_album_art(void) {
 
 void shell_prefs_set_music_show_album_art(bool enable) {
   prv_pref_set(PREF_KEY_MUSIC_SHOW_ALBUM_ART, &enable, sizeof(enable));
+}
+
+DarkMode shell_prefs_get_dark_mode(void) {
+  return (DarkMode)s_dark_mode;
+}
+
+void shell_prefs_set_dark_mode(DarkMode mode) {
+  uint8_t val = (uint8_t)mode;
+  prv_pref_set(PREF_KEY_DARK_MODE, &val, sizeof(val));
+}
+
+void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
+  if (schedule_out) {
+    *schedule_out = s_dark_mode_schedule;
+  }
+}
+
+void shell_prefs_set_dark_mode_schedule(const DarkModeSchedule *schedule) {
+  if (schedule) {
+    prv_pref_set(PREF_KEY_DARK_MODE_SCHEDULE, schedule, sizeof(*schedule));
+  }
 }

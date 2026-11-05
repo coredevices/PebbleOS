@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
@@ -31,7 +31,7 @@
 
 typedef struct SwipeVelocitySample {
   GPoint point;
-  RtcTicks ticks;
+  uint64_t ticks;
 } SwipeVelocitySample;
 
 struct SwipeRecognizerData {
@@ -44,7 +44,7 @@ struct SwipeRecognizerData {
   struct {
     GPoint touch_down_point;   // Touchdown point; the path is measured from here
     GPoint last_point;         // Most recent position update point (liftoff coords are ignored)
-    RtcTicks touch_down_ticks; // Touchdown time, used for the duration check
+    uint64_t touch_down_ticks; // Touchdown time, used for the duration check
     SwipeDirection direction;  // Recognized direction, valid once Completed
     // Velocity sample ring buffer; sample_head indexes the newest, filled up to sample_count
     // entries
@@ -62,15 +62,15 @@ static const RecognizerImpl s_swipe_recognizer_impl = {
   .handle_touch_event = prv_handle_touch_event, .reset = prv_reset, .cancel = prv_cancel
 };
 
-static uint32_t prv_ticks_to_ms(RtcTicks ticks) {
-  return (uint32_t)((ticks * PBL_MSEC_PER_SEC) / RTC_TICKS_HZ);
+static uint32_t prv_ticks_to_ms(uint64_t ticks) {
+  return (uint32_t)((ticks * PBL_MSEC_PER_SEC) / PBL_TICK_HZ);
 }
 
 static uint32_t prv_touch_duration_ms(const SwipeRecognizerData *data) {
   return prv_ticks_to_ms(sys_get_ticks() - data->state.touch_down_ticks);
 }
 
-static void prv_record_sample(SwipeRecognizerData *data, GPoint point, RtcTicks ticks) {
+static void prv_record_sample(SwipeRecognizerData *data, GPoint point, uint64_t ticks) {
   const uint8_t next = (data->state.sample_count == 0)
                            ? 0
                            : (uint8_t)((data->state.sample_head + 1) % SWIPE_VELOCITY_SAMPLE_COUNT);
@@ -131,7 +131,7 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
   switch (touch_event->type) {
     case TouchEvent_Touchdown: {
       const GPoint point = GPoint(touch_event->x, touch_event->y);
-      const RtcTicks now = sys_get_ticks();
+      const uint64_t now = sys_get_ticks();
       data->state.touch_down_point = point;
       data->state.last_point = point;
       data->state.touch_down_ticks = now;

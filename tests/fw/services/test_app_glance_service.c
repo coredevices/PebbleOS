@@ -1,29 +1,28 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
 #include <clar.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
 
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-status_t pfs_remove(const char *name) {
-  fake_settings_file_reset();
+int pbl_fs_unlink(const char *path) {
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -35,7 +34,7 @@ status_t pfs_remove(const char *name) {
 ////////////////////////////////////////////////////////////////
 
 void test_app_glance_service__initialize(void) {
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
   app_glance_service_init();
 }
@@ -49,7 +48,7 @@ void test_app_glance_service__cleanup(void) {
 static void prv_check_expected_slice_data(const AppGlanceSliceInternal *expected_slice_data,
                                           time_t time) {
   // Set the current time to the provided time
-  rtc_set_time(time);
+  pbl_realtime_set(time);
 
   AppGlanceSliceInternal slice_out;
   if (expected_slice_data) {

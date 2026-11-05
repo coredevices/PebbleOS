@@ -7,6 +7,7 @@
 //! into the default \ref ActionBarLayer provided by the dialog.
 #pragma once
 
+#include <applib/fonts/fonts.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/action_bar_layer.h>
 #include <applib/ui/click.h>
@@ -40,5 +41,6 @@ typedef struct ActionableDialog {
   };
   ActionBarLayer *action_bar;
   ClickConfigProvider config_provider;
+  GFont text_font;
   void *user_data;
 } ActionableDialog;

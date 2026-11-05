@@ -5,9 +5,9 @@
 
 #include <pbl/kernel/assert.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/window_private.h>
-#include <kernel/pbl_malloc.h>
 
 inline static bool action_bar_legacy2_is_highlighted(ActionBarLayerLegacy2 *action_bar,
                                                      uint8_t index) {
@@ -93,7 +93,7 @@ void action_bar_layer_legacy2_init(ActionBarLayerLegacy2 *action_bar) {
 }
 
 ActionBarLayerLegacy2 *action_bar_layer_legacy2_create(void) {
-  ActionBarLayerLegacy2 *layer = task_malloc(sizeof(ActionBarLayerLegacy2));
+  ActionBarLayerLegacy2 *layer = applib_malloc(sizeof(ActionBarLayerLegacy2));
   if (layer) {
     action_bar_layer_legacy2_init(layer);
   }
@@ -109,7 +109,7 @@ void action_bar_layer_legacy2_destroy(ActionBarLayerLegacy2 *action_bar_layer) {
     return;
   }
   action_bar_layer_legacy2_deinit(action_bar_layer);
-  task_free(action_bar_layer);
+  applib_free(action_bar_layer);
 }
 
 Layer *action_bar_layer_legacy2_get_layer(ActionBarLayerLegacy2 *action_bar_layer) {

@@ -6,7 +6,6 @@
 #include "session_receive_router.h"
 #include "session_transport.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 
@@ -52,8 +51,8 @@ typedef struct CommSession {
   /** Inbound message parser state. */
   ReceiveRouter recv_router;
 
-  /** RTC ticks when the session was opened. */
-  RtcTicks open_ticks;
+  /** Uptime in ticks when the session was opened. */
+  uint64_t open_ticks;
 } CommSession;
 
 /** @} */

@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config LOG_BACKEND_PULSE
+    bool "PULSE backend"
+    default y
+    depends on PULSE_EVERYWHERE
+    help
+      Write log messages over the PULSE protocol.
+
+if LOG_BACKEND_PULSE
+
+choice "LOG_BACKEND_PULSE_LEVEL_CHOICE"
+    default LOG_BACKEND_PULSE_LEVEL_DEBUG
+endchoice
+
+backend = PULSE
+backend-str = PULSE
+source "subsys/logging/Kconfig.template.backend_level"
+
+endif
+
+config LOG_BACKEND_UART
+    bool "UART backend"
+    default y
+    depends on !PULSE_EVERYWHERE
+    help
+      Write log messages as text lines to the serial console.
+
+if LOG_BACKEND_UART
+
+choice "LOG_BACKEND_UART_LEVEL_CHOICE"
+    default LOG_BACKEND_UART_LEVEL_DEBUG
+endchoice
+
+backend = UART
+backend-str = UART
+source "subsys/logging/Kconfig.template.backend_level"
+
+endif
+
+config LOG_BACKEND_FLASH
+    bool "Flash backend"
+    default y
+    help
+      Store log messages in the debug flash region, one log generation
+      per boot.
+
+if LOG_BACKEND_FLASH
+
+backend = FLASH
+backend-str = Flash
+source "subsys/logging/Kconfig.template.backend_level"
+
+endif

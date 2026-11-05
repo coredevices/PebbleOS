@@ -6,16 +6,18 @@
 #include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/logging/logging.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_timer.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/click.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
+#include <flash_region/flash_region.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 // Demo app that deliberately runs a series of memory accesses that the
@@ -54,6 +56,10 @@ typedef enum {
 #ifdef CONFIG_SOC_SF32LB52
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
+  TestKind_FilesystemRead,
+#ifdef CONFIG_MMAP_RESOURCES
+  TestKind_ResourceBankRead,
+#endif
 #endif
 #ifndef CONFIG_ARMV8_M_MAINLINE
   TestKind_RoBssWrite,
@@ -75,6 +81,10 @@ static const char *const s_test_titles[TestKindCount] = {
 #ifdef CONFIG_SOC_SF32LB52
   [TestKind_RamfuncWrite] = "Ramfunc W",
   [TestKind_RamfuncRead] = "Ramfunc R",
+  [TestKind_FilesystemRead] = "Filesystem R",
+#ifdef CONFIG_MMAP_RESOURCES
+  [TestKind_ResourceBankRead] = "Resource bank R",
+#endif
 #endif
 #ifndef CONFIG_ARMV8_M_MAINLINE
   [TestKind_RoBssWrite] = "RO BSS W",
@@ -89,6 +99,9 @@ static const char *const s_test_titles[TestKindCount] = {
 
 static const bool s_test_expect_survive[TestKindCount] = {
   [TestKind_SyscallNearLimit] = true,
+#if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
+  [TestKind_ResourceBankRead] = true,
+#endif
 };
 
 typedef struct {
@@ -172,6 +185,20 @@ static void prv_run_test(TestKind kind) {
       (void)v;
       break;
     }
+    case TestKind_FilesystemRead: {
+      volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_FILESYSTEM_BEGIN;
+      volatile uint32_t v = *p;
+      (void)v;
+      break;
+    }
+#ifdef CONFIG_MMAP_RESOURCES
+    case TestKind_ResourceBankRead: {
+      volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
+      volatile uint32_t v = *p;
+      (void)v;
+      break;
+    }
+#endif
 #endif
 #ifndef CONFIG_ARMV8_M_MAINLINE
     case TestKind_RoBssWrite: {
@@ -225,6 +252,7 @@ static void prv_attempt(void *cb_data) {
   // Reaching this point means no fault. Surface that prominently --
   // the previous "TESTING..." text gets replaced so the outcome is
   // obvious in a screenshot.
+  PBL_LOG_INFO("%s survived", s_test_titles[data->selected_index]);
   text_layer_set_text(&data->selection_text, s_test_expect_survive[data->selected_index]
                                                  ? "SURVIVED\n(expected)"
                                                  : "SURVIVED!\n(MPU MISS)");

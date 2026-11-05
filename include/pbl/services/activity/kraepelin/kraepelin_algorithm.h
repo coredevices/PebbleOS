@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
+
 /**
  * @defgroup services_activity_kraepelin Kraepelin algorithm
  * @ingroup services_activity
@@ -17,7 +20,7 @@
  * The caller owns the state, of size kalg_state_size():
  *
  * @code{.c}
- * KAlgState *state = kernel_malloc_check(kalg_state_size());
+ * KAlgState *state = pbl_malloc_check(kalg_state_size());
  * kalg_init(state, NULL);
  *
  * // For every batch of 25 Hz samples
@@ -29,11 +32,11 @@
  * uint8_t orientation;
  * bool still;
  * kalg_minute_stats(state, &vmc, &orientation, &still);
- * kalg_activities_update(state, rtc_get_time(), minute_steps, vmc, orientation, not_worn,
+ * kalg_activities_update(state, pbl_realtime(), minute_steps, vmc, orientation, not_worn,
  *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
  *
  * kalg_deinit(state);
- * kernel_free(state);
+ * pbl_free(state);
  * @endcode
  * @{
  */
@@ -237,30 +240,14 @@ void kalg_get_sleep_stats(KAlgState *state, KAlgOngoingSleepStats *stats);
 /**
  * @brief Enable or disable automatic activity session detection.
  *
- * Resets the detectors.
+ * Ends the step activities in progress and resets the detectors.
  *
  * @param kalg_state State passed to kalg_init().
  * @param enable true to detect sessions, false to stop.
+ * @param sessions_cb Called for each step activity ended.
+ * @param context Passed to @p sessions_cb.
  */
-void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable);
-
-/**
- * @brief Check whether a continuous heart rate session is active for a detected activity.
- *
- * @param kalg_state State passed to kalg_init().
- * @return true if a walk or run heart rate session is active.
- */
-bool kalg_activity_hrm_is_active(KAlgState *kalg_state);
-
-/**
- * @brief Pause or resume the heart rate sessions of detected activities.
- *
- * Pausing sets their update interval to a day, freeing the shared optical path for a SpO2
- * reading; resuming restores the 1 second interval.
- *
- * @param kalg_state State passed to kalg_init().
- * @param paused true to pause, false to resume.
- */
-void kalg_activity_hrm_set_paused(KAlgState *kalg_state, bool paused);
+void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
+                                   KAlgActivitySessionCallback sessions_cb, void *context);
 
 /** @} */

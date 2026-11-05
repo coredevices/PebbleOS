@@ -6,11 +6,11 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_lock.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 // -------------------------------------------------------------------------------------------------
 //! @see gatt_client_accessors.c / gatt_client_subscriptions.c
@@ -82,7 +82,7 @@ static enum pbl_bt_gatt_error prv_handle_response(
   uint16_t val_len = resp->value_length;
   if (val_len) {
     // Only create ReadResponseData node if length is not 0
-    ReadResponseData *read_response = kernel_malloc(sizeof(ReadResponseData) + val_len);
+    ReadResponseData *read_response = pbl_malloc(sizeof(ReadResponseData) + val_len);
     if (!read_response) {
       *gatt_value_length = 0;
       return PBL_BT_GATT_ERROR_LOCAL_INSUFFICIENT_RESOURCES;
@@ -155,7 +155,7 @@ void pbl_bt_cb_gatt_client_operations_handle_response(
 
 cleanup:
   list_remove(event->context, (ListNode **)&s_client_event_ctxs, nullptr);
-  kernel_free(event->context);
+  pbl_free(event->context);
 unlock:
   bt_unlock();
 }
@@ -163,7 +163,7 @@ unlock:
 typedef uint16_t (*HandleAndConnectionGetter)(uintptr_t obj_ref, GAPLEConnection **connection_out);
 
 static GattClientEventContext *prv_create_event_context(void) {
-  GattClientEventContext *evt_ctx = kernel_zalloc(sizeof(GattClientEventContext));
+  GattClientEventContext *evt_ctx = pbl_zalloc(sizeof(GattClientEventContext));
   if (evt_ctx) {
     s_client_event_ctxs =
         (GattClientEventContext *)list_prepend(&s_client_event_ctxs->node, &evt_ctx->node);
@@ -207,7 +207,7 @@ static enum pbl_bt_errno prv_read(uintptr_t obj_ref, HandleAndConnectionGetter h
     // Clean up the context we created if the driver call failed
     bt_lock();
     list_remove(&data->node, (ListNode **)&s_client_event_ctxs, nullptr);
-    kernel_free(data);
+    pbl_free(data);
     bt_unlock();
   }
   return ret_val;
@@ -249,7 +249,7 @@ static enum pbl_bt_errno prv_write(uintptr_t obj_ref, const uint8_t *value, size
     // Clean up the context we created if the driver call failed
     bt_lock();
     list_remove(&data->node, (ListNode **)&s_client_event_ctxs, nullptr);
-    kernel_free(data);
+    pbl_free(data);
     bt_unlock();
   }
   return ret_val;
@@ -275,7 +275,7 @@ bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[]
         memcpy(value_out, read_response->value, read_response->length);
       }
       list_remove(&read_response->node, (ListNode **)&s_read_responses, nullptr);
-      kernel_free(read_response);
+      pbl_free(read_response);
       consumed = true;
     }
   }
@@ -327,7 +327,7 @@ enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
 }
 
 static bool prv_deinit_ctx_list(ListNode *node, void *unused) {
-  kernel_free(node);
+  pbl_free(node);
   return true;
 }
 
@@ -341,7 +341,7 @@ void gatt_client_op_cleanup(void) {
     ReadResponseData *read_response = s_read_responses;
     while (read_response) {
       ReadResponseData *next_read_response = (ReadResponseData *)read_response->node.next;
-      kernel_free(read_response);
+      pbl_free(read_response);
       read_response = next_read_response;
     }
     s_read_responses = nullptr;

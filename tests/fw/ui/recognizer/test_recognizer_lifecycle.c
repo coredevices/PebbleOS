@@ -11,6 +11,7 @@
 #include <applib/ui/window_manager.h>
 #include <applib/ui/window_private.h>
 #include <clar.h>
+#include <shell/system_theme.h>
 
 // Stubs
 #include <stubs_app_state.h>

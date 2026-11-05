@@ -9,10 +9,10 @@
 #include <pbl/util/math.h>
 #include <pbl/util/trig.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/ui/kino/kino_reel/scale_segmented.h>
 #include <applib/ui/kino/kino_reel/transform.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <shell/system_theme.h>
 
@@ -43,7 +43,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   }
 
   if (peek_layer->show_dot) {
-    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
     GRect dot_rect = {.size = {peek_layer->dot_diameter, peek_layer->dot_diameter}};
     grect_align(&dot_rect, &peek_layer->layer.bounds, GAlignCenter, false /* clip */);
     graphics_fill_radial(ctx, dot_rect, GOvalScaleModeFitCircle, peek_layer->dot_diameter, 0,
@@ -89,7 +89,7 @@ static void prv_layout_text(PeekLayer *peek_layer) {
 /////////////////////
 
 PeekLayer *peek_layer_create(GRect frame) {
-  PeekLayer *peek_layer = task_malloc(sizeof(PeekLayer));
+  PeekLayer *peek_layer = applib_malloc(sizeof(PeekLayer));
   if (peek_layer) {
     peek_layer_init(peek_layer, &frame);
   }
@@ -102,7 +102,7 @@ void peek_layer_destroy(PeekLayer *peek_layer) {
     peek_layer_deinit(peek_layer);
   }
 
-  task_free(peek_layer);
+  applib_free(peek_layer);
 }
 
 void peek_layer_init(PeekLayer *peek_layer, const GRect *frame) {
@@ -163,6 +163,12 @@ void peek_layer_set_frame(PeekLayer *peek_layer, const GRect *frame) {
 
 void peek_layer_set_background_color(PeekLayer *peek_layer, GColor color) {
   peek_layer->bg_color = color;
+}
+
+void peek_layer_set_text_color(PeekLayer *peek_layer, GColor color) {
+  text_layer_set_text_color(&peek_layer->number.text_layer, color);
+  text_layer_set_text_color(&peek_layer->title.text_layer, color);
+  text_layer_set_text_color(&peek_layer->subtitle.text_layer, color);
 }
 
 static bool prv_is_dot_size(GSize size) {

@@ -102,6 +102,7 @@ static void prv_text_layer_init(Window *window, TextLayer *text_layer, GRect *re
   text_layer_init_with_parameters(text_layer, rect, i18n_get(i18n_str, window), subtitle_font,
                                   GColorBlack, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
+  text_layer_set_text_color_follows_theme(text_layer);
   layer_add_child(&window->layer, &text_layer->layer);
 }
 

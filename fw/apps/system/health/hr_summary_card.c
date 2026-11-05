@@ -13,12 +13,13 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <apps/system/timeline/text_node.h>
 #include <board/display.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((DISP_COLS - LEGACY_2X_DISP_COLS) / 2)
@@ -44,8 +45,8 @@ typedef struct HealthHrSummaryCardData {
 #define PROGRESS_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack))
 #define PROGRESS_OUTLINE_COLOR    (PBL_IF_COLOR_ELSE(GColorClear, GColorBlack))
 
-#define TEXT_COLOR            (PBL_IF_COLOR_ELSE(GColorBulgarianRose, GColorBlack))
-#define CARD_BACKGROUND_COLOR (PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite))
+#define TEXT_COLOR            (PBL_IF_COLOR_ELSE(GColorBulgarianRose, system_theme_get_fg_color()))
+#define CARD_BACKGROUND_COLOR (system_theme_get_bg_color())
 
 static void prv_pulsing_heart_timer_cb(void *context) {
   Layer *base_layer = context;
@@ -78,6 +79,19 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
                            HEALTH_PROGRESS_BAR_MAX_VALUE);
 }
 
+static void prv_recolor_pulsing_heart_for_dark_mode(GDrawCommandProcessor *processor,
+                                                    GDrawCommand *processed_command,
+                                                    size_t processed_command_max_size,
+                                                    const GDrawCommandList *list,
+                                                    const GDrawCommand *command) {
+  if (gcolor_equal(gdraw_command_get_stroke_color((GDrawCommand *)command), GColorBlack)) {
+    gdraw_command_set_stroke_color(processed_command, GColorWhite);
+  }
+  if (gcolor_equal(gdraw_command_get_fill_color((GDrawCommand *)command), GColorWhite)) {
+    gdraw_command_set_fill_color(processed_command, GColorClear);
+  }
+}
+
 static void prv_render_icon(GContext *ctx, Layer *base_layer) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
 
@@ -85,7 +99,14 @@ static void prv_render_icon(GContext *ctx, Layer *base_layer) {
       data->pulsing_heart, data->pulsing_heart_frame_index);
   if (frame) {
     const GPoint offset = GPoint(-1 + HEALTH_X_OFFSET, -23 + HEALTH_Y_OFFSET);
-    gdraw_command_frame_draw(ctx, data->pulsing_heart, frame, offset);
+    if (system_theme_is_dark_mode()) {
+      GDrawCommandProcessor processor = {
+        .command = prv_recolor_pulsing_heart_for_dark_mode,
+      };
+      gdraw_command_frame_draw_processed(ctx, data->pulsing_heart, frame, offset, &processor);
+    } else {
+      gdraw_command_frame_draw(ctx, data->pulsing_heart, frame, offset);
+    }
     return;
   }
 }

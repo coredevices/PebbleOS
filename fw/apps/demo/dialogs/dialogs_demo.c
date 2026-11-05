@@ -10,6 +10,7 @@
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_transforms.h>
 #include <applib/ui/app_window_stack.h>
@@ -20,7 +21,6 @@
 #include <applib/ui/preferred_durations.h>
 #include <applib/ui/window.h>
 #include <applib/voice/transcription_dialog.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_menu_data_source.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>

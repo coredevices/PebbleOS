@@ -7,10 +7,10 @@
 #include "model.h"
 #include "pin_window.h"
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/compositor/compositor_transitions.h>
@@ -20,12 +20,12 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/kino/kino_reel/unfold.h>
 #include <applib/ui/ui.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
 #include <resource/timeline_resource_ids.auto.h>
@@ -969,7 +969,7 @@ static void PBL_NOINLINE prv_setup_peek(TimelineAppData *data) {
   EventServiceEventHandler focus_handler = prv_open_did_focus_handler;
 
   // we'll only show the first pin peek if timeline peek (aka quick view) isn't enabled
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   if (!first_pin && prv_set_state(s_app_data, TimelineAppStateNoEvents)) {
     layer_set_hidden((Layer *)&data->peek_layer, false);
     prv_setup_no_events_peek(data);
@@ -1190,7 +1190,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
   }
 
   // check if we were asked to launch into a specific item
-  time_t now = rtc_get_time();
+  time_t now = pbl_realtime();
   TimelineItem pin;
   bool launch_into_pin = false;
   if (args && args->launch_into_pin && !uuid_is_invalid(&args->pin_id) &&

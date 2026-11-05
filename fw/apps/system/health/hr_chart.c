@@ -13,11 +13,11 @@
 #include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/graphics_circle.h>
 #include <applib/graphics/text.h>
-#include <kernel/pbl_malloc.h>
 
 #define BAR_COLOR         PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack)
 #define MARKER_COLOR      BAR_COLOR

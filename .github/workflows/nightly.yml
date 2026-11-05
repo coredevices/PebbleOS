@@ -64,6 +64,7 @@ jobs:
         if: ${{ !steps.version.outputs.SKIP }}
         uses: actions/download-artifact@v8
         with:
+          pattern: firmware-*
           path: artifacts
 
       - name: Collect release files

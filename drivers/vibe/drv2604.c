@@ -70,9 +70,7 @@ static const struct pbl_drv2604 *prv_get(const struct pbl_vibe *vibe) {
 static int prv_read_register(const struct pbl_drv2604 *dev, uint8_t reg, uint8_t *val) {
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_read_register(&dev->i2c, reg, val);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_reg_read_byte(&dev->i2c, reg, val);
 
   return ret;
 }
@@ -81,9 +79,7 @@ static int prv_write_register(const struct pbl_drv2604 *dev, uint8_t reg, uint8_
   const uint8_t buf[2] = {reg, val};
   int ret;
 
-  pbl_i2c_use(&dev->i2c);
-  ret = pbl_i2c_write_block(&dev->i2c, sizeof(buf), buf);
-  pbl_i2c_release(&dev->i2c);
+  ret = pbl_i2c_write(&dev->i2c, buf, sizeof(buf));
 
   return ret;
 }

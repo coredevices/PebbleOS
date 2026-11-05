@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#if defined(CONFIG_SHELL) && defined(CONFIG_TOUCH)
+#ifdef CONFIG_TOUCH_SHELL
 
 #include <pbl/services/touch/touch_nav_service.h>
 #include <pbl/shell/shell.h>
@@ -49,11 +49,6 @@ static const struct pbl_shell_cmd sub_touch_nav[] = {
   PBL_SHELL_SUBCMD_SET_END,
 };
 
-static const struct pbl_shell_cmd sub_touch[] = {
-  PBL_SHELL_CMD(nav, sub_touch_nav, "Touch navigation", nullptr),
-  PBL_SHELL_SUBCMD_SET_END,
-};
-
-PBL_SHELL_CMD_REGISTER(touch, sub_touch, "Touch", nullptr);
+PBL_SHELL_SUBCMD_ADD(sub_touch, nav, sub_touch_nav, "Touch navigation", nullptr, 0, 0);
 
 #endif

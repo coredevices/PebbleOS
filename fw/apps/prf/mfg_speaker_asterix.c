@@ -4,6 +4,7 @@
 #include <pbl/drivers/i2c.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/tick_timer_service.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/dialogs/confirmation_dialog.h>
@@ -11,7 +12,6 @@
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
@@ -44,12 +44,8 @@ static void da7212_register_write(uint8_t reg, uint8_t value) {
   uint8_t data[2] = {reg, value};
   bool ret;
 
-  pbl_i2c_use(I2C_DA7212);
-
-  ret = pbl_i2c_write_block(I2C_DA7212, 2, data) == 0;
+  ret = pbl_i2c_write(I2C_DA7212, data, 2) == 0;
   PBL_ASSERTN(ret);
-
-  pbl_i2c_release(I2C_DA7212);
 }
 
 static void prv_da7212_play_tone(void) {

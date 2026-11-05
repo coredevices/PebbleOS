@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# A lab: the hardware wired to this host. pbl reads it from --lab, else
+# $PBL_LAB, else ~/.config/pbl/lab.yaml. Commands that reach a watch take
+# its ports from the watch running the build; command-line options override
+# it. `pbl lab` shows it.
+
+# Watches, by name. `board` may leave out the revision to match any.
+# `serial` is the debug serial port (console, sftool, serial debuggers),
+# `probe` the debug probe as the probe-rs runner names it, `supply` the one
+# wired to its battery terminals.
+watches:
+  obelix:
+    board: obelix@pvt
+    serial: /dev/tty.wchusbserial5B7A1355001
+  getafix:
+    board: getafix@dvt2
+    serial: /dev/tty.wchusbserial5B7A1354971
+    supply: ppk2
+  asterix:
+    board: asterix
+    serial: /dev/tty.usbmodem0010500000001
+    probe: 1366:1051:001050000000
+
+# Power supplies (see docs/pbl/power.md for the types); one powers one
+# watch at a time.
+supplies:
+  ppk2:
+    type: ppk2
+    port: auto          # or the PPK2's data port
+
+# Bluetooth dongles: nRF52840s running an H4 HCI UART firmware (see qemu.md),
+# by serial port. The integration tests' phone takes the first; the
+# emulator, with --bt-hci lab, takes the first and the phone the second.
+dongles:
+  dongle-a:
+    port: /dev/cu.usbmodem112401

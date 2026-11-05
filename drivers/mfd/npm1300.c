@@ -19,9 +19,7 @@ int pbl_npm1300_read(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t *val)
   int ret;
 
   pbl_npm1300_lock(pmic);
-  pbl_i2c_use(&pmic->i2c);
-  ret = pbl_i2c_write_read_block(&pmic->i2c, sizeof(regad), regad, 1, val);
-  pbl_i2c_release(&pmic->i2c);
+  ret = pbl_i2c_write_read(&pmic->i2c, regad, sizeof(regad), val, 1);
   pbl_npm1300_unlock(pmic);
 
   return ret;
@@ -32,9 +30,7 @@ int pbl_npm1300_write(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t val)
   int ret;
 
   pbl_npm1300_lock(pmic);
-  pbl_i2c_use(&pmic->i2c);
-  ret = pbl_i2c_write_block(&pmic->i2c, sizeof(d), d);
-  pbl_i2c_release(&pmic->i2c);
+  ret = pbl_i2c_write(&pmic->i2c, d, sizeof(d));
   pbl_npm1300_unlock(pmic);
 
   return ret;

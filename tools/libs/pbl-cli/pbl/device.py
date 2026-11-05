@@ -9,7 +9,7 @@ execute one of the device commands.
 
 import os
 
-from pbl import runners
+from pbl import runners, util
 from pbl.errors import CommandContextError
 
 
@@ -27,18 +27,21 @@ def runner_options(parser):
     runners.register_args(group)
 
 
-def make_runner(build, args, resources=False, erase_ranges=()):
-    """Create the runner for ``build``, honoring ``--runner``."""
-    supported = build.board_spec.runners
-    selected = getattr(args, "runner", None) or (supported[0] if supported else None)
-    if not selected:
-        raise CommandContextError(f"board {build.board} has no runner")
-    if selected not in supported:
-        raise CommandContextError(
-            f"board {build.board} does not support the {selected} runner; "
-            f"supported runners: {', '.join(supported) or 'none'}"
-        )
+def make_runner(
+    build,
+    args,
+    commands,
+    resources=False,
+    erase_ranges=(),
+    extra_args=(),
+    watch=None,
+):
+    """Create the runner for ``build``, honoring ``--runner``.
 
+    Without it, the board's first runner that can handle the build and one
+    of ``commands`` is picked. ``watch``, the lab's (:class:`pbl.lab.Watch`),
+    gives the ports the command line leaves out.
+    """
     resources_file = None
     resources_address = None
     if resources and build.variant != "prf":
@@ -51,21 +54,64 @@ def make_runner(build, args, resources=False, erase_ranges=()):
         soc=build.config.CONFIG_SOC or None,
         hex_file=build.hex,
         elf_file=build.elf,
+        bin_file=build.bin,
+        pbpack_file=build.pbpack if build.variant != "prf" else None,
+        firmware_slot=build.config.CONFIG_FIRMWARE_SLOT
+        if build.config.CONFIG_PBLBOOT
+        else None,
         resources_file=resources_file,
         resources_address=resources_address,
         erase_ranges=tuple(erase_ranges),
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),
+        gdb_port=getattr(args, "gdb_port", None),
+        build=build,
+        extra_args=tuple(extra_args),
+        tty=getattr(args, "tty", None) or (watch.serial if watch else None),
+        probe=getattr(args, "probe", None) or (watch.probe if watch else None),
+        watch=watch,
         dry_run=getattr(args, "dry_run", False),
     )
-    return runners.create(selected, cfg, args)
+
+    supported = build.board_spec.runners
+    selected = getattr(args, "runner", None)
+    if not selected:
+        usable = [
+            name
+            for name in supported
+            if runners.get(name).supports(cfg)
+            and runners.get(name).capabilities().commands & set(commands)
+        ]
+        selected = usable[0] if usable else None
+    if not selected:
+        raise CommandContextError(
+            f"board {build.board} has no runner for {' or '.join(commands)}"
+        )
+    if selected not in supported:
+        raise CommandContextError(
+            f"board {build.board} does not support the {selected} runner; "
+            f"supported runners: {', '.join(supported) or 'none'}"
+        )
+    if not runners.get(selected).supports(cfg):
+        raise CommandContextError(
+            f"the {selected} runner cannot run this {build.board} build"
+        )
+    runner = runners.create(selected, cfg, args)
+    if watch is not None and runner.lab_ports:
+        util.inf(f"lab: watch {watch.name} ({watch.board})")
+    return runner
 
 
-def run_on_device(build, args, command, resources=False, erase_ranges=()):
+def run_on_device(build, args, command, resources=False, erase_ranges=(), watch=None):
     """Dispatch one runner command, reporting failures as command errors."""
     try:
-        make_runner(build, args, resources=resources, erase_ranges=erase_ranges).run(
-            command
-        )
+        make_runner(
+            build,
+            args,
+            (command,),
+            resources=resources,
+            erase_ranges=erase_ranges,
+            watch=watch,
+        ).run(command)
     except runners.RunnerError as e:
         raise CommandContextError(str(e)) from e

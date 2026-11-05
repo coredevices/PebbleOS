@@ -13,7 +13,8 @@ void pbl_posix_start(int (*entry)(void));
 //! the CPU.
 void pbl_posix_irq_run(void (*isr)(void *), void *arg);
 
-//! Idle: lets go of the CPU until an interrupt ran or @p timeout_us passed.
+//! Idle: lets go of the CPU until an interrupt ran or @p timeout_us passed, UINT64_MAX for no
+//! limit.
 void pbl_posix_cpu_wait(uint64_t timeout_us);
 
 #ifdef CONFIG_ARCH_POSIX_FIBERS

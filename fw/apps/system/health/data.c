@@ -8,14 +8,14 @@
 #include <string.h>
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
+#include <applib/app_malloc.h>
 #include <applib/health_service_private.h>
-#include <kernel/pbl_malloc.h>
 #include <syscall/syscall.h>
 
 PBL_T_STATIC void prv_merge_adjacent_sessions(ActivitySession *current, ActivitySession *previous) {
@@ -55,7 +55,7 @@ void health_data_destroy(HealthData *health_data) {
 }
 
 void health_data_update_quick(HealthData *health_data) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&now, &local_tm);
 
@@ -72,7 +72,7 @@ void health_data_update_quick(HealthData *health_data) {
 }
 
 void health_data_update(HealthData *health_data) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&now, &local_tm);
 
@@ -160,13 +160,6 @@ void health_data_update_sleep(HealthData *health_data, uint32_t new_sleep,
 void health_data_update_current_bpm(HealthData *health_data) {
   health_data->resting_hr_bpm = activity_prefs_heart_get_resting_hr();
 
-  // Check the quality. If it doesn't meet our standards, bail
-  int32_t quality;
-  activity_get_metric(ActivityMetricHeartRateRawQuality, 1, &quality);
-  if (quality < HRMQuality_Acceptable) {
-    return;
-  }
-
   uint32_t current_hr_timestamp;
   activity_get_metric(ActivityMetricHeartRateRawUpdatedTimeUTC, 1,
                       (int32_t *)&current_hr_timestamp);
@@ -180,7 +173,7 @@ uint16_t health_data_hr_get_today_bpm(uint8_t *minute_bpm) {
   memset(minute_bpm, 0, PBL_MIN_PER_DAY);
 
   const time_t midnight = time_start_of_today();
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const uint16_t num_minutes = time_util_get_minute_of_day(now) + 1;
   const uint32_t num_utc_minutes = ((now - midnight) / PBL_SEC_PER_MIN) + 1;
   if (num_utc_minutes == num_minutes) {
@@ -237,7 +230,7 @@ static int32_t prv_health_data_get_n_average_chunks(HealthData *health_data, int
 
 int32_t health_data_steps_get_current_average(HealthData *health_data) {
   // get the current minutes into today
-  time_t utc_sec = rtc_get_time();
+  time_t utc_sec = pbl_realtime();
   struct pbl_tm local_tm;
   pbl_localtime_r(&utc_sec, &local_tm);
   int32_t today_min = local_tm.tm_hour * PBL_MIN_PER_HOUR + local_tm.tm_min;

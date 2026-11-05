@@ -10,7 +10,7 @@ pbl/app/main.py    finds the workspace, assembles the commands, dispatches
 pbl/command.py     PblCommand, the base class every command derives from
 pbl/workspace.py   the checkout: pbl.yml, the layout, the extensions
 pbl/build.py       a build directory and what can be read back from it
-pbl/runners.py     the binary runners (openocd, sftool, nrfutil)
+pbl/runners/       the binary runners (openocd, sftool, probe-rs, qemu, ...)
 pbl/commands/      the commands themselves
 ```
 
@@ -49,7 +49,7 @@ top-level help the command is listed under.
 
 ### Feeds
 
-`pbl feed <feed>` writes simulated phone data into the emulator. Each feed
+`pbl emulator feed <feed>` writes simulated phone data into the emulator. Each feed
 is a module in `pbl/feeds/` with a `Feed` subclass, discovered the same
 way commands are: it names its subcommand, adds its own options in
 `add_arguments()` and writes its data in `run()` through the `Watch` it is
@@ -100,8 +100,12 @@ runners:
   - nrfutil
 ```
 
-`pbl flash`, `reset`, `run`, `bork`, `openocd` and `debug` all dispatch to
-it. Each runner contributes its own options (e.g. `--tty` for sftool), so
-they show up on all of those commands. New runners are modules in
-`pbl/runners/`, registered in that package's `RUNNERS` table, and declare
-the operations they support in `capabilities()`.
+`pbl run`, `erase`, `debug` and `debugserver` dispatch to the first of
+them that supports the command. Each runner contributes its own options (e.g.
+`--tty` for sftool), so they show up on all of those commands. New runners
+are modules in `pbl/runners/`, registered in that package's `RUNNERS`
+table, and declare the operations they support in `capabilities()`.
+
+A runner with a GDB server implements `debugserver` by running it in the
+foreground, and `debug` by handing it to `run_server_and_gdb()`, which
+starts it, attaches GDB once it listens and stops it when GDB quits.

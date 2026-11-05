@@ -2,7 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
+#include <pbl/services/time.h>
+
+#include <services/clock/tz_storage.h>
 
 void PBL_WEAK clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
 }
@@ -32,4 +36,18 @@ size_t PBL_WEAK clock_get_time_number(char *number_buffer, size_t number_buffer_
 
 size_t PBL_WEAK clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
   return 0;
+}
+
+void PBL_WEAK clock_get_time_tm(struct pbl_tm *time_tm) {
+  time_t t = pbl_realtime();
+
+  pbl_gmtime_r(&t, time_tm);
+}
+
+bool PBL_WEAK clock_is_timezone_set(void) {
+  return tz_storage_is_set();
+}
+
+void PBL_WEAK clock_timezone_clear(void) {
+  tz_storage_clear();
 }

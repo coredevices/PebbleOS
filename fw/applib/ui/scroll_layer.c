@@ -17,7 +17,6 @@
 #include <process_management/app_manager.h>
 
 #ifdef CONFIG_TOUCH
-#include <pbl/drivers/rtc.h>
 #include <pbl/util/testing.h>
 
 #include <applib/ui/recognizer/pan.h>

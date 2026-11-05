@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
@@ -10,19 +11,19 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
 
-#include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 //! Notification preferences file name and size
-#define NOTIF_PREFS_FILE_NAME "notifpref"
+#define NOTIF_PREFS_FILE_NAME "/notifpref"
 #define NOTIF_PREFS_FILE_LEN  (1024)
 
 //! Flag to suppress change callback during phone-originated INSERTs.
@@ -46,6 +47,7 @@ static const char *s_syncable_settings[] = {
   // Display preferences
   "unitsDistance",
   "unitsWind",
+  "unitsTemperature",
   "textStyle",
   "systemTextSize",
   "stationaryMode",
@@ -150,6 +152,7 @@ static const char *s_syncable_notif_prefs[] = {
   "notifDesignStyle",
   "notifVibeDelay",
   "notifBacklight",
+  "notifRespectPhoneSilence",
   "dndMotionBacklight",
   "dndTouchBacklight",
   "dndNotificationBacklight",
@@ -159,6 +162,11 @@ static const char *s_syncable_notif_prefs[] = {
 static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
 
 static bool s_initialized = false;
+
+struct prv_syncable_keys {
+  const char **keys;
+  size_t num_keys;
+};
 
 //! Check if the connected phone supports Settings BlobDB sync
 //! Returns true if the phone advertises settings_sync_support capability
@@ -284,15 +292,17 @@ static void prv_deferred_sync_callback(void *data) {
 //!
 //! This callback is coalesced - multiple setting changes result in at most one
 //! queued callback, preventing system task queue overflow.
-static void prv_settings_change_callback(SettingsFile *file, const void *key, int key_len,
-                                         time_t last_modified) {
+static void prv_settings_change_callback(const void *key, size_t key_len, uint32_t last_modified,
+                                         void *user_data) {
+  const struct prv_syncable_keys *syncable = user_data;
+
   // Skip callback if suppressed (during phone-originated INSERTs)
   if (s_suppress_change_callback) {
     return;
   }
 
   // Only sync whitelisted settings
-  if (!prv_is_syncable((const uint8_t *)key, key_len)) {
+  if (!prv_is_key_in_list((const uint8_t *)key, key_len, syncable->keys, syncable->num_keys)) {
     return;
   }
 
@@ -305,6 +315,28 @@ static void prv_settings_change_callback(SettingsFile *file, const void *key, in
   system_task_add_callback(prv_deferred_sync_callback, nullptr);
 }
 
+static const struct prv_syncable_keys s_shell_prefs_keys = {
+  .keys = s_syncable_settings,
+  .num_keys = ARRAY_LENGTH(s_syncable_settings),
+};
+
+static const struct prv_syncable_keys s_notif_prefs_keys = {
+  .keys = s_syncable_notif_prefs,
+  .num_keys = ARRAY_LENGTH(s_syncable_notif_prefs),
+};
+
+static struct pbl_settings_watch s_shell_prefs_watch = {
+  .name = SHELL_PREFS_FILE_NAME,
+  .cb = prv_settings_change_callback,
+  .user_data = (void *)&s_shell_prefs_keys,
+};
+
+static struct pbl_settings_watch s_notif_prefs_watch = {
+  .name = NOTIF_PREFS_FILE_NAME,
+  .cb = prv_settings_change_callback,
+  .user_data = (void *)&s_notif_prefs_keys,
+};
+
 // BlobDB Interface Implementation
 
 void settings_blob_db_init(void) {
@@ -312,8 +344,9 @@ void settings_blob_db_init(void) {
     return;
   }
 
-  // Register callback to sync settings immediately when they change
-  settings_file_set_change_callback(prv_settings_change_callback);
+  // Sync settings as soon as they change
+  pbl_settings_watch_add(&s_shell_prefs_watch);
+  pbl_settings_watch_add(&s_notif_prefs_watch);
 
   s_initialized = true;
   PBL_LOG_DBG("Settings BlobDB initialized (%u whitelisted settings)",
@@ -349,8 +382,8 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
 
   prv_lock_for_file(is_notif_pref);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif_pref);
     return status;
@@ -360,13 +393,13 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = settings_file_set(&file, key, key_len, val, val_len);
+  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
 
   if (PASSED(status)) {
     // Mark as synced - the record came from the phone so it's already in sync
-    settings_file_mark_synced(&file, key, key_len);
+    pbl_settings_mark_synced(&file, key, key_len);
   }
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Unlock before calling event handlers - they acquire the same mutex internally
   prv_unlock_for_file(is_notif_pref);
@@ -411,15 +444,15 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
 
   prv_lock_for_file(is_notif);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  int len = settings_file_get_len(&file, key, key_len);
-  settings_file_close(&file);
+  int len = pbl_settings_get_len(&file, key, key_len);
+  pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
   return len;
@@ -446,15 +479,15 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out
 
   prv_lock_for_file(is_notif);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = settings_file_get(&file, key, key_len, val_out, val_len);
-  settings_file_close(&file);
+  status = status_from_errno(pbl_settings_get(&file, key, key_len, val_out, val_len));
+  pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
   return status;
@@ -483,15 +516,15 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
 
   prv_lock_for_file(is_notif);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = settings_file_delete(&file, key, key_len);
-  settings_file_close(&file);
+  status = status_from_errno(pbl_settings_delete(&file, key, key_len));
+  pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
   return status;
@@ -504,8 +537,8 @@ typedef struct {
   BlobDBDirtyItem *dirty_list_tail;
 } BuildDirtyListContext;
 
-static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo *info,
-                                          void *context) {
+static bool prv_build_dirty_list_callback(struct pbl_settings_file *file,
+                                          struct pbl_settings_record *info, void *context) {
   BuildDirtyListContext *ctx = (BuildDirtyListContext *)context;
 
   // Skip settings that are already synced
@@ -514,8 +547,8 @@ static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo
   }
 
   // Read the key to check whitelist
-  uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   // Only include whitelisted settings
   if (!prv_is_syncable(key_buf, info->key_len)) {
@@ -523,7 +556,7 @@ static bool prv_build_dirty_list_callback(SettingsFile *file, SettingsRecordInfo
   }
 
   // Allocate dirty item
-  BlobDBDirtyItem *item = kernel_malloc_check(sizeof(BlobDBDirtyItem) + info->key_len);
+  BlobDBDirtyItem *item = pbl_malloc_check(sizeof(BlobDBDirtyItem) + info->key_len);
   list_init((ListNode *)item);
   item->last_updated = (time_t)info->last_modified;
   item->key_len = info->key_len;
@@ -550,20 +583,21 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
 
   // Iterate shell prefs file
   prefs_private_lock();
-  SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  struct pbl_settings_file file;
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
-    settings_file_close(&file);
+    pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
+    pbl_settings_close(&file);
   }
   prefs_private_unlock();
 
   // Iterate notif prefs file
   alerts_preferences_lock();
-  status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    settings_file_each(&file, prv_build_dirty_list_callback, &ctx);
-    settings_file_close(&file);
+    pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
+    pbl_settings_close(&file);
   }
   alerts_preferences_unlock();
 
@@ -589,15 +623,15 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
 
   prv_lock_for_file(is_notif);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = settings_file_mark_synced(&file, key, key_len);
-  settings_file_close(&file);
+  status = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
+  pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
   return status;
@@ -607,7 +641,8 @@ typedef struct {
   bool found_dirty;
 } IsDirtyContext;
 
-static bool prv_is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_is_dirty_callback(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                  void *context) {
   IsDirtyContext *ctx = (IsDirtyContext *)context;
 
   if (!info->dirty) {
@@ -615,8 +650,8 @@ static bool prv_is_dirty_callback(SettingsFile *file, SettingsRecordInfo *info, 
   }
 
   // Check if whitelisted
-  uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   if (prv_is_syncable(key_buf, info->key_len)) {
     ctx->found_dirty = true;
@@ -636,21 +671,23 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
 
   // Check shell prefs file
   prefs_private_lock();
-  SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  struct pbl_settings_file file;
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    settings_file_each(&file, prv_is_dirty_callback, &ctx);
-    settings_file_close(&file);
+    pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
+    pbl_settings_close(&file);
   }
   prefs_private_unlock();
 
   // If already found dirty, no need to check notif prefs
   if (!ctx.found_dirty) {
     alerts_preferences_lock();
-    status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+    status =
+        status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
     if (PASSED(status)) {
-      settings_file_each(&file, prv_is_dirty_callback, &ctx);
-      settings_file_close(&file);
+      pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
+      pbl_settings_close(&file);
     }
     alerts_preferences_unlock();
   }
@@ -664,8 +701,8 @@ status_t settings_blob_db_flush(void) {
     return E_INTERNAL;
   }
 
-  // SettingsFile writes are already atomic, no explicit flush needed
-  PBL_LOG_DBG("Settings BlobDB flush (no-op for SettingsFile)");
+  // struct pbl_settings_file writes are already atomic, no explicit flush needed
+  PBL_LOG_DBG("Settings BlobDB flush (no-op for struct pbl_settings_file)");
   return S_SUCCESS;
 }
 
@@ -680,11 +717,12 @@ status_t settings_blob_db_mark_all_dirty(void) {
 
   // Mark shell prefs file dirty
   prefs_private_lock();
-  SettingsFile file;
-  status_t status = settings_file_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  struct pbl_settings_file file;
+  status_t status =
+      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    status = settings_file_mark_all_dirty(&file);
-    settings_file_close(&file);
+    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
+    pbl_settings_close(&file);
     if (FAILED(status)) {
       result = status;
     }
@@ -695,10 +733,10 @@ status_t settings_blob_db_mark_all_dirty(void) {
 
   // Mark notif prefs file dirty
   alerts_preferences_lock();
-  status = settings_file_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
   if (PASSED(status)) {
-    status = settings_file_mark_all_dirty(&file);
-    settings_file_close(&file);
+    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
+    pbl_settings_close(&file);
     if (FAILED(status) && PASSED(result)) {
       result = status;
     }
@@ -711,21 +749,21 @@ status_t settings_blob_db_mark_all_dirty(void) {
 // Context for finding last_modified timestamp
 typedef struct {
   const uint8_t *search_key;
-  int search_key_len;
+  size_t search_key_len;
   time_t last_modified;
   bool found;
 } GetTimestampContext;
 
-static bool prv_get_timestamp_callback(SettingsFile *file, SettingsRecordInfo *info,
-                                       void *context) {
+static bool prv_get_timestamp_callback(struct pbl_settings_file *file,
+                                       struct pbl_settings_record *info, void *context) {
   GetTimestampContext *ctx = (GetTimestampContext *)context;
 
   if (info->key_len != ctx->search_key_len) {
     return true; // Continue
   }
 
-  uint8_t key_buf[SETTINGS_KEY_MAX_LEN];
-  info->get_key(file, key_buf, info->key_len);
+  uint8_t key_buf[PBL_SETTINGS_KEY_MAX_LEN];
+  pbl_settings_read_key(file, key_buf, info->key_len);
 
   if (memcmp(key_buf, ctx->search_key, info->key_len) == 0) {
     ctx->last_modified = (time_t)info->last_modified;
@@ -760,8 +798,8 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
 
   prv_lock_for_file(is_notif_pref);
 
-  SettingsFile file;
-  status_t status = settings_file_open(&file, file_name, file_len);
+  struct pbl_settings_file file;
+  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
   if (FAILED(status)) {
     prv_unlock_for_file(is_notif_pref);
     return status;
@@ -774,11 +812,11 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     .last_modified = 0,
     .found = false,
   };
-  settings_file_each(&file, prv_get_timestamp_callback, &ctx);
+  pbl_settings_each(&file, prv_get_timestamp_callback, &ctx);
 
   if (ctx.found && ctx.last_modified > timestamp) {
     // Watch data is newer - reject the insert
-    settings_file_close(&file);
+    pbl_settings_close(&file);
     prv_unlock_for_file(is_notif_pref);
     PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
                 (unsigned long)timestamp);
@@ -790,13 +828,13 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = settings_file_set(&file, key, key_len, val, val_len);
+  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
 
   if (PASSED(status)) {
     // Mark as synced - the record came from the phone so it's already in sync
-    settings_file_mark_synced(&file, key, key_len);
+    pbl_settings_mark_synced(&file, key, key_len);
   }
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 
   // Unlock before calling event handlers - they acquire the same mutex internally
   prv_unlock_for_file(is_notif_pref);

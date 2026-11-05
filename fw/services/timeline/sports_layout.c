@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
@@ -11,11 +11,11 @@
 #include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/preferred_content_size.h>
 #include <applib/ui/ui.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 static_assert(AttributeIdRankAway + 1 == AttributeIdRankHome,
@@ -53,7 +53,7 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout, int team_offse
 static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buffer_size,
                                time_t timestamp) {
   const int max_relative_hrs = 24;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t difference = timestamp - now;
   size_t starts_len = 0;
   if (difference <= PBL_SEC_PER_HOUR * max_relative_hrs &&
@@ -285,7 +285,7 @@ bool sports_layout_verify(bool existing_attributes[]) {
 }
 
 LayoutLayer *sports_layout_create(const LayoutLayerConfig *config) {
-  SportsLayout *layout = task_zalloc_check(sizeof(SportsLayout));
+  SportsLayout *layout = applib_zalloc(sizeof(SportsLayout));
 
   static const TimelineLayoutImpl s_timeline_layout_impl = {
     .attributes = {AttributeIdTitle, AttributeIdSubtitle},

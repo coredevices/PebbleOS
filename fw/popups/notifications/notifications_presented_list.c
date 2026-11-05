@@ -3,9 +3,8 @@
 
 #include "notifications_presented_list.h"
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/list.h>
-
-#include <kernel/pbl_malloc.h>
 
 // currently focused notification id
 static NotifList *s_current_notif;
@@ -64,13 +63,13 @@ void notifications_presented_list_remove(Uuid *id) {
   }
 
   list_remove((ListNode *)node, (ListNode **)&s_presented_notifs, nullptr);
-  task_free(node);
+  pbl_free(node);
 }
 
 static NotifList *prv_add_notification_common(Uuid *id, NotificationType type) {
   notifications_presented_list_remove(id);
 
-  NotifList *new_entry = task_malloc_check(sizeof(NotifList));
+  NotifList *new_entry = pbl_malloc_check(sizeof(NotifList));
   list_init((ListNode *)new_entry);
   new_entry->notif.type = type;
   new_entry->notif.id = *id;
@@ -148,7 +147,7 @@ void notifications_presented_list_deinit(NotificationListEachCallback callback, 
       callback(&head->notif.id, head->notif.type, cb_data);
     }
 
-    task_free(head);
+    pbl_free(head);
   }
 }
 

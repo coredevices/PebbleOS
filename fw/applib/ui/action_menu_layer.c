@@ -239,9 +239,11 @@ static void prv_draw_glyph_columns(GContext *ctx, const GRect *bounds, GFont fon
   }
 }
 
-static void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
-                                 ActionMenuLayer *aml, ActionMenuItem *items, int num_items,
-                                 int sel_idx) {
+// Kept out of line so its locals don't grow prv_draw_row's frame on the item path, which legacy
+// apps' 2 KiB stack can't afford
+static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const *cell_layer,
+                                              ActionMenuLayer *aml, ActionMenuItem *items,
+                                              int num_items, int sel_idx) {
   const GFont font = aml->layout_cache.font;
   const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
@@ -1194,6 +1196,8 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   menu_layer_init(&aml->menu_layer, &aml->layer.bounds);
   menu_layer_set_normal_colors(&aml->menu_layer, GColorBlack,
                                PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
+  // The action menu is drawn on black and has its own look, independent of the system accent
+  menu_layer_set_highlight_colors(&aml->menu_layer, GColorBlack, GColorWhite);
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
 #endif

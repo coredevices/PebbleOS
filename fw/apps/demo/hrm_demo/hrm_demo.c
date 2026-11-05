@@ -9,12 +9,12 @@
 #include <pbl/util/units.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/app_message/app_message.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_state/app_state/app_state.h>
@@ -54,28 +54,11 @@ typedef struct {
   TextLayer quality_text_layer;
 
   char bpm_string[BPM_STRING_LEN];
+  char confidence_string[24];
 
   bool ready_to_send;
   DictionaryIterator *out_iter;
 } AppData;
-
-static char *prv_get_quality_string(HRMQuality quality) {
-  switch (quality) {
-    case HRMQuality_OffWrist:
-      return "Off Wrist";
-    case HRMQuality_Worst:
-      return "Worst";
-    case HRMQuality_Poor:
-      return "Poor";
-    case HRMQuality_Acceptable:
-      return "Acceptable";
-    case HRMQuality_Good:
-      return "Good";
-    case HRMQuality_Excellent:
-      return "Excellent";
-  }
-  pbl_panic();
-}
 
 static char *prv_translate_error(AppMessageResult result) {
   switch (result) {
@@ -158,7 +141,13 @@ static void prv_handle_hrm_data(PebbleEvent *e, void *context) {
 
     if (hrm->event_type == HRMEvent_BPM) {
       snprintf(app_data->bpm_string, sizeof(app_data->bpm_string), "%" PRIu8 " BPM", hrm->bpm.bpm);
-      text_layer_set_text(&app_data->quality_text_layer, prv_get_quality_string(hrm->bpm.quality));
+      if (hrm->bpm.off_wrist) {
+        snprintf(app_data->confidence_string, sizeof(app_data->confidence_string), "Off Wrist");
+      } else {
+        snprintf(app_data->confidence_string, sizeof(app_data->confidence_string),
+                 "Confidence %" PRIu8, hrm->bpm.confidence);
+      }
+      text_layer_set_text(&app_data->quality_text_layer, app_data->confidence_string);
       layer_mark_dirty(&app_data->window.layer);
     } else if (hrm->event_type == HRMEvent_SubscriptionExpiring) {
       PBL_LOG_INFO("Got subscription expiring event");

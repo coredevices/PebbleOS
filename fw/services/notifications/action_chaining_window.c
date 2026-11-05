@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/notifications/action_chaining_window.h>
 
 #include <applib/ui/ui.h>
-#include <kernel/pbl_malloc.h>
 
 typedef struct {
   Window window;
@@ -86,7 +86,7 @@ static void prv_chaining_window_unload(Window *window) {
 #if PBL_RECT
   status_bar_layer_deinit(&data->status_layer);
 #endif
-  kernel_free(data);
+  pbl_free(data);
 }
 
 static void prv_chaining_window_load(Window *window) {
@@ -111,15 +111,19 @@ static void prv_chaining_window_load(Window *window) {
                              .select_click = prv_select_callback,
                            });
 
-  menu_layer_set_highlight_colors(&data->menu_layer,
-                                  PBL_IF_COLOR_ELSE(GColorIslamicGreen, GColorBlack), GColorWhite);
+#if PBL_COLOR
+  menu_layer_set_highlight_colors(&data->menu_layer, GColorIslamicGreen, GColorWhite);
+#endif
   menu_layer_set_click_config_onto_window(&data->menu_layer, &data->window);
   layer_add_child(&data->window.layer, menu_layer_get_layer(&data->menu_layer));
 
 #if PBL_RECT
   status_bar_layer_init(&data->status_layer);
-  status_bar_layer_set_colors(&data->status_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack),
-                              PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+#if PBL_COLOR
+  status_bar_layer_set_colors_follow_theme(&data->status_layer, false /* transparent_background */);
+#else
+  status_bar_layer_set_colors(&data->status_layer, GColorBlack, GColorWhite);
+#endif
   status_bar_layer_set_title(&data->status_layer, data->title, false /* revert */,
                              false /* animated */);
   status_bar_layer_set_separator_mode(&data->status_layer, StatusBarLayerSeparatorModeDotted);
@@ -131,7 +135,7 @@ void action_chaining_window_push(WindowStack *window_stack, const char *title,
                                  TimelineItemActionGroup *action_group,
                                  ActionChainingMenuSelectCb select_cb, void *select_cb_context,
                                  ActionChainingMenuClosedCb closed_cb, void *closed_cb_context) {
-  ChainingWindowData *data = kernel_zalloc_check(sizeof(ChainingWindowData));
+  ChainingWindowData *data = pbl_zalloc_check(sizeof(ChainingWindowData));
   *data = (ChainingWindowData){
     .title = title,
     .action_group = action_group,

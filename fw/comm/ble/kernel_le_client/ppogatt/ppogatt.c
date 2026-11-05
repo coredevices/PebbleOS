@@ -9,9 +9,10 @@
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_transport.h>
@@ -25,9 +26,7 @@
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
-#include <system/hexdump.h>
 
 typedef enum {
   StateDisconnectedReadingMeta,
@@ -148,7 +147,7 @@ typedef struct PPoGATTClient {
   CommSession *session;
 
   //! Tick count when this client was created, for measuring handshake duration
-  RtcTicks created_ticks;
+  uint64_t created_ticks;
 } PPoGATTClient;
 
 // -------------------------------------------------------------------------------------------------
@@ -163,8 +162,8 @@ static uint8_t s_disconnect_counter;
 //! Caps rediscovery on stale meta handles to once per BLE connection.
 static bool s_rediscovery_requested_this_connection;
 
-//! The connection currently using reversed PPoG, or NULL if none. Forward
-//! PPoG yields to reversed on this connection.
+//! The connection on which the phone started a reversed PPoG handshake, or
+//! NULL if none. Forward PPoG yields to reversed on this connection.
 static GAPLEConnection *s_reversed_active_conn;
 
 // -------------------------------------------------------------------------------------------------
@@ -173,6 +172,7 @@ static GAPLEConnection *s_reversed_active_conn;
 static void prv_send_next_packets(PPoGATTClient *client);
 static void prv_start_reset(PPoGATTClient *client);
 static void prv_request_meta_rediscovery(PPoGATTClient *client);
+static void prv_reversed_take_over(PPoGATTClient *client);
 
 extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
     const struct pbl_bt_device_internal *device);
@@ -413,7 +413,7 @@ static void prv_timer_callback(void *unused) {
 // -------------------------------------------------------------------------------------------------
 
 static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry_timer) {
-  PPoGATTClient *client = kernel_malloc(sizeof(PPoGATTClient));
+  PPoGATTClient *client = pbl_malloc(sizeof(PPoGATTClient));
   if (!client) {
     return nullptr;
   }
@@ -421,7 +421,7 @@ static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry
   client->app_uuid = UUID_INVALID;
   client->rx_ack_timer = rx_ack_timer;
   client->send_retry_timer = send_retry_timer;
-  client->created_ticks = rtc_get_ticks();
+  client->created_ticks = pbl_uptime_ticks();
   s_ppogatt_head = (PPoGATTClient *)list_prepend((ListNode *)s_ppogatt_head, &client->node);
   return client;
 }
@@ -429,7 +429,7 @@ static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry
 // -------------------------------------------------------------------------------------------------
 
 static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, DeleteReason reason) {
-  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
   PBL_LOG_INFO("PPoGATT client deleted: role=%u state=%u reason=%u disconnected=%u after %" PRIu32
                "ms",
                client->role, client->state, reason, is_disconnected, elapsed_ms);
@@ -454,7 +454,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   list_remove(&client->node, (ListNode **)&s_ppogatt_head, nullptr);
   new_timer_delete(client->rx_ack_timer);
   new_timer_delete(client->send_retry_timer);
-  kernel_free(client);
+  pbl_free(client);
 
   prv_update_ack_timer();
 }
@@ -505,20 +505,16 @@ static PPoGATTClient *prv_find_reversed_client_for_conn(uint16_t conn_handle) {
                                     (void *)(uintptr_t)conn_handle);
 }
 
-static bool prv_connection_filter_callback(ListNode *found_node, void *data) {
+static bool prv_forward_connection_filter_callback(ListNode *found_node, void *data) {
   const PPoGATTClient *client = (const PPoGATTClient *)found_node;
-  const GAPLEConnection *connection = (const GAPLEConnection *)data;
-  if (client->role == PPoGATTRoleReversed) {
-    return (client->rev.connection == connection);
-  }
-  GAPLEConnection *forward_conn =
-      gatt_client_characteristic_get_connection(client->characteristics.meta);
-  return (forward_conn == connection);
+  return (client->role == PPoGATTRoleForward &&
+          gatt_client_characteristic_get_connection(client->characteristics.meta) ==
+              (const GAPLEConnection *)data);
 }
 
-static PPoGATTClient *prv_find_client_for_connection(GAPLEConnection *connection) {
-  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head, prv_connection_filter_callback,
-                                    (void *)connection);
+static PPoGATTClient *prv_find_forward_client_for_connection(GAPLEConnection *connection) {
+  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head,
+                                    prv_forward_connection_filter_callback, (void *)connection);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -686,7 +682,7 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   }
 
   {
-    const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+    const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
     PBL_LOG_INFO("PPoGATT Session is opened (%s, Vers: %d TXW: %d RXW: %d) after %" PRIu32 "ms!",
                  (client->role == PPoGATTRoleReversed) ? "reversed" : "forward", client->version,
                  client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
@@ -772,7 +768,7 @@ static void prv_handle_data(PPoGATTClient *client, const PPoGATTPacket *packet,
 static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *value,
                                          uint16_t value_length) {
   //  PBL_LOG_DBG("IN:");
-  //  PBL_HEXDUMP(LOG_LEVEL_DEBUG, value, value_length);
+  //  PBL_LOG_HEXDUMP_DBG(value, value_length);
 
   if (PBL_UNLIKELY(value_length == 0)) {
     PBL_LOG_ERR("Zero length packet");
@@ -785,6 +781,9 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
   }
   if (PBL_UNLIKELY(packet->type == PPoGATTPacketTypeResetRequest)) {
     PBL_LOG_INFO("Got reset request!");
+    if (client->role == PPoGATTRoleReversed && s_reversed_active_conn != client->rev.connection) {
+      prv_reversed_take_over(client);
+    }
     prv_handle_reset_request(client);
     return;
   }
@@ -814,7 +813,7 @@ static void prv_handle_data_notification(PPoGATTClient *client, const uint8_t *v
 static void prv_rediscover_kernelbg_cb(void *data) {
   struct pbl_bt_device_internal *device = (struct pbl_bt_device_internal *)data;
   const enum pbl_bt_errno e = gatt_client_discovery_rediscover_all(device);
-  kernel_free(device);
+  pbl_free(device);
   if (e != PBL_BT_ERRNO_OK) {
     PBL_LOG_ERR("PPoGATT couldn't restart discovery: %d", (int)e);
   }
@@ -829,7 +828,7 @@ static void prv_request_meta_rediscovery(PPoGATTClient *client) {
     return;
   }
 
-  struct pbl_bt_device_internal *device = kernel_malloc(sizeof(struct pbl_bt_device_internal));
+  struct pbl_bt_device_internal *device = pbl_malloc(sizeof(struct pbl_bt_device_internal));
   if (!device) {
     return;
   }
@@ -888,7 +887,7 @@ static void prv_meta_read_retry_timer_cb(void *data) {
 
 static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, size_t value_length,
                                  enum pbl_bt_gatt_error error) {
-  const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+  const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
   PBL_ASSERTN(client->state == StateDisconnectedReadingMeta);
   if (error != PBL_BT_GATT_ERROR_SUCCESS) {
     PBL_LOG_ERR("PPoGATT meta read failed: err=0x%x after %" PRIu32 "ms (retry %u/%u)", error,
@@ -1078,16 +1077,24 @@ void ppogatt_invalidate_all_references(void) {
 // -------------------------------------------------------------------------------------------------
 // Reversed PPoG (watch hosts the GATT service)
 
+// A subscription alone doesn't mean the phone uses reversed PPoG: NimBLE also
+// restores a bonded phone's subscription when it reconnects, while the phone
+// may host forward PPoG. Reversed takes over once the phone starts its
+// handshake.
+static void prv_reversed_take_over(PPoGATTClient *client) {
+  bt_lock_assert_held(true);
+
+  PPoGATTClient *forward = prv_find_forward_client_for_connection(client->rev.connection);
+  if (forward) {
+    PBL_LOG_INFO("Reversed PPoG taking over from forward client");
+    prv_delete_client(forward, false /* is_disconnected */, DeleteReason_DuplicateServer);
+  }
+  s_reversed_active_conn = client->rev.connection;
+}
+
 static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle,
                                TimerID rx_ack_timer, TimerID send_retry_timer) {
   bt_lock_assert_held(true);
-
-  // Reversed wins over any client already bound to this connection.
-  PPoGATTClient *existing = prv_find_client_for_connection(connection);
-  if (existing) {
-    PBL_LOG_INFO("Reversed PPoG taking over from existing client (role=%u)", existing->role);
-    prv_delete_client(existing, false /* is_disconnected */, DeleteReason_DuplicateServer);
-  }
 
   PPoGATTClient *client = prv_create_client(rx_ack_timer, send_retry_timer);
   if (!client) {
@@ -1099,8 +1106,6 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
   client->app_uuid = UUID_INVALID;
   client->version = PPOGATT_MAX_VERSION;
   client->destination = TransportDestinationHybrid;
-
-  s_reversed_active_conn = connection;
 
   // The handshake is phone-initiated: wait for the phone's ResetRequest.
   client->state = StateConnectedClosedAwaitingResetRequest;
@@ -1190,25 +1195,25 @@ typedef struct {
 static void prv_reversed_subscribed_kernelmain_cb(void *data) {
   ReversedSubscribedCtx *ctx = (ReversedSubscribedCtx *)data;
   ppogatt_reversed_handle_subscribed(&ctx->device, ctx->conn_handle);
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 static void prv_reversed_unsubscribed_kernelmain_cb(void *data) {
   ReversedUnsubscribedCtx *ctx = (ReversedUnsubscribedCtx *)data;
   ppogatt_reversed_handle_unsubscribed(ctx->conn_handle);
-  kernel_free(ctx);
+  pbl_free(ctx);
 }
 
 static void prv_reversed_data_kernelmain_cb(void *data) {
   ReversedDataCtx *ctx = (ReversedDataCtx *)data;
   ppogatt_reversed_handle_data(ctx->conn_handle, ctx->buf, ctx->len);
-  kernel_free(ctx->buf);
-  kernel_free(ctx);
+  pbl_free(ctx->buf);
+  pbl_free(ctx);
 }
 
 void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
                                         uint16_t conn_handle) {
-  ReversedSubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedSubscribedCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG subscribed: out of memory");
     return;
@@ -1219,7 +1224,7 @@ void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *dev
 }
 
 void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
-  ReversedUnsubscribedCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedUnsubscribedCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG unsubscribed: out of memory");
     return;
@@ -1229,10 +1234,10 @@ void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
 }
 
 void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
-  ReversedDataCtx *ctx = kernel_malloc(sizeof(*ctx));
+  ReversedDataCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG data: out of memory");
-    kernel_free(buf);
+    pbl_free(buf);
     return;
   }
   ctx->conn_handle = conn_handle;
@@ -1329,7 +1334,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
     }
     PBL_ASSERTN(client->state == StateDisconnectedSubscribingData);
     if (error) {
-      const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_ERR("PPoGATT subscribe failed: err=0x%x after %" PRIu32 "ms", error, elapsed_ms);
       prv_delete_client(client, false /* is_disconnected */, DeleteReason_SubscribeFailure);
       goto unlock;
@@ -1339,7 +1344,7 @@ void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
       goto unlock;
     }
     {
-      const uint32_t elapsed_ms = (rtc_get_ticks() - client->created_ticks) * 1000 / RTC_TICKS_HZ;
+      const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
       PBL_LOG_INFO("PPoGATT subscribed to Data after %" PRIu32 "ms, sending ResetRequest",
                    elapsed_ms);
     }
@@ -1383,7 +1388,7 @@ static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *
     if (max_payload_size == 0) {
       return nullptr;
     }
-    packet = (PPoGATTPacket *)kernel_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
+    packet = (PPoGATTPacket *)pbl_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
     *heap_packet_in_out = packet;
   }
   return packet;
@@ -1664,7 +1669,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     }
   }
 
-  kernel_free(heap_packet);
+  pbl_free(heap_packet);
 
   client->send_in_progress = false;
 }

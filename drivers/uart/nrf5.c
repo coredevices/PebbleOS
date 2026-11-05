@@ -1,379 +1,267 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/uart.h>
+#include <errno.h>
+
+#include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
-#include <pbl/kernel/assert.h>
-#include <pbl/kernel/fatal.h>
-#include <pbl/logging/logging.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
+#include <pbl/soc/nrf/ppi.h>
+#include <pbl/util/bits.h>
+#include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
-#include <nrfx_uarte.h>
-#ifdef NRF_PPI_BASE
-#include <nrfx_ppi.h>
-#else
-#include <nrfx_dppi.h>
-#endif
+#include <hardware/nrf52_timer.h>
+#include <hardware/nrf52_uarte.h>
 
-PBL_LOG_MODULE_DEFINE(driver_uart_nrf5, CONFIG_DRIVER_UART_LOG_LEVEL);
+#define RX_HALF_SIZE (PBL_UART_NRF5_RX_BUF_SIZE / 2U)
 
-// UART: 8n1, duplex
+// The received byte count runs free, so it must wrap at a multiple of the buffer size
+static_assert((PBL_UART_NRF5_RX_BUF_SIZE & (PBL_UART_NRF5_RX_BUF_SIZE - 1U)) == 0U);
+static_assert(RX_HALF_SIZE <= UARTE_MAXCNT_MASK);
 
-static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx);
+static const struct {
+  uintptr_t base;
+  pbl_irq_t irqn;
+} s_instances[] = {
+  {NRF52_UARTE0_BASE, PBL_IRQN(UART0_UARTE0)},
+  {NRF52_UARTE1_BASE, PBL_IRQN(UARTE1)},
+};
 
-static void _timer_event_handler(nrf_timer_event_t event_type, void *ctx) {
+static const uintptr_t s_timers[] = {
+  NRF52_TIMER0_BASE, NRF52_TIMER1_BASE, NRF52_TIMER2_BASE, NRF52_TIMER3_BASE, NRF52_TIMER4_BASE,
+};
+
+static const struct {
+  uint32_t baudrate;
+  uint32_t reg;
+} s_baudrates[] = {
+  {1200U, UARTE_BAUDRATE_1200},     {2400U, UARTE_BAUDRATE_2400},
+  {4800U, UARTE_BAUDRATE_4800},     {9600U, UARTE_BAUDRATE_9600},
+  {14400U, UARTE_BAUDRATE_14400},   {19200U, UARTE_BAUDRATE_19200},
+  {28800U, UARTE_BAUDRATE_28800},   {31250U, UARTE_BAUDRATE_31250},
+  {38400U, UARTE_BAUDRATE_38400},   {56000U, UARTE_BAUDRATE_56000},
+  {57600U, UARTE_BAUDRATE_57600},   {76800U, UARTE_BAUDRATE_76800},
+  {115200U, UARTE_BAUDRATE_115200}, {230400U, UARTE_BAUDRATE_230400},
+  {250000U, UARTE_BAUDRATE_250000}, {460800U, UARTE_BAUDRATE_460800},
+  {921600U, UARTE_BAUDRATE_921600}, {1000000U, UARTE_BAUDRATE_1000000},
+};
+
+static const struct pbl_uart_nrf5 *prv_nrf5(const struct pbl_uart *uart) {
+  return container_of(uart, const struct pbl_uart_nrf5, uart);
 }
 
-void uart_init(UARTDevice *dev) {
-  nrfx_uarte_config_t config = {
-    .txd_pin = dev->tx_gpio,
-    .rxd_pin = dev->rx_gpio,
-    .rts_pin = dev->rts_gpio,
-    .cts_pin = dev->cts_gpio,
-    .p_context = (void *)dev,
-    .tx_cache =
-        {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-         .length = sizeof(dev->state->tx_cache_buffer)},
-    .rx_cache =
-        {.p_buffer = (uint8_t *)dev->state->rx_cache_buffer,
-         .length = sizeof(dev->state->rx_cache_buffer)},
-    .baudrate = NRF_UARTE_BAUDRATE_1000000,
-    .config =
-        {.hwfc = NRF_UARTE_HWFC_DISABLED,
-         .parity = NRF_UARTE_PARITY_EXCLUDED,
-         .stop = NRF_UARTE_STOP_ONE},
-    .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
-  };
-
-  nrfx_err_t err = nrfx_uarte_init(&dev->periph, &config, _uart_event_handler);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  /* Roughly patterned off of
-   * https://devzone.nordicsemi.com/f/nordic-q-a/28420/uarte-in-circular-mode */
-  nrfx_timer_config_t tconfig = {
-    .frequency = 1000000, /* dummy */
-    .mode = NRF_TIMER_MODE_COUNTER,
-    .bit_width = NRF_TIMER_BIT_WIDTH_32,
-    .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
-    .p_context = nullptr,
-  };
-  err = nrfx_timer_init(&dev->counter, &tconfig, _timer_event_handler);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-#ifdef NRF_PPI_BASE
-  nrf_ppi_channel_t rxdrdy_count_channel;
-  nrf_ppi_channel_t endrx_clear_channel;
-
-  err = nrfx_ppi_channel_alloc(&rxdrdy_count_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  nrfx_ppi_channel_assign(rxdrdy_count_channel,
-                          nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY),
-                          nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT));
-  nrfx_ppi_channel_enable(rxdrdy_count_channel);
-
-  err = nrfx_ppi_channel_alloc(&endrx_clear_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  nrfx_ppi_channel_assign(endrx_clear_channel,
-                          nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX),
-                          nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR));
-  nrfx_ppi_channel_enable(endrx_clear_channel);
-#else
-  uint8_t rxdrdy_count_channel;
-  uint8_t endrx_clear_channel;
-
-  err = nrfx_dppi_channel_alloc(&rxdrdy_count_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_RXDRDY),
-                          rxdrdy_count_channel);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_COUNT),
-                          rxdrdy_count_channel);
-  nrfx_dppi_channel_enable(rxdrdy_count_channel);
-
-  err = nrfx_dppi_channel_alloc(&endrx_clear_channel);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_uarte_event_address_get(&dev->periph, NRF_UARTE_EVENT_ENDRX),
-                          endrx_clear_channel);
-  NRF_DPPI_ENDPOINT_SETUP(nrfx_timer_task_address_get(&dev->counter, NRF_TIMER_TASK_CLEAR),
-                          endrx_clear_channel);
-  nrfx_dppi_channel_enable(endrx_clear_channel);
-#endif
-
-  dev->state->initialized = true;
+static inline uintptr_t prv_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
+  return s_instances[nrf5->index].base + offset;
 }
 
-void uart_init_open_drain(UARTDevice *dev) {
-  pbl_panic(); /* unimplemented, for now */
+static inline uint32_t prv_getreg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
+  return pbl_readl(prv_reg(nrf5, offset));
 }
 
-void uart_init_tx_only(UARTDevice *dev) {
-  nrfx_uarte_config_t config = {
-    .txd_pin = dev->tx_gpio,
-    .rxd_pin = NRF_UARTE_PSEL_DISCONNECTED,
-    .rts_pin = NRF_UARTE_PSEL_DISCONNECTED,
-    .cts_pin = NRF_UARTE_PSEL_DISCONNECTED,
-    .p_context = (void *)dev,
-    .tx_cache =
-        {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-         .length = sizeof(dev->state->tx_cache_buffer)},
-    .baudrate = NRF_UARTE_BAUDRATE_1000000,
-    .config =
-        {.hwfc = NRF_UARTE_HWFC_DISABLED,
-         .parity = NRF_UARTE_PARITY_EXCLUDED,
-         .stop = NRF_UARTE_STOP_ONE},
-    .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
-  };
-
-  nrfx_err_t err = nrfx_uarte_init(&dev->periph, &config, _uart_event_handler);
-  PBL_ASSERTN(err == NRFX_SUCCESS);
-
-  dev->state->initialized = true;
+static inline void prv_putreg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset, uint32_t value) {
+  pbl_writel(value, prv_reg(nrf5, offset));
 }
 
-void uart_init_rx_only(UARTDevice *dev) {
-  pbl_panic(); /* unimplemented, for now */
+static inline uintptr_t prv_timer_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
+  return s_timers[nrf5->timer] + offset;
 }
 
-void uart_deinit(UARTDevice *dev) {
-  nrfx_uarte_uninit(&dev->periph);
+static void prv_event_clear(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
+  prv_putreg(nrf5, offset, 0U);
+  (void)prv_getreg(nrf5, offset);
 }
 
-void uart_set_baud_rate(UARTDevice *dev, uint32_t baud_rate) {
-  nrf_uarte_baudrate_t baud_cfg =
-#define MKBAUD(b) (baud_rate == b) ? NRF_UARTE_BAUDRATE_##b:
-      MKBAUD(1200) MKBAUD(2400) MKBAUD(4800) MKBAUD(9600) MKBAUD(14400) MKBAUD(19200) MKBAUD(28800)
-          MKBAUD(31250) MKBAUD(38400) MKBAUD(56000) MKBAUD(57600) MKBAUD(76800) MKBAUD(115200)
-              MKBAUD(230400) MKBAUD(250000) MKBAUD(460800) MKBAUD(921600) MKBAUD(1000000) -
-      1;
-  if (baud_cfg == (nrf_uarte_baudrate_t)-1)
-    pbl_panic();
-  nrfx_uarte_config_t config = {
-    .txd_pin = dev->tx_gpio,
-    .rxd_pin = dev->rx_gpio,
-    .rts_pin = dev->rts_gpio,
-    .cts_pin = dev->cts_gpio,
-    .p_context = (void *)dev,
-    .tx_cache =
-        {.p_buffer = (uint8_t *)dev->state->tx_cache_buffer,
-         .length = sizeof(dev->state->tx_cache_buffer)},
-    //.rx_cache = { .p_buffer = (uint8_t *) dev->state->rx_cache_buffer, .length =
-    // sizeof(dev->state->rx_cache_buffer) },
-    .baudrate = baud_cfg,
-    .config =
-        {.hwfc = NRF_UARTE_HWFC_DISABLED,
-         .parity = NRF_UARTE_PARITY_EXCLUDED,
-         .stop = NRF_UARTE_STOP_ONE},
-    .interrupt_priority = NRFX_UARTE_DEFAULT_CONFIG_IRQ_PRIORITY,
-  };
-
-  nrfx_err_t err = nrfx_uarte_reconfigure(&dev->periph, &config);
-  if (err != NRFX_SUCCESS)
-    pbl_panic();
+static void prv_event_wait(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
+  while (prv_getreg(nrf5, offset) == 0U) {
+  }
+  prv_event_clear(nrf5, offset);
 }
 
-// Read / Write APIs
-////////////////////////////////////////////////////////////////////////////////
+static int prv_pin_init(const struct pbl_gpio *gpio, uint32_t flags) {
+  if (pbl_device_init(&gpio->port->dev) != 0) {
+    return -ENODEV;
+  }
 
-void uart_write_byte(UARTDevice *dev, uint8_t data) {
-  /* XXX: nRF5 can run either a PIO UART or a DMA, but not tx-as-PIO /
-   * rx-as-DMA.  we could create our own linked TX buffer, but it is not
-   * really performance critical for now.  so for now we will do a blocking
-   * send on every byte.  */
-  nrfx_uarte_tx(&dev->periph, &data, 1, NRFX_UARTE_TX_BLOCKING);
+  return pbl_gpio_configure(gpio, flags);
 }
 
-uint8_t uart_read_byte(UARTDevice *dev) {
-  /* NYI for now, only accessory uses it */
-  pbl_panic();
+static int prv_early_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  int ret;
+
+  if (nrf5->index >= ARRAY_LENGTH(s_instances) || nrf5->timer >= ARRAY_LENGTH(s_timers)) {
+    return -EINVAL;
+  }
+
+  ret = prv_pin_init(&nrf5->tx, PBL_GPIO_OUTPUT_HIGH);
+  if (ret != 0) {
+    return ret;
+  }
+
+  prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_DISABLED);
+  prv_putreg(nrf5, NRF52_UARTE_PSEL_TXD_OFFSET, pbl_gpio_nrf5_pin(&nrf5->tx));
+  prv_putreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET, UARTE_PSEL_DISCONNECTED);
+  prv_putreg(nrf5, NRF52_UARTE_PSEL_RTS_OFFSET, UARTE_PSEL_DISCONNECTED);
+  prv_putreg(nrf5, NRF52_UARTE_PSEL_CTS_OFFSET, UARTE_PSEL_DISCONNECTED);
+  prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
+
   return 0;
 }
 
-UARTRXErrorFlags uart_has_errored_out(UARTDevice *dev) {
-#if 0
-  uint16_t errors = dev->periph->SR;
-  UARTRXErrorFlags flags = {
-    .parity_error = (errors & USART_FLAG_PE) != 0,
-    .overrun_error = (errors & USART_FLAG_ORE) != 0,
-    .framing_error = (errors & USART_FLAG_FE) != 0,
-    .noise_detected = (errors & USART_FLAG_NE) != 0,
-  };
-#endif
-  UARTRXErrorFlags flags = {};
-  return flags;
+static int prv_init(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  int ret;
+
+  ret = prv_early_init(uart);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = soc_nrf_ppi_alloc(&nrf5->state->ppi_ch);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_writel(TIMER_MODE_LOW_POWER_COUNTER, prv_timer_reg(nrf5, NRF52_TIMER_MODE_OFFSET));
+  pbl_writel(TIMER_BITMODE_32BIT, prv_timer_reg(nrf5, NRF52_TIMER_BITMODE_OFFSET));
+
+  soc_nrf_ppi_setup(nrf5->state->ppi_ch, prv_reg(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET),
+                    prv_timer_reg(nrf5, NRF52_TIMER_TASKS_COUNT_OFFSET), 0U);
+  soc_nrf_ppi_enable(PBL_BIT(nrf5->state->ppi_ch));
+
+  pbl_irq_enable(s_instances[nrf5->index].irqn);
+
+  return 0;
 }
 
-bool uart_is_rx_ready(UARTDevice *dev) {
-  // return dev->periph->SR & USART_SR_RXNE;
-  /* NYI: used only in dialog_bootrom.c */
-  pbl_panic();
-  return false;
+static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  uint32_t config = 0U;
+  size_t i;
+
+  if (cfg->parity == PBL_UART_PARITY_ODD || cfg->flow_ctrl != PBL_UART_FLOW_CTRL_NONE) {
+    return -ENOTSUP;
+  }
+
+  for (i = 0U; i < ARRAY_LENGTH(s_baudrates); i++) {
+    if (s_baudrates[i].baudrate == cfg->baudrate) {
+      break;
+    }
+  }
+
+  if (i == ARRAY_LENGTH(s_baudrates)) {
+    return -ENOTSUP;
+  }
+
+  if (cfg->parity == PBL_UART_PARITY_EVEN) {
+    config = PBL_FIELD_PREP(UARTE_CONFIG_PARITY_MASK, UARTE_CONFIG_PARITY_INCL);
+  }
+
+  prv_putreg(nrf5, NRF52_UARTE_BAUDRATE_OFFSET, s_baudrates[i].reg);
+  prv_putreg(nrf5, NRF52_UARTE_CONFIG_OFFSET, config);
+
+  return 0;
 }
 
-bool uart_has_rx_overrun(UARTDevice *dev) {
-  // return dev->periph->SR & USART_SR_ORE;
-  pbl_panic(); /* NYI: used only in has_errored_out */
-  return false;
+static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+
+  prv_putreg(nrf5, NRF52_UARTE_TXD_PTR_OFFSET, (uintptr_t)&c);
+  prv_putreg(nrf5, NRF52_UARTE_TXD_MAXCNT_OFFSET, 1U);
+  prv_putreg(nrf5, NRF52_UARTE_TASKS_STARTTX_OFFSET, 1U);
+  prv_event_wait(nrf5, NRF52_UARTE_EVENTS_ENDTX_OFFSET);
+
+  // A started transmitter keeps the high-frequency clock running
+  prv_putreg(nrf5, NRF52_UARTE_TASKS_STOPTX_OFFSET, 1U);
+  prv_event_wait(nrf5, NRF52_UARTE_EVENTS_TXSTOPPED_OFFSET);
 }
 
-bool uart_has_rx_framing_error(UARTDevice *dev) {
-  // return dev->periph->SR & USART_SR_FE;
-  pbl_panic(); /* NYU: used only in has_errored_out */
-  return false;
+static int prv_rx_enable(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  struct pbl_uart_nrf5_state *state = nrf5->state;
+  int ret;
+
+  // PSEL may only be written while the UARTE is disabled
+  if (prv_getreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET) == UARTE_PSEL_DISCONNECTED) {
+    ret = prv_pin_init(&nrf5->rx, PBL_GPIO_INPUT);
+    if (ret != 0) {
+      return ret;
+    }
+
+    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_DISABLED);
+    prv_putreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET, pbl_gpio_nrf5_pin(&nrf5->rx));
+    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
+  }
+
+  pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_CLEAR_OFFSET));
+  pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_START_OFFSET));
+
+  state->rx_consumed = 0U;
+  state->rx_next = 1U;
+
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET);
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET);
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXTO_OFFSET);
+  prv_putreg(nrf5, NRF52_UARTE_RXD_PTR_OFFSET, (uintptr_t)state->rx_buf);
+  prv_putreg(nrf5, NRF52_UARTE_RXD_MAXCNT_OFFSET, RX_HALF_SIZE);
+  prv_putreg(nrf5, NRF52_UARTE_SHORTS_OFFSET, UARTE_SHORTS_ENDRX_STARTRX);
+  prv_putreg(nrf5, NRF52_UARTE_INTENSET_OFFSET, UARTE_INT_RXSTARTED | UARTE_INT_RXDRDY);
+  prv_putreg(nrf5, NRF52_UARTE_TASKS_STARTRX_OFFSET, 1U);
+
+  return 0;
 }
 
-bool uart_is_tx_ready(UARTDevice *dev) {
-  // return dev->periph->SR & USART_SR_TXE;
-  /* NYI for now, only accessory uses it */
-  pbl_panic();
-  return false;
+// A running receiver keeps the high-frequency clock on
+static void prv_rx_disable(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+
+  prv_putreg(nrf5, NRF52_UARTE_INTENCLR_OFFSET, UARTE_INT_RXSTARTED | UARTE_INT_RXDRDY);
+  prv_putreg(nrf5, NRF52_UARTE_SHORTS_OFFSET, 0U);
+  prv_putreg(nrf5, NRF52_UARTE_TASKS_STOPRX_OFFSET, 1U);
+  prv_event_wait(nrf5, NRF52_UARTE_EVENTS_RXTO_OFFSET);
+
+  // nRF52840 anomaly 78: STOP alone leaves the TIMER drawing current
+  pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_SHUTDOWN_OFFSET));
+
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET);
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET);
+  pbl_irq_clear_pending(s_instances[nrf5->index].irqn);
 }
 
-bool uart_is_tx_complete(UARTDevice *dev) {
-  return true;
-  // return nrfx_uarte_tx_in_progress(&dev->periph);
-}
+void pbl_uart_nrf5_irq_handler(const struct pbl_uart_nrf5 *nrf5) {
+  struct pbl_uart_nrf5_state *state = nrf5->state;
+  uint32_t count;
 
-void uart_wait_for_tx_complete(UARTDevice *dev) {
-  while (!uart_is_tx_complete(dev))
-    continue;
-}
+  if (prv_getreg(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET) != 0U) {
+    prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET);
+    prv_putreg(nrf5, NRF52_UARTE_RXD_PTR_OFFSET,
+               (uintptr_t)&state->rx_buf[state->rx_next * RX_HALF_SIZE]);
+    state->rx_next ^= 1U;
+  }
 
-void uart_set_rx_interrupt_handler(UARTDevice *dev, UARTRXInterruptHandler irq_handler) {
-  PBL_ASSERTN(dev->state->initialized);
-  dev->state->rx_irq_handler = irq_handler;
-}
+  prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET);
 
-void uart_set_tx_interrupt_handler(UARTDevice *dev, UARTTXInterruptHandler irq_handler) {
-  PBL_ASSERTN(dev->state->initialized);
-  pbl_panic(); /* accessory only, for now */
-  dev->state->tx_irq_handler = irq_handler;
-}
+  pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_CAPTURE_OFFSET(0)));
+  count = pbl_readl(prv_timer_reg(nrf5, NRF52_TIMER_CC_OFFSET(0)));
 
-static void prv_rx_dma_start(UARTDevice *dev);
-static void prv_rx_dma_stop(UARTDevice *dev);
+  // The halves fill in turn, so byte n lands at n modulo the buffer size
+  while (state->rx_consumed != count) {
+    uint8_t c = state->rx_buf[state->rx_consumed % PBL_UART_NRF5_RX_BUF_SIZE];
 
-void uart_set_rx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  PBL_ASSERTN(dev->state->initialized);
-  dev->state->rx_int_enabled = enabled;
-
-  // A running receiver keeps the high-frequency clock on: stop it while nobody listens.
-  if (dev->state->rx_dma_buffer != nullptr && enabled != dev->state->rx_dma_running) {
-    if (enabled) {
-      prv_rx_dma_start(dev);
-    } else {
-      prv_rx_dma_stop(dev);
+    state->rx_consumed++;
+    if (!pbl_uart_receive(&nrf5->uart, c)) {
+      break;
     }
   }
 }
 
-void uart_set_tx_interrupt_enabled(UARTDevice *dev, bool enabled) {
-  PBL_ASSERTN(dev->state->initialized);
-  pbl_panic();
-}
-
-void uart_clear_all_interrupt_flags(UARTDevice *dev) {
-  pbl_panic(); /* only used internally? */
-}
-
-// DMA
-////////////////////////////////////////////////////////////////////////////////
-
-#define DMA_BUFFERS 4
-
-#define GET_SUBBUF_P(dev, n) (dev->state->rx_dma_buffer + dev->state->rx_dma_length * (n))
-
-static void _uart_event_handler(const nrfx_uarte_event_t *event, void *ctx) {
-  UARTDevice *dev = (UARTDevice *)ctx;
-
-  switch (event->type) {
-    case NRFX_UARTE_EVT_RX_BUF_REQUEST:
-      dev->state->rx_dma_index = (dev->state->rx_dma_index + 1) % DMA_BUFFERS;
-      nrfx_uarte_rx_buffer_set(&dev->periph, GET_SUBBUF_P(dev, dev->state->rx_dma_index),
-                               dev->state->rx_dma_length);
-      break;
-    case NRFX_UARTE_EVT_RX_BYTE:
-      /* we'll catch this up in the ring buffer catchup below */
-      break;
-    case NRFX_UARTE_EVT_RX_DONE: {
-      dev->state->rx_prod_index = (dev->state->rx_prod_index + 1) % DMA_BUFFERS;
-      break;
-    }
-    default:
-      break;
-  }
-
-  /* catch up on any completed buffers */
-  for (; dev->state->rx_cons_index != dev->state->rx_prod_index;
-       dev->state->rx_cons_index = (dev->state->rx_cons_index + 1) % DMA_BUFFERS) {
-    uint8_t *buf = GET_SUBBUF_P(dev, dev->state->rx_cons_index);
-    size_t ofs = dev->state->rx_cons_pos;
-    dev->state->rx_cons_pos = 0;
-
-    if (ofs == dev->state->rx_dma_length) /* already consumed */
-      continue;
-
-    const UARTRXErrorFlags err_flags = {}; /* ignored, for now */
-    for (; ofs < dev->state->rx_dma_length; ofs++) {
-      if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
-        dev->state->rx_irq_handler(dev, buf[ofs], &err_flags);
-      }
-    }
-  }
-
-  uint32_t curpos = nrfx_timer_capture(&dev->counter, NRF_TIMER_CC_CHANNEL0);
-  if (dev->state->rx_cons_pos < curpos) { /* if it is greater, then we have wrapped and we will
-                                             catch it on the completed buffer irq later */
-    uint8_t *buf = GET_SUBBUF_P(dev, dev->state->rx_cons_index);
-
-    const UARTRXErrorFlags err_flags = {}; /* ignored, for now */
-    for (; dev->state->rx_cons_pos < curpos; dev->state->rx_cons_pos++) {
-      if (dev->state->rx_irq_handler && dev->state->rx_int_enabled) {
-        dev->state->rx_irq_handler(dev, buf[dev->state->rx_cons_pos], &err_flags);
-      }
-    }
-  }
-}
-
-void uart_start_rx_dma(UARTDevice *dev, void *buffer, uint32_t length) {
-  /* the nRF5 model of DMA is sort of annoying.  what we do is we split the
-   * buffer in half, and double-buffer, swapping back and forth while
-   * triggering the RXSTOP -> RXSTART shortcut; every time we get a RXDRDY,
-   * we trigger a RXSTOP, eat the old buffer, and open the new buffer.  ugh!
-   */
-  PBL_ASSERTN((((uint32_t)buffer) & 3) == 0);
-  dev->state->rx_dma_buffer = buffer;
-  dev->state->rx_dma_length = length / DMA_BUFFERS;
-  if (dev->state->rx_dma_length % 4)
-    dev->state->rx_dma_length -= dev->state->rx_dma_length % 4;
-  prv_rx_dma_start(dev);
-}
-
-static void prv_rx_dma_start(UARTDevice *dev) {
-  dev->state->rx_dma_index = 0;
-  dev->state->rx_prod_index = 0;
-  dev->state->rx_cons_index = 0;
-  dev->state->rx_cons_pos = 0;
-
-  nrfx_timer_enable(&dev->counter);
-  nrfx_timer_clear(&dev->counter);
-
-  nrfx_uarte_rxdrdy_enable(&dev->periph);
-  nrfx_uarte_rx_buffer_set(&dev->periph, dev->state->rx_dma_buffer, dev->state->rx_dma_length);
-  nrfx_uarte_rx_enable(&dev->periph,
-                       NRFX_UARTE_RX_ENABLE_CONT | NRFX_UARTE_RX_ENABLE_KEEP_FIFO_CONTENT);
-  dev->state->rx_dma_running = true;
-}
-
-static void prv_rx_dma_stop(UARTDevice *dev) {
-  nrfx_uarte_rx_abort(&dev->periph, true, true);
-  nrfx_timer_disable(&dev->counter);
-  dev->state->rx_dma_running = false;
-}
-
-void uart_stop_rx_dma(UARTDevice *dev) {
-  if (dev->state->rx_dma_running) {
-    prv_rx_dma_stop(dev);
-  }
-  dev->state->rx_dma_buffer = nullptr;
-}
-
-void uart_clear_rx_dma_buffer(UARTDevice *dev) {
-}
+const struct pbl_uart_ops pbl_uart_nrf5_ops = {
+  .init = prv_init,
+  .early_init = prv_early_init,
+  .configure = prv_configure,
+  .poll_out = prv_poll_out,
+  .rx_enable = prv_rx_enable,
+  .rx_disable = prv_rx_disable,
+};

@@ -262,6 +262,7 @@ static void prv_draw_slider_settle(SelectionLayer *selection_layer, GContext *ct
 }
 
 static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
+  graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, system_theme_get_bg_color()));
   int16_t start_x_offset = prv_centered_offset_x(selection_layer);
   // Loop over each cell and draw the text
   for (unsigned i = 0, current_x_offset = start_x_offset; i < selection_layer->num_cells; i++) {
@@ -311,6 +312,12 @@ static void prv_draw_text(SelectionLayer *selection_layer, GContext *ctx) {
 
 static void prv_draw_selection_layer(Layer *layer, GContext *ctx) {
   SelectionLayer *selection_layer = (SelectionLayer *)layer;
+#if PBL_BW
+  if (system_theme_is_system_ui()) {
+    // Highlights invert the system theme on black and white displays
+    selection_layer->active_background_color = system_theme_get_fg_color();
+  }
+#endif
   // The first thing that is drawn is the background for each cell
   prv_draw_cell_backgrounds(selection_layer, ctx);
 

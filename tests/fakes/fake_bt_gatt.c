@@ -8,11 +8,11 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/btutil/bt_uuid.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/util/uuid.h>
 
 #include <clar_asserts.h>
 #include <comm/ble/gap_le_connection.h>
-#include <kernel/pbl_malloc.h>
 
 // A long-ish nominal watchdog period; the value is irrelevant to the tests,
 // which fire the timer explicitly through stub_new_timer_fire.
@@ -178,7 +178,7 @@ void fake_gatt_put_discovery_indication_service(unsigned int connection_id,
 
   const size_t size_bytes = PBL_BT_GATT_SERVICE_SIZE_BYTES(
       service->num_characteristics, num_descriptors, service->num_included_services);
-  struct pbl_bt_gatt_service *blob = kernel_zalloc_check(size_bytes);
+  struct pbl_bt_gatt_service *blob = pbl_zalloc_check(size_bytes);
 
   blob->uuid = service->uuid;
   blob->size_bytes = size_bytes;

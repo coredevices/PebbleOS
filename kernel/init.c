@@ -7,7 +7,26 @@
 #include <string.h>
 
 #include <pbl/kernel/init.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/logging/backend.h>
+#include <pbl/logging/logging.h>
+#include <pbl/version.h>
 
+void kernel_init(int (*entry)(void)) {
+  pbl_soc_early_init();
+  pbl_irq_init();
+  arch_init();
+  pbl_malloc_init();
+  pbl_log_early_init();
+
+  PBL_LOG_ALWAYS("*** Booting PebbleOS %s ***", PBL_VERSION_TAG);
+
+  entry();
+
+  PBL_ASSERTN(false);
+}
+
+#ifndef CONFIG_ARCH_POSIX
 extern uint8_t __data_load_start[];
 extern uint8_t __data_start[];
 extern uint8_t __data_end[];
@@ -29,9 +48,6 @@ void kernel_prep_c(void) {
 #endif
   memset(__bss_start, 0, __bss_end - __bss_start);
 
-  pbl_soc_early_init();
-
-  main();
-
-  PBL_ASSERTN(false);
+  kernel_init(main);
 }
+#endif

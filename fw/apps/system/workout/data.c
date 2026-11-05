@@ -28,9 +28,6 @@ bool workout_data_update(void *data) {
   workout_data->hr_samples = metrics.hr_samples;
   workout_data->active_kcal = metrics.active_kcal;
   workout_data->avg_bpm = metrics.avg_bpm;
-  workout_data->spo2 = metrics.spo2_pct;
-  workout_data->spo2_min = metrics.spo2_min_pct;
-  workout_data->spo2_measuring = metrics.spo2_measuring;
   memcpy(workout_data->hr_zone_time_s, metrics.hr_zone_time_s, sizeof(metrics.hr_zone_time_s));
 
   workout_data->avg_pace = 0;
@@ -48,10 +45,6 @@ static bool prv_metric_available(WorkoutMetricType type, WorkoutData *workout_da
       return workout_data->bpm > 0;
     case WorkoutMetricType_AvgHr:
       return workout_data->avg_bpm > 0;
-    case WorkoutMetricType_SpO2:
-      return workout_data_get_metric_value(type, workout_data) > 0;
-    case WorkoutMetricType_SpO2Min:
-      return workout_data->spo2_min > 0;
     case WorkoutMetricType_AvgSpeed:
     case WorkoutMetricType_AvgCadence:
       return workout_data->duration_s > 0;
@@ -73,8 +66,6 @@ void workout_data_fill_metric_value(WorkoutMetricType type, char *buffer, size_t
   switch (type) {
     case WorkoutMetricType_Hr:
     case WorkoutMetricType_AvgHr:
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
     case WorkoutMetricType_Steps:
     case WorkoutMetricType_AvgCadence:
     case WorkoutMetricType_ActiveCalories: {
@@ -119,11 +110,6 @@ int32_t workout_data_get_metric_value(WorkoutMetricType type, void *data) {
       return workout_data->bpm;
     case WorkoutMetricType_AvgHr:
       return workout_data->avg_bpm;
-    case WorkoutMetricType_SpO2:
-      // -1 while a reading is in progress.
-      return workout_data->spo2_measuring ? -1 : workout_data->spo2;
-    case WorkoutMetricType_SpO2Min:
-      return workout_data->spo2_min;
     case WorkoutMetricType_HrZone0Time:
     case WorkoutMetricType_HrZone1Time:
     case WorkoutMetricType_HrZone2Time:

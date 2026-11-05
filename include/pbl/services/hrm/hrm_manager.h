@@ -34,7 +34,7 @@
  *
  * @code{.c}
  * static void prv_hrm_cb(PebbleHRMEvent *event, void *context) {
- *   if (event->event_type == HRMEvent_BPM && event->bpm.quality >= HRMQuality_Acceptable) {
+ *   if (event->event_type == HRMEvent_BPM && !event->bpm.off_wrist) {
  *     // event->bpm.bpm
  *   } else if (event->event_type == HRMEvent_SubscriptionExpiring) {
  *     // renew with sys_hrm_manager_set_update_interval() if still needed
@@ -50,21 +50,12 @@
  * @{
  */
 
-/** @brief Quality of a reading, as graded by the sensor algorithm. */
-typedef enum {
-  /** The watch is not on the wrist. */
-  HRMQuality_OffWrist = -1,
-  /** Worst quality. */
-  HRMQuality_Worst = 0,
-  /** Poor quality. */
-  HRMQuality_Poor,
-  /** Acceptable quality. */
-  HRMQuality_Acceptable,
-  /** Good quality. */
-  HRMQuality_Good,
-  /** Excellent quality. */
-  HRMQuality_Excellent,
-} HRMQuality;
+/**
+ * @brief Algorithm confidence (0-100) at or above which a reading is considered accurate.
+ *
+ * Readings below it are still valid; the algorithm already drops unusable ones.
+ */
+#define HRM_CONFIDENCE_HIGH (80)
 
 /** @brief Bit positions of @ref HRMFeature. */
 typedef enum {
@@ -257,22 +248,22 @@ void hrm_manager_enable(bool on);
 typedef struct {
   /** Features with valid data in this report. */
   HRMFeature features;
+  /** The watch is off the wrist; the readings carry no value. */
+  bool off_wrist;
 
   /** Heart rate, in beats per minute. */
   uint8_t hrm_bpm;
-  /** Heart rate quality. */
-  HRMQuality hrm_quality;
+  /** Heart rate algorithm confidence, 0-100. */
+  uint8_t hrm_confidence;
 
   /** Peak-to-peak interval, in milliseconds. */
   uint16_t hrv_ppi_ms;
-  /** HRV quality. */
-  HRMQuality hrv_quality;
+  /** HRV algorithm confidence, 0-100. */
+  uint8_t hrv_confidence;
 
   /** Oxygen saturation (SpO2), in percent. */
   uint8_t spo2_percent;
-  /** SpO2 quality. */
-  HRMQuality spo2_quality;
-  /** Raw algorithm confidence coefficient (debug). */
+  /** SpO2 algorithm confidence, 0-100. */
   uint8_t spo2_confidence;
   /** Raw algorithm valid level (debug). */
   uint8_t spo2_valid_level;

@@ -4,16 +4,16 @@
 #include <stdint.h>
 
 #include <pbl/drivers/mag.h>
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
@@ -42,7 +42,7 @@ typedef struct {
   char status_string[STATUS_STRING_LEN];
 
   TestState state;
-  RtcTicks state_start_time;
+  uint64_t state_start_time;
 
   // Track min/max per axis
   int16_t min_x, max_x;
@@ -74,7 +74,7 @@ static void prv_update_display(void *context) {
   // Log raw magnetometer samples at debug level
   PBL_LOG_DBG("Mag (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x, sample.y, sample.z);
 
-  uint32_t elapsed = (uint32_t)(rtc_get_ticks() - data->state_start_time);
+  uint32_t elapsed = (uint32_t)(pbl_uptime_ticks() - data->state_start_time);
 
   switch (data->state) {
     case STATE_IDLE: {
@@ -130,7 +130,7 @@ static void prv_update_display(void *context) {
         mfg_test_result_report(MfgTestId_Mag, data->test_passed, 0);
 
         data->state = STATE_RESULT;
-        data->state_start_time = rtc_get_ticks();
+        data->state_start_time = pbl_uptime_ticks();
       }
       break;
     }
@@ -158,7 +158,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
     case STATE_IDLE:
       // Start test
       data->state = STATE_TESTING;
-      data->state_start_time = rtc_get_ticks();
+      data->state_start_time = pbl_uptime_ticks();
       data->sample_count = 0;
       break;
 
@@ -201,7 +201,7 @@ static void prv_handle_init(void) {
   window_set_click_config_provider_with_context(window, prv_click_config_provider, data);
 
   data->state = STATE_IDLE;
-  data->state_start_time = rtc_get_ticks();
+  data->state_start_time = pbl_uptime_ticks();
 
   app_window_stack_push(window, true /* Animated */);
 

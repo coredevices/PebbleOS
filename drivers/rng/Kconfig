@@ -37,7 +37,7 @@ config RNG_POSIX
 
 config RNG_SHELL
     bool "Shell commands"
-    default y
+    default DRIVER_SHELL
     depends on SHELL
     help
       The rng shell command, to print random words and check their bit

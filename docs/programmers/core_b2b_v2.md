@@ -7,7 +7,7 @@ host SWD debug access and the debug UART over a single USB connection.
 :Boards: {doc}`asterix <../boards/asterix/index>`
 :Host interface: USB: CMSIS-DAP probe and virtual COM port
 :Target interfaces: SWD, debug UART, reset, VUSB
-:Runners: `openocd`, `nrfutil`
+:Runners: `openocd`, `nrfutil`, `probe-rs`
 :Firmware: [coredevices/asterix_b2b2_fw](https://github.com/coredevices/asterix_b2b2_fw)
 
 It is based on the [Raspberry Pi Debug Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html).

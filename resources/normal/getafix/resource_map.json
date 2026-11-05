@@ -4,11 +4,7 @@
     {
       "type": "pdc",
       "name": "VOICE_MICROPHONE_LARGE",
-      "file": "normal/snowy/images/Pebble_80x80_Microphone.svg",
-      "builtin": true,
-      "_comment": ["Built into firmware to ensure that voice API memory contract is not violated",
-                   "Ensure that if this is moved to resources, images are allocated up front when",
-                   "a dictation session is started"]
+      "file": "normal/snowy/images/Pebble_80x80_Microphone.svg"
     },
     {
       "type": "pdc",
@@ -33,62 +29,52 @@
     {
       "type": "raw",
       "name": "ALARM_CLOCK_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Alarm_clock.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Alarm_clock.pdc"
     },
     {
-      "type": "raw",
+      "type": "pdc",
       "name": "BATTERY_ICON_CHARGING_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Battery_currently_charging.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/Pebble_80x80_Battery_currently_charging.svg"
     },
     {
       "type": "raw",
       "name": "RESULT_DELETED_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Deleted.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Deleted.pdc"
     },
     {
       "type": "raw",
       "name": "RESULT_SHREDDED_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Result_shredded.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Result_shredded.pdc"
     },
     {
       "type": "raw",
       "name": "RESULT_DISMISSED_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Dismiss.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Dismiss.pdc"
     },
     {
       "type": "raw",
       "name": "GENERIC_CONFIRMATION_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Generic_confirmation.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Generic_confirmation.pdc"
     },
     {
       "type": "raw",
       "name": "INCOMING_PHONE_CALL_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Incoming_call.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Incoming_call.pdc"
     },
     {
       "type": "raw",
       "name": "RESULT_MUTE_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Mute.pdc"
     },
     {
       "type": "raw",
       "name": "RESULT_SENT_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Sent.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Sent.pdc"
     },
     {
       "type": "raw",
       "name": "RESULT_UNMUTE_LARGE",
-      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Unmute.pdc",
-      "builtin": true
+      "file": "normal/snowy/images/animated_pdcs/Pebble_80x80_Unmute.pdc"
     },
     {
       "type": "png",

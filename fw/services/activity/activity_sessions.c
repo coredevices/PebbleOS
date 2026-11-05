@@ -19,6 +19,7 @@
 #include <applib/health_service.h>
 #include <kernel/events.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -498,7 +499,7 @@ static void prv_log_activities(time_t now_utc) {
   // List of event classes and info on each
   typedef struct {
     ActivitySettingsKey key; // settings key used to store last UTC time for this activity class
-    time_t *exit_utc;        // pointer to last UTC time in our globals
+    uint32_t *exit_utc;      // pointer to last UTC time in our globals
     bool modified;           // true if we need to update it.
   } ActivityClassParams;
 
@@ -511,12 +512,30 @@ static void prv_log_activities(time_t now_utc) {
     {ActivitySettingsKeyLastStepActivityUTC, &state->logged_step_activity_exit_at_utc, false},
   };
 
-  bool logged_event = false;
+  bool exit_utc_changed = false;
+
+  // A clock set into the future and corrected later leaves future exit times behind, which
+  // would mark every new session as already logged. Reset them; the phone dedups re-sent ones.
+  for (int i = 0; i < ActivityClassCount; i++) {
+    ActivityClassParams *params = &class_settings[i];
+    if ((time_t)*params->exit_utc > now_utc) {
+      PBL_LOG_WRN("Last logged activity exit time in the future, resetting");
+      *params->exit_utc = 0;
+      params->modified = true;
+      exit_utc_changed = true;
+    }
+  }
+
   ActivitySession *session = state->activity_sessions;
   for (uint32_t i = 0; i < state->activity_sessions_count; i++, session++) {
     // Get info on this activity
     uint32_t session_len_sec = session->length_min * PBL_SEC_PER_MIN;
     time_t session_exit_utc = session->start_utc + session_len_sec;
+
+    // Sessions ending in the future were recorded with a wrong clock, don't log them
+    if (session_exit_utc > now_utc) {
+      continue;
+    }
 
     ActivityClassParams *params = nullptr;
     switch (session->type) {
@@ -543,7 +562,7 @@ static void prv_log_activities(time_t now_utc) {
     PBL_ASSERTN(params);
 
     // If this is an event we already logged, or it's still ongoing, don't log it
-    if (session->ongoing || (session_exit_utc <= *params->exit_utc)) {
+    if (session->ongoing || (session_exit_utc <= (time_t)*params->exit_utc)) {
       continue;
     }
 
@@ -560,18 +579,18 @@ static void prv_log_activities(time_t now_utc) {
     activity_sessions_prv_send_activity_session_to_data_logging(session);
     *params->exit_utc = session_exit_utc;
     params->modified = true;
-    logged_event = true;
+    exit_utc_changed = true;
   }
 
-  // Update settings file if any events were logged
-  if (logged_event) {
+  // Update settings file if any exit times changed
+  if (exit_utc_changed) {
     pbl_mutex_lock(&state->mutex, PBL_FOREVER);
-    SettingsFile *file = activity_private_settings_open();
+    struct pbl_settings_file *file = activity_private_settings_open();
     if (file) {
       for (int i = 0; i < ActivityClassCount; i++) {
         ActivityClassParams *params = &class_settings[i];
-        status_t result = settings_file_set(file, &params->key, sizeof(params->key),
-                                            params->exit_utc, sizeof(*params->exit_utc));
+        status_t result = status_from_errno(pbl_settings_set(
+            file, &params->key, sizeof(params->key), params->exit_utc, sizeof(*params->exit_utc)));
         if (result != S_SUCCESS) {
           PBL_LOG_ERR("Error saving last event time");
         }
@@ -584,13 +603,13 @@ static void prv_log_activities(time_t now_utc) {
 
 // ------------------------------------------------------------------------------------------------
 // Load in the stored activities from our settings file
-void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
+void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now) {
   ActivityState *state = activity_private_state();
   ActivitySettingsKey key = ActivitySettingsKeyStoredActivities;
 
-  // Check the length first. The settings_file_get() call will not return an error if we ask
+  // Check the length first. The pbl_settings_get() call will not return an error if we ask
   // for less than the value size
-  int stored_len = settings_file_get_len(file, &key, sizeof(key));
+  int stored_len = pbl_settings_get_len(file, &key, sizeof(key));
   if (stored_len == 0) {
     PBL_LOG_DBG("No stored activity sessions");
     return;
@@ -602,8 +621,8 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
   }
 
   // Read in the stored activities
-  status_t result = settings_file_get(file, &key, sizeof(key), state->activity_sessions,
-                                      sizeof(state->activity_sessions));
+  status_t result = status_from_errno(pbl_settings_get(
+      file, &key, sizeof(key), state->activity_sessions, sizeof(state->activity_sessions)));
   if (result != S_SUCCESS) {
     return;
   }
@@ -620,14 +639,13 @@ void activity_sessions_prv_init(SettingsFile *file, time_t utc_now) {
       // NOTE: We check for full validity as well as we can (rather than just checking for a
       // non-null activity start time for example) because there have been cases where
       // flash got corrupted.
-      PBL_HEXDUMP(LOG_LEVEL_INFO, (void *)state->activity_sessions,
-                  sizeof(state->activity_sessions));
+      PBL_LOG_HEXDUMP_INFO((void *)state->activity_sessions, sizeof(state->activity_sessions));
       PBL_LOG_ERR("Invalid activity session detected - could be flash corruption");
 
       // Zero out flash so that we don't get into a reboot loop
       memset(state->activity_sessions, 0, sizeof(state->activity_sessions));
-      settings_file_set(file, &key, sizeof(key), state->activity_sessions,
-                        sizeof(state->activity_sessions));
+      pbl_settings_set(file, &key, sizeof(key), state->activity_sessions,
+                       sizeof(state->activity_sessions));
       pbl_panic();
     }
     state->activity_sessions_count++;

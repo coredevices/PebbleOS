@@ -1,23 +1,25 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/sync_util.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/attributes_actions.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
-#include <kernel/pbl_malloc.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
-PBL_T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "iosnotifprefdb";
+PBL_T_STATIC const char *iOS_NOTIF_PREF_DB_FILE_NAME = "/iosnotifprefdb";
 PBL_T_STATIC const int iOS_NOTIF_PREF_MAX_SIZE = PBL_KIB(32);
 
 typedef struct PBL_PACKED {
@@ -29,11 +31,11 @@ typedef struct PBL_PACKED {
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
-static status_t prv_file_open_and_lock(SettingsFile *file) {
+static status_t prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = settings_file_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
-                                            iOS_NOTIF_PREF_MAX_SIZE, PBL_KIB(4));
+  status_t rv = status_from_errno(pbl_settings_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
+                                                             iOS_NOTIF_PREF_MAX_SIZE, PBL_KIB(4)));
   if (rv != S_SUCCESS) {
     pbl_mutex_unlock(&s_mutex);
   }
@@ -41,24 +43,24 @@ static status_t prv_file_open_and_lock(SettingsFile *file) {
   return rv;
 }
 
-static void prv_file_close_and_unlock(SettingsFile *file) {
-  settings_file_close(file);
+static void prv_file_close_and_unlock(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_mutex_unlock(&s_mutex);
 }
 
 //! Assumes the file is opened and locked
-static status_t prv_save_serialized_prefs(SettingsFile *file, const void *key, size_t key_len,
-                                          const void *val, size_t val_len) {
+static status_t prv_save_serialized_prefs(struct pbl_settings_file *file, const void *key,
+                                          size_t key_len, const void *val, size_t val_len) {
   // Invert flags before writing to flash
   ((SerializedNotifPrefs *)val)->flags = ~(((SerializedNotifPrefs *)val)->flags);
 
-  return settings_file_set(file, key, key_len, val, val_len);
+  return status_from_errno(pbl_settings_set(file, key, key_len, val, val_len));
 }
 
 //! Assumes the file is opened and locked
-static status_t prv_read_serialized_prefs(SettingsFile *file, const void *key, size_t key_len,
-                                          void *val_out, size_t val_out_len) {
-  status_t rv = settings_file_get(file, key, key_len, val_out, val_out_len);
+static status_t prv_read_serialized_prefs(struct pbl_settings_file *file, const void *key,
+                                          size_t key_len, void *val_out, size_t val_out_len) {
+  status_t rv = status_from_errno(pbl_settings_get(file, key, key_len, val_out, val_out_len));
 
   // The flags for inverted before writing, revert them back
   ((SerializedNotifPrefs *)val_out)->flags = ~(((SerializedNotifPrefs *)val_out)->flags);
@@ -68,21 +70,21 @@ static status_t prv_read_serialized_prefs(SettingsFile *file, const void *key, s
 
 //! Returns the length of the data
 //! When done with the prefs, call prv_free_serialized_prefs()
-static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, int key_len,
-                                    SerializedNotifPrefs **prefs_out) {
-  const unsigned prefs_len = settings_file_get_len(file, app_id, key_len);
+static int prv_get_serialized_prefs(struct pbl_settings_file *file, const uint8_t *app_id,
+                                    int key_len, SerializedNotifPrefs **prefs_out) {
+  const unsigned prefs_len = pbl_settings_get_len(file, app_id, key_len);
   if (prefs_len < sizeof(SerializedNotifPrefs)) {
     return 0;
   }
 
-  *prefs_out = kernel_zalloc(prefs_len);
+  *prefs_out = pbl_zalloc(prefs_len);
   if (!*prefs_out) {
     return 0;
   }
 
   status_t rv = prv_read_serialized_prefs(file, app_id, key_len, (void *)*prefs_out, prefs_len);
   if (rv != S_SUCCESS) {
-    kernel_free(*prefs_out);
+    pbl_free(*prefs_out);
     return 0;
   }
 
@@ -90,17 +92,17 @@ static int prv_get_serialized_prefs(SettingsFile *file, const uint8_t *app_id, i
 }
 
 static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
-  kernel_free(prefs);
+  pbl_free(prefs);
 }
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return 0;
   }
 
-  if (!settings_file_exists(&file, app_id, key_len)) {
+  if (!pbl_settings_exists(&file, app_id, key_len)) {
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)app_id, key_len);
     buffer[key_len] = '\0';
@@ -137,7 +139,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
       serialized_prefs->num_attributes, serialized_prefs->num_actions, attributes_per_action,
       string_alloc_size);
 
-  iOSNotifPrefs *notif_prefs = kernel_zalloc_check(sizeof(iOSNotifPrefs) + alloc_size);
+  iOSNotifPrefs *notif_prefs = pbl_zalloc_check(sizeof(iOSNotifPrefs) + alloc_size);
 
   uint8_t *buffer = (uint8_t *)notif_prefs + sizeof(iOSNotifPrefs);
   uint8_t *const buf_end = buffer + alloc_size;
@@ -153,7 +155,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
     buffer[key_len] = '\0';
     PBL_LOG_ERR("Could not deserialize data for <%s>", buffer);
     prv_free_serialized_prefs(serialized_prefs);
-    kernel_free(notif_prefs);
+    pbl_free(notif_prefs);
     return nullptr;
   }
 
@@ -162,12 +164,12 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
 }
 
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
-  kernel_free(prefs);
+  pbl_free(prefs);
 }
 
 status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
                                        TimelineItemActionGroup *action_group) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
@@ -175,7 +177,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
 
   size_t payload_size = attributes_actions_get_serialized_payload_size(attr_list, action_group);
   size_t serialized_prefs_size = sizeof(SerializedNotifPrefs) + payload_size;
-  SerializedNotifPrefs *new_prefs = kernel_zalloc_check(serialized_prefs_size);
+  SerializedNotifPrefs *new_prefs = pbl_zalloc_check(serialized_prefs_size);
   *new_prefs = (SerializedNotifPrefs){
     .num_attributes = attr_list ? attr_list->num_attributes : 0,
     .num_actions = action_group ? action_group->num_actions : 0,
@@ -192,7 +194,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
     buffer[length] = '\0';
     PBL_LOG_INFO("Added <%s> to the notif pref db", buffer);
 
-    blob_db_sync_record(BlobDBIdiOSNotifPref, app_id, length, rtc_get_time());
+    blob_db_sync_record(BlobDBIdiOSNotifPref, app_id, length, pbl_realtime());
   }
 
   return rv;
@@ -207,7 +209,7 @@ status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
@@ -221,7 +223,7 @@ status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t
     PBL_LOG_DBG("iOS notif pref insert <%s>", buffer);
 
     // All records inserted from the phone are not dirty (the phone is the source of truth)
-    rv = settings_file_mark_synced(&file, key, key_len);
+    rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
   }
 
   prv_file_close_and_unlock(&file);
@@ -234,13 +236,13 @@ int ios_notif_pref_db_get_len(const uint8_t *key, int key_len) {
     return 0;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return 0;
   }
 
-  int length = settings_file_get_len(&file, key, key_len);
+  int length = pbl_settings_get_len(&file, key, key_len);
 
   prv_file_close_and_unlock(&file);
 
@@ -249,7 +251,7 @@ int ios_notif_pref_db_get_len(const uint8_t *key, int key_len) {
 
 status_t ios_notif_pref_db_read(const uint8_t *key, int key_len, uint8_t *val_out,
                                 int val_out_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
@@ -267,13 +269,13 @@ status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
 
-  rv = settings_file_delete(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -282,31 +284,31 @@ status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
 
 status_t ios_notif_pref_db_flush(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(iOS_NOTIF_PREF_DB_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(iOS_NOTIF_PREF_DB_FILE_NAME));
   pbl_mutex_unlock(&s_mutex);
   return rv;
 }
 
 status_t ios_notif_pref_db_compact(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&file);
+  rv = status_from_errno(pbl_settings_compact(&file));
   prv_file_close_and_unlock(&file);
   return rv;
 }
 
 status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
 
   *is_dirty_out = false;
-  rv = settings_file_each(&file, sync_util_is_dirty_cb, is_dirty_out);
+  pbl_settings_each(&file, sync_util_is_dirty_cb, is_dirty_out);
 
   prv_file_close_and_unlock(&file);
 
@@ -314,13 +316,13 @@ status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
 }
 
 BlobDBDirtyItem *ios_notif_pref_db_get_dirty_list(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (S_SUCCESS != prv_file_open_and_lock(&file)) {
     return nullptr;
   }
 
   BlobDBDirtyItem *dirty_list = nullptr;
-  settings_file_each(&file, sync_util_build_dirty_list_cb, &dirty_list);
+  pbl_settings_each(&file, sync_util_build_dirty_list_cb, &dirty_list);
 
   prv_file_close_and_unlock(&file);
 
@@ -332,13 +334,13 @@ status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
 
-  rv = settings_file_mark_synced(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -348,7 +350,7 @@ status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
 // ----------------------------------------------------------------------------------------------
 #if UNITTEST
 uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return 0;
@@ -368,10 +370,11 @@ uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
 
 #include <pbl/shell/shell.h>
 
-static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_print_notif_pref_db(struct pbl_settings_file *file,
+                                    struct pbl_settings_record *info, void *context) {
   const struct pbl_shell *sh = context;
   char app_id[64];
-  info->get_key(file, app_id, info->key_len);
+  pbl_settings_read_key(file, app_id, info->key_len);
   app_id[info->key_len] = '\0';
   pbl_shell_print(sh, "%s", app_id);
 
@@ -394,13 +397,13 @@ static bool prv_print_notif_pref_db(SettingsFile *file, SettingsRecordInfo *info
 }
 
 static int prv_cmd_prefs(const struct pbl_shell *sh, size_t argc, char **argv) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (S_SUCCESS != prv_file_open_and_lock(&file)) {
     pbl_shell_error(sh, "failed to open the database");
     return -EIO;
   }
 
-  settings_file_each(&file, prv_print_notif_pref_db, (void *)sh);
+  pbl_settings_each(&file, prv_print_notif_pref_db, (void *)sh);
 
   prv_file_close_and_unlock(&file);
   return 0;

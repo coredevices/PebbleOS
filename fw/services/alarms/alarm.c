@@ -4,10 +4,11 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
@@ -15,9 +16,10 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/services/time.h>
 #include <pbl/services/timeline/event.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/string.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
@@ -25,15 +27,15 @@
 #include <applib/event_service_client.h>
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
 #define DEFAULT_SNOOZE_DELAY_M (10)
 #define MAX_CONFIGURED_ALARMS  (10)
 
-#define ALARM_FILE_NAME          "alarms"
+#define ALARM_FILE_NAME          "/alarms"
 #define ALARM_MAX_FILE_SIZE      PBL_KIB(1) // ~50 alarms or so
 #define NUM_ALARM_PINS_PER_ALARM (3)
 #define ALARM_ENTRY_SIZE         (UUID_SIZE * NUM_ALARM_PINS_PER_ALARM)
@@ -114,9 +116,11 @@ typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *co
 // Forward declarations
 static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context,
                                 bool schedule_changed);
-static bool prv_reload_alarms(SettingsFile *file);
-static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out);
-static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config);
+static bool prv_reload_alarms(struct pbl_settings_file *file);
+static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
+                                 AlarmConfig *config_out);
+static void prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
+                                 const AlarmConfig *config);
 static void prv_cron_callback(struct pbl_cron_job *job, void *data);
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated);
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context);
@@ -156,10 +160,10 @@ static time_t s_missed_alarm_time;
 static PBL_MUTEX_DEFINE(s_mutex);
 
 // ----------------------------------------------------------------------------------------------
-static bool prv_file_open_and_lock(SettingsFile *file) {
+static bool prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = settings_file_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE);
+  status_t rv = status_from_errno(pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE));
   bool success = rv == S_SUCCESS;
   if (!success) {
     pbl_mutex_unlock(&s_mutex);
@@ -169,8 +173,8 @@ static bool prv_file_open_and_lock(SettingsFile *file) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_file_close_and_unlock(SettingsFile *file) {
-  settings_file_close(file);
+static void prv_file_close_and_unlock(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_mutex_unlock(&s_mutex);
 }
 
@@ -210,19 +214,19 @@ static bool prv_should_smart_alarm_trigger(const AlarmConfig *config) {
 // ----------------------------------------------------------------------------------------------
 //! Removes the alarm from the timeline. No-op if it doesn't exist.
 //! @return true if an alarm pin was removed
-static bool prv_timeline_remove_alarm(SettingsFile *fd, AlarmId id) {
+static bool prv_timeline_remove_alarm(struct pbl_settings_file *fd, AlarmId id) {
   bool success = false;
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
-  int size = settings_file_get_len(fd, &key, sizeof(key));
+  int size = pbl_settings_get_len(fd, &key, sizeof(key));
 
   if (size <= 0) { // empty (likely deleted) entry
     return false;
   } else if (size > ALARM_ENTRY_SIZE) { // malformed data
-    settings_file_delete(fd, &key, sizeof(key));
+    pbl_settings_delete(fd, &key, sizeof(key));
     return false;
   } else { // size <= ALARM_ENTRY_SIZE
     uint8_t buffer[size];
-    if (settings_file_get(fd, &key, sizeof(key), buffer, size) == S_SUCCESS) {
+    if (pbl_settings_get(fd, &key, sizeof(key), buffer, size) == 0) {
       for (int i = 0; i < size / UUID_SIZE; i++) {
         Uuid *pinid = (Uuid *)&buffer[UUID_SIZE * i];
         if (uuid_is_invalid(pinid)) {
@@ -231,7 +235,7 @@ static bool prv_timeline_remove_alarm(SettingsFile *fd, AlarmId id) {
         alarm_pin_remove(pinid);
         success = true;
       }
-      settings_file_delete(fd, &key, sizeof(key));
+      pbl_settings_delete(fd, &key, sizeof(key));
     }
   }
   return success;
@@ -257,16 +261,16 @@ static status_t prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_
 
 // ----------------------------------------------------------------------------------------------
 //! Pins alarm in the timeline for the next three days
-static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
+static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *alarm,
                                    const struct pbl_cron_job *cron, const time_t current_time) {
   // If an alarm was updated then remove all the pins with stale information
   // If an alarm was added then this has no effect
   prv_timeline_remove_alarm(file, alarm->id);
 
   // We allocate some larger variables on the heap to reduce stack usage
-  struct pbl_tm *local_alarm_time = kernel_malloc_check(sizeof(struct pbl_tm));
-  uint8_t *settings_file_buffer = kernel_malloc_check(ALARM_ENTRY_SIZE);
-  AppInstallEntry *entry = kernel_malloc_check(sizeof(AppInstallEntry));
+  struct pbl_tm *local_alarm_time = pbl_malloc_check(sizeof(struct pbl_tm));
+  uint8_t *settings_file_buffer = pbl_malloc_check(ALARM_ENTRY_SIZE);
+  AppInstallEntry *entry = pbl_malloc_check(sizeof(AppInstallEntry));
   if (!app_install_get_entry_for_install_id(APP_ID_ALARMS, entry)) {
     goto cleanup;
   }
@@ -294,8 +298,8 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
-  status_t rv =
-      settings_file_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds);
+  status_t rv = status_from_errno(
+      pbl_settings_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Could not save alarm %u pin IDs: %" PRId32, alarm->id, rv);
     for (int i = 0; i < num_pin_adds; ++i) {
@@ -304,9 +308,9 @@ static void prv_timeline_add_alarm(SettingsFile *file, const Alarm *alarm,
   }
 
 cleanup:
-  kernel_free(settings_file_buffer);
-  kernel_free(local_alarm_time);
-  kernel_free(entry);
+  pbl_free(settings_file_buffer);
+  pbl_free(local_alarm_time);
+  pbl_free(entry);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -345,7 +349,7 @@ static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron) {
 
 // ----------------------------------------------------------------------------------------------
 //! Checks to see if this alarm is the new next alarm. If it is, adjust the timer so it's scheduled.
-static void prv_check_and_schedule_alarm(SettingsFile *fd, Alarm *alarm, bool refresh) {
+static void prv_check_and_schedule_alarm(struct pbl_settings_file *fd, Alarm *alarm, bool refresh) {
   if (alarm->id == ALARM_INVALID_ID) {
     return;
   }
@@ -357,7 +361,7 @@ static void prv_check_and_schedule_alarm(SettingsFile *fd, Alarm *alarm, bool re
 
   struct pbl_cron_job cron;
   time_t execute_time = prv_build_cron(&alarm->config, &cron);
-  prv_timeline_add_alarm(fd, alarm, &cron, rtc_get_time());
+  prv_timeline_add_alarm(fd, alarm, &cron, pbl_realtime());
 
   if (s_next_alarm_time == 0 || execute_time < s_next_alarm_time) {
     // This alarm is sooner than the previous one!
@@ -371,7 +375,7 @@ static void prv_check_and_schedule_alarm(SettingsFile *fd, Alarm *alarm, bool re
 // ----------------------------------------------------------------------------------------------
 //! Records which alarm is armed and when it is due, so that the next boot can tell whether a
 //! firing was missed while the watch was down.
-static void prv_persist_armed_alarm(SettingsFile *file) {
+static void prv_persist_armed_alarm(struct pbl_settings_file *file) {
   const AlarmArmedRecord record = {
     .time = s_next_alarm_time,
     .id = (s_next_alarm_time != 0) ? s_next_alarm.id : ALARM_INVALID_ID,
@@ -379,21 +383,21 @@ static void prv_persist_armed_alarm(SettingsFile *file) {
   if (memcmp(&record, &s_armed_record, sizeof(record)) == 0) {
     return;
   }
-  if (settings_file_set(file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &record,
-                        sizeof(record)) == S_SUCCESS) {
+  if (pbl_settings_set(file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &record,
+                       sizeof(record)) == 0) {
     s_armed_record = record;
   }
 }
 
 // ----------------------------------------------------------------------------------------------
-static status_t prv_remove_untracked_alarm_pins(SettingsFile *file) {
-  Uuid *tracked = kernel_malloc_check(MAX_CONFIGURED_ALARMS * ALARM_ENTRY_SIZE);
+static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) {
+  Uuid *tracked = pbl_malloc_check(MAX_CONFIGURED_ALARMS * ALARM_ENTRY_SIZE);
   size_t tracked_count = 0;
   status_t rv = S_SUCCESS;
 
   for (AlarmId id = 0; id < MAX_CONFIGURED_ALARMS; ++id) {
     AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
-    int size = settings_file_get_len(file, &key, sizeof(key));
+    int size = pbl_settings_get_len(file, &key, sizeof(key));
     if (size < 0) {
       rv = size;
       break;
@@ -401,7 +405,8 @@ static status_t prv_remove_untracked_alarm_pins(SettingsFile *file) {
     if (size == 0 || size > ALARM_ENTRY_SIZE || size % UUID_SIZE != 0) {
       continue;
     }
-    rv = settings_file_get(file, &key, sizeof(key), &tracked[tracked_count], size);
+    rv =
+        status_from_errno(pbl_settings_get(file, &key, sizeof(key), &tracked[tracked_count], size));
     if (rv != S_SUCCESS) {
       break;
     }
@@ -409,16 +414,16 @@ static status_t prv_remove_untracked_alarm_pins(SettingsFile *file) {
   }
 
   if (rv == S_SUCCESS) {
-    rv = alarm_pin_remove_untracked_future(rtc_get_time(), tracked, tracked_count);
+    rv = alarm_pin_remove_untracked_future(pbl_realtime(), tracked, tracked_count);
   }
-  kernel_free(tracked);
+  pbl_free(tracked);
   return rv;
 }
 
 // ----------------------------------------------------------------------------------------------
 //! Scans the all the configured alarms and re-adds them all.
 //! @return True if at least one alarm was found
-static bool prv_reload_alarms(SettingsFile *file) {
+static bool prv_reload_alarms(struct pbl_settings_file *file) {
   bool alarm_found = false;
 
   status_t rv = prv_remove_untracked_alarm_pins(file);
@@ -456,7 +461,7 @@ static void prv_put_alarm_event(void) {
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
-      .alarm_time = rtc_get_time(),
+      .alarm_time = pbl_realtime(),
       .alarm_label = is_smart ? i18n_noop("Smart Alarm") : i18n_noop("Alarm")
     }
   };
@@ -467,7 +472,7 @@ static void prv_put_alarm_event(void) {
 // ----------------------------------------------------------------------------------------------
 static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) {
   // Add a pin to the timeline (will show up in the past)
-  prv_add_pin(id, config, rtc_get_time(), nullptr);
+  prv_add_pin(id, config, pbl_realtime(), nullptr);
 
   return false;
 }
@@ -502,6 +507,8 @@ static void prv_process_most_recent_alarm(void) {
     }
   }
   if (trigger) {
+    // The smart window is over; a stale counter would let a later clock change re-fire it.
+    s_smart_snooze_counter = 0;
     prv_put_alarm_event();
     // Alarm events are triggered for both the initial alarm time and subsequent user snoozes
     // Ensure that we only record the first alarm time
@@ -535,7 +542,7 @@ PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
   // We allocate some larger variables on the heap to reduce stack usage
   AlarmConfig *config = &s_most_recent_alarm_config;
-  SettingsFile *file = kernel_malloc_check(sizeof(SettingsFile));
+  struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
   bool rv = prv_file_open_and_lock(file);
   if (!rv) {
     goto cleanup;
@@ -555,7 +562,7 @@ PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
 
 cleanup:
   prv_file_close_and_unlock(file);
-  kernel_free(file);
+  pbl_free(file);
 
   PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;
@@ -569,7 +576,7 @@ static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_persist_alarm(SettingsFile *fd, Alarm *alarm) {
+static void prv_persist_alarm(struct pbl_settings_file *fd, Alarm *alarm) {
   PBL_ASSERT(alarm->id >= 0 && alarm->id < MAX_CONFIGURED_ALARMS, "Invalid id %d", alarm->id);
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_CONFIG};
@@ -584,33 +591,34 @@ static void prv_persist_alarm(SettingsFile *fd, Alarm *alarm) {
     .tone = alarm->config.tone,
   };
   memcpy(&config.scheduled_days, alarm->config.scheduled_days, sizeof(config.scheduled_days));
-  settings_file_set(fd, &key, sizeof(key), &config, sizeof(config));
+  pbl_settings_set(fd, &key, sizeof(key), &config, sizeof(config));
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_add_and_schedule_alarm(SettingsFile *file, Alarm *alarm) {
+static void prv_add_and_schedule_alarm(struct pbl_settings_file *file, Alarm *alarm) {
   prv_check_and_schedule_alarm(file, alarm, true /* refresh */);
   prv_persist_alarm(file, alarm);
   prv_persist_armed_alarm(file);
 }
 
 // ----------------------------------------------------------------------------------------------
-static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *config_out) {
+static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
+                                 AlarmConfig *config_out) {
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
-  const int size = settings_file_get_len(file, &key, sizeof(key));
+  const int size = pbl_settings_get_len(file, &key, sizeof(key));
   if (size <= 0) {
     return false;
   }
 
   AlarmConfig config = {};
   const int load_size = MIN(size, (int)sizeof(config));
-  if (settings_file_get(file, &key, sizeof(key), &config, load_size) == S_SUCCESS) {
+  if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) == 0) {
     if (config.hour > 23 || config.minute > 59) {
       PBL_LOG_DBG(
           "Invalid config for id %u! Blowing it out! "
           "Hours %u Minutes %u Kind %u",
           id, config.hour, config.minute, config.kind);
-      settings_file_delete(file, &key, sizeof(key));
+      pbl_settings_delete(file, &key, sizeof(key));
       return false;
     }
 
@@ -632,7 +640,8 @@ static bool prv_alarm_get_config(SettingsFile *file, AlarmId id, AlarmConfig *co
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConfig *config) {
+static void prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
+                                 const AlarmConfig *config) {
   PBL_ASSERTN(id >= 0 && id < MAX_CONFIGURED_ALARMS);
 
   Alarm alarm = {.id = id, .config = *config};
@@ -642,12 +651,12 @@ static void prv_alarm_set_config(SettingsFile *file, AlarmId id, const AlarmConf
 }
 
 // ----------------------------------------------------------------------------------------------
-static AlarmId prv_get_next_free_alarm_id(SettingsFile *file) {
+static AlarmId prv_get_next_free_alarm_id(struct pbl_settings_file *file) {
   AlarmId id_out = ALARM_INVALID_ID;
 
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmStorageKey key = {.id = i, .type = ALARM_DATA_CONFIG};
-    if (settings_file_get_len(file, &key, sizeof(key)) == 0) {
+    if (pbl_settings_get_len(file, &key, sizeof(key)) == 0) {
       id_out = i;
       break;
     }
@@ -660,7 +669,7 @@ static AlarmId prv_get_next_free_alarm_id(SettingsFile *file) {
 static int prv_get_day_for_just_once_alarm(int hour, int minute) {
   // Figure out what day the alarm should happen
   struct pbl_tm local_time;
-  const time_t current_time = rtc_get_time();
+  const time_t current_time = pbl_realtime();
   pbl_localtime_r(&current_time, &local_time);
 
   if (hour < local_time.tm_hour || (hour == local_time.tm_hour && minute <= local_time.tm_min)) {
@@ -684,7 +693,7 @@ static void prv_set_day_for_just_once_alarm(AlarmConfig *config, int hour, int m
 //! Re-picks the day every enabled "just once" alarm should fire on. Their day is stored as a
 //! weekday, so an alarm whose firing was missed (the watch was off or rebooting) would otherwise
 //! stay armed for the same weekday a whole week later.
-static void prv_refresh_just_once_alarm_days(SettingsFile *file) {
+static void prv_refresh_just_once_alarm_days(struct pbl_settings_file *file) {
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmConfig config;
     if (!prv_alarm_get_config(file, i, &config) || config.kind != ALARM_KIND_JUST_ONCE ||
@@ -724,7 +733,7 @@ static void prv_enable_alarm_config(AlarmConfig *config, bool enable) {
 
 AlarmId alarm_create(const AlarmInfo *info) {
   prv_assert_alarm_params(info->hour, info->minute);
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return ALARM_INVALID_ID;
   }
@@ -758,7 +767,7 @@ typedef bool (*AlarmOperationCallback)(AlarmId id, AlarmConfig *config, void *co
 
 static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, void *context,
                                 bool schedule_changed) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -898,7 +907,7 @@ void alarm_set_custom(AlarmId id, const bool scheduled_days[PBL_DAY_PER_WEEK]) {
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_custom_days(AlarmId id, bool scheduled_days[PBL_DAY_PER_WEEK]) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -917,7 +926,7 @@ cleanup:
 
 // ----------------------------------------------------------------------------------------------
 void alarm_set_enabled(AlarmId id, bool enable) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -945,7 +954,7 @@ cleanup:
 
 // ----------------------------------------------------------------------------------------------
 void alarm_delete(AlarmId id) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -958,7 +967,7 @@ void alarm_delete(AlarmId id) {
   }
 
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
-  settings_file_delete(&file, &key, sizeof(key));
+  pbl_settings_delete(&file, &key, sizeof(key));
   prv_timeline_remove_alarm(&file, id);
   prv_reload_alarms(&file);
 
@@ -967,7 +976,7 @@ void alarm_delete(AlarmId id) {
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_enabled(AlarmId id) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -988,7 +997,7 @@ cleanup:
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_hours_minutes(AlarmId id, int *hour_out, int *minute_out) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -1044,7 +1053,7 @@ bool alarm_is_next_enabled_alarm_smart(void) {
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_time_until(AlarmId id, time_t *time_out) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -1058,7 +1067,7 @@ bool alarm_get_time_until(AlarmId id, time_t *time_out) {
 
   if (time_out) {
     struct pbl_cron_job cron;
-    *time_out = prv_build_cron(&config, &cron) - rtc_get_time();
+    *time_out = prv_build_cron(&config, &cron) - pbl_realtime();
   }
   alarm_is_scheduled = true;
 
@@ -1069,7 +1078,7 @@ cleanup:
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_get_kind(AlarmId id, AlarmKind *kind_out) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -1100,7 +1109,7 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
     return false;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -1151,15 +1160,15 @@ uint16_t alarm_get_snooze_delay(void) {
 
 // ----------------------------------------------------------------------------------------------
 void alarm_set_snooze_delay(uint16_t delay_m) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
 
   s_snooze_delay_m = delay_m;
 
-  settings_file_set(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
-                    &s_snooze_delay_m, sizeof(s_snooze_delay_m));
+  pbl_settings_set(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
+                   &s_snooze_delay_m, sizeof(s_snooze_delay_m));
 
   prv_file_close_and_unlock(&file);
 }
@@ -1174,7 +1183,8 @@ typedef struct {
   void *cb_data;
 } ForEachAlarmItrData;
 
-static bool alarm_for_each_itr(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool alarm_for_each_itr(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                               void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(AlarmStorageKey)) {
     return true; // continue iterating
@@ -1183,7 +1193,7 @@ static bool alarm_for_each_itr(SettingsFile *file, SettingsRecordInfo *info, voi
   ForEachAlarmItrData *itr_data = (ForEachAlarmItrData *)context;
 
   AlarmStorageKey key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   if (key.type != ALARM_DATA_CONFIG) {
     return true;
@@ -1212,7 +1222,7 @@ static bool alarm_for_each_itr(SettingsFile *file, SettingsRecordInfo *info, voi
 }
 
 void alarm_for_each(AlarmForEach cb, void *context) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -1220,14 +1230,14 @@ void alarm_for_each(AlarmForEach cb, void *context) {
     .cb = cb,
     .cb_data = context,
   };
-  settings_file_each(&file, alarm_for_each_itr, &itr_data);
+  pbl_settings_each(&file, alarm_for_each_itr, &itr_data);
 
   prv_file_close_and_unlock(&file);
 }
 
 // ----------------------------------------------------------------------------------------------
 bool alarm_can_schedule(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return false;
   }
@@ -1247,7 +1257,7 @@ bool alarm_can_schedule(void) {
 
 // ----------------------------------------------------------------------------------------------
 void alarm_handle_clock_change(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -1273,7 +1283,7 @@ void alarm_handle_clock_change(void) {
       } else {
         // Also check if current time is within the smart alarm window past the deadline
         // This handles cases where counter < 28 but we're legitimately past the alarm time
-        time_t now = rtc_get_time();
+        time_t now = pbl_realtime();
         struct pbl_tm now_tm;
         pbl_localtime_r(&now, &now_tm);
         int current_minutes = now_tm.tm_hour * 60 + now_tm.tm_min;
@@ -1327,7 +1337,7 @@ void alarm_handle_clock_change(void) {
 
 // ----------------------------------------------------------------------------------------------
 static void prv_language_change_kernel_bg_callback(void *unused) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
@@ -1352,25 +1362,25 @@ void alarm_init(void) {
   };
   event_service_client_subscribe(&s_language_change_event_info);
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
   }
 
   uint16_t snooze_delay_value;
-  if (settings_file_get(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
-                        &snooze_delay_value, sizeof(snooze_delay_value)) == S_SUCCESS) {
+  if (pbl_settings_get(&file, ALARM_PREF_KEY_SNOOZE_DELAY, strlen(ALARM_PREF_KEY_SNOOZE_DELAY),
+                       &snooze_delay_value, sizeof(snooze_delay_value)) == 0) {
     s_snooze_delay_m = snooze_delay_value;
   }
 
   AlarmArmedRecord armed;
-  if (settings_file_get(&file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &armed,
-                        sizeof(armed)) == S_SUCCESS) {
+  if (pbl_settings_get(&file, ALARM_PREF_KEY_ARMED, strlen(ALARM_PREF_KEY_ARMED), &armed,
+                       sizeof(armed)) == 0) {
     s_armed_record = armed;
 
     // An alarm which was armed for a time we have already passed never got the chance to fire:
     // the watch was down (rebooting, or updating) when it was due.
-    const time_t now = rtc_get_time();
+    const time_t now = pbl_realtime();
     if (armed.time != 0 && armed.id != ALARM_INVALID_ID && now >= armed.time &&
         (now - armed.time) <= ALARM_MISSED_MAX_DELAY_S) {
       s_missed_alarm_id = armed.id;
@@ -1398,7 +1408,7 @@ void alarm_service_enable_alarms(bool enable) {
   const AlarmId id = s_missed_alarm_id;
   s_missed_alarm_id = ALARM_INVALID_ID;
 
-  if ((rtc_get_time() - s_missed_alarm_time) > ALARM_MISSED_MAX_DELAY_S) {
+  if ((pbl_realtime() - s_missed_alarm_time) > ALARM_MISSED_MAX_DELAY_S) {
     PBL_LOG_DBG("Missed alarm %d is too late to fire", id);
     return;
   }

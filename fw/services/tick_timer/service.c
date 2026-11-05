@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/tick_timer.h>
@@ -22,7 +22,7 @@ static RegularTimerInfo *s_active_timer;
 static void timer_tick_event_publisher(void *data) {
   PebbleEvent e = {
     .type = PEBBLE_TICK_EVENT,
-    .clock_tick.tick_time = rtc_get_time(),
+    .clock_tick.tick_time = pbl_realtime(),
   };
 
   event_put(&e);
@@ -97,7 +97,7 @@ static void prv_apply_request(void *data) {
     PebbleEvent e = {
       .type = PEBBLE_TICK_EVENT,
       .task_mask = (PebbleTaskBitset) ~(1u << task),
-      .clock_tick.tick_time = rtc_get_time(),
+      .clock_tick.tick_time = pbl_realtime(),
     };
     event_put(&e);
   }

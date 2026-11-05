@@ -6,14 +6,15 @@
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
@@ -21,7 +22,7 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -33,15 +34,6 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 #endif
 
 //! The BtPersistBonding*Data structs can never shrink, only grow
-
-//! Stores data about a remote BT classic device
-typedef struct PBL_PACKED {
-  struct pbl_bt_addr addr;
-  struct pbl_bt_sm_key link_key;
-  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  // These are the lowest bits of Remote.platform_bitfield_cache, which contain the OS type
-  uint8_t platform_bits;
-} BtPersistBondingBTClassicData;
 
 //! Stores data about a remote BLE device
 typedef struct PBL_PACKED {
@@ -56,10 +48,7 @@ typedef struct PBL_PACKED {
 typedef struct PBL_PACKED {
   BtPersistBondingType type : 8;
 
-  union PBL_PACKED {
-    BtPersistBondingBTClassicData bt_classic_data;
-    BtPersistBondingBLEData ble_data;
-  };
+  BtPersistBondingBLEData ble_data;
 } BtPersistBondingData;
 
 typedef struct PBL_PACKED {
@@ -77,13 +66,12 @@ typedef struct PBL_PACKED {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Settings File
 
-#define BT_PERSISTENT_STORAGE_FILE_NAME "gap_bonding_db"
+#define BT_PERSISTENT_STORAGE_FILE_NAME "/gap_bonding_db"
 #define BT_PERSISTENT_STORAGE_FILE_SIZE (4096)
 
 //! All of the actual pairings use a pbl_bt_bonding_id_t as a key. This is because with BLE pairings
-//! an address is not alway available, and it made it easier to have BT Classic and BLE pairings use
-//! the same type of key. When adding pairings there is no pbl_bt_bonding_id_t so a free key has to
-//! be found by iterating over all possible keys.
+//! an address is not alway available. When adding pairings there is no pbl_bt_bonding_id_t so a
+//! free key has to be found by iterating over all possible keys.
 
 //! All of the local device attributes can be accessed directly with the following keys:
 
@@ -148,21 +136,20 @@ static int prv_file_get(const void *key, size_t key_len, void *data_out, size_t 
   memset(data_out, 0, buf_len);
   prv_lock();
   {
-    SettingsFile fd;
-    status_t rv =
-        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv != S_SUCCESS) {
       goto cleanup;
     }
 
-    data_len = settings_file_get_len(&fd, key, key_len);
+    data_len = pbl_settings_get_len(&fd, key, key_len);
     // If a big enough buffer wasn't passed in, then the data can't be read.
-    if (data_len > buf_len ||
-        settings_file_get(&fd, key, key_len, data_out, buf_len) != S_SUCCESS) {
+    if (data_len > buf_len || pbl_settings_get(&fd, key, key_len, data_out, buf_len) != 0) {
       data_len = 0;
     }
 
-    settings_file_close(&fd);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -194,18 +181,19 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
   bool do_perform_update = true;
   prv_lock();
   {
-    SettingsFile fd;
-    rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv != S_SUCCESS) {
       goto cleanup;
     }
 
     // Only store data if data_in is a valid pointer, otherwise, clear the entry
     if (data_in) {
-      if (settings_file_get_len(&fd, key, key_len) == (int)data_len) {
+      if (pbl_settings_get_len(&fd, key, key_len) == data_len) {
         uint8_t curr_val[data_len];
 
-        settings_file_get(&fd, key, key_len, &curr_val[0], data_len);
+        pbl_settings_get(&fd, key, key_len, &curr_val[0], data_len);
 
         // Don't bother rewriting the exact same info. Pairing info is precious,
         // we want to minimize cases where we could mess it up
@@ -216,12 +204,12 @@ static GapBondingFileSetStatus prv_file_set(const void *key, size_t key_len, con
 
       if (do_perform_update) {
         PBL_LOG_DBG("Updating GAP bonding record");
-        rv = settings_file_set(&fd, key, key_len, (uint8_t *)data_in, data_len);
+        rv = status_from_errno(pbl_settings_set(&fd, key, key_len, (uint8_t *)data_in, data_len));
       }
     } else {
-      rv = settings_file_delete(&fd, key, key_len);
+      rv = status_from_errno(pbl_settings_delete(&fd, key, key_len));
     }
-    settings_file_close(&fd);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -234,18 +222,19 @@ cleanup:
 }
 
 //! Returns true if things were successful
-static bool prv_file_each(SettingsFileEachCallback itr_cb, void *itr_data) {
+static bool prv_file_each(pbl_settings_each_cb_t itr_cb, void *itr_data) {
   status_t rv;
   prv_lock();
   {
-    SettingsFile fd;
-    rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
 
-    settings_file_each(&fd, itr_cb, itr_data);
-    settings_file_close(&fd);
+    pbl_settings_each(&fd, itr_cb, itr_data);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -260,21 +249,21 @@ static pbl_bt_bonding_id_t prv_get_free_key() {
 
   prv_lock();
   {
-    SettingsFile fd;
-    status_t rv =
-        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
 
     for (pbl_bt_bonding_id_t id = 0; id < PBL_BT_BONDING_ID_INVALID; id++) {
-      if (!settings_file_exists(&fd, &id, sizeof(id))) {
+      if (!pbl_settings_exists(&fd, &id, sizeof(id))) {
         free_key = id;
         break;
       }
     }
 
-    settings_file_close(&fd);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -287,29 +276,29 @@ static pbl_bt_cccd_id_t prv_get_free_cccd() {
 
   prv_lock();
   {
-    SettingsFile fd;
-    status_t rv =
-        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
 
     for (pbl_bt_cccd_id_t id = 0U; id < PBL_BT_CCCD_ID_INVALID; id++) {
-      if (!settings_file_exists(&fd, &id, sizeof(id))) {
+      if (!pbl_settings_exists(&fd, &id, sizeof(id))) {
         free_cccd = id;
         break;
       }
     }
 
-    settings_file_close(&fd);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
   return free_cccd;
 }
 
-static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                            void *context) {
+static bool prv_any_pinned_ble_pairings_itr(struct pbl_settings_file *file,
+                                            struct pbl_settings_record *info, void *context) {
   if (info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true;
   }
@@ -318,10 +307,10 @@ static bool prv_any_pinned_ble_pairings_itr(SettingsFile *file, SettingsRecordIn
   }
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData data = {};
-  info->get_val(file, &data, MIN((unsigned)info->val_len, sizeof(data)));
+  pbl_settings_read_val(file, &data, MIN(info->val_len, sizeof(data)));
   if (data.ble_data.requires_address_pinning) {
     bool *has_pinned_ble_pairings = context;
     *has_pinned_ble_pairings = true;
@@ -500,7 +489,7 @@ static void prv_call_ble_bonding_change_handlers_impl(pbl_bt_bonding_id_t bondin
 static void prv_call_ble_bonding_change_handlers_cb(void *data) {
   BleBondingChangeContext *context = data;
   prv_call_ble_bonding_change_handlers_impl(context->bonding, context->op);
-  kernel_free(context);
+  pbl_free(context);
 }
 
 static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
@@ -510,7 +499,7 @@ static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
     return;
   }
 
-  BleBondingChangeContext *context = kernel_malloc_check(sizeof(*context));
+  BleBondingChangeContext *context = pbl_malloc_check(sizeof(*context));
 
   *context = (BleBondingChangeContext){
     .bonding = bonding,
@@ -531,8 +520,8 @@ static bool prv_is_pairing_info_equal_identity(const BtPersistLEPairingInfo *a,
           memcmp(&a->irk, &b->irk, sizeof(struct pbl_bt_sm_key)) == 0);
 }
 
-static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                                void *context) {
+static bool prv_get_key_for_sm_pairing_info_itr(struct pbl_settings_file *file,
+                                                struct pbl_settings_record *info, void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true; // continue iterating
@@ -541,10 +530,10 @@ static bool prv_get_key_for_sm_pairing_info_itr(SettingsFile *file, SettingsReco
   KeyForSMPairingItrData *itr_data = (KeyForSMPairingItrData *)context;
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
       prv_is_pairing_info_equal_identity(&stored_data.ble_data.pairing_info,
@@ -580,8 +569,8 @@ typedef struct {
   uint8_t count;
 } CollectOtherBleItrData;
 
-static bool prv_collect_other_ble_bondings_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                               void *context) {
+static bool prv_collect_other_ble_bondings_itr(struct pbl_settings_file *file,
+                                               struct pbl_settings_record *info, void *context) {
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true;
   }
@@ -589,13 +578,13 @@ static bool prv_collect_other_ble_bondings_itr(SettingsFile *file, SettingsRecor
   CollectOtherBleItrData *itr_data = context;
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
   if (key == itr_data->keep_id) {
     return true;
   }
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
   if (stored_data.type != BtPersistBondingTypeBLE) {
     return true;
   }
@@ -631,8 +620,8 @@ typedef struct {
   uint8_t ble_count;
 } MostRecentBleItrData;
 
-static bool prv_find_most_recent_ble_bonding_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                                 void *context) {
+static bool prv_find_most_recent_ble_bonding_itr(struct pbl_settings_file *file,
+                                                 struct pbl_settings_record *info, void *context) {
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true;
   }
@@ -640,13 +629,13 @@ static bool prv_find_most_recent_ble_bonding_itr(SettingsFile *file, SettingsRec
   MostRecentBleItrData *itr_data = context;
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
   if (stored_data.type != BtPersistBondingTypeBLE) {
     return true;
   }
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   itr_data->ble_count++;
   if (itr_data->key_out == PBL_BT_BONDING_ID_INVALID ||
@@ -813,17 +802,19 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
 
   prv_lock();
   {
-    SettingsFile fd;
-    rv = settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv) {
       goto cleanup;
     }
 
     for (pbl_bt_cccd_id_t id = 0U; id < PBL_BT_CCCD_ID_INVALID; id++) {
-      if (settings_file_exists(&fd, &id, sizeof(id))) {
+      if (pbl_settings_exists(&fd, &id, sizeof(id))) {
         BtPersistCCCDData stored_data;
 
-        rv = settings_file_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data));
+        rv = status_from_errno(
+            pbl_settings_get(&fd, &id, sizeof(id), &stored_data, sizeof(stored_data)));
         if (rv) {
           goto cleanup;
         }
@@ -838,7 +829,7 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
 
           pbl_bt_handle_host_removed_cccd(&cccd_to_delete);
 
-          rv = settings_file_delete(&fd, &id, sizeof(id));
+          rv = status_from_errno(pbl_settings_delete(&fd, &id, sizeof(id)));
           if (rv) {
             goto cleanup;
           }
@@ -846,7 +837,7 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
       }
     }
 
-    settings_file_close(&fd);
+    pbl_settings_close(&fd);
   }
 cleanup:
   prv_unlock();
@@ -885,7 +876,8 @@ typedef struct {
   bool found;
 } FindByAddrItrData;
 
-static bool prv_find_by_addr_itr(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_find_by_addr_itr(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                 void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true; // continue iterating
@@ -894,10 +886,10 @@ static bool prv_find_by_addr_itr(SettingsFile *file, SettingsRecordInfo *info, v
   FindByAddrItrData *itr_data = (FindByAddrItrData *)context;
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE &&
       bt_device_internal_equal(&itr_data->device, &stored_data.ble_data.pairing_info.identity)) {
@@ -1017,8 +1009,8 @@ bool bt_persistent_storage_get_ble_pinned_address(struct pbl_bt_addr *address_ou
   return true;
 }
 
-static bool prv_get_first_ancs_bonding_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                           void *context) {
+static bool prv_get_first_ancs_bonding_itr(struct pbl_settings_file *file,
+                                           struct pbl_settings_record *info, void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true; // continue iterating
@@ -1027,10 +1019,10 @@ static bool prv_get_first_ancs_bonding_itr(SettingsFile *file, SettingsRecordInf
   pbl_bt_bonding_id_t *first_ancs_supported_bonding_found = (pbl_bt_bonding_id_t *)context;
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE && stored_data.ble_data.supports_ancs) {
     *first_ancs_supported_bonding_found = key;
@@ -1094,8 +1086,8 @@ static void prv_public_for_each_ble_cb(pbl_bt_bonding_id_t key, BtPersistBonding
                itr_data->cb_data);
 }
 
-static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                                  void *context) {
+static bool prv_ble_pairing_internal_for_each_itr(struct pbl_settings_file *file,
+                                                  struct pbl_settings_record *info, void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_bonding_id_t)) {
     return true; // continue iterating
@@ -1104,10 +1096,10 @@ static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file, SettingsRe
   ForEachBLEPairingInternalData *internal_itr_data = (ForEachBLEPairingInternalData *)context;
 
   pbl_bt_bonding_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistBondingData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   if (stored_data.type == BtPersistBondingTypeBLE) {
     internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
@@ -1116,8 +1108,8 @@ static bool prv_ble_pairing_internal_for_each_itr(SettingsFile *file, SettingsRe
   return true;
 }
 
-static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file, SettingsRecordInfo *info,
-                                               void *context) {
+static bool prv_ble_cccd_internal_for_each_itr(struct pbl_settings_file *file,
+                                               struct pbl_settings_record *info, void *context) {
   // check entry is valid
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_cccd_id_t)) {
     return true; // continue iterating
@@ -1126,10 +1118,10 @@ static bool prv_ble_cccd_internal_for_each_itr(SettingsFile *file, SettingsRecor
   ForEachBLECCCDInternalData *internal_itr_data = (ForEachBLECCCDInternalData *)context;
 
   pbl_bt_cccd_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistCCCDData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
 
@@ -1188,7 +1180,8 @@ typedef struct {
   pbl_bt_cccd_id_t id;
 } FindCCCDItrData;
 
-static bool prv_find_cccd_itr(SettingsFile *file, SettingsRecordInfo *info, void *context) {
+static bool prv_find_cccd_itr(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                              void *context) {
   if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_cccd_id_t)) {
     return true; // continue iterating
   }
@@ -1196,10 +1189,10 @@ static bool prv_find_cccd_itr(SettingsFile *file, SettingsRecordInfo *info, void
   FindCCCDItrData *itr_data = (FindCCCDItrData *)context;
 
   pbl_bt_cccd_id_t key;
-  info->get_key(file, (uint8_t *)&key, info->key_len);
+  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
 
   BtPersistCCCDData stored_data;
-  info->get_val(file, (uint8_t *)&stored_data, MIN((unsigned)info->val_len, sizeof(stored_data)));
+  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
 
   if (bt_device_internal_equal(itr_data->peer, &stored_data.peer) &&
       stored_data.chr_val_handle == itr_data->chr_val_handle) {
@@ -1448,24 +1441,25 @@ void bt_persistent_storage_init(void) {
   prv_load_cached_system_capabilities(&s_cached_system_capabilities);
 }
 
-static void prv_delete_all_pairings_itr(SettingsFile *old_file, SettingsFile *new_file,
-                                        SettingsRecordInfo *info, void *context) {
+static void prv_delete_all_pairings_itr(struct pbl_settings_file *old_file,
+                                        struct pbl_settings_file *new_file,
+                                        struct pbl_settings_record *info, void *context) {
   if (info->key_len == sizeof(pbl_bt_bonding_id_t)) {
     // Skip pairing entries
     return;
   }
 
   // Re-write non-pairing entries
-  void *key = kernel_zalloc_check(info->key_len);
-  info->get_key(old_file, key, info->key_len);
+  void *key = pbl_zalloc_check(info->key_len);
+  pbl_settings_read_key(old_file, key, info->key_len);
 
-  void *data = kernel_malloc_check(info->val_len);
-  info->get_val(old_file, data, info->val_len);
+  void *data = pbl_malloc_check(info->val_len);
+  pbl_settings_read_val(old_file, data, info->val_len);
 
-  settings_file_set(new_file, key, info->key_len, data, info->val_len);
+  pbl_settings_set(new_file, key, info->key_len, data, info->val_len);
 
-  kernel_free(key);
-  kernel_free(data);
+  pbl_free(key);
+  pbl_free(data);
 }
 
 void bt_persistent_storage_delete_all_pairings(void) {
@@ -1474,12 +1468,12 @@ void bt_persistent_storage_delete_all_pairings(void) {
 
   prv_lock();
   {
-    SettingsFile fd;
-    status_t rv =
-        settings_file_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE);
+    struct pbl_settings_file fd;
+    status_t rv = status_from_errno(
+        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
     if (rv == S_SUCCESS) {
-      settings_file_rewrite(&fd, prv_delete_all_pairings_itr, nullptr);
-      settings_file_close(&fd);
+      pbl_settings_rewrite(&fd, prv_delete_all_pairings_itr, nullptr);
+      pbl_settings_close(&fd);
     }
   }
   prv_unlock();
@@ -1494,9 +1488,7 @@ static void prv_dump_bonding_db_data(const struct pbl_shell *sh, pbl_bt_bonding_
                                      const BtPersistBondingData *data) {
   bool matches_prf;
 
-  if (data->type == BtPersistBondingTypeBTClassic) {
-    pbl_shell_print(sh, "Classic Key %d (legacy)", (int)bond_id);
-  } else if (data->type == BtPersistBondingTypeBLE) {
+  if (data->type == BtPersistBondingTypeBLE) {
     pbl_shell_print(sh, "LE Key %d", (int)bond_id);
 
     pbl_shell_print(sh, " ANCS: %d Gateway: %d Req Pin: %d", (int)data->ble_data.supports_ancs,
@@ -1532,7 +1524,8 @@ static void prv_dump_cccd_db_data(const struct pbl_shell *sh, pbl_bt_cccd_id_t c
   pbl_shell_print(sh, " Value Changed: %s", bool_to_str(data->value_changed));
 }
 
-static bool prv_dump_bt_persistent_storage_contents(SettingsFile *file, SettingsRecordInfo *info,
+static bool prv_dump_bt_persistent_storage_contents(struct pbl_settings_file *file,
+                                                    struct pbl_settings_record *info,
                                                     void *context) {
   const struct pbl_shell *sh = context;
 
@@ -1543,11 +1536,11 @@ static bool prv_dump_bt_persistent_storage_contents(SettingsFile *file, Settings
 
   uint8_t key[info->key_len];
   memset(key, 0x0, info->key_len);
-  info->get_key(file, &key[0], info->key_len);
+  pbl_settings_read_key(file, &key[0], info->key_len);
 
   uint8_t val[info->val_len];
   memset(val, 0x0, info->val_len);
-  info->get_val(file, &val[0], info->val_len);
+  pbl_settings_read_val(file, &val[0], info->val_len);
 
   if (memcmp(key, ACTIVE_GATEWAY_KEY, info->key_len) == 0) {
     PBL_ASSERTN(info->val_len == sizeof(pbl_bt_bonding_id_t));

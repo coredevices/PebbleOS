@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/runlevel.h>
 
 #include <apps/core/progress_ui.h>
-#include <console/pulse_internal.h>
 #include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
@@ -16,14 +16,13 @@
 #include <kernel/util/fw_reset.h>
 #include <process_management/app_manager.h>
 #include <system/bootbits.h>
-#include <system/reset.h>
 
 static void prv_reset_into_prf(void) {
   RebootReason reason = {RebootReasonCode_PrfReset, 0};
   reboot_reason_set(&reason);
   boot_bit_set(BOOT_BIT_FORCE_PRF);
   services_set_runlevel(RunLevel_BareMinimum);
-  system_reset();
+  pbl_reboot();
 }
 
 void fw_reset_into_prf(void) {
@@ -41,10 +40,10 @@ typedef enum {
 
 static void prv_launch_factory_reset_app(void *unused) {
   // factory_reset() holds the PFS mutex for the entire erase (~3 min via
-  // pfs_format()). launcher_block_popups() in prv_factory_reset_non_pfs_data
+  // pbl_fs_format()). launcher_block_popups() in prv_factory_reset_non_pfs_data
   // only blocks new popups -- it does not dismiss ones already on screen.
   // Pop them here so the user can't, say, press Select on an open notification
-  // and block KernelMain in pin_db_get -> pfs_seek on the held PFS mutex.
+  // and block KernelMain in pin_db_get -> pbl_fs_seek on the held PFS mutex.
   modal_manager_pop_all();
 
   static const ProgressUIAppArgs s_factory_reset_args = {
@@ -65,7 +64,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
   switch (cmd) {
     case ResetCmdNormal:
       PBL_LOG_WRN("Rebooting");
-      system_reset();
+      pbl_reboot();
       break;
 
     case ResetCmdCoreDump:
@@ -87,12 +86,4 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
       PBL_LOG_ERR("Invalid reset msg, data[0] %u", data[0]);
       break;
   }
-}
-
-void fw_prepare_for_reset(void) {
-  // Tear down Bluetooth, to avoid confusing the phone:
-  services_set_runlevel(RunLevel_BareMinimum);
-#ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_end();
-#endif
 }

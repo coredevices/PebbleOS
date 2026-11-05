@@ -20,7 +20,7 @@ from datetime import datetime
 
 from harness import commands, connections
 from harness.connections import Capability
-from harness.errors import HarnessError, Unsupported, WatchTimeout
+from harness.errors import HarnessError, LinkClosed, Unsupported, WatchTimeout
 from harness.lab import VIRTUAL
 from harness.logs import Dehasher, LogBuffer, LogFile
 
@@ -85,6 +85,8 @@ class DeviceAdapter(ABC):
         self._device_launch()
         self.connect()
         self.wait_ready()
+        if self.config.erase_fs:
+            self._clear_timezone()
 
     def close(self):
         self.disconnect()
@@ -217,11 +219,21 @@ class DeviceAdapter(ABC):
         if not self._hard_reset():
             try:
                 self.prompt(self.command("reset"), timeout=2)
-            except WatchTimeout:
+            except (WatchTimeout, LinkClosed):
                 pass
         self.disconnect()
         self.connect()
         self.wait_ready()
+
+    def _clear_timezone(self):
+        """The timezone outlives a filesystem erase; the harness phone dates
+        notifications in UTC, which the watch takes for local time."""
+        if not self.has(Capability.PROMPT):
+            return
+        try:
+            self.prompt(self.command("tz_clear"))
+        except Unsupported:
+            pass
 
     def wait_ready(self, timeout=None):
         """Wait until the firmware answers on the prompt or the protocol."""
@@ -291,6 +303,14 @@ class DeviceAdapter(ABC):
         for connection in self.connections:
             if Capability.PROTOCOL in connection.capabilities:
                 connection.set_platform(platform)
+
+    def set_phone_settings_sync(self, enabled):
+        """Make the harness's own Pebble protocol sessions say the phone app
+        supports settings sync, or not. The test then answers the watch's
+        settings write-backs itself."""
+        for connection in self.connections:
+            connection.settings_sync = enabled
+        self.protocol.set_settings_sync(enabled)
 
     def wait_for_log(self, pattern, timeout=None, since=0):
         """The first log record matching ``pattern`` after mark ``since``."""

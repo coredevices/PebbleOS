@@ -30,7 +30,7 @@ typedef struct PBL_PACKED {
   uint32_t timestamp;
 } ResourceVersion;
 
-//! Types used by pfs_watch_resource()
+//! Types used by resource_watch()
 typedef void (*ResourceChangedCallback)(void *data);
 typedef void *ResourceCallbackHandle;
 
@@ -65,7 +65,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
 //! @internal
 //! Gets a pointer to a data of a built-in resource or memory-addressable resource if possible
 const uint8_t *resource_get_readonly_bytes(ResAppNum app_num, uint32_t resource_id,
-                                           size_t *num_bytes_out, bool has_privileged_access);
+                                           size_t *num_bytes_out);
 
 //! @internal
 //! True, if given pointer maps to a built-in resource or memory-addressable read-only resource

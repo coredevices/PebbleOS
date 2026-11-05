@@ -15,7 +15,7 @@ static time_t s_last_fired_time;
 
 static void prv_seconds_cb(void *data) {
   s_seconds_fired++;
-  s_last_fired_time = rtc_get_time();
+  s_last_fired_time = pbl_realtime();
 }
 
 static RegularTimerInfo s_seconds_info = {.cb = prv_seconds_cb};
@@ -124,12 +124,11 @@ static RegularTimerInfo s_multi_info = {.cb = prv_multi_cb};
 void test_regular_timer__idle_waits_for_the_minute(void) {
   regular_timer_remove_callback(&s_seconds_info);
   prv_advance_and_fire();
-  cl_assert_equal_i(rtc_get_time(), START_TIME + 1);
-  // 39 s to the minute, plus the drift allowance.
-  const uint32_t base = 38 * 1000 + (1000 - MARGIN_MS);
-  cl_assert_equal_i(prv_timeout(), base + MARGIN_MS + base / 1024);
+  cl_assert_equal_i(pbl_realtime(), START_TIME + 1);
+  // 39 s to the minute.
+  cl_assert_equal_i(prv_timeout(), 38 * 1000 + (1000 - MARGIN_MS) + MARGIN_MS);
   prv_advance_and_fire();
-  cl_assert_equal_i(rtc_get_time() % 60, 0);
+  cl_assert_equal_i(pbl_realtime() % 60, 0);
 }
 
 void test_regular_timer__multisecond_skips_idle_seconds(void) {
@@ -141,10 +140,10 @@ void test_regular_timer__multisecond_skips_idle_seconds(void) {
   cl_assert_equal_i(s_multi_fired, 0);
   prv_advance_and_fire();
   cl_assert_equal_i(s_multi_fired, 1);
-  cl_assert_equal_i(rtc_get_time(), START_TIME + 5);
+  cl_assert_equal_i(pbl_realtime(), START_TIME + 5);
   prv_advance_and_fire();
   cl_assert_equal_i(s_multi_fired, 2);
-  cl_assert_equal_i(rtc_get_time(), START_TIME + 10);
+  cl_assert_equal_i(pbl_realtime(), START_TIME + 10);
   regular_timer_remove_callback(&s_multi_info);
 }
 
@@ -157,10 +156,10 @@ void test_regular_timer__adding_pulls_the_timer_in(void) {
   fake_rtc_increment_time_ms(400);
   s_multi_fired = 0;
   regular_timer_add_multisecond_callback(&s_multi_info, 2);
-  cl_assert_equal_i(prv_timeout(), 1000 + (1000 - MARGIN_MS - 400) + MARGIN_MS + 1);
+  cl_assert_equal_i(prv_timeout(), 1000 + (1000 - MARGIN_MS - 400) + MARGIN_MS);
   prv_advance_and_fire();
   cl_assert_equal_i(s_multi_fired, 1);
-  cl_assert_equal_i(rtc_get_time(), START_TIME + 3);
+  cl_assert_equal_i(pbl_realtime(), START_TIME + 3);
   regular_timer_remove_callback(&s_multi_info);
 }
 
@@ -169,7 +168,7 @@ static time_t s_registered_fired_time;
 
 static void prv_registered_cb(void *data) {
   s_registered_fired++;
-  s_registered_fired_time = rtc_get_time();
+  s_registered_fired_time = pbl_realtime();
 }
 
 static RegularTimerInfo s_registered_info = {.cb = prv_registered_cb};
@@ -191,7 +190,7 @@ void test_regular_timer__registered_in_a_pass_counts_from_then(void) {
   prv_advance_and_fire();
   prv_advance_and_fire();
   cl_assert_equal_i(s_multi_fired, 1);
-  cl_assert_equal_i(rtc_get_time(), START_TIME + 10);
+  cl_assert_equal_i(pbl_realtime(), START_TIME + 10);
   cl_assert_equal_i(s_registered_fired, 0);
 
   regular_timer_remove_callback(&s_registering_info);

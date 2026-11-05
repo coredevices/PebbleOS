@@ -1,9 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/services/comm_session/app_session_capabilities.h>
 #include <pbl/services/comm_session/session.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 
 #include <clar.h>
 #include <fff.h>
@@ -28,42 +30,43 @@ CommSessionCapability comm_session_get_capabilities(CommSession *session) {
 }
 
 FAKE_VALUE_FUNC(CommSession *, comm_session_get_current_app_session);
-FAKE_VALUE_FUNC(status_t, settings_file_open, SettingsFile *, const char *, int);
-FAKE_VOID_FUNC(settings_file_close, SettingsFile *);
-FAKE_VALUE_FUNC(status_t, settings_file_get, SettingsFile *, const void *, size_t, void *, size_t);
-FAKE_VALUE_FUNC(status_t, settings_file_set, SettingsFile *, const void *, size_t, const void *,
+FAKE_VALUE_FUNC(int, pbl_settings_open, struct pbl_settings_file *, const char *, int);
+FAKE_VOID_FUNC(pbl_settings_close, struct pbl_settings_file *);
+FAKE_VALUE_FUNC(int, pbl_settings_get, struct pbl_settings_file *, const void *, size_t, void *,
                 size_t);
-FAKE_VALUE_FUNC(status_t, settings_file_delete, SettingsFile *, const void *, size_t);
-FAKE_VALUE_FUNC(status_t, settings_file_rewrite, SettingsFile *, SettingsFileRewriteCallback,
+FAKE_VALUE_FUNC(int, pbl_settings_set, struct pbl_settings_file *, const void *, size_t,
+                const void *, size_t);
+FAKE_VALUE_FUNC(int, pbl_settings_delete, struct pbl_settings_file *, const void *, size_t);
+FAKE_VALUE_FUNC(int, pbl_settings_rewrite, struct pbl_settings_file *, pbl_settings_rewrite_cb_t,
                 void *);
 
 #define FAKES(FAKE)                          \
   FAKE(comm_session_get_current_app_session) \
-  FAKE(settings_file_open)                   \
-  FAKE(settings_file_close)                  \
-  FAKE(settings_file_get)                    \
-  FAKE(settings_file_set)                    \
-  FAKE(settings_file_delete)                 \
-  FAKE(settings_file_rewrite)
+  FAKE(pbl_settings_open)                    \
+  FAKE(pbl_settings_close)                   \
+  FAKE(pbl_settings_get)                     \
+  FAKE(pbl_settings_set)                     \
+  FAKE(pbl_settings_delete)                  \
+  FAKE(pbl_settings_rewrite)
 
 static uint64_t s_get_value;
-static status_t prv_settings_file_get(SettingsFile *file, const void *key, size_t key_len,
-                                      void *val_out, size_t val_out_len) {
+static int prv_settings_file_get(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                 void *val_out, size_t val_out_len) {
   *((uint64_t *)val_out) = s_get_value;
-  return S_SUCCESS;
+  return 0;
 }
 
 static uint64_t s_set_value;
-static status_t prv_settings_file_set(SettingsFile *file, const void *key, size_t key_len,
-                                      const void *val, size_t val_len) {
+static int prv_settings_file_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                 const void *val, size_t val_len) {
   cl_assert_equal_i(val_len, sizeof(uint64_t));
   s_set_value = *(uint64_t *)val;
-  return S_SUCCESS;
+  return 0;
 }
 
 static void prv_set_cache(uint64_t value) {
   s_get_value = value;
-  settings_file_get_fake.custom_fake = prv_settings_file_get;
+  pbl_settings_get_fake.custom_fake = prv_settings_file_get;
 }
 
 // Helpers
@@ -77,8 +80,8 @@ static CommSession *s_fake_app_session = (CommSession *)~0;
 void test_app_session_capabilities__initialize(void) {
   FAKES(RESET_FAKE);
   FFF_RESET_HISTORY();
-  settings_file_get_fake.return_val = E_DOES_NOT_EXIST;
-  settings_file_set_fake.custom_fake = prv_settings_file_set;
+  pbl_settings_get_fake.return_val = -ENOENT;
+  pbl_settings_set_fake.custom_fake = prv_settings_file_set;
   s_app_md = (PebbleProcessMd){};
 }
 
@@ -86,22 +89,22 @@ void test_app_session_capabilities__cleanup(void) {
 }
 
 void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
-  settings_file_open_fake.return_val = E_ERROR;
+  pbl_settings_open_fake.return_val = E_ERROR;
   bool has_cap =
       comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
   cl_assert_equal_b(false, has_cap);
-  cl_assert_equal_i(settings_file_get_fake.call_count, 0);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 0);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 0);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 0);
 }
 
 void test_app_session_capabilities__no_cache_file_but_connected(void) {
-  settings_file_open_fake.return_val = E_ERROR;
+  pbl_settings_open_fake.return_val = E_ERROR;
   comm_session_get_current_app_session_fake.return_val = s_fake_app_session;
   bool has_cap =
       comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
   cl_assert_equal_b(true, has_cap);
-  cl_assert_equal_i(settings_file_get_fake.call_count, 0);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 0);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 0);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 0);
 }
 
 void test_app_session_capabilities__cache_file_and_not_connected(void) {
@@ -109,16 +112,16 @@ void test_app_session_capabilities__cache_file_and_not_connected(void) {
   bool has_cap =
       comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
   cl_assert_equal_b(true, has_cap);
-  cl_assert_equal_i(settings_file_get_fake.call_count, 1);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 1);
 }
 
 void test_app_session_capabilities__cache_file_but_no_key_and_not_connected(void) {
   bool has_cap =
       comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
   cl_assert_equal_b(false, has_cap);
-  cl_assert_equal_i(settings_file_get_fake.call_count, 1);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 1);
 }
 
 void test_app_session_capabilities__cache_file_and_connected_new_value(void) {
@@ -134,11 +137,11 @@ void test_app_session_capabilities__cache_file_and_connected_new_value(void) {
   cl_assert_equal_b(false, has_ext_notifications);
 
   // Check that cache is re-written:
-  cl_assert(settings_file_set_fake.call_count > 0);
+  cl_assert(pbl_settings_set_fake.call_count > 0);
   cl_assert_equal_i(s_set_value, s_live_capabilities);
 
-  cl_assert_equal_i(settings_file_get_fake.call_count, 2);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 2);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 2);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 2);
 }
 
 void test_app_session_capabilities__cache_file_and_connected_same_value(void) {
@@ -150,8 +153,8 @@ void test_app_session_capabilities__cache_file_and_connected_same_value(void) {
   cl_assert_equal_b(true, has_cap_infinite_log_dumping);
 
   // Check that cache is NOT re-written:
-  cl_assert_equal_i(settings_file_set_fake.call_count, 0);
+  cl_assert_equal_i(pbl_settings_set_fake.call_count, 0);
 
-  cl_assert_equal_i(settings_file_get_fake.call_count, 1);
-  cl_assert_equal_i(settings_file_close_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_get_fake.call_count, 1);
+  cl_assert_equal_i(pbl_settings_close_fake.call_count, 1);
 }

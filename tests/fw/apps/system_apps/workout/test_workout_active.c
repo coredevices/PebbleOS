@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "fake_pfs.h"
 #include "test_workout_app_includes.h"
 
 #include <pbl/services/activity/health_util.h>
@@ -21,11 +22,6 @@ static const bool s_has_hrm = false;
 #endif
 
 bool s_hrm_is_present;
-static bool s_spo2_enabled;
-
-bool activity_prefs_spo2_activity_tracking_is_enabled(void) {
-  return s_spo2_enabled;
-}
 static UnitsDistance s_distance_units;
 
 UnitsDistance shell_prefs_get_units_distance(void) {
@@ -118,8 +114,6 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     case WorkoutMetricType_AvgCadence:
     case WorkoutMetricType_ActiveCalories:
     case WorkoutMetricType_AvgHr:
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
     case WorkoutMetricType_HrZone0Time:
     case WorkoutMetricType_HrZone1Time:
     case WorkoutMetricType_HrZone2Time:
@@ -171,8 +165,6 @@ void test_workout_active__initialize(void) {
   workout_service_set_hr_samples(0);
   s_distance_units = UnitsDistance_Miles;
   s_hrm_is_present = s_has_hrm;
-  s_spo2_enabled = false;
-  workout_service_set_spo2(0, 0, false);
   workout_service_pause_workout(false);
   workout_service_stop_workout();
 
@@ -187,8 +179,8 @@ void test_workout_active__initialize(void) {
 
   // Setup resources
   fake_spi_flash_init(0 /* offset */, 0x1000000 /* length */);
-  pfs_init(false /* run filesystem check */);
-  pfs_format(true /* write erase headers */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
                                  false /* is_next */);
   resource_init();
@@ -817,58 +809,6 @@ void test_workout_active__workout_render_heart_page_low(void) {
   WorkoutActiveWindow *window = workout_active_create_for_activity_type(
       ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
   prv_create_window_and_render(window, 3);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
-void test_workout_active__workout_render_heart_page_spo2(void) {
-  if (!s_has_hrm) {
-    return;
-  }
-  s_spo2_enabled = true;
-  s_workout_data = (WorkoutData){
-    .duration_s = 1800,
-    .bpm = 152,
-    .avg_bpm = 142,
-    .spo2 = 96,
-  };
-  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
-      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
-  prv_create_window_and_render(window, 3);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
-void test_workout_active__workout_render_reading_spo2(void) {
-  if (!s_has_hrm) {
-    return;
-  }
-  s_spo2_enabled = true;
-  s_workout_data = (WorkoutData){
-    .duration_s = 1800,
-    .avg_bpm = 142,
-    .spo2 = 96,
-    .spo2_measuring = true,
-  };
-  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
-      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
-  prv_create_window_and_render(window, 3);
-  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
-}
-
-void test_workout_active__workout_render_completed_spo2(void) {
-  if (!s_has_hrm) {
-    return;
-  }
-  s_spo2_enabled = true;
-  workout_service_start_workout(ActivitySessionType_Run);
-  workout_service_set_current_workout_info(3210, 754, 2400, 148, HRZone_Zone2);
-  workout_service_set_active_kcalories(125);
-  workout_service_set_avg_hr(142);
-  workout_service_set_spo2(97, 94, false);
-  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
-      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
-  prv_finish_workout(window);
-  cl_assert_equal_i(s_workout_data.spo2_min, 94);
-  prv_create_window_and_render(window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 

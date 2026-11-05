@@ -6,6 +6,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
 #include <pbl/kernel/thread.h>
@@ -17,7 +18,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/task_init.h>
 #include <process_management/app_manager.h>
@@ -113,7 +113,7 @@ static void prv_requeue_deferred(void) {
     if (!s_deferred_head) {
       s_deferred_tail = nullptr;
     }
-    kernel_free(d);
+    pbl_free(d);
   }
 }
 
@@ -205,7 +205,7 @@ static void prv_add_from_system_task(const SystemTaskEvent *event, uintptr_t cal
     return;
   }
 
-  DeferredEvent *d = kernel_malloc(sizeof(*d));
+  DeferredEvent *d = pbl_malloc(sizeof(*d));
   if (!d) {
     handle_system_task_send_failure(event->cb, caller_lr);
   }

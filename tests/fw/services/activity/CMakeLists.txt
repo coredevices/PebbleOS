@@ -18,7 +18,13 @@ pbl_clar_test(test_activity
     tests/fakes/fake_rtc.c
     fw/applib/pbl_std/strftime.c
     fw/applib/pbl_std/timelocal.c
-  DEFINES DUMA_DISABLED CAPABILITY_HAS_HEALTH_TRACKING=1 CONFIG_HRM CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25
+  DEFINES
+    DUMA_DISABLED
+    CAPABILITY_HAS_HEALTH_TRACKING=1
+    CONFIG_HRM
+    CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25
+    CONFIG_SERVICE_LIGHT_DARK_THRESHOLD=0
+    CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY=55
   OVERRIDES dummy_board
 )
 
@@ -30,7 +36,7 @@ pbl_clar_test(test_activity_insights
     fw/services/timeline/attribute.c
     fw/services/timeline/metricgroup.c
     tests/fakes/fake_clock.c
-    tests/fakes/fake_settings_file.c
+    tests/fakes/fake_settings.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_rtc.c
     fw/applib/pbl_std/strftime.c

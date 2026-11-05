@@ -55,7 +55,7 @@ typedef enum {
   SpeakerPriorityApp = 0,
   /** Notification sounds. */
   SpeakerPriorityNotification,
-  /** Sounds that must not be interrupted, e.g. alarms. */
+  /** Sounds that must not be interrupted, e.g. alarms. Not muted by Do Not Disturb. */
   SpeakerPriorityCritical
 } SpeakerPriority;
 

@@ -15,15 +15,16 @@
 #include "menu_layer_private.h"
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/struct.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
+#include <applib/app_malloc.h>
 #include <applib/ui/kino/kino_reel.h>
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 
 //! Cache twice the number of glances we'll show simultaneously in the launcher
 #define LAUNCHER_APP_GLANCE_SERVICE_CACHE_NUM_ENTRIES (2 * LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS)
@@ -71,7 +72,7 @@ static void prv_update_slice_expiration_timer_if_necessary(LauncherAppGlanceServ
     return;
   }
 
-  const int time_until_slice_expires = new_slice_expire_time - rtc_get_time();
+  const int time_until_slice_expires = new_slice_expire_time - pbl_realtime();
   // On the off chance that this slice has already expired, immediately call the timer callback
   if (time_until_slice_expires <= 0) {
     prv_slice_expiration_timer_cb(service);

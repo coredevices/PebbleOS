@@ -10,7 +10,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
-#include <board/board.h>
 #include <clar.h>
 #include <fake_new_timer.h>
 #include <fake_rtc.h>
@@ -142,7 +141,8 @@ uint16_t backlight_get_sunset_minute(void) {
 ///////////////////////////////////////////////////////////
 
 static uint8_t get_expected_brightness() {
-  return DIVIDE_CEIL(backlight_get_intensity() * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U);
+  return DIVIDE_CEIL(
+      backlight_get_intensity() * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
 }
 
 static void check_on(void) {
@@ -163,7 +163,7 @@ static void check_on_timed_and_consume_partial(void) {
 
   const uint8_t fade_brightness = 100 - (100 / LIGHT_FADE_STEPS);
   const uint8_t scaled_fade =
-      DIVIDE_CEIL(fade_brightness * (uint16_t)BOARD_CONFIG.backlight_on_percent, 100U);
+      DIVIDE_CEIL(fade_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
   cl_assert_equal_i(s_backlight_brightness, scaled_fade);
   cl_assert(stub_new_timer_is_scheduled(s_light_timer));
 }

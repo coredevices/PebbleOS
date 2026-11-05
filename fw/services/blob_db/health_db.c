@@ -4,27 +4,28 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/hr_util.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/health_db.h>
-#include <pbl/services/filesystem/pfs.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/time.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
-#include <system/hexdump.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define HEALTH_DB_DEBUG       0
 #define HEALTH_DB_MAX_KEY_LEN 30
 
-static const char *HEALTH_DB_FILE_NAME = "healthdb";
+static const char *HEALTH_DB_FILE_NAME = "/healthdb";
 static const int HEALTH_DB_MAX_SIZE = PBL_KIB(12);
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -84,11 +85,11 @@ static_assert(offsetof(HeartRateZoneData, version) == 0,
 static_assert(sizeof(HeartRateZoneData) % sizeof(uint32_t) == 0,
               "HeartRateZoneData size is invalid");
 
-static status_t prv_file_open_and_lock(SettingsFile *file) {
+static status_t prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv =
-      settings_file_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, PBL_KIB(8));
+  status_t rv = status_from_errno(
+      pbl_settings_open_growable(file, HEALTH_DB_FILE_NAME, HEALTH_DB_MAX_SIZE, PBL_KIB(8)));
   if (rv != S_SUCCESS) {
     PBL_LOG_ERR("Failed to open settings file");
     pbl_mutex_unlock(&s_mutex);
@@ -97,8 +98,8 @@ static status_t prv_file_open_and_lock(SettingsFile *file) {
   return rv;
 }
 
-static void prv_file_close_and_unlock(SettingsFile *file) {
-  settings_file_close(file);
+static void prv_file_close_and_unlock(struct pbl_settings_file *file) {
+  pbl_settings_close(file);
   pbl_mutex_unlock(&s_mutex);
 }
 
@@ -134,7 +135,7 @@ static void prv_notify_health_listeners(const char *key, int key_len, const uint
     }
   }
   // For logging
-  const enum pbl_weekday cur_wday = time_util_get_day_in_week(rtc_get_time());
+  const enum pbl_weekday cur_wday = time_util_get_day_in_week(pbl_realtime());
 
   if (strstr(key, MOVEMENT_DATA_KEY_SUFFIX)) {
     MovementData *data = (MovementData *)val;
@@ -189,14 +190,15 @@ bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, in
   snprintf(key, HEALTH_DB_MAX_KEY_LEN, "%s%s", WEEKDAY_NAMES[day], SLEEP_DATA_KEY_SUFFIX);
   const int key_len = strlen(key);
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_file_open_and_lock(&file) != S_SUCCESS) {
     return false;
   }
 
   // We cheat a bit here because the only typical values we store are sleep related
   SleepData data;
-  status_t s = settings_file_get(&file, key, key_len, (uint8_t *)&data, sizeof(data));
+  status_t s =
+      status_from_errno(pbl_settings_get(&file, key, key_len, (uint8_t *)&data, sizeof(data)));
 
   prv_file_close_and_unlock(&file);
 
@@ -225,7 +227,7 @@ bool health_db_get_typical_value(ActivityMetric metric, enum pbl_weekday day, in
     case ActivityMetricSleepStateSeconds:
     case ActivityMetricLastVMC:
     case ActivityMetricHeartRateRawBPM:
-    case ActivityMetricHeartRateRawQuality:
+    case ActivityMetricHeartRateRawConfidence:
     case ActivityMetricHeartRateRawUpdatedTimeUTC:
     case ActivityMetricHeartRateFilteredBPM:
     case ActivityMetricHeartRateFilteredUpdatedTimeUTC:
@@ -247,7 +249,7 @@ bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_o
     return false;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_file_open_and_lock(&file) != S_SUCCESS) {
     return false;
   }
@@ -258,7 +260,8 @@ bool health_db_get_monthly_average_value(ActivityMetric metric, int32_t *value_o
       (metric == ActivityMetricStepCount) ? STEP_AVERAGE_KEY_SUFFIX : SLEEP_AVERAGE_KEY_SUFFIX);
   const int key_len = strlen(key);
 
-  status_t s = settings_file_get(&file, key, key_len, value_out, sizeof(uint32_t));
+  status_t s =
+      status_from_errno(pbl_settings_get(&file, key, key_len, value_out, sizeof(uint32_t)));
 
   prv_file_close_and_unlock(&file);
   return (s == S_SUCCESS);
@@ -275,7 +278,7 @@ bool health_db_get_typical_step_averages(enum pbl_weekday day, ActivityMetricAve
       "Cannot use memset");
   memset(averages->average, ACTIVITY_METRIC_AVERAGES_UNKNOWN & 0xFF, sizeof(averages->average));
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   if (prv_file_open_and_lock(&file) != S_SUCCESS) {
     return false;
   }
@@ -284,7 +287,8 @@ bool health_db_get_typical_step_averages(enum pbl_weekday day, ActivityMetricAve
   snprintf(key, HEALTH_DB_MAX_KEY_LEN, "%s%s", WEEKDAY_NAMES[day], STEP_TYPICALS_KEY_SUFFIX);
   const int key_len = strlen(key);
 
-  status_t s = settings_file_get(&file, key, key_len, averages->average, sizeof(averages->average));
+  status_t s = status_from_errno(
+      pbl_settings_get(&file, key, key_len, averages->average, sizeof(averages->average)));
 
   prv_file_close_and_unlock(&file);
   return (s == S_SUCCESS);
@@ -311,7 +315,7 @@ void health_db_init(void) {
 status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!prv_key_is_valid(key, key_len)) {
     PBL_LOG_ERR("Invalid health db key");
-    PBL_HEXDUMP(LOG_LEVEL_ERROR, key, key_len);
+    PBL_LOG_HEXDUMP_ERR(key, key_len);
     return E_INVALID_ARGUMENT;
   } else if (!prv_value_is_valid(key, key_len, val, val_len)) {
     PBL_LOG_ERR("Invalid health db value. Length %d", val_len);
@@ -320,9 +324,9 @@ status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, i
 
 #if HEALTH_DB_DEBUG
   PBL_LOG_DBG("New health db entry key:");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, key, key_len);
+  PBL_LOG_HEXDUMP_DBG(key, key_len);
   PBL_LOG_DBG("val: ");
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, val, val_len);
+  PBL_LOG_HEXDUMP_DBG(val, val_len);
 #endif
 
   // Only store typicals / averages in this settings file. "Current" values are stored in the
@@ -331,13 +335,13 @@ status_t health_db_insert(const uint8_t *key, int key_len, const uint8_t *val, i
   // for convience and can't be accessed from this settings file.
   status_t rv = S_SUCCESS;
   if (!strstr((char *)key, MOVEMENT_DATA_KEY_SUFFIX)) {
-    SettingsFile file;
+    struct pbl_settings_file file;
     rv = prv_file_open_and_lock(&file);
     if (rv != S_SUCCESS) {
       return rv;
     }
 
-    rv = settings_file_set(&file, key, key_len, val, val_len);
+    rv = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
     prv_file_close_and_unlock(&file);
   }
 
@@ -351,13 +355,13 @@ int health_db_get_len(const uint8_t *key, int key_len) {
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return 0;
   }
 
-  int length = settings_file_get_len(&file, key, key_len);
+  int length = pbl_settings_get_len(&file, key, key_len);
 
   prv_file_close_and_unlock(&file);
 
@@ -369,13 +373,13 @@ status_t health_db_read(const uint8_t *key, int key_len, uint8_t *value_out, int
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
 
-  rv = settings_file_get(&file, key, key_len, value_out, value_out_len);
+  rv = status_from_errno(pbl_settings_get(&file, key, key_len, value_out, value_out_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -387,13 +391,13 @@ status_t health_db_delete(const uint8_t *key, int key_len) {
     return E_INVALID_ARGUMENT;
   }
 
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
 
-  rv = settings_file_delete(&file, key, key_len);
+  rv = status_from_errno(pbl_settings_delete(&file, key, key_len));
 
   prv_file_close_and_unlock(&file);
 
@@ -402,18 +406,18 @@ status_t health_db_delete(const uint8_t *key, int key_len) {
 
 status_t health_db_flush(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t rv = pfs_remove(HEALTH_DB_FILE_NAME);
+  status_t rv = status_from_errno(pbl_fs_unlink(HEALTH_DB_FILE_NAME));
   pbl_mutex_unlock(&s_mutex);
   return rv;
 }
 
 status_t health_db_compact(void) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   status_t rv = prv_file_open_and_lock(&file);
   if (rv != S_SUCCESS) {
     return rv;
   }
-  rv = settings_file_compact(&file);
+  rv = status_from_errno(pbl_settings_compact(&file));
   prv_file_close_and_unlock(&file);
   return rv;
 }

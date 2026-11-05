@@ -4,16 +4,16 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/vibes/vibe_intensity.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -21,7 +21,7 @@
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
-#define FILE_NAME "notifpref"
+#define FILE_NAME "/notifpref"
 #define FILE_LEN  (1024)
 
 static PBL_MUTEX_DEFINE(s_mutex);
@@ -109,6 +109,9 @@ static bool s_notification_vibe_delay =
 static bool s_notification_backlight =
     true; // true = enable backlight (default), false = disable backlight
 
+#define PREF_KEY_NOTIF_RESPECT_PHONE_SILENCE "notifRespectPhoneSilence"
+static bool s_notification_respect_phone_silence = false;
+
 #define PREF_KEY_NOTIF_GROUPING_RANGE "notifGroupingRange"
 static NotificationGroupingRange s_notification_grouping_range = NotificationGroupingRange_Never;
 
@@ -176,36 +179,35 @@ static const DoNotDisturbScheduleConfigKeys s_dnd_schedule_keys[NumDNDSchedules]
 // Notifications used to render with the legacy "textStyle" content size. Seed the dedicated
 // preference from it once so an existing choice survives. Shell prefs are not loaded yet
 // when this runs, so read their file directly.
-static void prv_migrate_notification_content_size(SettingsFile *file) {
-  if (settings_file_exists(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE))) {
+static void prv_migrate_notification_content_size(struct pbl_settings_file *file) {
+  if (pbl_settings_exists(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE))) {
     return;
   }
 
   s_notification_content_size = PreferredContentSizeDefault;
-  SettingsFile shell_prefs = {};
-  if (settings_file_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == S_SUCCESS) {
+  struct pbl_settings_file shell_prefs = {};
+  if (pbl_settings_open(&shell_prefs, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
     uint8_t text_style;
     // Shell pref keys are stored with their NUL terminator.
-    if (settings_file_get(&shell_prefs, SHELL_PREF_KEY_TEXT_STYLE,
-                          sizeof(SHELL_PREF_KEY_TEXT_STYLE), &text_style,
-                          sizeof(text_style)) == S_SUCCESS &&
+    if (pbl_settings_get(&shell_prefs, SHELL_PREF_KEY_TEXT_STYLE, sizeof(SHELL_PREF_KEY_TEXT_STYLE),
+                         &text_style, sizeof(text_style)) == 0 &&
         text_style < NumPreferredContentSizes) {
       s_notification_content_size = text_style;
     }
-    settings_file_close(&shell_prefs);
+    pbl_settings_close(&shell_prefs);
   }
 
-  settings_file_set(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE),
-                    &s_notification_content_size, sizeof(s_notification_content_size));
+  pbl_settings_set(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE),
+                   &s_notification_content_size, sizeof(s_notification_content_size));
 }
 
-static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
+static void prv_migrate_legacy_dnd_schedule(struct pbl_settings_file *file) {
   // If Weekday schedule does not exist, assume that the other 3 settings files are missing as well
   // Set the new schedules to the legacy schedule and delete the legacy schedule
-  if (!settings_file_exists(file, s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
-                            strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key))) {
+  if (!pbl_settings_exists(file, s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
+                           strlen(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key))) {
 #define SET_PREF_ALREADY_OPEN(key, value) \
-  settings_file_set(file, key, strlen(key), value, sizeof(*(value)));
+  pbl_settings_set(file, key, strlen(key), value, sizeof(*(value)));
 
     s_dnd_schedule[WeekdaySchedule].schedule = s_legacy_dnd_schedule;
     SET_PREF_ALREADY_OPEN(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
@@ -221,11 +223,11 @@ static void prv_migrate_legacy_dnd_schedule(SettingsFile *file) {
                           &s_dnd_schedule[WeekendSchedule].enabled);
 #undef SET_PREF_ALREADY_OPEN
 
-#define DELETE_PREF(key)                                \
-  do {                                                  \
-    if (settings_file_exists(file, key, strlen(key))) { \
-      settings_file_delete(file, key, strlen(key));     \
-    }                                                   \
+#define DELETE_PREF(key)                               \
+  do {                                                 \
+    if (pbl_settings_exists(file, key, strlen(key))) { \
+      pbl_settings_delete(file, key, strlen(key));     \
+    }                                                  \
   } while (0)
 
     DELETE_PREF(PREF_KEY_LEGACY_DND_SCHEDULE);
@@ -257,9 +259,8 @@ static bool prv_slot_mirrors_legacy(DoNotDisturbScheduleType type,
          do_not_disturb_schedule_slot_get_days(slot) == s_dnd_schedule_days[type];
 }
 
-static void prv_migrate_dnd_schedule_slots(SettingsFile *file) {
-  if (settings_file_exists(file, s_dnd_schedule_slot_keys[0],
-                           strlen(s_dnd_schedule_slot_keys[0]))) {
+static void prv_migrate_dnd_schedule_slots(struct pbl_settings_file *file) {
+  if (pbl_settings_exists(file, s_dnd_schedule_slot_keys[0], strlen(s_dnd_schedule_slot_keys[0]))) {
     return;
   }
 
@@ -274,17 +275,18 @@ static void prv_migrate_dnd_schedule_slots(SettingsFile *file) {
         legacy->schedule = s_default_dnd_schedule;
         s_dnd_schedule_slots[type].schedule = legacy->schedule;
         const char *key = s_dnd_schedule_keys[type].schedule_pref_key;
-        settings_file_set(file, key, strlen(key), &legacy->schedule, sizeof(legacy->schedule));
+        pbl_settings_set(file, key, strlen(key), &legacy->schedule, sizeof(legacy->schedule));
       }
     }
-    settings_file_set(file, s_dnd_schedule_slot_keys[type], strlen(s_dnd_schedule_slot_keys[type]),
-                      &s_dnd_schedule_slots[type], sizeof(s_dnd_schedule_slots[type]));
+    pbl_settings_set(file, s_dnd_schedule_slot_keys[type], strlen(s_dnd_schedule_slot_keys[type]),
+                     &s_dnd_schedule_slots[type], sizeof(s_dnd_schedule_slots[type]));
   }
 }
 
 //! Make the legacy keys of a schedule describe its slot. A slot that doesn't mirror the legacy
 //! schedule leaves it disabled.
-static void prv_sync_legacy_schedule(SettingsFile *file, DoNotDisturbScheduleType type) {
+static void prv_sync_legacy_schedule(struct pbl_settings_file *file,
+                                     DoNotDisturbScheduleType type) {
   const DoNotDisturbScheduleSlot *slot = &s_dnd_schedule_slots[type];
   DoNotDisturbScheduleConfig *legacy = &s_dnd_schedule[type];
   const DoNotDisturbScheduleConfigKeys *keys = &s_dnd_schedule_keys[type];
@@ -293,27 +295,27 @@ static void prv_sync_legacy_schedule(SettingsFile *file, DoNotDisturbScheduleTyp
 
   if (mirrors && memcmp(&legacy->schedule, &slot->schedule, sizeof(legacy->schedule)) != 0) {
     legacy->schedule = slot->schedule;
-    settings_file_set(file, keys->schedule_pref_key, strlen(keys->schedule_pref_key),
-                      &legacy->schedule, sizeof(legacy->schedule));
+    pbl_settings_set(file, keys->schedule_pref_key, strlen(keys->schedule_pref_key),
+                     &legacy->schedule, sizeof(legacy->schedule));
   }
   if (legacy->enabled != enabled) {
     legacy->enabled = enabled;
-    settings_file_set(file, keys->enabled_pref_key, strlen(keys->enabled_pref_key),
-                      &legacy->enabled, sizeof(legacy->enabled));
+    pbl_settings_set(file, keys->enabled_pref_key, strlen(keys->enabled_pref_key), &legacy->enabled,
+                     sizeof(legacy->enabled));
   }
 }
 
-static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
-  // These don't need to be initialized since settings_file_get will clear them on error
+static void prv_migrate_legacy_first_use_settings(struct pbl_settings_file *file) {
+  // These don't need to be initialized since pbl_settings_get will clear them on error
   uint8_t manual_dnd_first_use_complete;
   bool smart_dnd_first_use_complete;
 
   // Migrate the old first use dialog prefs
-#define RESTORE_AND_DELETE_PREF(key, var)                                            \
-  do {                                                                               \
-    if (settings_file_get(file, key, strlen(key), &var, sizeof(var)) == S_SUCCESS) { \
-      settings_file_delete(file, key, strlen(key));                                  \
-    }                                                                                \
+#define RESTORE_AND_DELETE_PREF(key, var)                                   \
+  do {                                                                      \
+    if (pbl_settings_get(file, key, strlen(key), &var, sizeof(var)) == 0) { \
+      pbl_settings_delete(file, key, strlen(key));                          \
+    }                                                                       \
   } while (0)
 
   RESTORE_AND_DELETE_PREF(PREF_KEY_LEGACY_DND_MANUAL_FIRST_USE, manual_dnd_first_use_complete);
@@ -330,15 +332,16 @@ static void prv_migrate_legacy_first_use_settings(SettingsFile *file) {
 // which would otherwise make the watch win every sync conflict against the
 // phone and leave settings_blob_db's INSERT_WITH_TIMESTAMP path permanently
 // rejecting the user's chosen value.
-static void prv_save_changed_vibe_scores_to_file(SettingsFile *file, VibeScoreId orig_notifications,
+static void prv_save_changed_vibe_scores_to_file(struct pbl_settings_file *file,
+                                                 VibeScoreId orig_notifications,
                                                  VibeScoreId orig_incoming_calls,
                                                  VibeScoreId orig_alarms, VibeScoreId orig_hourly,
                                                  VibeScoreId orig_on_disconnect) {
-#define SET_PREF_IF_CHANGED(key, value, orig)                             \
-  do {                                                                    \
-    if ((value) != (orig)) {                                              \
-      settings_file_set(file, key, strlen(key), &(value), sizeof(value)); \
-    }                                                                     \
+#define SET_PREF_IF_CHANGED(key, value, orig)                            \
+  do {                                                                   \
+    if ((value) != (orig)) {                                             \
+      pbl_settings_set(file, key, strlen(key), &(value), sizeof(value)); \
+    }                                                                    \
   } while (0)
 
   SET_PREF_IF_CHANGED(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications,
@@ -382,20 +385,20 @@ static void prv_set_vibe_scores_based_on_legacy_intensity(VibeIntensity intensit
   }
 }
 
-static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
+static void prv_migrate_vibe_intensity_to_vibe_scores(struct pbl_settings_file *file) {
   // We use the existence of the notifications vibe score pref as a shallow measurement of whether
   // or not the user has migrated to vibe scores
-  const bool user_has_migrated_to_vibe_scores = settings_file_exists(
+  const bool user_has_migrated_to_vibe_scores = pbl_settings_exists(
       file, PREF_KEY_VIBE_SCORE_NOTIFICATIONS, strlen(PREF_KEY_VIBE_SCORE_NOTIFICATIONS));
 
   if (!user_has_migrated_to_vibe_scores) {
     // If the user previously set a vibration intensity, set the vibe scores based on that intensity
-    if (settings_file_exists(file, PREF_KEY_VIBE_INTENSITY, strlen(PREF_KEY_VIBE_INTENSITY))) {
+    if (pbl_settings_exists(file, PREF_KEY_VIBE_INTENSITY, strlen(PREF_KEY_VIBE_INTENSITY))) {
       prv_set_vibe_scores_based_on_legacy_intensity(s_vibe_intensity);
-    } else if (rtc_is_timezone_set()) {
+    } else if (clock_is_timezone_set()) {
       // Otherwise, if the timezone has been set, then we assume this is a user on 3.10 and lower
       // that has not touched their vibe intensity preferences.
-      // rtc_is_timezone_set() was chosen because it is a setting that gets written when the user
+      // clock_is_timezone_set() was chosen because it is a setting that gets written when the user
       // connects their watch to a phone
       prv_set_vibe_scores_based_on_legacy_intensity(DEFAULT_VIBE_INTENSITY);
     }
@@ -404,18 +407,18 @@ static void prv_migrate_vibe_intensity_to_vibe_scores(SettingsFile *file) {
   // PREF_KEY_VIBE, which used to track whether the user enabled/disabled vibrations, has been
   // deprecated in favor of the "disabled vibe score", VibeScoreId_Disabled, so switch to using it
   // and delete PREF_KEY_VIBE from the settings file if PREF_KEY_VIBE exists in the settings file
-  if (settings_file_exists(file, PREF_KEY_VIBE, strlen(PREF_KEY_VIBE))) {
+  if (pbl_settings_exists(file, PREF_KEY_VIBE, strlen(PREF_KEY_VIBE))) {
     if (!s_vibe_on_notification) {
       s_vibe_score_notifications = VibeScoreId_Disabled;
       s_vibe_score_incoming_calls = VibeScoreId_Disabled;
     }
-    settings_file_delete(file, PREF_KEY_VIBE, strlen(PREF_KEY_VIBE));
+    pbl_settings_delete(file, PREF_KEY_VIBE, strlen(PREF_KEY_VIBE));
   }
 }
 
 void alerts_preferences_init(void) {
-  SettingsFile file = {};
-  if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     return;
   }
 
@@ -424,13 +427,13 @@ void alerts_preferences_init(void) {
   // canonicalised the key length). Settings file lookups match key_len exactly,
   // so probe both lengths to remain backwards compatible with records written
   // by older firmware.
-#define RESTORE_PREF(key, var)                                                              \
-  do {                                                                                      \
-    typeof(var) _tmp;                                                                       \
-    if (settings_file_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == S_SUCCESS ||     \
-        settings_file_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-      var = _tmp;                                                                           \
-    }                                                                                       \
+#define RESTORE_PREF(key, var)                                                     \
+  do {                                                                             \
+    typeof(var) _tmp;                                                              \
+    if (pbl_settings_get(&file, key, strlen(key), &_tmp, sizeof(_tmp)) == 0 ||     \
+        pbl_settings_get(&file, key, strlen(key) + 1, &_tmp, sizeof(_tmp)) == 0) { \
+      var = _tmp;                                                                  \
+    }                                                                              \
   } while (0)
 
   RESTORE_PREF(PREF_KEY_MASK, s_mask);
@@ -475,6 +478,7 @@ void alerts_preferences_init(void) {
   RESTORE_PREF(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RESTORE_PREF(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RESTORE_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RESTORE_PREF(PREF_KEY_NOTIF_RESPECT_PHONE_SILENCE, s_notification_respect_phone_silence);
   RESTORE_PREF(PREF_KEY_NOTIF_GROUPING_RANGE, s_notification_grouping_range);
   RESTORE_PREF(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
   RESTORE_PREF(PREF_KEY_NOTIF_TEXT_SIZE, s_notification_content_size);
@@ -506,19 +510,19 @@ void alerts_preferences_init(void) {
                                        orig_vibe_score_incoming_calls, orig_vibe_score_alarms,
                                        orig_vibe_score_hourly, orig_vibe_score_on_disconnect);
 
-  settings_file_close(&file);
+  pbl_settings_close(&file);
 }
 
 // Convenience macro for setting a string key to a non-pointer value.
 #define SET_PREF(key, value) prv_set_pref(key, strlen(key), &value, sizeof(value))
 static void prv_set_pref(const void *key, size_t key_len, const void *value, size_t value_len) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  SettingsFile file = {};
-  if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     goto cleanup;
   }
-  settings_file_set(&file, key, key_len, value, value_len);
-  settings_file_close(&file);
+  pbl_settings_set(&file, key, key_len, value, value_len);
+  pbl_settings_close(&file);
 cleanup:
   pbl_mutex_unlock(&s_mutex);
 }
@@ -571,6 +575,15 @@ bool alerts_preferences_get_notification_backlight(void) {
 void alerts_preferences_set_notification_backlight(bool enable) {
   s_notification_backlight = enable;
   SET_PREF(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+}
+
+bool alerts_preferences_get_notification_respect_phone_silence(void) {
+  return s_notification_respect_phone_silence;
+}
+
+void alerts_preferences_set_notification_respect_phone_silence(bool enable) {
+  s_notification_respect_phone_silence = enable;
+  SET_PREF(PREF_KEY_NOTIF_RESPECT_PHONE_SILENCE, s_notification_respect_phone_silence);
 }
 
 NotificationGroupingRange alerts_preferences_get_notification_grouping_range(void) {
@@ -789,15 +802,15 @@ void alerts_preferences_dnd_set_schedule_slot(unsigned int index,
   if (index >= NumDNDSchedules) {
     s_dnd_schedule_slots[index].legacy = false;
   }
-  SettingsFile file = {};
-  if (settings_file_open(&file, FILE_NAME, FILE_LEN) == S_SUCCESS) {
-    settings_file_set(&file, s_dnd_schedule_slot_keys[index],
-                      strlen(s_dnd_schedule_slot_keys[index]), &s_dnd_schedule_slots[index],
-                      sizeof(s_dnd_schedule_slots[index]));
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) == 0) {
+    pbl_settings_set(&file, s_dnd_schedule_slot_keys[index],
+                     strlen(s_dnd_schedule_slot_keys[index]), &s_dnd_schedule_slots[index],
+                     sizeof(s_dnd_schedule_slots[index]));
     if (index < NumDNDSchedules) {
       prv_sync_legacy_schedule(&file, index);
     }
-    settings_file_close(&file);
+    pbl_settings_close(&file);
   }
   pbl_mutex_unlock(&s_mutex);
 }
@@ -852,7 +865,7 @@ static bool prv_is_dnd_state_key(const char *key) {
 //! Apply a phone write of a legacy schedule to its mirrored slot. Only the written field is
 //! applied, and an unused slot is only filled when the schedule gets enabled. Writes that can't
 //! be applied are reverted, which leaves them dirty so the next sync restores the phone's copy.
-static void prv_mirror_legacy_schedule(SettingsFile *file, const char *key) {
+static void prv_mirror_legacy_schedule(struct pbl_settings_file *file, const char *key) {
   for (int type = 0; type < NumDNDSchedules; type++) {
     const DoNotDisturbScheduleConfigKeys *keys = &s_dnd_schedule_keys[type];
     const bool is_schedule = (strcmp(key, keys->schedule_pref_key) == 0);
@@ -869,8 +882,8 @@ static void prv_mirror_legacy_schedule(SettingsFile *file, const char *key) {
       PBL_LOG_WRN("Rejecting invalid DND schedule %d", type);
       if (!mirrors) {
         legacy->schedule = s_default_dnd_schedule;
-        settings_file_set(file, keys->schedule_pref_key, strlen(keys->schedule_pref_key),
-                          &legacy->schedule, sizeof(legacy->schedule));
+        pbl_settings_set(file, keys->schedule_pref_key, strlen(keys->schedule_pref_key),
+                         &legacy->schedule, sizeof(legacy->schedule));
       }
     } else if (mirrors || (!slot->used && is_enabled && legacy->enabled)) {
       if (!mirrors) {
@@ -880,8 +893,8 @@ static void prv_mirror_legacy_schedule(SettingsFile *file, const char *key) {
       } else {
         slot->enabled = legacy->enabled;
       }
-      settings_file_set(file, s_dnd_schedule_slot_keys[type],
-                        strlen(s_dnd_schedule_slot_keys[type]), slot, sizeof(*slot));
+      pbl_settings_set(file, s_dnd_schedule_slot_keys[type], strlen(s_dnd_schedule_slot_keys[type]),
+                       slot, sizeof(*slot));
     }
     prv_sync_legacy_schedule(file, type);
     return;
@@ -890,15 +903,15 @@ static void prv_mirror_legacy_schedule(SettingsFile *file, const char *key) {
 
 //! Reload a schedule slot written by the phone. Invalid writes are reverted, which leaves the
 //! record dirty so the next sync restores the phone's copy.
-static void prv_reload_schedule_slot(SettingsFile *file, unsigned int index, const uint8_t *key,
-                                     int key_len) {
+static void prv_reload_schedule_slot(struct pbl_settings_file *file, unsigned int index,
+                                     const uint8_t *key, int key_len) {
   DoNotDisturbScheduleSlot slot;
-  if (settings_file_get_len(file, key, key_len) != sizeof(slot) ||
-      settings_file_get(file, key, key_len, &slot, sizeof(slot)) != S_SUCCESS ||
+  if (pbl_settings_get_len(file, key, key_len) != sizeof(slot) ||
+      pbl_settings_get(file, key, key_len, &slot, sizeof(slot)) != 0 ||
       (slot.used && !do_not_disturb_schedule_slot_is_valid(&slot))) {
     PBL_LOG_WRN("Rejecting invalid DND schedule slot %u", index);
-    settings_file_set(file, key, key_len, &s_dnd_schedule_slots[index],
-                      sizeof(s_dnd_schedule_slots[index]));
+    pbl_settings_set(file, key, key_len, &s_dnd_schedule_slots[index],
+                     sizeof(s_dnd_schedule_slots[index]));
     return;
   }
 
@@ -910,7 +923,7 @@ static void prv_reload_schedule_slot(SettingsFile *file, unsigned int index, con
                       do_not_disturb_schedule_slot_get_days(current) !=
                           do_not_disturb_schedule_slot_get_days(&slot))) {
     slot.legacy = false;
-    settings_file_set(file, key, key_len, &slot, sizeof(slot));
+    pbl_settings_set(file, key, key_len, &slot, sizeof(slot));
   }
   s_dnd_schedule_slots[index] = slot;
   if (index < NumDNDSchedules) {
@@ -929,28 +942,28 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  SettingsFile file = {};
-  if (settings_file_open(&file, FILE_NAME, FILE_LEN) != S_SUCCESS) {
+  struct pbl_settings_file file = {};
+  if (pbl_settings_open(&file, FILE_NAME, FILE_LEN) != 0) {
     pbl_mutex_unlock(&s_mutex);
     return;
   }
 
   // Helper macro to reload a single preference from file if key matches
   // key_len may or may not include the null terminator depending on BlobDB protocol
-  // IMPORTANT: settings_file_get uses exact key_len matching, so we must use the same
+  // IMPORTANT: pbl_settings_get uses exact key_len matching, so we must use the same
   // key_len that was used when writing the record (i.e., key_len from the event)
-#define RELOAD_IF_MATCH(pref_key, var)                                                \
-  do {                                                                                \
-    size_t _pref_strlen = strlen(pref_key);                                           \
-    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) &&       \
-        memcmp(key, pref_key, _pref_strlen) == 0) {                                   \
-      typeof(var) _tmp;                                                               \
-      if (settings_file_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == S_SUCCESS) { \
-        var = _tmp;                                                                   \
-        matched_key = pref_key;                                                       \
-      }                                                                               \
-      goto done;                                                                      \
-    }                                                                                 \
+#define RELOAD_IF_MATCH(pref_key, var)                                          \
+  do {                                                                          \
+    size_t _pref_strlen = strlen(pref_key);                                     \
+    if ((key_len == (int)_pref_strlen || key_len == (int)(_pref_strlen + 1)) && \
+        memcmp(key, pref_key, _pref_strlen) == 0) {                             \
+      typeof(var) _tmp;                                                         \
+      if (pbl_settings_get(&file, key, key_len, &_tmp, sizeof(_tmp)) == 0) {    \
+        var = _tmp;                                                             \
+        matched_key = pref_key;                                                 \
+      }                                                                         \
+      goto done;                                                                \
+    }                                                                           \
   } while (0)
 
   RELOAD_IF_MATCH(PREF_KEY_MASK, s_mask);
@@ -974,6 +987,7 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_DESIGN_STYLE, s_notification_alternative_design);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_VIBE_DELAY, s_notification_vibe_delay);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_BACKLIGHT, s_notification_backlight);
+  RELOAD_IF_MATCH(PREF_KEY_NOTIF_RESPECT_PHONE_SILENCE, s_notification_respect_phone_silence);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_GROUPING_RANGE, s_notification_grouping_range);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_STATUS_BAR_STYLE, s_notification_status_bar_style);
   RELOAD_IF_MATCH(PREF_KEY_NOTIF_TEXT_SIZE, s_notification_content_size);
@@ -1002,7 +1016,7 @@ done:
   if (matched_key) {
     prv_mirror_legacy_schedule(&file, matched_key);
   }
-  settings_file_close(&file);
+  pbl_settings_close(&file);
   pbl_mutex_unlock(&s_mutex);
 
   if (matched_key) {

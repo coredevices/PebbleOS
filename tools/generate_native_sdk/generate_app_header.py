@@ -52,7 +52,8 @@ def rename_full_definition(e):
 
 
 def collect_type_renames(exports_tree):
-    renames = {}
+    # The firmware spells the app's 32-bit time_t explicitly.
+    renames = {"pbl_time32_t": "time_t"}
 
     def collect(e):
         if e.type in ("type", "define") and e.impl_name != e.name:

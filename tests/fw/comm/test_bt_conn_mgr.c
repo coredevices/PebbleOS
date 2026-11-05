@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/time.h>
 #include <pbl/services/regular_timer.h>
 
 #include <clar.h>
@@ -32,7 +33,7 @@ GAPLEConnection *gap_le_connection_any(void) {
 
 void prv_regular_timer_spend_seconds(uint32_t seconds) {
   for (uint32_t i = 0; i < seconds; ++i) {
-    fake_rtc_increment_ticks(RTC_TICKS_HZ);
+    fake_rtc_increment_ticks(PBL_TICK_HZ);
     regular_timer_fire_seconds(1);
 
     // bt_conn_mgr offloads the callback to KernelBG

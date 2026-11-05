@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/peek.h>
@@ -9,7 +10,6 @@
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
-#include <kernel/pbl_malloc.h>
 #include <shell/prefs.h>
 
 typedef struct TimelinePeekEventData {
@@ -34,7 +34,7 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
                                TimelinePeekTimeType time_type) {
   TimelineItemId *item_id_copy = nullptr;
   if (item_id) {
-    item_id_copy = kernel_malloc_check(sizeof(TimelineItemId));
+    item_id_copy = pbl_malloc_check(sizeof(TimelineItemId));
     *item_id_copy = *item_id;
   }
   const bool is_all_day_event_visible =
@@ -56,13 +56,13 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
 
 static void prv_peek_will_update(void **context) {
   PeekUpdateContext **update = (PeekUpdateContext **)context;
-  *update = task_zalloc_check(sizeof(PeekUpdateContext));
+  *update = pbl_zalloc_check(sizeof(PeekUpdateContext));
   (*update)->first_header.common.id = UUID_INVALID;
 }
 
 static void prv_peek_did_update(void **context) {
   PeekUpdateContext **update = (PeekUpdateContext **)context;
-  task_free(*update);
+  pbl_free(*update);
 }
 
 static bool prv_is_in_peeking_time_window(SerializedTimelineItemHeader *header, time_t now) {
@@ -84,7 +84,7 @@ static bool prv_should_set_first_event(PeekUpdateContext *update,
 
 static bool prv_peek_filter(SerializedTimelineItemHeader *header, void **context) {
   PeekUpdateContext *update = *(PeekUpdateContext **)context;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t start = header->common.timestamp;
   const time_t end = start + (header->common.duration * PBL_SEC_PER_MIN);
   if (timeline_event_is_all_day(&header->common)) {
@@ -119,7 +119,7 @@ static bool prv_peek_filter(SerializedTimelineItemHeader *header, void **context
 
 static int prv_peek_comparator(SerializedTimelineItemHeader *new_header,
                                SerializedTimelineItemHeader *old_header, void **context) {
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const bool new_is_peeking = prv_is_in_peeking_time_window(new_header, now);
   const bool old_is_peeking = prv_is_in_peeking_time_window(old_header, now);
   const bool new_is_persistent = new_header->common.persistent;
@@ -145,7 +145,7 @@ static uint32_t prv_calc_timeout(CommonTimelineItemHeader *item,
   }
 
   TimelinePeekTimeType time_type;
-  const time_t now = rtc_get_time();
+  const time_t now = pbl_realtime();
   const time_t start = item->timestamp;
   const unsigned int duration_m = item->duration;
   const time_t end = start + (duration_m * PBL_SEC_PER_MIN);

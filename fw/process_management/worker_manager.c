@@ -10,13 +10,13 @@
 // Pebble stuff
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/light.h>
 #include <pbl/services/speaker/speaker_service.h>
 #include <pbl/services/vibe_pattern.h>
 
 #include <kernel/memory_layout.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/segment.h>
 #include <kernel/util/task_init.h>
@@ -205,14 +205,12 @@ bool worker_manager_launch_new_worker_with_args(const PebbleProcessMd *app_md, c
   }
   // The remaining space in worker_segment is assigned to the worker's
   // heap. Worker state needs to be configured before initializing the
-  // heap as the WorkerState struct holds the worker heap's Heap object.
-  Heap *worker_heap = worker_state_get_heap();
+  // heap as the WorkerState struct holds the worker heap.
+  struct pbl_heap *worker_heap = worker_state_get_heap();
   PBL_LOG_DBG("Worker heap init %p %p", worker_segment.start, worker_segment.end);
-  heap_init(worker_heap, worker_segment.start, worker_segment.end,
-            /* enable_heap_fuzzing */ false);
-  heap_set_lock_impl(worker_heap, (HeapLockImpl){
-                                    .lock_function = prv_heap_lock,
-                                  });
+  pbl_heap_init(worker_heap, worker_segment.start, worker_segment.end,
+                /* enable_heap_fuzzing */ false);
+  pbl_heap_set_lock(worker_heap, (struct pbl_heap_lock){.lock = prv_heap_lock});
   process_heap_set_exception_handlers(worker_heap, app_md);
 
   // Init services required for this process before it starts to execute
@@ -326,7 +324,7 @@ void worker_manager_close_current_worker(bool gracefully) {
   if (closing_worker_install_id == app_manager_get_current_app_id()) {
     app_manager_force_quit_to_launcher();
   } else {
-    const time_t current_time = rtc_get_time();
+    const time_t current_time = pbl_realtime();
     const time_t WORKER_CRASH_RESET_TIMEOUT_SECONDS = 60;
     if ((closing_worker_install_id == s_last_worker_crashed_install_id) &&
         ((current_time - s_last_worker_crash_timestamp) <= WORKER_CRASH_RESET_TIMEOUT_SECONDS)) {

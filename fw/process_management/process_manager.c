@@ -11,6 +11,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/heap.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
@@ -25,7 +27,6 @@
 #include <pbl/services/persist.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/voice/voice.h>
-#include <pbl/util/heap.h>
 
 #include <applib/accel_service_private.h>
 #include <applib/app_logging.h>
@@ -33,7 +34,6 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
 #include <apps/system/app_fetch_ui.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_state/app_state/app_state.h>
@@ -263,7 +263,7 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
       PBL_LOG_DBG("Cache entry did not exist on launch attempt");
 
       // Freed in app_fetch_ui.c
-      AppFetchUIArgs *fetch_args = kernel_malloc_check(sizeof(AppFetchUIArgs));
+      AppFetchUIArgs *fetch_args = pbl_malloc_check(sizeof(AppFetchUIArgs));
       *fetch_args = (AppFetchUIArgs){};
       fetch_args->common = config->common;
       fetch_args->app_id = id;
@@ -483,7 +483,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
 
   // If this is not a system app, output its heap usage stats.
   if (context->app_md->process_storage == ProcessStorageFlash) {
-    const Heap *heap;
+    const struct pbl_heap *heap;
     if (task == PebbleTask_App) {
       heap = app_state_get_heap();
     } else if (task == PebbleTask_Worker) {
@@ -496,7 +496,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
     // like the %zd formatter
     APP_LOG(APP_LOG_LEVEL_INFO,
             "Heap Usage for %s: Total Size <%dB> Used <%uB> Still allocated <%uB>",
-            pebble_task_get_name(task), (int)heap_size(heap), heap->high_water_mark,
+            pebble_task_get_name(task), (int)pbl_heap_size(heap), heap->high_water_mark,
             heap->current_size);
   }
 

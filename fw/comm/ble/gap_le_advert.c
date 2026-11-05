@@ -8,6 +8,7 @@
 #include <pbl/bluetooth/advert.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/regular_timer.h>
@@ -15,7 +16,6 @@
 
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
@@ -233,8 +233,8 @@ static void prv_increment_elapsed_time_for_job(GAPLEAdvertisingJob **job_ptr, bo
       }
 
       PBL_LOG_DBG("Unscheduled advertising completed job: %s", prv_string_for_debug_tag(job->tag));
-      kernel_free(job->terms);
-      kernel_free(job);
+      pbl_free(job->terms);
+      pbl_free(job);
       *job_ptr = nullptr;
     }
   }
@@ -400,7 +400,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
   }
 
   // Create the job data structure:
-  GAPLEAdvertisingJob *job = kernel_malloc_check(
+  GAPLEAdvertisingJob *job = pbl_malloc_check(
       sizeof(GAPLEAdvertisingJob) + payload->ad_data_length + payload->scan_resp_data_length);
 
   *job = (const GAPLEAdvertisingJob){
@@ -415,7 +415,7 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
     },
   };
 
-  job->terms = kernel_malloc_check(sizeof(GAPLEAdvertisingJobTerm) * num_terms);
+  job->terms = pbl_malloc_check(sizeof(GAPLEAdvertisingJobTerm) * num_terms);
 
   memcpy(job->terms, terms, sizeof(GAPLEAdvertisingJobTerm) * num_terms);
 
@@ -431,8 +431,8 @@ GAPLEAdvertisingJobRef gap_le_advert_schedule(const struct pbl_bt_ad_data *paylo
       prv_link_job(job);
       prv_perform_next_job(false);
     } else {
-      kernel_free(job->terms);
-      kernel_free(job);
+      pbl_free(job->terms);
+      pbl_free(job);
       job = nullptr;
     }
   }
@@ -479,8 +479,8 @@ unlock:
   bt_unlock();
 
   if (is_registered) {
-    kernel_free(job->terms);
-    kernel_free(job);
+    pbl_free(job->terms);
+    pbl_free(job);
   }
 }
 

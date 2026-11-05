@@ -1,30 +1,30 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/blob_db/app_glance_db_private.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
 #include <clar.h>
 #include <fff.h>
-#include <kernel/pbl_malloc.h>
 #include <resource/resource_ids.auto.h>
 
 // Fakes
 ////////////////////////////////////////////////////////////////
 
 #include <fake_events.h>
-#include <fake_settings_file.h>
+#include <fake_settings.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
 
-status_t pfs_remove(const char *name) {
-  fake_settings_file_reset();
+int pbl_fs_unlink(const char *path) {
+  fake_settings_reset();
   return S_SUCCESS;
 }
 
@@ -210,7 +210,7 @@ void test_app_glance_db__initialize(void) {
   RESET_FAKE(app_cache_app_launched);
 
   fake_event_init();
-  fake_settings_file_reset();
+  fake_settings_reset();
   app_glance_db_init();
 }
 
@@ -247,12 +247,12 @@ void test_app_glance_db__basic_glance_blob_insert_and_read(void) {
   cl_assert_equal_i(app_glance_db_get_len((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE),
                     glance_size);
 
-  uint8_t *glance_out = kernel_malloc(glance_size);
+  uint8_t *glance_out = pbl_malloc(glance_size);
   cl_assert_equal_i(
       app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE, glance_out, glance_size),
       S_SUCCESS);
   cl_assert_equal_m(glance_out, (uint8_t *)s_app_glance_basic, glance_size);
-  kernel_free(glance_out);
+  pbl_free(glance_out);
 }
 
 void test_app_glance_db__blob_read_with_invalid_key_length_or_null_val_out_fails(void) {
@@ -590,7 +590,7 @@ void test_app_glance_db__empty_glance_insert_after_basic_glance_insert_succeeds(
   test_app_glance_db__basic_glance_insert_and_read();
 
   // Let some time pass so the creation time of this next glance insertion is newer
-  rtc_set_time(rtc_get_time() + 10);
+  pbl_realtime_set(pbl_realtime() + 10);
 
   // Try inserting an empty glance; this should succeed and clear the glance
   AppGlance empty_glance = {};

@@ -18,10 +18,7 @@ config HAL_SIFLI_SF32LB52
     bool "SF32LB52 SoC variant"
     select HAL_SIFLI_AON
     select HAL_SIFLI_GPT
-    select HAL_SIFLI_IPC_QUEUE
     select HAL_SIFLI_LPTIM
-    select HAL_SIFLI_LRC_CAL
-    select HAL_SIFLI_MPI
     select HAL_SIFLI_PINMUX
     select HAL_SIFLI_RTC
     help
@@ -29,7 +26,7 @@ config HAL_SIFLI_SF32LB52
       SF32LB52X target define and adds the SF32LB52-specific cmsis
       and local glue sources to the build. It also selects the HAL
       modules required by SoC-level PebbleOS code (clock/tick,
-      sleep, flash XIP, pinmux, RTC and RC calibration).
+      sleep, pinmux and RTC).
 
 config HAL_SIFLI_AES
     bool "AES HAL module"
@@ -107,36 +104,19 @@ config HAL_SIFLI_HCD
       Enable the HCD (USB host controller) SiFli HAL module
       driver.
 
-config HAL_SIFLI_I2C
-    bool "I2C HAL module"
-    help
-      Enable the I2C SiFli HAL module driver.
-
 config HAL_SIFLI_I2S
     bool "I2S HAL module"
     help
       Enable the I2S SiFli HAL module driver.
 
-config HAL_SIFLI_IPC_QUEUE
-    bool "IPC queue"
-    select HAL_SIFLI_MAILBOX
-    help
-      Enable the IPC queue middleware for inter-core
-      communication.
-
-config HAL_SIFLI_LCD
-    bool "LCDC HAL module"
-    help
-      Enable the LCDC (LCD controller) SiFli HAL module driver.
-
 config HAL_SIFLI_LCPU
-    bool "LCPU boot support"
+    bool "LCPU ROM patches and BT RF calibration"
     depends on HAL_SIFLI_SF32LB52
     select HAL_SIFLI_LCPU_CONFIG
     select HAL_SIFLI_LCPU_PATCH
     help
-      Enable LCPU power-on, patch installation and BT RF
-      calibration support.
+      Enable the LCPU ROM patches (A4 and later) and the BT RF
+      calibration, used by the LCPU driver.
 
 config HAL_SIFLI_LCPU_CONFIG
     bool "LCPU_CONFIG HAL module"
@@ -167,12 +147,6 @@ config HAL_SIFLI_MAILBOX
     help
       Enable the MAILBOX (inter-core mailbox) SiFli HAL module
       driver.
-
-config HAL_SIFLI_MPI
-    bool "MPI HAL module"
-    help
-      Enable the MPI (memory peripheral interface, NOR flash)
-      SiFli HAL module driver.
 
 config HAL_SIFLI_PCD
     bool "PCD HAL module"

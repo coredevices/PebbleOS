@@ -5,14 +5,15 @@
 
 #include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
+#include <applib/app_logging.h>
 #include <logging/logging_private.h>
 #include <process_management/worker_manager.h>
 
@@ -29,28 +30,44 @@ PBL_SYSCALL(int, sys_test, (VAL, int, arg)) {
 }
 
 PBL_SYSCALL(time_t, sys_get_time) {
-  return rtc_get_time();
+  return pbl_realtime();
 }
 
 PBL_SYSCALL(void, sys_get_time_ms, (OUT, time_t *, t), (OUT, uint16_t *, out_ms)) {
-  rtc_get_time_ms(t, out_ms);
+  uint64_t now_ms = pbl_realtime_ms();
+
+  *t = (time_t)(now_ms / 1000U);
+  *out_ms = (uint16_t)(now_ms % 1000U);
 }
 
-PBL_SYSCALL(RtcTicks, sys_get_ticks) {
-  return rtc_get_ticks();
+PBL_SYSCALL(uint64_t, sys_get_ticks) {
+  return pbl_uptime_ticks();
 }
 
 PBL_SYSCALL(void, sys_pbl_log, (VAL, LogBinaryMessage *, log_message), (VAL, uint32_t, flags)) {
   // log_message points at a struct whose trailing message[] is sized by the
   // embedded message_length byte. Without a check, an app can hand us any
   // kernel address: log_level and message_length steer the formatting code,
-  // and kernel_pbl_log_flash() ends up writing `sizeof(*log_message) +
+  // and the flash backend ends up writing `sizeof(*log_message) +
   // message_length` bytes straight from that address to the flash log channel
   // — a generic kernel-memory exfiltration primitive.
   if (from_user) {
     kernel_pbl_log_verify_user(log_message);
   }
   kernel_pbl_log(log_message, flags);
+}
+
+PBL_SYSCALL(void, sys_app_log, (VAL, size_t, length), (IN_BUF, void *, log_buffer, length)) {
+  AppLogBinaryMessage *message = log_buffer;
+
+  if (from_user) {
+    if (length < sizeof(*message)) {
+      pbl_syscall_fail();
+    }
+    kernel_pbl_log_verify_user(&message->log_msg);
+  }
+
+  kernel_pbl_log_app(&message->log_msg, (const uint8_t *)&message->uuid);
 }
 
 PBL_SYSCALL(void, sys_copy_timezone_abbr, (OUT_BUF, char *, timezone_abbr, PBL_TZ_LEN),

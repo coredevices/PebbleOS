@@ -2,136 +2,244 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "logging_private.h"
-#include "pulse_logging.h"
 
-#include <ctype.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
-#include <pbl/drivers/rtc.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/interrupts.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
 
-#include <console/serial_console.h>
-#include <debug/advanced_logging.h>
-#include <kernel/pebble_tasks.h>
-#include <kernel/util/stack_info.h>
-
-#ifndef PBL_LOG_LEVEL
-#define PBL_LOG_LEVEL LOG_LEVEL_DEBUG
+#ifndef PBL_NO_LINKER_SCRIPT
+extern const struct pbl_log_backend __pbl_log_backends_start[];
+extern const struct pbl_log_backend __pbl_log_backends_end[];
+#else
+extern const struct pbl_log_backend __pbl_log_backends_start[] PBL_UNSORTED_SECTION_START(
+    pbl_log_be);
+extern const struct pbl_log_backend __pbl_log_backends_end[] PBL_UNSORTED_SECTION_END(pbl_log_be);
 #endif
 
-int g_pbl_log_level = PBL_LOG_LEVEL;
+#define PRV_FOREACH_BACKEND(_backend)                                     \
+  for (const struct pbl_log_backend *_backend = __pbl_log_backends_start; \
+       _backend < __pbl_log_backends_end; _backend++)
+
 bool g_pbl_log_enabled = true;
 
-static bool prv_check_serial_log_enabled(int level, uint32_t flags) {
-  return (g_pbl_log_enabled) && ((flags & PBL_LOG_FLAG_FILTERED) || level == LOG_LEVEL_ALWAYS ||
-                                 (level <= g_pbl_log_level));
+char pbl_log_get_level_char(const uint8_t log_level) {
+  switch (log_level) {
+    case LOG_LEVEL_ALWAYS:
+      return '*';
+    case LOG_LEVEL_ERROR:
+      return 'E';
+    case LOG_LEVEL_WARNING:
+      return 'W';
+    case LOG_LEVEL_INFO:
+      return 'I';
+    case LOG_LEVEL_DEBUG:
+      return 'D';
+    case LOG_LEVEL_DEBUG_VERBOSE:
+      return 'V';
+    default:
+      return '?';
+  }
 }
 
-#ifndef CONFIG_PULSE_EVERYWHERE
-#define TIMESTAMP_BUFFER_SIZE 40
-static void prv_log_timestamp(void) {
-  // Enough stack space to use sprintfs?
-  uint32_t stack_space = stack_free_bytes();
-  if (stack_space < LOGGING_MIN_STACK_FOR_SPRINTF) {
-    serial_console_write_log_message(LOGGING_STACK_FULL_MSG);
-    serial_console_write_log_message(" ");
-    return;
-  }
-
-  char buffer[TIMESTAMP_BUFFER_SIZE];
-
-  time_t time_seconds;
-  uint16_t time_ms;
-  rtc_get_time_ms(&time_seconds, &time_ms);
-  struct pbl_tm time_seconds_calendar;
-  pbl_gmtime_r(&time_seconds, &time_seconds_calendar);
-
-  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", time_seconds_calendar.tm_hour,
-            time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);
-
-  serial_console_write_log_message(buffer);
+void pbl_log_backend_enable(const struct pbl_log_backend *backend) {
+  atomic_store_explicit(&backend->state->enabled, true, memory_order_relaxed);
 }
 
-static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_line_number,
-                           const char *message) {
-  if (!serial_console_is_logging_enabled() && log_level != LOG_LEVEL_ALWAYS) {
-    return;
-  }
+void pbl_log_backend_disable(const struct pbl_log_backend *backend) {
+  atomic_store_explicit(&backend->state->enabled, false, memory_order_relaxed);
+}
 
-  // Log the log level and the current task+privilege level
-  {
-#ifdef CONFIG_LOG_TASK_PREFIX
-    unsigned char task_char = pebble_task_get_char(pebble_task_get_current());
-    if (!pbl_is_user_context()) {
-      task_char = toupper(task_char);
+bool pbl_log_backend_is_enabled(const struct pbl_log_backend *backend) {
+  return atomic_load_explicit(&backend->state->enabled, memory_order_relaxed);
+}
+
+void pbl_log_backend_set_level(const struct pbl_log_backend *backend, int level) {
+  atomic_store_explicit(&backend->state->level, (int16_t)level, memory_order_relaxed);
+}
+
+const struct pbl_log_backend *pbl_log_backend_get_by_name(const char *name) {
+  PRV_FOREACH_BACKEND(backend) {
+    if (strcmp(backend->name, name) == 0) {
+      return backend;
     }
-#else
-    unsigned char task_char = '-';
+  }
+
+  return nullptr;
+}
+
+void pbl_log_early_init(void) {
+  PRV_FOREACH_BACKEND(backend) {
+    if (backend->api->early_init) {
+      backend->api->early_init(backend);
+    }
+  }
+}
+
+void pbl_log_init(void) {
+  PRV_FOREACH_BACKEND(backend) {
+    if (backend->api->init) {
+      backend->api->init(backend);
+    }
+  }
+}
+
+void pbl_log_panic(void) {
+  PRV_FOREACH_BACKEND(backend) {
+    if (backend->api->panic &&
+        atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
+      backend->api->panic(backend);
+    }
+  }
+}
+
+static bool prv_accepts(const struct pbl_log_backend *backend, const struct pbl_log_msg *msg,
+                        bool filtered) {
+  return filtered || msg->level == LOG_LEVEL_ALWAYS ||
+         msg->level <= atomic_load_explicit(&backend->state->level, memory_order_relaxed);
+}
+
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+struct prv_boot_rec {
+  uint32_t timestamp;
+  uint16_t size;
+  uint16_t line;
+  uint8_t level;
+  uint8_t flags;
+  uint8_t text_len;
+  bool filtered;
+  char file[16];
+  char text[];
+};
+
+static uint8_t s_boot_buf[CONFIG_LOG_BOOT_BUFFER_SIZE] PBL_ALIGNED(4);
+static size_t s_boot_len;
+static bool s_boot_full;
+
+static void prv_boot_record(const struct pbl_log_msg *msg, bool filtered) {
+  const size_t size = (sizeof(struct prv_boot_rec) + msg->text_len + 1U + 3U) & ~3U;
+
+  pbl_irq_lock();
+  if (!s_boot_full && s_boot_len + size > sizeof(s_boot_buf)) {
+    s_boot_full = true;
+  }
+  if (!s_boot_full) {
+    struct prv_boot_rec *rec = (struct prv_boot_rec *)&s_boot_buf[s_boot_len];
+    *rec = (struct prv_boot_rec){
+      .timestamp = msg->timestamp,
+      .size = (uint16_t)size,
+      .line = msg->line,
+      .level = msg->level,
+      .flags = msg->flags,
+      .text_len = msg->text_len,
+      .filtered = filtered,
+    };
+    strncpy(rec->file, msg->file, sizeof(rec->file) - 1U);
+    memcpy(rec->text, msg->text, msg->text_len);
+    rec->text[msg->text_len] = '\0';
+    s_boot_len += size;
+  }
+  pbl_irq_unlock();
+}
+
+static size_t prv_boot_replay(const struct pbl_log_backend *backend, size_t pos, size_t end) {
+  while (pos < end) {
+    const struct prv_boot_rec *rec = (const struct prv_boot_rec *)&s_boot_buf[pos];
+    const struct pbl_log_msg msg = {
+      .file = rec->file,
+      .text = rec->text,
+      .timestamp = rec->timestamp,
+      .line = rec->line,
+      .level = rec->level,
+      .text_len = rec->text_len,
+      .flags = rec->flags,
+    };
+
+    if (prv_accepts(backend, &msg, rec->filtered)) {
+      backend->api->process(backend, &msg);
+    }
+    pos += rec->size;
+  }
+
+  return pos;
+}
 #endif
 
-    char buffer[] = {pbl_log_get_level_char(log_level), ' ', task_char, ' ', 0};
-    serial_console_write_log_message(buffer);
-  }
+void pbl_log_backend_start(const struct pbl_log_backend *backend) {
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+  size_t pos = 0;
 
-  // Start out with the timestamp
-  prv_log_timestamp();
-
-  // Write out the filename
-  src_filename = GET_FILE_NAME(src_filename);
-  serial_console_write_log_message(src_filename);
-
-  // Write out the line number
-  {
-    char line_number_buffer[12];
-    itoa_int(src_line_number, line_number_buffer, 10);
-    serial_console_write_log_message(":");
-    serial_console_write_log_message(line_number_buffer);
-    serial_console_write_log_message("> ");
-  }
-
-  // Write the actual log message.
-  serial_console_write_log_message(message);
-
-  // Append our newlines and our trailing null
-  serial_console_write_log_message("\r\n");
-}
-#endif // CONFIG_PULSE_EVERYWHERE
-
-void kernel_pbl_log_serial(LogBinaryMessage *log_message, uint32_t flags) {
-  if (!prv_check_serial_log_enabled(log_message->log_level, flags)) {
+  if (!backend->api->replay) {
+    pbl_log_backend_enable(backend);
     return;
   }
 
-#ifdef CONFIG_PULSE_EVERYWHERE
-  if (flags & PBL_LOG_FLAG_ASYNC) {
-    pulse_logging_log(log_message->log_level, log_message->filename,
-                      pbl_cpu_to_be16(log_message->line_number), log_message->message);
-  } else {
-    pulse_logging_log_sync(log_message->log_level, log_message->filename,
-                           pbl_cpu_to_be16(log_message->line_number), log_message->message);
+  while (true) {
+    pbl_irq_lock();
+    const size_t end = s_boot_len;
+    if (pos == end) {
+      atomic_store_explicit(&backend->state->enabled, true, memory_order_relaxed);
+      pbl_irq_unlock();
+      return;
+    }
+    pbl_irq_unlock();
+
+    pos = prv_boot_replay(backend, pos, end);
   }
 #else
-  prv_log_serial(log_message->log_level, log_message->filename,
-                 pbl_cpu_to_be16(log_message->line_number), log_message->message);
+  pbl_log_backend_enable(backend);
 #endif
 }
 
-void kernel_pbl_log_flash(LogBinaryMessage *log_message, uint32_t flags) {
-  int length = sizeof(*log_message) + log_message->message_length;
+//! @param filtered The level was already checked against a runtime module level.
+static void prv_dispatch(const struct pbl_log_msg *msg, bool filtered) {
+  bool record = false;
 
-  if (g_pbl_log_enabled &&
-      ((flags & PBL_LOG_FLAG_FILTERED) || log_message->log_level == LOG_LEVEL_ALWAYS ||
-       (log_message->log_level <= FLASH_LOG_LEVEL))) {
-    pbl_log_advanced((const char *)log_message, length, flags & PBL_LOG_FLAG_ASYNC);
+  PRV_FOREACH_BACKEND(backend) {
+    if (!prv_accepts(backend, msg, filtered)) {
+      continue;
+    }
+
+    if (!atomic_load_explicit(&backend->state->enabled, memory_order_relaxed)) {
+      record |= backend->api->replay;
+      continue;
+    }
+
+    backend->api->process(backend, msg);
   }
+
+#if CONFIG_LOG_BOOT_BUFFER_SIZE > 0
+  if (record && msg->app_uuid == nullptr && !(msg->flags & PBL_LOG_MSG_FAULT)) {
+    prv_boot_record(msg, filtered);
+  }
+#else
+  (void)record;
+#endif
+}
+
+static void prv_log_binary(LogBinaryMessage *log_message, uint32_t flags, const uint8_t *app_uuid) {
+  if (!g_pbl_log_enabled) {
+    return;
+  }
+
+  const struct pbl_log_msg msg = {
+    .file = log_message->filename,
+    .text = log_message->message,
+    .app_uuid = app_uuid,
+    .timestamp = pbl_cpu_to_be32(log_message->timestamp),
+    .line = pbl_cpu_to_be16(log_message->line_number),
+    .level = log_message->log_level,
+    .text_len = log_message->message_length,
+    .flags = (flags & PBL_LOG_FLAG_ASYNC) ? PBL_LOG_MSG_ASYNC : 0,
+  };
+
+  prv_dispatch(&msg, flags & PBL_LOG_FLAG_FILTERED);
 }
 
 void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message) {
@@ -154,21 +262,25 @@ void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message) {
 }
 
 void kernel_pbl_log(LogBinaryMessage *log_message, uint32_t flags) {
-  kernel_pbl_log_serial(log_message, flags);
+  prv_log_binary(log_message, flags, nullptr);
+}
 
-  if (!pbl_irq_is_locked() && !mcu_state_is_isr() && !pbl_sched_is_locked()) {
-    kernel_pbl_log_flash(log_message, flags);
-  }
+void kernel_pbl_log_app(LogBinaryMessage *log_message, const uint8_t *app_uuid) {
+  prv_log_binary(log_message, 0, app_uuid);
 }
 
 void kernel_pbl_log_from_fault_handler(const char *src_filename, uint16_t src_line_number,
                                        const char *message) {
-#ifdef CONFIG_PULSE_EVERYWHERE
-  pulse_logging_log_sync(LOG_LEVEL_ALWAYS, src_filename, src_line_number, message);
-#else
-  serial_console_write_log_message(message);
-  serial_console_write_log_message("\r\n");
-#endif
+  const struct pbl_log_msg msg = {
+    .file = src_filename,
+    .text = message,
+    .line = src_line_number,
+    .level = LOG_LEVEL_ALWAYS,
+    .text_len = strnlen(message, UINT8_MAX),
+    .flags = PBL_LOG_MSG_FAULT,
+  };
+
+  prv_dispatch(&msg, true);
 }
 
 void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t src_line_number,
@@ -187,22 +299,38 @@ void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t sr
 
 #include <pbl/shell/shell.h>
 
-static int prv_cmd_level(const struct pbl_shell *sh, size_t argc, char **argv) {
-  if (argc > 1) {
-    long level;
-    if (pbl_shell_strtol(argv[1], &level) != 0) {
-      pbl_shell_error(sh, "invalid level '%s'", argv[1]);
-      return -EINVAL;
-    }
-    g_pbl_log_level = level;
+static int prv_cmd_backends(const struct pbl_shell *sh, size_t argc, char **argv) {
+  PRV_FOREACH_BACKEND(backend) {
+    pbl_shell_print(sh, "%-8s %-8s level %i", backend->name,
+                    backend->state->enabled ? "enabled" : "disabled", backend->state->level);
   }
 
-  pbl_shell_print(sh, "Log level: %i", g_pbl_log_level);
+  return 0;
+}
+
+static int prv_cmd_level(const struct pbl_shell *sh, size_t argc, char **argv) {
+  const struct pbl_log_backend *backend = pbl_log_backend_get_by_name(argv[1]);
+  if (backend == nullptr) {
+    pbl_shell_error(sh, "unknown backend '%s'", argv[1]);
+    return -ENOENT;
+  }
+
+  if (argc > 2) {
+    long level;
+    if (pbl_shell_strtol(argv[2], &level) != 0) {
+      pbl_shell_error(sh, "invalid level '%s'", argv[2]);
+      return -EINVAL;
+    }
+    pbl_log_backend_set_level(backend, level);
+  }
+
+  pbl_shell_print(sh, "%s: level %i", backend->name, backend->state->level);
   return 0;
 }
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_log);
 PBL_SHELL_CMD_REGISTER(log, sub_log, "Logging", nullptr);
-PBL_SHELL_SUBCMD_ADD(sub_log, level, nullptr, "Get or set the log level [level]", prv_cmd_level, 1,
-                     1);
+PBL_SHELL_SUBCMD_ADD(sub_log, backends, nullptr, "List the backends", prv_cmd_backends, 0, 0);
+PBL_SHELL_SUBCMD_ADD(sub_log, level, nullptr, "Get or set a backend level <backend> [level]",
+                     prv_cmd_level, 2, 1);
 #endif

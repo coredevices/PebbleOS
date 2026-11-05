@@ -3,3 +3,4 @@
 
 config DEMO_APP_GFX_TESTS
     bool "Gfx Tests"
+    select PROFILER

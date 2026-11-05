@@ -1,0 +1,273 @@
+<!doctype html>
+<!--
+SPDX-FileCopyrightText: 2026 Core Devices LLC
+SPDX-License-Identifier: Apache-2.0
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Footprint</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1d1d1f;
+    --muted: #6e6e73;
+    --border: #d2d2d7;
+    --tile-border: rgba(0, 0, 0, 0.35);
+    --tip-bg: #1d1d1f;
+    --tip-fg: #f5f5f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161618;
+      --fg: #f5f5f7;
+      --muted: #a1a1a6;
+      --border: #3a3a3c;
+      --tile-border: rgba(0, 0, 0, 0.6);
+      --tip-bg: #f5f5f7;
+      --tip-fg: #1d1d1f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--fg);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 { font-size: 15px; margin: 0; }
+  .tabs button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    cursor: pointer;
+  }
+  .tabs button:first-child { border-radius: 4px 0 0 4px; }
+  .tabs button:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+  .tabs button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  nav { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  nav a { color: inherit; cursor: pointer; text-decoration: underline; }
+  nav .size { color: var(--muted); margin-left: 8px; }
+  #map { position: relative; flex: 1; margin: 8px 16px 16px; overflow: hidden; }
+  .tile {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid var(--tile-border);
+    color: #111;
+    cursor: pointer;
+  }
+  .tile .label {
+    padding: 2px 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  .tile.leaf { cursor: default; }
+  #tip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--tip-bg);
+    color: var(--tip-fg);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    max-width: 480px;
+    overflow-wrap: anywhere;
+    display: none;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <div class="tabs" id="tabs"></div>
+  <nav id="crumbs"></nav>
+</header>
+<div id="map"></div>
+<div id="tip"></div>
+<script>
+const DATA = /*FOOTPRINT_DATA*/null;
+
+const map = document.getElementById("map");
+const tip = document.getElementById("tip");
+const crumbs = document.getElementById("crumbs");
+let report = "rom";
+let stack = [];
+
+// Tiles show this many levels below the node being viewed.
+const LEVELS = 2;
+const LABEL_HEIGHT = 16;
+
+function fmt(n) {
+  if (n >= 1024 * 1024) return (n / 1024 / 1024).toFixed(2) + " MiB";
+  if (n >= 1024) return (n / 1024).toFixed(1) + " KiB";
+  return n + " B";
+}
+
+// Squarified treemap: lay the items out in rows that keep tiles close to
+// square.
+function squarify(items, x, y, w, h) {
+  const total = items.reduce((s, i) => s + i.size, 0);
+  const out = [];
+  if (total <= 0 || w <= 0 || h <= 0) return out;
+  const scale = (w * h) / total;
+  let rest = items.map((i) => ({ item: i, area: i.size * scale }));
+  while (rest.length) {
+    const side = Math.min(w, h);
+    let row = [];
+    let rowArea = 0;
+    let best = Infinity;
+    for (const r of rest) {
+      const area = rowArea + r.area;
+      const max = Math.max(...row.map((q) => q.area), r.area);
+      const min = Math.min(...row.map((q) => q.area), r.area);
+      const worst = Math.max((side * side * max) / (area * area), (area * area) / (side * side * min));
+      if (worst > best) break;
+      best = worst;
+      row.push(r);
+      rowArea = area;
+    }
+    rest = rest.slice(row.length);
+    const thick = rowArea / side;
+    let off = 0;
+    for (const r of row) {
+      const len = r.area / thick;
+      if (w >= h) out.push({ item: r.item, x: x, y: y + off, w: thick, h: len });
+      else out.push({ item: r.item, x: x + off, y: y, w: len, h: thick });
+      off += len;
+    }
+    if (w >= h) { x += thick; w -= thick; } else { y += thick; h -= thick; }
+  }
+  return out;
+}
+
+function color(index, depth) {
+  const hue = (index * 137.508) % 360;
+  return `hsl(${hue}, 55%, ${72 + depth * 8}%)`;
+}
+
+function pathOf(trail) {
+  return trail.map((n) => n.name).slice(1).join("/") || "/";
+}
+
+function draw() {
+  map.textContent = "";
+  const node = stack[stack.length - 1];
+  const rootSize = stack[0].size || 1;
+  const rect = map.getBoundingClientRect();
+
+  function place(n, trail, x, y, w, h, level, hue) {
+    const kids = (n.children || []).filter((c) => c.size > 0);
+    squarify(kids, x, y, w, h).forEach((t, i) => {
+      const c = t.item;
+      const h0 = level === 1 ? i : hue;
+      const el = document.createElement("div");
+      el.className = "tile" + (c.children ? "" : " leaf");
+      el.style.left = t.x + "px";
+      el.style.top = t.y + "px";
+      el.style.width = Math.max(0, t.w) + "px";
+      el.style.height = Math.max(0, t.h) + "px";
+      el.style.background = color(h0, level - 1);
+      const label = document.createElement("div");
+      label.className = "label";
+      label.textContent = `${c.name} ${fmt(c.size)}`;
+      el.appendChild(label);
+      const here = trail.concat([c]);
+      el.addEventListener("mousemove", (e) => {
+        e.stopPropagation();
+        let text = `${pathOf(here)}\n${fmt(c.size)} (${c.size} B), ` +
+          `${((100 * c.size) / rootSize).toFixed(2)}%`;
+        if (c.section) text += `\n${c.section}`;
+        if (c.address !== undefined) text += ` @ 0x${c.address.toString(16)}`;
+        tip.textContent = text;
+        tip.style.whiteSpace = "pre-line";
+        tip.style.display = "block";
+        const tx = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+        const ty = Math.min(e.clientY + 12, window.innerHeight - tip.offsetHeight - 8);
+        tip.style.left = Math.max(8, tx) + "px";
+        tip.style.top = Math.max(8, ty) + "px";
+      });
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!c.children) return;
+        stack = stack.concat(here.slice(stack.length));
+        update();
+      });
+      map.appendChild(el);
+      if (level < LEVELS && c.children && t.w > 24 && t.h > LABEL_HEIGHT + 8) {
+        place(c, here, t.x + 2, t.y + LABEL_HEIGHT, t.w - 4, t.h - LABEL_HEIGHT - 2, level + 1, h0);
+      }
+    });
+  }
+
+  place(node, stack.slice(), 0, 0, rect.width, rect.height, 1, 0);
+}
+
+function update() {
+  crumbs.textContent = "";
+  stack.forEach((n, i) => {
+    if (i) crumbs.append(" / ");
+    if (i < stack.length - 1) {
+      const a = document.createElement("a");
+      a.textContent = n.name;
+      a.addEventListener("click", () => { stack = stack.slice(0, i + 1); update(); });
+      crumbs.appendChild(a);
+    } else {
+      crumbs.append(n.name);
+    }
+  });
+  const node = stack[stack.length - 1];
+  const size = document.createElement("span");
+  size.className = "size";
+  size.textContent = `${fmt(node.size)} (${node.size} B)`;
+  crumbs.appendChild(size);
+  document.querySelectorAll("#tabs button").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b.dataset.report === report));
+  });
+  draw();
+}
+
+function select(name) {
+  report = name;
+  stack = [DATA.reports[name]];
+  update();
+}
+
+document.title = `Footprint: ${DATA.title}`;
+document.getElementById("title").textContent = DATA.title;
+const tabs = document.getElementById("tabs");
+for (const name of Object.keys(DATA.reports)) {
+  const b = document.createElement("button");
+  b.dataset.report = name;
+  b.textContent = `${name.toUpperCase()} ${fmt(DATA.reports[name].size)}`;
+  b.addEventListener("click", () => select(name));
+  tabs.appendChild(b);
+}
+map.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+window.addEventListener("resize", draw);
+window.addEventListener("keydown", (e) => {
+  if ((e.key === "Escape" || e.key === "Backspace") && stack.length > 1) {
+    stack = stack.slice(0, -1);
+    update();
+  }
+});
+select("rom");
+</script>
+</body>
+</html>

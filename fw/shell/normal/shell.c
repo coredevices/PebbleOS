@@ -1,16 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 
 #include <apps/system_app_ids.h>
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
 #include <shell/system_shell.h>
+#include <shell/system_theme.h>
 
-#define WATCHFACE_SHUTTER_COLOR GColorWhite
+#define WATCHFACE_SHUTTER_COLOR system_theme_get_bg_color()
 #define HEALTH_SHUTTER_COLOR    PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite)
 #define ACTION_SHUTTER_COLOR    PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite)
 
@@ -80,7 +81,7 @@ static const CompositorTransition *prv_app_launcher_transition_animation(
 const CompositorTransition *shell_get_close_compositor_animation(AppInstallId current_app_id,
                                                                  AppInstallId next_app_id) {
   const CompositorTransition *res = nullptr;
-  AppInstallEntry *app_entry = kernel_zalloc_check(sizeof(AppInstallEntry));
+  AppInstallEntry *app_entry = pbl_zalloc_check(sizeof(AppInstallEntry));
 
   if (app_install_get_entry_for_install_id(next_app_id, app_entry) &&
       app_install_entry_is_watchface(app_entry)) {
@@ -104,7 +105,7 @@ const CompositorTransition *shell_get_close_compositor_animation(AppInstallId cu
   // If we get here, we don't use a compositor animation for the transition
 
 done:
-  kernel_free(app_entry);
+  pbl_free(app_entry);
   return res;
 }
 
@@ -112,7 +113,7 @@ const CompositorTransition *shell_get_open_compositor_animation(AppInstallId cur
                                                                 AppInstallId next_app_id,
                                                                 const LaunchConfigCommon *config) {
   const CompositorTransition *res = nullptr;
-  AppInstallEntry *app_entry = kernel_zalloc_check(sizeof(AppInstallEntry));
+  AppInstallEntry *app_entry = pbl_zalloc_check(sizeof(AppInstallEntry));
 
   if (app_install_get_entry_for_install_id(current_app_id, app_entry)) {
     if (app_install_entry_is_watchface(app_entry)) {
@@ -139,6 +140,6 @@ const CompositorTransition *shell_get_open_compositor_animation(AppInstallId cur
   // If we get here, we don't use a compositor animation for the transition
 
 done:
-  kernel_free(app_entry);
+  pbl_free(app_entry);
   return res;
 }

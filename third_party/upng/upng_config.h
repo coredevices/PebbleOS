@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "kernel/pbl_malloc.h"
+#include <applib/applib_malloc.auto.h>
 
-#define UPNG_MALLOC(size) task_malloc(size)
-#define UPNG_FREE(ptr)    task_free(ptr)
+#define UPNG_MALLOC(size) applib_malloc(size)
+#define UPNG_FREE(ptr)    applib_free(ptr)

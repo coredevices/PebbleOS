@@ -12,11 +12,11 @@
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <host/ble_gap.h>
-#include <kernel/pbl_malloc.h>
 #include <os/os_mbuf.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -140,7 +140,7 @@ static void prv_handle_connection_event(struct ble_gap_event *event) {
     // If the address is not resolved, pairing is gonna happen.
     // Trigger name read to have it ready for the pairing confirmation.
     memset(s_device_name, 0, sizeof(s_device_name));
-    uint16_t *conn_handle = kernel_malloc_check(sizeof(*conn_handle));
+    uint16_t *conn_handle = pbl_malloc_check(sizeof(*conn_handle));
     *conn_handle = event->connect.conn_handle;
     nimble_gattc_op_queue_push(prv_device_name_read_op_start, conn_handle);
   }
@@ -201,25 +201,24 @@ static void prv_handle_enc_change_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
-  if (event->conn_update.status != 0) {
-    PBL_LOG_ERR("Connection parameters update failed: 0x%04x", (uint16_t)event->conn_update.status);
-    return;
-  }
-
   struct ble_gap_conn_desc desc;
   if (ble_gap_conn_find(event->conn_update.conn_handle, &desc) != 0) {
     PBL_LOG_ERR("prv_handle_conn_params_updated_event: Failed to find connection descriptor");
     return;
   }
 
-  PBL_LOG_INFO(
-      "Connection parameters updated: "
-      "itvl=%u ms, latency=%u, spvn timeout=%u ms",
-      desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
-      desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+  if (event->conn_update.status != 0) {
+    PBL_LOG_ERR("Connection parameters update failed: 0x%04x", (uint16_t)event->conn_update.status);
+  } else {
+    PBL_LOG_INFO(
+        "Connection parameters updated: "
+        "itvl=%u ms, latency=%u, spvn timeout=%u ms",
+        desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
+        desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
+  }
 
   struct pbl_bt_conn_update_complete_event conn_params_update_event = {
-    .status = PBL_BT_HCI_STATUS_SUCCESS,
+    .status = nimble_hs_status_to_hci(event->conn_update.status),
   };
   nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
   nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);

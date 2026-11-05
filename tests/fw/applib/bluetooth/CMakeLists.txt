@@ -5,6 +5,6 @@ pbl_clar_test(test_ble_ad_parse
   MODULES rand
   SOURCES
     fw/applib/bluetooth/ble_ad_parse.c
-    fw/system/hexdump.c
+    subsys/logging/hexdump.c
     tests/fakes/fake_rtc.c
 )

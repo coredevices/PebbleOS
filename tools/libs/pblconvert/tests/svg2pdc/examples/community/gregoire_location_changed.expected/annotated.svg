@@ -15,7 +15,7 @@
       <pdc:annotation description="Element contains unsupported curved command(s).">
         <pdc:highlight y="56.58" x="45.15" height="6.06" width="5.68"/>
       </pdc:annotation>
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="62.65" x="45.15" details="Invalid point: (45.15, 62.65). Used closest supported coordinate: (45.125, 62.625)"/>
         <pdc:highlight y="56.59" x="50.84" details="Invalid point: (50.84, 56.59). Used closest supported coordinate: (50.875, 56.625)"/>
         <pdc:highlight y="56.46" x="66.75" details="Invalid point: (66.75, 56.46). Used closest supported coordinate: (66.75, 56.5)"/>
@@ -25,7 +25,7 @@
       </pdc:annotation>
     </path>
     <path d="M 23.12727,60.28064 7.05584,22.24493 l 0,-13.57143 8.39286,-7.67858 15.71429,0.17857 7.85713,7.85715 0,13.21428 z" id="path4551" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="61.72" x="58.99" details="Invalid point: (58.99, 61.72). Used closest supported coordinate: (59.0, 61.75)"/>
         <pdc:highlight y="23.68" x="42.92" details="Invalid point: (42.92, 23.68). Used closest supported coordinate: (42.875, 23.625)"/>
         <pdc:highlight y="10.11" x="42.92" details="Invalid point: (42.92, 10.11). Used closest supported coordinate: (42.875, 10.125)"/>
@@ -36,26 +36,26 @@
       </pdc:annotation>
     </path>
     <circle cx="0" cy="0" r="7" transform="translate(23.12727,16.35206)" id="circle20" style="fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="17.79" x="58.99" details="Invalid point: (58.99, 17.79). Used closest supported coordinate: (59.0, 18.0)"/>
       </pdc:annotation>
     </circle>
     <path d="m 6.17529,40.24432 -8.75,0 0,0" id="path4571" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="41.68" x="42.04" details="Invalid point: (42.04, 41.68). Used closest supported coordinate: (42.0, 41.625)"/>
         <pdc:highlight y="41.68" x="33.29" details="Invalid point: (33.29, 41.68). Used closest supported coordinate: (33.25, 41.625)"/>
         <pdc:highlight y="41.68" x="33.29" details="Invalid point: (33.29, 41.68). Used closest supported coordinate: (33.25, 41.625)"/>
       </pdc:annotation>
     </path>
     <path d="m -7.21756,40.24432 -8.57143,0 -5.53572,-6.07143" id="path4573" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="41.68" x="28.64" details="Invalid point: (28.64, 41.68). Used closest supported coordinate: (28.625, 41.625)"/>
         <pdc:highlight y="41.68" x="20.07" details="Invalid point: (20.07, 41.68). Used closest supported coordinate: (20.125, 41.625)"/>
         <pdc:highlight y="35.61" x="14.54" details="Invalid point: (14.54, 35.61). Used closest supported coordinate: (14.5, 35.625)"/>
       </pdc:annotation>
     </path>
     <path d="m -23.82471,31.31575 -8.75,-8.21429 0,0 0.17857,0" id="path4575" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="32.75" x="12.04" details="Invalid point: (12.04, 32.75). Used closest supported coordinate: (12.0, 32.75)"/>
         <pdc:highlight y="24.54" x="3.29" details="Invalid point: (3.29, 24.54). Used closest supported coordinate: (3.25, 24.5)"/>
         <pdc:highlight y="24.54" x="3.29" details="Invalid point: (3.29, 24.54). Used closest supported coordinate: (3.25, 24.5)"/>
@@ -63,43 +63,43 @@
       </pdc:annotation>
     </path>
     <path d="m -34.36042,18.45861 0.17857,-7.85715" id="path4577" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="19.89" x="1.50" details="Invalid point: (1.50, 19.89). Used closest supported coordinate: (1.5, 19.875)"/>
         <pdc:highlight y="12.04" x="1.68" details="Invalid point: (1.68, 12.04). Used closest supported coordinate: (1.625, 12.0)"/>
       </pdc:annotation>
     </path>
     <path d="m -32.57471,6.13718 4.64286,-4.10714" id="path4579" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="7.57" x="3.29" details="Invalid point: (3.29, 7.57). Used closest supported coordinate: (3.25, 7.625)"/>
         <pdc:highlight y="3.47" x="7.93" details="Invalid point: (7.93, 3.47). Used closest supported coordinate: (7.875, 3.5)"/>
       </pdc:annotation>
     </path>
     <path d="m -23.82471,0.24432 8.57143,-0.17857" id="path4581" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="1.68" x="12.04" details="Invalid point: (12.04, 1.68). Used closest supported coordinate: (12.0, 1.625)"/>
         <pdc:highlight y="1.50" x="20.61" details="Invalid point: (20.61, 1.50). Used closest supported coordinate: (20.625, 1.5)"/>
       </pdc:annotation>
     </path>
     <path d="m -11.50328,2.03004 4.64286,4.46428" id="path4583" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="3.47" x="24.36" details="Invalid point: (24.36, 3.47). Used closest supported coordinate: (24.375, 3.5)"/>
         <pdc:highlight y="7.93" x="29.00" details="Invalid point: (29.00, 7.93). Used closest supported coordinate: (29.0, 7.875)"/>
       </pdc:annotation>
     </path>
     <path d="m -5.25328,10.78004 0,7.67857" id="path4585" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="12.22" x="30.61" details="Invalid point: (30.61, 12.22). Used closest supported coordinate: (30.625, 12.25)"/>
         <pdc:highlight y="19.90" x="30.61" details="Invalid point: (30.61, 19.90). Used closest supported coordinate: (30.625, 19.875)"/>
       </pdc:annotation>
     </path>
     <path d="m -7.21756,23.10146 -8.21429,8.21429" id="path4587" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="24.54" x="28.64" details="Invalid point: (28.64, 24.54). Used closest supported coordinate: (28.625, 24.5)"/>
         <pdc:highlight y="32.75" x="20.43" details="Invalid point: (20.43, 32.75). Used closest supported coordinate: (20.375, 32.75)"/>
       </pdc:annotation>
     </path>
     <path d="m -24.18185,39.17289 -7.32143,7.14286" id="path4589" style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
-      <pdc:annotation description="Element is expressed with unsupported coordinate(s)." href="https://pebbleos.readthedocs.io/en/latest/reference/formats/pdc.html#coordinate-grid">
+      <pdc:annotation description="Element is expressed with unsupported coordinate(s).">
         <pdc:highlight y="40.61" x="11.68" details="Invalid point: (11.68, 40.61). Used closest supported coordinate: (11.625, 40.625)"/>
         <pdc:highlight y="47.75" x="4.36" details="Invalid point: (4.36, 47.75). Used closest supported coordinate: (4.375, 47.75)"/>
       </pdc:annotation>

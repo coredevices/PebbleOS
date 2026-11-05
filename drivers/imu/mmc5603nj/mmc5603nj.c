@@ -23,9 +23,7 @@ static const struct pbl_mmc5603nj *s_dev;
 static int prv_read(uint8_t reg, uint8_t *data, uint32_t len) {
   int ret;
 
-  pbl_i2c_use(&s_dev->i2c);
-  ret = pbl_i2c_read_register_block(&s_dev->i2c, reg, len, data);
-  pbl_i2c_release(&s_dev->i2c);
+  ret = pbl_i2c_burst_read(&s_dev->i2c, reg, data, len);
   if (ret != 0) {
     PBL_LOG_ERR("Could not read register 0x%02x (%d)", reg, ret);
   }
@@ -36,9 +34,7 @@ static int prv_read(uint8_t reg, uint8_t *data, uint32_t len) {
 static int prv_write(uint8_t reg, uint8_t val) {
   int ret;
 
-  pbl_i2c_use(&s_dev->i2c);
-  ret = pbl_i2c_write_register(&s_dev->i2c, reg, val);
-  pbl_i2c_release(&s_dev->i2c);
+  ret = pbl_i2c_reg_write_byte(&s_dev->i2c, reg, val);
   if (ret != 0) {
     PBL_LOG_ERR("Could not write register 0x%02x (%d)", reg, ret);
   }

@@ -21,6 +21,7 @@
 #include <pbl/util/struct.h>
 #include <pbl/util/trig.h>
 
+#include <applib/app_malloc.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gpath.h>
 #include <applib/graphics/graphics.h>
@@ -28,7 +29,6 @@
 #include <applib/ui/kino/kino_layer.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/window.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <popups/timeline/peek_animations.h>
@@ -463,8 +463,9 @@ static void prv_show_day_sep(TimelineLayer *timeline_layer, bool slide) {
   TimelineResourceInfo timeline_res = {
     .res_id = TIMELINE_RESOURCE_DAY_SEPARATOR,
   };
-  peek_layer_set_icon_with_size(&timeline_layer->day_separator, &timeline_res,
-                                TimelineResourceSizeLarge, icon_from);
+  peek_layer_set_icon_with_size_invert(&timeline_layer->day_separator, &timeline_res,
+                                       TimelineResourceSizeLarge, icon_from,
+                                       system_theme_is_dark_mode());
 
   if (slide) {
     const bool align_in_frame = true;
@@ -654,8 +655,12 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   TimelineLayer *timeline_layer = (TimelineLayer *)layer;
   const GRect *bounds = &layer->bounds;
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
   graphics_fill_rect(ctx, &(GRect){.size = bounds->size});
+
+  // The theme can change while the timeline is open, so keep the stored text color in sync. This
+  // only marks the day separator dirty when the color actually changes.
+  peek_layer_set_text_color(&timeline_layer->day_separator, system_theme_get_fg_color());
 
   AnimationProgress progress;
   if (timeline_layer->animating_intro_or_exit &&
@@ -663,7 +668,7 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
     const GPoint offset = {
       PEEK_ANIMATIONS_SPEED_LINES_OFFSET_X, interpolate_int64_linear(progress, 0, -DISP_ROWS)
     };
-    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
     peek_animations_draw_timeline_speed_lines(ctx, offset);
   }
 
@@ -965,6 +970,7 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
   };
   peek_layer_set_icon(&layer->day_separator, &timeline_res);
   peek_layer_set_background_color(&layer->day_separator, GColorClear);
+  peek_layer_set_text_color(&layer->day_separator, system_theme_get_fg_color());
   peek_layer_set_dot_diameter(&layer->day_separator, style->day_sep_dot_diameter);
   layer_set_hidden((Layer *)&layer->day_separator, true);
   layer_add_child((Layer *)layer, (Layer *)&layer->day_separator);

@@ -5,7 +5,8 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/kernel/malloc.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/time.h>
@@ -14,7 +15,6 @@
 #include <pbl/util/units.h>
 
 #include <clar_asserts.h>
-#include <kernel/pbl_malloc.h>
 
 #define WEATHER_PREFS_DATA_SIZE        \
   (sizeof(SerializedWeatherAppPrefs) + \
@@ -134,13 +134,13 @@ static WeatherDBEntry *prv_create_entry(const WeatherDBEntry *base_entry, char *
   data_size = strlen(location) + strlen(phrase) + sizeof(uint16_t) * 2; // One for each string
 
   const size_t entry_size = sizeof(WeatherDBEntry) + data_size;
-  WeatherDBEntry *entry = task_zalloc_check(entry_size);
+  WeatherDBEntry *entry = pbl_zalloc_check(entry_size);
   *entry = *base_entry;
   // The strings are appended after the FULL current struct, so the record must
   // carry the current minor — a lower minor moves the strings offset forward.
   entry->minor_version = WEATHER_DB_CURRENT_MINOR_VERSION;
   entry->pstring16s.data_size = data_size;
-  entry->last_update_time_utc = rtc_get_time();
+  entry->last_update_time_utc = pbl_realtime();
 
   weather_shared_data_write_strings(&entry->pstring16s, location, phrase);
 
@@ -165,14 +165,14 @@ static void prv_initialize_entries(void) {
 }
 
 void weather_shared_data_init(void) {
-  rtc_set_time(1461765790); // 2016-04-27T14:03:10+00:00
+  pbl_realtime_set(1461765790); // 2016-04-27T14:03:10+00:00
   prv_initialize_entries();
 }
 
 void weather_shared_data_cleanup(void) {
   for (int i = 0; i < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; i++) {
     if (s_entries[i]) {
-      task_free(s_entries[i]);
+      pbl_free(s_entries[i]);
       s_entries[i] = nullptr;
     }
   }

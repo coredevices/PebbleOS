@@ -11,11 +11,10 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/button_id.h>
-#include <pbl/drivers/rtc.h>
 #include <pbl/services/touch/touch_event.h>
 
 #include <applib/graphics/gtypes.h>
+#include <applib/ui/click.h>
 #include <applib/ui/layer.h>
 
 //! Touch-nav routing bridge (per-task).
@@ -179,7 +178,7 @@ typedef struct TouchNavState {
   //! every later vtable call until the gesture ends.
   TouchNavWidgetNode *latched_target;
   GPoint gesture_base;
-  RtcTicks last_update_ticks;
+  uint64_t last_update_ticks;
   bool declined;
 
   //! Route latched on the most recent Touchdown.

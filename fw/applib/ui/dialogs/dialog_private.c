@@ -14,6 +14,7 @@
 #include <applib/ui/window_stack.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/system_theme.h>
 
 static void prv_app_timer_callback(void *context) {
   Dialog *dialog = context;
@@ -26,12 +27,19 @@ void dialog_init(Dialog *dialog, const char *dialog_name) {
   *dialog = (Dialog){};
 
   window_init(&dialog->window, dialog_name);
-  window_set_background_color(&dialog->window, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+  dialog_set_colors_follow_theme(dialog, true /* dimmed */);
 
   // initial values
   dialog->icon_anim_direction = DialogIconAnimationFromRight;
   dialog->destroy_on_pop = true;
-  dialog->text_color = GColorBlack;
+}
+
+void dialog_apply_text_color(Dialog *dialog, TextLayer *text_layer) {
+  if (dialog->text_follows_theme) {
+    text_layer_set_text_color_follows_theme(text_layer);
+  } else {
+    text_layer_set_text_color(text_layer, dialog->text_color);
+  }
 }
 
 void dialog_pop(Dialog *dialog) {
@@ -161,6 +169,10 @@ void dialog_add_status_bar_layer(Dialog *dialog, const GRect *status_layer_frame
   StatusBarLayer *status_layer = &dialog->status_layer;
   status_bar_layer_init(status_layer);
   layer_set_frame(&status_layer->layer, status_layer_frame);
-  status_bar_layer_set_colors(status_layer, GColorClear, dialog->text_color);
+  if (dialog->text_follows_theme) {
+    status_bar_layer_set_colors_follow_theme(status_layer, true /* transparent_background */);
+  } else {
+    status_bar_layer_set_colors(status_layer, GColorClear, dialog->text_color);
+  }
   layer_add_child(&dialog->window.layer, &status_layer->layer);
 }

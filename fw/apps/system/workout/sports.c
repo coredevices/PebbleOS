@@ -15,8 +15,8 @@
 
 #include <applib/app.h>
 #include <applib/app_comm.h>
+#include <applib/app_malloc.h>
 #include <applib/app_sync/app_sync.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 enum {
@@ -232,8 +232,6 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     case WorkoutMetricType_AvgCadence:
     case WorkoutMetricType_ActiveCalories:
     case WorkoutMetricType_AvgHr:
-    case WorkoutMetricType_SpO2:
-    case WorkoutMetricType_SpO2Min:
     case WorkoutMetricType_HrZone0Time:
     case WorkoutMetricType_HrZone1Time:
     case WorkoutMetricType_HrZone2Time:

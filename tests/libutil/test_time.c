@@ -104,3 +104,35 @@ void test_time__breakdown_keeps_zone_fields(void) {
   cl_assert_equal_i(tm.tm_gmtoff, 3600);
   cl_assert_equal_s(tm.tm_zone, "CET");
 }
+
+void test_time__time32_round_trip(void) {
+  cl_assert_equal_i(pbl_time_to_time32(0), 0);
+  cl_assert_equal_i(pbl_time_to_time32(INT32_MAX), INT32_MAX);
+  cl_assert_equal_i(pbl_time_to_time32(-1), -1);
+  cl_assert_equal_i(pbl_time_to_time32((time_t)INT32_MAX + 1), INT32_MIN);
+}
+
+void test_time__time32_sign_extends_before_2038(void) {
+  const time_t now = 1790870400;
+  cl_assert(pbl_time_from_time32(0, now) == 0);
+  cl_assert(pbl_time_from_time32(-1, now) == -1);
+  cl_assert(pbl_time_from_time32(INT32_MIN, now) == INT32_MIN);
+  cl_assert(pbl_time_from_time32(INT32_MAX, now) == INT32_MAX);
+  cl_assert(pbl_time_from_time32(INT32_MAX, INT32_MAX) == INT32_MAX);
+}
+
+void test_time__time32_closest_after_2038(void) {
+  if (sizeof(time_t) < 8) {
+    return;
+  }
+  const time_t now = (time_t)INT32_MAX + 1000;
+  // time() after the wrap comes back as now.
+  cl_assert(pbl_time_from_time32(pbl_time_to_time32(now), now) == now);
+  // A minute ago, before the wrap.
+  cl_assert(pbl_time_from_time32(INT32_MAX - 60, now) == (time_t)INT32_MAX - 60);
+  // A day ahead.
+  cl_assert(pbl_time_from_time32(pbl_time_to_time32(now + 86400), now) == now + 86400);
+  // Far past 2106.
+  const time_t later = (time_t)5000000000LL;
+  cl_assert(pbl_time_from_time32(pbl_time_to_time32(later - 3600), later) == later - 3600);
+}

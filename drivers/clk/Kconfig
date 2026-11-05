@@ -7,9 +7,62 @@ config CLK
       Clock controller class (pbl/drivers/clk.h), selected by the drivers
       that provide clocks.
 
+config CLK_SHELL
+    bool "Clock shell commands"
+    default DRIVER_SHELL
+    depends on SHELL && CLK
+    help
+      The clk shell command: list clocks and rates, and sample, hold and
+      inspect calibrated clocks.
+
 config CLK_SF32LB
     bool "SiFli SF32LB RCC"
     default y if SOC_SF32LB52
     select CLK
     help
       Clock controller of the SiFli SF32LB52 HPSYS RCC.
+
+config CLK_CAL
+    bool
+    select CLK
+    help
+      Calibrated clocks (pbl/drivers/clk/cal.h), selected by the drivers
+      of oscillators whose rate is measured against a reference.
+
+if CLK_CAL
+
+module = CLK_CAL
+module-str = Calibrated clocks
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # CLK_CAL
+
+config CLK_SF32LB_RC10K
+    bool "SiFli SF32LB52 RC10K calibration"
+    default y if SOC_SF32LB52
+    select CLK_CAL
+    help
+      The SF32LB52 RC10K low-power oscillator as a clock whose rate is
+      calibrated against the 48 MHz crystal.
+
+if CLK_SF32LB_RC10K
+
+config CLK_SF32LB_RC10K_CAL_GATE_CYCLES
+    int "RC10K calibration gate (RC10K cycles)"
+    range 200 65535
+    default 2000
+    help
+      Length of each RC10K measurement against the 48 MHz crystal. The
+      RC10K frequency noise averages down as the square root of the gate
+      time; the crystal and the low-power domain stay on for the gate.
+
+config CLK_SF32LB_RC10K_CAL_PERIOD_S
+    int "RC10K calibration period (seconds)"
+    range 10 3600
+    default 60
+
+module = CLK_SF32LB_RC10K
+module-str = SF32LB52 RC10K calibration
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # CLK_SF32LB_RC10K

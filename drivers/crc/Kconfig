@@ -11,7 +11,7 @@ config CRC_SF32LB
 
 config CRC_SHELL
     bool "Shell commands"
-    default y
+    default DRIVER_SHELL
     depends on SHELL && CRC_HW_ACCEL
     help
       The crc shell command, to check the CRC unit against the software

@@ -5,19 +5,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/persist.h>
-#include <pbl/services/settings/settings_file.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
-#include <kernel/pbl_malloc.h>
 #include <process_management/app_install_manager.h>
+#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 
@@ -27,7 +28,7 @@ PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 typedef struct PersistStore {
   ListNode list_node;
   Uuid uuid;
-  SettingsFile file;
+  struct pbl_settings_file file;
   bool file_open;
   uint8_t usage_count; //!< How many clients are using this store
 } PersistStore;
@@ -57,15 +58,15 @@ static inline void prv_unlock(void) {
 }
 
 // "ps" prefix + 32 hex chars (16-byte UUID) + NUL.
-#define PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000102030405060708090a0b0c0d0e0f")
+#define PERSIST_FILE_NAME_MAX_LENGTH sizeof("/ps000102030405060708090a0b0c0d0e0f")
 
 static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) {
   // Persist files are named "ps<uuid-hex>". The "ps" prefix indicates the file
-  // is in SettingsFile format. The UUID is stable across reinstalls, so the
+  // is in struct pbl_settings_file format. The UUID is stable across reinstalls, so the
   // file follows the app regardless of its (volatile) AppInstallId.
   const uint8_t *b = (const uint8_t *)uuid;
   return snprintf(name, buf_len,
-                  "ps%02x%02x%02x%02x%02x%02x%02x%02x"
+                  "/ps%02x%02x%02x%02x%02x%02x%02x%02x"
                   "%02x%02x%02x%02x%02x%02x%02x%02x",
                   b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12],
                   b[13], b[14], b[15]);
@@ -78,7 +79,7 @@ status_t persist_service_delete_file(const Uuid *uuid) {
   if (FAILED(status)) {
     return status;
   }
-  return pfs_remove(name);
+  return status_from_errno(pbl_fs_unlink(name));
 }
 
 size_t persist_service_get_max_size(void) {
@@ -91,8 +92,8 @@ size_t persist_service_get_max_size(void) {
 // scheme and removes the now-unused pmap.
 // TODO: remove this migration once all devices have upgraded.
 
-#define LEGACY_PMAP_FILE_NAME               "pmap"
-#define LEGACY_PERSIST_FILE_NAME_MAX_LENGTH sizeof("ps000001")
+#define LEGACY_PMAP_FILE_NAME               "/pmap"
+#define LEGACY_PERSIST_FILE_NAME_MAX_LENGTH sizeof("/ps000001")
 #define LEGACY_PMAP_EOF_ID                  ((int)(~0))
 
 typedef struct PBL_PACKED {
@@ -105,62 +106,71 @@ typedef struct PBL_PACKED {
 } LegacyPersistMapField;
 
 static status_t prv_copy_file(const char *from, const char *to) {
-  int from_fd = pfs_open(from, OP_FLAG_READ, 0, 0);
-  if (from_fd < 0) {
-    return from_fd;
+  struct pbl_fs_file from_file;
+  int ret = pbl_fs_open(&from_file, from, PBL_FS_O_READ);
+  if (ret < 0) {
+    return status_from_errno(ret);
   }
 
-  size_t size = pfs_get_file_size(from_fd);
-  int to_fd = pfs_open(to, OP_FLAG_WRITE, FILE_TYPE_STATIC, size);
-  if (to_fd < 0) {
-    pfs_close(from_fd);
-    return to_fd;
+  size_t size = pbl_fs_size(&from_file);
+  struct pbl_fs_file to_file;
+  ret = pbl_fs_open(&to_file, to, PBL_FS_O_WRITE | PBL_FS_O_CREATE);
+  if (ret == 0) {
+    ret = (pbl_fs_size(&to_file) == 0) ? pbl_fs_truncate(&to_file, size) : -EEXIST;
+    if (ret < 0) {
+      pbl_fs_close(&to_file);
+    }
+  }
+
+  if (ret < 0) {
+    pbl_fs_close(&from_file);
+    return status_from_errno(ret);
   }
 
   status_t rv = S_SUCCESS;
   const size_t chunk_size = 128;
-  uint8_t *buf = kernel_malloc(chunk_size);
+  uint8_t *buf = pbl_malloc(chunk_size);
   if (buf == nullptr) {
     rv = E_OUT_OF_MEMORY;
   } else {
     size_t remaining = size;
     while (remaining > 0) {
       size_t n = MIN(remaining, chunk_size);
-      if ((rv = pfs_read(from_fd, buf, n)) != (int)n) {
-        rv = (rv >= 0) ? E_INTERNAL : rv;
+      if ((ret = pbl_fs_read(&from_file, buf, n)) != (int)n) {
+        rv = (ret >= 0) ? E_INTERNAL : status_from_errno(ret);
         break;
       }
-      if ((rv = pfs_write(to_fd, buf, n)) != (int)n) {
-        rv = (rv >= 0) ? E_INTERNAL : rv;
+      if ((ret = pbl_fs_write(&to_file, buf, n)) != (int)n) {
+        rv = (ret >= 0) ? E_INTERNAL : status_from_errno(ret);
         break;
       }
       remaining -= n;
     }
-    kernel_free(buf);
+    pbl_free(buf);
   }
 
-  pfs_close(from_fd);
-  pfs_close(to_fd);
+  pbl_fs_close(&from_file);
+  pbl_fs_close(&to_file);
   return rv;
 }
 
 static void prv_migrate_legacy_persist_files(void) {
-  int fd = pfs_open(LEGACY_PMAP_FILE_NAME, OP_FLAG_READ, 0, 0);
-  if (fd < 0) {
+  struct pbl_fs_file file;
+  if (pbl_fs_open(&file, LEGACY_PMAP_FILE_NAME, PBL_FS_O_READ) < 0) {
     // No legacy map, nothing to migrate.
     return;
   }
 
-  pfs_seek(fd, sizeof(LegacyPersistMapHeader), FSeekSet);
+  pbl_fs_seek(&file, sizeof(LegacyPersistMapHeader), PBL_FS_SEEK_SET);
 
   LegacyPersistMapField field;
-  while (pfs_read(fd, (uint8_t *)&field, sizeof(field)) == (int)sizeof(field)) {
+  while (pbl_fs_read(&file, (uint8_t *)&field, sizeof(field)) == (int)sizeof(field)) {
     if (field.id == LEGACY_PMAP_EOF_ID) {
       break;
     }
 
     char old_name[LEGACY_PERSIST_FILE_NAME_MAX_LENGTH];
-    snprintf(old_name, sizeof(old_name), "ps%06d", field.id);
+    snprintf(old_name, sizeof(old_name), "/ps%06d", field.id);
 
     char new_name[PERSIST_FILE_NAME_MAX_LENGTH];
     if (FAILED(prv_get_file_name(new_name, sizeof(new_name), &field.uuid))) {
@@ -168,12 +178,12 @@ static void prv_migrate_legacy_persist_files(void) {
     }
 
     if (PASSED(prv_copy_file(old_name, new_name))) {
-      pfs_remove(old_name);
+      pbl_fs_unlink(old_name);
     }
   }
 
-  pfs_close(fd);
-  pfs_remove(LEGACY_PMAP_FILE_NAME);
+  pbl_fs_close(&file);
+  pbl_fs_unlink(LEGACY_PMAP_FILE_NAME);
 }
 
 // Designed to be called once during reset
@@ -185,28 +195,28 @@ void persist_service_init(void) {
 // must call persist_service_client_open() to create/open the store during its
 // startup and persist_service_client_close() during its shutdown.
 //
-// The SettingsFile is opened/created lazily. A persist file will not be
+// The struct pbl_settings_file is opened/created lazily. A persist file will not be
 // created for an app unless it calls a persist function.
 //
 // The persist service mutex is locked when this function is called. It will
 // only be unlocked after a call to persist_service_unlock(). While the global
 // persist service mutex is currently used, the API is designed such that a
 // per-file mutex could be used without altering the callers.
-SettingsFile *persist_service_lock_and_get_store(const Uuid *uuid) {
+struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   prv_lock();
   PersistStore *store = prv_find_open_store(uuid);
   PBL_ASSERTN(store);
   if (!store->file_open) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
     PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
-    PBL_ASSERTN(PASSED(settings_file_open_growable(
-        &store->file, filename, PERSIST_STORAGE_MAX_SPACE, PERSIST_STORAGE_INITIAL_ALLOC)));
+    PBL_ASSERTN(PASSED(pbl_settings_open_growable(&store->file, filename, PERSIST_STORAGE_MAX_SPACE,
+                                                  PERSIST_STORAGE_INITIAL_ALLOC)));
     store->file_open = true;
   }
   return &store->file;
 }
 
-void persist_service_unlock_store(SettingsFile *store) {
+void persist_service_unlock_store(struct pbl_settings_file *store) {
   prv_unlock();
 }
 
@@ -221,7 +231,7 @@ void persist_service_client_open(const Uuid *uuid) {
     if (store) {
       store->usage_count++;
     } else {
-      store = kernel_malloc_check(sizeof(*store));
+      store = pbl_malloc_check(sizeof(*store));
       *store = (PersistStore){
         .uuid = *uuid,
         .usage_count = 1,
@@ -245,10 +255,10 @@ void persist_service_client_close(const Uuid *uuid) {
 
     if (--store->usage_count == 0) {
       if (store->file_open) {
-        settings_file_close(&store->file);
+        pbl_settings_close(&store->file);
       }
       list_remove(&store->list_node, &s_client_stores /* &head */, nullptr /* &tail */);
-      kernel_free(store);
+      pbl_free(store);
     }
   }
   prv_unlock();

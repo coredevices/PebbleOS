@@ -45,7 +45,7 @@ battery usage compared to a debug build.
 Manufacturing-only functionality in the PRF build.
 
 Options for debugging and logging are listed with
-{doc}`../development/debugging` and {doc}`../subsystems/logging`. To browse
+{doc}`../development/debugging/index` and {doc}`../subsystems/logging`. To browse
 and change every symbol interactively, use {doc}`menuconfig`.
 
 ## Options

@@ -7,8 +7,8 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/util/math.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/graphics/graphics.h>
-#include <kernel/pbl_malloc.h>
 
 //! The max text node traversal draw depth.
 //! The deepest layout as of this commit is 4, belonging to the calendar layout glance time.
@@ -127,7 +127,7 @@ static GAxis prv_get_opposite_axis(GAxis axis) {
 }
 
 GTextNodeText *graphics_text_node_create_text(size_t buffer_size) {
-  GTextNodeText *text_node = task_zalloc(sizeof(GTextNodeText) + buffer_size);
+  GTextNodeText *text_node = applib_zalloc(sizeof(GTextNodeText) + buffer_size);
   if (text_node) {
     *text_node = (GTextNodeText){
       .node.type = GTextNodeType_Text,
@@ -141,7 +141,7 @@ GTextNodeText *graphics_text_node_create_text(size_t buffer_size) {
 GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
                                                              GTextNodeTextDynamicUpdate update,
                                                              void *user_data) {
-  GTextNodeTextDynamic *text_node = task_zalloc(sizeof(GTextNodeTextDynamic) + buffer_size);
+  GTextNodeTextDynamic *text_node = applib_zalloc(sizeof(GTextNodeTextDynamic) + buffer_size);
   if (text_node) {
     *text_node = (GTextNodeTextDynamic){
       .text.node.type = GTextNodeType_TextDynamic,
@@ -156,7 +156,7 @@ GTextNodeTextDynamic *graphics_text_node_create_text_dynamic(size_t buffer_size,
 }
 
 static GTextNodeContainer *prv_create_container(GTextNodeType type, size_t size, size_t max_nodes) {
-  GTextNodeContainer *container_node = task_zalloc(size + max_nodes * sizeof(GTextNode *));
+  GTextNodeContainer *container_node = applib_zalloc(size + max_nodes * sizeof(GTextNode *));
   if (container_node) {
     *container_node = (GTextNodeContainer){
       .node.type = type,
@@ -179,7 +179,7 @@ GTextNodeVertical *graphics_text_node_create_vertical(size_t max_nodes) {
 }
 
 GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback, void *user_data) {
-  GTextNodeCustom *custom_node = task_malloc(sizeof(GTextNodeCustom));
+  GTextNodeCustom *custom_node = applib_malloc(sizeof(GTextNodeCustom));
   if (custom_node) {
     *custom_node = (GTextNodeCustom){
       .node.type = GTextNodeType_Custom,
@@ -193,7 +193,7 @@ GTextNodeCustom *graphics_text_node_create_custom(GTextNodeDrawCallback callback
 
 static void prv_destroy_text_node_base(GTextNode *node) {
   if (node && node->free_on_destroy) {
-    task_free(node);
+    applib_free(node);
   }
 }
 
@@ -538,7 +538,7 @@ static void prv_draw_text_node_tree(GTextNode *root_node, GContext *gcontext, co
   //      / /
   //    / /  \ ___ Descent loop caused by the nested for loop. With nested containers, the algorithm
   //               can descend multiple times if a container is the last child in a container.
-  GTextNodeDrawContext *contexts = task_zalloc_check(sizeof(GTextNodeDrawContext) * MAX_DRAW_DEPTH);
+  GTextNodeDrawContext *contexts = applib_zalloc(sizeof(GTextNodeDrawContext) * MAX_DRAW_DEPTH);
   // Draw contexts are initialized by the parent container. Since this is the first level, level 0,
   // it must be initialized on its own.
   prv_init_draw_context(&contexts[0], root_node, gcontext, box, config, render);
@@ -596,7 +596,7 @@ static void prv_draw_text_node_tree(GTextNode *root_node, GContext *gcontext, co
   if (size_out) {
     *size_out = *contexts[0].size_out;
   }
-  task_free(contexts);
+  applib_free(contexts);
 }
 
 static void prv_draw_text_node(GTextNode *node, GContext *ctx, const GRect *box,

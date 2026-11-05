@@ -19,6 +19,7 @@ Two classes carry design notes worth reading before changing them:
 
 device_model.md
 crc/index.md
+clk/index.md
 ```
 
 The {apidoc}`API reference <drivers>` documents every driver class.

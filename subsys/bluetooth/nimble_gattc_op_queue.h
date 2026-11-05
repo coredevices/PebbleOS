@@ -23,7 +23,7 @@
 typedef int (*NimbleGattClientOpStartFn)(void *ctx);
 
 //! Enqueues an operation. ctx must be heap-allocated (or NULL); it is
-//! kernel_free()'d when the op completes, fails to start, or is dropped.
+//! pbl_free()'d when the op completes, fails to start, or is dropped.
 void nimble_gattc_op_queue_push(NimbleGattClientOpStartFn start, void *ctx);
 
 //! Signals completion of the running operation and kicks the next one.

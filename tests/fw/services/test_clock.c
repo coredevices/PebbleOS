@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/fs/fs.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/timezone_database.h>
 #include <pbl/services/vibes/vibe_score.h>
@@ -20,6 +20,7 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_events.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
@@ -38,7 +39,7 @@ static bool s_prefs_24h_style;
 void test_clock__initialize(void) {
   // Setup resources
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
+  fake_pfs_mount();
   load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME, false);
   resource_init();
 }
@@ -72,13 +73,13 @@ static void prv_clock_reset(int32_t gmtoff) {
   tzinfo.dst_start = tzinfo.dst_end = 0;
   tzinfo.tm_gmtoff = gmtoff;
   tzinfo.timezone_id = 0;
-  rtc_set_timezone(&tzinfo);
+  tz_storage_save(&tzinfo);
   clock_init();
   clock_set_24h_style(false);
 }
 static void prv_set_current_time(struct pbl_tm new_time) {
   time_t secs = pbl_mktime(&new_time);
-  rtc_set_time(secs);
+  pbl_realtime_set(secs);
 }
 
 // Fakes
@@ -135,8 +136,8 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 void test_clock__hourly_chime_waits_for_resources_after_boot(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
-  rtc_set_time(1262304000); // 2010-01-01 00:00:00 UTC, divisible by 3600
+  tz_storage_clear();
+  pbl_realtime_set(1262304000); // 2010-01-01 00:00:00 UTC, divisible by 3600
   clock_init();
 
   s_should_vibrate = true;
@@ -156,15 +157,15 @@ void test_clock__hourly_chime_first_minute_boundary_after_boot(void) {
   static const time_t hour_timestamp = 1262304000 + PBL_SEC_PER_HOUR;
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
-  rtc_set_time(hour_timestamp - 20);
+  tz_storage_clear();
+  pbl_realtime_set(hour_timestamp - 20);
   clock_init();
 
   s_should_vibrate = true;
   s_vibe_create_count = 0;
   clock_hourly_chime_arm();
 
-  rtc_set_time(hour_timestamp + 1);
+  pbl_realtime_set(hour_timestamp + 1);
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
@@ -172,8 +173,8 @@ void test_clock__hourly_chime_first_minute_boundary_after_boot(void) {
 void test_clock__hourly_chime_only_on_the_hour(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
-  rtc_set_time(1262304000);
+  tz_storage_clear();
+  pbl_realtime_set(1262304000);
   clock_init();
 
   s_should_vibrate = true;
@@ -182,11 +183,11 @@ void test_clock__hourly_chime_only_on_the_hour(void) {
   clock_hourly_chime_arm();
   cl_assert_equal_i(s_vibe_create_count, 0);
 
-  rtc_set_time(1262304000 + PBL_SEC_PER_MIN + 42); // not near the hour
+  pbl_realtime_set(1262304000 + PBL_SEC_PER_MIN + 42); // not near the hour
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
-  rtc_set_time(1262304000 + PBL_SEC_PER_HOUR); // top of the hour
+  pbl_realtime_set(1262304000 + PBL_SEC_PER_HOUR); // top of the hour
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
@@ -195,15 +196,15 @@ void test_clock__hourly_chime_ignores_clock_adjustment_into_first_minute(void) {
   static const time_t hour_timestamp = 1262304000 + PBL_SEC_PER_HOUR;
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
-  rtc_set_time(hour_timestamp - PBL_SEC_PER_MIN);
+  tz_storage_clear();
+  pbl_realtime_set(hour_timestamp - PBL_SEC_PER_MIN);
   clock_init();
 
   s_should_vibrate = true;
   s_vibe_create_count = 0;
   clock_hourly_chime_arm();
 
-  rtc_set_time(hour_timestamp + 42);
+  pbl_realtime_set(hour_timestamp + 42);
   prv_watch_dst((void *)false);
   cl_assert_equal_i(s_vibe_create_count, 0);
 }
@@ -211,8 +212,8 @@ void test_clock__hourly_chime_ignores_clock_adjustment_into_first_minute(void) {
 void test_clock__hourly_chime_respects_vibrate_setting(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
-  rtc_set_time(1262304000);
+  tz_storage_clear();
+  pbl_realtime_set(1262304000);
   clock_init();
 
   s_should_vibrate = false;
@@ -226,18 +227,18 @@ void test_clock__hourly_chime_respects_vibrate_setting(void) {
 void test_clock__basic_no_timezone_set_time(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
+  tz_storage_clear();
   clock_init();
 
   static const time_t jan1st_noon_2005 = 1104580800;
   clock_set_time(jan1st_noon_2005);
-  cl_assert_equal_i(rtc_get_time(), jan1st_noon_2005);
+  cl_assert_equal_i(pbl_realtime(), jan1st_noon_2005);
 }
 
 void test_clock__basic_timezone_gmtoffset(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
+  tz_storage_clear();
 
   static const time_t jan1st_noon_2005 = 1104580800;
   static const int32_t min_gmtoff = -12 * PBL_SEC_PER_HOUR;
@@ -253,18 +254,18 @@ void test_clock__basic_timezone_gmtoffset(void) {
     prv_clock_reset(0);
 
     tzinfo.tm_gmtoff = gmtoff;
-    rtc_set_timezone(&tzinfo);
+    tz_storage_save(&tzinfo);
     clock_init();
     clock_set_time(jan1st_noon_2005);
-    cl_assert_equal_i(rtc_get_time(), jan1st_noon_2005);
-    cl_assert_equal_i(time_utc_to_local(rtc_get_time()), jan1st_noon_2005 + gmtoff);
+    cl_assert_equal_i(pbl_realtime(), jan1st_noon_2005);
+    cl_assert_equal_i(time_utc_to_local(pbl_realtime()), jan1st_noon_2005 + gmtoff);
   }
 }
 
 void test_clock__basic_timezone_dst(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
+  tz_storage_clear();
 
   static const time_t jan1st_noon_2005 = 1104580800;
   static const int32_t min_dstoff = -12 * PBL_SEC_PER_HOUR;
@@ -281,14 +282,14 @@ void test_clock__basic_timezone_dst(void) {
 
     tzinfo.dst_start = dstoff;
     tzinfo.dst_end = tzinfo.dst_start + dstrange;
-    rtc_set_timezone(&tzinfo);
+    tz_storage_save(&tzinfo);
     clock_init();
     clock_set_time(jan1st_noon_2005);
-    cl_assert_equal_i(rtc_get_time(), jan1st_noon_2005);
-    if (tzinfo.dst_start <= rtc_get_time() && rtc_get_time() < tzinfo.dst_end) {
-      cl_assert_equal_i(time_utc_to_local(rtc_get_time()), jan1st_noon_2005 + time_get_dstoffset());
+    cl_assert_equal_i(pbl_realtime(), jan1st_noon_2005);
+    if (tzinfo.dst_start <= pbl_realtime() && pbl_realtime() < tzinfo.dst_end) {
+      cl_assert_equal_i(time_utc_to_local(pbl_realtime()), jan1st_noon_2005 + time_get_dstoffset());
     } else {
-      cl_assert_equal_i(time_utc_to_local(rtc_get_time()), jan1st_noon_2005);
+      cl_assert_equal_i(time_utc_to_local(pbl_realtime()), jan1st_noon_2005);
     }
   }
 }
@@ -518,7 +519,7 @@ void prv_update_dstrule_timestamps_by_dstzone_id(TimezoneInfo *tz_info, time_t u
 void test_clock__dstzone_rule_check(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
+  tz_storage_clear();
   clock_init();
 
   static const time_t jan1st_noon_2015 = 1420113600;
@@ -569,7 +570,7 @@ void test_clock__next_monday(void) {
     .dst_start = 1394330400, // Sun, 09 Mar 2014 02:00
     .dst_end = 1414893600    // Sun, 02 Nov 2014 02:00
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(jan_1);
   cl_assert_equal_i(clock_to_timestamp(MONDAY, 17, 30), pbl_mktime(&jan_6));
 }
@@ -577,7 +578,7 @@ void test_clock__next_monday(void) {
 void test_clock__clock_to_timestamp(void) {
   s_prefs_24h_style = false;
   fake_rtc_init(0, 0);
-  rtc_timezone_clear();
+  tz_storage_clear();
 
   static const time_t jan1st_noon_2005 = 1104580800;
   static const int32_t min_gmtoff = -12 * PBL_SEC_PER_HOUR;
@@ -592,12 +593,12 @@ void test_clock__clock_to_timestamp(void) {
     prv_clock_reset(0);
 
     tzinfo.tm_gmtoff = gmtoff;
-    rtc_set_timezone(&tzinfo);
+    tz_storage_save(&tzinfo);
     clock_init();
     clock_set_time(jan1st_noon_2005);
-    cl_assert_equal_i(rtc_get_time(), jan1st_noon_2005);
+    cl_assert_equal_i(pbl_realtime(), jan1st_noon_2005);
 
-    time_t t = rtc_get_time();
+    time_t t = pbl_realtime();
     struct pbl_tm now;
     pbl_localtime_r(&t, &now);
     time_t timestamp = clock_to_timestamp(TODAY, now.tm_hour, now.tm_min + 1);
@@ -635,7 +636,7 @@ void test_clock__cross_dst(void) {
     .dst_end = 1446343200,   // Sun, 01 Nov 2015 02:00
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(oct_31);
   cl_assert_equal_i(clock_to_timestamp(SATURDAY, 0, 15), pbl_mktime(&nov_7));
 }
@@ -670,7 +671,7 @@ void test_clock__today(void) {
     .dst_end = 1478397600,   // Sun, 06 Nov 2016 02:00
     .tm_gmtoff = -5 * PBL_SEC_PER_HOUR,
   };
-  time_util_update_timezone(&tz_info);
+  time_util_update_timezone(&tz_info, 0, 0);
   prv_set_current_time(may_30);
   cl_assert_equal_i(clock_to_timestamp(TODAY, 5, 0), pbl_mktime(&may_31));
 }
@@ -681,7 +682,7 @@ void test_clock__time_until_one_hour_relative(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 10th 2015, 14:00:00
   // Now + two hours
@@ -691,112 +692,112 @@ void test_clock__time_until_one_hour_relative(void) {
   const int MAX_RELATIVE_HRS = 1;
 
   // June 10th 2015, 12:00:00 (T-02:00:00)
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 2:00 PM", time_buf);
 
   // June 8th 2015, 14:00:00 (T-48:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 8th 2015, 23:59:58 (T-38:00:02)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (14 * PBL_SEC_PER_HOUR) - 2);
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (14 * PBL_SEC_PER_HOUR) - 2);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 8th 2015, 23:59:59 (T-38:00:01)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (14 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (14 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 9th 2015, 14:00:00 (T-24:00:00)
-  rtc_set_time(event_time - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 9th 2015, 23:59:58 (T-14:00:02)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR) - 2);
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR) - 2);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 9th 2015, 23:59:59 (T-14:00:01)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Wed,  2:00 PM", time_buf);
 
   // June 10th 2015, 00:00:00 (T-14:00:00)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 2:00 PM", time_buf);
 
   // June 10th 2015, 00:00:01 (T-13:59:59)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR) + 1);
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 2:00 PM", time_buf);
 
   // June 10th 2015, 12:59:59 (T-01:00:01)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 2:00 PM", time_buf);
 
   // June 10th 2015, 13:00:00 (T-01:00:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 H", time_buf);
 
   // June 10th 2015, 13:00:01 (T-00:59:59)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR) + 1);
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 H", time_buf);
 
   // June 10th 2015, 13:00:59 (T-00:59:01)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR) + 59);
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 H", time_buf);
 
   // June 10th 2015, 13:01:00 (T-00:59:00)
-  rtc_set_time(event_time - (59 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (59 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 59 MIN", time_buf);
 
   // June 10th 2015, 13:01:59 (T-00:58:01)
-  rtc_set_time(event_time - (58 * PBL_SEC_PER_MIN) - 1);
+  pbl_realtime_set(event_time - (58 * PBL_SEC_PER_MIN) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 59 MIN", time_buf);
 
   // June 10th 2015, 13:30:00 (T-00:30:00)
-  rtc_set_time(event_time - (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 30 MIN", time_buf);
 
   // June 10th 2015, 13:30:29 (T-00:29:31)
-  rtc_set_time(event_time - (30 * PBL_SEC_PER_MIN) + 29);
+  pbl_realtime_set(event_time - (30 * PBL_SEC_PER_MIN) + 29);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 30 MIN", time_buf);
 
   // June 10th 2015, 13:30:30 (T-00:29:30)
-  rtc_set_time(event_time - (30 * PBL_SEC_PER_MIN) + 30);
+  pbl_realtime_set(event_time - (30 * PBL_SEC_PER_MIN) + 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 30 MIN", time_buf);
 
   // June 10th 2015, 13:30:59 (T-00:29:01)
-  rtc_set_time(event_time - (30 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time - (30 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 30 MIN", time_buf);
 
   // June 10th 2015, 13:59:00 (T-00:01:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 MIN", time_buf);
 
   // June 10th 2015, 13:59:59 (T-00:00:01)
-  rtc_set_time(event_time - 1);
+  pbl_realtime_set(event_time - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 MIN", time_buf);
 
   // June 10th 2015, 14:00:00 (T-00:00:00)
-  rtc_set_time(event_time);
+  pbl_realtime_set(event_time);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("NOW", time_buf);
 }
@@ -807,7 +808,7 @@ void test_clock__time_until_twenty_four_hour_relative(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 12th 2015, 12:00
   // Now + two days
@@ -817,107 +818,107 @@ void test_clock__time_until_twenty_four_hour_relative(void) {
   const int MAX_RELATIVE_HRS = 24;
 
   // June 10th 2015, 12:00:00 (T-48:00:00)
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 5th 2015, 12:00:00 (T-7DAY-00:00:00)
-  rtc_set_time(jun10th_noon_2015 - (7 * PBL_SEC_PER_DAY));
+  pbl_realtime_set(jun10th_noon_2015 - (7 * PBL_SEC_PER_DAY));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun 12, 12:00 PM", time_buf);
 
   // June 5th 2015, 12:00:01 (T-7DAY+00:00:01)
-  rtc_set_time(jun10th_noon_2015 - (7 * PBL_SEC_PER_DAY) + 1);
+  pbl_realtime_set(jun10th_noon_2015 - (7 * PBL_SEC_PER_DAY) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun 12, 12:00 PM", time_buf);
 
   // June 10th 2015, 23:59:59 (T-2DAY+11:59:59)
-  rtc_set_time(jun10th_noon_2015 + (12 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(jun10th_noon_2015 + (12 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 00:00:00 (T-1DAY-12:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 12:00:00 (T-24:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY);
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 12:00:01 (T-23:59:59)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY + 1);
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 23:59:29 (T-12:00:31)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) - 31);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) - 31);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 23:59:30 (T-12:00:30)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) - 30);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) - 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 11th 2015, 23:59:59 (T-12:00:01)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Fri, 12:00 PM", time_buf);
 
   // June 12th 2015, 00:00:00 (T-12:00:00)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 12 H", time_buf);
 
   // June 12th 2015, 00:00:01 (T-11:59:59)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + 1);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 12 H", time_buf);
 
   // June 12th 2015, 00:29:29 (T-11:30:31)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 29);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 29);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 12 H", time_buf);
 
   // June 12th 2015, 00:29:30 (T-11:30:30)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 30);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 12 H", time_buf);
 
   // June 12th 2015, 00:29:59 (T-11:30:01)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + (29 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 12 H", time_buf);
 
   // June 12th 2015, 00:30:00 (T-11:30:00)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 11 H", time_buf);
 
   // June 12th 2015, 00:30:01 (T-11:29:59)
-  rtc_set_time(event_time - (12 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN) + 1);
+  pbl_realtime_set(event_time - (12 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 11 H", time_buf);
 
   // June 12th 2015, 00:59:59 (T-11:00:01)
-  rtc_set_time(event_time - (11 * PBL_SEC_PER_HOUR) - 1);
+  pbl_realtime_set(event_time - (11 * PBL_SEC_PER_HOUR) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 11 H", time_buf);
 
   // June 12th 2015, 01:00:00 (T-11:00:00)
-  rtc_set_time(event_time - (11 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (11 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 11 H", time_buf);
 
   // June 12th 2015, 01:00:01 (T-10:59:59)
-  rtc_set_time(event_time - (11 * PBL_SEC_PER_HOUR) + 1);
+  pbl_realtime_set(event_time - (11 * PBL_SEC_PER_HOUR) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 11 H", time_buf);
 
   // June 12th 2015, 01:30:00 (T-10:30:00)
-  rtc_set_time(event_time - (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (11 * PBL_SEC_PER_HOUR) + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 10 H", time_buf);
 }
@@ -928,7 +929,7 @@ void test_clock__time_past_two_hour_relative(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 12:00:00
   // Now - one day
@@ -938,122 +939,122 @@ void test_clock__time_past_two_hour_relative(void) {
   const int MAX_RELATIVE_HRS = 2;
 
   // June 9th 2015, 12:00:00 (T+00:00:00)
-  rtc_set_time(event_time);
+  pbl_realtime_set(event_time);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("NOW", time_buf);
 
   // June 9th 2015, 12:00:59 (T+00:00:59)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN) - 1);
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN) - 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("NOW", time_buf);
 
   // June 9th 2015, 12:01:00 (T+00:01:00)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 MIN AGO", time_buf);
 
   // June 9th 2015, 12:05:00 (T+00:05:00)
-  rtc_set_time(event_time + (5 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (5 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("5 MIN AGO", time_buf);
 
   // June 9th 2015, 12:10:00 (T+00:10:00)
-  rtc_set_time(event_time + (10 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (10 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("10 MIN AGO", time_buf);
 
   // June 9th 2015, 12:10:00 (T+00:10:01)
-  rtc_set_time(event_time + (10 * PBL_SEC_PER_MIN) + 1);
+  pbl_realtime_set(event_time + (10 * PBL_SEC_PER_MIN) + 1);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("10 MIN AGO", time_buf);
 
   // June 9th 2015, 12:10:30 (T+00:10:30)
-  rtc_set_time(event_time + (10 * PBL_SEC_PER_MIN) + 30);
+  pbl_realtime_set(event_time + (10 * PBL_SEC_PER_MIN) + 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("10 MIN AGO", time_buf);
 
   // June 9th 2015, 12:10:59 (T+00:10:59)
-  rtc_set_time(event_time + (10 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + (10 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("10 MIN AGO", time_buf);
 
   // June 9th 2015, 12:59:29 (T+00:59:29)
-  rtc_set_time(event_time + (59 * PBL_SEC_PER_MIN) + 29);
+  pbl_realtime_set(event_time + (59 * PBL_SEC_PER_MIN) + 29);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("59 MIN AGO", time_buf);
 
   // June 9th 2015, 12:59:30 (T+00:59:30)
-  rtc_set_time(event_time + (59 * PBL_SEC_PER_MIN) + 30);
+  pbl_realtime_set(event_time + (59 * PBL_SEC_PER_MIN) + 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("59 MIN AGO", time_buf);
 
   // June 9th 2015, 12:59:58 (T+00:59:58)
-  rtc_set_time(event_time + (59 * PBL_SEC_PER_MIN) + 58);
+  pbl_realtime_set(event_time + (59 * PBL_SEC_PER_MIN) + 58);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("59 MIN AGO", time_buf);
 
   // June 9th 2015, 12:59:59 (T+00:59:59)
-  rtc_set_time(event_time + (59 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + (59 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("59 MIN AGO", time_buf);
 
   // June 9th 2015, 13:00:00 (T+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 H AGO", time_buf);
 
   // June 9th 2015, 13:29:29 (T+01:29:29)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (29 * PBL_SEC_PER_MIN) + 29);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (29 * PBL_SEC_PER_MIN) + 29);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 H AGO", time_buf);
 
   // June 9th 2015, 13:29:30 (T+01:29:30)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (29 * PBL_SEC_PER_MIN) + 30);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (29 * PBL_SEC_PER_MIN) + 30);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 H AGO", time_buf);
 
   // June 9th 2015, 13:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 13:59:59 (T+01:59:59)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (59 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (59 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 14:00:00 (T+02:00:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("12:00 PM", time_buf);
 
   // June 9th 2015, 23:59:59 (T+11:59:59)
-  rtc_set_time(event_time + (11 * PBL_SEC_PER_HOUR) + (59 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + (11 * PBL_SEC_PER_HOUR) + (59 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("12:00 PM", time_buf);
 
   // June 10th 2015, 00:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 12:00 PM", time_buf);
 
   // June 10th 2015, 11:00:00 (T+23:00:00)
-  rtc_set_time(event_time + (23 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (23 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 12:00 PM", time_buf);
 
   // June 10th 2015, 13:00:00 (T+1DAY+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_DAY + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + PBL_SEC_PER_DAY + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 12:00 PM", time_buf);
 
   // June 11th 2015, 13:00:00 (T+2DAY+01:00:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Tue, 12:00 PM", time_buf);
 
   // June 16th 2015, 13:00:00 (T+7DAY+01:00:00)
-  rtc_set_time(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun  9, 12:00 PM", time_buf);
 }
@@ -1064,7 +1065,7 @@ void test_clock__time_past_twenty_four_hour_relative(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 12:00:00
   // Now - one day
@@ -1074,32 +1075,32 @@ void test_clock__time_past_twenty_four_hour_relative(void) {
   const int MAX_RELATIVE_HRS = 24;
 
   // June 9th 2015, 13:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 13:59:59 (T+01:59:59)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (59 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (59 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 14:00:00 (T+02:00:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 23:59:59 (T+11:59:59)
-  rtc_set_time(event_time + (11 * PBL_SEC_PER_HOUR) + (59 * PBL_SEC_PER_MIN) + 59);
+  pbl_realtime_set(event_time + (11 * PBL_SEC_PER_HOUR) + (59 * PBL_SEC_PER_MIN) + 59);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("12 H AGO", time_buf);
 
   // June 10th 2015, 00:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 12:00 PM", time_buf);
 
   // June 10th 2015, 11:00:00 (T+23:00:00)
-  rtc_set_time(event_time + (23 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (23 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 12:00 PM", time_buf);
 }
@@ -1110,7 +1111,7 @@ void test_clock__time_12h_style(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1121,62 +1122,62 @@ void test_clock__time_12h_style(void) {
 
   clock_set_24h_style(false);
   // June 9th 2015, 17:00:00 (T+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 H AGO", time_buf);
 
   // June 9th 2015, 17:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 16:01:00 (T+00:01:00)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 MIN AGO", time_buf);
 
   // June 9th 2015, 16:02:00 (T+00:02:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 MIN AGO", time_buf);
 
   // June 9th 2015, 15:00:00 (T-01:00:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 H", time_buf);
 
   // June 9th 2015, 14:00:00 (T-02:00:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 2 H", time_buf);
 
   // June 9th 2015, 15:59:00 (T-00:01:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 MIN", time_buf);
 
   // June 9th 2015, 15:58:00 (T-00:02:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 2 MIN", time_buf);
 
   // June 10th 2015, 04:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday,  4:00 PM", time_buf);
 
   // June 9th 2015, 02:00:00 (T-14:00:00)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 4:00 PM", time_buf);
 
   // June 8th 2015, 16:00:00 (T-48:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Tue,  4:00 PM", time_buf);
 
   // June 16th 2015, 17:00:00 (T+7DAY+01:00:00)
-  rtc_set_time(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun  9,  4:00 PM", time_buf);
 }
@@ -1187,7 +1188,7 @@ void test_clock__time_24h_style(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1198,62 +1199,62 @@ void test_clock__time_24h_style(void) {
 
   clock_set_24h_style(true);
   // June 9th 2015, 17:00:00 (T+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR);
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 H AGO", time_buf);
 
   // June 9th 2015, 17:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 H AGO", time_buf);
 
   // June 9th 2015, 16:01:00 (T+00:01:00)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 MIN AGO", time_buf);
 
   // June 9th 2015, 16:02:00 (T+00:02:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 MIN AGO", time_buf);
 
   // June 9th 2015, 15:00:00 (T-01:00:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 H", time_buf);
 
   // June 9th 2015, 14:00:00 (T-02:00:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 2 H", time_buf);
 
   // June 9th 2015, 15:59:00 (T-00:01:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 1 MIN", time_buf);
 
   // June 9th 2015, 15:58:00 (T-00:02:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_MIN));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("IN 2 MIN", time_buf);
 
   // June 10th 2015, 04:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 16:00", time_buf);
 
   // June 9th 2015, 02:00:00 (T-14:00:00)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("16:00", time_buf);
 
   // June 8th 2015, 16:00:00 (T-48:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Tue, 16:00", time_buf);
 
   // June 16th 2015, 17:00:00 (T+7DAY+01:00:00)
-  rtc_set_time(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time_capitalized(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun  9, 16:00", time_buf);
 }
@@ -1264,7 +1265,7 @@ void test_clock__time_12h_lower_style(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1275,62 +1276,62 @@ void test_clock__time_12h_lower_style(void) {
 
   clock_set_24h_style(false);
   // June 9th 2015, 17:00:00 (T+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR);
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("An hour ago", time_buf);
 
   // June 9th 2015, 17:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 hours ago", time_buf);
 
   // June 9th 2015, 16:01:00 (T+00:01:00)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 minute ago", time_buf);
 
   // June 9th 2015, 16:02:00 (T+00:02:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 minutes ago", time_buf);
 
   // June 9th 2015, 15:00:00 (T-01:00:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 1 hour", time_buf);
 
   // June 9th 2015, 14:00:00 (T-02:00:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 2 hours", time_buf);
 
   // June 9th 2015, 15:59:00 (T-00:01:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 1 minute", time_buf);
 
   // June 9th 2015, 15:58:00 (T-00:02:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 2 minutes", time_buf);
 
   // June 10th 2015, 04:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday,  4:00 PM", time_buf);
 
   // June 9th 2015, 02:00:00 (T-14:00:00)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s(" 4:00 PM", time_buf);
 
   // June 8th 2015, 16:00:00 (T-48:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Tue,  4:00 PM", time_buf);
 
   // June 16th 2015, 17:00:00 (T+7DAY+01:00:00)
-  rtc_set_time(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun  9,  4:00 PM", time_buf);
 }
@@ -1341,7 +1342,7 @@ void test_clock__time_24h_lower_style(void) {
   const int jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1352,62 +1353,62 @@ void test_clock__time_24h_lower_style(void) {
 
   clock_set_24h_style(true);
   // June 9th 2015, 17:00:00 (T+01:00:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR);
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR);
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("An hour ago", time_buf);
 
   // June 9th 2015, 17:30:00 (T+01:30:00)
-  rtc_set_time(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + PBL_SEC_PER_HOUR + (30 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 hours ago", time_buf);
 
   // June 9th 2015, 16:01:00 (T+00:01:00)
-  rtc_set_time(event_time + (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (1 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("1 minute ago", time_buf);
 
   // June 9th 2015, 16:02:00 (T+00:02:00)
-  rtc_set_time(event_time + (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time + (2 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("2 minutes ago", time_buf);
 
   // June 9th 2015, 15:00:00 (T-01:00:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 1 hour", time_buf);
 
   // June 9th 2015, 14:00:00 (T-02:00:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 2 hours", time_buf);
 
   // June 9th 2015, 15:59:00 (T-00:01:00)
-  rtc_set_time(event_time - (1 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (1 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 1 minute", time_buf);
 
   // June 9th 2015, 15:58:00 (T-00:02:00)
-  rtc_set_time(event_time - (2 * PBL_SEC_PER_MIN));
+  pbl_realtime_set(event_time - (2 * PBL_SEC_PER_MIN));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("In 2 minutes", time_buf);
 
   // June 10th 2015, 04:00:00 (T+12:00:00)
-  rtc_set_time(event_time + (12 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (12 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Yesterday, 16:00", time_buf);
 
   // June 9th 2015, 02:00:00 (T-14:00:00)
-  rtc_set_time(event_time - (14 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - (14 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("16:00", time_buf);
 
   // June 8th 2015, 16:00:00 (T-48:00:00)
-  rtc_set_time(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time - PBL_SEC_PER_DAY - (24 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Tue, 16:00", time_buf);
 
   // June 16th 2015, 17:00:00 (T+7DAY+01:00:00)
-  rtc_set_time(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
+  pbl_realtime_set(event_time + (7 * PBL_SEC_PER_DAY) + (1 * PBL_SEC_PER_HOUR));
   clock_get_until_time(time_buf, sizeof(time_buf), event_time, MAX_RELATIVE_HRS);
   cl_assert_equal_s("Jun  9, 16:00", time_buf);
 }
@@ -1418,7 +1419,7 @@ void test_clock__month_named_date(void) {
   const time_t jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1453,7 +1454,7 @@ void test_clock__month_named_abbrev_date(void) {
   const time_t jun10th_noon_2015 = 1433937600;
 
   prv_clock_reset(0);
-  rtc_set_time(jun10th_noon_2015);
+  pbl_realtime_set(jun10th_noon_2015);
 
   // Our test event is at June 9th 2015, 16:00:00
   // Now - one day
@@ -1501,9 +1502,9 @@ void test_clock__relative_daypart_string(void) {
   const int feb24_2015 = 1424753940;
 
   prv_clock_reset(0);
-  rtc_set_time(feb24_2015);
+  pbl_realtime_set(feb24_2015);
 
-  time_t timestamp = rtc_get_time();
+  time_t timestamp = pbl_realtime();
 
   // The following are for "Powered 'til"
   // Which is read as "Powered 'til at least" ...
@@ -1573,9 +1574,9 @@ void test_clock__relative_daypart_string(void) {
   const int oct31_2015 = 1446328800;
 
   prv_clock_reset(0);
-  rtc_set_time(oct31_2015);
+  pbl_realtime_set(oct31_2015);
 
-  timestamp = rtc_get_time();
+  timestamp = pbl_realtime();
 
   // (10pm today) time between 9pm and tomorrow 9am is tonight
   daypart_string = clock_get_relative_daypart_string(timestamp, 0 /* hours_in_the_future */);
@@ -1589,9 +1590,9 @@ void test_clock__relative_daypart_string(void) {
   const int jan1_2016 = 1451682000;
 
   prv_clock_reset(0);
-  rtc_set_time(jan1_2016);
+  pbl_realtime_set(jan1_2016);
 
-  timestamp = rtc_get_time();
+  timestamp = pbl_realtime();
 
   // (9pm today) time between 9pm and tomorrow 9am is tonight
   daypart_string = clock_get_relative_daypart_string(timestamp, 0 /* hours_in_the_future */);
@@ -1616,4 +1617,54 @@ void test_clock__hour_and_minute_add(void) {
   clock_hour_and_minute_add(&hour, &minute, -30);
   cl_assert_equal_i(hour, 23);
   cl_assert_equal_i(minute, 45);
+}
+
+// Once a DST period ends the stored period becomes next year's. Times within the period that
+// just ended must still read as DST, also after a reboot.
+static void prv_check_prev_dst_kept(uint8_t dst_id, time_t in_prev) {
+  fake_rtc_init(0, in_prev);
+  tz_storage_clear();
+  clock_init();
+
+  TimezoneInfo prev = {
+    .tm_zone = "TST",
+    .dst_id = dst_id,
+    .tm_gmtoff = s_dst_correct_values[dst_id][2],
+  };
+  prv_update_dstrule_timestamps_by_dstzone_id(&prev, in_prev);
+  cl_assert(prev.dst_start <= in_prev && in_prev < prev.dst_end);
+
+  time_t now = prev.dst_end + PBL_SEC_PER_HOUR;
+  TimezoneInfo tz_info = prev;
+  prv_update_dstrule_timestamps_by_dstzone_id(&tz_info, now);
+  cl_assert(tz_info.dst_start > prev.dst_end);
+  prv_update_time_info_and_generate_event(&now, &tz_info);
+
+  cl_assert(time_get_isdst(prev.dst_start));
+  cl_assert(time_get_isdst(prev.dst_end - 1));
+  cl_assert(!time_get_isdst(prev.dst_start - 1));
+  cl_assert(!time_get_isdst(prev.dst_end));
+  cl_assert(!time_get_isdst(now));
+
+  // Reboot: the stored timezone only holds the next period until the previous one is loaded
+  clock_init();
+  cl_assert(!time_get_isdst(prev.dst_end - 1));
+  clock_init_prev_dst();
+  cl_assert(time_get_isdst(prev.dst_start));
+  cl_assert(time_get_isdst(prev.dst_end - 1));
+  cl_assert(!time_get_isdst(prev.dst_end));
+  cl_assert(!time_get_isdst(now));
+
+  tz_storage_clear();
+  time_util_update_timezone(&(TimezoneInfo){}, 0, 0);
+}
+
+void test_clock__prev_dst_kept_northern(void) {
+  // Canada, 2026-11-01 04:00 UTC: local midnight while still on EDT
+  prv_check_prev_dst_kept(8, 1793505600);
+}
+
+void test_clock__prev_dst_kept_southern(void) {
+  // Chatham, DST spans the new year: 2026-01-15 00:00 UTC
+  prv_check_prev_dst_kept(9, 1768435200);
 }

@@ -2,10 +2,9 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "112",
+  "revision" : "113",
   "version" : "2.0",
   "files": [
-    "include/pbl/drivers/button_id.h",
     "fw/system/status_codes.h",
     "fw/applib/dict.h",
     "include/pbl/util/list.h",
@@ -28,6 +27,7 @@
     "fw/applib/app_worker.h",
     "fw/applib/backlight_service.h",
     "fw/applib/battery_state_service.h",
+    "fw/applib/dark_mode_service.h",
     "fw/applib/alarm_service.h",
     "fw/applib/compass_service.h",
     "fw/applib/connection_service.h",
@@ -261,6 +261,7 @@
             }, {
               "type": "function",
               "name": "clock_to_timestamp",
+              "implName": "clock_to_timestamp_time32",
               "addedRevision": "24"
             }, {
               "type": "function",
@@ -428,6 +429,33 @@
                   "type": "function",
                   "name": "battery_state_service_peek",
                   "addedRevision": "0"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "DarkModeService",
+              "appOnly": true,
+              "addedRevision": "113",
+              "exports": [
+                {
+                  "type": "type",
+                  "name": "DarkModeHandler",
+                  "addedRevision": "113"
+                }, {
+                  "type": "function",
+                  "name": "dark_mode_service_subscribe",
+                  "addedRevision": "113",
+                  "stubReturn": "void"
+                }, {
+                  "type": "function",
+                  "name": "dark_mode_service_unsubscribe",
+                  "addedRevision": "113",
+                  "stubReturn": "void"
+                }, {
+                  "type": "function",
+                  "name": "dark_mode_service_peek",
+                  "addedRevision": "113",
+                  "stubReturn": "false"
                 }
               ]
             }, {
@@ -4513,6 +4541,11 @@
               "type": "function",
               "name": "mic_capture_is_active",
               "addedRevision": "111"
+            }, {
+              "type": "function",
+              "name": "layer_get_mic_accessory_bounds",
+              "addedRevision": "112",
+              "stubReturn": "false"
             }
           ]
         }, {
@@ -4724,23 +4757,23 @@
             }, {
               "type": "function",
               "name": "localtime",
-              "implName": "pbl_override_localtime",
+              "implName": "pbl_override_localtime_time32",
               "sortName": "gmtime",
               "addedRevision": "31"
             }, {
               "type": "function",
               "name": "gmtime",
-              "implName": "pbl_override_gmtime",
+              "implName": "pbl_override_gmtime_time32",
               "addedRevision": "0"
             }, {
               "type": "function",
               "name": "mktime",
-              "implName": "pbl_override_mktime",
+              "implName": "pbl_override_mktime_time32",
               "addedRevision": "29"
             }, {
               "type": "function",
               "name": "localtime__deprecated",
-              "implName": "pbl_override_gmtime",
+              "implName": "pbl_override_gmtime_time32",
               "deprecated": true,
               "addedRevision": "0"
             }, {
@@ -4768,11 +4801,12 @@
             }, {
               "type": "function",
               "name": "time_ms",
+              "implName": "time_ms_time32",
               "addedRevision": "59"
             }, {
               "type": "function",
               "name": "time_start_of_today",
-              "implName": "sys_time_start_of_today",
+              "implName": "time_start_of_today_time32",
               "addedRevision": "78"
             }
           ]
@@ -4782,25 +4816,25 @@
       "type": "function",
       "name": "malloc",
       "skipDefinition": true,
-      "implName": "task_malloc",
+      "implName": "applib_malloc",
       "addedRevision": "0"
     }, {
       "type": "function",
       "name": "calloc",
       "skipDefinition": true,
-      "implName": "task_calloc",
+      "implName": "applib_calloc",
       "addedRevision": "9"
     }, {
       "type": "function",
       "name": "free",
       "skipDefinition": true,
-      "implName": "task_free",
+      "implName": "applib_free",
       "addedRevision": "0"
     }, {
       "type": "function",
       "name": "realloc",
       "skipDefinition": true,
-      "implName": "task_realloc",
+      "implName": "applib_realloc",
       "addedRevision": "12"
     }, {
       "type": "function",

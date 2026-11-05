@@ -10,7 +10,7 @@ if VIBE
 
 config VIBE_SHELL
     bool "Shell commands"
-    default y
+    default DRIVER_SHELL
     depends on SHELL
     help
       The vibe shell command, to drive and calibrate the motor.

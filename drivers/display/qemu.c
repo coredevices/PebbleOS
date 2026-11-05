@@ -3,146 +3,93 @@
 
 #include <string.h>
 
-#include <pbl/drivers/display/display.h>
-#include <pbl/kernel/assert.h>
+#include <pbl/drivers/display/qemu.h>
+#include <pbl/kernel/mmio.h>
+#include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
-#include <board/board.h>
-
-#define REG32(addr) (*(volatile uint32_t *)(addr))
-
-// Display MMIO register offsets (must match QEMU pebble-display device)
 #define DISP_CTRL       0x000
-#define DISP_STATUS     0x004
-#define DISP_WIDTH      0x008
-#define DISP_HEIGHT     0x00C
-#define DISP_FORMAT     0x010
-#define DISP_FLAGS      0x014
-#define DISP_BRIGHTNESS 0x018
 #define DISP_INT_STATUS 0x01C
-#define DISP_INT_CTRL   0x020
 
-// CTRL register bits
 #define CTRL_ENABLE         (1 << 0)
 #define CTRL_UPDATE_REQUEST (1 << 1)
 
-// STATUS register bits
-#define STATUS_BUSY        (1 << 0)
-#define STATUS_UPDATE_DONE (1 << 1)
-
-// INT bits
-#define INT_UPDATE_DONE_IE      (1 << 0)
 #define INT_UPDATE_DONE_PENDING (1 << 0)
 
-static bool s_enabled;
-static bool s_updating;
-
-void display_init(void) {
-  uint32_t base = DISPLAY->base_addr;
-
-  // Clear any pending interrupts
-  REG32(base + DISP_INT_STATUS) = INT_UPDATE_DONE_PENDING;
-
-  // Enable the display
-  REG32(base + DISP_CTRL) = CTRL_ENABLE;
-  s_enabled = true;
-  s_updating = false;
+static const struct pbl_display_qemu *prv_qemu(const struct pbl_display *disp) {
+  return container_of(disp, const struct pbl_display_qemu, disp);
 }
 
-void display_clear(void) {
-  uint32_t fb_addr = DISPLAY->fb_addr;
-  uint16_t width = DISPLAY->width;
-  uint16_t height = DISPLAY->height;
-
-#if PBL_BW
-  uint32_t fb_size = ROUND_TO_MOD_CEIL_U(width, 32) / 8 * height;
-#else
-  uint32_t fb_size = width * height;
-#endif
-  memset((void *)fb_addr, 0, fb_size);
-
-  // Request the QEMU display to update
-  REG32(DISPLAY->base_addr + DISP_CTRL) |= CTRL_UPDATE_REQUEST;
-}
-
-void display_set_enabled(bool enabled) {
-  uint32_t base = DISPLAY->base_addr;
-  uint32_t ctrl = REG32(base + DISP_CTRL);
-
-  if (enabled) {
-    ctrl |= CTRL_ENABLE;
-  } else {
-    ctrl &= ~CTRL_ENABLE;
-  }
-  REG32(base + DISP_CTRL) = ctrl;
-  s_enabled = enabled;
-}
-
-void display_set_rotated(bool rotated) {
-  // QEMU display does not support rotation
-  (void)rotated;
-}
-
-bool display_update_in_progress(void) {
-  return s_updating;
-}
-
-void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
-  PBL_ASSERTN(nrcb != nullptr);
-  PBL_ASSERTN(uccb != nullptr);
-
-  uint32_t fb_addr = DISPLAY->fb_addr;
-  uint16_t width = DISPLAY->width;
-  DisplayRow row;
-
-  s_updating = true;
-
-  // Iterate through rows provided by the compositor
-#if PBL_BW
-  uint16_t row_bytes = ROUND_TO_MOD_CEIL_U(width, 32) / 8;
-#endif
-  while (nrcb(&row)) {
-#if PBL_BW
-    // 1bpp: copy packed row data directly to QEMU framebuffer
-    volatile uint8_t *dst = (volatile uint8_t *)(fb_addr + (row.address * row_bytes));
-    memcpy((void *)dst, row.data, row_bytes);
-#else
-    // 8bpp: copy row data directly
-    volatile uint8_t *dst = (volatile uint8_t *)(fb_addr + (row.address * width));
-    memcpy((void *)dst, row.data, width);
-#endif
+static uint32_t prv_row_bytes(const struct pbl_display *disp) {
+  if (disp->format == PBL_DISPLAY_FORMAT_MONO) {
+    return ROUND_TO_MOD_CEIL(disp->width, 32U) / 8U;
   }
 
-  // Tell QEMU to refresh the display
-  REG32(DISPLAY->base_addr + DISP_CTRL) |= CTRL_UPDATE_REQUEST;
-
-  s_updating = false;
-
-  // In QEMU the update is immediate, so call the completion callback directly
-  uccb(true);
+  return disp->width;
 }
 
-void display_update_boot_frame(uint8_t *framebuffer) {
-  uint32_t fb_addr = DISPLAY->fb_addr;
-  uint16_t width = DISPLAY->width;
-  uint16_t height = DISPLAY->height;
+static void prv_refresh(const struct pbl_display_qemu *qemu) {
+  pbl_writel(pbl_readl(qemu->base + DISP_CTRL) | CTRL_UPDATE_REQUEST, qemu->base + DISP_CTRL);
+}
 
-#if PBL_BW
-  // Boot splash provides 8bpp data; convert to 1bpp packed for QEMU
-  uint16_t row_bytes = ROUND_TO_MOD_CEIL_U(width, 32) / 8;
-  volatile uint8_t *dst = (volatile uint8_t *)fb_addr;
-  memset((void *)dst, 0, row_bytes * height);
-  for (uint16_t y = 0; y < height; y++) {
-    for (uint16_t x = 0; x < width; x++) {
-      uint8_t pixel = framebuffer[y * width + x];
-      if (pixel != 0xFF) { // Non-white = black pixel
-        dst[y * row_bytes + x / 8] |= (1 << (x & 7));
-      }
-    }
+static int prv_init(const struct pbl_display *disp) {
+  const struct pbl_display_qemu *qemu = prv_qemu(disp);
+
+  pbl_writel(INT_UPDATE_DONE_PENDING, qemu->base + DISP_INT_STATUS);
+  pbl_writel(CTRL_ENABLE, qemu->base + DISP_CTRL);
+
+  return 0;
+}
+
+static int prv_enable(const struct pbl_display *disp) {
+  const struct pbl_display_qemu *qemu = prv_qemu(disp);
+
+  pbl_writel(pbl_readl(qemu->base + DISP_CTRL) | CTRL_ENABLE, qemu->base + DISP_CTRL);
+
+  return 0;
+}
+
+static int prv_disable(const struct pbl_display *disp) {
+  const struct pbl_display_qemu *qemu = prv_qemu(disp);
+
+  pbl_writel(pbl_readl(qemu->base + DISP_CTRL) & ~CTRL_ENABLE, qemu->base + DISP_CTRL);
+
+  return 0;
+}
+
+static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
+  return 0;
+}
+
+static int prv_update(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
+                      uint16_t y0, uint16_t y1) {
+  const struct pbl_display_qemu *qemu = prv_qemu(disp);
+  uint32_t row_bytes = prv_row_bytes(disp);
+
+  for (uint16_t y = y0; y <= y1; y++) {
+    memcpy((void *)(qemu->fb + (y * row_bytes)), &buf->data[y * buf->pitch], row_bytes);
   }
-#else
-  memcpy((void *)fb_addr, framebuffer, width * height);
-#endif
 
-  // Request display refresh
-  REG32(DISPLAY->base_addr + DISP_CTRL) |= CTRL_UPDATE_REQUEST;
+  prv_refresh(qemu);
+  pbl_display_complete(disp, 0);
+
+  return 0;
 }
+
+static int prv_clear(const struct pbl_display *disp) {
+  const struct pbl_display_qemu *qemu = prv_qemu(disp);
+
+  memset((void *)qemu->fb, 0, prv_row_bytes(disp) * disp->height);
+  prv_refresh(qemu);
+
+  return 0;
+}
+
+const struct pbl_display_ops pbl_display_qemu_ops = {
+  .init = prv_init,
+  .enable = prv_enable,
+  .disable = prv_disable,
+  .set_rotated = prv_set_rotated,
+  .update = prv_update,
+  .clear = prv_clear,
+};

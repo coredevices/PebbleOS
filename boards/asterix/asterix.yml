@@ -4,3 +4,5 @@
 runners:
   - openocd
   - nrfutil
+  - probe-rs
+  - phone

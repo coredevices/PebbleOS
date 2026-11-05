@@ -130,9 +130,9 @@ struct PBL_PACKED pbl_bt_conn_params_update_req {
  *
  * @param addr The peer.
  * @param req Requested parameters.
- * @return true if the request was sent.
+ * @return PBL_BT_HCI_STATUS_SUCCESS if the request was sent, otherwise the reason it was not.
  */
-bool pbl_bt_le_connection_parameter_update(const struct pbl_bt_device_internal *addr,
-                                           const struct pbl_bt_conn_params_update_req *req);
+enum pbl_bt_hci_status pbl_bt_le_connection_parameter_update(
+    const struct pbl_bt_device_internal *addr, const struct pbl_bt_conn_params_update_req *req);
 
 /** @} */

@@ -6,12 +6,12 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
-#include <pbl/services/filesystem/pfs.h>
+#include <pbl/fs/fs.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/system_task.h>
+#include <pbl/settings/settings.h>
 
 #include <applib/ui/action_toggle.h>
 #include <clar.h>
@@ -24,6 +24,7 @@
 
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 
@@ -94,16 +95,16 @@ void do_not_disturb_toggle_push(ActionTogglePrompt prompt, bool set_exit_reason)
 
 static void prv_assert_settings_value(const void *key, size_t key_len, const void *expected_value,
                                       size_t value_len) {
-  SettingsFile file;
+  struct pbl_settings_file file;
   char buffer[value_len];
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
-  cl_must_pass(settings_file_get(&file, key, key_len, buffer, value_len));
-  settings_file_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_get(&file, key, key_len, buffer, value_len));
+  pbl_settings_close(&file);
   cl_assert_equal_m(expected_value, buffer, value_len);
 }
 
 static void prv_assert_seconds_until_update(time_t expected) {
-  cl_assert_equal_i(pbl_cron_get_next_execute_time() - rtc_get_time(), expected);
+  cl_assert_equal_i(pbl_cron_get_next_execute_time() - pbl_realtime(), expected);
 }
 
 static void prv_assert_manually_dnd_setting_val(bool expected_value) {
@@ -157,10 +158,10 @@ static bool prv_is_schedule_enabled(unsigned int index) {
 
 void test_do_not_disturb__initialize(void) {
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
-  rtc_set_time(s_thursday_00_00);
+  pbl_realtime_set(s_thursday_00_00);
   alerts_preferences_init();
   pbl_cron_init();
   do_not_disturb_init();
@@ -218,10 +219,10 @@ void test_do_not_disturb__manually_enable(void) {
 //! Simulate the phone writing a pref through settings sync: the record lands in the
 //! settings file first, then the BlobDB insert event is handed to alerts_preferences.
 static void prv_sync_bool_pref_from_phone(const char *key, bool value) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
-  cl_must_pass(settings_file_set(&file, key, strlen(key), &value, sizeof(value)));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_set(&file, key, strlen(key), &value, sizeof(value)));
+  pbl_settings_close(&file);
 
   PebbleBlobDBEvent event = {
     .type = BlobDBEventTypeInsert,
@@ -362,7 +363,7 @@ void test_do_not_disturb__disabling_manual_dnd_should_override_scheduled(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == false); // not in Scheduled mode
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   do_not_disturb_handle_clock_change(); // In scheduled period
 
   do_not_disturb_set_manually_enabled(true); // both ON
@@ -409,12 +410,12 @@ void test_do_not_disturb__disable_manual_dnd_when_scheduled_ends(void) {
   active = do_not_disturb_is_active();
   cl_assert(active == true); // Both ON
 
-  rtc_set_time(s_thursday_12_00);
+  pbl_realtime_set(s_thursday_12_00);
   do_not_disturb_handle_clock_change(); // In scheduled period
   active = do_not_disturb_is_active();
   cl_assert(active == true); // Both ON
 
-  rtc_set_time(s_thursday_13_00);
+  pbl_realtime_set(s_thursday_13_00);
   do_not_disturb_handle_clock_change(); // Out of scheduled period
   active = do_not_disturb_is_active();
   cl_assert(active == false); // Both should be turned off
@@ -434,13 +435,13 @@ void test_do_not_disturb__cron_fires_schedule_boundaries(void) {
   cl_assert(do_not_disturb_is_active() == false);
   prv_assert_seconds_until_update(3600);
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == true);
   prv_assert_seconds_until_update(11.5 * PBL_SEC_PER_HOUR);
 
   do_not_disturb_set_manually_enabled(true);
-  rtc_set_time(s_thursday_13_00);
+  pbl_realtime_set(s_thursday_13_00);
   pbl_cron_wakeup();
   cl_assert(do_not_disturb_is_active() == false);
   cl_assert(do_not_disturb_is_manually_enabled() == false);
@@ -470,7 +471,7 @@ void test_do_not_disturb__change_schedule_while_in_scheduled(void) {
   };
   prv_set_schedule(WeekdaySlot, &schedule_2);
 
-  rtc_set_time(s_thursday_12_00);
+  pbl_realtime_set(s_thursday_12_00);
   do_not_disturb_handle_clock_change(); // Should still be in scheduled period
   cl_assert(do_not_disturb_is_manually_enabled() == false);
   active = do_not_disturb_is_active();
@@ -541,13 +542,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekdaySlot, true);
   prv_set_schedule_enabled(WeekendSlot, true);
 
-  rtc_set_time(s_friday_08_30);
+  pbl_realtime_set(s_friday_08_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Friday 23:00
   prv_assert_seconds_until_update(52200);
 
-  rtc_set_time(s_friday_23_30);
+  pbl_realtime_set(s_friday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 01:00
@@ -555,19 +556,19 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // Friday's period carries on into Saturday
 
-  rtc_set_time(s_saturday_00_30);
+  pbl_realtime_set(s_saturday_00_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 01:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
   prv_assert_seconds_until_update(19800);
 
-  rtc_set_time(s_saturday_10_30);
+  pbl_realtime_set(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Sunday 01:00
@@ -575,13 +576,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   prv_set_schedule_enabled(WeekendSlot, false);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
   prv_assert_seconds_until_update(19800);
 
-  rtc_set_time(s_thursday_00_00);
+  pbl_realtime_set(s_thursday_00_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Thursday 07:00
@@ -601,7 +602,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekendSlot, true);
   prv_set_schedule_enabled(WeekdaySlot, false);
 
-  rtc_set_time(s_thursday_01_00);
+  pbl_realtime_set(s_thursday_01_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Saturday 01:00
@@ -610,7 +611,7 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekendSlot, false);
   prv_set_schedule_enabled(WeekdaySlot, true);
 
-  rtc_set_time(s_saturday_01_30);
+  pbl_realtime_set(s_saturday_01_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 07:00, end of Friday's period
@@ -634,31 +635,31 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
   prv_set_schedule_enabled(WeekdaySlot, true);
   prv_set_schedule_enabled(WeekendSlot, true);
 
-  rtc_set_time(s_friday_23_30);
+  pbl_realtime_set(s_friday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 00:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_saturday_00_00);
+  pbl_realtime_set(s_saturday_00_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Saturday 08:30, end of Friday's period
   prv_assert_seconds_until_update(30600);
 
-  rtc_set_time(s_saturday_10_30);
+  pbl_realtime_set(s_saturday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Sunday 00:00
   prv_assert_seconds_until_update(48600);
 
-  rtc_set_time(s_sunday_9_30);
+  pbl_realtime_set(s_sunday_9_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == true);
   // Sunday 10:00
   prv_assert_seconds_until_update(1800);
 
-  rtc_set_time(s_sunday_10_00);
+  pbl_realtime_set(s_sunday_10_00);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
@@ -666,13 +667,13 @@ void test_do_not_disturb__weekday_weekend_schedule(void) {
 
   // No period starts on Sunday night
 
-  rtc_set_time(s_sunday_23_30);
+  pbl_realtime_set(s_sunday_23_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
   prv_assert_seconds_until_update(82800);
 
-  rtc_set_time(s_monday_10_30);
+  pbl_realtime_set(s_monday_10_30);
   do_not_disturb_handle_clock_change();
   cl_assert(do_not_disturb_is_active() == false);
   // Monday 22:30
@@ -745,17 +746,17 @@ static const int s_wednesday_02_00 = 1426039200;
 static const int s_thursday_02_00 = 1426125600;
 
 static void prv_write_pref(const char *key, const void *value, size_t value_len) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
-  cl_must_pass(settings_file_set(&file, key, strlen(key), value, value_len));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  cl_must_pass(pbl_settings_set(&file, key, strlen(key), value, value_len));
+  pbl_settings_close(&file);
 }
 
 static void prv_delete_pref(const char *key) {
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "notifpref", 1024));
-  settings_file_delete(&file, key, strlen(key));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/notifpref", 1024));
+  pbl_settings_delete(&file, key, strlen(key));
+  pbl_settings_close(&file);
 }
 
 static void prv_sync_pref_from_phone(const char *key, const void *value, size_t value_len) {
@@ -769,7 +770,7 @@ static void prv_sync_pref_from_phone(const char *key, const void *value, size_t 
 }
 
 static void prv_set_time(time_t t) {
-  rtc_set_time(t);
+  pbl_realtime_set(t);
   do_not_disturb_handle_clock_change();
 }
 

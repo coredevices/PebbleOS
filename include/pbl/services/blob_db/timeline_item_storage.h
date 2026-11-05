@@ -5,8 +5,8 @@
 
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/settings/settings_file.h>
 #include <pbl/services/timeline/item.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/uuid.h>
 
 /**
@@ -22,7 +22,7 @@
 /** @brief Timeline item store backed by a settings file. */
 typedef struct {
   /** Backing settings file, kept open between init and deinit. */
-  SettingsFile file;
+  struct pbl_settings_file file;
   /** Serializes access to @ref file. */
   struct pbl_mutex mutex;
   /** Settings file name. */
@@ -48,7 +48,7 @@ typedef bool (*TimelineItemStorageFilterCallback)(SerializedTimelineItemHeader *
  * @warning @c flags and @c status of the stored CommonTimelineItemHeader are inverted and are not
  * restored for the callback.
  */
-typedef SettingsFileEachCallback TimelineItemStorageEachCallback;
+typedef pbl_settings_each_cb_t TimelineItemStorageEachCallback;
 
 /**
  * @brief Callback of timeline_item_storage_delete_with_parent().
@@ -136,8 +136,8 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t 
  * @param[out] item Item; free its buffer with timeline_item_free_allocated_buffer().
  * @return @c S_SUCCESS on success, @c E_INTERNAL if the record cannot be deserialized.
  */
-status_t timeline_item_storage_get_from_settings_record(SettingsFile *file,
-                                                        SettingsRecordInfo *info,
+status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file *file,
+                                                        struct pbl_settings_record *info,
                                                         TimelineItem *item);
 
 /**

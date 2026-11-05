@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
@@ -13,8 +14,6 @@
 #include <pbl/util/testing.h>
 
 #include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-#include <kernel/pbl_malloc.h>
-#include <system/hexdump.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -83,7 +82,7 @@ static void prv_action_system_task_callback(void *data) {
   comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
                          (uint8_t *)&action->msg, action->length, COMM_SESSION_DEFAULT_TIMEOUT);
 
-  kernel_free(action);
+  pbl_free(action);
 }
 
 static ActionResultType prv_get_action_result_type(ResponseHeader *header) {
@@ -117,7 +116,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
       num_attributes, num_actions, attributes_per_action, string_alloc_size);
 
   PebbleSysNotificationActionResult *action_result =
-      kernel_zalloc(sizeof(PebbleSysNotificationActionResult) + alloc_size);
+      pbl_zalloc(sizeof(PebbleSysNotificationActionResult) + alloc_size);
   if (!action_result) {
     PBL_LOG_WRN("Failed to allocate memory for action result");
     return nullptr;
@@ -140,7 +139,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
   return action_result;
 
 cleanup:
-  kernel_free(action_result);
+  pbl_free(action_result);
   return nullptr;
 }
 
@@ -150,7 +149,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   size_t attr_data_size =
       (attributes != nullptr) ? attribute_list_get_serialized_size(attributes) : 0;
   InvokeActionMsgCbData *invoke_action_data =
-      kernel_zalloc_check(sizeof(InvokeActionMsgCbData) + attr_data_size);
+      pbl_zalloc_check(sizeof(InvokeActionMsgCbData) + attr_data_size);
 
   invoke_action_data->length = sizeof(invoke_action_data->msg) + attr_data_size;
   if (type == TimelineItemActionTypeAncsResponse || type == TimelineItemActionTypeAncsGeneric) {
@@ -173,7 +172,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   uuid_to_string(id, uuid_string);
   PBL_LOG_INFO("Send action to phone (Item ID: %s; Action ID: %d)", uuid_string, action_id);
 
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, (uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
+  PBL_LOG_HEXDUMP_DBG((uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
 
   if (do_async) {
     system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
@@ -181,7 +180,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
     comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
                            (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
                            COMM_SESSION_DEFAULT_TIMEOUT);
-    kernel_free(invoke_action_data);
+    pbl_free(invoke_action_data);
   }
 }
 
@@ -220,7 +219,7 @@ void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const 
 
   PebbleSysNotificationActionResult *action_result = nullptr;
 
-  PBL_HEXDUMP(LOG_LEVEL_DEBUG, data, length);
+  PBL_LOG_HEXDUMP_DBG(data, length);
 
   if (header->command == CommandPhoneResponse) {
     PhoneResponseMsg *msg = (PhoneResponseMsg *)data;

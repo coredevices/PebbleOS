@@ -9,10 +9,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
+#include <applib/applib_malloc.auto.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
-#include <kernel/pbl_malloc.h>
 #include <process_state/app_state/app_state.h>
 
 static GTextLayoutCacheRef prv_text_layer_legacy2_get_cache_handle(TextLayerLegacy2 *text_layer) {
@@ -58,7 +58,7 @@ void text_layer_legacy2_init(TextLayerLegacy2 *text_layer, const GRect *frame) {
 }
 
 TextLayerLegacy2 *text_layer_legacy2_create(GRect frame) {
-  TextLayerLegacy2 *layer = task_malloc(sizeof(TextLayerLegacy2));
+  TextLayerLegacy2 *layer = applib_malloc(sizeof(TextLayerLegacy2));
   if (layer) {
     text_layer_legacy2_init(layer, &frame);
   }
@@ -70,7 +70,7 @@ void text_layer_legacy2_destroy(TextLayerLegacy2 *text_layer) {
     return;
   }
   text_layer_legacy2_deinit(text_layer);
-  task_free(text_layer);
+  applib_free(text_layer);
 }
 
 void text_layer_legacy2_deinit(TextLayerLegacy2 *text_layer) {

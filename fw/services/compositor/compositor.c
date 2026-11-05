@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_display.h>
 #include <pbl/util/math.h>
@@ -24,7 +25,8 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <shell/prefs.h>
-#include <system/profiler.h>
+
+PBL_PROFILER_NODE_DEFINE(compositor);
 
 PBL_LOG_MODULE_DEFINE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
@@ -116,6 +118,8 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
                                    int16_t offset_y, const AppFrameFit *fit);
 
 void compositor_init(void) {
+  compositor_display_init();
+
   const GSize fb_size = GSize(DISP_COLS, DISP_ROWS);
   framebuffer_init(&s_framebuffer, &fb_size);
   framebuffer_clear(&s_framebuffer);
@@ -297,12 +301,12 @@ static bool prv_render_app_dirty_rect(const AppFrameFit *fit) {
 void compositor_render_app(void) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
-  PROFILER_NODE_START(compositor);
+  PBL_PROFILER_NODE_START(compositor);
 
   const AppFrameFit fit = prv_get_app_frame_fit();
   s_app_frame_verbatim = prv_app_frame_fit_is_verbatim(&fit);
   if (prv_render_app_dirty_rect(&fit)) {
-    PROFILER_NODE_STOP(compositor);
+    PBL_PROFILER_NODE_STOP(compositor);
     return;
   }
 
@@ -322,7 +326,7 @@ void compositor_render_app(void) {
     prv_render_modal_over_app();
   }
 
-  PROFILER_NODE_STOP(compositor);
+  PBL_PROFILER_NODE_STOP(compositor);
 
   framebuffer_dirty_all(&s_framebuffer);
 }

@@ -5,9 +5,12 @@
 
 #include <pbl/drivers/mic.h>
 #include <pbl/drivers/mic/sf32lb52/pdm_definitions.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -15,11 +18,8 @@
 #include <pbl/services/system_task.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/circular_buffer.h>
-#include <pbl/util/heap.h>
 
 #include <board/board.h>
-#include <kernel/kernel_heap.h>
-#include <kernel/pbl_malloc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 
@@ -66,9 +66,7 @@ void mic_init(const MicDevice *this) {
   pbl_mutex_init(&state->mutex);
   state->volume = PDM_AUDIO_RECORD_GAIN_DEFAULT;
 
-  // Pinmux configuration
-  HAL_PIN_Set(this->clk_gpio.pad, this->clk_gpio.func, this->clk_gpio.flags, 1);
-  HAL_PIN_Set(this->data_gpio.pad, this->data_gpio.func, this->data_gpio.flags, 1);
+  PBL_ASSERTN(pbl_pinctrl_select_state(&this->pinctrl, PBL_PINCTRL_STATE_DEFAULT) == 0);
 
   this->state->hpdm = &s_hpdm;
   PDM_HandleTypeDef *hpdm = this->state->hpdm;
@@ -114,7 +112,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
   uint8_t *storage = nullptr;
 
   while (try_size >= floor) {
-    storage = kernel_malloc(try_size);
+    storage = pbl_malloc(try_size);
     if (storage) {
       break;
     }
@@ -123,7 +121,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 
   if (!storage) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)", (unsigned)floor,
                 max_free);
     return false;
@@ -131,7 +129,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 
   if (try_size < requested) {
     unsigned int used, free_bytes, max_free;
-    heap_calc_totals(kernel_heap_get(), &used, &free_bytes, &max_free);
+    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
     PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
                 (unsigned)try_size, (unsigned)requested, max_free);
   }
@@ -144,7 +142,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 static void prv_free_buffers(MicDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
+    pbl_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
 }
@@ -382,9 +380,9 @@ static bool prv_start(const MicDevice *this, MicDataHandlerCB data_handler, void
   // boundary. dcache_invalidate() in the IRQ path would otherwise risk
   // destroying dirty bytes in lines shared with neighboring allocations.
   const size_t cache_align = dcache_line_size();
-  state->raw_dma_buffer = kernel_malloc(hpdm->RxXferSize + cache_align - 1U);
+  state->raw_dma_buffer = pbl_malloc(hpdm->RxXferSize + cache_align - 1U);
   if (!state->raw_dma_buffer || !prv_allocate_buffers(this, ready != nullptr)) {
-    kernel_free(state->raw_dma_buffer);
+    pbl_free(state->raw_dma_buffer);
     state->raw_dma_buffer = nullptr;
     pbl_mutex_unlock(&state->mutex);
     return false;
@@ -424,7 +422,7 @@ static bool prv_start(const MicDevice *this, MicDataHandlerCB data_handler, void
     HAL_PDM_DeInit(hpdm);
     HAL_RCC_DisableModule(RCC_MOD_PDM1);
 
-    kernel_free(state->raw_dma_buffer);
+    pbl_free(state->raw_dma_buffer);
     state->raw_dma_buffer = nullptr;
     hpdm->pRxBuffPtr = nullptr;
 
@@ -488,7 +486,7 @@ void mic_stop(const MicDevice *this) {
   // Free dynamically allocated buffers
   prv_free_buffers(state);
 
-  kernel_free(state->raw_dma_buffer);
+  pbl_free(state->raw_dma_buffer);
   state->raw_dma_buffer = nullptr;
   hpdm->pRxBuffPtr = nullptr;
 

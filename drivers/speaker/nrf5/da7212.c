@@ -7,6 +7,7 @@
 #include <pbl/drivers/speaker/nrf5/da7212_definitions.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -15,7 +16,6 @@
 #include <pbl/util/math.h>
 
 #include <board/board.h>
-#include <kernel/pbl_malloc.h>
 #include <nrfx_i2s.h>
 
 PBL_LOG_MODULE_DEFINE(driver_speaker_da7212, CONFIG_DRIVER_SPEAKER_LOG_LEVEL);
@@ -86,17 +86,13 @@ static void prv_i2s_data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t 
 
 static void prv_codec_write(AudioDevice *dev, uint8_t reg, uint8_t value) {
   uint8_t data[2] = {reg, value};
-  pbl_i2c_use(dev->codec);
-  bool ok = pbl_i2c_write_block(dev->codec, sizeof(data), data) == 0;
-  pbl_i2c_release(dev->codec);
+  bool ok = pbl_i2c_write(dev->codec, data, sizeof(data)) == 0;
   PBL_ASSERTN(ok);
 }
 
 static uint8_t prv_codec_read(AudioDevice *dev, uint8_t reg) {
   uint8_t value = 0;
-  pbl_i2c_use(dev->codec);
-  bool ok = pbl_i2c_read_register(dev->codec, reg, &value) == 0;
-  pbl_i2c_release(dev->codec);
+  bool ok = pbl_i2c_reg_read_byte(dev->codec, reg, &value) == 0;
   PBL_ASSERTN(ok);
   return value;
 }
@@ -207,21 +203,21 @@ static void prv_codec_power_down(AudioDevice *dev) {
 // ---------------------------------------------------------------------------
 
 static bool prv_allocate_buffers(AudioDeviceState *state) {
-  state->circ_buffer_storage = kernel_malloc(NRF5_AUDIO_CIRC_BUF_SIZE_BYTES);
+  state->circ_buffer_storage = pbl_malloc(NRF5_AUDIO_CIRC_BUF_SIZE_BYTES);
   if (!state->circ_buffer_storage) {
     PBL_LOG_ERR("Failed to allocate audio circular buffer");
     return false;
   }
 
   for (int i = 0; i < NRF5_AUDIO_I2S_BUF_COUNT; i++) {
-    state->i2s_bufs[i] = kernel_malloc(I2S_BUF_SIZE_BYTES);
+    state->i2s_bufs[i] = pbl_malloc(I2S_BUF_SIZE_BYTES);
     if (!state->i2s_bufs[i]) {
       PBL_LOG_ERR("Failed to allocate I2S buffer %d", i);
       for (int j = 0; j < i; j++) {
-        kernel_free(state->i2s_bufs[j]);
+        pbl_free(state->i2s_bufs[j]);
         state->i2s_bufs[j] = nullptr;
       }
-      kernel_free(state->circ_buffer_storage);
+      pbl_free(state->circ_buffer_storage);
       state->circ_buffer_storage = nullptr;
       return false;
     }
@@ -236,12 +232,12 @@ static bool prv_allocate_buffers(AudioDeviceState *state) {
 static void prv_free_buffers(AudioDeviceState *state) {
   for (int i = 0; i < NRF5_AUDIO_I2S_BUF_COUNT; i++) {
     if (state->i2s_bufs[i]) {
-      kernel_free(state->i2s_bufs[i]);
+      pbl_free(state->i2s_bufs[i]);
       state->i2s_bufs[i] = nullptr;
     }
   }
   if (state->circ_buffer_storage) {
-    kernel_free(state->circ_buffer_storage);
+    pbl_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
 }

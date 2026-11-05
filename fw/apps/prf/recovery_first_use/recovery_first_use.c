@@ -14,6 +14,7 @@
 #include <pbl/version.h>
 
 #include <applib/app.h>
+#include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gtypes.h>
@@ -28,7 +29,6 @@
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gap_le_device_name.h>
 #include <kernel/event_loop.h>
-#include <kernel/pbl_malloc.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_state/app_state/app_state.h>

@@ -4,6 +4,9 @@
 #include "test_alarm_common.h"
 
 // Stubs
+#include "fake_pfs.h"
+
+#include <pbl/kernel/time.h>
 #include <pbl/util/units.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,16 +19,15 @@ static int s_snooze_timer_id = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
 
-time_t rtc_get_time(void) {
+time_t pbl_realtime(void) {
   return s_current_day + prv_hours_and_minutes_to_seconds(s_current_hour, s_current_minute);
 }
 
-void rtc_get_time_ms(time_t *out_seconds, uint16_t *out_ms) {
-  *out_ms = 0;
-  *out_seconds = rtc_get_time();
+uint64_t pbl_realtime_ms(void) {
+  return (uint64_t)pbl_realtime() * 1000U;
 }
 
-RtcTicks rtc_get_ticks(void) {
+uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 
@@ -74,8 +76,8 @@ void test_alarm__initialize(void) {
   memset(s_fake_pin_records, 0, sizeof(s_fake_pin_records));
 
   fake_spi_flash_init(0, 0x1000000);
-  pfs_init(false);
-  pfs_format(false);
+  fake_pfs_mount();
+  pbl_fs_format("/");
 
   pbl_cron_init();
 
@@ -511,21 +513,21 @@ void test_alarm__reload_removes_untracked_future_pins(void) {
   AlarmId id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
   Uuid tracked[3];
-  SettingsFile file;
-  cl_must_pass(settings_file_open(&file, "alarms", 1024));
-  cl_must_pass(settings_file_get(&file, &key, sizeof(key), tracked, sizeof(tracked)));
-  settings_file_close(&file);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  cl_must_pass(pbl_settings_get(&file, &key, sizeof(key), tracked, sizeof(tracked)));
+  pbl_settings_close(&file);
 
   const Uuid alarm_source = UUID_ALARMS_DATA_SOURCE;
   const Uuid other_source = UUID_REMINDERS_DATA_SOURCE;
   const Uuid orphan = {.byte0 = 1};
   const Uuid past = {.byte0 = 2};
   const Uuid unrelated = {.byte0 = 3};
-  prv_fake_pin_record_add(orphan, alarm_source, rtc_get_time() + PBL_SEC_PER_HOUR, LayoutIdAlarm);
-  prv_fake_pin_record_add(past, alarm_source, rtc_get_time() - PBL_SEC_PER_HOUR, LayoutIdAlarm);
-  prv_fake_pin_record_add(unrelated, other_source, rtc_get_time() + PBL_SEC_PER_HOUR,
+  prv_fake_pin_record_add(orphan, alarm_source, pbl_realtime() + PBL_SEC_PER_HOUR, LayoutIdAlarm);
+  prv_fake_pin_record_add(past, alarm_source, pbl_realtime() - PBL_SEC_PER_HOUR, LayoutIdAlarm);
+  prv_fake_pin_record_add(unrelated, other_source, pbl_realtime() + PBL_SEC_PER_HOUR,
                           LayoutIdAlarm);
-  prv_fake_pin_record_add(tracked[0], alarm_source, rtc_get_time() + PBL_SEC_PER_HOUR,
+  prv_fake_pin_record_add(tracked[0], alarm_source, pbl_realtime() + PBL_SEC_PER_HOUR,
                           LayoutIdAlarm);
 
   const int removes_before = s_num_timeline_removes;
@@ -597,7 +599,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 13);
   cl_assert_equal_i(s_num_timeline_removes, 6);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -607,7 +609,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 20);
   cl_assert_equal_i(s_num_timeline_removes, 12);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -618,7 +620,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 27);
   cl_assert_equal_i(s_num_timeline_removes, 18);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -628,7 +630,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 34);
   cl_assert_equal_i(s_num_timeline_removes, 24);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -639,7 +641,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 5);
   cl_assert_equal_i(s_num_timeline_adds, 41);
   cl_assert_equal_i(s_num_timeline_removes, 30);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -649,7 +651,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 6);
   cl_assert_equal_i(s_num_timeline_adds, 48);
   cl_assert_equal_i(s_num_timeline_removes, 36);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -660,7 +662,7 @@ void test_alarm__recurring_daily_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 7);
   cl_assert_equal_i(s_num_timeline_adds, 55);
   cl_assert_equal_i(s_num_timeline_removes, 42);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm__recurring_weekends_alarm_timeout_ahead(void) {
@@ -714,7 +716,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
   cl_assert_equal_i(s_num_timeline_removes, 2);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -724,7 +726,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 9);
   cl_assert_equal_i(s_num_timeline_removes, 5);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -735,7 +737,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 11);
   cl_assert_equal_i(s_num_timeline_removes, 7);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again, but not until Saturday
   s_current_hour = 11;
@@ -745,7 +747,7 @@ void test_alarm__recurring_weekends_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 12);
   cl_assert_equal_i(s_num_timeline_removes, 8);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm__recurring_weekday_alarm_timeout_ahead(void) {
@@ -786,7 +788,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 8);
   cl_assert_equal_i(s_num_timeline_removes, 4);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -796,7 +798,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 11);
   cl_assert_equal_i(s_num_timeline_removes, 7);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -807,7 +809,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 14);
   cl_assert_equal_i(s_num_timeline_removes, 9);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again, but not until Monday
   s_current_hour = 11;
@@ -817,7 +819,7 @@ void test_alarm__recurring_weekday_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 17);
   cl_assert_equal_i(s_num_timeline_removes, 11);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm__just_once_alarm_timeout_ahead(void) {
@@ -864,7 +866,7 @@ void test_alarm__just_once_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 4);
   cl_assert_equal_i(s_num_timeline_removes, 2);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. No alarms should be up
   s_current_hour = 11;
@@ -875,7 +877,7 @@ void test_alarm__just_once_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 5);
   cl_assert_equal_i(s_num_timeline_removes, 3);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm__custom_alarm_everyday(void) {
@@ -1028,7 +1030,7 @@ void test_alarm__custom_alarm_weekends(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(s_num_timeline_adds, 6);
   cl_assert_equal_i(s_num_timeline_removes, 2);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again
   s_current_hour = 11;
@@ -1038,7 +1040,7 @@ void test_alarm__custom_alarm_weekends(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 2);
   cl_assert_equal_i(s_num_timeline_adds, 9);
   cl_assert_equal_i(s_num_timeline_removes, 5);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // First alarm goes off. Second one should be up
   s_current_hour = 10;
@@ -1049,7 +1051,7 @@ void test_alarm__custom_alarm_weekends(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 3);
   cl_assert_equal_i(s_num_timeline_adds, 11);
   cl_assert_equal_i(s_num_timeline_removes, 7);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 
   // Second alarm goes off. First one should be up again, but not until Saturday
   s_current_hour = 11;
@@ -1059,7 +1061,7 @@ void test_alarm__custom_alarm_weekends(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 4);
   cl_assert_equal_i(s_num_timeline_adds, 12);
   cl_assert_equal_i(s_num_timeline_removes, 8);
-  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, rtc_get_time());
+  cl_assert_equal_i(s_last_timeline_item_added->header.timestamp, pbl_realtime());
 }
 
 void test_alarm__custom_alarm_no_alarm(void) {
@@ -1215,7 +1217,7 @@ void test_alarm__alarm_get_next_enabled_alarm(void) {
   cl_assert_equal_b(at_least_one_alarm_enabled, true);
   alarm_is_scheduled = alarm_get_time_until(id1, &time_until_alarm);
   cl_assert_equal_b(alarm_is_scheduled, true);
-  cl_assert_equal_i(next_alarm, rtc_get_time() + time_until_alarm);
+  cl_assert_equal_i(next_alarm, pbl_realtime() + time_until_alarm);
 
   // Schedule another alarm before the previous alarm, it becomes the next alarm
   id2 = alarm_create(&(AlarmInfo){.hour = 9, .minute = 30, .kind = ALARM_KIND_WEEKDAYS});
@@ -1223,7 +1225,7 @@ void test_alarm__alarm_get_next_enabled_alarm(void) {
   cl_assert_equal_b(at_least_one_alarm_enabled, true);
   alarm_is_scheduled = alarm_get_time_until(id2, &time_until_alarm);
   cl_assert_equal_b(alarm_is_scheduled, true);
-  cl_assert_equal_i(next_alarm, rtc_get_time() + time_until_alarm);
+  cl_assert_equal_i(next_alarm, pbl_realtime() + time_until_alarm);
 
   // Disable both alarms, now there is no next alarm
   alarm_set_enabled(id1, false);

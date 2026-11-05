@@ -3,15 +3,18 @@
 
 #include <string.h>
 
-#include <pbl/drivers/rtc.h>
+#include <pbl/fs/fs.h>
+#include <pbl/fs/pfs.h>
+#include <pbl/kernel/assert.h>
+#include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint_private.h>
+#include <pbl/services/clock.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/filesystem/pfs.h>
 #include <pbl/services/mic_capture.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/mic_stream.h>
@@ -53,7 +56,7 @@ static EventServiceInfo s_time_event_info;
 
 static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
   // Check if time is now valid and activity init was deferred
-  if (s_activity_init_deferred && rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP) {
+  if (s_activity_init_deferred && pbl_realtime() >= MIN_VALID_TIME_TIMESTAMP) {
     // Time is now valid, initialize activity
     s_activity_init_deferred = false;
 
@@ -74,14 +77,18 @@ static void prv_time_set_event_handler(PebbleEvent *e, void *context) {
 }
 
 static bool prv_is_time_valid_for_activity_init(void) {
-  return rtc_get_time() >= MIN_VALID_TIME_TIMESTAMP;
+  return pbl_realtime() >= MIN_VALID_TIME_TIMESTAMP;
 }
 
 void services_normal_early_init(void) {
-  pfs_init(true);
+  static struct pbl_fs_mount s_pfs_mount = {.mnt_point = "/", .ops = &pbl_fs_pfs_ops};
+  int ret = pbl_fs_mount(&s_pfs_mount);
+  PBL_ASSERTN(ret == 0);
 }
 
 void services_normal_init(void) {
+  clock_init_prev_dst();
+
   persist_service_init();
 
   app_install_manager_init();

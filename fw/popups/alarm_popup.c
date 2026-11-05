@@ -5,23 +5,26 @@
 
 #include <stdio.h>
 
+#include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/new_timer/new_timer.h>
+#include <pbl/services/time.h>
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/units.h>
 
+#include <applib/fonts/fonts.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/vibes.h>
+#include <board/display.h>
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>
-#include <kernel/pbl_malloc.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <resource/resource_ids.auto.h>
 
@@ -330,7 +333,7 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
     gbitmap_destroy(s_alarm_popup_data->bitmap);
     gbitmap_destroy(s_alarm_popup_data->action_bar_snooze);
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
-    task_free(s_alarm_popup_data);
+    pbl_free(s_alarm_popup_data);
     s_alarm_popup_data = nullptr;
   }
 }
@@ -343,7 +346,7 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     return;
   }
 
-  s_alarm_popup_data = task_malloc_check(sizeof(AlarmPopupData));
+  s_alarm_popup_data = pbl_malloc_check(sizeof(AlarmPopupData));
   *s_alarm_popup_data = (AlarmPopupData){};
   s_alarm_popup_data->vibe_timer = TIMER_INVALID_ID;
 
@@ -364,12 +367,20 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
     pbl_strftime_r(display_time, 16, "%I:%M %p", &alarm_tm);
   }
   dialog_set_text(dialog, display_time);
+  if (PBL_ROUND && DISP_ROWS > 180) {
+    actionable_dialog_set_text_font(s_alarm_popup_data->alarm_popup,
+                                    fonts_get_system_font(FONT_KEY_GOTHIC_36_BOLD));
+  }
   dialog_set_icon(dialog, RESOURCE_ID_ALARM_CLOCK_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
   DialogCallbacks callback = {
     .unload = prv_cleanup_alarm_popup,
   };
   dialog_set_callbacks(dialog, &callback, nullptr);
+#ifdef CONFIG_TOUCH
+  // A ringing alarm must not be dismissed or snoozed by a stray touch; buttons only.
+  window_set_touch_bridge_disabled(&dialog->window, true);
+#endif
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
   // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes

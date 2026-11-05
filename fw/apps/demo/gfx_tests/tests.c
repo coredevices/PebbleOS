@@ -8,11 +8,13 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/profiler/profiler.h>
 #include <pbl/util/size.h>
 
+#include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
-#include <kernel/pbl_malloc.h>
-#include <system/profiler.h>
+
+PBL_PROFILER_NODE_DEFINE(gfx_test_update_proc);
 
 typedef struct {
   Window menu_window;
@@ -57,15 +59,14 @@ static void prv_test_update_proc(Layer *layer, GContext *ctx) {
     test->setup(layer->window);
   }
 
-  PROFILER_INIT;
-  PROFILER_START;
-  while (PROFILER_NODE_GET_TOTAL_US(gfx_test_update_proc) < (test->duration * PBL_USEC_PER_SEC)) {
-    PROFILER_NODE_START(gfx_test_update_proc);
+  pbl_profiler_reset();
+  pbl_profiler_start();
+  while (PBL_PROFILER_NODE_TOTAL_US(gfx_test_update_proc) < (test->duration * PBL_USEC_PER_SEC)) {
+    PBL_PROFILER_NODE_START(gfx_test_update_proc);
     test->test_proc(layer, ctx);
-    PROFILER_NODE_STOP(gfx_test_update_proc);
+    PBL_PROFILER_NODE_STOP(gfx_test_update_proc);
   }
-  PROFILER_STOP;
-  PROFILER_PRINT_STATS;
+  pbl_profiler_print_stats();
 
   if (test->teardown) {
     test->teardown(layer->window);
@@ -108,8 +109,8 @@ static void prv_handle_results_click(ClickRecognizerRef recognizer, void *contex
 static void prv_results_window_load(Window *window) {
   AppData *app_data = window_get_user_data(window);
 
-  uint32_t total_us = PROFILER_NODE_GET_TOTAL_US(gfx_test_update_proc);
-  uint32_t count = PROFILER_NODE_GET_COUNT(gfx_test_update_proc);
+  uint32_t total_us = PBL_PROFILER_NODE_TOTAL_US(gfx_test_update_proc);
+  uint32_t count = PBL_PROFILER_NODE_COUNT(gfx_test_update_proc);
 
   GfxTest *test = app_data->current_test;
 

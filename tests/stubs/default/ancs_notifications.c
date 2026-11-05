@@ -10,3 +10,6 @@ PBL_WEAK void ancs_notifications_enable_bulk_action_mode(bool enable) {
 PBL_WEAK bool ancs_notifications_is_bulk_action_mode_enabled(void) {
   return false;
 }
+
+PBL_WEAK void ancs_notifications_handle_session_lost(void) {
+}
