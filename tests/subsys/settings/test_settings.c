@@ -31,6 +31,7 @@ void test_settings__initialize(void) {
 
 void test_settings__cleanup(void) {
   stub_pbl_malloc_set_should_fail(false);
+  stub_pbl_malloc_set_max_size(0);
 }
 
 #include <stdio.h>
@@ -974,6 +975,26 @@ void test_settings__rewrite_filtered_oom(void) {
   // And the data must survive a reopen.
   cl_must_pass(pbl_settings_open(&file, "/test_file_rewrite_oom", 4096));
   verify(&file, key, key_len, val, val_len);
+  pbl_settings_close(&file);
+}
+
+void test_settings__rewrite_small_heap(void) {
+  printf("\nTesting that a full file of small records compacts without a large buffer...\n");
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/test_file_rewrite_small_heap", 4096));
+  uint8_t key[] = "steps";
+  int key_len = sizeof(key) - 1;
+  uint8_t val[120];
+
+  // Only allocations a little larger than the record may succeed, as on a
+  // fragmented heap. Overwriting the record fills the file, so the sets below
+  // only succeed if compaction does.
+  stub_pbl_malloc_set_max_size(256);
+  for (int i = 0; i < 100; i++) {
+    memset(val, i, sizeof(val));
+    cl_must_pass(pbl_settings_set(&file, key, key_len, val, sizeof(val)));
+  }
+  verify(&file, key, key_len, val, sizeof(val));
   pbl_settings_close(&file);
 }
 

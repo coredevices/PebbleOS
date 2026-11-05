@@ -45,6 +45,13 @@ PBL_WEAK void stub_pbl_malloc_set_should_fail(bool should_fail) {
   s_pbl_malloc_should_fail = should_fail;
 }
 
+// Set to make pbl_malloc fail for requests larger than this, 0 for no limit.
+static size_t s_pbl_malloc_max_size = 0;
+
+PBL_WEAK void stub_pbl_malloc_set_max_size(size_t max_size) {
+  s_pbl_malloc_max_size = max_size;
+}
+
 PBL_WEAK void smart_free(void *ptr) {
   free(ptr);
 }
@@ -59,7 +66,7 @@ PBL_WEAK struct pbl_heap *pbl_malloc_heap(void) {
 }
 
 PBL_WEAK void *pbl_malloc(size_t size) {
-  if (s_pbl_malloc_should_fail) {
+  if (s_pbl_malloc_should_fail || (s_pbl_malloc_max_size && size > s_pbl_malloc_max_size)) {
     return nullptr;
   }
   return malloc(size);
