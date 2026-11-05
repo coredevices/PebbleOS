@@ -150,6 +150,7 @@ static void prv_test_session_setup_msg(uint16_t endpoint_id, const uint8_t *data
 
   bool app_initiated = msg->flags.app_initiated != 0;
   cl_assert_equal_b(app_initiated, s_app_initiated);
+  cl_assert_equal_b(msg->flags.service_retry_support != 0, true);
 
   if (!app_initiated) {
     uint8_t expected_attr_data[] = {

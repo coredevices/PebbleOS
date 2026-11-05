@@ -256,10 +256,12 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     .attr_list.num_attributes = 1,
   };
 
+  // Set the flags after struct initialization because the rest of the fields in the bitfield are
+  // left uninitialized if just one is set.
+  msg->flags.service_retry_support = 1;
+
   struct pbl_generic_attr *attr = msg->attr_list.attributes;
   if (app_uuid) {
-    // set this after struct initialization because the rest of the fields in the bitfield are left
-    // uninitialized if just one is set.
     msg->flags.app_initiated = 1;
 
     // we're also sending the app UUID
