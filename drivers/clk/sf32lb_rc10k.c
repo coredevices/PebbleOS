@@ -2,8 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
-#include <inttypes.h>
-#include <math.h>
 
 #include <pbl/drivers/clk/cal.h>
 #include <pbl/drivers/clk/sf32lb.h>
@@ -28,9 +26,8 @@ PBL_LOG_MODULE_DEFINE(clk_sf32lb_rc10k, CONFIG_CLK_SF32LB_RC10K_LOG_LEVEL);
 #define GATE_CYCLES CONFIG_CLK_SF32LB_RC10K_CAL_GATE_CYCLES
 #define PERIOD_MS   (CONFIG_CLK_SF32LB_RC10K_CAL_PERIOD_S * 1000U)
 
-#define NOMINAL_HZ 9660.0
-// Further from nominal is not an RC10K measurement, e.g. the result of an LCPU gate.
-#define PLAUSIBLE_REL 0.05
+// Only until the first gate, whatever the real rate is.
+#define NOMINAL_HZ 10000.0
 
 #define HXT48_TIMEOUT_US 5000U
 #define DONE_TIMEOUT_US  2000U
@@ -61,10 +58,6 @@ static inline void prv_acr_modify(uint32_t clear, uint32_t set) {
 
 static inline void prv_unlock(void) {
   pbl_writel(MAILBOX_CxEXR_EX, SF32LB52_MAILBOX2_BASE + SF32LB52_MAILBOX_C1EXR_OFFSET);
-}
-
-static bool prv_plausible(double hz) {
-  return fabs(hz / NOMINAL_HZ - 1.0) <= PLAUSIBLE_REL;
 }
 
 // Takes LPSYS, the counter and the reference clock. Returns 0, -EBUSY if the LCPU holds the
@@ -144,11 +137,11 @@ static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) 
     return ret;
   }
 
-  *hz = (count != 0U) ? REF_HZ * cycles / count : 0.0;
-  if (!prv_plausible(*hz)) {
-    PBL_LOG_WRN("Implausible RC10K count %" PRIu32, count);
+  if (count == 0U) {
     return -EIO;
   }
+
+  *hz = REF_HZ * cycles / count;
 
   return 0;
 }
