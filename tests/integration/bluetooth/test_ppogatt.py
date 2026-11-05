@@ -25,7 +25,7 @@ SESSION_OPENED = (
 )
 SESSION_CLOSED = r"Session event: is_open=0"
 MIN_MTU = 23
-# What the harness asks for; the watch supports up to 256.
+# What the harness asks for; the watch supports up to 247.
 LARGE_MTU = 339
 # The windows the harness offers.
 PHONE_WINDOW = 25
@@ -96,7 +96,7 @@ def test_window_is_phones(dut, watch, phones, mtu):
     phone = phones(mtu=mtu).connect()
     role, version, tx, rx = _opened(dut, since)
     assert (role, version) == ("reversed", 1)
-    assert phone.link.att_mtu == min(mtu, 256)
+    assert phone.link.att_mtu == min(mtu, 247)
     assert tx == PHONE_WINDOW
     assert 0 < rx <= PHONE_WINDOW
 
