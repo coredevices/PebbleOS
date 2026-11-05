@@ -14,7 +14,7 @@
 
 #include <applib/app_malloc.h>
 #include <applib/fonts/codepoint.h>
-#include <board/display.h>
+#include <applib/platform.h>
 #include <shell/system_theme.h>
 
 typedef struct HealthHrDetailCard {

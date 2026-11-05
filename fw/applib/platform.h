@@ -16,6 +16,37 @@ typedef enum PlatformType {
 // Unit tests and the firmware don't define the SDK platform defines because reasons.
 // Therefore, we need to switch on the platform for the platform type.
 #if !defined(SDK)
+#ifdef CONFIG_PLATFORM_COLOR
+#define PBL_BW    0
+#define PBL_COLOR 1
+#else
+#define PBL_BW    1
+#define PBL_COLOR 0
+#endif
+
+#ifdef CONFIG_PLATFORM_ROUND
+#define PBL_RECT  0
+#define PBL_ROUND 1
+#else
+#define PBL_RECT  1
+#define PBL_ROUND 0
+#endif
+
+#define PBL_DISPLAY_WIDTH  CONFIG_PLATFORM_DISPLAY_WIDTH
+#define PBL_DISPLAY_HEIGHT CONFIG_PLATFORM_DISPLAY_HEIGHT
+
+#define LEGACY_2X_DISP_COLS CONFIG_PLATFORM_LEGACY_2X_DISPLAY_WIDTH
+#define LEGACY_2X_DISP_ROWS CONFIG_PLATFORM_LEGACY_2X_DISPLAY_HEIGHT
+#define LEGACY_3X_DISP_COLS CONFIG_PLATFORM_LEGACY_3X_DISPLAY_WIDTH
+#define LEGACY_3X_DISP_ROWS CONFIG_PLATFORM_LEGACY_3X_DISPLAY_HEIGHT
+
+#if PBL_BW
+#define DISPLAY_FRAMEBUFFER_BYTES \
+  (ROUND_TO_MOD_CEIL(PBL_DISPLAY_WIDTH, 32) / 8 * PBL_DISPLAY_HEIGHT)
+#else
+#define DISPLAY_FRAMEBUFFER_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
+#endif
+
 // Variant boards should go before their base platforms, as they define the base platform too.
 #ifdef CONFIG_PLATFORM_EMERY
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery

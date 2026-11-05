@@ -9,8 +9,8 @@
 #include <pbl/util/size.h>
 
 #include <applib/event_service_client.h>
+#include <applib/platform.h>
 #include <applib/ui/recognizer/swipe.h>
-#include <board/display.h>
 #include <clar.h>
 #include <kernel/events.h>
 #include <kernel/input_buttons.h>

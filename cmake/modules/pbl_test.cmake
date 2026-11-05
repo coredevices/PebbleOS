@@ -335,10 +335,7 @@ function(_pbl_test_add id)
       "PBI2PNG_EXE=\"${PBL_BASE}/tools/pbi2png.py\"")
   endif()
 
-  # The platform display macros are force-included so that the firmware's
-  # #ifdefs resolve without a per-platform reconfigure.
-  set(options -Wno-unused-command-line-argument
-              -include${PBL_BASE}/fw/board/display_platform.h)
+  set(options -Wno-unused-command-line-argument)
 
   # Everything that changes the generated code, and nothing that does
   # not: two tests agreeing on all of it share their objects.

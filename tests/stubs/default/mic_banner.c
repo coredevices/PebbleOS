@@ -3,7 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 
-#include <board/display.h>
+#include <applib/platform.h>
 #include <popups/mic_banner.h>
 
 void PBL_WEAK mic_banner_init(void) {

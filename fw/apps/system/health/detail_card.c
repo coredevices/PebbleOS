@@ -12,7 +12,7 @@
 
 #include <applib/app_malloc.h>
 #include <applib/pbl_std/pbl_std.h>
-#include <board/display.h>
+#include <applib/platform.h>
 #include <kernel/events.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>

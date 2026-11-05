@@ -5,7 +5,7 @@
 
 #include <pbl/util/math.h>
 
-#include <board/display.h>
+#include <applib/platform.h>
 #include <shell/system_theme_style.h>
 
 #if PBL_RECT

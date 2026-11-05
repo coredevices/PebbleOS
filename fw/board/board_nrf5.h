@@ -4,8 +4,6 @@
 #pragma once
 
 // clang-format off
-#include "display.h"
-
 #include <stdint.h>
 
 #include <pbl/input/input.h>

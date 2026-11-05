@@ -8,7 +8,7 @@
 
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
-#include <board/display.h>
+#include <applib/platform.h>
 
 volatile const int FrameBuffer_MaxX = PBL_DISPLAY_WIDTH;
 volatile const int FrameBuffer_MaxY = PBL_DISPLAY_HEIGHT;

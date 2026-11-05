@@ -12,7 +12,7 @@
 #include <pbl/util/string.h>
 
 #include <applib/pbl_std/pbl_std.h>
-#include <board/display.h>
+#include <applib/platform.h>
 
 // Compile-time display offset calculations
 #define HEALTH_X_OFFSET ((PBL_DISPLAY_WIDTH - LEGACY_2X_DISP_COLS) / 2)

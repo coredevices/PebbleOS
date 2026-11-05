@@ -12,7 +12,7 @@
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
 
-#include <board/display.h>
+#include <applib/platform.h>
 #include <resource/resource.h>
 
 //! @addtogroup Graphics

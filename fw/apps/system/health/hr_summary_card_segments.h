@@ -5,7 +5,7 @@
 
 #include "progress.h"
 
-#include <board/display.h>
+#include <applib/platform.h>
 
 //! 4 main segments + 4 real corners
 //! Each of the 4 non-corner segments get 25% of the total
