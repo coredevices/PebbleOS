@@ -96,7 +96,6 @@ target_compile_definitions(pebble_renderer PRIVATE
 )
 target_compile_options(pebble_renderer PRIVATE
   -O2
-  -include${PEBBLEOS_ROOT}/fw/board/display_platform.h
 )
 target_link_options(pebble_renderer PRIVATE
   -O2

@@ -60,8 +60,6 @@ target_include_directories(pdc2png PRIVATE
   ${PBL_BASE}/fw
 )
 
-target_compile_options(pdc2png PRIVATE -include${PBL_BASE}/fw/board/display_platform.h)
-
 # pdc2png resolves pbi2png against its own directory, so it gets a copy.
 add_custom_command(TARGET pdc2png POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different

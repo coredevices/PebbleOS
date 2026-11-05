@@ -5,7 +5,7 @@
 
 #include "progress.h"
 
-#include <board/display.h>
+#include <applib/platform.h>
 
 //! 5 main segments + 4 real corners
 //! The top bar is split up into 2 segments (12am is the middle of the top bar)

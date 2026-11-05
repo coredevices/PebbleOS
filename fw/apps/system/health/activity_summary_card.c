@@ -14,8 +14,8 @@
 #include <pbl/util/units.h>
 
 #include <applib/pbl_std/pbl_std.h>
+#include <applib/platform.h>
 #include <applib/ui/kino/kino_reel.h>
-#include <board/display.h>
 #include <resource/resource_ids.auto.h>
 
 // Compile-time display offset calculations

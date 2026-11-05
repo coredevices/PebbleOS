@@ -14,7 +14,7 @@
 #include <applib/app_malloc.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
-#include <board/display.h>
+#include <applib/platform.h>
 
 // Compile-time display offset calculations
 #define DISPLAY_Y_OFFSET ((PBL_DISPLAY_HEIGHT - LEGACY_2X_DISP_ROWS) / 2)

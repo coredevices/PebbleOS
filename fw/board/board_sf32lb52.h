@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "display.h"
-
 #include <stdint.h>
 
 #include <pbl/drivers/gpio/sf32lb.h>

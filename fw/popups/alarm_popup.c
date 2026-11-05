@@ -18,11 +18,11 @@
 #include <pbl/util/units.h>
 
 #include <applib/fonts/fonts.h>
+#include <applib/platform.h>
 #include <applib/ui/dialogs/actionable_dialog.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/vibes.h>
-#include <board/display.h>
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>

@@ -13,12 +13,12 @@
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
+#include <applib/platform.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/menu_layer_private.h>
 #include <applib/ui/property_animation.h>
 #include <applib/ui/scroll_layer_private.h>
-#include <board/display.h>
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
 #include <shell/system_theme.h>
