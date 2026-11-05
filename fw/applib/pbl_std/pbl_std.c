@@ -11,6 +11,7 @@
 #include <applib/applib_malloc.auto.h>
 #include <applib/pbl_std/pbl_std.h>
 #include <kernel/memory_layout.h>
+#include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
@@ -103,7 +104,11 @@ static time_t prv_mktime_with_normalized_gmtoff(const struct pbl_tm *tb, int isd
 PBL_SYSCALL(time_t, pbl_override_mktime, (INOUT, struct pbl_tm *, tb)) {
   time_t t;
   if (tb->tm_isdst >= 0) {
-    // Caller knows the DST state — trust their tm_gmtoff and pass through.
+    // Caller knows the DST state — trust their tm_gmtoff and pass through. Older apps hold the
+    // standard time offset there and expect mktime() to add DST itself.
+    if (tb->tm_isdst > 0 && process_manager_expects_legacy_tm_gmtoff()) {
+      tb->tm_gmtoff += time_get_dstoffset();
+    }
     t = pbl_mktime(tb);
   } else {
     // tm_isdst < 0: caller doesn't know if DST is active. Try both

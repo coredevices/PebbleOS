@@ -30,11 +30,19 @@ const char *get_timezone_abbr(void) {
   return s_timezone_abbr;
 }
 
+static int32_t s_gmtoffset;
+static int32_t s_dstoffset;
+static bool s_expects_legacy_tm_gmtoff;
+
 int32_t time_get_gmtoffset(void) {
-  return 0;
+  return s_gmtoffset;
 }
 int32_t time_get_dstoffset(void) {
-  return 0;
+  return s_dstoffset;
+}
+
+bool process_manager_expects_legacy_tm_gmtoff(void) {
+  return s_expects_legacy_tm_gmtoff;
 }
 
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time) {
@@ -52,6 +60,12 @@ struct pbl_tm *sys_localtime_r(const time_t *timep, struct pbl_tm *result) {
 
 // Tests
 ////////////////////////////////////
+
+void test_pbl_std__cleanup(void) {
+  s_gmtoffset = 0;
+  s_dstoffset = 0;
+  s_expects_legacy_tm_gmtoff = false;
+}
 
 void test_pbl_std__get_id(void) {
   const int STR_SIZE = 100;
@@ -164,4 +178,34 @@ void test_pbl_std__verify_difftime_double_conversion(void) {
   cl_assert_equal_i(pbl_override_difftime(0, 0), 0);
   cl_assert_equal_i(pbl_override_difftime(1, 0), 1);
   cl_assert_equal_i(pbl_override_difftime(2147483647, 0), 2147483647);
+}
+
+// 2026-06-22 12:00:00 local summer time in Brussels (UTC+1, DST +1h), i.e. 10:00 UTC.
+static const time_t s_brussels_summer_utc = 1782122400;
+
+static struct pbl_tm prv_brussels_summer_noon(int32_t gmtoff) {
+  return (struct pbl_tm){
+    .tm_year = 126,
+    .tm_mon = 5,
+    .tm_mday = 22,
+    .tm_hour = 12,
+    .tm_isdst = 1,
+    .tm_gmtoff = gmtoff,
+  };
+}
+
+void test_pbl_std__mktime_tm_gmtoff_includes_dst(void) {
+  s_gmtoffset = 3600;
+  s_dstoffset = 3600;
+  struct pbl_tm tm = prv_brussels_summer_noon(7200);
+  cl_assert_equal_i(pbl_override_mktime(&tm), s_brussels_summer_utc);
+}
+
+void test_pbl_std__mktime_legacy_tm_gmtoff_excludes_dst(void) {
+  // Apps built with SDK rev 89 or older hold the standard time offset in tm_gmtoff.
+  s_gmtoffset = 3600;
+  s_dstoffset = 3600;
+  s_expects_legacy_tm_gmtoff = true;
+  struct pbl_tm tm = prv_brussels_summer_noon(3600);
+  cl_assert_equal_i(pbl_override_mktime(&tm), s_brussels_summer_utc);
 }

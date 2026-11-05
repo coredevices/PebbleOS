@@ -155,6 +155,10 @@ bool process_manager_compiled_with_legacy2_sdk(void);
 //! Return true if the current process was compiled with any 3.x SDK
 bool process_manager_compiled_with_legacy3_sdk(void);
 
+//! Return true if the current process was built before localtime() included DST in tm_gmtoff
+//! and expects tm_gmtoff to hold the standard time offset only
+bool process_manager_expects_legacy_tm_gmtoff(void);
+
 //! Returns platform the application was compiled against
 //! Use this to test, e.g. if app is Aplite while being executed on Basalt
 //! or Basalt while being executed on Emery
