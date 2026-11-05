@@ -44,6 +44,21 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 #define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MIN (4 * PBL_MIN_PER_HOUR)
 #define SLEEP_SUMMARY_NOTIF_WAKE_MINUTE_MAX (18 * PBL_MIN_PER_HOUR)
 
+// Adults do best with 7 to 9 hours of sleep. Under 6 or over 10 hours is not recommended, though
+// a long night is normal when catching up on sleep debt or when ill.
+#define SLEEP_SHORT_MINUTES           (6 * PBL_MIN_PER_HOUR)
+#define SLEEP_RECOMMENDED_MIN_MINUTES (7 * PBL_MIN_PER_HOUR)
+#define SLEEP_RECOMMENDED_MAX_MINUTES (9 * PBL_MIN_PER_HOUR)
+#define SLEEP_VERY_LONG_MINUTES       (10 * PBL_MIN_PER_HOUR)
+
+typedef enum {
+  SleepBand_Short,
+  SleepBand_BelowRecommended,
+  SleepBand_Recommended,
+  SleepBand_Long,
+  SleepBand_VeryLong,
+} SleepBand;
+
 // Consecutive sleep windows start at least 23h apart (DST), so a smaller move of the window
 // start comes from a UTC offset change, not from a new window.
 #define SLEEP_WINDOW_TZ_SHIFT_MAX (12 * PBL_SEC_PER_HOUR)
@@ -522,7 +537,8 @@ PercentTier prv_calc_percent_tier(const SummaryPinConfig *config, ActivityScalar
 static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, time_t now_utc,
                                                          ActivityScalarStore cur_val,
                                                          ActivityScalarStore average,
-                                                         const SummaryPinConfig *config) {
+                                                         const SummaryPinConfig *config,
+                                                         const char *body) {
   AttributeList pin_attr_list = {};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
                              i18n_get(config->short_title, &pin_attr_list));
@@ -581,7 +597,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
       &pin_attr_list, PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle), detail_text);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdBody,
-                             i18n_get(percent_config->body, &pin_attr_list));
+                             i18n_get(body ? body : percent_config->body, &pin_attr_list));
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconTiny, config->icon);
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconSmall,
                                  s_tier_config[tier].card_icon);
@@ -633,8 +649,9 @@ static bool prv_push_pin(TimelineItem *item, Uuid *existing_uuid) {
 // ------------------------------------------------------------------------------------------------
 static bool prv_push_summary_pin(time_t pin_time_utc, time_t now_utc, Uuid *existing_uuid,
                                  ActivityScalarStore cur_val, ActivityScalarStore average,
-                                 const SummaryPinConfig *config) {
-  TimelineItem *item = prv_create_summary_pin(pin_time_utc, now_utc, cur_val, average, config);
+                                 const SummaryPinConfig *config, const char *body) {
+  TimelineItem *item =
+      prv_create_summary_pin(pin_time_utc, now_utc, cur_val, average, config, body);
   return prv_push_pin(item, existing_uuid);
 }
 
@@ -863,6 +880,45 @@ static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds, int32_t 
 }
 
 // -----------------------------------------------------------------------------------------
+static SleepBand prv_get_sleep_band(int32_t sleep_total_seconds) {
+  const int32_t minutes = sleep_total_seconds / PBL_SEC_PER_MIN;
+  if (minutes < SLEEP_SHORT_MINUTES) {
+    return SleepBand_Short;
+  } else if (minutes < SLEEP_RECOMMENDED_MIN_MINUTES) {
+    return SleepBand_BelowRecommended;
+  } else if (minutes <= SLEEP_RECOMMENDED_MAX_MINUTES) {
+    return SleepBand_Recommended;
+  } else if (minutes < SLEEP_VERY_LONG_MINUTES) {
+    return SleepBand_Long;
+  }
+  return SleepBand_VeryLong;
+}
+
+// -----------------------------------------------------------------------------------------
+// Pin body for a night outside the recommended range, or nullptr to use the tier's body
+PBL_T_STATIC const char *prv_get_sleep_pin_body(int32_t sleep_total_seconds,
+                                                int32_t sleep_average_seconds) {
+  int percentage;
+  const PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds,
+                                                 sleep_average_seconds, &percentage);
+  switch (prv_get_sleep_band(sleep_total_seconds)) {
+    case SleepBand_Short:
+      return i18n_noop("Short night! Try going to bed a little earlier tonight.");
+    case SleepBand_BelowRecommended:
+      if (tier == PercentTier_AboveAverage || tier == PercentTier_OnAverage) {
+        return i18n_noop("Almost there! A little more sleep tonight would help.");
+      }
+      return nullptr;
+    case SleepBand_Long:
+    case SleepBand_VeryLong:
+      return i18n_noop("A long night! Great for catching up; a steady routine helps most.");
+    case SleepBand_Recommended:
+      break;
+  }
+  return nullptr;
+}
+
+// -----------------------------------------------------------------------------------------
 static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
                                        int32_t sleep_enter_seconds, int32_t sleep_exit_seconds,
                                        int32_t sleep_total_seconds,
@@ -871,7 +927,8 @@ static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
 
   // Insert or update the pin
   return prv_push_summary_pin(pin_time_utc, now_utc, uuid, sleep_total_seconds,
-                              sleep_average_seconds, &SLEEP_SUMMARY_PIN_CONFIG);
+                              sleep_average_seconds, &SLEEP_SUMMARY_PIN_CONFIG,
+                              prv_get_sleep_pin_body(sleep_total_seconds, sleep_average_seconds));
 }
 
 // -----------------------------------------------------------------------------------------
@@ -1393,10 +1450,50 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
 }
 
 // ------------------------------------------------------------------------------------------------
-// Creates a notification to notify the user of the sleep summary
-static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep_total_seconds,
-                                                int32_t sleep_average_seconds, int variant) {
-  static InsightCopyVariants s_tier_config[PercentTierCount] = {
+// Picks the sleep summary notification copy. Its format takes hours, minutes and the percentage
+// difference from the typical, in that order. Returns nullptr for an invalid variant.
+PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
+                                                   int32_t sleep_average_seconds, int variant) {
+  static const InsightCopyVariants s_short_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Sleep notification on wake up, slept under 6 hours
+      i18n_noop("Short night? You slept for %dH %dM. Most adults need at least 7 hours, so try "
+                "heading to bed earlier tonight."),
+      i18n_noop("You slept for %dH %dM. Sleep fuels everything you do; let's aim for more "
+                "tonight 😉"),
+    },
+  };
+  static const InsightCopyVariants s_almost_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Sleep notification on wake up, slept 6 to 7 hours, not below their typical
+      i18n_noop("You slept for %dH %dM. You're close! A little extra tonight goes a long way."),
+      i18n_noop("Good morning! You slept for %dH %dM. Just a bit more sleep would help you feel "
+                "your best."),
+    },
+  };
+  static const InsightCopyVariants s_long_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Sleep notification on wake up, slept 9 to 10 hours
+      i18n_noop("You slept for %dH %dM. A long night can help you catch up after short ones; a "
+                "steady routine is what counts."),
+      i18n_noop("Well rested? You slept for %dH %dM. Extra sleep helps you recover, but most "
+                "adults do best with 7 to 9 hours."),
+    },
+  };
+  static const InsightCopyVariants s_very_long_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Sleep notification on wake up, slept 10 hours or more
+      i18n_noop("You slept for %dH %dM. That's a long night! Great for recovering, but a regular "
+                "bedtime and wake time will help you feel your best."),
+      i18n_noop("You slept for %dH %dM, more than most adults need. Catching up now and then is "
+                "fine; try to keep a steady routine."),
+    },
+  };
+  static const InsightCopyVariants s_tier_config[PercentTierCount] = {
     [PercentTier_AboveAverage] =
         {
           .num_variants = 5,
@@ -1464,8 +1561,6 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
     },
   };
 
-  const int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
-  const int minutes = (sleep_total_seconds / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
   int percentage;
   PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds,
                                            sleep_average_seconds, &percentage);
@@ -1477,9 +1572,39 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
     tier = PercentTier_OnAverage;
   }
 
+  // Outside the recommended range, the duration matters more than the user's typical: praising a
+  // short or very long night just because it beats the average sends the wrong message.
+  switch (prv_get_sleep_band(sleep_total_seconds)) {
+    case SleepBand_Short:
+      return prv_get_variant(&s_short_copy, variant);
+    case SleepBand_BelowRecommended:
+      if (tier == PercentTier_AboveAverage || tier == PercentTier_OnAverage) {
+        return prv_get_variant(&s_almost_copy, variant);
+      }
+      break;
+    case SleepBand_Long:
+      return prv_get_variant(&s_long_copy, variant);
+    case SleepBand_VeryLong:
+      return prv_get_variant(&s_very_long_copy, variant);
+    case SleepBand_Recommended:
+      break;
+  }
+  return prv_get_variant(&s_tier_config[tier], variant);
+}
+
+// ------------------------------------------------------------------------------------------------
+// Creates a notification to notify the user of the sleep summary
+static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep_total_seconds,
+                                                int32_t sleep_average_seconds, int variant) {
+  const int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
+  const int minutes = (sleep_total_seconds / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
+  int percentage;
+  prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds, sleep_average_seconds,
+                        &percentage);
+
   // Enough to fit any filled out format string above and i18n variants
   const int max_notif_length = 256;
-  const char *fmt = prv_get_variant(&s_tier_config[tier], variant);
+  const char *fmt = prv_get_sleep_summary_fmt(sleep_total_seconds, sleep_average_seconds, variant);
   if (fmt == nullptr) {
     // invalid variant
     return;
@@ -1514,7 +1639,7 @@ static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, i
   i18n_free_all(&ACTIVITY_SUMMARY_PIN_CONFIG);
 
   return prv_push_summary_pin(pin_time_utc, now_utc, uuid, steps, total_steps_avg,
-                              &ACTIVITY_SUMMARY_PIN_CONFIG);
+                              &ACTIVITY_SUMMARY_PIN_CONFIG, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------

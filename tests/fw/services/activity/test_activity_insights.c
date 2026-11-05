@@ -44,6 +44,10 @@ static struct pbl_tm s_init_time_tm = {
 
 #define MAX_ACTIVITY_SESSIONS 24
 
+extern const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
+                                             int32_t sleep_average_seconds, int variant);
+extern const char *prv_get_sleep_pin_body(int32_t sleep_total_seconds,
+                                          int32_t sleep_average_seconds);
 extern void prv_calculate_metric_history_stats(ActivityMetric metric,
                                                ActivityInsightMetricHistoryStats *stats);
 
@@ -1158,4 +1162,50 @@ void test_activity_insights__run_session_notification_includes_zero_calories(voi
   prv_push_session_notification(ActivitySessionType_Run, 0);
   cl_assert_equal_i(s_data.notifs_shown, 1);
   cl_assert_equal_i(prv_get_notification_metric("Active Calories"), 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// Test that the sleep summary follows the 7 to 9 hour recommendation before the user's typical
+#define HOURS(h) ((int32_t)((h) * PBL_SEC_PER_HOUR))
+
+static void prv_assert_sleep_fmt(int32_t total, int32_t average, const char *needle, bool expect) {
+  for (int variant = 0; variant < 2; variant++) {
+    const char *fmt = prv_get_sleep_summary_fmt(total, average, variant);
+    cl_assert(fmt);
+    cl_assert_((strstr(fmt, needle) != nullptr) == expect, fmt);
+  }
+}
+
+void test_activity_insights__sleep_summary_duration_bands(void) {
+  activity_insights_init(pbl_realtime());
+
+  // Long nights are above the typical, but must not be praised as such
+  prv_assert_sleep_fmt(HOURS(11), HOURS(8), "typical", false);
+  prv_assert_sleep_fmt(HOURS(9.5), HOURS(7), "typical", false);
+
+  // A short night is never "on average", even for someone who usually sleeps little
+  prv_assert_sleep_fmt(HOURS(5), HOURS(5), "typical", false);
+  prv_assert_sleep_fmt(HOURS(5), HOURS(5), "Keep it up", false);
+  prv_assert_sleep_fmt(HOURS(5), HOURS(8), "typical", false);
+
+  // 6 to 7 hours: a nudge unless it's already below the typical
+  prv_assert_sleep_fmt(HOURS(6.5), HOURS(6), "typical", false);
+  prv_assert_sleep_fmt(HOURS(6.5), HOURS(8), "below your typical", true);
+
+  // Within 7 to 9 hours the comparison with the typical still applies
+  prv_assert_sleep_fmt(HOURS(8.5), HOURS(7), "above your typical", true);
+
+  // Variants past the end are rejected
+  cl_assert_equal_p(prv_get_sleep_summary_fmt(HOURS(11), HOURS(8), 2), nullptr);
+}
+
+void test_activity_insights__sleep_pin_duration_bands(void) {
+  activity_insights_init(pbl_realtime());
+
+  cl_assert(prv_get_sleep_pin_body(HOURS(11), HOURS(8)));
+  cl_assert(prv_get_sleep_pin_body(HOURS(9.5), HOURS(9.5)));
+  cl_assert(prv_get_sleep_pin_body(HOURS(5), HOURS(5)));
+  cl_assert(prv_get_sleep_pin_body(HOURS(6.5), HOURS(6)));
+  cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(6.5), HOURS(8)), nullptr);
+  cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(8), HOURS(7)), nullptr);
 }
