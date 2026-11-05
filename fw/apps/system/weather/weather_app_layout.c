@@ -494,6 +494,10 @@ static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t 
   } else if (f->today_wind_mph >= 20) {
     alert = i18n_noop("Windy");
     wind = true;
+  } else if (prv_precip_is_the_headline(t)) {
+    // A wet day must not fall through to a calm sign-off like "All clear".
+    alert = (f->today_precip_mm < 0 || f->today_precip_mm >= 60) ? prv_precip_likely(t)
+                                                                 : prv_precip_chance(t);
   } else {
     // No warning on file — a calm sign-off, deterministic per day's conditions.
     if (t == WeatherType_Sun) {
