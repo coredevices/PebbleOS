@@ -74,8 +74,8 @@ enum {
   DebuggingItemAccelShakeLogInfo,
   DebuggingItemVibeLogInfo,
   DebuggingItemCompactSettingsDbs,
-#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
-  DebuggingItemSpO2Test,
+#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_HRM_TEST)
+  DebuggingItemHrmTest,
 #endif
   DebuggingItem_Count,
 };
@@ -499,8 +499,8 @@ static const char *s_debugging_titles[DebuggingItem_Count] = {
   [DebuggingItemAccelShakeLogInfo] = pbl_i18n_noop("Shake Log Info"),
   [DebuggingItemVibeLogInfo] = pbl_i18n_noop("Vibe Log Info"),
   [DebuggingItemCompactSettingsDbs] = pbl_i18n_noop("Compact Settings DBs"),
-#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
-  [DebuggingItemSpO2Test] = pbl_i18n_noop("SpO2 Test"),
+#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_HRM_TEST)
+  [DebuggingItemHrmTest] = pbl_i18n_noop("HRM Test"),
 #endif
 };
 
@@ -587,10 +587,10 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
     case DebuggingItemCompactSettingsDbs:
       prv_compact_settings_dbs();
       break;
-#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
-    case DebuggingItemSpO2Test:
+#if defined(CONFIG_SERVICE_HRM) && defined(CONFIG_DEMO_APP_HRM_TEST)
+    case DebuggingItemHrmTest:
       app_manager_put_launch_app_event(&(AppLaunchEventConfig){
-        .id = APP_ID_SPO2_TEST,
+        .id = APP_ID_HRM_TEST,
         .common.reason = APP_LAUNCH_USER,
       });
       break;

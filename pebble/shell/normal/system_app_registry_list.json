@@ -603,19 +603,10 @@
     },
     {
       "id": -89,
-      "enum": "HRM_DEMO",
-      "md_fn": "hrm_demo_get_app_info",
+      "enum": "HRM_TEST",
+      "md_fn": "hrm_test_get_app_info",
       "ifdefs": [
-        "CONFIG_DEMO_APP_HRM_DEMO",
-        "CONFIG_SERVICE_HRM"
-      ]
-    },
-    {
-      "id": -193,
-      "enum": "SPO2_TEST",
-      "md_fn": "spo2_test_get_app_info",
-      "ifdefs": [
-        "CONFIG_DEMO_APP_SPO2_TEST",
+        "CONFIG_DEMO_APP_HRM_TEST",
         "CONFIG_SERVICE_HRM"
       ]
     },
