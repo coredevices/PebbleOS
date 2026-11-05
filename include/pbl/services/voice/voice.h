@@ -91,6 +91,10 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type);
  * - an error status when the phone reports an error;
  * - @ref VoiceStatusTimeout when no result arrives within 15 s.
  *
+ * While waiting, a @c VoiceEventTypeServiceRetry event with @ref VoiceStatusSuccess is sent each
+ * time the phone switches to another dictation service, the type specified in the
+ * event's service field.
+ *
  * Called before recording has started, the session is cancelled instead. Ignored if
  * @p session_id is not the current session.
  *
@@ -149,6 +153,19 @@ void voice_handle_dictation_result(VoiceEndpointResult result, AudioEndpointSess
  */
 void voice_handle_nlp_result(VoiceEndpointResult result, AudioEndpointSessionId session_id,
                              char *reminder, time_t timestamp);
+
+/**
+ * @brief Handle a service retry received by the voice endpoint.
+ *
+ * Sent by the phone when it switches to another dictation service for the session in progress.
+ * Restarts the pending result timeout so the watch does not end the session meanwhile, and sends
+ * a @c VoiceEventTypeServiceRetry event carrying the service. Ignored unless the session is
+ * waiting for its result, or if @p session_id is not the current session.
+ *
+ * @param session_id Audio transfer session the retry applies to.
+ * @param service Service the phone is retrying with.
+ */
+void voice_handle_service_retry(AudioEndpointSessionId session_id, VoiceEndpointService service);
 
 /**
  * @brief Syscall wrapper of voice_start_dictation().

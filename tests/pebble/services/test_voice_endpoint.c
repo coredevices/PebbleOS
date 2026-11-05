@@ -27,6 +27,8 @@ static uint8_t s_num_attributes;
 static int s_num_dictation_results;
 static char *s_reminder_str = nullptr;
 static time_t s_timestamp;
+static VoiceEndpointService s_retry_service;
+static int s_retry_count;
 
 static const Uuid s_uuid_invalid = UUID_INVALID;
 
@@ -82,6 +84,12 @@ void voice_handle_nlp_result(VoiceEndpointResult result, AudioEndpointSessionId 
   s_session_id = session_id;
 }
 
+void voice_handle_service_retry(AudioEndpointSessionId session_id, VoiceEndpointService service) {
+  s_retry_service = service;
+  s_session_id = session_id;
+  s_retry_count++;
+}
+
 // setup and teardown
 void test_voice_endpoint__initialize(void) {
   s_session_type = 0;
@@ -92,6 +100,7 @@ void test_voice_endpoint__initialize(void) {
   s_app_uuid = UUID_INVALID;
 
   s_timestamp = 0;
+  s_retry_count = 0;
 
   fake_comm_session_init();
   s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
@@ -784,4 +793,34 @@ void test_voice_endpoint__handle_nlp_result_with_app_id(void) {
   fake_sys_work_callbacks_invoke_pending();
   // Just make sure we don't crash or do anything weird. We just ignore the app uuid for now
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
+}
+
+void test_voice_endpoint__handle_service_retry(void) {
+  uint8_t service_retry[] = {
+    0x04,                   // Message ID: Service retry
+    0x00, 0x00, 0x00, 0x00, // flags
+    0x11, 0x22,             // Audio streaming session ID
+    0x01,                   // service: offline
+  };
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry, sizeof(service_retry));
+  cl_assert_equal_i(s_retry_count, 1);
+  cl_assert_equal_i(s_session_id, 0x2211);
+  cl_assert_equal_i(s_retry_service, VoiceEndpointServiceOffline);
+
+  service_retry[7] = 0x00; // service: online
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry, sizeof(service_retry));
+  cl_assert_equal_i(s_retry_count, 2);
+  cl_assert_equal_i(s_retry_service, VoiceEndpointServiceOnline);
+
+  // Unknown service: ignored
+  service_retry[7] = 0x02;
+  s_session_id = 0;
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry, sizeof(service_retry));
+  cl_assert_equal_i(s_retry_count, 2);
+  cl_assert_equal_i(s_session_id, 0);
+
+  // Message too short to hold the service: ignored
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry, sizeof(service_retry) - 1);
+  cl_assert_equal_i(s_retry_count, 2);
+  cl_assert_equal_i(s_session_id, 0);
 }

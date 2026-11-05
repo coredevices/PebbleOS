@@ -751,6 +751,50 @@ unlock:
   pbl_mutex_unlock(&s_lock);
 }
 
+// The phone has switched to a different dictation service for the session in progress. Restart
+// result timeout so the watch does not give up on the session.
+void voice_handle_service_retry(AudioEndpointSessionId session_id, VoiceEndpointService service) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+
+  if (s_state == SessionState_Idle) {
+    PBL_LOG_WRN("Service retry received when no session was in progress");
+    goto unlock;
+  }
+
+  if (s_session_id != session_id) {
+    PBL_LOG_WRN("Service retry received for wrong session (Expected: %" PRIu16
+                "; Received: %" PRIu16 ")",
+                s_session_id, session_id);
+    goto unlock;
+  }
+
+  if (s_state == SessionState_WaitForSessionResult) {
+    if (pbl_work_is_running(&s_result_timeout.work)) {
+      // The timeout is waiting for the lock and ends the session: do not schedule it again
+      PBL_LOG_WRN("Service retry received as the result timeout fired, ignoring");
+      goto unlock;
+    }
+    prv_start_result_timeout();
+    s_timeout_generation = s_session_generation;
+    PBL_LOG_DBG("Phone retrying dictation with service %u", (unsigned)service);
+
+    PebbleEvent event = {
+      .type = PEBBLE_VOICE_SERVICE_EVENT,
+      .voice_service = {
+        .type = VoiceEventTypeServiceRetry,
+        .status = VoiceStatusSuccess,
+        .service = service,
+      },
+    };
+    event_put(&event);
+  } else {
+    PBL_LOG_WRN("Service retry received when not waiting for a result, ignoring");
+  }
+
+unlock:
+  pbl_mutex_unlock(&s_lock);
+}
+
 PBL_SYSCALL(VoiceSessionId, sys_voice_start_dictation,
             (VAL, VoiceEndpointSessionType, session_type)) {
   if ((session_type >= VoiceEndpointSessionTypeCount) ||

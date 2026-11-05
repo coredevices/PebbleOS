@@ -54,6 +54,17 @@ typedef enum {
   VoiceEndpointResultFailInvalidMessage = 0x06,
 } VoiceEndpointResult;
 
+/** @brief Dictation service the phone retries a session with, see #MsgIdServiceRetry. */
+typedef enum {
+  /** A network speech-to-text service. */
+  VoiceEndpointServiceOnline = 0x00,
+  /** A model running on the phone. */
+  VoiceEndpointServiceOffline = 0x01,
+
+  /** Number of services. */
+  VoiceEndpointServiceCount,
+} VoiceEndpointService;
+
 /** @brief Speex stream parameters, sent before the encoded audio. */
 typedef struct PBL_PACKED {
   /** Speex version string. */
