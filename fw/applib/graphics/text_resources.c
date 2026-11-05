@@ -716,9 +716,11 @@ static Codepoint prv_plain_latin_codepoint(Codepoint codepoint) {
 }
 
 // Looks codepoint up in the primary font, the language packs and the system fallback font.
-static const GlyphData *prv_find_glyph(FontCache *font_cache, Codepoint codepoint,
-                                       FontInfo *font_info, bool need_bitmap,
-                                       GlyphLocation *location_out) {
+// Inlined into its single caller: every glyph load runs through here, and a frame of its own
+// would push legacy apps, whose stack is only 2 KiB, past their limit when drawing text.
+static PBL_ALWAYS_INLINE const GlyphData *prv_find_glyph(FontCache *font_cache, Codepoint codepoint,
+                                                         FontInfo *font_info, bool need_bitmap,
+                                                         GlyphLocation *location_out) {
   const FontInfo *owner = nullptr;
   const FontResource *font_res = nullptr;
 
@@ -785,19 +787,19 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
     sys_font_reload_font(font_info);
   }
 
-  const GlyphData *data =
-      prv_find_glyph(font_cache, codepoint, font_info, need_bitmap, location_out);
-  if (data) {
-    return data;
-  }
-
   // (c) Missing styled Latin letter or digit: draw its plain form, which is still readable.
   const Codepoint plain = prv_plain_latin_codepoint(codepoint);
-  if (plain != codepoint) {
-    data = prv_find_glyph(font_cache, plain, font_info, need_bitmap, location_out);
+  const GlyphData *data;
+  Codepoint lookup = codepoint;
+  while (true) {
+    data = prv_find_glyph(font_cache, lookup, font_info, need_bitmap, location_out);
     if (data) {
       return data;
     }
+    if (lookup == plain) {
+      break;
+    }
+    lookup = plain;
   }
 
   // (d) Absent everywhere: fall back to the wildcard (square box) then ' ', looked up in the
