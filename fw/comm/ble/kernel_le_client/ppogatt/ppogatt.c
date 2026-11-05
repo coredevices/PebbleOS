@@ -1379,7 +1379,9 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *client,
+static void prv_retry_send_later(PPoGATTClient *client);
+
+static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(PPoGATTClient *client,
                                                            PPoGATTPacket **heap_packet_in_out) {
   PPoGATTPacket *packet = *heap_packet_in_out;
   // Lazily allocate a buffer on the heap:
@@ -1388,7 +1390,11 @@ static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *
     if (max_payload_size == 0) {
       return nullptr;
     }
-    packet = (PPoGATTPacket *)pbl_malloc_check(sizeof(PPoGATTPacket) + max_payload_size);
+    packet = (PPoGATTPacket *)pbl_malloc(sizeof(PPoGATTPacket) + max_payload_size);
+    if (!packet) {
+      prv_retry_send_later(client);
+      return nullptr;
+    }
     *heap_packet_in_out = packet;
   }
   return packet;
@@ -1396,7 +1402,7 @@ static PPoGATTPacket *prv_lazily_allocate_packet_if_needed(const PPoGATTClient *
 
 // -------------------------------------------------------------------------------------------------
 
-static const PPoGATTPacket *prv_prepare_next_reset_packet(const PPoGATTClient *client,
+static const PPoGATTPacket *prv_prepare_next_reset_packet(PPoGATTClient *client,
                                                           PPoGATTPacket **heap_packet_in_out,
                                                           uint16_t *payload_size_out) {
   PPoGATTPacket *packet = prv_lazily_allocate_packet_if_needed(client, heap_packet_in_out);
