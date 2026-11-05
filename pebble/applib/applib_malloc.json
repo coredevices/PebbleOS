@@ -254,7 +254,7 @@
         "_comment": "Generously padded because it's not feature complete yet (only 3.x)"
     }, {
         "name": "VoiceWindow",
-        "size_3x_padding": 31,
+        "size_3x_padding": 7,
         "size_3x": 2384,
         "dependencies": ["TranscriptionDialog", "Layer", "Layer", "StatusBarLayer", "TextLayer", 
                          "KinoLayer", "Window", "EventServiceInfo"],
