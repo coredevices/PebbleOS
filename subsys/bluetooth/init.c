@@ -51,8 +51,18 @@ typedef enum {
 // with the vendor's ble_hs_enabled_state (Stopped<->OFF, Started<->ON).
 static DriverState s_driver_state = DriverStateStopped;
 
+#define LL_MAX_TX_OCTETS  251
+#define LL_MAX_TX_TIME_US 2120
+
 static void prv_sync_cb(void) {
   PBL_LOG_DBG("NimBLE host synchronized");
+
+  // Controllers default to 27-byte LL PDUs when transmitting.
+  int rc = ble_gap_write_sugg_def_data_len(LL_MAX_TX_OCTETS, LL_MAX_TX_TIME_US);
+  if (rc != 0) {
+    PBL_LOG_WRN("Failed to set the default data length (0x%04x)", (uint16_t)rc);
+  }
+
   pbl_sem_give(&s_host_started);
   pbl_bt_handle_host_resynced();
 }
