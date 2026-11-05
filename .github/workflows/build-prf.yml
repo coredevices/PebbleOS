@@ -101,6 +101,7 @@ jobs:
           BOARD: ${{ matrix.board }}
 
       - name: Configure
+        shell: bash
         run: |
           if [ "${{ matrix.mode }}" == "mfg" ]; then
             OPTS="-DCONFIG_MFG=y -DCONFIG_LOG_HASHED=n"
