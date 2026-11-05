@@ -72,8 +72,8 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb_rc10k;
  * @brief RC10K low-power oscillator, calibrated against the 48 MHz crystal.
  *
  * Its rate is the filtered estimate, updated every @c CONFIG_CLK_SF32LB_RC10K_CAL_PERIOD_S
- * seconds from the tick interrupt, and the nominal rate until the first gate a few seconds into
- * boot; see the RC10K calibration page in the driver documentation. The clock always runs.
+ * seconds from the tick interrupt, and a placeholder until the first gate, with or without
+ * Bluetooth; see the RC10K calibration page in the driver documentation. The clock always runs.
  */
 #define SF32LB_RC10K (&pbl_clk_sf32lb_rc10k)
 
