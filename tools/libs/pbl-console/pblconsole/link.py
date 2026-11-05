@@ -5,6 +5,7 @@
 
 import base64
 import re
+import socket
 import struct
 import threading
 import time
@@ -86,6 +87,10 @@ class ConsoleLink:
         # RTS resets the SoC on some boards.
         port.rts = False
         port.open()
+        tcp = getattr(port, "_socket", None)
+        if tcp is not None:
+            # Each frame waits for the last one's acknowledgement.
+            tcp.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self._serial = port
         self._closing = False
         self._raw = b""
