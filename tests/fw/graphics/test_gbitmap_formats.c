@@ -17,7 +17,7 @@ void test_gbitmap_formats__create_blank(void) {
 
 #ifdef CONFIG_PLATFORM_GABBRO
   const GSize s10 = GSize(10, 10);
-  const GSize s_full = GSize(DISP_COLS, DISP_ROWS);
+  const GSize s_full = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
 
   bmp = gbitmap_create_blank(s10, GBitmapFormat1Bit);
   cl_assert(nullptr != bmp);
@@ -49,11 +49,11 @@ void test_gbitmap_formats__create_blank(void) {
   cl_assert_equal_p(bmp->addr, info.data);
   cl_assert_equal_i(113, info.min_x);
   cl_assert_equal_i(146, info.max_x);
-  info = gbitmap_get_data_row_info(bmp, DISP_ROWS / 2);
-  cl_assert_equal_p((uint8_t *)bmp->addr + DISP_ROWS / 2 * DISP_COLS, info.data);
+  info = gbitmap_get_data_row_info(bmp, PBL_DISPLAY_HEIGHT / 2);
+  cl_assert_equal_p((uint8_t *)bmp->addr + PBL_DISPLAY_HEIGHT / 2 * PBL_DISPLAY_WIDTH, info.data);
   cl_assert_equal_i(0, info.min_x);
-  cl_assert_equal_i(DISP_COLS - 1, info.max_x);
-  info = gbitmap_get_data_row_info(bmp, DISP_ROWS - 1);
+  cl_assert_equal_i(PBL_DISPLAY_WIDTH - 1, info.max_x);
+  info = gbitmap_get_data_row_info(bmp, PBL_DISPLAY_HEIGHT - 1);
   cl_assert_equal_i(113, info.min_x);
   cl_assert_equal_i(146, info.max_x);
 #endif
@@ -62,7 +62,7 @@ void test_gbitmap_formats__create_blank(void) {
 void test_gbitmap_formats__create_blank_with_palette(void) {
 #ifdef CONFIG_PLATFORM_GABBRO
   const GSize s10 = GSize(10, 10);
-  const GSize s_full = GSize(DISP_COLS, DISP_ROWS);
+  const GSize s_full = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   GBitmap *bmp;
   GColor8 *p = (GColor8 *)&p; // some value to test against
 
@@ -111,6 +111,7 @@ void test_gbitmap_formats__size_for_data(void) {
   cl_assert_equal_i(0, prv_gbitmap_size_for_data(GSize(13, 10), GBitmapFormat8BitCircular));
 
   const size_t expected = PBL_IF_RECT_ELSE(0, DISPLAY_FRAMEBUFFER_BYTES);
-  cl_assert_equal_i(
-      expected, prv_gbitmap_size_for_data(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat8BitCircular));
+  cl_assert_equal_i(expected,
+                    prv_gbitmap_size_for_data(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
+                                              GBitmapFormat8BitCircular));
 }

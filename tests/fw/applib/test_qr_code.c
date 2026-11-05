@@ -34,12 +34,12 @@ void test_qr_code__initialize(void) {
   }
 
   s_fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(s_fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, s_fb);
-  setup_test_aa_sw(&s_ctx, s_fb, GRect(0, 0, DISP_COLS, DISP_ROWS),
-                   GRect(0, 0, DISP_COLS, DISP_ROWS), false, 1);
+  setup_test_aa_sw(&s_ctx, s_fb, GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
+                   GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT), false, 1);
   graphics_context_set_fill_color(&s_ctx, GColorRed);
-  graphics_fill_rect(&s_ctx, &GRect(0, 0, DISP_COLS, DISP_ROWS));
+  graphics_fill_rect(&s_ctx, &GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
 }
 
 void test_qr_code__cleanup(void) {
@@ -47,7 +47,7 @@ void test_qr_code__cleanup(void) {
 }
 
 static void prv_render(size_t len, QRCodeECC ecc) {
-  QRCode *qr_code = qr_code_create(GRect(0, 0, DISP_COLS, DISP_ROWS));
+  QRCode *qr_code = qr_code_create(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
 
   cl_assert(qr_code != nullptr);
   qr_code_set_data(qr_code, s_data, len);

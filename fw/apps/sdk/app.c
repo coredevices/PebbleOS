@@ -37,7 +37,8 @@ static void prv_sdk_home_update_proc(Layer *layer, GContext *ctx) {
   const int line_top_margin = 14;
   const int line_stroke_width = 2;
   graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, &GRect(0, time_max_y + line_top_margin, DISP_COLS, line_stroke_width));
+  graphics_fill_rect(ctx,
+                     &GRect(0, time_max_y + line_top_margin, PBL_DISPLAY_WIDTH, line_stroke_width));
 }
 
 static void prv_update_time(SdkAppData *data) {
@@ -99,7 +100,7 @@ static void prv_init(void) {
 
   const int time_padding = 22;
   frame.origin.y += time_height + time_padding;
-  frame.size.h = DISP_ROWS - frame.origin.y;
+  frame.size.h = PBL_DISPLAY_HEIGHT - frame.origin.y;
 
   TextLayer *info_text_layer = &data->info_text_layer;
   text_layer_init(info_text_layer, &frame);

@@ -318,7 +318,7 @@ static GTextNode *prv_create_icon_label_node_rect(const LayoutLayer *layout,
   }
   if (ctx->one_line) {
     // Keep the time on one line; what doesn't fit is cut off at the screen edge
-    node->margin.w = -DISP_COLS;
+    node->margin.w = -PBL_DISPLAY_WIDTH;
   }
   GTextNodeHorizontal *horizontal_node = graphics_text_node_create_horizontal(2);
   GTextNodeCustom *image_node = prv_create_image_node(ctx->image);

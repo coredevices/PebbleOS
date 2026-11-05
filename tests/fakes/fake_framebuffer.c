@@ -11,8 +11,8 @@
 
 #include <framebuffer.h>
 
-const int FrameBuffer_MaxX = DISP_COLS;
-const int FrameBuffer_MaxY = DISP_ROWS;
+const int FrameBuffer_MaxX = PBL_DISPLAY_WIDTH;
+const int FrameBuffer_MaxY = PBL_DISPLAY_HEIGHT;
 
 static FrameBuffer *s_current_framebuffer;
 static uint8_t s_current_flush_line;
@@ -29,7 +29,7 @@ uint32_t *framebuffer_get_line(FrameBuffer *f, uint8_t y) {
 
 void framebuffer_clear(FrameBuffer *f) {
   memset(f->buffer, 0xffffffff, FRAMEBUFFER_SIZE_BYTES);
-  memset(f->dirty_lines, 0xff, DISP_ROWS / 8);
+  memset(f->dirty_lines, 0xff, PBL_DISPLAY_HEIGHT / 8);
   f->is_dirty = true;
   f->is_cleared = false;
 }
@@ -63,7 +63,7 @@ void framebuffer_set_lines(FrameBuffer *f, uint8_t y, const uint8_t num_lines,
                            const uint32_t *buffer) {
   uint32_t *line = framebuffer_get_line(f, y);
   memcpy(line, buffer, num_lines * FRAMEBUFFER_WORDS_PER_ROW);
-  const GRect dirty_rect = GRect(0, y, DISP_COLS, num_lines);
+  const GRect dirty_rect = GRect(0, y, PBL_DISPLAY_WIDTH, num_lines);
   framebuffer_mark_dirty_rect(f, dirty_rect);
 }
 
@@ -90,7 +90,7 @@ static void flush_complete(void) {
 }
 
 static bool flush_get_next_line(DisplayRow *row) {
-  while (s_current_flush_line < DISP_ROWS) {
+  while (s_current_flush_line < PBL_DISPLAY_HEIGHT) {
     if (pbl_bitset8_get(s_current_framebuffer->dirty_lines, s_current_flush_line)) {
       row->address = s_current_flush_line;
       row->data = framebuffer_get_line(s_current_framebuffer, s_current_flush_line);
@@ -105,7 +105,7 @@ static bool flush_get_next_line(DisplayRow *row) {
 }
 
 static void framebuffer_reset_dirty(FrameBuffer *f) {
-  memset(f->dirty_lines, 0x00, DISP_ROWS / 8);
+  memset(f->dirty_lines, 0x00, PBL_DISPLAY_HEIGHT / 8);
   f->is_dirty = false;
   f->is_cleared = false;
 }

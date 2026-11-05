@@ -228,7 +228,7 @@ static void prv_collapse_animation_update_round(GContext *ctx,
                                                 uint32_t distance_normalized) {
   // If we're expanding, blit the app framebuffer into the system framebuffer (so below the ring)
   if (!config.collapse_starting_animation) {
-    compositor_scaled_app_fb_copy(GRect(0, 0, DISP_COLS, DISP_ROWS),
+    compositor_scaled_app_fb_copy(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
                                   false /* copy_relative_to_origin */);
   }
 

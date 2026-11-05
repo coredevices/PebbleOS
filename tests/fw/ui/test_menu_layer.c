@@ -426,7 +426,7 @@ static void prv_skip_odd_rows(struct MenuLayer *menu_layer, MenuIndex *new_index
 
 void test_menu_layer__center_focused_handles_skipped_rows(void) {
   MenuLayer l;
-  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_init(&l, &GRect(10, 10, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   menu_layer_set_center_focused(&l, true);
   menu_layer_set_callbacks(&l, nullptr,
                            &(MenuLayerCallbacks){
@@ -474,7 +474,7 @@ static void prv_redirect_off_last_row(struct MenuLayer *menu_layer, MenuIndex *n
 
 void test_menu_layer__wrap_around_honors_selection_will_change(void) {
   MenuLayer l;
-  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_init(&l, &GRect(10, 10, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   menu_layer_set_callbacks(&l, nullptr,
                            &(MenuLayerCallbacks){
                              .draw_row = prv_draw_row,
@@ -503,7 +503,7 @@ static void prv_lock_selection(struct MenuLayer *menu_layer, MenuIndex *new_inde
 
 void test_menu_layer__wrap_around_cancelled_when_selection_locked(void) {
   MenuLayer l;
-  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_init(&l, &GRect(10, 10, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   menu_layer_set_callbacks(&l, nullptr,
                            &(MenuLayerCallbacks){
                              .draw_row = prv_draw_row,
@@ -519,7 +519,7 @@ void test_menu_layer__wrap_around_cancelled_when_selection_locked(void) {
 
 void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
   MenuLayer l;
-  menu_layer_init(&l, &GRect(10, 10, DISP_COLS, DISP_ROWS));
+  menu_layer_init(&l, &GRect(10, 10, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   menu_layer_set_center_focused(&l, true);
   menu_layer_set_callbacks(&l, nullptr,
                            &(MenuLayerCallbacks){
@@ -529,7 +529,7 @@ void test_menu_layer__center_focused_handles_skipped_rows_animated(void) {
                            });
   menu_layer_reload_data(&l);
   const int16_t basic_cell_height = menu_cell_basic_cell_height();
-  const int initial_scroll_offset = (DISP_ROWS - basic_cell_height) / 2;
+  const int initial_scroll_offset = (PBL_DISPLAY_HEIGHT - basic_cell_height) / 2;
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).section);
   cl_assert_equal_i(0, menu_layer_get_selected_index(&l).row);
   cl_assert_equal_i(0, l.selection.y);
@@ -607,8 +607,8 @@ void test_menu_layer__menu_cell_is_part_of_hierarchy(void) {
 
 void test_menu_layer__center_focused_updates_height_on_reload(void) {
   MenuLayer l;
-  const int height = DISP_ROWS;
-  menu_layer_init(&l, &GRect(10, 10, height, DISP_COLS));
+  const int height = PBL_DISPLAY_HEIGHT;
+  menu_layer_init(&l, &GRect(10, 10, height, PBL_DISPLAY_WIDTH));
   menu_layer_set_center_focused(&l, true);
   s_num_rows = 3;
   menu_layer_set_callbacks(&l, nullptr,

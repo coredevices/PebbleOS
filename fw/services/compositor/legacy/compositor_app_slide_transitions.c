@@ -22,7 +22,7 @@ static_assert(sizeof(AppSlideTransitionAnimationConfiguration) == sizeof(void *)
 void compositor_app_slide_transition_animation_update(GContext *ctx, uint32_t distance_normalized,
                                                       CompositorTransitionDirection dir) {
   const bool is_right = (dir == CompositorTransitionDirectionRight);
-  const int16_t from = (int16_t)((is_right) ? -DISP_COLS : DISP_COLS);
+  const int16_t from = (int16_t)((is_right) ? -PBL_DISPLAY_WIDTH : PBL_DISPLAY_WIDTH);
   const int16_t to = 0;
   const int16_t app_fb_origin_x = interpolate_int16(distance_normalized, from, to);
 

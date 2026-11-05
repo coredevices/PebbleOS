@@ -17,7 +17,7 @@
 #include <shell/system_theme.h>
 
 //! Title text vertically centered position
-#define TEXT_OFFSET_Y ((DISP_ROWS / 2) + PBL_IF_RECT_ELSE(46, 42))
+#define TEXT_OFFSET_Y ((PBL_DISPLAY_HEIGHT / 2) + PBL_IF_RECT_ELSE(46, 42))
 
 //! Number text vertically bottom-aligned with Title text
 #define NUMBER_OFFSET_Y (TEXT_OFFSET_Y + 2)

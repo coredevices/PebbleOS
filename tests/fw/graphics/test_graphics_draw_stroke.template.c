@@ -31,7 +31,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_graphics_draw_stroke_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 }
 
 // Teardown

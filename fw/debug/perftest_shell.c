@@ -69,15 +69,19 @@ static int prv_perftest_line(const struct pbl_shell *sh, const char *do_aa, cons
 
   pbl_profiler_start();
   // 45 degrees
-  graphics_draw_line(ctx, GPoint(0, 0), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(0, 0), GPoint(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   // ~63 degrees
-  graphics_draw_line(ctx, GPoint(DISP_COLS / 2, 0), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(PBL_DISPLAY_WIDTH / 2, 0),
+                     GPoint(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   // ~33 degrees
-  graphics_draw_line(ctx, GPoint(0, DISP_ROWS / 3), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(0, PBL_DISPLAY_HEIGHT / 3),
+                     GPoint(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   // ~53 degrees
-  graphics_draw_line(ctx, GPoint(DISP_COLS / 4, 0), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(PBL_DISPLAY_WIDTH / 4, 0),
+                     GPoint(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   // ~39 degrees
-  graphics_draw_line(ctx, GPoint(0, DISP_ROWS / 5), GPoint(DISP_COLS, DISP_ROWS));
+  graphics_draw_line(ctx, GPoint(0, PBL_DISPLAY_HEIGHT / 5),
+                     GPoint(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   pbl_profiler_stop();
 
   uint32_t total_time = pbl_profiler_duration_cycles();
@@ -218,10 +222,10 @@ static void prv_perftest_text_main(void *data) {
   strncpy(s_text_test_str, s_perftest_text_strings[args->text_index].string, length);
   s_text_test_str[length] = '\0';
 
-  GRect bounds = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  GRect bounds = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   bounds.origin.y -= args->y_offset;
   if (args->y_offset > 0) {
-    bounds.size.h = DISP_ROWS + args->y_offset;
+    bounds.size.h = PBL_DISPLAY_HEIGHT + args->y_offset;
   }
 
   uint32_t avg = 0;

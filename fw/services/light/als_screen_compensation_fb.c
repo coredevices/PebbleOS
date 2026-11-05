@@ -24,8 +24,8 @@ uint16_t als_compensation_sample_luminance(void) {
   // the sensor mirrors. This is a relative flip, independent of the board's
   // default rotation.
   if (display_orientation_is_left()) {
-    rx = DISP_COLS - rx - rw;
-    ry = DISP_ROWS - ry - rh;
+    rx = PBL_DISPLAY_WIDTH - rx - rw;
+    ry = PBL_DISPLAY_HEIGHT - ry - rh;
   }
 #endif
   // The system framebuffer is owned by KernelMain, the same task the light

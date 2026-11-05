@@ -54,9 +54,9 @@ static uint8_t prv_corner_row(uint16_t y, uint8_t *save_idx) {
     return DISPLAY->corners[y];
   }
 
-  if (y >= DISP_ROWS - rows) {
-    *save_idx = rows + (DISP_ROWS - y - 1);
-    return DISPLAY->corners[DISP_ROWS - y - 1];
+  if (y >= PBL_DISPLAY_HEIGHT - rows) {
+    *save_idx = rows + (PBL_DISPLAY_HEIGHT - y - 1);
+    return DISPLAY->corners[PBL_DISPLAY_HEIGHT - y - 1];
   }
 
   return 0;
@@ -77,7 +77,7 @@ static void prv_corners_apply(FrameBuffer *fb, bool mask) {
     uint8_t *line = (uint8_t *)framebuffer_get_line(fb, y);
     uint8_t *saved = &s_saved_corners[idx * 2 * s_corner_bytes];
     uint16_t left = PIXEL_BYTE(0);
-    uint16_t right = PIXEL_BYTE(DISP_COLS - width);
+    uint16_t right = PIXEL_BYTE(PBL_DISPLAY_WIDTH - width);
     uint16_t len = PIXEL_BYTE(width - 1) - left + 1;
 
     if (mask) {
@@ -85,7 +85,7 @@ static void prv_corners_apply(FrameBuffer *fb, bool mask) {
       memcpy(&saved[s_corner_bytes], &line[right], len);
       for (uint8_t x = 0; x < width; x++) {
         prv_mask_pixel(line, x);
-        prv_mask_pixel(line, DISP_COLS - x - 1);
+        prv_mask_pixel(line, PBL_DISPLAY_WIDTH - x - 1);
       }
     } else {
       memcpy(&line[left], saved, len);
@@ -139,7 +139,7 @@ void compositor_display_init(void) {
   const enum pbl_display_format format = PBL_DISPLAY_FORMAT_ARGB2222;
 #endif
 
-  PBL_ASSERTN((DISPLAY->width == DISP_COLS) && (DISPLAY->height == DISP_ROWS) &&
+  PBL_ASSERTN((DISPLAY->width == PBL_DISPLAY_WIDTH) && (DISPLAY->height == PBL_DISPLAY_HEIGHT) &&
               (DISPLAY->format == format));
 
   uint8_t max_width = 0;

@@ -199,7 +199,8 @@ void test_gbitmap_sequence__color_8bit_coin_round(void) {
   GBitmapSequence *bitmap_sequence = gbitmap_sequence_create_with_resource(resource_id);
   cl_assert(bitmap_sequence);
 
-  GBitmap *bitmap = gbitmap_create_blank(GSize(DISP_COLS, DISP_ROWS), GBitmapFormat8BitCircular);
+  GBitmap *bitmap =
+      gbitmap_create_blank(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT), GBitmapFormat8BitCircular);
   cl_assert(bitmap);
 
   // Since frame 1 has 0 delay, it renders then immediately we render frame 2
@@ -227,7 +228,7 @@ void test_gbitmap_sequence__color_8bit_bounds(void) {
   uint32_t resource_id = sys_resource_load_file_as_resource(TEST_IMAGES_PATH, GET_APNG_NAME);
   cl_assert(resource_id != UINT32_MAX);
 
-  GRect orig_bounds = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  GRect orig_bounds = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   int xshift = 71;
   int yshift = 39;
   GRect shift_bounds =

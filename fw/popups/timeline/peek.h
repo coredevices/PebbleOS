@@ -31,13 +31,13 @@
 // equivalent lower portion of the circle rather than bottom-flush, which
 // would put the peek deep in the narrow bottom curve of the circle.
 #if PBL_ROUND
-#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE ((DISP_ROWS * 112) / 180)
+#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE ((PBL_DISPLAY_HEIGHT * 112) / 180)
 #else
-#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE (DISP_ROWS - TIMELINE_PEEK_HEIGHT)
+#define TIMELINE_PEEK_ORIGIN_Y_VISIBLE (PBL_DISPLAY_HEIGHT - TIMELINE_PEEK_HEIGHT)
 #endif
 
 #define TIMELINE_PEEK_FRAME_VISIBLE \
-  GRect(0, TIMELINE_PEEK_ORIGIN_Y_VISIBLE, DISP_COLS, TIMELINE_PEEK_HEIGHT)
+  GRect(0, TIMELINE_PEEK_ORIGIN_Y_VISIBLE, PBL_DISPLAY_WIDTH, TIMELINE_PEEK_HEIGHT)
 
 //! Gets the concurrent height needed to render for the number of concurrent events.
 //! @return The concurrent height

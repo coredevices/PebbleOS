@@ -223,7 +223,7 @@ RemoteInputResult remote_input_button_set(uint8_t buttons) {
 #define REMOTE_INPUT_SWIPE_TRAVEL_NUM 3
 #define REMOTE_INPUT_SWIPE_TRAVEL_DEN 5
 
-static_assert((MIN(DISP_COLS, DISP_ROWS) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
+static_assert((MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
                       REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
                   SWIPE_MIN_LENGTH_PX,
               "swipe travel is below the swipe recognizer's minimum length");
@@ -307,7 +307,7 @@ static RemoteInputResult prv_start_path(int16_t x1, int16_t y1, int16_t x2, int1
 }
 
 static bool prv_on_screen(int16_t x, int16_t y) {
-  return (x >= 0) && (x < DISP_COLS) && (y >= 0) && (y < DISP_ROWS);
+  return (x >= 0) && (x < PBL_DISPLAY_WIDTH) && (y >= 0) && (y < PBL_DISPLAY_HEIGHT);
 }
 
 RemoteInputResult remote_input_touch(int16_t x1, int16_t y1, int16_t x2, int16_t y2,
@@ -341,7 +341,7 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
 
   const bool vertical =
       (direction == RemoteInputSwipeDirection_Up) || (direction == RemoteInputSwipeDirection_Down);
-  const int16_t axis = vertical ? DISP_ROWS : DISP_COLS;
+  const int16_t axis = vertical ? PBL_DISPLAY_HEIGHT : PBL_DISPLAY_WIDTH;
   const int16_t travel =
       (int16_t)((axis * REMOTE_INPUT_SWIPE_TRAVEL_NUM) / REMOTE_INPUT_SWIPE_TRAVEL_DEN);
   // The finger starts on the far side of centre and travels towards the named direction.
@@ -350,8 +350,8 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
           ? -1
           : 1;
   const int16_t half = (int16_t)(travel / 2);
-  const int16_t x1 = (int16_t)(DISP_COLS / 2 - (vertical ? 0 : sign * half));
-  const int16_t y1 = (int16_t)(DISP_ROWS / 2 - (vertical ? sign * half : 0));
+  const int16_t x1 = (int16_t)(PBL_DISPLAY_WIDTH / 2 - (vertical ? 0 : sign * half));
+  const int16_t y1 = (int16_t)(PBL_DISPLAY_HEIGHT / 2 - (vertical ? sign * half : 0));
 
   // The touchdown-to-liftoff time covers the position updates plus the liftoff that follows
   // them. One divisor step beyond that count keeps the scheduled path strictly inside the

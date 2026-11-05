@@ -70,7 +70,7 @@ static void cl_assert_equal_rect(const GRect a, const GRect b) {
 
 void test_gbitmap_processor__initialize(void) {
   s_fb = (FrameBuffer){};
-  framebuffer_init(&s_fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(&s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
   s_bitblt_bitmap_into_bitmap_tiled_calls = (MockBitbltBitmapIntoBitmapTiledCallRecordings){};
 }

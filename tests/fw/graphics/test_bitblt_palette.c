@@ -27,7 +27,7 @@ static GBitmap dest_bitmap = {
   .info.format = GBitmapFormat8Bit,
   .info.version = GBITMAP_VERSION_CURRENT,
   .bounds = {
-    .size = {.w = DISP_COLS, .h = DISP_ROWS},
+    .size = {.w = PBL_DISPLAY_WIDTH, .h = PBL_DISPLAY_HEIGHT},
     .origin = {0, 0},
   },
 };
@@ -75,7 +75,7 @@ static bool prv_check_source_stripe_blit(const uint8_t *data, const GBitmap *src
 
 // setup and teardown
 void test_bitblt_palette__initialize(void) {
-  framebuffer_init(&framebuffer, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(&framebuffer, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&ctx, &framebuffer);
 }
 

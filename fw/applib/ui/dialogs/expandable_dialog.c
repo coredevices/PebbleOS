@@ -111,7 +111,7 @@ static void prv_expandable_dialog_load(Window *window) {
   bool has_header = *expandable_dialog->header ? true : false;
 
   const GFont header_font = expandable_dialog->header_font;
-  int32_t header_content_height = has_header ? DISP_ROWS : 0;
+  int32_t header_content_height = has_header ? PBL_DISPLAY_HEIGHT : 0;
 
   uint16_t status_layer_offset = dialog->show_status_layer * STATUS_BAR_LAYER_HEIGHT;
   uint16_t action_bar_offset = show_action_bar * ACTION_BAR_WIDTH;

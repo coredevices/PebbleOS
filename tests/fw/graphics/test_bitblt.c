@@ -41,7 +41,7 @@ static GColor prv_next_color(GColor color) {
 
 // setup and teardown
 void test_bitblt__initialize(void) {
-  framebuffer_init(&framebuffer, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(&framebuffer, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&ctx, &framebuffer);
 }
 

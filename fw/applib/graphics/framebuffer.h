@@ -40,8 +40,8 @@ bool framebuffer_is_dirty(FrameBuffer *f);
 //! with graphics routines. Note that updating this bitmap won't mark the appropriate lines as
 //! dirty in the framebuffer, so this will have to be done manually.
 //! @note The size which is passed in should come from app_manager_get_framebuffer_size() for the
-//! app framebuffer (or generated based on DISP_ROWS / DISP_COLS for the system framebuffer) to
-//! protect against malicious apps changing their own framebuffer size.
+//! app framebuffer (or generated based on PBL_DISPLAY_HEIGHT / PBL_DISPLAY_WIDTH for the system
+//! framebuffer) to protect against malicious apps changing their own framebuffer size.
 GBitmap framebuffer_get_as_bitmap(FrameBuffer *f, const GSize *size);
 
 //! Get the framebuffer size

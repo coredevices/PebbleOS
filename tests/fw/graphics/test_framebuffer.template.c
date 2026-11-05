@@ -23,7 +23,7 @@ static FrameBuffer framebuffer;
 
 void test_framebuffer_${BIT_DEPTH_NAME}__framebuffer_clear(void) {
   // clear the framebuffer
-  framebuffer_init(&framebuffer, &(GSize) { DISP_COLS, DISP_ROWS });
+  framebuffer_init(&framebuffer, &(GSize) { PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT });
   framebuffer_clear(&framebuffer);
 
   // check the clearing
@@ -35,7 +35,7 @@ void test_framebuffer_${BIT_DEPTH_NAME}__framebuffer_clear(void) {
   for (int i = 0; i < ARRAY_LENGTH(framebuffer.buffer); i++) {
     cl_assert(framebuffer.buffer[i] == GColorWhite.argb);
   }
-  GRect expected_dirty = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  GRect expected_dirty = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   cl_assert(!memcmp(&framebuffer.dirty_rect, &expected_dirty, sizeof(GRect)));
 #else
   cl_assert(false);

@@ -214,8 +214,8 @@ bool graphics_context_mask_use(GContext *ctx, GDrawMask *mask);
 void graphics_context_mask_destroy(GContext *ctx, GDrawMask *mask);
 
 //! @internal
-//! Gets the size of the backing framebuffer for the graphics context or GSize(DISP_COLS, DISP_ROWS)
-//! if there is no backing framebuffer.
+//! Gets the size of the backing framebuffer for the graphics context or GSize(PBL_DISPLAY_WIDTH,
+//! PBL_DISPLAY_HEIGHT) if there is no backing framebuffer.
 GSize graphics_context_get_framebuffer_size(GContext *ctx);
 
 //! @internal

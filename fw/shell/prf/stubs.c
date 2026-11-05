@@ -334,15 +334,15 @@ FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
 }
 
 int16_t timeline_peek_get_origin_y(void) {
-  return DISP_ROWS;
+  return PBL_DISPLAY_HEIGHT;
 }
 
 int16_t timeline_peek_get_obstruction_origin_y(void) {
-  return DISP_ROWS;
+  return PBL_DISPLAY_HEIGHT;
 }
 
 int16_t mic_banner_get_obstruction_origin_y(void) {
-  return DISP_ROWS;
+  return PBL_DISPLAY_HEIGHT;
 }
 
 bool mic_banner_get_accessory_area(GRect *area_out) {

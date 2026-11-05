@@ -365,7 +365,7 @@ static void prv_hide_peek_layer(void *context) {
 #if PBL_ROUND
   // Needed because the peek layer's background and the screen have different sizes,
   // so the peek layer needs to move a different number of pixels vs the swap layer
-  const int16_t peek_circle_vertical_offset = (BANNER_CIRCLE_RADIUS - (DISP_ROWS / 2)) / 2;
+  const int16_t peek_circle_vertical_offset = (BANNER_CIRCLE_RADIUS - (PBL_DISPLAY_HEIGHT / 2)) / 2;
   peek_frame_animation_dy -= peek_circle_vertical_offset;
 #endif
   Animation *peek_up =

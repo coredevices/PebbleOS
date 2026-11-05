@@ -114,7 +114,7 @@ static inline bool framebuffer_eq_image_raw(const FrameBuffer *framebuffer, uint
     for (int i = col; i < col + cols && i < FRAMEBUFFER_WORDS_PER_ROW; i++) {
       int fb_index = j * FRAMEBUFFER_WORDS_PER_ROW + i;
       int img_index = (j - row) * cols + (i - col);
-      uint32_t number_of_bits = col < IMAGE_DWORDS_PER_LINE - 1 ? 32 : DISP_COLS % 32;
+      uint32_t number_of_bits = col < IMAGE_DWORDS_PER_LINE - 1 ? 32 : PBL_DISPLAY_WIDTH % 32;
       uint32_t mask = number_of_bits == 32 ? -1 : ((1 << number_of_bits) - 1);
       uint32_t fb_part = mask & framebuffer->buffer[fb_index];
       uint32_t img_part = mask & image[img_index];

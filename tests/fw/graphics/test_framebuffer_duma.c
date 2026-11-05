@@ -35,7 +35,7 @@ GColor color_table[NUM_COLORS] = {
 // Setup
 void test_framebuffer_duma__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 }
 
 // Teardown
@@ -60,7 +60,7 @@ void test_framebuffer_duma__draw_within_framebuffer(void) {
             ctx.dest_bitmap.info.format == GBitmapFormat8BitCircular);
 
   // This should touch all valid bytes in the framebuffer
-  for (int y = DISP_ROWS - 1; y >= 0; y--) {
+  for (int y = PBL_DISPLAY_HEIGHT - 1; y >= 0; y--) {
     GColor color = color_table[y % NUM_COLORS];
     GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(&ctx.dest_bitmap, y);
     for (int x = row_info.min_x; x < row_info.max_x; x++) {

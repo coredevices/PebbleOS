@@ -62,8 +62,10 @@ static void prv_port_hole_transition_animation_update(GContext *ctx, Animation *
   if (distance_normalized > transition_progress_threshold) {
     // Second half of the transition
     const GRect rect = direction_vertical
-                           ? GRect(0, -current_offset_px, DISP_COLS, DISP_ROWS - current_offset_px)
-                           : GRect(-current_offset_px, 0, DISP_COLS - current_offset_px, DISP_ROWS);
+                           ? GRect(0, -current_offset_px, PBL_DISPLAY_WIDTH,
+                                   PBL_DISPLAY_HEIGHT - current_offset_px)
+                           : GRect(-current_offset_px, 0, PBL_DISPLAY_WIDTH - current_offset_px,
+                                   PBL_DISPLAY_HEIGHT);
 
     compositor_scaled_app_fb_copy(rect, false /* copy_relative_to_origin */);
   } else {

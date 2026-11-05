@@ -110,12 +110,12 @@ static void prv_window_transition_move_render(WindowTransitioningContext *contex
 
 static Animation *prv_window_transition_move_from_right_create_animation(
     WindowTransitioningContext *context) {
-  return prv_window_transition_move(context, DISP_COLS);
+  return prv_window_transition_move(context, PBL_DISPLAY_WIDTH);
 }
 
 static Animation *prv_window_transition_move_from_left_create_animation(
     WindowTransitioningContext *context) {
-  return prv_window_transition_move(context, -DISP_COLS);
+  return prv_window_transition_move(context, -PBL_DISPLAY_WIDTH);
 }
 
 const WindowTransitionImplementation g_window_transition_default_push_implementation_rect = {

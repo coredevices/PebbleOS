@@ -32,7 +32,7 @@ static FrameBuffer *fb = nullptr;
 // Setup
 void test_gdraw_command_transforms__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 }
 
 // Teardown

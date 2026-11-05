@@ -302,7 +302,7 @@ static void setup_test(GContext* ctx, bool antialiased, uint8_t stroke_width, GC
 // Setup
 void test_graphics_context_${BIT_DEPTH_NAME}__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&context, fb);
 }
 
@@ -784,7 +784,7 @@ void test_graphics_context_${BIT_DEPTH_NAME}__lock_context(void) {
 
 void test_graphics_context_${BIT_DEPTH_NAME}__lock_framebuffer(void) {
   FrameBuffer fb = {};
-  framebuffer_init(&fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(&fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   GContext ctx = {.dest_bitmap.info = {
     .format = GBITMAP_NATIVE_FORMAT,
     .version = GBITMAP_VERSION_CURRENT,

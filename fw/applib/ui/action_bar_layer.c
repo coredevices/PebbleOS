@@ -160,7 +160,7 @@ static void prv_draw_background_rect(ActionBarLayer *action_bar, GContext *ctx, 
 #endif
 
 void prv_draw_background_round(ActionBarLayer *action_bar, GContext *ctx, GColor bg_color) {
-  const uint32_t action_bar_circle_diameter = DISP_ROWS * 19 / 9;
+  const uint32_t action_bar_circle_diameter = PBL_DISPLAY_HEIGHT * 19 / 9;
   GRect action_bar_circle_frame =
       (GRect){.size = GSize(action_bar_circle_diameter, action_bar_circle_diameter)};
   grect_align(&action_bar_circle_frame, &action_bar->layer.bounds, GAlignLeft, false /* clips */);

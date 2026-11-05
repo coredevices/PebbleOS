@@ -58,7 +58,7 @@ void test_blending_${BIT_DEPTH_NAME}__photoshop(void) {
 
   GContext ctx;
   FrameBuffer *fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) { DISP_COLS, DISP_ROWS });
+  framebuffer_init(fb, &(GSize) { PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT });
   test_graphics_context_init(&ctx, fb);
   GBitmap *background_0_100 = get_gbitmap_from_pbi("blendtest_0_100_backdrop.pbi");
   GBitmap *background_33_66 = get_gbitmap_from_pbi("blendtest_33_66_backdrop.pbi");

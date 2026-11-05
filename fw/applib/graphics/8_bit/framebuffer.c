@@ -10,8 +10,8 @@
 #include <applib/graphics/gtypes.h>
 #include <board/display.h>
 
-volatile const int FrameBuffer_MaxX = DISP_COLS;
-volatile const int FrameBuffer_MaxY = DISP_ROWS;
+volatile const int FrameBuffer_MaxX = PBL_DISPLAY_WIDTH;
+volatile const int FrameBuffer_MaxY = PBL_DISPLAY_HEIGHT;
 volatile const int FrameBuffer_BytesPerRow = FRAMEBUFFER_BYTES_PER_ROW;
 
 #if PBL_ROUND

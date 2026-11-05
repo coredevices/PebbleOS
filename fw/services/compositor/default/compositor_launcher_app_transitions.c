@@ -47,7 +47,7 @@ static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, i
   for (int16_t dest_col = start_col; dest_col != end_col; dest_col += delta) {
     bitmap->bounds = (GRect){
       .origin.x = (dupe_col >= 0 ? dupe_col : dest_col),
-      .size = {1, DISP_ROWS},
+      .size = {1, PBL_DISPLAY_HEIGHT},
     };
     bitblt_bitmap_into_bitmap(bitmap, bitmap, GPoint(dest_col, 0), GCompOpAssign, GColorWhite);
   }
@@ -56,16 +56,18 @@ static void prv_duplicate_framebuffer_cols(GBitmap *bitmap, int16_t start_col, i
 static void prv_copy_app_fb_patching_garbage(int16_t dest_origin_x) {
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
 
-  compositor_scaled_app_fb_copy(GRect(dest_origin_x, 0, DISP_COLS - dest_origin_x, DISP_ROWS),
-                                false /* copy_relative_to_origin */);
+  compositor_scaled_app_fb_copy(
+      GRect(dest_origin_x, 0, PBL_DISPLAY_WIDTH - dest_origin_x, PBL_DISPLAY_HEIGHT),
+      false /* copy_relative_to_origin */);
 
   // Patch garbage pixels using the first/last column, if necessary
   if (dest_origin_x != 0) {
     const bool offscreen_left = (dest_origin_x < 0);
     const int16_t first_column_x = 0;
-    const int16_t last_column_x = DISP_COLS - 1;
+    const int16_t last_column_x = PBL_DISPLAY_WIDTH - 1;
     const int16_t column_to_replicate = (offscreen_left ? last_column_x : first_column_x);
-    const int16_t from = (int16_t)(offscreen_left ? (dest_origin_x + DISP_COLS) : first_column_x);
+    const int16_t from =
+        (int16_t)(offscreen_left ? (dest_origin_x + PBL_DISPLAY_WIDTH) : first_column_x);
     const int16_t to = (int16_t)(offscreen_left ? last_column_x : dest_origin_x - 1);
     prv_duplicate_framebuffer_cols(&dest_bitmap, from, to, column_to_replicate);
   }
@@ -88,11 +90,11 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
   const int16_t area_above_selection_rect_height = selection_rect->origin.y;
   if (area_above_selection_rect_height > 0) {
     const GRect area_above_selection_rect =
-        GRect(-selection_rect->origin.x, 0, DISP_COLS, area_above_selection_rect_height);
+        GRect(-selection_rect->origin.x, 0, PBL_DISPLAY_WIDTH, area_above_selection_rect_height);
     prv_move_region_of_bitmap_horizontally(&ctx->dest_bitmap, &area_above_selection_rect, -delta);
 
     const GRect stretch_rect_above_selection_rect =
-        GRect(0, selection_rect->origin.y - abs_delta, DISP_COLS, abs_delta);
+        GRect(0, selection_rect->origin.y - abs_delta, PBL_DISPLAY_WIDTH, abs_delta);
     graphics_context_set_fill_color(ctx, selection_color);
     graphics_fill_rect(ctx, &stretch_rect_above_selection_rect);
   }
@@ -101,15 +103,15 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
   // color down
   const int16_t row_below_selection_rect_bottom = grect_get_max_y(selection_rect);
   const int16_t area_below_selection_rect_height =
-      (int16_t)DISP_ROWS - row_below_selection_rect_bottom;
+      (int16_t)PBL_DISPLAY_HEIGHT - row_below_selection_rect_bottom;
   if (area_below_selection_rect_height > 0) {
     const GRect area_below_selection_rect =
-        GRect(-selection_rect->origin.x, row_below_selection_rect_bottom, DISP_COLS,
+        GRect(-selection_rect->origin.x, row_below_selection_rect_bottom, PBL_DISPLAY_WIDTH,
               area_below_selection_rect_height);
     prv_move_region_of_bitmap_horizontally(&ctx->dest_bitmap, &area_below_selection_rect, -delta);
 
     const GRect stretch_rect_below_selection_rect =
-        GRect(0, row_below_selection_rect_bottom, DISP_COLS, abs_delta);
+        GRect(0, row_below_selection_rect_bottom, PBL_DISPLAY_WIDTH, abs_delta);
     graphics_context_set_fill_color(ctx, selection_color);
     graphics_fill_rect(ctx, &stretch_rect_below_selection_rect);
   }
@@ -124,7 +126,7 @@ static void prv_launcher_app_transition_animation_update(GContext *ctx,
   const GColor selection_color = s_data.launcher_draw_state.selection_background_color;
 
   const int16_t start = 0;
-  const int16_t end = DISP_COLS;
+  const int16_t end = PBL_DISPLAY_WIDTH;
   const int16_t delta_x_before_cut = interpolate_int16(distance_normalized, start, end);
   const int16_t delta_x_before_cut_diff = delta_x_before_cut - s_data.prev_delta_x_before_cut;
   const int16_t delta_x_after_cut = interpolate_int16(distance_normalized, -end, start);
@@ -132,7 +134,7 @@ static void prv_launcher_app_transition_animation_update(GContext *ctx,
   // This rect specifies where the launcher's selected row currently is in the system framebuffer
   const GRect selection_rect =
       GRect((is_right ? s_data.prev_delta_x_before_cut : start), selection_vertical_range.origin_y,
-            DISP_COLS, selection_vertical_range.size_h);
+            PBL_DISPLAY_WIDTH, selection_vertical_range.size_h);
 
   // We know we're before the moook cut if our delta for after the cut hasn't "moooked" beyond
   // where we will finish the animation

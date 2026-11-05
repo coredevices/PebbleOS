@@ -37,7 +37,7 @@ static FrameBuffer *fb = nullptr;
 void test_graphics_draw_text_${BIT_DEPTH_NAME}__initialize(void) {
   s_fake_data_row_handling = false;
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize) {DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize) {PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
 }
 
 // Teardown

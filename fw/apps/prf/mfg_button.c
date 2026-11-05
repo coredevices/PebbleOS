@@ -119,8 +119,8 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
   // Angles are in Pebble trig format (0 at 3 o'clock, counter-clockwise)
   // Up: -30 deg from top, Down: +30 deg from top, Back: +30 deg from left
 #define ARROW_MARGIN 5
-  const int16_t center_x = DISP_COLS / 2;
-  const int16_t center_y = DISP_ROWS / 2;
+  const int16_t center_x = PBL_DISPLAY_WIDTH / 2;
+  const int16_t center_y = PBL_DISPLAY_HEIGHT / 2;
   const int16_t radius = center_x - ARROW_MARGIN - ARROW_LAYER_SIZE / 2;
 
   // Angles: 0 = 3 o'clock, 90 = 12 o'clock (TRIG_MAX_ANGLE/4), etc.
@@ -167,11 +167,14 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
     // BACK
     {{ARROW_LR_MARGIN, ARROW_TB_MARGIN}, ARROW_SIZE},
     // UP
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, ARROW_TB_MARGIN}, ARROW_SIZE},
+    {{PBL_DISPLAY_WIDTH - ARROW_LR_MARGIN - ARROW_W, ARROW_TB_MARGIN}, ARROW_SIZE},
     // SELECT
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, (DISP_ROWS - ARROW_H) / 2}, ARROW_SIZE},
+    {{PBL_DISPLAY_WIDTH - ARROW_LR_MARGIN - ARROW_W, (PBL_DISPLAY_HEIGHT - ARROW_H) / 2},
+     ARROW_SIZE},
     // DOWN
-    {{DISP_COLS - ARROW_LR_MARGIN - ARROW_W, DISP_ROWS - ARROW_TB_MARGIN - ARROW_H}, ARROW_SIZE},
+    {{PBL_DISPLAY_WIDTH - ARROW_LR_MARGIN - ARROW_W,
+      PBL_DISPLAY_HEIGHT - ARROW_TB_MARGIN - ARROW_H},
+     ARROW_SIZE},
   };
 
   layer_set_frame(&arrow->layer, &ARROW_RECTS[id]);

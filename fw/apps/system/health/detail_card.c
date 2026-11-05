@@ -19,7 +19,7 @@
 #include <shell/system_theme.h>
 
 // Compile-time display offset calculations
-#define HEALTH_Y_OFFSET       ((DISP_ROWS - LEGACY_2X_DISP_ROWS) / 2)
+#define HEALTH_Y_OFFSET       ((PBL_DISPLAY_HEIGHT - LEGACY_2X_DISP_ROWS) / 2)
 #define HEALTH_PADDING_OFFSET (HEALTH_Y_OFFSET / 10)
 
 #define CORNER_RADIUS (3)
@@ -449,7 +449,7 @@ static int16_t prv_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *ce
                                             void *context) {
   HealthDetailCard *detail_card = (HealthDetailCard *)context;
   if (cell_index->row <= prv_num_chart_rows(detail_card)) {
-    return menu_layer_is_index_selected(menu_layer, cell_index) ? DISP_ROWS : 0;
+    return menu_layer_is_index_selected(menu_layer, cell_index) ? PBL_DISPLAY_HEIGHT : 0;
   }
 
 #if PBL_DISPLAY_HEIGHT >= 200

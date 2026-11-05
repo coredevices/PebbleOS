@@ -44,7 +44,7 @@
 /** @brief Height of the white arrow layer. */
 #define LAYOUT_ARROW_HEIGHT PBL_IF_RECT_ELSE(19, 16)
 /** @brief Height of the layout text region: the display minus the status bar and arrow. */
-#define LAYOUT_HEIGHT (DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT)
+#define LAYOUT_HEIGHT (PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT - LAYOUT_ARROW_HEIGHT)
 /** @brief Vertical offset before the text begins. */
 #define LAYOUT_BEFORE_TEXT_SPACING_Y 40
 /** @brief Radius of the round banner. */
@@ -61,7 +61,7 @@
  * @param h Height of the layout.
  */
 #define TEXT_VISIBLE_LOWER_THRESHOLD(h) \
-  (-(h) + DISP_ROWS - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
+  (-(h) + PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
 
 /**
  * @brief Fonts and spacing of a notification card, per content size.

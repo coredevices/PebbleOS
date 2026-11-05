@@ -68,12 +68,12 @@ void test_perimeter__perimeter_for_display_rect(void) {
   GPerimeter p = {
     .callback = perimeter_for_display_rect,
   };
-  const GSize ctx_size = GSize(DISP_COLS, DISP_ROWS);
+  const GSize ctx_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
   GRangeVertical r = {.origin_y = 10, .size_h = 10};
 
-  GRangeHorizontal expected = (GRangeHorizontal){.origin_x = 0, .size_w = DISP_COLS};
+  GRangeHorizontal expected = (GRangeHorizontal){.origin_x = 0, .size_w = PBL_DISPLAY_WIDTH};
   cl_assert_equal_rangehorizontal(expected, perimeter_for_display_rect(&p, &ctx_size, r, 0));
-  expected = (GRangeHorizontal){.origin_x = 5, .size_w = DISP_COLS - 10};
+  expected = (GRangeHorizontal){.origin_x = 5, .size_w = PBL_DISPLAY_WIDTH - 10};
   cl_assert_equal_rangehorizontal(expected, perimeter_for_display_rect(&p, &ctx_size, r, 5));
   cl_assert_equal_i(0, perimeter_for_display_rect(&p, &ctx_size, r, 500).size_w);
 #endif
@@ -85,8 +85,8 @@ void test_perimeter__perimeter_for_display_round(void) {
     .callback = perimeter_for_display_round,
   };
   GRangeVertical r = {.origin_y = 10, .size_h = 10};
-  const GSize ctx_size = GSize(DISP_COLS, DISP_ROWS);
-  const GRect disp = GRect(0, 0, DISP_COLS, DISP_ROWS);
+  const GSize ctx_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+  const GRect disp = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
 
   GRangeHorizontal expected =
       perimeter_for_circle(r, grect_center_point(&disp), grect_shortest_side(disp) / 2);

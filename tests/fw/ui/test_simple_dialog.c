@@ -96,7 +96,7 @@ bool graphics_release_frame_buffer(GContext *ctx, GBitmap *buffer) {
 
 void test_simple_dialog__initialize(void) {
   fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, fb);
   framebuffer_clear(fb);
 
@@ -123,8 +123,8 @@ void test_simple_dialog__cleanup(void) {
 void prv_push_and_render_simple_dialog(Dialog *dialog) {
   gbitmap_destroy(s_dest_bitmap);
 
-  const int16_t bitmap_width = DISP_COLS;
-  const int16_t bitmap_height = DISP_ROWS;
+  const int16_t bitmap_width = PBL_DISPLAY_WIDTH;
+  const int16_t bitmap_height = PBL_DISPLAY_HEIGHT;
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
   s_dest_bitmap = gbitmap_create_blank(bitmap_size, CANVAS_GBITMAP_FORMAT);
 

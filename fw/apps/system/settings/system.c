@@ -880,7 +880,7 @@ static void prv_append_regulatory_compliance_mark(SystemCertificationData *cd, G
   // Determine whether adding this mark overflows the cell, necessitating
   // another cell for this mark.
   uint16_t mark_width = mark->bounds.size.w;
-  if (cd->current_regulatory_marks_cell_width + mark_width >= DISP_COLS) {
+  if (cd->current_regulatory_marks_cell_width + mark_width >= PBL_DISPLAY_WIDTH) {
     // Flush the current marks to a cell and start a new one.
     prv_append_certification_menu(
         cd, &(SystemCertificationMenuItem){

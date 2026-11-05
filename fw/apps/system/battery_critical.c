@@ -22,8 +22,8 @@ static void update_proc(Layer *layer, GContext *ctx) {
   GRect low_battery_bounds = {
     .origin =
         {
-          .x = (DISP_COLS - app_data->bitmap.bounds.size.w) / 2,
-          .y = (DISP_ROWS - app_data->bitmap.bounds.size.h),
+          .x = (PBL_DISPLAY_WIDTH - app_data->bitmap.bounds.size.w) / 2,
+          .y = (PBL_DISPLAY_HEIGHT - app_data->bitmap.bounds.size.h),
         },
     .size = app_data->bitmap.bounds.size,
   };

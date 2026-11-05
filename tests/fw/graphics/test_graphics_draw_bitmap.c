@@ -39,7 +39,7 @@ static FrameBuffer *s_fb = nullptr;
 
 void test_graphics_draw_bitmap__initialize(void) {
   s_fb = malloc(sizeof(FrameBuffer));
-  framebuffer_init(s_fb, &(GSize){DISP_COLS, DISP_ROWS});
+  framebuffer_init(s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   test_graphics_context_init(&s_ctx, s_fb);
   read_pbi("no_litter_crop.png.pbi", &test_image);
 }
