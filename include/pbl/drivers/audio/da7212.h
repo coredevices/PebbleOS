@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/regulator.h>
 
 /**
  * @defgroup drivers_audio_da7212 DA7212 codec
@@ -15,7 +16,7 @@
  * an exact 16 kHz frame clock. Its DAC gain runs from -78 to +12 dB in 0.75 dB steps.
  *
  * @code{.c}
- * PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c.bus, 0x1a);
+ * PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c.bus, 0x1a, &s_ldo.reg);
  * static const struct pbl_audio_link s_speaker_link = {
  *   .codec = &s_da7212.codec,
  *   .fmt = PBL_AUDIO_FMT_I2S | PBL_AUDIO_FMT_CODEC_MASTER,
@@ -30,6 +31,8 @@ struct pbl_audio_da7212 {
   struct pbl_audio_codec codec;
   /** Control port. */
   struct pbl_i2c_dev i2c;
+  /** Supply of the digital and analogue circuits, to reset the codec if needed. */
+  const struct pbl_regulator *vdd;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -44,8 +47,9 @@ int pbl_audio_da7212_init(const struct pbl_device *dev);
  * @param _name Device name.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
+ * @param _vdd Supply of the digital and analogue circuits, always on.
  */
-#define PBL_AUDIO_DA7212_DEFINE(sym, _name, _bus, _addr)                                    \
+#define PBL_AUDIO_DA7212_DEFINE(sym, _name, _bus, _addr, _vdd)                              \
   PBL_DEVICE_STATE_DEFINE(sym);                                                             \
   static const struct pbl_audio_da7212 sym = {                                              \
     .codec =                                                                                \
@@ -54,6 +58,7 @@ int pbl_audio_da7212_init(const struct pbl_device *dev);
           .ops = &pbl_audio_da7212_ops,                                                     \
         },                                                                                  \
     .i2c = PBL_I2C_DEV(_bus, _addr),                                                        \
+    .vdd = (_vdd),                                                                          \
   };                                                                                        \
   PBL_DEVICE_REGISTER(sym, &sym.codec.dev)
 

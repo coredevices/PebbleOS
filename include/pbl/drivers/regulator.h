@@ -112,6 +112,17 @@ int pbl_regulator_enable(const struct pbl_regulator *reg);
 int pbl_regulator_disable(const struct pbl_regulator *reg);
 
 /**
+ * @brief Switch a rail off and back on, also if it is always-on.
+ *
+ * For a consumer to reset what the rail feeds. Nothing else on the rail may be in use.
+ *
+ * @param reg Regulator.
+ * @param off_ms Time off, in milliseconds. Output capacitors keep the rail up for a while.
+ * @return 0, -EBUSY if the rail has users, or a negative errno.
+ */
+int pbl_regulator_power_cycle(const struct pbl_regulator *reg, uint32_t off_ms);
+
+/**
  * @brief Check whether a rail is on.
  *
  * @param reg Regulator.

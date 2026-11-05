@@ -43,6 +43,7 @@ PBL_LOG_MODULE_DEFINE(driver_audio_da7212, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 #define DA7212_LDO_CTRL_EN                0x80U
 #define DA7212_PLL_CTRL_EN                0x80U
 #define DA7212_PLL_STATUS_LOCK            0x01U
+#define DA7212_PLL_STATUS_SRM_LOCK        0x02U
 #define DA7212_PLL_STATUS_MCLK            0x04U
 #define DA7212_PLL_STATUS_LOCKED          (DA7212_PLL_STATUS_LOCK | DA7212_PLL_STATUS_MCLK)
 #define DA7212_SR_16KHZ                   0x05U
@@ -58,6 +59,9 @@ PBL_LOG_MODULE_DEFINE(driver_audio_da7212, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 #define GAIN_MIN_MDB  (((int32_t)GAIN_CODE_MIN - (int32_t)GAIN_CODE_0DB) * GAIN_STEP_MDB)
 #define GAIN_MAX_MDB  (((int32_t)GAIN_CODE_MAX - (int32_t)GAIN_CODE_0DB) * GAIN_STEP_MDB)
 
+#define WAKE_MS       30U
+#define SUPPLY_OFF_MS 100U
+#define SUPPLY_ON_MS  10U
 #define RESET_MS      10U
 #define REFERENCES_MS 30U
 #define PLL_LOCK_MS   40U
@@ -128,9 +132,54 @@ static int prv_write_seq(const struct pbl_audio_da7212 *dev, const struct prv_re
   return 0;
 }
 
+// A PLL that ran with SRM as DAI master, as older firmware did, keeps a wrong rate until the codec
+// loses power, and reports SRM lock on the first read
+static int prv_recover(const struct pbl_audio_da7212 *dev) {
+  uint8_t status;
+  int ret;
+
+  ret = prv_write(dev, DA7212_SYSTEM_ACTIVE, DA7212_SYSTEM_ACTIVE_ON);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(WAKE_MS);
+
+  ret = pbl_i2c_reg_read_byte(&dev->i2c, DA7212_PLL_STATUS, &status);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if ((status & DA7212_PLL_STATUS_SRM_LOCK) == 0U) {
+    return 0;
+  }
+
+  PBL_LOG_WRN("PLL left in SRM, power cycling the codec");
+
+  ret = pbl_regulator_power_cycle(dev->vdd, SUPPLY_OFF_MS);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(SUPPLY_ON_MS);
+
+  return 0;
+}
+
 int pbl_audio_da7212_init(const struct pbl_device *dev) {
   const struct pbl_audio_da7212 *da7212 =
       container_of(dev, const struct pbl_audio_da7212, codec.dev);
+  int ret;
+
+  ret = pbl_device_init(&da7212->vdd->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_recover(da7212);
+  if (ret != 0) {
+    return ret;
+  }
 
   return prv_write(da7212, DA7212_SYSTEM_ACTIVE, 0U);
 }
