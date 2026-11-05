@@ -1103,6 +1103,24 @@ void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
   fake_gatt_client_op_assert_no_write();
 }
 
+void test_ppogatt__send_retried_when_out_of_heap(void) {
+  test_ppogatt__open_session_when_found_pebble_app();
+  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
+                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+                    true);
+  fake_malloc_set_largest_free_block(0);
+  ppogatt_send_next(transport);
+  fake_gatt_client_op_assert_no_write();
+
+  fake_malloc_set_largest_free_block(~0);
+  stub_new_timer_invoke(1);
+  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], 0, s_short_data_fragment,
+                       sizeof(s_short_data_fragment));
+  fake_gatt_client_op_assert_no_write();
+}
+
 void test_ppogatt__mtu_zero_due_to_disconnection(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
