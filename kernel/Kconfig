@@ -87,6 +87,38 @@ config RAMFUNC
 	  section is loaded from flash and copied to RAM at boot. Selected
 	  by SoCs that need code to run while flash is unavailable.
 
+config EXTRAM
+	bool
+	help
+	  External RAM is available: zero-initialized data marked
+	  PBL_SECTION_EXTRAM or PBL_SECTION_DISPOSABLE is placed there.
+	  Selected by SoCs, which must
+	  bring the memory up in pbl_soc_early_init(); the kernel zeroes it
+	  right after.
+
+config EXTRAM_BASE
+	hex
+	depends on EXTRAM
+	help
+	  Base address of the external RAM. Defaulted per SoC in
+	  soc/*/Kconfig.defconfig.
+
+config EXTRAM_SIZE
+	hex
+	depends on EXTRAM
+	help
+	  Size of the external RAM. Defaulted per SoC in
+	  soc/*/Kconfig.defconfig.
+
+config PSRAM_RETENTION
+	bool
+	depends on EXTRAM
+	help
+	  PBL_SECTION_DISPOSABLE data only keeps its contents while a
+	  retention hold is taken (psram_retain_acquire()). Selected by
+	  SoCs that power the external RAM down in deep sleep when no hold
+	  is taken and no PBL_SECTION_EXTRAM data needs it.
+
 endmenu
 
 rsource "arch/arm/Kconfig"

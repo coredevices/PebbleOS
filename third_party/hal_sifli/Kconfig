@@ -148,6 +148,12 @@ config HAL_SIFLI_MAILBOX
       Enable the MAILBOX (inter-core mailbox) SiFli HAL module
       driver.
 
+config HAL_SIFLI_MPI_PSRAM
+    bool "MPI PSRAM HAL module"
+    help
+      Enable the MPI (memory peripheral interface) PSRAM SiFli HAL
+      module driver.
+
 config HAL_SIFLI_PCD
     bool "PCD HAL module"
     help

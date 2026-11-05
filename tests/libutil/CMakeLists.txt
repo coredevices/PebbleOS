@@ -54,3 +54,5 @@ pbl_clar_test(test_gmtime)
 pbl_clar_test(test_mktime)
 
 pbl_clar_test(test_freq_track)
+
+pbl_clar_test(test_sha256)

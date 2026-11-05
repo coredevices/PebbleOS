@@ -11,4 +11,5 @@ pbl_library_sources(
   idle.c
   lpsys.c
 )
+pbl_library_sources_ifdef(CONFIG_SF32LB52_PSRAM psram.c)
 pbl_linker_sources(ramfunc ramfunc.ld)

@@ -20,6 +20,7 @@
 #include <pbl/util/circular_buffer.h>
 
 #include <board/board.h>
+#include <kernel/volatile_heap.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mic_sf32lb, CONFIG_DRIVER_MIC_LOG_LEVEL);
 
@@ -99,6 +100,19 @@ void mic_set_volume(const MicDevice *this, uint16_t volume) {
   state->volume = volume;
 }
 
+// Free space of the heap the ring comes from, for diagnostics
+static unsigned int prv_ring_heap_max_free(void) {
+#ifdef CONFIG_KERNEL_VOLATILE_HEAP
+  unsigned int used, high_water, allocations;
+  kernel_volatile_heap_stats(&used, &high_water, &allocations);
+  return CONFIG_KERNEL_VOLATILE_HEAP_SIZE - used;
+#else
+  unsigned int used, free_bytes, max_free;
+  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
+  return max_free;
+#endif
+}
+
 static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
   MicDeviceState *state = this->state;
   const uint32_t channels = this->channels ? this->channels : 1;
@@ -112,7 +126,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
   uint8_t *storage = nullptr;
 
   while (try_size >= floor) {
-    storage = pbl_malloc(try_size);
+    storage = kernel_volatile_malloc(try_size);
     if (storage) {
       break;
     }
@@ -120,16 +134,14 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
   }
 
   if (!storage) {
-    unsigned int used, free_bytes, max_free;
-    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
+    unsigned int max_free = prv_ring_heap_max_free();
     PBL_LOG_ERR("Failed to allocate PDM circular buffer (min %u B, max_free %u B)", (unsigned)floor,
                 max_free);
     return false;
   }
 
   if (try_size < requested) {
-    unsigned int used, free_bytes, max_free;
-    pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
+    unsigned int max_free = prv_ring_heap_max_free();
     PBL_LOG_WRN("PDM circular buffer fell back to %u B (requested %u, max_free %u)",
                 (unsigned)try_size, (unsigned)requested, max_free);
   }
@@ -142,7 +154,7 @@ static bool prv_allocate_buffers(const MicDevice *this, bool polling) {
 static void prv_free_buffers(MicDeviceState *state) {
   // Free circular buffer storage
   if (state->circ_buffer_storage) {
-    pbl_free(state->circ_buffer_storage);
+    kernel_volatile_free(state->circ_buffer_storage);
     state->circ_buffer_storage = nullptr;
   }
 }

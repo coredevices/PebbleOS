@@ -26,6 +26,10 @@ PBL_WEAK uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 
+PBL_WEAK uint64_t pbl_uptime_ms(void) {
+  return 0;
+}
+
 // Timezone storage
 ///////////////////////////////////////////////////////////////////////////////
 

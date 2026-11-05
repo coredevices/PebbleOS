@@ -12,8 +12,19 @@
 #include <pbl/logging/logging.h>
 #include <pbl/version.h>
 
+#ifdef CONFIG_EXTRAM
+extern uint8_t __extram_bss_start[];
+extern uint8_t __extram_bss_end[];
+extern uint8_t __disposable_bss_start[];
+extern uint8_t __disposable_bss_end[];
+#endif
+
 void kernel_init(int (*entry)(void)) {
   pbl_soc_early_init();
+#ifdef CONFIG_EXTRAM
+  memset(__extram_bss_start, 0, __extram_bss_end - __extram_bss_start);
+  memset(__disposable_bss_start, 0, __disposable_bss_end - __disposable_bss_start);
+#endif
   pbl_irq_init();
   arch_init();
   pbl_malloc_init();

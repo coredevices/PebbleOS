@@ -101,6 +101,7 @@ pbl_clar_test(test_music_endpoint
     tests/fakes/fake_rtc.c
     fw/services/music/endpoint.c
     fw/services/music/service.c
+    fw/services/imaging/resident_image.c
 )
 
 pbl_clar_test(test_ping
@@ -112,6 +113,23 @@ pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
     fw/services/imaging/imaging.c
+    fw/services/imaging/resident_image.c
+)
+
+pbl_clar_test(test_imaging_cache
+  SOURCE test_imaging.c
+  SOURCES
+    tests/fakes/fake_session.c
+    fw/services/imaging/imaging.c
+    fw/services/imaging/resident_image.c
+    fw/services/imaging/image_cache.c
+    fw/kernel/psram_image_pool.c
+  DEFINES
+    CONFIG_PSRAM_RETENTION
+    CONFIG_PSRAM_IMAGE_POOL
+    CONFIG_PSRAM_IMAGE_SLOTS=4
+    CONFIG_IMAGE_CACHE
+    CONFIG_PSRAM_IDLE_RELEASE_MS=5000
 )
 
 pbl_clar_test(test_analytics_native
@@ -505,4 +523,26 @@ pbl_clar_test(test_mic_capture
     tests/fakes/fake_settings.c
   DEFINES CONFIG_SERVICE_MIC_CAPTURE
   OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_voice_speex
+  SOURCES fw/services/voice/voice_speex.c fw/kernel/volatile_heap.c kernel/heap.c
+  DEFINES CONFIG_PSRAM_RETENTION CONFIG_KERNEL_VOLATILE_HEAP CONFIG_KERNEL_VOLATILE_HEAP_SIZE=32768
+  LIBS speex
+  INCLUDES third_party/speex third_party/speex/speex/include
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_resident_image
+  SOURCES fw/services/imaging/resident_image.c
+)
+
+pbl_clar_test(test_image_cache
+  SOURCES fw/services/imaging/image_cache.c fw/kernel/psram_image_pool.c
+  DEFINES
+    CONFIG_PSRAM_RETENTION
+    CONFIG_PSRAM_IMAGE_POOL
+    CONFIG_PSRAM_IMAGE_SLOTS=18
+    CONFIG_IMAGE_CACHE
+    CONFIG_PSRAM_IDLE_RELEASE_MS=5000
 )

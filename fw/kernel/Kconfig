@@ -6,3 +6,34 @@ config TASK_TIMER_POOL_SIZE
     default 192
     help
       Number of TaskTimer slots reserved in .kernel_bss
+
+config KERNEL_VOLATILE_HEAP
+    bool "Volatile kernel heap in external RAM"
+    depends on PSRAM_RETENTION
+    default y
+    help
+      A kernel heap in disposable external RAM, for large transient
+      buffers (e.g. voice). Live allocations hold the external RAM
+      retained. Without it, kernel_volatile_*() use the kernel heap.
+
+config KERNEL_VOLATILE_HEAP_SIZE
+    int "Volatile kernel heap size"
+    depends on KERNEL_VOLATILE_HEAP
+    default 65536
+    range 4096 131072
+
+config PSRAM_IMAGE_POOL
+    bool "Image slot pool in external RAM"
+    depends on PSRAM_RETENTION
+    default y
+    help
+      Fixed-size slots in disposable external RAM for decoded images,
+      for the image cache. Slots are only usable with a retention hold.
+
+config PSRAM_IMAGE_SLOTS
+    int "Number of image slots"
+    depends on PSRAM_IMAGE_POOL
+    default 32
+    range 1 64
+    help
+      Each slot takes 44 KiB of external RAM.
