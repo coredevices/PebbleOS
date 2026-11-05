@@ -30,6 +30,9 @@ PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL
 #define FIFO_STEP_MS   32U
 #define FIFO_BYTES(ms) ((ms) * SAMPLES_PER_MS * MIC_MANAGER_CHANNELS * sizeof(int16_t))
 
+// Heap left for the Bluetooth packets that carry the audio
+#define FIFO_HEAP_RESERVE_BYTES 2048U
+
 // Frames per KernelBG callback, leaving time for Bluetooth to drain between batches
 #define MAX_FRAMES_PER_CALLBACK 8U
 
@@ -111,8 +114,15 @@ static void prv_dispatch(void *data) {
 }
 
 static uint8_t *prv_alloc_fifo(uint16_t *size) {
+  unsigned int used, free_bytes, max_free;
+
+  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
   for (uint32_t ms = FIFO_MS; ms >= FIFO_MIN_MS; ms -= FIFO_STEP_MS) {
-    uint8_t *storage = pbl_malloc(FIFO_BYTES(ms));
+    uint8_t *storage = nullptr;
+
+    if (FIFO_BYTES(ms) + FIFO_HEAP_RESERVE_BYTES <= max_free) {
+      storage = pbl_malloc(FIFO_BYTES(ms));
+    }
 
     if (storage != nullptr) {
       if (ms < FIFO_MS) {
@@ -123,8 +133,6 @@ static uint8_t *prv_alloc_fifo(uint16_t *size) {
     }
   }
 
-  unsigned int used, free_bytes, max_free;
-  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
   PBL_LOG_ERR("No memory for the mic queue (max_free %u B)", max_free);
   return nullptr;
 }
