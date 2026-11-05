@@ -5,7 +5,7 @@ description = "Internal tool for interacting with pebbles."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-	"pebble_tool>=5.0.18",
+	"pebble_tool>=5.1.2",
 	"libpebble2>=0.0.23",
 	"pbl-console[protocol]",
 ]

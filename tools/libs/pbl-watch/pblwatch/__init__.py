@@ -9,8 +9,8 @@ class PebbleTransportConsole(pebble_tool.commands.base.PebbleTransportConfigurat
     name = "console"
 
     @classmethod
-    def add_argument_handler(cls, parser):
-        parser.add_argument(
+    def add_argument_handler(cls, group, parser):
+        group.add_argument(
             "--console",
             type=str,
             help="Use this option to connect to your Pebble via its text"
