@@ -3,10 +3,12 @@
 
 #include "app_menu_data_source.h"
 
+#include <inttypes.h>
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/process_management/app_order_storage.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -16,6 +18,7 @@
 #include <apps/system_app_ids.h>
 #include <process_management/app_manager.h>
 #include <resource/resource_ids.auto.h>
+#include <syscall/syscall.h>
 
 static void add_app_with_install_id(const AppInstallEntry *entry, AppMenuDataSource *source);
 static bool remove_app_with_install_id(const AppInstallId install_id, AppMenuDataSource *source);
@@ -307,6 +310,9 @@ static bool prv_app_enumerate_callback(AppInstallEntry *entry, void *data) {
 ////////////////////
 // Add / remove helper functions:
 
+// Menu icons are at most 25x25 (clipped to 32x32 when drawn), well within this
+#define APP_MENU_ICON_MAX_SIZE (8 * 1024)
+
 // This function should only be called once per app entry. The icon from the app will either be
 // loaded and cached or we will load the default system icon that is set by the client.
 static void prv_load_list_item_icon(AppMenuDataSource *source, AppMenuNode *node) {
@@ -314,8 +320,14 @@ static void prv_load_list_item_icon(AppMenuDataSource *source, AppMenuNode *node
   PBL_ASSERTN(node->icon == nullptr);
 
   if (node->icon_resource_id != RESOURCE_ID_INVALID) {
-    // If we have some sort of valid resource_id, try loading it
-    node->icon = gbitmap_create_with_resource_system(node->app_num, node->icon_resource_id);
+    // Skip icons too large for the app heap: the allocation would croak, not fail
+    const size_t icon_size = sys_resource_size(node->app_num, node->icon_resource_id);
+    if ((node->app_num != SYSTEM_APP) && (icon_size > APP_MENU_ICON_MAX_SIZE)) {
+      PBL_LOG_WRN("Icon of app %" PRId32 " is too large (%zu bytes), using the default",
+                  node->install_id, icon_size);
+    } else {
+      node->icon = gbitmap_create_with_resource_system(node->app_num, node->icon_resource_id);
+    }
   }
 
   if (!node->icon) {
