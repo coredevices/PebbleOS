@@ -15,9 +15,6 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
 endif()
 set(micro_sources
   SiFli-SDK/drivers/hal/bf0_hal.c
-  SiFli-SDK/drivers/hal/bf0_hal_adc.c
-  SiFli-SDK/drivers/hal/bf0_hal_cortex.c
-  SiFli-SDK/drivers/hal/bf0_hal_dma.c
   SiFli-SDK/drivers/hal/bf0_hal_efuse.c
   SiFli-SDK/drivers/hal/bf0_hal_hlp.c
   SiFli-SDK/drivers/hal/bf0_hal_pmu.c
@@ -26,11 +23,6 @@ set(micro_sources
 set(ramfunc_sources
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
 )
-if(CONFIG_HAL_SIFLI_AES OR CONFIG_HAL_SIFLI_HASH)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_aes.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_AON)
   list(APPEND micro_sources
     SiFli-SDK/drivers/hal/bf0_hal_hpaon.c
@@ -38,69 +30,6 @@ if(CONFIG_HAL_SIFLI_AON)
   )
   list(APPEND ramfunc_sources
     SiFli-SDK/drivers/hal/bf0_hal_hpaon.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_ATIM)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_tim_ex.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_AUDCODEC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_audcodec_m.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_AUDPRC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_audprc.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_BUSMON)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_busmon.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_CRC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_crc.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_EPIC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_epic.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_EXTDMA)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_ext_dma.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_EZIP)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_ezip.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_GPIO)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_gpio.c
-  )
-  list(APPEND ramfunc_sources
-    SiFli-SDK/drivers/hal/bf0_hal_gpio.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_GPT)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_tim.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_HCD)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_hcd.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_I2S)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_i2s.c
   )
 endif()
 if(CONFIG_HAL_SIFLI_LCPU_CONFIG)
@@ -113,88 +42,12 @@ if(CONFIG_HAL_SIFLI_LCPU_PATCH)
     SiFli-SDK/drivers/hal/bf0_hal_patch.c
   )
 endif()
-if(CONFIG_HAL_SIFLI_LPTIM)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_lptim.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_LRC_CAL)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_lrc_cal.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_MAILBOX)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_mailbox.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_PCD)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_pcd.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_PDM)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_pdm.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_PINMUX)
   list(APPEND micro_sources
     SiFli-SDK/drivers/hal/bf0_hal_pinmux.c
   )
   list(APPEND ramfunc_sources
     SiFli-SDK/drivers/hal/bf0_hal_pinmux.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_PTC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_ptc.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_RNG)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_rng.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_RTC)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_rtc.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_SD)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_sdmmc.c
-    SiFli-SDK/drivers/hal/bf0_hal_sd_ex.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_SDHCI)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_sdhci.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_SECU)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_secu.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_SPI)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_spi.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_TSEN)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_tsen.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_UART)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_uart.c
-  )
-endif()
-if(CONFIG_HAL_SIFLI_WDT)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_wdt.c
   )
 endif()
 if(CONFIG_HAL_SIFLI_SF32LB52)
