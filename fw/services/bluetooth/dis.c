@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include <pbl/bluetooth/dis.h>
-#include <pbl/board.h>
 
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>

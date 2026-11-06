@@ -3,7 +3,6 @@
 
 #include "touch_sdl_bottom.h"
 
-#include <pbl/board.h>
 #include <pbl/drivers/touch.h>
 #include <pbl/drivers/touch/sdl.h>
 #include <pbl/services/system_task.h>

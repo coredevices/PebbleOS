@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-#include <pbl/board.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/services/runlevel.h>
 

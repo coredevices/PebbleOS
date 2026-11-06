@@ -9,6 +9,7 @@
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/display/sharp_ls013b7dh01.h>
 #include <pbl/drivers/flash/spi_nor.h>
+#include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
@@ -24,6 +25,7 @@
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/drivers/vibe/drv2604.h>
+#include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
 

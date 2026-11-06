@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/init.h>
-#include <pbl/board.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
@@ -112,7 +111,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   task_init();
 
   memory_layout_setup_mpu();
-
 
   kernel_applib_init();
 

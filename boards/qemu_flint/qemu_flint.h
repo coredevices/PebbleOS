@@ -3,12 +3,6 @@
 
 #pragma once
 
-#include <stdint.h>
-
-#include <pbl/input/input.h>
-
-#include <cmsis_core.h>
-
 extern const struct pbl_uart *const QEMU_UART;
 #ifdef CONFIG_BT_HCI_UART
 extern const struct pbl_uart *const BT_HCI_UART;

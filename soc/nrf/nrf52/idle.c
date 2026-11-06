@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/soc/nrf/sleep.h>

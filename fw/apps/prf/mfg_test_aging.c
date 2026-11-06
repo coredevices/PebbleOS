@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>

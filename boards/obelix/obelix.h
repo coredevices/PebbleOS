@@ -3,14 +3,6 @@
 
 #pragma once
 
-#include <stdint.h>
-
-#include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/i2c/sf32lb.h>
-#include <pbl/drivers/pinctrl.h>
-#include <pbl/input/input.h>
-#include <pbl/services/imu/units.h>
-
 #ifdef CONFIG_REMOTEPROC_SF32LB52
 extern const struct pbl_rproc_sf32lb52 *const LCPU;
 #endif // CONFIG_REMOTEPROC_SF32LB52
