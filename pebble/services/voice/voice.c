@@ -531,10 +531,10 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
   if (s_state != SessionState_StartSession && s_state != SessionState_AudioEndpointSetupReceived &&
       s_state != SessionState_VoiceEndpointSetupReceived) {
     PBL_LOG_WRN("Session setup result received when not expected, state=%d", (int)s_state);
-    prv_cancel_session();
     VoiceEventType event_type = (s_state <= SessionState_StartSession)
                                     ? VoiceEventTypeSessionSetup
                                     : VoiceEventTypeSessionResult;
+    prv_cancel_session();
     prv_send_event(event_type, VoiceStatusErrorGeneric, nullptr);
     goto done;
   }
