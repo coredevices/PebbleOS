@@ -16,9 +16,9 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
-#include <flash_region/flash_region.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <system/firmware_storage.h>
 
 // Samples read back from flash at once
 #define PCM_BUFFER_SIZE 1024
@@ -32,9 +32,8 @@
 #define SAMPLE_SIZE_BYTES (SAMPLE_BITS / 8)
 #define BLOCK_SIZE        (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
-#define FLASH_START FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END \
-  (FLASH_REGION_FIRMWARE_DEST_BEGIN + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
+#define FLASH_START PART_FIRMWARE_DEST_OFFSET
+#define FLASH_END (PART_FIRMWARE_DEST_OFFSET + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
 #define PROCESS_STATUS_STR_LEN 64
 

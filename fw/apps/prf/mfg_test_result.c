@@ -3,13 +3,14 @@
 
 #include <string.h>
 
+#include <pbl/board/partitions.h>
+
 #include <apps/prf/mfg_test_result.h>
 
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 
-#include <flash_region/flash_region.h>
 #endif
 
 #define NUM_MODES 2
@@ -30,8 +31,7 @@ typedef struct PBL_PACKED {
 } MfgResultRecord;
 
 #define MFG_RESULT_EMPTY        0xFF
-#define MFG_RESULTS_SIZE        (FLASH_REGION_MFG_RESULTS_END - FLASH_REGION_MFG_RESULTS_BEGIN)
-#define MFG_RESULTS_MAX_RECORDS (MFG_RESULTS_SIZE / sizeof(MfgResultRecord))
+#define MFG_RESULTS_MAX_RECORDS (PART_MFG_RESULTS_SIZE / sizeof(MfgResultRecord))
 
 static bool s_loaded;
 static uint32_t s_record_count;
@@ -45,15 +45,13 @@ static void prv_write_record(uint32_t index, MfgTestId test, uint8_t mode_index,
     .rsvd = 0,
     .value = value,
   };
-  pbl_flash_write(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN + index * sizeof(rec),
-                  (const uint8_t *)&rec, sizeof(rec));
+  pbl_flash_partition_write(PART_MFG_RESULTS, index * sizeof(rec), &rec, sizeof(rec));
 }
 
 static void prv_load(void) {
   for (uint32_t i = 0; i < MFG_RESULTS_MAX_RECORDS; i++) {
     MfgResultRecord rec;
-    pbl_flash_read(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN + i * sizeof(rec), (uint8_t *)&rec,
-                   sizeof(rec));
+    pbl_flash_partition_read(PART_MFG_RESULTS, i * sizeof(rec), &rec, sizeof(rec));
     if (rec.test_id == MFG_RESULT_EMPTY) {
       break;
     }
@@ -79,7 +77,7 @@ static void prv_ensure_loaded(void) {
 static void prv_append(MfgTestId test, uint8_t mode_index, bool passed, uint32_t value) {
   if (s_record_count >= MFG_RESULTS_MAX_RECORDS) {
     // Log full: erase and rewrite the current state as a compacted log.
-    pbl_flash_erase(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES);
+    pbl_flash_partition_erase(PART_MFG_RESULTS, 0U, PART_MFG_RESULTS_SIZE);
     s_record_count = 0;
     for (uint8_t m = 0; m < NUM_MODES; m++) {
       for (uint8_t t = 0; t < MfgTestIdCount; t++) {
@@ -140,8 +138,8 @@ void mfg_test_result_reset(void) {
   s_result_reported = false;
 
 #ifdef CONFIG_MFG
-  if (!pbl_flash_is_erased(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES)) {
-    pbl_flash_erase(FLASH, FLASH_REGION_MFG_RESULTS_BEGIN, SUBSECTOR_SIZE_BYTES);
+  if (!pbl_flash_partition_is_erased(PART_MFG_RESULTS, 0U, PART_MFG_RESULTS_SIZE)) {
+    pbl_flash_partition_erase(PART_MFG_RESULTS, 0U, PART_MFG_RESULTS_SIZE);
   }
   s_record_count = 0;
   s_loaded = true;
