@@ -248,6 +248,15 @@ pbl_clar_test(test_transcription
     pebble/services/voice/transcription.c
 )
 
+pbl_clar_test(test_voice
+  SOURCES
+    pebble/services/voice/transcription.c
+    pebble/services/voice/voice.c
+    tests/fakes/fake_events.c
+  DEFINES CONFIG_MIC
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_voice_endpoint
   MODULES rand
   SOURCES
