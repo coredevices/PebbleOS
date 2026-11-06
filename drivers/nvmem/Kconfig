@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config NVMEM
+    bool
+    help
+      Non-volatile memory class (pbl/drivers/nvmem.h), selected by the
+      providers.
+
+config NVMEM_SHELL
+    bool "Non-volatile memory shell commands"
+    default DRIVER_SHELL
+    depends on NVMEM && SHELL
+    help
+      The nvmem shell command, to list the memories and read from them.
