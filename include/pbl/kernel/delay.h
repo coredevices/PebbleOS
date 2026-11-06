@@ -46,7 +46,8 @@
  * @brief Spin for at least a number of microseconds.
  *
  * Counts CPU cycles at the CPU clock read on entry; changing the CPU clock meanwhile skews it.
- * Interrupts and preemption are not masked and add to the delay. Privileged only.
+ * Interrupts and preemption are not masked and add to the delay. Privileged only. Runs from RAM
+ * where the SoC supports it, so it works with the flash unreadable.
  *
  * @param us Microseconds to wait.
  */

@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/section.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/mcu/mpu.h>
 
@@ -191,7 +192,7 @@ bool arch_in_isr(void) {
   return mcu_state_is_isr();
 }
 
-uint32_t arch_cycles_per_sec(void) {
+PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
   return SystemCoreClock;
 }
 
