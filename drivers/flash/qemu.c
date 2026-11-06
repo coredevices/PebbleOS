@@ -9,7 +9,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define FLASH_CMD    0x00U
 #define FLASH_ADDR   0x04U

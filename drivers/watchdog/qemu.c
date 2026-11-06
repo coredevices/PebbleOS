@@ -5,7 +5,7 @@
 
 #include <pbl/drivers/watchdog.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 

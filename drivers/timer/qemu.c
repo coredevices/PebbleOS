@@ -4,7 +4,7 @@
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/mmio.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define RTC_TICKS_OFFSET 0x10U
 #define RTC_TICKS_HZ     1000U

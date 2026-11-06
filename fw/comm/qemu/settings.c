@@ -5,8 +5,8 @@
 
 #include <pbl/kernel/fatal.h>
 
-#include <board/board.h>
 #include <comm/qemu/settings.h>
+#include <hardware/qemu_memorymap.h>
 
 // QEMU RTC backup registers at RTC_BASE + 0x40
 #define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)
