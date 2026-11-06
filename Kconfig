@@ -155,6 +155,12 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
+config BOARD_HEADER
+    string
+    default "$(BOARD)/$(BOARD).h"
+    help
+      Header of the board, relative to boards/. pbl/board.h includes it.
+
 config RESOURCES_BOARD
     string
     help

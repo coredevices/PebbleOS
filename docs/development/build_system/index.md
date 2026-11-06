@@ -100,7 +100,8 @@ result, so it is cached too and can be overridden with `-D`.
 ```text
 CMakeLists.txt        the firmware image: what is built and linked
 Kconfig               the root of the configuration tree
-boards/<board>/       defconfig, Kconfig and manifest of each board
+boards/<board>/       defconfig, Kconfig, manifest and device definitions
+                      (<board>.c, <board>.h) of each board
 fw/prj*.conf          project and variant configuration fragments
 cmake/modules/        the build model, split by concern
 cmake/toolchain/      the bare-metal ARM and host toolchains

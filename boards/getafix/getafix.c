@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
+#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/backlight/aw9364e.h>
@@ -30,8 +32,6 @@
 #include <pbl/drivers/vibe/aw8623x.h>
 #include <pbl/kernel/irq.h>
 
-#include <board/board.h>
-#include <board/otp_layout.h>
 #include <hardware/sf32lb52_memorymap.h>
 
 PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,

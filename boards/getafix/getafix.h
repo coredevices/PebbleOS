@@ -1,8 +1,14 @@
-/* SPDX-FileCopyrightText: 2025 Core Devices LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #pragma once
 
+#include <stdint.h>
+
+#include <pbl/drivers/gpio/sf32lb.h>
+#include <pbl/drivers/i2c/sf32lb.h>
+#include <pbl/drivers/pinctrl.h>
+#include <pbl/input/input.h>
 #include <pbl/services/imu/units.h>
 
 #define BT_VENDOR_ID   0x0EEA
@@ -14,4 +20,3 @@ extern const struct pbl_rproc_sf32lb52 *const LCPU;
 #ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
 extern const struct pbl_uart *const HCI_TRACE_UART;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-extern HRMDevice *const HRM;

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
 #include <pbl/drivers/ambient/posix.h>
 #include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/backlight/posix.h>
@@ -13,8 +14,6 @@
 #include <pbl/drivers/uart/posix.h>
 #include <pbl/drivers/vibe/posix.h>
 
-#include <board/board.h>
-
 PBL_UART_POSIX_DEFINE(s_dbg_uart, "console", PBL_UART_POSIX_CONSOLE, 115200);
 const struct pbl_uart *const CONSOLE_UART = &s_dbg_uart.uart;
 
@@ -26,21 +25,8 @@ PBL_UART_POSIX_DEFINE(s_bt_hci_uart, "bt_hci", PBL_UART_POSIX_BT_HCI, 115200);
 const struct pbl_uart *const BT_HCI_UART = &s_bt_hci_uart.uart;
 #endif
 
-#ifdef CONFIG_DISPLAY_SDL_MONO
-#define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_MONO
-#else
-#define DISPLAY_FORMAT PBL_DISPLAY_FORMAT_ARGB2222
-#endif
-
-#ifdef CONFIG_PLATFORM_ROUND
-#include <pbl/drivers/panel/ls013b7dd02.h>
-#define DISPLAY_ROUND_MASK pbl_panel_ls013b7dd02_round_mask
-#else
-#define DISPLAY_ROUND_MASK nullptr
-#endif
-
 PBL_DISPLAY_SDL_DEFINE(s_display, "display", CONFIG_DISPLAY_SDL_WIDTH, CONFIG_DISPLAY_SDL_HEIGHT,
-                       DISPLAY_FORMAT, .round_mask = DISPLAY_ROUND_MASK);
+                       PBL_DISPLAY_FORMAT_ARGB2222, .round_mask = nullptr);
 
 const struct pbl_display *const DISPLAY = &s_display;
 

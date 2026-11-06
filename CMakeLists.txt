@@ -144,6 +144,7 @@ add_subdirectory(kernel)
 add_subdirectory(soc)
 add_subdirectory(subsys)
 add_subdirectory(drivers)
+add_subdirectory(boards)
 add_subdirectory(fw)
 # The stored apps are built for the watch, which the recovery firmware runs
 # none on.
