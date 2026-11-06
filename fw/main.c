@@ -93,7 +93,18 @@ static void uptime_callback(void *data) {
 }
 #endif
 
-static PBL_NOINLINE void prv_main_task_init(void) {
+int main(void) {
+  pebble_task_register(PebbleTask_KernelMain, pbl_thread_current());
+  memory_layout_thread_regions_init();
+
+  print_splash_screen();
+
+  clock_restore_time();
+
+#ifdef CONFIG_RECOVERY_FW
+  boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
+#endif
+
   static McuRebootReason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
@@ -191,21 +202,7 @@ static PBL_NOINLINE void prv_main_task_init(void) {
   input_buttons_enable();
 
   pbl_task_wdt_resume();
-}
 
-int main(void) {
-  pebble_task_register(PebbleTask_KernelMain, pbl_thread_current());
-  memory_layout_thread_regions_init();
-
-  print_splash_screen();
-
-  clock_restore_time();
-
-#ifdef CONFIG_RECOVERY_FW
-  boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
-#endif
-
-  prv_main_task_init();
   launcher_main_loop();
   return 0;
 }
