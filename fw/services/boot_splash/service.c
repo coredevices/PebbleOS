@@ -7,13 +7,13 @@
 
 #if defined(CONFIG_PBLBOOT) || defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 
+#include "splash.xbm"
+
 #include <string.h>
 
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/util/math.h>
-
-#include <board/splash.h>
 
 enum splash_color {
   SPLASH_COLOR_WHITE,
