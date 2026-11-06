@@ -8,6 +8,9 @@
 //! Opens the session if the emulator is configured to start connected.
 void qemu_transport_start(void);
 
+//! Tells host tools the system is up, once the first app has had time to start.
+void qemu_transport_notify_ready(void);
+
 //! Drops the connection and tears the session down.
 void qemu_transport_stop(void);
 

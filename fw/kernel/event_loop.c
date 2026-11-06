@@ -68,12 +68,14 @@
 #include <pbl/services/wakeup.h>
 #include <pbl/util/struct.h>
 
+#ifdef CONFIG_QEMU_SERIAL
+#include <comm/qemu/transport.h>
+#endif
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
 #include <shell/shell_event_loop.h>
 #include <system/bootbits.h>
-#include <system/testinfra.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
@@ -647,7 +649,9 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   }
 #endif
 
-  notify_system_ready_for_communication();
+#ifdef CONFIG_QEMU_SERIAL
+  qemu_transport_notify_ready();
+#endif
 #ifdef CONFIG_CONSOLE
   pbl_console_enable_prompt();
 #endif
