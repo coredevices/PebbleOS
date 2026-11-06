@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/process_management/app_storage.h>
@@ -17,12 +18,12 @@
 
 static const SystemResourceBank s_resource_banks[] = {
   {
-    .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
-    .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END,
+    .begin = PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
+    .end = PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0_SIZE,
   },
   {
-    .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
-    .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END,
+    .begin = PART_SYSTEM_RESOURCES_BANK_1_OFFSET,
+    .end = PART_SYSTEM_RESOURCES_BANK_1_OFFSET + PART_SYSTEM_RESOURCES_BANK_1_SIZE,
   },
 };
 
