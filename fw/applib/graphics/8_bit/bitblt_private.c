@@ -6,6 +6,7 @@
 #include <pbl/util/math.h>
 
 #include <applib/graphics/bitblt_private.h>
+#include <applib/graphics/graphics_row_ops.h>
 #include <applib/graphics/raw_image.h>
 
 #if !defined(__clang__)
@@ -118,6 +119,10 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_8bit(GBitmap *dest_bitmap,
   }
 }
 
+static bool prv_rows_overlap(const uint8_t *a, const uint8_t *b, int16_t width) {
+  return (a < (b + width)) && (b < (a + width));
+}
+
 void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GBitmap *src_bitmap,
                                                   GRect dest_rect, GPoint src_origin_offset,
                                                   GCompOp compositing_mode, GColor8 tint_color) {
@@ -158,6 +163,13 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
         const int16_t src_end_x = MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
 
         int16_t src_x = src_initial_x + src_origin_offset.x;
+        const int16_t width = dest_end_x - dest_begin_x;
+        if (src_x >= src_begin_x && (src_x + width) <= src_end_x &&
+            !prv_rows_overlap(&dest[dest_begin_x], &src[src_x], width)) {
+          graphics_row_copy(&dest[dest_begin_x], &src[src_x], (size_t)width);
+          continue;
+        }
+
         for (int16_t dest_x = dest_begin_x; dest_x < dest_end_x; ++dest_x, ++src_x) {
           if (!WITHIN(src_x, src_begin_x, src_end_x - 1)) {
             // Check if content should wrap (under and over) for tiling
