@@ -148,6 +148,16 @@ config IS_BIGBOARD
       in the board name). Gates bigboard-only behaviour that differs
       from the shipping board.
 
+config BOARD_PARTITIONS_DUAL_SLOT
+    bool
+    help
+      The board uses the flash partitions of include/pbl/board/partitions_dual_slot.h.
+
+config BOARD_PARTITIONS_SINGLE_SLOT
+    bool
+    help
+      The board uses the flash partitions of include/pbl/board/partitions_single_slot.h.
+
 # Source the active board's Kconfig and its per-board defaults; kconfig.py
 # exports $(BOARD) and $(BOARD_REVISION) from the --board argument.
 rsource "boards/$(BOARD)/Kconfig"

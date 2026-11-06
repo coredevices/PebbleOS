@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/flash.h>
+
 #if defined(CONFIG_FLASH_QEMU) || defined(CONFIG_FLASH_POSIX)
 #include "flash_region_qemu.h"
 #elifdef CONFIG_FLASH_GD25LQ255E

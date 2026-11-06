@@ -3,14 +3,6 @@
 
 #pragma once
 
-#define PAGE_SIZE_BYTES (0x100)
-
-#define SECTOR_SIZE_BYTES (0x10000)
-#define SECTOR_ADDR_MASK  (~(SECTOR_SIZE_BYTES - 1))
-
-#define SUBSECTOR_SIZE_BYTES (0x1000)
-#define SUBSECTOR_ADDR_MASK  (~(SUBSECTOR_SIZE_BYTES - 1))
-
 // Flash layout for QEMU (32MB external flash, same layout as obelix/gd25q256e)
 #define FLASH_REGION_DEF(MACRO, arg)                                                        \
   MACRO(PTABLE, 0x0010000 /*    64K */, arg)                  /* 0x10000000 - 0x1000FFFF */ \
