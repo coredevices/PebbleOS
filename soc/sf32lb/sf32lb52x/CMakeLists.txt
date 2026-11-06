@@ -10,5 +10,6 @@ pbl_library_sources(
   syscfg.c
   idle.c
   lpsys.c
+  lpsys_halt.c
 )
 pbl_linker_sources(ramfunc ramfunc.ld)

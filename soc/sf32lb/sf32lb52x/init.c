@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "lpsys.h"
 #include "syscfg.h"
 
 #include <pbl/kernel/assert.h>
@@ -44,7 +45,7 @@ void pbl_soc_early_init(void) {
 
   // Halt LCPU first to avoid LCPU in running state
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(1);
+  soc_sf32lb52_lpsys_halt(true);
 
   soc_sf32lb52_syscfg_init();
 

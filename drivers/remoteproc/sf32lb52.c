@@ -12,6 +12,7 @@
 #include <pbl/util/misc.h>
 
 #include <bf0_hal.h>
+#include <lpsys.h>
 
 // LPSYS RAM areas used by the LCPU ROM
 #define LCPU_CODE_BASE  0x20400000UL
@@ -103,7 +104,7 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu) {
 
 static int prv_start(const struct pbl_rproc *rproc) {
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(0);
+  soc_sf32lb52_lpsys_halt(false);
 
   prv_rom_config(prv_lcpu(rproc));
 
@@ -130,7 +131,7 @@ static int prv_start(const struct pbl_rproc *rproc) {
 static void prv_stop(const struct pbl_rproc *rproc) {
   // LPSYS_AON is only reachable while the wake request is held
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
-  HAL_RCC_Reset_and_Halt_LCPU(0);
+  soc_sf32lb52_lpsys_halt(false);
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 }
 
