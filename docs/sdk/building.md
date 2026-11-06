@@ -37,7 +37,11 @@ pbl build sdk
 `tools/cmake/sdk.py` copies the common files from `sdk/` into
 `build/sdk/common/` — the app project templates under `sdk/defaults/`, and
 the tools and resource pipeline the app build shares with the firmware —
-and bundles `sdk/waftools/` into the `waf` binary app developers use to
-build their apps. That waf is the only one left in the tree: everything it
-needs lives under `sdk/`, and it is built out of tree, so packaging leaves
-the checkout untouched.
+and the CMake package apps are built with, `sdk/cmake/`, into
+`build/sdk/cmake/` ({doc}`app_build`). It also bundles `sdk/waftools/` into
+the deprecated `waf` binary older projects build with. That waf is the only
+one left in the tree: everything it needs lives under `sdk/`, and it is
+built out of tree, so packaging leaves the checkout untouched.
+
+Both app builds read `package.json` through `sdk/tools/pebble_project.py`;
+the CMake build's steps are `sdk/tools/pebble_build.py`.
