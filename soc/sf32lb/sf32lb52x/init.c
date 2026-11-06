@@ -7,7 +7,6 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/kernel/time.h>
 
 #include <bf0_hal.h>
 #include <drivers/watchdog.h>
@@ -21,6 +20,9 @@ void pbl_soc_early_init(void) {
   uint32_t bootopt;
 
   SystemInit();
+
+  // Busy waits count cycles, and the bootloader may have left any clock running
+  SystemCoreClock = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
 
   // Make the boot ROM power cycle the flash through PA21 on reset: the
   // bootloader leaves it in 4-byte address mode, which the ROM cannot read,
@@ -84,9 +86,6 @@ void pbl_soc_early_init(void) {
 
   HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
-  // Reset sysclk used by HAL_Delay_us
-  HAL_Delay_us(0);
-
   HAL_RCC_Init();
   HAL_PMU_Init();
 
@@ -124,9 +123,4 @@ void pbl_soc_early_init(void) {
   // at 48MHz (div=1). Also, clock needs to be forced ON during deep WFI
   // (FORCE_HP bit in HPSYS_RCC_DBGR register)
   HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
-}
-
-// HAL timeouts count kernel uptime.
-uint32_t HAL_GetTick(void) {
-  return (uint32_t)pbl_uptime_ms();
 }
