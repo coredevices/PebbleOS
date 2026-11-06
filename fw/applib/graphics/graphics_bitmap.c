@@ -126,6 +126,60 @@ PBL_T_STATIC GColor get_bitmap_color(GBitmap *bmp, int x, int y) {
 }
 #endif
 
+#if PBL_COLOR
+//! The common case of the loop in graphics_draw_rotated_bitmap, without per pixel lookups.
+//! @return false if it does not apply, with nothing drawn.
+static bool prv_draw_rotated_8bit(GBitmap *dest, const GBitmap *src, GRect clip, GPoint src_ic,
+                                  GPoint dest_ic, int32_t cos_value, int32_t sin_value,
+                                  GCompOp op) {
+  if (gbitmap_get_format(src) != GBitmapFormat8Bit || (op != GCompOpAssign && op != GCompOpSet) ||
+      (dest->info.format != GBitmapFormat8Bit && dest->info.format != GBitmapFormat8BitCircular)) {
+    return false;
+  }
+
+  grect_clip(&clip, &dest->bounds);
+  const int32_t src_w = MIN(src->bounds.size.w, grect_get_max_x(&src->bounds));
+  const int32_t src_h = src->bounds.size.h;
+  const uint8_t *src_data = src->addr;
+  const size_t src_row_size = src->row_size_bytes;
+
+  for (int y = clip.origin.y; y < grect_get_max_y(&clip); ++y) {
+    const GBitmapDataRowInfo dest_info = gbitmap_get_data_row_info(dest, y);
+    const int x_begin = MAX(clip.origin.x, dest_info.min_x);
+    const int x_end = MIN(grect_get_max_x(&clip) - 1, dest_info.max_x);
+    if (x_begin > x_end) {
+      continue;
+    }
+
+    // Unsigned, as the loop this replaces wraps on far away pivots
+    const uint32_t dx = (uint32_t)(x_begin - dest_ic.x);
+    const uint32_t dy = (uint32_t)(y - dest_ic.y);
+    uint32_t numerator_x = (uint32_t)cos_value * dx - (uint32_t)sin_value * dy;
+    uint32_t numerator_y = (uint32_t)cos_value * dy + (uint32_t)sin_value * dx;
+    uint8_t *out = dest_info.data;
+
+    for (int x = x_begin; x <= x_end;
+         ++x, numerator_x += (uint32_t)cos_value, numerator_y += (uint32_t)sin_value) {
+      const int32_t src_x = src_ic.x + (int32_t)numerator_x / TRIG_MAX_RATIO;
+      const int32_t src_y = src_ic.y + (int32_t)numerator_y / TRIG_MAX_RATIO;
+      if (src_x < 0 || src_x >= src_w || src_y < 0 || src_y >= src_h) {
+        continue;
+      }
+
+      const GColor color = {.argb = src_data[(size_t)src_y * src_row_size + (size_t)src_x]};
+      GColor result = color;
+      if (op == GCompOpSet && color.a != 3) {
+        result = gcolor_alpha_blend(color, (GColor){.argb = out[x]});
+      }
+      result.a = 3;
+      out[x] = result.argb;
+    }
+  }
+
+  return true;
+}
+#endif
+
 void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, int rotation,
                                   GPoint dest_ic) {
   PBL_ASSERTN(ctx);
@@ -211,6 +265,17 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
     grect_clip(&dest_clip, &dest_clip_min);
   }
 
+  const int32_t cos_value = cos_lookup(-rotation);
+  const int32_t sin_value = sin_lookup(-rotation);
+
+#if PBL_COLOR
+  if (prv_draw_rotated_8bit(dest_bitmap, src, dest_clip, src_ic, dest_ic, cos_value, sin_value,
+                            compositing_mode)) {
+    graphics_release_frame_buffer(ctx, dest_bitmap);
+    return;
+  }
+#endif
+
   for (int y = dest_clip.origin.y; y < dest_clip.origin.y + dest_clip.size.h; ++y) {
     for (int x = dest_clip.origin.x; x < dest_clip.origin.x + dest_clip.size.w; ++x) {
       // only draw if within the dest range
@@ -219,8 +284,6 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
         continue;
       }
 
-      const int32_t cos_value = cos_lookup(-rotation);
-      const int32_t sin_value = sin_lookup(-rotation);
       const int32_t src_numerator_x = cos_value * (x - dest_ic.x) - sin_value * (y - dest_ic.y);
       const int32_t src_numerator_y = cos_value * (y - dest_ic.y) + sin_value * (x - dest_ic.x);
 
