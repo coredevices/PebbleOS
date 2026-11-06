@@ -5,6 +5,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/comm_session/session_transport.h>
+#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
 #include <comm/bt_lock.h>
@@ -14,6 +15,10 @@
 #include <comm/qemu/transport.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
+
+PBL_LOG_MODULE_DECLARE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
+
+static const uint32_t READY_LOG_DELAY_MS = 500;
 
 typedef struct {
   CommSession *session;
@@ -222,6 +227,15 @@ void qemu_transport_start(void) {
     qemu_transport_set_connected(true);
   }
 #endif
+}
+
+static void prv_log_ready(void *unused) {
+  PBL_LOG_INFO("Ready for communication.");
+}
+
+void qemu_transport_notify_ready(void) {
+  // Host tools install on seeing this line, so give the first app time to push its window.
+  new_timer_start(new_timer_create(), READY_LOG_DELAY_MS, prv_log_ready, nullptr, 0);
 }
 
 void qemu_transport_stop(void) {

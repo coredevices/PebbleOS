@@ -32,6 +32,8 @@
 #include <process_management/app_manager.h>
 #include <shell/system_theme.h>
 
+PBL_LOG_MODULE_DEFINE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
+
 static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg);
 
 // Our globals

@@ -85,6 +85,14 @@ config QEMU_SERIAL
       time format, ...) over the board's QEMU_UART, framed as libpebble2's
       QEMU transport expects.
 
+if QEMU_SERIAL
+
+module = QEMU_SERIAL
+module-str = QEMU serial protocol
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # QEMU_SERIAL
+
 config NO_WATCH_TIMEOUT
     bool "Disable watchface idle timeout"
 

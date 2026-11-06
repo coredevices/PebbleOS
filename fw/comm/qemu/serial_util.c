@@ -11,6 +11,8 @@
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 
+PBL_LOG_MODULE_DECLARE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
+
 // -----------------------------------------------------------------------------------------
 void qemu_serial_private_init_state(QemuSerialGlobals *state) {
   // Create our mutex
