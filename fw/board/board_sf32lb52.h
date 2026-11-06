@@ -9,8 +9,6 @@
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/input/input.h>
 
-#include <bf0_hal_pinmux.h>
-
 struct pbl_uart;
 typedef const struct HRMDevice HRMDevice;
 

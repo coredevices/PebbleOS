@@ -16,12 +16,11 @@ if HAL_SIFLI
 config HAL_SIFLI_SF32LB52
     bool "SF32LB52 SoC variant"
     select HAL_SIFLI_AON
-    select HAL_SIFLI_PINMUX
     help
       Configure the SiFli HAL for the SF32LB52 SoC. This sets the
       SF32LB52X target define and adds the SF32LB52-specific cmsis
       and local glue sources to the build. It also selects the HAL
-      modules required by SoC-level PebbleOS code (sleep and pinmux).
+      modules required by SoC-level PebbleOS code (sleep).
 
 config HAL_SIFLI_AON
     bool "AON HAL module"
@@ -48,10 +47,5 @@ config HAL_SIFLI_LCPU_PATCH
     bool "LCPU_PATCH HAL module"
     help
       Enable the LCPU_PATCH (ROM patch) SiFli HAL module.
-
-config HAL_SIFLI_PINMUX
-    bool "PINMUX HAL module"
-    help
-      Enable the PINMUX SiFli HAL module driver.
 
 endif # HAL_SIFLI

@@ -41,21 +41,9 @@ if(CONFIG_HAL_SIFLI_LCPU_PATCH)
     SiFli-SDK/drivers/hal/bf0_hal_patch.c
   )
 endif()
-if(CONFIG_HAL_SIFLI_PINMUX)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_pinmux.c
-  )
-  list(APPEND ramfunc_sources
-    SiFli-SDK/drivers/hal/bf0_hal_pinmux.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND micro_sources
-    SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_pin_const.c
     sf32lb52/system_bf0_ap.c
-  )
-  list(APPEND ramfunc_sources
-    SiFli-SDK/drivers/cmsis/sf32lb52x/bf0_pin_const.c
   )
   if(CONFIG_HAL_SIFLI_LCPU_CONFIG)
     list(APPEND micro_sources
