@@ -511,6 +511,13 @@ static void prv_update_enable_timer_cb(void *context) {
   system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
 }
 
+// Every path that makes the sensor runnable again posts its own pass.
+static void prv_schedule_update_if_needed(void) {
+  if (prv_can_turn_sensor_on() || hrm_is_enabled(HRM)) {
+    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+  }
+}
+
 //! The system task needs its own handler for HRM data since we can't queue up generic events.
 static void prv_system_task_hrm_handler(void *context) {
   time_t utc_now = pbl_realtime();
@@ -1008,7 +1015,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_features, (VAL, HRMSessionRef, session),
   // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
   // optical path, and must not wait for the next sample to trigger a pass.
   if (success) {
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+    prv_schedule_update_if_needed();
   }
   return success;
 }
@@ -1032,7 +1039,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_update_interval, (VAL, HRMSessionRef, sess
   }
   pbl_mutex_unlock(&s_manager_state.lock);
   if (success) {
-    system_task_add_callback(prv_update_hrm_enable_system_cb, nullptr);
+    prv_schedule_update_if_needed();
   }
   return success;
 }
