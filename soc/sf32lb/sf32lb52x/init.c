@@ -91,7 +91,6 @@ void pbl_soc_early_init(void) {
   HAL_PMU_Init();
 
   __HAL_SYSCFG_CLEAR_SECURITY();
-  HAL_EFUSE_Init();
 
   // set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press
   hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;

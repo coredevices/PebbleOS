@@ -2,8 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stdint.h>
 #include <string.h>
 
+#include <pbl/drivers/nvmem/sf32lb52.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/util/bits.h>
@@ -20,8 +22,52 @@
 #define LCPU_LOAD_HCLK_MAX_HZ 24000000UL
 #define LCPU_BOOT_DELAY_US    5000U
 
+// Factory RF calibration, efuse bank 1
+#define RF_CAL_OFFSET 32U
+#define RF_CAL_SIZE   20U
+
 extern void lcpu_patch_install_rev_b(void);
 extern void bt_rf_cal(void);
+int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_cal,
+                                  uint8_t *dac_lsb_cnt_cal);
+int8_t bt_rf_get_tmxcap_sel_efuse(uint8_t *tmxcap_sel_efuse_flag, uint32_t *tmxcal_sel0,
+                                  uint32_t *tmxcal_sel78);
+
+static const struct pbl_nvmem_cell s_rf_cal_cell =
+    PBL_NVMEM_CELL(SF32LB52_EFUSE, RF_CAL_OFFSET, RF_CAL_SIZE);
+
+// Called by bt_rf_cal(), replacing its weak versions
+int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_cal,
+                                  uint8_t *dac_lsb_cnt_cal) {
+  uint8_t cal[RF_CAL_SIZE];
+
+  if (pbl_nvmem_cell_read(&s_rf_cal_cell, cal, sizeof(cal)) != 0) {
+    *edr_cal_flag = 0U;
+    return 1;
+  }
+
+  *edr_cal_flag = (cal[15] & 0x20U) >> 5;
+  *pa_bm_cal = (cal[15] & 0xc0U) >> 6;
+  *dac_lsb_cnt_cal = cal[16] & 0x3U;
+
+  return 0;
+}
+
+int8_t bt_rf_get_tmxcap_sel_efuse(uint8_t *tmxcap_sel_efuse_flag, uint32_t *tmxcal_sel0,
+                                  uint32_t *tmxcal_sel78) {
+  uint8_t cal[RF_CAL_SIZE];
+
+  if (pbl_nvmem_cell_read(&s_rf_cal_cell, cal, sizeof(cal)) != 0) {
+    *tmxcap_sel_efuse_flag = 0U;
+    return 1;
+  }
+
+  *tmxcap_sel_efuse_flag = (cal[16] & 0x4U) >> 2;
+  *tmxcal_sel78 = (cal[16] & 0x78U) >> 3;
+  *tmxcal_sel0 = ((cal[16] & 0x80U) >> 7) | ((cal[17] & 0x7U) << 1);
+
+  return 0;
+}
 
 static const struct pbl_rproc_sf32lb52 *prv_lcpu(const struct pbl_rproc *rproc) {
   return container_of(rproc, const struct pbl_rproc_sf32lb52, rproc);

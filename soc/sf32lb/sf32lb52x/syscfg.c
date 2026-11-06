@@ -6,26 +6,30 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/kernel/delay.h>
+
 #include <bf0_hal.h>
 
 // Factory test calibration, efuse bank 1
-#define ATE_BIT_OFFSET 256U
-#define ATE_SIZE       32U
-#define ATE_SETTLE_US  10U
+#define ATE_OFFSET    32U
+#define ATE_SIZE      32U
+#define ATE_SETTLE_US 10U
 
 #define PID_D 4U
 
+static const struct pbl_nvmem_cell s_ate_cell =
+    PBL_NVMEM_CELL(SF32LB52_EFUSE, ATE_OFFSET, ATE_SIZE);
 static uint8_t s_ate[ATE_SIZE];
 
 void soc_sf32lb52_syscfg_init(void) {
-  if (HAL_EFUSE_Init() != HAL_OK) {
+  if (pbl_device_init(&SF32LB52_EFUSE->dev) != 0) {
     return;
   }
 
-  HAL_Delay_us(0);
-  HAL_Delay_us(ATE_SETTLE_US);
+  pbl_busy_wait_us(ATE_SETTLE_US);
 
-  if (HAL_EFUSE_Read(ATE_BIT_OFFSET, s_ate, sizeof(s_ate)) != (int32_t)sizeof(s_ate)) {
+  if (pbl_nvmem_cell_read(&s_ate_cell, s_ate, sizeof(s_ate)) != 0) {
     memset(s_ate, 0, sizeof(s_ate));
     return;
   }
