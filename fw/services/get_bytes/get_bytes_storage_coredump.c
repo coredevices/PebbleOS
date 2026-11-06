@@ -7,7 +7,6 @@
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage_file.h>
 
-#include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
 #include <system/status_codes.h>
 

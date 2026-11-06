@@ -19,6 +19,7 @@
 // (-std=c23), so declare it explicitly for non-Pebble libcs.
 extern char *itoa(int value, char *str, int base);
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -36,7 +37,6 @@ extern char *itoa(int value, char *str, int base);
 #ifdef CONFIG_CONSOLE
 #include <pbl/console/console.h>
 #endif
-#include <flash_region/flash_region.h>
 #include <kernel/core_dump.h>
 #include <kernel/core_dump_private.h>
 #include <logging/logging_private.h>
@@ -525,8 +525,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
 
   // Re-initialize the flash, which must not rely on OS services from now on
   CD_ASSERTN(pbl_flash_coredump_init(FLASH) == 0);
-  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+  (void)pbl_flash_partition_protect(PART_SAFE_FIRMWARE);
 
   // If there is a fairly recent unread core image already present, don't replace it. Once it is
   // read through the get_bytes_protocol_msg_callback(), the unread flag gets cleared out.
