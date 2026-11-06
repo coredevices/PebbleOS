@@ -7,3 +7,4 @@ sphinxcontrib-mermaid~=2.1
 kconfiglib~=14.1
 matplotlib~=3.11
 numpy~=2.5
+schemdraw~=0.23

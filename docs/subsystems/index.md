@@ -11,8 +11,7 @@ it at link time, and a Kconfig option selects the backend.
 bluetooth.md
 crc.md
 fs.md
-fuel_gauge.md
-fuel_gauge_characterization.md
+fuel_gauge/index.md
 input.md
 logging.md
 profiler.md

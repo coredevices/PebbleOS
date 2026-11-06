@@ -4,8 +4,8 @@
 
 """Cell model fitting and replay for the fuel gauge (subsys/fuel_gauge).
 
-See docs/subsystems/fuel_gauge.md for the model and
-docs/subsystems/fuel_gauge_characterization.md for the method. Logs are the
+See docs/subsystems/fuel_gauge/index.md for the model and
+docs/subsystems/fuel_gauge/characterization.md for the method. Logs are the
 CSV files described in fuel_gauge_log.py.
 """
 

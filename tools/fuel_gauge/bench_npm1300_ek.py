@@ -7,7 +7,7 @@
 Drives the EK shell over its USB serial port: charges the cell CC/CV, rests
 it, then discharges it in pulses through the nPM-FG active load down to the
 cutoff voltage. Writes CSV logs (fuel_gauge_log.py) for fuel_gauge.py fit,
-see docs/subsystems/fuel_gauge_npm1300_ek.md.
+see docs/subsystems/fuel_gauge/npm1300_ek.md.
 
 The cell must be on the EK battery connector with the nPM-FG attached. VBUS
 (the EK's PMIC USB port) must be connected for charging, and disconnected
