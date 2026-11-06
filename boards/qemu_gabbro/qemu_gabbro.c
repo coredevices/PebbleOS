@@ -59,12 +59,6 @@ PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
 PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
 
-void board_early_init(void) {
-}
-
-void board_init(void) {
-}
-
 const struct pbl_accel *const ACCEL = QEMU_ACCEL;
 
 const struct pbl_als *const ALS = QEMU_ALS;

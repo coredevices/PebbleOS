@@ -70,7 +70,6 @@ static void print_splash_screen(void) {
 
 static void init_drivers(void) {
   pbl_device_init_all();
-  board_init();
 
   battery_init();
 
@@ -114,7 +113,6 @@ static PBL_NOINLINE void prv_main_task_init(void) {
 
   memory_layout_setup_mpu();
 
-  board_early_init();
 
   kernel_applib_init();
 

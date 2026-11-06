@@ -6,9 +6,6 @@
 //! Console port.
 extern const struct pbl_uart *const CONSOLE_UART;
 
-void board_early_init(void);
-void board_init(void);
-
 // FIXME: remove once the HRM moves to the device model
 typedef const struct HRMDevice HRMDevice;
 
