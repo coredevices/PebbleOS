@@ -8,7 +8,7 @@ menuconfig HAL_SIFLI
       umbrella (USE_HAL_DRIVER), selects the high-performance CPU
       (SOC_BF0_HCPU), sets the HAL tick rate to 1024 Hz, and lets
       our NMI handler override SiFli's default. The HAL core
-      (bf0_hal, eFuse, HLP, PMU, RCC, system config) is always
+      (bf0_hal, HLP, PMU, RCC, system config) is always
       built; other modules are gated by the options below.
 
 if HAL_SIFLI

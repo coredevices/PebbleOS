@@ -15,7 +15,6 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
 endif()
 set(micro_sources
   SiFli-SDK/drivers/hal/bf0_hal.c
-  SiFli-SDK/drivers/hal/bf0_hal_efuse.c
   SiFli-SDK/drivers/hal/bf0_hal_hlp.c
   SiFli-SDK/drivers/hal/bf0_hal_pmu.c
   SiFli-SDK/drivers/hal/bf0_hal_rcc.c
