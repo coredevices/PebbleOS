@@ -11,6 +11,7 @@
 #include <pbl/drivers/audio/qemu.h>
 #endif
 
+#include <pbl/board.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
@@ -22,7 +23,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <board/board.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/transport.h>

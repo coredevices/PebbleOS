@@ -3,10 +3,9 @@
 
 #pragma once
 
+#include <pbl/board.h>
 #include <pbl/services/hrm/hrm_activity_scene.h>
 #include <pbl/services/hrm/hrm_manager.h>
-
-#include <board/board.h>
 
 /**
  * @defgroup drivers_hrm Heart rate monitor

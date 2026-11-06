@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/board.h>
 #include <pbl/console/console.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
@@ -20,7 +21,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/stack_info.h>

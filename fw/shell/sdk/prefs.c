@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
@@ -9,7 +10,6 @@
 
 #include <applib/preferred_content_size.h>
 #include <apps/system_app_ids.h>
-#include <board/board.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>

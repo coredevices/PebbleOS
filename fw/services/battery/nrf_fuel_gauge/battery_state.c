@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -16,7 +17,6 @@
 #include <pbl/services/system_task.h>
 #include <pbl/util/ratio.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 
 #ifndef CONFIG_RECOVERY_FW

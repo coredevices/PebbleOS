@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/board.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
@@ -29,7 +30,6 @@
 #include <pbl/services/system_task.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include <board/board.h>
 #include <debug/debug.h>
 #include <flash_region/flash_region.h>
 #include <kernel/event_loop.h>

@@ -8,6 +8,7 @@
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/bluetooth/types.h>
+#include <pbl/board.h>
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -17,7 +18,6 @@
 #include <pbl/version.h>
 
 #include <applib/bluetooth/ble_ad_parse.h>
-#include <board/board.h>
 #include <comm/bt_lock.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>

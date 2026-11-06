@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
 
@@ -16,7 +17,6 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_private.h>
 #include <apps/prf/mfg_test_result.h>
-#include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
