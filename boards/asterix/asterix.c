@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
+#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/drivers/audio/nrf5.h>
@@ -25,8 +27,6 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
 
-#include <board/board.h>
-#include <board/otp_layout.h>
 #include <flash_region/flash_region.h>
 #include <hal/nrf_gpio.h>
 

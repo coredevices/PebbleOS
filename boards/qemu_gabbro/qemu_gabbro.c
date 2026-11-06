@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
 #include <pbl/drivers/ambient/qemu.h>
 #include <pbl/drivers/backlight/qemu.h>
 #include <pbl/drivers/display/qemu.h>
@@ -8,12 +9,14 @@
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/panel/ls013b7dd02.h>
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
+#include <pbl/drivers/touch/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
 #include <pbl/kernel/irq.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 // UART device for debug serial
 #include <pbl/drivers/audio/qemu.h>
@@ -32,8 +35,9 @@ const struct pbl_uart *const BT_HCI_UART = &s_uart3.uart;
 #endif
 
 // Display device - QEMU framebuffer
-PBL_DISPLAY_QEMU_DEFINE(s_display, "display", QEMU_DISPLAY_BASE, QEMU_DISPLAY_FB_BASE, 144, 168,
-                        PBL_DISPLAY_FORMAT_MONO);
+PBL_DISPLAY_QEMU_DEFINE(s_display, "display", QEMU_DISPLAY_BASE, QEMU_DISPLAY_FB_BASE, 260, 260,
+                        PBL_DISPLAY_FORMAT_ARGB2222,
+                        .round_mask = pbl_panel_ls013b7dd02_round_mask);
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 
@@ -43,11 +47,6 @@ PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
                      PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(QEMU_GPIO, 2, 0), PBL_INPUT_KEY_SELECT,
                                        0),
                      PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(QEMU_GPIO, 3, 0), PBL_INPUT_KEY_DOWN, 0));
-
-// Audio device
-PBL_AUDIO_QEMU_DEFINE(s_speaker, "speaker", QEMU_AUDIO_BASE, PBL_IRQN(AUDIO));
-
-const struct pbl_audio *const SPEAKER = &s_speaker.audio;
 
 // Microphone fed by the host
 PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
@@ -59,7 +58,6 @@ PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
 #ifdef CONFIG_BT_HCI_UART
 PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
-PBL_IRQ_CONNECT(AUDIO, 5, pbl_audio_qemu_irq_handler, &s_speaker, 0);
 
 void board_early_init(void) {
 }
@@ -79,4 +77,5 @@ const struct pbl_temp *const DIE_TEMP = QEMU_TEMP;
 
 const struct pbl_rtc *const RTC = QEMU_RTC;
 
+const struct pbl_touch *const TOUCH = QEMU_TOUCH;
 const struct pbl_flash *const FLASH = QEMU_FLASH;

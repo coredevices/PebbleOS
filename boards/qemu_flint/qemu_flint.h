@@ -3,6 +3,12 @@
 
 #pragma once
 
+#include <stdint.h>
+
+#include <pbl/input/input.h>
+
+#include <cmsis_core.h>
+
 #define BT_VENDOR_ID   0x0EEA
 #define BT_VENDOR_NAME "QEMU"
 

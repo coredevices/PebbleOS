@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/otp.h>
 #include <pbl/util/size.h>
 
-#include <board/otp_layout.h>
 #include <clar.h>
 #include <fake_new_timer.h>
 
