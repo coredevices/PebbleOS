@@ -5,10 +5,9 @@
 
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
-
-#include <flash_region/flash_region.h>
 
 // Versioned so that the layout can be migrated.
 typedef struct PBL_PACKED {
@@ -23,7 +22,7 @@ typedef struct PBL_PACKED {
 
 #define TZINFO_VERSION 1
 
-static_assert(sizeof(TzinfoFlashStorage) <= SUBSECTOR_SIZE_BYTES,
+static_assert(sizeof(TzinfoFlashStorage) <= PART_TZINFO_SIZE,
               "TzinfoFlashStorage must fit in the TZINFO flash region");
 
 void tz_storage_save(const TimezoneInfo *tz_info) {
@@ -37,14 +36,14 @@ void tz_storage_save(const TimezoneInfo *tz_info) {
   };
   memcpy(storage.tm_zone, tz_info->tm_zone, PBL_TZ_LEN - 1);
 
-  pbl_flash_erase(FLASH, FLASH_REGION_TZINFO_BEGIN, SUBSECTOR_SIZE_BYTES);
-  pbl_flash_write(FLASH, FLASH_REGION_TZINFO_BEGIN, (const uint8_t *)&storage, sizeof(storage));
+  pbl_flash_partition_erase(PART_TZINFO, 0U, PART_TZINFO_SIZE);
+  pbl_flash_partition_write(PART_TZINFO, 0U, &storage, sizeof(storage));
 }
 
 void tz_storage_load(TimezoneInfo *tz_info) {
   TzinfoFlashStorage storage;
 
-  pbl_flash_read(FLASH, FLASH_REGION_TZINFO_BEGIN, (uint8_t *)&storage, sizeof(storage));
+  pbl_flash_partition_read(PART_TZINFO, 0U, &storage, sizeof(storage));
   if (storage.version != TZINFO_VERSION) {
     memset(tz_info, 0, sizeof(*tz_info));
     return;
@@ -61,11 +60,11 @@ void tz_storage_load(TimezoneInfo *tz_info) {
 bool tz_storage_is_set(void) {
   uint8_t version;
 
-  pbl_flash_read(FLASH, FLASH_REGION_TZINFO_BEGIN, &version, sizeof(version));
+  pbl_flash_partition_read(PART_TZINFO, 0U, &version, sizeof(version));
 
   return version == TZINFO_VERSION;
 }
 
 void tz_storage_clear(void) {
-  pbl_flash_erase(FLASH, FLASH_REGION_TZINFO_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_partition_erase(PART_TZINFO, 0U, PART_TZINFO_SIZE);
 }

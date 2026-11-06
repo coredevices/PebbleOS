@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -25,7 +26,6 @@
 #ifdef CONFIG_MFG
 #include <pbl/drivers/flash.h>
 
-#include <flash_region/flash_region.h>
 #endif
 
 #include <nrf_fuel_gauge.h>
@@ -98,16 +98,14 @@ static uint32_t s_save_counter;
 #ifdef CONFIG_MFG
 // In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
 static void prv_erase_state(void) {
-  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
   PBL_LOG_DBG("Fuel gauge state erased");
 }
 
 static bool prv_load_state(void *state, size_t size) {
-  if (size > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
+  if (pbl_flash_partition_read(PART_MFG_BATTERY_STATE, 0U, state, size) != 0) {
     return false;
   }
-
-  pbl_flash_read(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, state, size);
 
   // Check if the flash region contains valid data (not all 0xFF)
   uint8_t *bytes = (uint8_t *)state;
@@ -136,13 +134,13 @@ static void prv_save_state(void) {
     return;
   }
 
-  if (sizeof(buf) > (FLASH_REGION_MFG_BATTERY_STATE_END - FLASH_REGION_MFG_BATTERY_STATE_BEGIN)) {
+  if (sizeof(buf) > PART_MFG_BATTERY_STATE_SIZE) {
     PBL_LOG_ERR("Fuel gauge state too large for MFG_BATTERY_STATE region");
     return;
   }
 
-  pbl_flash_erase(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, SUBSECTOR_SIZE_BYTES);
-  pbl_flash_write(FLASH, FLASH_REGION_MFG_BATTERY_STATE_BEGIN, buf, sizeof(buf));
+  pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
+  pbl_flash_partition_write(PART_MFG_BATTERY_STATE, 0U, buf, sizeof(buf));
 
   PBL_LOG_DBG("Fuel gauge state saved");
 }
