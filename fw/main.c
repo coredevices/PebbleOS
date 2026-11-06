@@ -94,9 +94,6 @@ static void uptime_callback(void *data) {
 #endif
 
 static PBL_NOINLINE void prv_main_task_init(void) {
-  // The Snowy bootloader does not clear the watchdog flag itself. Clear the
-  // flag ourselves so that a future safe reset does not look like a watchdog
-  // reset to the bootloader.
   static McuRebootReason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
