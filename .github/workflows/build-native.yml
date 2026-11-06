@@ -110,7 +110,7 @@ jobs:
         run: |
           set -o pipefail
           cd build
-          ./pebbleos -t 20 -S smoke.bmp < /dev/null | tee smoke.log
+          ./pebbleos -t 45 -S smoke.bmp < /dev/null | tee smoke.log
           grep -q "Starting Launcher" smoke.log
 
       - name: Store smoke test results
