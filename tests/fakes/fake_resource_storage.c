@@ -4,9 +4,9 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/util/string.h>
 
-#include <flash_region/flash_region.h>
 #include <resource/resource.h>
 #include <resource/resource_storage_flash.h>
 #include <resource/resource_storage_impl.h>
@@ -21,8 +21,8 @@ void resource_storage_clear(ResAppNum app_num) {
 
 const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
   static const SystemResourceBank unused_bank = {
-    .begin = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
-    .end = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END,
+    .begin = PART_SYSTEM_RESOURCES_BANK_1_OFFSET,
+    .end = PART_SYSTEM_RESOURCES_BANK_1_OFFSET + PART_SYSTEM_RESOURCES_BANK_1_SIZE,
   };
   return &unused_bank;
 }

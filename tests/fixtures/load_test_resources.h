@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <flash_region/flash_region.h>
 #include <resource/resource.h>
 #include <resource/resource_version.auto.h>
 #include <pbl/fs/fs.h>
+#include <pbl/board/partitions.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -26,8 +26,7 @@
 void load_resource_fixture_in_flash(const char *fixture_path, const char *name, bool is_next) {
   char res_path[strlen(CLAR_FIXTURE_PATH) + strlen(fixture_path) + strlen(name) + 3];
   sprintf(res_path, "%s/%s/%s", CLAR_FIXTURE_PATH, fixture_path, name);
-  uint32_t address = is_next ? FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN
-                             : FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
+  uint32_t address = is_next ? PART_SYSTEM_RESOURCES_BANK_1_OFFSET : PART_SYSTEM_RESOURCES_BANK_0_OFFSET;
   fake_spi_flash_populate_from_file(res_path, address);
   resource_init_app(0, &SYSTEM_RESOURCE_VERSION);
 }
