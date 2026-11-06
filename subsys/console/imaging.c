@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 
-#include <flash_region/flash_region.h>
 #include <resource/resource_storage_flash.h>
 #include <system/bootbits.h>
 
@@ -108,8 +108,8 @@ static void prv_handle_query_region(uint8_t region) {
     case REGION_RECOVERY:
       // A query means the region is about to be written.
       (void)pbl_flash_unprotect(FLASH);
-      resp.address = FLASH_REGION_SAFE_FIRMWARE_BEGIN;
-      resp.length = FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN;
+      resp.address = PART_SAFE_FIRMWARE_OFFSET;
+      resp.length = PART_SAFE_FIRMWARE_SIZE;
       break;
     case REGION_RESOURCES: {
       const SystemResourceBank *bank = resource_storage_flash_get_unused_bank();
@@ -128,8 +128,7 @@ static void prv_handle_query_region(uint8_t region) {
 static void prv_handle_finalize_region(uint8_t region) {
   switch (region) {
     case REGION_RECOVERY:
-      (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                              FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+      (void)pbl_flash_partition_protect(PART_SAFE_FIRMWARE);
       break;
     case REGION_RESOURCES:
       boot_bit_set(BOOT_BIT_NEW_SYSTEM_RESOURCES_AVAILABLE);
