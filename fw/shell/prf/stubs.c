@@ -7,7 +7,6 @@
 //! to exist because systems that were common to both PRF and normal firmware wouldn't try to
 //! use something that only exists in normal, but we're not quite there yet.
 
-#include <pbl/board.h>
 #include <pbl/services/light.h>
 #include <pbl/services/notifications/alerts_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>

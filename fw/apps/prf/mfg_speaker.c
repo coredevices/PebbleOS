@@ -3,7 +3,6 @@
 
 #include "mfg_audio.h"
 
-#include <pbl/board.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>

@@ -10,6 +10,8 @@
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/flash/spi_nor.h>
+#include <pbl/drivers/gpio/sf32lb.h>
+#include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/input/gpio_keys.h>
@@ -30,6 +32,7 @@
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/drivers/vibe/aw8623x.h>
+#include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 
 #include <hardware/sf32lb52_memorymap.h>

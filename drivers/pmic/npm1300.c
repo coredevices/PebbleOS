@@ -8,7 +8,6 @@
 #include <inttypes.h>
 #include <math.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic.h>

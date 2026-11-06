@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>

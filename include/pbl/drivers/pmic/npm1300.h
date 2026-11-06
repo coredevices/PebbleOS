@@ -5,7 +5,6 @@
 
 #include <stdint.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/services/new_timer/new_timer.h>

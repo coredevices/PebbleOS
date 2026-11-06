@@ -3,8 +3,6 @@
 
 #include "mfg_factory_mode.h"
 
-#include <pbl/board.h>
-
 #include <apps/prf/mfg_menu.h>
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>

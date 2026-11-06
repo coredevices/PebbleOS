@@ -5,7 +5,6 @@
 
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION)
 
-#include <pbl/board.h>
 #include <pbl/services/compositor/compositor.h>
 
 #include <applib/graphics/gtypes.h>

@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <pbl/board.h>
 #include <pbl/util/units.h>
 
 /**

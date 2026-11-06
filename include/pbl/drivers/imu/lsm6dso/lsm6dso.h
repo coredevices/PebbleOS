@@ -5,7 +5,6 @@
 
 #include <stdint.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>

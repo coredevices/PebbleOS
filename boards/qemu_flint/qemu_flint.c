@@ -12,6 +12,7 @@
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
+#include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 
 #include <hardware/qemu_memorymap.h>

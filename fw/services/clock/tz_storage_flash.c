@@ -5,7 +5,6 @@
 
 #include <string.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 

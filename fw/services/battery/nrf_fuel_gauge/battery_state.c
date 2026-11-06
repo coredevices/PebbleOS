@@ -3,7 +3,6 @@
 
 #include <math.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>

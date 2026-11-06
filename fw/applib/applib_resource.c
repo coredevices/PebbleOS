@@ -3,8 +3,6 @@
 
 #include "applib_resource_private.h"
 
-#include <pbl/board.h>
-
 #include <applib/applib_malloc.auto.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_storage_builtin.h>

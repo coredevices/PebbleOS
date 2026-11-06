@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include <pbl/board.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/irq.h>
