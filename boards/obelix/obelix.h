@@ -11,9 +11,6 @@
 #include <pbl/input/input.h>
 #include <pbl/services/imu/units.h>
 
-#define BT_VENDOR_ID   0x0EEA
-#define BT_VENDOR_NAME "Core Devices LLC"
-
 #ifdef CONFIG_REMOTEPROC_SF32LB52
 extern const struct pbl_rproc_sf32lb52 *const LCPU;
 #endif // CONFIG_REMOTEPROC_SF32LB52

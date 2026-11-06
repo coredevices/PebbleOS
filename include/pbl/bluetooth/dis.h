@@ -18,7 +18,7 @@
 
 /** @brief Length of the model number, MFG_HW_VERSION_SIZE + 1. */
 #define PBL_BT_DIS_MODEL_NUMBER_LEN (10)
-/** @brief Length of the manufacturer name, at least sizeof(BT_VENDOR_NAME). */
+/** @brief Length of the manufacturer name, at least sizeof(CONFIG_BT_VENDOR_NAME). */
 #define PBL_BT_DIS_MANUFACTURER_LEN (18)
 /** @brief Length of the serial number, MFG_SERIAL_NUMBER_SIZE + 1. */
 #define PBL_BT_DIS_SERIAL_NUMBER_LEN (13)

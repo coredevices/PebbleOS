@@ -13,6 +13,18 @@ config BT
 
 if BT
 
+config BT_VENDOR_ID
+    hex "Vendor ID"
+    default 0x0EEA
+    help
+      Company identifier in the manufacturer data of advertisements.
+
+config BT_VENDOR_NAME
+    string "Vendor name"
+    default "Core Devices LLC"
+    help
+      Manufacturer name in the Device Information Service.
+
 config BT_HOST_THREAD_STACK_SIZE
     int "Host thread stack size in bytes"
     default 5000

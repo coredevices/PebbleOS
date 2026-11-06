@@ -12,6 +12,3 @@
 #include <pbl/services/imu/units.h>
 
 #include <hal/nrf_gpio.h>
-
-#define BT_VENDOR_ID   0x0EEA
-#define BT_VENDOR_NAME "Core Devices LLC"
