@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 
-#include <flash_region/flash_region.h>
 #include <mfg/mfg_info.h>
 
 #define CURRENT_DATA_VERSION 0
@@ -17,14 +17,14 @@ typedef struct {
 } MfgData;
 
 static void prv_update_struct(const MfgData *data) {
-  pbl_flash_erase(FLASH, FLASH_REGION_MFG_INFO_BEGIN, SUBSECTOR_SIZE_BYTES);
-  pbl_flash_write(FLASH, FLASH_REGION_MFG_INFO_BEGIN, (const uint8_t *)data, sizeof(*data));
+  pbl_flash_partition_erase(PART_MFG_INFO, 0U, PART_MFG_INFO_SIZE);
+  pbl_flash_partition_write(PART_MFG_INFO, 0U, data, sizeof(*data));
 }
 
 static MfgData prv_fetch_struct(void) {
   MfgData result;
 
-  pbl_flash_read(FLASH, FLASH_REGION_MFG_INFO_BEGIN, (uint8_t *)&result, sizeof(result));
+  pbl_flash_partition_read(PART_MFG_INFO, 0U, &result, sizeof(result));
 
   // Fallback data if not available
   if (result.data_version != CURRENT_DATA_VERSION) {

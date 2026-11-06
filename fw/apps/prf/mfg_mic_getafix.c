@@ -21,10 +21,10 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <flash_region/flash_region.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <system/firmware_storage.h>
 
 // Kiss FFT from Speex library - must include config and os_support before kiss_fft headers
 // Save and undefine ABS to avoid redefinition warning with Speex's arch.h
@@ -46,9 +46,8 @@
 #define SAMPLE_SIZE_BYTES (SAMPLE_BITS / 8)
 #define BLOCK_SIZE        (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
-#define FLASH_START FLASH_REGION_FIRMWARE_DEST_BEGIN
-#define FLASH_END \
-  (FLASH_REGION_FIRMWARE_DEST_BEGIN + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
+#define FLASH_START PART_FIRMWARE_DEST_OFFSET
+#define FLASH_END (PART_FIRMWARE_DEST_OFFSET + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
 // Target frequency: 1 kHz ± 100 Hz
 #define TARGET_FREQ_HZ    1000
