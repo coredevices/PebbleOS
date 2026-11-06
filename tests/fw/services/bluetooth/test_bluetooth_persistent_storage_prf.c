@@ -3,6 +3,7 @@
 
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/board/partitions.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
@@ -10,7 +11,6 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <flash_region/flash_region.h>
 
 typedef struct GAPLEConnection GAPLEConnection;
 
@@ -107,8 +107,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
 void test_bluetooth_persistent_storage_prf__initialize(void) {
   bonding_sync_init();
   prv_reset_change_op_tracking();
-  fake_spi_flash_init(FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                      FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN);
+  fake_spi_flash_init(PART_SHARED_PRF_STORAGE_OFFSET, PART_SHARED_PRF_STORAGE_SIZE);
   shared_prf_storage_init();
   bt_persistent_storage_init();
 }

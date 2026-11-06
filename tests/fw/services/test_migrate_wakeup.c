@@ -8,7 +8,6 @@
 #include <pbl/settings/settings.h>
 
 #include <clar.h>
-#include <flash_region/flash_region.h>
 #include <process_management/app_install_manager.h>
 #include <syscall/syscall.h>
 

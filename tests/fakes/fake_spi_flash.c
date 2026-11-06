@@ -7,10 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 
 #include <clar_asserts.h>
-#include <flash_region/flash_region.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <system/status_codes.h>
@@ -45,17 +45,11 @@ void fake_spi_flash_init(uint32_t offset, uint32_t length) {
   // Clients are not required to cleanup due to prior code, so do so here.
   fake_spi_flash_cleanup();
 
-  // Tests pass small windows: grow them over the regions code reaches beyond the filesystem.
-#ifdef FLASH_REGION_FILESYSTEM_END
-  if (offset + length < FLASH_REGION_FILESYSTEM_END) {
-    length = FLASH_REGION_FILESYSTEM_END - offset;
+  // Tests pass small windows: grow them over the partitions code reaches past the filesystem.
+  const uint32_t end = PART_SHARED_PRF_STORAGE_OFFSET + PART_SHARED_PRF_STORAGE_SIZE;
+  if (offset + length < end) {
+    length = end - offset;
   }
-#endif
-#ifdef FLASH_REGION_SHARED_PRF_STORAGE_END
-  if (offset + length < FLASH_REGION_SHARED_PRF_STORAGE_END) {
-    length = FLASH_REGION_SHARED_PRF_STORAGE_END - offset;
-  }
-#endif
 
   s_state.offset = offset;
   s_state.length = length;

@@ -9,7 +9,6 @@
 
 #include <clar.h>
 #include <fixtures/load_test_resources.h>
-#include <flash_region/flash_region.h>
 #include <kernel/events.h>
 #include <resource/language_pack.h>
 #include <resource/resource_ids.auto.h>
