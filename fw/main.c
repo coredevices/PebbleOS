@@ -1,15 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdio.h>
+#include <stdint.h>
 
 #include <pbl/bluetooth/init.h>
 #include <pbl/device.h>
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
-#include <pbl/drivers/otp.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -36,6 +34,7 @@
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/memory_layout.h>
+#include <kernel/pebble_tasks.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
 #include <mfg/mfg_info.h>
