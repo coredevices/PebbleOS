@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/section.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
 
@@ -19,11 +20,11 @@ uint64_t pbl_uptime_ms(void) {
   return pbl_uptime_ticks() * 1000U / PBL_TICK_HZ;
 }
 
-uint32_t pbl_cycles_per_sec(void) {
+PBL_SECTION_RAM uint32_t pbl_cycles_per_sec(void) {
   return arch_cycles_per_sec();
 }
 
-void pbl_busy_wait_us(uint32_t us) {
+PBL_SECTION_RAM void pbl_busy_wait_us(uint32_t us) {
   // Cycles per microsecond, rounded up.
   uint32_t per_us = (arch_cycles_per_sec() + 999999U) / 1000000U;
   uint64_t cycles = (uint64_t)us * per_us;
