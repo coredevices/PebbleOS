@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "../battery_state_store.h"
+
 #include <math.h>
 
 #include <pbl/analytics/analytics.h>
-#include <pbl/board/partitions.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
 #include <pbl/drivers/pmic/npm1300.h>
@@ -17,18 +18,7 @@
 #include <pbl/util/ratio.h>
 
 #include <kernel/events.h>
-
-#ifndef CONFIG_RECOVERY_FW
-#include <pbl/settings/settings.h>
-#endif
-
-#ifdef CONFIG_MFG
-#include <pbl/drivers/flash.h>
-
-#endif
-
 #include <nrf_fuel_gauge.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -97,135 +87,21 @@ static bool s_charger_enabled;
 
 static uint32_t s_save_counter;
 
-#ifdef CONFIG_MFG
-// In manufacturing firmware, use dedicated MFG_BATTERY_STATE flash region
-static void prv_erase_state(void) {
-  pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
-  PBL_LOG_DBG("Fuel gauge state erased");
-}
-
-static bool prv_load_state(void *state, size_t size) {
-  if (pbl_flash_partition_read(PART_MFG_BATTERY_STATE, 0U, state, size) != 0) {
-    return false;
-  }
-
-  // Check if the flash region contains valid data (not all 0xFF)
-  uint8_t *bytes = (uint8_t *)state;
-  bool all_erased = true;
-  for (size_t i = 0; i < size; i++) {
-    if (bytes[i] != 0xFF) {
-      all_erased = false;
-      break;
-    }
-  }
-
-  if (all_erased) {
-    return false;
-  }
-
-  PBL_LOG_DBG("Fuel gauge state loaded");
-
-  return true;
-}
-
 static void prv_save_state(void) {
   uint8_t buf[nrf_fuel_gauge_state_size];
+  int ret;
 
-  if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
-    PBL_LOG_ERR("Failed to get fuel gauge state");
+  ret = nrf_fuel_gauge_state_get(buf, sizeof(buf));
+  if (ret != 0) {
+    PBL_LOG_ERR("Failed to get fuel gauge state (%d)", ret);
     return;
   }
 
-  if (sizeof(buf) > PART_MFG_BATTERY_STATE_SIZE) {
-    PBL_LOG_ERR("Fuel gauge state too large for MFG_BATTERY_STATE region");
-    return;
-  }
-
-  pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
-  pbl_flash_partition_write(PART_MFG_BATTERY_STATE, 0U, buf, sizeof(buf));
-
-  PBL_LOG_DBG("Fuel gauge state saved");
-}
-#else
-// In normal firmware, use settings file
-#define FUEL_GAUGE_SETTINGS_FILE_NAME "/fgs"
-#define FUEL_GAUGE_SETTINGS_MAX_SIZE  2048
-
-static const uint32_t FUEL_GAUGE_STATE_KEY = 1;
-
-static void prv_erase_state(void) {
-  struct pbl_settings_file file;
-  status_t ret;
-
-  ret = status_from_errno(
-      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
-  if (ret != S_SUCCESS) {
-    return;
-  }
-
-  pbl_settings_delete(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
-  pbl_settings_close(&file);
-
-  PBL_LOG_DBG("Fuel gauge state erased");
-}
-
-static bool prv_load_state(void *state, size_t size) {
-  struct pbl_settings_file file;
-  status_t ret;
-
-  ret = status_from_errno(
-      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
-  if (ret != S_SUCCESS) {
-    return false;
-  }
-
-  int len = pbl_settings_get_len(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY));
-  if (len != (int)size) {
-    pbl_settings_close(&file);
-    return false;
-  }
-
-  ret = status_from_errno(
-      pbl_settings_get(&file, &FUEL_GAUGE_STATE_KEY, sizeof(FUEL_GAUGE_STATE_KEY), state, size));
-  pbl_settings_close(&file);
-
-  if (ret != S_SUCCESS) {
-    return false;
-  }
-
-  PBL_LOG_DBG("Fuel gauge state loaded");
-
-  return true;
-}
-
-static void prv_save_state(void) {
-  uint8_t buf[nrf_fuel_gauge_state_size];
-  struct pbl_settings_file file;
-  status_t ret;
-
-  if (nrf_fuel_gauge_state_get(buf, sizeof(buf)) != 0) {
-    PBL_LOG_ERR("Failed to get fuel gauge state");
-    return;
-  }
-
-  ret = status_from_errno(
-      pbl_settings_open(&file, FUEL_GAUGE_SETTINGS_FILE_NAME, FUEL_GAUGE_SETTINGS_MAX_SIZE));
-  if (ret != S_SUCCESS) {
-    PBL_LOG_ERR("Failed to open fuel gauge settings file");
-    return;
-  }
-
-  ret = status_from_errno(pbl_settings_set(&file, &FUEL_GAUGE_STATE_KEY,
-                                           sizeof(FUEL_GAUGE_STATE_KEY), buf, sizeof(buf)));
-  pbl_settings_close(&file);
-
-  if (ret != S_SUCCESS) {
-    PBL_LOG_ERR("Failed to save fuel gauge state");
-  } else {
-    PBL_LOG_DBG("Fuel gauge state saved");
+  ret = battery_state_store_save(buf, sizeof(buf));
+  if (ret < 0) {
+    PBL_LOG_ERR("Could not save the fuel gauge state (%d)", ret);
   }
 }
-#endif // CONFIG_MFG
 #endif // FUEL_GAUGE_STATEFUL
 
 static void prv_schedule_update(uint32_t delay);
@@ -243,7 +119,7 @@ static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool lo
   uint8_t saved_state[nrf_fuel_gauge_state_size];
 
   if (load_state) {
-    if (prv_load_state(saved_state, sizeof(saved_state))) {
+    if (battery_state_store_load(saved_state, sizeof(saved_state)) == 0) {
       parameters.state = saved_state;
     }
   }
@@ -254,7 +130,7 @@ static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool lo
   if (ret != 0 && parameters.state != nullptr) {
     PBL_LOG_WRN("Failed to initialize fuel gauge with saved state, erasing");
 
-    prv_erase_state();
+    (void)battery_state_store_erase();
 
     parameters.state = nullptr;
     ret = nrf_fuel_gauge_init(&parameters, nullptr);
@@ -512,7 +388,7 @@ void battery_state_init(void) {
 #if FUEL_GAUGE_STATEFUL
   if ((uint8_t)ceilf(pct) == 0 && constants.v_mv >= BATTERY_MIN_VALID_VOLTAGE_MV) {
     PBL_LOG_WRN("Invalid state detected, reloading without state");
-    prv_erase_state();
+    (void)battery_state_store_erase();
     ret = prv_fuel_gauge_init_common(&constants, false);
     PBL_ASSERTN(ret == 0);
     pct =
