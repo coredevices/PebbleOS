@@ -13,6 +13,15 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/services/new_timer/new_timer.h>
 
+// Program and erase units of the NOR parts in use, for sizes known at build time
+#define PAGE_SIZE_BYTES (0x100)
+
+#define SECTOR_SIZE_BYTES (0x10000)
+#define SECTOR_ADDR_MASK  (~(SECTOR_SIZE_BYTES - 1))
+
+#define SUBSECTOR_SIZE_BYTES (0x1000)
+#define SUBSECTOR_ADDR_MASK  (~(SUBSECTOR_SIZE_BYTES - 1))
+
 /**
  * @defgroup drivers_flash Flash
  * @ingroup drivers

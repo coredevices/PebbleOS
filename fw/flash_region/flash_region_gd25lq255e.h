@@ -3,14 +3,6 @@
 
 #pragma once
 
-#define PAGE_SIZE_BYTES (0x100)
-
-#define SECTOR_SIZE_BYTES (0x10000)
-#define SECTOR_ADDR_MASK  (~(SECTOR_SIZE_BYTES - 1))
-
-#define SUBSECTOR_SIZE_BYTES (0x1000)
-#define SUBSECTOR_ADDR_MASK  (~(SUBSECTOR_SIZE_BYTES - 1))
-
 // A bit of preprocessor magic to help with automatically calculating flash region addresses
 //////////////////////////////////////////////////////////////////////////////
 

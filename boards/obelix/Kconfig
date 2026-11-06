@@ -4,3 +4,4 @@
 config BOARD_OBELIX
     bool
     default y
+    select BOARD_PARTITIONS_DUAL_SLOT

@@ -41,3 +41,9 @@ pbl_clar_test(test_accel_qemu
     PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_flash_partition
+  SOURCES
+    tests/fakes/fake_spi_flash.c
+    tests/fw/drivers/flash_partitions_single_slot.c
+)
