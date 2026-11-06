@@ -6,12 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash/posix.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 
 #include <fcntl.h>
-#include <flash_region/flash_region.h>
 #include <posix_host.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -22,7 +22,7 @@ PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 #define ERASED_BYTE 0xFFU
 
 static const struct pbl_flash_geometry s_geometry = {
-  .size = BOARD_NOR_FLASH_SIZE,
+  .size = 32U * 1024U * 1024U,
   .page_size = PAGE_SIZE_BYTES,
   .sector_size = SECTOR_SIZE_BYTES,
   .subsector_size = SUBSECTOR_SIZE_BYTES,
@@ -54,8 +54,7 @@ static uint8_t *prv_ptr(const struct pbl_flash *flash, uint32_t addr) {
 }
 
 static void prv_install_resources(const struct pbl_flash *flash) {
-  const size_t bank_size =
-      FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
+  const size_t bank_size = PART_SYSTEM_RESOURCES_BANK_0_SIZE;
   char default_path[PATH_MAX];
   const char *path = s_resources_path;
   uint8_t *bank;
@@ -75,7 +74,7 @@ static void prv_install_resources(const struct pbl_flash *flash) {
     return;
   }
 
-  bank = prv_ptr(flash, FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN);
+  bank = prv_ptr(flash, PART_SYSTEM_RESOURCES_BANK_0_OFFSET);
   len = fread(bank, 1, bank_size, f);
   fclose(f);
   memset(bank + len, ERASED_BYTE, bank_size - len);

@@ -29,7 +29,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
 
-#include <flash_region/flash_region.h>
+#include <board/otp_layout.h>
 #include <hal/nrf_gpio.h>
 
 PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(NRF5_GPIO_P0, 19, 0),
