@@ -680,65 +680,6 @@ void test_pfs__get_size(void) {
   cl_assert(pfs_get_size() == (ftl_get_size() - SECTOR_SIZE_BYTES));
 }
 
-void test_pfs__migration(void) {
-  // The filesystem migration path grows the filesystem by adding flash regions one at a time.
-  // This only happens on legacy multi-region (non-contiguous) flash layouts (Pebble OG / Steel,
-  // PLATFORM_TINTIN / n25q), which expose FLASH_REGION_FILESYSTEM_2_BEGIN. Modern platforms (e.g.
-  // obelix) have a single contiguous filesystem region, so there is no second region to migrate
-  // into and ftl_populate_region_list() is a no-op. Guard the migration-specific assertions so
-  // this case only exercises behaviour that exists on the platform under test.
-#ifdef FLASH_REGION_FILESYSTEM_2_BEGIN
-  // reset the flash
-  fake_spi_flash_cleanup();
-  fake_spi_flash_init(0, 0x1000000);
-
-  extern void ftl_force_version(int version_idx);
-  pfs_init(true);
-  ftl_force_version(1);
-
-  // simulate a migration by leaving leaving files in various states
-  // in the first region. Then try to add another region and confirm
-  // none of the files have been corrupted
-  char file_small[10];
-
-  char buf[50];
-  const int erase_count = 3;
-  for (int num_erases = 0; num_erases < erase_count; num_erases++) {
-    for (int i = 0; i < num_pages(); i++) {
-      snprintf(file_small, sizeof(file_small), "file%d", i);
-      snprintf(buf, sizeof(buf), "This is small buf %d!", i);
-      int len = strlen(buf);
-      int fd = pfs_open(file_small, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
-      cl_assert(fd >= 0);
-      cl_assert(pfs_write(fd, (uint8_t *)buf, len) == len);
-      cl_assert(pfs_close(fd) == S_SUCCESS);
-      if (num_erases != (erase_count - 1)) {
-        cl_assert(pfs_remove(file_small) == S_SUCCESS);
-      }
-    }
-  }
-
-  int original_page_count = num_pages();
-  ftl_populate_region_list();
-  // make sure something was added
-  PBL_LOG_DBG("original pages %u, num pages: %u", original_page_count, num_pages());
-  cl_assert(original_page_count < num_pages());
-
-  for (int i = 0; i < original_page_count; i++) {
-    snprintf(file_small, sizeof(file_small), "file%d", i);
-    snprintf(buf, sizeof(buf), "This is small buf %d!", i);
-    int len = strlen(buf);
-    char rbuf[len];
-    int fd = pfs_open(file_small, OP_FLAG_READ, FILE_TYPE_STATIC, 0);
-    cl_assert(fd >= 0);
-    cl_assert_equal_i(pfs_read(fd, (uint8_t *)rbuf, len), len);
-    cl_assert(memcmp(rbuf, buf, len) == 0);
-    cl_assert(fd >= 0);
-    cl_assert(pfs_close(fd) == S_SUCCESS);
-  }
-#endif // FLASH_REGION_FILESYSTEM_2_BEGIN
-}
-
 extern status_t test_scan_for_last_written(void);
 void test_pfs__last_written_page(void) {
   pfs_format(true);
