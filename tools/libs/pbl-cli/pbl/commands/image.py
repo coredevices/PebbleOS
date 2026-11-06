@@ -7,6 +7,7 @@ import sys
 
 from pbl import lock
 from pbl.command import PblCommand
+from pbl.runners.sftool import FLASH_XIP_BASE
 
 
 class _ImageCommand(PblCommand):
@@ -14,6 +15,7 @@ class _ImageCommand(PblCommand):
 
     group = "device"
     partition = None
+    region = None
 
     def do_add_parser(self, parser_adder):
         parser = self.add_subparser(parser_adder)
@@ -40,18 +42,25 @@ class _ImageCommand(PblCommand):
             tty = watch.serial
             self.inf(f"lab: watch {watch.name} ({watch.board})")
 
-        tool = self.script("tools", self._tool(build, args) + ".py")
+        tool_name = self._tool(build, args)
+        tool = self.script("tools", tool_name + ".py")
+        tool_args = ""
+        if tool_name == "sftool_flash_imaging":
+            offset, _ = build.flash_region(self.region)
+            tool_args = f"--address {FLASH_XIP_BASE + offset:#x} "
         self.inf(f'writing "{path}" to {tty}')
         with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
             self.check_shell(
                 f"{shlex.quote(sys.executable)} {tool} -t {shlex.quote(tty)} "
-                f"-p {self.partition} {shlex.quote(path)}",
+                f"{tool_args}-p {self.partition} {shlex.quote(path)}",
                 "imaging failed",
             )
 
 
 class ImageResources(_ImageCommand):
     partition = "resources"
+    # The bank the firmware checks first
+    region = "SYSTEM_RESOURCES_BANK_0"
 
     def __init__(self):
         super().__init__("image_resources", "Image the system resources over serial")
@@ -63,6 +72,7 @@ class ImageResources(_ImageCommand):
 
 class ImageRecovery(_ImageCommand):
     partition = "firmware"
+    region = "SAFE_FIRMWARE"
 
     def __init__(self):
         super().__init__("image_recovery", "Image the recovery firmware over serial")
