@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -15,7 +16,6 @@
 #include <pbl/version.h>
 
 #include <applib/app_watch_info.h>
-#include <flash_region/flash_region.h>
 #include <system/firmware_storage.h>
 
 //! This symbol and its contents are provided by the linker script, see the
@@ -92,14 +92,13 @@ bool version_copy_recovery_fw_metadata(FirmwareMetadata *out_metadata) {
   return true;
 #else
   const bool check_crc = true;
-  return prv_version_copy_flash_fw_metadata(out_metadata, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                                            check_crc);
+  return prv_version_copy_flash_fw_metadata(out_metadata, PART_SAFE_FIRMWARE_OFFSET, check_crc);
 #endif
 }
 
 bool version_copy_update_fw_metadata(FirmwareMetadata *out_metadata) {
   const bool check_crc = false;
-  uint32_t addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+  uint32_t addr = PART_FIRMWARE_DEST_OFFSET;
 
   return prv_version_copy_flash_fw_metadata(out_metadata, addr, check_crc);
 }
@@ -116,13 +115,13 @@ bool version_copy_recovery_fw_version(char *dest, const int dest_len_bytes) {
 bool version_is_prf_installed(void) {
 #ifndef CONFIG_PBLBOOT
   FirmwareDescription firmware_description =
-      firmware_storage_read_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+      firmware_storage_read_firmware_description(PART_SAFE_FIRMWARE_OFFSET);
 
-  return firmware_storage_check_valid_firmware_description(FLASH_REGION_SAFE_FIRMWARE_BEGIN,
+  return firmware_storage_check_valid_firmware_description(PART_SAFE_FIRMWARE_OFFSET,
                                                            &firmware_description);
 #else
-  FirmwareHeader header = firmware_storage_read_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN);
-  return firmware_storage_check_valid_firmware_header(FLASH_REGION_SAFE_FIRMWARE_BEGIN, &header);
+  FirmwareHeader header = firmware_storage_read_firmware_header(PART_SAFE_FIRMWARE_OFFSET);
+  return firmware_storage_check_valid_firmware_header(PART_SAFE_FIRMWARE_OFFSET, &header);
 #endif
 }
 

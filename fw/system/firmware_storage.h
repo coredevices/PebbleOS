@@ -8,7 +8,24 @@
 
 #include <stdint.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/kernel/compiler.h>
+
+//! Where a firmware update is written, and read back from once the transfer is over. Without
+//! pblboot there is a single slot; with it, the one not running, or slot 0 from recovery.
+#if !defined(CONFIG_PBLBOOT)
+#define PART_FIRMWARE_DEST_OFFSET PART_FIRMWARE_SLOT_1_OFFSET
+#define PART_FIRMWARE_DEST_SIZE   PART_FIRMWARE_SLOT_1_SIZE
+#elif (defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG) && \
+       !defined(CONFIG_RECOVERY_FW_AS_FW)) ||                 \
+    CONFIG_FIRMWARE_SLOT == 1
+#define PART_FIRMWARE_DEST_OFFSET PART_FIRMWARE_SLOT_0_OFFSET
+#define PART_FIRMWARE_DEST_SIZE   PART_FIRMWARE_SLOT_0_SIZE
+#else
+#define PART_FIRMWARE_DEST_OFFSET PART_FIRMWARE_SLOT_1_OFFSET
+#define PART_FIRMWARE_DEST_SIZE   PART_FIRMWARE_SLOT_1_SIZE
+#endif
+#define PART_FIRMWARE_DEST PBL_FLASH_PARTITION(PART_FIRMWARE_DEST)
 
 #ifndef CONFIG_PBLBOOT
 typedef struct PBL_PACKED FirmwareDescription {
