@@ -5,10 +5,12 @@
 
 #include <stdint.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 
 #include <pebbleos/core_dump_structs.h>
+#include <system/firmware_storage.h>
 
 // LCPU (BLE coprocessor) RAM, in the LPSYS domain outside main RAM.
 #if defined(CONFIG_SOC_SF32LB52)
@@ -17,9 +19,15 @@
 #endif
 
 // Max number of core dump images we can fit in our allocated space
-#define CORE_DUMP_FLASH_START FLASH_REGION_CD_BEGIN
-#define CORE_DUMP_FLASH_END   FLASH_REGION_CD_END
-#define CORE_DUMP_FLASH_SIZE  (CORE_DUMP_FLASH_END - CORE_DUMP_FLASH_START)
+#ifdef CONFIG_PBLBOOT
+#define CORE_DUMP_FLASH_START PART_CD_OFFSET
+#define CORE_DUMP_FLASH_SIZE  PART_CD_SIZE
+#else
+// Shares the only firmware slot
+#define CORE_DUMP_FLASH_START PART_FIRMWARE_DEST_OFFSET
+#define CORE_DUMP_FLASH_SIZE  PART_FIRMWARE_DEST_SIZE
+#endif
+#define CORE_DUMP_FLASH_END (CORE_DUMP_FLASH_START + CORE_DUMP_FLASH_SIZE)
 #if defined(CONFIG_SOC_NRF52)
 #define CORE_DUMP_MAX_IMAGES 2
 #elifdef CONFIG_SOC_SF32LB52

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/init.h>
+#include <pbl/board/partitions.h>
 #include <pbl/device.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/battery.h>
@@ -30,7 +31,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <debug/debug.h>
-#include <flash_region/flash_region.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/input_buttons.h>
@@ -72,8 +72,7 @@ static void init_drivers(void) {
 
   battery_init();
 
-  (void)pbl_flash_protect(FLASH, FLASH_REGION_SAFE_FIRMWARE_BEGIN,
-                          FLASH_REGION_SAFE_FIRMWARE_END - FLASH_REGION_SAFE_FIRMWARE_BEGIN);
+  (void)pbl_flash_partition_protect(PART_SAFE_FIRMWARE);
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();
   if (vibe_cali != MFG_INFO_VIBE_CALI_INVALID) {

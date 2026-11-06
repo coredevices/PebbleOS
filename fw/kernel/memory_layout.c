@@ -6,12 +6,12 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
-#include <flash_region/flash_region.h>
 #include <logging/logging_private.h>
 
 #ifdef CONFIG_SHELL
@@ -153,16 +153,16 @@ static const MpuRegion s_microflash_region = {
 };
 
 #if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
-static_assert(FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END ==
-                  FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
+static_assert(PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0_SIZE ==
+                  PART_SYSTEM_RESOURCES_BANK_1_OFFSET,
               "resource banks must be contiguous");
 
 // System resources are served as pointers into the memory mapped banks.
 static const MpuRegion s_resource_banks_region = {
   .region_num = MemoryRegion_ResourceBanks,
   .enabled = true,
-  .base_address = CONFIG_FLASH_BASE + FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
-  .size = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+  .base_address = CONFIG_FLASH_BASE + PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
+  .size = PART_SYSTEM_RESOURCES_BANK_0_SIZE + PART_SYSTEM_RESOURCES_BANK_1_SIZE,
   .cache_policy = MpuCachePolicy_WriteThrough,
   .permissions = MpuPermissions_PrivRO_UserRO,
 };
