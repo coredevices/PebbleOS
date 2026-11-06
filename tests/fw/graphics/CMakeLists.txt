@@ -437,3 +437,16 @@ pbl_clar_test(test_graphics_draw_rotated_bitmap
 )
 
 pbl_clar_test(test_raw_image)
+
+pbl_clar_test(test_graphics_fast_paths
+  MODULES graphics
+  SOURCES
+    tests/fakes/fake_gbitmap_png.c
+    tests/fakes/fake_round_display.c
+    fw/applib/graphics/8_bit/framebuffer.c
+    fw/applib/ui/layer.c
+    fw/applib/graphics/8_bit/bitblt_private.c
+    fw/applib/graphics/graphics_bitmap.c
+  PLATFORMS emery gabbro
+  TEST_IMAGES
+)
