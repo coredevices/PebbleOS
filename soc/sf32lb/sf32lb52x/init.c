@@ -3,6 +3,8 @@
 
 #include "syscfg.h"
 
+#include <pbl/drivers/pinctrl/sf32lb52.h>
+#include <pbl/drivers/pinctrl/sf32lb52_pins.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
@@ -15,6 +17,9 @@
 
 #define HCPU_FREQ_MHZ    240
 #define PWRKEY_RESET_CNT (32000 * 15)
+
+#define PIN_FUNC_MSK \
+  (PBL_PINCTRL_SF32LB52_FSEL_MSK | PBL_PINCTRL_SF32LB52_PULL_UP | PBL_PINCTRL_SF32LB52_INPUT)
 
 void pbl_soc_early_init(void) {
   HAL_StatusTypeDef ret;
@@ -31,7 +36,7 @@ void pbl_soc_early_init(void) {
   HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
 
   // Disable default PA21 pull-down, causing leakage
-  HAL_PIN_Set(PAD_PA21, GPIO_A21, PIN_NOPULL, 1);
+  (void)pbl_pinctrl_sf32lb52_modify(SF32LB52_PA21_GPIO | PBL_PINCTRL_SF32LB52_INPUT, PIN_FUNC_MSK);
 
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
     HAL_HPAON_EnableXT48();
