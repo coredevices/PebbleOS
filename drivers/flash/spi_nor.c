@@ -831,10 +831,9 @@ static int prv_read_op(const struct pbl_flash_spi_nor *nor, uint32_t offs, void 
 }
 
 // Through the window where it reaches, through operations beyond
-static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
+static int prv_read(const struct pbl_flash *flash, uint32_t offs, void *buf, size_t len) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
   const struct pbl_spi_mem_dirmap *dm = &nor->data->dirmap;
-  uint32_t offs = addr - flash->base;
   uint8_t *dst = buf;
   int ret;
 
@@ -865,11 +864,10 @@ static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, siz
   return 0;
 }
 
-static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *buf, size_t len) {
+static int prv_write(const struct pbl_flash *flash, uint32_t start, const void *buf, size_t len) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
   const struct pbl_flash_spi_nor_data *data = nor->data;
   const uint32_t page_size = data->geometry.page_size;
-  const uint32_t start = addr - flash->base;
   const size_t total = len;
   uint32_t offset = start;
   const uint8_t *src = buf;
@@ -906,10 +904,9 @@ static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *b
   return ret;
 }
 
-static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size) {
+static int prv_erase(const struct pbl_flash *flash, uint32_t offset, uint32_t size) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
   const struct pbl_flash_spi_nor_data *data = nor->data;
-  const uint32_t offset = addr - flash->base;
   struct pbl_spi_mem_op op;
   uint8_t opcode;
   int ret;

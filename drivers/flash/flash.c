@@ -38,8 +38,7 @@ PBL_DEVICE_CLASS_DEFINE(pbl_flash_class, "flash");
 
 static PBL_ALWAYS_INLINE bool prv_in_range(const struct pbl_flash *flash, uint32_t addr,
                                            size_t len) {
-  return addr >= flash->base && len <= flash->geometry->size &&
-         (addr - flash->base) <= (flash->geometry->size - len);
+  return len <= flash->geometry->size && addr <= (flash->geometry->size - len);
 }
 
 static bool prv_is_protected(const struct pbl_flash *flash, uint32_t addr, size_t len) {
@@ -127,7 +126,7 @@ static void prv_schedule_resume(const struct pbl_flash *flash, uint32_t delay_ms
 static uint32_t prv_erase_unit(const struct pbl_flash *flash, uint32_t addr, uint32_t end) {
   const struct pbl_flash_geometry *geo = flash->geometry;
 
-  if (((addr - flash->base) % geo->sector_size) == 0U && (end - addr) >= geo->sector_size) {
+  if ((addr % geo->sector_size) == 0U && (end - addr) >= geo->sector_size) {
     return geo->sector_size;
   }
 
@@ -256,7 +255,7 @@ static int prv_erase_check(const struct pbl_flash *flash, uint32_t addr, size_t 
     return -ENODEV;
   }
 
-  if (((addr - flash->base) % subsector_size) != 0U) {
+  if ((addr % subsector_size) != 0U) {
     return -EINVAL;
   }
 
@@ -480,7 +479,6 @@ static void prv_map_copy(uint8_t *dst, const uint8_t *src, size_t len) {
 
 int pbl_flash_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
   struct pbl_flash_state *st = flash->state;
-  uint32_t offs = addr - flash->base;
   int ret;
 
   if (!prv_ready(flash)) {
@@ -505,8 +503,8 @@ int pbl_flash_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size
     prv_schedule_resume(flash, ERASE_RESUME_AFTER_READ_MS);
   }
 
-  if (offs < st->map_len && len <= st->map_len - offs) {
-    prv_map_copy(buf, st->map + offs, len);
+  if (addr < st->map_len && len <= st->map_len - addr) {
+    prv_map_copy(buf, st->map + addr, len);
     ret = 0;
   } else {
     ret = flash->ops->read(flash, addr, buf, len);

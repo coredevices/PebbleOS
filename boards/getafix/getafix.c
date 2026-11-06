@@ -83,8 +83,7 @@ static const struct pbl_flash_otp_cell s_otp_cells[] = {
   BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
 };
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
-PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &pbl_flash_nor_gd25q256e,
-                         SF32LB52_MPI2_MEM_BASE, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &pbl_flash_nor_gd25q256e, &s_otp_layout);
 
 PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
 

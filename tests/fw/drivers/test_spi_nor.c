@@ -454,10 +454,9 @@ static const struct pbl_flash_otp_cell s_otp_cells[] = {
 };
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, 0U, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, 0U, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, 0x12000000U,
-                         &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, &s_otp_layout);
 
 const struct pbl_flash *const FLASH = &s_nor_q.flash;
 
@@ -800,9 +799,9 @@ void test_spi_nor__xip_adopts_and_erases_synchronously(void) {
 
   memset(s_mem, 0x00, 0x1000U);
   s_polls = 0;
-  cl_assert_equal_i(pbl_flash_erase(flash, 0x12000000U, 0x1000U), 0);
+  cl_assert_equal_i(pbl_flash_erase(flash, 0U, 0x1000U), 0);
   cl_assert_equal_i(s_polls, 1);
-  cl_assert(pbl_flash_is_erased(flash, 0x12000000U, 0x1000U));
+  cl_assert(pbl_flash_is_erased(flash, 0U, 0x1000U));
 }
 
 void test_spi_nor__xip_erase_suspended_for_interrupts(void) {
@@ -817,14 +816,14 @@ void test_spi_nor__xip_erase_suspended_for_interrupts(void) {
   memset(s_mem, 0x00, 0x10000U);
   s_erase_busy = 2000U;
   s_irq_every = 10U;
-  cl_assert_equal_i(pbl_flash_erase(flash, 0x12000000U, 0x10000U), 0);
+  cl_assert_equal_i(pbl_flash_erase(flash, 0U, 0x10000U), 0);
 
   cl_assert_equal_i(s_susp_polls, 1);
   cl_assert(s_irq_windows >= 10);
   cl_assert(s_min_resume_to_suspend >= pbl_flash_nor_gd25q256e.resume_us);
   cl_assert(!s_suspended);
   cl_assert_equal_i(s_sr2 & PBL_FLASH_NOR_SR2_SUS, 0);
-  cl_assert(pbl_flash_is_erased(flash, 0x12000000U, 0x10000U));
+  cl_assert(pbl_flash_is_erased(flash, 0U, 0x10000U));
 }
 
 void test_spi_nor__xip_program_not_suspended(void) {
@@ -838,7 +837,7 @@ void test_spi_nor__xip_program_not_suspended(void) {
   flash = prv_init(&s_nor_xip);
 
   s_irq_every = 1U;
-  cl_assert_equal_i(pbl_flash_write(flash, 0x12000000U, data, sizeof(data)), 0);
+  cl_assert_equal_i(pbl_flash_write(flash, 0U, data, sizeof(data)), 0);
   cl_assert_equal_i(s_susp_polls, 0);
   cl_assert_equal_i(s_irq_windows, 0);
 }

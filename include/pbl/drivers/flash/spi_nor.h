@@ -35,7 +35,7 @@
  * };
  * static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
  *
- * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e, 0U,
+ * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e,
  *                          &s_otp_layout);
  * @endcode
  * @{
@@ -83,19 +83,18 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
  * @param _name Name.
  * @param _bus Controller, a struct pbl_spi_mem.
  * @param _part Part, a struct pbl_flash_nor_part.
- * @param _base Address of the first byte.
  * @param _otp_layout OTP cells, a struct pbl_flash_otp_layout, or NULL.
  */
-#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _part, _base, _otp_layout)                   \
-  PBL_FLASH_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_flash_spi_nor_data sym##_data;                                              \
-  const struct pbl_flash_spi_nor sym = {                                                        \
-    .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_flash_spi_nor_ops, (_base), \
-                            &sym##_data.geometry, &(_part)->otp.info, _otp_layout),             \
-    .data = &sym##_data,                                                                        \
-    .bus = (_bus),                                                                              \
-    .part = (_part),                                                                            \
-  };                                                                                            \
+#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _part, _otp_layout)                 \
+  PBL_FLASH_STATE_DEFINE(sym);                                                         \
+  static struct pbl_flash_spi_nor_data sym##_data;                                     \
+  const struct pbl_flash_spi_nor sym = {                                               \
+    .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_flash_spi_nor_ops, \
+                            &sym##_data.geometry, &(_part)->otp.info, _otp_layout),    \
+    .data = &sym##_data,                                                               \
+    .bus = (_bus),                                                                     \
+    .part = (_part),                                                                   \
+  };                                                                                   \
   PBL_DEVICE_REGISTER(sym, &sym.flash.dev)
 
 /** @} */

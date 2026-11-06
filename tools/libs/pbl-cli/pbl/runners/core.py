@@ -65,8 +65,8 @@ class RunnerConfig(NamedTuple):
     pbpack_file: str | None = None  # None on PRF builds
     firmware_slot: int | None = None  # None without multiple slots
     resources_file: str | None = None
-    resources_address: int | None = None  # in the board's flash layout
-    erase_ranges: tuple = ()  # (address, size) in the board's flash layout
+    resources_address: int | None = None  # offset in the flash
+    erase_ranges: tuple = ()  # (offset, size) in the flash
     sftool: str = "sftool"
     gdb: str | None = None
     gdb_port: int | None = None  # None for the runner's default

@@ -34,7 +34,7 @@ static const struct pbl_flash_geometry s_geometry = {
 };
 
 static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {
-  memcpy(buf, (const void *)(uintptr_t)addr, len);
+  memcpy(buf, (const void *)(uintptr_t)(QEMU_EXTFLASH_XIP_BASE + addr), len);
 
   return 0;
 }
@@ -42,6 +42,8 @@ static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, siz
 static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *buf, size_t len) {
   const uint32_t page_size = flash->geometry->page_size;
   const uint8_t *src = buf;
+
+  addr += QEMU_EXTFLASH_XIP_BASE;
 
   while (len > 0U) {
     size_t chunk = MIN(len, page_size - (addr % page_size));
@@ -73,7 +75,7 @@ static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size
     return -EINVAL;
   }
 
-  pbl_writel(addr, QEMU_EXTFLASH_BASE + FLASH_ADDR);
+  pbl_writel(QEMU_EXTFLASH_XIP_BASE + addr, QEMU_EXTFLASH_BASE + FLASH_ADDR);
   pbl_writel(cmd, QEMU_EXTFLASH_BASE + FLASH_CMD);
 
   return 0;
@@ -91,7 +93,6 @@ static const struct pbl_flash_ops s_ops = {
 };
 
 PBL_FLASH_STATE_DEFINE(pbl_flash_qemu);
-const struct pbl_flash pbl_flash_qemu =
-    PBL_FLASH_INIT(pbl_flash_qemu, "flash", nullptr, nullptr, &s_ops, QEMU_EXTFLASH_XIP_BASE,
-                   &s_geometry, nullptr, nullptr);
+const struct pbl_flash pbl_flash_qemu = PBL_FLASH_INIT(pbl_flash_qemu, "flash", nullptr, nullptr,
+                                                       &s_ops, &s_geometry, nullptr, nullptr);
 PBL_DEVICE_REGISTER(pbl_flash_qemu, &pbl_flash_qemu.dev);

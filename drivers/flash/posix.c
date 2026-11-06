@@ -50,7 +50,7 @@ POSIX_HOST_OPTION(.flag = 'r', .arg = "res.pbpack",
                   .set = prv_set_resources_path)
 
 static uint8_t *prv_ptr(const struct pbl_flash *flash, uint32_t addr) {
-  return &s_flash[addr - flash->base];
+  return &s_flash[addr];
 }
 
 static void prv_install_resources(const struct pbl_flash *flash) {
@@ -151,7 +151,6 @@ static const struct pbl_flash_ops s_ops = {
 };
 
 PBL_FLASH_STATE_DEFINE(pbl_flash_posix);
-const struct pbl_flash pbl_flash_posix =
-    PBL_FLASH_INIT(pbl_flash_posix, "flash", nullptr, nullptr, &s_ops, FLASH_REGION_BASE_ADDRESS,
-                   &s_geometry, nullptr, nullptr);
+const struct pbl_flash pbl_flash_posix = PBL_FLASH_INIT(pbl_flash_posix, "flash", nullptr, nullptr,
+                                                        &s_ops, &s_geometry, nullptr, nullptr);
 PBL_DEVICE_REGISTER(pbl_flash_posix, &pbl_flash_posix.dev);

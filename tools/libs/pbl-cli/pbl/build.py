@@ -191,7 +191,7 @@ class BuildDir:
         return self.join("system_resources.pbpack")
 
     def flash_region(self, name):
-        """``(address, size)`` of flash region ``name``, e.g. ``FILESYSTEM``."""
+        """``(offset, size)`` of flash region ``name``, e.g. ``FILESYSTEM``."""
         from pbl import flash_layout
 
         layout = flash_layout.regions(self)

@@ -40,8 +40,7 @@ PBL_IRQ_CONNECT(QSPI, 5, pbl_spi_mem_nrf5_qspi_irq_handler, &s_qspi, 0);
 
 static const struct pbl_flash_otp_cell s_otp_cells[] = {BOARD_OTP_CELLS};
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
-PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e,
-                         FLASH_REGION_BASE_ADDRESS, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e, &s_otp_layout);
 
 const struct pbl_flash *const FLASH = &s_flash.flash;
 /* PERIPHERAL ID 43 */
