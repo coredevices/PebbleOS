@@ -12,8 +12,13 @@ EMOJI_28~color.pbf files are the color-display variants of these fonts. They
 carry the same glyphs, some of them colored, and every notice in this file
 applies to them as well.
 
-The original community glyphs described below are retained unchanged and remain
-under the Apache License, Version 2.0.
+The EMOJI_36.pbf file holds only the glyphs that the 28 point fonts render
+from Noto Emoji without color, rendered again from Noto Emoji at the larger
+size. It uses no community images. Every notice in this file about Noto Emoji
+applies to it as well.
+
+The original community glyphs described below are retained unchanged in the 14
+to 28 point fonts and remain under the Apache License, Version 2.0.
 =============================================================================
 
 The files:
