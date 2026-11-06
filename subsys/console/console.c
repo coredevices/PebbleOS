@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board.h>
 #include <pbl/console/console.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
@@ -8,7 +9,6 @@
 #include <pbl/kernel/sched.h>
 #include <pbl/mcu/interrupts.h>
 
-#include <board/board.h>
 #include <console/console_private.h>
 
 #ifdef CONFIG_SHELL

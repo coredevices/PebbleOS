@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
@@ -18,8 +19,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
-
-#include <board/board.h>
 
 PBL_LOG_MODULE_DEFINE(driver_accel_lis2dw12, CONFIG_DRIVER_IMU_LOG_LEVEL);
 

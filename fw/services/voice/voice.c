@@ -15,6 +15,7 @@
 #ifdef CONFIG_SERVICE_MIC_STREAM
 #include <pbl/services/mic_stream.h>
 #endif
+#include <pbl/board.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/voice/transcription.h>
@@ -23,7 +24,6 @@
 #include <pbl/services/voice_endpoint.h>
 #include <pbl/util/uuid.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 #include <process_management/app_manager.h>
 

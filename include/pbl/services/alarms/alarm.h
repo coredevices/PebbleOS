@@ -6,9 +6,8 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <pbl/board.h>
 #include <pbl/util/units.h>
-
-#include <board/board.h>
 
 /**
  * @defgroup services_alarms Alarms

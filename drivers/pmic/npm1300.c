@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include <math.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic.h>
@@ -22,7 +23,6 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
@@ -29,7 +30,6 @@
 #include <applib/ui/vibes.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <board/board.h>
 #ifdef CONFIG_CONSOLE
 #include <pbl/console/console.h>
 #endif

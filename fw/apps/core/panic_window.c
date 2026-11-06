@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/board.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/services/runlevel.h>
 
@@ -13,7 +14,6 @@
 #include <applib/graphics/text.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window_private.h>
-#include <board/board.h>
 #include <kernel/event_loop.h>
 #include <kernel/panic.h>
 #include <process_management/pebble_process_md.h>

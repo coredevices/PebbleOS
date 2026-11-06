@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/id_addr.h>
+#include <pbl/board.h>
 #include <pbl/drivers/mbox.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/kernel/assert.h>
@@ -23,7 +24,6 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
-#include <board/board.h>
 #include <hardware/sf32lb52_memorymap.h>
 #include <kernel/pebble_tasks.h>
 

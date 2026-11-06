@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/irq.h>
@@ -27,7 +28,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <board/board.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);

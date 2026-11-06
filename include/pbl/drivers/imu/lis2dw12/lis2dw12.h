@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
@@ -12,8 +13,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/services/regular_timer.h>
-
-#include <board/board.h>
 
 /**
  * @defgroup drivers_imu_lis2dw12 LIS2DW12

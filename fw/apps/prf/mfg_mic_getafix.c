@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -21,7 +22,6 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <board/board.h>
 #include <flash_region/flash_region.h>
 #include <mfg/mfg_info.h>
 #include <process_management/pebble_process_md.h>

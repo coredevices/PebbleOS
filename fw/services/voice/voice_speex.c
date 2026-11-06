@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/board.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
@@ -11,7 +12,6 @@
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/voice/voice_speex.h>
 
-#include <board/board.h>
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>

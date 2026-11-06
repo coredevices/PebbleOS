@@ -6,8 +6,8 @@
 #include <string.h>
 
 #include <pbl/bluetooth/dis.h>
+#include <pbl/board.h>
 
-#include <board/board.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_management/pebble_process_info.h>

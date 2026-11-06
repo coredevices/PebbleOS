@@ -5,10 +5,10 @@
 
 #include <string.h>
 
+#include <pbl/board.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 
-#include <board/board.h>
 #include <flash_region/flash_region.h>
 
 // Versioned so that the layout can be migrated.

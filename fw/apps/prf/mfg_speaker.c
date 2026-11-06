@@ -3,6 +3,7 @@
 
 #include "mfg_audio.h"
 
+#include <pbl/board.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -12,7 +13,6 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <apps/prf/mfg_test_result.h>
-#include <board/board.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 
