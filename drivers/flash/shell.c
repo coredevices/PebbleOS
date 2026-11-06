@@ -17,7 +17,7 @@
 #include <pbl/util/rand32.h>
 #include <pbl/util/size.h>
 
-#include <flash_region/flash_region.h>
+#include <system/firmware_storage.h>
 
 #define ERASED_BYTE 0xFFU
 
@@ -249,7 +249,7 @@ static int prv_validate_erase(const struct pbl_shell *sh, uint32_t addr, uint32_
 }
 
 static int prv_cmd_validate(const struct pbl_shell *sh, size_t argc, char **argv) {
-  const uint32_t test_addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+  const uint32_t test_addr = PART_FIRMWARE_DEST_OFFSET;
   const uint32_t test_len = FLASH->geometry->sector_size;
   uint8_t buf[VALIDATE_BUF_SIZE];
   int ret;
@@ -350,8 +350,8 @@ PBL_SHELL_SUBCMD_ADD(sub_flash, erased_sectors, nullptr,
 #define BENCH_MIN_TICKS   300U
 #define BENCH_START_ITERS 4096U
 
-static uint32_t s_stress_addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
-static uint32_t s_stress_erased_end = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+static uint32_t s_stress_addr = PART_FIRMWARE_DEST_OFFSET;
+static uint32_t s_stress_erased_end = PART_FIRMWARE_DEST_OFFSET;
 
 static uint32_t prv_xorshift32(uint32_t x) {
   x ^= x << 13;
@@ -382,9 +382,9 @@ static void prv_stress_cb(void *data) {
     return;
   }
 
-  if (s_stress_addr + len > FLASH_REGION_FIRMWARE_DEST_END) {
-    s_stress_addr = FLASH_REGION_FIRMWARE_DEST_BEGIN;
-    s_stress_erased_end = FLASH_REGION_FIRMWARE_DEST_BEGIN;
+  if (s_stress_addr + len > PART_FIRMWARE_DEST_OFFSET + PART_FIRMWARE_DEST_SIZE) {
+    s_stress_addr = PART_FIRMWARE_DEST_OFFSET;
+    s_stress_erased_end = PART_FIRMWARE_DEST_OFFSET;
   }
 
   addr = s_stress_addr;
@@ -466,7 +466,7 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
 
     iters *= 2U;
     for (uint32_t i = 0U; i < iters; i++) {
-      (void)pbl_flash_read(FLASH, FLASH_REGION_FIRMWARE_DEST_BEGIN + offset, buf, size);
+      (void)pbl_flash_partition_read(PART_FIRMWARE_DEST, offset, buf, size);
       offset = (offset + size) % window;
     }
 
