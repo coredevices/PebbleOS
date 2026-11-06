@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
@@ -25,7 +26,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 
-#include <flash_region/filesystem_regions.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
@@ -34,7 +34,7 @@ static PBL_MUTEX_DEFINE(s_pfs_mutex);
 
 #define IS_FILE_TYPE(file_type, type) ((file_type) == (type))
 
-#define PFS_PAGE_SIZE              FLASH_FILESYSTEM_BLOCK_SIZE
+#define PFS_PAGE_SIZE              SUBSECTOR_SIZE_BYTES
 #define PFS_PAGES_PER_ERASE_SECTOR (SECTOR_SIZE_BYTES / PFS_PAGE_SIZE)
 #define GC_REGION_SIZE             SECTOR_SIZE_BYTES
 
@@ -2044,7 +2044,7 @@ void pfs_format(bool write_erase_headers) {
   }
 
   // clear out all pages
-  filesystem_regions_erase_all();
+  pbl_flash_partition_erase(PART_FILESYSTEM, 0U, PART_FILESYSTEM_SIZE);
   prv_invalidate_page_flags_cache_all();
 
   if (write_erase_headers) {

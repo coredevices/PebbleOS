@@ -5,14 +5,12 @@
 
 #include "pfs.h"
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
-
-#include <flash_region/filesystem_regions.h>
-#include <flash_region/flash_region.h>
 
 PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
 
@@ -24,7 +22,22 @@ typedef enum {
   FTLEraseSubsector
 } FTLOperation;
 
-//! Total number of FSRegions listed in s_region_list
+// The filesystem only performs sector erases
+static_assert((PART_FILESYSTEM_OFFSET % SECTOR_SIZE_BYTES) == 0,
+              "Filesystem region start not sector aligned");
+static_assert(((PART_FILESYSTEM_OFFSET + PART_FILESYSTEM_SIZE) % SECTOR_SIZE_BYTES) == 0,
+              "Filesystem end region not sector aligned");
+
+struct pbl_ftl__region {
+  uint32_t start;
+  uint32_t end;
+};
+
+static const struct pbl_ftl__region s_region_list[] = {
+  {.start = PART_FILESYSTEM_OFFSET, .end = PART_FILESYSTEM_OFFSET + PART_FILESYSTEM_SIZE},
+};
+
+//! Total number of regions listed in s_region_list
 static const unsigned int TOTAL_NUM_FLASH_REGIONS = ARRAY_LENGTH(s_region_list);
 
 //! Keeps track of the current total size of our filesystem in bytes.
@@ -33,7 +46,7 @@ static uint32_t s_ftl_size;
 //! Keeps track of which regions are included in the filesystem.
 static unsigned int s_next_region_idx = 0;
 
-//! returns FSRegion size given idx in s_region_list
+//! returns the size of the region at idx in s_region_list
 static uint32_t prv_region_size(int idx) {
   return (s_region_list[idx].end - s_region_list[idx].start);
 }

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board/partitions.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
@@ -11,7 +12,6 @@
 #include <pbl/services/system_task.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include <flash_region/filesystem_regions.h>
 #include <kernel/event_loop.h>
 #include <kernel/util/factory_reset.h>
 #include <kernel/util/standby.h>
@@ -92,7 +92,7 @@ void factory_reset(bool should_shutdown) {
   // writes from the App task that would otherwise survive into a freshly-erased region.
   pbl_fs_format("/");
 #else
-  filesystem_regions_erase_all();
+  pbl_flash_partition_erase(PART_FILESYSTEM, 0U, PART_FILESYSTEM_SIZE);
 #endif
 
   prv_factory_reset_post(should_shutdown);
