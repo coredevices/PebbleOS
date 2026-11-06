@@ -12,7 +12,6 @@
 
 #include <applib/persist.h>
 #include <clar.h>
-#include <flash_region/flash_region.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_md.h>
 

@@ -52,7 +52,6 @@ set(PBL_TEST_DEFINES
   "CLAR_FIXTURE_PATH=\"${PBL_BASE}/tests/fixtures/\""
   CONFIG_LOG=1
   # The flash layout every test sees; it belongs to no platform.
-  CONFIG_FLASH_GD25Q256E=1
   CONFIG_BOARD_PARTITIONS_DUAL_SLOT=1
   CONFIG_PBLBOOT=1
   CONFIG_FIRMWARE_SLOT=0

@@ -18,7 +18,6 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/data_logging.h>
-#include <flash_region/flash_region.h>
 #include <kernel/pebble_tasks.h>
 
 /**

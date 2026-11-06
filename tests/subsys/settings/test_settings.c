@@ -10,7 +10,6 @@
 #include <pbl/settings/settings.h>
 
 #include <clar.h>
-#include <flash_region/flash_region.h>
 #include <settings/raw_iter.h>
 
 // Stubs

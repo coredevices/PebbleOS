@@ -13,7 +13,6 @@
 #include <clar.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <flash_region/flash_region.h>
 #include <fs/pfs/flash_translation.h>
 #include <fs/pfs/pfs.h>
 

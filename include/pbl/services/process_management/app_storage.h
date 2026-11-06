@@ -5,7 +5,6 @@
 
 #include <stddef.h>
 
-#include <flash_region/flash_region.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_types.h>
 #include <process_management/pebble_process_info.h>

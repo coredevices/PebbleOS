@@ -7,16 +7,12 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <flash_region/flash_region.h>
 
 // Stubs
 ////////////////////////////////////
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-
-#define TEST_START FLASH_REGION_FILE_TEST_SPACE_BEGIN
-#define TEST_SIZE  (FLASH_REGION_FILE_TEST_SPACE_END - FLASH_REGION_FILE_TEST_SPACE_BEGIN)
 
 extern void notification_storage_reset(void);
 

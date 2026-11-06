@@ -375,7 +375,6 @@ pbl_clar_test(test_shared_prf_storage_v3
     fw/services/shared_prf_storage/shared_prf_storage.c
     tests/fakes/fake_spi_flash.c
   PLATFORMS emery
-  OVERRIDES shared_prf_storage_v3
 )
 
 pbl_clar_test(test_app_file

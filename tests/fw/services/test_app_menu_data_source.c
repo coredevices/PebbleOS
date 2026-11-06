@@ -11,7 +11,6 @@
 #include <applib/ui/menu_layer.h>
 #include <clar.h>
 #include <fixtures/load_test_resources.h>
-#include <flash_region/flash_region.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_menu_data_source.h>
 #include <resource/resource.h>

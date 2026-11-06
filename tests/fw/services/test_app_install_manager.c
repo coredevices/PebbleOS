@@ -14,7 +14,6 @@
 #include <apps/system_app_ids.h>
 #include <clar.h>
 #include <fixtures/load_test_resources.h>
-#include <flash_region/flash_region.h>
 #include <pebble_asserts.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/pebble_process_info.h>

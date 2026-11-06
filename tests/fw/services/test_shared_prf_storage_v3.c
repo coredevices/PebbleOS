@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/sm_types.h>
+#include <pbl/board/partitions.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <flash_region/flash_region.h>
 
 // Fakes
 //////////////////////////////////////////////////////////
@@ -26,12 +26,10 @@ extern void shared_prf_storage_set_valid_page_number(uint32_t page_num);
 
 // Defines
 //////////////////////////////////////////////////////////
-#define SPRF_REGION_SIZE \
-  (FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN)
-#define SPRF_NUM_PAGES (SPRF_REGION_SIZE / sizeof(SharedPRFData))
+#define SPRF_REGION_SIZE PART_SHARED_PRF_STORAGE_SIZE
+#define SPRF_NUM_PAGES   (SPRF_REGION_SIZE / sizeof(SharedPRFData))
 
-#define SPRF_PAGE_FLASH_OFFSET(idx) \
-  (FLASH_REGION_SHARED_PRF_STORAGE_BEGIN + (idx * sizeof(SharedPRFData)))
+#define SPRF_PAGE_FLASH_OFFSET(idx) (PART_SHARED_PRF_STORAGE_OFFSET + (idx * sizeof(SharedPRFData)))
 
 // Stubs
 //////////////////////////////////////////////////////////
@@ -174,7 +172,7 @@ static void prv_fill_flash_random_data(void) {
   uint8_t *buf = pbl_malloc_check(SPRF_REGION_SIZE);
   fake_spi_flash_erase();
   memset(buf, 0x17, SPRF_REGION_SIZE);
-  pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, buf, SPRF_REGION_SIZE);
+  pbl_flash_write(FLASH, PART_SHARED_PRF_STORAGE_OFFSET, buf, SPRF_REGION_SIZE);
   pbl_free(buf);
 }
 
@@ -185,7 +183,7 @@ static void prv_assert_mutexes_unlocked(void) {
 // Tests
 ///////////////////////////////////////////////////////////
 void test_shared_prf_storage_v3__initialize(void) {
-  fake_spi_flash_init(FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, SPRF_REGION_SIZE);
+  fake_spi_flash_init(PART_SHARED_PRF_STORAGE_OFFSET, SPRF_REGION_SIZE);
   shared_prf_storage_init();
 }
 
@@ -196,7 +194,7 @@ void test_shared_prf_storage_v3__cleanup(void) {
 
 void test_shared_prf_storage_v3__init_all_zeros(void) {
   uint8_t *flash_buf = pbl_zalloc(SPRF_REGION_SIZE);
-  pbl_flash_write(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN, flash_buf, SPRF_REGION_SIZE);
+  pbl_flash_write(FLASH, PART_SHARED_PRF_STORAGE_OFFSET, flash_buf, SPRF_REGION_SIZE);
   shared_prf_storage_init();
   shared_prf_storage_set_getting_started_complete(true);
   cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), true);

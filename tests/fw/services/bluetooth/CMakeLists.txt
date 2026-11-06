@@ -20,7 +20,6 @@ pbl_clar_test(test_bluetooth_persistent_storage_prf
     tests/fakes/fake_spi_flash.c
     tests/fakes/fake_events.c
   PLATFORMS emery
-  OVERRIDES shared_prf_storage_v3
 )
 
 pbl_clar_test(test_bluetooth_persistent_storage
