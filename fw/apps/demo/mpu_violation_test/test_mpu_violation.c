@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 
@@ -15,7 +16,6 @@
 #include <applib/ui/click.h>
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
-#include <flash_region/flash_region.h>
 #include <font_resource_keys.auto.h>
 #include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
@@ -193,7 +193,7 @@ static void prv_run_test(TestKind kind) {
       break;
     }
     case TestKind_FilesystemRead: {
-      volatile uint32_t *p = (volatile uint32_t *)(FLASH_MAP_BASE + FLASH_REGION_FILESYSTEM_BEGIN);
+      volatile uint32_t *p = (volatile uint32_t *)(FLASH_MAP_BASE + PART_FILESYSTEM_OFFSET);
       volatile uint32_t v = *p;
       (void)v;
       break;
@@ -201,7 +201,7 @@ static void prv_run_test(TestKind kind) {
 #ifdef CONFIG_MMAP_RESOURCES
     case TestKind_ResourceBankRead: {
       volatile uint32_t *p =
-          (volatile uint32_t *)(FLASH_MAP_BASE + FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN);
+          (volatile uint32_t *)(FLASH_MAP_BASE + PART_SYSTEM_RESOURCES_BANK_0_OFFSET);
       volatile uint32_t v = *p;
       (void)v;
       break;
