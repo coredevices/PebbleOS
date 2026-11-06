@@ -34,12 +34,6 @@ PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
 
 const struct pbl_audio *const MIC = &s_mic.audio;
 
-void board_early_init(void) {
-}
-
-void board_init(void) {
-}
-
 const struct pbl_accel *const ACCEL = POSIX_ACCEL;
 
 const struct pbl_als *const ALS = POSIX_ALS;

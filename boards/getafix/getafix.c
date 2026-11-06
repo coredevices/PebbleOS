@@ -256,12 +256,6 @@ PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 
 const struct pbl_audio *const MIC = &s_mic.audio;
 
-void board_early_init(void) {
-}
-
-void board_init(void) {
-}
-
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
 
 const struct pbl_rtc *const RTC = SF32LB_RTC;

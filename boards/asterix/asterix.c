@@ -175,12 +175,6 @@ const Npm1300Config NPM1300_CONFIG = {
   .vterm_reduced_mv = 4000, .ntc_kohm = 10,         .thermistor_beta = 3380, .ntc_hot_celsius = 45,
 };
 
-void board_early_init(void) {
-}
-
-void board_init(void) {
-}
-
 const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
 
 const struct pbl_rtc *const RTC = RETAINED_RTC;

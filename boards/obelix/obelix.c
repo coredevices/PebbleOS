@@ -307,12 +307,6 @@ PBL_IRQ_CONNECT(DMAC1_CH4, 5, pbl_dma_sf32lb52_irq_handler, &s_speaker_dma, 0);
 
 const struct pbl_audio *const SPEAKER = &s_speaker.audio;
 
-void board_early_init(void) {
-}
-
-void board_init(void) {
-}
-
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
 
 const struct pbl_rtc *const RTC = SF32LB_RTC;
