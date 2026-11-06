@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board/partitions.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
@@ -11,16 +12,11 @@
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h>
 
-#include <flash_region/flash_region.h>
-
 PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
 
-#define SPRF_REGION_SIZE \
-  (FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN)
-#define SPRF_NUM_PAGES (SPRF_REGION_SIZE / sizeof(SharedPRFData))
+#define SPRF_NUM_PAGES (PART_SHARED_PRF_STORAGE_SIZE / sizeof(SharedPRFData))
 
-#define SPRF_PAGE_FLASH_ADDR(idx) \
-  (FLASH_REGION_SHARED_PRF_STORAGE_BEGIN + (idx * sizeof(SharedPRFData)))
+#define SPRF_PAGE_FLASH_ADDR(idx) (PART_SHARED_PRF_STORAGE_OFFSET + (idx * sizeof(SharedPRFData)))
 // CRC Unwritten state and size
 #define SPRF_UNWRITTEN_CRC ((uint32_t)0xFFFFFFFF)
 #define SPRF_CRC_SIZE      (sizeof(uint32_t))
@@ -136,8 +132,7 @@ static void prv_write_to_current_page(SharedPRFData *data, bool write_metadata) 
 }
 
 static void prv_erase_region_and_save(SharedPRFData *data) {
-  pbl_flash_erase(FLASH, FLASH_REGION_SHARED_PRF_STORAGE_BEGIN,
-                  FLASH_REGION_SHARED_PRF_STORAGE_END - FLASH_REGION_SHARED_PRF_STORAGE_BEGIN);
+  pbl_flash_partition_erase(PART_SHARED_PRF_STORAGE, 0U, PART_SHARED_PRF_STORAGE_SIZE);
   s_valid_page_idx = 0;
   prv_write_to_current_page(data, false);
 }

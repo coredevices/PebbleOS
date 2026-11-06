@@ -7,11 +7,9 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
 
-#include <flash_region/flash_region.h>
-
 bool gb_storage_flash_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                             GetBytesStorageInfo *info) {
-  if (!info->flash_len || (info->flash_start_addr + info->flash_len) > BOARD_NOR_FLASH_SIZE) {
+  if (!info->flash_len || (info->flash_start_addr + info->flash_len) > FLASH->geometry->size) {
     return false;
   }
   storage->impl_data = pbl_zalloc_check(sizeof(*info));

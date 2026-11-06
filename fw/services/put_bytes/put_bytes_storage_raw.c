@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/responsiveness.h>
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/put_bytes/put_bytes_storage_raw.h>
 #include <pbl/util/math.h>
 
-#include <flash_region/flash_region.h>
 #include <resource/resource_storage_flash.h>
 #include <system/firmware_storage.h>
 
@@ -27,11 +27,13 @@ typedef struct MemoryLayout {
 static const MemoryLayout *prv_get_layout_for_type(PutBytesObjectType object_type) {
   static const MemoryLayout layouts[] = {
 #ifndef CONFIG_PBLBOOT
-    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription)},
-    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, sizeof(FirmwareDescription)},
+    {PART_FIRMWARE_DEST_OFFSET, PART_FIRMWARE_DEST_OFFSET + PART_FIRMWARE_DEST_SIZE,
+     sizeof(FirmwareDescription)},
+    {PART_FIRMWARE_DEST_OFFSET, PART_FIRMWARE_DEST_OFFSET + PART_FIRMWARE_DEST_SIZE,
+     sizeof(FirmwareDescription)},
 #else
-    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
-    {FLASH_REGION_FIRMWARE_DEST_BEGIN, FLASH_REGION_FIRMWARE_DEST_END, 0U},
+    {PART_FIRMWARE_DEST_OFFSET, PART_FIRMWARE_DEST_OFFSET + PART_FIRMWARE_DEST_SIZE, 0U},
+    {PART_FIRMWARE_DEST_OFFSET, PART_FIRMWARE_DEST_OFFSET + PART_FIRMWARE_DEST_SIZE, 0U},
 #endif
   };
   static MemoryLayout resource_layout;
