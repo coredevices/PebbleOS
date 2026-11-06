@@ -14,7 +14,7 @@
 #include <system/version.h>
 
 static_assert(PBL_BT_DIS_MODEL_NUMBER_LEN >= MFG_HW_VERSION_SIZE + 1, "Size mismatch");
-static_assert(PBL_BT_DIS_MANUFACTURER_LEN >= sizeof(BT_VENDOR_NAME), "Size mismatch");
+static_assert(PBL_BT_DIS_MANUFACTURER_LEN >= sizeof(CONFIG_BT_VENDOR_NAME), "Size mismatch");
 static_assert(PBL_BT_DIS_SERIAL_NUMBER_LEN >= MFG_SERIAL_NUMBER_SIZE + 1, "Size mismatch");
 static_assert(PBL_BT_DIS_FW_REVISION_LEN >= sizeof(TINTIN_METADATA.version_tag), "Size mismatch");
 
@@ -23,7 +23,7 @@ static void prv_set_model_number(struct pbl_bt_dis_info *info) {
 }
 
 static void prv_set_manufacturer_name(struct pbl_bt_dis_info *info) {
-  strncpy(info->manufacturer, BT_VENDOR_NAME, PBL_BT_DIS_MANUFACTURER_LEN);
+  strncpy(info->manufacturer, CONFIG_BT_VENDOR_NAME, PBL_BT_DIS_MANUFACTURER_LEN);
 }
 
 static void prv_set_serial_number(struct pbl_bt_dis_info *info) {

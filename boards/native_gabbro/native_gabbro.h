@@ -7,9 +7,6 @@
 
 #include <pbl/input/input.h>
 
-#define BT_VENDOR_ID   0x0EEA
-#define BT_VENDOR_NAME "Native"
-
 extern const struct pbl_uart *const QEMU_UART;
 #ifdef CONFIG_BT_HCI_UART
 extern const struct pbl_uart *const BT_HCI_UART;
