@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -10,7 +11,6 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/number_window.h>
 #include <applib/ui/window_stack.h>
-#include <flash_region/flash_region.h>
 #include <process_management/pebble_process_md.h>
 
 static NumberWindow number_window;
@@ -18,7 +18,7 @@ static NumberWindow number_window;
 static uint32_t timed_read_bytes(uint32_t num_bytes) {
   uint8_t *buffer = pbl_malloc_check(num_bytes);
   uint64_t start_ms = pbl_realtime_ms();
-  pbl_flash_read(FLASH, FLASH_REGION_FILESYSTEM_BEGIN, buffer, num_bytes);
+  pbl_flash_partition_read(PART_FILESYSTEM, 0U, buffer, num_bytes);
   uint64_t stop_ms = pbl_realtime_ms();
   pbl_free(buffer);
   return (uint32_t)(stop_ms - start_ms);

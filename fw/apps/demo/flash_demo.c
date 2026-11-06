@@ -9,7 +9,6 @@
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/window.h>
-#include <flash_region/flash_region.h>
 
 static Window *window;
 

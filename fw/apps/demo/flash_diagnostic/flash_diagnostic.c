@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
@@ -16,7 +17,6 @@
 #include <applib/ui/simple_menu_layer.h>
 #include <applib/ui/ui.h>
 #include <applib/ui/window.h>
-#include <flash_region/flash_region.h>
 #include <kernel/pebble_tasks.h>
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
@@ -38,11 +38,11 @@ struct Region {
 };
 
 static struct Region s_flash_regions[] = {
-  {"System Resources", FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
-   FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END},
-  {"System Resources", FLASH_REGION_SYSTEM_RESOURCES_BANK_1_BEGIN,
-   FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END},
-  {"File System", FLASH_REGION_FILESYSTEM_BEGIN, FLASH_REGION_FILESYSTEM_END},
+  {"System Resources", PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
+   PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0_SIZE},
+  {"System Resources", PART_SYSTEM_RESOURCES_BANK_1_OFFSET,
+   PART_SYSTEM_RESOURCES_BANK_1_OFFSET + PART_SYSTEM_RESOURCES_BANK_1_SIZE},
+  {"File System", PART_FILESYSTEM_OFFSET, PART_FILESYSTEM_OFFSET + PART_FILESYSTEM_SIZE},
 };
 
 typedef struct {
