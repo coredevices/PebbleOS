@@ -10,7 +10,7 @@
 #include <pbl/services/system_task.h>
 #include <pbl/util/bits.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define TOUCH_STATE   0x00
 #define TOUCH_X       0x04

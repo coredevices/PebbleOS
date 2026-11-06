@@ -9,7 +9,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define GPIO_STATE   0x00U
 #define GPIO_INTCTRL 0x08U

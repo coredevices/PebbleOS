@@ -5,7 +5,7 @@
 #include <pbl/drivers/backlight/qemu.h>
 #include <pbl/kernel/mmio.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 // Display register offsets (must match QEMU pebble-display)
 #define DISP_CTRL       0x000

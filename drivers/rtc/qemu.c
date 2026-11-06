@@ -5,7 +5,7 @@
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/kernel/mmio.h>
 
-#include <board/board.h>
+#include <hardware/qemu_memorymap.h>
 
 #define RTC_TIME_LO_OFFSET 0x00U
 #define RTC_CTRL_OFFSET    0x0CU
