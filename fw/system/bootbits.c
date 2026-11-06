@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
-#include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
 
-#include <flash_region/flash_region.h>
 #include <system/bootbits.h>
 #include <system/version.h>
 
@@ -134,8 +133,8 @@ uint32_t boot_version_read(void) {
   struct pb_version version_data;
   uint32_t version;
 
-  pbl_flash_read(FLASH, FLASH_REGION_BOOTLOADER_END - sizeof(struct pb_version),
-                 (uint8_t *)&version_data, sizeof(struct pb_version));
+  pbl_flash_partition_read(PART_BOOTLOADER, PART_BOOTLOADER_SIZE - sizeof(struct pb_version),
+                           &version_data, sizeof(version_data));
 
   if (version_data.magic != PB_VERSION_MAGIC) {
     return 0UL;

@@ -6,8 +6,6 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/logging/logging.h>
 
-#include <flash_region/flash_region.h>
-
 #ifndef CONFIG_PBLBOOT
 FirmwareDescription firmware_storage_read_firmware_description(uint32_t firmware_start_address) {
   FirmwareDescription firmware_description;
@@ -60,15 +58,10 @@ bool firmware_storage_check_valid_firmware_header(uint32_t address, const Firmwa
 }
 
 void firmware_storage_invalidate_firmware_slot(uint8_t slot) {
-  uint32_t slot_start;
+  const struct pbl_flash_partition part =
+      (slot == 0U) ? PART_FIRMWARE_SLOT_0 : PART_FIRMWARE_SLOT_1;
 
-  if (slot == 0U) {
-    slot_start = FLASH_REGION_FIRMWARE_SLOT_0_BEGIN;
-  } else {
-    slot_start = FLASH_REGION_FIRMWARE_SLOT_1_BEGIN;
-  }
-
-  pbl_flash_erase(FLASH, slot_start, SUBSECTOR_SIZE_BYTES);
+  pbl_flash_partition_erase(part, 0U, SUBSECTOR_SIZE_BYTES);
 }
 
 #endif
