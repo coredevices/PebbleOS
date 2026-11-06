@@ -10,7 +10,7 @@ config REMOTEPROC
 config REMOTEPROC_SF32LB52
     bool "SiFli SF32LB52 LCPU"
     default y if SOC_SF32LB52
-    depends on MBOX_SF32LB52 && HAL_SIFLI_SF32LB52
+    depends on MBOX_SF32LB52 && NVMEM_SF32LB52 && HAL_SIFLI_SF32LB52
     select REMOTEPROC
     select HAL_SIFLI_LCPU
     help

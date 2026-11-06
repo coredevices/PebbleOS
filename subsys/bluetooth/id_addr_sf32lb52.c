@@ -6,19 +6,26 @@
 #include <string.h>
 
 #include <pbl/bluetooth/id_addr.h>
-
-#include <bf0_hal_efuse.h>
+#include <pbl/drivers/nvmem/sf32lb52.h>
 
 #define UID_SIZE  8U
 #define UID_MAGIC 0xA5U
+
+static const struct pbl_nvmem_cell s_uid_cell = PBL_NVMEM_CELL(SF32LB52_EFUSE, 0U, UID_SIZE);
 
 // The first six bytes of the eFUSE unique ID are the address, followed by
 // their checksum and a magic byte.
 int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type) {
   uint8_t uid[UID_SIZE];
   uint8_t chksum = 0U;
+  int ret;
 
-  if (HAL_EFUSE_Read(0, uid, UID_SIZE) != (int32_t)UID_SIZE || uid[7] != UID_MAGIC) {
+  ret = pbl_nvmem_cell_read(&s_uid_cell, uid, sizeof(uid));
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (uid[7] != UID_MAGIC) {
     return -ENODEV;
   }
 

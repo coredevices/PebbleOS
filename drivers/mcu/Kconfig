@@ -13,7 +13,7 @@ config MCU_NRF5
 config MCU_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
-    select HAL_SIFLI
+    depends on NVMEM_SF32LB52
     help
       Support for SiFli SF32LB MCU information.
 
