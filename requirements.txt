@@ -40,7 +40,7 @@ ppk2-api
 # Its software controller asks the peripheral for the LTK since 0.0.235.
 bumble>=0.0.235
 
-# Fuel gauge cell model fitting (tools/fuel_gauge.py)
+# Fuel gauge cell model fitting (tools/fuel_gauge)
 scipy
 matplotlib
 

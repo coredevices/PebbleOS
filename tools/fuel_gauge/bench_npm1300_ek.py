@@ -6,8 +6,8 @@
 
 Drives the EK shell over its USB serial port: charges the cell CC/CV, rests
 it, then discharges it in pulses through the nPM-FG active load down to the
-cutoff voltage. Writes CSV logs for tools/fuel_gauge.py fit (see
-docs/subsystems/fuel_gauge.md).
+cutoff voltage. Writes CSV logs (fuel_gauge_log.py) for fuel_gauge.py fit,
+see docs/subsystems/fuel_gauge_npm1300_ek.md.
 
 The cell must be on the EK battery connector with the nPM-FG attached. VBUS
 (the EK's PMIC USB port) must be connected for charging, and disconnected
@@ -15,7 +15,6 @@ for the discharge; the script asks when.
 """
 
 import argparse
-import csv
 import json
 import math
 import pathlib
@@ -24,14 +23,12 @@ import sys
 import time
 
 import serial
+from fuel_gauge_log import ChargeState, LogWriter
 
 PROMPT = "shell:~$ "
 ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 LOG_LINE = re.compile(r"^\[(\d+):(\d\d):(\d\d)\.(\d+),(\d+)\] <(\w+)> (\w+): (.*)$")
 REPLY = re.compile(r"\b(Success|Value|Error|error|usage):")
-
-LOG_COLUMNS = ("time_s", "voltage_v", "current_a", "temperature_c", "charge_state")
-DISCHARGING, CHARGING_CC, CHARGING_CV, CHARGE_COMPLETE = range(4)
 
 STATUS_FULL = 0x02
 STATUS_TRICKLE = 0x04
@@ -135,20 +132,6 @@ class Shell:
         return float(m.group(1))
 
 
-class CsvLog:
-    def __init__(self, path):
-        # Held open for the whole run, flushed on every row.
-        self._f = open(path, "w", newline="")  # noqa: SIM115
-        self._w = csv.writer(self._f)
-        self._w.writerow(LOG_COLUMNS)
-        self.rows = 0
-
-    def write(self, t, v, i, temp, state):
-        self._w.writerow([f"{t:.3f}", f"{v:.4f}", f"{i:.6f}", f"{temp:.2f}", state])
-        self._f.flush()
-        self.rows += 1
-
-
 def configure(sh, args):
     ntc_type, ntc_beta = NTC[args.ntc]
     sh.cmd("npmx charger module charger set 0")
@@ -165,9 +148,9 @@ def configure(sh, args):
 
 
 def charge(sh, args, out):
-    log = CsvLog(out)
+    log = LogWriter(out)
     t0 = time.monotonic()
-    state = [DISCHARGING]
+    state = [ChargeState.DISCHARGING]
     first = []
 
     def on_log(t, level, module, message):
@@ -187,17 +170,23 @@ def charge(sh, args, out):
     while True:
         status = int(sh.value("npmx charger status all get"))
         if status & STATUS_FULL:
-            state[0] = CHARGE_COMPLETE
+            state[0] = ChargeState.CHARGE_COMPLETE
             break
         state[0] = (
-            CHARGING_CV
+            ChargeState.CHARGING_CV
             if status & STATUS_CV
-            else CHARGING_CC
+            else ChargeState.CHARGING_CC
             if status & (STATUS_CC | STATUS_TRICKLE)
-            else DISCHARGING
+            else ChargeState.DISCHARGING
         )
-        if state[0] == DISCHARGING:
+        if state[0] == ChargeState.DISCHARGING:
             print(f"warning: not charging (status 0x{status:02x})", file=sys.stderr)
+        if time.monotonic() - t0 > args.charge_timeout * 3600.0:
+            sh.cmd("npmx charger module charger set 0")
+            sys.exit(
+                f"\nno charge completion after {args.charge_timeout:g} h "
+                f"(status 0x{status:02x})"
+            )
         sh.poll(10.0)
         print(f"\rcharging {(time.monotonic() - t0) / 60:.0f} min", end="", flush=True)
     sh.cmd("npmx charger module charger set 0")
@@ -223,7 +212,7 @@ def discharge(sh, args, out):
         sys.exit("nPM-FG load not detected")
     sh.cmd("npmx charger module charger set 0")
 
-    log = CsvLog(out)
+    log = LogWriter(out)
     done = [None]
     first = []
     t0 = time.monotonic()
@@ -242,7 +231,7 @@ def discharge(sh, args, out):
         temp = d.get("tbat", args.temp) if args.ntc != "none" else args.temp
         first[:] = first or [t]
         # The load reports discharge current as negative.
-        log.write(t - first[0], d["vload"], -d["iload"], temp, DISCHARGING)
+        log.write(t - first[0], d["vload"], -d["iload"], temp, ChargeState.DISCHARGING)
 
     sh.on_log = on_log
     sh.cmd(f"cc_profile profile set 1000 8000 {args.cutoff:.3f} {' '.join(profiles)}")
@@ -293,6 +282,12 @@ def main(argv=None):
         type=float,
         default=0.2,
         help="switch to quarter-rate pulses this far above the cutoff [V]",
+    )
+    parser.add_argument(
+        "--charge-timeout",
+        type=float,
+        default=4.0,
+        help="give up if the charge doesn't complete within this time [h]",
     )
     parser.add_argument(
         "--skip-charge", action="store_true", help="cell is already full"

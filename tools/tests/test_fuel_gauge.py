@@ -8,8 +8,8 @@ import unittest
 
 import numpy as np
 
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-sys.path.insert(0, root_dir)
+tools_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+sys.path.insert(0, os.path.join(tools_dir, "fuel_gauge"))
 
 import fuel_gauge
 
@@ -59,17 +59,44 @@ class TestFuelGaugeFit(unittest.TestCase):
         self.assertLess(np.max(np.abs(est - ref)), 0.02)
         self.assertTrue(np.all(np.diff(reported) <= 0.0))
 
+    def test_pulse_tail(self):
+        t, i = fuel_gauge.pulse_profile(
+            MODEL.capacity_ah, 0.5, 144.0, 600.0, 2.0, lambda soc, _: soc < 0.1
+        )
+        i_pulse = 0.5 * MODEL.capacity_ah
+
+        charge = np.sum(i * np.diff(t, prepend=0.0)) / 3600.0
+        self.assertAlmostEqual(charge, MODEL.capacity_ah, delta=1e-4)
+        # All the quarter-rate pulses come after the full-rate ones
+        full = np.flatnonzero(np.isclose(i, i_pulse))
+        quarter = np.flatnonzero(np.isclose(i, i_pulse / 4.0))
+        self.assertGreater(len(quarter), 0)
+        self.assertLess(full[-1], quarter[0])
+
+    def test_log_without_charge_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "log.csv")
+            with open(path, "w") as f:
+                f.write("time_s,voltage_v,current_a,temperature_c\n0,4.1,0.01,25\n")
+            log = fuel_gauge.read_log(path)
+
+            self.assertIsNone(log.state)
+            with self.assertRaises(SystemExit):
+                fuel_gauge.main(["replay", os.path.join(tmp, "model.c"), path])
+
     def test_extract(self):
         lines = [
             (
-                "<D> battery_state.c:370> Battery state: v_mv: 4012, i_ua: 1500, t_mc: 24500, "
-                "td_ms: 60000, fg: 0, soc: 80, tte: 0, ttf: 0"
+                "<D> battery_state.c:379> Battery state: v_mv: 4012, i_ua: 1500, t_mc: 24500, "
+                "td_ms: 60000, fg: 0"
             ),
+            "<D> battery_state.c:382> Battery estimate: soc: 80, tte: 0, ttf: 0",
             "unrelated line",
             (
-                "<D> battery_state.c:370> Battery state: v_mv: 4010, i_ua: -90000, t_mc: 25000, "
-                "td_ms: 30500, fg: 1, soc: 80, tte: 0, ttf: 0"
+                "<D> battery_state.c:379> Battery state: v_mv: 4010, i_ua: -90000, t_mc: 25000, "
+                "td_ms: 30500, fg: 1"
             ),
+            "<D> battery_state.c:382> Battery estimate: soc: 80, tte: 0, ttf: 0",
         ]
         with tempfile.TemporaryDirectory() as tmp:
             src = os.path.join(tmp, "log.txt")
