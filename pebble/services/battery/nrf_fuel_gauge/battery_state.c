@@ -91,7 +91,9 @@ static uint64_t s_last_log;
 static bool s_charger_enabled;
 
 #if FUEL_GAUGE_STATEFUL
-#define FUEL_GAUGE_SAVE_INTERVAL_S 300
+// Updates between saves of the state: about 5 hours at one update a minute.
+// Each change of the reported percentage also saves.
+#define FUEL_GAUGE_SAVE_INTERVAL_UPDATES 300
 
 static uint32_t s_save_counter;
 
@@ -399,7 +401,7 @@ static void prv_update_state(void *force_update) {
   }
 
 #if FUEL_GAUGE_STATEFUL
-  if (update || (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_S)) {
+  if (update || (++s_save_counter >= FUEL_GAUGE_SAVE_INTERVAL_UPDATES)) {
     s_save_counter = 0;
     prv_save_state();
   }
