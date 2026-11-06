@@ -121,8 +121,6 @@ const struct pbl_als *const ALS = &s_opt3001.als;
 
 PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c_iic2.bus, 0x1A, &s_npm1300_ldsw1.reg);
 
-const struct pbl_i2c_dev *const I2C_DA7212 = &s_da7212.i2c;
-
 PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
                    .int1 = PBL_IRQ_SPEC(NRF5_GPIO_P1_INTC, 13, PBL_IRQ_TYPE_EDGE_RISING),
                    .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
