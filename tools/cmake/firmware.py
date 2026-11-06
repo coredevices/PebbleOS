@@ -180,15 +180,20 @@ def cmd_qemu_image_micro(args):
     img.tobinfile(args.output, start=0x00000000, end=flash_end - 1)
 
 
+def qemu_resources_offset():
+    header = os.path.join(
+        REPO_ROOT, "include", "pbl", "board", "partitions_dual_slot.h"
+    )
+    with open(header) as f:
+        match = re.search(
+            r"PART_SYSTEM_RESOURCES_BANK_0_OFFSET\s+(0x[0-9A-Fa-f]+)", f.read()
+        )
+    return int(match.group(1), 16)
+
+
 def cmd_qemu_image_spi(args):
-    config = read_config(args.config)
-    if enabled(config, "CONFIG_QEMU"):
-        # QEMU generic boards: resources at offset 0x620000 in 32MB flash
-        resources_begin = 0x620000
-        image_size = 0x2000000
-    else:
-        resources_begin = 0x280000
-        image_size = 0x400000
+    resources_begin = qemu_resources_offset()
+    image_size = 32 * 1024 * 1024
 
     pprint(f"Writing SPI flash image to {args.output}")
     resources = b""

@@ -1,38 +1,36 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""The board's flash layout, read from the header its flash part selects.
-
-``fw/flash_region/flash_region_<part>.h`` lists the regions back to back,
-from offset 0 of the flash.
-"""
+"""The board's flash layout, read from the partition header it selects."""
 
 import os
 import re
 
 from pbl.errors import CommandContextError
 
-_HEADER_RE = re.compile(r"flash_region_(\w+)\.h")
-_REGION_RE = re.compile(r"MACRO\((\w+),\s*(0x[0-9A-Fa-f]+)")
+_LAYOUTS = ("dual_slot", "single_slot")
+_PARTITION_RE = re.compile(
+    r"#define\s+PART_(\w+)_OFFSET\s+(0x[0-9A-Fa-f]+)\s*"
+    r"#define\s+PART_\1_SIZE\s+PBL_(KIB|MIB)\((\d+)\)"
+)
+_UNITS = {"KIB": 1024, "MIB": 1024 * 1024}
 
 
 def _header(build):
-    layout_dir = os.path.join(build.topdir, "fw", "flash_region")
-    for name in sorted(os.listdir(layout_dir)):
-        match = _HEADER_RE.fullmatch(name)
-        if match and build.config.get(f"CONFIG_FLASH_{match.group(1).upper()}") is True:
-            return os.path.join(layout_dir, name)
+    for layout in _LAYOUTS:
+        if build.config.get(f"CONFIG_BOARD_PARTITIONS_{layout.upper()}") is True:
+            return os.path.join(
+                build.topdir, "include", "pbl", "board", f"partitions_{layout}.h"
+            )
     raise CommandContextError(f"no flash layout for board {build.board}")
 
 
 def regions(build):
-    """``{name: (offset, size)}`` of the board's flash regions."""
+    """``{name: (offset, size)}`` of the board's flash partitions."""
     with open(_header(build)) as f:
         text = f.read()
 
-    layout = {}
-    offset = 0
-    for name, size in _REGION_RE.findall(text):
-        layout[name] = (offset, int(size, 16))
-        offset += int(size, 16)
-    return layout
+    return {
+        name: (int(offset, 16), int(count) * _UNITS[unit])
+        for name, offset, unit, count in _PARTITION_RE.findall(text)
+    }
