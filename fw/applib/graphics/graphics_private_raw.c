@@ -5,6 +5,7 @@
 
 #include "graphics.h"
 #include "graphics_private.h"
+#include "graphics_row_ops.h"
 #include "gtypes.h"
 
 #include <string.h>
@@ -30,7 +31,7 @@ PBL_ALWAYS_INLINE void graphics_private_raw_blend_color_factor(const GContext *c
 static PBL_ALWAYS_INLINE void prv_set_color(const GContext *ctx, GColor *dst_color,
                                             unsigned int data_row_offset, int x, int width,
                                             GColor src_color) {
-  memset(dst_color, src_color.argb, (size_t)width);
+  graphics_row_fill((uint8_t *)dst_color, src_color.argb, (size_t)width);
 }
 
 #if !PBL_COLOR
