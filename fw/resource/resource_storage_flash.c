@@ -102,8 +102,8 @@ bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
 #ifdef CONFIG_MMAP_RESOURCES
   // Pointers inside the banks are in the always-mapped XIP window.
   for (unsigned int i = 0; i < ARRAY_LENGTH(s_resource_banks); i++) {
-    if ((bytes >= (const void *)(uintptr_t)s_resource_banks[i].begin) &&
-        (bytes < (const void *)(uintptr_t)s_resource_banks[i].end)) {
+    if ((bytes >= (const void *)(uintptr_t)(CONFIG_FLASH_BASE + s_resource_banks[i].begin)) &&
+        (bytes < (const void *)(uintptr_t)(CONFIG_FLASH_BASE + s_resource_banks[i].end))) {
       return true;
     }
   }
@@ -114,7 +114,7 @@ bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
 static const uint8_t *resource_storage_system_bank_readonly_bytes(ResourceStoreEntry *entry) {
 #ifdef CONFIG_MMAP_RESOURCES
   // Bank is XIP-mapped and readable by unprivileged code too.
-  return (const uint8_t *)(uintptr_t)(BANK.begin + entry->offset);
+  return (const uint8_t *)(uintptr_t)(CONFIG_FLASH_BASE + BANK.begin + entry->offset);
 #else
   return nullptr;
 #endif

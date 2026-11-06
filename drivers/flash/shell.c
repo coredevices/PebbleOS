@@ -62,8 +62,8 @@ static int prv_parse_range(const struct pbl_shell *sh, const char *addr_str, con
 static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_flash_geometry *geo = FLASH->geometry;
 
-  pbl_shell_print(sh, "%s: 0x%08" PRIx32 ", %" PRIu32 " bytes%s", FLASH->dev.name, FLASH->base,
-                  geo->size, pbl_device_is_ready(&FLASH->dev) ? "" : " (not ready)");
+  pbl_shell_print(sh, "%s: %" PRIu32 " bytes%s", FLASH->dev.name, geo->size,
+                  pbl_device_is_ready(&FLASH->dev) ? "" : " (not ready)");
   pbl_shell_print(sh, "page %" PRIu32 ", sector %" PRIu32 ", subsector %" PRIu32, geo->page_size,
                   geo->sector_size, geo->subsector_size);
 
@@ -320,7 +320,7 @@ static int prv_cmd_erased_sectors(const struct pbl_shell *sh, size_t argc, char 
   const struct pbl_flash_geometry *geo = FLASH->geometry;
   const bool show_subsectors = (argc > 1) && (strcmp(argv[1], "1") == 0);
 
-  for (uint32_t addr = FLASH->base; addr - FLASH->base < geo->size; addr += geo->sector_size) {
+  for (uint32_t addr = 0U; addr < geo->size; addr += geo->sector_size) {
     bool erased = pbl_flash_is_erased(FLASH, addr, geo->sector_size);
 
     pbl_shell_print(sh, "SECTOR - 0x%-8" PRIX32 " :: %s", addr, erased ? "true" : "false");

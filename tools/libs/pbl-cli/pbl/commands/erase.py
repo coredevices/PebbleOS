@@ -37,8 +37,8 @@ class Erase(PblCommand):
             "--range",
             action="append",
             default=[],
-            metavar="ADDRESS:SIZE",
-            help="Erase SIZE bytes from ADDRESS (repeatable)",
+            metavar="OFFSET:SIZE",
+            help="Erase SIZE bytes from flash OFFSET (repeatable)",
         )
         runner_options(parser)
         return parser
@@ -48,7 +48,7 @@ class Erase(PblCommand):
         ranges = []
         for spec in args.region:
             name, sep, size = spec.partition(":")
-            address, region_size = build.flash_region(name)
+            offset, region_size = build.flash_region(name)
             if sep:
                 size = _int(size, "size")
                 if not 0 < size <= region_size:
@@ -56,14 +56,14 @@ class Erase(PblCommand):
                         f"size {size:#x} outside region {name} ({region_size:#x})"
                     )
                 region_size = size
-            ranges.append((address, region_size))
+            ranges.append((offset, region_size))
         for spec in args.range:
-            address, sep, size = spec.partition(":")
+            offset, sep, size = spec.partition(":")
             if not sep:
                 raise CommandContextError(
-                    f"invalid range '{spec}': expected ADDRESS:SIZE"
+                    f"invalid range '{spec}': expected OFFSET:SIZE"
                 )
-            ranges.append((_int(address, "address"), _int(size, "size")))
+            ranges.append((_int(offset, "offset"), _int(size, "size")))
         if not ranges:
             raise CommandContextError("nothing to erase: give --region or --range")
         run_on_device(

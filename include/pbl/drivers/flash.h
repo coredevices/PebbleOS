@@ -18,10 +18,10 @@
  * @ingroup drivers
  * @brief NOR flash class.
  *
- * A flash is a struct pbl_flash device. Addresses are absolute: they start at the device's
- * @c base, which is where the flash is memory-mapped on SoCs that map it. Writes only clear bits,
- * so the target range must be erased first. Erases work on whole subsectors: the class erases a
- * range with as few sector and subsector erases as it can, skipping the blank ones.
+ * A flash is a struct pbl_flash device. Addresses are offsets from its first byte, wherever the
+ * SoC maps it. Writes only clear bits, so the target range must be erased first. Erases work on
+ * whole subsectors: the class erases a range with as few sector and subsector erases as it can,
+ * skipping the blank ones.
  *
  * @code{.c}
  * static void prv_erased(int status, void *arg) {
@@ -210,8 +210,6 @@ struct pbl_flash {
   const struct pbl_flash_ops *ops;
   /** Runtime state. */
   struct pbl_flash_state *state;
-  /** Address of the first byte. */
-  uint32_t base;
   /** Geometry. */
   const struct pbl_flash_geometry *geometry;
   /** OTP organization, or NULL. */
@@ -244,18 +242,16 @@ extern const struct pbl_flash *const FLASH;
  * @param _parent Parent device, e.g. the memory controller, or NULL.
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _ops Driver operations.
- * @param _base Address of the first byte.
  * @param _geometry Geometry.
  * @param _otp OTP organization, or NULL.
  * @param _otp_layout OTP cells, or NULL.
  */
-#define PBL_FLASH_INIT(sym, _name, _parent, _deps, _ops, _base, _geometry, _otp, _otp_layout)    \
+#define PBL_FLASH_INIT(sym, _name, _parent, _deps, _ops, _geometry, _otp, _otp_layout)           \
   {                                                                                              \
     .dev =                                                                                       \
         PBL_DEVICE_INIT_CLASS(sym, _name, pbl_flash_dev_init, _parent, _deps, &pbl_flash_class), \
     .ops = (_ops),                                                                               \
     .state = &sym##_flash_state,                                                                 \
-    .base = (_base),                                                                             \
     .geometry = (_geometry),                                                                     \
     .otp = (_otp),                                                                               \
     .otp_layout = (_otp_layout),                                                                 \

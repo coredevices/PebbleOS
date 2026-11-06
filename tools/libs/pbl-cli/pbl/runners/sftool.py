@@ -3,6 +3,9 @@
 
 from .core import Runner, RunnerCaps, RunnerError
 
+# Where the SF32LB52 maps its flash, the addresses sftool programs it at.
+FLASH_XIP_BASE = 0x12000000
+
 
 class SfToolRunner(Runner):
     name = "sftool"
@@ -32,9 +35,11 @@ class SfToolRunner(Runner):
             files = [self.cfg.hex_file]
             if self.cfg.resources_file:
                 files.append(
-                    f"{self.cfg.resources_file}@{self.cfg.resources_address:#x}"
+                    f"{self.cfg.resources_file}@{FLASH_XIP_BASE + self.cfg.resources_address:#x}"
                 )
             self._sftool("write_flash " + self.quote(*files))
         elif command == "erase":
-            ranges = [f"{a:#x}:{s:#x}" for a, s in self.cfg.erase_ranges]
+            ranges = [
+                f"{FLASH_XIP_BASE + a:#x}:{s:#x}" for a, s in self.cfg.erase_ranges
+            ]
             self._sftool("erase_region " + self.quote(*ranges))

@@ -11,8 +11,6 @@
 #define SUBSECTOR_SIZE_BYTES (0x1000)
 #define SUBSECTOR_ADDR_MASK  (~(SUBSECTOR_SIZE_BYTES - 1))
 
-#define FLASH_REGION_BASE_ADDRESS 0x12000000
-
 // A bit of preprocessor magic to help with automatically calculating flash region addresses
 //////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +84,7 @@
 #define FLASH_REGION_SHARED_PRF_STORAGE_BEGIN FLASH_REGION_START_ADDR(SHARED_PRF_STORAGE)
 #define FLASH_REGION_SHARED_PRF_STORAGE_END   FLASH_REGION_END_ADDR(SHARED_PRF_STORAGE)
 
-#define BOARD_NOR_FLASH_SIZE FLASH_REGION_START_ADDR(_COUNT) - FLASH_REGION_BASE_ADDRESS
+#define BOARD_NOR_FLASH_SIZE FLASH_REGION_START_ADDR(_COUNT)
 
 // Static asserts to make sure everything worked out
 //////////////////////////////////////////////////////////////////////////////

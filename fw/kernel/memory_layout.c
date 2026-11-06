@@ -161,7 +161,7 @@ static_assert(FLASH_REGION_SYSTEM_RESOURCES_BANK_0_END ==
 static const MpuRegion s_resource_banks_region = {
   .region_num = MemoryRegion_ResourceBanks,
   .enabled = true,
-  .base_address = FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
+  .base_address = CONFIG_FLASH_BASE + FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
   .size = FLASH_REGION_SYSTEM_RESOURCES_BANK_1_END - FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN,
   .cache_policy = MpuCachePolicy_WriteThrough,
   .permissions = MpuPermissions_PrivRO_UserRO,

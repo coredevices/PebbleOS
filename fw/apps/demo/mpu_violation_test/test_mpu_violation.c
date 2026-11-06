@@ -20,6 +20,14 @@
 #include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
 
+#ifdef CONFIG_QEMU
+#include <hardware/qemu_memorymap.h>
+
+#define FLASH_MAP_BASE QEMU_EXTFLASH_XIP_BASE
+#else
+#define FLASH_MAP_BASE CONFIG_FLASH_BASE
+#endif
+
 // Demo app that deliberately runs a series of memory accesses that the
 // MPU is supposed to deny for the unprivileged App task. Use up/down to
 // cycle through tests; press select to run the highlighted test. The
@@ -185,14 +193,15 @@ static void prv_run_test(TestKind kind) {
       break;
     }
     case TestKind_FilesystemRead: {
-      volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_FILESYSTEM_BEGIN;
+      volatile uint32_t *p = (volatile uint32_t *)(FLASH_MAP_BASE + FLASH_REGION_FILESYSTEM_BEGIN);
       volatile uint32_t v = *p;
       (void)v;
       break;
     }
 #ifdef CONFIG_MMAP_RESOURCES
     case TestKind_ResourceBankRead: {
-      volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
+      volatile uint32_t *p =
+          (volatile uint32_t *)(FLASH_MAP_BASE + FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN);
       volatile uint32_t v = *p;
       (void)v;
       break;
