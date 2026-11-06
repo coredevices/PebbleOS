@@ -13,7 +13,6 @@
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/system_task.h>
 
-#include <flash_region/filesystem_regions.h>
 #include <kernel/events.h>
 #include <kernel/language_pack_protocol.h>
 #include <kernel/pebble_tasks.h>

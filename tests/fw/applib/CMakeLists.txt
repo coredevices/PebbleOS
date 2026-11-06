@@ -87,7 +87,6 @@ pbl_clar_test(test_text_resources
 
 pbl_clar_test(test_system_resource_language_fonts
   SOURCES
-    fw/flash_region/filesystem_regions.c
     subsys/logging/hexdump.c
     fw/applib/fonts/codepoint.c
     fw/applib/fonts/fonts.c

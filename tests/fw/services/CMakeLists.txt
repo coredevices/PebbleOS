@@ -57,7 +57,6 @@ pbl_clar_test(test_language_pack_storage
     subsys/fs/pfs/pfs_fs.c
     tests/fakes/fake_pfs.c
     fw/services/process_management/app_file.c
-    fw/flash_region/filesystem_regions.c
     drivers/flash/flash_crc.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_spi_flash.c
