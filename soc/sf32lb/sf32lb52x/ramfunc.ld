@@ -8,7 +8,3 @@
         *(.text.SystemPowerOnModeGet)
         *(.text.HAL_Init)
         *(.text.HAL_MspInit)
-        *(.text.HAL_Delay)
-        *(.text.HAL_Delay_us)
-        *(.text.HAL_Delay_us_)
-        *(.text.HAL_Delay_us2_)

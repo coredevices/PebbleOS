@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include <pbl/drivers/sf32lb52/hxt.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/section.h>
 #include <pbl/logging/logging.h>
@@ -64,8 +65,7 @@ static PBL_SECTION_RAM void prv_apply_cbank(uint32_t cbank) {
 
   HAL_PMU_SET_HXT_CBANK(cbank);
 
-  HAL_Delay_us(0);
-  HAL_Delay_us(CBANK_SETTLE_US);
+  pbl_busy_wait_us(CBANK_SETTLE_US);
 
   HAL_RCC_HCPU_DisableDLL1();
   HAL_RCC_HCPU_DisableDLL2();
@@ -73,7 +73,6 @@ static PBL_SECTION_RAM void prv_apply_cbank(uint32_t cbank) {
   HAL_RCC_HCPU_EnableDLL2(dll2_hz);
 
   HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
-  HAL_Delay_us(0);
 
   pbl_irq_restore_all(key);
 }

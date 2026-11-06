@@ -111,7 +111,6 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   if (clk_src == RCC_SYSCLK_DLL1) {
     HAL_RCC_HCPU_EnableDLL1(dll1_freq);
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_DLL1);
-    HAL_Delay_us(0);
   }
 }
 

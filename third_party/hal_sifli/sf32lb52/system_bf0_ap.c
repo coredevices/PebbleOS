@@ -4,6 +4,10 @@
 #include "bf0_hal.h"
 #include "register.h"
 
+#include <pbl/kernel/delay.h>
+#include <pbl/kernel/section.h>
+#include <pbl/kernel/time.h>
+
 #define DCACHE_SIZE 16384
 #define ICACHE_SIZE (DCACHE_SIZE << 1)
 
@@ -134,4 +138,25 @@ void SystemInit(void) {
 
   SCB_EnableICache();
   SCB_EnableDCache();
+}
+
+// The overrides of the HAL's weak functions live here because an archive member holding only them
+// would not be linked: the weak versions satisfy the references.
+
+// HAL timeouts count kernel uptime.
+uint32_t HAL_GetTick(void) {
+  return (uint32_t)pbl_uptime_ms();
+}
+
+// HAL delays, some with the flash down
+PBL_SECTION_RAM void HAL_Delay_us(uint32_t us) {
+  pbl_busy_wait_us(us);
+}
+
+PBL_SECTION_RAM void HAL_Delay_us_(__IO uint32_t us) {
+  pbl_busy_wait_us(us);
+}
+
+PBL_SECTION_RAM void HAL_Delay(__IO uint32_t ms) {
+  pbl_busy_wait_us(ms * 1000U);
 }
