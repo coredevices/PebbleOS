@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/board/partitions.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -12,15 +13,15 @@
 #include <clar.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <flash_region/flash_region.h>
 #include <logging/backends/flash.h>
 
 void test_log_flash__initialize(void) {
-  fake_spi_flash_init(0, BOARD_NOR_FLASH_SIZE);
+  fake_spi_flash_init(0, 32U * 1024U * 1024U);
 }
 
 void test_log_flash__cleanup(void) {
-  fake_flash_assert_untouched_outside(FLASH_REGION_DEBUG_DB_BEGIN, FLASH_REGION_DEBUG_DB_END);
+  fake_flash_assert_untouched_outside(PART_DEBUG_DB_OFFSET,
+                                      PART_DEBUG_DB_OFFSET + PART_DEBUG_DB_SIZE);
   fake_spi_flash_cleanup();
 }
 

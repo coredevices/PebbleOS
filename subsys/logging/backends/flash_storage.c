@@ -3,6 +3,7 @@
 
 #include "flash.h"
 
+#include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -12,7 +13,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
 
-#include <flash_region/flash_region.h>
 #include <syscall/syscall.h>
 #include <system/version.h>
 
@@ -35,8 +35,8 @@
 // PBL_LOGs in this file, else you could generate infinite loops!
 
 // Configuration Defines
-#define LOG_REGION_SIZE (FLASH_REGION_DEBUG_DB_END - FLASH_REGION_DEBUG_DB_BEGIN)
-#define ERASE_UNIT_SIZE (FLASH_DEBUG_DB_BLOCK_SIZE)
+#define LOG_REGION_SIZE PART_DEBUG_DB_SIZE
+#define ERASE_UNIT_SIZE SUBSECTOR_SIZE_BYTES
 
 #define DEFAULT_LOG_PAGE_SIZE (0x2000)
 #if ERASE_UNIT_SIZE < DEFAULT_LOG_PAGE_SIZE
@@ -123,8 +123,8 @@ static_assert((LOG_REGION_SIZE / ERASE_UNIT_SIZE) >= 2,
               "Need to have at least 2 eraseable units for flash logging to work");
 static_assert((LOG_REGION_SIZE % LOG_PAGE_SIZE) == 0,
               "The log page size must be divisible by the log region size");
-static_assert(((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0) &&
-                  ((FLASH_REGION_DEBUG_DB_END % ERASE_UNIT_SIZE) == 0),
+static_assert(((PART_DEBUG_DB_OFFSET % ERASE_UNIT_SIZE) == 0) &&
+                  ((PART_DEBUG_DB_SIZE % ERASE_UNIT_SIZE) == 0),
               "Space for flash logging must be aligned on an erase region boundary");
 static_assert(LOG_PAGE_SIZE <= ERASE_UNIT_SIZE, "Log pages must fit within an erase unit");
 static_assert((ERASE_UNIT_SIZE % LOG_PAGE_SIZE) == 0,
@@ -133,9 +133,8 @@ static_assert((ERASE_UNIT_SIZE % LOG_PAGE_SIZE) == 0,
 //! Given the current address and amount to increment it by, handles wrapping
 //! and computes the valid flash address
 static uint32_t prv_get_page_addr(uint32_t curr_page_addr, uint32_t incr_by) {
-  uint32_t new_offset =
-      ((curr_page_addr - FLASH_REGION_DEBUG_DB_BEGIN) + incr_by) % LOG_REGION_SIZE;
-  return (new_offset + FLASH_REGION_DEBUG_DB_BEGIN);
+  uint32_t new_offset = ((curr_page_addr - PART_DEBUG_DB_OFFSET) + incr_by) % LOG_REGION_SIZE;
+  return (new_offset + PART_DEBUG_DB_OFFSET);
 }
 
 //! Given the header magic and version, returns true if the log is valid
@@ -157,7 +156,7 @@ static void prv_erase_unit(uint32_t addr) {
 
 static void prv_format_flash_logging_region(void) {
   uint32_t sector_addr;
-  for (sector_addr = FLASH_REGION_DEBUG_DB_BEGIN; sector_addr < FLASH_REGION_DEBUG_DB_END;
+  for (sector_addr = PART_DEBUG_DB_OFFSET; sector_addr < PART_DEBUG_DB_OFFSET + PART_DEBUG_DB_SIZE;
        sector_addr += ERASE_UNIT_SIZE) {
     prv_erase_unit(sector_addr);
   }
@@ -182,7 +181,7 @@ static uint32_t prv_validate_flash_log_region(uint8_t *first_log_file_id) {
   uint32_t first_used_region = UINT32_MAX;
 
   for (uint32_t offset = 0; offset < LOG_REGION_SIZE; offset += LOG_PAGE_SIZE) {
-    uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN + offset;
+    uint32_t flash_addr = PART_DEBUG_DB_OFFSET + offset;
 
     FlashLoggingHeader hdr;
     pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
@@ -213,7 +212,7 @@ static int prv_get_start_of_log_file(uint8_t log_file_id, uint32_t *start_page_a
   uint32_t log_start_addr = PBL_LOG__FLASH_INVALID_ADDR;
 
   for (uint32_t offset = 0; offset < LOG_REGION_SIZE; offset += LOG_PAGE_SIZE) {
-    uint32_t flash_addr = FLASH_REGION_DEBUG_DB_BEGIN + offset;
+    uint32_t flash_addr = PART_DEBUG_DB_OFFSET + offset;
 
     FlashLoggingHeader hdr;
     pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
@@ -278,7 +277,7 @@ void pbl_log__flash_storage_init(void) {
   uint32_t first_used_region = prv_validate_flash_log_region(&prev_log_id);
 
   if (first_used_region == UINT32_MAX) { // no logs exist so start at region 0
-    s_curr_state.page_start_addr = FLASH_REGION_DEBUG_DB_BEGIN;
+    s_curr_state.page_start_addr = PART_DEBUG_DB_OFFSET;
     goto done;
   }
 
@@ -286,8 +285,7 @@ void pbl_log__flash_storage_init(void) {
   bool multiple_gens_found = false;
 
   for (uint32_t offset = 0; offset < LOG_REGION_SIZE; offset += LOG_PAGE_SIZE) {
-    uint32_t flash_addr =
-        prv_get_page_addr(FLASH_REGION_DEBUG_DB_BEGIN + first_used_region, offset);
+    uint32_t flash_addr = prv_get_page_addr(PART_DEBUG_DB_OFFSET + first_used_region, offset);
 
     FlashLoggingHeader hdr;
     pbl_flash_read(FLASH, flash_addr, (uint8_t *)&hdr, sizeof(hdr));
@@ -317,7 +315,7 @@ void pbl_log__flash_storage_init(void) {
   if (!new_log_region_found) {
     if (multiple_gens_found ||
         (prv_get_start_of_log_file(prev_log_id, &s_curr_state.page_start_addr) == 0)) {
-      s_curr_state.page_start_addr = FLASH_REGION_DEBUG_DB_BEGIN;
+      s_curr_state.page_start_addr = PART_DEBUG_DB_OFFSET;
     }
 
     s_curr_state.page_start_addr = prv_get_unit_base_address(s_curr_state.page_start_addr);
