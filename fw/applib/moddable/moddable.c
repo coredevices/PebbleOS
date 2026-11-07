@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include <pbl/kernel/syscall.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/services/evented_timer.h>
 
 #include <applib/app.h>
@@ -26,6 +27,10 @@
 #include <xsHosts.h>
 #include <xsffi.h>
 #include <xsmc.h>
+
+void xsbug_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg, size_t length);
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_XSBUG, PBL_PP_ACCESS_ANY, xsbug_protocol_msg_callback);
 
 static ExpandableDialog *prv_create_fatal_dialog(const char *message) {
   ExpandableDialog *dialog = expandable_dialog_create("");
@@ -226,14 +231,5 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
 
 PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Moddable XS not supported in this build");
-}
-
-// Normally provided by the moddable submodule (xsPlatform.c). The xsbug
-// endpoint stays in the protocol endpoints table regardless of build config,
-// so stub the callback when building without moddable to satisfy the linker.
-struct pbl_pp_session;
-
-void xsbug_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
-                                 size_t length) {
 }
 #endif
