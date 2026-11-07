@@ -1051,3 +1051,8 @@ void test_kernel__workq_ops_can_be_set_while_idle(void) {
   pbl_test_kernel_run();
   cl_assert(strstr(s_trace, "WwWcw") == s_trace);
 }
+
+void test_kernel__ms_to_ticks_saturates(void) {
+  cl_assert_equal_i(pbl_ms_to_ticks(1000), PBL_TICK_HZ);
+  cl_assert_equal_i(pbl_ms_to_ticks(UINT32_MAX), PBL_TICK_FOREVER - 1U);
+}
