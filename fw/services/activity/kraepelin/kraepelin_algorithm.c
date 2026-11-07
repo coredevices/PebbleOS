@@ -376,7 +376,7 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
   return alg_state->log_time_fmt;
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Bound the auto-activity HR subscription and re-arm it each active minute, so it lapses on its own
 // if this state machine ever stops running. An activity survives k_max_inactive_minutes without
 // reaching here, so the window has to comfortably exceed that.
@@ -386,7 +386,7 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
 // ----------------------------------------------------------------------------------------
 // Drop the HRM subscription held by a step activity, if it has one.
 static void prv_release_step_activity_hrm(KAlgStepActivityState *state) {
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   if (state->hrm_session != HRM_INVALID_SESSION_REF) {
     sys_hrm_manager_unsubscribe(state->hrm_session);
     state->hrm_session = HRM_INVALID_SESSION_REF;
@@ -1943,7 +1943,7 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivi
   return &k_attributes[activity];
 }
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // ------------------------------------------------------------------------------------------
 static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
   // The algorithm doesn't care about these events. It only subscribed so the activity service
@@ -1951,7 +1951,7 @@ static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
 }
 #endif
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 // Recompute the HR algorithm's activity scene from whichever auto-detected walk/run session is
 // sampling HR. Run dominates walk (higher intensity); neither active -> default model. Manual
 // workouts disable auto-tracking, so this never races the workout's own scene. Runs on KernelBG.
@@ -1992,7 +1992,7 @@ static void prv_end_step_activity(KAlgState *alg_state, KAlgStepActivityState *s
                 state->distance_mm);
   }
   prv_reset_step_activity_state(state);
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
   // This activity's HR session is gone; recompute the scene so it follows whichever activity
   // (if any) is still running, or drops back to the default model.
   prv_update_activity_hrm_scene(alg_state);
@@ -2047,7 +2047,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     PBL_ASSERTN(state->start_time < utc_now);
     uint32_t duration_secs = utc_now - state->start_time;
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
     // Make sure we have a couple active minutes in a row before enabling the HRM to save battery
     const unsigned min_duration_for_hrm = 3 * PBL_SEC_PER_MIN;
     if (state->hrm_session != HRM_INVALID_SESSION_REF) {

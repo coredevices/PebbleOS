@@ -4,12 +4,12 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_calculators.h>
 #include <pbl/services/activity/workout_service.h>
+#include <pbl/services/hrm/hrm_activity_scene.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
 #include <clar.h>
-#include <drivers/hrm.h>
 #include <fff.h>
 #include <process_management/app_install_types.h>
 

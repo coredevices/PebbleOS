@@ -6,6 +6,5 @@ pbl_library_sources(services.c)
 
 pbl_add_subdirectory_ifdef(CONFIG_BT_SERVICE_BAS bas)
 pbl_add_subdirectory_ifdef(CONFIG_BT_SERVICE_DIS dis)
-pbl_add_subdirectory_ifdef(CONFIG_BT_SERVICE_GH3X2X_TUNING gh3x2x_tuning)
 pbl_add_subdirectory_ifdef(CONFIG_BT_SERVICE_PPOG_REVERSED ppog_reversed)
 pbl_add_subdirectory_ifdef(CONFIG_BT_SERVICE_PPS pps)

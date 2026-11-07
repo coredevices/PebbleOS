@@ -9,18 +9,19 @@
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/input/gpio_keys.h>
+#include <pbl/drivers/ppg/qemu.h>
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/drivers/temperature/qemu.h>
 #include <pbl/drivers/touch/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/services/hrm/hrm_ppg.h>
 
 #include <hardware/qemu_memorymap.h>
 
 // UART device for debug serial
 #include <pbl/drivers/audio/qemu.h>
-#include <pbl/drivers/hrm/qemu.h>
 #include <pbl/drivers/uart/qemu.h>
 
 PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
@@ -58,11 +59,50 @@ PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
 
 const struct pbl_audio *const MIC = &s_mic.audio;
 
-static HRMDeviceState s_hrm_state;
-static HRMDevice s_hrm = {
-  .state = &s_hrm_state,
+const struct pbl_ppg *const PPG = QEMU_PPG;
+
+const struct hrm_ppg_config HRM_PPG_CONFIG = {
+  .roles = {
+    [HRM_PPG_ROLE_GREEN] =
+        {
+          .slot = 0,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_target = HRM_PPG_AGC_GENERAL,
+          .initial_ua = 20000,
+          .initial_gain_ohm = 100000,
+          .min_ua = 10000,
+          .max_ua = 150000,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_RED] =
+        {
+          .slot = 1,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_led = 1,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 20000,
+          .initial_gain_ohm = 25000,
+          .min_ua = 20000,
+          .max_ua = 100000,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_IR] =
+        {
+          .slot = 2,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 20000,
+          .initial_gain_ohm = 25000,
+          .min_ua = 20000,
+          .max_ua = 100000,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_AMBIENT] = {.slot = 3, .rx_mask = 0x1},
+  },
 };
-HRMDevice *const HRM = &s_hrm;
 
 PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
 PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);

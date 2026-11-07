@@ -31,7 +31,7 @@ Emery platform, which apps see as a 200 × 228 color display.
 - **Touch**: Hynitron CST816 capacitive touch controller
 - **Accelerometer and gyroscope**: [ST LSM6DSO](https://www.st.com/en/mems-and-sensors/lsm6dso.html)
 - **Magnetometer**: [MEMSIC MMC5603NJ](https://www.memsic.com/magnetometer-2)
-- **Heart rate**: Goodix GH3X2X optical sensor
+- **Heart rate**: Goodix GH3026 optical front end
 - **Ambient light**: W1160
 - **Vibration**: [Awinic AW86225](https://www.awinic.com/en/productDetail/AW86225CSR) haptic driver, with a linear resonant
   actuator

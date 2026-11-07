@@ -13,7 +13,6 @@
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
@@ -22,6 +21,8 @@
 #include <pbl/drivers/panel/jdi_mip.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/ppg/gh3x2x.h>
+#include <pbl/drivers/ppg/gh3x2x_regs.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
@@ -35,6 +36,8 @@
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/services/hrm/hrm_ppg.h>
+#include <pbl/util/size.h>
 
 #include <hardware/sf32lb52_memorymap.h>
 
@@ -239,18 +242,168 @@ PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", 4, 400000, &s_i2c4_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
 
-static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&s_i2c4.bus, 0x14);
-
-static HRMDeviceState s_hrm_state;
-static HRMDevice s_hrm = {
-  .state = &s_hrm_state,
-  .i2c = &s_i2c_gh3x2x,
-  .int_irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
-  .int_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
-  .reset = PBL_GPIO(&s_npm1300_gpio.port, 3, PBL_GPIO_PULL_UP),
+static const struct pbl_gh3x2x_reg s_gh3x2x_regs[] = {
+  {GH3X2X_SAMPLE_RATE, 0x001F},
+  {GH3X2X_DATA_CTRL0, 0x0005},
+  {GH3X2X_FIFO_WATERMARK, 0x00A0},
+  {GH3X2X_WAKEUP_TIMER, 0x000D},
+  {GH3X2X_PAD_CTRL0, 0x5477},
+  {GH3X2X_PAD_CTRL1, 0x5555},
+  {GH3X2X_SLOT_SEQ(0), 0x0100},
+  {GH3X2X_SLOT_SEQ(2), 0x0302},
+  {GH3X2X_SLOT_SEQ(4), 0x0504},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL0), 0x274C},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL3), 0x0D13},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL4), 0x4455},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL5), 0x000A},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL10), 0x0019},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(0, GH3X2X_SLOT_CTRL12), 0x0CBF},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL0), 0x2744},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL1), 0x0001},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL3), 0x0E14},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL4), 0x4441},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL5), 0x0002},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL10), 0x0400},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL11), 0x0219},
+  {GH3X2X_SLOT_REG(1, GH3X2X_SLOT_CTRL12), 0x197F},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL0), 0x2744},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL1), 0x0001},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL3), 0x0D14},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL4), 0x4441},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL5), 0x0002},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL10), 0x0219},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(2, GH3X2X_SLOT_CTRL12), 0x197F},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL0), 0x2744},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL1), 0x0001},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL3), 0x0C10},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL4), 0x4442},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL5), 0x0002},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL10), 0x020C},
+  {GH3X2X_SLOT_REG(3, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL0), 0x2744},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL1), 0x0001},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL3), 0x0000},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL4), 0x4442},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL5), 0x0002},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL10), 0x0400},
+  {GH3X2X_SLOT_REG(4, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL0), 0xC704},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL1), 0x0001},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL2), 0x0000},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL3), 0x0C10},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL4), 0x4442},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL5), 0x0002},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL8), 0x0003},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL10), 0x020C},
+  {GH3X2X_SLOT_REG(5, GH3X2X_SLOT_CTRL11), 0x0400},
+  {GH3X2X_SLOT_TIMER(0), 0x0123},
+  {GH3X2X_SLOT_TIMER(1), 0x0172},
+  {GH3X2X_SLOT_TIMER(2), 0x0172},
+  {GH3X2X_SLOT_TIMER(3), 0x00E8},
+  {GH3X2X_SLOT_TIMER(4), 0x006A},
+  {GH3X2X_SLOT_TIMER(5), 0x00E8},
+  {GH3X2X_AFE_CTRL0, 0x1020},
+  {GH3X2X_LED_AGC_CTRL(0), 0x0A00},
+  {GH3X2X_LED_AGC_CTRL(1), 0xF530},
+  {GH3X2X_LED_AGC_CTRL(2), 0x9388},
+  {GH3X2X_LED_AGC_CTRL(3), 0xC45C},
+  {GH3X2X_LED_AGC_CTRL(4), 0xA328},
+  {GH3X2X_ADT_WEARON_CR, 0x0001},
+  {GH3X2X_ADT_WEARON1_THU_L, 0x49F0},
+  {GH3X2X_ADT_WEARON1_THU_H, 0x0082},
+  {GH3X2X_ADT_WEARON1_THD_L, 0x49F0},
+  {GH3X2X_ADT_WEARON1_THD_H, 0x0082},
+  {GH3X2X_ADT_WEARON_PR, 0x0011},
+  {GH3X2X_ADT_WEARON_CONFIRM_TIME, 0x0901},
+  {GH3X2X_ADT_WEARON_LOGIC_SEL, 0x0102},
+  {GH3X2X_ADT_WEAROFF_LOGIC_SEL, 0x0102},
+  {GH3X2X_INT_CR2, 0x4F60},
+  {GH3X2X_INT_PWR, 0x000A},
+  {GH3X2X_INT_CTR, 0x00A1},
+  {GH3X2X_OSC32K_TEMP, 0x0008},
+  {GH3X2X_LED_FS, 0x0233},
+  {GH3X2X_ECG_IA_AD0, 0x0400},
+  {GH3X2X_ECG_IA_AD2, 0x3310},
+  {GH3X2X_ECG_IA_AD3, 0x1101},
+  {GH3X2X_EFUSE_CTRL, 0x0000},
 };
 
-HRMDevice *const HRM = &s_hrm;
+static const struct pbl_ppg_slot s_gh3x2x_slots[] = {
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_GREEN}, .rx_mask = 0x3},
+  {.led_mask = 0x2, .leds = {[1] = PBL_PPG_LED_RED}, .rx_mask = 0x3},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = 0x3},
+  {.led_mask = 0x1, .leds = {PBL_PPG_LED_IR}, .rx_mask = 0x3},
+  {.rx_mask = 0x3},
+};
+
+static const struct pbl_gh3x2x_setup s_gh3x2x_setup = {
+  .regs = s_gh3x2x_regs,
+  .num_regs = ARRAY_LENGTH(s_gh3x2x_regs),
+  .slots = s_gh3x2x_slots,
+  .num_slots = ARRAY_LENGTH(s_gh3x2x_slots),
+};
+
+PBL_GH3X2X_DEFINE(s_gh3x2x, &s_i2c4.bus, 0x14,
+                  .irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
+                  .irq_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
+                  .reset = PBL_GPIO(&s_npm1300_gpio.port, 3,
+                                    PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
+                  .setup = &s_gh3x2x_setup);
+
+const struct pbl_ppg *const PPG = &s_gh3x2x.ppg;
+
+const struct hrm_ppg_config HRM_PPG_CONFIG = {
+  .roles = {
+    [HRM_PPG_ROLE_GREEN] =
+        {
+          .slot = 0,
+          .rx_mask = 0x3,
+          .agc = true,
+          .agc_led = 0,
+          .agc_target = HRM_PPG_AGC_GENERAL,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 250000,
+          .min_ua = 9412,
+          .max_ua = 149804,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_RED] =
+        {
+          .slot = 1,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_led = 1,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 25000,
+          .min_ua = 19608,
+          .max_ua = 99608,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_IR] =
+        {
+          .slot = 2,
+          .rx_mask = 0x1,
+          .agc = true,
+          .agc_led = 0,
+          .agc_target = HRM_PPG_AGC_SPO2,
+          .initial_ua = 19608,
+          .initial_gain_ohm = 25000,
+          .min_ua = 19608,
+          .max_ua = 99608,
+          .max_gain_ohm = 1000000,
+        },
+    [HRM_PPG_ROLE_WEAR] = {.slot = 3, .rx_mask = 0x1},
+    [HRM_PPG_ROLE_AMBIENT] = {.slot = 4, .rx_mask = 0x1},
+  },
+};
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {
