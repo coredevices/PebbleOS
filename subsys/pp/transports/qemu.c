@@ -12,10 +12,9 @@
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/settings.h>
-#include <comm/qemu/transport.h>
 #include <kernel/events.h>
 
-PBL_LOG_MODULE_DECLARE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
 
 static const uint32_t READY_LOG_DELAY_MS = 500;
 
@@ -76,7 +75,7 @@ static void prv_put_comm_session_event(bool is_open, bool is_system) {
   event_put(&event);
 }
 
-void qemu_transport_set_connected(bool is_connected) {
+void pbl_pp_qemu_set_connected(bool is_connected) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   if (is_connected && s_session == nullptr) {
@@ -103,7 +102,7 @@ void qemu_transport_set_connected(bool is_connected) {
   pbl_mutex_unlock(&s_lock);
 }
 
-bool qemu_transport_is_connected(void) {
+bool pbl_pp_qemu_is_connected(void) {
   bool connected;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -113,7 +112,7 @@ bool qemu_transport_is_connected(void) {
   return connected;
 }
 
-void qemu_transport_handle_received_data(const uint8_t *data, uint32_t length) {
+void pbl_pp_qemu_receive(const uint8_t *data, uint32_t length) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_session != nullptr) {
     pbl_pp_session_receive(s_session, data, length);
@@ -136,12 +135,12 @@ static bool prv_default_connected(void) {
 }
 #endif
 
-void qemu_transport_start(void) {
+void pbl_pp_qemu_start(void) {
 #ifndef CONFIG_BT_HCI_UART
   // Open the session synchronously: the host may send a WatchVersionRequest
   // as soon as it sees "Ready for communication".
   if (prv_default_connected()) {
-    qemu_transport_set_connected(true);
+    pbl_pp_qemu_set_connected(true);
   }
 #endif
 }
@@ -150,13 +149,13 @@ static void prv_log_ready(void *unused) {
   PBL_LOG_INFO("Ready for communication.");
 }
 
-void qemu_transport_notify_ready(void) {
+void pbl_pp_qemu_notify_ready(void) {
   // Host tools install on seeing this line, so give the first app time to push its window.
   new_timer_start(new_timer_create(), READY_LOG_DELAY_MS, prv_log_ready, nullptr, 0);
 }
 
-void qemu_transport_stop(void) {
-  qemu_transport_set_connected(false);
+void pbl_pp_qemu_stop(void) {
+  pbl_pp_qemu_set_connected(false);
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_session != nullptr) {

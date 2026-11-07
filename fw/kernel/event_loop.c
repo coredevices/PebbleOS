@@ -16,6 +16,7 @@
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/time.h>
 #include <pbl/mcu/fpu.h>
+#include <pbl/pp/transports/qemu.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/clock.h>
@@ -67,9 +68,6 @@
 #include <pbl/services/wakeup.h>
 #include <pbl/util/struct.h>
 
-#ifdef CONFIG_QEMU_SERIAL
-#include <comm/qemu/transport.h>
-#endif
 #include <shell/normal/app_idle_timeout.h>
 #include <shell/normal/watchface.h>
 #include <shell/prefs.h>
@@ -649,8 +647,8 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   }
 #endif
 
-#ifdef CONFIG_QEMU_SERIAL
-  qemu_transport_notify_ready();
+#ifdef CONFIG_PP_TRANSPORT_QEMU
+  pbl_pp_qemu_notify_ready();
 #endif
 #ifdef CONFIG_CONSOLE
   pbl_console_enable_prompt();

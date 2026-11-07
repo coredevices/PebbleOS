@@ -13,4 +13,11 @@ module = PP
 module-str = Pebble protocol
 source "subsys/logging/Kconfig.template.log_level"
 
+config PP_TRANSPORT_QEMU
+    bool
+    default y
+    depends on QEMU_SERIAL
+    help
+      Pebble protocol over the emulator's serial link.
+
 endif
