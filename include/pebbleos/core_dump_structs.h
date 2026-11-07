@@ -11,8 +11,8 @@
  * @brief Register records stored in a core dump.
  *
  * A core dump is a stream of chunks, each a 32-bit key and a 32-bit payload size followed by the
- * payload. These are the payloads of the thread and extra register chunks, shared with the
- * Bluetooth controller's core dump code and parsed by @c tools/readcore.py. All fields are
+ * payload. These are the payloads of the thread and extra register chunks, parsed by
+ * @c tools/readcore.py. All fields are
  * little-endian. Registers are stored in the order r0-r12, sp, lr, pc, xpsr, the same order as
  * @ref pbl_thread_reg.
  * @{
