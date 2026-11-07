@@ -247,7 +247,7 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   prv_put_comm_session_event(false, is_system);
 
   if (is_system && (session->destination == TransportDestinationHybrid)) {
-    prv_put_comm_session_event(true, false);
+    prv_put_comm_session_event(false, false);
   }
 
   // Cleanup:
