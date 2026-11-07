@@ -29,6 +29,7 @@ static int s_ran[FLOOD];
 static int s_num_ran;
 static pbl_tick_t s_flood_start;
 static pbl_tick_t s_flood_ticks;
+static SystemTaskEventCallback s_first_cb;
 
 // ---- stubs ------------------------------------------------------------------
 
@@ -80,9 +81,23 @@ static void prv_flood(void *data) {
   system_task_add_callback(prv_stop, nullptr);
 }
 
+static void prv_check_culprit(void *data) {
+  cl_assert(system_task_get_current_callback() == (void *)prv_check_culprit);
+  s_num_ran++;
+}
+
+static void prv_queue_culprits(void *data) {
+  // Through the pool, then the heap fallback once it fills up.
+  for (int i = 0; i < FLOOD; i++) {
+    system_task_add_callback(prv_check_culprit, nullptr);
+  }
+  cl_assert(system_task_add_callback_from_isr_droppable_raised(prv_check_culprit, nullptr));
+  system_task_add_callback(prv_stop, nullptr);
+}
+
 static void prv_main_entry(void *arg) {
   system_task_init();
-  system_task_add_callback(prv_flood, nullptr);
+  system_task_add_callback(s_first_cb, nullptr);
   pbl_thread_sleep(PBL_FOREVER);
 }
 
@@ -108,6 +123,7 @@ void test_system_task__initialize(void) {
   s_num_ran = 0;
   s_flood_start = 0;
   s_flood_ticks = 0;
+  s_first_cb = prv_flood;
   stub_pbl_malloc_set_should_fail(false);
   system_task_reset_for_test();
 }
@@ -134,4 +150,11 @@ void test_system_task__overflow_without_memory_resets(void) {
   cl_assert(s_reset);
   cl_assert_equal_i(s_reason.code, RebootReasonCode_EventQueueFull);
   cl_assert_equal_i(s_flood_ticks, 0);
+}
+
+void test_system_task__reports_the_callback_behind_a_wrapper(void) {
+  s_first_cb = prv_queue_culprits;
+  prv_run();
+  cl_assert(!s_reset);
+  cl_assert_equal_i(s_num_ran, FLOOD + 1);
 }

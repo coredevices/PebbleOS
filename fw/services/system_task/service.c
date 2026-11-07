@@ -7,15 +7,16 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/kernel/msgq.h>
-#include <pbl/kernel/poll.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/fpu.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/task_wdt/task_wdt.h>
+#include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/task_init.h>
@@ -25,32 +26,29 @@ PBL_LOG_MODULE_DEFINE(service_system_task, CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL)
 
 #define APP_THROTTLE_TIME_MS 300
 
-typedef struct {
+//! Apps get their own slots, so they wait for each other rather than starve the system.
+#define SYSTEM_TASK_POOL_SIZE          30
+#define FROM_APP_SYSTEM_TASK_POOL_SIZE 8
+#define RAISED_POOL_SIZE               8
+
+struct pbl_system_task__heap_call {
+  struct pbl_work work;
   SystemTaskEventCallback cb;
   void *data;
-  bool raised_priority;
-} SystemTaskEvent;
+};
 
-typedef struct DeferredEvent {
-  struct DeferredEvent *next;
-  SystemTaskEvent event;
-} DeferredEvent;
+struct pbl_system_task__raised_call {
+  SystemTaskEventCallback cb;
+  void *data;
+};
 
-#define SYSTEM_TASK_QUEUE_LENGTH          30
-#define FROM_APP_SYSTEM_TASK_QUEUE_LENGTH 8
-
-static PBL_MSGQ_DEFINE(s_system_task_queue, sizeof(SystemTaskEvent), SYSTEM_TASK_QUEUE_LENGTH);
-static PBL_MSGQ_DEFINE(s_from_app_system_task_queue, sizeof(SystemTaskEvent),
-                       FROM_APP_SYSTEM_TASK_QUEUE_LENGTH);
-static PBL_POLL_GROUP_DEFINE(s_system_task_queue_set);
+static PBL_WORK_POOL_DEFINE(s_pool, SYSTEM_TASK_POOL_SIZE);
+static PBL_WORK_POOL_DEFINE(s_from_app_pool, FROM_APP_SYSTEM_TASK_POOL_SIZE);
+static PBL_WORK_POOL_DEFINE(s_raised_pool, RAISED_POOL_SIZE);
+static struct pbl_system_task__raised_call s_raised_calls[RAISED_POOL_SIZE];
+//! The callback behind a wrapper, which is all the queue knows about.
+static SystemTaskEventCallback s_wrapped_cb;
 static bool s_initialized;
-
-static SystemTaskEventCallback s_current_cb;
-
-//! Events the system task queued for itself while its queue was full. Only
-//! the system task touches the list.
-static DeferredEvent *s_deferred_head;
-static DeferredEvent *s_deferred_tail;
 
 static int s_wdt_channel = -1;
 static TimerID s_throttle_timer = TIMER_INVALID_ID;
@@ -94,78 +92,52 @@ static void prv_app_throttle_start(void) {
 //! the app hogs the CPU. Parking the app briefly resolves both.
 static void *prv_wdt_expired(int channel_id, void *user_data) {
   if (s_throttle_timer != TIMER_INVALID_ID &&
-      (system_task_is_ready_to_run() || s_current_cb != nullptr)) {
+      (system_task_is_ready_to_run() || system_task_get_current_callback() != nullptr)) {
     prv_app_throttle_start();
   }
-  return s_current_cb;
+  return system_task_get_current_callback();
 }
 
-static void prv_requeue_deferred(void) {
-  while (s_deferred_head) {
-    DeferredEvent *d = s_deferred_head;
-    if (pbl_msgq_put(&s_system_task_queue, &d->event, PBL_NO_WAIT) != 0) {
-      return;
-    }
-    s_deferred_head = d->next;
-    if (!s_deferred_head) {
-      s_deferred_tail = nullptr;
-    }
-    pbl_free(d);
-  }
-}
-
-static void system_task_main(void *paramater) {
+static void prv_workq_start(struct pbl_workq *q) {
   s_wdt_channel = pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr);
   PBL_ASSERTN(s_wdt_channel >= 0);
   task_init();
-
-  while (true) {
-    SystemTaskEvent event;
-
-    pbl_task_wdt_set_waiting(true);
-    struct pbl_msgq *activated_queue = pbl_poll_group_wait(&s_system_task_queue_set, PBL_FOREVER);
-    pbl_task_wdt_set_waiting(false);
-
-    // Get event from the activated queue
-    bool result = (pbl_msgq_get(activated_queue, &event, PBL_NO_WAIT) == 0);
-
-    // I believe its possible that we just reset the queue and accidentally
-    // pended an extra event to the queue set so handle that case gracefully
-    if (result) {
-      s_current_cb = event.cb;
-      event.cb(event.data);
-      mcu_fpu_cleanup();
-      s_current_cb = nullptr;
-      if (event.raised_priority) {
-        system_task_enable_raised_priority(false);
-      }
-    }
-
-    prv_requeue_deferred();
-
-    // Refresh the watchdog immediately, just in case that cb() took awhile to run.
-    system_task_watchdog_feed();
-  }
 }
 
 static struct pbl_thread s_thread;
 PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_SERVICE_SYSTEM_TASK_THREAD_STACK_SIZE);
 
+static void prv_workq_wait(struct pbl_workq *q, bool waiting) {
+  pbl_task_wdt_set_waiting(waiting);
+}
+
+static void prv_workq_done(struct pbl_workq *q) {
+  mcu_fpu_cleanup();
+  // Refresh the watchdog immediately, just in case the callback took a while to run.
+  system_task_watchdog_feed();
+}
+
+static const struct pbl_workq_ops s_workq_ops = {
+  .start = prv_workq_start,
+  .wait = prv_workq_wait,
+  .done = prv_workq_done,
+};
+
 void system_task_init(void) {
   s_raised_priority_refcount = 0;
-  pbl_poll_group_add(&s_system_task_queue_set, &s_system_task_queue);
-  pbl_poll_group_add(&s_system_task_queue_set, &s_from_app_system_task_queue);
   s_initialized = true;
 
   const struct pbl_thread_attr attr = {
     .name = "KernelBG",
-    .entry = system_task_main,
+    .entry = pbl_workq_thread,
+    .arg = &pbl_sys_workq,
     .prio = CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO,
     .privileged = true,
     .stack = s_stack,
     .stack_size = sizeof(s_stack),
   };
 
+  pbl_workq_set_ops(&pbl_sys_workq, &s_workq_ops);
   PBL_ASSERTN(pbl_thread_create(&s_thread, &attr) == 0);
   pebble_task_register(PebbleTask_KernelBackground, &s_thread);
 }
@@ -180,13 +152,15 @@ void system_task_watchdog_feed(void) {
 
 [[noreturn]] static void handle_system_task_send_failure(SystemTaskEventCallback cb,
                                                          uintptr_t caller_lr) {
-  PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, s_current_cb);
+  void *current_cb = system_task_get_current_callback();
+
+  PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, current_cb);
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,
     .event_queue = {
       .push_lr = (uint32_t)caller_lr,
-      .current_event = (uint32_t)(uintptr_t)s_current_cb,
+      .current_event = (uint32_t)(uintptr_t)current_cb,
       .dropped_event = (uint32_t)(uintptr_t)cb
     }
   };
@@ -195,34 +169,38 @@ void system_task_watchdog_feed(void) {
   reset_due_to_software_failure();
 }
 
-//! The system task is its queue's only consumer, so it must never wait for
-//! room: events that do not fit are kept aside and requeued as it drains.
-static void prv_add_from_system_task(const SystemTaskEvent *event, uintptr_t caller_lr) {
-  if (!s_deferred_head && pbl_msgq_put(&s_system_task_queue, event, PBL_NO_WAIT) == 0) {
+static int prv_call(struct pbl_work_pool *pool, SystemTaskEventCallback cb, void *data,
+                    pbl_timeout_t timeout) {
+  return pbl_work_call(&pbl_sys_workq, pool, cb, data, timeout);
+}
+
+static void prv_heap_call_fn(struct pbl_work *work) {
+  struct pbl_system_task__heap_call *call =
+      container_of(work, struct pbl_system_task__heap_call, work);
+  SystemTaskEventCallback cb = call->cb;
+  void *data = call->data;
+
+  pbl_free(call);
+  s_wrapped_cb = cb;
+  cb(data);
+  s_wrapped_cb = nullptr;
+}
+
+//! The system task runs its own calls, so it must never wait for a slot: calls that do not fit
+//! go on the heap instead.
+static void prv_add_from_system_task(SystemTaskEventCallback cb, void *data, uintptr_t caller_lr) {
+  if (prv_call(&s_pool, cb, data, PBL_NO_WAIT) == 0) {
     return;
   }
 
-  DeferredEvent *d = pbl_malloc(sizeof(*d));
-  if (!d) {
-    handle_system_task_send_failure(event->cb, caller_lr);
+  struct pbl_system_task__heap_call *call = pbl_malloc(sizeof(*call));
+  if (!call) {
+    handle_system_task_send_failure(cb, caller_lr);
   }
 
-  *d = (DeferredEvent){.event = *event};
-  if (s_deferred_tail) {
-    s_deferred_tail->next = d;
-  } else {
-    s_deferred_head = d;
-  }
-  s_deferred_tail = d;
-}
-
-static bool prv_send_to_queue_no_wait(SystemTaskEventCallback cb, void *data) {
-  SystemTaskEvent event = {
-    .cb = cb,
-    .data = data,
-  };
-
-  return pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0;
+  *call = (struct pbl_system_task__heap_call){.cb = cb, .data = data};
+  pbl_work_init(&call->work, prv_heap_call_fn);
+  pbl_work_submit(&pbl_sys_workq, &call->work);
 }
 
 bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
@@ -232,12 +210,11 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
     return false;
   }
 
-  bool success = prv_send_to_queue_no_wait(cb, data);
-  if (!success) {
+  if (prv_call(&s_pool, cb, data, PBL_NO_WAIT) != 0) {
     handle_system_task_send_failure(cb, caller_lr);
   }
 
-  return success;
+  return true;
 }
 
 bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data) {
@@ -245,11 +222,27 @@ bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data) 
     return false;
   }
 
-  return prv_send_to_queue_no_wait(cb, data);
+  return prv_call(&s_pool, cb, data, PBL_NO_WAIT) == 0;
 }
 
 bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data) {
   return system_task_add_callback_droppable(cb, data);
+}
+
+static void prv_raised_call_fn(void *data) {
+  struct pbl_system_task__raised_call *call = data;
+  SystemTaskEventCallback cb = call->cb;
+  void *cb_data = call->data;
+
+  pbl_irq_lock();
+  call->cb = nullptr;
+  pbl_irq_unlock();
+
+  s_wrapped_cb = cb;
+  cb(cb_data);
+  s_wrapped_cb = nullptr;
+  mcu_fpu_cleanup();
+  system_task_enable_raised_priority(false);
 }
 
 bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback cb, void *data) {
@@ -257,19 +250,22 @@ bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback 
     return false;
   }
 
-  SystemTaskEvent event = {
-    .cb = cb,
-    .data = data,
-    .raised_priority = true,
-  };
+  bool success = false;
 
-  // The queued event owns the boost until its callback returns, even if the
-  // device stops in the meantime. Rejected work must not retain a reference.
+  // The queued call owns the boost until its callback returns, even if the device stops in the
+  // meantime. Rejected work must not retain a reference.
   pbl_irq_lock();
-  system_task_enable_raised_priority(true);
-  bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_NO_WAIT) == 0);
-  if (!success) {
-    system_task_enable_raised_priority(false);
+  for (size_t i = 0; i < ARRAY_LENGTH(s_raised_calls); i++) {
+    struct pbl_system_task__raised_call *call = &s_raised_calls[i];
+    if (call->cb == nullptr) {
+      if (pbl_work_call(&pbl_sys_workq, &s_raised_pool, prv_raised_call_fn, call, PBL_NO_WAIT) ==
+          0) {
+        *call = (struct pbl_system_task__raised_call){.cb = cb, .data = data};
+        system_task_enable_raised_priority(true);
+        success = true;
+      }
+      break;
+    }
   }
   pbl_irq_unlock();
   return success;
@@ -281,27 +277,18 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
     return false;
   }
 
-  SystemTaskEvent event = {
-    .cb = cb,
-    .data = data,
-  };
-
-  if (pebble_task_get_current() == PebbleTask_App) {
-    // If we're the app and we've filled up our system task, the app just gets to wait.
+  const PebbleTask task = pebble_task_get_current();
+  if (task == PebbleTask_App) {
+    // If we're the app and we've filled up our slots, the app just gets to wait.
     // FIXME: In the future when we want to bound the amount of time a syscall can take this will
     // have to change.
-    pbl_msgq_put(&s_from_app_system_task_queue, &event, PBL_FOREVER);
-    return true;
-  } else if (pebble_task_get_current() == PebbleTask_KernelBackground) {
-    prv_add_from_system_task(&event, caller_lr);
-  } else {
+    prv_call(&s_from_app_pool, cb, data, PBL_FOREVER);
+  } else if (task == PebbleTask_KernelBackground) {
+    prv_add_from_system_task(cb, data, caller_lr);
+  } else if (prv_call(&s_pool, cb, data, PBL_MSEC(3000)) != 0) {
     // Back ourselves up and wait a reasonable amount of time before failing. If the queue is really
-    // backed up we want to fall through to the handle_system_task_send_failure and not just get
-    // killed by the watchdog.
-    bool success = (pbl_msgq_put(&s_system_task_queue, &event, PBL_MSEC(3000)) == 0);
-    if (!success) {
-      handle_system_task_send_failure(cb, caller_lr);
-    }
+    // backed up we want to fail here and not just get killed by the watchdog.
+    handle_system_task_send_failure(cb, caller_lr);
   }
 
   return true;
@@ -313,11 +300,11 @@ void system_task_block_callbacks(bool block) {
 
 uint32_t system_task_get_available_space(void) {
   const bool is_app = pebble_task_get_current() == PebbleTask_App;
-  return pbl_msgq_num_free(is_app ? &s_from_app_system_task_queue : &s_system_task_queue);
+  return pbl_work_pool_num_free(is_app ? &s_from_app_pool : &s_pool);
 }
 
 void *system_task_get_current_callback(void) {
-  return s_current_cb;
+  return s_wrapped_cb ? (void *)s_wrapped_cb : pbl_workq_current_fn(&pbl_sys_workq);
 }
 
 void system_task_enable_raised_priority(bool is_raised) {
@@ -354,14 +341,16 @@ bool system_task_is_ready_to_run(void) {
 #if UNITTEST
 void system_task_reset_for_test(void) {
   memset(&s_thread, 0, sizeof(s_thread));
-  pbl_msgq_init(&s_system_task_queue, s_system_task_queue.buf, sizeof(SystemTaskEvent),
-                SYSTEM_TASK_QUEUE_LENGTH);
-  pbl_msgq_init(&s_from_app_system_task_queue, s_from_app_system_task_queue.buf,
-                sizeof(SystemTaskEvent), FROM_APP_SYSTEM_TASK_QUEUE_LENGTH);
-  pbl_poll_group_init(&s_system_task_queue_set);
+  static struct pbl_work_call s_slots[SYSTEM_TASK_POOL_SIZE];
+  static struct pbl_work_call s_from_app_slots[FROM_APP_SYSTEM_TASK_POOL_SIZE];
+  static struct pbl_work_call s_raised_slots[RAISED_POOL_SIZE];
+
+  pbl_workq_init(&pbl_sys_workq);
+  pbl_work_pool_init(&s_pool, s_slots, SYSTEM_TASK_POOL_SIZE);
+  pbl_work_pool_init(&s_from_app_pool, s_from_app_slots, FROM_APP_SYSTEM_TASK_POOL_SIZE);
+  pbl_work_pool_init(&s_raised_pool, s_raised_slots, RAISED_POOL_SIZE);
+  memset(s_raised_calls, 0, sizeof(s_raised_calls));
+  s_wrapped_cb = nullptr;
   s_initialized = false;
-  s_current_cb = nullptr;
-  s_deferred_head = nullptr;
-  s_deferred_tail = nullptr;
 }
 #endif

@@ -464,6 +464,7 @@ pbl_clar_test(test_system_task
     kernel/tick.c
     kernel/sched.c
     kernel/timer.c
+    kernel/work.c
     kernel/thread.c
     kernel/mutex.c
     kernel/sem.c
