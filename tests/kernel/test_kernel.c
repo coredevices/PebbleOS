@@ -11,6 +11,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/kernel.h>
+#include <pbl/util/size.h>
 
 #include <clar.h>
 #include <kernel_test.h>
@@ -1055,4 +1056,61 @@ void test_kernel__workq_ops_can_be_set_while_idle(void) {
 void test_kernel__ms_to_ticks_saturates(void) {
   cl_assert_equal_i(pbl_ms_to_ticks(1000), PBL_TICK_HZ);
   cl_assert_equal_i(pbl_ms_to_ticks(UINT32_MAX), PBL_TICK_FOREVER - 1U);
+}
+
+// ---- periodic delayed work --------------------------------------------------
+
+static uint64_t s_periodic_at[4];
+static int s_periodic_runs;
+static pbl_tick_t s_periodic_busy;
+
+static void prv_periodic_fn(struct pbl_work *work) {
+  s_periodic_at[s_periodic_runs++] = pbl_uptime_ticks();
+  if (s_periodic_busy > 0U) {
+    pbl_thread_sleep(PBL_TICKS(s_periodic_busy));
+  }
+  if (s_periodic_runs < (int)ARRAY_LENGTH(s_periodic_at)) {
+    pbl_delayed_work_schedule_next(&s_dwork, 10);
+  }
+}
+
+static void prv_periodic_main(void *arg) {
+  const uint64_t start = pbl_uptime_ticks();
+
+  pbl_delayed_work_reschedule(&s_wq, &s_dwork, PBL_TICKS(10));
+  pbl_thread_sleep(PBL_TICKS(45));
+  cl_assert_equal_i(s_periodic_runs, 4);
+  for (int i = 0; i < 4; i++) {
+    cl_assert_equal_i(s_periodic_at[i], start + (uint64_t)(i + 1) * 10U);
+  }
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__delayed_work_schedule_next_does_not_drift(void) {
+  s_periodic_runs = 0;
+  s_periodic_busy = 3;
+  pbl_delayed_work_init(&s_dwork, prv_periodic_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_periodic_main, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_periodic_overrun_main(void *arg) {
+  pbl_delayed_work_reschedule(&s_wq, &s_dwork, PBL_TICKS(10));
+  pbl_thread_sleep(PBL_TICKS(120));
+  // No burst for the missed periods: each run is a tick after the one before returned.
+  cl_assert_equal_i(s_periodic_runs, 4);
+  for (int i = 1; i < 4; i++) {
+    cl_assert_equal_i(s_periodic_at[i] - s_periodic_at[i - 1], 26);
+  }
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__delayed_work_schedule_next_skips_missed_periods(void) {
+  s_periodic_runs = 0;
+  s_periodic_busy = 25;
+  pbl_delayed_work_init(&s_dwork, prv_periodic_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_periodic_overrun_main, nullptr);
+  pbl_test_kernel_run();
 }

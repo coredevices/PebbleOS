@@ -490,40 +490,6 @@ pbl_clar_test(test_sys_work
     PBL_NO_LINKER_SCRIPT
 )
 
-pbl_clar_test(test_new_timer
-  SOURCES
-    fw/services/new_timer/new_timer.c
-    kernel/tick.c
-    kernel/time.c
-    kernel/sched.c
-    kernel/timer.c
-    kernel/work.c
-    kernel/thread.c
-    kernel/mutex.c
-    kernel/sem.c
-    kernel/msgq.c
-    kernel/poll.c
-    kernel/irq.c
-    kernel/debug.c
-    kernel/arch/posix/arch.c
-    kernel/arch/posix/cycle.c
-    kernel/arch/posix/test.c
-    kernel/timekeeping.c
-    drivers/base/device.c
-    drivers/timer/timer.c
-  INCLUDES
-    kernel
-    kernel/arch
-    kernel/arch/posix/include
-  DEFINES
-    PBL_NO_LINKER_SCRIPT
-    CONFIG_DEVICE_LOG_LEVEL=0
-    CONFIG_KERNEL_IDLE_STACK_SIZE=1024
-    CONFIG_TASK_WDT_TIMEOUT_MS=5000
-    CONFIG_SERVICE_NEW_TIMER_LOG_LEVEL=0
-    CONFIG_SERVICE_NEW_TIMER_POOL_SIZE=8
-)
-
 pbl_clar_test(test_mic_capture
   SOURCES
     fw/services/mic_capture/mic_capture.c

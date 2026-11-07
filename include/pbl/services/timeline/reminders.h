@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/timeline/item.h>
 
 #include <system/status_codes.h>

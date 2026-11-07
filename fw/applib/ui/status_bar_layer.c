@@ -173,7 +173,7 @@ void status_bar_layer_init(StatusBarLayer *status_bar_layer) {
   status_bar_layer->layer.follows_theme = PBL_IF_COLOR_ELSE(system_theme_is_system_ui(), false);
   prv_refresh_theme_colors(status_bar_layer);
 
-  status_bar_layer->title_timer_id = TIMER_INVALID_ID;
+  status_bar_layer->title_timer_id = nullptr;
 }
 
 StatusBarLayer *status_bar_layer_create(void) {
@@ -197,7 +197,7 @@ void status_bar_layer_deinit(StatusBarLayer *status_bar_layer) {
   if (!prv_mode_is_clock(status_bar_layer->config.mode)) {
     prv_marquee_stop(status_bar_layer);
   }
-  if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
+  if (status_bar_layer->title_timer_id != nullptr) {
     app_timer_cancel(status_bar_layer->title_timer_id);
   }
   event_service_client_unsubscribe(&(status_bar_layer->tick_event));
@@ -250,7 +250,7 @@ void status_bar_layer_set_title(StatusBarLayer *status_bar_layer, const char *te
   utf8_truncate_with_ellipsis(text, status_bar_layer->config.title_text_buffer,
                               TITLE_TEXT_BUFFER_SIZE);
   if (revert) { // revert title text back to clock time after STATUS_BAR_LAYER_TITLE_TIMEOUT
-    if (status_bar_layer->title_timer_id != TIMER_INVALID_ID) {
+    if (status_bar_layer->title_timer_id != nullptr) {
       app_timer_cancel(status_bar_layer->title_timer_id);
     }
     status_bar_layer->title_timer_id = app_timer_register(

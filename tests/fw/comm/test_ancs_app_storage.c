@@ -22,7 +22,6 @@
 // Fakes
 ////////////////////////////////////
 
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_session.h>
 #include <fake_spi_flash.h>

@@ -22,7 +22,6 @@
 #include <pbl/services/boot_splash.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>
-#include <pbl/services/new_timer/new_timer_service.h>
 #include <pbl/services/prf_update.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/services.h>
@@ -147,7 +146,6 @@ int main(void) {
 
   events_init();
 
-  new_timer_service_init();
   regular_timer_init();
 
   // After the timer service, which the display may use

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stdio.h>
 
 #include <pbl/drivers/vibe.h>
 #include <pbl/fs/fs.h>
@@ -48,7 +49,6 @@ void prefs_sync_init(void) {
 #include <fake_accel_service.h>
 #include <fake_cron.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_std.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>

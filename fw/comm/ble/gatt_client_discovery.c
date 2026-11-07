@@ -122,7 +122,7 @@ static enum pbl_bt_errno prv_run_next_job(GAPLEConnection *connection) {
 static bool prv_discovery_handle_timeout(GAPLEConnection *connection, enum pbl_bt_errno *e) {
   bool retry_started = false;
   enum pbl_bt_errno finalize_result = PBL_BT_ERRNO_OK;
-  // Executing on NewTimer task, so need to bt_lock():
+  // Executing on the high priority work queue, so need to bt_lock():
   PBL_LOG_WRN("Service Discovery Watchdog Timeout");
   bt_lock();
   {

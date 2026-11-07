@@ -11,7 +11,6 @@
 
 // Fakes
 #include <fake_gap_le_connect_params.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_sys_work.h>
