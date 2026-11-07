@@ -13,7 +13,7 @@
  * @brief Timers whose callbacks run on the registering task's event loop.
  *
  * Callbacks run as events on the task that registered the timer (KernelMain, App or Worker), so
- * they need no locking against the rest of that task's code. Timers are backed by new timers;
+ * they need no locking against the rest of that task's code. Timers are backed by delayed work;
  * when they fire, a callback event is posted to the owning task. A one-shot timer is freed right
  * before its callback runs.
  *
@@ -69,7 +69,7 @@ void evented_timer_clear_process_timers(PebbleTask task);
  * @param callback Callback to run.
  * @param callback_data Data passed to @p callback.
  * @return Timer handle, or @ref EVENTED_TIMER_INVALID_ID if an app or worker already has
- *         CONFIG_SERVICE_EVENTED_TIMER_MAX_PER_PROCESS timers.
+ *         CONFIG_SERVICE_EVENTED_TIMER_MAX_PER_PROCESS timers or the kernel heap is out of memory.
  */
 EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
                                       EventedTimerCallback callback, void *callback_data);

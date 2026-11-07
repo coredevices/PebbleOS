@@ -6,9 +6,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -26,7 +27,6 @@ typedef struct {
   Window *window;
   SimpleMenuLayer *menu_layer;
 
-  TimerID timer[NUM_MAX_TIMERS];
   uint64_t fired_time[NUM_MAX_TIMERS];
 
   RegularTimerInfo reg_timers[NUM_MAX_TIMERS];
@@ -38,8 +38,25 @@ typedef struct {
 static TestTimersAppData *s_app_data = 0;
 
 // =================================================================================
-static void timer_callback(void *data) {
-  int idx = (int)data;
+static void timer_callback(struct pbl_work *work);
+static void long_timer_callback(struct pbl_work *work);
+static void repeating_timer_callback(struct pbl_work *work);
+static void stuck_timer_callback(struct pbl_work *work);
+
+// Static, as they must outlive the app's heap if they are still pending when it exits.
+static struct pbl_delayed_work s_timers[2] = {
+  PBL_DELAYED_WORK_INITIALIZER(timer_callback),
+  PBL_DELAYED_WORK_INITIALIZER(timer_callback),
+};
+static PBL_DELAYED_WORK_DEFINE(s_long_timer, long_timer_callback);
+static PBL_DELAYED_WORK_DEFINE(s_repeating_timer, repeating_timer_callback);
+static PBL_DELAYED_WORK_DEFINE(s_stuck_timer, stuck_timer_callback);
+
+#define REPEATING_TIMER_PERIOD_MS 500
+
+// =================================================================================
+static void timer_callback(struct pbl_work *work) {
+  int idx = container_of(work, struct pbl_delayed_work, work) - s_timers;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
   PBL_LOG_DBG("STT normal callback %d executed", idx);
   s_app_data->fired_time[idx] = pbl_uptime_ticks();
@@ -47,7 +64,14 @@ static void timer_callback(void *data) {
 }
 
 // =================================================================================
-static void stuck_timer_callback(void *data) {
+static void repeating_timer_callback(struct pbl_work *work) {
+  PBL_LOG_DBG("STT repeating callback executed");
+  s_app_data->fired_time[0] = pbl_uptime_ticks();
+  pbl_delayed_work_schedule_next(&s_repeating_timer, pbl_ms_to_ticks(REPEATING_TIMER_PERIOD_MS));
+}
+
+// =================================================================================
+static void stuck_timer_callback(struct pbl_work *work) {
   PBL_LOG_DBG("STT entering infinite loop in callback");
   while (true) {
     sys_psleep(100);
@@ -55,14 +79,18 @@ static void stuck_timer_callback(void *data) {
 }
 
 // =================================================================================
-static void long_timer_callback(void *data) {
-  int idx = (int)data;
-  PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
-  PBL_LOG_DBG("STT long running callback %d executed", idx);
-  s_app_data->fired_time[idx] = pbl_uptime_ticks();
+static void long_timer_callback(struct pbl_work *work) {
+  PBL_LOG_DBG("STT long running callback executed");
+  s_app_data->fired_time[0] = pbl_uptime_ticks();
 
   sys_psleep(250);
   return;
+}
+
+// =================================================================================
+static void app_timer_callback(void *data) {
+  PBL_LOG_DBG("STT app timer callback executed");
+  s_app_data->fired_time[0] = pbl_uptime_ticks();
 }
 
 // =================================================================================
@@ -99,21 +127,25 @@ static void reg_timer_3_callback(void *data) {
 }
 
 // =================================================================================
+static void prv_cancel_timers(void) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_timers); i++) {
+    pbl_delayed_work_cancel_sync(&s_timers[i]);
+  }
+  pbl_delayed_work_cancel_sync(&s_long_timer);
+  pbl_delayed_work_cancel_sync(&s_repeating_timer);
+}
+
+// =================================================================================
 static void menu_callback_prefix(int index, void *ctx) {
   PBL_LOG_DBG("Hit menu item %d", index);
 
   // Mark the layer to be updated
   layer_mark_dirty(simple_menu_layer_get_layer(s_app_data->menu_layer));
 
-  // Cancel and delete old timers if present
+  // Cancel old timers if present
+  prv_cancel_timers();
   for (int i = 0; i < NUM_MAX_TIMERS; i++) {
     s_app_data->fired_time[i] = 0;
-    if (s_app_data->timer[i] != TIMER_INVALID_ID) {
-      PBL_LOG_DBG("STT stopping and deleting previous timer %d", i);
-      new_timer_stop(s_app_data->timer[i]);
-      new_timer_delete(s_app_data->timer[i]);
-      s_app_data->timer[i] = TIMER_INVALID_ID;
-    }
   }
 
   if (s_app_data->app_timer != nullptr) {
@@ -133,136 +165,80 @@ static void menu_callback_prefix(int index, void *ctx) {
 
 // =================================================================================
 void single_shot_timer_menu_cb(int index, void *ctx) {
-  uint32_t zero_flags = 0;
-  uint32_t expire_ms;
-  int timer_idx_0 = 0;
-  bool scheduled = false;
-
   menu_callback_prefix(index, ctx);
 
   // Single shot timer
-  s_app_data->timer[0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[timer_idx_0], 100, timer_callback,
-                                 (void *)timer_idx_0, zero_flags);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timers[0], PBL_MSEC(100));
 
   // Make sure it's marked as scheduled
-  scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
-  PBL_ASSERTN(scheduled && expire_ms <= 100);
+  PBL_ASSERTN(pbl_delayed_work_is_pending(&s_timers[0]));
+  uint32_t expire_ms = pbl_ticks_to_ms(pbl_delayed_work_remaining(&s_timers[0]));
+  PBL_ASSERTN(expire_ms <= 100);
   PBL_LOG_DBG("STT firing in %d ms", (int)expire_ms);
 
   // Wait for it to fire
   sys_psleep(300);
-  PBL_ASSERTN(s_app_data->fired_time[timer_idx_0] != 0);
-  scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
-  PBL_ASSERTN(!scheduled);
+  PBL_ASSERTN(s_app_data->fired_time[0] != 0);
+  PBL_ASSERTN(!pbl_delayed_work_is_pending(&s_timers[0]));
 }
 
 // =================================================================================
 void repeating_timer_menu_cb(int index, void *ctx) {
-  uint32_t expire_ms;
-  int timer_idx_0 = 0;
-  bool scheduled = false;
-
   menu_callback_prefix(index, ctx);
 
   // Repeating timer
-  s_app_data->timer[timer_idx_0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[timer_idx_0], 500, timer_callback,
-                                 (void *)timer_idx_0, TIMER_START_FLAG_REPEATING);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_repeating_timer,
+                              PBL_MSEC(REPEATING_TIMER_PERIOD_MS));
 
-  scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
-  PBL_ASSERTN(scheduled && expire_ms <= 500);
+  PBL_ASSERTN(pbl_delayed_work_is_pending(&s_repeating_timer));
+  uint32_t expire_ms = pbl_ticks_to_ms(pbl_delayed_work_remaining(&s_repeating_timer));
+  PBL_ASSERTN(expire_ms <= REPEATING_TIMER_PERIOD_MS);
   PBL_LOG_DBG("STT firing in %d ms", (int)expire_ms);
 }
 
 // =================================================================================
 void two_timers_menu_cb(int index, void *ctx) {
-  uint32_t zero_flags = 0;
-  uint32_t expire_ms;
-
   menu_callback_prefix(index, ctx);
 
   // Multiple timers
-  int timer_idx_0 = 0;
-  s_app_data->timer[timer_idx_0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[timer_idx_0], 300, timer_callback,
-                                 (void *)timer_idx_0, zero_flags);
-  PBL_ASSERTN(success);
-
-  int timer_idx_1 = 1;
-  s_app_data->timer[timer_idx_1] = new_timer_create();
-  success = new_timer_start(s_app_data->timer[timer_idx_1], 100, timer_callback,
-                            (void *)timer_idx_1, zero_flags);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timers[0], PBL_MSEC(300));
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timers[1], PBL_MSEC(100));
 
   // Wait for them to fire
   sys_psleep(500);
-  PBL_ASSERTN(s_app_data->fired_time[timer_idx_0] != 0);
-  PBL_ASSERTN(s_app_data->fired_time[timer_idx_1] != 0);
-  PBL_ASSERTN(s_app_data->fired_time[timer_idx_1] < s_app_data->fired_time[timer_idx_0]);
-  bool scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_0], &expire_ms);
-  PBL_ASSERTN(!scheduled);
-  scheduled = new_timer_scheduled(s_app_data->timer[timer_idx_1], &expire_ms);
-  PBL_ASSERTN(!scheduled);
+  PBL_ASSERTN(s_app_data->fired_time[0] != 0);
+  PBL_ASSERTN(s_app_data->fired_time[1] != 0);
+  PBL_ASSERTN(s_app_data->fired_time[1] < s_app_data->fired_time[0]);
+  PBL_ASSERTN(!pbl_delayed_work_is_pending(&s_timers[0]));
+  PBL_ASSERTN(!pbl_delayed_work_is_pending(&s_timers[1]));
 }
 
 // =================================================================================
-void deferred_delete_menu_cb(int index, void *ctx) {
-  void *cb_data = 0;
-  uint32_t zero_flags = 0;
-
+void cancel_while_running_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
-  // Deferred delete
-  s_app_data->timer[0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data, zero_flags);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_long_timer, PBL_MSEC(1));
   sys_psleep(50);
 
-  // Stop and then delete it
-  success = new_timer_stop(s_app_data->timer[0]);
-  PBL_ASSERTN(!success); /* stop returns false if callback is running */
-  new_timer_delete(s_app_data->timer[0]);
-  s_app_data->timer[0] = TIMER_INVALID_ID;
-}
+  // A plain cancel finds nothing pending and leaves the callback running
+  PBL_ASSERTN(pbl_work_is_running(&s_long_timer.work));
+  PBL_ASSERTN(!pbl_delayed_work_cancel(&s_long_timer));
+  PBL_ASSERTN(pbl_work_is_running(&s_long_timer.work));
 
-// =================================================================================
-void fail_if_executing_menu_cb(int index, void *ctx) {
-  void *cb_data = 0;
-  uint32_t zero_flags = 0;
-
-  menu_callback_prefix(index, ctx);
-
-  // fail if executing
-  s_app_data->timer[0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data, zero_flags);
-  PBL_ASSERTN(success);
-  sys_psleep(50);
-
-  // try and reschedule while it's executing
-  success = new_timer_start(s_app_data->timer[0], 1, long_timer_callback, cb_data,
-                            TIMER_START_FLAG_FAIL_IF_EXECUTING);
-  PBL_ASSERTN(!success);
+  // A sync cancel waits for it
+  pbl_delayed_work_cancel_sync(&s_long_timer);
+  PBL_ASSERTN(!pbl_work_is_running(&s_long_timer.work));
 }
 
 // =================================================================================
 void fail_if_scheduled_menu_cb(int index, void *ctx) {
-  void *cb_data = 0;
-  uint32_t zero_flags = 0;
-
   menu_callback_prefix(index, ctx);
 
   // fail if scheduled
-  s_app_data->timer[0] = new_timer_create();
-  bool success = new_timer_start(s_app_data->timer[0], 100, timer_callback, cb_data, zero_flags);
-  PBL_ASSERTN(success);
+  PBL_ASSERTN(pbl_delayed_work_schedule(&pbl_sys_workq_high, &s_timers[0], PBL_MSEC(100)));
 
   // try and reschedule while it's already scheduled
-  success = new_timer_start(s_app_data->timer[0], 1, timer_callback, cb_data,
-                            TIMER_START_FLAG_FAIL_IF_SCHEDULED);
-  PBL_ASSERTN(!success);
+  PBL_ASSERTN(!pbl_delayed_work_schedule(&pbl_sys_workq_high, &s_timers[0], PBL_MSEC(1)));
 }
 
 // =================================================================================
@@ -272,33 +248,16 @@ void evented_timer_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
   // Test evented_timer
-  s_app_data->app_timer = app_timer_register(100 /*ms*/, timer_callback, cb_data);
+  s_app_data->app_timer = app_timer_register(100 /*ms*/, app_timer_callback, cb_data);
   PBL_ASSERTN(s_app_data->app_timer);
 }
 
 // =================================================================================
 void stuck_callback_menu_cb(int index, void *ctx) {
-  void *cb_data = 0;
-  uint32_t zero_flags = 0;
-
   menu_callback_prefix(index, ctx);
 
   // stuck callback
-  s_app_data->timer[0] = new_timer_create();
-  bool success =
-      new_timer_start(s_app_data->timer[0], 100, stuck_timer_callback, cb_data, zero_flags);
-  PBL_ASSERTN(success);
-}
-
-// =================================================================================
-void invalid_timer_id_menu_cb(int index, void *ctx) {
-  void *cb_data = 0;
-  uint32_t zero_flags = 0;
-
-  menu_callback_prefix(index, ctx);
-
-  // invalid timer id
-  new_timer_start(0x12345678, 100, timer_callback, cb_data, zero_flags);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_stuck_timer, PBL_MSEC(100));
 }
 
 // =================================================================================
@@ -356,12 +315,10 @@ static void prv_window_load(Window *window) {
     {.title = "single-shot timer", .callback = single_shot_timer_menu_cb},
     {.title = "repeating timer", .callback = repeating_timer_menu_cb},
     {.title = "two timers", .callback = two_timers_menu_cb},
-    {.title = "deferred delete", .callback = deferred_delete_menu_cb},
-    {.title = "fail if executing", .callback = fail_if_executing_menu_cb},
+    {.title = "cancel while running", .callback = cancel_while_running_menu_cb},
     {.title = "fail if scheduled", .callback = fail_if_scheduled_menu_cb},
     {.title = "evented_timer", .callback = evented_timer_menu_cb},
     {.title = "stuck callback", .callback = stuck_callback_menu_cb},
-    {.title = "invalid timer ID", .callback = invalid_timer_id_menu_cb},
     {.title = "RT: sch 1 sec from cb", .callback = reg_timer_schedule_1sec_from_cb_menu_cb},
     {.title = "RT: sch 1 min from cb", .callback = reg_timer_schedule_1min_from_cb_menu_cb},
     {.title = "RT: delete from cb", .callback = reg_timer_delete_from_cb_menu_cb},
@@ -405,6 +362,7 @@ static void handle_init(void) {
 }
 
 static void handle_deinit(void) {
+  prv_cancel_timers();
   // Don't bother freeing anything, the OS should be re-initing the heap.
 }
 

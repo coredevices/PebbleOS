@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
@@ -15,16 +15,17 @@ static Window *window;
 static PBL_MUTEX_DEFINE(s_mutex);
 static PBL_MUTEX_DEFINE(s_mutex2);
 
-static void callback(void *data) {
-  PBL_LOG_DBG("Locking mutex 2 (new timer)");
+static void callback(struct pbl_work *work) {
+  PBL_LOG_DBG("Locking mutex 2 (work)");
   pbl_mutex_lock(&s_mutex2, PBL_FOREVER);
-  PBL_LOG_DBG("Locking mutex 1 (new timer)");
+  PBL_LOG_DBG("Locking mutex 1 (work)");
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 }
 
+static PBL_DELAYED_WORK_DEFINE(s_work, callback);
+
 static void deadlock(void) {
-  TimerID timer = new_timer_create();
-  new_timer_start(timer, 10, callback, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_work, PBL_MSEC(10));
 
   PBL_LOG_DBG("Locking mutex 1");
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
