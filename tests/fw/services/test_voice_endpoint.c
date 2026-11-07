@@ -27,6 +27,8 @@ static uint8_t s_num_attributes;
 static int s_num_dictation_results;
 static char *s_reminder_str = nullptr;
 static time_t s_timestamp;
+static char *s_retry_service_name = nullptr;
+static int s_retry_count;
 
 static const Uuid s_uuid_invalid = UUID_INVALID;
 
@@ -82,6 +84,19 @@ void voice_handle_nlp_result(VoiceEndpointResult result, AudioEndpointSessionId 
   s_session_id = session_id;
 }
 
+void voice_handle_service_retry(AudioEndpointSessionId session_id, const char *service_name) {
+  if (s_retry_service_name) {
+    free(s_retry_service_name);
+    s_retry_service_name = nullptr;
+  }
+  if (service_name) {
+    s_retry_service_name = malloc(strlen(service_name) + 1);
+    strcpy(s_retry_service_name, service_name);
+  }
+  s_session_id = session_id;
+  s_retry_count++;
+}
+
 // setup and teardown
 void test_voice_endpoint__initialize(void) {
   s_session_type = 0;
@@ -92,6 +107,7 @@ void test_voice_endpoint__initialize(void) {
   s_app_uuid = UUID_INVALID;
 
   s_timestamp = 0;
+  s_retry_count = 0;
 
   fake_comm_session_init();
   s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
@@ -108,6 +124,10 @@ void test_voice_endpoint__cleanup(void) {
   if (s_reminder_str) {
     free(s_reminder_str);
     s_reminder_str = nullptr;
+  }
+  if (s_retry_service_name) {
+    free(s_retry_service_name);
+    s_retry_service_name = nullptr;
   }
 }
 
@@ -130,6 +150,7 @@ static void prv_test_session_setup_msg(uint16_t endpoint_id, const uint8_t *data
 
   bool app_initiated = msg->flags.app_initiated != 0;
   cl_assert_equal_b(app_initiated, s_app_initiated);
+  cl_assert_equal_b(msg->flags.service_retry_support != 0, true);
 
   if (!app_initiated) {
     uint8_t expected_attr_data[] = {
@@ -784,4 +805,68 @@ void test_voice_endpoint__handle_nlp_result_with_app_id(void) {
   fake_system_task_callbacks_invoke_pending();
   // Just make sure we don't crash or do anything weird. We just ignore the app uuid for now
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
+}
+
+void test_voice_endpoint__handle_service_retry(void) {
+  uint8_t service_retry[] = {
+    0x04,                   // Message ID: Service retry
+    0x00, 0x00, 0x00, 0x00, // flags
+    0x11, 0x22,             // Audio streaming session ID
+
+    0x01, // attribute list - num attributes
+
+    0x06,       // attribute type - service name
+    0x06, 0x00, // attribute length
+    'G',  'o',  'o',  'g',  'l', 'e',
+  };
+
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry, sizeof(service_retry));
+  cl_assert_equal_i(s_retry_count, 1);
+  cl_assert_equal_i(s_session_id, 0x2211);
+  cl_assert(s_retry_service_name != nullptr);
+  cl_assert_equal_s(s_retry_service_name, "Google");
+
+  // Service name attribute missing: ignored
+  uint8_t service_retry_no_name[] = {
+    0x04,                   // Message ID: Service retry
+    0x00, 0x00, 0x00, 0x00, // flags
+    0x11, 0x22,             // Audio streaming session ID
+
+    0x01, // attribute list - num attributes
+
+    0x05,       // attribute type - timestamp (wrong attribute)
+    0x04, 0x00, // attribute length
+    0x01, 0x02, 0x03, 0x04,
+  };
+  s_session_id = 0;
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry_no_name,
+                                       sizeof(service_retry_no_name));
+  cl_assert_equal_i(s_retry_count, 1);
+  cl_assert_equal_i(s_session_id, 0);
+
+  // Empty service name: ignored
+  uint8_t service_retry_empty_name[] = {
+    0x04,                   // Message ID: Service retry
+    0x00, 0x00, 0x00, 0x00, // flags
+    0x11, 0x22,             // Audio streaming session ID
+
+    0x01, // attribute list - num attributes
+
+    0x06,       // attribute type - service name
+    0x00, 0x00, // attribute length
+  };
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry_empty_name,
+                                       sizeof(service_retry_empty_name));
+  cl_assert_equal_i(s_retry_count, 1);
+  cl_assert_equal_i(s_session_id, 0);
+
+  // Message too short to hold the header: ignored
+  uint8_t service_retry_short[] = {
+    0x04,                   // Message ID: Service retry
+    0x00, 0x00, 0x00, 0x00, // flags
+    0x11,                   // truncated session ID
+  };
+  voice_endpoint_protocol_msg_callback(nullptr, service_retry_short, sizeof(service_retry_short));
+  cl_assert_equal_i(s_retry_count, 1);
+  cl_assert_equal_i(s_session_id, 0);
 }

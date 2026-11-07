@@ -740,6 +740,56 @@ unlock:
   pbl_mutex_unlock(&s_lock);
 }
 
+// The phone has switched to a different dictation service for the session in progress. Restart
+// whichever timeout is pending so the watch does not give up on the session.
+void voice_handle_service_retry(AudioEndpointSessionId session_id, const char *service_name) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+
+  if (s_state == SessionState_Idle) {
+    PBL_LOG_WRN("Service retry received when no session was in progress");
+    goto unlock;
+  }
+
+  if (s_session_id != session_id) {
+    PBL_LOG_WRN("Service retry received for wrong session (Expected: %" PRIu16
+                "; Received: %" PRIu16 ")",
+                s_session_id, session_id);
+    goto unlock;
+  }
+
+  switch (s_state) {
+    case SessionState_StartSession:
+    case SessionState_VoiceEndpointSetupReceived:
+    case SessionState_AudioEndpointSetupReceived:
+      // Still waiting for the phone to accept the session
+      s_timeout_generation = s_session_generation;
+      new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, nullptr, 0);
+      break;
+    case SessionState_WaitForSessionResult:
+      // Audio has been sent, waiting for the transcription
+      s_timeout_generation = s_session_generation;
+      prv_start_result_timeout();
+      break;
+    case SessionState_Recording:
+    default:
+      // No phone-dependent timeout is running while recording. Nothing to feed.
+      PBL_LOG_WRN("Service retry received while recording, ignoring");
+      goto unlock;
+  }
+
+  PBL_LOG_DBG("Phone retrying dictation with service '%s'", service_name);
+
+  const size_t name_size = strlen(service_name) + 1;
+  const size_t event_size = sizeof(PebbleVoiceServiceEventData) + name_size;
+  PebbleVoiceServiceEventData *event_data = pbl_zalloc_check(event_size);
+  memcpy(event_data->sentence, service_name, name_size);
+
+  prv_send_event(VoiceEventTypeServiceRetry, VoiceStatusSuccess, event_data);
+
+unlock:
+  pbl_mutex_unlock(&s_lock);
+}
+
 PBL_SYSCALL(VoiceSessionId, sys_voice_start_dictation,
             (VAL, VoiceEndpointSessionType, session_type)) {
   if ((session_type >= VoiceEndpointSessionTypeCount) ||

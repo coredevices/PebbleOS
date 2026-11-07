@@ -7,6 +7,7 @@
 #include "transcription_dialog.h"
 #include "voice_window_private.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
@@ -70,6 +71,7 @@ static void prv_start_dictation(VoiceUiData *data);
 static void prv_stop_dictation(VoiceUiData *data);
 static void prv_cancel_dictation(VoiceUiData *data);
 static void prv_set_mic_window_state(VoiceUiData *data, VoiceUiState state);
+static void prv_show_retry_text(VoiceUiData *data, PebbleVoiceServiceEvent *event);
 static PropertyAnimation *prv_create_int16_prop_anim(int16_t from, int16_t to, uint32_t duration,
                                                      const PropertyAnimationImplementation *impl,
                                                      void *subject);
@@ -493,11 +495,18 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
       if (event->type == VoiceEventTypeSessionSetup) {
         prv_handle_ready_event(data, event);
       }
+      if (event->type == VoiceEventTypeServiceRetry) {
+        // The voice service has already extended its timeout; just tell the user
+        prv_show_retry_text(data, event);
+      }
       break;
 
     case StateWaitForResponse:
       if (event->type == VoiceEventTypeSessionResult) {
         prv_handle_dictation_result(data, event);
+      }
+      if (event->type == VoiceEventTypeServiceRetry) {
+        prv_show_retry_text(data, event);
       }
       break;
 
@@ -516,6 +525,9 @@ static void prv_voice_event_handler(PebbleEvent *e, void *context) {
 
         app_timer_cancel(data->dictation_timeout);
         prv_handle_dictation_result(data, event);
+      }
+      if (event->type == VoiceEventTypeServiceRetry) {
+        prv_show_retry_text(data, event);
       }
       break;
 
@@ -668,6 +680,21 @@ static void prv_hide_mic_text(VoiceUiData *data) {
 static void prv_show_mic_text(VoiceUiData *data, const char *msg) {
   layer_set_hidden((Layer *)&data->mic_window.text_layer, false);
   sys_i18n_get_with_buffer(msg, data->mic_window.text_buffer, sizeof(data->mic_window.text_buffer));
+  text_layer_set_text(&data->mic_window.text_layer, data->mic_window.text_buffer);
+}
+
+// Show "Retrying with <service>" using the service name carried in a service retry event
+static void prv_show_retry_text(VoiceUiData *data, PebbleVoiceServiceEvent *event) {
+  char service_name[32];
+  if (sys_voice_get_transcription_from_event(event, service_name, sizeof(service_name)) == 0) {
+    PBL_LOG_DBG("Service retry event without a service name");
+    return;
+  }
+
+  char fmt[32];
+  sys_i18n_get_with_buffer(i18n_noop("Retrying with %s"), fmt, sizeof(fmt));
+  snprintf(data->mic_window.text_buffer, sizeof(data->mic_window.text_buffer), fmt, service_name);
+  layer_set_hidden((Layer *)&data->mic_window.text_layer, false);
   text_layer_set_text(&data->mic_window.text_layer, data->mic_window.text_buffer);
 }
 
@@ -1131,12 +1158,14 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
 
     case StateStopWaitForResponse:
       // shrink progress bar
+      prv_hide_mic_text(data);
       prv_shrink_progress_bar(data);
       break;
 
     case StateTransitionToText:
       // fly dot out
       prv_hide_unfold_animation(data);
+      prv_hide_mic_text(data);
       prv_hide_progress_bar(data);
       prv_hide_mic_dot(data);
       prv_fly_dot(data, false /* fly out */);

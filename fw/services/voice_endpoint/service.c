@@ -143,6 +143,25 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
   voice_handle_nlp_result(msg->result, msg->session_id, reminder_str, timestamp);
   pbl_free(reminder_str);
 }
+
+static void prv_handle_service_retry(ServiceRetryMsg *msg, size_t size) {
+  const size_t attr_list_size =
+      size - sizeof(ServiceRetryMsg) + sizeof(struct pbl_generic_attr_list);
+
+  struct pbl_generic_attr *name_attr =
+      pbl_generic_attr_find(&msg->attr_list, VEAttributeIdServiceName, attr_list_size);
+  if (!name_attr || name_attr->length == 0) {
+    PBL_LOG_WRN("No service name attribute found in service retry message");
+    return;
+  }
+
+  char *service_name = pbl_zalloc_check(name_attr->length + 1);
+  memcpy(service_name, name_attr->data, name_attr->length);
+  service_name[name_attr->length] = '\0';
+
+  voice_handle_service_retry(msg->session_id, service_name);
+  pbl_free(service_name);
+}
 #endif
 
 #ifdef CONFIG_MIC
@@ -197,6 +216,15 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
       }
       break;
     }
+    case MsgIdServiceRetry: {
+      if (size >= sizeof(ServiceRetryMsg)) {
+        ServiceRetryMsg *msg = (ServiceRetryMsg *)data;
+        prv_handle_service_retry(msg, size);
+      } else {
+        PBL_LOG_WRN("Invalid size for service retry message %zu", size);
+      }
+      break;
+    }
     default:
       // Ignore invalid message ID
       PBL_LOG_WRN("Invalid message ID");
@@ -228,10 +256,12 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
     .attr_list.num_attributes = 1,
   };
 
+  // Set the flags after struct initialization because the rest of the fields in the bitfield are
+  // left uninitialized if just one is set.
+  msg->flags.service_retry_support = 1;
+
   struct pbl_generic_attr *attr = msg->attr_list.attributes;
   if (app_uuid) {
-    // set this after struct initialization because the rest of the fields in the bitfield are left
-    // uninitialized if just one is set.
     msg->flags.app_initiated = 1;
 
     // we're also sending the app UUID
