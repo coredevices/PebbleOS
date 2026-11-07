@@ -7,10 +7,6 @@
 
 static struct pbl_timer *s_timers;
 
-static inline bool prv_before(pbl_tick_t a, pbl_tick_t b) {
-  return (int32_t)(a - b) < 0;
-}
-
 static void prv_remove(struct pbl_timer *timer) {
   struct pbl_timer **link = &s_timers;
   while (*link && *link != timer) {
@@ -33,9 +29,9 @@ void pbl_timer_start(struct pbl_timer *timer, pbl_timeout_t delay) {
   if (timer->active) {
     prv_remove(timer);
   }
-  timer->expires = sched_ticks() + (delay.ticks > 0 ? delay.ticks : 1);
+  timer->expires = sched_uptime_ticks() + (delay.ticks > 0 ? delay.ticks : 1);
   struct pbl_timer **link = &s_timers;
-  while (*link && !prv_before(timer->expires, (*link)->expires)) {
+  while (*link && (*link)->expires <= timer->expires) {
     link = &(*link)->next;
   }
   timer->next = *link;
@@ -56,11 +52,23 @@ bool pbl_timer_is_active(const struct pbl_timer *timer) {
   return timer->active;
 }
 
+pbl_tick_t pbl_timer_remaining(const struct pbl_timer *timer) {
+  pbl_tick_t remaining = 0;
+
+  pbl_irq_lock();
+  uint64_t now = sched_uptime_ticks();
+  if (timer->active && timer->expires > now) {
+    remaining = (pbl_tick_t)(timer->expires - now);
+  }
+  pbl_irq_unlock();
+  return remaining;
+}
+
 void timer_expire(void) {
   for (;;) {
     pbl_irq_lock();
     struct pbl_timer *timer = s_timers;
-    if (timer == nullptr || prv_before(sched_ticks(), timer->expires)) {
+    if (timer == nullptr || sched_uptime_ticks() < timer->expires) {
       pbl_irq_unlock();
       return;
     }
@@ -72,12 +80,15 @@ void timer_expire(void) {
   }
 }
 
-pbl_tick_t timer_ticks_until_next(pbl_tick_t now) {
+pbl_tick_t timer_ticks_until_next(uint64_t now) {
   if (s_timers == nullptr) {
     return PBL_TICK_FOREVER;
   }
-  int32_t delta = (int32_t)(s_timers->expires - now);
-  return delta > 0 ? (pbl_tick_t)delta : 0;
+  if (s_timers->expires <= now) {
+    return 0;
+  }
+  uint64_t delta = s_timers->expires - now;
+  return delta < PBL_TICK_FOREVER ? (pbl_tick_t)delta : PBL_TICK_FOREVER - 1;
 }
 
 void timer_reset_for_test(void) {

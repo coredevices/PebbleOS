@@ -35,7 +35,7 @@ typedef void (*pbl_timer_fn_t)(struct pbl_timer *timer);
 struct pbl_timer {
   /** @cond INTERNAL_HIDDEN */
   struct pbl_timer *next;
-  pbl_tick_t expires;
+  uint64_t expires;
   bool active;
   /** @endcond */
   /** Callback. */
@@ -79,5 +79,13 @@ void pbl_timer_stop(struct pbl_timer *timer);
  * @return True from pbl_timer_start() until it expires or is stopped.
  */
 bool pbl_timer_is_active(const struct pbl_timer *timer);
+
+/**
+ * @brief Get the time left on a timer.
+ *
+ * @param timer Timer.
+ * @return Ticks until it expires, 0 if it is not active.
+ */
+pbl_tick_t pbl_timer_remaining(const struct pbl_timer *timer);
 
 /** @} */

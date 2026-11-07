@@ -204,7 +204,7 @@ void timekeeping_idle(pbl_tick_t ticks) {
   prv_announce();
   // Programming drops the tick that woke the CPU up, and only the ISR runs timers.
   uint64_t now = sched_uptime_ticks();
-  prv_program(timer_ticks_until_next((pbl_tick_t)now) == 0U ? now : now + 1U);
+  prv_program(timer_ticks_until_next(now) == 0U ? now : now + 1U);
   pbl_irq_unlock();
 }
 
