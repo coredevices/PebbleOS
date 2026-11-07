@@ -19,8 +19,8 @@
 ////////////////////////////////////////////////////////////////
 #include <fake_events.h>
 #include <fake_mutex.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_work.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -253,7 +253,7 @@ void test_mic_stream__initialize(void) {
   s_stream_id = 0;
   s_setup_sessions = 0;
   s_setup_had_uuid = false;
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
   mic_manager_init();
   mic_stream_service_init();
 }
@@ -262,7 +262,7 @@ void test_mic_stream__cleanup(void) {
   mic_stream_service_stop(PebbleTask_App);
   mic_manager_release(MicClientVoiceDictation);
   fake_mutex_assert_all_unlocked();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
   fake_pbl_malloc_check_net_allocs();
 }
 
@@ -351,7 +351,9 @@ void test_mic_stream__refused_by_phone(void) {
 
 void test_mic_stream__setup_timeout(void) {
   prv_start_ok();
-  cl_assert(stub_new_timer_fire(stub_new_timer_get_next()));
+  struct pbl_delayed_work *timer = fake_work_get_next();
+  cl_assert(timer != nullptr);
+  fake_work_fire(timer);
   cl_assert(!mic_stream_service_is_active());
   cl_assert_equal_i(1, s_transfer_cancelled_count);
   prv_assert_stopped_event(MicStreamServiceStopReasonPhone);

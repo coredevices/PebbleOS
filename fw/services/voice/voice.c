@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
@@ -16,7 +17,6 @@
 #include <pbl/services/mic_stream.h>
 #endif
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/voice/transcription.h>
 #include <pbl/services/voice/voice.h>
 #include <pbl/services/voice/voice_speex.h>
@@ -55,7 +55,11 @@ static VoiceEndpointSessionType s_session_type;
 static Uuid s_app_uuid;
 
 static AudioEndpointSessionId s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-static TimerID s_timeout = TIMER_INVALID_ID;
+
+static void prv_session_setup_timeout(struct pbl_work *work);
+static void prv_session_result_timeout(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_setup_timeout, prv_session_setup_timeout);
+static PBL_DELAYED_WORK_DEFINE(s_result_timeout, prv_session_result_timeout);
 
 // Session generation & teardown guards to mitigate race conditions between explicit cancel
 // and timeout callbacks executing on the timer thread.
@@ -65,7 +69,6 @@ static bool s_teardown_in_progress = false; // Debounce concurrent teardown path
 
 static void prv_send_event(VoiceEventType event_type, VoiceStatus status,
                            PebbleVoiceServiceEventData *data);
-static void prv_session_result_timeout(void *data);
 
 static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *context) {
   if (!voice_speex_is_initialized()) {
@@ -155,8 +158,15 @@ static void prv_cancel_session(void) {
   prv_reset();
 }
 
+static void prv_stop_timeouts(void) {
+  pbl_delayed_work_cancel(&s_setup_timeout);
+  pbl_delayed_work_cancel(&s_result_timeout);
+}
+
 static void prv_start_result_timeout(void) {
-  new_timer_start(s_timeout, TIMEOUT_SESSION_RESULT, prv_session_result_timeout, nullptr, 0);
+  pbl_delayed_work_cancel(&s_setup_timeout);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_result_timeout,
+                              PBL_MSEC(TIMEOUT_SESSION_RESULT));
 }
 
 static void prv_audio_transfer_stopped_handler(AudioEndpointSessionId session_id) {
@@ -253,7 +263,7 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
     PBL_LOG_DBG("Both subsystems ready, transitioning to Recording state");
     s_state = SessionState_Recording;
 
-    new_timer_stop(s_timeout);
+    prv_stop_timeouts();
 
     PBL_LOG_DBG("Starting recording now that both subsystems are ready");
     if (!prv_start_recording()) {
@@ -268,7 +278,7 @@ static void prv_handle_subsystem_started(SessionState transition_to_state) {
   }
 }
 
-static void prv_session_result_timeout(void *data) {
+static void prv_session_result_timeout(struct pbl_work *work) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
@@ -289,7 +299,7 @@ static void prv_session_result_timeout(void *data) {
   pbl_mutex_unlock(&s_lock);
 }
 
-static void prv_session_setup_timeout(void *data) {
+static void prv_session_setup_timeout(struct pbl_work *work) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_teardown_in_progress || (s_timeout_generation != s_session_generation)) {
     PBL_LOG_DBG("Ignoring stale session setup timeout (t_gen=%" PRIu32 " cur=%" PRIu32
@@ -434,11 +444,10 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   voice_endpoint_setup_session(session_type, s_session_id, &transfer_info,
                                s_from_app ? &s_app_uuid : nullptr);
 
-  if (s_timeout == TIMER_INVALID_ID) {
-    s_timeout = new_timer_create();
-  }
   s_timeout_generation = s_session_generation;
-  new_timer_start(s_timeout, TIMEOUT_SESSION_SETUP, prv_session_setup_timeout, nullptr, 0);
+  pbl_delayed_work_cancel(&s_result_timeout);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_setup_timeout,
+                              PBL_MSEC(TIMEOUT_SESSION_SETUP));
 
   PBL_LOG_DBG("Audio transfer setup complete, handling subsystem started");
   prv_handle_subsystem_started(SessionState_AudioEndpointSetupReceived);
@@ -477,8 +486,10 @@ void voice_cancel_dictation(VoiceSessionId session_id) {
   }
 
   if (s_state != SessionState_Idle) {
-    bool stopped = new_timer_stop(s_timeout);
-    if (!stopped) {
+    const bool running =
+        pbl_work_is_running(&s_setup_timeout.work) || pbl_work_is_running(&s_result_timeout.work);
+    prv_stop_timeouts();
+    if (running) {
       // Timer callback in progress or already firing; invalidate generation so callback no-ops
       s_timeout_generation = 0;
       PBL_LOG_DBG("Timeout stop race (cancel), invalidating timeout generation");
@@ -574,7 +585,7 @@ void voice_handle_session_setup_result(VoiceEndpointResult result,
 done:
   if (has_error) {
     PBL_LOG_DBG("Session setup had errors, stopping timeout timer");
-    new_timer_stop(s_timeout);
+    prv_stop_timeouts();
   } else {
     PBL_LOG_DBG("Session setup complete, notifying voice endpoint subsystem started");
     prv_handle_subsystem_started(SessionState_VoiceEndpointSetupReceived);
@@ -615,7 +626,7 @@ static bool prv_handle_dictation_nlp_result_common(VoiceEndpointResult result,
   }
 
   // stop timer before changing state variable
-  new_timer_stop(s_timeout);
+  prv_stop_timeouts();
 
   if (s_state != SessionState_WaitForSessionResult) {
     // This handles erroneous replies from the phone app (sometimes the phone app sends a session

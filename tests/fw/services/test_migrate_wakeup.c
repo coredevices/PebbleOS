@@ -14,7 +14,6 @@
 // Fakes
 //////////////////////////////////////////////////////////
 #include <fake_app_manager.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>

@@ -11,8 +11,8 @@
 #include <pbl/util/units.h>
 
 #include <clar.h>
-#include <fake_new_timer.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -27,7 +27,9 @@ extern const uint32_t LIGHT_FADE_STEPS;
 // Stubs
 ///////////////////////////////////////////////////////////
 
-static TimerID s_light_timer;
+extern struct pbl_delayed_work *light_test_get_timer(void);
+
+static struct pbl_delayed_work *s_light_timer;
 
 static uint8_t s_backlight_brightness;
 static bool s_backlight_enabled = true;
@@ -147,25 +149,25 @@ static uint8_t get_expected_brightness() {
 
 static void check_on(void) {
   cl_assert_equal_i(s_backlight_brightness, get_expected_brightness());
-  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+  cl_assert(!fake_work_is_scheduled(s_light_timer));
 }
 
 static void check_on_timed(void) {
   cl_assert_equal_i(s_backlight_brightness, get_expected_brightness());
-  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+  cl_assert(fake_work_is_scheduled(s_light_timer));
 }
 
 // Go from timed to part way through fading
 static void check_on_timed_and_consume_partial(void) {
   check_on_timed();
 
-  stub_new_timer_fire(s_light_timer);
+  fake_work_fire(s_light_timer);
 
   const uint8_t fade_brightness = 100 - (100 / LIGHT_FADE_STEPS);
   const uint8_t scaled_fade =
       DIVIDE_CEIL(fade_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
   cl_assert_equal_i(s_backlight_brightness, scaled_fade);
-  cl_assert(stub_new_timer_is_scheduled(s_light_timer));
+  cl_assert(fake_work_is_scheduled(s_light_timer));
 }
 
 static void check_on_timed_and_consume(void) {
@@ -173,16 +175,16 @@ static void check_on_timed_and_consume(void) {
 
   // Fire the time repeatedly to take us through the remaining steps.
   while (s_backlight_brightness) {
-    stub_new_timer_fire(s_light_timer);
+    fake_work_fire(s_light_timer);
   }
 
   // We're at backlight off. There should be no more timers.
-  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+  cl_assert(!fake_work_is_scheduled(s_light_timer));
 }
 
 static void check_off(void) {
   cl_assert_equal_i(s_backlight_brightness, 0);
-  cl_assert(!stub_new_timer_is_scheduled(s_light_timer));
+  cl_assert(!fake_work_is_scheduled(s_light_timer));
 }
 
 // Tests
@@ -204,7 +206,7 @@ void test_light__initialize(void) {
   pbl_cron_init();
   light_init();
   light_allow(true);
-  s_light_timer = ((StubTimer *)s_idle_timers)->id;
+  s_light_timer = light_test_get_timer();
   backlight_set_intensity(100);
   s_backlight_enabled = true;
   s_backlight_color = 0;
@@ -218,7 +220,7 @@ void test_light__cleanup(void) {
   s_backlight_brightness = 0;
   s_backlight_enabled = true;
   pbl_cron_deinit();
-  stub_new_timer_delete(s_light_timer);
+  fake_work_cleanup();
 }
 
 void test_light__scales_getafix_presets_upward(void) {

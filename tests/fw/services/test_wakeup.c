@@ -18,13 +18,13 @@
 #include <pbl/util/time.h>
 
 #include <fake_app_manager.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_sys_work.h>
 #include <fake_time.h>
+#include <fake_work.h>
 
 #define OTHER_UUID                                                                             \
   UuidMake(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, \
@@ -98,6 +98,7 @@ void test_wakeup__initialize(void) {
 }
 
 void test_wakeup__cleanup(void) {
+  fake_work_cleanup();
 }
 
 void test_wakeup__basic_checks(void) {
@@ -183,7 +184,7 @@ void test_wakeup__out_of_order_schedule(void) {
   wakeup_enable(true);
 
   // Simulate the firing of the early event
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)early_wakeup_id);
 
   // Make sure early_wakeup_id not scheduled
@@ -201,7 +202,7 @@ void test_wakeup__out_of_order_schedule(void) {
   wakeup_enable(true);
 
   // Simulate the firing of the late event
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)late_wakeup_id);
 
   // There should now be no scheduled wakeups
@@ -216,17 +217,17 @@ void test_wakeup__time_jump(void) {
   WakeupId first_wakeup_id = sys_wakeup_schedule(first_event, 0, false);
   cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), first_event);
 
-  TimerID first_timer = wakeup_get_current();
+  struct pbl_delayed_work *first_timer = wakeup_get_current();
 
   // Schedule another a minute away
   time_t second_event = sys_get_time() + WAKEUP_EVENT_WINDOW * 2;
   WakeupId second_wakeup_id = sys_wakeup_schedule(second_event, 0, false);
   cl_assert_equal_i(sys_wakeup_query(second_wakeup_id), second_event);
 
-  TimerID test_timer = wakeup_get_current();
+  struct pbl_delayed_work *test_timer = wakeup_get_current();
 
   // Wakeup should still return the first event as scheduled
-  cl_assert_equal_i(first_timer, test_timer);
+  cl_assert_equal_p(first_timer, test_timer);
 
   // Schedule another in the future
   time_t third_event = sys_get_time() + WAKEUP_EVENT_WINDOW * 3;
@@ -246,30 +247,30 @@ void test_wakeup__time_jump(void) {
   wakeup_enable(true);
 
   // fire the first wakeup event, as it is still current
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)first_wakeup_id);
 
   // The current timer should be the second event, even though it is in the past, and should
   // have a WAKEUP_CATCHUP_WINDOW second gap scheduled
-  TimerID gap_timer = wakeup_get_current();
-  cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
+  struct pbl_delayed_work *gap_timer = wakeup_get_current();
+  cl_assert_equal_i(fake_work_timeout_ms(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)second_wakeup_id);
 
   // The current timer should be the third event, with a WAKEUP_CATCHUP_WINDOW second gap again
   // (catchup)
   gap_timer = wakeup_get_current();
-  cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
+  cl_assert_equal_i(fake_work_timeout_ms(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
   pbl_realtime_set(third_event); // manually move time forward to after third event
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)third_wakeup_id);
 
   // Catchup should be finished, gap should be back to >= WAKEUP_CATCHUP_WINDOW seconds
   gap_timer = wakeup_get_current();
 
-  cl_assert_equal_b((stub_new_timer_timeout(gap_timer) / 1000) > WAKEUP_CATCHUP_WINDOW, true);
+  cl_assert_equal_b((fake_work_timeout_ms(gap_timer) / 1000) > WAKEUP_CATCHUP_WINDOW, true);
 }
 
 void test_wakeup__handle_clock_change_not_scheduled(void) {
@@ -288,16 +289,16 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   WakeupId first_wakeup_id = sys_wakeup_schedule(first_event, 0, true);
   cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), first_event);
 
-  TimerID first_timer = wakeup_get_current();
+  struct pbl_delayed_work *first_timer = wakeup_get_current();
 
   // Jump 30 seconds in the future
-  uint32_t initial_timeout = stub_new_timer_timeout(first_timer);
+  uint32_t initial_timeout = fake_work_timeout_ms(first_timer);
   uint32_t time_jump_seconds = 30;
   pbl_realtime_set(sys_get_time() + time_jump_seconds);
 
   // Notify clock change and record change in new timer
   wakeup_handle_clock_change();
-  uint32_t final_timeout = stub_new_timer_timeout(first_timer);
+  uint32_t final_timeout = fake_work_timeout_ms(first_timer);
 
   // Compare to expected value for new timer
   cl_assert_equal_i(final_timeout, initial_timeout - time_jump_seconds * 1000);
@@ -313,7 +314,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   // There should be a missed wakeup event and a popup displayed
   cl_assert_equal_b(s_popup_occurred, true);
   // Make sure the wakeup event is no longer scheduled
-  cl_assert_equal_i(sys_wakeup_query(first_timer), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), E_DOES_NOT_EXIST);
 }
 
 void test_wakeup__id_independent_of_timestamp(void) {
@@ -406,12 +407,12 @@ void test_wakeup__simultaneous_events_spaced(void) {
   WakeupId second_id = (first_id == wakeup_id) ? other_id : wakeup_id;
   cl_assert(first_id == wakeup_id || first_id == other_id);
 
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)first_id);
 
   // The second event is delayed instead of preempting the first one right away
   cl_assert_equal_i(wakeup_get_next_scheduled(), second_id);
-  cl_assert_equal_i(stub_new_timer_timeout(wakeup_get_current()) / 1000, WAKEUP_CATCHUP_WINDOW);
+  cl_assert_equal_i(fake_work_timeout_ms(wakeup_get_current()) / 1000, WAKEUP_CATCHUP_WINDOW);
 }
 
 void test_wakeup__far_future_not_early(void) {
@@ -422,18 +423,18 @@ void test_wakeup__far_future_not_early(void) {
   cl_assert(wakeup_id > 0);
   cl_assert_equal_i(wakeup_get_next_scheduled(), wakeup_id);
 
-  uint32_t timeout_s = stub_new_timer_timeout(wakeup_get_current()) / 1000;
+  uint32_t timeout_s = fake_work_timeout_ms(wakeup_get_current()) / 1000;
   cl_assert(timeout_s > 0);
   cl_assert(timeout_s < event_time - start_time);
 
   // The timer expiring before the event is due re-arms it instead of firing
   pbl_realtime_set(start_time + timeout_s);
-  stub_new_timer_fire(wakeup_get_current());
+  fake_work_fire(wakeup_get_current());
   wakeup_dispatcher_sys_work((void *)(uintptr_t)wakeup_id);
 
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), event_time);
   cl_assert_equal_i(wakeup_get_next_scheduled(), wakeup_id);
-  cl_assert(stub_new_timer_timeout(wakeup_get_current()) / 1000 > 0);
+  cl_assert(fake_work_timeout_ms(wakeup_get_current()) / 1000 > 0);
 }
 
 void test_wakeup__dispatch_leaves_stationary(void) {

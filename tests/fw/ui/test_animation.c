@@ -24,10 +24,10 @@
 
 // Fakes
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 #define TEST_INCLUDE_BASIC
 #define TEST_INCLUDE_COMPLEX
@@ -75,7 +75,7 @@ void graphics_context_set_drawing_state(GContext *ctx, GDrawState draw_state) {
 void window_schedule_render(struct Window *window) {
 }
 
-TimerID animation_service_test_get_timer_id(void);
+struct pbl_delayed_work *animation_service_test_get_timer(void);
 
 // --------------------------------------------------------------------------------------
 static void cl_assert_equal_point(const GPoint a, const GPoint b) {
@@ -149,22 +149,18 @@ static void prv_advance_by_ms_no_timers(uint64_t ms_delta) {
 // Fire the timer used by the animation service. Before doing so, advance the time to when
 // the timer would fire next.
 static void prv_fire_animation_timer(void) {
-  TimerID sys_timer_id = animation_service_test_get_timer_id();
-  if (!sys_timer_id) {
-    DPRINTF("timer not scheduled\n");
-    return;
-  }
-  if (!stub_new_timer_is_scheduled(sys_timer_id)) {
+  struct pbl_delayed_work *sys_timer_id = animation_service_test_get_timer();
+  if (!fake_work_is_scheduled(sys_timer_id)) {
     DPRINTF("timer not scheduled\n");
     return;
   }
 
   // Advance time
-  uint32_t ms_delta = stub_new_timer_timeout(sys_timer_id);
+  uint32_t ms_delta = fake_work_timeout_ms(sys_timer_id);
   prv_advance_by_ms_no_timers(ms_delta);
 
   // This posts a callback event to the KernelMain event queue
-  stub_new_timer_fire(sys_timer_id);
+  fake_work_fire(sys_timer_id);
 
   // Get the callback event and process it
   PebbleEvent evt = fake_event_get_last();
@@ -178,21 +174,15 @@ static void prv_advance_to_ms_with_timers(uint64_t dst_time) {
   uint64_t now = prv_now_ms();
 
   while (now < dst_time) {
-    TimerID sys_timer_id = animation_service_test_get_timer_id();
-    if (!sys_timer_id) {
-      DPRINTF("timer not created\n");
-      prv_advance_by_ms_no_timers(dst_time - now);
-      return;
-    }
-
-    if (!stub_new_timer_is_scheduled(sys_timer_id)) {
+    struct pbl_delayed_work *sys_timer_id = animation_service_test_get_timer();
+    if (!fake_work_is_scheduled(sys_timer_id)) {
       DPRINTF("timer not scheduled\n");
       prv_advance_by_ms_no_timers(dst_time - now);
       return;
     }
 
     // Advance time to when timer would fire and fire it
-    uint32_t ms_delta = stub_new_timer_timeout(sys_timer_id);
+    uint32_t ms_delta = fake_work_timeout_ms(sys_timer_id);
     if (ms_delta < dst_time - now) {
       prv_fire_animation_timer();
     } else {

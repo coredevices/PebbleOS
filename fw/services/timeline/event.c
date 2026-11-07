@@ -7,6 +7,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/sys_work.h>
@@ -40,8 +41,6 @@ static bool s_initialized;
 
 static TimelineEventState s_states[TimelineEventServiceCount];
 
-static TimerID s_timer;
-
 static atomic_flag s_cb_scheduled;
 
 static void prv_update_status(void);
@@ -59,9 +58,11 @@ static void prv_update_status_async(void) {
   sys_work_add(prv_update_status_sys_work_callback, nullptr);
 }
 
-static void prv_new_timer_callback(void *unused) {
+static void prv_timer_callback(struct pbl_work *work) {
   prv_update_status_async();
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_timer, prv_timer_callback);
 
 static uint32_t prv_calc_timeout(const TimelineItem *item) {
   const time_t now = pbl_realtime();
@@ -77,11 +78,11 @@ static uint32_t prv_calc_timeout(const TimelineItem *item) {
 static void prv_set_timer(unsigned int timeout_ms) {
   if (!timeout_ms) {
     PBL_LOG_ERR("Not setting timer");
-  } else if (new_timer_start(s_timer, timeout_ms, prv_new_timer_callback, nullptr, 0)) {
-    PBL_LOG_DBG("Set timer for %u", timeout_ms);
-  } else {
-    PBL_LOG_ERR("Could not start timer.");
+    return;
   }
+
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer, PBL_MSEC(timeout_ms));
+  PBL_LOG_DBG("Set timer for %u", timeout_ms);
 }
 
 static bool prv_should_use_item(TimelineEventState *state, SerializedTimelineItemHeader *header) {
@@ -113,7 +114,7 @@ static void prv_update_status(void) {
     return;
   }
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  new_timer_stop(s_timer);
+  pbl_delayed_work_cancel(&s_timer);
   SerializedTimelineItemHeader *filter_headers =
       pbl_zalloc_check(TimelineEventServiceCount * sizeof(SerializedTimelineItemHeader));
 
@@ -180,8 +181,6 @@ static void prv_init([[maybe_unused]] void *data) {
     state->impl = s_services[i]();
   }
 
-  s_timer = new_timer_create();
-
   pbl_mutex_unlock(&s_mutex);
   prv_update_status();
 }
@@ -193,8 +192,7 @@ void timeline_event_init(void) {
 void timeline_event_deinit(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  new_timer_delete(s_timer);
-  s_timer = TIMER_INVALID_ID;
+  pbl_delayed_work_cancel(&s_timer);
 
   pbl_mutex_unlock(&s_mutex);
   s_initialized = false;

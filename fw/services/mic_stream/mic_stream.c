@@ -3,12 +3,12 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/mic_stream.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/services/voice/voice_speex.h>
 #include <pbl/services/voice_endpoint.h>
@@ -44,14 +44,15 @@ typedef struct {
 static PBL_MUTEX_DEFINE(s_lock);
 static MicStreamState s_state;
 static uint32_t s_last_stream_id;
-static TimerID s_setup_timer = TIMER_INVALID_ID;
+static void prv_setup_timeout(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_setup_timer, prv_setup_timeout);
+static uint32_t s_setup_timer_stream_id;
 static uint8_t s_packet[MAX_ENCODED_FRAME_SIZE];
 //! Lets a start, which runs its checks unlocked, tell that a focus loss raced them
 static uint32_t s_focus_losses;
 
 void mic_stream_service_init(void) {
   s_state = (MicStreamState){};
-  s_setup_timer = new_timer_create();
 }
 
 static void prv_post_event(uint32_t stream_id, MicStreamEventType type,
@@ -69,7 +70,7 @@ static void prv_post_event(uint32_t stream_id, MicStreamEventType type,
 
 //! Expects s_lock held. Resets the state; the rest is left to prv_finish_teardown().
 static MicStreamTeardown prv_teardown_locked(bool phone_expects_stop) {
-  new_timer_stop(s_setup_timer);
+  pbl_delayed_work_cancel(&s_setup_timer);
   const MicStreamTeardown teardown = {
     .chunk = s_state.chunk,
     .session = s_state.session,
@@ -142,9 +143,9 @@ static void prv_setup_timeout_bg(void *data) {
   }
 }
 
-//! The teardown takes bt_lock and stops the mic, so it never runs on the timer task.
-static void prv_setup_timeout(void *data) {
-  sys_work_add(prv_setup_timeout_bg, data);
+//! The teardown takes bt_lock and stops the mic, so it never runs on the high priority queue.
+static void prv_setup_timeout(struct pbl_work *work) {
+  sys_work_add(prv_setup_timeout_bg, (void *)(uintptr_t)s_setup_timer_stream_id);
 }
 
 static void prv_transfer_stopped_bg(void *data) {
@@ -229,7 +230,8 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
     .stream_id = s_last_stream_id,
   };
   const uint32_t id = s_state.stream_id;
-  new_timer_start(s_setup_timer, SETUP_TIMEOUT_MS, prv_setup_timeout, (void *)(uintptr_t)id, 0);
+  s_setup_timer_stream_id = id;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_setup_timer, PBL_MSEC(SETUP_TIMEOUT_MS));
   pbl_mutex_unlock(&s_lock);
 
   AudioTransferInfoSpeex transfer_info;
@@ -258,7 +260,7 @@ void mic_stream_service_handle_setup_result(AudioEndpointSessionId session_id,
     PBL_LOG_DBG("Ignoring setup result for session %u", session_id);
     return;
   }
-  new_timer_stop(s_setup_timer);
+  pbl_delayed_work_cancel(&s_setup_timer);
   s_state.setup_pending = false;
   const uint32_t stream_id = s_state.stream_id;
 

@@ -6,10 +6,10 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
@@ -81,7 +81,10 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry);
 static void prv_wakeup_timer_next_pending(void);
 
 static bool s_wakeup_enabled = false;
-static TimerID s_current_timer_id = TIMER_INVALID_ID; // single timer reused for each event
+static void prv_wakeup_dispatcher(struct pbl_work *work);
+// single timer reused for each event
+static PBL_DELAYED_WORK_DEFINE(s_current_timer, prv_wakeup_dispatcher);
+static WakeupId s_current_timer_wakeup_id; // the event s_current_timer dispatches
 // single structure containing the global wakeup state
 static WakeupState s_wakeup_state = {-1, -1, 0};
 static bool s_catchup_enabled = false; // enables catching up with missed events
@@ -148,10 +151,9 @@ void wakeup_dispatcher_sys_work(void *data) {
 
 // This callback is the system dispatcher that wakes up the application by AppInstallId
 // OR queues a wakeup callback for that application
-// and is triggered by NewTimer
-static void prv_wakeup_dispatcher(void *data) {
-  // Place actual work on sys_work to unload it from new_timer task
-  sys_work_add(wakeup_dispatcher_sys_work, data);
+static void prv_wakeup_dispatcher(struct pbl_work *work) {
+  // Place actual work on sys_work to unload it from the high priority queue
+  sys_work_add(wakeup_dispatcher_sys_work, (void *)(intptr_t)s_current_timer_wakeup_id);
 }
 
 static bool prv_find_next_wakeup_id_callback(struct pbl_settings_file *file,
@@ -186,9 +188,7 @@ static void prv_wakeup_timer_next_pending(void) {
 
   // If there is already a wakeup timer scheduled, cancel it. There will be a
   // new timer scheduled for the soonest wakeup that is registered.
-  if (new_timer_scheduled(s_current_timer_id, nullptr)) {
-    new_timer_stop(s_current_timer_id);
-  }
+  pbl_delayed_work_cancel(&s_current_timer);
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
@@ -234,8 +234,9 @@ static void prv_wakeup_timer_next_pending(void) {
 
     // timers are in milliseconds, set main callback dispatch for wakeup
     // WakeupId is used to save/restore/lookup wakeup events
-    new_timer_start(s_current_timer_id, (uint32_t)time_difference * 1000, prv_wakeup_dispatcher,
-                    (void *)((intptr_t)s_wakeup_state.current_wakeup_id), 0);
+    s_current_timer_wakeup_id = s_wakeup_state.current_wakeup_id;
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_current_timer,
+                                PBL_MSEC((uint32_t)time_difference * 1000));
   }
 }
 
@@ -350,8 +351,6 @@ void wakeup_init(void) {
 
   event_service_init(PEBBLE_WAKEUP_EVENT, nullptr, nullptr);
 
-  // Create single reusable timer for wakeup events
-  s_current_timer_id = new_timer_create();
   s_wakeup_state.next_wakeup_id = CLIP(pbl_realtime(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
   s_wakeup_state.timestamp = -1;
 
@@ -465,9 +464,8 @@ PBL_SYSCALL(void, sys_wakeup_delete, (VAL, WakeupId, wakeup_id)) {
 
   // Only allow owner to delete its own wakeup events
   if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
-    if (wakeup_id == s_wakeup_state.current_wakeup_id &&
-        new_timer_scheduled(s_current_timer_id, nullptr)) {
-      new_timer_stop(s_current_timer_id);
+    if (wakeup_id == s_wakeup_state.current_wakeup_id) {
+      pbl_delayed_work_cancel(&s_current_timer);
     }
     prv_wakeup_settings_delete_entry(wakeup_id);
     prv_wakeup_timer_next_pending();
@@ -576,9 +574,8 @@ static void prv_delete_events_by_uuid_callback(struct pbl_settings_file *old_fil
   // If the UUID is equal, delete the entry
   if (uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
     // if this is the current timer event, cancel it
-    if (wakeup_id == s_wakeup_state.current_wakeup_id &&
-        new_timer_scheduled(s_current_timer_id, nullptr)) {
-      new_timer_stop(s_current_timer_id);
+    if (wakeup_id == s_wakeup_state.current_wakeup_id) {
+      pbl_delayed_work_cancel(&s_current_timer);
     }
     // Deletes the entry automatically if not written
   } else { // Keep the entry
@@ -649,13 +646,13 @@ void wakeup_enable(bool enable) {
   s_wakeup_enabled = enable;
   if (enable && !was_enabled) {
     prv_wakeup_timer_next_pending();
-  } else if (!enable && s_current_timer_id && new_timer_scheduled(s_current_timer_id, nullptr)) {
-    new_timer_stop(s_current_timer_id);
+  } else if (!enable) {
+    pbl_delayed_work_cancel(&s_current_timer);
   }
 }
 
-TimerID wakeup_get_current(void) {
-  return s_current_timer_id;
+struct pbl_delayed_work *wakeup_get_current(void) {
+  return &s_current_timer;
 }
 
 WakeupId wakeup_get_next_scheduled(void) {
