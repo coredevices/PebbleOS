@@ -3,6 +3,7 @@
 
 config ANALYTICS
     bool "Analytics"
+    depends on SERVICE_DATA_LOGGING
     help
       Firmware analytics and telemetry.
 
