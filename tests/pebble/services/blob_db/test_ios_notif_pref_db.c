@@ -15,6 +15,7 @@
 
 // Fakes
 ////////////////////////////////////////////////////////////////
+#include <fake_pbl_malloc.h>
 #include <fake_settings.h>
 #include <fake_sys_work.h>
 
@@ -186,6 +187,15 @@ void test_ios_notif_pref_db__store_empty_prefs(void) {
   cl_assert_equal_i(notif_prefs->action_group.num_actions, 0);
 
   ios_notif_pref_db_free_prefs(notif_prefs);
+}
+
+void test_ios_notif_pref_db__store_prefs_does_not_leak(void) {
+  char *key = "key1";
+  int key_len = strlen(key);
+
+  int net_allocs = fake_pbl_malloc_num_net_allocs();
+  ios_notif_pref_db_store_prefs((uint8_t *)key, key_len, nullptr, nullptr);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), net_allocs);
 }
 
 void test_ios_notif_pref_db__is_dirty_insert_from_phone(void) {

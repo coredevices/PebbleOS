@@ -187,6 +187,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
   // Add the new entry to the DB
   rv = prv_save_serialized_prefs(&file, app_id, length, new_prefs, serialized_prefs_size);
   prv_file_close_and_unlock(&file);
+  prv_free_serialized_prefs(new_prefs);
 
   if (rv == S_SUCCESS) {
     char buffer[length + 1];
