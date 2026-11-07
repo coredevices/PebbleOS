@@ -1,17 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/*
- * This module contains the core dump logic which writes the core dump to SPI flash. It operates
- *  under a very limited set of constraints:
- *   1.) It can NOT use most FreeRTOS functions
- *   2.) It can not use the regular flash driver (because that uses FreeRTOS mutexes)
- *
- * There is a separate module, core_dump_protocol.c which implements the session endpoint logic for
- * fetching the core dump over bluetooth. That module is free to use FreeRTOS, regular flash
- * driver, etc.
- */
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,8 +16,6 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/time.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -82,11 +69,6 @@ static bool s_test_force_assert = false;    // Used for unit testing
 typedef struct {
   void *start;
   uint32_t length;
-  bool word_reads_only; // Some peripherals can only be read 32 bits at a
-                        // time, or you BusFault (maybe). Set this to true
-                        // for memory regions where reads smaller than 32
-                        // bits will fail. The start pointer must also be
-                        // word-aligned.
 } MemoryRegion;
 
 // Memory regions to dump
@@ -369,24 +351,13 @@ static void prv_write_memory_regions(const MemoryRegion *regions, unsigned int c
     mem_hdr.start = (uint32_t)regions[i].start;
     s_flash_addr += prv_flash_write_bytes(&mem_hdr, s_flash_addr, sizeof(mem_hdr));
 
-    if (regions[i].word_reads_only) {
-      // Copy the memory into a temporary buffer before writing it to flash so
-      // that we can be sure that the memory is only being accessed by word.
-      uint32_t temp;
-      for (uint32_t offset = 0; offset < regions[i].length; offset += sizeof(temp)) {
-        temp = *(volatile uint32_t *)((char *)regions[i].start + offset);
-        s_flash_addr += prv_flash_write_bytes(&temp, s_flash_addr, sizeof(temp));
-        watchdog_feed();
-      }
-    } else {
-      uint32_t bytes_remaining = regions[i].length;
-      for (uint32_t offset = 0; offset < regions[i].length; offset += SECTOR_SIZE_BYTES) {
-        uint32_t bytes_to_write = MIN(bytes_remaining, SECTOR_SIZE_BYTES);
-        s_flash_addr += prv_flash_write_bytes((void *)((uint32_t)regions[i].start + offset),
-                                              s_flash_addr, bytes_to_write);
-        bytes_remaining -= bytes_to_write;
-        watchdog_feed();
-      }
+    uint32_t bytes_remaining = regions[i].length;
+    for (uint32_t offset = 0; offset < regions[i].length; offset += SECTOR_SIZE_BYTES) {
+      uint32_t bytes_to_write = MIN(bytes_remaining, SECTOR_SIZE_BYTES);
+      s_flash_addr += prv_flash_write_bytes((void *)((uint32_t)regions[i].start + offset),
+                                            s_flash_addr, bytes_to_write);
+      bytes_remaining -= bytes_to_write;
+      watchdog_feed();
     }
   }
 }
@@ -685,28 +656,6 @@ bool core_dump_is_unread_available(uint32_t flash_base) {
 
 uint32_t core_dump_get_slot_address(unsigned int i) {
   return (CORE_DUMP_FLASH_START + SUBSECTOR_SIZE_BYTES + i * CORE_DUMP_MAX_SIZE);
-}
-
-// BLE API - reserve core dump slot in flash
-bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
-                                ElfExternalNote *build_id) {
-  bool status = true;
-  uint32_t flash_addr, flash_addr_base;
-
-  flash_addr_base = prv_flash_start_address(true /*new*/);
-  if (flash_addr_base == CORE_DUMP_FLASH_INVALID_ADDR) {
-    status = false;
-    goto cleanup;
-  }
-
-  flash_addr = flash_addr_base + sizeof(CoreDumpFlashRegionHeader);
-  flash_addr += prv_write_image_header(flash_addr, CORE_ID_BLE, build_id, pbl_realtime());
-
-  *flash_base = flash_addr;
-  *max_size = CORE_DUMP_MAX_SIZE - (flash_addr - flash_addr_base);
-
-cleanup:
-  return status;
 }
 
 // --------------------------------------------------------------------------------------------------

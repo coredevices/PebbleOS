@@ -36,11 +36,6 @@ uint32_t core_dump_get_slot_address(unsigned int i) {
   return CORE_DUMP_FLASH_INVALID_ADDR;
 }
 
-bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
-                                ElfExternalNote *build_id) {
-  return false;
-}
-
 void core_dump_test_force_bus_fault(void) {
   abort();
 }

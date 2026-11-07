@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/util/build_id.h>
 
 #include <system/status_codes.h>
 
@@ -23,7 +22,3 @@ status_t core_dump_size(uint32_t flash_base, uint32_t *size);
 void core_dump_mark_read(uint32_t flash_base);
 bool core_dump_is_unread_available(uint32_t flash_base);
 uint32_t core_dump_get_slot_address(unsigned int i);
-
-// Bluetooth Core Dump API
-bool core_dump_reserve_ble_slot(uint32_t *flash_base, uint32_t *max_size,
-                                ElfExternalNote *build_id);
