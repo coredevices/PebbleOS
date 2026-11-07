@@ -8,7 +8,6 @@
 #include <pbl/services/runlevel.h>
 
 #include <apps/core/progress_ui.h>
-#include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/modals/modal_manager.h>
@@ -16,6 +15,7 @@
 #include <kernel/util/fw_reset.h>
 #include <process_management/app_manager.h>
 #include <system/bootbits.h>
+#include <system/die.h>
 
 static void prv_reset_into_prf(void) {
   RebootReason reason = {RebootReasonCode_PrfReset, 0};
@@ -69,7 +69,7 @@ void reset_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
 
     case ResetCmdCoreDump:
       PBL_LOG_WRN("Core dump + Reboot triggered");
-      core_dump_reset(true /* force overwrite any existing core dump */);
+      reset_with_core_dump(true /* force overwrite any existing core dump */);
       break;
 
     case ResetCmdIntoRecovery:

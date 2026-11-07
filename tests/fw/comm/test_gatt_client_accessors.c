@@ -25,9 +25,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-void core_dump_reset(bool is_forced) {
-}
-
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }

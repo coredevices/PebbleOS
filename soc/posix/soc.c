@@ -48,3 +48,8 @@ void posix_fw_start(void) {
   extern int pbl_fw_main(void);
   pbl_posix_start(pbl_fw_main);
 }
+
+#ifndef CONFIG_SAMSA
+// Third-party apps are ARM binaries, which a native build cannot load.
+const void *const g_pbl_system_tbl[] = {0};
+#endif

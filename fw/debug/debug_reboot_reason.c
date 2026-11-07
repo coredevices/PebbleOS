@@ -3,10 +3,10 @@
 
 #include "debug.h"
 
+#include <pbl/coredump/coredump.h>
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gatt_service_changed.h>
-#include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
 #include <popups/crashed_ui.h>
 #include <system/reboot_reason.h>
@@ -140,9 +140,12 @@ void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
             rebooted_due_to, reason.extra.value);
   }
 
-  if (is_unread_coredump_available()) {
+#ifdef CONFIG_COREDUMP
+  struct pbl_coredump_stored stored;
+  if (pbl_coredump_stored_find(true /* unread_only */, &stored) == 0) {
     PBL_LOG_INFO("Unread coredump file is present!");
   }
+#endif
 
   PBL_LOG_INFO("MCU reset reason mask: 0x%x", (int)mcu_reboot_reason.reset_mask);
 

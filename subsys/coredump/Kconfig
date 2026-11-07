@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Core dumps"
+
+config COREDUMP
+    bool "Core dumps"
+    default y
+    depends on ARCH_HAS_COREDUMP
+    help
+      Save the state of the system when it crashes, for analysis after
+      the reset.
+
+if COREDUMP
+
+config COREDUMP_TEST_FAULT
+    bool
+    help
+      Let tests inject a fault while a dump is being written.
+
+rsource "backends/Kconfig"
+
+endif
+
+endmenu
