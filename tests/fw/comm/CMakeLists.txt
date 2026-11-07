@@ -134,47 +134,6 @@ pbl_clar_test(test_kernel_le_client
     fw/comm/ble/kernel_le_client/kernel_le_client.c
 )
 
-pbl_clar_test(test_ppogatt_v0
-  SOURCE test_ppogatt.c
-  MODULES rand
-  SOURCES
-    fw/services/clock/time.c
-    subsys/logging/hexdump.c
-    fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
-    fw/services/regular_timer/service.c
-    tests/fakes/fake_gatt_client_operations.c
-    tests/fakes/fake_gatt_client_subscriptions.c
-    tests/fakes/fake_session.c
-  DEFINES USE_PPOGATT_VERSION=0
-)
-
-pbl_clar_test(test_ppogatt_v1
-  SOURCE test_ppogatt.c
-  MODULES rand
-  SOURCES
-    fw/services/clock/time.c
-    subsys/logging/hexdump.c
-    fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
-    fw/services/regular_timer/service.c
-    tests/fakes/fake_gatt_client_operations.c
-    tests/fakes/fake_gatt_client_subscriptions.c
-    tests/fakes/fake_session.c
-  DEFINES USE_PPOGATT_VERSION=1
-)
-
-pbl_clar_test(test_ppogatt_reversed
-  MODULES rand
-  SOURCES
-    fw/services/clock/time.c
-    subsys/logging/hexdump.c
-    fw/comm/ble/kernel_le_client/ppogatt/ppogatt.c
-    fw/services/regular_timer/service.c
-    tests/fakes/fake_gatt_client_operations.c
-    tests/fakes/fake_gatt_client_subscriptions.c
-    tests/fakes/fake_session.c
-  DEFINES USE_PPOGATT_VERSION=1
-)
-
 # Skipped for now; see pbl_test_broken() in tests/CMakeLists.txt.
 pbl_clar_test(test_gap_le_connect
   SOURCES

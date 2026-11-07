@@ -2,14 +2,14 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/pp/transport.h>
+#include <pbl/pp/transports/gatt.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_operations.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
+#include <pp/transports/gatt/ppogatt_internal.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -110,17 +110,17 @@ static void prv_send_next(struct pbl_pp_session *session) {
 }
 
 #define NUM_SERVICE_INSTANCES 2
-static pbl_bt_characteristic_t s_characteristics[NUM_SERVICE_INSTANCES][PPoGATTCharacteristicNum] =
-    {
-      [0] =
-          {
-            [PPoGATTCharacteristicData] = 01,
-            [PPoGATTCharacteristicMeta] = 02,
-          },
-      [1] = {
-        [PPoGATTCharacteristicData] = 11,
-        [PPoGATTCharacteristicMeta] = 12,
-      },
+static pbl_bt_characteristic_t s_characteristics[NUM_SERVICE_INSTANCES]
+                                                [PBL_PP_GATT_CHARACTERISTIC_NUM] = {
+                                                  [0] =
+                                                      {
+                                                        [PBL_PP_GATT_CHARACTERISTIC_DATA] = 01,
+                                                        [PBL_PP_GATT_CHARACTERISTIC_META] = 02,
+                                                      },
+                                                  [1] = {
+                                                    [PBL_PP_GATT_CHARACTERISTIC_DATA] = 11,
+                                                    [PBL_PP_GATT_CHARACTERISTIC_META] = 12,
+                                                  },
 };
 
 static const pbl_bt_characteristic_t s_unknown_characteristics = 0x55;
@@ -212,12 +212,13 @@ static void prv_create_expected_reset_complete(void) {
 }
 
 static void prv_receive_reset_request(pbl_bt_characteristic_t characteristic) {
-  ppogatt_handle_read_or_notification(characteristic, (const uint8_t *)&s_server_reset_request,
-                                      sizeof(s_server_reset_request), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(characteristic, (const uint8_t *)&s_server_reset_request,
+                                          sizeof(s_server_reset_request),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
 }
 static void prv_receive_reset_complete(pbl_bt_characteristic_t characteristic) {
-  ppogatt_handle_read_or_notification(characteristic, (const uint8_t *)s_client_reset_complete,
-                                      s_client_reset_complete_size, PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(characteristic, (const uint8_t *)s_client_reset_complete,
+                                          s_client_reset_complete_size, PBL_BT_GATT_ERROR_SUCCESS);
 }
 
 //! Tests send it shortened by one byte per SN, across a whole window.
@@ -231,8 +232,8 @@ static void prv_receive_short_data_fragment(pbl_bt_characteristic_t characterist
   packet->sn = sn;
   packet->type = PPoGATTPacketTypeData;
   memcpy(packet->payload, s_short_data_fragment, sizeof(s_short_data_fragment));
-  ppogatt_handle_read_or_notification(characteristic, (const uint8_t *)packet,
-                                      sizeof(s_short_data_fragment), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(characteristic, (const uint8_t *)packet,
+                                          sizeof(s_short_data_fragment), PBL_BT_GATT_ERROR_SUCCESS);
   free(packet);
 }
 
@@ -241,8 +242,8 @@ static void prv_receive_ack(pbl_bt_characteristic_t characteristic, uint8_t sn) 
     .sn = sn,
     .type = PPoGATTPacketTypeAck,
   };
-  ppogatt_handle_read_or_notification(characteristic, (const uint8_t *)&ack, sizeof(ack),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(characteristic, (const uint8_t *)&ack, sizeof(ack),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
 }
 
 static void prv_assert_sent_reset_request(pbl_bt_characteristic_t characteristic) {
@@ -312,11 +313,11 @@ void test_ppogatt__initialize(void) {
   fake_gatt_client_subscriptions_init();
   regular_timer_init();
   fake_comm_session_init();
-  ppogatt_create();
+  pbl_pp_gatt_create();
 }
 
 void test_ppogatt__cleanup(void) {
-  ppogatt_destroy();
+  pbl_pp_gatt_destroy();
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_i(regular_timer_seconds_count(), 0);
   regular_timer_deinit();
@@ -334,7 +335,7 @@ void test_ppogatt__cleanup(void) {
 
 void prv_notify_services_discovered(int num_services_to_register) {
   for (int i = 0; i < NUM_SERVICE_INSTANCES && i < num_services_to_register; i++) {
-    ppogatt_handle_service_discovered(s_characteristics[i]);
+    pbl_pp_gatt_handle_service_discovered(s_characteristics[i]);
   }
 }
 
@@ -342,33 +343,33 @@ void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
   prv_notify_services_discovered(NUM_SERVICE_INSTANCES);
 
   // Assert GATT reads requests to Meta characteristics happened:
-  fake_gatt_client_op_assert_read(s_characteristics[0][PPoGATTCharacteristicMeta]);
-  fake_gatt_client_op_assert_read(s_characteristics[1][PPoGATTCharacteristicMeta]);
+  fake_gatt_client_op_assert_read(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META]);
+  fake_gatt_client_op_assert_read(s_characteristics[1][PBL_PP_GATT_CHARACTERISTIC_META]);
 
   // Simulate read responses:
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
 
-  ppogatt_handle_read_or_notification(s_characteristics[1][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_app, sizeof(s_meta_v0_app),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[1][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_app, sizeof(s_meta_v0_app),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_app.app_uuid), true);
 }
 
 void test_ppogatt__handles_unknown_read_response(void) {
   uint8_t data = 0;
-  ppogatt_handle_read_or_notification(s_unknown_characteristics, &data, sizeof(data),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_unknown_characteristics, &data, sizeof(data),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
   // No crashes / asserts etc.
 }
 
 void test_ppogatt__handles_too_short_meta_length(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(
-      s_characteristics[0][PPoGATTCharacteristicMeta], (const uint8_t *)&s_meta_v0_system,
+  pbl_pp_gatt_handle_read_or_notification(
+      s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META], (const uint8_t *)&s_meta_v0_system,
       sizeof(s_meta_v0_system) - 1 /* missing last byte */, PBL_BT_GATT_ERROR_SUCCESS);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
@@ -396,15 +397,15 @@ void test_ppogatt__handles_meta_v1(void) {
 
   for (int i = 0; i < ARRAY_LENGTH(metas); ++i) {
     prv_notify_services_discovered(1);
-    ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                        (const uint8_t *)metas[i].meta, sizeof(PPoGATTMetaV1),
-                                        PBL_BT_GATT_ERROR_SUCCESS);
+    pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                            (const uint8_t *)metas[i].meta, sizeof(PPoGATTMetaV1),
+                                            PBL_BT_GATT_ERROR_SUCCESS);
     // Client created:
     cl_assert_equal_i(ppogatt_client_count(), 1);
 
     cl_assert_equal_i(ppogatt_get_destination_for_uuid(&metas[i].meta->app_uuid),
                       metas[i].expected_destination);
-    ppogatt_invalidate_all_references();
+    pbl_pp_gatt_invalidate_all_references();
   }
 }
 
@@ -415,9 +416,10 @@ void test_ppogatt__handles_unsupported_meta_ppogatt_version(void) {
 
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(
-      s_characteristics[0][PPoGATTCharacteristicMeta], (const uint8_t *)&future_meta_non_compatible,
-      sizeof(future_meta_non_compatible), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&future_meta_non_compatible,
+                                          sizeof(future_meta_non_compatible),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&future_meta_non_compatible.app_uuid), false);
@@ -429,9 +431,9 @@ void test_ppogatt__handles_invalid_uuid_meta(void) {
 
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&meta_invalid_uuid,
-                                      sizeof(meta_invalid_uuid), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&meta_invalid_uuid,
+                                          sizeof(meta_invalid_uuid), PBL_BT_GATT_ERROR_SUCCESS);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&meta_invalid_uuid.app_uuid), false);
@@ -440,23 +442,23 @@ void test_ppogatt__handles_invalid_uuid_meta(void) {
 void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   // Client created:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
 
   // Rediscovery:
-  ppogatt_invalidate_all_references();
+  pbl_pp_gatt_invalidate_all_references();
   prv_notify_services_discovered(1);
 
   // Still one client:
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   // Still one client:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
@@ -464,15 +466,15 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
 
 void test_ppogatt__invalidate_characteristic_refs_immediately_after_update(void) {
   prv_notify_services_discovered(1);
-  ppogatt_handle_service_removed(&s_characteristics[0][0], PPoGATTCharacteristicNum);
+  pbl_pp_gatt_handle_service_removed(&s_characteristics[0][0], PBL_PP_GATT_CHARACTERISTIC_NUM);
   const bool can_handle =
-      ppogatt_can_handle_characteristic(s_characteristics[0][PPoGATTCharacteristicData]);
+      pbl_pp_gatt_can_handle_characteristic(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   cl_assert_equal_b(can_handle, false);
 }
 
 void test_ppogatt__handle_subscribe_to_unknown_characteristic(void) {
-  ppogatt_handle_subscribe(s_unknown_characteristics, BLESubscriptionNotifications,
-                           PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_subscribe(s_unknown_characteristics, BLESubscriptionNotifications,
+                               PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect to unsubscribe from the unknown characteristic:
   fake_gatt_client_subscriptions_assert_subscribe(s_unknown_characteristics, BLESubscriptionNone);
@@ -490,18 +492,18 @@ void test_ppogatt__cleanup_client_when_meta_read_fails(void) {
 static void prv_fail_meta_read_retry(pbl_bt_characteristic_t meta, const uint8_t *value,
                                      size_t value_length, enum pbl_bt_gatt_error error) {
   stub_new_timer_invoke(1);
-  ppogatt_handle_read_or_notification(meta, value, value_length, error);
+  pbl_pp_gatt_handle_read_or_notification(meta, value, value_length, error);
 }
 
 void test_ppogatt__cleanup_client_when_meta_read_gets_error_response(void) {
   fake_gatt_client_op_set_read_return_value(PBL_BT_ERRNO_OK);
   prv_notify_services_discovered(1);
 
-  pbl_bt_characteristic_t meta = s_characteristics[0][PPoGATTCharacteristicMeta];
+  pbl_bt_characteristic_t meta = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META];
 
   // A failing meta read is now retriable (commit 8651be8fb): the first failure
   // schedules a retry rather than deleting the client.
-  ppogatt_handle_read_or_notification(meta, nullptr, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
+  pbl_pp_gatt_handle_read_or_notification(meta, nullptr, 0, PBL_BT_GATT_ERROR_INVALID_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Exhaust the remaining retries; the client is deleted only after
@@ -517,13 +519,13 @@ void test_ppogatt__cleanup_client_when_data_subscription_cccd_write_failed(void)
 
   prv_notify_services_discovered(1);
 
-  pbl_bt_characteristic_t meta = s_characteristics[0][PPoGATTCharacteristicMeta];
+  pbl_bt_characteristic_t meta = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META];
 
   // The meta read succeeds, but the data subscription cccd write fails. That is
   // now treated as a retriable failure (commit 8651be8fb), so the first attempt
   // schedules a retry instead of deleting the client.
-  ppogatt_handle_read_or_notification(meta, (const uint8_t *)&s_meta_v0_system,
-                                      sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(meta, (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Each retry re-reads the meta (success) and re-attempts the failing
@@ -539,15 +541,15 @@ void test_ppogatt__cleanup_client_when_data_subscription_cccd_write_failed(void)
 void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
-  fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications);
+  fake_gatt_client_subscriptions_assert_subscribe(
+      s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
   // Simulate getting the subscription failure:
-  ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                           BLESubscriptionNotifications, PBL_BT_GATT_ERROR_READ_NOT_PERMITTED);
+  pbl_pp_gatt_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                               BLESubscriptionNotifications, PBL_BT_GATT_ERROR_READ_NOT_PERMITTED);
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
 }
@@ -555,18 +557,18 @@ void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
 static void prv_discover_and_read_meta_and_reset(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
-  fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications);
+  fake_gatt_client_subscriptions_assert_subscribe(
+      s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
   // Simulate getting the subscription confirmation:
-  ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                           BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                               BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect Reset to be initiated ("Reset Request" sent by FW):
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Session should still no have opened yet:
   cl_assert_equal_i(fake_comm_session_open_call_count(), 0);
@@ -576,10 +578,10 @@ void test_ppogatt__open_session_when_found_pebble_app(void) {
   prv_discover_and_read_meta_and_reset();
 
   // Simulate getting "Reset Complete" from remote:
-  prv_receive_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Expect "Reset Complete" to be sent by FW:
-  prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Expect Session to be opened now:
   cl_assert_equal_i(fake_comm_session_open_call_count(), 1);
@@ -588,9 +590,9 @@ void test_ppogatt__open_session_when_found_pebble_app(void) {
 void test_ppogatt__start_reset_upon_out_of_range_ack(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   // Simulate getting an Ack that's outside of the window of outstanding SNs:
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], PPOGATT_SN_MOD_DIV / 2);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], PPOGATT_SN_MOD_DIV / 2);
   // Expect Reset to be initiated ("Reset Request" sent by FW):
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 }
 
 void test_ppogatt__ignore_retransmitted_ack(void) {
@@ -602,17 +604,17 @@ void test_ppogatt__ignore_retransmitted_ack(void) {
                                                                  sizeof(s_short_data_fragment));
     cl_assert_equal_b(success, true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment));
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment));
   }
 
   // Receive ACK for first data packet with sn=0:
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], 0);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], 0);
 
   // Pretend data packets with sn=1 got lost in the ether, but data sn=2 was received...
 
   // Receive a retransmit for the ACK sn=0, to indicate data was missing.
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], 0);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], 0);
 
   // The retransmitted ACK should be ignored.
   fake_gatt_client_op_assert_no_write();
@@ -624,34 +626,34 @@ void test_ppogatt__ignore_retransmitted_ack(void) {
 void test_ppogatt__ignore_server_reset_request_while_resetting_due_to_server_reset_request(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
-  prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
+  prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
-  prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   fake_gatt_client_op_assert_no_write();
 }
 
 void test_ppogatt__ignore_server_reset_request_while_resetting_due_to_own_reset_request(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
-  ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                           BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                               BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect Reset to be initiated ("Reset Request" sent by FW):
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
-  prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   fake_gatt_client_op_assert_no_write();
 }
 
 void test_ppogatt__timeout_waiting_for_reset_complete_remote_initiated(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
-  prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
+  prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Timeout waiting for "Reset Complete":
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
@@ -659,7 +661,7 @@ void test_ppogatt__timeout_waiting_for_reset_complete_remote_initiated(void) {
   }
 
   // Expect "Reset Request" sent by FW:
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 }
 
 void test_ppogatt__timeout_waiting_for_reset_complete_self_initiated(void) {
@@ -671,7 +673,7 @@ void test_ppogatt__timeout_waiting_for_reset_complete_self_initiated(void) {
   }
 
   // Expect "Reset Request" sent by FW:
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 }
 
 void test_ppogatt__server_reset_request_while_pending_ack(void) {
@@ -681,11 +683,11 @@ void test_ppogatt__server_reset_request_while_pending_ack(void) {
   fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
   // Receive data (that needs to be ack'd):
   uint8_t sn = 0;
-  prv_receive_short_data_fragment(s_characteristics[0][PPoGATTCharacteristicData], sn);
+  prv_receive_short_data_fragment(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn);
   fake_gatt_client_op_assert_no_write();
 
   // Receive Reset Request:
-  prv_receive_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   fake_gatt_client_op_assert_no_write();
 
   // Simulate outbound queue having space again, the retry timer resends:
@@ -693,7 +695,7 @@ void test_ppogatt__server_reset_request_while_pending_ack(void) {
   stub_new_timer_invoke(1);
 
   // Expect Reset Complete to be sent out, but nothing more than that:
-  prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   fake_gatt_client_op_assert_no_write();
 
   // In the past we had a bug here where the pending ACK would get sent out.
@@ -705,9 +707,9 @@ void test_ppogatt__ignore_invalid_packet_type(void) {
     .sn = 0,
     .type = PPoGATTPacketTypeInvalidRangeStart,
   };
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicData],
-                                      (const uint8_t *)&packet, sizeof(packet),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                                          (const uint8_t *)&packet, sizeof(packet),
+                                          PBL_BT_GATT_ERROR_SUCCESS);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
@@ -717,7 +719,7 @@ void test_ppogatt__ignore_invalid_packet_type(void) {
 void test_ppogatt__ignore_reset_complete_while_open(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   // Simulate getting "Reset Complete" from remote:
-  prv_receive_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
@@ -727,23 +729,24 @@ void test_ppogatt__ignore_reset_complete_while_open(void) {
 void test_ppogatt__ignore_data_during_reset(void) {
   prv_notify_services_discovered(1);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
-  ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                           BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                               BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect Reset to be initiated ("Reset Request" sent by FW):
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Receive data:
-  prv_receive_short_data_fragment(s_characteristics[0][PPoGATTCharacteristicData], 3 /* sn */);
+  prv_receive_short_data_fragment(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                                  3 /* sn */);
 
   // Simulate getting "Reset Complete" from remote:
-  prv_receive_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_receive_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Expect "Reset Complete" to be sent by FW:
-  prv_assert_sent_reset_complete(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 
   // Expect Session to be opened now:
   cl_assert_equal_i(fake_comm_session_open_call_count(), 1);
@@ -751,8 +754,8 @@ void test_ppogatt__ignore_data_during_reset(void) {
 
 void test_ppogatt__ignore_zero_length_notification(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicData], nullptr, 0,
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                                          nullptr, 0, PBL_BT_GATT_ERROR_SUCCESS);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
@@ -766,15 +769,15 @@ void test_ppogatt__ack_received_data(void) {
   for (uint8_t i = 0; i < PPOGATT_SN_MOD_DIV + 1; ++i) {
     const uint8_t sn = i % PPOGATT_SN_MOD_DIV;
     ppogatt_trigger_rx_ack_send_timeout();
-    prv_receive_short_data_fragment(s_characteristics[0][PPoGATTCharacteristicData], sn);
-    prv_assert_sent_ack(s_characteristics[0][PPoGATTCharacteristicData], sn);
+    prv_receive_short_data_fragment(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn);
+    prv_assert_sent_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn);
   }
 }
 
 void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
-  const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
+  const pbl_bt_characteristic_t data = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA];
 
   // V0 Acks every packet, V1 every half window:
   const uint8_t num_packets = (s_ppogatt_version > 0) ? (s_rx_window_size / 2) : 1;
@@ -806,7 +809,7 @@ void test_ppogatt__missing_inbound_packet(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
   // Receive data:
-  prv_receive_short_data_fragment(s_characteristics[0][PPoGATTCharacteristicData],
+  prv_receive_short_data_fragment(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
                                   1 /* sn (expecting sn=0) */);
   // Expect nothing to be sent, rely on other end to hit time-out and retransmit
   fake_gatt_client_op_assert_no_write();
@@ -824,7 +827,7 @@ void test_ppogatt__send_data_max_payload_size(void) {
     cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, data, MAX_PAYLOAD_SIZE),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, data,
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn, data,
                          MAX_PAYLOAD_SIZE);
   }
 
@@ -847,8 +850,8 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
     printf("SEND %d %d\n", sn, success);
     cl_assert_equal_b(success, true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment));
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment));
   }
 
   printf("done\n");
@@ -861,11 +864,11 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
   fake_gatt_client_op_assert_no_write();
 
   // Ack the first one (sn=0):
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], 0 /* sn */);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], 0 /* sn */);
 
   // The last enqueued one should now be sent out:
-  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                       sizeof(s_short_data_fragment));
+  prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                       s_short_data_fragment, sizeof(s_short_data_fragment));
 }
 
 void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
@@ -879,13 +882,14 @@ void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
                                                               sizeof(s_short_data_fragment)),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment));
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment));
   }
 
   // Ack the last one (sn == s_tx_window_size - 1), which will be interpreted as Ack'ing all
   // the packets before it too:
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], s_tx_window_size - 1 /* sn */);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                  s_tx_window_size - 1 /* sn */);
 
   // We should now be able to submit s_tx_window_size packets again:
   for (sn = s_tx_window_size; sn < 2 * s_tx_window_size; ++sn) {
@@ -893,8 +897,8 @@ void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
                                                               sizeof(s_short_data_fragment)),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment));
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment));
   }
 }
 
@@ -910,7 +914,7 @@ void test_ppogatt__handle_client_disappearing_for_send_callback(void) {
 void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
-  const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
+  const pbl_bt_characteristic_t data = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA];
 
   for (uint8_t sn = 0; sn < 2; ++sn) {
     fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
@@ -947,8 +951,8 @@ void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
                                                               sizeof(s_short_data_fragment) - sn),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment) - sn);
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 
   // Simulate the regular timer firing a bunch of times to expire the timeout for all the packets:
@@ -965,7 +969,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
   // would refer to the old or new fragmentation.
 
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn /* sn */,
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn /* sn */,
                          s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 }
@@ -982,8 +986,8 @@ void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(vo
                                                               sizeof(s_short_data_fragment) - sn),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment) - sn);
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
     if (sn == 0 || sn == 1) {
       // Make the first and second packet time out each, one second earlier
       // than the 3rd and 4rd packets:
@@ -1002,7 +1006,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(vo
   fake_comm_session_process_send_next();
 
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn /* sn */,
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn /* sn */,
                          s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 }
@@ -1018,8 +1022,8 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
                                                               sizeof(s_short_data_fragment) - sn),
                       true);
     prv_send_next(session);
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment) - sn);
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 
   // Time-out all packets in flight, rolling back for retransmission:
@@ -1029,7 +1033,8 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
   // Simulate receiving an ack for the last, after the roll-back, but before the packets are
   // retransmitted (the last part shouldn't matter much, but simplifies the test a bit)
-  prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], (sn - 1) % PPOGATT_SN_MOD_DIV);
+  prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                  (sn - 1) % PPOGATT_SN_MOD_DIV);
 
   // Some new data has been queued up in the mean time:
   cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
@@ -1040,7 +1045,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
   // Expect the new data to come through, no retransmissions at all.
   // (They all got considered Ack'd by the one Ack)
-  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn /* sn */,
+  prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn /* sn */,
                        s_short_data_fragment, sizeof(s_short_data_fragment));
 }
 
@@ -1054,8 +1059,8 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
                                                             sizeof(s_short_data_fragment) - sn),
                     true);
   prv_send_next(session);
-  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                       sizeof(s_short_data_fragment) - sn);
+  prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                       s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
 
   for (int j = 0; j < PPOGATT_TIMEOUT_COUNT_MAX - 1; ++j) {
     // Time-out the packet over and over until (max - 1) is reached:
@@ -1063,15 +1068,15 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
       regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
     }
     fake_comm_session_process_send_next();
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment) - sn);
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 
   // The last straw:
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
     regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
-  prv_assert_sent_reset_request(s_characteristics[0][PPoGATTCharacteristicData]);
+  prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 }
 
 void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
@@ -1093,14 +1098,14 @@ void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
       regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
     }
 
-    prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], sn /* sn */);
+    prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn /* sn */);
   }
 
   fake_comm_session_process_send_next();
 
   for (int sn = 0; sn < num_packets; sn++) {
-    prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
-                         sizeof(s_short_data_fragment) - sn);
+    prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
+                         s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 
   // There should be no writes we haven't already checked for. That would only happen if we timed
@@ -1121,8 +1126,8 @@ void test_ppogatt__send_retried_when_out_of_heap(void) {
 
   fake_malloc_set_largest_free_block(~0);
   stub_new_timer_invoke(1);
-  prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], 0, s_short_data_fragment,
-                       sizeof(s_short_data_fragment));
+  prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], 0,
+                       s_short_data_fragment, sizeof(s_short_data_fragment));
   fake_gatt_client_op_assert_no_write();
 }
 
@@ -1148,14 +1153,14 @@ void test_ppogatt__mtu_zero_due_to_disconnection(void) {
 //! packet shouldn't be attempted to be written at all, because it will not fit and overrun the
 //! buffer.
 void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
-  ppogatt_handle_service_discovered(s_characteristics[0]);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics[0]);
 
-  ppogatt_handle_read_or_notification(s_characteristics[0][PPoGATTCharacteristicMeta],
-                                      (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system),
-                                      PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                          (const uint8_t *)&s_meta_v0_system,
+                                          sizeof(s_meta_v0_system), PBL_BT_GATT_ERROR_SUCCESS);
   // Expect subscribe request was made:
-  fake_gatt_client_subscriptions_assert_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                                                  BLESubscriptionNotifications);
+  fake_gatt_client_subscriptions_assert_subscribe(
+      s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
 
   // During service re-discovery the cached characteristic handles will be stale for a brief period.
   // This will cause the gatt_client_characteristic_get_device to return
@@ -1165,8 +1170,8 @@ void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
   // Simulate getting the subscription confirmation, this will normally trigger PPoGATT to try to
   // write out the Reset packet, but because the MTU is couldn't be looked up, no packet should get
   // sent out:
-  ppogatt_handle_subscribe(s_characteristics[0][PPoGATTCharacteristicData],
-                           BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  pbl_pp_gatt_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
+                               BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
 
   // Expect nothing to be sent out by FW:
   fake_gatt_client_op_assert_no_write();

@@ -11,7 +11,6 @@
 #endif
 #include <comm/ble/kernel_le_client/app_launch/app_launch_definition.h>
 #include <comm/ble/kernel_le_client/dis/dis_definition.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt_definition.h>
 #if UNITTEST
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #endif
@@ -22,6 +21,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/transports/gatt.h>
 
 #include <comm/ble/gap_le_connect.h>
 #include <comm/ble/gap_le_slave_reconnect.h>
@@ -41,7 +41,9 @@ enum {
 #if UNITTEST
   KernelLEClientUnitTest = 0,
 #else
-  KernelLEClientPPoGATT = 0,
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+  KernelLEClientPPoGATT,
+#endif
 #if defined(CONFIG_BT_ANCS_CLIENT)
   KernelLEClientANCS,
 #endif
@@ -109,20 +111,22 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
     .handle_read_or_notification = test_client_handle_read_or_notification,
   },
 #else
+#if defined(CONFIG_PP_TRANSPORT_GATT)
   [KernelLEClientPPoGATT] =
       {
         .debug_name = "PPoG",
-        .service_uuid = &s_ppogatt_service_uuid,
-        .characteristic_uuids = s_ppogatt_characteristic_uuids,
-        .num_characteristics = PPoGATTCharacteristicNum,
-        .handle_service_discovered = ppogatt_handle_service_discovered,
-        .handle_service_removed = ppogatt_handle_service_removed,
-        .invalidate_all_references = ppogatt_invalidate_all_references,
-        .can_handle_characteristic = ppogatt_can_handle_characteristic,
+        .service_uuid = &pbl_pp_gatt_service_uuid,
+        .characteristic_uuids = pbl_pp_gatt_characteristic_uuids,
+        .num_characteristics = PBL_PP_GATT_CHARACTERISTIC_NUM,
+        .handle_service_discovered = pbl_pp_gatt_handle_service_discovered,
+        .handle_service_removed = pbl_pp_gatt_handle_service_removed,
+        .invalidate_all_references = pbl_pp_gatt_invalidate_all_references,
+        .can_handle_characteristic = pbl_pp_gatt_can_handle_characteristic,
         .handle_write_response = nullptr,
-        .handle_subscribe = ppogatt_handle_subscribe,
-        .handle_read_or_notification = ppogatt_handle_read_or_notification,
+        .handle_subscribe = pbl_pp_gatt_handle_subscribe,
+        .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
       },
+#endif
 #if defined(CONFIG_BT_ANCS_CLIENT)
   [KernelLEClientANCS] =
       {
@@ -418,14 +422,18 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 #if defined(CONFIG_BT_AMS_CLIENT)
     ams_create();
 #endif
-    ppogatt_create();
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+    pbl_pp_gatt_create();
+#endif
 
     gap_le_slave_reconnect_stop();
     gatt_client_discovery_discover_all(&device);
 
   } else {
     PBL_LOG_DBG("Disconnected from Gateway!");
-    ppogatt_destroy();
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+    pbl_pp_gatt_destroy();
+#endif
 #if defined(CONFIG_BT_AMS_CLIENT)
     ams_destroy();
 #endif
@@ -491,8 +499,9 @@ void kernel_le_client_handle_bonding_change(pbl_bt_bonding_id_t bonding, BtPersi
 
 // -------------------------------------------------------------------------------------------------
 void kernel_le_client_init(void) {
-  // Reset analytics
-  ppogatt_reset_disconnect_counter();
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+  pbl_pp_gatt_reset_disconnect_counter();
+#endif
 
   pbl_bt_bonding_id_t gateway_bonding = bt_persistent_storage_get_ble_ancs_bonding();
   if (gateway_bonding != PBL_BT_BONDING_ID_INVALID) {
@@ -507,5 +516,7 @@ void kernel_le_client_deinit(void) {
 
   gap_le_slave_reconnect_stop();
   gap_le_connect_cancel_all();
-  ppogatt_destroy();
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+  pbl_pp_gatt_destroy();
+#endif
 }

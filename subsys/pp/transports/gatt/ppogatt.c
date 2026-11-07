@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
-
-#include "ppogatt.h"
 
 #include "ppogatt_internal.h"
 
@@ -9,6 +8,7 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/gatt.h>
+#include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -17,6 +17,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/transport.h>
+#include <pbl/pp/transports/gatt.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -29,6 +30,20 @@
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
+
+const Uuid pbl_pp_gatt_service_uuid = {
+  PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT),
+};
+
+const Uuid pbl_pp_gatt_characteristic_uuids[PBL_PP_GATT_CHARACTERISTIC_NUM] = {
+  [PBL_PP_GATT_CHARACTERISTIC_DATA] =
+      {
+        PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_DATA_CHARACTERISTIC_UUID_32BIT),
+      },
+  [PBL_PP_GATT_CHARACTERISTIC_META] = {
+    PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_META_CHARACTERISTIC_UUID_32BIT),
+  },
+};
 
 typedef enum {
   StateDisconnectedReadingMeta,
@@ -189,7 +204,7 @@ extern uint16_t gatt_client_characteristic_get_handle_and_connection(
     pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection_out);
 
 // -------------------------------------------------------------------------------------------------
-void ppogatt_reset_disconnect_counter(void) {
+void pbl_pp_gatt_reset_disconnect_counter(void) {
   s_disconnect_counter = 0;
 }
 
@@ -617,7 +632,7 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
   // Possibly successful disconnect?
   if (s_disconnect_counter) {
   }
-  ppogatt_reset_disconnect_counter();
+  pbl_pp_gatt_reset_disconnect_counter();
   client->resets_counter = 0;
 
   if (PBL_LIKELY(client->state == StateConnectedClosedAwaitingResetCompleteSelfInitiatedReset)) {
@@ -973,7 +988,7 @@ handle_error:
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_create(void) {
+void pbl_pp_gatt_create(void) {
   bt_lock();
   {
     PBL_ASSERT_TASK(PebbleTask_KernelMain);
@@ -985,8 +1000,8 @@ void ppogatt_create(void) {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                    uint8_t num_characteristics) {
+void pbl_pp_gatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
+                                        uint8_t num_characteristics) {
   bt_lock();
   {
     bool client_removed = false;
@@ -1028,7 +1043,7 @@ void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
   bt_unlock();
 }
 
-void ppogatt_invalidate_all_references(void) {
+void pbl_pp_gatt_invalidate_all_references(void) {
   bt_lock();
   {
     PPoGATTClient *client = s_ppogatt_head;
@@ -1084,7 +1099,7 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
 
 void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_internal *device,
                                         uint16_t conn_handle) {
-  // new_timer_create() must be called outside bt_lock (see ppogatt_handle_service_discovered).
+  // new_timer_create() must be called outside bt_lock (see pbl_pp_gatt_handle_service_discovered).
   TimerID rx_ack_timer = new_timer_create();
   PBL_ASSERTN(rx_ack_timer);
   TimerID send_retry_timer = new_timer_create();
@@ -1218,7 +1233,7 @@ void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, ui
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
+void pbl_pp_gatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_INFO("PPoGATT service discovered, starting handshake");
 
   // Create timers outside of bt_lock to avoid deadlock with NimbleHost.
@@ -1234,7 +1249,7 @@ void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics)
     // Reversed PPoG has priority: ignore the forward service if reversed is
     // active on this connection.
     GAPLEConnection *meta_conn =
-        gatt_client_characteristic_get_connection(characteristics[PPoGATTCharacteristicMeta]);
+        gatt_client_characteristic_get_connection(characteristics[PBL_PP_GATT_CHARACTERISTIC_META]);
     if (meta_conn && s_reversed_active_conn == meta_conn) {
       bt_unlock();
       new_timer_delete(rx_ack_timer);
@@ -1252,9 +1267,9 @@ void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics)
       return;
     }
     client->role = PPoGATTRoleForward;
-    pbl_bt_characteristic_t meta = characteristics[PPoGATTCharacteristicMeta];
-    client->characteristics.meta = characteristics[PPoGATTCharacteristicMeta];
-    client->characteristics.data = characteristics[PPoGATTCharacteristicData];
+    pbl_bt_characteristic_t meta = characteristics[PBL_PP_GATT_CHARACTERISTIC_META];
+    client->characteristics.meta = characteristics[PBL_PP_GATT_CHARACTERISTIC_META];
+    client->characteristics.data = characteristics[PBL_PP_GATT_CHARACTERISTIC_DATA];
 
     PBL_LOG_DBG("PPoGATT reading meta characteristic");
 
@@ -1278,7 +1293,7 @@ void ppogatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics)
 
 // -------------------------------------------------------------------------------------------------
 
-bool ppogatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
+bool pbl_pp_gatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
   bt_lock();
   bool can_handle = (prv_find_client_with_characteristic(characteristic, nullptr) != nullptr);
   bt_unlock();
@@ -1287,8 +1302,8 @@ bool ppogatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
-                              BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
+void pbl_pp_gatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
+                                  BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
   bt_lock();
   {
     const bool is_subscribed = (subscription_type != BLESubscriptionNone);
@@ -1326,9 +1341,9 @@ unlock:
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
-                                         const uint8_t *value, size_t value_length,
-                                         enum pbl_bt_gatt_error error) {
+void pbl_pp_gatt_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
+                                             const uint8_t *value, size_t value_length,
+                                             enum pbl_bt_gatt_error error) {
   bt_lock();
   {
     bool is_data = false;
@@ -1715,7 +1730,7 @@ static const struct pbl_pp_transport s_transport = {
 
 // -------------------------------------------------------------------------------------------------
 
-void ppogatt_destroy(void) {
+void pbl_pp_gatt_destroy(void) {
   bool self_initiated_disconnect = false;
   bt_lock();
   {
@@ -1734,7 +1749,7 @@ void ppogatt_destroy(void) {
   // phone out of range). If we initiated the disconnect ourselves due to max resets, keep the
   // counter so the stall protection can kick in after repeated failures.
   if (!self_initiated_disconnect) {
-    ppogatt_reset_disconnect_counter();
+    pbl_pp_gatt_reset_disconnect_counter();
   }
 }
 

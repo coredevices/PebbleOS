@@ -13,6 +13,13 @@ module = PP
 module-str = Pebble protocol
 source "subsys/logging/Kconfig.template.log_level"
 
+config PP_TRANSPORT_GATT
+    bool
+    default y
+    depends on BT
+    help
+      Pebble protocol over GATT (PPoGATT), the transport phones use.
+
 config PP_TRANSPORT_CONSOLE
     bool
     default y
