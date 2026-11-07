@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
@@ -22,7 +23,6 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 

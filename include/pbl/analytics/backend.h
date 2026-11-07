@@ -8,8 +8,8 @@
 #include <stdint.h>
 
 /**
- * @defgroup services_analytics_backend Analytics backends
- * @ingroup services_analytics
+ * @defgroup analytics_backend Analytics backends
+ * @ingroup analytics
  * @brief Interface implemented by analytics backends.
  * @{
  */
@@ -17,7 +17,7 @@
 /**
  * @brief Operations of an analytics backend.
  *
- * The analytics service validates the key and forwards every metric update to each backend.
+ * Analytics validates the key and forwards every metric update to each backend.
  */
 struct pbl_analytics_backend_ops {
   /** Set a signed metric. */

@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/irq.h>
@@ -18,7 +19,6 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/speaker/note_sequence.h>

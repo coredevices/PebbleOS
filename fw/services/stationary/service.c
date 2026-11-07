@@ -3,12 +3,12 @@
 
 #include <stdlib.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/stationary.h>

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/analytics/analytics.h>
+#include <pbl/analytics/analytics.h>
 #include <pbl/services/runlevel.h>
 
 #include <apps/prf/low_power.h>

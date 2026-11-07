@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/assert.h>
@@ -14,7 +15,6 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_transport.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>

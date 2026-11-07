@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/board/partitions.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/pmic.h>
@@ -11,7 +12,6 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>

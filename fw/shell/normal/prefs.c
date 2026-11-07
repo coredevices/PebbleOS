@@ -33,11 +33,11 @@
 #include <pbl/services/orientation_manager.h>
 #endif
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>

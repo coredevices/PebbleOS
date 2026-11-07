@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/console/console.h>
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/time.h>
 #include <pbl/mcu/fpu.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/clock.h>

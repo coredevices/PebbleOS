@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/vibes/vibe_intensity.h>

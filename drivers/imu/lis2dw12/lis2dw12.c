@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
@@ -10,7 +11,6 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>

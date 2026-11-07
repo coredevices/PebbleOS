@@ -5,12 +5,12 @@
 
 #include "gap_le_connect.h"
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/advert.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 

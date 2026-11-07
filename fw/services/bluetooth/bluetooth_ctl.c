@@ -12,10 +12,10 @@
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/transport.h>
 #endif
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/bluetooth/battery_level.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>

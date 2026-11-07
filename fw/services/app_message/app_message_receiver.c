@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/comm_session/session_receive_router.h>

@@ -3,9 +3,9 @@
 
 #include "watchface.h"
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 
 #include <applib/ui/dialogs/expandable_dialog.h>

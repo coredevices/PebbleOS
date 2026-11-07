@@ -6,9 +6,9 @@
 #include "event_service_client.h"
 #include "tick_timer_service_private.h"
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/tick_timer.h>

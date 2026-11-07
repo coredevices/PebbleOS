@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/btutil/bt_device.h>
-#include <pbl/services/analytics/analytics.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connect.h>

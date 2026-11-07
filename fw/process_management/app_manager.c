@@ -7,12 +7,12 @@
 #include "process_runtime.h"
 
 // Pebble stuff
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
 #include <pbl/services/compositor/compositor_transitions.h>

@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
@@ -13,7 +14,6 @@
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/system_task.h>

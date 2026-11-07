@@ -7,11 +7,11 @@
 
 #include <stdint.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/units.h>

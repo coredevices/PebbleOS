@@ -3,9 +3,9 @@
 
 #include <inttypes.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/util/math.h>
 
 #ifdef CONFIG_SHELL

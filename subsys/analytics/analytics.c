@@ -3,11 +3,11 @@
 
 #include <stdlib.h>
 
+#include <pbl/analytics/analytics.h>
+#include <pbl/analytics/backend.h>
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
-#include <pbl/services/analytics/analytics.h>
-#include <pbl/services/analytics/backend.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
