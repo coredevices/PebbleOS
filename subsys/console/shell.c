@@ -5,14 +5,14 @@
 #include <stdint.h>
 
 #include <pbl/console/console.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 #include <pbl/shell/shell.h>
 
-static TimerID s_rx_disable_timer = TIMER_INVALID_ID;
-
-static void prv_rx_disable_timer_cb(void *data) {
+static void prv_rx_disable_timer_cb(struct pbl_work *work) {
   pbl_console_set_rx_enabled(true);
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_rx_disable_timer, prv_rx_disable_timer_cb);
 
 static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **argv) {
   unsigned long seconds;
@@ -22,15 +22,11 @@ static int prv_cmd_rx_disable(const struct pbl_shell *sh, size_t argc, char **ar
     return -EINVAL;
   }
 
-  if (s_rx_disable_timer == TIMER_INVALID_ID) {
-    s_rx_disable_timer = new_timer_create();
-  }
-
   pbl_console_set_rx_enabled(false);
 
   pbl_shell_print(sh, "console RX disabled for %lu seconds", seconds);
 
-  new_timer_start(s_rx_disable_timer, seconds * 1000, prv_rx_disable_timer_cb, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_rx_disable_timer, PBL_MSEC(seconds * 1000));
 
   return 0;
 }

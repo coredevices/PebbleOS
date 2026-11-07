@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/runlevel.h>
 
 #include <apps/prf/low_power.h>
@@ -14,7 +15,6 @@
 #include <process_management/worker_manager.h>
 
 static bool s_low_power_active, s_prev_low_power_active;
-static TimerID s_toggle_timer = TIMER_INVALID_ID;
 
 static void prv_low_power_launcher_task_callback(void *unused) {
   if (s_low_power_active == s_prev_low_power_active) {
@@ -35,20 +35,19 @@ static void prv_low_power_launcher_task_callback(void *unused) {
   s_prev_low_power_active = s_low_power_active;
 }
 
-static void prv_low_power_toggle_timer_callback(void *data) {
-  launcher_task_add_callback(prv_low_power_launcher_task_callback, data);
+static void prv_low_power_toggle_timer_callback(struct pbl_work *work) {
+  launcher_task_add_callback(prv_low_power_launcher_task_callback, nullptr);
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_toggle_timer, prv_low_power_toggle_timer_callback);
 
 static void prv_low_power_transition(bool active) {
   s_low_power_active = active;
-  if (s_toggle_timer == TIMER_INVALID_ID) {
-    s_toggle_timer = new_timer_create();
-  }
   // Rapid charger connection changes (aligning magnetic connector for example)
   // will cause repeated low power on/off requests. Require that a few seconds
   // elapse without further transitions before acting upon it to give us some
   // time to settle on one state or the other.
-  new_timer_start(s_toggle_timer, 3000, prv_low_power_toggle_timer_callback, nullptr, 0 /*flags*/);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_toggle_timer, PBL_MSEC(3000));
 
   // FIXME PBL-XXXXX: This should be in a shell/prf/battery_ui_fsm.c
 #ifdef CONFIG_RECOVERY_FW

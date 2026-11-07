@@ -7,8 +7,8 @@
 #include <string.h>
 
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/shell/shell.h>
 
@@ -27,13 +27,19 @@ static void prv_stall_irq(void *data) {
   prv_stall(data);
 }
 
+static void prv_stall_work(struct pbl_work *work) {
+  prv_stall(nullptr);
+}
+
+static PBL_DELAYED_WORK_DEFINE(s_stall_timer, prv_stall_work);
+
 static int prv_cmd_stall(const struct pbl_shell *sh, size_t argc, char **argv) {
   const char *thread = argv[1];
 
   if (strcmp(thread, "main") == 0) {
     launcher_task_add_callback(prv_stall, nullptr);
   } else if (strcmp(thread, "timers") == 0) {
-    new_timer_start(new_timer_create(), 10, prv_stall, nullptr, 0);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_stall_timer, PBL_MSEC(10));
   } else if (strcmp(thread, "bg") == 0) {
     sys_work_add(prv_stall, nullptr);
   } else if (strcmp(thread, "irq") == 0) {

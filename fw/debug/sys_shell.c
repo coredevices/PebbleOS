@@ -15,7 +15,7 @@
 #include <pbl/kernel/mpu.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/size.h>
 
@@ -123,24 +123,18 @@ static int prv_cmd_bootbit(const struct pbl_shell *sh, size_t argc, char **argv)
   return 0;
 }
 
-static TimerID s_abusive_timer = TIMER_INVALID_ID;
+static uint16_t s_waste_count;
+static uint16_t s_waste_delay;
 
-struct WasteTimerData {
-  uint16_t count;
-  uint16_t delay;
-};
-static_assert(sizeof(struct WasteTimerData) <= sizeof(uintptr_t), "struct WasteTimerData too big");
+static void prv_waste_time_cb(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_abusive_timer, prv_waste_time_cb);
 
-static void prv_waste_time_cb(void *context) {
-  struct WasteTimerData data;
-  memcpy(&data, &context, sizeof data);
-
-  for (int i = 0; i < data.delay; ++i) {
+static void prv_waste_time_cb(struct pbl_work *work) {
+  for (int i = 0; i < s_waste_delay; ++i) {
     pbl_busy_wait_us(1000);
   }
-  if (--data.count > 0) {
-    memcpy(&context, &data, sizeof context);
-    new_timer_start(s_abusive_timer, 1, prv_waste_time_cb, context, 0);
+  if (--s_waste_count > 0) {
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_abusive_timer, PBL_MSEC(1));
   }
 }
 
@@ -158,17 +152,9 @@ static int prv_cmd_waste_time(const struct pbl_shell *sh, size_t argc, char **ar
     return -EINVAL;
   }
 
-  struct WasteTimerData data = {count, delay};
-  uintptr_t data_pack = 0;
-  memcpy(&data_pack, &data, sizeof data);
-
-  if (s_abusive_timer == TIMER_INVALID_ID) {
-    s_abusive_timer = new_timer_create();
-  }
-  if (!new_timer_start(s_abusive_timer, 100, prv_waste_time_cb, (void *)data_pack, 0)) {
-    pbl_shell_error(sh, "failed to start the timer");
-    return -EIO;
-  }
+  s_waste_count = count;
+  s_waste_delay = delay;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_abusive_timer, PBL_MSEC(100));
 
   return 0;
 }

@@ -15,13 +15,13 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mpu.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/boot_splash.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/new_timer/new_timer_service.h>
 #include <pbl/services/prf_update.h>
 #include <pbl/services/regular_timer.h>
@@ -46,10 +46,6 @@
 #include <system/version.h>
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/serial.h>
-#endif
-
-#ifndef CONFIG_MFG
-static TimerID s_uptime_timer = TIMER_INVALID_ID;
 #endif
 
 static void print_splash_screen(void) {
@@ -85,11 +81,12 @@ static void clear_reset_loop_detection_bits(void) {
 }
 
 #ifndef CONFIG_MFG
-static void uptime_callback(void *data) {
+static void uptime_callback(struct pbl_work *work) {
   PBL_LOG_VERBOSE("Uptime reached 15 minutes, set stable bit.");
-  new_timer_delete(s_uptime_timer);
   boot_bit_set(BOOT_BIT_FW_STABLE);
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_uptime_timer, uptime_callback);
 #endif
 
 #ifdef CONFIG_SOC_SF32LB52
@@ -219,8 +216,7 @@ int main(void) {
   PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr) >= 0);
 
 #ifndef CONFIG_MFG
-  s_uptime_timer = new_timer_create();
-  new_timer_start(s_uptime_timer, 15 * 60 * 1000, uptime_callback, nullptr, 0 /*flags*/);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_uptime_timer, PBL_MSEC(15 * 60 * 1000));
 #else
   boot_bit_set(BOOT_BIT_FW_STABLE);
 #endif

@@ -15,6 +15,7 @@
 #include <pbl/console/console.h>
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/mcu/fpu.h>
 #include <pbl/pp/transports/qemu.h>
 #include <pbl/services/battery/battery_monitor.h>
@@ -29,7 +30,6 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/music_internal.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/task_wdt/task_wdt.h>
 
@@ -76,7 +76,8 @@
 #include <system/die.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
-static int s_back_hold_timer = TIMER_INVALID_ID;
+static void back_button_force_quit_handler(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_back_hold_timer, back_button_force_quit_handler);
 
 #ifndef CONFIG_SHELL_SDK
 static const uint32_t BACK_QUICKPRESS_INTERVAL_TICKS = 300;
@@ -133,7 +134,7 @@ bool launcher_popups_are_blocked(void) {
 // loading a watchface as a result of pressing 'back', the
 // FORCE_QUIT_HOLD_MS timer will trigger.  Check once we wake up and process
 // the launcher_force_quit_app event to see if the back button release event
-// got processed between the NewTimer firing and KernelMain waking up to do the kill.
+// got processed between the timer firing and KernelMain waking up to do the kill.
 static bool s_force_quit_was_cancelled = false;
 
 #ifdef CONFIG_TOUCH
@@ -143,7 +144,7 @@ static bool s_touch_contact_engaged;
 
 void launcher_cancel_force_quit(void) {
   s_force_quit_was_cancelled = true;
-  new_timer_stop(s_back_hold_timer);
+  pbl_delayed_work_cancel(&s_back_hold_timer);
 }
 
 static void launcher_force_quit_app(void *data) {
@@ -151,7 +152,7 @@ static void launcher_force_quit_app(void *data) {
     // If you see this in logs after FIRM-556 (general system sluggishness)
     // is fixed, please file a bug!
     PBL_LOG_ERR(
-        "NewTimer event fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
+        "Timer fired for force quit, but the back button was released before we went to deal with it!  Wow, we must have been really slow!  Please file a bug!");
     return;
   }
 
@@ -164,8 +165,8 @@ static void launcher_force_quit_app(void *data) {
   app_manager_force_quit_to_launcher();
 }
 
-static void back_button_force_quit_handler(void *data) {
-  // Happens on NewTimer thread -- the launcher task may still be "behind"
+static void back_button_force_quit_handler(struct pbl_work *work) {
+  // Happens on the work queue thread -- the launcher task may still be "behind"
   // on servicing events, so do check again later once *this* event gets
   // serviced to see if this is still relevant!
   launcher_task_add_callback(launcher_force_quit_app, nullptr);
@@ -184,9 +185,8 @@ static void launcher_handle_button_event(PebbleEvent *e) {
             ProcessAppRunLevelNormal) {
       // Start timer for force-quitting app
       s_force_quit_was_cancelled = false;
-      bool success = new_timer_start(s_back_hold_timer, FORCE_QUIT_HOLD_MS,
-                                     back_button_force_quit_handler, nullptr, 0 /*flags*/);
-      PBL_ASSERTN(success);
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_back_hold_timer,
+                                  PBL_MSEC(FORCE_QUIT_HOLD_MS));
     }
 
 #ifndef CONFIG_SHELL_SDK
@@ -587,8 +587,6 @@ static void PBL_NOINLINE prv_handle_event(PebbleEvent *e) {
 }
 
 static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
-  s_back_hold_timer = new_timer_create();
-
   process_manager_init();
   app_manager_init();
   worker_manager_init();

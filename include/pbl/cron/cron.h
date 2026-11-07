@@ -18,9 +18,10 @@
  * job computes its next matching time; the job fires once, then is unscheduled. DST transitions
  * are handled, and clock changes recompute the execution times as configured per job.
  *
- * Callbacks run on the NewTimers thread, or on the caller of pbl_cron_handle_clock_change() for
- * the jobs it finds due, without the cron lock held, so they may reschedule their own job. The
- * job structures are owned by the caller and must stay valid while scheduled.
+ * Callbacks run on the pbl_sys_workq_high thread, or on the caller of
+ * pbl_cron_handle_clock_change() for the jobs it finds due, without the cron lock held, so they may
+ * reschedule their own job. The job structures are owned by the caller and must stay valid while
+ * scheduled.
  *
  * @code{.c}
  * static void prv_alarm_fired(struct pbl_cron_job *job, void *data) {

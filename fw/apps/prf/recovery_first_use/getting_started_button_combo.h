@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/bitops.h>
 
 #include <kernel/events.h>
@@ -30,12 +29,6 @@ typedef void (*GettingStartedButtonComboCallback)(void *data);
 typedef struct {
   //! Track which buttons are held.
   uint8_t buttons_held_bitset;
-
-  //! Timer for how long the combination has been held for. We use new_timer instead of app_timer
-  //! even though it's a little more dangerous (doesn't automatically get cleaned up by the app)
-  //! because the api is nicer for starting/stopping/rescheduling the same timer over and over
-  //! again with different callbacks.
-  TimerID combo_timer;
 
   //! The callback to call when select is held.
   GettingStartedButtonComboCallback select_callback;

@@ -6,12 +6,12 @@
 #include <stdio.h>
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
@@ -93,7 +93,6 @@ typedef struct {
   GBitmap *action_bar_snooze;
   ActionBarLayer action_bar;
 
-  TimerID vibe_timer;
   int max_vibes;
   int vibe_count;
   VibeScore *vibe_score;
@@ -114,6 +113,14 @@ typedef struct {
 
 AlarmPopupData *s_alarm_popup_data = nullptr;
 
+static void prv_vibe(struct pbl_work *work);
+
+// Outside the popup data: stopping must not wait for prv_vibe, which can stall on the event queue
+// that KernelMain drains. Cleared before canceling, so a running prv_vibe does not re-arm.
+static bool s_vibe_repeating;
+static pbl_tick_t s_vibe_period_ticks;
+static PBL_DELAYED_WORK_DEFINE(s_vibe_timer, prv_vibe);
+
 static void prv_stop_animation_kernel_main_cb(void *callback_context) {
   if (s_alarm_popup_data) {
     dialog_set_icon((Dialog *)s_alarm_popup_data->alarm_popup,
@@ -124,10 +131,9 @@ static void prv_stop_animation_kernel_main_cb(void *callback_context) {
 static void prv_stop_vibes(void) {
   PBL_LOG_DBG("Alarm vibe: stop, played=%d/%d", s_alarm_popup_data->vibe_count,
               s_alarm_popup_data->max_vibes);
-  if (s_alarm_popup_data->vibe_timer != TIMER_INVALID_ID) {
-    new_timer_stop(s_alarm_popup_data->vibe_timer);
-    new_timer_delete(s_alarm_popup_data->vibe_timer);
-    s_alarm_popup_data->vibe_timer = TIMER_INVALID_ID;
+  if (s_vibe_repeating) {
+    s_vibe_repeating = false;
+    pbl_delayed_work_cancel(&s_vibe_timer);
     if (s_alarm_popup_data->vibe_score) {
       vibe_score_destroy(s_alarm_popup_data->vibe_score);
       s_alarm_popup_data->vibe_score = nullptr;
@@ -246,8 +252,11 @@ static void prv_vibe_kernel_main_cb(void *callback_context) {
   }
 }
 
-static void prv_vibe(void *unused) {
+static void prv_vibe(struct pbl_work *work) {
   launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);
+  if (s_vibe_repeating) {
+    pbl_delayed_work_schedule_next(&s_vibe_timer, s_vibe_period_ticks);
+  }
 }
 
 static void prv_start_vibes(void) {
@@ -277,10 +286,10 @@ static void prv_start_vibes(void) {
   s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);
   PBL_LOG_DBG("Alarm vibe: start, low_power=%d, interval=%ums, max=%d", low_power_is_active(),
               vibe_repeat_interval_ms, s_alarm_popup_data->max_vibes);
-  s_alarm_popup_data->vibe_timer = new_timer_create();
-  prv_vibe(nullptr);
-  new_timer_start(s_alarm_popup_data->vibe_timer, vibe_repeat_interval_ms, prv_vibe, nullptr,
-                  TIMER_START_FLAG_REPEATING);
+  launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);
+  s_vibe_period_ticks = pbl_ms_to_ticks(vibe_repeat_interval_ms);
+  s_vibe_repeating = true;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_vibe_timer, PBL_TICKS(s_vibe_period_ticks));
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -348,7 +357,6 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 
   s_alarm_popup_data = pbl_malloc_check(sizeof(AlarmPopupData));
   *s_alarm_popup_data = (AlarmPopupData){};
-  s_alarm_popup_data->vibe_timer = TIMER_INVALID_ID;
 
   prv_setup_action_bar();
 

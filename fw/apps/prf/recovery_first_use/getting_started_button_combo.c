@@ -3,6 +3,7 @@
 
 #include "getting_started_button_combo.h"
 
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
@@ -14,17 +15,22 @@
 #include <mfg/mfg_mode/mfg_factory_mode.h>
 #include <process_management/process_manager.h>
 
+static void prv_timeout_expired(struct pbl_work *work);
+
+// Not in the state: that is app memory, which goes away without a deinit if the app is killed.
+static PBL_DELAYED_WORK_DEFINE(s_combo_timer, prv_timeout_expired);
+static void (*s_combo_callback)(void *data);
+
 void getting_started_button_combo_init(GettingStartedButtonComboState *state,
                                        GettingStartedButtonComboCallback select_callback) {
   *state = (GettingStartedButtonComboState){
     .buttons_held_bitset = 0,
-    .combo_timer = new_timer_create(),
     .select_callback = select_callback
   };
 }
 
 void getting_started_button_combo_deinit(GettingStartedButtonComboState *state) {
-  new_timer_delete(state->combo_timer);
+  pbl_delayed_work_cancel(&s_combo_timer);
 }
 
 static void prv_factory_reset(void *not_used) {
@@ -45,12 +51,11 @@ static void prv_mfg_mode_cb(void *data) {
 }
 #endif
 
-static void prv_timeout_expired(void *data) {
+static void prv_timeout_expired(struct pbl_work *work) {
   PBL_LOG_INFO("Button combo timeout expired!");
 
   // Timeout expired, jump over the app thread to do the thing.
-  void (*real_callback)(void *) = data;
-  process_manager_send_callback_event_to_process(PebbleTask_App, real_callback, nullptr);
+  process_manager_send_callback_event_to_process(PebbleTask_App, s_combo_callback, nullptr);
 }
 
 static void prv_update_state(GettingStartedButtonComboState *state) {
@@ -72,8 +77,10 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
     if (state->buttons_held_bitset == BUTTON_COMBOS[i].desired_bitset) {
       PBL_LOG_DBG("Starting timer for combo #%d", i);
 
-      new_timer_start(state->combo_timer, COMBO_HOLD_MS, prv_timeout_expired,
-                      BUTTON_COMBOS[i].callback, 0);
+      // Canceled first, so an expiry cannot pick up the new combo's callback.
+      pbl_delayed_work_cancel(&s_combo_timer);
+      s_combo_callback = BUTTON_COMBOS[i].callback;
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_combo_timer, PBL_MSEC(COMBO_HOLD_MS));
       return;
     }
   }
@@ -81,7 +88,7 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
   PBL_LOG_DBG("Stopping combo timer");
 
   // No combo found, cancel the timer. It's harmless to call this if the timer isn't running.
-  new_timer_stop(state->combo_timer);
+  pbl_delayed_work_cancel(&s_combo_timer);
 }
 
 void getting_started_button_combo_button_pressed(GettingStartedButtonComboState *state,
