@@ -5,7 +5,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/screenshot_pp.h>
 #include <pbl/services/system_task.h>
@@ -35,7 +35,7 @@ typedef struct FrameBufferState {
 } FrameBufferState;
 
 typedef struct ScreenshotState {
-  CommSession *session;
+  struct pbl_pp_session *session;
   FrameBufferState framebuffer;
   bool sent_header;
 } ScreenshotState;
@@ -49,11 +49,11 @@ typedef struct PBL_PACKED {
 } ScreenshotHeader;
 
 typedef struct ScreenshotErrorResponseData {
-  CommSession *session;
+  struct pbl_pp_session *session;
   ScreenshotHeader header;
 } ScreenshotErrorResponseData;
 
-static void prv_send_error_response(CommSession *session, uint8_t response) {
+static void prv_send_error_response(struct pbl_pp_session *session, uint8_t response) {
   ScreenshotErrorResponseData error_response = (ScreenshotErrorResponseData){
     .session = session,
     .header = {
@@ -64,21 +64,22 @@ static void prv_send_error_response(CommSession *session, uint8_t response) {
     },
   };
 
-  comm_session_send_data(error_response.session, SCREENSHOT_ENDPOINT_ID,
-                         (const uint8_t *)&error_response.header, sizeof(error_response.header),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(error_response.session, SCREENSHOT_ENDPOINT_ID,
+              (const uint8_t *)&error_response.header, sizeof(error_response.header),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static void prv_finish(ScreenshotState *state) {
-  comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_SCREENSHOT,
-                                  PBL_BT_RESPONSE_TIME_MAX, 0);
+  pbl_pp_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_SCREENSHOT,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
   compositor_unfreeze();
   s_screenshot_in_progress = false;
 }
 
-static void prv_request_fast_connection(CommSession *session) {
-  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_SCREENSHOT, PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS);
+static void prv_request_fast_connection(struct pbl_pp_session *session) {
+  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_SCREENSHOT,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS, nullptr);
 }
 
 static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
@@ -132,8 +133,8 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
 void screenshot_send_next_chunk(void *raw_state) {
   ScreenshotState *state = (ScreenshotState *)raw_state;
 
-  CommSession *session = state->session;
-  uint32_t max_buf_len = comm_session_send_buffer_get_max_payload_length(session);
+  struct pbl_pp_session *session = state->session;
+  uint32_t max_buf_len = pbl_pp_send_buffer_max_payload(session);
   uint32_t session_len = 0;
   if (!state->sent_header) {
     max_buf_len -= sizeof(ScreenshotHeader);
@@ -156,17 +157,17 @@ void screenshot_send_next_chunk(void *raw_state) {
     return;
   }
 
-  SendBuffer *sb;
+  struct pbl_pp_send_buffer *sb;
   if (max_buf_len == 0 /* disconnected */ ||
-      !(sb = comm_session_send_buffer_begin_write_bulk(session, SCREENSHOT_ENDPOINT_ID, session_len,
-                                                       COMM_SESSION_DEFAULT_TIMEOUT))) {
+      !(sb = pbl_pp_send_buffer_begin_bulk(session, SCREENSHOT_ENDPOINT_ID, session_len,
+                                           PBL_PP_DEFAULT_TIMEOUT_MS))) {
     PBL_LOG_WRN("Terminating screenshot send early: %" PRIu32, max_buf_len);
     prv_finish(state);
     return;
   }
 
   if (state->sent_header) {
-    comm_session_send_buffer_write(sb, buffer, len);
+    pbl_pp_send_buffer_write(sb, buffer, len);
   } else {
     const ScreenshotHeader header = (const ScreenshotHeader){
       .response_code = SCREENSHOT_OK,
@@ -180,13 +181,13 @@ void screenshot_send_next_chunk(void *raw_state) {
       .width = pbl_cpu_to_be32(state->framebuffer.width),
       .height = pbl_cpu_to_be32(state->framebuffer.height),
     };
-    comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
+    pbl_pp_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
     // Fill the rest of this packet with image data.
-    comm_session_send_buffer_write(sb, buffer, len);
+    pbl_pp_send_buffer_write(sb, buffer, len);
 
     state->sent_header = true;
   }
-  comm_session_send_buffer_end_write(sb);
+  pbl_pp_send_buffer_end(sb);
 
   pbl_free(buffer);
 
@@ -199,7 +200,7 @@ static void prv_frozen_cb(void *data) {
   system_task_add_callback(screenshot_send_next_chunk, data);
 }
 
-void screenshot_protocol_msg_callback(CommSession *session, const uint8_t *msg_data,
+void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
                                       unsigned int msg_len) {
   uint8_t sub_command = msg_data[0];
   if (sub_command != 0x00) {

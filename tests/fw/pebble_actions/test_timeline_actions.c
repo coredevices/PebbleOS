@@ -1,6 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
+#include <pbl/pp/send.h>
 #include <pbl/services/timeline/timeline_actions.h>
 
 #include <clar.h>
@@ -82,25 +85,26 @@ bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
   return true;
 }
 
-bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
-  return s_window_state_supported && capability == CommSessionNotificationWindowStateSupport;
+bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
+                                   enum pbl_pp_capability capability) {
+  return s_window_state_supported && capability == PBL_PP_CAP_NOTIFICATION_WINDOW_STATE;
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   s_send_count++;
   if (s_expected_send_data == nullptr) {
-    return false;
+    return -EAGAIN;
   }
 
   if (endpoint_id != TIMELINE_ACTION_ENDPOINT) {
-    return false;
+    return -EAGAIN;
   }
 
   cl_assert_equal_m(s_expected_send_data, data, length);
   s_sent_action = true;
   s_sent_length = length;
-  return true;
+  return 0;
 }
 
 // Setup

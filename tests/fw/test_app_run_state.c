@@ -7,7 +7,8 @@
 #include <stdlib.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/comm_session/protocol.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
 #include <pbl/util/list.h>
 
 #include <process_management/app_run_state.h>
@@ -27,7 +28,7 @@ typedef struct PBL_PACKED {
   Uuid uuid;
 } AppStateMessage;
 
-struct CommSession {};
+struct pbl_pp_session {};
 
 typedef struct PBL_PACKED {
   AppState state : 8;
@@ -36,7 +37,7 @@ typedef struct PBL_PACKED {
 
 // Globals
 ///////////////////////////////////////
-CommSession *s_session = nullptr;
+struct pbl_pp_session *s_session = nullptr;
 
 static uint8_t s_launcher_deprecated_messages = 0;
 
@@ -64,11 +65,11 @@ static void prv_set_expected(AppState app_state) {
   s_app_state = app_state;
 }
 
-static void prv_set_remote_capability(CommSessionCapability c) {
+static void prv_set_remote_capability(enum pbl_pp_capability c) {
   s_flags |= c;
 }
 
-bool comm_session_has_capability(CommSession *session, CommSessionCapability c) {
+bool pbl_pp_session_has_capability(const struct pbl_pp_session *session, enum pbl_pp_capability c) {
   return (s_flags & c) != 0;
 }
 
@@ -100,7 +101,7 @@ void process_manager_put_kill_process_event(PebbleTask task, bool gracefully) {
   app_run_state_send_update(&app_manager_get_current_app_md()->uuid, NOT_RUNNING);
 }
 
-CommSession *comm_session_get_system_session(void) {
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return s_session;
 }
 
@@ -109,12 +110,12 @@ void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool runni
   cl_assert(running == (s_app_state == RUNNING ? true : false));
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   AppRunState *state = (AppRunState *)data;
   s_app_run_state_messages++;
   cl_assert(state->state == s_app_state);
-  return true;
+  return 0;
 }
 
 void bt_lock(void) {
@@ -128,7 +129,7 @@ void bt_unlock(void) {
 // Tests
 ///////////////////////////////////////
 
-extern void app_run_state_protocol_msg_callback(CommSession *, const uint8_t *, size_t);
+extern void app_run_state_protocol_msg_callback(struct pbl_pp_session *, const uint8_t *, size_t);
 
 void test_app_run_state__initialize(void) {
   s_launcher_deprecated_messages = 0;
@@ -166,7 +167,7 @@ void test_app_run_state__send_update(void) {
 
   // When app_run_state is supported, should use app_run_state
   prv_set_expected(NOT_RUNNING);
-  prv_set_remote_capability(CommSessionRunState);
+  prv_set_remote_capability(PBL_PP_CAP_RUN_STATE);
   app_run_state_send_update(&s_app_uuid, NOT_RUNNING);
   cl_assert_equal_i(s_launcher_deprecated_messages, 1);
   cl_assert_equal_i(s_app_run_state_messages, 1);
@@ -183,11 +184,11 @@ void test_app_run_state__protocol_msg_callback(void) {
   // Tests app_run_state_protocol_msg_callback which should take data
   // from a source and perform the appropriate command
   prv_set_remote_active();
-  prv_set_remote_capability(CommSessionRunState);
+  prv_set_remote_capability(PBL_PP_CAP_RUN_STATE);
   stub_app_set_uuid(s_app_uuid);
   stub_app_set_install_id(1337);
 
-  CommSession session;
+  struct pbl_pp_session session;
   AppStateMessage msg;
 
   msg.command = APP_RUN_STATE_INVALID_COMMAND;

@@ -10,7 +10,7 @@
 #include <applib/app_message/app_message.h>
 #include <applib/app_timer.h>
 
-typedef struct CommSession CommSession;
+struct pbl_pp_session;
 
 #define ACK_NACK_TIME_OUT_MS    (10000)
 #define APP_MESSAGE_ENDPOINT_ID (0x30)
@@ -98,7 +98,7 @@ typedef struct AppMessageCtx {
 static_assert(sizeof(AppMessageCtx) <= 112, "AppMessageCtx must not exceed 112 bytes!");
 
 typedef struct {
-  CommSession *session;
+  struct pbl_pp_session *session;
   //! To give us some room for future changes. This structure ends up in a buffer that is sized by
   //! the app, so we can't easily increase the size of this once shipped.
   uint8_t padding[8];
@@ -118,8 +118,8 @@ void app_message_inbox_close(AppMessageCtxInbox *inbox);
 
 typedef struct AppInboxConsumerInfo AppInboxConsumerInfo;
 
-void app_message_inbox_receive(CommSession *session, AppMessagePush *push_message, size_t length,
-                               AppInboxConsumerInfo *consumer_info);
+void app_message_inbox_receive(struct pbl_pp_session *session, AppMessagePush *push_message,
+                               size_t length, AppInboxConsumerInfo *consumer_info);
 
 AppMessageResult app_message_outbox_open(AppMessageCtxOutbox *outbox, size_t size_outbound);
 
@@ -127,13 +127,13 @@ void app_message_outbox_close(AppMessageCtxOutbox *outbox);
 
 void app_message_out_handle_ack_nack_received(const AppMessageHeader *header);
 
-void app_message_inbox_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id,
-                                           AppMessageCmd cmd);
+void app_message_inbox_send_ack_nack_reply(struct pbl_pp_session *session,
+                                           const uint8_t transaction_id, AppMessageCmd cmd);
 
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops);
 
-void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length,
-                                           AppInboxConsumerInfo *consumer_info);
+void app_message_app_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                           size_t length, AppInboxConsumerInfo *consumer_info);
 
-void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
-                                                   size_t length);
+void app_message_app_protocol_system_nack_callback(struct pbl_pp_session *session,
+                                                   const uint8_t *data, size_t length);

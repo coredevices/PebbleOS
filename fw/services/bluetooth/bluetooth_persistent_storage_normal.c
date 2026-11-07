@@ -9,6 +9,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/bluetooth/local_addr.h>
@@ -94,7 +95,7 @@ static PBL_MUTEX_DEFINE(s_db_mutex);
 
 //! Cache of the last connected system session capabilities. Updated in flash when we get new flags
 //! @note prv_lock() must be held when accessing this variable.
-static PebbleProtocolCapabilities s_cached_system_capabilities;
+static struct pbl_pp_capabilities s_cached_system_capabilities;
 
 static void prv_lock(void) {
   pbl_mutex_lock(&s_db_mutex, PBL_FOREVER);
@@ -1368,21 +1369,21 @@ void bt_persistent_storage_set_airplane_mode_enabled(bool new_state) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Remote Device Info
 
-static void prv_load_cached_system_capabilities(PebbleProtocolCapabilities *capabilities_out) {
+static void prv_load_cached_system_capabilities(struct pbl_pp_capabilities *capabilities_out) {
   if (!capabilities_out) {
     return;
   }
 
   const int read_size = prv_file_get(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY),
-                                     capabilities_out, sizeof(PebbleProtocolCapabilities));
+                                     capabilities_out, sizeof(struct pbl_pp_capabilities));
   // Default to zero capabilities if no entry found
   if (!read_size) {
-    *capabilities_out = (PebbleProtocolCapabilities){};
+    *capabilities_out = (struct pbl_pp_capabilities){};
   }
 }
 
 void bt_persistent_storage_get_cached_system_capabilities(
-    PebbleProtocolCapabilities *capabilities_out) {
+    struct pbl_pp_capabilities *capabilities_out) {
   if (!capabilities_out) {
     return;
   }
@@ -1395,8 +1396,8 @@ void bt_persistent_storage_get_cached_system_capabilities(
 }
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {
-  PebbleProtocolCapabilities diff = {};
+    const struct pbl_pp_capabilities *capabilities) {
+  struct pbl_pp_capabilities diff = {};
 
   prv_lock();
   {
@@ -1406,7 +1407,7 @@ void bt_persistent_storage_set_cached_system_capabilities(
       s_cached_system_capabilities = *capabilities;
     } else {
       diff.flags = s_cached_system_capabilities.flags;
-      s_cached_system_capabilities = (PebbleProtocolCapabilities){};
+      s_cached_system_capabilities = (struct pbl_pp_capabilities){};
     }
   }
   prv_unlock();
@@ -1414,7 +1415,7 @@ void bt_persistent_storage_set_cached_system_capabilities(
   // Only update the cache if the capability flags changed
   if (diff.flags) {
     prv_file_set(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY), capabilities,
-                 sizeof(PebbleProtocolCapabilities));
+                 sizeof(struct pbl_pp_capabilities));
 
     PebbleEvent event = {
       .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
@@ -1423,6 +1424,19 @@ void bt_persistent_storage_set_cached_system_capabilities(
     event_put(&event);
   }
 }
+
+static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
+                           void *user_data) {
+  if (event == PBL_PP_SESSION_CAPABILITIES && pbl_pp_session_is_system(session)) {
+    const struct pbl_pp_capabilities capabilities = {
+      .flags = pbl_pp_session_get_capabilities(session),
+    };
+
+    bt_persistent_storage_set_cached_system_capabilities(&capabilities);
+  }
+}
+
+PBL_PP_SESSION_LISTENER_DEFINE(bt_persistent_storage, prv_session_cb, nullptr);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common

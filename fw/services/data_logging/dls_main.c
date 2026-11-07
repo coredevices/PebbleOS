@@ -11,7 +11,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_endpoint.h>
 #include <pbl/services/data_logging/dls_list.h>
@@ -44,7 +44,7 @@ static bool prv_sends_enabled(void) {
 
 // Snapshot the session list, then chain one send per system task callback.
 // Iterating + sending inline under s_list_mutex can stall KernelBG for
-// ~500ms per session (the comm_session_send_buffer_begin_write timeout),
+// ~500ms per session (the pbl_pp_send_buffer_begin timeout),
 // tripping the watchdog once the pool fills.
 typedef struct {
   ListNode list_node;
@@ -159,8 +159,8 @@ static void prv_check_all_sessions_timer_cb(void *data) {
   static int check_counter = 0;
 
   PBL_LOG_DBG("send all sessions: empty %s connected %s counter %u",
-              bool_to_str(check_counter == 0),
-              bool_to_str(comm_session_get_system_session() != nullptr), check_counter);
+              bool_to_str(check_counter == 0), bool_to_str(pbl_pp_session_get_system() != nullptr),
+              check_counter);
 
   system_task_add_callback(prv_send_all_sessions_system_task_cb,
                            (void *)(uintptr_t)(check_counter == 0));
@@ -198,7 +198,7 @@ bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
   }
 
   // Only attempt to send data out if we can communicate with the phone
-  if (comm_session_get_system_session() == nullptr) {
+  if (pbl_pp_session_get_system() == nullptr) {
     return true;
   }
 

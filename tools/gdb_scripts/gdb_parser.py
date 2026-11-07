@@ -19,7 +19,6 @@ from collections import OrderedDict, namedtuple
 
 from gdb_symbols import get_static_variable
 from gdb_tintin import FreeRTOSMutex, LinkedList, Tasks
-from gdb_tintin_metadata import TintinMetadata
 
 logger = logging.getLogger(__name__)
 recognizers = {}
@@ -374,30 +373,17 @@ class EventedTimer(Recognizer):
 
 
 # --- Communication --- #
-class CommSession(Recognizer):
-    type = "CommSession"
+class PPSession(Recognizer):
+    type = "struct pbl_pp_session"
     depends_on = "Heap"
 
-    def try_session_address(self, var_name):
-        try:
-            var_ref = get_static_variable(var_name)
-            return gdb.parse_and_eval(var_ref).address
-        except Exception:  # noqa: BLE001
-            return None
-
     def is_type(self, session, search_blocks):
-        meta = TintinMetadata()
-        meta.hw_platform()
+        try:
+            name = session["transport"]["name"].string()
+        except Exception:  # noqa: BLE001
+            return False
 
-        transport_imp = session["transport_imp"].dereference().address
-
-        iap = self.try_session_address("s_iap_transport_implementation")
-        spp = self.try_session_address("s_plain_spp_transport_implementation")
-        ppogatt = self.try_session_address("s_ppogatt_transport_implementation")
-        qemu = self.try_session_address("s_qemu_transport_implementation")
-        console = self.try_session_address("s_console_transport_implementation")
-
-        return transport_imp in [iap, spp, ppogatt, qemu, console]
+        return name in ("PPoGATT", "console", "QEMU")
 
 
 # --- Windows --- #

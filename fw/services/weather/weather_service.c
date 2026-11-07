@@ -4,10 +4,10 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/protocol.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/time.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
@@ -298,7 +298,7 @@ bool weather_service_supported_by_phone(void) {
 #ifdef CONFIG_QEMU
   return true;
 #endif
-  PebbleProtocolCapabilities capabilities;
+  struct pbl_pp_capabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
   if (!capabilities.weather_app_support) {
     PBL_LOG_WRN("No weather support on phone");

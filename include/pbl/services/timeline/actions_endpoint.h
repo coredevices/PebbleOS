@@ -6,7 +6,7 @@
 #include "attribute.h"
 #include "item.h"
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/util/uuid.h>
 
 /**
@@ -36,7 +36,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
 /**
  * @brief Tell the phone which notification the watch is displaying.
  *
- * Only sent to phones with @ref CommSessionNotificationWindowStateSupport.
+ * Only sent to phones with @ref PBL_PP_CAP_NOTIFICATION_WINDOW_STATE.
  *
  * @param id Id of the displayed notification, or NULL when none is displayed.
  */
@@ -49,7 +49,7 @@ void timeline_action_endpoint_send_displayed_item(const Uuid *id);
  * @param data Message.
  * @param length Length of @p data in bytes.
  */
-void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
-                                                    size_t length);
+void timeline_action_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
+                                                    const uint8_t *data, size_t length);
 
 /** @} */

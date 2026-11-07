@@ -7,8 +7,9 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/system_task.h>
@@ -23,9 +24,8 @@ static const uint16_t ENDPOINT_ID = SYS_MSG_ENDPOINT_ID;
 
 void system_message_send(SystemMessageType type) {
   uint8_t buffer[2] = {0x00, type};
-  CommSession *system_session = comm_session_get_system_session();
-  comm_session_send_data(system_session, ENDPOINT_ID, buffer, sizeof(buffer),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  struct pbl_pp_session *system_session = pbl_pp_session_get_system();
+  pbl_pp_send(system_session, ENDPOINT_ID, buffer, sizeof(buffer), PBL_PP_DEFAULT_TIMEOUT_MS);
   PBL_LOG_DBG("Sending sysmsg: %u", type);
 }
 
@@ -53,7 +53,7 @@ static void prv_handle_firmware_complete_msg(void) {
 //! Note: For now we just call into storage directly for the status of FW installs. Someday,
 //! it would be nice for this exchange to take place as part of PutBytes
 extern bool pb_storage_get_status(PutBytesObjectType obj_type, PbInstallStatus *status);
-static void prv_handle_firmware_status_request(CommSession *session) {
+static void prv_handle_firmware_status_request(struct pbl_pp_session *session) {
   struct PBL_PACKED {
     uint8_t deprecated;
     uint8_t type;
@@ -81,11 +81,12 @@ static void prv_handle_firmware_status_request(CommSession *session) {
               fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
               fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
 
-  comm_session_send_data(session, ENDPOINT_ID, (uint8_t *)&fw_status_resp, sizeof(fw_status_resp),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, ENDPOINT_ID, (uint8_t *)&fw_status_resp, sizeof(fw_status_resp),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void sys_msg_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                   size_t length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   SystemMessageType t = data[1];
@@ -105,7 +106,7 @@ void sys_msg_protocol_msg_callback(CommSession *session, const uint8_t *data, si
       uint32_t total_size = 0;
 
       bool smooth_progress_supported =
-          comm_session_has_capability(session, CommSessionSmoothFwInstallProgressSupport) &&
+          pbl_pp_session_has_capability(session, PBL_PP_CAP_SMOOTH_FW_INSTALL_PROGRESS) &&
           (length >= sizeof(SysMsgSmoothFirmwareStartPayload));
 
       if (smooth_progress_supported) {
@@ -191,7 +192,6 @@ void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
     uint8_t status;
   } msg = {.zero = 0x00, .type = SysMsgFirmwareStartResponse, .status = status};
 
-  CommSession *session = comm_session_get_system_session();
-  comm_session_send_data(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(msg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
+  pbl_pp_send(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
 }

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session_receive_router.h>
+#include <pbl/pp/endpoint.h>
 
 #include <applib/app_inbox.h>
 #include <applib/app_message/app_message_internal.h>
@@ -12,9 +12,9 @@
 #include <kernel/events.h>
 #include <process_management/app_install_types.h>
 
-extern const ReceiverImplementation g_app_message_receiver_implementation;
+extern const struct pbl_pp_receiver_api g_app_message_receiver_implementation;
 
-static const ReceiverImplementation *s_rcv_imp = &g_app_message_receiver_implementation;
+static const struct pbl_pp_receiver_api *s_rcv_imp = &g_app_message_receiver_implementation;
 
 #define MAX_HEADER_SIZE (sizeof(AppMessageHeader))
 #define BUFFER_SIZE     (sizeof(AppMessagePush))
@@ -51,36 +51,39 @@ AppInstallId app_manager_get_current_app_id(void) {
 static uint8_t s_app_message_pp_buffer[BUFFER_SIZE];
 static size_t s_app_message_pp_received_length;
 
-void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length,
-                                           AppInboxConsumerInfo *consumer_info) {
+void app_message_app_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                           size_t length, AppInboxConsumerInfo *consumer_info) {
   cl_assert(length <= BUFFER_SIZE);
   memcpy(s_app_message_pp_buffer, data, length);
   s_app_message_pp_received_length = length;
 }
 
-static void prv_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+static void prv_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                      size_t length) {
   app_message_app_protocol_msg_callback(session, data, length, nullptr);
 }
 
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
 }
 
-void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
-                                     enum pbl_bt_response_time_state state,
-                                     uint16_t max_period_secs) {
+void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
+                                       enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted) {
 }
 
 static bool s_kernel_receiver_available;
-static Receiver *s_kernel_receiver;
+static struct pbl_pp_receiver *s_kernel_receiver;
 static bool s_kernel_receiver_is_receiving;
 static uint8_t s_kernel_receiver_buffer[MAX_HEADER_SIZE];
 static off_t s_kernel_receiver_buffer_idx;
 static bool s_kernel_receiver_finish_called;
 static bool s_kernel_receiver_cleanup_called;
 
-static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
-                                                     const PebbleProtocolEndpoint *endpoint,
-                                                     size_t total_payload_size) {
+static struct pbl_pp_receiver *prv_default_kernel_receiver_prepare(
+    struct pbl_pp_session *session, const struct pbl_pp_endpoint *endpoint,
+    size_t total_payload_size) {
   if (!s_kernel_receiver_available) {
     return nullptr;
   }
@@ -90,7 +93,7 @@ static Receiver *prv_default_kernel_receiver_prepare(CommSession *session,
   return s_kernel_receiver;
 }
 
-static void prv_default_kernel_receiver_write(Receiver *receiver, const uint8_t *data,
+static void prv_default_kernel_receiver_write(struct pbl_pp_receiver *receiver, const uint8_t *data,
                                               size_t length) {
   cl_assert_equal_p(receiver, s_kernel_receiver);
   memcpy(s_kernel_receiver_buffer + s_kernel_receiver_buffer_idx, data, length);
@@ -98,27 +101,27 @@ static void prv_default_kernel_receiver_write(Receiver *receiver, const uint8_t 
   cl_assert(s_kernel_receiver_buffer_idx <= MAX_HEADER_SIZE);
 }
 
-static void prv_default_kernel_receiver_finish(Receiver *receiver) {
+static void prv_default_kernel_receiver_finish(struct pbl_pp_receiver *receiver) {
   cl_assert_equal_p(receiver, s_kernel_receiver);
   s_kernel_receiver_is_receiving = false;
   s_kernel_receiver_finish_called = true;
 }
 
-static void prv_default_kernel_receiver_cleanup(Receiver *receiver) {
+static void prv_default_kernel_receiver_cleanup(struct pbl_pp_receiver *receiver) {
   cl_assert_equal_p(receiver, s_kernel_receiver);
   s_kernel_receiver_is_receiving = false;
   s_kernel_receiver_cleanup_called = true;
 }
 
-const ReceiverImplementation g_default_kernel_receiver_implementation = {
+const struct pbl_pp_receiver_api pbl_pp_kernel_receiver = {
   .prepare = prv_default_kernel_receiver_prepare,
   .write = prv_default_kernel_receiver_write,
   .finish = prv_default_kernel_receiver_finish,
   .cleanup = prv_default_kernel_receiver_cleanup,
 };
 
-void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
-                                                   size_t length) {
+void app_message_app_protocol_system_nack_callback(struct pbl_pp_session *session,
+                                                   const uint8_t *data, size_t length) {
 }
 void test_dropped_handler(uint32_t num_dropped_messages) {
 }
@@ -133,11 +136,11 @@ void test_alt_dropped_handler(uint32_t num_dropped_messages) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Tests
 
-static CommSession *s_session = (CommSession *)0xaabbccdd;
+static struct pbl_pp_session *s_session = (struct pbl_pp_session *)0xaabbccdd;
 
 void test_app_message_receiver__initialize(void) {
   s_kernel_receiver_available = true;
-  s_kernel_receiver = (Receiver *)0xffaaffaa;
+  s_kernel_receiver = (struct pbl_pp_receiver *)0xffaaffaa;
   s_kernel_receiver_is_receiving = false;
   s_kernel_receiver_finish_called = false;
   s_kernel_receiver_cleanup_called = false;
@@ -165,16 +168,16 @@ static const AppMessagePush s_push = {
   },
 };
 
-static const PebbleProtocolEndpoint s_app_message_endpoint = (const PebbleProtocolEndpoint){
-  .endpoint_id = APP_MESSAGE_ENDPOINT_ID,
+static const struct pbl_pp_endpoint s_app_message_endpoint = (const struct pbl_pp_endpoint){
   .handler = prv_protocol_msg_callback,
-  .access_mask = PebbleProtocolAccessAny,
-  .receiver_imp = &g_app_message_receiver_implementation,
-  .receiver_opt = nullptr,
+  .receiver = &g_app_message_receiver_implementation,
+  .id = APP_MESSAGE_ENDPOINT_ID,
+  .access = PBL_PP_ACCESS_ANY,
 };
 
 void test_app_message_receiver__receive_push_but_inbox_not_opened(void) {
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   cl_assert(r != nullptr);
   cl_assert_equal_b(true, s_kernel_receiver_is_receiving);
 
@@ -192,7 +195,8 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened(void) {
 }
 
 void test_app_message_receiver__receive_push_but_inbox_not_opened_then_cleanup(void) {
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
 
   s_rcv_imp->cleanup(r);
@@ -203,7 +207,8 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_then_cleanup(v
 void test_app_message_receiver__receive_push_but_inbox_not_opened_kernel_oom(void) {
   fake_kernel_malloc_set_largest_free_block(0);
 
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   cl_assert_equal_p(r, nullptr);
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
 }
@@ -211,7 +216,8 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_kernel_oom(voi
 void test_app_message_receiver__receive_push_but_inbox_not_opened_no_kernel_receiver(void) {
   fake_kernel_malloc_mark();
   s_kernel_receiver_available = false;
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   cl_assert_equal_p(r, nullptr);
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
   fake_kernel_malloc_mark_assert_equal();
@@ -220,9 +226,10 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened_no_kernel_rece
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Normal flow: writing message to app message inbox
 
-static Receiver *prv_create_inbox_prepare_and_write(void) {
+static struct pbl_pp_receiver *prv_create_inbox_prepare_and_write(void) {
   cl_assert_equal_b(true, app_message_receiver_open(sizeof(AppMessagePush)));
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   cl_assert(r != nullptr);
 
   s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
@@ -234,7 +241,7 @@ static void prv_destroy_inbox(void) {
 }
 
 void test_app_message_receiver__receive_push(void) {
-  Receiver *r = prv_create_inbox_prepare_and_write();
+  struct pbl_pp_receiver *r = prv_create_inbox_prepare_and_write();
 
   s_rcv_imp->finish(r);
   prv_process_events();
@@ -250,7 +257,7 @@ void test_app_message_receiver__receive_push(void) {
 }
 
 void test_app_message_receiver__receive_push_then_cleanup(void) {
-  Receiver *r = prv_create_inbox_prepare_and_write();
+  struct pbl_pp_receiver *r = prv_create_inbox_prepare_and_write();
 
   s_rcv_imp->cleanup(r);
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
@@ -267,7 +274,7 @@ void test_app_message_receiver__receive_push_buffer_overflow(void) {
   cl_assert_equal_b(true, app_message_receiver_open(sizeof(AppMessagePush)));
   // Write an ACK, we should be able to fit one (N)ACK in addition to the Push message:
   AppMessageAck ack = {};
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(ack));
+  struct pbl_pp_receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(ack));
   cl_assert(r != nullptr);
   s_rcv_imp->write(r, (const uint8_t *)&ack, sizeof(ack));
   s_rcv_imp->finish(r);
@@ -306,7 +313,8 @@ void test_app_message_receiver__receive_push_buffer_overflow(void) {
 void test_app_message_receiver__receive_multi_chunk_push_while_open_close_toggle(void) {
   cl_assert_equal_b(true, app_message_receiver_open(sizeof(AppMessagePush)));
 
-  Receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
   cl_assert(r != nullptr);
 
   // Receive only first byte of the push message:

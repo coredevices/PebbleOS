@@ -11,7 +11,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/services/comm_session/protocol.h>
+#include <pbl/pp/protocol.h>
 #include <pbl/services/time.h>
 #include <pbl/util/shared_cbuf.h>
 #include <pbl/util/units.h>
@@ -256,7 +256,7 @@ typedef struct PBL_PACKED {
 
 /** @brief Largest data message payload, and largest item size for unbuffered sessions. */
 static const uint32_t DLS_ENDPOINT_MAX_PAYLOAD =
-    (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage));
+    (PBL_PP_MAX_OUTBOUND_PAYLOAD - sizeof(DataLoggingSendDataMessage));
 
 /**
  * @brief Read session data, for unit tests only.

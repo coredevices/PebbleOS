@@ -7,8 +7,9 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/byteorder.h>
 
@@ -47,15 +48,15 @@ typedef struct PBL_PACKED {
 } PongMsg;
 
 static void prv_send_ping_kernel_bg_cb(void *unused) {
-  CommSession *system_session = comm_session_get_system_session();
+  struct pbl_pp_session *system_session = pbl_pp_session_get_system();
   if (system_session) {
     // Are we idle?
     bool idle = (battery_is_usb_connected() || accel_is_idle());
 
     PingMsgV2 ping_msg =
         (PingMsgV2){.hdr = {.cmd = 0, .cookie = pbl_cpu_to_be32(42)}, .idle = idle};
-    bool success = comm_session_send_data(system_session, PING_ENDPOINT, (const uint8_t *)&ping_msg,
-                                          sizeof(ping_msg), COMM_SESSION_DEFAULT_TIMEOUT);
+    bool success = 0 == pbl_pp_send(system_session, PING_ENDPOINT, (const uint8_t *)&ping_msg,
+                                    sizeof(ping_msg), PBL_PP_DEFAULT_TIMEOUT_MS);
     if (success) {
       s_last_send_time = pbl_realtime();
     }
@@ -79,7 +80,7 @@ void ping_send_if_due(void) {
     return;
   }
 
-  // Offload to KernelBG, because we cannot use comm_session_send_data() with bt_lock held.
+  // Offload to KernelBG, because pbl_pp_send() may block.
   system_task_add_callback(prv_send_ping_kernel_bg_cb, nullptr);
   s_is_ping_kernel_bg_callback_scheduled = true;
 }
@@ -102,7 +103,8 @@ static void prv_push_window(void *data) {
   simple_dialog_push(s_dialog, stack);
 }
 
-void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void ping_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                size_t length) {
   PingMsgV1 *ping = (PingMsgV1 *)data;
   switch (ping->hdr.cmd) {
     case 0: {
@@ -122,8 +124,8 @@ void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_
 
       // Send the pong response
       PongMsg pong = {.hdr = {.cmd = 1, .cookie = pbl_cpu_to_be32(cookie)}};
-      comm_session_send_data(session, PING_ENDPOINT, (uint8_t *)&pong, sizeof(pong),
-                             COMM_SESSION_DEFAULT_TIMEOUT);
+      pbl_pp_send(session, PING_ENDPOINT, (uint8_t *)&pong, sizeof(pong),
+                  PBL_PP_DEFAULT_TIMEOUT_MS);
       break;
     }
 

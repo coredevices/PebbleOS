@@ -3,7 +3,8 @@
 
 #include <string.h>
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 
 #include <mfg/mfg_info.h>
 
@@ -12,8 +13,8 @@
 #define FACTORY_REGISTRY_ENDPOINT 5001
 
 static void prv_send_response(const uint8_t *data, unsigned int length) {
-  comm_session_send_data(comm_session_get_system_session(), FACTORY_REGISTRY_ENDPOINT, data, length,
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(pbl_pp_session_get_system(), FACTORY_REGISTRY_ENDPOINT, data, length,
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static void prv_send_color_response(void) {
@@ -26,7 +27,7 @@ static void prv_send_fail_response(void) {
   prv_send_response(&error_response, sizeof(error_response));
 }
 
-void factory_registry_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void factory_registry_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                             size_t length_bytes) {
   // Expected message is 0x0 (Read), 0x09 (Length of key), followed by the string "mfg_color".
   // All other messages just get an error response

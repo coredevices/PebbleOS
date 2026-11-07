@@ -15,7 +15,7 @@
 
 #define OBJECT_SIZE 4096
 
-extern void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_data,
+extern void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
                                             uint32_t msg_len);
 
 // Fakes
@@ -67,10 +67,10 @@ static void prv_sent_cb(uint16_t endpoint_id, const uint8_t *data, unsigned int 
 // Helpers
 //////////////////////////////////////////////////////////
 
-static Transport *s_transport;
-static CommSession *s_session;
+static struct fake_transport *s_transport;
+static struct pbl_pp_session *s_session;
 
-static void prv_request_coredump(CommSession *session, uint8_t transaction_id) {
+static void prv_request_coredump(struct pbl_pp_session *session, uint8_t transaction_id) {
   const GetBytesHeader hdr = {
     .cmd_id = GET_BYTES_CMD_GET_COREDUMP,
     .transaction_id = transaction_id,
@@ -81,7 +81,7 @@ static void prv_request_coredump(CommSession *session, uint8_t transaction_id) {
 // The fake send buffer never blocks, so drain it between chunk callbacks
 static void prv_pump_transfer(void) {
   while (fake_system_task_count_callbacks()) {
-    comm_session_send_next(s_session);
+    pbl_pp_session_send_next(s_session);
     fake_system_task_callbacks_invoke(fake_system_task_count_callbacks());
   }
 }
@@ -103,7 +103,7 @@ void test_get_bytes__initialize(void) {
   fake_comm_session_init();
   fake_event_reset_count();
 
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, prv_sent_cb);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_cb);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
 }
 

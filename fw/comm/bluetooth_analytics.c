@@ -8,7 +8,7 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 #include <comm/ble/gap_le_connection.h>
 #include <comm/bt_lock.h>

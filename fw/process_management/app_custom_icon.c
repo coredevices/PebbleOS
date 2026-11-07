@@ -11,7 +11,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/util/math.h>
 
 #include <apps/system_app_ids.h>
@@ -112,7 +112,7 @@ static void set_name(const CustomizableAppType app_type, const char *name, const
   do_callbacks(app_type);
 }
 
-void customizable_app_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void customizable_app_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                             size_t length) {
   AppCustomizeMessage *message = (AppCustomizeMessage *)data;
   const FieldId field_id = message->app_type_and_field_bits & FIELD_MASK;

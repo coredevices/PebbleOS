@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/input/input.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -91,13 +92,13 @@ static uint8_t s_ack[8];
 static int s_ack_length;
 static int s_ack_count;
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   cl_assert(length <= sizeof(s_ack));
   memcpy(s_ack, data, length);
   s_ack_length = length;
   s_ack_count++;
-  return true;
+  return 0;
 }
 
 // Helpers

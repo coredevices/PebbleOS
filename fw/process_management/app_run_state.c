@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/system_task.h>
 
 #include <kernel/event_loop.h>
@@ -25,13 +26,12 @@ typedef struct PBL_PACKED {
 static void prv_send_response(void *data) {
   AppRunState *app_run_state = (AppRunState *)data;
 
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (session) {
-    if (comm_session_has_capability(session, CommSessionRunState)) {
+    if (pbl_pp_session_has_capability(session, PBL_PP_CAP_RUN_STATE)) {
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
-      bool success =
-          comm_session_send_data(session, PB_APP_STATE_ENDPOINT_ID, (uint8_t *)app_run_state,
-                                 sizeof(*app_run_state), COMM_SESSION_DEFAULT_TIMEOUT);
+      bool success = pbl_pp_send(session, PB_APP_STATE_ENDPOINT_ID, (uint8_t *)app_run_state,
+                                 sizeof(*app_run_state), PBL_PP_DEFAULT_TIMEOUT_MS);
 
       uuid_to_string(&app_run_state->uuid, uuid_buffer);
       PBL_LOG_DBG("AppRunState(0x34) %s sending status: %s - %u", (success ? "success" : "failed"),
@@ -46,7 +46,8 @@ static void prv_send_response(void *data) {
   pbl_free(app_run_state);
 }
 
-void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const Uuid *uuid) {
+void app_run_state_command(struct pbl_pp_session *session, AppRunStateCommand cmd,
+                           const Uuid *uuid) {
   const AppInstallId install_id = app_install_get_id_for_uuid(uuid);
 
   // Log most recent communication timestamp:
@@ -94,7 +95,8 @@ void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const U
   }
 }
 
-void app_run_state_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void app_run_state_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                         size_t length) {
   typedef struct PBL_PACKED {
     uint8_t command;
     Uuid uuid;
@@ -123,7 +125,7 @@ void app_run_state_send_update(const Uuid *uuid, AppState app_state) {
   // providing a different method of interacting with the endpoint.  Calls the old
   // method if the mobile application does not support the new endpoint.
 
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     // If we don't have a comm session open, don't bother sending application messages
     return;

@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session.h>
 
 #include <clar.h>
 
@@ -18,8 +19,8 @@
 // Stubs
 ////////////////////////////////////
 
-CommSession *comm_session_get_system_session(void) {
-  return (CommSession *)1;
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
+  return (struct pbl_pp_session *)1;
 }
 
 void blob_db_set_accepting_messages(bool ehh) {
@@ -34,38 +35,38 @@ static uint8_t sendbuffer[100];
 static int sendbuffer_length;
 static int sendbuffer_write_index;
 
-extern void blob_db2_protocol_msg_callback(CommSession *session, const uint8_t *data,
+extern void blob_db2_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                            size_t length);
 
-typedef void SendBuffer;
-
-SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
-                                                 size_t required_payload_length,
-                                                 uint32_t timeout_ms) {
+struct pbl_pp_send_buffer *pbl_pp_send_buffer_begin(struct pbl_pp_session *session,
+                                                    uint16_t endpoint_id,
+                                                    size_t required_payload_length,
+                                                    uint32_t timeout_ms) {
   cl_assert(required_payload_length < 100);
   sendbuffer_length = required_payload_length;
   sendbuffer_write_index = 0;
   return (void *)(uintptr_t)1;
 }
 
-bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t length) {
+bool pbl_pp_send_buffer_write(struct pbl_pp_send_buffer *sb, const uint8_t *data, size_t length) {
   memcpy(&sendbuffer[sendbuffer_write_index], data, length);
   sendbuffer_write_index += length;
   return true;
 }
 
-void comm_session_send_buffer_end_write(SendBuffer *sb) {
+void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {
   cl_assert(sendbuffer_length > 0);
   cl_assert_equal_m(sendbuffer, s_expected_msg, sendbuffer_length);
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   cl_assert_equal_m(data, s_expected_msg, length);
-  return true;
+  return 0;
 }
 
-extern void prv_send_response(CommSession *session, uint8_t *response, uint8_t response_length) {
+extern void prv_send_response(struct pbl_pp_session *session, uint8_t *response,
+                              uint8_t response_length) {
   cl_assert_equal_m(response, s_expected_msg, response_length);
 }
 

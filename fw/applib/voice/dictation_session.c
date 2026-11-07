@@ -64,7 +64,7 @@ DictationSession *dictation_session_create(uint32_t buffer_size,
   // capability flag set, which is what we want.
   bool from_app = (pebble_task_get_current() == PebbleTask_App) &&
                   !app_install_id_from_system(sys_process_manager_get_current_process_id());
-  if (from_app && !sys_system_pp_has_capability(CommSessionVoiceApiSupport)) {
+  if (from_app && !sys_system_pp_has_capability(PBL_PP_CAP_VOICE_API)) {
     PBL_LOG_WRN(
         "No phone connected or phone app does not support app-initiated dictation sessions");
     return nullptr;

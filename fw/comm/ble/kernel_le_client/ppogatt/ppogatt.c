@@ -15,7 +15,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/transport.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/system_task.h>
@@ -24,6 +25,7 @@
 
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_operations.h>
+#include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
@@ -41,7 +43,7 @@ typedef enum {
 } State;
 
 typedef enum {
-  DeleteReason_DuplicateServer = CommSessionCloseReason_TransportSpecificBegin,
+  DeleteReason_DuplicateServer = 100,
   DeleteReason_ServiceRemoved,
   DeleteReason_InvalidateAllReferences,
   DeleteReason_ResetSelfInitiated,
@@ -51,11 +53,9 @@ typedef enum {
   DeleteReason_SubscribeFailure,
   DeleteReason_MetaDataReadFailure,
   DeleteReason_MetaDataInvalid,
-  DeleteReason_CouldntOpenCommSession,
+  DeleteReason_CouldntOpenSession,
   DeleteReasonCount,
 } DeleteReason;
-
-static_assert(DeleteReasonCount <= CommSessionCloseReason_TransportSpecificEnd + 1, "");
 
 typedef enum {
   AckTimeoutState_Inactive = 0,
@@ -139,12 +139,10 @@ typedef struct PPoGATTClient {
   TimerID send_retry_timer;
 
   //! Whether the PPoGATT server transports "System", "App" or "Hybrid" PP sessions.
-  TransportDestination destination;
+  enum pbl_pp_destination destination;
 
-  //! The CommSession associated with the client.
-  //! @note Each PPoGATT client (transport) is responsible for managing the CommSession's lifecycle,
-  //! by calling comm_session_open / comm_session_close at the appropriate times.
-  CommSession *session;
+  //! Session of the client, opened and closed by it.
+  struct pbl_pp_session *session;
 
   //! Tick count when this client was created, for measuring handshake duration
   uint64_t created_ticks;
@@ -171,6 +169,7 @@ static GAPLEConnection *s_reversed_active_conn;
 
 static void prv_send_next_packets(PPoGATTClient *client);
 static void prv_start_reset(PPoGATTClient *client);
+static const struct pbl_pp_transport s_transport;
 static void prv_request_meta_rediscovery(PPoGATTClient *client);
 static void prv_reversed_take_over(PPoGATTClient *client);
 
@@ -216,40 +215,11 @@ static GAPLEConnection *prv_get_connection(const PPoGATTClient *client) {
   return gatt_client_characteristic_get_connection(client->characteristics.meta);
 }
 
-static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
-                                              enum pbl_bt_response_time_state state,
-                                              uint16_t max_period_secs,
-                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
-  PPoGATTClient *client = (PPoGATTClient *)transport;
-  GAPLEConnection *connection = prv_get_connection(client);
-  conn_mgr_set_ble_conn_response_time_ext(connection, consumer, state, max_period_secs,
-                                          granted_handler);
-}
-
-static const Uuid *prv_get_uuid(Transport *transport) {
-  PPoGATTClient *client = (PPoGATTClient *)transport;
-  return &client->app_uuid;
-}
-
-static CommSessionTransportType prv_get_type(struct Transport *transport) {
-  return CommSessionTransportType_PPoGATT;
-}
-
-static const TransportImplementation s_ppogatt_transport_implementation = {
-  .send_next = &ppogatt_send_next,
-  .close = &ppogatt_close,
-  .reset = &ppogatt_reset,
-  .set_connection_responsiveness = prv_set_connection_responsiveness,
-  .get_uuid = prv_get_uuid,
-  .get_type = prv_get_type,
-};
-
 // -------------------------------------------------------------------------------------------------
 
 static void prv_send_next_packets_async(PPoGATTClient *client) {
-  // Go through comm_session, because this will skip scheduling a callback to send_next if one is
-  // already scheduled, to avoid spamming the KernelBG queue and doing unnecessary work.
-  comm_session_send_next(client->session);
+  // The session skips scheduling if a send_next call is already pending.
+  pbl_pp_session_send_next(client->session);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -444,7 +414,7 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   }
 
   if (client->state == StateConnectedOpen) {
-    comm_session_close(client->session, (CommSessionCloseReason)reason);
+    pbl_pp_session_close(client->session);
   }
 
   if (client->role == PPoGATTRoleReversed && s_reversed_active_conn == client->rev.connection) {
@@ -553,11 +523,8 @@ static uint16_t prv_get_max_payload_size(const PPoGATTClient *client) {
 
 static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_initiated) {
   if (client->state == StateConnectedOpen) {
-    // No need to consume the remaining bytes in the SendBuffer, it's CommSession's responsibility
-    // to clean up the SendBuffer.
-    DeleteReason reason =
-        self_initiated ? DeleteReason_ResetSelfInitiated : DeleteReason_ResetRemoteInitiated;
-    comm_session_close(client->session, (CommSessionCloseReason)reason);
+    // Closing the session drops what is left in its send queue.
+    pbl_pp_session_close(client->session);
     client->session = nullptr;
   }
   client->in.next_expected_data_sn = 0;
@@ -640,10 +607,10 @@ static void prv_handle_reset_request(PPoGATTClient *client) {
 
 static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket *packet,
                                       uint16_t payload_length) {
-  CommSession *session = comm_session_open((Transport *)client, &s_ppogatt_transport_implementation,
-                                           client->destination);
+  struct pbl_pp_session *session =
+      pbl_pp_session_open(&s_transport, client->destination, &client->app_uuid);
   if (!session) {
-    prv_delete_client(client, false /* is_disconnected */, DeleteReason_CouldntOpenCommSession);
+    prv_delete_client(client, false /* is_disconnected */, DeleteReason_CouldntOpenSession);
     return;
   }
 
@@ -700,7 +667,7 @@ static void prv_handle_ack(PPoGATTClient *client, uint32_t sn) {
     // Ack'd one of the packets in flight
     const uint32_t next_sn = prv_next_sn(sn);
     const uint16_t num_bytes_acked = prv_total_num_bytes_awaiting_ack_up_to(client, next_sn);
-    comm_session_send_queue_consume(client->session, num_bytes_acked);
+    pbl_pp_session_send_queue_consume(client->session, num_bytes_acked);
 
     // If next_data_sn is before the Ack'd sn, the packet pending retransmission has just been
     // Ack'd. We can determine whether or not a packet is pending retransmission by checking if the
@@ -754,7 +721,7 @@ static void prv_handle_data(PPoGATTClient *client, const PPoGATTPacket *packet,
     prv_send_next_packets(client);
 
     client->in.next_expected_data_sn = prv_next_sn(client->in.next_expected_data_sn);
-    comm_session_receive_router_write(client->session, packet->payload, payload_length);
+    pbl_pp_session_receive(client->session, packet->payload, payload_length);
     //    PBL_LOG_DBG("Got PP data (sn=%u, %u bytes)", packet->sn, payload_length);
   } else {
     PBL_LOG_DBG("packet->sn != next_expected_data_sn (%u != %u)", packet->sn,
@@ -971,10 +938,10 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
     client->meta_read_retries = 0;
 
     if (session_type == PPoGATTSessionType_Hybrid) {
-      client->destination = TransportDestinationHybrid;
+      client->destination = PBL_PP_DESTINATION_HYBRID;
     } else { // (session_type == PPoGATTSessionType_InferredFromUuid)
       const bool is_system = uuid_is_system(&client->app_uuid);
-      client->destination = is_system ? TransportDestinationSystem : TransportDestinationApp;
+      client->destination = is_system ? PBL_PP_DESTINATION_SYSTEM : PBL_PP_DESTINATION_APP;
     }
     return;
   }
@@ -1108,7 +1075,7 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
   client->rev.connection = connection;
   client->app_uuid = UUID_INVALID;
   client->version = PPOGATT_MAX_VERSION;
-  client->destination = TransportDestinationHybrid;
+  client->destination = PBL_PP_DESTINATION_HYBRID;
 
   // The handshake is phone-initiated: wait for the phone's ResetRequest.
   client->state = StateConnectedClosedAwaitingResetRequest;
@@ -1540,7 +1507,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
     // Max number of data packets in flight, try again when we got some of them Ack'd.
     return nullptr;
   }
-  uint16_t read_space = comm_session_send_queue_get_length(client->session);
+  uint16_t read_space = pbl_pp_session_send_queue_length(client->session);
   if (read_space == 0) {
     return nullptr;
   }
@@ -1577,7 +1544,8 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
   }
   packet->type = PPoGATTPacketTypeData;
   packet->sn = client->out.next_data_sn;
-  PBL_ASSERTN(comm_session_send_queue_copy(client->session, offset, payload_size, packet->payload));
+  PBL_ASSERTN(
+      pbl_pp_session_send_queue_copy(client->session, offset, payload_size, packet->payload));
   *payload_size_out = payload_size;
   return packet;
 }
@@ -1638,7 +1606,7 @@ static void prv_send_next_packets(PPoGATTClient *client) {
     // Re-entered while the outer call dropped bt_lock; reschedule so queued
     // data still gets flushed after the outer call exits.
     if (client->session) {
-      comm_session_send_next(client->session);
+      pbl_pp_session_send_next(client->session);
     }
     return;
   }
@@ -1685,41 +1653,65 @@ static void prv_send_next_packets(PPoGATTClient *client) {
 
 // -------------------------------------------------------------------------------------------------
 
-// To be called by comm_session after enqueuing new data into the SendBuffer
-// bt_lock() must be held before calling
-void ppogatt_send_next(Transport *transport) {
-  bt_lock_assert_held(true);
-  PPoGATTClient *client = (PPoGATTClient *)transport;
-  if (!prv_is_client_valid(client)) {
-    // Client became invalid in the mean time
-    return;
-  }
-  prv_send_next_packets(client);
+static bool prv_session_filter_callback(ListNode *found_node, void *data) {
+  return ((const PPoGATTClient *)found_node)->session == data;
 }
 
-// -------------------------------------------------------------------------------------------------
-
-void ppogatt_close(struct Transport *transport) {
-  bt_lock_assert_held(true);
-  PPoGATTClient *client = (PPoGATTClient *)transport;
-  prv_delete_client(client, false /* is_disconnected */, DeleteReason_CloseCalled);
+static PPoGATTClient *prv_find_client_with_session(const struct pbl_pp_session *session) {
+  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head, prv_session_filter_callback,
+                                    (void *)session);
 }
 
-// -------------------------------------------------------------------------------------------------
-
-void ppogatt_reset(struct Transport *transport) {
-  PPoGATTClient *client = (PPoGATTClient *)transport;
+static void prv_transport_send_next(struct pbl_pp_session *session) {
   bt_lock();
-  {
-    if (!prv_is_client_valid(client)) {
-      // Client became invalid in the mean time
-      goto unlock;
-    }
-    prv_start_reset(client);
+  PPoGATTClient *client = prv_find_client_with_session(session);
+  if (client != nullptr) {
+    prv_send_next_packets(client);
   }
-unlock:
   bt_unlock();
 }
+
+static void prv_transport_close(struct pbl_pp_session *session) {
+  bt_lock();
+  PPoGATTClient *client = prv_find_client_with_session(session);
+  if (client != nullptr) {
+    prv_delete_client(client, false /* is_disconnected */, DeleteReason_CloseCalled);
+  }
+  bt_unlock();
+}
+
+static void prv_transport_reset(struct pbl_pp_session *session) {
+  bt_lock();
+  PPoGATTClient *client = prv_find_client_with_session(session);
+  if (client != nullptr) {
+    prv_start_reset(client);
+  }
+  bt_unlock();
+}
+
+static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
+                                             enum pbl_bt_consumer consumer,
+                                             enum pbl_bt_response_time_state state,
+                                             uint16_t max_period_secs,
+                                             pbl_bt_responsiveness_granted_cb_t granted) {
+  bt_lock();
+  PPoGATTClient *client = prv_find_client_with_session(session);
+  GAPLEConnection *connection = (client != nullptr) ? prv_get_connection(client) : nullptr;
+  bt_unlock();
+
+  if (connection != nullptr) {
+    conn_mgr_set_ble_conn_response_time_ext(connection, consumer, state, max_period_secs, granted);
+  }
+}
+
+static const struct pbl_pp_transport s_transport = {
+  .name = "PPoGATT",
+  .priority = 2U,
+  .send_next = prv_transport_send_next,
+  .close = prv_transport_close,
+  .reset = prv_transport_reset,
+  .set_responsiveness = prv_transport_set_responsiveness,
+};
 
 // -------------------------------------------------------------------------------------------------
 
@@ -1749,12 +1741,17 @@ void ppogatt_destroy(void) {
 // -------------------------------------------------------------------------------------------------
 // For Unit Testing
 
-Transport *ppogatt_client_for_uuid(const Uuid *uuid) {
-  return (Transport *)prv_find_client_with_uuid(uuid);
+struct pbl_pp_session *ppogatt_session_for_uuid(const Uuid *uuid) {
+  PPoGATTClient *client = prv_find_client_with_uuid(uuid);
+  return (client != nullptr) ? client->session : nullptr;
 }
 
-TransportDestination ppogatt_get_destination(Transport *transport) {
-  return ((PPoGATTClient *)transport)->destination;
+enum pbl_pp_destination ppogatt_get_destination_for_uuid(const Uuid *uuid) {
+  return prv_find_client_with_uuid(uuid)->destination;
+}
+
+const struct pbl_pp_transport *ppogatt_get_transport(void) {
+  return &s_transport;
 }
 
 bool ppogatt_has_client_for_uuid(const Uuid *uuid) {

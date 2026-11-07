@@ -19,8 +19,8 @@ static bool s_default_connection_state;
 static unsigned int s_event_count = 0;
 static PebbleEvent s_cached_event;
 
-static Transport *s_transport;
-static CommSession *s_session;
+static struct fake_transport *s_transport;
+static struct pbl_pp_session *s_session;
 
 bool remote_is_connected(void) {
   return s_default_connection_state;
@@ -39,7 +39,7 @@ void event_put(PebbleEvent *event) {
 ///////////////////////////////////////////////////////////
 static void init(bool connected) {
   if (connected) {
-    s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+    s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
     s_session = fake_transport_set_connected(s_transport, true);
   }
 

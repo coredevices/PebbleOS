@@ -2,11 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/app_message/app_message_sender.h>
 #include <pbl/services/app_outbox_service.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_internal.h>
+#include <pbl/services/app_session.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
@@ -14,10 +15,10 @@
 #include <applib/app_message/app_message_internal.h>
 #include <clar.h>
 #include <fff.h>
+#include <pp/pp_private.h>
 #include <process_management/app_install_manager.h>
 
-extern const SessionSendJobImpl s_app_message_send_job_impl;
-extern void comm_session_send_queue_cleanup(CommSession *session);
+extern const struct pbl_pp_send_job_api s_app_message_send_job_impl;
 
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,38 +51,48 @@ void app_outbox_service_cleanup_all_pending_messages(void) {
   s_is_message_cancelled = true;
 }
 
-static CommSession s_system_session;
-static CommSession *s_system_session_ptr;
-CommSession *comm_session_get_system_session(void) {
+static struct pbl_pp_session s_system_session;
+static struct pbl_pp_session *s_system_session_ptr;
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return s_system_session_ptr;
 }
 
-static CommSession s_app_session;
-static CommSession *s_app_session_ptr;
-CommSession *comm_session_get_current_app_session(void) {
+static struct pbl_pp_session s_app_session;
+static struct pbl_pp_session *s_app_session_ptr;
+struct pbl_pp_session *app_session_get_current(void) {
   if (s_process_md.allow_js) {
-    return comm_session_get_system_session();
+    return pbl_pp_session_get_system();
   }
   return s_app_session_ptr;
 }
 
-bool comm_session_is_valid(const CommSession *session) {
+void pbl_pp__lock(void) {
+}
+
+void pbl_pp__unlock(void) {
+}
+
+void pbl_pp__assert_locked(void) {
+}
+
+bool pbl_pp__session_is_open(const struct pbl_pp_session *session) {
   if (!session) {
     return false;
   }
-  return (session == comm_session_get_current_app_session() ||
-          session == comm_session_get_system_session());
+  return (session == app_session_get_current() || session == pbl_pp_session_get_system());
 }
 
-FAKE_VOID_FUNC(comm_session_send_next, CommSession *);
+FAKE_VOID_FUNC(pbl_pp_session_send_next, struct pbl_pp_session *);
 
-void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
-                                     enum pbl_bt_response_time_state state,
-                                     uint16_t max_period_secs) {
+void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
+                                       enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted) {
 }
 
-void comm_session_sanitize_app_session(CommSession **session_in_out) {
-  CommSession *permitted_session = comm_session_get_current_app_session();
+void app_session_sanitize(struct pbl_pp_session **session_in_out) {
+  struct pbl_pp_session *permitted_session = app_session_get_current();
   *session_in_out =
       ((!*session_in_out) || (*session_in_out == permitted_session)) ? permitted_session : nullptr;
 }
@@ -98,7 +109,7 @@ static void prv_send_outbox_raw_data(const uint8_t *data, size_t length) {
   app_outbox_service_register_fake.arg1_val(outbox_message);
 }
 
-static AppMessageAppOutboxData *prv_create_and_send_outbox_message(CommSession *session,
+static AppMessageAppOutboxData *prv_create_and_send_outbox_message(struct pbl_pp_session *session,
                                                                    uint16_t endpoint_id,
                                                                    const uint8_t *payload,
                                                                    size_t payload_length) {
@@ -112,11 +123,11 @@ static AppMessageAppOutboxData *prv_create_and_send_outbox_message(CommSession *
   return outbox_data;
 }
 
-static void prv_process_send_queue(CommSession *session) {
+static void prv_process_send_queue(struct pbl_pp_session *session) {
   cl_assert(session);
-  size_t length = comm_session_send_queue_get_length(session);
+  size_t length = pbl_pp_session_send_queue_length(session);
   if (length) {
-    comm_session_send_queue_consume(session, length);
+    pbl_pp_session_send_queue_consume(session, length);
   }
 }
 
@@ -137,7 +148,7 @@ static void prv_process_send_queue(CommSession *session) {
 #define ALLOWED_ENDPOINT_ID    (APP_MESSAGE_ENDPOINT_ID)
 
 static const uint8_t TEST_PAYLOAD[] = {0xaa, 0xbb, 0xcc, 0xdd};
-static uint8_t TEST_EXPECTED_PP_MSG[sizeof(PebbleProtocolHeader) + sizeof(TEST_PAYLOAD)];
+static uint8_t TEST_EXPECTED_PP_MSG[sizeof(struct pbl_pp_header) + sizeof(TEST_PAYLOAD)];
 
 void test_app_message_sender__initialize(void) {
   s_system_session_ptr = &s_system_session;
@@ -145,14 +156,14 @@ void test_app_message_sender__initialize(void) {
   RESET_FAKE(app_install_mark_prioritized);
   RESET_FAKE(app_outbox_service_consume_message);
   RESET_FAKE(app_outbox_service_register);
-  RESET_FAKE(comm_session_send_next);
+  RESET_FAKE(pbl_pp_session_send_next);
   app_outbox_service_consume_message_fake.custom_fake = prv_consume_message;
 
   s_is_message_cancelled = false;
 
   s_process_md.allow_js = false;
 
-  PebbleProtocolHeader *header = (PebbleProtocolHeader *)TEST_EXPECTED_PP_MSG;
+  struct pbl_pp_header *header = (struct pbl_pp_header *)TEST_EXPECTED_PP_MSG;
   header->length = pbl_cpu_to_be16(sizeof(TEST_PAYLOAD));
   header->endpoint_id = pbl_cpu_to_be16(ALLOWED_ENDPOINT_ID);
   memcpy(TEST_EXPECTED_PP_MSG + sizeof(*header), TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
@@ -254,9 +265,9 @@ void test_app_message_sender__system_session_and_js_app(void) {
 void test_app_message_sender__freed_but_not_sent_entirely(void) {
   AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
       nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
-  size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
-  comm_session_send_queue_consume(s_app_session_ptr, length - 1);
-  comm_session_send_queue_cleanup(s_app_session_ptr);
+  size_t length = pbl_pp_session_send_queue_length(s_app_session_ptr);
+  pbl_pp_session_send_queue_consume(s_app_session_ptr, length - 1);
+  pbl_pp__send_queue_drop(s_app_session_ptr);
   assert_consumed(AppMessageSenderErrorDisconnected, 1);
   cl_assert_equal_i(app_install_mark_prioritized_fake.call_count, 0);
   app_free(outbox_data);
@@ -265,33 +276,32 @@ void test_app_message_sender__freed_but_not_sent_entirely(void) {
 void test_app_message_sender__byte_by_byte_consume(void) {
   AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
       nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
-  size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
-  cl_assert_equal_i(length, sizeof(PebbleProtocolHeader) + sizeof(TEST_PAYLOAD));
+  size_t length = pbl_pp_session_send_queue_length(s_app_session_ptr);
+  cl_assert_equal_i(length, sizeof(struct pbl_pp_header) + sizeof(TEST_PAYLOAD));
 
   for (int i = 0; i < length; ++i) {
     // Test the `length` implementation:
-    cl_assert_equal_i(length - i, comm_session_send_queue_get_length(s_app_session_ptr));
+    cl_assert_equal_i(length - i, pbl_pp_session_send_queue_length(s_app_session_ptr));
 
     // Test the `read_pointer` implementation:
     const uint8_t *read_pointer = nullptr;
-    size_t length_available =
-        comm_session_send_queue_get_read_pointer(s_app_session_ptr, &read_pointer);
+    size_t length_available = pbl_pp_session_send_queue_peek(s_app_session_ptr, &read_pointer);
     cl_assert(read_pointer);
     cl_assert_equal_i(TEST_EXPECTED_PP_MSG[i], *read_pointer);
     // Expect that the header and payload will be non-contiguous:
-    if (i < sizeof(PebbleProtocolHeader)) {
-      cl_assert_equal_i(sizeof(PebbleProtocolHeader) - i, length_available);
+    if (i < sizeof(struct pbl_pp_header)) {
+      cl_assert_equal_i(sizeof(struct pbl_pp_header) - i, length_available);
     } else {
       cl_assert_equal_i(length - i, length_available);
     }
 
     // Test the `copy` implementation:
     uint8_t byte_out = 0xff;
-    cl_assert_equal_i(1, comm_session_send_queue_copy(s_app_session_ptr, 0 /* offset */,
-                                                      1 /* length */, &byte_out));
+    cl_assert_equal_i(1, pbl_pp_session_send_queue_copy(s_app_session_ptr, 0 /* offset */,
+                                                        1 /* length */, &byte_out));
     cl_assert_equal_i(TEST_EXPECTED_PP_MSG[i], byte_out);
 
-    comm_session_send_queue_consume(s_app_session_ptr, 1 /* length */);
+    pbl_pp_session_send_queue_consume(s_app_session_ptr, 1 /* length */);
   }
 
   assert_consumed(AppMessageSenderErrorSuccess, 1);
@@ -302,8 +312,8 @@ void test_app_message_sender__byte_by_byte_consume(void) {
 void test_app_message_sender__byte_by_byte_copy_with_offset(void) {
   AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
       nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
-  size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
-  cl_assert_equal_i(length, sizeof(PebbleProtocolHeader) + sizeof(TEST_PAYLOAD));
+  size_t length = pbl_pp_session_send_queue_length(s_app_session_ptr);
+  cl_assert_equal_i(length, sizeof(struct pbl_pp_header) + sizeof(TEST_PAYLOAD));
 
   uint8_t bytes_out[length];
   memset(bytes_out, 0xff, length);
@@ -313,12 +323,12 @@ void test_app_message_sender__byte_by_byte_copy_with_offset(void) {
     // Shift offset byte by byte:
     for (int o = 0; o < (length - c); ++o) {
       size_t length_to_copy = (length - c - o);
-      cl_assert_equal_i(length_to_copy, comm_session_send_queue_copy(s_app_session_ptr, o,
-                                                                     length_to_copy, bytes_out));
+      cl_assert_equal_i(length_to_copy, pbl_pp_session_send_queue_copy(s_app_session_ptr, o,
+                                                                       length_to_copy, bytes_out));
       cl_assert_equal_i(0, memcmp(bytes_out, TEST_EXPECTED_PP_MSG + o + c, length_to_copy));
     }
 
-    comm_session_send_queue_consume(s_app_session_ptr, 1 /* length */);
+    pbl_pp_session_send_queue_consume(s_app_session_ptr, 1 /* length */);
   }
 
   assert_consumed(AppMessageSenderErrorSuccess, 1);
@@ -335,30 +345,31 @@ static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
   AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
       nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
 
-  size_t length = comm_session_send_queue_get_length(s_app_session_ptr);
+  size_t length = pbl_pp_session_send_queue_length(s_app_session_ptr);
   uint8_t bytes_out[length];
   memset(bytes_out, 0xff, length);
 
   // Copy & consume one byte of the header -- note the header is 4 bytes total:
   size_t first_length = num_bytes;
   cl_assert_equal_i(first_length,
-                    comm_session_send_queue_copy(s_app_session_ptr, 0, first_length, bytes_out));
-  comm_session_send_queue_consume(s_app_session_ptr, first_length);
+                    pbl_pp_session_send_queue_copy(s_app_session_ptr, 0, first_length, bytes_out));
+  pbl_pp_session_send_queue_consume(s_app_session_ptr, first_length);
 
   // App quits with only one header byte consumed:
   app_outbox_service_cleanup_all_pending_messages();
 
   // Copy & consume the rest:
   size_t second_length = (length - first_length);
-  cl_assert_equal_i(second_length, comm_session_send_queue_copy(s_app_session_ptr, 0, second_length,
-                                                                bytes_out + first_length));
-  comm_session_send_queue_consume(s_app_session_ptr, second_length);
+  cl_assert_equal_i(second_length,
+                    pbl_pp_session_send_queue_copy(s_app_session_ptr, 0, second_length,
+                                                   bytes_out + first_length));
+  pbl_pp_session_send_queue_consume(s_app_session_ptr, second_length);
 
   // The message should be consumed now (to free the resources associated with it):
   assert_consumed(AppMessageSenderErrorSuccess, 1);
 
   // Expect at least the PebbleProtocol header or more to be intact:
-  size_t intact_size = MAX(num_bytes, sizeof(PebbleProtocolHeader));
+  size_t intact_size = MAX(num_bytes, sizeof(struct pbl_pp_header));
   cl_assert_equal_m(bytes_out, TEST_EXPECTED_PP_MSG, intact_size);
 
   // Expect the remainder to be filled with zeroes:
@@ -371,10 +382,10 @@ static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
 
 void test_app_message_sender__cancelled_message_in_flight_header_and_payload_not_finished(void) {
   // Expect header to get sent out normally, then a payload with all zeroes
-  prv_quit_app_after_pp_msg_byte(sizeof(PebbleProtocolHeader) - 1);
+  prv_quit_app_after_pp_msg_byte(sizeof(struct pbl_pp_header) - 1);
 }
 
 void test_app_message_sender__cancelled_message_in_flight_payload_not_finished(void) {
   // Expect remainder payload to be all zeroes
-  prv_quit_app_after_pp_msg_byte(sizeof(PebbleProtocolHeader) + 1);
+  prv_quit_app_after_pp_msg_byte(sizeof(struct pbl_pp_header) + 1);
 }

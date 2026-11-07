@@ -5,6 +5,7 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/services/app_cache.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/time.h>
@@ -66,7 +67,7 @@ bool app_fetch_in_progress(void) {
 void app_fetch_cancel_from_system_task(void) {
 }
 
-void comm_session_app_session_capabilities_evict(const Uuid *app_uuid) {
+void app_session_capabilities_evict(const Uuid *app_uuid) {
 }
 
 void put_bytes_cancel(void) {

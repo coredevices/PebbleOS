@@ -4,8 +4,9 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/poll_remote.h>
 #include <pbl/services/system_task.h>
 
@@ -93,16 +94,16 @@ static void prv_send_request(PollRemoteContext *ctx) {
   if (has_min_interval_passed(ctx) == false) {
     return;
   }
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     return;
   }
-  // [MT]: comm_session_send_data() doesn't make the link active,
+  // [MT]: pbl_pp_send() doesn't make the link active,
   // which is what we want here. If this this changes in the future
   // we need to take measures here to make sure we don't pull the link active.
   const PollRemoteMessage msg = {.cmd = CMD_POLL, .service = ctx->service};
-  comm_session_send_data(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(PollRemoteMessage),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(PollRemoteMessage),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   ctx->counted_minutes = 0;
 }
 
@@ -128,7 +129,7 @@ static void set_intervals(PollRemoteContext *ctx, const uint8_t min_interval_min
   ctx->max_interval_minutes = max_interval_minutes;
 }
 
-void comm_poll_remote_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void comm_poll_remote_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                             size_t length) {
   PollRemoteCommand cmd = data[0];
 

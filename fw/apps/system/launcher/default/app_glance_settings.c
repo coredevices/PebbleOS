@@ -11,9 +11,9 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/notifications/alerts_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/util/size.h>
@@ -336,7 +336,7 @@ static void prv_refresh_glance_content(LauncherAppGlanceSettings *settings_glanc
 }
 
 static bool prv_is_pebble_app_connected(void) {
-  return (comm_session_get_system_session() != nullptr);
+  return (pbl_pp_session_get_system() != nullptr);
 }
 
 static void prv_event_handler(PebbleEvent *event, void *context) {

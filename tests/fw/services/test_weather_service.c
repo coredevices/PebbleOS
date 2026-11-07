@@ -4,8 +4,8 @@
 #include "./blob_db/weather_data_shared.h"
 
 #include <pbl/fs/fs.h>
+#include <pbl/pp/protocol.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/services/weather/weather_types.h>
@@ -36,7 +36,7 @@ void event_service_client_unsubscribe(EventServiceInfo *service_info) {
 }
 
 void bt_persistent_storage_get_cached_system_capabilities(
-    PebbleProtocolCapabilities *capabilities) {
+    struct pbl_pp_capabilities *capabilities) {
   capabilities->weather_app_support = 1;
 }
 

@@ -5,10 +5,10 @@
 
 #include <stdint.h>
 
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/app_outbox_service.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_send_queue.h>
 
 /**
  * @defgroup services_app_message App message
@@ -47,12 +47,12 @@ static_assert((NumAppMessageSenderError - 1) <= AppOutboxStatusUserRangeEnd,
  */
 typedef struct {
   /** Send queue job; must be first. */
-  SessionSendQueueJob send_queue_job;
+  struct pbl_pp_send_job send_queue_job;
 
   /** Session the message is sent on. */
-  CommSession *session;
+  struct pbl_pp_session *session;
   /** Pebble Protocol header, sent before the payload. */
-  PebbleProtocolHeader header;
+  struct pbl_pp_header header;
 
   /** Bytes of header and payload already sent. */
   size_t consumed_length;
@@ -69,7 +69,7 @@ static_assert(offsetof(AppMessageSendJob, send_queue_job) == 0,
  */
 typedef struct {
   /** Session to send on, or NULL to select it from the UUID of the running app. */
-  CommSession *session;
+  struct pbl_pp_session *session;
 
   /** Reserved. */
   uint8_t padding[6];

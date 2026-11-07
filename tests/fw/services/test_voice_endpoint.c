@@ -14,8 +14,8 @@
 #include <fake_session.h>
 #include <fake_system_task.h>
 
-extern void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
-                                                 size_t size);
+extern void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
+                                                 const uint8_t *data, size_t size);
 
 static VoiceEndpointSessionType s_session_type;
 static VoiceEndpointResult s_session_result;
@@ -30,7 +30,7 @@ static time_t s_timestamp;
 
 static const Uuid s_uuid_invalid = UUID_INVALID;
 
-static Transport *s_transport;
+static struct fake_transport *s_transport;
 
 // Stubs
 
@@ -94,7 +94,7 @@ void test_voice_endpoint__initialize(void) {
   s_timestamp = 0;
 
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true);
 }
 

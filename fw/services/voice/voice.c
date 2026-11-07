@@ -9,8 +9,8 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/mic_manager.h>
 #ifdef CONFIG_SERVICE_MIC_STREAM
 #include <pbl/services/mic_stream.h>
@@ -105,10 +105,10 @@ static void prv_audio_data_handler(int16_t *samples, size_t sample_count, void *
 
 static void prv_teardown_session(void) {
   // Reset communication session responsiveness to default after voice session ends
-  CommSession *comm_session = comm_session_get_system_session();
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   if (comm_session) {
-    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                    PBL_BT_RESPONSE_TIME_MAX, 0);
+    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
+                                      PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
   }
 }
 
@@ -404,11 +404,11 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
 
   // Set up communication session responsiveness for voice session
-  CommSession *comm_session = comm_session_get_system_session();
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   if (comm_session) {
-    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
+    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS, nullptr);
   }
 
   // Get Speex transfer info

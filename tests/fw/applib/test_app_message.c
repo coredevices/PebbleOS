@@ -87,7 +87,7 @@ static RemoteReceiveHandler s_remote_receive_handler;
 static Uuid simplicity_uuid = (Uuid){0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
                                      0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
 
-static CommSession *s_fake_app_comm_session = (CommSession *)0xaabbccdd;
+static struct pbl_pp_session *s_fake_app_comm_session = (struct pbl_pp_session *)0xaabbccdd;
 static bool s_is_connected;
 static bool s_is_app_message_receiver_open;
 static Uuid s_app_uuid;
@@ -165,7 +165,7 @@ static void prv_send_ack_nack(uint16_t endpoint_id, const uint8_t *data, unsigne
                               bool nack) {
   const int o = offsetof(AppMessage, payload[0].push.dictionary);
   cl_assert_equal_i(length, o + dict_calc_buffer_size(1, (size_t)MAX_DATA_SIZE));
-  CommSession *session = s_fake_app_comm_session;
+  struct pbl_pp_session *session = s_fake_app_comm_session;
   AppMessage *message = (AppMessage *)data;
   AppMessage ack = {
     .command = nack ? CMD_NACK : CMD_ACK,
@@ -202,7 +202,7 @@ static void prv_receive_test_data(uint8_t transaction_id) {
   memcpy(&message->payload->push.dictionary, s_expected_buffer, dict_length);
   PBL_LOG_DBG("message->transaction_id = %" PRIu32, message->transaction_id);
 
-  CommSession *session = s_fake_app_comm_session;
+  struct pbl_pp_session *session = s_fake_app_comm_session;
   app_message_app_protocol_msg_callback(session, buffer, message_length, nullptr);
 }
 
@@ -231,7 +231,7 @@ static void prv_no_reply_callback(uint16_t endpoint_id, const uint8_t *data, uns
 // Overrides
 ///////////////////////////////////
 
-bool sys_app_pp_has_capability(CommSessionCapability capability) {
+bool sys_app_pp_has_capability(enum pbl_pp_capability capability) {
   return true;
 }
 
@@ -291,7 +291,7 @@ void prv_send_data(uint16_t endpoint_id, const uint8_t *data, uint16_t length) {
   s_sent_endpoint_id = endpoint_id;
 }
 
-bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+bool sys_app_pp_send_data(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
                           uint16_t length) {
   if (!s_is_connected) {
     return false;

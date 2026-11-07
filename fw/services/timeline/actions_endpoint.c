@@ -5,6 +5,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/system_task.h>
@@ -79,8 +80,8 @@ PBL_T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
 static void prv_action_system_task_callback(void *data) {
   InvokeActionMsgCbData *action = data;
 
-  comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
-                         (uint8_t *)&action->msg, action->length, COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(pbl_pp_session_get_system(), TIMELINE_ACTION_ENDPOINT, (uint8_t *)&action->msg,
+              action->length, PBL_PP_DEFAULT_TIMEOUT_MS);
 
   pbl_free(action);
 }
@@ -177,28 +178,28 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   if (do_async) {
     system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
   } else {
-    comm_session_send_data(comm_session_get_system_session(), TIMELINE_ACTION_ENDPOINT,
-                           (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
-                           COMM_SESSION_DEFAULT_TIMEOUT);
+    pbl_pp_send(pbl_pp_session_get_system(), TIMELINE_ACTION_ENDPOINT,
+                (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
+                PBL_PP_DEFAULT_TIMEOUT_MS);
     pbl_free(invoke_action_data);
   }
 }
 
 void timeline_action_endpoint_send_displayed_item(const Uuid *id) {
-  CommSession *session = comm_session_get_system_session();
-  if (!comm_session_has_capability(session, CommSessionNotificationWindowStateSupport)) {
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
+  if (!pbl_pp_session_has_capability(session, PBL_PP_CAP_NOTIFICATION_WINDOW_STATE)) {
     return;
   }
   const DisplayedItemMsg msg = {
     .command = CommandDisplayedItem,
     .item_id = id ? *id : UUID_INVALID,
   };
-  comm_session_send_data(session, TIMELINE_ACTION_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, TIMELINE_ACTION_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-void timeline_action_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
-                                                    size_t length) {
+void timeline_action_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
+                                                    const uint8_t *data, size_t length) {
   if (length < sizeof(ResponseHeader)) {
     PBL_LOG_WRN("Invalid phone response message length %d", (int)length);
     return;

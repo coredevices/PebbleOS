@@ -13,8 +13,9 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_receive_router.h>
+#include <pbl/pp/endpoint.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/process_management/app_storage.h>
@@ -146,7 +147,7 @@ typedef struct {
   //! Holds PB commands. Will enqueue multiple PutRequests when pre-acking is enabled
   PutBytesPendingJobs pb_pending_jobs;
 
-  //! Storage for the Pebble Protocol ReceiverImplementation:
+  //! Storage for the Pebble protocol receiver:
   struct {
     //! Backing storage for the received Put Bytes message. This buffer points to one of the buffers
     //! allocated within `pb_pending_jobs`
@@ -314,8 +315,8 @@ static bool prv_init_put_job_queue_if_necessary(void) {
 }
 
 static void prv_set_responsiveness(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
-  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                  state, timeout_secs);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                    state, timeout_secs, nullptr);
 }
 
 static void prv_send_nack_from_system_task(void *data) {
@@ -427,8 +428,8 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
     uint32_t token;
   } PBL_PACKED msg = {.response_code = code, .token = pbl_cpu_to_be32(token)};
 
-  bool success = comm_session_send_data(comm_session_get_system_session(), PB_ENDPOINT_ID,
-                                        (uint8_t *)&msg, sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
+  bool success = 0 == pbl_pp_send(pbl_pp_session_get_system(), PB_ENDPOINT_ID, (uint8_t *)&msg,
+                                  sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!success) {
     PBL_LOG_WRN("PutBytes timeout sending response");
   }
@@ -1115,7 +1116,7 @@ void put_bytes_handle_comm_session_event(const PebbleCommSessionEvent *comm_sess
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// ReceiverImplementation
+// Pebble protocol receiver
 
 static bool prv_receiver_contains_put_request(void) {
   return (s_pb_state.receiver.buffer[0] == PutBytesPut);
@@ -1166,11 +1167,12 @@ static bool prv_prepare(size_t total_payload_length) {
   return (s_pb_state.receiver.buffer != nullptr);
 }
 
-Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoint *endpoint,
-                               size_t total_payload_length) {
+struct pbl_pp_receiver *prv_receiver_prepare(struct pbl_pp_session *session,
+                                             const struct pbl_pp_endpoint *endpoint,
+                                             size_t total_payload_length) {
   // This receiver should only be used for the Put Bytes endpoint (which has a NULL handler,
   // because this receiver calls the internal, static functions in this file directly).
-  // It should only be used with the System session, we use comm_session_get_system_session()
+  // It should only be used with the System session, we use pbl_pp_session_get_system()
   // directly, instead of passing around the session as a variable.
   PBL_ASSERTN(endpoint->handler == nullptr);
 
@@ -1187,7 +1189,7 @@ Receiver *prv_receiver_prepare(CommSession *session, const PebbleProtocolEndpoin
 
   // This is just symbolic, It just has to be non-NULL, really.
   // Since there is just once instance, we statically refer to it everywhere.
-  return (Receiver *)&s_pb_state.receiver;
+  return (struct pbl_pp_receiver *)&s_pb_state.receiver;
 }
 
 static void prv_validate_and_preack_request_if_needed(const uint8_t *rcvd_data, uint8_t length) {
@@ -1209,7 +1211,7 @@ static void prv_validate_and_preack_request_if_needed(const uint8_t *rcvd_data, 
   }
 }
 
-void prv_receiver_write(Receiver *receiver, const uint8_t *data, size_t length) {
+void prv_receiver_write(struct pbl_pp_receiver *receiver, const uint8_t *data, size_t length) {
   if (!prv_take_lock_with_short_timeout()) {
     s_pb_state.receiver.should_nack = true;
     return;
@@ -1235,14 +1237,14 @@ finally:
   pbl_sem_give(&s_pb_semaphore);
 }
 
-void prv_receiver_cleanup(Receiver *receiver) {
+void prv_receiver_cleanup(struct pbl_pp_receiver *receiver) {
   // Got disconnected while in the middle of receiving a message, clean up:
   prv_cleanup_async();
 
   // No point in trying to Nack, because we got disconnected...
 }
 
-void prv_receiver_finish(Receiver *receiver) {
+void prv_receiver_finish(struct pbl_pp_receiver *receiver) {
   if (s_pb_state.receiver.should_nack) {
     PBL_LOG_WRN("NACK'ing from ..._finish");
     prv_add_nack_no_token_system_callback();
@@ -1266,7 +1268,7 @@ void prv_receiver_finish(Receiver *receiver) {
   // The Put Bytes code will clean it up itself.
 }
 
-const ReceiverImplementation g_put_bytes_receiver_impl = {
+const struct pbl_pp_receiver_api g_put_bytes_receiver_impl = {
   .prepare = prv_receiver_prepare,
   .write = prv_receiver_write,
   .finish = prv_receiver_finish,

@@ -3,7 +3,9 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/app_message/app_message_sender.h>
+#include <pbl/services/app_session.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
@@ -18,10 +20,11 @@ PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL)
 // -------------------------------------------------------------------------------------------------
 // Misc helpers:
 
-static void prv_request_fast_connection(CommSession *session) {
+static void prv_request_fast_connection(struct pbl_pp_session *session) {
   // TODO: use a heuristic to decide whether to put the connection in fast mode
-  comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE, PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
 }
 
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
@@ -30,7 +33,7 @@ static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
   return (AppOutboxMessage *)(((uint8_t *)app_message_send_job) - offset);
 }
 
-static AppOutboxMessage *prv_outbox_message_from_send_job(SessionSendQueueJob *send_job) {
+static AppOutboxMessage *prv_outbox_message_from_send_job(struct pbl_pp_send_job *send_job) {
   return prv_outbox_message_from_app_message_send_job((AppMessageSendJob *)send_job);
 }
 
@@ -41,11 +44,11 @@ static size_t prv_get_length(AppMessageSendJob *app_message_send_job) {
   AppOutboxMessage *outbox_message =
       prv_outbox_message_from_app_message_send_job(app_message_send_job);
   return (outbox_message->length - offsetof(AppMessageAppOutboxData, payload) +
-          sizeof(PebbleProtocolHeader) - app_message_send_job->consumed_length);
+          sizeof(struct pbl_pp_header) - app_message_send_job->consumed_length);
 }
 
 static bool prv_is_header_consumed_for_offset(uint32_t offset) {
-  return (offset >= sizeof(PebbleProtocolHeader));
+  return (offset >= sizeof(struct pbl_pp_header));
 }
 
 static size_t prv_get_read_pointer(AppMessageSendJob *app_message_send_job, uint32_t offset,
@@ -70,11 +73,11 @@ static size_t prv_get_read_pointer(AppMessageSendJob *app_message_send_job, uint
 
     const AppMessageAppOutboxData *outbox_data =
         (const AppMessageAppOutboxData *)outbox_message->data;
-    read_pointer = (outbox_data->payload - sizeof(PebbleProtocolHeader));
+    read_pointer = (outbox_data->payload - sizeof(struct pbl_pp_header));
     num_bytes_available = prv_get_length(app_message_send_job);
   } else {
     read_pointer = (const uint8_t *)&app_message_send_job->header;
-    num_bytes_available = (sizeof(PebbleProtocolHeader) - offset);
+    num_bytes_available = (sizeof(struct pbl_pp_header) - offset);
   }
   read_pointer += offset;
   *data_out = read_pointer;
@@ -82,11 +85,11 @@ static size_t prv_get_read_pointer(AppMessageSendJob *app_message_send_job, uint
   return num_bytes_available;
 }
 
-static size_t prv_send_job_impl_get_length(const SessionSendQueueJob *send_job) {
+static size_t prv_send_job_impl_get_length(const struct pbl_pp_send_job *send_job) {
   return prv_get_length((AppMessageSendJob *)send_job);
 }
 
-static size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int start_offset,
+static size_t prv_send_job_impl_copy(const struct pbl_pp_send_job *send_job, size_t start_offset,
                                      size_t length, uint8_t *data_out) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   prv_request_fast_connection(app_message_send_job->session);
@@ -110,7 +113,7 @@ static size_t prv_send_job_impl_copy(const SessionSendQueueJob *send_job, int st
   return length_to_copy;
 }
 
-static size_t prv_send_job_impl_get_read_pointer(const SessionSendQueueJob *send_job,
+static size_t prv_send_job_impl_get_read_pointer(const struct pbl_pp_send_job *send_job,
                                                  const uint8_t **data_out) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   prv_request_fast_connection(app_message_send_job->session);
@@ -119,12 +122,12 @@ static size_t prv_send_job_impl_get_read_pointer(const SessionSendQueueJob *send
                               data_out);
 }
 
-static void prv_send_job_impl_consume(const SessionSendQueueJob *send_job, size_t length) {
+static void prv_send_job_impl_consume(const struct pbl_pp_send_job *send_job, size_t length) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   app_message_send_job->consumed_length += length;
 }
 
-static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
+static void prv_send_job_impl_free(struct pbl_pp_send_job *send_job) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
   AppOutboxMessage *outbox_message = prv_outbox_message_from_send_job(send_job);
   const bool is_completed = (0 == prv_get_length(app_message_send_job));
@@ -139,7 +142,7 @@ static void prv_send_job_impl_free(SessionSendQueueJob *send_job) {
   app_outbox_service_consume_message(outbox_message, status);
 }
 
-PBL_T_STATIC const SessionSendJobImpl s_app_message_send_job_impl = {
+PBL_T_STATIC const struct pbl_pp_send_job_api s_app_message_send_job_impl = {
   .get_length = prv_send_job_impl_get_length,
   .copy = prv_send_job_impl_copy,
   .get_read_pointer = prv_send_job_impl_get_read_pointer,
@@ -168,7 +171,7 @@ static AppMessageSenderError prv_sanity_check_msg_and_fill_header(const AppOutbo
 
   const size_t pp_payload_length = (message->length - offsetof(AppMessageAppOutboxData, payload));
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)message->consumer_data;
-  app_message_send_job->header = (const PebbleProtocolHeader){
+  app_message_send_job->header = (const struct pbl_pp_header){
     .endpoint_id = pbl_cpu_to_be16(endpoint_id),
     .length = pbl_cpu_to_be16(pp_payload_length),
   };
@@ -181,7 +184,7 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
   *app_message_send_job = (const AppMessageSendJob){
     .send_queue_job =
         {
-          .impl = &s_app_message_send_job_impl,
+          .api = &s_app_message_send_job_impl,
         },
     .consumed_length = 0,
   };
@@ -196,7 +199,7 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
   const AppMessageAppOutboxData *outbox_data = (const AppMessageAppOutboxData *)message->data;
 
   app_message_send_job->session = outbox_data->session;
-  comm_session_sanitize_app_session(&app_message_send_job->session);
+  app_session_sanitize(&app_message_send_job->session);
   if (!app_message_send_job->session) {
     // Most likely disconnected in the mean time, don't spam our logs about this
     app_outbox_service_consume_message(message, (AppOutboxStatus)AppMessageSenderErrorDisconnected);
@@ -204,8 +207,8 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
   }
 
   prv_request_fast_connection(app_message_send_job->session);
-  comm_session_send_queue_add_job(app_message_send_job->session,
-                                  (SessionSendQueueJob **)&app_message_send_job);
+  pbl_pp_send_job_submit(app_message_send_job->session,
+                         (struct pbl_pp_send_job **)&app_message_send_job);
 }
 
 // -------------------------------------------------------------------------------------------------

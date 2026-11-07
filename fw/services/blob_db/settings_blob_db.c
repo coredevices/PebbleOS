@@ -5,11 +5,11 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/system_task.h>
 #include <pbl/settings/settings.h>
@@ -172,7 +172,7 @@ struct prv_syncable_keys {
 //! Check if the connected phone supports Settings BlobDB sync
 //! Returns true if the phone advertises settings_sync_support capability
 bool settings_blob_db_phone_supports_sync(void) {
-  PebbleProtocolCapabilities capabilities;
+  struct pbl_pp_capabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
   return capabilities.settings_sync_support;
 }
@@ -272,7 +272,7 @@ static void prv_deferred_sync_callback(void *data) {
   s_sync_callback_pending = false;
 
   // Only sync if we have an active connection to the phone
-  if (!comm_session_get_system_session()) {
+  if (!pbl_pp_session_get_system()) {
     PBL_LOG_DBG("No connection to phone, skipping settings sync");
     return;
   }

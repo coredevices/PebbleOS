@@ -6,9 +6,9 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/i18n/i18n.h>
@@ -104,15 +104,15 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
 
 static void prv_request_responsive_session(void) {
   // In anticipation of having to communicate with the phone, request the minimum latency for 10s:
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS);
+  pbl_pp_session_set_responsiveness(
+      pbl_pp_session_get_system(), PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
+      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS, nullptr);
 }
 
 static void prv_reset_session_responsiveness(void) {
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MAX,
-                                  0);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
+                                    PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MAX,
+                                    0, nullptr);
 }
 
 static WindowStack *prv_get_window_stack(ActionResultData *data) {

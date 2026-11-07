@@ -4,8 +4,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/mic_stream.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -181,7 +181,7 @@ MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t 
     case MicManagerAppNotForeground:
       return MicStreamServiceStartErrNotForeground;
   }
-  if (!comm_session_get_system_session()) {
+  if (!pbl_pp_session_get_system()) {
     return MicStreamServiceStartErrUnavailable;
   }
 

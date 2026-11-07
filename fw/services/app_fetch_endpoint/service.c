@@ -6,10 +6,11 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/math.h>
@@ -257,9 +258,9 @@ static void prv_app_fetch_binaries_system_task_cb(void *data) {
   AppFetchInstallRequest *request = (AppFetchInstallRequest *)data;
 
   // check if Bluetooth is active. If so, this will send.
-  bool successful = comm_session_send_data(comm_session_get_system_session(), APP_FETCH_ENDPOINT_ID,
-                                           (uint8_t *)request, sizeof(AppFetchInstallRequest),
-                                           COMM_SESSION_DEFAULT_TIMEOUT);
+  bool successful =
+      0 == pbl_pp_send(pbl_pp_session_get_system(), APP_FETCH_ENDPOINT_ID, (uint8_t *)request,
+                       sizeof(AppFetchInstallRequest), PBL_PP_DEFAULT_TIMEOUT_MS);
 
   // log it
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -334,9 +335,9 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
 
   // Start "warming up" the connection, this will cause the low-latency period to start ~1s sooner.
   // Put bytes will extend the low-latency period after this:
-  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_APP_FETCH,
-                                  PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_APP_FETCH,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS, nullptr);
 
   system_task_add_callback(prv_app_fetch_binaries_system_task_cb, request);
 }
@@ -407,7 +408,8 @@ static void prv_app_fetch_protocol_handle_msg(AppFetchResponseData *response_dat
 
 //! Callback that is placed in the endpoints table. As of now, only responses will come through this
 //! callback as all commands are originally sent to the phone.
-void app_fetch_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void app_fetch_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                     size_t length) {
   if (length < sizeof(AppFetchResponseData)) {
     PBL_LOG_ERR("Invalid message length %" PRIu32 "", (uint32_t)length);
     prv_cleanup(AppFetchResultGeneralFailure);

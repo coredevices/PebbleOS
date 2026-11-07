@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/pp/transport.h>
 
 //
 // Usage hints:
@@ -11,14 +11,15 @@
 //
 // Typically, you'll want to do something like:
 //
-// 1. Connect a fake transport for the system CommSession:
+// 1. Connect a fake transport for the system session:
 //
-//    Transport *transport = fake_transport_create(TransportDestinationSystem, NULL, NULL);
+//    struct fake_transport *transport =
+//        fake_transport_create(PBL_PP_DESTINATION_SYSTEM, NULL, NULL);
 //    fake_transport_set_connected(transport, true /* connected */);
 //
 // 2. Simulate receiving some data by calling your module's endpoint handler:
 //
-//    put_bytes_protocol_msg_callback(comm_session_get_system_session(), msg, sizeof(msg));
+//    put_bytes_protocol_msg_callback(pbl_pp_session_get_system(), msg, sizeof(msg));
 //
 // 3. Process the outbound data that has been queued up by your endpoint implementation:
 //
@@ -46,51 +47,55 @@ uint32_t fake_comm_session_is_latency_reduced(void);
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Transport mock
 
+struct fake_transport;
+
 //! Pointer to function handling data that is sent out by the session
 typedef void (*FakeTransportSentCallback)(uint16_t endpoint_id, const uint8_t *data,
                                           unsigned int data_length);
 
 //! Creates a mock transport
-//! @param destination The destination type this transport is connected to. See comments with the
-//! TransportDestination struct for more info.
+//! @param destination The destination type this transport is connected to.
 //! @param app_uuid The UUID of the app that this transport is connected to.
 //! Pass NULL if this information is not known or irrelevant.
 //! @param sent_cb The callback that needs to be called whenever data is sent out using this mock
 //! transport. Note that data will only be sent out when fake_comm_session_process_send_next() is
 //! called. It's recommended to leave this NULL and use fake_transport_assert_sent instead.
-Transport *fake_transport_create(TransportDestination destination, const Uuid *app_uuid,
-                                 FakeTransportSentCallback sent_cb);
+struct fake_transport *fake_transport_create(enum pbl_pp_destination destination,
+                                             const Uuid *app_uuid,
+                                             FakeTransportSentCallback sent_cb);
 
 //! Simulating (dis)connecting the transport.
-//! @return When connected, returns the opened CommSession. Returns NULL when disconnected.
-CommSession *fake_transport_set_connected(Transport *transport, bool connected);
+//! @return When connected, returns the opened session. Returns NULL when disconnected.
+struct pbl_pp_session *fake_transport_set_connected(struct fake_transport *transport,
+                                                    bool connected);
 
 //! Asserts the data of sent packets.
 //! @note This function can only be used when fake_transport_set_sent_cb is not used. They are
 //! mutually exclusive.
 //! @param index Packet index. Zero-based, newest packet first, oldest last.
-void fake_transport_assert_sent(Transport *transport, uint16_t index, uint16_t endpoint_id,
-                                const uint8_t data[], size_t length);
+void fake_transport_assert_sent(struct fake_transport *transport, uint16_t index,
+                                uint16_t endpoint_id, const uint8_t data[], size_t length);
 
 //! Asserts no data has been sent out.
-void fake_transport_assert_nothing_sent(Transport *transport);
+void fake_transport_assert_nothing_sent(struct fake_transport *transport);
 
 //! Assigns a new callback that needs to be called whenever data is sent out using this mock
 //! transport. Note that data will only be sent out when fake_comm_session_process_send_next() is
 //! called. It's recommended to use fake_transport_assert_sent, because it results in tests that
 //! are much easier to read.
-void fake_transport_set_sent_cb(Transport *transport, FakeTransportSentCallback sent_cb);
+void fake_transport_set_sent_cb(struct fake_transport *transport,
+                                FakeTransportSentCallback sent_cb);
 
 //! Destroys the mock transport
-void fake_transport_destroy(Transport *transport);
+void fake_transport_destroy(struct fake_transport *transport);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Transport helper functions
 
 //! Writes data into the fake send buffer, skipping Pebble Protocol
 //! @return false if there's insufficient space.
-bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport, const uint8_t *data,
-                                                          size_t length);
+bool fake_comm_session_send_buffer_write_raw(struct pbl_pp_session *session, const uint8_t *data,
+                                             size_t length);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake life cycle

@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
+#include <pbl/pp/protocol.h>
 
 #include <applib/app_message/app_message.h>
 #include <applib/app_message/app_message_internal.h>
@@ -29,8 +29,8 @@ static bool prv_has_invalid_header_length(size_t length) {
 //! The new implementation uses up to 72 bytes more stack space than the previous implementation.
 //! Might need to do some extra work to get a "thinner" stack, if this causes issues.
 //! Executes on App task.
-void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length,
-                                           AppInboxConsumerInfo *consumer_info) {
+void app_message_app_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                           size_t length, AppInboxConsumerInfo *consumer_info) {
   if (prv_has_invalid_header_length(length)) {
     return;
   }
@@ -61,8 +61,8 @@ void app_message_app_protocol_msg_callback(CommSession *session, const uint8_t *
 //! Executes on KernelBG, sends back NACK on behalf of the app if it is not able to do so.
 //! Note that app_message_receiver_dropped_handler will also get called on the App task,
 //! to report the number of missed messages.
-void app_message_app_protocol_system_nack_callback(CommSession *session, const uint8_t *data,
-                                                   size_t length) {
+void app_message_app_protocol_system_nack_callback(struct pbl_pp_session *session,
+                                                   const uint8_t *data, size_t length) {
   if (prv_has_invalid_header_length(length)) {
     return;
   }
@@ -126,7 +126,7 @@ void app_message_deregister_callbacks(void) {
 }
 
 static bool prv_supports_8k(void) {
-  if (!sys_app_pp_has_capability(CommSessionAppMessage8kSupport)) {
+  if (!sys_app_pp_has_capability(PBL_PP_CAP_APP_MESSAGE_8K)) {
     return false;
   }
   const Version app_sdk_version = sys_get_current_app_sdk_version();
@@ -141,9 +141,9 @@ uint32_t app_message_inbox_size_maximum(void) {
   } else {
     // Legacy behavior:
     if (sys_get_current_app_is_js_allowed()) {
-      return (COMM_PRIVATE_MAX_INBOUND_PAYLOAD_SIZE - APP_MSG_HDR_OVRHD_SIZE);
+      return (PBL_PP_MAX_INBOUND_PAYLOAD_PRIVATE - APP_MSG_HDR_OVRHD_SIZE);
     } else {
-      return (COMM_PUBLIC_MAX_INBOUND_PAYLOAD_SIZE - APP_MSG_HDR_OVRHD_SIZE);
+      return (PBL_PP_MAX_INBOUND_PAYLOAD_PUBLIC - APP_MSG_HDR_OVRHD_SIZE);
     }
   }
 }

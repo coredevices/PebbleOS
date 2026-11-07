@@ -36,8 +36,8 @@ void app_message_inbox_close(AppMessageCtxInbox *inbox) {
   inbox->is_open = false;
 }
 
-void app_message_inbox_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id,
-                                           AppMessageCmd cmd) {
+void app_message_inbox_send_ack_nack_reply(struct pbl_pp_session *session,
+                                           const uint8_t transaction_id, AppMessageCmd cmd) {
   const AppMessageAck nack_message = (const AppMessageAck){
     .header = {
       .command = cmd,
@@ -72,8 +72,8 @@ static bool prv_is_app_with_uuid_running(const Uuid *uuid) {
   return uuid_equal(&app_uuid, uuid);
 }
 
-void app_message_inbox_receive(CommSession *session, AppMessagePush *push_message, size_t length,
-                               AppInboxConsumerInfo *consumer_info) {
+void app_message_inbox_receive(struct pbl_pp_session *session, AppMessagePush *push_message,
+                               size_t length, AppInboxConsumerInfo *consumer_info) {
   // Test if the data is long enough to contain a push message:
   if (length < sizeof(AppMessagePush)) {
     PBL_LOG_ERR("Too short");

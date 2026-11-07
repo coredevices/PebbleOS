@@ -32,7 +32,7 @@ static void prv_handle_set_discoverable_pairable(
 
 // -----------------------------------------------------------------------------
 //! Pebble protocol handler for the BLE control endpoint
-void pp_ble_control_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                           unsigned int length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 

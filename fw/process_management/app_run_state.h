@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/util/uuid.h>
 
 typedef enum {
@@ -29,4 +29,5 @@ void app_run_state_send_update(const Uuid *uuid, AppState app_state);
 
 // Currently only needed for backwards support of the 0x32 endpoint, at which point
 // it will become static and not exported.
-void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const Uuid *uuid);
+void app_run_state_command(struct pbl_pp_session *session, AppRunStateCommand cmd,
+                           const Uuid *uuid);

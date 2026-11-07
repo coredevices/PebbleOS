@@ -6,7 +6,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -419,7 +420,8 @@ typedef struct PBL_PACKED RemoteInputAck {
   uint8_t status;
 } RemoteInputAck;
 
-void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void remote_input_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length) {
   RemoteInputResult result = RemoteInputResult_Invalid;
   uint8_t command = 0xff;
 
@@ -470,6 +472,6 @@ void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *dat
     .command = command,
     .status = (uint8_t)result,
   };
-  comm_session_send_data(session, REMOTE_INPUT_ENDPOINT, (const uint8_t *)&ack, sizeof(ack),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, REMOTE_INPUT_ENDPOINT, (const uint8_t *)&ack, sizeof(ack),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }

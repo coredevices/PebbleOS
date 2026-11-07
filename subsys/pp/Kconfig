@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PP
+    bool "Pebble protocol"
+    help
+      Pebble protocol sessions with phone apps: endpoints, send queues
+      and the transports that carry them.
+
+if PP
+
+module = PP
+module-str = Pebble protocol
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

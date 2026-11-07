@@ -9,7 +9,7 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session_receive_router.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/util/byteorder.h>
 
@@ -31,14 +31,12 @@ extern TimerID put_bytes_get_timer_id(void);
 extern uint32_t put_bytes_get_index(void);
 extern uint8_t prv_put_bytes_get_max_batched_pb_ops(void);
 
-extern const ReceiverImplementation g_put_bytes_receiver_impl;
+extern const struct pbl_pp_receiver_api g_put_bytes_receiver_impl;
 
-static const PebbleProtocolEndpoint s_put_bytes_endpoint = (const PebbleProtocolEndpoint){
-  .endpoint_id = 0xBEEF,
-  .handler = nullptr,
-  .access_mask = PebbleProtocolAccessPrivate,
-  .receiver_imp = &g_put_bytes_receiver_impl,
-  .receiver_opt = nullptr,
+static const struct pbl_pp_endpoint s_put_bytes_endpoint = (const struct pbl_pp_endpoint){
+  .receiver = &g_put_bytes_receiver_impl,
+  .id = 0xBEEF,
+  .access = PBL_PP_ACCESS_PRIVATE,
 };
 
 // Fakes
@@ -127,7 +125,7 @@ static int s_acks_received;
 static int s_nacks_received;
 static uint32_t s_last_response_cookie;
 
-static CommSession *s_session;
+static struct pbl_pp_session *s_session;
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -140,8 +138,9 @@ static CommSession *s_session;
 
 static void (*s_do_before_write)(void);
 
-static void prv_receive_data(CommSession *session, const uint8_t *data, size_t length) {
-  Receiver *r = g_put_bytes_receiver_impl.prepare(session, &s_put_bytes_endpoint, length);
+static void prv_receive_data(struct pbl_pp_session *session, const uint8_t *data, size_t length) {
+  struct pbl_pp_receiver *r =
+      g_put_bytes_receiver_impl.prepare(session, &s_put_bytes_endpoint, length);
   if (r) {
     if (s_do_before_write) {
       s_do_before_write();
@@ -317,10 +316,10 @@ void test_put_bytes__initialize(void) {
   fake_comm_session_init();
   fake_event_reset_count();
 
-  Transport *transport =
-      fake_transport_create(TransportDestinationSystem, nullptr, prv_system_msg_sent_callback);
+  struct fake_transport *transport =
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_system_msg_sent_callback);
   s_session = fake_transport_set_connected(transport, true /* connected */);
-  cl_assert_equal_p(comm_session_get_system_session(), s_session);
+  cl_assert_equal_p(pbl_pp_session_get_system(), s_session);
 
   prv_process_and_reset_test_counters();
   s_last_response_cookie = 0;

@@ -5,7 +5,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 #include <comm/ble/gatt_client_operations.h>
 
@@ -26,7 +26,7 @@ void app_launch_handle_service_discovered(pbl_bt_characteristic_t *characteristi
   s_app_launch_characteristic = *characteristics;
 
   // If there was no system session, try launching the Pebble app:
-  if (!comm_session_get_system_session()) {
+  if (!pbl_pp_session_get_system()) {
     app_launch_trigger();
   }
 }
@@ -63,3 +63,12 @@ void app_launch_trigger(void) {
     PBL_LOG_ERR("App relaunch failed: %u", err);
   }
 }
+
+static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
+                           void *user_data) {
+  if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
+    app_launch_trigger();
+  }
+}
+
+PBL_PP_SESSION_LISTENER_DEFINE(app_launch, prv_session_cb, nullptr);
