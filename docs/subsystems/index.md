@@ -8,6 +8,7 @@ it at link time, and a Kconfig option selects the backend.
 ```{toctree}
 :maxdepth: 1
 
+analytics.md
 bluetooth.md
 crc.md
 fs.md
