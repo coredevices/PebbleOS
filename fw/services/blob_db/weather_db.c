@@ -19,6 +19,13 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
+#ifndef UNITTEST
+// The phone writes v4 records at these offsets (weather_db_v4_example.md). The unit tests' host
+// build lays enums out wider, so the check holds on the watch only.
+static_assert(WEATHER_DB_V4_5_FIXED_SIZE == 250, "v4.5 strings offset moved");
+static_assert(WEATHER_DB_V4_FIXED_SIZE == 346, "v4.6 strings offset moved");
+#endif
+
 static struct {
   struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
