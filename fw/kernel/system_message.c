@@ -89,7 +89,7 @@ static void prv_handle_firmware_status_request(struct pbl_pp_session *session) {
 
 void sys_msg_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                    size_t length) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkq);
 
   SystemMessageType t = data[1];
 

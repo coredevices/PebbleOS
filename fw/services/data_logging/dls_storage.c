@@ -31,7 +31,7 @@ typedef enum {
 static const DLSFileHeaderVersion DLS_CURRENT_VERSION = DLS_VERSION_0;
 
 // Set while executing dls_storage_rebuild() which is called from dls_init() during boot time
-// When set, we allow storage accesses from KernelMain whereas normally, only KernelBG is allowed.
+// When set, we allow storage accesses from KernelMain whereas normally, only SysWorkq is allowed.
 static bool s_initializing_storage = false;
 
 // Each session stores data in a separate file with this data in the front. The file path
@@ -74,9 +74,9 @@ static void prv_release_session_file(DataLoggingSession *session);
 static void prv_assert_valid_task(void) {
   if (!s_initializing_storage) {
     // The s_initializing_storage is only set during boot, when dls_storage_rebuild() is called.
-    // That is the only time we allow a task (KernelMain) other than KernelBG access to the storage
+    // That is the only time we allow a task (KernelMain) other than SysWorkq access to the storage
     // functions.
-    PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+    PBL_ASSERT_TASK(PebbleTask_SysWorkq);
   }
 }
 
@@ -616,8 +616,8 @@ exit:
 }
 
 // -----------------------------------------------------------------------------------------
-// Copy data out of a session's circular buffer and write it to flash. Called from a KernelBG
-// system task callback triggered by dls_log() after data is added to a buffered session.
+// Copy data out of a session's circular buffer and write it to flash. Called from a SysWorkq
+// background work queue callback triggered by dls_log() after data is added to a buffered session.
 bool dls_storage_write_session(DataLoggingSession *session) {
   prv_assert_valid_task();
 
@@ -874,7 +874,7 @@ void dls_storage_rebuild(void) {
   char name[DLS_FILE_PATH_MAX_LEN];
   char path[DLS_FILE_PATH_MAX_LEN];
 
-  // This disables the checks that verify that only KernelBG is accessing the storage files.
+  // This disables the checks that verify that only SysWorkq is accessing the storage files.
   // dls_storage_rebuild() is called from KernelMain during boot.
   s_initializing_storage = true;
 
@@ -898,7 +898,7 @@ void dls_storage_rebuild(void) {
       // This operation can take awhile and tends to starve out other threads while it's on going.
       // It typically takes 100-200ms to restore a session, so if you have a lot of sessions you
       // can take 2-4 seconds to do. The KernelMain task_watchdog isn't a problem at this time
-      // because we haven't started monitoring it yet, but if we starve KernelBG we'll hit false
+      // because we haven't started monitoring it yet, but if we starve SysWorkq we'll hit false
       // watchdog reboots. Sleep a bit here so the background task has a chance to run.
       pbl_sleep_ms(10);
       restored_any = false;
@@ -982,6 +982,6 @@ void dls_storage_rebuild(void) {
   pbl_free(entry);
   pbl_fs_closedir(&dir);
 
-  // No longer in initialization. From now on, only KernelBG can use the session storage calls.
+  // No longer in initialization. From now on, only SysWorkq can use the session storage calls.
   s_initializing_storage = false;
 }

@@ -155,7 +155,7 @@ void test_gatt_service_changed_client__handle_indication_service_changed(void) {
   };
   const bool handled = gatt_service_changed_client_handle_indication(
       &s_connection, att_handle, (const uint8_t *)handle_range, sizeof(uint16_t) * 2);
-  // Re-discovery is trigger on KernelBG:
+  // Re-discovery is trigger on SysWorkq:
   fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_b(handled, true);

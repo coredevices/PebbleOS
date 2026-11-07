@@ -27,7 +27,7 @@ static uint8_t s_buffer_storage[1200];
 static PBL_MUTEX_DEFINE(s_buffer_mutex);      //!< Protects s_buffer
 static PBL_MUTEX_DEFINE(s_flash_write_mutex); //!< Protects log line consistency
 static bool
-    s_is_flash_write_scheduled; //!< true if handle_buffer_sync KernelBG callback is scheduled
+    s_is_flash_write_scheduled; //!< true if handle_buffer_sync SysWorkq callback is scheduled
 
 static void write_message(void) {
   // Note that we should enter this function with the buffer mutex held.
@@ -89,7 +89,7 @@ static void handle_buffer_sync(void *data) {
   // write_message() releases the buffer mutex around the flash write so other
   // tasks (BT, KernelMain) can keep producing log lines; if we kept the outer
   // while running on the live "remaining" count, a chatty producer can keep
-  // this callback executing on KernelBackground forever.  That starves every
+  // this callback executing on SysWorkq forever.  That starves every
   // other system-task callback (PutBytes processing in particular) and the
   // emulator wedges with no progress and no watchdog reboot.  Drain the
   // initial backlog and leave any newly-arrived bytes for the next callback;

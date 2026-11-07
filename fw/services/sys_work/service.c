@@ -90,7 +90,7 @@ static void prv_app_throttle_start(void) {
                               PBL_MSEC(APP_THROTTLE_TIME_MS));
 }
 
-//! The system task is starved when it is ready to run but does not get the
+//! The background work queue is starved when it is ready to run but does not get the
 //! CPU, or blocked in a callback on a lock the worker cannot release because
 //! the app hogs the CPU. Parking the app briefly resolves both.
 static void *prv_wdt_expired(int channel_id, void *user_data) {
@@ -136,14 +136,14 @@ void sys_work_init(void) {
 
   struct pbl_thread *thread = pbl_workq_get_thread(&pbl_sys_workq);
 
-  pebble_task_register(PebbleTask_KernelBackground, thread);
+  pebble_task_register(PebbleTask_SysWorkq, thread);
   s_wdt_channel = pbl_task_wdt_add(thread, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr);
   PBL_ASSERTN(s_wdt_channel >= 0);
   pbl_workq_set_ops(&pbl_sys_workq, &s_workq_ops);
   pbl_work_submit(&pbl_sys_workq, &s_task_init_work);
 
   thread = pbl_workq_get_thread(&pbl_sys_workq_high);
-  pebble_task_register(PebbleTask_NewTimers, thread);
+  pebble_task_register(PebbleTask_SysWorkqHigh, thread);
   PBL_ASSERTN(pbl_task_wdt_add(thread, CONFIG_TASK_WDT_TIMEOUT_MS, prv_high_wdt_expired, nullptr) >=
               0);
   pbl_workq_set_ops(&pbl_sys_workq_high, &s_high_workq_ops);
@@ -157,7 +157,7 @@ void sys_work_watchdog_feed(void) {
 [[noreturn]] static void handle_sys_work_send_failure(SysWorkCallback cb, uintptr_t caller_lr) {
   void *current_cb = sys_work_get_current_callback();
 
-  PBL_LOG_ERR("System task queue full. Dropped cb: %p, current cb: %p", cb, current_cb);
+  PBL_LOG_ERR("Background work queue queue full. Dropped cb: %p, current cb: %p", cb, current_cb);
 
   RebootReason reason = {
     .code = RebootReasonCode_EventQueueFull,
@@ -188,8 +188,8 @@ static void prv_heap_call_fn(struct pbl_work *work) {
   s_wrapped_cb = nullptr;
 }
 
-//! The system task runs its own calls, so it must never wait for a slot: calls that do not fit
-//! go on the heap instead.
+//! The background work queue runs its own calls, so it must never wait for a slot: calls that do
+//! not fit go on the heap instead.
 static void prv_add_from_sys_work(SysWorkCallback cb, void *data, uintptr_t caller_lr) {
   if (prv_call(&s_pool, cb, data, PBL_NO_WAIT) == 0) {
     return;
@@ -289,7 +289,7 @@ bool sys_work_add(SysWorkCallback cb, void *data) {
     // FIXME: In the future when we want to bound the amount of time a syscall can take this will
     // have to change.
     prv_call(&s_from_app_pool, cb, data, PBL_FOREVER);
-  } else if (task == PebbleTask_KernelBackground) {
+  } else if (task == PebbleTask_SysWorkq) {
     prv_add_from_sys_work(cb, data, caller_lr);
   } else if (prv_call(&s_pool, cb, data, PBL_MSEC(3000)) != 0) {
     // Back ourselves up and wait a reasonable amount of time before failing. If the queue is really
@@ -322,7 +322,7 @@ void sys_work_enable_raised_priority(bool is_raised) {
       return;
     }
     if (s_raised_priority_refcount++ == 0) {
-      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
+      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_SysWorkq),
                           CONFIG_SERVICE_SYS_WORK_THREAD_RAISED_PRIO);
     }
   } else {
@@ -332,7 +332,7 @@ void sys_work_enable_raised_priority(bool is_raised) {
       return;
     }
     if (--s_raised_priority_refcount == 0) {
-      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
+      pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_SysWorkq),
                           CONFIG_KERNEL_SYS_WORKQ_PRIO);
     }
   }
@@ -340,7 +340,7 @@ void sys_work_enable_raised_priority(bool is_raised) {
 }
 
 bool sys_work_is_ready_to_run(void) {
-  // check if system task is ready to go (instead of e.g. waiting for a mutex)
+  // check if background work queue is ready to go (instead of e.g. waiting for a mutex)
   return pbl_thread_state(pbl_workq_get_thread(&pbl_sys_workq)) == PBL_THREAD_READY;
 }
 

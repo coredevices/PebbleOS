@@ -22,7 +22,7 @@
 //! Channels of the frames clients receive.
 #define MIC_MANAGER_CHANNELS 1
 
-//! Handler for a full frame of captured audio, called on KernelBG.
+//! Handler for a full frame of captured audio, called on SysWorkq.
 //! @param samples Captured samples, the buffer passed when acquiring.
 //! @param sample_count Number of 16-bit samples in @p samples.
 //! @param context User context passed when acquiring.

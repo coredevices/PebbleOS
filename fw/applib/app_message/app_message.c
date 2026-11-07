@@ -58,7 +58,7 @@ void app_message_app_protocol_msg_callback(struct pbl_pp_session *session, const
   }
 }
 
-//! Executes on KernelBG, sends back NACK on behalf of the app if it is not able to do so.
+//! Executes on SysWorkq, sends back NACK on behalf of the app if it is not able to do so.
 //! Note that app_message_receiver_dropped_handler will also get called on the App task,
 //! to report the number of missed messages.
 void app_message_app_protocol_system_nack_callback(struct pbl_pp_session *session,

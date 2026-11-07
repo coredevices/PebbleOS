@@ -9,10 +9,10 @@
 //! Sample rate of the factory tests, in Hz.
 #define MFG_AUDIO_SAMPLE_RATE 16000
 
-//! Receives recorded interleaved samples on KernelBG. May stop the recording.
+//! Receives recorded interleaved samples on SysWorkq. May stop the recording.
 typedef void (*MfgAudioCaptureCb)(int16_t *samples, size_t count);
 
-//! Fills up to @p count mono samples on KernelBG and returns how many it wrote. May stop the
+//! Fills up to @p count mono samples on SysWorkq and returns how many it wrote. May stop the
 //! playback.
 typedef size_t (*MfgAudioFillCb)(int16_t *samples, size_t count);
 

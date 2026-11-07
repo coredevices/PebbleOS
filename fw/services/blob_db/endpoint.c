@@ -322,7 +322,7 @@ static void prv_blob_db_msg_decode_and_handle(struct pbl_pp_session *session, Bl
 
 void blob_db_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                    size_t length) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   PBL_LOG_HEXDUMP_DBG(data, length);
 

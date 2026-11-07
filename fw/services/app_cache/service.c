@@ -572,7 +572,7 @@ unlock:
 }
 
 void app_cache_flush(void) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   pbl_mutex_lock(&s_app_cache_mutex, PBL_FOREVER);
   {

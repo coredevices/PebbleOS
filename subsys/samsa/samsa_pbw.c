@@ -305,7 +305,7 @@ static void prv_install(void *data) {
 
 //! On KernelMain, which takes events once the launcher runs, after the
 //! services an install needs have started. The work itself goes to the
-//! system task.
+//! background work queue.
 static void prv_install_when_ready(void *data) {
   sys_work_add(prv_install, data);
 }

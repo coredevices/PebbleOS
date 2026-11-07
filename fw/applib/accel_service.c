@@ -19,8 +19,7 @@
 
 static bool prv_is_session_task(void) {
   PebbleTask task = pebble_task_get_current();
-  return (task == PebbleTask_KernelMain || task == PebbleTask_KernelBackground ||
-          task == PebbleTask_App);
+  return (task == PebbleTask_KernelMain || task == PebbleTask_SysWorkq || task == PebbleTask_App);
 }
 
 // ------------------------------------------------------------------------------------------

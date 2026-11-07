@@ -61,7 +61,7 @@ typedef const struct HRMDevice {
 } HRMDevice;
 
 /**
- * @brief Queue tuning protocol data received over BLE for processing on the system task.
+ * @brief Queue tuning protocol data received over BLE for processing on the background work queue.
  *
  * Only with @c CONFIG_BT_SERVICE_GH3X2X_TUNING.
  *
@@ -102,20 +102,20 @@ typedef enum {
 } GH3x2xFTType;
 
 /**
- * @brief Start the CTR factory test on the system task.
+ * @brief Start the CTR factory test on the background work queue.
  *
  * Results are reported through the HRM manager as @c HRMFeature_CTR data. MFG builds only.
  */
 void gh3x2x_start_ft_ctr(void);
 
 /**
- * @brief Start the light leakage factory test on the system task.
+ * @brief Start the light leakage factory test on the background work queue.
  *
  * Results are reported through the HRM manager as @c HRMFeature_Leakage data. MFG builds only.
  */
 void gh3x2x_start_ft_leakage(void);
 
-/** @brief Stop the running factory test on the system task. MFG builds only. */
+/** @brief Stop the running factory test on the background work queue. MFG builds only. */
 void gh3x2x_factory_test_disable();
 
 /**

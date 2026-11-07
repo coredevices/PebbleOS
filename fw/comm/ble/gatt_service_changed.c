@@ -50,7 +50,7 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
   struct pbl_bt_att_handle_range *range = (struct pbl_bt_att_handle_range *)value;
   PBL_LOG_DBG("Service Changed Indication: %x - %x", range->start, range->end);
 
-  // Initiate rediscovery on KernelBG if the Server is asking us to rediscover everything
+  // Initiate rediscovery on SysWorkq if the Server is asking us to rediscover everything
   // (See "2.5.2 Attribute Caching" in BT Core Specification)
   if ((range->start == 0x001 && range->end == 0xFFFF)) {
     struct pbl_bt_device_internal *device =

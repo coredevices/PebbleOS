@@ -255,7 +255,7 @@ void activity_sessions_prv_send_activity_session_to_data_logging(ActivitySession
   }
 
   if (state->activity_dls_session == nullptr) {
-    // We don't need to be buffered since we are logging from the KernelBG task and this
+    // We don't need to be buffered since we are logging from the background work queue and this
     // saves having to allocate another buffer from the kernel heap.
     const bool buffered = false;
     const bool resume = false;

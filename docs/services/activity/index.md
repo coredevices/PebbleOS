@@ -325,8 +325,8 @@ data.
 
 `activity.c` asks the algorithm for its accelerometer sampling rate and
 subscribes to the accel service with it. All step and sleep processing
-runs on the KernelBackground task: the subscription is made from a
-KernelBackground callback.
+runs on the SysWorkq task: the subscription is made from a
+SysWorkq callback.
 
 The accel service calls `activity.c` once a second with 25 samples, which
 it passes to the algorithm's handler in `activity_algorithm_kraepelin.c`.

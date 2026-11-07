@@ -17,7 +17,7 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 // FIRM-1649: temporary instrumentation to catch long mutex hold/wait on the
 // timeline item storage mutex. Suspected root cause of multi-second KernelMain
 // stalls during QuickView/alarm-save flows is settings_file compaction running
-// under this mutex on KernelBackground.
+// under this mutex on SysWorkq.
 #define FIRM_1649_MUTEX_WARN_MS 100
 
 static uint64_t prv_storage_lock(TimelineItemStorage *storage, const char *op) {

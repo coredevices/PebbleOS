@@ -13,7 +13,7 @@
  */
 
 /**
- * @brief Handle a BLE control endpoint message, on KernelBG.
+ * @brief Handle a BLE control endpoint message, on SysWorkq.
  *
  * Only the "set discoverable and pairable" command is supported; it makes the watch pairable
  * for the requested duration.

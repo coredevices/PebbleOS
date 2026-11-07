@@ -59,7 +59,7 @@ static void prv_launch_factory_reset_app(void *unused) {
 
 void reset_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                  size_t length) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkq);
 
   const uint8_t cmd = data[0];
 

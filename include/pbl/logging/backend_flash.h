@@ -34,7 +34,7 @@ typedef void (*pbl_log_flash_dump_done_cb_t)(bool success);
 void pbl_log_flash_init(void);
 
 /**
- * @brief Dump a log generation, one message per system task callback.
+ * @brief Dump a log generation, one message per background work queue callback.
  *
  * @param generation 0 for the current boot, 1 for the previous one, and so on.
  * @param line_cb Called with each message.

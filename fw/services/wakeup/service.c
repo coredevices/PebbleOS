@@ -706,7 +706,7 @@ void wakeup_handle_significant_clock_change(void) {
   // 2. Show "missed event" popups for events with notify_if_missed=true
   // 3. Reschedule the next wakeup timer
 
-  if (pebble_task_get_current() == PebbleTask_KernelBackground) {
+  if (pebble_task_get_current() == PebbleTask_SysWorkq) {
     prv_wakeup_rewrite_kernel_bg_cb(nullptr);
   } else {
     sys_work_add(prv_wakeup_rewrite_kernel_bg_cb, nullptr);

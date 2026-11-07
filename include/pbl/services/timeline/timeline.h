@@ -137,8 +137,8 @@ void timeline_enable_ancs_bulk_action_mode(bool enable);
 /**
  * @brief Enable or disable asynchronous sending of remote actions.
  *
- * When enabled, actions sent to the phone are queued on the system task instead of blocking the
- * caller until there is room in the send buffer.
+ * When enabled, actions sent to the phone are queued on the background work queue instead of
+ * blocking the caller until there is room in the send buffer.
  *
  * @param enable true to enable.
  */

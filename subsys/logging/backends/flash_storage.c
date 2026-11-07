@@ -91,7 +91,7 @@ static CurrentLoggingState s_curr_state;
 #define MAX_MSG_LEN ((0x1UL << sizeof(((LogRecordHeader *)0)->length) * 8) - 2)
 
 // This is the state used while performing flash_log_file(). Each log message gets handled
-// by a separate system task callback
+// by a separate background work queue callback
 typedef struct {
   uint8_t page_index;                        // which page we are currently dumping
   uint8_t num_pages;                         // number of pages to dump
@@ -400,7 +400,7 @@ bool pbl_log__flash_storage_write(const uint8_t *data_to_write, uint32_t flash_a
 }
 
 // Extract the next log message out of flash and send it using the pbl_log_flash_dump_line_cb_t.
-// This system task callback is used by pbl_log_flash_dump()
+// This background work queue callback is used by pbl_log_flash_dump()
 static void prv_dump_log_system_cb(void *context) {
   DumpStatus status = DumpStatus_DoneFailure;
   DumpLogState *state = (DumpLogState *)context;

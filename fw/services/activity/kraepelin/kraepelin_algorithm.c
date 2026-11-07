@@ -1954,7 +1954,7 @@ static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
 #ifdef CONFIG_HRM
 // Recompute the HR algorithm's activity scene from whichever auto-detected walk/run session is
 // sampling HR. Run dominates walk (higher intensity); neither active -> default model. Manual
-// workouts disable auto-tracking, so this never races the workout's own scene. Runs on KernelBG.
+// workouts disable auto-tracking, so this never races the workout's own scene. Runs on SysWorkq.
 static void prv_update_activity_hrm_scene(KAlgState *alg_state) {
   const bool run_active = alg_state->run_state.hrm_session != HRM_INVALID_SESSION_REF;
   const bool walk_active = alg_state->walk_state.hrm_session != HRM_INVALID_SESSION_REF;

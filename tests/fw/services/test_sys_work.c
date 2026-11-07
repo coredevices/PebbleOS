@@ -43,17 +43,17 @@ void mcu_fpu_cleanup(void) {
 }
 
 void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
-  if (task == PebbleTask_KernelBackground) {
+  if (task == PebbleTask_SysWorkq) {
     s_bg = thread;
   }
 }
 
 PebbleTask pebble_task_get_current(void) {
-  return pbl_thread_current() == s_bg ? PebbleTask_KernelBackground : PebbleTask_KernelMain;
+  return pbl_thread_current() == s_bg ? PebbleTask_SysWorkq : PebbleTask_KernelMain;
 }
 
 struct pbl_thread *pebble_task_get_thread(PebbleTask task) {
-  return task == PebbleTask_KernelBackground ? s_bg : nullptr;
+  return task == PebbleTask_SysWorkq ? s_bg : nullptr;
 }
 
 void reboot_reason_set(RebootReason *reason) {

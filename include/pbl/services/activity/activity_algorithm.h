@@ -13,7 +13,7 @@
  * @ingroup services_activity
  * @brief Interface between the activity service and the step/sleep algorithm.
  *
- * The activity service calls these from KernelBG. The algorithm consumes accelerometer samples
+ * The activity service calls these from SysWorkq. The algorithm consumes accelerometer samples
  * at the rate returned by activity_algorithm_init(), keeps the running step count, builds one
  * minute record per minute, stores those in the minute file and sends them to data logging, and
  * reports detected sessions to the service.

@@ -11,7 +11,7 @@
  * @brief Reference-counted requests to be discoverable and pairable over BLE.
  *
  * The watch is discoverable and pairable while the count is non-zero; address cycling is
- * paused meanwhile. Changes are applied from KernelBG.
+ * paused meanwhile. Changes are applied from SysWorkq.
  * @{
  */
 

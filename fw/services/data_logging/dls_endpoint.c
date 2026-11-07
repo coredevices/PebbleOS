@@ -118,7 +118,7 @@ static bool check_ack_timeout_for_session(DataLoggingSession *session, void *dat
   if (session->comm.ack_timeout != 0 && session->comm.ack_timeout <= *current_ticks) {
     PBL_LOG_DBG("session %" PRIu8 " timeout", session->comm.session_id);
 
-    // Send timeout msg from system task because it could take a while and also require
+    // Send timeout msg from background work queue because it could take a while and also require
     //  more stack space than provided by the timer task.
     sys_work_add(send_timeout_msg, (void *)(uintptr_t)(session->comm.session_id));
 
@@ -388,7 +388,7 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
   }
 }
 
-//! System task callback executed which reopens the next session in the list built up by
+//! Background work queue callback executed which reopens the next session in the list built up by
 //! report_cmd_sys_work_cb
 static void prv_reopen_next_session_sys_work_cb(void *data) {
   DataLoggingReopenEntry *entry = (DataLoggingReopenEntry *)data;

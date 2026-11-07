@@ -89,7 +89,7 @@ void bluetooth_analytics_handle_connection_disconnection_event(
   }
 
   // It's okay to log to analytics directly from the BT02 callback thread
-  // because flash writes are dispatched to KernelBG if the datalogging session
+  // because flash writes are dispatched to SysWorkq if the datalogging session
   // is buffered
   if (!vers_info) { // We expect version info
     PBL_LOG_WRN("Le Disconnect but no version info?");

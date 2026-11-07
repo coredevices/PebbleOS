@@ -110,7 +110,7 @@ static void prv_permissions_changed(const Uuid *uuid, uint32_t permissions) {
 }
 
 static status_t prv_cancel_app_fetch(AppInstallId app_id) {
-  if (pebble_task_get_current() == PebbleTask_KernelBackground) {
+  if (pebble_task_get_current() == PebbleTask_SysWorkq) {
     // if we are on kernel_bg, we can go ahead and cancel the app fetch instantly
     app_fetch_cancel_from_sys_work(app_id);
     return S_SUCCESS;

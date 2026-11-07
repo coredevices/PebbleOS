@@ -353,7 +353,7 @@ void workout_service_init(void) {
   pbl_mutex_init(&s_workout_data.s_workout_mutex);
 }
 
-// FIXME: We should probably handle this on KernelBG and not use the official app subscription
+// FIXME: We should probably handle this on SysWorkq and not use the official app subscription
 void workout_service_frontend_opened(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();
@@ -369,7 +369,7 @@ void workout_service_frontend_opened(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-// FIXME: We should probably handle this on KernelBG and not use the official app subscription
+// FIXME: We should probably handle this on SysWorkq and not use the official app subscription
 void workout_service_frontend_closed(void) {
   PBL_ASSERT_TASK(PebbleTask_App);
   prv_lock();

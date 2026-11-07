@@ -14,5 +14,5 @@
 //! Feed a received character, passing those outside frames to @p text_input.
 void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c));
 
-//! Handle a frame on the flash imaging channel, on KernelBG.
+//! Handle a frame on the flash imaging channel, on SysWorkq.
 void pbl_console__imaging_handle_frame(const void *data, size_t len);

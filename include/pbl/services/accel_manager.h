@@ -90,8 +90,8 @@ int sys_accel_manager_peek(AccelData *accel_data);
  * @param rate Sampling rate.
  * @param data_cb Callback invoked when data is available.
  * @param context Context passed to @p data_cb.
- * @param handler_task Task on which @p data_cb runs: App, Worker, KernelMain, KernelBackground or
- *                     NewTimers.
+ * @param handler_task Task on which @p data_cb runs: App, Worker, KernelMain, SysWorkq or
+ *                     SysWorkqHigh.
  * @return Subscription allocated on the kernel heap; free it with
  *         sys_accel_manager_data_unsubscribe().
  */

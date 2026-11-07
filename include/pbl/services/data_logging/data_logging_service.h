@@ -17,9 +17,9 @@
  * services). Logged items are stored in a PFS file per session and sent to the phone over the
  * data logging endpoint every few minutes, or right away when the session is finished.
  *
- * Buffered sessions copy items into a RAM circular buffer that KernelBG writes to flash, so
+ * Buffered sessions copy items into a RAM circular buffer that SysWorkq writes to flash, so
  * logging does not block. Unbuffered sessions write to flash directly and may only be used from
- * KernelBG.
+ * SysWorkq.
  *
  * @code{.c}
  * DataLoggingSession *s = dls_create(DlsSystemTagActivitySession, DATA_LOGGING_BYTE_ARRAY,
@@ -121,7 +121,7 @@ DataLoggingSession *dls_create_current_process(uint32_t tag, DataLoggingItemType
  * @param item_type Type of the logged items.
  * @param item_size Size of one item in bytes.
  * @param buffered Use a RAM buffer allocated on the kernel heap. Buffered sessions may be created
- *                 from the worker or kernel tasks, unbuffered ones only from KernelBG.
+ *                 from the worker or kernel tasks, unbuffered ones only from SysWorkq.
  * @param resume Reuse an active session with the same tag and UUID instead of finishing it.
  * @param uuid Owner UUID.
  * @return Session, or NULL on invalid parameters or too many sessions.

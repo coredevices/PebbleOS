@@ -135,7 +135,7 @@ void app_run_state_send_update(const Uuid *uuid, AppState app_state) {
     return;
   }
 
-  // Offload to KernelBG, because this function is called 2x when switching apps and we want to
+  // Offload to SysWorkq, because this function is called 2x when switching apps and we want to
   // be sure not to block KernelMain for 2x 4000ms when the send buffer is full.
   AppRunState *app_run_state = pbl_malloc(sizeof(AppRunState));
   app_run_state->uuid = *uuid;

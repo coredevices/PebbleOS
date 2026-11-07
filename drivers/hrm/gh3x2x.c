@@ -437,7 +437,7 @@ void gh3x2x_factory_test_enable(HRMDevice *dev, GH3x2xFTType test_type) {
   Gh3x2xDemoStartSamplingWithCfgSwitch(mode, 1);
 }
 
-// shoud be called in system task
+// shoud be called in background work queue
 static void gh3x2x_ft_ctr_start_handle(void *data) {
   gh3x2x_factory_test_enable(HRM, HRM_FACTORY_TEST_CTR);
 }
@@ -446,7 +446,7 @@ void gh3x2x_start_ft_ctr(void) {
   sys_work_add(gh3x2x_ft_ctr_start_handle, nullptr);
 }
 
-// shoud be called in system task
+// shoud be called in background work queue
 static void gh3x2x_ft_leakage_start_handle(void *data) {
   gh3x2x_factory_test_enable(HRM, HRM_FACTORY_TEST_LIGHT_LEAK);
 }
@@ -455,7 +455,7 @@ void gh3x2x_start_ft_leakage(void) {
   sys_work_add(gh3x2x_ft_leakage_start_handle, nullptr);
 }
 
-// shoud be called in system task
+// shoud be called in background work queue
 static void gh3x2x_factory_test_disable_handle(void *data) {
   HRMDevice *dev = (HRMDevice *)data;
   dev->state->enabled = false;

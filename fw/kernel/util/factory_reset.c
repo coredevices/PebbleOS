@@ -36,8 +36,8 @@ static bool s_in_factory_reset = false;
 static void prv_factory_reset_non_pfs_data() {
   PBL_LOG_SYNC_INFO("Factory resetting...");
 
-  // This function can block the system task for a long time.
-  // Prevent callbacks being added to the system task so it doesn't overflow.
+  // This function can block the background work queue for a long time.
+  // Prevent callbacks being added to the background work queue so it doesn't overflow.
   sys_work_block(true /* block callbacks */);
   launcher_block_popups(true);
 

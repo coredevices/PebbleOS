@@ -157,7 +157,7 @@ static void prv_evented_timer_event_callback(void *data) {
 //! Called on the queue's thread. From here we need to generate a callback on the client's task.
 //! The timer stays allocated until this returns: see prv_release_timer.
 static void prv_work(struct pbl_work *work) {
-  PBL_ASSERT_TASK(PebbleTask_NewTimers);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkqHigh);
   EventedTimer *timer = container_of(work, EventedTimer, work.work);
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);

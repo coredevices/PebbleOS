@@ -481,7 +481,7 @@ static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) 
 // ----------------------------------------------------------------------------------------------
 static void prv_clear_snooze_timer(void) {
   pbl_delayed_work_cancel(&s_snooze_timer);
-  // Invalidate callbacks already queued on KernelBG.
+  // Invalidate callbacks already queued on SysWorkq.
   s_snooze_generation++;
   s_user_snoozed = false;
 }

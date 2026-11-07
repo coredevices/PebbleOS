@@ -99,7 +99,7 @@ cleanup:
   return storage;
 }
 
-//! Should be called on system task.
+//! Should be called on background work queue.
 static void prv_app_order_write_order(AppMenuOrderStorage *storage) {
   pbl_mutex_lock(&s_data.order_mutex, PBL_FOREVER);
 
@@ -168,9 +168,9 @@ bool prv_enumerate_apps(AppInstallEntry *entry, void *data) {
   return true; // continue iterating
 }
 
-//! Should be called on system task.
+//! Should be called on background work queue.
 void write_uuid_list_to_file(const Uuid *uuid_list, uint8_t count) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   int storage_size = sizeof(AppMenuOrderStorage) + (count * sizeof(AppInstallId));
   AppMenuOrderStorage *storage = pbl_malloc(storage_size);

@@ -264,9 +264,9 @@ static bool prv_call_data_callback(AccelManagerState *state) {
       // becomes available from the driver, we will retry anyway
       return pbl_msgq_put(queue, &event, PBL_NO_WAIT) == 0;
     }
-    case PebbleTask_KernelBackground:
+    case PebbleTask_SysWorkq:
       return sys_work_add(state->data_cb_handler, state->data_cb_context);
-    case PebbleTask_NewTimers:
+    case PebbleTask_SysWorkqHigh:
       return sys_work_add_high(state->data_cb_handler, state->data_cb_context);
     default:
       pbl_panic(); // Unsupported task for the accel manager
@@ -447,7 +447,7 @@ PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSa
   AccelManagerState *state;
 
   // `handler_task` decides where prv_call_data_callback() dispatches the
-  // user-supplied data_cb. For KernelMain/KernelBackground/NewTimers values
+  // user-supplied data_cb. For KernelMain/SysWorkq/SysWorkqHigh values
   // the callback ends up invoked directly in kernel mode (either via the
   // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, sys_work_add,
   // or sys_work_add_high) — handing an unprivileged app arbitrary

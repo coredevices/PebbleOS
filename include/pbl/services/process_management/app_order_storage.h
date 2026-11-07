@@ -51,7 +51,7 @@ AppMenuOrderStorage *app_order_read_order(void);
 /**
  * @brief Store an app order given as a list of UUIDs.
  *
- * Must be called from the KernelBG task. UUIDs of apps that are not installed are stored as
+ * Must be called from the background work queue. UUIDs of apps that are not installed are stored as
  * install id 0.
  *
  * @param uuid_list UUIDs in menu order.

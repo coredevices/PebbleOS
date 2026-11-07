@@ -81,7 +81,7 @@ void ping_send_if_due(void) {
     return;
   }
 
-  // Offload to KernelBG, because pbl_pp_send() may block.
+  // Offload to SysWorkq, because pbl_pp_send() may block.
   sys_work_add(prv_send_ping_kernel_bg_cb, nullptr);
   s_is_ping_kernel_bg_callback_scheduled = true;
 }

@@ -8,25 +8,26 @@
 #include <kernel/pebble_tasks.h>
 
 /**
- * @defgroup services_sys_work System task
+ * @defgroup services_sys_work Background work queue
  * @ingroup services
- * @brief Low priority background task (KernelBG) running deferred work.
+ * @brief Callbacks with a payload on the system work queues, and the policy around them.
  *
- * KernelBG serves @ref pbl_sys_workq, adding a watchdog and app throttling; new code should use
- * the kernel work API directly. ISRs and higher priority tasks marshal units of work onto KernelBG
- * by queueing callbacks, which run one at a time in FIFO order. Callbacks are covered by a task
- * watchdog; long ones must call sys_work_watchdog_feed() regularly. When KernelBG starves, the
- * app task is briefly throttled.
+ * The kernel runs @ref pbl_sys_workq and @ref pbl_sys_workq_high. This service adds what is the
+ * system's own: a watchdog on both, throttling the app while the background queue starves, a slot
+ * pool apps cannot exhaust for the system, and what to do when a queue is full. New code with a
+ * fixed payload should embed a work item instead, with the kernel work API.
  *
- * The enqueue variants differ in what happens when the queue is full:
- * - sys_work_add() waits, then resets the system if still full (apps wait forever on
- *   a separate queue),
+ * Callbacks run one at a time in FIFO order. Long ones on the background queue must call
+ * sys_work_watchdog_feed() regularly. The enqueue variants differ in what happens when the
+ * background queue is full:
+ * - sys_work_add() waits, then resets the system if still full (apps wait forever on separate
+ *   slots),
  * - sys_work_add_from_isr() does not wait and resets the system,
- * - the @c _droppable variants do not wait and return false.
+ * - the sys_work_try_add() variants do not wait and return false.
  *
  * @code{.c}
  * static void prv_save_cb(void *data) {
- *   // Runs on KernelBG.
+ *   // Runs on SysWorkq.
  * }
  *
  * sys_work_add(prv_save_cb, ctx);
@@ -34,18 +35,18 @@
  * @{
  */
 
-/** @brief Create the KernelBG task. */
+/** @brief Attach the watchdog and hooks to the system work queues. */
 void sys_work_init(void);
 
 /**
- * @brief Feed the KernelBG watchdog.
+ * @brief Feed the SysWorkq watchdog.
  *
  * Call it regularly from callbacks that take a while to run.
  */
 void sys_work_watchdog_feed(void);
 
 /**
- * @brief System task callback.
+ * @brief Background work queue callback.
  *
  * @param data Context given when queueing the callback.
  */
@@ -56,7 +57,7 @@ typedef void (*SysWorkCallback)(void *data);
  *
  * Does not wait. A full queue resets the system.
  *
- * @param cb Callback to run on KernelBG.
+ * @param cb Callback to run on SysWorkq.
  * @param data Context passed to @p cb.
  * @return True if queued, false if callbacks are not accepted (not initialized or blocked).
  */
@@ -68,7 +69,7 @@ bool sys_work_add_from_isr(SysWorkCallback cb, void *data);
  * Callable from task or ISR context, including with interrupts locked. Never resets on failure.
  * Only use it when losing the callback is tolerable or the caller can retry later.
  *
- * @param cb Callback to run on KernelBG.
+ * @param cb Callback to run on SysWorkq.
  * @param data Context passed to @p cb.
  * @return True if queued, false if the queue is full or callbacks are not accepted.
  */
@@ -96,12 +97,12 @@ bool sys_work_add_high(SysWorkCallback cb, void *data);
 void sys_work_add_high_from_isr(SysWorkCallback cb, void *data);
 
 /**
- * @brief Queue a droppable callback that raises KernelBG priority until it has run.
+ * @brief Queue a droppable callback that raises SysWorkq priority until it has run.
  *
  * The priority is raised while the callback is pending or running, and released after it
  * returns. Nothing is retained if the callback is dropped.
  *
- * @param cb Callback to run on KernelBG.
+ * @param cb Callback to run on SysWorkq.
  * @param data Context passed to @p cb.
  * @return True if queued, false if the queue is full or callbacks are not accepted.
  */
@@ -113,7 +114,7 @@ bool sys_work_try_add_raised(SysWorkCallback cb, void *data);
  * From the app task, waits for space as long as needed. From other tasks, waits up to 3 seconds,
  * then resets the system.
  *
- * @param cb Callback to run on KernelBG.
+ * @param cb Callback to run on SysWorkq.
  * @param data Context passed to @p cb.
  * @return True if queued, false if callbacks are not accepted (not initialized or blocked).
  */
@@ -141,16 +142,16 @@ uint32_t sys_work_get_available_space(void);
 void *sys_work_get_current_callback(void);
 
 /**
- * @brief Acquire or release a reference raising KernelBG priority.
+ * @brief Acquire or release a reference raising SysWorkq priority.
  *
- * While at least one reference is held, KernelBG runs at the priority of KernelMain.
+ * While at least one reference is held, SysWorkq runs at the priority of KernelMain.
  *
  * @param is_raised True to acquire a reference, false to release one. Calls must be balanced.
  */
 void sys_work_enable_raised_priority(bool is_raised);
 
 /**
- * @brief Check whether KernelBG is ready to run.
+ * @brief Check whether SysWorkq is ready to run.
  *
  * @return True if ready, false if blocked (e.g. on a mutex or its queue).
  */

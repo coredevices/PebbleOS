@@ -318,7 +318,7 @@ static bool prv_minute_file_rewrite_cb(void *key_arg, size_t key_len, void *val_
     return false;
   }
 
-  // This can take a while, so periodically tickle the KernelBG watchdog.
+  // This can take a while, so periodically tickle the SysWorkq watchdog.
   if (context->watchdog_kicks_left > 0) {
     // Check counter as insurance against getting into an infinite loop and still tickling the
     // watchdog.
@@ -473,7 +473,7 @@ exit:
 static DataLoggingSession *prv_get_dls_minute_session(void) {
   // Open up the data logging session if we don't have one
   if (s_alg_state->dls_session == nullptr) {
-    // We don't need to be buffered since we are logging from the KernelBG task and this
+    // We don't need to be buffered since we are logging from the background work queue and this
     // saves having to allocate another buffer from the kernel heap.
     const bool buffered = false;
     const bool resume = false;
@@ -628,8 +628,8 @@ static void prv_send_minute_data(uint16_t uncertain_m, time_t sleep_start_utc, u
 // Handle storage and logging of the minute data
 static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
   // Store the minute data into our circular buffer. The only place we ever read from this buffer
-  // is below in this same method (during prv_send_minute_data) only from the KernelBG task, so no
-  // need for a lock.
+  // is below in this same method (during prv_send_minute_data) only from the background work queue,
+  // so no need for a lock.
   bool success = pbl_shared_cbuf_write(&s_alg_state->minute_data_cbuf, (uint8_t *)minute_rec,
                                        sizeof(*minute_rec), false /*advance_slackers*/);
   if (!success) {

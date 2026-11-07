@@ -196,7 +196,7 @@ void test_timeline_actions__displayed_item_needs_phone_support(void) {
   cl_assert(!s_sent_action);
 }
 
-// Dismiss all sends one dismiss at a time from the system task, never from KernelMain.
+// Dismiss all sends one dismiss at a time from the background work queue, never from KernelMain.
 void test_timeline_actions__dismiss_all_sends_from_sys_work(void) {
   NotificationInfo notifications[3];
   for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {

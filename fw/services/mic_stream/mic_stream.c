@@ -113,7 +113,7 @@ static void prv_stop_with_reason(uint32_t stream_id, MicStreamServiceStopReason 
   prv_post_event(stream_id, MicStreamEventStopped, reason);
 }
 
-// Runs on KernelBG, driven by the mic driver.
+// Runs on SysWorkq, driven by the mic driver.
 static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *context) {
   int len = 0;
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -164,7 +164,7 @@ static void prv_transfer_stopped_bg(void *data) {
   }
 }
 
-//! Called by the endpoint with bt_lock held, so s_lock is only taken on KernelBG.
+//! Called by the endpoint with bt_lock held, so s_lock is only taken on SysWorkq.
 static void prv_transfer_stopped(AudioEndpointSessionId session_id) {
   sys_work_add(prv_transfer_stopped_bg, (void *)(uintptr_t)session_id);
 }

@@ -85,7 +85,7 @@ void wakeup_migrate_timezone(int utc_diff);
 /**
  * @brief Handle a significant time change (over 15 s, timezone or DST).
  *
- * Deletes past events, shows missed event popups and reschedules, on KernelBG.
+ * Deletes past events, shows missed event popups and reschedules, on SysWorkq.
  */
 void wakeup_handle_significant_clock_change(void);
 

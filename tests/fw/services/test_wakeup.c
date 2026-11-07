@@ -86,7 +86,7 @@ void test_wakeup__initialize(void) {
   fake_spi_flash_init(0, 0x1000000); // from test_settings.c
   fake_pfs_mount();
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   stub_app_init();
 
   // Reset variable due to previous callbacks

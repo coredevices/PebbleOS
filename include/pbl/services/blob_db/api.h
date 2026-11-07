@@ -215,7 +215,7 @@ void blob_db_init_dbs(void);
 /**
  * @brief Compact every database that implements ::BlobDBCompactImpl.
  *
- * Must be called after blob_db_init_dbs(). Performs flash I/O: call it from a system task
+ * Must be called after blob_db_init_dbs(). Performs flash I/O: call it from a background work queue
  * callback, not from the kernel main loop.
  */
 void blob_db_compact_growable_dbs(void);

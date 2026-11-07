@@ -88,7 +88,7 @@ typedef struct {
   int idle_ticks;    // animation ticks since the last interaction
   int icon_fade;     // R5_FADE_MAX = animating … 0 = frozen static icon
   // Cached so the 40ms animation redraw never re-runs expensive text layout (which was
-  // starving the system task that services touch). Recomputed only on load / data update.
+  // starving the background work queue that services touch). Recomputed only on load / data update.
   int16_t today_icon_x;    // today icon left-x (centred over the date string)
   void *today_cond_font;   // GFont for today's condition phrase
   bool today_header_dirty; // recompute today_icon_x/font (set on data change)
@@ -2245,7 +2245,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   }
   const char *daydate = s_list->daydate_cache;
   // Recompute the expensive text-layout-dependent header geometry ONLY when the data
-  // changed — never every animation frame (that re-measuring was starving the system task
+  // changed — never every animation frame (that re-measuring was starving the background work queue
   // that services touch). today_icon_x centres the icon over the date; today_cond_font
   // steps the condition phrase down a size if it won't fit its band.
   if (s_list->today_header_dirty) {

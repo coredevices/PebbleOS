@@ -139,12 +139,12 @@ PBL_T_STATIC uint32_t prv_get_dropped_events_count(void) {
 #endif
 
 static void prv_handle_accel_data(void *data) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_NewTimers);
+  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkqHigh);
 
-  // Held across the manager calls so a disable on KernelBG can't free accel_state under them
+  // Held across the manager calls so a disable on SysWorkq can't free accel_state under them
   pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
 
-  // A stale event, from a subscription dropped or replaced on KernelBG
+  // A stale event, from a subscription dropped or replaced on SysWorkq
   if (!s_manager_state.accel_state || (uintptr_t)data != s_manager_state.accel_subscription) {
     pbl_mutex_unlock(&s_manager_state.accel_data_lock);
     return;
@@ -193,7 +193,7 @@ static void prv_accel_subscribe(void) {
   uint32_t subscription = s_manager_state.accel_subscription + 1;
   AccelManagerState *accel_state =
       sys_accel_manager_data_subscribe(ACCEL_SAMPLING_25HZ, prv_handle_accel_data,
-                                       (void *)(uintptr_t)subscription, PebbleTask_NewTimers);
+                                       (void *)(uintptr_t)subscription, PebbleTask_SysWorkqHigh);
   pbl_mutex_lock(&s_manager_state.accel_data_lock, PBL_FOREVER);
   s_manager_state.accel_state = accel_state;
   s_manager_state.accel_subscription = subscription;
@@ -356,10 +356,10 @@ static void prv_arm_update_timer(int64_t ticks) {
 }
 
 // Figure out if we should enable the HR sensor or not based on all subscribers and their
-// desired sampling periods, and when to check again. Must be called from the KernelBG task.
+// desired sampling periods, and when to check again. Must be called from the background work queue.
 static void prv_update_hrm_enable_system_cb(void *unused) {
   const time_t utc_now = pbl_realtime();
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   {
     const uint64_t cur_ticks = pbl_uptime_ticks();
@@ -489,7 +489,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 
     if (turn_sensor_on && active_features != 0 && !hrm_is_enabled(HRM) &&
         s_manager_state.enable_failure_count < HRM_MAX_ENABLE_FAILURES) {
-      // The enable failed; retry after a backoff rather than busy-looping on KernelBG
+      // The enable failed; retry after a backoff rather than busy-looping on SysWorkq
       next_check_ticks = MIN(next_check_ticks, spin_up_ticks);
     } else if (serve_pending && hrm_is_enabled(HRM)) {
       // Defer the waiting subscriber even if the driver goes silent
@@ -508,7 +508,8 @@ static void prv_update_enable_timer_cb(struct pbl_work *work) {
   sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
 }
 
-//! The system task needs its own handler for HRM data since we can't queue up generic events.
+//! The background work queue needs its own handler for HRM data since we can't queue up generic
+//! events.
 static void prv_sys_work_hrm_handler(void *context) {
   time_t utc_now = pbl_realtime();
 
@@ -518,10 +519,10 @@ static void prv_sys_work_hrm_handler(void *context) {
   const uint16_t available_bytes =
       circular_buffer_get_read_space_remaining(&s_manager_state.sys_work_event_buffer);
   if (available_bytes < sizeof(PebbleHRMEvent)) {
-    // No event available to read - this can happen if system task callbacks are queued
+    // No event available to read - this can happen if background work queue callbacks are queued
     // without corresponding events, or during concurrent access.
     PBL_LOG_WRN(
-        "HRM: system task handler called with no event in buffer "
+        "HRM: background work queue handler called with no event in buffer "
         "(available=%u, needed=%zu)",
         available_bytes, sizeof(PebbleHRMEvent));
     pbl_mutex_unlock(&s_manager_state.lock);
@@ -531,11 +532,11 @@ static void prv_sys_work_hrm_handler(void *context) {
   PebbleHRMEvent event;
   prv_read_event_from_buffer_and_consume(&s_manager_state.sys_work_event_buffer, &event);
 
-  // Send event to all KernelBG subscribers that asked for this feature
+  // Send event to all SysWorkq subscribers that asked for this feature
   HRMSubscriberState *state = (HRMSubscriberState *)s_manager_state.subscribers;
   for (; state != nullptr; state = (HRMSubscriberState *)state->list_node.next) {
     if (!state->callback_handler) {
-      // Not a KernelBG subscriber
+      // Not a SysWorkq subscriber
       continue;
     }
 
@@ -742,7 +743,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
       }
       if (state->callback_handler) {
         // For kernel BG subscribers, we only queue one event of each type (which is then
-        // dispatched to all KernelBG subscribers from the KernelBG callback) so that we don't
+        // dispatched to all SysWorkq subscribers from the SysWorkq callback) so that we don't
         // overfill our limited size circular buffer.
         if (kernel_bg_features_sent & feature) {
           continue;
@@ -757,7 +758,7 @@ void hrm_manager_new_data_cb(const HRMData *data) {
     }
 
     // If this is an app subscription, see if we need to send an "expiring" event. We check
-    // KernelBG subscribers from the system callback function (prv_sys_work_hrm_handler).
+    // SysWorkq subscribers from the system callback function (prv_sys_work_hrm_handler).
     if (!state->callback_handler && prv_needs_expiring_event(state, utc_now)) {
       hrm_event = (PebbleHRMEvent){
         .event_type = HRMEvent_SubscriptionExpiring,
@@ -853,8 +854,8 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
                                                   void *context) {
   const PebbleTask current_task = pebble_task_get_current();
   bool is_app_subscription = false;
-  if (current_task == PebbleTask_KernelBackground) {
-    // KernelBG must provide a callback
+  if (current_task == PebbleTask_SysWorkq) {
+    // SysWorkq must provide a callback
     PBL_ASSERTN(callback != nullptr);
   } else if (current_task == PebbleTask_KernelMain) {
     // KernelMain clients can either set a callback, or use the event_service interface.

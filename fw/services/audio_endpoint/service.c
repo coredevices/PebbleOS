@@ -88,7 +88,7 @@ static void prv_start_active_mode(void *data) {
 }
 
 //! Never block on bt_lock from the high priority queue (pbl_pp_session_set_responsiveness
-//! takes it); defer to KernelBG.
+//! takes it); defer to SysWorkq.
 static void prv_active_mode_timer_cb(struct pbl_work *work) {
   sys_work_add(prv_start_active_mode, nullptr);
 

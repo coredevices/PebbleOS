@@ -247,7 +247,7 @@ unlock:
 }
 
 static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data) {
-  // offload handling onto KernelBG so we don't stall the timer thread
+  // offload handling onto SysWorkq so we don't stall the timer thread
   // trying to get the bt lock
   sys_work_add(prv_bt_le_gateway_response_latency_watchdog_handler, data);
 }

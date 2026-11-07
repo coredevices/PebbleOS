@@ -26,7 +26,7 @@ static RegularTimerInfo s_pairability_timer_info = {
 };
 
 static void evaluate_pairing_refcount(void *data) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   if (!bt_ctl_is_bluetooth_running()) {
     return;

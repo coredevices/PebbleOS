@@ -13,7 +13,7 @@
 //! assembly and terrible things will happen if you move this around.
 typedef enum PebbleTask {
   PebbleTask_KernelMain,
-  PebbleTask_KernelBackground,
+  PebbleTask_SysWorkq,
   PebbleTask_Worker,
   PebbleTask_App,
 
@@ -21,7 +21,7 @@ typedef enum PebbleTask {
   PebbleTask_BTController, // Bluetooth Controller
   PebbleTask_BTHCI,        // Bluetooth HCI
 
-  PebbleTask_NewTimers,
+  PebbleTask_SysWorkqHigh,
 
   NumPebbleTask,
 

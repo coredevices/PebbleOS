@@ -43,7 +43,7 @@ static void stuck_timer_callback(struct pbl_work *work) {
 static PBL_DELAYED_WORK_DEFINE(s_stuck_timer, stuck_timer_callback);
 
 static void stuck_sys_work_callback(void *data) {
-  PBL_LOG_DBG("Entering infinite loop in system task callback");
+  PBL_LOG_DBG("Entering infinite loop in background work queue callback");
   while (true) {
     sys_psleep(100);
   }
@@ -161,7 +161,7 @@ static void menu_select_callback(int index, void *ctx) {
     kaboom();
 
   } else if (index == 11) {
-    PBL_LOG_INFO("Infinite Loop on system task");
+    PBL_LOG_INFO("Infinite Loop on background work queue");
     sys_work_add(stuck_sys_work_callback, nullptr);
 
   } else if (index == 12) {
@@ -226,7 +226,7 @@ static void prv_window_load(Window *window) {
     .callback = menu_select_callback,
   };
   data->menu_items[i++] = (SimpleMenuItem){
-    .title = "stuck system task",
+    .title = "stuck background work queue",
     .callback = menu_select_callback,
   };
   data->menu_items[i++] = (SimpleMenuItem){

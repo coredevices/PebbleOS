@@ -33,7 +33,7 @@ PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL
 // Heap left for the Bluetooth packets that carry the audio
 #define FIFO_HEAP_RESERVE_BYTES 2048U
 
-// Frames per KernelBG callback, leaving time for Bluetooth to drain between batches
+// Frames per SysWorkq callback, leaving time for Bluetooth to drain between batches
 #define MAX_FRAMES_PER_CALLBACK 8U
 
 static struct {

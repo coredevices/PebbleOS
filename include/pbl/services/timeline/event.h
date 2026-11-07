@@ -11,7 +11,7 @@
  * @brief Tracks the next or current timeline event for services that react to it.
  *
  * Each registered service (calendar, Timeline Peek) supplies a TimelineEventImpl. Whenever pins
- * change, a timer expires or a refresh is requested, the event service runs on KernelBG: it calls
+ * change, a timer expires or a refresh is requested, the event service runs on SysWorkq: it calls
  * every will_update callback, passes each pin header through every filter, keeps one item per
  * service, calls every update callback with it (or NULL), then every did_update callback. The next
  * run is scheduled at the earliest of the timeouts returned by the update callbacks and the start
@@ -104,7 +104,7 @@ typedef const TimelineEventImpl *(*TimelineEventImplGetter)(void);
 /**
  * @brief Initialize the timeline event service and all registered services.
  *
- * Runs asynchronously on KernelBG. Pins inserted before initialization are taken into account.
+ * Runs asynchronously on SysWorkq. Pins inserted before initialization are taken into account.
  */
 void timeline_event_init(void);
 

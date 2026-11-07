@@ -507,7 +507,7 @@ typedef struct {
   /** Mutex serializing access to the state. */
   struct pbl_mutex mutex;
 
-  /** Semaphore to wait for KernelBG callbacks to finish. */
+  /** Semaphore to wait for SysWorkq callbacks to finish. */
   struct pbl_sem bg_wait_semaphore;
 
   /** Accelerometer session. */
@@ -611,7 +611,7 @@ typedef struct {
 
   /** activity_start_tracking() was called in test mode. */
   bool test_mode;
-  /** A test feed callback is pending on KernelBG. */
+  /** A test feed callback is pending on SysWorkq. */
   bool pending_test_cb;
 } ActivityState;
 
