@@ -11,11 +11,11 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/timeline.h>
@@ -25,6 +25,8 @@
 #include <applib/event_service_client.h>
 #include <clar.h>
 #include <resource/timeline_resource_ids.auto.h>
+
+extern struct pbl_delayed_work s_snooze_timer;
 
 // Stubs
 

@@ -8,7 +8,7 @@
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
@@ -34,7 +34,9 @@ extern void pbl_analytics__native_heartbeat(void);
 
 extern const struct pbl_analytics_backend_ops pbl_analytics__native_ops;
 
-static TimerID s_heartbeat_timer;
+static void prv_heartbeat_timer_cb(struct pbl_work *work);
+
+static PBL_DELAYED_WORK_DEFINE(s_heartbeat_timer, prv_heartbeat_timer_cb);
 
 static void (*const s_init[])(void) = {
   pbl_analytics__native_init,
@@ -91,8 +93,9 @@ static void prv_heartbeat_sys_work_cb(void *data) {
   }
 }
 
-static void prv_heartbeat_timer_cb(void *data) {
+static void prv_heartbeat_timer_cb(struct pbl_work *work) {
   sys_work_add(prv_heartbeat_sys_work_cb, nullptr);
+  pbl_delayed_work_schedule_next(&s_heartbeat_timer, pbl_ms_to_ticks(HEARTBEAT_PERIOD_SEC * 1000));
 }
 
 void pbl_analytics_init(void) {
@@ -100,10 +103,8 @@ void pbl_analytics_init(void) {
     s_init[i]();
   }
 
-  s_heartbeat_timer = new_timer_create();
-
-  new_timer_start(s_heartbeat_timer, HEARTBEAT_PERIOD_SEC * 1000, prv_heartbeat_timer_cb, nullptr,
-                  TIMER_START_FLAG_REPEATING);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_heartbeat_timer,
+                              PBL_MSEC(HEARTBEAT_PERIOD_SEC * 1000));
 }
 
 // Apps pass `key` straight through to backends that use it as an unchecked

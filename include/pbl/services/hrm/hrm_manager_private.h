@@ -9,8 +9,8 @@
 
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/hrm/hrm_activity_scene.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/list.h>
@@ -158,7 +158,7 @@ struct HRMManagerState {
   EventServiceInfo charger_subscription;
 
   /** Timer checking due, expired, and unserved subscriptions. */
-  TimerID update_enable_timer_id;
+  struct pbl_delayed_work update_enable_timer;
 
   /** Driver reports since the last turn-off check, up to @ref HRM_CHECK_SENSOR_DISABLE_COUNT. */
   uint8_t check_disable_counter;

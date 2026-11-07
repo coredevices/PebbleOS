@@ -11,10 +11,11 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_curve.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
@@ -59,7 +60,10 @@ typedef struct BatteryState {
 } BatteryState;
 
 static BatteryState s_last_battery_state;
-static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
+static void prv_update_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_periodic_timer, prv_update_callback);
+//! Whether the next run of the timer is a forced update.
+static bool s_force_update;
 static int s_analytics_previous_mv = 0;
 static uint32_t s_analytics_last_cpct = 0;
 
@@ -208,20 +212,21 @@ static void prv_update_state(void *force_update) {
   }
 }
 
-static void prv_update_callback(void *data) {
-  // Running the battery monitor on the timer task is not a good idea because
+static void prv_update_callback(struct pbl_work *work) {
+  // Running the battery monitor on the high priority queue is not a good idea because
   // we could be sampling right in the middle of a flash erase, etc. Therefore,
   // dispatch to a lower priority task
-  sys_work_add(prv_update_state, data);
+  sys_work_add(prv_update_state, (void *)s_force_update);
 
   // Reschedule ourselves again so we create a loop
   prv_schedule_update(BATTERY_SAMPLE_RATE_MS, false);
 }
 
 static void prv_schedule_update(uint32_t delay, bool force_update) {
-  bool success = new_timer_start(s_periodic_timer_id, delay, prv_update_callback,
-                                 (void *)force_update, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  pbl_irq_lock();
+  s_force_update = force_update;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_periodic_timer, PBL_MSEC(delay));
+  pbl_irq_unlock();
 }
 
 void battery_state_force_update(void) {
@@ -234,8 +239,6 @@ void battery_state_force_update(void) {
 }
 
 void battery_state_init(void) {
-  s_periodic_timer_id = new_timer_create();
-
   s_last_battery_state = (BatteryState){.connection = ConnectionStateDischargingUnplugged};
   battery_state_reset_filter();
   battery_state_force_update();
@@ -300,8 +303,8 @@ BatteryChargeState battery_get_charge_state(void) {
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) {
-  return s_periodic_timer_id;
+struct pbl_delayed_work *battery_state_get_periodic_timer(void) {
+  return &s_periodic_timer;
 }
 
 uint16_t battery_state_get_voltage(void) {

@@ -37,9 +37,6 @@
 /** @brief Create the KernelBG task. */
 void sys_work_init(void);
 
-/** @brief Set up the timers used by the system task, once timers are available. */
-void sys_work_timer_init(void);
-
 /**
  * @brief Feed the KernelBG watchdog.
  *

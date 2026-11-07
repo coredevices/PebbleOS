@@ -33,7 +33,6 @@
 #include <pbl/kernel/time.h>
 
 #include <fake_app_manager.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_pfs.h>
@@ -41,6 +40,7 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 #include <process_management/process_regions.h>
 const struct pbl_mpu_region *process_region_app(void) {
   return nullptr;

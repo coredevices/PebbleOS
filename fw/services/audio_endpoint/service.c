@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 
@@ -18,17 +18,26 @@ PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_
 #define ACTIVE_MODE_TIMEOUT      (10000)
 #define ACTIVE_MODE_START_BUFFER (100)
 
+#define ACTIVE_MODE_PERIOD_MS    (ACTIVE_MODE_TIMEOUT - ACTIVE_MODE_START_BUFFER)
+#define ACTIVE_MODE_PERIOD_TICKS (pbl_ms_to_ticks(ACTIVE_MODE_PERIOD_MS))
+
 static_assert(ACTIVE_MODE_TIMEOUT > ACTIVE_MODE_START_BUFFER,
               "ACTIVE_MODE_TIMEOUT must be greater than ACTIVE_MODE_START_BUFFER");
 
 typedef struct {
   AudioEndpointSessionId id;
   AudioEndpointStopTransferCallback stop_transfer;
-  TimerID active_mode_trigger;
+  struct pbl_delayed_work active_mode_trigger;
+  //! Cleared before canceling the trigger, which re-arms itself.
+  bool active_mode_on;
 } AudioEndpointSession;
 
 static AudioEndpointSessionId s_session_id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
-static AudioEndpointSession s_session;
+static void prv_active_mode_timer_cb(struct pbl_work *work);
+
+static AudioEndpointSession s_session = {
+  .active_mode_trigger = PBL_DELAYED_WORK_INITIALIZER(prv_active_mode_timer_cb),
+};
 static uint32_t s_dropped_frames;
 
 static void prv_session_deinit(bool call_stop_handler) {
@@ -37,9 +46,9 @@ static void prv_session_deinit(bool call_stop_handler) {
     s_session.stop_transfer(s_session.id);
   }
 
-  if (s_session.active_mode_trigger != TIMER_INVALID_ID) {
-    new_timer_delete(s_session.active_mode_trigger);
-    s_session.active_mode_trigger = TIMER_INVALID_ID;
+  if (s_session.active_mode_on) {
+    s_session.active_mode_on = false;
+    pbl_delayed_work_cancel(&s_session.active_mode_trigger);
     struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
     pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
                                       PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
@@ -78,10 +87,15 @@ static void prv_start_active_mode(void *data) {
       PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, nullptr /* granted_handler */);
 }
 
-//! Never block on bt_lock from the timer task (pbl_pp_session_set_responsiveness
+//! Never block on bt_lock from the high priority queue (pbl_pp_session_set_responsiveness
 //! takes it); defer to KernelBG.
-static void prv_active_mode_timer_cb(void *data) {
+static void prv_active_mode_timer_cb(struct pbl_work *work) {
   sys_work_add(prv_start_active_mode, nullptr);
+
+  // sys_work_add() may wait, so the session may have stopped or restarted by now.
+  if (s_session.active_mode_on && !pbl_delayed_work_is_pending(&s_session.active_mode_trigger)) {
+    pbl_delayed_work_schedule_next(&s_session.active_mode_trigger, ACTIVE_MODE_PERIOD_TICKS);
+  }
 }
 
 AudioEndpointSessionId audio_endpoint_setup_transfer(
@@ -94,12 +108,12 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(
 
   s_session.id = ++s_session_id;
   s_session.stop_transfer = stop_transfer;
-  s_session.active_mode_trigger = new_timer_create();
+  s_session.active_mode_on = true;
   s_dropped_frames = 0;
 
   // restart active mode before it expires, this way it will never be off during the transfer
-  new_timer_start(s_session.active_mode_trigger, ACTIVE_MODE_TIMEOUT - ACTIVE_MODE_START_BUFFER,
-                  prv_active_mode_timer_cb, nullptr, TIMER_START_FLAG_REPEATING);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_session.active_mode_trigger,
+                              PBL_MSEC(ACTIVE_MODE_PERIOD_MS));
 
   bt_unlock();
 

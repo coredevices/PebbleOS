@@ -12,6 +12,7 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/hrm/hrm_manager.h>
@@ -47,7 +48,7 @@ PBL_LOG_MODULE_DEFINE(service_hrm, CONFIG_SERVICE_HRM_LOG_LEVEL);
 static struct HRMManagerState s_manager_state;
 
 // Forward declarations
-static void prv_update_enable_timer_cb(void *context);
+static void prv_update_enable_timer_cb(struct pbl_work *work);
 
 static bool prv_match_session_ref(ListNode *found_node, void *data) {
   const HRMSubscriberState *state = (HRMSubscriberState *)found_node;
@@ -120,8 +121,8 @@ static void prv_remove_and_free_subscription(HRMSubscriberState *state) {
 
 #if UNITTEST
 // Used by unit tests
-PBL_T_STATIC TimerID prv_get_timer_id(void) {
-  return s_manager_state.update_enable_timer_id;
+PBL_T_STATIC struct pbl_delayed_work *prv_get_timer(void) {
+  return &s_manager_state.update_enable_timer;
 }
 
 // Used by unit tests
@@ -342,20 +343,16 @@ static void prv_sensor_disable(void) {
   }
 }
 
-// Arm the timer to re-evaluate in `ticks`, or stop it for INT64_MAX. Rounds up so the pass
-// never runs just before its deadline. Must hold s_manager_state.lock.
+// Arm the timer to re-evaluate in `ticks`, or stop it for INT64_MAX. Must hold
+// s_manager_state.lock.
 static void prv_arm_update_timer(int64_t ticks) {
   if (ticks == INT64_MAX) {
-    new_timer_stop(s_manager_state.update_enable_timer_id);
+    pbl_delayed_work_cancel(&s_manager_state.update_enable_timer);
     return;
   }
   ticks = CLIP(ticks, 1, INT32_MAX);
-  uint32_t ms = pbl_ticks_to_ms((pbl_tick_t)ticks);
-  if (pbl_ms_to_ticks(ms) < ticks) {
-    ms++;
-  }
-  new_timer_start(s_manager_state.update_enable_timer_id, ms, prv_update_enable_timer_cb,
-                  nullptr /*context*/, 0 /*flags*/);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_manager_state.update_enable_timer,
+                              PBL_TICKS((pbl_tick_t)ticks));
 }
 
 // Figure out if we should enable the HR sensor or not based on all subscribers and their
@@ -507,7 +504,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 }
 
 // Re-evaluate current state so a callback queued before a gate or path change is harmless.
-static void prv_update_enable_timer_cb(void *context) {
+static void prv_update_enable_timer_cb(struct pbl_work *work) {
   sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
 }
 
@@ -836,7 +833,7 @@ void hrm_manager_set_activity_scene(HRMActivityScene scene) {
 
 void hrm_manager_init(void) {
   s_manager_state = (struct HRMManagerState){
-    .update_enable_timer_id = new_timer_create(),
+    .update_enable_timer = PBL_DELAYED_WORK_INITIALIZER(prv_update_enable_timer_cb),
     .enabled_charging_state = !battery_is_usb_connected(),
     .charger_subscription = (EventServiceInfo){
       .type = PEBBLE_BATTERY_STATE_CHANGE_EVENT,

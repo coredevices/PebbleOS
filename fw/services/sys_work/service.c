@@ -12,7 +12,6 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/fpu.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/misc.h>
@@ -53,7 +52,6 @@ static SysWorkCallback s_wrapped_cb;
 static bool s_initialized;
 
 static int s_wdt_channel = -1;
-static TimerID s_throttle_timer = TIMER_INVALID_ID;
 
 static bool s_should_block_callbacks = false;
 static uint32_t s_raised_priority_refcount;
@@ -62,13 +60,15 @@ static bool prv_is_accepting_callbacks() {
   return s_initialized && !s_should_block_callbacks;
 }
 
-static void prv_app_throttle_end(void *data) {
+static void prv_app_throttle_end(struct pbl_work *work) {
   struct pbl_thread *app = pebble_task_get_thread(PebbleTask_App);
   if (app) {
     pbl_thread_prio_set(app, CONFIG_APP_THREAD_PRIO);
   }
   PBL_LOG_DBG("Ending App Throttling");
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_throttle_timer, prv_app_throttle_end);
 
 static void prv_app_throttle_start(void) {
   static char s_last_throttled_app[PBL_THREAD_NAME_LEN];
@@ -86,15 +86,15 @@ static void prv_app_throttle_start(void) {
   }
 
   pbl_thread_prio_set(app, PBL_PRIO_IDLE);
-  new_timer_start(s_throttle_timer, APP_THROTTLE_TIME_MS, prv_app_throttle_end, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_throttle_timer,
+                              PBL_MSEC(APP_THROTTLE_TIME_MS));
 }
 
 //! The system task is starved when it is ready to run but does not get the
 //! CPU, or blocked in a callback on a lock the worker cannot release because
 //! the app hogs the CPU. Parking the app briefly resolves both.
 static void *prv_wdt_expired(int channel_id, void *user_data) {
-  if (s_throttle_timer != TIMER_INVALID_ID &&
-      (sys_work_is_ready_to_run() || sys_work_get_current_callback() != nullptr)) {
+  if (sys_work_is_ready_to_run() || sys_work_get_current_callback() != nullptr) {
     prv_app_throttle_start();
   }
   return sys_work_get_current_callback();
@@ -148,10 +148,6 @@ void sys_work_init(void) {
               0);
   pbl_workq_set_ops(&pbl_sys_workq_high, &s_high_workq_ops);
   pbl_work_submit(&pbl_sys_workq_high, &s_high_task_init_work);
-}
-
-void sys_work_timer_init(void) {
-  s_throttle_timer = new_timer_create();
 }
 
 void sys_work_watchdog_feed(void) {

@@ -163,7 +163,6 @@ int main(void) {
 #ifdef CONFIG_ANALYTICS
   pbl_analytics_init();
 #endif
-  sys_work_timer_init();
 
   init_drivers();
 

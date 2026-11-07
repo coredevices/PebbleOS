@@ -7,9 +7,10 @@
 #include <pbl/util/list.h>
 
 #include <clar.h>
-#include <fake_new_timer.h>
+#include <fake_pbl_malloc.h>
 #include <fake_session.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 extern void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
                                                  const uint8_t *data, size_t size);
@@ -95,6 +96,20 @@ void test_audio_endpoint__remote_stop_transfer(void) {
   audio_endpoint_protocol_msg_callback(s_session, (uint8_t *)msg, sizeof(StopTransferMsg));
   fake_sys_work_callbacks_invoke_pending();
   free(msg);
+}
+
+void test_audio_endpoint__active_mode_trigger_repeats_until_stopped(void) {
+  struct pbl_delayed_work *trigger = fake_work_get_next();
+
+  cl_assert(trigger != nullptr);
+  cl_assert_equal_i(fake_work_timeout_ms(trigger), 9900);
+
+  fake_work_fire(trigger);
+  cl_assert(fake_work_is_scheduled(trigger));
+  fake_sys_work_callbacks_invoke_pending();
+
+  audio_endpoint_cancel_transfer(s_session_id);
+  cl_assert(!fake_work_is_scheduled(trigger));
 }
 
 void test_audio_endpoint__cleanup(void) {

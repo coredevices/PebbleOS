@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/services/battery/battery_state.h>
-#include <pbl/services/new_timer/new_timer.h>
 
 /**
  * @defgroup services_battery_battery_monitor Battery monitor
@@ -39,8 +38,8 @@ bool battery_monitor_critical_lockout(void);
 /**
  * @brief Get the standby timer, for unit tests.
  *
- * @return Timer id.
+ * @return Delayed work item.
  */
-TimerID battery_monitor_get_standby_timer_id(void);
+struct pbl_delayed_work *battery_monitor_get_standby_timer(void);
 
 /** @} */
