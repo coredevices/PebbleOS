@@ -11,9 +11,8 @@
 #define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
 //! Indices in pbl_thread_attr::regions.
-#define MEMORY_LAYOUT_THREAD_REGION_APP           0
-#define MEMORY_LAYOUT_THREAD_REGION_WORKER        1
-#define MEMORY_LAYOUT_THREAD_REGION_SYSCALL_GUARD 3
+#define MEMORY_LAYOUT_THREAD_REGION_APP    0
+#define MEMORY_LAYOUT_THREAD_REGION_WORKER 1
 
 void memory_layout_dump_mpu_regions(void);
 
