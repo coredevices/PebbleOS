@@ -39,6 +39,18 @@
 /** Places a variable where unprivileged code can read it but not write to it. */
 #define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
+/**
+ * @brief Assign a @ref KERNEL_READONLY_DATA variable. Privileged code only.
+ *
+ * @param var Variable.
+ * @param val Value.
+ */
+#define KERNEL_READONLY_DATA_SET(var, val)              \
+  do {                                                  \
+    typeof(var) val_ = (val);                           \
+    pbl_mpu_user_ro_write(&(var), &val_, sizeof(val_)); \
+  } while (0)
+
 /** No access. Below a stack, this makes a guard. */
 #define PBL_MPU_NO_ACCESS 0U
 /** Privileged read/write, no unprivileged access. */
@@ -96,6 +108,18 @@ struct pbl_mpu_region {
  * @retval -EINVAL The region overlaps another static region.
  */
 int pbl_mpu_region_add(const struct pbl_mpu_region *region);
+
+/**
+ * @brief Write to the @ref PBL_MPU_P_RW_U_RO region from privileged code.
+ *
+ * ARMv8-M cannot let only privileged code write to a region, so the region is lifted for the
+ * duration of the copy, with interrupts masked. Elsewhere this is a plain copy.
+ *
+ * @param dst Destination.
+ * @param src Source.
+ * @param n Number of bytes.
+ */
+void pbl_mpu_user_ro_write(void *dst, const void *src, size_t n);
 
 /**
  * @brief Regions the SoC declares, with @c CONFIG_SOC_HAS_MPU_REGIONS.
