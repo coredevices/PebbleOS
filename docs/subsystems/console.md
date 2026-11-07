@@ -21,7 +21,7 @@ ESC _ <channel> <base64(seq, payload, crc32)> ESC \
 
 The channel is one character. The CRC-32 is `pbl_crc32()` of the channel, the
 sequence number and the payload, little-endian. A payload is at most
-`CONSOLE_FRAME_MTU` (512) bytes. The firmware only sends frames once a host has
+`PBL_CONSOLE_FRAME_MTU` (512) bytes. The firmware only sends frames once a host has
 started using them, so a terminal does not see them. Anything received that
 does not look like a frame goes back to being text, which keeps a stray escape
 sequence from wedging the console.

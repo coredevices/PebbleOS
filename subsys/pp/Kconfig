@@ -13,6 +13,13 @@ module = PP
 module-str = Pebble protocol
 source "subsys/logging/Kconfig.template.log_level"
 
+config PP_TRANSPORT_CONSOLE
+    bool
+    default y
+    depends on CONSOLE
+    help
+      Pebble protocol over serial console frames, for development tools.
+
 config PP_TRANSPORT_QEMU
     bool
     default y
