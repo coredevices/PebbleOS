@@ -9,13 +9,13 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/event.h>
@@ -123,6 +123,7 @@ static void prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
                                  const AlarmConfig *config);
 static void prv_cron_callback(struct pbl_cron_job *job, void *data);
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated);
+static void prv_snooze_timer_callback(struct pbl_work *work);
 static bool prv_set_alarm_kind_op(AlarmId id, AlarmConfig *config, void *context);
 static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *context);
 
@@ -137,7 +138,7 @@ static AlarmId s_most_recent_alarm_id = ALARM_INVALID_ID;
 static AlarmConfig s_most_recent_alarm_config;
 static bool s_most_recent_alarm_recorded;
 
-static TimerID s_snooze_timer_id = TIMER_INVALID_ID;
+PBL_T_STATIC PBL_DELAYED_WORK_DEFINE(s_snooze_timer, prv_snooze_timer_callback);
 static uintptr_t s_snooze_generation;
 static uint16_t s_snooze_delay_m = DEFAULT_SNOOZE_DELAY_M;
 
@@ -479,7 +480,7 @@ static bool prv_record_alarm_op(AlarmId id, AlarmConfig *config, void *context) 
 
 // ----------------------------------------------------------------------------------------------
 static void prv_clear_snooze_timer(void) {
-  new_timer_stop(s_snooze_timer_id);
+  pbl_delayed_work_cancel(&s_snooze_timer);
   // Invalidate callbacks already queued on KernelBG.
   s_snooze_generation++;
   s_user_snoozed = false;
@@ -528,9 +529,12 @@ static void prv_snooze_kernel_bg_callback(void *generation) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_snooze_timer_callback(void *generation) {
+static void prv_snooze_timer_callback(struct pbl_work *work) {
+  // Read before anything blocks, or a snooze cleared meanwhile would pass as current.
+  const uintptr_t generation = s_snooze_generation;
+
   PBL_LOG_INFO("Snooze timeout");
-  sys_work_add(prv_snooze_kernel_bg_callback, generation);
+  sys_work_add(prv_snooze_kernel_bg_callback, (void *)generation);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1142,10 +1146,8 @@ static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated) {
   // Set the snooze kind before arming the timer.
   s_user_snoozed = user_initiated;
   PBL_LOG_INFO("Snoozing for %d minutes", snooze_delay_s / PBL_SEC_PER_MIN);
-  bool success =
-      new_timer_start(s_snooze_timer_id, snooze_delay_s * PBL_MSEC_PER_SEC,
-                      prv_snooze_timer_callback, (void *)s_snooze_generation, 0 /* flags*/);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_snooze_timer,
+                              PBL_MSEC(snooze_delay_s * PBL_MSEC_PER_SEC));
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1315,7 +1317,7 @@ void alarm_handle_clock_change(void) {
       s_smart_snooze_counter = 0;
     } else {
       // Leave the in-flight smart-alarm snooze loop running. It is driven by
-      // s_snooze_timer_id and counts toward the guaranteed fallback fire
+      // s_snooze_timer and counts toward the guaranteed fallback fire
       // (s_smart_snooze_counter >= SMART_ALARM_MAX_SMART_SNOOZE). A benign clock
       // change such as a periodic phone time sync must not cancel it, or the
       // smart alarm silently never goes off while basic alarms keep working.
@@ -1354,7 +1356,6 @@ static void prv_language_change_event_handler(PebbleEvent *event, void *context)
 // ----------------------------------------------------------------------------------------------
 void alarm_init(void) {
   s_next_alarm_time = 0;
-  s_snooze_timer_id = new_timer_create();
 
   s_language_change_event_info = (EventServiceInfo){
     .type = PEBBLE_LANGUAGE_CHANGE_EVENT,

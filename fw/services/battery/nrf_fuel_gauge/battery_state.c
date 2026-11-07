@@ -11,9 +11,9 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_state.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/ratio.h>
 
@@ -63,7 +63,8 @@ static const struct battery_model prv_battery_model = {
 };
 
 static PreciseBatteryChargeState s_last_battery_charge_state;
-static TimerID s_periodic_timer_id = TIMER_INVALID_ID;
+static void prv_update_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_periodic_timer, prv_update_callback);
 
 static volatile bool s_update_pending = false;
 static volatile bool s_pending_force_update = false;
@@ -226,7 +227,7 @@ static void prv_save_state(void) {
 #endif // CONFIG_MFG
 #endif // FUEL_GAUGE_STATEFUL
 
-static void prv_schedule_update(uint32_t delay, bool force_update);
+static void prv_schedule_update(uint32_t delay);
 
 static int prv_fuel_gauge_init_common(const BatteryConstants *constants, bool load_state) {
   struct nrf_fuel_gauge_init_parameters parameters = {};
@@ -441,24 +442,22 @@ static void prv_enqueue_update(bool force) {
   }
 }
 
-static void prv_update_callback(void *data) {
-  new_timer_stop(s_periodic_timer_id);
-  prv_enqueue_update(data != nullptr);
+static void prv_update_callback(struct pbl_work *work) {
+  pbl_delayed_work_cancel(&s_periodic_timer);
+  prv_enqueue_update(true);
 }
 
 static void prv_callback_from_regular_timer(void *data) {
-  // no need to stop the new_timer here, since this came from the regular_timer
+  // no need to cancel the timer here, since this came from the regular_timer
   prv_enqueue_update(false);
 }
 
-static void prv_schedule_update(uint32_t delay, bool force_update) {
-  bool success = new_timer_start(s_periodic_timer_id, delay, prv_update_callback,
-                                 (void *)force_update, 0 /*flags*/);
-  PBL_ASSERTN(success);
+static void prv_schedule_update(uint32_t delay) {
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_periodic_timer, PBL_MSEC(delay));
 }
 
 void battery_state_force_update(void) {
-  prv_schedule_update(0, true);
+  prv_schedule_update(0);
 }
 
 void battery_state_init(void) {
@@ -536,8 +535,6 @@ void battery_state_init(void) {
     PBL_ANALYTICS_TIMER_START(battery_discharge_duration_ms);
   }
 
-  s_periodic_timer_id = new_timer_create();
-
   battery_state_force_update();
 
   static RegularTimerInfo battery_regular_timer = {.cb = prv_callback_from_regular_timer};
@@ -548,7 +545,7 @@ void battery_state_init(void) {
 }
 
 void battery_state_handle_connection_event(bool is_connected) {
-  prv_schedule_update(RECONNECTION_DELAY_MS, true);
+  prv_schedule_update(RECONNECTION_DELAY_MS);
 }
 
 PBL_SYSCALL(BatteryChargeState, sys_battery_get_charge_state) {
@@ -566,8 +563,8 @@ BatteryChargeState battery_get_charge_state(void) {
 }
 
 // For unit tests
-TimerID battery_state_get_periodic_timer_id(void) {
-  return s_periodic_timer_id;
+struct pbl_delayed_work *battery_state_get_periodic_timer(void) {
+  return &s_periodic_timer;
 }
 
 uint16_t battery_state_get_voltage(void) {

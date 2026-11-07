@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/firmware_update.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/ratio.h>
 #include <pbl/util/testing.h>
@@ -49,7 +49,9 @@ static const PowerState power_states[] = {
 
 ////////////////////////
 // Business logic
-static TimerID s_standby_timer_id = TIMER_INVALID_ID;
+static void prv_standby_timer_callback(struct pbl_work *work);
+
+static PBL_DELAYED_WORK_DEFINE(s_standby_timer, prv_standby_timer_callback);
 PBL_T_STATIC PowerStateID s_power_state;
 static bool s_low_on_first_run;
 static bool s_first_run;
@@ -83,7 +85,7 @@ static void prv_resume_normal_operation(void) {
 static void prv_exit_critical(void) {
   // Cancel the standby timer so we don't enter standby if we're no longer critical
   // (e.g. charger was plugged in before the timer expired).
-  new_timer_stop(s_standby_timer_id);
+  pbl_delayed_work_cancel(&s_standby_timer);
 
   // Checking the state here is a bit of a hack because the state machine does not have proper
   // transition actions, only entry/exit actions.
@@ -102,7 +104,7 @@ static void prv_exit_lpm(void) {
   }
 }
 
-static void prv_standby_timer_callback(void *data) {
+static void prv_standby_timer_callback(struct pbl_work *work) {
   // FIXME This is so broken: battery_state_force_update schedules a new timer callback to execute
   // immediately, which then pends a background task callback to perform the update, so this will
   // never update before we check the power_state.
@@ -117,8 +119,7 @@ static void prv_begin_standby_timer(void) {
   PBL_LOG_INFO("Battery critical: begin standby timer");
   // If the watch was already running, give them 30s, otherwise just 2s.
   uint32_t standby_timeout = (s_first_run) ? 2000 : 30000;
-  new_timer_start(s_standby_timer_id, standby_timeout, prv_standby_timer_callback, nullptr,
-                  0 /*flags*/);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_standby_timer, PBL_MSEC(standby_timeout));
 }
 
 static void sys_work_handle_battery_critical(void *data) {
@@ -222,7 +223,6 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
 }
 
 void battery_monitor_init(void) {
-  s_standby_timer_id = new_timer_create();
   s_power_state = PowerStateGood;
   s_low_on_first_run = false;
   s_first_run = true;
@@ -236,8 +236,8 @@ bool battery_monitor_critical_lockout(void) {
   return s_power_state == PowerStateCritical;
 }
 
-TimerID battery_monitor_get_standby_timer_id(void) {
-  return s_standby_timer_id;
+struct pbl_delayed_work *battery_monitor_get_standby_timer(void) {
+  return &s_standby_timer;
 }
 
 #ifdef CONFIG_SHELL

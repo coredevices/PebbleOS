@@ -13,9 +13,9 @@
 #include <pbl/logging/logging.h>
 
 #include <fake_battery.h>
-#include <fake_new_timer.h>
 #include <fake_rtc.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 #include <kernel/events.h>
 #include <system/reboot_reason.h>
 
@@ -50,37 +50,34 @@ void battery_force_charge_enable(bool is_charging) {
 }
 
 static void periodic_timer_trigger(int count) {
-  TimerID timer_id = battery_state_get_periodic_timer_id();
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
+  struct pbl_delayed_work *timer = battery_state_get_periodic_timer();
+  cl_assert(fake_work_is_scheduled(timer));
   for (int i = 0; i < count; ++i) {
-    stub_new_timer_fire(timer_id);
+    fake_work_fire(timer);
     fake_sys_work_callbacks_invoke_pending();
   }
 }
 
 static void standby_timer_trigger(int count) {
-  TimerID timer_id = battery_monitor_get_standby_timer_id();
+  struct pbl_delayed_work *timer = battery_monitor_get_standby_timer();
 
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
+  cl_assert(fake_work_is_scheduled(timer));
   for (int i = 0; i < count; ++i) {
-    stub_new_timer_fire(timer_id);
+    fake_work_fire(timer);
     fake_sys_work_callbacks_invoke_pending();
   }
 }
 
 static bool standby_timer_is_scheduled() {
-  TimerID timer_id = battery_monitor_get_standby_timer_id();
-  return timer_id != TIMER_INVALID_ID && stub_new_timer_is_scheduled(timer_id);
+  struct pbl_delayed_work *timer = battery_monitor_get_standby_timer();
+  return fake_work_is_scheduled(timer);
 }
 
 static uint32_t standby_timer_get_timeout() {
-  TimerID timer_id = battery_monitor_get_standby_timer_id();
+  struct pbl_delayed_work *timer = battery_monitor_get_standby_timer();
 
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  return stub_new_timer_timeout(timer_id);
+  cl_assert(fake_work_is_scheduled(timer));
+  return fake_work_timeout_ms(timer);
 }
 
 FAKE_VALUE_FUNC(int, enter_standby, RebootReasonCode);
@@ -117,6 +114,7 @@ void test_battery_monitor__initialize(void) {
 }
 
 void test_battery_monitor__cleanup(void) {
+  fake_work_cleanup();
 }
 
 // Tests

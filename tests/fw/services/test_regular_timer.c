@@ -4,8 +4,8 @@
 #include <pbl/services/regular_timer.h>
 
 #include <clar.h>
-#include <fake_new_timer.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 #define START_TIME 1790000000
 #define MARGIN_MS  10
@@ -20,17 +20,17 @@ static void prv_seconds_cb(void *data) {
 
 static RegularTimerInfo s_seconds_info = {.cb = prv_seconds_cb};
 
-static TimerID prv_timer(void) {
-  return stub_new_timer_get_next();
+static struct pbl_delayed_work *prv_timer(void) {
+  return fake_work_get_next();
 }
 
 static uint32_t prv_timeout(void) {
-  return stub_new_timer_timeout(prv_timer());
+  return fake_work_timeout_ms(prv_timer());
 }
 
 static void prv_advance_and_fire(void) {
   fake_rtc_increment_time_ms(prv_timeout());
-  stub_new_timer_fire(prv_timer());
+  fake_work_fire(prv_timer());
 }
 
 void test_regular_timer__initialize(void) {
@@ -44,12 +44,12 @@ void test_regular_timer__initialize(void) {
 void test_regular_timer__cleanup(void) {
   regular_timer_remove_callback(&s_seconds_info);
   regular_timer_deinit();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
 }
 
 void test_regular_timer__first_tick_aligned_to_second(void) {
   regular_timer_deinit();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
   fake_rtc_increment_time_ms(300);
   regular_timer_init();
 
@@ -68,7 +68,7 @@ void test_regular_timer__realigns_after_time_set(void) {
   fake_rtc_increment_time_ms(600);
   fake_rtc_init(0, START_TIME + 2);
   fake_rtc_increment_time_ms(prv_timeout() - 600);
-  stub_new_timer_fire(prv_timer());
+  fake_work_fire(prv_timer());
   cl_assert_equal_i(s_seconds_fired, 2);
   cl_assert_equal_i(s_last_fired_time, START_TIME + 2);
 
@@ -87,7 +87,7 @@ void test_regular_timer__no_duplicate_second(void) {
   fake_rtc_increment_time_ms(300);
   fake_rtc_init(0, START_TIME + 1);
   fake_rtc_increment_time_ms(prv_timeout() - 300);
-  stub_new_timer_fire(prv_timer());
+  fake_work_fire(prv_timer());
   cl_assert_equal_i(s_seconds_fired, 1);
 
   cl_assert_equal_i(prv_timeout(), 300 + MARGIN_MS);
@@ -103,7 +103,7 @@ void test_regular_timer__backwards_jump(void) {
 
   fake_rtc_init(0, START_TIME - 60);
   fake_rtc_increment_time_ms(prv_timeout());
-  stub_new_timer_fire(prv_timer());
+  fake_work_fire(prv_timer());
   cl_assert_equal_i(s_seconds_fired, 3);
   cl_assert_equal_i(s_last_fired_time, START_TIME - 59);
 

@@ -9,12 +9,11 @@
 #include <pbl/kernel/time.h>
 #include <pbl/util/units.h>
 
+#include <fake_work.h>
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
-static int s_num_timer_register_calls = 0;
 static int s_alarm_timer_timeout_ms = 0;
-static int s_snooze_timer_timeout_ms = 0;
-static int s_snooze_timer_id = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -31,38 +30,15 @@ uint64_t pbl_uptime_ticks(void) {
   return 0;
 }
 
-TimerID new_timer_create(void) {
-  static TimerID s_next_timer_id = 0;
-  s_snooze_timer_id = s_next_timer_id + 1;
-  return ++s_next_timer_id;
-}
-
-bool new_timer_start(TimerID timer_id, uint32_t timeout_ms, NewTimerCallback cb, void *cb_data,
-                     uint32_t flags) {
-  s_num_timer_register_calls++;
-  s_snooze_timer_timeout_ms = timeout_ms;
-  return true;
-}
-
-bool new_timer_stop(TimerID timer_id) {
-  s_snooze_timer_timeout_ms = 0;
-  return true;
-}
-
-void new_timer_delete(TimerID timer_id) {
-  s_snooze_timer_timeout_ms = 0;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Setup
 
 void test_alarm__initialize(void) {
-  s_num_timer_register_calls = 0;
+  fake_work_cleanup();
   s_num_timeline_adds = 0;
   s_num_timeline_removes = 0;
   s_num_alarm_events_put = 0;
   s_alarm_timer_timeout_ms = 0;
-  s_snooze_timer_timeout_ms = 0;
   s_num_alarms_fired = 0;
 
   s_current_hour = 0;
@@ -415,7 +391,7 @@ void test_alarm__snooze_delay(void) {
 
 void test_alarm__set_snooze_alarm() {
   alarm_set_snooze_alarm();
-  cl_assert_equal_i(s_snooze_timer_timeout_ms, 10 * 1000);
+  cl_assert_equal_i(fake_work_timeout_ms(&s_snooze_timer), 10 * 1000);
   cl_assert_equal_i(s_num_alarm_events_put, 0);
   s_current_minute = 10;
   cl_assert_equal_i(s_num_alarm_events_put, 1);

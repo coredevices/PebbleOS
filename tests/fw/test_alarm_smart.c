@@ -7,12 +7,11 @@
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
 
-#include <fake_new_timer.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 static int s_rand = 0;
-static TimerID s_alarm_snooze_timer_id;
 
 int rand(void) {
   // There are no odds
@@ -58,6 +57,7 @@ static void prv_set_time(time_t day, int hour, int minute) {
 //! Setup
 
 void test_alarm_smart__initialize(void) {
+  fake_work_cleanup();
   s_num_timeline_adds = 0;
   s_num_timeline_removes = 0;
   s_num_alarm_events_put = 0;
@@ -90,7 +90,6 @@ void test_alarm_smart__initialize(void) {
   pbl_cron_init();
 
   alarm_init();
-  s_alarm_snooze_timer_id = ((StubTimer *)s_idle_timers)->id;
   alarm_service_enable_alarms(true);
 }
 
@@ -200,7 +199,7 @@ void test_alarm_smart__trigger_15_min_early_light_sleep(void) {
     s_last_vmc = i == 2 ? 1 : 0;
     prv_set_time(s_current_day, 10, (i + 1) * 5);
     PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
-    stub_new_timer_invoke(1);
+    fake_work_fire(&s_snooze_timer);
     if (i < num_checks - 1) {
       // Smart alarm non-trigger checks
       cl_assert_equal_i(s_num_alarms_fired, 1);
@@ -245,7 +244,7 @@ void test_alarm_smart__trigger_at_timeout(void) {
     s_last_vmc = (i == 5);
     prv_set_time(s_current_day, 10, i * 5);
     PBL_LOG_DBG("Iteration #%d, sleep %d seconds", i, s_sleep_state_seconds);
-    stub_new_timer_invoke(1);
+    fake_work_fire(&s_snooze_timer);
     if (i < num_checks - 1) {
       // Smart alarm non-trigger checks
       cl_assert_equal_i(s_num_alarms_fired, 1);
@@ -283,13 +282,13 @@ void test_alarm_smart__user_snooze_fires_after_delay(void) {
 
   // The snooze timer must re-fire the alarm event, not re-enter the sleep poll
   prv_set_time(s_current_day, 10, alarm_get_snooze_delay());
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
 
   // Snoozing again keeps working the same way
   alarm_set_snooze_alarm();
   prv_set_time(s_current_day, 10, 2 * alarm_get_snooze_delay());
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 3);
 }
 
@@ -313,7 +312,7 @@ void test_alarm_smart__user_snooze_survives_clock_change(void) {
     s_sleep_state_seconds = (i + 1) * 5 * PBL_SEC_PER_MIN;
     s_last_vmc = (i == 5);
     prv_set_time(s_current_day, 10, i * 5);
-    stub_new_timer_invoke(1);
+    fake_work_fire(&s_snooze_timer);
   }
   // The alarm has now fired at the end of the smart window
   cl_assert_equal_i(s_num_alarm_events_put, 1);
@@ -327,7 +326,7 @@ void test_alarm_smart__user_snooze_survives_clock_change(void) {
 
   // ...and it still fires after exactly the configured delay
   prv_set_time(s_current_day, 10, 25 + alarm_get_snooze_delay());
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
 }
 
@@ -352,7 +351,7 @@ void test_alarm_smart__clock_change_still_force_triggers_sleep_poll(void) {
     s_sleep_state_seconds = (i + 1) * 5 * PBL_SEC_PER_MIN;
     s_last_vmc = 0;
     prv_set_time(s_current_day, 10, i * 5);
-    stub_new_timer_invoke(1);
+    fake_work_fire(&s_snooze_timer);
   }
   cl_assert_equal_i(s_num_alarm_events_put, 0);
 
@@ -379,7 +378,7 @@ void test_alarm_smart__clock_change_after_fire_does_not_refire(void) {
   // Sleep through the whole window so the guaranteed fire happens at the max counter
   for (int i = 1; i <= SMART_ALARM_MAX_SMART_SNOOZE + 1 && s_num_alarm_events_put == 0; i++) {
     prv_set_time(s_current_day, 10, i);
-    stub_new_timer_invoke(1);
+    fake_work_fire(&s_snooze_timer);
   }
   cl_assert_equal_i(s_num_alarm_events_put, 1);
 
@@ -435,12 +434,12 @@ static AlarmId prv_start_sleeping_smart_alarm(void) {
   pbl_cron_wakeup();
   cl_assert_equal_i(alarm_get_most_recent_id(), id);
   cl_assert_equal_i(s_num_alarm_events_put, 0);
-  cl_assert(stub_new_timer_is_scheduled(s_alarm_snooze_timer_id));
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
   return id;
 }
 
-static void prv_assert_sleep_poll_cancelled(TimerID timer_id) {
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+static void prv_assert_sleep_poll_cancelled(void) {
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
   alarm_handle_clock_change();
   cl_assert_equal_i(s_num_alarm_events_put, 0);
@@ -448,10 +447,9 @@ static void prv_assert_sleep_poll_cancelled(TimerID timer_id) {
 
 void test_alarm_smart__editing_time_and_type_cancels_sleep_poll(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_time(id, 14, 30);
   alarm_set_smart(id, false);
-  prv_assert_sleep_poll_cancelled(timer_id);
+  prv_assert_sleep_poll_cancelled();
 
   s_sleep_state = ActivitySleepStateAwake;
   prv_set_time(s_current_day, 10, 30);
@@ -465,9 +463,8 @@ void test_alarm_smart__editing_time_and_type_cancels_sleep_poll(void) {
 
 void test_alarm_smart__editing_type_cancels_sleep_poll(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_smart(id, false);
-  prv_assert_sleep_poll_cancelled(timer_id);
+  prv_assert_sleep_poll_cancelled();
 
   prv_set_time(s_current_day, 10, 30);
   pbl_cron_wakeup();
@@ -476,44 +473,41 @@ void test_alarm_smart__editing_type_cancels_sleep_poll(void) {
 
 void test_alarm_smart__editing_kind_cancels_sleep_poll(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_kind(id, ALARM_KIND_WEEKENDS);
-  prv_assert_sleep_poll_cancelled(timer_id);
+  prv_assert_sleep_poll_cancelled();
 }
 
 void test_alarm_smart__editing_custom_days_cancels_sleep_poll(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_custom(id, s_weekend_schedule);
-  prv_assert_sleep_poll_cancelled(timer_id);
+  prv_assert_sleep_poll_cancelled();
 }
 
 void test_alarm_smart__editing_other_alarm_preserves_sleep_poll(void) {
   AlarmId other_id =
       alarm_create(&(AlarmInfo){.hour = 15, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_time(other_id, 16, 0);
   alarm_set_smart(other_id, true);
   alarm_set_kind(other_id, ALARM_KIND_WEEKENDS);
   alarm_set_custom(other_id, s_weekday_schedule);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
   cl_assert_equal_i(alarm_get_most_recent_id(), id);
 
   s_sleep_state = ActivitySleepStateAwake;
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   // Recording the first firing must retain the alarm for later manual snoozes.
   cl_assert_equal_i(alarm_get_most_recent_id(), id);
   alarm_set_snooze_alarm();
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
 }
 
 void test_alarm_smart__editing_alert_settings_preserves_user_snooze(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
   s_sleep_state = ActivitySleepStateAwake;
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   alarm_set_sound_enabled(id, true);
   alarm_set_vibrate_enabled(id, false);
@@ -521,11 +515,10 @@ void test_alarm_smart__editing_alert_settings_preserves_user_snooze(void) {
   cl_assert_equal_i(alarm_get_most_recent_id(), id);
 
   alarm_set_snooze_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_tone(id, AlarmTone_Chime);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
   s_sleep_state = ActivitySleepStateRestfulSleep;
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
 }
 
@@ -535,9 +528,8 @@ void test_alarm_smart__editing_basic_alarm_cancels_user_snooze(void) {
   pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   alarm_set_snooze_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_time(id, 14, 0);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
   alarm_handle_clock_change();
   cl_assert_equal_i(s_num_alarm_events_put, 1);
@@ -549,9 +541,8 @@ void test_alarm_smart__editing_basic_alarm_cancels_user_snooze(void) {
 
 void test_alarm_smart__editing_alarm_rejects_queued_snooze_callback(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   s_defer_sys_work_callbacks = true;
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   s_defer_sys_work_callbacks = false;
   cl_assert(s_pending_sys_work_callback);
 
@@ -560,13 +551,13 @@ void test_alarm_smart__editing_alarm_rejects_queued_snooze_callback(void) {
   s_pending_sys_work_callback(s_pending_sys_work_data);
   cl_assert_equal_i(s_num_alarm_events_put, 0);
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
 }
 
 void test_alarm_smart__queued_snooze_cannot_process_new_alarm(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
   s_defer_sys_work_callbacks = true;
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   s_defer_sys_work_callbacks = false;
   cl_assert(s_pending_sys_work_callback);
   alarm_set_time(id, 14, 30);
@@ -580,7 +571,7 @@ void test_alarm_smart__queued_snooze_cannot_process_new_alarm(void) {
   alarm_set_snooze_alarm();
   s_pending_sys_work_callback(s_pending_sys_work_data);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 2);
 }
 
@@ -588,7 +579,7 @@ void test_alarm_smart__anonymous_user_snooze_still_fires(void) {
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
   alarm_set_snooze_alarm();
   prv_set_time(s_current_day, 0, alarm_get_snooze_delay());
-  stub_new_timer_invoke(1);
+  fake_work_fire(&s_snooze_timer);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
 }
 
@@ -602,13 +593,11 @@ void test_alarm_smart__switching_to_basic_cancels_user_snooze(void) {
   pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   alarm_set_snooze_alarm();
-  TimerID timer_id = s_alarm_snooze_timer_id;
   alarm_set_smart(id, false);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
 
   prv_set_time(s_current_day, 10, alarm_get_snooze_delay());
-  stub_new_timer_invoke(1);
   pbl_cron_wakeup();
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   prv_set_time(s_current_day, 10, 30);

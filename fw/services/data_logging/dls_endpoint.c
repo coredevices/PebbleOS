@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
@@ -17,7 +18,6 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/services/data_logging/dls_storage.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 
@@ -37,7 +37,7 @@ typedef struct {
 
 static struct {
   struct pbl_mutex mutex;
-  TimerID ack_timer;
+  struct pbl_delayed_work ack_timer;
   bool report_in_progress;
 } s_endpoint_data;
 
@@ -140,7 +140,7 @@ static void check_ack_timeout(void) {
   reschedule_ack_timeout();
 }
 
-static void ack_timer_cb(void *cb_data) {
+static void ack_timer_cb(struct pbl_work *work) {
   dls_list_lock();
 
   pbl_mutex_lock(&s_endpoint_data.mutex, PBL_FOREVER);
@@ -167,7 +167,7 @@ static void reschedule_ack_timeout(void) {
 
   if (soonest_ack_timeout == 0) {
     // No one is waiting for ack, just stop the timer
-    new_timer_stop(s_endpoint_data.ack_timer);
+    pbl_delayed_work_cancel(&s_endpoint_data.ack_timer);
     return;
   }
 
@@ -183,9 +183,8 @@ static void reschedule_ack_timeout(void) {
   uint64_t ticks_until_timeout = soonest_ack_timeout - current_ticks;
   uint32_t ms_until_timeout = ((uint64_t)ticks_until_timeout * 1000) / PBL_TICK_HZ;
 
-  bool success = new_timer_start(s_endpoint_data.ack_timer, ms_until_timeout, ack_timer_cb, nullptr,
-                                 0 /*flags*/);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_endpoint_data.ack_timer,
+                              PBL_MSEC(ms_until_timeout));
 }
 
 static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
@@ -547,7 +546,7 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_DATA_LOGGING, PBL_PP_ACCESS_PRIVATE,
 
 void dls_endpoint_init(void) {
   pbl_mutex_init(&s_endpoint_data.mutex);
-  s_endpoint_data.ack_timer = new_timer_create();
+  pbl_delayed_work_init(&s_endpoint_data.ack_timer, ack_timer_cb);
 }
 
 static bool prv_handle_disconnect_cb(DataLoggingSession *session, void *data) {

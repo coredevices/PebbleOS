@@ -4,7 +4,7 @@
 #pragma once
 #include <stdint.h>
 
-#include <pbl/services/new_timer/new_timer.h>
+struct pbl_delayed_work;
 
 /**
  * @addtogroup Foundation
@@ -119,8 +119,8 @@ int32_t battery_state_get_temperature(void);
 /**
  * @brief Get the periodic sampling timer, for unit tests.
  *
- * @return Timer id.
+ * @return Delayed work item.
  */
-TimerID battery_state_get_periodic_timer_id(void);
+struct pbl_delayed_work *battery_state_get_periodic_timer(void);
 
 /** @} */

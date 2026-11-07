@@ -6,8 +6,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
@@ -17,8 +17,10 @@ PBL_LOG_MODULE_DEFINE(service_regular_timer, CONFIG_SERVICE_REGULAR_TIMER_LOG_LE
 //! Don't let users modify the list while callbacks are occurring.
 static PBL_MUTEX_DEFINE(s_callback_list_semaphore);
 
+static void timer_callback(struct pbl_work *work);
+
 //! The timer we use
-static TimerID s_timer_id = TIMER_INVALID_ID;
+static PBL_DELAYED_WORK_DEFINE(s_timer, timer_callback);
 
 static ListNode s_seconds_callbacks;
 static ListNode s_minutes_callbacks;
@@ -92,14 +94,11 @@ static void do_callbacks(ListNode *list) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void timer_callback(void *data);
-
 //! Arm the timer for second @p next; the wall clock is at @p now and @p ms.
 static void prv_arm_locked(time_t now, uint16_t ms, time_t next) {
   uint32_t timeout_ms = (uint32_t)(next - now - 1) * 1000 + (1000 - MIN(ms, 999));
   timeout_ms += SECOND_BOUNDARY_MARGIN_MS;
-  bool success = new_timer_start(s_timer_id, timeout_ms, timer_callback, nullptr, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer, PBL_MSEC(timeout_ms));
   s_next_fire = next;
   s_armed = true;
 }
@@ -122,9 +121,7 @@ static void prv_arm_next_locked(void) {
 }
 
 // -------------------------------------------------------------------------------------------
-static void timer_callback(void *data) {
-  (void)data;
-
+static void timer_callback(struct pbl_work *work) {
   time_t t = pbl_realtime();
 
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
@@ -183,7 +180,6 @@ static void timer_callback(void *data) {
 void regular_timer_init(void) {
   uint64_t now_ms = pbl_realtime_ms();
   time_t seconds = (time_t)(now_ms / 1000U);
-  s_timer_id = new_timer_create();
   pbl_mutex_lock(&s_callback_list_semaphore, PBL_FOREVER);
   prv_arm_locked(seconds, (uint16_t)(now_ms % 1000U), seconds + 1);
   pbl_mutex_unlock(&s_callback_list_semaphore);
@@ -306,8 +302,7 @@ bool regular_timer_remove_callback(RegularTimerInfo *cb) {
 // For Testing:
 
 void regular_timer_deinit(void) {
-  new_timer_delete(s_timer_id);
-  s_timer_id = TIMER_INVALID_ID;
+  pbl_delayed_work_cancel(&s_timer);
   s_last_second_fired_valid = false;
   s_armed = false;
 }
