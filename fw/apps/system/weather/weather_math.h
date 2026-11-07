@@ -35,10 +35,6 @@ int32_t weather_norm_square(int32_t value);
 int32_t weather_norm_bell(int32_t value);
 void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect, int dst_x);
 
-#define WEATHER_GLOW_WRAP_SPIN_TICKS  12
-#define WEATHER_GLOW_WRAP_CLOSE_TICKS 4
-#define WEATHER_GLOW_WRAP_TICKS       (WEATHER_GLOW_WRAP_SPIN_TICKS + WEATHER_GLOW_WRAP_CLOSE_TICKS)
-
 // Card<->globe horizontal slide duration (SELECT out-left / BACK in-left): a snappy fraction
 // of the moook default so the two-phase transition feels quick. Shared by expanded_view.c and
 // globe_view.c so the pair can't drift apart.
@@ -60,8 +56,12 @@ extern const uint8_t weather_diurnal_curve[24];
 //! WHO UV severity ramp (shared by the card dial + the report UV bar).
 GColor weather_uv_severity_color(int uv);
 
+// Two half-turn arcs of the ring turning against each other from `phase`, with sparks in the
+// theme's background at their heads. Idle, they turn together without sparks; extra_span
+// lengthens both
+// (TRIG_MAX_ANGLE / 2 closes the ring).
 void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor glow_color,
-                            uint32_t phase, uint8_t idle_progress);
+                            uint32_t phase, bool idle, int32_t extra_span);
 
 // Whole-screen Timeline jelly squash-stretch blit, shared by forecast_list and clock_face.
 // `scratch` = W*H one-shot framebuffer snapshot. Modes 1-3 match forecast_list's

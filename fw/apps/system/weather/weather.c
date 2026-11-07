@@ -64,6 +64,10 @@ typedef struct WeatherAppData {
   uint8_t tomorrow_hourly_type[24];
   int8_t tomorrow_hourly_temp[24];
   bool tomorrow_hourly_valid;
+  // Chance of precipitation per hour, % (255 unknown): today's hours 0-23, then tomorrow's
+  // (v4 minor 6; the clock's precipitation ring).
+  uint8_t hourly_precip[48];
+  bool hourly_precip_valid;
   // Active location coordinates (v4; for the 3D globe).
   int16_t latitude_e2;
   int16_t longitude_e2;
@@ -199,6 +203,10 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
            sizeof(data->tomorrow_hourly_type));
     memcpy(data->tomorrow_hourly_temp, ds->tomorrow_hourly_temp,
            sizeof(data->tomorrow_hourly_temp));
+  }
+  data->hourly_precip_valid = ds->has_hourly_precip;
+  if (data->hourly_precip_valid) {
+    memcpy(data->hourly_precip, ds->hourly_precip, sizeof(data->hourly_precip));
   }
   data->latitude_e2 = ds->latitude_e2;
   data->longitude_e2 = ds->longitude_e2;
@@ -475,6 +483,13 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
   }
   if (have_hourly) {
     clock_face_update_hourly_temps_for_day((int)di, s_hourly_temp, 24);
+  }
+  // Hourly chance of precipitation (v4 minor 6): today's dial runs into tomorrow, so it gets
+  // both days; tomorrow's dial gets tomorrow's. Later days have no hourly series, and without
+  // one the clock skips its precipitation ring.
+  if (data->hourly_precip_valid && di <= 1) {
+    clock_face_update_hourly_precip_for_day((int)di, data->hourly_precip + di * 24,
+                                            di == 0 ? 48 : 24);
   }
   // Day 0's dial crosses midnight from early afternoon — hand it tomorrow's
   // hourly series (v4 minor 5) so those positions show real data.

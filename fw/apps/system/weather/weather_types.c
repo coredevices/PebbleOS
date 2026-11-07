@@ -122,6 +122,29 @@ void weather_icon_draw(GContext *ctx, GBitmap *icon, GRect rect, bool invert_ink
   }
 }
 
+uint32_t weather_type_pdc_resource(WeatherType weather_type, bool small) {
+  switch (weather_type) {
+    case WeatherType_Sun:
+      return small ? RESOURCE_ID_SUNNY_DAY_SMALL : RESOURCE_ID_SUNNY_DAY_TINY;
+    case WeatherType_PartlyCloudy:
+      return small ? RESOURCE_ID_PARTLY_CLOUDY_SMALL : RESOURCE_ID_PARTLY_CLOUDY_TINY;
+    case WeatherType_CloudyDay:
+      return small ? RESOURCE_ID_CLOUDY_DAY_SMALL : RESOURCE_ID_CLOUDY_DAY_TINY;
+    case WeatherType_LightRain:
+      return small ? RESOURCE_ID_LIGHT_RAIN_SMALL : RESOURCE_ID_LIGHT_RAIN_TINY;
+    case WeatherType_HeavyRain:
+      return small ? RESOURCE_ID_HEAVY_RAIN_SMALL : RESOURCE_ID_HEAVY_RAIN_TINY;
+    case WeatherType_LightSnow:
+      return small ? RESOURCE_ID_LIGHT_SNOW_SMALL : RESOURCE_ID_LIGHT_SNOW_TINY;
+    case WeatherType_HeavySnow:
+      return small ? RESOURCE_ID_HEAVY_SNOW_SMALL : RESOURCE_ID_HEAVY_SNOW_TINY;
+    case WeatherType_RainAndSnow:
+      return small ? RESOURCE_ID_RAINING_AND_SNOWING_SMALL : RESOURCE_ID_RAINING_AND_SNOWING_TINY;
+    default:
+      return small ? RESOURCE_ID_GENERIC_WEATHER_SMALL : RESOURCE_ID_GENERIC_WEATHER_TINY;
+  }
+}
+
 uint32_t weather_type_icon_large_resource(WeatherType weather_type) {
   static const uint16_t s_resources[] = {
     RESOURCE_ID_IMAGE_PARTLY_CLOUDY_LARGE,   // 0 PartlyCloudy

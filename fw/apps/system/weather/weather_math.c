@@ -338,19 +338,11 @@ static void prv_fill_wrapped_radial(GContext *ctx, GRect rect, uint16_t inset, i
 }
 
 void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor glow_color,
-                            uint32_t phase_u, uint8_t idle_progress) {
+                            uint32_t phase_u, bool idle, int32_t extra_span) {
   int32_t phase = (int32_t)phase_u & ((int32_t)TRIG_MAX_ANGLE - 1);
   int32_t half = (int32_t)(TRIG_MAX_ANGLE / 2);
-  int32_t span = half;
-  bool idle = idle_progress > 0;
+  int32_t span = half + extra_span;
   int32_t neg = idle ? phase : (-phase & ((int32_t)TRIG_MAX_ANGLE - 1));
-
-  if (idle_progress > WEATHER_GLOW_WRAP_SPIN_TICKS) {
-    uint8_t close = idle_progress - WEATHER_GLOW_WRAP_SPIN_TICKS;
-    if (close > WEATHER_GLOW_WRAP_CLOSE_TICKS)
-      close = WEATHER_GLOW_WRAP_CLOSE_TICKS;
-    span += (int32_t)close * (half / WEATHER_GLOW_WRAP_CLOSE_TICKS);
-  }
 
   // (The faded Celeste outer halo ring was removed by design —
   // the temp keeps just the solid condition-colored ring + sparks/beads.)
