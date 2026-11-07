@@ -7,8 +7,8 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/trig.h>
 
 #include <applib/accel_service.h>
@@ -222,7 +222,7 @@ static void prv_mag_sample_cb(const struct pbl_mag *mag, const MagData *sample, 
   s_mag_sample = *sample;
 
   // event_put() may block on KernelMain, which takes the device lock: post outside of it
-  new_timer_add_work_callback(prv_post_event_work, nullptr);
+  sys_work_add_high(prv_post_event_work, nullptr);
 }
 
 static const struct pbl_mag_listener s_mag_listener = {

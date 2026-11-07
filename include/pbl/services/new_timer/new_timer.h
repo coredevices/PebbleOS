@@ -117,32 +117,4 @@ void new_timer_delete(TimerID timer);
  */
 void *new_timer_debug_get_current_callback(void);
 
-/**
- * @brief Work callback, run on the NewTimer task.
- *
- * @param data Data passed when queuing the work.
- */
-typedef void (*NewTimerWorkCallback)(void *data);
-
-/**
- * @brief Queue work on the NewTimer task from an ISR.
- *
- * Used to handle time sensitive hardware events. The work is dropped if no slot is free.
- *
- * @param cb Work callback.
- * @param data Data passed to @p cb.
- */
-void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data);
-
-/**
- * @brief Queue work on the NewTimer task.
- *
- * Waits up to 50 ticks for a free slot.
- *
- * @param cb Work callback.
- * @param data Data passed to @p cb.
- * @return true if queued, false if no slot became free.
- */
-bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data);
-
 /** @} */

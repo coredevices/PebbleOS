@@ -190,7 +190,7 @@ void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
     case RX_ACK_END:
       s_rx_state = RX_TEXT;
       if (c == '\\' && s_ack_len == ACK_B64_LEN) {
-        new_timer_add_work_callback_from_isr(prv_process_ack, nullptr);
+        sys_work_add_high_from_isr(prv_process_ack, nullptr);
       }
       break;
   }

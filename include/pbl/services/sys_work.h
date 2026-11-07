@@ -78,6 +78,27 @@ bool sys_work_add_from_isr(SysWorkCallback cb, void *data);
 bool sys_work_try_add(SysWorkCallback cb, void *data);
 
 /**
+ * @brief Queue a short, time sensitive callback on @ref pbl_sys_workq_high.
+ *
+ * Waits up to 50 ticks for a free slot.
+ *
+ * @param cb Callback.
+ * @param data Context passed to @p cb.
+ * @return True if queued, false if no slot became free.
+ */
+bool sys_work_add_high(SysWorkCallback cb, void *data);
+
+/**
+ * @brief Queue a short, time sensitive callback on @ref pbl_sys_workq_high from an ISR.
+ *
+ * The callback is dropped if no slot is free.
+ *
+ * @param cb Callback.
+ * @param data Context passed to @p cb.
+ */
+void sys_work_add_high_from_isr(SysWorkCallback cb, void *data);
+
+/**
  * @brief Queue a droppable callback that raises KernelBG priority until it has run.
  *
  * The priority is raised while the callback is pending or running, and released after it
