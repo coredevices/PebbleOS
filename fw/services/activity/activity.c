@@ -1126,8 +1126,6 @@ static void prv_handle_activity_enabled_change(void) {
 }
 
 static void prv_charger_event_cb(PebbleEvent *e, void *context) {
-#ifndef CONFIG_IS_BIGBOARD
-  // Since bigboards are usually plugged in, don't react to a battery connection event
   const PebbleBatteryStateChangeEvent *evt = &e->battery_state;
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
@@ -1135,7 +1133,6 @@ static void prv_charger_event_cb(PebbleEvent *e, void *context) {
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
   prv_handle_activity_enabled_change();
-#endif
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1276,11 +1273,7 @@ bool activity_init(void) {
     .handler = prv_charger_event_cb,
   };
   event_service_client_subscribe(&s_activity_state.charger_subscription);
-#ifdef CONFIG_IS_BIGBOARD
-  s_activity_state.enabled_charging_state = true;
-#else
   s_activity_state.enabled_charging_state = !battery_is_usb_connected();
-#endif
 
   return true;
 }

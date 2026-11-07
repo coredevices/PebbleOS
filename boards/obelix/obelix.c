@@ -190,7 +190,7 @@ PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", 2, 400000, &s_i2c2_default, &s_i2c2_dm
 
 PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 
-#ifdef CONFIG_IS_BIGBOARD
+#ifdef CONFIG_BOARD_OBELIX_BB2
 #define LSM6DSO_AXIS_DIR_Y   (-1)
 #define MMC5603NJ_AXIS_DIR_X (-1)
 #define MMC5603NJ_AXIS_DIR_Y 1

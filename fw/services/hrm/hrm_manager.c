@@ -202,7 +202,7 @@ static void prv_accel_subscribe(void) {
 }
 
 PBL_T_STATIC bool prv_can_turn_sensor_on(void) {
-#if defined(CONFIG_IS_BIGBOARD) || defined(CONFIG_RECOVERY_FW)
+#ifdef CONFIG_RECOVERY_FW
   return true;
 #endif
 
