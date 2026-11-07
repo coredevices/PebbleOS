@@ -22,6 +22,10 @@
 
 struct pbl_thread *pbl_cur;
 
+void arch_cur_set(struct pbl_thread *t) {
+  pbl_cur = t;
+}
+
 pthread_mutex_t posix_cpu = PTHREAD_MUTEX_INITIALIZER;
 bool posix_switch_pending;
 bool posix_in_isr;
