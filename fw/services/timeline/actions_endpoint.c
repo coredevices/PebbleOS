@@ -5,6 +5,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
@@ -75,12 +76,10 @@ typedef struct PBL_PACKED {
   Uuid item_id;
 } DisplayedItemMsg;
 
-PBL_T_STATIC const int TIMELINE_ACTION_ENDPOINT = 0x2cb0;
-
 static void prv_action_system_task_callback(void *data) {
   InvokeActionMsgCbData *action = data;
 
-  pbl_pp_send(pbl_pp_session_get_system(), TIMELINE_ACTION_ENDPOINT, (uint8_t *)&action->msg,
+  pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_TIMELINE_ACTION, (uint8_t *)&action->msg,
               action->length, PBL_PP_DEFAULT_TIMEOUT_MS);
 
   pbl_free(action);
@@ -178,7 +177,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   if (do_async) {
     system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
   } else {
-    pbl_pp_send(pbl_pp_session_get_system(), TIMELINE_ACTION_ENDPOINT,
+    pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_TIMELINE_ACTION,
                 (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,
                 PBL_PP_DEFAULT_TIMEOUT_MS);
     pbl_free(invoke_action_data);
@@ -194,7 +193,7 @@ void timeline_action_endpoint_send_displayed_item(const Uuid *id) {
     .command = CommandDisplayedItem,
     .item_id = id ? *id : UUID_INVALID,
   };
-  pbl_pp_send(session, TIMELINE_ACTION_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
+  pbl_pp_send(session, PBL_PP_ENDPOINT_TIMELINE_ACTION, (const uint8_t *)&msg, sizeof(msg),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -238,3 +237,6 @@ void timeline_action_endpoint_protocol_msg_callback(struct pbl_pp_session *sessi
     notifications_handle_notification_action_result(action_result);
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_TIMELINE_ACTION, PBL_PP_ACCESS_PRIVATE,
+                       timeline_action_endpoint_protocol_msg_callback);

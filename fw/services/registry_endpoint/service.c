@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 
@@ -10,10 +11,8 @@
 
 #define MFG_COLOR_KEY "mfg_color"
 
-#define FACTORY_REGISTRY_ENDPOINT 5001
-
 static void prv_send_response(const uint8_t *data, unsigned int length) {
-  pbl_pp_send(pbl_pp_session_get_system(), FACTORY_REGISTRY_ENDPOINT, data, length,
+  pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_FACTORY_REGISTRY, data, length,
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -41,3 +40,6 @@ void factory_registry_protocol_msg_callback(struct pbl_pp_session *session, cons
 
   prv_send_fail_response();
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_FACTORY_REGISTRY, PBL_PP_ACCESS_PRIVATE,
+                       factory_registry_protocol_msg_callback);

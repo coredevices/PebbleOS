@@ -9,6 +9,7 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/alarms/alarm.h>
@@ -373,7 +374,7 @@ static void prv_handle_set_time_msg(time_t new_time) {
 }
 
 void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
-                                 unsigned int length) {
+                                 size_t length) {
   char sub_command = *data++;
 
   switch (sub_command) {
@@ -425,6 +426,10 @@ void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
       break;
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_CLOCK, PBL_PP_ACCESS_PRIVATE, clock_protocol_msg_callback);
+#endif
 
 // TODO: Using a regular timer is pretty gross...
 //! Runs once a minute from the regular_timer minutes list. DST transitions and

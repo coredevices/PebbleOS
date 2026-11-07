@@ -6,6 +6,7 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
@@ -20,7 +21,6 @@
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 //! BlobDB Endpoint ID
-static const uint16_t BLOB_DB2_ENDPOINT_ID = 0xb2db;
 
 //! BlobDB Protocol Version - increment when adding new features
 static const uint8_t BLOB_DB_PROTOCOL_VERSION = 1;
@@ -51,7 +51,8 @@ static const uint8_t *prv_read_token_and_response(const uint8_t *iter, BlobDBTok
 
 PBL_T_STATIC void prv_send_response(struct pbl_pp_session *session, uint8_t *response,
                                     uint8_t response_length) {
-  pbl_pp_send(session, BLOB_DB2_ENDPOINT_ID, response, response_length, PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_BLOB_DB2, response, response_length,
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static void prv_handle_get_dirty_databases(struct pbl_pp_session *session, const uint8_t *data,
@@ -307,8 +308,8 @@ static uint16_t prv_send_write_writeback(BlobDBCommand cmd, BlobDBId db_id, time
                             key_len + sizeof(uint16_t) /* val length size */ + val_len;
 
   struct pbl_pp_send_buffer *sb =
-      pbl_pp_send_buffer_begin(pbl_pp_session_get_system(), BLOB_DB2_ENDPOINT_ID, writeback_length,
-                               PBL_PP_DEFAULT_TIMEOUT_MS);
+      pbl_pp_send_buffer_begin(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_BLOB_DB2,
+                               writeback_length, PBL_PP_DEFAULT_TIMEOUT_MS);
   if (sb) {
     pbl_pp_send_buffer_write(sb, (uint8_t *)&writeback_metadata, sizeof(writeback_metadata));
     pbl_pp_send_buffer_write(sb, (uint8_t *)&key_len, sizeof(uint8_t));
@@ -350,7 +351,7 @@ void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
 
   PBL_LOG_DBG("Sending sync done for db: %d", db_id);
 
-  pbl_pp_send(pbl_pp_session_get_system(), BLOB_DB2_ENDPOINT_ID, (uint8_t *)&msg, sizeof(msg),
+  pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_BLOB_DB2, (uint8_t *)&msg, sizeof(msg),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -377,6 +378,9 @@ void blob_db2_protocol_msg_callback(struct pbl_pp_session *session, const uint8_
 
   prv_blob_db_msg_decode_and_handle(session, cmd, data, data_length);
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLOB_DB2, PBL_PP_ACCESS_PRIVATE,
+                       blob_db2_protocol_msg_callback);
 
 void blob_db2_set_accepting_messages(bool enabled) {
   s_b2db_accepting_messages = enabled;

@@ -7,6 +7,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/util/byteorder.h>
@@ -16,8 +17,6 @@
 #include <logging/logging_private.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_log_endpoint, CONFIG_SERVICE_APP_LOG_ENDPOINT_LOG_LEVEL);
-
-static const uint16_t APP_LOGGING_ENDPOINT = 2006;
 
 static const uint32_t MIN_STACK_FOR_SEND_DATA = 400;
 
@@ -42,7 +41,7 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
 
   const size_t length = sizeof(Uuid) + sizeof(header) + msg->text_len;
   struct pbl_pp_send_buffer *sb =
-      pbl_pp_send_buffer_begin(session, APP_LOGGING_ENDPOINT, length, PBL_PP_DEFAULT_TIMEOUT_MS);
+      pbl_pp_send_buffer_begin(session, PBL_PP_ENDPOINT_APP_LOG, length, PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!sb) {
     return;
   }
@@ -87,3 +86,8 @@ void app_log_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       PBL_LOG_WRN("Invalid app log command 0x%x", command->commandType);
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_LOG, PBL_PP_ACCESS_PRIVATE,
+                       app_log_protocol_msg_callback);
+#endif

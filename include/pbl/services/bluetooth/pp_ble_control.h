@@ -23,6 +23,6 @@
  * @param length Length of @p data in bytes.
  */
 void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
-                                          unsigned int length);
+                                          size_t length);
 
 /** @} */

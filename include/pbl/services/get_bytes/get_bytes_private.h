@@ -18,8 +18,6 @@
  */
 
 /** @brief Get bytes endpoint ID. */
-static const uint16_t GET_BYTES_ENDPOINT_ID = 9000;
-
 /** @brief Header of every request and response. */
 typedef struct PBL_PACKED {
   /** Command, a @ref GetBytesCmd value. */

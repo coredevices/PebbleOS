@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/services/bluetooth/pp_ble_control.h>
 
@@ -33,11 +34,11 @@ static void prv_handle_set_discoverable_pairable(
 // -----------------------------------------------------------------------------
 //! Pebble protocol handler for the BLE control endpoint
 void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
-                                          unsigned int length) {
+                                          size_t length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   if (length < sizeof(BLEControlCommandSetDiscoverablePairable)) {
-    PBL_LOG_WRN("Invalid pp_ble_control_protocol_msg_callback message: %d", length);
+    PBL_LOG_WRN("Invalid pp_ble_control_protocol_msg_callback message: %d", (int)length);
     return;
   }
 
@@ -58,3 +59,8 @@ void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const 
       break;
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLE_CONTROL, PBL_PP_ACCESS_PRIVATE,
+                       pp_ble_control_protocol_msg_callback);
+#endif

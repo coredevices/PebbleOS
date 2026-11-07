@@ -4,6 +4,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
@@ -17,7 +18,6 @@ PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL)
  */
 
 static const uint8_t MIN_INTERVAL_MINUTES = 1;
-static const uint16_t ENDPOINT_ID = 0xcafe;
 static bool s_running = false;
 
 typedef enum {
@@ -102,8 +102,8 @@ static void prv_send_request(PollRemoteContext *ctx) {
   // which is what we want here. If this this changes in the future
   // we need to take measures here to make sure we don't pull the link active.
   const PollRemoteMessage msg = {.cmd = CMD_POLL, .service = ctx->service};
-  pbl_pp_send(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(PollRemoteMessage),
-              PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_POLL_REMOTE, (const uint8_t *)&msg,
+              sizeof(PollRemoteMessage), PBL_PP_DEFAULT_TIMEOUT_MS);
   ctx->counted_minutes = 0;
 }
 
@@ -162,6 +162,11 @@ void comm_poll_remote_protocol_msg_callback(struct pbl_pp_session *session, cons
     }
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_POLL_REMOTE, PBL_PP_ACCESS_ANY,
+                       comm_poll_remote_protocol_msg_callback);
+#endif
 
 /*
  * Public

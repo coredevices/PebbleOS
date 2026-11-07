@@ -4,6 +4,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
@@ -20,8 +21,6 @@
 #endif
 
 PBL_LOG_MODULE_DEFINE(service_voice_endpoint, CONFIG_SERVICE_VOICE_ENDPOINT_LOG_LEVEL);
-
-#define VOICE_CONTROL_ENDPOINT (11000)
 
 #ifdef CONFIG_MIC
 static bool prv_handle_result_common(VoiceEndpointResult result, bool app_initiated,
@@ -205,6 +204,9 @@ void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
       break;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_VOICE, PBL_PP_ACCESS_PRIVATE,
+                       voice_endpoint_protocol_msg_callback);
 #else
 void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t size) {
@@ -250,7 +252,6 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
   size_t actual_size = (uint8_t *)attr - (uint8_t *)msg;
   PBL_ASSERTN(actual_size == size);
 
-  pbl_pp_send(comm_session, VOICE_CONTROL_ENDPOINT, (uint8_t *)msg, size,
-              PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(comm_session, PBL_PP_ENDPOINT_VOICE, (uint8_t *)msg, size, PBL_PP_DEFAULT_TIMEOUT_MS);
   pbl_free(msg);
 }

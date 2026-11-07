@@ -6,6 +6,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/app_cache.h>
@@ -66,7 +67,6 @@ typedef struct PBL_PACKED {
 static AppFetchState s_fetch_state;
 
 //! Endpoint ID
-static const uint16_t APP_FETCH_ENDPOINT_ID = 6001;
 
 ////////////////////////////
 // Internal Helper Functions
@@ -259,7 +259,7 @@ static void prv_app_fetch_binaries_system_task_cb(void *data) {
 
   // check if Bluetooth is active. If so, this will send.
   bool successful =
-      0 == pbl_pp_send(pbl_pp_session_get_system(), APP_FETCH_ENDPOINT_ID, (uint8_t *)request,
+      0 == pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_APP_FETCH, (uint8_t *)request,
                        sizeof(AppFetchInstallRequest), PBL_PP_DEFAULT_TIMEOUT_MS);
 
   // log it
@@ -423,3 +423,6 @@ void app_fetch_protocol_msg_callback(struct pbl_pp_session *session, const uint8
 
   prv_app_fetch_protocol_handle_msg((AppFetchResponseData *)data);
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_FETCH, PBL_PP_ACCESS_PRIVATE,
+                       app_fetch_protocol_msg_callback);

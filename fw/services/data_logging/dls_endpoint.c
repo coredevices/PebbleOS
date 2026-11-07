@@ -9,6 +9,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -54,8 +55,6 @@ typedef struct PBL_PACKED {
   DataLoggingItemType data_item_type : 8;
   uint16_t data_item_size;
 } DataLoggingOpenSessionMessage;
-
-static const uint16_t ENDPOINT_ID_DATA_LOGGING = 0x1a7a;
 
 #define ACK_NACK_TIMEOUT_TICKS (30 * PBL_TICK_HZ)
 
@@ -109,7 +108,7 @@ static void send_timeout_msg(void *session_id_param) {
     .session_id = logging_session->comm.session_id,
   };
 
-  pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
+  pbl_pp_send(session, PBL_PP_ENDPOINT_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -236,7 +235,7 @@ bool dls_endpoint_open_session(DataLoggingSession *session) {
 
   update_session_state(session, DataLoggingSessionCommStateOpening, true /*reschedule*/);
 
-  return (0 == pbl_pp_send(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+  return (0 == pbl_pp_send(comm_session, PBL_PP_ENDPOINT_DATA_LOGGING, (uint8_t *)&msg,
                            sizeof(DataLoggingOpenSessionMessage), PBL_PP_DEFAULT_TIMEOUT_MS));
 }
 
@@ -253,7 +252,7 @@ void dls_endpoint_close_session(uint8_t session_id) {
 
   dls_endpoint_print_message((uint8_t *)&msg, 0);
 
-  pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+  pbl_pp_send(session, PBL_PP_ENDPOINT_DATA_LOGGING, (uint8_t *)&msg,
               sizeof(DataLoggingCloseSessionMessage), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -279,8 +278,8 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
   const uint32_t total_length = sizeof(DataLoggingSendDataMessage) + num_bytes;
   const uint32_t timeout_ms = 500;
-  struct pbl_pp_send_buffer *sb =
-      pbl_pp_send_buffer_begin_bulk(session, ENDPOINT_ID_DATA_LOGGING, total_length, timeout_ms);
+  struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin_bulk(
+      session, PBL_PP_ENDPOINT_DATA_LOGGING, total_length, timeout_ms);
   if (!sb) {
     pbl_mutex_unlock(&s_endpoint_data.mutex);
     return false;
@@ -533,7 +532,7 @@ void data_logging_protocol_msg_callback(struct pbl_pp_session *session, const ui
         .enabled = enabled,
       };
 
-      pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
+      pbl_pp_send(session, PBL_PP_ENDPOINT_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
                   PBL_PP_DEFAULT_TIMEOUT_MS);
     } break;
 
@@ -542,6 +541,9 @@ void data_logging_protocol_msg_callback(struct pbl_pp_session *session, const ui
       break;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_DATA_LOGGING, PBL_PP_ACCESS_PRIVATE,
+                       data_logging_protocol_msg_callback);
 
 void dls_endpoint_init(void) {
   pbl_mutex_init(&s_endpoint_data.mutex);

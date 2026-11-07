@@ -10,6 +10,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
@@ -60,7 +61,7 @@ static bool prv_protocol_send_err_response(struct pbl_pp_session *session, int8_
     .num_bytes = pbl_cpu_to_be32(0),
   };
 
-  bool success = 0 == pbl_pp_send(session, GET_BYTES_ENDPOINT_ID, (const uint8_t *)&rsp,
+  bool success = 0 == pbl_pp_send(session, PBL_PP_ENDPOINT_GET_BYTES, (const uint8_t *)&rsp,
                                   sizeof(rsp), PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!success) {
     PBL_LOG_ERR("GET_BYTES: aborted");
@@ -124,7 +125,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
   struct pbl_pp_send_buffer *sb;
   if (packet_len == 0 ||
-      !(sb = pbl_pp_send_buffer_begin_bulk(state->session, GET_BYTES_ENDPOINT_ID, packet_len,
+      !(sb = pbl_pp_send_buffer_begin_bulk(state->session, PBL_PP_ENDPOINT_GET_BYTES, packet_len,
                                            PBL_PP_DEFAULT_TIMEOUT_MS))) {
     if (pbl_pp_send_buffer_max_payload(state->session) == 0) {
       gb_storage_cleanup(&state->storage, false /* unsuccessful */);
@@ -246,10 +247,10 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state, const ui
 }
 
 void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
-                                     uint32_t msg_len) {
+                                     size_t msg_len) {
   // at least have a cmd and a transaction_id
   if (msg_len < 2) {
-    PBL_LOG_ERR("Invalid length %" PRIu32, msg_len);
+    PBL_LOG_ERR("Invalid length %" PRIu32, (uint32_t)msg_len);
     prv_protocol_send_err_response(session, 0 /*transaction_id*/, GET_BYTES_MALFORMED_COMMAND);
     return;
   }
@@ -292,3 +293,6 @@ void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8
 
   prv_protocol_send_next_chunk(state);
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_GET_BYTES, PBL_PP_ACCESS_PRIVATE,
+                       get_bytes_protocol_msg_callback);
