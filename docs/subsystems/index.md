@@ -15,6 +15,7 @@ crc.md
 fs.md
 input.md
 logging.md
+pp/index.md
 profiler.md
 shell.md
 console.md
