@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mpu.h>
 
@@ -42,6 +44,10 @@ PBL_WEAK int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
 
 PBL_WEAK bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
   return false;
+}
+
+PBL_WEAK void pbl_mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  memcpy(dst, src, n);
 }
 
 PBL_WEAK const struct pbl_mpu_region *pbl_mpu_region_firmware(void) {

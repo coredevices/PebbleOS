@@ -3,11 +3,11 @@
 
 #include <string.h>
 
-#include <arch.h>
-
 #include <pbl/kernel/irq.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/mcu/fpu.h>
+
+#include <arch.h>
 
 // The host has no interrupt controller, caches to maintain or MPU: interrupts
 // come from host threads (see native.c) and memory is unprotected.
@@ -64,6 +64,10 @@ void arch_mpu_enable(void) {
 }
 
 void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region) {
+}
+
+void arch_mpu_user_ro_write(int slot, void *dst, const void *src, size_t n) {
+  memcpy(dst, src, n);
 }
 
 bool arch_mpu_region_get(unsigned int slot, struct pbl_mpu_region *region) {

@@ -3,6 +3,8 @@
 
 #include "arm_mpu.h"
 
+#include <string.h>
+
 #include <pbl/util/size.h>
 
 #include <cmsis_core.h>
@@ -93,6 +95,33 @@ void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region)
   ARM_MPU_SetRegion(slot, rbar, rlar);
   __DSB();
   __ISB();
+  __set_PRIMASK(primask);
+}
+
+void arch_mpu_user_ro_write(int slot, void *dst, const void *src, size_t n) {
+  if (slot < 0) {
+    memcpy(dst, src, n);
+    return;
+  }
+
+  const uint32_t primask = __get_PRIMASK();
+  __disable_irq();
+
+  const uint32_t rnr = MPU->RNR;
+  MPU->RNR = (uint32_t)slot;
+  const uint32_t rlar = MPU->RLAR;
+  MPU->RLAR = rlar & ~MPU_RLAR_EN_Msk;
+  __DSB();
+  __ISB();
+
+  memcpy(dst, src, n);
+
+  __DSB();
+  MPU->RLAR = rlar;
+  MPU->RNR = rnr;
+  __DSB();
+  __ISB();
+
   __set_PRIMASK(primask);
 }
 
