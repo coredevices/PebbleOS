@@ -7,11 +7,11 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/size.h>
 
-#include <kernel/memory_layout.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
 #include <system/die.h>

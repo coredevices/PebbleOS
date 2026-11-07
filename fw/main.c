@@ -12,6 +12,7 @@
 #include <pbl/drivers/vibe.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/backend_flash.h>
@@ -33,11 +34,11 @@
 #include <kernel/events.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
 #include <mfg/mfg_info.h>
+#include <process_management/process_regions.h>
 #include <resource/resource.h>
 #include <resource/system_resource.h>
 #include <system/bootbits.h>
@@ -91,9 +92,40 @@ static void uptime_callback(void *data) {
 }
 #endif
 
+#ifdef CONFIG_SOC_SF32LB52
+// The linker script places the image from Kconfig, which can't see the partitions
+#if defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG) && !defined(CONFIG_RECOVERY_FW_AS_FW)
+static_assert(CONFIG_FLASH_OFFSET == PART_SAFE_FIRMWARE_OFFSET);
+static_assert(CONFIG_FW_FLASH_SIZE == PART_SAFE_FIRMWARE_SIZE);
+#elif CONFIG_FIRMWARE_SLOT == 1
+static_assert(CONFIG_FLASH_OFFSET == PART_FIRMWARE_SLOT_1_OFFSET);
+static_assert(CONFIG_FW_FLASH_SIZE == PART_FIRMWARE_SLOT_1_SIZE);
+#else
+static_assert(CONFIG_FLASH_OFFSET == PART_FIRMWARE_SLOT_0_OFFSET);
+static_assert(CONFIG_FW_FLASH_SIZE == PART_FIRMWARE_SLOT_0_SIZE);
+#endif
+#endif
+
+static void prv_resource_banks_region_add(void) {
+#ifdef CONFIG_MMAP_RESOURCES
+  static_assert(PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0_SIZE ==
+                    PART_SYSTEM_RESOURCES_BANK_1_OFFSET,
+                "resource banks must be contiguous");
+
+  // System resources are served as pointers into the memory mapped banks.
+  static const struct pbl_mpu_region s_region = {
+    .name = "resource banks",
+    .base = CONFIG_FLASH_BASE + PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
+    .size = PART_SYSTEM_RESOURCES_BANK_0_SIZE + PART_SYSTEM_RESOURCES_BANK_1_SIZE,
+    .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_SHAREABLE,
+  };
+  PBL_ASSERTN(pbl_mpu_region_add(&s_region) == 0);
+#endif
+}
+
 int main(void) {
   pebble_task_register(PebbleTask_KernelMain, pbl_thread_current());
-  memory_layout_thread_regions_init();
+  process_regions_thread_init();
 
   print_splash_screen();
 
@@ -110,7 +142,7 @@ int main(void) {
 
   task_init();
 
-  memory_layout_setup_mpu();
+  prv_resource_banks_region_add();
 
   kernel_applib_init();
 

@@ -41,7 +41,7 @@ add_executable(pdc2png
   ${PBL_BASE}/tests/stubs/default/applib_resource.c
   ${PBL_BASE}/tests/stubs/default/heap.c
   ${PBL_BASE}/tests/stubs/default/logging.c
-  ${PBL_BASE}/tests/stubs/default/memory_layout.c
+  ${PBL_BASE}/tests/stubs/default/process_regions.c
   ${PBL_BASE}/tests/stubs/default/pbl_malloc.c
   ${PBL_BASE}/tests/stubs/default/resources.c
   ${PBL_BASE}/tests/stubs/default/syscalls.c

@@ -17,7 +17,6 @@
 #include <pbl/services/system_task.h>
 #include <pbl/task_wdt/task_wdt.h>
 
-#include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/util/task_init.h>
 #include <process_management/app_manager.h>
