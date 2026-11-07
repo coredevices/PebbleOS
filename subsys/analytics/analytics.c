@@ -31,8 +31,6 @@ extern void pbl_analytics_external_collect_settings(void);
 extern void pbl_analytics_external_collect_watchface(void);
 extern void pbl_analytics_external_collect_display_stats(void);
 
-#ifdef ANALYTICS_NATIVE
-
 extern void pbl_analytics__native_init(void);
 extern void pbl_analytics__native_heartbeat(void);
 
@@ -186,30 +184,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
   }
 }
 
-#else // No analytics backend: provide no-op stubs.
-
-void pbl_analytics_init(void) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_set_signed, (VAL, enum pbl_analytics_key, key),
-            (VAL, int32_t, signed_value)) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_set_unsigned, (VAL, enum pbl_analytics_key, key),
-            (VAL, uint32_t, unsigned_value)) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_set_string, (VAL, enum pbl_analytics_key, key),
-            (VAL, const char *, value)) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_timer_start, (VAL, enum pbl_analytics_key, key)) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_timer_stop, (VAL, enum pbl_analytics_key, key)) {
-}
-PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
-            (VAL, int32_t, amount)) {
-}
-
-#endif
-
-#if defined(CONFIG_SHELL) && defined(ANALYTICS_NATIVE)
+#ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_heartbeat(const struct pbl_shell *sh, size_t argc, char **argv) {

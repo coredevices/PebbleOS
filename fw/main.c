@@ -160,7 +160,9 @@ int main(void) {
   pbl_task_wdt_init();
   pbl_task_wdt_suspend(30 * 1000);
 
+#ifdef CONFIG_ANALYTICS
   pbl_analytics_init();
+#endif
   system_task_timer_init();
 
   init_drivers();

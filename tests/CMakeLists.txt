@@ -50,6 +50,7 @@ pbl_test_init()
 add_compile_options(${PBL_TEST_C_FLAGS})
 set(PBL_TEST_DEFINES
   "CLAR_FIXTURE_PATH=\"${PBL_BASE}/tests/fixtures/\""
+  CONFIG_ANALYTICS=1
   CONFIG_LOG=1
   # The flash layout every test sees; it belongs to no platform.
   CONFIG_BOARD_PARTITIONS_DUAL_SLOT=1

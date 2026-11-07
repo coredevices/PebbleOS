@@ -195,6 +195,7 @@ void pbl_analytics_external_collect_stack_free(void) {
                              prv_syscall_stack_free_bytes(PebbleTask_Worker));
 }
 
+#ifdef CONFIG_ANALYTICS
 static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
   [PebbleTask_KernelMain] = PBL_ANALYTICS_KEY(task_cpu_kernel_main_pct),
   [PebbleTask_KernelBackground] = PBL_ANALYTICS_KEY(task_cpu_kernel_background_pct),
@@ -256,6 +257,7 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
   uint32_t idle_pct = delta_total ? (uint32_t)(((uint64_t)idle_delta * 10000U) / delta_total) : 0;
   PBL_ANALYTICS_SET_UNSIGNED(task_cpu_idle_pct, idle_pct);
 }
+#endif
 
 struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
   struct pbl_msgq *queue;

@@ -13,7 +13,7 @@
  * Metrics are declared in @c analytics.def as unsigned, signed, scaled, timer or string metrics.
  * Values accumulate over a heartbeat period (one hour) and are then handed to the analytics
  * backends, which log them and reset them for the next period. Running timers keep running
- * across heartbeats. Without a backend every call is a no-op.
+ * across heartbeats. Without @c CONFIG_ANALYTICS the macros only evaluate their value.
  *
  * The functions are syscalls, so they may be used from apps as well as from the kernel. Keys out
  * of range are ignored.
@@ -124,6 +124,8 @@ void sys_pbl_analytics_timer_stop(enum pbl_analytics_key key);
  */
 void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
 
+#ifdef CONFIG_ANALYTICS
+
 /**
  * @brief Set a signed metric by name.
  *
@@ -174,5 +176,16 @@ void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
  */
 #define PBL_ANALYTICS_ADD(key_name, amount) \
   sys_pbl_analytics_add(PBL_ANALYTICS_KEY(key_name), amount)
+
+#else
+
+#define PBL_ANALYTICS_SET_SIGNED(key_name, signed_value)     ((void)(signed_value))
+#define PBL_ANALYTICS_SET_UNSIGNED(key_name, unsigned_value) ((void)(unsigned_value))
+#define PBL_ANALYTICS_SET_STRING(key_name, value)            ((void)(value))
+#define PBL_ANALYTICS_TIMER_START(key_name)                  ((void)0)
+#define PBL_ANALYTICS_TIMER_STOP(key_name)                   ((void)0)
+#define PBL_ANALYTICS_ADD(key_name, amount)                  ((void)(amount))
+
+#endif /* CONFIG_ANALYTICS */
 
 /** @} */
