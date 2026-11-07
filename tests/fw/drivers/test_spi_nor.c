@@ -8,10 +8,11 @@
 #include <pbl/board/otp_layout.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/otp.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <fake_new_timer.h>
+#include <fake_work.h>
 
 // Fake GigaDevice-like NOR chip behind a fake controller
 ///////////////////////////////////////////////////////////
@@ -579,7 +580,7 @@ void test_spi_nor__initialize(void) {
 
 void test_spi_nor__cleanup(void) {
   free(s_mem);
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
 }
 
 // Geometry and modes
@@ -857,7 +858,7 @@ void test_spi_nor__erase_suspended_for_reads(void) {
   cl_assert(s_suspended);
   cl_assert(s_sr2 & PBL_FLASH_NOR_SR2_SUS);
 
-  stub_new_timer_fire(stub_new_timer_get_next());
+  fake_work_fire(fake_work_get_next());
   cl_assert(!s_suspended);
   cl_assert(s_busy > 0U);
 }

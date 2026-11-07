@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <errno.h>
 #include <string.h>
 
 #include <pbl/drivers/audio/qemu.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -37,18 +37,24 @@ static void prv_fill(struct pbl_audio_host_mic_state *state, int16_t *out, size_
   memset(&out[filled], 0, (count - filled) * sizeof(int16_t));
 }
 
-static void prv_timer_cb(void *data) {
-  const struct pbl_audio_host_mic *mic = data;
+static void prv_timer_fn(struct pbl_work *work) {
+  struct pbl_audio_host_mic_state *state =
+      container_of(work, struct pbl_audio_host_mic_state, timer.work);
+  const struct pbl_audio_host_mic *mic = state->mic;
   const struct pbl_audio_state *audio_state = mic->audio.state;
-  struct pbl_audio_host_mic_state *state = mic->state;
 
-  if (!pbl_audio_is_running(&mic->audio)) {
-    return;
+  if (pbl_audio_is_running(&mic->audio)) {
+    prv_fill(state, pbl_audio_period(&mic->audio, state->idx), audio_state->stream.period_frames);
+    state->idx = (state->idx + 1U) % audio_state->stream.periods;
+    pbl_audio_period_elapsed(&mic->audio);
   }
 
-  prv_fill(state, pbl_audio_period(&mic->audio, state->idx), audio_state->stream.period_frames);
-  state->idx = (state->idx + 1U) % audio_state->stream.periods;
-  pbl_audio_period_elapsed(&mic->audio);
+  // prv_stop() can land while this runs
+  pbl_irq_lock();
+  if (state->repeat && !pbl_delayed_work_is_pending(&state->timer)) {
+    pbl_delayed_work_schedule_next(&state->timer, state->period_ticks);
+  }
+  pbl_irq_unlock();
 }
 
 void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
@@ -93,13 +99,14 @@ void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
 }
 
 static int prv_init(const struct pbl_audio *audio) {
-  struct pbl_audio_host_mic_state *state = prv_dev(audio)->state;
+  const struct pbl_audio_host_mic *mic = prv_dev(audio);
+  struct pbl_audio_host_mic_state *state = mic->state;
 
-  *state = (struct pbl_audio_host_mic_state){0};
+  *state = (struct pbl_audio_host_mic_state){.mic = mic};
   pbl_mutex_init(&state->lock);
-  state->timer = new_timer_create();
+  pbl_delayed_work_init(&state->timer, prv_timer_fn);
 
-  return state->timer != TIMER_INVALID_ID ? 0 : -ENOMEM;
+  return 0;
 }
 
 static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
@@ -130,11 +137,9 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   state->idx = 0U;
   pbl_mutex_unlock(&state->lock);
 
-  if (!new_timer_start(state->timer, period_ms, prv_timer_cb, (void *)mic,
-                       TIMER_START_FLAG_REPEATING)) {
-    prv_free_ring(state);
-    return -EIO;
-  }
+  state->period_ticks = pbl_ms_to_ticks(period_ms);
+  state->repeat = true;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &state->timer, PBL_MSEC(period_ms));
 
   s_running = mic;
 
@@ -145,7 +150,10 @@ static int prv_stop(const struct pbl_audio *audio) {
   struct pbl_audio_host_mic_state *state = prv_dev(audio)->state;
 
   s_running = nullptr;
-  new_timer_stop(state->timer);
+  pbl_irq_lock();
+  state->repeat = false;
+  pbl_delayed_work_cancel(&state->timer);
+  pbl_irq_unlock();
   prv_free_ring(state);
 
   return 0;

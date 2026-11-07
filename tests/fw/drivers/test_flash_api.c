@@ -8,7 +8,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <fake_new_timer.h>
+#include <fake_work.h>
 
 #define SECTOR_SIZE    0x10000U
 #define SUBSECTOR_SIZE 0x1000U
@@ -129,11 +129,11 @@ static void prv_cb(int status, void *arg) {
 
 static void prv_fire_timers(int max) {
   for (int i = 0; i < max; i++) {
-    TimerID timer = stub_new_timer_get_next();
-    if (timer == TIMER_INVALID_ID) {
+    struct pbl_delayed_work *timer = fake_work_get_next();
+    if (timer == nullptr) {
       return;
     }
-    stub_new_timer_fire(timer);
+    fake_work_fire(timer);
   }
 }
 
@@ -164,7 +164,7 @@ void test_flash_api__initialize(void) {
 }
 
 void test_flash_api__cleanup(void) {
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
 }
 
 void test_flash_api__erase_subsector(void) {
@@ -295,13 +295,13 @@ void test_flash_api__read_suspends_and_resumes_erase(void) {
   cl_assert_equal_i(pbl_flash_read(&s_async, 0U, buf, sizeof(buf)), 0);
   cl_assert_equal_i(s_suspends, 1);
   cl_assert_equal_i(s_resumes, 0);
-  cl_assert(stub_new_timer_is_scheduled(s_async_flash_state.resume_timer));
+  cl_assert(fake_work_is_scheduled(&s_async_flash_state.resume_timer));
 
   // Further reads while suspended do not suspend again
   cl_assert_equal_i(pbl_flash_read(&s_async, 0U, buf, sizeof(buf)), 0);
   cl_assert_equal_i(s_suspends, 1);
 
-  stub_new_timer_fire(s_async_flash_state.resume_timer);
+  fake_work_fire(&s_async_flash_state.resume_timer);
   cl_assert_equal_i(s_resumes, 1);
 }
 

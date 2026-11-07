@@ -154,14 +154,19 @@ static int prv_set_rate_hw(uint8_t rate_hz) {
                                             MMC5603NJ_CTRL2_PRD_SET_EN | MMC5603NJ_CTRL2_CMM_EN);
 }
 
-static void prv_poll_cb(void *data) {
+static pbl_tick_t prv_poll_period_ticks(uint8_t rate_hz) {
+  return pbl_ms_to_ticks(DIVIDE_CEIL(1000U, rate_hz));
+}
+
+static void prv_poll_fn(struct pbl_work *work) {
+  struct pbl_mmc5603nj_state *state = s_dev->state;
   MagData sample;
   bool ready;
   int ret;
 
   pbl_mag_lock(&s_dev->mag);
 
-  if (s_dev->state->rate_hz == 0U) {
+  if (state->rate_hz == 0U) {
     goto out;
   }
 
@@ -177,7 +182,7 @@ static void prv_poll_cb(void *data) {
   if (ret != 0) {
     PBL_LOG_WRN("Read failed (%d), restarting sampling", ret);
     if (prv_set_rate_hw(0U) == 0) {
-      (void)prv_set_rate_hw(s_dev->state->rate_hz);
+      (void)prv_set_rate_hw(state->rate_hz);
     }
     goto out;
   }
@@ -185,6 +190,11 @@ static void prv_poll_cb(void *data) {
   pbl_mag_report_sample(&s_dev->mag, &sample);
 
 out:
+  // Rate changes hold the lock too
+  if (state->rate_hz != 0U && !pbl_delayed_work_is_pending(&state->poll_timer)) {
+    pbl_delayed_work_schedule_next(&state->poll_timer, prv_poll_period_ticks(state->rate_hz));
+  }
+
   pbl_mag_unlock(&s_dev->mag);
 }
 
@@ -193,6 +203,7 @@ static int prv_init(const struct pbl_mag *mag) {
   int ret;
 
   s_dev = container_of(mag, const struct pbl_mmc5603nj, mag);
+  pbl_delayed_work_init(&s_dev->state->poll_timer, prv_poll_fn);
 
   ret = prv_read(MMC5603NJ_REG_WHO_AM_I, &whoami, 1);
   if (ret != 0) {
@@ -240,17 +251,10 @@ static int prv_set_sampling_interval(const struct pbl_mag *mag, uint32_t interva
     state->rate_hz = rate_hz;
 
     if (rate_hz == 0U) {
-      new_timer_stop(state->poll_timer);
+      pbl_delayed_work_cancel(&state->poll_timer);
     } else {
-      if (state->poll_timer == TIMER_INVALID_ID) {
-        state->poll_timer = new_timer_create();
-        if (state->poll_timer == TIMER_INVALID_ID) {
-          return -ENOMEM;
-        }
-      }
-
-      new_timer_start(state->poll_timer, DIVIDE_CEIL(1000U, rate_hz), prv_poll_cb, nullptr,
-                      TIMER_START_FLAG_REPEATING);
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high, &state->poll_timer,
+                                  PBL_TICKS(prv_poll_period_ticks(rate_hz)));
     }
   }
 

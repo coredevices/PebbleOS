@@ -11,9 +11,9 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/cache.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -50,10 +50,9 @@ PBL_LOG_MODULE_DEFINE(driver_display_sf32lb_lcdc, CONFIG_DRIVER_DISPLAY_LOG_LEVE
 // (lcd_if.h struct ends around offset 0x100).
 #define DISPLAY_LCDC_REG_DUMP_BYTES 2048
 
-// The silent-loss timer callback has the generation as its argument
 static const struct pbl_display_sf32lb_lcdc *s_lcdc;
 
-static TimerID s_silent_loss_timer = TIMER_INVALID_ID;
+static struct pbl_delayed_work s_silent_loss_timer;
 // Generation of the update in flight, and of the last one the EOF callback
 // completed. The silent-loss handler only crashes if its generation never
 // completed, so a timer left running after a completion is harmless.
@@ -357,10 +356,16 @@ static void prv_snapshot_lcdc_regs(const struct pbl_display_sf32lb_lcdc *lcdc) {
   }
 }
 
-static void prv_silent_loss_handler(void *data) {
+static void prv_silent_loss_handler(struct pbl_work *work) {
   struct pbl_display_sf32lb_lcdc_state *state = s_lcdc->state;
 
-  if (s_completed_gen == (uint32_t)(uintptr_t)data) {
+  // A new update may have rearmed the timer after it expired
+  pbl_irq_lock();
+  const bool rearmed = pbl_delayed_work_is_pending(&s_silent_loss_timer);
+  const uint32_t gen = s_update_gen;
+  pbl_irq_unlock();
+
+  if (rearmed || s_completed_gen == gen) {
     return;
   }
 
@@ -477,7 +482,7 @@ static int prv_init(const struct pbl_display *disp) {
   }
 
   s_lcdc = lcdc;
-  s_silent_loss_timer = new_timer_create();
+  pbl_delayed_work_init(&s_silent_loss_timer, prv_silent_loss_handler);
 
   // Power cycle the panel with its inputs low
   for (uint8_t i = 0U; i < lcdc->num_discharge; i++) {
@@ -546,9 +551,11 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
   // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
   // the transfer starts, never races us into a state where the timer
   // isn't yet armed.
+  pbl_irq_lock();
   s_update_gen++;
-  new_timer_start(s_silent_loss_timer, DISPLAY_SILENT_LOSS_TIMEOUT_MS, prv_silent_loss_handler,
-                  (void *)(uintptr_t)s_update_gen, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_silent_loss_timer,
+                              PBL_MSEC(DISPLAY_SILENT_LOSS_TIMEOUT_MS));
+  pbl_irq_unlock();
 
   ret = prv_update_start(lcdc);
   if (ret != 0) {

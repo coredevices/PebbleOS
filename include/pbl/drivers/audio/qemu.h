@@ -9,7 +9,7 @@
 #include <pbl/drivers/audio.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 
 /**
  * @defgroup drivers_audio_qemu Emulated audio
@@ -80,7 +80,10 @@ void pbl_audio_qemu_irq_handler(const struct pbl_audio_qemu *dev);
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_audio_host_mic_state {
-  TimerID timer;
+  const struct pbl_audio_host_mic *mic;
+  struct pbl_delayed_work timer;
+  pbl_tick_t period_ticks;
+  bool repeat;
   struct pbl_mutex lock;
   int16_t *ring;
   size_t ring_read;
