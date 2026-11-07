@@ -33,6 +33,10 @@ struct posix_thread {
 
 struct pbl_thread *pbl_cur;
 
+void arch_cur_set(struct pbl_thread *t) {
+  pbl_cur = t;
+}
+
 static bool s_switch_pending;
 static bool s_in_isr;
 

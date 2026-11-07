@@ -50,7 +50,11 @@ static_assert(FIRST_MPU_REGION % ARCH_THREAD_MPU_REGIONS == 0, "thread slots mus
 #define SHPR_SVCALL 7
 #define SHPR_PENDSV 10
 
-struct pbl_thread *pbl_cur PBL_SECTION(".kernel_unpriv_ro_bss");
+struct pbl_thread *pbl_cur KERNEL_READONLY_DATA;
+
+void arch_cur_set(struct pbl_thread *t) {
+  pbl_mpu_user_ro_write(&pbl_cur, &t, sizeof(t));
+}
 
 //! Saved context, lowest address first. Matches the layout core dump tooling
 //! learned from the FreeRTOS port so the canonical register walk is unchanged.
