@@ -247,7 +247,7 @@ typedef int (*GPointComparator)(const GPoint *const a, const GPoint *const b, vo
 
 //! @internal
 static inline GPoint gpoint_scalar_lshift(const GPoint point, int8_t s) {
-  return GPoint(point.x << s, point.y << s);
+  return GPoint(point.x * (1 << s), point.y * (1 << s));
 }
 
 //! @internal
@@ -507,10 +507,10 @@ typedef GRect GRectReturn;
 //! @internal
 static inline GRect grect_scalar_lshift(const GRect rect, int8_t s) {
   return (GRect){
-    .origin.x = rect.origin.x << s,
-    .origin.y = rect.origin.y << s,
-    .size.w = rect.size.w << s,
-    .size.h = rect.size.h << s,
+    .origin.x = rect.origin.x * (1 << s),
+    .origin.y = rect.origin.y * (1 << s),
+    .size.w = rect.size.w * (1 << s),
+    .size.h = rect.size.h * (1 << s),
   };
 }
 
