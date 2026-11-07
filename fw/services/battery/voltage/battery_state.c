@@ -316,7 +316,7 @@ int32_t battery_state_get_temp(void) {
 // Analytics
 
 // Note that this is run on a different thread than battery_state!
-void pbl_analytics_external_collect_battery(void) {
+static void prv_collect_battery(void) {
   int32_t battery_mv = s_last_battery_state.voltage;
   uint32_t battery_soc_cpct = (s_last_battery_state.percent * 10000U) / PBL_RATIO32_MAX;
   int32_t d_mv;
@@ -332,6 +332,7 @@ void pbl_analytics_external_collect_battery(void) {
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc_cpct);
   s_analytics_last_cpct = battery_soc_cpct;
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_battery);
 
 #ifdef CONFIG_SHELL
 #include <errno.h>

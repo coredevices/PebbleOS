@@ -208,6 +208,3 @@ uint8_t activity_prefs_heart_get_zone2_threshold(void) {
 uint8_t activity_prefs_heart_get_zone3_threshold(void) {
   return 172;
 }
-
-void pbl_analytics_external_collect_settings(void) {
-}

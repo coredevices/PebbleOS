@@ -357,9 +357,3 @@ void timeline_peek_handle_process_start(void) {
 
 void timeline_peek_handle_process_kill(void) {
 }
-
-void pbl_analytics_external_collect_pfs_stats(void) {
-}
-
-void pbl_analytics_external_collect_settings(void) {
-}

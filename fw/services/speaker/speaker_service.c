@@ -1121,7 +1121,7 @@ void speaker_service_register_finish(PebbleTask task) {
   pbl_mutex_unlock(&s_lock);
 }
 
-void pbl_analytics_external_collect_speaker_stats(void) {
+static void prv_collect_speaker_stats(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   // Capture one final sample to account for time since last volume change.
@@ -1140,6 +1140,7 @@ void pbl_analytics_external_collect_speaker_stats(void) {
 
   pbl_mutex_unlock(&s_lock);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_speaker_stats);
 
 #else // !CONFIG_SPEAKER
 
@@ -1225,8 +1226,6 @@ SpeakerState speaker_service_get_state(void) {
 void speaker_service_stop_for_task(PebbleTask task) {
 }
 void speaker_service_register_finish(PebbleTask task) {
-}
-void pbl_analytics_external_collect_speaker_stats(void) {
 }
 
 bool speaker_service_is_muted(void) {

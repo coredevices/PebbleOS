@@ -938,7 +938,7 @@ bool light_is_lit_by_touch(void) {
   return light_is_on() && s_touch_lit;
 }
 
-void pbl_analytics_external_collect_backlight_stats(void) {
+static void prv_collect_backlight_stats(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
   // Capture one final sample to account for time since last brightness change
@@ -960,3 +960,4 @@ void pbl_analytics_external_collect_backlight_stats(void) {
 
   pbl_mutex_unlock(&s_mutex);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_backlight_stats);

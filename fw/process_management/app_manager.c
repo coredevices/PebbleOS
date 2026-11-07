@@ -277,7 +277,7 @@ static char s_watchface_name[APP_NAME_SIZE_BYTES];
 static char s_watchface_uuid[UUID_STRING_BUFFER_LENGTH];
 #endif
 
-void pbl_analytics_external_collect_watchface(void) {
+static void prv_collect_watchface(void) {
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_SHELL_SDK)
   pbl_mutex_lock(&s_watchface_metrics_mutex, PBL_FOREVER);
   if (s_watchface_name[0] != '\0') {
@@ -287,6 +287,7 @@ void pbl_analytics_external_collect_watchface(void) {
   pbl_mutex_unlock(&s_watchface_metrics_mutex);
 #endif
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_watchface);
 
 // ---------------------------------------------------------------------------------------------
 //! @return True on success, False if:
