@@ -37,16 +37,16 @@ PBL_WEAK const uint32_t __FLASH_start__;
 
 PBL_WEAK const uint32_t __FLASH_size__;
 
-PBL_WEAK void mpu_init_region_from_region(MpuRegion *copy, const MpuRegion *from,
-                                          bool allow_user_access) {
+PBL_WEAK int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
+  return 0;
 }
 
-PBL_WEAK void mpu_enable(void) {
+PBL_WEAK void pbl_mpu_regions_enable(void) {
 }
 
-PBL_WEAK MpuRegion mpu_get_region(int region_num) {
-  return (MpuRegion){};
+PBL_WEAK bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
+  return false;
 }
 
-PBL_WEAK void mpu_set_region(const MpuRegion *region) {
+PBL_WEAK void pbl_mpu_regions_print(void (*print)(void *ctx, const char *line), void *ctx) {
 }

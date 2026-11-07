@@ -7,7 +7,7 @@
 // Tests
 ///////////////////////////////////////////////////////////
 void test_memory_layout__pointer_in_region(void) {
-  MpuRegion region = {.base_address = 1000, .size = 1000};
+  struct pbl_mpu_region region = {.base = 1000, .size = 1000};
 
   cl_assert(!memory_layout_is_pointer_in_region(&region, (void *)0));
   cl_assert(!memory_layout_is_pointer_in_region(&region, (void *)999));
@@ -24,8 +24,8 @@ void test_memory_layout__cstring_in_region(void) {
   const char *invalid_str =
       buffer + 6 + 7; // skip yyyxxx + strstr\0, equal to "badstr" but no trailing null
 
-  MpuRegion region = {
-    .base_address = (uintptr_t)buffer + 3, // Skip leading yyy
+  struct pbl_mpu_region region = {
+    .base = (uintptr_t)buffer + 3, // Skip leading yyy
     .size = sizeof(buffer) - 1 - 3 - 3     // Skip trailing null, leading yyy, trailing yyy
   };
 
@@ -49,7 +49,7 @@ void test_memory_layout__cstring_in_region(void) {
 }
 
 void test_memory_layout__buffer_in_region(void) {
-  MpuRegion region = {.base_address = 1000, .size = 1000};
+  struct pbl_mpu_region region = {.base = 1000, .size = 1000};
 
   cl_assert(memory_layout_is_buffer_in_region(&region, (void *)1000, 1000));
   cl_assert(!memory_layout_is_buffer_in_region(&region, (void *)1000, 1001));

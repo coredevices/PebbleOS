@@ -53,6 +53,14 @@ config KERNEL_USER_STACK_GUARD_SIZE
 	  pbl_thread_attr::user_stack. Frames that skip it still fault, as they
 	  land in memory the thread can't write.
 
+config KERNEL_MPU_REGIONS
+	int
+	default 12 if SOC_SF32LB52
+	default 8
+	help
+	  MPU slots the core implements. The last four switch with the thread, and
+	  the rest take the static regions.
+
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
 	default 1000 if QEMU || SOC_SF32LB52 || SOC_POSIX

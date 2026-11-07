@@ -11,7 +11,7 @@ PBL_WEAK int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_att
   return 0;
 }
 
-PBL_WEAK void pbl_thread_regions_default_set(const MpuRegion *const *regions) {
+PBL_WEAK void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions) {
 }
 
 PBL_WEAK void pbl_thread_abort(struct pbl_thread *t) {

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/heap.h>
-#include <pbl/mcu/mpu.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/vibe_pattern.h>
 

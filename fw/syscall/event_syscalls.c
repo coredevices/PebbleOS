@@ -23,7 +23,7 @@ static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   }
 }
 
-static const MpuRegion *prv_process_region(PebbleTask task) {
+static const struct pbl_mpu_region *prv_process_region(PebbleTask task) {
   return (task == PebbleTask_Worker) ? memory_layout_get_worker_region()
                                      : memory_layout_get_app_region();
 }

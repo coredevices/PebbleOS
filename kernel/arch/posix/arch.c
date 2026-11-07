@@ -78,7 +78,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   t->backend.arch.pt = pt;
 }
 
-void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
+void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
   (void)t;
   (void)regions;
 }

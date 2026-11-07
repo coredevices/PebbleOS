@@ -59,14 +59,11 @@ void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr 
   attr->syscall_stack = stack->words;
   attr->syscall_stack_size = sizeof(stack->words);
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  static MpuRegion s_guards[NumPebbleTask];
-  s_guards[task] = (MpuRegion){
-    .region_num = MemoryRegion_Task4,
-    .enabled = true,
-    .base_address = (uintptr_t)stack->guard,
+  static struct pbl_mpu_region s_guards[NumPebbleTask];
+  s_guards[task] = (struct pbl_mpu_region){
+    .base = (uintptr_t)stack->guard,
     .size = sizeof(stack->guard),
-    .cache_policy = MpuCachePolicy_NotCacheable,
-    .permissions = MpuPermissions_NoAccess,
+    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
   };
   attr->regions[MEMORY_LAYOUT_THREAD_REGION_SYSCALL_GUARD] = &s_guards[task];
 #endif
