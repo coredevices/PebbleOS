@@ -141,13 +141,6 @@ config LINKER_MAP
 
 endmenu
 
-config IS_BIGBOARD
-    bool "Bigboard revision"
-    help
-      Engineering/development PCB revision of a board (`_bb` suffix
-      in the board name). Gates bigboard-only behaviour that differs
-      from the shipping board.
-
 config BOARD_PARTITIONS_DUAL_SLOT
     bool
     help

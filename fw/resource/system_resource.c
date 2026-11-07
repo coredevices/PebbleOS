@@ -13,7 +13,6 @@
 #include <applib/graphics/text_resources.h>
 #include <kernel/event_loop.h>
 #include <kernel/memory_layout.h>
-#include <kernel/panic.h>
 #include <pbl/kernel/malloc.h>
 #include <kernel/util/fw_reset.h>
 #include <resource/resource.h>
@@ -33,15 +32,8 @@ void system_resource_init(void) {
   prv_watch_language_packs();
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {
     // System resources are missing!
-#if defined(CONFIG_IS_BIGBOARD)
-    static const uint32_t ERROR_BAD_RESOURCES = 0xfe504505;
-    pbl_log(LOG_LEVEL_ERROR, __FILE_NAME__, __LINE__,
-            "System resources are missing or corrupt, time to sad watch");
-    launcher_panic(ERROR_BAD_RESOURCES);
-#else
     PBL_LOG_ERR("System resources are missing or corrupt! Going to PRF");
     fw_reset_into_prf();
-#endif
   }
 }
 

@@ -123,11 +123,7 @@ static void prv_send_status_and_version(void) {
   dict_write_data(app_data->out_iter, AppMessageKey_SerialNumber, (uint8_t *)serial_number_buffer,
                   sizeof(serial_number_buffer));
 
-#ifdef CONFIG_IS_BIGBOARD
-  WatchInfoColor watch_color = WATCH_INFO_COLOR_UNKNOWN;
-#else
   WatchInfoColor watch_color = mfg_info_get_watch_color();
-#endif // CONFIG_IS_BIGBOARD
   dict_write_uint32(app_data->out_iter, AppMessageKey_Model, watch_color);
 
   prv_send_msg();
