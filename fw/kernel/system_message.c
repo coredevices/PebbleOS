@@ -7,6 +7,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
@@ -20,12 +21,11 @@
 #include <kernel/system_message.h>
 #include <system/reboot_reason.h>
 
-static const uint16_t ENDPOINT_ID = SYS_MSG_ENDPOINT_ID;
-
 void system_message_send(SystemMessageType type) {
   uint8_t buffer[2] = {0x00, type};
   struct pbl_pp_session *system_session = pbl_pp_session_get_system();
-  pbl_pp_send(system_session, ENDPOINT_ID, buffer, sizeof(buffer), PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(system_session, PBL_PP_ENDPOINT_SYSTEM_MESSAGE, buffer, sizeof(buffer),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   PBL_LOG_DBG("Sending sysmsg: %u", type);
 }
 
@@ -81,8 +81,8 @@ static void prv_handle_firmware_status_request(struct pbl_pp_session *session) {
               fw_status_resp.resource_bytes_written, (int)fw_status_resp.resource_crc,
               fw_status_resp.firmware_bytes_written, (int)fw_status_resp.firmware_crc);
 
-  pbl_pp_send(session, ENDPOINT_ID, (uint8_t *)&fw_status_resp, sizeof(fw_status_resp),
-              PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_MESSAGE, (uint8_t *)&fw_status_resp,
+              sizeof(fw_status_resp), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 void sys_msg_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
@@ -185,6 +185,9 @@ void sys_msg_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
   }
 }
 
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_MESSAGE, PBL_PP_ACCESS_PRIVATE,
+                            sys_msg_protocol_msg_callback);
+
 void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
   struct PBL_PACKED {
     uint8_t zero;
@@ -193,5 +196,6 @@ void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
   } msg = {.zero = 0x00, .type = SysMsgFirmwareStartResponse, .status = status};
 
   struct pbl_pp_session *session = pbl_pp_session_get_system();
-  pbl_pp_send(session, ENDPOINT_ID, (const uint8_t *)&msg, sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_MESSAGE, (const uint8_t *)&msg, sizeof(msg),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }

@@ -61,7 +61,7 @@ void shell_prefs_set_language(ShellLanguage language) {
 
 int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint, const uint8_t *data,
                 size_t length, uint32_t timeout) {
-  cl_assert_equal_i(endpoint, SYS_MSG_ENDPOINT_ID);
+  cl_assert_equal_i(endpoint, PBL_PP_ENDPOINT_SYSTEM_MESSAGE);
   cl_assert(length <= sizeof(s_response));
   memcpy(s_response, data, length);
   s_length = length;
