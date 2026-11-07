@@ -16,10 +16,10 @@
 //   - NO_ACCESS: AP=0b10 (RO priv only). Unprivileged code and privileged
 //     writes still fault, which is what a stack guard needs.
 //   - P_RW_U_RO: the AP field cannot split write access by privilege.
-//     We pick AP=0b01 (R/W any privilege level), which gives the user
-//     write access too.
+//     We pick AP=0b11 (RO any privilege level) and privileged writers go
+//     through arch_mpu_user_ro_write().
 static const uint8_t s_access_to_ap[] = {
-  [PBL_MPU_NO_ACCESS] = 0x2, [PBL_MPU_P_RW] = 0x0, [PBL_MPU_P_RW_U_RO] = 0x1,
+  [PBL_MPU_NO_ACCESS] = 0x2, [PBL_MPU_P_RW] = 0x0, [PBL_MPU_P_RW_U_RO] = 0x3,
   [PBL_MPU_P_RW_U_RW] = 0x1, [PBL_MPU_P_RO] = 0x2, [PBL_MPU_P_RO_U_RO] = 0x3,
 };
 
@@ -34,8 +34,8 @@ static const uint8_t s_type_to_mair[] = {
 };
 
 static uint32_t prv_ap_to_access(uint32_t ap) {
-  // AP=0b10 could have been set for NO_ACCESS or P_RO, and AP=0b01 for
-  // P_RW_U_RO or P_RW_U_RW. Static regions report what they were added with.
+  // AP=0b10 could have been set for NO_ACCESS or P_RO, and AP=0b11 for
+  // P_RW_U_RO or P_RO_U_RO. Static regions report what they were added with.
   switch (ap) {
     case 0x0:
       return PBL_MPU_P_RW;

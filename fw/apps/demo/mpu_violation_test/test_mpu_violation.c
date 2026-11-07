@@ -44,9 +44,7 @@ extern const uint32_t _heap_start[];
 extern const uint32_t __ramfunc_start[];
 #endif
 
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
-#endif
 
 typedef enum {
   TestKind_WorkerRamWrite,
@@ -62,9 +60,7 @@ typedef enum {
   TestKind_ResourceBankRead,
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_RoBssWrite,
-#endif
   TestKind_FlashWrite,
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_StackGuardWrite,
@@ -88,9 +84,7 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_ResourceBankRead] = "Resource bank R",
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_RoBssWrite] = "RO BSS W",
-#endif
   [TestKind_FlashWrite] = "Flash W",
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_StackGuardWrite] = "Stack guard W",
@@ -208,14 +202,11 @@ static void prv_run_test(TestKind kind) {
     }
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
     case TestKind_RoBssWrite: {
-      // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
       volatile uint32_t *p = &s_ro_bss_probe;
       *p = 0xDEADBEEF;
       break;
     }
-#endif
     case TestKind_FlashWrite: {
       volatile uint32_t *p = (volatile uint32_t *)__FLASH_start__;
       *p = 0xDEADBEEF;
