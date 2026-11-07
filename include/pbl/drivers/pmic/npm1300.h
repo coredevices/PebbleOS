@@ -7,7 +7,7 @@
 
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 
 /**
  * @defgroup drivers_pmic_npm1300 nPM1300 charger
@@ -50,7 +50,7 @@ typedef struct {
 struct pbl_npm1300_charger_state {
   uint32_t dischg_limit_ma;
   uint32_t high_load_count;
-  TimerID debounce_timer;
+  struct pbl_delayed_work debounce_timer;
 };
 /** @endcond */
 

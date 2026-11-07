@@ -11,7 +11,7 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 
 // Program and erase units of the NOR parts in use, for sizes known at build time
 #define PAGE_SIZE_BYTES (0x100)
@@ -34,7 +34,7 @@
  *
  * @code{.c}
  * static void prv_erased(int status, void *arg) {
- *   // Runs on the timer task: keep it short
+ *   // Runs on the high priority system work queue: keep it short
  * }
  *
  * ret = pbl_flash_erase(FLASH, addr, len);
@@ -68,7 +68,8 @@ struct pbl_flash;
 /**
  * @brief Completion callback of pbl_flash_erase_async().
  *
- * Runs from the timer task, or from the caller if there is nothing to erase, with no lock held:
+ * Runs on @ref pbl_sys_workq_high, or from the caller if there is nothing to erase, with no lock
+ * held:
  * it may start another erase.
  *
  * @param status 0 or a negative errno.
@@ -179,6 +180,7 @@ struct pbl_flash_ops {
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_flash_state {
+  const struct pbl_flash *flash;
   struct pbl_mutex lock;
   struct pbl_sem erase_sem;
   bool coredump;
@@ -201,8 +203,8 @@ struct pbl_flash_state {
     pbl_flash_erase_cb_t cb;
     void *arg;
   } erase;
-  TimerID poll_timer;
-  TimerID resume_timer;
+  struct pbl_delayed_work poll_timer;
+  struct pbl_delayed_work resume_timer;
   const uint8_t *map;
   uint32_t map_len;
 };

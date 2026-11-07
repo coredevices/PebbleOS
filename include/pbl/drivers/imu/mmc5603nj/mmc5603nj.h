@@ -9,7 +9,7 @@
 
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/mag.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 
 /**
  * @defgroup drivers_imu_mmc5603nj MMC5603NJ
@@ -35,8 +35,8 @@ struct pbl_mmc5603nj_state {
   bool rotated;
   /** Output data rate in Hz, 0 when not sampling. */
   uint8_t rate_hz;
-  /** Polling timer, created on first use. */
-  TimerID poll_timer;
+  /** Polling work. */
+  struct pbl_delayed_work poll_timer;
 };
 
 /** @brief MMC5603NJ magnetometer. */
@@ -69,9 +69,7 @@ extern const struct pbl_mag_ops pbl_mmc5603nj_ops;
  */
 #define PBL_MMC5603NJ_DEFINE(sym, _bus, _addr, ...)                          \
   PBL_MAG_STATE_DEFINE(sym);                                                 \
-  static struct pbl_mmc5603nj_state sym##_mmc5603nj_state = {                \
-    .poll_timer = TIMER_INVALID_ID,                                          \
-  };                                                                         \
+  static struct pbl_mmc5603nj_state sym##_mmc5603nj_state;                   \
   const struct pbl_mmc5603nj sym = {                                         \
     .mag = PBL_MAG_INIT(sym, "mmc5603nj", &(_bus)->dev, &pbl_mmc5603nj_ops), \
     .state = &sym##_mmc5603nj_state,                                         \

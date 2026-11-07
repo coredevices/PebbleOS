@@ -254,7 +254,7 @@ static int prv_set_vbus_current_lim0(void) {
   return prv_write_register(NPM1300_TASKUPDATELIMSW, NPM1300_TASKUPDATELIMSW_EN);
 }
 
-static void prv_handle_charge_state_change(void *null) {
+static void prv_handle_charge_state_change(struct pbl_work *work) {
   const bool is_charging = pmic_is_charging();
   const bool is_connected = pmic_is_usb_connected();
   PBL_LOG_DBG("nPM1300 Interrupt: Charging? %s Plugged? %s", is_charging ? "YES" : "NO",
@@ -294,8 +294,8 @@ static void prv_pmic_state_change_cb(void *null) {
     PBL_LOG_ERR("Interrupt clear failed (%d)", ret);
   }
 
-  new_timer_start(NPM1300_CHARGER->state->debounce_timer, CHARGER_DEBOUNCE_MS,
-                  prv_handle_charge_state_change, nullptr, 0 /*flags*/);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &NPM1300_CHARGER->state->debounce_timer,
+                              PBL_MSEC(CHARGER_DEBOUNCE_MS));
 }
 
 static void prv_npm1300_interrupt_handler(void *arg) {
@@ -314,7 +314,7 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
   int ret;
 
   charger->state->dischg_limit_ma = 0;
-  charger->state->debounce_timer = new_timer_create();
+  pbl_delayed_work_init(&charger->state->debounce_timer, prv_handle_charge_state_change);
 
   if ((cfg->chg_current_ma < 32U) || (cfg->chg_current_ma > 800U) ||
       (cfg->chg_current_ma % 2U != 0U)) {

@@ -9,8 +9,8 @@
 #include <clar.h>
 #include <comm/qemu/serial.h>
 #include <fake_mutex.h>
-#include <fake_new_timer.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) {
 }
@@ -38,13 +38,14 @@ void test_accel_qemu__cleanup(void) {
   pbl_accel_set_num_samples(QEMU_ACCEL, 0);
   pbl_accel_set_listener(QEMU_ACCEL, nullptr);
   fake_mutex_reset(true /* assert_all_unlocked */);
+  fake_work_cleanup();
 }
 
 void test_accel_qemu__sample_is_delivered_locked(void) {
   cl_assert_equal_i(pbl_accel_set_sampling_interval(QEMU_ACCEL, 40000, nullptr), 0);
   cl_assert_equal_i(pbl_accel_set_num_samples(QEMU_ACCEL, 25), 0);
 
-  stub_new_timer_invoke(1);
+  fake_work_fire(fake_work_get_next());
 
   cl_assert_equal_i(s_samples_delivered, 1);
   cl_assert(s_locked_at_delivery);

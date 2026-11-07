@@ -109,17 +109,20 @@ static void prv_erase_resume(const struct pbl_flash *flash) {
   st->erase.suspended = false;
 }
 
-static void prv_resume_timer_cb(void *arg) {
-  const struct pbl_flash *flash = arg;
-
+static void prv_resume(const struct pbl_flash *flash) {
   pbl_mutex_lock(&flash->state->lock, PBL_FOREVER);
   prv_erase_resume(flash);
   pbl_mutex_unlock(&flash->state->lock);
 }
 
+static void prv_resume_timer_fn(struct pbl_work *work) {
+  prv_resume(container_of(work, struct pbl_flash_state, resume_timer.work)->flash);
+}
+
 static void prv_schedule_resume(const struct pbl_flash *flash, uint32_t delay_ms) {
   if (flash->state->erase.suspended) {
-    new_timer_start(flash->state->resume_timer, delay_ms, prv_resume_timer_cb, (void *)flash, 0U);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &flash->state->resume_timer,
+                                PBL_MSEC(delay_ms));
   }
 }
 
@@ -239,13 +242,16 @@ static bool prv_erase_step(const struct pbl_flash *flash, uint32_t *wait_ms) {
   return true;
 }
 
-static void prv_poll_timer_cb(void *arg) {
-  const struct pbl_flash *flash = arg;
+static void prv_poll(const struct pbl_flash *flash) {
   uint32_t wait_ms;
 
   if (!prv_erase_step(flash, &wait_ms)) {
-    new_timer_start(flash->state->poll_timer, wait_ms, prv_poll_timer_cb, arg, 0U);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &flash->state->poll_timer, PBL_MSEC(wait_ms));
   }
+}
+
+static void prv_poll_timer_fn(struct pbl_work *work) {
+  prv_poll(container_of(work, struct pbl_flash_state, poll_timer.work)->flash);
 }
 
 static int prv_erase_check(const struct pbl_flash *flash, uint32_t addr, size_t *len) {
@@ -340,8 +346,9 @@ int pbl_flash_dev_init(const struct pbl_device *dev) {
   struct pbl_flash_state *st = flash->state;
   int ret;
 
-  st->poll_timer = new_timer_create();
-  st->resume_timer = new_timer_create();
+  st->flash = flash;
+  pbl_delayed_work_init(&st->poll_timer, prv_poll_timer_fn);
+  pbl_delayed_work_init(&st->resume_timer, prv_resume_timer_fn);
 
   if (flash->ops->init == nullptr) {
     return 0;
@@ -373,7 +380,7 @@ void pbl_flash_stop(const struct pbl_flash *flash) {
 
   pbl_mutex_lock(&st->lock, PBL_FOREVER);
   if (st->erase.in_progress) {
-    new_timer_stop(st->resume_timer);
+    pbl_delayed_work_cancel(&st->resume_timer);
     prv_erase_resume(flash);
   }
   pbl_mutex_unlock(&st->lock);
@@ -563,7 +570,6 @@ int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
   struct pbl_flash_state *st = flash->state;
   int status = 0;
   uint32_t wait_ms;
-  uint32_t resume_ms;
   uint32_t unit_waited_ms = 0U;
   uint32_t last_next = addr;
   uint32_t steps = 0U;
@@ -595,8 +601,9 @@ int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
     }
 
     // The resume timer may be starved by this task
-    if (new_timer_scheduled(st->resume_timer, &resume_ms) && resume_ms == 0U) {
-      prv_resume_timer_cb((void *)flash);
+    if (pbl_delayed_work_is_pending(&st->resume_timer) &&
+        pbl_ticks_to_ms(pbl_delayed_work_remaining(&st->resume_timer)) == 0U) {
+      prv_resume(flash);
     }
 
     if (st->erase.next != last_next) {
@@ -641,7 +648,7 @@ int pbl_flash_erase_async(const struct pbl_flash *flash, uint32_t addr, size_t l
     return ret;
   }
 
-  prv_poll_timer_cb((void *)flash);
+  prv_poll(flash);
 
   return 0;
 }

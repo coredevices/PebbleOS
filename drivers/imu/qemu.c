@@ -45,8 +45,8 @@
 
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/imu/qemu.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -59,8 +59,7 @@ static uint32_t s_sampling_interval_ms = 0;
 static const AccelRawData s_default_sample = {.x = 0, .y = 0, .z = -1000};
 
 // We copy accel data received over the QEMU serial connection into this buffer.
-// This data gets moved into s_latest_reading when the s_timer_id timer callback
-// executes.
+// This data gets moved into s_latest_reading when the s_timer function executes.
 #define QEMU_ACCEL_RCV_BUFFER_SAMPLES 256
 static AccelRawData s_rcv_buffer[QEMU_ACCEL_RCV_BUFFER_SAMPLES];
 static uint16_t s_num_rcv_samples;
@@ -71,8 +70,7 @@ static uint32_t s_num_fifo_samples; // # of samples in the fifo
 
 // This timer is used to feed the FIFO
 static bool s_timer_running;
-static TimerID s_timer_id; // timer used to copy data from s_rcv_samples into
-                           // s_latest_reading.
+static struct pbl_delayed_work s_timer; // copies data from s_rcv_samples into s_latest_reading.
 
 static void prv_construct_driver_sample(AccelDriverSample *sample) {
   uint64_t timestamp_ms = pbl_realtime_ms();
@@ -86,16 +84,16 @@ static void prv_construct_driver_sample(AccelDriverSample *sample) {
 }
 
 static void prv_stop_timer(void) {
-  new_timer_stop(s_timer_id);
   s_timer_running = false;
+  pbl_delayed_work_cancel(&s_timer);
 }
 
 // This timer runs as long as we have samples in our s_rcv_buffer or there is
 // any subscription to the accel that expects samples to arrive at a given
 // frequency. It feeds samples at the right rate into the s_latest_reading
 // global (for peek mode) and into the accel driver.
-static void prv_timer_cb(void *data) {
-  const struct pbl_accel *accel = data;
+static void prv_timer_fn(struct pbl_work *work) {
+  const struct pbl_accel *accel = QEMU_ACCEL;
 
   pbl_accel_lock(accel);
 
@@ -113,6 +111,8 @@ static void prv_timer_cb(void *data) {
 
   if (s_num_fifo_samples == 0 && s_current_rcv_sample >= s_num_rcv_samples) {
     prv_stop_timer();
+  } else if (s_timer_running && !pbl_delayed_work_is_pending(&s_timer)) {
+    pbl_delayed_work_schedule_next(&s_timer, pbl_ms_to_ticks(s_sampling_interval_ms));
   }
 
   pbl_accel_unlock(accel);
@@ -121,9 +121,7 @@ static void prv_timer_cb(void *data) {
 // Start/reschedule the timer that feeds the FIFO/s_latest_reading out of the
 // samples received from the host
 static void prv_reschedule_timer(void) {
-  bool success = new_timer_start(s_timer_id, s_sampling_interval_ms, prv_timer_cb,
-                                 (void *)QEMU_ACCEL, TIMER_START_FLAG_REPEATING);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer, PBL_MSEC(s_sampling_interval_ms));
   s_timer_running = true;
 }
 
@@ -175,7 +173,7 @@ void qemu_accel_msg_callback(const uint8_t *data, uint32_t len) {
 
 static int prv_init(const struct pbl_accel *accel) {
   s_latest_reading = s_default_sample;
-  s_timer_id = new_timer_create();
+  pbl_delayed_work_init(&s_timer, prv_timer_fn);
 
   return 0;
 }
