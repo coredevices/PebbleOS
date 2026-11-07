@@ -122,7 +122,7 @@ iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
   }
 
   size_t string_alloc_size;
-  uint8_t attributes_per_action[serialized_prefs->num_actions];
+  uint8_t attributes_per_action[MAX(serialized_prefs->num_actions, 1)];
   bool r = attributes_actions_parse_serial_data(
       serialized_prefs->num_attributes, serialized_prefs->num_actions, serialized_prefs->data,
       serialized_prefs_data_len, &string_alloc_size, attributes_per_action);

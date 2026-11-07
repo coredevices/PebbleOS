@@ -71,7 +71,7 @@ bool timeline_item_create_from_serial_data(TimelineItem *item, uint8_t num_attri
   PBL_ASSERTN(string_alloc_size != nullptr);
 
   // Determine string buffer allocation size based on serialized data
-  uint8_t attributes_per_action[num_actions];
+  uint8_t attributes_per_action[MAX(num_actions, 1)];
   bool r = attributes_actions_parse_serial_data(num_attributes, num_actions, data, size,
                                                 string_alloc_size, attributes_per_action);
   if (!r) {
