@@ -141,13 +141,6 @@ config LINKER_MAP
 
 endmenu
 
-config IS_BIGBOARD
-    bool "Bigboard revision"
-    help
-      Engineering/development PCB revision of a board (`_bb` suffix
-      in the board name). Gates bigboard-only behaviour that differs
-      from the shipping board.
-
 # Source the active board's Kconfig and its per-board defaults; kconfig.py
 # exports $(BOARD) and $(BOARD_REVISION) from the --board argument.
 rsource "boards/$(BOARD)/Kconfig"

@@ -3,8 +3,6 @@
 
 #include "mfg_serials.h"
 
-#include <stdio.h>
-
 #include <pbl/util/size.h>
 
 static const uint8_t OTP_SERIAL_SLOT_INDICES[] = {
@@ -95,57 +93,6 @@ MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint
   return prv_mfg_write_data_to_slot(OTP_HWVER_SLOT_INDICES, ARRAY_LENGTH(OTP_HWVER_SLOT_INDICES),
                                     hwver, hwver_size, out_index);
 }
-
-#if defined(CONFIG_IS_BIGBOARD)
-
-#include <stdio.h>
-
-#include <pbl/logging/logging.h>
-
-#ifndef CONFIG_SOC_NRF52
-static void prv_get_not_so_unique_serial(char *serial_number) {
-  // Contains 96 bits (12 bytes) that uniquely identify the STM32F2/F4 MCUs:
-  const uint8_t *DEVICE_ID_REGISTER = (const uint8_t *)0x1FFF7A10;
-  // BBs used the first bytes of the ID registers, which happened to be not very unique...
-  for (int i = 2, r = 7; i < MFG_SERIAL_NUMBER_SIZE; i += 2, ++r) {
-    sniprintf(&serial_number[i], 3 /* 2 hex digits + zero terminator */, "%02X",
-              DEVICE_ID_REGISTER[r]);
-  }
-  serial_number[MFG_SERIAL_NUMBER_SIZE] = 0;
-}
-#endif
-
-static bool prv_get_more_unique_serial(char *serial_number) {
-  for (int i = 2; i < MFG_SERIAL_NUMBER_SIZE; i += 2) {
-    sniprintf(&serial_number[i], 3 /* 2 hex digits + zero terminator */, "%02X", rand());
-  }
-  serial_number[MFG_SERIAL_NUMBER_SIZE] = 0;
-  return true;
-}
-
-void mfg_write_bigboard_serial_number(void) {
-  char serial_number[MFG_SERIAL_NUMBER_SIZE + 1];
-  // Start with underscore, so it's easy to filter out from analytics:
-  serial_number[0] = '_';
-  serial_number[1] = 'B';
-  serial_number[2] = 0;
-
-  // Check whether the previous not-so-unique SN or the no SN ("XXXXXXXXXXXX") has been written:
-#ifndef CONFIG_SOC_NRF52
-  prv_get_not_so_unique_serial(serial_number);
-#endif
-  const char *current_serial_number = mfg_get_serial_number();
-
-  if (strcmp(current_serial_number, serial_number) && strcmp(current_serial_number, DUMMY_SERIAL)) {
-    return;
-  }
-
-  // Create a "more unique" serial number using rand():
-  if (prv_get_more_unique_serial(serial_number)) {
-    mfg_write_serial_number(serial_number, MFG_SERIAL_NUMBER_SIZE, nullptr);
-  }
-}
-#endif
 
 #if defined(CONFIG_SHELL) && defined(CONFIG_RECOVERY_FW)
 #include <errno.h>
