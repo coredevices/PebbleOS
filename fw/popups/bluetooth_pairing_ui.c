@@ -11,10 +11,10 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/size.h>
 
 #include <applib/fonts/fonts.h>
@@ -70,7 +70,8 @@ typedef struct BTPairingUIData {
   char device_name_layer_buffer[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   TextLayer code_text_layer;
   char code_text_layer_buffer[CODE_BUF_SIZE];
-  TimerID timer;
+  struct pbl_delayed_work timeout_timer;
+  struct pbl_delayed_work pop_timer;
   BTPairingUIState ui_state;
   const struct pbl_bt_pairing_confirm_ctx *ctx;
 
@@ -467,7 +468,10 @@ static void prv_window_unload(Window *window) {
     gbitmap_destroy(data->approve_bitmap);
     gbitmap_destroy(data->decline_bitmap);
     action_bar_layer_deinit(&data->action_bar_layer);
-    new_timer_delete(data->timer);
+    // Their functions never touch data. Waiting here could stall a function on the event queue
+    // this thread drains.
+    pbl_delayed_work_cancel(&data->timeout_timer);
+    pbl_delayed_work_cancel(&data->pop_timer);
     if (data->ui_state == BTPairingUIStateAwaitingUserConfirmation) {
       prv_send_response(false /* is_confirmed */);
     }
@@ -484,7 +488,7 @@ static void prv_show_failure_kernel_main_cb(void *unused) {
   prv_handle_pairing_complete(false /* success */);
 }
 
-static void prv_pairing_timeout_timer_callback(void *unused) {
+static void prv_pairing_timeout_timer_callback(struct pbl_work *work) {
   PBL_LOG_WRN("SSP timeout fired!");
   launcher_task_add_callback(prv_show_failure_kernel_main_cb, nullptr);
 }
@@ -499,7 +503,7 @@ static void prv_pop_window_kernel_main_cb(void *unused) {
   prv_pop_window();
 }
 
-static void prv_pop_window_timer_callback(void *unused) {
+static void prv_pop_window_timer_callback(struct pbl_work *work) {
   launcher_task_add_callback(prv_pop_window_kernel_main_cb, nullptr);
 }
 
@@ -522,10 +526,7 @@ static void prv_push_pairing_window(void) {
   // This timeout is 0.5s longer than the BT Spec's timeout, to decrease the chances of getting
   // a success confirmation right at the max allowed time of 30 secs:
   const uint32_t timeout_ms = (30 * 1000) + 500;
-  data->timer = new_timer_create();
-  bool success = new_timer_start(data->timer, timeout_ms, prv_pairing_timeout_timer_callback, data,
-                                 0 /* flags */);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &data->timeout_timer, PBL_MSEC(timeout_ms));
 }
 
 static void prv_pop_click_handler(ClickRecognizerRef recognizer, void *ctx) {
@@ -548,6 +549,8 @@ static void prv_create_new_pairing_data(void) {
   BTPairingUIData *data = pbl_malloc_check(sizeof(BTPairingUIData));
   *data = (BTPairingUIData){};
   data->ui_state = BTPairingUIStateAwaitingUserConfirmation;
+  pbl_delayed_work_init(&data->timeout_timer, prv_pairing_timeout_timer_callback);
+  pbl_delayed_work_init(&data->pop_timer, prv_pop_window_timer_callback);
   s_data_ptr = data;
 }
 
@@ -583,16 +586,17 @@ static void prv_handle_pairing_complete(bool success) {
   data->ui_state = success ? BTPairingUIStateSuccess : BTPairingUIStateFailed;
   prv_adjust_background_frame_for_state(data);
 
-  if (!new_timer_stop(data->timer)) {
+  if (pbl_work_is_running(&data->timeout_timer.work)) {
     // Timer was already executing...
     if (success) {
       PBL_LOG_WRN("Timeout cb executing while received successful completion event");
     }
   }
+  pbl_delayed_work_cancel(&data->timeout_timer);
 
   // On failure, leave the message on screen for 60 seconds, on success, only for 5 seconds:
   const uint32_t timeout_ms = (success ? 5 : 60) * 1000;
-  new_timer_start(data->timer, timeout_ms, prv_pop_window_timer_callback, nullptr, 0 /* flags */);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &data->pop_timer, PBL_MSEC(timeout_ms));
 
   window_set_click_config_provider(&data->window, prv_success_or_failure_click_config_provider);
 

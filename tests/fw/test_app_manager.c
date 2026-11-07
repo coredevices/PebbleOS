@@ -21,7 +21,6 @@
 #include <stubs_thread.h>
 
 // Fakes
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 

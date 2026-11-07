@@ -10,7 +10,7 @@
 
 // Stubs
 /////////////////////////////////////////////////////////////////////////
-#include <fake_new_timer.h>
+#include <fake_work.h>
 
 // When set, launcher task callbacks are held until prv_run_deferred() to model queueing
 static bool s_defer_callbacks;
@@ -40,12 +40,13 @@ FAKE_VOID_FUNC(watchface_launch_default, const CompositorTransition *);
 
 // Module state under test
 /////////////////////////////////////////////////////////////////////////
-extern TimerID s_timer;
+extern struct pbl_delayed_work s_timer;
+extern bool s_app_started;
 extern bool s_app_paused;
 extern bool s_touch_held;
 
 static bool prv_is_scheduled(void) {
-  return stub_new_timer_is_scheduled(s_timer);
+  return fake_work_is_scheduled(&s_timer);
 }
 
 // Tests
@@ -61,7 +62,7 @@ void test_app_idle_timeout__initialize(void) {
 
 void test_app_idle_timeout__cleanup(void) {
   app_idle_timeout_stop();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
 }
 
 void test_app_idle_timeout__start_schedules(void) {
@@ -71,21 +72,22 @@ void test_app_idle_timeout__start_schedules(void) {
 
 void test_app_idle_timeout__uses_requested_duration(void) {
   app_idle_timeout_start(APP_IDLE_TIMEOUT_MENU_MS);
-  cl_assert_equal_i(stub_new_timer_timeout(s_timer), APP_IDLE_TIMEOUT_MENU_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(&s_timer), APP_IDLE_TIMEOUT_MENU_MS);
 
   app_idle_timeout_refresh();
-  cl_assert_equal_i(stub_new_timer_timeout(s_timer), APP_IDLE_TIMEOUT_MENU_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(&s_timer), APP_IDLE_TIMEOUT_MENU_MS);
 }
 
 void test_app_idle_timeout__set_duration_restarts(void) {
   app_idle_timeout_start(APP_IDLE_TIMEOUT_MENU_MS);
   app_idle_timeout_set_duration(APP_IDLE_TIMEOUT_BLUETOOTH_MS);
-  cl_assert_equal_i(stub_new_timer_timeout(s_timer), APP_IDLE_TIMEOUT_BLUETOOTH_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(&s_timer), APP_IDLE_TIMEOUT_BLUETOOTH_MS);
 }
 
 void test_app_idle_timeout__set_duration_when_stopped_is_noop(void) {
   app_idle_timeout_set_duration(APP_IDLE_TIMEOUT_BLUETOOTH_MS);
-  cl_assert(s_timer == TIMER_INVALID_ID);
+  cl_assert(!s_app_started);
+  cl_assert(!prv_is_scheduled());
 }
 
 void test_app_idle_timeout__set_duration_dropped_after_app_exit(void) {
@@ -98,7 +100,7 @@ void test_app_idle_timeout__set_duration_dropped_after_app_exit(void) {
   app_idle_timeout_start(APP_IDLE_TIMEOUT_LAUNCHER_MS);
   prv_run_deferred();
 
-  cl_assert_equal_i(stub_new_timer_timeout(s_timer), APP_IDLE_TIMEOUT_LAUNCHER_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(&s_timer), APP_IDLE_TIMEOUT_LAUNCHER_MS);
 }
 
 void test_app_idle_timeout__touch_hold_halts_until_liftoff(void) {
@@ -159,6 +161,6 @@ void test_app_idle_timeout__start_during_hold_waits_for_liftoff(void) {
 
 void test_app_idle_timeout__expiry_launches_watchface(void) {
   app_idle_timeout_start(APP_IDLE_TIMEOUT_LAUNCHER_MS);
-  cl_assert(stub_new_timer_fire(s_timer));
+  fake_work_fire(&s_timer);
   cl_assert_equal_i(watchface_launch_default_fake.call_count, 1);
 }

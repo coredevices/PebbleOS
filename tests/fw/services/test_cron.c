@@ -2,23 +2,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/cron/cron.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
 #include <clar.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 #include <fff.h>
 
-TimerID new_timer_create(void) {
-  return 1;
-}
-
-FAKE_VALUE_FUNC(bool, new_timer_start, TimerID, uint32_t, NewTimerCallback, void *, uint32_t);
-
-bool new_timer_stop(TimerID timer) {
-  return true;
+static uint32_t prv_wakeup_timeout_ms(void) {
+  return fake_work_timeout_ms(fake_work_get_next());
 }
 
 // Tests
@@ -43,13 +37,12 @@ static const TimezoneInfo s_timezone_gmt = {
 };
 
 void test_cron__initialize(void) {
-  RESET_FAKE(new_timer_start);
-  new_timer_start_fake.return_val = true;
   pbl_cron_init();
 }
 
 void test_cron__cleanup(void) {
   pbl_cron_deinit();
+  fake_work_cleanup();
 }
 
 static TimezoneInfo g_timezone;
@@ -85,7 +78,7 @@ void test_cron__timer_aligned_to_execute_second(void) {
 
   cl_assert_equal_i(execute_time, 1447332300);
   // 603250 ms away, plus the margin.
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 603250 + 10);
+  cl_assert_equal_i(prv_wakeup_timeout_ms(), 603250 + 10);
   cl_assert(pbl_cron_job_unschedule(&job));
 }
 
@@ -847,13 +840,13 @@ void test_cron__schedule_at_fires_at_the_time(void) {
 
   pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100);
   cl_assert_equal_i(job.cached_execute_time, s_2015_nov12_123456_gmt + 100);
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 100000 + 10);
+  cl_assert_equal_i(prv_wakeup_timeout_ms(), 100000 + 10);
 
   // The timer expiring early re-arms for what is left.
   fake_rtc_increment_time(99);
   pbl_cron_wakeup();
   cl_assert_equal_i((uintptr_t)job.cb_data, 0);
-  cl_assert_equal_i(new_timer_start_fake.arg1_val, 1000 + 10);
+  cl_assert_equal_i(prv_wakeup_timeout_ms(), 1000 + 10);
 
   fake_rtc_increment_time(1);
   pbl_cron_wakeup();
@@ -1050,5 +1043,24 @@ void test_cron__dst_end_overlap_fixed_hour_job_fires_once(void) {
   job.hour = 3;
   prv_set_rtc(dst_end - 30 * PBL_SEC_PER_MIN, &s_timezone_vienna);
   cl_assert_equal_i(pbl_cron_job_schedule(&job), dst_end + PBL_SEC_PER_HOUR);
+  cl_assert(pbl_cron_job_unschedule(&job));
+}
+
+void test_cron__far_job_arms_a_delay_that_fits(void) {
+  struct pbl_cron_job job = {.cb = prv_cron_callback};
+  prv_set_rtc(s_2015_nov12_123456_gmt, &s_timezone_gmt);
+
+  // Further than 32 bits of milliseconds can say.
+  pbl_cron_job_schedule_at(&job, s_2015_nov12_123456_gmt + 100 * PBL_SEC_PER_DAY);
+  cl_assert(fake_work_get_next() != nullptr);
+  const uint32_t timeout_ms = prv_wakeup_timeout_ms();
+  cl_assert(timeout_ms > 20U * PBL_SEC_PER_DAY * 1000U);
+  cl_assert(timeout_ms < 30U * PBL_SEC_PER_DAY * 1000U);
+
+  // Waking up then runs nothing, and arms for the rest.
+  fake_rtc_increment_time(24 * PBL_SEC_PER_DAY);
+  pbl_cron_wakeup();
+  cl_assert_equal_i((uintptr_t)job.cb_data, 0);
+  cl_assert(fake_work_get_next() != nullptr);
   cl_assert(pbl_cron_job_unschedule(&job));
 }

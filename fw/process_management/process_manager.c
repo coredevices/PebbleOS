@@ -17,6 +17,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/animation_service.h>
 #include <pbl/services/app_cache.h>
@@ -43,7 +44,9 @@
 #include <shell/normal/watchface.h>
 #include <syscall/syscall.h>
 
-static TimerID s_deinit_timer_id = TIMER_INVALID_ID;
+static struct pbl_delayed_work s_deinit_timer;
+static void (*s_deinit_timeout_fn)(PebbleTask task);
+static PebbleTask s_deinit_timeout_task;
 
 // -------------------------------------------------------------------------------------------
 static ProcessContext *prv_get_context_for_task(PebbleTask task) {
@@ -63,9 +66,8 @@ static ProcessContext *prv_get_context(void) {
 // --------------------------------------------------------------------------------------------------
 // This timer callback gets called if the process doesn't finish it's deinit within the required
 // timeout (currently 3 seconds).
-static void prv_graceful_close_timer_callback(void *data) {
+static void prv_graceful_close_timeout(PebbleTask task) {
   PBL_LOG_DBG("deinit timeout expired, killing app forcefully");
-  PebbleTask task = (PebbleTask)(uintptr_t)data;
 
   process_manager_put_kill_process_event(task, false /*gracefully*/);
 }
@@ -87,14 +89,26 @@ static bool prv_force_stop_task_if_unprivileged(ProcessContext *context) {
 }
 
 // --------------------------------------------------------------------------------------------------
-static void prv_force_close_timer_callback(void *data) {
-  PebbleTask task = (PebbleTask)(uintptr_t)data;
+static void prv_force_close_timeout(PebbleTask task) {
   ProcessContext *context = prv_get_context_for_task(task);
 
   if (!prv_force_stop_task_if_unprivileged(context)) {
     pbl_panic("task stuck inside privileged code!");
   }
   process_manager_put_kill_process_event(task, false /*graceful*/);
+}
+
+static void prv_deinit_timer_fn(struct pbl_work *work) {
+  s_deinit_timeout_fn(s_deinit_timeout_task);
+}
+
+//! Replaces any timeout running for either process.
+static void prv_start_deinit_timer(void (*fn)(PebbleTask task), PebbleTask task) {
+  // Canceled first, so an expiry cannot pair the new function with the old task.
+  pbl_delayed_work_cancel(&s_deinit_timer);
+  s_deinit_timeout_fn = fn;
+  s_deinit_timeout_task = task;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_deinit_timer, PBL_SEC(3));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -115,7 +129,7 @@ void pbl_kernel_syscall_exit(void) {
 
 // ---------------------------------------------------------------------------------------------
 void process_manager_init(void) {
-  s_deinit_timer_id = new_timer_create();
+  pbl_delayed_work_init(&s_deinit_timer, prv_deinit_timer_fn);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -423,9 +437,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
       // can respond within 3 seconds by posting a PEBBLE_APP_KILL_EVENT (graceful=true), which will
       // result in app_manager_close_current_app() being called, which in turn calls this method
       // with graceful = true.
-      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_graceful_close_timer_callback,
-                                     (void *)task, 0 /*flags*/);
-      PBL_ASSERTN(success);
+      prv_start_deinit_timer(prv_graceful_close_timeout, task);
     }
     // Else we're already in the gracefully closing state, just let the timer run out or the
     // app to mark itself as safe_to_kill.
@@ -467,9 +479,7 @@ bool process_manager_make_process_safe_to_kill(PebbleTask task, bool gracefully)
       };
       process_manager_send_event_to_process(task, &deinit_event);
 
-      bool success = new_timer_start(s_deinit_timer_id, 3 * 1000, prv_force_close_timer_callback,
-                                     (void *)task, 0 /*flags*/);
-      PBL_ASSERTN(success);
+      prv_start_deinit_timer(prv_force_close_timeout, task);
     }
   }
   return false;
@@ -599,7 +609,7 @@ void process_manager_process_cleanup(PebbleTask task) {
   // Unregister the task
   pebble_task_unregister(task);
 
-  new_timer_stop(s_deinit_timer_id);
+  pbl_delayed_work_cancel(&s_deinit_timer);
 
   if (context->task_handle) {
     pbl_thread_abort(context->task_handle);

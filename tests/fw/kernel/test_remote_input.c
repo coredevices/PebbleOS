@@ -19,8 +19,8 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
+#include <fake_work.h>
 
 #define MAX_RECORDED 32
 
@@ -104,16 +104,26 @@ int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint
 // Helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// The service creates exactly one timer, and the fake hands out ids from 1.
-#define INPUT_TIMER_ID 1
+// The service has exactly one timer, so it is the only item that can be pending.
+static bool prv_timer_is_scheduled(void) {
+  return fake_work_get_next() != nullptr;
+}
+
+static void prv_fire_timer(void) {
+  fake_work_fire(fake_work_get_next());
+}
+
+static uint32_t prv_timer_timeout_ms(void) {
+  return fake_work_timeout_ms(fake_work_get_next());
+}
 
 //! Run the injected sequence to completion, so the test sees what the rest of the system would.
 static void prv_run_sequence(void) {
   for (int i = 0; i < MAX_RECORDED; i++) {
-    if (!stub_new_timer_is_scheduled(INPUT_TIMER_ID)) {
+    if (!prv_timer_is_scheduled()) {
       return;
     }
-    stub_new_timer_fire(INPUT_TIMER_ID);
+    prv_fire_timer();
   }
   cl_fail("injected sequence never finished");
 }
@@ -177,9 +187,16 @@ void test_remote_input__button_hold_time_separates_down_from_up(void) {
 
   // First callback presses the button, and must schedule the release a full hold time later,
   // otherwise a "long press" would be indistinguishable from a short one.
-  stub_new_timer_fire(INPUT_TIMER_ID);
+  prv_fire_timer();
   cl_assert_equal_i(PEBBLE_BUTTON_DOWN_EVENT, s_events[0].type);
-  cl_assert_equal_i(700, stub_new_timer_timeout(INPUT_TIMER_ID));
+  cl_assert_equal_i(700, prv_timer_timeout_ms());
+}
+
+void test_remote_input__wide_hold_time_is_not_shortened(void) {
+  cl_assert_equal_i(RemoteInputResult_Ok,
+                    remote_input_button_press(BUTTON_ID_BACK, 1, UINT32_MAX, 0));
+  prv_fire_timer();
+  cl_assert(prv_timer_timeout_ms() > UINT32_MAX / 2);
 }
 
 void test_remote_input__zero_presses_leaves_no_button_held(void) {
@@ -212,7 +229,7 @@ void test_remote_input__button_set_holds_until_released(void) {
   cl_assert_equal_i(1, s_event_count);
   cl_assert_equal_i(PEBBLE_BUTTON_DOWN_EVENT, s_events[0].type);
   cl_assert_equal_i(BUTTON_ID_SELECT, s_events[0].button.button_id);
-  cl_assert(!stub_new_timer_is_scheduled(INPUT_TIMER_ID));
+  cl_assert(!prv_timer_is_scheduled());
 
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_button_set(0));
   cl_assert_equal_i(2, s_event_count);
@@ -410,11 +427,11 @@ void test_remote_input__cap_duration_swipe_stays_inside_the_recognizer_window(vo
                     remote_input_swipe(RemoteInputSwipeDirection_Up, SWIPE_MAX_DURATION_MS));
 
   // Touchdown fires immediately; sum what the rest of the path is scheduled to take.
-  stub_new_timer_fire(INPUT_TIMER_ID);
+  prv_fire_timer();
   uint32_t scheduled_ms = 0;
-  while (stub_new_timer_is_scheduled(INPUT_TIMER_ID)) {
-    scheduled_ms += stub_new_timer_timeout(INPUT_TIMER_ID);
-    stub_new_timer_fire(INPUT_TIMER_ID);
+  while (prv_timer_is_scheduled()) {
+    scheduled_ms += prv_timer_timeout_ms();
+    prv_fire_timer();
   }
 
   // The recognizer measures touchdown-to-liftoff in wall-clock time and rejects anything past the
@@ -427,14 +444,14 @@ void test_remote_input__cap_duration_swipe_stays_inside_the_recognizer_window(vo
 void test_remote_input__swipe_aborts_when_injection_is_refused(void) {
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_swipe(RemoteInputSwipeDirection_Up, 150));
   // Touchdown lands, then the touch service takes the sensor away mid-path.
-  stub_new_timer_fire(INPUT_TIMER_ID);
+  prv_fire_timer();
   cl_assert_equal_i(1, s_touch_count);
   s_injection_accepts = false;
-  stub_new_timer_fire(INPUT_TIMER_ID);
+  prv_fire_timer();
 
   // The sequence stops instead of leaving a half-finished path behind, and frees its claim so the
   // next request is not stuck reporting Busy.
-  cl_assert(!stub_new_timer_is_scheduled(INPUT_TIMER_ID));
+  cl_assert(!prv_timer_is_scheduled());
   s_injection_accepts = true;
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_button_press(BUTTON_ID_UP, 1, 20, 0));
 }
@@ -497,11 +514,11 @@ void test_remote_input__touch_drags_from_start_to_end(void) {
 void test_remote_input__touch_takes_the_requested_duration(void) {
   cl_assert_equal_i(RemoteInputResult_Ok, remote_input_touch(10, 20, 50, 80, 600));
 
-  stub_new_timer_fire(INPUT_TIMER_ID);
+  prv_fire_timer();
   uint32_t scheduled_ms = 0;
-  while (stub_new_timer_is_scheduled(INPUT_TIMER_ID)) {
-    scheduled_ms += stub_new_timer_timeout(INPUT_TIMER_ID);
-    stub_new_timer_fire(INPUT_TIMER_ID);
+  while (prv_timer_is_scheduled()) {
+    scheduled_ms += prv_timer_timeout_ms();
+    prv_fire_timer();
   }
   cl_assert_equal_i(600, scheduled_ms);
 }

@@ -7,7 +7,7 @@
 
 // Stubs
 ///////////////////////////////////////////////////////////////////////////////
-#include <fake_new_timer.h>
+#include <fake_work.h>
 
 FAKE_VOID_FUNC(mfg_enter_mfg_mode);
 
@@ -55,10 +55,11 @@ void test_getting_started_button_combo__initialize(void) {
 
 void test_getting_started_button_combo__cleanup(void) {
   getting_started_button_combo_deinit(&s_state);
+  fake_work_cleanup();
 }
 
-static StubTimer *prv_find_combo_timer(void) {
-  return (StubTimer *)s_running_timers;
+static struct pbl_delayed_work *prv_find_combo_timer(void) {
+  return fake_work_get_next();
 }
 
 static void prv_press_button(ButtonId id) {
@@ -79,12 +80,12 @@ void test_getting_started_button_combo__simple(void) {
   prv_press_button(BUTTON_ID_SELECT);
 
   // Make sure we've waited the appropriate amount of time
-  StubTimer *timer = prv_find_combo_timer();
+  struct pbl_delayed_work *timer = prv_find_combo_timer();
   cl_assert(timer);
-  cl_assert_equal_i(stub_new_timer_timeout(timer->id), 5000);
+  cl_assert_equal_i(fake_work_timeout_ms(timer), 5000);
 
   // Pretend 5000ms have elapsed
-  stub_new_timer_fire(timer->id);
+  fake_work_fire(timer);
 
   // We now should be in mfg mode
   cl_assert_equal_i(mfg_enter_mfg_mode_fake.call_count, 1);
@@ -105,12 +106,12 @@ void test_getting_started_button_combo__push_and_release_other_button(void) {
   prv_release_button(BUTTON_ID_DOWN);
 
   // Make sure we've waited the appropriate amount of time
-  StubTimer *timer = prv_find_combo_timer();
+  struct pbl_delayed_work *timer = prv_find_combo_timer();
   cl_assert(timer);
-  cl_assert_equal_i(stub_new_timer_timeout(timer->id), 5000);
+  cl_assert_equal_i(fake_work_timeout_ms(timer), 5000);
 
   // Pretend 5000ms have elapsed
-  stub_new_timer_fire(timer->id);
+  fake_work_fire(timer);
 
   // We now should be in mfg mode
   cl_assert_equal_i(mfg_enter_mfg_mode_fake.call_count, 1);
@@ -131,12 +132,12 @@ void test_getting_started_button_combo__push_combo_and_release_one(void) {
   prv_press_button(BUTTON_ID_SELECT);
 
   // Make sure we've waited the appropriate amount of time
-  StubTimer *timer = prv_find_combo_timer();
+  struct pbl_delayed_work *timer = prv_find_combo_timer();
   cl_assert(timer);
-  cl_assert_equal_i(stub_new_timer_timeout(timer->id), 5000);
+  cl_assert_equal_i(fake_work_timeout_ms(timer), 5000);
 
   // Pretend 5000ms have elapsed
-  stub_new_timer_fire(timer->id);
+  fake_work_fire(timer);
 
   // We now should be in mfg mode
   cl_assert_equal_i(mfg_enter_mfg_mode_fake.call_count, 1);
@@ -153,11 +154,11 @@ void test_getting_started_button_combo__push_complex_and_release_to_simple(void)
 
   // Now we're just holding down, which is a different combo
 
-  StubTimer *timer = prv_find_combo_timer();
+  struct pbl_delayed_work *timer = prv_find_combo_timer();
   cl_assert(timer);
-  cl_assert_equal_i(stub_new_timer_timeout(timer->id), 5000);
+  cl_assert_equal_i(fake_work_timeout_ms(timer), 5000);
 
-  stub_new_timer_fire(timer->id);
+  fake_work_fire(timer);
 
   cl_assert_equal_i(mfg_enter_mfg_mode_fake.call_count, 0);
   cl_assert(s_select_cb_called);
@@ -175,11 +176,11 @@ void test_getting_started_button_combo__push_complex_and_release_to_simple_and_b
 
   prv_press_button(BUTTON_ID_UP);
 
-  StubTimer *timer = prv_find_combo_timer();
+  struct pbl_delayed_work *timer = prv_find_combo_timer();
   cl_assert(timer);
-  cl_assert_equal_i(stub_new_timer_timeout(timer->id), 5000);
+  cl_assert_equal_i(fake_work_timeout_ms(timer), 5000);
 
-  stub_new_timer_fire(timer->id);
+  fake_work_fire(timer);
 
   cl_assert_equal_i(mfg_enter_mfg_mode_fake.call_count, 1);
   cl_assert_equal_i(factory_reset_fake.call_count, 0);

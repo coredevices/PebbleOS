@@ -6,10 +6,10 @@
 
 #include <pbl/console/console.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/console.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
 #include <kernel/events.h>
@@ -26,15 +26,19 @@
 
 static PBL_MUTEX_DEFINE(s_lock);
 
+static void prv_retry_timer_cb(struct pbl_work *work);
+
 // Under s_lock.
 static struct {
   struct pbl_pp_session *session;
-  TimerID tx_timer;
+  struct pbl_delayed_work tx_timer;
   // Bytes at the head of the send queue in the frame being acknowledged.
   size_t tx_len;
   uint8_t tx_seq;
   uint8_t tx_tries;
-} s_transport;
+} s_transport = {
+  .tx_timer = PBL_DELAYED_WORK_INITIALIZER(prv_retry_timer_cb),
+};
 
 // Under s_lock.
 static uint8_t s_tx_buf[PBL_CONSOLE_FRAME_MTU];
@@ -43,15 +47,13 @@ static void prv_send_opcode(uint8_t opcode) {
   pbl_console_frame_send(PBL_CONSOLE_CHANNEL_PP, 0U, &opcode, sizeof(opcode));
 }
 
-static void prv_retry_timer_cb(void *unused);
-
 static void prv_send_frame(void) {
   s_tx_buf[0] = OPCODE_DATA;
   pbl_pp_session_send_queue_copy(s_transport.session, 0U, s_transport.tx_len,
                                  &s_tx_buf[OPCODE_LEN]);
   pbl_console_frame_send(PBL_CONSOLE_CHANNEL_PP, s_transport.tx_seq, s_tx_buf,
                          OPCODE_LEN + s_transport.tx_len);
-  new_timer_start(s_transport.tx_timer, TX_RETRY_MS, prv_retry_timer_cb, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_transport.tx_timer, PBL_MSEC(TX_RETRY_MS));
 }
 
 static void prv_send_next(struct pbl_pp_session *session) {
@@ -81,7 +83,7 @@ static const struct pbl_pp_transport s_pp_transport = {
 void pbl_pp_console_ack(uint8_t seq) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_transport.tx_len > 0U && seq == s_transport.tx_seq) {
-    new_timer_stop(s_transport.tx_timer);
+    pbl_delayed_work_cancel(&s_transport.tx_timer);
     pbl_pp_session_send_queue_consume(s_transport.session, s_transport.tx_len);
     s_transport.tx_len = 0U;
     pbl_pp_session_send_next(s_transport.session);
@@ -104,9 +106,6 @@ static void prv_set_connected(bool connected) {
 
   if ((s_transport.session != nullptr) != connected) {
     if (connected) {
-      if (s_transport.tx_timer == TIMER_INVALID_ID) {
-        s_transport.tx_timer = new_timer_create();
-      }
       s_transport.tx_seq = 0U;
       s_transport.session =
           pbl_pp_session_open(&s_pp_transport, PBL_PP_DESTINATION_HYBRID, nullptr);
@@ -118,7 +117,7 @@ static void prv_set_connected(bool connected) {
         prv_put_connection_event(true);
       }
     } else {
-      new_timer_stop(s_transport.tx_timer);
+      pbl_delayed_work_cancel(&s_transport.tx_timer);
       s_transport.tx_len = 0U;
       pbl_pp_session_close(s_transport.session);
       s_transport.session = nullptr;
@@ -129,7 +128,7 @@ static void prv_set_connected(bool connected) {
   pbl_mutex_unlock(&s_lock);
 }
 
-static void prv_retry_timer_cb(void *unused) {
+static void prv_retry_timer_cb(struct pbl_work *work) {
   bool give_up = false;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);

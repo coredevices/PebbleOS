@@ -5,11 +5,11 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
@@ -28,17 +28,23 @@
 
 // Buttons and swipes share one timer, so injected input is single-flight: a swipe can never land
 // halfway through a button press, and either one reports Busy while the other runs.
-static TimerID s_input_timer = TIMER_INVALID_ID;
+static void (*s_sequence_cb)(void *context);
+static void *s_sequence_context;
+
+static void prv_input_timer_fn(struct pbl_work *work) {
+  s_sequence_cb(s_sequence_context);
+}
+
+static PBL_DELAYED_WORK_DEFINE(s_input_timer, prv_input_timer_fn);
 
 // Buttons currently held down by remote_input_button_set(). Bit x is ButtonId x. Released by
 // another call, or when the phone's session closes.
 static uint8_t s_held_buttons;
 
 // Set from the moment a sequence is admitted until its last callback frees the context. The
-// timer's own scheduled state cannot stand in for this: NewTimer clears the expiry before running
-// a callback, so a timer reports unscheduled for the whole time its callback is executing, and a
-// request arriving in that window would be admitted and then have its timer stolen when the
-// running callback rearms.
+// timer's own pending state cannot stand in for this: a work item reports not pending for the whole
+// time its function runs, and a request arriving in that window would be admitted and then have its
+// timer stolen when the running callback rearms.
 static bool s_sequence_active;
 
 // Serializes admission. Two controllers are exposed -- the serial console and the endpoint, on
@@ -79,19 +85,12 @@ static RemoteInputResult prv_claim_timer(void) {
   if ((s_held_buttons != 0) || s_sequence_active) {
     return RemoteInputResult_Busy;
   }
-  if (s_input_timer == TIMER_INVALID_ID) {
-    s_input_timer = new_timer_create();
-    if (s_input_timer == TIMER_INVALID_ID) {
-      return RemoteInputResult_Invalid;
-    }
-  }
   s_sequence_active = true;
   return RemoteInputResult_Ok;
 }
 
-// Admits one sequence and fires its first callback immediately. Rolls the claim back if the timer
-// cannot start, so a failed request never leaves the service stuck reporting Busy.
-static RemoteInputResult prv_start_sequence(NewTimerCallback cb, void *context) {
+// Admits one sequence and fires its first callback immediately.
+static RemoteInputResult prv_start_sequence(void (*cb)(void *context), void *context) {
   pbl_mutex_lock(&s_input_lock, PBL_FOREVER);
   const RemoteInputResult claimed = prv_claim_timer();
   pbl_mutex_unlock(&s_input_lock);
@@ -99,10 +98,9 @@ static RemoteInputResult prv_start_sequence(NewTimerCallback cb, void *context) 
     return claimed;
   }
   // Past this point the claim is ours: no other caller can be admitted, so no lock is needed.
-  if (!new_timer_start(s_input_timer, 0, cb, context, 0 /* flags */)) {
-    prv_sequence_finished();
-    return RemoteInputResult_Invalid;
-  }
+  s_sequence_cb = cb;
+  s_sequence_context = context;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_input_timer, PBL_NO_WAIT);
   return RemoteInputResult_Ok;
 }
 
@@ -137,8 +135,8 @@ static void prv_button_timer_cb(void *cb_data) {
 
   if (context->presses_remaining > 0) {
     context->button_is_held_down = !was_held_down;
-    new_timer_start(s_input_timer, was_held_down ? context->gap_ms : context->hold_ms,
-                    prv_button_timer_cb, context, 0 /* flags */);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_input_timer,
+                                PBL_MSEC(was_held_down ? context->gap_ms : context->hold_ms));
   } else {
     pbl_free(context);
     prv_sequence_finished();
@@ -279,7 +277,7 @@ static void prv_path_timer_cb(void *cb_data) {
     return;
   }
 
-  new_timer_start(s_input_timer, context->step_ms, prv_path_timer_cb, context, 0 /* flags */);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_input_timer, PBL_MSEC(context->step_ms));
 }
 
 static RemoteInputResult prv_start_path(int16_t x1, int16_t y1, int16_t x2, int16_t y2,

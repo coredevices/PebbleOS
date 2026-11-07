@@ -6,6 +6,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
@@ -36,18 +37,19 @@ static void prv_reset_kernel_bg_cb(void *unused) {
   pbl_reboot();
 }
 
-static void prv_ui_update_reset_delay_timer_callback(void *unused) {
+static void prv_ui_update_reset_delay_timer_callback(struct pbl_work *work) {
   sys_work_add(prv_reset_kernel_bg_cb, nullptr);
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_reset_delay_timer, prv_ui_update_reset_delay_timer_callback);
 
 static void prv_handle_firmware_complete_msg(void) {
   uint32_t timeout = 3000;
 
   // Wait 3 seconds before rebooting so there is time to show the update complete screen
   PBL_LOG_ALWAYS("Delaying reset by 3s so the UI can update...");
-  TimerID timer = new_timer_create(); // Don't bother cleaning up this timer, we're going to reset
-  PBL_ASSERTN(timer != TIMER_INVALID_ID);
-  new_timer_start(timer, timeout, prv_ui_update_reset_delay_timer_callback, nullptr, 0);
+  // Not rescheduled: a repeated message must not delay the reset.
+  pbl_delayed_work_schedule(&pbl_sys_workq_high, &s_reset_delay_timer, PBL_MSEC(timeout));
 }
 
 //! Note: For now we just call into storage directly for the status of FW installs. Someday,
