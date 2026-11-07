@@ -6,6 +6,7 @@ pbl_clar_test(test_kernel
     kernel/tick.c
     kernel/time.c
     kernel/timer.c
+    kernel/work.c
     kernel/sched.c
     kernel/thread.c
     kernel/mutex.c

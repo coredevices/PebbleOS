@@ -13,6 +13,7 @@ threads.md
 syscalls.md
 interrupts.md
 time.md
+work.md
 boot.md
 idle.md
 memory.md
@@ -54,6 +55,9 @@ Next to the API, `include/pbl/kernel/` holds:
 | Semaphore | `struct pbl_sem` | `PBL_SEM_DEFINE` |
 | Message queue | `struct pbl_msgq` | `PBL_MSGQ_DEFINE` |
 | Poll group | `struct pbl_poll_group` | `PBL_POLL_GROUP_DEFINE` |
+| Work item | `struct pbl_work` | `PBL_WORK_DEFINE` |
+| Delayed work item | `struct pbl_delayed_work` | `PBL_DELAYED_WORK_DEFINE` |
+| Work queue | `struct pbl_workq` | `PBL_WORKQ_DEFINE` |
 
 Conventions:
 

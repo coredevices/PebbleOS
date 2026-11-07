@@ -19,3 +19,4 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/timer.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
