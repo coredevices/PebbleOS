@@ -43,7 +43,9 @@ void mcu_fpu_cleanup(void) {
 }
 
 void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
-  s_bg = thread;
+  if (task == PebbleTask_KernelBackground) {
+    s_bg = thread;
+  }
 }
 
 PebbleTask pebble_task_get_current(void) {
@@ -155,6 +157,28 @@ void test_sys_work__overflow_without_memory_resets(void) {
   cl_assert(s_reset);
   cl_assert_equal_i(s_reason.code, RebootReasonCode_EventQueueFull);
   cl_assert_equal_i(s_flood_ticks, 0);
+}
+
+static void prv_high_record(void *data) {
+  cl_assert(pbl_workq_is_current(&pbl_sys_workq_high));
+  s_ran[s_num_ran++] = (int)(uintptr_t)data;
+}
+
+static void prv_high_burst(void *data) {
+  // All of them, on one wake-up.
+  pbl_test_isr_enter();
+  sys_work_add_high_from_isr(prv_high_record, (void *)1);
+  sys_work_add_high_from_isr(prv_high_record, (void *)2);
+  sys_work_add_high_from_isr(prv_high_record, (void *)3);
+  pbl_test_isr_exit();
+  cl_assert_equal_i(s_num_ran, 3);
+  cl_assert_equal_i(s_ran[2], 3);
+  pbl_test_kernel_stop();
+}
+
+void test_sys_work__high_callbacks_run_on_one_wake(void) {
+  s_first_cb = prv_high_burst;
+  prv_run();
 }
 
 void test_sys_work__reports_the_callback_behind_a_wrapper(void) {

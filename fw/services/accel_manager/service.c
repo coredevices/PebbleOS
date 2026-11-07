@@ -267,7 +267,7 @@ static bool prv_call_data_callback(AccelManagerState *state) {
     case PebbleTask_KernelBackground:
       return sys_work_add(state->data_cb_handler, state->data_cb_context);
     case PebbleTask_NewTimers:
-      return new_timer_add_work_callback(state->data_cb_handler, state->data_cb_context);
+      return sys_work_add_high(state->data_cb_handler, state->data_cb_context);
     default:
       pbl_panic(); // Unsupported task for the accel manager
   }
@@ -450,7 +450,7 @@ PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSa
   // user-supplied data_cb. For KernelMain/KernelBackground/NewTimers values
   // the callback ends up invoked directly in kernel mode (either via the
   // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, sys_work_add,
-  // or new_timer_add_work_callback) — handing an unprivileged app arbitrary
+  // or sys_work_add_high) — handing an unprivileged app arbitrary
   // kernel-mode code execution. Force unprivileged callers onto their own
   // task so the dispatch lands in their app/worker event loop instead.
   if (from_user) {

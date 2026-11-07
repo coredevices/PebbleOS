@@ -27,7 +27,7 @@ static size_t s_tx_len;
 
 static bool s_task_queue_full;
 static SysWorkCallback s_task_cb;
-static NewTimerWorkCallback s_timer_work_cb;
+static SysWorkCallback s_timer_work_cb;
 
 void pbl_console_lock(void) {
 }
@@ -50,7 +50,7 @@ bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
   return true;
 }
 
-void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
+void sys_work_add_high_from_isr(SysWorkCallback cb, void *data) {
   s_timer_work_cb = cb;
 }
 
@@ -85,7 +85,7 @@ static void prv_feed_str(const char *str) {
 
 static void prv_run_task(void) {
   if (s_timer_work_cb != nullptr) {
-    NewTimerWorkCallback cb = s_timer_work_cb;
+    SysWorkCallback cb = s_timer_work_cb;
     s_timer_work_cb = nullptr;
     cb(nullptr);
   }

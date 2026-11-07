@@ -106,9 +106,9 @@ const struct pbl_accel *const ACCEL = &s_fake_accel;
 static int s_posted_events;
 static bool s_new_timer_queue_full;
 
-void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
+void sys_work_add_high_from_isr(SysWorkCallback cb, void *data) {
 }
-bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
+bool sys_work_add_high(SysWorkCallback cb, void *data) {
   if (s_new_timer_queue_full) {
     return false;
   }

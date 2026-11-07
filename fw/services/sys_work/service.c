@@ -30,6 +30,7 @@ PBL_LOG_MODULE_DEFINE(service_sys_work, CONFIG_SERVICE_SYS_WORK_LOG_LEVEL);
 #define SYS_WORK_POOL_SIZE          30
 #define FROM_APP_SYS_WORK_POOL_SIZE 8
 #define RAISED_POOL_SIZE            8
+#define HIGH_POOL_SIZE              5
 
 struct pbl_sys_work__heap_call {
   struct pbl_work work;
@@ -45,6 +46,7 @@ struct pbl_sys_work__raised_call {
 static PBL_WORK_POOL_DEFINE(s_pool, SYS_WORK_POOL_SIZE);
 static PBL_WORK_POOL_DEFINE(s_from_app_pool, FROM_APP_SYS_WORK_POOL_SIZE);
 static PBL_WORK_POOL_DEFINE(s_raised_pool, RAISED_POOL_SIZE);
+static PBL_WORK_POOL_DEFINE(s_high_pool, HIGH_POOL_SIZE);
 static struct pbl_sys_work__raised_call s_raised_calls[RAISED_POOL_SIZE];
 //! The callback behind a wrapper, which is all the queue knows about.
 static SysWorkCallback s_wrapped_cb;
@@ -103,6 +105,11 @@ static void prv_task_init(struct pbl_work *work) {
 }
 
 static PBL_WORK_DEFINE(s_task_init_work, prv_task_init);
+static PBL_WORK_DEFINE(s_high_task_init_work, prv_task_init);
+
+static void *prv_high_wdt_expired(int channel_id, void *user_data) {
+  return pbl_workq_current_fn(&pbl_sys_workq_high);
+}
 
 static void prv_workq_wait(struct pbl_workq *q, bool waiting) {
   pbl_task_wdt_set_waiting(waiting);
@@ -119,6 +126,10 @@ static const struct pbl_workq_ops s_workq_ops = {
   .done = prv_workq_done,
 };
 
+static const struct pbl_workq_ops s_high_workq_ops = {
+  .wait = prv_workq_wait,
+};
+
 void sys_work_init(void) {
   s_raised_priority_refcount = 0;
   s_initialized = true;
@@ -130,6 +141,13 @@ void sys_work_init(void) {
   PBL_ASSERTN(s_wdt_channel >= 0);
   pbl_workq_set_ops(&pbl_sys_workq, &s_workq_ops);
   pbl_work_submit(&pbl_sys_workq, &s_task_init_work);
+
+  thread = pbl_workq_get_thread(&pbl_sys_workq_high);
+  pebble_task_register(PebbleTask_NewTimers, thread);
+  PBL_ASSERTN(pbl_task_wdt_add(thread, CONFIG_TASK_WDT_TIMEOUT_MS, prv_high_wdt_expired, nullptr) >=
+              0);
+  pbl_workq_set_ops(&pbl_sys_workq_high, &s_high_workq_ops);
+  pbl_work_submit(&pbl_sys_workq_high, &s_high_task_init_work);
 }
 
 void sys_work_timer_init(void) {
@@ -203,6 +221,14 @@ bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
   }
 
   return true;
+}
+
+bool sys_work_add_high(SysWorkCallback cb, void *data) {
+  return pbl_work_call(&pbl_sys_workq_high, &s_high_pool, cb, data, PBL_TICKS(50)) == 0;
+}
+
+void sys_work_add_high_from_isr(SysWorkCallback cb, void *data) {
+  (void)pbl_work_call(&pbl_sys_workq_high, &s_high_pool, cb, data, PBL_NO_WAIT);
 }
 
 bool sys_work_try_add(SysWorkCallback cb, void *data) {
@@ -327,10 +353,12 @@ void sys_work_reset_for_test(void) {
   static struct pbl_work_call s_slots[SYS_WORK_POOL_SIZE];
   static struct pbl_work_call s_from_app_slots[FROM_APP_SYS_WORK_POOL_SIZE];
   static struct pbl_work_call s_raised_slots[RAISED_POOL_SIZE];
+  static struct pbl_work_call s_high_slots[HIGH_POOL_SIZE];
 
   pbl_work_pool_init(&s_pool, s_slots, SYS_WORK_POOL_SIZE);
   pbl_work_pool_init(&s_from_app_pool, s_from_app_slots, FROM_APP_SYS_WORK_POOL_SIZE);
   pbl_work_pool_init(&s_raised_pool, s_raised_slots, RAISED_POOL_SIZE);
+  pbl_work_pool_init(&s_high_pool, s_high_slots, HIGH_POOL_SIZE);
   memset(s_raised_calls, 0, sizeof(s_raised_calls));
   s_wrapped_cb = nullptr;
   s_initialized = false;

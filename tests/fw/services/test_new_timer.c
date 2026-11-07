@@ -7,10 +7,8 @@
 #include <pbl/kernel/kernel.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/new_timer/new_timer_service.h>
-#include <pbl/task_wdt/task_wdt.h>
 
 #include <clar.h>
-#include <kernel/pebble_tasks.h>
 #include <kernel_test.h>
 
 // Timers on the real kernel, with time delivered by the POSIX arch.
@@ -21,7 +19,6 @@ void sys_workq_reset_for_test(void);
 
 #define NUM_TIMERS 8
 
-static struct pbl_thread *s_nt;
 static struct pbl_thread s_main;
 static uint8_t s_main_stack[4096] __attribute__((aligned(8)));
 static uint64_t s_fired_at[8];
@@ -29,28 +26,11 @@ static int s_fires;
 static TimerID s_id;
 static uint32_t s_data;
 
-// ---- stubs ------------------------------------------------------------------
-
-void task_init(void) {
-}
-
-int pbl_task_wdt_add(struct pbl_thread *thread, uint32_t timeout_ms,
-                     pbl_task_wdt_callback_t callback, void *user_data) {
-  return 0;
-}
-
-void pbl_task_wdt_set_waiting(bool waiting) {
-}
-
-void pebble_task_register(PebbleTask pebble_task, struct pbl_thread *thread) {
-  s_nt = thread;
-}
-
 // ---- helpers ----------------------------------------------------------------
 
 static void prv_record(void *data) {
   cl_assert(data == &s_data);
-  cl_assert(pbl_thread_current() == s_nt);
+  cl_assert(pbl_workq_is_current(&pbl_sys_workq_high));
   cl_assert(new_timer_debug_get_current_callback() == (void *)prv_record);
   s_fired_at[s_fires++] = pbl_uptime_ticks();
 }
@@ -71,7 +51,6 @@ static void prv_run(void (*entry)(void *)) {
 }
 
 void test_new_timer__initialize(void) {
-  s_nt = nullptr;
   memset(&s_main, 0, sizeof(s_main));
   memset(s_fired_at, 0, sizeof(s_fired_at));
   s_fires = 0;
@@ -272,24 +251,4 @@ static void prv_exhaust_reuse(void *arg) {
 
 void test_new_timer__ids_change_and_slots_recycle(void) {
   prv_run(prv_exhaust_reuse);
-}
-
-static void prv_work_a(void *data) {
-  s_fired_at[s_fires++] = (uintptr_t)data;
-}
-
-static void prv_work_burst(void *arg) {
-  // All of them, on one wake-up and with no timer due.
-  pbl_test_isr_enter();
-  new_timer_add_work_callback_from_isr(prv_work_a, (void *)1);
-  new_timer_add_work_callback_from_isr(prv_work_a, (void *)2);
-  new_timer_add_work_callback_from_isr(prv_work_a, (void *)3);
-  pbl_test_isr_exit();
-  cl_assert_equal_i(s_fires, 3);
-  cl_assert_equal_i(s_fired_at[2], 3);
-  pbl_test_kernel_stop();
-}
-
-void test_new_timer__work_callbacks_all_run_on_one_wake(void) {
-  prv_run(prv_work_burst);
 }
