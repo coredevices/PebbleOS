@@ -27,6 +27,7 @@
 
 #ifndef CONFIG_ARCH_POSIX
 #include <cmsis_core.h>
+#include <pbl_arch_coredump.h>
 #endif
 
 #include <stdint.h>
@@ -406,16 +407,16 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
   }
 }
 
-void MemManage_Handler(void) {
+void PBL_NAKED MemManage_Handler(void) {
   // Grab the stack pointer, shove it into a register and call
   // the c function above.
-  __asm(
-      "tst lr, #4\n"
-      "ite eq\n"
-      "mrseq r0, msp\n"
-      "mrsne r0, psp\n"
-      "mov r1, lr\n"
-      "b %0\n" ::"i"(mem_manage_handler_c));
+  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "mov r1, lr\n"
+        "b %0\n" ::"i"(mem_manage_handler_c));
 }
 
 static void busfault_handler_c(unsigned int *stacked_args, unsigned int lr) {
@@ -430,14 +431,14 @@ static void busfault_handler_c(unsigned int *stacked_args, unsigned int lr) {
   attempt_handle_generic_fault(stacked_args, lr);
 }
 
-void BusFault_Handler(void) {
-  __asm(
-      "tst lr, #4\n"
-      "ite eq\n"
-      "mrseq r0, msp\n"
-      "mrsne r0, psp\n"
-      "mov r1, lr\n"
-      "b %0\n" ::"i"(busfault_handler_c));
+void PBL_NAKED BusFault_Handler(void) {
+  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "mov r1, lr\n"
+        "b %0\n" ::"i"(busfault_handler_c));
 }
 
 // STKOF = bit 4 of UFSR = bit 20 of CFSR (ARMv8-M only, reads as 0 on CM3/CM4)
@@ -473,13 +474,13 @@ static void usagefault_handler_c(unsigned int *stacked_args, unsigned int lr) {
   attempt_handle_generic_fault(stacked_args, lr);
 }
 
-void UsageFault_Handler(void) {
-  __asm(
-      "tst lr, #4\n"
-      "ite eq\n"
-      "mrseq r0, msp\n"
-      "mrsne r0, psp\n"
-      "mov r1, lr\n"
-      "b %0\n" ::"i"(usagefault_handler_c));
+void PBL_NAKED UsageFault_Handler(void) {
+  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "mov r1, lr\n"
+        "b %0\n" ::"i"(usagefault_handler_c));
 }
 #endif
