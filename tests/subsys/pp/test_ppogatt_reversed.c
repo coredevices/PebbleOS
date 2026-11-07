@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/pp/transport.h>
+#include <pbl/pp/transports/gatt.h>
 #include <pbl/services/regular_timer.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_operations.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
-#include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
+#include <pp/transports/gatt/ppogatt_internal.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -90,9 +90,9 @@ extern void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_intern
 extern void ppogatt_reversed_handle_unsubscribed(uint16_t conn_handle);
 extern void ppogatt_reversed_handle_data(uint16_t conn_handle, const uint8_t *buf, size_t len);
 
-static pbl_bt_characteristic_t s_characteristics[PPoGATTCharacteristicNum] = {
-  [PPoGATTCharacteristicData] = 01,
-  [PPoGATTCharacteristicMeta] = 02,
+static pbl_bt_characteristic_t s_characteristics[PBL_PP_GATT_CHARACTERISTIC_NUM] = {
+  [PBL_PP_GATT_CHARACTERISTIC_DATA] = 01,
+  [PBL_PP_GATT_CHARACTERISTIC_META] = 02,
 };
 
 static void prv_phone_sends_reversed_reset_request(void) {
@@ -124,11 +124,11 @@ void test_ppogatt_reversed__initialize(void) {
   fake_gatt_client_subscriptions_init();
   regular_timer_init();
   fake_comm_session_init();
-  ppogatt_create();
+  pbl_pp_gatt_create();
 }
 
 void test_ppogatt_reversed__cleanup(void) {
-  ppogatt_destroy();
+  pbl_pp_gatt_destroy();
   cl_assert_equal_i(ppogatt_client_count(), 0);
   regular_timer_deinit();
   fake_gatt_client_op_deinit();
@@ -144,22 +144,22 @@ void test_ppogatt_reversed__subscription_does_not_block_forward(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
-  ppogatt_handle_service_discovered(s_characteristics);
-  fake_gatt_client_op_assert_read(s_characteristics[PPoGATTCharacteristicMeta]);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  fake_gatt_client_op_assert_read(s_characteristics[PBL_PP_GATT_CHARACTERISTIC_META]);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 }
 
 // Once the phone starts the reversed handshake, reversed replaces forward.
 void test_ppogatt_reversed__reset_request_takes_over_forward(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  ppogatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 
   prv_phone_sends_reversed_reset_request();
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Forward PPoG yields to the reversed session from now on.
-  ppogatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 }
 
@@ -171,17 +171,17 @@ void test_ppogatt_reversed__reset_request_without_forward(void) {
 
 void test_ppogatt_reversed__unsubscribe_deletes_reversed(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  ppogatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
   ppogatt_reversed_handle_unsubscribed(CONN_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 }
 
 void test_ppogatt_reversed__invalidate_all_keeps_reversed(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  ppogatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 
-  ppogatt_invalidate_all_references();
+  pbl_pp_gatt_invalidate_all_references();
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   prv_phone_sends_reversed_reset_request();
@@ -194,8 +194,8 @@ void test_ppogatt_reversed__invalidate_all_keeps_open_reversed_session(void) {
   prv_phone_sends_reversed_reset_complete();
   cl_assert_equal_i(fake_comm_session_open_call_count(), 1);
 
-  ppogatt_invalidate_all_references();
-  ppogatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_invalidate_all_references();
+  pbl_pp_gatt_handle_service_discovered(s_characteristics);
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }
