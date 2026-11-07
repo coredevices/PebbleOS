@@ -31,7 +31,6 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 #include <fake_events.h>
 #include <fake_gatt_client_subscriptions.h>
 #include <fake_kernel_services_notifications.h>
-#include <fake_new_timer.h>
 #include <fake_notification_storage.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>

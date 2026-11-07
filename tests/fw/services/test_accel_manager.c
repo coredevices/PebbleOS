@@ -11,7 +11,6 @@
 
 #include <clar.h>
 #include <fake_app_manager.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_sys_work.h>

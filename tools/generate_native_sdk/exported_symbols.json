@@ -75,7 +75,6 @@
     "include/pbl/services/clock.h",
     "include/pbl/services/light_level.h",
     "include/pbl/services/ecompass.h",
-    "include/pbl/services/new_timer/new_timer.h",
     "include/pbl/services/wakeup.h",
     "fw/syscall/syscall.h",
     "fw/kernel/events.h",

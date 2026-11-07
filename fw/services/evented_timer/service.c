@@ -273,10 +273,9 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
   }
 
   // A process must not be able to reset the watch by asking for more timers than the heap holds.
-  EventedTimer *new_timer = current_task == PebbleTask_KernelMain
-                                ? pbl_malloc_check(sizeof(*new_timer))
-                                : pbl_malloc(sizeof(*new_timer));
-  if (new_timer == nullptr) {
+  EventedTimer *timer = current_task == PebbleTask_KernelMain ? pbl_malloc_check(sizeof(*timer))
+                                                              : pbl_malloc(sizeof(*timer));
+  if (timer == nullptr) {
     pbl_mutex_unlock(&s_mutex);
     PBL_LOG_WRN("No memory for a timer for %s", pebble_task_get_name(current_task));
     return EVENTED_TIMER_INVALID_ID;
@@ -285,7 +284,7 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
   const EventedTimerID id = prv_next_id();
   const pbl_tick_t ticks = pbl_ms_to_ticks(timeout_ms);
 
-  *new_timer = (EventedTimer){
+  *timer = (EventedTimer){
     .list_node = {},
     .id = id,
     .period_ticks = ticks,
@@ -295,11 +294,11 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
     .repeating = repeating,
     .expired = false
   };
-  pbl_delayed_work_init(&new_timer->work, prv_work);
+  pbl_delayed_work_init(&timer->work, prv_work);
 
-  s_timer_list_head = list_prepend(s_timer_list_head, &new_timer->list_node);
+  s_timer_list_head = list_prepend(s_timer_list_head, &timer->list_node);
 
-  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &new_timer->work, PBL_TICKS(ticks));
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &timer->work, PBL_TICKS(ticks));
 
   pbl_mutex_unlock(&s_mutex);
   return id;

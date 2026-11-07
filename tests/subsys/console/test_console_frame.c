@@ -7,7 +7,6 @@
 
 #include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/base64.h>
 

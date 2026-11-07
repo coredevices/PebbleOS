@@ -43,7 +43,7 @@ Each kernel thread is a GDB thread, with its name and state:
   Id   Target Id                                               Frame
 * 1    Thread 1.1 (IDLE 0x2001E8B0: Running)                   pbl_soc_idle (max_ticks=max_ticks@entry=33)
     at ./soc/qemu/idle.c:19
-  4    Thread 1.536989952 (NewTimer 0x2001D100: Blocked)       0x00143666 in arch_irq_enable ()
+  4    Thread 1.536989952 (SysWorkqHigh 0x2001D100: Blocked)   0x00143666 in arch_irq_enable ()
     at ./kernel/arch/arm/arch.c:213
   5    Thread 1.536989376 (NimbleHost 0x2001CEC0: Blocked)     0x00143666 in arch_irq_enable ()
     at ./kernel/arch/arm/arch.c:213
@@ -94,7 +94,7 @@ and its arguments, and the line about to run, e.g. on
 `event_put`:
 
 ```
-Breakpoint 1, event_put (event=event@entry=0x2000960c <s_new_timer_stack+1292>)
+Breakpoint 1, event_put (event=event@entry=0x2000960c <s_sys_high_stack+1292>)
     at ./fw/kernel/events.c:222
 222	  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 ```
@@ -106,9 +106,9 @@ frames:
 
 ```
 (gdb) bt 4
-#0  event_put (event=event@entry=0x2000960c <s_new_timer_stack+1292>) at ./fw/kernel/events.c:222
+#0  event_put (event=event@entry=0x2000960c <s_sys_high_stack+1292>) at ./fw/kernel/events.c:222
 #1  0x12154dce in launcher_task_add_callback (callback=<optimized out>, data=<optimized out>) at ./fw/kernel/event_loop.c:95
-#2  0x120982b0 in prv_fire (work=work@entry=0x2002bc60 <s_timers+56>) at ./fw/services/new_timer/new_timer.c:97
+#2  0x120982b0 in prv_work (work=work@entry=0x2002bc60) at ./fw/services/evented_timer/service.c:152
 #3  0x1206cb86 in pbl_workq_thread (arg=<optimized out>) at ./kernel/work.c:121
 (More stack frames follow...)
 ```
@@ -121,7 +121,7 @@ following pointers and calling firmware functions:
 (gdb) print event->type
 $1 = PEBBLE_CALLBACK_EVENT
 (gdb) print pbl_cur->name
-$2 = "NewTimer\000\000\000\000\000\000\000"
+$2 = "SysWorkqHigh\000\000\000"
 ```
 
 `x/8x ADDRESS` dumps memory, and `display EXPR` prints an expression at
@@ -233,7 +233,7 @@ Process 84855 stopped
 (lldb) thread list
 ...
 * thread #10: tid = 0x3c26550, ... app_manager_launch_new_app(config=0x00000001702e6d70) at app_manager.c:713:43, name = 'KernelMain'
-  thread #11: tid = 0x3c26551, ... libsystem_kernel.dylib`__psynch_cvwait + 8, name = 'NewTimer'
+  thread #11: tid = 0x3c26551, ... libsystem_kernel.dylib`__psynch_cvwait + 8, name = 'SysWorkqHigh'
   thread #15: tid = 0x3c2655a, ... libsystem_kernel.dylib`__psynch_cvwait + 8, name = 'IDLE'
   thread #17: tid = 0x3c2657a, ... libsystem_kernel.dylib`__psynch_cvwait + 8, name = 'NimbleHost'
   thread #21: tid = 0x3c2657e, ... libsystem_kernel.dylib`__psynch_cvwait + 8, name = 'App <Launcher>'

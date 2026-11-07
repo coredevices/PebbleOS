@@ -278,7 +278,7 @@ PBL_T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
 
 // ---------------------------------------------------------------------------------------
 PBL_T_STATIC void prv_workout_timer_cb(void *unused) {
-  // This runs on the NewTimer task, which has a watchdog. The workout mutex
+  // This runs on the high priority work queue, which has a watchdog. The workout mutex
   // can be held by paths that block on flash (e.g. stop_workout pushing the
   // session notification), so a blocking lock here can trip the watchdog and
   // reboot the watch. The cb is purely advisory (duration tick / HR aging),

@@ -15,7 +15,6 @@
 typedef struct GAPLEConnection GAPLEConnection;
 
 #include <fake_bonding_sync.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_regular_timer.h>
 #include <fake_spi_flash.h>

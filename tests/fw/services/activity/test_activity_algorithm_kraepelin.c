@@ -2,9 +2,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -33,7 +35,6 @@
 #include <pbl/util/units.h>
 
 #include <fake_accel_service.h>
-#include <fake_new_timer.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>

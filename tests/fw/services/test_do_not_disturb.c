@@ -7,7 +7,6 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/fs/fs.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/sys_work.h>
@@ -22,7 +21,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pfs.h>
 #include <fake_rtc.h>
@@ -75,11 +73,9 @@ static const int s_sunday_23_30 = 1427067000;
 // Monday, March 23, 2015, 10:30 UTC
 static const int s_monday_10_30 = 1427106600;
 
-static TimerID s_timer = TIMER_INVALID_ID;
 static bool s_event_ongoing = false;
 
 void calendar_init() {
-  s_timer = new_timer_create();
 }
 
 bool calendar_event_is_ongoing() {
