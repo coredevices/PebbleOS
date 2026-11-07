@@ -7,7 +7,8 @@
 #ifndef CONFIG_RECOVERY_FW
 #include <string.h>
 
-#include <pbl/services/comm_session/protocol.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
 
 #include <resource/language_pack.h>
 #include <shell/prefs.h>
@@ -34,11 +35,12 @@ typedef struct PBL_PACKED {
 
 static const char s_no_locale[ISO_LOCALE_LENGTH];
 
-static void prv_send(CommSession *session, const void *data, size_t length) {
-  comm_session_send_data(session, SYS_MSG_ENDPOINT_ID, data, length, COMM_SESSION_DEFAULT_TIMEOUT);
+static void prv_send(struct pbl_pp_session *session, const void *data, size_t length) {
+  pbl_pp_send(session, SYS_MSG_ENDPOINT_ID, data, length, PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-void language_pack_protocol_handle_list(CommSession *session, const uint8_t *data, size_t length) {
+void language_pack_protocol_handle_list(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length) {
   SysMsgLanguagePacksResponsePayload response = {
     .type = SysMsgLanguagePacksResponse,
     // Answer even a request without a token, so the phone doesn't wait for a timeout
@@ -73,8 +75,9 @@ void language_pack_protocol_handle_list(CommSession *session, const uint8_t *dat
 }
 
 // Parses a remove or select request, answering malformed ones with a failure.
-static const SysMsgLanguagePackPayload *prv_parse(CommSession *session, const uint8_t *data,
-                                                  size_t length, SystemMessageType response_type) {
+static const SysMsgLanguagePackPayload *prv_parse(struct pbl_pp_session *session,
+                                                  const uint8_t *data, size_t length,
+                                                  SystemMessageType response_type) {
   if (length >= sizeof(SysMsgLanguagePackPayload)) {
     return (const SysMsgLanguagePackPayload *)data;
   }
@@ -98,7 +101,7 @@ static bool prv_matches(const SysMsgLanguagePackPayload *request, const I18nPack
                     memcmp(request->locale, s_no_locale, ISO_LOCALE_LENGTH) == 0;
 }
 
-void language_pack_protocol_handle_remove(CommSession *session, const uint8_t *data,
+void language_pack_protocol_handle_remove(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t length) {
   const SysMsgLanguagePackPayload *request =
       prv_parse(session, data, length, SysMsgLanguagePackRemoveResponse);
@@ -120,7 +123,7 @@ void language_pack_protocol_handle_remove(CommSession *session, const uint8_t *d
   prv_send(session, &response, sizeof(response));
 }
 
-void language_pack_protocol_handle_select(CommSession *session, const uint8_t *data,
+void language_pack_protocol_handle_select(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t length) {
   const SysMsgLanguagePackPayload *request =
       prv_parse(session, data, length, SysMsgLanguageSelectResponse);

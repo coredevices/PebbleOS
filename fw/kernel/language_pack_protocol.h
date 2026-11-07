@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <kernel/system_message.h>
@@ -36,8 +36,11 @@ typedef struct PBL_PACKED SysMsgLanguagePackResultPayload {
   bool success;
 } SysMsgLanguagePackResultPayload;
 
-void language_pack_protocol_handle_list(CommSession *session, const uint8_t *data, size_t length);
+void language_pack_protocol_handle_list(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length);
 
-void language_pack_protocol_handle_remove(CommSession *session, const uint8_t *data, size_t length);
+void language_pack_protocol_handle_remove(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t length);
 
-void language_pack_protocol_handle_select(CommSession *session, const uint8_t *data, size_t length);
+void language_pack_protocol_handle_select(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t length);

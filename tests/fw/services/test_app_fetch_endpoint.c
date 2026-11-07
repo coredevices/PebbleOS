@@ -5,8 +5,8 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/app_fetch_endpoint.h>
-#include <pbl/services/comm_session/session.h>
 
 #include <clar.h>
 
@@ -37,11 +37,6 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
 void app_storage_delete_bank(uint32_t bank) {
 }
 
-typedef struct PBL_PACKED {
-  uint16_t length;
-  uint16_t endpoint_id;
-} PebbleProtocolHeader;
-
 enum {
   APP_FETCH_INSTALL_COMMAND = 0x01,
 };
@@ -51,7 +46,7 @@ enum {
 };
 
 typedef struct AppFetchData {
-  CommSession *session;
+  struct pbl_pp_session *session;
   size_t length;
   uint8_t data[];
 } AppFetchData;
@@ -62,7 +57,7 @@ typedef struct PBL_PACKED {
   uint32_t app_id;
 } AppFetchRequest;
 
-extern void app_fetch_protocol_msg_callback(CommSession *session, const uint8_t *data,
+extern void app_fetch_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                             size_t length);
 
 static const uint16_t APP_FETCH_ENDPOINT_ID = 6001;
@@ -71,13 +66,13 @@ static const uint32_t app_id_1 = 42;
 static const Uuid uuid_1 = {0x6b, 0xf6, 0x21, 0x5b, 0xc9, 0x7f, 0x40, 0x9e,
                             0x8c, 0x31, 0x4f, 0x55, 0x65, 0x72, 0x22, 0xb4};
 
-Transport *s_transport;
+struct fake_transport *s_transport;
 
 /* Start of test */
 
 void test_app_fetch_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
 }
 
@@ -110,7 +105,7 @@ static void prv_check_valid_app_fetch_request(uint16_t endpoint_id, const uint8_
   cl_assert_equal_b(true, uuid_equal(&request.uuid, &uuid_1));
 
   // if anything is planning on being done relating to this ACK, then it will be done after this
-  app_fetch_protocol_msg_callback(comm_session_get_system_session(), s_app_fetch_success,
+  app_fetch_protocol_msg_callback(pbl_pp_session_get_system(), s_app_fetch_success,
                                   sizeof(s_app_fetch_success));
 }
 

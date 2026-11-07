@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_remote_os.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
@@ -26,12 +26,13 @@
 void ams_music_disconnect(void) {
 }
 
-extern void music_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length);
+extern void music_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                        size_t length);
 
 // Helpers
 ///////////////////////////////////////////////////////////
 
-static void prv_receive_app_info_event_for_os(RemoteOS os) {
+static void prv_receive_app_info_event_for_os(enum pbl_pp_remote_os os) {
   const PebbleRemoteAppInfoEvent app_info_event = (const PebbleRemoteAppInfoEvent){
     .os = os,
   };
@@ -39,7 +40,7 @@ static void prv_receive_app_info_event_for_os(RemoteOS os) {
 }
 
 static void prv_receive_app_info_event(bool is_android) {
-  prv_receive_app_info_event_for_os(is_android ? RemoteOSAndroid : RemoteOSiOS);
+  prv_receive_app_info_event_for_os(is_android ? PBL_PP_REMOTE_OS_ANDROID : PBL_PP_REMOTE_OS_IOS);
 }
 
 static void prv_receive_app_event(bool is_open) {
@@ -199,7 +200,7 @@ static void prv_take_event(PebbleEvent *e) {
 // Tests
 ///////////////////////////////////////////////////////////
 
-Transport *s_transport;
+struct fake_transport *s_transport;
 
 void test_music_endpoint__initialize(void) {
   s_now_playing_requested = false;
@@ -212,7 +213,7 @@ void test_music_endpoint__initialize(void) {
   fake_comm_session_init();
   music_init();
 
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
 
   // Simulate connecting Pebble mobile app:
@@ -353,7 +354,7 @@ void test_music_endpoint__request_now_playing_from_desktop_app(void) {
   fake_transport_set_sent_cb(s_transport, &prv_assert_now_playing_requested_cb);
 
   // A desktop app has no Apple Media Service to read instead:
-  prv_receive_app_info_event_for_os(RemoteOSX);
+  prv_receive_app_info_event_for_os(PBL_PP_REMOTE_OS_OSX);
 
   fake_comm_session_process_send_next();
   cl_assert_equal_b(s_now_playing_requested, true);
@@ -361,7 +362,7 @@ void test_music_endpoint__request_now_playing_from_desktop_app(void) {
 
 void test_music_endpoint__ignore_now_playing_from_app_of_unknown_os(void) {
   // An app that does not say what it runs on could be an iOS one:
-  prv_receive_app_info_event_for_os(RemoteOSUnknown);
+  prv_receive_app_info_event_for_os(PBL_PP_REMOTE_OS_UNKNOWN);
   prv_receive_and_assert_all(false /* expect_is_handled*/);
 }
 

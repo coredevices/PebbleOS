@@ -6,9 +6,9 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/drivers/mag.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/app_glances/app_glance_service.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
@@ -213,14 +213,14 @@ void sys_app_inbox_service_consume(AppInboxConsumerInfo *consumer_info);
 void sys_app_outbox_send(const uint8_t *data, size_t length, AppOutboxSentHandler sent_handler,
                          void *cb_ctx);
 
-bool sys_app_pp_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
+bool sys_app_pp_send_data(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
                           uint16_t length);
 
-CommSession *sys_app_pp_get_comm_session(void);
+struct pbl_pp_session *sys_app_pp_get_comm_session(void);
 
-bool sys_app_pp_has_capability(CommSessionCapability capability);
+bool sys_app_pp_has_capability(enum pbl_pp_capability capability);
 
-bool sys_system_pp_has_capability(CommSessionCapability capability);
+bool sys_system_pp_has_capability(enum pbl_pp_capability capability);
 
 bool sys_app_glance_update(const Uuid *uuid, const AppGlance *glance);
 

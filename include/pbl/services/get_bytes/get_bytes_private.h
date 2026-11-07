@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 /**
  * @defgroup services_get_bytes_get_bytes_private Get bytes protocol
@@ -87,7 +87,7 @@ typedef struct PBL_PACKED {
 /** @brief Error response sent asynchronously. */
 typedef struct GetBytesErrorResponse {
   /** Session to reply on. */
-  CommSession *session;
+  struct pbl_pp_session *session;
   /** Transaction ID of the request. */
   int8_t transaction_id;
   /** Error code. */

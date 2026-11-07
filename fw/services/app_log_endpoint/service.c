@@ -7,8 +7,8 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/util/byteorder.h>
 
 #include <applib/app_logging.h>
@@ -27,7 +27,7 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
     return;
   }
 
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     return;
   }
@@ -41,16 +41,16 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
   strncpy(header.filename, msg->file, sizeof(header.filename));
 
   const size_t length = sizeof(Uuid) + sizeof(header) + msg->text_len;
-  SendBuffer *sb = comm_session_send_buffer_begin_write(session, APP_LOGGING_ENDPOINT, length,
-                                                        COMM_SESSION_DEFAULT_TIMEOUT);
+  struct pbl_pp_send_buffer *sb =
+      pbl_pp_send_buffer_begin(session, APP_LOGGING_ENDPOINT, length, PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!sb) {
     return;
   }
 
-  comm_session_send_buffer_write(sb, msg->app_uuid, sizeof(Uuid));
-  comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
-  comm_session_send_buffer_write(sb, (const uint8_t *)msg->text, msg->text_len);
-  comm_session_send_buffer_end_write(sb);
+  pbl_pp_send_buffer_write(sb, msg->app_uuid, sizeof(Uuid));
+  pbl_pp_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
+  pbl_pp_send_buffer_write(sb, (const uint8_t *)msg->text, msg->text_len);
+  pbl_pp_send_buffer_end(sb);
 }
 
 static const struct pbl_log_backend_api s_api = {
@@ -64,7 +64,8 @@ bool app_log_is_bt_enabled(void) {
   return pbl_log_backend_is_enabled(PBL_LOG_BACKEND_GET(app_log));
 }
 
-void app_log_protocol_msg_callback(CommSession *session, const uint8_t *data, const size_t length) {
+void app_log_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                   const size_t length) {
   typedef struct PBL_PACKED AppLogCommand {
     uint8_t commandType;
   } AppLogCommand;

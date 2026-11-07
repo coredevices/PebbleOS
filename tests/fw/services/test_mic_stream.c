@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/mic_stream.h>
 #include <pbl/services/voice/voice_speex.h>
@@ -45,8 +45,8 @@ bool app_install_id_from_system(AppInstallId id) {
 
 static bool s_no_phone;
 
-CommSession *comm_session_get_system_session(void) {
-  return s_no_phone ? nullptr : (CommSession *)1;
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
+  return s_no_phone ? nullptr : (struct pbl_pp_session *)1;
 }
 
 static bool s_watchface_running;

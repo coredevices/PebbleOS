@@ -5,7 +5,7 @@
 #include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/put_bytes/put_bytes_storage_raw.h>
 #include <pbl/util/math.h>
 
@@ -121,18 +121,18 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
     // NimbleHost task. Scoped to the erase only: this shares PBL_BT_CONSUMER_PP_PUT_BYTES with the
     // PBL_BT_RESPONSE_TIME_MIN request held during chunk streaming, so leaving it in place would
     // cancel the fast connection interval.
-    comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                    PBL_BT_RESPONSE_TIME_MIDDLE,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+    pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                      PBL_BT_RESPONSE_TIME_MIDDLE,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
 
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
     pbl_flash_erase(FLASH, layout->start_address, layout->end_address - layout->start_address);
 
     // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
-    comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+    pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
   } else {
     // Some data we want has already been written, just continue from last valid location!
     storage->current_offset += append_offset;
@@ -168,7 +168,7 @@ uint32_t pb_storage_raw_calculate_crc(PutBytesStorage *storage, PutBytesCrcType 
 
 void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {
   // Restore normal BLE responsiveness that was reduced in pb_storage_raw_init
-  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                  PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
 }

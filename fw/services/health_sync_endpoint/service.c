@@ -3,7 +3,8 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/system_task.h>
 
@@ -34,9 +35,8 @@ static void prv_send_ack_nack(bool ok) {
     .ack_nack = ok ? ACK : NACK,
   };
 
-  comm_session_send_data(comm_session_get_system_session(), HEALTH_SYNC_ENDPOINT_ID,
-                         (uint8_t *)&msg, sizeof(HealthSyncEndpointAckMsg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(pbl_pp_session_get_system(), HEALTH_SYNC_ENDPOINT_ID, (uint8_t *)&msg,
+              sizeof(HealthSyncEndpointAckMsg), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 #include <pbl/services/activity/activity_algorithm.h>
@@ -64,7 +64,8 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
   system_task_add_callback(prv_sync_health_system_task_cb, nullptr);
 }
 
-void health_sync_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t len) {
+void health_sync_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                       size_t len) {
   if (len < 1) {
     PBL_LOG_ERR("Invalid message received, length: %zu", len);
   }

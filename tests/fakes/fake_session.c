@@ -3,85 +3,109 @@
 
 #include "fake_session.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
-#include <comm/bt_lock.h>
 
 extern void fake_system_task_callbacks_invoke_pending(void);
 
-typedef struct CommSession {
+struct pbl_pp_session {
   ListNode node;
-  Transport *transport;
-  const TransportImplementation *transport_imp;
+  const struct pbl_pp_transport *transport;
   bool is_send_next_call_pending;
-  TransportDestination destination;
+  enum pbl_pp_destination destination;
+  uint32_t capabilities;
   uint8_t *temp_write_buffer;
   uint16_t endpoint_id;
   uint16_t bytes_written;
   uint16_t max_out_payload_length;
   CircularBuffer send_buffer;
   uint8_t storage[1024];
-} CommSession;
+};
 
-static CommSession *s_session_head;
+static struct pbl_pp_session *s_session_head;
 
 static int s_session_close_call_count;
 static int s_session_open_call_count;
 
-bool comm_session_is_valid(const CommSession *session) {
-  return list_contains((ListNode *)s_session_head, &session->node);
+static bool prv_is_open(const struct pbl_pp_session *session) {
+  return (session != nullptr) && list_contains((ListNode *)s_session_head, &session->node);
 }
 
-static bool prv_find_session_is_system_filter(ListNode *found_node, void *data) {
-  const CommSessionType requested_type = (const bool)(uintptr_t)data;
-  const TransportDestination destination = ((const CommSession *)found_node)->destination;
+static bool prv_find_session_filter(ListNode *found_node, void *data) {
+  const enum pbl_pp_session_type requested_type = (enum pbl_pp_session_type)(uintptr_t)data;
+  const enum pbl_pp_destination destination =
+      ((const struct pbl_pp_session *)found_node)->destination;
   switch (requested_type) {
-    case CommSessionTypeApp:
-      return destination == TransportDestinationApp || destination == TransportDestinationHybrid;
-    case CommSessionTypeSystem:
-      return destination == TransportDestinationSystem || destination == TransportDestinationHybrid;
+    case PBL_PP_SESSION_APP:
+      return destination == PBL_PP_DESTINATION_APP || destination == PBL_PP_DESTINATION_HYBRID;
+    case PBL_PP_SESSION_SYSTEM:
+      return destination == PBL_PP_DESTINATION_SYSTEM || destination == PBL_PP_DESTINATION_HYBRID;
     default:
       return false;
   }
 }
 
-bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
+static struct pbl_pp_session *prv_get_by_type(enum pbl_pp_session_type type) {
+  return (struct pbl_pp_session *)list_find((ListNode *)s_session_head, prv_find_session_filter,
+                                            (void *)(uintptr_t)type);
+}
+
+bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
+                                   enum pbl_pp_capability capability) {
   return true;
 }
 
-CommSession *comm_session_get_by_type(CommSessionType type) {
-  // TODO: This is not going to fly with multiple app sessions
-  CommSession *session;
-  bt_lock();
-  {
-    session = (CommSession *)list_find((ListNode *)s_session_head,
-                                       prv_find_session_is_system_filter, (void *)(uintptr_t)type);
+uint32_t pbl_pp_session_get_capabilities(const struct pbl_pp_session *session) {
+  return prv_is_open(session) ? session->capabilities : 0U;
+}
+
+void pbl_pp_session_set_capabilities(struct pbl_pp_session *session, uint32_t capabilities) {
+  if (prv_is_open(session)) {
+    session->capabilities = capabilities;
   }
-  bt_unlock();
-  return session;
 }
 
-CommSession *comm_session_get_system_session(void) {
-  // TODO: What if Pebble App is connected via iSPP *and* PPoGATT ?
-  return comm_session_get_by_type(CommSessionTypeSystem);
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
+  return prv_get_by_type(PBL_PP_SESSION_SYSTEM);
 }
 
-CommSession *comm_session_get_current_app_session(void) {
-  // TODO: What if App is connected via iSPP *and* PPoGATT ?
-  return comm_session_get_by_type(CommSessionTypeApp);
+struct pbl_pp_session *pbl_pp_session_get_app(const Uuid *app_uuid) {
+  return prv_get_by_type(PBL_PP_SESSION_APP);
 }
 
-void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
-  cl_assert(list_contains((const ListNode *)s_session_head, &session->node));
+enum pbl_pp_session_type pbl_pp_session_get_type(const struct pbl_pp_session *session) {
+  if (!prv_is_open(session)) {
+    return PBL_PP_SESSION_INVALID;
+  }
+  return (session->destination == PBL_PP_DESTINATION_APP) ? PBL_PP_SESSION_APP
+                                                          : PBL_PP_SESSION_SYSTEM;
+}
+
+bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
+  return pbl_pp_session_get_type(session) == PBL_PP_SESSION_SYSTEM;
+}
+
+void pbl_pp_session_reset(struct pbl_pp_session *session) {
+  cl_assert_(false, "Not implemented: pbl_pp_session_reset");
+}
+
+struct pbl_pp_session *app_session_get_current(void) {
+  return prv_get_by_type(PBL_PP_SESSION_APP);
+}
+
+void pbl_pp_session_close(struct pbl_pp_session *session) {
+  cl_assert(prv_is_open(session));
   if (session->temp_write_buffer) {
     pbl_free(session->temp_write_buffer);
   }
@@ -90,78 +114,75 @@ void comm_session_close(CommSession *session, CommSessionCloseReason reason) {
   ++s_session_close_call_count;
 }
 
-void comm_session_receive_router_write(CommSession *session, const uint8_t *received_data,
-                                       size_t num_bytes_to_copy) {
+void pbl_pp_session_receive(struct pbl_pp_session *session, const uint8_t *data, size_t length) {
   PBL_LOG_DBG("Received Data:");
-  PBL_LOG_HEXDUMP_DBG(received_data, num_bytes_to_copy);
+  PBL_LOG_HEXDUMP_DBG(data, length);
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
-  SendBuffer *sb = comm_session_send_buffer_begin_write(session, endpoint_id, length, timeout_ms);
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
+  struct pbl_pp_send_buffer *sb =
+      pbl_pp_send_buffer_begin(session, endpoint_id, length, timeout_ms);
   if (!sb) {
-    return false;
+    return -EAGAIN;
   }
-  comm_session_send_buffer_write(sb, data, length);
-  comm_session_send_buffer_end_write(sb);
-  return true;
+  pbl_pp_send_buffer_write(sb, data, length);
+  pbl_pp_send_buffer_end(sb);
+  return 0;
 }
 
-CommSession *comm_session_open(Transport *transport, const TransportImplementation *implementation,
-                               TransportDestination destination) {
+struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transport,
+                                           enum pbl_pp_destination destination,
+                                           const Uuid *app_uuid) {
   ++s_session_open_call_count;
 
-  CommSession *session = pbl_malloc(sizeof(CommSession));
+  struct pbl_pp_session *session = pbl_malloc(sizeof(struct pbl_pp_session));
   memset(session, 0, sizeof(*session));
-  *session = (const CommSession){
+  *session = (const struct pbl_pp_session){
     .transport = transport,
-    .transport_imp = implementation,
     .destination = destination,
-    .max_out_payload_length = COMM_MAX_OUTBOUND_PAYLOAD_SIZE,
+    .max_out_payload_length = PBL_PP_MAX_OUTBOUND_PAYLOAD,
   };
 
-  const size_t max_pp_msg_size = session->max_out_payload_length + sizeof(PebbleProtocolHeader);
-  // If this fails, you need to bump up the size of the storage[] array in the fake CommSession
+  const size_t max_pp_msg_size = session->max_out_payload_length + sizeof(struct pbl_pp_header);
+  // If this fails, you need to bump up the size of the storage[] array in the fake session
   cl_assert(sizeof(session->storage) >= max_pp_msg_size);
   circular_buffer_init(&session->send_buffer, session->storage, max_pp_msg_size);
 
-  s_session_head = (CommSession *)list_prepend((ListNode *)s_session_head, &session->node);
+  s_session_head =
+      (struct pbl_pp_session *)list_prepend((ListNode *)s_session_head, &session->node);
   return session;
 }
 
-size_t comm_session_send_queue_get_length(const CommSession *session) {
-  cl_assert(list_contains((const ListNode *)s_session_head, &session->node));
+size_t pbl_pp_session_send_queue_length(const struct pbl_pp_session *session) {
+  cl_assert(prv_is_open(session));
   return circular_buffer_get_read_space_remaining(&session->send_buffer);
 }
 
-size_t comm_session_send_queue_copy(CommSession *session, uint32_t start_off, size_t length,
-                                    uint8_t *data_out) {
+size_t pbl_pp_session_send_queue_copy(struct pbl_pp_session *session, size_t offset, size_t length,
+                                      uint8_t *data_out) {
   cl_assert(data_out);
-  cl_assert(list_contains((const ListNode *)s_session_head, &session->node));
-  return circular_buffer_copy_offset(&session->send_buffer, start_off, data_out, length);
+  cl_assert(prv_is_open(session));
+  return circular_buffer_copy_offset(&session->send_buffer, offset, data_out, length);
 }
 
-void comm_session_send_queue_consume(CommSession *session, size_t length) {
+void pbl_pp_session_send_queue_consume(struct pbl_pp_session *session, size_t length) {
   circular_buffer_consume(&session->send_buffer, length);
 }
 
 static void prv_send_next_kernel_bg_cb(void *data) {
-  CommSession *session = (CommSession *)data;
-  if (!list_contains((const ListNode *)s_session_head, (const ListNode *)session)) {
-    // Session closed in the mean time
+  struct pbl_pp_session *session = (struct pbl_pp_session *)data;
+  if (!prv_is_open(session)) {
     return;
   }
-  // Flip the flag before the send_next callback, so it can schedule again if needed.
   session->is_send_next_call_pending = false;
 
-  // Kick the transport to send out the next bytes from the send buffer
-  const size_t read_space = comm_session_send_queue_get_length(session);
-  if (read_space) {
-    session->transport_imp->send_next(session->transport);
+  if (pbl_pp_session_send_queue_length(session)) {
+    session->transport->send_next(session);
   }
 }
 
-void comm_session_send_next(CommSession *session) {
+void pbl_pp_session_send_next(struct pbl_pp_session *session) {
   if (session->is_send_next_call_pending) {
     return;
   }
@@ -169,35 +190,25 @@ void comm_session_send_next(CommSession *session) {
   session->is_send_next_call_pending = true;
 }
 
-bool prv_filter_by_transport_callback(ListNode *node, void *data) {
-  return (((CommSession *)node)->transport == data);
-}
-
-CommSession *prv_find_session_by_transport(Transport *transport) {
-  return (CommSession *)list_find((ListNode *)s_session_head, prv_filter_by_transport_callback,
-                                  transport);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Send buffer fakes
 
-size_t comm_session_send_buffer_get_max_payload_length(const CommSession *session) {
+size_t pbl_pp_send_buffer_max_payload(const struct pbl_pp_session *session) {
   size_t max_length = 0;
-  if (comm_session_is_valid(session)) {
-    max_length = session->send_buffer.buffer_size - sizeof(PebbleProtocolHeader);
+  if (prv_is_open(session)) {
+    max_length = session->send_buffer.buffer_size - sizeof(struct pbl_pp_header);
   }
   return max_length;
 }
 
-SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t endpoint_id,
-                                                 size_t required_free_length, uint32_t timeout_ms) {
-  if (!session) {
+struct pbl_pp_send_buffer *pbl_pp_send_buffer_begin(struct pbl_pp_session *session,
+                                                    uint16_t endpoint_id,
+                                                    size_t required_free_length,
+                                                    uint32_t timeout_ms) {
+  if (!prv_is_open(session)) {
     return nullptr;
   }
-  if (!comm_session_is_valid(session)) {
-    return nullptr;
-  }
-  if (required_free_length + sizeof(PebbleProtocolHeader) >
+  if (required_free_length + sizeof(struct pbl_pp_header) >
       circular_buffer_get_write_space_remaining(&session->send_buffer)) {
     return nullptr;
   }
@@ -208,18 +219,18 @@ SendBuffer *comm_session_send_buffer_begin_write(CommSession *session, uint16_t 
   session->temp_write_buffer = (uint8_t *)pbl_malloc(session->max_out_payload_length);
   session->bytes_written = 0;
   session->endpoint_id = endpoint_id;
-  return (SendBuffer *)session;
+  return (struct pbl_pp_send_buffer *)session;
 }
 
-SendBuffer *comm_session_send_buffer_begin_write_bulk(CommSession *session, uint16_t endpoint_id,
-                                                      size_t required_free_length,
-                                                      uint32_t timeout_ms) {
-  return comm_session_send_buffer_begin_write(session, endpoint_id, required_free_length,
-                                              timeout_ms);
+struct pbl_pp_send_buffer *pbl_pp_send_buffer_begin_bulk(struct pbl_pp_session *session,
+                                                         uint16_t endpoint_id,
+                                                         size_t required_free_length,
+                                                         uint32_t timeout_ms) {
+  return pbl_pp_send_buffer_begin(session, endpoint_id, required_free_length, timeout_ms);
 }
 
-bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t length) {
-  CommSession *session = (CommSession *)sb;
+bool pbl_pp_send_buffer_write(struct pbl_pp_send_buffer *sb, const uint8_t *data, size_t length) {
+  struct pbl_pp_session *session = (struct pbl_pp_session *)sb;
   cl_assert(session);
   cl_assert(session->temp_write_buffer);
   cl_assert(length + session->bytes_written <= session->max_out_payload_length);
@@ -229,12 +240,12 @@ bool comm_session_send_buffer_write(SendBuffer *sb, const uint8_t *data, size_t 
   return true;
 }
 
-void comm_session_send_buffer_end_write(SendBuffer *sb) {
-  CommSession *session = (CommSession *)sb;
+void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {
+  struct pbl_pp_session *session = (struct pbl_pp_session *)sb;
   cl_assert(session);
   cl_assert(session->temp_write_buffer);
 
-  const PebbleProtocolHeader pp_header = {
+  const struct pbl_pp_header pp_header = {
     .length = session->bytes_written,
     .endpoint_id = session->endpoint_id,
   };
@@ -252,16 +263,11 @@ static uint32_t s_responsiveness_max_period_s;
 static bool s_responsiveness_latency_is_reduced;
 static pbl_bt_responsiveness_granted_cb_t s_last_responsiveness_granted_handler;
 
-void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
-                                     enum pbl_bt_response_time_state state,
-                                     uint16_t max_period_secs) {
-  comm_session_set_responsiveness_ext(session, consumer, state, max_period_secs, nullptr);
-}
-
-void comm_session_set_responsiveness_ext(CommSession *session, enum pbl_bt_consumer consumer,
-                                         enum pbl_bt_response_time_state state,
-                                         uint16_t max_period_secs,
-                                         pbl_bt_responsiveness_granted_cb_t granted_handler) {
+void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
+                                       enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted_handler) {
   s_responsiveness_max_period_s = max_period_secs;
 
   if (state == PBL_BT_RESPONSE_TIME_MIDDLE) {
@@ -289,10 +295,10 @@ int fake_comm_session_close_call_count(void) {
 }
 
 void fake_comm_session_process_send_next(void) {
-  CommSession *session = s_session_head;
+  struct pbl_pp_session *session = s_session_head;
   while (session) {
-    CommSession *next = (CommSession *)session->node.next;
-    comm_session_send_next(session);
+    struct pbl_pp_session *next = (struct pbl_pp_session *)session->node.next;
+    pbl_pp_session_send_next(session);
     session = next;
   }
   fake_system_task_callbacks_invoke_pending();
@@ -316,26 +322,28 @@ typedef struct {
   uint8_t data[];
 } DataNode;
 
-typedef struct {
+struct fake_transport {
   ListNode node;
-  TransportDestination destination;
+  enum pbl_pp_destination destination;
   FakeTransportSentCallback sent_cb;
   Uuid app_uuid;
-  CommSession *session;
+  struct pbl_pp_session *session;
 
   //! When no sent_cb is used, data is appended to this list
   DataNode *sent_data;
-} FakeTransport;
+};
 
-static FakeTransport *s_fake_transport_head;
+static struct fake_transport *s_fake_transport_head;
 
-static void prv_fake_transport_send_next(Transport *transport) {
-  FakeTransport *fake_transport = (FakeTransport *)transport;
-  cl_assert_equal_b(
-      list_contains((const ListNode *)s_fake_transport_head, (const ListNode *)fake_transport),
-      true);
-  CommSession *session = fake_transport->session;
-  PebbleProtocolHeader pp_header;
+static bool prv_filter_by_session_callback(ListNode *node, void *data) {
+  return ((struct fake_transport *)node)->session == data;
+}
+
+static void prv_fake_transport_send_next(struct pbl_pp_session *session) {
+  struct fake_transport *fake_transport = (struct fake_transport *)list_find(
+      (ListNode *)s_fake_transport_head, prv_filter_by_session_callback, session);
+  cl_assert(fake_transport);
+  struct pbl_pp_header pp_header;
   uint8_t *buffer = pbl_malloc(1024);
   while (circular_buffer_copy(&session->send_buffer, (uint8_t *)&pp_header, sizeof(pp_header)) ==
          sizeof(pp_header)) {
@@ -360,28 +368,16 @@ static void prv_fake_transport_send_next(Transport *transport) {
   pbl_free(buffer);
 }
 
-static void prv_fake_transport_reset(Transport *transport) {
-  cl_assert_(false, "Not implemented: prv_fake_transport_reset");
-}
-
-static const TransportImplementation s_fake_transport_implementation = {
+static const struct pbl_pp_transport s_fake_transport = {
+  .name = "fake",
   .send_next = prv_fake_transport_send_next,
-  .reset = prv_fake_transport_reset,
 };
 
-Transport *fake_transport_create(TransportDestination destination, const Uuid *app_uuid,
-                                 FakeTransportSentCallback sent_cb) {
-  if (app_uuid == nullptr) {
-    cl_assert_(TransportDestinationSystem == destination ||
-                   TransportDestinationHybrid == TransportDestinationSystem,
-               "When passing NULL app_uuid, the destination can only be System or Hybrid");
-  } else {
-    cl_assert_(TransportDestinationSystem == destination ||
-                   TransportDestinationHybrid == TransportDestinationSystem,
-               "When passing an app_uuid, the destination can only be App or Hybrid");
-  }
-  FakeTransport *transport = (FakeTransport *)pbl_malloc(sizeof(FakeTransport));
-  *transport = (const FakeTransport){
+struct fake_transport *fake_transport_create(enum pbl_pp_destination destination,
+                                             const Uuid *app_uuid,
+                                             FakeTransportSentCallback sent_cb) {
+  struct fake_transport *transport = pbl_malloc(sizeof(*transport));
+  *transport = (const struct fake_transport){
     .destination = destination,
     .sent_cb = sent_cb,
   };
@@ -389,36 +385,35 @@ Transport *fake_transport_create(TransportDestination destination, const Uuid *a
     transport->app_uuid = *app_uuid;
   }
   s_fake_transport_head =
-      (FakeTransport *)list_prepend((ListNode *)s_fake_transport_head, &transport->node);
-  return (Transport *)transport;
+      (struct fake_transport *)list_prepend((ListNode *)s_fake_transport_head, &transport->node);
+  return transport;
 }
 
-CommSession *fake_transport_set_connected(Transport *transport, bool connected) {
-  FakeTransport *fake_transport = (FakeTransport *)transport;
+struct pbl_pp_session *fake_transport_set_connected(struct fake_transport *transport,
+                                                    bool connected) {
   if (connected) {
-    cl_assert_equal_p(fake_transport->session, nullptr);
-    fake_transport->session =
-        comm_session_open(transport, &s_fake_transport_implementation, fake_transport->destination);
-    return fake_transport->session;
-  } else {
-    cl_assert(fake_transport->session);
-    comm_session_close(fake_transport->session, 0);
-    fake_transport->session = nullptr;
-    return nullptr;
+    cl_assert_equal_p(transport->session, nullptr);
+    transport->session =
+        pbl_pp_session_open(&s_fake_transport, transport->destination, &transport->app_uuid);
+    return transport->session;
   }
+
+  cl_assert(transport->session);
+  pbl_pp_session_close(transport->session);
+  transport->session = nullptr;
+  return nullptr;
 }
 
-void fake_transport_set_sent_cb(Transport *transport, FakeTransportSentCallback sent_cb) {
+void fake_transport_set_sent_cb(struct fake_transport *transport,
+                                FakeTransportSentCallback sent_cb) {
   cl_assert(transport);
-  FakeTransport *fake_transport = (FakeTransport *)transport;
-  fake_transport->sent_cb = sent_cb;
+  transport->sent_cb = sent_cb;
 }
 
-void fake_transport_assert_sent(Transport *transport, uint16_t index, uint16_t endpoint_id,
-                                const uint8_t data[], size_t length) {
+void fake_transport_assert_sent(struct fake_transport *transport, uint16_t index,
+                                uint16_t endpoint_id, const uint8_t data[], size_t length) {
   cl_assert(transport);
-  FakeTransport *fake_transport = (FakeTransport *)transport;
-  DataNode *data_node = fake_transport->sent_data;
+  DataNode *data_node = transport->sent_data;
   for (uint16_t i = 0; i <= index; ++i) {
     cl_assert_(data_node, "Sent out too few packets");
 
@@ -432,40 +427,34 @@ void fake_transport_assert_sent(Transport *transport, uint16_t index, uint16_t e
   }
 }
 
-void fake_transport_assert_nothing_sent(Transport *transport) {
+void fake_transport_assert_nothing_sent(struct fake_transport *transport) {
   cl_assert(transport);
-  FakeTransport *fake_transport = (FakeTransport *)transport;
-  DataNode *data_node = fake_transport->sent_data;
-  cl_assert_equal_p(data_node, nullptr);
+  cl_assert_equal_p(transport->sent_data, nullptr);
 }
 
-void fake_transport_destroy(Transport *transport) {
-  FakeTransport *fake_transport = (FakeTransport *)transport;
+void fake_transport_destroy(struct fake_transport *transport) {
   cl_assert(transport);
   cl_assert_equal_b(
-      list_contains((const ListNode *)s_fake_transport_head, (const ListNode *)fake_transport),
-      true);
-  if (fake_transport->session) {
-    // Causes clean up of CommSession:
-    fake_transport_set_connected((Transport *)fake_transport, false /* connected */);
+      list_contains((const ListNode *)s_fake_transport_head, (const ListNode *)transport), true);
+  if (transport->session) {
+    fake_transport_set_connected(transport, false /* connected */);
   }
-  list_remove((ListNode *)fake_transport, (ListNode **)&s_fake_transport_head, nullptr);
-  DataNode *data_node = fake_transport->sent_data;
+  list_remove((ListNode *)transport, (ListNode **)&s_fake_transport_head, nullptr);
+  DataNode *data_node = transport->sent_data;
   while (data_node) {
     DataNode *next_data_node = (DataNode *)data_node->node.next;
     pbl_free(data_node);
     data_node = next_data_node;
   }
-  pbl_free(fake_transport);
+  pbl_free(transport);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Transport helper functions
 
-bool fake_comm_session_send_buffer_write_raw_by_transport(Transport *transport, const uint8_t *data,
-                                                          size_t length) {
-  CommSession *session = prv_find_session_by_transport(transport);
-  cl_assert(session);
+bool fake_comm_session_send_buffer_write_raw(struct pbl_pp_session *session, const uint8_t *data,
+                                             size_t length) {
+  cl_assert(prv_is_open(session));
   return circular_buffer_write(&session->send_buffer, data, length);
 }
 
@@ -483,10 +472,10 @@ void fake_comm_session_init(void) {
 }
 
 void fake_comm_session_cleanup(void) {
-  FakeTransport *fake_transport = s_fake_transport_head;
+  struct fake_transport *fake_transport = s_fake_transport_head;
   while (fake_transport) {
-    FakeTransport *next = (FakeTransport *)fake_transport->node.next;
-    fake_transport_destroy((Transport *)fake_transport);
+    struct fake_transport *next = (struct fake_transport *)fake_transport->node.next;
+    fake_transport_destroy(fake_transport);
     fake_transport = next;
   }
 }

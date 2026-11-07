@@ -9,9 +9,10 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
@@ -371,7 +372,8 @@ static void prv_handle_set_time_msg(time_t new_time) {
   prv_update_time_info_and_generate_event(&new_time, nullptr);
 }
 
-void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsigned int length) {
+void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                 unsigned int length) {
   char sub_command = *data++;
 
   switch (sub_command) {
@@ -387,8 +389,8 @@ void clock_protocol_msg_callback(CommSession *session, const uint8_t *data, unsi
 
       *(uint32_t *)(response_buffer + 1) = pbl_cpu_to_be32(t);
 
-      comm_session_send_data(session, protocol_time_endpoint_id, response_buffer,
-                             response_buffer_length, COMM_SESSION_DEFAULT_TIMEOUT);
+      pbl_pp_send(session, protocol_time_endpoint_id, response_buffer, response_buffer_length,
+                  PBL_PP_DEFAULT_TIMEOUT_MS);
       PBL_LOG_VERBOSE("protocol_time_callback called, responding with current time: %" PRIu32,
                       (uint32_t)t);
       break;
@@ -665,7 +667,7 @@ void clock_set_manual_time_source(bool manual) {
 }
 
 void clock_request_time_from_phone(void) {
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     PBL_LOG_VERBOSE("No system session, cannot request time from phone");
     return;
@@ -674,8 +676,8 @@ void clock_request_time_from_phone(void) {
   // Send sub-command 0x04 (request time) to the phone.
   // The phone should respond with a 0x03 (set UTC + timezone) message.
   const uint8_t request[] = {0x04};
-  comm_session_send_data(session, protocol_time_endpoint_id, request, sizeof(request),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, protocol_time_endpoint_id, request, sizeof(request),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 PBL_SYSCALL(time_t, clock_to_timestamp, (VAL, WeekDay, day), (VAL, int, hour), (VAL, int, minute)) {

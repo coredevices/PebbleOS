@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <clar.h>
@@ -9,7 +9,8 @@
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 
-extern void ping_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
+extern void ping_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                       size_t length);
 
 #define MAX_CALLBACKS 8
 
@@ -26,10 +27,10 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
 void system_task_add_callback(CallbackEventCallback callback, void *data) {
 }
 
-FAKE_VALUE_FUNC(bool, comm_session_send_data, CommSession *, uint16_t, const uint8_t *, size_t,
+FAKE_VALUE_FUNC(int, pbl_pp_send, struct pbl_pp_session *, uint16_t, const uint8_t *, size_t,
                 uint32_t);
 
-CommSession *comm_session_get_system_session(void) {
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return nullptr;
 }
 
@@ -95,8 +96,8 @@ static void prv_receive_ping(uint8_t cookie) {
 
 void test_ping__initialize(void) {
   s_num_callbacks = 0;
-  RESET_FAKE(comm_session_send_data);
-  comm_session_send_data_fake.return_val = true;
+  RESET_FAKE(pbl_pp_send);
+  pbl_pp_send_fake.return_val = 0;
   s_num_dialogs = 0;
 }
 
@@ -113,7 +114,7 @@ void test_ping__burst_shows_one_dialog(void) {
   }
   prv_run_callbacks();
 
-  cl_assert_equal_i(comm_session_send_data_fake.call_count, 100);
+  cl_assert_equal_i(pbl_pp_send_fake.call_count, 100);
   cl_assert_equal_i(s_num_dialogs, 1);
 }
 
@@ -125,6 +126,6 @@ void test_ping__dialog_shown_again_once_dismissed(void) {
   prv_receive_ping(1);
   prv_run_callbacks();
 
-  cl_assert_equal_i(comm_session_send_data_fake.call_count, 2);
+  cl_assert_equal_i(pbl_pp_send_fake.call_count, 2);
   cl_assert_equal_i(s_num_dialogs, 2);
 }

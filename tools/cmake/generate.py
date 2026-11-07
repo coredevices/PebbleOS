@@ -169,7 +169,7 @@ def cmd_app_registry(args):
     write_if_changed(args.enum, "".join(out))
 
 
-# --- Pebble protocol endpoint table (fw/services/comm_session) ---------
+# --- Pebble protocol endpoints not yet defined by their owners (subsys/pp) ---
 
 
 def cmd_endpoints_table(args):
@@ -181,51 +181,29 @@ def cmd_endpoints_table(args):
         endpoints.extend(definition["normal_fw_only"])
     endpoints.sort()
 
-    def get_access_enum(access_str):
-        if access_str == "private":
-            return "PebbleProtocolAccessPrivate"
-        if access_str == "any":
-            return "PebbleProtocolAccessAny"
-        raise ValueError(f"Unknown value: {access_str}")
+    access_enums = {"private": "PBL_PP_ACCESS_PRIVATE", "any": "PBL_PP_ACCESS_ANY"}
 
-    DEFAULT_RECV_IMPL = "g_default_kernel_receiver_implementation"
-    DEFAULT_RECV_OPT = "g_default_kernel_receiver_opt_bg"
-    recv_imp_set = {DEFAULT_RECV_IMPL}
-    recv_opt_set = {DEFAULT_RECV_OPT}
-
-    out = ["// GENERATED -- DO NOT EDIT\n\n", '#include "kernel/pebble_tasks.h"\n\n']
-    for _eid, _eid_str, _access, cb_str, recv_imp, recv_opt in endpoints:
-        if recv_imp:
-            recv_imp_set.add(recv_imp)
-        if recv_opt:
-            recv_opt_set.add(recv_opt)
-        if cb_str:
-            out.append(
-                f"extern void {cb_str}(CommSession *session, "
-                "const uint8_t* data, size_t length);\n"
-            )
-
-    out.append("\n\n")
-    out.extend(f"extern ReceiverImplementation {r};\n" for r in recv_imp_set)
-    out.append("\n\n")
-    out.extend(f"extern const PebbleTask {r};\n" for r in recv_opt_set)
-    out.append("\n\nstatic const PebbleProtocolEndpoint s_protocol_endpoints[] = {\n")
-
+    out = ["// GENERATED -- DO NOT EDIT\n\n", "#include <pbl/pp/endpoint.h>\n\n"]
     for eid, eid_str, access_str, cb_str, recv_imp, recv_opt in endpoints:
         if int(eid_str, base=16) != eid:
             raise ValueError(f"Endpoint IDs need to match: {eid} vs {eid_str}")
-        if not cb_str:
-            cb_str = "NULL"
-        if not recv_imp:
-            recv_imp = DEFAULT_RECV_IMPL
-            if not recv_opt:
-                recv_opt = DEFAULT_RECV_OPT
-        recv_opt = "&" + recv_opt if recv_opt else "NULL"
+        access = access_enums[access_str]
+        if recv_imp:
+            out.append(f"extern const struct pbl_pp_receiver_api {recv_imp};\n")
+            out.append(
+                f"PBL_PP_ENDPOINT_DEFINE_RECEIVER({eid_str}, {access}, {recv_imp});\n\n"
+            )
+            continue
         out.append(
-            f"  {{ {eid}, {cb_str}, {get_access_enum(access_str)}, "
-            f"&{recv_imp}, {recv_opt} }},\n"
+            f"extern void {cb_str}(struct pbl_pp_session *session, const uint8_t *data, "
+            "size_t length);\n"
         )
-    out.append("};\n\n")
+        macro = (
+            "PBL_PP_ENDPOINT_DEFINE_MAIN"
+            if recv_opt == "main"
+            else "PBL_PP_ENDPOINT_DEFINE"
+        )
+        out.append(f"{macro}({eid_str}, {access}, {cb_str});\n\n")
     write_if_changed(args.output, "".join(out))
 
 

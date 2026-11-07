@@ -6,9 +6,9 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/app_inbox_service.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_receive_router.h>
 #include <pbl/util/math.h>
 
 #include <applib/app_message/app_message_internal.h>
@@ -17,11 +17,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
 
-extern const ReceiverImplementation g_default_kernel_receiver_implementation;
-extern const ReceiverImplementation g_app_message_receiver_implementation;
+extern const struct pbl_pp_receiver_api g_app_message_receiver_implementation;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// ReceiverImplementation that writes App Message PP messages to the app's memory space using
+// Receiver that writes App Message PP messages to the app's memory space using
 // app_inbox_service. It also forwards a copy of the header to the default system receiver, but
 // with a special handler that will always send a nack reply. If all goes well, this forward is
 // cancelled in the end and the nack does not get sent.
@@ -34,7 +33,7 @@ extern const ReceiverImplementation g_app_message_receiver_implementation;
 typedef struct {
   bool is_writing_to_app_inbox;
 
-  CommSession *session;
+  struct pbl_pp_session *session;
 
   //! Used to keep track of how many header bytes are remaining to either forward to the default
   //! system receiver or to save them in the event the app inbox write fails in the end.
@@ -42,22 +41,21 @@ typedef struct {
   size_t header_bytes_remaining;
 
   //! Pointer to the default system receiver context, to which we want to forward the header data.
-  Receiver *kernel_receiver;
+  struct pbl_pp_receiver *kernel_receiver;
 } AppMessageReceiver;
 
-static bool prv_fwd_prepare(AppMessageReceiver *rcv, CommSession *session,
+static bool prv_fwd_prepare(AppMessageReceiver *rcv, struct pbl_pp_session *session,
                             size_t header_bytes_remaining) {
   // Try to set up a forward to the default system receiver that will send a nack back, based
   // on the header of the message:
-  static const PebbleProtocolEndpoint kernel_nack_endpoint = {
-    .endpoint_id = APP_MESSAGE_ENDPOINT_ID,
+  static const struct pbl_pp_endpoint kernel_nack_endpoint = {
     .handler = app_message_app_protocol_system_nack_callback,
-    .access_mask = PebbleProtocolAccessAny,
-    .receiver_imp = &g_default_kernel_receiver_implementation,
-    .receiver_opt = nullptr,
+    .id = APP_MESSAGE_ENDPOINT_ID,
+    .access = PBL_PP_ACCESS_ANY,
+    .task = PBL_PP_HANDLER_BG,
   };
-  Receiver *kernel_receiver = g_default_kernel_receiver_implementation.prepare(
-      session, &kernel_nack_endpoint, header_bytes_remaining);
+  struct pbl_pp_receiver *kernel_receiver =
+      pbl_pp_kernel_receiver.prepare(session, &kernel_nack_endpoint, header_bytes_remaining);
   if (!kernel_receiver) {
     PBL_LOG_ERR("System receiver wasn't able to prepare");
     return false;
@@ -70,13 +68,13 @@ static void prv_write(const uint8_t *data, size_t length) {
   app_inbox_service_write(AppInboxServiceTagAppMessageReceiver, data, length);
 }
 
-static Receiver *prv_app_message_receiver_prepare(CommSession *session,
-                                                  const PebbleProtocolEndpoint *endpoint,
-                                                  size_t total_payload_size) {
+static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
+    struct pbl_pp_session *session, const struct pbl_pp_endpoint *endpoint,
+    size_t total_payload_size) {
   if (total_payload_size > 500) {
-    comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+    pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
   }
 
   AppMessageReceiver *rcv = (AppMessageReceiver *)pbl_zalloc(sizeof(AppMessageReceiver));
@@ -100,7 +98,7 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
   // Reasons why app_inbox_service_begin() might fail:
   // - the watchapp does not have App Message context opened
   // - there is no more space in the buffer that the app had allocated for it,
-  // - the inbox is already being written to (by another CommSession) -- should be very rare
+  // - the inbox is already being written to (by another session) -- should be very rare
   if (app_inbox_service_begin(AppInboxServiceTagAppMessageReceiver, total_size, session)) {
     rcv->is_writing_to_app_inbox = true;
 
@@ -115,20 +113,20 @@ static Receiver *prv_app_message_receiver_prepare(CommSession *session,
     prv_write((const uint8_t *)&header, sizeof(header));
   }
 
-  return (Receiver *)rcv;
+  return (struct pbl_pp_receiver *)rcv;
 }
 
-static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *data, size_t length) {
+static void prv_app_message_receiver_write(struct pbl_pp_receiver *receiver, const uint8_t *data,
+                                           size_t length) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
-  comm_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                  PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  pbl_pp_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
-    g_default_kernel_receiver_implementation.write(rcv->kernel_receiver, data,
-                                                   header_bytes_to_write);
+    pbl_pp_kernel_receiver.write(rcv->kernel_receiver, data, header_bytes_to_write);
     rcv->header_bytes_remaining -= header_bytes_to_write;
   }
 
@@ -138,21 +136,21 @@ static void prv_app_message_receiver_write(Receiver *receiver, const uint8_t *da
 }
 
 static void prv_finally(AppMessageReceiver *receiver,
-                        void (*kernel_receiver_finally_cb)(Receiver *)) {
+                        void (*kernel_receiver_finally_cb)(struct pbl_pp_receiver *)) {
   kernel_receiver_finally_cb(receiver->kernel_receiver);
   pbl_free(receiver);
 }
 
-static void prv_app_message_receiver_finish(Receiver *receiver) {
+static void prv_app_message_receiver_finish(struct pbl_pp_receiver *receiver) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
   // Default to letting the system receiver process the message and thus nack it:
-  void (*kernel_receiver_finally_cb)(Receiver *) = g_default_kernel_receiver_implementation.finish;
+  void (*kernel_receiver_finally_cb)(struct pbl_pp_receiver *) = pbl_pp_kernel_receiver.finish;
 
   if (rcv->is_writing_to_app_inbox) {
     if (app_inbox_service_end(AppInboxServiceTagAppMessageReceiver)) {
       // The write was successful, cancel processing the header for nacking:
-      kernel_receiver_finally_cb = g_default_kernel_receiver_implementation.cleanup;
+      kernel_receiver_finally_cb = pbl_pp_kernel_receiver.cleanup;
       PBL_ANALYTICS_ADD(app_message_received_count, 1);
     }
   }
@@ -160,7 +158,7 @@ static void prv_app_message_receiver_finish(Receiver *receiver) {
   prv_finally(rcv, kernel_receiver_finally_cb);
 }
 
-static void prv_app_message_receiver_cleanup(Receiver *receiver) {
+static void prv_app_message_receiver_cleanup(struct pbl_pp_receiver *receiver) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
   if (rcv->is_writing_to_app_inbox) {
@@ -168,10 +166,10 @@ static void prv_app_message_receiver_cleanup(Receiver *receiver) {
     app_inbox_service_cancel(AppInboxServiceTagAppMessageReceiver);
   }
 
-  prv_finally(rcv, g_default_kernel_receiver_implementation.cleanup);
+  prv_finally(rcv, pbl_pp_kernel_receiver.cleanup);
 }
 
-const ReceiverImplementation g_app_message_receiver_implementation = {
+const struct pbl_pp_receiver_api g_app_message_receiver_implementation = {
   .prepare = prv_app_message_receiver_prepare,
   .write = prv_app_message_receiver_write,
   .finish = prv_app_message_receiver_finish,

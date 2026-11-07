@@ -7,12 +7,12 @@
 #include <pbl/drivers/mcu.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notification_image.h>
 #include <pbl/util/byteorder.h>
@@ -49,7 +49,7 @@ struct PBL_PACKED VersionsMessage {
   // Use this padding string for additional bit flags passed by
   // >= 2.X versions of the mobile applications.  ISO + locale
   // on 1.X mobile application versions.
-  PebbleProtocolCapabilities capabilities;
+  struct pbl_pp_capabilities capabilities;
   bool is_unfaithful;
   pbl_be16_t activity_insights_version;
   pbl_be16_t javascript_bytecode_version;
@@ -72,7 +72,7 @@ static void resource_version_to_network_endian(ResourceVersion *resources_versio
   resources_version->timestamp = pbl_cpu_to_be32(resources_version->timestamp);
 }
 
-static void prv_send_watch_versions(CommSession *session) {
+static void prv_send_watch_versions(struct pbl_pp_session *session) {
   struct VersionsMessage versions_msg = {
     .command = VERSION_RESPONSE,
     .boot_version = pbl_cpu_to_be32(boot_version_read()),
@@ -149,11 +149,11 @@ static void prv_send_watch_versions(CommSession *session) {
   versions_msg.activity_insights_version = pbl_be16_make(activity_insights_settings_get_version());
 #endif
 
-  comm_session_send_data(session, s_endpoint_id, (uint8_t *)&versions_msg, sizeof(versions_msg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, s_endpoint_id, (uint8_t *)&versions_msg, sizeof(versions_msg),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-void system_version_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void system_version_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t length) {
   switch (data[0]) {
     case VERSION_REQUEST: {

@@ -2,7 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/syscall.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/debounced_connection_service.h>
 #include <pbl/services/regular_timer.h>
 
@@ -70,10 +71,8 @@ void debounced_connection_service_init(void) {
   }
 
   // initial state of the connections
-  s_debounced_state_is_connected[MobileAppDebounce] =
-      (comm_session_get_system_session() != nullptr);
-  s_debounced_state_is_connected[PebbleKitDebounce] =
-      (comm_session_get_current_app_session() != nullptr);
+  s_debounced_state_is_connected[MobileAppDebounce] = (pbl_pp_session_get_system() != nullptr);
+  s_debounced_state_is_connected[PebbleKitDebounce] = (app_session_get_current() != nullptr);
 }
 
 PBL_SYSCALL(bool, sys_mobile_app_is_connected_debounced) {

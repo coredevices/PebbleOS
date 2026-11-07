@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
 
 #include <applib/app_message/app_message_internal.h>
 #include <applib/dict.h>
@@ -58,8 +59,8 @@ void launcher_app_message_send_app_state_deprecated(const Uuid *uuid, bool runni
   PBL_ASSERTN(DICT_OK == dict_serialize_tuplets_to_buffer(
                              &tuplet, 1, (uint8_t *)&push_message->dictionary, &size));
 
-  comm_session_send_data(comm_session_get_system_session(), LAUNCHER_MESSAGE_ENDPOINT_ID,
-                         (const uint8_t *)buffer, sizeof(buffer), COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(pbl_pp_session_get_system(), LAUNCHER_MESSAGE_ENDPOINT_ID, (const uint8_t *)buffer,
+              sizeof(buffer), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static bool prv_has_invalid_length(size_t expected, size_t actual) {
@@ -70,7 +71,7 @@ static bool prv_has_invalid_length(size_t expected, size_t actual) {
   return false;
 }
 
-static bool prv_receive_push_cmd(CommSession *session, AppMessagePush *push_message,
+static bool prv_receive_push_cmd(struct pbl_pp_session *session, AppMessagePush *push_message,
                                  size_t length) {
   if (prv_has_invalid_length(sizeof(AppMessagePush), length)) {
     return false;
@@ -111,18 +112,19 @@ static bool prv_receive_push_cmd(CommSession *session, AppMessagePush *push_mess
   return success;
 }
 
-static void prv_send_ack_nack_reply(CommSession *session, const uint8_t transaction_id, bool ack) {
+static void prv_send_ack_nack_reply(struct pbl_pp_session *session, const uint8_t transaction_id,
+                                    bool ack) {
   const AppMessageAck nack_message = {
     .header = {
       .command = ack ? CMD_ACK : CMD_NACK,
       .transaction_id = transaction_id,
     },
   };
-  comm_session_send_data(session, LAUNCHER_MESSAGE_ENDPOINT_ID, (const uint8_t *)&nack_message,
-                         sizeof(nack_message), COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, LAUNCHER_MESSAGE_ENDPOINT_ID, (const uint8_t *)&nack_message,
+              sizeof(nack_message), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,
+void launcher_app_message_protocol_msg_callback_deprecated(struct pbl_pp_session *session,
                                                            const uint8_t *data, size_t length) {
   if (prv_has_invalid_length(sizeof(AppMessageHeader), length)) {
     return;

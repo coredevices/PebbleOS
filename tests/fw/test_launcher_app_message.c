@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
-#include <pbl/services/comm_session/session_internal.h>
 #include <pbl/util/uuid.h>
 
 #include <applib/app_message/app_message_internal.h>
@@ -12,7 +11,7 @@
 #include <process_management/launcher_app_message.h>
 
 extern void launcher_app_message_reset(void);
-extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *session,
+extern void launcher_app_message_protocol_msg_callback_deprecated(struct pbl_pp_session *session,
                                                                   const uint8_t *data,
                                                                   size_t length);
 
@@ -28,8 +27,8 @@ extern void launcher_app_message_protocol_msg_callback_deprecated(CommSession *s
 
 AppRunStateCommand s_last_cmd;
 
-Transport *s_transport;
-CommSession *s_session;
+struct fake_transport *s_transport;
+struct pbl_pp_session *s_session;
 
 #define APP_UUID_RAW \
   0x13, 0xEC, 0xC6, 0x7C, 0xCC, 0xB4, 0x4A, 0x96, 0x9E, 0xA7, 0x50, 0xE5, 0x09, 0xCA, 0xF7, 0x3A
@@ -56,7 +55,8 @@ CommSession *s_session;
   fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, \
                              (const uint8_t *)&ack_message, sizeof(ack_message));
 
-void app_run_state_command(CommSession *session, AppRunStateCommand cmd, const Uuid *uuid) {
+void app_run_state_command(struct pbl_pp_session *session, AppRunStateCommand cmd,
+                           const Uuid *uuid) {
   s_last_cmd = cmd;
   Uuid expected_uuid = {APP_UUID_RAW};
   cl_assert_equal_b(uuid, &expected_uuid);
@@ -105,7 +105,7 @@ void test_launcher_app_message__initialize(void) {
   launcher_app_message_reset();
   s_last_cmd = APP_RUN_STATE_INVALID_COMMAND;
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
 }
 

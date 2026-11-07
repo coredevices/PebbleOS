@@ -5,10 +5,10 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
-#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
+#include <pbl/pp/transport.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_private.h>
@@ -70,12 +70,13 @@ void pbl_task_wdt_feed_self(void) {
 
 // ------------------------------------------------------------------------------------
 // Comm session fake support
-void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
+void data_logging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length);
 
-static CommSession *s_session;
+static struct pbl_pp_session *s_session;
 
 static DataLoggingSendDataMessage s_prev_send_data_hdr;
-static uint8_t s_prev_send_data[COMM_MAX_OUTBOUND_PAYLOAD_SIZE];
+static uint8_t s_prev_send_data[PBL_PP_MAX_OUTBOUND_PAYLOAD];
 static uint32_t s_prev_send_data_bytes;
 
 static void prv_transport_sent_data_cb(uint16_t endpoint_id, const uint8_t *data,
@@ -188,12 +189,12 @@ void test_data_logging__initialize(void) {
   fake_system_task_callbacks_invoke_pending();
 
   // Create the system comm session
-  // Transport *transport = (Transport *) ~0;
+  // struct fake_transport *transport = (struct fake_transport *) ~0;
   // s_session = comm_session_open(transport, &s_transport_imp,
-  //                                         TransportDestinationSystem);
+  //                                         PBL_PP_DESTINATION_SYSTEM);
   fake_comm_session_init();
-  Transport *transport =
-      fake_transport_create(TransportDestinationSystem, nullptr, prv_transport_sent_data_cb);
+  struct fake_transport *transport =
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_transport_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
 }
 
@@ -540,7 +541,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   fake_comm_session_process_send_next();
 
   // Generate the received ack from the phone endpoint
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   uint8_t ack_data[] = {
     ~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck, dls_test_get_session_id(logging_session)
   };
@@ -563,7 +564,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   s_prev_send_data_bytes = 0;
   dls_private_send_session(logging_session, true /*empty*/);
   const int items_per_send =
-      (COMM_MAX_OUTBOUND_PAYLOAD_SIZE - sizeof(DataLoggingSendDataMessage)) / item_size;
+      (PBL_PP_MAX_OUTBOUND_PAYLOAD - sizeof(DataLoggingSendDataMessage)) / item_size;
   const int num_sends = num_items / items_per_send;
   for (int i = 0; i < num_sends + 5; i++) {
     // This sends a chunk out and it should show up in our prv_transport_sent_data_cb callback

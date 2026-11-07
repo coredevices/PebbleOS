@@ -10,11 +10,10 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/msgq.h>
+#include <pbl/pp/protocol.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/comm_session/session_remote_os.h>
-#include <pbl/services/comm_session/session_remote_version.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/music.h>
@@ -404,7 +403,7 @@ typedef struct PBL_PACKED PebbleCommSessionEvent { // 1 byte
 } PebbleCommSessionEvent;
 
 typedef struct PBL_PACKED { // 1 bytes
-  RemoteOS os;
+  enum pbl_pp_remote_os os;
 } PebbleRemoteAppInfoEvent;
 
 typedef enum {
@@ -619,7 +618,7 @@ typedef struct PBL_PACKED { // 6 bytes
 } PebbleGestureEvent;
 
 typedef struct PBL_PACKED { // 8 bytes
-  PebbleProtocolCapabilities flags_diff;
+  struct pbl_pp_capabilities flags_diff;
 } PebbleCapabilitiesChangedEvent;
 
 typedef enum WeatherEventType {

@@ -8,7 +8,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -38,7 +39,7 @@ static PBL_MUTEX_DEFINE(s_lock);
 // Latched per session: the connected phone doesn't change what it supports mid-connection, and a
 // reconnect (possibly to a different phone) clears it via prv_session_types.
 static uint32_t s_unsupported_types;
-static CommSession *s_latched_session;
+static struct pbl_pp_session *s_latched_session;
 
 static struct {
   bool active;
@@ -112,7 +113,8 @@ static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
 // Clear the unsupported-type latch when the system session changes (reconnect / different phone).
 // The latch is also cleared explicitly when the session closes (imaging_handle_comm_session_event)
 // so a recycled session pointer can't be mistaken for the old one. s_lock held by the caller.
-static bool prv_type_latched_unsupported(CommSession *session, ImagingImageType image_type) {
+static bool prv_type_latched_unsupported(struct pbl_pp_session *session,
+                                         ImagingImageType image_type) {
   if (session != s_latched_session) {
     s_latched_session = session;
     s_unsupported_types = 0;
@@ -121,8 +123,8 @@ static bool prv_type_latched_unsupported(CommSession *session, ImagingImageType 
 }
 
 bool imaging_is_type_supported(ImagingImageType image_type) {
-  CommSession *session = comm_session_get_system_session();
-  if (!session || !comm_session_has_capability(session, CommSessionImagingSupport)) {
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
+  if (!session || !pbl_pp_session_has_capability(session, PBL_PP_CAP_IMAGING)) {
     return false;
   }
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -136,7 +138,7 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
   if (!imaging_is_type_supported(ImagingImageTypeAlbumArt)) {
     return false;
   }
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   const size_t title_len = title ? MIN(strlen(title), 255) : 0;
   const size_t artist_len = artist ? MIN(strlen(artist), 255) : 0;
   uint8_t payload[sizeof(ImagingRequestHeader) + 2 + 255 + 255];
@@ -155,8 +157,7 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
   memcpy(cursor, artist, artist_len);
   cursor += artist_len;
 
-  comm_session_send_data(session, IMAGING_ENDPOINT, payload, cursor - payload,
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, IMAGING_ENDPOINT, payload, cursor - payload, PBL_PP_DEFAULT_TIMEOUT_MS);
   return true;
 }
 
@@ -165,7 +166,7 @@ bool imaging_request_notification_image(uint8_t token, ImagingFormat format, uin
   if (!item_id || !imaging_is_type_supported(ImagingImageTypeNotification)) {
     return false;
   }
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   uint8_t payload[sizeof(ImagingRequestHeader) + UUID_SIZE];
   ImagingRequestHeader *hdr = (ImagingRequestHeader *)payload;
   hdr->cmd = ImagingCmdIDRequest;
@@ -176,8 +177,7 @@ bool imaging_request_notification_image(uint8_t token, ImagingFormat format, uin
   hdr->height = height;
   memcpy(payload + sizeof(*hdr), item_id, UUID_SIZE);
 
-  comm_session_send_data(session, IMAGING_ENDPOINT, payload, sizeof(payload),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, IMAGING_ENDPOINT, payload, sizeof(payload), PBL_PP_DEFAULT_TIMEOUT_MS);
   return true;
 }
 
@@ -196,7 +196,8 @@ static uint16_t prv_gbitmap_format_for(ImagingFormat format, GBitmapFormat *out)
   }
 }
 
-void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length) {
+void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                   size_t length) {
   if (length < sizeof(ImagingResponseHeader)) {
     return;
   }

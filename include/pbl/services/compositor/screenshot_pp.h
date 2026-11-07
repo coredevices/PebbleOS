@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 /**
  * @defgroup services_compositor_screenshot_pp Screenshot protocol
@@ -22,7 +22,7 @@
  * @param data Message payload.
  * @param length Length of @p data in bytes.
  */
-void screenshot_protocol_msg_callback(CommSession *session, const uint8_t *data,
+void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                       unsigned int length);
 
 /** @} */

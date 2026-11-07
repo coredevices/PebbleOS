@@ -231,8 +231,9 @@ PBL_SYSCALL(void, moddable_createMachine, (VAL, ModdableCreationRecord *, cr)) {
 // Normally provided by the moddable submodule (xsPlatform.c). The xsbug
 // endpoint stays in the protocol endpoints table regardless of build config,
 // so stub the callback when building without moddable to satisfy the linker.
-struct CommSession;
+struct pbl_pp_session;
 
-void xsbug_protocol_msg_callback(struct CommSession *session, const uint8_t *msg, size_t length) {
+void xsbug_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                 size_t length) {
 }
 #endif

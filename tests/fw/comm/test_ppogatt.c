@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/pp/transport.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/kernel_le_client/ppogatt/ppogatt.h>
 #include <comm/ble/kernel_le_client/ppogatt/ppogatt_internal.h>
@@ -97,11 +98,16 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 // Helpers
 ///////////////////////////////////////////////////////////
 
-extern Transport *ppogatt_client_for_uuid(const Uuid *uuid);
+extern struct pbl_pp_session *ppogatt_session_for_uuid(const Uuid *uuid);
 extern bool ppogatt_has_client_for_uuid(const Uuid *uuid);
 extern uint32_t ppogatt_client_count(void);
 extern void ppogatt_trigger_rx_ack_send_timeout(void);
-extern TransportDestination ppogatt_get_destination(Transport *transport);
+extern enum pbl_pp_destination ppogatt_get_destination_for_uuid(const Uuid *uuid);
+extern const struct pbl_pp_transport *ppogatt_get_transport(void);
+
+static void prv_send_next(struct pbl_pp_session *session) {
+  ppogatt_get_transport()->send_next(session);
+}
 
 #define NUM_SERVICE_INSTANCES 2
 static pbl_bt_characteristic_t s_characteristics[NUM_SERVICE_INSTANCES][PPoGATTCharacteristicNum] =
@@ -372,19 +378,19 @@ void test_ppogatt__handles_too_short_meta_length(void) {
 void test_ppogatt__handles_meta_v1(void) {
   struct {
     const PPoGATTMetaV1 *meta;
-    TransportDestination expected_destination;
+    enum pbl_pp_destination expected_destination;
   } metas[] = {
     {
       .meta = &s_meta_v1_hybrid,
-      .expected_destination = TransportDestinationHybrid,
+      .expected_destination = PBL_PP_DESTINATION_HYBRID,
     },
     {
       .meta = &s_meta_v1_system_inferred,
-      .expected_destination = TransportDestinationSystem,
+      .expected_destination = PBL_PP_DESTINATION_SYSTEM,
     },
     {
       .meta = &s_meta_v1_app_inferred,
-      .expected_destination = TransportDestinationApp,
+      .expected_destination = PBL_PP_DESTINATION_APP,
     },
   };
 
@@ -396,9 +402,9 @@ void test_ppogatt__handles_meta_v1(void) {
     // Client created:
     cl_assert_equal_i(ppogatt_client_count(), 1);
 
-    Transport *client = ppogatt_client_for_uuid(&metas[i].meta->app_uuid);
-    cl_assert_equal_i(ppogatt_get_destination(client), metas[i].expected_destination);
-    ppogatt_close(client);
+    cl_assert_equal_i(ppogatt_get_destination_for_uuid(&metas[i].meta->app_uuid),
+                      metas[i].expected_destination);
+    ppogatt_invalidate_all_references();
   }
 }
 
@@ -590,12 +596,12 @@ void test_ppogatt__start_reset_upon_out_of_range_ack(void) {
 void test_ppogatt__ignore_retransmitted_ack(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   for (uint8_t sn = 0; sn < 3; ++sn) {
-    const bool success = fake_comm_session_send_buffer_write_raw_by_transport(
-        transport, s_short_data_fragment, sizeof(s_short_data_fragment));
+    const bool success = fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                                 sizeof(s_short_data_fragment));
     cl_assert_equal_b(success, true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment));
   }
@@ -767,7 +773,7 @@ void test_ppogatt__ack_received_data(void) {
 
 void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
 
   // V0 Acks every packet, V1 every half window:
@@ -776,7 +782,7 @@ void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
     prv_receive_short_data_fragment(data, sn);
     // Send attempts don't count as received packets:
     for (uint8_t i = 0; i < s_rx_window_size; ++i) {
-      ppogatt_send_next(transport);
+      prv_send_next(session);
     }
     fake_gatt_client_op_assert_no_write();
   }
@@ -787,12 +793,13 @@ void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
 void test_ppogatt__close(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  Transport *client = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
-  cl_assert(client);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  cl_assert(session);
 
-  ppogatt_close(client);
+  ppogatt_get_transport()->close(session);
 
-  cl_assert_equal_p(nullptr, ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid));
+  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_i(fake_comm_session_close_call_count(), 1);
 }
 
 void test_ppogatt__missing_inbound_packet(void) {
@@ -812,12 +819,11 @@ void test_ppogatt__send_data_max_payload_size(void) {
 
   // The fake send buffer holds a V0 window of these:
   const uint8_t num_packets = MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   for (uint8_t sn = 0; sn < num_packets; ++sn) {
-    cl_assert_equal_b(
-        fake_comm_session_send_buffer_write_raw_by_transport(transport, data, MAX_PAYLOAD_SIZE),
-        true);
-    ppogatt_send_next(transport);
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, data, MAX_PAYLOAD_SIZE),
+                      true);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, data,
                          MAX_PAYLOAD_SIZE);
   }
@@ -829,18 +835,18 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
   uint8_t sn = 0;
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   // V1 takes the phone's window whatever the MTU:
   cl_assert_equal_i(s_tx_window_size,
                     (s_ppogatt_version > 0) ? PHONE_WINDOW_SIZE : PPOGATT_V0_WINDOW_SIZE);
 
   // Get s_rx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    const bool success = fake_comm_session_send_buffer_write_raw_by_transport(
-        transport, s_short_data_fragment, sizeof(s_short_data_fragment));
+    const bool success = fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                                 sizeof(s_short_data_fragment));
     printf("SEND %d %d\n", sn, success);
     cl_assert_equal_b(success, true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment));
   }
@@ -848,10 +854,10 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
   printf("done\n");
 
   // Enqueue another:
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                            sizeof(s_short_data_fragment)),
                     true);
-  ppogatt_send_next(transport);
+  prv_send_next(session);
   fake_gatt_client_op_assert_no_write();
 
   // Ack the first one (sn=0):
@@ -865,14 +871,14 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
 void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get s_tx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment)),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment));
   }
@@ -883,36 +889,35 @@ void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
 
   // We should now be able to submit s_tx_window_size packets again:
   for (sn = s_tx_window_size; sn < 2 * s_tx_window_size; ++sn) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment)),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment));
   }
 }
 
 void test_ppogatt__handle_client_disappearing_for_send_callback(void) {
-  // ppogatt_send_next() is called from the KernelBG task sometimes.
-  // It's possible that the pointer is dangling by the time the callback executes.
-  // Therefore ppogatt_send_next() should be able to handle this dangling pointer gracefully.
-  uint8_t fake_client = 0;
-  ppogatt_send_next((struct Transport *)&fake_client);
+  // send_next runs after the session may have closed: a session the transport does not own
+  // must be ignored.
+  uint8_t fake_session = 0;
+  prv_send_next((struct pbl_pp_session *)&fake_session);
   // No crashes, no writes, etc.
   fake_gatt_client_op_assert_no_write();
 }
 
 void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   const pbl_bt_characteristic_t data = s_characteristics[0][PPoGATTCharacteristicData];
 
   for (uint8_t sn = 0; sn < 2; ++sn) {
     fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment)),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
 
     // NimBLE has no "Buffer Empty" event; the retry timer backs off:
     uint32_t delay_ms = PPOGATT_SEND_RETRY_DELAY_MS;
@@ -934,14 +939,14 @@ void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(v
 void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get s_tx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment) - sn),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment) - sn);
   }
@@ -968,15 +973,15 @@ void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
 void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get s_tx_window_size packets in flight:
   uint8_t secs_passed = 0;
   for (sn = 0; sn < s_tx_window_size; ++sn) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment) - sn),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment) - sn);
     if (sn == 0 || sn == 1) {
@@ -1004,15 +1009,15 @@ void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(vo
 
 void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_once(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get s_tx_window_size packets in flight:
   uint8_t sn = 0;
   for (; sn < s_tx_window_size; ++sn) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment) - sn),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
     prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                          sizeof(s_short_data_fragment) - sn);
   }
@@ -1027,8 +1032,8 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
   prv_receive_ack(s_characteristics[0][PPoGATTCharacteristicData], (sn - 1) % PPOGATT_SN_MOD_DIV);
 
   // Some new data has been queued up in the mean time:
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                            sizeof(s_short_data_fragment)),
                     true);
   // Only now the system task callback is fired (prv_send_next_packets_async):
   fake_comm_session_process_send_next();
@@ -1041,14 +1046,14 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
 void test_ppogatt__retransmit_max_number_of_times(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get a packet in flight:
   uint8_t sn = 0;
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                            sizeof(s_short_data_fragment) - sn),
                     true);
-  ppogatt_send_next(transport);
+  prv_send_next(session);
   prv_assert_sent_data(s_characteristics[0][PPoGATTCharacteristicData], sn, s_short_data_fragment,
                        sizeof(s_short_data_fragment) - sn);
 
@@ -1071,16 +1076,16 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
 
 void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   uint8_t num_packets = s_tx_window_size;
 
   // Get a packet in flight:
   for (int sn = 0; sn < num_packets; sn++) {
-    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                          transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+    cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                              sizeof(s_short_data_fragment) - sn),
                       true);
-    ppogatt_send_next(transport);
+    prv_send_next(session);
   }
 
   for (int sn = 0; sn < num_packets; sn++) {
@@ -1105,13 +1110,13 @@ void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
 
 void test_ppogatt__send_retried_when_out_of_heap(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment)),
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                            sizeof(s_short_data_fragment)),
                     true);
   fake_malloc_set_largest_free_block(0);
-  ppogatt_send_next(transport);
+  prv_send_next(session);
   fake_gatt_client_op_assert_no_write();
 
   fake_malloc_set_largest_free_block(~0);
@@ -1123,16 +1128,16 @@ void test_ppogatt__send_retried_when_out_of_heap(void) {
 
 void test_ppogatt__mtu_zero_due_to_disconnection(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  Transport *transport = ppogatt_client_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
 
   // Get a packet in flight:
   uint8_t sn = 0;
-  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw_by_transport(
-                        transport, s_short_data_fragment, sizeof(s_short_data_fragment) - sn),
+  cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
+                                                            sizeof(s_short_data_fragment) - sn),
                     true);
   fake_malloc_set_largest_free_block(1000);
   s_mtu_size = 0;
-  ppogatt_send_next(transport);
+  prv_send_next(session);
   // No crash
 }
 

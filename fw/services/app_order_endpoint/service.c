@@ -2,7 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/process_management/app_order_storage.h>
 #include <pbl/util/uuid.h>
 
@@ -35,17 +36,18 @@ typedef enum {
 } AppOrderResponse;
 
 typedef struct {
-  CommSession *session;
+  struct pbl_pp_session *session;
   uint8_t result;
 } ResponseInfo;
 
-static void prv_send_result(CommSession *session, uint8_t result) {
+static void prv_send_result(struct pbl_pp_session *session, uint8_t result) {
   PBL_LOG_DBG("Sending result of %d", result);
-  comm_session_send_data(session, APP_ORDER_ENDPOINT_ID, (uint8_t *)&result, sizeof(result),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, APP_ORDER_ENDPOINT_ID, (uint8_t *)&result, sizeof(result),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-static void prv_handle_app_order_msg(CommSession *session, const uint8_t *data, uint32_t length) {
+static void prv_handle_app_order_msg(struct pbl_pp_session *session, const uint8_t *data,
+                                     uint32_t length) {
   // call write order function, then fire an event for app install manager to tell the launcher
   // to throw everything away or at least don't overwrite the data please.
   uint8_t num_uuids = data[0];
@@ -60,7 +62,8 @@ static void prv_handle_app_order_msg(CommSession *session, const uint8_t *data, 
   prv_send_result(session, APP_ORDER_RES_SUCCESS);
 }
 
-void app_order_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void app_order_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                     size_t length) {
   // header includes APP_ORDER_CMD and a num_uuids uint8_t
   const uint8_t header_len = sizeof(AppOrderCommand) + sizeof(uint8_t);
 

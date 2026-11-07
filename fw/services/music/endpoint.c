@@ -2,8 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_remote_os.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
@@ -11,6 +12,7 @@
 #include <pbl/util/units.h>
 
 #include <comm/ble/kernel_le_client/ams/ams.h>
+#include <comm/bt_conn_mgr.h>
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
@@ -20,13 +22,12 @@ static bool s_connected;
 static bool s_progress_reporting_supported = true;
 
 static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     PBL_LOG_ERR("No system session");
     return;
   }
-  comm_session_send_data(session, MUSIC_CTRL_ENDPOINT, (const uint8_t *)&cmd, 1,
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, MUSIC_CTRL_ENDPOINT, (const uint8_t *)&cmd, 1, PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
@@ -48,7 +49,8 @@ static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
   return iter;
 }
 
-static void prv_update_now_playing_info(CommSession *session, const uint8_t *msg, size_t length) {
+static void prv_update_now_playing_info(struct pbl_pp_session *session, const uint8_t *msg,
+                                        size_t length) {
   // Read all the lengths from the message so we know how to break it up.
   const uint8_t *read_iter = msg;
   const char *artist_ptr;
@@ -79,7 +81,7 @@ static void prv_update_now_playing_info(CommSession *session, const uint8_t *msg
   music_update_now_playing(title_ptr, title_length, artist_ptr, artist_length, album_ptr,
                            album_length);
 
-  if (comm_session_has_capability(session, CommSessionExtendedMusicService)) {
+  if (pbl_pp_session_has_capability(session, PBL_PP_CAP_EXTENDED_MUSIC)) {
     if (read_iter + sizeof(uint32_t) <= msg + length) {
       uint32_t track_duration_ms = *(uint32_t *)read_iter;
       music_update_track_duration(track_duration_ms);
@@ -98,7 +100,8 @@ static void prv_update_now_playing_info(CommSession *session, const uint8_t *msg
   }
 }
 
-static void prv_update_play_state_info(CommSession *session, const uint8_t *msg, size_t length) {
+static void prv_update_play_state_info(struct pbl_pp_session *session, const uint8_t *msg,
+                                       size_t length) {
   if (length < sizeof(MusicEndpointPlayStateInfo)) {
     return;
   }
@@ -137,14 +140,16 @@ static void prv_update_play_state_info(CommSession *session, const uint8_t *msg,
   music_update_player_playback_state(&player_state_update);
 }
 
-static void prv_update_volume_info(CommSession *session, const uint8_t *msg, size_t length) {
+static void prv_update_volume_info(struct pbl_pp_session *session, const uint8_t *msg,
+                                   size_t length) {
   if (length < sizeof(uint8_t)) {
     return;
   }
   music_update_player_volume_percent((uint8_t)*msg);
 }
 
-static void prv_update_player_info(CommSession *session, const uint8_t *msg, size_t length) {
+static void prv_update_player_info(struct pbl_pp_session *session, const uint8_t *msg,
+                                   size_t length) {
   // Read all the lengths from the message so we know how to break it up.
   const uint8_t *read_iter = msg;
 
@@ -167,7 +172,8 @@ static void prv_update_player_info(CommSession *session, const uint8_t *msg, siz
   music_update_player_name(player_name_ptr, player_name_length);
 }
 
-void music_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length) {
+void music_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                 size_t length) {
   if (!s_connected) {
     return;
   }
@@ -234,8 +240,7 @@ static void prv_music_command_send(MusicCommand command) {
 }
 
 static MusicServerCapability prv_music_get_capability_bitset(void) {
-  if (comm_session_has_capability(comm_session_get_system_session(),
-                                  CommSessionExtendedMusicService)) {
+  if (pbl_pp_session_has_capability(pbl_pp_session_get_system(), PBL_PP_CAP_EXTENDED_MUSIC)) {
     if (s_progress_reporting_supported) {
       return (MusicServerCapabilityPlaybackStateReporting | MusicServerCapabilityProgressReporting |
               MusicServerCapabilityVolumeReporting);
@@ -254,15 +259,15 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
 static void prv_music_request_reduced_latency(bool reduced_latency) {
   const enum pbl_bt_response_time_state state =
       reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
-                                  MAX_PERIOD_RUN_FOREVER);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
+                                    PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
+                                    MAX_PERIOD_RUN_FOREVER, nullptr);
 }
 
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
-  comm_session_set_responsiveness(comm_session_get_system_session(),
-                                  PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
-                                  period_ms / PBL_MSEC_PER_SEC);
+  pbl_pp_session_set_responsiveness(
+      pbl_pp_session_get_system(), PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY,
+      PBL_BT_RESPONSE_TIME_MIN, period_ms / PBL_MSEC_PER_SEC, nullptr);
 }
 
 static const MusicServerImplementation s_pp_music_implementation = {
@@ -298,10 +303,10 @@ void music_endpoint_handle_mobile_app_info_event(const PebbleRemoteAppInfoEvent 
   // the app did not say what it runs on, which could be an older iOS one.
   // Everything else — a desktop, or Android — has nothing but this endpoint.
   switch (app_info_event->os) {
-    case RemoteOSAndroid:
-    case RemoteOSX:
-    case RemoteOSLinux:
-    case RemoteOSWindows:
+    case PBL_PP_REMOTE_OS_ANDROID:
+    case PBL_PP_REMOTE_OS_OSX:
+    case PBL_PP_REMOTE_OS_LINUX:
+    case PBL_PP_REMOTE_OS_WINDOWS:
       break;
     default:
       return;

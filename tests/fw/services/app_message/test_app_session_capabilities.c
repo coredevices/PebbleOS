@@ -3,8 +3,8 @@
 
 #include <errno.h>
 
-#include <pbl/services/comm_session/app_session_capabilities.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
+#include <pbl/services/app_session.h>
 #include <pbl/settings/settings.h>
 
 #include <clar.h>
@@ -12,7 +12,7 @@
 #include <process_management/pebble_process_md.h>
 #include <system/status_codes.h>
 
-static const CommSessionCapability s_live_capabilities = (CommSessionInfiniteLogDumping);
+static const enum pbl_pp_capability s_live_capabilities = (PBL_PP_CAP_INFINITE_LOG_DUMPING);
 
 // Fakes & Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,14 +22,14 @@ const PebbleProcessMd *app_manager_get_current_app_md(void) {
   return &s_app_md;
 }
 
-CommSessionCapability comm_session_get_capabilities(CommSession *session) {
+uint32_t pbl_pp_session_get_capabilities(const struct pbl_pp_session *session) {
   if (!session) {
     return 0;
   }
   return s_live_capabilities;
 }
 
-FAKE_VALUE_FUNC(CommSession *, comm_session_get_current_app_session);
+FAKE_VALUE_FUNC(struct pbl_pp_session *, app_session_get_current);
 FAKE_VALUE_FUNC(int, pbl_settings_open, struct pbl_settings_file *, const char *, int);
 FAKE_VOID_FUNC(pbl_settings_close, struct pbl_settings_file *);
 FAKE_VALUE_FUNC(int, pbl_settings_get, struct pbl_settings_file *, const void *, size_t, void *,
@@ -40,13 +40,13 @@ FAKE_VALUE_FUNC(int, pbl_settings_delete, struct pbl_settings_file *, const void
 FAKE_VALUE_FUNC(int, pbl_settings_rewrite, struct pbl_settings_file *, pbl_settings_rewrite_cb_t,
                 void *);
 
-#define FAKES(FAKE)                          \
-  FAKE(comm_session_get_current_app_session) \
-  FAKE(pbl_settings_open)                    \
-  FAKE(pbl_settings_close)                   \
-  FAKE(pbl_settings_get)                     \
-  FAKE(pbl_settings_set)                     \
-  FAKE(pbl_settings_delete)                  \
+#define FAKES(FAKE)             \
+  FAKE(app_session_get_current) \
+  FAKE(pbl_settings_open)       \
+  FAKE(pbl_settings_close)      \
+  FAKE(pbl_settings_get)        \
+  FAKE(pbl_settings_set)        \
+  FAKE(pbl_settings_delete)     \
   FAKE(pbl_settings_rewrite)
 
 static uint64_t s_get_value;
@@ -75,7 +75,7 @@ static void prv_set_cache(uint64_t value) {
 // Tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static CommSession *s_fake_app_session = (CommSession *)~0;
+static struct pbl_pp_session *s_fake_app_session = (struct pbl_pp_session *)~0;
 
 void test_app_session_capabilities__initialize(void) {
   FAKES(RESET_FAKE);
@@ -90,8 +90,7 @@ void test_app_session_capabilities__cleanup(void) {
 
 void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
   pbl_settings_open_fake.return_val = E_ERROR;
-  bool has_cap =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(false, has_cap);
   cl_assert_equal_i(pbl_settings_get_fake.call_count, 0);
   cl_assert_equal_i(pbl_settings_close_fake.call_count, 0);
@@ -99,41 +98,36 @@ void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
 
 void test_app_session_capabilities__no_cache_file_but_connected(void) {
   pbl_settings_open_fake.return_val = E_ERROR;
-  comm_session_get_current_app_session_fake.return_val = s_fake_app_session;
-  bool has_cap =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  app_session_get_current_fake.return_val = s_fake_app_session;
+  bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(true, has_cap);
   cl_assert_equal_i(pbl_settings_get_fake.call_count, 0);
   cl_assert_equal_i(pbl_settings_close_fake.call_count, 0);
 }
 
 void test_app_session_capabilities__cache_file_and_not_connected(void) {
-  prv_set_cache(CommSessionInfiniteLogDumping);
-  bool has_cap =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  prv_set_cache(PBL_PP_CAP_INFINITE_LOG_DUMPING);
+  bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(true, has_cap);
   cl_assert_equal_i(pbl_settings_get_fake.call_count, 1);
   cl_assert_equal_i(pbl_settings_close_fake.call_count, 1);
 }
 
 void test_app_session_capabilities__cache_file_but_no_key_and_not_connected(void) {
-  bool has_cap =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(false, has_cap);
   cl_assert_equal_i(pbl_settings_get_fake.call_count, 1);
   cl_assert_equal_i(pbl_settings_close_fake.call_count, 1);
 }
 
 void test_app_session_capabilities__cache_file_and_connected_new_value(void) {
-  prv_set_cache(CommSessionExtendedNotificationService);
-  comm_session_get_current_app_session_fake.return_val = s_fake_app_session;
+  prv_set_cache(PBL_PP_CAP_EXTENDED_NOTIFICATIONS);
+  app_session_get_current_fake.return_val = s_fake_app_session;
 
-  bool has_cap_infinite_log_dumping =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  bool has_cap_infinite_log_dumping = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(true, has_cap_infinite_log_dumping);
 
-  bool has_ext_notifications =
-      comm_session_current_app_session_cache_has_capability(CommSessionExtendedNotificationService);
+  bool has_ext_notifications = app_session_has_capability(PBL_PP_CAP_EXTENDED_NOTIFICATIONS);
   cl_assert_equal_b(false, has_ext_notifications);
 
   // Check that cache is re-written:
@@ -145,11 +139,10 @@ void test_app_session_capabilities__cache_file_and_connected_new_value(void) {
 }
 
 void test_app_session_capabilities__cache_file_and_connected_same_value(void) {
-  prv_set_cache(CommSessionInfiniteLogDumping);
-  comm_session_get_current_app_session_fake.return_val = s_fake_app_session;
+  prv_set_cache(PBL_PP_CAP_INFINITE_LOG_DUMPING);
+  app_session_get_current_fake.return_val = s_fake_app_session;
 
-  bool has_cap_infinite_log_dumping =
-      comm_session_current_app_session_cache_has_capability(CommSessionInfiniteLogDumping);
+  bool has_cap_infinite_log_dumping = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(true, has_cap_infinite_log_dumping);
 
   // Check that cache is NOT re-written:

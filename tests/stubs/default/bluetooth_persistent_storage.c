@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/pp/protocol.h>
 
 void PBL_WEAK
-bt_persistent_storage_get_cached_system_capabilities(PebbleProtocolCapabilities *capabilities_out) {
+bt_persistent_storage_get_cached_system_capabilities(struct pbl_pp_capabilities *capabilities_out) {
   if (capabilities_out) {
     capabilities_out->flags = 0;
   }

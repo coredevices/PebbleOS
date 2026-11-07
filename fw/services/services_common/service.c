@@ -9,10 +9,8 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/services/accel_manager.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/app_session_capabilities.h>
-#include <pbl/services/comm_session/default_kernel_sender.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/light.h>
@@ -40,11 +38,9 @@ void services_common_init(void) {
   shared_prf_storage_init();
   bt_persistent_storage_init();
 
-  comm_default_kernel_sender_init();
 #if !defined(CONFIG_RECOVERY_FW)
-  comm_session_app_session_capabilities_init();
+  app_session_capabilities_init();
 #endif
-  comm_session_init();
 
   remote_input_init();
 

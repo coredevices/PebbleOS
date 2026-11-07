@@ -9,8 +9,8 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/protocol.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_endpoint.h>
 #include <pbl/services/data_logging/dls_list.h>
@@ -93,7 +93,7 @@ static void update_session_state(DataLoggingSession *session, DataLoggingSession
 
 static void send_timeout_msg(void *session_id_param) {
   uint8_t session_id = (uint8_t)(uintptr_t)session_id_param;
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     // timed out because of lost connection
     return;
@@ -109,8 +109,8 @@ static void send_timeout_msg(void *session_id_param) {
     .session_id = logging_session->comm.session_id,
   };
 
-  comm_session_send_data(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static bool check_ack_timeout_for_session(DataLoggingSession *session, void *data) {
@@ -217,7 +217,7 @@ static void dls_endpoint_print_message(uint8_t *message, int num_bytes) {
 }
 
 bool dls_endpoint_open_session(DataLoggingSession *session) {
-  CommSession *comm_session = comm_session_get_system_session();
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   if (!comm_session) {
     return false;
   }
@@ -236,13 +236,12 @@ bool dls_endpoint_open_session(DataLoggingSession *session) {
 
   update_session_state(session, DataLoggingSessionCommStateOpening, true /*reschedule*/);
 
-  return (comm_session_send_data(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
-                                 sizeof(DataLoggingOpenSessionMessage),
-                                 COMM_SESSION_DEFAULT_TIMEOUT));
+  return (0 == pbl_pp_send(comm_session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+                           sizeof(DataLoggingOpenSessionMessage), PBL_PP_DEFAULT_TIMEOUT_MS));
 }
 
 void dls_endpoint_close_session(uint8_t session_id) {
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     return;
   }
@@ -254,8 +253,8 @@ void dls_endpoint_close_session(uint8_t session_id) {
 
   dls_endpoint_print_message((uint8_t *)&msg, 0);
 
-  comm_session_send_data(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
-                         sizeof(DataLoggingCloseSessionMessage), COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg,
+              sizeof(DataLoggingCloseSessionMessage), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *data,
@@ -265,7 +264,7 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
     return true;
   }
 
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     return false;
   }
@@ -280,8 +279,8 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
 
   const uint32_t total_length = sizeof(DataLoggingSendDataMessage) + num_bytes;
   const uint32_t timeout_ms = 500;
-  SendBuffer *sb = comm_session_send_buffer_begin_write_bulk(session, ENDPOINT_ID_DATA_LOGGING,
-                                                             total_length, timeout_ms);
+  struct pbl_pp_send_buffer *sb =
+      pbl_pp_send_buffer_begin_bulk(session, ENDPOINT_ID_DATA_LOGGING, total_length, timeout_ms);
   if (!sb) {
     pbl_mutex_unlock(&s_endpoint_data.mutex);
     return false;
@@ -293,9 +292,9 @@ bool dls_endpoint_send_data(DataLoggingSession *logging_session, const uint8_t *
     .items_left_hereafter = 0xffff, // FIXME: logging_session->storage.num_bytes - num_bytes,
     .crc32 = pbl_crc32_legacy(data, num_bytes),
   };
-  comm_session_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
-  comm_session_send_buffer_write(sb, data, num_bytes);
-  comm_session_send_buffer_end_write(sb);
+  pbl_pp_send_buffer_write(sb, (const uint8_t *)&header, sizeof(header));
+  pbl_pp_send_buffer_write(sb, data, num_bytes);
+  pbl_pp_send_buffer_end(sb);
 
   dls_endpoint_print_message((uint8_t *)&header, num_bytes);
   PBL_LOG_HEXDUMP_DBG(data, MIN(num_bytes, 64));
@@ -488,7 +487,8 @@ static void prv_empty_session(uint8_t session_id) {
 }
 
 //! data_logging_protocol_msg_callback runs on Bluetooth task. Keep it quick.
-void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length) {
+void data_logging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length) {
   // consume the first byte to read the command
   uint8_t command = data[0];
 
@@ -533,8 +533,8 @@ void data_logging_protocol_msg_callback(CommSession *session, const uint8_t *dat
         .enabled = enabled,
       };
 
-      comm_session_send_data(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
-                             COMM_SESSION_DEFAULT_TIMEOUT);
+      pbl_pp_send(session, ENDPOINT_ID_DATA_LOGGING, (uint8_t *)&msg, sizeof(msg),
+                  PBL_PP_DEFAULT_TIMEOUT_MS);
     } break;
 
     case (DataLoggingEndpointCmdSetSendEnable):
@@ -558,3 +558,12 @@ void dls_private_handle_disconnect(void *data) {
   dls_list_for_each_session(prv_handle_disconnect_cb, 0);
   pbl_mutex_unlock(&s_endpoint_data.mutex);
 }
+
+static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
+                           void *user_data) {
+  if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
+    system_task_add_callback(dls_private_handle_disconnect, nullptr);
+  }
+}
+
+PBL_PP_SESSION_LISTENER_DEFINE(data_logging, prv_session_cb, nullptr);

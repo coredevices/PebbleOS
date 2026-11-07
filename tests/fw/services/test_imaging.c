@@ -6,7 +6,7 @@
 
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
 
 #include <applib/graphics/gtypes.h>
@@ -152,11 +152,11 @@ static void prv_receive_valid_image(uint8_t token) {
 // Tests
 ///////////////////////////////////////////////////////////
 
-static Transport *s_transport;
+static struct fake_transport *s_transport;
 
 void test_imaging__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true);
   imaging_register_handler(ImagingImageTypeAlbumArt, prv_art_handler);
   imaging_register_transfer_handlers(ImagingImageTypeAlbumArt, prv_will_receive_handler,

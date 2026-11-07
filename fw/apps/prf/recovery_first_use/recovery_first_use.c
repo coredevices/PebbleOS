@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/pp/session.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/version.h>
 
 #include <applib/app.h>
@@ -139,7 +139,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
     size_t len = MIN(strlen(PBL_VERSION_TAG), sizeof(data->name_text_buffer) - 1);
     memcpy(data->name_text_buffer, PBL_VERSION_TAG, len);
     data->name_text_buffer[len] = '\0';
-  } else if ((comm_session_get_system_session() != nullptr) && (gap_conn != nullptr)) {
+  } else if ((pbl_pp_session_get_system() != nullptr) && (gap_conn != nullptr)) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).
     gap_le_connection_copy_device_name(gap_conn, data->name_text_buffer,
@@ -293,7 +293,7 @@ static void handle_init(void) {
   *data = (RecoveryFUAppData){};
   app_state_set_user_data(data);
 
-  const bool is_connected = (comm_session_get_system_session() != nullptr);
+  const bool is_connected = (pbl_pp_session_get_system() != nullptr);
   data->is_pebble_mobile_app_connected = is_connected;
   prv_allow_pairing(data, !is_connected);
 

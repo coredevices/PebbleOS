@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/phone_call_util.h>
 #include <pbl/services/phone_pp.h>
 
@@ -11,7 +11,8 @@
 #include <fake_system_task.h>
 #include <kernel/events.h>
 
-extern void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length);
+extern void phone_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *iter,
+                                        size_t length);
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -36,13 +37,13 @@ static void prv_assert_last_event(PhoneEventType subtype, bool check_cookie, boo
 // Tests
 ///////////////////////////////////////////////////////////
 
-static Transport *s_transport;
-static CommSession *s_session;
+static struct fake_transport *s_transport;
+static struct pbl_pp_session *s_session;
 
 void test_phone_pp__initialize(void) {
   fake_event_init();
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
   pp_get_phone_state_set_enabled(false);
 }

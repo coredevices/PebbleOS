@@ -5,8 +5,6 @@
 
 #include <comm/ble/gatt_client_subscriptions.h>
 
-struct Transport;
-
 typedef enum {
   PPoGATTCharacteristicData,
   PPoGATTCharacteristicMeta,
@@ -30,14 +28,6 @@ void ppogatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
                                     uint8_t num_characteristics);
 
 void ppogatt_invalidate_all_references(void);
-
-//! Interface for CommSession, to let it signal the PPoGATT transport that data has been written
-//! into the SendBuffer and can be sent out.
-void ppogatt_send_next(struct Transport *transport);
-
-void ppogatt_close(struct Transport *transport);
-
-void ppogatt_reset(struct Transport *transport);
 
 void ppogatt_destroy(void);
 

@@ -11,8 +11,8 @@
 #include <fake_session.h>
 #include <fake_system_task.h>
 
-extern void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data,
-                                                 size_t size);
+extern void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
+                                                 const uint8_t *data, size_t size);
 
 static AudioEndpointSessionId s_session_id;
 
@@ -23,7 +23,7 @@ static uint8_t s_test_frame[] = {
   0x04,
 };
 
-static CommSession *s_session;
+static struct pbl_pp_session *s_session;
 
 static void prv_test_data_transfer_msg(uint16_t endpoint_id, const uint8_t *data,
                                        unsigned int length) {
@@ -54,11 +54,11 @@ static void prv_test_stop_transfer_callback(AudioEndpointSessionId session_id) {
   cl_assert(session_id == s_session_id);
 }
 
-Transport *s_transport;
+struct fake_transport *s_transport;
 
 void test_audio_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(TransportDestinationSystem, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   s_session = fake_transport_set_connected(s_transport, true);
 
   s_session_id = audio_endpoint_setup_transfer(prv_test_stop_transfer_callback);

@@ -1,6 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
+#include <pbl/pp/send.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
@@ -35,23 +38,24 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 void system_task_add_callback(void (*callback)(void *data), void *data) {
 }
 
-bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
+bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
+                                   enum pbl_pp_capability capability) {
   return false;
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
-                            size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   if (s_expected_send_data == nullptr) {
-    return false;
+    return -EAGAIN;
   }
 
   if (endpoint_id != TIMELINE_ACTION_ENDPOINT) {
-    return false;
+    return -EAGAIN;
   }
 
   cl_assert_equal_m(s_expected_send_data, data, length);
   s_sent_action = true;
-  return true;
+  return 0;
 }
 
 static void prv_support_sms_replies(void) {

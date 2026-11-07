@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/pp/send.h>
 #include <pbl/services/i18n/i18n.h>
 
 #include <clar.h>
@@ -58,13 +59,13 @@ void shell_prefs_set_language(ShellLanguage language) {
   s_language = language;
 }
 
-bool comm_session_send_data(CommSession *session, uint16_t endpoint, const uint8_t *data,
-                            size_t length, uint32_t timeout) {
+int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint, const uint8_t *data,
+                size_t length, uint32_t timeout) {
   cl_assert_equal_i(endpoint, SYS_MSG_ENDPOINT_ID);
   cl_assert(length <= sizeof(s_response));
   memcpy(s_response, data, length);
   s_length = length;
-  return true;
+  return 0;
 }
 
 void test_language_pack_protocol__initialize(void) {

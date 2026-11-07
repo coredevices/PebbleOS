@@ -5,7 +5,8 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/phone_call_util.h>
 #include <pbl/services/phone_pp.h>
 #include <pbl/util/math.h>
@@ -103,14 +104,14 @@ static void prv_send_phone_command_to_handset(uint8_t cmd, uint8_t *data, unsign
   memcpy(buffer + sizeof(cmd), data, length);
 
   // PBL_LOG_DBG("Sending PhoneCmd: %d", cmd);
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     // Looks like we disconnected...
-    PBL_LOG_ERR("No CommSession for phone command, ending call");
+    PBL_LOG_ERR("No struct pbl_pp_session for phone command, ending call");
     prv_put_call_disconnect_event();
   } else {
-    comm_session_send_data(session, PHONE_CTRL_ENDPOINT, buffer, length + sizeof(cmd),
-                           COMM_SESSION_DEFAULT_TIMEOUT);
+    pbl_pp_send(session, PHONE_CTRL_ENDPOINT, buffer, length + sizeof(cmd),
+                PBL_PP_DEFAULT_TIMEOUT_MS);
   }
 }
 
@@ -216,7 +217,8 @@ static void prv_parse_msg_and_emit_event(const uint8_t *msg, size_t length,
   }
 }
 
-void phone_protocol_msg_callback(CommSession *session, const uint8_t *iter, size_t length) {
+void phone_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *iter,
+                                 size_t length) {
   PBL_LOG_HEXDUMP_DBG(iter, length);
 
   // Get State Response is basically a list representing the state of current calls. It's

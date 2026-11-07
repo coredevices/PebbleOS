@@ -12,7 +12,7 @@
 #include <kernel/events.h>
 
 struct GBitmap;
-typedef struct CommSession CommSession;
+struct pbl_pp_session;
 
 /**
  * @defgroup services_imaging Image fetch
@@ -129,7 +129,8 @@ bool imaging_request_notification_image(uint8_t token, ImagingFormat format, uin
  * @param msg Message.
  * @param length Length of @p msg in bytes.
  */
-void imaging_protocol_msg_callback(CommSession *session, const uint8_t *msg, size_t length);
+void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,
+                                   size_t length);
 
 /**
  * @brief Handle a comm session event.

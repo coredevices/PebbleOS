@@ -691,7 +691,7 @@ static void prv_put_notification_action_result(const Uuid *id, const char *msg,
 
 static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type, uint8_t action_id,
                                  const AttributeList *attributes, bool do_async) {
-  if (comm_session_get_system_session()) {
+  if (pbl_pp_session_get_system()) {
     timeline_action_endpoint_invoke_action(id, type, action_id, attributes, do_async);
   } else {
     // We know we aren't connected, don't wait around for a response that won't come

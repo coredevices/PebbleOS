@@ -3,10 +3,10 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/util.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/list.h>
 
@@ -96,7 +96,7 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
     return;
   }
 
-  if (!comm_session_get_system_session()) {
+  if (!pbl_pp_session_get_system()) {
     PBL_LOG_DBG("Cancelling sync: No route to phone");
     blob_db_sync_cancel(session);
     return;

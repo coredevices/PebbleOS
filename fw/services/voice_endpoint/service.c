@@ -4,8 +4,9 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/audio_endpoint.h>
-#include <pbl/services/comm_session/session.h>
 #include <pbl/services/voice/voice.h>
 #include <pbl/services/voice_endpoint.h>
 #include <pbl/services/voice_endpoint_private.h>
@@ -146,7 +147,8 @@ static void prv_handle_nlp_result(VoiceSessionResultMsg *msg, size_t size) {
 #endif
 
 #ifdef CONFIG_MIC
-void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {
+void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t size) {
   MsgId msg_id = data[0];
   switch (msg_id) {
     case MsgIdSessionSetup: {
@@ -204,17 +206,18 @@ void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
   }
 }
 #else
-void voice_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {
+void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t size) {
 }
 #endif
 
 void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
                                   AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info,
                                   Uuid *app_uuid) {
-  CommSession *comm_session = comm_session_get_system_session();
-  comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                  PBL_BT_RESPONSE_TIME_MIN,
-                                  PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
+  pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
+                                    PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS, nullptr);
 
   // We're only sending one attribute now: the speex audio transfer info packet
   size_t size = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +
@@ -247,7 +250,7 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
   size_t actual_size = (uint8_t *)attr - (uint8_t *)msg;
   PBL_ASSERTN(actual_size == size);
 
-  comm_session_send_data(comm_session, VOICE_CONTROL_ENDPOINT, (uint8_t *)msg, size,
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(comm_session, VOICE_CONTROL_ENDPOINT, (uint8_t *)msg, size,
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   pbl_free(msg);
 }

@@ -1,209 +1,126 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session_transport.h>
+#include <pbl/pp/transport.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
-#include <comm/bt_lock.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/settings.h>
 #include <comm/qemu/transport.h>
-#include <kernel/event_loop.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DECLARE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
 
 static const uint32_t READY_LOG_DELAY_MS = 500;
 
-typedef struct {
-  CommSession *session;
-} QemuTransport;
+static PBL_MUTEX_DEFINE(s_lock);
 
-// -----------------------------------------------------------------------------------------
-// Static Variables (protected by bt_lock)
+// Under s_lock.
+static struct pbl_pp_session *s_session;
+// Emulated connection state, under s_lock.
+static bool s_connected;
 
-//! The CommSession that the QEMU transport is managing.
-//! Currently there's only one for the System session.
-static QemuTransport s_transport;
+static void prv_send_next(struct pbl_pp_session *session) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
-//! Emulated bluetooth connection state
-static bool s_emulated_session_connected;
+  size_t remaining = (session == s_session) ? pbl_pp_session_send_queue_length(session) : 0U;
 
-// -----------------------------------------------------------------------------------------
-// bt_lock() is held by caller
-static void prv_send_next(Transport *transport) {
-  CommSession *session = s_transport.session;
-  PBL_ASSERTN(session);
-  size_t bytes_remaining = comm_session_send_queue_get_length(session);
-  if (bytes_remaining == 0) {
-    return;
+  if (remaining > 0U) {
+    const size_t buffer_size = MIN(remaining, QEMU_MAX_DATA_LEN);
+    uint8_t *buffer = pbl_malloc_check(buffer_size);
+
+    while (remaining > 0U) {
+      const size_t length = MIN(remaining, buffer_size);
+
+      pbl_pp_session_send_queue_copy(session, 0U, length, buffer);
+      qemu_serial_send(QemuProtocol_SPP, buffer, length);
+      pbl_pp_session_send_queue_consume(session, length);
+      remaining -= length;
+    }
+
+    pbl_free(buffer);
   }
 
-  const size_t temp_buffer_size = MIN(bytes_remaining, QEMU_MAX_DATA_LEN);
-  uint8_t *temp_buffer = pbl_malloc_check(temp_buffer_size);
-  while (bytes_remaining) {
-    const size_t bytes_to_copy = MIN(bytes_remaining, temp_buffer_size);
-    comm_session_send_queue_copy(session, 0 /* start_offset */, bytes_to_copy, temp_buffer);
-    qemu_serial_send(QemuProtocol_SPP, temp_buffer, bytes_to_copy);
-    comm_session_send_queue_consume(session, bytes_to_copy);
-    bytes_remaining -= bytes_to_copy;
-  }
-  pbl_free(temp_buffer);
+  pbl_mutex_unlock(&s_lock);
 }
 
-// -----------------------------------------------------------------------------------------
-// bt_lock() is held by caller
-static void prv_reset(Transport *transport) {
-  PBL_LOG_WRN("Unimplemented");
+static const struct pbl_pp_transport s_transport = {
+  .name = "QEMU",
+  .priority = 0U,
+  .send_next = prv_send_next,
+};
+
+static void prv_put_connection_event(bool connected) {
+  PebbleEvent event = {
+    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .bluetooth.connection.state = connected ? PebbleBluetoothConnectionEventStateConnected
+                                            : PebbleBluetoothConnectionEventStateDisconnected,
+  };
+
+  event_put(&event);
 }
 
-static void prv_granted_kernel_main_cb(void *ctx) {
-  pbl_bt_responsiveness_granted_cb_t granted_handler = ctx;
-  granted_handler();
-}
-
-static void prv_set_connection_responsiveness(Transport *transport, enum pbl_bt_consumer consumer,
-                                              enum pbl_bt_response_time_state state,
-                                              uint16_t max_period_secs,
-                                              pbl_bt_responsiveness_granted_cb_t granted_handler) {
-  // PutBytes calls this every single packet — at INFO it pushes ~76 bytes/packet
-  // into the 1200-byte flash log backend ring buffer, which fills in ~16 packets
-  // and forces inline flash-logging flushes on KernelMain.  That starves
-  // SystemTask's PutBytes callback (it's competing for s_flash_write_mutex) and
-  // wedges the install with no watchdog reboot.  CLAUDE.md is explicit that
-  // high-frequency paths must not log at INFO; this is one of them.
-  PBL_LOG_DBG("Consumer %d: requesting change to %d for %" PRIu16 "seconds", consumer, state,
-              max_period_secs);
-
-  // it's qemu, our request to bump the speed is always granted!
-  if (granted_handler) {
-    launcher_task_add_callback(prv_granted_kernel_main_cb, granted_handler);
-  }
-}
-
-static CommSessionTransportType prv_get_type(struct Transport *transport) {
-  return CommSessionTransportType_QEMU;
-}
-
-//! Copy of the same function in session.c
 static void prv_put_comm_session_event(bool is_open, bool is_system) {
   PebbleEvent event = {
     .type = PEBBLE_COMM_SESSION_EVENT,
     .bluetooth.comm_session_event.is_open = is_open,
     .bluetooth.comm_session_event.is_system = is_system,
   };
+
   event_put(&event);
 }
 
-//! Defined in session.c
-extern void comm_session_set_capabilities(CommSession *session,
-                                          CommSessionCapability capability_flags);
-
-// -----------------------------------------------------------------------------------------
 void qemu_transport_set_connected(bool is_connected) {
-  bt_lock();
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
-  const bool transport_is_connected = (s_transport.session) && s_emulated_session_connected;
-  if (transport_is_connected == is_connected) {
-    bt_unlock();
-    return;
-  }
-
-  static const TransportImplementation s_qemu_transport_implementation = {
-    .send_next = prv_send_next,
-    .reset = prv_reset,
-    .set_connection_responsiveness = prv_set_connection_responsiveness,
-    .get_type = prv_get_type,
-  };
-
-  bool send_event = true;
-
-  if (is_connected && !s_transport.session) {
-    PBL_LOG_DBG("Opening new QemuTransport CommSession");
-    s_transport.session = comm_session_open(
-        (Transport *)&s_transport, &s_qemu_transport_implementation, TransportDestinationHybrid);
-    if (!s_transport.session) {
-      PBL_LOG_ERR("CommSession couldn't be opened");
-      send_event = false;
+  if (is_connected && s_session == nullptr) {
+    PBL_LOG_DBG("Opening the QEMU session");
+    s_session = pbl_pp_session_open(&s_transport, PBL_PP_DESTINATION_HYBRID, nullptr);
+    if (s_session == nullptr) {
+      PBL_LOG_ERR("Could not open the QEMU session");
+    } else {
+      pbl_pp_session_set_capabilities(
+          s_session, PBL_PP_CAP_RUN_STATE | PBL_PP_CAP_INFINITE_LOG_DUMPING | PBL_PP_CAP_VOICE_API |
+                         PBL_PP_CAP_APP_MESSAGE_8K);
+      prv_put_connection_event(true);
     }
+    s_connected = true;
+  } else if (s_connected != is_connected) {
+    PBL_LOG_DBG("Emulated session %s", is_connected ? "connecting" : "disconnecting");
 
-    // Give it the appropriate capabilities
-    const CommSessionCapability capabilities = CommSessionRunState | CommSessionInfiniteLogDumping |
-                                               CommSessionVoiceApiSupport |
-                                               CommSessionAppMessage8kSupport;
-    comm_session_set_capabilities(s_transport.session, capabilities);
-
-    if (send_event) {
-      PebbleEvent e = {
-        .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
-        .bluetooth = {
-          .connection = {
-            .state = (s_transport.session) ? PebbleBluetoothConnectionEventStateConnected
-                                           : PebbleBluetoothConnectionEventStateDisconnected
-          }
-        }
-      };
-      event_put(&e);
-    }
-
-    s_emulated_session_connected = is_connected;
-  }
-
-  if (s_emulated_session_connected != is_connected) {
-    PBL_LOG_DBG("Toggling emulated session connection state --> %s",
-                is_connected ? "connecting" : "disconnecting");
-
-    // Only send PEBBLE_COMM_SESSION_EVENT without opening or terminating a session
-    // Apps will get notified in both case but the rest of the firmware will still
-    // communicate normally in case of disconnection
+    // Only tell apps: the rest of the firmware keeps using the session.
     prv_put_comm_session_event(is_connected, true);
     prv_put_comm_session_event(is_connected, false);
-
-    s_emulated_session_connected = is_connected;
+    s_connected = is_connected;
   }
 
-  bt_unlock();
+  pbl_mutex_unlock(&s_lock);
 }
 
-static void prv_close_session(void) {
-  if (!s_transport.session)
-    return;
-
-  bt_lock();
-
-  comm_session_close(s_transport.session, CommSessionCloseReason_UnderlyingDisconnection);
-  s_transport.session = nullptr;
-
-  PebbleEvent e = {
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
-    .bluetooth = {.connection = {.state = PebbleBluetoothConnectionEventStateDisconnected}}
-  };
-  event_put(&e);
-
-  bt_unlock();
-}
-
-// -----------------------------------------------------------------------------------------
 bool qemu_transport_is_connected(void) {
-  return (s_transport.session != nullptr) && s_emulated_session_connected;
+  bool connected;
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  connected = (s_session != nullptr) && s_connected;
+  pbl_mutex_unlock(&s_lock);
+
+  return connected;
 }
 
-// -----------------------------------------------------------------------------------------
-// Handle incoming Qemu-SPP packet data
 void qemu_transport_handle_received_data(const uint8_t *data, uint32_t length) {
-  bt_lock();
-  if (!s_transport.session) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_session != nullptr) {
+    pbl_pp_session_receive(s_session, data, length);
+  } else {
     PBL_LOG_ERR("Received QEMU serial data, but session not connected!");
-    goto unlock;
   }
-  comm_session_receive_router_write(s_transport.session, data, length);
-unlock:
-  bt_unlock();
+  pbl_mutex_unlock(&s_lock);
 }
 
 #ifndef CONFIG_BT_HCI_UART
@@ -240,5 +157,12 @@ void qemu_transport_notify_ready(void) {
 
 void qemu_transport_stop(void) {
   qemu_transport_set_connected(false);
-  prv_close_session();
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_session != nullptr) {
+    pbl_pp_session_close(s_session);
+    s_session = nullptr;
+    prv_put_connection_event(false);
+  }
+  pbl_mutex_unlock(&s_lock);
 }

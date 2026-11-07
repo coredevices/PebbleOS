@@ -10,7 +10,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
 #include <pbl/services/system_task.h>
@@ -25,7 +25,7 @@ PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
 
 // Internal state used by the protocol handler.
 typedef struct {
-  CommSession *session;
+  struct pbl_pp_session *session;
   GetBytesObjectType object_type;
   uint8_t transaction_id;
   uint32_t num_bytes;
@@ -51,7 +51,7 @@ static void prv_put_status_event(DebugInfoEventState state) {
 }
 
 // -----------------------------------------------------------------------------------------------
-static bool prv_protocol_send_err_response(CommSession *session, int8_t transaction_id,
+static bool prv_protocol_send_err_response(struct pbl_pp_session *session, int8_t transaction_id,
                                            GetBytesInfoErrorCode result) {
   const GetBytesRspObjectInfo rsp = (const GetBytesRspObjectInfo){
     .hdr.cmd_id = GET_BYTES_CMD_OBJECT_INFO,
@@ -60,8 +60,8 @@ static bool prv_protocol_send_err_response(CommSession *session, int8_t transact
     .num_bytes = pbl_cpu_to_be32(0),
   };
 
-  bool success = comm_session_send_data(session, GET_BYTES_ENDPOINT_ID, (const uint8_t *)&rsp,
-                                        sizeof(rsp), COMM_SESSION_DEFAULT_TIMEOUT);
+  bool success = 0 == pbl_pp_send(session, GET_BYTES_ENDPOINT_ID, (const uint8_t *)&rsp,
+                                  sizeof(rsp), PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!success) {
     PBL_LOG_ERR("GET_BYTES: aborted");
     s_get_bytes_in_progress = false;
@@ -110,7 +110,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
   uint32_t data_len = 0;
   if (state->sent_header) {
-    uint32_t max_buf_len = comm_session_send_buffer_get_max_payload_length(state->session);
+    uint32_t max_buf_len = pbl_pp_send_buffer_max_payload(state->session);
     if (max_buf_len == 0) {
       // Session disconnected in the mean time
       packet_len = 0;
@@ -122,11 +122,11 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     packet_len = sizeof(GetBytesRspObjectInfo);
   }
 
-  SendBuffer *sb;
+  struct pbl_pp_send_buffer *sb;
   if (packet_len == 0 ||
-      !(sb = comm_session_send_buffer_begin_write_bulk(state->session, GET_BYTES_ENDPOINT_ID,
-                                                       packet_len, COMM_SESSION_DEFAULT_TIMEOUT))) {
-    if (comm_session_send_buffer_get_max_payload_length(state->session) == 0) {
+      !(sb = pbl_pp_send_buffer_begin_bulk(state->session, GET_BYTES_ENDPOINT_ID, packet_len,
+                                           PBL_PP_DEFAULT_TIMEOUT_MS))) {
+    if (pbl_pp_send_buffer_max_payload(state->session) == 0) {
       gb_storage_cleanup(&state->storage, false /* unsuccessful */);
       pbl_free(state);
       s_get_bytes_in_progress = false;
@@ -150,7 +150,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     // read the next chunk from storage
     gb_storage_read_next_chunk(&state->storage, rsp->data, data_len);
 
-    comm_session_send_buffer_write(sb, (const uint8_t *)rsp, packet_len);
+    pbl_pp_send_buffer_write(sb, (const uint8_t *)rsp, packet_len);
     pbl_free(rsp);
     PBL_LOG_DBG("GET_BYTES: sending next %d bytes. %d remaining", (int)data_len,
                 (int)(remaining_bytes - data_len));
@@ -162,13 +162,13 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
       .error_code = pbl_cpu_to_be32(GET_BYTES_OK),
       .num_bytes = pbl_cpu_to_be32(state->num_bytes),
     };
-    comm_session_send_buffer_write(sb, (const uint8_t *)&rsp, sizeof(rsp));
+    pbl_pp_send_buffer_write(sb, (const uint8_t *)&rsp, sizeof(rsp));
     state->sent_header = true;
   }
-  comm_session_send_buffer_end_write(sb);
+  pbl_pp_send_buffer_end(sb);
 
   if (state->storage.current_offset >= state->num_bytes) {
-    CommSession *session = state->session;
+    struct pbl_pp_session *session = state->session;
     prv_gather_and_record_stats(state);
 
     // If all done, mark the image as "read" and free up our state structure
@@ -177,13 +177,13 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
-    comm_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_GET_BYTES, PBL_BT_RESPONSE_TIME_MAX,
-                                    0);
+    pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_GET_BYTES,
+                                      PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
     return;
   } else {
-    comm_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS);
+    pbl_pp_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS, nullptr);
   }
 
   system_task_add_callback(prv_protocol_send_next_chunk, state);
@@ -245,7 +245,7 @@ bool prv_setup_state_for_command(GetBytesCmd cmd, GetBytesState *state, const ui
   }
 }
 
-void get_bytes_protocol_msg_callback(CommSession *session, const uint8_t *msg_data,
+void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
                                      uint32_t msg_len) {
   // at least have a cmd and a transaction_id
   if (msg_len < 2) {

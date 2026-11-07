@@ -13,10 +13,10 @@ pbl_clar_test(test_app_message_receiver
 pbl_clar_test(test_app_message_sender
   SOURCES
     fw/services/app_message/app_message_sender.c
-    fw/services/comm_session/session_send_queue.c
+    subsys/pp/send_queue.c
 )
 
 pbl_clar_test(test_app_session_capabilities
   SOURCES
-    fw/services/comm_session/app_session_capabilities.c
+    fw/services/app_session/capabilities.c
 )

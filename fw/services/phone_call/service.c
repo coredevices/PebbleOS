@@ -3,7 +3,7 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/ancs/ancs_phone_call.h>
 #include <pbl/services/phone_call.h>
@@ -296,7 +296,7 @@ void phone_call_service_init() {
   };
   event_service_client_subscribe(&ancs_disconnected_event_info);
 
-  s_mobile_app_is_connected = (comm_session_get_system_session() != nullptr);
+  s_mobile_app_is_connected = (pbl_pp_session_get_system() != nullptr);
 
   s_call_watchdog = new_timer_create();
 }

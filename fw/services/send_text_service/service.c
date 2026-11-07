@@ -54,7 +54,7 @@ void send_text_service_init(void) {
 }
 
 bool send_text_service_is_send_text_supported(void) {
-  PebbleProtocolCapabilities capabilities;
+  struct pbl_pp_capabilities capabilities;
   bt_persistent_storage_get_cached_system_capabilities(&capabilities);
 
   return (capabilities.send_text_support && s_has_send_text_reply_action);

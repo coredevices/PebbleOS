@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 
 #include <applib/ui/click.h>
 
@@ -70,4 +70,5 @@ RemoteInputResult remote_input_touch(int16_t x1, int16_t y1, int16_t x2, int16_t
                                      uint16_t duration_ms);
 
 //! Remote input endpoint handler. Answers every message with a {command, RemoteInputResult} ack.
-void remote_input_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
+void remote_input_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                        size_t length);

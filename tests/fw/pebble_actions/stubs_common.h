@@ -33,14 +33,16 @@ status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
 void timeline_pin_window_push_modal(TimelineItem *item) {
 }
 
-CommSession *comm_session_get_system_session(void) {
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
   // This can't be NULL (in that case we don't try to send the message)
-  return (CommSession *)1;
+  return (struct pbl_pp_session *)1;
 }
 
-void comm_session_set_responsiveness(CommSession *session, enum pbl_bt_consumer consumer,
-                                     enum pbl_bt_response_time_state state,
-                                     uint16_t max_period_secs) {
+void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
+                                       enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted) {
   return;
 }
 

@@ -4,10 +4,10 @@
 #include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/comm_session/session.h>
 
 #include <clar.h>
 
@@ -26,12 +26,8 @@ void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
 void blob_db2_set_accepting_messages(bool ehh) {
 }
 
-typedef struct PBL_PACKED {
-  uint16_t length;
-  uint16_t endpoint_id;
-} PebbleProtocolHeader;
-
-extern void blob_db_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t length);
+extern void blob_db_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t length);
 
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
 
@@ -42,7 +38,7 @@ static uint32_t system_task_queue_size = 7;
 static uint8_t s_data[1024];
 static uint16_t s_sending_endpoint_id = 0;
 static uint32_t s_sending_data_length = 0;
-static CommSession *s_session;
+static struct pbl_pp_session *s_session;
 
 static const uint8_t TEST_KEY_SIZE = 16;
 static const uint16_t TEST_VALUE_SIZE = 320;
@@ -73,8 +69,8 @@ extern void blob_db_set_accepting_messages(bool enabled);
 void test_blob_db_endpoint__initialize(void) {
   blob_db_set_accepting_messages(true);
   fake_comm_session_init();
-  Transport *transport =
-      fake_transport_create(TransportDestinationSystem, nullptr, prv_sent_data_cb);
+  struct fake_transport *transport =
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
   system_task_set_available_space(system_task_queue_size);
 }
@@ -888,7 +884,8 @@ void test_blob_db_endpoint__handle_invalid_operation_command(void) {
 
 static const uint8_t *s_expected_data;
 
-extern void prv_send_v2_response(CommSession *session, uint8_t *response, uint8_t response_length) {
+extern void prv_send_v2_response(struct pbl_pp_session *session, uint8_t *response,
+                                 uint8_t response_length) {
   cl_assert_equal_m(response, s_expected_data, response_length);
 }
 

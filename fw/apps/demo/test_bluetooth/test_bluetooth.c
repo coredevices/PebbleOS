@@ -3,8 +3,8 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/system_task.h>
 
 #include <applib/app.h>
@@ -35,7 +35,7 @@ static volatile bool s_connected = false;
 static void send_bluetooth(void *data) {
   // uint8_t *buffer = (uint8_t *)"hello world";
 
-  CommSession *session = comm_session_get_system_session();
+  struct pbl_pp_session *session = pbl_pp_session_get_system();
   if (!session) {
     s_pending_count--;
     s_connected = false;
@@ -43,9 +43,8 @@ static void send_bluetooth(void *data) {
   }
 
   PBL_LOG_INFO("sending data");
-  comm_session_send_data(session, 2000, (uint8_t *)0x08000000,
-                         comm_session_send_buffer_get_max_payload_length(session),
-                         COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(session, 2000, (uint8_t *)0x08000000, pbl_pp_send_buffer_max_payload(session),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   s_pending_count--;
 }
 

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_APP_SESSION
+    bool "App session"
+    depends on PP
+    help
+      Selects the Pebble protocol session serving the running watch app,
+      and caches the capabilities its phone counterpart announced.

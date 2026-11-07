@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/data_logging/dls_private.h>
 
@@ -152,8 +152,8 @@ static void click_config_provider(void *context) {
 }
 
 static void handle_deinit(void) {
-  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_APP,
-                                  PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
+                                    PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER, nullptr);
 }
 
 static void handle_init(void) {
@@ -180,8 +180,8 @@ static void handle_init(void) {
 
   start_logging();
 
-  comm_session_set_responsiveness(comm_session_get_system_session(), PBL_BT_CONSUMER_APP,
-                                  PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
+                                    PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER, nullptr);
 }
 
 ////////////////////

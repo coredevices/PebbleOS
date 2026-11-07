@@ -266,11 +266,11 @@ void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t
 //! Remote Device Info
 
 void bt_persistent_storage_get_cached_system_capabilities(
-    PebbleProtocolCapabilities *capabilities_out) {
+    struct pbl_pp_capabilities *capabilities_out) {
 }
 
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities) {
+    const struct pbl_pp_capabilities *capabilities) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

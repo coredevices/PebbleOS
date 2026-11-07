@@ -3,14 +3,15 @@
 
 #include <string.h>
 
-#include <pbl/services/comm_session/session.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/system_task.h>
 
 #include <applib/app_watch_info.h>
 #include <clar.h>
 
-extern void factory_registry_protocol_msg_callback(CommSession *session, const uint8_t *data,
-                                                   size_t length_bytes);
+extern void factory_registry_protocol_msg_callback(struct pbl_pp_session *session,
+                                                   const uint8_t *data, size_t length_bytes);
 
 // Fakes
 /////////////////////////////////////////////////////////////////////
@@ -20,8 +21,8 @@ static int s_send_data_count = 0;
 static uint8_t *s_expected_response = nullptr;
 static unsigned int s_expected_response_length = 0;
 
-bool comm_session_send_data(CommSession *comm_session_ref, uint16_t endpoint_id,
-                            const uint8_t *data, size_t length, uint32_t timeout_ms) {
+int pbl_pp_send(struct pbl_pp_session *comm_session_ref, uint16_t endpoint_id, const uint8_t *data,
+                size_t length, uint32_t timeout_ms) {
   ++s_send_data_count;
 
   cl_assert_equal_i(endpoint_id, 5001);
@@ -30,7 +31,7 @@ bool comm_session_send_data(CommSession *comm_session_ref, uint16_t endpoint_id,
     cl_assert_equal_i(data[i], s_expected_response[i]);
   }
 
-  return true;
+  return 0;
 }
 
 static int s_watch_color = 0x1;
@@ -44,7 +45,7 @@ bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
   return true;
 }
 
-CommSession *comm_session_get_system_session(void) {
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return nullptr;
 }
 

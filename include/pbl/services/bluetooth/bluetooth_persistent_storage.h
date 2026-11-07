@@ -6,7 +6,7 @@
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/services/comm_session/session_remote_version.h>
+#include <pbl/pp/protocol.h>
 
 /**
  * @defgroup services_bluetooth_bluetooth_persistent_storage Bonding database
@@ -301,12 +301,12 @@ void bt_persistent_storage_set_airplane_mode_enabled(bool enable);
 /**
  * @brief Get the cached capabilities of the last system session.
  *
- * Prefer comm_session_get_capabilities() when connected.
+ * Prefer pbl_pp_session_get_capabilities() when connected.
  *
  * @param[out] capabilities_out Capabilities, zero if none cached. Ignored if NULL.
  */
 void bt_persistent_storage_get_cached_system_capabilities(
-    PebbleProtocolCapabilities *capabilities_out);
+    struct pbl_pp_capabilities *capabilities_out);
 
 /**
  * @brief Cache the capabilities of the system session.
@@ -316,7 +316,7 @@ void bt_persistent_storage_get_cached_system_capabilities(
  * @param capabilities Capabilities, or NULL to clear the cache.
  */
 void bt_persistent_storage_set_cached_system_capabilities(
-    const PebbleProtocolCapabilities *capabilities);
+    const struct pbl_pp_capabilities *capabilities);
 
 /**
  * @brief Initialize the database, before the Bluetooth stack starts.

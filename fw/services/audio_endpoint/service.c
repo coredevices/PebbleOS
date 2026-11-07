@@ -3,9 +3,9 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
-#include <pbl/services/comm_session/session_send_buffer.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/circular_buffer.h>
@@ -41,9 +41,9 @@ static void prv_session_deinit(bool call_stop_handler) {
   if (s_session.active_mode_trigger != TIMER_INVALID_ID) {
     new_timer_delete(s_session.active_mode_trigger);
     s_session.active_mode_trigger = TIMER_INVALID_ID;
-    CommSession *comm_session = comm_session_get_system_session();
-    comm_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
-                                    PBL_BT_RESPONSE_TIME_MAX, 0);
+    struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
+    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
+                                      PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
@@ -55,7 +55,8 @@ static void prv_session_deinit(bool call_stop_handler) {
   }
 }
 
-void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *data, size_t size) {
+void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
+                                          size_t size) {
   MsgId msg_id = data[0];
   if (size >= sizeof(StopTransferMsg) && msg_id == MsgIdStopTransfer) {
     StopTransferMsg *msg = (StopTransferMsg *)data;
@@ -69,13 +70,13 @@ void audio_endpoint_protocol_msg_callback(CommSession *session, const uint8_t *d
 }
 
 static void prv_start_active_mode(void *data) {
-  CommSession *comm_session = comm_session_get_system_session();
-  comm_session_set_responsiveness_ext(
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
+  pbl_pp_session_set_responsiveness(
       comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT, PBL_BT_RESPONSE_TIME_MIN,
       PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, nullptr /* granted_handler */);
 }
 
-//! Never block on bt_lock from the timer task (comm_session_set_responsiveness_ext
+//! Never block on bt_lock from the timer task (pbl_pp_session_set_responsiveness
 //! takes it); defer to KernelBG.
 static void prv_active_mode_timer_cb(void *data) {
   system_task_add_callback(prv_start_active_mode, nullptr);
@@ -113,8 +114,8 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
     return;
   }
 
-  CommSession *comm_session = comm_session_get_system_session();
-  SendBuffer *sb = comm_session_send_buffer_begin_write_bulk(
+  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
+  struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin_bulk(
       comm_session, AUDIO_ENDPOINT, sizeof(DataTransferMsg) + frame_size + 1,
       0 /* timeout_ms, never block */);
   if (!sb) {
@@ -132,9 +133,9 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
   };
   msg->frames[0] = frame_size;
 
-  comm_session_send_buffer_write(sb, header, sizeof(header));
-  comm_session_send_buffer_write(sb, frame, frame_size);
-  comm_session_send_buffer_end_write(sb);
+  pbl_pp_send_buffer_write(sb, header, sizeof(header));
+  pbl_pp_send_buffer_write(sb, frame, frame_size);
+  pbl_pp_send_buffer_end(sb);
 }
 
 void audio_endpoint_cancel_transfer(AudioEndpointSessionId session_id) {
@@ -161,6 +162,6 @@ void audio_endpoint_stop_transfer(AudioEndpointSessionId session_id) {
 
   prv_session_deinit(false /* call_stop_handler */);
 
-  comm_session_send_data(comm_session_get_system_session(), AUDIO_ENDPOINT, (const uint8_t *)&msg,
-                         sizeof(msg), COMM_SESSION_DEFAULT_TIMEOUT);
+  pbl_pp_send(pbl_pp_session_get_system(), AUDIO_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
 }
