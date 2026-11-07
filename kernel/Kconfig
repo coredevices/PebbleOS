@@ -15,6 +15,22 @@ config KERNEL_MAIN_THREAD_PRIO
 	int "Main thread priority"
 	default 3
 
+config KERNEL_SYS_WORKQ_STACK_SIZE
+	int "Background work queue stack size in bytes"
+	default 4096
+
+config KERNEL_SYS_WORKQ_PRIO
+	int "Background work queue priority"
+	default 1
+
+config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
+	int "High priority work queue stack size in bytes"
+	default 1380
+
+config KERNEL_SYS_WORKQ_HIGH_PRIO
+	int "High priority work queue priority"
+	default 4
+
 config KERNEL_ISR_STACK_SIZE
 	int "ISR stack size in bytes"
 	default 1024

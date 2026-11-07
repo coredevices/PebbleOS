@@ -16,6 +16,8 @@
 // Timers on the real kernel, with time delivered by the POSIX arch.
 
 void new_timer_reset_for_test(void);
+void sys_workq_init(void);
+void sys_workq_reset_for_test(void);
 
 #define NUM_TIMERS 8
 
@@ -63,6 +65,7 @@ static void prv_run(void (*entry)(void *)) {
     .stack_size = sizeof(s_main_stack),
   };
   cl_assert_equal_i(pbl_thread_create(&s_main, &attr), 0);
+  sys_workq_init();
   new_timer_service_init();
   pbl_test_kernel_run();
 }
@@ -73,6 +76,7 @@ void test_new_timer__initialize(void) {
   memset(s_fired_at, 0, sizeof(s_fired_at));
   s_fires = 0;
   s_id = TIMER_INVALID_ID;
+  sys_workq_reset_for_test();
   new_timer_reset_for_test();
 }
 

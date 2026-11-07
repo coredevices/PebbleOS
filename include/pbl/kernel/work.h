@@ -78,8 +78,6 @@ struct pbl_delayed_work {
 
 /** @brief Optional hooks run on a queue's thread. */
 struct pbl_workq_ops {
-  /** Before the first work item. */
-  void (*start)(struct pbl_workq *q);
   /** Around blocking for work. */
   void (*wait)(struct pbl_workq *q, bool waiting);
   /** After each work item. */
@@ -193,7 +191,7 @@ extern struct pbl_workq pbl_sys_workq_high;
 void pbl_workq_init(struct pbl_workq *q);
 
 /**
- * @brief Set the hooks of a queue. Must be called before its thread starts.
+ * @brief Set the hooks of a queue, which take effect once it is next idle.
  *
  * @param q Queue.
  * @param ops Hooks, which must outlive the queue.
@@ -203,8 +201,8 @@ void pbl_workq_set_ops(struct pbl_workq *q, const struct pbl_workq_ops *ops);
 /**
  * @brief Thread entry serving a queue, with the queue as its argument.
  *
- * The caller creates the thread, which picks the queue's priority and stack. Work may be submitted
- * before the thread starts.
+ * For queues other than the system ones, which the kernel starts at boot. The caller creates the
+ * thread, which picks the queue's priority and stack. Work may be submitted before it starts.
  *
  * @param arg Queue.
  */
@@ -218,6 +216,22 @@ void pbl_workq_thread(void *arg);
  * @param q Queue.
  */
 void pbl_workq_flush(struct pbl_workq *q);
+
+/**
+ * @brief Get the thread serving a queue.
+ *
+ * @param q Queue.
+ * @return Its thread, NULL until it has one.
+ */
+struct pbl_thread *pbl_workq_get_thread(const struct pbl_workq *q);
+
+/**
+ * @brief Check whether the caller runs on a queue's thread.
+ *
+ * @param q Queue.
+ * @return true on its thread, false elsewhere, including in an ISR.
+ */
+bool pbl_workq_is_current(const struct pbl_workq *q);
 
 /**
  * @brief Get the function being run, for debugging.

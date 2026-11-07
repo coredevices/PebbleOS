@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <string.h>
-
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/thread.h>
@@ -41,8 +39,6 @@ struct pbl_new_timer__timer {
   uint32_t defer_delete : 1;
 };
 
-static struct pbl_thread s_new_timer_thread;
-PBL_THREAD_STACK_DEFINE(s_new_timer_stack, CONFIG_SERVICE_NEW_TIMER_THREAD_STACK_SIZE);
 static PBL_WORK_POOL_DEFINE(s_work_pool, WORK_POOL_SIZE);
 
 static struct pbl_new_timer__timer s_timers[CONFIG_SERVICE_NEW_TIMER_POOL_SIZE];
@@ -199,17 +195,17 @@ static void *prv_wdt_expired(int channel_id, void *user_data) {
   return new_timer_debug_get_current_callback();
 }
 
-static void prv_workq_start(struct pbl_workq *q) {
+static void prv_task_init(struct pbl_work *work) {
   task_init();
-  PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr) >= 0);
 }
+
+static PBL_WORK_DEFINE(s_task_init_work, prv_task_init);
 
 static void prv_workq_wait(struct pbl_workq *q, bool waiting) {
   pbl_task_wdt_set_waiting(waiting);
 }
 
 static const struct pbl_workq_ops s_workq_ops = {
-  .start = prv_workq_start,
   .wait = prv_workq_wait,
 };
 
@@ -224,19 +220,12 @@ void new_timer_service_init(void) {
     prv_slot_free(&s_timers[i - 1U]);
   }
 
-  struct pbl_thread_attr attr = {
-    .name = "NewTimer",
-    .entry = pbl_workq_thread,
-    .arg = &pbl_sys_workq_high,
-    .prio = CONFIG_SERVICE_NEW_TIMER_THREAD_PRIO,
-    .privileged = true,
-    .stack = s_new_timer_stack,
-    .stack_size = sizeof(s_new_timer_stack),
-  };
+  struct pbl_thread *thread = pbl_workq_get_thread(&pbl_sys_workq_high);
 
+  pebble_task_register(PebbleTask_NewTimers, thread);
+  PBL_ASSERTN(pbl_task_wdt_add(thread, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr) >= 0);
   pbl_workq_set_ops(&pbl_sys_workq_high, &s_workq_ops);
-  PBL_ASSERTN(pbl_thread_create(&s_new_timer_thread, &attr) == 0);
-  pebble_task_register(PebbleTask_NewTimers, &s_new_timer_thread);
+  pbl_work_submit(&pbl_sys_workq_high, &s_task_init_work);
 }
 
 void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
@@ -249,10 +238,8 @@ bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data) {
 
 #if UNITTEST
 void new_timer_reset_for_test(void) {
-  memset(&s_new_timer_thread, 0, sizeof(s_new_timer_thread));
   static struct pbl_work_call s_slots[WORK_POOL_SIZE];
 
-  pbl_workq_init(&pbl_sys_workq_high);
   pbl_work_pool_init(&s_work_pool, s_slots, WORK_POOL_SIZE);
   s_free_head = nullptr;
   for (size_t i = 0; i < ARRAY_LENGTH(s_timers); i++) {

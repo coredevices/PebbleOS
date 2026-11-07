@@ -78,6 +78,9 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   }
 
   arch_thread_init(t, attr->entry, attr->arg);
+  for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
+    t->own_regions |= attr->regions[i] != nullptr;
+  }
   prv_regions_set(t, attr->regions);
 
   pbl_irq_lock();
@@ -143,8 +146,9 @@ void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions)
     s_default_regions[i] = regions[i];
   }
   for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
-    PBL_ASSERTN(t == pbl_cur || t == sched_idle_thread());
-    prv_regions_set(t, nullptr);
+    if (!t->own_regions) {
+      prv_regions_set(t, nullptr);
+    }
   }
   pbl_irq_unlock();
 }

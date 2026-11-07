@@ -98,14 +98,11 @@ static void *prv_wdt_expired(int channel_id, void *user_data) {
   return system_task_get_current_callback();
 }
 
-static void prv_workq_start(struct pbl_workq *q) {
-  s_wdt_channel = pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr);
-  PBL_ASSERTN(s_wdt_channel >= 0);
+static void prv_task_init(struct pbl_work *work) {
   task_init();
 }
 
-static struct pbl_thread s_thread;
-PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_SERVICE_SYSTEM_TASK_THREAD_STACK_SIZE);
+static PBL_WORK_DEFINE(s_task_init_work, prv_task_init);
 
 static void prv_workq_wait(struct pbl_workq *q, bool waiting) {
   pbl_task_wdt_set_waiting(waiting);
@@ -118,7 +115,6 @@ static void prv_workq_done(struct pbl_workq *q) {
 }
 
 static const struct pbl_workq_ops s_workq_ops = {
-  .start = prv_workq_start,
   .wait = prv_workq_wait,
   .done = prv_workq_done,
 };
@@ -127,19 +123,13 @@ void system_task_init(void) {
   s_raised_priority_refcount = 0;
   s_initialized = true;
 
-  const struct pbl_thread_attr attr = {
-    .name = "KernelBG",
-    .entry = pbl_workq_thread,
-    .arg = &pbl_sys_workq,
-    .prio = CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO,
-    .privileged = true,
-    .stack = s_stack,
-    .stack_size = sizeof(s_stack),
-  };
+  struct pbl_thread *thread = pbl_workq_get_thread(&pbl_sys_workq);
 
+  pebble_task_register(PebbleTask_KernelBackground, thread);
+  s_wdt_channel = pbl_task_wdt_add(thread, CONFIG_TASK_WDT_TIMEOUT_MS, prv_wdt_expired, nullptr);
+  PBL_ASSERTN(s_wdt_channel >= 0);
   pbl_workq_set_ops(&pbl_sys_workq, &s_workq_ops);
-  PBL_ASSERTN(pbl_thread_create(&s_thread, &attr) == 0);
-  pebble_task_register(PebbleTask_KernelBackground, &s_thread);
+  pbl_work_submit(&pbl_sys_workq, &s_task_init_work);
 }
 
 void system_task_timer_init(void) {
@@ -327,7 +317,7 @@ void system_task_enable_raised_priority(bool is_raised) {
     }
     if (--s_raised_priority_refcount == 0) {
       pbl_thread_prio_set(pebble_task_get_thread(PebbleTask_KernelBackground),
-                          CONFIG_SERVICE_SYSTEM_TASK_THREAD_PRIO);
+                          CONFIG_KERNEL_SYS_WORKQ_PRIO);
     }
   }
   pbl_irq_unlock();
@@ -335,17 +325,15 @@ void system_task_enable_raised_priority(bool is_raised) {
 
 bool system_task_is_ready_to_run(void) {
   // check if system task is ready to go (instead of e.g. waiting for a mutex)
-  return pbl_thread_state(pebble_task_get_thread(PebbleTask_KernelBackground)) == PBL_THREAD_READY;
+  return pbl_thread_state(pbl_workq_get_thread(&pbl_sys_workq)) == PBL_THREAD_READY;
 }
 
 #if UNITTEST
 void system_task_reset_for_test(void) {
-  memset(&s_thread, 0, sizeof(s_thread));
   static struct pbl_work_call s_slots[SYSTEM_TASK_POOL_SIZE];
   static struct pbl_work_call s_from_app_slots[FROM_APP_SYSTEM_TASK_POOL_SIZE];
   static struct pbl_work_call s_raised_slots[RAISED_POOL_SIZE];
 
-  pbl_workq_init(&pbl_sys_workq);
   pbl_work_pool_init(&s_pool, s_slots, SYSTEM_TASK_POOL_SIZE);
   pbl_work_pool_init(&s_from_app_pool, s_from_app_slots, FROM_APP_SYSTEM_TASK_POOL_SIZE);
   pbl_work_pool_init(&s_raised_pool, s_raised_slots, RAISED_POOL_SIZE);
