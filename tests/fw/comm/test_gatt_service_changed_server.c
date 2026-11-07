@@ -18,7 +18,7 @@ extern void gatt_service_changed_server_init(void);
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ static void prv_process_pending_callbacks(GAPLEConnection *connection) {
   if (connection && connection->gatt_service_changed_indication_timer) {
     stub_new_timer_fire(connection->gatt_service_changed_indication_timer);
   }
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 #define prv_expect_service_changed_indication_api_call_count(expected_count)             \

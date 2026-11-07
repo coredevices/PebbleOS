@@ -135,13 +135,13 @@ struct HRMManagerState {
   ListNode *subscribers;
 
   /** Events pending for KernelBG subscribers. */
-  CircularBuffer system_task_event_buffer;
+  CircularBuffer sys_work_event_buffer;
   /** Number of dropped events. */
   uint32_t dropped_events;
   /** Last session reference assigned. */
   HRMSessionRef next_session_ref;
-  /** Storage of @ref system_task_event_buffer. */
-  uint8_t system_task_event_storage[EVENT_STORAGE_SIZE];
+  /** Storage of @ref sys_work_event_buffer. */
+  uint8_t sys_work_event_storage[EVENT_STORAGE_SIZE];
 
   /** Accelerometer manager subscription, while the sensor is on. */
   AccelManagerState *accel_state;

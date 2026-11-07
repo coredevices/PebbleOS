@@ -17,10 +17,10 @@
 ///////////////////////////////////////////////////////////
 
 #include <fake_kernel_malloc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  system_task_add_callback(callback, data);
+  sys_work_add(callback, data);
 }
 
 bool launcher_task_is_current_task(void) {
@@ -176,7 +176,7 @@ void test_receive__cleanup(void) {
     pbl_pp_session_close(s_session);
     s_session = nullptr;
   }
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_kernel_malloc_mark_assert_equal();
   fake_kernel_malloc_deinit();
 }

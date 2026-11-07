@@ -22,7 +22,7 @@
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_hr.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/base64.h>
@@ -601,7 +601,7 @@ static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *
 }
 
 // -----------------------------------------------------------------------------------------
-// Called from the prv_minute_system_task_cb(). Determines if we should update storage.
+// Called from the prv_minute_sys_work_cb(). Determines if we should update storage.
 static void PBL_NOINLINE prv_update_storage(time_t utc_sec) {
   // If no reason to update storage, we can bail immediately.
   s_activity_state.update_settings_counter -= 1;
@@ -751,7 +751,7 @@ static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
 // ------------------------------------------------------------------------------------------------
 // This system task, triggered by a minute regular timer, takes care of updating the history
 // when we reach midnight, checking for changes in sleep state, and updating insights
-PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
+PBL_T_STATIC void prv_minute_sys_work_cb(void *data) {
   if (!s_activity_state.started) {
     return;
   }
@@ -775,7 +775,7 @@ PBL_T_STATIC void prv_minute_system_task_cb(void *data) {
 // ------------------------------------------------------------------------------------------------
 // Runs on the timer task. Simply register a callback for the KernelBG task from here.
 static void prv_minute_cb(struct pbl_cron_job *job, void *data) {
-  system_task_add_callback(prv_minute_system_task_cb, data);
+  sys_work_add(prv_minute_sys_work_cb, data);
   pbl_cron_job_schedule(job);
 }
 
@@ -918,7 +918,7 @@ static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t time
   // Update our copy of the steps after grabbing the mutex. We guard these globals with a
   // mutex because activity_get_metric() provides access to the current metrics from any task.
   // The current sleep data is only recomputed every few minutes in order to reduce overhead and
-  // is done so from prv_minute_system_task_cb()
+  // is done so from prv_minute_sys_work_cb()
   ActivityScalarStore prev_steps = s_activity_state.step_data.steps;
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
@@ -1122,7 +1122,7 @@ static void prv_handle_activity_enabled_change(void) {
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
 
-  system_task_add_callback(prv_set_enable_cb, nullptr);
+  sys_work_add(prv_set_enable_cb, nullptr);
 }
 
 static void prv_charger_event_cb(PebbleEvent *e, void *context) {
@@ -1174,7 +1174,7 @@ static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler 
   PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
 
   req->handler = handler;
-  if (!system_task_add_callback(prv_bg_request_system_cb, req)) {
+  if (!sys_work_add(prv_bg_request_system_cb, req)) {
     pbl_free(req);
     return false;
   }
@@ -1287,7 +1287,7 @@ bool activity_start_tracking(bool test_mode) {
   if (!s_activity_initialized) {
     return false;
   }
-  return system_task_add_callback(prv_start_tracking_cb, (void *)test_mode);
+  return sys_work_add(prv_start_tracking_cb, (void *)test_mode);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1300,7 +1300,7 @@ bool activity_stop_tracking(void) {
     prv_stop_tracking_early();
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
-  return system_task_add_callback(prv_stop_tracking_cb, nullptr);
+  return sys_work_add(prv_stop_tracking_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1663,7 +1663,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
     context->num_samples = chunk_size;
     memmove(context->data, data, chunk_size * sizeof(AccelRawData));
     s_activity_state.pending_test_cb = true;
-    system_task_add_callback(prv_feed_samples_system_cb, context);
+    sys_work_add(prv_feed_samples_system_cb, context);
 
     data += chunk_size;
     num_samples -= chunk_size;
@@ -1676,7 +1676,7 @@ bool activity_test_run_minute_callback(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  return system_task_add_callback(prv_minute_system_task_cb, nullptr);
+  return sys_work_add(prv_minute_sys_work_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1823,7 +1823,7 @@ bool activity_test_send_fake_dls_records(void) {
     return false;
   }
   // Enqueue it for KernelBG to process
-  return system_task_add_callback(prv_send_fake_dls_records_system_cb, nullptr);
+  return sys_work_add(prv_send_fake_dls_records_system_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -21,7 +21,7 @@
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/stationary.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -482,7 +482,7 @@ static void prv_compact_settings_dbs_task_cb(void *data) {
 }
 
 static void prv_compact_settings_dbs(void) {
-  system_task_add_callback(prv_compact_settings_dbs_task_cb, nullptr);
+  sys_work_add(prv_compact_settings_dbs_task_cb, nullptr);
 }
 
 // Debug options window

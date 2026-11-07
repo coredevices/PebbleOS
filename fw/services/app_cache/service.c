@@ -13,7 +13,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/process_management/app_file.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
@@ -242,7 +242,7 @@ static bool prv_each_free_up_space(struct pbl_settings_file *file, struct pbl_se
   if ((info->key_len != sizeof(AppInstallId)) || (info->val_len != sizeof(AppCacheEntry))) {
     PBL_LOG_WRN("Invalid cache entry with key_len: %u and val_len: %u, flushing",
                 (unsigned)info->key_len, (unsigned)info->val_len);
-    system_task_add_callback(prv_delete_cache_callback, nullptr);
+    sys_work_add(prv_delete_cache_callback, nullptr);
     return false; // stop iterating, delete the file and binaries
   }
 
@@ -503,7 +503,7 @@ status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
     pbl_settings_close(&file);
 
     // cleanup the cache if we need to
-    system_task_add_callback(prv_cleanup_app_cache_if_needed, nullptr);
+    sys_work_add(prv_cleanup_app_cache_if_needed, nullptr);
   }
 unlock:
   pbl_mutex_unlock(&s_app_cache_mutex);

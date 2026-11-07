@@ -13,7 +13,7 @@ extern const struct pbl_pp_endpoint pbl_pp_endpoint_0x0000;
 
 #include <fake_kernel_malloc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 static struct fake_transport *s_transport;
 static struct pbl_pp_session *s_session;
@@ -22,7 +22,7 @@ static struct pbl_pp_session *s_session;
 ///////////////////////////////////////////////////////////
 
 static void prv_process_and_assert_sent(const uint8_t data[], uint16_t length) {
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   fake_comm_session_process_send_next();
   fake_transport_assert_sent(s_transport, 0 /* index */, PBL_PP_ENDPOINT_META, data, length);
 }

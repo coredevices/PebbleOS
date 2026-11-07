@@ -16,7 +16,7 @@
 
 extern void notification_storage_reset(void);
 
-typedef void (*SystemTaskEventCallback)(void *data);
+typedef void (*SysWorkCallback)(void *data);
 
 static Attribute action1_attributes[] = {
   {.id = AttributeIdTitle, .cstring = "Dismiss"},
@@ -61,7 +61,7 @@ static Attribute attributes[] = {
   {.id = AttributeIdSubtitle, .cstring = "Subject"},
 };
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+bool sys_work_add(SysWorkCallback cb, void *data) {
   return true;
 }
 

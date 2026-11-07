@@ -40,7 +40,7 @@
 #include <fake_rtc.h>
 #include <fake_session.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <process_management/process_regions.h>
 const struct pbl_mpu_region *process_region_app(void) {
   return nullptr;
@@ -136,7 +136,7 @@ static void prv_data_log_chain(DataLoggingSessionRef logging_session, uint8_t *b
     }
     PBL_ASSERTN(chunk_size <= num_bytes);
     data_logging_log(logging_session, buf, chunk_size / item_size);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
     // KernelBG feeds its watchdog after every system task callback
     pbl_task_wdt_feed_self();
     buf += chunk_size;
@@ -186,7 +186,7 @@ void test_data_logging__initialize(void) {
   stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
   dls_clear();
   dls_init();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Create the system comm session
   // struct fake_transport *transport = (struct fake_transport *) ~0;
@@ -213,7 +213,7 @@ void test_data_logging__log_consume(void) {
   for (int i = 0; i < 10; i++) {
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // Log Consume
@@ -253,7 +253,7 @@ void test_data_logging__log_consume_large_items(void) {
     item_size[i] = 50 + (rand() % 250);
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_BYTE_ARRAY, item_size[i], false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // Log Consume
@@ -273,7 +273,7 @@ void test_data_logging__log_realloc(void) {
   for (int i = 0; i < 5; i++) {
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // Log Consume
@@ -297,7 +297,7 @@ void test_data_logging__log_realloc_large_unread(void) {
   DataLoggingSessionRef logging_session =
       data_logging_create(0, DATA_LOGGING_UINT, item_size, false);
   cl_assert(logging_session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   s_flash_ops_at_feed = prv_flash_ops();
   s_max_flash_ops_between_feeds = 0;
@@ -319,7 +319,7 @@ void test_data_logging__fill_quota(void) {
   for (int i = 0; i < num_sessions; i++) {
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // This should fill up the file system
@@ -344,7 +344,7 @@ void test_data_logging__fill_quota(void) {
   for (int i = num_sessions; i < DLS_MAX_NUM_SESSIONS; i++) {
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
     prv_log_random_data(logging_sessions[i], item_size, DLS_FILE_INIT_SIZE_BYTES);
   }
 
@@ -370,7 +370,7 @@ void test_data_logging__large_session(void) {
   logging_session = (DataLoggingSessionRef)dls_create(
       0, DATA_LOGGING_BYTE_ARRAY, item_size, false /*buffered*/, false /*resume*/, &system_uuid);
   cl_assert(logging_session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // We should be able to create a really large session.
   int num_bytes = DLS_MAX_DATA_BYTES / 2;
@@ -391,7 +391,7 @@ void test_data_logging__interleave(void) {
   for (int i = 0; i < 10; i++) {
     logging_sessions[i] = data_logging_create(i, DATA_LOGGING_UINT, item_size, false);
     cl_assert(logging_sessions[i]);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
 
     buf_size[i] = bytes_left[i] = rand() % (50 * 300);
     crcs[i] = prv_get_random_buffer(&(buf[i]), buf_size[i]);
@@ -444,7 +444,7 @@ static void prv_do_recovery_test(int num_sessions) {
 
   // Rebuild the list from flash
   dls_init();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Check the sessions
   for (int i = 0; i < num_sessions; i++) {
@@ -487,10 +487,10 @@ void test_data_logging__invalid_session_use_after_close(void) {
 
   DataLoggingSessionRef session = data_logging_create(0x1234, DATA_LOGGING_UINT, 4, false);
   cl_assert(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   data_logging_finish(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Log to the session after it's closed.
   cl_assert_equal_i(data_logging_log(session, data, ARRAY_LENGTH(data)),
@@ -507,7 +507,7 @@ void test_data_logging__invalid_params(void) {
 
   DataLoggingSessionRef session = data_logging_create(0x1234, DATA_LOGGING_UINT, 4, false);
   cl_assert(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Log to the session after it's closed.
   cl_assert_equal_i(data_logging_log(session, nullptr, 4), DATA_LOGGING_INVALID_PARAMS);
@@ -535,7 +535,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
   logging_session = (DataLoggingSessionRef)dls_create(0, DATA_LOGGING_BYTE_ARRAY, item_size,
                                                       buffered, false /*resume*/, uuid);
   cl_assert(logging_session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // This sends the open session request out the transport
   fake_comm_session_process_send_next();
@@ -546,7 +546,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
     ~DLS_ENDPOINT_CMD_MASK | DataLoggingEndpointCmdAck, dls_test_get_session_id(logging_session)
   };
   data_logging_protocol_msg_callback(session, ack_data, 2);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Log the data
   uint32_t random_crc = prv_log_random_data(logging_session, item_size, num_items);
@@ -576,7 +576,7 @@ static void prv_endpoint_test(bool buffered, const int item_size, const int num_
 
     // Provide acknowledgement from phone, this should trigger another dls_private_send_session
     data_logging_protocol_msg_callback(session, ack_data, 2);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // Verify the received data

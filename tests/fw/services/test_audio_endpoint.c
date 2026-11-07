@@ -9,7 +9,7 @@
 #include <clar.h>
 #include <fake_new_timer.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 extern void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
                                                  const uint8_t *data, size_t size);
@@ -93,13 +93,13 @@ void test_audio_endpoint__remote_stop_transfer(void) {
   msg->msg_id = MsgIdStopTransfer;
   msg->session_id = s_session_id;
   audio_endpoint_protocol_msg_callback(s_session, (uint8_t *)msg, sizeof(StopTransferMsg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   free(msg);
 }
 
 void test_audio_endpoint__cleanup(void) {
   fake_comm_session_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   s_transport = nullptr;
 
   fake_pbl_malloc_check_net_allocs();

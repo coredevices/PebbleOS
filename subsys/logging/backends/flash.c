@@ -12,7 +12,7 @@
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/shared_cbuf.h>
 
@@ -165,7 +165,7 @@ static bool write_buffer_locking(const LogBinaryMessage *header, const char *tex
     pbl_mutex_lock(&s_buffer_mutex, PBL_FOREVER);
     if (!s_is_flash_write_scheduled) {
       s_is_flash_write_scheduled = true;
-      system_task_add_callback(handle_buffer_sync, (void *)(uintptr_t)true /* is_async */);
+      sys_work_add(handle_buffer_sync, (void *)(uintptr_t)true /* is_async */);
     }
     pbl_mutex_unlock(&s_buffer_mutex);
   }

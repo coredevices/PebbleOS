@@ -16,7 +16,7 @@
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/imu/units.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>
@@ -265,7 +265,7 @@ static bool prv_call_data_callback(AccelManagerState *state) {
       return pbl_msgq_put(queue, &event, PBL_NO_WAIT) == 0;
     }
     case PebbleTask_KernelBackground:
-      return system_task_add_callback(state->data_cb_handler, state->data_cb_context);
+      return sys_work_add(state->data_cb_handler, state->data_cb_context);
     case PebbleTask_NewTimers:
       return new_timer_add_work_callback(state->data_cb_handler, state->data_cb_context);
     default:
@@ -449,7 +449,7 @@ PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSa
   // `handler_task` decides where prv_call_data_callback() dispatches the
   // user-supplied data_cb. For KernelMain/KernelBackground/NewTimers values
   // the callback ends up invoked directly in kernel mode (either via the
-  // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, system_task_add_callback,
+  // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, sys_work_add,
   // or new_timer_add_work_callback) — handing an unprivileged app arbitrary
   // kernel-mode code execution. Force unprivileged callers onto their own
   // task so the dispatch lands in their app/worker event loop instead.

@@ -5,7 +5,7 @@
 
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <applib/app_watch_info.h>
 #include <clar.h>
@@ -40,7 +40,7 @@ WatchInfoColor mfg_info_get_watch_color(void) {
   return s_watch_color;
 }
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+bool sys_work_add(SysWorkCallback cb, void *data) {
   cb(data);
   return true;
 }

@@ -9,7 +9,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <comm/bt_lock.h>
 
@@ -55,7 +55,7 @@ bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *conne
     struct pbl_bt_device_internal *device =
         (struct pbl_bt_device_internal *)pbl_malloc_check(sizeof(struct pbl_bt_device_internal));
     *device = connection->device;
-    system_task_add_callback(prv_rediscover_kernelbg_cb, device);
+    sys_work_add(prv_rediscover_kernelbg_cb, device);
     return true;
   }
 
@@ -146,7 +146,7 @@ static void prv_send_service_changed_indication(void *ctx) {
 
 static void prv_send_indication_timer_cb(void *ctx) {
   GAPLEConnection *connection = (GAPLEConnection *)ctx;
-  system_task_add_callback(prv_send_service_changed_indication, connection);
+  sys_work_add(prv_send_service_changed_indication, connection);
 }
 
 void pbl_bt_cb_gatt_service_changed_server_subscribe(
@@ -247,7 +247,7 @@ static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **ar
     return -ENOTCONN;
   }
 
-  system_task_add_callback(prv_rediscover_kernelbg_cb, device);
+  sys_work_add(prv_rediscover_kernelbg_cb, device);
   return 0;
 }
 

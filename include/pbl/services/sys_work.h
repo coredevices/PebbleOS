@@ -8,20 +8,20 @@
 #include <kernel/pebble_tasks.h>
 
 /**
- * @defgroup services_system_task System task
+ * @defgroup services_sys_work System task
  * @ingroup services
  * @brief Low priority background task (KernelBG) running deferred work.
  *
  * KernelBG serves @ref pbl_sys_workq, adding a watchdog and app throttling; new code should use
  * the kernel work API directly. ISRs and higher priority tasks marshal units of work onto KernelBG
  * by queueing callbacks, which run one at a time in FIFO order. Callbacks are covered by a task
- * watchdog; long ones must call system_task_watchdog_feed() regularly. When KernelBG starves, the
+ * watchdog; long ones must call sys_work_watchdog_feed() regularly. When KernelBG starves, the
  * app task is briefly throttled.
  *
  * The enqueue variants differ in what happens when the queue is full:
- * - system_task_add_callback() waits, then resets the system if still full (apps wait forever on
+ * - sys_work_add() waits, then resets the system if still full (apps wait forever on
  *   a separate queue),
- * - system_task_add_callback_from_isr() does not wait and resets the system,
+ * - sys_work_add_from_isr() does not wait and resets the system,
  * - the @c _droppable variants do not wait and return false.
  *
  * @code{.c}
@@ -29,30 +29,30 @@
  *   // Runs on KernelBG.
  * }
  *
- * system_task_add_callback(prv_save_cb, ctx);
+ * sys_work_add(prv_save_cb, ctx);
  * @endcode
  * @{
  */
 
 /** @brief Create the KernelBG task. */
-void system_task_init(void);
+void sys_work_init(void);
 
 /** @brief Set up the timers used by the system task, once timers are available. */
-void system_task_timer_init(void);
+void sys_work_timer_init(void);
 
 /**
  * @brief Feed the KernelBG watchdog.
  *
  * Call it regularly from callbacks that take a while to run.
  */
-void system_task_watchdog_feed(void);
+void sys_work_watchdog_feed(void);
 
 /**
  * @brief System task callback.
  *
  * @param data Context given when queueing the callback.
  */
-typedef void (*SystemTaskEventCallback)(void *data);
+typedef void (*SysWorkCallback)(void *data);
 
 /**
  * @brief Queue a callback from an ISR.
@@ -63,7 +63,7 @@ typedef void (*SystemTaskEventCallback)(void *data);
  * @param data Context passed to @p cb.
  * @return True if queued, false if callbacks are not accepted (not initialized or blocked).
  */
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data);
+bool sys_work_add_from_isr(SysWorkCallback cb, void *data);
 
 /**
  * @brief Queue a callback without waiting, dropping it if the queue is full.
@@ -75,16 +75,7 @@ bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data);
  * @param data Context passed to @p cb.
  * @return True if queued, false if the queue is full or callbacks are not accepted.
  */
-bool system_task_add_callback_droppable(SystemTaskEventCallback cb, void *data);
-
-/**
- * @brief ISR flavour of system_task_add_callback_droppable().
- *
- * @param cb Callback to run on KernelBG.
- * @param data Context passed to @p cb.
- * @return True if queued, false if the queue is full or callbacks are not accepted.
- */
-bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, void *data);
+bool sys_work_try_add(SysWorkCallback cb, void *data);
 
 /**
  * @brief Queue a droppable callback that raises KernelBG priority until it has run.
@@ -96,7 +87,7 @@ bool system_task_add_callback_from_isr_droppable(SystemTaskEventCallback cb, voi
  * @param data Context passed to @p cb.
  * @return True if queued, false if the queue is full or callbacks are not accepted.
  */
-bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback cb, void *data);
+bool sys_work_try_add_raised(SysWorkCallback cb, void *data);
 
 /**
  * @brief Queue a callback from task context.
@@ -108,28 +99,28 @@ bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback 
  * @param data Context passed to @p cb.
  * @return True if queued, false if callbacks are not accepted (not initialized or blocked).
  */
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data);
+bool sys_work_add(SysWorkCallback cb, void *data);
 
 /**
  * @brief Block or unblock new callbacks.
  *
  * @param block True to reject new callbacks, false to accept them.
  */
-void system_task_block_callbacks(bool block);
+void sys_work_block(bool block);
 
 /**
  * @brief Get the free space of the queue used by the calling task.
  *
  * @return Number of callbacks that can be queued before the queue is full.
  */
-uint32_t system_task_get_available_space(void);
+uint32_t sys_work_get_available_space(void);
 
 /**
  * @brief Get the callback being run, for debugging.
  *
  * @return Running callback, or NULL when idle.
  */
-void *system_task_get_current_callback(void);
+void *sys_work_get_current_callback(void);
 
 /**
  * @brief Acquire or release a reference raising KernelBG priority.
@@ -138,13 +129,13 @@ void *system_task_get_current_callback(void);
  *
  * @param is_raised True to acquire a reference, false to release one. Calls must be balanced.
  */
-void system_task_enable_raised_priority(bool is_raised);
+void sys_work_enable_raised_priority(bool is_raised);
 
 /**
  * @brief Check whether KernelBG is ready to run.
  *
  * @return True if ready, false if blocked (e.g. on a mutex or its queue).
  */
-bool system_task_is_ready_to_run(void);
+bool sys_work_is_ready_to_run(void);
 
 /** @} */

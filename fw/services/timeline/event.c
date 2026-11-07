@@ -9,7 +9,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
@@ -46,7 +46,7 @@ static atomic_flag s_cb_scheduled;
 
 static void prv_update_status(void);
 
-static void prv_update_status_system_task_callback(void *unused) {
+static void prv_update_status_sys_work_callback(void *unused) {
   atomic_flag_clear_explicit(&s_cb_scheduled, memory_order_relaxed);
   prv_update_status();
 }
@@ -56,7 +56,7 @@ static void prv_update_status_async(void) {
     return; // we already have a cb scheduled
   }
 
-  system_task_add_callback(prv_update_status_system_task_callback, nullptr);
+  sys_work_add(prv_update_status_sys_work_callback, nullptr);
 }
 
 static void prv_new_timer_callback(void *unused) {
@@ -187,7 +187,7 @@ static void prv_init([[maybe_unused]] void *data) {
 }
 
 void timeline_event_init(void) {
-  system_task_add_callback(prv_init, nullptr);
+  sys_work_add(prv_init, nullptr);
 }
 
 void timeline_event_deinit(void) {

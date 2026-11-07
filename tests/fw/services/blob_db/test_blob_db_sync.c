@@ -8,7 +8,7 @@
 #include <fake_blobdb.h>
 #include <fake_pbl_malloc.h>
 #include <fake_regular_timer.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 /////////////
@@ -37,8 +37,8 @@ static void prv_handle_response_from_phone(void *data) {
 }
 
 static void prv_generate_responses_from_phone(void) {
-  while (fake_system_task_count_callbacks()) {
-    fake_system_task_callbacks_invoke_pending();
+  while (fake_sys_work_count_callbacks()) {
+    fake_sys_work_callbacks_invoke_pending();
   }
 }
 
@@ -49,7 +49,7 @@ BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated,
   if (s_num_until_timeout != 0 && s_num_writebacks >= s_num_until_timeout) {
     // Don't respond - simulates timeout (message lost/no response from phone)
   } else {
-    system_task_add_callback(prv_handle_response_from_phone, session);
+    sys_work_add(prv_handle_response_from_phone, session);
   }
 
   return 12345;
@@ -72,7 +72,7 @@ void test_blob_db_sync__initialize(void) {
 
 void test_blob_db_sync__cleanup(void) {
   blob_db_flush(BlobDBIdTest);
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 void test_blob_db_sync__no_dirty(void) {
@@ -285,16 +285,16 @@ void test_blob_db_sync__stale_timeout_callback_after_cancel(void) {
   BlobDBSyncSession *session = prv_start_sync_with_two_keys();
 
   // Drop the harness' pending phone response; exercise the timeout path alone.
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 
   fake_regular_timer_trigger(&session->timeout_timer);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   blob_db_sync_cancel(session);
   cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == nullptr);
 
   s_num_writebacks = 0;
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // The stale callback must not resurrect the session or send anything.
   cl_assert_equal_i(s_num_writebacks, 0);
@@ -308,18 +308,18 @@ void test_blob_db_sync__stale_abandon_callback_after_cancel(void) {
   s_num_writebacks = 1;
 
   BlobDBSyncSession *session = prv_start_sync_with_two_keys();
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
 
   // A timeout schedules the abandon timer.
   fake_regular_timer_trigger(&session->timeout_timer);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert(regular_timer_is_scheduled(&session->abandon_timer));
   fake_regular_timer_trigger(&session->abandon_timer);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   // Session goes away before the abandon callback runs; it must not free twice.
   blob_db_sync_cancel(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert(blob_db_sync_get_session_for_id(BlobDBIdTest) == nullptr);
 }
 
@@ -329,7 +329,7 @@ void test_blob_db_sync__stale_callback_does_not_match_new_session(void) {
   BlobDBSyncSession *session = prv_start_sync_with_two_keys();
   const uint32_t first_id = session->session_id;
 
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_regular_timer_trigger(&session->timeout_timer);
   blob_db_sync_cancel(session);
 
@@ -338,7 +338,7 @@ void test_blob_db_sync__stale_callback_does_not_match_new_session(void) {
   cl_assert(new_session->session_id != first_id);
 
   s_num_writebacks = 0;
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // The new session syncs to completion; the stale timeout must not have
   // driven it (which would double-send the first item).

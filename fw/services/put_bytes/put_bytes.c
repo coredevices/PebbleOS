@@ -21,7 +21,7 @@
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/put_bytes/put_bytes_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
@@ -318,13 +318,13 @@ static void prv_set_responsiveness(enum pbl_bt_response_time_state state, uint16
                                     state, timeout_secs, nullptr);
 }
 
-static void prv_send_nack_from_system_task(void *data) {
+static void prv_send_nack_from_sys_work(void *data) {
   const uint32_t token = (uintptr_t)data;
   prv_send_response(ResponseNack, token);
 }
 
 static void prv_add_nack_system_callback(uint32_t token) {
-  system_task_add_callback(prv_send_nack_from_system_task, (void *)(uintptr_t)token);
+  sys_work_add(prv_send_nack_from_sys_work, (void *)(uintptr_t)token);
 }
 
 static void prv_add_nack_no_token_system_callback(void) {
@@ -372,14 +372,14 @@ static void prv_cleanup(void) {
   s_pb_state = (PutBytesState){.type = type};
 }
 
-static void prv_cleanup_from_system_task(void *data) {
+static void prv_cleanup_from_sys_work(void *data) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
   prv_cleanup();
   pbl_sem_give(&s_pb_semaphore);
 }
 
 static void prv_cleanup_async(void) {
-  system_task_add_callback(prv_cleanup_from_system_task, nullptr);
+  sys_work_add(prv_cleanup_from_sys_work, nullptr);
 }
 
 static void prv_fail(uint32_t token) {
@@ -883,7 +883,7 @@ static bool prv_check_putrequest_for_errors(const PutRequest *request_hdr,
   return false;
 }
 
-static void prv_process_put_requests_system_task_cb(void *unused) {
+static void prv_process_put_requests_sys_work_cb(void *unused) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   prv_lock_pb_job_state();
   put_jobs->process_scheduled = false;
@@ -973,14 +973,14 @@ static void prv_schedule_put_requests_processing(void) {
   }
   prv_unlock_pb_job_state();
 
-  if (schedule && !system_task_add_callback(prv_process_put_requests_system_task_cb, nullptr)) {
+  if (schedule && !sys_work_add(prv_process_put_requests_sys_work_cb, nullptr)) {
     prv_lock_pb_job_state();
     put_jobs->process_scheduled = false;
     prv_unlock_pb_job_state();
   }
 }
 
-static void prv_process_msg_system_task_callback(void *unused) {
+static void prv_process_msg_sys_work_callback(void *unused) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
 
   if (!s_pb_state.receiver.buffer || s_pb_state.receiver.length == 0) {
@@ -1260,7 +1260,7 @@ void prv_receiver_finish(struct pbl_pp_receiver *receiver) {
     prv_receiver_reset();
     prv_schedule_put_requests_processing();
   } else {
-    system_task_add_callback(prv_process_msg_system_task_callback, nullptr);
+    sys_work_add(prv_process_msg_sys_work_callback, nullptr);
   }
 
   // Don't clean up, the receiver.buffer will be re-used for the entire Put Bytes session.

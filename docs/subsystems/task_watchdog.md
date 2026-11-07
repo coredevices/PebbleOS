@@ -50,7 +50,7 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
   boot, adds the NewTimers channel (fed from a regular timer, which proves
   the timer thread still runs callbacks) and the KernelMain channel, which
   the launcher event loop feeds.
-- `fw/services/system_task/service.c` owns the KernelBackground
+- `fw/services/sys_work/service.c` owns the KernelBackground
   channel. Its callback throttles the app thread to the idle priority for a
   short time when the system task is ready to run but starved.
 - `subsys/bluetooth/init.c` owns the NimBLE host channel, waiting while the

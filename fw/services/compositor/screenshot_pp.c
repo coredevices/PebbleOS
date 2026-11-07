@@ -9,7 +9,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/screenshot_pp.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 
 #include <applib/graphics/framebuffer.h>
@@ -193,11 +193,11 @@ void screenshot_send_next_chunk(void *raw_state) {
 
   prv_request_fast_connection(session);
 
-  system_task_add_callback(screenshot_send_next_chunk, state);
+  sys_work_add(screenshot_send_next_chunk, state);
 }
 
 static void prv_frozen_cb(void *data) {
-  system_task_add_callback(screenshot_send_next_chunk, data);
+  sys_work_add(screenshot_send_next_chunk, data);
 }
 
 void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,

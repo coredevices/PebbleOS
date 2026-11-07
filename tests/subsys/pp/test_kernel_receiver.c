@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/pp/endpoint.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <clar.h>
 
@@ -13,14 +13,14 @@
 ///////////////////////////////////////////////////////////
 
 #include <fakes/fake_pbl_malloc.h>
-#include <fakes/fake_system_task.h>
+#include <fakes/fake_sys_work.h>
 
 typedef void (*CallbackEventCallback)(void *data);
 
 static int s_kernel_main_schedule_count;
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   ++s_kernel_main_schedule_count;
-  system_task_add_callback(callback, data);
+  sys_work_add(callback, data);
 }
 
 #define FAKE_SESSION ((struct pbl_pp_session *)1)
@@ -117,7 +117,7 @@ void test_kernel_receiver__initialize(void) {
 }
 
 void test_kernel_receiver__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 void test_kernel_receiver__zero_length_is_dropped(void) {
@@ -138,7 +138,7 @@ void test_kernel_receiver__prepare_write_finish_single(void) {
   cl_assert_equal_i(s_kernel_main_schedule_count, 0);
 
   prv_set_expected_data(data, strlen(data));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerA], 1);
   cl_assert_equal_p(s_handler_session[HandlerA], FAKE_SESSION);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
@@ -153,7 +153,7 @@ void test_kernel_receiver__main_task_endpoint(void) {
   prv_assert_no_handler_calls();
 
   prv_set_expected_data(data, strlen(data));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerC], 1);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
@@ -181,7 +181,7 @@ void test_kernel_receiver__multiple_sessions(void) {
     cl_assert_equal_i(s_handler_call_count[i], 0);
 
     prv_set_expected_data(data[i], strlen(data[i]));
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
     cl_assert_equal_i(s_handler_call_count[i], 1);
     cl_assert_equal_p(s_handler_session[i], session[i]);
   }
@@ -200,7 +200,7 @@ void test_kernel_receiver__same_session_batched(void) {
   prv_assert_no_handler_calls();
 
   s_skip_data_assert = true;
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerA], batch_num);
 
   cl_assert_equal_i(s_recorded_count, batch_num);
@@ -224,15 +224,15 @@ void test_kernel_receiver__batch_drains_one_per_callback(void) {
   s_skip_data_assert = true;
 
   // The flood coalesces into a single pending callback.
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   for (int i = 0; i < batch_num; i++) {
     cl_assert_equal_i(s_handler_call_count[HandlerA], i);
-    fake_system_task_callbacks_invoke(1);
+    fake_sys_work_callbacks_invoke(1);
     cl_assert_equal_i(s_handler_call_count[HandlerA], i + 1);
   }
 
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
 
@@ -241,11 +241,11 @@ void test_kernel_receiver__bg_and_main_drain_independently(void) {
 
   pbl_pp_kernel_receiver.finish(prv_prepare_write(FAKE_SESSION, HandlerA, &data, 1));
   pbl_pp_kernel_receiver.finish(prv_prepare_write(FAKE_SESSION, HandlerC, &data, 1));
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 2);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 2);
   cl_assert_equal_i(s_kernel_main_schedule_count, 1);
 
   s_skip_data_assert = true;
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerA], 1);
   cl_assert_equal_i(s_handler_call_count[HandlerC], 1);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
@@ -257,7 +257,7 @@ void test_kernel_receiver__receiver_cleanup(void) {
   struct pbl_pp_receiver *receiver = prv_prepare_write(FAKE_SESSION, HandlerA, data, strlen(data));
   pbl_pp_kernel_receiver.cleanup(receiver);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_no_handler_calls();
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
@@ -273,7 +273,7 @@ void test_kernel_receiver__cleanup_after_finish(void) {
   cl_assert(fake_pbl_malloc_num_net_allocs() != 0);
 
   prv_set_expected_data(data, strlen(data));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_handler_call_count[HandlerA], 1);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }

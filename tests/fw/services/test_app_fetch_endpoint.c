@@ -16,7 +16,7 @@
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////
@@ -80,7 +80,7 @@ void test_app_fetch_endpoint__cleanup(void) {
   fake_transport_destroy(s_transport);
   s_transport = nullptr;
   fake_comm_session_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 /*************************************
@@ -117,7 +117,7 @@ void test_app_fetch_endpoint__app_fetch_binaries(void) {
   app_fetch_binaries(&uuid_1, app_id_1, 0);
 
   // process system task events
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   fake_comm_session_process_send_next();
 
   // if anything is planning on being done relating to the ACK sent back from phone,
@@ -131,13 +131,13 @@ static void prv_fetch_complete_app() {
     .object_type = ObjectAppResources,
     .has_cookie = true,
   });
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   app_fetch_put_bytes_event_handler(&(PebblePutBytesEvent){
     .type = PebblePutBytesEventTypeCleanup,
     .object_type = ObjectWatchApp,
     .has_cookie = true,
   });
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 void test_app_fetch_endpoint__fetch_complete(void) {

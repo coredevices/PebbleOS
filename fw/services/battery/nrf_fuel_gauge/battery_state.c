@@ -14,7 +14,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/ratio.h>
 
 #include <kernel/events.h>
@@ -436,7 +436,7 @@ static void prv_enqueue_update(bool force) {
   if (s_update_pending) {
     return;
   }
-  if (system_task_add_callback(prv_update_state, nullptr)) {
+  if (sys_work_add(prv_update_state, nullptr)) {
     s_update_pending = true;
   }
 }

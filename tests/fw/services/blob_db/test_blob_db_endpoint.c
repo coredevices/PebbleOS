@@ -14,7 +14,7 @@
 // Fakes
 ////////////////////////////////////
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////
@@ -31,8 +31,8 @@ extern void blob_db_protocol_msg_callback(struct pbl_pp_session *session, const 
 
 static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
 
-// used to test the filling of the system_task queue
-static uint32_t system_task_queue_size = 7;
+// used to test the filling of the sys_work queue
+static uint32_t sys_work_queue_size = 7;
 
 // used to examine sending buffer for valid contents
 static uint8_t s_data[1024];
@@ -57,7 +57,7 @@ static uint8_t *process_blob_db_command(const uint8_t *command, uint32_t length)
   s_sending_data_length = 0;
 
   blob_db_protocol_msg_callback(s_session, command, length);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   fake_comm_session_process_send_next();
   cl_assert(BLOB_DB_ENDPOINT_ID == s_sending_endpoint_id);
   return s_data;
@@ -72,7 +72,7 @@ void test_blob_db_endpoint__initialize(void) {
   struct fake_transport *transport =
       fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
-  system_task_set_available_space(system_task_queue_size);
+  sys_work_set_available_space(sys_work_queue_size);
 }
 
 void test_blob_db_endpoint__cleanup(void) {

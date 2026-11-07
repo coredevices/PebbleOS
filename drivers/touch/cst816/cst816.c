@@ -10,7 +10,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -419,7 +419,7 @@ static void prv_irq_handler(void *arg) {
   }
 
   state->work_pending = true;
-  if (!system_task_add_callback_from_isr_droppable_raised(prv_work, arg)) {
+  if (!sys_work_try_add_raised(prv_work, arg)) {
     state->work_pending = false;
   }
 }

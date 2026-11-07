@@ -11,7 +11,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 
 #include <applib/ui/dialogs/dialog.h>
@@ -82,7 +82,7 @@ void ping_send_if_due(void) {
   }
 
   // Offload to KernelBG, because pbl_pp_send() may block.
-  system_task_add_callback(prv_send_ping_kernel_bg_cb, nullptr);
+  sys_work_add(prv_send_ping_kernel_bg_cb, nullptr);
   s_is_ping_kernel_bg_callback_scheduled = true;
 }
 

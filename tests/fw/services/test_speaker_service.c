@@ -14,7 +14,7 @@
 #include <fake_mutex.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Alerts preferences: speaker unmuted by default, no volume cap
 static bool s_speaker_muted;
@@ -34,8 +34,8 @@ bool do_not_disturb_is_active(void) {
   return s_dnd_active;
 }
 
-bool system_task_add_callback_from_isr_droppable_raised(SystemTaskEventCallback cb, void *data) {
-  return system_task_add_callback(cb, data);
+bool sys_work_try_add_raised(SysWorkCallback cb, void *data) {
+  return sys_work_add(cb, data);
 }
 
 void pbl_irq_lock(void) {
@@ -152,7 +152,7 @@ static void prv_hw_period(void) {
 // A period followed by the KernelBG work it scheduled
 static void prv_period(void) {
   prv_hw_period();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 static void prv_pump_until_idle(void) {
@@ -162,7 +162,7 @@ static void prv_pump_until_idle(void) {
 }
 
 void test_speaker_service__initialize(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_event_init();
   s_running = false;
   s_start_count = 0;
@@ -181,7 +181,7 @@ void test_speaker_service__initialize(void) {
 
 void test_speaker_service__cleanup(void) {
   speaker_service_stop();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 // A tone shorter than the device ring must still be played in full, and the device must play
@@ -265,13 +265,13 @@ void test_speaker_service__stream_refills_from_the_period_wakeup(void) {
   cl_assert_equal_i(speaker_service_stream_write(samples, sizeof(samples)), sizeof(samples));
   prv_hw_period();
   cl_assert_equal_i(s_samples_written, 0);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   // A wakeup already scheduled is not scheduled again
   prv_hw_period();
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_hw_period();
   cl_assert_equal_i(s_samples_written, 512);
   cl_assert_equal_i(s_nonzero_samples, 512);
@@ -462,7 +462,7 @@ static void prv_resample_partition(const int16_t *input, unsigned partition, int
   cl_assert(s_output_count >= 2 * RESAMPLE_INPUT_SAMPLES);
   memcpy(output, s_output, 2 * RESAMPLE_INPUT_SAMPLES * sizeof(int16_t));
   speaker_service_stop();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 void test_speaker_service__upsampling_does_not_depend_on_packet_boundaries(void) {
@@ -503,7 +503,7 @@ void test_speaker_service__upsampling_underrun_runs_silence_through_the_filter(v
   prv_hw_period();
   cl_assert_equal_i(s_samples_written, 6);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_hw_period();
   cl_assert_equal_i(s_samples_written, 6 + 512);
   const int16_t expected[] = {0, 0, 0, 0, 0, -1000, 0, 9000, 16000, 9000, 0, -1000, 0, 0};

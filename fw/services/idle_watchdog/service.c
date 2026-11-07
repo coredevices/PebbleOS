@@ -5,7 +5,7 @@
 
 #include <pbl/services/idle_watchdog.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <applib/event_service_client.h>
 #include <comm/ble/gap_le_connection.h>
@@ -37,7 +37,7 @@ static void prv_handle_watchdog_timeout_cb(void *not_used) {
 }
 
 static void prv_handle_watchdog_timeout(void *not_used) {
-  system_task_add_callback(prv_handle_watchdog_timeout_cb, nullptr);
+  sys_work_add(prv_handle_watchdog_timeout_cb, nullptr);
 }
 
 static void prv_watchdog_feed(PebbleEvent *e, void *context) {

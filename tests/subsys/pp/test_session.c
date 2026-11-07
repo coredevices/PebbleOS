@@ -17,10 +17,10 @@
 ///////////////////////////////////////////////////////////
 
 #include <fake_kernel_malloc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  system_task_add_callback(callback, data);
+  sys_work_add(callback, data);
 }
 
 static bool s_in_launcher_task;
@@ -147,7 +147,7 @@ void test_session__initialize(void) {
 }
 
 void test_session__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_kernel_malloc_mark_assert_equal();
   fake_kernel_malloc_deinit();
 }
@@ -302,23 +302,23 @@ void test_session__get_app_session_falls_back_to_hybrid(void) {
 
 void test_session__send_next_deduping(void) {
   struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 
   for (int i = 0; i < 5; ++i) {
     pbl_pp_session_send_next(session);
-    cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+    cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
   }
   cl_assert_equal_b(pbl_pp__send_next_is_pending(session), true);
   cl_assert_equal_i(s_send_next_count, 0);
 
-  fake_system_task_callbacks_invoke_pending();
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+  fake_sys_work_callbacks_invoke_pending();
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
   cl_assert_equal_i(s_send_next_count, 1);
   cl_assert_equal_b(pbl_pp__send_next_is_pending(session), false);
 
   pbl_pp_session_send_next(session);
   pbl_pp_session_send_next(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_send_next_count, 2);
 
   pbl_pp_session_close(session);
@@ -326,17 +326,17 @@ void test_session__send_next_deduping(void) {
 
 void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
   struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 
   pbl_pp_session_send_next(session);
   pbl_pp_session_close(session);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_send_next_count, 0);
 }
 
 void test_session__send_next_now_keeps_pending_flag(void) {
   struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 
   pbl_pp_session_send_next(session);
   cl_assert_equal_b(pbl_pp__send_next_is_pending(session), true);
@@ -345,7 +345,7 @@ void test_session__send_next_now_keeps_pending_flag(void) {
   cl_assert_equal_i(s_send_next_count, 1);
   cl_assert_equal_b(pbl_pp__send_next_is_pending(session), true);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_b(pbl_pp__send_next_is_pending(session), false);
   cl_assert_equal_i(s_send_next_count, 2);
 
@@ -384,11 +384,11 @@ void test_session__responsiveness(void) {
 
   // Transports without the notion grant at once, on KernelMain.
   struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   pbl_pp_session_set_responsiveness(qemu, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10,
                                     prv_granted);
   cl_assert_equal_i(s_responsiveness_count, 1);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_granted_count, 1);
 
   pbl_pp_session_close(gatt);

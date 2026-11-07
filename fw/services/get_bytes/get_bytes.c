@@ -14,7 +14,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -135,7 +135,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
       return;
     }
     // Timed out, try again
-    system_task_add_callback(prv_protocol_send_next_chunk, state);
+    sys_work_add(prv_protocol_send_next_chunk, state);
     return;
   }
 
@@ -187,7 +187,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
                                       PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS, nullptr);
   }
 
-  system_task_add_callback(prv_protocol_send_next_chunk, state);
+  sys_work_add(prv_protocol_send_next_chunk, state);
   return;
 
 cleanup:

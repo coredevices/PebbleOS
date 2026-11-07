@@ -10,7 +10,7 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
@@ -51,7 +51,7 @@ CrashInfo make_crash_info_pc_lr(uintptr_t pc, uintptr_t lr) {
   return (CrashInfo){.pc = pc, .pc_known = true, .lr = lr, .lr_known = true};
 }
 
-static void prv_log_app_lr_and_pc_system_task(void *data) {
+static void prv_log_app_lr_and_pc_sys_work(void *data) {
   CrashInfo *crash_info = (CrashInfo *)data;
 
   char lr_str[16];
@@ -199,7 +199,7 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
 
   CrashInfo crash_info = make_crash_info_pc(stashed_lr);
   setup_log_app_crash_info(crash_info);
-  system_task_add_callback(prv_log_app_lr_and_pc_system_task, &s_current_app_crash_info);
+  sys_work_add(prv_log_app_lr_and_pc_sys_work, &s_current_app_crash_info);
 
   prv_kill_user_process(stashed_lr);
   for (;;) {
@@ -225,7 +225,7 @@ static void prv_save_debug_registers(unsigned int *stacked_args) {
 }
 
 static void hardware_fault_landing_zone(void) {
-  prv_log_app_lr_and_pc_system_task(&s_current_app_crash_info);
+  prv_log_app_lr_and_pc_sys_work(&s_current_app_crash_info);
 
   // Pass the original LR/PC down so a Worker hardfault gets a real address
   // when it routes to kernel_fault.

@@ -24,7 +24,7 @@
 #include <fake_events.h>
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////
@@ -122,7 +122,7 @@ void test_app_cache__initialize(void) {
 }
 
 void test_app_cache__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 
   s_test_id_ql_up = 0;
   s_test_id_ql_down = 0;
@@ -323,7 +323,7 @@ void test_app_cache__corrupt_key(void) {
   // force iteration on the app_cache. This will find the corrupted entry, and delete the app cache
   app_cache_free_up_space(1);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_b(false, app_cache_entry_exists(app1.id));
   cl_assert_equal_b(false, app_cache_entry_exists(app2.id));
   cl_assert_equal_b(false, app_cache_entry_exists(app3.id));
@@ -418,7 +418,7 @@ void test_app_cache__free_up_space_keeps_running_processes(void) {
   prv_cleanup();
   // ask for everything: only the two running processes may survive
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(SIZE_SUM));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_b(true, app_cache_entry_exists(17));
   cl_assert_equal_b(true, app_cache_entry_exists(50));
   cl_assert_equal_i(t_data[16].size + t_data[49].size, app_cache_get_size());
@@ -435,7 +435,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert(after_size <= (before_size - to_free));
 
@@ -445,7 +445,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - to_free));
 
@@ -455,7 +455,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - 207357));
 
@@ -465,7 +465,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - to_free));
 
@@ -475,7 +475,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, 0);
 
@@ -485,7 +485,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(E_INVALID_ARGUMENT, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, before_size);
 
@@ -495,7 +495,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   before_size = app_cache_get_size();
   cl_assert(before_size < to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, 0);
 }
@@ -559,7 +559,7 @@ void test_app_cache__free_up_space_save_defaults(void) {
   PBL_LOG_DBG("%d %d %d", to_free, after_free, before_size);
   cl_assert(before_size >= to_free);
   cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert(after_size == (before_size - to_free));
 }

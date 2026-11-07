@@ -20,7 +20,7 @@ extern void launcher_app_message_protocol_msg_callback_deprecated(struct pbl_pp_
 #include <fake_app_manager.h>
 #include <fake_pbl_malloc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////
@@ -112,7 +112,7 @@ void test_launcher_app_message__cleanup(void) {
   s_transport = nullptr;
   s_session = nullptr;
   fake_comm_session_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 void test_launcher_app_message__ingore_too_short_message(void) {

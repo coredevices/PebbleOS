@@ -15,7 +15,7 @@
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline.h>
@@ -2120,7 +2120,7 @@ static void prv_reload_settings(void *not_used) {
 }
 
 static void prv_settings_file_changed_cb(void *data) {
-  system_task_add_callback(prv_reload_settings, data);
+  sys_work_add(prv_reload_settings, data);
 }
 
 static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
@@ -2342,17 +2342,17 @@ static void prv_test_push_nap_session(void *unused) {
 }
 
 void activity_insights_test_push_summary_pins(void) {
-  system_task_add_callback(prv_test_push_summary_pins, nullptr);
+  sys_work_add(prv_test_push_summary_pins, nullptr);
 }
 
 void activity_insights_test_push_rewards(void) {
-  system_task_add_callback(prv_test_push_rewards, nullptr);
+  sys_work_add(prv_test_push_rewards, nullptr);
 }
 
 void activity_insights_test_push_walk_run_sessions(void) {
-  system_task_add_callback(prv_test_push_walk_run_session, nullptr);
+  sys_work_add(prv_test_push_walk_run_session, nullptr);
 }
 
 void activity_insights_test_push_nap_session(void) {
-  system_task_add_callback(prv_test_push_nap_session, nullptr);
+  sys_work_add(prv_test_push_nap_session, nullptr);
 }

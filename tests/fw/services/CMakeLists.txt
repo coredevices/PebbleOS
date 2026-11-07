@@ -458,9 +458,9 @@ pbl_clar_test(test_clock_time
     tests/fakes/fake_rtc.c
 )
 
-pbl_clar_test(test_system_task
+pbl_clar_test(test_sys_work
   SOURCES
-    fw/services/system_task/service.c
+    fw/services/sys_work/service.c
     kernel/tick.c
     kernel/sched.c
     kernel/timer.c
@@ -486,7 +486,7 @@ pbl_clar_test(test_system_task
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
     CONFIG_TASK_WDT_TIMEOUT_MS=5000
-    CONFIG_SERVICE_SYSTEM_TASK_LOG_LEVEL=0
+    CONFIG_SERVICE_SYS_WORK_LOG_LEVEL=0
     PBL_NO_LINKER_SCRIPT
 )
 

@@ -53,7 +53,7 @@ void prefs_sync_init(void) {
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // We start time out at 5pm on Jan 1, 2015 for all of these tests
 static const struct pbl_tm s_init_time_tm = {
@@ -78,7 +78,7 @@ void health_tracking_ui_feature_show_disabled(void) {
 // These are declared as PBL_T_STATIC in activity.c
 void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
 void prv_spo2_subscription_cb(PebbleHRMEvent *hrm_event, void *context);
-void prv_minute_system_task_cb(void *data);
+void prv_minute_sys_work_cb(void *data);
 
 void hrm_manager_handle_prefs_changed(void) {
 }
@@ -176,18 +176,18 @@ AppInstallId app_get_app_id(void) {
 // ======================================================================================
 // Queue stubs, to support the semaphore that activity.c uses to block on a kernel BG callback
 int s_queue_value = 0;
-static bool s_system_task_stalled;
+static bool s_sys_work_stalled;
 
 void pbl_sem_init(struct pbl_sem *s, uint32_t initial, uint32_t limit) {
 }
 
 int pbl_sem_take(struct pbl_sem *s, pbl_timeout_t timeout) {
-  if (s_system_task_stalled) {
+  if (s_sys_work_stalled) {
     fake_rtc_increment_ticks(PBL_TICK_HZ);
     return -EAGAIN;
   }
   while (s_queue_value <= 0) {
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
   s_queue_value--;
   return 0;
@@ -738,7 +738,7 @@ static void prv_feed_canned_accel_data(uint32_t num_sec, uint32_t steps_per_minu
     utc_secs += 1;
     if ((utc_secs % 60) == 0) {
       fake_cron_job_fire();
-      fake_system_task_callbacks_invoke_pending();
+      fake_sys_work_callbacks_invoke_pending();
     }
   }
   PBL_ASSERTN(num_steps == 0);
@@ -774,7 +774,7 @@ static void prv_feed_raw_accel_data(AccelRawData *samples, uint32_t num_samples)
     utc_secs += 1;
     if ((utc_secs % 60) == 0) {
       fake_cron_job_fire();
-      fake_system_task_callbacks_invoke_pending();
+      fake_sys_work_callbacks_invoke_pending();
     }
   }
 }
@@ -789,7 +789,7 @@ static void prv_advance_by_days(uint32_t num_days) {
     fake_rtc_increment_ticks(PBL_TICK_HZ * PBL_SEC_PER_DAY);
 
     fake_cron_job_fire();
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 }
 
@@ -840,7 +840,7 @@ static void prv_uncompress_captured_data(AccelRawData *data, uint32_t num_sample
 static void prv_activity_init_and_set_enabled(bool enable) {
   activity_init();
   activity_set_enabled(enable);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 // -----------------------------------------------------------------------------------------
@@ -965,9 +965,9 @@ void test_activity__initialize(void) {
 
 // ---------------------------------------------------------------------------------------
 void test_activity__cleanup(void) {
-  s_system_task_stalled = false;
+  s_sys_work_stalled = false;
   activity_stop_tracking();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 // ---------------------------------------------------------------------------------------
@@ -998,7 +998,7 @@ void test_activity__init_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Feed in 100 steps/min over 1 min, 1 minute of deep and 1 minute of light sleep
   prv_feed_canned_accel_data(60, 100, ActivitySleepStateAwake);
@@ -1186,7 +1186,7 @@ void test_activity__day_rollover(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Feed in 100 steps/min over 1 min, 1 minute of deep and 1 minute of light sleep
   prv_feed_canned_accel_data(60, 100, ActivitySleepStateAwake);
@@ -1317,7 +1317,7 @@ void test_activity__step_derived_metrics(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // All tests start at 5pm, which is 1020 minutes into a 1440 minute day. The BMR for
   // the above user is 1388 kcalories per day, so we expect to get:
@@ -1366,7 +1366,7 @@ void test_activity__step_derived_metrics(void) {
   // ----------------------------------------------------------------------------------
   // Reset and try another case. Faster pace and taller person
   activity_stop_tracking();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   const int k_height_mm_2 = 1830;
   activity_prefs_set_height_mm(k_height_mm_2);
@@ -1382,7 +1382,7 @@ void test_activity__step_derived_metrics(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // All tests start at 5pm, which is 1020 minutes into a 1440 minute day. The BMR for
   // the above user is 1859 kcalories per day, so we expect to get:
@@ -1423,7 +1423,7 @@ void test_activity__sleep_derived_metrics(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // All of our tests start at 5pm. Let's enter a sleep cycle where the user gets into bed
   // at 10pm, takes 30 minutes to fall asleep, and wakes up at 6am.
@@ -1486,7 +1486,7 @@ void test_activity__sleep_state_without_session(void) {
   int32_t value;
 
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   activity_private_state()->sleep_data.cur_state = ActivitySleepStateRestfulSleep;
   activity_private_state()->sleep_data.cur_state_elapsed_minutes = 30;
@@ -1507,7 +1507,7 @@ void test_activity__sleep_totals_cleared_on_session_delete(void) {
   int32_t value;
 
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   prv_feed_canned_accel_data(150 * PBL_SEC_PER_MIN, 0, ActivitySleepStateLightSleep);
   activity_get_metric(ActivityMetricSleepTotalSeconds, 1, &value);
@@ -1535,7 +1535,7 @@ void test_activity__sleep_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // All of our tests start at 5pm. Let's enter a sleep cycle where the user has a sleep session
   // before the cut-off for the new day
@@ -1584,7 +1584,7 @@ void test_activity__raw_sample_collection(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // ---------------------------------------------------------------------------------------
   // Feed in some raw samples where every sample is unique
@@ -1663,7 +1663,7 @@ void test_activity__get_sleep_sessions(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Light walking, 50 steps/minute, until 10pm
   prv_feed_canned_accel_data(5 * PBL_SEC_PER_HOUR, 50, ActivitySleepStateAwake);
@@ -1696,7 +1696,7 @@ void test_activity__get_minute_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   const uint32_t exp_num_records = 10;
   HealthMinuteData minutes[exp_num_records];
@@ -1762,7 +1762,7 @@ void test_activity__get_minute_history(void) {
 // Requests larger than one kernel chunk are returned in full and in order
 void test_activity__get_minute_history_chunked(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   const uint32_t exp_num_records = 150;
   HealthMinuteData minutes[exp_num_records];
@@ -1786,7 +1786,7 @@ void test_activity__get_minute_history_chunked(void) {
 // KernelBG must not write into the caller's buffers after the caller timed out
 void test_activity__get_minute_history_timeout(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   HealthMinuteData minutes[10];
   memset(minutes, 0xA5, sizeof(minutes));
@@ -1796,15 +1796,15 @@ void test_activity__get_minute_history_timeout(void) {
   time_t utc_start = pbl_realtime() - ((ALG_MINUTES_PER_FILE_RECORD * 2) * PBL_SEC_PER_MIN);
 
   stub_pebble_tasks_set_current(PebbleTask_App);
-  s_system_task_stalled = true;
+  s_sys_work_stalled = true;
   uint32_t num_records = ARRAY_LENGTH(minutes);
   cl_assert(!activity_get_minute_history(minutes, &num_records, &utc_start));
   cl_assert_equal_i(num_records, 0);
   cl_assert_equal_i(utc_start, 0);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
-  s_system_task_stalled = false;
-  fake_system_task_callbacks_invoke_pending();
+  s_sys_work_stalled = false;
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_m(minutes, exp_minutes, sizeof(minutes));
 }
 
@@ -1812,7 +1812,7 @@ void test_activity__get_minute_history_timeout(void) {
 // A whole day of heart rates comes back from a single request, unavailable minutes as 0
 void test_activity__get_minute_heart_rate(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   const uint32_t num_minutes = PBL_MIN_PER_DAY;
   uint8_t bpm[num_minutes];
@@ -1834,19 +1834,19 @@ void test_activity__get_minute_heart_rate(void) {
 // Requests too large to fill in a bounded kernel buffer are refused
 void test_activity__get_minute_heart_rate_too_long(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   static uint8_t bpm[ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES + 1];
   stub_pebble_tasks_set_current(PebbleTask_App);
   cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
 }
 
 // ---------------------------------------------------------------------------------------
 // KernelBG must not write into the caller's buffer after the caller timed out
 void test_activity__get_minute_heart_rate_timeout(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   uint8_t bpm[10];
   memset(bpm, 0xA5, sizeof(bpm));
@@ -1854,12 +1854,12 @@ void test_activity__get_minute_heart_rate_timeout(void) {
   memset(exp_bpm, 0xA5, sizeof(exp_bpm));
 
   stub_pebble_tasks_set_current(PebbleTask_App);
-  s_system_task_stalled = true;
+  s_sys_work_stalled = true;
   cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
-  s_system_task_stalled = false;
-  fake_system_task_callbacks_invoke_pending();
+  s_sys_work_stalled = false;
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_m(bpm, exp_bpm, sizeof(bpm));
 }
 
@@ -1912,7 +1912,7 @@ void prv_assert_known_settings(void) {
 
   prv_activity_init_and_set_enabled(true);
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Feed in 100 steps/min over 1 min, 1 minute of deep and 1 minute of light sleep
   prv_feed_canned_accel_data(60, 100, ActivitySleepStateAwake);
@@ -2119,7 +2119,7 @@ void test_activity__health_events(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // -----------------------------------
   // Test that we receive step update events
@@ -2207,7 +2207,7 @@ void test_activity__sleep_after_timezone_change(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Advance to 6pm EST
   prv_feed_canned_accel_data(6 * PBL_SEC_PER_HOUR, 50, ActivitySleepStateAwake);
@@ -2290,7 +2290,7 @@ void test_activity__health_service_interpolation(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Feed in 100 steps/min over 10 minutes, for a total of 1000 steps for today
   prv_feed_canned_accel_data(10 * PBL_SEC_PER_MIN, 100, ActivitySleepStateAwake);
@@ -2359,7 +2359,7 @@ void test_activity__distance(void) {
   time_tm.tm_mday += 1;
   time_t utc_sec = pbl_mktime(&time_tm);
   pbl_realtime_set(utc_sec);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   int act_distance[ARRAY_LENGTH(tests)];
   const int k_elapsed_sec = 2 * PBL_SEC_PER_MIN;
@@ -2380,7 +2380,7 @@ void test_activity__distance(void) {
     // Start activity tracking. This method assumes it can be called from any task, so we must
     // invoke system callbacks to handle its KernelBG callback.
     activity_start_tracking(false /*test_mode*/);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
 
     // Feed in the test cadence for 2 minutes. Compute the expected distance in 2 minutes
     // as well
@@ -2408,7 +2408,7 @@ void test_activity__distance(void) {
     cl_assert_equal_i(value, health_service_sum_today(HealthMetricWalkedDistanceMeters));
 
     activity_stop_tracking();
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   // Print summary of results
@@ -2464,7 +2464,7 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
       s_num_hrm_callbacks++;
     }
     if ((pbl_realtime() % PBL_SEC_PER_MIN) == 0) {
-      prv_minute_system_task_cb(nullptr);
+      prv_minute_sys_work_cb(nullptr);
     }
   }
 }
@@ -2475,7 +2475,7 @@ void test_activity__hrm_sampling_period(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   s_test_alg_state.orientation = 0x11; // Not flat
 
   prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
@@ -2552,7 +2552,7 @@ void test_activity__hrm_median(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Reset the median
   activity_metrics_prv_reset_hr_stats();
@@ -2582,7 +2582,7 @@ void test_activity__hrm_median(void) {
   prv_advance_time_hr(3 /*sec*/, 100 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   prv_advance_time_hr(1 /*sec*/, 51 /*hr*/, CONF_GOOD, true /*force_continuous*/);
   prv_advance_time_hr(8 /*sec*/, 120 /*hr*/, CONF_WORST, true /*force_continuous*/);
-  prv_minute_system_task_cb(nullptr);
+  prv_minute_sys_work_cb(nullptr);
   activity_metrics_prv_get_median_hr_bpm(&median, &total_weight);
   cl_assert_equal_i(median, 51);
 
@@ -2621,7 +2621,7 @@ void test_activity__hrm_ignore(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   fake_event_reset_count();
   fake_event_set_callback(prv_fake_hr_event_handler);
@@ -2681,7 +2681,7 @@ static uint8_t prv_take_spo2_percent(void) {
 // no longer replace it.
 void test_activity__spo2_prefers_high_confidence(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   ActivitySpO2Support *spo2 = &activity_private_state()->spo2;
   spo2->num_valid_samples = 0;
   spo2->num_high_confidence_samples = 0;
@@ -2711,7 +2711,7 @@ void test_activity__spo2_deferred_while_walking(void) {
   activity_prefs_set_spo2_enabled(true);
   activity_prefs_set_spo2_measurement_interval(HRMonitoringInterval_10Min);
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   ActivityState *state = activity_private_state();
   state->hr.currently_sampling = false;
@@ -2737,7 +2737,7 @@ void test_activity__spo2_deferred_while_walking(void) {
 // Today is Thursday
 void test_activity__prv_set_metric(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   int32_t metric_values[ACTIVITY_HISTORY_DAYS] = {};
 
@@ -2818,7 +2818,7 @@ void test_activity__prv_set_metric(void) {
   cl_assert_equal_i(metric_values[1], 60);
 
   activity_stop_tracking();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   activity_metrics_prv_set_metric(ActivityMetricStepCount, PBL_THURSDAY, 5555);
   activity_get_metric(ActivityMetricStepCount, 1, metric_values);
@@ -2830,7 +2830,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // No sessions active, ensure that asking if a run is ongoing returns false
   cl_assert_equal_b(false, activity_sessions_is_session_type_ongoing(ActivitySessionType_Run));
@@ -2880,7 +2880,7 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // No sessions active, ensure that asking if a sleep session is ongoing returns false
   cl_assert_equal_b(false, activity_sessions_is_session_type_ongoing(ActivitySessionType_Sleep));
@@ -2931,7 +2931,7 @@ void test_activity__activity_sessions_ongoing_multiple(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
   // invoke system callbacks to handle its KernelBG callback.
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // No sessions active, ensure that asking for run,walk,sleep returns false
   cl_assert_equal_b(false, activity_sessions_is_session_type_ongoing(ActivitySessionType_Run));
@@ -2997,7 +2997,7 @@ static void prv_set_median_hr_for_minutes(int bpm, int num_minutes) {
   memset(activity_private_state()->hr.weights, 100, num_samples);
 
   for (int i = 0; i < num_minutes; i++) {
-    prv_minute_system_task_cb(nullptr);
+    prv_minute_sys_work_cb(nullptr);
   }
 }
 
@@ -3009,7 +3009,7 @@ void test_activity__update_time_in_hr_zones(void) {
   int32_t zone1_minutes, zone2_minutes, zone3_minutes;
 
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   activity_metrics_prv_reset_hr_stats();
 
   cl_assert_equal_b(prv_is_hr_elevated(), false);
@@ -3090,7 +3090,7 @@ void test_activity__update_time_in_hr_zones(void) {
   time_t utc_sec = pbl_realtime();
   utc_sec += PBL_SEC_PER_DAY;
   pbl_realtime_set(utc_sec);
-  prv_minute_system_task_cb(nullptr);
+  prv_minute_sys_work_cb(nullptr);
   cl_assert_equal_b(prv_is_hr_elevated(), true); // stays elevated
   activity_get_metric(ActivityMetricHeartRateZone1Minutes, 1, &zone1_minutes);
   cl_assert_equal_i(zone1_minutes, 0);
@@ -3200,7 +3200,7 @@ void test_activity__activity_sessions_add_delete_sessions(void) {
 // Test that sessions are still logged after the clock was set into the future and corrected
 void test_activity__activity_sessions_logged_after_future_clock(void) {
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   struct pbl_tm start_tm = {
     // Jan 1, 2015, 10am
@@ -3242,7 +3242,7 @@ void test_activity__activity_sessions_logged_after_future_clock(void) {
 
   state->sleep_data.cur_state = ActivitySleepStateAwake;
   prv_reset_captured_dls_data();
-  prv_minute_system_task_cb(nullptr);
+  prv_minute_sys_work_cb(nullptr);
 
   // Only the sessions that ended before now are logged
   cl_assert_equal_i(s_num_dls_activity_records, 2);
@@ -3270,14 +3270,14 @@ void test_activity__reboot_after_dst_end_keeps_today(void) {
 
   // 2026-11-01 00:30 EDT: the day's history is stamped while DST is still in effect
   activity_stop_tracking();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   pbl_realtime_set(1793507400);
   prv_activity_init_and_set_enabled(true);
   activity_start_tracking(false /*test_mode*/);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   activity_metrics_set_metric_exact(ActivityMetricStepCount, 1234);
   activity_stop_tracking();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // After the change the stored period is 2027's, the clock service keeps 2026's as previous
   tz_info.dst_start = 1805007600;

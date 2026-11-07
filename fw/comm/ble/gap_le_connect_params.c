@@ -13,7 +13,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/units.h>
 
 #include <comm/bluetooth_analytics.h>
@@ -251,7 +251,7 @@ retry:
                   prv_watchdog_timer_callback, connection, 0);
 }
 
-static void prv_watchdog_system_task_callback(void *ctx) {
+static void prv_watchdog_sys_work_callback(void *ctx) {
   bt_lock();
   GAPLEConnection *connection = (GAPLEConnection *)ctx;
   // The connection may have gone away between scheduling and execution, so
@@ -274,7 +274,7 @@ static void prv_watchdog_timer_callback(void *ctx) {
   // NewTimers callbacks must never block on bt_lock: every other timer in the
   // system (vibes, UI timeouts) is stalled behind it while the BT stack holds
   // the lock. Defer to KernelBG, which re-validates the connection.
-  system_task_add_callback(prv_watchdog_system_task_callback, ctx);
+  sys_work_add(prv_watchdog_sys_work_callback, ctx);
 }
 
 void gap_le_connect_params_request(GAPLEConnection *connection,

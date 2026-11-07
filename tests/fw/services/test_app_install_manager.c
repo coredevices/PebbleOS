@@ -64,7 +64,7 @@ bool app_fetch_in_progress(void) {
   return false;
 }
 
-void app_fetch_cancel_from_system_task(void) {
+void app_fetch_cancel_from_sys_work(void) {
 }
 
 void app_session_capabilities_evict(const Uuid *app_uuid) {
@@ -83,7 +83,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-bool system_task_add_callback(void (*cb)(void *), void *data) {
+bool sys_work_add(void (*cb)(void *), void *data) {
   cb(data);
   return true;
 }

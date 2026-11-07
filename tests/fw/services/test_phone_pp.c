@@ -8,7 +8,7 @@
 #include <clar.h>
 #include <fake_events.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <kernel/events.h>
 
 extern void phone_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *iter,
@@ -55,7 +55,7 @@ void test_phone_pp__cleanup(void) {
 void test_phone_pp__incoming_no_caller_id(void) {
   uint8_t pp_msg[] = {0x04, 0x1a, 0xd4, 0x77, 0x08, 0x00, 0x00};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Incoming, true /* check_cookie */,
                         true /* check_name_number */, "Unknown", nullptr);
 }
@@ -65,7 +65,7 @@ void test_phone_pp__incoming_no_name(void) {
                       0x35, 0x35, 0x35, 0x2D, 0x35, 0x35, 0x35, 0x35, 0x00, // "555-555-5555"
                       0x00};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Incoming, true /* check_cookie */,
                         true /* check_name_number */, "", "555-555-5555");
 }
@@ -74,7 +74,7 @@ void test_phone_pp__incoming_no_number(void) {
   uint8_t pp_msg[] = {0x04, 0x1a, 0xd4, 0x77, 0x08, 0x00, 0x06,
                       0x42, 0x6F, 0x62, 0x62, 0x79, 0x00}; // "Bobby"
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Incoming, true /* check_cookie */,
                         true /* check_name_number */, "Bobby", "");
 }
@@ -84,7 +84,7 @@ void test_phone_pp__incoming(void) {
                       0x35, 0x35, 0x35, 0x2D, 0x35, 0x35, 0x35, 0x35, 0x00, // "555-555-5555"
                       0x06, 0x42, 0x6F, 0x62, 0x62, 0x79, 0x00};            // "Bobby"
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Incoming, true /* check_cookie */,
                         true /* check_name_number */, "Bobby", "555-555-5555");
 }
@@ -92,7 +92,7 @@ void test_phone_pp__incoming(void) {
 void test_phone_pp__start(void) {
   uint8_t pp_msg[] = {0x08, 0x1a, 0xd4, 0x77, 0x08};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
                         false /* check_name_number */, nullptr, nullptr);
 }
@@ -100,7 +100,7 @@ void test_phone_pp__start(void) {
 void test_phone_pp__end(void) {
   uint8_t pp_msg[] = {0x09, 0x1a, 0xd4, 0x77, 0x08};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_End, true /* check_cookie */, false /* check_name_number */,
                         nullptr, nullptr);
 }
@@ -148,7 +148,7 @@ void test_phone_pp__get_phone_call_state_response_no_calls(void) {
   pp_get_phone_state_set_enabled(true);
   uint8_t pp_msg[] = {0x83};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_End, false /* check_cookie */, false /* check_name_number */,
                         nullptr, nullptr);
 }
@@ -157,7 +157,7 @@ void test_phone_pp__get_phone_call_state_response_one_started_call(void) {
   pp_get_phone_state_set_enabled(true);
   uint8_t pp_msg[] = {0x83, 0x05, 0x08, 0x1a, 0xd4, 0x77, 0x08};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
                         false /* check_name_number */, nullptr, nullptr);
 }
@@ -166,7 +166,7 @@ void test_phone_pp__get_phone_call_state_response_two_started_calls(void) {
   pp_get_phone_state_set_enabled(true);
   uint8_t pp_msg[] = {0x83, 0x05, 0x12, 0x34, 0x45, 0x67, 0x89, 0x05, 0x08, 0x1a, 0xd4, 0x77, 0x08};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   // TODO: assert the first event as well
   prv_assert_last_event(PhoneEventType_Start, true /* check_cookie */,
                         false /* check_name_number */, nullptr, nullptr);
@@ -186,7 +186,7 @@ void test_phone_pp__get_phone_call_state_response_incoming(void) {
   pp_get_phone_state_set_enabled(true);
   uint8_t pp_msg[] = {0x83, 0x07, 0x04, 0x1a, 0xd4, 0x77, 0x08, 0x00, 0x00};
   phone_protocol_msg_callback(s_session, pp_msg, sizeof(pp_msg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // We shouldn't have emitted any event in this case
   cl_assert_equal_i(fake_event_get_count(), 0);

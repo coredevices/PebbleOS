@@ -11,7 +11,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 
 PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL);
@@ -55,7 +55,7 @@ static void prv_dispatch(void *data);
 static void prv_schedule_from_isr(void) {
   // A drop is retried on the next period; losing samples beats a full queue
   s_src.dispatch_pending = true;
-  if (!system_task_add_callback_from_isr_droppable(prv_dispatch, nullptr)) {
+  if (!sys_work_try_add(prv_dispatch, nullptr)) {
     s_src.dispatch_pending = false;
   }
 }
@@ -98,7 +98,7 @@ static void prv_dispatch(void *data) {
     }
 
     s_src.handler(s_src.buffer, s_src.buffer_len, s_src.context);
-    system_task_watchdog_feed();
+    sys_work_watchdog_feed();
   }
 
   pbl_irq_lock();
@@ -106,7 +106,7 @@ static void prv_dispatch(void *data) {
   s_src.dispatch_pending = more;
   pbl_irq_unlock();
 
-  if (more && !system_task_add_callback_droppable(prv_dispatch, nullptr)) {
+  if (more && !sys_work_try_add(prv_dispatch, nullptr)) {
     s_src.dispatch_pending = false;
   }
 

@@ -8,7 +8,7 @@
 
 #include <clar.h>
 #include <fake_new_timer.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <system/reboot_reason.h>
 #include <system/version.h>
 
@@ -89,7 +89,7 @@ void test_analytics__initialize(void) {
   s_collect_b_count = 0;
   s_collected_before_heartbeat = 0;
   stub_new_timer_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   pbl_analytics_init();
 }
 
@@ -100,7 +100,7 @@ void test_analytics__collectors_run_before_each_heartbeat(void) {
     cl_assert(stub_new_timer_fire(timer));
     cl_assert_equal_i(s_heartbeat_count, i - 1);
 
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
 
     cl_assert_equal_i(s_heartbeat_count, i);
     cl_assert_equal_i(s_collect_a_count, i);

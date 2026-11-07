@@ -22,7 +22,7 @@
 #include <fake_sem.h>
 #include <fake_session.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
 
@@ -248,12 +248,12 @@ static void prv_receive_install(uint32_t cookie) {
 static void prv_receive_init_fw_object(void) {
   prv_receive_init(VALID_OBJECT_SIZE, ObjectFirmware);
   fake_comm_session_process_send_next();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 static void prv_process_and_reset_test_counters(void) {
   fake_comm_session_process_send_next();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   s_acks_received = 0;
   s_nacks_received = 0;
 }
@@ -261,7 +261,7 @@ static void prv_process_and_reset_test_counters(void) {
 static void prv_receive_init_and_put_fw_object(void) {
   prv_receive_init(VALID_OBJECT_SIZE, ObjectFirmware);
   fake_comm_session_process_send_next();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   const uint8_t chunk[] = {0xaa, 0xbb, 0xcc, 0xdd};
   prv_receive_put(s_last_response_cookie, chunk, sizeof(chunk));
@@ -338,7 +338,7 @@ void test_put_bytes__cleanup(void) {
   put_bytes_deinit();
 
   fake_comm_session_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_event_clear_last();
 
   fake_pbl_malloc_check_net_allocs();
@@ -676,7 +676,7 @@ void test_put_bytes__receive_batched_messages(void) {
 
   prv_receive_init(VALID_OBJECT_SIZE * num_ops, ObjectFirmware);
   fake_comm_session_process_send_next();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   uint8_t buffer[num_ops * VALID_OBJECT_SIZE];
   for (size_t i = 0; i < sizeof(buffer); i += VALID_OBJECT_SIZE) {
@@ -694,7 +694,7 @@ void test_put_bytes__receive_batched_messages(void) {
     fake_pb_storage_register_cb_before_write(prv_cb_before_write);
 
     fake_comm_session_process_send_next();
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 
   fake_pb_storage_mem_assert_contents_written(buffer, sizeof(buffer));
@@ -711,14 +711,14 @@ void test_put_bytes__batched_messages_share_one_callback(void) {
   const uint8_t chunks[] = {0xaa, 0xbb, 0xcc, 0xdd};
   prv_receive_put(s_last_response_cookie, &chunks[0], 2);
   prv_receive_put(s_last_response_cookie, &chunks[2], 2);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   assert_ack_count(2);
   fake_pb_storage_mem_assert_contents_written(chunks, sizeof(chunks));
 
   prv_receive_put(s_last_response_cookie, chunks, 2);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -785,7 +785,7 @@ void test_put_bytes__commit_message_fw_description(void) {
   fake_pb_storage_register_cb_before_write(prv_flag_write);
   prv_receive_commit(s_last_response_cookie, EXPECTED_CRC);
   fake_comm_session_process_send_next();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   fake_pb_storage_register_cb_before_write(nullptr);
 
 #ifdef CONFIG_PBLBOOT
@@ -943,7 +943,7 @@ void test_put_bytes__put_chunk_restarts_timeout_timer(void) {
 
   const uint8_t chunk[] = {0xaa, 0xbb, 0xcc};
   prv_receive_put(s_last_response_cookie, chunk, sizeof(chunk));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_b(true, stub_new_timer_is_scheduled(timer_id));
   cl_assert_equal_i(PUT_BYTES_TIMEOUT_MS, stub_new_timer_timeout(timer_id));
@@ -955,7 +955,7 @@ void test_put_bytes__after_timeout_cleanup_and_allow_init_again(void) {
   assert_nack_count(0);
 
   stub_new_timer_fire(put_bytes_get_timer_id());
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_b(fake_pb_storage_mem_get_last_success(), false);
 
@@ -991,7 +991,7 @@ void test_put_bytes__expect_init_no_event_when_init_received(void) {
 
   fake_event_reset_count();
   stub_new_timer_fire(put_bytes_get_timer_id());
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   // Expect only "Cleanup" event:
   cl_assert_equal_i(fake_event_get_count(), 1);
@@ -1022,7 +1022,7 @@ void test_put_bytes__session_closed_after_fw_init(void) {
 
   // Close the BT session, have put_bytes react
   put_bytes_handle_comm_session_event(&app_event);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   assert_cleanup_event(ObjectFirmware, VALID_OBJECT_SIZE);
 }
@@ -1035,7 +1035,7 @@ void test_put_bytes__session_opened_before_fw_init(void) {
   // The session opening is handled after the update started
   put_bytes_handle_comm_session_event(&app_event);
   fake_event_reset_count();
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(fake_event_get_count(), 0);
 
   prv_receive_init_fw_object();
@@ -1050,7 +1050,7 @@ void test_put_bytes__session_closed_after_expect_init(void) {
 
   // Close the BT session, have put_bytes react
   put_bytes_handle_comm_session_event(&app_event);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   assert_cleanup_event(ObjectUnknown, 0);
 }

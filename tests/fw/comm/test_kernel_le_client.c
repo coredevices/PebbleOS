@@ -14,7 +14,7 @@
 // Stubs
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 void ams_create(void) {
 }
@@ -106,8 +106,8 @@ void gatt_client_subscriptions_reschedule(void) {
 }
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  // Use fake_system_task as mock:
-  system_task_add_callback(callback, data);
+  // Use fake_sys_work as mock:
+  sys_work_add(callback, data);
 }
 
 void ppogatt_create(void) {
@@ -240,7 +240,7 @@ void test_kernel_le_client__initialize(void) {
 
 void test_kernel_le_client__cleanup(void) {
   kernel_le_client_deinit();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 void test_kernel_le_client__read_response_consumed_even_if_client_is_gone(void) {

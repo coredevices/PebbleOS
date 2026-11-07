@@ -12,7 +12,7 @@
 
 #include <clar.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <logging/backends/flash.h>
 
 void test_log_flash__initialize(void) {
@@ -131,7 +131,7 @@ static void setup_and_test_expected_msg(char **msg_arr, int log_gen, int start_i
       pbl_log_flash_dump(log_gen, prv_flash_log_line_dump, prv_flash_log_dump_completed_cb);
   cl_assert(success);
   while (!s_completed) {
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
   cl_assert(s_completed_success);
 
@@ -336,7 +336,7 @@ void test_log_flash__long_lived_log(void) {
   cl_assert(rv);
 
   while (!s_completed) {
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
   cl_assert(s_completed_success);
 

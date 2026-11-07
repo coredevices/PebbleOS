@@ -22,7 +22,7 @@
 #include <fake_pebble_tasks.h>
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 static time_t now = 0;
 static int num_events_put = 0;
 
@@ -52,11 +52,11 @@ extern time_t get_reminder_timestamp(void);
 extern ReminderId *get_reminder_id(void);
 
 // Runs the reminder job if it is due at the given time.
-// system_task_add_callback is faked to enqueue, so we then drain the queue.
+// sys_work_add is faked to enqueue, so we then drain the queue.
 static void prv_advance_to_and_fire(time_t target) {
   now = target;
   fake_cron_job_fire_if_due(now);
-  fake_system_task_callbacks_invoke(1);
+  fake_sys_work_callbacks_invoke(1);
 }
 
 static TimelineItem item1 = {
@@ -189,7 +189,7 @@ void test_reminders__not_ready_yet(void) {
   // item2 has ts=100; before that, tick should do nothing.
   now = 50;
   fake_cron_job_fire_if_due(now);
-  fake_system_task_callbacks_invoke(1);
+  fake_sys_work_callbacks_invoke(1);
   cl_assert_equal_i(num_events_put, 1);
   cl_assert(get_reminder_armed());
   cl_assert_equal_i(get_reminder_timestamp(), 100);

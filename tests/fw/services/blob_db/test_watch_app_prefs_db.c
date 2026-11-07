@@ -17,7 +17,7 @@
 #include <fake_kernel_services_notifications.h>
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ void test_watch_app_prefs_db__flush(void) {
                                               sizeof(s_weather_prefs)),
                     S_SUCCESS);
   cl_assert_equal_i(watch_app_prefs_db_flush(), S_SUCCESS);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(watch_app_prefs_db_get_len(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), 0);
 }
 

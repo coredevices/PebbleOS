@@ -24,7 +24,7 @@ static TimelineItemAction s_reply_action = {
 ///////////////////////////////////////////////////////////
 #include "stubs_common.h"
 
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Externs
 ///////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ void test_timeline_actions__initialize(void) {
 }
 
 void test_timeline_actions__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 // Tests
@@ -197,7 +197,7 @@ void test_timeline_actions__displayed_item_needs_phone_support(void) {
 }
 
 // Dismiss all sends one dismiss at a time from the system task, never from KernelMain.
-void test_timeline_actions__dismiss_all_sends_from_system_task(void) {
+void test_timeline_actions__dismiss_all_sends_from_sys_work(void) {
   NotificationInfo notifications[3];
   for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
     notifications[i] = (NotificationInfo){.type = NotificationMobile, .id = {.byte0 = i + 1U}};
@@ -208,18 +208,18 @@ void test_timeline_actions__dismiss_all_sends_from_system_task(void) {
 
   for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
     cl_assert_equal_i(s_send_count, i);
-    cl_assert_equal_i(list_count(s_system_task_callback_head), 2);
+    cl_assert_equal_i(list_count(s_sys_work_callback_head), 2);
     cl_assert_equal_i(s_num_launcher_callbacks, 0);
 
-    fake_system_task_callbacks_invoke(1);
+    fake_sys_work_callbacks_invoke(1);
     cl_assert_equal_i(s_send_count, i + 1);
 
-    fake_system_task_callbacks_invoke(1);
+    fake_sys_work_callbacks_invoke(1);
     cl_assert_equal_i(s_num_launcher_callbacks, 1);
     prv_run_launcher_callback();
   }
 
   cl_assert_equal_i(s_send_count, ARRAY_LENGTH(notifications));
-  cl_assert_equal_i(list_count(s_system_task_callback_head), 0);
+  cl_assert_equal_i(list_count(s_sys_work_callback_head), 0);
   cl_assert_equal_i(s_num_launcher_callbacks, 0);
 }

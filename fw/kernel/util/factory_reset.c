@@ -9,7 +9,7 @@
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/event_loop.h>
@@ -38,7 +38,7 @@ static void prv_factory_reset_non_pfs_data() {
 
   // This function can block the system task for a long time.
   // Prevent callbacks being added to the system task so it doesn't overflow.
-  system_task_block_callbacks(true /* block callbacks */);
+  sys_work_block(true /* block callbacks */);
   launcher_block_popups(true);
 
   worker_manager_disable();

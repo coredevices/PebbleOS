@@ -8,7 +8,7 @@
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 
 #include <comm/bt_lock.h>
@@ -81,7 +81,7 @@ static void prv_start_active_mode(void *data) {
 //! Never block on bt_lock from the timer task (pbl_pp_session_set_responsiveness
 //! takes it); defer to KernelBG.
 static void prv_active_mode_timer_cb(void *data) {
-  system_task_add_callback(prv_start_active_mode, nullptr);
+  sys_work_add(prv_start_active_mode, nullptr);
 }
 
 AudioEndpointSessionId audio_endpoint_setup_transfer(

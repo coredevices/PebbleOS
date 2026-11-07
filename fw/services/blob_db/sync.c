@@ -7,7 +7,7 @@
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/util.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/list.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -62,7 +62,7 @@ static void prv_abandon_kernelbg_callback(void *data) {
 }
 
 static void prv_abandon_timer_callback(void *data) {
-  system_task_add_callback(prv_abandon_kernelbg_callback, data);
+  sys_work_add(prv_abandon_kernelbg_callback, data);
 }
 
 static void prv_timeout_kernelbg_callback(void *data) {
@@ -83,7 +83,7 @@ static void prv_timeout_kernelbg_callback(void *data) {
 }
 
 static void prv_timeout_timer_callback(void *data) {
-  system_task_add_callback(prv_timeout_kernelbg_callback, data);
+  sys_work_add(prv_timeout_kernelbg_callback, data);
 }
 
 static void prv_send_writeback(BlobDBSyncSession *session) {

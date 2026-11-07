@@ -18,7 +18,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <kernel/event_loop.h>
@@ -307,7 +307,7 @@ static void prv_install(void *data) {
 //! services an install needs have started. The work itself goes to the
 //! system task.
 static void prv_install_when_ready(void *data) {
-  system_task_add_callback(prv_install, data);
+  sys_work_add(prv_install, data);
 }
 
 static void prv_install_isr(void *arg) {

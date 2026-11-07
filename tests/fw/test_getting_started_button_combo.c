@@ -25,7 +25,7 @@ void app_window_stack_push(Window *window, bool animated) {
   return;
 }
 
-void system_task_add_callback(void (*callback)(void *data), void *data) {
+void sys_work_add(void (*callback)(void *data), void *data) {
   callback(data);
 }
 

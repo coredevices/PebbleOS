@@ -11,13 +11,13 @@
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/app_session.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
 
-extern void fake_system_task_callbacks_invoke_pending(void);
+extern void fake_sys_work_callbacks_invoke_pending(void);
 
 struct pbl_pp_session {
   ListNode node;
@@ -186,7 +186,7 @@ void pbl_pp_session_send_next(struct pbl_pp_session *session) {
   if (session->is_send_next_call_pending) {
     return;
   }
-  system_task_add_callback(prv_send_next_kernel_bg_cb, session);
+  sys_work_add(prv_send_next_kernel_bg_cb, session);
   session->is_send_next_call_pending = true;
 }
 
@@ -301,7 +301,7 @@ void fake_comm_session_process_send_next(void) {
     pbl_pp_session_send_next(session);
     session = next;
   }
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 uint32_t fake_comm_session_get_responsiveness_max_period(void) {

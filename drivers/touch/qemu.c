@@ -7,7 +7,7 @@
 #include <pbl/drivers/touch/qemu.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/bits.h>
 
 #include <hardware/qemu_memorymap.h>
@@ -44,7 +44,7 @@ static void prv_irq_handler(void) {
     return;
   }
 
-  s_work_pending = system_task_add_callback_from_isr(prv_work, nullptr);
+  s_work_pending = sys_work_add_from_isr(prv_work, nullptr);
 }
 
 PBL_IRQ_CONNECT(TOUCH, 6, prv_irq_handler, , 0);

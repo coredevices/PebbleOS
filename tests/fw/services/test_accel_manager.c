@@ -14,7 +14,7 @@
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // helpers from accel manager
 extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,
@@ -131,7 +131,7 @@ void test_accel_manager__initialize(void) {
 
 void test_accel_manager__cleanup(void) {
   test_accel_manager_reset();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
 }
 
 static void prv_noop_sample_handler(void *context) {
@@ -416,7 +416,7 @@ void test_accel_manager__a_consume_hands_a_waiting_batch_to_the_running_callback
   bool result = prv_consume(state);
 
   cl_assert(result);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 }
 
 //! While the running callback has a batch, the driver posts no second event for it
@@ -429,7 +429,7 @@ void test_accel_manager__a_waiting_batch_holds_off_the_next_event(void) {
 
   prv_feed(2);
 
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 }
 
 //! Once nothing is waiting, the consume releases the event and the next full batch posts one
@@ -444,7 +444,7 @@ void test_accel_manager__a_consume_with_nothing_waiting_releases_the_event(void)
 
   prv_feed(2);
 
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 2);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 2);
 }
 
 //! A consume posts no other subscriber's event, since that could wait on their queue under the lock

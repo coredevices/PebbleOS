@@ -12,7 +12,7 @@
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/notifications/do_not_disturb_toggle.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/util/math.h>
@@ -138,7 +138,7 @@ static void prv_try_update_schedule_mode(void *data) {
 }
 
 static void prv_try_update_schedule_mode_callback(bool clear_manual_override) {
-  system_task_add_callback(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
+  sys_work_add(prv_try_update_schedule_mode, (void *)(uintptr_t)clear_manual_override);
 }
 
 static void prv_schedule_cron_callback(struct pbl_cron_job *job, void *data) {

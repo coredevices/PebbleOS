@@ -37,7 +37,7 @@ bool app_fetch_in_progress(void) {
   return false;
 }
 
-void app_fetch_cancel_from_system_task(void) {
+void app_fetch_cancel_from_sys_work(void) {
 }
 
 extern AppInstallId app_db_check_next_unique_id(void);
