@@ -158,9 +158,9 @@ Logs are also persisted to a circular buffer in flash;
 
 ## Coredumps
 
-When the firmware crashes, it writes a coredump to SPI flash. The on-flash
-format, a header followed by chunked records including the register set of
-every thread, is documented in `fw/kernel/core_dump.c`.
+When the firmware crashes, it writes a coredump to SPI flash. The format, a
+header followed by chunked records including the register set of every thread,
+is documented in `pbl/coredump/format.h`. See {doc}`../../subsystems/coredump`.
 
 - `tools/analyze_coredump.py <symbols.elf> <coredump>` runs GDB in batch
   mode and prints a full report: backtraces for all threads, registers,

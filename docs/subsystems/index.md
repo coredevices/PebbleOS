@@ -10,6 +10,7 @@ it at link time, and a Kconfig option selects the backend.
 
 analytics.md
 bluetooth.md
+coredump.md
 crc.md
 fs.md
 input.md

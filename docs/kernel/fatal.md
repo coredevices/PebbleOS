@@ -14,6 +14,6 @@ flash, and a call site without a message is reduced to its return address.
 `kernel/fatal.c` logs the error and the address of the code that raised it,
 then calls `pbl_fatal_error_handler()`, the one hook the platform implements.
 The firmware's, in `fw/kernel/fault_handling.c`, records an assertion reboot
-reason, saves a core dump and reboots, or only kills the app when the error was
-raised by unprivileged code. Unit tests replace the whole of `kernel/fatal.c`
+reason, saves a {doc}`core dump <../subsystems/coredump>` and reboots, or only
+kills the app when the error was raised by unprivileged code. Unit tests replace the whole of `kernel/fatal.c`
 with `tests/stubs/default/fatal.c`, so `cl_assert_panic()` can catch a panic.
