@@ -12,5 +12,6 @@ pbl_library_sources(
   session.c
   version.c
 )
+pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_CONSOLE transports/console.c)
 pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_QEMU transports/qemu.c)
 pbl_linker_sources(rom-start pp.ld)

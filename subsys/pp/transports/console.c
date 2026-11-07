@@ -4,13 +4,14 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/console/console.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transport.h>
+#include <pbl/pp/transports/console.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
-#include <console/console_private.h>
 #include <kernel/events.h>
 
 #define OPCODE_DATA  1U
@@ -18,7 +19,7 @@
 #define OPCODE_CLOSE 3U
 
 #define OPCODE_LEN 1U
-#define MSS        (CONSOLE_FRAME_MTU - OPCODE_LEN)
+#define MSS        (PBL_CONSOLE_FRAME_MTU - OPCODE_LEN)
 
 #define TX_RETRY_MS  200U
 #define TX_MAX_TRIES 25U
@@ -36,10 +37,10 @@ static struct {
 } s_transport;
 
 // Under s_lock.
-static uint8_t s_tx_buf[CONSOLE_FRAME_MTU];
+static uint8_t s_tx_buf[PBL_CONSOLE_FRAME_MTU];
 
 static void prv_send_opcode(uint8_t opcode) {
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, 0U, &opcode, sizeof(opcode));
+  pbl_console_frame_send(PBL_CONSOLE_CHANNEL_PP, 0U, &opcode, sizeof(opcode));
 }
 
 static void prv_retry_timer_cb(void *unused);
@@ -48,8 +49,8 @@ static void prv_send_frame(void) {
   s_tx_buf[0] = OPCODE_DATA;
   pbl_pp_session_send_queue_copy(s_transport.session, 0U, s_transport.tx_len,
                                  &s_tx_buf[OPCODE_LEN]);
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, s_transport.tx_seq, s_tx_buf,
-                          OPCODE_LEN + s_transport.tx_len);
+  pbl_console_frame_send(PBL_CONSOLE_CHANNEL_PP, s_transport.tx_seq, s_tx_buf,
+                         OPCODE_LEN + s_transport.tx_len);
   new_timer_start(s_transport.tx_timer, TX_RETRY_MS, prv_retry_timer_cb, nullptr, 0);
 }
 
@@ -77,7 +78,7 @@ static const struct pbl_pp_transport s_pp_transport = {
   .send_next = prv_send_next,
 };
 
-void pbl_console__pp_handle_ack(uint8_t seq) {
+void pbl_pp_console_ack(uint8_t seq) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_transport.tx_len > 0U && seq == s_transport.tx_seq) {
     new_timer_stop(s_transport.tx_timer);
@@ -146,7 +147,7 @@ static void prv_retry_timer_cb(void *unused) {
   }
 }
 
-void pbl_console__pp_handle_frame(const void *data, size_t len) {
+void pbl_pp_console_receive(const void *data, size_t len) {
   const uint8_t *bytes = data;
 
   if (len < OPCODE_LEN) {

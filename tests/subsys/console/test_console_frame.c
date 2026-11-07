@@ -16,7 +16,7 @@
 static char s_text[512];
 static size_t s_text_len;
 
-static uint8_t s_pp[CONSOLE_FRAME_MTU];
+static uint8_t s_pp[PBL_CONSOLE_FRAME_MTU];
 static size_t s_pp_len;
 static int s_pp_count;
 
@@ -54,13 +54,13 @@ void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data) {
   s_timer_work_cb = cb;
 }
 
-void pbl_console__pp_handle_frame(const void *data, size_t len) {
+void pbl_pp_console_receive(const void *data, size_t len) {
   memcpy(s_pp, data, len);
   s_pp_len = len;
   s_pp_count++;
 }
 
-void pbl_console__pp_handle_ack(uint8_t seq) {
+void pbl_pp_console_ack(uint8_t seq) {
   s_acked = seq;
 }
 
@@ -97,7 +97,7 @@ static void prv_run_task(void) {
 }
 
 static size_t prv_encode(char *out, char channel, uint8_t seq, const void *payload, size_t len) {
-  uint8_t raw[CONSOLE_FRAME_MTU + 5];
+  uint8_t raw[PBL_CONSOLE_FRAME_MTU + 5];
   size_t pos = 0;
 
   raw[0] = seq;
@@ -116,7 +116,7 @@ static size_t prv_encode(char *out, char channel, uint8_t seq, const void *paylo
 
 static void prv_feed_frame(uint8_t seq, const char *payload) {
   char frame[1024];
-  const size_t len = prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, seq, payload, strlen(payload));
+  const size_t len = prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, seq, payload, strlen(payload));
 
   prv_feed(frame, len);
   prv_run_task();
@@ -172,14 +172,14 @@ void test_console_frame__frame_is_delivered_and_acknowledged(void) {
 
 void test_console_frame__largest_frame(void) {
   char frame[1024];
-  char payload[CONSOLE_FRAME_MTU];
+  char payload[PBL_CONSOLE_FRAME_MTU];
 
   memset(payload, 'x', sizeof(payload));
-  prv_feed(frame, prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 1, payload, sizeof(payload)));
+  prv_feed(frame, prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, 1, payload, sizeof(payload)));
   prv_run_task();
 
   cl_assert_equal_i(s_pp_count, 1);
-  cl_assert_equal_i(s_pp_len, CONSOLE_FRAME_MTU);
+  cl_assert_equal_i(s_pp_len, PBL_CONSOLE_FRAME_MTU);
   prv_assert_ack(1);
 }
 
@@ -204,7 +204,7 @@ void test_console_frame__seq_0_is_always_handled(void) {
 
 void test_console_frame__bad_crc_is_dropped_silently(void) {
   char frame[64];
-  const size_t len = prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 3, "abc", 3);
+  const size_t len = prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, 3, "abc", 3);
 
   frame[4] = (frame[4] == 'A') ? 'B' : 'A';
   prv_feed(frame, len);
@@ -252,12 +252,12 @@ void test_console_frame__oversized_frame_goes_back_to_text(void) {
 
 void test_console_frame__busy_frame_is_dropped(void) {
   char frame[64];
-  const size_t len = prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 4, "abc", 3);
+  const size_t len = prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, 4, "abc", 3);
 
   // A frame that arrives while the previous one waits to be handled.
   prv_feed(frame, len);
   char other[64];
-  const size_t other_len = prv_encode(other, CONSOLE_FRAME_CHANNEL_PP, 5, "xyz", 3);
+  const size_t other_len = prv_encode(other, PBL_CONSOLE_CHANNEL_PP, 5, "xyz", 3);
   prv_feed(other, other_len);
   prv_run_task();
 
@@ -274,17 +274,17 @@ void test_console_frame__busy_frame_is_dropped(void) {
 
 void test_console_frame__largest_frame_survives_a_busy_frame(void) {
   char frame[1024];
-  char payload[CONSOLE_FRAME_MTU];
+  char payload[PBL_CONSOLE_FRAME_MTU];
   char other[64];
 
   memset(payload, 'x', sizeof(payload));
-  prv_feed(frame, prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 1, payload, sizeof(payload)));
-  prv_feed(other, prv_encode(other, CONSOLE_FRAME_CHANNEL_PP, 2, "xyz", 3));
+  prv_feed(frame, prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, 1, payload, sizeof(payload)));
+  prv_feed(other, prv_encode(other, PBL_CONSOLE_CHANNEL_PP, 2, "xyz", 3));
   prv_run_task();
 
   cl_assert_equal_i(s_text_len, 0);
   cl_assert_equal_i(s_pp_count, 1);
-  cl_assert_equal_i(s_pp_len, CONSOLE_FRAME_MTU);
+  cl_assert_equal_i(s_pp_len, PBL_CONSOLE_FRAME_MTU);
   prv_assert_ack(1);
 }
 
@@ -302,9 +302,9 @@ void test_console_frame__full_task_queue_drops_the_frame(void) {
 void test_console_frame__sends_decodable_frame(void) {
   char expected[64];
 
-  pbl_console__frame_send(CONSOLE_FRAME_CHANNEL_PP, 9, "abc", 3);
+  pbl_console_frame_send(PBL_CONSOLE_CHANNEL_PP, 9, "abc", 3);
 
-  const size_t len = prv_encode(expected, CONSOLE_FRAME_CHANNEL_PP, 9, "abc", 3);
+  const size_t len = prv_encode(expected, PBL_CONSOLE_CHANNEL_PP, 9, "abc", 3);
   cl_assert_equal_i(s_tx_len, len);
   cl_assert(memcmp(s_tx, expected, len) == 0);
 }
@@ -328,7 +328,7 @@ void test_console_frame__ack_reaches_the_transport_unacknowledged(void) {
 void test_console_frame__ack_gets_through_while_a_frame_waits(void) {
   char frame[64];
   char ack[64];
-  const size_t frame_len = prv_encode(frame, CONSOLE_FRAME_CHANNEL_PP, 3, "abc", 3);
+  const size_t frame_len = prv_encode(frame, PBL_CONSOLE_CHANNEL_PP, 3, "abc", 3);
   const size_t ack_len = prv_encode_ack(ack, 42);
 
   prv_feed(frame, frame_len);
