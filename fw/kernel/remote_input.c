@@ -6,6 +6,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -24,8 +25,6 @@
 #endif
 
 #include <stdint.h>
-
-#define REMOTE_INPUT_ENDPOINT 0xf00d
 
 // Buttons and swipes share one timer, so injected input is single-flight: a swipe can never land
 // halfway through a button press, and either one reports Busy while the other runs.
@@ -472,6 +471,9 @@ void remote_input_protocol_msg_callback(struct pbl_pp_session *session, const ui
     .command = command,
     .status = (uint8_t)result,
   };
-  pbl_pp_send(session, REMOTE_INPUT_ENDPOINT, (const uint8_t *)&ack, sizeof(ack),
+  pbl_pp_send(session, PBL_PP_ENDPOINT_REMOTE_INPUT, (const uint8_t *)&ack, sizeof(ack),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_REMOTE_INPUT, PBL_PP_ACCESS_PRIVATE,
+                       remote_input_protocol_msg_callback);

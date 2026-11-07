@@ -36,7 +36,7 @@ typedef struct PBL_PACKED {
 static const char s_no_locale[ISO_LOCALE_LENGTH];
 
 static void prv_send(struct pbl_pp_session *session, const void *data, size_t length) {
-  pbl_pp_send(session, SYS_MSG_ENDPOINT_ID, data, length, PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_MESSAGE, data, length, PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 void language_pack_protocol_handle_list(struct pbl_pp_session *session, const uint8_t *data,

@@ -7,6 +7,7 @@
 #include <pbl/drivers/mcu.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
@@ -32,8 +33,6 @@
 
 #define VERSION_REQUEST  0x00
 #define VERSION_RESPONSE 0x01
-
-static const uint16_t s_endpoint_id = 0x0010;
 
 struct PBL_PACKED VersionsMessage {
   const uint8_t command;
@@ -149,8 +148,8 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
   versions_msg.activity_insights_version = pbl_be16_make(activity_insights_settings_get_version());
 #endif
 
-  pbl_pp_send(session, s_endpoint_id, (uint8_t *)&versions_msg, sizeof(versions_msg),
-              PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_VERSION, (uint8_t *)&versions_msg,
+              sizeof(versions_msg), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 void system_version_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
@@ -165,6 +164,9 @@ void system_version_protocol_msg_callback(struct pbl_pp_session *session, const 
       break;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_VERSION, PBL_PP_ACCESS_ANY,
+                            system_version_protocol_msg_callback);
 
 #ifdef CONFIG_SHELL
 static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv) {

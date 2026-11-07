@@ -4,6 +4,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/runlevel.h>
 
@@ -57,7 +58,7 @@ static void prv_launch_factory_reset_app(void *unused) {
 }
 
 void reset_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
-                                 unsigned int length) {
+                                 size_t length) {
   PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
 
   const uint8_t cmd = data[0];
@@ -88,3 +89,5 @@ void reset_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
       break;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_RESET, PBL_PP_ACCESS_PRIVATE, reset_protocol_msg_callback);
