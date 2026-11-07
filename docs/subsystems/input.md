@@ -41,7 +41,7 @@ the properties, the users and the last sample.
 ## Delivery
 
 `pbl_input_report()` calls every listener before it returns, in the context
-of the report: the debounce ISR for buttons, the system task for touch, the
+of the report: the debounce ISR for buttons, the background work queue for touch, the
 calling thread for injected input. There is no queue or thread of its own;
 the listeners that need to defer work already have the kernel event queue.
 

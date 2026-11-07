@@ -42,8 +42,8 @@ static bool prv_sends_enabled(void) {
   return (s_sends_enabled_run_level && s_sends_enabled_pp);
 }
 
-// Snapshot the session list, then chain one send per system task callback.
-// Iterating + sending inline under s_list_mutex can stall KernelBG for
+// Snapshot the session list, then chain one send per background work queue callback.
+// Iterating + sending inline under s_list_mutex can stall SysWorkq for
 // ~500ms per session (the pbl_pp_send_buffer_begin timeout),
 // tripping the watchdog once the pool fills.
 typedef struct {
@@ -60,7 +60,7 @@ typedef struct {
   bool empty;
 } DataLoggingSendBuildCtx;
 
-// Touched only on KernelBG (the system task), so no synchronization needed.
+// Touched only on SysWorkq (the background work queue), so no synchronization needed.
 static bool s_flush_in_progress = false;
 
 static void prv_send_next_session_sys_work_cb(void *data);
@@ -188,7 +188,7 @@ static void prv_remove_logging_session(DataLoggingSession *data) {
 // Grab the next chunk of bytes out of the session's storage and send it to the mobile
 // Returns false on unexpected errors, else true
 bool dls_private_send_session(DataLoggingSession *logging_session, bool empty) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   // If sends are not enabled, ignore
   if (!prv_sends_enabled()) {
@@ -400,7 +400,7 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
         // they have such limited memory
         PebbleTask task = pebble_task_get_current();
         PBL_ASSERTN(task == PebbleTask_Worker || task == PebbleTask_KernelMain ||
-                    task == PebbleTask_KernelBackground);
+                    task == PebbleTask_SysWorkq);
         buffer = pbl_malloc_check(buf_size);
         logging_session->data->buffer_in_kernel_heap = true;
       }
@@ -410,8 +410,8 @@ static DataLoggingSession *prv_dls_create(uint32_t tag, DataLoggingItemType item
       pbl_shared_cbuf_add_client(&logging_session->data->buffer,
                                  &logging_session->data->buffer_client);
     } else {
-      // non buffered sessions can only be created/used from KernelBG
-      PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+      // non buffered sessions can only be created/used from SysWorkq
+      PBL_ASSERT_TASK(PebbleTask_SysWorkq);
     }
   }
 
@@ -457,7 +457,8 @@ void dls_finish(DataLoggingSession *logging_session) {
     }
 
     // There's still bytes in the circular buffer that haven't been persisted to flash yet. Just
-    // unlock and wait a little bit, since the system task should be busy writing these to flash.
+    // unlock and wait a little bit, since the background work queue should be busy writing these to
+    // flash.
     dls_unlock_session(logging_session, false /*inactivate*/);
     timeout -= 10;
     pbl_sleep_ms(10);
@@ -535,8 +536,8 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
 
   pbl_shared_cbuf_write(&session->data->buffer, data, num_bytes, false /*advance_slackers*/);
 
-  // Only enqueue work on the sys_work if we're not already waiting on the system task to handle
-  // previously enqueued work for this session.
+  // Only enqueue work on the sys_work if we're not already waiting on the background work queue to
+  // handle previously enqueued work for this session.
   if (!session->data->write_request_pending) {
     session->data->write_request_pending = true;
     sys_work_add(prv_write_all_sessions_to_flash, nullptr);

@@ -133,7 +133,7 @@ void test_kernel_receiver__prepare_write_finish_single(void) {
   prv_assert_no_handler_calls();
 
   pbl_pp_kernel_receiver.finish(receiver);
-  // Pended on KernelBG, not run right away:
+  // Pended on SysWorkq, not run right away:
   prv_assert_no_handler_calls();
   cl_assert_equal_i(s_kernel_main_schedule_count, 0);
 

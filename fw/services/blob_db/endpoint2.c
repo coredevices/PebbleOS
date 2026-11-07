@@ -357,7 +357,7 @@ void blob_db_endpoint_send_sync_done(BlobDBId db_id) {
 
 void blob_db2_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                     size_t length) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   // Each BlobDB message is required to have at least a Command and a Token
   static const uint8_t MIN_RAW_DATA_LEN = sizeof(BlobDBCommand) + sizeof(BlobDBToken);

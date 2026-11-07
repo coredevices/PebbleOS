@@ -161,7 +161,7 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler
 
 | Macro | Handling |
 |---|---|
-| `PBL_PP_ENDPOINT_DEFINE()` | The default receiver copies the payload to the kernel heap and runs the handler on KernelBG |
+| `PBL_PP_ENDPOINT_DEFINE()` | The default receiver copies the payload to the kernel heap and runs the handler on SysWorkq |
 | `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on KernelMain, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
 | `PBL_PP_ENDPOINT_DEFINE_RECEIVER()` | A receiver of the endpoint's own buffers the message, such as Put Bytes into its download buffer or AppMessage into the app's inbox |
 
@@ -184,7 +184,7 @@ sequenceDiagram
   participant T as Transport
   participant S as Session
   participant R as Receiver
-  participant H as Handler (KernelBG or KernelMain)
+  participant H as Handler (SysWorkq or KernelMain)
   L->>T: bytes
   T->>S: pbl_pp_session_receive()
   Note over S: collect the 4-byte header,<br/>look the endpoint up,<br/>check its access

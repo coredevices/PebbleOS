@@ -957,7 +957,7 @@ static void prv_process_put_requests_sys_work_cb(void *unused) {
 }
 
 //! One callback processes every pending PutRequest, so only queue one at a time: a callback per
-//! request piles up on the system task while the sender keeps pace with the flash writes.
+//! request piles up on the background work queue while the sender keeps pace with the flash writes.
 static void prv_schedule_put_requests_processing(void) {
   PutBytesPendingJobs *put_jobs = &s_pb_state.pb_pending_jobs;
   bool schedule;
@@ -1028,7 +1028,7 @@ void put_bytes_init(void) {
 }
 
 void put_bytes_cancel(void) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   if ((pbl_sem_take(&s_pb_semaphore, PBL_FOREVER) != 0)) {
     PBL_LOG_ERR("Failed to acquire the put-bytes semaphore");

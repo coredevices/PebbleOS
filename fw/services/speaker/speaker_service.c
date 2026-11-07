@@ -39,7 +39,7 @@ PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 #define SPEAKER_PERIOD_FRAMES SPEAKER_REFILL_SAMPLES
 #define SPEAKER_PERIODS       2
 
-// Samples queued between the synthesizer on KernelBG and the device ring
+// Samples queued between the synthesizer on SysWorkq and the device ring
 #define SPEAKER_FIFO_MS    128
 #define SPEAKER_FIFO_BYTES ((SPEAKER_SAMPLE_RATE * SPEAKER_FIFO_MS / MS_PER_S) * sizeof(int16_t))
 
@@ -250,7 +250,7 @@ static void prv_fifo_flush(void) {
 
 static void prv_bottom_half(void *data);
 
-//! Runs from the device interrupt: drain the queue into the period and wake KernelBG once.
+//! Runs from the device interrupt: drain the queue into the period and wake SysWorkq once.
 static void prv_period_done(const struct pbl_audio *audio, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   uint16_t avail = circular_buffer_get_read_space_remaining(&s_state.fifo);
@@ -496,7 +496,7 @@ static bool prv_can_preempt(SpeakerPriority new_pri) {
   return new_pri > s_state.priority;
 }
 
-//! KernelBG side of the device interrupt: refill the queue, end drained playback and stop the
+//! SysWorkq side of the device interrupt: refill the queue, end drained playback and stop the
 //! device once it has idled through its standby.
 static void prv_bottom_half(void *data) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);

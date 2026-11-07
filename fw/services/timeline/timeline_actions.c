@@ -1190,7 +1190,7 @@ static void prv_dismiss_all_next(void *context) {
 
 // Dismissing can post events to KernelMain, the task running this, so dismiss one notification
 // per callback to let its event queue drain in between. Dismisses sent to the phone go out on the
-// system task, so KernelMain does not block while the send buffer is full.
+// background work queue, so KernelMain does not block while the send buffer is full.
 static void prv_dismiss_all_step(void *context) {
   DismissAllContext *ctx = context;
 

@@ -33,7 +33,7 @@ sequence from wedging the console.
 | `B` | Flash imaging |
 
 The host sends one frame at a time, and repeats it after a second without
-acknowledgment. The firmware handles a frame on KernelBG and acknowledges it
+acknowledgment. The firmware handles a frame on SysWorkq and acknowledges it
 afterwards, so the acknowledgment says that it was handled, and whatever the
 firmware sent in response comes before it. A repeated sequence number is
 acknowledged without handling the frame again, except 0, for frames that do no

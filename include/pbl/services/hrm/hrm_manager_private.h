@@ -27,9 +27,9 @@
  */
 
 /**
- * @brief Callback receiving HRM events, for KernelBG and KernelMain subscribers.
+ * @brief Callback receiving HRM events, for SysWorkq and KernelMain subscribers.
  *
- * Called on KernelBG with the HRM manager lock held.
+ * Called on SysWorkq with the HRM manager lock held.
  *
  * @param event Event.
  * @param context Context given at subscription.
@@ -65,12 +65,12 @@ typedef struct HRMSubscriberState {
   AppInstallId app_id;
   /** Task of the subscriber. */
   PebbleTask task;
-  /** Queue events are sent to; NULL for KernelBG. */
+  /** Queue events are sent to; NULL for SysWorkq. */
   struct pbl_msgq *queue;
 
-  /** Callback, only for KernelBG subscribers. */
+  /** Callback, only for SysWorkq subscribers. */
   HRMSubscriberCallback callback_handler;
-  /** Callback context, only for KernelBG subscribers. */
+  /** Callback context, only for SysWorkq subscribers. */
   void *callback_context;
 
   /** Requested update interval, in seconds. */
@@ -96,13 +96,13 @@ typedef struct HRMSubscriberState {
 } HRMSubscriberState;
 
 /**
- * @brief Number of events queued for KernelBG subscribers.
+ * @brief Number of events queued for SysWorkq subscribers.
  *
  * Updates come at about 1 Hz, with up to 2 events per second: 8 events allow a 4 s stall when
  * subscribed to both BPM and another feature.
  */
 #define NUM_EVENTS_TO_QUEUE (8)
-/** @brief Size of the KernelBG event storage, in bytes. */
+/** @brief Size of the SysWorkq event storage, in bytes. */
 #define EVENT_STORAGE_SIZE (sizeof(PebbleHRMEvent) * NUM_EVENTS_TO_QUEUE)
 
 /** @brief Accelerometer samples per accelerometer manager update. */
@@ -134,7 +134,7 @@ struct HRMManagerState {
   /** Subscriber list. */
   ListNode *subscribers;
 
-  /** Events pending for KernelBG subscribers. */
+  /** Events pending for SysWorkq subscribers. */
   CircularBuffer sys_work_event_buffer;
   /** Number of dropped events. */
   uint32_t dropped_events;
@@ -191,9 +191,9 @@ struct HRMManagerState {
 };
 
 /**
- * @brief Subscribe a KernelBG or KernelMain client to sensor updates.
+ * @brief Subscribe a SysWorkq or KernelMain client to sensor updates.
  *
- * KernelBG clients must pass a callback. KernelMain clients may instead receive events through
+ * SysWorkq clients must pass a callback. KernelMain clients may instead receive events through
  * the event service. Apps and workers use sys_hrm_manager_app_subscribe().
  *
  * @param app_id App install id, @c INSTALL_ID_INVALID for system subscribers.
@@ -202,7 +202,7 @@ struct HRMManagerState {
  * @param features Requested features.
  * @param low_latency true for consumers showing live data that need prompt updates; false for
  * background logging and streaming, letting the sensor drain its FIFO less often to save power.
- * @param callback KernelBG callback.
+ * @param callback SysWorkq callback.
  * @param context Context passed to @p callback.
  * @return Session reference.
  */

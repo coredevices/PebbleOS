@@ -996,7 +996,7 @@ void test_activity__init_history(void) {
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricRestingKCalories, exp_resting_kcalories);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1184,7 +1184,7 @@ void test_activity__settings(void) {
 // Test that our periodic minute callback correctly detects the midnight rollover
 void test_activity__day_rollover(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1315,7 +1315,7 @@ void test_activity__step_derived_metrics(void) {
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1380,7 +1380,7 @@ void test_activity__step_derived_metrics(void) {
   prv_activity_init_and_set_enabled(true);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1421,7 +1421,7 @@ void test_activity__sleep_derived_metrics(void) {
   int32_t value;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1533,7 +1533,7 @@ void test_activity__sleep_totals_cleared_on_session_delete(void) {
 // Test that sleep sessions get registered in the correct day
 void test_activity__sleep_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1582,7 +1582,7 @@ void test_activity__raw_sample_collection(void) {
   uint32_t seconds;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1661,7 +1661,7 @@ void test_activity__get_sleep_sessions(void) {
   int32_t value;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1694,7 +1694,7 @@ void test_activity__get_sleep_sessions(void) {
 // Test getting the minute history
 void test_activity__get_minute_history(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -1783,7 +1783,7 @@ void test_activity__get_minute_history_chunked(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-// KernelBG must not write into the caller's buffers after the caller timed out
+// SysWorkq must not write into the caller's buffers after the caller timed out
 void test_activity__get_minute_history_timeout(void) {
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
@@ -1843,7 +1843,7 @@ void test_activity__get_minute_heart_rate_too_long(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-// KernelBG must not write into the caller's buffer after the caller timed out
+// SysWorkq must not write into the caller's buffer after the caller timed out
 void test_activity__get_minute_heart_rate_timeout(void) {
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
@@ -2117,7 +2117,7 @@ static void prv_fake_history_event_cb(PebbleEvent *event) {
 // Test that we generate health events at the appropriate time
 void test_activity__health_events(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2205,7 +2205,7 @@ void test_activity__sleep_after_timezone_change(void) {
   time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2288,7 +2288,7 @@ void test_activity__health_service_interpolation(void) {
   time_util_update_timezone(&tz_info, 0, 0);
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2378,7 +2378,7 @@ void test_activity__distance(void) {
     activity_prefs_set_gender(params->gender);
 
     // Start activity tracking. This method assumes it can be called from any task, so we must
-    // invoke system callbacks to handle its KernelBG callback.
+    // invoke system callbacks to handle its SysWorkq callback.
     activity_start_tracking(false /*test_mode*/);
     fake_sys_work_callbacks_invoke_pending();
 
@@ -2473,7 +2473,7 @@ static void prv_advance_time_hr(uint32_t num_sec, uint8_t bpm, int confidence,
 // Test that we subscribe to the HR events at the expected times
 void test_activity__hrm_sampling_period(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
   s_test_alg_state.orientation = 0x11; // Not flat
@@ -2550,7 +2550,7 @@ void test_activity__hrm_median(void) {
   int32_t median, total_weight;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2619,7 +2619,7 @@ void test_activity__hrm_ignore(void) {
   s_num_hr_events = 0;
 
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2828,7 +2828,7 @@ void test_activity__prv_set_metric(void) {
 // Test that we report the that a run session is ongoing.
 void test_activity__activity_sessions_run_ongoing_then_end(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2878,7 +2878,7 @@ void test_activity__activity_sessions_run_ongoing_then_end(void) {
 // Test that we report the that a Sleep session is ongoing.
 void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 
@@ -2929,7 +2929,7 @@ void test_activity__activity_sessions_sleep_ongoing_then_delete(void) {
 // Test that we report the that multiple sessions are ongoing.
 void test_activity__activity_sessions_ongoing_multiple(void) {
   // Start activity tracking. This method assumes it can be called from any task, so we must
-  // invoke system callbacks to handle its KernelBG callback.
+  // invoke system callbacks to handle its SysWorkq callback.
   activity_start_tracking(false /*test_mode*/);
   fake_sys_work_callbacks_invoke_pending();
 

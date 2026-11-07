@@ -354,7 +354,7 @@ static void prv_feed_minute_data(uint32_t num_minutes, AlgMinuteDLSSample *minut
     // counts for this minute
     activity_algorithm_handle_accel(samples, s_sample_rate, timestamp);
 
-    // Are we simulating delays in KernelBG processing?
+    // Are we simulating delays in SysWorkq processing?
     int delay = 0;
     if (simulate_bg_delays) {
       delay = (((i / ALG_MINUTES_PER_FILE_RECORD) + 1) % 30);

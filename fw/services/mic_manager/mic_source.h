@@ -10,7 +10,7 @@
 #include <pbl/services/mic_manager.h>
 
 //! Records from the board microphone and hands frames of @p buffer_len samples to @p handler on
-//! KernelBG. The buffer is owned by the source until mic_source_stop() returns.
+//! SysWorkq. The buffer is owned by the source until mic_source_stop() returns.
 bool mic_source_start(MicDataHandlerCB handler, void *context, int16_t *buffer, size_t buffer_len);
 
 //! Stops recording. No handler runs once it returns.

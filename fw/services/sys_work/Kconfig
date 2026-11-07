@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 config SERVICE_SYS_WORK
-    bool "System task"
+    bool "Background work queue"
     help
-      Background system task runner.
+      Background background work queue runner.
 
 if SERVICE_SYS_WORK
 
 config SERVICE_SYS_WORK_THREAD_RAISED_PRIO
-    int "System task thread priority while raised"
+    int "Background work queue thread priority while raised"
     default 3
 
 module = SERVICE_SYS_WORK
-module-str = System task
+module-str = Background work queue
 source "subsys/logging/Kconfig.template.log_level"
 
 endif

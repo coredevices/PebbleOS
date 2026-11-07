@@ -120,7 +120,7 @@ struct pbl_msgq *event_get_to_kernel_queue(PebbleTask task) {
     return &s_from_worker_event_queue;
   } else if (task == PebbleTask_KernelMain) {
     return &s_from_kernel_event_queue;
-  } else if ((task == PebbleTask_NewTimers) || (task == PebbleTask_KernelBackground)) {
+  } else if ((task == PebbleTask_SysWorkqHigh) || (task == PebbleTask_SysWorkq)) {
     return &s_kernel_event_queue;
   } else {
     pbl_panic();

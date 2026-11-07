@@ -137,7 +137,7 @@ static void prv_data_log_chain(DataLoggingSessionRef logging_session, uint8_t *b
     PBL_ASSERTN(chunk_size <= num_bytes);
     data_logging_log(logging_session, buf, chunk_size / item_size);
     fake_sys_work_callbacks_invoke_pending();
-    // KernelBG feeds its watchdog after every system task callback
+    // SysWorkq feeds its watchdog after every background work queue callback
     pbl_task_wdt_feed_self();
     buf += chunk_size;
     num_bytes -= chunk_size;
@@ -183,7 +183,7 @@ static void prv_log_consume_random(DataLoggingSessionRef logging_session, int it
 void test_data_logging__initialize(void) {
   regular_timer_init();
   prv_init_fake_flash();
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   dls_clear();
   dls_init();
   fake_sys_work_callbacks_invoke_pending();

@@ -18,7 +18,7 @@
  * Commands are defined next to the code they drive, collected at link time and served by any
  * number of shell instances, one per backend (see @ref shell_backend). Commands form a tree:
  * a command has a name, a help string, an optional handler and optional subcommands. Handlers
- * of every instance run on KernelBG.
+ * of every instance run on SysWorkq.
  *
  * A handler gets @c argc / @c argv with @c argv[0] being the matched command name. The core
  * checks the argument count, prints the help of the matched command for @c -h / @c --help,

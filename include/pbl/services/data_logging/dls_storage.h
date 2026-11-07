@@ -10,7 +10,7 @@
  * @ingroup services_data_logging
  * @brief Session data stored in a PFS file per session.
  *
- * All functions must be called from KernelBG, except during dls_storage_rebuild() at boot. On a
+ * All functions must be called from SysWorkq, except during dls_storage_rebuild() at boot. On a
  * write error the session's file is deleted.
  * @{
  */

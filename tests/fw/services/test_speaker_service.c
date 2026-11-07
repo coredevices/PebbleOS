@@ -149,7 +149,7 @@ static void prv_hw_period(void) {
   }
 }
 
-// A period followed by the KernelBG work it scheduled
+// A period followed by the SysWorkq work it scheduled
 static void prv_period(void) {
   prv_hw_period();
   fake_sys_work_callbacks_invoke_pending();

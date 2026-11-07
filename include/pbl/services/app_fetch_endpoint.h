@@ -16,7 +16,7 @@
  * The watch sends an install request for an app to the phone, which then pushes the app, worker
  * and resources over put_bytes. Progress, completion and errors are reported with
  * @c PEBBLE_APP_FETCH_EVENT events; once all parts are received the app is added to the app cache.
- * Only one fetch can be in progress at a time. The work runs on KernelBackground.
+ * Only one fetch can be in progress at a time. The work runs on SysWorkq.
  * @{
  */
 
@@ -66,7 +66,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker);
 /**
  * @brief Cancel a fetch in progress.
  *
- * The cancellation runs asynchronously on KernelBackground.
+ * The cancellation runs asynchronously on SysWorkq.
  *
  * @param app_id App whose fetch is cancelled; @c INSTALL_ID_INVALID cancels any fetch.
  */
@@ -75,7 +75,7 @@ void app_fetch_cancel(AppInstallId app_id);
 /**
  * @brief Cancel a fetch in progress, synchronously.
  *
- * Must be called from KernelBackground.
+ * Must be called from SysWorkq.
  *
  * @param app_id App whose fetch is cancelled; @c INSTALL_ID_INVALID cancels any fetch.
  */

@@ -1153,7 +1153,7 @@ unlock:
 }
 
 // The pbl_bt_cb_* callbacks below defer to KernelMain: the NimBLE host-task
-// stack is too small to run the PPoG state machine directly, and KernelBG
+// stack is too small to run the PPoG state machine directly, and SysWorkq
 // callbacks may block waiting for Pebble Protocol send progress (e.g. the BT
 // log dump), which would starve inbound ACK processing and deadlock the
 // transport. KernelMain is where forward-mode RX and send_next jobs already

@@ -35,7 +35,7 @@ static void prv_handle_set_discoverable_pairable(
 //! Pebble protocol handler for the BLE control endpoint
 void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t length) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkq);
 
   if (length < sizeof(BLEControlCommandSetDiscoverablePairable)) {
     PBL_LOG_WRN("Invalid pp_ble_control_protocol_msg_callback message: %d", (int)length);

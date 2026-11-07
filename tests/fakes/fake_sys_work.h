@@ -69,7 +69,7 @@ void *s_fake_sys_work_current_cb;
 void fake_sys_work_callbacks_invoke(int num_to_invoke) {
   PebbleTask current_task = pebble_task_get_current();
   if (!s_invoke_as_current) {
-    stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+    stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   }
 
   // Start at tail ("oldest" callback):

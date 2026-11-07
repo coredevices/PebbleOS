@@ -109,7 +109,7 @@ static bool prv_item_header_filter(SerializedTimelineItemHeader *header, void *u
 }
 
 static void prv_update_status(void) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
   if (!s_initialized) {
     return;
   }

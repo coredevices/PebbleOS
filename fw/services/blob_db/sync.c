@@ -28,7 +28,7 @@ static bool prv_session_uid_filter_callback(ListNode *node, void *data) {
   return session->session_id == (uint32_t)(uintptr_t)data;
 }
 
-//! The regular timers below hop to KernelBG before touching the session, and by
+//! The regular timers below hop to SysWorkq before touching the session, and by
 //! then the sync may have finished or been cancelled and the session freed.
 //! Resolve the id against the live list instead of trusting a raw pointer.
 static BlobDBSyncSession *prv_find_live_session(void *session_id) {

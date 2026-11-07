@@ -27,7 +27,7 @@
  *             command.
  * @param action_id Id of the action.
  * @param attributes Extra attributes to send (e.g. the reply text), may be NULL.
- * @param do_async true to send from KernelBG, false to send from the current task.
+ * @param do_async true to send from SysWorkq, false to send from the current task.
  */
 void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionType type,
                                             uint8_t action_id, const AttributeList *attributes,

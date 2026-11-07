@@ -112,10 +112,10 @@ void test_app_fetch_endpoint__app_fetch_binaries(void) {
   // set the function that will validate the data in the send buffer
   fake_transport_set_sent_cb(s_transport, prv_check_valid_app_fetch_request);
 
-  // queue of system task to send an app_fetch request
+  // queue of background work queue to send an app_fetch request
   app_fetch_binaries(&uuid_1, app_id_1, 0);
 
-  // process system task events
+  // process background work queue events
   fake_sys_work_callbacks_invoke_pending();
   fake_comm_session_process_send_next();
 

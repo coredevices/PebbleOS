@@ -12,14 +12,14 @@
  *
  * All regular timers share one timer aligned to the RTC second boundary, so periodic work wakes
  * the system at the same time. Second callbacks run shortly after each second boundary, minute
- * callbacks when the wall-clock minute changes. Callbacks run on the NewTimers task and must not
- * block for long.
+ * callbacks when the wall-clock minute changes. Callbacks run on the high priority work queue and
+ * must not block for long.
  *
  * The caller owns the RegularTimerInfo, which must stay valid while registered:
  *
  * @code{.c}
  * static void prv_tick(void *data) {
- *   // Runs on the NewTimers task every 5 seconds.
+ *   // Runs on the high priority work queue every 5 seconds.
  * }
  *
  * static RegularTimerInfo s_timer = {

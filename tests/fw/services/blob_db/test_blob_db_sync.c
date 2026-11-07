@@ -278,7 +278,7 @@ static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
   return session;
 }
 
-// The regular timers fire on the timer task and hop to KernelBG before touching
+// The regular timers fire on the timer task and hop to SysWorkq before touching
 // the session. If the sync completes or is cancelled in that window the session
 // is freed, so the deferred half must detect that instead of dereferencing it.
 void test_blob_db_sync__stale_timeout_callback_after_cancel(void) {

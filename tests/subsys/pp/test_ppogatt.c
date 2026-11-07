@@ -1041,7 +1041,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
   cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
                                                             sizeof(s_short_data_fragment)),
                     true);
-  // Only now the system task callback is fired (prv_send_next_packets_async):
+  // Only now the background work queue callback is fired (prv_send_next_packets_async):
   fake_comm_session_process_send_next();
 
   // Expect the new data to come through, no retransmissions at all.

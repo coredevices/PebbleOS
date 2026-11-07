@@ -35,7 +35,7 @@ void prv_regular_timer_spend_seconds(uint32_t seconds) {
     fake_rtc_increment_ticks(PBL_TICK_HZ);
     regular_timer_fire_seconds(1);
 
-    // bt_conn_mgr offloads the callback to KernelBG
+    // bt_conn_mgr offloads the callback to SysWorkq
     fake_sys_work_callbacks_invoke_pending();
   }
 }

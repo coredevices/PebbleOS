@@ -187,7 +187,7 @@ void test_gatt_service_changed_server__disconnect_after_delay(void) {
   gatt_service_changed_server_handle_fw_update();
   prv_cccd_write(true /* is_subscribing */);
 
-  // The delay passes, which queues the indication on the system task:
+  // The delay passes, which queues the indication on the background work queue:
   fake_work_fire(&s_connection->gatt_service_changed_indication_work);
 
   // Simulate disconnection before that runs:

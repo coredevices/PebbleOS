@@ -27,7 +27,8 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 #define NOTIF_PREFS_FILE_LEN  (1024)
 
 //! Flag to suppress change callback during phone-originated INSERTs.
-//! This prevents queuing unnecessary sync callbacks that would flood the system task queue.
+//! This prevents queuing unnecessary sync callbacks that would flood the background work queue
+//! queue.
 static bool s_suppress_change_callback = false;
 
 //! Flag to track if a sync callback is already pending.
@@ -292,7 +293,7 @@ static void prv_deferred_sync_callback(void *data) {
 //! the sync to run after the file operations complete.
 //!
 //! This callback is coalesced - multiple setting changes result in at most one
-//! queued callback, preventing system task queue overflow.
+//! queued callback, preventing background work queue queue overflow.
 static void prv_settings_change_callback(const void *key, size_t key_len, uint32_t last_modified,
                                          void *user_data) {
   const struct prv_syncable_keys *syncable = user_data;

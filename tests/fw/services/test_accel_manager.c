@@ -101,7 +101,7 @@ static const struct pbl_accel s_fake_accel =
     PBL_ACCEL_INIT(s_fake_accel, "accel", nullptr, &s_fake_ops);
 const struct pbl_accel *const ACCEL = &s_fake_accel;
 
-// Data events for a NewTimers subscriber land here, so a test can count them
+// Data events for a SysWorkqHigh subscriber land here, so a test can count them
 static int s_posted_events;
 static bool s_new_timer_queue_full;
 
@@ -305,7 +305,7 @@ static AccelManagerState *prv_subscribe_on(PebbleTask task) {
 }
 
 static AccelManagerState *prv_subscribe_on_new_timers(void) {
-  return prv_subscribe_on(PebbleTask_NewTimers);
+  return prv_subscribe_on(PebbleTask_SysWorkqHigh);
 }
 
 // Consumes the full batch in a subscription's buffer and returns its timestamp
@@ -408,7 +408,7 @@ void test_accel_manager__a_consume_of_0_releases_the_event_and_keeps_the_samples
 //! A batch already waiting goes to the running callback, without waiting on free queue space
 void test_accel_manager__a_consume_hands_a_waiting_batch_to_the_running_callback(void) {
   AccelRawData buffer[2];
-  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_SysWorkq);
   sys_accel_manager_set_sample_buffer(state, buffer, 2);
   prv_feed(4);
 
@@ -421,7 +421,7 @@ void test_accel_manager__a_consume_hands_a_waiting_batch_to_the_running_callback
 //! While the running callback has a batch, the driver posts no second event for it
 void test_accel_manager__a_waiting_batch_holds_off_the_next_event(void) {
   AccelRawData buffer[2];
-  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_SysWorkq);
   sys_accel_manager_set_sample_buffer(state, buffer, 2);
   prv_feed(4);
   prv_consume(state);
@@ -434,7 +434,7 @@ void test_accel_manager__a_waiting_batch_holds_off_the_next_event(void) {
 //! Once nothing is waiting, the consume releases the event and the next full batch posts one
 void test_accel_manager__a_consume_with_nothing_waiting_releases_the_event(void) {
   AccelRawData buffer[2];
-  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_SysWorkq);
   sys_accel_manager_set_sample_buffer(state, buffer, 2);
   prv_feed(4);
   prv_consume(state);
@@ -452,7 +452,7 @@ void test_accel_manager__a_consume_posts_no_other_subscribers_event(void) {
   AccelRawData other_buffer[2];
   AccelManagerState *other = prv_subscribe_on_new_timers();
   sys_accel_manager_set_sample_buffer(other, other_buffer, 2);
-  AccelManagerState *state = prv_subscribe_on(PebbleTask_KernelBackground);
+  AccelManagerState *state = prv_subscribe_on(PebbleTask_SysWorkq);
   sys_accel_manager_set_sample_buffer(state, buffer, 2);
   s_new_timer_queue_full = true;
   prv_feed(2);
@@ -463,7 +463,7 @@ void test_accel_manager__a_consume_posts_no_other_subscribers_event(void) {
   cl_assert_equal_i(s_posted_events, 0);
 }
 
-//! A NewTimers subscriber gets a waiting batch straight away too, not at the next driver batch
+//! A SysWorkqHigh subscriber gets a waiting batch straight away too, not at the next driver batch
 void test_accel_manager__a_consume_on_new_timers_hands_over_a_waiting_batch(void) {
   AccelRawData buffer[2];
   AccelManagerState *state = prv_subscribe_on_new_timers();

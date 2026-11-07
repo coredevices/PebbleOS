@@ -20,7 +20,7 @@
 #define PERIODS       2
 #define MAX_CHANNELS  2
 #define CHUNK_SAMPLES (PERIOD_FRAMES * MAX_CHANNELS)
-// Queue between the device interrupt and KernelBG
+// Queue between the device interrupt and SysWorkq
 #define FIFO_PERIODS 8
 
 // Held around the callbacks, so stopping waits for one in flight

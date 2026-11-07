@@ -132,7 +132,7 @@ static uint8_t prv_compute_progress_percent(PutBytesObjectType type, unsigned in
   return MIN(100, percent);
 }
 
-//! Cleans up the state of the app fetch endpoint. Always called from the system task
+//! Cleans up the state of the app fetch endpoint. Always called from the background work queue
 static void prv_cleanup(AppFetchResult result) {
   if (result != AppFetchResultSuccess) {
     put_bytes_cancel();
@@ -145,7 +145,7 @@ static void prv_cleanup(AppFetchResult result) {
   PBL_LOG_INFO("App fetch cleanup with result %d", result);
 }
 
-//! System task callback triggered by app_fetch_put_bytes_event_handler() when we are receiving
+//! Callback triggered by app_fetch_put_bytes_event_handler() when we are receiving
 //! put_bytes messages in response to a fetch request to the phone.
 void prv_put_bytes_event_sys_work_cb(void *data) {
   PebblePutBytesEvent *pb_event = (PebblePutBytesEvent *)data;
@@ -252,7 +252,7 @@ void app_fetch_put_bytes_event_handler(PebblePutBytesEvent *pb_event) {
   sys_work_add(prv_put_bytes_event_sys_work_cb, pb_event_copy);
 }
 
-//! Callback for the system task to fire off the fetch request. Triggered by a call to
+//! Callback for the background work queue to fire off the fetch request. Triggered by a call to
 //! app_fetch_binaries().
 static void prv_app_fetch_binaries_sys_work_cb(void *data) {
   AppFetchInstallRequest *request = (AppFetchInstallRequest *)data;
@@ -283,7 +283,7 @@ static void prv_app_fetch_binaries_sys_work_cb(void *data) {
   put_bytes_expect_init(FETCH_TIMEOUT_MS);
 }
 
-//! Called from the system task. Translates an Endpoint error to an event error and sends
+//! Called from the background work queue. Translates an Endpoint error to an event error and sends
 //! off the appropriate event.
 void prv_handle_app_fetch_install_response(uint8_t result_code) {
   switch (result_code) {
@@ -363,13 +363,13 @@ static void prv_cancel_fetch_from_sys_work(void *data) {
     return;
   }
 
-  PBL_LOG_DBG("Cancelling app fetch from system task");
+  PBL_LOG_DBG("Cancelling app fetch from background work queue");
   s_fetch_state.cancelling = true;
   put_bytes_cancel();
 }
 
 void app_fetch_cancel_from_sys_work(AppInstallId app_id) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   prv_cancel_fetch_from_sys_work((void *)(uintptr_t)app_id);
 }
@@ -392,7 +392,7 @@ typedef struct PBL_PACKED {
   uint8_t result_code;
 } AppFetchResponseData;
 
-//! System task callback triggered by app_fetch_protocol_msg_callback().
+//! Callback triggered by app_fetch_protocol_msg_callback().
 static void prv_app_fetch_protocol_handle_msg(AppFetchResponseData *response_data) {
   switch (response_data->command) {
     case APP_FETCH_INSTALL_RESPONSE:

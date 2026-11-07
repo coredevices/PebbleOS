@@ -126,7 +126,7 @@ char pebble_task_get_char(PebbleTask task) {
   switch (task) {
     case PebbleTask_KernelMain:
       return 'm';
-    case PebbleTask_KernelBackground:
+    case PebbleTask_SysWorkq:
       return 's';
     case PebbleTask_Worker:
       return 'w';
@@ -138,7 +138,7 @@ char pebble_task_get_char(PebbleTask task) {
       return 'c';
     case PebbleTask_BTHCI:
       return 'd';
-    case PebbleTask_NewTimers:
+    case PebbleTask_SysWorkqHigh:
       return 't';
     case NumPebbleTask:
     case PebbleTask_Unknown:;
@@ -186,9 +186,9 @@ static void prv_collect_stack_free(void) {
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes,
                              prv_task_get_stack_free(PebbleTask_KernelMain));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes,
-                             prv_task_get_stack_free(PebbleTask_KernelBackground));
+                             prv_task_get_stack_free(PebbleTask_SysWorkq));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_newtimers_bytes,
-                             prv_task_get_stack_free(PebbleTask_NewTimers));
+                             prv_task_get_stack_free(PebbleTask_SysWorkqHigh));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_app_syscall_bytes,
                              prv_syscall_stack_free_bytes(PebbleTask_App));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_worker_syscall_bytes,
@@ -199,13 +199,13 @@ PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_stack_free);
 #ifdef CONFIG_ANALYTICS
 static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
   [PebbleTask_KernelMain] = PBL_ANALYTICS_KEY(task_cpu_kernel_main_pct),
-  [PebbleTask_KernelBackground] = PBL_ANALYTICS_KEY(task_cpu_kernel_background_pct),
+  [PebbleTask_SysWorkq] = PBL_ANALYTICS_KEY(task_cpu_kernel_background_pct),
   [PebbleTask_Worker] = PBL_ANALYTICS_KEY(task_cpu_worker_pct),
   [PebbleTask_App] = PBL_ANALYTICS_KEY(task_cpu_app_pct),
   [PebbleTask_BTHost] = PBL_ANALYTICS_KEY(task_cpu_bt_host_pct),
   [PebbleTask_BTController] = PBL_ANALYTICS_KEY(task_cpu_bt_controller_pct),
   [PebbleTask_BTHCI] = PBL_ANALYTICS_KEY(task_cpu_bt_hci_pct),
-  [PebbleTask_NewTimers] = PBL_ANALYTICS_KEY(task_cpu_new_timers_pct),
+  [PebbleTask_SysWorkqHigh] = PBL_ANALYTICS_KEY(task_cpu_new_timers_pct),
 };
 
 static void prv_collect_task_cpu_stats(void) {
@@ -273,7 +273,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
     case PebbleTask_App:
       queue = app_manager_get_task_context()->to_process_event_queue;
       break;
-    case PebbleTask_KernelBackground:
+    case PebbleTask_SysWorkq:
       queue = nullptr;
       break;
     default:

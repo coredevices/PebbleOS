@@ -94,7 +94,7 @@ static void prv_bt_log_dump_completed_cb(bool success) {
 }
 
 static void prv_dump(struct pbl_pp_session *session, int generation, uint32_t cookie) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkq);
   if (s_bt_dump_chunk_callback_data.in_progress) {
     PBL_LOG_ERR("Already in the middle of dumping logs");
     return;

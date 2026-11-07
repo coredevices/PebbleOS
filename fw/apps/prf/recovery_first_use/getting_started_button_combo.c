@@ -41,7 +41,7 @@ static void prv_down_cb(void *data) {
   Window *spinner_window = spinner_ui_window_get(PBL_IF_COLOR_ELSE(GColorBlue, GColorDarkGray));
   app_window_stack_push(spinner_window, false /* animated */);
 
-  // Factory reset on KernelBG so the animation gets priority
+  // Factory reset on SysWorkq so the animation gets priority
   sys_work_add(prv_factory_reset, nullptr);
 }
 

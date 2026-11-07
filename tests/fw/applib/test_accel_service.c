@@ -328,7 +328,7 @@ void test_accel_service__a_queued_event_after_a_worker_unsubscribes_calls_no_han
 
 //! A kernel session with a queued event is freed on delete. The event only reads its token
 void test_accel_service__a_kernel_session_with_a_queued_event_is_freed_on_delete(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   void *stale_context = prv_post();
@@ -343,7 +343,7 @@ void test_accel_service__a_kernel_session_with_a_queued_event_is_freed_on_delete
 
 //! A kernel session with nothing queued is freed on delete too
 void test_accel_service__kernel_session_without_a_queued_event_is_freed_on_delete(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   accel_session_data_unsubscribe(session);
@@ -412,7 +412,7 @@ void test_accel_service__a_stale_event_after_a_replace_calls_no_handler(void) {
 
 //! A replaced kernel session is freed on delete with an event queued for the old subscription
 void test_accel_service__a_replaced_kernel_session_is_freed_on_delete(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   void *stale_context = prv_post();
@@ -631,7 +631,7 @@ void test_accel_service__unsubscribing_in_the_handler_stops_the_pass(void) {
 
 //! A kernel session deleted in its own handler is freed at once
 void test_accel_service__a_kernel_session_deleted_in_its_handler_is_freed_at_once(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_session = accel_session_create();
   accel_session_raw_data_subscribe(s_session, ACCEL_SAMPLING_25HZ, 1, prv_deleting_raw_handler);
 
@@ -693,7 +693,7 @@ void test_accel_service__a_deprecated_raw_handler_keeps_its_buffer_after_a_chang
 
 //! The same when a kernel session's raw handler deletes the session
 void test_accel_service__a_raw_handler_keeps_its_buffer_after_deleting_its_session(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_session = accel_session_create();
   accel_session_raw_data_subscribe(s_session, ACCEL_SAMPLING_25HZ, 1, prv_deleting_raw_handler);
   s_session->raw_data[0].x = 7;
@@ -708,21 +708,21 @@ void test_accel_service__a_raw_handler_keeps_its_buffer_after_deleting_its_sessi
 
 //! Unsubscribing a kernel session off its handler task asserts
 void test_accel_service__unsubscribing_from_another_task_asserts(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
   cl_assert_panic(accel_session_data_unsubscribe(session));
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   accel_session_data_unsubscribe(session);
   accel_session_delete(session);
 }
 
 //! An unsubscribed session can be deleted from any task, since a queued event only reads its token
 void test_accel_service__an_unsubscribed_session_can_be_deleted_from_another_task(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   void *stale_context = prv_post();
@@ -731,14 +731,14 @@ void test_accel_service__an_unsubscribed_session_can_be_deleted_from_another_tas
 
   accel_session_delete(session);
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_data_cb(stale_context);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
 
 //! An unsubscribed session can subscribe again on another task
 void test_accel_service__an_unsubscribed_session_can_subscribe_on_another_task(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   accel_session_data_unsubscribe(session);
@@ -754,7 +754,7 @@ void test_accel_service__an_unsubscribed_session_can_subscribe_on_another_task(v
 
 //! Subscribing a kernel session again off its handler task asserts
 void test_accel_service__subscribing_again_from_another_task_asserts(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
@@ -762,42 +762,42 @@ void test_accel_service__subscribing_again_from_another_task_asserts(void) {
   cl_assert_panic(
       accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler));
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   accel_session_data_unsubscribe(session);
   accel_session_delete(session);
 }
 
 //! The same for changing its batch size
 void test_accel_service__changing_the_batch_size_from_another_task_asserts(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
   cl_assert_panic(accel_session_set_samples_per_update(session, 2));
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   accel_session_data_unsubscribe(session);
   accel_session_delete(session);
 }
 
 //! The same for changing its sampling rate
 void test_accel_service__changing_the_sampling_rate_from_another_task_asserts(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   accel_session_raw_data_subscribe(session, ACCEL_SAMPLING_25HZ, 1, prv_raw_data_handler);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 
   cl_assert_panic(accel_session_set_sampling_rate(session, ACCEL_SAMPLING_50HZ));
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   accel_session_data_unsubscribe(session);
   accel_session_delete(session);
 }
 
 //! A session that never subscribed, like a shake-only one, can be deleted from any task
 void test_accel_service__a_session_that_never_subscribed_can_be_deleted_anywhere(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   AccelServiceState *session = accel_session_create();
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
 

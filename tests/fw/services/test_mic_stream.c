@@ -178,7 +178,7 @@ void mic_source_stop(void) {
   s_mic_handler = nullptr;
 }
 
-//! Simulates the driver delivering one chunk of `value`-filled samples on KernelBG.
+//! Simulates the driver delivering one chunk of `value`-filled samples on SysWorkq.
 static void prv_deliver_chunk(int16_t value) {
   cl_assert(s_mic_running);
   for (size_t i = 0; i < s_mic_buffer_len; i++) {

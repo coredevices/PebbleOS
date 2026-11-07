@@ -76,7 +76,7 @@ void put_bytes_init(void);
  * @brief Cancel an ongoing app, app resources or worker transfer.
  *
  * Does nothing when idle or for other object types. The phone's next requests are nacked. Must be
- * called from KernelBG.
+ * called from SysWorkq.
  */
 void put_bytes_cancel(void);
 

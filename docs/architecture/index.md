@@ -68,11 +68,11 @@ The firmware runs a fixed set of tasks, each a kernel thread:
 | Task | Role |
 | --- | --- |
 | KernelMain | The system's event loop: input, UI and most services |
-| KernelBackground | Deferred work kept off KernelMain |
+| SysWorkq | Deferred work kept off KernelMain |
 | App | The foreground app or watchface |
 | Worker | The app's background worker, if it has one |
 | Bluetooth host, controller, HCI | The Bluetooth stack |
-| NewTimers | Timer callbacks |
+| SysWorkqHigh | Timer callbacks |
 
 Services and drivers post events to KernelMain, which handles them and
 forwards what concerns the app to the app's own event queue. Only one app

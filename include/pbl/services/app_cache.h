@@ -31,7 +31,7 @@ void app_cache_init(void);
 /**
  * @brief Add an entry for a newly installed app.
  *
- * Schedules an eviction on KernelBackground if free space is now too low.
+ * Schedules an eviction on SysWorkq if free space is now too low.
  *
  * @param app_id App to add.
  * @param total_size Size of the app's binaries, in bytes.
@@ -81,7 +81,7 @@ status_t app_cache_free_up_space(uint32_t bytes_needed);
 /**
  * @brief Clear the whole cache and delete all cached app binaries.
  *
- * Must be called from KernelBackground.
+ * Must be called from SysWorkq.
  */
 void app_cache_flush(void);
 

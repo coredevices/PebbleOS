@@ -7,7 +7,7 @@ menuconfig SHELL
     depends on CONSOLE
     help
       Command shell. Commands register themselves with
-      PBL_SHELL_CMD_REGISTER() and run on KernelBG, one shell instance per
+      PBL_SHELL_CMD_REGISTER() and run on SysWorkq, one shell instance per
       backend.
 
 if SHELL

@@ -275,7 +275,7 @@ unlock:
   bt_unlock();
 }
 
-//! Runs once per second on the NewTimers task; never block on bt_lock there
+//! Runs once per second on the high priority work queue; never block on bt_lock there
 //! (it stalls every other timer in the system) — bounce to KernelMain.
 static void prv_cycle_timer_callback(void *unused) {
   launcher_task_add_callback(prv_cycle_kernelmain_cb, nullptr);

@@ -148,7 +148,7 @@ struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {
   switch (task) {
     case PebbleTask_App:
       return FAKE_APP_QUEUE;
-    case PebbleTask_KernelBackground:
+    case PebbleTask_SysWorkq:
       return nullptr;
     default:
       pbl_panic();
@@ -363,7 +363,7 @@ void test_hrm_manager__same_path_superset_keeps_running(void) {
   cl_assert_equal_i(s_hrm_state.features, HRMFeature_BPM);
   cl_assert_equal_i(s_hrm_state.enable_count, 1);
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   HRMSessionRef hrv_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, PBL_SEC_PER_MIN, 0, HRMFeature_BPM | HRMFeature_HRV,
       false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
@@ -425,7 +425,7 @@ void test_hrm_manager__low_latency_only_for_live_foreground_app(void) {
 void test_hrm_manager__pref_mask_exempts_foreground_app(void) {
   s_activity_prefs_spo2_is_enabled = false;
 
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   HRMSessionRef bg_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1, 0, HRMFeature_SpO2, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_sys_work_callbacks_invoke_pending();
@@ -464,7 +464,7 @@ void test_hrm_manager__select_active_path(void) {
 // the SpO2 subscriber is served and backs off.
 void test_hrm_manager__spo2_preempts_green(void) {
   s_activity_prefs_spo2_is_enabled = true;
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   HRMSessionRef green_ref = hrm_manager_subscribe_with_callback(
       INSTALL_ID_INVALID, 1, 0, HRMFeature_BPM, false /*low_latency*/, prv_fake_hrm_1_cb, nullptr);
   fake_sys_work_callbacks_invoke_pending();
@@ -494,7 +494,7 @@ void test_hrm_manager__spo2_preempts_green(void) {
 // A subscriber whose interval is within the spin-up time is always due and so keeps the green path
 // on continuously; pref-masked and SpO2 subscribers don't count.
 void test_hrm_manager__has_continuous_green_subscriber(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   cl_assert(!hrm_manager_has_continuous_green_subscriber());
 
   HRMSessionRef slow_ref =
@@ -612,7 +612,7 @@ void test_hrm_manager__app_expiration(void) {
 
 // Test that system subscriptions expire correctly
 void test_hrm_manager__kernel_expiration(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   const uint16_t expire_s = PBL_SEC_PER_MIN;
   HRMSessionRef session_ref =
       hrm_manager_subscribe_with_callback(INSTALL_ID_INVALID, 1, expire_s, HRMFeature_BPM,
@@ -756,7 +756,7 @@ void test_hrm_manager__multiple_feature_callbacks(void) {
 }
 
 void test_hrm_manager__sys_work_data_callback(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_num_cb_events_1 = 0;
 
   const uint16_t expire_s = PBL_SEC_PER_MIN;
@@ -782,10 +782,10 @@ void test_hrm_manager__sys_work_data_callback(void) {
   sys_hrm_manager_unsubscribe(session_ref);
 }
 
-// Test having 2 different KernelBG subscribers. The data should only get pushed into the
+// Test having 2 different SysWorkq subscribers. The data should only get pushed into the
 // circular buffer once, but both clients should get it
 void test_hrm_manager__multiple_sys_work_data_callbacks(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_num_cb_events_1 = 0;
   s_num_cb_events_2 = 0;
 
@@ -1146,7 +1146,7 @@ void test_hrm_manager__unserved_timeout_keeps_live_hr_on(void) {
 
 // Test that off-wrist readings are delivered immediately without delay
 void test_hrm_manager__immediate_off_wrist(void) {
-  stub_pebble_tasks_set_current(PebbleTask_KernelBackground);
+  stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   s_num_cb_events_1 = 0;
 
   const uint16_t expire_s = PBL_SEC_PER_MIN;
@@ -1284,7 +1284,7 @@ void test_hrm_manager__stale_timeout_obeys_gates_and_restart_gets_full_window(vo
   HRMSessionRef session_ref = sys_hrm_manager_app_subscribe(1, 600, 0, HRMFeature_BPM);
   fake_sys_work_callbacks_invoke_pending();
   for (int gate = 0; gate < 3; ++gate) {
-    // Queue the old timer callback, then close a gate before KernelBG evaluates it.
+    // Queue the old timer callback, then close a gate before SysWorkq evaluates it.
     prv_advance_time_ms(HRM_MAX_UNSERVED_TIME_SEC * PBL_MSEC_PER_SEC);
     fake_work_fire(prv_get_timer());
     if (gate == 0) {

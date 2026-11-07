@@ -27,7 +27,7 @@
  * PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler);
  * @endcode
  *
- * The handler runs on KernelBG once the whole message has arrived, with a copy of the payload on
+ * The handler runs on SysWorkq once the whole message has arrived, with a copy of the payload on
  * the kernel heap. PBL_PP_ENDPOINT_DEFINE_MAIN() runs it on KernelMain instead, for handlers whose
  * events must stay ordered with the session events. Endpoints that need their own buffering
  * provide a @ref pbl_pp_receiver_api with PBL_PP_ENDPOINT_DEFINE_RECEIVER().
@@ -51,7 +51,7 @@ enum pbl_pp_access : uint8_t {
 
 /** @brief Task the default receiver runs an endpoint handler on. */
 enum pbl_pp_handler_task : uint8_t {
-  /** KernelBG. */
+  /** SysWorkq. */
   PBL_PP_HANDLER_BG,
   /** KernelMain. */
   PBL_PP_HANDLER_MAIN,
@@ -166,7 +166,7 @@ struct pbl_pp_endpoint {
 /** @endcond */
 
 /**
- * @brief Define an endpoint whose handler runs on KernelBG.
+ * @brief Define an endpoint whose handler runs on SysWorkq.
  *
  * @param _id Endpoint ID, one of the PBL_PP_ENDPOINT_ macros.
  * @param _access Senders allowed to use the endpoint, a @ref pbl_pp_access.

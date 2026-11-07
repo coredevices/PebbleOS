@@ -749,13 +749,13 @@ static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// This system task, triggered by a minute regular timer, takes care of updating the history
+// This callback, triggered by a minute regular timer, takes care of updating the history
 // when we reach midnight, checking for changes in sleep state, and updating insights
 PBL_T_STATIC void prv_minute_sys_work_cb(void *data) {
   if (!s_activity_state.started) {
     return;
   }
-  PBL_LOG_DBG("running minute system task");
+  PBL_LOG_DBG("running minute work");
 
   // Get the current time
   time_t utc_sec = pbl_realtime();
@@ -773,7 +773,7 @@ PBL_T_STATIC void prv_minute_sys_work_cb(void *data) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Runs on the timer task. Simply register a callback for the KernelBG task from here.
+// Runs on the timer task. Simply register a callback for the background work queue from here.
 static void prv_minute_cb(struct pbl_cron_job *job, void *data) {
   sys_work_add(prv_minute_sys_work_cb, data);
   pbl_cron_job_schedule(job);
@@ -904,7 +904,7 @@ static void prv_collect_raw_samples(AccelRawData *accel_data, uint32_t num_sampl
 }
 
 // ------------------------------------------------------------------------------------------------
-// Accel callback. Called from KernelBG task. Feeds new samples into the algorithm, saves
+// Accel callback. Called from background work queue. Feeds new samples into the algorithm, saves
 // the updated step and sleep stats into our globals, and posts a service event if the steps
 // have changed.
 static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t timestamp) {
@@ -912,7 +912,7 @@ static void prv_accel_cb(AccelRawData *data, uint32_t num_samples, uint64_t time
   if (vibes_get_vibe_strength() != VIBE_STRENGTH_OFF) {
     memset(data, 0, num_samples * sizeof(AccelRawData));
   }
-  // Have the algorithm process the samples from KernelBG
+  // Have the algorithm process the samples from SysWorkq
   activity_algorithm_handle_accel(data, num_samples, timestamp);
 
   // Update our copy of the steps after grabbing the mutex. We guard these globals with a
@@ -996,7 +996,7 @@ static void prv_stop_tracking_early(void) {
 // ------------------------------------------------------------------------------------------------
 // Start activity tracking system callback
 static void prv_start_tracking_cb(void *context) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
   bool test_mode = (bool)context;
   activity_prefs_set_activated();
 
@@ -1009,7 +1009,7 @@ static void prv_start_tracking_cb(void *context) {
   if (activity_algorithm_init(&sampling_rate)) {
     PBL_LOG_DBG("Starting activity tracking...");
 
-    // Subscribe to the accelerometer from KernelBG
+    // Subscribe to the accelerometer from SysWorkq
     s_activity_state.test_mode = test_mode;
     if (!test_mode) {
       PBL_ASSERTN(s_activity_state.accel_session == nullptr);
@@ -1079,9 +1079,9 @@ static void prv_stop_tracking_cb(void *context) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Enable/disable activity service KernelBG callback. Used by activity_set_enabled().
+// Enable/disable activity service SysWorkq callback. Used by activity_set_enabled().
 static void prv_set_enable_cb(void *context) {
-  PBL_ASSERT_TASK(PebbleTask_KernelBackground);
+  PBL_ASSERT_TASK(PebbleTask_SysWorkq);
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
     const bool enable = prv_activity_allowed_to_be_enabled();
@@ -1114,7 +1114,7 @@ cleanup:
 
 static void prv_handle_activity_enabled_change(void) {
   // Hold the activity mutex across the started/allowed check and prv_stop_tracking_early so we
-  // can't race with prv_set_enable_cb on KernelBG, which can call activity_algorithm_deinit() and
+  // can't race with prv_set_enable_cb on SysWorkq, which can call activity_algorithm_deinit() and
   // free s_alg_state out from under an in-flight activity_algorithm_early_deinit().
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   if (s_activity_state.started && !prv_activity_allowed_to_be_enabled()) {
@@ -1136,8 +1136,8 @@ static void prv_charger_event_cb(PebbleEvent *e, void *context) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Requests executed on KernelBG on behalf of an app or worker. They are heap allocated so that
-// KernelBG never writes into memory owned by the caller, which may give up waiting.
+// Requests executed on SysWorkq on behalf of an app or worker. They are heap allocated so that
+// SysWorkq never writes into memory owned by the caller, which may give up waiting.
 typedef struct ActivityBgRequest ActivityBgRequest;
 typedef bool (*ActivityBgRequestHandler)(ActivityBgRequest *req);
 
@@ -1166,10 +1166,10 @@ static void prv_bg_request_system_cb(void *data) {
 }
 
 // Returns true if the request completed, in which case the caller owns and must free it.
-// Otherwise ownership is gone: it was freed here or will be freed by KernelBG.
+// Otherwise ownership is gone: it was freed here or will be freed by SysWorkq.
 static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler handler,
                                uint32_t timeout_sec) {
-  // This call blocks on KernelBG, so it should only be called from an app or worker
+  // This call blocks on SysWorkq, so it should only be called from an app or worker
   PebbleTask task = pebble_task_get_current();
   PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
 
@@ -1206,7 +1206,7 @@ bool activity_init(void) {
   pbl_mutex_init(&s_activity_state.mutex);
   s_activity_initialized = true;
 
-  // This semaphore used to wake up the calling task when it is waiting for KernelBG to
+  // This semaphore used to wake up the calling task when it is waiting for SysWorkq to
   // handle a request
   pbl_sem_init(&s_activity_state.bg_wait_semaphore, 0, 1);
 
@@ -1514,7 +1514,7 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
 PBL_SYSCALL(bool, sys_activity_get_minute_history, (VAL, HealthMinuteData *, minute_data),
             (INOUT, uint32_t *, num_records), (INOUT, time_t *, utc_start)) {
   if (from_user) {
-    // num_records is a kernel copy here, so an app racing the KernelBG callback
+    // num_records is a kernel copy here, so an app racing the SysWorkq callback
     // can't swap it after it is validated (TOCTOU). An overflowing size would
     // let a tiny validated buffer gate a much larger kernel write.
     const uint32_t requested = *num_records;
@@ -1703,7 +1703,7 @@ bool activity_test_reset(bool reset_settings, bool tracking_on,
 
   activity_stop_tracking();
   while (s_activity_state.started) {
-    // Wait for stop_tracking KernelBG callback to run
+    // Wait for stop_tracking SysWorkq callback to run
     sys_psleep(1);
   }
   pbl_cron_job_unschedule(&s_activity_job);
@@ -1822,7 +1822,7 @@ bool activity_test_send_fake_dls_records(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  // Enqueue it for KernelBG to process
+  // Enqueue it for SysWorkq to process
   return sys_work_add(prv_send_fake_dls_records_system_cb, nullptr);
 }
 

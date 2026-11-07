@@ -16,7 +16,7 @@
 /**
  * @brief Handle a frame received on @c PBL_CONSOLE_CHANNEL_PP.
  *
- * Called by the console on KernelBG.
+ * Called by the console on SysWorkq.
  *
  * @param data Frame payload.
  * @param len Length of @p data in bytes.
@@ -26,8 +26,8 @@ void pbl_pp_console_receive(const void *data, size_t len);
 /**
  * @brief Handle the host's acknowledgment of a frame.
  *
- * Called by the console on the timer task: senders on KernelBG or KernelMain may be blocked
- * waiting for what this frees.
+ * Called by the console on the high priority work queue: senders on SysWorkq or KernelMain may
+ * be blocked waiting for what this frees.
  *
  * @param seq Sequence number of the acknowledged frame.
  */

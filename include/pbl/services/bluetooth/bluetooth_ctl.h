@@ -75,7 +75,7 @@ bool bt_ctl_is_bluetooth_running(void);
 /**
  * @brief Set and persist airplane mode.
  *
- * The stack is started or stopped later from KernelBG.
+ * The stack is started or stopped later from SysWorkq.
  *
  * @param enabled True to turn airplane mode on.
  */
@@ -100,7 +100,7 @@ void bt_ctl_set_enabled(bool enabled);
 void bt_ctl_set_override_mode(BtCtlModeOverride override);
 
 /**
- * @brief Restart the stack from KernelBG.
+ * @brief Restart the stack from SysWorkq.
  *
  * No-op if Bluetooth is not active.
  */

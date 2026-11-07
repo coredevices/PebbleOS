@@ -29,7 +29,7 @@
  * when the run level disables it.
  *
  * Apps and workers subscribe through the syscalls and receive @c PEBBLE_HRM_EVENT events on
- * their queue. KernelBG clients subscribe with a callback (see
+ * their queue. SysWorkq clients subscribe with a callback (see
  * @ref services_hrm_hrm_manager_private):
  *
  * @code{.c}
@@ -154,7 +154,7 @@ bool hrm_manager_has_continuous_green_subscriber(void);
 /**
  * @brief Subscribe an app or worker to sensor updates.
  *
- * Not for KernelBG or KernelMain clients, see hrm_manager_subscribe_with_callback(). An existing
+ * Not for SysWorkq or KernelMain clients, see hrm_manager_subscribe_with_callback(). An existing
  * subscription of the caller is replaced, keeping its session reference. Events are delivered
  * as @c PEBBLE_HRM_EVENT to the caller's task. Foreground apps with an interval of at most
  * @ref HRM_LOW_LATENCY_MAX_INTERVAL_S get low latency updates.
@@ -171,7 +171,7 @@ HRMSessionRef sys_hrm_manager_app_subscribe(AppInstallId app_id, uint32_t update
 /**
  * @brief Get the subscription of an app or worker.
  *
- * Not for KernelBG subscriptions.
+ * Not for SysWorkq subscriptions.
  *
  * @param app_id App install id.
  * @return Session reference, @ref HRM_INVALID_SESSION_REF if none.

@@ -21,7 +21,8 @@ static struct {
   struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
   // We cache the reminder app prefs because they're read in reminder_app_get_info() which needs to
-  // be fast because it's called by analytics from the system task while counting timeline pins
+  // be fast because it's called by analytics from the background work queue while counting timeline
+  // pins
   bool is_cached_reminder_app_prefs_valid;
   SerializedReminderAppPrefs cached_reminder_app_prefs;
 } s_watch_app_prefs_db;

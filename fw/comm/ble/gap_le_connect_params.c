@@ -272,7 +272,7 @@ static void prv_watchdog_sys_work_callback(void *ctx) {
 
 static void prv_watchdog_fn(struct pbl_work *work) {
   // Must never block on bt_lock: all other work on this queue (vibes, UI timeouts) is stalled
-  // behind it while the BT stack holds the lock. Defer to KernelBG, which re-validates the
+  // behind it while the BT stack holds the lock. Defer to SysWorkq, which re-validates the
   // connection.
   sys_work_add(prv_watchdog_sys_work_callback,
                container_of(work, GAPLEConnection, param_update_info.watchdog_work.work));
@@ -314,7 +314,7 @@ static void prv_evaluate(GAPLEConnection *connection,
   if (prv_do_actual_params_match_desired_state(connection, desired_state, nullptr)) {
     conn_mgr_handle_desired_state_granted(connection, desired_state);
 
-    // If the deferred KernelBG callback is already queued or waiting on bt_lock at this point,
+    // If the deferred SysWorkq callback is already queued or waiting on bt_lock at this point,
     // it's not a problem because the actual vs desired state gets checked in that path as well.
     pbl_delayed_work_cancel(&connection->param_update_info.watchdog_work);
     return;
