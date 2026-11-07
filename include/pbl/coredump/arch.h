@@ -29,12 +29,16 @@ void arch_coredump_trigger(void);
 /**
  * @brief Get the registers of the thread that was running.
  *
+ * If the thread faulted, these are its registers at the fault, not those of the fault handler.
+ *
  * @param[out] regs Registers, indexed by @ref pbl_thread_reg.
  */
 void arch_coredump_thread_regs(uint32_t regs[PBL_THREAD_REG_COUNT]);
 
 /**
  * @brief Get the registers of the exception that was running, if any.
+ *
+ * If it faulted, these are its registers at the fault, not those of the fault handler.
  *
  * @param[out] regs Registers, indexed by @ref pbl_thread_reg.
  * @return true if an exception was running.

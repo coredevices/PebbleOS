@@ -16,6 +16,18 @@
 
 #define REG_UNKNOWN 0xa5a5a5a5u
 
+#define EXC_RETURN_NO_FP 0x10u
+
+#define FRAME_WORDS    8
+#define FP_FRAME_WORDS 18
+
+#define IPSR_MASK        0x1ffu
+#define IPSR_HARD_FAULT  3u
+#define IPSR_USAGE_FAULT 6u
+
+// CFSR causes that mean the faulting code's registers never made it to its stack.
+#define CFSR_STACKING_ERRORS ((1u << 4) | (1u << 12) | (1u << 20)) // MSTKERR, STKERR, STKOF
+
 extern uint8_t __RAM_start__;
 extern uint8_t __RAM_size__;
 
@@ -33,6 +45,21 @@ static struct PBL_PACKED PBL_ALIGNED(4) {
   uint32_t core_reg[PBL_THREAD_REG_COUNT];
   struct pbl_coredump_extra_regs extra_reg;
 } s_saved_registers;
+
+/*
+ * Written by PBL_ARCH_COREDUMP_FAULT_ENTRY on every fault, whose assembly depends on the layout.
+ * Recovered faults leave it behind, so it only means something if the dump preempted a fault
+ * handler, which s_in_fault_handler tells.
+ */
+PBL_USED struct {
+  uint32_t r4_r11[8];
+  uint32_t exc_return;
+  uint32_t msp;
+  uint32_t psp;
+  uint32_t cfsr;
+} arch_coredump_fault;
+
+static bool s_in_fault_handler;
 
 void arch_coredump_trigger(void) {
   SCB->ICSR = SCB_ICSR_NMIPENDSET_Msk;
@@ -74,7 +101,50 @@ PBL_EXTERNALLY_VISIBLE void arch_coredump_handler_c(void) {
   s_saved_registers.extra_reg.faultmask = __get_FAULTMASK();
   s_saved_registers.extra_reg.control = __get_CONTROL();
 
+  if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
+    const uint32_t exception = process_sp[7] & IPSR_MASK;
+
+    s_in_fault_handler = exception >= IPSR_HARD_FAULT && exception <= IPSR_USAGE_FAULT;
+  }
+
   pbl_coredump_arch_handler();
+}
+
+static void prv_fault_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
+  const uint32_t exc_return = arch_coredump_fault.exc_return;
+  const uint32_t sp =
+      RETURNS_TO_PSP(exc_return) ? arch_coredump_fault.psp : arch_coredump_fault.msp;
+
+  for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
+    regs[i] = REG_UNKNOWN;
+  }
+  for (int i = 0; i < 8; i++) {
+    regs[PBL_THREAD_REG_R4 + i] = arch_coredump_fault.r4_r11[i];
+  }
+  regs[PBL_THREAD_REG_SP] = sp;
+
+  if (arch_coredump_fault.cfsr & CFSR_STACKING_ERRORS) {
+    return;
+  }
+
+  const uint32_t *frame = (const uint32_t *)sp;
+  regs[PBL_THREAD_REG_R0] = frame[0];
+  regs[PBL_THREAD_REG_R1] = frame[1];
+  regs[PBL_THREAD_REG_R2] = frame[2];
+  regs[PBL_THREAD_REG_R3] = frame[3];
+  regs[PBL_THREAD_REG_R12] = frame[4];
+  regs[PBL_THREAD_REG_LR] = frame[5];
+  regs[PBL_THREAD_REG_PC] = frame[6];
+  regs[PBL_THREAD_REG_XPSR] = frame[7];
+
+  uint32_t words = FRAME_WORDS;
+  if (!(exc_return & EXC_RETURN_NO_FP)) {
+    words += FP_FRAME_WORDS;
+  }
+  if (frame[7] & XPSR_STACK_PADDING) {
+    words++;
+  }
+  regs[PBL_THREAD_REG_SP] = (uint32_t)&frame[words];
 }
 
 void arch_coredump_thread_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
@@ -83,6 +153,11 @@ void arch_coredump_thread_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
       regs[i] = s_saved_registers.core_reg[i];
     }
     regs[PBL_THREAD_REG_SP] = s_saved_registers.extra_reg.psp;
+    return;
+  }
+
+  if (s_in_fault_handler && RETURNS_TO_PSP(arch_coredump_fault.exc_return)) {
+    prv_fault_regs(regs);
     return;
   }
 
@@ -106,6 +181,10 @@ void arch_coredump_thread_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
 bool arch_coredump_exception_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
   if (RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
     return false;
+  }
+  if (s_in_fault_handler && !RETURNS_TO_PSP(arch_coredump_fault.exc_return)) {
+    prv_fault_regs(regs);
+    return true;
   }
   for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
     regs[i] = s_saved_registers.core_reg[i];

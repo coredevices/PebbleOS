@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
@@ -11,6 +12,7 @@
 #include <kernel/fault_handling.h>
 #include <kernel/pebble_tasks.h>
 #include <logging/logging_private.h>
+#include <pbl_arch_coredump.h>
 #include <system/die.h>
 #include <system/reboot_reason.h>
 
@@ -178,14 +180,14 @@ static void hard_fault_handler_c(unsigned int *hardfault_args, unsigned int exc_
   reset_due_to_software_failure();
 }
 
-void HardFault_Handler(void) {
+void PBL_NAKED HardFault_Handler(void) {
   // Grab the stack pointer, shove it into a register and call
   // the c function above.
-  __asm(
-      "tst lr, #4\n"
-      "ite eq\n"
-      "mrseq r0, msp\n"
-      "mrsne r0, psp\n"
-      "mov r1, lr\n"
-      "b %0\n" ::"i"(hard_fault_handler_c));
+  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "mov r1, lr\n"
+        "b %0\n" ::"i"(hard_fault_handler_c));
 }
