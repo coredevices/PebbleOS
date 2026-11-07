@@ -34,6 +34,9 @@ void arch_mpu_enable(void);
 
 void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region);
 
+//! Copies into the P_RW_U_RO region in @p slot, negative if there is none yet.
+void arch_mpu_user_ro_write(int slot, void *dst, const void *src, size_t n);
+
 //! Reads back a slot. The name is left out, and so is everything but the access
 //! and exec attributes, of which access is the closest the hardware can tell.
 //! @return false if the slot is empty.

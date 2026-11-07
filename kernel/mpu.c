@@ -14,6 +14,7 @@
 
 static const struct pbl_mpu_region *s_static_regions[STATIC_SLOTS];
 static unsigned int s_num_static_regions;
+static int s_user_ro_slot = -1;
 
 static bool prv_overlaps(uintptr_t base, size_t size, uintptr_t other_base, size_t other_size) {
   return base < other_base + other_size && other_base < base + size;
@@ -28,6 +29,11 @@ int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
   }
   if (s_num_static_regions == STATIC_SLOTS) {
     return -ENOSPC;
+  }
+
+  if ((region->attr & PBL_MPU_ACCESS_MSK) == PBL_MPU_P_RW_U_RO) {
+    PBL_ASSERTN(s_user_ro_slot < 0);
+    s_user_ro_slot = s_num_static_regions;
   }
 
   arch_mpu_region_set(s_num_static_regions, region);
@@ -56,10 +62,11 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
     .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_EXEC,
   },
   {
+    // Written through the default memory map, which it has to stay coherent with.
     .name = "ro bss",
     .base = (uintptr_t)__unpriv_ro_bss_start__,
     .size = (size_t)__unpriv_ro_bss_size__,
-    .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB | PBL_MPU_SHAREABLE,
+    .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB,
   },
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   {
@@ -87,6 +94,10 @@ void mpu_init(void) {
   prv_regions_add(pbl_soc_mpu_regions, pbl_soc_num_mpu_regions);
 #endif
   arch_mpu_enable();
+}
+
+void pbl_mpu_user_ro_write(void *dst, const void *src, size_t n) {
+  arch_mpu_user_ro_write(s_user_ro_slot, dst, src, n);
 }
 
 const struct pbl_mpu_region *pbl_mpu_region_firmware(void) {
