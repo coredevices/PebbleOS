@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/system_task.h>
 
@@ -15,8 +16,6 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
-
-#define PB_APP_STATE_ENDPOINT_ID 0x34
 
 typedef struct PBL_PACKED {
   AppState state : 8;
@@ -30,7 +29,7 @@ static void prv_send_response(void *data) {
   if (session) {
     if (pbl_pp_session_has_capability(session, PBL_PP_CAP_RUN_STATE)) {
       char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
-      bool success = pbl_pp_send(session, PB_APP_STATE_ENDPOINT_ID, (uint8_t *)app_run_state,
+      bool success = pbl_pp_send(session, PBL_PP_ENDPOINT_APP_RUN_STATE, (uint8_t *)app_run_state,
                                  sizeof(*app_run_state), PBL_PP_DEFAULT_TIMEOUT_MS);
 
       uuid_to_string(&app_run_state->uuid, uuid_buffer);
@@ -113,6 +112,11 @@ void app_run_state_protocol_msg_callback(struct pbl_pp_session *session, const u
   }
   app_run_state_command(session, msg->command, uuid_is_invalid(&msg->uuid) ? nullptr : &msg->uuid);
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_RUN_STATE, PBL_PP_ACCESS_ANY,
+                       app_run_state_protocol_msg_callback);
+#endif
 
 void app_run_state_send_update(const Uuid *uuid, AppState app_state) {
 #ifdef CONFIG_RECOVERY_FW

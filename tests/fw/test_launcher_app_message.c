@@ -33,8 +33,6 @@ struct pbl_pp_session *s_session;
 #define APP_UUID_RAW \
   0x13, 0xEC, 0xC6, 0x7C, 0xCC, 0xB4, 0x4A, 0x96, 0x9E, 0xA7, 0x50, 0xE5, 0x09, 0xCA, 0xF7, 0x3A
 
-#define LAUNCHER_MESSAGE_ENDPOINT_ID (0x31)
-
 #define RUN_STATE_KEY   (1)
 #define STATE_FETCH_KEY (2)
 #define INVALID_KEY     (0xffffffff)
@@ -44,15 +42,15 @@ struct pbl_pp_session *s_session;
 
 #define TRANSACTION_ID (0xA5)
 
-#define assert_ack(ack)                                                    \
-  fake_comm_session_process_send_next();                                   \
-  const AppMessageAck ack_message = {                                      \
-    .header = {                                                            \
-      .command = ack ? CMD_ACK : CMD_NACK,                                 \
-      .transaction_id = TRANSACTION_ID,                                    \
-    },                                                                     \
-  };                                                                       \
-  fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, \
+#define assert_ack(ack)                                                            \
+  fake_comm_session_process_send_next();                                           \
+  const AppMessageAck ack_message = {                                              \
+    .header = {                                                                    \
+      .command = ack ? CMD_ACK : CMD_NACK,                                         \
+      .transaction_id = TRANSACTION_ID,                                            \
+    },                                                                             \
+  };                                                                               \
+  fake_transport_assert_sent(s_transport, 0, PBL_PP_ENDPOINT_LAUNCHER_APP_MESSAGE, \
                              (const uint8_t *)&ack_message, sizeof(ack_message));
 
 void app_run_state_command(struct pbl_pp_session *session, AppRunStateCommand cmd,
@@ -184,5 +182,6 @@ void test_launcher_app_message__send_app_state(void) {
   PBL_ASSERTN(DICT_OK == dict_serialize_tuplets_to_buffer(
                              &tuplet, 1, (uint8_t *)&push_message->dictionary, &size));
   fake_comm_session_process_send_next();
-  fake_transport_assert_sent(s_transport, 0, LAUNCHER_MESSAGE_ENDPOINT_ID, buffer, sizeof(buffer));
+  fake_transport_assert_sent(s_transport, 0, PBL_PP_ENDPOINT_LAUNCHER_APP_MESSAGE, buffer,
+                             sizeof(buffer));
 }
