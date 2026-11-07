@@ -378,13 +378,6 @@ class QueueStats(gdb.Command):
                 [get_static_variable("s_from_app_event_queue"), "PebbleEvent"],
                 [get_static_variable("s_from_worker_event_queue"), "PebbleEvent"],
             ],
-            "KernelBG": [
-                [get_static_variable("s_system_task_queue"), "SystemTaskEvent"],
-                [
-                    get_static_variable("s_from_app_system_task_queue"),
-                    "SystemTaskEvent",
-                ],
-            ],
             "App": [[get_static_variable("s_to_app_event_queue"), "PebbleEvent"]],
             "Worker": [[get_static_variable("s_to_worker_event_queue"), "PebbleEvent"]],
         }

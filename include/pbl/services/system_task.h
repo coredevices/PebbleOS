@@ -12,9 +12,11 @@
  * @ingroup services
  * @brief Low priority background task (KernelBG) running deferred work.
  *
- * ISRs and higher priority tasks marshal units of work onto KernelBG by queueing callbacks, which
- * run one at a time in FIFO order. Callbacks are covered by a task watchdog; long ones must call
- * system_task_watchdog_feed() regularly. When KernelBG starves, the app task is briefly throttled.
+ * KernelBG serves @ref pbl_sys_workq, adding a watchdog and app throttling; new code should use
+ * the kernel work API directly. ISRs and higher priority tasks marshal units of work onto KernelBG
+ * by queueing callbacks, which run one at a time in FIFO order. Callbacks are covered by a task
+ * watchdog; long ones must call system_task_watchdog_feed() regularly. When KernelBG starves, the
+ * app task is briefly throttled.
  *
  * The enqueue variants differ in what happens when the queue is full:
  * - system_task_add_callback() waits, then resets the system if still full (apps wait forever on
