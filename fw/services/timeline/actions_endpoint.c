@@ -105,7 +105,7 @@ static PebbleSysNotificationActionResult *prv_action_result_create_from_serial_d
     ResponseHeader *header, uint8_t num_attributes, uint8_t num_actions, const uint8_t *data,
     size_t size) {
   size_t string_alloc_size;
-  uint8_t attributes_per_action[num_actions];
+  uint8_t attributes_per_action[MAX(num_actions, 1)];
   bool r = attributes_actions_parse_serial_data(num_attributes, num_actions, data, size,
                                                 &string_alloc_size, attributes_per_action);
   if (!r) {
