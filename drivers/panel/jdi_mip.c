@@ -9,7 +9,7 @@
 #include <pbl/util/misc.h>
 
 #define POWER_SEQ_DELAY_US 11000U
-#define OFF_TIME_MS        500U
+#define OFF_TIME_MS        100U
 
 static const struct pbl_panel_jdi_mip *prv_jdi(const struct pbl_panel *panel) {
   return container_of(panel, const struct pbl_panel_jdi_mip, panel);

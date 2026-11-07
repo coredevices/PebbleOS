@@ -16,7 +16,7 @@
  *
  * The panel takes its timing from the board, and has two supplies switched by GPIOs: VLCD, raised
  * first, and VDDP. Its VCOM is inverted by a PWM output at the VCOM frequency, 50% duty cycle,
- * while the image is on. Once powered down, the panel is kept off for 500 ms before it is powered
+ * while the image is on. Once powered down, the panel is kept off for 100 ms before it is powered
  * again. The panel is powered down when it is set up.
  *
  * @code{.c}
