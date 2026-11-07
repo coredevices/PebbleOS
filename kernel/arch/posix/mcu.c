@@ -57,6 +57,9 @@ void dcache_invalidate(void *addr, size_t size) {
 void dcache_align(uintptr_t *addr, size_t *size) {
 }
 
+void arch_mpu_init(void) {
+}
+
 void arch_mpu_enable(void) {
 }
 

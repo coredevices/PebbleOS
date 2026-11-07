@@ -61,6 +61,11 @@ config KERNEL_MPU_REGIONS
 	  MPU slots the core implements. The last four switch with the thread, and
 	  the rest take the static regions.
 
+config KERNEL_MPU_IN_FAULTS
+	bool
+	help
+	  Keep the MPU on in the HardFault and NMI handlers.
+
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
 	default 1000 if QEMU || SOC_SF32LB52 || SOC_POSIX

@@ -26,6 +26,9 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg);
 //! Number of MPU slots switched in with each thread, the last ones of the MPU.
 #define ARCH_THREAD_MPU_REGIONS 4
 
+//! Leaves the MPU off with every slot empty, whatever came before the kernel.
+void arch_mpu_init(void);
+
 //! Turns memory protection on.
 void arch_mpu_enable(void);
 

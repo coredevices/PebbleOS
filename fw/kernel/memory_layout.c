@@ -23,9 +23,6 @@ void memory_layout_dump_mpu_regions(void) {
 }
 
 #if defined(UNITTEST) || defined(CONFIG_ARCH_POSIX)
-static const uint32_t __unpriv_ro_bss_start__ = 0;
-static const uint32_t __unpriv_ro_bss_size__ = 0;
-
 static const uint32_t __APP_RAM__ = 0;
 static const uint32_t __APP_RAM_size__ = 0;
 static const uint32_t __WORKER_RAM__ = 0;
@@ -34,10 +31,6 @@ static const uint32_t __WORKER_RAM_size__ = 0;
 static const uint32_t __FLASH_start__ = 0;
 static const uint32_t __FLASH_size__ = 0;
 #else
-extern const uint32_t __unpriv_ro_bss_start__[];
-extern const uint32_t __unpriv_ro_bss_size__[];
-extern const uint32_t __isr_stack_start__[];
-
 extern const uint32_t __APP_RAM__[];
 extern const uint32_t __APP_RAM_size__[];
 extern const uint32_t __WORKER_RAM__[];
@@ -45,23 +38,6 @@ extern const uint32_t __WORKER_RAM_size__[];
 
 extern const uint32_t __FLASH_start__[];
 extern const uint32_t __FLASH_size__[];
-#endif
-
-// Kernel read only RAM. Parts of RAM that it's kosher for unprivileged apps to read
-static const struct pbl_mpu_region s_readonly_bss_region = {
-  .name = "ro bss",
-  .base = (uintptr_t)__unpriv_ro_bss_start__,
-  .size = (size_t)__unpriv_ro_bss_size__,
-  .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB | PBL_MPU_SHAREABLE,
-};
-
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-static const struct pbl_mpu_region s_isr_stack_guard_region = {
-  .name = "isr guard",
-  .base = (uintptr_t)__isr_stack_start__,
-  .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
-  .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
-};
 #endif
 
 // App and worker .text is relocated into their RAM.
@@ -115,27 +91,13 @@ static const struct pbl_mpu_region s_resource_banks_region = {
 #endif
 
 void memory_layout_setup_mpu(void) {
-  // On SF32LB52 SystemInit() already programs a user-RO region for the firmware image.
-#ifndef CONFIG_SOC_SF32LB52
-  PBL_ASSERTN(pbl_mpu_region_add(&s_microflash_region) == 0);
-#endif
 #if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
   PBL_ASSERTN(pbl_mpu_region_add(&s_resource_banks_region) == 0);
 #endif
-  PBL_ASSERTN(pbl_mpu_region_add(&s_readonly_bss_region) == 0);
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  PBL_ASSERTN(pbl_mpu_region_add(&s_isr_stack_guard_region) == 0);
-#endif
-
-  pbl_mpu_regions_enable();
 }
 
 const struct pbl_mpu_region *memory_layout_get_app_region(void) {
   return &s_app_region;
-}
-
-const struct pbl_mpu_region *memory_layout_get_readonly_bss_region(void) {
-  return &s_readonly_bss_region;
 }
 
 const struct pbl_mpu_region *memory_layout_get_worker_region(void) {

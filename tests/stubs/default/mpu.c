@@ -41,9 +41,6 @@ PBL_WEAK int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
   return 0;
 }
 
-PBL_WEAK void pbl_mpu_regions_enable(void) {
-}
-
 PBL_WEAK bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
   return false;
 }

@@ -84,3 +84,6 @@ void timer_expire(void);
 pbl_tick_t timer_ticks_until_next(pbl_tick_t now);
 void timer_reset_for_test(void);
 extern struct pbl_thread *pbl_all_threads;
+
+//! Takes over the MPU, adds the static regions it knows about and enables it.
+void mpu_init(void);
