@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include <pbl/services/new_timer/new_timer.h>
+struct pbl_delayed_work;
 
 /**
  * @defgroup services_wakeup Wakeup
@@ -13,7 +13,7 @@
  * @brief Scheduled app launches.
  *
  * Kernel side of the app wakeup API. Events are stored in the "wakeup" settings file and the
- * next one is scheduled with a new_timer. When an event fires, its app is launched with
+ * next one is scheduled with delayed work. When an event fires, its app is launched with
  * @c APP_LAUNCH_WAKEUP, or receives a @c PEBBLE_WAKEUP_EVENT if already running. Events missed
  * while the watch was off can be reported with a popup.
  * @{
@@ -64,9 +64,9 @@ void wakeup_enable(bool enabled);
 /**
  * @brief Get the timer used to schedule events, for tests.
  *
- * @return Timer identifier.
+ * @return Delayed work item.
  */
-TimerID wakeup_get_current(void);
+struct pbl_delayed_work *wakeup_get_current(void);
 
 /**
  * @brief Get the next scheduled event, for tests.

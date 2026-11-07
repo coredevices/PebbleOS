@@ -12,9 +12,9 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/list.h>
@@ -141,7 +141,8 @@ typedef struct {
 
 static const uint32_t MAX_VIBE_DURATION_MS = 10000;
 
-static int s_pattern_timer = TIMER_INVALID_ID;
+static void prv_timer_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_pattern_timer, prv_timer_callback);
 static bool s_pattern_in_progress = false;
 // Source that started the active pattern; VibePatternOwner_Other when none is live.
 static VibePatternOwner s_pattern_owner = VibePatternOwner_Other;
@@ -176,7 +177,6 @@ static uint32_t s_total_vibe_on_time_ms;      // Total vibe on time tracked inte
 
 void vibes_init() {
   s_pattern_in_progress = false;
-  s_pattern_timer = new_timer_create();
 
   // Initialize strength analytics tracking
   s_strength_time_product_sum = 0;
@@ -272,7 +272,7 @@ static uint32_t prv_next_timeout_ms(uint32_t step_duration_ms) {
   return (uint32_t)(s_pattern_deadline_ms - elapsed_ms);
 }
 
-static void prv_timer_callback(void *data) {
+static void prv_timer_callback(struct pbl_work *work) {
   if (s_vibe_queue_head == nullptr) {
     PBL_LOG_ERR("Tried to handle a vibe event with a null vibe queue");
     return;
@@ -289,9 +289,7 @@ static void prv_timer_callback(void *data) {
     // move to the next step
     prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
     const uint32_t next_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-    bool success =
-        new_timer_start(s_pattern_timer, next_ms, prv_timer_callback, nullptr, 0 /*flags*/);
-    PBL_ASSERTN(success);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_pattern_timer, PBL_MSEC(next_ms));
   } else {
     // I'm done with the active pattern
     // make sure it's off
@@ -419,16 +417,14 @@ PBL_SYSCALL(void, sys_vibe_pattern_trigger_start) {
   prv_vibes_set_vibe_strength(s_vibe_queue_head->strength);
   s_pattern_in_progress = true;
   const uint32_t first_ms = prv_next_timeout_ms(s_vibe_queue_head->duration_ms);
-  bool success =
-      new_timer_start(s_pattern_timer, first_ms, prv_timer_callback, nullptr, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_pattern_timer, PBL_MSEC(first_ms));
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }
 
 // Stop the active pattern and drop queued steps. Caller holds s_vibe_pattern_mutex.
 static void prv_clear_pattern_locked(void) {
   pbl_mutex_assert_held(&s_vibe_pattern_mutex, true);
-  new_timer_stop(s_pattern_timer);
+  pbl_delayed_work_cancel(&s_pattern_timer);
   unsigned int dropped_steps = 0;
   while (s_vibe_queue_head) {
     VibePatternStep *removed_node = s_vibe_queue_head;

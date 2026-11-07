@@ -14,8 +14,8 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -69,7 +69,8 @@ static BacklightState s_light_state;
 static uint8_t s_current_brightness;
 
 //! Timer to count down from the LIGHT_STATE_ON_TIMED state.
-static TimerID s_timer_id;
+static void light_timer_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_timer, light_timer_callback);
 
 //! Refcount of the number of buttons that are currently pushed
 static int s_num_buttons_down;
@@ -151,7 +152,8 @@ static uint32_t s_dark_threshold;
 //! holdoff is sized to cover typical multi-wake patterns ("raise wrist, lower,
 //! raise again a few seconds later") so we keep sampling across them rather
 //! than re-paying the first-IT wait per wake.
-static TimerID s_als_prime_release_timer_id;
+static void prv_als_prime_release_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_als_prime_release_timer, prv_als_prime_release_callback);
 static bool s_als_primed;
 #define ALS_PRIME_HOLDOFF_MS (5000)
 
@@ -190,8 +192,8 @@ static uint8_t prv_dynamic_mode_floor_intensity(BacklightDynamicMode mode) {
 static void prv_change_state(BacklightState new_state);
 
 //! Timer callback: holdoff expired, drop the prime so the W1160 stops
-//! integrating in the background. Runs on the new_timer task.
-static void prv_als_prime_release_callback(void *data) {
+//! integrating in the background. Runs on the high priority work queue.
+static void prv_als_prime_release_callback(struct pbl_work *work) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (s_als_primed) {
     s_als_primed = false;
@@ -211,8 +213,8 @@ static void prv_als_prime_for_interaction(void) {
     s_als_primed = true;
     pbl_als_prime(ALS);
   }
-  new_timer_start(s_als_prime_release_timer_id, ALS_PRIME_HOLDOFF_MS,
-                  prv_als_prime_release_callback, nullptr, 0 /* flags */);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_als_prime_release_timer,
+                              PBL_MSEC(ALS_PRIME_HOLDOFF_MS));
 }
 
 static void prv_als_sample(void) {
@@ -293,7 +295,7 @@ static bool prv_als_is_light(void) {
   return prv_get_als_gate_level() > s_dark_threshold;
 }
 
-static void light_timer_callback(void *data) {
+static void light_timer_callback(struct pbl_work *work) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_change_state(LIGHT_STATE_ON_FADING);
   pbl_mutex_unlock(&s_mutex);
@@ -517,14 +519,14 @@ static void prv_change_state(BacklightState new_state) {
   switch (new_state) {
     case LIGHT_STATE_ON:
       new_brightness = prv_backlight_get_intensity();
-      new_timer_stop(s_timer_id);
+      pbl_delayed_work_cancel(&s_timer);
       break;
     case LIGHT_STATE_ON_TIMED:
       new_brightness = prv_backlight_get_intensity();
 
       // Schedule the timer to move us from the ON_TIMED state to the ON_FADING state
-      new_timer_start(s_timer_id, backlight_get_timeout_ms(), light_timer_callback, nullptr,
-                      0 /* flags */);
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer,
+                                  PBL_MSEC(backlight_get_timeout_ms()));
       break;
     case LIGHT_STATE_ON_FADING:
       // Build the fade ladder only when we first enter fading state. Pacing
@@ -544,12 +546,12 @@ static void prv_change_state(BacklightState new_state) {
         new_brightness = s_fade_levels[s_fade_level_idx++];
 
         // Reschedule the timer so we step down the brightness again.
-        new_timer_start(s_timer_id, s_fade_step_ms, light_timer_callback, nullptr, 0 /* flags */);
+        pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer, PBL_MSEC(s_fade_step_ms));
       }
       break;
     case LIGHT_STATE_OFF:
       new_brightness = 0;
-      new_timer_stop(s_timer_id);
+      pbl_delayed_work_cancel(&s_timer);
       break;
   }
 
@@ -621,12 +623,7 @@ void light_init(void) {
   s_als_cached_level = 0;
   s_als_cached_ticks = 0;
 
-  // Create the ALS release timer before the fade timer so existing tests that
-  // pluck the most-recently-created idle timer (test_light.c:149) still pick
-  // up s_timer_id.
-  s_als_prime_release_timer_id = new_timer_create();
   s_als_primed = false;
-  s_timer_id = new_timer_create();
 }
 
 static void prv_button_pressed(bool touch) {
@@ -961,3 +958,9 @@ static void prv_collect_backlight_stats(void) {
   pbl_mutex_unlock(&s_mutex);
 }
 PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_backlight_stats);
+
+#if UNITTEST
+struct pbl_delayed_work *light_test_get_timer(void) {
+  return &s_timer;
+}
+#endif

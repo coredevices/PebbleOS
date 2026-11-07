@@ -19,12 +19,12 @@
 #include <pbl/util/units.h>
 
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
 #include <fake_settings.h>
 #include <fake_spi_flash.h>
+#include <fake_work.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
   return true;
@@ -323,7 +323,7 @@ void test_timeline_peek_event__initialize(void) {
 void test_timeline_peek_event__cleanup(void) {
   timeline_peek_set_show_before_time(TIMELINE_PEEK_DEFAULT_SHOW_BEFORE_TIME_S);
   timeline_event_deinit();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
   fake_settings_reset();
 }
 
@@ -390,7 +390,7 @@ typedef struct CheckNoEventsParams {
     cl_assert_equal_i(peek.time_type, TimelinePeekTimeType_None);                    \
     cl_assert_equal_i(peek.num_concurrent, 0);                                       \
     cl_assert_equal_b(peek.is_future_empty, params.is_future_empty);                 \
-    cl_assert_equal_i(stub_new_timer_get_next(), TIMER_INVALID_ID);                  \
+    cl_assert_equal_p(fake_work_get_next(), nullptr);                                \
     peek;                                                                            \
   })
 
@@ -413,15 +413,18 @@ typedef struct CheckEventParams {
     cl_assert_equal_i(peek.num_concurrent, params.num_concurrent);                     \
     cl_assert_equal_b(peek.is_first_event, params.is_first_event);                     \
     cl_assert_equal_b(peek.is_future_empty, false);                                    \
-    const TimerID timer_id = stub_new_timer_get_next();                                \
-    cl_assert(timer_id != TIMER_INVALID_ID);                                           \
-    cl_assert_equal_i(stub_new_timer_timeout(timer_id), params.timeout_ms);            \
+    const struct pbl_delayed_work *timer = fake_work_get_next();                       \
+    cl_assert(timer != nullptr);                                                       \
+    cl_assert_equal_i(fake_work_timeout_ms(timer), params.timeout_ms);                 \
     peek;                                                                              \
   })
 
 static void prv_invoke_timer(unsigned int timeout_s) {
   fake_rtc_increment_time(timeout_s);
-  stub_new_timer_invoke(1 /* num_invoke */);
+  struct pbl_delayed_work *timer = fake_work_get_next();
+  if (timer != nullptr) {
+    fake_work_fire(timer);
+  }
 }
 
 void test_timeline_peek_event__no_events(void) {

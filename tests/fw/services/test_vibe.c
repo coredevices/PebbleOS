@@ -9,10 +9,10 @@
 #include <applib/ui/vibes.h>
 #include <clar.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
+#include <fake_work.h>
 
 static struct pbl_mutex *s_last_locked_mutex;
 static struct pbl_mutex *s_history_mutex;
@@ -99,12 +99,12 @@ static void prv_snap_ticks_to_wall(void) {
 }
 
 static void prv_run_vibes() {
-  TimerID timer = stub_new_timer_get_next();
-  while (timer != TIMER_INVALID_ID) {
-    fake_rtc_increment_time_ms(stub_new_timer_timeout(timer));
+  struct pbl_delayed_work *timer = fake_work_get_next();
+  while (timer != nullptr) {
+    fake_rtc_increment_time_ms(fake_work_timeout_ms(timer));
     prv_snap_ticks_to_wall();
-    stub_new_timer_fire(timer);
-    timer = stub_new_timer_get_next();
+    fake_work_fire(timer);
+    timer = fake_work_get_next();
   }
 }
 

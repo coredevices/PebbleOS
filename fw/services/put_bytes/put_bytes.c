@@ -12,12 +12,12 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/firmware_update.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/put_bytes/put_bytes_storage.h>
@@ -125,8 +125,6 @@ typedef struct {
 } PutBytesPendingJobs;
 
 typedef struct {
-  TimerID timer_id;
-
   uint32_t token;
   PutBytesObjectType type;
   bool has_cookie;
@@ -177,6 +175,11 @@ static struct InstallableObject {
 } s_ready_to_install[NumObjects];
 
 static PBL_SEM_DEFINE(s_pb_semaphore, 1, 1);
+
+static void prv_timer_work(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_timer, prv_timer_work);
+//! The timer is waiting for an Init rather than for the next message of a transfer
+static bool s_timer_expects_init;
 
 //! Marks that the receiver state is now free to use
 static void prv_receiver_reset(void);
@@ -337,10 +340,7 @@ static void prv_cleanup(void) {
   prv_deinit_put_job_queue();
   s_pb_state.receiver = (typeof(s_pb_state.receiver)){};
 
-  if (s_pb_state.timer_id) {
-    new_timer_delete(s_pb_state.timer_id);
-    s_pb_state.timer_id = TIMER_INVALID_ID;
-  }
+  pbl_delayed_work_cancel(&s_timer);
 
   pb_storage_deinit(&s_pb_state.storage, s_pb_state.is_success);
 
@@ -387,7 +387,7 @@ static void prv_fail(uint32_t token) {
   prv_add_nack_system_callback(token);
 }
 
-static void prv_timer_callback(void *data) {
+static void prv_transfer_timeout(void) {
   PBL_LOG_WRN("Put bytes Tok: %" PRIu32 " timed out after %" PRIu32 "ms, cleaning up.",
               s_pb_state.token, PUT_TIMEOUT_MS);
   prv_cleanup_async();
@@ -620,12 +620,10 @@ static bool prv_parse_init_index(const InitRequest *init_request, uint32_t *inde
   return true;
 }
 
-static void prv_create_timer_if_needed(void) {
-  if (s_pb_state.timer_id != TIMER_INVALID_ID) {
-    new_timer_stop(s_pb_state.timer_id);
-  } else {
-    s_pb_state.timer_id = new_timer_create();
-  }
+static void prv_start_timer(uint32_t timeout_ms, bool expects_init) {
+  pbl_delayed_work_cancel(&s_timer);
+  s_timer_expects_init = expects_init;
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_timer, PBL_MSEC(timeout_ms));
 }
 
 static bool prv_setup_storage_for_init_request(const InitRequest *request, uint32_t index) {
@@ -751,9 +749,7 @@ static void prv_do_init(void) {
   };
   event_put(&event);
 
-  prv_create_timer_if_needed();
-  success = new_timer_start(s_pb_state.timer_id, PUT_TIMEOUT_MS, prv_timer_callback, &s_pb_state,
-                            0 /*flags*/);
+  prv_start_timer(PUT_TIMEOUT_MS, false);
 
 exit:
   prv_mark_pb_jobs_complete(1);
@@ -941,8 +937,7 @@ static void prv_process_put_requests_sys_work_cb(void *unused) {
   pbl_sem_give(&s_pb_semaphore);
 
   // (re)start timer for next event
-  PBL_ASSERTN(new_timer_start(s_pb_state.timer_id, PUT_TIMEOUT_MS, prv_timer_callback, &s_pb_state,
-                              0 /*flags*/));
+  prv_start_timer(PUT_TIMEOUT_MS, false);
 
   prv_mark_pb_jobs_complete(num_put_jobs);
 
@@ -1057,9 +1052,7 @@ void put_bytes_cancel(void) {
 void put_bytes_deinit(void) {
   pbl_sem_deinit(&s_pb_semaphore);
 
-  if (s_pb_state.timer_id != TIMER_INVALID_ID) {
-    new_timer_delete(s_pb_state.timer_id);
-  }
+  pbl_delayed_work_cancel(&s_timer);
   pb_storage_deinit(&s_pb_state.storage, false);
   prv_deinit_put_job_queue();
 
@@ -1067,13 +1060,10 @@ void put_bytes_deinit(void) {
   memset(&s_ready_to_install, 0, sizeof(s_ready_to_install));
 }
 
-static void prv_expect_init_timeout_cb(void *data) {
+static void prv_expect_init_timeout(void) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
 
-  if (s_pb_state.timer_id) {
-    new_timer_delete(s_pb_state.timer_id);
-    s_pb_state.timer_id = TIMER_INVALID_ID;
-  }
+  pbl_delayed_work_cancel(&s_timer);
 
   PebbleEvent event = {
     .type = PEBBLE_PUT_BYTES_EVENT,
@@ -1091,6 +1081,14 @@ static void prv_expect_init_timeout_cb(void *data) {
   pbl_sem_give(&s_pb_semaphore);
 }
 
+static void prv_timer_work(struct pbl_work *work) {
+  if (s_timer_expects_init) {
+    prv_expect_init_timeout();
+  } else {
+    prv_transfer_timeout();
+  }
+}
+
 void put_bytes_expect_init(uint32_t timeout_ms) {
   pbl_sem_take(&s_pb_semaphore, PBL_FOREVER);
 
@@ -1101,10 +1099,7 @@ void put_bytes_expect_init(uint32_t timeout_ms) {
   }
 
   // Just in case this is called more than once
-  prv_create_timer_if_needed();
-  bool success = new_timer_start(s_pb_state.timer_id, timeout_ms, prv_expect_init_timeout_cb,
-                                 nullptr, 0 /*flags*/);
-  PBL_ASSERTN(success);
+  prv_start_timer(timeout_ms, true);
   pbl_sem_give(&s_pb_semaphore);
 }
 
@@ -1284,8 +1279,8 @@ struct pbl_sem *put_bytes_get_semaphore(void) {
   return &s_pb_semaphore;
 }
 
-TimerID put_bytes_get_timer_id(void) {
-  return s_pb_state.timer_id;
+struct pbl_delayed_work *put_bytes_get_timer(void) {
+  return &s_timer;
 }
 
 uint32_t put_bytes_get_index(void) {

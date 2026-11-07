@@ -1,11 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
+#include <pbl/util/math.h>
 
-#include <applib/app_logging.h>
 #include <applib/ui/animation_private.h>
 #include <kernel/events.h>
 #include <kernel/kernel_applib_state.h>
@@ -13,9 +12,11 @@
 #include <process_management/process_manager.h>
 #include <process_state/app_state/app_state.h>
 
-// The timer ID used for each task that we support
-static TimerID s_kernel_main_timer_id = TIMER_INVALID_ID;
-static TimerID s_app_timer_id = TIMER_INVALID_ID;
+static void prv_timer_callback(struct pbl_work *work);
+
+// The timer used for each task that we support
+static PBL_DELAYED_WORK_DEFINE(s_kernel_main_timer, prv_timer_callback);
+static PBL_DELAYED_WORK_DEFINE(s_app_timer, prv_timer_callback);
 
 static bool s_kernel_main_event_pending;
 static bool s_app_event_pending;
@@ -25,45 +26,30 @@ void animation_service_cleanup(PebbleTask task) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
 
   if (task == PebbleTask_KernelMain) {
-    if (s_kernel_main_timer_id != TIMER_INVALID_ID) {
-      new_timer_delete(s_kernel_main_timer_id);
-      s_kernel_main_timer_id = TIMER_INVALID_ID;
-    }
+    pbl_delayed_work_cancel(&s_kernel_main_timer);
     s_kernel_main_event_pending = false;
   } else if (task == PebbleTask_App) {
-    if (s_app_timer_id != TIMER_INVALID_ID) {
-      new_timer_delete(s_app_timer_id);
-      s_app_timer_id = TIMER_INVALID_ID;
-    }
+    pbl_delayed_work_cancel(&s_app_timer);
     s_app_event_pending = false;
   }
 }
 
 // ------------------------------------------------------------------------------------------
-static void prv_timer_callback(void *context) {
-  PebbleTask task = (PebbleTask)(uintptr_t)context;
-
+static void prv_timer_callback(struct pbl_work *work) {
   PebbleEvent e = {
     .type = PEBBLE_CALLBACK_EVENT,
     .callback = {.callback = animation_private_timer_callback}
   };
 
-  switch (task) {
-    case PebbleTask_KernelMain:
-      if (!s_kernel_main_event_pending) {
-        s_kernel_main_event_pending = true;
-        e.callback.data = (void *)kernel_applib_get_animation_state();
-        event_put(&e);
-      }
-      break;
-    case PebbleTask_App:
-      if (!s_app_event_pending) {
-        e.callback.data = (void *)app_state_get_animation_state();
-        s_app_event_pending = process_manager_send_event_to_process(task, &e);
-      }
-      break;
-    default:
-      pbl_panic("Invalid task %s", pebble_task_get_name(pebble_task_get_current()));
+  if (work == &s_kernel_main_timer.work) {
+    if (!s_kernel_main_event_pending) {
+      s_kernel_main_event_pending = true;
+      e.callback.data = (void *)kernel_applib_get_animation_state();
+      event_put(&e);
+    }
+  } else if (!s_app_event_pending) {
+    e.callback.data = (void *)app_state_get_animation_state();
+    s_app_event_pending = process_manager_send_event_to_process(PebbleTask_App, &e);
   }
 }
 
@@ -83,12 +69,12 @@ PBL_SYSCALL(void, animation_service_timer_event_received) {
 // ------------------------------------------------------------------------------------------
 PBL_SYSCALL(void, animation_service_timer_schedule, (VAL, uint32_t, ms)) {
   PebbleTask task = pebble_task_get_current();
-  TimerID *timer_id;
+  struct pbl_delayed_work *timer;
 
   if (task == PebbleTask_KernelMain) {
-    timer_id = &s_kernel_main_timer_id;
+    timer = &s_kernel_main_timer;
   } else if (task == PebbleTask_App) {
-    timer_id = &s_app_timer_id;
+    timer = &s_app_timer;
   } else {
     if (from_user) {
       pbl_syscall_fail();
@@ -96,24 +82,11 @@ PBL_SYSCALL(void, animation_service_timer_schedule, (VAL, uint32_t, ms)) {
     return;
   }
 
-  // Need to create the timer?
-  bool success = false;
-  if (*timer_id == TIMER_INVALID_ID) {
-    *timer_id = new_timer_create();
-  }
-
-  // Schedule/reschedule it
-  if (*timer_id != TIMER_INVALID_ID) {
-    success =
-        new_timer_start(*timer_id, ms, prv_timer_callback, (void *)(uintptr_t)task, 0 /*flags */);
-  }
-  if (!success) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Error scheduling timer");
-  }
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, timer, PBL_MSEC(ms));
 }
 
 // ---------------------------------------------------------------------------
 // Used for unit tests only
-TimerID animation_service_test_get_timer_id(void) {
-  return s_kernel_main_timer_id;
+struct pbl_delayed_work *animation_service_test_get_timer(void) {
+  return &s_kernel_main_timer;
 }

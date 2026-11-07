@@ -15,7 +15,6 @@
 
 #include <clar.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_put_bytes_storage_mem.h>
 #include <fake_rtc.h>
@@ -23,11 +22,12 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
 
 extern struct pbl_sem *put_bytes_get_semaphore(void);
-extern TimerID put_bytes_get_timer_id(void);
+extern struct pbl_delayed_work *put_bytes_get_timer(void);
 extern uint32_t put_bytes_get_index(void);
 extern uint8_t prv_put_bytes_get_max_batched_pb_ops(void);
 
@@ -929,24 +929,24 @@ void test_put_bytes__install_message_fw_and_sys_resources_boot_bits_set(void) {
 void test_put_bytes__init_starts_timeout_timer(void) {
   prv_receive_init_fw_object();
 
-  TimerID timer_id = put_bytes_get_timer_id();
-  cl_assert_equal_b(true, stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(PUT_BYTES_TIMEOUT_MS, stub_new_timer_timeout(timer_id));
+  struct pbl_delayed_work *timer_id = put_bytes_get_timer();
+  cl_assert_equal_b(true, fake_work_is_scheduled(timer_id));
+  cl_assert_equal_i(PUT_BYTES_TIMEOUT_MS, fake_work_timeout_ms(timer_id));
 }
 
 void test_put_bytes__put_chunk_restarts_timeout_timer(void) {
   prv_receive_init_fw_object();
 
   // Stop the timer, so we can easily detect it gets restarted again:
-  TimerID timer_id = put_bytes_get_timer_id();
-  new_timer_stop(timer_id);
+  struct pbl_delayed_work *timer_id = put_bytes_get_timer();
+  pbl_delayed_work_cancel(timer_id);
 
   const uint8_t chunk[] = {0xaa, 0xbb, 0xcc};
   prv_receive_put(s_last_response_cookie, chunk, sizeof(chunk));
   fake_sys_work_callbacks_invoke_pending();
 
-  cl_assert_equal_b(true, stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(PUT_BYTES_TIMEOUT_MS, stub_new_timer_timeout(timer_id));
+  cl_assert_equal_b(true, fake_work_is_scheduled(timer_id));
+  cl_assert_equal_i(PUT_BYTES_TIMEOUT_MS, fake_work_timeout_ms(timer_id));
 }
 
 void test_put_bytes__after_timeout_cleanup_and_allow_init_again(void) {
@@ -954,7 +954,7 @@ void test_put_bytes__after_timeout_cleanup_and_allow_init_again(void) {
   assert_ack_count(1);
   assert_nack_count(0);
 
-  stub_new_timer_fire(put_bytes_get_timer_id());
+  fake_work_fire(put_bytes_get_timer());
   fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_b(fake_pb_storage_mem_get_last_success(), false);
@@ -978,7 +978,7 @@ void test_put_bytes__expect_init_noop_while_not_idle(void) {
   put_bytes_expect_init(EXPECT_INIT_TIMEOUT_MS);
 
   // The timer is still not overridden by the "expect_init" timer:
-  cl_assert_equal_i(stub_new_timer_timeout(put_bytes_get_timer_id()), PUT_BYTES_TIMEOUT_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(put_bytes_get_timer()), PUT_BYTES_TIMEOUT_MS);
 }
 
 void test_put_bytes__expect_init_no_event_when_init_received(void) {
@@ -987,10 +987,10 @@ void test_put_bytes__expect_init_no_event_when_init_received(void) {
   prv_receive_init_fw_object();
 
   // The timer is overridden by the 30s Put Bytes timeout:
-  cl_assert_equal_i(stub_new_timer_timeout(put_bytes_get_timer_id()), PUT_BYTES_TIMEOUT_MS);
+  cl_assert_equal_i(fake_work_timeout_ms(put_bytes_get_timer()), PUT_BYTES_TIMEOUT_MS);
 
   fake_event_reset_count();
-  stub_new_timer_fire(put_bytes_get_timer_id());
+  fake_work_fire(put_bytes_get_timer());
   fake_sys_work_callbacks_invoke_pending();
 
   // Expect only "Cleanup" event:
@@ -1001,7 +1001,7 @@ void test_put_bytes__expect_init_no_event_when_init_received(void) {
 void test_put_bytes__expect_init_event_upon_timeout(void) {
   put_bytes_expect_init(EXPECT_INIT_TIMEOUT_MS);
 
-  stub_new_timer_fire(put_bytes_get_timer_id());
+  fake_work_fire(put_bytes_get_timer());
 
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(event.type, PEBBLE_PUT_BYTES_EVENT);

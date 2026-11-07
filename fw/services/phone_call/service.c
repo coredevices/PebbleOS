@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/notifications/alerts.h>
@@ -43,7 +44,11 @@ static bool s_mobile_app_is_connected;
 
 // We can't expect iOS to reliably send us phone call events, so we must poll for the current
 // status of the phone call
-static TimerID s_call_watchdog = TIMER_INVALID_ID;
+static void prv_timer_callback(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_call_watchdog, prv_timer_callback);
+//! Cleared before canceling, so a running callback does not re-arm
+static bool s_call_watchdog_active;
+static pbl_tick_t s_call_watchdog_period;
 
 static void prv_handle_call_end(bool disconnected);
 
@@ -55,10 +60,14 @@ static void prv_poll_phone_for_status(void *context) {
   pp_get_phone_state();
 }
 
-static void prv_timer_callback(void *context) {
+static void prv_timer_callback(struct pbl_work *work) {
   // Make sure we aren't overflowing / backing up the queue too much
   if (sys_work_get_available_space() > 10) {
-    sys_work_add(prv_poll_phone_for_status, context);
+    sys_work_add(prv_poll_phone_for_status, nullptr);
+  }
+
+  if (s_call_watchdog_active) {
+    pbl_delayed_work_schedule_next(&s_call_watchdog, s_call_watchdog_period);
   }
 }
 
@@ -68,21 +77,20 @@ static void prv_schedule_call_watchdog(int poll_interval_ms) {
   // iOS 9 since we can rely on ANCS to tell us when the phone stops ringing
   if (s_call_source == PhoneCallSource_ANCS_Legacy) {
     // Schedule/reschedule the watchdog
-    if (!new_timer_start(s_call_watchdog, poll_interval_ms, prv_timer_callback, nullptr,
-                         TIMER_START_FLAG_REPEATING)) {
-      PBL_LOG_ERR("Could not start the phone call watchdog timer");
-      prv_handle_call_end(true /* Treat this as a disconnection */);
-    } else {
-      PBL_LOG_DBG("Phone call watchdog timer started");
-      pp_get_phone_state_set_enabled(true);
-    }
+    s_call_watchdog_period = pbl_ms_to_ticks(poll_interval_ms);
+    s_call_watchdog_active = true;
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_call_watchdog,
+                                PBL_TICKS(s_call_watchdog_period));
+    PBL_LOG_DBG("Phone call watchdog timer started");
+    pp_get_phone_state_set_enabled(true);
   } else {
     PBL_LOG_DBG("Not starting phone call watchdog, this isn't iOS 8: %d", s_call_source);
   }
 }
 
 static void prv_cancel_call_watchdog(void) {
-  new_timer_stop(s_call_watchdog);
+  s_call_watchdog_active = false;
+  pbl_delayed_work_cancel(&s_call_watchdog);
   pp_get_phone_state_set_enabled(false);
 }
 
@@ -213,7 +221,7 @@ PBL_T_STATIC void prv_handle_phone_event(PebbleEvent *e, void *context) {
     return;
   }
 
-  if (!(event.type == PhoneEventType_Incoming && new_timer_scheduled(s_call_watchdog, nullptr))) {
+  if (!(event.type == PhoneEventType_Incoming && s_call_watchdog_active)) {
     // Be careful not to spam the logs with the new iOS polling implementation
     PBL_LOG_DBG("PebblePhoneEvent: %d, Call in progress: %s, Connected: %s", event.type,
                 s_call_in_progress ? "T" : "F", s_mobile_app_is_connected ? "T" : "F");
@@ -297,8 +305,6 @@ void phone_call_service_init() {
   event_service_client_subscribe(&ancs_disconnected_event_info);
 
   s_mobile_app_is_connected = (pbl_pp_session_get_system() != nullptr);
-
-  s_call_watchdog = new_timer_create();
 }
 
 void phone_call_answer(void) {

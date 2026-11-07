@@ -16,12 +16,12 @@
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
 #include <fake_settings.h>
 #include <fake_spi_flash.h>
+#include <fake_work.h>
 
 bool calendar_layout_verify(bool existing_attributes[]) {
   return true;
@@ -177,7 +177,7 @@ void test_calendar__initialize(void) {
 
 void test_calendar__cleanup(void) {
   timeline_event_deinit();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
   fake_settings_reset();
 }
 
@@ -188,8 +188,7 @@ void test_calendar__no_events(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__init_with_future_event(void) {
@@ -200,32 +199,29 @@ void test_calendar__init_with_future_event(void) {
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(10 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 }
 
 void test_calendar_handle__future_event_added_and_removed(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 
   cl_assert(timeline_add(&item1));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(10 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   cl_assert(timeline_remove(&item1.header.id));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 3);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__init_with_ongoing_event(void) {
@@ -236,10 +232,8 @@ void test_calendar__init_with_ongoing_event(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(5 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(5 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 }
 
 void test_calendar_handle__ongoing_event_added_and_removed(void) {
@@ -247,22 +241,21 @@ void test_calendar_handle__ongoing_event_added_and_removed(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 
   cl_assert(timeline_add(&item1));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(5 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(5 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   cl_assert(timeline_remove(&item1.header.id));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 3);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__init_with_past_event(void) {
@@ -273,9 +266,8 @@ void test_calendar__init_with_past_event(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar_handle__past_event_added_and_removed(void) {
@@ -283,21 +275,20 @@ void test_calendar_handle__past_event_added_and_removed(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 
   cl_assert(timeline_add(&item1));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 
   cl_assert(timeline_remove(&item1.header.id));
   timeline_event_handle_blobdb_event();
   cl_assert_equal_i(fake_event_get_count(), 3);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__timer_test(void) {
@@ -313,44 +304,42 @@ void test_calendar__timer_test(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert(timer_id != TIMER_INVALID_ID);
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(10 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   pbl_realtime_set(10 * 60);
-  cl_assert(stub_new_timer_fire(timer_id));
+  fake_work_fire(fake_work_get_next());
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert(prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(10 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   pbl_realtime_set(20 * 60);
-  cl_assert(stub_new_timer_fire(timer_id));
+  fake_work_fire(fake_work_get_next());
   cl_assert_equal_i(fake_event_get_count(), 3);
   cl_assert(prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(15 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(15 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   pbl_realtime_set(35 * 60);
-  cl_assert(stub_new_timer_fire(timer_id));
+  fake_work_fire(fake_work_get_next());
   cl_assert_equal_i(fake_event_get_count(), 4);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(65 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(65 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   pbl_realtime_set(100 * 60);
-  cl_assert(stub_new_timer_fire(timer_id));
+  fake_work_fire(fake_work_get_next());
   cl_assert_equal_i(fake_event_get_count(), 5);
   cl_assert(prv_get_calendar_ongoing());
-  cl_assert(stub_new_timer_is_scheduled(timer_id));
-  cl_assert_equal_i(10 * 60, stub_new_timer_timeout(timer_id) / 1000);
+  cl_assert(fake_work_get_next() != nullptr);
+  cl_assert_equal_i(10 * 60, fake_work_timeout_ms(fake_work_get_next()) / 1000);
 
   pbl_realtime_set(110 * 60);
-  cl_assert(stub_new_timer_fire(timer_id));
+  fake_work_fire(fake_work_get_next());
   cl_assert_equal_i(fake_event_get_count(), 6);
   cl_assert(!prv_get_calendar_ongoing());
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__handle_non_calendar_pins(void) {
@@ -361,8 +350,7 @@ void test_calendar__handle_non_calendar_pins(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert_equal_i(timer_id, TIMER_INVALID_ID);
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
 
 void test_calendar__handle_all_day_pins(void) {
@@ -373,6 +361,5 @@ void test_calendar__handle_all_day_pins(void) {
   timeline_event_init();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert(!prv_get_calendar_ongoing());
-  TimerID timer_id = stub_new_timer_get_next();
-  cl_assert(!stub_new_timer_is_scheduled(timer_id));
+  cl_assert_equal_p(fake_work_get_next(), nullptr);
 }
