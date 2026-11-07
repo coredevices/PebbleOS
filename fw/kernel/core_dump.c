@@ -9,6 +9,7 @@
 extern char *itoa(int value, char *str, int base);
 
 #include <pbl/board/partitions.h>
+#include <pbl/coredump/arch.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -41,10 +42,6 @@ extern char *itoa(int value, char *str, int base);
 
 #include <cmsis_core.h>
 
-//! Evaluates to 1 iff execution will use the process stack when returning from
-//! the exception.
-#define RETURNS_TO_PSP(exc_return) ((exc_return & 0x4) == 0x4)
-
 //! This symbol and its contents are provided by the linker script, see the
 //! .note.gnu.build-id section in fw/stm32f2xx_flash_fw.ld
 extern const ElfExternalNote TINTIN_BUILD_ID;
@@ -56,8 +53,6 @@ extern uint8_t __RAM_size__;
 // Private globals
 
 static uint32_t s_flash_addr; // next address in flash to write to
-// Saved registers before we trigger our interrupt: [r0-r12, sp, lr, pc, xpsr]
-static PBL_ALIGNED(4) CoreDumpSavedRegisters s_saved_registers;
 static uint32_t s_time_stamp;
 static bool s_core_dump_initiated = false;
 static bool s_core_dump_is_forced = false;
@@ -279,56 +274,11 @@ static void prv_thread_info_cb(const struct pbl_thread_info *task_info, void *da
     packed_info.registers[i] = task_info->regs[i];
   }
 
-  // If this is the current task, adjust the registers based on whether or not we were handling
-  //  an exception at the time core_dump_reset() was called.
   if (packed_info.running) {
-    if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
-      // The core dump handler got invoked from another exception, therefore the
-      // running task was interrupted by an exception.
-      // Get R0-R3, R12, R14, PC, xpsr for the task off the process stack used
-      // by the task.
-      // The information for this task is going to be incorrect: the values of
-      // R4-R11 will be completely bogus. The only way to recover them is to
-      // properly unwind the full exception stack in a debugger with unwind
-      // information available. Unfortunately mainline GDB is unable to unwind
-      // across the MSP/PSP split stack so this incomplete hack is required to
-      // get useable information.
-      for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
-        // Clear out all of the bogus values in the info
-        packed_info.registers[i] = 0xa5a5a5a5;
-      }
-      uint32_t *sp = (uint32_t *)s_saved_registers.extra_reg.psp;
-      packed_info.registers[PBL_THREAD_REG_R0] = sp[0];
-      packed_info.registers[PBL_THREAD_REG_R1] = sp[1];
-      packed_info.registers[PBL_THREAD_REG_R2] = sp[2];
-      packed_info.registers[PBL_THREAD_REG_R3] = sp[3];
-      packed_info.registers[PBL_THREAD_REG_R12] = sp[4];
-      packed_info.registers[PBL_THREAD_REG_LR] = sp[5];
-      packed_info.registers[PBL_THREAD_REG_PC] = sp[6];
-      packed_info.registers[PBL_THREAD_REG_XPSR] = sp[7];
-      // Pop the exception stack frame, taking stack alignment into account.
-      // The 10th bit of the pushed xPSR indicates whether an alignment word was
-      // inserted into the stack frame during exception entry in order to make
-      // sp 8-byte aligned.
-      // Note that this is going to be wrong if the floating-point registers
-      // were stacked. The only way to know for sure whether the FP regs were
-      // pushed during exception entry requires unwinding the ISR stack to
-      // determine the EXC_RETURN value of the bottom-most ISR.
-      if (sp[7] & 0x200) {
-        packed_info.registers[PBL_THREAD_REG_SP] = (uint32_t)(&sp[9]);
-      } else {
-        packed_info.registers[PBL_THREAD_REG_SP] = (uint32_t)(&sp[8]);
-      }
-    } else {
-      // If current task called core_dump_reset directly, then jam in the
-      // registers we saved at the beginning.
-      for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
-        // registers [r0-r12, msp, lr, pc, psr]
-        packed_info.registers[i] = s_saved_registers.core_reg[i];
-      }
-      // Set sp to the saved psp so that GDB can unwind the task's stack.
-      packed_info.registers[PBL_THREAD_REG_SP] = s_saved_registers.extra_reg.psp;
-    }
+    uint32_t regs[PBL_THREAD_REG_COUNT];
+
+    arch_coredump_thread_regs(regs);
+    memcpy(packed_info.registers, regs, sizeof(packed_info.registers));
   }
 
   // Write out this thread info
@@ -412,59 +362,14 @@ static uint32_t prv_write_image_header(uint32_t flash_addr, uint8_t core_number,
     reboot_reason_set(&reason);
   }
 
-  // Pend the Non-Maskable Interrupt, as the NMI handler performs the core dump.
-  SCB->ICSR = SCB_ICSR_NMIPENDSET_Msk;
-  __DSB();
-  __ISB();
+  arch_coredump_trigger();
   // Shouldn't get here
   RebootReason reason = {RebootReasonCode_CoreDumpEntryFailed, 0};
   reboot_reason_set(&reason);
   prv_reset();
 }
 
-void PBL_NAKED NMI_Handler(void) {
-  // Save the processor state at the moment the NMI exception was entered to a
-  // struct of type CoreDumpSavedRegisters.
-  //
-  // Save the processor state which is not automatically stacked during
-  // exception entry before any C code can clobber it.
-  __asm volatile(
-      "  ldr r0, =%[s_saved_registers]\n"
-      "  stmia r0!, {r4-r11}          \n"
-      "  str sp, [r0, #4]!            \n" // sp, skipping r12
-      "  str lr, [r0, #4]!            \n" // lr
-      "  mrs r1, xpsr                 \n"
-      "  mrs r2, msp                  \n"
-      "  mrs r3, psp                  \n"
-      "  adds r0, #8                  \n" // skip pc
-      "  stmia r0!, {r1-r3}           \n" // xpsr, msp, psp
-      "  b core_dump_handler_c    \n"
-      :
-      : [s_saved_registers] "i"(&s_saved_registers.core_reg[PBL_THREAD_REG_R4])
-      : "r0", "r1", "r2", "r3", "cc");
-}
-
-PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
-  // Locate the stack pointer where the processor state was stacked before the
-  // NMI handler was executed so that the saved state can be copied into
-  // s_saved_registers.
-  uint32_t *process_sp = (uint32_t *)(RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])
-                                          ? s_saved_registers.extra_reg.psp
-                                          : s_saved_registers.extra_reg.msp);
-  s_saved_registers.core_reg[PBL_THREAD_REG_R0] = process_sp[0];
-  s_saved_registers.core_reg[PBL_THREAD_REG_R1] = process_sp[1];
-  s_saved_registers.core_reg[PBL_THREAD_REG_R2] = process_sp[2];
-  s_saved_registers.core_reg[PBL_THREAD_REG_R3] = process_sp[3];
-  // Replace the r12 saved earlier with the real value.
-  s_saved_registers.core_reg[PBL_THREAD_REG_R12] = process_sp[4];
-  // Make it look like the processor had halted at the start of this function.
-  s_saved_registers.core_reg[PBL_THREAD_REG_PC] = (uint32_t)NMI_Handler;
-  // Save the special registers that the C compiler won't clobber.
-  s_saved_registers.extra_reg.primask = __get_PRIMASK();
-  s_saved_registers.extra_reg.basepri = __get_BASEPRI();
-  s_saved_registers.extra_reg.faultmask = __get_FAULTMASK();
-  s_saved_registers.extra_reg.control = __get_CONTROL();
-
+void pbl_coredump_arch_handler(void) {
   // if we coredump after new fw has been installed but before we reboot, the
   // FW image will be overwritten with a coredump. Clear the boot bits so we
   // don't try and load the resources which would result in us dropping to PRF
@@ -561,7 +466,7 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   chunk_hdr.size = sizeof(CoreDumpExtraRegInfo);
   CD_ASSERTN(s_flash_addr + chunk_hdr.size - flash_base < CORE_DUMP_MAX_SIZE);
   s_flash_addr += prv_flash_write_bytes(&chunk_hdr, s_flash_addr, sizeof(chunk_hdr));
-  s_flash_addr += prv_flash_write_bytes(&s_saved_registers.extra_reg, s_flash_addr, chunk_hdr.size);
+  s_flash_addr += prv_flash_write_bytes(arch_coredump_extra_regs(), s_flash_addr, chunk_hdr.size);
 
   // Write out each of the thread chunks ----------------------------------
   // Note that we leave the threads for last just in case we encounter corrupted FreeRTOS
@@ -571,17 +476,12 @@ PBL_EXTERNALLY_VISIBLE void core_dump_handler_c(void) {
   pbl_thread_foreach(prv_thread_info_cb, nullptr);
 
   // If we core dumped from an ISR, we make up a special "ISR" thread to hold the registers
-  if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
-    // Another exception invoked the core dump handler
-    struct pbl_thread_info task_info = {
-      .name = "ISR",
-      .id = 1,
-      .current = false,
-    };
-    for (int i = 0; i < PBL_THREAD_REG_COUNT; i++) {
-      // registers [r0-r12, sp, lr, pc, sr]
-      task_info.regs[i] = s_saved_registers.core_reg[i];
-    }
+  struct pbl_thread_info task_info = {
+    .name = "ISR",
+    .id = 1,
+    .current = false,
+  };
+  if (arch_coredump_exception_regs(task_info.regs)) {
     prv_thread_info_cb(&task_info, nullptr);
   }
 

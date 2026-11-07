@@ -19,6 +19,11 @@ config KERNEL_ISR_STACK_SIZE
 	int "ISR stack size in bytes"
 	default 1024
 
+config ARCH_HAS_COREDUMP
+	bool
+	help
+	  The architecture can capture its state for a core dump.
+
 config ARCH_HAS_STACK_GUARD
 	bool
 	help

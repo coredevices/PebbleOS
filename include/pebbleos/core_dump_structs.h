@@ -60,21 +60,4 @@ typedef struct PBL_PACKED {
   uint8_t control;
 } CoreDumpExtraRegInfo;
 
-/**
- * @brief Processor state captured on entry to the core dump handler.
- *
- * Saved by the NMI handler that performs the core dump, into a static variable, before any C code
- * runs; the handler's assembly depends on the order and packing of this structure. Not written
- * to the dump as such, but reachable in RAM through the @c s_saved_registers symbol.
- */
-typedef struct PBL_PACKED {
-  /**
-   * Registers r0-r12, sp, lr, pc, xpsr. sp is the MSP and lr the EXC_RETURN value at handler
-   * entry; pc is the handler's own address.
-   */
-  uint32_t core_reg[CORE_DUMP_NUM_REGISTERS];
-  /** Special registers. */
-  CoreDumpExtraRegInfo extra_reg;
-} CoreDumpSavedRegisters;
-
 /** @} */
