@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/comm_session/session_analytics.h>
 #include <pbl/services/comm_session/session_internal.h>
 

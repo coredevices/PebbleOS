@@ -4,12 +4,12 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/touch/cst816.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/system_task.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>

@@ -7,6 +7,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
@@ -14,7 +15,6 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>

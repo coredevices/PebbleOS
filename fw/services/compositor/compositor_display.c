@@ -3,12 +3,12 @@
 
 #include <string.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/compositor_private.h>
 #include <pbl/util/math.h>

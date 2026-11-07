@@ -9,6 +9,7 @@
 #include "process_regions.h"
 #include "worker_manager.h"
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/fatal.h>
@@ -17,7 +18,6 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/animation_service.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>

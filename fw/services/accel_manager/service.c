@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
@@ -13,7 +14,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/system_task.h>

@@ -10,11 +10,11 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/i18n/i18n.h>

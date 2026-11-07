@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
@@ -13,7 +14,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>

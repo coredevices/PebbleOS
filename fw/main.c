@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/board/partitions.h>
 #include <pbl/device.h>
@@ -17,7 +18,6 @@
 #include <pbl/logging/backend.h>
 #include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/boot_splash.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>

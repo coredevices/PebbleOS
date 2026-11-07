@@ -6,8 +6,8 @@
 #include <stdint.h>
 
 /**
- * @defgroup services_analytics Analytics
- * @ingroup services
+ * @defgroup analytics Analytics
+ * @ingroup subsys
  * @brief Firmware metrics collected into periodic heartbeats.
  *
  * Metrics are declared in @c analytics.def as unsigned, signed, scaled, timer or string metrics.

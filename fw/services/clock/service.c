@@ -4,12 +4,12 @@
 #include "rtc_sync.h"
 #include "tz_storage.h"
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/i18n/i18n.h>

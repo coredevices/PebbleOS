@@ -8,11 +8,11 @@
 #include <pbl/drivers/battery/qemu.h>
 #endif
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/analytics/analytics.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/system_task.h>

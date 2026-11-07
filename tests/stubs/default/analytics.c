@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/analytics/analytics.h>
 
 PBL_WEAK void pbl_analytics_init(void) {
 }
