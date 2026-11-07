@@ -16,9 +16,3 @@ config PROCESS_SYSCALL_STACK_SIZE
     help
       Privileged stack each process runs its syscalls on. Size it against
       the measured high-water, reported by analytics.
-
-config TASK_TIMER_POOL_SIZE
-    int "TaskTimer slab pool size"
-    default 192
-    help
-      Number of TaskTimer slots reserved in .kernel_bss
