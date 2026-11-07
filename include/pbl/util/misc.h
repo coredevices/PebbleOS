@@ -41,7 +41,7 @@
  * @param member Name of the member within @p type.
  * @return Pointer to the containing structure.
  */
-#define container_of(ptr, type, member) ((type *)((char *)(ptr) - (size_t)&(((type *)0)->member)))
+#define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 
 /**
  * @brief Swap the values of two lvalues of the same type.
