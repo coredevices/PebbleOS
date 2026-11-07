@@ -98,7 +98,7 @@ bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
     }
   }
 
-  for (unsigned int i = PBL_THREAD_REGION_STACK_GUARD; i < ARCH_THREAD_MPU_REGIONS; i++) {
+  for (unsigned int i = THREAD_REGION_STACK_GUARD; i < ARCH_THREAD_MPU_REGIONS; i++) {
     struct pbl_mpu_region region;
     if (arch_mpu_region_get(STATIC_SLOTS + i, &region) &&
         prv_overlaps(start, end - start, region.base, region.size)) {
@@ -131,8 +131,8 @@ void pbl_mpu_regions_print(void (*print)(void *ctx, const char *line), void *ctx
   static const char *const s_thread_names[ARCH_THREAD_MPU_REGIONS] = {
     [0] = "thread 0",
     [1] = "thread 1",
-    [PBL_THREAD_REGION_STACK_GUARD] = "stack guard",
-    [PBL_THREAD_REGION_STACK_GUARD + 1] = "syscall guard",
+    [THREAD_REGION_STACK_GUARD] = "stack guard",
+    [THREAD_REGION_SYSCALL_GUARD] = "syscall guard",
   };
   char line[80];
 
