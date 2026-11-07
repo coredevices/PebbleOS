@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
@@ -48,6 +49,33 @@ static int prv_cmd_crash_hard(const struct pbl_shell *sh, size_t argc, char **ar
 static int prv_cmd_panic(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_panic("You asked for this!");
 }
+
+#ifdef CONFIG_COREDUMP
+// Known register values at a known instruction, for tests to look for in the core dump.
+static void PBL_NAKED prv_fault(void) {
+  __asm volatile(
+      "ldr r0, =0x10101010\n"
+      "ldr r1, =0x11111111\n"
+      "ldr r2, =0x12121212\n"
+      "ldr r3, =0x13131313\n"
+      "ldr r4, =0x14141414\n"
+      "ldr r5, =0x15151515\n"
+      "ldr r6, =0x16161616\n"
+      "ldr r7, =0x17171717\n"
+      "ldr r8, =0x18181818\n"
+      "ldr r9, =0x19191919\n"
+      "ldr r10, =0x1a1a1a1a\n"
+      "ldr r11, =0x1b1b1b1b\n"
+      "ldr r12, =0x1c1c1c1c\n"
+      "udf #0\n"
+      ".ltorg\n");
+}
+
+static int prv_cmd_fault(const struct pbl_shell *sh, size_t argc, char **argv) {
+  prv_fault();
+  return 0;
+}
+#endif
 
 static int prv_cmd_factory_reset(const struct pbl_shell *sh, size_t argc, char **argv) {
   if (argc < 2) {
@@ -217,6 +245,10 @@ PBL_SHELL_SUBCMD_ADD(sub_sys, crash, nullptr, "Reset as if the launcher panicked
 PBL_SHELL_SUBCMD_ADD(sub_sys, crash_hard, nullptr, "Hard reset as if the firmware failed to start",
                      prv_cmd_crash_hard, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, panic, nullptr, "Trigger a panic", prv_cmd_panic, 0, 0);
+#ifdef CONFIG_COREDUMP
+PBL_SHELL_SUBCMD_ADD(sub_sys, fault, nullptr, "Trigger a fault with known registers", prv_cmd_fault,
+                     0, 0);
+#endif
 #ifdef CONFIG_RECOVERY_FW
 PBL_SHELL_SUBCMD_ADD(sub_sys, factory_reset, nullptr, "Factory reset", prv_cmd_factory_reset, 1, 0);
 #else
