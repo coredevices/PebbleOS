@@ -101,8 +101,22 @@ static uint32_t get_size_field(uint32_t block_size) {
   return result;
 }
 
+void arch_mpu_init(void) {
+  PBL_ASSERTN(((MPU->TYPE & MPU_TYPE_DREGION_Msk) >> MPU_TYPE_DREGION_Pos) >=
+              CONFIG_KERNEL_MPU_REGIONS);
+
+  ARM_MPU_Disable();
+  for (uint32_t i = 0U; i < CONFIG_KERNEL_MPU_REGIONS; i++) {
+    ARM_MPU_ClrRegion(i);
+  }
+}
+
 void arch_mpu_enable(void) {
+#ifdef CONFIG_KERNEL_MPU_IN_FAULTS
+  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_HFNMIENA_Msk);
+#else
   ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+#endif
 }
 
 void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *region, uint32_t *rbar,

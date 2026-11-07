@@ -8,16 +8,6 @@
 #include <cmsis_core.h>
 #include <kernel.h>
 
-// On SF32LB52 the SiFli vendor code (system_bf0_ap.c) programs its own MPU
-// regions in SystemInit() and burns MAIR indices 0..2 (code / ram / device)
-// for those. To avoid clobbering them we shift our own memory types
-// into MAIR indices MAIR_INDEX_BASE..MAIR_INDEX_BASE+3.
-#ifdef CONFIG_SOC_SF32LB52
-#define MAIR_INDEX_BASE 4U
-#else
-#define MAIR_INDEX_BASE 0U
-#endif
-
 #define TYPE_IDX(attr) (((attr) & PBL_MPU_TYPE_MSK) >> 3)
 
 // The 2-bit AP field cannot express two of the access attributes:
@@ -56,20 +46,25 @@ static uint32_t prv_ap_to_access(uint32_t ap) {
   }
 }
 
-void arch_mpu_enable(void) {
-  for (uint8_t i = 0U; i < ARRAY_LENGTH(s_type_to_mair); i++) {
-    ARM_MPU_SetMemAttr(i + MAIR_INDEX_BASE, s_type_to_mair[i]);
-  }
+void arch_mpu_init(void) {
+  PBL_ASSERTN(((MPU->TYPE & MPU_TYPE_DREGION_Msk) >> MPU_TYPE_DREGION_Pos) >=
+              CONFIG_KERNEL_MPU_REGIONS);
 
-  // ARM_MPU_Enable() writes MPU_CTRL directly, which would clobber bits set
-  // by another module (e.g. SiFli's SystemInit() turns on HFNMIENA). If the
-  // MPU is already enabled, just OR in PRIVDEFENA so we keep whatever flags
-  // are already there.
-  if (MPU->CTRL & MPU_CTRL_ENABLE_Msk) {
-    MPU->CTRL |= MPU_CTRL_PRIVDEFENA_Msk;
-  } else {
-    ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+  ARM_MPU_Disable();
+  for (uint32_t i = 0U; i < CONFIG_KERNEL_MPU_REGIONS; i++) {
+    ARM_MPU_ClrRegion(i);
   }
+  for (uint8_t i = 0U; i < ARRAY_LENGTH(s_type_to_mair); i++) {
+    ARM_MPU_SetMemAttr(i, s_type_to_mair[i]);
+  }
+}
+
+void arch_mpu_enable(void) {
+#ifdef CONFIG_KERNEL_MPU_IN_FAULTS
+  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_HFNMIENA_Msk);
+#else
+  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+#endif
 }
 
 void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *region, uint32_t *rbar,
@@ -85,7 +80,7 @@ void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *regio
   *rbar = (region->base & MPU_RBAR_BASE_Msk) | (sh << MPU_RBAR_SH_Pos) | (ap << MPU_RBAR_AP_Pos) |
           (xn << MPU_RBAR_XN_Pos);
   *attr = ((region->base + region->size - 1U) & MPU_RLAR_LIMIT_Msk) |
-          ((TYPE_IDX(region->attr) + MAIR_INDEX_BASE) << MPU_RLAR_AttrIndx_Pos) | MPU_RLAR_EN_Msk;
+          ((TYPE_IDX(region->attr)) << MPU_RLAR_AttrIndx_Pos) | MPU_RLAR_EN_Msk;
 }
 
 void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region) {

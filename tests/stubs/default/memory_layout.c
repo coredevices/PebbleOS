@@ -9,9 +9,6 @@ PBL_WEAK const struct pbl_mpu_region *memory_layout_get_app_region(void) {
   return nullptr;
 }
 
-PBL_WEAK const struct pbl_mpu_region *memory_layout_get_readonly_bss_region(void) {
-  return nullptr;
-}
 PBL_WEAK const struct pbl_mpu_region *memory_layout_get_microflash_region(void) {
   return nullptr;
 }

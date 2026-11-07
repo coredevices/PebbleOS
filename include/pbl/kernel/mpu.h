@@ -92,8 +92,14 @@ struct pbl_mpu_region {
  */
 int pbl_mpu_region_add(const struct pbl_mpu_region *region);
 
-/** @brief Turn memory protection on. */
-void pbl_mpu_regions_enable(void);
+/**
+ * @brief Regions the SoC declares, with @c CONFIG_SOC_HAS_MPU_REGIONS.
+ *
+ * The kernel adds them first thing on boot, before pbl_soc_early_init().
+ */
+extern const struct pbl_mpu_region pbl_soc_mpu_regions[];
+/** @brief Number of entries in @ref pbl_soc_mpu_regions. */
+extern const size_t pbl_soc_num_mpu_regions;
 
 /**
  * @brief Check whether a stack guard covers any of a memory range.
