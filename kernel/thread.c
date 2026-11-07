@@ -12,10 +12,10 @@ static_assert(CONFIG_KERNEL_STACK_GUARD_SIZE == 0 ||
               "stacks must be aligned to their guard");
 
 static uint32_t s_next_id;
-static const MpuRegion *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
+static const struct pbl_mpu_region *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
 
-static void prv_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
-  const MpuRegion *merged[PBL_THREAD_MAX_MEM_REGIONS];
+static void prv_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
+  const struct pbl_mpu_region *merged[PBL_THREAD_MAX_MEM_REGIONS];
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     merged[i] = (regions != nullptr && regions[i] != nullptr) ? regions[i] : s_default_regions[i];
   }
@@ -114,7 +114,7 @@ enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
   return (enum pbl_thread_state)t->backend.state;
 }
 
-void pbl_thread_regions_default_set(const MpuRegion *const *regions) {
+void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions) {
   pbl_irq_lock();
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     s_default_regions[i] = regions[i];

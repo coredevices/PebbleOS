@@ -41,10 +41,10 @@
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
 #include <kernel/memory_layout.h>
-const MpuRegion *memory_layout_get_app_region(void) {
+const struct pbl_mpu_region *memory_layout_get_app_region(void) {
   return nullptr;
 }
-bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length) {
+bool memory_layout_is_buffer_in_region(const struct pbl_mpu_region *region, const void *buf, size_t length) {
   return true;
 }
 
