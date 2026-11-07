@@ -32,7 +32,7 @@ extern void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connect
 extern void gatt_client_cleanup_discovery_jobs(GAPLEConnection *connection);
 
 // Defined in gap_le_connect_params.c
-extern void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer);
+extern void gap_le_connect_params_setup_connection(GAPLEConnection *connection);
 extern void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection);
 
 // -------------------------------------------------------------------------------------------------
@@ -110,8 +110,7 @@ void gap_le_connection_set_irk(GAPLEConnection *connection, const struct pbl_bt_
 // -------------------------------------------------------------------------------------------------
 
 GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *device,
-                                       const struct pbl_bt_sm_key *irk, bool local_is_master,
-                                       TimerID param_watchdog_timer) {
+                                       const struct pbl_bt_sm_key *irk, bool local_is_master) {
   bt_lock_assert_held(true /* is_held */);
   PBL_ASSERTN(!gap_le_connection_is_connected(device));
 
@@ -130,7 +129,7 @@ GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *devi
 
   s_connections = (GAPLEConnection *)list_prepend(&s_connections->node, &connection->node);
 
-  gap_le_connect_params_setup_connection(connection, param_watchdog_timer);
+  gap_le_connect_params_setup_connection(connection);
 
   return connection;
 }

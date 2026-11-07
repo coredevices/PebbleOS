@@ -3,8 +3,6 @@
 
 #include "fake_gap_le_connect_params.h"
 
-#include <pbl/services/new_timer/new_timer.h>
-
 static enum pbl_bt_response_time_state s_last_requested_desired_state;
 
 void gap_le_connect_params_request(GAPLEConnection *connection,
@@ -12,7 +10,7 @@ void gap_le_connect_params_request(GAPLEConnection *connection,
   s_last_requested_desired_state = desired_state;
 }
 
-void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {
+void gap_le_connect_params_setup_connection(GAPLEConnection *connection) {
 }
 
 void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {

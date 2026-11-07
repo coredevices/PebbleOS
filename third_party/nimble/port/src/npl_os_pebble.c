@@ -10,8 +10,9 @@
 #include "pbl/kernel/irq.h"
 #include "pbl/kernel/mutex.h"
 #include "pbl/kernel/types.h"
+#include "pbl/kernel/work.h"
 #include "pbl/mcu/interrupts.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include "pbl/util/misc.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -145,14 +146,14 @@ ble_npl_error_t npl_pebble_sem_release(struct ble_npl_sem *sem) {
   return BLE_NPL_OK;
 }
 
-static void os_callout_timer_cb(void *timer);
+static void os_callout_timer_cb(struct pbl_work *work);
 
 //! npl_pebble_callout_do_update is the core logic of the update, and can
 //! happen from a few places.  It can happen directly from
 //! npl_pebble_callout_reset, but if that's called while we're in an ISR, it
-//! can get deferred to an eventq for later, since new_timer is not
-//! ISR-safe.  And, if there's an update that is waiting for an eventq that
-//! didn't get called yet, but the timer did get called, this function can
+//! gets deferred to an eventq for later.  And, if there's an update that is
+//! waiting for an eventq that didn't get called yet, but the timer did get
+//! called, this function can
 //! also get called from when the callout otherwise would have happened, to
 //! go reset the timer and try again later.
 static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
@@ -179,7 +180,7 @@ static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
   //    that would be quite difficult to track down, we want to ensure that
   //    callouts are always triggered from the same context.  So, we defer
   //    it for the minimum amount of time possible, but we make sure that it
-  //    is triggered through the same new_timer path that it always would be
+  //    is triggered through the same work queue path that it always would be
   //    otherwise.
   int rem_ticks = co->update_target_time_ticks - pbl_uptime_ticks();
   if (rem_ticks < 1) {
@@ -187,8 +188,7 @@ static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
     rem_ticks = 1;
   }
 
-  new_timer_stop(co->handle);
-  PBL_ASSERTN(new_timer_start(co->handle, pbl_ticks_to_ms(rem_ticks), os_callout_timer_cb, co, 0));
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &co->work, PBL_TICKS(rem_ticks));
 
   co->update_pending = false;
 }
@@ -197,8 +197,8 @@ static void npl_pebble_callout_do_update_from_eventq(struct ble_npl_event *ev) {
   npl_pebble_callout_do_update((struct ble_npl_callout *)ev->arg);
 }
 
-static void os_callout_timer_cb(void *timer) {
-  struct ble_npl_callout *co = timer;
+static void os_callout_timer_cb(struct pbl_work *work) {
+  struct ble_npl_callout *co = container_of(work, struct ble_npl_callout, work.work);
 
   // check to see if we are pending an update; if so, trigger it and do
   // nothing, since we were already asked to delay until later
@@ -216,10 +216,15 @@ static void os_callout_timer_cb(void *timer) {
 
 void npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
                              ble_npl_event_fn *ev_cb, void *ev_arg) {
+  // NimBLE inits some callouts again on every host start, possibly while pending. All of them are
+  // in static storage, so this only matches an earlier init.
+  if (co->work.work.fn == os_callout_timer_cb) {
+    pbl_delayed_work_cancel(&co->work);
+  }
+
   memset(co, 0, sizeof(*co));
 
-  co->handle = new_timer_create();
-  PBL_ASSERTN(co->handle != TIMER_INVALID_ID);
+  pbl_delayed_work_init(&co->work, os_callout_timer_cb);
   co->evq = evq;
   co->ticks = 0;
   co->update_ev.queued = false;
@@ -251,11 +256,11 @@ ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_tim
 }
 
 void npl_pebble_callout_stop(struct ble_npl_callout *co) {
-  new_timer_stop(co->handle);
+  pbl_delayed_work_cancel(&co->work);
 }
 
 bool npl_pebble_callout_is_active(struct ble_npl_callout *co) {
-  return new_timer_scheduled(co->handle, NULL);
+  return pbl_delayed_work_is_pending(&co->work);
 }
 
 ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co) {
@@ -263,9 +268,7 @@ ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co) {
 }
 
 ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, ble_npl_time_t now) {
-  uint32_t rt = 0;
-  new_timer_scheduled(co->handle, &rt);
-  return rt;
+  return pbl_ticks_to_ms(pbl_delayed_work_remaining(&co->work));
 }
 
 ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks) {

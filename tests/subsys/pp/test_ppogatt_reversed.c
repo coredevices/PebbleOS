@@ -15,10 +15,10 @@
 
 #include <fake_gatt_client_operations.h>
 #include <fake_gatt_client_subscriptions.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_session.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 #define CONN_HANDLE (1)
 
@@ -136,6 +136,7 @@ void test_ppogatt_reversed__cleanup(void) {
   fake_pbl_malloc_check_net_allocs();
   fake_pbl_malloc_clear_tracking();
   fake_comm_session_cleanup();
+  fake_work_cleanup();
 }
 
 // A bonded phone's subscription is restored when it reconnects, while the

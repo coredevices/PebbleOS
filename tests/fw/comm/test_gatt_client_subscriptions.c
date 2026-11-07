@@ -17,7 +17,6 @@
 #include <fake_bt_gatt.h>
 #include <fake_event_gatt_service_buffer.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_sem.h>
 #include <fake_sys_work.h>
@@ -96,7 +95,7 @@ static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
 
 static struct pbl_bt_device_internal prv_connected_dummy_device(uint8_t octet) {
   struct pbl_bt_device_internal device = prv_dummy_device(octet);
-  gap_le_connection_add(&device, nullptr, true /* local_is_master */, TIMER_INVALID_ID);
+  gap_le_connection_add(&device, nullptr, true /* local_is_master */);
   s_connection = gap_le_connection_by_device(&device);
   s_connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
   return device;

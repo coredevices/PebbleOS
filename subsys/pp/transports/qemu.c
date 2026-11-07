@@ -4,9 +4,9 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transport.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/util/math.h>
 
 #include <comm/qemu/serial.h>
@@ -145,13 +145,15 @@ void pbl_pp_qemu_start(void) {
 #endif
 }
 
-static void prv_log_ready(void *unused) {
+static void prv_log_ready(struct pbl_work *work) {
   PBL_LOG_INFO("Ready for communication.");
 }
 
+static PBL_DELAYED_WORK_DEFINE(s_ready_log_work, prv_log_ready);
+
 void pbl_pp_qemu_notify_ready(void) {
   // Host tools install on seeing this line, so give the first app time to push its window.
-  new_timer_start(new_timer_create(), READY_LOG_DELAY_MS, prv_log_ready, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_ready_log_work, PBL_MSEC(READY_LOG_DELAY_MS));
 }
 
 void pbl_pp_qemu_stop(void) {

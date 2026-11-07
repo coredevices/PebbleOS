@@ -15,9 +15,9 @@
 #include <fake_bt_gatt.h>
 #include <fake_event_gatt_service_buffer.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ static struct pbl_bt_device_internal prv_dummy_device(uint8_t octet) {
 
 static struct pbl_bt_device_internal prv_connected_dummy_device(uint8_t octet) {
   struct pbl_bt_device_internal device = prv_dummy_device(octet);
-  gap_le_connection_add(&device, nullptr, true /* local_is_master */, TIMER_INVALID_ID);
+  gap_le_connection_add(&device, nullptr, true /* local_is_master */);
   GAPLEConnection *connection = gap_le_connection_by_device(&device);
   connection->gatt_connection_id = TEST_GATT_CONNECTION_ID;
   return device;
@@ -100,6 +100,7 @@ void test_gatt_client_discovery__initialize(void) {
 
 void test_gatt_client_discovery__cleanup(void) {
   gap_le_connection_deinit();
+  fake_work_cleanup();
 
   // make sure we haven't leaked any memory!
   fake_pbl_malloc_check_net_allocs();
@@ -194,8 +195,7 @@ static void prv_fire_watchdog_timeouts(const struct pbl_bt_device_internal *devi
     const int stop_count = fake_gatt_is_service_discovery_stop_count();
 
     // Fire the watchdog timer:
-    const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
-    stub_new_timer_fire(watchdog_timer);
+    fake_work_fire(pbl_bt_gatt_get_watchdog_work());
 
     // Check whether GATT_Stop_Service_Discovery has been called:
     cl_assert_equal_i(stop_count + 1, fake_gatt_is_service_discovery_stop_count());
@@ -249,8 +249,7 @@ void test_gatt_client_discovery__watchdog_race_with_stopping(void) {
   fake_gatt_set_stop_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
-  stub_new_timer_fire(watchdog_timer);
+  fake_work_fire(pbl_bt_gatt_get_watchdog_work());
 
   // No event should be generated, because the finishing / disconnecting / ... should cause
   // Bluetopia to call back to prv_handle_bluetopia_discovery_event() and therefore the normal
@@ -273,8 +272,7 @@ void test_gatt_client_discovery__watchdog_race_with_restarting(void) {
   fake_gatt_set_start_return_value(BTGATT_ERROR_INVALID_PARAMETER);
 
   // Fire the watchdog timer:
-  const TimerID watchdog_timer = pbl_bt_gatt_get_watchdog_timer_id();
-  stub_new_timer_fire(watchdog_timer);
+  fake_work_fire(pbl_bt_gatt_get_watchdog_work());
 
   // Stopping did not fail, but restarting did. In this case we need to generate an event that
   // the discovery process failed. The error from GATT_Start_Service_Discovery is expected to be

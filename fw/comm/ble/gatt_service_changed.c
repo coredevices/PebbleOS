@@ -7,9 +7,10 @@
 
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
+#include <pbl/util/misc.h>
 
 #include <comm/bt_lock.h>
 
@@ -108,9 +109,10 @@ void pbl_bt_cb_gatt_service_changed_server_confirmation(
 }
 
 void gatt_service_changed_server_cleanup_by_connection(GAPLEConnection *connection) {
-  if (connection->gatt_service_changed_indication_timer != TIMER_INVALID_ID) {
-    new_timer_delete(connection->gatt_service_changed_indication_timer);
-    connection->gatt_service_changed_indication_timer = TIMER_INVALID_ID;
+  // Initialized along with the flag. No need to wait for a running function: it never dereferences
+  // the connection.
+  if (connection->has_sent_gatt_service_changed_indication) {
+    pbl_delayed_work_cancel(&connection->gatt_service_changed_indication_work);
   }
 }
 
@@ -126,7 +128,6 @@ static void prv_send_service_changed_indication(void *ctx) {
       bt_unlock();
       return;
     }
-    connection->gatt_service_changed_indication_timer = TIMER_INVALID_ID;
     // Copy the device address while holding bt_lock — the driver resolves the
     // NimBLE connection handle through its own connection table, so no bt_lock
     // is needed in the driver path.
@@ -144,25 +145,16 @@ static void prv_send_service_changed_indication(void *ctx) {
   pbl_bt_gatt_send_changed_indication(&device, &range);
 }
 
-static void prv_send_indication_timer_cb(void *ctx) {
-  GAPLEConnection *connection = (GAPLEConnection *)ctx;
-  sys_work_add(prv_send_service_changed_indication, connection);
+static void prv_send_indication_fn(struct pbl_work *work) {
+  sys_work_add(prv_send_service_changed_indication,
+               container_of(work, GAPLEConnection, gatt_service_changed_indication_work.work));
 }
 
 void pbl_bt_cb_gatt_service_changed_server_subscribe(
     const struct pbl_bt_gatt_server_subscribe_event *event) {
-  TimerID timer = TIMER_INVALID_ID;
-  const bool subscribed = event->is_subscribing;
-  if (subscribed) {
-    timer = new_timer_create();
-    if (!timer) {
-      return;
-    }
-  }
-
   bt_lock();
   {
-    if (subscribed) {
+    if (event->is_subscribing) {
       PBL_LOG_DBG("Remote subscribed to Service Changed characteristic");
 
       GAPLEConnection *connection = gap_le_connection_by_addr(&event->dev_address);
@@ -181,11 +173,11 @@ void pbl_bt_cb_gatt_service_changed_server_subscribe(
       PBL_LOG_INFO("Indicating Service Changed to remote device");
 
       // Work-around for iOS issue (see comment above), send the indication after a short delay:
-      connection->gatt_service_changed_indication_timer = timer;
-      new_timer_start(connection->gatt_service_changed_indication_timer,
-                      GATT_SERVICE_CHANGED_INDICATION_DELAY_MS, prv_send_indication_timer_cb,
-                      connection, 0);
-      timer = TIMER_INVALID_ID; // Timer now owned by connection, don't delete it below
+      pbl_delayed_work_init(&connection->gatt_service_changed_indication_work,
+                            prv_send_indication_fn);
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high,
+                                  &connection->gatt_service_changed_indication_work,
+                                  PBL_MSEC(GATT_SERVICE_CHANGED_INDICATION_DELAY_MS));
       --s_service_changed_indications_left;
       // Don't send again for this connection:
       connection->has_sent_gatt_service_changed_indication = true;
@@ -193,11 +185,6 @@ void pbl_bt_cb_gatt_service_changed_server_subscribe(
   }
 unlock:
   bt_unlock();
-
-  // Clean up timer if we didn't use it
-  if (timer != TIMER_INVALID_ID) {
-    new_timer_delete(timer);
-  }
 }
 
 void pbl_bt_cb_gatt_service_changed_server_read_subscription(

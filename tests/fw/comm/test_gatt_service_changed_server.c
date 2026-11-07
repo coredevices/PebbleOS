@@ -15,10 +15,10 @@ extern void gatt_service_changed_server_init(void);
 ///////////////////////////////////////////////////////////
 
 #include <fake_bt_gatt.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -78,8 +78,8 @@ static void prv_cccd_write(bool is_subscribing) {
 }
 
 static void prv_process_pending_callbacks(GAPLEConnection *connection) {
-  if (connection && connection->gatt_service_changed_indication_timer) {
-    stub_new_timer_fire(connection->gatt_service_changed_indication_timer);
+  if (connection && fake_work_is_scheduled(&connection->gatt_service_changed_indication_work)) {
+    fake_work_fire(&connection->gatt_service_changed_indication_work);
   }
   fake_sys_work_callbacks_invoke_pending();
 }
@@ -97,7 +97,7 @@ void test_gatt_service_changed_server__initialize(void) {
   gatt_service_changed_server_init();
   fake_gatt_init();
   gap_le_connection_init();
-  gap_le_connection_add(&s_device, nullptr, false /* local_is_master */, TIMER_INVALID_ID);
+  gap_le_connection_add(&s_device, nullptr, false /* local_is_master */);
   s_connection = gap_le_connection_by_device(&s_device);
   cl_assert(s_connection);
   s_connection->gatt_connection_id = s_connection_id;
@@ -109,7 +109,7 @@ void test_gatt_service_changed_server__cleanup(void) {
     s_connection = nullptr;
   }
   gap_le_connection_deinit();
-  stub_new_timer_cleanup();
+  fake_work_cleanup();
 }
 
 void test_gatt_service_changed_server__unsubscribe(void) {
@@ -150,7 +150,7 @@ void test_gatt_service_changed_server__reconnect_resubscribe_stop_sending_after_
   static const int max_times = 5;
 
   for (int i = 0; i < max_times + 1; ++i) {
-    gap_le_connection_add(&s_device, nullptr, false /* local_is_master */, TIMER_INVALID_ID);
+    gap_le_connection_add(&s_device, nullptr, false /* local_is_master */);
     s_connection = gap_le_connection_by_device(&s_device);
     cl_assert(s_connection);
     s_connection->gatt_connection_id = s_connection_id;
@@ -171,16 +171,28 @@ void test_gatt_service_changed_server__disconnect_during_delay(void) {
   gatt_service_changed_server_handle_fw_update();
   prv_cccd_write(true /* is_subscribing */);
 
-  // Grab the timer ID:
-  TimerID t = s_connection->gatt_service_changed_indication_timer;
-  s_connection->gatt_service_changed_indication_timer = TIMER_INVALID_ID;
+  cl_assert(fake_work_get_next() != nullptr);
 
   // Simulate disconnection:
   gap_le_connection_remove(&s_device);
   s_connection = nullptr;
 
-  // Timer fires:
-  stub_new_timer_fire(t);
+  // The delay must not outlive the connection:
+  cl_assert(fake_work_get_next() == nullptr);
+
+  prv_expect_service_changed_indication_api_call_count(0);
+}
+
+void test_gatt_service_changed_server__disconnect_after_delay(void) {
+  gatt_service_changed_server_handle_fw_update();
+  prv_cccd_write(true /* is_subscribing */);
+
+  // The delay passes, which queues the indication on the system task:
+  fake_work_fire(&s_connection->gatt_service_changed_indication_work);
+
+  // Simulate disconnection before that runs:
+  gap_le_connection_remove(&s_device);
+  s_connection = nullptr;
 
   prv_expect_service_changed_indication_api_call_count(0);
 }

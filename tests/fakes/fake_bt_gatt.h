@@ -7,7 +7,7 @@
 
 #include <pbl/bluetooth/gatt_service_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 #include <pbl/util/uuid.h>
 
 //! High-level description of a remote GATT service used by the unit tests. The
@@ -67,9 +67,9 @@ void fake_gatt_set_start_return_value(int ret_value);
 //! As fake_gatt_set_start_return_value, but for pbl_bt_gatt_stop_discovery.
 void fake_gatt_set_stop_return_value(int ret_value);
 
-//! @return the TimerID of the simulated discovery watchdog. Firing it (via
-//! stub_new_timer_fire) makes the controller report a discovery timeout.
-TimerID pbl_bt_gatt_get_watchdog_timer_id(void);
+//! @return the simulated discovery watchdog. Firing it (via fake_work_fire) makes the controller
+//! report a discovery timeout.
+struct pbl_delayed_work *pbl_bt_gatt_get_watchdog_work(void);
 
 //! @return the number of Service Changed indications the firmware has pushed to
 //! the controller through pbl_bt_gatt_send_changed_indication.

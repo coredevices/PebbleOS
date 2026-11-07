@@ -14,15 +14,16 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/sys_work.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
 #include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_operations.h>
@@ -147,11 +148,13 @@ typedef struct PPoGATTClient {
   //! not stalled.
   uint16_t send_retry_count;
 
-  TimerID rx_ack_timer; //! Timer to ensure Acks for data are dispatched regularly
+  struct pbl_delayed_work rx_ack_work; //! Ensures Acks for data are dispatched regularly
 
-  //! Timer to retry sending after the BT stack ran out of buffers
+  struct pbl_delayed_work meta_read_retry_work;
+
+  //! Retries sending after the BT stack ran out of buffers
   //! (NimBLE has no "buffers freed" event to wait for)
-  TimerID send_retry_timer;
+  struct pbl_delayed_work send_retry_work;
 
   //! Whether the PPoGATT server transports "System", "App" or "Hybrid" PP sessions.
   enum pbl_pp_destination destination;
@@ -187,6 +190,9 @@ static void prv_start_reset(PPoGATTClient *client);
 static const struct pbl_pp_transport s_transport;
 static void prv_request_meta_rediscovery(PPoGATTClient *client);
 static void prv_reversed_take_over(PPoGATTClient *client);
+static void prv_rx_ack_fn(struct pbl_work *work);
+static void prv_meta_read_retry_fn(struct pbl_work *work);
+static void prv_send_retry_fn(struct pbl_work *work);
 
 extern enum pbl_bt_errno gatt_client_discovery_rediscover_all(
     const struct pbl_bt_device_internal *device);
@@ -397,15 +403,16 @@ static void prv_timer_callback(void *unused) {
 
 // -------------------------------------------------------------------------------------------------
 
-static PPoGATTClient *prv_create_client(TimerID rx_ack_timer, TimerID send_retry_timer) {
+static PPoGATTClient *prv_create_client(void) {
   PPoGATTClient *client = pbl_malloc(sizeof(PPoGATTClient));
   if (!client) {
     return nullptr;
   }
   *client = (PPoGATTClient){};
   client->app_uuid = UUID_INVALID;
-  client->rx_ack_timer = rx_ack_timer;
-  client->send_retry_timer = send_retry_timer;
+  pbl_delayed_work_init(&client->rx_ack_work, prv_rx_ack_fn);
+  pbl_delayed_work_init(&client->meta_read_retry_work, prv_meta_read_retry_fn);
+  pbl_delayed_work_init(&client->send_retry_work, prv_send_retry_fn);
   client->created_ticks = pbl_uptime_ticks();
   s_ppogatt_head = (PPoGATTClient *)list_prepend((ListNode *)s_ppogatt_head, &client->node);
   return client;
@@ -437,8 +444,10 @@ static void prv_delete_client(PPoGATTClient *client, bool is_disconnected, Delet
   }
 
   list_remove(&client->node, (ListNode **)&s_ppogatt_head, nullptr);
-  new_timer_delete(client->rx_ack_timer);
-  new_timer_delete(client->send_retry_timer);
+  // No need to wait for a running function: they never dereference the client.
+  pbl_delayed_work_cancel(&client->rx_ack_work);
+  pbl_delayed_work_cancel(&client->meta_read_retry_work);
+  pbl_delayed_work_cancel(&client->send_retry_work);
   pbl_free(client);
 
   prv_update_ack_timer();
@@ -859,10 +868,11 @@ static void prv_meta_read_retry_kernelmain_cb(void *data) {
   bt_unlock();
 }
 
-//! Never block on bt_lock from the timer task; bounce to KernelMain
-//! (prv_retry_meta_read also calls into NimBLE, which doesn't belong on the timer task).
-static void prv_meta_read_retry_timer_cb(void *data) {
-  launcher_task_add_callback(prv_meta_read_retry_kernelmain_cb, data);
+//! Never block on bt_lock from the work queue; bounce to KernelMain
+//! (prv_retry_meta_read also calls into NimBLE, which doesn't belong on the work queue).
+static void prv_meta_read_retry_fn(struct pbl_work *work) {
+  launcher_task_add_callback(prv_meta_read_retry_kernelmain_cb,
+                             container_of(work, PPoGATTClient, meta_read_retry_work.work));
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -967,8 +977,8 @@ handle_retriable_error:
     PBL_LOG_WRN("PPoGATT meta read failed (err=%x), scheduling retry %u/%u", error,
                 client->meta_read_retries, PPOGATT_META_READ_RETRY_COUNT_MAX);
     client->state = StateDisconnectedAwaitingMetaRetry;
-    new_timer_start(client->rx_ack_timer, PPOGATT_META_READ_RETRY_DELAY_MS,
-                    prv_meta_read_retry_timer_cb, client, 0);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &client->meta_read_retry_work,
+                                PBL_MSEC(PPOGATT_META_READ_RETRY_DELAY_MS));
     return;
   }
   PBL_LOG_ERR("PPoGATT meta read failed after %u retries", PPOGATT_META_READ_RETRY_COUNT_MAX);
@@ -1077,13 +1087,12 @@ static void prv_reversed_take_over(PPoGATTClient *client) {
   s_reversed_active_conn = client->rev.connection;
 }
 
-static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle,
-                               TimerID rx_ack_timer, TimerID send_retry_timer) {
+static void prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle) {
   bt_lock_assert_held(true);
 
-  PPoGATTClient *client = prv_create_client(rx_ack_timer, send_retry_timer);
+  PPoGATTClient *client = prv_create_client();
   if (!client) {
-    return false;
+    return;
   }
   client->role = PPoGATTRoleReversed;
   client->rev.conn_handle = conn_handle;
@@ -1094,18 +1103,10 @@ static bool prv_reversed_start(GAPLEConnection *connection, uint16_t conn_handle
 
   // The handshake is phone-initiated: wait for the phone's ResetRequest.
   client->state = StateConnectedClosedAwaitingResetRequest;
-  return true;
 }
 
 void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_internal *device,
                                         uint16_t conn_handle) {
-  // new_timer_create() must be called outside bt_lock (see pbl_pp_gatt_handle_service_discovered).
-  TimerID rx_ack_timer = new_timer_create();
-  PBL_ASSERTN(rx_ack_timer);
-  TimerID send_retry_timer = new_timer_create();
-  PBL_ASSERTN(send_retry_timer);
-
-  bool started = false;
   bt_lock();
   {
     GAPLEConnection *connection = gap_le_connection_by_device(device);
@@ -1119,14 +1120,10 @@ void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_internal *dev
       goto unlock;
     }
     PBL_LOG_INFO("Reversed PPoG subscribed (conn_handle=%u)", conn_handle);
-    started = prv_reversed_start(connection, conn_handle, rx_ack_timer, send_retry_timer);
+    prv_reversed_start(connection, conn_handle);
   }
 unlock:
   bt_unlock();
-  if (!started) {
-    new_timer_delete(rx_ack_timer);
-    new_timer_delete(send_retry_timer);
-  }
 }
 
 void ppogatt_reversed_handle_unsubscribed(uint16_t conn_handle) {
@@ -1236,11 +1233,6 @@ void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, ui
 void pbl_pp_gatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_INFO("PPoGATT service discovered, starting handshake");
 
-  TimerID rx_ack_timer = new_timer_create();
-  PBL_ASSERTN(rx_ack_timer);
-  TimerID send_retry_timer = new_timer_create();
-  PBL_ASSERTN(send_retry_timer);
-
   bt_lock();
   {
     // Reversed PPoG has priority: ignore the forward service if reversed is
@@ -1249,18 +1241,14 @@ void pbl_pp_gatt_handle_service_discovered(pbl_bt_characteristic_t *characterist
         gatt_client_characteristic_get_connection(characteristics[PBL_PP_GATT_CHARACTERISTIC_META]);
     if (meta_conn && s_reversed_active_conn == meta_conn) {
       bt_unlock();
-      new_timer_delete(rx_ack_timer);
-      new_timer_delete(send_retry_timer);
       PBL_LOG_DBG("Reversed PPoG active, skipping forward");
       return;
     }
 
     // Create new clients:
-    PPoGATTClient *client = prv_create_client(rx_ack_timer, send_retry_timer);
+    PPoGATTClient *client = prv_create_client();
     if (!client) {
       bt_unlock();
-      new_timer_delete(rx_ack_timer);
-      new_timer_delete(send_retry_timer);
       return;
     }
     client->role = PPoGATTRoleForward;
@@ -1446,9 +1434,10 @@ static void prv_rx_ack_kernelmain_cb(void *data) {
   bt_unlock();
 }
 
-//! Never block on bt_lock from the timer task; bounce to KernelMain.
-static void rx_ack_timer_cb(void *data) {
-  launcher_task_add_callback(prv_rx_ack_kernelmain_cb, data);
+//! Never block on bt_lock from the work queue; bounce to KernelMain.
+static void prv_rx_ack_fn(struct pbl_work *work) {
+  launcher_task_add_callback(prv_rx_ack_kernelmain_cb,
+                             container_of(work, PPoGATTClient, rx_ack_work.work));
 }
 
 //! Pumps prv_send_next_packets directly (not via prv_send_next_packets_async)
@@ -1466,16 +1455,17 @@ static void prv_send_retry_kernelmain_cb(void *data) {
   bt_unlock();
 }
 
-//! Never send from the timer task (NimBLE calls don't belong on it); bounce
+//! Never send from the work queue (NimBLE calls don't belong on it); bounce
 //! to KernelMain, where the rest of the PPoG state machine runs.
-static void prv_send_retry_timer_cb(void *data) {
-  launcher_task_add_callback(prv_send_retry_kernelmain_cb, data);
+static void prv_send_retry_fn(struct pbl_work *work) {
+  launcher_task_add_callback(prv_send_retry_kernelmain_cb,
+                             container_of(work, PPoGATTClient, send_retry_work.work));
 }
 
 //! Out of mbufs (e.g. inbound flood during a firmware update). NimBLE has no
 //! "buffers freed" event, so retry later, backing off while the stall lasts.
 static void prv_retry_send_later(PPoGATTClient *client) {
-  if (new_timer_scheduled(client->send_retry_timer, nullptr)) {
+  if (pbl_delayed_work_is_pending(&client->send_retry_work)) {
     return;
   }
   if (client->send_retry_count == 0) {
@@ -1485,7 +1475,7 @@ static void prv_retry_send_later(PPoGATTClient *client) {
   const uint32_t delay_ms = MIN(PPOGATT_SEND_RETRY_DELAY_MS << MIN(client->send_retry_count, 16),
                                 PPOGATT_SEND_RETRY_MAX_DELAY_MS);
   client->send_retry_count++;
-  new_timer_start(client->send_retry_timer, delay_ms, prv_send_retry_timer_cb, client, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &client->send_retry_work, PBL_MSEC(delay_ms));
 }
 
 static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
@@ -1495,19 +1485,15 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
     return prv_prepare_next_reset_packet(client, heap_packet_in_out, payload_size_out);
   } else if (client->out.ack_packet_byte != 0) {
     if (client->out.send_rx_ack_now) {
-      if (new_timer_scheduled(client->rx_ack_timer, nullptr)) {
-        new_timer_stop(client->rx_ack_timer);
-      }
+      pbl_delayed_work_cancel(&client->rx_ack_work);
 
       // Ack packet (zero payload size):
       *payload_size_out = 0;
       return (const PPoGATTPacket *)&client->out.ack_packet_to_send;
     }
 
-    if (!new_timer_scheduled(client->rx_ack_timer, nullptr)) {
-      new_timer_start(client->rx_ack_timer, PPOGATT_MAX_DATA_ACK_LATENCY_MS, rx_ack_timer_cb,
-                      client, 0);
-    }
+    pbl_delayed_work_schedule(&pbl_sys_workq_high, &client->rx_ack_work,
+                              PBL_MSEC(PPOGATT_MAX_DATA_ACK_LATENCY_MS));
     // We will defer sending the Ack for now, fallthrough and send data instead
   }
 
