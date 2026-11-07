@@ -7,6 +7,5 @@
   "prf_and_normal_fw": [
   ],
   "normal_fw_only": [
-    [ 51967, "0xcaff", "any",     "xsbug_protocol_msg_callback", null, null ]
   ]
 }
