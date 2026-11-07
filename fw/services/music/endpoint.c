@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
@@ -16,8 +17,6 @@
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
-static const uint16_t MUSIC_CTRL_ENDPOINT = 0x20;
-
 static bool s_connected;
 static bool s_progress_reporting_supported = true;
 
@@ -27,7 +26,7 @@ static void prv_send_music_command_to_handset(MusicEndpointCmdID cmd) {
     PBL_LOG_ERR("No system session");
     return;
   }
-  pbl_pp_send(session, MUSIC_CTRL_ENDPOINT, (const uint8_t *)&cmd, 1, PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_MUSIC, (const uint8_t *)&cmd, 1, PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
 static const uint8_t *prv_read_ptr_and_length_from_buffer(const uint8_t *iter,
@@ -196,6 +195,9 @@ void music_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
       PBL_LOG_DBG("Invalid command 0x%" PRIx8, msg[0]);
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_MUSIC, PBL_PP_ACCESS_PRIVATE,
+                            music_protocol_msg_callback);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // MusicServerImplementation

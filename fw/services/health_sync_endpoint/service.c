@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -10,9 +11,8 @@
 
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 
-#define HEALTH_SYNC_ENDPOINT_ID 911
-#define ACK                     0x1
-#define NACK                    0x2
+#define ACK  0x1
+#define NACK 0x2
 
 typedef enum HealthSyncEndpointCmd {
   HealthSyncEndpointCmd_Sync = 0x1,
@@ -35,7 +35,7 @@ static void prv_send_ack_nack(bool ok) {
     .ack_nack = ok ? ACK : NACK,
   };
 
-  pbl_pp_send(pbl_pp_session_get_system(), HEALTH_SYNC_ENDPOINT_ID, (uint8_t *)&msg,
+  pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_HEALTH_SYNC, (uint8_t *)&msg,
               sizeof(HealthSyncEndpointAckMsg), PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -81,3 +81,6 @@ void health_sync_protocol_msg_callback(struct pbl_pp_session *session, const uin
       return;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_HEALTH_SYNC, PBL_PP_ACCESS_PRIVATE,
+                       health_sync_protocol_msg_callback);

@@ -22,7 +22,6 @@
 
 // Externs
 ///////////////////////////////////////////////////////////
-extern const int TIMELINE_ACTION_ENDPOINT;
 
 // Fakes / Helpers
 ///////////////////////////////////////////////////////////
@@ -49,7 +48,7 @@ int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint
     return -EAGAIN;
   }
 
-  if (endpoint_id != TIMELINE_ACTION_ENDPOINT) {
+  if (endpoint_id != PBL_PP_ENDPOINT_TIMELINE_ACTION) {
     return -EAGAIN;
   }
 

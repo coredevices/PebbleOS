@@ -16,7 +16,7 @@
 #define OBJECT_SIZE 4096
 
 extern void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
-                                            uint32_t msg_len);
+                                            size_t msg_len);
 
 // Fakes
 //////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ void bluetooth_analytics_handle_get_bytes_stats(
 }
 
 static void prv_sent_cb(uint16_t endpoint_id, const uint8_t *data, unsigned int data_length) {
-  cl_assert_equal_i(endpoint_id, GET_BYTES_ENDPOINT_ID);
+  cl_assert_equal_i(endpoint_id, PBL_PP_ENDPOINT_GET_BYTES);
   if (data[0] == GET_BYTES_CMD_OBJECT_INFO) {
     cl_assert_equal_i(data_length, sizeof(s_last_info));
     memcpy(&s_last_info, data, sizeof(s_last_info));

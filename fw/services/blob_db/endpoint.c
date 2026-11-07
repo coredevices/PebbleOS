@@ -4,6 +4,7 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/endpoint_private.h>
@@ -51,7 +52,6 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 //! \endcode
 
 //! BlobDB Endpoint ID
-static const uint16_t BLOB_DB_ENDPOINT_ID = 0xb1db;
 
 [[maybe_unused]] static const uint8_t KEY_DATA_LENGTH = (sizeof(uint8_t) + sizeof(uint8_t));
 static const uint8_t VALUE_DATA_LENGTH = (sizeof(uint16_t) + sizeof(uint8_t));
@@ -74,7 +74,7 @@ static void prv_send_response(struct pbl_pp_session *session, BlobDBToken token,
     .result = result,
   };
 
-  pbl_pp_send(session, BLOB_DB_ENDPOINT_ID, (uint8_t *)&response, sizeof(response),
+  pbl_pp_send(session, PBL_PP_ENDPOINT_BLOB_DB, (uint8_t *)&response, sizeof(response),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
@@ -345,6 +345,9 @@ void blob_db_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
 
   prv_blob_db_msg_decode_and_handle(session, cmd, data, data_length);
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLOB_DB, PBL_PP_ACCESS_PRIVATE,
+                       blob_db_protocol_msg_callback);
 
 void blob_db_set_accepting_messages(bool enabled) {
   s_bdb_accepting_messages = enabled;

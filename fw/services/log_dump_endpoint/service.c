@@ -7,6 +7,7 @@
 #include <pbl/logging/backend.h>
 #include <pbl/logging/backend_flash.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 
@@ -14,8 +15,6 @@
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DEFINE(service_log_dump_endpoint, CONFIG_SERVICE_LOG_DUMP_ENDPOINT_LOG_LEVEL);
-
-static const uint16_t ENDPOINT_ID = 2002;
 
 typedef struct PBL_PACKED {
   uint8_t command;
@@ -52,7 +51,7 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
 
   const uint16_t required_length = total_length + 1 + 4;
   struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin_bulk(
-      session, ENDPOINT_ID, required_length, PBL_PP_DEFAULT_TIMEOUT_MS);
+      session, PBL_PP_ENDPOINT_LOG_DUMP, required_length, PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!sb) {
     PBL_LOG_DBG("Failed to get send buffer");
     return false;
@@ -76,13 +75,13 @@ static void prv_bt_log_dump_completed_cb(bool success) {
   struct pbl_pp_session *session = s_bt_dump_chunk_callback_data.comm_session;
   if (!success && pbl_pp_session_has_capability(session, PBL_PP_CAP_INFINITE_LOG_DUMPING)) {
     header.command = 0x82;
-    pbl_pp_send(s_bt_dump_chunk_callback_data.comm_session, ENDPOINT_ID, (uint8_t *)&header,
-                sizeof(header), PBL_PP_DEFAULT_TIMEOUT_MS);
+    pbl_pp_send(s_bt_dump_chunk_callback_data.comm_session, PBL_PP_ENDPOINT_LOG_DUMP,
+                (uint8_t *)&header, sizeof(header), PBL_PP_DEFAULT_TIMEOUT_MS);
   } else {
     // Otherwise, just send a "done" message
     header.command = 0x81;
-    pbl_pp_send(s_bt_dump_chunk_callback_data.comm_session, ENDPOINT_ID, (uint8_t *)&header,
-                sizeof(header), PBL_PP_DEFAULT_TIMEOUT_MS);
+    pbl_pp_send(s_bt_dump_chunk_callback_data.comm_session, PBL_PP_ENDPOINT_LOG_DUMP,
+                (uint8_t *)&header, sizeof(header), PBL_PP_DEFAULT_TIMEOUT_MS);
   }
 
   s_bt_dump_chunk_callback_data.in_progress = false;
@@ -153,3 +152,6 @@ void dump_log_protocol_msg_callback(struct pbl_pp_session *session, const uint8_
       break;
   }
 }
+
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_LOG_DUMP, PBL_PP_ACCESS_PRIVATE,
+                       dump_log_protocol_msg_callback);

@@ -7,6 +7,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/accel_manager.h>
@@ -20,7 +21,6 @@
 
 PBL_LOG_MODULE_DEFINE(service_ping, CONFIG_SERVICE_PING_LOG_LEVEL);
 
-#define PING_ENDPOINT        2001
 #define PING_MIN_PERIOD_SECS (60 * 60) // 1 hour
 
 static time_t s_last_send_time;
@@ -55,8 +55,9 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
 
     PingMsgV2 ping_msg =
         (PingMsgV2){.hdr = {.cmd = 0, .cookie = pbl_cpu_to_be32(42)}, .idle = idle};
-    bool success = 0 == pbl_pp_send(system_session, PING_ENDPOINT, (const uint8_t *)&ping_msg,
-                                    sizeof(ping_msg), PBL_PP_DEFAULT_TIMEOUT_MS);
+    bool success =
+        0 == pbl_pp_send(system_session, PBL_PP_ENDPOINT_PING, (const uint8_t *)&ping_msg,
+                         sizeof(ping_msg), PBL_PP_DEFAULT_TIMEOUT_MS);
     if (success) {
       s_last_send_time = pbl_realtime();
     }
@@ -124,7 +125,7 @@ void ping_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *d
 
       // Send the pong response
       PongMsg pong = {.hdr = {.cmd = 1, .cookie = pbl_cpu_to_be32(cookie)}};
-      pbl_pp_send(session, PING_ENDPOINT, (uint8_t *)&pong, sizeof(pong),
+      pbl_pp_send(session, PBL_PP_ENDPOINT_PING, (uint8_t *)&pong, sizeof(pong),
                   PBL_PP_DEFAULT_TIMEOUT_MS);
       break;
     }
@@ -144,6 +145,10 @@ void ping_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *d
       break;
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, ping_protocol_msg_callback);
+#endif
 
 #ifdef CONFIG_SHELL
 #include <pbl/shell/shell.h>

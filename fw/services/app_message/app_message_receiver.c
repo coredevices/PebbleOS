@@ -175,3 +175,6 @@ const struct pbl_pp_receiver_api g_app_message_receiver_implementation = {
   .finish = prv_app_message_receiver_finish,
   .cleanup = prv_app_message_receiver_cleanup,
 };
+
+PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_APP_MESSAGE, PBL_PP_ACCESS_ANY,
+                                g_app_message_receiver_implementation);

@@ -5,6 +5,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/screenshot_pp.h>
@@ -16,7 +17,6 @@
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
-static const uint16_t SCREENSHOT_ENDPOINT_ID = 8000;
 static bool s_screenshot_in_progress = false;
 
 typedef enum {
@@ -64,7 +64,7 @@ static void prv_send_error_response(struct pbl_pp_session *session, uint8_t resp
     },
   };
 
-  pbl_pp_send(error_response.session, SCREENSHOT_ENDPOINT_ID,
+  pbl_pp_send(error_response.session, PBL_PP_ENDPOINT_SCREENSHOT,
               (const uint8_t *)&error_response.header, sizeof(error_response.header),
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
@@ -159,7 +159,7 @@ void screenshot_send_next_chunk(void *raw_state) {
 
   struct pbl_pp_send_buffer *sb;
   if (max_buf_len == 0 /* disconnected */ ||
-      !(sb = pbl_pp_send_buffer_begin_bulk(session, SCREENSHOT_ENDPOINT_ID, session_len,
+      !(sb = pbl_pp_send_buffer_begin_bulk(session, PBL_PP_ENDPOINT_SCREENSHOT, session_len,
                                            PBL_PP_DEFAULT_TIMEOUT_MS))) {
     PBL_LOG_WRN("Terminating screenshot send early: %" PRIu32, max_buf_len);
     prv_finish(state);
@@ -201,7 +201,7 @@ static void prv_frozen_cb(void *data) {
 }
 
 void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,
-                                      unsigned int msg_len) {
+                                      size_t msg_len) {
   uint8_t sub_command = msg_data[0];
   if (sub_command != 0x00) {
     PBL_LOG_ERR("first byte can't be %u", sub_command);
@@ -236,3 +236,8 @@ void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint
 
   compositor_freeze(prv_frozen_cb, &s_screenshot_state);
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_SCREENSHOT, PBL_PP_ACCESS_PRIVATE,
+                       screenshot_protocol_msg_callback);
+#endif

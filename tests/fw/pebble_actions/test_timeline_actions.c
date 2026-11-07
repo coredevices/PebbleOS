@@ -28,7 +28,6 @@ static TimelineItemAction s_reply_action = {
 
 // Externs
 ///////////////////////////////////////////////////////////
-extern const int TIMELINE_ACTION_ENDPOINT;
 
 typedef struct ActionResultData ActionResultData;
 extern ActionResultData *prv_invoke_action(ActionMenu *action_menu,
@@ -97,7 +96,7 @@ int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint
     return -EAGAIN;
   }
 
-  if (endpoint_id != TIMELINE_ACTION_ENDPOINT) {
+  if (endpoint_id != PBL_PP_ENDPOINT_TIMELINE_ACTION) {
     return -EAGAIN;
   }
 

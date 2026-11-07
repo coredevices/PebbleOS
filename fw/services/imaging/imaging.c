@@ -8,6 +8,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
@@ -17,8 +18,6 @@
 #include <applib/graphics/gtypes.h>
 
 PBL_LOG_MODULE_DEFINE(service_imaging, DEFAULT_LOG_LEVEL);
-
-static const uint16_t IMAGING_ENDPOINT = 0x35;
 
 // Full-screen 4-bpp on the largest supported display (260x260) is ~34 KB. Cap generously and reject
 // anything larger to bound kernel-heap use against a malformed or hostile phone.
@@ -157,7 +156,8 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
   memcpy(cursor, artist, artist_len);
   cursor += artist_len;
 
-  pbl_pp_send(session, IMAGING_ENDPOINT, payload, cursor - payload, PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_IMAGING, payload, cursor - payload,
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   return true;
 }
 
@@ -177,7 +177,8 @@ bool imaging_request_notification_image(uint8_t token, ImagingFormat format, uin
   hdr->height = height;
   memcpy(payload + sizeof(*hdr), item_id, UUID_SIZE);
 
-  pbl_pp_send(session, IMAGING_ENDPOINT, payload, sizeof(payload), PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(session, PBL_PP_ENDPOINT_IMAGING, payload, sizeof(payload),
+              PBL_PP_DEFAULT_TIMEOUT_MS);
   return true;
 }
 
@@ -338,6 +339,11 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     prv_deliver(token, type, bmp);
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_IMAGING, PBL_PP_ACCESS_PRIVATE,
+                            imaging_protocol_msg_callback);
+#endif
 
 void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
   if (!event->is_system || event->is_open) {

@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
@@ -13,8 +14,6 @@
 #include <comm/bt_lock.h>
 
 PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_LEVEL);
-
-#define AUDIO_ENDPOINT (10000)
 
 #define ACTIVE_MODE_TIMEOUT      (10000)
 #define ACTIVE_MODE_START_BUFFER (100)
@@ -69,6 +68,9 @@ void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
   }
 }
 
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_AUDIO, PBL_PP_ACCESS_PRIVATE,
+                       audio_endpoint_protocol_msg_callback);
+
 static void prv_start_active_mode(void *data) {
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   pbl_pp_session_set_responsiveness(
@@ -116,7 +118,7 @@ void audio_endpoint_add_frame(AudioEndpointSessionId session_id, uint8_t *frame,
 
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin_bulk(
-      comm_session, AUDIO_ENDPOINT, sizeof(DataTransferMsg) + frame_size + 1,
+      comm_session, PBL_PP_ENDPOINT_AUDIO, sizeof(DataTransferMsg) + frame_size + 1,
       0 /* timeout_ms, never block */);
   if (!sb) {
     s_dropped_frames++;
@@ -162,6 +164,6 @@ void audio_endpoint_stop_transfer(AudioEndpointSessionId session_id) {
 
   prv_session_deinit(false /* call_stop_handler */);
 
-  pbl_pp_send(pbl_pp_session_get_system(), AUDIO_ENDPOINT, (const uint8_t *)&msg, sizeof(msg),
-              PBL_PP_DEFAULT_TIMEOUT_MS);
+  pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_AUDIO, (const uint8_t *)&msg,
+              sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
 }

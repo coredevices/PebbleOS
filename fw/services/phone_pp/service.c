@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/phone_call_util.h>
@@ -16,8 +17,6 @@
 PBL_LOG_MODULE_DEFINE(service_phone_pp, CONFIG_SERVICE_PHONE_PP_LOG_LEVEL);
 
 #define CALLER_BUFFER_LENGTH 32
-
-static const uint16_t PHONE_CTRL_ENDPOINT = 0x21;
 
 static bool s_get_phone_state_enabled;
 
@@ -110,7 +109,7 @@ static void prv_send_phone_command_to_handset(uint8_t cmd, uint8_t *data, unsign
     PBL_LOG_ERR("No struct pbl_pp_session for phone command, ending call");
     prv_put_call_disconnect_event();
   } else {
-    pbl_pp_send(session, PHONE_CTRL_ENDPOINT, buffer, length + sizeof(cmd),
+    pbl_pp_send(session, PBL_PP_ENDPOINT_PHONE, buffer, length + sizeof(cmd),
                 PBL_PP_DEFAULT_TIMEOUT_MS);
   }
 }
@@ -253,3 +252,8 @@ void phone_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
     prv_parse_msg_and_emit_event(iter, length, false /* is_state_response */);
   }
 }
+
+#ifndef CONFIG_RECOVERY_FW
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_PHONE, PBL_PP_ACCESS_PRIVATE,
+                            phone_protocol_msg_callback);
+#endif

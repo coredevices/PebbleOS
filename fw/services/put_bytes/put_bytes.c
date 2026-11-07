@@ -91,7 +91,6 @@ typedef struct PBL_PACKED {
   SharedHeader header;
 } InstallRequest;
 
-static const uint16_t PB_ENDPOINT_ID = 0xBEEF;
 static const uint32_t PUT_TIMEOUT_MS = 30000;
 
 //! @note The 2044 bytes is historically the size of the biggest allowable chunk of data with the
@@ -428,8 +427,8 @@ static void prv_send_response(ResponseCode code, uint32_t token) {
     uint32_t token;
   } PBL_PACKED msg = {.response_code = code, .token = pbl_cpu_to_be32(token)};
 
-  bool success = 0 == pbl_pp_send(pbl_pp_session_get_system(), PB_ENDPOINT_ID, (uint8_t *)&msg,
-                                  sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
+  bool success = 0 == pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_PUT_BYTES,
+                                  (uint8_t *)&msg, sizeof(msg), PBL_PP_DEFAULT_TIMEOUT_MS);
   if (!success) {
     PBL_LOG_WRN("PutBytes timeout sending response");
   }
@@ -1274,6 +1273,9 @@ const struct pbl_pp_receiver_api g_put_bytes_receiver_impl = {
   .finish = prv_receiver_finish,
   .cleanup = prv_receiver_cleanup,
 };
+
+PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_PUT_BYTES, PBL_PP_ACCESS_PRIVATE,
+                                g_put_bytes_receiver_impl);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // For Unit Testing
