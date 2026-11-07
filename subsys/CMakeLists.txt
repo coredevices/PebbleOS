@@ -4,6 +4,7 @@
 pbl_include_directories(.)
 pbl_add_subdirectory_ifdef(CONFIG_BT bluetooth)
 pbl_add_subdirectory_ifdef(CONFIG_CONSOLE console)
+pbl_add_subdirectory_ifdef(CONFIG_COREDUMP coredump)
 add_subdirectory(crc)
 pbl_add_subdirectory_ifdef(CONFIG_CRON cron)
 pbl_add_subdirectory_ifdef(CONFIG_FS fs)

@@ -4,7 +4,6 @@
 pbl_library()
 pbl_include_directories(include)
 pbl_library_sources(
-  core_dump.c
   memory.c
   soc.c
 )

@@ -37,7 +37,6 @@
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
-#include <kernel/core_dump.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <mfg/mfg_info.h>
@@ -49,6 +48,7 @@
 #include <shell/system_app_ids.auto.h>
 #include <syscall/syscall.h>
 #include <system/bootbits.h>
+#include <system/die.h>
 #include <system/version.h>
 
 enum {
@@ -337,7 +337,7 @@ static void prv_information_window_push(SettingsSystemData *data) {
 ////////////////////////////
 
 static void prv_coredump_confirm_cb(ClickRecognizerRef recognizer, void *context) {
-  core_dump_reset(true /* force_overwrite */);
+  reset_with_core_dump(true /* force_overwrite */);
 }
 
 static void prv_confirm_pop(ClickRecognizerRef recognizer, void *context) {

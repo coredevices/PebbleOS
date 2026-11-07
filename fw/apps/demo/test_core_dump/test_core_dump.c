@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/coredump/coredump.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
@@ -11,10 +12,10 @@
 #include <applib/app.h>
 #include <applib/app_malloc.h>
 #include <applib/ui/ui.h>
-#include <kernel/core_dump.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
+#include <system/die.h>
 
 #define NUM_MENU_ITEMS 13
 
@@ -51,7 +52,7 @@ static void stuck_system_task_callback(void *data) {
 //  task information if we get it while stuck in an ISR
 void OTG_FS_WKUP_IRQHandler(void) {
   if (s_call_core_dump_from_isr) {
-    core_dump_reset(false /* don't force overwrite */);
+    reset_with_core_dump(false /* don't force overwrite */);
   } else {
     PBL_LOG_SYNC_ALWAYS("Entering infinite loop in ISR");
     while (true)
@@ -84,7 +85,7 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 2) {
     // call directly
-    core_dump_reset(false /* don't force overwrite */);
+    reset_with_core_dump(false /* don't force overwrite */);
 
   } else if (index == 3) {
     // stuck app
@@ -124,18 +125,18 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 6) {
     PBL_LOG_INFO("Forcing bus fault during core dump");
-    core_dump_test_force_bus_fault();
-    core_dump_reset(false /* don't force overwrite */);
+    pbl_coredump_test_fault_set(PBL_COREDUMP_TEST_FAULT_BUS);
+    reset_with_core_dump(false /* don't force overwrite */);
 
   } else if (index == 7) {
     PBL_LOG_INFO("Forcing inf loop during core dump");
-    core_dump_test_force_inf_loop();
-    core_dump_reset(false /* don't force overwrite */);
+    pbl_coredump_test_fault_set(PBL_COREDUMP_TEST_FAULT_LOOP);
+    reset_with_core_dump(false /* don't force overwrite */);
 
   } else if (index == 8) {
     PBL_LOG_INFO("Forcing assert loop during core dump");
-    core_dump_test_force_assert();
-    core_dump_reset(false /* don't force overwrite */);
+    pbl_coredump_test_fault_set(PBL_COREDUMP_TEST_FAULT_ASSERT);
+    reset_with_core_dump(false /* don't force overwrite */);
 
   } else if (index == 9) {
     PBL_LOG_INFO("Calling core_dump FreeRTOS ISR");
@@ -189,7 +190,7 @@ static void prv_window_load(Window *window) {
     .callback = menu_select_callback,
   };
   data->menu_items[i++] = (SimpleMenuItem){
-    .title = "call core_dump_reset",
+    .title = "call reset_with_core_dump",
     .callback = menu_select_callback,
   };
   data->menu_items[i++] = (SimpleMenuItem){

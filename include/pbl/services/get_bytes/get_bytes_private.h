@@ -10,8 +10,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/comm_session/session.h>
 
-#include <kernel/core_dump_private.h>
-
 /**
  * @defgroup services_get_bytes_get_bytes_private Get bytes protocol
  * @ingroup services_get_bytes

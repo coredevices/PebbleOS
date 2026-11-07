@@ -36,7 +36,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/ui/ui.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
-#include <kernel/core_dump.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/low_power.h>
@@ -76,6 +75,7 @@
 #include <shell/prefs.h>
 #include <shell/shell_event_loop.h>
 #include <system/bootbits.h>
+#include <system/die.h>
 
 static const uint32_t FORCE_QUIT_HOLD_MS = 1500;
 static int s_back_hold_timer = TIMER_INVALID_ID;
@@ -203,7 +203,7 @@ static void launcher_handle_button_event(PebbleEvent *e) {
       s_back_quickpress_count++;
       if (s_back_quickpress_count >= BACK_QUICKPRESS_COREDUMP_PRESSES &&
           shell_prefs_can_coredump_on_request()) {
-        core_dump_reset(true /* is_forced */);
+        reset_with_core_dump(true /* is_forced */);
       }
     }
 #endif // !defined(CONFIG_SHELL_SDK)

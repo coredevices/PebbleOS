@@ -20,9 +20,6 @@
 // Stubs
 ///////////////////////////////////////////////////////////
 
-void core_dump_reset(bool is_forced) {
-}
-
 static GAPLEConnection s_connection;
 
 GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *addr) {

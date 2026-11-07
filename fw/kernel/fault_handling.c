@@ -14,7 +14,6 @@
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
-#include <kernel/core_dump.h>
 #include <kernel/fault_handling.h>
 #include <logging/logging_private.h>
 #include <process_management/app_manager.h>
@@ -23,6 +22,7 @@
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
+#include <system/die.h>
 #include <system/reboot_reason.h>
 
 #ifndef CONFIG_ARCH_POSIX
@@ -113,7 +113,7 @@ static void setup_log_app_crash_info(CrashInfo crash_info) {
   reboot_reason_set(&reason);
   if (reason_code == RebootReasonCode_Assert) {
     prepare_for_software_failure();
-    core_dump_reset(false /* is_forced */);
+    reset_with_core_dump(false /* is_forced */);
   } else {
     reset_due_to_software_failure();
   }

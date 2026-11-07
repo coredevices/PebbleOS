@@ -23,6 +23,7 @@ typedef struct GetBytesStorageImplementation {
 #include <pbl/services/get_bytes/get_bytes_storage_flash.h>
 
 static const GetBytesStorageImplementation s_get_bytes_impls[] = {
+#ifdef CONFIG_COREDUMP
   {// Coredump Storage
    .type = GetBytesStorageTypeCoredump,
    .setup = gb_storage_coredump_setup,
@@ -30,6 +31,7 @@ static const GetBytesStorageImplementation s_get_bytes_impls[] = {
    .read_next_chunk = gb_storage_coredump_read_next_chunk,
    .cleanup = gb_storage_coredump_cleanup
   },
+#endif
 #if !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE)
   {// Filesystem File Storage
    .type = GetBytesStorageTypeFile,

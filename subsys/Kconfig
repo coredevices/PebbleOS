@@ -3,6 +3,7 @@
 
 rsource "bluetooth/Kconfig"
 rsource "console/Kconfig"
+rsource "coredump/Kconfig"
 rsource "crc/Kconfig"
 rsource "cron/Kconfig"
 rsource "fs/Kconfig"

@@ -6,9 +6,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <pbl/coredump/format.h>
 #include <pbl/kernel/debug.h>
-
-#include <pebbleos/core_dump_structs.h>
 
 /**
  * @defgroup coredump_arch Architecture interface
@@ -43,7 +42,7 @@ void arch_coredump_thread_regs(uint32_t regs[PBL_THREAD_REG_COUNT]);
 bool arch_coredump_exception_regs(uint32_t regs[PBL_THREAD_REG_COUNT]);
 
 /** @brief Get the special registers at the time of the dump. */
-const CoreDumpExtraRegInfo *arch_coredump_extra_regs(void);
+const struct pbl_coredump_extra_regs *arch_coredump_extra_regs(void);
 
 /**
  * @brief Write the core dump and reset.

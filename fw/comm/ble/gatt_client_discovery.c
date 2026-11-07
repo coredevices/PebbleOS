@@ -16,8 +16,8 @@
 
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
-#include <kernel/core_dump.h>
 #include <kernel/events.h>
+#include <system/die.h>
 
 // TODO: virtualize the gatt_client_discovery_discover_all() call
 
@@ -145,7 +145,7 @@ static bool prv_discovery_handle_timeout(GAPLEConnection *connection, enum pbl_b
 
     if (connection->gatt_service_discovery_retries == GATT_CLIENT_DISCOVERY_MAX_RETRY) {
 #if !defined(CONFIG_RELEASE) && !UNITTEST
-      core_dump_reset(true /* is_forced */);
+      reset_with_core_dump(true /* is_forced */);
 #endif
       // Done retrying, just error out:
       finalize_result = PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT;

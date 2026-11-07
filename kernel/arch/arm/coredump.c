@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/coredump/arch.h>
+#include <pbl/coredump/coredump.h>
 #include <pbl/kernel/compiler.h>
 
 #include <cmsis_core.h>
@@ -15,6 +16,14 @@
 
 #define REG_UNKNOWN 0xa5a5a5a5u
 
+extern uint8_t __RAM_start__;
+extern uint8_t __RAM_size__;
+
+PBL_COREDUMP_REGION_DEFINE(ram, &__RAM_start__, (size_t)&__RAM_size__);
+PBL_COREDUMP_REGION_DEFINE(nvic_iser, (const void *)&NVIC->ISER, sizeof(NVIC->ISER));
+PBL_COREDUMP_REGION_DEFINE(nvic_ispr, (const void *)&NVIC->ISPR, sizeof(NVIC->ISPR));
+PBL_COREDUMP_REGION_DEFINE(nvic_iabr, (const void *)&NVIC->IABR, sizeof(NVIC->IABR));
+
 /*
  * Written by NMI_Handler, whose assembly depends on the layout. Tools can find it through the
  * s_saved_registers symbol. sp is the MSP and lr the EXC_RETURN value at handler entry; pc is the
@@ -22,7 +31,7 @@
  */
 static struct PBL_PACKED PBL_ALIGNED(4) {
   uint32_t core_reg[PBL_THREAD_REG_COUNT];
-  CoreDumpExtraRegInfo extra_reg;
+  struct pbl_coredump_extra_regs extra_reg;
 } s_saved_registers;
 
 void arch_coredump_trigger(void) {
@@ -104,6 +113,6 @@ bool arch_coredump_exception_regs(uint32_t regs[PBL_THREAD_REG_COUNT]) {
   return true;
 }
 
-const CoreDumpExtraRegInfo *arch_coredump_extra_regs(void) {
+const struct pbl_coredump_extra_regs *arch_coredump_extra_regs(void) {
   return &s_saved_registers.extra_reg;
 }
