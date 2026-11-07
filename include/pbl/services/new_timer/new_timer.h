@@ -12,8 +12,8 @@
  *
  * NewTimer runs at the highest task priority and executes timer callbacks and work deferred from
  * interrupts by drivers. Callbacks must be short: anything long should be handed to another task,
- * e.g. with an evented timer or a system task callback. Timers are a wrapper around the kernel
- * task timers.
+ * e.g. with an evented timer or a system task callback. Timers are delayed work on
+ * @ref pbl_sys_workq_high; new code should use the kernel work API directly.
  *
  * @code{.c}
  * static TimerID s_timer;
@@ -127,7 +127,7 @@ typedef void (*NewTimerWorkCallback)(void *data);
 /**
  * @brief Queue work on the NewTimer task from an ISR.
  *
- * Used to handle time sensitive hardware events. The work is dropped if the queue is full.
+ * Used to handle time sensitive hardware events. The work is dropped if no slot is free.
  *
  * @param cb Work callback.
  * @param data Data passed to @p cb.
@@ -137,11 +137,11 @@ void new_timer_add_work_callback_from_isr(NewTimerWorkCallback cb, void *data);
 /**
  * @brief Queue work on the NewTimer task.
  *
- * Waits up to 50 ticks for space in the queue.
+ * Waits up to 50 ticks for a free slot.
  *
  * @param cb Work callback.
  * @param data Data passed to @p cb.
- * @return true if queued, false if the queue stayed full.
+ * @return true if queued, false if no slot became free.
  */
 bool new_timer_add_work_callback(NewTimerWorkCallback cb, void *data);
 

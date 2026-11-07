@@ -1236,9 +1236,6 @@ void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, ui
 void pbl_pp_gatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
   PBL_LOG_INFO("PPoGATT service discovered, starting handshake");
 
-  // Create timers outside of bt_lock to avoid deadlock with NimbleHost.
-  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
-  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
   TimerID rx_ack_timer = new_timer_create();
   PBL_ASSERTN(rx_ack_timer);
   TimerID send_retry_timer = new_timer_create();

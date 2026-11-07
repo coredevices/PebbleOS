@@ -284,9 +284,6 @@ void pbl_bt_handle_peer_version_info_event(
 
 //! bt_lock is assumed to be taken before calling this function.
 void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complete_event *event) {
-  // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
-  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
-  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
   TimerID param_watchdog_timer = TIMER_INVALID_ID;
   if (event->status == PBL_BT_HCI_STATUS_SUCCESS) {
     param_watchdog_timer = new_timer_create();

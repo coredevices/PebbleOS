@@ -151,9 +151,6 @@ static void prv_send_indication_timer_cb(void *ctx) {
 
 void pbl_bt_cb_gatt_service_changed_server_subscribe(
     const struct pbl_bt_gatt_server_subscribe_event *event) {
-  // Create timer outside of bt_lock to avoid deadlock with NimbleHost.
-  // new_timer_create() acquires TaskTimerManager mutex, which may be held by NimbleHost
-  // when it's trying to acquire bt_lock, leading to a lock ordering deadlock.
   TimerID timer = TIMER_INVALID_ID;
   const bool subscribed = event->is_subscribing;
   if (subscribed) {
