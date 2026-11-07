@@ -38,7 +38,6 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
 #include <mfg/mfg_info.h>
-#include <mfg/mfg_serials.h>
 #include <resource/resource.h>
 #include <resource/system_resource.h>
 #include <system/bootbits.h>
@@ -136,11 +135,6 @@ int main(void) {
   init_drivers();
 
   clock_init();
-
-#if defined(CONFIG_IS_BIGBOARD)
-  // Program a random S/N into the Bigboard in case it's not been done yet:
-  mfg_write_bigboard_serial_number();
-#endif
 
 #if defined(CONFIG_MFG)
   mfg_info_update_constant_data();
