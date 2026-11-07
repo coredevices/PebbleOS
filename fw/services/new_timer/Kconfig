@@ -16,6 +16,16 @@ config SERVICE_NEW_TIMER_THREAD_PRIO
     int "Timer thread priority"
     default 4
 
+config SERVICE_NEW_TIMER_POOL_SIZE
+    int "Number of timers"
+    range 1 254
+    default 176
+    help
+      Number of timer slots reserved in .kernel_bss. Running out asserts.
+      Size it above the system's peak, about 40, plus
+      SERVICE_EVENTED_TIMER_MAX_PER_PROCESS, since each timer of an app or
+      worker takes a slot.
+
 module = SERVICE_NEW_TIMER
 module-str = New timer
 source "subsys/logging/Kconfig.template.log_level"

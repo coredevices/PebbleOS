@@ -108,8 +108,8 @@ frames:
 (gdb) bt 4
 #0  event_put (event=event@entry=0x2000960c <s_new_timer_stack+1292>) at ./fw/kernel/events.c:222
 #1  0x12154dce in launcher_task_add_callback (callback=<optimized out>, data=<optimized out>) at ./fw/kernel/event_loop.c:95
-#2  0x120982b0 in task_timer_manager_execute_expired_timers (manager=manager@entry=0x2002bc60 <s_task_timer_manager>) at ./fw/kernel/task_timer.c:350
-#3  0x1206cb86 in new_timer_service_loop (data=<optimized out>) at ./fw/services/new_timer/new_timer.c:87
+#2  0x120982b0 in prv_fire (work=work@entry=0x2002bc60 <s_timers+56>) at ./fw/services/new_timer/new_timer.c:97
+#3  0x1206cb86 in pbl_workq_thread (arg=<optimized out>) at ./kernel/work.c:121
 (More stack frames follow...)
 ```
 

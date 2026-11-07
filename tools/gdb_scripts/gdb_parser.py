@@ -347,29 +347,13 @@ class AnalyticsHeartbeat(Recognizer):
 
 
 # --- Timers --- #
-class TaskTimer(Recognizer):
-    type = "TaskTimer"
-
-    def is_type(self, timer, search_blocks):
-        timer_manager_ref = get_static_variable("s_task_timer_manager")
-        timer_manager = gdb.parse_and_eval(timer_manager_ref)
-        max_timer_id = int(timer_manager["next_id"]) - 1
-        return 1 <= timer["id"] <= max_timer_id
-
-
 class EventedTimer(Recognizer):
     type = "EventedTimer"
 
     def is_type(self, timer, search_blocks):
-        timer_manager_ref = get_static_variable("s_task_timer_manager")
-        timer_manager = gdb.parse_and_eval(timer_manager_ref)
-        max_timer_id = int(timer_manager["next_id"]) - 1
         total_tasks = Tasks().total
 
-        return (
-            1 <= timer["sys_timer_id"] <= max_timer_id
-            and 0 <= timer["target_task"] < total_tasks
-        )
+        return timer["sys_timer_id"] != 0 and 0 <= timer["target_task"] < total_tasks
 
 
 # --- Communication --- #
