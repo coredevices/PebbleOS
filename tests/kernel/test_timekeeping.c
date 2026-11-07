@@ -79,7 +79,7 @@ void sched_announce(uint64_t ticks) {
   s_ticks += ticks;
 }
 
-pbl_tick_t timer_ticks_until_next(pbl_tick_t now) {
+pbl_tick_t timer_ticks_until_next(uint64_t now) {
   return s_until_next_timer;
 }
 

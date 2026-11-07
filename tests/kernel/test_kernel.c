@@ -680,3 +680,25 @@ void test_kernel__sched_lock_defers_switch(void) {
   pbl_test_kernel_run();
   cl_assert_equal_s(s_trace, "abWc");
 }
+
+// ---- timers past 32 bits ----------------------------------------------------
+
+static void prv_timer_long(void *arg) {
+  // Would read as already expired with a signed 32-bit comparison.
+  const pbl_tick_t delay = 0x80000010U;
+  pbl_timer_start(&s_timer, PBL_TICKS(delay));
+  cl_assert_equal_i(pbl_timer_remaining(&s_timer), delay);
+  cl_assert_equal_i(pbl_sem_take(&s_sem, PBL_TICKS(10)), -EAGAIN);
+  cl_assert(pbl_timer_is_active(&s_timer));
+  cl_assert_equal_i(pbl_timer_remaining(&s_timer), delay - 10);
+  pbl_timer_stop(&s_timer);
+  cl_assert_equal_i(pbl_timer_remaining(&s_timer), 0);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__timer_longer_than_half_the_tick_range(void) {
+  pbl_sem_init(&s_sem, 0, 1);
+  pbl_timer_init(&s_timer, prv_timer_fn);
+  prv_spawn(0, "waiter", 2, prv_timer_long, nullptr);
+  pbl_test_kernel_run();
+}

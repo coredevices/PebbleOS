@@ -361,7 +361,7 @@ static void prv_idle_entry(void *arg) {
       sched_yield_current();
     }
     pbl_tick_t idle_ticks = prv_ticks_until_next_timeout();
-    pbl_tick_t timer_ticks = timer_ticks_until_next((pbl_tick_t)s_ticks);
+    pbl_tick_t timer_ticks = timer_ticks_until_next(s_ticks);
     if (timer_ticks < idle_ticks) {
       idle_ticks = timer_ticks;
     }
