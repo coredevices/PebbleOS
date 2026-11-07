@@ -21,7 +21,6 @@ void memory_layout_setup_mpu(void);
 
 const struct pbl_mpu_region *memory_layout_get_app_region(void);
 
-const struct pbl_mpu_region *memory_layout_get_readonly_bss_region(void);
 const struct pbl_mpu_region *memory_layout_get_microflash_region(void);
 
 const struct pbl_mpu_region *memory_layout_get_worker_region(void);

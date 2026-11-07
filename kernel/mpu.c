@@ -8,25 +8,19 @@
 #include <stdio.h>
 
 #include <pbl/kernel/mpu.h>
+#include <pbl/util/size.h>
 
 #define STATIC_SLOTS (CONFIG_KERNEL_MPU_REGIONS - ARCH_THREAD_MPU_REGIONS)
 
-// SF32LB52: SystemInit() programs slots 0..4.
-#ifdef CONFIG_SOC_SF32LB52
-#define FIRST_SLOT 5U
-#else
-#define FIRST_SLOT 0U
-#endif
-
 static const struct pbl_mpu_region *s_static_regions[STATIC_SLOTS];
-static unsigned int s_num_static_regions = FIRST_SLOT;
+static unsigned int s_num_static_regions;
 
 static bool prv_overlaps(uintptr_t base, size_t size, uintptr_t other_base, size_t other_size) {
   return base < other_base + other_size && other_base < base + size;
 }
 
 int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
-  for (unsigned int i = FIRST_SLOT; i < s_num_static_regions; i++) {
+  for (unsigned int i = 0; i < s_num_static_regions; i++) {
     const struct pbl_mpu_region *other = s_static_regions[i];
     if (prv_overlaps(region->base, region->size, other->base, other->size)) {
       return -EINVAL;
@@ -41,12 +35,62 @@ int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
   return 0;
 }
 
-void pbl_mpu_regions_enable(void) {
+#ifndef CONFIG_ARCH_POSIX
+extern const uint8_t __unpriv_ro_bss_start__[];
+extern const uint8_t __unpriv_ro_bss_size__[];
+extern const uint8_t __isr_stack_start__[];
+extern const uint8_t __FLASH_start__[];
+extern const uint8_t __FLASH_size__[];
+
+static const struct pbl_mpu_region s_kernel_regions[] = {
+  {
+    .name = "firmware",
+#ifdef CONFIG_ARMV8_M_MAINLINE
+    .base = CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET,
+    .size = CONFIG_FW_FLASH_SIZE,
+#else
+    // ARMv7-M cannot line a region up with the image.
+    .base = (uintptr_t)__FLASH_start__,
+    .size = (size_t)__FLASH_size__,
+#endif
+    .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_EXEC,
+  },
+  {
+    .name = "ro bss",
+    .base = (uintptr_t)__unpriv_ro_bss_start__,
+    .size = (size_t)__unpriv_ro_bss_size__,
+    .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB | PBL_MPU_SHAREABLE,
+  },
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
+  {
+    .name = "isr guard",
+    .base = (uintptr_t)__isr_stack_start__,
+    .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
+  },
+#endif
+};
+#endif
+
+[[maybe_unused]] static void prv_regions_add(const struct pbl_mpu_region *regions, size_t num) {
+  for (size_t i = 0; i < num; i++) {
+    PBL_ASSERTN(pbl_mpu_region_add(&regions[i]) == 0);
+  }
+}
+
+void mpu_init(void) {
+  arch_mpu_init();
+#ifndef CONFIG_ARCH_POSIX
+  prv_regions_add(s_kernel_regions, ARRAY_LENGTH(s_kernel_regions));
+#endif
+#ifdef CONFIG_SOC_HAS_MPU_REGIONS
+  prv_regions_add(pbl_soc_mpu_regions, pbl_soc_num_mpu_regions);
+#endif
   arch_mpu_enable();
 }
 
 bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
-  for (unsigned int i = FIRST_SLOT; i < s_num_static_regions; i++) {
+  for (unsigned int i = 0; i < s_num_static_regions; i++) {
     const struct pbl_mpu_region *region = s_static_regions[i];
     if ((region->attr & PBL_MPU_ACCESS_MSK) == PBL_MPU_NO_ACCESS &&
         prv_overlaps(start, end - start, region->base, region->size)) {
@@ -100,8 +144,8 @@ void pbl_mpu_regions_print(void (*print)(void *ctx, const char *line), void *ctx
       const char *name = "?";
       if (i >= STATIC_SLOTS) {
         name = s_thread_names[i - STATIC_SLOTS];
-      } else if (s_static_regions[i] != nullptr) {
-        name = s_static_regions[i]->name;
+      } else if (i < s_num_static_regions) {
+        name = s_static_regions[i]->name != nullptr ? s_static_regions[i]->name : "?";
         region.attr = s_static_regions[i]->attr;
       }
       snprintf(line, sizeof(line), "%2u %-14s 0x%08" PRIxPTR " 0x%08zx %s %s", i, name, region.base,

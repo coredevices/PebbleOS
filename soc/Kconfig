@@ -18,7 +18,9 @@ config SOC_SF32LB52
     select HAL_SIFLI
     select CPU_STAR_MC1
     select CPU_HAS_FPU
+    select KERNEL_MPU_IN_FAULTS
     select RAMFUNC
+    select SOC_HAS_MPU_REGIONS
     select SOC_HAS_RESET
 
 config SOC_QEMU
@@ -33,6 +35,11 @@ config SOC_POSIX
       (Linux, macOS), with emulated peripherals.
 
 endchoice
+
+config SOC_HAS_MPU_REGIONS
+    bool
+    help
+      The SoC declares MPU regions in pbl_soc_mpu_regions.
 
 config SOC_HAS_RESET
     bool
