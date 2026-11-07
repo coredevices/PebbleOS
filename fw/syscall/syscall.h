@@ -44,7 +44,7 @@ struct pbl_tm *sys_localtime_r(const time_t *timep, struct pbl_tm *result);
 void sys_copy_timezone_abbr(char *timezone_abbr, time_t time);
 time_t sys_time_start_of_today(void);
 
-void sys_evented_timer_consume(TimerID timer_id, EventedTimerCallback *out_cb, void **out_cb_data);
+void sys_evented_timer_consume(uint32_t timer_id, EventedTimerCallback *out_cb, void **out_cb_data);
 
 void sys_send_pebble_event_to_kernel(PebbleEvent *event);
 void sys_current_process_schedule_callback(CallbackEventCallback async_cb, void *ctx);

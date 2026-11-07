@@ -5,8 +5,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
 
 #include <applib/app.h>
@@ -33,12 +33,14 @@ typedef struct {
 static TestTimersAppData *s_app_data = 0;
 
 // =================================================================================
-static void stuck_timer_callback(void *data) {
+static void stuck_timer_callback(struct pbl_work *work) {
   PBL_LOG_DBG("STT: Entering infinite loop in timer callback");
   while (true) {
     sys_psleep(100);
   }
 }
+
+static PBL_DELAYED_WORK_DEFINE(s_stuck_timer, stuck_timer_callback);
 
 static void stuck_sys_work_callback(void *data) {
   PBL_LOG_DBG("Entering infinite loop in system task callback");
@@ -78,10 +80,8 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 1) {
     // stuck timer callback
-    TimerID timer = new_timer_create();
     PBL_LOG_INFO("Entering infinite loop in Timer callback");
-    bool success = new_timer_start(timer, 100, stuck_timer_callback, nullptr, 0 /*flags*/);
-    PBL_ASSERTN(success);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_stuck_timer, PBL_MSEC(100));
 
   } else if (index == 2) {
     // call directly

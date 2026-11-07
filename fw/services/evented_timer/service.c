@@ -6,9 +6,11 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/util/misc.h>
 
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
@@ -20,10 +22,10 @@ PBL_LOG_MODULE_DEFINE(service_evented_timer, CONFIG_SERVICE_EVENTED_TIMER_LOG_LE
 typedef struct EventedTimer {
   ListNode list_node;
 
-  //! The TimerID type used for sys_timers is a non-repeating integer that we also use as our key
-  //! for finding
-  //!  EventedTimers by id.
-  TimerID sys_timer_id;
+  EventedTimerID id;
+
+  struct pbl_delayed_work work;
+  pbl_tick_t period_ticks;
 
   EventedTimerCallback callback;
   void *callback_data;
@@ -32,6 +34,7 @@ typedef struct EventedTimer {
 
   bool expired; // This gets set when the timer's callback runs
   bool repeating;
+  bool released; // Unlinked, and freed once a run in progress is over
 } EventedTimer;
 
 //! The list of all the timers that have been created.
@@ -39,14 +42,16 @@ static ListNode *s_timer_list_head;
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
+static uint32_t s_last_id;
+
 // ------------------------------------------------------------------------------------
 // Find timer by id
 static bool prv_id_list_filter(ListNode *node, void *data) {
   EventedTimer *timer = (EventedTimer *)node;
-  return timer->sys_timer_id == (uintptr_t)data;
+  return timer->id == (uintptr_t)data;
 }
 
-static EventedTimer *prv_find_timer(TimerID timer_id) {
+static EventedTimer *prv_find_timer(EventedTimerID timer_id) {
   if (timer_id == EVENTED_TIMER_INVALID_ID) {
     return nullptr;
   }
@@ -57,13 +62,42 @@ static EventedTimer *prv_find_timer(TimerID timer_id) {
   return (EventedTimer *)node;
 }
 
+//! Call with s_mutex held.
+static EventedTimerID prv_next_id(void) {
+  do {
+    s_last_id++;
+  } while (s_last_id == EVENTED_TIMER_INVALID_ID || prv_find_timer(s_last_id));
+  return s_last_id;
+}
+
+static void prv_free_work(struct pbl_work *work) {
+  pbl_free(container_of(work, EventedTimer, work.work));
+}
+
+//! Unlinks and frees a timer, never blocking: prv_work can hold up the queue posting to the very
+//! task that gets here, so waiting for it could deadlock. Once canceled, no new run can start. A
+//! run already in progress can be waiting for s_mutex and goes on to read the timer, so the free
+//! is queued behind it, which also keeps the address from being reused under it. Call with s_mutex
+//! held.
+static void prv_release_timer(EventedTimer *timer) {
+  list_remove(&timer->list_node, &s_timer_list_head, nullptr);
+  timer->released = true;
+  pbl_delayed_work_cancel(&timer->work);
+  if (pbl_work_is_running(&timer->work.work)) {
+    timer->work.work.fn = prv_free_work;
+    pbl_work_submit(&pbl_sys_workq_high, &timer->work.work);
+  } else {
+    pbl_free(timer);
+  }
+}
+
 //! Retrieves details for a given timer handle and copies them out to user supplied memory.
 //! This gets executed on the client's task and is called directly from the callback we put onto the
 //! client task's event queue.
 //! It accesses the privileged contents of the timer from the client's unprivileged task.
-//! This call deletes the system timer and removes it from the timer list before returning unless
-//! it is a repeating timer.
-PBL_SYSCALL(void, sys_evented_timer_consume, (VAL, TimerID, timer_id),
+//! This call removes the timer from the timer list and releases it before returning unless it is a
+//! repeating timer.
+PBL_SYSCALL(void, sys_evented_timer_consume, (VAL, uint32_t, timer_id),
             (OUT, EventedTimerCallback *, out_cb), (OUT, void **, out_cb_data)) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
@@ -80,7 +114,7 @@ PBL_SYSCALL(void, sys_evented_timer_consume, (VAL, TimerID, timer_id),
   }
 
   // Only allow consuming a timer that belongs to the calling task. Without this
-  // check an unprivileged app could probe TimerIDs to find a system timer and
+  // check an unprivileged app could probe timer IDs to find a system timer and
   // read back its kernel callback pointer + data (KASLR-defeating info leak),
   // and additionally cancel that timer (DoS).
   if (from_user && timer->target_task != pebble_task_get_current()) {
@@ -92,14 +126,10 @@ PBL_SYSCALL(void, sys_evented_timer_consume, (VAL, TimerID, timer_id),
   *out_cb = timer->callback;
   *out_cb_data = timer->callback_data;
 
-  if (timer->repeating) {
-    pbl_mutex_unlock(&s_mutex);
-  } else {
-    list_remove(&timer->list_node, &s_timer_list_head, nullptr);
-    pbl_mutex_unlock(&s_mutex);
-    new_timer_delete(timer->sys_timer_id);
-    pbl_free(timer);
+  if (!timer->repeating) {
+    prv_release_timer(timer);
   }
+  pbl_mutex_unlock(&s_mutex);
 }
 
 //! Wrapper for the user supplied callback. We installed this callback by posting a
@@ -108,7 +138,7 @@ static void prv_evented_timer_event_callback(void *data) {
   // Note this may be running on the app task, so we have to jump through hoops to read kernel
   // memory.
 
-  TimerID timer_id = (TimerID)(uintptr_t)data;
+  uint32_t timer_id = (uint32_t)(uintptr_t)data;
 
   EventedTimerCallback timer_cb;
   void *timer_cb_data;
@@ -124,28 +154,24 @@ static void prv_evented_timer_event_callback(void *data) {
   timer_cb(timer_cb_data);
 }
 
-//! Called on the timer task. From here we need to generate a callback on the client's task.
-static void prv_sys_timer_callback(void *cb_data) {
+//! Called on the queue's thread. From here we need to generate a callback on the client's task.
+//! The timer stays allocated until this returns: see prv_release_timer.
+static void prv_work(struct pbl_work *work) {
   PBL_ASSERT_TASK(PebbleTask_NewTimers);
-  TimerID id = (TimerID)(uintptr_t)cb_data;
+  EventedTimer *timer = container_of(work, EventedTimer, work.work);
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  EventedTimer *timer = prv_find_timer(id);
-  if (!timer) {
-    // If there's no timer in the list, that means we've been cancelled already.
-    // When we cancel a timer, we immediately  free the EventedTimer* and
-    // call new_time_delete() to delete the timer. It's possible however that this
-    // callback got entered after we grabbed the mutex but before we issued the
-    // new_timer_delete(), in which case we  would have been blocked at the beginning
-    // of this method trying to grab the mutex while the timer was deleted.
-    // To handle this, we check here to see if the EventedTimer got deleted on us and
-    // return immediately if so.
+  // A cancel or reschedule may have got s_mutex first, after this run was dequeued.
+  if (timer->released || pbl_delayed_work_is_pending(&timer->work)) {
     pbl_mutex_unlock(&s_mutex);
     return;
   }
 
   timer->expired = !timer->repeating;
+  const EventedTimerID id = timer->id;
+  const PebbleTask target_task = timer->target_task;
+  const bool repeating = timer->repeating;
 
   pbl_mutex_unlock(&s_mutex);
 
@@ -153,21 +179,32 @@ static void prv_sys_timer_callback(void *cb_data) {
     .type = PEBBLE_CALLBACK_EVENT,
     .callback = {
       .callback = prv_evented_timer_event_callback,
-      .data = (void *)(intptr_t)id,
+      .data = (void *)id,
     }
   };
 
-  switch (timer->target_task) {
+  switch (target_task) {
     case PebbleTask_KernelMain:
       event_put(&e);
       break;
     case PebbleTask_App:
     case PebbleTask_Worker:
-      process_manager_send_event_to_process(timer->target_task, &e);
+      process_manager_send_event_to_process(target_task, &e);
       break;
     default:
       pbl_panic("Invalid task %s", pebble_task_get_name(pebble_task_get_current()));
   }
+
+  if (!repeating) {
+    return;
+  }
+
+  // After posting, which can block, so that periods missed meanwhile are skipped.
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  if (!timer->released && !pbl_delayed_work_is_pending(&timer->work)) {
+    pbl_delayed_work_schedule_next(&timer->work, timer->period_ticks);
+  }
+  pbl_mutex_unlock(&s_mutex);
 }
 
 // ========================================================================================================
@@ -187,10 +224,7 @@ void evented_timer_clear_process_timers(PebbleTask task) {
     ListNode *next = list_get_next(iter);
 
     if (timer->target_task == task) {
-      list_remove(iter, &s_timer_list_head, nullptr);
-      // The delete operation will stop it for us
-      new_timer_delete(timer->sys_timer_id);
-      pbl_free(timer);
+      prv_release_timer(timer);
     }
 
     iter = next;
@@ -238,30 +272,37 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
     return EVENTED_TIMER_INVALID_ID;
   }
 
-  EventedTimer *new_timer = pbl_malloc_check(sizeof(EventedTimer));
+  // A process must not be able to reset the watch by asking for more timers than the heap holds.
+  EventedTimer *new_timer = current_task == PebbleTask_KernelMain
+                                ? pbl_malloc_check(sizeof(*new_timer))
+                                : pbl_malloc(sizeof(*new_timer));
+  if (new_timer == nullptr) {
+    pbl_mutex_unlock(&s_mutex);
+    PBL_LOG_WRN("No memory for a timer for %s", pebble_task_get_name(current_task));
+    return EVENTED_TIMER_INVALID_ID;
+  }
+
+  const EventedTimerID id = prv_next_id();
+  const pbl_tick_t ticks = pbl_ms_to_ticks(timeout_ms);
 
   *new_timer = (EventedTimer){
     .list_node = {},
-    .sys_timer_id = TIMER_INVALID_ID, // We set this below
+    .id = id,
+    .period_ticks = ticks,
     .callback = callback,
     .callback_data = data,
     .target_task = current_task,
     .repeating = repeating,
     .expired = false
   };
-
-  new_timer->sys_timer_id = new_timer_create();
-  PBL_ASSERTN(new_timer->sys_timer_id != TIMER_INVALID_ID);
+  pbl_delayed_work_init(&new_timer->work, prv_work);
 
   s_timer_list_head = list_prepend(s_timer_list_head, &new_timer->list_node);
 
-  uint32_t flags = repeating ? TIMER_START_FLAG_REPEATING : 0;
-  bool success = new_timer_start(new_timer->sys_timer_id, timeout_ms, prv_sys_timer_callback,
-                                 (void *)(intptr_t)new_timer->sys_timer_id, flags);
-  PBL_ASSERTN(success);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &new_timer->work, PBL_TICKS(ticks));
 
   pbl_mutex_unlock(&s_mutex);
-  return new_timer->sys_timer_id;
+  return id;
 }
 
 bool evented_timer_reschedule(EventedTimerID timer_id, uint32_t timeout_ms) {
@@ -283,27 +324,21 @@ bool evented_timer_reschedule(EventedTimerID timer_id, uint32_t timeout_ms) {
   PBL_ASSERT(timer->target_task == pebble_task_get_current(), "%u vs %u", timer->target_task,
              pebble_task_get_current());
 
-  // This will detect if the timer callback has already executed on the timer task.
-  // If the timer is still in our  timer's list but is expired,
-  // it means the event posted by the timer task has not yet arrived at the
-  // client's task.
-  if (timer->expired) {
+  // This will detect if the timer callback has already executed on the queue's thread.
+  // If the timer is still in our timer's list but is expired, it means the event posted from there
+  // has not yet arrived at the client's task.
+  // A running one-shot is about to expire, so it is too late for it as well. A run that gets
+  // dequeued after this check finds the item pending again and does not fire.
+  if (timer->expired || (!timer->repeating && pbl_work_is_running(&timer->work.work))) {
     pbl_mutex_unlock(&s_mutex);
     return false;
   }
 
-  // At this point, we are assured that the timer callback either has not yet run
-  // or that the callback is currently blocked trying to grab s_mutex.
-  // new_timer_start() will reliably tell us if it was able to reschedule
-  // the timer before the callback got entered.
-  // If it returns false, it means the callback was entered before it was able to reschedule it.
-  uint32_t flags =
-      timer->repeating ? TIMER_START_FLAG_REPEATING : TIMER_START_FLAG_FAIL_IF_EXECUTING;
-  bool success = new_timer_start(timer->sys_timer_id, timeout_ms, prv_sys_timer_callback,
-                                 (void *)(intptr_t)timer->sys_timer_id, flags);
+  timer->period_ticks = pbl_ms_to_ticks(timeout_ms);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &timer->work, PBL_TICKS(timer->period_ticks));
 
   pbl_mutex_unlock(&s_mutex);
-  return success;
+  return true;
 }
 
 void evented_timer_cancel(EventedTimerID timer_id) {
@@ -321,9 +356,7 @@ void evented_timer_cancel(EventedTimerID timer_id) {
     return;
   }
 
-  new_timer_delete(timer->sys_timer_id); // This automatically stops the timer for us first
-  list_remove(&timer->list_node, &s_timer_list_head, nullptr);
-  pbl_free(timer);
+  prv_release_timer(timer);
 
   pbl_mutex_unlock(&s_mutex);
 }
