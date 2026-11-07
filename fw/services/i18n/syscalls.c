@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 
-#include <kernel/memory_layout.h>
 #include <kernel/pebble_tasks.h>
+#include <process_management/process_regions.h>
 
 PBL_LOG_MODULE_DECLARE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 
@@ -25,8 +26,8 @@ PBL_SYSCALL(void, sys_i18n_get_with_buffer, (VAL, const char *, string),
     pbl_syscall_fail();
   }
   if (from_user) {
-    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), string, 100) &&
-        !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), string, 100)) {
+    if (!pbl_mpu_region_contains_cstring(process_region_app(), string, 100) &&
+        !pbl_mpu_region_contains_cstring(pbl_mpu_region_firmware(), string, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", string);
       pbl_syscall_fail();
     }
@@ -41,8 +42,8 @@ PBL_SYSCALL(size_t, sys_i18n_get_length, (VAL, const char *, string)) {
     pbl_syscall_fail();
   }
   if (from_user) {
-    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), string, 100) &&
-        !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), string, 100)) {
+    if (!pbl_mpu_region_contains_cstring(process_region_app(), string, 100) &&
+        !pbl_mpu_region_contains_cstring(pbl_mpu_region_firmware(), string, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", string);
       pbl_syscall_fail();
     }

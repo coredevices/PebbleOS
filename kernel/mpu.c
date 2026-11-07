@@ -89,6 +89,15 @@ void mpu_init(void) {
   arch_mpu_enable();
 }
 
+const struct pbl_mpu_region *pbl_mpu_region_firmware(void) {
+  static const struct pbl_mpu_region s_firmware = {
+    .name = "firmware",
+    .base = CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET,
+    .size = CONFIG_FW_FLASH_SIZE,
+  };
+  return &s_firmware;
+}
+
 bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
   for (unsigned int i = 0; i < s_num_static_regions; i++) {
     const struct pbl_mpu_region *region = s_static_regions[i];

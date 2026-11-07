@@ -26,7 +26,6 @@
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/simple_dialog.h>
 #include <kernel/event_loop.h>
-#include <kernel/memory_layout.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <kernel/util/segment.h>

@@ -10,6 +10,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/animation_service.h>
@@ -20,7 +21,6 @@
 #include <applib/legacy2/ui/animation_legacy2.h>
 #include <applib/legacy2/ui/animation_private_legacy2.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
 
 #ifdef CONFIG_SHELL

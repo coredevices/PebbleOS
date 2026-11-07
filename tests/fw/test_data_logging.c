@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/time.h>
 
 #include <fake_app_manager.h>
@@ -40,11 +41,12 @@
 #include <fake_session.h>
 #include <fake_spi_flash.h>
 #include <fake_system_task.h>
-#include <kernel/memory_layout.h>
-const struct pbl_mpu_region *memory_layout_get_app_region(void) {
+#include <process_management/process_regions.h>
+const struct pbl_mpu_region *process_region_app(void) {
   return nullptr;
 }
-bool memory_layout_is_buffer_in_region(const struct pbl_mpu_region *region, const void *buf, size_t length) {
+bool pbl_mpu_region_contains_buffer(const struct pbl_mpu_region *region, const void *buf,
+                                    size_t length) {
   return true;
 }
 

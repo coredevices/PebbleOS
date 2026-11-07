@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -17,8 +18,8 @@
 #include <applib/ui/window.h>
 #include <flash_region/flash_region.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 // Demo app that deliberately runs a series of memory accesses that the
 // MPU is supposed to deny for the unprivileged App task. Use up/down to
@@ -56,6 +57,7 @@ typedef enum {
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
   TestKind_FilesystemRead,
+  TestKind_FilesystemSyscall,
 #ifdef CONFIG_MMAP_RESOURCES
   TestKind_ResourceBankRead,
 #endif
@@ -81,6 +83,7 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_RamfuncWrite] = "Ramfunc W",
   [TestKind_RamfuncRead] = "Ramfunc R",
   [TestKind_FilesystemRead] = "Filesystem R",
+  [TestKind_FilesystemSyscall] = "Filesystem syscall",
 #ifdef CONFIG_MMAP_RESOURCES
   [TestKind_ResourceBankRead] = "Resource bank R",
 #endif
@@ -188,6 +191,12 @@ static void prv_run_test(TestKind kind) {
       volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_FILESYSTEM_BEGIN;
       volatile uint32_t v = *p;
       (void)v;
+      break;
+    }
+    case TestKind_FilesystemSyscall: {
+      // The kernel must refuse to read this on the app's behalf too. Not through
+      // fonts_get_system_font(), which also reads the key from the app.
+      sys_font_get_system_font((const char *)FLASH_REGION_FILESYSTEM_BEGIN);
       break;
     }
 #ifdef CONFIG_MMAP_RESOURCES

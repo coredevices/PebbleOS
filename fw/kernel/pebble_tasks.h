@@ -8,8 +8,6 @@
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/thread.h>
 
-#include <kernel/memory_layout.h>
-
 //! This is an enumeration of different tasks we've had in our system. Please don't rearrange
 //! these numbers! For example, the value of PebbleTask_Timers is hardcoded into our syscall
 //! assembly and terrible things will happen if you move this around.

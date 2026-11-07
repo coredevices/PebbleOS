@@ -6,6 +6,7 @@
 #include "app_install_manager.h"
 #include "app_manager.h"
 #include "pebble_process_md.h"
+#include "process_regions.h"
 #include "worker_manager.h"
 
 #include <pbl/kernel/assert.h>
@@ -537,12 +538,12 @@ struct pbl_thread *process_manager_thread_create(PebbleTask task, struct pbl_thr
   const bool is_app = (task == PebbleTask_App);
   PBL_ASSERTN(is_app || task == PebbleTask_Worker);
 
-  struct pbl_mpu_region app_region = *memory_layout_get_app_region();
-  struct pbl_mpu_region worker_region = *memory_layout_get_worker_region();
+  struct pbl_mpu_region app_region = *process_region_app();
+  struct pbl_mpu_region worker_region = *process_region_worker();
   struct pbl_mpu_region *user_region = is_app ? &app_region : &worker_region;
   user_region->attr = (user_region->attr & ~PBL_MPU_ACCESS_MSK) | PBL_MPU_P_RW_U_RW;
-  attr->regions[MEMORY_LAYOUT_THREAD_REGION_APP] = &app_region;
-  attr->regions[MEMORY_LAYOUT_THREAD_REGION_WORKER] = &worker_region;
+  attr->regions[PROCESS_REGIONS_THREAD_APP] = &app_region;
+  attr->regions[PROCESS_REGIONS_THREAD_WORKER] = &worker_region;
 
 #ifdef CONFIG_USERSPACE
   attr->user_start = user_region->base;

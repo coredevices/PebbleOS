@@ -15,8 +15,8 @@
 #include <resource/system_resource.h>
 #include <shell/prefs.h>
 #include <stubs_logging.h>
-#include <stubs_memory_layout.h>
 #include <stubs_pbl_malloc.h>
+#include <stubs_process_regions.h>
 #include <stubs_syscall_internal.h>
 #include <syscall/syscall.h>
 
