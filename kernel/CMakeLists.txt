@@ -10,6 +10,8 @@ pbl_library_sources(
   init.c
   irq.c
   malloc.c
+  mpu.c
+  mpu_region.c
   msgq.c
   mutex.c
   poll.c

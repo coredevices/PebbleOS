@@ -5,7 +5,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/types.h>
-#include <pbl/mcu/mpu.h>
+#include <pbl/kernel/mpu.h>
 
 /**
  * @defgroup kernel_thread Threads
@@ -102,7 +102,7 @@ struct pbl_thread_attr {
    * MPU regions switched in with the thread. NULL entries take the default region. The stack guard
    * replaces @ref PBL_THREAD_REGION_STACK_GUARD.
    */
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS];
+  const struct pbl_mpu_region *regions[PBL_THREAD_MAX_MEM_REGIONS];
 #ifdef CONFIG_USERSPACE
   /**
    * Memory the thread's syscalls may read and write, [user_start, user_end); empty for none. The
@@ -283,7 +283,7 @@ static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
  * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions, which must stay valid; NULL
  *                entries leave the slot empty.
  */
-void pbl_thread_regions_default_set(const MpuRegion *const *regions);
+void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions);
 
 /**
  * @brief Read a thread-local pointer slot.

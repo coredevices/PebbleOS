@@ -235,7 +235,7 @@ PBL_SYSCALL(size_t, sys_strftime, (OUT_BUF, char *, s, maxsize), (VAL, size_t, m
             (IN, const struct pbl_tm *, tim_p), (VAL, char *, locale)) {
   if (from_user) {
     // Workers pass the app's locale buffer, which is not theirs to read
-    const MpuRegion *region = (pebble_task_get_current() == PebbleTask_Worker)
+    const struct pbl_mpu_region *region = (pebble_task_get_current() == PebbleTask_Worker)
                                   ? memory_layout_get_worker_region()
                                   : memory_layout_get_app_region();
     if (locale && !memory_layout_is_buffer_in_region(region, locale, ISO_LOCALE_LENGTH)) {

@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/thread.h>
 
 //! What the portable kernel needs from an architecture.
@@ -22,7 +23,20 @@ void arch_init(void);
 //! @p entry(@p arg) on the thread's stack.
 void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg);
 
-void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions);
+//! Number of MPU slots switched in with each thread, the last ones of the MPU.
+#define ARCH_THREAD_MPU_REGIONS 4
+
+//! Turns memory protection on.
+void arch_mpu_enable(void);
+
+void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region);
+
+//! Reads back a slot. The name is left out, and so is everything but the access
+//! and exec attributes, of which access is the closest the hardware can tell.
+//! @return false if the slot is empty.
+bool arch_mpu_region_get(unsigned int slot, struct pbl_mpu_region *region);
+
+void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions);
 
 //! Starts running pbl_cur; never returns.
 [[noreturn]] void arch_start(void);

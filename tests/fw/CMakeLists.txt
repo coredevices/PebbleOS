@@ -153,6 +153,7 @@ pbl_clar_test(test_data_logging
 pbl_clar_test(test_memory_layout
   SOURCES
     fw/kernel/memory_layout.c
+    kernel/mpu_region.c
 )
 
 pbl_clar_test(test_app_manager
@@ -167,6 +168,7 @@ pbl_clar_test(test_app_manager
     fw/kernel/memory_layout.c
     fw/kernel/util/segment.c
     kernel/heap.c
+    kernel/mpu_region.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

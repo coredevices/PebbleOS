@@ -32,7 +32,7 @@ bool event_try_put_from_process(PebbleTask task, PebbleEvent *event) {
 
 static bool s_text_in_region;
 
-bool memory_layout_is_cstring_in_region(const MpuRegion *region, const char *str,
+bool memory_layout_is_cstring_in_region(const struct pbl_mpu_region *region, const char *str,
                                         size_t max_length) {
   return s_text_in_region;
 }

@@ -3,14 +3,9 @@
 
 #include "memory_layout.h"
 
-#include <inttypes.h>
-#include <string.h>
-
 #include <pbl/board/partitions.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/util/math.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
 
 #include <logging/logging_private.h>
 
@@ -18,54 +13,13 @@
 #include <pbl/shell/shell.h>
 #endif
 
-static const char *const MEMORY_REGION_NAMES[] = {
-// Keep the four RESERVED entries in lockstep with MemoryRegion_Reserved*
-// in memory_layout.h. SiFli's fifth region (mailbox) overlaps with the
-// "UNPRIV_FLASH" slot at index 4 -- Pebble never programs that index on
-// SF32LB52, so the cosmetic label is the only casualty.
-#ifdef CONFIG_SOC_SF32LB52
-  "RESERVED0",       "RESERVED1",       "RESERVED2",       "RESERVED3",
-#endif
-  "UNPRIV_FLASH",    "UNPRIV_RO_BSS",   "UNPRIV_RES",      "ISR_STACK_GUARD",
-  "Task Specific 1", "Task Specific 2", "Task Specific 3", "Task Specific 4"
-};
-
-static const char *prv_permissions_str(MpuPermissions p) {
-  switch (p) {
-    case MpuPermissions_NoAccess:
-      return "NoAccess";
-    case MpuPermissions_PrivRW:
-      return "PrivRW";
-    case MpuPermissions_PrivRW_UserRO:
-      return "PrivRW_UserRO";
-    case MpuPermissions_PrivRW_UserRW:
-      return "PrivRW_UserRW";
-    case MpuPermissions_PrivRO:
-      return "PrivRO";
-    case MpuPermissions_PrivRO_UserRO:
-      return "PrivRO_UserRO";
-    case MpuPermissionsCount:
-      break;
-  }
-  return "?";
+static void prv_log_line(void *ctx, const char *line) {
+  char buffer[90];
+  PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, sizeof(buffer), "%s", line);
 }
 
 void memory_layout_dump_mpu_regions(void) {
-  char buffer[90];
-
-  for (size_t i = 0; i < ARRAY_LENGTH(MEMORY_REGION_NAMES); ++i) {
-    MpuRegion region = mpu_get_region(i);
-
-    if (!region.enabled) {
-      PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, sizeof(buffer), "%u Not enabled", i);
-      continue;
-    }
-
-    PBL_LOG_FROM_FAULT_HANDLER_FMT(
-        buffer, sizeof(buffer), "%u < %-22s>: Addr %p Size 0x%08" PRIx32 " %s Perms: %s", i,
-        MEMORY_REGION_NAMES[i], (void *)region.base_address, region.size,
-        region.executable ? "X" : "-", prv_permissions_str(region.permissions));
-  }
+  pbl_mpu_regions_print(prv_log_line, nullptr);
 }
 
 #if defined(UNITTEST) || defined(CONFIG_ARCH_POSIX)
@@ -94,62 +48,42 @@ extern const uint32_t __FLASH_size__[];
 #endif
 
 // Kernel read only RAM. Parts of RAM that it's kosher for unprivileged apps to read
-static const MpuRegion s_readonly_bss_region = {
-  .region_num = MemoryRegion_ReadOnlyBss,
-  .enabled = true,
-  .base_address = (uint32_t)__unpriv_ro_bss_start__,
-  .size = (uint32_t)__unpriv_ro_bss_size__,
-  .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .permissions = MpuPermissions_PrivRW_UserRO,
+static const struct pbl_mpu_region s_readonly_bss_region = {
+  .name = "ro bss",
+  .base = (uintptr_t)__unpriv_ro_bss_start__,
+  .size = (size_t)__unpriv_ro_bss_size__,
+  .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB | PBL_MPU_SHAREABLE,
 };
 
-static_assert(MemoryRegion_TaskStackGuard - MemoryRegion_AppRAM == PBL_THREAD_REGION_STACK_GUARD,
-              "the kernel owns this region");
-
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-// ISR stack guard
-static const MpuRegion s_isr_stack_guard_region = {
-  .region_num = MemoryRegion_IsrStackGuard,
-  .enabled = true,
-  .base_address = (uint32_t)__isr_stack_start__,
+static const struct pbl_mpu_region s_isr_stack_guard_region = {
+  .name = "isr guard",
+  .base = (uintptr_t)__isr_stack_start__,
   .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
-  .cache_policy = MpuCachePolicy_NotCacheable,
-  .permissions = MpuPermissions_NoAccess,
+  .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
 };
 #endif
 
-static const MpuRegion s_app_region = {
-  .region_num = MemoryRegion_AppRAM,
-  .enabled = true,
-  // App process .text is relocated into App RAM, so the App task needs
-  // to be able to execute from this region.
-  .executable = true,
-  .base_address = (uintptr_t)__APP_RAM__,
-  .size = (uint32_t)__APP_RAM_size__,
-  .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .permissions = MpuPermissions_PrivRW,
+// App and worker .text is relocated into their RAM.
+static const struct pbl_mpu_region s_app_region = {
+  .name = "app",
+  .base = (uintptr_t)__APP_RAM__,
+  .size = (size_t)__APP_RAM_size__,
+  .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_WB | PBL_MPU_EXEC | PBL_MPU_SHAREABLE,
 };
 
-static const MpuRegion s_worker_region = {
-  .region_num = MemoryRegion_WorkerRAM,
-  .enabled = true,
-  // Worker process .text is relocated into Worker RAM.
-  .executable = true,
-  .base_address = (uintptr_t)__WORKER_RAM__,
-  .size = (uint32_t)__WORKER_RAM_size__,
-  .cache_policy = MpuCachePolicy_WriteBackWriteAllocate,
-  .permissions = MpuPermissions_PrivRW,
+static const struct pbl_mpu_region s_worker_region = {
+  .name = "worker",
+  .base = (uintptr_t)__WORKER_RAM__,
+  .size = (size_t)__WORKER_RAM_size__,
+  .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_WB | PBL_MPU_EXEC | PBL_MPU_SHAREABLE,
 };
 
-static const MpuRegion s_microflash_region = {
-  .region_num = MemoryRegion_Flash,
-  .enabled = true,
-  // The firmware itself runs from flash.
-  .executable = true,
-  .base_address = (uint32_t)__FLASH_start__,
-  .size = (uint32_t)__FLASH_size__,
-  .cache_policy = MpuCachePolicy_WriteThrough,
-  .permissions = MpuPermissions_PrivRO_UserRO,
+static const struct pbl_mpu_region s_microflash_region = {
+  .name = "flash",
+  .base = (uintptr_t)__FLASH_start__,
+  .size = (size_t)__FLASH_size__,
+  .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_EXEC | PBL_MPU_SHAREABLE,
 };
 
 #ifdef CONFIG_SOC_SF32LB52
@@ -172,55 +106,43 @@ static_assert(PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0
               "resource banks must be contiguous");
 
 // System resources are served as pointers into the memory mapped banks.
-static const MpuRegion s_resource_banks_region = {
-  .region_num = MemoryRegion_ResourceBanks,
-  .enabled = true,
-  .base_address = CONFIG_FLASH_BASE + PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
+static const struct pbl_mpu_region s_resource_banks_region = {
+  .name = "resource banks",
+  .base = CONFIG_FLASH_BASE + PART_SYSTEM_RESOURCES_BANK_0_OFFSET,
   .size = PART_SYSTEM_RESOURCES_BANK_0_SIZE + PART_SYSTEM_RESOURCES_BANK_1_SIZE,
-  .cache_policy = MpuCachePolicy_WriteThrough,
-  .permissions = MpuPermissions_PrivRO_UserRO,
+  .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_SHAREABLE,
 };
 #endif
 
 void memory_layout_setup_mpu(void) {
-  // Flash parts...
-  // Read only for executing code and loading data out of.
-
-  // Unprivileged flash, by default anyone can read any part of flash.
-  // On SF32LB52 the SiFli HAL already programs a user-RO executable region
-  // covering the firmware image in SystemInit(), so we skip our own.
+  // On SF32LB52 SystemInit() already programs a user-RO region for the firmware image.
 #ifndef CONFIG_SOC_SF32LB52
-  mpu_set_region(&s_microflash_region);
+  PBL_ASSERTN(pbl_mpu_region_add(&s_microflash_region) == 0);
 #endif
 #if defined(CONFIG_SOC_SF32LB52) && defined(CONFIG_MMAP_RESOURCES)
-  mpu_set_region(&s_resource_banks_region);
+  PBL_ASSERTN(pbl_mpu_region_add(&s_resource_banks_region) == 0);
 #endif
-
-  // RAM parts
-  // The background memory map only allows privileged access. We need to add additional regions to
-  // enable access to unprivileged code.
-
-  mpu_set_region(&s_readonly_bss_region);
+  PBL_ASSERTN(pbl_mpu_region_add(&s_readonly_bss_region) == 0);
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  mpu_set_region(&s_isr_stack_guard_region);
+  PBL_ASSERTN(pbl_mpu_region_add(&s_isr_stack_guard_region) == 0);
 #endif
 
-  mpu_enable();
+  pbl_mpu_regions_enable();
 }
 
-const MpuRegion *memory_layout_get_app_region(void) {
+const struct pbl_mpu_region *memory_layout_get_app_region(void) {
   return &s_app_region;
 }
 
-const MpuRegion *memory_layout_get_readonly_bss_region(void) {
+const struct pbl_mpu_region *memory_layout_get_readonly_bss_region(void) {
   return &s_readonly_bss_region;
 }
 
-const MpuRegion *memory_layout_get_worker_region(void) {
+const struct pbl_mpu_region *memory_layout_get_worker_region(void) {
   return &s_worker_region;
 }
 
-const MpuRegion *memory_layout_get_microflash_region(void) {
+const struct pbl_mpu_region *memory_layout_get_microflash_region(void) {
   return &s_microflash_region;
 }
 
@@ -229,52 +151,34 @@ void memory_layout_thread_regions_init(void) {
   // inner-shareable regions, so an access without them can leave dirty lines the
   // process never sees, or read stale ones. Every thread has to use them, as ISRs
   // inherit the regions of the thread they interrupt.
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS] = {&s_app_region, &s_worker_region};
+  const struct pbl_mpu_region *regions[PBL_THREAD_MAX_MEM_REGIONS] = {
+    [MEMORY_LAYOUT_THREAD_REGION_APP] = &s_app_region,
+    [MEMORY_LAYOUT_THREAD_REGION_WORKER] = &s_worker_region,
+  };
   pbl_thread_regions_default_set(regions);
 }
 
-bool memory_layout_is_pointer_in_region(const MpuRegion *region, const void *ptr) {
-  uintptr_t p = (uintptr_t)ptr;
-  return (p >= region->base_address && p < (region->base_address + region->size));
+bool memory_layout_is_pointer_in_region(const struct pbl_mpu_region *region, const void *ptr) {
+  return pbl_mpu_region_contains(region, ptr);
 }
 
-bool memory_layout_is_buffer_in_region(const MpuRegion *region, const void *buf, size_t length) {
-  uintptr_t buf_end;
-  if (ckd_add(&buf_end, (uintptr_t)buf, length)) {
-    return false;
-  }
-  return memory_layout_is_pointer_in_region(region, buf) &&
-         memory_layout_is_pointer_in_region(region, (void *)(buf_end - 1));
+bool memory_layout_is_buffer_in_region(const struct pbl_mpu_region *region, const void *buf,
+                                       size_t length) {
+  return pbl_mpu_region_contains_buffer(region, buf, length);
 }
 
-bool memory_layout_is_cstring_in_region(const MpuRegion *region, const char *str,
+bool memory_layout_is_cstring_in_region(const struct pbl_mpu_region *region, const char *str,
                                         size_t max_length) {
-  uintptr_t region_end = region->base_address + region->size;
-
-  if ((uintptr_t)str < region->base_address || (uintptr_t)str >= region_end) {
-    return false;
-  }
-
-  size_t avail = region_end - (uintptr_t)str;
-  size_t scan_len = (max_length < avail) ? max_length + 1 : avail;
-
-  return strnlen(str, scan_len) < scan_len;
+  return pbl_mpu_region_contains_cstring(region, str, max_length);
 }
 
 #ifdef CONFIG_SHELL
+static void prv_shell_line(void *ctx, const char *line) {
+  pbl_shell_print(ctx, "%s", line);
+}
+
 static int prv_cmd_mpu(const struct pbl_shell *sh, size_t argc, char **argv) {
-  for (size_t i = 0; i < ARRAY_LENGTH(MEMORY_REGION_NAMES); ++i) {
-    MpuRegion region = mpu_get_region(i);
-
-    if (!region.enabled) {
-      pbl_shell_print(sh, "%u Not enabled", (unsigned int)i);
-      continue;
-    }
-
-    pbl_shell_print(sh, "%u < %-22s>: Addr %p Size 0x%08" PRIx32 " %s Perms: %s", (unsigned int)i,
-                    MEMORY_REGION_NAMES[i], (void *)region.base_address, region.size,
-                    region.executable ? "X" : "-", prv_permissions_str(region.permissions));
-  }
+  pbl_mpu_regions_print(prv_shell_line, (void *)sh);
   return 0;
 }
 

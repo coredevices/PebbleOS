@@ -27,7 +27,6 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/mpu.h>
 #include <pbl/services/comm_session/session.h>
 #include <pbl/services/time.h>
 #include <pbl/util/build_id.h>

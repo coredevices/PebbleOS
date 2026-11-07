@@ -323,33 +323,17 @@ static void attempt_handle_generic_fault(unsigned int *stacked_args, unsigned in
 extern void fault_handler_dump(char buffer[80], unsigned int *stacked_args);
 extern void fault_handler_dump_cfsr(char buffer[80]);
 
-static bool prv_overlaps_stack_guard(uintptr_t start, uintptr_t end) {
-  static const uint8_t s_guard_regions[] = {
-    MemoryRegion_IsrStackGuard,
-    MemoryRegion_TaskStackGuard,
-    MemoryRegion_Task4, // syscall stack guard, when the task has one
-  };
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_guard_regions); i++) {
-    MpuRegion mpu_region = mpu_get_region(s_guard_regions[i]);
-    if (mpu_region.enabled && start < mpu_region.base_address + mpu_region.size &&
-        end > mpu_region.base_address) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool fault_handling_hit_stack_guard(const unsigned int *stacked_args, unsigned int exc_return) {
   const uint8_t mmfsr = SCB->CFSR & 0xff;
   if (mmfsr & (1 << 7) /* MMARVALID */) {
     const uintptr_t fault_addr = SCB->MMFAR;
-    return prv_overlaps_stack_guard(fault_addr, fault_addr + 1);
+    return pbl_mpu_region_is_stack_guard(fault_addr, fault_addr + 1);
   }
   if (mmfsr & (1 << 4) /* MSTKERR */) {
     // Stacking faults leave MMFAR invalid, but SP already points at the frame.
     const uintptr_t frame = (uintptr_t)stacked_args;
     const size_t frame_words = (exc_return & 0x10) ? 8 : 26;
-    return prv_overlaps_stack_guard(frame, frame + frame_words * sizeof(uint32_t));
+    return pbl_mpu_region_is_stack_guard(frame, frame + frame_words * sizeof(uint32_t));
   }
   return false;
 }
