@@ -3,6 +3,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/services/touch/touch.h>
 
 #include <applib/app_message/app_message_internal.h>
@@ -143,7 +144,8 @@ KERNEL_READONLY_DATA static AppState *s_app_state_ptr;
 
 bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                          int16_t obstruction_origin_y) {
-  s_app_state_ptr = memory_segment_split(app_state_ram, nullptr, sizeof(AppState));
+  KERNEL_READONLY_DATA_SET(s_app_state_ptr,
+                           memory_segment_split(app_state_ram, nullptr, sizeof(AppState)));
   if (!s_app_state_ptr) {
     return false;
   }
