@@ -1017,3 +1017,37 @@ void test_kernel__work_call_times_out(void) {
   prv_spawn(0, "main", 2, prv_call_timeout_main, nullptr);
   pbl_test_kernel_run();
 }
+
+static void prv_ops_wait(struct pbl_workq *q, bool waiting) {
+  prv_trace(waiting ? 'w' : 'W');
+}
+
+static const struct pbl_workq_ops s_ops = {
+  .wait = prv_ops_wait,
+};
+
+static void prv_is_current(struct pbl_work *work) {
+  cl_assert(pbl_workq_is_current(&s_wq));
+  prv_trace('c');
+}
+
+static void prv_ops_late_main(void *arg) {
+  // The queue is idle and blocked by now, past where it would call a hook.
+  cl_assert_equal_s(s_trace, "");
+  cl_assert(pbl_workq_get_thread(&s_wq) != nullptr);
+  cl_assert(!pbl_workq_is_current(&s_wq));
+  pbl_workq_set_ops(&s_wq, &s_ops);
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_s(s_trace, "Ww");
+  pbl_work_submit(&s_wq, &s_works[0]);
+  pbl_workq_flush(&s_wq);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__workq_ops_can_be_set_while_idle(void) {
+  pbl_work_init(&s_works[0], prv_is_current);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_ops_late_main, nullptr);
+  pbl_test_kernel_run();
+  cl_assert(strstr(s_trace, "WwWcw") == s_trace);
+}

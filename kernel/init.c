@@ -40,6 +40,7 @@ void kernel_init(int (*entry)(void)) {
     .stack_size = sizeof(s_main_stack),
   };
   PBL_ASSERTN(pbl_thread_create(&s_main_thread, &attr) == 0);
+  sys_workq_init();
 
   pbl_kernel_start();
 }

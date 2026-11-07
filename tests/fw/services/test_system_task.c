@@ -13,6 +13,9 @@
 #include <system/reboot_reason.h>
 
 #define QUEUE_LENGTH 30
+void sys_workq_init(void);
+void sys_workq_reset_for_test(void);
+
 #define FLOOD        (3 * QUEUE_LENGTH)
 
 void system_task_reset_for_test(void);
@@ -96,6 +99,7 @@ static void prv_queue_culprits(void *data) {
 }
 
 static void prv_main_entry(void *arg) {
+  sys_workq_init();
   system_task_init();
   system_task_add_callback(s_first_cb, nullptr);
   pbl_thread_sleep(PBL_FOREVER);
@@ -125,6 +129,7 @@ void test_system_task__initialize(void) {
   s_flood_ticks = 0;
   s_first_cb = prv_flood;
   stub_pbl_malloc_set_should_fail(false);
+  sys_workq_reset_for_test();
   system_task_reset_for_test();
 }
 

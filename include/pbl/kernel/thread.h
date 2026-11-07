@@ -142,6 +142,8 @@ struct pbl_thread {
   size_t stack_size;
   /** Size in bytes of the guard below @ref stack. */
   size_t stack_guard_size;
+  /** Created with regions of its own, so the defaults leave it alone. */
+  bool own_regions;
   /** Thread-local pointer slots, see pbl_thread_tls_get(). */
   void *tls[CONFIG_KERNEL_THREAD_TLS_SLOTS];
 #ifdef CONFIG_USERSPACE
@@ -279,8 +281,7 @@ static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
 /**
  * @brief Set the regions of threads that do not specify their own.
  *
- * Must be called from the first thread, before it creates any other: the idle thread and the
- * caller get these regions too, the caller when it is next switched in.
+ * Threads that already exist get them too, the caller when it is next switched in.
  *
  * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions, which must stay valid; NULL
  *                entries leave the slot empty.

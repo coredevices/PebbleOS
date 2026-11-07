@@ -77,16 +77,17 @@ thread would never return, and asserts.
 
 | Queue | Thread | Use |
 | --- | --- | --- |
-| `pbl_sys_workq` | `KernelBG`, low priority | Background work; may block and take a while. |
-| `pbl_sys_workq_high` | `NewTimer`, highest priority | Short, time sensitive work and timeouts. |
+| `pbl_sys_workq` | `SysWorkq`, low priority | Background work; may block and take a while. |
+| `pbl_sys_workq_high` | `SysWorkqHigh`, highest priority | Short, time sensitive work and timeouts. |
 
 Work on `pbl_sys_workq_high` delays every lower priority thread and every other
 item on the queue, so it must be brief.
 
-A queue's thread is created by whoever owns its stack, with `pbl_workq_thread` as
-the entry and the queue as the argument. Work submitted before the thread starts
-waits for it. The hooks in `struct pbl_workq_ops` let the owner attach policy,
-such as a watchdog, around the work it runs.
+The kernel starts both at boot. Any other queue's thread is created by whoever
+owns its stack, with `pbl_workq_thread` as the entry and the queue as the
+argument, and work submitted before it starts waits for it. The hooks in
+`struct pbl_workq_ops` attach policy, such as a watchdog, around the work a queue
+runs.
 
 ## Choosing a mechanism
 
