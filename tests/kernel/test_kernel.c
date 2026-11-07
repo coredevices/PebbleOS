@@ -702,3 +702,318 @@ void test_kernel__timer_longer_than_half_the_tick_range(void) {
   prv_spawn(0, "waiter", 2, prv_timer_long, nullptr);
   pbl_test_kernel_run();
 }
+
+// ---- work queues ------------------------------------------------------------
+
+static struct pbl_workq s_wq;
+static struct pbl_work s_works[3];
+static struct pbl_delayed_work s_dwork;
+static uint64_t s_dwork_ran_at;
+static int s_dwork_runs;
+static PBL_SEM_DEFINE(s_work_gate, 0, 1);
+
+static void prv_work_trace(struct pbl_work *work) {
+  prv_trace('0' + (int)(work - s_works));
+}
+
+static void prv_work_blocking(struct pbl_work *work) {
+  prv_trace('r');
+  pbl_sem_take(&s_work_gate, PBL_FOREVER);
+  prv_trace('R');
+}
+
+static void prv_dwork_fn(struct pbl_work *work) {
+  s_dwork_ran_at = pbl_uptime_ticks();
+  s_dwork_runs++;
+}
+
+static void prv_spawn_q(int prio) {
+  pbl_workq_init(&s_wq);
+  prv_spawn(7, "workq", prio, pbl_workq_thread, &s_wq);
+}
+
+static void prv_fifo_and_coalesce(void *arg) {
+  cl_assert(pbl_work_submit(&s_wq, &s_works[1]));
+  cl_assert(pbl_work_submit(&s_wq, &s_works[0]));
+  cl_assert(!pbl_work_submit(&s_wq, &s_works[1]));
+  cl_assert(pbl_work_is_pending(&s_works[1]));
+  pbl_workq_flush(&s_wq);
+  cl_assert(!pbl_work_is_pending(&s_works[1]));
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_runs_in_order_and_coalesces(void) {
+  for (int i = 0; i < 3; i++) {
+    pbl_work_init(&s_works[i], prv_work_trace);
+  }
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_fifo_and_coalesce, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "10");
+}
+
+static void prv_isr_drain(void *arg) {
+  // The queue must not need one wake-up per item, however many pile up in one ISR.
+  pbl_test_isr_enter();
+  for (int i = 0; i < 3; i++) {
+    pbl_work_submit(&s_wq, &s_works[i]);
+  }
+  pbl_test_isr_exit();
+  cl_assert_equal_s(s_trace, "012");
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_from_isr_drains_on_one_wake(void) {
+  for (int i = 0; i < 3; i++) {
+    pbl_work_init(&s_works[i], prv_work_trace);
+  }
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_isr_drain, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_work_requeue(struct pbl_work *work) {
+  prv_trace('x');
+  if (strlen(s_trace) < 3) {
+    cl_assert(pbl_work_submit(&s_wq, work));
+  }
+}
+
+static void prv_requeue_main(void *arg) {
+  pbl_work_submit(&s_wq, &s_works[0]);
+  while (strlen(s_trace) < 3) {
+    pbl_thread_sleep(PBL_TICKS(1));
+  }
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_resubmits_itself(void) {
+  pbl_work_init(&s_works[0], prv_work_requeue);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_requeue_main, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "xxx");
+}
+
+static void prv_cancel_main(void *arg) {
+  pbl_work_submit(&s_wq, &s_works[0]);
+  pbl_work_submit(&s_wq, &s_works[1]);
+  pbl_work_submit(&s_wq, &s_works[2]);
+  cl_assert(pbl_work_cancel(&s_works[1]));
+  cl_assert(!pbl_work_cancel(&s_works[1]));
+  cl_assert(pbl_work_cancel(&s_works[2]));
+  // The tail moved: this must still link up.
+  pbl_work_submit(&s_wq, &s_works[2]);
+  pbl_workq_flush(&s_wq);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_cancel_removes_from_queue(void) {
+  for (int i = 0; i < 3; i++) {
+    pbl_work_init(&s_works[i], prv_work_trace);
+  }
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_cancel_main, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "02");
+}
+
+static void prv_cancel_sync_gate(void *arg) {
+  pbl_thread_sleep(PBL_TICKS(5));
+  prv_trace('g');
+  pbl_sem_give(&s_work_gate);
+}
+
+static void prv_cancel_sync_main(void *arg) {
+  pbl_work_submit(&s_wq, &s_works[0]);
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert(pbl_work_is_running(&s_works[0]));
+  cl_assert(!pbl_work_cancel(&s_works[0]));
+  cl_assert(!pbl_work_cancel_sync(&s_works[0]));
+  cl_assert(!pbl_work_is_running(&s_works[0]));
+  prv_trace('c');
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_cancel_sync_waits_for_running(void) {
+  pbl_sem_init(&s_work_gate, 0, 1);
+  pbl_work_init(&s_works[0], prv_work_blocking);
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_cancel_sync_main, nullptr);
+  prv_spawn(1, "gate", 3, prv_cancel_sync_gate, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "rgRc");
+}
+
+static void prv_flush_main(void *arg) {
+  cl_assert(!pbl_work_flush(&s_works[0]));
+  pbl_work_submit(&s_wq, &s_works[0]);
+  pbl_work_submit(&s_wq, &s_works[1]);
+  cl_assert(pbl_work_flush(&s_works[0]));
+  // Back at a higher priority right after 0, before 1 got to run.
+  prv_trace('f');
+  pbl_workq_flush(&s_wq);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_flush_waits_for_the_item_only(void) {
+  for (int i = 0; i < 3; i++) {
+    pbl_work_init(&s_works[i], prv_work_trace);
+  }
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_flush_main, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "0f1");
+}
+
+static void prv_dwork_main(void *arg) {
+  cl_assert(pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(5)));
+  cl_assert(pbl_delayed_work_is_pending(&s_dwork));
+  cl_assert_equal_i(pbl_delayed_work_remaining(&s_dwork), 5);
+  // Schedule keeps the running delay, reschedule replaces it.
+  cl_assert(!pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(1)));
+  pbl_thread_sleep(PBL_TICKS(3));
+  cl_assert(pbl_delayed_work_reschedule(&s_wq, &s_dwork, PBL_TICKS(4)));
+  pbl_thread_sleep(PBL_TICKS(10));
+  cl_assert_equal_i(s_dwork_runs, 1);
+  cl_assert_equal_i(s_dwork_ran_at, 7);
+  cl_assert(!pbl_delayed_work_is_pending(&s_dwork));
+
+  pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(2));
+  cl_assert(pbl_delayed_work_cancel(&s_dwork));
+  pbl_thread_sleep(PBL_TICKS(5));
+  cl_assert_equal_i(s_dwork_runs, 1);
+
+  cl_assert(!pbl_delayed_work_reschedule(&s_wq, &s_dwork, PBL_NO_WAIT));
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(s_dwork_runs, 2);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__delayed_work(void) {
+  s_dwork_runs = 0;
+  pbl_delayed_work_init(&s_dwork, prv_dwork_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_dwork_main, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_dwork_self_rearm(struct pbl_work *work) {
+  s_dwork_runs++;
+  pbl_sem_take(&s_work_gate, PBL_FOREVER);
+  pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(1));
+}
+
+static void prv_dwork_sync_gate(void *arg) {
+  pbl_thread_sleep(PBL_TICKS(5));
+  pbl_sem_give(&s_work_gate);
+}
+
+static void prv_dwork_sync_main(void *arg) {
+  pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_NO_WAIT);
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(s_dwork_runs, 1);
+  // Returns only once the function has run and its re-arm is undone.
+  pbl_delayed_work_cancel_sync(&s_dwork);
+  cl_assert(!pbl_delayed_work_is_pending(&s_dwork));
+  pbl_thread_sleep(PBL_TICKS(5));
+  cl_assert_equal_i(s_dwork_runs, 1);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__delayed_work_cancel_sync_beats_self_rearm(void) {
+  s_dwork_runs = 0;
+  pbl_sem_init(&s_work_gate, 0, 1);
+  pbl_delayed_work_init(&s_dwork, prv_dwork_self_rearm);
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_dwork_sync_main, nullptr);
+  prv_spawn(1, "gate", 3, prv_dwork_sync_gate, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_dwork_stale_main(void *arg) {
+  // An ISR preempting the tick can land between a timer's expiry and its callback.
+  pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(2));
+  pbl_delayed_work_cancel(&s_dwork);
+  pbl_delayed_work_expired(&s_dwork.timer);
+  cl_assert(!pbl_delayed_work_is_pending(&s_dwork));
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(s_dwork_runs, 0);
+
+  pbl_delayed_work_schedule(&s_wq, &s_dwork, PBL_TICKS(2));
+  pbl_delayed_work_expired(&s_dwork.timer);
+  cl_assert_equal_i(pbl_delayed_work_remaining(&s_dwork), 2);
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(s_dwork_runs, 0);
+  pbl_thread_sleep(PBL_TICKS(2));
+  cl_assert_equal_i(s_dwork_runs, 1);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__delayed_work_ignores_a_stale_expiry(void) {
+  s_dwork_runs = 0;
+  pbl_delayed_work_init(&s_dwork, prv_dwork_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_dwork_stale_main, nullptr);
+  pbl_test_kernel_run();
+}
+
+static PBL_WORK_POOL_DEFINE(s_pool, 2);
+
+static void prv_call_record(void *data) {
+  prv_trace((char)(uintptr_t)data);
+}
+
+static void prv_call_requeue(void *data) {
+  prv_trace('a');
+  // The caller's slot is already free, and the queue's own thread must not wait.
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'b', PBL_FOREVER), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'c', PBL_FOREVER), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'z', PBL_FOREVER),
+                    -EBUSY);
+}
+
+static void prv_call_main(void *arg) {
+  // Payloads stay distinct, unlike with a single work item.
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'1', PBL_NO_WAIT), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'2', PBL_NO_WAIT), 0);
+  cl_assert_equal_i(pbl_work_pool_num_free(&s_pool), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'z', PBL_NO_WAIT),
+                    -EBUSY);
+  // The lower priority queue runs while this waits, which frees a slot.
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'3', PBL_FOREVER), 0);
+  pbl_workq_flush(&s_wq);
+  cl_assert_equal_i(pbl_work_pool_num_free(&s_pool), 2);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_requeue, nullptr, PBL_FOREVER), 0);
+  pbl_workq_flush(&s_wq);
+  pbl_workq_flush(&s_wq);
+  cl_assert_equal_i(pbl_work_pool_num_free(&s_pool), 2);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_call_pool(void) {
+  static struct pbl_work_call slots[2];
+  pbl_work_pool_init(&s_pool, slots, 2);
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_call_main, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_s(s_trace, "123abc");
+}
+
+static void prv_call_timeout_main(void *arg) {
+  // No thread serves the queue, so nothing frees the slot.
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'1', PBL_NO_WAIT), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'2', PBL_NO_WAIT), 0);
+  cl_assert_equal_i(pbl_work_call(&s_wq, &s_pool, prv_call_record, (void *)'z', PBL_TICKS(2)),
+                    -EAGAIN);
+  cl_assert_equal_i(pbl_uptime_ticks(), 2);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__work_call_times_out(void) {
+  static struct pbl_work_call slots[2];
+  pbl_work_pool_init(&s_pool, slots, 2);
+  pbl_workq_init(&s_wq);
+  prv_spawn(0, "main", 2, prv_call_timeout_main, nullptr);
+  pbl_test_kernel_run();
+}
