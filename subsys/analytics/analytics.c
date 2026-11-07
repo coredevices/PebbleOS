@@ -19,17 +19,15 @@
 #define HEARTBEAT_PERIOD_SEC     3600
 #define ANALYTICS_STRING_MAX_LEN 64
 
-extern void pbl_analytics_external_collect_battery(void);
-extern void pbl_analytics_external_collect_cpu_stats(void);
-extern void pbl_analytics_external_collect_task_cpu_stats(void);
-extern void pbl_analytics_external_collect_stack_free(void);
-extern void pbl_analytics_external_collect_pfs_stats(void);
-extern void pbl_analytics_external_collect_backlight_stats(void);
-extern void pbl_analytics_external_collect_vibe_stats(void);
-extern void pbl_analytics_external_collect_speaker_stats(void);
-extern void pbl_analytics_external_collect_settings(void);
-extern void pbl_analytics_external_collect_watchface(void);
-extern void pbl_analytics_external_collect_display_stats(void);
+#ifndef PBL_NO_LINKER_SCRIPT
+extern const struct pbl_analytics_collector __pbl_analytics_collectors_start[];
+extern const struct pbl_analytics_collector __pbl_analytics_collectors_end[];
+#else
+extern const struct pbl_analytics_collector
+    __pbl_analytics_collectors_start[] PBL_UNSORTED_SECTION_START(pbl_analytics);
+extern const struct pbl_analytics_collector
+    __pbl_analytics_collectors_end[] PBL_UNSORTED_SECTION_END(pbl_analytics);
+#endif
 
 extern void pbl_analytics__native_init(void);
 extern void pbl_analytics__native_heartbeat(void);
@@ -81,18 +79,12 @@ static void prv_heartbeat_system_task_cb(void *data) {
     }
   }
 
-  pbl_analytics_external_collect_battery();
-  pbl_analytics_external_collect_cpu_stats();
-  pbl_analytics_external_collect_task_cpu_stats();
-  pbl_analytics_external_collect_stack_free();
-  pbl_analytics_external_collect_pfs_stats();
   prv_collect_kernel_heap_stats();
-  pbl_analytics_external_collect_backlight_stats();
-  pbl_analytics_external_collect_vibe_stats();
-  pbl_analytics_external_collect_speaker_stats();
-  pbl_analytics_external_collect_settings();
-  pbl_analytics_external_collect_watchface();
-  pbl_analytics_external_collect_display_stats();
+
+  for (const struct pbl_analytics_collector *c = __pbl_analytics_collectors_start;
+       c < __pbl_analytics_collectors_end; c++) {
+    c->collect();
+  }
 
   for (size_t i = 0U; i < ARRAY_LENGTH(s_heartbeat); i++) {
     s_heartbeat[i]();

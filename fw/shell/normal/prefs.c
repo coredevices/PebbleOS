@@ -2423,7 +2423,7 @@ void shell_prefs_set_menu_scroll_vibe_behavior(MenuScrollVibeBehavior behavior) 
   prv_pref_set(PREF_KEY_MENU_SCROLL_VIBE_BEHAVIOR, &behavior, sizeof(MenuScrollVibeBehavior));
 }
 
-void pbl_analytics_external_collect_settings(void) {
+static void prv_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_health_tracking_enabled,
                              activity_prefs_tracking_is_enabled());
 #ifdef CONFIG_HRM
@@ -2438,6 +2438,7 @@ void pbl_analytics_external_collect_settings(void) {
   PBL_ANALYTICS_SET_UNSIGNED(settings_backlight_timeout_s, backlight_get_timeout_ms() / 1000);
   PBL_ANALYTICS_SET_UNSIGNED(settings_touch_enabled, touch_is_globally_enabled());
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_settings);
 
 bool shell_prefs_get_music_show_volume_controls(void) {
   return s_music_show_volume_controls;

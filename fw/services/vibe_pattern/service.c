@@ -473,7 +473,7 @@ void vibe_pattern_clear_for_owner(VibePatternOwner owner) {
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }
 
-void pbl_analytics_external_collect_vibe_stats(void) {
+static void prv_collect_vibe_stats(void) {
   pbl_mutex_lock(&s_vibe_pattern_mutex, PBL_FOREVER);
 
   // Capture one final sample to account for time since last strength change
@@ -496,3 +496,4 @@ void pbl_analytics_external_collect_vibe_stats(void) {
 
   pbl_mutex_unlock(&s_vibe_pattern_mutex);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_vibe_stats);

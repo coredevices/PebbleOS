@@ -185,7 +185,7 @@ bool compositor_display_update_in_progress(void) {
   return pbl_display_update_in_progress(DISPLAY);
 }
 
-void pbl_analytics_external_collect_display_stats(void) {
+static void prv_collect_display_stats(void) {
   pbl_irq_lock();
   uint32_t count = s_flush_count;
   uint64_t ticks = s_flush_ticks;
@@ -196,3 +196,4 @@ void pbl_analytics_external_collect_display_stats(void) {
   PBL_ANALYTICS_SET_UNSIGNED(display_update_count, count);
   PBL_ANALYTICS_SET_UNSIGNED(display_flush_time_ms, (uint32_t)((ticks * 1000) / PBL_TICK_HZ));
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_display_stats);

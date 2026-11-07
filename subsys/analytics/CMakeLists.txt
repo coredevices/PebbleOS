@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(analytics.c native.c)
+pbl_linker_sources(rom-start analytics.ld)

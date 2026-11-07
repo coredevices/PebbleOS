@@ -582,7 +582,7 @@ int32_t battery_state_get_temperature(void) {
 // Analytics
 
 // Note that this is run on a different thread than battery_state!
-void pbl_analytics_external_collect_battery(void) {
+static void prv_collect_battery(void) {
   int32_t battery_mv = s_last_voltage_mv;
   uint32_t battery_soc_cpct = s_last_soc_cpct;
   int32_t d_mv;
@@ -604,6 +604,7 @@ void pbl_analytics_external_collect_battery(void) {
 
   PBL_ANALYTICS_SET_UNSIGNED(battery_tte_s, s_last_tte);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_battery);
 
 #ifdef CONFIG_SHELL
 #include <errno.h>

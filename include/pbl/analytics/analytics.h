@@ -5,6 +5,9 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/section.h>
+
 /**
  * @defgroup analytics Analytics
  * @ingroup subsys
@@ -18,12 +21,20 @@
  * The functions are syscalls, so they may be used from apps as well as from the kernel. Keys out
  * of range are ignored.
  *
+ * Metrics that are only worth computing once per period are refreshed by a collector, which runs
+ * right before each heartbeat on the system task.
+ *
  * @code{.c}
  * PBL_ANALYTICS_ADD(button_pressed_count, 1);
  *
  * PBL_ANALYTICS_TIMER_START(backlight_on_time_ms);
  * ...
  * PBL_ANALYTICS_TIMER_STOP(backlight_on_time_ms);
+ *
+ * static void prv_collect_pfs_stats(void) {
+ *   PBL_ANALYTICS_SET_UNSIGNED(pfs_space_free_kb, get_available_pfs_space() / 1024);
+ * }
+ * PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_pfs_stats);
  * @endcode
  * @{
  */
@@ -64,6 +75,12 @@ enum pbl_analytics_key {
 enum pbl_analytics_drv_init_fail_flag {
   /** The heart rate monitor driver failed to initialize. */
   PBL_ANALYTICS_DRV_INIT_FAIL_HRM = 1U << 0U,
+};
+
+/** @brief A function that refreshes metrics right before each heartbeat. */
+struct pbl_analytics_collector {
+  /** Function called on the system task. */
+  void (*collect)(void);
 };
 
 /**
@@ -177,6 +194,21 @@ void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
 #define PBL_ANALYTICS_ADD(key_name, amount) \
   sys_pbl_analytics_add(PBL_ANALYTICS_KEY(key_name), amount)
 
+/**
+ * @brief Define a collector.
+ *
+ * @param _collect Function to call, an identifier unique among collectors.
+ */
+#ifdef PBL_NO_LINKER_SCRIPT
+#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)                                          \
+  static const struct pbl_analytics_collector pbl_analytics_collector_##_collect PBL_USED \
+  PBL_UNSORTED_SECTION(pbl_analytics) = {.collect = (_collect)}
+#else
+#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)                                          \
+  static const struct pbl_analytics_collector pbl_analytics_collector_##_collect PBL_USED \
+      PBL_ALIGNED(4) PBL_SECTION(".pbl_analytics_collectors." #_collect) = {.collect = (_collect)}
+#endif
+
 #else
 
 #define PBL_ANALYTICS_SET_SIGNED(key_name, signed_value)     ((void)(signed_value))
@@ -185,6 +217,9 @@ void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
 #define PBL_ANALYTICS_TIMER_START(key_name)                  ((void)0)
 #define PBL_ANALYTICS_TIMER_STOP(key_name)                   ((void)0)
 #define PBL_ANALYTICS_ADD(key_name, amount)                  ((void)(amount))
+#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)               \
+  [[maybe_unused]] static const struct pbl_analytics_collector \
+      pbl_analytics_collector_##_collect = {.collect = (_collect)}
 
 #endif /* CONFIG_ANALYTICS */
 

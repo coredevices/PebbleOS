@@ -182,7 +182,7 @@ void pebble_task_suspend(PebbleTask task) {
   pbl_thread_suspend(g_task_threads[task]);
 }
 
-void pbl_analytics_external_collect_stack_free(void) {
+static void prv_collect_stack_free(void) {
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_main_bytes,
                              prv_task_get_stack_free(PebbleTask_KernelMain));
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_kernel_background_bytes,
@@ -194,6 +194,7 @@ void pbl_analytics_external_collect_stack_free(void) {
   PBL_ANALYTICS_SET_UNSIGNED(stack_free_worker_syscall_bytes,
                              prv_syscall_stack_free_bytes(PebbleTask_Worker));
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_stack_free);
 
 #ifdef CONFIG_ANALYTICS
 static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
@@ -207,7 +208,7 @@ static const enum pbl_analytics_key s_task_cpu_pct_keys[NumPebbleTask] = {
   [PebbleTask_NewTimers] = PBL_ANALYTICS_KEY(task_cpu_new_timers_pct),
 };
 
-void pbl_analytics_external_collect_task_cpu_stats(void) {
+static void prv_collect_task_cpu_stats(void) {
   static uint32_t s_prev_total_task_cycles[NumPebbleTask];
   static uint32_t s_prev_idle_run_time;
   static uint32_t s_prev_total_run_time;
@@ -257,6 +258,7 @@ void pbl_analytics_external_collect_task_cpu_stats(void) {
   uint32_t idle_pct = delta_total ? (uint32_t)(((uint64_t)idle_delta * 10000U) / delta_total) : 0;
   PBL_ANALYTICS_SET_UNSIGNED(task_cpu_idle_pct, idle_pct);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_task_cpu_stats);
 #endif
 
 struct pbl_msgq *pebble_task_get_to_queue(PebbleTask task) {

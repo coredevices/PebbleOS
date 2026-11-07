@@ -62,7 +62,7 @@ static uint16_t prv_pct100(uint64_t part, uint64_t total) {
   return (total > 0U) ? (uint16_t)MIN((part * 10000U) / total, 10000U) : 0U;
 }
 
-void pbl_analytics_external_collect_cpu_stats(void) {
+static void prv_collect_cpu_stats(void) {
   struct cpu_stats delta;
 
   prv_delta(&delta);
@@ -74,6 +74,7 @@ void pbl_analytics_external_collect_cpu_stats(void) {
 
   prv_snapshot(&s_last);
 }
+PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_cpu_stats);
 
 #ifdef CONFIG_SHELL
 static int prv_cmd_force_active(const struct pbl_shell *sh, size_t argc, char **argv) {
