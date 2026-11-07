@@ -3,13 +3,14 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
 
 #include <kernel/kernel_applib_state.h>
-#include <kernel/memory_layout.h>
 #include <process_management/app_manager.h>
+#include <process_management/process_regions.h>
 #include <process_management/worker_manager.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
@@ -23,9 +24,8 @@ static void prv_put_event_from_process(PebbleTask task, PebbleEvent *event) {
   }
 }
 
-static const MpuRegion *prv_process_region(PebbleTask task) {
-  return (task == PebbleTask_Worker) ? memory_layout_get_worker_region()
-                                     : memory_layout_get_app_region();
+static const struct pbl_mpu_region *prv_process_region(PebbleTask task) {
+  return (task == PebbleTask_Worker) ? process_region_worker() : process_region_app();
 }
 
 static PebbleTaskBitset prv_only_to(PebbleTask task) {
@@ -47,8 +47,8 @@ static bool prv_validate_event_from_user(PebbleTask task, PebbleEvent *event) {
     case PEBBLE_DICTATION_EVENT:
       event->task_mask = prv_only_to(task);
       return (event->dictation.text == nullptr) ||
-             memory_layout_is_cstring_in_region(prv_process_region(task), event->dictation.text,
-                                                SIZE_MAX);
+             pbl_mpu_region_contains_cstring(prv_process_region(task), event->dictation.text,
+                                             SIZE_MAX);
     case PEBBLE_HEALTH_SERVICE_EVENT:
       if (event->health_event.type != HealthEventSignificantUpdate) {
         return false;

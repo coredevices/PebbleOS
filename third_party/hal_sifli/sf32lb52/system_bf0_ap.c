@@ -17,76 +17,7 @@ uint32_t __Vectors;
 
 uint32_t SystemCoreClock = 48000000UL;
 
-extern uint8_t __ramfunc_start[];
-extern uint8_t __ramfunc_end[];
-
 void SystemCoreClockUpdate(void) {
-}
-
-enum {
-  ATTR_CODE_IDX,
-  ATTR_RAM_IDX,
-  ATTR_DEVICE_IDX,
-};
-
-#define ATTR_CODE   ARM_MPU_ATTR(ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0), ARM_MPU_ATTR_MEMORY_(0, 0, 1, 0))
-#define ATTR_RAM    ARM_MPU_ATTR(ARM_MPU_ATTR_NON_CACHEABLE, ARM_MPU_ATTR_NON_CACHEABLE)
-#define ATTR_DEVICE ARM_MPU_ATTR(ARM_MPU_ATTR_DEVICE, ARM_MPU_ATTR_DEVICE_nGnRnE)
-
-// FIXME(SF32LB52): ARMv8 MPU support is not complete, so for now, configure
-// the MPU here as needed by the system to run.
-static void prv_mpu_config(void) {
-  uint32_t rbar, rlar;
-
-  ARM_MPU_Disable();
-
-  for (uint8_t i = 0U; i < MPU_REGION_NUM; i++) {
-    ARM_MPU_ClrRegion(i);
-  }
-
-  ARM_MPU_SetMemAttr(ATTR_CODE_IDX, ATTR_CODE);
-  ARM_MPU_SetMemAttr(ATTR_RAM_IDX, ATTR_RAM);
-  ARM_MPU_SetMemAttr(ATTR_DEVICE_IDX, ATTR_DEVICE);
-
-  // Firmware image. The rest of the flash holds user data, so it is left to
-  // the privileged background map.
-  // Non-shareable, RO, any privilege, executable
-  rbar = ARM_MPU_RBAR(CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET, ARM_MPU_SH_NON, 1, 1, 0);
-  rlar = ARM_MPU_RLAR(CONFIG_FLASH_BASE + CONFIG_FLASH_OFFSET + CONFIG_FW_FLASH_SIZE - 1U,
-                      ATTR_CODE_IDX);
-  ARM_MPU_SetRegion(0U, rbar, rlar);
-
-  // Peripheral space
-  // Non-shareable, RW, privileged only, non-executable
-  rbar = ARM_MPU_RBAR(0x40000000, ARM_MPU_SH_NON, 0, 0, 1);
-  rlar = ARM_MPU_RLAR(0x5fffffff, ATTR_DEVICE_IDX);
-  ARM_MPU_SetRegion(1U, rbar, rlar);
-
-  // hpsys ram, .ramfunc range only: vendor HAL code copied here from flash
-  // must be executable. Keep it privileged-only and read-only after startup
-  // has copied the section into RAM. The rest of HPSYS RAM is reachable for
-  // privileged code via the background map (PRIVDEFENA is set in
-  // ARM_MPU_Enable below).
-  // Non-shareable, RO privileged only, executable
-  rbar = ARM_MPU_RBAR((uint32_t)__ramfunc_start, ARM_MPU_SH_NON, 1, 0, 0);
-  rlar = ARM_MPU_RLAR((uint32_t)__ramfunc_end - 1U, ATTR_RAM_IDX);
-  ARM_MPU_SetRegion(2U, rbar, rlar);
-
-  // lpsys ram
-  // Non-shareable, RW, privileged only, executable
-  rbar = ARM_MPU_RBAR(0x203fc000, ARM_MPU_SH_NON, 0, 0, 0);
-  rlar = ARM_MPU_RLAR(0x204fffff, ATTR_RAM_IDX);
-  ARM_MPU_SetRegion(3U, rbar, rlar);
-
-  // HCPU<->LCPU mailbox (last 1K of HPSYS SRAM). The BT controller running
-  // on LPSYS reads/writes this window directly, so it must be non-cacheable
-  // on the HCPU side -- otherwise the two cores see incoherent contents.
-  // Non-shareable, RW privileged only, non-executable.
-  rbar = ARM_MPU_RBAR(0x2007fc00, ARM_MPU_SH_NON, 0, 0, 1);
-  rlar = ARM_MPU_RLAR(0x2007ffff, ATTR_RAM_IDX);
-  ARM_MPU_SetRegion(4U, rbar, rlar);
-
-  ARM_MPU_Enable(MPU_CTRL_HFNMIENA_Msk | MPU_CTRL_PRIVDEFENA_Msk);
 }
 
 int mpu_dcache_invalidate(void *data, uint32_t size) {
@@ -133,8 +64,6 @@ void SystemInit(void) {
   SCB->CPACR |= ((3U << 10U * 2U) | // enable CP10 Full Access
                  (3U << 11U * 2U)); // enable CP11 Full Access
 #endif
-
-  prv_mpu_config();
 
   SCB_EnableICache();
   SCB_EnableDCache();

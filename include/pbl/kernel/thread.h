@@ -4,8 +4,8 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/types.h>
-#include <pbl/mcu/mpu.h>
 
 /**
  * @defgroup kernel_thread Threads
@@ -45,10 +45,8 @@
 
 /** @brief Size of a thread name, including the terminating NUL. */
 #define PBL_THREAD_NAME_LEN 16
-/** @brief Number of MPU regions switched in with each thread. */
-#define PBL_THREAD_MAX_MEM_REGIONS 4
-/** @brief Index in the thread's MPU regions the kernel uses for the stack guard, if any. */
-#define PBL_THREAD_REGION_STACK_GUARD 2
+/** @brief Number of MPU regions a thread can bring, on top of its stack guards. */
+#define PBL_THREAD_MAX_MEM_REGIONS 2
 
 /**
  * @brief Thread entry function.
@@ -99,10 +97,10 @@ struct pbl_thread_attr {
   /** Stack buffer size in bytes, guard included; the rest must be at least 128. */
   size_t stack_size;
   /**
-   * MPU regions switched in with the thread. NULL entries take the default region. The stack guard
-   * replaces @ref PBL_THREAD_REGION_STACK_GUARD.
+   * MPU regions switched in with the thread, which only need to be valid during
+   * pbl_thread_create(). NULL entries take the default region.
    */
-  const MpuRegion *regions[PBL_THREAD_MAX_MEM_REGIONS];
+  const struct pbl_mpu_region *regions[PBL_THREAD_MAX_MEM_REGIONS];
 #ifdef CONFIG_USERSPACE
   /**
    * Memory the thread's syscalls may read and write, [user_start, user_end); empty for none. The
@@ -111,9 +109,13 @@ struct pbl_thread_attr {
   uintptr_t user_start;
   /** End of the thread's syscall-accessible memory. */
   uintptr_t user_end;
-  /** Privileged stack the thread's syscalls run on, or NULL to run them on its own stack. */
+  /**
+   * Privileged stack the thread's syscalls run on, or NULL to run them on its own stack. Lowest
+   * address of the buffer, aligned to @c CONFIG_KERNEL_STACK_GUARD_SIZE; the guard takes the bottom
+   * of it.
+   */
   void *syscall_stack;
-  /** Size of @ref syscall_stack in bytes. */
+  /** Size of the @ref syscall_stack buffer in bytes, guard included. */
   size_t syscall_stack_size;
 #endif
 };
@@ -283,7 +285,7 @@ static inline uint32_t pbl_thread_id(const struct pbl_thread *t) {
  * @param regions Array of @ref PBL_THREAD_MAX_MEM_REGIONS regions, which must stay valid; NULL
  *                entries leave the slot empty.
  */
-void pbl_thread_regions_default_set(const MpuRegion *const *regions);
+void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions);
 
 /**
  * @brief Read a thread-local pointer slot.

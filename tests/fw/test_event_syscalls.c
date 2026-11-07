@@ -4,13 +4,13 @@
 #include "fake_pebble_tasks.h"
 #include "stubs_syscall_internal.h"
 
+#include <pbl/kernel/mpu.h>
 #include <pbl/services/event_service.h>
 #include <pbl/util/size.h>
 
 #include <applib/event_service_client.h>
 #include <clar.h>
 #include <kernel/events.h>
-#include <kernel/memory_layout.h>
 #include <process_management/process_manager.h>
 #include <syscall/syscall.h>
 
@@ -32,8 +32,8 @@ bool event_try_put_from_process(PebbleTask task, PebbleEvent *event) {
 
 static bool s_text_in_region;
 
-bool memory_layout_is_cstring_in_region(const MpuRegion *region, const char *str,
-                                        size_t max_length) {
+bool pbl_mpu_region_contains_cstring(const struct pbl_mpu_region *region, const char *str,
+                                     size_t max_length) {
   return s_text_in_region;
 }
 

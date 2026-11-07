@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -17,8 +18,8 @@
 #include <applib/ui/window.h>
 #include <flash_region/flash_region.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 // Demo app that deliberately runs a series of memory accesses that the
 // MPU is supposed to deny for the unprivileged App task. Use up/down to
@@ -43,9 +44,7 @@ extern const uint32_t _heap_start[];
 extern const uint32_t __ramfunc_start[];
 #endif
 
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
 KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
-#endif
 
 typedef enum {
   TestKind_WorkerRamWrite,
@@ -56,13 +55,12 @@ typedef enum {
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
   TestKind_FilesystemRead,
+  TestKind_FilesystemSyscall,
 #ifdef CONFIG_MMAP_RESOURCES
   TestKind_ResourceBankRead,
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_RoBssWrite,
-#endif
   TestKind_FlashWrite,
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   TestKind_StackGuardWrite,
@@ -81,13 +79,12 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_RamfuncWrite] = "Ramfunc W",
   [TestKind_RamfuncRead] = "Ramfunc R",
   [TestKind_FilesystemRead] = "Filesystem R",
+  [TestKind_FilesystemSyscall] = "Filesystem syscall",
 #ifdef CONFIG_MMAP_RESOURCES
   [TestKind_ResourceBankRead] = "Resource bank R",
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_RoBssWrite] = "RO BSS W",
-#endif
   [TestKind_FlashWrite] = "Flash W",
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   [TestKind_StackGuardWrite] = "Stack guard W",
@@ -190,6 +187,12 @@ static void prv_run_test(TestKind kind) {
       (void)v;
       break;
     }
+    case TestKind_FilesystemSyscall: {
+      // The kernel must refuse to read this on the app's behalf too. Not through
+      // fonts_get_system_font(), which also reads the key from the app.
+      sys_font_get_system_font((const char *)FLASH_REGION_FILESYSTEM_BEGIN);
+      break;
+    }
 #ifdef CONFIG_MMAP_RESOURCES
     case TestKind_ResourceBankRead: {
       volatile uint32_t *p = (volatile uint32_t *)FLASH_REGION_SYSTEM_RESOURCES_BANK_0_BEGIN;
@@ -199,14 +202,11 @@ static void prv_run_test(TestKind kind) {
     }
 #endif
 #endif
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
     case TestKind_RoBssWrite: {
-      // ARMv7-M maps this as priv RW + user RO, so unprivileged writes fault.
       volatile uint32_t *p = &s_ro_bss_probe;
       *p = 0xDEADBEEF;
       break;
     }
-#endif
     case TestKind_FlashWrite: {
       volatile uint32_t *p = (volatile uint32_t *)__FLASH_start__;
       *p = 0xDEADBEEF;

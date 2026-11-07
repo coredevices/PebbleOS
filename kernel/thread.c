@@ -12,13 +12,34 @@ static_assert(CONFIG_KERNEL_STACK_GUARD_SIZE == 0 ||
               "stacks must be aligned to their guard");
 
 static uint32_t s_next_id;
-static const MpuRegion *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
+static const struct pbl_mpu_region *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
 
-static void prv_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
-  const MpuRegion *merged[PBL_THREAD_MAX_MEM_REGIONS];
+static void prv_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
+  const struct pbl_mpu_region *merged[ARCH_THREAD_MPU_REGIONS] = {};
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     merged[i] = (regions != nullptr && regions[i] != nullptr) ? regions[i] : s_default_regions[i];
   }
+
+#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
+  const struct pbl_mpu_region stack_guard = {
+    .base = (uintptr_t)t->stack - t->stack_guard_size,
+    .size = t->stack_guard_size,
+    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
+  };
+  merged[THREAD_REGION_STACK_GUARD] = &stack_guard;
+
+#ifdef CONFIG_USERSPACE
+  const struct pbl_mpu_region syscall_guard = {
+    .base = (uintptr_t)t->syscall_stack - CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .size = CONFIG_KERNEL_STACK_GUARD_SIZE,
+    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
+  };
+  if (t->syscall_stack != nullptr) {
+    merged[THREAD_REGION_SYSCALL_GUARD] = &syscall_guard;
+  }
+#endif
+#endif
+
   arch_thread_regions_set(t, merged);
 }
 
@@ -45,8 +66,10 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
 #ifdef CONFIG_USERSPACE
   t->user_start = attr->user_start;
   t->user_end = attr->user_end;
-  t->syscall_stack = attr->syscall_stack;
-  t->syscall_stack_size = attr->syscall_stack_size;
+  if (attr->syscall_stack != nullptr) {
+    t->syscall_stack = (uint8_t *)attr->syscall_stack + CONFIG_KERNEL_STACK_GUARD_SIZE;
+    t->syscall_stack_size = attr->syscall_stack_size - CONFIG_KERNEL_STACK_GUARD_SIZE;
+  }
 #endif
 
   uint32_t *words = t->stack;
@@ -114,7 +137,7 @@ enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
   return (enum pbl_thread_state)t->backend.state;
 }
 
-void pbl_thread_regions_default_set(const MpuRegion *const *regions) {
+void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions) {
   pbl_irq_lock();
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     s_default_regions[i] = regions[i];

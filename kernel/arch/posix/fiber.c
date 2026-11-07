@@ -33,6 +33,10 @@ struct posix_thread {
 
 struct pbl_thread *pbl_cur;
 
+void arch_cur_set(struct pbl_thread *t) {
+  pbl_cur = t;
+}
+
 static bool s_switch_pending;
 static bool s_in_isr;
 
@@ -116,7 +120,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   t->backend.arch.pt = pt;
 }
 
-void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
+void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
 }
 
 void arch_start(void) {

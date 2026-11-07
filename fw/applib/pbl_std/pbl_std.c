@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/time.h>
@@ -10,8 +11,8 @@
 #include <applib/app_time32.h>
 #include <applib/applib_malloc.auto.h>
 #include <applib/pbl_std/pbl_std.h>
-#include <kernel/memory_layout.h>
 #include <process_management/process_manager.h>
+#include <process_management/process_regions.h>
 #include <process_state/app_state/app_state.h>
 #include <process_state/worker_state/worker_state.h>
 #include <syscall/syscall.h>
@@ -235,10 +236,10 @@ PBL_SYSCALL(size_t, sys_strftime, (OUT_BUF, char *, s, maxsize), (VAL, size_t, m
             (IN, const struct pbl_tm *, tim_p), (VAL, char *, locale)) {
   if (from_user) {
     // Workers pass the app's locale buffer, which is not theirs to read
-    const MpuRegion *region = (pebble_task_get_current() == PebbleTask_Worker)
-                                  ? memory_layout_get_worker_region()
-                                  : memory_layout_get_app_region();
-    if (locale && !memory_layout_is_buffer_in_region(region, locale, ISO_LOCALE_LENGTH)) {
+    const struct pbl_mpu_region *region = (pebble_task_get_current() == PebbleTask_Worker)
+                                              ? process_region_worker()
+                                              : process_region_app();
+    if (locale && !pbl_mpu_region_contains_buffer(region, locale, ISO_LOCALE_LENGTH)) {
       locale = nullptr;
     }
   }

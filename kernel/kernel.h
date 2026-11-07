@@ -84,3 +84,12 @@ void timer_expire(void);
 pbl_tick_t timer_ticks_until_next(pbl_tick_t now);
 void timer_reset_for_test(void);
 extern struct pbl_thread *pbl_all_threads;
+
+//! What the MPU slots of a thread hold, after its PBL_THREAD_MAX_MEM_REGIONS.
+#define THREAD_REGION_STACK_GUARD   PBL_THREAD_MAX_MEM_REGIONS
+#define THREAD_REGION_SYSCALL_GUARD (PBL_THREAD_MAX_MEM_REGIONS + 1)
+static_assert(THREAD_REGION_SYSCALL_GUARD + 1 == ARCH_THREAD_MPU_REGIONS,
+              "every thread slot must have a use");
+
+//! Takes over the MPU, adds the static regions it knows about and enables it.
+void mpu_init(void);

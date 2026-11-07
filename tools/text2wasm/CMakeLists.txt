@@ -55,7 +55,7 @@ add_executable(pebble_renderer
   "${PEBBLEOS_ROOT}/tests/stubs/default/compiled_with_legacy2_sdk.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/heap.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/logging.c"
-  "${PEBBLEOS_ROOT}/tests/stubs/default/memory_layout.c"
+  "${PEBBLEOS_ROOT}/tests/stubs/default/process_regions.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/pbl_malloc.c"
   "${PEBBLEOS_ROOT}/tests/stubs/default/pebble_tasks.c"
 )

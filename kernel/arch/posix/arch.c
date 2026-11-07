@@ -22,6 +22,10 @@
 
 struct pbl_thread *pbl_cur;
 
+void arch_cur_set(struct pbl_thread *t) {
+  pbl_cur = t;
+}
+
 pthread_mutex_t posix_cpu = PTHREAD_MUTEX_INITIALIZER;
 bool posix_switch_pending;
 bool posix_in_isr;
@@ -78,7 +82,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   t->backend.arch.pt = pt;
 }
 
-void arch_thread_regions_set(struct pbl_thread *t, const MpuRegion *const *regions) {
+void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
   (void)t;
   (void)regions;
 }

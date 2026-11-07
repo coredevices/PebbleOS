@@ -16,8 +16,8 @@
 #include <resource/resource_ids.auto.h>
 #include <shell/prefs.h>
 #include <stubs_logging.h>
-#include <stubs_memory_layout.h>
 #include <stubs_pbl_malloc.h>
+#include <stubs_process_regions.h>
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);

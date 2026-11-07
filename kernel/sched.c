@@ -320,7 +320,7 @@ struct pbl_thread *sched_switch_in(void) {
       prev->backend.state = PBL_THREAD_READY;
     }
     next->backend.switched_in_at = (uint32_t)s_ticks;
-    pbl_cur = next;
+    arch_cur_set(next);
   }
   next->backend.state = PBL_THREAD_RUNNING;
   return next;
@@ -386,7 +386,7 @@ void sched_start_prepare(void) {
 
   pbl_irq_lock();
   s_started = true;
-  pbl_cur = prv_pick();
+  arch_cur_set(prv_pick());
   pbl_cur->backend.state = PBL_THREAD_RUNNING;
   pbl_cur->backend.switched_in_at = (uint32_t)s_ticks;
 }
@@ -450,7 +450,7 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
 
 void sched_reset_for_test(void) {
   memset(&s_idle_thread, 0, sizeof(s_idle_thread));
-  pbl_cur = nullptr;
+  arch_cur_set(nullptr);
   pbl_all_threads = nullptr;
   for (int i = 0; i < NUM_PRIO; i++) {
     s_ready_head[i] = s_ready_tail[i] = nullptr;

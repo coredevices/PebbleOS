@@ -23,6 +23,37 @@ heap; `kernel/linker/memory.ld` how SRAM is divided between the kernel, the
 app and the worker; and, on ARM, `kernel/arch/arm/linker/regions.ld` the
 alignment the MPU imposes on those regions.
 
+## Memory protection
+
+`pbl/kernel/mpu.h` is the only interface to the MPU. A `struct pbl_mpu_region`
+says what a range of memory is: who may access it, its memory type and whether
+code can run from it. The kernel picks the slots and encodes the registers, so
+nothing else knows either.
+
+Privileged code can access anything no region covers through the default memory
+map, and unprivileged code only what a region grants.
+
+Static regions apply to every thread and last until reset:
+
+- The kernel adds the firmware image, the read-only BSS and the ISR stack guard
+  first thing on boot, before the SoC init.
+- A SoC with `CONFIG_SOC_HAS_MPU_REGIONS` declares `pbl_soc_mpu_regions`, which
+  the kernel adds next. Peripherals and memory shared with other cores go here.
+- Anything else calls `pbl_mpu_region_add()` once the kernel runs, which is how
+  the firmware adds the resource banks.
+
+Static regions cannot overlap. The last four of the
+`CONFIG_KERNEL_MPU_REGIONS` slots switch with the thread: up to two regions it
+brings ({doc}`threads`) and its stack and syscall stack guards, which the kernel
+adds.
+
+`KERNEL_READONLY_DATA` places a variable in the read-only BSS, which apps can
+read. ARMv8-M cannot let only privileged code write to a region, so all writes
+go through `KERNEL_READONLY_DATA_SET()` or `pbl_mpu_user_ro_write()`, which lift
+the region around the copy with interrupts masked.
+
+`sys mpu` prints the programmed regions, as does a memory fault.
+
 ## Heaps
 
 `pbl/kernel/heap.h` is a first-fit allocator over a region the caller

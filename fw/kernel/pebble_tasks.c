@@ -7,11 +7,11 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/analytics/analytics.h>
 #include <pbl/util/size.h>
 
-#include <kernel/memory_layout.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
 #include <system/die.h>
@@ -56,20 +56,8 @@ static struct syscall_stack *prv_syscall_stack(PebbleTask task) {
 
 void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr *attr) {
   struct syscall_stack *stack = prv_syscall_stack(task);
-  attr->syscall_stack = stack->words;
-  attr->syscall_stack_size = sizeof(stack->words);
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  static MpuRegion s_guards[NumPebbleTask];
-  s_guards[task] = (MpuRegion){
-    .region_num = MemoryRegion_Task4,
-    .enabled = true,
-    .base_address = (uintptr_t)stack->guard,
-    .size = sizeof(stack->guard),
-    .cache_policy = MpuCachePolicy_NotCacheable,
-    .permissions = MpuPermissions_NoAccess,
-  };
-  attr->regions[MEMORY_LAYOUT_THREAD_REGION_SYSCALL_GUARD] = &s_guards[task];
-#endif
+  attr->syscall_stack = stack;
+  attr->syscall_stack_size = sizeof(*stack);
 }
 
 // Peak unused bytes on a syscall stack: scan the zeroed .bss from the base to
@@ -89,7 +77,7 @@ static uint16_t prv_syscall_stack_free_bytes(PebbleTask task) {
 #endif
 
 void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
-  g_task_threads[task] = thread;
+  KERNEL_READONLY_DATA_SET(g_task_threads[task], thread);
 }
 
 static uint32_t prv_read_task_run_time(const struct pbl_thread *thread) {
@@ -112,7 +100,7 @@ void pebble_task_unregister(PebbleTask task) {
   // Clear the handle before crediting the cycles: the collector reads
   // s_dead_task_cycles before walking the task list, so this ordering
   // ensures cycles are never seen in both buckets simultaneously.
-  g_task_threads[task] = nullptr;
+  KERNEL_READONLY_DATA_SET(g_task_threads[task], nullptr);
   s_dead_task_cycles[task] += cycles;
 }
 

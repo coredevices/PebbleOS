@@ -12,7 +12,9 @@
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
 #include <kernel/event_loop.h>
-#include <kernel/memory_layout.h>
+#include <process_management/process_regions.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/mpu.h>
 #include <kernel/panic.h>
 #include <pbl/kernel/malloc.h>
 #include <kernel/util/fw_reset.h>
@@ -87,11 +89,17 @@ static void prv_invalidate_system_fonts(void) {
   // Shared fonts reload lazily. A concurrent render may miss a glyph for one frame;
   // the next lookup retries after initialization completes.
   for (size_t i = 0; i < ARRAY_LENGTH(s_system_fonts_info_table); ++i) {
-    s_system_fonts_info_table[i].loaded = false;
+    FontInfo info = s_system_fonts_info_table[i];
+    info.loaded = false;
+    pbl_mpu_user_ro_write(&s_system_fonts_info_table[i], &info, sizeof(info));
   }
   // Publish last: a renderer that sees the new generation must find the fonts unloaded, or it
   // would refill its cache from the old ones under the new generation.
-  atomic_fetch_add_explicit(&g_font_language_generation, 1, memory_order_release);
+  pbl_irq_lock();
+  const uint32_t generation =
+      atomic_load_explicit(&g_font_language_generation, memory_order_relaxed) + 1;
+  pbl_mpu_user_ro_write(&g_font_language_generation, &generation, sizeof(generation));
+  pbl_irq_unlock();
 }
 
 static void prv_language_changed(void *data) {
@@ -208,13 +216,22 @@ PBL_SYSCALL(bool, sys_font_get_language_font, (VAL, uint32_t, base_resource_id),
 #endif
 }
 
+// The table is read-only to apps, so fonts are loaded into a copy that is written back.
+static bool prv_init_font(FontInfo *entry, ResAppNum app_num, uint32_t resource,
+                          uint32_t extension) {
+  FontInfo info = *entry;
+  const bool ok = text_resources_init_font(app_num, resource, extension, &info);
+  pbl_mpu_user_ro_write(entry, &info, sizeof(info));
+  return ok;
+}
+
 static GFont prv_load_system_font(const char *font_key) {
   if (font_key == nullptr) {
     PBL_LOG_DBG("GETTING FALLBACK FONT");
     // load fallback font
     if (!s_system_fonts_info_table[NUM_SYSTEM_FONTS].loaded) {
-      PBL_ASSERTN(text_resources_init_font(SYSTEM_APP, RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0,
-                                           &s_system_fonts_info_table[NUM_SYSTEM_FONTS]));
+      PBL_ASSERTN(prv_init_font(&s_system_fonts_info_table[NUM_SYSTEM_FONTS], SYSTEM_APP,
+                                RESOURCE_ID_FONT_FALLBACK_INTERNAL, 0));
     }
     return &s_system_fonts_info_table[NUM_SYSTEM_FONTS];
   }
@@ -232,15 +249,14 @@ static GFont prv_load_system_font(const char *font_key) {
 #endif
       // if the font has not been initialized yet
       if (!fontinfo->loaded) {
-        if (!text_resources_init_font(SYSTEM_APP, resource, extension,
-                                      &s_system_fonts_info_table[i])) {
+        if (!prv_init_font(fontinfo, SYSTEM_APP, resource, extension)) {
           // Can't initialize the font for some reason
           return nullptr;
         }
         resource_get_and_cache(SYSTEM_APP, resource);
         resource_get_and_cache(SYSTEM_APP, extension);
       }
-      return &s_system_fonts_info_table[i];
+      return fontinfo;
     }
   }
 
@@ -255,8 +271,8 @@ GFont system_resource_get_font(const char *font_key) {
 
 PBL_SYSCALL(GFont, sys_font_get_system_font, (VAL, const char *, font_key)) {
   if (font_key && from_user) {
-    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), font_key, 100) &&
-        !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), font_key, 100)) {
+    if (!pbl_mpu_region_contains_cstring(process_region_app(), font_key, 100) &&
+        !pbl_mpu_region_contains_cstring(pbl_mpu_region_firmware(), font_key, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", font_key);
       pbl_syscall_fail();
     }
@@ -292,5 +308,5 @@ PBL_SYSCALL(void, sys_font_reload_font, (VAL, FontInfo *, fontinfo)) {
     }
   }
 #endif
-  text_resources_init_font(fontinfo->base.app_num, fontinfo->base.resource_id, extension, fontinfo);
+  prv_init_font(fontinfo, fontinfo->base.app_num, fontinfo->base.resource_id, extension);
 }

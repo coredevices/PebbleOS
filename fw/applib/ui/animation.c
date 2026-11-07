@@ -10,6 +10,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/animation_service.h>
@@ -20,7 +21,6 @@
 #include <applib/legacy2/ui/animation_legacy2.h>
 #include <applib/legacy2/ui/animation_private_legacy2.h>
 #include <kernel/kernel_applib_state.h>
-#include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
 
 #ifdef CONFIG_SHELL
@@ -1782,12 +1782,12 @@ Animation *animation_clone(Animation *animation_h) {
 
 // -------------------------------------------------------------------------------------------
 void animation_private_pause(void) {
-  s_paused = true;
+  KERNEL_READONLY_DATA_SET(s_paused, true);
 }
 
 // -------------------------------------------------------------------------------------------
 void animation_private_resume(void) {
-  s_paused = false;
+  KERNEL_READONLY_DATA_SET(s_paused, false);
 }
 
 #ifdef CONFIG_SHELL
