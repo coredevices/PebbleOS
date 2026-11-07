@@ -110,7 +110,6 @@ const struct pbl_kernel_debug_layout pbl_kernel_debug_layout PBL_USED = {
 
 static_assert(offsetof(struct pbl_thread, backend.sp) == 0, "saved SP must be first");
 static_assert(offsetof(struct pbl_thread, backend.arch.mpu) == 4, "MPU words must follow the SP");
-static_assert(ARCH_THREAD_MPU_REGIONS == PBL_THREAD_MAX_MEM_REGIONS, "region count mismatch");
 
 static inline bool prv_fp_active(uint32_t exc_return) {
   return (exc_return & EXC_RETURN_FP_INACTIVE) == 0;
@@ -148,20 +147,8 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
 // an RBAR write with VALID clear lands on whatever region RNR last selected,
 // i.e. it would wipe the slot programmed just before it.
 void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  const struct pbl_mpu_region stack_guard = {
-    .base = (uintptr_t)t->stack - t->stack_guard_size,
-    .size = t->stack_guard_size,
-    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
-  };
-#endif
   for (unsigned int i = 0; i < ARCH_THREAD_MPU_REGIONS; i++) {
-    const struct pbl_mpu_region *r = regions ? regions[i] : nullptr;
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-    if (i == PBL_THREAD_REGION_STACK_GUARD) {
-      r = &stack_guard;
-    }
-#endif
+    const struct pbl_mpu_region *r = regions[i];
     uint32_t rbar = 0;
     uint32_t attr = 0;
 #ifndef CONFIG_ARMV8_M_MAINLINE

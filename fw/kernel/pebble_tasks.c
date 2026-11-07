@@ -56,17 +56,8 @@ static struct syscall_stack *prv_syscall_stack(PebbleTask task) {
 
 void pebble_task_attr_set_syscall_stack(PebbleTask task, struct pbl_thread_attr *attr) {
   struct syscall_stack *stack = prv_syscall_stack(task);
-  attr->syscall_stack = stack->words;
-  attr->syscall_stack_size = sizeof(stack->words);
-#if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
-  static struct pbl_mpu_region s_guards[NumPebbleTask];
-  s_guards[task] = (struct pbl_mpu_region){
-    .base = (uintptr_t)stack->guard,
-    .size = sizeof(stack->guard),
-    .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
-  };
-  attr->regions[MEMORY_LAYOUT_THREAD_REGION_SYSCALL_GUARD] = &s_guards[task];
-#endif
+  attr->syscall_stack = stack;
+  attr->syscall_stack_size = sizeof(*stack);
 }
 
 // Peak unused bytes on a syscall stack: scan the zeroed .bss from the base to
