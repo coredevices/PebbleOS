@@ -13,7 +13,7 @@
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/put_bytes/put_bytes.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>
 
@@ -147,7 +147,7 @@ static void prv_cleanup(AppFetchResult result) {
 
 //! System task callback triggered by app_fetch_put_bytes_event_handler() when we are receiving
 //! put_bytes messages in response to a fetch request to the phone.
-void prv_put_bytes_event_system_task_cb(void *data) {
+void prv_put_bytes_event_sys_work_cb(void *data) {
   PebblePutBytesEvent *pb_event = (PebblePutBytesEvent *)data;
 
   if (!s_fetch_state.in_progress) {
@@ -249,12 +249,12 @@ void app_fetch_put_bytes_event_handler(PebblePutBytesEvent *pb_event) {
 
   PebblePutBytesEvent *pb_event_copy = pbl_malloc_check(sizeof(PebblePutBytesEvent));
   memcpy(pb_event_copy, pb_event, sizeof(PebblePutBytesEvent));
-  system_task_add_callback(prv_put_bytes_event_system_task_cb, pb_event_copy);
+  sys_work_add(prv_put_bytes_event_sys_work_cb, pb_event_copy);
 }
 
 //! Callback for the system task to fire off the fetch request. Triggered by a call to
 //! app_fetch_binaries().
-static void prv_app_fetch_binaries_system_task_cb(void *data) {
+static void prv_app_fetch_binaries_sys_work_cb(void *data) {
   AppFetchInstallRequest *request = (AppFetchInstallRequest *)data;
 
   // check if Bluetooth is active. If so, this will send.
@@ -339,7 +339,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
                                     PBL_BT_RESPONSE_TIME_MIN,
                                     PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS, nullptr);
 
-  system_task_add_callback(prv_app_fetch_binaries_system_task_cb, request);
+  sys_work_add(prv_app_fetch_binaries_sys_work_cb, request);
 }
 
 AppFetchError app_fetch_get_previous_error(void) {
@@ -351,7 +351,7 @@ AppFetchError app_fetch_get_previous_error(void) {
   return error;
 }
 
-static void prv_cancel_fetch_from_system_task(void *data) {
+static void prv_cancel_fetch_from_sys_work(void *data) {
   AppInstallId app_id = (AppInstallId)(intptr_t)data;
 
   if ((!s_fetch_state.in_progress) ||
@@ -368,15 +368,15 @@ static void prv_cancel_fetch_from_system_task(void *data) {
   put_bytes_cancel();
 }
 
-void app_fetch_cancel_from_system_task(AppInstallId app_id) {
+void app_fetch_cancel_from_sys_work(AppInstallId app_id) {
   PBL_ASSERT_TASK(PebbleTask_KernelBackground);
 
-  prv_cancel_fetch_from_system_task((void *)(uintptr_t)app_id);
+  prv_cancel_fetch_from_sys_work((void *)(uintptr_t)app_id);
 }
 
 void app_fetch_cancel(AppInstallId app_id) {
   // Everything within app fetch happens on the background task
-  system_task_add_callback(prv_cancel_fetch_from_system_task, (void *)(uintptr_t)app_id);
+  sys_work_add(prv_cancel_fetch_from_sys_work, (void *)(uintptr_t)app_id);
 }
 
 bool app_fetch_in_progress(void) {

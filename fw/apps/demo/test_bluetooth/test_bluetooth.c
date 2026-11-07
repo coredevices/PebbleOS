@@ -5,7 +5,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -70,7 +70,7 @@ static void menu_select_callback(int index, void *ctx) {
         sys_psleep(100);
       }
       s_pending_count++;
-      system_task_add_callback(send_bluetooth, nullptr);
+      sys_work_add(send_bluetooth, nullptr);
     }
     PBL_LOG_INFO("Bluetooth disconnected");
 

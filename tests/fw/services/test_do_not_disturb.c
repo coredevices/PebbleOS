@@ -10,7 +10,7 @@
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 
 #include <applib/ui/action_toggle.h>
@@ -35,7 +35,7 @@ static int s_num_dnd_events_put = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+bool sys_work_add(SysWorkCallback cb, void *data) {
   cb(data);
   return true;
 }

@@ -11,7 +11,7 @@
 
 #include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/byteorder.h>
@@ -101,7 +101,7 @@ static void prv_spam_cb(void *data) {
 static int prv_cmd_spam(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_shell_print(sh, "spam logs!");
   for (int i = 0; i < 16; ++i) {
-    system_task_add_callback(prv_spam_cb, (void *)(uintptr_t)i);
+    sys_work_add(prv_spam_cb, (void *)(uintptr_t)i);
   }
   return 0;
 }

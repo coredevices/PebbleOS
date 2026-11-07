@@ -23,18 +23,18 @@ static const struct pbl_pp_receiver_api *s_rcv_imp = &g_app_message_receiver_imp
 // Fakes & Stubs
 
 #include <fake_kernel_malloc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   cl_assert_equal_i(PEBBLE_CALLBACK_EVENT, e->type);
 
-  // Use fake_system_task as mock implementation:
-  system_task_add_callback(e->callback.callback, e->callback.data);
+  // Use fake_sys_work as mock implementation:
+  sys_work_add(e->callback.callback, e->callback.data);
   return true;
 }
 
 static void prv_process_events(void) {
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 }
 
 static AppInbox *s_app_message_inbox;
@@ -154,7 +154,7 @@ void test_app_message_receiver__initialize(void) {
 }
 
 void test_app_message_receiver__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_kernel_malloc_deinit();
 }
 

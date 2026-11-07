@@ -13,7 +13,7 @@
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/stationary.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/timeline/event.h>
 
 #include <apps/system/timeline/timeline.h>
@@ -49,7 +49,7 @@ static void prv_maybe_run_settings_dbs_compaction_migration(void) {
   if (shell_prefs_get_settings_dbs_compacted_v1()) {
     return;
   }
-  system_task_add_callback(prv_settings_dbs_compaction_migration_cb, nullptr);
+  sys_work_add(prv_settings_dbs_compaction_migration_cb, nullptr);
 }
 
 void shell_event_loop_init(void) {

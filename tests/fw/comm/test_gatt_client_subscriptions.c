@@ -20,7 +20,7 @@
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_sem.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 static enum pbl_bt_errno s_write_descriptor_cccd_result;
 static pbl_bt_descriptor_t s_last_cccd_ref;

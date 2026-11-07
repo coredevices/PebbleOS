@@ -8,7 +8,7 @@
 #include <pbl/services/notifications/ancs/ancs_phone_call.h>
 #include <pbl/services/phone_call.h>
 #include <pbl/services/phone_pp.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/testing.h>
 
 #include <applib/event_service_client.h>
@@ -57,8 +57,8 @@ static void prv_poll_phone_for_status(void *context) {
 
 static void prv_timer_callback(void *context) {
   // Make sure we aren't overflowing / backing up the queue too much
-  if (system_task_get_available_space() > 10) {
-    system_task_add_callback(prv_poll_phone_for_status, context);
+  if (sys_work_get_available_space() > 10) {
+    sys_work_add(prv_poll_phone_for_status, context);
   }
 }
 

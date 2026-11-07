@@ -15,7 +15,7 @@
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ void test_gatt_service_changed_client__handle_indication_service_changed(void) {
   const bool handled = gatt_service_changed_client_handle_indication(
       &s_connection, att_handle, (const uint8_t *)handle_range, sizeof(uint16_t) * 2);
   // Re-discovery is trigger on KernelBG:
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_b(handled, true);
 

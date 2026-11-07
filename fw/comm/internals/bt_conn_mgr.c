@@ -7,7 +7,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
@@ -249,7 +249,7 @@ unlock:
 static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data) {
   // offload handling onto KernelBG so we don't stall the timer thread
   // trying to get the bt lock
-  system_task_add_callback(prv_bt_le_gateway_response_latency_watchdog_handler, data);
+  sys_work_add(prv_bt_le_gateway_response_latency_watchdog_handler, data);
 }
 
 static bool prv_find_source(ListNode *found_node, void *data) {

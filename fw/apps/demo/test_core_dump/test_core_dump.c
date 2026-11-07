@@ -7,7 +7,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -40,7 +40,7 @@ static void stuck_timer_callback(void *data) {
   }
 }
 
-static void stuck_system_task_callback(void *data) {
+static void stuck_sys_work_callback(void *data) {
   PBL_LOG_DBG("Entering infinite loop in system task callback");
   while (true) {
     sys_psleep(100);
@@ -162,7 +162,7 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 11) {
     PBL_LOG_INFO("Infinite Loop on system task");
-    system_task_add_callback(stuck_system_task_callback, nullptr);
+    sys_work_add(stuck_sys_work_callback, nullptr);
 
   } else if (index == 12) {
     PBL_LOG_INFO("Generate hard-fault");

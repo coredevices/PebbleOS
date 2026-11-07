@@ -9,7 +9,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/poll_remote.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL);
 
@@ -89,7 +89,7 @@ static bool has_max_interval_passed(PollRemoteContext *ctx) {
   return (ctx->counted_minutes >= ctx->max_interval_minutes);
 }
 
-// SystemTaskCallback
+// SysWorkCallback
 static void prv_send_request(PollRemoteContext *ctx) {
   if (has_min_interval_passed(ctx) == false) {
     return;
@@ -172,13 +172,13 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_POLL_REMOTE, PBL_PP_ACCESS_ANY,
  * Public
  */
 
-static void poll_service_system_task_callback(void *data) {
+static void poll_service_sys_work_callback(void *data) {
   PBL_ASSERTN(s_running);
   for_each_context(context_interval_check);
 }
 
 static void poll_service_timer_callback(void *data) {
-  system_task_add_callback(poll_service_system_task_callback, data);
+  sys_work_add(poll_service_sys_work_callback, data);
 }
 
 void poll_remote_init(void) {

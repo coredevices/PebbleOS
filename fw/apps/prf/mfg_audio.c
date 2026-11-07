@@ -10,7 +10,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 
@@ -96,7 +96,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
 
   if (!s->pending) {
     s->pending = true;
-    if (!system_task_add_callback_from_isr_droppable(prv_bottom_half, s)) {
+    if (!sys_work_try_add(prv_bottom_half, s)) {
       s->pending = false;
     }
   }
@@ -158,7 +158,7 @@ static void prv_stop(struct prv_session *s) {
   s->running = false;
   (void)pbl_audio_stop(s->audio);
   // A queued bottom half may still reference the session
-  (void)system_task_add_callback(prv_free_cb, s);
+  (void)sys_work_add(prv_free_cb, s);
 }
 
 #ifdef CONFIG_MIC

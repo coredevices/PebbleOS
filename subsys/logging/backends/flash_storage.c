@@ -8,7 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
@@ -484,7 +484,7 @@ exit:
     pbl_free(state);
   } else {
     // Keep going
-    system_task_add_callback(prv_dump_log_system_cb, state);
+    sys_work_add(prv_dump_log_system_cb, state);
   }
 }
 
@@ -514,7 +514,7 @@ bool pbl_log_flash_dump(int generation, pbl_log_flash_dump_line_cb_t line_cb,
   };
 
   // Kick it off
-  system_task_add_callback(prv_dump_log_system_cb, state);
+  sys_work_add(prv_dump_log_system_cb, state);
   return (true);
 }
 

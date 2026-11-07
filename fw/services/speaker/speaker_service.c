@@ -22,7 +22,7 @@
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/speaker/note_sequence.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -269,7 +269,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
   // A dropped wakeup is retried on the next period; underrunning beats flooding the queue
   if (!s_state.bottom_half_pending) {
     s_state.bottom_half_pending = true;
-    if (!system_task_add_callback_from_isr_droppable_raised(prv_bottom_half, nullptr)) {
+    if (!sys_work_try_add_raised(prv_bottom_half, nullptr)) {
       s_state.bottom_half_pending = false;
     }
   }

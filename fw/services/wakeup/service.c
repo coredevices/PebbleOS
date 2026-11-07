@@ -11,7 +11,7 @@
 #include <pbl/services/event_service.h>
 #include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/stationary.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
 #include <pbl/settings/settings.h>
@@ -92,7 +92,7 @@ static void prv_stationary_wake_up_cb(void *unused) {
   stationary_wake_up();
 }
 
-void wakeup_dispatcher_system_task(void *data) {
+void wakeup_dispatcher_sys_work(void *data) {
   WakeupId wakeup_id = (WakeupId)(intptr_t)data;
   WakeupEntry entry = prv_wakeup_settings_get_entry(wakeup_id);
 
@@ -150,8 +150,8 @@ void wakeup_dispatcher_system_task(void *data) {
 // OR queues a wakeup callback for that application
 // and is triggered by NewTimer
 static void prv_wakeup_dispatcher(void *data) {
-  // Place actual work on system_task to unload it from new_timer task
-  system_task_add_callback(wakeup_dispatcher_system_task, data);
+  // Place actual work on sys_work to unload it from new_timer task
+  sys_work_add(wakeup_dispatcher_sys_work, data);
 }
 
 static bool prv_find_next_wakeup_id_callback(struct pbl_settings_file *file,
@@ -712,7 +712,7 @@ void wakeup_handle_significant_clock_change(void) {
   if (pebble_task_get_current() == PebbleTask_KernelBackground) {
     prv_wakeup_rewrite_kernel_bg_cb(nullptr);
   } else {
-    system_task_add_callback(prv_wakeup_rewrite_kernel_bg_cb, nullptr);
+    sys_work_add(prv_wakeup_rewrite_kernel_bg_cb, nullptr);
   }
 }
 

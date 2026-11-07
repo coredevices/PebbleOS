@@ -26,7 +26,7 @@
 #include <pbl/services/prf_update.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/services.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <debug/debug.h>
@@ -146,7 +146,7 @@ int main(void) {
 
   kernel_applib_init();
 
-  system_task_init();
+  sys_work_init();
 
   events_init();
 
@@ -163,7 +163,7 @@ int main(void) {
 #ifdef CONFIG_ANALYTICS
   pbl_analytics_init();
 #endif
-  system_task_timer_init();
+  sys_work_timer_init();
 
   init_drivers();
 

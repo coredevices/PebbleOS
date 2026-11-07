@@ -84,7 +84,7 @@ bool app_install_is_app_running(AppInstallId id) {
 void app_install_mark_prioritized(AppInstallId install_id, bool can_expire) {
 }
 
-bool system_task_add_callback(void (*cb)(void *data), void *data) {
+bool sys_work_add(void (*cb)(void *data), void *data) {
   cb(data);
   return true;
 }

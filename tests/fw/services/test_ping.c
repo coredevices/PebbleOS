@@ -24,7 +24,7 @@ void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   s_callbacks[s_num_callbacks++] = callback;
 }
 
-void system_task_add_callback(CallbackEventCallback callback, void *data) {
+void sys_work_add(CallbackEventCallback callback, void *data) {
 }
 
 FAKE_VALUE_FUNC(int, pbl_pp_send, struct pbl_pp_session *, uint16_t, const uint8_t *, size_t,

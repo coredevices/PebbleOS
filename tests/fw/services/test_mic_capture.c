@@ -84,7 +84,7 @@ void app_install_clear_app_db(void) {
 bool app_fetch_in_progress(void) {
   return false;
 }
-void app_fetch_cancel_from_system_task(void) {
+void app_fetch_cancel_from_sys_work(void) {
 }
 bool app_install_do_callbacks(InstallEventType type, AppInstallId id, Uuid *uuid,
                               InstallCallbackDoneCallback cb, void *data) {

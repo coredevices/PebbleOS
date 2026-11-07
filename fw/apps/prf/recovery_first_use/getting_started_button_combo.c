@@ -4,7 +4,7 @@
 #include "getting_started_button_combo.h"
 
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
@@ -36,7 +36,7 @@ static void prv_down_cb(void *data) {
   app_window_stack_push(spinner_window, false /* animated */);
 
   // Factory reset on KernelBG so the animation gets priority
-  system_task_add_callback(prv_factory_reset, nullptr);
+  sys_work_add(prv_factory_reset, nullptr);
 }
 
 #ifdef CONFIG_RECOVERY_FW

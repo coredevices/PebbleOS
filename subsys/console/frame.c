@@ -10,7 +10,7 @@
 #include <pbl/crc/crc.h>
 #include <pbl/pp/transports/console.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/base64.h>
 
 #define ESC 0x1b
@@ -173,7 +173,7 @@ void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
       s_rx_state = RX_TEXT;
       if (c == '\\' && !s_rx_dropping && s_rx_len > 1U) {
         s_rx_pending = true;
-        if (!system_task_add_callback_from_isr(prv_process_frame, nullptr)) {
+        if (!sys_work_add_from_isr(prv_process_frame, nullptr)) {
           s_rx_pending = false;
         }
       }

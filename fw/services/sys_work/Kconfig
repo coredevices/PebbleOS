@@ -1,18 +1,18 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SERVICE_SYSTEM_TASK
+config SERVICE_SYS_WORK
     bool "System task"
     help
       Background system task runner.
 
-if SERVICE_SYSTEM_TASK
+if SERVICE_SYS_WORK
 
-config SERVICE_SYSTEM_TASK_THREAD_RAISED_PRIO
+config SERVICE_SYS_WORK_THREAD_RAISED_PRIO
     int "System task thread priority while raised"
     default 3
 
-module = SERVICE_SYSTEM_TASK
+module = SERVICE_SYS_WORK
 module-str = System task
 source "subsys/logging/Kconfig.template.log_level"
 

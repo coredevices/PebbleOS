@@ -21,7 +21,7 @@
 #include <fake_events.h>
 #include <fake_rtc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 void ams_music_disconnect(void) {
 }

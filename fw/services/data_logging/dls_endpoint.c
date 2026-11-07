@@ -18,7 +18,7 @@
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/services/data_logging/dls_storage.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
@@ -120,7 +120,7 @@ static bool check_ack_timeout_for_session(DataLoggingSession *session, void *dat
 
     // Send timeout msg from system task because it could take a while and also require
     //  more stack space than provided by the timer task.
-    system_task_add_callback(send_timeout_msg, (void *)(uintptr_t)(session->comm.session_id));
+    sys_work_add(send_timeout_msg, (void *)(uintptr_t)(session->comm.session_id));
 
     // Set reschedule to false because: 1.) we don't need to reschedule the timer since all
     // we did was process one that already expired, 2.) it can cause an infinite recursion
@@ -390,8 +390,8 @@ static void prv_dls_endpoint_handle_nack(uint8_t session_id) {
 }
 
 //! System task callback executed which reopens the next session in the list built up by
-//! report_cmd_system_task_cb
-static void prv_reopen_next_session_system_task_cb(void *data) {
+//! report_cmd_sys_work_cb
+static void prv_reopen_next_session_sys_work_cb(void *data) {
   DataLoggingReopenEntry *entry = (DataLoggingReopenEntry *)data;
   if (!entry) {
     s_endpoint_data.report_in_progress = false;
@@ -418,7 +418,7 @@ static void prv_reopen_next_session_system_task_cb(void *data) {
   if (success) {
     // Schedule next one
     if (new_head) {
-      bool result = system_task_add_callback(prv_reopen_next_session_system_task_cb, new_head);
+      bool result = sys_work_add(prv_reopen_next_session_sys_work_cb, new_head);
       PBL_ASSERTN(result);
     } else {
       s_endpoint_data.report_in_progress = false;
@@ -473,7 +473,7 @@ static void prv_handle_report_cmd(const uint8_t *session_ids, size_t num_session
   dls_list_for_each_session(dls_endpoint_add_reopen_sessions_cb, (void *)&head);
 
   // Re-open the first one and reschedule the next one
-  prv_reopen_next_session_system_task_cb((void *)head);
+  prv_reopen_next_session_sys_work_cb((void *)head);
 }
 
 //! Empty a session by session id
@@ -564,7 +564,7 @@ void dls_private_handle_disconnect(void *data) {
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
   if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
-    system_task_add_callback(dls_private_handle_disconnect, nullptr);
+    sys_work_add(dls_private_handle_disconnect, nullptr);
   }
 }
 

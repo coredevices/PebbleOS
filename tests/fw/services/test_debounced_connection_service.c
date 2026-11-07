@@ -9,7 +9,7 @@
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <syscall/syscall.h>
 
 // Fakes

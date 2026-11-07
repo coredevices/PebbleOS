@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/kernel/kernel.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <clar.h>
 #include <kernel/pebble_tasks.h>
@@ -16,9 +16,9 @@
 void sys_workq_init(void);
 void sys_workq_reset_for_test(void);
 
-#define FLOOD        (3 * QUEUE_LENGTH)
+#define FLOOD (3 * QUEUE_LENGTH)
 
-void system_task_reset_for_test(void);
+void sys_work_reset_for_test(void);
 void stub_pbl_malloc_set_should_fail(bool should_fail);
 
 static struct pbl_thread *s_bg;
@@ -32,7 +32,7 @@ static int s_ran[FLOOD];
 static int s_num_ran;
 static pbl_tick_t s_flood_start;
 static pbl_tick_t s_flood_ticks;
-static SystemTaskEventCallback s_first_cb;
+static SysWorkCallback s_first_cb;
 
 // ---- stubs ------------------------------------------------------------------
 
@@ -78,30 +78,30 @@ static void prv_stop(void *data) {
 static void prv_flood(void *data) {
   s_flood_start = pbl_uptime_ticks();
   for (int i = 0; i < FLOOD; i++) {
-    system_task_add_callback(prv_record, (void *)(uintptr_t)i);
+    sys_work_add(prv_record, (void *)(uintptr_t)i);
   }
   s_flood_ticks = pbl_uptime_ticks() - s_flood_start;
-  system_task_add_callback(prv_stop, nullptr);
+  sys_work_add(prv_stop, nullptr);
 }
 
 static void prv_check_culprit(void *data) {
-  cl_assert(system_task_get_current_callback() == (void *)prv_check_culprit);
+  cl_assert(sys_work_get_current_callback() == (void *)prv_check_culprit);
   s_num_ran++;
 }
 
 static void prv_queue_culprits(void *data) {
   // Through the pool, then the heap fallback once it fills up.
   for (int i = 0; i < FLOOD; i++) {
-    system_task_add_callback(prv_check_culprit, nullptr);
+    sys_work_add(prv_check_culprit, nullptr);
   }
-  cl_assert(system_task_add_callback_from_isr_droppable_raised(prv_check_culprit, nullptr));
-  system_task_add_callback(prv_stop, nullptr);
+  cl_assert(sys_work_try_add_raised(prv_check_culprit, nullptr));
+  sys_work_add(prv_stop, nullptr);
 }
 
 static void prv_main_entry(void *arg) {
   sys_workq_init();
-  system_task_init();
-  system_task_add_callback(s_first_cb, nullptr);
+  sys_work_init();
+  sys_work_add(s_first_cb, nullptr);
   pbl_thread_sleep(PBL_FOREVER);
 }
 
@@ -118,7 +118,7 @@ static void prv_run(void) {
   pbl_test_kernel_run();
 }
 
-void test_system_task__initialize(void) {
+void test_sys_work__initialize(void) {
   s_bg = nullptr;
   memset(&s_main, 0, sizeof(s_main));
   memset(&s_reason, 0, sizeof(s_reason));
@@ -130,16 +130,16 @@ void test_system_task__initialize(void) {
   s_first_cb = prv_flood;
   stub_pbl_malloc_set_should_fail(false);
   sys_workq_reset_for_test();
-  system_task_reset_for_test();
+  sys_work_reset_for_test();
 }
 
-void test_system_task__cleanup(void) {
+void test_sys_work__cleanup(void) {
   stub_pbl_malloc_set_should_fail(false);
 }
 
 // ---- tests ------------------------------------------------------------------
 
-void test_system_task__overflowing_own_queue_never_blocks(void) {
+void test_sys_work__overflowing_own_queue_never_blocks(void) {
   prv_run();
   cl_assert(!s_reset);
   cl_assert_equal_i(s_flood_ticks, 0);
@@ -149,7 +149,7 @@ void test_system_task__overflowing_own_queue_never_blocks(void) {
   }
 }
 
-void test_system_task__overflow_without_memory_resets(void) {
+void test_sys_work__overflow_without_memory_resets(void) {
   stub_pbl_malloc_set_should_fail(true);
   prv_run();
   cl_assert(s_reset);
@@ -157,7 +157,7 @@ void test_system_task__overflow_without_memory_resets(void) {
   cl_assert_equal_i(s_flood_ticks, 0);
 }
 
-void test_system_task__reports_the_callback_behind_a_wrapper(void) {
+void test_sys_work__reports_the_callback_behind_a_wrapper(void) {
   s_first_cb = prv_queue_culprits;
   prv_run();
   cl_assert(!s_reset);

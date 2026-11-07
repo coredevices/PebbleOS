@@ -15,7 +15,7 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -37,7 +37,7 @@
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 #define ASSERT_EQUAL_I(i1, i2, file, line) \
   clar__assert_equal_i((i1), (i2), file, line, #i1 " != " #i2, 1)
@@ -401,7 +401,7 @@ void test_activity_algorithm_kraepelin__initialize(void) {
 
 // ---------------------------------------------------------------------------------------
 void test_activity_algorithm_kraepelin__cleanup(void) {
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   activity_algorithm_deinit();
 }
 

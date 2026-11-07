@@ -12,7 +12,7 @@
 
 #include <clar.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 extern void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session,
                                                  const uint8_t *data, size_t size);
@@ -99,7 +99,7 @@ void test_voice_endpoint__initialize(void) {
 }
 
 void test_voice_endpoint__cleanup(void) {
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_comm_session_cleanup();
   if (s_transcription) {
     free(s_transcription);
@@ -262,7 +262,7 @@ void test_voice_endpoint__handle_setup_response(void) {
     0x00                    // Result: Success
   };
   voice_endpoint_protocol_msg_callback(nullptr, setup_response, sizeof(setup_response));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
   cl_assert_equal_i(s_session_type, VoiceEndpointSessionTypeDictation);
@@ -271,7 +271,7 @@ void test_voice_endpoint__handle_setup_response(void) {
   // Use failure code
   setup_response[6] = VoiceEndpointResultFailServiceUnavailable;
   voice_endpoint_protocol_msg_callback(nullptr, setup_response, sizeof(setup_response));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailServiceUnavailable);
   cl_assert_equal_i(s_session_type, VoiceEndpointSessionTypeDictation);
@@ -280,7 +280,7 @@ void test_voice_endpoint__handle_setup_response(void) {
   // App initiated failure
   setup_response[1] = 0x01;
   voice_endpoint_protocol_msg_callback(nullptr, setup_response, sizeof(setup_response));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailServiceUnavailable);
   cl_assert_equal_i(s_session_type, VoiceEndpointSessionTypeDictation);
@@ -289,7 +289,7 @@ void test_voice_endpoint__handle_setup_response(void) {
   // App initiated success
   setup_response[6] = VoiceEndpointResultSuccess;
   voice_endpoint_protocol_msg_callback(nullptr, setup_response, sizeof(setup_response));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
 
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
   cl_assert_equal_i(s_session_type, VoiceEndpointSessionTypeDictation);
@@ -379,7 +379,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
 
   // test valid message
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert(s_transcription != nullptr);
   size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr);
   cl_assert_equal_m(s_transcription, &dictation_result[offset], sizeof(dictation_result) - offset);
@@ -391,7 +391,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   // test size too small by 1
   s_session_id = 0;
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result) - 1);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidMessage);
@@ -401,7 +401,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   // test size larger than necessary by 1
   s_session_id = 0;
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result) + 1);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert(s_transcription != nullptr);
   cl_assert_equal_m(s_transcription, &dictation_result[offset], sizeof(dictation_result) - offset);
   cl_assert_equal_i(s_session_id, 0x2211);
@@ -414,7 +414,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   s_session_result = VoiceEndpointResultSuccess;
   dictation_result[9] = 99;
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidMessage);
@@ -426,7 +426,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   s_session_id = 0;
   dictation_result[8] = 0; // set num attributes field to 0
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(VoiceSessionResultMsg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidMessage);
@@ -438,7 +438,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   s_session_id = 0;
   dictation_result[7] = VoiceEndpointResultFailTimeout; // indicate transcription failure
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(VoiceSessionResultMsg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailTimeout);
@@ -451,7 +451,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   dictation_result[7] = VoiceEndpointResultSuccess;
   dictation_result[17] = 0x00; // length of word #1 of sentence #1
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
@@ -463,7 +463,7 @@ void test_voice_endpoint__handle_dictation_result(void) {
   dictation_result[7] = VoiceEndpointResultFailInvalidMessage; // indicate transcription failure
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result,
                                        sizeof(VoiceSessionResultMsg) - 1);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_session_id, 0);
   dictation_result[7] = VoiceEndpointResultSuccess; // restore transcription result
 }
@@ -496,7 +496,7 @@ void test_voice_endpoint__handle_dictation_result_empty(void) {
 
   s_num_dictation_results = 0;
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
@@ -508,7 +508,7 @@ void test_voice_endpoint__handle_dictation_result_empty(void) {
   dictation_result[10] = 0x02; // attribute length
   dictation_result[13] = 0x00; // sentence count
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result, sizeof(dictation_result) - 2);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_transcription, nullptr);
   cl_assert_equal_i(s_session_id, 0x2211);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultFailInvalidRecognizerResponse);
@@ -619,7 +619,7 @@ void test_voice_endpoint__handle_dictation_result_app_initiated(void) {
 
   // test valid app-initiated message
   voice_endpoint_protocol_msg_callback(nullptr, dictation_result_1, sizeof(dictation_result_1));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert(s_transcription != nullptr);
   size_t offset = sizeof(VoiceSessionResultMsg) + sizeof(struct pbl_generic_attr);
   cl_assert_equal_m(
@@ -667,7 +667,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
 
   // test valid message
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(nlp_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_s(s_reminder_str, "Phil");
   cl_assert_equal_i(s_timestamp, 0x574617E8);
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
@@ -677,7 +677,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
   nlp_result[8] = 1;
   s_session_id = 0;
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(nlp_result) - 7);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_s(s_reminder_str, "Phil");
   cl_assert_equal_i(s_timestamp, 0);
   cl_assert_equal_i(s_session_id, 0x2211);
@@ -689,7 +689,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
   s_session_result = VoiceEndpointResultSuccess;
   nlp_result[9] = 99;
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(nlp_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_reminder_str, nullptr);
   cl_assert_equal_i(s_timestamp, 0);
   cl_assert_equal_i(s_session_id, 0x2211);
@@ -700,7 +700,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
   s_session_id = 0;
   nlp_result[8] = 0; // set num attributes field to 0
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(VoiceSessionResultMsg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_reminder_str, nullptr);
   cl_assert_equal_i(s_timestamp, 0);
   cl_assert_equal_i(s_session_id, 0x2211);
@@ -711,7 +711,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
   s_session_id = 0;
   nlp_result[7] = VoiceEndpointResultFailTimeout; // indicate transcription failure
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(VoiceSessionResultMsg));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_p(s_reminder_str, nullptr);
   cl_assert_equal_i(s_timestamp, 0);
   cl_assert_equal_i(s_session_id, 0x2211);
@@ -723,7 +723,7 @@ void test_voice_endpoint__handle_nlp_result(void) {
   s_session_id = 0;
   nlp_result[7] = VoiceEndpointResultFailInvalidMessage; // indicate transcription failure
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(VoiceSessionResultMsg) - 1);
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(s_session_id, 0);
   nlp_result[7] = VoiceEndpointResultSuccess; // restore transcription result
 }
@@ -781,7 +781,7 @@ void test_voice_endpoint__handle_nlp_result_with_app_id(void) {
   };
 
   voice_endpoint_protocol_msg_callback(nullptr, nlp_result, sizeof(nlp_result));
-  fake_system_task_callbacks_invoke_pending();
+  fake_sys_work_callbacks_invoke_pending();
   // Just make sure we don't crash or do anything weird. We just ignore the app uuid for now
   cl_assert_equal_i(s_session_result, VoiceEndpointResultSuccess);
 }

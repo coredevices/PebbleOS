@@ -15,7 +15,7 @@
 #include <fake_battery.h>
 #include <fake_new_timer.h>
 #include <fake_rtc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <kernel/events.h>
 #include <system/reboot_reason.h>
 
@@ -55,7 +55,7 @@ static void periodic_timer_trigger(int count) {
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   for (int i = 0; i < count; ++i) {
     stub_new_timer_fire(timer_id);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 }
 
@@ -66,7 +66,7 @@ static void standby_timer_trigger(int count) {
   cl_assert(stub_new_timer_is_scheduled(timer_id));
   for (int i = 0; i < count; ++i) {
     stub_new_timer_fire(timer_id);
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 }
 

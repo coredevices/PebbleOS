@@ -7,7 +7,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/reminders.h>
@@ -57,7 +57,7 @@ void reminders_handle_reminder_removed(const Uuid *reminder_id) {
   prv_put_reminder_event((ReminderId *)reminder_id, ReminderRemoved);
 }
 
-static void prv_trigger_reminder_system_task_callback(void *data) {
+static void prv_trigger_reminder_sys_work_callback(void *data) {
   ReminderId *item_id = (ReminderId *)data;
 
   // Mark that we are about to display the reminder
@@ -73,7 +73,7 @@ static void prv_job_callback(struct pbl_cron_job *job, void *data) {
   if (!s_reminder_armed) {
     return;
   }
-  if (system_task_add_callback(prv_trigger_reminder_system_task_callback, &s_next_reminder_id)) {
+  if (sys_work_add(prv_trigger_reminder_sys_work_callback, &s_next_reminder_id)) {
     s_reminder_armed = false;
   } else {
     pbl_cron_job_schedule_at(job, pbl_realtime() + 1);

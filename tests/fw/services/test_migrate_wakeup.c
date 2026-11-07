@@ -19,7 +19,7 @@
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <fake_time.h>
 
 // Stubs

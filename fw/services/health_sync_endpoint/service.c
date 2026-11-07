@@ -7,7 +7,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 
@@ -41,7 +41,7 @@ static void prv_send_ack_nack(bool ok) {
 
 #include <pbl/services/activity/activity_algorithm.h>
 
-static void prv_sync_health_system_task_cb(void *unused) {
+static void prv_sync_health_sys_work_cb(void *unused) {
   if (activity_tracking_on()) {
     // tell the activity service to pool the minutes it's got so far
     activity_algorithm_send_minutes();
@@ -61,7 +61,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
 
   PBL_LOG_DBG("Received health SYNC request");
 
-  system_task_add_callback(prv_sync_health_system_task_cb, nullptr);
+  sys_work_add(prv_sync_health_sys_work_cb, nullptr);
 }
 
 void health_sync_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,

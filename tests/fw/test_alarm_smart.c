@@ -62,9 +62,9 @@ void test_alarm_smart__initialize(void) {
   s_num_timeline_removes = 0;
   s_num_alarm_events_put = 0;
   s_num_alarms_fired = 0;
-  s_defer_system_task_callbacks = false;
-  s_pending_system_task_callback = nullptr;
-  s_pending_system_task_data = nullptr;
+  s_defer_sys_work_callbacks = false;
+  s_pending_sys_work_callback = nullptr;
+  s_pending_sys_work_data = nullptr;
   s_last_vmc = 0;
   s_rand = 0;
 
@@ -550,14 +550,14 @@ void test_alarm_smart__editing_basic_alarm_cancels_user_snooze(void) {
 void test_alarm_smart__editing_alarm_rejects_queued_snooze_callback(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
   TimerID timer_id = s_alarm_snooze_timer_id;
-  s_defer_system_task_callbacks = true;
+  s_defer_sys_work_callbacks = true;
   stub_new_timer_invoke(1);
-  s_defer_system_task_callbacks = false;
-  cl_assert(s_pending_system_task_callback);
+  s_defer_sys_work_callbacks = false;
+  cl_assert(s_pending_sys_work_callback);
 
   alarm_set_time(id, 14, 30);
   s_sleep_state = ActivitySleepStateAwake;
-  s_pending_system_task_callback(s_pending_system_task_data);
+  s_pending_sys_work_callback(s_pending_sys_work_data);
   cl_assert_equal_i(s_num_alarm_events_put, 0);
   cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
   cl_assert(!stub_new_timer_is_scheduled(timer_id));
@@ -565,10 +565,10 @@ void test_alarm_smart__editing_alarm_rejects_queued_snooze_callback(void) {
 
 void test_alarm_smart__queued_snooze_cannot_process_new_alarm(void) {
   AlarmId id = prv_start_sleeping_smart_alarm();
-  s_defer_system_task_callbacks = true;
+  s_defer_sys_work_callbacks = true;
   stub_new_timer_invoke(1);
-  s_defer_system_task_callbacks = false;
-  cl_assert(s_pending_system_task_callback);
+  s_defer_sys_work_callbacks = false;
+  cl_assert(s_pending_sys_work_callback);
   alarm_set_time(id, 14, 30);
 
   AlarmId other_id =
@@ -578,7 +578,7 @@ void test_alarm_smart__queued_snooze_cannot_process_new_alarm(void) {
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   cl_assert_equal_i(alarm_get_most_recent_id(), other_id);
   alarm_set_snooze_alarm();
-  s_pending_system_task_callback(s_pending_system_task_data);
+  s_pending_sys_work_callback(s_pending_sys_work_data);
   cl_assert_equal_i(s_num_alarm_events_put, 1);
   stub_new_timer_invoke(1);
   cl_assert_equal_i(s_num_alarm_events_put, 2);

@@ -7,7 +7,7 @@
 #include <pbl/bluetooth/gap_le_device_name.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <comm/bt_lock.h>
 #include <host/ble_gatt.h>
@@ -77,7 +77,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
 
   struct pbl_bt_addr *addr = pbl_zalloc_check(sizeof(struct pbl_bt_addr));
   *addr = addr_copy;
-  system_task_add_callback(pbl_bt_store_device_name_kernelbg_cb, addr);
+  sys_work_add(pbl_bt_store_device_name_kernelbg_cb, addr);
 
   return 0;
 }

@@ -14,7 +14,7 @@
 #include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 
@@ -37,7 +37,7 @@ void prv_regular_timer_spend_seconds(uint32_t seconds) {
     regular_timer_fire_seconds(1);
 
     // bt_conn_mgr offloads the callback to KernelBG
-    fake_system_task_callbacks_invoke_pending();
+    fake_sys_work_callbacks_invoke_pending();
   }
 }
 

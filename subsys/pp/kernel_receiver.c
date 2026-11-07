@@ -10,7 +10,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/slist.h>
 
 #include <kernel/event_loop.h>
@@ -36,7 +36,7 @@ struct pbl_pp__kernel_queue {
 };
 
 static void prv_bg_add_callback(void (*cb)(void *data), void *data) {
-  system_task_add_callback(cb, data);
+  sys_work_add(cb, data);
 }
 
 static void prv_main_add_callback(void (*cb)(void *data), void *data) {

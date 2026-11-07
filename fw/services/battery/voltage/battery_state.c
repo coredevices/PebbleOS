@@ -15,7 +15,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
 
@@ -212,7 +212,7 @@ static void prv_update_callback(void *data) {
   // Running the battery monitor on the timer task is not a good idea because
   // we could be sampling right in the middle of a flash erase, etc. Therefore,
   // dispatch to a lower priority task
-  system_task_add_callback(prv_update_state, data);
+  sys_work_add(prv_update_state, data);
 
   // Reschedule ourselves again so we create a loop
   prv_schedule_update(BATTERY_SAMPLE_RATE_MS, false);

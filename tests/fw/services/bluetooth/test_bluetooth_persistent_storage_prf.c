@@ -7,7 +7,7 @@
 #include <pbl/board/partitions.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -96,7 +96,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-bool system_task_add_callback(SystemTaskEventCallback cb, void *data) {
+bool sys_work_add(SysWorkCallback cb, void *data) {
   cb(data);
   return true;
 }

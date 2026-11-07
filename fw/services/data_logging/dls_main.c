@@ -17,7 +17,7 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_storage.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/list.h>
 #include <pbl/util/string.h>
@@ -63,7 +63,7 @@ typedef struct {
 // Touched only on KernelBG (the system task), so no synchronization needed.
 static bool s_flush_in_progress = false;
 
-static void prv_send_next_session_system_task_cb(void *data);
+static void prv_send_next_session_sys_work_cb(void *data);
 
 static bool prv_add_send_entry_cb(DataLoggingSession *session, void *data) {
   DataLoggingSendBuildCtx *ctx = (DataLoggingSendBuildCtx *)data;
@@ -92,7 +92,7 @@ static void prv_drain_send_list(DataLoggingSendEntry *head) {
   }
 }
 
-static void prv_send_next_session_system_task_cb(void *data) {
+static void prv_send_next_session_sys_work_cb(void *data) {
   DataLoggingSendEntry *entry = (DataLoggingSendEntry *)data;
   if (!entry) {
     s_flush_in_progress = false;
@@ -116,7 +116,7 @@ static void prv_send_next_session_system_task_cb(void *data) {
     return;
   }
 
-  if (!system_task_add_callback(prv_send_next_session_system_task_cb, new_head)) {
+  if (!sys_work_add(prv_send_next_session_sys_work_cb, new_head)) {
     PBL_LOG_WRN("Failed to schedule next DLS flush callback; aborting pass");
     prv_drain_send_list(new_head);
     s_flush_in_progress = false;
@@ -124,7 +124,7 @@ static void prv_send_next_session_system_task_cb(void *data) {
 }
 
 //! @param empty_all_data A bool that indicates if the session should be force emptied
-static void prv_send_all_sessions_system_task_cb(void *empty_all_data) {
+static void prv_send_all_sessions_sys_work_cb(void *empty_all_data) {
   if (s_flush_in_progress) {
     return;
   }
@@ -140,7 +140,7 @@ static void prv_send_all_sessions_system_task_cb(void *empty_all_data) {
   }
 
   s_flush_in_progress = true;
-  prv_send_next_session_system_task_cb(ctx.head);
+  prv_send_next_session_sys_work_cb(ctx.head);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -162,8 +162,7 @@ static void prv_check_all_sessions_timer_cb(void *data) {
               bool_to_str(check_counter == 0), bool_to_str(pbl_pp_session_get_system() != nullptr),
               check_counter);
 
-  system_task_add_callback(prv_send_all_sessions_system_task_cb,
-                           (void *)(uintptr_t)(check_counter == 0));
+  sys_work_add(prv_send_all_sessions_sys_work_cb, (void *)(uintptr_t)(check_counter == 0));
 
   // force a flush every 15 minutes
   static const int EMPTY_ALL_SESSIONS_INTERVAL_MINUTES =
@@ -347,7 +346,7 @@ void dls_send_all_sessions(void) {
     PBL_LOG_INFO("Not sending sessions because sending is disabled");
     return;
   }
-  system_task_add_callback(prv_send_all_sessions_system_task_cb, (void *)true);
+  sys_work_add(prv_send_all_sessions_sys_work_cb, (void *)true);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -536,11 +535,11 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
 
   pbl_shared_cbuf_write(&session->data->buffer, data, num_bytes, false /*advance_slackers*/);
 
-  // Only enqueue work on the system_task if we're not already waiting on the system task to handle
+  // Only enqueue work on the sys_work if we're not already waiting on the system task to handle
   // previously enqueued work for this session.
   if (!session->data->write_request_pending) {
     session->data->write_request_pending = true;
-    system_task_add_callback(prv_write_all_sessions_to_flash, nullptr);
+    sys_work_add(prv_write_all_sessions_to_flash, nullptr);
   }
 
 unlock_and_exit:

@@ -9,7 +9,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/services/timeline/timeline_actions.h>
@@ -76,7 +76,7 @@ typedef struct PBL_PACKED {
   Uuid item_id;
 } DisplayedItemMsg;
 
-static void prv_action_system_task_callback(void *data) {
+static void prv_action_sys_work_callback(void *data) {
   InvokeActionMsgCbData *action = data;
 
   pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_TIMELINE_ACTION, (uint8_t *)&action->msg,
@@ -175,7 +175,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   PBL_LOG_HEXDUMP_DBG((uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
 
   if (do_async) {
-    system_task_add_callback(prv_action_system_task_callback, invoke_action_data);
+    sys_work_add(prv_action_sys_work_callback, invoke_action_data);
   } else {
     pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_TIMELINE_ACTION,
                 (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,

@@ -9,7 +9,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/shell/shell.h>
 
 #include <kernel/event_loop.h>
@@ -35,9 +35,9 @@ static int prv_cmd_stall(const struct pbl_shell *sh, size_t argc, char **argv) {
   } else if (strcmp(thread, "timers") == 0) {
     new_timer_start(new_timer_create(), 10, prv_stall, nullptr, 0);
   } else if (strcmp(thread, "bg") == 0) {
-    system_task_add_callback(prv_stall, nullptr);
+    sys_work_add(prv_stall, nullptr);
   } else if (strcmp(thread, "irq") == 0) {
-    system_task_add_callback(prv_stall_irq, nullptr);
+    sys_work_add(prv_stall_irq, nullptr);
   } else {
     pbl_shell_error(sh, "unknown thread '%s', pick main | bg | timers | irq", thread);
     return -EINVAL;

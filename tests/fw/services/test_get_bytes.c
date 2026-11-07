@@ -11,7 +11,7 @@
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_session.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 #define OBJECT_SIZE 4096
 
@@ -80,9 +80,9 @@ static void prv_request_coredump(struct pbl_pp_session *session, uint8_t transac
 
 // The fake send buffer never blocks, so drain it between chunk callbacks
 static void prv_pump_transfer(void) {
-  while (fake_system_task_count_callbacks()) {
+  while (fake_sys_work_count_callbacks()) {
     pbl_pp_session_send_next(s_session);
-    fake_system_task_callbacks_invoke(fake_system_task_count_callbacks());
+    fake_sys_work_callbacks_invoke(fake_sys_work_count_callbacks());
   }
 }
 
@@ -109,7 +109,7 @@ void test_get_bytes__initialize(void) {
 
 void test_get_bytes__cleanup(void) {
   fake_comm_session_cleanup();
-  fake_system_task_callbacks_cleanup();
+  fake_sys_work_callbacks_cleanup();
   fake_event_clear_last();
 
   fake_pbl_malloc_check_net_allocs();
@@ -129,12 +129,12 @@ void test_get_bytes__transfer_completes(void) {
 
 void test_get_bytes__session_closed_mid_transfer_aborts(void) {
   prv_request_coredump(s_session, 1);
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 1);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   fake_transport_set_connected(s_transport, false /* connected */);
-  fake_system_task_callbacks_invoke(1);
+  fake_sys_work_callbacks_invoke(1);
 
-  cl_assert_equal_i(fake_system_task_count_callbacks(), 0);
+  cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
   cl_assert_equal_i(s_cleanup_count, 1);
   cl_assert(!s_last_cleanup_successful);
   cl_assert_equal_i(fake_event_get_last().debug_info.state, DebugInfoStateFinished);

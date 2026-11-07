@@ -23,7 +23,7 @@
 #include <fake_pfs.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 #include <fake_time.h>
 
 #define OTHER_UUID                                                                             \
@@ -156,8 +156,8 @@ void test_wakeup__gap(void) {
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }
 
-// work around system_task_add_callback
-extern void wakeup_dispatcher_system_task(void *data);
+// work around sys_work_add
+extern void wakeup_dispatcher_sys_work(void *data);
 
 void test_wakeup__out_of_order_schedule(void) {
   const time_t start_time = sys_get_time();
@@ -184,7 +184,7 @@ void test_wakeup__out_of_order_schedule(void) {
 
   // Simulate the firing of the early event
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)early_wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)early_wakeup_id);
 
   // Make sure early_wakeup_id not scheduled
   cl_assert_equal_i(sys_wakeup_query(early_wakeup_id), E_DOES_NOT_EXIST);
@@ -202,7 +202,7 @@ void test_wakeup__out_of_order_schedule(void) {
 
   // Simulate the firing of the late event
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)late_wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)late_wakeup_id);
 
   // There should now be no scheduled wakeups
   cl_assert_equal_i(sys_wakeup_query(late_wakeup_id), E_DOES_NOT_EXIST);
@@ -247,7 +247,7 @@ void test_wakeup__time_jump(void) {
 
   // fire the first wakeup event, as it is still current
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)first_wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)first_wakeup_id);
 
   // The current timer should be the second event, even though it is in the past, and should
   // have a WAKEUP_CATCHUP_WINDOW second gap scheduled
@@ -255,7 +255,7 @@ void test_wakeup__time_jump(void) {
   cl_assert_equal_i(stub_new_timer_timeout(gap_timer) / 1000, WAKEUP_CATCHUP_WINDOW);
 
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)second_wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)second_wakeup_id);
 
   // The current timer should be the third event, with a WAKEUP_CATCHUP_WINDOW second gap again
   // (catchup)
@@ -264,7 +264,7 @@ void test_wakeup__time_jump(void) {
 
   pbl_realtime_set(third_event); // manually move time forward to after third event
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)third_wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)third_wakeup_id);
 
   // Catchup should be finished, gap should be back to >= WAKEUP_CATCHUP_WINDOW seconds
   gap_timer = wakeup_get_current();
@@ -407,7 +407,7 @@ void test_wakeup__simultaneous_events_spaced(void) {
   cl_assert(first_id == wakeup_id || first_id == other_id);
 
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)first_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)first_id);
 
   // The second event is delayed instead of preempting the first one right away
   cl_assert_equal_i(wakeup_get_next_scheduled(), second_id);
@@ -429,7 +429,7 @@ void test_wakeup__far_future_not_early(void) {
   // The timer expiring before the event is due re-arms it instead of firing
   pbl_realtime_set(start_time + timeout_s);
   stub_new_timer_fire(wakeup_get_current());
-  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)wakeup_id);
 
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), event_time);
   cl_assert_equal_i(wakeup_get_next_scheduled(), wakeup_id);
@@ -445,11 +445,11 @@ void test_wakeup__dispatch_leaves_stationary(void) {
 
   // Not yet due, stays in stationary
   pbl_realtime_set(event_time - 1);
-  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)wakeup_id);
   cl_assert_equal_i(s_stationary_wake_up_count, 0);
 
   pbl_realtime_set(event_time);
-  wakeup_dispatcher_system_task((void *)(uintptr_t)wakeup_id);
+  wakeup_dispatcher_sys_work((void *)(uintptr_t)wakeup_id);
   cl_assert_equal_i(s_stationary_wake_up_count, 1);
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }

@@ -79,7 +79,7 @@ void app_fetch_cancel(AppInstallId app_id);
  *
  * @param app_id App whose fetch is cancelled; @c INSTALL_ID_INVALID cancels any fetch.
  */
-void app_fetch_cancel_from_system_task(AppInstallId app_id);
+void app_fetch_cancel_from_sys_work(AppInstallId app_id);
 
 /**
  * @brief Check whether a fetch is in progress.

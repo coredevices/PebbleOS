@@ -8,7 +8,7 @@
 #include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/util/base64.h>
 
 #include <console/console_private.h>
@@ -26,7 +26,7 @@ static char s_tx[2048];
 static size_t s_tx_len;
 
 static bool s_task_queue_full;
-static SystemTaskEventCallback s_task_cb;
+static SysWorkCallback s_task_cb;
 static NewTimerWorkCallback s_timer_work_cb;
 
 void pbl_console_lock(void) {
@@ -42,7 +42,7 @@ void pbl_console_putchar(char c) {
 void pbl_console_flush(void) {
 }
 
-bool system_task_add_callback_from_isr(SystemTaskEventCallback cb, void *data) {
+bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
   if (s_task_queue_full) {
     return false;
   }
@@ -90,7 +90,7 @@ static void prv_run_task(void) {
     cb(nullptr);
   }
   if (s_task_cb != nullptr) {
-    SystemTaskEventCallback cb = s_task_cb;
+    SysWorkCallback cb = s_task_cb;
     s_task_cb = nullptr;
     cb(nullptr);
   }
@@ -332,7 +332,7 @@ void test_console_frame__ack_gets_through_while_a_frame_waits(void) {
   const size_t ack_len = prv_encode_ack(ack, 42);
 
   prv_feed(frame, frame_len);
-  SystemTaskEventCallback frame_cb = s_task_cb;
+  SysWorkCallback frame_cb = s_task_cb;
   prv_feed(ack, ack_len);
   prv_run_task();
   cl_assert_equal_i(s_acked, 42);

@@ -9,7 +9,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 
@@ -65,7 +65,7 @@ static void prv_collect_kernel_heap_stats(void) {
   pbl_heap_reset_high_water_mark(heap);
 }
 
-static void prv_heartbeat_system_task_cb(void *data) {
+static void prv_heartbeat_sys_work_cb(void *data) {
   static bool s_reboot_reason_counted = false;
 
   PBL_ANALYTICS_SET_STRING(fw_version, TINTIN_METADATA.version_tag);
@@ -92,7 +92,7 @@ static void prv_heartbeat_system_task_cb(void *data) {
 }
 
 static void prv_heartbeat_timer_cb(void *data) {
-  system_task_add_callback(prv_heartbeat_system_task_cb, nullptr);
+  sys_work_add(prv_heartbeat_sys_work_cb, nullptr);
 }
 
 void pbl_analytics_init(void) {
@@ -180,7 +180,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_heartbeat(const struct pbl_shell *sh, size_t argc, char **argv) {
-  system_task_add_callback(prv_heartbeat_system_task_cb, nullptr);
+  sys_work_add(prv_heartbeat_sys_work_cb, nullptr);
   return 0;
 }
 

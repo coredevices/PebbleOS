@@ -15,7 +15,7 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/base64.h>
@@ -322,7 +322,7 @@ static bool prv_minute_file_rewrite_cb(void *key_arg, size_t key_len, void *val_
   if (context->watchdog_kicks_left > 0) {
     // Check counter as insurance against getting into an infinite loop and still tickling the
     // watchdog.
-    system_task_watchdog_feed();
+    sys_work_watchdog_feed();
     context->watchdog_kicks_left--;
   }
 
@@ -1370,7 +1370,7 @@ bool activity_algorithm_test_fill_minute_file(void) {
     if (!success) {
       break;
     }
-    system_task_watchdog_feed();
+    sys_work_watchdog_feed();
     if ((i % 25) == 0) {
       PBL_LOG_DBG("wrote %" PRIu32 " records...", i);
     }

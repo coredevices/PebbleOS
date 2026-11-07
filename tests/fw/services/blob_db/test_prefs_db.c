@@ -18,7 +18,7 @@
 #include <fake_kernel_services_notifications.h>
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
-#include <fake_system_task.h>
+#include <fake_sys_work.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////

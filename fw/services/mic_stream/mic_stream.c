@@ -9,7 +9,7 @@
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/mic_stream.h>
 #include <pbl/services/new_timer/new_timer.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 #include <pbl/services/voice/voice_speex.h>
 #include <pbl/services/voice_endpoint.h>
 
@@ -144,7 +144,7 @@ static void prv_setup_timeout_bg(void *data) {
 
 //! The teardown takes bt_lock and stops the mic, so it never runs on the timer task.
 static void prv_setup_timeout(void *data) {
-  system_task_add_callback(prv_setup_timeout_bg, data);
+  sys_work_add(prv_setup_timeout_bg, data);
 }
 
 static void prv_transfer_stopped_bg(void *data) {
@@ -165,7 +165,7 @@ static void prv_transfer_stopped_bg(void *data) {
 
 //! Called by the endpoint with bt_lock held, so s_lock is only taken on KernelBG.
 static void prv_transfer_stopped(AudioEndpointSessionId session_id) {
-  system_task_add_callback(prv_transfer_stopped_bg, (void *)(uintptr_t)session_id);
+  sys_work_add(prv_transfer_stopped_bg, (void *)(uintptr_t)session_id);
 }
 
 MicStreamServiceStartResult mic_stream_service_start(PebbleTask owner, uint32_t *stream_id) {

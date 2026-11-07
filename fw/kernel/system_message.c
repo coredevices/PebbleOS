@@ -13,7 +13,7 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/put_bytes/put_bytes.h>
-#include <pbl/services/system_task.h>
+#include <pbl/services/sys_work.h>
 
 #include <kernel/events.h>
 #include <kernel/language_pack_protocol.h>
@@ -37,7 +37,7 @@ static void prv_reset_kernel_bg_cb(void *unused) {
 }
 
 static void prv_ui_update_reset_delay_timer_callback(void *unused) {
-  system_task_add_callback(prv_reset_kernel_bg_cb, nullptr);
+  sys_work_add(prv_reset_kernel_bg_cb, nullptr);
 }
 
 static void prv_handle_firmware_complete_msg(void) {
