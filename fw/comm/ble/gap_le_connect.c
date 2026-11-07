@@ -284,15 +284,6 @@ void pbl_bt_handle_peer_version_info_event(
 
 //! bt_lock is assumed to be taken before calling this function.
 void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complete_event *event) {
-  TimerID param_watchdog_timer = TIMER_INVALID_ID;
-  if (event->status == PBL_BT_HCI_STATUS_SUCCESS) {
-    param_watchdog_timer = new_timer_create();
-    if (!param_watchdog_timer) {
-      PBL_LOG_ERR("Failed to create timer for connection params");
-      return;
-    }
-  }
-
   bt_lock();
   const struct pbl_bt_conn_params *params = &event->conn_params;
   PBL_LOG_INFO("LE Conn Compl: addr=" PBL_BT_ADDR_FMT ", is_random_addr=%u,",
@@ -332,9 +323,8 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
       }
 
       const struct pbl_bt_sm_key *remote_irk = event->is_resolved ? &event->irk : nullptr;
-      GAPLEConnection *connection = gap_le_connection_add(&event->peer_address, remote_irk,
-                                                          local_is_master, param_watchdog_timer);
-      param_watchdog_timer = TIMER_INVALID_ID; // Timer now owned by connection
+      GAPLEConnection *connection =
+          gap_le_connection_add(&event->peer_address, remote_irk, local_is_master);
       // Cache the BLE connection parameters
       connection->conn_params = *params;
       connection->gatt_mtu = event->mtu;
@@ -402,11 +392,6 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
   // Continue initiating connections to disconnected devices:
   prv_start_connecting_if_needed();
   bt_unlock();
-
-  // Clean up timer if we didn't use it (e.g., connection failed or already connected)
-  if (param_watchdog_timer != TIMER_INVALID_ID) {
-    new_timer_delete(param_watchdog_timer);
-  }
 }
 
 //! bt_lock is assumed to be taken before calling this function.

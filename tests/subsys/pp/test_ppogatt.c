@@ -19,10 +19,10 @@
 
 #include <fake_gatt_client_operations.h>
 #include <fake_gatt_client_subscriptions.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_session.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 #define MTU_SIZE         (158)
 #define MAX_PAYLOAD_SIZE (MTU_SIZE - 3 /* ATT Header size */ - 1 /* PPoGATT Packet Header */)
@@ -329,6 +329,7 @@ void test_ppogatt__cleanup(void) {
   fake_pbl_malloc_clear_tracking();
 
   fake_comm_session_cleanup();
+  fake_work_cleanup();
   free(s_client_reset_request);
   free(s_client_reset_complete);
 }
@@ -491,7 +492,7 @@ void test_ppogatt__cleanup_client_when_meta_read_fails(void) {
 // retry budget. Used to drive a retriable meta failure to client deletion.
 static void prv_fail_meta_read_retry(pbl_bt_characteristic_t meta, const uint8_t *value,
                                      size_t value_length, enum pbl_bt_gatt_error error) {
-  stub_new_timer_invoke(1);
+  fake_work_fire(fake_work_get_next());
   pbl_pp_gatt_handle_read_or_notification(meta, value, value_length, error);
 }
 
@@ -692,7 +693,7 @@ void test_ppogatt__server_reset_request_while_pending_ack(void) {
 
   // Simulate outbound queue having space again, the retry timer resends:
   fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
-  stub_new_timer_invoke(1);
+  fake_work_fire(fake_work_get_next());
 
   // Expect Reset Complete to be sent out, but nothing more than that:
   prv_assert_sent_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
@@ -927,14 +928,14 @@ void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(v
     uint32_t delay_ms = PPOGATT_SEND_RETRY_DELAY_MS;
     for (int i = 0; i < 6; ++i) {
       fake_gatt_client_op_assert_no_write();
-      cl_assert_equal_i(stub_new_timer_timeout(stub_new_timer_get_next()),
+      cl_assert_equal_i(fake_work_timeout_ms(fake_work_get_next()),
                         MIN(delay_ms, PPOGATT_SEND_RETRY_MAX_DELAY_MS));
-      stub_new_timer_invoke(1);
+      fake_work_fire(fake_work_get_next());
       delay_ms *= 2;
     }
 
     fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
-    stub_new_timer_invoke(1);
+    fake_work_fire(fake_work_get_next());
     prv_assert_sent_data(data, sn, s_short_data_fragment, sizeof(s_short_data_fragment));
     // The next stall starts over at the shortest delay.
   }
@@ -1125,7 +1126,7 @@ void test_ppogatt__send_retried_when_out_of_heap(void) {
   fake_gatt_client_op_assert_no_write();
 
   fake_malloc_set_largest_free_block(~0);
-  stub_new_timer_invoke(1);
+  fake_work_fire(fake_work_get_next());
   prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], 0,
                        s_short_data_fragment, sizeof(s_short_data_fragment));
   fake_gatt_client_op_assert_no_write();

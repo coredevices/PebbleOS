@@ -19,7 +19,6 @@
 #include <fake_HCIAPI.h>
 #include <fake_bluetooth_persistent_storage.h>
 #include <fake_events.h>
-#include <fake_new_timer.h>
 #include <fake_pbl_malloc.h>
 #include <fake_sys_work.h>
 

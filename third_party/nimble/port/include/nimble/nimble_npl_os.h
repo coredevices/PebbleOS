@@ -16,7 +16,7 @@
 #include "pbl/kernel/sem.h"
 #include "pbl/kernel/thread.h"
 #include "pbl/kernel/time.h"
-#include "pbl/services/new_timer/new_timer.h"
+#include "pbl/kernel/work.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -50,7 +50,7 @@ struct ble_npl_eventq {
 };
 
 struct ble_npl_callout {
-  TimerID handle;
+  struct pbl_delayed_work work;
 
   //! whether we have made changes to this timer from ISR state and need
   //! someone to go sync them back up on the main thread for us
@@ -58,7 +58,7 @@ struct ble_npl_callout {
 
   //! if we are pending_update, there might have been some ticks between
   //! when we asked to do work, and when it happens; set an actual target
-  //! time in ticks for newtimer, rather than deferring the number of ticks
+  //! time in ticks for the timer, rather than deferring the number of ticks
   //! to start counting when we actually schedule
   uint64_t update_target_time_ticks;
 

@@ -11,9 +11,10 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/new_timer/new_timer.h>
 #include <pbl/services/sys_work.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/units.h>
 
 #include <comm/bluetooth_analytics.h>
@@ -106,7 +107,6 @@ static const GAPLEConnectRequestParams s_default_connection_params_table[PBL_BT_
 extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
                                                   enum pbl_bt_response_time_state granted_state);
 
-static void prv_watchdog_timer_callback(void *ctx);
 static bool prv_handle_update_failed(GAPLEConnection *connection, enum pbl_bt_hci_status status);
 
 // -----------------------------------------------------------------------------
@@ -247,8 +247,8 @@ static void prv_request_params_update(GAPLEConnection *connection,
 
 retry:
   // Restart watchdog timer:
-  new_timer_start(connection->param_update_info.watchdog_timer, retry_ms,
-                  prv_watchdog_timer_callback, connection, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &connection->param_update_info.watchdog_work,
+                              PBL_MSEC(retry_ms));
 }
 
 static void prv_watchdog_sys_work_callback(void *ctx) {
@@ -270,11 +270,12 @@ static void prv_watchdog_sys_work_callback(void *ctx) {
   bt_unlock();
 }
 
-static void prv_watchdog_timer_callback(void *ctx) {
-  // NewTimers callbacks must never block on bt_lock: every other timer in the
-  // system (vibes, UI timeouts) is stalled behind it while the BT stack holds
-  // the lock. Defer to KernelBG, which re-validates the connection.
-  sys_work_add(prv_watchdog_sys_work_callback, ctx);
+static void prv_watchdog_fn(struct pbl_work *work) {
+  // Must never block on bt_lock: all other work on this queue (vibes, UI timeouts) is stalled
+  // behind it while the BT stack holds the lock. Defer to KernelBG, which re-validates the
+  // connection.
+  sys_work_add(prv_watchdog_sys_work_callback,
+               container_of(work, GAPLEConnection, param_update_info.watchdog_work.work));
 }
 
 void gap_le_connect_params_request(GAPLEConnection *connection,
@@ -286,12 +287,13 @@ void gap_le_connect_params_request(GAPLEConnection *connection,
   prv_request_params_update(connection, desired_state);
 }
 
-void gap_le_connect_params_setup_connection(GAPLEConnection *connection, TimerID timer) {
-  connection->param_update_info.watchdog_timer = timer;
+void gap_le_connect_params_setup_connection(GAPLEConnection *connection) {
+  pbl_delayed_work_init(&connection->param_update_info.watchdog_work, prv_watchdog_fn);
 }
 
 void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection) {
-  new_timer_delete(connection->param_update_info.watchdog_timer);
+  // No need to wait for a running function: it never dereferences the connection.
+  pbl_delayed_work_cancel(&connection->param_update_info.watchdog_work);
   prv_analytics_stop_conn_interval_timers();
 }
 
@@ -314,7 +316,7 @@ static void prv_evaluate(GAPLEConnection *connection,
 
     // If the deferred KernelBG callback is already queued or waiting on bt_lock at this point,
     // it's not a problem because the actual vs desired state gets checked in that path as well.
-    new_timer_stop(connection->param_update_info.watchdog_timer);
+    pbl_delayed_work_cancel(&connection->param_update_info.watchdog_work);
     return;
   }
 
@@ -351,8 +353,8 @@ static bool prv_handle_update_failed(GAPLEConnection *connection, enum pbl_bt_hc
   }
 
   PBL_LOG_DBG("Conn param request collided (0x%02x), retrying", status);
-  new_timer_start(connection->param_update_info.watchdog_timer, COLLISION_RETRY_MS,
-                  prv_watchdog_timer_callback, connection, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &connection->param_update_info.watchdog_work,
+                              PBL_MSEC(COLLISION_RETRY_MS));
 
   return true;
 }

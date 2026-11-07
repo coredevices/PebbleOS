@@ -10,7 +10,7 @@
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/services/new_timer/new_timer.h>
+#include <pbl/kernel/work.h>
 
 #include <comm/bt_conn_mgr_impl.h>
 
@@ -89,7 +89,7 @@ typedef struct GAPLEConnection {
   //! See gatt_service_changed.c
   uint16_t gatt_service_changed_att_handle;
   bool has_sent_gatt_service_changed_indication;
-  TimerID gatt_service_changed_indication_timer;
+  struct pbl_delayed_work gatt_service_changed_indication_work;
 
   //! The bonding ID (only for BLE at the moment).
   //! If the device is not bonded, the field will be PBL_BT_BONDING_ID_INVALID
@@ -121,7 +121,7 @@ typedef struct GAPLEConnection {
 
   //! @see gap_le_connect_params.c
   struct {
-    TimerID watchdog_timer;
+    struct pbl_delayed_work watchdog_work;
     uint8_t attempts;
     uint8_t collisions;
     bool is_request_pending;
@@ -143,8 +143,7 @@ typedef struct GAPLEConnection {
 } GAPLEConnection;
 
 GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *device,
-                                       const struct pbl_bt_sm_key *irk, bool local_is_master,
-                                       TimerID param_watchdog_timer);
+                                       const struct pbl_bt_sm_key *irk, bool local_is_master);
 
 //! Checks to see if the LE connection is in our list of currently tracked
 //! connections

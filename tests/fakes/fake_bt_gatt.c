@@ -9,13 +9,14 @@
 #include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/util/uuid.h>
 
 #include <clar_asserts.h>
 #include <comm/ble/gap_le_connection.h>
 
 // A long-ish nominal watchdog period; the value is irrelevant to the tests,
-// which fire the timer explicitly through stub_new_timer_fire.
+// which fire it explicitly through fake_work_fire.
 #define WATCHDOG_TIMEOUT_MS (10000)
 
 // Simulated discovery state, driven through the pbl_bt_gatt contract by
@@ -27,10 +28,11 @@ static int s_stop_count;
 static int s_start_ret_code;
 static int s_stop_ret_code;
 
-// The simulated controller's discovery watchdog. Created lazily and re-armed
-// each time a discovery is (re)started, so firing it reports a timeout against
-// the connection currently being discovered.
-static TimerID s_watchdog_timer = TIMER_INVALID_ID;
+// The simulated controller's discovery watchdog. Re-armed each time a discovery
+// is (re)started, so firing it reports a timeout against the connection
+// currently being discovered.
+static void prv_watchdog_timeout_fn(struct pbl_work *work);
+static PBL_DELAYED_WORK_DEFINE(s_watchdog_work, prv_watchdog_timeout_fn);
 static GAPLEConnection *s_watchdog_connection;
 
 // Service Changed indications the firmware has pushed to the controller: a count
@@ -43,26 +45,19 @@ static enum pbl_bt_errno prv_code_to_bterrno(int code) {
   return (code == 0) ? PBL_BT_ERRNO_OK : (enum pbl_bt_errno)PBL_BT_ERRNO_WITH_INTERNAL_ERROR(code);
 }
 
-static void prv_watchdog_timeout_cb(void *data) {
+static void prv_watchdog_timeout_fn(struct pbl_work *work) {
   // The controller reports the in-flight discovery as timed out.
   pbl_bt_cb_gatt_client_discovery_complete(s_watchdog_connection,
                                            PBL_BT_ERRNO_SERVICE_DISCOVERY_TIMEOUT);
 }
 
 static void prv_arm_watchdog(GAPLEConnection *connection) {
-  if (s_watchdog_timer == TIMER_INVALID_ID) {
-    s_watchdog_timer = new_timer_create();
-  }
   s_watchdog_connection = connection;
-  new_timer_start(s_watchdog_timer, WATCHDOG_TIMEOUT_MS, prv_watchdog_timeout_cb, nullptr, 0);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_watchdog_work, PBL_MSEC(WATCHDOG_TIMEOUT_MS));
 }
 
-// Frees the watchdog timer so no allocation outlives the discovery it guards.
 static void prv_disarm_watchdog(void) {
-  if (s_watchdog_timer != TIMER_INVALID_ID) {
-    new_timer_delete(s_watchdog_timer);
-    s_watchdog_timer = TIMER_INVALID_ID;
-  }
+  pbl_delayed_work_cancel(&s_watchdog_work);
 }
 
 // -- pbl_bt_gatt discovery contract ----------------------------------------
@@ -104,8 +99,8 @@ void pbl_bt_gatt_send_changed_indication(const struct pbl_bt_device_internal *de
   s_service_changed_last_range = *data;
 }
 
-TimerID pbl_bt_gatt_get_watchdog_timer_id(void) {
-  return s_watchdog_timer;
+struct pbl_delayed_work *pbl_bt_gatt_get_watchdog_work(void) {
+  return &s_watchdog_work;
 }
 
 int fake_gatt_get_service_changed_indication_count(void) {
