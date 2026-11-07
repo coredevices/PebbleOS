@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/kernel/section.h>
+
 /**
  * @defgroup kernel_mpu Memory protection
  * @ingroup kernel
@@ -33,6 +35,9 @@
  * @endcode
  * @{
  */
+
+/** Places a variable where unprivileged code can read it but not write to it. */
+#define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
 /** No access. Below a stack, this makes a guard. */
 #define PBL_MPU_NO_ACCESS 0U
@@ -111,6 +116,15 @@ extern const size_t pbl_soc_num_mpu_regions;
  * @return true if the range overlaps the ISR stack guard or one of the running thread.
  */
 bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end);
+
+/**
+ * @brief Get the memory of the running firmware image, to check pointers against.
+ *
+ * Not always what the MPU protects: an architecture may have to round its region up.
+ *
+ * @return Firmware image region.
+ */
+const struct pbl_mpu_region *pbl_mpu_region_firmware(void);
 
 /**
  * @brief Check whether a region contains an address.

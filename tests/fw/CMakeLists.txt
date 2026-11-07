@@ -150,9 +150,8 @@ pbl_clar_test(test_data_logging
   OVERRIDES dummy_board
 )
 
-pbl_clar_test(test_memory_layout
+pbl_clar_test(test_mpu_region
   SOURCES
-    fw/kernel/memory_layout.c
     kernel/mpu_region.c
 )
 
@@ -165,7 +164,7 @@ pbl_clar_test(test_app_manager
     fw/process_management/app_manager.c
     fw/process_management/pebble_process_md.c
     fw/process_management/process_runtime.c
-    fw/kernel/memory_layout.c
+    fw/process_management/process_regions.c
     fw/kernel/util/segment.c
     kernel/heap.c
     kernel/mpu_region.c

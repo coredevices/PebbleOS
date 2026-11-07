@@ -7,6 +7,7 @@
 
 #include <pbl/board/partitions.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -17,8 +18,8 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 #include <font_resource_keys.auto.h>
-#include <kernel/memory_layout.h>
 #include <process_state/app_state/app_state.h>
+#include <syscall/syscall.h>
 
 #ifdef CONFIG_QEMU
 #include <hardware/qemu_memorymap.h>
@@ -64,6 +65,7 @@ typedef enum {
   TestKind_RamfuncWrite,
   TestKind_RamfuncRead,
   TestKind_FilesystemRead,
+  TestKind_FilesystemSyscall,
 #ifdef CONFIG_MMAP_RESOURCES
   TestKind_ResourceBankRead,
 #endif
@@ -89,6 +91,7 @@ static const char *const s_test_titles[TestKindCount] = {
   [TestKind_RamfuncWrite] = "Ramfunc W",
   [TestKind_RamfuncRead] = "Ramfunc R",
   [TestKind_FilesystemRead] = "Filesystem R",
+  [TestKind_FilesystemSyscall] = "Filesystem syscall",
 #ifdef CONFIG_MMAP_RESOURCES
   [TestKind_ResourceBankRead] = "Resource bank R",
 #endif
@@ -196,6 +199,12 @@ static void prv_run_test(TestKind kind) {
       volatile uint32_t *p = (volatile uint32_t *)(FLASH_MAP_BASE + PART_FILESYSTEM_OFFSET);
       volatile uint32_t v = *p;
       (void)v;
+      break;
+    }
+    case TestKind_FilesystemSyscall: {
+      // The kernel must refuse to read this on the app's behalf too. Not through
+      // fonts_get_system_font(), which also reads the key from the app.
+      sys_font_get_system_font((const char *)(FLASH_MAP_BASE + PART_FILESYSTEM_OFFSET));
       break;
     }
 #ifdef CONFIG_MMAP_RESOURCES

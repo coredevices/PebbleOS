@@ -2,8 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
-
-#include <kernel/memory_layout.h>
+#include <pbl/kernel/mpu.h>
 
 PBL_WEAK const uint32_t __app_stack_start__;
 
@@ -42,6 +41,24 @@ PBL_WEAK int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
 }
 
 PBL_WEAK bool pbl_mpu_region_is_stack_guard(uintptr_t start, uintptr_t end) {
+  return false;
+}
+
+PBL_WEAK const struct pbl_mpu_region *pbl_mpu_region_firmware(void) {
+  return nullptr;
+}
+
+PBL_WEAK bool pbl_mpu_region_contains(const struct pbl_mpu_region *region, const void *ptr) {
+  return false;
+}
+
+PBL_WEAK bool pbl_mpu_region_contains_buffer(const struct pbl_mpu_region *region, const void *buf,
+                                             size_t length) {
+  return false;
+}
+
+PBL_WEAK bool pbl_mpu_region_contains_cstring(const struct pbl_mpu_region *region, const char *str,
+                                              size_t max_length) {
   return false;
 }
 

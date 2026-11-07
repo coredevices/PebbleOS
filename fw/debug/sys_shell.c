@@ -11,6 +11,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/new_timer/new_timer.h>
@@ -200,6 +201,16 @@ static int prv_cmd_audit_delay(const struct pbl_shell *sh, size_t argc, char **a
 }
 #endif
 
+static void prv_mpu_line(void *ctx, const char *line) {
+  pbl_shell_print(ctx, "%s", line);
+}
+
+static int prv_cmd_mpu(const struct pbl_shell *sh, size_t argc, char **argv) {
+  pbl_mpu_regions_print(prv_mpu_line, (void *)sh);
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_sys, mpu, nullptr, "Dump the MPU regions", prv_cmd_mpu, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, reset, nullptr, "Reset the system", prv_cmd_reset, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, crash, nullptr, "Reset as if the launcher panicked", prv_cmd_crash, 0,
                      0);

@@ -12,7 +12,8 @@
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/text_resources.h>
 #include <kernel/event_loop.h>
-#include <kernel/memory_layout.h>
+#include <process_management/process_regions.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/malloc.h>
 #include <kernel/util/fw_reset.h>
 #include <resource/resource.h>
@@ -247,8 +248,8 @@ GFont system_resource_get_font(const char *font_key) {
 
 PBL_SYSCALL(GFont, sys_font_get_system_font, (VAL, const char *, font_key)) {
   if (font_key && from_user) {
-    if (!memory_layout_is_cstring_in_region(memory_layout_get_app_region(), font_key, 100) &&
-        !memory_layout_is_cstring_in_region(memory_layout_get_microflash_region(), font_key, 100)) {
+    if (!pbl_mpu_region_contains_cstring(process_region_app(), font_key, 100) &&
+        !pbl_mpu_region_contains_cstring(pbl_mpu_region_firmware(), font_key, 100)) {
       PBL_LOG_ERR("Pointer %p not in app or microflash region", font_key);
       pbl_syscall_fail();
     }

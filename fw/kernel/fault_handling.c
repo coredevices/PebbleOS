@@ -4,6 +4,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mpu.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
@@ -15,7 +16,6 @@
 #include <applib/app_logging.h>
 #include <kernel/core_dump.h>
 #include <kernel/fault_handling.h>
-#include <kernel/memory_layout.h>
 #include <logging/logging_private.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
@@ -338,6 +338,11 @@ bool fault_handling_hit_stack_guard(const unsigned int *stacked_args, unsigned i
   return false;
 }
 
+static void prv_log_mpu_line(void *ctx, const char *line) {
+  char buffer[90];
+  PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, sizeof(buffer), "%s", line);
+}
+
 static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
   // Be very careful about touching stacked_args in this function. We can end up in the
   // memfault handler because we hit the stack guard, which indicates that we've run out of stack
@@ -348,7 +353,7 @@ static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
 
   char buffer[80];
   PBL_LOG_FROM_FAULT_HANDLER("Configured Regions: ");
-  memory_layout_dump_mpu_regions();
+  pbl_mpu_regions_print(prv_log_mpu_line, nullptr);
   PBL_LOG_FROM_FAULT_HANDLER("");
 
   // If if we faulted in a stack guard region, this indicates a stack overflow
