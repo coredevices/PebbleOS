@@ -169,44 +169,6 @@ def cmd_app_registry(args):
     write_if_changed(args.enum, "".join(out))
 
 
-# --- Pebble protocol endpoints not yet defined by their owners (subsys/pp) ---
-
-
-def cmd_endpoints_table(args):
-    with open(args.input) as f:
-        definition = json.load(f)
-
-    endpoints = list(definition["prf_and_normal_fw"])
-    if not args.recovery:
-        endpoints.extend(definition["normal_fw_only"])
-    endpoints.sort()
-
-    access_enums = {"private": "PBL_PP_ACCESS_PRIVATE", "any": "PBL_PP_ACCESS_ANY"}
-
-    out = ["// GENERATED -- DO NOT EDIT\n\n", "#include <pbl/pp/endpoint.h>\n\n"]
-    for eid, eid_str, access_str, cb_str, recv_imp, recv_opt in endpoints:
-        if int(eid_str, base=16) != eid:
-            raise ValueError(f"Endpoint IDs need to match: {eid} vs {eid_str}")
-        access = access_enums[access_str]
-        if recv_imp:
-            out.append(f"extern const struct pbl_pp_receiver_api {recv_imp};\n")
-            out.append(
-                f"PBL_PP_ENDPOINT_DEFINE_RECEIVER({eid_str}, {access}, {recv_imp});\n\n"
-            )
-            continue
-        out.append(
-            f"extern void {cb_str}(struct pbl_pp_session *session, const uint8_t *data, "
-            "size_t length);\n"
-        )
-        macro = (
-            "PBL_PP_ENDPOINT_DEFINE_MAIN"
-            if recv_opt == "main"
-            else "PBL_PP_ENDPOINT_DEFINE"
-        )
-        out.append(f"{macro}({eid_str}, {access}, {cb_str});\n\n")
-    write_if_changed(args.output, "".join(out))
-
-
 # --- applib_malloc ---------------------------------------------------------
 
 
@@ -339,12 +301,6 @@ def main():
         help="leave out the apps stored as resources (the stored apps are not built)",
     )
     p.set_defaults(func=cmd_app_registry)
-
-    p = sub.add_parser("endpoints-table")
-    p.add_argument("--input", required=True)
-    p.add_argument("--output", required=True)
-    p.add_argument("--recovery", action="store_true")
-    p.set_defaults(func=cmd_endpoints_table)
 
     p = sub.add_parser("applib-malloc")
     p.add_argument("--input", required=True)
