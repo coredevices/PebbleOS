@@ -1067,7 +1067,10 @@ void ppogatt_invalidate_all_references(void) {
     PPoGATTClient *client = s_ppogatt_head;
     while (client) {
       PPoGATTClient *next = (PPoGATTClient *)client->node.next;
-      prv_delete_client(client, true /* is_disconnected */, DeleteReason_InvalidateAllReferences);
+      // Reversed clients live on our own GATT server, nothing would recreate them
+      if (client->role != PPoGATTRoleReversed) {
+        prv_delete_client(client, true /* is_disconnected */, DeleteReason_InvalidateAllReferences);
+      }
       client = next;
     }
   }

@@ -102,6 +102,19 @@ static void prv_phone_sends_reversed_reset_request(void) {
   ppogatt_reversed_handle_data(CONN_HANDLE, (const uint8_t *)&reset_request, sizeof(reset_request));
 }
 
+static void prv_phone_sends_reversed_reset_complete(void) {
+  uint8_t reset_complete[sizeof(PPoGATTPacket) + sizeof(PPoGATTResetCompleteClientIDPayloadV1)] =
+      {};
+  PPoGATTPacket *packet = (PPoGATTPacket *)reset_complete;
+  packet->type = PPoGATTPacketTypeResetComplete;
+  *(PPoGATTResetCompleteClientIDPayloadV1 *)packet->payload =
+      (PPoGATTResetCompleteClientIDPayloadV1){
+        .ppogatt_max_rx_window = 25,
+        .ppogatt_max_tx_window = 25
+      };
+  ppogatt_reversed_handle_data(CONN_HANDLE, reset_complete, sizeof(reset_complete));
+}
+
 // Tests
 ///////////////////////////////////////////////////////////
 
@@ -161,4 +174,28 @@ void test_ppogatt_reversed__unsubscribe_deletes_reversed(void) {
   ppogatt_handle_service_discovered(s_characteristics);
   ppogatt_reversed_handle_unsubscribed(CONN_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
+}
+
+void test_ppogatt_reversed__invalidate_all_keeps_reversed(void) {
+  ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
+  ppogatt_handle_service_discovered(s_characteristics);
+  cl_assert_equal_i(ppogatt_client_count(), 2);
+
+  ppogatt_invalidate_all_references();
+  cl_assert_equal_i(ppogatt_client_count(), 1);
+
+  prv_phone_sends_reversed_reset_request();
+  cl_assert_equal_i(ppogatt_client_count(), 1);
+}
+
+void test_ppogatt_reversed__invalidate_all_keeps_open_reversed_session(void) {
+  ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
+  prv_phone_sends_reversed_reset_request();
+  prv_phone_sends_reversed_reset_complete();
+  cl_assert_equal_i(fake_comm_session_open_call_count(), 1);
+
+  ppogatt_invalidate_all_references();
+  ppogatt_handle_service_discovered(s_characteristics);
+  cl_assert_equal_i(ppogatt_client_count(), 1);
+  cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }
