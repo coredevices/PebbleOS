@@ -62,6 +62,7 @@ struct pbl_work {
   struct pbl_workq *q;
   bool pending;
   bool armed;
+  bool boosted;
   /** @endcond */
   /** Function. */
   pbl_work_fn_t fn;
@@ -94,6 +95,9 @@ struct pbl_workq {
   struct pbl_thread *thread;
   const struct pbl_workq_ops *ops;
   struct pbl_sem wake;
+  uint32_t boosts;
+  pbl_prio_t boost_prio;
+  pbl_prio_t unboosted_prio;
   /** @endcond */
 };
 
@@ -257,6 +261,28 @@ void pbl_work_init(struct pbl_work *work, pbl_work_fn_t fn);
  * @return true if queued, false if it was already pending.
  */
 bool pbl_work_submit(struct pbl_workq *q, struct pbl_work *work);
+
+/**
+ * @brief Set the priority a queue's thread runs at while it has boosted work.
+ *
+ * @param q Queue.
+ * @param prio Priority, above the thread's own for the boost to have an effect.
+ */
+void pbl_workq_set_boost_prio(struct pbl_workq *q, pbl_prio_t prio);
+
+/**
+ * @brief Queue a work item that raises its queue's priority until it has run.
+ *
+ * For latency sensitive work on a low priority queue, such as reading a device after its
+ * interrupt. The queue's thread runs at the priority set with pbl_workq_set_boost_prio() from now
+ * until the function returns or the item is canceled, together with any other boosted item.
+ * Submitting an item that is already pending boosts it.
+ *
+ * @param q Queue.
+ * @param work Work item.
+ * @return true if queued, false if it was already pending.
+ */
+bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work);
 
 /**
  * @brief Remove a work item from its queue, without waiting for it if it is running.
