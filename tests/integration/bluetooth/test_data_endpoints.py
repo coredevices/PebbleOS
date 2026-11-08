@@ -10,6 +10,7 @@ import struct
 import time
 
 import pytest
+from harness.errors import WatchTimeout
 from harness.helpers.ui import protocol_screenshot
 
 pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
@@ -37,6 +38,8 @@ DLS_SEND_ENABLE = 0x0A
 DLS_SET_SEND_ENABLE = 0x8B
 # Data logging's tag for native analytics heartbeats.
 DLS_TAG_HEARTBEAT = 87
+DLS_DRAIN_QUIET_S = 2
+DLS_DRAIN_TIMEOUT_S = 60
 HEARTBEAT_LOGGED_TIMEOUT_S = 5
 
 GET_BYTES_FILE = 0x03
@@ -92,24 +95,46 @@ def _dls_sessions(prompt):
     return sessions
 
 
+def _dls_drain(prompt, phone):
+    """Have the phone take everything pending. Each boot starts new
+    sessions, so a watch that rebooted without a phone to send them to
+    can have its session table full."""
+    since = phone.inbox.mark()
+    prompt("dls send")
+    deadline = time.monotonic() + DLS_DRAIN_TIMEOUT_S
+    while time.monotonic() < deadline:
+        try:
+            message, since = phone.inbox.next(
+                DATA_LOGGING_ENDPOINT,
+                lambda p: p[0] in (DLS_OPEN, DLS_DATA),
+                DLS_DRAIN_QUIET_S,
+                since,
+            )
+        except WatchTimeout:
+            return
+        phone.send(DATA_LOGGING_ENDPOINT, bytes([DLS_ACK, message[1]]))
+
+
 def test_data_logging(prompt, phone):
     """What the watch logs goes to the phone, session by session, and is
     dropped from the watch once the phone has it."""
+    _dls_drain(prompt, phone)
+    before = _dls_sessions(prompt)
     prompt("analytics heartbeat")
     # The heartbeat gets to data logging after the command returns.
     deadline = time.monotonic() + HEARTBEAT_LOGGED_TIMEOUT_S
     while True:
         sessions = _dls_sessions(prompt)
-        pending = {
+        grown = {
             s
             for s, (tag, size) in sessions.items()
-            if tag == DLS_TAG_HEARTBEAT and size
+            if tag == DLS_TAG_HEARTBEAT and size > before.get(s, (tag, 0))[1]
         }
-        if pending or time.monotonic() > deadline:
+        if grown or time.monotonic() > deadline:
             break
         time.sleep(0.1)
-    assert pending, f"no heartbeat logged: {sessions}"
-    (session,) = pending
+    assert grown, f"no heartbeat logged: {sessions}"
+    (session,) = grown
 
     prompt("dls send")
     deadline = time.monotonic() + 30
