@@ -14,11 +14,11 @@
 
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/process_management/app_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <kernel/event_loop.h>
@@ -307,7 +307,7 @@ static void prv_install(void *data) {
 //! services an install needs have started. The work itself goes to the
 //! background work queue.
 static void prv_install_when_ready(void *data) {
-  sys_work_add(prv_install, data);
+  pbl_sys_work_call(prv_install, data);
 }
 
 static void prv_install_isr(void *arg) {

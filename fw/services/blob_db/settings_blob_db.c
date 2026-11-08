@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
@@ -11,7 +12,6 @@
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
@@ -314,7 +314,7 @@ static void prv_settings_change_callback(const void *key, size_t key_len, uint32
   }
 
   s_sync_callback_pending = true;
-  sys_work_add(prv_deferred_sync_callback, nullptr);
+  pbl_sys_work_call(prv_deferred_sync_callback, nullptr);
 }
 
 static const struct prv_syncable_keys s_shell_prefs_keys = {

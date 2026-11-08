@@ -16,7 +16,6 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/settings/settings.h>
@@ -149,10 +148,10 @@ static int s_num_alarms_fired = 0;
 void prv_timer_kernel_bg_callback(void *data);
 
 static bool s_defer_sys_work_callbacks;
-static SysWorkCallback s_pending_sys_work_callback;
+static pbl_work_call_fn_t s_pending_sys_work_callback;
 static void *s_pending_sys_work_data;
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   if (s_defer_sys_work_callbacks) {
     s_pending_sys_work_callback = cb;
     s_pending_sys_work_data = data;

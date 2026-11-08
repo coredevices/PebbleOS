@@ -20,7 +20,7 @@
 #include <fake_sys_work.h>
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
-  sys_work_add(callback, data);
+  pbl_sys_work_call(callback, data);
 }
 
 bool launcher_task_is_current_task(void) {

@@ -8,6 +8,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
@@ -17,7 +18,6 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>

@@ -5,7 +5,6 @@
 
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gtypes.h>
@@ -42,7 +41,7 @@ static void prv_down_cb(void *data) {
   app_window_stack_push(spinner_window, false /* animated */);
 
   // Factory reset on SysWorkq so the animation gets priority
-  sys_work_add(prv_factory_reset, nullptr);
+  pbl_sys_work_call(prv_factory_reset, nullptr);
 }
 
 #ifdef CONFIG_RECOVERY_FW

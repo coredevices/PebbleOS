@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/size.h>
 

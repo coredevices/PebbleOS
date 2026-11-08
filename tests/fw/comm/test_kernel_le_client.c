@@ -107,7 +107,7 @@ void gatt_client_subscriptions_reschedule(void) {
 
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   // Use fake_sys_work as mock:
-  sys_work_add(callback, data);
+  pbl_sys_work_call(callback, data);
 }
 
 void ppogatt_create(void) {

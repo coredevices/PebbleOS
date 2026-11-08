@@ -4,10 +4,10 @@
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/services/timeline/reminders.h>
@@ -73,7 +73,7 @@ static void prv_job_callback(struct pbl_cron_job *job, void *data) {
   if (!s_reminder_armed) {
     return;
   }
-  if (sys_work_add(prv_trigger_reminder_sys_work_callback, &s_next_reminder_id)) {
+  if (pbl_sys_work_call(prv_trigger_reminder_sys_work_callback, &s_next_reminder_id)) {
     s_reminder_armed = false;
   } else {
     pbl_cron_job_schedule_at(job, pbl_realtime() + 1);

@@ -18,7 +18,6 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/services/data_logging/dls_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DECLARE(service_data_logging, CONFIG_SERVICE_DATA_LOGGING_LOG_LEVEL);
@@ -120,7 +119,7 @@ static bool check_ack_timeout_for_session(DataLoggingSession *session, void *dat
 
     // Send timeout msg from background work queue because it could take a while and also require
     //  more stack space than provided by the timer task.
-    sys_work_add(send_timeout_msg, (void *)(uintptr_t)(session->comm.session_id));
+    pbl_sys_work_call(send_timeout_msg, (void *)(uintptr_t)(session->comm.session_id));
 
     // Set reschedule to false because: 1.) we don't need to reschedule the timer since all
     // we did was process one that already expired, 2.) it can cause an infinite recursion
@@ -417,7 +416,7 @@ static void prv_reopen_next_session_sys_work_cb(void *data) {
   if (success) {
     // Schedule next one
     if (new_head) {
-      bool result = sys_work_add(prv_reopen_next_session_sys_work_cb, new_head);
+      bool result = pbl_sys_work_call(prv_reopen_next_session_sys_work_cb, new_head);
       PBL_ASSERTN(result);
     } else {
       s_endpoint_data.report_in_progress = false;
@@ -563,7 +562,7 @@ void dls_private_handle_disconnect(void *data) {
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
   if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
-    sys_work_add(dls_private_handle_disconnect, nullptr);
+    pbl_sys_work_call(dls_private_handle_disconnect, nullptr);
   }
 }
 

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <pbl/services/sys_work.h>
+#include <pbl/kernel/work.h>
 #include <pbl/shell/backend.h>
 #include <pbl/shell/shell.h>
 
@@ -362,7 +362,7 @@ static void prv_finish(const struct pbl_shell *sh, int ret) {
   if (sh->prompt != nullptr && ctx->active) {
     if (ctx->rx_head != ctx->rx_tail && !ctx->rx_scheduled) {
       ctx->rx_scheduled = true;
-      if (!sys_work_add(prv_rx_process, (void *)sh)) {
+      if (!pbl_sys_work_call(prv_rx_process, (void *)sh)) {
         ctx->rx_scheduled = false;
       }
     }
@@ -405,7 +405,7 @@ int pbl_shell_execute_line(const struct pbl_shell *sh, const char *line, size_t 
   memcpy(ctx->line, line, len);
   ctx->len = len;
 
-  if (!sys_work_add(prv_line_run, (void *)sh)) {
+  if (!pbl_sys_work_call(prv_line_run, (void *)sh)) {
     ctx->busy = false;
     return -ENOMEM;
   }
@@ -590,14 +590,14 @@ static void prv_schedule_from_isr(const struct pbl_shell *sh) {
   }
 
   ctx->rx_scheduled = true;
-  if (!sys_work_add_from_isr(prv_rx_process, (void *)sh)) {
+  if (!pbl_sys_work_call_from_isr(prv_rx_process, (void *)sh)) {
     ctx->rx_scheduled = false;
   }
 }
 
 void pbl_shell_start(const struct pbl_shell *sh) {
   sh->ctx->rx_scheduled = true;
-  if (!sys_work_add(prv_rx_process, (void *)sh)) {
+  if (!pbl_sys_work_call(prv_rx_process, (void *)sh)) {
     sh->ctx->rx_scheduled = false;
   }
 }

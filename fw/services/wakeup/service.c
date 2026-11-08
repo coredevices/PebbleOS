@@ -11,7 +11,6 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/stationary.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/wakeup.h>
 #include <pbl/settings/settings.h>
@@ -153,7 +152,7 @@ void wakeup_dispatcher_sys_work(void *data) {
 // OR queues a wakeup callback for that application
 static void prv_wakeup_dispatcher(struct pbl_work *work) {
   // Place actual work on sys_work to unload it from the high priority queue
-  sys_work_add(wakeup_dispatcher_sys_work, (void *)(intptr_t)s_current_timer_wakeup_id);
+  pbl_sys_work_call(wakeup_dispatcher_sys_work, (void *)(intptr_t)s_current_timer_wakeup_id);
 }
 
 static bool prv_find_next_wakeup_id_callback(struct pbl_settings_file *file,
@@ -709,7 +708,7 @@ void wakeup_handle_significant_clock_change(void) {
   if (pebble_task_get_current() == PebbleTask_SysWorkq) {
     prv_wakeup_rewrite_kernel_bg_cb(nullptr);
   } else {
-    sys_work_add(prv_wakeup_rewrite_kernel_bg_cb, nullptr);
+    pbl_sys_work_call(prv_wakeup_rewrite_kernel_bg_cb, nullptr);
   }
 }
 

@@ -2,15 +2,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/sys_work.h>
+#include <pbl/kernel/work.h>
 
 #include <unistd.h>
 
-PBL_WEAK bool sys_work_add(SysWorkCallback cb, void *data) {
+PBL_WEAK bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   cb(data);
   return true;
 }
 
-PBL_WEAK uint32_t sys_work_get_available_space(void) {
+PBL_WEAK size_t pbl_sys_work_num_free(void) {
   return 0;
 }

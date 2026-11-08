@@ -34,7 +34,8 @@ static bool s_sent_action = false;
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 }
 
-void sys_work_add(void (*callback)(void *data), void *data) {
+bool pbl_sys_work_call(void (*callback)(void *data), void *data) {
+  return true;
 }
 
 bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,

@@ -14,7 +14,6 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/put_bytes/put_bytes.h>
-#include <pbl/services/sys_work.h>
 
 #include <kernel/events.h>
 #include <kernel/language_pack_protocol.h>
@@ -38,7 +37,7 @@ static void prv_reset_kernel_bg_cb(void *unused) {
 }
 
 static void prv_ui_update_reset_delay_timer_callback(struct pbl_work *work) {
-  sys_work_add(prv_reset_kernel_bg_cb, nullptr);
+  pbl_sys_work_call(prv_reset_kernel_bg_cb, nullptr);
 }
 
 static PBL_DELAYED_WORK_DEFINE(s_reset_delay_timer, prv_ui_update_reset_delay_timer_callback);

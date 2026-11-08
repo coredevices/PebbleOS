@@ -157,7 +157,7 @@ void test_wakeup__gap(void) {
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
 }
 
-// work around sys_work_add
+// work around pbl_sys_work_call
 extern void wakeup_dispatcher_sys_work(void *data);
 
 void test_wakeup__out_of_order_schedule(void) {

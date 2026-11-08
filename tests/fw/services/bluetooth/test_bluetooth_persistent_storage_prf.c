@@ -5,9 +5,9 @@
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/board/partitions.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -95,7 +95,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   cb(data);
   return true;
 }

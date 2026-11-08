@@ -4,12 +4,12 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/services/timeline/timeline_actions.h>
@@ -175,7 +175,7 @@ void timeline_action_endpoint_invoke_action(const Uuid *id, TimelineItemActionTy
   PBL_LOG_HEXDUMP_DBG((uint8_t *)&invoke_action_data->msg, invoke_action_data->length);
 
   if (do_async) {
-    sys_work_add(prv_action_sys_work_callback, invoke_action_data);
+    pbl_sys_work_call(prv_action_sys_work_callback, invoke_action_data);
   } else {
     pbl_pp_send(pbl_pp_session_get_system(), PBL_PP_ENDPOINT_TIMELINE_ACTION,
                 (uint8_t *)&invoke_action_data->msg, invoke_action_data->length,

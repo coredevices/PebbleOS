@@ -6,8 +6,8 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
@@ -42,7 +42,7 @@ void pbl_pp__meta_send_error(struct pbl_pp_session *session, enum pbl_pp__meta_e
     .session = session,
     .payload = {.error = error, .endpoint_id = pbl_cpu_to_be16(endpoint_id)},
   };
-  sys_work_add(prv_send_cb, response);
+  pbl_sys_work_call(prv_send_cb, response);
 }
 
 static void prv_meta_handler(struct pbl_pp_session *session, const uint8_t *data, size_t length) {

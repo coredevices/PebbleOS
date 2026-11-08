@@ -9,8 +9,8 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/shell/shell.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
@@ -114,7 +114,7 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
 
     addr += chunk;
     len -= chunk;
-    sys_work_watchdog_feed();
+    pbl_task_wdt_feed_self();
   }
 
   return 0;
@@ -378,7 +378,7 @@ static void prv_stress_cb(void *data) {
   buf = pbl_malloc(len);
   if (buf == nullptr) {
     PBL_LOG_ALWAYS("flash stress test: malloc of size %" PRIu32 " failed", len);
-    sys_work_add(prv_stress_cb, (void *)(uintptr_t)(iters - 1U));
+    pbl_sys_work_call(prv_stress_cb, (void *)(uintptr_t)(iters - 1U));
     return;
   }
 
@@ -429,7 +429,7 @@ static void prv_stress_cb(void *data) {
 
   PBL_LOG_ALWAYS("flash stress test: %" PRIu32 " bytes at 0x%" PRIx32 " OK, %" PRIu32 " to go", len,
                  addr, iters - 1U);
-  sys_work_add(prv_stress_cb, (void *)(uintptr_t)(iters - 1U));
+  pbl_sys_work_call(prv_stress_cb, (void *)(uintptr_t)(iters - 1U));
 }
 
 static int prv_cmd_stress(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -443,7 +443,7 @@ static int prv_cmd_stress(const struct pbl_shell *sh, size_t argc, char **argv) 
 
   // This wears the flash out: erases repeat on the same sectors far faster than specified
   pbl_shell_print(sh, "flash stress test running in background");
-  sys_work_add(prv_stress_cb, (void *)(uintptr_t)count);
+  pbl_sys_work_call(prv_stress_cb, (void *)(uintptr_t)count);
 
   return 0;
 }

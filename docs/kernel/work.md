@@ -86,8 +86,33 @@ item on the queue, so it must be brief.
 The kernel starts both at boot. Any other queue's thread is created by whoever
 owns its stack, with `pbl_workq_thread` as the entry and the queue as the
 argument, and work submitted before it starts waits for it. The hooks in
-`struct pbl_workq_ops` attach policy, such as a watchdog, around the work a queue
-runs.
+`struct pbl_workq_ops` attach policy around the work a queue runs, such as a
+watchdog with `pbl_task_wdt_add_workq()`.
+
+### Calls on the system queues
+
+`pbl_sys_work_call()` runs a function with a payload on `pbl_sys_workq`, from
+slots the kernel owns, for work that cannot embed an item:
+
+- A caller waits for a slot for a while, then the system stops, as a queue that
+  stays full is stuck. `pbl_sys_work_try_call()` returns false instead, and
+  `pbl_sys_work_call_from_isr()` stops the system at once.
+- The queue's own thread never waits on itself: what does not fit goes on the
+  heap.
+- A thread created with `work_pool` in its attributes uses those slots and waits
+  for them, so one that floods the queue, such as an app's, cannot take the
+  slots the system needs.
+- `pbl_sys_work_block()` refuses calls for a while, e.g. during a shutdown.
+
+`pbl_sys_work_call_high()` does the same on `pbl_sys_workq_high`, dropping the
+call rather than stopping the system when no slot is free.
+
+### Boosted work
+
+Latency sensitive work on a low priority queue, such as reading a device after
+its interrupt, uses `pbl_work_submit_boosted()`. The queue's thread runs at the
+priority set with `pbl_workq_set_boost_prio()` from submission until the
+function returns or the item is canceled, together with any other boosted item.
 
 ## Choosing a mechanism
 
@@ -97,4 +122,6 @@ runs.
 | Defer from an interrupt to a thread | `struct pbl_work` |
 | Run something later, in a thread | `struct pbl_delayed_work` |
 | Several pending payloads | `pbl_work_call()` |
+| A payload on the system queue | `pbl_sys_work_call()` |
+| Not wait behind the app on a low priority queue | `pbl_work_submit_boosted()` |
 | Own priority, or long blocking work | A dedicated `struct pbl_workq` |

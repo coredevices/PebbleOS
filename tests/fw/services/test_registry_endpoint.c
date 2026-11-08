@@ -3,9 +3,9 @@
 
 #include <string.h>
 
+#include <pbl/kernel/work.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
-#include <pbl/services/sys_work.h>
 
 #include <applib/app_watch_info.h>
 #include <clar.h>
@@ -40,7 +40,7 @@ WatchInfoColor mfg_info_get_watch_color(void) {
   return s_watch_color;
 }
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   cb(data);
   return true;
 }

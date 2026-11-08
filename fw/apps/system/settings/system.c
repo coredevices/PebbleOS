@@ -16,12 +16,12 @@
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/stationary.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -482,7 +482,7 @@ static void prv_compact_settings_dbs_task_cb(void *data) {
 }
 
 static void prv_compact_settings_dbs(void) {
-  sys_work_add(prv_compact_settings_dbs_task_cb, nullptr);
+  pbl_sys_work_call(prv_compact_settings_dbs_task_cb, nullptr);
 }
 
 // Debug options window

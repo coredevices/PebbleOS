@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
-#include <pbl/services/sys_work.h>
 
 PBL_LOG_MODULE_DEFINE(service_health_sync_endpoint, CONFIG_SERVICE_HEALTH_SYNC_ENDPOINT_LOG_LEVEL);
 
@@ -61,7 +61,7 @@ static void prv_handle_sync(const uint8_t *msg, size_t len) {
 
   PBL_LOG_DBG("Received health SYNC request");
 
-  sys_work_add(prv_sync_health_sys_work_cb, nullptr);
+  pbl_sys_work_call(prv_sync_health_sys_work_cb, nullptr);
 }
 
 void health_sync_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg,

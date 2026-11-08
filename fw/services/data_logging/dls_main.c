@@ -10,6 +10,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/data_logging/data_logging_service.h>
@@ -17,7 +18,6 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_storage.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/list.h>
 #include <pbl/util/string.h>
@@ -116,7 +116,7 @@ static void prv_send_next_session_sys_work_cb(void *data) {
     return;
   }
 
-  if (!sys_work_add(prv_send_next_session_sys_work_cb, new_head)) {
+  if (!pbl_sys_work_call(prv_send_next_session_sys_work_cb, new_head)) {
     PBL_LOG_WRN("Failed to schedule next DLS flush callback; aborting pass");
     prv_drain_send_list(new_head);
     s_flush_in_progress = false;
@@ -162,7 +162,7 @@ static void prv_check_all_sessions_timer_cb(void *data) {
               bool_to_str(check_counter == 0), bool_to_str(pbl_pp_session_get_system() != nullptr),
               check_counter);
 
-  sys_work_add(prv_send_all_sessions_sys_work_cb, (void *)(uintptr_t)(check_counter == 0));
+  pbl_sys_work_call(prv_send_all_sessions_sys_work_cb, (void *)(uintptr_t)(check_counter == 0));
 
   // force a flush every 15 minutes
   static const int EMPTY_ALL_SESSIONS_INTERVAL_MINUTES =
@@ -346,7 +346,7 @@ void dls_send_all_sessions(void) {
     PBL_LOG_INFO("Not sending sessions because sending is disabled");
     return;
   }
-  sys_work_add(prv_send_all_sessions_sys_work_cb, (void *)true);
+  pbl_sys_work_call(prv_send_all_sessions_sys_work_cb, (void *)true);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -540,7 +540,7 @@ DataLoggingResult dls_log(DataLoggingSession *session, const void *data, uint32_
   // handle previously enqueued work for this session.
   if (!session->data->write_request_pending) {
     session->data->write_request_pending = true;
-    sys_work_add(prv_write_all_sessions_to_flash, nullptr);
+    pbl_sys_work_call(prv_write_all_sessions_to_flash, nullptr);
   }
 
 unlock_and_exit:

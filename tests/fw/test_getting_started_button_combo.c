@@ -25,8 +25,9 @@ void app_window_stack_push(Window *window, bool animated) {
   return;
 }
 
-void sys_work_add(void (*callback)(void *data), void *data) {
+bool pbl_sys_work_call(void (*callback)(void *data), void *data) {
   callback(data);
+  return true;
 }
 
 void process_manager_send_callback_event_to_process(PebbleTask task, void (*callback)(void *data),

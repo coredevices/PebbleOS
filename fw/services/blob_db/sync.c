@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/util.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/list.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
@@ -62,7 +62,7 @@ static void prv_abandon_kernelbg_callback(void *data) {
 }
 
 static void prv_abandon_timer_callback(void *data) {
-  sys_work_add(prv_abandon_kernelbg_callback, data);
+  pbl_sys_work_call(prv_abandon_kernelbg_callback, data);
 }
 
 static void prv_timeout_kernelbg_callback(void *data) {
@@ -83,7 +83,7 @@ static void prv_timeout_kernelbg_callback(void *data) {
 }
 
 static void prv_timeout_timer_callback(void *data) {
-  sys_work_add(prv_timeout_kernelbg_callback, data);
+  pbl_sys_work_call(prv_timeout_kernelbg_callback, data);
 }
 
 static void prv_send_writeback(BlobDBSyncSession *session) {

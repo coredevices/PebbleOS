@@ -541,6 +541,9 @@ void process_manager_process_setup(PebbleTask task) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The app's calls to the system wait for each other rather than take the system's slots.
+static PBL_WORK_POOL_DEFINE(s_app_work_pool, 8);
+
 struct pbl_thread *process_manager_thread_create(PebbleTask task, struct pbl_thread_attr *attr) {
   static struct pbl_thread s_app_thread;
   static struct pbl_thread s_worker_thread;
@@ -559,6 +562,8 @@ struct pbl_thread *process_manager_thread_create(PebbleTask task, struct pbl_thr
   attr->user_start = user_region->base;
   attr->user_end = user_region->base + user_region->size;
 #endif
+
+  attr->work_pool = is_app ? &s_app_work_pool : nullptr;
 
   struct pbl_thread *thread = is_app ? &s_app_thread : &s_worker_thread;
   PBL_ASSERTN(pbl_thread_create(thread, attr) == 0);

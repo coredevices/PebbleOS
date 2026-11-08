@@ -8,14 +8,15 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pbl/services/sys_work.h>
+#include <pbl/kernel/work.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
 
 typedef struct {
   ListNode node;
-  SysWorkCallback callback;
+  pbl_work_call_fn_t callback;
   void *data;
 } SysWorkCallbackNode;
 
@@ -23,7 +24,7 @@ static ListNode *s_sys_work_callback_head = nullptr;
 static bool s_invoke_as_current = false;
 static uint32_t sys_work_available_space = ~(uint32_t)0;
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   SysWorkCallbackNode *node = (SysWorkCallbackNode *)malloc(sizeof(SysWorkCallbackNode));
   cl_assert(node != nullptr);
   list_init(&node->node);
@@ -38,19 +39,19 @@ bool sys_work_add(SysWorkCallback cb, void *data) {
   return true;
 }
 
-bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
-  return sys_work_add(cb, data);
+bool pbl_sys_work_call_from_isr(pbl_work_call_fn_t cb, void *data) {
+  return pbl_sys_work_call(cb, data);
 }
 
-bool sys_work_try_add(SysWorkCallback cb, void *data) {
-  return sys_work_add(cb, data);
+bool pbl_sys_work_try_call(pbl_work_call_fn_t cb, void *data) {
+  return pbl_sys_work_call(cb, data);
 }
 
-uint32_t sys_work_get_available_space(void) {
+size_t pbl_sys_work_num_free(void) {
   return sys_work_available_space;
 }
 
-void sys_work_set_available_space(uint32_t space) {
+void fake_sys_work_set_num_free(uint32_t space) {
   sys_work_available_space = space;
 }
 
@@ -112,20 +113,10 @@ void fake_sys_work_callbacks_cleanup(void) {
   cl_assert(s_sys_work_callback_head == nullptr);
 }
 
-void sys_work_watchdog_feed(void) {
-}
-
 uint32_t fake_sys_work_count_callbacks(void) {
   return list_count(s_sys_work_callback_head);
 }
 
-void sys_work_enable_raised_priority(bool is_raised) {
-}
-
-bool sys_work_is_ready_to_run(void) {
-  return true;
-}
-
-void *sys_work_get_current_callback(void) {
+void *pbl_sys_work_current_fn(void) {
   return s_fake_sys_work_current_cb;
 }

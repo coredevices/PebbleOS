@@ -7,8 +7,8 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/size.h>
 #include <pbl/util/string.h>
@@ -484,7 +484,7 @@ exit:
     pbl_free(state);
   } else {
     // Keep going
-    sys_work_add(prv_dump_log_system_cb, state);
+    pbl_sys_work_call(prv_dump_log_system_cb, state);
   }
 }
 
@@ -514,7 +514,7 @@ bool pbl_log_flash_dump(int generation, pbl_log_flash_dump_line_cb_t line_cb,
   };
 
   // Kick it off
-  sys_work_add(prv_dump_log_system_cb, state);
+  pbl_sys_work_call(prv_dump_log_system_cb, state);
   return (true);
 }
 
