@@ -7,6 +7,7 @@
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/speaker/speaker_service.h>
 
 #include <clar.h>
@@ -34,8 +35,30 @@ bool do_not_disturb_is_active(void) {
   return s_dnd_active;
 }
 
-bool sys_work_try_add_raised(SysWorkCallback cb, void *data) {
-  return sys_work_add(cb, data);
+static void prv_run_work(void *data) {
+  struct pbl_work *work = data;
+
+  work->pending = false;
+  work->fn(work);
+}
+
+// The service's item outlives the fake queue it was on, which the tests empty.
+static struct pbl_work *s_boosted_work;
+
+bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work) {
+  if (work->pending) {
+    return false;
+  }
+  s_boosted_work = work;
+  work->pending = true;
+  return sys_work_add(prv_run_work, work);
+}
+
+static void prv_drop_queued_work(void) {
+  fake_sys_work_callbacks_cleanup();
+  if (s_boosted_work != nullptr) {
+    s_boosted_work->pending = false;
+  }
 }
 
 void pbl_irq_lock(void) {
@@ -162,7 +185,7 @@ static void prv_pump_until_idle(void) {
 }
 
 void test_speaker_service__initialize(void) {
-  fake_sys_work_callbacks_cleanup();
+  prv_drop_queued_work();
   fake_event_init();
   s_running = false;
   s_start_count = 0;
@@ -181,7 +204,7 @@ void test_speaker_service__initialize(void) {
 
 void test_speaker_service__cleanup(void) {
   speaker_service_stop();
-  fake_sys_work_callbacks_cleanup();
+  prv_drop_queued_work();
 }
 
 // A tone shorter than the device ring must still be played in full, and the device must play
@@ -462,7 +485,7 @@ static void prv_resample_partition(const int16_t *input, unsigned partition, int
   cl_assert(s_output_count >= 2 * RESAMPLE_INPUT_SAMPLES);
   memcpy(output, s_output, 2 * RESAMPLE_INPUT_SAMPLES * sizeof(int16_t));
   speaker_service_stop();
-  fake_sys_work_callbacks_cleanup();
+  prv_drop_queued_work();
 }
 
 void test_speaker_service__upsampling_does_not_depend_on_packet_boundaries(void) {

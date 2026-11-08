@@ -18,11 +18,11 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/speaker/note_sequence.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -110,7 +110,6 @@ typedef struct {
   CircularBuffer fifo;
   // Periods handed out with no queued samples, counted from the device interrupt
   volatile uint32_t idle_periods;
-  volatile bool bottom_half_pending;
 
   // Finish-event delivery
   bool finish_enabled;
@@ -248,7 +247,8 @@ static void prv_fifo_flush(void) {
   pbl_irq_unlock();
 }
 
-static void prv_bottom_half(void *data);
+static void prv_bottom_half(struct pbl_work *work);
+static PBL_WORK_DEFINE(s_bottom_half_work, prv_bottom_half);
 
 //! Runs from the device interrupt: drain the queue into the period and wake SysWorkq once.
 static void prv_period_done(const struct pbl_audio *audio, void *period,
@@ -266,13 +266,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
 
   (void)pbl_audio_period_ready(audio, period);
 
-  // A dropped wakeup is retried on the next period; underrunning beats flooding the queue
-  if (!s_state.bottom_half_pending) {
-    s_state.bottom_half_pending = true;
-    if (!sys_work_try_add_raised(prv_bottom_half, nullptr)) {
-      s_state.bottom_half_pending = false;
-    }
-  }
+  pbl_work_submit_boosted(&pbl_sys_workq, &s_bottom_half_work);
 }
 
 //! The speaker draws more than the default battery discharge limit allows
@@ -327,7 +321,6 @@ static int prv_device_up(void) {
   circular_buffer_init(&s_state.fifo, s_state.fifo_storage, SPEAKER_FIFO_BYTES);
   s_state.ring = stream.buf;
   s_state.idle_periods = 0;
-  s_state.bottom_half_pending = false;
 
   prv_high_load(true);
   ret = pbl_audio_start(SPEAKER, &stream);
@@ -498,9 +491,8 @@ static bool prv_can_preempt(SpeakerPriority new_pri) {
 
 //! SysWorkq side of the device interrupt: refill the queue, end drained playback and stop the
 //! device once it has idled through its standby.
-static void prv_bottom_half(void *data) {
+static void prv_bottom_half(struct pbl_work *work) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  s_state.bottom_half_pending = false;
 
   if (s_state.source_type == SpeakerSourceStream && s_state.stream_realtime) {
     prv_refill_realtime_locked();

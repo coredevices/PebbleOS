@@ -9,8 +9,8 @@
 #include <pbl/input/input.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -320,9 +320,9 @@ static int prv_wake(const struct pbl_cst816 *cst) {
   return pbl_intc_enable(&state->irq);
 }
 
-static void prv_work(void *arg) {
-  const struct pbl_cst816 *cst = arg;
-  struct pbl_cst816_state *state = cst->state;
+static void prv_work(struct pbl_work *work) {
+  struct pbl_cst816_state *state = container_of(work, struct pbl_cst816_state, work);
+  const struct pbl_cst816 *cst = state->cst;
   uint8_t data[CST816_TOUCH_DATA_SIZE];
   uint16_t gesture_code = 0U;
   bool report_gesture = false;
@@ -335,7 +335,6 @@ static void prv_work(void *arg) {
 
   pbl_touch_lock(&cst->touch);
 
-  state->work_pending = false;
   if (!state->enabled) {
     pbl_touch_unlock(&cst->touch);
     return;
@@ -414,14 +413,7 @@ static void prv_irq_handler(void *arg) {
   const struct pbl_cst816 *cst = arg;
   struct pbl_cst816_state *state = cst->state;
 
-  if (state->work_pending) {
-    return;
-  }
-
-  state->work_pending = true;
-  if (!sys_work_try_add_raised(prv_work, arg)) {
-    state->work_pending = false;
-  }
+  pbl_work_submit_boosted(&pbl_sys_workq, &state->work);
 }
 
 static int prv_sleep(const struct pbl_cst816 *cst, bool awake) {
@@ -449,6 +441,9 @@ static int prv_sleep(const struct pbl_cst816 *cst, bool awake) {
 static int prv_init(const struct pbl_touch *touch) {
   const struct pbl_cst816 *cst = prv_from_touch(touch);
   struct pbl_cst816_state *state = cst->state;
+
+  state->cst = cst;
+  pbl_work_init(&state->work, prv_work);
   int ret;
 
   ret = pbl_device_init(&cst->reset.port->dev);
