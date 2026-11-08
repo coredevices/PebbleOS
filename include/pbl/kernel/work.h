@@ -439,4 +439,75 @@ size_t pbl_work_pool_num_free(const struct pbl_work_pool *pool);
 int pbl_work_call(struct pbl_workq *q, struct pbl_work_pool *pool, pbl_work_call_fn_t fn,
                   void *data, pbl_timeout_t timeout);
 
+/**
+ * @brief Run a function with a payload on @ref pbl_sys_workq.
+ *
+ * For work that cannot embed a work item. Thread context only. A thread with its own slots, see
+ * @ref pbl_thread_attr, waits for one; the queue's own thread puts what does not fit on the heap;
+ * any other thread waits a while, then stops the system, as a queue that stays full is stuck.
+ *
+ * @param fn Function.
+ * @param data Argument of @p fn.
+ * @return true if queued, false while calls are blocked.
+ */
+bool pbl_sys_work_call(pbl_work_call_fn_t fn, void *data);
+
+/**
+ * @brief Like pbl_sys_work_call(), from an ISR: stops the system at once if no slot is free.
+ *
+ * @param fn Function.
+ * @param data Argument of @p fn.
+ * @return true if queued, false while calls are blocked.
+ */
+bool pbl_sys_work_call_from_isr(pbl_work_call_fn_t fn, void *data);
+
+/**
+ * @brief Like pbl_sys_work_call(), but never waits nor stops the system. Callable from an ISR.
+ *
+ * @param fn Function.
+ * @param data Argument of @p fn.
+ * @return true if queued, false if no slot was free or calls are blocked.
+ */
+bool pbl_sys_work_try_call(pbl_work_call_fn_t fn, void *data);
+
+/**
+ * @brief Run a short, time sensitive function with a payload on @ref pbl_sys_workq_high.
+ *
+ * Thread context only; waits a little for a free slot.
+ *
+ * @param fn Function.
+ * @param data Argument of @p fn.
+ * @return true if queued, false if no slot became free.
+ */
+bool pbl_sys_work_call_high(pbl_work_call_fn_t fn, void *data);
+
+/**
+ * @brief Like pbl_sys_work_call_high(), from an ISR: the call is dropped if no slot is free.
+ *
+ * @param fn Function.
+ * @param data Argument of @p fn.
+ */
+void pbl_sys_work_call_high_from_isr(pbl_work_call_fn_t fn, void *data);
+
+/**
+ * @brief Refuse new calls to @ref pbl_sys_workq, e.g. while the system shuts down.
+ *
+ * @param block true to refuse them, false to accept them again.
+ */
+void pbl_sys_work_block(bool block);
+
+/**
+ * @brief Get how many calls the caller can make to @ref pbl_sys_workq without waiting.
+ *
+ * @return Free slots, the caller's own if it has some.
+ */
+size_t pbl_sys_work_num_free(void);
+
+/**
+ * @brief Get the function running on @ref pbl_sys_workq, for debugging.
+ *
+ * @return The function, including one behind a call the queue made to itself, NULL when idle.
+ */
+void *pbl_sys_work_current_fn(void);
+
 /** @} */

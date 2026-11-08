@@ -27,6 +27,22 @@ config KERNEL_SYS_WORKQ_BOOST_PRIO
 	int "Background work queue priority while running boosted work"
 	default 3
 
+config KERNEL_SYS_WORKQ_CALLS
+	int "Calls with a payload pending at once on the background work queue"
+	default 30
+
+config KERNEL_SYS_WORKQ_CALL_TIMEOUT_MS
+	int "Time to wait for a background work queue slot before stopping the system"
+	default 3000
+
+config KERNEL_SYS_WORKQ_HIGH_CALLS
+	int "Calls with a payload pending at once on the high priority work queue"
+	default 5
+
+config KERNEL_SYS_WORKQ_HIGH_CALL_TIMEOUT_MS
+	int "Time to wait for a high priority work queue slot"
+	default 50
+
 config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
 	int "High priority work queue stack size in bytes"
 	default 1380
