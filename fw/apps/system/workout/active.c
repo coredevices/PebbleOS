@@ -1493,12 +1493,14 @@ static void prv_draw_confetti(GContext *ctx, WorkoutActiveWindow *window, GSize 
 
 static void prv_draw_page_indicator(GContext *ctx, WorkoutActiveWindow *window, GSize size,
                                     bool on_band) {
-  const int count = window->num_scrollable_metrics;
+  // The heart rate chart behind the gauge is a page of its own.
+  const int count = window->num_scrollable_metrics + (window->hr_history ? 1 : 0);
+  const int current_page = window->current_scrollable_metric + (window->hr_plot_visible ? 1 : 0);
   if (count < 2) {
     return;
   }
   for (int i = 0; i < count; i++) {
-    const bool current = i == window->current_scrollable_metric;
+    const bool current = i == current_page;
     // Dots clear of the bezel, the current page larger.
     const int offset = i * 12 - (count - 1) * 6;
     const GPoint center = PBL_IF_ROUND_ELSE(GPoint(size.w / 2 + offset, size.h - 12),
