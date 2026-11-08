@@ -3,8 +3,21 @@
 
 import pytest
 from harness.connections import Capability
+from harness.errors import Unsupported
 from harness.helpers.pairing import WatchPairing
 from harness.helpers.phone import IOS
+
+
+@pytest.fixture(autouse=True)
+def bluetooth_on(dut):
+    """Bluetooth out of airplane mode, which persists: a run that left it on
+    would fail every test after it."""
+    try:
+        command = dut.command("bt_airplane", mode="off")
+    except Unsupported:
+        return
+    if dut.has(Capability.PROMPT):
+        dut.prompt(command)
 
 
 @pytest.fixture
