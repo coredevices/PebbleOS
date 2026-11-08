@@ -8,6 +8,7 @@
 
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/kernel.h>
+#include <pbl/kernel/work.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <clar.h>
@@ -407,4 +408,66 @@ void test_task_wdt__woken_waiting_channel_expires_when_starved(void) {
   cl_assert_equal_i(s_callback_channel, 0);
   cl_assert(s_first_callback_ms >= s_woken_ms + TIMEOUT_MS);
   cl_assert(s_first_callback_ms < s_woken_ms + TIMEOUT_MS + 2 * PERIOD_MS);
+}
+
+// ---- work queues ------------------------------------------------------------
+
+static struct pbl_workq s_wq;
+
+static void prv_quick_fn(struct pbl_work *work) {
+}
+
+static void prv_stuck_fn(struct pbl_work *work) {
+  prv_sleep_ms(60 * 1000);
+  cl_fail("the stuck item outlived the watchdog");
+}
+
+static PBL_WORK_DEFINE(s_quick_work, prv_quick_fn);
+static PBL_WORK_DEFINE(s_stuck_work, prv_stuck_fn);
+
+static void prv_idle_queue_entry(void *arg) {
+  prv_sleep_ms(1);
+  cl_assert(pbl_task_wdt_add_workq(&s_wq, TIMEOUT_MS, prv_callback, nullptr) >= 0);
+  for (int i = 0; i < 6; i++) {
+    pbl_work_submit(&s_wq, &s_quick_work);
+    prv_sleep_ms(TIMEOUT_MS);
+  }
+  pbl_test_kernel_stop();
+}
+
+void test_task_wdt__idle_work_queue_never_expires(void) {
+  pbl_workq_init(&s_wq);
+  prv_spawn(0, "workq", pbl_workq_thread, &s_wq);
+  prv_spawn(1, "main", prv_idle_queue_entry, nullptr);
+  pbl_test_kernel_run();
+  cl_assert_equal_i(s_callbacks, 0);
+  cl_assert(!s_reset);
+}
+
+static void prv_threadless_queue_entry(void *arg) {
+  cl_assert_equal_i(pbl_task_wdt_add_workq(&s_wq, TIMEOUT_MS, prv_callback, nullptr), -EINVAL);
+  pbl_test_kernel_stop();
+}
+
+void test_task_wdt__work_queue_without_a_thread_is_refused(void) {
+  pbl_workq_init(&s_wq);
+  prv_spawn(0, "main", prv_threadless_queue_entry, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_stuck_queue_entry(void *arg) {
+  prv_sleep_ms(1);
+  cl_assert(pbl_task_wdt_add_workq(&s_wq, TIMEOUT_MS, prv_callback, &s_work) >= 0);
+  pbl_work_submit(&s_wq, &s_stuck_work);
+  prv_sleep_ms(60 * 1000);
+}
+
+void test_task_wdt__stuck_work_item_expires(void) {
+  pbl_workq_init(&s_wq);
+  prv_spawn(0, "workq", pbl_workq_thread, &s_wq);
+  prv_spawn(1, "main", prv_stuck_queue_entry, nullptr);
+  pbl_test_kernel_run();
+  cl_assert(s_callbacks >= 1);
+  cl_assert(s_first_callback_ms >= TIMEOUT_MS);
+  cl_assert(s_reset);
 }

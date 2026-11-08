@@ -8,6 +8,7 @@ pbl_clar_test(test_task_wdt
     kernel/sched.c
     kernel/timer.c
     kernel/thread.c
+    kernel/work.c
     kernel/mutex.c
     kernel/sem.c
     kernel/msgq.c

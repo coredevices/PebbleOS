@@ -14,6 +14,7 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
@@ -432,3 +433,37 @@ void pbl_task_wdt_reset_for_test(void) {
   s_stalled = false;
 }
 #endif
+
+static void prv_workq_wait(struct pbl_workq *q, bool waiting) {
+  pbl_task_wdt_set_waiting(waiting);
+}
+
+static void prv_workq_done(struct pbl_workq *q) {
+  pbl_task_wdt_feed_self();
+}
+
+static const struct pbl_workq_ops s_workq_ops = {
+  .wait = prv_workq_wait,
+  .done = prv_workq_done,
+};
+
+static void *prv_workq_expired(int channel_id, void *user_data) {
+  return pbl_workq_current_fn(user_data);
+}
+
+int pbl_task_wdt_add_workq(struct pbl_workq *q, uint32_t timeout_ms,
+                           pbl_task_wdt_callback_t callback, void *user_data) {
+  struct pbl_thread *thread = pbl_workq_get_thread(q);
+  if (thread == nullptr) {
+    return -EINVAL;
+  }
+
+  const int channel_id =
+      pbl_task_wdt_add(thread, timeout_ms, callback != nullptr ? callback : prv_workq_expired,
+                       callback != nullptr ? user_data : q);
+
+  if (channel_id >= 0) {
+    pbl_workq_set_ops(q, &s_workq_ops);
+  }
+  return channel_id;
+}
