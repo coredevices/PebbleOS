@@ -9,7 +9,6 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/shell/shell.h>
 
 #include <kernel/event_loop.h>
@@ -41,9 +40,9 @@ static int prv_cmd_stall(const struct pbl_shell *sh, size_t argc, char **argv) {
   } else if (strcmp(thread, "timers") == 0) {
     pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_stall_timer, PBL_MSEC(10));
   } else if (strcmp(thread, "bg") == 0) {
-    sys_work_add(prv_stall, nullptr);
+    pbl_sys_work_call(prv_stall, nullptr);
   } else if (strcmp(thread, "irq") == 0) {
-    sys_work_add(prv_stall_irq, nullptr);
+    pbl_sys_work_call(prv_stall_irq, nullptr);
   } else {
     pbl_shell_error(sh, "unknown thread '%s', pick main | bg | timers | irq", thread);
     return -EINVAL;

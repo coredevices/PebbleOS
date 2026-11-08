@@ -9,7 +9,6 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/work.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 
@@ -94,7 +93,7 @@ static void prv_heartbeat_sys_work_cb(void *data) {
 }
 
 static void prv_heartbeat_timer_cb(struct pbl_work *work) {
-  sys_work_add(prv_heartbeat_sys_work_cb, nullptr);
+  pbl_sys_work_call(prv_heartbeat_sys_work_cb, nullptr);
   pbl_delayed_work_schedule_next(&s_heartbeat_timer, pbl_ms_to_ticks(HEARTBEAT_PERIOD_SEC * 1000));
 }
 
@@ -181,7 +180,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_heartbeat(const struct pbl_shell *sh, size_t argc, char **argv) {
-  sys_work_add(prv_heartbeat_sys_work_cb, nullptr);
+  pbl_sys_work_call(prv_heartbeat_sys_work_cb, nullptr);
   return 0;
 }
 

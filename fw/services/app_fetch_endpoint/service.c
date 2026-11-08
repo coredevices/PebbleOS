@@ -5,6 +5,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
@@ -13,7 +14,6 @@
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/put_bytes/put_bytes.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/uuid.h>
 
@@ -249,7 +249,7 @@ void app_fetch_put_bytes_event_handler(PebblePutBytesEvent *pb_event) {
 
   PebblePutBytesEvent *pb_event_copy = pbl_malloc_check(sizeof(PebblePutBytesEvent));
   memcpy(pb_event_copy, pb_event, sizeof(PebblePutBytesEvent));
-  sys_work_add(prv_put_bytes_event_sys_work_cb, pb_event_copy);
+  pbl_sys_work_call(prv_put_bytes_event_sys_work_cb, pb_event_copy);
 }
 
 //! Callback for the background work queue to fire off the fetch request. Triggered by a call to
@@ -339,7 +339,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
                                     PBL_BT_RESPONSE_TIME_MIN,
                                     PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS, nullptr);
 
-  sys_work_add(prv_app_fetch_binaries_sys_work_cb, request);
+  pbl_sys_work_call(prv_app_fetch_binaries_sys_work_cb, request);
 }
 
 AppFetchError app_fetch_get_previous_error(void) {
@@ -376,7 +376,7 @@ void app_fetch_cancel_from_sys_work(AppInstallId app_id) {
 
 void app_fetch_cancel(AppInstallId app_id) {
   // Everything within app fetch happens on the background task
-  sys_work_add(prv_cancel_fetch_from_sys_work, (void *)(uintptr_t)app_id);
+  pbl_sys_work_call(prv_cancel_fetch_from_sys_work, (void *)(uintptr_t)app_id);
 }
 
 bool app_fetch_in_progress(void) {

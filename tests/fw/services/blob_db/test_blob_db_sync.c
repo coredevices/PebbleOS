@@ -49,7 +49,7 @@ BlobDBToken blob_db_endpoint_send_writeback(BlobDBId db_id, time_t last_updated,
   if (s_num_until_timeout != 0 && s_num_writebacks >= s_num_until_timeout) {
     // Don't respond - simulates timeout (message lost/no response from phone)
   } else {
-    sys_work_add(prv_handle_response_from_phone, session);
+    pbl_sys_work_call(prv_handle_response_from_phone, session);
   }
 
   return 12345;

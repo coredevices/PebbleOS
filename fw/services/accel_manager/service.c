@@ -11,12 +11,12 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/imu/units.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>
@@ -265,9 +265,9 @@ static bool prv_call_data_callback(AccelManagerState *state) {
       return pbl_msgq_put(queue, &event, PBL_NO_WAIT) == 0;
     }
     case PebbleTask_SysWorkq:
-      return sys_work_add(state->data_cb_handler, state->data_cb_context);
+      return pbl_sys_work_call(state->data_cb_handler, state->data_cb_context);
     case PebbleTask_SysWorkqHigh:
-      return sys_work_add_high(state->data_cb_handler, state->data_cb_context);
+      return pbl_sys_work_call_high(state->data_cb_handler, state->data_cb_context);
     default:
       pbl_panic(); // Unsupported task for the accel manager
   }
@@ -449,8 +449,8 @@ PBL_SYSCALL(AccelManagerState *, sys_accel_manager_data_subscribe, (VAL, AccelSa
   // `handler_task` decides where prv_call_data_callback() dispatches the
   // user-supplied data_cb. For KernelMain/SysWorkq/SysWorkqHigh values
   // the callback ends up invoked directly in kernel mode (either via the
-  // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, sys_work_add,
-  // or sys_work_add_high) — handing an unprivileged app arbitrary
+  // kernel main event loop's PEBBLE_CALLBACK_EVENT handler, pbl_sys_work_call,
+  // or pbl_sys_work_call_high) — handing an unprivileged app arbitrary
   // kernel-mode code execution. Force unprivileged callers onto their own
   // task so the dispatch lands in their app/worker event loop instead.
   if (from_user) {

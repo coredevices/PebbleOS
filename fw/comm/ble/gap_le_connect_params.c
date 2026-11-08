@@ -13,7 +13,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/units.h>
 
@@ -274,8 +273,8 @@ static void prv_watchdog_fn(struct pbl_work *work) {
   // Must never block on bt_lock: all other work on this queue (vibes, UI timeouts) is stalled
   // behind it while the BT stack holds the lock. Defer to SysWorkq, which re-validates the
   // connection.
-  sys_work_add(prv_watchdog_sys_work_callback,
-               container_of(work, GAPLEConnection, param_update_info.watchdog_work.work));
+  pbl_sys_work_call(prv_watchdog_sys_work_callback,
+                    container_of(work, GAPLEConnection, param_update_info.watchdog_work.work));
 }
 
 void gap_le_connect_params_request(GAPLEConnection *connection,

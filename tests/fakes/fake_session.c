@@ -7,11 +7,11 @@
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/app_session.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/list.h>
 
@@ -186,7 +186,7 @@ void pbl_pp_session_send_next(struct pbl_pp_session *session) {
   if (session->is_send_next_call_pending) {
     return;
   }
-  sys_work_add(prv_send_next_kernel_bg_cb, session);
+  pbl_sys_work_call(prv_send_next_kernel_bg_cb, session);
   session->is_send_next_call_pending = true;
 }
 

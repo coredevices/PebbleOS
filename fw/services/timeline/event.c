@@ -10,7 +10,6 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
@@ -55,7 +54,7 @@ static void prv_update_status_async(void) {
     return; // we already have a cb scheduled
   }
 
-  sys_work_add(prv_update_status_sys_work_callback, nullptr);
+  pbl_sys_work_call(prv_update_status_sys_work_callback, nullptr);
 }
 
 static void prv_timer_callback(struct pbl_work *work) {
@@ -186,7 +185,7 @@ static void prv_init([[maybe_unused]] void *data) {
 }
 
 void timeline_event_init(void) {
-  sys_work_add(prv_init, nullptr);
+  pbl_sys_work_call(prv_init, nullptr);
 }
 
 void timeline_event_deinit(void) {

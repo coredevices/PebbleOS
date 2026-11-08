@@ -132,7 +132,7 @@ subsystem collects listeners at link time and calls each for every event:
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
   if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
-    sys_work_add(prv_handle_disconnect, NULL);
+    pbl_sys_work_call(prv_handle_disconnect, NULL);
   }
 }
 

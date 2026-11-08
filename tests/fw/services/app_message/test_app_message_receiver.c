@@ -29,7 +29,7 @@ bool process_manager_send_event_to_process(PebbleTask task, PebbleEvent *e) {
   cl_assert_equal_i(PEBBLE_CALLBACK_EVENT, e->type);
 
   // Use fake_sys_work as mock implementation:
-  sys_work_add(e->callback.callback, e->callback.data);
+  pbl_sys_work_call(e->callback.callback, e->callback.data);
   return true;
 }
 

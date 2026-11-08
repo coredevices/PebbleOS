@@ -9,12 +9,12 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
@@ -135,7 +135,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
       return;
     }
     // Timed out, try again
-    sys_work_add(prv_protocol_send_next_chunk, state);
+    pbl_sys_work_call(prv_protocol_send_next_chunk, state);
     return;
   }
 
@@ -187,7 +187,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
                                       PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS, nullptr);
   }
 
-  sys_work_add(prv_protocol_send_next_chunk, state);
+  pbl_sys_work_call(prv_protocol_send_next_chunk, state);
   return;
 
 cleanup:

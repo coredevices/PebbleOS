@@ -40,6 +40,9 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
   while it is blocked. Once woken it must run within its timeout, counted
   from the check that first finds it runnable, so a waiting thread starved
   by a busier, higher-priority one still expires.
+- `pbl_task_wdt_add_workq()` watches a work queue's thread: it waits while the
+  queue is idle and its channel is fed after each item, so each item gets the
+  whole timeout.
 - `pbl_task_wdt_suspend()` keeps every channel fed for a bounded time (or until
   `pbl_task_wdt_resume()`), for phases such as boot or a long settings-file
   compaction where stalls are expected.
@@ -47,12 +50,12 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
 ## Users
 
 - `fw/main.c` starts the watchdog, suspends it for the first 30 s of
-  boot, adds the SysWorkqHigh channel (fed from a regular timer, which proves
-  the timer thread still runs callbacks) and the KernelMain channel, which
-  the launcher event loop feeds.
-- `fw/services/sys_work/service.c` owns the SysWorkq
-  channel. Its callback throttles the app thread to the idle priority for a
-  short time when the background work queue is ready to run but starved.
+  boot, watches the high priority system work queue with
+  `pbl_task_wdt_add_workq()`, and adds the KernelMain channel, which the
+  launcher event loop feeds.
+- `fw/process_management/app_throttle.c` watches the background system work
+  queue. Its callback throttles the app thread to the idle priority for a
+  short time when that queue is ready to run but starved.
 - `subsys/bluetooth/init.c` owns the NimBLE host channel, waiting while the
   host has no events to run.
 - Flash, filesystem and console code feeds the calling thread's channel from

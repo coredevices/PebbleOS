@@ -8,8 +8,8 @@
 
 #include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/pp/transports/console.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/base64.h>
 
 #define ESC 0x1b
@@ -172,7 +172,7 @@ void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
       s_rx_state = RX_TEXT;
       if (c == '\\' && !s_rx_dropping && s_rx_len > 1U) {
         s_rx_pending = true;
-        if (!sys_work_add_from_isr(prv_process_frame, nullptr)) {
+        if (!pbl_sys_work_call_from_isr(prv_process_frame, nullptr)) {
           s_rx_pending = false;
         }
       }
@@ -189,7 +189,7 @@ void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
     case RX_ACK_END:
       s_rx_state = RX_TEXT;
       if (c == '\\' && s_ack_len == ACK_B64_LEN) {
-        sys_work_add_high_from_isr(prv_process_ack, nullptr);
+        pbl_sys_work_call_high_from_isr(prv_process_ack, nullptr);
       }
       break;
   }

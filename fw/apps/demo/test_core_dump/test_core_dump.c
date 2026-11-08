@@ -7,7 +7,6 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -162,7 +161,7 @@ static void menu_select_callback(int index, void *ctx) {
 
   } else if (index == 11) {
     PBL_LOG_INFO("Infinite Loop on background work queue");
-    sys_work_add(stuck_sys_work_callback, nullptr);
+    pbl_sys_work_call(stuck_sys_work_callback, nullptr);
 
   } else if (index == 12) {
     PBL_LOG_INFO("Generate hard-fault");

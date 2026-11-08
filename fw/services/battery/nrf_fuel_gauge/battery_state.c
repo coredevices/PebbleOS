@@ -14,7 +14,6 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_state.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/ratio.h>
 
 #include <kernel/events.h>
@@ -437,7 +436,7 @@ static void prv_enqueue_update(bool force) {
   if (s_update_pending) {
     return;
   }
-  if (sys_work_add(prv_update_state, nullptr)) {
+  if (pbl_sys_work_call(prv_update_state, nullptr)) {
     s_update_pending = true;
   }
 }

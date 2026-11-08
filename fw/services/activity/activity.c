@@ -11,6 +11,7 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
@@ -22,7 +23,6 @@
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/protobuf_log/protobuf_log_hr.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/base64.h>
@@ -775,7 +775,7 @@ PBL_T_STATIC void prv_minute_sys_work_cb(void *data) {
 // ------------------------------------------------------------------------------------------------
 // Runs on the timer task. Simply register a callback for the background work queue from here.
 static void prv_minute_cb(struct pbl_cron_job *job, void *data) {
-  sys_work_add(prv_minute_sys_work_cb, data);
+  pbl_sys_work_call(prv_minute_sys_work_cb, data);
   pbl_cron_job_schedule(job);
 }
 
@@ -1122,7 +1122,7 @@ static void prv_handle_activity_enabled_change(void) {
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
 
-  sys_work_add(prv_set_enable_cb, nullptr);
+  pbl_sys_work_call(prv_set_enable_cb, nullptr);
 }
 
 static void prv_charger_event_cb(PebbleEvent *e, void *context) {
@@ -1174,7 +1174,7 @@ static bool prv_bg_request_run(ActivityBgRequest *req, ActivityBgRequestHandler 
   PBL_ASSERTN(task == PebbleTask_App || task == PebbleTask_Worker);
 
   req->handler = handler;
-  if (!sys_work_add(prv_bg_request_system_cb, req)) {
+  if (!pbl_sys_work_call(prv_bg_request_system_cb, req)) {
     pbl_free(req);
     return false;
   }
@@ -1287,7 +1287,7 @@ bool activity_start_tracking(bool test_mode) {
   if (!s_activity_initialized) {
     return false;
   }
-  return sys_work_add(prv_start_tracking_cb, (void *)test_mode);
+  return pbl_sys_work_call(prv_start_tracking_cb, (void *)test_mode);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1300,7 +1300,7 @@ bool activity_stop_tracking(void) {
     prv_stop_tracking_early();
   }
   pbl_mutex_unlock(&s_activity_state.mutex);
-  return sys_work_add(prv_stop_tracking_cb, nullptr);
+  return pbl_sys_work_call(prv_stop_tracking_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1663,7 +1663,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
     context->num_samples = chunk_size;
     memmove(context->data, data, chunk_size * sizeof(AccelRawData));
     s_activity_state.pending_test_cb = true;
-    sys_work_add(prv_feed_samples_system_cb, context);
+    pbl_sys_work_call(prv_feed_samples_system_cb, context);
 
     data += chunk_size;
     num_samples -= chunk_size;
@@ -1676,7 +1676,7 @@ bool activity_test_run_minute_callback(void) {
   if (!s_activity_initialized) {
     return false;
   }
-  return sys_work_add(prv_minute_sys_work_cb, nullptr);
+  return pbl_sys_work_call(prv_minute_sys_work_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1823,7 +1823,7 @@ bool activity_test_send_fake_dls_records(void) {
     return false;
   }
   // Enqueue it for SysWorkq to process
-  return sys_work_add(prv_send_fake_dls_records_system_cb, nullptr);
+  return pbl_sys_work_call(prv_send_fake_dls_records_system_cb, nullptr);
 }
 
 // ------------------------------------------------------------------------------------------------

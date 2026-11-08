@@ -11,8 +11,8 @@
 #ifdef CONFIG_GH3X2X_ALGO
 #include <math.h>
 
+#include <pbl/kernel/work.h>
 #include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/services/sys_work.h>
 
 #include <gh3x2x_demo_mp.h>
 #include <gh_demo.h>
@@ -103,7 +103,7 @@ static void gh3026_int_irq_callback(void *arg) {
   hal_gh3x2x_int_handler_call_back();
 
   if (s_hrm_int_flag == false) {
-    if (sys_work_add_from_isr(gh3026_int_callback_function, nullptr)) {
+    if (pbl_sys_work_call_from_isr(gh3026_int_callback_function, nullptr)) {
       s_hrm_int_flag = true;
     }
   }
@@ -244,7 +244,7 @@ static void gh3x2x_timer_callback(void *data) {
   if (param != 0x87965421) {
     // Coalesce repeated timer firings - only queue one callback at a time
     if (s_hrm_timer_flag == false) {
-      if (sys_work_add(gh3x2x_timer_callback, (void *)0x87965421)) {
+      if (pbl_sys_work_call(gh3x2x_timer_callback, (void *)0x87965421)) {
         s_hrm_timer_flag = true;
       }
     }
@@ -308,7 +308,7 @@ bool gh3x2x_ble_data_recv(void *context) {
     return false;
   }
 
-  if (!sys_work_add(gh3x2x_ble_data_recv_handle, context)) {
+  if (!pbl_sys_work_call(gh3x2x_ble_data_recv_handle, context)) {
     return false;
   }
   return true;
@@ -443,7 +443,7 @@ static void gh3x2x_ft_ctr_start_handle(void *data) {
 }
 
 void gh3x2x_start_ft_ctr(void) {
-  sys_work_add(gh3x2x_ft_ctr_start_handle, nullptr);
+  pbl_sys_work_call(gh3x2x_ft_ctr_start_handle, nullptr);
 }
 
 // shoud be called in background work queue
@@ -452,7 +452,7 @@ static void gh3x2x_ft_leakage_start_handle(void *data) {
 }
 
 void gh3x2x_start_ft_leakage(void) {
-  sys_work_add(gh3x2x_ft_leakage_start_handle, nullptr);
+  pbl_sys_work_call(gh3x2x_ft_leakage_start_handle, nullptr);
 }
 
 // shoud be called in background work queue
@@ -467,7 +467,7 @@ static void gh3x2x_factory_test_disable_handle(void *data) {
 }
 
 void gh3x2x_factory_test_disable(void) {
-  sys_work_add(gh3x2x_factory_test_disable_handle, (void *)HRM);
+  pbl_sys_work_call(gh3x2x_factory_test_disable_handle, (void *)HRM);
 }
 
 void gh3x2x_set_work_mode(int32_t mode) {

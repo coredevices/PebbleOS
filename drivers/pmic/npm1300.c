@@ -16,8 +16,8 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -299,7 +299,7 @@ static void prv_pmic_state_change_cb(void *null) {
 }
 
 static void prv_npm1300_interrupt_handler(void *arg) {
-  sys_work_add_from_isr(prv_pmic_state_change_cb, nullptr);
+  pbl_sys_work_call_from_isr(prv_pmic_state_change_cb, nullptr);
 }
 
 int pbl_npm1300_charger_init(const struct pbl_device *dev) {

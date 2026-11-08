@@ -7,7 +7,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/firmware_update.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/ratio.h>
 #include <pbl/util/testing.h>
 
@@ -132,7 +131,7 @@ static void sys_work_handle_battery_critical(void *data) {
 }
 
 static void prv_enter_standby(void) {
-  sys_work_add(sys_work_handle_battery_critical, nullptr);
+  pbl_sys_work_call(sys_work_handle_battery_critical, nullptr);
 }
 
 static void prv_log_battery_state(PreciseBatteryChargeState state) {

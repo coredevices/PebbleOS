@@ -16,7 +16,7 @@
 
 extern void notification_storage_reset(void);
 
-typedef void (*SysWorkCallback)(void *data);
+typedef void (*pbl_work_call_fn_t)(void *data);
 
 static Attribute action1_attributes[] = {
   {.id = AttributeIdTitle, .cstring = "Dismiss"},
@@ -61,7 +61,7 @@ static Attribute attributes[] = {
   {.id = AttributeIdSubtitle, .cstring = "Subject"},
 };
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   return true;
 }
 

@@ -25,7 +25,6 @@
 #include <pbl/services/prf_update.h>
 #include <pbl/services/regular_timer.h>
 #include <pbl/services/services.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <debug/debug.h>
@@ -37,6 +36,7 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
 #include <mfg/mfg_info.h>
+#include <process_management/app_throttle.h>
 #include <process_management/process_regions.h>
 #include <resource/resource.h>
 #include <resource/system_resource.h>
@@ -119,6 +119,22 @@ static void prv_resource_banks_region_add(void) {
 #endif
 }
 
+static void prv_task_init(void *data) {
+  task_init();
+}
+
+//! The kernel runs the system work queues; give them the system's watchdog and identities.
+static void prv_sys_workq_init(void) {
+  pebble_task_register(PebbleTask_SysWorkq, pbl_workq_get_thread(&pbl_sys_workq));
+  pebble_task_register(PebbleTask_SysWorkqHigh, pbl_workq_get_thread(&pbl_sys_workq_high));
+  app_throttle_init();
+  PBL_ASSERTN(pbl_task_wdt_add_workq(&pbl_sys_workq_high, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr,
+                                     nullptr) >= 0);
+  // rand() keeps its state per thread.
+  pbl_sys_work_call(prv_task_init, nullptr);
+  PBL_ASSERTN(pbl_sys_work_call_high(prv_task_init, nullptr));
+}
+
 int main(void) {
   pebble_task_register(PebbleTask_KernelMain, pbl_thread_current());
   process_regions_thread_init();
@@ -142,7 +158,7 @@ int main(void) {
 
   kernel_applib_init();
 
-  sys_work_init();
+  prv_sys_workq_init();
 
   events_init();
 

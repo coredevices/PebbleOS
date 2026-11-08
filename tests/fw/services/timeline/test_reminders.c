@@ -52,7 +52,7 @@ extern time_t get_reminder_timestamp(void);
 extern ReminderId *get_reminder_id(void);
 
 // Runs the reminder job if it is due at the given time.
-// sys_work_add is faked to enqueue, so we then drain the queue.
+// pbl_sys_work_call is faked to enqueue, so we then drain the queue.
 static void prv_advance_to_and_fire(time_t target) {
   now = target;
   fake_cron_job_fire_if_due(now);

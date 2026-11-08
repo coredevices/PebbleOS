@@ -4,8 +4,8 @@
 
 #include <string.h>
 
+#include <pbl/kernel/work.h>
 #include <pbl/pp/endpoint.h>
-#include <pbl/services/sys_work.h>
 
 #include <clar.h>
 
@@ -20,7 +20,7 @@ typedef void (*CallbackEventCallback)(void *data);
 static int s_kernel_main_schedule_count;
 void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
   ++s_kernel_main_schedule_count;
-  sys_work_add(callback, data);
+  pbl_sys_work_call(callback, data);
 }
 
 #define FAKE_SESSION ((struct pbl_pp_session *)1)

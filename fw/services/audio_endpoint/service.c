@@ -8,7 +8,6 @@
 #include <pbl/pp/send.h>
 #include <pbl/services/audio_endpoint.h>
 #include <pbl/services/audio_endpoint_private.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/circular_buffer.h>
 
 #include <comm/bt_lock.h>
@@ -90,9 +89,9 @@ static void prv_start_active_mode(void *data) {
 //! Never block on bt_lock from the high priority queue (pbl_pp_session_set_responsiveness
 //! takes it); defer to SysWorkq.
 static void prv_active_mode_timer_cb(struct pbl_work *work) {
-  sys_work_add(prv_start_active_mode, nullptr);
+  pbl_sys_work_call(prv_start_active_mode, nullptr);
 
-  // sys_work_add() may wait, so the session may have stopped or restarted by now.
+  // pbl_sys_work_call() may wait, so the session may have stopped or restarted by now.
   if (s_session.active_mode_on && !pbl_delayed_work_is_pending(&s_session.active_mode_trigger)) {
     pbl_delayed_work_schedule_next(&s_session.active_mode_trigger, ACTIVE_MODE_PERIOD_TICKS);
   }

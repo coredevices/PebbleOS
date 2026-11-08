@@ -7,7 +7,7 @@
 
 #include <pbl/console/console.h>
 #include <pbl/crc/crc.h>
-#include <pbl/services/sys_work.h>
+#include <pbl/kernel/work.h>
 #include <pbl/util/base64.h>
 
 #include <console/console_private.h>
@@ -25,8 +25,8 @@ static char s_tx[2048];
 static size_t s_tx_len;
 
 static bool s_task_queue_full;
-static SysWorkCallback s_task_cb;
-static SysWorkCallback s_timer_work_cb;
+static pbl_work_call_fn_t s_task_cb;
+static pbl_work_call_fn_t s_timer_work_cb;
 
 void pbl_console_lock(void) {
 }
@@ -41,7 +41,7 @@ void pbl_console_putchar(char c) {
 void pbl_console_flush(void) {
 }
 
-bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call_from_isr(pbl_work_call_fn_t cb, void *data) {
   if (s_task_queue_full) {
     return false;
   }
@@ -49,7 +49,7 @@ bool sys_work_add_from_isr(SysWorkCallback cb, void *data) {
   return true;
 }
 
-void sys_work_add_high_from_isr(SysWorkCallback cb, void *data) {
+void pbl_sys_work_call_high_from_isr(pbl_work_call_fn_t cb, void *data) {
   s_timer_work_cb = cb;
 }
 
@@ -84,12 +84,12 @@ static void prv_feed_str(const char *str) {
 
 static void prv_run_task(void) {
   if (s_timer_work_cb != nullptr) {
-    SysWorkCallback cb = s_timer_work_cb;
+    pbl_work_call_fn_t cb = s_timer_work_cb;
     s_timer_work_cb = nullptr;
     cb(nullptr);
   }
   if (s_task_cb != nullptr) {
-    SysWorkCallback cb = s_task_cb;
+    pbl_work_call_fn_t cb = s_task_cb;
     s_task_cb = nullptr;
     cb(nullptr);
   }
@@ -331,7 +331,7 @@ void test_console_frame__ack_gets_through_while_a_frame_waits(void) {
   const size_t ack_len = prv_encode_ack(ack, 42);
 
   prv_feed(frame, frame_len);
-  SysWorkCallback frame_cb = s_task_cb;
+  pbl_work_call_fn_t frame_cb = s_task_cb;
   prv_feed(ack, ack_len);
   prv_run_task();
   cl_assert_equal_i(s_acked, 42);

@@ -7,9 +7,9 @@
 
 #include <pbl/cron/cron.h>
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/settings/settings.h>
 
 #include <applib/ui/action_toggle.h>
@@ -33,7 +33,7 @@ static int s_num_dnd_events_put = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
 
-bool sys_work_add(SysWorkCallback cb, void *data) {
+bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
   cb(data);
   return true;
 }

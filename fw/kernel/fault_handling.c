@@ -8,9 +8,9 @@
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_logging.h>
@@ -199,7 +199,7 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
 
   CrashInfo crash_info = make_crash_info_pc(stashed_lr);
   setup_log_app_crash_info(crash_info);
-  sys_work_add(prv_log_app_lr_and_pc_sys_work, &s_current_app_crash_info);
+  pbl_sys_work_call(prv_log_app_lr_and_pc_sys_work, &s_current_app_crash_info);
 
   prv_kill_user_process(stashed_lr);
   for (;;) {

@@ -5,6 +5,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/reminder_db.h>
@@ -18,7 +19,6 @@
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
@@ -1225,7 +1225,7 @@ static void prv_dismiss_all_step(void *context) {
     timeline_item_free_allocated_buffer(&item);
   }
 
-  sys_work_add(prv_dismiss_all_next, ctx);
+  pbl_sys_work_call(prv_dismiss_all_next, ctx);
 }
 
 void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifications,

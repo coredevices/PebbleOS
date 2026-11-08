@@ -16,7 +16,6 @@
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/settings/settings.h>
@@ -534,7 +533,7 @@ static void prv_snooze_timer_callback(struct pbl_work *work) {
   const uintptr_t generation = s_snooze_generation;
 
   PBL_LOG_INFO("Snooze timeout");
-  sys_work_add(prv_snooze_kernel_bg_callback, (void *)generation);
+  pbl_sys_work_call(prv_snooze_kernel_bg_callback, (void *)generation);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -576,7 +575,7 @@ cleanup:
 }
 
 static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
-  sys_work_add(prv_timer_kernel_bg_callback, data);
+  pbl_sys_work_call(prv_timer_kernel_bg_callback, data);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1350,7 +1349,7 @@ static void prv_language_change_kernel_bg_callback(void *unused) {
 static EventServiceInfo s_language_change_event_info;
 
 static void prv_language_change_event_handler(PebbleEvent *event, void *context) {
-  sys_work_add(prv_language_change_kernel_bg_callback, nullptr);
+  pbl_sys_work_call(prv_language_change_kernel_bg_callback, nullptr);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1413,7 +1412,7 @@ void alarm_service_enable_alarms(bool enable) {
     PBL_LOG_DBG("Missed alarm %d is too late to fire", id);
     return;
   }
-  sys_work_add(prv_timer_kernel_bg_callback, (void *)(intptr_t)id);
+  pbl_sys_work_call(prv_timer_kernel_bg_callback, (void *)(intptr_t)id);
 }
 
 // ----------------------------------------------------------------------------------------------

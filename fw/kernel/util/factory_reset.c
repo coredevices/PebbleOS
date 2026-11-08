@@ -4,12 +4,12 @@
 #include <pbl/board/partitions.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/event_loop.h>
@@ -38,7 +38,7 @@ static void prv_factory_reset_non_pfs_data() {
 
   // This function can block the background work queue for a long time.
   // Prevent callbacks being added to the background work queue so it doesn't overflow.
-  sys_work_block(true /* block callbacks */);
+  pbl_sys_work_block(true /* block callbacks */);
   launcher_block_popups(true);
 
   worker_manager_disable();

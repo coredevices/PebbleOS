@@ -7,10 +7,10 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
-#include <pbl/services/sys_work.h>
 
 #include <kernel/event_loop.h>
 #include <process_management/app_install_manager.h>
@@ -140,5 +140,5 @@ void app_run_state_send_update(const Uuid *uuid, AppState app_state) {
   AppRunState *app_run_state = pbl_malloc(sizeof(AppRunState));
   app_run_state->uuid = *uuid;
   app_run_state->state = app_state;
-  sys_work_add(prv_send_response, app_run_state);
+  pbl_sys_work_call(prv_send_response, app_run_state);
 }

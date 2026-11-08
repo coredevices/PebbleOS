@@ -72,7 +72,7 @@ void test_blob_db_endpoint__initialize(void) {
   struct fake_transport *transport =
       fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
-  sys_work_set_available_space(sys_work_queue_size);
+  fake_sys_work_set_num_free(sys_work_queue_size);
 }
 
 void test_blob_db_endpoint__cleanup(void) {

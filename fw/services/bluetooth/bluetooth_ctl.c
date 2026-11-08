@@ -8,6 +8,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/qemu.h>
 #include <pbl/services/bluetooth/battery_level.h>
@@ -18,7 +19,6 @@
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/sys_work.h>
 
 #include <comm/ble/gap_le.h>
 #include <comm/ble/gatt_client_subscriptions.h>
@@ -221,7 +221,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
   }
   pbl_mutex_unlock(&s_comm_state_change_mutex);
   if (should_schedule_eval) {
-    sys_work_add(prv_comm_state_change, nullptr);
+    pbl_sys_work_call(prv_comm_state_change, nullptr);
   }
 }
 
@@ -253,7 +253,7 @@ static void prv_bt_ctl_reset_bluetooth_callback(void *context) {
 
 void bt_ctl_reset_bluetooth(void) {
   if (bt_ctl_is_bluetooth_active()) {
-    sys_work_add(prv_bt_ctl_reset_bluetooth_callback, nullptr);
+    pbl_sys_work_call(prv_bt_ctl_reset_bluetooth_callback, nullptr);
   } else {
     PBL_LOG_DBG("Bluetooth is disabled, reset aborted");
   }

@@ -83,7 +83,7 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
-bool sys_work_add(void (*cb)(void *), void *data) {
+bool pbl_sys_work_call(void (*cb)(void *), void *data) {
   cb(data);
   return true;
 }

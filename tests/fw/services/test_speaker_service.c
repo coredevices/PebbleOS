@@ -51,7 +51,7 @@ bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work) {
   }
   s_boosted_work = work;
   work->pending = true;
-  return sys_work_add(prv_run_work, work);
+  return pbl_sys_work_call(prv_run_work, work);
 }
 
 static void prv_drop_queued_work(void) {

@@ -16,7 +16,6 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_curve.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
 
@@ -216,7 +215,7 @@ static void prv_update_callback(struct pbl_work *work) {
   // Running the battery monitor on the high priority queue is not a good idea because
   // we could be sampling right in the middle of a flash erase, etc. Therefore,
   // dispatch to a lower priority task
-  sys_work_add(prv_update_state, (void *)s_force_update);
+  pbl_sys_work_call(prv_update_state, (void *)s_force_update);
 
   // Reschedule ourselves again so we create a loop
   prv_schedule_update(BATTERY_SAMPLE_RATE_MS, false);

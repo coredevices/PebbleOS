@@ -21,7 +21,6 @@
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/put_bytes/put_bytes_storage.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
@@ -327,7 +326,7 @@ static void prv_send_nack_from_sys_work(void *data) {
 }
 
 static void prv_add_nack_system_callback(uint32_t token) {
-  sys_work_add(prv_send_nack_from_sys_work, (void *)(uintptr_t)token);
+  pbl_sys_work_call(prv_send_nack_from_sys_work, (void *)(uintptr_t)token);
 }
 
 static void prv_add_nack_no_token_system_callback(void) {
@@ -379,7 +378,7 @@ static void prv_cleanup_from_sys_work(void *data) {
 }
 
 static void prv_cleanup_async(void) {
-  sys_work_add(prv_cleanup_from_sys_work, nullptr);
+  pbl_sys_work_call(prv_cleanup_from_sys_work, nullptr);
 }
 
 static void prv_fail(uint32_t token) {
@@ -968,7 +967,7 @@ static void prv_schedule_put_requests_processing(void) {
   }
   prv_unlock_pb_job_state();
 
-  if (schedule && !sys_work_add(prv_process_put_requests_sys_work_cb, nullptr)) {
+  if (schedule && !pbl_sys_work_call(prv_process_put_requests_sys_work_cb, nullptr)) {
     prv_lock_pb_job_state();
     put_jobs->process_scheduled = false;
     prv_unlock_pb_job_state();
@@ -1255,7 +1254,7 @@ void prv_receiver_finish(struct pbl_pp_receiver *receiver) {
     prv_receiver_reset();
     prv_schedule_put_requests_processing();
   } else {
-    sys_work_add(prv_process_msg_sys_work_callback, nullptr);
+    pbl_sys_work_call(prv_process_msg_sys_work_callback, nullptr);
   }
 
   // Don't clean up, the receiver.buffer will be re-used for the entire Put Bytes session.

@@ -10,10 +10,10 @@
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -432,11 +432,11 @@ static void prv_work_cb(void *data) {
 
 //! Run driver work on the timer task, with the device lock held
 static void prv_queue_work(void (*work)(void)) {
-  sys_work_add_high(prv_work_cb, (void *)work);
+  pbl_sys_work_call_high(prv_work_cb, (void *)work);
 }
 
 static void prv_queue_work_from_isr(void (*work)(void)) {
-  sys_work_add_high_from_isr(prv_work_cb, (void *)work);
+  pbl_sys_work_call_high_from_isr(prv_work_cb, (void *)work);
 }
 
 static void prv_lis2dw12_int1_work_handler(void) {

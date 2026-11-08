@@ -20,7 +20,6 @@
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -824,7 +823,7 @@ static void prv_request_meta_rediscovery(PPoGATTClient *client) {
     return;
   }
   *device = connection->device;
-  sys_work_add(prv_rediscover_kernelbg_cb, device);
+  pbl_sys_work_call(prv_rediscover_kernelbg_cb, device);
 }
 
 static void prv_retry_meta_read(PPoGATTClient *client) {

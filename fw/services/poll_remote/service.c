@@ -3,13 +3,13 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/poll_remote.h>
-#include <pbl/services/sys_work.h>
 
 PBL_LOG_MODULE_DEFINE(service_poll_remote, CONFIG_SERVICE_POLL_REMOTE_LOG_LEVEL);
 
@@ -89,7 +89,7 @@ static bool has_max_interval_passed(PollRemoteContext *ctx) {
   return (ctx->counted_minutes >= ctx->max_interval_minutes);
 }
 
-// SysWorkCallback
+// pbl_work_call_fn_t
 static void prv_send_request(PollRemoteContext *ctx) {
   if (has_min_interval_passed(ctx) == false) {
     return;
@@ -178,7 +178,7 @@ static void poll_service_sys_work_callback(void *data) {
 }
 
 static void poll_service_timer_callback(void *data) {
-  sys_work_add(poll_service_sys_work_callback, data);
+  pbl_sys_work_call(poll_service_sys_work_callback, data);
 }
 
 void poll_remote_init(void) {

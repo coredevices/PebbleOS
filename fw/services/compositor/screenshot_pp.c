@@ -4,12 +4,12 @@
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/compositor/screenshot_pp.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/byteorder.h>
 
 #include <applib/graphics/framebuffer.h>
@@ -193,11 +193,11 @@ void screenshot_send_next_chunk(void *raw_state) {
 
   prv_request_fast_connection(session);
 
-  sys_work_add(screenshot_send_next_chunk, state);
+  pbl_sys_work_call(screenshot_send_next_chunk, state);
 }
 
 static void prv_frozen_cb(void *data) {
-  sys_work_add(screenshot_send_next_chunk, data);
+  pbl_sys_work_call(screenshot_send_next_chunk, data);
 }
 
 void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *msg_data,

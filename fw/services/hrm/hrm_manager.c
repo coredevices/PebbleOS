@@ -17,7 +17,6 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
-#include <pbl/services/sys_work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -505,7 +504,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
 
 // Re-evaluate current state so a callback queued before a gate or path change is harmless.
 static void prv_update_enable_timer_cb(struct pbl_work *work) {
-  sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+  pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
 }
 
 //! The background work queue needs its own handler for HRM data since we can't queue up generic
@@ -656,7 +655,7 @@ static bool prv_event_put(HRMSubscriberState *state, PebbleHRMEvent *event) {
     success = (pbl_msgq_put(state->queue, &e, PBL_NO_WAIT) == 0);
   } else {
     prv_queue_sys_work_event(event);
-    success = sys_work_add(prv_sys_work_hrm_handler, nullptr);
+    success = pbl_sys_work_call(prv_sys_work_hrm_handler, nullptr);
   }
   return success;
 }
@@ -669,7 +668,7 @@ PBL_T_STATIC void prv_charger_event_cb(PebbleEvent *e, void *context) {
   }
   pbl_mutex_unlock(&s_manager_state.lock);
 
-  sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+  pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
 }
 
 // Accept new data from the HR device driver.
@@ -795,12 +794,12 @@ void hrm_manager_new_data_cb(const HRMData *data) {
 unlock:
   pbl_mutex_unlock(&s_manager_state.lock);
   if (update) {
-    sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+    pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
   }
 }
 
 void hrm_manager_handle_prefs_changed(void) {
-  sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+  pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
 }
 
 bool hrm_manager_has_continuous_green_subscriber(void) {
@@ -902,7 +901,7 @@ HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t 
   pbl_mutex_unlock(&s_manager_state.lock);
 
   // Update the HR enablement state
-  sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+  pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
   return session_ref;
 }
 
@@ -946,7 +945,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_unsubscribe, (VAL, HRMSessionRef, session)) {
 
   pbl_mutex_unlock(&s_manager_state.lock);
   if (success) {
-    sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+    pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
   }
   return success;
 }
@@ -1006,7 +1005,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_features, (VAL, HRMSessionRef, session),
   // Re-evaluate right away: a feature change can turn the sensor on, off, or onto the other
   // optical path, and must not wait for the next sample to trigger a pass.
   if (success) {
-    sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+    pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
   }
   return success;
 }
@@ -1030,7 +1029,7 @@ PBL_SYSCALL(bool, sys_hrm_manager_set_update_interval, (VAL, HRMSessionRef, sess
   }
   pbl_mutex_unlock(&s_manager_state.lock);
   if (success) {
-    sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+    pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
   }
   return success;
 }
@@ -1039,7 +1038,7 @@ void hrm_manager_enable(bool on) {
   pbl_mutex_lock(&s_manager_state.lock, PBL_FOREVER);
   s_manager_state.enabled_run_level = on;
   pbl_mutex_unlock(&s_manager_state.lock);
-  sys_work_add(prv_update_hrm_enable_system_cb, nullptr);
+  pbl_sys_work_call(prv_update_hrm_enable_system_cb, nullptr);
 }
 
 HRMAccelData *hrm_manager_get_accel_data(void) {
@@ -1114,7 +1113,7 @@ static void prv_console_read_callback(PebbleHRMEvent *event, void *context) {
 
   if (event->event_type == type) {
     s_console_event = *event;
-    sys_work_add(prv_console_finish_cb, nullptr);
+    pbl_sys_work_call(prv_console_finish_cb, nullptr);
   }
 }
 

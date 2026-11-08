@@ -3,13 +3,13 @@
 
 #include <pbl/bluetooth/pairability.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/services/regular_timer.h>
-#include <pbl/services/sys_work.h>
 
 #include <comm/ble/gap_le_slave_discovery.h>
 #include <kernel/pebble_tasks.h>
@@ -51,7 +51,7 @@ static void evaluate_pairing_refcount(void *data) {
 static void prv_schedule_evaluation(void) {
   // Always evaluate, even if the state might not have changed: this pretty much only happens in
   // response to user input, and skipping evaluations has caused bugs before.
-  sys_work_add(evaluate_pairing_refcount, nullptr);
+  pbl_sys_work_call(evaluate_pairing_refcount, nullptr);
 }
 
 void bt_pairability_use(void) {
