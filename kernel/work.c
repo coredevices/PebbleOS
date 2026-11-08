@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/kernel/work.h>
+#include <pbl/mcu/fpu.h>
 #include <pbl/util/misc.h>
 
 PBL_WORKQ_DEFINE(pbl_sys_workq);
@@ -169,6 +170,8 @@ void pbl_workq_thread(void *arg) {
 
     // The function may have freed the item: only compare its address from here on.
     fn(work);
+    // Or the next items pay for stacking the FPU registers on every context switch.
+    mcu_fpu_cleanup();
 
     pbl_irq_lock();
     q->current = nullptr;
