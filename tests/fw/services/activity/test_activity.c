@@ -2527,15 +2527,15 @@ void test_activity__hrm_sampling_period(void) {
   }
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
-  // Flat and off-wrist: the next sampling period must not start a measurement.
-  prv_advance_time_hr((10 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
+  // Flat and off-wrist: the next sampling period must not start a measurement. The window closed
+  // mid-minute, so allow one more minute tick past the period.
+  prv_advance_time_hr((11 * PBL_SEC_PER_MIN), 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
   cl_assert(s_hrm_manager_update_interval > PBL_SEC_PER_HOUR);
 
-  // Advance to our next sampling period, the watch is no longer flat so we should be sampling.
-  // The period has already expired during the flat advance above, so just advance until
-  // the next minute boundary triggers the subscription update and starts sampling.
+  // The wrist is no longer flat. A flat skip defers rather than restamping the period, so the
+  // window opens on the next minute boundary instead of charging another full period.
   s_test_alg_state.orientation = 0x22; // Not flat
-  for (uint32_t i = 0; i < (10 * PBL_SEC_PER_MIN); i++) {
+  for (uint32_t i = 0; i < PBL_SEC_PER_MIN; i++) {
     prv_advance_time_hr(1, 100 /*bpm*/, CONF_GOOD, false /*force_continuous*/);
     if (s_hrm_manager_update_interval == 1) {
       break;

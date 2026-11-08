@@ -150,11 +150,11 @@ static void prv_heart_rate_subscription_update(uint32_t now_ts) {
     const bool watch_is_flat = z_axis == 0 || z_axis == 8;
     const bool likely_off_wrist =
         watch_is_flat && activity_metrics_prv_is_hrm_offwrist(pbl_realtime());
-
-    const bool should_be_sampling = !s_activity_state.hr.currently_sampling && !likely_off_wrist;
     if (!s_activity_state.hr.currently_sampling && likely_off_wrist) {
-      PBL_LOG_DBG("Not subscribing to HRM: watch is flat and off wrist");
+      return;
     }
+
+    const bool should_be_sampling = !s_activity_state.hr.currently_sampling;
 
     // Pick the subscription rate (essentially ON and OFF)
     const uint32_t desired_interval_sec = (should_be_sampling)
