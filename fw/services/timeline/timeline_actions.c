@@ -18,6 +18,7 @@
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/system_task.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
@@ -1180,8 +1181,16 @@ static bool prv_dismiss_all_load_item(NotificationInfo *info, TimelineItem *item
   return true;
 }
 
+static void prv_dismiss_all_step(void *context);
+
+// Queued after the dismiss send, so only one dismiss is in flight
+static void prv_dismiss_all_next(void *context) {
+  launcher_task_add_callback(prv_dismiss_all_step, context);
+}
+
 // Dismissing can post events to KernelMain, the task running this, so dismiss one notification
-// per callback to let its event queue drain in between.
+// per callback to let its event queue drain in between. Dismisses sent to the phone go out on the
+// system task, so KernelMain does not block while the send buffer is full.
 static void prv_dismiss_all_step(void *context) {
   DismissAllContext *ctx = context;
 
@@ -1201,7 +1210,9 @@ static void prv_dismiss_all_step(void *context) {
     const TimelineItemAction *action = timeline_item_find_dismiss_action(&item);
     if (action) {
       timeline_enable_ancs_bulk_action_mode(ctx->ancs_bulk_mode);
+      timeline_enable_async_remote_action_mode(true);
       timeline_invoke_action(&item, action, nullptr);
+      timeline_enable_async_remote_action_mode(false);
       timeline_enable_ancs_bulk_action_mode(false);
       ctx->performed_actions = true;
 
@@ -1214,7 +1225,7 @@ static void prv_dismiss_all_step(void *context) {
     timeline_item_free_allocated_buffer(&item);
   }
 
-  launcher_task_add_callback(prv_dismiss_all_step, ctx);
+  system_task_add_callback(prv_dismiss_all_next, ctx);
 }
 
 void timeline_actions_dismiss_all(NotificationInfo *notif_list, int num_notifications,
