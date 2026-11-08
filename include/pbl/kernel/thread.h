@@ -70,6 +70,8 @@ enum pbl_thread_state {
 };
 
 /** @brief Thread creation attributes. */
+struct pbl_work_pool;
+
 struct pbl_thread_attr {
   /** Name, truncated to @ref PBL_THREAD_NAME_LEN - 1 characters. */
   const char *name;
@@ -101,6 +103,12 @@ struct pbl_thread_attr {
    * pbl_thread_create(). NULL entries take the default region.
    */
   const struct pbl_mpu_region *regions[PBL_THREAD_MAX_MEM_REGIONS];
+  /**
+   * Slots for the thread's calls to the background system work queue, which it waits for when
+   * they are all taken, or NULL to share the system's. Keeps a thread that floods the queue, such
+   * as an app's, from taking the slots the system needs.
+   */
+  struct pbl_work_pool *work_pool;
 #ifdef CONFIG_USERSPACE
   /**
    * Memory the thread's syscalls may read and write, [user_start, user_end); empty for none. The
@@ -146,6 +154,8 @@ struct pbl_thread {
   bool own_regions;
   /** Thread-local pointer slots, see pbl_thread_tls_get(). */
   void *tls[CONFIG_KERNEL_THREAD_TLS_SLOTS];
+  /** Slots for its system work queue calls, see @ref pbl_thread_attr. */
+  struct pbl_work_pool *work_pool;
 #ifdef CONFIG_USERSPACE
   /** Start of the syscall-accessible memory. */
   uintptr_t user_start;

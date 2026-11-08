@@ -60,6 +60,7 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   strncpy(t->name, attr->name, sizeof(t->name) - 1);
   t->prio = attr->prio;
   t->privileged = attr->privileged;
+  t->work_pool = attr->work_pool;
   t->stack = (uint8_t *)attr->stack + guard_size;
   t->stack_size = attr->stack_size - guard_size;
   t->stack_guard_size = guard_size;
