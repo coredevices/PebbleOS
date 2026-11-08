@@ -10,6 +10,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/touch.h>
+#include <pbl/kernel/work.h>
 
 /**
  * @defgroup drivers_touch_cst816 CST816
@@ -30,10 +31,11 @@
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_cst816_state {
+  const struct pbl_cst816 *cst;
+  struct pbl_work work;
   struct pbl_irq_spec irq;
   uint64_t last_irq_ticks;
   bool enabled;
-  bool work_pending;
   bool palm_down;
   bool palm_click_pending;
 };
