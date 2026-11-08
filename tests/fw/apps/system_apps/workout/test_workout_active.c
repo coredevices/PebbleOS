@@ -38,6 +38,8 @@ Animation *animation_create(void) {
 extern void prv_cycle_scrollable_metrics(WorkoutActiveWindow *active_window);
 extern void prv_finish_workout(WorkoutActiveWindow *active_window);
 extern void prv_update_timer_callback(void *data);
+extern void prv_record_hr_sample(WorkoutActiveWindow *window);
+extern void prv_set_hr_plot(WorkoutActiveWindow *window, bool visible, bool animated);
 
 bool activity_is_hrm_present(void) {
   return s_hrm_is_present;
@@ -325,6 +327,23 @@ void test_workout_active__workout_render_open_workout_no_hrm(void) {
 
   WorkoutActiveWindow *active_window = workout_active_create_for_activity_type(
       ActivitySessionType_Open, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(active_window, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+// An Open workout has three pages plus the chart, so four page dots.
+void test_workout_active__workout_render_open_workout_heart_plot(void) {
+  if (!s_has_hrm) {
+    return;
+  }
+  s_workout_data = (WorkoutData){.duration_s = 60, .bpm = 120};
+  WorkoutActiveWindow *active_window = workout_active_create_for_activity_type(
+      ActivitySessionType_Open, &s_workout_data, &s_workout_controller);
+  prv_record_hr_sample(active_window);
+  for (int i = 0; i < 2; i++) {
+    prv_cycle_scrollable_metrics(active_window);
+  }
+  prv_set_hr_plot(active_window, true, false);
   prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
