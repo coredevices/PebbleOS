@@ -23,12 +23,6 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
   return nullptr;
 }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
-}
-
-void system_task_add_callback(void (*callback)(void *data), void *data) {
-}
-
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
 }
 

@@ -29,6 +29,12 @@ extern const int TIMELINE_ACTION_ENDPOINT;
 static const uint8_t *s_expected_send_data = nullptr;
 static bool s_sent_action = false;
 
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+}
+
+void system_task_add_callback(void (*callback)(void *data), void *data) {
+}
+
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
   return false;
 }

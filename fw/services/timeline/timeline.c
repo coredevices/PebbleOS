@@ -50,6 +50,7 @@ static uint32_t i18n_key;
 #define TIMELINE_PAST_WINDOW   (2 * PBL_SEC_PER_DAY)
 
 static bool s_bulk_action_mode = false;
+static bool s_async_remote_action_mode = false;
 
 /////////////////////////
 // Timeline Iterator
@@ -784,6 +785,10 @@ bool timeline_is_bulk_ancs_action_mode_enabled(void) {
   return s_bulk_action_mode;
 }
 
+void timeline_enable_async_remote_action_mode(bool enable) {
+  s_async_remote_action_mode = enable;
+}
+
 typedef struct OpenAppContext {
   EventServiceInfo event_info;
   AppInstallId install_id;
@@ -885,7 +890,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypePostpone:
     case TimelineItemActionTypeRemoteRemove: {
       // remote action, send it to the phone
-      const bool do_async = false;
+      const bool do_async = s_async_remote_action_mode;
       prv_do_remote_action(&item->header.id, action->type, action->id, attributes, do_async);
       break;
     }

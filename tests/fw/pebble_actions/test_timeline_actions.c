@@ -21,6 +21,8 @@ static TimelineItemAction s_reply_action = {
 ///////////////////////////////////////////////////////////
 #include "stubs_common.h"
 
+#include <fake_system_task.h>
+
 // Externs
 ///////////////////////////////////////////////////////////
 extern const int TIMELINE_ACTION_ENDPOINT;
@@ -36,6 +38,49 @@ static const uint8_t *s_expected_send_data = nullptr;
 static bool s_sent_action = false;
 static size_t s_sent_length = 0;
 static bool s_window_state_supported = false;
+static int s_send_count;
+
+#define MAX_LAUNCHER_CALLBACKS 4
+static struct {
+  void (*callback)(void *data);
+  void *data;
+} s_launcher_callbacks[MAX_LAUNCHER_CALLBACKS];
+static int s_num_launcher_callbacks;
+
+void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  cl_assert(s_num_launcher_callbacks < MAX_LAUNCHER_CALLBACKS);
+  s_launcher_callbacks[s_num_launcher_callbacks].callback = callback;
+  s_launcher_callbacks[s_num_launcher_callbacks].data = data;
+  s_num_launcher_callbacks++;
+}
+
+static void prv_run_launcher_callback(void) {
+  cl_assert(s_num_launcher_callbacks > 0);
+  void (*callback)(void *data) = s_launcher_callbacks[0].callback;
+  void *data = s_launcher_callbacks[0].data;
+  s_num_launcher_callbacks--;
+  memmove(&s_launcher_callbacks[0], &s_launcher_callbacks[1],
+          s_num_launcher_callbacks * sizeof(s_launcher_callbacks[0]));
+  callback(data);
+}
+
+static TimelineItemAction s_dismiss_action = {
+  .id = 1,
+  .type = TimelineItemActionTypeDismiss,
+};
+
+bool notification_storage_get(const Uuid *id, TimelineItem *item_out) {
+  *item_out = (TimelineItem){
+    .header =
+        {
+          .id = *id,
+          .parent_id = UUID_NOTIFICATIONS_DATA_SOURCE,
+          .type = TimelineItemTypeNotification,
+        },
+    .action_group = {.num_actions = 1, .actions = &s_dismiss_action},
+  };
+  return true;
+}
 
 bool comm_session_has_capability(CommSession *session, CommSessionCapability capability) {
   return s_window_state_supported && capability == CommSessionNotificationWindowStateSupport;
@@ -43,6 +88,7 @@ bool comm_session_has_capability(CommSession *session, CommSessionCapability cap
 
 bool comm_session_send_data(CommSession *session, uint16_t endpoint_id, const uint8_t *data,
                             size_t length, uint32_t timeout_ms) {
+  s_send_count++;
   if (s_expected_send_data == nullptr) {
     return false;
   }
@@ -64,9 +110,12 @@ void test_timeline_actions__initialize(void) {
   s_sent_action = false;
   s_sent_length = 0;
   s_window_state_supported = false;
+  s_send_count = 0;
+  s_num_launcher_callbacks = 0;
 }
 
 void test_timeline_actions__cleanup(void) {
+  fake_system_task_callbacks_cleanup();
 }
 
 // Tests
@@ -142,4 +191,32 @@ void test_timeline_actions__displayed_item_needs_phone_support(void) {
   s_expected_send_data = expected;
   timeline_action_endpoint_send_displayed_item(nullptr);
   cl_assert(!s_sent_action);
+}
+
+// Dismiss all sends one dismiss at a time from the system task, never from KernelMain.
+void test_timeline_actions__dismiss_all_sends_from_system_task(void) {
+  NotificationInfo notifications[3];
+  for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
+    notifications[i] = (NotificationInfo){.type = NotificationMobile, .id = {.byte0 = i + 1U}};
+  }
+
+  timeline_actions_dismiss_all(notifications, ARRAY_LENGTH(notifications), nullptr, nullptr,
+                               nullptr);
+
+  for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
+    cl_assert_equal_i(s_send_count, i);
+    cl_assert_equal_i(list_count(s_system_task_callback_head), 2);
+    cl_assert_equal_i(s_num_launcher_callbacks, 0);
+
+    fake_system_task_callbacks_invoke(1);
+    cl_assert_equal_i(s_send_count, i + 1);
+
+    fake_system_task_callbacks_invoke(1);
+    cl_assert_equal_i(s_num_launcher_callbacks, 1);
+    prv_run_launcher_callback();
+  }
+
+  cl_assert_equal_i(s_send_count, ARRAY_LENGTH(notifications));
+  cl_assert_equal_i(list_count(s_system_task_callback_head), 0);
+  cl_assert_equal_i(s_num_launcher_callbacks, 0);
 }
