@@ -129,6 +129,24 @@ void pbl_task_wdt_feed_all(void);
  */
 void pbl_task_wdt_set_waiting(bool waiting);
 
+struct pbl_workq;
+
+/**
+ * @brief Add a channel watching the thread of a work queue.
+ *
+ * The thread waits while the queue is idle, and its channel is fed after each item, so it expires
+ * when an item runs for too long or the queue does not get to run. This takes the queue's hooks.
+ *
+ * @param q Queue, whose thread must exist.
+ * @param timeout_ms Maximum time between items, in milliseconds.
+ * @param callback Callback when the channel expires, or NULL to name the function being run.
+ * @param user_data Data passed to @p callback.
+ * @return Channel id, -EINVAL when the queue has no thread yet, or -ENOMEM when every channel is
+ *         in use.
+ */
+int pbl_task_wdt_add_workq(struct pbl_workq *q, uint32_t timeout_ms,
+                           pbl_task_wdt_callback_t callback, void *user_data);
+
 /**
  * @brief Keep every channel fed for a while, for phases where stalls are expected.
  *
