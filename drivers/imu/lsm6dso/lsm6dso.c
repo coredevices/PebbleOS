@@ -57,6 +57,9 @@ static const struct pbl_lsm6dso *s_dev;
 #define LSM6DSO_STALL_MARGIN 2U
 #define LSM6DSO_STALL_MIN_MS 1000U
 
+// Max buffer-sized reads when draining the FIFO
+#define LSM6DSO_DRAIN_CHUNKS_MAX 4U
+
 // INT1 watchdog poll rate in shake-only mode (no FIFO cadence to track)
 #define LSM6DSO_SHAKE_WDT_PERIOD_S 5U
 
@@ -340,27 +343,29 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
 
 //! Salvage and dispatch any samples queued in the FIFO
 static void prv_lsm6dso_drain_fifo(void) {
-  uint8_t status[2];
-  uint16_t samples;
+  for (unsigned int i = 0U; i < LSM6DSO_DRAIN_CHUNKS_MAX; i++) {
+    uint8_t status[2];
+    uint16_t samples;
 
-  if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, status, 2)) {
-    PBL_LOG_ERR("Could not read FIFO_STATUS registers");
-    return;
+    if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, status, 2)) {
+      PBL_LOG_ERR("Could not read FIFO_STATUS registers");
+      return;
+    }
+
+    samples = (PBL_FIELD_GET(LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK, status[1]) << 8U) | status[0];
+    samples = MIN(samples, LSM6DSO_FIFO_SIZE);
+    if (samples == 0U) {
+      return;
+    }
+
+    if (!prv_lsm6dso_read_fifo(samples)) {
+      PBL_LOG_ERR("Failed to read samples");
+      return;
+    }
+
+    prv_lsm6dso_process_samples(samples, prv_get_curr_system_time_us());
+    s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
   }
-
-  samples = (PBL_FIELD_GET(LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK, status[1]) << 8U) | status[0];
-  samples = MIN(samples, LSM6DSO_FIFO_SIZE);
-  if (samples == 0U) {
-    return;
-  }
-
-  if (!prv_lsm6dso_read_fifo(samples)) {
-    PBL_LOG_ERR("Failed to read samples");
-    return;
-  }
-
-  prv_lsm6dso_process_samples(samples, prv_get_curr_system_time_us());
-  s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
 }
 
 static void prv_lsm6dso_recover(void);
