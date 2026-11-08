@@ -274,6 +274,8 @@ static int prv_cmd_airplane(const struct pbl_shell *sh, size_t argc, char **argv
     override = BtCtlModeOverrideStop;
   } else if (strcmp(argv[1], "off") == 0) {
     override = BtCtlModeOverrideNone;
+    // Also leave the airplane mode set from the UI, which persists across reboots.
+    bt_ctl_set_airplane_mode_async(false);
   } else {
     pbl_shell_error(sh, "invalid mode '%s'", argv[1]);
     return -EINVAL;
