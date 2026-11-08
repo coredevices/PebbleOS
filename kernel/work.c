@@ -52,6 +52,28 @@ static void prv_insert(struct pbl_workq *q, struct pbl_work *prev, struct pbl_wo
 }
 
 //! Call with the interrupt lock held.
+static void prv_boost_apply(struct pbl_workq *q) {
+  q->unboosted_prio = pbl_thread_prio_get(q->thread);
+  if (q->boost_prio > q->unboosted_prio) {
+    pbl_thread_prio_set(q->thread, q->boost_prio);
+  }
+}
+
+//! Call with the interrupt lock held.
+static void prv_boost(struct pbl_workq *q, bool boost) {
+  if (boost) {
+    if (q->boosts++ == 0U && q->thread != nullptr) {
+      prv_boost_apply(q);
+    }
+  } else {
+    PBL_ASSERTN(q->boosts > 0U);
+    if (--q->boosts == 0U && q->thread != nullptr && q->boost_prio > q->unboosted_prio) {
+      pbl_thread_prio_set(q->thread, q->unboosted_prio);
+    }
+  }
+}
+
+//! Call with the interrupt lock held.
 static bool prv_remove(struct pbl_work *work) {
   if (!work->pending) {
     return false;
@@ -69,6 +91,10 @@ static bool prv_remove(struct pbl_work *work) {
     q->tail = prev;
   }
   work->pending = false;
+  if (work->boosted) {
+    work->boosted = false;
+    prv_boost(q, false);
+  }
   return true;
 }
 
@@ -101,13 +127,24 @@ bool pbl_workq_is_current(const struct pbl_workq *q) {
 void pbl_workq_thread(void *arg) {
   struct pbl_workq *q = arg;
 
-  q->thread = pbl_thread_current();
+  pbl_irq_lock();
+  if (q->thread == nullptr) {
+    q->thread = pbl_thread_current();
+    // Boosted work submitted before the queue had a thread.
+    if (q->boosts > 0U) {
+      prv_boost_apply(q);
+    }
+  }
+  pbl_irq_unlock();
 
   for (;;) {
     pbl_irq_lock();
     struct pbl_work *work = q->head;
     pbl_work_fn_t fn = nullptr;
+    bool boosted = false;
     if (work) {
+      boosted = work->boosted;
+      work->boosted = false;
       q->head = work->next;
       if (!q->head) {
         q->tail = nullptr;
@@ -136,6 +173,9 @@ void pbl_workq_thread(void *arg) {
     pbl_irq_lock();
     q->current = nullptr;
     q->current_fn = nullptr;
+    if (boosted) {
+      prv_boost(q, false);
+    }
     pbl_irq_unlock();
 
     if (q->ops && q->ops->done) {
@@ -162,6 +202,7 @@ static void prv_sys_workq_start(struct pbl_workq *q, struct pbl_thread *thread, 
 }
 
 void sys_workq_init(void) {
+  pbl_workq_set_boost_prio(&pbl_sys_workq, CONFIG_KERNEL_SYS_WORKQ_BOOST_PRIO);
   prv_sys_workq_start(&pbl_sys_workq, &s_sys_thread, "SysWorkq", CONFIG_KERNEL_SYS_WORKQ_PRIO,
                       s_sys_stack, sizeof(s_sys_stack));
   prv_sys_workq_start(&pbl_sys_workq_high, &s_sys_high_thread, "SysWorkqHigh",
@@ -208,6 +249,28 @@ bool pbl_work_submit(struct pbl_workq *q, struct pbl_work *work) {
     work->pending = true;
     prv_insert(q, q->tail, work);
     queued = true;
+  }
+  pbl_irq_unlock();
+  return queued;
+}
+
+void pbl_workq_set_boost_prio(struct pbl_workq *q, pbl_prio_t prio) {
+  q->boost_prio = prio;
+}
+
+bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work) {
+  bool queued = false;
+
+  pbl_irq_lock();
+  if (!work->pending) {
+    work->q = q;
+    work->pending = true;
+    prv_insert(q, q->tail, work);
+    queued = true;
+  }
+  if (!work->boosted) {
+    work->boosted = true;
+    prv_boost(work->q, true);
   }
   pbl_irq_unlock();
   return queued;

@@ -1114,3 +1114,56 @@ void test_kernel__delayed_work_schedule_next_skips_missed_periods(void) {
   prv_spawn(0, "main", 2, prv_periodic_overrun_main, nullptr);
   pbl_test_kernel_run();
 }
+
+// ---- boosted work -----------------------------------------------------------
+
+static pbl_prio_t s_prio_seen[3];
+
+static void prv_record_prio(struct pbl_work *work) {
+  s_prio_seen[work - s_works] = pbl_thread_prio_get(pbl_workq_get_thread(&s_wq));
+}
+
+static void prv_boost_main(void *arg) {
+  pbl_workq_set_boost_prio(&s_wq, 4);
+  pbl_work_submit(&s_wq, &s_works[0]);
+  pbl_workq_flush(&s_wq);
+  // Raised from submission, which runs it ahead of this thread, and lowered once it returns.
+  cl_assert(pbl_work_submit_boosted(&s_wq, &s_works[1]));
+  pbl_workq_flush(&s_wq);
+  cl_assert_equal_i(pbl_thread_prio_get(pbl_workq_get_thread(&s_wq)), 1);
+  // Canceling a boosted item lowers it too.
+  pbl_test_isr_enter();
+  pbl_work_submit_boosted(&s_wq, &s_works[2]);
+  cl_assert(pbl_work_cancel(&s_works[2]));
+  pbl_test_isr_exit();
+  cl_assert_equal_i(pbl_thread_prio_get(pbl_workq_get_thread(&s_wq)), 1);
+  cl_assert_equal_i(s_prio_seen[0], 1);
+  cl_assert_equal_i(s_prio_seen[1], 4);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__boosted_work_raises_the_queue_until_it_ran(void) {
+  for (int i = 0; i < 3; i++) {
+    pbl_work_init(&s_works[i], prv_record_prio);
+  }
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_boost_main, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_boost_early_main(void *arg) {
+  // The queue's thread, of a lower priority, has yet to run.
+  pbl_workq_set_boost_prio(&s_wq, 4);
+  cl_assert(pbl_work_submit_boosted(&s_wq, &s_works[0]));
+  pbl_workq_flush(&s_wq);
+  cl_assert_equal_i(s_prio_seen[0], 4);
+  cl_assert_equal_i(pbl_thread_prio_get(pbl_workq_get_thread(&s_wq)), 1);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__boosted_work_submitted_before_the_queue_thread_runs(void) {
+  pbl_work_init(&s_works[0], prv_record_prio);
+  prv_spawn_q(1);
+  prv_spawn(0, "main", 2, prv_boost_early_main, nullptr);
+  pbl_test_kernel_run();
+}

@@ -23,6 +23,10 @@ config KERNEL_SYS_WORKQ_PRIO
 	int "Background work queue priority"
 	default 1
 
+config KERNEL_SYS_WORKQ_BOOST_PRIO
+	int "Background work queue priority while running boosted work"
+	default 3
+
 config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
 	int "High priority work queue stack size in bytes"
 	default 1380
