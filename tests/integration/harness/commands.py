@@ -13,6 +13,7 @@ SHELL = {
     "bt_airplane": "bt airplane {mode}",
     "bt_mac": "bt mac",
     "bt_pairing": "bt pairing",
+    "bt_rediscover": "bt rediscover",
     "bt_status": "bt status",
     "bt_unpair": "bt prefs_wipe",
     "click": "button click {button}",
