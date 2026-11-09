@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/i2c/nordic,nrf52832-twim.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 TWIM I2C controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  I2C controller with EasyDMA of the nRF52 series, first in the nRF52832. It
+  shares its registers, interrupt and address with the other serial functions
+  of the same instance, such as the SPIM, each a sibling node of its own, and
+  only one of them may be enabled. The peripheral selects its own pins, given as
+  scl-gpios and sda-gpios.
+
+allOf:
+  - $ref: /schemas/i2c/i2c-controller.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-twim
+      - items:
+          - enum:
+              - nordic,nrf52833-twim
+              - nordic,nrf52840-twim
+          - const: nordic,nrf52832-twim
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clock-frequency:
+    enum: [100000, 250000, 400000]
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - scl-gpios
+  - sda-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+
+    i2c@40003000 {
+        compatible = "nordic,nrf52832-twim";
+        reg = <0x40003000 0x1000>;
+        interrupts = <3>;
+        clock-frequency = <400000>;
+        scl-gpios = <&gpio0 25 GPIO_PULL_UP>;
+        sda-gpios = <&gpio0 11 GPIO_PULL_UP>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };

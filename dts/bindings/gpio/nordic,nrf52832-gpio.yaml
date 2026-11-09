@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/nordic,nrf52832-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 GPIO port
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  A GPIO port of the nRF52 series, first in the nRF52832. Its pins interrupt through the GPIOTE block, so
+  interrupt specifiers take two cells, the pin and the trigger type from
+  <dt-bindings/interrupt-controller/irq.h>.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-gpio
+      - items:
+          - enum:
+              - nordic,nrf52833-gpio
+              - nordic,nrf52840-gpio
+          - const: nordic,nrf52832-gpio
+
+  reg:
+    items:
+      - description: Base of the port
+      - description: Registers of the port
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  ngpios:
+    minimum: 1
+    maximum: 32
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+required:
+  - compatible
+  - reg
+  - gpio-controller
+  - '#gpio-cells'
+  - interrupt-controller
+  - '#interrupt-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    gpio@50000000 {
+        compatible = "nordic,nrf52832-gpio";
+        reg = <0x50000000 0x200>, <0x50000500 0x300>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <32>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };

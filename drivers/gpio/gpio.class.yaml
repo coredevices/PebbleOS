@@ -5,5 +5,7 @@ class: gpio
 type: struct pbl_gpio_port
 include: pbl/drivers/gpio.h
 provides:
+  # Cells are <pin flags>, flags those of <dt-bindings/gpio/gpio.h>
+  gpio: "PBL_GPIO(&{sym}, {0}, PBL_GPIO_DT_FLAGS({1}))"
   # Level read-back on the pad of an interrupt
   irq-gpio: "PBL_GPIO(&{sym}, {0}, 0)"
