@@ -2,6 +2,7 @@ freetype
 gettext
 llvm
 cmake
+dtc
 lcov
 ninja
 node

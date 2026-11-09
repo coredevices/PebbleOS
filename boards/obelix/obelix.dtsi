@@ -1,0 +1,122 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include "sf32lb/sf32lb52x/sf32lb52.dtsi"
+
+/ {
+	model = "Core Devices Pebble Time 2";
+};
+
+&pinctrl {
+	i2c1_default: i2c1-default-state {
+		scl-pins {
+			pins = "PA31";
+			function = "i2c1_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA30";
+			function = "i2c1_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c2_default: i2c2-default-state {
+		scl-pins {
+			pins = "PA32";
+			function = "i2c2_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA33";
+			function = "i2c2_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c3_default: i2c3-default-state {
+		scl-pins {
+			pins = "PA11";
+			function = "i2c3_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA10";
+			function = "i2c3_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c4_default: i2c4-default-state {
+		scl-pins {
+			pins = "PA09";
+			function = "i2c4_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA20";
+			function = "i2c4_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+};
+
+&i2c1 {
+	pinctrl-0 = <&i2c1_default>;
+	pinctrl-names = "default";
+	clock-frequency = <400000>;
+	status = "okay";
+};
+
+&i2c2 {
+	pinctrl-0 = <&i2c2_default>;
+	pinctrl-names = "default";
+	clock-frequency = <400000>;
+	dmas = <&dmac1 5 23 2>;
+	dma-names = "rx";
+	status = "okay";
+
+	lsm6dso: imu@6a {
+		compatible = "st,lsm6dso";
+		reg = <0x6a>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <38 IRQ_TYPE_EDGE_RISING>;
+		mount-matrix = "-1", "0", "0",
+			       "0", "1", "0",
+			       "0", "0", "1";
+	};
+
+	mmc5603nj: magnetometer@30 {
+		compatible = "memsic,mmc5603";
+		reg = <0x30>;
+		mount-matrix = "0", "1", "0",
+			       "-1", "0", "0",
+			       "0", "0", "1";
+	};
+};
+
+&i2c3 {
+	pinctrl-0 = <&i2c3_default>;
+	pinctrl-names = "default";
+	clock-frequency = <400000>;
+	status = "okay";
+};
+
+&i2c4 {
+	pinctrl-0 = <&i2c4_default>;
+	pinctrl-names = "default";
+	clock-frequency = <400000>;
+	status = "okay";
+};

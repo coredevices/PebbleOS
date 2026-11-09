@@ -1,0 +1,22 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "obelix.dtsi"
+
+/ {
+	compatible = "coredevices,obelix-bb2", "coredevices,obelix", "sifli,sf32lb52";
+};
+
+&lsm6dso {
+	mount-matrix = "-1", "0", "0",
+		       "0", "-1", "0",
+		       "0", "0", "1";
+};
+
+&mmc5603nj {
+	mount-matrix = "0", "-1", "0",
+		       "1", "0", "0",
+		       "0", "0", "1";
+};
