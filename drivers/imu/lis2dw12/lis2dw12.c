@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <inttypes.h>
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/accel.h>
@@ -13,7 +14,6 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imu/units.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -627,18 +627,18 @@ static uint32_t prv_stall_threshold_ms(void) {
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
 //! Call after num_samples or shake_detection_enabled changes.
 static void prv_update_int1_watchdog(void) {
-  regular_timer_remove_callback(&s_dev->state->int1_wdt_timer);
+  pbl_wallclock_work_stop(&s_dev->state->int1_wdt_timer);
   s_dev->state->shake_stuck_passes = 0U;
 
   if (s_dev->state->num_samples > 0U) {
     s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
     s_dev->state->int1_period_ms =
         (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
-    regular_timer_add_multisecond_callback(
-        &s_dev->state->int1_wdt_timer, MAX(DIVIDE_CEIL(s_dev->state->int1_period_ms, 1000UL), 1U));
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
+                             MAX(DIVIDE_CEIL(s_dev->state->int1_period_ms, 1000UL), 1U));
   } else if (s_dev->state->shake_detection_enabled) {
-    regular_timer_add_multisecond_callback(&s_dev->state->int1_wdt_timer,
-                                           LIS2DW12_SHAKE_WDT_PERIOD_S);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
+                             LIS2DW12_SHAKE_WDT_PERIOD_S);
   }
 }
 
@@ -680,7 +680,7 @@ static void prv_stall_check_work_cb(void) {
   prv_lis2dw12_recover();
 }
 
-static void prv_int1_wdt_cb(void *data) {
+static void prv_int1_wdt_cb(struct pbl_work *work) {
   prv_queue_work(prv_stall_check_work_cb);
 }
 
@@ -816,7 +816,7 @@ static int prv_init(const struct pbl_accel *accel) {
     return err;
   }
 
-  s_dev->state->int1_wdt_timer.cb = prv_int1_wdt_cb;
+  pbl_wallclock_work_init(&s_dev->state->int1_wdt_timer, prv_int1_wdt_cb);
 
   return 0;
 }

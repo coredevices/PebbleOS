@@ -33,7 +33,6 @@
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_types.h>
 #include <pbl/services/notifications/notifications.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attribute.h>
@@ -45,6 +44,7 @@
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
@@ -181,9 +181,7 @@ static void prv_cleanup_timer(EventedTimerID *timer_id) {
 }
 
 static void prv_cancel_reminder_watchdog(NotificationWindowData *data) {
-  if (regular_timer_is_scheduled(&data->reminder_watchdog_timer_id)) {
-    regular_timer_remove_callback(&data->reminder_watchdog_timer_id);
-  }
+  pbl_wallclock_work_stop(&data->reminder_watchdog);
 }
 
 static void prv_cleanup_timers(NotificationWindowData *data) {
@@ -662,24 +660,20 @@ static void prv_clear_stale_reminders(void *data) {
   notifications_presented_list_each(prv_clear_if_stale_reminder, data);
 }
 
-static void prv_clear_stale_reminders_timer_cb(void *data) {
+static void prv_clear_stale_reminders_timer_cb(struct pbl_work *work) {
+  NotificationWindowData *data = container_of(work, NotificationWindowData, reminder_watchdog.work);
   // This functionality only exists for popups (modal windows) which currently all
   // run on Kernel Main
   launcher_task_add_callback(prv_clear_stale_reminders, data);
 }
 
 static void prv_setup_reminder_watchdog(NotificationWindowData *data) {
-  if (!data->is_modal || regular_timer_is_scheduled(&data->reminder_watchdog_timer_id) ||
+  if (!data->is_modal || pbl_wallclock_work_is_running(&data->reminder_watchdog) ||
       !do_not_disturb_is_active()) {
     return;
   }
 
-  data->reminder_watchdog_timer_id = (const RegularTimerInfo){
-    .cb = prv_clear_stale_reminders_timer_cb,
-    .cb_data = data,
-  };
-
-  regular_timer_add_minutes_callback(&data->reminder_watchdog_timer_id);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &data->reminder_watchdog, 60, 1);
 }
 
 ///////////////////////
@@ -1485,6 +1479,8 @@ void notification_window_focus_notification(Uuid *id, bool animated) {
 void notification_window_service_init(void) {
   pbl_mutex_init(&s_notification_window_mutex);
   s_notification_window_data.pop_timer_id = EVENTED_TIMER_INVALID_ID;
+  pbl_wallclock_work_init(&s_notification_window_data.reminder_watchdog,
+                          prv_clear_stale_reminders_timer_cb);
   // Unconditional: prv_window_unload clears the slot on every platform, so the lock has to exist
   // even where images are never fetched.
   notification_image_service_init();

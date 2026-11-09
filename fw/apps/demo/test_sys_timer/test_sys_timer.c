@@ -8,7 +8,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
@@ -29,7 +28,7 @@ typedef struct {
 
   uint64_t fired_time[NUM_MAX_TIMERS];
 
-  RegularTimerInfo reg_timers[NUM_MAX_TIMERS];
+  struct pbl_wallclock_work reg_timers[NUM_MAX_TIMERS];
 
   AppTimer *app_timer;
 
@@ -94,35 +93,35 @@ static void app_timer_callback(void *data) {
 }
 
 // =================================================================================
-// Try and reschedule a regular timer from it's callback
-static void reg_timer_1_callback(void *data) {
+// Try and reschedule a wall clock work item from its function
+static void reg_timer_1_callback(struct pbl_work *work) {
   PBL_LOG_DBG("STT running reg_timer_1_callback");
-  if (s_app_data->reg_timers[0].cb != 0) {
+  if (pbl_wallclock_work_is_running(&s_app_data->reg_timers[0])) {
     PBL_LOG_DBG("STT reg_timer_1_callback rescheduling from callback for every 2 secs. ");
-    regular_timer_add_multisecond_callback(&s_app_data->reg_timers[0], 2);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 1, 2);
   }
 }
 
 // =================================================================================
-// Try and delete a regular timer from it's callback
-static void reg_timer_2_callback(void *data) {
+// Try and stop a wall clock work item from its function
+static void reg_timer_2_callback(struct pbl_work *work) {
   PBL_LOG_DBG("STT running reg_timer_2_callback");
-  if (s_app_data->reg_timers[0].cb != 0) {
+  if (pbl_wallclock_work_is_running(&s_app_data->reg_timers[0])) {
     PBL_LOG_DBG("STT reg_timer_2_callback deleting from callback");
-    regular_timer_remove_callback(&s_app_data->reg_timers[0]);
+    pbl_wallclock_work_stop(&s_app_data->reg_timers[0]);
   }
 }
 
 // =================================================================================
-// Try and delete, then re-add a regular timer from its callback
+// Try and stop, then start a wall clock work item from its function
 static int s_reg_timer_3_callback_count = 0;
-static void reg_timer_3_callback(void *data) {
+static void reg_timer_3_callback(struct pbl_work *work) {
   s_reg_timer_3_callback_count++;
   PBL_LOG_DBG("STT running reg_timer_3_callback");
-  if (s_app_data->reg_timers[0].cb != 0) {
+  if (pbl_wallclock_work_is_running(&s_app_data->reg_timers[0])) {
     PBL_LOG_DBG("STT reg_timer_3_callback deleting then adding from callback");
-    regular_timer_remove_callback(&s_app_data->reg_timers[0]);
-    regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
+    pbl_wallclock_work_stop(&s_app_data->reg_timers[0]);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 1, 1);
   }
 }
 
@@ -153,12 +152,10 @@ static void menu_callback_prefix(int index, void *ctx) {
     s_app_data->app_timer = 0;
   }
 
-  // Cancel and delete old regular timers if present
+  // Stop old wall clock work items if present
   for (int i = 0; i < NUM_MAX_TIMERS; i++) {
-    if (s_app_data->reg_timers[i].cb != nullptr) {
-      PBL_LOG_DBG("STT deleting previous regular timer %d", i);
-      regular_timer_remove_callback(&s_app_data->reg_timers[i]);
-      s_app_data->reg_timers[i].cb = nullptr;
+    if (pbl_wallclock_work_stop(&s_app_data->reg_timers[i])) {
+      PBL_LOG_DBG("STT stopped previous wall clock work %d", i);
     }
   }
 }
@@ -264,26 +261,26 @@ void stuck_callback_menu_cb(int index, void *ctx) {
 void reg_timer_schedule_1sec_from_cb_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
-  s_app_data->reg_timers[0].cb = reg_timer_1_callback;
-  regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
+  pbl_wallclock_work_init(&s_app_data->reg_timers[0], reg_timer_1_callback);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 1, 1);
 }
 
 // =================================================================================
 void reg_timer_schedule_1min_from_cb_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
-  s_app_data->reg_timers[0].cb = reg_timer_1_callback;
-  regular_timer_add_minutes_callback(&s_app_data->reg_timers[0]);
+  pbl_wallclock_work_init(&s_app_data->reg_timers[0], reg_timer_1_callback);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 60, 1);
 
-  // This should assert when the callback runs because it tries to reschedule as a seconds callback
+  // The function moves it to every 2 seconds
 }
 
 // =================================================================================
 void reg_timer_delete_from_cb_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
-  s_app_data->reg_timers[0].cb = reg_timer_2_callback;
-  regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
+  pbl_wallclock_work_init(&s_app_data->reg_timers[0], reg_timer_2_callback);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 1, 1);
 }
 
 // =================================================================================
@@ -291,8 +288,8 @@ void reg_timer_delete_then_add_from_cb_menu_cb(int index, void *ctx) {
   menu_callback_prefix(index, ctx);
 
   s_reg_timer_3_callback_count = 0;
-  s_app_data->reg_timers[0].cb = reg_timer_3_callback;
-  regular_timer_add_seconds_callback(&s_app_data->reg_timers[0]);
+  pbl_wallclock_work_init(&s_app_data->reg_timers[0], reg_timer_3_callback);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_app_data->reg_timers[0], 1, 1);
 
   // Wait for timer to run at least twice
   PBL_LOG_DBG("waiting for callback to run 2 times");

@@ -10,8 +10,8 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/work.h>
 #include <pbl/mcu/cache.h>
-#include <pbl/services/regular_timer.h>
 
 /**
  * @defgroup drivers_imu_lis2dw12 LIS2DW12
@@ -41,7 +41,7 @@ typedef struct LIS2DW12State {
   uint8_t raw_sample_buf[DCACHE_ROUND_UP(
       LIS2DW12_FIFO_SIZE * LIS2DW12_SAMPLE_SIZE_BYTES)] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX);
   /** Watchdog timer detecting a stalled INT1 stream. */
-  RegularTimerInfo int1_wdt_timer;
+  struct pbl_wallclock_work int1_wdt_timer;
   /** Time of the last FIFO read. */
   uint64_t last_fifo_read_tick;
   /** Expected INT1 period in milliseconds. */
