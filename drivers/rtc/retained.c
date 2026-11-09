@@ -4,8 +4,7 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/rtc/retained.h>
 #include <pbl/kernel/time.h>
-
-#include <system/rtc_registers.h>
+#include <pbl/system/rtc_registers.h>
 
 // The time last set, and the uptime when it was: a reset restarts the uptime, so the time
 // resumes from the last value set.
