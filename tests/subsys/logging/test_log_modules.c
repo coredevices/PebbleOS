@@ -16,7 +16,6 @@
 
 #include <pbl/logging/backend.h>
 
-#include <kernel/pebble_tasks.h>
 #include <logging/logging_private.h>
 
 PBL_LOG_MODULE_DEFINE(test_runtime, CONFIG_TEST_RUNTIME_LOG_LEVEL);
@@ -35,35 +34,28 @@ static bool s_flash_async;
 static char s_message[LOG_BUFFER_LENGTH];
 static char s_flash_message[LOG_BUFFER_LENGTH];
 
-PebbleTask pebble_task_get_current(void) {
-  return PebbleTask_Unknown;
-}
-
-LogState *kernel_applib_get_log_state(void) {
+LogState *pbl_log__state_get(void) {
   return &s_state;
 }
 
-void kernel_applib_release_log_state(LogState *state) {
+void pbl_log__state_release(LogState *state) {
 }
 
-LogState *app_state_get_log_state(void) {
-  return nullptr;
-}
-
-LogState *worker_state_get_log_state(void) {
-  return nullptr;
-}
-
-uint32_t sys_stack_free_bytes(void) {
+uint32_t pbl_log__stack_free(void) {
   return 1024;
 }
 
-time_t sys_get_time(void) {
+uint32_t pbl_log__time(void) {
   return 0;
 }
 
-void sys_pbl_log(LogBinaryMessage *message, uint32_t flags) {
-  kernel_pbl_log(message, flags);
+// Only the default hooks use these.
+bool pbl_kernel_is_running(void) {
+  return false;
+}
+
+size_t pbl_stack_free(void) {
+  return 1024;
 }
 
 static void prv_serial_process(const struct pbl_log_backend *backend,
