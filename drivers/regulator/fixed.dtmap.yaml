@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: regulator-fixed
+config: REGULATOR_FIXED
+class: regulator
+define: PBL_REGULATOR_FIXED_DEFINE
+args:
+  - name: true
+  - gpio: ""
+  - flag: enable-active-high
+  - prop: startup-delay-us
+    default: 0
+  - flag: regulator-always-on

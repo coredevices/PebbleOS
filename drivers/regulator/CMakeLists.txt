@@ -3,6 +3,9 @@
 
 pbl_library()
 set(sources regulator.c)
+if(CONFIG_REGULATOR_FIXED)
+  list(APPEND sources fixed.c)
+endif()
 if(CONFIG_REGULATOR_NPM1300)
   list(APPEND sources npm1300.c)
 endif()
