@@ -55,22 +55,86 @@ jobs:
     strategy:
       matrix:
         board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
-        build: ["normal", "normal-itest", "prf-itest"]
-        include:
-          - build: normal
-            variant: normal
-          - build: normal-itest
-            variant: normal
-            suffix: -normal-itest
-            options: -DCONFIG_BT_HCI_UART=y
-          - build: prf-itest
-            variant: prf
-            suffix: -prf-itest
-            options: -DCONFIG_BT_HCI_UART=y
 
     steps:
       - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}" 
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+        with:
+          submodules: true
+
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: qemu-${{ matrix.board }}-normal
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Configure
+        run: pbl configure --board ${{ matrix.board }}
+
+      - name: Build
+        run: pbl build qemu_image_micro qemu_image_spi bundle
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: qemu-${{ matrix.board }}-normal
+
+      - name: Copy artifacts
+        run: |
+          version=$(git describe)
+          mkdir artifacts
+          cp build/qemu_micro_flash.bin "artifacts/${{ matrix.board }}_${version}_micro_flash.bin"
+          cp build/qemu_spi_flash.bin "artifacts/${{ matrix.board }}_${version}_spi_flash.bin"
+
+      - name: Store
+        uses: actions/upload-artifact@v7
+        with:
+          name: firmware-${{ matrix.board }}-qemu
+          path: artifacts
+
+  # Each test job builds the firmware it runs, so it starts as soon as the
+  # changes are known instead of waiting on every build.
+  integration-tests:
+    needs: changes-qemu
+    if: needs.changes-qemu.outputs.should-build == 'true'
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/coredevices/pebbleos-docker:v11
+
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
+        build: ["normal-itest", "prf-itest"]
+        include:
+          - build: normal-itest
+            variant: normal
+            suffix: -normal-itest
+            options: --bt-hci virtual --integration
+          - build: prf-itest
+            variant: prf
+            suffix: -prf-itest
+            options: --bt-hci virtual --integration --main-build "$GITHUB_WORKSPACE/build-main"
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -90,90 +154,6 @@ jobs:
         with:
           key: qemu-${{ matrix.board }}-${{ matrix.build }}
 
-      - name: Install Python dependencies
-        run: |
-          pip install -U pip
-          pip install -r requirements.txt
-
-      - name: Get npm cache directory
-        id: npm-cache-dir
-        shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-
-      - name: Configure
-        run: pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} ${{ matrix.options }}
-
-      - name: Build
-        run: pbl build qemu_image_micro qemu_image_spi bundle
-
-      - name: Save the compiler cache
-        uses: ./.github/actions/ccache-save
-        with:
-          key: qemu-${{ matrix.board }}-${{ matrix.build }}
-
-      - name: Copy artifacts
-        if: matrix.build == 'normal'
-        run: |
-          version=$(git describe)
-          mkdir artifacts
-          cp build/qemu_micro_flash.bin "artifacts/${{ matrix.board }}_${version}_micro_flash.bin"
-          cp build/qemu_spi_flash.bin "artifacts/${{ matrix.board }}_${version}_spi_flash.bin"
-
-      - name: Store
-        if: matrix.build == 'normal'
-        uses: actions/upload-artifact@v7
-        with:
-          name: firmware-${{ matrix.board }}-qemu
-          path: artifacts
-
-      # What the integration tests need of the build, laid out as in build/;
-      # the normal build's firmware bundle is what the PRF tests install.
-      - name: Store integration test build
-        uses: actions/upload-artifact@v7
-        with:
-          name: itest-build-${{ matrix.board }}${{ matrix.suffix }}
-          include-hidden-files: true
-          retention-days: 3
-          path: |
-            build/CMakeCache.txt
-            build/.config
-            build/pebbleos.elf
-            build/qemu_micro_flash.bin
-            build/qemu_spi_flash.bin
-            build/normal_*.pbz
-
-  integration-tests:
-    needs: build-qemu
-    runs-on: ubuntu-24.04
-
-    container:
-      image: ghcr.io/coredevices/pebbleos-docker:v11
-
-    strategy:
-      fail-fast: false
-      matrix:
-        board: ["qemu_flint", "qemu_emery", "qemu_gabbro"]
-        build: ["normal-itest", "prf-itest"]
-        include:
-          - build: normal-itest
-            suffix: -normal-itest
-            options: --bt-hci virtual --integration
-          - build: prf-itest
-            suffix: -prf-itest
-            options: --bt-hci virtual --integration --main-build "$GITHUB_WORKSPACE/build-main"
-
-    steps:
-      - name: Mark Github workspace as safe
-        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Rebase onto target branch
-        uses: ./.github/actions/rebase
-
       - name: Install dependencies
         run: |
           # QEMU links SDL even when run headless.
@@ -182,18 +162,22 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
-      - name: Download build
-        uses: actions/download-artifact@v8
-        with:
-          name: itest-build-${{ matrix.board }}${{ matrix.suffix }}
-          path: build
-
-      - name: Download normal build
+      # The PRF tests install the normal firmware bundle.
+      - name: Build the normal firmware
         if: matrix.build == 'prf-itest'
-        uses: actions/download-artifact@v8
+        run: |
+          pbl -b build-main configure --board ${{ matrix.board }}
+          pbl -b build-main build qemu_image_micro qemu_image_spi bundle
+
+      - name: Build
+        run: |
+          pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} -DCONFIG_BT_HCI_UART=y
+          pbl build qemu_image_micro qemu_image_spi bundle
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
         with:
-          name: itest-build-${{ matrix.board }}
-          path: build-main
+          key: qemu-${{ matrix.board }}-${{ matrix.build }}
 
       - name: Integration tests
         run: pbl itest --no-build -n 4 ${{ matrix.options }}
