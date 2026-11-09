@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,npm1300
+config: PMIC_NPM1300
+class: npm1300_charger
+define: PBL_NPM1300_CHARGER_DEFINE
+symbol: "{sym}_charger"
+args:
+  - self: npm1300
+  - irq: 0
+  - prop: constant-charge-current-max-microamp
+    of: monitored-battery
+  - prop: charge-term-current-microamp
+    of: monitored-battery
+  - prop: constant-charge-voltage-max-microvolt
+    of: monitored-battery
+  - prop: nordic,reduced-charge-voltage-microvolt
+  - prop: nordic,thermistor-ohms
+  - prop: nordic,thermistor-beta
+  - prop: nordic,thermistor-hot-celsius
+  - prop: nordic,discharge-current-limit-microamp
+  - prop: input-current-limit-microamp
+    default: 0
+  - prop: nordic,startup-input-current-limit-microamp
+    default: 0

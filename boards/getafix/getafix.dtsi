@@ -5,6 +5,13 @@
 
 / {
 	model = "Core Devices Pebble Round 2";
+
+	battery: battery {
+		compatible = "simple-battery";
+		constant-charge-current-max-microamp = <70000>;
+		charge-term-current-microamp = <7000>;
+		constant-charge-voltage-max-microvolt = <4450000>;
+	};
 };
 
 &pinctrl {
@@ -86,4 +93,41 @@
 	pinctrl-names = "default";
 	clock-frequency = <400000>;
 	status = "okay";
+
+	pmic: pmic@6b {
+		compatible = "nordic,npm1300";
+		reg = <0x6b>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <44 IRQ_TYPE_EDGE_RISING>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		monitored-battery = <&battery>;
+		nordic,reduced-charge-voltage-microvolt = <4000000>;
+		nordic,thermistor-ohms = <10000>;
+		nordic,thermistor-beta = <3380>;
+		nordic,thermistor-hot-celsius = <45>;
+		nordic,discharge-current-limit-microamp = <200000>;
+		input-current-limit-microamp = <500000>;
+		nordic,startup-input-current-limit-microamp = <500000>;
+
+		regulators {
+			buck1: BUCK1 {
+				regulator-name = "npm1300_buck1";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+
+			ldsw1: LDSW1 {
+				regulator-name = "npm1300_ldsw1";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+				nordic,ldo-mode;
+			};
+
+			ldsw2: LDSW2 {
+				regulator-name = "npm1300_ldsw2";
+			};
+		};
+	};
 };

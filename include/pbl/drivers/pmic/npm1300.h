@@ -69,9 +69,6 @@ struct pbl_npm1300_charger {
 /** @brief The board's charger. */
 extern const struct pbl_npm1300_charger *const NPM1300_CHARGER;
 
-/** @brief The board's charger configuration. */
-extern const Npm1300Config NPM1300_CONFIG;
-
 /** @cond INTERNAL_HIDDEN */
 int pbl_npm1300_charger_init(const struct pbl_device *dev);
 /** @endcond */
@@ -83,16 +80,39 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
  *
  * @param sym Symbol of the charger.
  * @param _pmic Core, a struct pbl_npm1300.
- * @param _cfg Charger configuration.
  * @param _irq Interrupt line, a struct pbl_irq_spec initializer.
+ * @param _chg_ua Charge current, in uA.
+ * @param _term_ua Charge termination current, in uA.
+ * @param _vterm_uv Charge termination voltage, in uV.
+ * @param _vterm_reduced_uv Termination voltage in the warm and cool regions, in uV.
+ * @param _ntc_ohms NTC thermistor nominal resistance, in ohm.
+ * @param _beta Thermistor beta value.
+ * @param _hot_celsius Charging stops above this temperature.
+ * @param _dischg_ua Discharge current limit, in uA.
+ * @param _vbus_ua VBUS current limit with USB connected, in uA, 0 to keep the default.
+ * @param _vbus_startup_ua VBUS current limit at startup, in uA, 0 to keep the default.
  */
-#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _cfg, _irq)                                         \
+#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _irq, _chg_ua, _term_ua, _vterm_uv,                 \
+                                   _vterm_reduced_uv, _ntc_ohms, _beta, _hot_celsius, _dischg_ua,  \
+                                   _vbus_ua, _vbus_startup_ua)                                     \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
   static struct pbl_npm1300_charger_state sym##_npm1300_charger_state;                             \
+  static const Npm1300Config sym##_cfg = {                                                         \
+    .chg_current_ma = (_chg_ua) / 1000,                                                            \
+    .dischg_limit_ma = (_dischg_ua) / 1000,                                                        \
+    .term_current_pct = (_term_ua) * 100 / (_chg_ua),                                              \
+    .vterm_mv = (_vterm_uv) / 1000,                                                                \
+    .vterm_reduced_mv = (_vterm_reduced_uv) / 1000,                                                \
+    .ntc_kohm = (_ntc_ohms) / 1000,                                                                \
+    .thermistor_beta = (_beta),                                                                    \
+    .ntc_hot_celsius = (_hot_celsius),                                                             \
+    .vbus_current_lim0 = (_vbus_ua) / 1000,                                                        \
+    .vbus_current_startup = (_vbus_startup_ua) / 1000,                                             \
+  };                                                                                               \
   const struct pbl_npm1300_charger sym = {                                                         \
     .dev =                                                                                         \
         PBL_DEVICE_INIT(sym, "npm1300_charger", pbl_npm1300_charger_init, &(_pmic)->dev, nullptr), \
-    .cfg = (_cfg),                                                                                 \
+    .cfg = &sym##_cfg,                                                                             \
     .irq = _irq,                                                                                   \
     .state = &sym##_npm1300_charger_state,                                                         \
   };                                                                                               \

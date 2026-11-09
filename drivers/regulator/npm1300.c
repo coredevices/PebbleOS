@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
@@ -222,3 +223,5 @@ const struct pbl_regulator_ops pbl_npm1300_regulator_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
 };
+
+#include PBL_DT_INSTANCES(nordic_npm1300_regulator)

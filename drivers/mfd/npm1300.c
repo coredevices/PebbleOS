@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/util/misc.h>
 
@@ -43,3 +44,5 @@ int pbl_npm1300_init(const struct pbl_device *dev) {
 
   return (pbl_device_init_children(dev) == 0) ? 0 : -EIO;
 }
+
+#include PBL_DT_INSTANCES(nordic_npm1300_npm1300)

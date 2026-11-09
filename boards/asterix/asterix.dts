@@ -9,7 +9,15 @@
 
 / {
 	model = "Core Devices Pebble 2 Duo";
+
 	compatible = "coredevices,asterix", "nordic,nrf52840";
+
+	battery: battery {
+		compatible = "simple-battery";
+		constant-charge-current-max-microamp = <128000>;
+		charge-term-current-microamp = <12800>;
+		constant-charge-voltage-max-microvolt = <4200000>;
+	};
 };
 
 &i2c0 {
@@ -55,4 +63,51 @@
 	scl-gpios = <&gpio0 14 GPIO_PULL_UP>;
 	sda-gpios = <&gpio0 15 GPIO_PULL_UP>;
 	status = "okay";
+
+	pmic: pmic@6b {
+		compatible = "nordic,npm1300";
+		reg = <0x6b>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <12 IRQ_TYPE_EDGE_RISING>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		monitored-battery = <&battery>;
+		nordic,reduced-charge-voltage-microvolt = <4000000>;
+		nordic,thermistor-ohms = <10000>;
+		nordic,thermistor-beta = <3380>;
+		nordic,thermistor-hot-celsius = <45>;
+		nordic,discharge-current-limit-microamp = <200000>;
+
+		regulators {
+			buck1: BUCK1 {
+				regulator-name = "npm1300_buck1";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			buck2: BUCK2 {
+				regulator-name = "npm1300_buck2";
+				regulator-min-microvolt = <3000000>;
+				regulator-max-microvolt = <3000000>;
+				regulator-always-on;
+			};
+
+			ldsw1: LDSW1 {
+				regulator-name = "npm1300_ldsw1";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+				nordic,ldo-mode;
+			};
+
+			ldsw2: LDSW2 {
+				regulator-name = "npm1300_ldsw2";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+				nordic,ldo-mode;
+			};
+		};
+	};
 };
