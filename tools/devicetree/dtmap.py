@@ -70,6 +70,7 @@ ARG_KINDS = {
     "id",
     "size",
     "list",
+    "mbox",
     "pwm",
     "supply",
     "referrer",
@@ -89,6 +90,7 @@ ARG_OPTIONS = {
     "up",
     "remote",
     "all",
+    "values",
 }
 
 
@@ -187,10 +189,7 @@ class Spec:
         # A SoC singleton defined from the tree keeps the name C code knows it by
         self.singleton = symbol[self.classes[0]] if self.define and fixed else None
         self.file = c_ident(self.compatibles[0])
-        for arg in self.args:
-            check_keys(self._error, arg, ARG_KINDS | ARG_OPTIONS, "argument")
-            if len(arg.keys() & ARG_KINDS) != 1:
-                raise self._error(f"argument {arg}: needs one of {sorted(ARG_KINDS)}")
+        self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
         trailing = [bool(arg.get("optional")) or "list" in arg for arg in self.args]
         if any(trailing[i] and not all(trailing[i:]) for i in range(len(trailing))):
@@ -205,6 +204,18 @@ class Spec:
             kind: self._load_ids(kind, ids, include_dir)
             for kind, ids in data.get("ids", {}).items()
         }
+
+    def _check_args(self, args):
+        for arg in args:
+            check_keys(self._error, arg, ARG_KINDS | ARG_OPTIONS, "argument")
+            if len(arg.keys() & ARG_KINDS) != 1:
+                raise self._error(f"argument {arg}: needs one of {sorted(ARG_KINDS)}")
+            if "default" in arg and arg["default"] is None:
+                raise self._error(f"argument {arg}: 'default' has no value")
+            item = arg.get("item")
+            if isinstance(item, dict):
+                check_keys(self._error, item, {"define", "args"}, "item", ("define", "args"))
+                self._check_args(item["args"])
 
     def _load_ids(self, kind, ids, include_dir):
         """The cell and, for each abstract ID of the binding, the number the driver uses."""
@@ -362,8 +373,27 @@ class Generator:
                 (s for s in found if any(spec.config in self.config for spec in s)),
                 found[0] if found else [],
             )
-            self.devices[node.path] = Device(node, specs)
+            self.devices[node.path] = (
+                Device(node, specs) if specs else self._child_device(node)
+            ) or Device(node, [])
         return self.devices[node.path]
+
+    def _child_device(self, node):
+        """A child that a spec with 'children' instantiates, as a regulator of a PMIC."""
+        name = node.name.split("@")[0]
+        candidates = [(node.parent, None)]
+        if node.parent is not None and node.parent.parent is not None:
+            candidates.append((node.parent.parent, node.parent.name))
+        for owner, container in candidates:
+            if owner is None:
+                continue
+            for spec in self._device(owner).specs:
+                children = spec.children or {}
+                if children.get("node") == container and name in children.get("names", {}):
+                    return Device(
+                        node, [spec], owner=self._device(owner), child_id=children["names"][name]
+                    )
+        return None
 
     def _bound(self, dev):
         """The specs of the node whose driver is enabled."""
@@ -443,9 +473,7 @@ class Generator:
             name = child.name.split("@")[0]
             if name not in names:
                 raise DtError(f"{child.path}: not one of {sorted(names)}")
-            self._instantiate(
-                Device(child, [spec], owner=dev, child_id=names[name]), spec
-            )
+            self._instantiate(self._device(child), spec)
 
     def _instantiate(self, dev, spec):
         self.out = self.outputs[instance_file(spec)]
@@ -623,7 +651,9 @@ class Generator:
         return f"{self._translate(dev, self._reg_entry(dev, key)[0]):#x}"
 
     def _list(self, dev, node, path, item):
-        """An item per enabled child of the node reached through children of the given compatibles."""
+        """An item per enabled child of the node reached through children of the given compatibles:
+        a template of the child's reg cells and name, or a macro with arguments read from the child.
+        """
         for compatible in path:
             node = next(
                 (
@@ -639,6 +669,12 @@ class Generator:
         items = []
         for child in node.children:
             if not enabled(child):
+                continue
+            if isinstance(item, dict):
+                # A macro per child, its arguments read from the child
+                child_dev = Device(child, [], owner=dev)
+                values = self._args(child_dev, item["args"])
+                items.append(f"{item['define']}({', '.join(values)})")
                 continue
             cells = child.u32s("reg") if child.has("reg") else []
             try:
@@ -793,8 +829,9 @@ class Generator:
         if "of" in arg:
             if not node.has(arg["of"]):
                 return None
+            # The first phandle, as all cells of nvmem-cells are in the same device
             node = self.tree.phandle(
-                node.u32(arg["of"]), f"{dev.node.path}: '{arg['of']}'"
+                node.u32s(arg["of"])[0], f"{dev.node.path}: '{arg['of']}'"
             )
         if kind == "name":
             return f'"{dev.name}"'
@@ -812,6 +849,9 @@ class Generator:
             owner = dev.owner.node if dev.owner else node.parent
             return self._provided(dev, owner, key, [])
         if kind == "self":
+            # A node inside a device, as an nvmem cell of a flash, refers to that device
+            while node.parent is not None and not self._device(node).specs:
+                node = node.parent
             return self._provided(dev, node, key, [])
         if kind == "id":
             if dev.child_id is None:
@@ -820,8 +860,18 @@ class Generator:
         if kind == "flag":
             return "true" if node.has(key) else "false"
         if kind == "string":
-            return f'"{node.string(key)}"' if node.has(key) else None
+            if not node.has(key):
+                return None
+            value = node.string(key)
+            if "values" not in arg:
+                return f'"{value}"'
+            # An enumerated string property, as C
+            if value not in arg["values"]:
+                raise dev.error(f"'{key}' of '{value}', not one of {sorted(arg['values'])}")
+            return c_value(arg["values"][value])
         if kind == "irq":
+            if not (node.has("interrupts") or node.has("interrupts-extended")):
+                return None
             return self._interrupt(src, key, arg.get("as", "irq"))
         if kind == "clock":
             if not node.has("clocks"):
@@ -833,9 +883,19 @@ class Generator:
             target, cells = entries[index]
             return self._provided(src, target, "clock", cells)
         if kind == "prop":
-            return str(node.u32(key)) if node.has(key) else None
+            if not node.has(key):
+                return None
+            if "index" in arg:
+                cells = node.u32s(key)
+                if arg["index"] >= len(cells):
+                    raise dev.error(f"no cell {arg['index']} in '{key}'")
+                return str(cells[arg["index"]])
+            return str(node.u32(key))
         if kind == "strings":
-            return ", ".join(node.strings(key)) if node.has(key) else None
+            if not node.has(key):
+                return None
+            item = arg.get("item", "{}")
+            return ", ".join(item.format(value) for value in node.strings(key))
         if kind == "dma":
             return self._dma(dev, src, key) if node.has("dmas") else None
         if kind == "flags":
@@ -851,6 +911,15 @@ class Generator:
                 raise src.error(f"no reset {index}")
             target, cells = entries[index]
             return self._provided(src, target, "reset", cells)
+        if kind == "mbox":
+            if not node.has("mboxes"):
+                return None
+            index = self._index(src, key, "mbox-names")
+            entries = self._phandles(src, "mboxes", "#mbox-cells")
+            if index >= len(entries):
+                raise src.error(f"no mbox {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "mbox", cells)
         if kind == "pwm":
             if not node.has("pwms"):
                 return None

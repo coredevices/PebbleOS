@@ -810,6 +810,77 @@ def test_children_become_a_list(tmp_path):
     assert "otp" not in gen.header()
 
 
+def test_list_items_read_from_each_child(tmp_path):
+    text = LIST_DTS.replace(
+        "    ctrl: ctrl@1000 {",
+        """    keys: keys {
+        compatible = "acme,keys";
+
+        key-a {
+            label = "A";
+            linux,code = <30>;
+            debounce-interval = <40>;
+            pair = <3 7>;
+        };
+
+        key-b {
+            label = "B";
+            linux,code = <48>;
+        };
+
+        key-c {
+            label = "C";
+            linux,code = <46>;
+            status = "disabled";
+        };
+    };
+
+    ctrl: ctrl@1000 {""",
+    )
+    path, dtb = tmp_path / "k.dts", tmp_path / "k.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    keys = {
+        "compatible": "acme,keys",
+        "config": "KEYS",
+        "class": "sensor",
+        "define": "KEYS_DEFINE",
+        "args": [
+            {"name": True},
+            {
+                "list": [],
+                "item": {
+                    "define": "KEY",
+                    "args": [
+                        {"string": "label"},
+                        {"prop": "linux,code"},
+                        {"prop": "debounce-interval", "default": 5},
+                        {"prop": "pair", "index": 1, "default": 0},
+                    ],
+                },
+            },
+        ],
+    }
+    gen = dtmap.Generator(fdt.load(dtb), {"acme,keys": spec("acme,keys", keys)}, {"KEYS"})
+    gen.run()
+    assert 'KEYS_DEFINE(dt_keys, "keys", KEY("A", 30, 40, 7), KEY("B", 48, 5, 0));' in body(gen)
+
+
+def test_list_item_arguments_are_checked():
+    data = {
+        "compatible": "acme,keys",
+        "config": "KEYS",
+        "class": "sensor",
+        "define": "KEYS_DEFINE",
+        "args": [{"list": [], "item": {"define": "KEY", "args": [{"bogus": 1}]}}],
+    }
+    with pytest.raises(DtError, match="argument"):
+        spec("acme,keys", data)
+
+
 def test_empty_list_ends_the_arguments(tmp_path):
     text = LIST_DTS.replace('compatible = "user-otp";', 'compatible = "factory-otp";')
     gen = list_generate(tmp_path, text)
@@ -1103,3 +1174,351 @@ def test_spec_provides_of_a_driver_defined_device(tmp_path):
     gen.run()
     assert "TPWM_DEFINE(dt_tpwm, 0x3000, CLK(&acme_osc, OSC_ID));" in body(gen)
     assert "acme/osc.h" in instances(gen, "acme_timer_pwm")
+
+
+CHILD_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    leds@1000 {
+        compatible = "acme,leds";
+        reg = <0x1000 0x100>;
+
+        status_led: multi-led {
+        };
+    };
+
+    backlight {
+        compatible = "acme,backlight";
+        leds = <&status_led>;
+    };
+};
+"""
+
+
+def test_children_are_providers(tmp_path):
+    path, dtb = tmp_path / "c.dts", tmp_path / "c.dtb"
+    path.write_text(CHILD_DTS)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    specs = {
+        "acme,leds": spec(
+            "acme,leds",
+            {
+                "compatible": "acme,leds",
+                "config": "LEDS",
+                "class": "bus",
+                "define": "LED_DEFINE",
+                "children": {"names": {"multi-led": 0}},
+                "args": [{"reg": 0, "up": True}],
+            },
+        ),
+        "acme,backlight": spec(
+            "acme,backlight",
+            {
+                "compatible": "acme,backlight",
+                "config": "BACKLIGHT",
+                "class": "sensor",
+                "define": "BACKLIGHT_DEFINE",
+                "args": [{"self": "bus", "of": "leds"}],
+            },
+        ),
+    }
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"LEDS", "BACKLIGHT"})
+    gen.run()
+    assert "LED_DEFINE(dt_status_led, 0x1000);" in body(gen)
+    assert "BACKLIGHT_DEFINE(dt_node_backlight, &dt_status_led);" in body(gen)
+
+
+GPIO_SPEC = {
+    "compatible": "acme,gpio",
+    "config": "GPIO",
+    "class": "gpio",
+    "define": "GPIO_DEFINE",
+    "args": [],
+}
+GPIO_DTS = DTS.replace(
+    "    ctrl: ctrl@1000 {",
+    '    gpio: gpio@900 {\n        compatible = "acme,gpio";\n        reg = <0x900 0x100>;\n'
+    "        #gpio-cells = <2>;\n    };\n    ctrl: ctrl@1000 {",
+)
+
+
+def sensor_generate(tmp_path, args, sensor="", dts=GPIO_DTS, extra=None, config=ALL):
+    specs = {
+        "acme,gpio": spec("acme,gpio", GPIO_SPEC),
+        "acme,sensor": spec("acme,sensor", {**SPECS["acme,sensor"], "args": args}),
+        **(extra or {}),
+    }
+    return generate(
+        tmp_path, config=(*config, "GPIO"), sensor=sensor, specs=specs, dts=dts
+    )
+
+
+@pytest.mark.parametrize(
+    "dts",
+    [
+        DTS.replace("bus: bus@2000", "bus: abus: bus@2000"),
+        DTS + "abus: &bus { };\n",
+    ],
+    ids=["inline", "reference"],
+)
+def test_labels_of_a_node_are_aliases_of_the_first_sorted(tmp_path, dts):
+    gen = generate(tmp_path, dts=dts)
+    assert 'BUS_DT_DEFINE(dt_abus, "abus",' in body(gen)
+    assert "SENSOR_DT_DEFINE(dt_sensor, &dt_abus," in body(gen)
+    header = gen.header()
+    assert "extern const struct bus dt_abus;" in header
+    assert "#define dt_bus dt_abus" in header
+    assert "extern const struct bus dt_bus;" not in header
+
+
+def test_labels_of_a_pin_state_are_aliases(tmp_path):
+    dts = DTS.replace("bus_default: state", "bus_default: bus_active: state")
+    gen = generate(tmp_path, dts=dts)
+    assert "PIN_STATE(dt_bus_active, " in body(gen)
+    assert "#define dt_bus_default dt_bus_active" in gen.header()
+
+
+def test_class_symbols_of_every_label(tmp_path):
+    data = {
+        **SPECS["acme,bus"],
+        "class": ["bus", "sensor"],
+        "symbol": {"bus": "{sym}", "sensor": "{sym}_sensor"},
+        "args": [],
+    }
+    dts = DTS.replace("bus: bus@2000", "bus: abus: bus@2000")
+    gen = generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)}, dts=dts)
+    assert "#define dt_bus dt_abus\n" in gen.header()
+    assert "#define dt_bus_sensor dt_abus_sensor\n" in gen.header()
+
+
+@pytest.mark.parametrize(
+    "arg, value",
+    [
+        ({"gpio": "reset"}, "PIN(&dt_gpio, 9, 0)"),
+        ({"clock": 0}, "CLK(&acme_clk, 5)"),
+        ({"irq": 0}, "IRQ(&acme_intc, 4)"),
+    ],
+)
+def test_references_are_read_from_the_redirected_node(tmp_path, arg, value):
+    sensor = (
+        "reset-gpios = <&gpio 1 0>; clocks = <&ctrl 2>;\n"
+        "sub { reset-gpios = <&gpio 9 0>; clocks = <&ctrl 5>;\n"
+        "interrupts-extended = <&ctrl 4>; };"
+    )
+    gen = sensor_generate(tmp_path, [{**arg, "child": "sub"}], sensor)
+    assert f"SENSOR_DT_DEFINE(dt_sensor, {value});" in body(gen)
+
+
+def test_references_of_a_redirected_node_alone(tmp_path):
+    sensor = "sub { reset-gpios = <&gpio 9 0>; };"
+    gen = sensor_generate(tmp_path, [{"gpio": "reset", "child": "sub"}], sensor)
+    assert "SENSOR_DT_DEFINE(dt_sensor, PIN(&dt_gpio, 9, 0));" in body(gen)
+
+
+OPTIONAL_ARGS = [
+    {"reg": 0},
+    {"gpio": "reset", "optional": True},
+    {"gpio": "enable", "optional": True},
+]
+
+
+def test_argument_after_an_absent_optional_fails(tmp_path):
+    with pytest.raises(DtError, match=r"/bus@2000/sensor@30: has what .*enable"):
+        sensor_generate(tmp_path, OPTIONAL_ARGS, "enable-gpios = <&gpio 5 0>;")
+
+
+def test_trailing_optionals_may_be_absent(tmp_path):
+    gen = sensor_generate(tmp_path, OPTIONAL_ARGS, "reset-gpios = <&gpio 5 0>;")
+    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30, PIN(&dt_gpio, 5, 0));" in body(gen)
+    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30);" in body(
+        sensor_generate(tmp_path, OPTIONAL_ARGS)
+    )
+
+
+def test_first_compatible_with_an_enabled_driver_binds(tmp_path):
+    new = {**SPECS["acme,sensor"], "compatible": "acme,new", "config": "NEW"}
+    new["define"] = "NEW_DT_DEFINE"
+    dts = DTS.replace(
+        'compatible = "acme,sensor";', 'compatible = "acme,new", "acme,sensor";'
+    )
+    specs = {"acme,new": spec("acme,new", new)}
+    assert "SENSOR_DT_DEFINE(dt_sensor," in body(generate(tmp_path, specs=specs, dts=dts))
+    gen = generate(tmp_path, config=(*ALL, "NEW"), specs=specs, dts=dts)
+    assert "NEW_DT_DEFINE(dt_sensor," in body(gen)
+    assert "SENSOR_DT_DEFINE" not in body(gen)
+
+
+def test_self_does_not_climb_past_a_disabled_driver(tmp_path):
+    other = {
+        "compatible": "acme,other",
+        "config": "OTHER",
+        "class": "sensor",
+        "define": "OTHER_DEFINE",
+        "provides": {"bus": "&{sym}"},
+        "args": [],
+    }
+    sensor = 'link = <&other>;\n};\nother: other@40 { compatible = "acme,other"; reg = <0x40>;'
+    extra = {"acme,other": spec("acme,other", other)}
+    args = [{"self": "bus", "of": "link"}]
+    with pytest.raises(DtError, match="other@40, which has no enabled driver"):
+        sensor_generate(tmp_path, args, sensor, extra=extra)
+    gen = sensor_generate(tmp_path, args, sensor, extra=extra, config=(*ALL, "OTHER"))
+    assert "SENSOR_DT_DEFINE(dt_sensor, &dt_other);" in body(gen)
+
+
+def test_disabled_partitions_are_left_out(tmp_path):
+    text = PARTITIONS_DTS.replace(
+        'label = "firmware-slot-1";', 'label = "firmware-slot-1"; status = "disabled";'
+    )
+    header = dtmap.partitions_header(compile_tree(tmp_path, text))
+    assert "PART_SAFE_FIRMWARE_OFFSET" in header
+    assert "FIRMWARE_SLOT_1" not in header
+
+
+def test_overlapping_partitions_fail(tmp_path):
+    text = PARTITIONS_DTS.replace("reg = <0xff000 0x180>", "reg = <0x7f000 0x2000>")
+    with pytest.raises(DtError, match="mfg-info@ff000: overlaps .*partition@0"):
+        dtmap.partitions_header(compile_tree(tmp_path, text))
+
+
+def test_partition_without_reg_fails(tmp_path):
+    text = PARTITIONS_DTS.replace("reg = <0xff000 0x180>;", "")
+    with pytest.raises(DtError, match="mfg-info@ff000: no 'reg'"):
+        dtmap.partitions_header(compile_tree(tmp_path, text))
+
+
+@pytest.mark.parametrize(
+    "old, new, message",
+    [
+        ("reg = <0x2000 0x100>;", "", "/bus@2000: no 'reg'"),
+        ("#clock-cells = <1>;", "", "/ctrl@1000: no '#clock-cells'"),
+        ('function = "scl";\n                input-enable;', "", "no 'function'"),
+        ("clocks = <&ctrl 3>;", "clocks = <&ctrl>;", "/ctrl@1000 takes 1 cells"),
+    ],
+    ids=["reg", "cells", "function", "specifier"],
+)
+def test_missing_data_fails_with_the_node(tmp_path, old, new, message):
+    assert old in DTS
+    with pytest.raises(DtError, match=message):
+        generate(tmp_path, dts=DTS.replace(old, new))
+
+
+def test_dma_without_names_fails(tmp_path):
+    data = {**SPECS["acme,bus"], "args": [{"dma": "rx"}]}
+    specs = {"acme,bus": spec("acme,bus", data)}
+    with pytest.raises(DtError, match="/bus@2000: no 'dma-names'"):
+        generate(tmp_path, specs=specs, bus="dmas = <&ctrl 1>;")
+
+
+def test_boolean_defaults_and_values_are_c(tmp_path):
+    args = [
+        {"prop": "absent", "default": False},
+        {"prop": "missing", "default": True},
+        {"string": "mode", "values": {"fast": True}},
+    ]
+    gen = sensor_generate(tmp_path, args, 'mode = "fast";')
+    assert "SENSOR_DT_DEFINE(dt_sensor, false, true, true);" in body(gen)
+
+
+def test_null_default_is_rejected():
+    data = {**SPECS["acme,sensor"], "args": [{"prop": "x", "default": None}]}
+    with pytest.raises(DtError, match="'default' has no value"):
+        spec("acme,sensor", data)
+
+
+def write_specs(root, specs):
+    (root / "drivers").mkdir(parents=True)
+    for name in ("clk", "bus"):
+        (root / "drivers" / f"{name}.class.yaml").write_text(
+            f"class: {name}\ntype: t\ninclude: {name}.h\n"
+        )
+    for name, text in specs.items():
+        (root / "drivers" / f"{name}.dtmap.yaml").write_text(text)
+
+
+def test_instance_files_of_specs_sharing_one_of_their_compatibles(tmp_path):
+    write_specs(
+        tmp_path,
+        {
+            "a": "compatible:\n  - acme,one\n  - acme,two\n"
+            "config: A\nclass: clk\ndefine: A\n",
+            "b": "compatible: acme,two\nconfig: B\nclass: bus\ndefine: B\n",
+        },
+    )
+    assert dtmap.instance_files(dtmap.load_specs(tmp_path)) == [
+        "devicetree/instances/acme_one_clk.inc",
+        "devicetree/instances/acme_two_bus.inc",
+    ]
+
+
+def test_specs_sharing_a_compatible_need_a_class(tmp_path):
+    write_specs(
+        tmp_path,
+        {
+            "a": "compatible: acme,two\nconfig: A\nclass: clk\n",
+            "b": "compatible: acme,two\nconfig: B\n",
+        },
+    )
+    with pytest.raises(DtError, match="b.dtmap.yaml: sharing 'acme,two' needs a class"):
+        dtmap.load_specs(tmp_path)
+
+
+def test_specs_need_their_own_instance_file(tmp_path):
+    write_specs(
+        tmp_path,
+        {
+            "a": "compatible: acme,a-b\nconfig: A\nclass: clk\ndefine: A\n",
+            "b": "compatible: acme,a_b\nconfig: B\nclass: bus\ndefine: B\n",
+        },
+    )
+    with pytest.raises(DtError, match="same instance file"):
+        dtmap.load_specs(tmp_path)
+
+
+def test_depfile_paths_may_have_spaces():
+    text = "board.dtb: /a\\ b/x.dts \\\n  /a\\ b/y.dtsi /c/z.h\n"
+    assert dtmap.depfile_sources(text) == ["/a b/x.dts", "/a b/y.dtsi", "/c/z.h"]
+
+
+def test_main_only_writes_what_changed_and_drops_stale_files(tmp_path, monkeypatch):
+    write_specs(tmp_path, {"a": "compatible: acme,a\nconfig: A\nclass: clk\ndefine: A\n"})
+    (tmp_path / ".config").write_text("")
+    out = tmp_path / "out"
+    stale = out / "devicetree" / "instances" / "gone.inc"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("")
+    argv = ["dtmap.py", "--srcdir", str(tmp_path), "--outdir", str(out)]
+    monkeypatch.setattr(sys, "argv", [*argv, "--config", str(tmp_path / ".config")])
+    dtmap.main()
+    assert not stale.exists()
+    files = [out / "devicetree" / "devices.h", stale.with_name("acme_a.inc")]
+    for path in files:
+        os.utime(path, (1, 1))
+    dtmap.main()
+    assert [path.stat().st_mtime for path in files] == [1, 1]
+
+
+def test_header_values_in_any_integer_form(tmp_path):
+    header = tmp_path / "h.h"
+    header.write_text(
+        "#define P_A 1\n#define P_B 0x10\n#define P_C 3 /* c */\n#define P_D (4)\n"
+        "#define P_E 5U\n#define P_F (0x6UL) // f\n#define P_G (1 << 2)\n"
+    )
+    values = {"A": 1, "B": 16, "C": 3, "D": 4, "E": 5, "F": 6}
+    assert dtmap.header_defines(header, "P_") == values
+
+
+def test_nodes_with_the_same_symbol_fail(tmp_path):
+    dts = DTS.replace("sensor: sensor@30", "a-b@30").replace(
+        "            %(sensor)s\n        };",
+        '            %(sensor)s\n        };\n        a_b@30 { compatible = "acme,sensor";'
+        ' reg = <0x30>; mount-matrix = "1", "0"; };',
+    )
+    with pytest.raises(DtError, match="a_b@30: 'dt_node_bus_2000_a_b_30' is also"):
+        generate(tmp_path, dts=dts)
+
