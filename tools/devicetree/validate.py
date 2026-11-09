@@ -181,7 +181,7 @@ def compile_trees(args, tmp):
         outdir = tmp / "trees" / dts.stem
         try:
             dtb, _ = dtmap.compile_dts(
-                dts, args.cc, [root / "boards", root / "soc", root / "include"], outdir
+                dts, args.cc, [root / "boards", root / "dts", root / "include"], outdir
             )
         except dtmap.DtError as e:
             sys.exit(f"validate: {e}")
