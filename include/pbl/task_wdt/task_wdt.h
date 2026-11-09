@@ -16,10 +16,13 @@
  * channel within its timeout, unless it is waiting for work (see pbl_task_wdt_set_waiting()). A
  * thread at the highest priority checks the channels every @c CONFIG_TASK_WDT_CHECK_PERIOD_MS and
  * feeds the hardware watchdog. A channel that expires is
- * logged and recorded in the reboot reason, and its callback gets a chance to recover the
+ * logged and reported with pbl_task_wdt_stalled(), and its callback gets a chance to recover the
  * thread; once it stays expired for @c CONFIG_TASK_WDT_GRACE_MS after the check that found it
- * expired, the system resets with a core dump (with @c CONFIG_WATCHDOG; otherwise it only
+ * expired, pbl_task_wdt_expired() resets the system (with @c CONFIG_WATCHDOG; otherwise it only
  * logs). The pool holds @c CONFIG_TASK_WDT_CHANNELS channels.
+ *
+ * pbl_task_wdt_stalled(), pbl_task_wdt_recovered() and pbl_task_wdt_expired() have defaults an
+ * application overrides to record what was stuck and to reset its own way.
  *
  * @code{.c}
  * static void prv_worker(void *arg) {
@@ -45,10 +48,48 @@
  *
  * @param channel_id Expired channel.
  * @param user_data Data given to pbl_task_wdt_add().
- * @return Pointer naming the work the thread was running, recorded in the reboot reason, or
- * NULL.
+ * @return Pointer naming the work the thread was running, reported with pbl_task_wdt_stalled(),
+ * or NULL.
  */
 typedef void *(*pbl_task_wdt_callback_t)(int channel_id, void *user_data);
+
+/** @brief Expired channels, as reported with pbl_task_wdt_stalled(). */
+struct pbl_task_wdt_stall {
+  /** Channels fed in time, one bit per channel. */
+  uint8_t fed_mask;
+  /** Channels in use, one bit per channel. */
+  uint8_t active_mask;
+  /** Program counter of the highest-priority stuck thread, the most likely culprit. */
+  uintptr_t pc;
+  /** Link register of that thread. */
+  uintptr_t lr;
+  /** What its channel callback returned, or NULL. */
+  void *work;
+};
+
+/**
+ * @brief Report expired channels.
+ *
+ * Called on the watchdog thread on every check that finds channels expired. The default does
+ * nothing.
+ *
+ * @param stall What is stuck.
+ */
+void pbl_task_wdt_stalled(const struct pbl_task_wdt_stall *stall);
+
+/**
+ * @brief Report that the channels found expired have all been fed again.
+ *
+ * Called on the watchdog thread. The default does nothing.
+ */
+void pbl_task_wdt_recovered(void);
+
+/**
+ * @brief Reset the system: channels stayed expired for the grace period.
+ *
+ * Called on the watchdog thread with interrupts locked. The default panics.
+ */
+[[noreturn]] void pbl_task_wdt_expired(void);
 
 /**
  * @brief Start the watchdog thread.

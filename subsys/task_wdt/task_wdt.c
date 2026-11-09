@@ -9,7 +9,9 @@
 
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
@@ -19,13 +21,10 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 
-#include <system/die.h>
-#include <system/reboot_reason.h>
-
 PBL_LOG_MODULE_DEFINE(task_wdt, CONFIG_TASK_WDT_LOG_LEVEL);
 
 #define NUM_CHANNELS CONFIG_TASK_WDT_CHANNELS
-static_assert(NUM_CHANNELS <= 8, "the reboot reason records the channels as 8-bit masks");
+static_assert(NUM_CHANNELS <= 8, "the channels are reported as 8-bit masks");
 #ifdef CONFIG_WATCHDOG
 static_assert(CONFIG_TASK_WDT_CHECK_PERIOD_MS < CONFIG_WATCHDOG_TIMEOUT_MS / 2,
               "the hardware watchdog must outlast the check period");
@@ -147,21 +146,25 @@ static size_t prv_collect_expired(struct expired *expired, uint8_t *fed_mask,
   return num_expired;
 }
 
-static bool prv_reboot_reason_is_ours(void) {
-  RebootReason current;
-  reboot_reason_get(&current);
-  return current.code == RebootReasonCode_Unknown || current.code == RebootReasonCode_Watchdog;
+PBL_WEAK void pbl_task_wdt_stalled(const struct pbl_task_wdt_stall *stall) {
+}
+
+PBL_WEAK void pbl_task_wdt_recovered(void) {
+}
+
+[[noreturn]] PBL_WEAK void pbl_task_wdt_expired(void) {
+  pbl_panic("Task watchdog expired");
 }
 
 //! Logs every expired channel, gives each callback a chance to recover the
-//! thread and records the highest-priority stuck thread, which is the most
-//! likely culprit when several are stuck, in the reboot reason.
+//! thread and reports the highest-priority stuck thread, which is the most
+//! likely culprit when several are stuck.
 //! @return the longest time since a check first found a channel expired.
 static pbl_tick_t prv_report(const struct expired *expired, size_t num_expired, uint8_t fed_mask,
                              uint8_t active_mask) {
-  RebootReason reason = {
-    .code = RebootReasonCode_Watchdog,
-    .data8 = {fed_mask, active_mask},
+  struct pbl_task_wdt_stall stall = {
+    .fed_mask = fed_mask,
+    .active_mask = active_mask,
   };
   pbl_prio_t worst_prio = 0;
   bool have_worst = false;
@@ -187,19 +190,16 @@ static pbl_tick_t prv_report(const struct expired *expired, size_t num_expired, 
     if (!have_worst || prio > worst_prio) {
       have_worst = true;
       worst_prio = prio;
-      reason.watchdog.stuck_task_pc = regs.pc;
-      reason.watchdog.stuck_task_lr = regs.lr;
-      reason.watchdog.stuck_task_callback = (uint32_t)(uintptr_t)work;
+      stall.pc = regs.pc;
+      stall.lr = regs.lr;
+      stall.work = work;
     }
     if (e->expired_for > max_expired_for) {
       max_expired_for = e->expired_for;
     }
   }
 
-  if (prv_reboot_reason_is_ours()) {
-    reboot_reason_clear();
-    reboot_reason_set(&reason);
-  }
+  pbl_task_wdt_stalled(&stall);
 
   return max_expired_for;
 }
@@ -251,9 +251,7 @@ static uint32_t prv_check(void) {
   if (num_expired == 0) {
     if (s_stalled) {
       s_stalled = false;
-      if (prv_reboot_reason_is_ours()) {
-        reboot_reason_clear();
-      }
+      pbl_task_wdt_recovered();
       PBL_LOG_SYNC_WRN("Task watchdog: recovered from a stall");
     }
     prv_feed_hw(debugger);
@@ -271,7 +269,7 @@ static uint32_t prv_check(void) {
       // block on the stuck thread and lose the core dump; a locked-out
       // scheduler makes it skip straight to the dump.
       pbl_irq_lock();
-      reset_due_to_software_failure();
+      pbl_task_wdt_expired();
     }
 #else
     PBL_LOG_SYNC_ERR("Task watchdog: expired, not resetting (CONFIG_WATCHDOG=n)");

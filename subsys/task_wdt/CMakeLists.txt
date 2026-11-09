@@ -3,4 +3,3 @@
 
 pbl_library()
 pbl_library_sources(task_wdt.c)
-pbl_library_sources_ifdef(CONFIG_SHELL shell.c)
