@@ -100,6 +100,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--srcdir", required=True)
     parser.add_argument("--builddir", required=True)
+    parser.add_argument("--appdir", required=True, help="application source directory")
     parser.add_argument("--board", required=True)
     parser.add_argument("--variant", default="normal")
     parser.add_argument("--override", action="append", default=[])
@@ -108,6 +109,7 @@ def main():
 
     srcdir = os.path.abspath(args.srcdir)
     builddir = os.path.abspath(args.builddir)
+    appdir = os.path.abspath(args.appdir)
 
     try:
         board = boards.parse_board(srcdir, args.board)
@@ -124,7 +126,12 @@ def main():
     os.environ["BOARD"] = board.name
     os.environ["BOARD_REVISION"] = board.revision or boards.NO_REVISION
 
-    kconf = kconfiglib.Kconfig(os.path.join(srcdir, "Kconfig"))
+    # An application with a Kconfig of its own is the root of the tree, and
+    # sources Kconfig.pebbleos from there.
+    root = os.path.join(appdir, "Kconfig")
+    if not os.path.exists(root):
+        root = os.path.join(srcdir, "Kconfig")
+    kconf = kconfiglib.Kconfig(root)
     kconf.warn_assign_override = True
     kconf.warn_assign_redun = True
     kconf.warn_assign_undef = True
@@ -147,15 +154,18 @@ def main():
             kconf.load_config(board_variant_defconfig, replace=False)
             sources.append(board_variant_defconfig)
 
-    prj_conf = os.path.join(srcdir, "fw", "prj.conf")
-    if os.path.exists(prj_conf):
-        kconf.load_config(prj_conf, replace=False)
-        sources.append(prj_conf)
-
-    variant_conf = os.path.join(srcdir, "fw", f"prj_{args.variant}.conf")
-    if os.path.exists(variant_conf):
-        kconf.load_config(variant_conf, replace=False)
-        sources.append(variant_conf)
+    # The application's settings: for every board, then for this one, each
+    # followed by what the variant being built adds.
+    for name in (
+        "prj.conf",
+        f"prj_{args.variant}.conf",
+        os.path.join("boards", f"{board.name}.conf"),
+        os.path.join("boards", f"{board.name}_{args.variant}.conf"),
+    ):
+        app_conf = os.path.join(appdir, name)
+        if os.path.exists(app_conf):
+            kconf.load_config(app_conf, replace=False)
+            sources.append(app_conf)
 
     # An interactively edited configuration, kept across reconfigurations. It
     # overrides the fragments above on purpose, like the -D overrides below.

@@ -68,7 +68,8 @@ def kconfig_load(app: Sphinx) -> tuple[kconfiglib.Kconfig, dict[str, str]]:
     saved = {name: os.environ.get(name) for name in env}
     os.environ.update(env)
     try:
-        return kconfiglib.Kconfig(str(PBL_BASE / "Kconfig"), warn=False), {}
+        # The firmware's Kconfig is the root of its tree, and sources PebbleOS's.
+        return kconfiglib.Kconfig(str(PBL_BASE / "fw" / "Kconfig"), warn=False), {}
     finally:
         for name, value in saved.items():
             if value is None:
