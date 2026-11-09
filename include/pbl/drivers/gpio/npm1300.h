@@ -50,11 +50,10 @@ extern const struct pbl_gpio_port_ops pbl_npm1300_gpio_ops;
 #define PBL_NPM1300_GPIO_DEFINE(sym, _pmic)                                                        \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
   static struct pbl_npm1300_gpio_state sym##_npm1300_gpio_state;                                   \
-  const struct pbl_npm1300_gpio sym = {                                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_npm1300_gpio, struct pbl_gpio_port, port) {                  \
     .port = PBL_GPIO_PORT_INIT(sym, "npm1300_gpio", nullptr, &(_pmic)->dev, &pbl_npm1300_gpio_ops, \
                                NPM1300_GPIO_NUM_PINS, nullptr),                                    \
     .state = &sym##_npm1300_gpio_state,                                                            \
-  };                                                                                               \
-  PBL_DEVICE_REGISTER(sym, &sym.port.dev)
+  }
 
 /** @} */

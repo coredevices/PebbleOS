@@ -11,7 +11,6 @@
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/flash/spi_nor.h>
-#include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/gpio/sf32lb.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
@@ -19,7 +18,6 @@
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
-#include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/rtc/sf32lb.h>
@@ -148,20 +146,7 @@ PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-co
 
 const struct pbl_flash *const FLASH = &s_flash.flash;
 
-PBL_NPM1300_DEFINE(s_npm1300, &dt_i2c1, 0x6B);
-PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
-                           PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING));
-PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
-
-const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
-
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
-                             false, false);
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
-                             true, true);
-// Microphone supply
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 3300,
-                             true, false);
+const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
 
 PBL_AW86225_DEFINE(s_aw86225, &dt_i2c1, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW));
 
@@ -180,8 +165,8 @@ const struct pbl_mag *const MAG = &dt_mmc5603nj;
 #endif
 
 PBL_CST816_DEFINE(s_cst816, &dt_i2c3, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
-                  PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
-                  .size_x = 200, .size_y = 228);
+                  PBL_GPIO(&dt_pmic_gpio, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP), .size_x = 200,
+                  .size_y = 228);
 
 const struct pbl_touch *const TOUCH = &s_cst816.touch;
 
@@ -194,21 +179,11 @@ static HRMDevice s_hrm = {
   .i2c = &s_i2c_gh3x2x,
   .int_irq = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_FALLING),
   .int_input = PBL_GPIO(SF32LB_GPIO1, 44, 0),
-  .reset = PBL_GPIO(&s_npm1300_gpio.port, 3, PBL_GPIO_PULL_UP),
+  .reset = PBL_GPIO(&dt_pmic_gpio, 3, PBL_GPIO_PULL_UP),
 };
 
 HRMDevice *const HRM = &s_hrm;
 #endif
-
-// TODO(OBELIX): Adjust to final battery parameters
-const Npm1300Config NPM1300_CONFIG = {
-  // 190mA = 1C (rapid charge, max limit from datasheet)
-  .chg_current_ma = 190,    .dischg_limit_ma = 200,
-  .term_current_pct = 10,   .vterm_mv = 4350,
-  .vterm_reduced_mv = 4000, .ntc_kohm = 10,
-  .thermistor_beta = 3380,  .ntc_hot_celsius = 45,
-  .vbus_current_lim0 = 500, .vbus_current_startup = 500,
-};
 
 // Bench-calibrated on 3 production units (unit spread 1.3%); dark floor
 // is <20 counts so no offset is needed.
@@ -236,7 +211,7 @@ PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
                          SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
 PBL_AUDIO_SF32LB52_PDM_DEFINE(s_mic, "mic", PBL_PINCTRL(&s_mic_default, nullptr, 0), PBL_IRQN(PDM1),
-                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &s_npm1300_ldsw2.reg);
+                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &dt_ldsw2);
 PBL_IRQ_CONNECT(PDM1, 5, pbl_audio_sf32lb52_pdm_irq_handler, &s_mic, 0);
 PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 

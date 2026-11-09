@@ -22,11 +22,12 @@
  * rail (@ref drivers_regulator_npm1300).
  *
  * @code{.c}
- * PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1.bus, 0x6B);
- * PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
- *                            {.peripheral = hwp_gpio1, .gpio_pin = 26});
+ * PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1, 0x6B);
+ * PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, PBL_IRQ_SPEC(&s_gpio1_intc, 12, 1),
+ *                            128000, 12800, 4200000, 4000000, 10000, 3380, 45, 200000, 0, 0);
  * PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
- * PBL_NPM1300_REGULATOR_DEFINE(s_ldo2, "ldo2", &s_npm1300, PBL_NPM1300_LDSW2, 3300, true, false);
+ * PBL_NPM1300_REGULATOR_DEFINE(s_ldo2, "ldo2", &s_npm1300, PBL_NPM1300_LDSW2, 3300000, true,
+ *                              false);
  * @endcode
  * @{
  */

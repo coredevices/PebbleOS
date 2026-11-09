@@ -1,0 +1,138 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mfd/nordic,npm1300.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nPM1300 power management IC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Battery charger with fuel gauge support, two BUCK regulators, two load
+  switches that can also run as LDOs, and GPIOs. The battery being charged is
+  described by a simple-battery node.
+
+properties:
+  compatible:
+    const: nordic,npm1300
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+    description: Event line, from the PMIC's GPIO1.
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  monitored-battery:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: The battery being charged, a simple-battery node.
+
+  nordic,reduced-charge-voltage-microvolt:
+    description: Charge termination voltage in the warm and cool regions.
+    minimum: 3500000
+    maximum: 4450000
+
+  nordic,thermistor-ohms:
+    description: Nominal resistance of the battery NTC thermistor.
+    enum: [10000, 47000, 100000]
+
+  nordic,thermistor-beta:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Beta value of the battery NTC thermistor.
+
+  nordic,thermistor-hot-celsius:
+    description: Charging stops above this battery temperature.
+    minimum: 0
+    maximum: 80
+
+  nordic,discharge-current-limit-microamp:
+    description: Battery discharge current limit.
+    enum: [200000, 1000000]
+
+  input-current-limit-microamp:
+    description: VBUS current limit while USB is connected.
+    minimum: 100000
+    maximum: 1500000
+
+  nordic,startup-input-current-limit-microamp:
+    description: VBUS current limit at startup.
+    minimum: 100000
+    maximum: 1500000
+
+  regulators:
+    type: object
+    additionalProperties: false
+
+    patternProperties:
+      "^BUCK[12]$":
+        type: object
+        $ref: /schemas/regulator/regulator.yaml#
+        unevaluatedProperties: false
+
+      "^LDSW[12]$":
+        type: object
+        $ref: /schemas/regulator/regulator.yaml#
+        unevaluatedProperties: false
+
+        properties:
+          nordic,ldo-mode:
+            type: boolean
+            description: Run as an LDO rather than as a load switch.
+
+required:
+  - compatible
+  - reg
+  - monitored-battery
+  - nordic,reduced-charge-voltage-microvolt
+  - nordic,thermistor-ohms
+  - nordic,thermistor-beta
+  - nordic,thermistor-hot-celsius
+  - nordic,discharge-current-limit-microamp
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/interrupt-controller/irq.h>
+
+    i2c {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        pmic@6b {
+            compatible = "nordic,npm1300";
+            reg = <0x6b>;
+            interrupts = <26 IRQ_TYPE_EDGE_RISING>;
+            gpio-controller;
+            #gpio-cells = <2>;
+            monitored-battery = <&battery>;
+            nordic,reduced-charge-voltage-microvolt = <4000000>;
+            nordic,thermistor-ohms = <10000>;
+            nordic,thermistor-beta = <3380>;
+            nordic,thermistor-hot-celsius = <45>;
+            nordic,discharge-current-limit-microamp = <200000>;
+
+            regulators {
+                BUCK1 {
+                    regulator-name = "npm1300_buck1";
+                    regulator-min-microvolt = <1800000>;
+                    regulator-max-microvolt = <1800000>;
+                };
+
+                LDSW1 {
+                    regulator-name = "npm1300_ldsw1";
+                    regulator-min-microvolt = <1800000>;
+                    regulator-max-microvolt = <1800000>;
+                    regulator-always-on;
+                    nordic,ldo-mode;
+                };
+            };
+        };
+    };

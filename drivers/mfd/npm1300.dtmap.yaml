@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,npm1300
+config: MFD_NPM1300
+class: npm1300
+define: PBL_NPM1300_DEFINE
+args:
+  - parent: i2c
+  - reg: 0

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The core of the nPM1300, which its cells refer to
+class: npm1300
+type: struct pbl_npm1300
+include: pbl/drivers/mfd/npm1300.h
+provides:
+  npm1300: "&{sym}"

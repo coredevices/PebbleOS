@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,npm1300
+config: REGULATOR_NPM1300
+class: regulator
+define: PBL_NPM1300_REGULATOR_DEFINE
+children:
+  node: regulators
+  names:
+    BUCK1: PBL_NPM1300_BUCK1
+    BUCK2: PBL_NPM1300_BUCK2
+    LDSW1: PBL_NPM1300_LDSW1
+    LDSW2: PBL_NPM1300_LDSW2
+args:
+  - string: regulator-name
+  - parent: npm1300
+  - id: true
+  - prop: regulator-max-microvolt
+    default: 0
+  - flag: nordic,ldo-mode
+  - flag: regulator-always-on

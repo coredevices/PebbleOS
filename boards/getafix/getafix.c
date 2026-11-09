@@ -19,7 +19,6 @@
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/sf32lb_lptim.h>
-#include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/rtc/sf32lb.h>
@@ -161,19 +160,7 @@ PBL_CST816_DEFINE(s_cst816, &dt_i2c2, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 38, PBL
 
 const struct pbl_touch *const TOUCH = &s_cst816.touch;
 
-PBL_NPM1300_DEFINE(s_npm1300, &dt_i2c3, 0x6B);
-PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
-                           PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_RISING));
-
-const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
-
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
-                             false, false);
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
-                             true, true);
-// Microphone supply
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 0,
-                             false, false);
+const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
 
 // Bench-calibrated on 1 DVT2 unit, fit above 4500 lux; readings below
 // ~4000 lux deviated from the fit on that unit and need a re-measure.
@@ -193,15 +180,6 @@ PBL_AW8623X_DEFINE(s_aw8623x, &dt_i2c3, 0x5a, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPI
 const struct pbl_vibe *const VIBE = &s_aw8623x.vibe;
 #endif
 
-const Npm1300Config NPM1300_CONFIG = {
-  // 70mA = 1C (max limit from datasheet)
-  .chg_current_ma = 70,     .dischg_limit_ma = 200,
-  .term_current_pct = 10,   .vterm_mv = 4450,
-  .vterm_reduced_mv = 4000, .ntc_kohm = 10,
-  .thermistor_beta = 3380,  .ntc_hot_celsius = 45,
-  .vbus_current_lim0 = 500, .vbus_current_startup = 500,
-};
-
 PBL_GPIO_KEYS_DEFINE(
     BUTTONS, "buttons",
     PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(SF32LB_GPIO1, 34, 0), PBL_INPUT_KEY_BACK, 40),
@@ -220,7 +198,7 @@ PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
                          SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
 PBL_AUDIO_SF32LB52_PDM_DEFINE(s_mic, "mic", PBL_PINCTRL(&s_mic_default, nullptr, 0), PBL_IRQN(PDM1),
-                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &s_npm1300_ldsw2.reg);
+                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &dt_ldsw2);
 PBL_IRQ_CONNECT(PDM1, 5, pbl_audio_sf32lb52_pdm_irq_handler, &s_mic, 0);
 PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 

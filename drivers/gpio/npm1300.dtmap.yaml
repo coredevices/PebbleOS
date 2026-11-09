@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,npm1300
+config: GPIO_NPM1300
+class: gpio
+define: PBL_NPM1300_GPIO_DEFINE
+symbol: "{sym}_gpio"
+args:
+  - self: npm1300

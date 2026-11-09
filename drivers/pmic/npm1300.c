@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include <math.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic.h>
@@ -905,3 +906,5 @@ static const struct pbl_shell_cmd sub_pmic[] = {
 
 PBL_SHELL_CMD_REGISTER(pmic, sub_pmic, "PMIC", nullptr);
 #endif
+
+#include PBL_DT_INSTANCES(nordic_npm1300_npm1300_charger)

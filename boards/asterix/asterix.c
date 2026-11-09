@@ -14,7 +14,6 @@
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/pwm/nrf5_rtc.h>
-#include <pbl/drivers/regulator/npm1300.h>
 #include <pbl/drivers/rtc/retained.h>
 #include <pbl/drivers/spi/nrf5.h>
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
@@ -82,28 +81,14 @@ const struct pbl_display *const DISPLAY = &s_display.disp;
 /* nPM1300 */
 /* PERIPHERAL ID 9 */
 
-PBL_NPM1300_DEFINE(s_npm1300, &dt_i2c1, 0x6B);
-PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
-                           PBL_IRQ_SPEC(&dt_gpio1_intc, 12, PBL_IRQ_TYPE_EDGE_RISING));
-
-const struct pbl_npm1300_charger *const NPM1300_CHARGER = &s_npm1300_charger;
-
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck1, "npm1300_buck1", &s_npm1300, PBL_NPM1300_BUCK1, 1800,
-                             false, true);
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_buck2, "npm1300_buck2", &s_npm1300, PBL_NPM1300_BUCK2, 3000,
-                             false, true);
-// Codec and microphone supply
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_NPM1300_LDSW1, 1800,
-                             true, true);
-PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 1800,
-                             true, true);
+const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
 
 /* peripheral I2C bus */
 const struct pbl_vibe *const VIBE = &dt_drv2604;
 
 const struct pbl_als *const ALS = &dt_opt3001;
 
-PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &dt_i2c0, 0x1A, &s_npm1300_ldsw1.reg);
+PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &dt_i2c0, 0x1A, &dt_ldsw1);
 
 const struct pbl_accel *const ACCEL = &dt_lsm6dso;
 
@@ -140,12 +125,6 @@ PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(&dt_gpio1, 8, 0),
                          .max_duty_cycle_percent = 67);
 
 const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
-
-const Npm1300Config NPM1300_CONFIG = {
-  // 128mA = ~1C (rapid charge)
-  .chg_current_ma = 128,    .dischg_limit_ma = 200, .term_current_pct = 10,  .vterm_mv = 4200,
-  .vterm_reduced_mv = 4000, .ntc_kohm = 10,         .thermistor_beta = 3380, .ntc_hot_celsius = 45,
-};
 
 const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
 
