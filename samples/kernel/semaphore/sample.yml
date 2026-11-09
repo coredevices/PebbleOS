@@ -1,0 +1,7 @@
+description: Signalling a thread from an interrupt, and sharing a few resources among many
+expect:
+  - 'main: 10 ms transfer returns 0'
+  - 'main: 5 s transfer returns -ETIMEDOUT'
+  - 'main: 4 workers shared 2 channels, at most 2 busy at once'
+  - 'main: 2 channels free again'
+  - 'Sample done'
