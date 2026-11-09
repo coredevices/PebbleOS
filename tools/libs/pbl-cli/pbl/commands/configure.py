@@ -67,18 +67,11 @@ class Configure(PblCommand):
         if os.path.exists(build.join("menuconfig.conf")):
             self.wrn(f"applying the Kconfig changes from {build.join('menuconfig.conf')}")
 
-        cmd = [
-            "cmake",
-            "-B",
-            str(build),
-            "-S",
-            os.path.abspath(args.app) if args.app else os.path.join(self.topdir, "pebble"),
-            "-G",
-            args.generator,
-            f"-DBOARD={args.board}",
-            f"-DVARIANT={args.variant}",
-        ]
-        # Where find_package(PebbleOS) finds this checkout.
-        cmd.append(f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}")
-
-        return self.run_cmd(cmd + unknown)
+        return self.cmake_configure(
+            build,
+            args.board,
+            app=args.app,
+            variant=args.variant,
+            generator=args.generator,
+            extra=unknown,
+        )

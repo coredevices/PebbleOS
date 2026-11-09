@@ -277,6 +277,26 @@ class PblCommand(ABC):
             raise CommandError(msg, returncode=rc)
         return rc
 
+    def cmake_configure(
+        self, build, board, app=None, variant="normal", generator="Ninja", extra=(), **kwargs
+    ):
+        """Run CMake in ``build`` for the application in ``app``, the
+        firmware by default. Returns its status."""
+        cmd = [
+            "cmake",
+            "-B",
+            str(build),
+            "-S",
+            os.path.abspath(app) if app else os.path.join(self.topdir, "pebble"),
+            "-G",
+            generator,
+            f"-DBOARD={board}",
+            f"-DVARIANT={variant}",
+            # Where find_package(PebbleOS) finds this checkout.
+            f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}",
+        ]
+        return self.run_cmd(cmd + list(extra), **kwargs)
+
     def cmake_build(self, build, *targets, msg=None):
         """Build the given targets (or the default one) in ``build``."""
         cmd = ["cmake", "--build", str(build)]
