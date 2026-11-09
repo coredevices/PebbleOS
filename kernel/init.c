@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/device.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/backend.h>
@@ -17,6 +18,9 @@ PBL_THREAD_STACK_DEFINE(s_main_stack, CONFIG_KERNEL_MAIN_STACK_SIZE);
 
 static void prv_main_entry(void *arg) {
   int (*entry)(void) = arg;
+
+  (void)pbl_device_init_all();
+
   entry();
 }
 
