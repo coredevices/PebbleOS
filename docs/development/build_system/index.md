@@ -20,6 +20,9 @@ cmake -B build -GNinja -DBOARD=asterix
 cmake --build build
 ```
 
+The firmware is one application of PebbleOS. {doc}`applications` covers
+building another one.
+
 ## From configuration to image
 
 ```{mermaid}
@@ -99,11 +102,17 @@ result, so it is cached too and can be overridden with `-D`.
 
 ```text
 CMakeLists.txt        the firmware image: what is built and linked
-Kconfig               the root of the configuration tree
+Kconfig.pebbleos      the configuration tree of PebbleOS, which the
+                      application's Kconfig sources
 boards/<board>/       defconfig, Kconfig, manifest and device definitions
                       (<board>.c, <board>.h) of each board
-fw/prj*.conf          project and variant configuration fragments
-cmake/modules/        the build model, split by concern
+fw/prj*.conf          the firmware's configuration fragments, with those
+fw/boards/            for one board
+cmake/modules/        the build model, split by concern; os.cmake adds
+                      PebbleOS itself
+cmake/PebbleOSConfig.cmake
+                      find_package(PebbleOS), for applications
+samples/              applications other than the firmware
 cmake/toolchain/      the bare-metal ARM and host toolchains
 tools/cmake/          the generators the build shells out to
 ```
@@ -118,4 +127,5 @@ developers to build their own projects with; see {doc}`../../sdk/building`.
 
 cmake.md
 kconfig.md
+applications.md
 ```
