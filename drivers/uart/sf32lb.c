@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -11,7 +11,6 @@
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
-#include <pbl/util/size.h>
 
 #include <hardware/sf32lb52_usart.h>
 
@@ -20,22 +19,12 @@
 
 #define ICR_ERRORS (UART_ICR_PECF | UART_ICR_FECF | UART_ICR_NCF | UART_ICR_ORECF)
 
-static const struct {
-  uintptr_t base;
-  struct pbl_clk clk;
-  pbl_irq_t irqn;
-} s_instances[] = {
-  {SF32LB52_USART1_BASE, PBL_CLK(nullptr, 0), PBL_IRQN(USART1)},
-  {SF32LB52_USART2_BASE, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART2), PBL_IRQN(USART2)},
-  {SF32LB52_USART3_BASE, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART3), PBL_IRQN(USART3)},
-};
-
 static const struct pbl_uart_sf32lb *prv_sf32lb(const struct pbl_uart *uart) {
   return container_of(uart, const struct pbl_uart_sf32lb, uart);
 }
 
 static inline uintptr_t prv_reg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {
-  return s_instances[usart->index - 1U].base + offset;
+  return usart->base + offset;
 }
 
 static inline uint32_t prv_getreg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {
@@ -65,12 +54,11 @@ static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_clk *clk;
   int ret;
 
-  if (usart->index == 0U || usart->index > ARRAY_LENGTH(s_instances) ||
-      (usart->rx_dma != nullptr) != (usart->rx_buf != nullptr)) {
+  if ((usart->rx_dma != nullptr) != (usart->rx_buf != nullptr)) {
     return -EINVAL;
   }
 
-  clk = &s_instances[usart->index - 1U].clk;
+  clk = &usart->clk;
   if (clk->ctrl != nullptr) {
     ret = pbl_device_init(&clk->ctrl->dev);
     if (ret != 0) {
@@ -124,7 +112,7 @@ static int prv_init(const struct pbl_uart *uart) {
     }
   }
 
-  pbl_irq_enable(s_instances[usart->index - 1U].irqn);
+  pbl_irq_enable(usart->irq);
 
   return 0;
 }
@@ -299,3 +287,5 @@ const struct pbl_uart_ops pbl_uart_sf32lb_ops = {
   .rx_enable = prv_rx_enable,
   .rx_disable = prv_rx_disable,
 };
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_usart)

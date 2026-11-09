@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-usart
+config: UART_SF32LB
+class: uart
+define: PBL_UART_SF32LB_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+    default: PBL_CLK(nullptr, 0)
+  - prop: current-speed
+    default: 115200
+  - pinctrl: default
+  - dma: rx
+    optional: true

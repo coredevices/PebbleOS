@@ -5,10 +5,12 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/clk.h>
 #include <pbl/drivers/dma.h>
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/mcu/cache.h>
 
 /**
@@ -18,17 +20,15 @@
  *
  * Bytes are sent polled. Received bytes come from the receive interrupt or, with a receive DMA
  * channel, from a cyclic transfer into a receive buffer, drained when the line goes idle and at
- * each half of the buffer. Deep sleep is blocked while reception is enabled. The USART interrupt,
- * and the DMA channel's, are connected by the board with the same priority:
+ * each half of the buffer. Deep sleep is blocked while reception is enabled. An instance connects
+ * its interrupt itself, with priority @c CONFIG_UART_SF32LB_IRQ_PRIO:
  *
  * @code{.c}
- * static const struct pbl_dma_chan s_uart1_rx_dma =
- *     PBL_DMA_CHAN(SF32LB52_DMAC1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
+ * static const struct pbl_dma_chan s_usart1_rx_dma =
+ *     PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
  *
- * PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_uart1_default, &s_uart1_rx_dma,
- *                            nullptr);
- * PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
- * PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_uart1_rx_dma, 0);
+ * PBL_UART_SF32LB_DEFINE(s_usart1, "usart1", SF32LB52_USART1_BASE, PBL_SOC_IRQN_USART1,
+ *                        PBL_CLK(nullptr, 0), 1000000, &s_usart1_default, &s_usart1_rx_dma);
  * @endcode
  * @{
  */
@@ -49,63 +49,58 @@ struct pbl_uart_sf32lb {
   struct pbl_uart uart;
   /** Driver runtime state. */
   struct pbl_uart_sf32lb_state *state;
+  /** Registers. */
+  uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irq;
+  /** Clock, without a controller when it cannot be gated. */
+  struct pbl_clk clk;
   /** Pins. */
   struct pbl_pinctrl pinctrl;
   /** Receive DMA channel, or NULL. */
   const struct pbl_dma_chan *rx_dma;
   /** Receive buffer of @ref PBL_UART_SF32LB_RX_BUF_SIZE bytes, with a receive DMA channel. */
   uint8_t *rx_buf;
-  /** USART instance, from 1. */
-  uint8_t index;
 };
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_uart_ops pbl_uart_sf32lb_ops;
 
-#define PBL_UART_SF32LB_DEFINE_(sym, _name, _idx, _baudrate, _pinctrl, _rx_dma, _rx_buf, _deps) \
-  PBL_UART_STATE_DEFINE(sym);                                                                   \
-  static struct pbl_uart_sf32lb_state sym##_sf32lb_state;                                       \
-  const struct pbl_uart_sf32lb sym = {                                                          \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_sf32lb_ops, _baudrate, _deps),                  \
-    .state = &sym##_sf32lb_state,                                                               \
-    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),                                               \
-    .rx_dma = (_rx_dma),                                                                        \
-    .rx_buf = (_rx_buf),                                                                        \
-    .index = (_idx),                                                                            \
-  };                                                                                            \
-  PBL_DEVICE_REGISTER(sym, &sym.uart.dev)
+#define PBL_UART_SF32LB_FIRST_(_first, ...) _first
 /** @endcond */
-
-/**
- * @brief Define a serial port on an SF32LB USART, receiving through DMA.
- *
- * @param sym Symbol of the port.
- * @param _name Name.
- * @param _idx USART instance, from 1.
- * @param _baudrate Initial baud rate, in bits per second.
- * @param _pinctrl Default pin control state.
- * @param _rx_dma Receive DMA channel.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
- */
-#define PBL_UART_SF32LB_DMA_DEFINE(sym, _name, _idx, _baudrate, _pinctrl, _rx_dma, _deps)     \
-  static uint8_t sym##_rx_buf[PBL_UART_SF32LB_RX_BUF_SIZE] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX); \
-  PBL_UART_SF32LB_DEFINE_(sym, _name, _idx, _baudrate, _pinctrl, _rx_dma, sym##_rx_buf, _deps)
 
 /**
  * @brief Define a serial port on an SF32LB USART.
  *
  * @param sym Symbol of the port.
  * @param _name Name.
- * @param _idx USART instance, from 1.
+ * @param _base Registers.
+ * @param _irq Interrupt line.
+ * @param _clk Clock, from PBL_CLK(), with a NULL controller when it cannot be gated.
  * @param _baudrate Initial baud rate, in bits per second.
  * @param _pinctrl Default pin control state.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
+ * @param ... Receive DMA channel, if any, which also gives the port its receive buffer.
  */
-#define PBL_UART_SF32LB_DEFINE(sym, _name, _idx, _baudrate, _pinctrl, _deps) \
-  PBL_UART_SF32LB_DEFINE_(sym, _name, _idx, _baudrate, _pinctrl, nullptr, nullptr, _deps)
+#define PBL_UART_SF32LB_DEFINE(sym, _name, _base, _irq, _clk, _baudrate, _pinctrl, ...)            \
+  PBL_UART_STATE_DEFINE(sym);                                                                      \
+  static struct pbl_uart_sf32lb_state sym##_sf32lb_state;                                          \
+  __VA_OPT__(                                                                                      \
+      static uint8_t sym##_rx_buf[PBL_UART_SF32LB_RX_BUF_SIZE] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX);) \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_sf32lb, struct pbl_uart, uart){                         \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_sf32lb_ops, _baudrate, nullptr),                   \
+    .state = &sym##_sf32lb_state,                                                                  \
+    .base = (_base),                                                                               \
+    .irq = (_irq),                                                                                 \
+    .clk = _clk,                                                                                   \
+    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),                                                  \
+    .rx_dma = PBL_UART_SF32LB_FIRST_(__VA_ARGS__ __VA_OPT__(, ) nullptr),                          \
+    .rx_buf = PBL_UART_SF32LB_FIRST_(__VA_OPT__(sym##_rx_buf, ) nullptr),                          \
+  };                                                                                               \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UART_SF32LB_IRQ_PRIO, pbl_uart_sf32lb_irq_handler, &sym##_inst, \
+                      0)
 
 /**
- * @brief USART interrupt handler, to connect with PBL_IRQ_CONNECT().
+ * @brief USART interrupt handler, connected by PBL_UART_SF32LB_DEFINE().
  *
  * @param uart Port.
  */
