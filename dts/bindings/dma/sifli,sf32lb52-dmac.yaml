@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/dma/sifli,sf32lb52-dmac.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 DMA controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Eight-channel DMA controller. DMA specifiers take three cells, the channel
+  (0 to 7), the request line (0 to 63) and the priority (0 low to 3 very high).
+
+allOf:
+  - $ref: /schemas/dma/dma-controller.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-dmac
+
+  reg:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  '#dma-cells':
+    const: 3
+
+  dma-channels:
+    const: 8
+
+required:
+  - compatible
+  - reg
+  - clocks
+  - '#dma-cells'
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    dma-controller@50081000 {
+        compatible = "sifli,sf32lb52-dmac";
+        reg = <0x50081000 0x1000>;
+        clocks = <&rcc 0>;
+        #dma-cells = <3>;
+        dma-channels = <8>;
+    };

@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: dma
+type: struct pbl_dma_controller
+include: pbl/drivers/dma.h
+provides:
+  dma: "PBL_DMA_CHAN(&{sym}, {0}, {1}, {2})"

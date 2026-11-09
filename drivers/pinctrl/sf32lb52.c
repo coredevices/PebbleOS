@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -235,3 +236,13 @@ const struct pbl_pinctrl_sf32lb52 pbl_pinctrl_sf32lb52_hpsys = {
   .cfg = SF32LB52_HPSYS_CFG_BASE,
 };
 PBL_DEVICE_REGISTER(pbl_pinctrl_sf32lb52_hpsys, &pbl_pinctrl_sf32lb52_hpsys.ctrl.dev);
+
+#define PBL_PINCTRL_SF32LB52_DT_STATE(sym, ...)       \
+  static const uint32_t sym##_pins[] = {__VA_ARGS__}; \
+  const struct pbl_pinctrl_state sym = {              \
+    .ctrl = SF32LB52_PINCTRL,                         \
+    .pins = sym##_pins,                               \
+    .num_pins = ARRAY_LENGTH(sym##_pins),             \
+  }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_pinctrl)

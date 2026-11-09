@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/sifli,sf32lb52-hpsys-rcc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 HPSYS reset and clock controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Gates the clocks of the HPSYS peripherals. Clock specifiers take one cell, an
+  ID from <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-hpsys-rcc
+
+  reg:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+
+required:
+  - compatible
+  - reg
+  - '#clock-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    clock-controller@50000000 {
+        compatible = "sifli,sf32lb52-hpsys-rcc";
+        reg = <0x50000000 0x1000>;
+        #clock-cells = <1>;
+    };

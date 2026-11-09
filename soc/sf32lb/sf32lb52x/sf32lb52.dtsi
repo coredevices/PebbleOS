@@ -1,0 +1,97 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v8m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&nvic>;
+		ranges;
+
+		hpsys_rcc: clock-controller@50000000 {
+			compatible = "sifli,sf32lb52-hpsys-rcc";
+			reg = <0x50000000 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		pinctrl: pinctrl@50003000 {
+			compatible = "sifli,sf32lb52-pinctrl";
+			reg = <0x50003000 0x100>;
+		};
+
+		dmac1: dma-controller@50081000 {
+			compatible = "sifli,sf32lb52-dmac";
+			reg = <0x50081000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DMAC1>;
+			#dma-cells = <3>;
+			dma-channels = <8>;
+		};
+
+		i2c1: i2c@5009c000 {
+			compatible = "sifli,sf32lb52-i2c";
+			reg = <0x5009c000 0x1000>;
+			interrupts = <61>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_I2C1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		i2c2: i2c@5009d000 {
+			compatible = "sifli,sf32lb52-i2c";
+			reg = <0x5009d000 0x1000>;
+			interrupts = <76>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_I2C2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		i2c3: i2c@5009e000 {
+			compatible = "sifli,sf32lb52-i2c";
+			reg = <0x5009e000 0x1000>;
+			interrupts = <93>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_I2C3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		i2c4: i2c@5009f000 {
+			compatible = "sifli,sf32lb52-i2c";
+			reg = <0x5009f000 0x1000>;
+			interrupts = <78>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_I2C4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		gpio1: gpio@500a0000 {
+			compatible = "sifli,sf32lb52-gpio";
+			reg = <0x500a0000 0x1000>;
+			interrupts = <84>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_GPIO1>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <45>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+	};
+};
