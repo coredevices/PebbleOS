@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: reset
+type: struct pbl_reset_controller
+include: pbl/drivers/reset.h
+provides:
+  reset: "PBL_RESET(&{sym}, {0})"

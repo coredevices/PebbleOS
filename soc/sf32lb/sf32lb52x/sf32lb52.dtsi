@@ -27,6 +27,7 @@
 			compatible = "sifli,sf32lb52-hpsys-rcc";
 			reg = <0x50000000 0x1000>;
 			#clock-cells = <1>;
+			#reset-cells = <1>;
 		};
 
 		pinctrl: pinctrl@50003000 {
