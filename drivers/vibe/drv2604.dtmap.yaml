@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: ti,drv2604
+config: VIBE_DRV2604
+class: vibe
+define: PBL_DRV2604_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - gpio: enable

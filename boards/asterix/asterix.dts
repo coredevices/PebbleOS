@@ -5,6 +5,8 @@
 
 #include "nrf/nrf52/nrf52840.dtsi"
 
+#include <dt-bindings/input/ti-drv260x.h>
+
 / {
 	model = "Core Devices Pebble 2 Duo";
 	compatible = "coredevices,asterix", "nordic,nrf52840";
@@ -24,6 +26,19 @@
 		mount-matrix = "0", "1", "0",
 			       "1", "0", "0",
 			       "0", "0", "1";
+	};
+
+	drv2604: haptics@5a {
+		compatible = "ti,drv2604";
+		reg = <0x5a>;
+		enable-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+		mode = <DRV260X_LRA_MODE>;
+		library-sel = <DRV260X_LIB_LRA>;
+	};
+
+	opt3001: light-sensor@44 {
+		compatible = "ti,opt3001";
+		reg = <0x44>;
 	};
 
 	mmc5603nj: magnetometer@30 {

@@ -3,12 +3,19 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
+
+#ifdef CONFIG_AMBIENT_LIGHT_OPT3001_ALWAYS_ON
+#define ALWAYS_ON true
+#else
+#define ALWAYS_ON false
+#endif
 
 PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 
@@ -84,7 +91,7 @@ static int prv_init(const struct pbl_als *als) {
     return -ENODEV;
   }
 
-  if (dev->always_on) {
+  if (ALWAYS_ON) {
     ret = prv_configure(dev, OPT3001_CONFIG_MODE_CONTINUOUS);
     if (ret != 0) {
       PBL_LOG_ERR("Could not start continuous conversions (%d)", ret);
@@ -100,7 +107,7 @@ static int prv_read(const struct pbl_als *als, uint32_t *level) {
   uint16_t result;
   int ret;
 
-  if (!dev->always_on) {
+  if (!ALWAYS_ON) {
     ret = prv_configure(dev, OPT3001_CONFIG_MODE_SINGLESHOT);
     if (ret != 0) {
       return ret;
@@ -122,3 +129,5 @@ const struct pbl_als_ops pbl_opt3001_ops = {
   .init = prv_init,
   .read = prv_read,
 };
+
+#include PBL_DT_INSTANCES(ti_opt3001)

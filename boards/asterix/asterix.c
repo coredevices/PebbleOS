@@ -3,7 +3,6 @@
 
 #include <pbl/board.h>
 #include <pbl/board/otp_layout.h>
-#include <pbl/drivers/ambient/opt3001.h>
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/drivers/audio/nrf5.h>
 #include <pbl/drivers/backlight/pwm.h>
@@ -21,7 +20,6 @@
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
-#include <pbl/drivers/vibe/drv2604.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
@@ -101,13 +99,9 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_N
                              true, true);
 
 /* peripheral I2C bus */
-PBL_DRV2604_DEFINE(s_drv2604, &dt_i2c0, 0x5A, PBL_GPIO(&dt_gpio0, 2, 0));
+const struct pbl_vibe *const VIBE = &dt_drv2604;
 
-const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
-
-PBL_OPT3001_DEFINE(s_opt3001, &dt_i2c0, 0x44, nullptr, .always_on = true);
-
-const struct pbl_als *const ALS = &s_opt3001.als;
+const struct pbl_als *const ALS = &dt_opt3001;
 
 PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &dt_i2c0, 0x1A, &s_npm1300_ldsw1.reg);
 

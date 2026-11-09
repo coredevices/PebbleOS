@@ -11,9 +11,17 @@ if AMBIENT_LIGHT
 
 config AMBIENT_LIGHT_OPT3001
     bool "TI OPT3001"
+    default DT_HAS_TI_OPT3001_ENABLED
     depends on I2C
     help
       Support for the TI OPT3001 ambient light sensor.
+
+config AMBIENT_LIGHT_OPT3001_ALWAYS_ON
+    bool "Convert continuously"
+    depends on AMBIENT_LIGHT_OPT3001
+    help
+      Keep converting instead of converting once per read, for faster reads
+      at the cost of power.
 
 config AMBIENT_LIGHT_W1160
     bool "W1160"
