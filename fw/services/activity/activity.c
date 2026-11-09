@@ -749,7 +749,7 @@ static void PBL_NOINLINE prv_process_minute_data(time_t utc_sec) {
 }
 
 // ------------------------------------------------------------------------------------------------
-// This callback, triggered by a minute regular timer, takes care of updating the history
+// This callback, triggered every minute of the wall clock, takes care of updating the history
 // when we reach midnight, checking for changes in sleep state, and updating insights
 PBL_T_STATIC void prv_minute_sys_work_cb(void *data) {
   if (!s_activity_state.started) {

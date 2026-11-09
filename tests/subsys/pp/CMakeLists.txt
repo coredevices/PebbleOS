@@ -73,7 +73,6 @@ pbl_clar_test(test_ppogatt_v0
     fw/services/clock/time.c
     subsys/logging/hexdump.c
     subsys/pp/transports/gatt/ppogatt.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
@@ -87,7 +86,6 @@ pbl_clar_test(test_ppogatt_v1
     fw/services/clock/time.c
     subsys/logging/hexdump.c
     subsys/pp/transports/gatt/ppogatt.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
@@ -100,7 +98,6 @@ pbl_clar_test(test_ppogatt_reversed
     fw/services/clock/time.c
     subsys/logging/hexdump.c
     subsys/pp/transports/gatt/ppogatt.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c

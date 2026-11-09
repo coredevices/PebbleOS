@@ -20,7 +20,6 @@ pbl_clar_test(test_ams_util
 pbl_clar_test(test_gap_le_advert
   SOURCES
     fw/comm/ble/gap_le_advert.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_bt_advert.c
     tests/fakes/fake_rtc.c
     fw/services/clock/time.c
@@ -30,7 +29,6 @@ pbl_clar_test(test_gap_le_advert
 pbl_clar_test(test_bt_conn_mgr
   SOURCES
     fw/comm/internals/bt_conn_mgr.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_gap_le_connect_params.c
     tests/fakes/fake_rtc.c
     fw/services/clock/time.c
@@ -116,7 +114,6 @@ pbl_clar_test(test_ancs
     fw/comm/ble/kernel_le_client/ancs/ancs_util.c
     fw/comm/ble/kernel_le_client/ancs/ancs.c
     fw/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c
-    fw/services/regular_timer/service.c
     tests/fakes/fake_events.c
     tests/fakes/fake_kernel_services_notifications.c
     tests/fakes/fake_gatt_client_subscriptions.c

@@ -155,16 +155,8 @@ pbl_clar_test(test_phone_call
     fw/services/phone_call/service.c
 )
 
-pbl_clar_test(test_regular_timer
-  SOURCES
-    fw/services/regular_timer/service.c
-    tests/fakes/fake_rtc.c
-    fw/services/clock/time.c
-)
-
 pbl_clar_test(test_debounced_connection_service
   SOURCES
-    fw/services/regular_timer/service.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_session.c
     fw/services/debounced_connection_service/service.c
