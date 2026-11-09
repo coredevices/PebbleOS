@@ -1,0 +1,15 @@
+description: Time of the kernel's basic operations, in CPU cycles
+# The emulator's cycle counter does not count.
+skip: [qemu_emery, qemu_flint, qemu_gabbro]
+expect:
+  - 'bench: 1000 iterations each, \d+ cycles per second'
+  - 'bench: empty measurement: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: sem give \+ take: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: mutex lock \+ unlock: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: msgq put \+ get: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: malloc \+ free, 64 bytes: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: yield, there and back: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: sem wake, there and back: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: thread create, run, end: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'bench: work submit to start: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
+  - 'Sample done'
