@@ -14,7 +14,6 @@
 #include <clar.h>
 #include <fff.h>
 #include <kernel_test.h>
-#include <system/reboot_reason.h>
 
 // The subsystem on the POSIX kernel: time only moves when every thread is
 // blocked, so the watchdog thread's periodic sleep drives the clock.
@@ -29,7 +28,9 @@ static struct pbl_thread s_threads[4];
 #define GRACE_MS   CONFIG_TASK_WDT_GRACE_MS
 #define TIMEOUT_MS 2000
 
-static RebootReason s_reason;
+// The last stall reported, until a recovery is.
+static struct pbl_task_wdt_stall s_stall;
+static bool s_stalled;
 
 static int s_callbacks;
 static int s_callback_channel;
@@ -55,21 +56,16 @@ void pbl_log(uint8_t log_level, const char *src_filename, int src_line_number, c
 
 FAKE_VOID_FUNC(watchdog_feed);
 
-void reboot_reason_set(RebootReason *reason) {
-  if (s_reason.code == RebootReasonCode_Unknown) {
-    s_reason = *reason;
-  }
+void pbl_task_wdt_stalled(const struct pbl_task_wdt_stall *stall) {
+  s_stall = *stall;
+  s_stalled = true;
 }
 
-void reboot_reason_get(RebootReason *reason) {
-  *reason = s_reason;
+void pbl_task_wdt_recovered(void) {
+  s_stalled = false;
 }
 
-void reboot_reason_clear(void) {
-  memset(&s_reason, 0, sizeof(s_reason));
-}
-
-[[noreturn]] void reset_due_to_software_failure(void) {
+[[noreturn]] void pbl_task_wdt_expired(void) {
   s_reset = true;
   s_reset_ms = prv_now_ms();
   pbl_test_kernel_stop();
@@ -107,7 +103,8 @@ static void prv_sleep_ms(uint32_t ms) {
 
 void test_task_wdt__initialize(void) {
   memset(s_threads, 0, sizeof(s_threads));
-  memset(&s_reason, 0, sizeof(s_reason));
+  memset(&s_stall, 0, sizeof(s_stall));
+  s_stalled = false;
   RESET_FAKE(watchdog_feed);
   s_callbacks = 0;
   s_callback_channel = -1;
@@ -169,10 +166,10 @@ void test_task_wdt__unfed_channel_calls_back_then_resets(void) {
   cl_assert_equal_i(s_reset_ms, s_first_callback_ms + GRACE_MS);
   cl_assert_equal_i(s_callbacks, 2);
 
-  cl_assert_equal_i(s_reason.code, RebootReasonCode_Watchdog);
-  cl_assert_equal_i(s_reason.data8[0], 0x0);
-  cl_assert_equal_i(s_reason.data8[1], 0x1);
-  cl_assert_equal_i(s_reason.watchdog.stuck_task_callback, (uint32_t)(uintptr_t)&s_work);
+  cl_assert(s_stalled);
+  cl_assert_equal_i(s_stall.fed_mask, 0x0);
+  cl_assert_equal_i(s_stall.active_mask, 0x1);
+  cl_assert_equal_p(s_stall.work, &s_work);
 }
 
 static void *prv_recovering_callback(int channel_id, void *user_data) {
@@ -194,7 +191,7 @@ void test_task_wdt__callback_recovers_overdue_channel(void) {
   pbl_test_kernel_run();
   cl_assert(!s_reset);
   cl_assert_equal_i(s_callbacks, 1);
-  cl_assert_equal_i(s_reason.code, RebootReasonCode_Unknown);
+  cl_assert(!s_stalled);
 }
 
 static void prv_late_feed_entry(void *arg) {
@@ -202,7 +199,7 @@ static void prv_late_feed_entry(void *arg) {
   // Expire, then recover inside the grace period.
   prv_sleep_ms(TIMEOUT_MS + PERIOD_MS / 2);
   cl_assert(s_callbacks >= 1);
-  cl_assert_equal_i(s_reason.code, RebootReasonCode_Watchdog);
+  cl_assert(s_stalled);
   pbl_task_wdt_feed(ch);
   prv_sleep_ms(TIMEOUT_MS / 2);
   pbl_test_kernel_stop();
@@ -212,7 +209,7 @@ void test_task_wdt__feed_inside_grace_recovers(void) {
   prv_spawn(0, "late", prv_late_feed_entry, nullptr);
   pbl_test_kernel_run();
   cl_assert(!s_reset);
-  cl_assert_equal_i(s_reason.code, RebootReasonCode_Unknown);
+  cl_assert(!s_stalled);
 }
 
 static void prv_suspended_entry(void *arg) {
@@ -269,8 +266,8 @@ void test_task_wdt__feed_self_leaves_other_channels_alone(void) {
   pbl_test_kernel_run();
   cl_assert(s_reset);
   cl_assert_equal_i(s_callback_channel, 1);
-  cl_assert_equal_i(s_reason.data8[0], 0x1);
-  cl_assert_equal_i(s_reason.data8[1], 0x3);
+  cl_assert_equal_i(s_stall.fed_mask, 0x1);
+  cl_assert_equal_i(s_stall.active_mask, 0x3);
 }
 
 static void prv_all_feeder_entry(void *arg) {
@@ -373,7 +370,7 @@ void test_task_wdt__waiting_is_per_thread(void) {
   pbl_test_kernel_run();
   cl_assert(s_reset);
   cl_assert_equal_i(s_callback_channel, 1);
-  cl_assert_equal_i(s_reason.data8[0], 0x1);
+  cl_assert_equal_i(s_stall.fed_mask, 0x1);
 }
 
 static struct pbl_sem s_wake;
