@@ -136,6 +136,14 @@ struct pbl_thread_stack_info {
  */
 void pbl_thread_stack_info(const struct pbl_thread *t, struct pbl_thread_stack_info *info);
 
+/**
+ * @brief Get the free space of the stack in use: the current thread's, or the ISR stack in an
+ * ISR and before the first thread starts.
+ *
+ * @return Bytes between the stack pointer and the lowest address of the stack.
+ */
+size_t pbl_stack_free(void);
+
 /** @brief Run-time statistics of a thread. */
 struct pbl_thread_stats {
   /** Thread object. */

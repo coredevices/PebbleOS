@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/debug.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
@@ -13,7 +14,6 @@
 #include <pbl/util/byteorder.h>
 
 #include <applib/app_logging.h>
-#include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
 
 PBL_LOG_MODULE_DEFINE(service_app_log_endpoint, CONFIG_SERVICE_APP_LOG_ENDPOINT_LOG_LEVEL);
@@ -22,7 +22,7 @@ static const uint32_t MIN_STACK_FOR_SEND_DATA = 400;
 
 static void prv_backend_process(const struct pbl_log_backend *backend,
                                 const struct pbl_log_msg *msg) {
-  if (!msg->app_uuid || stack_free_bytes() <= MIN_STACK_FOR_SEND_DATA) {
+  if (!msg->app_uuid || pbl_stack_free() <= MIN_STACK_FOR_SEND_DATA) {
     return;
   }
 
