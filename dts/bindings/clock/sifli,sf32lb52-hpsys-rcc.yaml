@@ -10,8 +10,10 @@ maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Gates the clocks of the HPSYS peripherals. Clock specifiers take one cell, an
-  ID from <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>.
+  Gates the clocks and drives the reset lines of the HPSYS peripherals. Clock
+  and reset specifiers take one cell, an ID from
+  <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h> or
+  <dt-bindings/reset/sifli,sf32lb52-hpsys-rcc.h>.
 
 properties:
   compatible:
@@ -23,10 +25,14 @@ properties:
   '#clock-cells':
     const: 1
 
+  '#reset-cells':
+    const: 1
+
 required:
   - compatible
   - reg
   - '#clock-cells'
+  - '#reset-cells'
 
 additionalProperties: false
 
@@ -36,4 +42,5 @@ examples:
         compatible = "sifli,sf32lb52-hpsys-rcc";
         reg = <0x50000000 0x1000>;
         #clock-cells = <1>;
+        #reset-cells = <1>;
     };
