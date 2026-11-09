@@ -16,6 +16,8 @@
 #include <pbl/services/app_outbox_service.h>
 
 #include <syscall/syscall.h>
+#include <system/die.h>
+#include <system/reboot_reason.h>
 
 #define MAX_KERNEL_EVENTS           32
 #define MAX_FROM_APP_EVENTS         10

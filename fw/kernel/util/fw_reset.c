@@ -17,6 +17,7 @@
 #include <process_management/app_manager.h>
 #include <system/bootbits.h>
 #include <system/die.h>
+#include <system/reboot_reason.h>
 
 static void prv_reset_into_prf(void) {
   RebootReason reason = {RebootReasonCode_PrfReset, 0};
