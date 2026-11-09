@@ -1693,11 +1693,10 @@ static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
   bt_lock();
   PPoGATTClient *client = prv_find_client_with_session(session);
   GAPLEConnection *connection = (client != nullptr) ? prv_get_connection(client) : nullptr;
-  bt_unlock();
-
   if (connection != nullptr) {
     conn_mgr_set_ble_conn_response_time_ext(connection, consumer, state, max_period_secs, granted);
   }
+  bt_unlock();
 }
 
 static const struct pbl_pp_transport s_transport = {
