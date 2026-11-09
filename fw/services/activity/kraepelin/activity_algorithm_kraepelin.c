@@ -14,6 +14,7 @@
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/light.h>
 #include <pbl/services/light_level.h>
 #include <pbl/services/time.h>
@@ -41,12 +42,28 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 #define ALG_MINUTE_CBUF_NUM_RECORDS \
   (MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + KALG_MAX_UNCERTAIN_SLEEP_M + 1)
 
+#ifdef CONFIG_HRM
+// A walk or run must be this long before it turns the HRM on, to save battery
+#define ALG_ACTIVITY_HRM_MIN_LEN_S (3 * PBL_SEC_PER_MIN)
+
+// The HR subscription of a walk or run is bounded and re-armed each active minute, so it lapses
+// on its own if the minute handler ever stops running. An activity survives several inactive
+// minutes without being re-armed, so the window has to comfortably exceed that.
+#define ALG_ACTIVITY_HRM_EXPIRE_S (10 * PBL_SEC_PER_MIN)
+#endif
+
 // ---------------------------------------------------------------------------------------------
 // Globals
 typedef struct {
   struct pbl_mutex mutex;
 
   KAlgState *k_state; // Pointer to Kraepelin state variables
+
+#ifdef CONFIG_HRM
+  // HR subscriptions held by the walk and run in progress
+  HRMSessionRef walk_hrm_session;
+  HRMSessionRef run_hrm_session;
+#endif
 
   // Accumulated steps
   int32_t steps;
@@ -129,6 +146,73 @@ static void prv_minute_data_file_close(struct pbl_settings_file *file) {
 static uint32_t prv_minute_file_get_settings_key(time_t utc) {
   uint32_t seconds_per_key = ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
   return utc / seconds_per_key;
+}
+
+#ifdef CONFIG_HRM
+// ----------------------------------------------------------------------------------------------
+static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
+  // The algorithm doesn't care about these events. It only subscribed so the activity service
+  // gets events.
+}
+
+// ----------------------------------------------------------------------------------------------
+// Take, re-arm or release the HR subscription of a walk or run. Returns true if it was taken or
+// released.
+static bool prv_update_step_activity_hrm(KAlgActivityType activity, HRMSessionRef *session) {
+  struct kalg_step_activity step_activity;
+  kalg_get_step_activity(s_alg_state->k_state, activity, &step_activity);
+
+  // An activity that restarted, e.g. after a time jump, is too short again
+  const bool long_enough =
+      (step_activity.start_utc != 0) && (step_activity.len_sec >= ALG_ACTIVITY_HRM_MIN_LEN_S);
+
+  if (*session != HRM_INVALID_SESSION_REF) {
+    if (!long_enough) {
+      sys_hrm_manager_unsubscribe(*session);
+      *session = HRM_INVALID_SESSION_REF;
+      return true;
+    }
+    if (step_activity.active) {
+      sys_hrm_manager_set_update_interval(*session, 1 /*update_interval_s*/,
+                                          ALG_ACTIVITY_HRM_EXPIRE_S);
+    }
+    return false;
+  }
+
+  if (long_enough && step_activity.active && activity_prefs_hrm_activity_tracking_is_enabled()) {
+    *session = hrm_manager_subscribe_with_callback(
+        INSTALL_ID_INVALID, 1 /*update_interval_s*/, ALG_ACTIVITY_HRM_EXPIRE_S, HRMFeature_BPM,
+        false /*low_latency*/, prv_hrm_subscription_cb, nullptr);
+    return true;
+  }
+  return false;
+}
+#endif
+
+// ----------------------------------------------------------------------------------------------
+// Make the HR subscriptions follow the walk and run in progress. Must be called whenever the
+// algorithm may have started or ended one.
+static void prv_update_activity_hrm(void) {
+#ifdef CONFIG_HRM
+  const bool walk_changed =
+      prv_update_step_activity_hrm(KAlgActivityType_Walk, &s_alg_state->walk_hrm_session);
+  const bool run_changed =
+      prv_update_step_activity_hrm(KAlgActivityType_Run, &s_alg_state->run_hrm_session);
+  if (!walk_changed && !run_changed) {
+    return;
+  }
+
+  // Have the HR algorithm follow whichever activity is sampling HR. Run dominates walk (higher
+  // intensity); neither active -> default model. Manual workouts disable auto-tracking, so this
+  // never races the workout's own scene.
+  HRMActivityScene scene = HRMActivityScene_Default;
+  if (s_alg_state->run_hrm_session != HRM_INVALID_SESSION_REF) {
+    scene = HRMActivityScene_Run;
+  } else if (s_alg_state->walk_hrm_session != HRM_INVALID_SESSION_REF) {
+    scene = HRMActivityScene_Walk;
+  }
+  hrm_manager_set_activity_scene(scene);
+#endif
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -847,7 +931,15 @@ bool activity_algorithm_deinit(void) {
   PBL_ASSERTN(s_alg_state->k_state);
 
   pbl_mutex_deinit(&s_alg_state->mutex);
-  kalg_deinit(s_alg_state->k_state);
+#ifdef CONFIG_HRM
+  // Anything left subscribed would pin the sensor on
+  if (s_alg_state->walk_hrm_session != HRM_INVALID_SESSION_REF) {
+    sys_hrm_manager_unsubscribe(s_alg_state->walk_hrm_session);
+  }
+  if (s_alg_state->run_hrm_session != HRM_INVALID_SESSION_REF) {
+    sys_hrm_manager_unsubscribe(s_alg_state->run_hrm_session);
+  }
+#endif
   pbl_free(s_alg_state->k_state);
 
   pbl_free(s_alg_state);
@@ -972,6 +1064,7 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
                          m_rec->base.orientation, not_worn, m_rec->resting_calories,
                          m_rec->active_calories, minute_distance_mm, shutting_down,
                          prv_create_activity_session_cb, nullptr);
+  prv_update_activity_hrm();
 }
 
 // ------------------------------------------------------------------------------------
@@ -1037,6 +1130,7 @@ void activity_algorithm_enable_activity_tracking(bool enable) {
 
   kalg_enable_activity_tracking(s_alg_state->k_state, enable, prv_create_activity_session_cb,
                                 nullptr);
+  prv_update_activity_hrm();
 
   prv_unlock();
 }

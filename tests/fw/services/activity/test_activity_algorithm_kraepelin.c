@@ -16,6 +16,7 @@
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
+#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/light_level.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
@@ -62,6 +63,17 @@ static uint8_t s_alg_next_orientation;
 static uint8_t s_alg_next_light;
 static bool s_alg_next_plugged_in;
 
+// Which walk and run in progress to return from kalg_get_step_activity()
+static struct kalg_step_activity s_alg_next_walk;
+static struct kalg_step_activity s_alg_next_run;
+
+// HRM manager state
+static HRMSessionRef s_hrm_next_session_ref;
+static int s_hrm_live_subscriptions;
+static uint16_t s_hrm_last_expire_s;
+static bool s_hrm_activity_tracking_enabled;
+static HRMActivityScene s_hrm_activity_scene;
+
 static struct pbl_tm s_start_time_tm = {.tm_hour = 17, .tm_mday = 1, .tm_mon = 0, .tm_year = 115};
 
 // ============================================================================================
@@ -86,6 +98,39 @@ BatteryChargeState battery_get_charge_state(void) {
 
 void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
                                    KAlgActivitySessionCallback sessions_cb, void *context) {
+  s_alg_next_walk = (struct kalg_step_activity){};
+  s_alg_next_run = (struct kalg_step_activity){};
+}
+
+HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
+                                                  uint16_t expire_s, HRMFeature features,
+                                                  bool low_latency, HRMSubscriberCallback callback,
+                                                  void *context) {
+  s_hrm_live_subscriptions++;
+  s_hrm_last_expire_s = expire_s;
+  return s_hrm_next_session_ref++;
+}
+
+bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
+  cl_assert(session < s_hrm_next_session_ref);
+  cl_assert(s_hrm_live_subscriptions > 0);
+  s_hrm_live_subscriptions--;
+  return true;
+}
+
+bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
+                                         uint16_t expire_s) {
+  cl_assert(session < s_hrm_next_session_ref);
+  s_hrm_last_expire_s = expire_s;
+  return true;
+}
+
+void hrm_manager_set_activity_scene(HRMActivityScene scene) {
+  s_hrm_activity_scene = scene;
+}
+
+bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
+  return s_hrm_activity_tracking_enabled;
 }
 
 bool activity_tracking_on(void) {
@@ -238,9 +283,6 @@ bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
   return true;
 }
 
-void kalg_deinit(KAlgState *state) {
-}
-
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
                               uint32_t *consumed_samples) {
   *consumed_samples = 0;
@@ -265,6 +307,11 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
 
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
   return pbl_realtime();
+}
+
+void kalg_get_step_activity(KAlgState *state, KAlgActivityType activity,
+                            struct kalg_step_activity *step_activity) {
+  *step_activity = (activity == KAlgActivityType_Run) ? s_alg_next_run : s_alg_next_walk;
 }
 
 // Set these to simulate a sleep session (that should result in zeroing out any steps taken)
@@ -396,6 +443,13 @@ void test_activity_algorithm_kraepelin__initialize(void) {
   s_activity_next_heart_rate_zone = 0;
   s_kalg_sleep_start_utc = 0;
   s_kalg_sleep_m = 0;
+  s_alg_next_walk = (struct kalg_step_activity){};
+  s_alg_next_run = (struct kalg_step_activity){};
+  s_hrm_next_session_ref = 1;
+  s_hrm_live_subscriptions = 0;
+  s_hrm_last_expire_s = 0;
+  s_hrm_activity_tracking_enabled = true;
+  s_hrm_activity_scene = HRMActivityScene_Default;
   activity_algorithm_init(&s_sample_rate);
 }
 
@@ -955,4 +1009,146 @@ void test_activity_algorithm_kraepelin__minute_data_steps_during_sleep(void) {
                                                              ALG_RAW_LIGHT_SENSOR_DIVIDE_BY));
     cl_assert_equal_i(retrieve[i].heart_rate_bpm, minute_data[i].heart_rate_bpm);
   }
+}
+
+// ---------------------------------------------------------------------------------------
+// Run the minute handler with the given walk and run in progress
+static void prv_feed_step_activities(uint32_t walk_len_m, bool walk_active, uint32_t run_len_m,
+                                     bool run_active) {
+  fake_rtc_increment_time(PBL_SEC_PER_MIN);
+  const time_t now = pbl_realtime();
+
+  s_alg_next_walk = (struct kalg_step_activity){};
+  if (walk_len_m != 0) {
+    s_alg_next_walk = (struct kalg_step_activity){
+      .start_utc = now - walk_len_m * PBL_SEC_PER_MIN,
+      .len_sec = walk_len_m * PBL_SEC_PER_MIN,
+      .active = walk_active,
+    };
+  }
+  s_alg_next_run = (struct kalg_step_activity){};
+  if (run_len_m != 0) {
+    s_alg_next_run = (struct kalg_step_activity){
+      .start_utc = now - run_len_m * PBL_SEC_PER_MIN,
+      .len_sec = run_len_m * PBL_SEC_PER_MIN,
+      .active = run_active,
+    };
+  }
+
+  AlgMinuteRecord minute_record = {};
+  activity_algorithm_minute_handler(now, &minute_record);
+}
+
+// ---------------------------------------------------------------------------------------
+// A walk in progress turns the HRM on once it is 3 minutes long, until it ends.
+void test_activity_algorithm_kraepelin__hrm_follows_step_activity(void) {
+  prv_feed_step_activities(0, false, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+
+  prv_feed_step_activities(1, true, 0, false);
+  prv_feed_step_activities(2, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+
+  // Not taken on an inactive minute
+  prv_feed_step_activities(3, false, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+
+  prv_feed_step_activities(4, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Walk);
+
+  // Kept during a pause
+  prv_feed_step_activities(5, false, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+
+  prv_feed_step_activities(0, false, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Default);
+}
+
+// ---------------------------------------------------------------------------------------
+// The subscription is bounded and re-armed each active minute, so it lapses on its own if the
+// minute handler ever stops running.
+void test_activity_algorithm_kraepelin__hrm_subscription_is_bounded(void) {
+  prv_feed_step_activities(5, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+
+  // The window has to outlast the inactive-minute grace period, or an ongoing activity would
+  // lose its subscription mid-walk
+  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
+
+  // Each further active minute re-arms it rather than subscribing again
+  s_hrm_last_expire_s = 0;
+  prv_feed_step_activities(6, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
+
+  // An inactive minute does not
+  s_hrm_last_expire_s = 0;
+  prv_feed_step_activities(7, false, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+  cl_assert_equal_i(s_hrm_last_expire_s, 0);
+}
+
+// ---------------------------------------------------------------------------------------
+// No subscription is taken when the user disabled HR during activities.
+void test_activity_algorithm_kraepelin__hrm_not_used_when_disabled(void) {
+  s_hrm_activity_tracking_enabled = false;
+  prv_feed_step_activities(5, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Default);
+}
+
+// ---------------------------------------------------------------------------------------
+// The HR algorithm follows the most intense activity sampling HR.
+void test_activity_algorithm_kraepelin__hrm_scene_follows_activities(void) {
+  prv_feed_step_activities(5, true, 0, false);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Walk);
+
+  prv_feed_step_activities(6, false, 3, true);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 2);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Run);
+
+  prv_feed_step_activities(7, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Walk);
+}
+
+// ---------------------------------------------------------------------------------------
+// The subscription must be released when activity tracking is disabled. Otherwise starting a
+// workout leaves a subscription behind that keeps the sensor on.
+void test_activity_algorithm_kraepelin__hrm_released_when_tracking_disabled(void) {
+  prv_feed_step_activities(5, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+
+  // Starting a workout disables activity tracking while the walk is still in progress
+  activity_algorithm_enable_activity_tracking(false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Default);
+}
+
+// ---------------------------------------------------------------------------------------
+// A walk that restarts, e.g. after a time jump, does not inherit the subscription of the one it
+// replaces.
+void test_activity_algorithm_kraepelin__hrm_released_when_activity_restarts(void) {
+  prv_feed_step_activities(5, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+
+  prv_feed_step_activities(1, true, 0, false);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Default);
+}
+
+// ---------------------------------------------------------------------------------------
+// Deinit must release a subscription held by an activity in progress, the state holding it is
+// freed.
+void test_activity_algorithm_kraepelin__hrm_released_on_deinit(void) {
+  prv_feed_step_activities(5, true, 6, true);
+  cl_assert_equal_i(s_hrm_live_subscriptions, 2);
+
+  activity_algorithm_deinit();
+  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+
+  // For the cleanup
+  activity_algorithm_init(&s_sample_rate);
 }

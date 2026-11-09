@@ -4,6 +4,7 @@
 
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/services/accel_manager_types.h>
 
 /**
  * @defgroup services_activity_kraepelin Kraepelin algorithm
@@ -35,7 +36,6 @@
  * kalg_activities_update(state, pbl_realtime(), minute_steps, vmc, orientation, not_worn,
  *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
  *
- * kalg_deinit(state);
  * pbl_free(state);
  * @endcode
  * @{
@@ -99,6 +99,16 @@ typedef struct {
   time_t uncertain_start_utc;
 } KAlgOngoingSleepStats;
 
+/** @brief Walk or run in progress, returned by kalg_get_step_activity(). */
+struct kalg_step_activity {
+  /** Start time, UTC; 0 if no activity is in progress. */
+  time_t start_utc;
+  /** Time since the start as of the last minute processed, in seconds. */
+  uint32_t len_sec;
+  /** true if the last minute processed was an active minute of the activity. */
+  bool active;
+};
+
 /**
  * @brief Callback reporting activity sessions, called by kalg_activities_update().
  *
@@ -146,16 +156,6 @@ uint32_t kalg_state_size(void);
  * @return true on success.
  */
 bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb);
-
-/**
- * @brief Release the resources held by the state.
- *
- * Must be called before freeing the state, otherwise the activity heart rate subscriptions
- * outlive it.
- *
- * @param state State passed to kalg_init().
- */
-void kalg_deinit(KAlgState *state);
 
 /**
  * @brief Analyze accelerometer samples.
@@ -228,6 +228,19 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
  * @return UTC time of the minute.
  */
 time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity);
+
+/**
+ * @brief Get the walk or run in progress.
+ *
+ * An activity is in progress from its first active minute, before it is long enough to be
+ * reported to @ref KAlgActivitySessionCallback, until it ends.
+ *
+ * @param state State passed to kalg_init().
+ * @param activity @ref KAlgActivityType_Walk or @ref KAlgActivityType_Run.
+ * @param[out] step_activity Activity in progress.
+ */
+void kalg_get_step_activity(KAlgState *state, KAlgActivityType activity,
+                            struct kalg_step_activity *step_activity);
 
 /**
  * @brief Get the ongoing sleep statistics.
