@@ -144,3 +144,24 @@ Fixed part ends at **250** (was 201 for minor 4); strings follow as before.
 ⚠️ Firmware with this schema **rejects records stamped with a minor it does not
 know** (a strict-validation change — unknown minors used to be mis-parsed).
 Gate minor 5 on firmware support, or retry a bounced insert as minor 4.
+
+## v4 minor 6 — hourly precipitation
+
+Appended after `tomorrow_hourly_temp[24]`, immediately before the trailing
+pstrings; stamp `minor_version = 6`. Hours are 0-23 of the location-local day,
+as in the other hourly series, so the clock's precipitation ring (the next 12
+hours) can cross midnight.
+
+| offset | field | type | Open-Meteo source | notes |
+|---|---|---|---|---|
+| 250 | `today_hourly_precip_probability[24]` | u8 × 24 | hourly `precipitation_probability`, today | whole percent 0-100, `255` unknown |
+| 274 | `tomorrow_hourly_precip_probability[24]` | u8 × 24 | the same, tomorrow | as above |
+| 298 | `today_hourly_precip_mm_x10[24]` | u8 × 24 | hourly `precipitation`, today, mm × 10 | clamp 254, `255` unknown; always mm |
+| 322 | `tomorrow_hourly_precip_mm_x10[24]` | u8 × 24 | the same, tomorrow | as above |
+
+Fixed part ends at **346** (was 250 for minor 5); strings follow as before.
+
+Firmware that parses minor 6 sets the `weather_db_v4_6_support` capability (bit
+29 of the watch's version response; bit 24 still means v4). Write minor 6 only
+when it is set, otherwise minor 5. An insert that comes back
+`BLOB_DB_INVALID_DATA` (0x05) can be retried as minor 5.

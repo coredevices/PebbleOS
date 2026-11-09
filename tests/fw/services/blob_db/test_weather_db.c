@@ -161,6 +161,151 @@ void test_weather_db__legacy_v3_inserted(void) {
   pbl_free(entry);
 }
 
+void test_weather_db__v4_6_layout(void) {
+  // Minor 6 appends four hourly series straight after minor 5's fields, and each minor's strings
+  // start where its fields end. (The absolute offsets are checked in weather_db.c: this host
+  // build lays enums out wider than the watch does.)
+  const size_t minor5_end =
+      offsetof(WeatherDBEntry, tomorrow_hourly_temp) + WEATHER_DB_HOURLY_COUNT;
+  cl_assert_equal_i(minor5_end, WEATHER_DB_V4_5_FIXED_SIZE);
+  cl_assert_equal_i(minor5_end, offsetof(WeatherDBEntry, today_hourly_precip_probability));
+  cl_assert_equal_i(minor5_end + WEATHER_DB_HOURLY_COUNT,
+                    offsetof(WeatherDBEntry, tomorrow_hourly_precip_probability));
+  cl_assert_equal_i(minor5_end + 2 * WEATHER_DB_HOURLY_COUNT,
+                    offsetof(WeatherDBEntry, today_hourly_precip_mm_x10));
+  cl_assert_equal_i(minor5_end + 3 * WEATHER_DB_HOURLY_COUNT,
+                    offsetof(WeatherDBEntry, tomorrow_hourly_precip_mm_x10));
+  cl_assert_equal_i(minor5_end + 4 * WEATHER_DB_HOURLY_COUNT, WEATHER_DB_V4_FIXED_SIZE);
+  cl_assert_equal_i(WEATHER_DB_V4_5_FIXED_SIZE,
+                    weather_db_entry_strings_offset(WEATHER_DB_CURRENT_VERSION, 5));
+  cl_assert_equal_i(WEATHER_DB_V4_FIXED_SIZE,
+                    weather_db_entry_strings_offset(WEATHER_DB_CURRENT_VERSION, 6));
+}
+
+// A v4 record cut down to an older minor's fixed fields, `fixed_size` bytes, followed by its
+// strings and stamped `minor`.
+static uint8_t *prv_create_minor_record(uint8_t minor, size_t fixed_size, size_t *size_out) {
+  const char *location = "OSLO";
+  const char *phrase = "Snow";
+  const size_t data_size = strlen(location) + strlen(phrase) + (sizeof(uint16_t) * 2);
+  const size_t size = fixed_size + sizeof(struct pbl_serialized_array) + data_size;
+  uint8_t *record = pbl_zalloc_check(size);
+  memcpy(record, weather_shared_data_get_entry(0), fixed_size);
+  ((WeatherDBEntry *)record)->minor_version = minor;
+  struct pbl_serialized_array *strings = (struct pbl_serialized_array *)(record + fixed_size);
+  strings->data_size = data_size;
+  weather_shared_data_write_strings(strings, location, phrase);
+  *size_out = size;
+  return record;
+}
+
+void test_weather_db__older_minor_inserted(void) {
+  // A phone that has not moved on to minor 6 keeps writing minor 5, whose strings follow
+  // tomorrow's hourly series.
+  size_t size;
+  uint8_t *record = prv_create_minor_record(5, WEATHER_DB_V4_5_FIXED_SIZE, &size);
+  WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7};
+  cl_assert_equal_i(S_SUCCESS, weather_db_insert((uint8_t *)&key, sizeof(key), record, size));
+
+  uint8_t *read = pbl_zalloc_check(size);
+  cl_assert_equal_i(S_SUCCESS, weather_db_read((uint8_t *)&key, sizeof(key), read, size));
+  struct pbl_pstring16_list strings;
+  pbl_pstring16_list_init(&strings, weather_db_entry_get_strings((WeatherDBEntry *)read));
+  cl_assert(pbl_pstring16_equal_cstring(
+      pbl_pstring16_list_get(&strings, WeatherDbStringIndex_LocationName), "OSLO"));
+  cl_assert(pbl_pstring16_equal_cstring(
+      pbl_pstring16_list_get(&strings, WeatherDbStringIndex_ShortPhrase), "Snow"));
+
+  cl_assert_equal_i(S_SUCCESS, weather_db_delete((uint8_t *)&key, sizeof(key)));
+  pbl_free(read);
+  pbl_free(record);
+}
+
+void test_weather_db__minor_without_its_fields_not_inserted(void) {
+  // Stamped minor 6 but only as long as minor 5: its strings would start past the end.
+  size_t size;
+  uint8_t *record = prv_create_minor_record(6, WEATHER_DB_V4_5_FIXED_SIZE, &size);
+  WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7};
+  cl_assert_equal_i(E_INVALID_ARGUMENT,
+                    weather_db_insert((uint8_t *)&key, sizeof(key), record, size));
+  pbl_free(record);
+}
+
+// Insert a record whose trailing string block is `data` (data_len bytes) under a header
+// declaring data_size, after `fixed_size` bytes of fixed fields copied from entry 0 and stamped
+// `version`/`minor`. Returns the insert's status; a record that got in is deleted again.
+static status_t prv_insert_with_strings(uint8_t version, uint8_t minor, size_t fixed_size,
+                                        const uint8_t *data, size_t data_len, uint16_t data_size) {
+  const size_t size = fixed_size + sizeof(struct pbl_serialized_array) + data_len;
+  uint8_t *record = pbl_zalloc_check(size);
+  memcpy(record, weather_shared_data_get_entry(0), fixed_size);
+  ((WeatherDBEntry *)record)->version = version;
+  if (version >= WEATHER_DB_CURRENT_VERSION) {
+    ((WeatherDBEntry *)record)->minor_version = minor;
+  }
+  struct pbl_serialized_array *strings = (struct pbl_serialized_array *)(record + fixed_size);
+  strings->data_size = data_size;
+  memcpy(strings->data, data, data_len);
+  WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8};
+  const status_t rv = weather_db_insert((uint8_t *)&key, sizeof(key), record, size);
+  if (rv == S_SUCCESS) {
+    weather_db_delete((uint8_t *)&key, sizeof(key));
+  }
+  pbl_free(record);
+  return rv;
+}
+
+void test_weather_db__strings_block_past_record_end_not_inserted(void) {
+  // The header claims one byte more than the record holds.
+  const uint8_t data[] = {4, 0, 'O', 'S', 'L', 'O', 4, 0, 'S', 'n', 'o', 'w'};
+  cl_assert_equal_i(
+      E_INVALID_ARGUMENT,
+      prv_insert_with_strings(WEATHER_DB_CURRENT_VERSION, WEATHER_DB_CURRENT_MINOR_VERSION,
+                              WEATHER_DB_V4_FIXED_SIZE, data, sizeof(data), sizeof(data) + 1));
+}
+
+void test_weather_db__pstring_past_block_end_not_inserted(void) {
+  // The first string claims 200 bytes of a 6-byte block.
+  const uint8_t data[] = {200, 0, 'O', 'S', 'L', 'O'};
+  cl_assert_equal_i(
+      E_INVALID_ARGUMENT,
+      prv_insert_with_strings(WEATHER_DB_CURRENT_VERSION, WEATHER_DB_CURRENT_MINOR_VERSION,
+                              WEATHER_DB_V4_FIXED_SIZE, data, sizeof(data), sizeof(data)));
+}
+
+void test_weather_db__pstring_length_over_255_walked_in_full(void) {
+  // A legacy record filled to MAX_ENTRY_SIZE: a 256-byte first string, then a second whose
+  // length cannot fit. A walk that stepped by the low byte of the first length (0) would land
+  // on bytes that read as two short strings exactly filling the block and accept the record;
+  // the reader, stepping by the full length, would then hand that impossible length to its
+  // caller.
+  const size_t block = MAX_ENTRY_SIZE - sizeof(WeatherDBEntryV3);
+  uint8_t *data = pbl_zalloc_check(block);
+  data[0] = 0x00;
+  data[1] = 0x01; // 256
+  data[2] = 0xFF;
+  data[3] = 0x00; // read as a 255-byte string by the low-byte walk, ending at 259
+  data[258] = 0xFF;
+  data[259] = (uint8_t)(block - 259 - sizeof(uint16_t)); // the rest of the block, to that walk
+  cl_assert_equal_i(
+      E_INVALID_ARGUMENT,
+      prv_insert_with_strings(WEATHER_DB_LEGACY_VERSION, 0, offsetof(WeatherDBEntryV3, pstring16s),
+                              data, block, block));
+  pbl_free(data);
+}
+
+void test_weather_db__fixed_fields_only_not_inserted(void) {
+  // Nothing after the fixed fields: not even the string block's header.
+  const size_t size = WEATHER_DB_V4_FIXED_SIZE;
+  uint8_t *record = pbl_zalloc_check(size);
+  memcpy(record, weather_shared_data_get_entry(0), size);
+  ((WeatherDBEntry *)record)->minor_version = WEATHER_DB_CURRENT_MINOR_VERSION;
+  WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8};
+  cl_assert_equal_i(E_INVALID_ARGUMENT,
+                    weather_db_insert((uint8_t *)&key, sizeof(key), record, size));
+  pbl_free(record);
+}
+
 status_t weather_db_get_num_keys(uint16_t *val_out);
 
 void test_weather_db__test_get_num_keys(void) {

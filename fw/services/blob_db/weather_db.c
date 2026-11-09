@@ -19,6 +19,13 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
+#ifndef UNITTEST
+// The phone writes v4 records at these offsets (weather_db_v4_example.md). The unit tests' host
+// build lays enums out wider, so the check holds on the watch only.
+static_assert(WEATHER_DB_V4_5_FIXED_SIZE == 250, "v4.5 strings offset moved");
+static_assert(WEATHER_DB_V4_FIXED_SIZE == 346, "v4.6 strings offset moved");
+#endif
+
 static struct {
   struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
@@ -51,8 +58,7 @@ static void prv_close_file_and_unlock_mutex(void) {
 // Every byte past the fixed fields is phone-controlled, so the trailing string
 // block must be fully bounded by val_len before a record is accepted: the
 // struct pbl_serialized_array header, its data_size, and every pstring16 a reader can be
-// handed. The walk mirrors pstring.c (traversal advances by the LOW byte of a
-// pstring's length; the full uint16 length is what gets read back out).
+// handed. The walk mirrors pstring.c, advancing by each pstring's full length.
 static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_t strings_offset) {
   if (strings_offset + sizeof(struct pbl_serialized_array) > val_len) {
     return false;
@@ -73,7 +79,7 @@ static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_
     if (str_length > block_size - off - sizeof(uint16_t)) {
       return false;
     }
-    off += strings->data[off] + sizeof(uint16_t);
+    off += str_length + sizeof(uint16_t);
   } while (block_size - off >= sizeof(uint16_t));
   return true;
 }

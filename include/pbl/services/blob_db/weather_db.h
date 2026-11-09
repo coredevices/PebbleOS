@@ -28,7 +28,8 @@
  *   variable-length pstring16s. The version byte is the single source of compatibility.
  *
  * The phone only writes v4 records when the firmware advertises @c weather_db_v4_support;
- * otherwise it keeps writing v3. The firmware parses both.
+ * otherwise it keeps writing v3. The firmware parses both. Minor 6 is advertised separately by
+ * @c weather_db_v4_6_support; each later minor will need its own capability bit.
  *
  * v4 minor versions append fixed fields before the trailing strings:
  * - 0: base v4.
@@ -38,6 +39,7 @@
  * - 3: dominant wind direction, today and per day.
  * - 4: today's hourly UV.
  * - 5: tomorrow's hourly type and temperature series.
+ * - 6: hourly chance and amount of precipitation, today and tomorrow.
  *
  * Older minors remain parseable: readers gate the appended fields on @c minor_version and the
  * record length, and the trailing strings offset is resolved per minor (see
@@ -49,7 +51,7 @@
 /** @brief Current major version of the record schema. */
 #define WEATHER_DB_CURRENT_VERSION (4)
 /** @brief Newest minor version of the v4 schema understood by the firmware. */
-#define WEATHER_DB_CURRENT_MINOR_VERSION (5)
+#define WEATHER_DB_CURRENT_MINOR_VERSION (6)
 /** @brief Major version of the legacy record schema. */
 #define WEATHER_DB_LEGACY_VERSION (3)
 
@@ -223,6 +225,22 @@ typedef struct PBL_PACKED {
   int8_t tomorrow_hourly_temp[WEATHER_DB_HOURLY_COUNT];
 
   /**
+   * Chance of precipitation for each hour of today, percent (0 to 100), 255 if unknown. Minor 6.
+   *
+   * Hours are 0 to 23 of the location-local day, like @ref today_hourly_temp.
+   */
+  uint8_t today_hourly_precip_probability[WEATHER_DB_HOURLY_COUNT];
+  /** Chance of precipitation for each hour of tomorrow, as above. Minor 6. */
+  uint8_t tomorrow_hourly_precip_probability[WEATHER_DB_HOURLY_COUNT];
+  /**
+   * Precipitation for each hour of today in tenths of a millimetre (0 to 254, larger amounts
+   * clamped to 254), 255 if unknown. Always millimetres, whatever the user's units. Minor 6.
+   */
+  uint8_t today_hourly_precip_mm_x10[WEATHER_DB_HOURLY_COUNT];
+  /** Precipitation for each hour of tomorrow, as above. Minor 6. */
+  uint8_t tomorrow_hourly_precip_mm_x10[WEATHER_DB_HOURLY_COUNT];
+
+  /**
    * Location name and short phrase, see ::WeatherDbStringIndex. Must stay last.
    *
    * Only at this offset in current minor records; use weather_db_entry_get_strings().
@@ -252,7 +270,9 @@ typedef enum WeatherDbStringIndex {
 #define WEATHER_DB_V4_3_FIXED_SIZE (offsetof(WeatherDBEntry, today_hourly_uv_x10))
 /** @brief Fixed size of a v4.4 record, where its strings start. */
 #define WEATHER_DB_V4_4_FIXED_SIZE (offsetof(WeatherDBEntry, tomorrow_hourly_count))
-/** @brief Fixed size of a current (v4.5) record, everything but the trailing strings. */
+/** @brief Fixed size of a v4.5 record, where its strings start. */
+#define WEATHER_DB_V4_5_FIXED_SIZE (offsetof(WeatherDBEntry, today_hourly_precip_probability))
+/** @brief Fixed size of a current (v4.6) record, everything but the trailing strings. */
 #define WEATHER_DB_V4_FIXED_SIZE (offsetof(WeatherDBEntry, pstring16s))
 
 /** @brief Smallest acceptable record, a legacy v3 record. */
@@ -302,8 +322,10 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
   if (version < WEATHER_DB_CURRENT_VERSION) {
     return offsetof(WeatherDBEntryV3, pstring16s);
   }
-  if (minor_version >= 5)
+  if (minor_version >= 6)
     return offsetof(WeatherDBEntry, pstring16s);
+  if (minor_version >= 5)
+    return WEATHER_DB_V4_5_FIXED_SIZE;
   if (minor_version >= 4)
     return WEATHER_DB_V4_4_FIXED_SIZE;
   if (minor_version >= 3)

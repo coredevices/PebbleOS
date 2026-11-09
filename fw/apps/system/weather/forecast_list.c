@@ -218,54 +218,6 @@ static void prv_fill_weekday_label(int day_index, const char *fallback, char *bu
 
 #ifdef CONFIG_TOUCH
 #define R5_TODAY_ICON 40 // scaled size of the today-summary header icon
-
-// Official PebbleOS weather PDC icon (Pebble_25x25_*) for each app WeatherType.
-static uint32_t prv_official_weather_pdc_res(WeatherType t) {
-  switch (t) {
-    case WeatherType_Sun:
-      return RESOURCE_ID_SUNNY_DAY_TINY;
-    case WeatherType_PartlyCloudy:
-      return RESOURCE_ID_PARTLY_CLOUDY_TINY;
-    case WeatherType_CloudyDay:
-      return RESOURCE_ID_CLOUDY_DAY_TINY;
-    case WeatherType_LightRain:
-      return RESOURCE_ID_LIGHT_RAIN_TINY;
-    case WeatherType_HeavyRain:
-      return RESOURCE_ID_HEAVY_RAIN_TINY;
-    case WeatherType_LightSnow:
-      return RESOURCE_ID_LIGHT_SNOW_TINY;
-    case WeatherType_HeavySnow:
-      return RESOURCE_ID_HEAVY_SNOW_TINY;
-    case WeatherType_RainAndSnow:
-      return RESOURCE_ID_RAINING_AND_SNOWING_TINY;
-    default:
-      return RESOURCE_ID_GENERIC_WEATHER_TINY;
-  }
-}
-
-// Larger (Pebble_50x50_*) official PDC, scaled down for the today-summary header.
-static uint32_t prv_official_weather_pdc_res_small(WeatherType t) {
-  switch (t) {
-    case WeatherType_Sun:
-      return RESOURCE_ID_SUNNY_DAY_SMALL;
-    case WeatherType_PartlyCloudy:
-      return RESOURCE_ID_PARTLY_CLOUDY_SMALL;
-    case WeatherType_CloudyDay:
-      return RESOURCE_ID_CLOUDY_DAY_SMALL;
-    case WeatherType_LightRain:
-      return RESOURCE_ID_LIGHT_RAIN_SMALL;
-    case WeatherType_HeavyRain:
-      return RESOURCE_ID_HEAVY_RAIN_SMALL;
-    case WeatherType_LightSnow:
-      return RESOURCE_ID_LIGHT_SNOW_SMALL;
-    case WeatherType_HeavySnow:
-      return RESOURCE_ID_HEAVY_SNOW_SMALL;
-    case WeatherType_RainAndSnow:
-      return RESOURCE_ID_RAINING_AND_SNOWING_SMALL;
-    default:
-      return RESOURCE_ID_GENERIC_WEATHER_SMALL;
-  }
-}
 #endif
 
 #ifdef CONFIG_TOUCH
@@ -285,7 +237,7 @@ static void prv_load_icons(void) {
       s_list->pdc_icons[i] = nullptr;
     }
     GDrawCommandImage *raw = gdraw_command_image_create_with_resource(
-        prv_official_weather_pdc_res(s_list->days[i].current_weather_type));
+        weather_type_pdc_resource(s_list->days[i].current_weather_type, false));
     s_list->pdc_icons[i] = raw ? gdraw_command_image_clone(raw) : nullptr;
     if (raw)
       gdraw_command_image_destroy(raw);
@@ -297,7 +249,7 @@ static void prv_load_icons(void) {
   }
   if (s_list->num_days > 0) {
     GDrawCommandImage *traw = gdraw_command_image_create_with_resource(
-        prv_official_weather_pdc_res_small(prv_header_type()));
+        weather_type_pdc_resource(prv_header_type(), true));
     if (traw) {
       s_list->today_pdc = gdraw_command_image_clone(traw);
       gdraw_command_image_destroy(traw);
