@@ -17,6 +17,8 @@ Each sample is built in a directory of its own,
 console of a sample when a line it should print does not come; `--verbose`
 shows it for every sample.
 
+{doc}`../samples/index` lists the samples and covers writing one.
+
 ## Options
 
 ```{pbl-command} samples

@@ -126,6 +126,7 @@ playground.md
 
 pbl/index.md
 development/build_system/index.md
+samples/index.md
 development/emulation/index.md
 development/tests/index.md
 development/debugging/index.md

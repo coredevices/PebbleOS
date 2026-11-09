@@ -138,3 +138,8 @@ another minute.
 | Every second or minute of the wall clock | `struct pbl_wallclock_work` |
 | Not wait behind the app on a low priority queue | `pbl_work_submit_boosted()` |
 | Own priority, or long blocking work | A dedicated `struct pbl_workq` |
+
+## Samples
+
+{doc}`../samples/kernel/work` submits items to the system queue and to a
+queue of its own, and cancels one.
