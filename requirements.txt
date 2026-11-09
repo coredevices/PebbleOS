@@ -12,6 +12,8 @@ sh<2
 packaging
 PyYAML
 kconfiglib
+# Devicetree checks (tools/devicetree/validate.py)
+dtschema==2026.9
 intelhex>=2.1,<3
 pyelftools
 libclang

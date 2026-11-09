@@ -156,3 +156,38 @@ jobs:
         uses: jidicula/clang-format-action@v4.18.0
         with:
           clang-format-version: "22"
+
+  devicetree:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
+      - name: Check out the upstream bindings
+        run: git submodule update --init --depth 1 third_party/devicetree/devicetree-rebasing
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends device-tree-compiler
+          pip install dtschema==2026.9 PyYAML pytest
+
+      - name: Test the generator
+        run: python3 -m pytest tools/devicetree/tests
+
+      - name: Check the changed bindings and every tree
+        run: |
+          base="origin/${GITHUB_BASE_REF}"
+          mapfile -t bindings < <(git diff --name-only --diff-filter=d "$base"...HEAD -- \
+            'dts/bindings/*.yaml')
+          python3 tools/devicetree/validate.py ${bindings:+--bindings "${bindings[@]}"} --all-trees
