@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Source of fr_FR.mo: msgfmt -o fr_FR.mo fr_FR.po
+msgid ""
+msgstr ""
+"Project-Id-Version: 7\n"
+"Language: fr_FR\n"
+"Name: Français\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Music"
+msgstr "Musique"
+
+msgctxt "Notifications"
+msgid "Enabled"
+msgstr "Activées"
+
+msgctxt "Quiet Time"
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Untranslated"
+msgstr ""
