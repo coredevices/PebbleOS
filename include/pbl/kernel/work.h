@@ -77,6 +77,21 @@ struct pbl_delayed_work {
   /** @endcond */
 };
 
+/** @brief Work item submitted at wall clock boundaries. */
+struct pbl_wallclock_work {
+  /** Work item, passed to the function. */
+  struct pbl_work work;
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_timer timer;
+  struct pbl_workq *q;
+  struct pbl_wallclock_work *next;
+  uint64_t due_ms;
+  uint32_t unit_ms;
+  uint32_t every;
+  bool running;
+  /** @endcond */
+};
+
 /** @brief Optional hooks run on a queue's thread. */
 struct pbl_workq_ops {
   /** Around blocking for work. */
@@ -438,6 +453,51 @@ size_t pbl_work_pool_num_free(const struct pbl_work_pool *pool);
  */
 int pbl_work_call(struct pbl_workq *q, struct pbl_work_pool *pool, pbl_work_call_fn_t fn,
                   void *data, pbl_timeout_t timeout);
+
+/**
+ * @brief Initialize a wall clock work item.
+ *
+ * @param[out] w Wall clock work item.
+ * @param fn Function, whose argument is @c &w->work.
+ */
+void pbl_wallclock_work_init(struct pbl_wallclock_work *w, pbl_work_fn_t fn);
+
+/**
+ * @brief Queue a work item at every @p every -th boundary of the wall clock's @p unit_s seconds.
+ *
+ * E.g. every minute, as the wall clock's minute changes, or every 5 seconds, as its second does.
+ * The first is @p every boundaries from now. Items due at the same boundary expire together, so
+ * they wake the system once.
+ *
+ * Setting the clock moves the boundaries with it. A change that lands in another unit counts as
+ * one boundary, so a minute item runs at once when the clock moves to another minute. Starting a
+ * running item restarts it.
+ *
+ * @param q Queue.
+ * @param w Wall clock work item.
+ * @param unit_s Unit in seconds, e.g. 1 or 60.
+ * @param every Number of boundaries between runs.
+ */
+void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w, uint32_t unit_s,
+                              uint32_t every);
+
+/**
+ * @brief Stop a wall clock work item, and remove it from its queue if it is pending.
+ *
+ * Does not wait for a function that is running.
+ *
+ * @param w Wall clock work item.
+ * @return true if it was running.
+ */
+bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w);
+
+/**
+ * @brief Check whether a wall clock work item is started.
+ *
+ * @param w Wall clock work item.
+ * @return true from pbl_wallclock_work_start() until pbl_wallclock_work_stop().
+ */
+bool pbl_wallclock_work_is_running(const struct pbl_wallclock_work *w);
 
 /**
  * @brief Run a function with a payload on @ref pbl_sys_workq.

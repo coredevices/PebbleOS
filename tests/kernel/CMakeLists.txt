@@ -19,6 +19,7 @@ pbl_clar_test(test_kernel
     kernel/arch/posix/cycle.c
     kernel/arch/posix/test.c
     kernel/timekeeping.c
+    kernel/wallclock.c
     drivers/base/device.c
     drivers/timer/timer.c
   INCLUDES
@@ -66,6 +67,7 @@ pbl_clar_test(test_kernel_sys_work
     kernel/arch/posix/cycle.c
     kernel/arch/posix/test.c
     kernel/timekeeping.c
+    kernel/wallclock.c
     drivers/base/device.c
     drivers/timer/timer.c
   INCLUDES

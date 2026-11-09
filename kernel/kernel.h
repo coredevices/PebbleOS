@@ -77,6 +77,11 @@ void timekeeping_start(void);
 void timekeeping_announce(void);
 //! Idles the CPU for up to @p ticks; call with every interrupt masked and idle confirmed.
 void timekeeping_idle(pbl_tick_t ticks);
+//! The uptime tick at which the wall clock reaches @p realtime_ms, rounded up. Interrupt lock held.
+uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms);
+//! Realigns the wall clock work after the clock moved. Interrupt lock held.
+void wallclock_clock_set(uint64_t old_ms, uint64_t new_ms);
+void wallclock_reset_for_test(void);
 
 //! Runs the callbacks of the expired timers, from the tick ISR.
 void timer_expire(void);
