@@ -95,6 +95,8 @@
 #define PBL_PINCTRL_SF32LB52_DRIVE_12MA PBL_PINCTRL_SF32LB52_DS_IDX(3)
 /** 20 mA drive, PA39-PA42 only. */
 #define PBL_PINCTRL_SF32LB52_DRIVE_20MA PBL_PINCTRL_SF32LB52_DS_IDX(4)
+/** Driven low by GPIO1, for a PA pad with the GPIO function. */
+#define PBL_PINCTRL_SF32LB52_OUTPUT_LOW (1U << 7)
 /** @} */
 
 /** @brief SF32LB52 pin controller. */
