@@ -146,8 +146,6 @@ int main(void) {
   static McuRebootReason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
-  pbl_log_init();
-
   task_init();
 
   prv_resource_banks_region_add();
@@ -162,7 +160,6 @@ int main(void) {
   boot_splash_start();
 
   // Suspend the task watchdog while the rest of the system comes up.
-  pbl_task_wdt_init();
   pbl_task_wdt_suspend(30 * 1000);
 
 #ifdef CONFIG_ANALYTICS
