@@ -41,7 +41,7 @@ jobs:
               - 'third_party/**'
               - 'tools/**'
               - 'CMakeLists.txt'
-              - 'Kconfig'
+              - 'Kconfig*'
               - 'SDK_VERSION'
               - 'pbl.yml'
               - 'requirements.txt'

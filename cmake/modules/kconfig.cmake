@@ -12,6 +12,7 @@ set(PBL_CONFIG_CMAKE ${PROJECT_BINARY_DIR}/config.cmake)
 set(kconfig_args
   --srcdir ${PBL_BASE}
   --builddir ${PROJECT_BINARY_DIR}
+  --appdir ${PBL_APPLICATION_SOURCE_DIR}
   --board ${BOARD}
   --variant ${VARIANT}
 )

@@ -73,9 +73,14 @@ class Menuconfig(PblCommand):
             self.inf("[dry-run] menuconfig", dotconfig, color="yellow")
             return 0
 
+        # The application's Kconfig, when it has one, is the root of the tree.
+        root = os.path.join(build.app_dir, "Kconfig")
+        if not os.path.isfile(root):
+            root = os.path.join(self.topdir, "Kconfig")
+
         before = read_entries(dotconfig)
         subprocess.run(
-            [sys.executable, "-m", "menuconfig", os.path.join(self.topdir, "Kconfig")],
+            [sys.executable, "-m", "menuconfig", root],
             env=env,
             check=False,
         )

@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+mainmenu "Pebble Firmware Configuration"
+
+source "Kconfig.pebbleos"
+
 rsource "apps/Kconfig"
 rsource "kernel/Kconfig"
 rsource "services/Kconfig"
@@ -55,6 +59,7 @@ config MODDABLE_XS
 
 config MMAP_RESOURCES
     bool "Memory-mapped (zero-copy) resource reads"
+    default y if SOC_SF32LB52
     help
       Serve read-only system resources as direct pointers into
       memory-mapped flash instead of copying them out.
@@ -79,7 +84,7 @@ menu "Debug & instrumentation"
 
 config QEMU_SERIAL
     bool "QEMU serial protocol"
-    default y if QEMU
+    default y if QEMU || SOC_POSIX
     help
       The Pebble protocol and the emulator's controls (battery, taps,
       time format, ...) over the board's QEMU_UART, framed as libpebble2's

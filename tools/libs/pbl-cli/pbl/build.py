@@ -5,7 +5,7 @@
 
 Everything is read back from the build's own byproducts -- ``.config`` for
 the Kconfig symbols and ``CMakeCache.txt`` for the board, the variant and
-the project name -- so the CLI never has to be kept in sync with the build
+the application -- so the CLI never has to be kept in sync with the build
 by hand.
 """
 
@@ -171,8 +171,15 @@ class BuildDir:
     # --- artifacts --------------------------------------------------------
 
     @property
+    def app_dir(self):
+        """The source directory of the application the build is for."""
+        return self.cache.get("PBL_APPLICATION_SOURCE_DIR") or os.path.join(self.topdir, "fw")
+
+    @property
     def project(self):
-        return self.cache.get("CMAKE_PROJECT_NAME", "pebbleos")
+        """The name of the image, whatever the application calls its project."""
+        # Not CMAKE_PROJECT_NAME: an application's own project() overrides it.
+        return "pebbleos"
 
     @property
     def elf(self):
