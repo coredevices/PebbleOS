@@ -111,6 +111,15 @@ class Runner(ABC):
     def do_create(cls, cfg, args):
         return cls(cfg)
 
+    def console_command(self):
+        """``(argv, env)`` running the build on the host with nothing on the
+        screen, its console on stdout and no port another instance would
+        want, for the runners that can. ``env`` is added to the environment.
+        """
+        raise UnsupportedOperation(
+            f"{self.name} runner cannot run the build with its console on stdout"
+        )
+
     def run(self, command):
         caps = self.capabilities()
         if command not in caps.commands:

@@ -56,6 +56,11 @@ class NativeRunner(Runner):
         argv += list(self.cfg.extra_args)
         return self.run_program(argv)
 
+    def console_command(self):
+        build = self.cfg.build
+        argv = [build.join(build.project), "-f", build.join(FLASH_FILE)]
+        return argv, {"SDL_VIDEODRIVER": "dummy"}
+
     def _debugger(self):
         """The host's debugger, set to start the program given after it."""
         build = self.cfg.build
