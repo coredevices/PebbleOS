@@ -7,8 +7,8 @@
 /////////////
 #include <fake_blobdb.h>
 #include <fake_pbl_malloc.h>
-#include <fake_regular_timer.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 // Stubs
 /////////////
@@ -73,6 +73,7 @@ void test_blob_db_sync__initialize(void) {
 void test_blob_db_sync__cleanup(void) {
   blob_db_flush(BlobDBIdTest);
   fake_sys_work_callbacks_cleanup();
+  fake_wallclock_work_cleanup();
 }
 
 void test_blob_db_sync__no_dirty(void) {
@@ -278,7 +279,7 @@ static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
   return session;
 }
 
-// The regular timers fire on the timer task and hop to SysWorkq before touching
+// The timers fire on the high priority work queue and hop to SysWorkq before touching
 // the session. If the sync completes or is cancelled in that window the session
 // is freed, so the deferred half must detect that instead of dereferencing it.
 void test_blob_db_sync__stale_timeout_callback_after_cancel(void) {
@@ -287,7 +288,7 @@ void test_blob_db_sync__stale_timeout_callback_after_cancel(void) {
   // Drop the harness' pending phone response; exercise the timeout path alone.
   fake_sys_work_callbacks_cleanup();
 
-  fake_regular_timer_trigger(&session->timeout_timer);
+  fake_wallclock_work_fire(&session->timeout_timer);
   cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   blob_db_sync_cancel(session);
@@ -311,10 +312,10 @@ void test_blob_db_sync__stale_abandon_callback_after_cancel(void) {
   cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
 
   // A timeout schedules the abandon timer.
-  fake_regular_timer_trigger(&session->timeout_timer);
+  fake_wallclock_work_fire(&session->timeout_timer);
   fake_sys_work_callbacks_invoke_pending();
-  cl_assert(regular_timer_is_scheduled(&session->abandon_timer));
-  fake_regular_timer_trigger(&session->abandon_timer);
+  cl_assert(pbl_wallclock_work_is_running(&session->abandon_timer));
+  fake_wallclock_work_fire(&session->abandon_timer);
   cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   // Session goes away before the abandon callback runs; it must not free twice.
@@ -330,7 +331,7 @@ void test_blob_db_sync__stale_callback_does_not_match_new_session(void) {
   const uint32_t first_id = session->session_id;
 
   fake_sys_work_callbacks_cleanup();
-  fake_regular_timer_trigger(&session->timeout_timer);
+  fake_wallclock_work_fire(&session->timeout_timer);
   blob_db_sync_cancel(session);
 
   // A fresh session for the same db, potentially at the same address.

@@ -6,7 +6,8 @@
 #include "api.h"
 #include "endpoint.h"
 
-#include <pbl/services/regular_timer.h>
+#include <pbl/kernel/work.h>
+#include <pbl/util/list.h>
 
 /**
  * @defgroup services_blob_db_sync Sync
@@ -53,9 +54,9 @@ typedef struct {
   /** Records left to sync; the head is the one in flight. */
   BlobDBDirtyItem *dirty_list;
   /** Retries the current write when the phone does not answer in time. */
-  RegularTimerInfo timeout_timer;
+  struct pbl_wallclock_work timeout_timer;
   /** Cancels the session after repeated timeouts. */
-  RegularTimerInfo abandon_timer;
+  struct pbl_wallclock_work abandon_timer;
   /** Token of the write in flight. */
   BlobDBToken current_token;
   /** Session scope. */

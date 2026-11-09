@@ -7,9 +7,9 @@
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/stationary.h>
 #include <pbl/util/size.h>
@@ -62,7 +62,7 @@ typedef enum {
 static AccelData s_last_accel_data;
 static AccelServiceState *s_accel_session;
 static EventServiceInfo s_button_event_info;
-static RegularTimerInfo s_accel_stationary_timer_info;
+static struct pbl_wallclock_work s_accel_stationary_timer_info;
 static StationaryState s_current_state = StationaryStateDisabled;
 static uint8_t s_stationary_count_down = STATIONARY_WAIT_BEFORE_ENGAGING_TIME_MINS;
 static bool s_stationary_mode_inhibit = true;
@@ -141,7 +141,7 @@ static void prv_stationary_check_launcher_task_cb(void *unused_data) {
 
 //! Called every minute to determine whether any motion has occurred since the last time
 //! the call was made. The current position is updated at this time
-static void prv_stationary_check_timer_cb(void *unused_data) {
+static void prv_stationary_check_timer_cb(struct pbl_work *work) {
   //! All stationary events need to be handled by kernel main
   launcher_task_add_callback(prv_stationary_check_launcher_task_cb, nullptr);
 }
@@ -225,7 +225,7 @@ static void prv_enter_peek_state(void) {
 
 static void prv_enter_disabled_state(void) {
   event_service_client_unsubscribe(&s_button_event_info);
-  regular_timer_remove_callback(&s_accel_stationary_timer_info);
+  pbl_wallclock_work_stop(&s_accel_stationary_timer_info);
   s_current_state = StationaryStateDisabled;
 }
 
@@ -234,9 +234,9 @@ static void prv_exit_disabled_state(void) {
   event_service_client_subscribe(&s_button_event_info);
 
 #if DEBUG_STATIONARY
-  regular_timer_add_seconds_callback(&s_accel_stationary_timer_info);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_accel_stationary_timer_info, 1, 1);
 #else
-  regular_timer_add_minutes_callback(&s_accel_stationary_timer_info);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_accel_stationary_timer_info, 60, 1);
 #endif
   s_current_state = StationaryStateAwake;
 }
@@ -334,7 +334,7 @@ static void prv_handle_action(StationaryAction action) {
 
 static void prv_setup_callback_info(void) {
   //! Timer callback to check whether the watch is stationary every minute
-  s_accel_stationary_timer_info = (RegularTimerInfo){.cb = prv_stationary_check_timer_cb};
+  pbl_wallclock_work_init(&s_accel_stationary_timer_info, prv_stationary_check_timer_cb);
 
   //! Button press events
   s_button_event_info = (EventServiceInfo){

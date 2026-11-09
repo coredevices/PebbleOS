@@ -4,8 +4,6 @@
 #pragma once
 #include <stdint.h>
 
-#include <pbl/services/regular_timer.h>
-
 /**
  * @defgroup services_poll_remote Remote polling
  * @ingroup services

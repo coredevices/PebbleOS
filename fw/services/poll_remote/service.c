@@ -66,12 +66,7 @@ typedef struct {
   uint8_t counted_minutes; //!< Number of minutes passed since the last request
 } PollRemoteContext;
 
-static void poll_service_timer_callback(void *data);
-
-static RegularTimerInfo s_poll_timer = {
-  .cb = poll_service_timer_callback,
-  .cb_data = nullptr,
-};
+static struct pbl_wallclock_work s_poll_timer;
 
 static PollRemoteContext s_poll_remote_contexts[NUM_POLL_REMOTE_SERVICES];
 
@@ -177,11 +172,12 @@ static void poll_service_sys_work_callback(void *data) {
   for_each_context(context_interval_check);
 }
 
-static void poll_service_timer_callback(void *data) {
-  pbl_sys_work_call(poll_service_sys_work_callback, data);
+static void poll_service_timer_callback(struct pbl_work *work) {
+  pbl_sys_work_call(poll_service_sys_work_callback, nullptr);
 }
 
 void poll_remote_init(void) {
+  pbl_wallclock_work_init(&s_poll_timer, poll_service_timer_callback);
   for (int i = 0; i < NUM_POLL_REMOTE_SERVICES; i++) {
     s_poll_remote_contexts[i].service = i;
   }
@@ -198,7 +194,7 @@ void poll_remote_start(void) {
 
   s_running = true;
   for_each_context(start);
-  regular_timer_add_minutes_callback(&s_poll_timer);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_poll_timer, 60, 1);
 }
 
 void poll_remote_stop(void) {
@@ -207,7 +203,7 @@ void poll_remote_stop(void) {
   }
 
   s_running = false;
-  regular_timer_remove_callback(&s_poll_timer);
+  pbl_wallclock_work_stop(&s_poll_timer);
 }
 
 void poll_remote_set_intervals(PollRemoteService service, const uint8_t min_interval_minutes,

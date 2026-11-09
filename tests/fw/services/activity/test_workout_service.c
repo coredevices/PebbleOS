@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/kernel/work.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_calculators.h>
 #include <pbl/services/activity/workout_service.h>
@@ -19,7 +20,7 @@
 
 extern void prv_abandon_workout_timer_callback(void *data);
 extern void prv_abandoned_notification_timer_callback(void *data);
-extern void prv_workout_timer_cb(void *data);
+extern void prv_workout_timer_cb(struct pbl_work *work);
 extern bool workout_service_get_avg_hr(int32_t *avg_hr_out);
 extern bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_out);
 extern void workout_service_get_active_kcalories(int32_t *active);

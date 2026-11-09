@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/kernel/mutex.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/timeline/item.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/uuid.h>

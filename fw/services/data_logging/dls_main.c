@@ -17,7 +17,6 @@
 #include <pbl/services/data_logging/dls_endpoint.h>
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_storage.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/list.h>
 #include <pbl/util/string.h>
@@ -144,8 +143,7 @@ static void prv_send_all_sessions_sys_work_cb(void *empty_all_data) {
 }
 
 // ----------------------------------------------------------------------------------------
-//! @param data unused
-static void prv_check_all_sessions_timer_cb(void *data) {
+static void prv_check_all_sessions_timer_cb(struct pbl_work *work) {
   // If sends are not enabled, do nothing
   if (!prv_sends_enabled()) {
     PBL_LOG_INFO("Not sending sessions because sending is disabled");
@@ -171,7 +169,7 @@ static void prv_check_all_sessions_timer_cb(void *data) {
 }
 
 // ----------------------------------------------------------------------------------------
-static RegularTimerInfo prv_check_all_sessions_timer_info = {.cb = prv_check_all_sessions_timer_cb};
+static struct pbl_wallclock_work prv_check_all_sessions_timer_info;
 
 // ----------------------------------------------------------------------------------------
 static void prv_remove_logging_session(DataLoggingSession *data) {
@@ -246,13 +244,13 @@ exit:
 
 // ----------------------------------------------------------------------------------------
 void dls_pause(void) {
-  regular_timer_remove_callback(&prv_check_all_sessions_timer_info);
+  pbl_wallclock_work_stop(&prv_check_all_sessions_timer_info);
 }
 
 // ----------------------------------------------------------------------------------------
 void dls_resume(void) {
-  regular_timer_add_multiminute_callback(&prv_check_all_sessions_timer_info,
-                                         DATALOGGING_DO_FLUSH_CHECK_INTERVAL_MINUTES);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &prv_check_all_sessions_timer_info, 60,
+                           DATALOGGING_DO_FLUSH_CHECK_INTERVAL_MINUTES);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -264,6 +262,7 @@ void dls_init(void) {
   dls_storage_rebuild();
 
   // add callbacks to empty and check logging_sessions
+  pbl_wallclock_work_init(&prv_check_all_sessions_timer_info, prv_check_all_sessions_timer_cb);
   dls_resume();
   s_initialized = true;
 }

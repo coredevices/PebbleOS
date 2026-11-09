@@ -12,7 +12,6 @@
 
 #include <fake_content_indicator.h>
 #include <fake_pbl_std.h>
-#include <fake_regular_timer.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fake_workout_service.h>

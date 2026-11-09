@@ -5,7 +5,6 @@
 
 #include <pbl/kernel/work.h>
 #include <pbl/services/idle_watchdog.h>
-#include <pbl/services/regular_timer.h>
 
 #include <applib/event_service_client.h>
 #include <comm/ble/gap_le_connection.h>
@@ -13,7 +12,7 @@
 #include <system/reboot_reason.h>
 
 #define PRF_IDLE_TIMEOUT_MINUTES 10
-static RegularTimerInfo s_is_idle_timer;
+static struct pbl_wallclock_work s_is_idle_timer;
 static EventServiceInfo s_bt_event_info;
 static EventServiceInfo s_battery_event_info;
 static EventServiceInfo s_button_event_info;
@@ -36,17 +35,19 @@ static void prv_handle_watchdog_timeout_cb(void *not_used) {
   enter_standby(RebootReasonCode_PrfIdle);
 }
 
-static void prv_handle_watchdog_timeout(void *not_used) {
+static void prv_handle_watchdog_timeout(struct pbl_work *work) {
   pbl_sys_work_call(prv_handle_watchdog_timeout_cb, nullptr);
 }
 
 static void prv_watchdog_feed(PebbleEvent *e, void *context) {
   if (atomic_load_explicit(&s_running, memory_order_relaxed)) {
-    regular_timer_add_multiminute_callback(&s_is_idle_timer, PRF_IDLE_TIMEOUT_MINUTES);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_is_idle_timer, 60, PRF_IDLE_TIMEOUT_MINUTES);
   }
 }
 
 void prf_idle_watchdog_init(void) {
+  pbl_wallclock_work_init(&s_is_idle_timer, prv_handle_watchdog_timeout);
+
   s_bt_event_info = (EventServiceInfo){
     .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
     .handler = prv_watchdog_feed,
@@ -67,14 +68,11 @@ void prf_idle_watchdog_init(void) {
 }
 
 void prf_idle_watchdog_start(void) {
-  s_is_idle_timer = (RegularTimerInfo){
-    .cb = prv_handle_watchdog_timeout,
-  };
-  regular_timer_add_multiminute_callback(&s_is_idle_timer, PRF_IDLE_TIMEOUT_MINUTES);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_is_idle_timer, 60, PRF_IDLE_TIMEOUT_MINUTES);
   atomic_store_explicit(&s_running, true, memory_order_relaxed);
 }
 
 void prf_idle_watchdog_stop(void) {
   atomic_store_explicit(&s_running, false, memory_order_relaxed);
-  regular_timer_remove_callback(&s_is_idle_timer);
+  pbl_wallclock_work_stop(&s_is_idle_timer);
 }
