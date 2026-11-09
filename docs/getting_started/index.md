@@ -21,6 +21,7 @@ sudo apt install \
     bison \
     clang \
     cmake \
+    device-tree-compiler \
     flex \
     gcc \
     gcc-multilib \
@@ -55,6 +56,7 @@ sudo dnf install \
     clang \
     cmake \
     dash \
+    dtc \
     flex \
     freetype-devel \
     gcc \

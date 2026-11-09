@@ -1,0 +1,10 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "obelix.dtsi"
+
+/ {
+	compatible = "coredevices,obelix-dvt", "coredevices,obelix", "sifli,sf32lb52";
+};

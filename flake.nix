@@ -101,6 +101,7 @@
               ccache
               cmake
               dash
+              dtc
               gettext
               git
               librsvg
