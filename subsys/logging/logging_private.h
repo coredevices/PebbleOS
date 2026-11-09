@@ -27,6 +27,24 @@ typedef struct {
   char buffer[LOG_BUFFER_LENGTH]; // For construction of the final log message
 } LogState;
 
+//! Hooks of the frontend, pbl_log() and its siblings. The defaults serve privileged threads; an
+//! application that also logs from unprivileged code overrides them.
+
+//! Get the buffer to format a message in, or NULL while one is being logged.
+LogState *pbl_log__state_get(void);
+
+//! Release the buffer obtained with pbl_log__state_get().
+void pbl_log__state_release(LogState *state);
+
+//! Pass a formatted message on, to kernel_pbl_log() in the end.
+void pbl_log__submit(LogBinaryMessage *log_message, uint32_t flags);
+
+//! Get the timestamp of a message, in seconds since the epoch.
+uint32_t pbl_log__time(void);
+
+//! Get the free space of the stack in use, in bytes.
+uint32_t pbl_log__stack_free(void);
+
 //! Return a single character representing the current log level. Used in serial logging.
 char pbl_log_get_level_char(const uint8_t log_level);
 
