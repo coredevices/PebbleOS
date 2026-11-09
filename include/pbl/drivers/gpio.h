@@ -128,6 +128,16 @@ struct pbl_gpio_port {
     .intc = (_intc),                                                                         \
   }
 
+/**
+ * @brief Pin flags from the flags cell of a devicetree GPIO specifier.
+ *
+ * @param f Flags, those of <dt-bindings/gpio/gpio.h>.
+ */
+#define PBL_GPIO_DT_FLAGS(f)                                                                       \
+  ((((f) & 0x1U) ? PBL_GPIO_ACTIVE_LOW : 0U) |                                                     \
+   ((((f) & 0x6U) == 0x6U) ? PBL_GPIO_OPEN_DRAIN : 0U) | (((f) & 0x10U) ? PBL_GPIO_PULL_UP : 0U) | \
+   (((f) & 0x20U) ? PBL_GPIO_PULL_DOWN : 0U))
+
 /** @brief A pin as wired on the board. */
 struct pbl_gpio {
   /** Port, NULL if not connected. */

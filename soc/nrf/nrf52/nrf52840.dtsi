@@ -1,0 +1,64 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v7m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&nvic>;
+		ranges;
+
+		i2c0: i2c@40003000 {
+			compatible = "nordic,nrf52840-twim", "nordic,nrf52832-twim";
+			reg = <0x40003000 0x1000>;
+			interrupts = <3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		i2c1: i2c@40004000 {
+			compatible = "nordic,nrf52840-twim", "nordic,nrf52832-twim";
+			reg = <0x40004000 0x1000>;
+			interrupts = <4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		gpio0: gpio@50000000 {
+			compatible = "nordic,nrf52840-gpio", "nordic,nrf52832-gpio";
+			reg = <0x50000000 0x200>, <0x50000500 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <32>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		gpio1: gpio@50000300 {
+			compatible = "nordic,nrf52840-gpio", "nordic,nrf52832-gpio";
+			reg = <0x50000300 0x200>, <0x50000800 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+	};
+};
