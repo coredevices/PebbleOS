@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
@@ -12,7 +13,6 @@
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/evented_timer.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/action_chaining_window.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
@@ -214,9 +214,9 @@ static void prv_show_result_window(ActionResultData *data, const TimelineResourc
   AppResourceInfo icon_res_info;
   timeline_resources_get_id(&timeline_res, icon_format, &icon_res_info);
 
-  const char *i18n_msg = i18n_get(msg, dialog);
+  const char *i18n_msg = pbl_i18n_get(msg, dialog);
   dialog_set_text(dialog, i18n_msg);
-  i18n_free(msg, dialog);
+  pbl_i18n_free(msg, dialog);
   dialog_set_icon(dialog, icon_res_info.res_id);
   dialog_set_icon_animate_direction(dialog, DialogIconAnimationFromLeft);
   const uint32_t dialog_timeout_ms =
@@ -268,7 +268,7 @@ static bool prv_show_result_window_with_progress(ActionResultData *data,
 static void prv_timeout_handler(void *context) {
   ActionResultData *data = context;
   // we failed to perform action since we timed out.
-  const char *msg = i18n_noop("Failed");
+  const char *msg = pbl_i18n_noop("Failed");
   const bool succeeded = false;
   PBL_LOG_WRN("Timed out waiting for action result");
   prv_show_result_window_with_progress(data, TIMELINE_RESOURCE_GENERIC_WARNING, msg, succeeded);
@@ -720,7 +720,7 @@ static void prv_push_dismiss_first_use_dialog(ActionMenu *action_menu) {
     return;
   }
 
-  const char *tutorial_msg = i18n_get(
+  const char *tutorial_msg = pbl_i18n_get(
       "Quickly dismiss all notifications by holding the "
       "Select button for 2 seconds from any incoming "
       "notification.",
@@ -730,7 +730,7 @@ static void prv_push_dismiss_first_use_dialog(ActionMenu *action_menu) {
       "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS, tutorial_msg,
       gcolor_legible_over(GColorLightGray), GColorLightGray, nullptr,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
-  i18n_free(tutorial_msg, action_menu);
+  pbl_i18n_free(tutorial_msg, action_menu);
   expandable_dialog_push(first_use_dialog, action_menu->window.parent_window_stack);
 }
 
@@ -809,15 +809,15 @@ static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *p
   } else {
     // hard-wired default responses in case the phone app doesn't provide any
     static char *strings[] = {
-      i18n_noop("Ok"),
-      i18n_noop("Yes"),
-      i18n_noop("No"),
-      i18n_noop("Call me"),
-      i18n_noop("Call you later"),
+      pbl_i18n_noop("Ok"),
+      pbl_i18n_noop("Yes"),
+      pbl_i18n_noop("No"),
+      pbl_i18n_noop("Call me"),
+      pbl_i18n_noop("Call you later"),
     };
     template_level = prv_create_level(ARRAY_LENGTH(strings), parent_level);
     for (size_t i = 0; i < (int)ARRAY_LENGTH(strings); i++) {
-      const char *label = i18n_get(strings[i], i18n_owner);
+      const char *label = pbl_i18n_get(strings[i], i18n_owner);
       action_menu_level_add_action(template_level, label, prv_action_menu_cb, action);
     }
   }
@@ -937,8 +937,8 @@ static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
   ActionMenuItem reply_options[ReplyOptionCount] = {
 #ifdef CONFIG_MIC
     {
-      .label =
-          (reply_prefix ? i18n_get("Reply with Voice", root_level) : i18n_get("Voice", root_level)),
+      .label = (reply_prefix ? pbl_i18n_get("Reply with Voice", root_level)
+                             : pbl_i18n_get("Voice", root_level)),
       .perform_action = prv_start_voice_reply,
       .action_data = action,
     },
@@ -948,11 +948,11 @@ static ActionMenuLevel *prv_create_responses_level(TimelineItemAction *action,
     },
 #endif
     {
-      .label = i18n_get("Canned messages", root_level),
+      .label = pbl_i18n_get("Canned messages", root_level),
       .is_leaf = 0,
     },
     {
-      .label = i18n_get("Emoji", root_level),
+      .label = pbl_i18n_get("Emoji", root_level),
       .is_leaf = 0,
     },
   };
@@ -1056,15 +1056,15 @@ static ActionMenuLevel *prv_create_postpone_level(TimelineItemAction *action,
     root_level = postpone_level;
   }
 
-  action_menu_level_add_action(postpone_level, i18n_get("In 15 minutes", root_level),
+  action_menu_level_add_action(postpone_level, pbl_i18n_get("In 15 minutes", root_level),
                                prv_postpone_15_minutes, action);
 
   if (show_later_today) {
-    action_menu_level_add_action(postpone_level, i18n_get("Later today", root_level),
+    action_menu_level_add_action(postpone_level, pbl_i18n_get("Later today", root_level),
                                  prv_postpone_later_today, action);
   }
 
-  action_menu_level_add_action(postpone_level, i18n_get("Tomorrow", root_level),
+  action_menu_level_add_action(postpone_level, pbl_i18n_get("Tomorrow", root_level),
                                prv_postpone_tomorrow, action);
 
   return postpone_level;
@@ -1101,7 +1101,7 @@ ActionMenuLevel *timeline_actions_create_action_menu_root_level(uint8_t num_item
 static void prv_cleanup_action_menu(ActionMenu *action_menu) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   action_menu_hierarchy_destroy(root_level, nullptr, nullptr);
-  i18n_free_all(root_level);
+  pbl_i18n_free_all(root_level);
   prv_reset_session_responsiveness();
 }
 

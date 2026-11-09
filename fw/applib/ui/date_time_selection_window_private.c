@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
 
@@ -71,9 +71,9 @@ char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *b
       return buf;
     case TimeInputIndexAMPM: // We should only get this in 12h style
       if (data->hour < 12) {
-        i18n_get_with_buffer("AM", buf, 3);
+        pbl_i18n_get_with_buffer("AM", buf, 3);
       } else {
-        i18n_get_with_buffer("PM", buf, 3);
+        pbl_i18n_get_with_buffer("PM", buf, 3);
       }
       return buf;
     default:

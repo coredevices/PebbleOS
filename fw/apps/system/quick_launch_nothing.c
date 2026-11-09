@@ -6,7 +6,7 @@
 
 #include "quick_launch_nothing.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 static void prv_main(void) {
   // Never runs; the shell drops the launch before it gets here.
@@ -21,7 +21,7 @@ const PebbleProcessMd *quick_launch_nothing_get_app_info(void) {
           .visibility = ProcessVisibilityQuickLaunch,
         },
     /// Quick Launch action that makes the button do nothing at all.
-    .name = i18n_noop("Nothing"),
+    .name = pbl_i18n_noop("Nothing"),
   };
   return &s_app_info.common;
 }

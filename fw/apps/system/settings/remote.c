@@ -5,11 +5,11 @@
 
 #include "bluetooth.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window_private.h>
@@ -39,20 +39,20 @@ typedef struct {
 
 static void prv_dialog_unload(void *context) {
   PBL_ASSERTN(context);
-  i18n_free_all(context);
+  pbl_i18n_free_all(context);
 }
 
 static void prv_show_dialog(void *i18n_owner) {
   DialogCallbacks callback = {.unload = prv_dialog_unload};
   const char *text = BT_FORGET_PAIRING_STR;
   ExpandableDialog *e_dialog = expandable_dialog_create_with_params(
-      "Forget Remote", RESOURCE_ID_GENERIC_CONFIRMATION_TINY, i18n_get(text, i18n_owner),
+      "Forget Remote", RESOURCE_ID_GENERIC_CONFIRMATION_TINY, pbl_i18n_get(text, i18n_owner),
       GColorWhite, GColorCobaltBlue, &callback, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
       expandable_dialog_close_cb);
-  i18n_free(text, i18n_owner);
+  pbl_i18n_free(text, i18n_owner);
 
   expandable_dialog_show_action_bar(e_dialog, true);
-  expandable_dialog_set_header(e_dialog, i18n_get("You're all set", e_dialog));
+  expandable_dialog_set_header(e_dialog, pbl_i18n_get("You're all set", e_dialog));
 
   app_expandable_dialog_push(e_dialog);
 }
@@ -65,7 +65,7 @@ static void prv_remote_menu_cleanup(ActionMenu *action_menu, const ActionMenuIte
                                     void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   SettingsRemoteData *data = (SettingsRemoteData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free((void *)root_level);
   app_free(data);
 }
@@ -121,7 +121,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
   };
 
   level->items[RemoteMenuForget] = (ActionMenuItem){
-    .label = i18n_get("Forget", data),
+    .label = pbl_i18n_get("Forget", data),
     .perform_action = prv_forget_item,
     .action_data = data,
   };
@@ -129,7 +129,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
 #ifdef CONFIG_SERVICE_BLE_HRM
   if (is_sharing_hr) {
     level->items[RemoteMenuStopSharingHeartRate] = (ActionMenuItem){
-      .label = i18n_get("Stop Sharing Heart Rate", data),
+      .label = pbl_i18n_get("Stop Sharing Heart Rate", data),
       .perform_action = prv_stop_sharing_heart_rate,
       .action_data = data,
     };

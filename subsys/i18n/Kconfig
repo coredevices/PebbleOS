@@ -1,15 +1,15 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SERVICE_I18N
+config I18N
     bool "Internationalization"
     help
-      Internationalization (gettext) runtime support for installed
-      language packs. Firmware includes only the English source strings.
+      Translates strings with a gettext message catalog. Without a
+      catalog, the English source strings are used.
 
-if SERVICE_I18N
+if I18N
 
-module = SERVICE_I18N
+module = I18N
 module-str = Internationalization
 source "subsys/logging/Kconfig.template.log_level"
 

@@ -184,7 +184,7 @@ static void prv_push_long_error_dialog(VoiceUiData *data, const char *header, co
 }
 
 static void prv_push_final_error_dialog(VoiceUiData *data) {
-  prv_push_error_dialog(data, i18n_noop("Dictation is not available."),
+  prv_push_error_dialog(data, pbl_i18n_noop("Dictation is not available."),
                         RESOURCE_ID_GENERIC_WARNING_LARGE, GColorRed);
 }
 
@@ -203,14 +203,14 @@ static void prv_show_error_dialog(VoiceUiData *data, const char *msg) {
 }
 
 static void prv_show_generic_error_dialog(VoiceUiData *data) {
-  prv_show_error_dialog(data, i18n_noop("Error occurred. Try again."));
+  prv_show_error_dialog(data, pbl_i18n_noop("Error occurred. Try again."));
 }
 
 static void prv_show_connectivity_error_and_exit(VoiceUiData *data) {
   data->error_count = MAX_ERROR_COUNT; // exit UI after the dialog is shown
   if (data->show_error_dialog) {
     const GColor dialog_bg_color = PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite);
-    prv_push_error_dialog(data, i18n_noop("No internet connection"),
+    prv_push_error_dialog(data, pbl_i18n_noop("No internet connection"),
                           RESOURCE_ID_CHECK_INTERNET_CONNECTION_LARGE, dialog_bg_color);
     data->error_exit_status = DictationSessionStatusFailureConnectivityError;
   } else {
@@ -221,9 +221,9 @@ static void prv_show_connectivity_error_and_exit(VoiceUiData *data) {
 static void prv_show_disabled_error_and_exit(VoiceUiData *data) {
   data->error_count = MAX_ERROR_COUNT; // exit UI after the dialog is shown
   if (data->show_error_dialog) {
-    prv_push_long_error_dialog(data, nullptr,
-                               i18n_noop("Enable voice in the settings page of the Pebble app."),
-                               RESOURCE_ID_GENERIC_WARNING_TINY);
+    prv_push_long_error_dialog(
+        data, nullptr, pbl_i18n_noop("Enable voice in the settings page of the Pebble app."),
+        RESOURCE_ID_GENERIC_WARNING_TINY);
     data->error_exit_status = DictationSessionStatusFailureDisabled;
   } else {
     prv_exit_and_send_result_event(data, DictationSessionStatusFailureDisabled);
@@ -385,7 +385,7 @@ static void prv_handle_dictation_error(VoiceUiData *data, VoiceStatus error_stat
 
   if (data->show_error_dialog) {
     if (error_status == VoiceStatusRecognizerResponseError) {
-      prv_show_error_dialog(data, i18n_noop("Missed that. Try again."));
+      prv_show_error_dialog(data, pbl_i18n_noop("Missed that. Try again."));
     } else {
       prv_show_generic_error_dialog(data);
     }
@@ -1112,7 +1112,7 @@ static void prv_do_transition(VoiceUiData *data, VoiceUiState state) {
       prv_hide_mic_dot(data);
       prv_hide_progress_bar(data);
       prv_show_unfold_animation(data, false /* is_reverse */);
-      prv_show_mic_text(data, i18n_noop("Listening"));
+      prv_show_mic_text(data, pbl_i18n_noop("Listening"));
       break;
 
     case StateStopRecording:

@@ -362,7 +362,7 @@ static void prv_draw_bpm(GContext *ctx, int32_t current_bpm, GFont font, GBitmap
   graphics_draw_bitmap_in_rect(ctx, heart_icon, &icon_bounds);
 
   char bpm_text[16];
-  snprintf(bpm_text, sizeof(bpm_text), i18n_get("%d BPM", i18n_owner), current_bpm);
+  snprintf(bpm_text, sizeof(bpm_text), pbl_i18n_get("%d BPM", i18n_owner), current_bpm);
 
 #if PBL_BW
   bounds.origin.x += 62; // bpm text left offset
@@ -472,11 +472,11 @@ static void prv_update_steps_buffer(KickstartData *data) {
   const int hundreds = data->current_steps % 1000;
   if (thousands) {
     /// Step count greater than 1000 with a thousands separator
-    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d,%03d", data), thousands,
-             hundreds);
+    snprintf(data->steps_buffer, sizeof(data->steps_buffer), pbl_i18n_get("%d,%03d", data),
+             thousands, hundreds);
   } else {
     /// Step count less than 1000
-    snprintf(data->steps_buffer, sizeof(data->steps_buffer), i18n_get("%d", data), hundreds);
+    snprintf(data->steps_buffer, sizeof(data->steps_buffer), pbl_i18n_get("%d", data), hundreds);
   }
   layer_mark_dirty(&data->base_layer);
 }
@@ -640,7 +640,7 @@ static void prv_main(void) {
   app_event_loop();
 
   window_deinit(&data->window);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

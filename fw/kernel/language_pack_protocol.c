@@ -22,8 +22,8 @@ typedef struct PBL_PACKED {
   uint8_t slot;
   uint8_t flags;
   uint16_t version;
-  char locale[ISO_LOCALE_LENGTH];
-  char name[LOCALE_NAME_LENGTH];
+  char locale[PBL_I18N_LOCALE_LEN];
+  char name[PBL_I18N_NAME_LEN];
 } LanguagePackRecord;
 
 typedef struct PBL_PACKED {
@@ -34,7 +34,7 @@ typedef struct PBL_PACKED {
   LanguagePackRecord packs[LANGUAGE_PACK_COUNT];
 } SysMsgLanguagePacksResponsePayload;
 
-static const char s_no_locale[ISO_LOCALE_LENGTH];
+static const char s_no_locale[PBL_I18N_LOCALE_LEN];
 
 static void prv_send(struct pbl_pp_session *session, const void *data, size_t length) {
   pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_MESSAGE, data, length, PBL_PP_DEFAULT_TIMEOUT_MS);
@@ -98,9 +98,9 @@ static const SysMsgLanguagePackPayload *prv_parse(struct pbl_pp_session *session
 static bool prv_matches(const SysMsgLanguagePackPayload *request,
                         const struct pbl_i18n_catalog_info *info) {
   return info ? request->version == info->version &&
-                    memcmp(request->locale, info->locale, ISO_LOCALE_LENGTH) == 0
+                    memcmp(request->locale, info->locale, PBL_I18N_LOCALE_LEN) == 0
               : request->version == 0 &&
-                    memcmp(request->locale, s_no_locale, ISO_LOCALE_LENGTH) == 0;
+                    memcmp(request->locale, s_no_locale, PBL_I18N_LOCALE_LEN) == 0;
 }
 
 void language_pack_protocol_handle_remove(struct pbl_pp_session *session, const uint8_t *data,

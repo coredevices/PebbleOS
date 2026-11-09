@@ -5,9 +5,9 @@
 
 #include "alarm_editor.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window.h>
@@ -60,10 +60,11 @@ typedef struct AlarmDetailData {
 static SimpleDialog *prv_snooze_set_confirm_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmSnoozeSet");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  const char *snooze_text = i18n_noop("Snooze delay set to %d minutes");
+  const char *snooze_text = pbl_i18n_noop("Snooze delay set to %d minutes");
   char snooze_buf[64];
-  snprintf(snooze_buf, sizeof(snooze_buf), i18n_get(snooze_text, dialog), alarm_get_snooze_delay());
-  i18n_free(snooze_text, dialog);
+  snprintf(snooze_buf, sizeof(snooze_buf), pbl_i18n_get(snooze_text, dialog),
+           alarm_get_snooze_delay());
+  pbl_i18n_free(snooze_text, dialog);
   dialog_set_text(dialog, snooze_buf);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
@@ -240,7 +241,7 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu, const ActionMenuItem
                                    void *context) {
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   AlarmDetailData *data = (AlarmDetailData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
 #ifdef CONFIG_SPEAKER
   app_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
@@ -271,46 +272,47 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
   ActionMenuLevel *main_menu = prv_create_main_menu();
 
   main_menu->items[DetailMenuItemIndexDelete] = (ActionMenuItem){
-    .label = i18n_get("Delete", data),
+    .label = pbl_i18n_get("Delete", data),
     .perform_action = prv_delete_alarm_handler,
     .action_data = data,
   };
   main_menu->items[DetailMenuItemIndexEnable] = (ActionMenuItem){
-    .label = data->alarm_info.enabled ? i18n_get("Disable", data) : i18n_get("Enable", data),
+    .label =
+        data->alarm_info.enabled ? pbl_i18n_get("Disable", data) : pbl_i18n_get("Enable", data),
     .perform_action = prv_toggle_enable_alarm_handler,
     .action_data = data,
   };
   main_menu->items[DetailMenuItemIndexChangeTime] = (ActionMenuItem){
-    .label = i18n_get("Change Time", data),
+    .label = pbl_i18n_get("Change Time", data),
     .perform_action = prv_edit_time_handler,
     .action_data = data,
   };
   main_menu->items[DetailMenuItemIndexChangeDays] = (ActionMenuItem){
-    .label = i18n_get("Change Days", data),
+    .label = pbl_i18n_get("Change Days", data),
     .perform_action = prv_edit_day_handler,
     .action_data = data,
   };
   main_menu->items[DetailMenuItemIndexConvertSmart] = (ActionMenuItem){
-    .label = data->alarm_info.is_smart ? i18n_get("Convert to Basic Alarm", data)
-                                       : i18n_get("Convert to Smart Alarm", data),
+    .label = data->alarm_info.is_smart ? pbl_i18n_get("Convert to Basic Alarm", data)
+                                       : pbl_i18n_get("Convert to Smart Alarm", data),
     .perform_action = prv_toggle_smart_alarm_handler,
     .action_data = data,
   };
 #ifdef CONFIG_SPEAKER
   main_menu->items[DetailMenuItemIndexSound] = (ActionMenuItem){
-    .label = i18n_get("Sound", data),
+    .label = pbl_i18n_get("Sound", data),
     .is_leaf = 0,
     .next_level = prv_create_sound_menu(main_menu),
   };
 #endif
   main_menu->items[DetailMenuItemIndexVibration] = (ActionMenuItem){
-    .label = data->alarm_info.vibrate_enabled ? i18n_get("Vibration: On", data)
-                                              : i18n_get("Vibration: Off", data),
+    .label = data->alarm_info.vibrate_enabled ? pbl_i18n_get("Vibration: On", data)
+                                              : pbl_i18n_get("Vibration: Off", data),
     .perform_action = prv_toggle_vibrate_handler,
     .action_data = data,
   };
   main_menu->items[DetailMenuItemIndexSnooze] = (ActionMenuItem){
-    .label = i18n_get("Snooze Delay", data),
+    .label = pbl_i18n_get("Snooze Delay", data),
     .is_leaf = 0,
     .next_level = prv_create_snooze_menu(main_menu),
   };
@@ -321,14 +323,14 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
   ActionMenuLevel *snooze_level = main_menu->items[DetailMenuItemIndexSnooze].next_level;
   static const unsigned snooze_delays[NUM_SNOOZE_MENU_ITEMS] = {5, 10, 15, 30, 60};
   static const char *snooze_delay_strs[NUM_SNOOZE_MENU_ITEMS] = {
-    i18n_noop("5 minutes"), i18n_noop("10 minutes"), i18n_noop("15 minutes"),
-    i18n_noop("30 minutes"), i18n_noop("1 hour")
+    pbl_i18n_noop("5 minutes"), pbl_i18n_noop("10 minutes"), pbl_i18n_noop("15 minutes"),
+    pbl_i18n_noop("30 minutes"), pbl_i18n_noop("1 hour")
   };
 
   unsigned current_snooze_delay = alarm_get_snooze_delay();
   for (int i = 0; i < NUM_SNOOZE_MENU_ITEMS; i++) {
     snooze_level->items[i] = (ActionMenuItem){
-      .label = i18n_get(snooze_delay_strs[i], data),
+      .label = pbl_i18n_get(snooze_delay_strs[i], data),
       .perform_action = prv_edit_snooze_delay,
       .action_data = (void *)(uintptr_t)snooze_delays[i],
     };
@@ -348,14 +350,14 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     AlarmTone_Chime,
   };
   sound_level->items[0] = (ActionMenuItem){
-    .label = i18n_ctx_get("AlarmSound", "Off", data),
+    .label = pbl_i18n_ctx_get("AlarmSound", "Off", data),
     .perform_action = prv_disable_sound_handler,
     .action_data = data,
   };
   const int num_tones = (int)(sizeof(tone_values) / sizeof(tone_values[0]));
   for (int i = 0; i < num_tones; i++) {
     sound_level->items[i + 1] = (ActionMenuItem){
-      .label = i18n_get(alarm_tones_get_name(tone_values[i]), data),
+      .label = pbl_i18n_get(alarm_tones_get_name(tone_values[i]), data),
       .perform_action = prv_select_tone_handler,
       .action_data = (void *)(uintptr_t)tone_values[i],
     };

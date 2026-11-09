@@ -42,8 +42,8 @@ const char *weather_type_get_name(WeatherType weather_type);
  * @brief Get the short condition phrase for a weather type.
  *
  * @param weather_type Weather type.
- * @return Untranslated phrase to pass to i18n_get(), e.g. "Partly Cloudy", or nullptr if the type
- *         has none.
+ * @return Untranslated phrase to pass to pbl_i18n_get(), e.g. "Partly Cloudy", or nullptr if the
+ * type has none.
  */
 const char *weather_type_get_phrase(WeatherType weather_type);
 

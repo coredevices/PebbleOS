@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/metricgroup.h>
 
@@ -37,7 +37,8 @@ bool metric_group_add_item(MetricGroup *metric_group, const char *name_i18n, con
   }
   const size_t max_list_size =
       PBL_STRING_LIST_SIZE(metric_group->max_num_items, metric_group->max_item_string_size);
-  pbl_string_list_add_string(metric_group->names, max_list_size, i18n_get(name_i18n, i18n_owner),
+  pbl_string_list_add_string(metric_group->names, max_list_size,
+                             pbl_i18n_get(name_i18n, i18n_owner),
                              metric_group->max_item_string_size);
   pbl_string_list_add_string(metric_group->values, max_list_size, value,
                              metric_group->max_item_string_size);

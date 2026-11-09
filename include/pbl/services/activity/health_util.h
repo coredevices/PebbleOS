@@ -40,7 +40,7 @@
  * @param[out] buffer Output string.
  * @param buffer_size Size of @p buffer.
  * @param duration_s Duration, in seconds.
- * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @param i18n_owner i18n owner; call pbl_i18n_free_all() on it after use.
  * @return Number of characters written, excluding the terminator, snprintf-style.
  */
 int health_util_format_hours_and_minutes(char *buffer, size_t buffer_size, int duration_s,
@@ -79,7 +79,7 @@ GTextNodeText *health_util_create_text_node_with_text(const char *text, GFont fo
  * @param buffer_size Size of @p buffer.
  * @param duration_s Duration, in seconds.
  * @param leading_zero Whether to pad the first field to two digits.
- * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @param i18n_owner i18n owner; call pbl_i18n_free_all() on it after use.
  * @return snprintf() result.
  */
 int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, int duration_s,
@@ -91,7 +91,7 @@ int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, i
  * @param[out] buffer Output string.
  * @param buffer_size Size of @p buffer.
  * @param duration_s Duration, in seconds.
- * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @param i18n_owner i18n owner; call pbl_i18n_free_all() on it after use.
  * @return snprintf() result.
  */
 int health_util_format_minutes_and_seconds(char *buffer, size_t buffer_size, int duration_s,
@@ -104,7 +104,7 @@ int health_util_format_minutes_and_seconds(char *buffer, size_t buffer_size, int
  * vertically aligned to the bottom of the numbers.
  *
  * @param duration_s Duration, in seconds.
- * @param i18n_owner i18n owner; call i18n_free_all() on it after use.
+ * @param i18n_owner i18n owner; call pbl_i18n_free_all() on it after use.
  * @param number_font Font of the numbers.
  * @param units_font Font of the units.
  * @param color Color of all nodes.

@@ -6,9 +6,9 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_malloc.h>
@@ -68,15 +68,15 @@ typedef enum UnsupportedFacesMenuIndex {
 
 static const char *s_before_time_strings[PeekBeforeTimingMenuIndexCount] = {
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
-  i18n_noop("Start Time"),
+  pbl_i18n_noop("Start Time"),
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
-  i18n_noop("5 Min Before"),
+  pbl_i18n_noop("5 Min Before"),
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
-  i18n_noop("10 Min Before"),
+  pbl_i18n_noop("10 Min Before"),
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
-  i18n_noop("15 Min Before"),
+  pbl_i18n_noop("15 Min Before"),
   /// Shows up in the Timeline settings as a "Timing" subtitle and submenu option.
-  i18n_noop("30 Min Before"),
+  pbl_i18n_noop("30 Min Before"),
 };
 
 static uint16_t s_before_time_values[PeekBeforeTimingMenuIndexCount] = {
@@ -86,11 +86,11 @@ static uint16_t s_before_time_values[PeekBeforeTimingMenuIndexCount] = {
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 static const char *s_unsupported_faces_strings[UnsupportedFacesMenuIndexCount] = {
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
-  i18n_noop("Overlay"),
+  pbl_i18n_noop("Overlay"),
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
-  i18n_noop("Shift up"),
+  pbl_i18n_noop("Shift up"),
   /// Shows up in the Timeline settings as an "Unsupported Faces" submenu option.
-  i18n_noop("Squish up"),
+  pbl_i18n_noop("Squish up"),
 };
 
 static const TimelinePeekUnsupportedFaceMode
@@ -123,7 +123,7 @@ static void prv_before_time_menu_select(OptionMenu *option_menu, int selection, 
 
 static void prv_push_before_time_menu(SettingsTimelinePeekData *data) {
   /// Shows up in the Timeline settings as the title for the "Timing" submenu window.
-  const char *title = i18n_noop("Timing");
+  const char *title = pbl_i18n_noop("Timing");
   const int selected = prv_before_time_min_to_index(timeline_peek_prefs_get_before_time());
   const OptionMenuCallbacks callbacks = {
     .select = prv_before_time_menu_select,
@@ -152,7 +152,7 @@ static void prv_unsupported_faces_menu_select(OptionMenu *option_menu, int selec
 
 static void prv_push_unsupported_faces_menu(SettingsTimelinePeekData *data) {
   /// Shows up in the Timeline settings as the title for unsupported watchface behavior.
-  const char *title = i18n_noop("Unsupported Faces");
+  const char *title = pbl_i18n_noop("Unsupported Faces");
   const int selected =
       prv_unsupported_face_mode_to_index(timeline_peek_prefs_get_unsupported_face_mode());
   const OptionMenuCallbacks callbacks = {
@@ -165,7 +165,7 @@ static void prv_push_unsupported_faces_menu(SettingsTimelinePeekData *data) {
 #endif
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
-  i18n_free_all(context);
+  pbl_i18n_free_all(context);
   app_free(context);
 }
 
@@ -183,26 +183,26 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   switch ((TimelinePeekMenuIndex)row) {
     case TimelinePeekMenuIndex_Toggle:
       /// Shows up in the Timeline settings as a toggle-able "Quick View" item.
-      title = i18n_noop("Quick View");
+      title = pbl_i18n_noop("Quick View");
       /// Shows up in the Timeline settings as the status under the "Quick View" toggle.
       subtitle =
           timeline_peek_prefs_get_enabled()
-              ? i18n_noop("On")
+              ? pbl_i18n_noop("On")
               :
               /// Shows up in the Timeline settings as the status under the "Quick View" toggle.
-              i18n_noop("Off");
+              pbl_i18n_noop("Off");
       break;
     case TimelinePeekMenuIndex_Timing:
       /// Shows up in the Timeline settings as the title for the menu item that controls the
       /// timing for when to begin showing the peek for an event.
-      title = i18n_noop("Timing");
+      title = pbl_i18n_noop("Timing");
       subtitle = s_before_time_strings[prv_before_time_min_to_index(
           timeline_peek_prefs_get_before_time())];
       break;
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
     case TimelinePeekMenuIndex_UnsupportedFaces:
       /// Shows up in the Timeline settings for watchfaces that do not support Quick View.
-      title = i18n_noop("Unsupported Faces");
+      title = pbl_i18n_noop("Unsupported Faces");
       subtitle = s_unsupported_faces_strings[prv_unsupported_face_mode_to_index(
           timeline_peek_prefs_get_unsupported_face_mode())];
       break;
@@ -212,7 +212,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   }
 
   PBL_ASSERTN(title);
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -264,10 +265,10 @@ static void prv_push_settings_window(ClickRecognizerRef recognizer, void *contex
 static Window *prv_create_first_use_dialog(void) {
   const void *i18n_owner = prv_create_first_use_dialog; // Use this function as the i18n owner
   /// Title for the Timeline Quick View first use dialog.
-  const char *header = i18n_get("Quick View", i18n_owner);
+  const char *header = pbl_i18n_get("Quick View", i18n_owner);
   /// Help text for the Timeline Quick View first use dialog.
   const char *text =
-      i18n_get("Appears on your watchface when an event is about to start.", i18n_owner);
+      pbl_i18n_get("Appears on your watchface when an event is about to start.", i18n_owner);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
       WINDOW_NAME("Timeline Quick View First Use"), RESOURCE_ID_SUNNY_DAY_TINY, text, GColorBlack,
       PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite), nullptr, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
@@ -277,7 +278,7 @@ static Window *prv_create_first_use_dialog(void) {
   expandable_dialog_set_header_font(expandable_dialog,
                                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 #endif
-  i18n_free_all(i18n_owner);
+  pbl_i18n_free_all(i18n_owner);
   return &expandable_dialog->dialog.window;
 }
 
@@ -293,7 +294,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_timeline_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Timeline"),
+    .name = pbl_i18n_noop("Timeline"),
     .init = prv_init,
   };
 

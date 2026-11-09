@@ -5,7 +5,7 @@
 
 #include "menu.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 
@@ -15,7 +15,7 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
     data->callbacks.unload(option_menu, data);
   }
   option_menu_destroy(option_menu);
-  i18n_free_all(option_menu);
+  pbl_i18n_free_all(option_menu);
   app_free(context);
 }
 
@@ -26,14 +26,14 @@ static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
 static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Layer *cell_layer,
                               const GRect *cell_frame, uint32_t row, bool selected, void *context) {
   SettingsOptionMenuData *data = context;
-  const char *title = i18n_get(data->rows[row], option_menu);
+  const char *title = pbl_i18n_get(data->rows[row], option_menu);
   option_menu_system_draw_row(option_menu, ctx, cell_layer, cell_frame, title, selected, context);
 }
 
 static uint16_t prv_menu_get_cell_height(OptionMenu *option_menu, uint16_t row, bool selected,
                                          void *context) {
   SettingsOptionMenuData *data = context;
-  return option_menu_system_cell_height(option_menu, i18n_get(data->rows[row], option_menu),
+  return option_menu_system_cell_height(option_menu, pbl_i18n_get(data->rows[row], option_menu),
                                         selected);
 }
 
@@ -47,7 +47,7 @@ OptionMenu *settings_option_menu_create(const char *i18n_title_key,
   }
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   const OptionMenuConfig config = {
-    .title = i18n_get(i18n_title_key, option_menu),
+    .title = pbl_i18n_get(i18n_title_key, option_menu),
     .content_type = content_type,
     .choice = choice,
     .status_colors = {GColorWhite, GColorBlack},

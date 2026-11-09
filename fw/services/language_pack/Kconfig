@@ -3,7 +3,7 @@
 
 config SERVICE_LANGUAGE_PACK
     bool "Language packs"
-    depends on SERVICE_I18N
+    depends on I18N
     help
       Manages the installed language packs and gives the translation
       catalog of the selected one to the internationalization runtime.

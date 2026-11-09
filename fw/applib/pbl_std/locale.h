@@ -5,12 +5,12 @@
 
 #include <locale.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 typedef struct {
-  char sys_locale[ISO_LOCALE_LENGTH];
-  char app_locale_time[ISO_LOCALE_LENGTH];
-  char app_locale_strings[ISO_LOCALE_LENGTH];
+  char sys_locale[PBL_I18N_LOCALE_LEN];
+  char app_locale_time[PBL_I18N_LOCALE_LEN];
+  char app_locale_strings[PBL_I18N_LOCALE_LEN];
 } LocaleInfo;
 
 void locale_init_app_locale(LocaleInfo *info);

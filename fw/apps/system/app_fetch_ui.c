@@ -7,11 +7,11 @@
 #include <string.h>
 
 #include <pbl/drivers/battery.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/compositor/compositor_transitions.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -108,7 +108,7 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
   switch (data->result) {
     case AppFetchResultNoBluetooth:
       icon = TIMELINE_RESOURCE_WATCH_DISCONNECTED;
-      message = i18n_get("Not connected", data);
+      message = pbl_i18n_get("Not connected", data);
       // Subscribe to the BT remote app connect event
       data->connect_event_info = (EventServiceInfo){
         .type = PEBBLE_COMM_SESSION_EVENT,
@@ -120,14 +120,14 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
       icon = TIMELINE_RESOURCE_CHECK_INTERNET_CONNECTION;
 #if PBL_ROUND
       // TODO: peek layer should do its own line wrapping
-      message = i18n_get("No internet\nconnection", data);
+      message = pbl_i18n_get("No internet\nconnection", data);
 #else
-      message = i18n_get("No internet connection", data);
+      message = pbl_i18n_get("No internet connection", data);
 #endif
       break;
     case AppFetchResultIncompatibleJSFailure:
       icon = TIMELINE_RESOURCE_GENERIC_WARNING;
-      message = i18n_get("Incompatible JS", data);
+      message = pbl_i18n_get("Incompatible JS", data);
       break;
     case AppFetchResultGeneralFailure:
     case AppFetchResultUUIDInvalid:
@@ -136,7 +136,7 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
     case AppFetchResultPhoneBusy:
     default:
       icon = TIMELINE_RESOURCE_GENERIC_WARNING;
-      message = i18n_get("Failed", data);
+      message = pbl_i18n_get("Failed", data);
       break;
   }
 
@@ -290,7 +290,7 @@ static void handle_deinit(void) {
   prv_app_fetch_cleanup(data);
   progress_window_deinit(&data->window);
   app_free(data);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 static void s_main(void) {

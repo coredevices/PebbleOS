@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/cron/cron.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -15,7 +16,6 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/settings/settings.h>
@@ -462,7 +462,7 @@ static void prv_put_alarm_event(void) {
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
       .alarm_time = pbl_realtime(),
-      .alarm_label = is_smart ? i18n_noop("Smart Alarm") : i18n_noop("Alarm")
+      .alarm_label = is_smart ? pbl_i18n_noop("Smart Alarm") : pbl_i18n_noop("Alarm")
     }
   };
 
@@ -1423,53 +1423,53 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
       alarm_day_text = all_caps ?
                                 /// A frequency option for alarms, i.e. the alarm would go off every
                                 /// day. Respect capitalization!
-                           i18n_noop("EVERY DAY")
+                           pbl_i18n_noop("EVERY DAY")
                                 :
                                 /// A frequency option for alarms, i.e. the alarm would go off every
                                 /// day. Respect capitalization!
-                           i18n_noop("Every Day");
+                           pbl_i18n_noop("Every Day");
       break;
     case ALARM_KIND_WEEKDAYS:
       alarm_day_text = all_caps ?
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// every weekday. Respect capitalization!
-                           i18n_noop("WEEKDAYS")
+                           pbl_i18n_noop("WEEKDAYS")
                                 :
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// every weekday. Respect capitalization!
-                           i18n_noop("Weekdays");
+                           pbl_i18n_noop("Weekdays");
       break;
     case ALARM_KIND_WEEKENDS:
       alarm_day_text = all_caps ?
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// each day on the weekend. Respect capitalization!
-                           i18n_noop("WEEKENDS")
+                           pbl_i18n_noop("WEEKENDS")
                                 :
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// each day on the weekend. Respect capitalization!
-                           i18n_noop("Weekends");
+                           pbl_i18n_noop("Weekends");
       break;
     case ALARM_KIND_JUST_ONCE:
 
       alarm_day_text = all_caps ?
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// one time ever. Respect capitalization!
-                           i18n_noop("ONCE")
+                           pbl_i18n_noop("ONCE")
                                 :
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// one time ever. Respect capitalization!
-                           i18n_noop("Once");
+                           pbl_i18n_noop("Once");
       break;
     case ALARM_KIND_CUSTOM:
       // TODO: Use selected days as the string
       alarm_day_text = all_caps ?
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// on a custom choice of days. Respect capitalization!
-                           i18n_noop("CUSTOM")
+                           pbl_i18n_noop("CUSTOM")
                                 :
                                 /// A frequency option for alarms, i.e. the alarm would only go off
                                 /// on a custom choice of days. Respect capitalization!
-                           i18n_noop("Custom");
+                           pbl_i18n_noop("Custom");
       break;
     default:
       alarm_day_text = "";
@@ -1482,13 +1482,14 @@ const char *alarm_get_string_for_kind(AlarmKind kind, bool all_caps) {
 void alarm_get_string_for_custom(bool scheduled_days[PBL_DAY_PER_WEEK], char *alarm_day_text) {
   // 4 chars per day, 3 for letters and 1 for comma
   // max length = 7 days in a week * 4 chars per day = 28
-  static const char *day_strings[7] = {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"),
-                                       i18n_noop("Wed"), i18n_noop("Thu"), i18n_noop("Fri"),
-                                       i18n_noop("Sat")};
-  static const char *full_day_strings[7] = {i18n_noop("Sundays"),   i18n_noop("Mondays"),
-                                            i18n_noop("Tuesdays"),  i18n_noop("Wednesdays"),
-                                            i18n_noop("Thursdays"), i18n_noop("Fridays"),
-                                            i18n_noop("Saturdays")};
+  static const char *day_strings[7] = {pbl_i18n_noop("Sun"), pbl_i18n_noop("Mon"),
+                                       pbl_i18n_noop("Tue"), pbl_i18n_noop("Wed"),
+                                       pbl_i18n_noop("Thu"), pbl_i18n_noop("Fri"),
+                                       pbl_i18n_noop("Sat")};
+  static const char *full_day_strings[7] = {pbl_i18n_noop("Sundays"),   pbl_i18n_noop("Mondays"),
+                                            pbl_i18n_noop("Tuesdays"),  pbl_i18n_noop("Wednesdays"),
+                                            pbl_i18n_noop("Thursdays"), pbl_i18n_noop("Fridays"),
+                                            pbl_i18n_noop("Saturdays")};
 
   uint8_t num_days_scheduled = 0, latest_day_scheduled = 0;
   // Monday should come first in the list
@@ -1496,18 +1497,18 @@ void alarm_get_string_for_custom(bool scheduled_days[PBL_DAY_PER_WEEK], char *al
     if (scheduled_days[i % 7] == true) {
       num_days_scheduled++;
       latest_day_scheduled = i % 7;
-      const char *day_string = i18n_get(day_strings[i % 7], day_strings);
+      const char *day_string = pbl_i18n_get(day_strings[i % 7], day_strings);
       strcat(alarm_day_text, day_string);
       strcat(alarm_day_text, ",");
-      i18n_free(day_strings[i % 7], day_strings); // copied in by strcat. We can free it
+      pbl_i18n_free(day_strings[i % 7], day_strings); // copied in by strcat. We can free it
     }
   }
   if (num_days_scheduled == 1) {
     // Write the full day string
     const char *full_day_string =
-        i18n_get(full_day_strings[latest_day_scheduled], full_day_strings);
+        pbl_i18n_get(full_day_strings[latest_day_scheduled], full_day_strings);
     strcpy(alarm_day_text, full_day_string);
-    i18n_free(full_day_strings[latest_day_scheduled], full_day_strings); // copied in above.
+    pbl_i18n_free(full_day_strings[latest_day_scheduled], full_day_strings); // copied in above.
   } else if (num_days_scheduled > 1) {
     // Write the shortened day strings, remove last ','
     alarm_day_text[strnlen(alarm_day_text, 28) - 1] = 0;

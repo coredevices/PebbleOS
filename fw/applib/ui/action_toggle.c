@@ -3,8 +3,8 @@
 
 #include "action_toggle.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
@@ -62,9 +62,9 @@ static void prv_setup_state_config(ActionToggleContext *ctx, ActionToggleDialogC
 
 static void prv_setup_dialog(Dialog *dialog, const ActionToggleDialogConfig *config,
                              void *context) {
-  const char *msg = i18n_get(config->message, dialog);
+  const char *msg = pbl_i18n_get(config->message, dialog);
   dialog_set_text(dialog, msg);
-  i18n_free(msg, dialog);
+  pbl_i18n_free(msg, dialog);
 
   dialog_set_icon(dialog, config->icon);
   dialog_set_text_color(dialog, config->text_color);

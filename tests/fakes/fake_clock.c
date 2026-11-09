@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
@@ -34,15 +34,15 @@ PBL_WEAK bool clock_is_24h_style() {
 static size_t prv_format_time(char *buffer, int buf_size, const char *format, time_t timestamp) {
   struct pbl_tm time_tm;
   pbl_localtime_r(&timestamp, &time_tm);
-  const size_t ret_val = pbl_strftime_r(buffer, buf_size, i18n_get(format, buffer), &time_tm);
-  i18n_free(format, buffer);
+  const size_t ret_val = pbl_strftime_r(buffer, buf_size, pbl_i18n_get(format, buffer), &time_tm);
+  pbl_i18n_free(format, buffer);
   return ret_val;
 }
 
 size_t clock_get_time_number(char *number_buffer, size_t number_buffer_size, time_t timestamp) {
-  const size_t written =
-      prv_format_time(number_buffer, number_buffer_size,
-                      (clock_is_24h_style() ? i18n_noop("%R") : i18n_noop("%l:%M")), timestamp);
+  const size_t written = prv_format_time(
+      number_buffer, number_buffer_size,
+      (clock_is_24h_style() ? pbl_i18n_noop("%R") : pbl_i18n_noop("%l:%M")), timestamp);
   const char *number_buffer_ptr = string_strip_leading_whitespace(number_buffer);
   memmove(number_buffer, number_buffer_ptr,
           number_buffer_size - (number_buffer_ptr - number_buffer));
@@ -54,7 +54,7 @@ size_t clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
     buffer[0] = '\0';
     return 0;
   } else {
-    return prv_format_time(buffer, buffer_size, i18n_noop("%p"), timestamp);
+    return prv_format_time(buffer, buffer_size, pbl_i18n_noop("%p"), timestamp);
   }
 }
 
@@ -93,11 +93,11 @@ void clock_copy_time_string(char *buffer, uint8_t size) {
 }
 
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp) {
-  return prv_format_time(buffer, buf_size, i18n_noop("%m/%d"), timestamp);
+  return prv_format_time(buffer, buf_size, pbl_i18n_noop("%m/%d"), timestamp);
 }
 
 size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp) {
-  return prv_format_time(buffer, buf_size, i18n_noop("%d"), timestamp);
+  return prv_format_time(buffer, buf_size, pbl_i18n_noop("%d"), timestamp);
 }
 
 void clock_hour_and_minute_add(int *hour, int *minute, int delta_minutes) {

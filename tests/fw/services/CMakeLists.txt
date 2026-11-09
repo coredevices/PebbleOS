@@ -45,7 +45,7 @@ pbl_clar_test(test_get_bytes
 pbl_clar_test(test_language_pack
   MODULES resources
   SOURCES
-    fw/services/i18n/i18n.c
+    subsys/i18n/i18n.c
     fw/services/language_pack/language_pack.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
@@ -55,7 +55,7 @@ pbl_clar_test(test_language_pack
 pbl_clar_test(test_language_pack_storage
   SOURCES
     fw/services/put_bytes/put_bytes_storage_file.c
-    fw/services/i18n/i18n.c
+    subsys/i18n/i18n.c
     fw/services/language_pack/language_pack.c
     fw/resource/resource.c
     fw/resource/resource_storage.c
@@ -183,7 +183,7 @@ pbl_clar_test(test_timeline_item
 pbl_clar_test(test_clock
   MODULES resources time
   SOURCES
-    fw/services/i18n/i18n.c
+    subsys/i18n/i18n.c
     tests/fakes/fake_bootbits.c
     tests/fakes/fake_rtc.c
     tests/fakes/fake_events.c

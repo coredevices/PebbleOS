@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/time.h>
@@ -415,7 +415,7 @@ static void prv_confirmed_handler(ClickRecognizerRef recognizer, void *context) 
   // Create and display DONE dialog
   SimpleDialog *confirmation_dialog = simple_dialog_create("Notifications Cleared");
   Dialog *dialog = simple_dialog_get_dialog(confirmation_dialog);
-  dialog_set_text(dialog, i18n_get("Done", data));
+  dialog_set_text(dialog, pbl_i18n_get("Done", data));
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_SHREDDED_LARGE);
   static const uint32_t DIALOG_TIMEOUT = 2000;
   dialog_set_timeout(dialog, DIALOG_TIMEOUT);
@@ -441,7 +441,7 @@ static void prv_settings_clear_history_window_push(NotificationsData *data) {
   actionable_dialog_set_click_config_provider(actionable_dialog, prv_dialog_click_config);
   actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, nullptr);
   Dialog *dialog = actionable_dialog_get_dialog(actionable_dialog);
-  dialog_set_text(dialog, i18n_get("Clear history?", data));
+  dialog_set_text(dialog, pbl_i18n_get("Clear history?", data));
   TimelineResourceInfo timeline_res = {
     .res_id = TIMELINE_RESOURCE_GENERIC_QUESTION,
   };
@@ -710,7 +710,7 @@ static int16_t prv_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell
 static const char *prv_get_group_title(NotificationsData *data, const NotificationHistoryRow *row) {
   const char *sender = row->group.sender;
   /// Notification sender followed by the number of grouped notifications
-  const char *format = i18n_get("%s (%u)", data);
+  const char *format = pbl_i18n_get("%s (%u)", data);
   const int title_length = snprintf(nullptr, 0, format, sender, (unsigned int)row->group.count);
   if (title_length < 0) {
     return sender;
@@ -749,14 +749,14 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   if (first_row) {
     // Draw "Clear all" box and exit
 #if PBL_ROUND
-    draw_cell(ctx, cell_layer, i18n_get("Clear All", data), nullptr, nullptr);
+    draw_cell(ctx, cell_layer, pbl_i18n_get("Clear All", data), nullptr, nullptr);
 #else
     const GFont font = system_theme_get_font(TextStyleFont_MenuCellTitle);
     GRect box = cell_layer->bounds;
     box.origin.y +=
         (box.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
 
-    graphics_draw_text(ctx, i18n_get("Clear All", data), font, box,
+    graphics_draw_text(ctx, pbl_i18n_get("Clear All", data), font, box,
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 #endif
     return;
@@ -1007,7 +1007,7 @@ static void prv_window_load(Window *window) {
       text_layer,
       &GRect(horizontal_margin, window->layer.bounds.size.h / 2 - 15,
              window->layer.bounds.size.w - horizontal_margin, window->layer.bounds.size.h / 2),
-      i18n_get("No notifications", data), font, GColorBlack, GColorClear, GTextAlignmentCenter,
+      pbl_i18n_get("No notifications", data), font, GColorBlack, GColorClear, GTextAlignmentCenter,
       GTextOverflowModeTrailingEllipsis);
   text_layer_set_text_color_follows_theme(text_layer);
   layer_add_child(&window->layer, text_layer_get_layer(text_layer));
@@ -1067,7 +1067,7 @@ static void prv_handle_deinit(void) {
   notifications_history_deinit(&data->history);
   app_free(data->group_title);
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
   s_data = nullptr;
 }
@@ -1092,7 +1092,7 @@ static void prv_clear_history_handle_init(void) {
 static void prv_clear_history_handle_deinit(void) {
   NotificationsData *data = app_state_get_user_data();
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -1114,7 +1114,7 @@ const PebbleProcessMd *notifications_app_get_info() {
               {0xb2, 0xca, 0xe8, 0x18, 0x10, 0xf8, 0x46, 0xdf, 0xad, 0x2b, 0x98, 0xad, 0x22, 0x54,
                0xa3, 0xc1},
         },
-    .name = i18n_noop("Notifications"),
+    .name = pbl_i18n_noop("Notifications"),
     .icon_resource_id = RESOURCE_ID_NOTIFICATIONS_APP_GLANCE,
   };
   return (const PebbleProcessMd *)&s_app_md;
@@ -1128,7 +1128,7 @@ const PebbleProcessMd *notifications_clear_history_app_get_info(void) {
           .uuid = NOTIFICATIONS_CLEAR_HISTORY_UUID,
           .visibility = ProcessVisibilityQuickLaunch,
         },
-    .name = i18n_noop("Clear Notification History"),
+    .name = pbl_i18n_noop("Clear Notification History"),
   };
   return (const PebbleProcessMd *)&s_app_md;
 }

@@ -6,7 +6,7 @@
 #include "weather_data_source.h"
 #include "weather_types.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/math.h> // integer_sqrt — the launcher's chord-inset math
 
 #define SAVED_LOCATIONS_ROW_HEIGHT              44
@@ -157,9 +157,9 @@ static int16_t prv_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index,
 // Falls back to the plain menu cell when the record carries no temperature.
 static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
                                 const SavedLocationEntry *glance) {
-  const char *title = glance->label[0] ? glance->label : i18n_get("Location", s_view);
+  const char *title = glance->label[0] ? glance->label : pbl_i18n_get("Location", s_view);
   const char *subtitle =
-      glance->is_current_location ? i18n_get("Current Location", s_view) : nullptr;
+      glance->is_current_location ? pbl_i18n_get("Current Location", s_view) : nullptr;
   if (glance->temp == (int16_t)WX_DS_UNKNOWN_TEMP) {
     menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
     return;
@@ -244,8 +244,8 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
   (void)context;
   const int row = cell_index->row;
   if (s_entry_count <= 0) {
-    menu_cell_basic_draw(ctx, cell_layer, i18n_get("No Locations", s_view),
-                         i18n_get("Add them in the app", s_view), nullptr);
+    menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get("No Locations", s_view),
+                         pbl_i18n_get("Add them in the app", s_view), nullptr);
     return;
   }
   if (row < 0 || row >= s_entry_count)
@@ -460,7 +460,7 @@ static void prv_window_unload(Window *window) {
 #endif
   window_destroy(view->window);
   s_view = nullptr;
-  i18n_free_all(view);
+  pbl_i18n_free_all(view);
   free(view);
 }
 

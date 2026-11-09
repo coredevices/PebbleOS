@@ -3,7 +3,7 @@
 
 #include "backlight_state.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/light.h>
 
 #include <applib/app.h>
@@ -24,10 +24,10 @@ static const ActionToggleImpl s_backlight_state_action_toggle_impl = {
   .window_name = "Backlight Toggle",
   .prompt_icon = RESOURCE_ID_BACKLIGHT,
   .result_icon = RESOURCE_ID_BACKLIGHT,
-  .prompt_enable_message = i18n_noop("Turn On Backlight?"),
-  .prompt_disable_message = i18n_noop("Turn Off Backlight?"),
-  .result_enable_message = i18n_noop("Backlight On"),
-  .result_disable_message = i18n_noop("Backlight Off"),
+  .prompt_enable_message = pbl_i18n_noop("Turn On Backlight?"),
+  .prompt_disable_message = pbl_i18n_noop("Turn Off Backlight?"),
+  .result_enable_message = pbl_i18n_noop("Backlight On"),
+  .result_disable_message = pbl_i18n_noop("Backlight Off"),
   .callbacks = {
     .get_state = prv_get_state,
     .set_state = prv_set_state,
@@ -51,7 +51,7 @@ const PebbleProcessMd *backlight_state_toggle_get_app_info(void) {
           .visibility = ProcessVisibilityQuickLaunch,
         },
     /// The Quick Launch action that toggles the backlight.
-    .name = i18n_noop("Toggle Backlight"),
+    .name = pbl_i18n_noop("Toggle Backlight"),
   };
   return &s_app_info.common;
 }

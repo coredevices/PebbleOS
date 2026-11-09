@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/pp/session.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <kernel/system_message.h>
 
@@ -25,7 +25,7 @@ typedef struct PBL_PACKED SysMsgLanguagePackPayload {
   uint8_t slot;
   // Expected metadata, zero for packs without a translation and for English
   uint16_t version;
-  char locale[ISO_LOCALE_LENGTH];
+  char locale[PBL_I18N_LOCALE_LEN];
 } SysMsgLanguagePackPayload;
 
 typedef struct PBL_PACKED SysMsgLanguagePackResultPayload {

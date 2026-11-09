@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/util/math.h>
 
@@ -112,7 +112,7 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   const GRect text_box =
       GRect(text_start - (PBL_DISPLAY_WIDTH - bounds.size.w), text_top, PBL_DISPLAY_WIDTH, line_h);
   graphics_context_set_text_color(ctx, GColorBlack);
-  graphics_draw_text(ctx, i18n_get("Listening...", &s_banner), fonts_get_system_font(FONT_KEY),
+  graphics_draw_text(ctx, pbl_i18n_get("Listening...", &s_banner), fonts_get_system_font(FONT_KEY),
                      text_box, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   const GRect icon_box = GRect(0, BORDER, icon_origin.x + ICON_SIZE + gap, bounds.size.h);
   graphics_fill_rect(ctx, &icon_box);
@@ -135,7 +135,7 @@ static void prv_release(MicBanner *banner) {
   window_stack_remove(&banner->window, false /* animated */);
   gdraw_command_image_destroy(banner->icon);
   banner->icon = nullptr;
-  i18n_free_all(banner);
+  pbl_i18n_free_all(banner);
 }
 
 // Obstruction

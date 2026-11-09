@@ -10,12 +10,12 @@
 #include "summary.h"
 #include "utils.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -141,7 +141,7 @@ static void prv_show_workout_detected_dialog(WorkoutAppData *data) {
                                            prv_detected_workout_click_config_provider);
   workout_dialog_set_click_config_context(workout_dialog, data);
 
-  i18n_free_all(workout_dialog);
+  pbl_i18n_free_all(workout_dialog);
 
   app_workout_dialog_push(workout_dialog);
 }
@@ -164,10 +164,10 @@ static void prv_show_workout_ended_dialog(WorkoutAppData *data) {
   dialog_set_destroy_on_pop(dialog, false);
   dialog_set_timeout(dialog, preferred_result_display_duration());
 
-  workout_dialog_set_text(workout_dialog, i18n_get("Workout\nEnded", workout_dialog));
+  workout_dialog_set_text(workout_dialog, pbl_i18n_get("Workout\nEnded", workout_dialog));
   workout_dialog_set_action_bar_hidden(workout_dialog, true);
 
-  i18n_free_all(workout_dialog);
+  pbl_i18n_free_all(workout_dialog);
 
   app_workout_dialog_push(workout_dialog);
 }
@@ -189,7 +189,7 @@ void workout_push_summary_window(void) {
 static void prv_init(void) {
   if (!activity_is_initialized()) {
     /// Workouts waiting for time sync
-    static const char *msg = i18n_noop(
+    static const char *msg = pbl_i18n_noop(
         "Workout requires the time to be synced."
         " Please connect your phone.");
     health_tracking_ui_show_message(RESOURCE_ID_ALARM_CLOCK_TINY, msg, true);
@@ -198,7 +198,8 @@ static void prv_init(void) {
 
   if (!activity_prefs_tracking_is_enabled()) {
     /// Health disabled text
-    static const char *msg = i18n_noop("Enable Pebble Health in the mobile app to track workouts");
+    static const char *msg =
+        pbl_i18n_noop("Enable Pebble Health in the mobile app to track workouts");
     health_tracking_ui_show_message(RESOURCE_ID_HEART_TINY, msg, true);
     return;
   }
@@ -206,7 +207,7 @@ static void prv_init(void) {
   if (activity_is_hrm_present() &&
       activity_prefs_get_workout_app_opened_version() != CURRENT_WORKOUT_APP_VERSION) {
     /// Workout app first use text
-    static const char *msg = i18n_noop(
+    static const char *msg = pbl_i18n_noop(
         "Wear your watch snug and 2 fingers' width above "
         "your wrist bone for best results.");
     health_tracking_ui_show_message(RESOURCE_ID_WORKOUT_APP_HR_PULSE_TINY, msg, true);
@@ -265,7 +266,7 @@ const PebbleProcessMd *workout_app_get_info(void) {
               {0xfe, 0xf8, 0x2c, 0x82, 0x71, 0x76, 0x4e, 0x22, 0x88, 0xde, 0x35, 0xa3, 0xfc, 0x18,
                0xd4, 0x3f},
         },
-    .name = i18n_noop("Workout"),
+    .name = pbl_i18n_noop("Workout"),
     .icon_resource_id = RESOURCE_ID_ACTIVITY_TINY,
   };
   return (const PebbleProcessMd *)&s_workout_app_info;

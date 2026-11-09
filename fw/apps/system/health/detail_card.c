@@ -3,9 +3,9 @@
 
 #include "detail_card.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
@@ -603,7 +603,7 @@ void health_detail_card_destroy(HealthDetailCard *detail_card) {
 #else
   scroll_layer_deinit(&detail_card->scroll_layer);
 #endif
-  i18n_free_all(detail_card);
+  pbl_i18n_free_all(detail_card);
   app_free(detail_card);
 }
 
@@ -676,7 +676,7 @@ void health_detail_card_set_render_day_zones(HealthDetailZone *zones, int16_t *n
     int pos = 0;
 
     if (i == 0) {
-      pos += snprintf(label_ptr, buffer_size, "%s ", i18n_get("Today", i18n_owner));
+      pos += snprintf(label_ptr, buffer_size, "%s ", pbl_i18n_get("Today", i18n_owner));
     } else {
       pos += pbl_strftime_r(label_ptr, buffer_size, "%a ", &time_tm);
     }

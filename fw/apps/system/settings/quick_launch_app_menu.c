@@ -10,7 +10,7 @@
 #include "quick_launch.h"
 #include "quick_launch_setup_menu.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>
@@ -34,9 +34,9 @@ typedef struct {
 
 static const char *s_category_titles[] = {
   /// Title of the Quick Launch menu listing the available actions.
-  [QuickLaunchMenuCategoryActions] = i18n_noop("Actions"),
+  [QuickLaunchMenuCategoryActions] = pbl_i18n_noop("Actions"),
   /// Title of the Quick Launch menu listing the installed apps.
-  [QuickLaunchMenuCategoryApps] = i18n_noop("Apps"),
+  [QuickLaunchMenuCategoryApps] = pbl_i18n_noop("Apps"),
 };
 
 //! Row 0 when nothing is bound, the matching entry when it is in this category, and no
@@ -108,7 +108,7 @@ static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Laye
   const char *text;
   if (row == 0) {
     /// Shown in Quick Launch Settings when no action or app is bound to the button.
-    text = i18n_get("Unassigned", data);
+    text = pbl_i18n_get("Unassigned", data);
   } else {
     AppMenuNode *node =
         app_menu_data_source_get_node_at_index(&data->data_source, row - NUM_CUSTOM_CELLS);
@@ -153,7 +153,7 @@ static void prv_menu_unload(OptionMenu *option_menu, void *context) {
 
   option_menu_destroy(option_menu);
   app_menu_data_source_deinit(&data->data_source);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -182,7 +182,7 @@ void quick_launch_app_menu_window_push(ButtonId button, bool is_tap,
 
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   const OptionMenuConfig config = {
-    .title = i18n_get(s_category_titles[category], data),
+    .title = pbl_i18n_get(s_category_titles[category], data),
     .choice = prv_choice(install_id, app_index),
     .status_colors =
         {

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/services/vibes/vibe_intensity.h>
@@ -35,15 +35,15 @@ const char *vibe_intensity_get_string_for_intensity(VibeIntensity intensity) {
   switch (intensity) {
     case VibeIntensityLow: {
       /// Standard vibration pattern option that has a low intensity
-      return i18n_noop("Standard - Low");
+      return pbl_i18n_noop("Standard - Low");
     }
     case VibeIntensityMedium: {
       /// Standard vibration pattern option that has a medium intensity
-      return i18n_noop("Standard - Medium");
+      return pbl_i18n_noop("Standard - Medium");
     }
     case VibeIntensityHigh: {
       /// Standard vibration pattern option that has a high intensity
-      return i18n_noop("Standard - High");
+      return pbl_i18n_noop("Standard - High");
     }
     default: {
       return nullptr;

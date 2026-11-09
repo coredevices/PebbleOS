@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/vibes/vibe_score_info.h>
 #include <pbl/util/size.h>
 

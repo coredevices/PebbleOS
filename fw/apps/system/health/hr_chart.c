@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
@@ -108,11 +108,12 @@ static size_t prv_cluster_bucket(const HealthHrChartData *data, int bucket,
 }
 
 static void prv_format_hour(char *buffer, size_t size, int hour, bool show_am_pm) {
-  const char *format =
-      clock_is_24h_style() ? i18n_noop("%k") : (show_am_pm ? i18n_noop("%l%p") : i18n_noop("%l"));
+  const char *format = clock_is_24h_style()
+                           ? pbl_i18n_noop("%k")
+                           : (show_am_pm ? pbl_i18n_noop("%l%p") : pbl_i18n_noop("%l"));
   const struct pbl_tm time_tm = {.tm_hour = hour};
-  pbl_strftime_r(buffer, size, i18n_get(format, buffer), &time_tm);
-  i18n_free(format, buffer);
+  pbl_strftime_r(buffer, size, pbl_i18n_get(format, buffer), &time_tm);
+  pbl_i18n_free(format, buffer);
   // %k and %l pad single digits with a space
   const char *start = string_strip_leading_whitespace(buffer);
   memmove(buffer, start, strlen(start) + 1);

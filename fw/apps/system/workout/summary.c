@@ -15,7 +15,7 @@
 #ifdef CONFIG_TOUCH
 #include <applib/touch_service.h>
 #endif
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/testing.h>
 
 #include <resource/resource_ids.auto.h>
@@ -58,8 +58,8 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, const char *na
                                      ActivitySessionType activity_type) {
   const int w = layer->bounds.size.w;
   const int footer_y = workout_picker_footer_y(layer->bounds.size);
-  workout_draw_picker_heading(ctx, w, WORKOUT_PICKER_HEADER_Y, i18n_get("WORKOUT", layer));
-  workout_draw_picker_name(ctx, w, footer_y, i18n_get(name, layer));
+  workout_draw_picker_heading(ctx, w, WORKOUT_PICKER_HEADER_Y, pbl_i18n_get("WORKOUT", layer));
+  workout_draw_picker_name(ctx, w, footer_y, pbl_i18n_get(name, layer));
   const ActivitySessionType types[] = {
     ActivitySessionType_Run, ActivitySessionType_Walk, ActivitySessionType_Open
   };
@@ -72,7 +72,7 @@ static void prv_render_activity_type(GContext *ctx, Layer *layer, const char *na
     graphics_draw_circle(ctx, center, 4);
   }
   workout_draw_select_indicator(ctx, layer->bounds.size);
-  i18n_free_all(layer);
+  pbl_i18n_free_all(layer);
 }
 
 static void prv_base_layer_update_proc(struct Layer *layer, GContext *ctx) {
@@ -274,7 +274,7 @@ static void prv_window_unload_handler(Window *window) {
     layer_deinit(&summary_window->icon_layer);
     layer_deinit(&summary_window->base_layer);
     window_deinit(&summary_window->window);
-    i18n_free_all(summary_window);
+    pbl_i18n_free_all(summary_window);
     app_free(summary_window);
   }
 }

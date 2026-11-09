@@ -8,7 +8,7 @@
 
 #include "globe_view.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 // GLOBE_* resource ids come from the real resource_ids.auto.h (via
 // pebble_compat.h); the stored-app pinned header is not used in the system app.
 
@@ -2165,11 +2165,11 @@ static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_s
     return;
 
   SavedLocationEntry *entry = selected_saved_entry(view);
-  const char *label = i18n_get("Saved Location", view);
+  const char *label = pbl_i18n_get("Saved Location", view);
   if (entry && entry->label[0]) {
     label = entry->label;
   } else if (entry && entry->is_current_location) {
-    label = i18n_get("Current Location", view);
+    label = pbl_i18n_get("Current Location", view);
   }
 
 #if PBL_ROUND
@@ -3099,14 +3099,14 @@ static void draw_intro_title(GContext *ctx, GlobeView *view, GRect bounds, int g
   const int header_height = GLOBE_SMALL_RECT ? 24 : 38;
   graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   graphics_draw_text(
-      ctx, i18n_get("CITY SELECT", view),
+      ctx, pbl_i18n_get("CITY SELECT", view),
       fonts_get_system_font(GLOBE_SMALL_RECT ? FONT_KEY_GOTHIC_18_BOLD : FONT_KEY_GOTHIC_28_BOLD),
       GRect(0, -2, bounds.size.w, header_height + 2), GTextOverflowModeTrailingEllipsis,
       GTextAlignmentCenter, nullptr);
   graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
   graphics_fill_rect(ctx, GRect(0, header_height - 2, bounds.size.w, 2), 0, GCornerNone);
 #else
-  const char *title = i18n_get("CITY SELECT", view);
+  const char *title = pbl_i18n_get("CITY SELECT", view);
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
   int planet_center_y = globe_y + frame_size.h / 2 + GLOBE_PLANET_CENTER_Y_OFFSET;
   int planet_top = planet_center_y - GLOBE_RENDER_BASE_DIAMETER / 2;
@@ -3167,7 +3167,7 @@ static void draw_saved_locations_pin(GContext *ctx, GPoint origin, GColor color,
 static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bounds,
                                        bool selected) {
 #if !PBL_ROUND
-  const char *label = i18n_get("SAVED LOCATIONS", view);
+  const char *label = pbl_i18n_get("SAVED LOCATIONS", view);
   const int side_inset = 10;
   const int bar_h = GLOBE_SMALL_RECT ? 24 : GLOBE_SAVED_LABEL_HEIGHT;
   int y = bounds.size.h - bar_h;
@@ -3199,7 +3199,7 @@ static void draw_saved_locations_label(GContext *ctx, GlobeView *view, GRect bou
       GLOBE_SMALL_RECT ? GTextAlignmentLeft : GTextAlignmentCenter, nullptr);
 #else
   // Uppercase to match the rect city-select redesign's footer treatment.
-  const char *label = i18n_get("SAVED LOCATIONS", view);
+  const char *label = pbl_i18n_get("SAVED LOCATIONS", view);
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
   // Constant string + constant font: measure once, not per intro frame (28.6fps while the
   // cradle animates).
@@ -3697,7 +3697,7 @@ static void globe_view_reload_saved_locations(GlobeView *view) {
     };
     snprintf(view->saved_entries[0].label, sizeof(view->saved_entries[0].label), "%s",
              view->current_location_label[0] ? view->current_location_label
-                                             : i18n_get("Current Location", view));
+                                             : pbl_i18n_get("Current Location", view));
   }
 
   int next_index = had_previous_entry ? find_saved_entry_index(view, &previous_entry) : -1;
@@ -3751,7 +3751,7 @@ void globe_view_set_current_location(GlobeView *view, const char *label, int16_t
     strncpy(view->current_location_label, label, sizeof(view->current_location_label) - 1);
     view->current_location_label[sizeof(view->current_location_label) - 1] = '\0';
   } else {
-    strncpy(view->current_location_label, i18n_get("Current Location", view),
+    strncpy(view->current_location_label, pbl_i18n_get("Current Location", view),
             sizeof(view->current_location_label) - 1);
     view->current_location_label[sizeof(view->current_location_label) - 1] = '\0';
   }
@@ -3811,7 +3811,7 @@ void globe_view_destroy(GlobeView *view) {
     view->window = nullptr;
   }
 
-  i18n_free_all(view);
+  pbl_i18n_free_all(view);
   free(view);
 }
 

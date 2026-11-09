@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/layout_node.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/util/size.h>
@@ -97,13 +97,13 @@ static GTextNodeText *prv_create_text_attribute_node_from_config(
 static GTextNodeText *prv_create_text_buffer_node_from_config(
     const LayoutLayer *layout, const LayoutNodeTextBufferConfig *config) {
   GTextNodeText *text_node = nullptr;
-  const char *str = config->use_i18n ? i18n_get(config->str, layout) : config->str;
+  const char *str = config->use_i18n ? pbl_i18n_get(config->str, layout) : config->str;
   if (!IS_EMPTY_STRING(str)) {
     text_node = prv_create_text_node_buffer(str);
     prv_set_text_node_text_parameters_from_config(text_node, layout, &config->text);
   }
   if (config->use_i18n) {
-    i18n_free(config->str, layout);
+    pbl_i18n_free(config->str, layout);
   }
   return text_node;
 }

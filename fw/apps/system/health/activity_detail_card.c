@@ -7,8 +7,8 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/health_util.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 
@@ -33,7 +33,8 @@ static void prv_set_calories(char *buffer, size_t buffer_size, int32_t current_c
     return;
   }
 
-  snprintf(buffer, buffer_size, "%" PRId32 "%s", current_calories, i18n_get("kcal", i18n_owner));
+  snprintf(buffer, buffer_size, "%" PRId32 "%s", current_calories,
+           pbl_i18n_get("kcal", i18n_owner));
 }
 
 static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_distance_meters) {
@@ -43,7 +44,8 @@ static void prv_set_distance(char *buffer, size_t buffer_size, int32_t current_d
   }
 
   const int conversion_factor = health_util_get_distance_factor();
-  const char *units_string = health_util_get_distance_string(i18n_noop("mi"), i18n_noop("km"));
+  const char *units_string =
+      health_util_get_distance_string(pbl_i18n_noop("mi"), pbl_i18n_noop("km"));
 
   char distance_buffer[HEALTH_WHOLE_AND_DECIMAL_LENGTH];
   health_util_format_whole_and_decimal(distance_buffer, HEALTH_WHOLE_AND_DECIMAL_LENGTH,
@@ -56,7 +58,7 @@ static void prv_set_avg(char *buffer, size_t buffer_size, int32_t daily_avg, voi
   int pos = 0;
 
   pos += snprintf(buffer, buffer_size, PBL_IF_ROUND_ELSE("%s\n", "%s"),
-                  i18n_get("30 DAY AVG", i18n_owner));
+                  pbl_i18n_get("30 DAY AVG", i18n_owner));
 
   if (daily_avg > 0) {
     snprintf(buffer + pos, buffer_size - pos, " %" PRId32, daily_avg);
@@ -83,9 +85,9 @@ Window *health_activity_detail_card_create(HealthData *health_data) {
   HealthDetailHeading *heading = &card_data->headings[card_data->num_headings++];
 
   *heading = (HealthDetailHeading){
-    .primary_label = (char *)i18n_get("CALORIES", card_data),
+    .primary_label = (char *)pbl_i18n_get("CALORIES", card_data),
     .primary_value = app_zalloc_check(buffer_len),
-    .secondary_label = (char *)i18n_get("DISTANCE", card_data),
+    .secondary_label = (char *)pbl_i18n_get("DISTANCE", card_data),
     .secondary_value = app_zalloc_check(buffer_len),
     .fill_color = GColorWhite,
     .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
@@ -135,7 +137,7 @@ void health_activity_detail_card_destroy(Window *window) {
   for (int i = 0; i < card_data->num_zones; i++) {
     app_free(card_data->zones[i].label);
   }
-  i18n_free_all(card_data);
+  pbl_i18n_free_all(card_data);
   app_free(card_data);
   health_detail_card_destroy(card);
 }

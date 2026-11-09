@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
@@ -20,7 +21,6 @@
 #include <pbl/services/blob_db/reminder_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/evented_timer.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/light.h>
 #include <pbl/services/notifications/alerts.h>
@@ -724,10 +724,10 @@ static WindowStack *prv_get_window_stack(void) {
 static void prv_push_snooze_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("Snooze");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  const char *msg = i18n_get("Snoozed", dialog);
+  const char *msg = pbl_i18n_get("Snoozed", dialog);
   dialog_set_text(dialog, msg);
   dialog_set_icon(dialog, RESOURCE_ID_REMINDER_SNOOZE);
-  i18n_free(msg, dialog);
+  pbl_i18n_free(msg, dialog);
   dialog_set_text_color(dialog, GColorWhite);
   dialog_set_fullscreen(dialog, true);
   dialog_set_background_color(dialog, GColorBlueMoon);
@@ -757,11 +757,11 @@ static void prv_push_muted_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("Muted");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
 
-  const char *msg = i18n_get("Muted", dialog);
+  const char *msg = pbl_i18n_get("Muted", dialog);
   dialog_set_text(dialog, msg);
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_MUTE_LARGE);
   dialog_set_timeout(dialog, preferred_result_display_duration());
-  i18n_free(msg, dialog);
+  pbl_i18n_free(msg, dialog);
   simple_dialog_push(simple_dialog, prv_get_window_stack());
 }
 
@@ -927,8 +927,8 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
     timeline_actions_add_action_to_root_level(dismiss_action, root_level);
   }
   if (has_snooze_action) {
-    action_menu_level_add_action(root_level, i18n_get("Snooze", root_level), prv_snooze_reminder_cb,
-                                 window_data);
+    action_menu_level_add_action(root_level, pbl_i18n_get("Snooze", root_level),
+                                 prv_snooze_reminder_cb, window_data);
   }
   for (int i = 0; i < item->action_group.num_actions; i++) {
     TimelineItemAction *action = &item->action_group.actions[i];
@@ -945,9 +945,9 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
       display_name = (char *)attribute_get_string(&notif_prefs->attr_list, AttributeIdAppName, "");
     }
 
-    const char *mute_label = i18n_noop("Mute %s");
+    const char *mute_label = pbl_i18n_noop("Mute %s");
     static char mute_label_buf[32];
-    snprintf(mute_label_buf, sizeof(mute_label_buf), i18n_get(mute_label, root_level),
+    snprintf(mute_label_buf, sizeof(mute_label_buf), pbl_i18n_get(mute_label, root_level),
              display_name);
 
     const uint8_t mute_option = ancs_filtering_get_mute_type(notif_prefs);
@@ -963,19 +963,19 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
 
       action_menu_level_add_child(root_level, mute_level, mute_label_buf);
 
-      action_menu_level_add_action(mute_level, i18n_get("Mute 1 Hour", root_level),
+      action_menu_level_add_action(mute_level, pbl_i18n_get("Mute 1 Hour", root_level),
                                    prv_mute_notification_1_hour, window_data);
 
-      action_menu_level_add_action(mute_level, i18n_get("Mute Today", root_level),
+      action_menu_level_add_action(mute_level, pbl_i18n_get("Mute Today", root_level),
                                    prv_mute_notification_today, window_data);
 
-      action_menu_level_add_action(mute_level, i18n_get("Mute Always", root_level),
+      action_menu_level_add_action(mute_level, pbl_i18n_get("Mute Always", root_level),
                                    prv_mute_notification_always, window_data);
 
-      action_menu_level_add_action(mute_level, i18n_get("Mute Weekends", root_level),
+      action_menu_level_add_action(mute_level, pbl_i18n_get("Mute Weekends", root_level),
                                    prv_mute_notification_weekends, window_data);
 
-      action_menu_level_add_action(mute_level, i18n_get("Mute Weekdays", root_level),
+      action_menu_level_add_action(mute_level, pbl_i18n_get("Mute Weekdays", root_level),
                                    prv_mute_notification_weekdays, window_data);
     }
 
@@ -983,14 +983,14 @@ static ActionMenuLevel *prv_create_action_menu_for_item(TimelineItem *item,
   }
 
   if (has_dismiss_all_action) {
-    action_menu_level_add_action(root_level, i18n_get("Dismiss All", root_level),
+    action_menu_level_add_action(root_level, pbl_i18n_get("Dismiss All", root_level),
                                  prv_dismiss_all_action_cb, window_data);
   }
   if (has_quiet_time_action) {
     action_menu_level_add_action(root_level,
                                  do_not_disturb_is_active()
-                                     ? i18n_get("End Quiet Time", root_level)
-                                     : i18n_get("Start Quiet Time", root_level),
+                                     ? pbl_i18n_get("End Quiet Time", root_level)
+                                     : pbl_i18n_get("Start Quiet Time", root_level),
                                  prv_toggle_dnd_from_action_menu, window_data);
   }
 
@@ -1150,7 +1150,7 @@ static void prv_window_unload(Window *window) {
 
   window_deinit(window);
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   s_in_use = false;
   timeline_action_endpoint_send_displayed_item(nullptr);
 }

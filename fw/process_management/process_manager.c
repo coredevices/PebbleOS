@@ -208,10 +208,11 @@ bool process_manager_check_SDK_compatible(const AppInstallId id) {
 
   ExpandableDialog *expandable_dialog = expandable_dialog_create("Incompatible SDK");
   Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
-  const char *error_text = i18n_noop("This app requires a newer version of the Pebble firmware.");
-  dialog_set_text(dialog, i18n_get(error_text, expandable_dialog));
+  const char *error_text =
+      pbl_i18n_noop("This app requires a newer version of the Pebble firmware.");
+  dialog_set_text(dialog, pbl_i18n_get(error_text, expandable_dialog));
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
-  i18n_free(error_text, expandable_dialog);
+  pbl_i18n_free(error_text, expandable_dialog);
 
   if (pebble_task_get_current() == PebbleTask_KernelMain) {
     WindowStack *window_stack = modal_manager_get_window_stack(ModalPriorityAlert);
@@ -353,10 +354,10 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
 
       ExpandableDialog *expandable_dialog = expandable_dialog_create("Unsupported App");
       Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
-      const char *error_text = i18n_noop("This app uses RockyJS which is no longer supported.");
-      dialog_set_text(dialog, i18n_get(error_text, expandable_dialog));
+      const char *error_text = pbl_i18n_noop("This app uses RockyJS which is no longer supported.");
+      dialog_set_text(dialog, pbl_i18n_get(error_text, expandable_dialog));
       dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
-      i18n_free(error_text, expandable_dialog);
+      pbl_i18n_free(error_text, expandable_dialog);
 
       WindowStack *window_stack = modal_manager_get_window_stack(ModalPriorityAlert);
       expandable_dialog_push(expandable_dialog, window_stack);

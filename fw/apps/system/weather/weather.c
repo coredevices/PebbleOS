@@ -27,8 +27,8 @@
 #include "weather_report.h"
 #include "weather_types.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h> // UUID_WEATHER_DATA_SOURCE
 #include <pbl/util/units.h>
 
@@ -100,21 +100,21 @@ static void prv_sync_glance_strings(WeatherAppData *data);
 static const char *prv_phrase_for_type(uint8_t type) {
   switch ((WeatherType)type) {
     case WeatherType_Sun:
-      return i18n_noop("Sunny");
+      return pbl_i18n_noop("Sunny");
     case WeatherType_PartlyCloudy:
-      return i18n_noop("Partly Cloudy");
+      return pbl_i18n_noop("Partly Cloudy");
     case WeatherType_CloudyDay:
-      return i18n_noop("Cloudy");
+      return pbl_i18n_noop("Cloudy");
     case WeatherType_LightRain:
-      return i18n_noop("Light Rain");
+      return pbl_i18n_noop("Light Rain");
     case WeatherType_HeavyRain:
-      return i18n_noop("Rain");
+      return pbl_i18n_noop("Rain");
     case WeatherType_LightSnow:
-      return i18n_noop("Light Snow");
+      return pbl_i18n_noop("Light Snow");
     case WeatherType_HeavySnow:
-      return i18n_noop("Snow");
+      return pbl_i18n_noop("Snow");
     case WeatherType_RainAndSnow:
-      return i18n_noop("Rain & Snow");
+      return pbl_i18n_noop("Rain & Snow");
     case WeatherType_Generic:
     case WeatherType_Unknown:
     default:
@@ -125,7 +125,7 @@ static const char *prv_phrase_for_type(uint8_t type) {
 static void prv_fill_phrase(uint8_t type, char *buf, size_t bufsize) {
   const char *phrase = prv_phrase_for_type(type);
   if (phrase) {
-    i18n_get_with_buffer(phrase, buf, bufsize);
+    pbl_i18n_get_with_buffer(phrase, buf, bufsize);
   } else {
     buf[0] = '\0';
   }
@@ -138,18 +138,19 @@ static void prv_day_label(int day_offset, char *buf, size_t bufsize) {
     return;
   }
   if (day_offset == 0) {
-    i18n_get_with_buffer(i18n_noop("Today"), buf, bufsize);
+    pbl_i18n_get_with_buffer(pbl_i18n_noop("Today"), buf, bufsize);
   } else if (day_offset == 1) {
-    i18n_get_with_buffer(i18n_noop("Tomorrow"), buf, bufsize);
+    pbl_i18n_get_with_buffer(pbl_i18n_noop("Tomorrow"), buf, bufsize);
   } else {
     static const char *const kWday[7] = {
-      i18n_noop("Sunday"),   i18n_noop("Monday"), i18n_noop("Tuesday"),  i18n_noop("Wednesday"),
-      i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday"),
+      pbl_i18n_noop("Sunday"),    pbl_i18n_noop("Monday"),   pbl_i18n_noop("Tuesday"),
+      pbl_i18n_noop("Wednesday"), pbl_i18n_noop("Thursday"), pbl_i18n_noop("Friday"),
+      pbl_i18n_noop("Saturday"),
     };
     time_t t = pbl_realtime() + (time_t)day_offset * PBL_SEC_PER_DAY;
     struct pbl_tm *lt = localtime(&t); // compat maps to pbl_override_localtime
     int w = (lt && lt->tm_wday >= 0 && lt->tm_wday < 7) ? lt->tm_wday : 0;
-    i18n_get_with_buffer(kWday[w], buf, bufsize);
+    pbl_i18n_get_with_buffer(kWday[w], buf, bufsize);
   }
 }
 
@@ -209,7 +210,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   // record's own phrase is phone text and only used when the type has no name.
   const char *phrase0 = prv_phrase_for_type(ds->current_weather_type);
   if (phrase0) {
-    i18n_get_with_buffer(phrase0, data->phrase_buf0, sizeof(data->phrase_buf0));
+    pbl_i18n_get_with_buffer(phrase0, data->phrase_buf0, sizeof(data->phrase_buf0));
   } else {
     snprintf(data->phrase_buf0, sizeof(data->phrase_buf0), "%s", ds->short_phrase);
   }
@@ -260,7 +261,8 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
       // Leave the record's own phrase in place when the type has no name.
       const char *hourly_phrase = prv_phrase_for_type(ds->hourly_type[hour]);
       if (hourly_phrase) {
-        i18n_get_with_buffer(hourly_phrase, data->current_now_buf, sizeof(data->current_now_buf));
+        pbl_i18n_get_with_buffer(hourly_phrase, data->current_now_buf,
+                                 sizeof(data->current_now_buf));
         data->days[0].current_phrase_now = data->current_now_buf;
       }
     }
@@ -379,7 +381,7 @@ static void prv_show_no_data_warning(WeatherAppData *data) {
   }
   app_window_stack_pop_all(false /* animated */);
   /// Shown when there are no forecasts available to show the user
-  const char *warning_text = i18n_get(
+  const char *warning_text = pbl_i18n_get(
       "No location information available. To see weather, add "
       "locations in your Pebble mobile app.",
       data);
@@ -768,7 +770,7 @@ static void prv_deinit(void) {
     if (s_data->dark_mode_event_info.handler) {
       event_service_client_unsubscribe(&s_data->dark_mode_event_info);
     }
-    i18n_free_all(s_data);
+    pbl_i18n_free_all(s_data);
     clock_face_set_wrap_callback(nullptr, nullptr);
     if (s_data->globe_view) {
       globe_view_destroy(s_data->globe_view);
@@ -791,7 +793,7 @@ const PebbleProcessMd *weather_app_get_info(void) {
           .main_func = prv_main,
           .uuid = UUID_WEATHER_DATA_SOURCE,
         },
-    .name = i18n_noop("Weather"),
+    .name = pbl_i18n_noop("Weather"),
     .icon_resource_id = RESOURCE_ID_GENERIC_WEATHER_TINY,
   };
   return weather_ds_supported() ? (const PebbleProcessMd *)&s_weather_app_info : nullptr;

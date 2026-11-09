@@ -3,8 +3,8 @@
 
 #include "graph_card.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
@@ -306,13 +306,13 @@ size_t health_graph_format_weekday_prefix(HealthGraphCard *graph_card, char *buf
          PBL_SEC_PER_DAY) +
         graph_card->data_timestamp;
     const int pos = clock_get_month_named_abbrev_date(buffer, buffer_size, selection_time);
-    strncat(buffer, i18n_get(": ", graph_card), buffer_size - pos - 1);
+    strncat(buffer, pbl_i18n_get(": ", graph_card), buffer_size - pos - 1);
     return strlen(buffer);
   } else {
     struct pbl_tm local_tm = (struct pbl_tm){
       .tm_wday = positive_modulo(graph_card->selection, PBL_DAY_PER_WEEK),
     };
-    return pbl_strftime_r(buffer, buffer_size, i18n_get("%a: ", graph_card), &local_tm);
+    return pbl_strftime_r(buffer, buffer_size, pbl_i18n_get("%a: ", graph_card), &local_tm);
   }
 }
 
@@ -395,7 +395,7 @@ HealthGraphCard *health_graph_card_create(const HealthGraphCardConfig *config) {
     graph_card->legend_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
     graph_card->current_day = prv_get_weekday(graph_card->data_timestamp);
     // The day characters in standard tm weekday order
-    graph_card->day_chars = i18n_get("SMTWTFS", graph_card);
+    graph_card->day_chars = pbl_i18n_get("SMTWTFS", graph_card);
     graph_card->selection = HealthGraphIndex_Average;
   }
   return graph_card;
@@ -406,7 +406,7 @@ void health_graph_card_destroy(HealthGraphCard *graph_card) {
     return;
   }
   layer_deinit(&graph_card->layer);
-  i18n_free_all(graph_card);
+  pbl_i18n_free_all(graph_card);
   app_free(graph_card);
 }
 
@@ -415,10 +415,10 @@ void health_graph_card_configure(HealthGraphCard *graph_card, const HealthGraphC
     return;
   }
   if (config->title) {
-    graph_card->title = i18n_get(config->title, graph_card);
+    graph_card->title = pbl_i18n_get(config->title, graph_card);
   }
   if (config->info_avg) {
-    graph_card->info_avg = i18n_get(config->info_avg, graph_card);
+    graph_card->info_avg = pbl_i18n_get(config->info_avg, graph_card);
   }
   if (config->graph_data) {
     graph_card->stats = config->graph_data->stats;

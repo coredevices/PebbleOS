@@ -5,40 +5,41 @@
 
 #include "workout.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/workout_service.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h>
 
 #include <applib/app_malloc.h>
 #include <resource/timeline_resource_ids.auto.h>
 
 static TimelineItem *prv_create_abandoned_workout_notification(void) {
-  const char *msg = i18n_noop(
+  const char *msg = pbl_i18n_noop(
       "Still sweating? Your workout is active and will be ended soon. "
       "Open the workout to keep it going.");
 
   AttributeList notif_attr_list = {};
   attribute_list_add_uint32(&notif_attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_ACTIVITY);
-  attribute_list_add_cstring(&notif_attr_list, AttributeIdBody, i18n_get(msg, &notif_attr_list));
+  attribute_list_add_cstring(&notif_attr_list, AttributeIdBody,
+                             pbl_i18n_get(msg, &notif_attr_list));
   attribute_list_add_uint8(&notif_attr_list, AttributeIdBgColor,
                            PBL_IF_COLOR_ELSE(GColorYellowARGB8, GColorDarkGrayARGB8));
 
   AttributeList dismiss_attr_list = {};
   attribute_list_add_cstring(&dismiss_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &notif_attr_list));
+                             pbl_i18n_get("Dismiss", &notif_attr_list));
 
   AttributeList end_workout_attr_list = {};
   attribute_list_add_cstring(&end_workout_attr_list, AttributeIdTitle,
-                             i18n_get("End Workout", &notif_attr_list));
+                             pbl_i18n_get("End Workout", &notif_attr_list));
   attribute_list_add_uint32(&end_workout_attr_list, AttributeIdLaunchCode,
                             WorkoutLaunchArg_EndWorkout);
 
   AttributeList open_workout_attr_list = {};
   attribute_list_add_cstring(&open_workout_attr_list, AttributeIdTitle,
-                             i18n_get("Open Workout", &notif_attr_list));
+                             pbl_i18n_get("Open Workout", &notif_attr_list));
 
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
@@ -69,7 +70,7 @@ static TimelineItem *prv_create_abandoned_workout_notification(void) {
       timeline_item_create_with_attributes(now_utc, 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &notif_attr_list, &action_group);
 
-  i18n_free_all(&notif_attr_list);
+  pbl_i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
   attribute_list_destroy_list(&end_workout_attr_list);
   attribute_list_destroy_list(&open_workout_attr_list);
@@ -91,13 +92,13 @@ const char *workout_utils_get_name_for_activity(ActivitySessionType type) {
   switch (type) {
     case ActivitySessionType_Open:
       /// Workout Label
-      return i18n_noop("Workout");
+      return pbl_i18n_noop("Workout");
     case ActivitySessionType_Walk:
       /// Walk Label
-      return i18n_noop("Walk");
+      return pbl_i18n_noop("Walk");
     case ActivitySessionType_Run:
       /// Run Label
-      return i18n_noop("Run");
+      return pbl_i18n_noop("Run");
     case ActivitySessionType_Sleep:
     case ActivitySessionType_RestfulSleep:
     case ActivitySessionType_Nap:
@@ -115,13 +116,13 @@ const char *workout_utils_get_detection_text_for_activity(ActivitySessionType ty
   switch (type) {
     case ActivitySessionType_Open:
       /// Workout automatically detected dialog text
-      return i18n_noop("Workout\nDetected");
+      return pbl_i18n_noop("Workout\nDetected");
     case ActivitySessionType_Walk:
       /// Walk automatically detected dialog text
-      return i18n_noop("Walk\nDetected");
+      return pbl_i18n_noop("Walk\nDetected");
     case ActivitySessionType_Run:
       /// Run automatically detected dialog text
-      return i18n_noop("Run\nDetected");
+      return pbl_i18n_noop("Run\nDetected");
     case ActivitySessionType_Sleep:
     case ActivitySessionType_RestfulSleep:
     case ActivitySessionType_Nap:

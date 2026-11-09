@@ -25,44 +25,45 @@
  *
  */
 
+#include "mo.h"
+
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
-#include <pbl/services/i18n/mo.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 
-PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(i18n, CONFIG_I18N_LOG_LEVEL);
 
 //////////////////////////////////////////////////////
 // See mo.h for a description of the MO file format //
 //////////////////////////////////////////////////////
 
-typedef struct {
+struct pbl_i18n__lookup {
   uint32_t hash;
   const char *string;
   const void *owner;
-} StringLookupInfo;
+};
 
-typedef struct {
+struct pbl_i18n__string {
   ListNode node;
   const void *owner;
   uint32_t original_hash;
   // Stored right after translated_string
   char *original_string;
   char translated_string[];
-} I18nString;
+};
 
-static struct DomainBinding {
+static struct pbl_i18n__domain {
   struct pbl_i18n_catalog catalog;
-  MoHandle mohandle;
-  I18nString *strings_list;
+  struct pbl_i18n__mo_handle mohandle;
+  struct pbl_i18n__string *strings_list;
   struct pbl_i18n_catalog_info info;
 } s_system_domain;
 
@@ -111,9 +112,9 @@ static uint32_t prv_next_index(uint32_t curidx, uint32_t hashsize, uint32_t step
 //! @param[out] rstring Can be NULL. If non-null this buffer will be populated with the translated
 //!                     string. This buffer will be null-terminated.
 //! @param rstring_len The length of the rstring buffer.
-static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen, char *rstring,
+static void prv_lookup(const char *msgid, struct pbl_i18n__domain *db, size_t *rlen, char *rstring,
                        size_t rstring_len) {
-  MoHandle *mohandle = &db->mohandle;
+  struct pbl_i18n__mo_handle *mohandle = &db->mohandle;
   *rlen = 0;
 
   if (mohandle->mo.hdr.mo_hsize <= 2 || mohandle->mo.mo_htable == nullptr) {
@@ -130,9 +131,10 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
       /* unexpected miss */
       return;
     }
-    MoEntry oentry;
-    if (!prv_read(&db->catalog, mohandle->mo.hdr.mo_otable + sizeof(MoEntry) * strno, &oentry,
-                  sizeof(MoEntry))) {
+    struct pbl_i18n__mo_entry oentry;
+    if (!prv_read(&db->catalog,
+                  mohandle->mo.hdr.mo_otable + sizeof(struct pbl_i18n__mo_entry) * strno, &oentry,
+                  sizeof(struct pbl_i18n__mo_entry))) {
       return;
     }
     if (len == oentry.len) {
@@ -145,9 +147,10 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
 
       if (!strcmp(msgid, key)) {
         // Contents of original string matches, get the translated string
-        MoEntry tentry;
-        if (!prv_read(&db->catalog, mohandle->mo.hdr.mo_ttable + sizeof(MoEntry) * strno, &tentry,
-                      sizeof(MoEntry))) {
+        struct pbl_i18n__mo_entry tentry;
+        if (!prv_read(&db->catalog,
+                      mohandle->mo.hdr.mo_ttable + sizeof(struct pbl_i18n__mo_entry) * strno,
+                      &tentry, sizeof(struct pbl_i18n__mo_entry))) {
           return;
         }
         if (rstring) { // If we want the translated string, copy it out.
@@ -197,13 +200,13 @@ static bool prv_get_property(const char *header, const char *name, char *buffer,
 
 static bool prv_parse_metadata(const char *header, struct pbl_i18n_catalog_info *info) {
   // Isolate the language substring
-  if (!prv_get_property(header, "Language: ", info->locale, ISO_LOCALE_LENGTH)) {
+  if (!prv_get_property(header, "Language: ", info->locale, PBL_I18N_LOCALE_LEN)) {
     PBL_LOG_WRN("Could not parse a language from language pack");
     return false;
   }
 
   // Isolate the language name
-  if (!prv_get_property(header, "Name: ", info->name, LOCALE_NAME_LENGTH)) {
+  if (!prv_get_property(header, "Name: ", info->name, PBL_I18N_NAME_LEN)) {
     strcpy(info->name, info->locale);
   }
 
@@ -224,7 +227,7 @@ static bool prv_parse_metadata(const char *header, struct pbl_i18n_catalog_info 
   return true;
 }
 
-static bool prv_get_metadata(struct DomainBinding *db) {
+static bool prv_get_metadata(struct pbl_i18n__domain *db) {
   // malloc a comfortable amount of RAM to save the header in
   char *header = pbl_malloc_check(HEADER_BUFFER_SIZE);
   size_t header_len = 0;
@@ -244,11 +247,11 @@ cleanup:
   return (success);
 }
 
-static void prv_unmapit(struct DomainBinding *db) {
-  MoHandle *mohandle = &db->mohandle;
+static void prv_unmapit(struct pbl_i18n__domain *db) {
+  struct pbl_i18n__mo_handle *mohandle = &db->mohandle;
 
   pbl_free(mohandle->mo.mo_htable);
-  mohandle->mo = (Mo){};
+  mohandle->mo = (struct pbl_i18n__mo){};
   db->info = (struct pbl_i18n_catalog_info){
     .locale = "en_US",
     .name = "English",
@@ -256,14 +259,14 @@ static void prv_unmapit(struct DomainBinding *db) {
   };
 }
 
-static int prv_mapit(struct DomainBinding *db) {
+static int prv_mapit(struct pbl_i18n__domain *db) {
   const size_t size = db->catalog.size;
-  if (size < sizeof(MoHeader)) {
+  if (size < sizeof(struct pbl_i18n__mo_header)) {
     return -EINVAL;
   }
 
-  MoHandle *mohandle = &db->mohandle;
-  if (!prv_read(&db->catalog, 0, &mohandle->mo.hdr, sizeof(MoHeader))) {
+  struct pbl_i18n__mo_handle *mohandle = &db->mohandle;
+  if (!prv_read(&db->catalog, 0, &mohandle->mo.hdr, sizeof(struct pbl_i18n__mo_header))) {
     return -EIO;
   }
   if (mohandle->mo.hdr.mo_magic != MO_MAGIC) {
@@ -318,8 +321,8 @@ static void prv_list_flush(void) {
 }
 
 static bool prv_list_string_filter_callback(ListNode *found_node, void *data) {
-  I18nString *i18n_string = (I18nString *)found_node;
-  StringLookupInfo *lookup_info = data;
+  struct pbl_i18n__string *i18n_string = (struct pbl_i18n__string *)found_node;
+  struct pbl_i18n__lookup *lookup_info = data;
   if (i18n_string->original_hash == lookup_info->hash && lookup_info->owner == i18n_string->owner &&
       strcmp(i18n_string->original_string, lookup_info->string) == 0) {
     return true;
@@ -329,7 +332,7 @@ static bool prv_list_string_filter_callback(ListNode *found_node, void *data) {
 }
 
 static bool prv_list_owner_filter_callback(ListNode *found_node, void *owner) {
-  I18nString *i18n_string = (I18nString *)found_node;
+  struct pbl_i18n__string *i18n_string = (struct pbl_i18n__string *)found_node;
   if (i18n_string->owner == owner) {
     return true;
   } else {
@@ -337,14 +340,15 @@ static bool prv_list_owner_filter_callback(ListNode *found_node, void *owner) {
   }
 }
 
-static I18nString *prv_list_find_string(const char *string, const void *owner) {
-  StringLookupInfo lookup_info = {
+static struct pbl_i18n__string *prv_list_find_string(const char *string, const void *owner) {
+  struct pbl_i18n__lookup lookup_info = {
     .string = string,
     .hash = prv_gettext_hash(string),
     .owner = owner
   };
-  return (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-                                 prv_list_string_filter_callback, (void *)&lookup_info);
+  return (struct pbl_i18n__string *)list_find((ListNode *)s_system_domain.strings_list,
+                                              prv_list_string_filter_callback,
+                                              (void *)&lookup_info);
 }
 
 static const char *prv_list_add_string(const char *original_string, const char *translated_string,
@@ -353,8 +357,8 @@ static const char *prv_list_add_string(const char *original_string, const char *
 
   // Allocate enough space to hold the original and translated strings. The translated string
   // is stored at i18n_string->translated and the original string immediately after that.
-  I18nString *i18n_string =
-      pbl_malloc_check(sizeof(I18nString) + translated_len + 1 + strlen(original_string) + 1);
+  struct pbl_i18n__string *i18n_string = pbl_malloc_check(
+      sizeof(struct pbl_i18n__string) + translated_len + 1 + strlen(original_string) + 1);
 
   list_init(&i18n_string->node);
   i18n_string->owner = owner;
@@ -366,8 +370,9 @@ static const char *prv_list_add_string(const char *original_string, const char *
   i18n_string->original_string = &i18n_string->translated_string[translated_len + 1];
   strcpy(i18n_string->original_string, original_string);
 
-  I18nString **strings_list = &s_system_domain.strings_list;
-  *strings_list = (I18nString *)list_prepend((ListNode *)*strings_list, &i18n_string->node);
+  struct pbl_i18n__string **strings_list = &s_system_domain.strings_list;
+  *strings_list =
+      (struct pbl_i18n__string *)list_prepend((ListNode *)*strings_list, &i18n_string->node);
 
   if (translated_len > 0) {
     return (i18n_string->translated_string);
@@ -376,12 +381,12 @@ static const char *prv_list_add_string(const char *original_string, const char *
   }
 }
 
-static void prv_list_remove_string(I18nString *i18n_string) {
+static void prv_list_remove_string(struct pbl_i18n__string *i18n_string) {
   list_remove(&i18n_string->node, (ListNode **)&s_system_domain.strings_list, nullptr);
   pbl_free(i18n_string);
 }
 
-static bool prv_check_domain(struct DomainBinding *db) {
+static bool prv_check_domain(struct pbl_i18n__domain *db) {
   return db->mohandle.mo.mo_htable != nullptr;
 }
 
@@ -402,20 +407,20 @@ static const char *prv_message_from_msgid(const char *msgid) {
 // i18n API
 
 // NOTE: Currently, we don't do reference counting, so bad things will happen if the caller
-// calls i18n_get() on the same string more than once and assumes that any of those return
-// pointers will still be valid after i18n_free() is called on one of them.
+// calls pbl_i18n_get() on the same string more than once and assumes that any of those return
+// pointers will still be valid after pbl_i18n_free() is called on one of them.
 static const char *prv_get_locked(const char *msgid, const void *owner) {
   PBL_ASSERTN(owner);
   if (msgid == nullptr || msgid[0] == 0) {
     goto fail;
   }
 
-  struct DomainBinding *db = &s_system_domain;
+  struct pbl_i18n__domain *db = &s_system_domain;
   if (!prv_check_domain(db)) {
     goto fail;
   }
   // See if this original has been cached.
-  I18nString *i18n_string = prv_list_find_string(msgid, owner);
+  struct pbl_i18n__string *i18n_string = prv_list_find_string(msgid, owner);
   if (i18n_string) {
     if (i18n_string->translated_string[0]) {
       return i18n_string->translated_string;
@@ -454,7 +459,7 @@ static void prv_get_with_buffer_locked(const char *msgid, char *buffer, size_t l
     goto fail;
   }
 
-  struct DomainBinding *db = &s_system_domain;
+  struct pbl_i18n__domain *db = &s_system_domain;
   if (!prv_check_domain(db)) {
     goto fail;
   }
@@ -481,7 +486,7 @@ static size_t prv_get_length_locked(const char *msgid) {
     return 0;
   }
 
-  struct DomainBinding *db = &s_system_domain;
+  struct pbl_i18n__domain *db = &s_system_domain;
   if (!prv_check_domain(db)) {
     goto fail;
   }
@@ -500,17 +505,17 @@ fail:
 
 static void prv_free_locked(const char *original, const void *owner) {
   PBL_ASSERTN(owner);
-  I18nString *i18n_string = prv_list_find_string(original, owner);
+  struct pbl_i18n__string *i18n_string = prv_list_find_string(original, owner);
   if (i18n_string) {
     prv_list_remove_string(i18n_string);
   }
 }
 
 static void prv_free_all_locked(const void *owner) {
-  I18nString *cur_string = (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
-                                                   prv_list_owner_filter_callback, (void *)owner);
+  struct pbl_i18n__string *cur_string = (struct pbl_i18n__string *)list_find(
+      (ListNode *)s_system_domain.strings_list, prv_list_owner_filter_callback, (void *)owner);
   while (cur_string) {
-    I18nString *next_string = (I18nString *)list_find_next(
+    struct pbl_i18n__string *next_string = (struct pbl_i18n__string *)list_find_next(
         &cur_string->node, prv_list_owner_filter_callback, false, (void *)owner);
     prv_list_remove_string(cur_string);
     cur_string = next_string;
@@ -518,7 +523,7 @@ static void prv_free_all_locked(const void *owner) {
 }
 
 static int prv_set_catalog_locked(const struct pbl_i18n_catalog *catalog) {
-  struct DomainBinding *db = &s_system_domain;
+  struct pbl_i18n__domain *db = &s_system_domain;
 
   prv_list_flush();
   prv_unmapit(db);
@@ -534,33 +539,33 @@ static int prv_set_catalog_locked(const struct pbl_i18n_catalog *catalog) {
   return ret;
 }
 
-const char *i18n_get(const char *msgid, const void *owner) {
+const char *pbl_i18n_get(const char *msgid, const void *owner) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   const char *string = prv_get_locked(msgid, owner);
   pbl_mutex_unlock(&s_mutex);
   return string;
 }
 
-void i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
+void pbl_i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_get_with_buffer_locked(msgid, buffer, length);
   pbl_mutex_unlock(&s_mutex);
 }
 
-size_t i18n_get_length(const char *msgid) {
+size_t pbl_i18n_get_length(const char *msgid) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   const size_t length = prv_get_length_locked(msgid);
   pbl_mutex_unlock(&s_mutex);
   return length;
 }
 
-void i18n_free(const char *original, const void *owner) {
+void pbl_i18n_free(const char *original, const void *owner) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_free_locked(original, owner);
   pbl_mutex_unlock(&s_mutex);
 }
 
-void i18n_free_all(const void *owner) {
+void pbl_i18n_free_all(const void *owner) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   prv_free_all_locked(owner);
   pbl_mutex_unlock(&s_mutex);
@@ -576,9 +581,9 @@ int pbl_i18n_set_catalog(const struct pbl_i18n_catalog *catalog) {
 int pbl_i18n_catalog_get_info(const struct pbl_i18n_catalog *catalog,
                               struct pbl_i18n_catalog_info *info) {
   // Only the header entry is needed, which msgfmt sorts first; skip the htable.
-  MoHeader hdr;
-  MoEntry original;
-  MoEntry translation;
+  struct pbl_i18n__mo_header hdr;
+  struct pbl_i18n__mo_entry original;
+  struct pbl_i18n__mo_entry translation;
   if (!prv_read(catalog, 0, &hdr, sizeof(hdr))) {
     return -EIO;
   }
@@ -607,14 +612,14 @@ int pbl_i18n_catalog_get_info(const struct pbl_i18n_catalog *catalog,
   return ret;
 }
 
-char *i18n_get_locale(void) {
+char *pbl_i18n_get_locale(void) {
   return s_system_domain.info.locale;
 }
 
-uint16_t i18n_get_version(void) {
+uint16_t pbl_i18n_get_version(void) {
   return s_system_domain.info.version;
 }
 
-char *i18n_get_lang_name(void) {
+char *pbl_i18n_get_lang_name(void) {
   return s_system_domain.info.name;
 }

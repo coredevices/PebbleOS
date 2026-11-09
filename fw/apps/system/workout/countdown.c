@@ -13,7 +13,7 @@
 #ifdef CONFIG_TOUCH
 #include <applib/touch_service.h>
 #endif
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
 
@@ -82,10 +82,10 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
       WORKOUT_PICKER_HEADER_Y - (morphing ? interpolate_int16(window->progress, 0, 60) : 0);
   const int footer_y = workout_picker_footer_y(GSize(w, h)) +
                        (morphing ? interpolate_int16(window->progress, 0, 90) : 0);
-  workout_draw_picker_heading(ctx, w, header_y, i18n_get("WORKOUT", window));
+  workout_draw_picker_heading(ctx, w, header_y, pbl_i18n_get("WORKOUT", window));
   workout_draw_picker_name(
       ctx, w, footer_y,
-      i18n_get(workout_utils_get_name_for_activity(window->activity_type), window));
+      pbl_i18n_get(workout_utils_get_name_for_activity(window->activity_type), window));
 
   graphics_context_set_fill_color(ctx, workout_activity_color(window->activity_type));
   if (morphing) {
@@ -104,7 +104,7 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
 
   if (window->phase == CountdownPhase_Number && window->number == 0) {
     graphics_context_set_text_color(ctx, GColorBlack);
-    graphics_draw_text(ctx, i18n_get("GO!", window),
+    graphics_draw_text(ctx, pbl_i18n_get("GO!", window),
                        fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
                        GRect(center.x - radius, center.y - 21, 2 * radius, 40),
                        GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
@@ -117,7 +117,7 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
         GRect(center.x - radius, center.y - (h >= 200 ? 40 : 29), 2 * radius, h >= 200 ? 75 : 58),
         GTextOverflowModeFill, GTextAlignmentCenter, nullptr);
   }
-  i18n_free_all(window);
+  pbl_i18n_free_all(window);
 }
 
 static void prv_icon_layer_update_proc(Layer *layer, GContext *ctx) {
@@ -237,7 +237,7 @@ static void prv_window_unload_handler(Window *window) {
   layer_deinit(&countdown->icon_layer);
   layer_deinit(&countdown->base_layer);
   window_deinit(window);
-  i18n_free_all(countdown);
+  pbl_i18n_free_all(countdown);
   app_free(countdown);
 }
 

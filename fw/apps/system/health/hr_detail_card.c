@@ -8,8 +8,8 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/health_util.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
 #include <applib/app_malloc.h>
@@ -42,7 +42,8 @@ static void prv_set_range_value(char *buffer, const size_t buffer_size, const He
     return;
   }
   /// Range of heart rate readings, e.g. "52–104 BPM"
-  snprintf(buffer, buffer_size, i18n_get("%d–%d BPM", i18n_owner), chart->min_bpm, chart->max_bpm);
+  snprintf(buffer, buffer_size, pbl_i18n_get("%d–%d BPM", i18n_owner), chart->min_bpm,
+           chart->max_bpm);
 }
 
 static void prv_set_zone(HealthDetailZone *zone, int32_t minutes, int32_t *max_progress,
@@ -53,7 +54,7 @@ static void prv_set_zone(HealthDetailZone *zone, int32_t minutes, int32_t *max_p
     .fill_color = PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorDarkGray),
   };
 
-  int pos = snprintf(zone->label, buffer_size, "%s ", i18n_get(zone_label, i18n_owner));
+  int pos = snprintf(zone->label, buffer_size, "%s ", pbl_i18n_get(zone_label, i18n_owner));
   if (zone->progress) {
     health_util_format_hours_and_minutes(zone->label + pos, buffer_size - pos, zone->progress,
                                          i18n_owner);
@@ -87,20 +88,20 @@ Window *health_hr_detail_card_create(HealthData *health_data, const HealthHrChar
   const size_t buffer_size = 32;
 
   prv_set_zone(&card_data->zones[card_data->num_zones++], zone1_minutes, &max_progress, buffer_size,
-               i18n_noop("Fat Burn"), card_data);
+               pbl_i18n_noop("Fat Burn"), card_data);
 
   prv_set_zone(&card_data->zones[card_data->num_zones++], zone2_minutes, &max_progress, buffer_size,
-               i18n_noop("Endurance"), card_data);
+               pbl_i18n_noop("Endurance"), card_data);
 
   prv_set_zone(&card_data->zones[card_data->num_zones++], zone3_minutes, &max_progress, buffer_size,
-               i18n_noop("Performance"), card_data);
+               pbl_i18n_noop("Performance"), card_data);
 
   health_hr_chart_init(&card_data->chart, today);
 
   HealthDetailHeading *range_heading = &card_data->headings[card_data->num_headings++];
   *range_heading = (HealthDetailHeading){
     /// Heading above a chart of today's heart rate and its lowest to highest reading
-    .primary_label = (char *)i18n_get("TODAY'S RANGE", card_data),
+    .primary_label = (char *)pbl_i18n_get("TODAY'S RANGE", card_data),
     .primary_value = app_zalloc_check(buffer_size),
     // One block with the chart's box
     .fill_color = HEALTH_HR_CHART_BG_COLOR,
@@ -112,7 +113,7 @@ Window *health_hr_detail_card_create(HealthData *health_data, const HealthHrChar
 
   *heading = (HealthDetailHeading){
     /// Heading above the time spent in each heart rate zone today
-    .primary_label = (char *)i18n_get("TIME IN ZONES", card_data),
+    .primary_label = (char *)pbl_i18n_get("TIME IN ZONES", card_data),
     .primary_value = app_zalloc_check(buffer_size),
     .fill_color = PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorWhite),
     .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
@@ -152,7 +153,7 @@ void health_hr_detail_card_destroy(Window *window) {
     app_free(card_data->zones[i].label);
   }
   health_hr_chart_deinit(&card_data->chart);
-  i18n_free_all(card_data);
+  pbl_i18n_free_all(card_data);
   app_free(card_data);
   health_detail_card_destroy(card);
 }

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -8,7 +9,6 @@
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/ancs/ancs_filtering.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
@@ -441,19 +441,19 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
 void ancs_notifications_handle_access_denied(void) {
   AttributeList attr_list = {};
   attribute_list_add_cstring(&attr_list, AttributeIdTitle,
-                             i18n_get("iPhone Notifications Blocked", &attr_list));
+                             pbl_i18n_get("iPhone Notifications Blocked", &attr_list));
   attribute_list_add_cstring(
       &attr_list, AttributeIdBody,
-      i18n_get("Your iPhone is not sharing notifications with this watch. On your iPhone, open "
-               "Settings > Bluetooth, tap the (i) next to your Pebble and turn on Share System "
-               "Notifications.",
-               &attr_list));
+      pbl_i18n_get("Your iPhone is not sharing notifications with this watch. On your iPhone, open "
+                   "Settings > Bluetooth, tap the (i) next to your Pebble and turn on Share System "
+                   "Notifications.",
+                   &attr_list));
   attribute_list_add_uint32(&attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_GENERIC_WARNING);
   attribute_list_add_uint8(&attr_list, AttributeIdBgColor, GColorOrangeARGB8);
 
   TimelineItem *item = timeline_item_create_with_attributes(
       pbl_realtime(), 0, TimelineItemTypeNotification, LayoutIdNotification, &attr_list, nullptr);
-  i18n_free_all(&attr_list);
+  pbl_i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);
   if (!item) {
     return;

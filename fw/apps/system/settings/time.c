@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timezone_database.h>
 #include <pbl/util/string.h>
 
@@ -159,7 +159,7 @@ static void prv_init_continent_and_region_names(SettingsTimeData *data) {
 
 static char *prv_get_timezone_title(void) {
   /// Title of the menu for changing the watch's timezone.
-  return i18n_noop("Timezone");
+  return pbl_i18n_noop("Timezone");
 }
 
 // Timezone Region Menu
@@ -259,7 +259,7 @@ static void prv_time_picker_push(SettingsTimeData *data) {
   time_selection_window_deinit(picker);
 
   const TimeSelectionWindowConfig config = {
-    .label = i18n_noop("Set Time"),
+    .label = pbl_i18n_noop("Set Time"),
     .color = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
     .range = {.update = true, .enabled = false},
     .callback = {
@@ -298,7 +298,7 @@ static void prv_date_picker_push(SettingsTimeData *data) {
   // Deinit any previous state before re-initializing (safe on zeroed struct)
   date_selection_window_deinit(picker);
 
-  date_selection_window_init(picker, i18n_noop("Set Date"),
+  date_selection_window_init(picker, pbl_i18n_noop("Set Date"),
                              PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack),
                              prv_date_picker_complete, data);
   date_selection_window_set_to_current_date(picker);
@@ -357,12 +357,13 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
 
   switch (prv_row_for_index(row)) {
     case TimeRow_TimeSource: {
-      title = i18n_noop("Time Source");
-      subtitle = clock_time_source_is_manual() ? i18n_noop("Manual") : i18n_noop("Automatic");
+      title = pbl_i18n_noop("Time Source");
+      subtitle =
+          clock_time_source_is_manual() ? pbl_i18n_noop("Manual") : pbl_i18n_noop("Automatic");
       break;
     }
     case TimeRow_SetTime: {
-      title = i18n_noop("Set Time");
+      title = pbl_i18n_noop("Set Time");
       struct pbl_tm local_now;
       clock_get_time_tm(&local_now);
       clock_format_time(time_buf, sizeof(time_buf), local_now.tm_hour, local_now.tm_min, true);
@@ -370,7 +371,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
     case TimeRow_SetDate: {
-      title = i18n_noop("Set Date");
+      title = pbl_i18n_noop("Set Date");
       struct pbl_tm local_now;
       clock_get_time_tm(&local_now);
       pbl_strftime_r(date_buf, sizeof(date_buf), "%Y-%m-%d", &local_now);
@@ -378,27 +379,27 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
     }
     case TimeRow_Format: {
-      title = i18n_noop("Time Format");
-      subtitle = clock_is_24h_style() ? i18n_noop("24h") : i18n_noop("12h");
+      title = pbl_i18n_noop("Time Format");
+      subtitle = clock_is_24h_style() ? pbl_i18n_noop("24h") : pbl_i18n_noop("12h");
       break;
     }
     case TimeRow_TimezoneSource: {
-      title = i18n_noop("Timezone Source");
+      title = pbl_i18n_noop("Timezone Source");
       if (clock_timezone_source_is_manual()) {
-        subtitle = i18n_noop("Manual");
+        subtitle = pbl_i18n_noop("Manual");
       } else if (clock_is_timezone_set()) {
         // Show the active timezone since the Timezone row is hidden
         clock_get_timezone_region(current_timezone_region, TIMEZONE_NAME_LENGTH);
-        snprintf(tz_source_buf, sizeof(tz_source_buf), "%s (%s)", i18n_get("Automatic", data),
+        snprintf(tz_source_buf, sizeof(tz_source_buf), "%s (%s)", pbl_i18n_get("Automatic", data),
                  current_timezone_region);
         subtitle = tz_source_buf;
       } else {
-        subtitle = i18n_noop("Automatic");
+        subtitle = pbl_i18n_noop("Automatic");
       }
       break;
     }
     case TimeRow_Timezone: {
-      title = i18n_noop("Timezone");
+      title = pbl_i18n_noop("Timezone");
       clock_get_timezone_region(current_timezone_region, TIMEZONE_NAME_LENGTH);
       subtitle = current_timezone_region;
       break;
@@ -407,7 +408,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       break;
   }
 
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
@@ -416,7 +418,7 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsTimeData *data = (SettingsTimeData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data->continent_names);
   app_free(data->region_names);
   app_free(data->region_names_buffer);
@@ -443,7 +445,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_time_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Date & Time"),
+    .name = pbl_i18n_noop("Date & Time"),
     .init = prv_init,
   };
 

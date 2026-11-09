@@ -20,13 +20,13 @@
 #endif
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/hr_util.h>
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -133,16 +133,16 @@ static const char *prv_get_label_for_hr_metric(int bpm) {
   switch (hr_util_get_hr_zone(bpm)) {
     case HRZone_Zone1:
       /// Zone 1 HR Label
-      return i18n_noop("FAT BURN");
+      return pbl_i18n_noop("FAT BURN");
     case HRZone_Zone2:
       /// Zone 2 HR Label
-      return i18n_noop("ENDURANCE");
+      return pbl_i18n_noop("ENDURANCE");
     case HRZone_Zone3:
       /// Zone 3 HR Label
-      return i18n_noop("PERFORMANCE");
+      return pbl_i18n_noop("PERFORMANCE");
     default:
       /// Default/Zone 0 HR Label
-      return i18n_noop("HEART RATE");
+      return pbl_i18n_noop("HEART RATE");
   }
 }
 
@@ -159,46 +159,46 @@ static const char *prv_get_label_for_metric(WorkoutMetricType metric_type,
       return active_window->workout_controller->get_custom_metric_label_string();
     case WorkoutMetricType_Duration:
       /// Duration Label
-      return i18n_noop("DURATION");
+      return pbl_i18n_noop("DURATION");
     case WorkoutMetricType_AvgPace:
 #if PBL_RECT
       /// Average Pace Label
-      return i18n_noop("AVG PACE");
+      return pbl_i18n_noop("AVG PACE");
 #else
       /// Average Pace Label with units
-      return active_window->workout_controller->get_distance_string(i18n_noop("AVG PACE (/MI)"),
-                                                                    i18n_noop("AVG PACE (/KM)"));
+      return active_window->workout_controller->get_distance_string(
+          pbl_i18n_noop("AVG PACE (/MI)"), pbl_i18n_noop("AVG PACE (/KM)"));
 #endif
     case WorkoutMetricType_Pace:
 #if PBL_RECT
       /// Pace Label
-      return i18n_noop("PACE");
+      return pbl_i18n_noop("PACE");
 #else
       /// Pace Label with units
-      return active_window->workout_controller->get_distance_string(i18n_noop("PACE (/MI)"),
-                                                                    i18n_noop("PACE (/KM)"));
+      return active_window->workout_controller->get_distance_string(pbl_i18n_noop("PACE (/MI)"),
+                                                                    pbl_i18n_noop("PACE (/KM)"));
 #endif
     case WorkoutMetricType_Speed:
 #if PBL_RECT
       /// Speed Label
-      return i18n_noop("SPEED");
+      return pbl_i18n_noop("SPEED");
 #else
       /// Speed Label with units
-      return active_window->workout_controller->get_distance_string(i18n_noop("SPEED (MPH)"),
-                                                                    i18n_noop("SPEED (KM/H)"));
+      return active_window->workout_controller->get_distance_string(pbl_i18n_noop("SPEED (MPH)"),
+                                                                    pbl_i18n_noop("SPEED (KM/H)"));
 #endif
     case WorkoutMetricType_Distance:
 #if PBL_RECT
       /// Distance Label
-      return i18n_noop("DISTANCE");
+      return pbl_i18n_noop("DISTANCE");
 #else
       /// Distance Label with units
-      return active_window->workout_controller->get_distance_string(i18n_noop("DISTANCE (MI)"),
-                                                                    i18n_noop("DISTANCE (KM)"));
+      return active_window->workout_controller->get_distance_string(pbl_i18n_noop("DISTANCE (MI)"),
+                                                                    pbl_i18n_noop("DISTANCE (KM)"));
 #endif
     case WorkoutMetricType_Steps:
       /// Steps Label
-      return i18n_noop("STEPS");
+      return pbl_i18n_noop("STEPS");
     default:
       return "";
   }
@@ -302,10 +302,10 @@ static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
 
 #if PBL_RECT
       /// MI/KM units string
-      const char *units_string =
-          active_window->workout_controller->get_distance_string(i18n_noop("MI"), i18n_noop("KM"));
+      const char *units_string = active_window->workout_controller->get_distance_string(
+          pbl_i18n_noop("MI"), pbl_i18n_noop("KM"));
       GTextNodeText *units_text_node = health_util_create_text_node_with_text(
-          i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
+          pbl_i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
       units_text_node->node.offset.y = units_offset_y;
 #endif
       break;
@@ -360,9 +360,9 @@ static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
 
         /// MI/KM units string
         const char *units_string = active_window->workout_controller->get_distance_string(
-            i18n_noop("MI"), i18n_noop("KM"));
+            pbl_i18n_noop("MI"), pbl_i18n_noop("KM"));
         GTextNodeText *units_text_node = health_util_create_text_node_with_text(
-            i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
+            pbl_i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
         units_text_node->node.offset.y = units_offset_y;
 #endif
       }
@@ -379,9 +379,9 @@ static GTextNode *prv_create_text_node(WorkoutActiveWindow *active_window,
 #if PBL_RECT
       /// MI/KM units string
       const char *units_string = active_window->workout_controller->get_distance_string(
-          i18n_noop("MPH"), i18n_noop("KM/H"));
+          pbl_i18n_noop("MPH"), pbl_i18n_noop("KM/H"));
       GTextNodeText *units_text_node = health_util_create_text_node_with_text(
-          i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
+          pbl_i18n_get(units_string, i18n_owner), units_font, TEXT_COLOR, container);
       units_text_node->node.offset.y = units_offset_y;
 #endif
       break;
@@ -748,7 +748,7 @@ static void prv_render_metric_label(GContext *ctx, GRect *box, WorkoutMetricType
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
   graphics_draw_text(ctx,
-                     i18n_get(prv_get_label_for_metric(metric_type, active_window), i18n_owner),
+                     pbl_i18n_get(prv_get_label_for_metric(metric_type, active_window), i18n_owner),
                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), label_box, overflow_mode,
                      TEXT_ALIGNMENT, nullptr);
 }
@@ -976,7 +976,7 @@ static void prv_draw_field(GContext *ctx, WorkoutActiveWindow *window, GRect box
                            WorkoutMetricType metric, const char *label, const char *font_key,
                            GColor color) {
   const bool large = window->window.layer.bounds.size.h >= 200;
-  prv_dashboard_text(ctx, i18n_get(label, window), FONT_KEY_GOTHIC_14_BOLD,
+  prv_dashboard_text(ctx, pbl_i18n_get(label, window), FONT_KEY_GOTHIC_14_BOLD,
                      GRect(box.origin.x, box.origin.y, box.size.w, 18), prv_metric_color(metric));
   const int font_h = fonts_get_font_height(fonts_get_system_font(font_key));
   const int label_h = large ? 15 : 12;
@@ -1050,20 +1050,20 @@ static void prv_draw_status(GContext *ctx, WorkoutActiveWindow *window, GSize si
   GColor banner_color = GColorWhite;
   GColor banner_ink = GColorBlack;
   if (window->finished) {
-    banner = i18n_noop("COMPLETE");
+    banner = pbl_i18n_noop("COMPLETE");
     banner_color = workout_activity_color(window->activity_type);
   } else if (paused && window->confirming_finish) {
-    banner = i18n_noop("END WORKOUT?");
+    banner = pbl_i18n_noop("END WORKOUT?");
     banner_color = PBL_IF_COLOR_ELSE(GColorRed, GColorWhite);
     banner_ink = PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack);
   } else if (paused) {
-    banner = i18n_noop("PAUSED");
+    banner = pbl_i18n_noop("PAUSED");
     banner_color = PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite);
   }
   if (banner) {
     graphics_context_set_fill_color(ctx, banner_color);
     graphics_fill_rect(ctx, &GRect(0, 0, w, status_h));
-    prv_dashboard_text(ctx, i18n_get(banner, window), FONT_KEY_GOTHIC_18_BOLD,
+    prv_dashboard_text(ctx, pbl_i18n_get(banner, window), FONT_KEY_GOTHIC_18_BOLD,
                        GRect(0, text_y, w, 24), banner_ink);
     return;
   }
@@ -1111,10 +1111,10 @@ static void prv_draw_hr_band(GContext *ctx, WorkoutActiveWindow *window, GSize s
   const GSize value_size = graphics_text_layout_get_max_used_size(
       ctx, value, fonts_get_system_font(font), GRect(0, 0, row.size.w, 50), GTextOverflowModeFill,
       GTextAlignmentLeft, nullptr);
-  const char *label = window->finished ? i18n_noop("AVG") : i18n_noop("BPM");
+  const char *label = window->finished ? pbl_i18n_noop("AVG") : pbl_i18n_noop("BPM");
   char badge[12] = {};
   if (bpm > 0) {
-    snprintf(badge, sizeof(badge), i18n_get("Z%d", window), (int)zone + 1);
+    snprintf(badge, sizeof(badge), pbl_i18n_get("Z%d", window), (int)zone + 1);
   }
   const int badge_w = large ? 34 : 26;
   const int group_w = heart_h + 6 + value_size.w + 8 + badge_w;
@@ -1127,7 +1127,7 @@ static void prv_draw_hr_band(GContext *ctx, WorkoutActiveWindow *window, GSize s
   const int badge_x = x + heart_h + 6 + value_size.w + 8;
   prv_dashboard_text(ctx, badge, large ? FONT_KEY_GOTHIC_24_BOLD : FONT_KEY_GOTHIC_18_BOLD,
                      GRect(badge_x, center_y - (large ? 17 : 13), badge_w, 28), GColorBlack);
-  prv_dashboard_text(ctx, i18n_get(label, window), FONT_KEY_GOTHIC_14_BOLD,
+  prv_dashboard_text(ctx, pbl_i18n_get(label, window), FONT_KEY_GOTHIC_14_BOLD,
                      GRect(badge_x - 6, center_y + (large ? 4 : 2), badge_w + 12, 18), GColorBlack);
 
   // Zone scale with a marker at the exact heart rate.
@@ -1170,21 +1170,21 @@ static void prv_draw_main(GContext *ctx, WorkoutActiveWindow *window, GSize size
   const bool paused = !window->finished && window->workout_controller->is_paused();
   GRect row = prv_row_box(size, w, 0, top, timer_h);
   prv_draw_field(ctx, window, GRect(0, row.origin.y + 2, w, row.size.h), WorkoutMetricType_Duration,
-                 window->finished ? i18n_noop("TOTAL TIME") : i18n_noop("TIMER"),
+                 window->finished ? pbl_i18n_noop("TOTAL TIME") : pbl_i18n_noop("TIMER"),
                  large ? FONT_KEY_LECO_42_NUMBERS : FONT_KEY_LECO_32_BOLD_NUMBERS,
                  paused ? PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite) : INK_COLOR);
 
   const int pair_y = top + timer_h;
   row = prv_row_box(size, w, 0, pair_y, pair_h);
   prv_draw_rule(ctx, GPoint(row.origin.x, pair_y), GPoint(row.origin.x + row.size.w, pair_y));
-  const char *distance =
-      window->workout_controller->get_distance_string(i18n_noop("DIST MI"), i18n_noop("DIST KM"));
-  const char *pace =
-      window->workout_controller->get_distance_string(i18n_noop("PACE /MI"), i18n_noop("PACE /KM"));
+  const char *distance = window->workout_controller->get_distance_string(pbl_i18n_noop("DIST MI"),
+                                                                         pbl_i18n_noop("DIST KM"));
+  const char *pace = window->workout_controller->get_distance_string(pbl_i18n_noop("PACE /MI"),
+                                                                     pbl_i18n_noop("PACE /KM"));
   const DashboardField pair[] = {
-    open ? (DashboardField){WorkoutMetricType_Steps, i18n_noop("STEPS")}
+    open ? (DashboardField){WorkoutMetricType_Steps, pbl_i18n_noop("STEPS")}
          : (DashboardField){WorkoutMetricType_Distance, distance},
-    open ? (DashboardField){WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")}
+    open ? (DashboardField){WorkoutMetricType_ActiveCalories, pbl_i18n_noop("KCAL")}
          : (DashboardField){WorkoutMetricType_AvgPace, pace},
   };
   const char *pair_font =
@@ -1199,9 +1199,9 @@ static void prv_draw_main(GContext *ctx, WorkoutActiveWindow *window, GSize size
   row = prv_row_box(size, w, 0, band_y, size.h - band_y - PBL_IF_ROUND_ELSE(20, 4));
   prv_draw_rule(ctx, GPoint(row.origin.x, band_y), GPoint(row.origin.x + row.size.w, band_y));
   const DashboardField last[] = {
-    open ? (DashboardField){WorkoutMetricType_AvgCadence, i18n_noop("CADENCE")}
-         : (DashboardField){WorkoutMetricType_Steps, i18n_noop("STEPS")},
-    {WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")},
+    open ? (DashboardField){WorkoutMetricType_AvgCadence, pbl_i18n_noop("CADENCE")}
+         : (DashboardField){WorkoutMetricType_Steps, pbl_i18n_noop("STEPS")},
+    {WorkoutMetricType_ActiveCalories, pbl_i18n_noop("KCAL")},
   };
   prv_draw_field_row(ctx, window, row, last, open ? 1 : 2, pair_font);
 }
@@ -1210,22 +1210,23 @@ static void prv_draw_grid(GContext *ctx, WorkoutActiveWindow *window, GSize size
   const bool large = size.h >= 200;
   const int bottom = size.h - PBL_IF_ROUND_ELSE(14, 2);
   const int row_h = (bottom - top) / 3;
-  const char *speed = window->workout_controller->get_distance_string(i18n_noop("SPEED MPH"),
-                                                                      i18n_noop("SPEED KM/H"));
-  const char *pace =
-      window->workout_controller->get_distance_string(i18n_noop("PACE /MI"), i18n_noop("PACE /KM"));
+  const char *speed = window->workout_controller->get_distance_string(pbl_i18n_noop("SPEED MPH"),
+                                                                      pbl_i18n_noop("SPEED KM/H"));
+  const char *pace = window->workout_controller->get_distance_string(pbl_i18n_noop("PACE /MI"),
+                                                                     pbl_i18n_noop("PACE /KM"));
   DashboardField last = {
-    WorkoutMetricType_Duration, window->finished ? i18n_noop("TOTAL TIME") : i18n_noop("TIMER")
+    WorkoutMetricType_Duration,
+    window->finished ? pbl_i18n_noop("TOTAL TIME") : pbl_i18n_noop("TIMER")
   };
   if (window->has_hrm) {
-    last = (DashboardField){WorkoutMetricType_AvgHr, i18n_noop("AVG BPM")};
+    last = (DashboardField){WorkoutMetricType_AvgHr, pbl_i18n_noop("AVG BPM")};
   }
   const DashboardField fields[] = {
     {WorkoutMetricType_AvgPace, pace},
     {WorkoutMetricType_AvgSpeed, speed},
-    {WorkoutMetricType_AvgCadence, i18n_noop("CADENCE")},
-    {WorkoutMetricType_Steps, i18n_noop("STEPS")},
-    {WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")},
+    {WorkoutMetricType_AvgCadence, pbl_i18n_noop("CADENCE")},
+    {WorkoutMetricType_Steps, pbl_i18n_noop("STEPS")},
+    {WorkoutMetricType_ActiveCalories, pbl_i18n_noop("KCAL")},
     last,
   };
   for (int i = 0; i < 3; i++) {
@@ -1242,8 +1243,8 @@ static void prv_draw_grid(GContext *ctx, WorkoutActiveWindow *window, GSize size
 // Time spent in each zone, hardest zone on top.
 static void prv_draw_zones(GContext *ctx, WorkoutActiveWindow *window, GSize size, int w, int top) {
   const bool large = size.h >= 200;
-  prv_dashboard_text(ctx, i18n_get(i18n_noop("TIME IN ZONE"), window), FONT_KEY_GOTHIC_14_BOLD,
-                     GRect(0, top + 2, w, 18), DIM_COLOR);
+  prv_dashboard_text(ctx, pbl_i18n_get(pbl_i18n_noop("TIME IN ZONE"), window),
+                     FONT_KEY_GOTHIC_14_BOLD, GRect(0, top + 2, w, 18), DIM_COLOR);
   int times[HRZoneCount];
   int longest = 1;
   for (int i = 0; i < HRZoneCount; i++) {
@@ -1265,7 +1266,7 @@ static void prv_draw_zones(GContext *ctx, WorkoutActiveWindow *window, GSize siz
     const int bar_y = row.origin.y + (row.size.h - bar_h) / 2;
     const GColor color = prv_zone_color(zone, false);
     char text[16];
-    snprintf(text, sizeof(text), i18n_get("Z%d", window), zone + 1);
+    snprintf(text, sizeof(text), pbl_i18n_get("Z%d", window), zone + 1);
     GRect label = GRect(row.origin.x, bar_y + bar_h / 2 - (large ? 9 : 7), label_w, bar_h + 4);
     if (zone == current) {
       GRect badge = GRect(row.origin.x, bar_y - 2, label_w, bar_h + 4);
@@ -1389,10 +1390,11 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
   }
   prv_dashboard_text(ctx, label, FONT_KEY_GOTHIC_14_BOLD, GRect(box.origin.x, bottom - 9, 22, 18),
                      DIM_COLOR);
-  prv_dashboard_text(ctx, i18n_get(i18n_noop("LAST MINUTE"), window), FONT_KEY_GOTHIC_14_BOLD,
-                     GRect(left, bottom + 1, right - left, 18), DIM_COLOR);
+  prv_dashboard_text(ctx, pbl_i18n_get(pbl_i18n_noop("LAST MINUTE"), window),
+                     FONT_KEY_GOTHIC_14_BOLD, GRect(left, bottom + 1, right - left, 18), DIM_COLOR);
   if (!has_reading) {
-    prv_dashboard_text(ctx, i18n_get(i18n_noop("WAITING FOR HR"), window), FONT_KEY_GOTHIC_14_BOLD,
+    prv_dashboard_text(ctx, pbl_i18n_get(pbl_i18n_noop("WAITING FOR HR"), window),
+                       FONT_KEY_GOTHIC_14_BOLD,
                        GRect(left, (top + bottom - 18) / 2, right - left, 18), INK_COLOR);
   }
 }
@@ -1416,10 +1418,11 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
   char heading[24];
   GColor heading_color = bpm > 0 ? prv_zone_color(zone, false) : DIM_COLOR;
   if (bpm > 0) {
-    snprintf(heading, sizeof(heading), i18n_get("ZONE %d", window), (int)zone + 1);
+    snprintf(heading, sizeof(heading), pbl_i18n_get("ZONE %d", window), (int)zone + 1);
   } else {
     snprintf(heading, sizeof(heading), "%s",
-             i18n_get(window->finished ? i18n_noop("AVG BPM") : i18n_noop("MEASURING"), window));
+             pbl_i18n_get(window->finished ? pbl_i18n_noop("AVG BPM") : pbl_i18n_noop("MEASURING"),
+                          window));
   }
   const int value_h = large ? 60 : 42;
   const int value_y = center.y - value_h / 2 - (large ? 10 : 8);
@@ -1447,7 +1450,7 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
     char time[16];
     window->workout_controller->metric_to_string(WorkoutMetricType_HrZone0Time + zone, time,
                                                  sizeof(time), window, window->workout_data);
-    snprintf(text, sizeof(text), "%s  %s", i18n_get(prv_get_label_for_hr_metric(bpm), window),
+    snprintf(text, sizeof(text), "%s  %s", pbl_i18n_get(prv_get_label_for_hr_metric(bpm), window),
              time);
     prv_dashboard_text(ctx, text, FONT_KEY_GOTHIC_14_BOLD,
                        GRect(center.x - 70, value_y + value_h + (large ? 0 : 2), 140, 18),
@@ -1457,9 +1460,9 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
   const int pair_h = large ? 44 : 34;
   const int pair_y = PBL_IF_ROUND_ELSE(size.h - pair_h - 30, size.h - pair_h - 2);
   const DashboardField pair[] = {
-    window->finished ? (DashboardField){WorkoutMetricType_Duration, i18n_noop("TOTAL TIME")}
-                     : (DashboardField){WorkoutMetricType_AvgHr, i18n_noop("AVG BPM")},
-    (DashboardField){WorkoutMetricType_ActiveCalories, i18n_noop("KCAL")},
+    window->finished ? (DashboardField){WorkoutMetricType_Duration, pbl_i18n_noop("TOTAL TIME")}
+                     : (DashboardField){WorkoutMetricType_AvgHr, pbl_i18n_noop("AVG BPM")},
+    (DashboardField){WorkoutMetricType_ActiveCalories, pbl_i18n_noop("KCAL")},
   };
   const int pair_w = PBL_IF_ROUND_ELSE(150, 124);
   prv_draw_field_row(ctx, window, GRect((w - pair_w) / 2, pair_y, pair_w, pair_h), pair, 2,
@@ -1549,7 +1552,7 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
     }
   }
   prv_draw_confetti(ctx, window, size);
-  i18n_free_all(window);
+  pbl_i18n_free_all(window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1806,7 +1809,7 @@ static void prv_window_unload_handler(Window *window) {
     layer_deinit(&active_window->scrollable_metric_layer);
     layer_deinit(&active_window->base_layer);
     window_deinit(&active_window->window);
-    i18n_free_all(active_window);
+    pbl_i18n_free_all(active_window);
     app_free(active_window);
   }
 }

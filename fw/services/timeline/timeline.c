@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -9,7 +10,6 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/phone_call_util.h>
@@ -655,7 +655,7 @@ bool timeline_add_missed_call_pin(TimelineItem *pin, uint32_t uid) {
   TimelineItemAction *remove_action = timeline_item_find_dismiss_action(pin);
   if (remove_action) {
     // This i18n'd string is leaked, but only ever allocated once
-    remove_action->attr_list.attributes[1].cstring = (char *)i18n_get("Remove", &i18n_key);
+    remove_action->attr_list.attributes[1].cstring = (char *)pbl_i18n_get("Remove", &i18n_key);
     remove_action->type = TimelineItemActionTypeRemove;
   }
 
@@ -696,7 +696,7 @@ static void prv_do_remote_action(const Uuid *id, TimelineItemActionType type, ui
   } else {
     // We know we aren't connected, don't wait around for a response that won't come
     prv_put_notification_action_result(
-        id, i18n_get("Can't connect. Relaunch Pebble Time app on phone.", &i18n_key),
+        id, pbl_i18n_get("Can't connect. Relaunch Pebble Time app on phone.", &i18n_key),
         TIMELINE_RESOURCE_GENERIC_WARNING, ActionResultTypeFailure);
   }
 }
@@ -708,7 +708,7 @@ static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAc
     blob_db_delete(BlobDBIdPins, (uint8_t *)&item->header.id, UUID_SIZE);
 
     // This i18n'd string is leaked, but only ever allocated once
-    prv_put_notification_action_result(&item->header.id, i18n_get("Removed", &i18n_key),
+    prv_put_notification_action_result(&item->header.id, pbl_i18n_get("Removed", &i18n_key),
                                        TIMELINE_RESOURCE_RESULT_DELETED, ActionResultTypeSuccess);
   } else {
     const bool do_async = true;
@@ -718,7 +718,7 @@ static void prv_remove_pin_action(const TimelineItem *item, const TimelineItemAc
 
 static void prv_dismiss_local_notification_action(const TimelineItem *item) {
   // This i18n'd string is leaked, but only ever allocated once
-  prv_put_notification_action_result(&item->header.id, i18n_get("Dismissed", &i18n_key),
+  prv_put_notification_action_result(&item->header.id, pbl_i18n_get("Dismissed", &i18n_key),
                                      TIMELINE_RESOURCE_RESULT_DISMISSED, ActionResultTypeSuccess);
 }
 
@@ -737,14 +737,14 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
 
   if (!timeline_is_bulk_ancs_action_mode_enabled()) {
     // This i18n'd string is leaked, but only ever allocated once
-    char *msg_i18n = i18n_noop("Dismissed");
+    char *msg_i18n = pbl_i18n_noop("Dismissed");
     int res_id = TIMELINE_RESOURCE_RESULT_DISMISSED;
 
     if (action->type == TimelineItemActionTypeAncsDelete) {
-      msg_i18n = i18n_noop("Deleted");
+      msg_i18n = pbl_i18n_noop("Deleted");
       res_id = TIMELINE_RESOURCE_RESULT_DELETED;
     }
-    prv_put_notification_action_result(&item->header.id, i18n_get(msg_i18n, &i18n_key), res_id,
+    prv_put_notification_action_result(&item->header.id, pbl_i18n_get(msg_i18n, &i18n_key), res_id,
                                        ActionResultTypeSuccess);
   } else {
     // Bulk mode suppresses the per-item dialog, but we must still remove the notification from the
@@ -768,7 +768,7 @@ static void prv_perform_health_response_action(const TimelineItem *item,
                                                const TimelineItemAction *action) {
   // This i18n'd string is leaked, but only ever allocated once
   const char *message = attribute_get_string(&action->attr_list, AttributeIdBody,
-                                             (char *)i18n_get("Thanks!", &i18n_key));
+                                             (char *)pbl_i18n_get("Thanks!", &i18n_key));
 
   const uint32_t timeline_res_id =
       attribute_get_uint32(&action->attr_list, AttributeIdIconLarge, TIMELINE_RESOURCE_THUMBS_UP);
@@ -918,31 +918,31 @@ typedef struct {
 static const PrivateDataSourceInfo s_data_sources[] = {
   {
     .id = UUID_NOTIFICATIONS_DATA_SOURCE,
-    .name = i18n_noop("Notifications"),
+    .name = pbl_i18n_noop("Notifications"),
   },
   {
     .id = UUID_CALENDAR_DATA_SOURCE,
-    .name = i18n_noop("Calendar"),
+    .name = pbl_i18n_noop("Calendar"),
   },
   {
     .id = UUID_WEATHER_DATA_SOURCE,
-    .name = i18n_noop("Weather"),
+    .name = pbl_i18n_noop("Weather"),
   },
   {
     .id = UUID_REMINDERS_DATA_SOURCE,
-    .name = i18n_noop("Reminders"),
+    .name = pbl_i18n_noop("Reminders"),
   },
   {
     .id = UUID_ALARMS_DATA_SOURCE,
-    .name = i18n_noop("Alarms"),
+    .name = pbl_i18n_noop("Alarms"),
   },
   {
     .id = UUID_HEALTH_DATA_SOURCE,
-    .name = i18n_noop("Health"),
+    .name = pbl_i18n_noop("Health"),
   },
   {
     .id = UUID_INTERCOM_DATA_SOURCE,
-    .name = i18n_noop("Intercom"),
+    .name = pbl_i18n_noop("Intercom"),
   },
 };
 

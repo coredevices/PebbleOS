@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/alarm_layout.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/util/size.h>
@@ -44,7 +44,8 @@ PBL_T_STATIC void prv_get_subtitle_from_attributes(AttributeList *attributes, ch
   Attribute *alarm_kind_attribute = attribute_find(attributes, AttributeIdAlarmKind);
   if (alarm_kind_attribute) {
     const AlarmKind alarm_kind = (AlarmKind)alarm_kind_attribute->uint8;
-    subtitle_string = i18n_get(alarm_get_string_for_kind(alarm_kind, all_caps_desired), i18n_owner);
+    subtitle_string =
+        pbl_i18n_get(alarm_get_string_for_kind(alarm_kind, all_caps_desired), i18n_owner);
   } else {
     // Otherwise, fallback to just using the subtitle in the pin
     subtitle_string = attribute_get_string(attributes, AttributeIdSubtitle, "");

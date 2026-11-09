@@ -8,10 +8,10 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -103,10 +103,10 @@ static const char *prv_get_dnd_mask_subtitle(void *i18n_key) {
   const char *title = nullptr;
   switch (alerts_get_dnd_mask()) {
     case AlertMaskAllOff:
-      title = i18n_get("Quiet All Notifications", i18n_key);
+      title = pbl_i18n_get("Quiet All Notifications", i18n_key);
       break;
     case AlertMaskPhoneCalls:
-      title = i18n_get("Allow Phone Calls", i18n_key);
+      title = pbl_i18n_get("Allow Phone Calls", i18n_key);
       break;
     default:
       title = "???";
@@ -286,7 +286,7 @@ static void prv_scheduled_dnd_menu_cleanup(ActionMenu *action_menu, const Action
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   SettingsQuietTimeScheduleData *data = context;
   app_free(data->action_menu_text);
-  i18n_free_all(&data->action_menu);
+  pbl_i18n_free_all(&data->action_menu);
   app_free(root_level);
 }
 
@@ -311,11 +311,11 @@ static void prv_scheduled_dnd_menu_push(SettingsQuietTimeScheduleData *data) {
   data->action_menu_text = app_malloc_check(buffer_size);
   if (slot->enabled) {
     snprintf(data->action_menu_text, buffer_size, "%.*s", text_max_size,
-             i18n_get("Disable", &data->action_menu));
+             pbl_i18n_get("Disable", &data->action_menu));
   } else {
     prv_get_dnd_time(&slot->schedule, time_text, sizeof(time_text));
     snprintf(data->action_menu_text, buffer_size, "%.*s (%s)", text_max_size,
-             i18n_get("Enable", &data->action_menu), time_text);
+             pbl_i18n_get("Enable", &data->action_menu), time_text);
   }
 
   level->items[DNDMenuItemDisable] = (ActionMenuItem){
@@ -324,17 +324,17 @@ static void prv_scheduled_dnd_menu_push(SettingsQuietTimeScheduleData *data) {
   };
 
   level->items[DNDMenuItemChangeSchedule] = (ActionMenuItem){
-    .label = i18n_get("Change Schedule", &data->action_menu),
+    .label = pbl_i18n_get("Change Schedule", &data->action_menu),
     .perform_action = prv_dnd_set_schedule,
   };
 
   level->items[DNDMenuItemChangeDays] = (ActionMenuItem){
-    .label = i18n_get("Change Days", &data->action_menu),
+    .label = pbl_i18n_get("Change Days", &data->action_menu),
     .perform_action = prv_dnd_change_days,
   };
 
   level->items[DNDMenuItemDelete] = (ActionMenuItem){
-    .label = i18n_get("Delete", &data->action_menu),
+    .label = pbl_i18n_get("Delete", &data->action_menu),
     .perform_action = prv_dnd_delete_schedule,
   };
 
@@ -365,7 +365,7 @@ static void prv_schedule_deinit_cb(SettingsCallbacks *context) {
     time_range_selection_window_deinit(&data->schedule_window);
   }
   gbitmap_deinit(&data->add_icon);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -381,7 +381,7 @@ static void prv_draw_add_schedule_row(SettingsQuietTimeScheduleData *data, GCont
 
         box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
-        const char *text = i18n_get("Limit reached.", data);
+        const char *text = pbl_i18n_get("Limit reached.", data);
         box.size = graphics_text_layout_get_max_used_size(
             ctx, text, font, box, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
         grect_align(&box, &cell_layer->bounds, GAlignCenter, true /* clip */);
@@ -424,7 +424,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   char day_text[32] = {};
   MenuCellLayerConfig config = {
     .title = time_text,
-    .value = slot->enabled ? i18n_get("ON", data) : i18n_get("OFF", data),
+    .value = slot->enabled ? pbl_i18n_get("ON", data) : pbl_i18n_get("OFF", data),
     .horizontal_inset = PBL_IF_ROUND_ELSE(-6, 0),
     .overflow_mode = GTextOverflowModeTrailingEllipsis,
   };
@@ -433,7 +433,7 @@ static void prv_schedule_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
     alarm_get_string_for_custom(days.custom_days, day_text);
     config.subtitle = day_text;
   } else {
-    config.subtitle = i18n_get(day_picker_kind_get_string((DayPickerKind)slot->kind), data);
+    config.subtitle = pbl_i18n_get(day_picker_kind_get_string((DayPickerKind)slot->kind), data);
   }
   menu_cell_layer_draw(ctx, cell_layer, &config);
 }
@@ -482,19 +482,19 @@ static void prv_schedule_submenu_push(void) {
   };
 
   Window *window = settings_window_create_with_title(SettingsMenuItemQuietTime,
-                                                     i18n_noop("Schedule"), &data->callbacks);
+                                                     pbl_i18n_noop("Schedule"), &data->callbacks);
   prv_load_schedules(data);
   app_window_stack_push(window, true /* animated */);
 }
 
 static const char *prv_get_dnd_notifications_subtitle(void *i18n_key) {
   if (alerts_preferences_dnd_get_show_notifications() == DndNotificationModeHide) {
-    return i18n_get("Off", i18n_key);
+    return pbl_i18n_get("Off", i18n_key);
   }
   if (alerts_preferences_dnd_get_auto_dismiss()) {
-    return i18n_get("On - Auto Dismiss", i18n_key);
+    return pbl_i18n_get("On - Auto Dismiss", i18n_key);
   }
-  return i18n_get("On - Persistent", i18n_key);
+  return pbl_i18n_get("On - Persistent", i18n_key);
 }
 
 static void prv_cycle_dnd_notifications(void) {
@@ -515,7 +515,7 @@ static void prv_cycle_dnd_notifications(void) {
 
 static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
   SettingsQuietTimeBacklightData *data = (SettingsQuietTimeBacklightData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -526,24 +526,27 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   const char *subtitle = nullptr;
   switch (row) {
     case QuietTimeBacklightItemMotion:
-      title = i18n_noop("Motion");
-      subtitle = alerts_preferences_dnd_get_motion_backlight() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Motion");
+      subtitle = alerts_preferences_dnd_get_motion_backlight() ? pbl_i18n_noop("On")
+                                                               : pbl_i18n_noop("Off");
       break;
 #ifdef CONFIG_TOUCH
     case QuietTimeBacklightItemTouch:
-      title = i18n_noop("Touch");
-      subtitle = alerts_preferences_dnd_get_touch_backlight() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Touch");
+      subtitle =
+          alerts_preferences_dnd_get_touch_backlight() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
 #endif
     case QuietTimeBacklightItemNotifications:
-      title = i18n_noop("Notifications");
-      subtitle =
-          alerts_preferences_dnd_get_notification_backlight() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Notifications");
+      subtitle = alerts_preferences_dnd_get_notification_backlight() ? pbl_i18n_noop("On")
+                                                                     : pbl_i18n_noop("Off");
       break;
     default:
       pbl_panic();
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static void prv_backlight_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -581,7 +584,7 @@ static void prv_backlight_submenu_push(void) {
   };
 
   Window *window = settings_window_create_with_title(SettingsMenuItemQuietTime,
-                                                     i18n_noop("Backlight"), &data->callbacks);
+                                                     pbl_i18n_noop("Backlight"), &data->callbacks);
   app_window_stack_push(window, true /* animated */);
 }
 
@@ -591,7 +594,7 @@ static void prv_backlight_submenu_push(void) {
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsQuietTimeData *data = (SettingsQuietTimeData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -603,34 +606,34 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
 
   switch (row) {
     case QuietTimeItemManual:
-      title = i18n_get("Manual", data);
-      subtitle =
-          do_not_disturb_is_manually_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
+      title = pbl_i18n_get("Manual", data);
+      subtitle = do_not_disturb_is_manually_enabled() ? pbl_i18n_get("On", data)
+                                                      : pbl_i18n_get("Off", data);
       break;
     case QuietTimeItemSmartDnd:
-      title = i18n_get("Calendar Aware", data);
-      subtitle =
-          do_not_disturb_is_smart_dnd_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
+      title = pbl_i18n_get("Calendar Aware", data);
+      subtitle = do_not_disturb_is_smart_dnd_enabled() ? pbl_i18n_get("On", data)
+                                                       : pbl_i18n_get("Off", data);
       break;
     case QuietTimeItemSchedule:
-      title = i18n_get("Schedule", data);
+      title = pbl_i18n_get("Schedule", data);
       break;
     case QuietTimeItemInterruptions:
-      title = i18n_get("Interruptions", data);
+      title = pbl_i18n_get("Interruptions", data);
       subtitle = prv_get_dnd_mask_subtitle(data);
       break;
     case QuietTimeItemNotifications:
-      title = i18n_get("Notifications", data);
+      title = pbl_i18n_get("Notifications", data);
       subtitle = prv_get_dnd_notifications_subtitle(data);
       break;
     case QuietTimeItemBacklight:
-      title = i18n_get("Backlight", data);
+      title = pbl_i18n_get("Backlight", data);
       break;
 #ifdef CONFIG_SPEAKER
     case QuietTimeItemMuteSpeaker:
-      title = i18n_get("Mute Speaker", data);
-      subtitle =
-          alerts_preferences_dnd_get_mute_speaker() ? i18n_get("On", data) : i18n_get("Off", data);
+      title = pbl_i18n_get("Mute Speaker", data);
+      subtitle = alerts_preferences_dnd_get_mute_speaker() ? pbl_i18n_get("On", data)
+                                                           : pbl_i18n_get("Off", data);
       break;
 #endif
     default:
@@ -689,7 +692,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_quiet_time_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Quiet Time"),
+    .name = pbl_i18n_noop("Quiet Time"),
     .init = prv_init,
   };
 

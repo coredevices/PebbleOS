@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/pbl_std/locale.h>
@@ -54,7 +54,7 @@ struct pbl_tm *sys_localtime_r(const time_t *timep, struct pbl_tm *result) {
 static bool s_i18n_translate = false;
 static bool s_i18n_locale_other = false;
 
-char *i18n_get_locale(void) {
+char *pbl_i18n_get_locale(void) {
   if (s_i18n_locale_other) {
     return "es_ES";
   } else {
@@ -67,7 +67,7 @@ char *app_get_system_locale(void) {
 
 static bool s_i18n_translate_may = false;
 
-const char *i18n_get(const char *msgid, const void *owner) {
+const char *pbl_i18n_get(const char *msgid, const void *owner) {
   if (s_i18n_translate) {
     return "Hola";
   }
@@ -83,26 +83,26 @@ const char *i18n_get(const char *msgid, const void *owner) {
   return message ? message + 1 : msgid;
 }
 
-void i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
-  strncpy(buffer, i18n_get(string, nullptr), length);
+void pbl_i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
+  strncpy(buffer, pbl_i18n_get(string, nullptr), length);
 }
 
-size_t i18n_get_length(const char *string) {
-  return strlen(i18n_get(string, nullptr));
+size_t pbl_i18n_get_length(const char *string) {
+  return strlen(pbl_i18n_get(string, nullptr));
 }
 
-void i18n_free(const char *original, const void *owner) {
+void pbl_i18n_free(const char *original, const void *owner) {
 }
 
-void i18n_free_all(const void *owner) {
+void pbl_i18n_free_all(const void *owner) {
 }
 
 void sys_i18n_get_with_buffer(const char *string, char *buffer, size_t length) {
-  i18n_get_with_buffer(string, buffer, length);
+  pbl_i18n_get_with_buffer(string, buffer, length);
 }
 
 size_t sys_i18n_get_length(const char *string) {
-  return i18n_get_length(string);
+  return pbl_i18n_get_length(string);
 }
 
 // Tests
@@ -1618,10 +1618,11 @@ void test_strftime__i18n(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00,
+                     pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
 
   s_i18n_translate = true;
@@ -1633,10 +1634,11 @@ void test_strftime__i18n(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00,
+                     pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
 
   s_i18n_translate = false;
@@ -1648,10 +1650,11 @@ void test_strftime__i18n(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00,
+                     pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Friday Jan January");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Fri Jan  2 13:00:00 2015");
 
   s_i18n_translate = true;
@@ -1663,10 +1666,11 @@ void test_strftime__i18n(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, nullptr);
   cl_assert_equal_s(tmbuf, "Hola");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%a %A %b %B", &jan_2_2015__13_00_00,
+                     pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Hola Hola Hola Hola");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%c", &jan_2_2015__13_00_00, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "Hola");
 
   s_i18n_translate = false;
@@ -1689,7 +1693,7 @@ void test_strftime__i18n_month_abbr_context(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, nullptr);
   cl_assert_equal_s(tmbuf, "May May May");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "May May May");
 
   s_i18n_translate_may = true;
@@ -1697,7 +1701,7 @@ void test_strftime__i18n_month_abbr_context(void) {
   localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, nullptr);
   cl_assert_equal_s(tmbuf, "Mai. Mai. Mai");
   tmbuf[0] = '\0';
-  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, i18n_get_locale());
+  localized_strftime(tmbuf, sizeof(tmbuf), "%b %h %B", &may_2_2015, pbl_i18n_get_locale());
   cl_assert_equal_s(tmbuf, "May May May");
 
   s_i18n_translate_may = false;

@@ -5,6 +5,7 @@
 
 #include <pbl/bluetooth/types.h>
 #include <pbl/drivers/mcu.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
@@ -14,7 +15,6 @@
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notification_image.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
@@ -43,7 +43,7 @@ struct PBL_PACKED VersionsMessage {
   char serial_number[MFG_SERIAL_NUMBER_SIZE];
   struct pbl_bt_addr device_address;
   ResourceVersion system_resources_version;
-  char iso_locale[ISO_LOCALE_LENGTH];
+  char iso_locale[PBL_I18N_LOCALE_LEN];
   uint16_t lang_version;
   // Use this padding string for additional bit flags passed by
   // >= 2.X versions of the mobile applications.  ISO + locale
@@ -93,9 +93,9 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
   mfg_info_get_hw_version(versions_msg.hw_version, sizeof(versions_msg.hw_version));
   mfg_info_get_serialnumber(versions_msg.serial_number, sizeof(versions_msg.serial_number));
 
-  strncpy(versions_msg.iso_locale, i18n_get_locale(), ISO_LOCALE_LENGTH - 1);
-  versions_msg.iso_locale[ISO_LOCALE_LENGTH - 1] = '\0';
-  versions_msg.lang_version = pbl_cpu_to_be16(i18n_get_version());
+  strncpy(versions_msg.iso_locale, pbl_i18n_get_locale(), PBL_I18N_LOCALE_LEN - 1);
+  versions_msg.iso_locale[PBL_I18N_LOCALE_LEN - 1] = '\0';
+  versions_msg.lang_version = pbl_cpu_to_be16(pbl_i18n_get_version());
   PBL_LOG_DBG("Sending lang version: %d", versions_msg.lang_version);
 
   // Set the capabilities as zero, effectively saying that we don't support anything.

@@ -7,9 +7,9 @@
 #include "hr_summary_card_segments.h"
 #include "progress.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -132,7 +132,7 @@ static void prv_render_bpm(GContext *ctx, Layer *base_layer) {
     snprintf((char *)number_text_node->text, bpm_size, "%" PRIu32, data->now_bpm);
 
     GTextNodeText *units_text_node = health_util_create_text_node_with_text(
-        i18n_get("BPM", base_layer), data->units_font, TEXT_COLOR, container);
+        pbl_i18n_get("BPM", base_layer), data->units_font, TEXT_COLOR, container);
     units_text_node->node.offset.x += 2;
     units_text_node->node.offset.y = units_offset_y;
   }
@@ -177,7 +177,7 @@ static void prv_render_hrm_disabled(GContext *ctx, Layer *base_layer) {
   GRect rect = GRect(0, y, base_layer->bounds.size.w, 52);
 
   /// HRM disabled
-  const char *text = i18n_get("Enable heart rate monitoring in the mobile app", base_layer);
+  const char *text = pbl_i18n_get("Enable heart rate monitoring in the mobile app", base_layer);
 
   graphics_context_set_text_color(ctx, TEXT_COLOR);
   graphics_draw_text(ctx, text, data->timestamp_font, rect, GTextOverflowModeWordWrap,
@@ -267,7 +267,7 @@ void health_hr_summary_card_destroy(Layer *base_layer) {
   HealthHrSummaryCardData *data = layer_get_data(base_layer);
   app_timer_cancel(data->pulsing_heart_timer);
   gdraw_command_sequence_destroy(data->pulsing_heart);
-  i18n_free_all(base_layer);
+  pbl_i18n_free_all(base_layer);
   layer_destroy(base_layer);
 }
 

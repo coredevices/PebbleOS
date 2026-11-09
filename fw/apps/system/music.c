@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
 #include <pbl/services/vibes/vibe_score.h>
@@ -870,7 +870,7 @@ static void prv_unload_no_music_window(Window *window) {
   gbitmap_deinit(&music_window->bitmap);
   bitmap_layer_deinit(&music_window->bitmap_layer);
   text_layer_deinit(&music_window->text_layer);
-  i18n_free_all(music_window);
+  pbl_i18n_free_all(music_window);
 }
 
 static void prv_handle_no_music_back(ClickRecognizerRef recognizer, void *context) {
@@ -905,10 +905,11 @@ static MusicNoMusicWindow *prv_create_no_music_window(void) {
   const GRect NO_MUSIC_TEXT_RECT = GRect(0, config->no_music_text_field.origin_y, PBL_DISPLAY_WIDTH,
                                          config->no_music_text_field.size_h);
 
-  text_layer_init_with_parameters(
-      &window->text_layer, &NO_MUSIC_TEXT_RECT, i18n_get("START PLAYBACK\nON YOUR PHONE", window),
-      fonts_get_system_font(config->no_music_font_key), GColorBlack, GColorClear,
-      GTextAlignmentCenter, GTextOverflowModeTrailingEllipsis);
+  text_layer_init_with_parameters(&window->text_layer, &NO_MUSIC_TEXT_RECT,
+                                  pbl_i18n_get("START PLAYBACK\nON YOUR PHONE", window),
+                                  fonts_get_system_font(config->no_music_font_key), GColorBlack,
+                                  GColorClear, GTextAlignmentCenter,
+                                  GTextOverflowModeTrailingEllipsis);
 #if PBL_COLOR
   text_layer_set_text_color_follows_theme(&window->text_layer);
 #endif
@@ -1828,7 +1829,7 @@ static void prv_handle_deinit(void) {
   }
   // Detach the action bar so its touch-nav snapshot does not keep routing taps after the app exits.
   action_bar_layer_remove_from_window(&data->action_bar);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 static void prv_main(void) {
@@ -1850,7 +1851,7 @@ const PebbleProcessMd *music_app_get_info(void) {
               {0x1f, 0x03, 0x29, 0x3d, 0x47, 0xaf, 0x4f, 0x28, 0xb9, 0x60, 0xf2, 0xb0, 0x2a, 0x6d,
                0xd7, 0x57},
         },
-    .name = i18n_noop("Music"),
+    .name = pbl_i18n_noop("Music"),
     .icon_resource_id = RESOURCE_ID_AUDIO_CASSETTE_TINY,
   };
   return (const PebbleProcessMd *)&s_app_info;

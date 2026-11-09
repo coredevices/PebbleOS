@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/gcolor_definitions.h>
@@ -25,12 +25,12 @@ static void prv_respond(bool is_granted, ActionableDialog *actionable_dialog) {
     SimpleDialog *simple_dialog = simple_dialog_create("Sharing");
     Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
 
-    const char *msg = i18n_get("Sharing Heart Rate", dialog);
+    const char *msg = pbl_i18n_get("Sharing Heart Rate", dialog);
     dialog_set_text(dialog, msg);
     dialog_set_icon(dialog, RESOURCE_ID_BLE_HRM_SHARED);
     dialog_set_timeout(dialog, BLE_HRM_CONFIRMATION_TIMEOUT_MS);
     simple_dialog_set_icon_animated(simple_dialog, false);
-    i18n_free(msg, dialog);
+    pbl_i18n_free(msg, dialog);
     simple_dialog_push(simple_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
   }
 }
@@ -62,8 +62,8 @@ void ble_hrm_push_sharing_request_window(BLEHRMSharingRequest *sharing_request) 
 
   dialog_set_icon(dialog, RESOURCE_ID_BLE_HRM_SHARE_REQUEST_LARGE);
 
-  dialog_set_text(dialog, i18n_get("Share heart rate?", a_dialog));
-  i18n_free_all(a_dialog);
+  dialog_set_text(dialog, pbl_i18n_get("Share heart rate?", a_dialog));
+  pbl_i18n_free_all(a_dialog);
 
   actionable_dialog_push(a_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
 

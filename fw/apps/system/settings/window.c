@@ -8,8 +8,8 @@
 #include "settings.h"
 #include "system.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/event_service_client.h>
@@ -170,7 +170,7 @@ static void prv_settings_window_load(Window *window) {
   status_bar_layer_init(status_layer);
   const char *title = data->title_override ? data->title_override
                                            : settings_menu_get_status_name(data->current_category);
-  status_bar_layer_set_title(status_layer, i18n_get(title, data), false, false);
+  status_bar_layer_set_title(status_layer, pbl_i18n_get(title, data), false, false);
   status_bar_layer_set_colors_follow_theme(status_layer, false /* transparent_background */);
   status_bar_layer_set_separator_mode(status_layer, OPTION_MENU_STATUS_SEPARATOR_MODE);
   layer_add_child(&data->window.layer, status_bar_layer_get_layer(status_layer));
@@ -240,7 +240,7 @@ static void prv_settings_window_unload(Window *window) {
   if (callbacks->hide) {
     callbacks->hide(callbacks);
   }
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   menu_layer_deinit(&data->menu_layer);
   status_bar_layer_deinit(&data->status_layer);
   settings_window_destroy(window);
@@ -294,7 +294,7 @@ void settings_window_destroy(Window *window) {
   // Restore whatever was in app-state user_data before we took over.
   app_state_set_user_data(data->prev_app_user_data);
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

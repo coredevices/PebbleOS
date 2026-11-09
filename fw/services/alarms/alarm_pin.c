@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/alarms/alarm_pin.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -70,21 +70,22 @@ status_t alarm_pin_remove_untracked_future(time_t now, const Uuid *tracked, size
 //! Sets attributes for an alarm pin
 static void prv_set_pin_attributes(AttributeList *list, AlarmType type, AlarmKind kind) {
   const bool is_smart = (type == AlarmType_Smart);
-  attribute_list_add_cstring(list, AttributeIdTitle,
-                             is_smart ? i18n_get("Smart Alarm", list) : i18n_get("Alarm", list));
+  attribute_list_add_cstring(
+      list, AttributeIdTitle,
+      is_smart ? pbl_i18n_get("Smart Alarm", list) : pbl_i18n_get("Alarm", list));
   attribute_list_add_resource_id(
       list, AttributeIdIconPin,
       is_smart ? TIMELINE_RESOURCE_SMART_ALARM : TIMELINE_RESOURCE_ALARM_CLOCK);
   attribute_list_add_resource_id(list, AttributeIdIconTiny, TIMELINE_RESOURCE_ALARM_CLOCK);
   const bool all_caps = false;
-  const char *alarm_string = i18n_get(alarm_get_string_for_kind(kind, all_caps), list);
+  const char *alarm_string = pbl_i18n_get(alarm_get_string_for_kind(kind, all_caps), list);
   attribute_list_add_cstring(list, AttributeIdSubtitle, alarm_string);
   attribute_list_add_uint8(list, AttributeIdAlarmKind, kind);
 }
 
 // ----------------------------------------------------------------------------------------------
 static void prv_set_edit_action_attributes(AttributeList *list, AlarmId id) {
-  attribute_list_add_cstring(list, AttributeIdTitle, i18n_get("Edit", list));
+  attribute_list_add_cstring(list, AttributeIdTitle, pbl_i18n_get("Edit", list));
   attribute_list_add_uint32(list, AttributeIdLaunchCode, (uint32_t)id);
 }
 
@@ -110,8 +111,8 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
   TimelineItem *item = timeline_item_create_with_attributes(
       alarm_time, 0, TimelineItemTypePin, LayoutIdAlarm, &pin_attr_list, &action_group);
   if (!item) {
-    i18n_free_all(&pin_attr_list);
-    i18n_free_all(&edit_attr_list);
+    pbl_i18n_free_all(&pin_attr_list);
+    pbl_i18n_free_all(&edit_attr_list);
     attribute_list_destroy_list(&pin_attr_list);
     attribute_list_destroy_list(&edit_attr_list);
     pbl_free(action_group.actions);
@@ -122,8 +123,8 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
 
   status_t rv = pin_db_insert_item_without_event(item);
 
-  i18n_free_all(&pin_attr_list);
-  i18n_free_all(&edit_attr_list);
+  pbl_i18n_free_all(&pin_attr_list);
+  pbl_i18n_free_all(&edit_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
   attribute_list_destroy_list(&edit_attr_list);
   pbl_free(action_group.actions);

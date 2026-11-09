@@ -16,13 +16,13 @@ else()
 endif()
 
 set(PBL_GETTEXT_KEYWORDS
-  i18n_noop
-  i18n_get
-  i18n_get_with_buffer
+  pbl_i18n_noop
+  pbl_i18n_get
+  pbl_i18n_get_with_buffer
   sys_i18n_get_with_buffer
-  i18n_ctx_noop:1c,2
-  i18n_ctx_get:1c,2
-  i18n_ctx_get_with_buffer:1c,2
+  pbl_i18n_ctx_noop:1c,2
+  pbl_i18n_ctx_get:1c,2
+  pbl_i18n_ctx_get_with_buffer:1c,2
 )
 
 define_property(GLOBAL PROPERTY PBL_POT_TARGET

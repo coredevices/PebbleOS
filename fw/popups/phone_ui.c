@@ -11,6 +11,7 @@
 #include <time.h>
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -18,7 +19,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/evented_timer.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/notification_constants.h>
@@ -576,17 +576,17 @@ static void prv_stop_call_duration_timer(void) {
 
 static void prv_set_status_text(CallStatus status) {
   if (status == ACCEPTED) {
-    i18n_get_with_buffer("Call Accepted", s_phone_ui_data->call_status_text_buf,
-                         CALL_STATUS_BUFFER_LENGTH);
+    pbl_i18n_get_with_buffer("Call Accepted", s_phone_ui_data->call_status_text_buf,
+                             CALL_STATUS_BUFFER_LENGTH);
   } else if (status == DISCONNECTED) {
-    i18n_get_with_buffer("Disconnected", s_phone_ui_data->call_status_text_buf,
-                         CALL_STATUS_BUFFER_LENGTH);
+    pbl_i18n_get_with_buffer("Disconnected", s_phone_ui_data->call_status_text_buf,
+                             CALL_STATUS_BUFFER_LENGTH);
   } else if (status == ENDED) {
-    i18n_get_with_buffer("Call Ended", s_phone_ui_data->call_status_text_buf,
-                         CALL_STATUS_BUFFER_LENGTH);
+    pbl_i18n_get_with_buffer("Call Ended", s_phone_ui_data->call_status_text_buf,
+                             CALL_STATUS_BUFFER_LENGTH);
   } else {
-    i18n_get_with_buffer("Call Declined", s_phone_ui_data->call_status_text_buf,
-                         CALL_STATUS_BUFFER_LENGTH);
+    pbl_i18n_get_with_buffer("Call Declined", s_phone_ui_data->call_status_text_buf,
+                             CALL_STATUS_BUFFER_LENGTH);
   }
 
   text_layer_set_text(&s_phone_ui_data->call_status_text_layer,
@@ -928,7 +928,7 @@ static void prv_phone_ui_deinit(void) {
 
   action_bar_layer_deinit(&s_phone_ui_data->action_bar);
 
-  i18n_free_all(s_phone_ui_data);
+  pbl_i18n_free_all(s_phone_ui_data);
 
   prv_stop_ringing();
 
