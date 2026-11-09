@@ -5,3 +5,4 @@ pbl_include_directories(.)
 
 pbl_library()
 pbl_library_sources(${PBL_BOARD_NAME}/${PBL_BOARD_NAME}.c)
+pbl_devicetree()

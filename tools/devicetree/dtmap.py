@@ -1,0 +1,1153 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+"""Turn a board devicetree into C, as told by the *.dtmap.yaml file of each driver.
+
+The tree stays on the host: a node with status okay whose driver is enabled in Kconfig becomes a
+call to the instance macro of its driver, in an instance file the driver includes. A spec only says
+which classes the driver implements and where each macro argument comes from.
+
+Classes are the software model and live in *.class.yaml files, unknown to the tree and the bindings.
+Instance files only include class headers, so drivers do not need to know each other.
+
+A labelled node is reached from other code as dt_<label>, of the type of its class, declared in
+devicetree/devices.h.
+"""
+
+import argparse
+import itertools
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import fdt
+from fdt import DtError
+
+SPEC_DIRS = ("drivers", "kernel", "soc")
+# Functions of a block that share its registers are sibling nodes at its address, as the I2C and
+# SPI of a serial engine, and only one of them may be enabled
+DTC_FLAGS = ("-Wno-unique_unit_address", "-Wunique_unit_address_if_enabled")
+SPEC_KEYS = {
+    "compatible",
+    "config",
+    "class",
+    "symbol",
+    "define",
+    "args",
+    "provides",
+    "pinctrl",
+    "ids",
+    "children",
+    "header",
+}
+CHILDREN_KEYS = {"node", "names"}
+CLASS_KEYS = {"class", "type", "include", "provides"}
+PINCTRL_KEYS = {"define", "pin", "flags", "values"}
+IDS_KEYS = {"cell", "header", "prefix", "values"}
+IDS_VALUES_KEYS = {"header", "prefix"}
+ARG_KINDS = {
+    "name",
+    "reg",
+    "prop",
+    "strings",
+    "irq",
+    "clock",
+    "dma",
+    "gpio",
+    "pinctrl",
+    "parent",
+    "self",
+    "flag",
+    "string",
+    "id",
+    "size",
+    "list",
+    "pwm",
+    "supply",
+    "referrer",
+    "reset",
+    "flags",
+}
+ARG_OPTIONS = {
+    "default",
+    "as",
+    "wrap",
+    "field",
+    "of",
+    "child",
+    "index",
+    "item",
+    "optional",
+    "up",
+    "remote",
+    "all",
+}
+
+
+def c_ident(name):
+    return "".join(c if c.isalnum() else "_" for c in name)
+
+
+def cells_number(cells):
+    number = 0
+    for cell in cells:
+        number = (number << 32) | cell
+    return number
+
+
+def as_list(value):
+    return value if isinstance(value, list) else [value]
+
+
+def c_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
+def check_keys(error, data, known, what, required=()):
+    if not isinstance(data, dict):
+        raise error(f"{what}: {data!r} is not a mapping")
+    if data.keys() - known:
+        raise error(f"{what}: unknown {sorted(data.keys() - known)}")
+    if set(required) - data.keys():
+        raise error(f"{what}: missing {sorted(set(required) - data.keys())}")
+
+
+def header_defines(header, prefix):
+    """The numeric defines of a header with a prefix, as {suffix: value}."""
+    number = r"\(?\s*(0[xX][0-9a-fA-F]+|\d+)[uUlL]*\s*\)?"
+    pattern = rf"^#define\s+{re.escape(prefix)}(\w+)\s+{number}\s*(?:/[/*].*)?$"
+    found = re.findall(pattern, Path(header).read_text(), re.MULTILINE)
+    return {
+        suffix: int(value, 16 if value[:2] in ("0x", "0X") else 10)
+        for suffix, value in found
+    }
+
+
+class Spec:
+    def __init__(self, path, data, classes, include_dir=None):
+        self.path = path
+        check_keys(self._error, data, SPEC_KEYS, "spec", ("compatible", "config"))
+        self.compatibles = as_list(data["compatible"])
+        self.config = data["config"]
+        self.classes = as_list(data.get("class", []))
+        self.define = data.get("define")
+        self.args = list(data.get("args", []))
+        self.provides = data.get("provides", {})
+        # Driver headers the provides templates need, as the modes of the parts of a panel driver
+        self.includes = as_list(data.get("header", []))
+        self.pinctrl = data.get("pinctrl")
+        self.children = data.get("children")
+        if self.children is not None:
+            check_keys(
+                self._error, self.children, CHILDREN_KEYS, "children", ("names",)
+            )
+            if not self.define:
+                raise self._error("'children' needs 'define'")
+        self.sources = []
+        for name in self.classes:
+            if name not in classes:
+                raise self._error(f"unknown class '{name}'")
+        self.class_info = {name: classes[name] for name in self.classes}
+        symbol = data.get("symbol", {})
+        if not isinstance(symbol, dict):
+            if len(self.classes) != 1:
+                raise self._error("'symbol' of a single name needs exactly one class")
+            symbol = {self.classes[0]: symbol}
+        if symbol.keys() - set(self.classes):
+            raise self._error(
+                f"'symbol' of unknown {sorted(symbol.keys() - set(self.classes))}"
+            )
+        if self.define and not self.classes:
+            raise self._error("'define' needs a class")
+        if (
+            self.define
+            and len(self.classes) != 1
+            and symbol.keys() != set(self.classes)
+        ):
+            raise self._error("'define' of several classes needs a 'symbol' for each")
+        for name, template in symbol.items():
+            if "{sym}" in template and not self.define:
+                raise self._error(
+                    f"'symbol' of '{name}': '{{sym}}' names what 'define' defines"
+                )
+        fixed = [name for name, template in symbol.items() if "{sym}" not in template]
+        if self.define and fixed and len(self.classes) != 1:
+            raise self._error("'define' of several classes names them with '{sym}'")
+        self.symbols = symbol
+        # A SoC singleton defined from the tree keeps the name C code knows it by
+        self.singleton = symbol[self.classes[0]] if self.define and fixed else None
+        self.file = c_ident(self.compatibles[0])
+        for arg in self.args:
+            check_keys(self._error, arg, ARG_KINDS | ARG_OPTIONS, "argument")
+            if len(arg.keys() & ARG_KINDS) != 1:
+                raise self._error(f"argument {arg}: needs one of {sorted(ARG_KINDS)}")
+        # Arguments a node may lack end a variadic macro, so only they may follow one
+        trailing = [bool(arg.get("optional")) or "list" in arg for arg in self.args]
+        if any(trailing[i] and not all(trailing[i:]) for i in range(len(trailing))):
+            raise self._error("optional and list arguments must come last")
+        if self.pinctrl is not None:
+            check_keys(
+                self._error, self.pinctrl, PINCTRL_KEYS, "pinctrl", ("define", "pin")
+            )
+            if len(self.classes) != 1:
+                raise self._error("'pinctrl' needs exactly one class")
+        self.ids = {
+            kind: self._load_ids(kind, ids, include_dir)
+            for kind, ids in data.get("ids", {}).items()
+        }
+
+    def _load_ids(self, kind, ids, include_dir):
+        """The cell and, for each abstract ID of the binding, the number the driver uses."""
+        what = f"ids of '{kind}'"
+        check_keys(self._error, ids, IDS_KEYS, what, IDS_KEYS)
+        check_keys(self._error, ids["values"], IDS_VALUES_KEYS, what, IDS_VALUES_KEYS)
+        if include_dir is None:
+            raise self._error(f"{what}: no include directory")
+        binding = Path(include_dir) / ids["header"]
+        values = Path(include_dir) / ids["values"]["header"]
+        for header in (binding, values):
+            if not header.exists():
+                raise self._error(f"{what}: no {header}")
+        self.sources += [str(binding), str(values)]
+        abstract = header_defines(binding, ids["prefix"])
+        numbers = header_defines(values, ids["values"]["prefix"])
+        if not abstract:
+            raise self._error(
+                f"{what}: nothing with prefix {ids['prefix']} in {binding}"
+            )
+        if len(set(abstract.values())) != len(abstract):
+            raise self._error(f"{what}: an ID is defined twice in {binding}")
+        missing = sorted(abstract.keys() - numbers.keys())
+        if missing:
+            raise self._error(f"{what}: {values} lacks {missing}")
+        table = {value: numbers[name] for name, value in abstract.items()}
+        return ids["cell"], table
+
+    def _error(self, message):
+        return DtError(f"{self.path}: {message}")
+
+
+def find_files(srcdir, pattern, appdir=None):
+    """Specs and classes of PebbleOS, and those of the application's own drivers."""
+    dirs = [Path(srcdir) / directory for directory in SPEC_DIRS]
+    if appdir is not None and Path(appdir).resolve() not in {d.resolve() for d in dirs}:
+        dirs.append(Path(appdir))
+    paths = []
+    for directory in dirs:
+        for path in sorted(directory.rglob(pattern)):
+            if path not in paths:
+                paths.append(path)
+    return paths
+
+
+def load_class(path, data):
+    def error(message):
+        return DtError(f"{path}: {message}")
+
+    check_keys(error, data, CLASS_KEYS, "class", ("class", "type", "include"))
+    return data
+
+
+def load_specs(srcdir, appdir=None):
+    classes = {}
+    for path in find_files(srcdir, "*.class.yaml", appdir):
+        with open(path) as f:
+            data = load_class(path, yaml.safe_load(f))
+        if data["class"] in classes:
+            raise DtError(f"{path}: another file has class '{data['class']}'")
+        classes[data["class"]] = data
+    specs = {}
+    include_dir = Path(srcdir) / "include"
+    for path in find_files(srcdir, "*.dtmap.yaml", appdir):
+        with open(path) as f:
+            spec = Spec(path, yaml.safe_load(f), classes, include_dir)
+        for compatible in spec.compatibles:
+            specs.setdefault(compatible, []).append(spec)
+    files = {}
+    for compatible, found in specs.items():
+        names = [name for spec in found for name in spec.classes]
+        if len(names) != len(set(names)):
+            raise DtError(f"several specs of '{compatible}' implement the same class")
+        if len(found) > 1:
+            # Drivers sharing a node, each with its own instance file
+            for spec in found:
+                if not spec.classes:
+                    raise DtError(
+                        f"{spec.path}: sharing '{compatible}' needs a class"
+                    )
+                first = c_ident(spec.compatibles[0])
+                spec.file = f"{first}_{c_ident(spec.classes[0])}"
+    for spec in {id(s): s for found in specs.values() for s in found}.values():
+        other = files.setdefault(spec.file, spec)
+        if other is not spec:
+            raise DtError(f"{spec.path}: same instance file as {other.path}")
+    return specs
+
+
+def as_spec_lists(specs):
+    return {c: s if isinstance(s, list) else [s] for c, s in specs.items()}
+
+
+def instance_file(spec):
+    return f"devicetree/instances/{spec.file}.inc"
+
+
+def instance_files(specs):
+    found = [spec for group in as_spec_lists(specs).values() for spec in group]
+    return sorted({instance_file(s) for s in found if s.define or s.pinctrl})
+
+
+def enabled(node):
+    while node is not None:
+        if not node.status_okay:
+            return False
+        node = node.parent
+    return True
+
+
+class Device:
+    def __init__(self, node, specs, owner=None, child_id=None):
+        self.node = node
+        self.specs = specs
+        # A child, as regulators of a PMIC, belongs to the device of its owner
+        self.owner = owner
+        self.child_id = child_id
+        # The first label names the device, the others are aliases of it
+        self.label = node.labels[0] if node.labels else None
+        self.aliases = node.labels[1:]
+        self.name = self.label or c_ident(node.name)
+        self.sym = f"dt_{self.label}" if self.label else f"dt_node{c_ident(node.path)}"
+
+    def error(self, message):
+        return DtError(f"{self.node.path}: {message}")
+
+
+class Output:
+    def __init__(self):
+        self.includes = set()
+        self.body = []
+
+
+class Generator:
+    def __init__(self, tree, specs, config):
+        self.tree = tree
+        self.specs = as_spec_lists(specs)
+        self.config = config
+        self.outputs = {name: Output() for name in instance_files(specs)}
+        self.out = None
+        self.declarations = []
+        self.aliases = {}
+        self.symbols = {}
+        self.unbound = []
+        # Nodes a driver reads as data, as the OTP cells of a flash
+        self.consumed = set()
+        self.devices = {}
+        self.pin_states = {}
+
+    def _device(self, node):
+        if node.path not in self.devices:
+            found = [self.specs[c] for c in node.compatibles if c in self.specs]
+            # The first compatible with an enabled driver, as Kconfig enables drivers
+            specs = next(
+                (s for s in found if any(spec.config in self.config for spec in s)),
+                found[0] if found else [],
+            )
+            self.devices[node.path] = Device(node, specs)
+        return self.devices[node.path]
+
+    def _bound(self, dev):
+        """The specs of the node whose driver is enabled."""
+        return [spec for spec in dev.specs if spec.config in self.config]
+
+    def run(self):
+        if self.tree is None:
+            return
+        for node in self.tree.nodes():
+            if (
+                node.parent is None
+                or not node.compatibles
+                or "simple-bus" in node.compatibles
+                or PARTITIONS in node.compatibles
+            ):
+                continue
+            if not enabled(node):
+                continue
+            dev = self._device(node)
+            bound = self._bound(dev)
+            if not bound:
+                self.unbound.append(node.path)
+            for spec in bound:
+                if spec.children:
+                    self._instantiate_children(dev, spec)
+                elif spec.define:
+                    self._instantiate(dev, spec)
+                else:
+                    self._declare_device(dev, spec)
+
+    def _class_symbols(self, dev, spec, sym=None):
+        """The symbol of each class object a spec gives a node, by class."""
+        sym = sym or dev.sym
+        if spec.symbols:
+            return {name: t.replace("{sym}", sym) for name, t in spec.symbols.items()}
+        if spec.define:
+            return {spec.classes[0]: sym}
+        return {}
+
+    def _define(self, symbol, node):
+        if self.symbols.setdefault(symbol, node.path) != node.path:
+            raise DtError(
+                f"{node.path}: '{symbol}' is also {self.symbols[symbol]}: label one"
+            )
+
+    def _alias(self, alias, symbol, node):
+        self._define(alias, node)
+        self.aliases[alias] = symbol
+
+    def _declare_device(self, dev, spec):
+        symbols = self._class_symbols(dev, spec)
+        for name, symbol in symbols.items():
+            self._declare(spec.class_info[name], symbol)
+        for label in dev.aliases:
+            others = self._class_symbols(dev, spec, f"dt_{label}")
+            for name, alias in others.items():
+                if alias != symbols[name]:
+                    self._alias(alias, symbols[name], dev.node)
+
+    def _declare(self, cls, symbol):
+        declaration = (cls["include"], cls["type"], symbol)
+        if declaration not in self.declarations:
+            self.declarations.append(declaration)
+
+    def _instantiate_children(self, dev, spec):
+        """One instance per child, matched by name, as the regulators of a PMIC."""
+        container = dev.node
+        if "node" in spec.children:
+            name = spec.children["node"]
+            container = next((c for c in dev.node.children if c.name == name), None)
+            if container is None:
+                return
+        names = spec.children["names"]
+        for child in container.children:
+            if not enabled(child):
+                continue
+            name = child.name.split("@")[0]
+            if name not in names:
+                raise DtError(f"{child.path}: not one of {sorted(names)}")
+            self._instantiate(
+                Device(child, [spec], owner=dev, child_id=names[name]), spec
+            )
+
+    def _instantiate(self, dev, spec):
+        self.out = self.outputs[instance_file(spec)]
+        first = dev.sym
+        if len(spec.classes) == 1 and spec.symbols:
+            first = self._class_symbols(dev, spec)[spec.classes[0]]
+        self._define(first, dev.node)
+        args = [first, *self._args(dev, spec.args)]
+        self.out.body.append(f"{spec.define}({', '.join(args)});")
+        if dev.label or spec.singleton:
+            self._declare_device(dev, spec)
+
+    def _args(self, dev, args):
+        """The arguments a node has. An empty list or an absent optional argument ends them, as
+        those of a variadic macro, so none may follow it."""
+        values, ended = [], None
+        for arg in args:
+            value = self._arg(dev, arg)
+            if value is None or ("list" in arg and value == ""):
+                ended = ended or arg
+            elif ended is not None:
+                raise dev.error(f"has what {arg} needs, but not what {ended} needs")
+            else:
+                values.append(value)
+        return values
+
+    def _provider(self, consumer, node, kind):
+        """A node others refer to: disabled or driverless ones break the consumer at build time."""
+        dev = self._device(node)
+        if not enabled(node):
+            raise consumer.error(f"'{kind}' from {node.path}, which is disabled")
+        if not self._bound(dev):
+            raise consumer.error(
+                f"'{kind}' from {node.path}, which has no enabled driver"
+            )
+        return dev
+
+    def _template(self, consumer, dev, kind):
+        """How to refer to a provider: template, symbol, class, spec, the class of the device
+        and its symbol, which an unlabelled provider has too."""
+        for spec in self._bound(dev):
+            if kind in spec.provides:
+                self.out.includes.update(spec.includes)
+                symbol = None
+                if spec.classes and (dev.label or not spec.define or spec.singleton):
+                    symbol = self._class_symbols(dev, spec).get(spec.classes[0])
+                return spec.provides[kind], symbol, None, spec
+            for name, cls in spec.class_info.items():
+                if kind in cls.get("provides", {}):
+                    device = self._class_symbols(dev, spec).get(name)
+                    symbol = None
+                    if dev.label or not spec.define or spec.singleton:
+                        symbol = self._class_symbols(dev, spec).get(name)
+                    return cls["provides"][kind], symbol, cls, spec
+        raise consumer.error(f"{dev.node.path} provides no '{kind}'")
+
+    def _transform(self, consumer, dev, spec, kind, cells):
+        """Abstract IDs of the binding, turned into the numbers of the driver."""
+        if kind not in spec.ids:
+            return cells
+        cell, table = spec.ids[kind]
+        if cell >= len(cells):
+            raise consumer.error(f"'{kind}' from {dev.node.path} lacks cell {cell}")
+        if cells[cell] not in table:
+            raise consumer.error(f"'{kind}' from {dev.node.path}: no ID {cells[cell]}")
+        return [*cells[:cell], table[cells[cell]], *cells[cell + 1 :]]
+
+    def _provided(self, consumer, node, kind, cells):
+        dev = self._provider(consumer, node, kind)
+        template, symbol, cls, spec = self._template(consumer, dev, kind)
+        cells = self._transform(consumer, dev, spec, kind, cells)
+        if cls is not None:
+            self.out.includes.add(cls["include"])
+
+        def field(match):
+            key = match.group(1)
+            if key == "sym":
+                if symbol is None:
+                    raise consumer.error(
+                        f"'{kind}' from {node.path}, which needs a label"
+                    )
+                self.out.includes.add("devicetree/devices.h")
+                return symbol
+            if int(key) >= len(cells):
+                raise consumer.error(f"'{kind}' from {node.path} lacks cell {key}")
+            return str(cells[int(key)])
+
+        return re.sub(r"\{(sym|\d+)\}", field, template)
+
+    def _phandles(self, dev, prop, cells_prop):
+        values = dev.node.u32s(prop)
+        entries = []
+        pos = 0
+        while pos < len(values):
+            target = self.tree.phandle(values[pos], f"{dev.node.path}: '{prop}'")
+            count = target.u32(cells_prop)
+            cells = values[pos + 1 : pos + 1 + count]
+            if len(cells) != count:
+                raise dev.error(f"'{prop}': {target.path} takes {count} cells")
+            entries.append((target, cells))
+            pos += 1 + count
+        return entries
+
+    def _index(self, dev, key, names_prop):
+        """An entry of a property given by index, or by name from its names property."""
+        if not isinstance(key, str):
+            return key
+        names = dev.node.strings(names_prop) if dev.node.has(names_prop) else []
+        if key not in names:
+            raise dev.error(f"no '{key}' in '{names_prop}'")
+        return names.index(key)
+
+    def _interrupt(self, dev, key, kind):
+        index = self._index(dev, key, "interrupt-names")
+        if dev.node.has("interrupts-extended"):
+            entries = self._phandles(dev, "interrupts-extended", "#interrupt-cells")
+            if index >= len(entries):
+                raise dev.error(f"no interrupt {index}")
+            target, cells = entries[index]
+            return self._provided(dev, target, kind, cells)
+        node = dev.node
+        while node is not None and not node.has("interrupt-parent"):
+            node = node.parent
+        if node is None:
+            raise dev.error("no interrupt parent")
+        parent = self.tree.phandle(node.u32("interrupt-parent"), dev.node.path)
+        count = parent.u32("#interrupt-cells")
+        cells = dev.node.u32s("interrupts")
+        entry = cells[index * count : (index + 1) * count]
+        if len(entry) != count:
+            raise dev.error(f"no interrupt {index}")
+        return self._provided(dev, parent, kind, entry)
+
+    def _translate(self, dev, address):
+        """A reg address as the CPU sees it, through the ranges of the buses above."""
+        bus = dev.node.parent
+        while bus is not None and bus.parent is not None:
+            if not bus.has("ranges"):
+                # Not memory mapped, as an I2C bus: addresses are the bus's own
+                return address
+            entries = bus.u32s("ranges") if bus.props["ranges"] else []
+            child_cells = bus.cells_of("#address-cells", 2)
+            parent_cells = bus.address_cells
+            size_cells = bus.cells_of("#size-cells", 1)
+            step = child_cells + parent_cells + size_cells
+            for start in range(0, len(entries), step):
+                child = cells_number(entries[start : start + child_cells])
+                parent = cells_number(
+                    entries[start + child_cells : start + child_cells + parent_cells]
+                )
+                size = cells_number(
+                    entries[start + child_cells + parent_cells : start + step]
+                )
+                if child <= address < child + size:
+                    address = parent + address - child
+                    break
+            else:
+                if entries:
+                    raise dev.error(f"{address:#x} is outside the ranges of {bus.path}")
+            bus = bus.parent
+        return address
+
+    def _reg_entry(self, dev, key):
+        index = self._index(dev, key, "reg-names")
+        address_cells = dev.node.address_cells
+        entry_cells = address_cells + dev.node.size_cells
+        cells = dev.node.u32s("reg")
+        start = index * entry_cells
+        if start + entry_cells > len(cells):
+            raise dev.error(f"no reg entry {index}")
+        address = cells_number(cells[start : start + address_cells])
+        return address, cells_number(cells[start + address_cells : start + entry_cells])
+
+    def _reg(self, dev, key):
+        return f"{self._translate(dev, self._reg_entry(dev, key)[0]):#x}"
+
+    def _list(self, dev, node, path, item):
+        """An item per enabled child of the node reached through children of the given compatibles."""
+        for compatible in path:
+            node = next(
+                (
+                    c
+                    for c in node.children
+                    if compatible in c.compatibles and enabled(c)
+                ),
+                None,
+            )
+            if node is None:
+                return None
+            self.consumed.add(node.path)
+        items = []
+        for child in node.children:
+            if not enabled(child):
+                continue
+            cells = child.u32s("reg") if child.has("reg") else []
+            try:
+                items.append(item.format(*cells, name=child.basename))
+            except (KeyError, IndexError) as error:
+                raise dev.error(f"{child.path}: no {error} for {item!r}") from None
+        return ", ".join(items)
+
+    def _dma(self, dev, src, name):
+        names = src.node.strings("dma-names")
+        if name not in names:
+            raise src.error(f"no '{name}' in 'dma-names'")
+        entries = self._phandles(src, "dmas", "#dma-cells")
+        if names.index(name) >= len(entries):
+            raise src.error(f"no dma '{name}'")
+        target, cells = entries[names.index(name)]
+        init = self._provided(src, target, "dma", cells)
+        sym = f"{dev.sym}_dma_{c_ident(name)}"
+        self.out.body.append(f"static const struct pbl_dma_chan {sym} = {init};")
+        return f"&{sym}"
+
+    def _pin(self, pinctrl, pin, group):
+        spec = pinctrl
+        flags = spec.get("flags", {})
+        values = spec.get("values", {})
+        unknown = set(group.props) - {"pins", "function", "phandle", *flags, *values}
+        if unknown:
+            raise DtError(f"{group.path}: unsupported {sorted(unknown)}")
+        parts = [spec["pin"].format(pin=pin, function=group.string("function").upper())]
+        parts += [name for prop, name in flags.items() if group.has(prop)]
+        parts += [
+            name.format(value=group.u32(prop))
+            for prop, name in values.items()
+            if group.has(prop)
+        ]
+        return " | ".join(parts)
+
+    def _pinctrl(self, dev, name):
+        names = dev.node.strings("pinctrl-names")
+        if name not in names:
+            raise dev.error(f"no '{name}' in 'pinctrl-names'")
+        prop = f"pinctrl-{names.index(name)}"
+        states = [
+            self.tree.phandle(value, f"{dev.node.path}: '{prop}'")
+            for value in dev.node.u32s(prop)
+        ]
+        if len(states) != 1:
+            raise dev.error(f"'{prop}' must point at one state")
+        ctrl = self._provider(dev, states[0].parent, "pinctrl")
+        spec = next((s for s in self._bound(ctrl) if s.pinctrl is not None), None)
+        if spec is None:
+            raise dev.error(f"{ctrl.node.path} is no pin controller")
+        sym = self._pin_state(dev, spec, states[0])
+        self.out.includes.add("devicetree/devices.h")
+        return f"&{sym}"
+
+    def _pin_state(self, consumer, spec, state):
+        """The state's symbol. It goes in the pin controller's file, once, if something uses it."""
+        if state.path in self.pin_states:
+            return self.pin_states[state.path]
+        if not state.labels:
+            raise consumer.error(f"pin state {state.path} needs a label")
+        sym = f"dt_{state.labels[0]}"
+        self._define(sym, state)
+        for label in state.labels[1:]:
+            self._alias(f"dt_{label}", sym, state)
+        pins = [
+            self._pin(spec.pinctrl, pin, group)
+            for group in state.children
+            for pin in group.strings("pins")
+        ]
+        out = self.outputs[instance_file(spec)]
+        out.includes.add("devicetree/devices.h")
+        out.body.append(f"{spec.pinctrl['define']}({', '.join([sym, *pins])});")
+        self._declare(spec.class_info[spec.classes[0]], sym)
+        self.pin_states[state.path] = sym
+        return sym
+
+    def _remote(self, dev, port):
+        """The device at the other end of a port's endpoint, in the graph of Linux."""
+        node = dev.node
+        ports = next((c for c in node.children if c.name == "ports"), node)
+        names = ("port",) if port == 0 else ()
+        found = next(
+            (c for c in ports.children if c.name in (*names, f"port@{port:x}")), None
+        )
+        if found is None:
+            return None
+        endpoint = next(
+            (c for c in found.children if c.basename == "endpoint" and enabled(c)), None
+        )
+        if endpoint is None or not endpoint.has("remote-endpoint"):
+            return None
+        remote = self.tree.phandle(
+            endpoint.u32("remote-endpoint"), f"{endpoint.path}: 'remote-endpoint'"
+        )
+        target = remote.parent.parent
+        if target.name == "ports":
+            target = target.parent
+        if not enabled(target):
+            raise dev.error(
+                f"{target.path}, at the other end of port {port}, is disabled"
+            )
+        return target
+
+    def _referrer(self, dev, prop):
+        """The enabled node whose property points at this one, as a GPIO controller's gpio-ranges."""
+        phandle = dev.node.u32("phandle") if dev.node.has("phandle") else None
+        found = [
+            n
+            for n in self.tree.nodes()
+            if phandle is not None
+            and n.has(prop)
+            and enabled(n)
+            and n.u32s(prop)[0] == phandle
+        ]
+        if len(found) > 1:
+            raise dev.error(f"several nodes refer to it with '{prop}'")
+        return found[0] if found else None
+
+    def _value(self, dev, arg):
+        """The argument as C, or None when the node does not have it."""
+        kind = next(iter(arg.keys() & ARG_KINDS))
+        key = arg[kind]
+        if arg.get("up"):
+            # The function of a block read from the block, as the PWM of a timer
+            dev = Device(dev.node.parent, [])
+        node = dev.node
+        if "remote" in arg:
+            node = self._remote(dev, arg["remote"])
+            if node is None:
+                return None
+        if "child" in arg:
+            # A property of the device on this bus, as the clock of the memory a controller drives,
+            # or of a child node by name
+            child = arg["child"]
+            node = next(
+                (
+                    c
+                    for c in node.children
+                    if enabled(c)
+                    and (
+                        c.name == child
+                        if isinstance(child, str)
+                        else c.unit_address == f"{child:x}"
+                    )
+                ),
+                None,
+            )
+            if node is None:
+                return None
+        if "of" in arg:
+            if not node.has(arg["of"]):
+                return None
+            node = self.tree.phandle(
+                node.u32(arg["of"]), f"{dev.node.path}: '{arg['of']}'"
+            )
+        if kind == "name":
+            return f'"{dev.name}"'
+        # The node read, as the memory a device is given with memory-region
+        src = dev if node is dev.node else Device(node, [])
+        if kind == "reg":
+            return self._reg(src, key)
+        if kind == "size":
+            return f"{self._reg_entry(src, key)[1]:#x}"
+        if kind == "list":
+            if "item" not in arg:
+                raise dev.error(f"{arg}: 'list' needs 'item'")
+            return self._list(dev, node, as_list(key), arg["item"])
+        if kind == "parent":
+            owner = dev.owner.node if dev.owner else node.parent
+            return self._provided(dev, owner, key, [])
+        if kind == "self":
+            return self._provided(dev, node, key, [])
+        if kind == "id":
+            if dev.child_id is None:
+                raise dev.error("'id' is for children")
+            return str(dev.child_id)
+        if kind == "flag":
+            return "true" if node.has(key) else "false"
+        if kind == "string":
+            return f'"{node.string(key)}"' if node.has(key) else None
+        if kind == "irq":
+            return self._interrupt(src, key, arg.get("as", "irq"))
+        if kind == "clock":
+            if not node.has("clocks"):
+                return None
+            index = self._index(src, key, "clock-names")
+            entries = self._phandles(src, "clocks", "#clock-cells")
+            if index >= len(entries):
+                raise src.error(f"no clock {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "clock", cells)
+        if kind == "prop":
+            return str(node.u32(key)) if node.has(key) else None
+        if kind == "strings":
+            return ", ".join(node.strings(key)) if node.has(key) else None
+        if kind == "dma":
+            return self._dma(dev, src, key) if node.has("dmas") else None
+        if kind == "flags":
+            # Boolean properties as a C mask, as the mode of a SPI device
+            present = [token for prop, token in key.items() if node.has(prop)]
+            return " | ".join(present) if present else "0U"
+        if kind == "reset":
+            if not node.has("resets"):
+                return None
+            index = self._index(src, key, "reset-names")
+            entries = self._phandles(src, "resets", "#reset-cells")
+            if index >= len(entries):
+                raise src.error(f"no reset {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "reset", cells)
+        if kind == "pwm":
+            if not node.has("pwms"):
+                return None
+            index = self._index(src, key, "pwm-names")
+            entries = self._phandles(src, "pwms", "#pwm-cells")
+            if index >= len(entries):
+                raise src.error(f"no pwm {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "pwm", cells)
+        if kind == "supply":
+            prop = f"{key}-supply"
+            if not node.has(prop):
+                return None
+            target = self.tree.phandle(node.u32(prop), f"{node.path}: '{prop}'")
+            return self._provided(dev, target, "regulator", [])
+        if kind == "referrer":
+            target = self._referrer(dev, key)
+            if target is None:
+                return None
+            return self._provided(dev, target, arg.get("as", key), [])
+        if kind == "gpio":
+            prop = f"{key}-gpios" if key else "gpios"
+            if not node.has(prop):
+                return None
+            entries = self._phandles(src, prop, "#gpio-cells")
+            if arg.get("all"):
+                return ", ".join(
+                    self._provided(src, target, "gpio", cells)
+                    for target, cells in entries
+                )
+            index = arg.get("index", 0)
+            if index >= len(entries):
+                raise src.error(f"no entry {index} in '{prop}'")
+            target, cells = entries[index]
+            return self._provided(src, target, "gpio", cells)
+        if kind == "pinctrl":
+            return self._pinctrl(src, key) if node.has("pinctrl-names") else None
+        raise AssertionError(kind)
+
+    def _arg(self, dev, arg):
+        value = self._value(dev, arg)
+        if value is None and arg.get("optional"):
+            return None
+        if value is None:
+            if "default" not in arg:
+                raise dev.error(f"missing what {arg} needs")
+            value = ", ".join(c_value(item) for item in as_list(arg["default"]))
+        if "wrap" in arg:
+            value = f"{arg['wrap']}({value})"
+        if "field" in arg:
+            value = f".{arg['field']} = {value}"
+        return value
+
+    def instances(self):
+        """The text of each instance file, by name."""
+        result = {}
+        for name, out in self.outputs.items():
+            lines = ["/* Generated from the board devicetree. */", ""]
+            lines += [f"#include <{header}>" for header in sorted(out.includes)]
+            lines += ["", *out.body]
+            result[name] = "\n".join(lines) + "\n"
+        return result
+
+    def header(self):
+        includes = sorted({include for include, _, _ in self.declarations})
+        lines = ["/* Generated from the board devicetree. */", "", "#pragma once", ""]
+        lines += [f"#include <{include}>" for include in includes]
+        lines.append("")
+        lines += [f"extern const {type_} {sym};" for _, type_, sym in self.declarations]
+        if self.aliases:
+            lines.append("")
+            lines += [f"#define {alias} {sym}" for alias, sym in self.aliases.items()]
+        unbound = [path for path in self.unbound if path not in self.consumed]
+        if unbound:
+            lines += ["", "/* Enabled, no driver in this configuration:"]
+            lines += [f" * {path}" for path in unbound]
+            lines.append(" */")
+        return "\n".join(lines) + "\n"
+
+
+PARTITIONS = "fixed-partitions"
+PARTITIONS_HEADER = "devicetree/partitions.h"
+KIB = 1024
+MIB = 1024 * KIB
+
+
+def size_expr(size):
+    if size % MIB == 0:
+        return f"PBL_MIB({size // MIB})"
+    if size % KIB == 0:
+        return f"PBL_KIB({size // KIB})"
+    return f"{size:#x}"
+
+
+def partitions_header(tree):
+    """The PART_* table of the board's flash, from its fixed-partitions node."""
+    lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
+    tables = []
+    if tree is not None:
+        tables = [n for n in tree.nodes() if PARTITIONS in n.compatibles and enabled(n)]
+    if len(tables) > 1:
+        raise DtError(f"{tables[1].path}: only one flash may have fixed partitions")
+    if tables:
+        lines += ["", "#include <pbl/util/units.h>"]
+        names = set()
+        regions = []
+        for part in tables[0].children:
+            if not part.status_okay:
+                continue
+            label = part.string("label") if part.has("label") else part.basename
+            name = "PART_" + c_ident(label).upper()
+            if name in names:
+                raise DtError(f"{part.path}: partition {label} is defined twice")
+            names.add(name)
+            cells = part.u32s("reg")
+            if len(cells) != part.address_cells + part.size_cells:
+                raise DtError(f"{part.path}: 'reg' must be one offset and size")
+            offset = cells_number(cells[: part.address_cells])
+            size = cells_number(cells[part.address_cells :])
+            regions.append((offset, offset + size, part.path))
+            lines += [
+                "",
+                f"#define {name}_OFFSET {offset:#09x}",
+                f"#define {name}_SIZE   {size_expr(size)}",
+                f"#define {name}        PBL_FLASH_PARTITION({name})",
+            ]
+        regions.sort()
+        for (_, end, path), (start, _, other) in itertools.pairwise(regions):
+            if start < end:
+                raise DtError(f"{other}: overlaps {path}")
+    return "\n".join(lines) + "\n"
+
+
+def write_if_changed(path, content):
+    path = Path(path)
+    if path.exists() and path.read_bytes() == content:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+
+
+def find_dts(srcdir, board, revision):
+    directory = Path(srcdir) / "boards" / board
+    names = ([f"{board}_{revision}.dts"] if revision else []) + [f"{board}.dts"]
+    return next(
+        (directory / name for name in names if (directory / name).exists()), None
+    )
+
+
+def depfile_sources(text):
+    """The prerequisites of a make rule, where a backslash escapes a space of a path."""
+    sources = text.replace("\\\n", " ").split(":", 1)[1]
+    return [s.replace("\\ ", " ") for s in re.findall(r"(?:\\ |\S)+", sources)]
+
+
+def compile_dts(dts, cc, include_dirs, outdir):
+    """Compile to outdir/board.dtb, returning it and the sources it came from."""
+    dtc = shutil.which("dtc")
+    if dtc is None:
+        raise DtError(f"{dts} needs dtc: install it")
+    outdir = Path(outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    pre, depfile, dtb = (
+        outdir / "board.dts.pre",
+        outdir / "board.dts.d",
+        outdir / "board.dtb",
+    )
+    cpp = [
+        cc,
+        "-E",
+        "-nostdinc",
+        "-undef",
+        "-D__DTS__",
+        "-x",
+        "assembler-with-cpp",
+        "-P",
+    ]
+    cpp += ["-MD", "-MF", str(depfile), "-MT", "board.dtb"]
+    cpp += [flag for path in include_dirs for flag in ("-I", str(path))]
+    result = subprocess.run(
+        [*cpp, "-o", str(pre), str(dts)], capture_output=True, text=True, check=False
+    )
+    if result.returncode != 0:
+        raise DtError(f"preprocessing {dts} failed:\n{result.stderr}")
+    tmp = outdir / "board.dtb.new"
+    result = subprocess.run(
+        [
+            dtc,
+            "-@",
+            *DTC_FLAGS,
+            "-I",
+            "dts",
+            "-O",
+            "dtb",
+            "-o",
+            str(tmp),
+            str(pre),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0 or result.stderr:
+        raise DtError(f"dtc failed on {dts}:\n{result.stderr}")
+    write_if_changed(dtb, tmp.read_bytes())
+    tmp.unlink()
+    return dtb, depfile_sources(depfile.read_text())
+
+
+def kconfig_symbol(compatible):
+    return "DT_HAS_" + re.sub(r"[^A-Z0-9]", "_", compatible.upper()) + "_ENABLED"
+
+
+def kconfig_text(tree, compatibles):
+    present = set()
+    if tree is not None:
+        for node in tree.nodes():
+            if enabled(node):
+                present.update(node.compatibles)
+    lines = ["# Generated from the board devicetree."]
+    for compatible in sorted(compatibles):
+        lines += [
+            "",
+            f"config {kconfig_symbol(compatible)}",
+            f"\tdef_bool {'y' if compatible in present else 'n'}",
+        ]
+    return "\n".join(lines) + "\n"
+
+
+def configure(srcdir, builddir, board, revision, cc, appdir=None):
+    """Prepare what Kconfig needs.
+
+    Writes Kconfig.dt. Returns the dtb or None, the files generated from it, and what it all depends on.
+    """
+    outdir = Path(builddir) / "devicetree"
+    specs = load_specs(srcdir, appdir)
+    deps = [str(path) for path in find_files(srcdir, "*.dtmap.yaml", appdir)]
+    deps += [str(path) for path in find_files(srcdir, "*.class.yaml", appdir)]
+    deps += sorted(
+        {src for group in specs.values() for spec in group for src in spec.sources}
+    )
+    tree, dtb = None, None
+    dts = find_dts(srcdir, board, revision)
+    if dts is not None:
+        srcdir = Path(srcdir)
+        dtb, sources = compile_dts(
+            dts, cc, [srcdir / "boards", srcdir / "soc", srcdir / "include"], outdir
+        )
+        deps += sources
+        tree = fdt.load(dtb)
+    kconfig = outdir / "Kconfig.dt"
+    write_if_changed(kconfig, kconfig_text(tree, [*specs, PARTITIONS]).encode())
+    outputs = [PARTITIONS_HEADER, *instance_files(specs)]
+    return str(dtb) if dtb else None, outputs, deps
+
+
+def load_config(path):
+    config = set()
+    with open(path) as f:
+        for line in f:
+            match = re.match(r"CONFIG_(\w+)=y$", line.strip())
+            if match:
+                config.add(match.group(1))
+    return config
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--srcdir", required=True)
+    parser.add_argument("--appdir", help="the application, for the specs of its drivers")
+    parser.add_argument("--dtb", help="the compiled tree, if the board has one")
+    parser.add_argument("--config", required=True, help="the .config file")
+    parser.add_argument(
+        "--outdir", required=True, help="include directory to generate into"
+    )
+    args = parser.parse_args()
+
+    try:
+        tree = fdt.load(args.dtb) if args.dtb else None
+        specs = load_specs(args.srcdir, args.appdir)
+        generator = Generator(tree, specs, load_config(args.config))
+        generator.run()
+        partitions = partitions_header(tree)
+    except DtError as error:
+        sys.exit(f"devicetree: {error}")
+
+    outputs = {
+        "devicetree/devices.h": generator.header(),
+        PARTITIONS_HEADER: partitions,
+        **generator.instances(),
+    }
+    for name, text in outputs.items():
+        write_if_changed(Path(args.outdir) / name, text.encode())
+    for path in (Path(args.outdir) / "devicetree" / "instances").glob("*.inc"):
+        if f"devicetree/instances/{path.name}" not in outputs:
+            path.unlink()
+
+
+if __name__ == "__main__":
+    main()

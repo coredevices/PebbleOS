@@ -5,6 +5,8 @@ osource "soc/*/Kconfig.defconfig"
 # syscfg.yml files; same reason, they have to come before the definitions.
 rsource "subsys/bluetooth/Kconfig.defconfig"
 
+osource "$(DT_BUILD_DIR)/Kconfig.dt"
+
 rsource "soc/Kconfig"
 
 config RELEASE
