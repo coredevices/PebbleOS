@@ -28,8 +28,6 @@ struct pbl_gpio_sf32lb_state {
 struct pbl_gpio_sf32lb {
   /** GPIO port. */
   struct pbl_gpio_port port;
-  /** Interrupt controller of the pins, child of the port. */
-  struct pbl_intc intc;
   /** Register base address. */
   uintptr_t base;
   /** Clock. */
@@ -40,11 +38,12 @@ struct pbl_gpio_sf32lb {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_gpio_sf32lb pbl_gpio_sf32lb_gpio1;
+extern const struct pbl_intc pbl_gpio_sf32lb_gpio1_intc;
 /** @endcond */
 
 /** Port GPIO1 (PA). */
 #define SF32LB_GPIO1 (&pbl_gpio_sf32lb_gpio1.port)
 /** Interrupt controller of port GPIO1. */
-#define SF32LB_GPIO1_INTC (&pbl_gpio_sf32lb_gpio1.intc)
+#define SF32LB_GPIO1_INTC (&pbl_gpio_sf32lb_gpio1_intc)
 
 /** @} */
