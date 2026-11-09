@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/vibe.h>
@@ -188,3 +189,5 @@ const struct pbl_vibe_ops pbl_drv2604_ops = {
   .stop = prv_stop,
   .calibrate = prv_calibrate,
 };
+
+#include PBL_DT_INSTANCES(ti_drv2604)

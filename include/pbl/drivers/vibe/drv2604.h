@@ -13,9 +13,9 @@
  * @brief TI DRV2604 @ref drivers_vibe driver, driving an LRA in real-time playback mode.
  *
  * @code{.c}
- * PBL_DRV2604_DEFINE(s_drv2604, &s_i2c.bus, 0x5A, PBL_GPIO(&dt_gpio0, 2, 0));
+ * PBL_DRV2604_DEFINE(s_drv2604, &s_i2c, 0x5A, PBL_GPIO(&dt_gpio0, 2, 0));
  *
- * const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
+ * const struct pbl_vibe *const VIBE = &s_drv2604;
  * @endcode
  * @{
  */
@@ -37,18 +37,16 @@ extern const struct pbl_vibe_ops pbl_drv2604_ops;
 /**
  * @brief Define a DRV2604.
  *
- * @param sym Symbol of the instance; the motor is @c sym.vibe.
+ * @param sym Symbol of the instance, a struct pbl_vibe; the motor is @c sym.vibe.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param _enable Enable line (struct pbl_gpio).
  */
 #define PBL_DRV2604_DEFINE(sym, _bus, _addr, _enable)                                         \
   PBL_VIBE_STATE_DEFINE(sym);                                                                 \
-  const struct pbl_drv2604 sym = {                                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_drv2604, struct pbl_vibe, vibe) {                       \
     .vibe = PBL_VIBE_INIT(sym, "drv2604", &(_bus)->dev, &pbl_drv2604_ops, VIBE_STRENGTH_MIN), \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                                          \
-    .enable = _enable,                                                                        \
-  };                                                                                          \
-  PBL_DEVICE_REGISTER(sym, &sym.vibe.dev)
+    .i2c = PBL_I2C_DEV(_bus, _addr), .enable = _enable,                                       \
+  }
 
 /** @} */

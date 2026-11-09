@@ -59,6 +59,7 @@ config VIBE_AW8623X
 
 config VIBE_DRV2604
     bool "TI DRV2604"
+    default DT_HAS_TI_DRV2604_ENABLED
     depends on I2C
     help
       Support for the TI DRV2604 haptic driver.

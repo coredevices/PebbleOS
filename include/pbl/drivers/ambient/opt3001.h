@@ -14,9 +14,9 @@
  * @brief TI OPT3001 @ref drivers_als driver.
  *
  * @code{.c}
- * PBL_OPT3001_DEFINE(s_opt3001, &s_i2c.bus, 0x44, nullptr, .always_on = true);
+ * PBL_OPT3001_DEFINE(s_opt3001, &s_i2c, 0x44);
  *
- * const struct pbl_als *const ALS = &s_opt3001.als;
+ * const struct pbl_als *const ALS = &s_opt3001;
  * @endcode
  * @{
  */
@@ -27,8 +27,6 @@ struct pbl_opt3001 {
   struct pbl_als als;
   /** I2C device. */
   struct pbl_i2c_dev i2c;
-  /** Convert continuously instead of once per read. */
-  bool always_on;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -38,19 +36,15 @@ extern const struct pbl_als_ops pbl_opt3001_ops;
 /**
  * @brief Define an OPT3001.
  *
- * @param sym Symbol of the instance; the sensor is @c sym.als.
+ * @param sym Symbol of the instance, a struct pbl_als.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
- * @param _scale Lux calibration (const struct pbl_als_scale *), or nullptr.
- * @param ... Designated initializers of the remaining fields: @c always_on.
  */
-#define PBL_OPT3001_DEFINE(sym, _bus, _addr, _scale, ...)                          \
-  PBL_ALS_STATE_DEFINE(sym);                                                       \
-  const struct pbl_opt3001 sym = {                                                 \
-    .als = PBL_ALS_INIT(sym, "opt3001", &(_bus)->dev, &pbl_opt3001_ops, (_scale)), \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                               \
-    __VA_ARGS__                                                                    \
-  };                                                                               \
-  PBL_DEVICE_REGISTER(sym, &sym.als.dev)
+#define PBL_OPT3001_DEFINE(sym, _bus, _addr)                                      \
+  PBL_ALS_STATE_DEFINE(sym);                                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_opt3001, struct pbl_als, als) {             \
+    .als = PBL_ALS_INIT(sym, "opt3001", &(_bus)->dev, &pbl_opt3001_ops, nullptr), \
+    .i2c = PBL_I2C_DEV(_bus, _addr),                                              \
+  }
 
 /** @} */
