@@ -283,8 +283,8 @@ bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCall
   return true;
 }
 
-uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
-                              uint32_t *consumed_samples) {
+uint32_t kalg_analyze_samples(KAlgState *state, const struct kalg_sample *data,
+                              uint32_t num_samples, uint32_t *consumed_samples) {
   *consumed_samples = 0;
   return s_alg_next_steps;
 }

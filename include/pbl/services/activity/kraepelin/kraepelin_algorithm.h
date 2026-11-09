@@ -2,10 +2,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <pbl/kernel/malloc.h>
-#include <pbl/kernel/time.h>
-#include <pbl/services/accel_manager_types.h>
-
 /**
  * @defgroup services_activity_kraepelin Kraepelin algorithm
  * @ingroup services_activity
@@ -21,7 +17,7 @@
  * The caller owns the state, of size kalg_state_size():
  *
  * @code{.c}
- * KAlgState *state = pbl_malloc_check(kalg_state_size());
+ * KAlgState *state = malloc(kalg_state_size());
  * kalg_init(state, nullptr, nullptr);
  *
  * // For every batch of 25 Hz samples
@@ -33,10 +29,10 @@
  * uint8_t orientation;
  * bool still;
  * kalg_minute_stats(state, &vmc, &orientation, &still);
- * kalg_activities_update(state, pbl_realtime(), minute_steps, vmc, orientation, not_worn,
+ * kalg_activities_update(state, time(NULL), minute_steps, vmc, orientation, not_worn,
  *                        resting_cal, active_cal, distance_mm, false, session_cb, ctx);
  *
- * pbl_free(state);
+ * free(state);
  * @endcode
  * @{
  */
@@ -46,6 +42,13 @@
 
 /** @brief Number of grams per kilogram. */
 #define KALG_GRAMS_PER_KG 1000
+
+/** @brief Accelerometer sample, in mG. */
+struct kalg_sample {
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
 
 /** @brief Opaque algorithm state. */
 typedef struct KAlgState KAlgState;
@@ -198,8 +201,8 @@ bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCall
  * (125) when one completed, 0 otherwise.
  * @return Steps counted.
  */
-uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *samples, uint32_t num_samples,
-                              uint32_t *consumed_samples);
+uint32_t kalg_analyze_samples(KAlgState *state, const struct kalg_sample *samples,
+                              uint32_t num_samples, uint32_t *consumed_samples);
 
 /**
  * @brief Get the last minute's stats and reset them for the next minute.
