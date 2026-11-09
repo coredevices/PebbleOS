@@ -34,7 +34,7 @@ command's own options.
 | {doc}`clean` | {doc}`emulator` |
 | {doc}`test` | {doc}`image_resources` |
 | {doc}`itest` | {doc}`image_recovery` |
-| | {doc}`erase` |
+| {doc}`samples` | {doc}`erase` |
 | | {doc}`lab` |
 | | {doc}`power` |
 
@@ -128,6 +128,7 @@ menuconfig.md
 clean.md
 test.md
 itest.md
+samples.md
 ```
 
 ```{toctree}
