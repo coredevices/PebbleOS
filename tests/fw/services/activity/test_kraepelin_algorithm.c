@@ -47,15 +47,14 @@ extern char *strdup(const char *s);
 // #define ACTIVITY_TEST_ONLY "walk_activities_0"
 
 // Implemented in activity/step_samples.c
-AccelRawData *activity_sample_30_steps(int *len);
-AccelRawData *activity_sample_working_at_desk(int *len);
-AccelRawData *activity_sample_not_moving(int *len);
+struct kalg_sample *activity_sample_30_steps(int *len);
+struct kalg_sample *activity_sample_working_at_desk(int *len);
+struct kalg_sample *activity_sample_not_moving(int *len);
 
 // Implemented in activity/sleep_samples_v1.c
 AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len);
 
-typedef AccelRawData *AccelRawDataPtr;
-typedef AccelRawDataPtr (*ActivitySamplesFunc)(int *len);
+typedef struct kalg_sample *(*ActivitySamplesFunc)(int *len);
 
 // These are the values we capture and compare against for every minute of accel data
 typedef struct {
@@ -69,7 +68,7 @@ typedef struct {
 // system
 typedef struct {
   char name[256];
-  AccelRawData *samples;
+  struct kalg_sample *samples;
   int num_samples;
   int exp_steps;
   int exp_steps_min;
@@ -329,7 +328,7 @@ static void prv_stats_write(const char *filename, bool create, const char *test_
 // @param[in,out] minute_data_len size of minute_data array on entry, # of filled entries
 //                 on exit
 // @param return number of steps computed.
-static uint32_t prv_feed_kalg_samples(AccelRawData *data, int num_samples,
+static uint32_t prv_feed_kalg_samples(struct kalg_sample *data, int num_samples,
                                       TestMinuteData *minute_data_array, int *minute_data_len) {
   uint32_t total_steps = 0;
   uint32_t minute_steps = 0;
@@ -388,7 +387,7 @@ static uint32_t prv_feed_kalg_samples(AccelRawData *data, int num_samples,
 
 // ---------------------------------------------------------------------------------------
 // Run samples through the reference algorithm.
-static uint32_t prv_feed_reference_samples(AccelRawData *data, int num_samples) {
+static uint32_t prv_feed_reference_samples(struct kalg_sample *data, int num_samples) {
   extern int ref_accel_data_handler(AccelData * data, uint32_t num_samples);
   extern void ref_init(void);
   extern int ref_finish_epoch(void);
@@ -445,7 +444,7 @@ typedef struct {
 #define ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES (12 * PBL_SEC_PER_MIN * KALG_SAMPLE_HZ)
 typedef struct {
   SampleDiscoveryState common;
-  AccelRawData samples[ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES];
+  struct kalg_sample samples[ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES];
   StepFileTestEntry test_entry;
 } AccelSampleDiscoveryState;
 static AccelSampleDiscoveryState s_accel_sample_discovery_state;
@@ -502,7 +501,7 @@ static bool prv_parse_accel_samples_file(AccelSampleDiscoveryState *state) {
       continue;
     }
 
-    // If this is an AccelRawData line, get the name
+    // If this is an struct kalg_sample line, get the name
     if (strcmp(token, "AccelRawData") == 0) {
       PBL_ASSERT(state->test_entry.name[0] == 0, "Unexpected start of new samples");
 
@@ -542,7 +541,7 @@ static bool prv_parse_accel_samples_file(AccelSampleDiscoveryState *state) {
       fflush(stdout);
 
       PBL_ASSERTN(state->test_entry.num_samples < ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES);
-      state->samples[state->test_entry.num_samples++] = (AccelRawData){
+      state->samples[state->test_entry.num_samples++] = (struct kalg_sample){
         .x = x,
         .y = y,
         .z = z,
@@ -1432,7 +1431,7 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
 
 // --------------------------------------------------------------------------------------
 // Run a set of samples through and verify that we got the right minute data
-static void prv_test_minute_data(AccelRawData *samples, int num_samples,
+static void prv_test_minute_data(struct kalg_sample *samples, int num_samples,
                                  TestMinuteData *exp_minutes, int exp_num_minutes) {
   int minute_data_len = 100;
   TestMinuteData minute_data[minute_data_len];
@@ -1809,7 +1808,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    AccelRawData *samples = activity_sample_30_steps(&num_samples);
+    struct kalg_sample *samples = activity_sample_30_steps(&num_samples);
     TestMinuteData exp_minutes[] = {
       {
         .steps = 28,
@@ -1824,7 +1823,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    AccelRawData *samples = activity_sample_working_at_desk(&num_samples);
+    struct kalg_sample *samples = activity_sample_working_at_desk(&num_samples);
     TestMinuteData exp_minutes[] = {
       {
         .steps = 0,
@@ -1839,7 +1838,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    AccelRawData *samples = activity_sample_not_moving(&num_samples);
+    struct kalg_sample *samples = activity_sample_not_moving(&num_samples);
     TestMinuteData exp_minutes[2] = {
       {
         .steps = 0,

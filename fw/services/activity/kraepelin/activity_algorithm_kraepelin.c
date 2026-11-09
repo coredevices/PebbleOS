@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
@@ -966,9 +968,15 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
   if (!prv_lock()) {
     return;
   }
+  // Same layout, the samples are passed as they are
+  static_assert(sizeof(AccelRawData) == sizeof(struct kalg_sample));
+  static_assert(offsetof(AccelRawData, x) == offsetof(struct kalg_sample, x));
+  static_assert(offsetof(AccelRawData, y) == offsetof(struct kalg_sample, y));
+  static_assert(offsetof(AccelRawData, z) == offsetof(struct kalg_sample, z));
+
   uint32_t consumed_samples;
-  uint16_t new_steps =
-      kalg_analyze_samples(s_alg_state->k_state, data, num_samples, &consumed_samples);
+  uint16_t new_steps = kalg_analyze_samples(s_alg_state->k_state, (const struct kalg_sample *)data,
+                                            num_samples, &consumed_samples);
   s_alg_state->steps += new_steps;
   s_alg_state->minute_steps += new_steps;
 
