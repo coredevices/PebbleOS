@@ -12,8 +12,9 @@ class Configure(PblCommand):
     def __init__(self):
         super().__init__(
             "configure",
-            "Configure the firmware build directory",
-            "Run CMake for a board. Anything this command does not recognize "
+            "Configure the build directory",
+            "Run CMake for a board, for the firmware or for the application "
+            "in the given directory. Anything this command does not recognize "
             "is passed straight to CMake, so Kconfig symbols can be overridden "
             "with -DCONFIG_FOO=y.",
             accepts_unknown_args=True,
@@ -47,6 +48,13 @@ class Configure(PblCommand):
             help="Firmware variant (default: normal)",
         )
         parser.add_argument(
+            "app",
+            nargs="?",
+            metavar="APP",
+            help="Application to build, a directory such as "
+            "samples/hello_world (default: the firmware)",
+        )
+        parser.add_argument(
             "-G",
             "--generator",
             default="Ninja",
@@ -59,17 +67,19 @@ class Configure(PblCommand):
         if os.path.exists(build.join("menuconfig.conf")):
             self.wrn(f"applying the Kconfig changes from {build.join('menuconfig.conf')}")
 
-        return self.run_cmd(
-            [
-                "cmake",
-                "-B",
-                str(build),
-                "-S",
-                self.topdir,
-                "-G",
-                args.generator,
-                f"-DBOARD={args.board}",
-                f"-DVARIANT={args.variant}",
-            ]
-            + unknown
-        )
+        cmd = [
+            "cmake",
+            "-B",
+            str(build),
+            "-S",
+            os.path.abspath(args.app) if args.app else self.topdir,
+            "-G",
+            args.generator,
+            f"-DBOARD={args.board}",
+            f"-DVARIANT={args.variant}",
+        ]
+        if args.app:
+            # Where find_package(PebbleOS) finds this checkout.
+            cmd.append(f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}")
+
+        return self.run_cmd(cmd + unknown)
