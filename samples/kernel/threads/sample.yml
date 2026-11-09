@@ -1,0 +1,8 @@
+description: Threads of different priorities, and how they share the CPU
+expect:
+  - 'main: creating a thread of higher priority'
+  - 'urgent: preempted main, which is still inside pbl_thread_create\(\)'
+  - 'main: urgent has ended'
+  - 'main: created two threads of lower priority, which wait for main to block'
+  - 'main: ping ran 3 rounds, pong ran 3 rounds'
+  - 'Sample done'
