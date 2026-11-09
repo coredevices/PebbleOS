@@ -3,6 +3,7 @@
 
 menuconfig FS
     bool "File system"
+    select TASK_WDT
     help
       Access to files on mounted file systems, regardless of their
       format.

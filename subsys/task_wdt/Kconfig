@@ -1,7 +1,15 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-menu "Task watchdog"
+menuconfig TASK_WDT
+    bool "Task watchdog"
+    default y if WATCHDOG
+    help
+      Software watchdog that catches stuck threads, and the one feeding
+      the hardware watchdog: without it, a hardware watchdog the SoC has
+      started resets the system.
+
+if TASK_WDT
 
 config TASK_WDT_CHANNELS
     int "Channels"
@@ -50,4 +58,4 @@ module = TASK_WDT
 module-str = Task watchdog
 source "subsys/logging/Kconfig.template.log_level"
 
-endmenu
+endif
