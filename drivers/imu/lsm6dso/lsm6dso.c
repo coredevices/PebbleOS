@@ -5,6 +5,7 @@
 #include <inttypes.h>
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
@@ -1183,3 +1184,5 @@ const struct pbl_accel_ops pbl_lsm6dso_ops = {
   .set_shake_sensitivity_high = prv_set_shake_sensitivity_high,
   .set_shake_sensitivity_percent = prv_set_shake_sensitivity_percent,
 };
+
+#include PBL_DT_INSTANCES(st_lsm6dso)

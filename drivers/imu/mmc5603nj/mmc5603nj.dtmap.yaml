@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: memsic,mmc5603
+config: MAG_MMC5603NJ
+class: mag
+define: PBL_MMC5603NJ_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - strings: mount-matrix
+    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    wrap: PBL_MOUNT_MATRIX_MAP
+    field: axis_map
+  - strings: mount-matrix
+    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    wrap: PBL_MOUNT_MATRIX_DIR
+    field: axis_dir

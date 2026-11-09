@@ -10,7 +10,8 @@ if I2C
 
 config I2C_NRF5
     bool "Nordic nRF5 I2C Controller"
-    default y if SOC_NRF52
+    default DT_HAS_NORDIC_NRF52832_TWIM_ENABLED
+    depends on SOC_NRF52
     select HAL_NORDIC
     help
       Support for the Nordic nRF5 I2C controller.
@@ -24,7 +25,7 @@ config I2C_NRF5_IRQ_PRIO
 
 config I2C_SF32LB
     bool "SiFli SF32LB I2C Controller"
-    default y if SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_I2C_ENABLED
     depends on CLK_SF32LB && PINCTRL
     select DMA
     help
