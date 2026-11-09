@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/rtc/nordic,nrf52832-rtc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 RTC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Counter of the 32768 Hz low-frequency clock with compare events. Its
+  functions are child nodes, as a PWM output driven through PPI and GPIOTE.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-rtc
+      - items:
+          - enum:
+              - nordic,nrf52833-rtc
+              - nordic,nrf52840-rtc
+          - const: nordic,nrf52832-rtc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  pwm:
+    type: object
+    additionalProperties: false
+    description: PWM output on a GPIO, toggled by GPIOTE tasks on compare events.
+
+    properties:
+      compatible:
+        const: nordic,nrf52832-rtc-pwm
+
+      "#pwm-cells":
+        const: 3
+
+      gpios:
+        maxItems: 1
+        description: Output.
+
+      nordic,gpiote:
+        $ref: /schemas/types.yaml#/definitions/phandle
+        description: GPIOTE whose tasks drive the output, on one of its channels.
+
+      nordic,ppi:
+        $ref: /schemas/types.yaml#/definitions/phandle
+        description:
+          PPI connecting the compare events to the GPIOTE tasks, on two of its
+          channels.
+
+      status: true
+
+    required:
+      - compatible
+      - "#pwm-cells"
+      - gpios
+      - nordic,gpiote
+      - nordic,ppi
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    rtc@40024000 {
+        compatible = "nordic,nrf52840-rtc", "nordic,nrf52832-rtc";
+        reg = <0x40024000 0x1000>;
+        interrupts = <36>;
+
+        pwm {
+            compatible = "nordic,nrf52832-rtc-pwm";
+            #pwm-cells = <3>;
+            gpios = <&gpio1 15 0>;
+            nordic,gpiote = <&gpiote>;
+            nordic,ppi = <&ppi>;
+        };
+    };

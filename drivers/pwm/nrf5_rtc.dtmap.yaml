@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-rtc-pwm
+config: PWM_NRF5_RTC
+class: pwm
+define: PBL_PWM_NRF5_RTC_DEFINE
+args:
+  - name: true
+  - reg: 0
+    up: true
+  - reg: 0
+    of: nordic,gpiote
+  - gpio: ""

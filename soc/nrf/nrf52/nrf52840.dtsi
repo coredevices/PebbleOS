@@ -39,6 +39,15 @@
 			status = "disabled";
 		};
 
+		spi0: spi@40003000 {
+			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			reg = <0x40003000 0x1000>;
+			interrupts = <3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		i2c1: i2c@40004000 {
 			compatible = "nordic,nrf52840-twim", "nordic,nrf52832-twim";
 			reg = <0x40004000 0x1000>;
@@ -46,6 +55,80 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			status = "disabled";
+		};
+
+		spi1: spi@40004000 {
+			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			reg = <0x40004000 0x1000>;
+			interrupts = <4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		gpiote: gpiote@40006000 {
+			compatible = "nordic,nrf52840-gpiote", "nordic,nrf52832-gpiote";
+			reg = <0x40006000 0x1000>;
+			interrupts = <6>;
+		};
+
+		rtc0: rtc@4000b000 {
+			compatible = "nordic,nrf52840-rtc", "nordic,nrf52832-rtc";
+			reg = <0x4000b000 0x1000>;
+			interrupts = <11>;
+			status = "disabled";
+
+			rtc0_pwm: pwm {
+				compatible = "nordic,nrf52832-rtc-pwm";
+				#pwm-cells = <3>;
+				nordic,gpiote = <&gpiote>;
+				nordic,ppi = <&ppi>;
+				status = "disabled";
+			};
+		};
+
+		rtc1: rtc@40011000 {
+			compatible = "nordic,nrf52840-rtc", "nordic,nrf52832-rtc";
+			reg = <0x40011000 0x1000>;
+			interrupts = <17>;
+			status = "disabled";
+
+			rtc1_pwm: pwm {
+				compatible = "nordic,nrf52832-rtc-pwm";
+				#pwm-cells = <3>;
+				nordic,gpiote = <&gpiote>;
+				nordic,ppi = <&ppi>;
+				status = "disabled";
+			};
+		};
+
+		ppi: ppi@4001f000 {
+			compatible = "nordic,nrf52840-ppi", "nordic,nrf52832-ppi";
+			reg = <0x4001f000 0x1000>;
+		};
+
+		spi2: spi@40023000 {
+			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			reg = <0x40023000 0x1000>;
+			interrupts = <35>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		rtc2: rtc@40024000 {
+			compatible = "nordic,nrf52840-rtc", "nordic,nrf52832-rtc";
+			reg = <0x40024000 0x1000>;
+			interrupts = <36>;
+			status = "disabled";
+
+			rtc2_pwm: pwm {
+				compatible = "nordic,nrf52832-rtc-pwm";
+				#pwm-cells = <3>;
+				nordic,gpiote = <&gpiote>;
+				nordic,ppi = <&ppi>;
+				status = "disabled";
+			};
 		};
 
 		uart1: serial@40028000 {
@@ -60,6 +143,15 @@
 			reg = <0x40029000 0x1000>, <0x12000000 0x8000000>;
 			reg-names = "qspi", "qspi_mm";
 			interrupts = <41>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		spi3: spi@4002f000 {
+			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			reg = <0x4002f000 0x1000>;
+			interrupts = <47>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			status = "disabled";

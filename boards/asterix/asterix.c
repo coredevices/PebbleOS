@@ -5,15 +5,12 @@
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/drivers/audio/nrf5.h>
 #include <pbl/drivers/backlight/pwm.h>
-#include <pbl/drivers/display/sharp_ls013b7dh01.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/pwm/nrf5.h>
-#include <pbl/drivers/pwm/nrf5_rtc.h>
 #include <pbl/drivers/rtc/retained.h>
-#include <pbl/drivers/spi/nrf5.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/input/input.h>
@@ -42,21 +39,11 @@ PBL_GPIO_KEYS_DEFINE(
                       PBL_INPUT_KEY_DOWN, 40));
 
 /* display */
-PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", 2, PBL_GPIO(&dt_gpio1, 15, 0), nullptr);
-PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 3, PBL_GPIO(&dt_gpio0, 6, 0), PBL_GPIO(&dt_gpio0, 8, 0),
-                    PBL_GPIO(nullptr, 0, 0), nullptr, PBL_GPIO(&dt_gpio1, 3, 0));
-PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &s_spi3, 0);
 
 const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 1, 1};
 const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
 
-// EXTCOMIN feeds a flip-flop, generating a 60 Hz 50% VCOM
-PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(
-    s_display, "display",
-    PBL_SPI_DEV(&s_spi3.bus, 0, 1000000, PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
-    PBL_GPIO(&dt_gpio0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
-
-const struct pbl_display *const DISPLAY = &s_display.disp;
+const struct pbl_display *const DISPLAY = &dt_display;
 
 /* PERIPHERAL ID 10 */
 

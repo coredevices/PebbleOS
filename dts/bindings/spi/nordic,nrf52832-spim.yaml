@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/spi/nordic,nrf52832-spim.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 SPIM
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  SPI controller with EasyDMA of the nRF52 series, first in the nRF52832. Its
+  pins are selected in its own registers, from sck-gpios, mosi-gpios,
+  miso-gpios and cs-gpios. SPIM0 and SPIM1 share their registers, interrupt
+  and address with the TWIM and other serial functions of the same instance,
+  each a sibling node of its own, and only one of them may be enabled.
+
+allOf:
+  - $ref: /schemas/spi/spi-controller.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-spim
+      - items:
+          - enum:
+              - nordic,nrf52833-spim
+              - nordic,nrf52840-spim
+          - const: nordic,nrf52832-spim
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  sck-gpios:
+    maxItems: 1
+
+  mosi-gpios:
+    maxItems: 1
+
+  miso-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - sck-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    spi@4002f000 {
+        compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+        reg = <0x4002f000 0x1000>;
+        interrupts = <47>;
+        sck-gpios = <&gpio0 6 0>;
+        mosi-gpios = <&gpio0 8 0>;
+        cs-gpios = <&gpio1 3 0>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };

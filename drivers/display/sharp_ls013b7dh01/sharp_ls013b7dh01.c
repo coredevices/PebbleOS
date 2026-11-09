@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/display/sharp_ls013b7dh01.h>
 #include <pbl/util/bitops.h>
 #include <pbl/util/misc.h>
@@ -124,3 +125,5 @@ const struct pbl_display_ops pbl_display_sharp_ls013b7dh01_ops = {
   .update = prv_update,
   .clear = prv_clear,
 };
+
+#include PBL_DT_INSTANCES(sharp_ls013b7dh01)
