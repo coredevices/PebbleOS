@@ -14,6 +14,15 @@ components:
     purl: pkg:github/ARM-software/CMSIS_5@55b19837f5703e418ca37894d5745b1dc05e4c91
     url: https://github.com/ARM-software/CMSIS_5
 
+  - name: devicetree-rebasing
+    path: devicetree/devicetree-rebasing
+    supplier: The Linux Kernel Organization
+    description: Linux devicetree bindings, used only to check devicetrees
+    version: v7.3-dts
+    commit: 44ab80381f4714c7e073a85fe9796f1cff8801c0
+    license: GPL-2.0-only
+    url: https://git.kernel.org/pub/scm/linux/kernel/git/devicetree/devicetree-rebasing.git
+
   - name: fff
     path: fff/fff
     supplier: Michael Long
