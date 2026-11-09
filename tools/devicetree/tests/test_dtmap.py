@@ -1522,3 +1522,93 @@ def test_nodes_with_the_same_symbol_fail(tmp_path):
     with pytest.raises(DtError, match="a_b@30: 'dt_node_bus_2000_a_b_30' is also"):
         generate(tmp_path, dts=dts)
 
+
+def test_specs_do_not_share_their_arguments():
+    data = {**SPECS["acme,sensor"], "args": [{"reg": 0}]}
+    spec("acme,sensor", data).args.append({"prop": "x"})
+    assert data["args"] == [{"reg": 0}]
+
+
+def test_children_of_a_disabled_container_are_left_out(tmp_path):
+    dts = PMIC_DTS.replace("            regulators {", '            regulators {\n                status = "disabled";')
+    gen = pmic_generate(tmp_path, dts=dts)
+    assert "REG_DEFINE" not in instances(gen, "acme_pmic_regulator")
+
+
+def test_label_clashing_with_a_class_object_fails(tmp_path):
+    dts = DTS.replace("    bus: bus@2000 {", GPIO_NODE + "    bus: bus@2000 {")
+    dts = dts.replace("sensor: sensor@30", "gpio3_intc: sensor@30")
+    specs = {**{k: spec(k) for k in SPECS}, "acme,gpio": spec("acme,gpio", GPIO_PORT)}
+    with pytest.raises(DtError, match="'dt_gpio3_intc' is also"):
+        generate(tmp_path, specs=specs, dts=dts)
+
+
+def test_unlabelled_providers_are_needed(tmp_path):
+    reg_class = {"class": "regulator", "type": "struct regulator", "include": "regulator.h"}
+    classes = {**CLASSES, "regulator": reg_class}
+    ldo = dtmap.Spec(
+        "ldo",
+        {
+            "compatible": "acme,ldo",
+            "config": "LDO",
+            "class": "regulator",
+            "define": "LDO_DEFINE",
+            "provides": {"regulator": "LDO_ID"},
+            "args": [],
+        },
+        classes,
+    )
+    args = [{"supply": "vdd"}]
+    dts = GPIO_DTS.replace(
+        "    ctrl: ctrl@1000 {",
+        '    ldo@800 {\n        compatible = "acme,ldo";\n        reg = <0x800 0x10>;\n'
+        "        phandle = <0x99>;\n    };\n    ctrl: ctrl@1000 {",
+    )
+    gen = sensor_generate(
+        tmp_path, args, "vdd-supply = <0x99>;", dts=dts, extra={"acme,ldo": [ldo]},
+        config=(*ALL, "LDO"),
+    )
+    assert "SENSOR_DT_DEFINE(dt_sensor, LDO_ID);" in body(gen)
+    assert (
+        "PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_node_ldo_800.dev);"
+        in depends(gen)
+    )
+    assert "extern const struct regulator dt_node_ldo_800;" in gen.header()
+
+
+def test_specs_of_the_application(tmp_path):
+    write_specs(tmp_path / "os", {})
+    app = tmp_path / "app" / "drivers"
+    app.mkdir(parents=True)
+    (app / "thing.dtmap.yaml").write_text(
+        "compatible: acme,thing\nconfig: THING\nclass: bus\ndefine: THING_DEFINE\nargs: []\n"
+    )
+    assert "acme,thing" not in dtmap.load_specs(tmp_path / "os")
+    assert "acme,thing" in dtmap.load_specs(tmp_path / "os", tmp_path / "app")
+
+
+BOARD_TREES = sorted(
+    path.relative_to(REPO).as_posix() for path in (REPO / "boards").glob("*/*.dts")
+)
+
+
+@pytest.mark.parametrize("dts", BOARD_TREES)
+def test_board_trees_generate_with_every_driver(tmp_path, dts):
+    dtc()
+    if shutil.which("cc") is None:
+        pytest.skip("needs cc")
+    specs = dtmap.load_specs(REPO)
+    dtb, _ = dtmap.compile_dts(
+        REPO / dts, "cc", [REPO / "boards", REPO / "dts", REPO / "include"], tmp_path
+    )
+    tree = fdt.load(dtb)
+    config = {s.config for group in specs.values() for s in group}
+    gen = dtmap.Generator(tree, specs, config)
+    gen.run()
+    assert "_DEFINE(" in "".join(gen.instances().values())
+    assert "extern const" in gen.header()
+    dtmap.partitions_header(tree)
+
+
+def test_every_board_has_its_tree():
+    assert len(BOARD_TREES) >= 9

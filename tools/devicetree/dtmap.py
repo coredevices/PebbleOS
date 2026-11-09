@@ -1166,7 +1166,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     if dts is not None:
         srcdir = Path(srcdir)
         dtb, sources = compile_dts(
-            dts, cc, [srcdir / "boards", srcdir / "soc", srcdir / "include"], outdir
+            dts, cc, [srcdir / "boards", srcdir / "dts", srcdir / "include"], outdir
         )
         deps += sources
         tree = fdt.load(dtb)

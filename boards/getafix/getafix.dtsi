@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
-#include "sf32lb/sf32lb52x/sf32lb52.dtsi"
+#include "sifli/sf32lb52.dtsi"
 #include "getafix-pinctrl.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
