@@ -11,9 +11,7 @@
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
-#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
 #include <pbl/drivers/panel/jdi_mip.h>
@@ -35,6 +33,7 @@
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 
+#include <devicetree/devices.h>
 #include <hardware/sf32lb52_memorymap.h>
 
 PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
@@ -147,18 +146,7 @@ PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
 
 const struct pbl_backlight *const BACKLIGHT = &s_aw9364e.backlight;
 
-PBL_PINCTRL_STATE_DEFINE(s_i2c1_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA32_I2C1_SCL | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-                         SF32LB52_PA33_I2C1_SDA | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-static const struct pbl_dma_chan s_i2c1_dma =
-    PBL_DMA_CHAN(SF32LB52_DMAC1, 5, SF32LB52_DMA_REQ_I2C1, SF32LB52_DMA_PL_HIGH);
-PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", SF32LB52_I2C1_BASE, PBL_SOC_IRQN_I2C1,
-                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C1), 400000, &s_i2c1_default,
-                      &s_i2c1_dma);
-
-PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1, 0x19,
+PBL_LIS2DW12_DEFINE(s_lis2dw12, &dt_i2c1, 0x19,
                     .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING),
                     .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
                     .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
@@ -166,34 +154,14 @@ PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1, 0x19,
 
 const struct pbl_accel *const ACCEL = &s_lis2dw12.accel;
 
-PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c1, 0x30,
-                     .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
-                     .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = -1, [AXIS_Z] = 1});
+const struct pbl_mag *const MAG = &dt_mmc5603nj;
 
-const struct pbl_mag *const MAG = &s_mmc5603nj;
-
-PBL_PINCTRL_STATE_DEFINE(s_i2c2_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA11_I2C2_SCL | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-                         SF32LB52_PA10_I2C2_SDA | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", SF32LB52_I2C2_BASE, PBL_SOC_IRQN_I2C2,
-                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C2), 400000, &s_i2c2_default,
-                      nullptr);
-PBL_CST816_DEFINE(s_cst816, &s_i2c2, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 38, PBL_GPIO_PULL_UP),
+PBL_CST816_DEFINE(s_cst816, &dt_i2c2, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 38, PBL_GPIO_PULL_UP),
                   PBL_GPIO(SF32LB_GPIO1, 28, PBL_GPIO_ACTIVE_LOW), .size_x = 260, .size_y = 260);
 
 const struct pbl_touch *const TOUCH = &s_cst816.touch;
 
-PBL_PINCTRL_STATE_DEFINE(s_i2c3_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA31_I2C3_SCL | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-                         SF32LB52_PA30_I2C3_SDA | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", SF32LB52_I2C3_BASE, PBL_SOC_IRQN_I2C3,
-                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C3), 400000, &s_i2c3_default,
-                      nullptr);
-PBL_NPM1300_DEFINE(s_npm1300, &s_i2c3, 0x6B);
+PBL_NPM1300_DEFINE(s_npm1300, &dt_i2c3, 0x6B);
 PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
                            PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 44, PBL_IRQ_TYPE_EDGE_RISING));
 
@@ -211,16 +179,16 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_N
 // ~4000 lux deviated from the fit on that unit and need a re-measure.
 static const struct pbl_als_scale s_w1160_scale = {.offset = 0, .num = 50, .den = 517};
 
-PBL_W1160_DEFINE(s_w1160, &s_i2c3, 0x48, &s_w1160_scale);
+PBL_W1160_DEFINE(s_w1160, &dt_i2c3, 0x48, &s_w1160_scale);
 
 const struct pbl_als *const ALS = &s_w1160.als;
 
 #ifdef CONFIG_BOARD_GETAFIX_DVT2
-PBL_AW86225_DEFINE(s_aw86225, &s_i2c3, 0x58, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
+PBL_AW86225_DEFINE(s_aw86225, &dt_i2c3, 0x58, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
 const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 #else
-PBL_AW8623X_DEFINE(s_aw8623x, &s_i2c3, 0x5a, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
+PBL_AW8623X_DEFINE(s_aw8623x, &dt_i2c3, 0x5a, PBL_GPIO(SF32LB_GPIO1, 20, PBL_GPIO_ACTIVE_LOW));
 
 const struct pbl_vibe *const VIBE = &s_aw8623x.vibe;
 #endif
