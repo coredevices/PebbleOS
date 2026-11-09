@@ -1,0 +1,90 @@
+name: Build Samples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, '*-branch']
+  workflow_call:
+
+jobs:
+  changes-samples:
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: read
+    outputs:
+      should-build: ${{ github.event_name == 'push' || steps.filter.outputs.src == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            src:
+              - '.github/actions/**'
+              - '.github/workflows/build-samples.yml'
+              - 'boards/**'
+              - 'cmake/**'
+              - 'drivers/**'
+              - 'include/**'
+              - 'kernel/**'
+              - 'lib/**'
+              - 'samples/**'
+              - 'soc/**'
+              - 'subsys/**'
+              - 'third_party/**'
+              - 'tools/**'
+              - 'Kconfig*'
+              - 'SDK_VERSION'
+              - 'pbl.yml'
+              - 'requirements.txt'
+
+  # The samples only need PebbleOS: building them keeps it from depending on
+  # the firmware again.
+  build-samples:
+    needs: changes-samples
+    if: needs.changes-samples.outputs.should-build == 'true'
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/coredevices/pebbleos-docker:v11
+
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ["hello_world"]
+        board: ["qemu_emery", "asterix", "obelix@pvt"]
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+        with:
+          submodules: true
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: Build
+        run: |
+          pbl configure --board ${{ matrix.board }} samples/${{ matrix.sample }}
+          pbl build
+
+  build-samples-status:
+    needs: [changes-samples, build-samples]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - if: >-
+          needs.build-samples.result == 'failure' ||
+          needs.build-samples.result == 'cancelled'
+        run: exit 1
