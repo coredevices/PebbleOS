@@ -9,7 +9,6 @@
 #include <pbl/kernel/sched.h>
 #include <pbl/util/size.h>
 
-#include <kernel/util/idle.h>
 #include <pbl_arch_posix.h>
 #include <posix_host.h>
 
@@ -37,7 +36,7 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
 int pbl_soc_idle_state_limit(void) {
-  return idle_is_allowed() ? 0 : -1;
+  return 0;
 }
 
 [[noreturn]] void pbl_soc_reset(void) {

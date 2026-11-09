@@ -12,16 +12,6 @@
 #include <pbl/shell/shell.h>
 #endif
 
-static bool s_idle_allowed = true;
-
-void idle_set_enabled(bool enable) {
-  s_idle_allowed = enable;
-}
-
-bool idle_is_allowed(void) {
-  return s_idle_allowed;
-}
-
 // CPU statistics
 ///////////////////////////////////////////////////////////
 
@@ -78,12 +68,12 @@ PBL_ANALYTICS_COLLECTOR_DEFINE(prv_collect_cpu_stats);
 
 #ifdef CONFIG_SHELL
 static int prv_cmd_force_active(const struct pbl_shell *sh, size_t argc, char **argv) {
-  idle_set_enabled(false);
+  pbl_idle_set_enabled(false);
   return 0;
 }
 
 static int prv_cmd_resume_normal(const struct pbl_shell *sh, size_t argc, char **argv) {
-  idle_set_enabled(true);
+  pbl_idle_set_enabled(true);
   return 0;
 }
 

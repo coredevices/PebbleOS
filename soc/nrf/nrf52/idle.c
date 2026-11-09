@@ -7,7 +7,6 @@
 #include <pbl/util/size.h>
 
 #include <cmsis_core.h>
-#include <kernel/util/idle.h>
 
 enum {
   IDLE_WFI,
@@ -36,9 +35,5 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
 int pbl_soc_idle_state_limit(void) {
-  if (!idle_is_allowed()) {
-    return -1;
-  }
-
   return soc_nrf_sleep_full_is_allowed() ? IDLE_FULL : IDLE_WFI;
 }
