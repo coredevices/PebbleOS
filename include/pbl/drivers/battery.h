@@ -38,8 +38,33 @@ typedef struct BatteryConstants {
   int32_t t_mc;
 } BatteryConstants;
 
+/**
+ * @brief Handler of USB power connection changes.
+ *
+ * Called from a system work queue.
+ *
+ * @param is_connected What battery_is_usb_connected() reports.
+ */
+typedef void (*battery_connection_handler_t)(bool is_connected);
+
 /** @brief Initialize the battery driver. */
 void battery_init(void);
+
+/**
+ * @brief Set the handler called when USB power is connected or removed.
+ *
+ * Changes are not reported while there is no handler.
+ *
+ * @param handler Handler, or NULL for none.
+ */
+void battery_set_connection_handler(battery_connection_handler_t handler);
+
+/**
+ * @brief Report a USB power connection change to the handler.
+ *
+ * For drivers, from thread context.
+ */
+void battery_connection_changed(void);
 
 /**
  * @brief Measure the battery voltage.

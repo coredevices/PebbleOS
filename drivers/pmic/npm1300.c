@@ -22,8 +22,6 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-#include <kernel/events.h>
-
 PBL_LOG_MODULE_DEFINE(driver_pmic_npm1300, CONFIG_DRIVER_PMIC_LOG_LEVEL);
 
 #define CHARGER_DEBOUNCE_MS 400
@@ -267,13 +265,7 @@ static void prv_handle_charge_state_change(struct pbl_work *work) {
     }
   }
 
-  PebbleEvent event = {
-    .type = PEBBLE_BATTERY_CONNECTION_EVENT,
-    .battery_connection = {
-      .is_connected = battery_is_usb_connected(),
-    },
-  };
-  event_put(&event);
+  battery_connection_changed();
 }
 
 static int prv_clear_pending_interrupts(void) {

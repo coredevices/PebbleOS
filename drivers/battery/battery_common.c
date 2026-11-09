@@ -5,6 +5,19 @@
 #include <pbl/drivers/gpio.h>
 
 static bool s_charging_forced_disable = false;
+static battery_connection_handler_t s_connection_handler;
+
+void battery_set_connection_handler(battery_connection_handler_t handler) {
+  s_connection_handler = handler;
+}
+
+void battery_connection_changed(void) {
+  battery_connection_handler_t handler = s_connection_handler;
+
+  if (handler != nullptr) {
+    handler(battery_is_usb_connected());
+  }
+}
 
 bool battery_charge_controller_thinks_we_are_charging(void) {
   if (s_charging_forced_disable) {
