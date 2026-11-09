@@ -139,6 +139,7 @@
 			interrupts = <84>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_GPIO1>;
 			gpio-controller;
+			gpio-ranges = <&pinctrl 0 0 45>;
 			#gpio-cells = <2>;
 			ngpios = <45>;
 			interrupt-controller;

@@ -21,6 +21,7 @@ config GPIO_SF32LB
     default y if SOC_SF32LB52
     depends on CLK_SF32LB && PINCTRL_SF32LB52
     select INTC
+    select PINCTRL_SF32LB52_OUTPUT_LOW
     help
       Support for the SiFli SF32LB GPIO controller.
 

@@ -4,6 +4,7 @@
 #include <errno.h>
 
 #include <pbl/devicetree.h>
+#include <pbl/drivers/gpio/sf32lb.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -191,10 +192,39 @@ static int prv_configure_pin(const struct pbl_pinctrl_sf32lb52 *ctrl, uint32_t p
   return 0;
 }
 
+#ifdef CONFIG_PINCTRL_SF32LB52_OUTPUT_LOW
+// The GPIO driver drives the pad and selects its GPIO function
+static int prv_output_low(uint32_t pin) {
+  struct pbl_gpio gpio =
+      PBL_GPIO(SF32LB_GPIO1, PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_PAD_MSK, pin), 0);
+
+  if (PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_PORT_MSK, pin) != PBL_PINCTRL_SF32LB52_PORT_PA ||
+      PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_FSEL_MSK, pin) != 0U) {
+    return -EINVAL;
+  }
+
+  if (pbl_device_init(&SF32LB_GPIO1->dev) != 0) {
+    return -ENODEV;
+  }
+
+  return pbl_gpio_configure(&gpio, PBL_GPIO_OUTPUT_LOW);
+}
+#endif
+
 static int prv_configure(const struct pbl_pinctrl_controller *ctrl, const uint32_t *pins,
                          uint8_t num_pins, uintptr_t reg) {
   for (uint8_t i = 0U; i < num_pins; i++) {
-    int ret = prv_configure_pin(prv_ctrl(ctrl), pins[i], PAD_MSK);
+    int ret;
+
+    if ((pins[i] & PBL_PINCTRL_SF32LB52_OUTPUT_LOW) != 0U) {
+#ifdef CONFIG_PINCTRL_SF32LB52_OUTPUT_LOW
+      ret = prv_output_low(pins[i]);
+#else
+      ret = -ENOTSUP;
+#endif
+    } else {
+      ret = prv_configure_pin(prv_ctrl(ctrl), pins[i], PAD_MSK);
+    }
 
     if (ret != 0) {
       return ret;

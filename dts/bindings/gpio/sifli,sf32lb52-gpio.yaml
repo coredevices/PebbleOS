@@ -27,6 +27,9 @@ properties:
 
   gpio-controller: true
 
+  gpio-ranges:
+    maxItems: 1
+
   '#gpio-cells':
     const: 2
 

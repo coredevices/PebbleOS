@@ -47,6 +47,10 @@ patternProperties:
           bias-pull-down: true
           input-enable: true
 
+          output-low:
+            description: Driven low by GPIO1, with the gpio function.
+            type: boolean
+
           drive-strength:
             enum: [2, 4, 8, 12, 20]
 

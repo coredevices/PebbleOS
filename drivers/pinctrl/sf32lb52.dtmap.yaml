@@ -12,5 +12,6 @@ pinctrl:
     input-enable: PBL_PINCTRL_SF32LB52_INPUT
     bias-pull-up: PBL_PINCTRL_SF32LB52_PULL_UP
     bias-pull-down: PBL_PINCTRL_SF32LB52_PULL_DOWN
+    output-low: PBL_PINCTRL_SF32LB52_OUTPUT_LOW
   values:
     drive-strength: "PBL_PINCTRL_SF32LB52_DRIVE_{value}MA"

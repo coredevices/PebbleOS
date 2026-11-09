@@ -15,6 +15,12 @@ config PINCTRL_SF32LB52
       Pin multiplexer and pad configuration of the SiFli SF32LB52 HPSYS
       pads.
 
+config PINCTRL_SF32LB52_OUTPUT_LOW
+    bool
+    depends on PINCTRL_SF32LB52
+    help
+      Pins of a state can be driven low, through the GPIO driver.
+
 config PINCTRL_SHELL
     bool "Pin controller shell commands"
     default DRIVER_SHELL
