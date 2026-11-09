@@ -36,6 +36,8 @@ enum chip_model {
   CHIP_GD25LQ255E,
   // 01h and 31h each take exactly 8 bits; security registers 1 to 3
   CHIP_GD25Q256E,
+  // A GD25Q256E answering with an ID no supported part has
+  CHIP_UNKNOWN,
 };
 
 static enum chip_model s_model;
@@ -45,6 +47,8 @@ static bool s_has_sfdp;
 static bool s_has_4bait;
 static uint8_t s_sr1;
 static uint8_t s_sr2;
+// Status register 2 bits a faulty part ignores on writes
+static uint8_t s_sr2_ignored;
 static bool s_wel;
 static bool s_4byte;
 static uint32_t s_busy;
@@ -75,7 +79,14 @@ static int s_susp_polls;
 static uint32_t s_min_resume_to_suspend;
 
 static uint32_t prv_chip_id(void) {
-  return (s_model == CHIP_GD25LQ255E) ? 0x1960c8U : 0x1940c8U;
+  switch (s_model) {
+    case CHIP_GD25LQ255E:
+      return 0x1960c8U;
+    case CHIP_GD25Q256E:
+      return 0x1940c8U;
+    default:
+      return 0x1940efU;
+  }
 }
 
 static uint32_t prv_sec_size(void) {
@@ -126,8 +137,10 @@ static bool prv_is_array_op(uint8_t opcode) {
 
 // Status register writes keep the read-only and the already set lock bits
 static void prv_write_sr2(uint8_t val) {
-  const uint8_t ro = (s_model == CHIP_GD25LQ255E) ? (uint8_t)(PBL_BIT(7) | PBL_BIT(3) | SR2_SUS2)
-                                                  : (uint8_t)(PBL_BIT(7) | PBL_BIT(0) | SR2_SUS2);
+  const uint8_t ro =
+      ((s_model == CHIP_GD25LQ255E) ? (uint8_t)(PBL_BIT(7) | PBL_BIT(3) | SR2_SUS2)
+                                    : (uint8_t)(PBL_BIT(7) | PBL_BIT(0) | SR2_SUS2)) |
+      s_sr2_ignored;
 
   s_sr2 = (uint8_t)((s_sr2 & ro) | (val & ~ro) | (s_sr2 & SR2_LB_ALL & ~ro));
 }
@@ -455,9 +468,9 @@ static const struct pbl_flash_otp_cell s_otp_cells[] = {
 };
 static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &s_otp_layout);
 
 const struct pbl_flash *const FLASH = &s_nor_q.flash;
 
@@ -540,6 +553,7 @@ static void prv_reset(enum chip_model model) {
   s_has_4bait = false;
   s_sr1 = 0U;
   s_sr2 = 0U;
+  s_sr2_ignored = 0U;
   s_wel = false;
   s_4byte = false;
   s_busy = 0U;
@@ -995,15 +1009,25 @@ void test_spi_nor__otp_lock_checked(void) {
 
   prv_reset(CHIP_GD25Q256E);
   s_sr2 = PBL_FLASH_NOR_SR2_QE;
-  flash = prv_init(&s_nor_lq);
+  s_sr2_ignored = PBL_BIT(3);
+  flash = prv_init(&s_nor_q);
 
   cl_assert_equal_i(pbl_flash_otp_lock(flash, 0U), -EIO);
 }
 
 void test_spi_nor__quad_enable_checked(void) {
   prv_reset(CHIP_GD25Q256E);
+  s_sr2_ignored = PBL_FLASH_NOR_SR2_QE;
   prv_build_sfdp();
-  cl_assert(pbl_device_init(&s_nor_lq.flash.dev) != 0);
+  cl_assert(pbl_device_init(&s_nor_q.flash.dev) != 0);
+}
+
+// A part none of the supported ones are is not driven
+void test_spi_nor__unsupported_part(void) {
+  prv_reset(CHIP_GD25Q256E);
+  s_model = CHIP_UNKNOWN;
+  prv_build_sfdp();
+  cl_assert_equal_i(pbl_device_init(&s_nor_q.flash.dev), -ENODEV);
 }
 
 void test_spi_nor__otp_cells(void) {

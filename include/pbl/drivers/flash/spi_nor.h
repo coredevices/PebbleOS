@@ -14,10 +14,11 @@
  * @ingroup drivers_flash
  * @brief @ref drivers_flash driver for a JEDEC NOR part on a @ref drivers_spi_mem controller.
  *
- * The part is described by its SFDP tables (JESD216): size, page size, erase types and times,
- * read modes and 4-byte address opcodes. The part description fills in what SFDP does not cover
- * (OTP organization, status register layout and latencies) and stands in for SFDP on parts
- * without it. The widest read and program modes both the part and the controller support are
+ * The part is found by its JEDEC ID among the supported ones, and fails to initialize when it
+ * is none of them. It is described by its SFDP tables (JESD216): size, page size, erase types
+ * and times, read modes and 4-byte address opcodes. The part description fills in what SFDP does
+ * not cover (OTP organization, status register layout and latencies) and stands in for SFDP on
+ * parts without it. The widest read and program modes both the part and the controller support are
  * used. Parts over 16 MiB are driven with 4-byte address opcodes when both support them, which
  * leaves the part in its power-on 3-byte address mode; otherwise the part is put in 4-byte
  * address mode, and taken out of it by pbl_flash_stop().
@@ -35,15 +36,16 @@
  * };
  * static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
  *
- * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &pbl_flash_nor_gd25lq255e,
- *                          &s_otp_layout);
+ * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &s_otp_layout);
  * @endcode
  * @{
  */
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_flash_spi_nor_data {
+  const struct pbl_flash_nor_part *part;
   struct pbl_flash_geometry geometry;
+  struct pbl_flash_otp_info otp;
   struct pbl_spi_mem_dirmap dirmap;
   struct pbl_spi_mem_pm pm;
   struct pbl_spi_mem_suspend susp;
@@ -68,8 +70,6 @@ struct pbl_flash_spi_nor {
   struct pbl_flash_spi_nor_data *data;
   /** Controller. */
   const struct pbl_spi_mem *bus;
-  /** Part. */
-  const struct pbl_flash_nor_part *part;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -82,18 +82,16 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
  * @param sym Symbol of the flash.
  * @param _name Name.
  * @param _bus Controller, a struct pbl_spi_mem.
- * @param _part Part, a struct pbl_flash_nor_part.
  * @param _otp_layout OTP cells, a struct pbl_flash_otp_layout, or NULL.
  */
-#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _part, _otp_layout)                 \
+#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _otp_layout)                        \
   PBL_FLASH_STATE_DEFINE(sym);                                                         \
   static struct pbl_flash_spi_nor_data sym##_data;                                     \
   const struct pbl_flash_spi_nor sym = {                                               \
     .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_flash_spi_nor_ops, \
-                            &sym##_data.geometry, &(_part)->otp.info, _otp_layout),    \
+                            &sym##_data.geometry, &sym##_data.otp, _otp_layout),       \
     .data = &sym##_data,                                                               \
     .bus = (_bus),                                                                     \
-    .part = (_part),                                                                   \
   };                                                                                   \
   PBL_DEVICE_REGISTER(sym, &sym.flash.dev)
 
