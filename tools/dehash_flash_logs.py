@@ -186,8 +186,7 @@ def main():
             os.path.dirname(__file__),
             "..",
             "build",
-            "fw",
-            "loghash_dict.json",
+            "log.dict.json",
         )
         if os.path.exists(default_dict):
             dehash_path = default_dict

@@ -81,7 +81,7 @@ changes, and CMake regenerates whenever a `CMakeLists.txt` does, so
 | `menuconfig.conf` | Changes made with {doc}`../../pbl/menuconfig`, kept across reconfigurations |
 | `pebbleos.elf`, `.hex`, `.bin` | The firmware image |
 | `system_resources.pbpack` | The system resource pack |
-| `fw/loghash_dict.json` | The dictionary that decodes hashed log messages |
+| `log.dict.json` | The dictionary that decodes hashed log messages, with `CONFIG_LOG_HASHED` |
 | `generated/` | Generated headers and sources |
 | `linker/` | The linker script fragments, collected per hook point |
 
