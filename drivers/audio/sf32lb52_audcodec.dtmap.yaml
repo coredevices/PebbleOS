@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-audcodec
+config: AUDIO_SF32LB52_AUDCODEC
+class: dai
+define: PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - dma: tx

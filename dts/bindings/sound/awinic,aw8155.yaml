@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sound/awinic,aw8155.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Awinic AW8155 Audio Amplifier
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  The Awinic AW8155 is a mono audio amplifier with different operation modes
+  (set using one-wire pulse control). The mode selects the amplifier class,
+  its gain and its output power limit.
+
+allOf:
+  - $ref: dai-common.yaml#
+
+properties:
+  compatible:
+    const: awinic,aw8155
+
+  mode-gpios:
+    description: GPIO used for one-wire pulse control, the CTRL pin.
+    maxItems: 1
+
+  awinic,mode:
+    description:
+      Operation mode (number of rising edges for one-wire pulse control).
+      Mode 3 is a test mode.
+    $ref: /schemas/types.yaml#/definitions/uint32
+    enum: [1, 2, 4]
+
+  vdd-supply: true
+
+  sound-name-prefix: true
+
+required:
+  - compatible
+  - mode-gpios
+  - awinic,mode
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+    audio-amplifier {
+        compatible = "awinic,aw8155";
+        mode-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+        awinic,mode = <1>;
+    };

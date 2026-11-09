@@ -21,11 +21,7 @@
  *
  * The SoC factory configuration is a list of records (one byte id, one byte length, data) in OTP
  * cells the board names. The first crystal record found is applied to the 48 MHz crystal
- * oscillator once the flash is up, before the radio core starts:
- *
- * @code{.c}
- * PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
- * @endcode
+ * oscillator once the flash is up, before the radio core starts.
  * @{
  */
 
@@ -56,12 +52,14 @@ int pbl_sf32lb52_hxt_init(const struct pbl_device *dev);
 #define PBL_SF32LB52_HXT_DEFINE(sym, _name, _flash, ...)                                \
   PBL_DEVICE_STATE_DEFINE(sym);                                                         \
   static const char *const sym##_cells[] = {__VA_ARGS__};                               \
-  const struct pbl_sf32lb52_hxt sym = {                                                 \
+  extern const struct pbl_sf32lb52_hxt sym##_inst;                                      \
+  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                     \
+  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_sf32lb52_hxt, struct pbl_device, dev);   \
+  const struct pbl_sf32lb52_hxt sym##_inst = {                                          \
     .dev = PBL_DEVICE_INIT(sym, _name, pbl_sf32lb52_hxt_init, &(_flash)->dev, nullptr), \
     .flash = (_flash),                                                                  \
     .cells = sym##_cells,                                                               \
     .num_cells = sizeof(sym##_cells) / sizeof(sym##_cells[0]),                          \
-  };                                                                                    \
-  PBL_DEVICE_REGISTER(sym, &sym.dev)
+  }
 
 /** @} */

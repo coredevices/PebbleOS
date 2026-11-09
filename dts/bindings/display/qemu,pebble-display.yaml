@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/qemu,pebble-display.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble display
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Display of the QEMU Pebble machines, shown from a memory-mapped framebuffer,
+  with the backlight in the same registers.
+
+properties:
+  compatible:
+    const: qemu,pebble-display
+
+  reg:
+    items:
+      - description: Registers
+      - description: Framebuffer
+
+  reg-names:
+    items:
+      - const: regs
+      - const: fb
+
+  interrupts:
+    maxItems: 1
+
+  width:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Width, in pixels.
+
+  height:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Height, in pixels.
+
+  bits-per-pixel:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: 8 for 2-bit ARGB, 1 for monochrome, packed in 32-bit words.
+    enum: [1, 8]
+
+  qemu,round-mask:
+    type: boolean
+    description: The display is round, its corners hidden.
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+  - width
+  - height
+  - bits-per-pixel
+
+additionalProperties: false
+
+examples:
+  - |
+    display-controller@40008000 {
+        compatible = "qemu,pebble-display";
+        reg = <0x40008000 0x1000>, <0x50000000 0x20000>;
+        reg-names = "regs", "fb";
+        interrupts = <7>;
+        width = <200>;
+        height = <228>;
+        bits-per-pixel = <8>;
+    };

@@ -24,10 +24,11 @@ config AMBIENT_LIGHT_OPT3001_ALWAYS_ON
       at the cost of power.
 
 config AMBIENT_LIGHT_W1160
-    bool "W1160"
+    bool "Sensortek W1160"
+    default DT_HAS_SENSORTEK_W1160_ENABLED
     depends on I2C
     help
-      Support for the W1160 ambient light sensor.
+      Support for the Sensortek W1160 ambient light sensor.
 
 config AMBIENT_LIGHT_QEMU
     bool "QEMU"

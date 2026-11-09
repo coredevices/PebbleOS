@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-hxt48
+config: SF32LB52_HXT
+class: device
+define: PBL_SF32LB52_HXT_DEFINE
+args:
+  - name: true
+  - self: flash
+    of: nvmem-cells
+  - strings: nvmem-cell-names
+    item: '"{}"'

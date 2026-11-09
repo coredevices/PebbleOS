@@ -17,6 +17,32 @@
 		#address-cells = <0>;
 	};
 
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		lcpu_ipc: memory@2007fe00 {
+			reg = <0x2007fe00 0x200>;
+			no-map;
+		};
+	};
+
+	lcpu: remoteproc-lcpu {
+		compatible = "sifli,sf32lb52-lcpu";
+		mboxes = <&mailbox1 0>, <&mailbox2 0>;
+		mbox-names = "tx", "rx";
+		memory-region = <&lcpu_ipc>;
+		status = "disabled";
+	};
+
+	hxt48: clock-hxt48 {
+		compatible = "sifli,sf32lb52-hxt48";
+		#clock-cells = <0>;
+		clock-frequency = <48000000>;
+		status = "disabled";
+	};
+
 	rc10k: clock-rc10k {
 		compatible = "sifli,sf32lb52-rc10k";
 		#clock-cells = <0>;
@@ -28,6 +54,14 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+
+		mailbox2: mailbox@40002000 {
+			compatible = "sifli,sf32lb52-mailbox";
+			reg = <0x40002000 0x1000>;
+			interrupts = <58>;
+			#mbox-cells = <1>;
+			status = "disabled";
+		};
 
 		hpsys_rcc: clock-controller@50000000 {
 			compatible = "sifli,sf32lb52-hpsys-rcc";
@@ -81,6 +115,14 @@
 			dma-channels = <8>;
 		};
 
+		mailbox1: mailbox@50082000 {
+			compatible = "sifli,sf32lb52-mailbox";
+			reg = <0x50082000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_MAILBOX1>;
+			#mbox-cells = <1>;
+			status = "disabled";
+		};
+
 		usart1: serial@50084000 {
 			compatible = "sifli,sf32lb52-usart";
 			reg = <0x50084000 0x1000>;
@@ -104,6 +146,24 @@
 			interrupts = <95>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_USART3>;
 			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART3>;
+			status = "disabled";
+		};
+
+		audcodec: audio-codec@50088000 {
+			compatible = "sifli,sf32lb52-audcodec";
+			reg = <0x50088000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_AUDCODEC>;
+			#sound-dai-cells = <0>;
+			status = "disabled";
+		};
+
+		pdm1: audio-controller@5009a000 {
+			compatible = "sifli,sf32lb52-pdm";
+			reg = <0x5009a000 0x1000>;
+			interrupts = <82>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PDM1>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_PDM1>;
+			#sound-dai-cells = <0>;
 			status = "disabled";
 		};
 

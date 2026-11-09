@@ -5,6 +5,7 @@
 
 #include "nrf/nrf52/nrf52840.dtsi"
 
+#include <dt-bindings/input/input.h>
 #include <dt-bindings/input/ti-drv260x.h>
 
 / {
@@ -23,6 +24,73 @@
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 3906250 0>;
 		enable-gpios = <&gpio1 8 0>;
+	};
+
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Back";
+			gpios = <&gpio0 28 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <40>;
+		};
+
+		button-up {
+			label = "Up";
+			gpios = <&gpio0 29 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <40>;
+		};
+
+		button-select {
+			label = "Select";
+			gpios = <&gpio0 30 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <40>;
+		};
+
+		button-down {
+			label = "Down";
+			gpios = <&gpio0 31 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <40>;
+		};
+	};
+
+	dmic: dmic {
+		compatible = "dmic-codec";
+		#sound-dai-cells = <0>;
+	};
+
+	mic: sound-mic {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "mic";
+		simple-audio-card,format = "pdm";
+
+		simple-audio-card,cpu {
+			sound-dai = <&pdm>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dmic>;
+		};
+	};
+
+	speaker: sound-speaker {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "speaker";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,bitclock-master = <&speaker_codec>;
+		simple-audio-card,frame-master = <&speaker_codec>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s>;
+		};
+
+		speaker_codec: simple-audio-card,codec {
+			sound-dai = <&da7212>;
+		};
 	};
 };
 
@@ -53,6 +121,13 @@
 	opt3001: light-sensor@44 {
 		compatible = "ti,opt3001";
 		reg = <0x44>;
+	};
+
+	da7212: audio-codec@1a {
+		compatible = "dlg,da7212";
+		reg = <0x1a>;
+		#sound-dai-cells = <0>;
+		VDDA-supply = <&ldsw1>;
 	};
 
 	mmc5603nj: magnetometer@30 {
@@ -247,5 +322,19 @@
 
 &pwm0 {
 	out-gpios = <&gpio0 26 0>;
+	status = "okay";
+};
+
+&pdm {
+	clk-gpios = <&gpio1 0 0>;
+	din-gpios = <&gpio0 24 0>;
+	status = "okay";
+};
+
+&i2s {
+	sck-gpios = <&gpio0 12 0>;
+	lrck-gpios = <&gpio0 7 0>;
+	mck-gpios = <&gpio1 9 0>;
+	sdout-gpios = <&gpio0 13 0>;
 	status = "okay";
 };

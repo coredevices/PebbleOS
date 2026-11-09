@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-i2s
+config: AUDIO_NRF5_I2S
+class: dai
+define: PBL_AUDIO_NRF5_I2S_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - gpio: sck
+  - gpio: lrck
+  - gpio: mck
+  - gpio: sdout

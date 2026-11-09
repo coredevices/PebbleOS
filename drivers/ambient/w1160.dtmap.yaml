@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sensortek,w1160
+config: AMBIENT_LIGHT_W1160
+class: als
+define: PBL_W1160_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - prop: sensortek,lux-scale
+    index: 0
+  - prop: sensortek,lux-scale
+    index: 1
+  - supply: vdd
+    default: nullptr

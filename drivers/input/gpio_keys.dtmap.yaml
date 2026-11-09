@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: gpio-keys
+config: INPUT_GPIO_KEYS
+class: input
+define: PBL_GPIO_KEYS_DEFINE
+args:
+  - name: true
+  - list: []
+    item:
+      define: PBL_GPIO_KEYS_KEY
+      args:
+        - string: label
+        - gpio: ""
+        - prop: linux,code
+        - prop: debounce-interval
+          default: 5

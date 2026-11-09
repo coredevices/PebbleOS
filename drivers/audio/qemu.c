@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/audio/qemu.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -26,8 +27,8 @@
 #define VOLUME_MAX      100
 #define MDB_PER_PERCENT (-GAIN_MIN_MDB / VOLUME_MAX)
 
-static const struct pbl_audio_qemu *prv_dev(const struct pbl_audio *audio) {
-  return container_of(audio, const struct pbl_audio_qemu, audio);
+static const struct pbl_audio_qemu *prv_dev(const struct pbl_audio_dai *dai) {
+  return container_of(dai, const struct pbl_audio_qemu, dai);
 }
 
 static void prv_write(const struct pbl_audio_qemu *dev, uint32_t reg, uint32_t value) {
@@ -43,13 +44,13 @@ static uint32_t prv_volume(int32_t gain_mdb, bool mute) {
 }
 
 static void prv_push(const struct pbl_audio_qemu *dev) {
-  const struct pbl_audio_state *audio_state = dev->audio.state;
+  const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&dev->dai)->state;
   struct pbl_audio_qemu_state *state = dev->state;
   size_t period_samples = audio_state->stream.period_frames;
   uint32_t avail = prv_read(dev, AUDIO_BUFAVAIL);
 
-  while (avail > 0U && pbl_audio_is_running(&dev->audio)) {
-    const int16_t *period = pbl_audio_period(&dev->audio, state->idx);
+  while (avail > 0U && pbl_audio_is_running(pbl_audio_dai_card(&dev->dai))) {
+    const int16_t *period = pbl_audio_period(pbl_audio_dai_card(&dev->dai), state->idx);
 
     for (; avail > 0U && state->offset < period_samples; avail--, state->offset++) {
       prv_write(dev, AUDIO_DATA, (uint16_t)period[state->offset]);
@@ -58,7 +59,7 @@ static void prv_push(const struct pbl_audio_qemu *dev) {
     if (state->offset == period_samples) {
       state->offset = 0U;
       state->idx = (state->idx + 1U) % audio_state->stream.periods;
-      pbl_audio_period_elapsed(&dev->audio);
+      pbl_audio_period_elapsed(pbl_audio_dai_card(&dev->dai));
     }
   }
 }
@@ -68,13 +69,13 @@ void pbl_audio_qemu_irq_handler(const struct pbl_audio_qemu *dev) {
   prv_push(dev);
 }
 
-static int prv_init(const struct pbl_audio *audio) {
-  prv_write(prv_dev(audio), AUDIO_CTRL, 0U);
+static int prv_init(const struct pbl_audio_dai *dai) {
+  prv_write(prv_dev(dai), AUDIO_CTRL, 0U);
 
   return 0;
 }
 
-static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 1U;
@@ -84,9 +85,9 @@ static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *c
   caps->gain_default_mdb = 0;
 }
 
-static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream,
+static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                      int32_t gain_mdb, bool mute) {
-  const struct pbl_audio_qemu *dev = prv_dev(audio);
+  const struct pbl_audio_qemu *dev = prv_dev(dai);
 
   *dev->state = (struct pbl_audio_qemu_state){0};
 
@@ -105,8 +106,8 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio *audio) {
-  const struct pbl_audio_qemu *dev = prv_dev(audio);
+static int prv_stop(const struct pbl_audio_dai *dai) {
+  const struct pbl_audio_qemu *dev = prv_dev(dai);
 
   prv_write(dev, AUDIO_CTRL, 0U);
   prv_write(dev, AUDIO_INTCTRL, 0U);
@@ -115,19 +116,19 @@ static int prv_stop(const struct pbl_audio *audio) {
   return 0;
 }
 
-static int prv_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
-  prv_write(prv_dev(audio), AUDIO_VOLUME, prv_volume(gain_mdb, audio->state->mute));
+static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+  prv_write(prv_dev(dai), AUDIO_VOLUME, prv_volume(gain_mdb, pbl_audio_dai_card(dai)->state->mute));
 
   return 0;
 }
 
-static int prv_set_mute(const struct pbl_audio *audio, bool mute) {
-  prv_write(prv_dev(audio), AUDIO_VOLUME, prv_volume(audio->state->gain_mdb, mute));
+static int prv_set_mute(const struct pbl_audio_dai *dai, bool mute) {
+  prv_write(prv_dev(dai), AUDIO_VOLUME, prv_volume(pbl_audio_dai_card(dai)->state->gain_mdb, mute));
 
   return 0;
 }
 
-const struct pbl_audio_ops pbl_audio_qemu_ops = {
+const struct pbl_audio_dai_ops pbl_audio_qemu_ops = {
   .init = prv_init,
   .get_caps = prv_get_caps,
   .start = prv_start,
@@ -135,3 +136,5 @@ const struct pbl_audio_ops pbl_audio_qemu_ops = {
   .set_gain = prv_set_gain,
   .set_mute = prv_set_mute,
 };
+
+#include PBL_DT_INSTANCES(qemu_pebble_audio)

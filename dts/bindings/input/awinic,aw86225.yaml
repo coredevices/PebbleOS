@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/input/awinic,aw86225.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Awinic AW86225 and AW86233 LRA haptic drivers
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Haptic drivers for a linear resonant actuator (LRA) over I2C, of the family
+  of the AW86927. The LRA properties describe the motor they drive.
+
+properties:
+  compatible:
+    enum:
+      - awinic,aw86225
+      - awinic,aw86233
+
+  reg:
+    maxItems: 1
+
+  reset-gpios:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  vdd-supply:
+    description: Regulator supplying the logic, VDD.
+
+  awinic,lra-f0-hz:
+    description: Nominal resonant frequency of the LRA.
+
+  awinic,lra-f0-tolerance-hz:
+    description: Accepted deviation of the measured resonant frequency.
+
+  awinic,lra-rated-microvolt:
+    description: Rated drive voltage of the LRA, RMS.
+
+  awinic,output-gain-percent:
+    description:
+      Measured output as a percentage of what the chip's model predicts, as
+      characterized on the board; the drive is scaled by its inverse.
+    minimum: 50
+    maximum: 100
+    default: 100
+
+required:
+  - compatible
+  - reg
+  - reset-gpios
+
+allOf:
+  - if:
+      properties:
+        compatible:
+          const: awinic,aw86225
+    then:
+      required:
+        - awinic,lra-f0-hz
+        - awinic,lra-f0-tolerance-hz
+        - awinic,lra-rated-microvolt
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+
+    i2c {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        haptics@58 {
+            compatible = "awinic,aw86225";
+            reg = <0x58>;
+            reset-gpios = <&gpio1 1 GPIO_ACTIVE_LOW>;
+            awinic,lra-f0-hz = <240>;
+            awinic,lra-f0-tolerance-hz = <20>;
+            awinic,lra-rated-microvolt = <1200000>;
+            awinic,output-gain-percent = <93>;
+        };
+    };

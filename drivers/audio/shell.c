@@ -48,7 +48,7 @@ static void prv_high_load(bool on) {
 }
 
 static const char *prv_dir_name(const struct pbl_audio *audio) {
-  return audio->dir == PBL_AUDIO_PLAYBACK ? "playback" : "capture";
+  return pbl_audio_dir(audio) == PBL_AUDIO_PLAYBACK ? "playback" : "capture";
 }
 
 static uint32_t prv_pick_rate(const struct pbl_audio_caps *caps) {
@@ -74,7 +74,7 @@ static const struct pbl_audio *prv_find(const struct pbl_shell *sh, const char *
   }
 
   audio = container_of(dev, const struct pbl_audio, dev);
-  if (audio->dir != dir) {
+  if (pbl_audio_dir(audio) != dir) {
     pbl_shell_error(sh, "%s is not a %s device", name,
                     dir == PBL_AUDIO_PLAYBACK ? "playback" : "capture");
     return nullptr;
@@ -181,7 +181,7 @@ static int prv_run(const struct pbl_shell *sh, const struct pbl_audio *audio, st
     return -ENOMEM;
   }
 
-  if (audio->dir == PBL_AUDIO_PLAYBACK) {
+  if (pbl_audio_dir(audio) == PBL_AUDIO_PLAYBACK) {
     for (uint8_t i = 0U; i < PERIODS; i++) {
       prv_tone_fill(s, (int16_t *)stream.buf + i * s->period_frames * s->channels);
     }

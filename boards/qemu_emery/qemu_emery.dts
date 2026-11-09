@@ -1,0 +1,177 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "qemu/pebble.dtsi"
+
+#include <dt-bindings/input/input.h>
+
+/ {
+	model = "QEMU Pebble Emery";
+
+	compatible = "qemu,pebble-emery";
+
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Back";
+			gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <0>;
+		};
+
+		button-up {
+			label = "Up";
+			gpios = <&gpio 1 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <0>;
+		};
+
+		button-select {
+			label = "Select";
+			gpios = <&gpio 2 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <0>;
+		};
+
+		button-down {
+			label = "Down";
+			gpios = <&gpio 3 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <0>;
+		};
+	};
+
+	speaker: sound-speaker {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "speaker";
+
+		simple-audio-card,cpu {
+			sound-dai = <&audio>;
+		};
+	};
+};
+
+&nvic {
+	compatible = "arm,v8m-nvic";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&uart2 {
+	status = "okay";
+};
+
+&uart3 {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
+&display {
+	width = <200>;
+	height = <228>;
+	bits-per-pixel = <8>;
+	status = "okay";
+};
+
+&touchscreen {
+	touchscreen-size-x = <200>;
+	touchscreen-size-y = <228>;
+	status = "okay";
+};
+
+&audio {
+	status = "okay";
+};
+
+&flash0 {
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "ptable";
+			reg = <0x0 0x10000>;
+		};
+
+		partition@10000 {
+			label = "bootloader";
+			reg = <0x10000 0x10000>;
+		};
+
+		partition@20000 {
+			label = "firmware-slot-0";
+			reg = <0x20000 0x300000>;
+		};
+
+		partition@320000 {
+			label = "firmware-slot-1";
+			reg = <0x320000 0x300000>;
+		};
+
+		partition@620000 {
+			label = "system-resources-bank-0";
+			reg = <0x620000 0x200000>;
+		};
+
+		partition@820000 {
+			label = "system-resources-bank-1";
+			reg = <0x820000 0x200000>;
+		};
+
+		partition@a20000 {
+			label = "safe-firmware";
+			reg = <0xa20000 0x90000>;
+		};
+
+		partition@ab0000 {
+			label = "filesystem";
+			reg = <0xab0000 0x1490000>;
+		};
+
+		partition@1f40000 {
+			label = "cd";
+			reg = <0x1f40000 0x80000>;
+		};
+
+		partition@1fcf000 {
+			label = "debug-db";
+			reg = <0x1fcf000 0x20000>;
+		};
+
+		partition@1ffb000 {
+			label = "mfg-results";
+			reg = <0x1ffb000 0x1000>;
+		};
+
+		partition@1ffc000 {
+			label = "mfg-battery-state";
+			reg = <0x1ffc000 0x1000>;
+		};
+
+		partition@1ffd000 {
+			label = "tzinfo";
+			reg = <0x1ffd000 0x1000>;
+		};
+
+		partition@1ffe000 {
+			label = "mfg-info";
+			reg = <0x1ffe000 0x1000>;
+		};
+
+		partition@1fff000 {
+			label = "shared-prf-storage";
+			reg = <0x1fff000 0x1000>;
+		};
+	};
+};

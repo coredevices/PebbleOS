@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: awinic,aw86225
+config: VIBE_AW86225
+class: vibe
+define: PBL_AW86225_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - gpio: reset
+  - prop: awinic,lra-f0-hz
+  - prop: awinic,lra-f0-tolerance-hz
+  - prop: awinic,lra-rated-microvolt
+  - prop: awinic,output-gain-percent
+    default: 100
+  - supply: vdd
+    default: nullptr

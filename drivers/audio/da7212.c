@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
@@ -278,3 +279,5 @@ const struct pbl_audio_codec_ops pbl_audio_da7212_ops = {
   .set_gain = prv_set_gain,
   .set_mute = prv_set_mute,
 };
+
+#include PBL_DT_INSTANCES(dlg_da7212)

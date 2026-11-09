@@ -16,15 +16,17 @@ The devicetree decides two things:
 
 The native boards, such as `native_emery`, run on the host and have no
 hardware to describe, so they define their devices in C. The QEMU boards run on
-emulated hardware, which a tree describes like any other; they do not have one
-yet.
+emulated hardware, which a tree describes like any other: `dts/qemu/pebble.dtsi`
+for the machine, a board tree for each.
 
 ## Trees
 
 | File | Contents |
 | --- | --- |
-| `soc/<family>/<series>/<soc>.dtsi` | The SoC: CPU, interrupt controller, peripherals, mostly `status = "disabled"` |
+| `dts/<vendor>/<soc>.dtsi` | The SoC, as `dts/sifli/sf32lb52.dtsi`: CPU, interrupt controller, peripherals, mostly `status = "disabled"` |
+| `dts/qemu/pebble.dtsi` | The QEMU Pebble machines, whose peripherals are QEMU devices (`qemu,pebble-*`) |
 | `boards/<board>/<board>.dtsi` | What the revisions of a board share |
+| `boards/<board>/<board>-pinctrl.dtsi` | The pin control states of the board, on SoCs with a pin controller |
 | `boards/<board>/<board>_<revision>.dts` | A revision, e.g. `obelix_pvt.dts`, or `<board>.dts` for boards with one |
 | `include/dt-bindings/` | Constants the trees use, such as clock IDs and GPIO flags |
 | `dts/bindings/` | Bindings that upstream does not have |
@@ -58,8 +60,8 @@ supplies switched by GPIOs.
 
 ```{mermaid}
 flowchart TD
-  dts["boards/&lt;board&gt;/*.dts<br/>soc/**/*.dtsi"]
-  dtc["C preprocessor, dtc"]
+  dts["boards/&lt;board&gt;/*.dts<br/>dts/*/*.dtsi"]
+  dtc["dtmap.py: C preprocessor, dtc"]
   dtb["board.dtb"]
   kdt["Kconfig.dt<br/>DT_HAS_*_ENABLED"]
   kconfig["Kconfig"]
@@ -80,16 +82,17 @@ flowchart TD
   class dtb,kdt,cfg,specs,drv base
 ```
 
-1. **Compile.** When the build directory is configured, `tools/cmake/kconfig.py`
-   preprocesses the board's tree with the C preprocessor, with `boards/`,
-   `soc/` and `include/` on the include path, and compiles it with `dtc`. Its
-   default checks apply, with `unique_unit_address_if_enabled` in place of
-   `unique_unit_address`; a warning fails the build.
-2. **Kconfig.** `tools/devicetree/dtmap.py` writes `Kconfig.dt` in the
-   `devicetree/` directory of the build, with one `DT_HAS_<compatible>_ENABLED`
-   symbol for every compatible a driver binds to, set when the tree has an
-   enabled node of that compatible. The root `Kconfig` sources it, and drivers
-   default to it.
+1. **Compile.** When the build directory is configured,
+   `tools/cmake/kconfig.py` has `tools/devicetree/dtmap.py` compile the
+   board's tree before Kconfig runs: the C preprocessor first, with `boards/`,
+   `dts/` and `include/` on the include path, then `dtc`, into
+   `devicetree/board.dtb` in the build. `dtc`'s default checks apply, with
+   `unique_unit_address_if_enabled` in place of `unique_unit_address`; a
+   warning fails the build.
+2. **Kconfig.** In the same step, `dtmap.py` writes `devicetree/Kconfig.dt`,
+   with one `DT_HAS_<compatible>_ENABLED` symbol for every compatible a driver
+   binds to, set when the tree has an enabled node of that compatible. The
+   root `Kconfig` sources it, and drivers default to it.
 3. **Generate.** At build time, `dtmap.py` reads the compiled tree, the
    resolved `.config` and the specs of the drivers, and writes, under
    `generated/include/devicetree/`:
@@ -241,15 +244,22 @@ can overlay, so that boards end up with no C file.
 
 ### Validating
 
-`tools/devicetree/validate.py` checks compiled trees with dtschema, against the
-upstream bindings and ours:
+`tools/devicetree/validate.py` checks our bindings and the board trees with
+dtschema, against the upstream bindings and ours. The upstream bindings and
+their headers come from the `third_party/devicetree/devicetree-rebasing`
+submodule, pinned to a release, and dtschema is in `requirements.txt`:
 
 ```shell
-pip install dtschema
 python3 tools/devicetree/validate.py \
-    --upstream-bindings <linux>/Documentation/devicetree/bindings \
-    build/devicetree/board.dtb
+    --bindings dts/bindings/<dir>/<vendor>,<part>.yaml \
+    --all-trees
 ```
+
+`--bindings` checks bindings as upstream checks its own: against the
+meta-schema, and their examples against the bindings. `--all-trees` compiles
+every board tree and checks it; compiled trees, such as
+`build/devicetree/board.dtb`, can be given instead. CI checks the bindings a
+pull request adds or changes, and every tree.
 
 ## Connecting a driver
 
@@ -330,7 +340,7 @@ An argument takes its value from one place:
 | `reg: <index or name>` | Address of a `reg` entry, translated through the `ranges` above |
 | `size: <index or name>` | Size of a `reg` entry |
 | `irq: <index or name>` | An interrupt, from `interrupts` or `interrupts-extended` |
-| `clock`, `reset`, `pwm` | A specifier of `clocks`, `resets`, `pwms`, by index or by name |
+| `clock`, `reset`, `mbox`, `pwm` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, by index or by name |
 | `dma: <name>` | A specifier of `dmas`, by name |
 | `gpio: <name>` | `<name>-gpios`, or `gpios` for an empty name |
 | `supply: <name>` | The regulator of `<name>-supply` |
@@ -341,7 +351,7 @@ An argument takes its value from one place:
 | `parent: <kind>` | What the parent provides, as the bus of a device on it |
 | `self: <kind>` | What a node provides, with `remote`, the device at the other end of a port |
 | `referrer: <property>` | What the node pointing at this one with that property provides |
-| `list: [<compatible>, ...]` | One `item` per child of the node reached through children of these compatibles |
+| `list: [<compatible>, ...]` | One `item` per enabled child of the node reached through children of these compatibles, or of the node itself for `[]`: a template of the child's `reg` cells and name, or a `define` with `args` read from the child, as the keys of `gpio-keys` |
 | `id: true` | For `children`, the ID of the child |
 
 with these options:
@@ -350,13 +360,14 @@ with these options:
 | --- | --- |
 | `default` | Value when the node does not have it; without one, the build fails |
 | `optional` | Leave the argument out when absent, for the trailing arguments of a variadic macro. A node that has an argument after an absent one fails the build |
-| `index` | Which entry of a `gpio` list |
+| `index` | Which cell of a `prop`, or which entry of a `gpio` list |
 | `all` | Every entry of a `gpio` list |
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller |
 | `remote: <port>` | Read from the device connected to a port |
 | `up: true` | Read from the parent, for a function of a block |
 | `wrap`, `field`, `as`, `item` | Wrap the value in a macro, make it a designated initializer, take another kind from a provider, format list items |
+| `values` | For `string`, the C of each value the property may take |
 
 A spec with `ids` maps the IDs a binding defines to the numbers of the driver,
 by the prefix of their names in two headers: the binding's, and one of the

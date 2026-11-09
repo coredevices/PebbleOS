@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: dmic-codec
+config: AUDIO_DMIC
+class: codec
+define: PBL_AUDIO_DMIC_DEFINE
+args:
+  - name: true
+  - supply: vref
+    default: nullptr
+  - prop: wakeup-delay-ms
+    default: 0

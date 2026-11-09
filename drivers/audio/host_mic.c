@@ -16,8 +16,8 @@
 
 static const struct pbl_audio_host_mic *s_running;
 
-static const struct pbl_audio_host_mic *prv_dev(const struct pbl_audio *audio) {
-  return container_of(audio, const struct pbl_audio_host_mic, audio);
+static const struct pbl_audio_host_mic *prv_dev(const struct pbl_audio_dai *dai) {
+  return container_of(dai, const struct pbl_audio_host_mic, dai);
 }
 
 static void prv_fill(struct pbl_audio_host_mic_state *state, int16_t *out, size_t count) {
@@ -41,12 +41,13 @@ static void prv_timer_fn(struct pbl_work *work) {
   struct pbl_audio_host_mic_state *state =
       container_of(work, struct pbl_audio_host_mic_state, timer.work);
   const struct pbl_audio_host_mic *mic = state->mic;
-  const struct pbl_audio_state *audio_state = mic->audio.state;
+  const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&mic->dai)->state;
 
-  if (pbl_audio_is_running(&mic->audio)) {
-    prv_fill(state, pbl_audio_period(&mic->audio, state->idx), audio_state->stream.period_frames);
+  if (pbl_audio_is_running(pbl_audio_dai_card(&mic->dai))) {
+    prv_fill(state, pbl_audio_period(pbl_audio_dai_card(&mic->dai), state->idx),
+             audio_state->stream.period_frames);
     state->idx = (state->idx + 1U) % audio_state->stream.periods;
-    pbl_audio_period_elapsed(&mic->audio);
+    pbl_audio_period_elapsed(pbl_audio_dai_card(&mic->dai));
   }
 
   // prv_stop() can land while this runs
@@ -98,8 +99,8 @@ void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
   pbl_mutex_unlock(&state->lock);
 }
 
-static int prv_init(const struct pbl_audio *audio) {
-  const struct pbl_audio_host_mic *mic = prv_dev(audio);
+static int prv_init(const struct pbl_audio_dai *dai) {
+  const struct pbl_audio_host_mic *mic = prv_dev(dai);
   struct pbl_audio_host_mic_state *state = mic->state;
 
   *state = (struct pbl_audio_host_mic_state){.mic = mic};
@@ -109,7 +110,7 @@ static int prv_init(const struct pbl_audio *audio) {
   return 0;
 }
 
-static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 1U;
@@ -123,9 +124,9 @@ static void prv_free_ring(struct pbl_audio_host_mic_state *state) {
   pbl_mutex_unlock(&state->lock);
 }
 
-static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream,
+static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                      int32_t gain_mdb, bool mute) {
-  const struct pbl_audio_host_mic *mic = prv_dev(audio);
+  const struct pbl_audio_host_mic *mic = prv_dev(dai);
   struct pbl_audio_host_mic_state *state = mic->state;
   uint32_t period_ms = DIVIDE_CEIL(stream->period_frames * MS_PER_S, stream->rate);
 
@@ -146,8 +147,8 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio *audio) {
-  struct pbl_audio_host_mic_state *state = prv_dev(audio)->state;
+static int prv_stop(const struct pbl_audio_dai *dai) {
+  struct pbl_audio_host_mic_state *state = prv_dev(dai)->state;
 
   s_running = nullptr;
   pbl_irq_lock();
@@ -159,7 +160,7 @@ static int prv_stop(const struct pbl_audio *audio) {
   return 0;
 }
 
-const struct pbl_audio_ops pbl_audio_host_mic_ops = {
+const struct pbl_audio_dai_ops pbl_audio_host_mic_ops = {
   .init = prv_init,
   .get_caps = prv_get_caps,
   .start = prv_start,

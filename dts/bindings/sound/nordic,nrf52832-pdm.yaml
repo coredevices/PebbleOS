@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sound/nordic,nrf52832-pdm.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 PDM interface
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Records one or two digital microphones. It selects its own pins, given as GPIO properties named after the signals.
+
+allOf:
+  - $ref: dai-common.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-pdm
+      - items:
+          - enum:
+              - nordic,nrf52833-pdm
+              - nordic,nrf52840-pdm
+          - const: nordic,nrf52832-pdm
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  "#sound-dai-cells":
+    const: 0
+
+  clk-gpios:
+    maxItems: 1
+
+  din-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - "#sound-dai-cells"
+  - clk-gpios
+  - din-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    audio-controller@4001d000 {
+        compatible = "nordic,nrf52840-pdm", "nordic,nrf52832-pdm";
+        reg = <0x4001d000 0x1000>;
+        interrupts = <29>;
+        #sound-dai-cells = <0>;
+        clk-gpios = <&gpio1 0 0>;
+        din-gpios = <&gpio0 24 0>;
+    };

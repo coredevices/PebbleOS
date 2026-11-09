@@ -3,13 +3,12 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/qemu.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
-
-#include <hardware/qemu_memorymap.h>
 
 #define GPIO_STATE   0x00U
 #define GPIO_INTCTRL 0x08U
@@ -17,14 +16,17 @@
 
 #define GPIO_INTCTRL_EN 0x1U
 
-#define GPIO_NUM_PINS 4U
+struct pbl_gpio_qemu_intc {
+  struct pbl_intc intc;
+  const struct pbl_gpio_qemu *port;
+};
 
 static const struct pbl_gpio_qemu *prv_port(const struct pbl_gpio_port *port) {
   return container_of(port, const struct pbl_gpio_qemu, port);
 }
 
 static const struct pbl_gpio_qemu *prv_intc_port(const struct pbl_intc *intc) {
-  return container_of(intc, const struct pbl_gpio_qemu, intc);
+  return container_of(intc, const struct pbl_gpio_qemu_intc, intc)->port;
 }
 
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
@@ -91,7 +93,7 @@ static void prv_irq_handler(const struct pbl_gpio_qemu *gpio) {
 
   pending = edges & state->enabled & ((level & state->rising) | (~level & state->falling));
   while (pending != 0U) {
-    pbl_intc_dispatch(&gpio->intc, (uint32_t)__builtin_ctz(pending));
+    pbl_intc_dispatch(gpio->port.intc, (uint32_t)__builtin_ctz(pending));
     pending &= pending - 1U;
   }
 }
@@ -99,26 +101,29 @@ static void prv_irq_handler(const struct pbl_gpio_qemu *gpio) {
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_gpio_qemu *gpio = prv_port(container_of(dev, const struct pbl_gpio_port, dev));
 
-  pbl_writel(PBL_BIT_MASK(GPIO_NUM_PINS), gpio->base + GPIO_INTSTAT);
+  pbl_writel(PBL_BIT_MASK(gpio->port.num_pins), gpio->base + GPIO_INTSTAT);
   pbl_writel(GPIO_INTCTRL_EN, gpio->base + GPIO_INTCTRL);
-  pbl_irq_enable(PBL_IRQN(GPIO));
+  pbl_irq_enable(gpio->irq);
 
   return 0;
 }
 
-static struct pbl_gpio_qemu_state s_gpio_state;
+#define PBL_GPIO_QEMU_DEFINE(sym, _name, _base, _irq, _num_pins)                                  \
+  extern const struct pbl_intc sym##_intc;                                                        \
+  static struct pbl_gpio_qemu_state sym##_qemu_state;                                             \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
+  PBL_INTC_STATE_DEFINE(sym##_intc, _num_pins);                                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_gpio_qemu, struct pbl_gpio_port, port){                     \
+    .port =                                                                                       \
+        PBL_GPIO_PORT_INIT(sym, _name, prv_init, nullptr, &s_port_ops, _num_pins, &sym##_intc),   \
+    .base = (_base),                                                                              \
+    .irq = (_irq),                                                                                \
+    .state = &sym##_qemu_state,                                                                   \
+  };                                                                                              \
+  PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_qemu_intc, struct pbl_intc, intc){              \
+    .intc = PBL_INTC_INIT(sym##_intc, _name "_intc", nullptr, &sym##_inst.port.dev, &s_intc_ops), \
+    .port = &sym##_inst,                                                                          \
+  };                                                                                              \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_GPIO_QEMU_IRQ_PRIO, prv_irq_handler, &sym##_inst, 0)
 
-PBL_DEVICE_STATE_DEFINE(pbl_gpio_qemu_gpio);
-PBL_INTC_STATE_DEFINE(pbl_gpio_qemu_gpio_intc, GPIO_NUM_PINS);
-const struct pbl_gpio_qemu pbl_gpio_qemu_gpio = {
-  .port = PBL_GPIO_PORT_INIT(pbl_gpio_qemu_gpio, "gpio", prv_init, nullptr, &s_port_ops,
-                             GPIO_NUM_PINS, &pbl_gpio_qemu_gpio.intc),
-  .intc = PBL_INTC_INIT(pbl_gpio_qemu_gpio_intc, "gpio_intc", nullptr, &pbl_gpio_qemu_gpio.port.dev,
-                        &s_intc_ops),
-  .base = QEMU_GPIO_BASE,
-  .state = &s_gpio_state,
-};
-PBL_DEVICE_REGISTER(pbl_gpio_qemu_gpio, &pbl_gpio_qemu_gpio.port.dev);
-PBL_DEVICE_REGISTER(pbl_gpio_qemu_gpio_intc, &pbl_gpio_qemu_gpio.intc.dev);
-
-PBL_IRQ_CONNECT(GPIO, 6, prv_irq_handler, &pbl_gpio_qemu_gpio, 0);
+#include PBL_DT_INSTANCES(qemu_pebble_gpio)

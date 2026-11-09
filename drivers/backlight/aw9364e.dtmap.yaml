@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: awinic,aw9364e
+config: BACKLIGHT_AW9364E
+class: backlight
+define: PBL_AW9364E_DEFINE
+args:
+  - gpio: enable

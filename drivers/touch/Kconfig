@@ -19,30 +19,26 @@ config TOUCH_SHELL
 
 config TOUCH_CST816
     bool "Hynitron CST816"
+    default DT_HAS_HYNITRON_CST816S_ENABLED
     depends on I2C
     select CST816_FW
+    select PINCTRL
     help
       Support for the Hynitron CST816 touch controller.
 
 config TOUCH_QEMU
     bool "QEMU Touchscreen"
-    default y if SOC_QEMU
+    default DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
+    depends on SOC_QEMU
     help
       Support for the QEMU touchscreen peripheral.
 
-if TOUCH_QEMU
-
-config TOUCH_QEMU_SIZE_X
-    int "QEMU touchscreen X coordinates"
+config TOUCH_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 6
+    depends on TOUCH_QEMU
     help
-      Number of X coordinates the QEMU touchscreen reports.
-
-config TOUCH_QEMU_SIZE_Y
-    int "QEMU touchscreen Y coordinates"
-    help
-      Number of Y coordinates the QEMU touchscreen reports.
-
-endif # TOUCH_QEMU
+      Priority of the touchscreen interrupt.
 
 config TOUCH_SDL
     bool "SDL mouse"

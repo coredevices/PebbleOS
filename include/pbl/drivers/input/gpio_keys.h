@@ -93,12 +93,14 @@ int pbl_gpio_keys_init(const struct pbl_device *dev);
   static const struct pbl_gpio_keys_key sym##_keys[] = {__VA_ARGS__};              \
   static struct pbl_gpio_keys_key_state sym##_key_state[ARRAY_LENGTH(sym##_keys)]; \
   PBL_DEVICE_STATE_DEFINE(sym);                                                    \
-  const struct pbl_gpio_keys sym = {                                               \
+  extern const struct pbl_gpio_keys sym##_inst;                                    \
+  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                \
+  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_gpio_keys, struct pbl_device, dev); \
+  const struct pbl_gpio_keys sym##_inst = {                                        \
     .dev = PBL_DEVICE_INIT(sym, _name, pbl_gpio_keys_init, nullptr, nullptr),      \
     .keys = sym##_keys,                                                            \
     .state = sym##_key_state,                                                      \
     .num_keys = ARRAY_LENGTH(sym##_keys),                                          \
-  };                                                                               \
-  PBL_DEVICE_REGISTER(sym, &sym.dev)
+  }
 
 /** @} */

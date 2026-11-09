@@ -5,6 +5,7 @@ menu "Input"
 
 config INPUT_GPIO_KEYS
     bool "GPIO keys"
+    default DT_HAS_GPIO_KEYS_ENABLED
     depends on GPIO
     select INPUT
     help

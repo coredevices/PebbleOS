@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: awinic,aw86233
+config: VIBE_AW8623X
+class: vibe
+define: PBL_AW8623X_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - gpio: reset
+  - supply: vdd
+    default: nullptr

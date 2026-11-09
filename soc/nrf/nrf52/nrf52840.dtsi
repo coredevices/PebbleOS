@@ -110,6 +110,14 @@
 			status = "disabled";
 		};
 
+		pdm: audio-controller@4001d000 {
+			compatible = "nordic,nrf52840-pdm", "nordic,nrf52832-pdm";
+			reg = <0x4001d000 0x1000>;
+			interrupts = <29>;
+			#sound-dai-cells = <0>;
+			status = "disabled";
+		};
+
 		ppi: ppi@4001f000 {
 			compatible = "nordic,nrf52840-ppi", "nordic,nrf52832-ppi";
 			reg = <0x4001f000 0x1000>;
@@ -153,6 +161,14 @@
 				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
+		};
+
+		i2s: i2s@40025000 {
+			compatible = "nordic,nrf52840-i2s", "nordic,nrf52832-i2s";
+			reg = <0x40025000 0x1000>;
+			interrupts = <37>;
+			#sound-dai-cells = <0>;
+			status = "disabled";
 		};
 
 		uart1: serial@40028000 {

@@ -180,19 +180,20 @@ def cmd_qemu_image_micro(args):
     img.tobinfile(args.output, start=0x00000000, end=flash_end - 1)
 
 
-def qemu_resources_offset():
-    header = os.path.join(
-        REPO_ROOT, "include", "pbl", "board", "partitions_dual_slot.h"
-    )
-    with open(header) as f:
-        match = re.search(
-            r"PART_SYSTEM_RESOURCES_BANK_0_OFFSET\s+(0x[0-9A-Fa-f]+)", f.read()
-        )
-    return int(match.group(1), 16)
+def qemu_resources_offset(config_path):
+    sys.path.insert(0, os.path.join(REPO_ROOT, "tools", "libs", "pbl-cli"))
+    from pbl import flash_layout
+    from pbl.build import BuildDir
+
+    build = BuildDir(os.path.dirname(os.path.abspath(config_path)), REPO_ROOT)
+    regions = flash_layout.regions(build)
+    if "SYSTEM_RESOURCES_BANK_0" not in regions:
+        sys.exit("qemu-image-spi: the board has no system-resources-bank-0 partition")
+    return regions["SYSTEM_RESOURCES_BANK_0"][0]
 
 
 def cmd_qemu_image_spi(args):
-    resources_begin = qemu_resources_offset()
+    resources_begin = qemu_resources_offset(args.config)
     image_size = 32 * 1024 * 1024
 
     pprint(f"Writing SPI flash image to {args.output}")

@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: awinic,aw2016
+config: LED_AW2016
+class: led
+define: PBL_AW2016_DEFINE
+children:
+  names:
+    multi-led: 0
+args:
+  - parent: i2c
+    up: true
+  - reg: 0
+    up: true

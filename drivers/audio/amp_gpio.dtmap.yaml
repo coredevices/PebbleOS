@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: awinic,aw8155
+config: AUDIO_AMP_GPIO
+class: amp
+define: PBL_AUDIO_AW8155_DEFINE
+args:
+  - name: true
+  - gpio: mode
+  - prop: awinic,mode
+  - supply: vdd
+    default: nullptr

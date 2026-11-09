@@ -3,8 +3,10 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/audio/amp_gpio.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/util/misc.h>
 
 static const struct pbl_audio_amp_gpio *prv_amp(const struct pbl_audio_amp *amp) {
@@ -32,23 +34,28 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev) {
 }
 
 static int prv_power_up(const struct pbl_audio_amp_gpio *amp) {
-  int ret;
+  int ret = 0;
 
-  for (uint8_t i = 0U; i < amp->mode_pulses; i++) {
+  // An interrupt would stretch a pulse past what the amplifier takes as one
+  pbl_irq_lock();
+
+  for (uint8_t i = 0U; i < amp->mode_pulses && ret == 0; i++) {
     ret = pbl_gpio_set(&amp->enable, true);
-    if (ret != 0) {
-      return ret;
-    }
     pbl_busy_wait_us(amp->pulse_us);
 
-    ret = pbl_gpio_set(&amp->enable, false);
-    if (ret != 0) {
-      return ret;
+    if (ret == 0) {
+      ret = pbl_gpio_set(&amp->enable, false);
+      pbl_busy_wait_us(amp->pulse_us);
     }
-    pbl_busy_wait_us(amp->pulse_us);
   }
 
-  return pbl_gpio_set(&amp->enable, true);
+  if (ret == 0) {
+    ret = pbl_gpio_set(&amp->enable, true);
+  }
+
+  pbl_irq_unlock();
+
+  return ret;
 }
 
 static int prv_power_down(const struct pbl_audio_amp_gpio *amp) {
@@ -95,3 +102,5 @@ const struct pbl_audio_amp_ops pbl_audio_amp_gpio_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
 };
+
+#include PBL_DT_INSTANCES(awinic_aw8155)

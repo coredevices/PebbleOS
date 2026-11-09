@@ -8,3 +8,12 @@
 / {
 	compatible = "coredevices,getafix-dvt", "coredevices,getafix", "sifli,sf32lb52";
 };
+
+&i2c3 {
+	haptics: haptics@5a {
+		compatible = "awinic,aw86233";
+		reg = <0x5a>;
+		reset-gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;
+		vdd-supply = <&ldsw1>;
+	};
+};

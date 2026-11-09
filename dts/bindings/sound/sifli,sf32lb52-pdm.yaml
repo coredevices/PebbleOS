@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sound/sifli,sf32lb52-pdm.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 PDM interface
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Records one or two digital microphones, with a programmable gain, through
+  a DMA channel.
+
+allOf:
+  - $ref: dai-common.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-pdm
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+  dmas:
+    maxItems: 1
+
+  dma-names:
+    const: rx
+
+  "#sound-dai-cells":
+    const: 0
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - resets
+  - "#sound-dai-cells"
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    audio-controller@5009a000 {
+        compatible = "sifli,sf32lb52-pdm";
+        reg = <0x5009a000 0x1000>;
+        interrupts = <82>;
+        clocks = <&hpsys_rcc 21>;
+        resets = <&hpsys_rcc 21>;
+        dmas = <&dmac1 4 36 0>;
+        dma-names = "rx";
+        #sound-dai-cells = <0>;
+    };

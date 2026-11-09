@@ -20,17 +20,20 @@ config BACKLIGHT_HAS_COLOR
     help
       Backlight drivers that support color should select this Kconfig symbol.
 
-config BACKLIGHT_AW2016
-    bool "AW2016"
-    depends on I2C
-    select BACKLIGHT_HAS_COLOR
-    help
-      Support for the AW2016 LED controller.
-
 config BACKLIGHT_AW9364E
     bool "AW9364E"
+    default DT_HAS_AWINIC_AW9364E_ENABLED
+    depends on GPIO
     help
       Support for the AW9364E LED controller.
+
+config BACKLIGHT_LED
+    bool "LED"
+    default DT_HAS_LED_BACKLIGHT_ENABLED
+    depends on LED
+    select BACKLIGHT_HAS_COLOR if LED_HAS_COLOR
+    help
+      Backlight on an LED, its color mixed by multicolor LEDs.
 
 config BACKLIGHT_PWM
     bool "PWM"
@@ -41,7 +44,8 @@ config BACKLIGHT_PWM
 
 config BACKLIGHT_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
+    depends on SOC_QEMU
     help
       Emulated backlight controller that writes to the QEMU
       pebble-display MMIO registers.

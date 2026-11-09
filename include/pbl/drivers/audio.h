@@ -62,10 +62,11 @@
  * Gain is in millibels (mdB) and mute is separate from it. Both take effect at once while
  * streaming and are kept for the next start otherwise.
  *
- * A device may be linked to a codec and an amplifier, described by the board as a struct
- * pbl_audio_link. The class then powers them around the stream: the amplifier on before the
- * stream and off after it, the codec up once the stream runs (it may need its clocks) and down
- * before the stream stops, and routes gain and mute to the codec.
+ * An audio device is a card, as in Linux: a digital audio interface (DAI) of the SoC, the
+ * struct pbl_audio_dai a driver implements, linked to a codec and an amplifier by a struct
+ * pbl_audio_link. The class powers them around the stream: the amplifier on before the stream
+ * and off after it, the codec up once the stream runs (it may need its clocks) and down before
+ * the stream stops, and routes gain and mute to the codec.
  *
  * Calls other than pbl_audio_period_ready() must not be made from interrupts. They return 0 or a
  * negative errno, @c -ENODEV if the device is not ready.
@@ -73,6 +74,7 @@
  */
 
 struct pbl_audio;
+struct pbl_audio_dai;
 struct pbl_audio_codec;
 struct pbl_audio_amp;
 
@@ -186,34 +188,34 @@ struct pbl_audio_caps {
 };
 
 /**
- * @brief Device driver operations.
+ * @brief DAI driver operations.
  *
- * Called with the device lock held, except the sync and pointer operations, which may be called
- * from the driver's interrupt.
+ * Called with the lock of the card held, except the sync and pointer operations, which may be
+ * called from the driver's interrupt.
  */
-struct pbl_audio_ops {
+struct pbl_audio_dai_ops {
   /** Optional. Bring the hardware up. Returns 0, @c -ENODEV if absent, or a negative errno. */
-  int (*init)(const struct pbl_audio *audio);
-  /** Report the capabilities. Gain fields are ignored on a device linked to a codec. */
-  void (*get_caps)(const struct pbl_audio *audio, struct pbl_audio_caps *caps);
+  int (*init)(const struct pbl_audio_dai *dai);
+  /** Report the capabilities. Gain fields are ignored on a card with a codec. */
+  void (*get_caps)(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps);
   /**
    * Start streaming the ring, applying @p gain_mdb and @p mute before any sample reaches the
    * output. Returns 0, @c -EINVAL for a stream the hardware cannot run, or a negative errno.
    */
-  int (*start)(const struct pbl_audio *audio, const struct pbl_audio_stream *stream,
+  int (*start)(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                int32_t gain_mdb, bool mute);
   /** Stop streaming. pbl_audio_period_elapsed() is not called once it returns. */
-  int (*stop)(const struct pbl_audio *audio);
+  int (*stop)(const struct pbl_audio_dai *dai);
   /** Optional, required with a variable gain. Set the gain while streaming. */
-  int (*set_gain)(const struct pbl_audio *audio, int32_t gain_mdb);
+  int (*set_gain)(const struct pbl_audio_dai *dai, int32_t gain_mdb);
   /** Optional. Set the mute while streaming; without it, mute sets the lowest gain. */
-  int (*set_mute)(const struct pbl_audio *audio, bool mute);
+  int (*set_mute)(const struct pbl_audio_dai *dai, bool mute);
   /** Optional. Make CPU writes to a playback period visible to the hardware. */
-  void (*sync_for_device)(const struct pbl_audio *audio, void *buf, size_t len);
+  void (*sync_for_device)(const struct pbl_audio_dai *dai, void *buf, size_t len);
   /** Optional. Make hardware writes to a capture period visible to the CPU. */
-  void (*sync_for_cpu)(const struct pbl_audio *audio, void *buf, size_t len);
+  void (*sync_for_cpu)(const struct pbl_audio_dai *dai, void *buf, size_t len);
   /** Optional. Report the frame position of the hardware within the ring. */
-  int (*pointer)(const struct pbl_audio *audio, size_t *frames);
+  int (*pointer)(const struct pbl_audio_dai *dai, size_t *frames);
 };
 
 /** @brief Codec configuration for a stream. */
@@ -230,20 +232,28 @@ struct pbl_audio_codec_cfg {
   bool mute;
 };
 
-/** @brief Codec driver operations, called with the lock of the linked device held. */
+/**
+ * @brief Codec driver operations, called with the lock of the card held.
+ *
+ * A codec without @c set_gain leaves the gain and mute to the DAI.
+ */
 struct pbl_audio_codec_ops {
-  /** Report the gain range in the gain fields of @p caps. */
+  /** Optional. Power up before the stream starts, as a microphone needs. */
+  int (*prepare)(const struct pbl_audio_codec *codec);
+  /** Optional, required with @c prepare. Power down after the stream stops. */
+  int (*unprepare)(const struct pbl_audio_codec *codec);
+  /** Optional, required with @c set_gain. Report the gain range in the gain fields of @p caps. */
   void (*get_caps)(const struct pbl_audio_codec *codec, struct pbl_audio_caps *caps);
   /**
-   * Power up for a stream whose clocks run, ending with the gain and mute applied. Powers down
-   * again on failure.
+   * Optional. Power up for a stream whose clocks run, ending with the gain and mute applied.
+   * Powers down again on failure.
    */
   int (*enable)(const struct pbl_audio_codec *codec, const struct pbl_audio_codec_cfg *cfg);
-  /** Power down. */
+  /** Optional, required with @c enable. Power down. */
   int (*disable)(const struct pbl_audio_codec *codec);
-  /** Set the gain while enabled. */
+  /** Optional. Set the gain while enabled. */
   int (*set_gain)(const struct pbl_audio_codec *codec, int32_t gain_mdb);
-  /** Set the mute while enabled. */
+  /** Optional, required with @c set_gain. Set the mute while enabled. */
   int (*set_mute)(const struct pbl_audio_codec *codec, bool mute);
 };
 
@@ -298,23 +308,41 @@ struct pbl_audio_state {
 };
 /** @endcond */
 
-/** @brief An audio device. */
-struct pbl_audio {
+/** @cond INTERNAL_HIDDEN */
+struct pbl_audio_dai_state {
+  const struct pbl_audio *card;
+};
+/** @endcond */
+
+/** @brief A digital audio interface of the SoC, streaming one direction. */
+struct pbl_audio_dai {
   /** Device. */
   struct pbl_device dev;
   /** Driver operations. */
-  const struct pbl_audio_ops *ops;
+  const struct pbl_audio_dai_ops *ops;
   /** Runtime state. */
-  struct pbl_audio_state *state;
-  /** What the device is wired to, or NULL. */
-  const struct pbl_audio_link *link;
+  struct pbl_audio_dai_state *state;
   /** Direction, one of @ref pbl_audio_dir. */
   uint8_t dir;
 };
 
+/** @brief An audio device: a card, a DAI and what it is wired to. */
+struct pbl_audio {
+  /** Device. */
+  struct pbl_device dev;
+  /** DAI. */
+  const struct pbl_audio_dai *dai;
+  /** Runtime state. */
+  struct pbl_audio_state *state;
+  /** What the DAI is wired to. */
+  const struct pbl_audio_link *link;
+};
+
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_device_class pbl_audio_class;
+extern const struct pbl_device_class pbl_audio_dai_class;
 int pbl_audio_dev_init(const struct pbl_device *dev);
+int pbl_audio_dai_dev_init(const struct pbl_device *dev);
 /** @endcond */
 
 /** @brief The board's speaker, a playback device. */
@@ -324,34 +352,79 @@ extern const struct pbl_audio *const SPEAKER;
 extern const struct pbl_audio *const MIC;
 
 /**
- * @brief Define the class state of an audio device.
+ * @brief Define the class state of a DAI.
  *
  * @param sym Symbol of the instance.
  */
-#define PBL_AUDIO_STATE_DEFINE(sym) \
-  PBL_DEVICE_STATE_DEFINE(sym);     \
-  static struct pbl_audio_state sym##_audio_state
+#define PBL_AUDIO_DAI_STATE_DEFINE(sym) \
+  PBL_DEVICE_STATE_DEFINE(sym);         \
+  static struct pbl_audio_dai_state sym##_dai_state
 
 /**
- * @brief Initializer for a struct pbl_audio.
+ * @brief Initializer for a struct pbl_audio_dai.
  *
- * @param sym Symbol of the instance, as passed to PBL_AUDIO_STATE_DEFINE().
+ * @param sym Symbol of the instance, as passed to PBL_AUDIO_DAI_STATE_DEFINE().
  * @param _name Device name.
  * @param _dir Direction, one of @ref pbl_audio_dir.
  * @param _ops Driver operations.
- * @param _link What the device is wired to, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL. The codec and amplifier of the link
- * are added by the class.
+ * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_AUDIO_INIT(sym, _name, _dir, _ops, _link, _deps)                                     \
-  {                                                                                              \
-    .dev =                                                                                       \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dev_init, nullptr, _deps, &pbl_audio_class), \
-    .ops = (_ops),                                                                               \
-    .state = &sym##_audio_state,                                                                 \
-    .link = (_link),                                                                             \
-    .dir = (_dir),                                                                               \
+#define PBL_AUDIO_DAI_INIT(sym, _name, _dir, _ops, _deps)                            \
+  {                                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, nullptr, _deps, \
+                                 &pbl_audio_dai_class),                              \
+    .ops = (_ops),                                                                   \
+    .state = &sym##_dai_state,                                                       \
+    .dir = (_dir),                                                                   \
   }
+
+/**
+ * @brief Define a card.
+ *
+ * @param sym Symbol of the card, a struct pbl_audio.
+ * @param _name Device name.
+ * @param _dai DAI.
+ * @param _codec Codec on the link, or NULL.
+ * @param _amp Amplifier, or NULL.
+ * @param _fmt Link framing, @ref PBL_AUDIO_FMT_I2S or 0.
+ * @param _clocks Who drives the clocks, @ref PBL_AUDIO_FMT_CODEC_MASTER or 0.
+ */
+#define PBL_AUDIO_CARD_DEFINE(sym, _name, _dai, _codec, _amp, _fmt, _clocks)            \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
+  static struct pbl_audio_state sym##_audio_state;                                      \
+  static const struct pbl_audio_link sym##_link = {                                     \
+    .codec = (_codec),                                                                  \
+    .amp = (_amp),                                                                      \
+    .fmt = (_fmt) | (_clocks),                                                          \
+  };                                                                                    \
+  const struct pbl_audio sym = {                                                        \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dev_init, &(_dai)->dev, nullptr, \
+                                 &pbl_audio_class),                                     \
+    .dai = (_dai),                                                                      \
+    .state = &sym##_audio_state,                                                        \
+    .link = &sym##_link,                                                                \
+  };                                                                                    \
+  PBL_DEVICE_REGISTER(sym, &sym.dev)
+
+/**
+ * @brief Get the direction of a card.
+ *
+ * @param audio Card.
+ * @return One of @ref pbl_audio_dir.
+ */
+static inline uint8_t pbl_audio_dir(const struct pbl_audio *audio) {
+  return audio->dai->dir;
+}
+
+/**
+ * @brief Get the card of a DAI, for drivers.
+ *
+ * @param dai DAI.
+ * @return Card, set once it is initialized.
+ */
+static inline const struct pbl_audio *pbl_audio_dai_card(const struct pbl_audio_dai *dai) {
+  return dai->state->card;
+}
 
 /**
  * @brief Report the end of the period the hardware was working on.

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: mbox
+type: struct pbl_mbox_controller
+include: pbl/drivers/mbox.h
+provides:
+  # Cells are those of the controller's specifier
+  mbox: "PBL_MBOX_CHAN(&{sym}, {0})"

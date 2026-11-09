@@ -70,7 +70,7 @@ static void prv_log(char c) {
   }
 }
 
-static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 2U;
@@ -81,7 +81,7 @@ static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *c
   caps->gain_default_mdb = -6000;
 }
 
-static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream,
+static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                      int32_t gain_mdb, bool mute) {
   prv_log('S');
   s_hw_gain = gain_mdb;
@@ -89,26 +89,26 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   return s_start_ret;
 }
 
-static int prv_stop(const struct pbl_audio *audio) {
+static int prv_stop(const struct pbl_audio_dai *dai) {
   prv_log('s');
   return 0;
 }
 
-static int prv_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
   s_hw_gain = gain_mdb;
   return 0;
 }
 
-static void prv_sync(const struct pbl_audio *audio, void *buf, size_t len) {
+static void prv_sync(const struct pbl_audio_dai *dai, void *buf, size_t len) {
   s_syncs++;
 }
 
-static int prv_pointer(const struct pbl_audio *audio, size_t *frames) {
+static int prv_pointer(const struct pbl_audio_dai *dai, size_t *frames) {
   *frames = s_pointer;
   return 0;
 }
 
-static const struct pbl_audio_ops s_ops = {
+static const struct pbl_audio_dai_ops s_ops = {
   .get_caps = prv_get_caps,
   .start = prv_start,
   .stop = prv_stop,
@@ -179,29 +179,53 @@ static const struct pbl_audio_codec s_codec = {
   .ops = &s_codec_ops,
 };
 
+static int prv_dmic_prepare(const struct pbl_audio_codec *codec) {
+  prv_log('P');
+  return 0;
+}
+
+static int prv_dmic_unprepare(const struct pbl_audio_codec *codec) {
+  prv_log('p');
+  return 0;
+}
+
+static const struct pbl_audio_codec_ops s_dmic_ops = {
+  .prepare = prv_dmic_prepare,
+  .unprepare = prv_dmic_unprepare,
+};
+
+PBL_DEVICE_STATE_DEFINE(s_dmic);
+static const struct pbl_audio_codec s_dmic = {
+  .dev = PBL_DEVICE_INIT(s_dmic, "dmic", nullptr, nullptr, nullptr),
+  .ops = &s_dmic_ops,
+};
+
 PBL_DEVICE_STATE_DEFINE(s_amp);
 static const struct pbl_audio_amp s_amp = {
   .dev = PBL_DEVICE_INIT(s_amp, "amp", nullptr, nullptr, nullptr),
   .ops = &s_amp_ops,
 };
 
-static const struct pbl_audio_link s_link = {
-  .codec = &s_codec,
-  .amp = &s_amp,
-  .fmt = PBL_AUDIO_FMT_I2S | PBL_AUDIO_FMT_CODEC_MASTER,
-};
+PBL_AUDIO_DAI_STATE_DEFINE(s_out_dai);
+static const struct pbl_audio_dai s_out_dai =
+    PBL_AUDIO_DAI_INIT(s_out_dai, "out_dai", PBL_AUDIO_PLAYBACK, &s_ops, nullptr);
+PBL_AUDIO_CARD_DEFINE(s_out, "out", &s_out_dai, nullptr, nullptr, 0, 0);
 
-PBL_AUDIO_STATE_DEFINE(s_out);
-static const struct pbl_audio s_out =
-    PBL_AUDIO_INIT(s_out, "out", PBL_AUDIO_PLAYBACK, &s_ops, nullptr, nullptr);
+PBL_AUDIO_DAI_STATE_DEFINE(s_in_dai);
+static const struct pbl_audio_dai s_in_dai =
+    PBL_AUDIO_DAI_INIT(s_in_dai, "in_dai", PBL_AUDIO_CAPTURE, &s_ops, nullptr);
+PBL_AUDIO_CARD_DEFINE(s_in, "in", &s_in_dai, nullptr, nullptr, 0, 0);
 
-PBL_AUDIO_STATE_DEFINE(s_in);
-static const struct pbl_audio s_in =
-    PBL_AUDIO_INIT(s_in, "in", PBL_AUDIO_CAPTURE, &s_ops, nullptr, nullptr);
+PBL_AUDIO_DAI_STATE_DEFINE(s_linked_dai);
+static const struct pbl_audio_dai s_linked_dai =
+    PBL_AUDIO_DAI_INIT(s_linked_dai, "linked_dai", PBL_AUDIO_PLAYBACK, &s_ops, nullptr);
+PBL_AUDIO_CARD_DEFINE(s_linked, "linked", &s_linked_dai, &s_codec, &s_amp, PBL_AUDIO_FMT_I2S,
+                      PBL_AUDIO_FMT_CODEC_MASTER);
 
-PBL_AUDIO_STATE_DEFINE(s_linked);
-static const struct pbl_audio s_linked =
-    PBL_AUDIO_INIT(s_linked, "linked", PBL_AUDIO_PLAYBACK, &s_ops, &s_link, nullptr);
+PBL_AUDIO_DAI_STATE_DEFINE(s_mic_dai);
+static const struct pbl_audio_dai s_mic_dai =
+    PBL_AUDIO_DAI_INIT(s_mic_dai, "mic_dai", PBL_AUDIO_CAPTURE, &s_ops, nullptr);
+PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_mic_dai, &s_dmic, nullptr, 0, 0);
 
 static void prv_period_done(const struct pbl_audio *audio, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
@@ -251,11 +275,18 @@ void test_audio__initialize(void) {
   memset(&s_out_device_state, 0, sizeof(s_out_device_state));
   memset(&s_in_device_state, 0, sizeof(s_in_device_state));
   memset(&s_linked_device_state, 0, sizeof(s_linked_device_state));
+  memset(&s_mic_device_state, 0, sizeof(s_mic_device_state));
+  memset(&s_out_dai_device_state, 0, sizeof(s_out_dai_device_state));
+  memset(&s_in_dai_device_state, 0, sizeof(s_in_dai_device_state));
+  memset(&s_linked_dai_device_state, 0, sizeof(s_linked_dai_device_state));
+  memset(&s_mic_dai_device_state, 0, sizeof(s_mic_dai_device_state));
+  memset(&s_dmic_device_state, 0, sizeof(s_dmic_device_state));
   memset(&s_codec_device_state, 0, sizeof(s_codec_device_state));
   memset(&s_amp_device_state, 0, sizeof(s_amp_device_state));
   cl_assert_equal_i(pbl_device_init(&s_out.dev), 0);
   cl_assert_equal_i(pbl_device_init(&s_in.dev), 0);
   cl_assert_equal_i(pbl_device_init(&s_linked.dev), 0);
+  cl_assert_equal_i(pbl_device_init(&s_mic.dev), 0);
 
   s_ring = nullptr;
   stream.buf = nullptr;
@@ -267,6 +298,7 @@ void test_audio__cleanup(void) {
   (void)pbl_audio_stop(&s_out);
   (void)pbl_audio_stop(&s_in);
   (void)pbl_audio_stop(&s_linked);
+  (void)pbl_audio_stop(&s_mic);
   pbl_audio_buf_free(s_ring);
 }
 
@@ -569,4 +601,21 @@ void test_audio__link_unwinds_on_codec_failure(void) {
   cl_assert_equal_i(pbl_audio_start(&s_linked, &stream), -EIO);
   cl_assert_equal_s(s_log, "ASCsa");
   cl_assert(!pbl_audio_is_running(&s_linked));
+}
+
+void test_audio__codec_without_gain_is_prepared_around_the_stream(void) {
+  struct pbl_audio_stream stream = prv_stream();
+  struct pbl_audio_caps caps;
+
+  stream.buf = s_ring;
+  cl_assert_equal_i(pbl_audio_get_caps(&s_mic, &caps), 0);
+  cl_assert(caps.gain_step_mdb != 0);
+
+  cl_assert_equal_i(pbl_audio_set_gain(&s_mic, -12000), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_mic, &stream), 0);
+  cl_assert_equal_s(s_log, "PS");
+  cl_assert_equal_i(s_hw_gain, -12000);
+
+  cl_assert_equal_i(pbl_audio_stop(&s_mic), 0);
+  cl_assert_equal_s(s_log, "PSsp");
 }

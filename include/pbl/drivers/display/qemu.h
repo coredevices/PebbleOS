@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/display.h>
+#include <pbl/drivers/panel/ls013b7dd02.h>
 
 /**
  * @defgroup drivers_display_qemu QEMU display
@@ -13,7 +14,8 @@
  * @brief @ref drivers_display driver for the QEMU framebuffer display peripheral.
  *
  * Rows are copied to the peripheral's framebuffer and shown at once; updates complete before
- * pbl_display_update() returns. The image is not rotated.
+ * pbl_display_update() returns. The image is not rotated. A round display hides the corners of
+ * the 260x260 round panel the machine emulates.
  * @{
  */
 
@@ -40,17 +42,18 @@ extern const struct pbl_display_ops pbl_display_qemu_ops;
  * @param _fb Framebuffer base address.
  * @param _width Width, in pixels.
  * @param _height Height, in pixels.
- * @param _format Framebuffer format.
- * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
+ * @param _bpp Bits per pixel: 8 for ARGB2222, 1 for monochrome.
+ * @param _round Whether the display is round.
  */
-#define PBL_DISPLAY_QEMU_DEFINE(sym, _name, _base, _fb, _width, _height, _format, ...)             \
-  PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
-  const struct pbl_display_qemu sym = {                                                            \
-    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_qemu_ops, nullptr, _width, _height, _format, \
-                             false, __VA_ARGS__),                                                  \
-    .base = (_base),                                                                               \
-    .fb = (_fb),                                                                                   \
-  };                                                                                               \
-  PBL_DEVICE_REGISTER(sym, &sym.disp.dev)
+#define PBL_DISPLAY_QEMU_DEFINE(sym, _name, _base, _fb, _width, _height, _bpp, _round) \
+  static_assert((_bpp) == 8 || (_bpp) == 1, "8 or 1 bits per pixel");                  \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_display_qemu, struct pbl_display, disp) {        \
+    .disp = PBL_DISPLAY_INIT(                                                          \
+        sym, _name, &pbl_display_qemu_ops, nullptr, _width, _height,                   \
+        ((_bpp) == 1) ? PBL_DISPLAY_FORMAT_MONO : PBL_DISPLAY_FORMAT_ARGB2222, false,  \
+        .round_mask = (_round) ? pbl_panel_ls013b7dd02_round_mask : nullptr),          \
+    .base = (_base), .fb = (_fb),                                                      \
+  }
 
 /** @} */
