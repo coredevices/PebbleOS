@@ -5,7 +5,6 @@
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/phone_call_util.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -35,6 +34,20 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_spi_flash.h>
+#include <fake_work.h>
+
+#define ANCS_OP_RESPONSE_TIMEOUT_SECONDS 10
+
+static uint32_t prv_wallclock_work_count(uint32_t unit_s) {
+  uint32_t count = 0;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] != nullptr &&
+        s_fake_wallclock_started[i]->unit_ms == unit_s * 1000U) {
+      count++;
+    }
+  }
+  return count;
+}
 
 bool shell_prefs_get_language_english(void) {
   return false;
@@ -277,7 +290,6 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
 
 void test_ancs__initialize(void) {
   s_block_event_callback = false;
-  regular_timer_init();
   s_num_requested_notif_attributes = 0;
   s_num_requested_app_attributes = 0;
   s_num_ds_notifications_received = 0;
@@ -295,9 +307,9 @@ void test_ancs__initialize(void) {
 
 void test_ancs__cleanup(void) {
   ancs_destroy();
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
-  cl_assert_equal_i(regular_timer_minutes_count(), 0);
-  regular_timer_deinit();
+  cl_assert_equal_i(prv_wallclock_work_count(1), 0);
+  cl_assert_equal_i(prv_wallclock_work_count(60), 0);
+  fake_wallclock_work_cleanup();
 }
 
 // A "fake ANCS": some phones advertise a GATT service matching the ANCS UUIDs
@@ -699,14 +711,17 @@ void test_ancs__op_timeout_recovers_wedged_head(void) {
   cl_assert_equal_i(s_num_requested_notif_attributes, 1);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
+  fake_wallclock_work_advance(1, ANCS_OP_RESPONSE_TIMEOUT_SECONDS - 1);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+
   // Watchdog fires: stuck head dropped, queue drains.
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
 
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
   cl_assert_equal_i(prv_get_queue_depth(), 0);
   cl_assert_equal_i(s_num_requested_notif_attributes, 3);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_wallclock_work_count(1), 0);
 }
 
 // When full, evict the oldest pending request rather than drop the newest.

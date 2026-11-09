@@ -4,14 +4,14 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/work.h>
 #include <pbl/services/notifications/ancs/ancs_phone_call.h>
 #include <pbl/services/phone_call_util.h>
-#include <pbl/services/regular_timer.h>
 
 #include <applib/graphics/utf8.h>
 #include <kernel/events.h>
 
-static RegularTimerInfo s_missed_call_timer_id;
+static struct pbl_wallclock_work s_missed_call_work;
 
 static void prv_put_call_event(PhoneEventType type, uint32_t call_identifier,
                                PebblePhoneCaller *caller, bool ios_9) {
@@ -72,23 +72,17 @@ void ancs_phone_call_handle_removed(uint32_t uid, bool ios_9) {
 }
 
 bool ancs_phone_call_should_ignore_missed_calls(void) {
-  return regular_timer_is_scheduled(&s_missed_call_timer_id);
+  return pbl_wallclock_work_is_running(&s_missed_call_work);
 }
 
-static void prv_handle_missed_call_timer_timeout(void *not_used) {
-  if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
-    regular_timer_remove_callback(&s_missed_call_timer_id);
-  }
+static void prv_handle_missed_call_timer_timeout(struct pbl_work *work) {
+  pbl_wallclock_work_stop(&s_missed_call_work);
 }
 
 void ancs_phone_call_temporarily_block_missed_calls(void) {
   const int BLOCK_MISS_CALL_TIME_S = 7;
-  if (regular_timer_is_scheduled(&s_missed_call_timer_id)) {
-    regular_timer_remove_callback(&s_missed_call_timer_id);
+  if (!pbl_wallclock_work_is_running(&s_missed_call_work)) {
+    pbl_wallclock_work_init(&s_missed_call_work, prv_handle_missed_call_timer_timeout);
   }
-
-  s_missed_call_timer_id = (const RegularTimerInfo){
-    .cb = prv_handle_missed_call_timer_timeout,
-  };
-  regular_timer_add_multisecond_callback(&s_missed_call_timer_id, BLOCK_MISS_CALL_TIME_S);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_missed_call_work, 1, BLOCK_MISS_CALL_TIME_S);
 }

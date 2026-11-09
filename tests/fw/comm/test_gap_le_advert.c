@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -15,6 +14,7 @@
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -41,6 +41,16 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
+static uint32_t prv_seconds_count(void) {
+  uint32_t count = 0;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] != nullptr && s_fake_wallclock_started[i]->unit_ms == 1000U) {
+      count++;
+    }
+  }
+  return count;
+}
+
 static uint32_t s_unscheduled_cb_count;
 static void *s_unscheduled_cb_data = "Callback Data";
 static GAPLEAdvertisingJobRef s_unscheduled_job;
@@ -64,7 +74,6 @@ void test_gap_le_advert__initialize(void) {
   // through scheduled advertisement jobs:
   s_is_connected_as_slave = true;
 
-  regular_timer_init();
   gap_le_advert_init();
 }
 
@@ -73,9 +82,9 @@ void test_gap_le_advert__cleanup(void) {
 
   // Make sure deinit did disable advertising and clean up timer:
   cl_assert(!gap_le_is_advertising_enabled());
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
 
-  regular_timer_deinit();
+  fake_wallclock_work_cleanup();
 }
 
 //! Helper to assert whether a piece of ad_data is set to the controller.
@@ -138,8 +147,8 @@ void test_gap_le_advert__single_job(void) {
   cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out), sizeof(scan_resp_data));
   cl_assert(memcmp(&scan_resp_data_out, scan_resp_data, sizeof(scan_resp_data)) == 0);
 
-  // Expect one regular timer to be running for advertisements:
-  cl_assert_equal_i(regular_timer_seconds_count(), 1);
+  // Expect one timer to be running for advertisements:
+  cl_assert_equal_i(prv_seconds_count(), 1);
   // Unschedule callback should not have been called:
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
 
@@ -153,7 +162,7 @@ void test_gap_le_advert__single_job(void) {
   cl_assert_equal_b(s_unscheduled_completed, false);
 
   // Expect no advertisement timer
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
 
   free(ad);
 }
@@ -186,14 +195,14 @@ void test_gap_le_advert__single_job_multiple_terms_silence_and_loop_around(void)
   assert_ad_data("yo");
   gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Short);
 
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
 
   // Second term:
   cl_assert(gap_le_is_advertising_enabled());
   assert_ad_data("yo");
   gap_le_assert_advertising_interval(GAPLEAdvertisingInterval_Long);
 
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
 
   // Looped around to second term (index==1):
   cl_assert(gap_le_is_advertising_enabled());
@@ -238,8 +247,8 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   cl_assert_equal_i(gap_le_get_scan_response_data(&scan_resp_data_out), sizeof(scan_resp_data));
   cl_assert(memcmp(&scan_resp_data_out, scan_resp_data, sizeof(scan_resp_data)) == 0);
 
-  // Expect one regular timer to be running for adverts:
-  cl_assert_equal_i(regular_timer_seconds_count(), 1);
+  // Expect one timer to be running for adverts:
+  cl_assert_equal_i(prv_seconds_count(), 1);
   // Unschedule callback should not have been called:
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
 
@@ -254,7 +263,7 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
       cl_assert_equal_i(s_unscheduled_cb_count, 0);
       assert_ad_data("ad data");
       gap_le_assert_advertising_interval(expected_intervals[term]);
-      regular_timer_fire_seconds(1);
+      fake_wallclock_work_advance(1, 1);
     }
   }
 
@@ -263,7 +272,7 @@ void test_gap_le_advert__single_job_multiple_terms(void) {
   cl_assert_equal_p(s_unscheduled_job, job);
 
   // Expect no advertisement timer
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
 
   free(ad);
 }
@@ -294,9 +303,9 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // Round-robin 10 times:
   for (int i = 0; i < 10; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
   }
 
@@ -312,11 +321,11 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // Round-robin 5 times:
   for (int i = 0; i < 5; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("C");
   }
 
@@ -332,13 +341,13 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // Round-robin 4 times:
   for (int i = 0; i < 4; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("C");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("D");
   }
 
@@ -358,13 +367,13 @@ void test_gap_le_advert__job_round_robin(void) {
   cl_assert_equal_i(s_unscheduled_cb_count, 0);
 
   // This is the last round for "C":
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   assert_ad_data("A");
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   assert_ad_data("B");
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   assert_ad_data("C");
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   assert_ad_data("D");
 
   // One job ("C") should been have been unscheduled:
@@ -372,23 +381,23 @@ void test_gap_le_advert__job_round_robin(void) {
 
   // Round-robin 5 times:
   for (int i = 0; i < 5; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("E");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("D");
   }
 
   // "D" should be done now, so expect only infinite jobs to get air-time again:
   for (int i = 0; i < 10; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("E");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
 
     // Jobs "C" and "D" should have been unscheduled, infinite jobs should never
@@ -435,23 +444,23 @@ void test_gap_le_advert__job_round_robin_multiple_terms(void) {
 
   // Round-robin. Each term is 5 seconds, each job is 10 seconds:
   for (int i = 0; i < 9; ++i) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("A");
     cl_assert_equal_i(s_unscheduled_cb_count, 0);
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     assert_ad_data("B");
     cl_assert_equal_i(s_unscheduled_cb_count, 0);
   }
 
   // Unschedule job "B", air job "A"
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   assert_ad_data("A");
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
   cl_assert_equal_p(s_unscheduled_job, job_b);
   cl_assert_equal_b(s_unscheduled_completed, true);
 
   // Unschedule job "A"
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   cl_assert_equal_i(s_unscheduled_cb_count, 2);
   cl_assert_equal_p(s_unscheduled_job, job_a);
   cl_assert_equal_b(s_unscheduled_completed, true);
@@ -483,12 +492,12 @@ void test_gap_le_advert__expiring_job(void) {
   while (seconds_left) {
     cl_assert(gap_le_is_advertising_enabled());
 
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
     --seconds_left;
   }
 
   cl_assert(!gap_le_is_advertising_enabled());
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
 
   // The job should been have been unscheduled:
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
@@ -558,7 +567,7 @@ void test_gap_le_advert__deinit_unschedules(void) {
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
   cl_assert_equal_p(s_unscheduled_job, job);
   cl_assert_equal_b(s_unscheduled_completed, false);
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
   free(ad);
 }
 
@@ -574,7 +583,7 @@ void test_gap_le_advert__cant_schedule_after_deinit(void) {
                                sizeof(advert_term) / sizeof(GAPLEAdvertisingJobTerm),
                                unscheduled_callback, s_unscheduled_cb_data, 0);
   cl_assert_equal_p(job, nullptr);
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
+  cl_assert_equal_i(prv_seconds_count(), 0);
 }
 
 void test_gap_le_advert__continue_after_slave_connection(void) {
@@ -601,7 +610,7 @@ void test_gap_le_advert__continue_after_slave_connection(void) {
 
   // While connected as slave, the cycle timer must not re-enable advertising:
   // the backend contract does not advertise during a connection.
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
 
   // Once disconnected, advertising resumes since the advertisement job is still
@@ -632,7 +641,7 @@ void test_gap_le_advert__stack_restart_while_connected_resets_state(void) {
   // The job must age and complete on schedule:
   for (int i = 0; i < 10; ++i) {
     cl_assert_equal_b(gap_le_is_advertising_enabled(), true);
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
   }
   cl_assert_equal_b(gap_le_is_advertising_enabled(), false);
   cl_assert_equal_i(s_unscheduled_cb_count, 1);
@@ -678,7 +687,7 @@ void test_gap_le_advert__unschedule_job_types(void) {
 
   // run some Ad cycling
   for (int i = 0; i < 3; i++) {
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
   }
 
   cl_assert_equal_b(gap_le_is_advertising_enabled(), true);

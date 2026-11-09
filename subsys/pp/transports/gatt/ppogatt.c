@@ -19,7 +19,6 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -170,7 +169,7 @@ typedef struct PPoGATTClient {
 
 static PPoGATTClient *s_ppogatt_head;
 
-static RegularTimerInfo s_ack_timer;
+static struct pbl_wallclock_work s_ack_work;
 
 static uint8_t s_disconnect_counter;
 
@@ -297,7 +296,7 @@ static void prv_clear_payload_sizes_up_to(PPoGATTClient *client, uint32_t sn_end
 // -------------------------------------------------------------------------------------------------
 // Ack Time-out related things.
 
-static void prv_timer_callback(void *unused);
+static void prv_ack_tick_fn(struct pbl_work *work);
 
 //! Only tick while some client waits for an ack, so an idle link does not wake the system.
 static void prv_update_ack_timer(void) {
@@ -311,13 +310,13 @@ static void prv_update_ack_timer(void) {
   }
 
   if (!waiting) {
-    if (regular_timer_is_scheduled(&s_ack_timer) && !regular_timer_pending_deletion(&s_ack_timer)) {
-      regular_timer_remove_callback(&s_ack_timer);
+    if (pbl_wallclock_work_is_running(&s_ack_work)) {
+      pbl_wallclock_work_stop(&s_ack_work);
     }
-  } else if (!regular_timer_is_scheduled(&s_ack_timer) ||
-             regular_timer_pending_deletion(&s_ack_timer)) {
-    s_ack_timer.cb = prv_timer_callback;
-    regular_timer_add_multisecond_callback(&s_ack_timer, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+  } else if (!pbl_wallclock_work_is_running(&s_ack_work)) {
+    pbl_wallclock_work_init(&s_ack_work, prv_ack_tick_fn);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_ack_work, 1,
+                             PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 }
 
@@ -394,9 +393,9 @@ static void prv_ack_timeout_kernelmain_cb(void *unused) {
   bt_unlock();
 }
 
-//! Never block on bt_lock from the timer task (it stalls every other timer in
-//! the system); bounce to KernelMain, where the rest of the PPoG state machine runs.
-static void prv_timer_callback(void *unused) {
+//! Never block on bt_lock on the high priority work queue (it stalls all other work there);
+//! bounce to KernelMain, where the rest of the PPoG state machine runs.
+static void prv_ack_tick_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_ack_timeout_kernelmain_cb, nullptr);
 }
 

@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/time.h>
-#include <pbl/services/regular_timer.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
@@ -14,26 +13,29 @@
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 
 // Stubs
 
 extern void conn_mgr_handle_desired_state_granted(GAPLEConnection *hdl,
                                                   enum pbl_bt_response_time_state granted_state);
 
+static GAPLEConnection s_hdl;
+
 // Stubs
 /////
-bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
-  return (conn != nullptr);
+GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data) {
+  return filter(&s_hdl, data) ? &s_hdl : nullptr;
 }
 
 GAPLEConnection *gap_le_connection_any(void) {
   return nullptr;
 }
 
-void prv_regular_timer_spend_seconds(uint32_t seconds) {
+void prv_spend_seconds(uint32_t seconds) {
   for (uint32_t i = 0; i < seconds; ++i) {
     fake_rtc_increment_ticks(PBL_TICK_HZ);
-    regular_timer_fire_seconds(1);
+    fake_wallclock_work_advance(1, 1);
 
     // bt_conn_mgr offloads the callback to SysWorkq
     fake_sys_work_callbacks_invoke_pending();
@@ -48,18 +50,16 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
 ///////////////////////////////////////////////////////////
 
 static int s_granted_count;
-static GAPLEConnection s_hdl;
 
 void test_bt_conn_mgr__initialize(void) {
   s_granted_count = 0;
   fake_rtc_init(0, 0);
-  regular_timer_init();
   fake_gap_le_connect_params_init();
   s_hdl.conn_mgr_info = bt_conn_mgr_info_init();
 }
 
 void test_bt_conn_mgr__cleanup(void) {
-  regular_timer_deinit();
+  fake_wallclock_work_cleanup();
 }
 
 void test_bt_conn_mgr__ble_latency_mgr(void) {
@@ -94,11 +94,15 @@ void test_bt_conn_mgr__ble_latency_mgr(void) {
   cl_assert_equal_i(secs_to_wait, BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
   cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_INVALID);
 
-  prv_regular_timer_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
+  // The watchdog waits an extra second.
+  prv_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
+  state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
+  cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIN);
+  prv_spend_seconds(1);
 
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
   cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MIDDLE);
-  cl_assert_equal_i(secs_to_wait, 30 - BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
+  cl_assert_equal_i(secs_to_wait, 30 - (BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS + 1));
   cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MIDDLE);
 
   // removing all consumers we should fall back to slowest interval, but only
@@ -107,7 +111,7 @@ void test_bt_conn_mgr__ble_latency_mgr(void) {
   conn_mgr_set_ble_conn_response_time(&s_hdl, PBL_BT_CONSUMER_UNIT_TESTS, PBL_BT_RESPONSE_TIME_MAX,
                                       0);
 
-  prv_regular_timer_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS);
+  prv_spend_seconds(BT_CONN_MGR_INACTIVITY_TIMEOUT_SECS + 1);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
   cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
   cl_assert_equal_i(fake_gap_le_connect_params_get_last_requested(), PBL_BT_RESPONSE_TIME_MAX);
@@ -191,7 +195,7 @@ void test_bt_conn_mgr__request_max_time_while_no_requests_are_running(void) {
   cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
 
   // Not even after waiting 10 seconds:
-  prv_regular_timer_spend_seconds(10);
+  prv_spend_seconds(10);
   state = conn_mgr_get_latency_for_le_connection(&s_hdl, &secs_to_wait);
   cl_assert_equal_i(state, PBL_BT_RESPONSE_TIME_MAX);
 

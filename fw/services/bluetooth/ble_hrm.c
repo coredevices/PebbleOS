@@ -6,11 +6,11 @@
 #include <pbl/btutil/bt_device.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
 
@@ -33,7 +33,7 @@ typedef struct BLEHRMSharingRequest {
 
 static bool s_ble_hrm_is_inited;
 static int s_ble_hrm_subscription_count;
-static RegularTimerInfo s_ble_hrm_timer;
+static struct pbl_wallclock_work s_ble_hrm_timer;
 static struct {
   EventServiceInfo service_info;
   HRMSessionRef manager_session;
@@ -254,23 +254,20 @@ static void prv_push_reminder_popup_kernel_main_cb(void *unused) {
   PBL_LOG_INFO("BLE HRM sharing timeout fired!");
 }
 
-//! @note executes on timer task
-static void prv_reminder_popup_timer_cb(void *unused) {
+static void prv_reminder_popup_timer_fn(struct pbl_work *work) {
   prv_execute_on_kernel_main(prv_push_reminder_popup_kernel_main_cb);
 }
 
 static void prv_stop_popup_timer(void) {
-  if (regular_timer_is_scheduled(&s_ble_hrm_timer)) {
-    regular_timer_remove_callback(&s_ble_hrm_timer);
+  if (pbl_wallclock_work_is_running(&s_ble_hrm_timer)) {
+    pbl_wallclock_work_stop(&s_ble_hrm_timer);
   }
 }
 
 static void prv_reschedule_popup_timer(void) {
   prv_stop_popup_timer();
-  s_ble_hrm_timer = (RegularTimerInfo){
-    .cb = prv_reminder_popup_timer_cb,
-  };
-  regular_timer_add_multiminute_callback(&s_ble_hrm_timer, BLE_HRM_REMINDER_POPUP_DELAY_MINS);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_ble_hrm_timer, 60,
+                           BLE_HRM_REMINDER_POPUP_DELAY_MINS);
 }
 
 static void prv_update_is_sharing(GAPLEConnection *connection, bool prev_is_sharing) {
@@ -434,7 +431,7 @@ void ble_hrm_handle_disconnection(GAPLEConnection *connection) {
 
 void ble_hrm_init(void) {
   s_ble_hrm_is_inited = true;
-  s_ble_hrm_timer = (RegularTimerInfo){};
+  pbl_wallclock_work_init(&s_ble_hrm_timer, prv_reminder_popup_timer_fn);
 }
 
 void ble_hrm_deinit(void) {
@@ -445,6 +442,6 @@ void ble_hrm_deinit(void) {
 }
 
 // For unit testing
-RegularTimerInfo *ble_hrm_timer(void) {
+struct pbl_wallclock_work *ble_hrm_timer(void) {
   return &s_ble_hrm_timer;
 }
