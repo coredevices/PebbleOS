@@ -1,0 +1,7 @@
+description: Uptime for measuring, the wall clock, and waiting for a condition with a time limit
+expect:
+  - 'time: slept 50 ms, uptime moved by at least 50 ms: yes'
+  - 'time: one second after it was set, the wall clock moved by \d s'
+  - 'time: device ready: yes'
+  - 'time: a condition that never holds returns -ETIMEDOUT'
+  - 'Sample done'
