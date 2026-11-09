@@ -12,3 +12,8 @@ memory the thread's syscalls may use and the stack they run on
 need: a thread walk with saved registers in the canonical order the core dump
 format expects, saved PC/LR/CONTROL of a blocked thread, stack bounds and
 high-water marks, and a run-time stats snapshot.
+
+## Samples
+
+{doc}`../samples/kernel/threads` creates threads above and below `main()`'s
+priority, and {doc}`../samples/kernel/msgq` passes messages between two.

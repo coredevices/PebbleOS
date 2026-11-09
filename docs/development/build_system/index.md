@@ -113,7 +113,8 @@ cmake/modules/        the build model, split by concern; os.cmake adds
                       PebbleOS itself
 cmake/PebbleOSConfig.cmake
                       find_package(PebbleOS), for applications
-samples/              applications other than the firmware
+samples/              applications other than the firmware, each showing
+                      one part of PebbleOS
 cmake/toolchain/      the bare-metal ARM and host toolchains
 tools/cmake/          the generators the build shells out to
 ```
