@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/kernel/irq.h>
@@ -21,17 +22,10 @@
 static_assert((PBL_UART_NRF5_RX_BUF_SIZE & (PBL_UART_NRF5_RX_BUF_SIZE - 1U)) == 0U);
 static_assert(RX_HALF_SIZE <= UARTE_MAXCNT_MASK);
 
-static const struct {
-  uintptr_t base;
-  pbl_irq_t irqn;
-} s_instances[] = {
-  {NRF52_UARTE0_BASE, PBL_IRQN(UART0_UARTE0)},
-  {NRF52_UARTE1_BASE, PBL_IRQN(UARTE1)},
-};
-
 static const uintptr_t s_timers[] = {
   NRF52_TIMER0_BASE, NRF52_TIMER1_BASE, NRF52_TIMER2_BASE, NRF52_TIMER3_BASE, NRF52_TIMER4_BASE,
 };
+static_assert(CONFIG_UART_NRF5_RX_TIMER < ARRAY_LENGTH(s_timers));
 
 static const struct {
   uint32_t baudrate;
@@ -53,7 +47,7 @@ static const struct pbl_uart_nrf5 *prv_nrf5(const struct pbl_uart *uart) {
 }
 
 static inline uintptr_t prv_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
-  return s_instances[nrf5->index].base + offset;
+  return nrf5->base + offset;
 }
 
 static inline uint32_t prv_getreg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
@@ -65,7 +59,7 @@ static inline void prv_putreg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset,
 }
 
 static inline uintptr_t prv_timer_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
-  return s_timers[nrf5->timer] + offset;
+  return s_timers[CONFIG_UART_NRF5_RX_TIMER] + offset;
 }
 
 static void prv_event_clear(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
@@ -90,10 +84,6 @@ static int prv_pin_init(const struct pbl_gpio *gpio, uint32_t flags) {
 static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
   int ret;
-
-  if (nrf5->index >= ARRAY_LENGTH(s_instances) || nrf5->timer >= ARRAY_LENGTH(s_timers)) {
-    return -EINVAL;
-  }
 
   ret = prv_pin_init(&nrf5->tx, PBL_GPIO_OUTPUT_HIGH);
   if (ret != 0) {
@@ -131,7 +121,7 @@ static int prv_init(const struct pbl_uart *uart) {
                     prv_timer_reg(nrf5, NRF52_TIMER_TASKS_COUNT_OFFSET), 0U);
   soc_nrf_ppi_enable(PBL_BIT(nrf5->state->ppi_ch));
 
-  pbl_irq_enable(s_instances[nrf5->index].irqn);
+  pbl_irq_enable(nrf5->irq);
 
   return 0;
 }
@@ -227,7 +217,7 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
 
   prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET);
   prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET);
-  pbl_irq_clear_pending(s_instances[nrf5->index].irqn);
+  pbl_irq_clear_pending(nrf5->irq);
 }
 
 void pbl_uart_nrf5_irq_handler(const struct pbl_uart_nrf5 *nrf5) {
@@ -265,3 +255,5 @@ const struct pbl_uart_ops pbl_uart_nrf5_ops = {
   .rx_enable = prv_rx_enable,
   .rx_disable = prv_rx_disable,
 };
+
+#include PBL_DT_INSTANCES(nordic_nrf52832_uarte)

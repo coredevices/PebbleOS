@@ -15,6 +15,23 @@
 };
 
 &pinctrl {
+	usart1_default: usart1-default-state {
+		tx-pins {
+			pins = "PA19";
+			function = "usart1_txd";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		rx-pins {
+			pins = "PA18";
+			function = "usart1_rxd";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
 	i2c1_default: i2c1-default-state {
 		scl-pins {
 			pins = "PA31";
@@ -288,4 +305,13 @@
 			};
 		};
 	};
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_default>;
+	pinctrl-names = "default";
+	current-speed = <1000000>;
+	dmas = <&dmac1 0 5 1>;
+	dma-names = "rx";
+	status = "okay";
 };

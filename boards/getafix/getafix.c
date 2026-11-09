@@ -31,20 +31,7 @@
 #include <devicetree/devices.h>
 #include <hardware/sf32lb52_memorymap.h>
 
-PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA19_USART1_TXD | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-                         SF32LB52_PA18_USART1_RXD | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
-
-static const struct pbl_dma_chan s_dbg_uart_rx_dma =
-    PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
-
-PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_dbg_uart_default, &s_dbg_uart_rx_dma,
-                           nullptr);
-const struct pbl_uart *const CONSOLE_UART = &s_uart1.uart;
-
-PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
+const struct pbl_uart *const CONSOLE_UART = &dt_usart1;
 
 PBL_MBOX_SF32LB52_DEFINE(s_mailbox1, "mailbox1", SF32LB52_MAILBOX1_BASE, PBL_MBOX_SF32LB52_NO_IRQ,
                          PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MAILBOX1), nullptr);
@@ -64,8 +51,10 @@ PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
                          SF32LB52_PA27_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
 
-PBL_UART_SF32LB_DEFINE(s_uart3, "uart3", 3, 1000000, &s_hci_trace_uart_default, nullptr);
-const struct pbl_uart *const HCI_TRACE_UART = &s_uart3.uart;
+PBL_UART_SF32LB_DEFINE(s_usart3, "usart3", SF32LB52_USART3_BASE, PBL_SOC_IRQN_USART3,
+                       PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART3), 1000000,
+                       &s_hci_trace_uart_default);
+const struct pbl_uart *const HCI_TRACE_UART = &s_usart3;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &dt_flash0, "soc-config-user", "soc-config-cust");

@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/serial/nordic,nrf52832-uarte.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 UARTE
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  UART with EasyDMA of the nRF52 series, first in the nRF52832. Its pins are
+  selected in its own registers, from tx-gpios and rx-gpios.
+
+allOf:
+  - $ref: /schemas/serial/serial.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-uarte
+      - items:
+          - enum:
+              - nordic,nrf52833-uarte
+              - nordic,nrf52840-uarte
+          - const: nordic,nrf52832-uarte
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  current-speed:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Initial baud rate, in bits per second.
+
+  tx-gpios:
+    maxItems: 1
+
+  rx-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - tx-gpios
+  - rx-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    serial@40002000 {
+        compatible = "nordic,nrf52840-uarte", "nordic,nrf52832-uarte";
+        reg = <0x40002000 0x1000>;
+        interrupts = <2>;
+        current-speed = <1000000>;
+        tx-gpios = <&gpio0 27 0>;
+        rx-gpios = <&gpio0 5 0>;
+    };

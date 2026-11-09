@@ -23,6 +23,13 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		uart0: serial@40002000 {
+			compatible = "nordic,nrf52840-uarte", "nordic,nrf52832-uarte";
+			reg = <0x40002000 0x1000>;
+			interrupts = <2>;
+			status = "disabled";
+		};
+
 		i2c0: i2c@40003000 {
 			compatible = "nordic,nrf52840-twim", "nordic,nrf52832-twim";
 			reg = <0x40003000 0x1000>;
@@ -38,6 +45,13 @@
 			interrupts = <4>;
 			#address-cells = <1>;
 			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		uart1: serial@40028000 {
+			compatible = "nordic,nrf52840-uarte", "nordic,nrf52832-uarte";
+			reg = <0x40028000 0x1000>;
+			interrupts = <40>;
 			status = "disabled";
 		};
 

@@ -3,6 +3,7 @@
 
 #include <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/reset/sifli,sf32lb52-hpsys-rcc.h>
 
 / {
 	#address-cells = <1>;
@@ -64,6 +65,32 @@
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DMAC1>;
 			#dma-cells = <3>;
 			dma-channels = <8>;
+		};
+
+		usart1: serial@50084000 {
+			compatible = "sifli,sf32lb52-usart";
+			reg = <0x50084000 0x1000>;
+			interrupts = <59>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART1>;
+			status = "disabled";
+		};
+
+		usart2: serial@50085000 {
+			compatible = "sifli,sf32lb52-usart";
+			reg = <0x50085000 0x1000>;
+			interrupts = <74>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_USART2>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART2>;
+			status = "disabled";
+		};
+
+		usart3: serial@50086000 {
+			compatible = "sifli,sf32lb52-usart";
+			reg = <0x50086000 0x1000>;
+			interrupts = <95>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_USART3>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART3>;
+			status = "disabled";
 		};
 
 		i2c1: i2c@5009c000 {

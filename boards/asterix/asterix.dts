@@ -204,3 +204,10 @@
 		};
 	};
 };
+
+&uart0 {
+	current-speed = <1000000>;
+	tx-gpios = <&gpio0 27 0>;
+	rx-gpios = <&gpio0 5 0>;
+	status = "okay";
+};

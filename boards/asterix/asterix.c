@@ -26,10 +26,7 @@
 const struct pbl_flash *const FLASH = &dt_flash0;
 /* PERIPHERAL ID 43 */
 
-PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(&dt_gpio0, 27, 0),
-                     PBL_GPIO(&dt_gpio0, 5, 0), 2, nullptr);
-const struct pbl_uart *const CONSOLE_UART = &s_uart0.uart;
-PBL_IRQ_CONNECT(UART0_UARTE0, 7, pbl_uart_nrf5_irq_handler, &s_uart0, 0);
+const struct pbl_uart *const CONSOLE_UART = &dt_uart0;
 /* PERIPHERAL ID 8 */
 
 /* buttons */
