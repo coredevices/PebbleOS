@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: spi_mem
+type: struct pbl_spi_mem
+include: pbl/drivers/spi_mem.h
+provides:
+  spi_mem: "&{sym}"

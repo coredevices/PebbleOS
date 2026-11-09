@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-mpi
+config: SPI_MEM_SF32LB52_MPI
+class: spi_mem
+define: PBL_SPI_MEM_SF32LB52_MPI_DEFINE
+args:
+  - name: true
+  - reg: mpi
+  - reg: mpi_mm
+  - size: mpi_mm
+  - clock: 0

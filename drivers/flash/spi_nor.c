@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
@@ -1173,3 +1174,5 @@ const struct pbl_flash_ops pbl_flash_spi_nor_ops = {
   .otp_lock = prv_otp_lock,
   .otp_erase = prv_otp_erase,
 };
+
+#include PBL_DT_INSTANCES(jedec_spi_nor)

@@ -145,7 +145,7 @@
 &mpi2 {
 	status = "okay";
 
-	flash@0 {
+	flash0: flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-rx-bus-width = <4>;

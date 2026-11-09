@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
 #include <pbl/kernel/compiler.h>
@@ -86,31 +87,32 @@ static const struct {
 
 static uint8_t PBL_ALIGNED(4) s_bounce_buf[32];
 
-static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_QSPI_BASE + offset);
+static inline uint32_t prv_getreg(const struct pbl_spi_mem_nrf5_qspi *qspi, uint32_t offset) {
+  return pbl_readl(qspi->base + offset);
 }
 
-static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_QSPI_BASE + offset);
+static inline void prv_putreg(const struct pbl_spi_mem_nrf5_qspi *qspi, uint32_t offset,
+                              uint32_t value) {
+  pbl_writel(value, qspi->base + offset);
 }
 
-static PBL_ALWAYS_INLINE void prv_event_clear(void) {
-  prv_putreg(NRF52_QSPI_EVENTS_READY_OFFSET, 0U);
-  (void)prv_getreg(NRF52_QSPI_EVENTS_READY_OFFSET);
+static PBL_ALWAYS_INLINE void prv_event_clear(const struct pbl_spi_mem_nrf5_qspi *qspi) {
+  prv_putreg(qspi, NRF52_QSPI_EVENTS_READY_OFFSET, 0U);
+  (void)prv_getreg(qspi, NRF52_QSPI_EVENTS_READY_OFFSET);
 }
 
-static PBL_ALWAYS_INLINE void prv_task(uint32_t offset) {
-  prv_event_clear();
-  prv_putreg(offset, 1U);
+static PBL_ALWAYS_INLINE void prv_task(const struct pbl_spi_mem_nrf5_qspi *qspi, uint32_t offset) {
+  prv_event_clear(qspi);
+  prv_putreg(qspi, offset, 1U);
 }
 
-static void prv_psel_set(const uint32_t psel[6]) {
-  prv_putreg(NRF52_QSPI_PSEL_SCK_OFFSET, psel[0]);
-  prv_putreg(NRF52_QSPI_PSEL_CSN_OFFSET, psel[1]);
-  prv_putreg(NRF52_QSPI_PSEL_IO0_OFFSET, psel[2]);
-  prv_putreg(NRF52_QSPI_PSEL_IO1_OFFSET, psel[3]);
-  prv_putreg(NRF52_QSPI_PSEL_IO2_OFFSET, psel[4]);
-  prv_putreg(NRF52_QSPI_PSEL_IO3_OFFSET, psel[5]);
+static void prv_psel_set(const struct pbl_spi_mem_nrf5_qspi *qspi, const uint32_t psel[6]) {
+  prv_putreg(qspi, NRF52_QSPI_PSEL_SCK_OFFSET, psel[0]);
+  prv_putreg(qspi, NRF52_QSPI_PSEL_CSN_OFFSET, psel[1]);
+  prv_putreg(qspi, NRF52_QSPI_PSEL_IO0_OFFSET, psel[2]);
+  prv_putreg(qspi, NRF52_QSPI_PSEL_IO1_OFFSET, psel[3]);
+  prv_putreg(qspi, NRF52_QSPI_PSEL_IO2_OFFSET, psel[4]);
+  prv_putreg(qspi, NRF52_QSPI_PSEL_IO3_OFFSET, psel[5]);
 }
 
 static PBL_ALWAYS_INLINE const struct pbl_spi_mem_nrf5_qspi *prv_qspi(
@@ -149,19 +151,19 @@ static int prv_erase_idx(uint8_t opcode) {
 }
 
 void pbl_spi_mem_nrf5_qspi_irq_handler(const struct pbl_spi_mem_nrf5_qspi *qspi) {
-  prv_event_clear();
+  prv_event_clear(qspi);
   pbl_sem_give(&qspi->data->done);
 }
 
-static PBL_ALWAYS_INLINE void prv_wait_ready(void) {
-  while (prv_getreg(NRF52_QSPI_EVENTS_READY_OFFSET) == 0U) {
+static PBL_ALWAYS_INLINE void prv_wait_ready(const struct pbl_spi_mem_nrf5_qspi *qspi) {
+  while (prv_getreg(qspi, NRF52_QSPI_EVENTS_READY_OFFSET) == 0U) {
   }
-  prv_event_clear();
+  prv_event_clear(qspi);
 }
 
-static void prv_activate(void) {
-  prv_task(NRF52_QSPI_TASKS_ACTIVATE_OFFSET);
-  prv_wait_ready();
+static void prv_activate(const struct pbl_spi_mem_nrf5_qspi *qspi) {
+  prv_task(qspi, NRF52_QSPI_TASKS_ACTIVATE_OFFSET);
+  prv_wait_ready(qspi);
 }
 
 // nRF52 anomaly 215: after XIP, accessing a QSPI register above offset 0x600 halts the CPU unless
@@ -173,9 +175,9 @@ static void prv_anomaly_215_workaround(const struct pbl_spi_mem_nrf5_qspi *qspi)
     QSPI_PSEL_DISCONNECTED, QSPI_PSEL_DISCONNECTED, QSPI_PSEL_DISCONNECTED,
   };
 
-  prv_psel_set(disconnected);
-  prv_activate();
-  prv_psel_set(qspi->data->psel);
+  prv_psel_set(qspi, disconnected);
+  prv_activate(qspi);
+  prv_psel_set(qspi, qspi->data->psel);
 }
 
 static bool prv_addr_ok(const struct pbl_spi_mem_op *op) {
@@ -222,9 +224,10 @@ static PBL_ALWAYS_INLINE void prv_set_ifconfig0(const struct pbl_spi_mem_nrf5_qs
     return;
   }
 
-  prv_putreg(NRF52_QSPI_IFCONFIG0_OFFSET, PBL_FIELD_PREP(QSPI_IFCONFIG0_READOC_MASK, readoc) |
-                                              PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, writeoc) |
-                                              (addr32 ? QSPI_IFCONFIG0_ADDRMODE_32BIT : 0U));
+  prv_putreg(qspi, NRF52_QSPI_IFCONFIG0_OFFSET,
+             PBL_FIELD_PREP(QSPI_IFCONFIG0_READOC_MASK, readoc) |
+                 PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, writeoc) |
+                 (addr32 ? QSPI_IFCONFIG0_ADDRMODE_32BIT : 0U));
 
   data->readoc = readoc;
   data->writeoc = writeoc;
@@ -234,24 +237,25 @@ static PBL_ALWAYS_INLINE void prv_set_ifconfig0(const struct pbl_spi_mem_nrf5_qs
 // The interrupt is only enabled during interrupt driven transfers: writing INTENCLR costs about
 // as much as a short polled read
 static PBL_ALWAYS_INLINE void prv_xfer(const struct pbl_spi_mem *mem, uint32_t task, size_t len) {
+  const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
   bool polling = pbl_spi_mem_is_polling(mem);
   bool irq = len > MIN_IRQ_XFER_SIZE && !polling;
 
   if (irq) {
-    prv_putreg(NRF52_QSPI_INTENSET_OFFSET, QSPI_INT_READY);
+    prv_putreg(qspi, NRF52_QSPI_INTENSET_OFFSET, QSPI_INT_READY);
     soc_nrf_sleep_full_block();
   } else if (polling) {
-    prv_putreg(NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
+    prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
   }
 
-  prv_task(task);
+  prv_task(qspi, task);
 
   if (irq) {
-    pbl_sem_take(&prv_qspi(mem)->data->done, PBL_FOREVER);
-    prv_putreg(NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
+    pbl_sem_take(&qspi->data->done, PBL_FOREVER);
+    prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
     soc_nrf_sleep_full_release();
   } else {
-    prv_wait_ready();
+    prv_wait_ready(qspi);
   }
 }
 
@@ -273,32 +277,33 @@ static void prv_exec_cinstr(const struct pbl_spi_mem_nrf5_qspi *qspi,
   }
   len += op->data.nbytes;
 
-  prv_putreg(NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
+  prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
   prv_anomaly_215_workaround(qspi);
 
   memcpy(dat, buf, sizeof(dat));
-  prv_putreg(NRF52_QSPI_CINSTRDAT0_OFFSET, pbl_le32_to_cpu(dat[0]));
-  prv_putreg(NRF52_QSPI_CINSTRDAT1_OFFSET, pbl_le32_to_cpu(dat[1]));
+  prv_putreg(qspi, NRF52_QSPI_CINSTRDAT0_OFFSET, pbl_le32_to_cpu(dat[0]));
+  prv_putreg(qspi, NRF52_QSPI_CINSTRDAT1_OFFSET, pbl_le32_to_cpu(dat[1]));
 
-  prv_event_clear();
-  prv_putreg(NRF52_QSPI_CINSTRCONF_OFFSET,
+  prv_event_clear(qspi);
+  prv_putreg(qspi, NRF52_QSPI_CINSTRCONF_OFFSET,
              PBL_FIELD_PREP(QSPI_CINSTRCONF_OPCODE_MASK, op->cmd.opcode) |
                  PBL_FIELD_PREP(QSPI_CINSTRCONF_LENGTH_MASK, len + 1U) | QSPI_CINSTRCONF_LIO2 |
                  QSPI_CINSTRCONF_LIO3);
-  prv_wait_ready();
+  prv_wait_ready(qspi);
 
   if (op->data.dir == PBL_SPI_MEM_DATA_IN) {
-    dat[0] = pbl_cpu_to_le32(prv_getreg(NRF52_QSPI_CINSTRDAT0_OFFSET));
-    dat[1] = pbl_cpu_to_le32(prv_getreg(NRF52_QSPI_CINSTRDAT1_OFFSET));
+    dat[0] = pbl_cpu_to_le32(prv_getreg(qspi, NRF52_QSPI_CINSTRDAT0_OFFSET));
+    dat[1] = pbl_cpu_to_le32(prv_getreg(qspi, NRF52_QSPI_CINSTRDAT1_OFFSET));
     memcpy(buf, dat, sizeof(dat));
     memcpy(op->data.buf.in, &buf[data_off], op->data.nbytes);
   }
 }
 
-static PBL_ALWAYS_INLINE void prv_read_setup(uint32_t addr, void *dst, size_t len) {
-  prv_putreg(NRF52_QSPI_READ_SRC_OFFSET, addr);
-  prv_putreg(NRF52_QSPI_READ_DST_OFFSET, (uintptr_t)dst);
-  prv_putreg(NRF52_QSPI_READ_CNT_OFFSET, len);
+static PBL_ALWAYS_INLINE void prv_read_setup(const struct pbl_spi_mem_nrf5_qspi *qspi,
+                                             uint32_t addr, void *dst, size_t len) {
+  prv_putreg(qspi, NRF52_QSPI_READ_SRC_OFFSET, addr);
+  prv_putreg(qspi, NRF52_QSPI_READ_DST_OFFSET, (uintptr_t)dst);
+  prv_putreg(qspi, NRF52_QSPI_READ_CNT_OFFSET, len);
 }
 
 static PBL_ALWAYS_INLINE bool prv_is_direct(const void *buf, size_t len) {
@@ -314,12 +319,12 @@ static void prv_exec_read(const struct pbl_spi_mem *mem, const struct pbl_spi_me
                     op->addr.nbytes);
 
   if (prv_is_direct(op->data.buf.in, op->data.nbytes)) {
-    prv_read_setup(op->addr.val, op->data.buf.in, op->data.nbytes);
+    prv_read_setup(qspi, op->addr.val, op->data.buf.in, op->data.nbytes);
     prv_xfer(mem, NRF52_QSPI_TASKS_READSTART_OFFSET, op->data.nbytes);
     return;
   }
 
-  prv_read_setup(op->addr.val, word, sizeof(word));
+  prv_read_setup(qspi, op->addr.val, word, sizeof(word));
   prv_xfer(mem, NRF52_QSPI_TASKS_READSTART_OFFSET, sizeof(word));
   memcpy(op->data.buf.in, word, op->data.nbytes);
 }
@@ -341,9 +346,9 @@ static void prv_exec_program(const struct pbl_spi_mem *mem, const struct pbl_spi
     len = ((len + WORD_SIZE - 1U) / WORD_SIZE) * WORD_SIZE;
   }
 
-  prv_putreg(NRF52_QSPI_WRITE_DST_OFFSET, op->addr.val);
-  prv_putreg(NRF52_QSPI_WRITE_SRC_OFFSET, (uintptr_t)src);
-  prv_putreg(NRF52_QSPI_WRITE_CNT_OFFSET, len);
+  prv_putreg(qspi, NRF52_QSPI_WRITE_DST_OFFSET, op->addr.val);
+  prv_putreg(qspi, NRF52_QSPI_WRITE_SRC_OFFSET, (uintptr_t)src);
+  prv_putreg(qspi, NRF52_QSPI_WRITE_CNT_OFFSET, len);
   prv_xfer(mem, NRF52_QSPI_TASKS_WRITESTART_OFFSET, len);
 }
 
@@ -352,11 +357,11 @@ static void prv_exec_erase(const struct pbl_spi_mem *mem, const struct pbl_spi_m
 
   prv_set_ifconfig0(qspi, qspi->data->readoc, qspi->data->writeoc, op->addr.nbytes);
 
-  prv_putreg(NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
-  prv_putreg(NRF52_QSPI_ERASE_PTR_OFFSET, op->addr.val);
-  prv_putreg(NRF52_QSPI_ERASE_LEN_OFFSET, s_erases[prv_erase_idx(op->cmd.opcode)].len);
-  prv_task(NRF52_QSPI_TASKS_ERASESTART_OFFSET);
-  prv_wait_ready();
+  prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
+  prv_putreg(qspi, NRF52_QSPI_ERASE_PTR_OFFSET, op->addr.val);
+  prv_putreg(qspi, NRF52_QSPI_ERASE_LEN_OFFSET, s_erases[prv_erase_idx(op->cmd.opcode)].len);
+  prv_task(qspi, NRF52_QSPI_TASKS_ERASESTART_OFFSET);
+  prv_wait_ready(qspi);
 }
 
 static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op *op) {
@@ -426,12 +431,12 @@ static int prv_dirmap_read(const struct pbl_spi_mem *mem, const struct pbl_spi_m
     size_t n = prv_adjust_len(dst, len, WORD_SIZE);
 
     if (prv_is_direct(dst, n)) {
-      prv_read_setup(offs, dst, n);
+      prv_read_setup(qspi, offs, dst, n);
       prv_xfer(mem, NRF52_QSPI_TASKS_READSTART_OFFSET, n);
     } else {
       uint8_t PBL_ALIGNED(4) word[WORD_SIZE];
 
-      prv_read_setup(offs, word, sizeof(word));
+      prv_read_setup(qspi, offs, word, sizeof(word));
       prv_xfer(mem, NRF52_QSPI_TASKS_READSTART_OFFSET, sizeof(word));
       memcpy(dst, word, n);
     }
@@ -453,15 +458,15 @@ static void prv_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_m
     pbl_busy_wait_us(pm->enter_us);
   }
 
-  prv_putreg(NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
-  prv_putreg(NRF52_QSPI_TASKS_DEACTIVATE_OFFSET, 1U);
-  prv_event_clear();
-  prv_putreg(NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_DISABLED);
+  prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
+  prv_putreg(qspi, NRF52_QSPI_TASKS_DEACTIVATE_OFFSET, 1U);
+  prv_event_clear(qspi);
+  prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_DISABLED);
 
   fn(arg);
 
-  prv_putreg(NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
-  prv_activate();
+  prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
+  prv_activate(qspi);
 
   if (pm != nullptr) {
     prv_exec_cinstr(qspi, &pm->exit);
@@ -486,25 +491,25 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   for (size_t i = 0U; i < ARRAY_LENGTH(qspi->io); i++) {
     data->psel[2U + i] = pbl_gpio_nrf5_pin(&qspi->io[i]);
   }
-  prv_psel_set(data->psel);
+  prv_psel_set(qspi, data->psel);
 
   data->readoc = QSPI_IFCONFIG0_READOC_FAST;
   data->writeoc = QSPI_IFCONFIG0_WRITEOC_PP;
   data->addr32 = false;
-  prv_putreg(NRF52_QSPI_IFCONFIG0_OFFSET,
+  prv_putreg(qspi, NRF52_QSPI_IFCONFIG0_OFFSET,
              PBL_FIELD_PREP(QSPI_IFCONFIG0_READOC_MASK, data->readoc) |
                  PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, data->writeoc));
 
   // SPI mode 0, no deep power-down by the peripheral itself
-  prv_putreg(NRF52_QSPI_IFCONFIG1_OFFSET,
-             (prv_getreg(NRF52_QSPI_IFCONFIG1_OFFSET) & QSPI_IFCONFIG1_RESERVED_MASK) |
+  prv_putreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET,
+             (prv_getreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET) & QSPI_IFCONFIG1_RESERVED_MASK) |
                  PBL_FIELD_PREP(QSPI_IFCONFIG1_SCKDELAY_MASK, QSPI_SCK_DELAY) |
                  PBL_FIELD_PREP(QSPI_IFCONFIG1_SCKFREQ_MASK, (QSPI_BASE_HZ / qspi->freq_hz) - 1U));
 
-  prv_putreg(NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
-  prv_activate();
+  prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
+  prv_activate(qspi);
 
-  pbl_irq_enable(PBL_IRQN(QSPI));
+  pbl_irq_enable(qspi->irq);
 
   return 0;
 }
@@ -518,3 +523,5 @@ const struct pbl_spi_mem_ops pbl_spi_mem_nrf5_qspi_ops = {
   .dirmap_read = prv_dirmap_read,
   .power_down = prv_power_down,
 };
+
+#include PBL_DT_INSTANCES(nordic_nrf52840_qspi)
