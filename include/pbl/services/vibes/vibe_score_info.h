@@ -86,6 +86,17 @@ const char *vibe_score_info_get_name(VibeScoreId id);
 VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id);
 
 /**
+ * @brief Get the vibe scores available to an alert, in catalog order.
+ *
+ * @param client Kind of alert; @ref VibeClient_AlarmsLPM is not allowed.
+ * @param[out] ids Buffer for the score IDs, may be NULL to only count them.
+ * @param max_ids Capacity of @p ids.
+ * @return Number of scores available, which may exceed @p max_ids.
+ */
+unsigned int vibe_score_info_get_ids_for_client(VibeClient client, VibeScoreId *ids,
+                                                unsigned int max_ids);
+
+/**
  * @brief Check whether a vibe score ID can be used.
  *
  * @param id Score ID.

@@ -64,33 +64,25 @@ static int prv_get_index(VibeScoreId id) {
   return 0;
 }
 
-VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
-  AlertType alert_type;
+static AlertType prv_alert_type_for_client(VibeClient client) {
   switch (client) {
-    case VibeClient_Notifications: {
-      alert_type = AlertType_Notifications;
-      break;
-    }
-    case VibeClient_PhoneCalls: {
-      alert_type = AlertType_Calls;
-      break;
-    }
-    case VibeClient_Alarms: {
-      alert_type = AlertType_Alarms;
-      break;
-    }
-    case VibeClient_Hourly: {
-      alert_type = AlertType_Hourly;
-      break;
-    }
-    case VibeClient_OnDisconnect: {
-      alert_type = AlertType_OnDisconnect;
-      break;
-    }
-    default: {
+    case VibeClient_Notifications:
+      return AlertType_Notifications;
+    case VibeClient_PhoneCalls:
+      return AlertType_Calls;
+    case VibeClient_Alarms:
+      return AlertType_Alarms;
+    case VibeClient_Hourly:
+      return AlertType_Hourly;
+    case VibeClient_OnDisconnect:
+      return AlertType_OnDisconnect;
+    default:
       pbl_panic();
-    }
   }
+}
+
+VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
+  const AlertType alert_type = prv_alert_type_for_client(client);
 
   unsigned int currently_showing_index = prv_get_index(curr_id);
   unsigned int search_index = (currently_showing_index + 1) % VIBE_MAP_SIZE;
@@ -103,6 +95,21 @@ VibeScoreId vibe_score_info_cycle_next(VibeClient client, VibeScoreId curr_id) {
   }
 
   return curr_id;
+}
+
+unsigned int vibe_score_info_get_ids_for_client(VibeClient client, VibeScoreId *ids,
+                                                unsigned int max_ids) {
+  const AlertType alert_type = prv_alert_type_for_client(client);
+  unsigned int count = 0;
+  for (unsigned int x = 0; x < VIBE_MAP_SIZE; x++) {
+    if ((S_VIBE_MAP[x].alert_types & alert_type) == alert_type) {
+      if (ids && count < max_ids) {
+        ids[count] = S_VIBE_MAP[x].id;
+      }
+      count++;
+    }
+  }
+  return count;
 }
 
 bool vibe_score_info_is_valid(VibeScoreId id) {
