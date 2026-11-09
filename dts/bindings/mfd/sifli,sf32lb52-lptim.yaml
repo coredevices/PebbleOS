@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mfd/sifli,sf32lb52-lptim.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 low-power timer
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Timer counting the low-power clock, so it keeps running in deep sleep. Its
+  functions are child nodes, as the PWM output.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-lptim
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+    description: Counter clock, the low-power oscillator.
+
+  pwm:
+    type: object
+    additionalProperties: false
+
+    properties:
+      compatible:
+        const: sifli,sf32lb52-lptim-pwm
+
+      "#pwm-cells":
+        const: 3
+
+      pinctrl-0: true
+
+      pinctrl-names:
+        const: default
+
+      status: true
+
+    required:
+      - compatible
+      - "#pwm-cells"
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+
+additionalProperties: false
+
+examples:
+  - |
+    timer@500c2000 {
+        compatible = "sifli,sf32lb52-lptim";
+        reg = <0x500c2000 0x1000>;
+        interrupts = <47>;
+        clocks = <&rc10k>;
+
+        pwm {
+            compatible = "sifli,sf32lb52-lptim-pwm";
+            #pwm-cells = <3>;
+        };
+    };

@@ -3,6 +3,8 @@
 
 #include "sf32lb/sf32lb52x/sf32lb52.dtsi"
 
+#include <dt-bindings/gpio/gpio.h>
+
 / {
 	model = "Core Devices Pebble Time 2";
 
@@ -12,9 +14,145 @@
 		charge-term-current-microamp = <19000>;
 		constant-charge-voltage-max-microvolt = <4350000>;
 	};
+
+	vddp: regulator-vddp {
+		compatible = "regulator-fixed";
+		regulator-name = "vddp";
+		gpios = <&gpio1 28 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+
+	vlcd: regulator-vlcd {
+		compatible = "regulator-fixed";
+		regulator-name = "vlcd";
+		gpios = <&gpio1 29 GPIO_ACTIVE_LOW>;
+	};
+
+	panel: panel {
+		compatible = "jdi,lpm015m135a";
+		vddp-supply = <&vddp>;
+		vlcd-supply = <&vlcd>;
+		pwms = <&lptim2_pwm 0 16666666 0>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&lcdc1_out>;
+			};
+		};
+	};
 };
 
 &pinctrl {
+	lcdc1_default: lcdc1-default-state {
+		vck-pins {
+			pins = "PA39";
+			function = "lcdc1_jdi_vck";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		xrst-pins {
+			pins = "PA40";
+			function = "lcdc1_jdi_xrst";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		hck-pins {
+			pins = "PA41";
+			function = "lcdc1_jdi_hck";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		r2-pins {
+			pins = "PA42";
+			function = "lcdc1_jdi_r2";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		b2-pins {
+			pins = "PA02";
+			function = "lcdc1_jdi_b2";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		b1-pins {
+			pins = "PA03";
+			function = "lcdc1_jdi_b1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		g1-pins {
+			pins = "PA04";
+			function = "lcdc1_jdi_g1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		r1-pins {
+			pins = "PA05";
+			function = "lcdc1_jdi_r1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		hst-pins {
+			pins = "PA06";
+			function = "lcdc1_jdi_hst";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		enb-pins {
+			pins = "PA07";
+			function = "lcdc1_jdi_enb";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		vst-pins {
+			pins = "PA08";
+			function = "lcdc1_jdi_vst";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		g2-pins {
+			pins = "PA43";
+			function = "lcdc1_jdi_g2";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	lcdc1_sleep: lcdc1-sleep-state {
+		discharge-pins {
+			pins = "PA03", "PA39", "PA40", "PA41", "PA42";
+			function = "gpio";
+			output-low;
+		};
+	};
+
+	lptim2_default: lptim2-default-state {
+		out-pins {
+			pins = "PA24";
+			function = "pbr_lptim2_out";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		inv-out-pins {
+			pins = "PA25";
+			function = "pbr_lptim2_inv_out";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
 	usart1_default: usart1-default-state {
 		tx-pins {
 			pins = "PA19";
@@ -314,4 +452,27 @@
 	dmas = <&dmac1 0 5 1>;
 	dma-names = "rx";
 	status = "okay";
+};
+
+&lptim2 {
+	status = "okay";
+};
+
+&lptim2_pwm {
+	pinctrl-0 = <&lptim2_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&lcdc1 {
+	pinctrl-0 = <&lcdc1_default>;
+	pinctrl-1 = <&lcdc1_sleep>;
+	pinctrl-names = "default", "sleep";
+	status = "okay";
+
+	port {
+		lcdc1_out: endpoint {
+			remote-endpoint = <&panel_in>;
+		};
+	};
 };

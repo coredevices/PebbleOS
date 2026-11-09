@@ -7,15 +7,12 @@
 #include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/backlight/aw2016.h>
 #include <pbl/drivers/clk/sf32lb.h>
-#include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/gpio/sf32lb.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
-#include <pbl/drivers/panel/jdi_mip.h>
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/pwm/sf32lb_lptim.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/rtc/sf32lb.h>
@@ -36,61 +33,10 @@
 
 const struct pbl_uart *const CONSOLE_UART = &dt_usart1;
 
-PBL_PINCTRL_STATE_DEFINE(
-    s_display_default, SF32LB52_PINCTRL,
-    SF32LB52_PA40_LCDC1_JDI_XRST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
-    SF32LB52_PA08_LCDC1_JDI_VST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA39_LCDC1_JDI_VCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
-    SF32LB52_PA07_LCDC1_JDI_ENB | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA06_LCDC1_JDI_HST | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA41_LCDC1_JDI_HCK | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
-    SF32LB52_PA05_LCDC1_JDI_R1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA42_LCDC1_JDI_R2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_4MA,
-    SF32LB52_PA04_LCDC1_JDI_G1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA43_LCDC1_JDI_G2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA03_LCDC1_JDI_B1 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-    SF32LB52_PA02_LCDC1_JDI_B2 | PBL_PINCTRL_SF32LB52_INPUT | PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-
-PBL_PINCTRL_STATE_DEFINE(s_lptim2_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA,
-                         SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", 2, &s_lptim2_default, nullptr);
-
-static const struct pbl_gpio s_display_discharge[] = {
-  PBL_GPIO(SF32LB_GPIO1, 3, 0),  PBL_GPIO(SF32LB_GPIO1, 39, 0), PBL_GPIO(SF32LB_GPIO1, 40, 0),
-  PBL_GPIO(SF32LB_GPIO1, 41, 0), PBL_GPIO(SF32LB_GPIO1, 42, 0),
-};
-
-static const struct pbl_panel_timing s_panel_timing = {
-  .clock_hz = 746268,
-  .hactive = 200,
-  .hback_porch = 2,
-  .hfront_porch = 6,
-  .vactive = 228,
-  .vback_porch = 0,
-  .vfront_porch = 6,
-  .enable_start = 3,
-  .enable_end = 99,
-};
-
-PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO1, 28, 0),
-                         PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
-                         PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0));
-
 const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 3, 2, 1};
 const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
 
-PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
-                               PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
-                               PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
-                               &s_panel.panel, 200, 228, false,
-                               PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
-                               ARRAY_LENGTH(s_display_discharge));
-
-const struct pbl_display *const DISPLAY = &s_display.disp;
-PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);
+const struct pbl_display *const DISPLAY = &dt_lcdc1;
 
 PBL_MBOX_SF32LB52_DEFINE(s_mailbox1, "mailbox1", SF32LB52_MAILBOX1_BASE, PBL_MBOX_SF32LB52_NO_IRQ,
                          PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MAILBOX1), nullptr);

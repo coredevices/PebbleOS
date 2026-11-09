@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: pwm
+type: struct pbl_pwm_controller
+include: pbl/drivers/pwm.h
+provides:
+  # Cells are <channel period-ns flags>, flags those of <dt-bindings/pwm/pwm.h>
+  pwm: "PBL_PWM(&{sym}, {0}, {1}, {2})"

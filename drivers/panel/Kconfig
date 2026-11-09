@@ -7,8 +7,9 @@ config PANEL
       Panel class, selected by the display controllers driving a panel.
 
 config PANEL_JDI_MIP
-    bool "JDI memory-in-pixel panel"
-    default y if DISPLAY_SF32LB_LCDC
-    depends on PANEL && GPIO && PWM
+    bool "Memory-in-pixel panels"
+    default DT_HAS_JDI_LPM015M135A_ENABLED || DT_HAS_SHARP_LS013B7DD02_ENABLED
+    depends on PANEL && PWM && REGULATOR
     help
-      Support for JDI memory-in-pixel panels on the parallel interface.
+      Support for the JDI LPM015M135A and Sharp LS013B7DD02 memory-in-pixel
+      panels on the JDI parallel interface.

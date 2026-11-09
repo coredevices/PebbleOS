@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-lptim-pwm
+config: PWM_SF32LB_LPTIM
+class: pwm
+define: PBL_PWM_SF32LB_LPTIM_DEFINE
+args:
+  - name: true
+  - reg: 0
+    up: true
+  - clock: 0
+    up: true
+  - pinctrl: default

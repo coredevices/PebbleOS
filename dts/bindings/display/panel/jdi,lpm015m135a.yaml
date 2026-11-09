@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/jdi,lpm015m135a.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Memory-in-pixel panels on the JDI parallel interface
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Reflective color panels that keep their image, written over the JDI
+  parallel interface with two bits per color. VCOM is inverted by an external
+  signal while the image is on.
+
+allOf:
+  - $ref: panel-common.yaml#
+
+properties:
+  compatible:
+    enum:
+      - jdi,lpm015m135a
+      - sharp,ls013b7dd02
+
+  vddp-supply:
+    description: Pixel memory supply, raised after VLCD.
+
+  vlcd-supply:
+    description: Liquid crystal supply.
+
+  pwms:
+    maxItems: 1
+    description: VCOM inversion signal.
+
+  port: true
+  rotation: true
+
+required:
+  - compatible
+  - vddp-supply
+  - vlcd-supply
+  - pwms
+  - port
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    panel {
+        compatible = "jdi,lpm015m135a";
+        vddp-supply = <&vddp>;
+        vlcd-supply = <&vlcd>;
+        pwms = <&lptim2_pwm 0 16666666 0>;
+
+        port {
+            endpoint {
+                remote-endpoint = <&lcdc1_out>;
+            };
+        };
+    };

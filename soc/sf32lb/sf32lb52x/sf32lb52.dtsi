@@ -17,6 +17,11 @@
 		#address-cells = <0>;
 	};
 
+	rc10k: clock-rc10k {
+		compatible = "sifli,sf32lb52-rc10k";
+		#clock-cells = <0>;
+	};
+
 	soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
@@ -34,6 +39,15 @@
 		pinctrl: pinctrl@50003000 {
 			compatible = "sifli,sf32lb52-pinctrl";
 			reg = <0x50003000 0x100>;
+		};
+
+		lcdc1: display-controller@50008000 {
+			compatible = "sifli,sf32lb52-lcdc";
+			reg = <0x50008000 0x1000>;
+			interrupts = <63>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_LCDC1>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_LCDC1>;
+			status = "disabled";
 		};
 
 		mpi1: spi@50041000 {
@@ -144,6 +158,34 @@
 			ngpios = <45>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
+		};
+
+		lptim1: timer@500c1000 {
+			compatible = "sifli,sf32lb52-lptim";
+			reg = <0x500c1000 0x1000>;
+			interrupts = <46>;
+			clocks = <&rc10k>;
+			status = "disabled";
+
+			lptim1_pwm: pwm {
+				compatible = "sifli,sf32lb52-lptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
+		};
+
+		lptim2: timer@500c2000 {
+			compatible = "sifli,sf32lb52-lptim";
+			reg = <0x500c2000 0x1000>;
+			interrupts = <47>;
+			clocks = <&rc10k>;
+			status = "disabled";
+
+			lptim2_pwm: pwm {
+				compatible = "sifli,sf32lb52-lptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
 		};
 	};
 };

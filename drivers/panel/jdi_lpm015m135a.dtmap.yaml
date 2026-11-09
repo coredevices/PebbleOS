@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: jdi,lpm015m135a
+config: PANEL_JDI_MIP
+class: panel
+define: PBL_PANEL_JDI_LPM015M135A_DEFINE
+header: pbl/drivers/panel/jdi_mip.h
+provides:
+  width: PBL_PANEL_JDI_LPM015M135A_WIDTH
+  height: PBL_PANEL_JDI_LPM015M135A_HEIGHT
+  round-mask: PBL_PANEL_JDI_LPM015M135A_ROUND_MASK
+args:
+  - name: true
+  - supply: vddp
+  - supply: vlcd
+  - pwm: 0
