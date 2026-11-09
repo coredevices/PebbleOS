@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-pwm
+config: PWM_NRF5
+class: pwm
+define: PBL_PWM_NRF5_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - gpio: out
+    all: true
+    optional: true

@@ -102,9 +102,33 @@
 			};
 		};
 
+		pwm0: pwm@4001c000 {
+			compatible = "nordic,nrf52840-pwm", "nordic,nrf52832-pwm";
+			reg = <0x4001c000 0x1000>;
+			interrupts = <28>;
+			#pwm-cells = <3>;
+			status = "disabled";
+		};
+
 		ppi: ppi@4001f000 {
 			compatible = "nordic,nrf52840-ppi", "nordic,nrf52832-ppi";
 			reg = <0x4001f000 0x1000>;
+		};
+
+		pwm1: pwm@40021000 {
+			compatible = "nordic,nrf52840-pwm", "nordic,nrf52832-pwm";
+			reg = <0x40021000 0x1000>;
+			interrupts = <33>;
+			#pwm-cells = <3>;
+			status = "disabled";
+		};
+
+		pwm2: pwm@40022000 {
+			compatible = "nordic,nrf52840-pwm", "nordic,nrf52832-pwm";
+			reg = <0x40022000 0x1000>;
+			interrupts = <34>;
+			#pwm-cells = <3>;
+			status = "disabled";
 		};
 
 		spi2: spi@40023000 {
@@ -145,6 +169,14 @@
 			interrupts = <41>;
 			#address-cells = <1>;
 			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		pwm3: pwm@4002d000 {
+			compatible = "nordic,nrf52840-pwm", "nordic,nrf52832-pwm";
+			reg = <0x4002d000 0x1000>;
+			interrupts = <45>;
+			#pwm-cells = <3>;
 			status = "disabled";
 		};
 

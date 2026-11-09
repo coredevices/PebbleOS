@@ -18,6 +18,12 @@
 		charge-term-current-microamp = <12800>;
 		constant-charge-voltage-max-microvolt = <4200000>;
 	};
+
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm0 0 3906250 0>;
+		enable-gpios = <&gpio1 8 0>;
+	};
 };
 
 &i2c0 {
@@ -237,4 +243,9 @@
 		sharp,vcom-mode = "pwm";
 		pwms = <&rtc2_pwm 0 8333333 0>;
 	};
+};
+
+&pwm0 {
+	out-gpios = <&gpio0 26 0>;
+	status = "okay";
 };

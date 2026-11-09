@@ -14,12 +14,14 @@
  * @ingroup drivers_backlight
  * @brief @ref drivers_backlight driver driving the LED with a PWM output.
  *
- * @code{.c}
- * PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(&dt_gpio1, 8, 0),
- *                          .pwm = PBL_PWM(&s_pwm0.ctrl, 0, PBL_PWM_HZ(256), 0),
- *                          .max_duty_cycle_percent = 67);
+ * The duty cycle follows the brightness linearly, full brightness being 100%: a lower ceiling
+ * for the product is set above, e.g. by @c CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT.
  *
- * const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
+ * @code{.c}
+ * PBL_BACKLIGHT_PWM_DEFINE(s_backlight, "backlight", PBL_GPIO(&dt_gpio1, 8, 0),
+ *                          PBL_PWM(&s_pwm0, 0, PBL_PWM_HZ(256), 0));
+ *
+ * const struct pbl_backlight *const BACKLIGHT = &s_backlight;
  * @endcode
  * @{
  */
@@ -32,8 +34,6 @@ struct pbl_backlight_pwm {
   struct pbl_gpio enable;
   /** PWM output, with the period to run it at. */
   struct pbl_pwm pwm;
-  /** Duty cycle at full brightness, in percent. */
-  uint8_t max_duty_cycle_percent;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -43,16 +43,16 @@ extern const struct pbl_backlight_ops pbl_backlight_pwm_ops;
 /**
  * @brief Define a PWM backlight.
  *
- * @param sym Symbol of the instance; the backlight is @c sym.backlight.
- * @param ... Designated initializers of the remaining fields: @c enable, @c pwm and
- *            @c max_duty_cycle_percent.
+ * @param sym Symbol of the backlight.
+ * @param _name Name.
+ * @param _enable Enable output, from PBL_GPIO(), or unconnected.
+ * @param ... PWM output, from PBL_PWM(), with the period to run it at.
  */
-#define PBL_BACKLIGHT_PWM_DEFINE(sym, ...)                                                  \
-  PBL_BACKLIGHT_STATE_DEFINE(sym);                                                          \
-  const struct pbl_backlight_pwm sym = {                                                    \
-    .backlight = PBL_BACKLIGHT_INIT(sym, "backlight_pwm", nullptr, &pbl_backlight_pwm_ops), \
-    __VA_ARGS__                                                                             \
-  };                                                                                        \
-  PBL_DEVICE_REGISTER(sym, &sym.backlight.dev)
+#define PBL_BACKLIGHT_PWM_DEFINE(sym, _name, _enable, ...)                              \
+  PBL_BACKLIGHT_STATE_DEFINE(sym);                                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_backlight_pwm, struct pbl_backlight, backlight) { \
+    .backlight = PBL_BACKLIGHT_INIT(sym, _name, nullptr, &pbl_backlight_pwm_ops),       \
+    .enable = _enable, .pwm = __VA_ARGS__,                                              \
+  }
 
 /** @} */

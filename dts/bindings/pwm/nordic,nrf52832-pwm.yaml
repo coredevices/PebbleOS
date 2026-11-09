@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/pwm/nordic,nrf52832-pwm.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 PWM
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Four-channel PWM controller of the nRF52 series, first in the nRF52832. Its
+  pins are selected in its own registers, from out-gpios, one per channel in
+  order.
+
+allOf:
+  - $ref: pwm.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-pwm
+      - items:
+          - enum:
+              - nordic,nrf52833-pwm
+              - nordic,nrf52840-pwm
+          - const: nordic,nrf52832-pwm
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  "#pwm-cells":
+    const: 3
+
+  out-gpios:
+    minItems: 1
+    maxItems: 4
+    description: Outputs of channels 0 to 3.
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    pwm@4001c000 {
+        compatible = "nordic,nrf52840-pwm", "nordic,nrf52832-pwm";
+        reg = <0x4001c000 0x1000>;
+        interrupts = <28>;
+        #pwm-cells = <3>;
+        out-gpios = <&gpio0 26 0>;
+    };

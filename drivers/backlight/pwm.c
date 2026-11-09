@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/gpio.h>
@@ -48,8 +49,7 @@ static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness
   }
 
   pbl_pwm_init_state(&dev->pwm, &state);
-  ret = pbl_pwm_set_relative_duty_cycle(&state, (uint32_t)brightness * dev->max_duty_cycle_percent,
-                                        PBL_BACKLIGHT_BRIGHTNESS_MAX * 100U);
+  ret = pbl_pwm_set_relative_duty_cycle(&state, brightness, PBL_BACKLIGHT_BRIGHTNESS_MAX);
   if (ret != 0) {
     return ret;
   }
@@ -63,3 +63,5 @@ const struct pbl_backlight_ops pbl_backlight_pwm_ops = {
   .init = prv_init,
   .set_brightness = prv_set_brightness,
 };
+
+#include PBL_DT_INSTANCES(pwm_backlight)
