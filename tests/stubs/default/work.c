@@ -46,3 +46,24 @@ PBL_WEAK bool pbl_work_is_running(const struct pbl_work *work) {
 
 PBL_WEAK struct pbl_workq pbl_sys_workq;
 PBL_WEAK struct pbl_workq pbl_sys_workq_high;
+
+PBL_WEAK void pbl_wallclock_work_init(struct pbl_wallclock_work *w, pbl_work_fn_t fn) {
+  *w = (struct pbl_wallclock_work){};
+  w->work.fn = fn;
+}
+
+PBL_WEAK void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w,
+                                       uint32_t unit_s, uint32_t every) {
+  w->running = true;
+}
+
+PBL_WEAK bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w) {
+  const bool was_running = w->running;
+
+  w->running = false;
+  return was_running;
+}
+
+PBL_WEAK bool pbl_wallclock_work_is_running(const struct pbl_wallclock_work *w) {
+  return w->running;
+}
