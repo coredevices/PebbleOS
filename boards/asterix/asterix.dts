@@ -111,3 +111,96 @@
 		};
 	};
 };
+
+&qspi {
+	sck-gpios = <&gpio0 19 0>;
+	cs-gpios = <&gpio0 17 0>;
+	io-gpios = <&gpio0 20 0>, <&gpio0 21 0>, <&gpio0 22 0>, <&gpio0 23 0>;
+	status = "okay";
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "safe-firmware";
+				reg = <0x0 0x80000>;
+			};
+
+			partition@ff000 {
+				label = "mfg-info";
+				reg = <0xff000 0x1000>;
+			};
+
+			partition@100000 {
+				label = "firmware-slot-1";
+				reg = <0x100000 0x100000>;
+			};
+
+			partition@200000 {
+				label = "system-resources-bank-0";
+				reg = <0x200000 0x100000>;
+			};
+
+			partition@300000 {
+				label = "system-resources-bank-1";
+				reg = <0x300000 0x100000>;
+			};
+
+			partition@400000 {
+				label = "filesystem";
+				reg = <0x400000 0x19d0000>;
+			};
+
+			partition@1fd0000 {
+				label = "debug-db";
+				reg = <0x1fd0000 0x20000>;
+			};
+
+			partition@1ffd000 {
+				label = "mfg-results";
+				reg = <0x1ffd000 0x1000>;
+			};
+
+			partition@1ffe000 {
+				label = "mfg-battery-state";
+				reg = <0x1ffe000 0x1000>;
+			};
+
+			partition@1fff000 {
+				label = "shared-prf-storage";
+				reg = <0x1fff000 0x1000>;
+			};
+		};
+
+		otp {
+			compatible = "user-otp";
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				hw-version@0 {
+					reg = <0x0 0x20>;
+				};
+
+				serial-number@20 {
+					reg = <0x20 0x20>;
+				};
+
+				pcba-serial-number@40 {
+					reg = <0x40 0x20>;
+				};
+			};
+		};
+	};
+};

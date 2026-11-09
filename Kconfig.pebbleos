@@ -141,6 +141,14 @@ config LINKER_MAP
 
 endmenu
 
+config BOARD_PARTITIONS_DT
+    bool
+    default DT_HAS_FIXED_PARTITIONS_ENABLED
+    help
+      The board's flash partitions come from the fixed-partitions node of
+      its devicetree. Boards without a devicetree select one of the layouts
+      below.
+
 config BOARD_PARTITIONS_DUAL_SLOT
     bool
     help

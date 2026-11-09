@@ -167,3 +167,125 @@
 	clock-frequency = <400000>;
 	status = "okay";
 };
+
+&mpi2 {
+	status = "okay";
+
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "ptable";
+				reg = <0x0 0x10000>;
+			};
+
+			partition@10000 {
+				label = "bootloader";
+				reg = <0x10000 0x10000>;
+			};
+
+			partition@20000 {
+				label = "firmware-slot-0";
+				reg = <0x20000 0x300000>;
+			};
+
+			partition@320000 {
+				label = "firmware-slot-1";
+				reg = <0x320000 0x300000>;
+			};
+
+			partition@620000 {
+				label = "system-resources-bank-0";
+				reg = <0x620000 0x200000>;
+			};
+
+			partition@820000 {
+				label = "system-resources-bank-1";
+				reg = <0x820000 0x200000>;
+			};
+
+			partition@a20000 {
+				label = "safe-firmware";
+				reg = <0xa20000 0x90000>;
+			};
+
+			partition@ab0000 {
+				label = "filesystem";
+				reg = <0xab0000 0x1490000>;
+			};
+
+			partition@1f40000 {
+				label = "cd";
+				reg = <0x1f40000 0x80000>;
+			};
+
+			partition@1fcf000 {
+				label = "debug-db";
+				reg = <0x1fcf000 0x20000>;
+			};
+
+			partition@1ffb000 {
+				label = "mfg-results";
+				reg = <0x1ffb000 0x1000>;
+			};
+
+			partition@1ffc000 {
+				label = "mfg-battery-state";
+				reg = <0x1ffc000 0x1000>;
+			};
+
+			partition@1ffd000 {
+				label = "tzinfo";
+				reg = <0x1ffd000 0x1000>;
+			};
+
+			partition@1ffe000 {
+				label = "mfg-info";
+				reg = <0x1ffe000 0x1000>;
+			};
+
+			partition@1fff000 {
+				label = "shared-prf-storage";
+				reg = <0x1fff000 0x1000>;
+			};
+		};
+
+		otp {
+			compatible = "user-otp";
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				hw-version@0 {
+					reg = <0x0 0x20>;
+				};
+
+				serial-number@20 {
+					reg = <0x20 0x20>;
+				};
+
+				pcba-serial-number@40 {
+					reg = <0x40 0x20>;
+				};
+
+				soc-config-user@800 {
+					reg = <0x800 0x100>;
+				};
+
+				soc-config-cust@1000 {
+					reg = <0x1000 0x100>;
+				};
+			};
+		};
+	};
+};
