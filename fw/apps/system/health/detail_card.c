@@ -32,6 +32,27 @@
 //! Empty rows between the chart and its heading below
 #define CHART_HEADING_GAP (2)
 
+#ifdef HEALTH_DETAIL_TALL_RECT
+// Larger fonts and roomier rows on tall rectangular displays (e.g. emery)
+#define RECT_PADDING         (10)
+#define RECT_HEADING_HEIGHT  (52)
+#define RECT_SUBTITLE_HEIGHT (30)
+#define RECT_ZONE_HEIGHT     (44)
+#define ZONE_BAR_DY          (30)
+#define ZONE_BAR_HEIGHT      (12)
+#define HEADING_LABEL_HEIGHT (20)
+#define HEADING_VALUE_PAD    (20)
+#else
+#define RECT_PADDING         (5 + HEALTH_PADDING_OFFSET)
+#define RECT_HEADING_HEIGHT  HEADING_HEIGHT
+#define RECT_SUBTITLE_HEIGHT (23)
+#define RECT_ZONE_HEIGHT     (33)
+#define ZONE_BAR_DY          (22)
+#define ZONE_BAR_HEIGHT      (10 + PBL_IF_BW_ELSE(-1, 0))
+#define HEADING_LABEL_HEIGHT (12)
+#define HEADING_VALUE_PAD    (12)
+#endif
+
 static void prv_draw_heading(HealthDetailCard *detail_card, GContext *ctx,
                              const HealthDetailHeading *heading, const GRect *rect) {
   const GRect header_rect = *rect;
@@ -54,14 +75,14 @@ static void prv_draw_heading(HealthDetailCard *detail_card, GContext *ctx,
   if (has_secondary_heading) {
     label_rect.size.w /= 2;
   }
-  label_rect.size.h = 12; // Restrict to a single line
+  label_rect.size.h = HEADING_LABEL_HEIGHT; // Restrict to a single line
 
   graphics_context_set_text_color(ctx, gcolor_legible_over(heading->fill_color));
 
   graphics_draw_text(ctx, heading->primary_label, detail_card->heading_label_font, label_rect,
                      GTextOverflowModeWordWrap, GTextAlignmentCenter, nullptr);
 
-  const int16_t value_rect_y_padding = 12;
+  const int16_t value_rect_y_padding = HEADING_VALUE_PAD;
 
   GRect value_rect = label_rect;
   value_rect.origin.y += value_rect_y_padding;
@@ -100,8 +121,13 @@ static void prv_draw_heading(HealthDetailCard *detail_card, GContext *ctx,
 
 static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, const Layer *layer,
                               int first, int count) {
+#ifdef HEALTH_DETAIL_TALL_RECT
+  const int16_t rect_padding = RECT_PADDING;
+  const int16_t rect_height = RECT_HEADING_HEIGHT;
+#else
   const int16_t rect_padding = PBL_IF_RECT_ELSE(5 + HEALTH_PADDING_OFFSET, 22);
   const int16_t rect_height = HEADING_HEIGHT;
+#endif
 
   for (int n = 0; n < count; n++) {
     const int i = first + n;
@@ -131,8 +157,13 @@ static void prv_draw_headings(HealthDetailCard *detail_card, GContext *ctx, cons
 }
 
 static void prv_draw_subtitles(HealthDetailCard *detail_card, GContext *ctx, const Layer *layer) {
+#ifdef HEALTH_DETAIL_TALL_RECT
+  const int16_t rect_padding = RECT_PADDING;
+  const int16_t rect_height = RECT_SUBTITLE_HEIGHT;
+#else
   const int16_t rect_padding = PBL_IF_RECT_ELSE(5 + HEALTH_PADDING_OFFSET, 0);
   const int16_t rect_height = PBL_IF_RECT_ELSE(23, 36);
+#endif
 
   for (int i = 0; i < detail_card->num_subtitles; i++) {
     HealthDetailSubtitle *subtitle = &detail_card->subtitles[i];
@@ -263,9 +294,9 @@ static void prv_draw_progress_bar_in_zone(GContext *ctx, const GRect *zone_rect,
                                           int current_progress, int typical_progress,
                                           int max_progress, bool hide_typical) {
   const int16_t progress_bar_x = zone_rect->origin.x + PBL_IF_BW_ELSE(0, -1);
-  const int16_t progress_bar_y = zone_rect->origin.y + 22;
+  const int16_t progress_bar_y = zone_rect->origin.y + ZONE_BAR_DY;
   const int16_t progress_bar_width = zone_rect->size.w + PBL_IF_BW_ELSE(-2, 1);
-  const int16_t progress_bar_height = 10 + PBL_IF_BW_ELSE(-1, 0);
+  const int16_t progress_bar_height = ZONE_BAR_HEIGHT;
 
   HealthProgressSegment segments[] = {
     {
@@ -320,8 +351,8 @@ static void prv_draw_zones(HealthDetailCard *detail_card, GContext *ctx) {
     return;
   }
 
-  const int16_t rect_padding = 5 + HEALTH_PADDING_OFFSET;
-  const int16_t rect_height = 33;
+  const int16_t rect_padding = RECT_PADDING;
+  const int16_t rect_height = RECT_ZONE_HEIGHT;
 
   GRect zone_rect = grect_inset(detail_card->window.layer.bounds, GEdgeInsets(rect_padding));
   zone_rect.origin.y += detail_card->y_origin;
@@ -478,13 +509,20 @@ static void prv_selection_changed_callback(struct MenuLayer *menu_layer, MenuInd
   HealthDetailCard *detail_card = (HealthDetailCard *)context;
   prv_refresh_content_indicators(detail_card);
 }
-#else  // PBL_RECT
+#else // PBL_RECT
 static void prv_health_detail_scroll_layer_update_proc(Layer *layer, GContext *ctx) {
   ScrollLayer *scroll_layer = (ScrollLayer *)layer->parent;
   HealthDetailCard *detail_card = (HealthDetailCard *)scroll_layer->context;
 
   detail_card->y_origin = 0;
   const Layer *window_layer = &detail_card->window.layer;
+#ifdef HEALTH_DETAIL_TALL_RECT
+  if (detail_card->header.draw) {
+    const GRect header_rect = GRect(0, 0, layer->bounds.size.w, detail_card->header.height);
+    detail_card->header.draw(ctx, &header_rect, detail_card->header.context);
+    detail_card->y_origin = detail_card->header.height;
+  }
+#endif
   const int num_chart_headings = prv_num_chart_headings(detail_card);
   if (detail_card->chart.draw) {
     prv_draw_chart(detail_card, ctx, window_layer);
@@ -582,9 +620,15 @@ HealthDetailCard *health_detail_card_create(const HealthDetailCardConfig *config
                         prv_health_detail_scroll_layer_update_proc);
 #endif // PBL_RECT
   detail_card->icon_crown = gdraw_command_image_create_with_resource(RESOURCE_ID_HEALTH_APP_CROWN);
+#ifdef HEALTH_DETAIL_TALL_RECT
+  detail_card->heading_label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  detail_card->heading_value_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  detail_card->subtitle_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+#else
   detail_card->heading_label_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
   detail_card->heading_value_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
   detail_card->subtitle_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+#endif
   return detail_card;
 }
 
@@ -639,6 +683,9 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
   }
   if (config->chart) {
     detail_card->chart = *config->chart;
+  }
+  if (config->header) {
+    detail_card->header = *config->header;
   }
   if (config->data) {
     detail_card->data = config->data;

@@ -9,12 +9,19 @@
 #include <applib/event_service_client.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gdraw_command_image.h>
+#include <applib/platform.h>
 #include <applib/ui/content_indicator_private.h>
 #include <applib/ui/ui.h>
 
 #define MAX_NUM_HEADINGS  (2)
 #define MAX_NUM_SUBTITLES (2)
 #define MAX_NUM_ZONES     (7)
+
+//! Tall rectangular displays (e.g. emery) get larger fonts, roomier rows and an optional hero
+//! header
+#if PBL_RECT && PBL_DISPLAY_HEIGHT > LEGACY_2X_DISP_ROWS
+#define HEALTH_DETAIL_TALL_RECT 1
+#endif
 
 typedef struct HealthDetailHeading {
   char *primary_label;
@@ -49,6 +56,16 @@ typedef struct HealthDetailChart {
   void *context;
 } HealthDetailChart;
 
+typedef void (*HealthDetailHeaderDrawCallback)(GContext *ctx, const GRect *bounds, void *context);
+
+//! A full-width section drawn above everything else on tall rectangular displays (a hero page);
+//! the content below it scrolls in as a second page
+typedef struct HealthDetailHeader {
+  int16_t height;
+  HealthDetailHeaderDrawCallback draw;
+  void *context;
+} HealthDetailHeader;
+
 typedef struct HealthDetailCardConfig {
   GColor bg_color;
   //! Use the system theme's background instead of bg_color, following dark mode flips
@@ -61,7 +78,8 @@ typedef struct HealthDetailCardConfig {
   int32_t weekly_max;
   int16_t num_zones;
   HealthDetailZone *zones;
-  const HealthDetailChart *chart; //!< Optional, NULL for none
+  const HealthDetailChart *chart;   //!< Optional, NULL for none
+  const HealthDetailHeader *header; //!< Optional, NULL for none (tall rectangular displays only)
   void *data;
 } HealthDetailCardConfig;
 
@@ -98,7 +116,8 @@ typedef struct HealthDetailCard {
   int16_t num_zones;
   HealthDetailZone *zones;
 
-  HealthDetailChart chart; //!< No chart when draw is NULL
+  HealthDetailChart chart;   //!< No chart when draw is NULL
+  HealthDetailHeader header; //!< No header when draw is NULL
 
   int16_t y_origin;
 
