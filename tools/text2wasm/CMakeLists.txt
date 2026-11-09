@@ -13,7 +13,7 @@ set(OVERRIDES "${CMAKE_CURRENT_BINARY_DIR}/overrides")
 file(MAKE_DIRECTORY "${DIST}" "${OVERRIDES}/kernel" "${OVERRIDES}/resource")
 
 # The browser does not use events; its time ABI differs from the watch's.
-set(EVENTS_HEADER "${PEBBLEOS_ROOT}/fw/kernel/events.h")
+set(EVENTS_HEADER "${PEBBLEOS_ROOT}/pebble/kernel/events.h")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${EVENTS_HEADER}")
 file(READ "${EVENTS_HEADER}" events)
 string(REPLACE "#if __SIZEOF_POINTER__ == 4"
@@ -24,27 +24,27 @@ file(CONFIGURE OUTPUT "${OVERRIDES}/resource/resource_ids.auto.h"
 
 add_executable(pebble_renderer
   renderer.c
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/8_bit/framebuffer.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/framebuffer.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/gcolor_definitions.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/gtypes.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/gbitmap.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/graphics.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/gtransform.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/bitblt.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/8_bit/bitblt_private.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/text_render.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/utf8.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/text_layout.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/bidi.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/arabic_shaping.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/perimeter.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/text_resources.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/graphics_private.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/graphics_private_raw.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/graphics_circle.c"
-  "${PEBBLEOS_ROOT}/fw/applib/graphics/graphics_line.c"
-  "${PEBBLEOS_ROOT}/fw/applib/fonts/codepoint.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/8_bit/framebuffer.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/framebuffer.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/gcolor_definitions.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/gtypes.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/gbitmap.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/graphics.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/gtransform.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/bitblt.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/8_bit/bitblt_private.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/text_render.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/utf8.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/text_layout.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/bidi.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/arabic_shaping.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/perimeter.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/text_resources.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/graphics_private.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/graphics_private_raw.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/graphics_circle.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/graphics/graphics_line.c"
+  "${PEBBLEOS_ROOT}/pebble/applib/fonts/codepoint.c"
   "${PEBBLEOS_ROOT}/lib/util/keyed_circular_cache.c"
   "${PEBBLEOS_ROOT}/lib/util/math.c"
   "${PEBBLEOS_ROOT}/lib/util/trig.c"
@@ -76,7 +76,7 @@ target_include_directories(pebble_renderer PRIVATE
   "${PEBBLEOS_ROOT}/include/pbl"
   "${PEBBLEOS_ROOT}/kernel/arch/posix/include"
   "${PEBBLEOS_ROOT}/subsys"
-  "${PEBBLEOS_ROOT}/fw"
+  "${PEBBLEOS_ROOT}/pebble"
   "${PEBBLEOS_ROOT}/third_party/upng/upng"
   "${PEBBLEOS_ROOT}/tests/fixtures"
 )

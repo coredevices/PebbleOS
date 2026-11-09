@@ -24,7 +24,7 @@ jobs:
               - '.github/workflows/test.yml'
               - 'cmake/**'
               - 'drivers/**'
-              - 'fw/**'
+              - 'pebble/**'
               - 'include/**'
               - 'kernel/**'
               - 'lib/**'

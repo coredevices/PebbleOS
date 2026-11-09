@@ -3,8 +3,8 @@
 apps/samples/fps_test/src/test_bitmaps.h
 sdk/defaults/lib/lib.c
 sdk/defaults/lib/lib.h
-fw/apps/demo/demo_images/*
-fw/apps/demo/fps_test_bitmaps.h
+pebble/apps/demo/demo_images/*
+pebble/apps/demo/fps_test_bitmaps.h
 tools/clar/*
 tests/fixtures/**
 third_party/nimble/port/include/syscfg/syscfg.h

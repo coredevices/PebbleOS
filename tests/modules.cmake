@@ -5,12 +5,12 @@
 
 pbl_test_module(time
   SOURCES
-    fw/services/clock/time.c
+    pebble/services/clock/time.c
 )
 
 pbl_test_module(rand
   SOURCES
-    fw/kernel/rand.c
+    pebble/kernel/rand.c
     third_party/tinymt/TinyMT/tinymt/tinymt32.c
 )
 
@@ -34,12 +34,12 @@ pbl_test_module(settings
 pbl_test_module(resources
   REQUIRES pfs
   SOURCES
-    fw/resource/resource.c
-    fw/resource/resource_storage.c
-    fw/resource/resource_storage_builtin.c
-    fw/resource/resource_storage_file.c
-    fw/resource/resource_storage_flash.c
-    fw/services/process_management/app_file.c
+    pebble/resource/resource.c
+    pebble/resource/resource_storage.c
+    pebble/resource/resource_storage_builtin.c
+    pebble/resource/resource_storage_file.c
+    pebble/resource/resource_storage_flash.c
+    pebble/services/process_management/app_file.c
     drivers/flash/flash_crc.c
     tests/fixtures/resources/builtin_resources.auto.c
     tests/fixtures/resources/pfs_resource_table.c
@@ -47,35 +47,35 @@ pbl_test_module(resources
 
 pbl_test_module(gtypes
   SOURCES
-    fw/applib/graphics/gtypes.c
-    fw/applib/graphics/gcolor_definitions.c
+    pebble/applib/graphics/gtypes.c
+    pebble/applib/graphics/gcolor_definitions.c
 )
 
 pbl_test_module(graphics
   REQUIRES gtypes
   SOURCES
-    fw/applib/graphics/graphics.c
-    fw/applib/graphics/graphics_private.c
-    fw/applib/graphics/graphics_private_raw.c
-    fw/applib/graphics/graphics_circle.c
-    fw/applib/graphics/graphics_line.c
-    fw/applib/graphics/bitblt.c
-    fw/applib/graphics/framebuffer.c
-    fw/applib/graphics/gbitmap.c
+    pebble/applib/graphics/graphics.c
+    pebble/applib/graphics/graphics_private.c
+    pebble/applib/graphics/graphics_private_raw.c
+    pebble/applib/graphics/graphics_circle.c
+    pebble/applib/graphics/graphics_line.c
+    pebble/applib/graphics/bitblt.c
+    pebble/applib/graphics/framebuffer.c
+    pebble/applib/graphics/gbitmap.c
 )
 
 pbl_test_module(graphics_bitdepth
   REQUIRES graphics
   SOURCES
-    fw/applib/graphics/graphics_bitmap.c
-    fw/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
-    fw/applib/graphics/@BITDEPTH@_bit/framebuffer.c
+    pebble/applib/graphics/graphics_bitmap.c
+    pebble/applib/graphics/@BITDEPTH@_bit/bitblt_private.c
+    pebble/applib/graphics/@BITDEPTH@_bit/framebuffer.c
     tests/fakes/fake_display.c
 )
 
 pbl_test_module(png
   SOURCES
-    fw/applib/graphics/gbitmap_png.c
+    pebble/applib/graphics/gbitmap_png.c
     third_party/upng/upng/upng.c
     third_party/uzlib/uzlib/src/tinflate.c
     third_party/uzlib/uzlib/src/adler32.c
@@ -84,56 +84,56 @@ pbl_test_module(png
 
 pbl_test_module(text
   SOURCES
-    fw/applib/graphics/utf8.c
-    fw/applib/fonts/codepoint.c
-    fw/applib/graphics/arabic_shaping.c
-    fw/applib/graphics/bidi.c
-    fw/applib/graphics/text_layout.c
+    pebble/applib/graphics/utf8.c
+    pebble/applib/fonts/codepoint.c
+    pebble/applib/graphics/arabic_shaping.c
+    pebble/applib/graphics/bidi.c
+    pebble/applib/graphics/text_layout.c
 )
 
 pbl_test_module(text_render
   REQUIRES text
   SOURCES
-    fw/applib/graphics/text_render.c
-    fw/applib/graphics/perimeter.c
+    pebble/applib/graphics/text_render.c
+    pebble/applib/graphics/perimeter.c
     tests/fakes/fake_fonts.c
     tests/fakes/fake_round_display.c
 )
 
 pbl_test_module(gdraw
   SOURCES
-    fw/applib/graphics/gdraw_command.c
-    fw/applib/graphics/gdraw_command_frame.c
-    fw/applib/graphics/gdraw_command_image.c
-    fw/applib/graphics/gdraw_command_list.c
-    fw/applib/graphics/gdraw_command_sequence.c
-    fw/applib/graphics/gbitmap_sequence.c
-    fw/applib/graphics/gpath.c
-    fw/applib/ui/kino/kino_reel.c
-    fw/applib/ui/kino/kino_reel_gbitmap.c
-    fw/applib/ui/kino/kino_reel_gbitmap_sequence.c
-    fw/applib/ui/kino/kino_reel_pdci.c
-    fw/applib/ui/kino/kino_reel_pdcs.c
+    pebble/applib/graphics/gdraw_command.c
+    pebble/applib/graphics/gdraw_command_frame.c
+    pebble/applib/graphics/gdraw_command_image.c
+    pebble/applib/graphics/gdraw_command_list.c
+    pebble/applib/graphics/gdraw_command_sequence.c
+    pebble/applib/graphics/gbitmap_sequence.c
+    pebble/applib/graphics/gpath.c
+    pebble/applib/ui/kino/kino_reel.c
+    pebble/applib/ui/kino/kino_reel_gbitmap.c
+    pebble/applib/ui/kino/kino_reel_gbitmap_sequence.c
+    pebble/applib/ui/kino/kino_reel_pdci.c
+    pebble/applib/ui/kino/kino_reel_pdcs.c
     tests/fakes/fake_applib_resource.c
 )
 
 pbl_test_module(timeline_item
   SOURCES
-    fw/services/timeline/item.c
-    fw/services/timeline/attribute_group.c
-    fw/services/timeline/attributes_actions.c
-    fw/services/timeline/attribute.c
+    pebble/services/timeline/item.c
+    pebble/services/timeline/attribute_group.c
+    pebble/services/timeline/attributes_actions.c
+    pebble/services/timeline/attribute.c
 )
 
 pbl_test_module(menu_layer
   SOURCES
-    fw/applib/ui/menu_layer.c
-    fw/applib/ui/scroll_layer.c
-    fw/applib/ui/inverter_layer.c
+    pebble/applib/ui/menu_layer.c
+    pebble/applib/ui/scroll_layer.c
+    pebble/applib/ui/inverter_layer.c
 )
 
 pbl_test_module(text_layer
   SOURCES
-    fw/applib/ui/text_layer.c
-    fw/applib/ui/text_layer_flow.c
+    pebble/applib/ui/text_layer.c
+    pebble/applib/ui/text_layer_flow.c
 )

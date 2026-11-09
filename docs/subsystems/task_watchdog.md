@@ -53,11 +53,11 @@ callback, backing a single hardware watchdog (`include/pbl/drivers/watchdog.h`).
 
 ## Users
 
-- `fw/main.c` starts the watchdog, suspends it for the first 30 s of
+- `pebble/main.c` starts the watchdog, suspends it for the first 30 s of
   boot, watches the high priority system work queue with
   `pbl_task_wdt_add_workq()`, and adds the KernelMain channel, which the
   launcher event loop feeds.
-- `fw/process_management/app_throttle.c` watches the background system work
+- `pebble/process_management/app_throttle.c` watches the background system work
   queue. Its callback throttles the app thread to the idle priority for a
   short time when that queue is ready to run but starved.
 - `subsys/bluetooth/init.c` owns the NimBLE host channel, waiting while the

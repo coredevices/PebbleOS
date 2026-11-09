@@ -78,7 +78,7 @@ Syscalls — assume the caller is a hostile app or watchface:
   `*_ARRAY`/`STR`/`STRN`); nothing is declared `VAL` that is then
   dereferenced. Lengths and counts come from the same checked argument.
 - New syscalls use `PBL_SYSCALL`, never `DEFINE_SYSCALL` (only the ones in
-  `fw/syscall/legacy_syscalls.txt` may).
+  `pebble/syscall/legacy_syscalls.txt` may).
 - Non-copied buffers (`*_BUF`, `*_ARRAY`, `STR`) are app memory the app
   can change: no check-then-use on their contents (TOCTOU); copy first.
 - Ownership checks the kinds cannot express go in the body under

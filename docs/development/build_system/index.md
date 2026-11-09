@@ -30,7 +30,7 @@ flowchart TD
   in["BOARD, VARIANT, -DCONFIG_*"]
   kconfig["tools/cmake/kconfig.py"]
   cfg[".config, autoconf.h, config.cmake"]
-  cmake["CMakeLists.txt, cmake/modules/<br/>third_party, lib, kernel, soc, subsys, drivers, fw"]
+  cmake["CMakeLists.txt, cmake/modules/<br/>third_party, lib, kernel, soc, subsys, drivers, pebble"]
   libs["Object and static libraries<br/>one pbl_library() per directory"]
   gen["Resource pack, generated headers<br/>pbl_resources(), tools/cmake/ generators"]
   link["pbl_link_firmware()"]
@@ -106,8 +106,8 @@ Kconfig.pebbleos      the configuration tree of PebbleOS, which the
                       application's Kconfig sources
 boards/<board>/       defconfig, Kconfig, manifest and device definitions
                       (<board>.c, <board>.h) of each board
-fw/prj*.conf          the firmware's configuration fragments, with those
-fw/boards/            for one board
+pebble/prj*.conf          the firmware's configuration fragments, with those
+pebble/boards/            for one board
 cmake/modules/        the build model, split by concern; os.cmake adds
                       PebbleOS itself
 cmake/PebbleOSConfig.cmake

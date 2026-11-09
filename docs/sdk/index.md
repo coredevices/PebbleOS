@@ -8,7 +8,7 @@ binary interface through which they call it.
 The SDK is generated from the firmware, by the same build:
 
 - `pebble.h` and `pebble_worker.h` declare the API: the functions, types
-  and constants of `fw/applib/` that are exported, per platform.
+  and constants of `pebble/applib/` that are exported, per platform.
 - `libpebble.a` is what apps link against. It holds no implementation,
   only one small trampoline per exported function, which jumps into the
   firmware.

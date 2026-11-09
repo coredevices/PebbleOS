@@ -12,7 +12,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 set(PBL_BASE ${CMAKE_CURRENT_SOURCE_DIR})
-set(PBL_APPLICATION_SOURCE_DIR ${PBL_BASE}/fw)
+set(PBL_APPLICATION_SOURCE_DIR ${PBL_BASE}/pebble)
 list(APPEND CMAKE_MODULE_PATH ${PBL_BASE}/cmake/modules)
 
 include(os)
@@ -39,7 +39,7 @@ endif()
 
 # Samsa runs the apps built against the SDK generated above.
 pbl_add_subdirectory_ifdef(CONFIG_SAMSA subsys/samsa)
-add_subdirectory(fw)
+add_subdirectory(pebble)
 # The stored apps are built for the watch, which the recovery firmware runs
 # none on.
 if(NOT CONFIG_RECOVERY_FW AND NOT CONFIG_SOC_POSIX)

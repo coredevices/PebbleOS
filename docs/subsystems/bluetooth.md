@@ -6,7 +6,7 @@ API is `include/pbl/bluetooth/`, enabled by `CONFIG_BT`; the
 
 ## Layering
 
-`fw/comm/ble/` is the host-side BLE layer and carries substantial design
+`pebble/comm/ble/` is the host-side BLE layer and carries substantial design
 prose:
 
 - `gap_le_connect.c` — connection management and the "connection intent"
@@ -21,7 +21,7 @@ prose:
 
 ```{mermaid}
 flowchart TD
-  ble["Host BLE layer<br/>fw/comm/ble/"]
+  ble["Host BLE layer<br/>pebble/comm/ble/"]
   glue["subsys/bluetooth/"]
   nimble["NimBLE host<br/>third_party/nimble"]
   nrf["NimBLE controller<br/>nRF52 radio"]
@@ -47,7 +47,7 @@ Beneath it sits NimBLE (`third_party/nimble`), glued in by
 NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
 and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial
-channel, `fw/comm/qemu/`.
+channel, `pebble/comm/qemu/`.
 
 ## Modules
 

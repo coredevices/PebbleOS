@@ -40,9 +40,9 @@ def gen_function_pointer_array(functions):
 
 
 def make_fw_shims(functions, pbl_output_dir):
-    with open(os.path.join(pbl_output_dir, "fw", FUNCTION_PTR_FILE), "w") as fptr_c:
+    with open(os.path.join(pbl_output_dir, "pebble", FUNCTION_PTR_FILE), "w") as fptr_c:
         fptr_c.write(gen_function_pointer_array(functions))
-    with open(os.path.join(pbl_output_dir, "fw", FUNCTION_LIST_FILE), "w") as f:
+    with open(os.path.join(pbl_output_dir, "pebble", FUNCTION_LIST_FILE), "w") as f:
         json.dump(
             [
                 None if fn.removed else {"name": fn.name, "impl": fn.impl_name}

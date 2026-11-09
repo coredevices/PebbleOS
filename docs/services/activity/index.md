@@ -1,7 +1,7 @@
 # Activity
 
 The activity service counts steps and tracks sleep from the
-accelerometer. It lives in `fw/services/activity/`, and apps reach it
+accelerometer. It lives in `pebble/services/activity/`, and apps reach it
 through the Health API. This page describes the algorithms, called
 Kraepelin, and how they are integrated into the firmware. The plots below
 are drawn from the step samples the unit tests use.
@@ -291,7 +291,7 @@ watch's orientation.
 ### Code organization
 
 ```text
-fw/services/activity/
+pebble/services/activity/
   activity.c
   activity_insights.c
   kraepelin/
@@ -318,7 +318,7 @@ lib/kraepelin/
   and handles their memory, persistent storage and the rest of their
   integration. Another algorithm would implement the same interface.
 
-The Health API for apps is `fw/applib/health_service.c`, which runs
+The Health API for apps is `pebble/applib/health_service.c`, which runs
 unprivileged and calls into the activity service for the step and sleep
 data.
 
@@ -360,7 +360,7 @@ byte by taking its square root, and the orientation is one byte as well:
 
 ## Testing
 
-The unit tests in `tests/fw/services/activity/` run recorded data through
+The unit tests in `tests/pebble/services/activity/` run recorded data through
 `lib/kraepelin/kraepelin.c` and check its results.
 
 ### Step samples

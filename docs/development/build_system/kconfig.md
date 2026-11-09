@@ -8,7 +8,7 @@ sources and the CMake build.
 
 ## Configuration tree
 
-The root of the tree is the application's `Kconfig`, `fw/Kconfig` for the
+The root of the tree is the application's `Kconfig`, `pebble/Kconfig` for the
 firmware, or the top-level `Kconfig` for an application without one. Both
 source `Kconfig.pebbleos`, which sources the rest of the tree:
 
@@ -35,14 +35,14 @@ A build's configuration is resolved from these fragments, in this order:
 | `boards/<board>/defconfig` | What the board has: SoC, platform, drivers and their parameters |
 | `boards/<board>/defconfig.<revision>` | What a revision changes |
 | `boards/<board>/defconfig.<board variant>` | What a board variant (`native_emery/wasm`) changes |
-| `fw/prj.conf` | Subsystems, services and features every firmware enables |
-| `fw/prj_<variant>.conf` | What the `normal` or `prf` variant adds or removes |
-| `fw/boards/<board>.conf` | What the firmware enables or tunes on one board |
-| `fw/boards/<board>_<variant>.conf` | The same, for one variant only |
+| `pebble/prj.conf` | Subsystems, services and features every firmware enables |
+| `pebble/prj_<variant>.conf` | What the `normal` or `prf` variant adds or removes |
+| `pebble/boards/<board>.conf` | What the firmware enables or tunes on one board |
+| `pebble/boards/<board>_<variant>.conf` | The same, for one variant only |
 | `<build>/menuconfig.conf` | Changes made with {doc}`../../pbl/menuconfig` |
 | `-DCONFIG_<SYMBOL>=<value>` | Overrides given when configuring |
 
-The `fw/` fragments are the firmware's. Another application brings the same
+The `pebble/` fragments are the firmware's. Another application brings the same
 files from its own directory instead, see {doc}`applications`.
 
 Overrides are passed to {doc}`../../pbl/configure` or to CMake:

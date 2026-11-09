@@ -11,8 +11,8 @@ gives the overall picture; each layer has its own section with the details.
 block-beta
   columns 2
   apps["Apps and workers"]:2
-  applib["Application framework<br/>fw/applib"]:2
-  services["Services<br/>fw/services"]:2
+  applib["Application framework<br/>pebble/applib"]:2
+  services["Services<br/>pebble/services"]:2
   subsys["Subsystems<br/>subsys/"] libs["Libraries<br/>lib/"]
   drivers["Drivers<br/>drivers/"]:2
   kernel["Kernel<br/>kernel/"]:2
@@ -48,13 +48,13 @@ From the bottom up:
   to the phone and feed events to apps.
 
 Application framework
-: `fw/applib` is the API apps are written against, from windows and
+: `pebble/applib` is the API apps are written against, from windows and
   layers to graphics and text. Its exported part is the
   {doc}`Application SDK <../sdk/index>`.
 
 Apps
 : System apps (launcher, settings, notifications, health, …) are built
-  into the firmware from `fw/apps`; third-party apps and workers are
+  into the firmware from `pebble/apps`; third-party apps and workers are
   installed from the phone.
 
 The public interfaces of each layer live under `include/pbl/`, documented
@@ -86,7 +86,7 @@ apps run privileged. {doc}`../sdk/how_it_works` describes the boundary.
 
 A bootloader, outside this tree, starts the firmware image in flash. The
 kernel's reset handler sets up memory and the SoC, then starts the scheduler
-with `main()` (`fw/main.c`) on the main thread, KernelMain. `main()` brings up
+with `main()` (`pebble/main.c`) on the main thread, KernelMain. `main()` brings up
 the drivers and services and launches the first app, normally the watchface.
 {doc}`../kernel/boot` details the early steps.
 

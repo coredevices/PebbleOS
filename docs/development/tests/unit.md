@@ -21,7 +21,7 @@ its selection and reporting options are all available:
 
 - `-R REGEX`: run the tests whose name matches, e.g. `pbl test -R animation`
 - `-L LABEL`: run by label; every test is labelled with its directory
-  (`tests/fw/ui`) and its platform (`emery`, `gabbro`, `flint`)
+  (`tests/pebble/ui`) and its platform (`emery`, `gabbro`, `flint`)
 - `-N`: list the tests that would run instead of running them
 - `--rerun-failed`: re-run only what failed last time
 - `-j N`: run N tests at once (the default is one per core)
@@ -39,7 +39,7 @@ Each test is a standalone binary under `build-test/`, so a failing one can
 be run directly or under a debugger:
 
 ```shell
-gdb build-test/fw/ui/test_animation/runme
+gdb build-test/pebble/ui/test_animation/runme
 ```
 
 Results are written as JUnit XML to `build-test/junit.xml`, and a

@@ -2,7 +2,7 @@
 
 PebbleOS is the kernel, the drivers, the subsystems and the libraries. What
 runs on top of it is an application: the code that provides `main()`. The
-watch firmware under `fw/` is one; anything else, from a driver test to a
+watch firmware under `pebble/` is one; anything else, from a driver test to a
 product that is not a watch, is another, built against PebbleOS from its
 own directory.
 
@@ -113,5 +113,5 @@ Subsystems are off unless the application asks for them, e.g.
 application does with it, such as the firmware's backlight levels on
 `obelix`, goes in the application's `boards/obelix.conf`.
 
-The firmware follows the same layout: `fw/prj.conf`, `fw/prj_normal.conf`,
-`fw/prj_prf.conf`, `fw/boards/` and `fw/Kconfig`.
+The firmware follows the same layout: `pebble/prj.conf`, `pebble/prj_normal.conf`,
+`pebble/prj_prf.conf`, `pebble/boards/` and `pebble/Kconfig`.

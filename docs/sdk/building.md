@@ -20,7 +20,7 @@ native watchapps, all under `build/`:
   arguments to a builtin can be exported.
 - `build/sdk/<platform>/lib/libpebble.a` — static library containing
   trampolines that call the exported functions in flash
-- `build/fw/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
+- `build/pebble/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
   pointers the trampolines use to find an exported function's address;
   compiled into the firmware image
 

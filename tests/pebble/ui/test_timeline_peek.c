@@ -1,0 +1,460 @@
+/* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <stdio.h>
+
+#include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/buffer.h>
+#include <pbl/util/hash.h>
+#include <pbl/util/math.h>
+#include <pbl/util/size.h>
+#include <pbl/util/trig.h>
+
+#include <applib/graphics/bitblt.h>
+#include <applib/graphics/framebuffer.h>
+#include <applib/graphics/graphics.h>
+#include <applib/graphics/raw_image.h>
+#include <applib/ui/app_window_stack.h>
+#include <applib/ui/text_layer.h>
+#include <applib/ui/window_private.h>
+#include <clar.h>
+#include <popups/timeline/peek_private.h>
+#include <resource/resource.h>
+#include <resource/resource_ids.auto.h>
+
+// Fakes
+/////////////////////
+
+#include <pbl/services/time.h>
+#include <pbl/util/units.h>
+
+#include <fake_pfs.h>
+#include <fake_rtc.h>
+#include <fake_spi_flash.h>
+#include <fixtures/load_test_resources.h>
+#include <fixtures/screen_grid.h>
+
+void clock_get_until_time(char *buffer, int buf_size, time_t timestamp, int max_relative_hrs) {
+  snprintf(buffer, buf_size, "In 5 minutes");
+}
+
+// Stubs
+/////////////////////
+
+// Helper Functions
+/////////////////////
+
+#include <pebble/graphics/test_graphics.h>
+#include <pebble/graphics/util.h>
+
+static GContext s_ctx;
+
+GContext *graphics_context_get_current_context(void) {
+  return &s_ctx;
+}
+
+static bool s_is_watchface_running;
+
+bool app_manager_is_watchface_running(void) {
+  return s_is_watchface_running;
+}
+
+// Setup and Teardown
+////////////////////////////////////
+
+static FrameBuffer s_fb;
+
+static GBitmap *s_dest_bitmap;
+
+void test_timeline_peek__initialize(void) {
+  // Setup time
+  TimezoneInfo tz_info = {
+    .tm_zone = "UTC",
+  };
+  time_util_update_timezone(&tz_info, 0, 0);
+  tz_storage_save(&tz_info);
+  pbl_realtime_set(PBL_SEC_PER_DAY);
+
+  // We start time out at 5pm on Jan 1, 2015 for all of these tests
+  struct pbl_tm time_tm = {
+    // Thursday, Jan 1, 2015, 5pm
+    .tm_hour = 17,
+    .tm_mday = 1,
+    .tm_year = 115
+  };
+
+  const time_t utc_sec = pbl_mktime(&time_tm);
+  fake_rtc_init(0 /* initial_ticks */, utc_sec);
+
+  // Setup graphics context
+  framebuffer_init(&s_fb, &DISP_FRAME.size);
+  framebuffer_clear(&s_fb);
+  graphics_context_init(&s_ctx, &s_fb, GContextInitializationMode_App);
+  s_app_state_get_graphics_context = &s_ctx;
+
+  // Setup resources
+  fake_spi_flash_init(0 /* offset */, 0x1000000 /* length */);
+  fake_pfs_mount();
+  pbl_fs_format("/");
+  load_resource_fixture_in_flash(RESOURCES_FIXTURE_PATH, SYSTEM_RESOURCES_FIXTURE_NAME,
+                                 false /* is_next */);
+  resource_init();
+
+  // Initialize peek
+  s_is_watchface_running = true;
+  timeline_peek_init();
+}
+
+void test_timeline_peek__cleanup(void) {
+  system_theme_set_content_size(PreferredContentSizeDefault);
+}
+
+// Helpers
+//////////////////////
+
+static void prv_render_layer(Layer *layer, const GRect *box, bool use_screen) {
+  gbitmap_destroy(s_dest_bitmap);
+
+  const GRect *drawing_box = use_screen ? &DISP_FRAME : box;
+  const GSize bitmap_size = drawing_box->size;
+  s_dest_bitmap = gbitmap_create_blank(bitmap_size, GBITMAP_NATIVE_FORMAT);
+
+  s_ctx.dest_bitmap = *s_dest_bitmap;
+  s_ctx.draw_state.clip_box.size = bitmap_size;
+  s_ctx.draw_state.drawing_box = *drawing_box;
+
+  layer_render_tree(layer, &s_ctx);
+
+  if (use_screen) {
+    GBitmap *screen_bitmap = s_dest_bitmap;
+    screen_bitmap->bounds = (GRect){gpoint_neg(box->origin), box->size};
+    s_dest_bitmap =
+        gbitmap_create_blank(box->size, PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
+    bitblt_bitmap_into_bitmap(s_dest_bitmap, screen_bitmap, GPointZero, GCompOpAssign, GColorClear);
+    gbitmap_destroy(screen_bitmap);
+  }
+}
+
+typedef struct TimelinePeekItemConfig {
+  time_t timestamp;
+  const char *title;
+  const char *subtitle;
+  TimelineResourceId icon;
+  int num_concurrent;
+} TimelinePeekItemConfig;
+
+static TimelineItem *prv_set_timeline_item(const TimelinePeekItemConfig *config, bool animated) {
+  TimelineItem *item = nullptr;
+  const time_t now = pbl_realtime();
+  const time_t timestamp = config ? (config->timestamp ?: now) : now;
+  if (config) {
+    AttributeList list;
+    attribute_list_init_list(3 /* num_attributes */, &list);
+    attribute_list_add_cstring(&list, AttributeIdTitle, config->title);
+    if (config->subtitle) {
+      attribute_list_add_cstring(&list, AttributeIdSubtitle, config->subtitle);
+    }
+    attribute_list_add_uint32(&list, AttributeIdIconPin, config->icon);
+    item = timeline_item_create_with_attributes(timestamp, PBL_MIN_PER_HOUR, TimelineItemTypePin,
+                                                LayoutIdGeneric, &list, nullptr);
+    attribute_list_destroy_list(&list);
+  }
+  timeline_peek_set_item(item, timestamp >= now, config ? config->num_concurrent : 0,
+                         false /* first */, animated);
+  return item;
+}
+
+static void prv_render_timeline_peek(const TimelinePeekItemConfig *config) {
+  TimelineItem *item = prv_set_timeline_item(config, false /* animated */);
+  // Force timeline peek to be visible
+  timeline_peek_set_visible(true, false /* animated */);
+
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // For text flow, the whole screen is needed. Render the screen, then reduce to the layer.
+  const bool use_screen = PBL_IF_ROUND_ELSE(true, false);
+  prv_render_layer(&peek->window.layer,
+                   &(GRect){gpoint_neg(layer->frame.origin), layer->frame.size}, use_screen);
+
+  timeline_item_destroy(item);
+}
+
+// Visual Layout Tests
+//////////////////////
+
+void test_timeline_peek__peek(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "CoreUX Design x Eng",
+    .subtitle = "ConfRM-Missile Command",
+    .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+    .num_concurrent = 0,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_newline(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "NY 3\nSF 12",
+    .subtitle = "Bottom of\nthe 9th",
+    .icon = TIMELINE_RESOURCE_TIMELINE_BASEBALL,
+    .num_concurrent = 1,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_title_only_newline(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "NY 3\nSF 12",
+    .icon = TIMELINE_RESOURCE_TIMELINE_BASEBALL,
+    .num_concurrent = 1,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_concurrent_1(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "NY 3 - SF 12",
+    .subtitle = "Bottom of the 9th",
+    .icon = TIMELINE_RESOURCE_TIMELINE_BASEBALL,
+    .num_concurrent = 1,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_concurrent_2(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "Stock for party 🍺",
+    .subtitle = "Pebble Pad on Park",
+    .icon = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,
+    .num_concurrent = 2,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_concurrent_2_max(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = ":parrot: :parrot:",
+    .subtitle = ":parrot: :parrot: :parrot:",
+    .icon = TIMELINE_RESOURCE_GENERIC_CONFIRMATION,
+    .num_concurrent = 3,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_title_only(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "Trash up the Place 🔥",
+    .icon = TIMELINE_RESOURCE_TIDE_IS_HIGH,
+    .num_concurrent = 0,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_title_only_concurrent_1(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "No Watch No Life",
+    .icon = TIMELINE_RESOURCE_DAY_SEPARATOR,
+    .num_concurrent = 1,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_title_only_concurrent_2(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .title = "OMG I think the text fits!",
+    .icon = TIMELINE_RESOURCE_GENERIC_WARNING,
+    .num_concurrent = 2,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_timeline_peek__peek_in_5_minutes(void) {
+  prv_render_timeline_peek(&(TimelinePeekItemConfig){
+    .timestamp = pbl_realtime() + (5 * PBL_SEC_PER_MIN),
+    .title = "Stock for party 🍺",
+    .subtitle = "Pebble Pad on Park",
+    .icon = TIMELINE_RESOURCE_NOTIFICATION_REMINDER,
+    .num_concurrent = 2,
+  });
+  cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+// Content Size Tests
+//////////////////////
+
+static const TimelinePeekItemConfig s_content_size_items[] = {
+  {
+    .title = "CoreUX Design x Eng",
+    .subtitle = "ConfRM-Missile Command",
+    .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+  },
+  {
+    .title = "OMG I think the text fits!",
+    .icon = TIMELINE_RESOURCE_GENERIC_WARNING,
+    .num_concurrent = 2,
+  },
+};
+
+//! Renders the whole screen with the peek in place
+static void prv_render_timeline_peek_screen(const TimelinePeekItemConfig *config) {
+  TimelineItem *item = prv_set_timeline_item(config, false /* animated */);
+  timeline_peek_set_visible(true, false /* animated */);
+  prv_render_layer(&timeline_peek_get_peek()->window.layer, &DISP_FRAME, false /* use_screen */);
+  timeline_item_destroy(item);
+}
+
+void test_timeline_peek__content_sizes(void) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, ARRAY_LENGTH(s_content_size_items));
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
+    system_theme_set_content_size(size);
+    for (size_t row = 0; row < ARRAY_LENGTH(s_content_size_items); row++) {
+      prv_render_timeline_peek_screen(&s_content_size_items[row]);
+      screen_grid_add(&grid, &s_ctx, size, row);
+    }
+  }
+  screen_grid_check(&grid, TEST_PBI_FILE);
+}
+
+// Visibility Tests
+//////////////////////
+
+void test_timeline_peek__peek_visibility(void) {
+  prv_set_timeline_item(nullptr, false /* animated */);
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // Normally it is animated, but for this unit test, we don't request `animated`
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Peek service shows the peek UI. Not animated for this unit test.
+  prv_set_timeline_item(
+      &(TimelinePeekItemConfig){
+        .title = "CoreUX Design x Eng",
+        .subtitle = "ConfRM-Missile Command",
+        .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+        .num_concurrent = 0,
+      },
+      false /* animated */);
+  // Peek should now be on-screen.
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
+
+  // Peek service hides the peek UI. Not animated for this unit test.
+  prv_set_timeline_item(nullptr, false /* animated */);
+  // Peek should now be off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+}
+
+void test_timeline_peek__peek_visible_to_hidden_outside_of_watchface(void) {
+  TimelineItem *item = prv_set_timeline_item(
+      &(TimelinePeekItemConfig){
+        .title = "CoreUX Design x Eng",
+        .subtitle = "ConfRM-Missile Command",
+        .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+        .num_concurrent = 0,
+      },
+      false /* animated */);
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // Normally it is animated, but for this unit test, we don't request `animated`
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
+
+  // Transition away from the watchface
+  s_is_watchface_running = false;
+  timeline_peek_set_visible(false, false /* animated */);
+  // For simplicity, the implementation also moves the layer even though it is not necessary.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Peek service hides the peek UI using the animated code path.
+  prv_set_timeline_item(nullptr, true /* animated */);
+  // This time we set the item to NULL, not just request invisibility. Since we're not in the
+  // watchface, even though `animated` was requested, it should immediately move the position.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition back to the watchface
+  s_is_watchface_running = true;
+  timeline_peek_set_visible(true, false /* animated */);
+  // Peek should be visible again, but it should still be off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+  timeline_item_destroy(item);
+}
+
+void test_timeline_peek__peek_hidden_to_visible_outside_of_watchface(void) {
+  prv_set_timeline_item(nullptr, false /* animated */);
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // Normally it is animated, but for this unit test, we don't request `animated`
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition away from the watchface
+  s_is_watchface_running = false;
+  timeline_peek_set_visible(false, false /* animated */);
+  // For simplicity, the implementation also moves the layer even though it is not necessary.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Peek service shows the peek UI using the animated code path.
+  TimelineItem *item = prv_set_timeline_item(
+      &(TimelinePeekItemConfig){
+        .title = "CoreUX Design x Eng",
+        .subtitle = "ConfRM-Missile Command",
+        .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+        .num_concurrent = 0,
+      },
+      true /* animated */);
+  // Since we're not in the watchface, the peek remains off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition back to the watchface
+  s_is_watchface_running = true;
+  timeline_peek_set_visible(true, false /* animated */);
+  // Peek should be visible again and now on-screen.
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
+  timeline_item_destroy(item);
+}
+
+void test_timeline_peek__peek_visible_leaving_and_entering_watchface(void) {
+  TimelineItem *item = prv_set_timeline_item(
+      &(TimelinePeekItemConfig){
+        .title = "CoreUX Design x Eng",
+        .subtitle = "ConfRM-Missile Command",
+        .icon = TIMELINE_RESOURCE_TIMELINE_CALENDAR,
+        .num_concurrent = 0,
+      },
+      false /* animated */);
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // Normally it is animated, but for this unit test, we don't request `animated`
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
+
+  // Transition away from the watchface
+  s_is_watchface_running = false;
+  timeline_peek_set_visible(false, false /* animated */);
+  // For simplicity, the implementation also moves the layer even though it is not necessary.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition back to the watchface
+  s_is_watchface_running = true;
+  timeline_peek_set_visible(true, false /* animated */);
+  // Peek should be visible again and on-screen.
+  cl_assert(layer->frame.origin.y < PBL_DISPLAY_HEIGHT);
+  timeline_item_destroy(item);
+}
+
+void test_timeline_peek__peek_hidden_leaving_and_entering_watchface(void) {
+  prv_set_timeline_item(nullptr, true /* animated */);
+  TimelinePeek *peek = timeline_peek_get_peek();
+  const Layer *layer = &peek->layout_layer;
+  // Peek should be off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition away from the watchface
+  s_is_watchface_running = false;
+  timeline_peek_set_visible(false, false /* animated */);
+  // Peek should be hidden and off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+
+  // Transition back to the watchface
+  s_is_watchface_running = true;
+  timeline_peek_set_visible(true, false /* animated */);
+  // Peek should be visible again, but it should still be off-screen.
+  cl_assert(layer->frame.origin.y >= PBL_DISPLAY_HEIGHT);
+}

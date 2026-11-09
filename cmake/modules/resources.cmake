@@ -32,7 +32,7 @@ endfunction()
 # Called once, after every directory has been added, so the dynamic
 # resources are all registered.
 function(pbl_resources)
-  set(fw_bin ${PROJECT_BINARY_DIR}/fw)
+  set(fw_bin ${PROJECT_BINARY_DIR}/pebble)
   set(manifest ${PROJECT_BINARY_DIR}/resources/manifest.pickle)
   set(ball ${PROJECT_BINARY_DIR}/system_resources.resball)
   set(pbpack ${PROJECT_BINARY_DIR}/system_resources.pbpack)
