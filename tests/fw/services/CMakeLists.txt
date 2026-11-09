@@ -42,10 +42,21 @@ pbl_clar_test(test_get_bytes
   DEFINES CONFIG_SOC_POSIX
 )
 
+pbl_clar_test(test_language_pack
+  MODULES resources
+  SOURCES
+    fw/services/i18n/i18n.c
+    fw/services/language_pack/language_pack.c
+    tests/fakes/fake_bootbits.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_language_pack_storage
   SOURCES
     fw/services/put_bytes/put_bytes_storage_file.c
     fw/services/i18n/i18n.c
+    fw/services/language_pack/language_pack.c
     fw/resource/resource.c
     fw/resource/resource_storage.c
     fw/resource/resource_storage_builtin.c

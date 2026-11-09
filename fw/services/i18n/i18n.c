@@ -25,25 +25,18 @@
  *
  */
 
-#include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/i18n/i18n.h>
 #include <pbl/services/i18n/mo.h>
 #include <pbl/util/list.h>
-
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
-#include <resource/language_pack.h>
-#include <resource/resource.h>
-#include <resource/resource_ids.auto.h>
-#include <shell/normal/language_ui.h>
-#include <shell/prefs.h>
+#include <pbl/util/math.h>
 
 PBL_LOG_MODULE_DEFINE(service_i18n, CONFIG_SERVICE_I18N_LOG_LEVEL);
 
@@ -57,24 +50,35 @@ typedef struct {
   const void *owner;
 } StringLookupInfo;
 
+typedef struct {
+  ListNode node;
+  const void *owner;
+  uint32_t original_hash;
+  // Stored right after translated_string
+  char *original_string;
+  char translated_string[];
+} I18nString;
+
 static struct DomainBinding {
-  uint32_t resource_id;
-  ResourceCallbackHandle watch_handle;
-  bool need_reload;
-  ResourceVersion version;
+  struct pbl_i18n_catalog catalog;
   MoHandle mohandle;
   I18nString *strings_list;
-  char iso_locale[ISO_LOCALE_LENGTH];
-  char lang_name[LOCALE_NAME_LENGTH];
-  uint16_t lang_version;
+  struct pbl_i18n_catalog_info info;
 } s_system_domain;
 
+static PBL_MUTEX_DEFINE(s_mutex);
+
 static void prv_list_flush(void);
+
+static bool prv_read(const struct pbl_i18n_catalog *catalog, uint32_t offset, void *buf,
+                     size_t length) {
+  return catalog->read(catalog->data, offset, buf, length) == 0;
+}
 
 ///////////////////////////////////////////////////
 // MO File Hash Table
 
-uint32_t prv_gettext_hash(const char *str) {
+static uint32_t prv_gettext_hash(const char *str) {
   const uint8_t *p;
   uint32_t hash = 0, tmp;
 
@@ -127,16 +131,14 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
       return;
     }
     MoEntry oentry;
-    if (resource_load_byte_range_system(0, db->resource_id,
-                                        mohandle->mo.hdr.mo_otable + sizeof(MoEntry) * strno,
-                                        (uint8_t *)&oentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+    if (!prv_read(&db->catalog, mohandle->mo.hdr.mo_otable + sizeof(MoEntry) * strno, &oentry,
+                  sizeof(MoEntry))) {
       return;
     }
     if (len == oentry.len) {
       // Length of original matches, compare the contents
       char key[oentry.len + 1];
-      if (resource_load_byte_range_system(0, db->resource_id, oentry.off, (uint8_t *)key,
-                                          oentry.len) != oentry.len) {
+      if (!prv_read(&db->catalog, oentry.off, key, oentry.len)) {
         return;
       }
       key[oentry.len] = '\0';
@@ -144,9 +146,8 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
       if (!strcmp(msgid, key)) {
         // Contents of original string matches, get the translated string
         MoEntry tentry;
-        if (resource_load_byte_range_system(
-                0, db->resource_id, mohandle->mo.hdr.mo_ttable + sizeof(MoEntry) * strno,
-                (uint8_t *)&tentry, sizeof(MoEntry)) != sizeof(MoEntry)) {
+        if (!prv_read(&db->catalog, mohandle->mo.hdr.mo_ttable + sizeof(MoEntry) * strno, &tentry,
+                      sizeof(MoEntry))) {
           return;
         }
         if (rstring) { // If we want the translated string, copy it out.
@@ -154,8 +155,7 @@ static void prv_lookup(const char *msgid, struct DomainBinding *db, size_t *rlen
           // Leave space for the null-terminator as well.
           const size_t read_length = MIN(tentry.len, rstring_len - 1);
 
-          if (resource_load_byte_range_system(0, db->resource_id, tentry.off, (uint8_t *)rstring,
-                                              read_length) != read_length) {
+          if (!prv_read(&db->catalog, tentry.off, rstring, read_length)) {
             return;
           }
 
@@ -195,17 +195,16 @@ static bool prv_get_property(const char *header, const char *name, char *buffer,
 
 #define HEADER_BUFFER_SIZE 400
 
-static bool prv_parse_metadata(const char *header, char *iso_locale, char *lang_name,
-                               uint16_t *lang_version) {
+static bool prv_parse_metadata(const char *header, struct pbl_i18n_catalog_info *info) {
   // Isolate the language substring
-  if (!prv_get_property(header, "Language: ", iso_locale, ISO_LOCALE_LENGTH)) {
+  if (!prv_get_property(header, "Language: ", info->locale, ISO_LOCALE_LENGTH)) {
     PBL_LOG_WRN("Could not parse a language from language pack");
     return false;
   }
 
   // Isolate the language name
-  if (!prv_get_property(header, "Name: ", lang_name, LOCALE_NAME_LENGTH)) {
-    strcpy(lang_name, iso_locale);
+  if (!prv_get_property(header, "Name: ", info->name, LOCALE_NAME_LENGTH)) {
+    strcpy(info->name, info->locale);
   }
 
   // Isolate the version value
@@ -215,13 +214,13 @@ static bool prv_parse_metadata(const char *header, char *iso_locale, char *lang_
     return false;
   }
   char *version_end;
-  *lang_version = strtol(version_str, &version_end, 0);
+  info->version = strtol(version_str, &version_end, 0);
   if (version_end == version_str) {
     PBL_LOG_WRN("Could not parse a version from language pack");
     return false;
   }
 
-  PBL_LOG_DBG("language: %s, version %d", iso_locale, *lang_version);
+  PBL_LOG_DBG("language: %s, version %d", info->locale, info->version);
   return true;
 }
 
@@ -238,103 +237,77 @@ static bool prv_get_metadata(struct DomainBinding *db) {
     goto cleanup;
   }
 
-  success = prv_parse_metadata(header, db->iso_locale, db->lang_name, &db->lang_version);
+  success = prv_parse_metadata(header, &db->info);
 
 cleanup:
   pbl_free(header);
   return (success);
 }
 
-static int prv_unmapit(struct DomainBinding *db) {
+static void prv_unmapit(struct DomainBinding *db) {
   MoHandle *mohandle = &db->mohandle;
 
   pbl_free(mohandle->mo.mo_htable);
-  mohandle->mo.mo_htable = nullptr;
   mohandle->mo = (Mo){};
-  strcpy(db->iso_locale, "en_US");
-  strcpy(db->lang_name, "English");
-  db->lang_version = 1;
-
-  return 0;
+  db->info = (struct pbl_i18n_catalog_info){
+    .locale = "en_US",
+    .name = "English",
+    .version = 1,
+  };
 }
 
-static bool prv_mapit(const uint32_t resource_id, struct DomainBinding *db) {
-  // If the resource is changed on disk, our resource_watch callback will set need_reload
-  if (!db->need_reload) {
-    return (db->version.crc != 0);
-  }
-
-  PBL_LOG_DBG("New language detected!");
-  db->need_reload = false;
-
-  /* save version */
-  db->version = resource_get_version(SYSTEM_APP, resource_id);
-  prv_list_flush();
-  prv_unmapit(db);
-
-  unsigned int size;
-  if ((size = resource_size(SYSTEM_APP, resource_id)) < sizeof(MoHeader)) {
-    goto fail;
-  }
-
-  if (!resource_is_valid(SYSTEM_APP, resource_id)) {
-    goto fail;
+static int prv_mapit(struct DomainBinding *db) {
+  const size_t size = db->catalog.size;
+  if (size < sizeof(MoHeader)) {
+    return -EINVAL;
   }
 
   MoHandle *mohandle = &db->mohandle;
-  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0, (uint8_t *)&mohandle->mo.hdr,
-                                      sizeof(MoHeader)) == 0) {
-    goto fail;
+  if (!prv_read(&db->catalog, 0, &mohandle->mo.hdr, sizeof(MoHeader))) {
+    return -EIO;
   }
   if (mohandle->mo.hdr.mo_magic != MO_MAGIC) {
-    goto fail;
+    return -EINVAL;
   }
 
   mohandle->len = size;
   /* validate htable */
   if (mohandle->mo.hdr.mo_hsize <= 2 || mohandle->mo.hdr.mo_hsize > size / sizeof(uint32_t)) {
-    goto fail;
+    return -EINVAL;
   }
 
   size_t htable_size = sizeof(uint32_t) * mohandle->mo.hdr.mo_hsize;
   if (mohandle->mo.hdr.mo_hoffset > size || htable_size > size - mohandle->mo.hdr.mo_hoffset) {
-    goto fail;
+    return -EINVAL;
   }
   // A corrupt pack can claim an htable close to its own size
   uint32_t *htable = pbl_malloc(htable_size);
   if (!htable) {
-    goto fail;
+    return -ENOMEM;
   }
   mohandle->mo.mo_htable = htable;
-  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, mohandle->mo.hdr.mo_hoffset,
-                                      (uint8_t *)htable, htable_size) == 0) {
-    prv_unmapit(db);
-    goto fail;
+  if (!prv_read(&db->catalog, mohandle->mo.hdr.mo_hoffset, htable, htable_size)) {
+    return -EIO;
   }
 
   for (unsigned int i = 0; i < mohandle->mo.hdr.mo_hsize; ++i) {
     if (htable[i] > mohandle->mo.hdr.mo_nstring) {
       /* illegal string number */
-      prv_unmapit(db);
-      goto fail;
+      return -EINVAL;
     }
   }
 
   if (!prv_get_metadata(db)) {
-    prv_unmapit(db);
-    goto fail;
+    return -EINVAL;
   }
 
-  return true;
-
-fail:
-  return false;
+  return 0;
 }
 
 ///////////////////////////////////////////////////
 // Strings List Manipulation
 
-void prv_list_flush(void) {
+static void prv_list_flush(void) {
   ListNode *cur = (ListNode *)s_system_domain.strings_list;
   while (cur) {
     ListNode *next = list_get_next(cur);
@@ -364,8 +337,7 @@ static bool prv_list_owner_filter_callback(ListNode *found_node, void *owner) {
   }
 }
 
-// Not static because we call this from unit test code
-I18nString *prv_list_find_string(const char *string, const void *owner) {
+static I18nString *prv_list_find_string(const char *string, const void *owner) {
   StringLookupInfo lookup_info = {
     .string = string,
     .hash = prv_gettext_hash(string),
@@ -410,7 +382,7 @@ static void prv_list_remove_string(I18nString *i18n_string) {
 }
 
 static bool prv_check_domain(struct DomainBinding *db) {
-  return (prv_mapit(s_system_domain.resource_id, db));
+  return db->mohandle.mo.mo_htable != nullptr;
 }
 
 static const char *prv_message_from_msgid(const char *msgid) {
@@ -432,7 +404,7 @@ static const char *prv_message_from_msgid(const char *msgid) {
 // NOTE: Currently, we don't do reference counting, so bad things will happen if the caller
 // calls i18n_get() on the same string more than once and assumes that any of those return
 // pointers will still be valid after i18n_free() is called on one of them.
-const char *i18n_get(const char *msgid, const void *owner) {
+static const char *prv_get_locked(const char *msgid, const void *owner) {
   PBL_ASSERTN(owner);
   if (msgid == nullptr || msgid[0] == 0) {
     goto fail;
@@ -473,7 +445,7 @@ fail:
   return prv_message_from_msgid(msgid);
 }
 
-void i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
+static void prv_get_with_buffer_locked(const char *msgid, char *buffer, size_t length) {
   if (length == 0) {
     // Nothing fits, and buffer[length - 1] below would wrap to an OOB write.
     return;
@@ -504,7 +476,7 @@ fail:
   buffer[length - 1] = '\0';
 }
 
-size_t i18n_get_length(const char *msgid) {
+static size_t prv_get_length_locked(const char *msgid) {
   if (msgid == nullptr || msgid[0] == 0) {
     return 0;
   }
@@ -526,7 +498,7 @@ fail:
   return strlen(msgid);
 }
 
-void i18n_free(const char *original, const void *owner) {
+static void prv_free_locked(const char *original, const void *owner) {
   PBL_ASSERTN(owner);
   I18nString *i18n_string = prv_list_find_string(original, owner);
   if (i18n_string) {
@@ -534,7 +506,7 @@ void i18n_free(const char *original, const void *owner) {
   }
 }
 
-void i18n_free_all(const void *owner) {
+static void prv_free_all_locked(const void *owner) {
   I18nString *cur_string = (I18nString *)list_find((ListNode *)s_system_domain.strings_list,
                                                    prv_list_owner_filter_callback, (void *)owner);
   while (cur_string) {
@@ -545,223 +517,104 @@ void i18n_free_all(const void *owner) {
   }
 }
 
-static uint32_t prv_language_id(void) {
-  return s_system_domain.mohandle.mo.mo_htable ? s_system_domain.version.crc : 0;
-}
+static int prv_set_catalog_locked(const struct pbl_i18n_catalog *catalog) {
+  struct DomainBinding *db = &s_system_domain;
 
-static void prv_put_event_if_changed(uint32_t prev_language_id) {
-  if (prv_language_id() == prev_language_id) {
-    return;
-  }
-
-  PebbleEvent event = {
-    .type = PEBBLE_LANGUAGE_CHANGE_EVENT,
-  };
-  event_put(&event);
-}
-
-static void prv_resource_changed_handler(void *data) {
-  struct DomainBinding *db = (struct DomainBinding *)data;
-  // Mark as invalid
-  PBL_LOG_DBG("lang resource file reloading");
-  const uint32_t prev_language_id = prv_language_id();
-  if (!shell_prefs_get_language_english()) {
-    db->need_reload = true;
-    prv_mapit(db->resource_id, db);
-  }
-  prv_put_event_if_changed(prev_language_id);
-}
-
-static void prv_resource_changed_callback(void *data) {
-  // We want to not actually handle the reload here, because the PFS lock is still held here.
-  // So instead we throw in the reload as an event callback.
-  PBL_LOG_DBG("lang resource file was modified");
-  launcher_task_add_callback(prv_resource_changed_handler, data);
-}
-
-#ifndef CONFIG_RECOVERY_FW
-// Pack slot a PutBytes transfer holds open, or LANGUAGE_PACK_COUNT
-static uint8_t s_install_slot = LANGUAGE_PACK_COUNT;
-
-// Language changes remap s_system_domain, so they run on the launcher task like its readers.
-static void prv_deselect_pack_cb(void *data) {
-  const uint8_t slot = (uintptr_t)data;
-  // Even with English toggled on: toggling it off would select whatever the slot holds by then.
-  if (shell_prefs_get_language() == shell_language_for_pack_slot(slot)) {
-    shell_prefs_set_language(ShellLanguageEnglish);
-  }
-}
-
-static void prv_deselect_pack(uint8_t slot) {
-  launcher_task_add_callback(prv_deselect_pack_cb, (void *)(uintptr_t)slot);
-}
-
-static void prv_select_installed_pack_cb(void *data) {
-  shell_prefs_set_language(ShellLanguageInstalledPack);
-  if (s_system_domain.mohandle.mo.mo_htable) {
-    language_ui_display_changed(s_system_domain.lang_name);
-  }
-}
-#endif
-
-static void prv_unset(void) {
-  s_system_domain.need_reload = false;
   prv_list_flush();
-  prv_unmapit(&s_system_domain);
-}
-
-void i18n_set_resource(uint32_t resource_id) {
-  // Remove prior watch, if any
-  // Warning: you better be sure we're not calling from the resource changed callback.
-  if (s_system_domain.watch_handle) {
-    resource_unwatch(s_system_domain.watch_handle);
+  prv_unmapit(db);
+  if (catalog == nullptr) {
+    return 0;
   }
 
-  s_system_domain.resource_id = resource_id;
-  s_system_domain.watch_handle =
-      resource_watch(SYSTEM_APP, resource_id, prv_resource_changed_callback, &s_system_domain);
-
-  const uint32_t prev_language_id = prv_language_id();
-  if (shell_prefs_get_language_english()) {
-    prv_unset();
-  } else {
-    s_system_domain.need_reload = true;
-    // try mapping it right away
-    prv_mapit(resource_id, &s_system_domain);
+  db->catalog = *catalog;
+  const int ret = prv_mapit(db);
+  if (ret != 0) {
+    prv_unmapit(db);
   }
-  prv_put_event_if_changed(prev_language_id);
+  return ret;
 }
 
-char *i18n_get_locale(void) {
-  return (s_system_domain.iso_locale);
+const char *i18n_get(const char *msgid, const void *owner) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  const char *string = prv_get_locked(msgid, owner);
+  pbl_mutex_unlock(&s_mutex);
+  return string;
 }
 
-uint16_t i18n_get_version(void) {
-  return (s_system_domain.lang_version);
+void i18n_get_with_buffer(const char *msgid, char *buffer, size_t length) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  prv_get_with_buffer_locked(msgid, buffer, length);
+  pbl_mutex_unlock(&s_mutex);
 }
 
-char *i18n_get_lang_name(void) {
-  return (s_system_domain.lang_name);
+size_t i18n_get_length(const char *msgid) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  const size_t length = prv_get_length_locked(msgid);
+  pbl_mutex_unlock(&s_mutex);
+  return length;
 }
 
-void i18n_enable(bool enable) {
-  const uint32_t prev_language_id = prv_language_id();
-  if (enable) {
-    s_system_domain.need_reload = true;
-    prv_mapit(s_system_domain.resource_id, &s_system_domain);
-  } else {
-    prv_unset();
-  }
-  prv_put_event_if_changed(prev_language_id);
+void i18n_free(const char *original, const void *owner) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  prv_free_locked(original, owner);
+  pbl_mutex_unlock(&s_mutex);
 }
 
-bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
-#ifndef CONFIG_RECOVERY_FW
-  if (slot >= LANGUAGE_PACK_COUNT || !info) {
-    return false;
-  }
-  const uint32_t resource_id =
-      language_pack_resource_id(slot, RESOURCE_ID_STRINGS, RESOURCE_ID_STRINGS);
-  // Only the header entry is needed, which msgfmt sorts first; skip the htable and CRC.
+void i18n_free_all(const void *owner) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  prv_free_all_locked(owner);
+  pbl_mutex_unlock(&s_mutex);
+}
+
+int pbl_i18n_set_catalog(const struct pbl_i18n_catalog *catalog) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  const int ret = prv_set_catalog_locked(catalog);
+  pbl_mutex_unlock(&s_mutex);
+  return ret;
+}
+
+int pbl_i18n_catalog_get_info(const struct pbl_i18n_catalog *catalog,
+                              struct pbl_i18n_catalog_info *info) {
+  // Only the header entry is needed, which msgfmt sorts first; skip the htable.
   MoHeader hdr;
   MoEntry original;
   MoEntry translation;
-  if (resource_load_byte_range_system(SYSTEM_APP, resource_id, 0, (uint8_t *)&hdr, sizeof(hdr)) !=
-          sizeof(hdr) ||
-      hdr.mo_magic != MO_MAGIC || hdr.mo_nstring == 0 ||
-      resource_load_byte_range_system(SYSTEM_APP, resource_id, hdr.mo_otable, (uint8_t *)&original,
-                                      sizeof(original)) != sizeof(original) ||
-      original.len != 0 ||
-      resource_load_byte_range_system(SYSTEM_APP, resource_id, hdr.mo_ttable,
-                                      (uint8_t *)&translation,
-                                      sizeof(translation)) != sizeof(translation)) {
-    return false;
+  if (!prv_read(catalog, 0, &hdr, sizeof(hdr))) {
+    return -EIO;
   }
+  if (hdr.mo_magic != MO_MAGIC || hdr.mo_nstring == 0) {
+    return -EINVAL;
+  }
+  if (!prv_read(catalog, hdr.mo_otable, &original, sizeof(original))) {
+    return -EIO;
+  }
+  if (original.len != 0) {
+    return -EINVAL;
+  }
+  if (!prv_read(catalog, hdr.mo_ttable, &translation, sizeof(translation))) {
+    return -EIO;
+  }
+
   char *header = pbl_malloc_check(HEADER_BUFFER_SIZE);
   const size_t length = MIN(translation.len, HEADER_BUFFER_SIZE - 1);
-  bool valid = resource_load_byte_range_system(SYSTEM_APP, resource_id, translation.off,
-                                               (uint8_t *)header, length) == length;
-  if (valid) {
+  int ret = -EIO;
+  if (prv_read(catalog, translation.off, header, length)) {
     header[length] = '\0';
-    // Zero-pad: the phone echoes these back and they are compared with memcmp.
-    *info = (I18nPackInfo){};
-    valid = prv_parse_metadata(header, info->locale, info->name, &info->version);
+    *info = (struct pbl_i18n_catalog_info){};
+    ret = prv_parse_metadata(header, info) ? 0 : -EINVAL;
   }
   pbl_free(header);
-  return valid;
-#else
-  return false;
-#endif
+  return ret;
 }
 
-bool i18n_pack_has_fonts(uint8_t slot) {
-#ifndef CONFIG_RECOVERY_FW
-  for (uint32_t font = RESOURCE_ID_GOTHIC_14_EXTENDED;
-       font <= RESOURCE_ID_LECO_60_BOLD_NUMBERS_AM_PM_EXTENDED; ++font) {
-    if (resource_is_valid(SYSTEM_APP, language_pack_resource_id(slot, font, RESOURCE_ID_STRINGS))) {
-      return true;
-    }
-  }
-#endif
-  return false;
+char *i18n_get_locale(void) {
+  return s_system_domain.info.locale;
 }
 
-bool i18n_remove_pack(uint8_t slot) {
-#ifndef CONFIG_RECOVERY_FW
-  const char *filename = language_pack_filename(slot);
-  if (!filename) {
-    return false;
-  }
-  // PFS croaks when deleting a file that a transfer still holds open
-  if (slot == s_install_slot || pbl_fs_unlink(filename) != 0) {
-    return false;
-  }
-  prv_deselect_pack(slot);
-  return true;
-#else
-  return false;
-#endif
+uint16_t i18n_get_version(void) {
+  return s_system_domain.info.version;
 }
 
-#ifndef CONFIG_RECOVERY_FW
-static bool s_select_on_install;
-
-const char *i18n_pack_install_begin(const char *filename) {
-  s_select_on_install = false;
-  s_install_slot = LANGUAGE_PACK_COUNT;
-  for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    if (strcmp(filename, language_pack_filename(slot)) == 0) {
-      // Legacy transfers replace slot zero and select it once complete.
-      s_select_on_install = slot == 0;
-      s_install_slot = slot;
-      return filename;
-    }
-  }
-  if (strcmp(filename, LANGUAGE_PACK_ADD_FILENAME) != 0) {
-    return filename;
-  }
-  for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    if (language_pack_is_installed(slot)) {
-      continue;
-    }
-    // The empty slot may still be selected, e.g. slot zero on a fresh watch.
-    prv_deselect_pack(slot);
-    s_install_slot = slot;
-    return language_pack_filename(slot);
-  }
-  return NULL;
-}
-
-void i18n_pack_install_end(bool success) {
-  if (success && s_select_on_install) {
-    launcher_task_add_callback(prv_select_installed_pack_cb, NULL);
-  }
-  s_select_on_install = false;
-  s_install_slot = LANGUAGE_PACK_COUNT;
-}
-#endif
-
-void command_i18n_resource(const char *arg) {
-  uint32_t resource_id = atoi(arg);
-  i18n_set_resource(resource_id);
+char *i18n_get_lang_name(void) {
+  return s_system_domain.info.name;
 }

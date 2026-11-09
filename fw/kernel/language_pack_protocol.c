@@ -9,6 +9,7 @@
 
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
+#include <pbl/services/language_pack.h>
 
 #include <resource/language_pack.h>
 #include <shell/prefs.h>
@@ -53,9 +54,9 @@ void language_pack_protocol_handle_list(struct pbl_pp_session *session, const ui
   for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
     LanguagePackRecord *record = &response.packs[slot];
     record->slot = slot;
-    I18nPackInfo info;
-    const bool translation = i18n_get_pack_info(slot, &info);
-    if (translation || i18n_pack_has_fonts(slot)) {
+    struct pbl_i18n_catalog_info info;
+    const bool translation = language_pack_get_info(slot, &info);
+    if (translation || language_pack_has_fonts(slot)) {
       record->flags = PACK_FLAG_PRESENT | PACK_FLAG_READABLE;
     } else if (language_pack_is_installed(slot)) {
       record->flags = PACK_FLAG_PRESENT;
@@ -94,7 +95,8 @@ static const SysMsgLanguagePackPayload *prv_parse(struct pbl_pp_session *session
   return NULL;
 }
 
-static bool prv_matches(const SysMsgLanguagePackPayload *request, const I18nPackInfo *info) {
+static bool prv_matches(const SysMsgLanguagePackPayload *request,
+                        const struct pbl_i18n_catalog_info *info) {
   return info ? request->version == info->version &&
                     memcmp(request->locale, info->locale, ISO_LOCALE_LENGTH) == 0
               : request->version == 0 &&
@@ -110,9 +112,10 @@ void language_pack_protocol_handle_remove(struct pbl_pp_session *session, const 
   }
   bool success = false;
   if (request->slot < LANGUAGE_PACK_COUNT) {
-    I18nPackInfo info;
-    const bool translation = i18n_get_pack_info(request->slot, &info);
-    success = prv_matches(request, translation ? &info : NULL) && i18n_remove_pack(request->slot);
+    struct pbl_i18n_catalog_info info;
+    const bool translation = language_pack_get_info(request->slot, &info);
+    success =
+        prv_matches(request, translation ? &info : NULL) && language_pack_remove(request->slot);
   }
   const SysMsgLanguagePackResultPayload response = {
     .type = SysMsgLanguagePackRemoveResponse,
@@ -137,8 +140,8 @@ void language_pack_protocol_handle_select(struct pbl_pp_session *session, const 
       shell_prefs_set_language(ShellLanguageEnglish);
     }
   } else if (request->slot < LANGUAGE_PACK_COUNT) {
-    I18nPackInfo info;
-    success = i18n_get_pack_info(request->slot, &info) && prv_matches(request, &info);
+    struct pbl_i18n_catalog_info info;
+    success = language_pack_get_info(request->slot, &info) && prv_matches(request, &info);
     if (success) {
       shell_prefs_set_language(shell_language_for_pack_slot(request->slot));
     }

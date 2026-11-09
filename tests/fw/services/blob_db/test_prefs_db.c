@@ -30,7 +30,7 @@ void prefs_sync_init(void) {
 void event_put(PebbleEvent *event) {
 }
 
-void i18n_enable(bool enable) {
+void language_pack_enable(bool enable) {
 }
 
 void test_prefs_db__initialize(void) {
