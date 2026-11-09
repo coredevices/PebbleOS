@@ -21,9 +21,9 @@
  * interrupt is connected by the board:
  *
  * @code{.c}
- * PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 3, PBL_GPIO(NRF5_GPIO_P0, 6, 0),
- *                     PBL_GPIO(NRF5_GPIO_P0, 8, 0), PBL_GPIO(NULL, 0, 0), NULL,
- *                     PBL_GPIO(NRF5_GPIO_P1, 3, PBL_GPIO_ACTIVE_LOW));
+ * PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 3, PBL_GPIO(&dt_gpio0, 6, 0),
+ *                     PBL_GPIO(&dt_gpio0, 8, 0), PBL_GPIO(NULL, 0, 0), NULL,
+ *                     PBL_GPIO(&dt_gpio1, 3, PBL_GPIO_ACTIVE_LOW));
  * PBL_IRQ_CONNECT(SPIM3, 7, pbl_spi_nrf5_irq_handler, &s_spi3, 0);
  * @endcode
  * @{

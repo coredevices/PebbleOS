@@ -1,0 +1,43 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "nrf/nrf52/nrf52840.dtsi"
+
+/ {
+	model = "Core Devices Pebble 2 Duo";
+	compatible = "coredevices,asterix", "nordic,nrf52840";
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+	scl-gpios = <&gpio0 25 GPIO_PULL_UP>;
+	sda-gpios = <&gpio0 11 GPIO_PULL_UP>;
+	status = "okay";
+
+	lsm6dso: imu@6a {
+		compatible = "st,lsm6dso";
+		reg = <0x6a>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <13 IRQ_TYPE_EDGE_RISING>;
+		mount-matrix = "0", "1", "0",
+			       "1", "0", "0",
+			       "0", "0", "1";
+	};
+
+	mmc5603nj: magnetometer@30 {
+		compatible = "memsic,mmc5603";
+		reg = <0x30>;
+		mount-matrix = "0", "1", "0",
+			       "-1", "0", "0",
+			       "0", "0", "1";
+	};
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	scl-gpios = <&gpio0 14 GPIO_PULL_UP>;
+	sda-gpios = <&gpio0 15 GPIO_PULL_UP>;
+	status = "okay";
+};

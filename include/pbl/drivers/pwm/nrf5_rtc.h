@@ -20,7 +20,7 @@
  * cycle stops the RTC and holds the output.
  *
  * @code{.c}
- * PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", 2, PBL_GPIO(NRF5_GPIO_P1, 15, 0), NULL);
+ * PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", 2, PBL_GPIO(&dt_gpio1, 15, 0), NULL);
  * @endcode
  * @{
  */

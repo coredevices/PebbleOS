@@ -13,7 +13,7 @@
  * @brief TI DRV2604 @ref drivers_vibe driver, driving an LRA in real-time playback mode.
  *
  * @code{.c}
- * PBL_DRV2604_DEFINE(s_drv2604, &s_i2c.bus, 0x5A, PBL_GPIO(NRF5_GPIO_P0, 2, 0));
+ * PBL_DRV2604_DEFINE(s_drv2604, &s_i2c.bus, 0x5A, PBL_GPIO(&dt_gpio0, 2, 0));
  *
  * const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
  * @endcode

@@ -24,7 +24,7 @@
  * @code{.c}
  * PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(s_display, "display",
  *     PBL_SPI_DEV(&s_spi3.bus, 0, 1000000, PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
- *     PBL_GPIO(NRF5_GPIO_P0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
+ *     PBL_GPIO(&dt_gpio0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
  * @endcode
  * @{
  */

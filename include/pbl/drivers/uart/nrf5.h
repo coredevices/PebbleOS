@@ -21,8 +21,8 @@
  * reception first starts. The UARTE interrupt is connected by the board:
  *
  * @code{.c}
- * PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(NRF5_GPIO_P0, 27, 0),
- *                      PBL_GPIO(NRF5_GPIO_P0, 5, 0), 2, nullptr);
+ * PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(&dt_gpio0, 27, 0),
+ *                      PBL_GPIO(&dt_gpio0, 5, 0), 2, nullptr);
  * PBL_IRQ_CONNECT(UART0_UARTE0, 7, pbl_uart_nrf5_irq_handler, &s_uart0, 0);
  * @endcode
  * @{

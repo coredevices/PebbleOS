@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/arm/nordic.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic SoC based boards
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+properties:
+  $nodename:
+    const: "/"
+  compatible:
+    oneOf:
+      - description: Core Devices Pebble 2 Duo (asterix)
+        items:
+          - const: coredevices,asterix
+          - const: nordic,nrf52840
+
+additionalProperties: true

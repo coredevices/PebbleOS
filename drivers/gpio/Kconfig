@@ -10,7 +10,8 @@ if GPIO
 
 config GPIO_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default DT_HAS_NORDIC_NRF52832_GPIO_ENABLED
+    depends on SOC_NRF52
     select INTC
     help
       Support for the Nordic nRF5 GPIO controller.
