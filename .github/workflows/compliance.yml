@@ -68,12 +68,14 @@ jobs:
             if $skip; then continue; fi
 
             if ! head -10 "$file" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
-              # Resolve the file's pre-PR identity: either same path or
-              # the source of a rename.
+              # Resolve the file's pre-PR identity: either same path or the
+              # source of a rename, followed commit by commit so a file moved
+              # and then edited is still recognized.
               origin="$file"
               if ! git cat-file -e "$base":"$origin" 2>/dev/null; then
-                origin=$(git diff --find-renames --diff-filter=R --name-status \
-                  "$base"...HEAD | awk -v f="$file" '$3 == f {print $2}')
+                origin=$(git log --follow --name-status --format= \
+                  "$base"..HEAD -- "$file" | awk -F '\t' 'NF { last = $0 }
+                  END { n = split(last, f, "\t"); if (n) print (f[1] ~ /^R/ ? f[2] : f[n]) }')
               fi
 
               # If the file (or its rename source) existed before this PR and
