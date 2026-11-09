@@ -7,6 +7,8 @@
 
 #define STACK_FILL 0xa5a5a5a5u
 
+extern const uint8_t __isr_stack_start__[];
+
 void pbl_thread_foreach(pbl_thread_info_fn fn, void *ctx) {
   for (struct pbl_thread *t = pbl_all_threads; t != nullptr; t = t->backend.all_next) {
     struct pbl_thread_info info = {
@@ -24,6 +26,18 @@ void pbl_thread_foreach(pbl_thread_info_fn fn, void *ctx) {
 
 void pbl_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs) {
   arch_thread_saved_regs(t, regs);
+}
+
+size_t pbl_stack_free(void) {
+  // The current SP, give or take a few bytes
+  uint8_t marker;
+  uintptr_t start = (uintptr_t)__isr_stack_start__ + CONFIG_KERNEL_STACK_GUARD_SIZE;
+
+  if (!arch_in_isr() && pbl_cur != nullptr) {
+    start = (uintptr_t)pbl_cur->stack;
+  }
+
+  return (uintptr_t)&marker - start;
 }
 
 void pbl_thread_stack_info(const struct pbl_thread *t, struct pbl_thread_stack_info *info) {
