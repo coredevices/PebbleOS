@@ -1,0 +1,7 @@
+description: One-shot timers, one that repeats by starting itself again, and stopping one
+expect:
+  - 'main: 5 blinks, the last one at least 100 ms after the start'
+  - 'main: started for 10 s, active: yes, more than 5 s left: yes'
+  - 'main: stopped, active: no'
+  - 'main: stopped before it expired, 0 blinks since'
+  - 'Sample done'
