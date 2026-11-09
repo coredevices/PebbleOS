@@ -360,6 +360,11 @@ static void handle_init(void) {
 
 static void handle_deinit(void) {
   prv_cancel_timers();
+  // The wall clock work items are in the app's heap.
+  for (int i = 0; i < NUM_MAX_TIMERS; i++) {
+    pbl_wallclock_work_stop(&s_app_data->reg_timers[i]);
+    pbl_work_flush(&s_app_data->reg_timers[i].work);
+  }
   // Don't bother freeing anything, the OS should be re-initing the heap.
 }
 
