@@ -17,6 +17,7 @@
 #include <kernel/panic.h>
 #include <process_management/pebble_process_md.h>
 #include <process_state/app_state/app_state.h>
+#include <system/reboot_reason.h>
 
 static const uint8_t sad_watch[] = {
   0x04, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x20, 0x00,

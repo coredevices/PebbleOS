@@ -59,6 +59,7 @@
 #include <shell/system_app_state_machine.h>
 #include <shell/system_shell.h>
 #include <syscall/syscall.h>
+#include <system/reboot_reason.h>
 
 // FreeRTOS stuff
 
