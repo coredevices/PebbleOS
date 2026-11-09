@@ -11,6 +11,7 @@
 #include <pbl/services/mic_manager.h>
 #include <pbl/services/voice/voice_speex.h>
 
+#include <kernel/volatile_heap.h>
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_header.h>
@@ -38,6 +39,7 @@ typedef struct {
   uint8_t *frame_buffer;
   size_t frame_buffer_size;
   uint8_t *encoded_buffer;
+  char *bits_buffer;
   size_t encoded_buffer_size;
 } VoiceSpeexEncoder;
 
@@ -53,6 +55,7 @@ static unsigned int s_users;
 #define SPEEX_QUALITY             6     // Quality level (0-10)
 #define SPEEX_COMPLEXITY          1     // Complexity (1-10, lower for embedded)
 #define SPEEX_ENCODED_BUFFER_SIZE 320   // Max encoded frame size
+#define SPEEX_BITS_BUFFER_SIZE    2000  // As allocated by speex_bits_init()
 #define SPEEX_AUDIO_GAIN          3     // Audio gain multiplier (3x)
 
 static bool prv_init_locked(void) {
@@ -79,8 +82,10 @@ static bool prv_init_locked(void) {
     return false;
   }
 
-  // Initialize bits structure
-  speex_bits_init(&s_encoder.bits);
+  // Initialize bits structure. Its buffer is only touched once per frame, so unlike the encoder
+  // state, it costs nothing measurable in the volatile heap.
+  s_encoder.bits_buffer = kernel_volatile_zalloc_check(SPEEX_BITS_BUFFER_SIZE);
+  speex_bits_init_buffer(&s_encoder.bits, s_encoder.bits_buffer, SPEEX_BITS_BUFFER_SIZE);
 
   // Initialize stereo state if stereo
   if (s_encoder.channels == 2) {
@@ -118,11 +123,11 @@ static bool prv_init_locked(void) {
 
   // Allocate frame buffer (16-bit samples, multiplied by channel count for stereo)
   s_encoder.frame_buffer_size = s_encoder.frame_size * sizeof(int16_t) * s_encoder.channels;
-  s_encoder.frame_buffer = (uint8_t *)pbl_malloc_check(s_encoder.frame_buffer_size);
+  s_encoder.frame_buffer = (uint8_t *)kernel_volatile_zalloc_check(s_encoder.frame_buffer_size);
 
   // Allocate encoded buffer
   s_encoder.encoded_buffer_size = SPEEX_ENCODED_BUFFER_SIZE;
-  s_encoder.encoded_buffer = pbl_malloc_check(s_encoder.encoded_buffer_size);
+  s_encoder.encoded_buffer = kernel_volatile_zalloc_check(s_encoder.encoded_buffer_size);
 
   s_encoder.initialized = true;
 
@@ -150,14 +155,15 @@ static void prv_deinit_locked(void) {
   }
 
   speex_bits_destroy(&s_encoder.bits);
+  kernel_volatile_free(s_encoder.bits_buffer);
 
   if (s_encoder.frame_buffer) {
-    pbl_free(s_encoder.frame_buffer);
+    kernel_volatile_free(s_encoder.frame_buffer);
     s_encoder.frame_buffer = nullptr;
   }
 
   if (s_encoder.encoded_buffer) {
-    pbl_free(s_encoder.encoded_buffer);
+    kernel_volatile_free(s_encoder.encoded_buffer);
     s_encoder.encoded_buffer = nullptr;
   }
 
