@@ -4,7 +4,7 @@
 
 An app is an ARM binary linked to run from address zero, and relocated
 when it is loaded. It starts with a
-`PebbleProcessInfo` header (`fw/process_management/pebble_process_info.h`)
+`PebbleProcessInfo` header (`pebble/process_management/pebble_process_info.h`)
 that records, among others:
 
 - the SDK version it was built with;
@@ -14,7 +14,7 @@ that records, among others:
 
 ## Loading
 
-The process loader (`fw/services/process_management/process_loader_storage.c`)
+The process loader (`pebble/services/process_management/process_loader_storage.c`)
 copies the app into the RAM reserved for it and prepares it:
 
 1. It checks the header, the image size and its checksum.
@@ -36,7 +36,7 @@ An app calling an SDK function goes through three steps:
 sequenceDiagram
   participant app as App
   participant tramp as libpebble.a trampoline
-  participant applib as fw/applib
+  participant applib as pebble/applib
   participant sys as sys_*() syscall
   app->>tramp: SDK function call
   tramp->>applib: jump through g_pbl_system_tbl[n]
@@ -52,7 +52,7 @@ sequenceDiagram
    wrote, takes the entry at the function's index, and jumps to it with the
    original arguments untouched.
 2. **Applib.** The table, `g_pbl_system_tbl` in the generated
-   `pebble.auto.c`, points at the implementation in `fw/applib/`. It runs
+   `pebble.auto.c`, points at the implementation in `pebble/applib/`. It runs
    in the app's task, still unprivileged, and does what needs no
    privileges itself: drawing into the app's framebuffer, walking the
    app's layers, handling its timers.

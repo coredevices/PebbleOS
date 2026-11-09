@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+pbl_clar_test(test_health
+  MODULES time
+  SOURCES
+    pebble/applib/health_service.c
+    pebble/process_management/pebble_process_info.c
+    tests/fakes/fake_rtc.c
+  DEFINES CAPABILITY_HAS_HEALTH_TRACKING=1
+  OVERRIDES dummy_board
+)

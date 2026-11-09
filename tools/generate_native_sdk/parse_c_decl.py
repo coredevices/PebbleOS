@@ -217,10 +217,10 @@ def parse_file(
         "-std=c23",
         f"-I{root_dir}/include",
         f"-I{root_dir}/subsys",
-        f"-I{root_dir}/fw",
+        f"-I{root_dir}/pebble",
         f"-I{root_dir}/boards",
         f"-I{root_dir}/third_party/upng/upng",
-        f"-I{root_dir}/build/fw",
+        f"-I{root_dir}/build/pebble",
         "-DSDK",
         "-fno-builtin-itoa",
     ]

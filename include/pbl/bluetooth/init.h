@@ -13,8 +13,8 @@
  * @ingroup subsys
  * @brief Bluetooth Low Energy stack interface (@c pbl/bluetooth).
  *
- * The firmware's Bluetooth code (@c fw/comm/ble and @c fw/services/bluetooth) talks to the stack
- * only through the @c pbl_bt_* API declared in these headers. It is implemented in
+ * The firmware's Bluetooth code (@c pebble/comm/ble and @c pebble/services/bluetooth) talks to the
+ * stack only through the @c pbl_bt_* API declared in these headers. It is implemented in
  * @c subsys/bluetooth on top of the NimBLE host, which runs in its own task.
  *
  * The API has two directions:

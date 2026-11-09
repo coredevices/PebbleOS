@@ -95,7 +95,7 @@ and its arguments, and the line about to run, e.g. on
 
 ```
 Breakpoint 1, event_put (event=event@entry=0x2000960c <s_sys_high_stack+1292>)
-    at ./fw/kernel/events.c:222
+    at ./pebble/kernel/events.c:222
 222	  uintptr_t saved_lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
 ```
 
@@ -106,9 +106,9 @@ frames:
 
 ```
 (gdb) bt 4
-#0  event_put (event=event@entry=0x2000960c <s_sys_high_stack+1292>) at ./fw/kernel/events.c:222
-#1  0x12154dce in launcher_task_add_callback (callback=<optimized out>, data=<optimized out>) at ./fw/kernel/event_loop.c:95
-#2  0x120982b0 in prv_work (work=work@entry=0x2002bc60) at ./fw/services/evented_timer/service.c:152
+#0  event_put (event=event@entry=0x2000960c <s_sys_high_stack+1292>) at ./pebble/kernel/events.c:222
+#1  0x12154dce in launcher_task_add_callback (callback=<optimized out>, data=<optimized out>) at ./pebble/kernel/event_loop.c:95
+#2  0x120982b0 in prv_work (work=work@entry=0x2002bc60) at ./pebble/services/evented_timer/service.c:152
 #3  0x1206cb86 in pbl_workq_thread (arg=<optimized out>) at ./kernel/work.c:121
 (More stack frames follow...)
 ```

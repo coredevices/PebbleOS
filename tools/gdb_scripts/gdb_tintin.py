@@ -578,7 +578,7 @@ def _load_applib_types_by_size():
     Returns an empty dict if the JSON can't be located or parsed.
     """
     json_path = os.path.join(
-        _SCRIPT_DIR, "..", "..", "fw", "applib", "applib_malloc.json"
+        _SCRIPT_DIR, "..", "..", "pebble", "applib", "applib_malloc.json"
     )
     try:
         with open(json_path) as f:
@@ -1251,7 +1251,7 @@ class DumpNotificationsApp(gdb.Command):
         )
 
     def invoke(self, unicode_args, from_tty):
-        symstr = "'fw/apps/system_apps/notifications_app.c'::s_data"
+        symstr = "'pebble/apps/system_apps/notifications_app.c'::s_data"
         app_data = gdb.parse_and_eval(symstr)
         if app_data == 0:
             print("Notifications app was not open?")

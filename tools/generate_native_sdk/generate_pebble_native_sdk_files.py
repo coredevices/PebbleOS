@@ -306,18 +306,18 @@ if __name__ == "__main__":
             os.makedirs(d)
 
     shutil.copy(
-        path.join(pbl_root_dir, "fw", "process_management", "pebble_process_info.h"),
+        path.join(pbl_root_dir, "pebble", "process_management", "pebble_process_info.h"),
         path.join(sdk_include_dir, "pebble_process_info.h"),
     )
 
     shutil.copy(
-        path.join(pbl_root_dir, "fw/applib/graphics", "gcolor_definitions.h"),
+        path.join(pbl_root_dir, "pebble/applib/graphics", "gcolor_definitions.h"),
         path.join(sdk_include_dir, "gcolor_definitions.h"),
     )
 
     # Copy unsupported function warnings header to SDK
     shutil.copy(
-        path.join(pbl_root_dir, "fw", "applib", "pebble_warn_unsupported_functions.h"),
+        path.join(pbl_root_dir, "pebble", "applib", "pebble_warn_unsupported_functions.h"),
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
 

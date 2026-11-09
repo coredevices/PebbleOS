@@ -173,7 +173,7 @@ class BuildDir:
     @property
     def app_dir(self):
         """The source directory of the application the build is for."""
-        return self.cache.get("PBL_APPLICATION_SOURCE_DIR") or os.path.join(self.topdir, "fw")
+        return self.cache.get("PBL_APPLICATION_SOURCE_DIR") or os.path.join(self.topdir, "pebble")
 
     @property
     def project(self):

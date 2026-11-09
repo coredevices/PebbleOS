@@ -1,20 +1,20 @@
 # Exporting a function
 
 Exporting a function makes it callable from third-party apps. The function
-lives in `fw/applib/`, and three things must change together; the firmware
+lives in `pebble/applib/`, and three things must change together; the firmware
 build alone does not surface it to apps:
 
 1. **Implement the applib wrapper and syscall** — add the function to the
-   appropriate `fw/applib/.../<area>.c/.h`, declare the `sys_*` syscall in
-   `fw/syscall/syscall.h`, and define it with `PBL_SYSCALL` (see
+   appropriate `pebble/applib/.../<area>.c/.h`, declare the `sys_*` syscall in
+   `pebble/syscall/syscall.h`, and define it with `PBL_SYSCALL` (see
    [](#defining-the-syscall)), either in the matching
-   `fw/syscall/<area>_syscalls.c` or alongside the implementation it
+   `pebble/syscall/<area>_syscalls.c` or alongside the implementation it
    wraps.
 2. **Register the symbol** in
    `tools/generate_native_sdk/exported_symbols.json` under the matching
    group, with an `addedRevision` matching the new SDK revision.
 3. **Bump the SDK revision** in
-   `fw/process_management/pebble_process_info.h`: increment
+   `pebble/process_management/pebble_process_info.h`: increment
    `PROCESS_INFO_CURRENT_SDK_VERSION_MINOR` and add a comment line above the
    `#define` following the existing pattern, e.g. `// sdk.major:0x5
 .minor:0x66 -- <description> (rev 105)`. The `rev` number in the comment
@@ -64,7 +64,7 @@ no kind covers, such as whether a session belongs to the caller, go in the
 body, which gets `bool from_user`: true for a checked call from unprivileged
 code.
 
-The syscalls listed in `fw/syscall/legacy_syscalls.txt` predate
+The syscalls listed in `pebble/syscall/legacy_syscalls.txt` predate
 `PBL_SYSCALL` and still check their arguments by hand with
 `DEFINE_SYSCALL`. The firmware build rejects any other syscall defined that
 way; a converted syscall must also be removed from the list.

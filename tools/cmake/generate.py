@@ -63,7 +63,7 @@ def cmd_version(args):
     write_if_changed(args.output, content)
 
 
-# --- System app registry (fw/shell) ------------------------------------
+# --- System app registry (pebble/shell) ------------------------------------
 
 
 def uuid_to_byte_hex_str(uuid):

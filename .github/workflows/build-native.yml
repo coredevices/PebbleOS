@@ -26,7 +26,7 @@ jobs:
               - 'boards/**'
               - 'cmake/**'
               - 'drivers/**'
-              - 'fw/**'
+              - 'pebble/**'
               - 'include/**'
               - 'kernel/**'
               - 'lib/**'

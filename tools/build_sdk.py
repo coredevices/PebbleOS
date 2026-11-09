@@ -29,7 +29,7 @@ from generate_pebble_native_sdk_files import expand_compiler_macros, generate_sh
 from pebble_sdk_platform import pebble_platforms
 
 SHIM_DEF = path.join(REPO_ROOT, "tools", "generate_native_sdk", "exported_symbols.json")
-PROCESS_INFO_H = path.join(REPO_ROOT, "fw", "process_management", "pebble_process_info.h")
+PROCESS_INFO_H = path.join(REPO_ROOT, "pebble", "process_management", "pebble_process_info.h")
 
 # Regex matching SDK version comments, which may be wrapped across lines:
 #   // sdk.major:0x5 .minor:0x4e -- ... (rev 81)
@@ -87,7 +87,7 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build, autoco
     sdk_lib_dir = path.join(platform_dir, "lib")
     pbl_output_src_dir = path.join(output_dir, "src")
 
-    for d in (sdk_include_dir, sdk_lib_dir, path.join(pbl_output_src_dir, "fw")):
+    for d in (sdk_include_dir, sdk_lib_dir, path.join(pbl_output_src_dir, "pebble")):
         if not path.isdir(d):
             os.makedirs(d)
 
@@ -100,11 +100,11 @@ def build_sdk_for_platform(platform_name, output_dir, internal_sdk_build, autoco
     if frozen_revision is not None:
         _patch_process_info_version(dest_process_info, frozen_revision)
     shutil.copy(
-        path.join(REPO_ROOT, "fw", "applib", "graphics", "gcolor_definitions.h"),
+        path.join(REPO_ROOT, "pebble", "applib", "graphics", "gcolor_definitions.h"),
         path.join(sdk_include_dir, "gcolor_definitions.h"),
     )
     shutil.copy(
-        path.join(REPO_ROOT, "fw", "applib", "pebble_warn_unsupported_functions.h"),
+        path.join(REPO_ROOT, "pebble", "applib", "pebble_warn_unsupported_functions.h"),
         path.join(sdk_include_dir, "pebble_warn_unsupported_functions.h"),
     )
 

@@ -12,7 +12,7 @@ little-endian.
 
 Pack files use the existing pack format. Slot zero is the legacy `lang` file;
 slots 1 to 3 are `lang1`, `lang2` and `lang3`
-(`fw/resource/language_pack.h`). A slot is occupied by any file, including one
+(`pebble/resource/language_pack.h`). A slot is occupied by any file, including one
 whose metadata can't be read.
 
 ## Installing
@@ -29,9 +29,9 @@ Packs are installed with an ordinary PutBytes file transfer:
 ## System messages
 
 Pack management uses the System Message endpoint (`0x12`,
-`fw/kernel/system_message.c`). Every message starts with a zero byte and a
+`pebble/kernel/system_message.c`). Every message starts with a zero byte and a
 message type, followed by a one-byte token the watch echoes in its response.
-Request and response structs are in `fw/kernel/language_pack_protocol.h`.
+Request and response structs are in `pebble/kernel/language_pack_protocol.h`.
 
 | Message                  | Type   | Direction      |
 | ------------------------ | ------ | -------------- |

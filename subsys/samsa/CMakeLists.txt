@@ -5,12 +5,12 @@ set(thunks ${PROJECT_BINARY_DIR}/subsys/samsa/samsa_thunks.auto.c)
 add_custom_command(
   OUTPUT ${thunks}
   COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/samsa/generate_thunks.py
-          --table ${PROJECT_BINARY_DIR}/fw/pebble.auto.json
+          --table ${PROJECT_BINARY_DIR}/pebble/pebble.auto.json
           --sdk-include ${PBL_SDK_DIR}/include
           --platform ${PBL_PLATFORM_NAME}
           --output ${thunks}
   DEPENDS ${PBL_BASE}/tools/samsa/generate_thunks.py
-          ${PROJECT_BINARY_DIR}/fw/pebble.auto.json
+          ${PROJECT_BINARY_DIR}/pebble/pebble.auto.json
           ${PBL_SDK_DIR}/include/pebble.h
   WORKING_DIRECTORY ${PBL_BASE}
   COMMENT "Generating Samsa thunks"

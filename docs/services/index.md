@@ -2,7 +2,7 @@
 
 System services sit between the drivers and the applications: they own
 shared hardware, persist state, talk to the phone and feed events to apps.
-They live in `fw/services/`, with their interfaces in `include/pbl/services/`.
+They live in `pebble/services/`, with their interfaces in `include/pbl/services/`.
 
 ## Storage
 

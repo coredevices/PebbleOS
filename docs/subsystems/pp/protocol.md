@@ -29,38 +29,38 @@ endpoint's own format, most of them little endian.
 | ID | Name | Access | In PRF | Defined in |
 |---|---|---|---|---|
 | `0x0000` | Meta | any | yes | `subsys/pp/meta.c` |
-| `0x000b` | Clock (time) | private | | `fw/services/clock/service.c` |
-| `0x0010` | System version | any | yes | `fw/kernel/system_versions.c` |
+| `0x000b` | Clock (time) | private | | `pebble/services/clock/service.c` |
+| `0x0010` | System version | any | yes | `pebble/kernel/system_versions.c` |
 | `0x0011` | Remote version | any | yes | `subsys/pp/version.c` |
-| `0x0012` | System message | private | yes | `fw/kernel/system_message.c` |
-| `0x0020` | Music | private | | `fw/services/music/endpoint.c` |
-| `0x0021` | Phone | private | | `fw/services/phone_pp/service.c` |
-| `0x0030` | AppMessage | any | | `fw/services/app_message/app_message_receiver.c` |
-| `0x0031` | Launcher AppMessage | any | | `fw/process_management/launcher_app_message.c` |
-| `0x0032` | App customization | any | | `fw/process_management/app_custom_icon.c` |
-| `0x0033` | BLE control | private | | `fw/services/bluetooth/pp_ble_control.c` |
-| `0x0034` | App run state | any | | `fw/process_management/app_run_state.c` |
-| `0x0035` | Imaging | private | | `fw/services/imaging/imaging.c` |
-| `0x038f` | Health sync | private | | `fw/services/health_sync_endpoint/service.c` |
-| `0x07d1` | Ping | any | | `fw/services/ping/service.c` |
-| `0x07d2` | Log dump | private | yes | `fw/services/log_dump_endpoint/service.c` |
-| `0x07d3` | Reset | private | yes | `fw/kernel/util/fw_reset.c` |
-| `0x07d6` | App log | private | | `fw/services/app_log_endpoint/service.c` |
-| `0x1389` | Factory registry | private | yes | `fw/services/registry_endpoint/service.c` |
-| `0x1771` | App fetch | private | | `fw/services/app_fetch_endpoint/service.c` |
-| `0x1a7a` | Data logging | private | | `fw/services/data_logging/dls_endpoint.c` |
-| `0x1f40` | Screenshot | private | | `fw/services/compositor/screenshot_pp.c` |
-| `0x2328` | Get Bytes | private | yes | `fw/services/get_bytes/get_bytes.c` |
-| `0x2710` | Audio | private | | `fw/services/audio_endpoint/service.c` |
-| `0x2af8` | Voice | private | | `fw/services/voice_endpoint/service.c` |
-| `0x2cb0` | Timeline action | private | | `fw/services/timeline/actions_endpoint.c` |
-| `0xabcd` | App order | private | | `fw/services/app_order_endpoint/service.c` |
-| `0xb1db` | BlobDB | private | | `fw/services/blob_db/endpoint.c` |
-| `0xb2db` | BlobDB v2 | private | | `fw/services/blob_db/endpoint2.c` |
-| `0xbeef` | Put Bytes | private | yes | `fw/services/put_bytes/put_bytes.c` |
-| `0xcafe` | Poll remote | any | | `fw/services/poll_remote/service.c` |
-| `0xcaff` | xsbug | any | | `fw/applib/moddable/moddable.c`, with moddable |
-| `0xf00d` | Remote input | private | yes | `fw/kernel/remote_input.c` |
+| `0x0012` | System message | private | yes | `pebble/kernel/system_message.c` |
+| `0x0020` | Music | private | | `pebble/services/music/endpoint.c` |
+| `0x0021` | Phone | private | | `pebble/services/phone_pp/service.c` |
+| `0x0030` | AppMessage | any | | `pebble/services/app_message/app_message_receiver.c` |
+| `0x0031` | Launcher AppMessage | any | | `pebble/process_management/launcher_app_message.c` |
+| `0x0032` | App customization | any | | `pebble/process_management/app_custom_icon.c` |
+| `0x0033` | BLE control | private | | `pebble/services/bluetooth/pp_ble_control.c` |
+| `0x0034` | App run state | any | | `pebble/process_management/app_run_state.c` |
+| `0x0035` | Imaging | private | | `pebble/services/imaging/imaging.c` |
+| `0x038f` | Health sync | private | | `pebble/services/health_sync_endpoint/service.c` |
+| `0x07d1` | Ping | any | | `pebble/services/ping/service.c` |
+| `0x07d2` | Log dump | private | yes | `pebble/services/log_dump_endpoint/service.c` |
+| `0x07d3` | Reset | private | yes | `pebble/kernel/util/fw_reset.c` |
+| `0x07d6` | App log | private | | `pebble/services/app_log_endpoint/service.c` |
+| `0x1389` | Factory registry | private | yes | `pebble/services/registry_endpoint/service.c` |
+| `0x1771` | App fetch | private | | `pebble/services/app_fetch_endpoint/service.c` |
+| `0x1a7a` | Data logging | private | | `pebble/services/data_logging/dls_endpoint.c` |
+| `0x1f40` | Screenshot | private | | `pebble/services/compositor/screenshot_pp.c` |
+| `0x2328` | Get Bytes | private | yes | `pebble/services/get_bytes/get_bytes.c` |
+| `0x2710` | Audio | private | | `pebble/services/audio_endpoint/service.c` |
+| `0x2af8` | Voice | private | | `pebble/services/voice_endpoint/service.c` |
+| `0x2cb0` | Timeline action | private | | `pebble/services/timeline/actions_endpoint.c` |
+| `0xabcd` | App order | private | | `pebble/services/app_order_endpoint/service.c` |
+| `0xb1db` | BlobDB | private | | `pebble/services/blob_db/endpoint.c` |
+| `0xb2db` | BlobDB v2 | private | | `pebble/services/blob_db/endpoint2.c` |
+| `0xbeef` | Put Bytes | private | yes | `pebble/services/put_bytes/put_bytes.c` |
+| `0xcafe` | Poll remote | any | | `pebble/services/poll_remote/service.c` |
+| `0xcaff` | xsbug | any | | `pebble/applib/moddable/moddable.c`, with moddable |
+| `0xf00d` | Remote input | private | yes | `pebble/kernel/remote_input.c` |
 
 *Private* endpoints only accept messages from the Pebble mobile app, on a
 system or hybrid session; *any* endpoints also accept them from third party

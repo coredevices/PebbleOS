@@ -4,7 +4,7 @@
 the registers of every thread. The public API is in `pbl/coredump/`.
 
 `pbl_coredump_trigger()` stops the system and writes the dump, then resets.
-Firmware code calls it through `reset_with_core_dump()` in `fw/system/die.h`,
+Firmware code calls it through `reset_with_core_dump()` in `pebble/system/die.h`,
 and most crashes get there from `reset_due_to_software_failure()`. The
 {doc}`../kernel/fatal` page describes the path from an assertion.
 
@@ -63,5 +63,5 @@ thread interrupted by an ISR.
 The platform implements `pbl_coredump_platform_prepare()`, which runs after the
 backends' `init` and before their `start`, so the drivers they use already work
 and nothing stored has been touched yet. It provides the serial number and build
-ID to store. `fw/kernel/core_dump_platform.c`
+ID to store. `pebble/kernel/core_dump_platform.c`
 is the firmware's.

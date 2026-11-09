@@ -4,7 +4,7 @@
 pbl_clar_test(test_settings
   MODULES settings rand
   SOURCES
-    fw/applib/dict.c
+    pebble/applib/dict.c
     tests/fakes/fake_rtc.c
     subsys/logging/hexdump.c
   DEFINES DUMA_DISABLED

@@ -7,7 +7,7 @@
 #include <applib/graphics/graphics.h>
 
 #if !FAKE_GRAPHICS_CONTEXT_C
-#include <fw/graphics/util.h>
+#include <pebble/graphics/util.h>
 #endif
 
 GContext *fake_graphics_context_get_context(void);

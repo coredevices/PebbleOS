@@ -45,7 +45,7 @@ set(PBL_TEST_INCLUDES_TAIL
   include
   kernel/arch/posix/include
   subsys
-  fw
+  pebble
   third_party/uzlib/uzlib/src
   third_party/upng
   third_party/upng/upng

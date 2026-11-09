@@ -28,10 +28,10 @@ for f in files:
   )
   string(REPLACE "\n" ";" headers "${headers}")
 
-  set(PBL_PEBBLE_AUTO_C ${PROJECT_BINARY_DIR}/fw/pebble.auto.c)
+  set(PBL_PEBBLE_AUTO_C ${PROJECT_BINARY_DIR}/pebble/pebble.auto.c)
   set(outputs
     ${PBL_PEBBLE_AUTO_C}
-    ${PROJECT_BINARY_DIR}/fw/pebble.auto.json
+    ${PROJECT_BINARY_DIR}/pebble/pebble.auto.json
     ${sdk_dir}/include/pebble.h
     ${sdk_dir}/include/pebble_sdk_version.h
     ${sdk_dir}/include/pebble_process_info.h

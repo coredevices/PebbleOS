@@ -14,8 +14,8 @@ pbl_library_sources(service.c util.c)
 
 `pbl_library()`
 : Declare the library the following `pbl_library_*()` calls apply to,
-  named after its directory (`fw/services/timeline` →
-  `fw__services__timeline`). The target is only created once it gets its
+  named after its directory (`pebble/services/timeline` →
+  `pebble__services__timeline`). The target is only created once it gets its
   first source, so a directory whose sources are all configured out
   contributes nothing.
 

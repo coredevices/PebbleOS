@@ -29,7 +29,7 @@ pbl configure --board qemu_emery samples/hello_world
 ## Variants
 
 `--variant` picks the image to build: `normal`, the main firmware, or
-`prf`, the recovery firmware, which applies `fw/prj_prf.conf` on top of
+`prf`, the recovery firmware, which applies `pebble/prj_prf.conf` on top of
 the board defconfig.
 
 ```shell

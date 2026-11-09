@@ -19,7 +19,7 @@
 #define SCREEN_GRID_ONE_BIT PBL_IF_COLOR_ELSE(false, true)
 #define SCREEN_GRID_BACKGROUND PBL_IF_COLOR_ELSE(GColorShockingPinkARGB8, 0)
 
-//! Defined by fw/graphics/util.h, which the test includes
+//! Defined by pebble/graphics/util.h, which the test includes
 bool gbitmap_pbi_eq(GBitmap *bmp, const char *filename);
 
 static const char *const s_screen_grid_size_names[NumPreferredContentSizes] = {

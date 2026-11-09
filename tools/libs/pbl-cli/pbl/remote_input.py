@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""The firmware's remote input endpoint (fw/kernel/remote_input.c)."""
+"""The firmware's remote input endpoint (pebble/kernel/remote_input.c)."""
 
 from libpebble2.protocol.base import PebblePacket
 from libpebble2.protocol.base.types import Int16, Uint8, Uint16
