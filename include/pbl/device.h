@@ -18,8 +18,8 @@
  * walks back out. Devices are const and live in flash; the only RAM is the state they point to.
  *
  * Instances are defined with the @c PBL_<DRIVER>_DEFINE() macro of their driver, built from
- * PBL_DEVICE_STATE_DEFINE(), PBL_DEVICE_INIT() and PBL_DEVICE_REGISTER(). pbl_device_init_all()
- * brings every registered device up, dependencies first: a device's parent and deps are
+ * PBL_DEVICE_STATE_DEFINE(), PBL_DEVICE_INIT() and PBL_DEVICE_REGISTER(). The kernel brings
+ * every registered device up before main(), dependencies first: a device's parent and deps are
  * initialized before it, and a driver's init calls pbl_device_init() on the devices it uses.
  *
  * An init returning @c -ENODEV means the device is not present: that is not logged as an error.
@@ -197,6 +197,8 @@ bool pbl_device_is_ready(const struct pbl_device *dev);
 
 /**
  * @brief Initialize every registered device.
+ *
+ * Called by the kernel on the main thread, before main().
  *
  * @return Number of devices that failed or are not present.
  */

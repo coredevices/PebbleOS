@@ -6,7 +6,6 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/board/partitions.h>
-#include <pbl/device.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
@@ -60,8 +59,6 @@ static void print_splash_screen(void) {
 }
 
 static void init_drivers(void) {
-  pbl_device_init_all();
-
   battery_init();
 
   (void)pbl_flash_partition_protect(PART_SAFE_FIRMWARE);
