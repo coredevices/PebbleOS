@@ -52,7 +52,7 @@ class Configure(PblCommand):
             nargs="?",
             metavar="APP",
             help="Application to build, a directory such as "
-            "samples/hello_world (default: the firmware)",
+            "samples/hello_world (default: the firmware, pebble)",
         )
         parser.add_argument(
             "-G",
@@ -72,14 +72,13 @@ class Configure(PblCommand):
             "-B",
             str(build),
             "-S",
-            os.path.abspath(args.app) if args.app else self.topdir,
+            os.path.abspath(args.app) if args.app else os.path.join(self.topdir, "pebble"),
             "-G",
             args.generator,
             f"-DBOARD={args.board}",
             f"-DVARIANT={args.variant}",
         ]
-        if args.app:
-            # Where find_package(PebbleOS) finds this checkout.
-            cmd.append(f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}")
+        # Where find_package(PebbleOS) finds this checkout.
+        cmd.append(f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}")
 
         return self.run_cmd(cmd + unknown)

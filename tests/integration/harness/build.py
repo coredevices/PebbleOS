@@ -68,10 +68,14 @@ class Build:
     def topdir(self):
         """The source tree, or the harness's own for a build configured on
         another host."""
-        topdir = self.cache.get("CMAKE_HOME_DIRECTORY") or self.cache.get(
-            "pebbleos_SOURCE_DIR"
-        )
-        return topdir if topdir and os.path.isdir(topdir) else _TOPDIR
+        # The application's directory, which is somewhere in the tree.
+        topdir = self.cache.get("CMAKE_HOME_DIRECTORY")
+        while topdir and os.path.isdir(topdir):
+            if os.path.isfile(os.path.join(topdir, "pbl.yml")):
+                return topdir
+            parent = os.path.dirname(topdir)
+            topdir = parent if parent != topdir else None
+        return _TOPDIR
 
     @property
     def board_target(self):
@@ -102,14 +106,16 @@ class Build:
     def variant(self):
         return self.cache.get("VARIANT", "normal")
 
+    # Not CMAKE_PROJECT_NAME: an application's own project() overrides it.
+
     @property
     def elf(self):
-        return self.join(f"{self.cache.get('CMAKE_PROJECT_NAME', 'pebbleos')}.elf")
+        return self.join("pebbleos.elf")
 
     @property
     def executable(self):
         """The native build's program."""
-        return self.join(self.cache.get("CMAKE_PROJECT_NAME", "pebbleos"))
+        return self.join("pebbleos")
 
     @property
     def loghash_dict(self):

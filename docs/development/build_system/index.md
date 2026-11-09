@@ -16,12 +16,12 @@ The firmware is built by three cooperating pieces:
 CMake invocation cannot do:
 
 ```shell
-cmake -B build -GNinja -DBOARD=asterix
+cmake -B build -GNinja -S pebble -DBOARD=asterix
 cmake --build build
 ```
 
-The firmware is one application of PebbleOS. {doc}`applications` covers
-building another one.
+The firmware is an application of PebbleOS, built from `pebble/` as any
+other is from its own directory; {doc}`applications` covers how.
 
 ## From configuration to image
 
@@ -30,7 +30,7 @@ flowchart TD
   in["BOARD, VARIANT, -DCONFIG_*"]
   kconfig["tools/cmake/kconfig.py"]
   cfg[".config, autoconf.h, config.cmake"]
-  cmake["CMakeLists.txt, cmake/modules/<br/>third_party, lib, kernel, soc, subsys, drivers, pebble"]
+  cmake["pebble/CMakeLists.txt, cmake/modules/<br/>third_party, lib, kernel, soc, subsys, drivers, pebble"]
   libs["Object and static libraries<br/>one pbl_library() per directory"]
   gen["Resource pack, generated headers<br/>pbl_resources(), tools/cmake/ generators"]
   link["pbl_link_firmware()"]
@@ -48,7 +48,8 @@ flowchart TD
   class cfg,libs,gen base
 ```
 
-1. **Configure.** The root `CMakeLists.txt` takes the board and variant
+1. **Configure.** `find_package(PebbleOS)`, from the firmware's
+   `pebble/CMakeLists.txt`, takes the board and variant
    (`-DBOARD=`, `-DVARIANT=`), and hands them with any `-DCONFIG_*`
    overrides to `tools/cmake/kconfig.py`. It writes `.config`,
    `autoconf.h` and `config.cmake`, which CMake includes, so every Kconfig
@@ -56,7 +57,8 @@ flowchart TD
 2. **Toolchain.** The bare-metal ARM toolchain comes from the installed
    PebbleOS SDK; boards that do not run on ARM, such as `native_emery`,
    bring their own `toolchain.cmake`.
-3. **Libraries.** The top-level directories are added in turn. Each one
+3. **Libraries.** PebbleOS's directories, then the firmware's, are added
+   in turn. Each one
    contributes libraries, global include directories, linker script
    fragments and generated sources through the `pbl_*` helpers.
 4. **Generated sources.** Version and registry headers, the resource
@@ -101,13 +103,12 @@ result, so it is cached too and can be overridden with `-D`.
 ## Directory layout
 
 ```text
-CMakeLists.txt        the firmware image: what is built and linked
 Kconfig.pebbleos      the configuration tree of PebbleOS, which the
                       application's Kconfig sources
 boards/<board>/       defconfig, Kconfig, manifest and device definitions
                       (<board>.c, <board>.h) of each board
-pebble/prj*.conf          the firmware's configuration fragments, with those
-pebble/boards/            for one board
+pebble/               the firmware: CMakeLists.txt, Kconfig, prj*.conf and
+                      boards/, as any application
 cmake/modules/        the build model, split by concern; os.cmake adds
                       PebbleOS itself
 cmake/PebbleOSConfig.cmake

@@ -18,8 +18,9 @@ toolchain (`toolchain.<variant>.cmake`).
 
 ## Applications
 
-Without more arguments, the build is for the watch firmware. To build
-another application, such as a sample, give its directory (see
+Without more arguments, the build is for the watch firmware, the
+application in `pebble/`. To build another application, such as a sample,
+give its directory (see
 {doc}`../development/build_system/applications`):
 
 ```shell
