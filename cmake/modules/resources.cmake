@@ -77,7 +77,7 @@ function(pbl_resources)
   message(STATUS "Resources: ${summary}")
 
   include(${PROJECT_BINARY_DIR}/resources/resources.cmake)
-  set_property(DIRECTORY ${PBL_BASE} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     ${PBL_RESOURCE_MAP_FILES} ${PBL_RESOURCES_PY} ${PBL_DOTCONFIG})
 
   pbl_resource_command(

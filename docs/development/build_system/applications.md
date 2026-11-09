@@ -1,10 +1,10 @@
 # Applications
 
 PebbleOS is the kernel, the drivers, the subsystems and the libraries. What
-runs on top of it is an application: the code that provides `main()`. The
-watch firmware under `pebble/` is one; anything else, from a driver test to a
-product that is not a watch, is another, built against PebbleOS from its
-own directory.
+runs on top of it is an application: the code that provides `main()`, built
+against PebbleOS from its own directory. The watch firmware under `pebble/`
+is one, and so is anything else, from a driver test to a product that is
+not a watch.
 
 ## A minimal application
 
@@ -113,5 +113,7 @@ Subsystems are off unless the application asks for them, e.g.
 application does with it, such as the firmware's backlight levels on
 `obelix`, goes in the application's `boards/obelix.conf`.
 
-The firmware follows the same layout: `pebble/prj.conf`, `pebble/prj_normal.conf`,
-`pebble/prj_prf.conf`, `pebble/boards/` and `pebble/Kconfig`.
+The firmware is built the same way, from `pebble/CMakeLists.txt`, and its
+configuration follows the same layout: `pebble/prj.conf`,
+`pebble/prj_normal.conf`, `pebble/prj_prf.conf`, `pebble/boards/` and
+`pebble/Kconfig`.

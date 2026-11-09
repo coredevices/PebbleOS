@@ -2,15 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # PebbleOS itself: configures the build for a board and adds the kernel, the
-# SoC, the drivers, the subsystems and the libraries. What runs on top, the
-# application, is added by whoever includes this: the firmware's top-level
-# CMakeLists.txt, or cmake/PebbleOSConfig.cmake for find_package(PebbleOS).
+# SoC, the drivers, the subsystems and the libraries, for the application
+# cmake/PebbleOSConfig.cmake was found from, the firmware included.
 #
 # Included before the first project() call, with PBL_BASE and
-# PBL_APPLICATION_SOURCE_DIR set. The image is linked once the top-level
-# CMakeLists.txt has been read to its end.
+# PBL_APPLICATION_SOURCE_DIR set. The image is linked once the
+# application's CMakeLists.txt has been read to its end.
 
-# For the tools that work on a build directory.
 set(PBL_APPLICATION_SOURCE_DIR ${PBL_APPLICATION_SOURCE_DIR} CACHE INTERNAL
   "Source directory of the application")
 
