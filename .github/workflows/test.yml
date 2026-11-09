@@ -53,7 +53,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          submodules: true
 
       - name: Rebase onto target branch
         uses: ./.github/actions/rebase

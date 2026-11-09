@@ -80,7 +80,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          submodules: true
 
       - name: Fetch tags
         run: git fetch --tags --force
@@ -198,7 +197,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          submodules: true
 
       - name: Fetch tags
         run: git fetch --tags --force
