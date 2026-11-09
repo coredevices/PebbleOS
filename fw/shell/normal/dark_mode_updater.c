@@ -3,8 +3,8 @@
 
 #include "dark_mode_updater.h"
 
+#include <pbl/kernel/work.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/regular_timer.h>
 
 #include <kernel/events.h>
 #include <shell/prefs.h>
@@ -15,11 +15,7 @@
 //! Last state announced with PEBBLE_DARK_MODE_CHANGE_EVENT
 static bool s_is_dark;
 
-static void prv_minute_callback(void *data);
-
-static RegularTimerInfo s_minute_timer = {
-  .cb = prv_minute_callback,
-};
+static struct pbl_wallclock_work s_minute_timer;
 
 bool dark_mode_schedule_is_active(const DarkModeSchedule *schedule, int minute_of_day) {
   const int start = schedule->from_hour * 60 + schedule->from_minute;
@@ -59,21 +55,22 @@ static void prv_update(void) {
   event_put(&event);
 }
 
-static void prv_minute_callback(void *data) {
+static void prv_minute_callback(struct pbl_work *work) {
   prv_update();
 }
 
 void dark_mode_updater_prefs_changed(void) {
   prv_update();
-  // The schedule has minute resolution, so follow the wall-clock minute tick
+  // The schedule has minute resolution, so follow the wall clock's minute
   if (shell_prefs_get_dark_mode() == DarkModeScheduled) {
-    regular_timer_add_minutes_callback(&s_minute_timer);
-  } else if (regular_timer_is_scheduled(&s_minute_timer)) {
-    regular_timer_remove_callback(&s_minute_timer);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_minute_timer, 60, 1);
+  } else {
+    pbl_wallclock_work_stop(&s_minute_timer);
   }
 }
 
 void dark_mode_updater_init(void) {
+  pbl_wallclock_work_init(&s_minute_timer, prv_minute_callback);
   s_is_dark = prv_is_dark();
   system_theme_set_dark_mode(s_is_dark);
   dark_mode_updater_prefs_changed();

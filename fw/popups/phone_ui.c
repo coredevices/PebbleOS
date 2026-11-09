@@ -14,6 +14,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/evented_timer.h>
@@ -22,7 +23,6 @@
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/phone_call.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_actions.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -167,7 +167,7 @@ typedef struct {
   EventedTimerID window_pop_timer;
   time_t call_start_time;
   VibeScore *vibe_score;
-  RegularTimerInfo ring_timer;
+  struct pbl_wallclock_work ring_timer;
   time_t ring_start_time;
   bool show_ongoing_call_ui;
 
@@ -456,7 +456,7 @@ static void prv_window_update_proc(Layer *layer, GContext *ctx) {
 }
 
 //! Ring functionality
-static void prv_ring(void *unused) {
+static void prv_ring(struct pbl_work *work) {
   PBL_LOG_DBG("RING");
   if (!s_phone_ui_data) {
     // There is a mutex-related issue that can appear where the timer callback will execute after
@@ -468,7 +468,7 @@ static void prv_ring(void *unused) {
     // The call-ended event never arrived (e.g. an ANCS removal lost across a
     // re-subscription); don't vibe until the user dismisses the window.
     PBL_LOG_WRN("Still ringing after %ds; stopping the vibe loop", MAX_RING_DURATION_S);
-    regular_timer_remove_callback(&s_phone_ui_data->ring_timer);
+    pbl_wallclock_work_stop(&s_phone_ui_data->ring_timer);
     return;
   }
   if (alerts_should_vibrate_for_type(AlertPhoneCall)) {
@@ -484,9 +484,6 @@ static void prv_ring(void *unused) {
 
 static void prv_start_ringing(void) {
   alerts_incoming_alert_analytics();
-  s_phone_ui_data->ring_timer = (const RegularTimerInfo){
-    .cb = prv_ring,
-  };
   s_phone_ui_data->ring_start_time = pbl_realtime();
   unsigned int vibe_repeat_interval_sec;
   s_phone_ui_data->vibe_score = vibe_client_get_score(VibeClient_PhoneCalls);
@@ -495,13 +492,14 @@ static void prv_start_ringing(void) {
   }
   unsigned int vibe_interval_ms = vibe_score_get_duration_ms(s_phone_ui_data->vibe_score) +
                                   vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
-  vibe_repeat_interval_sec = DIVIDE_CEIL(vibe_interval_ms, PBL_MSEC_PER_SEC);
+  vibe_repeat_interval_sec = MAX(DIVIDE_CEIL(vibe_interval_ms, PBL_MSEC_PER_SEC), 1U);
   prv_ring(nullptr);
-  regular_timer_add_multisecond_callback(&s_phone_ui_data->ring_timer, vibe_repeat_interval_sec);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_phone_ui_data->ring_timer, 1,
+                           vibe_repeat_interval_sec);
 }
 
 static void prv_stop_ringing(void) {
-  regular_timer_remove_callback(&s_phone_ui_data->ring_timer);
+  pbl_wallclock_work_stop(&s_phone_ui_data->ring_timer);
   if (s_phone_ui_data->vibe_score) {
     vibe_score_destroy(s_phone_ui_data->vibe_score);
     s_phone_ui_data->vibe_score = nullptr;
@@ -986,6 +984,7 @@ static void prv_phone_ui_init(void) {
   PBL_ASSERTN(s_phone_ui_data == nullptr);
 
   s_phone_ui_data = pbl_zalloc_check(sizeof(PhoneUIData));
+  pbl_wallclock_work_init(&s_phone_ui_data->ring_timer, prv_ring);
   s_phone_ui_data->hid_action_bar = false;
 
   s_phone_ui_data->style = s_phone_styles[system_theme_get_content_size()];

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pbl/kernel/work.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/timeline/swap_layer.h>
 
@@ -13,7 +14,7 @@
 typedef struct NotificationWindowData {
   Window window;
 
-  RegularTimerInfo reminder_watchdog_timer_id; // Clear stale reminders once a minute
+  struct pbl_wallclock_work reminder_watchdog; // Clear stale reminders once a minute
 
   EventedTimerID pop_timer_id; //!< Timer that automatically pops us in case of inactivity.
   bool pop_timer_is_final;     // true, if pop_timer_id cannot be rescheduled anymore

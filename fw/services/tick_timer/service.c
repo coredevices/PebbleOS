@@ -5,8 +5,8 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/tick_timer.h>
 
 #include <kernel/events.h>
@@ -17,9 +17,9 @@ PBL_LOG_MODULE_DEFINE(service_tick_timer, CONFIG_SERVICE_TICK_TIMER_LOG_LEVEL);
 static PBL_MUTEX_DEFINE(s_mutex);
 static uint16_t s_num_subscribers;
 static PebbleTaskBitset s_second_tasks;
-static RegularTimerInfo *s_active_timer;
+static struct pbl_wallclock_work *s_active_timer;
 
-static void timer_tick_event_publisher(void *data) {
+static void timer_tick_event_publisher(struct pbl_work *work) {
   PebbleEvent e = {
     .type = PEBBLE_TICK_EVENT,
     .clock_tick.tick_time = pbl_realtime(),
@@ -28,11 +28,18 @@ static void timer_tick_event_publisher(void *data) {
   event_put(&e);
 }
 
-static RegularTimerInfo s_second_timer_info = {.cb = &timer_tick_event_publisher};
-static RegularTimerInfo s_minute_timer_info = {.cb = &timer_tick_event_publisher};
+static struct pbl_wallclock_work s_second_timer_info;
+static struct pbl_wallclock_work s_minute_timer_info;
 
 static void prv_update_timer_locked(void) {
-  RegularTimerInfo *timer = nullptr;
+  static bool s_initialized;
+  if (!s_initialized) {
+    pbl_wallclock_work_init(&s_second_timer_info, timer_tick_event_publisher);
+    pbl_wallclock_work_init(&s_minute_timer_info, timer_tick_event_publisher);
+    s_initialized = true;
+  }
+
+  struct pbl_wallclock_work *timer = nullptr;
   if (s_num_subscribers > 0) {
     timer = (s_second_tasks != 0) ? &s_second_timer_info : &s_minute_timer_info;
   }
@@ -41,14 +48,14 @@ static void prv_update_timer_locked(void) {
   }
 
   if (s_active_timer) {
-    regular_timer_remove_callback(s_active_timer);
+    pbl_wallclock_work_stop(s_active_timer);
   }
   if (timer == &s_second_timer_info) {
     PBL_LOG_DBG("ticking every second");
-    regular_timer_add_seconds_callback(timer);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, timer, 1, 1);
   } else if (timer == &s_minute_timer_info) {
     PBL_LOG_DBG("ticking every minute");
-    regular_timer_add_minutes_callback(timer);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, timer, 60, 1);
   } else {
     PBL_LOG_DBG("stopping tick timer");
   }
