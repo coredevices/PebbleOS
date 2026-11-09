@@ -18,6 +18,7 @@ pbl_clar_test(test_task_wdt
     kernel/arch/posix/arch.c
     kernel/arch/posix/test.c
     kernel/timekeeping.c
+    kernel/wallclock.c
     drivers/base/device.c
     drivers/timer/timer.c
   INCLUDES

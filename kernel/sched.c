@@ -463,4 +463,5 @@ void sched_reset_for_test(void) {
   s_started = false;
   s_next_number = 0;
   timer_reset_for_test();
+  wallclock_reset_for_test();
 }

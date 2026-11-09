@@ -79,6 +79,9 @@ void sched_announce(uint64_t ticks) {
   s_ticks += ticks;
 }
 
+void wallclock_clock_set(uint64_t old_ms, uint64_t new_ms) {
+}
+
 pbl_tick_t timer_ticks_until_next(uint64_t now) {
   return s_until_next_timer;
 }

@@ -24,6 +24,7 @@ pbl_library_sources(
   time.c
   timekeeping.c
   timer.c
+  wallclock.c
   sys_work.c
   work.c
 )

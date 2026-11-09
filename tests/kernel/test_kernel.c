@@ -1167,3 +1167,128 @@ void test_kernel__boosted_work_submitted_before_the_queue_thread_runs(void) {
   prv_spawn(0, "main", 2, prv_boost_early_main, nullptr);
   pbl_test_kernel_run();
 }
+
+// ---- wall clock work --------------------------------------------------------
+
+#define T0        1700000000U // A whole minute: 22:13:20 UTC is not, 22:14:00 below is.
+#define MINUTE_T0 (T0 + 40U)
+
+static struct pbl_wallclock_work s_wcwork;
+static uint64_t s_wc_ran_ms[8];
+static int s_wc_runs;
+
+static void prv_wc_fn(struct pbl_work *work) {
+  cl_assert(work == &s_wcwork.work);
+  s_wc_ran_ms[s_wc_runs++] = pbl_realtime_ms();
+}
+
+static void prv_wc_minutes(void *arg) {
+  // 30 s before a minute.
+  pbl_realtime_set(MINUTE_T0 - 30U);
+  pbl_wallclock_work_start(&s_wq, &s_wcwork, 60, 1);
+  cl_assert(pbl_wallclock_work_is_running(&s_wcwork));
+  pbl_thread_sleep(PBL_MSEC(29 * 1000));
+  cl_assert_equal_i(s_wc_runs, 0);
+  pbl_thread_sleep(PBL_MSEC(2 * 1000));
+  cl_assert_equal_i(s_wc_runs, 1);
+  // On the boundary, and not before it.
+  cl_assert(s_wc_ran_ms[0] >= (uint64_t)MINUTE_T0 * 1000U);
+  cl_assert(s_wc_ran_ms[0] < (uint64_t)MINUTE_T0 * 1000U + 20U);
+  pbl_thread_sleep(PBL_MSEC(60 * 1000));
+  cl_assert_equal_i(s_wc_runs, 2);
+  cl_assert(s_wc_ran_ms[1] >= (uint64_t)(MINUTE_T0 + 60U) * 1000U);
+  cl_assert(pbl_wallclock_work_stop(&s_wcwork));
+  pbl_thread_sleep(PBL_MSEC(120 * 1000));
+  cl_assert_equal_i(s_wc_runs, 2);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__wallclock_work_runs_on_minute_boundaries(void) {
+  s_wc_runs = 0;
+  pbl_wallclock_work_init(&s_wcwork, prv_wc_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_wc_minutes, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_wc_clock_set(void *arg) {
+  pbl_realtime_set(MINUTE_T0 + 10U);
+  pbl_wallclock_work_start(&s_wq, &s_wcwork, 60, 1);
+  // Within the same minute: nothing to do yet.
+  pbl_realtime_set(MINUTE_T0 + 20U);
+  pbl_thread_sleep(PBL_TICKS(2));
+  cl_assert_equal_i(s_wc_runs, 0);
+  // Into another minute: as if the minute had changed.
+  pbl_realtime_set(MINUTE_T0 + 3600U + 5U);
+  pbl_thread_sleep(PBL_TICKS(2));
+  cl_assert_equal_i(s_wc_runs, 1);
+  // Back in time: the next run is at the next minute of the new time, not an hour later.
+  pbl_realtime_set(MINUTE_T0 + 50U);
+  pbl_thread_sleep(PBL_TICKS(2));
+  cl_assert_equal_i(s_wc_runs, 2);
+  pbl_thread_sleep(PBL_MSEC(11 * 1000));
+  cl_assert_equal_i(s_wc_runs, 3);
+  cl_assert(s_wc_ran_ms[2] >= (uint64_t)(MINUTE_T0 + 60U) * 1000U);
+  pbl_wallclock_work_stop(&s_wcwork);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__wallclock_work_follows_the_clock(void) {
+  s_wc_runs = 0;
+  pbl_wallclock_work_init(&s_wcwork, prv_wc_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_wc_clock_set, nullptr);
+  pbl_test_kernel_run();
+}
+
+static struct pbl_timer s_wc_set_timer;
+
+static void prv_wc_set_fn(struct pbl_timer *timer) {
+  pbl_realtime_set(MINUTE_T0 + 30U);
+}
+
+static void prv_wc_clock_set_when_due(void *arg) {
+  pbl_realtime_set(MINUTE_T0);
+  // Expires first on the tick the item is due at, so the clock is set before the item's timer runs.
+  pbl_timer_start(&s_wc_set_timer, PBL_TICKS(PBL_TICK_HZ));
+  pbl_wallclock_work_start(&s_wq, &s_wcwork, 1, 1);
+  pbl_thread_sleep(PBL_TICKS(PBL_TICK_HZ + 2));
+  cl_assert_equal_i(s_wc_runs, 1);
+  // And it keeps running, from the new time.
+  pbl_thread_sleep(PBL_MSEC(1000));
+  cl_assert_equal_i(s_wc_runs, 2);
+  cl_assert_equal_i(s_wc_ran_ms[1] / 1000U, MINUTE_T0 + 31U);
+  pbl_wallclock_work_stop(&s_wcwork);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__wallclock_work_runs_when_the_clock_is_set_as_it_is_due(void) {
+  s_wc_runs = 0;
+  pbl_wallclock_work_init(&s_wcwork, prv_wc_fn);
+  pbl_timer_init(&s_wc_set_timer, prv_wc_set_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_wc_clock_set_when_due, nullptr);
+  pbl_test_kernel_run();
+}
+
+static void prv_wc_every(void *arg) {
+  pbl_realtime_set(MINUTE_T0);
+  pbl_thread_sleep(PBL_MSEC(300));
+  // Every 5 s: the 5th second boundary from now, then every 5.
+  pbl_wallclock_work_start(&s_wq, &s_wcwork, 1, 5);
+  pbl_thread_sleep(PBL_MSEC(16 * 1000));
+  cl_assert_equal_i(s_wc_runs, 3);
+  for (int i = 0; i < 3; i++) {
+    cl_assert_equal_i(s_wc_ran_ms[i] / 1000U, MINUTE_T0 + 5U * (i + 1));
+  }
+  pbl_wallclock_work_stop(&s_wcwork);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__wallclock_work_counts_boundaries(void) {
+  s_wc_runs = 0;
+  pbl_wallclock_work_init(&s_wcwork, prv_wc_fn);
+  prv_spawn_q(3);
+  prv_spawn(0, "main", 2, prv_wc_every, nullptr);
+  pbl_test_kernel_run();
+}
