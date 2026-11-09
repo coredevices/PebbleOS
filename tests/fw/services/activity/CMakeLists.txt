@@ -53,7 +53,7 @@ pbl_clar_test(test_kraepelin_algorithm
     tests/fw/services/activity/kraepelin_reference/helper_worker.c
     tests/fw/services/activity/kraepelin_reference/ProjectK_worker.c
     tests/fw/services/activity/kraepelin_reference/raw_stats.c
-  DEFINES DUMA_DISABLED CONFIG_HRM
+  DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )
 
@@ -64,7 +64,7 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-  DEFINES DUMA_DISABLED
+  DEFINES DUMA_DISABLED CONFIG_HRM
   OVERRIDES dummy_board
 )
 

@@ -12,7 +12,6 @@
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
-#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -24,51 +23,12 @@
 // Stubs
 
 // Fakes
-#include <fake_rtc.h>
-
-HRMSessionRef s_hrm_next_session_ref = 1;
-int s_hrm_live_subscriptions = 0;
-uint16_t s_hrm_last_expire_s = 0;
-bool s_hrm_activity_tracking_enabled = true;
-
-HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
-                                                  uint16_t expire_s, HRMFeature features,
-                                                  bool low_latency, HRMSubscriberCallback callback,
-                                                  void *context) {
-  s_hrm_live_subscriptions++;
-  s_hrm_last_expire_s = expire_s;
-  return s_hrm_next_session_ref++;
-}
-
-bool sys_hrm_manager_unsubscribe(HRMSessionRef session) {
-  cl_assert(session < s_hrm_next_session_ref);
-  cl_assert(s_hrm_live_subscriptions > 0);
-  s_hrm_live_subscriptions--;
-  return true;
-}
-
-bool sys_hrm_manager_set_update_interval(HRMSessionRef session, uint32_t update_interval_s,
-                                         uint16_t expire_s) {
-  cl_assert(session < s_hrm_next_session_ref);
-  s_hrm_last_expire_s = expire_s;
-  return true;
-}
-
-HRMActivityScene s_hrm_activity_scene = HRMActivityScene_Default;
-
-void hrm_manager_set_activity_scene(HRMActivityScene scene) {
-  s_hrm_activity_scene = scene;
-}
-
-bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
-  return s_hrm_activity_tracking_enabled;
-}
-
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include <dirent.h>
+#include <fake_rtc.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -2177,7 +2137,6 @@ void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
 
   cl_assert_equal_i(s_num_captured_activity_sessions, 0);
 
-  kalg_deinit(s_kalg_state);
   pbl_free(s_kalg_state);
   s_kalg_state = nullptr;
 }
@@ -2211,7 +2170,6 @@ void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
   cl_assert(!s_captured_activity_sessions[0].ongoing);
   cl_assert(s_captured_activity_sessions[1].start_utc > ended.start_utc);
 
-  kalg_deinit(s_kalg_state);
   pbl_free(s_kalg_state);
   s_kalg_state = nullptr;
 }
@@ -2227,7 +2185,6 @@ static void prv_walk_ended_on_time_jump(int jump_secs) {
 
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
   cl_assert_equal_i(s_num_captured_activity_sessions, 1);
-  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Walk);
 
   const time_t jumped_utc = pbl_realtime() + jump_secs;
   pbl_realtime_set(jumped_utc);
@@ -2235,14 +2192,16 @@ static void prv_walk_ended_on_time_jump(int jump_secs) {
 
   cl_assert(!s_captured_activity_sessions[0].ongoing);
   cl_assert_equal_i(s_captured_activity_sessions[0].len_minutes, 12);
-  cl_assert_equal_i(s_hrm_activity_scene, HRMActivityScene_Default);
+
+  struct kalg_step_activity walk;
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, 0);
 
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
 
   cl_assert_equal_i(s_num_captured_activity_sessions, 2);
   cl_assert(s_captured_activity_sessions[1].start_utc >= jumped_utc);
 
-  kalg_deinit(s_kalg_state);
   pbl_free(s_kalg_state);
   s_kalg_state = nullptr;
 }
@@ -2256,71 +2215,55 @@ void test_kraepelin_algorithm__walk_ended_on_forward_time_jump(void) {
 }
 
 // ---------------------------------------------------------------------------------------
-// The HRM subscription taken by an auto-detected activity must be released when activity
-// tracking is disabled. Otherwise starting a workout leaves a never-expiring 1-second
-// subscription behind that pins the sensor on.
-void test_kraepelin_algorithm__hrm_released_when_tracking_disabled(void) {
+// The walk in progress is reported from its first active minute until it ends.
+void test_kraepelin_algorithm__step_activity_in_progress(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
   kalg_init(s_kalg_state, prv_stats_cb);
-  s_hrm_live_subscriptions = 0;
   s_num_captured_activity_sessions = 0;
+  pbl_realtime_set(WALK_TEST_START_UTC);
 
-  // Walk long enough to pass the 3 minute threshold that arms the HRM
-  prv_feed_minutes(5, WALK_STEPS_PER_MIN);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
+  struct kalg_step_activity walk;
+  struct kalg_step_activity run;
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, 0);
+  cl_assert_equal_i(walk.len_sec, 0);
+  cl_assert(!walk.active);
 
-  // Starting a workout disables activity tracking while the walk is still in progress
-  kalg_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback, nullptr);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
+  // In progress well before it is long enough to be a session
+  prv_feed_minutes(3, WALK_STEPS_PER_MIN);
+  cl_assert_equal_i(s_num_captured_activity_sessions, 0);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, WALK_TEST_START_UTC - PBL_SEC_PER_MIN);
+  cl_assert_equal_i(walk.len_sec, 3 * PBL_SEC_PER_MIN);
+  cl_assert(walk.active);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Run, &run);
+  cl_assert_equal_i(run.start_utc, 0);
 
-  kalg_deinit(s_kalg_state);
-  pbl_free(s_kalg_state);
-  s_kalg_state = nullptr;
-}
+  // Still in progress during a pause
+  prv_feed_minutes(2, 0);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, WALK_TEST_START_UTC - PBL_SEC_PER_MIN);
+  cl_assert_equal_i(walk.len_sec, 5 * PBL_SEC_PER_MIN);
+  cl_assert(!walk.active);
 
-// ---------------------------------------------------------------------------------------
-// kalg_deinit must release a subscription held by an in-progress activity. The caller frees the
-// state right after, so anything left subscribed is orphaned in the manager until reboot.
-void test_kraepelin_algorithm__hrm_released_on_deinit(void) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
-  s_hrm_live_subscriptions = 0;
-  s_num_captured_activity_sessions = 0;
-
-  prv_feed_minutes(5, WALK_STEPS_PER_MIN);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
-
-  kalg_deinit(s_kalg_state);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 0);
-
-  pbl_free(s_kalg_state);
-  s_kalg_state = nullptr;
-}
-
-// ---------------------------------------------------------------------------------------
-// The subscription is bounded and re-armed each active minute, so it lapses on its own if the
-// state machine ever stops running.
-void test_kraepelin_algorithm__hrm_subscription_is_bounded(void) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
-  s_hrm_live_subscriptions = 0;
-  s_hrm_last_expire_s = 0;
-  s_num_captured_activity_sessions = 0;
-
-  prv_feed_minutes(5, WALK_STEPS_PER_MIN);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
-
-  // The window has to outlast the inactive-minute grace period, or an ongoing activity would
-  // lose its subscription mid-walk
-  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
-
-  // Each further active minute re-arms it rather than subscribing again
-  s_hrm_last_expire_s = 0;
   prv_feed_minutes(1, WALK_STEPS_PER_MIN);
-  cl_assert_equal_i(s_hrm_live_subscriptions, 1);
-  cl_assert(s_hrm_last_expire_s > 7 * PBL_SEC_PER_MIN);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.len_sec, 6 * PBL_SEC_PER_MIN);
+  cl_assert(walk.active);
 
-  kalg_deinit(s_kalg_state);
+  // Gone once the pause is too long
+  prv_feed_minutes(8, 0);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, 0);
+
+  // Gone when activity tracking is disabled, e.g. by a workout
+  prv_feed_minutes(3, WALK_STEPS_PER_MIN);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert(walk.start_utc != 0);
+  kalg_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback, nullptr);
+  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  cl_assert_equal_i(walk.start_utc, 0);
+
   pbl_free(s_kalg_state);
   s_kalg_state = nullptr;
 }

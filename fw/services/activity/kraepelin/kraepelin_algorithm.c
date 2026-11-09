@@ -31,9 +31,7 @@ Pebble App project.
 
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
-#include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/math.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/size.h>
@@ -111,8 +109,6 @@ typedef struct {
   uint32_t resting_calories; // summed resting calories
   uint32_t active_calories;  // summed active calories
   uint32_t distance_mm;      // summed distance
-
-  HRMSessionRef hrm_session; // current hrm session
 } KAlgStepActivityState;
 
 // Returned by prv_get_step_activity_attributes() and used for classifying activities
@@ -374,30 +370,6 @@ static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
 
   snprintf(alg_state->log_time_fmt, sizeof(alg_state->log_time_fmt), "%02d:%02d", hours, minutes);
   return alg_state->log_time_fmt;
-}
-
-#ifdef CONFIG_HRM
-// Bound the auto-activity HR subscription and re-arm it each active minute, so it lapses on its own
-// if this state machine ever stops running. An activity survives k_max_inactive_minutes without
-// reaching here, so the window has to comfortably exceed that.
-#define KALG_ACTIVITY_HRM_EXPIRE_S (10 * PBL_SEC_PER_MIN)
-#endif
-
-// ----------------------------------------------------------------------------------------
-// Drop the HRM subscription held by a step activity, if it has one.
-static void prv_release_step_activity_hrm(KAlgStepActivityState *state) {
-#ifdef CONFIG_HRM
-  if (state->hrm_session != HRM_INVALID_SESSION_REF) {
-    sys_hrm_manager_unsubscribe(state->hrm_session);
-    state->hrm_session = HRM_INVALID_SESSION_REF;
-  }
-#endif
-}
-
-// ----------------------------------------------------------------------------------------
-static void prv_reset_step_activity_state(KAlgStepActivityState *state) {
-  prv_release_step_activity_hrm(state);
-  *state = (KAlgStepActivityState){};
 }
 
 // -----------------------------------------------------------------------------------------
@@ -1267,15 +1239,6 @@ bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
   return true;
 }
 
-// -----------------------------------------------------------------------------------------
-// Release resources held by the state. Must be called before the caller frees it, otherwise the
-// HRM subscriptions outlive the only references to them and pin the sensor on until reboot.
-void kalg_deinit(KAlgState *state) {
-  PBL_ASSERTN(state != nullptr);
-  prv_release_step_activity_hrm(&state->walk_state);
-  prv_release_step_activity_hrm(&state->run_state);
-}
-
 // ------------------------------------------------------------------------------------
 uint32_t kalg_analyze_samples(KAlgState *state, AccelRawData *data, uint32_t num_samples,
                               uint32_t *consumed_samples) {
@@ -1943,36 +1906,11 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivi
   return &k_attributes[activity];
 }
 
-#ifdef CONFIG_HRM
-// ------------------------------------------------------------------------------------------
-static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
-  // The algorithm doesn't care about these events. It only subscribed so the activity service
-  // gets events.
-}
-#endif
-
-#ifdef CONFIG_HRM
-// Recompute the HR algorithm's activity scene from whichever auto-detected walk/run session is
-// sampling HR. Run dominates walk (higher intensity); neither active -> default model. Manual
-// workouts disable auto-tracking, so this never races the workout's own scene. Runs on SysWorkq.
-static void prv_update_activity_hrm_scene(KAlgState *alg_state) {
-  const bool run_active = alg_state->run_state.hrm_session != HRM_INVALID_SESSION_REF;
-  const bool walk_active = alg_state->walk_state.hrm_session != HRM_INVALID_SESSION_REF;
-  HRMActivityScene scene = HRMActivityScene_Default;
-  if (run_active) {
-    scene = HRMActivityScene_Run;
-  } else if (walk_active) {
-    scene = HRMActivityScene_Walk;
-  }
-  hrm_manager_set_activity_scene(scene);
-}
-#endif
-
 // ------------------------------------------------------------------------------------------
 // End a step activity in progress, registering it if it is long enough, and reset its state
-static void prv_end_step_activity(KAlgState *alg_state, KAlgStepActivityState *state,
-                                  time_t utc_now, KAlgActivitySessionCallback sessions_cb,
-                                  void *context, KAlgActivityType activity_type) {
+static void prv_end_step_activity(KAlgStepActivityState *state, time_t utc_now,
+                                  KAlgActivitySessionCallback sessions_cb, void *context,
+                                  KAlgActivityType activity_type) {
   if (state->start_time == KALG_START_TIME_NONE) {
     return;
   }
@@ -1991,22 +1929,17 @@ static void prv_end_step_activity(KAlgState *alg_state, KAlgStepActivityState *s
                 false /*delete*/, state->steps, state->resting_calories, state->active_calories,
                 state->distance_mm);
   }
-  prv_reset_step_activity_state(state);
-#ifdef CONFIG_HRM
-  // This activity's HR session is gone; recompute the scene so it follows whichever activity
-  // (if any) is still running, or drops back to the default model.
-  prv_update_activity_hrm_scene(alg_state);
-#endif
+  *state = (KAlgStepActivityState){};
 }
 
 // ----------------------------------------------------------------------------------------
 // End the step activities in progress as of the last processed minute and reset all detectors
 static void prv_reset_state(KAlgState *state, KAlgActivitySessionCallback sessions_cb,
                             void *context) {
-  prv_end_step_activity(state, &state->walk_state, state->last_activity_update_utc, sessions_cb,
-                        context, KAlgActivityType_Walk);
-  prv_end_step_activity(state, &state->run_state, state->last_activity_update_utc, sessions_cb,
-                        context, KAlgActivityType_Run);
+  prv_end_step_activity(&state->walk_state, state->last_activity_update_utc, sessions_cb, context,
+                        KAlgActivityType_Walk);
+  prv_end_step_activity(&state->run_state, state->last_activity_update_utc, sessions_cb, context,
+                        KAlgActivityType_Run);
   state->sleep_state = (KAlgSleepActivityState){};
   state->deep_sleep_state = (KAlgDeepSleepActivityState){};
   state->not_worn_state = (KAlgNotWornState){};
@@ -2047,22 +1980,6 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
     PBL_ASSERTN(state->start_time < utc_now);
     uint32_t duration_secs = utc_now - state->start_time;
 
-#ifdef CONFIG_HRM
-    // Make sure we have a couple active minutes in a row before enabling the HRM to save battery
-    const unsigned min_duration_for_hrm = 3 * PBL_SEC_PER_MIN;
-    if (state->hrm_session != HRM_INVALID_SESSION_REF) {
-      sys_hrm_manager_set_update_interval(state->hrm_session, 1 /*update_interval_s*/,
-                                          KALG_ACTIVITY_HRM_EXPIRE_S);
-    } else if (duration_secs >= min_duration_for_hrm &&
-               activity_prefs_hrm_activity_tracking_is_enabled()) {
-      state->hrm_session = hrm_manager_subscribe_with_callback(
-          INSTALL_ID_INVALID, 1 /*update_interval_s*/, KALG_ACTIVITY_HRM_EXPIRE_S, HRMFeature_BPM,
-          false /*low_latency*/, prv_hrm_subscription_cb, nullptr);
-      // A new auto-detected activity just enabled HR: switch the algorithm to a motion-tuned scene.
-      prv_update_activity_hrm_scene(alg_state);
-    }
-#endif
-
     // If we've reached the minimum activity length, register/update it
     if (duration_secs >= KALG_MIN_STEP_ACTIVITY_SECS) {
       PBL_LOG_DBG("Updating activity %d: steps: %" PRIu16 ", rest_cal: %" PRIu32
@@ -2089,7 +2006,7 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
         (shutting_down) ? true : (state->inactive_minute_count++ > k_max_inactive_minutes);
 
     if (activity_ended) {
-      prv_end_step_activity(alg_state, state, utc_now, sessions_cb, context, activity_type);
+      prv_end_step_activity(state, utc_now, sessions_cb, context, activity_type);
     } else {
       // This was an inactive minute, but the activity is still considered ongoing, so accumulate
       // whatever steps, calories we have in this minute
@@ -2151,6 +2068,23 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
   }
   PBL_ASSERTN(false);
   return 0;
+}
+
+// ---------------------------------------------------------------------------------------
+void kalg_get_step_activity(KAlgState *alg_state, KAlgActivityType activity,
+                            struct kalg_step_activity *step_activity) {
+  PBL_ASSERTN(activity == KAlgActivityType_Walk || activity == KAlgActivityType_Run);
+  const KAlgStepActivityState *state =
+      (activity == KAlgActivityType_Walk) ? &alg_state->walk_state : &alg_state->run_state;
+
+  *step_activity = (struct kalg_step_activity){};
+  if (state->start_time == KALG_START_TIME_NONE) {
+    return;
+  }
+
+  step_activity->start_utc = state->start_time;
+  step_activity->len_sec = alg_state->last_activity_update_utc - state->start_time;
+  step_activity->active = (state->inactive_minute_count == 0);
 }
 
 // ---------------------------------------------------------------------------------------
