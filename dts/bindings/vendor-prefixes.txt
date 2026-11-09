@@ -1,0 +1,5 @@
+# Vendor prefixes the upstream registry lacks, merged into it when the bindings
+# are processed. Remove an entry once upstream has it.
+# <prefix>	<description>
+coredevices	Core Devices LLC
+sifli	SiFli Technologies (Nanjing) Co., Ltd.

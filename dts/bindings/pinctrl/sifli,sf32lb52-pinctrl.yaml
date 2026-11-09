@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/pinctrl/sifli,sf32lb52-pinctrl.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 pin controller (HPSYS PINMUX)
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  Selects the function of each SA and PA pad and configures the pad. Functions
+  are named after the signal, e.g. i2c1_scl. Pin configuration states are
+  children of the controller, holding groups of pins that share a function and
+  a pad configuration.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-pinctrl
+
+  reg:
+    maxItems: 1
+
+patternProperties:
+  '-state$':
+    type: object
+    description: A pin configuration state, referenced from pinctrl-N.
+
+    patternProperties:
+      '^(.+-)?pins$':
+        type: object
+        description: A group of pins sharing their pad configuration.
+        allOf:
+          - $ref: /schemas/pinctrl/pincfg-node.yaml#
+          - $ref: /schemas/pinctrl/pinmux-node.yaml#
+
+        properties:
+          pins:
+            items:
+              pattern: '^(PA|SA)[0-9][0-9]$'
+
+          function:
+            pattern: '^[a-z0-9_]+$'
+
+          bias-pull-up: true
+          bias-pull-down: true
+          input-enable: true
+
+          drive-strength:
+            enum: [2, 4, 8, 12, 20]
+
+        required:
+          - pins
+          - function
+
+        additionalProperties: false
+
+    additionalProperties: false
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    pinctrl@50003000 {
+        compatible = "sifli,sf32lb52-pinctrl";
+        reg = <0x50003000 0x100>;
+
+        i2c1-default-state {
+            scl-pins {
+                pins = "PA31";
+                function = "i2c1_scl";
+                input-enable;
+                drive-strength = <8>;
+            };
+        };
+    };

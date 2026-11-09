@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: intc
+type: struct pbl_intc
+include: pbl/drivers/intc.h
+provides:
+  # Cells are <line type>, type having the values of PBL_IRQ_TYPE_*
+  irq: "PBL_IRQ_SPEC(&{sym}, {0}, {1})"

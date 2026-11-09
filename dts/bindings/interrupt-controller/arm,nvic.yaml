@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/interrupt-controller/arm,nvic.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: ARM Nested Vectored Interrupt Controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  One interrupt cell, the line, as the upstream Cortex-M devicetrees use it.
+  Priorities are not part of the hardware description.
+
+properties:
+  compatible:
+    enum:
+      - arm,v7m-nvic
+      - arm,v8m-nvic
+
+  reg:
+    maxItems: 1
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 1
+
+  '#address-cells':
+    const: 0
+
+required:
+  - compatible
+  - reg
+  - interrupt-controller
+  - '#interrupt-cells'
+
+additionalProperties: false

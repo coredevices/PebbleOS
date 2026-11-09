@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/sifli,sf32lb52-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 GPIO controller (HPSYS GPIO1)
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  GPIO controller of the PA pads. Each pad is also an interrupt source.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-gpio
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  ngpios:
+    maximum: 45
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - gpio-controller
+  - '#gpio-cells'
+  - interrupt-controller
+  - '#interrupt-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    gpio@500a0000 {
+        compatible = "sifli,sf32lb52-gpio";
+        reg = <0x500a0000 0x1000>;
+        interrupts = <84>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <45>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible:
+  - arm,v7m-nvic
+  - arm,v8m-nvic
+config: CPU_CORTEX_M
+provides:
+  irq: "{0}"

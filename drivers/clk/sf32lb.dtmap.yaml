@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-hpsys-rcc
+config: CLK_SF32LB
+class: clk
+symbol: pbl_clk_sf32lb_hpsys_rcc
+ids:
+  clock:
+    cell: 0
+    header: dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h
+    prefix: SF32LB52_HPSYS_RCC_CLK_
+    values:
+      header: pbl/drivers/clk/sf32lb.h
+      prefix: SF32LB52_HPSYS_CLK_

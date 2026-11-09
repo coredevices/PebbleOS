@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-dmac
+config: DMA_SF32LB52
+class: dma
+symbol: pbl_dma_sf32lb52_dmac1
