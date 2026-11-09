@@ -3,6 +3,7 @@
 
 #include "vibe_patterns.h"
 
+#include "option_menu.h"
 #include "speaker_volume_window.h"
 #include "window.h"
 
@@ -54,6 +55,26 @@ static void prv_deinit_cb(SettingsCallbacks *context) {
   app_free(data);
 }
 
+static const char *prv_row_title(uint16_t row) {
+  switch (row) {
+    case VibeSettingsRow_Notifications:
+      return i18n_noop("Notifications");
+    case VibeSettingsRow_PhoneCalls:
+      return i18n_noop("Incoming Calls");
+    case VibeSettingsRow_Alarms:
+      return i18n_noop("Alarms");
+    case VibeSettingsRow_Hourly:
+      return i18n_noop("Hourly Notice");
+    case VibeSettingsRow_OnDisconnect:
+      return i18n_noop("On Disconnect");
+    case VibeSettingsRow_System:
+      /// Refers to the class of all non-score vibes, e.g. 3rd party app vibes
+      return i18n_noop("System");
+    default:
+      pbl_panic();
+  }
+}
+
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
                             uint16_t row, bool selected) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
@@ -80,34 +101,26 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     }
 #endif
     case VibeSettingsRow_Notifications: {
-      title = i18n_noop("Notifications");
       client = VibeClient_Notifications;
       break;
     }
     case VibeSettingsRow_PhoneCalls: {
-      title = i18n_noop("Incoming Calls");
       client = VibeClient_PhoneCalls;
       break;
     }
     case VibeSettingsRow_Alarms: {
-      title = i18n_noop("Alarms");
       client = VibeClient_Alarms;
       break;
     }
     case VibeSettingsRow_Hourly: {
-      title = i18n_noop("Hourly Notice");
       client = VibeClient_Hourly;
       break;
     }
     case VibeSettingsRow_OnDisconnect: {
-      title = i18n_noop("On Disconnect");
       client = VibeClient_OnDisconnect;
       break;
     }
     case VibeSettingsRow_System: {
-      /// Refers to the class of all non-score vibes, e.g. 3rd party app vibes
-      title = i18n_noop("System");
-
       const VibeIntensity current_system_default_vibe_intensity = vibe_intensity_get();
       subtitle = vibe_intensity_get_string_for_intensity(current_system_default_vibe_intensity);
       break;
@@ -116,6 +129,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       pbl_panic();
     }
   }
+
+  title = prv_row_title(row);
 
   // We need to set the subtitle to the name of a vibe score if it's NULL at this point
   if (!subtitle) {
@@ -176,6 +191,129 @@ static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_ro
   vibe_score_destroy(score);
 }
 
+// Vibe score menu
+/////////////////////////////
+
+typedef struct VibeScoreMenuData {
+  VibeClient client;
+  bool committed;
+  VibeScoreId *ids;
+  const char **names;
+} VibeScoreMenuData;
+
+static void prv_preview_score(VibeScoreId id) {
+  vibes_cancel();
+  if (id == VibeScoreId_Disabled) {
+    return;
+  }
+  VibeScore *score = vibe_score_create_with_resource(vibe_score_info_get_resource_id(id));
+  if (!score) {
+    return;
+  }
+  vibe_score_do_vibe(score);
+  vibe_score_destroy(score);
+}
+
+static void prv_score_menu_selection_will_change(OptionMenu *option_menu, uint16_t new_row,
+                                                 uint16_t old_row, void *context) {
+  VibeScoreMenuData *data = settings_option_menu_get_context(context);
+  if (new_row != old_row) {
+    prv_preview_score(data->ids[new_row]);
+  }
+}
+
+static void prv_score_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  VibeScoreMenuData *data = settings_option_menu_get_context(context);
+  data->committed = true;
+  alerts_preferences_set_vibe_score_for_client(data->client, data->ids[selection]);
+  settings_menu_mark_dirty(SettingsMenuItemVibrations);
+  prv_preview_score(data->ids[selection]);
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_score_menu_unload(OptionMenu *option_menu, void *context) {
+  VibeScoreMenuData *data = settings_option_menu_get_context(context);
+  // Keep the confirmation vibe of a selection, stop a preview when backing out
+  if (!data->committed) {
+    vibes_cancel();
+  }
+  app_free(data->ids);
+  app_free(data->names);
+  app_free(data);
+}
+
+static void prv_score_menu_push(VibeClient client, const char *title) {
+  const unsigned int num_scores = vibe_score_info_get_ids_for_client(client, nullptr, 0);
+  if (num_scores == 0) {
+    return;
+  }
+
+  VibeScoreMenuData *data = app_zalloc_check(sizeof(*data));
+  data->client = client;
+  data->ids = app_malloc_check(num_scores * sizeof(*data->ids));
+  data->names = app_malloc_check(num_scores * sizeof(*data->names));
+  vibe_score_info_get_ids_for_client(client, data->ids, num_scores);
+
+  const VibeScoreId current = alerts_preferences_get_vibe_score_for_client(client);
+  int choice = 0;
+  for (unsigned int i = 0; i < num_scores; i++) {
+    data->names[i] = vibe_score_info_get_name(data->ids[i]);
+    if (data->ids[i] == current) {
+      choice = i;
+    }
+  }
+
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_score_menu_select,
+    .selection_will_change = prv_score_menu_selection_will_change,
+    .unload = prv_score_menu_unload,
+  };
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, choice, &callbacks, num_scores,
+                            true /* icons_enabled */, data->names, data);
+}
+
+// System vibe intensity menu
+/////////////////////////////
+
+static const char *s_intensity_names[VibeIntensityNum];
+
+static void prv_intensity_menu_selection_will_change(OptionMenu *option_menu, uint16_t new_row,
+                                                     uint16_t old_row, void *context) {
+  if (new_row != old_row) {
+    // Apply the intensity until the menu closes so the user can feel it
+    vibes_cancel();
+    vibe_intensity_set(new_row);
+    vibes_short_pulse();
+  }
+}
+
+static void prv_intensity_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  alerts_preferences_set_vibe_intensity(selection);
+  settings_menu_mark_dirty(SettingsMenuItemVibrations);
+  vibes_cancel();
+  vibe_intensity_set(selection);
+  vibes_short_pulse();
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_intensity_menu_unload(OptionMenu *option_menu, void *context) {
+  vibe_intensity_set(alerts_preferences_get_vibe_intensity());
+}
+
+static void prv_intensity_menu_push(const char *title) {
+  for (int i = 0; i < VibeIntensityNum; i++) {
+    s_intensity_names[i] = vibe_intensity_get_string_for_intensity(i);
+  }
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_intensity_menu_select,
+    .selection_will_change = prv_intensity_menu_selection_will_change,
+    .unload = prv_intensity_menu_unload,
+  };
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine, vibe_intensity_get(),
+                            &callbacks, VibeIntensityNum, true /* icons_enabled */,
+                            s_intensity_names, nullptr);
+}
+
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
   vibes_cancel();
 
@@ -215,34 +353,14 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       break;
     }
     case VibeSettingsRow_System: {
-      const VibeIntensity current_system_default_vibe_intensity = vibe_intensity_get();
-      const VibeIntensity next_system_default_vibe_intensity =
-          vibe_intensity_cycle_next(current_system_default_vibe_intensity);
-
-      // Set the next system default vibe intensity and vibe a short pulse so the user can feel it
-      vibe_intensity_set(next_system_default_vibe_intensity);
-      alerts_preferences_set_vibe_intensity(next_system_default_vibe_intensity);
-      vibes_short_pulse();
-
-      settings_menu_mark_dirty(SettingsMenuItemVibrations);
-
-      // Just return because the remainder of this function only applies to vibe scores
+      prv_intensity_menu_push(prv_row_title(row));
       return;
     }
     default:
       pbl_panic();
   }
 
-  VibeScoreId current_vibe_score = alerts_preferences_get_vibe_score_for_client(client);
-  VibeScoreId new_vibe_score = vibe_score_info_cycle_next(client, current_vibe_score);
-  alerts_preferences_set_vibe_score_for_client(client, new_vibe_score);
-  settings_menu_mark_dirty(SettingsMenuItemVibrations);
-  VibeScore *score = vibe_client_get_score(client);
-  if (!score) {
-    return;
-  }
-  vibe_score_do_vibe(score);
-  vibe_score_destroy(score);
+  prv_score_menu_push(client, prv_row_title(row));
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
