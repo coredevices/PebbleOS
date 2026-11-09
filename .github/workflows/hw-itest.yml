@@ -49,7 +49,7 @@ jobs:
       contents: read
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v10
+      image: ghcr.io/coredevices/pebbleos-docker:v11
 
     strategy:
       fail-fast: false
