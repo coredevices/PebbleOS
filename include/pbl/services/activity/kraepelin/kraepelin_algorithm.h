@@ -22,7 +22,7 @@
  *
  * @code{.c}
  * KAlgState *state = pbl_malloc_check(kalg_state_size());
- * kalg_init(state, NULL);
+ * kalg_init(state, nullptr, nullptr);
  *
  * // For every batch of 25 Hz samples
  * uint32_t consumed;
@@ -131,6 +131,34 @@ typedef void (*KAlgActivitySessionCallback)(void *context, KAlgActivityType acti
                                             uint32_t active_calories, uint32_t distance_mm);
 
 /**
+ * @brief Detection parameters that depend on the accelerometer, passed to kalg_init().
+ *
+ * Accelerometers with a higher noise floor need higher VMC thresholds.
+ */
+struct kalg_params {
+  /** A minute whose weighted VMC score is at most this is a sleep minute. */
+  uint16_t sleep_max_minute_score;
+  /** A minute whose VMC is above this counts as an active minute of a sleep session. */
+  uint16_t sleep_min_valid_vmc;
+  /** A sleep session whose average VMC is above this is rejected. */
+  uint16_t sleep_max_avg_vmc;
+  /** A minute whose VMC is below this may be a not-worn minute. */
+  uint16_t not_worn_min_worn_vmc;
+  /** A run of possibly not-worn minutes at least this long, in minutes, is not worn. */
+  uint16_t not_worn_max_low_vmc_run_m;
+};
+
+/** @brief Default @ref kalg_params initializer. */
+#define KALG_PARAMS_DEFAULT            \
+  {                                    \
+    .sleep_max_minute_score = 330,     \
+    .sleep_min_valid_vmc = 20,         \
+    .sleep_max_avg_vmc = 180,          \
+    .not_worn_min_worn_vmc = 4,        \
+    .not_worn_max_low_vmc_run_m = 180, \
+  }
+
+/**
  * @brief Callback receiving algorithm statistics.
  *
  * Only used during algorithm development, to collect and summarize named statistics.
@@ -152,10 +180,11 @@ uint32_t kalg_state_size(void);
  * @brief Initialize the algorithm state.
  *
  * @param state State, of kalg_state_size() bytes.
+ * @param params Detection parameters, copied; NULL for @ref KALG_PARAMS_DEFAULT.
  * @param stats_cb If not NULL, called with statistics while analyzing samples.
  * @return true on success.
  */
-bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb);
+bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCallback stats_cb);
 
 /**
  * @brief Analyze accelerometer samples.

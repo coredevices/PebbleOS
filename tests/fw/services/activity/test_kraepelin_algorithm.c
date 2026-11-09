@@ -338,7 +338,7 @@ static uint32_t prv_feed_kalg_samples(AccelRawData *data, int num_samples,
 
   // Init  state
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
 
   // Run some data through it, 1 minute at a time
   while (num_samples_left) {
@@ -1493,7 +1493,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
     // It's easier to understand the algorithm log messages if we start at 0 time
     pbl_realtime_set(0);
     memset(s_kalg_state, 0, kalg_state_size());
-    kalg_init(s_kalg_state, prv_stats_cb);
+    kalg_init(s_kalg_state, nullptr, prv_stats_cb);
     s_num_captured_sleep_sessions = 0;
 
     // Run samples through the activity detector
@@ -1655,7 +1655,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
     printf("\nRunning activity sample set: \"%s\"\n", entry->name);
 
     memset(s_kalg_state, 0, kalg_state_size());
-    kalg_init(s_kalg_state, prv_stats_cb);
+    kalg_init(s_kalg_state, nullptr, prv_stats_cb);
     s_num_captured_activity_sessions = 0;
 
     // Run samples through the activity detector
@@ -1901,7 +1901,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
   // Init  state
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
 
   KAlgTestActivityMinute minute_raw_data[k_minute_data_len];
 
@@ -2040,7 +2040,7 @@ void test_kraepelin_algorithm__sleep_stats(void) {
   // It's easier to understand the algorithm log messages if we start at 0 time
   pbl_realtime_set(0);
   memset(s_kalg_state, 0, kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_sleep_sessions = 0;
 
   // Get the samples for this test
@@ -2121,7 +2121,7 @@ static void prv_feed_minutes(int num_minutes, uint16_t steps) {
 // spanning the whole workout.
 void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
@@ -2146,7 +2146,7 @@ void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
 // is a new one.
 void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
@@ -2179,7 +2179,7 @@ void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
 // start time across it.
 static void prv_walk_ended_on_time_jump(int jump_secs) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
@@ -2218,7 +2218,7 @@ void test_kraepelin_algorithm__walk_ended_on_forward_time_jump(void) {
 // The walk in progress is reported from its first active minute until it ends.
 void test_kraepelin_algorithm__step_activity_in_progress(void) {
   s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, prv_stats_cb);
+  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 

@@ -279,7 +279,7 @@ uint32_t kalg_state_size(void) {
   return 1;
 }
 
-bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
+bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCallback stats_cb) {
   return true;
 }
 

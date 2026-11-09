@@ -887,7 +887,14 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   pbl_shared_cbuf_add_client(&s_alg_state->minute_data_cbuf, &s_alg_state->dls_minute_data_client);
 
   // Init the algorithm state
-  kalg_init(k_state, nullptr);
+  const struct kalg_params params = {
+    .sleep_max_minute_score = CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_MINUTE_SCORE,
+    .sleep_min_valid_vmc = CONFIG_SERVICE_ACTIVITY_SLEEP_MIN_VALID_VMC,
+    .sleep_max_avg_vmc = CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_AVG_VMC,
+    .not_worn_min_worn_vmc = CONFIG_SERVICE_ACTIVITY_NOT_WORN_MIN_WORN_VMC,
+    .not_worn_max_low_vmc_run_m = CONFIG_SERVICE_ACTIVITY_NOT_WORN_MAX_LOW_VMC_RUN_M,
+  };
+  kalg_init(k_state, &params, nullptr);
 
   // Count # of records in minute file
   uint32_t num_records;

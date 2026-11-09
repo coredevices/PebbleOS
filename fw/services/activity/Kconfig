@@ -17,6 +17,40 @@ config SERVICE_ACTIVITY_BATCH_SAMPLES
       batching a full epoch minimizes wakeups. Defaults to the accel manager
       batch size, which is sized for the accelerometer FIFO depth.
 
+config SERVICE_ACTIVITY_SLEEP_MAX_MINUTE_SCORE
+    int "Sleep minute maximum score"
+    default 330
+    help
+      A minute whose weighted VMC score is at most this is a sleep minute.
+      Accelerometers with a higher noise floor need a higher value.
+
+config SERVICE_ACTIVITY_SLEEP_MIN_VALID_VMC
+    int "Sleep active minute minimum VMC"
+    default 20
+    help
+      A minute whose VMC is above this counts as an active minute of a
+      sleep session.
+
+config SERVICE_ACTIVITY_SLEEP_MAX_AVG_VMC
+    int "Sleep session maximum average VMC"
+    default 180
+    help
+      A sleep session whose average VMC is above this is rejected.
+
+config SERVICE_ACTIVITY_NOT_WORN_MIN_WORN_VMC
+    int "Not-worn minute maximum VMC"
+    default 4
+    help
+      A minute whose VMC is below this may be a minute the watch was not
+      worn.
+
+config SERVICE_ACTIVITY_NOT_WORN_MAX_LOW_VMC_RUN_M
+    int "Not-worn minimum run length (minutes)"
+    default 180
+    help
+      A run of possibly not-worn minutes at least this long means the watch
+      was not worn. Stillness during deep sleep must not reach it.
+
 module = SERVICE_ACTIVITY
 module-str = Activity
 source "subsys/logging/Kconfig.template.log_level"

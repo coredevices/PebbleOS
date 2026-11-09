@@ -187,10 +187,8 @@ typedef struct {
   uint16_t min_sleep_len_for_active_pct_check;
 } KAlgSleepParams;
 
-// Set the sleep parameters
-#if defined(CONFIG_BOARD_ASTERIX)
+// Default sleep parameters, the ones in struct kalg_params are set by kalg_init()
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
-  .max_sleep_minute_score = 500, // Increased significantly for asterix - much stricter
   .force_wake_minute_score = 8000,
   .force_wake_minute_vmc = 10000,
   .min_sleep_minutes = 5,
@@ -200,31 +198,10 @@ static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .max_wake_minutes_late = 11,
 
   .min_sleep_cycle_len_minutes = 60,
-  .min_valid_vmc = 30, // Increased significantly for asterix
   .max_active_minutes_pct = 89,
-  .max_avg_vmc = 250, // Increased significantly for asterix
   .vmc_clip = 1000,
   .min_sleep_len_for_active_pct_check = 39,
 };
-#else
-static const KAlgSleepParams KALG_SLEEP_PARAMS = {
-  .max_sleep_minute_score = 330,
-  .force_wake_minute_score = 8000,
-  .force_wake_minute_vmc = 10000,
-  .min_sleep_minutes = 5,
-
-  .max_wake_minute_early_offset = 60,
-  .max_wake_minutes_early = 14,
-  .max_wake_minutes_late = 11,
-
-  .min_sleep_cycle_len_minutes = 60,
-  .min_valid_vmc = 20,
-  .max_active_minutes_pct = 89,
-  .max_avg_vmc = 180,
-  .vmc_clip = 1000,
-  .min_sleep_len_for_active_pct_check = 39,
-};
-#endif
 
 // ----------------------------------------------------------------------------------------
 // Deep Sleep detection structures
@@ -298,21 +275,10 @@ typedef struct {
   uint16_t max_low_vmc_run_m;
 } KAlgNotWornParams;
 
-// Set the not-worn parameters
-#if defined(CONFIG_BOARD_ASTERIX)
+// Default not-worn parameters, the ones in struct kalg_params are set by kalg_init()
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
   .max_non_worn_vmc = 2500,
-  .min_worn_vmc = 15, // Increased significantly for asterix - much higher baseline noise
-  .max_low_vmc_run_m =
-      120, // Allow longer stillness during deep sleep while still catching desk time
 };
-#else
-static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
-  .max_non_worn_vmc = 2500,
-  .min_worn_vmc = 4,
-  .max_low_vmc_run_m = 180,
-};
-#endif
 
 // ---------------------------------------------------------------------------------------------
 // State variables. Must be allocated by caller and initialized by kalg_init()
@@ -341,6 +307,10 @@ typedef struct KAlgState {
 
   // Stats callback
   KAlgStatsCallback stats_cb;
+
+  // Detection parameters
+  KAlgSleepParams sleep_params;
+  KAlgNotWornParams not_worn_params;
 
   // Butterworth filter state used in prv_pim_filter.
   Fixed_S64_32 yt[KALG_N_AXES][KALG_BUTTERWORTH_NUM_COEFFICIENTS - 1];
@@ -1227,13 +1197,26 @@ uint32_t kalg_state_size(void) {
 
 // -----------------------------------------------------------------------------------------
 // Init the state, return true on success
-bool kalg_init(KAlgState *state, KAlgStatsCallback stats_cb) {
+bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCallback stats_cb) {
+  static const struct kalg_params default_params = KALG_PARAMS_DEFAULT;
+
   PBL_ASSERTN(state != nullptr);
+  if (params == nullptr) {
+    params = &default_params;
+  }
+
   *state = (KAlgState){
     .stats_cb = stats_cb,
+    .sleep_params = KALG_SLEEP_PARAMS,
+    .not_worn_params = KALG_NOT_WORN_PARAMS,
   };
+  state->sleep_params.max_sleep_minute_score = params->sleep_max_minute_score;
+  state->sleep_params.min_valid_vmc = params->sleep_min_valid_vmc;
+  state->sleep_params.max_avg_vmc = params->sleep_max_avg_vmc;
+  state->not_worn_params.min_worn_vmc = params->not_worn_min_worn_vmc;
+  state->not_worn_params.max_low_vmc_run_m = params->not_worn_max_low_vmc_run_m;
 
-  PBL_ASSERT((KALG_SLEEP_PARAMS.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
+  PBL_ASSERT((state->sleep_params.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
                  KALG_MAX_UNCERTAIN_SLEEP_M,
              "Invalid value for KALG_MAX_UNCERTAIN_SLEEP_M");
   return true;
@@ -1323,7 +1306,7 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
 static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
                                 uint8_t orientation, bool definitely_not_worn) {
   // Handy access to some variables
-  const KAlgNotWornParams *params = &KALG_NOT_WORN_PARAMS;
+  const KAlgNotWornParams *params = &alg_state->not_worn_params;
   KAlgNotWornState *state = &alg_state->not_worn_state;
 
   // Determine if this is a "maybe-not-worn" sample
@@ -1603,7 +1586,7 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
                                             uint32_t *score_ret, time_t *sample_utc_ret,
                                             bool *is_sleep_minute_ret) {
   // Handy access to some variables
-  const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
+  const KAlgSleepParams *params = &alg_state->sleep_params;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
 
   // Add this data to our history
@@ -1667,7 +1650,7 @@ static void prv_sleep_activity_update_session_state(
     KAlgActivitySessionCallback sessions_cb, void *context, time_t *sleep_end_time,
     bool *reject_session) {
   // Handy access to some variables
-  const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
+  const KAlgSleepParams *params = &alg_state->sleep_params;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
 
   // Compute running averages
@@ -1770,7 +1753,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
                                       bool shutting_down, KAlgActivitySessionCallback sessions_cb,
                                       void *context) {
   // Handy access to some variables
-  const KAlgSleepParams *params = &KALG_SLEEP_PARAMS;
+  const KAlgSleepParams *params = &alg_state->sleep_params;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
 
   // Update stats that we keep in our state variables and compute the score for this minute
