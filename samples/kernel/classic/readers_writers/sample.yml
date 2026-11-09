@@ -1,0 +1,6 @@
+description: Readers and writers, a lock that lets many read or one write
+expect:
+  - 'record: version 5 after 5 writes'
+  - 'record: up to 3 readers at once, 0 half written records read'
+  - 'record: 0 writes made with a reader in the room'
+  - 'Sample done'
