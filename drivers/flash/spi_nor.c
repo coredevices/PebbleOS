@@ -432,7 +432,7 @@ static uint8_t prv_part_qer(const struct pbl_flash_nor_part *part) {
 }
 
 static int prv_unprotect(const struct pbl_flash_spi_nor *nor) {
-  const uint8_t mask = nor->part->sr1_bp_mask;
+  const uint8_t mask = nor->data->part->sr1_bp_mask;
   uint8_t sr;
   int ret;
 
@@ -492,7 +492,7 @@ static uint8_t prv_opcode_4b(const struct pbl_flash_spi_nor *nor, const struct s
       return ((sfdp->fbait[0] & s_4b_opcodes[i].fbait) != 0U) ? s_4b_opcodes[i].op4 : 0U;
     }
 
-    return ((nor->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) != 0U) ? s_4b_opcodes[i].op4 : 0U;
+    return ((nor->data->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) != 0U) ? s_4b_opcodes[i].op4 : 0U;
   }
 
   return 0U;
@@ -508,7 +508,7 @@ static uint8_t prv_erase_opcode_4b(const struct pbl_flash_spi_nor *nor, const st
     return (uint8_t)(sfdp->fbait[1] >> (8U * type->idx));
   }
 
-  if ((nor->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) == 0U) {
+  if ((nor->data->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) == 0U) {
     return 0U;
   }
 
@@ -637,7 +637,7 @@ static int prv_set_addr_mode(const struct pbl_flash_spi_nor *nor, uint8_t opcode
 }
 
 static int prv_probe(const struct pbl_flash_spi_nor *nor) {
-  const struct pbl_flash_nor_part *part = nor->part;
+  const struct pbl_flash_nor_part *part = nor->data->part;
   struct pbl_flash_spi_nor_data *data = nor->data;
   struct erase_type small = {
     .size = part->geometry.subsector_size,
@@ -760,6 +760,32 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
   return 0;
 }
 
+static const struct pbl_flash_nor_part *const s_parts[] = {
+  &pbl_flash_nor_gd25lq255e,
+  &pbl_flash_nor_gd25q256e,
+};
+
+static const struct pbl_flash_nor_part *prv_find_part(uint32_t jedec_id) {
+  for (size_t i = 0U; i < ARRAY_LENGTH(s_parts); i++) {
+    if (s_parts[i]->id == jedec_id) {
+      return s_parts[i];
+    }
+  }
+
+  return nullptr;
+}
+
+// Before the part is known, wait as long as the slowest one
+static uint16_t prv_reset_ms(void) {
+  uint16_t ms = 0U;
+
+  for (size_t i = 0U; i < ARRAY_LENGTH(s_parts); i++) {
+    ms = MAX(ms, s_parts[i]->reset_ms);
+  }
+
+  return ms;
+}
+
 static int prv_init(const struct pbl_flash *flash) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
   uint8_t id[ID_LEN];
@@ -789,9 +815,9 @@ static int prv_init(const struct pbl_flash *flash) {
     }
 
     if (pbl_flash_in_coredump(flash)) {
-      pbl_busy_wait_us(nor->part->reset_ms * US_PER_MS);
+      pbl_busy_wait_us(prv_reset_ms() * US_PER_MS);
     } else {
-      pbl_sleep_ms(nor->part->reset_ms);
+      pbl_sleep_ms(prv_reset_ms());
     }
   }
 
@@ -801,9 +827,14 @@ static int prv_init(const struct pbl_flash *flash) {
   }
 
   jedec_id = (uint32_t)id[0] | ((uint32_t)id[1] << 8) | ((uint32_t)id[2] << 16);
-  if (jedec_id != nor->part->id) {
-    PBL_LOG_WRN("Flash is not %s (id 0x%06" PRIx32 ")", nor->part->name, jedec_id);
+  nor->data->part = prv_find_part(jedec_id);
+  if (nor->data->part == nullptr) {
+    PBL_LOG_ERR("Unsupported flash, id 0x%06" PRIx32, jedec_id);
+    return -ENODEV;
   }
+
+  nor->data->otp = nor->data->part->otp.info;
+  PBL_LOG_DBG("Flash %s", nor->data->part->name);
 
   ret = prv_probe(nor);
   if (ret != 0) {
@@ -984,7 +1015,7 @@ static int prv_erase_suspend(const struct pbl_flash *flash) {
     return ret;
   }
 
-  pbl_busy_wait_us(nor->part->suspend_us);
+  pbl_busy_wait_us(nor->data->part->suspend_us);
 
   return 0;
 }
@@ -1011,7 +1042,7 @@ static void prv_stop(const struct pbl_flash *flash) {
 }
 
 static uint32_t prv_otp_addr(const struct pbl_flash_spi_nor *nor, uint8_t region, uint32_t offs) {
-  const struct pbl_flash_nor_otp *otp = &nor->part->otp;
+  const struct pbl_flash_nor_otp *otp = &nor->data->part->otp;
 
   return otp->base + ((uint32_t)region * otp->offset) + offs;
 }
@@ -1069,7 +1100,7 @@ static int prv_otp_write(const struct pbl_flash *flash, uint8_t region, uint32_t
 }
 
 static uint8_t prv_otp_lb(const struct pbl_flash_spi_nor *nor, uint8_t region) {
-  return (uint8_t)PBL_BIT(nor->part->otp.lb_bit + region);
+  return (uint8_t)PBL_BIT(nor->data->part->otp.lb_bit + region);
 }
 
 static int prv_otp_is_locked(const struct pbl_flash *flash, uint8_t region, bool *locked) {
