@@ -89,6 +89,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: firmware-${{ matrix.board }}-slot${{ matrix.slot }}
+
       - name: Install Python dependencies
         run: |
           pip install -U pip
@@ -121,6 +126,11 @@ jobs:
 
       - name: Build
         run: pbl build
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: firmware-${{ matrix.board }}-slot${{ matrix.slot }}
 
       - name: Bundle
         run: pbl bundle
@@ -206,6 +216,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: itest-${{ matrix.board }}
+
       - name: Install Python dependencies
         run: |
           pip install -U pip
@@ -222,6 +237,11 @@ jobs:
 
       - name: Build
         run: pbl build
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: itest-${{ matrix.board }}
 
       - name: Bundle
         run: pbl bundle

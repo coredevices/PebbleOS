@@ -83,6 +83,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: prf-${{ matrix.board }}-${{ matrix.mode }}
+
       - name: Install Python dependencies
         run: |
           pip install -U pip
@@ -114,6 +119,11 @@ jobs:
 
       - name: Build
         run: pbl build
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: prf-${{ matrix.board }}-${{ matrix.mode }}
 
       - name: Bundle
         run: pbl bundle
