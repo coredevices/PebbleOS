@@ -20,4 +20,22 @@ typedef enum {
   AXIS_Z = 2,
 } IMUCoordinateAxis;
 
+/** @cond INTERNAL_HIDDEN */
+#define PBL_MOUNT_MATRIX_COL_(x, y, z) ((x) != 0 ? 0 : (y) != 0 ? 1 : 2)
+/** @endcond */
+
+/**
+ * @brief Sensor axis feeding each watch axis, from the rows of a devicetree mount-matrix.
+ */
+#define PBL_MOUNT_MATRIX_MAP(xx, xy, xz, yx, yy, yz, zx, zy, zz) \
+  {[AXIS_X] = PBL_MOUNT_MATRIX_COL_(xx, xy, xz),                 \
+   [AXIS_Y] = PBL_MOUNT_MATRIX_COL_(yx, yy, yz),                 \
+   [AXIS_Z] = PBL_MOUNT_MATRIX_COL_(zx, zy, zz)}
+
+/**
+ * @brief Direction of each watch axis, from the rows of a devicetree mount-matrix.
+ */
+#define PBL_MOUNT_MATRIX_DIR(xx, xy, xz, yx, yy, yz, zx, zy, zz) \
+  {[AXIS_X] = (xx) + (xy) + (xz), [AXIS_Y] = (yx) + (yy) + (yz), [AXIS_Z] = (zx) + (zy) + (zz)}
+
 /** @} */
