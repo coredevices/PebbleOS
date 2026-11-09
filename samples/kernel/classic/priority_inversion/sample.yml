@@ -1,0 +1,9 @@
+description: Priority inversion, and the priority inheritance of mutexes that bounds it
+# A thread that only uses the CPU is not preempted when run natively.
+skip: [native_emery, native_flint, native_gabbro]
+expect:
+  - 'low: ends its work at the priority of high: yes'
+  - 'high: got the lock before medium had the CPU'
+  - 'medium: done'
+  - 'low: back to its own priority: yes'
+  - 'Sample done'
