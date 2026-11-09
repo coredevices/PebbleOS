@@ -74,6 +74,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        if: matrix.host == 'linux'
+        uses: ./.github/actions/ccache
+        with:
+          key: native-${{ matrix.board }}
+
       - name: Install host dependencies (macOS)
         if: matrix.host == 'macos'
         run: brew install $(grep -v '^#' requirements-brew.txt)
@@ -100,6 +106,12 @@ jobs:
 
       - name: Build
         run: pbl build
+
+      - name: Save the compiler cache
+        if: matrix.host == 'linux'
+        uses: ./.github/actions/ccache-save
+        with:
+          key: native-${{ matrix.board }}
 
       # Boot without a display and check the firmware gets to the launcher.
       - name: Smoke test

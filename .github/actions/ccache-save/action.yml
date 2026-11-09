@@ -1,0 +1,30 @@
+name: Save the compiler cache
+description: >
+  Print the ccache statistics of the job and, on pushes to main, save the
+  cache for later runs. Pull requests only read the cache. Entries this
+  build did not use are dropped first, so the cache does not grow from
+  run to run.
+
+inputs:
+  key:
+    description: Same as given to the ccache action.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Show ccache statistics
+      shell: bash
+      run: ccache --show-stats
+
+    - name: Drop unused cache entries
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      shell: bash
+      run: ccache --evict-older-than 7200s
+
+    - name: Save the compiler cache
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/cache/save@v6
+      with:
+        path: .ccache
+        key: ccache-${{ inputs.key }}-${{ github.sha }}

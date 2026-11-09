@@ -1,0 +1,32 @@
+name: Restore the compiler cache
+description: >
+  Point ccache at the workspace and restore the newest cache a push to the
+  target branch saved for this job. Run after the checkout, which cleans
+  the workspace. Pair with ccache-save at the end of the job.
+
+inputs:
+  key:
+    description: Name of the cache, unique to the job and its matrix entry.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure ccache
+      shell: bash
+      run: |
+        {
+          echo "CCACHE_DIR=${GITHUB_WORKSPACE}/.ccache"
+          echo "CCACHE_MAXSIZE=500M"
+        } >> "${GITHUB_ENV}"
+
+    - name: Restore the compiler cache
+      uses: actions/cache/restore@v6
+      with:
+        path: .ccache
+        key: ccache-${{ inputs.key }}-${{ github.sha }}
+        restore-keys: ccache-${{ inputs.key }}-
+
+    - name: Reset ccache statistics
+      shell: bash
+      run: ccache --zero-stats

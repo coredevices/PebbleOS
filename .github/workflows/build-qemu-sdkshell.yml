@@ -72,6 +72,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: sdkshell-${{ matrix.board }}
+
       - name: Install Python dependencies
         run: |
           pip install -U pip
@@ -87,6 +92,11 @@ jobs:
 
       - name: Build
         run: pbl build qemu_image_micro qemu_image_spi
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: sdkshell-${{ matrix.board }}
 
       - name: Copy artifacts
         run: |

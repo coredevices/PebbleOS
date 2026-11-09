@@ -59,6 +59,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Restore the compiler cache
+        uses: ./.github/actions/ccache
+        with:
+          key: test
+
       - name: Install Python dependencies
         run: |
           pip install -U pip
@@ -68,6 +73,11 @@ jobs:
         # ctest runs the whole suite before reporting, so one failure does
         # not hide the rest. The job still fails if anything failed.
         run: pbl test
+
+      - name: Save the compiler cache
+        uses: ./.github/actions/ccache-save
+        with:
+          key: test
 
       - name: Run console host tests
         run: python -m pytest tools/libs/pbl-console/tests
