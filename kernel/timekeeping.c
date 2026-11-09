@@ -24,6 +24,7 @@ static uint64_t s_cs_ticks;
 static uint32_t s_cs_frac;
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
+static bool s_idle_disabled;
 
 // Wall clock time minus uptime, in microseconds.
 static int64_t s_realtime_offset_us;
@@ -172,7 +173,7 @@ void timekeeping_idle(pbl_tick_t ticks) {
   int limit;
   int i;
 
-  if (!s_running || ticks == 0U) {
+  if (!s_running || s_idle_disabled || ticks == 0U) {
     return;
   }
 
@@ -238,6 +239,10 @@ uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms) {
   }
   // Rounded up, so the wall clock has reached it by then.
   return ((uint64_t)uptime_us * PBL_TICK_HZ + 999999U) / 1000000U;
+}
+
+void pbl_idle_set_enabled(bool enable) {
+  s_idle_disabled = !enable;
 }
 
 uint64_t pbl_idle_residency_us(size_t state) {

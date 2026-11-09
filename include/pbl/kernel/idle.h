@@ -71,6 +71,15 @@ extern const size_t pbl_soc_num_idle_states;
 int pbl_soc_idle_state_limit(void);
 
 /**
+ * @brief Allow the CPU to idle or keep it running, e.g. while measuring.
+ *
+ * Idle is allowed at boot.
+ *
+ * @param enable False to keep the CPU out of every idle state.
+ */
+void pbl_idle_set_enabled(bool enable);
+
+/**
  * @brief Get the time spent in an idle state since boot.
  *
  * @param state Index in @ref pbl_soc_idle_states.
