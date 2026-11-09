@@ -4,3 +4,5 @@
 class: regulator
 type: struct pbl_regulator
 include: pbl/drivers/regulator.h
+provides:
+  regulator: "&{sym}"

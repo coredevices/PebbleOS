@@ -15,6 +15,14 @@ config REGULATOR_NPM1300
     help
       Support for the BUCK and LDSW rails of the Nordic nPM1300 PMIC.
 
+config REGULATOR_FIXED
+    bool "Fixed regulators"
+    default DT_HAS_REGULATOR_FIXED_ENABLED
+    depends on GPIO
+    select REGULATOR
+    help
+      Support for rails switched by a GPIO.
+
 if REGULATOR
 
 module = DRIVER_REGULATOR
