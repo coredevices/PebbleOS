@@ -1,0 +1,13 @@
+description: Passing messages between threads through a queue that holds a producer back
+expect:
+  - 'main: producer is blocked with 2 of 5 samples queued'
+  - 'main: sample 0 is next, and still queued'
+  - 'consumer: sample 0 = 0'
+  - 'consumer: sample 1 = 10'
+  - 'consumer: sample 2 = 20'
+  - 'consumer: sample 3 = 30'
+  - 'consumer: sample 4 = 40'
+  - 'consumer: no sample for 100 ms, 5 received'
+  - 'main: put on a full queue returns -EBUSY'
+  - 'main: sample 999 was put last and comes out first'
+  - 'Sample done'
