@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/spi/nordic,nrf52840-qspi.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52840 QSPI controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Quad SPI controller for an external flash, with a window that maps it for
+  reads and execution. Its pins are selected in its own registers, from
+  sck-gpios, cs-gpios and io-gpios.
+
+allOf:
+  - $ref: /schemas/spi/spi-controller.yaml#
+
+properties:
+  compatible:
+    const: nordic,nrf52840-qspi
+
+  reg:
+    items:
+      - description: registers
+      - description: memory-mapped window
+
+  reg-names:
+    items:
+      - const: qspi
+      - const: qspi_mm
+
+  interrupts:
+    maxItems: 1
+
+  sck-gpios:
+    description: Clock pin.
+    maxItems: 1
+
+  cs-gpios:
+    maxItems: 1
+
+  io-gpios:
+    description: Data pins, IO0 to IO3.
+    maxItems: 4
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+  - sck-gpios
+  - cs-gpios
+  - io-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    spi@40029000 {
+        compatible = "nordic,nrf52840-qspi";
+        reg = <0x40029000 0x1000>, <0x12000000 0x8000000>;
+        reg-names = "qspi", "qspi_mm";
+        interrupts = <41>;
+        sck-gpios = <&gpio0 19 0>;
+        cs-gpios = <&gpio0 17 0>;
+        io-gpios = <&gpio0 20 0>, <&gpio0 21 0>, <&gpio0 22 0>, <&gpio0 23 0>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        flash@0 {
+            compatible = "jedec,spi-nor";
+            reg = <0>;
+            spi-max-frequency = <8000000>;
+            spi-rx-bus-width = <4>;
+            spi-tx-bus-width = <4>;
+        };
+    };

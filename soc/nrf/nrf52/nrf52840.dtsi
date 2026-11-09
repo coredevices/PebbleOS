@@ -41,6 +41,16 @@
 			status = "disabled";
 		};
 
+		qspi: spi@40029000 {
+			compatible = "nordic,nrf52840-qspi";
+			reg = <0x40029000 0x1000>, <0x12000000 0x8000000>;
+			reg-names = "qspi", "qspi_mm";
+			interrupts = <41>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		gpio0: gpio@50000000 {
 			compatible = "nordic,nrf52840-gpio", "nordic,nrf52832-gpio";
 			reg = <0x50000000 0x200>, <0x50000500 0x300>;
