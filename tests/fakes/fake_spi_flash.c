@@ -9,11 +9,11 @@
 
 #include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/system/status_codes.h>
 
 #include <clar_asserts.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <system/status_codes.h>
 #include <unistd.h>
 
 typedef struct FakeFlashState {

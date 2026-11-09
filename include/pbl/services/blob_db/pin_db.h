@@ -9,9 +9,8 @@
 #include <stdint.h>
 
 #include <pbl/services/timeline/item.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/iterator.h>
-
-#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_pin_db Pin database

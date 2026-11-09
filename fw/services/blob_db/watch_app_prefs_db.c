@@ -8,11 +8,11 @@
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/settings/settings.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <system/status_codes.h>
 #include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);

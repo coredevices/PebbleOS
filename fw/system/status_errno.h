@@ -5,7 +5,7 @@
 
 #include <errno.h>
 
-#include <system/status_codes.h>
+#include <pbl/system/status_codes.h>
 
 //! Convert 0 or a negative errno to a status code.
 static inline status_t status_from_errno(int err) {

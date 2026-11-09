@@ -8,6 +8,7 @@
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/time.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
@@ -17,7 +18,6 @@
 #include <kernel/events.h>
 #include <process_management/app_install_manager.h>
 #include <syscall/syscall.h>
-#include <system/status_codes.h>
 
 //! Return true to continue iteration and false to stop it.
 typedef bool (*SliceForEachCb)(AppGlanceSliceInternal *slice, void *context);

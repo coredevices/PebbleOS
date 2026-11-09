@@ -7,10 +7,10 @@
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
 #include <pbl/settings/settings.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
-#include <system/status_codes.h>
 #include <system/status_errno.h>
 
 #define SETTINGS_FILE_NAME "/contactsdb"

@@ -6,8 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/services/blob_db/api.h>
-
-#include <system/status_codes.h>
+#include <pbl/system/status_codes.h>
 
 void test_db_init(void);
 

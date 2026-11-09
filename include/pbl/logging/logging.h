@@ -11,10 +11,10 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/system/status_codes.h>
 
 #include <system/die.h>
 #include <system/reboot_reason.h>
-#include <system/status_codes.h>
 
 /**
  * @defgroup logging Logging

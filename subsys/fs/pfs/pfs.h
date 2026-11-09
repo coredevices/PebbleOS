@@ -6,10 +6,10 @@
 #include <inttypes.h>
 #include <stddef.h>
 
+#include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
 #include <kernel/pebble_tasks.h>
-#include <system/status_codes.h>
 
 /*
  * Pebble File System (PFS) on the external NOR flash, the backend behind the "/" mount (see
