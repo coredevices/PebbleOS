@@ -156,6 +156,12 @@ osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
 rsource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
+config BOARD
+    string
+    default "$(BOARD)"
+    help
+      Name of the board.
+
 config BOARD_HEADER
     string
     default "$(BOARD)/$(BOARD).h"
