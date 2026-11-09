@@ -52,7 +52,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sample: ["hello_world"]
         board: ["qemu_emery", "asterix", "obelix@pvt"]
 
     steps:
@@ -74,10 +73,9 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
-      - name: Build
-        run: |
-          pbl configure --board ${{ matrix.board }} samples/${{ matrix.sample }}
-          pbl build
+      # Runs them too, and checks what they print, on the emulator.
+      - name: Build and run
+        run: pbl samples --board ${{ matrix.board }}
 
   build-samples-status:
     needs: [changes-samples, build-samples]
