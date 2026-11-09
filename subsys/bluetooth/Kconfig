@@ -7,6 +7,7 @@ config BT
     bool
     default y
     select MBEDTLS
+    select TASK_WDT
     help
       The Bluetooth subsystem: the NimBLE host and the PebbleOS glue
       around it.

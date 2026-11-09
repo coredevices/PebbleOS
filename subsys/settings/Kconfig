@@ -4,6 +4,7 @@
 config SETTINGS
     bool "Settings files"
     depends on FS
+    select TASK_WDT
     help
       Atomic key-value store kept in a single file.
 
