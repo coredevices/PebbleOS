@@ -26,7 +26,7 @@ static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
 }
 
 static const struct pbl_gpio_nrf5 *prv_intc_port(const struct pbl_intc *intc) {
-  return container_of(intc, const struct pbl_gpio_nrf5, intc);
+  return container_of(intc, const struct pbl_gpio_nrf5_intc, intc)->port;
 }
 
 static inline void prv_putreg(const struct pbl_gpio_nrf5 *gpio, uint32_t offset, uint32_t value) {
@@ -215,24 +215,29 @@ static const struct pbl_intc_ops s_intc_ops = {
   .disable = prv_intc_disable,
 };
 
-#define GPIO_NRF5_DEFINE(sym, _name, _index, _base, _num_pins)                                    \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
-  PBL_INTC_STATE_DEFINE(sym##_intc, _num_pins);                                                   \
-  const struct pbl_gpio_nrf5 sym = {                                                              \
-    .port = PBL_GPIO_PORT_INIT(sym, _name, prv_init, nullptr, &s_port_ops, _num_pins, &sym.intc), \
-    .intc = PBL_INTC_INIT(sym##_intc, _name "_intc", nullptr, &sym.port.dev, &s_intc_ops),        \
-    .base = (_base),                                                                              \
-    .index = (_index),                                                                            \
-  };                                                                                              \
-  PBL_DEVICE_REGISTER(sym, &sym.port.dev);                                                        \
-  PBL_DEVICE_REGISTER(sym##_intc, &sym.intc.dev)
+#define GPIO_NRF5_DEFINE(sym, _name, _index, _base, _num_pins)                                     \
+  PBL_DEVICE_STATE_DEFINE(sym##_port);                                                             \
+  PBL_INTC_STATE_DEFINE(sym##_intc, _num_pins);                                                    \
+  PBL_DEVICE_INSTANCE(sym##_port, struct pbl_gpio_nrf5, struct pbl_gpio_port, port){               \
+    .port = PBL_GPIO_PORT_INIT(sym##_port, _name, prv_init, nullptr, &s_port_ops, _num_pins,       \
+                               &sym##_intc),                                                       \
+    .base = (_base),                                                                               \
+    .index = (_index),                                                                             \
+  };                                                                                               \
+  PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_nrf5_intc, struct pbl_intc, intc) {              \
+    .intc =                                                                                        \
+        PBL_INTC_INIT(sym##_intc, _name "_intc", nullptr, &sym##_port_inst.port.dev, &s_intc_ops), \
+    .port = &sym##_port_inst,                                                                      \
+  }
 
 static int prv_init(const struct pbl_device *dev);
 
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p0, "gpio_p0", 0, NRF52_P0_BASE, P0_NUM_PINS);
-GPIO_NRF5_DEFINE(pbl_gpio_nrf5_p1, "gpio_p1", 1, NRF52_P1_BASE, P1_NUM_PINS);
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_gpio0, "gpio_p0", 0, NRF52_P0_BASE, P0_NUM_PINS);
+GPIO_NRF5_DEFINE(pbl_gpio_nrf5_gpio1, "gpio_p1", 1, NRF52_P1_BASE, P1_NUM_PINS);
 
-static const struct pbl_gpio_nrf5 *const s_ports[] = {&pbl_gpio_nrf5_p0, &pbl_gpio_nrf5_p1};
+static const struct pbl_intc *const s_intcs[] = {
+  &pbl_gpio_nrf5_gpio0_intc, &pbl_gpio_nrf5_gpio1_intc
+};
 
 static void prv_gpiote_irq_handler(void) {
   uint32_t inten = prv_gpiote_getreg(NRF52_GPIOTE_INTENSET_OFFSET);
@@ -248,7 +253,7 @@ static void prv_gpiote_irq_handler(void) {
     prv_gpiote_putreg(NRF52_GPIOTE_EVENTS_IN_OFFSET(ch), 0U);
     (void)prv_gpiote_getreg(NRF52_GPIOTE_EVENTS_IN_OFFSET(ch));
 
-    pbl_intc_dispatch(&s_ports[abs_pin / 32U]->intc, abs_pin % 32U);
+    pbl_intc_dispatch(s_intcs[abs_pin / 32U], abs_pin % 32U);
   }
 }
 
