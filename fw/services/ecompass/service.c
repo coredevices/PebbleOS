@@ -8,7 +8,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/trig.h>
 
 #include <applib/accel_service.h>
@@ -45,11 +44,11 @@ static MagData s_mag_sample;
 
 //////////////////////////////////////////////////////////////////////////////////
 // Calibration state variables
-static void prv_calibration_time_expired_cb(void *data);
+static void prv_calibration_time_expired_cb(struct pbl_work *work);
 
 static bool s_high_freq_calib_active = false;
 static bool s_calib_run = false;
-static RegularTimerInfo s_cb_info = {.cb = prv_calibration_time_expired_cb};
+static struct pbl_wallclock_work s_cb_info;
 
 //////////////////////////////////////////////////////////////////////////////////
 // Compass subscription state variables
@@ -131,7 +130,7 @@ static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data, MagData 
 //////////////////////////////////////////////////////////////////////////////////
 // Private handlers for compass service
 
-static void prv_calibration_time_expired_cb(void *data) {
+static void prv_calibration_time_expired_cb(struct pbl_work *work) {
   PBL_LOG_DBG(
       "Calibration time expired, complete, or app exit, "
       "dropping back to low frequency");
@@ -141,7 +140,7 @@ static void prv_calibration_time_expired_cb(void *data) {
   }
 
   s_high_freq_calib_active = false;
-  regular_timer_remove_callback(&s_cb_info);
+  pbl_wallclock_work_stop(&s_cb_info);
 }
 
 static void prv_accel_for_compass_handler(AccelRawData *d, uint32_t num_samples,
@@ -248,6 +247,7 @@ void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_st
 
 void ecompass_service_init(void) {
   s_service_init = true;
+  pbl_wallclock_work_init(&s_cb_info, prv_calibration_time_expired_cb);
 
   (void)pbl_mag_set_listener(MAG, &s_mag_listener);
 
@@ -285,7 +285,8 @@ void ecompass_service_handle(void) {
     if (!s_calib_run) {
       ecomp_corr_reset();
       (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_CALIB_SAMPLING_INTERVAL_US, nullptr);
-      regular_timer_add_multiminute_callback(&s_cb_info, ECOMPASS_CALIBRATION_FAST_MINUTES);
+      pbl_wallclock_work_start(&pbl_sys_workq_high, &s_cb_info, 60,
+                               ECOMPASS_CALIBRATION_FAST_MINUTES);
       s_calib_run = true;
       s_high_freq_calib_active = true;
       samples_collected = 0;

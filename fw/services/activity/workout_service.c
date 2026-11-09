@@ -4,6 +4,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_calculators.h>
@@ -13,7 +14,6 @@
 #include <pbl/services/activity/workout_service.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
@@ -74,7 +74,7 @@ typedef struct CurrentWorkoutData {
 //! Persisted statically in RAM
 typedef struct WorkoutServiceData {
   struct pbl_mutex s_workout_mutex;
-  RegularTimerInfo second_timer;
+  struct pbl_wallclock_work second_timer;
   time_t last_workout_end_ts;
   time_t frontend_last_opened_ts;
   HRMSessionRef hrm_session;
@@ -277,7 +277,7 @@ PBL_T_STATIC void prv_abandoned_notification_timer_callback(void *unused) {
 }
 
 // ---------------------------------------------------------------------------------------
-PBL_T_STATIC void prv_workout_timer_cb(void *unused) {
+PBL_T_STATIC void prv_workout_timer_cb(struct pbl_work *work) {
   // This runs on the high priority work queue, which has a watchdog. The workout mutex
   // can be held by paths that block on flash (e.g. stop_workout pushing the
   // session notification), so a blocking lock here can trip the watchdog and
@@ -351,6 +351,7 @@ unlock:
 // ---------------------------------------------------------------------------------------
 void workout_service_init(void) {
   pbl_mutex_init(&s_workout_data.s_workout_mutex);
+  pbl_wallclock_work_init(&s_workout_data.second_timer, prv_workout_timer_cb);
 }
 
 // FIXME: We should probably handle this on SysWorkq and not use the official app subscription
@@ -449,18 +450,14 @@ bool workout_service_start_workout(ActivitySessionType type) {
     s_workout_data.current_workout->type = type;
     s_workout_data.current_workout->start_utc = pbl_realtime();
     s_workout_data.current_workout->current_bpm_timestamp_ts = time_get_uptime_seconds();
-    // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
-    // API function call
-    s_workout_data.second_timer = (RegularTimerInfo){
-      .cb = prv_workout_timer_cb,
-    };
-
     // Initialize all of our initial values for keeping track of metrics
     activity_get_metric(ActivityMetricStepCount, 1,
                         &s_workout_data.current_workout->last_event_step_count);
     s_workout_data.current_workout->last_movement_event_time_ts = time_get_uptime_seconds();
 
-    regular_timer_add_seconds_callback(&s_workout_data.second_timer);
+    // FIXME: This probably doesn't need to be on a timer. We can just flush out a new time on each
+    // API function call
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_workout_data.second_timer, 1, 1);
 
     // Finally tell our algorithm it should stop automatically tracking activities
     activity_algorithm_enable_activity_tracking(false /* disable */);
@@ -559,7 +556,7 @@ bool workout_service_stop_workout(void) {
       save_session = true;
     }
 
-    regular_timer_remove_callback(&s_workout_data.second_timer);
+    pbl_wallclock_work_stop(&s_workout_data.second_timer);
 
     // Re-enable automatic activity tracking
     activity_algorithm_enable_activity_tracking(true /* enable */);
@@ -744,6 +741,7 @@ void workout_service_get_active_kcalories(int32_t *active) {
 }
 
 void workout_service_reset(void) {
+  pbl_wallclock_work_stop(&s_workout_data.second_timer);
   if (s_workout_data.current_workout) {
     pbl_free(s_workout_data.current_workout);
   }

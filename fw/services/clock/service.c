@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
@@ -15,7 +16,6 @@
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/i18n/i18n.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timezone_database.h>
 #include <pbl/util/byteorder.h>
@@ -49,7 +49,8 @@ PBL_LOG_MODULE_DEFINE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
 
 static const uint16_t protocol_time_endpoint_id = 11;
 
-static RegularTimerInfo s_dst_checker;
+static struct pbl_wallclock_work s_dst_checker;
+static bool s_was_dst;
 
 #ifndef CONFIG_RECOVERY_FW
 // Armed once the services the chime path uses are initialized.
@@ -431,12 +432,8 @@ void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
 PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_CLOCK, PBL_PP_ACCESS_PRIVATE, clock_protocol_msg_callback);
 #endif
 
-// TODO: Using a regular timer is pretty gross...
-//! Runs once a minute from the regular_timer minutes list. DST transitions and
-//! the top of the hour both land on minute boundaries, so minute granularity
-//! detects them at the same instant the old per-second poll did.
-PBL_T_STATIC void prv_watch_dst(void *user) {
-  const bool was_dst = (bool)user;
+//! Runs once a minute. DST transitions and the top of the hour both land on minute boundaries.
+PBL_T_STATIC void prv_watch_dst(struct pbl_work *work) {
   const bool is_dst = time_get_isdst(pbl_realtime());
 
 #ifndef CONFIG_RECOVERY_FW
@@ -453,7 +450,7 @@ PBL_T_STATIC void prv_watch_dst(void *user) {
   }
 #endif
 
-  if (is_dst != was_dst) {
+  if (is_dst != s_was_dst) {
     PebbleEvent e = {
       .type = PEBBLE_SET_TIME_EVENT,
       .set_time_info = {
@@ -463,7 +460,7 @@ PBL_T_STATIC void prv_watch_dst(void *user) {
       }
     };
     event_put(&e);
-    s_dst_checker.cb_data = (void *)is_dst;
+    s_was_dst = is_dst;
   }
 }
 
@@ -475,15 +472,12 @@ void clock_init(void) {
     tz_storage_load(&tz_info);
     time_util_update_timezone(&tz_info, 0, 0);
   }
-  // TODO: Using a regular timer is pretty gross...
-  s_dst_checker = (RegularTimerInfo){
-    .cb = prv_watch_dst,
-    .cb_data = (void *)time_get_isdst(pbl_realtime()),
-  };
+  pbl_wallclock_work_init(&s_dst_checker, prv_watch_dst);
+  s_was_dst = time_get_isdst(pbl_realtime());
 #ifndef CONFIG_RECOVERY_FW
   s_hourly_chime_armed = false;
 #endif
-  regular_timer_add_minutes_callback(&s_dst_checker);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dst_checker, 60, 1);
 }
 
 void clock_init_prev_dst(void) {

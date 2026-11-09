@@ -45,7 +45,7 @@ void test_clock__initialize(void) {
 }
 
 extern void prv_update_time_info_and_generate_event(time_t *t, TimezoneInfo *tz_info);
-extern void prv_watch_dst(void *user);
+extern void prv_watch_dst(struct pbl_work *work);
 
 // Hourly chime instrumentation
 //////////////////////////////
@@ -144,12 +144,12 @@ void test_clock__hourly_chime_waits_for_resources_after_boot(void) {
   s_vibe_create_count = 0;
 
   // A callback before resources are ready must not create a vibe score.
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
   // Once resources are ready, the same minute may chime normally.
   clock_hourly_chime_arm();
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
 
@@ -166,7 +166,7 @@ void test_clock__hourly_chime_first_minute_boundary_after_boot(void) {
   clock_hourly_chime_arm();
 
   pbl_realtime_set(hour_timestamp + 1);
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
 
@@ -184,11 +184,11 @@ void test_clock__hourly_chime_only_on_the_hour(void) {
   cl_assert_equal_i(s_vibe_create_count, 0);
 
   pbl_realtime_set(1262304000 + PBL_SEC_PER_MIN + 42); // not near the hour
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 0);
 
   pbl_realtime_set(1262304000 + PBL_SEC_PER_HOUR); // top of the hour
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 1);
 }
 
@@ -205,7 +205,7 @@ void test_clock__hourly_chime_ignores_clock_adjustment_into_first_minute(void) {
   clock_hourly_chime_arm();
 
   pbl_realtime_set(hour_timestamp + 42);
-  prv_watch_dst((void *)false);
+  prv_watch_dst(nullptr);
   cl_assert_equal_i(s_vibe_create_count, 0);
 }
 
@@ -220,7 +220,7 @@ void test_clock__hourly_chime_respects_vibrate_setting(void) {
   s_vibe_create_count = 0;
 
   clock_hourly_chime_arm();
-  prv_watch_dst((void *)false); // on the hour but vibing disabled
+  prv_watch_dst(nullptr); // on the hour but vibing disabled
   cl_assert_equal_i(s_vibe_create_count, 0);
 }
 

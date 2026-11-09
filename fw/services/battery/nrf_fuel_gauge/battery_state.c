@@ -446,8 +446,7 @@ static void prv_update_callback(struct pbl_work *work) {
   prv_enqueue_update(true);
 }
 
-static void prv_callback_from_regular_timer(void *data) {
-  // no need to cancel the timer here, since this came from the regular_timer
+static void prv_sample_cb(struct pbl_work *work) {
   prv_enqueue_update(false);
 }
 
@@ -536,8 +535,9 @@ void battery_state_init(void) {
 
   battery_state_force_update();
 
-  static RegularTimerInfo battery_regular_timer = {.cb = prv_callback_from_regular_timer};
-  regular_timer_add_multiminute_callback(&battery_regular_timer, BATTERY_SAMPLE_RATE_MIN);
+  static struct pbl_wallclock_work sample_timer;
+  pbl_wallclock_work_init(&sample_timer, prv_sample_cb);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &sample_timer, 60, BATTERY_SAMPLE_RATE_MIN);
 
   s_analytics_last_voltage_mv = s_last_voltage_mv;
   s_analytics_last_cpct = s_last_soc_cpct;

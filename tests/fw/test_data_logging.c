@@ -13,7 +13,6 @@
 #include <pbl/services/data_logging/dls_list.h>
 #include <pbl/services/data_logging/dls_private.h>
 #include <pbl/services/data_logging/dls_storage.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
@@ -181,7 +180,6 @@ static void prv_log_consume_random(DataLoggingSessionRef logging_session, int it
 
 // ----------------------------------------------------------------------------------------
 void test_data_logging__initialize(void) {
-  regular_timer_init();
   prv_init_fake_flash();
   stub_pebble_tasks_set_current(PebbleTask_SysWorkq);
   dls_clear();
@@ -200,7 +198,7 @@ void test_data_logging__initialize(void) {
 
 // ----------------------------------------------------------------------------------------
 void test_data_logging__cleanup(void) {
-  regular_timer_deinit();
+  fake_wallclock_work_cleanup();
   fake_comm_session_cleanup();
 }
 
@@ -438,9 +436,8 @@ static void prv_do_recovery_test(int num_sessions) {
   DataLoggingSessionRef logging_session = dls_list_get_next(nullptr);
   cl_assert(logging_session == nullptr);
 
-  // Reset regular timer. dls_init() will add the same timer info again
-  regular_timer_deinit();
-  regular_timer_init();
+  // dls_init() starts the same timer again
+  fake_wallclock_work_cleanup();
 
   // Rebuild the list from flash
   dls_init();

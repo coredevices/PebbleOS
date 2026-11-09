@@ -17,7 +17,6 @@
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/light_level.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>

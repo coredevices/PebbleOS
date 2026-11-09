@@ -6,9 +6,9 @@
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/regular_timer.h>
 
 PBL_LOG_MODULE_DECLARE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
 
@@ -16,7 +16,7 @@ PBL_LOG_MODULE_DECLARE(service_clock, CONFIG_SERVICE_CLOCK_LOG_LEVEL);
 // time is not that far off.
 #define MIN_VALID_TIME 1262304000
 
-static RegularTimerInfo s_save_timer;
+static struct pbl_wallclock_work s_save_timer;
 
 void clock_restore_time(void) {
   time_t t = 0;
@@ -48,7 +48,7 @@ void rtc_sync_save(void) {
   }
 }
 
-static void prv_save_cb(void *data) {
+static void prv_save_cb(struct pbl_work *work) {
   rtc_sync_save();
 }
 
@@ -63,6 +63,7 @@ PBL_SYS_OFF_HANDLER_DEFINE(rtc_sync_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE, PB
                            prv_sys_off, nullptr);
 
 void rtc_sync_start(void) {
-  s_save_timer = (RegularTimerInfo){.cb = prv_save_cb};
-  regular_timer_add_multisecond_callback(&s_save_timer, CONFIG_SERVICE_CLOCK_RTC_SAVE_INTERVAL);
+  pbl_wallclock_work_init(&s_save_timer, prv_save_cb);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_save_timer, 1,
+                           CONFIG_SERVICE_CLOCK_RTC_SAVE_INTERVAL);
 }

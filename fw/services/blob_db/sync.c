@@ -9,6 +9,7 @@
 #include <pbl/services/blob_db/sync.h>
 #include <pbl/services/blob_db/util.h>
 #include <pbl/util/list.h>
+#include <pbl/util/misc.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -28,7 +29,7 @@ static bool prv_session_uid_filter_callback(ListNode *node, void *data) {
   return session->session_id == (uint32_t)(uintptr_t)data;
 }
 
-//! The regular timers below hop to SysWorkq before touching the session, and by
+//! The timers below hop to SysWorkq before touching the session, and by
 //! then the sync may have finished or been cancelled and the session freed.
 //! Resolve the id against the live list instead of trusting a raw pointer.
 static BlobDBSyncSession *prv_find_live_session(void *session_id) {
@@ -61,8 +62,9 @@ static void prv_abandon_kernelbg_callback(void *data) {
   blob_db_sync_cancel(session);
 }
 
-static void prv_abandon_timer_callback(void *data) {
-  pbl_sys_work_call(prv_abandon_kernelbg_callback, data);
+static void prv_abandon_timer_callback(struct pbl_work *work) {
+  BlobDBSyncSession *session = container_of(work, BlobDBSyncSession, abandon_timer.work);
+  pbl_sys_work_call(prv_abandon_kernelbg_callback, (void *)(uintptr_t)session->session_id);
 }
 
 static void prv_timeout_kernelbg_callback(void *data) {
@@ -72,8 +74,9 @@ static void prv_timeout_kernelbg_callback(void *data) {
   }
 
   // Start the abandon timer if not already running
-  if (!regular_timer_is_scheduled(&session->abandon_timer)) {
-    regular_timer_add_multisecond_callback(&session->abandon_timer, SYNC_ABANDON_TIMEOUT_SECONDS);
+  if (!pbl_wallclock_work_is_running(&session->abandon_timer)) {
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &session->abandon_timer, 1,
+                             SYNC_ABANDON_TIMEOUT_SECONDS);
   }
 
   // Retry sending the current item
@@ -82,8 +85,9 @@ static void prv_timeout_kernelbg_callback(void *data) {
   prv_send_writeback(session);
 }
 
-static void prv_timeout_timer_callback(void *data) {
-  pbl_sys_work_call(prv_timeout_kernelbg_callback, data);
+static void prv_timeout_timer_callback(struct pbl_work *work) {
+  BlobDBSyncSession *session = container_of(work, BlobDBSyncSession, timeout_timer.work);
+  pbl_sys_work_call(prv_timeout_kernelbg_callback, (void *)(uintptr_t)session->session_id);
 }
 
 static void prv_send_writeback(BlobDBSyncSession *session) {
@@ -121,7 +125,7 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
     return;
   }
 
-  regular_timer_add_multisecond_callback(&session->timeout_timer, SYNC_TIMEOUT_SECONDS);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &session->timeout_timer, 1, SYNC_TIMEOUT_SECONDS);
 
   // only one writeback in flight at a time
   session->state = BlobDBSyncSessionStateWaitingForAck;
@@ -150,15 +154,8 @@ BlobDBSyncSession *prv_create_sync_session(BlobDBId db_id, BlobDBDirtyItem *dirt
   if (s_next_session_id == 0) {
     s_next_session_id = 1; // 0 is reserved as "no session"
   }
-  void *session_id_data = (void *)(uintptr_t)session->session_id;
-  session->timeout_timer = (const RegularTimerInfo){
-    .cb = prv_timeout_timer_callback,
-    .cb_data = session_id_data,
-  };
-  session->abandon_timer = (const RegularTimerInfo){
-    .cb = prv_abandon_timer_callback,
-    .cb_data = session_id_data,
-  };
+  pbl_wallclock_work_init(&session->timeout_timer, prv_timeout_timer_callback);
+  pbl_wallclock_work_init(&session->abandon_timer, prv_abandon_timer_callback);
   s_sync_sessions =
       (BlobDBSyncSession *)list_prepend((ListNode *)s_sync_sessions, (ListNode *)session);
 
@@ -230,12 +227,8 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
 
 void blob_db_sync_cancel(BlobDBSyncSession *session) {
   PBL_LOG_DBG("Cancelling session %d sync", session->db_id);
-  if (regular_timer_is_scheduled(&session->timeout_timer)) {
-    regular_timer_remove_callback(&session->timeout_timer);
-  }
-  if (regular_timer_is_scheduled(&session->abandon_timer)) {
-    regular_timer_remove_callback(&session->abandon_timer);
-  }
+  pbl_wallclock_work_stop(&session->timeout_timer);
+  pbl_wallclock_work_stop(&session->abandon_timer);
   blob_db_util_free_dirty_list(session->dirty_list);
   list_remove((ListNode *)session, (ListNode **)&s_sync_sessions, nullptr);
   pbl_free(session);
@@ -245,9 +238,7 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
   PBL_LOG_DBG("blob_db_sync_next");
 
   // Cancel abandon timer - we got a successful response, so connection is working
-  if (regular_timer_is_scheduled(&session->abandon_timer)) {
-    regular_timer_remove_callback(&session->abandon_timer);
-  }
+  pbl_wallclock_work_stop(&session->abandon_timer);
 
   BlobDBDirtyItem *dirty_item = session->dirty_list;
   blob_db_mark_synced(session->db_id, dirty_item->key, dirty_item->key_len);
@@ -268,12 +259,8 @@ void blob_db_sync_next(BlobDBSyncSession *session) {
     } else {
       PBL_LOG_DBG("Finished syncing db %d, session type: %d", session->db_id,
                   session->session_type);
-      if (regular_timer_is_scheduled(&session->timeout_timer)) {
-        regular_timer_remove_callback(&session->timeout_timer);
-      }
-      if (regular_timer_is_scheduled(&session->abandon_timer)) {
-        regular_timer_remove_callback(&session->abandon_timer);
-      }
+      pbl_wallclock_work_stop(&session->timeout_timer);
+      pbl_wallclock_work_stop(&session->abandon_timer);
       if (session->session_type == BlobDBSyncSessionTypeDB) {
         // Only send the sync done when syncing an entire db
         blob_db_endpoint_send_sync_done(session->db_id);

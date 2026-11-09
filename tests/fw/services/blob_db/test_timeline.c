@@ -5,7 +5,6 @@
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/phone_call_util.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/list.h>
 #include <pbl/util/size.h>
