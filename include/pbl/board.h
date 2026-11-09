@@ -3,8 +3,18 @@
 
 #pragma once
 
+#include <stdint.h>
+
 //! Console port.
 extern const struct pbl_uart *const CONSOLE_UART;
+
+#ifdef CONFIG_BOARD_DISPLAY_CORNERS
+//! Pixels hidden at each end of the first rows of the display, mirrored in the last rows, by
+//! tinted rounded corners on the glass.
+extern const uint8_t BOARD_DISPLAY_CORNERS[];
+//! Number of @ref BOARD_DISPLAY_CORNERS entries.
+extern const uint8_t BOARD_DISPLAY_NUM_CORNERS;
+#endif
 
 // FIXME: remove once the HRM moves to the device model
 typedef const struct HRMDevice HRMDevice;

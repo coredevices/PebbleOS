@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/board.h>
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
@@ -29,6 +30,7 @@ static uint16_t s_flush_y1;
 
 // Corner pixels hidden by the display mounting, drawn into the framebuffer for the flush and
 // undone after it. Holds the bytes of each masked row: [row][left, right][byte]
+#ifdef CONFIG_BOARD_DISPLAY_CORNERS
 static uint8_t *s_saved_corners;
 static uint8_t s_corner_bytes;
 
@@ -47,16 +49,16 @@ static void prv_mask_pixel(uint8_t *line, uint16_t x) {
 }
 
 static uint8_t prv_corner_row(uint16_t y, uint8_t *save_idx) {
-  const uint8_t rows = DISPLAY->num_corners;
+  const uint8_t rows = BOARD_DISPLAY_NUM_CORNERS;
 
   if (y < rows) {
     *save_idx = y;
-    return DISPLAY->corners[y];
+    return BOARD_DISPLAY_CORNERS[y];
   }
 
   if (y >= PBL_DISPLAY_HEIGHT - rows) {
     *save_idx = rows + (PBL_DISPLAY_HEIGHT - y - 1);
-    return DISPLAY->corners[PBL_DISPLAY_HEIGHT - y - 1];
+    return BOARD_DISPLAY_CORNERS[PBL_DISPLAY_HEIGHT - y - 1];
   }
 
   return 0;
@@ -93,11 +95,14 @@ static void prv_corners_apply(FrameBuffer *fb, bool mask) {
     }
   }
 }
+#endif
 
 static void prv_flush_finish(void *data) {
   bool success = (data == nullptr);
 
+#ifdef CONFIG_BOARD_DISPLAY_CORNERS
   prv_corners_apply(compositor_get_framebuffer(), false);
+#endif
 
   uint64_t elapsed = pbl_uptime_ticks() - s_flush_start_ticks;
   pbl_irq_lock();
@@ -145,15 +150,17 @@ void compositor_display_init(void) {
   PBL_ASSERTN(DISPLAY->round_mask != nullptr);
 #endif
 
+#ifdef CONFIG_BOARD_DISPLAY_CORNERS
   uint8_t max_width = 0;
-  for (uint8_t i = 0; i < DISPLAY->num_corners; i++) {
-    max_width = MAX(max_width, DISPLAY->corners[i]);
+  for (uint8_t i = 0; i < BOARD_DISPLAY_NUM_CORNERS; i++) {
+    max_width = MAX(max_width, BOARD_DISPLAY_CORNERS[i]);
   }
 
   if (max_width > 0) {
     s_corner_bytes = PIXEL_BYTE(max_width - 1) + 1;
-    s_saved_corners = pbl_malloc_check(DISPLAY->num_corners * 2 * 2 * s_corner_bytes);
+    s_saved_corners = pbl_malloc_check(BOARD_DISPLAY_NUM_CORNERS * 2 * 2 * s_corner_bytes);
   }
+#endif
 }
 
 void compositor_display_update(void (*handle_update_complete_cb)(bool success)) {
@@ -169,7 +176,9 @@ void compositor_display_update(void (*handle_update_complete_cb)(bool success)) 
   s_update_complete_handler = handle_update_complete_cb;
   s_flush_start_ticks = pbl_uptime_ticks();
 
+#ifdef CONFIG_BOARD_DISPLAY_CORNERS
   prv_corners_apply(fb, true);
+#endif
 
   struct pbl_display_buffer buf = {
     .data = (uint8_t *)framebuffer_get_line(fb, 0),

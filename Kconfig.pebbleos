@@ -141,6 +141,12 @@ config LINKER_MAP
 
 endmenu
 
+config BOARD_DISPLAY_CORNERS
+    bool
+    help
+      The board's glass hides the corners of the display, as given by
+      BOARD_DISPLAY_CORNERS in its sources.
+
 config BOARD_PARTITIONS_DT
     bool
     default DT_HAS_FIXED_PARTITIONS_ENABLED

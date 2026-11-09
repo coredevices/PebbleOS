@@ -120,13 +120,6 @@ struct pbl_display {
   /** Panel mounted upside down. */
   bool rotated;
   /**
-   * Pixels hidden at each end of the first rows, mirrored in the last rows, e.g. by tinted
-   * rounded corners on the glass, or NULL.
-   */
-  const uint8_t *corners;
-  /** Number of @ref corners entries. */
-  uint8_t num_corners;
-  /**
    * Pixels hidden at each end of the rows of the top half of a round panel, mirrored in the bottom
    * half, or NULL.
    */

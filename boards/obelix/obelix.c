@@ -79,16 +79,15 @@ PBL_PANEL_JDI_MIP_DEFINE(s_panel, "panel", &s_panel_timing, PBL_GPIO(SF32LB_GPIO
                          PBL_GPIO(SF32LB_GPIO1, 29, PBL_GPIO_ACTIVE_LOW),
                          PBL_PWM(&s_lptim2.ctrl, 0, PBL_PWM_HZ(60), 0));
 
-// Tinted rounded corners on the glass
-static const uint8_t s_display_corners[] = {3, 3, 2, 1};
+const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 3, 2, 1};
+const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
 
 PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_IRQN(LCDC1),
                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
                                PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
                                &s_panel.panel, 200, 228, false,
                                PBL_PINCTRL(&s_display_default, nullptr, 0), s_display_discharge,
-                               ARRAY_LENGTH(s_display_discharge), .corners = s_display_corners,
-                               .num_corners = ARRAY_LENGTH(s_display_corners));
+                               ARRAY_LENGTH(s_display_discharge));
 
 const struct pbl_display *const DISPLAY = &s_display.disp;
 PBL_IRQ_CONNECT(LCDC1, 5, pbl_display_sf32lb_lcdc_irq_handler, &s_display, 0);
