@@ -560,6 +560,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
 }
 
 static void prv_lsm6dso_int1_irq_handler(void *arg) {
+  s_dev->state->num_int1_irqs++;
   // A rising edge proves the pad was low, i.e. the wake-up source deasserted
   s_dev->state->wu_active = false;
   // ... which also breaks any stuck-high streak the watchdog counted
@@ -740,6 +741,7 @@ static void prv_update_int1_watchdog(void) {
 //! re-validates the stall at execution time.
 static void prv_stall_check_work_cb(void) {
   uint32_t ms_since_last_read;
+  uint8_t fifo_status[2] = {0U, 0U};
 
   s_dev->state->recovery_pending = false;
 
@@ -770,7 +772,15 @@ static void prv_stall_check_work_cb(void) {
     return;
   }
 
-  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
+  // Tells a lost edge (pad high) from an IMU not raising INT1 (pad low)
+  if (!prv_lsm6dso_read(LSM6DSO_FIFO_STATUS1, fifo_status, 2)) {
+    PBL_LOG_ERR("Could not read FIFO_STATUS registers");
+  }
+
+  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms (INT1 pad %d irqs %" PRIu32
+              " FIFO_STATUS1 0x%02" PRIx8 " FIFO_STATUS2 0x%02" PRIx8 ")",
+              ms_since_last_read, pbl_gpio_get(&s_dev->int1_in), s_dev->state->num_int1_irqs,
+              fifo_status[0], fifo_status[1]);
   prv_lsm6dso_recover();
 }
 
