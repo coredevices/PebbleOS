@@ -11,7 +11,6 @@
 #include <pbl/drivers/dma/sf32lb52.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
 #include <pbl/drivers/panel/jdi_mip.h>
@@ -145,13 +144,7 @@ PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
 
 const struct pbl_backlight *const BACKLIGHT = &s_aw9364e.backlight;
 
-PBL_LIS2DW12_DEFINE(s_lis2dw12, &dt_i2c1, 0x19,
-                    .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING),
-                    .int1_in = PBL_GPIO(SF32LB_GPIO1, 26, 0),
-                    .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
-                    .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = 1, [AXIS_Z] = 1});
-
-const struct pbl_accel *const ACCEL = &s_lis2dw12.accel;
+const struct pbl_accel *const ACCEL = &dt_lis2dw12;
 
 const struct pbl_mag *const MAG = &dt_mmc5603nj;
 

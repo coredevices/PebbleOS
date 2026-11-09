@@ -89,21 +89,18 @@ extern const struct pbl_accel_ops pbl_lis2dw12_ops;
  *
  * Only one instance is supported.
  *
- * @param sym Symbol of the instance; the accelerometer is @c sym.accel.
+ * @param sym Symbol of the instance, a struct pbl_accel.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
  *            and @c axis_dir.
  */
-#define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                             \
-  PBL_ACCEL_STATE_DEFINE(sym);                                                 \
-  static LIS2DW12State sym##_lis2dw12_state;                                   \
-  const struct pbl_lis2dw12 sym = {                                            \
-    .accel = PBL_ACCEL_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops), \
-    .state = &sym##_lis2dw12_state,                                            \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                           \
-    __VA_ARGS__,                                                               \
-  };                                                                           \
-  PBL_DEVICE_REGISTER(sym, &sym.accel.dev)
+#define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                                \
+  PBL_ACCEL_STATE_DEFINE(sym);                                                    \
+  static LIS2DW12State sym##_lis2dw12_state;                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_lis2dw12, struct pbl_accel, accel) {        \
+    .accel = PBL_ACCEL_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops),    \
+    .state = &sym##_lis2dw12_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \
+  }
 
 /** @} */

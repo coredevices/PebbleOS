@@ -72,6 +72,16 @@
 	dma-names = "rx";
 	status = "okay";
 
+	lis2dw12: accelerometer@19 {
+		compatible = "st,lis2dw12";
+		reg = <0x19>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <26 IRQ_TYPE_EDGE_RISING>;
+		mount-matrix = "-1", "0", "0",
+			       "0", "1", "0",
+			       "0", "0", "1";
+	};
+
 	mmc5603nj: magnetometer@30 {
 		compatible = "memsic,mmc5603";
 		reg = <0x30>;

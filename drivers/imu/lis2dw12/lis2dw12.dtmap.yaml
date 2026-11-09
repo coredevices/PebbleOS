@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,lis2dw12
+config: ACCEL_LIS2DW12
+class: accel
+define: PBL_LIS2DW12_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - irq: 0
+    field: int1
+  - irq: 0
+    as: irq-gpio
+    field: int1_in
+  - strings: mount-matrix
+    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    wrap: PBL_MOUNT_MATRIX_MAP
+    field: axis_map
+  - strings: mount-matrix
+    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    wrap: PBL_MOUNT_MATRIX_DIR
+    field: axis_dir
