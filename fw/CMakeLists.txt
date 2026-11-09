@@ -33,7 +33,7 @@ pbl_library_sources(${sources})
 # A native build's main() is the host process entry; the firmware's own
 # one is entered from the kernel thread it hands over to.
 if(CONFIG_ARCH_POSIX)
-  set_property(SOURCE main.c APPEND PROPERTY COMPILE_DEFINITIONS main=pbl_fw_main)
+  set_property(SOURCE main.c APPEND PROPERTY COMPILE_DEFINITIONS main=pbl_app_main)
 endif()
 
 if(NOT CONFIG_RECOVERY_FW)

@@ -44,8 +44,8 @@ int pbl_soc_idle_state_limit(void) {
 }
 
 void posix_fw_start(void) {
-  extern int pbl_fw_main(void);
-  pbl_posix_start(pbl_fw_main);
+  extern int pbl_app_main(void);
+  pbl_posix_start(pbl_app_main);
 }
 
 #ifndef CONFIG_SAMSA
