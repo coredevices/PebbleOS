@@ -1,10 +1,12 @@
 # Build system
 
-The firmware is built by three cooperating pieces:
+The firmware is built by these cooperating pieces:
 
 - [Kconfig](kconfig.md) decides *what* is built: every option, driver and
   service is a symbol, and a board's defconfig plus the project and variant
   fragments resolve to one configuration per build directory.
+- [Devicetree](devicetree.md) describes the board's hardware, for boards
+  that have it: which drivers its devices enable, and their instances.
 - [CMake](cmake.md), with Ninja as the generator, decides *how*: each
   directory declares a library from the sources its symbols enable, and all
   of them are linked into a single firmware image.
@@ -127,6 +129,7 @@ developers to build their own projects with; see {doc}`../../sdk/building`.
 :hidden:
 
 cmake.md
+devicetree.md
 kconfig.md
 applications.md
 ```
