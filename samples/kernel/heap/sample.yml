@@ -1,0 +1,11 @@
+description: A heap over a buffer of its own, its usage and what fragmentation does to it
+expect:
+  - 'heap: empty: 0 used, \d+ free, largest free block \d+'
+  - 'heap: block is in the heap: yes, allocated: yes'
+  - 'heap: full after \d+ blocks of 100 bytes'
+  - 'heap: full: \d+ used, \d+ free, largest free block \d+'
+  - 'heap: every other block freed: \d+ used, \d+ free, largest free block \d+'
+  - 'heap: 200 bytes from a fragmented heap: refused'
+  - 'heap: all freed: 0 used, \d+ free, largest free block \d+'
+  - 'heap: least memory it ever had left: \d+ of \d+ bytes'
+  - 'Sample done'
