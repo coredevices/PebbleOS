@@ -81,7 +81,7 @@ jobs:
           fi
 
       - name: Create release
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           files: release/*
           make_latest: ${{ steps.main.outputs.on_main }}
