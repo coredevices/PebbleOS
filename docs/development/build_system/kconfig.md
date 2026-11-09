@@ -85,9 +85,11 @@ Every symbol reaches all three consumers:
 
 Driver classes
 : A class is a `menuconfig` symbol, with one symbol per driver inside its
-  `if` block. A driver that only exists on one SoC defaults to `y` there
-  (`default y if SOC_QEMU`); a part on the board is enabled by the board's
-  defconfig.
+  `if` block. A driver whose devices come from the board's
+  {doc}`devicetree` defaults to the tree having one
+  (`default DT_HAS_NORDIC_NRF52832_TWIM_ENABLED`). Otherwise, a driver that
+  only exists on one SoC defaults to `y` there (`default y if SOC_QEMU`),
+  and a part on the board is enabled by the board's defconfig.
 
 Capabilities
 : What hardware or drivers provide is a hidden symbol (no prompt) that the
