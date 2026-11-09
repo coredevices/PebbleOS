@@ -20,11 +20,11 @@
  * data rate.
  *
  * @code{.c}
- * PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c2.bus, 0x30,
+ * PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c2, 0x30,
  *                      .axis_map = {1, 0, 2},
  *                      .axis_dir = {1, -1, 1});
  *
- * const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
+ * const struct pbl_mag *const MAG = &s_mmc5603nj;
  * @endcode
  * @{
  */
@@ -62,20 +62,17 @@ extern const struct pbl_mag_ops pbl_mmc5603nj_ops;
  *
  * Only one instance is supported.
  *
- * @param sym Symbol of the instance; the magnetometer is @c sym.mag.
+ * @param sym Symbol of the instance, a struct pbl_mag.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param ... Designated initializers of the remaining fields: @c axis_map and @c axis_dir.
  */
-#define PBL_MMC5603NJ_DEFINE(sym, _bus, _addr, ...)                          \
-  PBL_MAG_STATE_DEFINE(sym);                                                 \
-  static struct pbl_mmc5603nj_state sym##_mmc5603nj_state;                   \
-  const struct pbl_mmc5603nj sym = {                                         \
-    .mag = PBL_MAG_INIT(sym, "mmc5603nj", &(_bus)->dev, &pbl_mmc5603nj_ops), \
-    .state = &sym##_mmc5603nj_state,                                         \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                         \
-    __VA_ARGS__,                                                             \
-  };                                                                         \
-  PBL_DEVICE_REGISTER(sym, &sym.mag.dev)
+#define PBL_MMC5603NJ_DEFINE(sym, _bus, _addr, ...)                                \
+  PBL_MAG_STATE_DEFINE(sym);                                                       \
+  static struct pbl_mmc5603nj_state sym##_mmc5603nj_state;                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_mmc5603nj, struct pbl_mag, mag) {            \
+    .mag = PBL_MAG_INIT(sym, "mmc5603nj", &(_bus)->dev, &pbl_mmc5603nj_ops),       \
+    .state = &sym##_mmc5603nj_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \
+  }
 
 /** @} */

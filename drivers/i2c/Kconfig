@@ -15,6 +15,13 @@ config I2C_NRF5
     help
       Support for the Nordic nRF5 I2C controller.
 
+config I2C_NRF5_IRQ_PRIO
+    int "Interrupt priority"
+    default 7
+    depends on I2C_NRF5
+    help
+      Priority of the controller interrupts.
+
 config I2C_SF32LB
     bool "SiFli SF32LB I2C Controller"
     default y if SOC_SF32LB52
@@ -22,6 +29,13 @@ config I2C_SF32LB
     select DMA
     help
       Support for the SiFli SF32LB I2C controller.
+
+config I2C_SF32LB_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on I2C_SF32LB
+    help
+      Priority of the controller interrupts.
 
 config I2C_SHELL
     bool "Shell commands"

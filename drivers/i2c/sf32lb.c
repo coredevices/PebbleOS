@@ -3,7 +3,6 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
@@ -14,7 +13,6 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
-#include <pbl/util/size.h>
 
 #include <hardware/sf32lb52_i2c.h>
 
@@ -26,35 +24,16 @@
 #define IER_PIO (I2C_IER_TEIE | I2C_IER_RFIE | I2C_IER_BEDIE | I2C_IER_MSDIE)
 #define IER_DMA (I2C_IER_DMADONEIE | I2C_IER_BEDIE | I2C_IER_MSDIE)
 
-static const struct {
-  uintptr_t base;
-  uint32_t clk;
-  pbl_irq_t irqn;
-} s_instances[] = {
-  {SF32LB52_I2C1_BASE, SF32LB52_HPSYS_CLK_I2C1, PBL_IRQN(I2C1)},
-  {SF32LB52_I2C2_BASE, SF32LB52_HPSYS_CLK_I2C2, PBL_IRQN(I2C2)},
-  {SF32LB52_I2C3_BASE, SF32LB52_HPSYS_CLK_I2C3, PBL_IRQN(I2C3)},
-  {SF32LB52_I2C4_BASE, SF32LB52_HPSYS_CLK_I2C4, PBL_IRQN(I2C4)},
-};
-
 static const struct pbl_i2c_sf32lb *prv_i2c(const struct pbl_i2c_bus *bus) {
   return container_of(bus, const struct pbl_i2c_sf32lb, bus);
 }
 
-static inline uintptr_t prv_base(const struct pbl_i2c_sf32lb *i2c) {
-  return s_instances[i2c->index - 1U].base;
-}
-
 static inline uint32_t prv_getreg(const struct pbl_i2c_sf32lb *i2c, uint32_t offset) {
-  return pbl_readl(prv_base(i2c) + offset);
+  return pbl_readl(i2c->base + offset);
 }
 
 static inline void prv_putreg(const struct pbl_i2c_sf32lb *i2c, uint32_t offset, uint32_t value) {
-  pbl_writel(value, prv_base(i2c) + offset);
-}
-
-static struct pbl_clk prv_clk(const struct pbl_i2c_sf32lb *i2c) {
-  return (struct pbl_clk)PBL_CLK(SF32LB_HPSYS_RCC, s_instances[i2c->index - 1U].clk);
+  pbl_writel(value, i2c->base + offset);
 }
 
 static void prv_sleep_allow(const struct pbl_i2c_sf32lb *i2c) {
@@ -81,7 +60,7 @@ static void prv_configure(const struct pbl_i2c_sf32lb *i2c) {
   prv_putreg(i2c, SF32LB52_I2C_LCR_OFFSET,
              PBL_FIELD_PREP(I2C_LCR_FLV_MASK, flv) | I2C_LCR_SLV_MASK);
   pbl_modifyl(I2C_WCR_CNT_MASK, PBL_FIELD_PREP(I2C_WCR_CNT_MASK, cnt),
-              prv_base(i2c) + SF32LB52_I2C_WCR_OFFSET);
+              i2c->base + SF32LB52_I2C_WCR_OFFSET);
   prv_putreg(i2c, SF32LB52_I2C_SAR_OFFSET, 0U);
   prv_putreg(
       i2c, SF32LB52_I2C_CR_OFFSET,
@@ -90,7 +69,7 @@ static void prv_configure(const struct pbl_i2c_sf32lb *i2c) {
 
 // Unit reset, then a bus reset (nine clocks and a STOP) to free a stuck target
 static void prv_reset(const struct pbl_i2c_sf32lb *i2c) {
-  uintptr_t cr = prv_base(i2c) + SF32LB52_I2C_CR_OFFSET;
+  uintptr_t cr = i2c->base + SF32LB52_I2C_CR_OFFSET;
 
   prv_putreg(i2c, SF32LB52_I2C_IER_OFFSET, 0U);
 
@@ -210,7 +189,7 @@ static void prv_dma_chunk(const struct pbl_i2c_sf32lb *i2c) {
 
   prv_putreg(i2c, SF32LB52_I2C_SR_OFFSET, I2C_SR_DMADONE);
   pbl_modifyl(I2C_CR_DMAEN | I2C_CR_LASTNACK | I2C_CR_LASTSTOP, cr,
-              prv_base(i2c) + SF32LB52_I2C_CR_OFFSET);
+              i2c->base + SF32LB52_I2C_CR_OFFSET);
   prv_putreg(i2c, SF32LB52_I2C_DNR_OFFSET, state->chunk);
   prv_putreg(i2c, SF32LB52_I2C_TCR_OFFSET, I2C_TCR_RXREQ);
 }
@@ -242,7 +221,7 @@ static void prv_dma_finish(const struct pbl_i2c_sf32lb *i2c) {
 
   (void)pbl_dma_terminate(i2c->dma);
   pbl_modifyl(I2C_CR_DMAEN | I2C_CR_LASTNACK | I2C_CR_LASTSTOP, 0U,
-              prv_base(i2c) + SF32LB52_I2C_CR_OFFSET);
+              i2c->base + SF32LB52_I2C_CR_OFFSET);
   dcache_invalidate(msg->buf, DCACHE_ROUND_UP(msg->len));
   state->dma = false;
 }
@@ -380,42 +359,40 @@ static void prv_abort(const struct pbl_i2c_bus *bus) {
   }
   prv_reset(i2c);
   prv_sleep_allow(i2c);
-  pbl_irq_clear_pending(s_instances[i2c->index - 1U].irqn);
+  pbl_irq_clear_pending(i2c->irq);
 }
 
 static void prv_enable(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
-  struct pbl_clk clk = prv_clk(i2c);
 
-  (void)pbl_clk_enable(&clk);
+  (void)pbl_clk_enable(&i2c->clk);
   prv_configure(i2c);
 }
 
 static void prv_disable(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
-  struct pbl_clk clk = prv_clk(i2c);
 
   prv_putreg(i2c, SF32LB52_I2C_IER_OFFSET, 0U);
-  pbl_modifyl(I2C_CR_IUE, 0U, prv_base(i2c) + SF32LB52_I2C_CR_OFFSET);
-  (void)pbl_clk_disable(&clk);
+  pbl_modifyl(I2C_CR_IUE, 0U, i2c->base + SF32LB52_I2C_CR_OFFSET);
+  (void)pbl_clk_disable(&i2c->clk);
 }
 
 static int prv_init(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
   int ret;
 
-  if (i2c->index == 0U || i2c->index > ARRAY_LENGTH(s_instances) || i2c->clock_hz == 0U) {
+  if (i2c->clock_hz == 0U) {
     return -EINVAL;
   }
 
-  ret = pbl_device_init(&SF32LB_HPSYS_RCC->dev);
+  ret = pbl_device_init(&i2c->clk.ctrl->dev);
   if (ret != 0) {
     return ret;
   }
 
   if (i2c->dma != nullptr) {
     const struct pbl_dma_slave_config cfg = {
-      .src_addr = prv_base(i2c) + SF32LB52_I2C_FIFO_OFFSET,
+      .src_addr = i2c->base + SF32LB52_I2C_FIFO_OFFSET,
       .src_addr_width = PBL_DMA_SLAVE_BUSWIDTH_1_BYTE,
     };
 
@@ -436,7 +413,7 @@ static int prv_init(const struct pbl_i2c_bus *bus) {
     return ret;
   }
 
-  pbl_irq_enable(s_instances[i2c->index - 1U].irqn);
+  pbl_irq_enable(i2c->irq);
 
   return 0;
 }

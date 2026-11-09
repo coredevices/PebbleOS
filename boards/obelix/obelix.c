@@ -155,11 +155,11 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c1_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA30_I2C1_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", 1, 400000, &s_i2c1_default, nullptr);
+PBL_I2C_SF32LB_DEFINE(s_i2c1, "i2c1", SF32LB52_I2C1_BASE, PBL_SOC_IRQN_I2C1,
+                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C1), 400000, &s_i2c1_default,
+                      nullptr);
 
-PBL_IRQ_CONNECT(I2C1, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c1, 0);
-
-PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1.bus, 0x6B);
+PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1, 0x6B);
 PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
                            PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 26, PBL_IRQ_TYPE_EDGE_RISING));
 PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
@@ -174,11 +174,11 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw1, "npm1300_ldsw1", &s_npm1300, PBL_N
 PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_NPM1300_LDSW2, 3300,
                              true, false);
 
-PBL_AW86225_DEFINE(s_aw86225, &s_i2c1.bus, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW));
+PBL_AW86225_DEFINE(s_aw86225, &s_i2c1, 0x58, PBL_GPIO(SF32LB_GPIO1, 1, PBL_GPIO_ACTIVE_LOW));
 
 const struct pbl_vibe *const VIBE = &s_aw86225.vibe;
 
-PBL_AW2016_DEFINE(s_aw2016, &s_i2c1.bus, 0x64);
+PBL_AW2016_DEFINE(s_aw2016, &s_i2c1, 0x64);
 
 const struct pbl_backlight *const BACKLIGHT = &s_aw2016.backlight;
 
@@ -189,9 +189,9 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c2_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
 static const struct pbl_dma_chan s_i2c2_dma =
     PBL_DMA_CHAN(SF32LB52_DMAC1, 5, SF32LB52_DMA_REQ_I2C2, SF32LB52_DMA_PL_HIGH);
-PBL_I2C_SF32LB_DMA_DEFINE(s_i2c2, "i2c2", 2, 400000, &s_i2c2_default, &s_i2c2_dma, nullptr);
-
-PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
+PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", SF32LB52_I2C2_BASE, PBL_SOC_IRQN_I2C2,
+                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C2), 400000, &s_i2c2_default,
+                      &s_i2c2_dma);
 
 #ifdef CONFIG_BOARD_OBELIX_BB2
 #define LSM6DSO_AXIS_DIR_Y   (-1)
@@ -203,30 +203,30 @@ PBL_IRQ_CONNECT(I2C2, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c2, 0);
 #define MMC5603NJ_AXIS_DIR_Y (-1)
 #endif
 
-PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6a,
+PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2, 0x6a,
                    .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 38, PBL_IRQ_TYPE_EDGE_RISING),
                    .int1_in = PBL_GPIO(SF32LB_GPIO1, 38, 0),
                    .axis_map = {[AXIS_X] = 0, [AXIS_Y] = 1, [AXIS_Z] = 2},
                    .axis_dir = {[AXIS_X] = -1, [AXIS_Y] = LSM6DSO_AXIS_DIR_Y, [AXIS_Z] = 1});
 
-const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
+const struct pbl_accel *const ACCEL = &s_lsm6dso;
 
 PBL_MMC5603NJ_DEFINE(
-    s_mmc5603nj, &s_i2c2.bus, 0x30, .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
+    s_mmc5603nj, &s_i2c2, 0x30, .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
     .axis_dir = {[AXIS_X] = MMC5603NJ_AXIS_DIR_X, [AXIS_Y] = MMC5603NJ_AXIS_DIR_Y, [AXIS_Z] = 1});
 
-const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
+const struct pbl_mag *const MAG = &s_mmc5603nj;
 
 PBL_PINCTRL_STATE_DEFINE(s_i2c3_default, SF32LB52_PINCTRL,
                          SF32LB52_PA11_I2C3_SCL | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA10_I2C3_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", 3, 400000, &s_i2c3_default, nullptr);
+PBL_I2C_SF32LB_DEFINE(s_i2c3, "i2c3", SF32LB52_I2C3_BASE, PBL_SOC_IRQN_I2C3,
+                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C3), 400000, &s_i2c3_default,
+                      nullptr);
 
-PBL_IRQ_CONNECT(I2C3, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c3, 0);
-
-PBL_CST816_DEFINE(s_cst816, &s_i2c3.bus, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
+PBL_CST816_DEFINE(s_cst816, &s_i2c3, 0x15, 0x6A, PBL_GPIO(SF32LB_GPIO1, 27, PBL_GPIO_PULL_UP),
                   PBL_GPIO(&s_npm1300_gpio.port, 2, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
                   .size_x = 200, .size_y = 228);
 
@@ -237,12 +237,12 @@ PBL_PINCTRL_STATE_DEFINE(s_i2c4_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA20_I2C4_SDA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", 4, 400000, &s_i2c4_default, nullptr);
-
-PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
+PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", SF32LB52_I2C4_BASE, PBL_SOC_IRQN_I2C4,
+                      PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C4), 400000, &s_i2c4_default,
+                      nullptr);
 
 #ifdef CONFIG_HRM
-static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&s_i2c4.bus, 0x14);
+static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&s_i2c4, 0x14);
 
 static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
@@ -270,7 +270,7 @@ const Npm1300Config NPM1300_CONFIG = {
 // is <20 counts so no offset is needed.
 static const struct pbl_als_scale s_w1160_scale = {.offset = 0, .num = 100, .den = 483};
 
-PBL_W1160_DEFINE(s_w1160, &s_i2c1.bus, 0x48, &s_w1160_scale);
+PBL_W1160_DEFINE(s_w1160, &s_i2c1, 0x48, &s_w1160_scale);
 
 const struct pbl_als *const ALS = &s_w1160.als;
 

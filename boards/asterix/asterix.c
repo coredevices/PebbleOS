@@ -31,6 +31,7 @@
 
 #include <board/otp_layout.h>
 #include <hal/nrf_gpio.h>
+#include <hardware/nrf52_memorymap.h>
 
 PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(NRF5_GPIO_P0, 19, 0),
                              PBL_GPIO(NRF5_GPIO_P0, 17, 0), PBL_GPIO(NRF5_GPIO_P0, 20, 0),
@@ -84,14 +85,13 @@ const struct pbl_display *const DISPLAY = &s_display.disp;
 /* PERIPHERAL ID 10 */
 
 /* nPM1300 */
-PBL_I2C_NRF5_DEFINE(s_i2c_npmc_iic1, "i2c_npmc_iic1", 1, 400000,
+PBL_I2C_NRF5_DEFINE(s_i2c_npmc_iic1, "i2c_npmc_iic1", NRF52_TWIM1_BASE,
+                    PBL_SOC_IRQN_SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, 400000,
                     PBL_GPIO(NRF5_GPIO_P0, 14, PBL_GPIO_PULL_UP),
-                    PBL_GPIO(NRF5_GPIO_P0, 15, PBL_GPIO_PULL_UP), nullptr);
-PBL_IRQ_CONNECT(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1, 7, pbl_i2c_nrf5_irq_handler, &s_i2c_npmc_iic1,
-                0);
+                    PBL_GPIO(NRF5_GPIO_P0, 15, PBL_GPIO_PULL_UP));
 /* PERIPHERAL ID 9 */
 
-PBL_NPM1300_DEFINE(s_npm1300, &s_i2c_npmc_iic1.bus, 0x6B);
+PBL_NPM1300_DEFINE(s_npm1300, &s_i2c_npmc_iic1, 0x6B);
 PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, &NPM1300_CONFIG,
                            PBL_IRQ_SPEC(NRF5_GPIO_P1_INTC, 12, PBL_IRQ_TYPE_EDGE_RISING));
 
@@ -108,33 +108,34 @@ PBL_NPM1300_REGULATOR_DEFINE(s_npm1300_ldsw2, "npm1300_ldsw2", &s_npm1300, PBL_N
                              true, true);
 
 /* peripheral I2C bus */
-PBL_I2C_NRF5_DEFINE(s_i2c_iic2, "i2c_iic2", 0, 400000, PBL_GPIO(NRF5_GPIO_P0, 25, PBL_GPIO_PULL_UP),
-                    PBL_GPIO(NRF5_GPIO_P0, 11, PBL_GPIO_PULL_UP), nullptr);
-PBL_IRQ_CONNECT(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, 7, pbl_i2c_nrf5_irq_handler, &s_i2c_iic2, 0);
+PBL_I2C_NRF5_DEFINE(s_i2c_iic2, "i2c_iic2", NRF52_TWIM0_BASE,
+                    PBL_SOC_IRQN_SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, 400000,
+                    PBL_GPIO(NRF5_GPIO_P0, 25, PBL_GPIO_PULL_UP),
+                    PBL_GPIO(NRF5_GPIO_P0, 11, PBL_GPIO_PULL_UP));
 
-PBL_DRV2604_DEFINE(s_drv2604, &s_i2c_iic2.bus, 0x5A, PBL_GPIO(NRF5_GPIO_P0, 2, 0));
+PBL_DRV2604_DEFINE(s_drv2604, &s_i2c_iic2, 0x5A, PBL_GPIO(NRF5_GPIO_P0, 2, 0));
 
 const struct pbl_vibe *const VIBE = &s_drv2604.vibe;
 
-PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2.bus, 0x44, nullptr, .always_on = true);
+PBL_OPT3001_DEFINE(s_opt3001, &s_i2c_iic2, 0x44, nullptr, .always_on = true);
 
 const struct pbl_als *const ALS = &s_opt3001.als;
 
-PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c_iic2.bus, 0x1A, &s_npm1300_ldsw1.reg);
+PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &s_i2c_iic2, 0x1A, &s_npm1300_ldsw1.reg);
 
-PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2.bus, 0x6A,
+PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c_iic2, 0x6A,
                    .int1 = PBL_IRQ_SPEC(NRF5_GPIO_P1_INTC, 13, PBL_IRQ_TYPE_EDGE_RISING),
                    .int1_in = PBL_GPIO(NRF5_GPIO_P1, 13, 0),
                    .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
                    .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = 1, [AXIS_Z] = 1});
 
-const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
+const struct pbl_accel *const ACCEL = &s_lsm6dso;
 
-PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c_iic2.bus, 0x30,
+PBL_MMC5603NJ_DEFINE(s_mmc5603nj, &s_i2c_iic2, 0x30,
                      .axis_map = {[AXIS_X] = 1, [AXIS_Y] = 0, [AXIS_Z] = 2},
                      .axis_dir = {[AXIS_X] = 1, [AXIS_Y] = -1, [AXIS_Z] = 1});
 
-const struct pbl_mag *const MAG = &s_mmc5603nj.mag;
+const struct pbl_mag *const MAG = &s_mmc5603nj;
 
 /* PERIPHERAL ID 11 */
 
