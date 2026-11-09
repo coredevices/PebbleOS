@@ -9,21 +9,16 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_addr.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/regular_timer.h>
 
 #include <comm/ble/gap_le_slave_discovery.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
-static void prv_pairability_timer_cb(void *unused);
-
 static int s_allow_ble_pairing_refcount = 0;
 static bool s_last_ble_discoverable_state = false;
 
-static RegularTimerInfo s_pairability_timer_info = {
-  .cb = prv_pairability_timer_cb,
-};
+static struct pbl_wallclock_work s_pairability_work;
 
 static void evaluate_pairing_refcount(void *data) {
   PBL_ASSERT_TASK(PebbleTask_SysWorkq);
@@ -64,20 +59,21 @@ void bt_pairability_use_ble(void) {
   prv_schedule_evaluation();
 }
 
-static void prv_pairability_timer_cb(void *unused) {
-  regular_timer_remove_callback(&s_pairability_timer_info);
+static void prv_pairability_fn(struct pbl_work *work) {
+  pbl_wallclock_work_stop(&s_pairability_work);
   bt_pairability_release_ble();
 }
 
 void bt_pairability_use_ble_for_period(uint16_t duration_secs) {
-  if (!regular_timer_is_scheduled(&s_pairability_timer_info)) {
+  if (!pbl_wallclock_work_is_running(&s_pairability_work)) {
+    pbl_wallclock_work_init(&s_pairability_work, prv_pairability_fn);
     // If this function is called multiple times before the timer is unscheduled, limit to calling
     // "use" only once:
     bt_pairability_use_ble();
   }
   // Always reschedule, even if the duration is shorter than the one that might already be
   // scheduled:
-  regular_timer_add_multisecond_callback(&s_pairability_timer_info, duration_secs);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_pairability_work, 1, duration_secs);
 }
 
 void bt_pairability_release(void) {

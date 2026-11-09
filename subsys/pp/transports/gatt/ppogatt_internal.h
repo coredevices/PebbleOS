@@ -19,7 +19,7 @@
 #define PPOGATT_V0_WINDOW_SIZE             (4)
 #define PPOGATT_TIMEOUT_TICK_INTERVAL_SECS (2)
 //! Effective timeout: between 5 - 6 secs, because packet could be sent out just before the
-//! RegularTimer second tick is about to fire.
+//! timer tick is about to fire.
 #define PPOGATT_TIMEOUT_TICKS (3)
 
 //! Number of maximum consecutive timeouts without getting a packet Ack'd

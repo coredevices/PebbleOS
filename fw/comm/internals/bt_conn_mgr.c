@@ -7,9 +7,9 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 
 #include <comm/ble/gap_le_connect_params.h>
 #include <comm/ble/gap_le_connection.h>
@@ -38,7 +38,7 @@ typedef struct {
 typedef struct ConnectionMgrInfo {
   // callback which returns us to a low power state if user of API does not exit
   // a high power state
-  RegularTimerInfo watchdog_cb_info;
+  struct pbl_wallclock_work watchdog_work;
   // current running state of the connection
   enum pbl_bt_response_time_state curr_requested_state;
   // A list of consumers who have requested changes to latency state != PBL_BT_RESPONSE_TIME_MAX
@@ -137,7 +137,7 @@ static enum pbl_bt_response_time_state prv_determine_latency_for_connection(
  * LE connection manager handling for a gateway connection
  */
 
-static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data);
+static void prv_bt_le_gateway_response_latency_watchdog_fn(struct pbl_work *work);
 
 static void prv_granted_kernel_main_cb(void *ctx) {
   pbl_bt_responsiveness_granted_cb_t granted_handler = ctx;
@@ -187,32 +187,32 @@ static void prv_handle_response_latency_for_le_conn(GAPLEConnection *hdl) {
   }
 
   // remove a watchdog timer if it was already scheduled and schedule a new one
-  RegularTimerInfo *watchdog_cb_info = &hdl->conn_mgr_info->watchdog_cb_info;
-  if (regular_timer_is_scheduled(watchdog_cb_info)) {
-    regular_timer_remove_callback(watchdog_cb_info);
+  struct pbl_wallclock_work *watchdog_work = &hdl->conn_mgr_info->watchdog_work;
+  if (pbl_wallclock_work_is_running(watchdog_work)) {
+    pbl_wallclock_work_stop(watchdog_work);
   }
 
   // don't start the watchdog timer if we have entered the lowest power mode or
   // if we want to run at the specified rate indefinitely
   if ((state != PBL_BT_RESPONSE_TIME_MAX) && (secs_til_max_latency != MAX_PERIOD_RUN_FOREVER)) {
-    watchdog_cb_info->cb = prv_bt_le_gateway_response_latency_watchdog_cb;
-    watchdog_cb_info->cb_data = hdl;
-    // wait an extra second since the multisecond callback will fire somewhere
+    // wait an extra second since the first second boundary is somewhere
     // between 0 and 1 seconds from now and we want to make sure the interval
     // we are currently running at actually expires
-    regular_timer_add_multisecond_callback(watchdog_cb_info, secs_til_max_latency + 1);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, watchdog_work, 1, secs_til_max_latency + 1);
   }
 
   hdl->conn_mgr_info->curr_requested_state = state;
 }
 
+static bool prv_has_conn_mgr_info(GAPLEConnection *connection, void *data) {
+  return connection->conn_mgr_info == data;
+}
+
 static void prv_bt_le_gateway_response_latency_watchdog_handler(void *data) {
   bt_lock();
-  GAPLEConnection *hdl = (GAPLEConnection *)data;
-
-  // Let's make sure our connection handle is still valid in case we
-  // disconnected before this CB had a chance to execute
-  if (!gap_le_connection_is_valid(hdl)) {
+  // The info may have been freed with its connection before this ran.
+  GAPLEConnection *hdl = gap_le_connection_find(prv_has_conn_mgr_info, data);
+  if (!hdl) {
     goto unlock;
   }
 
@@ -246,10 +246,11 @@ unlock:
   bt_unlock();
 }
 
-static void prv_bt_le_gateway_response_latency_watchdog_cb(void *data) {
-  // offload handling onto SysWorkq so we don't stall the timer thread
-  // trying to get the bt lock
-  pbl_sys_work_call(prv_bt_le_gateway_response_latency_watchdog_handler, data);
+static void prv_bt_le_gateway_response_latency_watchdog_fn(struct pbl_work *work) {
+  // offload handling onto SysWorkq so we don't stall the high priority work
+  // queue trying to get the bt lock
+  pbl_sys_work_call(prv_bt_le_gateway_response_latency_watchdog_handler,
+                    container_of(work, ConnectionMgrInfo, watchdog_work.work));
 }
 
 static bool prv_find_source(ListNode *found_node, void *data) {
@@ -280,9 +281,9 @@ void conn_mgr_set_ble_conn_response_time_ext(GAPLEConnection *hdl, enum pbl_bt_c
   bt_lock();
   // remove the watchdog timer if it was already scheduled since we are
   // going to recompute
-  RegularTimerInfo *watchdog_cb_info = &hdl->conn_mgr_info->watchdog_cb_info;
-  if (regular_timer_is_scheduled(watchdog_cb_info)) {
-    regular_timer_remove_callback(watchdog_cb_info);
+  struct pbl_wallclock_work *watchdog_work = &hdl->conn_mgr_info->watchdog_work;
+  if (pbl_wallclock_work_is_running(watchdog_work)) {
+    pbl_wallclock_work_stop(watchdog_work);
   }
 
   ConnectionStateRequest *consumer_request = (ConnectionStateRequest *)list_find(
@@ -336,17 +337,15 @@ ConnectionMgrInfo *bt_conn_mgr_info_init(void) {
   *newinfo = (ConnectionMgrInfo){
     .curr_requested_state = PBL_BT_RESPONSE_TIME_MAX,
   };
+  pbl_wallclock_work_init(&newinfo->watchdog_work, prv_bt_le_gateway_response_latency_watchdog_fn);
 
   return newinfo;
 }
 
 //! expects that the bt_lock is held
 void bt_conn_mgr_info_deinit(ConnectionMgrInfo **info) {
-  // If we have any callbacks scheduled for this device, take them out
-  RegularTimerInfo *watchdog_cb_info = &(*info)->watchdog_cb_info;
-  if (regular_timer_is_scheduled(watchdog_cb_info)) {
-    regular_timer_remove_callback(watchdog_cb_info);
-  }
+  // A running function only passes the info's address on, checked under bt_lock.
+  pbl_wallclock_work_stop(&(*info)->watchdog_work);
 
   ListNode *curr_request = (ListNode *)(*info)->requests;
   while (curr_request != nullptr) {

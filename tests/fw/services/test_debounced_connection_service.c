@@ -2,14 +2,16 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/services/debounced_connection_service.h>
-#include <pbl/services/regular_timer.h>
 
 #include <clar.h>
 #include <fake_pbl_malloc.h>
 #include <fake_rtc.h>
 #include <fake_session.h>
 #include <fake_sys_work.h>
+#include <fake_work.h>
 #include <syscall/syscall.h>
+
+#define DISCONNECT_HIDE_DURATION_SECS 25
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -44,7 +46,6 @@ static void init(bool connected) {
 
   s_default_connection_state = connected;
 
-  regular_timer_init();
   debounced_connection_service_init();
 }
 
@@ -87,7 +88,7 @@ static void prv_assert_event_received(bool is_connected) {
 
 void test_debounced_connection_service__cleanup(void) {
   s_event_count = 0;
-  regular_timer_deinit();
+  fake_wallclock_work_cleanup();
   fake_comm_session_cleanup();
 }
 
@@ -101,11 +102,12 @@ void test_debounced_connection_service__connected_to_disconnected(void) {
 
   check_waiting_to_send_disconnect();
 
-  // No event put
+  // No event put, not even just before the timer fires
+  fake_wallclock_work_advance(1, DISCONNECT_HIDE_DURATION_SECS - 1);
   cl_assert_equal_i(s_event_count, 0);
 
   //! Timer fires
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, 1);
 
   // Event put
   prv_assert_event_received(false);
@@ -168,7 +170,7 @@ void test_debounced_connection_service__disconnected_wait_disconnected(void) {
   check_waiting_to_send_second_disconnect();
 
   //! Timer fires
-  regular_timer_fire_seconds(1);
+  fake_wallclock_work_advance(1, DISCONNECT_HIDE_DURATION_SECS);
 
   check_disconnected();
 

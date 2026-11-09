@@ -41,6 +41,10 @@ GAPLEConnection *gap_le_connection_any(void) {
   return nullptr;
 }
 
+GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void *data) {
+  return filter(&s_connection, data) ? &s_connection : nullptr;
+}
+
 uint16_t gaps_get_starting_att_handle(void) {
   return 4;
 }

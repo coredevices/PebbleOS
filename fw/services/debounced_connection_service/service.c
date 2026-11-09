@@ -2,10 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/work.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/app_session.h>
 #include <pbl/services/debounced_connection_service.h>
-#include <pbl/services/regular_timer.h>
 
 #ifndef CONFIG_RECOVERY_FW
 #include <pbl/services/notifications/alerts.h>
@@ -16,6 +16,7 @@
 #endif
 
 #include <pbl/logging/logging.h>
+#include <pbl/util/misc.h>
 
 //! This module is responsible for propagating debounced connection events.
 //! Connection events are passed through right away to subscribers but
@@ -34,7 +35,7 @@ typedef enum {
   NumConnectionsToDebounce,
 } DebounceConnection;
 
-static RegularTimerInfo s_debounce_timers[NumConnectionsToDebounce];
+static struct pbl_wallclock_work s_debounce_timers[NumConnectionsToDebounce];
 static bool s_debounced_state_is_connected[NumConnectionsToDebounce];
 
 static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
@@ -46,8 +47,12 @@ static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
   event_put(&event);
 }
 
-static void prv_handle_disconnection_debounced(void *data) {
-  DebounceConnection conn_id = (DebounceConnection)(uintptr_t)data;
+static void prv_handle_disconnection_debounced(struct pbl_work *work) {
+  struct pbl_wallclock_work *timer = container_of(work, struct pbl_wallclock_work, work);
+  DebounceConnection conn_id = (DebounceConnection)(timer - s_debounce_timers);
+
+  // First, so that a reconnection handled from now on reports itself.
+  pbl_wallclock_work_stop(timer);
   s_debounced_state_is_connected[conn_id] = false;
   prv_put_debounced_connection_event(conn_id);
 #ifndef CONFIG_RECOVERY_FW
@@ -61,13 +66,11 @@ static void prv_handle_disconnection_debounced(void *data) {
     }
   }
 #endif
-  regular_timer_remove_callback(&s_debounce_timers[conn_id]);
 }
 
 void debounced_connection_service_init(void) {
   for (int i = 0; i < NumConnectionsToDebounce; i++) {
-    s_debounce_timers[i].cb = prv_handle_disconnection_debounced;
-    s_debounce_timers[i].cb_data = (void *)(uintptr_t)i;
+    pbl_wallclock_work_init(&s_debounce_timers[i], prv_handle_disconnection_debounced);
   }
 
   // initial state of the connections
@@ -91,14 +94,14 @@ void debounced_connection_service_handle_event(PebbleCommSessionEvent *e) {
     // If we become disconnected don't update apps until we have had a chance
     // to recover the connection. This will make our BT connection seem more
     // reliable.
-    regular_timer_add_multisecond_callback(&s_debounce_timers[conn_id],
-                                           DISCONNECT_HIDE_DURATION_SECS);
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_debounce_timers[conn_id], 1,
+                             DISCONNECT_HIDE_DURATION_SECS);
     return;
   }
 
-  if (regular_timer_is_scheduled(&s_debounce_timers[conn_id])) {
+  if (pbl_wallclock_work_is_running(&s_debounce_timers[conn_id])) {
     // we reconnected quickly so no need to notify the app about it
-    timer_stopped = regular_timer_remove_callback(&s_debounce_timers[conn_id]);
+    timer_stopped = pbl_wallclock_work_stop(&s_debounce_timers[conn_id]);
   }
 
   if (!timer_stopped) {

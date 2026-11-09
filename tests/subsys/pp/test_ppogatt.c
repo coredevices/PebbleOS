@@ -3,7 +3,6 @@
 
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -311,16 +310,25 @@ void test_ppogatt__initialize(void) {
   fake_pbl_malloc_clear_tracking();
   fake_gatt_client_op_init();
   fake_gatt_client_subscriptions_init();
-  regular_timer_init();
   fake_comm_session_init();
   pbl_pp_gatt_create();
+}
+
+static uint32_t prv_wallclock_work_count(void) {
+  uint32_t count = 0;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] != nullptr) {
+      count++;
+    }
+  }
+  return count;
 }
 
 void test_ppogatt__cleanup(void) {
   pbl_pp_gatt_destroy();
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_i(regular_timer_seconds_count(), 0);
-  regular_timer_deinit();
+  cl_assert_equal_i(prv_wallclock_work_count(), 0);
+  fake_wallclock_work_cleanup();
   fake_gatt_client_op_deinit();
   fake_gatt_client_subscriptions_deinit();
 
@@ -658,7 +666,7 @@ void test_ppogatt__timeout_waiting_for_reset_complete_remote_initiated(void) {
 
   // Timeout waiting for "Reset Complete":
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 
   // Expect "Reset Request" sent by FW:
@@ -670,7 +678,7 @@ void test_ppogatt__timeout_waiting_for_reset_complete_self_initiated(void) {
 
   // Timeout waiting for "Reset Complete":
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 
   // Expect "Reset Request" sent by FW:
@@ -956,9 +964,9 @@ void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
                          s_short_data_fragment, sizeof(s_short_data_fragment) - sn);
   }
 
-  // Simulate the regular timer firing a bunch of times to expire the timeout for all the packets:
+  // Simulate the timer firing a bunch of times to expire the timeout for all the packets:
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 
   fake_comm_session_process_send_next();
@@ -992,16 +1000,16 @@ void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(vo
     if (sn == 0 || sn == 1) {
       // Make the first and second packet time out each, one second earlier
       // than the 3rd and 4rd packets:
-      regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+      fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
       ++secs_passed;
     }
     cl_assert(secs_passed < PPOGATT_TIMEOUT_TICKS);
   }
 
-  // Simulate the regular timer firing a bunch of times to expire the timeout for the in-flight
+  // Simulate the timer firing a bunch of times to expire the timeout for the in-flight
   // packets This will trigger a retransmit of the un-acked packets
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS - 1; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 
   fake_comm_session_process_send_next();
@@ -1029,7 +1037,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
   // Time-out all packets in flight, rolling back for retransmission:
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
 
   // Simulate receiving an ack for the last, after the roll-back, but before the packets are
@@ -1066,7 +1074,7 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
   for (int j = 0; j < PPOGATT_TIMEOUT_COUNT_MAX - 1; ++j) {
     // Time-out the packet over and over until (max - 1) is reached:
     for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-      regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+      fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
     }
     fake_comm_session_process_send_next();
     prv_assert_sent_data(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn,
@@ -1075,7 +1083,7 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
 
   // The last straw:
   for (int i = 0; i < PPOGATT_TIMEOUT_TICKS; ++i) {
-    regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+    fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
   }
   prv_assert_sent_reset_request(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
 }
@@ -1096,7 +1104,7 @@ void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
 
   for (int sn = 0; sn < num_packets; sn++) {
     for (int i = 0; i < (PPOGATT_TIMEOUT_TICKS - 1); ++i) {
-      regular_timer_fire_seconds(PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
+      fake_wallclock_work_advance(1, PPOGATT_TIMEOUT_TICK_INTERVAL_SECS);
     }
 
     prv_receive_ack(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], sn /* sn */);

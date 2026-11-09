@@ -16,7 +16,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 
 #include <fake_bonding_sync.h>
 #include <fake_pbl_malloc.h>
-#include <fake_regular_timer.h>
 #include <fake_spi_flash.h>
 
 typedef bool (*BondingSyncFilterCb)(const struct pbl_bt_bonding *bonding, void *ctx);

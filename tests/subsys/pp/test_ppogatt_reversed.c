@@ -3,7 +3,6 @@
 
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
-#include <pbl/services/regular_timer.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
@@ -122,7 +121,6 @@ void test_ppogatt_reversed__initialize(void) {
   fake_pbl_malloc_clear_tracking();
   fake_gatt_client_op_init();
   fake_gatt_client_subscriptions_init();
-  regular_timer_init();
   fake_comm_session_init();
   pbl_pp_gatt_create();
 }
@@ -130,7 +128,7 @@ void test_ppogatt_reversed__initialize(void) {
 void test_ppogatt_reversed__cleanup(void) {
   pbl_pp_gatt_destroy();
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  regular_timer_deinit();
+  fake_wallclock_work_cleanup();
   fake_gatt_client_op_deinit();
   fake_gatt_client_subscriptions_deinit();
   fake_pbl_malloc_check_net_allocs();

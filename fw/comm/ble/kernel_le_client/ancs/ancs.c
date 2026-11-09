@@ -15,10 +15,10 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/buffer.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -103,9 +103,10 @@ typedef struct {
 typedef struct ANCSClient {
   ANCSClientState state;
   pbl_bt_characteristic_t characteristics[NumANCSCharacteristic];
-  RegularTimerInfo is_alive_timer;
+  struct pbl_wallclock_work is_alive_work;
+  struct pbl_wallclock_work is_alive_response_work;
   // Watchdog for the in-flight Control Point request.
-  RegularTimerInfo op_timeout_timer;
+  struct pbl_wallclock_work op_timeout_work;
   ANCSAttribute *attributes[NUM_FETCHED_NOTIF_ATTRIBUTES];
   NotificationQueueNode *queue;
   bool alive_check_pending;
@@ -365,14 +366,14 @@ static void prv_op_timeout_launcher_task_cb(void *unused) {
   prv_reset_and_next();
 }
 
-static void prv_op_timeout_cb(void *unused) {
+static void prv_op_timeout_fn(struct pbl_work *work) {
   // Hop to KernelMain; ANCS state is single-threaded there.
   launcher_task_add_callback(prv_op_timeout_launcher_task_cb, nullptr);
 }
 
 static void prv_op_timeout_stop(void) {
-  if (s_ancs_client && regular_timer_is_scheduled(&s_ancs_client->op_timeout_timer)) {
-    regular_timer_remove_callback(&s_ancs_client->op_timeout_timer);
+  if (s_ancs_client && pbl_wallclock_work_is_running(&s_ancs_client->op_timeout_work)) {
+    pbl_wallclock_work_stop(&s_ancs_client->op_timeout_work);
   }
 }
 
@@ -380,18 +381,14 @@ static void prv_op_timeout_start(void) {
   if (!s_ancs_client) {
     return;
   }
-  // Only touch .cb — reassigning the whole struct would zero list_node while it
-  // may still be linked (we can re-arm from inside the callback), corrupting the
-  // regular-timer list.
   prv_op_timeout_stop();
-  s_ancs_client->op_timeout_timer.cb = prv_op_timeout_cb;
-  regular_timer_add_multisecond_callback(&s_ancs_client->op_timeout_timer,
-                                         ANCS_OP_RESPONSE_TIMEOUT_SECONDS);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_ancs_client->op_timeout_work, 1,
+                           ANCS_OP_RESPONSE_TIMEOUT_SECONDS);
 }
 
 static void prv_op_timeout_kick(void) {
   // DS data is progress; refresh the window so slow reassembly isn't killed.
-  if (s_ancs_client && regular_timer_is_scheduled(&s_ancs_client->op_timeout_timer)) {
+  if (s_ancs_client && pbl_wallclock_work_is_running(&s_ancs_client->op_timeout_work)) {
     prv_op_timeout_start();
   }
 }
@@ -416,8 +413,8 @@ static void prv_op_timeout_kick(void) {
 #define ANCS_ALIVE_CHECKS_WITHOUT_NS_BEFORE_RESUBSCRIBE \
   ((ANCS_NO_NS_TIMEOUT_HOURS * 60) / ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES)
 
-static void prv_is_ancs_alive_cb(void *data);
-static void prv_is_ancs_alive_response_timeout(void *data);
+static void prv_is_ancs_alive_fn(struct pbl_work *work);
+static void prv_is_ancs_alive_response_timeout_fn(struct pbl_work *work);
 
 // iOS rejects Control Point writes (ATT error, typically Write Not Permitted)
 // when it no longer allows this watch to read its notifications. Nothing on
@@ -442,29 +439,31 @@ static void prv_handle_alive_check_rejected(enum pbl_bt_gatt_error error) {
 }
 
 static void prv_ancs_is_alive_schedule_next_check(void) {
-  s_ancs_client->is_alive_timer = (const RegularTimerInfo){
-    .cb = prv_is_ancs_alive_cb,
-  };
-  regular_timer_add_multiminute_callback(&s_ancs_client->is_alive_timer,
-                                         ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES);
+  pbl_wallclock_work_stop(&s_ancs_client->is_alive_response_work);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_ancs_client->is_alive_work, 60,
+                           ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES);
 }
 
 static void prv_ancs_is_alive_start_response_wait_timer(void) {
-  s_ancs_client->is_alive_timer = (const RegularTimerInfo){
-    .cb = prv_is_ancs_alive_response_timeout,
-  };
-  regular_timer_add_multisecond_callback(&s_ancs_client->is_alive_timer,
-                                         ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS);
+  pbl_wallclock_work_stop(&s_ancs_client->is_alive_work);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_ancs_client->is_alive_response_work, 1,
+                           ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS);
+}
+
+static bool prv_ancs_is_alive_timer_running(void) {
+  return pbl_wallclock_work_is_running(&s_ancs_client->is_alive_work) ||
+         pbl_wallclock_work_is_running(&s_ancs_client->is_alive_response_work);
 }
 
 static void prv_ancs_is_alive_stop_timer(void) {
-  if (regular_timer_is_scheduled(&s_ancs_client->is_alive_timer)) {
-    regular_timer_remove_callback(&s_ancs_client->is_alive_timer);
+  if (prv_ancs_is_alive_timer_running()) {
+    pbl_wallclock_work_stop(&s_ancs_client->is_alive_work);
+    pbl_wallclock_work_stop(&s_ancs_client->is_alive_response_work);
   }
 }
 
 static void prv_ancs_is_alive_start_tracking(void) {
-  if (regular_timer_is_scheduled(&s_ancs_client->is_alive_timer)) {
+  if (prv_ancs_is_alive_timer_running()) {
     prv_ancs_is_alive_stop_timer();
   } else {
     // Not scheduled, so analytics stopwatch would have been stopped
@@ -532,10 +531,10 @@ static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
   prv_ancs_is_alive_schedule_next_check();
 }
 
-static void prv_is_ancs_alive_response_timeout(void *data) {
+static void prv_is_ancs_alive_response_timeout_fn(struct pbl_work *work) {
   PBL_LOG_DBG("ANCS isn't alive");
 
-  launcher_task_add_callback(prv_is_ancs_alive_response_timeout_launcher_task_cb, data);
+  launcher_task_add_callback(prv_is_ancs_alive_response_timeout_launcher_task_cb, nullptr);
 }
 
 static void prv_ancs_is_alive(void) {
@@ -604,8 +603,8 @@ PBL_T_STATIC void prv_is_ancs_alive_launcher_task_cb(void *data) {
   }
 }
 
-static void prv_is_ancs_alive_cb(void *data) {
-  launcher_task_add_callback(prv_is_ancs_alive_launcher_task_cb, data);
+static void prv_is_ancs_alive_fn(struct pbl_work *work) {
+  launcher_task_add_callback(prv_is_ancs_alive_launcher_task_cb, nullptr);
 }
 
 // -----------------------------------------------------------------------------
@@ -1269,6 +1268,10 @@ void ancs_handle_ios9_or_newer_detected(void) {
 void ancs_create(void) {
   PBL_ASSERTN(s_ancs_client == nullptr);
   s_ancs_client = (ANCSClient *)pbl_zalloc_check(sizeof(ANCSClient));
+  pbl_wallclock_work_init(&s_ancs_client->is_alive_work, prv_is_ancs_alive_fn);
+  pbl_wallclock_work_init(&s_ancs_client->is_alive_response_work,
+                          prv_is_ancs_alive_response_timeout_fn);
+  pbl_wallclock_work_init(&s_ancs_client->op_timeout_work, prv_op_timeout_fn);
   pbl_buffer_init(&s_ancs_client->reassembly_ctx.buffer,
                   sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
   ancs_app_name_storage_init();

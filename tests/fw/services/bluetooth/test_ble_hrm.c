@@ -17,7 +17,7 @@
 #include <fake_event_service.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
-#include <fake_regular_timer.h>
+#include <fake_work.h>
 
 FAKE_VOID_FUNC(gap_le_slave_reconnect_hrm_restart);
 FAKE_VOID_FUNC(gap_le_slave_reconnect_hrm_stop);
@@ -128,9 +128,9 @@ void test_ble_hrm__cleanup(void) {
 
   fake_pbl_malloc_check_net_allocs();
 
-  // Assert all regular timers are deregistered:
-  cl_assert_equal_p(s_seconds_callbacks.next, nullptr);
-  cl_assert_equal_p(s_minutes_callbacks.next, nullptr);
+  extern struct pbl_wallclock_work *ble_hrm_timer(void);
+  cl_assert_equal_b(false, pbl_wallclock_work_is_running(ble_hrm_timer()));
+  fake_wallclock_work_cleanup();
 }
 
 #define TEST_DEVICE_NAME "iPhone Martijn"
@@ -450,27 +450,27 @@ void test_ble_hrm__handle_activity_pref_hrm_changes(void) {
 }
 
 void test_ble_hrm__popup_after_long_continuous_use(void) {
-  extern RegularTimerInfo *ble_hrm_timer(void);
-  RegularTimerInfo *timer = ble_hrm_timer();
+  extern struct pbl_wallclock_work *ble_hrm_timer(void);
+  struct pbl_wallclock_work *timer = ble_hrm_timer();
 
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, true);
   prv_assert_permissions_ui_and_respond(true /* is_granted */);
 
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(true, pbl_wallclock_work_is_running(timer));
 
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, false);
-  cl_assert_equal_b(false, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(false, pbl_wallclock_work_is_running(timer));
 
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, true);
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(true, pbl_wallclock_work_is_running(timer));
 
   cl_assert_equal_i(0, ble_hrm_push_reminder_popup_fake.call_count);
-  fake_regular_timer_trigger(timer);
+  fake_wallclock_work_fire(timer);
   cl_assert_equal_i(1, ble_hrm_push_reminder_popup_fake.call_count);
 
   // Except timer to be rescheduled again:
-  cl_assert_equal_b(true, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(true, pbl_wallclock_work_is_running(timer));
 
   pbl_bt_cb_hrm_service_update_subscription(s_device_a, false);
-  cl_assert_equal_b(false, regular_timer_is_scheduled(timer));
+  cl_assert_equal_b(false, pbl_wallclock_work_is_running(timer));
 }

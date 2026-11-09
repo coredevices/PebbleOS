@@ -8,9 +8,9 @@
 
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/size.h>
 
 #include <applib/bluetooth/ble_ad_parse.h>
@@ -212,13 +212,13 @@ unlock:
 
 #define RECONNECT_HRM_TIMEOUT_SECS (60)
 
-static RegularTimerInfo s_hrm_reconnect_timer;
+static struct pbl_wallclock_work s_hrm_reconnect_work;
 
 static void prv_hrm_reconnect_timeout_kernel_main_callback(void *data) {
   gap_le_slave_reconnect_hrm_stop();
 }
 
-static void prv_hrm_reconnect_timeout_timer_callback(void *data) {
+static void prv_hrm_reconnect_timeout_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, nullptr);
 }
 
@@ -229,11 +229,10 @@ void gap_le_slave_reconnect_hrm_restart(void) {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, true);
 
     // Always restart the timer:
-    if (!regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
-      s_hrm_reconnect_timer = (RegularTimerInfo){
-        .cb = prv_hrm_reconnect_timeout_timer_callback,
-      };
-      regular_timer_add_multisecond_callback(&s_hrm_reconnect_timer, RECONNECT_HRM_TIMEOUT_SECS);
+    if (!pbl_wallclock_work_is_running(&s_hrm_reconnect_work)) {
+      pbl_wallclock_work_init(&s_hrm_reconnect_work, prv_hrm_reconnect_timeout_fn);
+      pbl_wallclock_work_start(&pbl_sys_workq_high, &s_hrm_reconnect_work, 1,
+                               RECONNECT_HRM_TIMEOUT_SECS);
     }
   }
   bt_unlock();
@@ -245,8 +244,8 @@ void gap_le_slave_reconnect_hrm_stop(void) {
   {
     prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, false);
 
-    if (regular_timer_is_scheduled(&s_hrm_reconnect_timer)) {
-      regular_timer_remove_callback(&s_hrm_reconnect_timer);
+    if (pbl_wallclock_work_is_running(&s_hrm_reconnect_work)) {
+      pbl_wallclock_work_stop(&s_hrm_reconnect_work);
     }
   }
   bt_unlock();

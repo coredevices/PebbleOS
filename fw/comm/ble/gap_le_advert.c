@@ -10,8 +10,8 @@
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/util/list.h>
 
 #include <comm/bt_lock.h>
@@ -93,9 +93,8 @@ static GAPLEAdvertisingJob *s_current;
 //! @note This pointer may be dangling, don't try to reference!
 static const struct pbl_bt_ad_data *s_current_ad_data;
 
-//! The regular timer that marks the end of a cycle and triggers the next job
-//! to be aired.
-static RegularTimerInfo s_cycle_regular_timer;
+//! Marks the end of a cycle and triggers the next job to be aired.
+static struct pbl_wallclock_work s_cycle_work;
 
 static bool s_is_advertising;
 
@@ -277,7 +276,7 @@ unlock:
 
 //! Runs once per second on the high priority work queue; never block on bt_lock there
 //! (it stalls every other timer in the system) — bounce to KernelMain.
-static void prv_cycle_timer_callback(void *unused) {
+static void prv_cycle_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_cycle_kernelmain_cb, nullptr);
 }
 
@@ -285,16 +284,16 @@ static void prv_cycle_timer_callback(void *unused) {
 //! Timer start / stop utilities
 //! bt_lock is expected to be taken!
 static void prv_timer_start(void) {
-  if (regular_timer_is_scheduled(&s_cycle_regular_timer)) {
+  if (pbl_wallclock_work_is_running(&s_cycle_work)) {
     PBL_LOG_ERR("Advertising timer already started");
-    regular_timer_remove_callback(&s_cycle_regular_timer);
+    pbl_wallclock_work_stop(&s_cycle_work);
   }
 
-  regular_timer_add_seconds_callback(&s_cycle_regular_timer);
+  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_cycle_work, 1, 1);
 }
 
 static void prv_timer_stop(void) {
-  regular_timer_remove_callback(&s_cycle_regular_timer);
+  pbl_wallclock_work_stop(&s_cycle_work);
 }
 
 // -----------------------------------------------------------------------------
@@ -546,9 +545,7 @@ void gap_le_advert_init(void) {
     s_jobs = nullptr;
     s_current = nullptr;
     s_current_ad_data = nullptr;
-    s_cycle_regular_timer = (const RegularTimerInfo){
-      .cb = prv_cycle_timer_callback,
-    };
+    pbl_wallclock_work_init(&s_cycle_work, prv_cycle_fn);
 
     s_is_advertising = false;
     // Not cleared by the disconnect handler if the stack went down while
@@ -570,8 +567,7 @@ void gap_le_advert_deinit(void) {
       gap_le_advert_unschedule(s_jobs);
     }
 
-    PBL_ASSERTN(!regular_timer_is_scheduled(&s_cycle_regular_timer) ||
-                regular_timer_pending_deletion(&s_cycle_regular_timer));
+    PBL_ASSERTN(!pbl_wallclock_work_is_running(&s_cycle_work));
     s_gap_le_advert_is_initialized = false;
   }
   bt_unlock();
