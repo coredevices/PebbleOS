@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: jedec,spi-nor
+config: FLASH_SPI_NOR
+class: flash
+define: PBL_FLASH_SPI_NOR_DEFINE
+args:
+  - name: true
+  - parent: spi_mem
+  - list: [user-otp, fixed-layout]
+    item: 'PBL_FLASH_OTP_CELL("{name}", {0:#x}, {1})'
+    default: []

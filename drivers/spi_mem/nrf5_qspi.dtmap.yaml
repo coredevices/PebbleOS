@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52840-qspi
+config: SPI_MEM_NRF5_QSPI
+class: spi_mem
+define: PBL_SPI_MEM_NRF5_QSPI_DEFINE
+args:
+  - name: true
+  - reg: qspi
+  - irq: 0
+  - prop: spi-max-frequency
+    child: 0
+  - gpio: sck
+  - gpio: cs
+  - gpio: io
+    index: 0
+  - gpio: io
+    index: 1
+  - gpio: io
+    index: 2
+  - gpio: io
+    index: 3

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/kernel/barrier.h>
 #include <pbl/kernel/compiler.h>
@@ -45,11 +46,11 @@ static const struct pbl_spi_mem_sf32lb52_mpi *prv_mpi(const struct pbl_spi_mem *
 }
 
 static uintptr_t prv_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
-  return (mpi->idx == 1U) ? SF32LB52_MPI1_BASE : SF32LB52_MPI2_BASE;
+  return mpi->base;
 }
 
 static uintptr_t prv_mem_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
-  return (mpi->idx == 1U) ? SF32LB52_MPI1_MEM_BASE : SF32LB52_MPI2_MEM_BASE;
+  return mpi->mem_base;
 }
 
 static PBL_ALWAYS_INLINE uint32_t prv_mode(uint8_t buswidth) {
@@ -528,3 +529,5 @@ const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops = {
   .dirmap_invalidate = prv_dirmap_invalidate,
   .power_down = prv_power_down,
 };
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_mpi)

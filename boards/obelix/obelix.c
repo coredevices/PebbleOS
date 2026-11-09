@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
-#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/audio/amp_gpio.h>
 #include <pbl/drivers/audio/sf32lb52.h>
@@ -10,7 +9,6 @@
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/dma/sf32lb52.h>
-#include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/sf32lb.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
@@ -22,7 +20,6 @@
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/rtc/sf32lb.h>
 #include <pbl/drivers/sf32lb52/hxt.h>
-#include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/drivers/temperature/sf32lb.h>
 #include <pbl/drivers/touch/cst816.h>
 #include <pbl/drivers/uart/sf32lb.h>
@@ -132,19 +129,9 @@ PBL_UART_SF32LB_DEFINE(s_uart3, "uart3", 3, 1000000, &s_hci_trace_uart_default, 
 const struct pbl_uart *const HCI_TRACE_UART = &s_uart3.uart;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
-PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 2, 16U * 1024U * 1024U,
-                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2), PBL_SPI_MEM_XIP,
-                                nullptr);
+PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &dt_flash0, "soc-config-user", "soc-config-cust");
 
-static const struct pbl_flash_otp_cell s_otp_cells[] = {
-  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
-};
-static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
-PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_mpi2.mem, &s_otp_layout);
-
-PBL_SF32LB52_HXT_DEFINE(s_hxt, "hxt", &s_flash.flash, "soc-config-user", "soc-config-cust");
-
-const struct pbl_flash *const FLASH = &s_flash.flash;
+const struct pbl_flash *const FLASH = &dt_flash0;
 
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
 

@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/otp.h>
 #include <pbl/util/math.h>
@@ -463,16 +462,17 @@ static const struct pbl_spi_mem s_xip_bus =
     PBL_SPI_MEM_INIT(s_xip_bus, "xip_bus", nullptr, &s_bus_ops, PBL_SPI_MEM_XIP);
 PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
 
-static const struct pbl_flash_otp_cell s_otp_cells[] = {
-  BOARD_OTP_CELLS, BOARD_OTP_CELLS_SOC_CONFIG
-};
-static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
+#define OTP_CELLS                                                                                \
+  PBL_FLASH_OTP_CELL("hw-version", 0x00U, 32U), PBL_FLASH_OTP_CELL("serial-number", 0x20U, 32U), \
+      PBL_FLASH_OTP_CELL("pcba-serial-number", 0x40U, 32U),                                      \
+      PBL_FLASH_OTP_CELL("soc-config-user", 0x0800U, 256U),                                      \
+      PBL_FLASH_OTP_CELL("soc-config-cust", 0x1000U, 256U)
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &s_otp_layout);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &s_otp_layout);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, OTP_CELLS);
 
-const struct pbl_flash *const FLASH = &s_nor_q.flash;
+const struct pbl_flash *const FLASH = &s_nor_q;
 
 static void prv_put32(uint8_t *p, uint32_t v) {
   p[0] = (uint8_t)v;
@@ -579,11 +579,11 @@ static void prv_reset(enum chip_model model) {
   s_min_resume_to_suspend = UINT32_MAX;
 }
 
-static const struct pbl_flash *prv_init(const struct pbl_flash_spi_nor *nor) {
+static const struct pbl_flash *prv_init(const struct pbl_flash *flash) {
   prv_build_sfdp();
-  cl_assert_equal_i(pbl_device_init(&nor->flash.dev), 0);
+  cl_assert_equal_i(pbl_device_init(&flash->dev), 0);
 
-  return &nor->flash;
+  return flash;
 }
 
 void test_spi_nor__initialize(void) {
@@ -1019,7 +1019,7 @@ void test_spi_nor__quad_enable_checked(void) {
   prv_reset(CHIP_GD25Q256E);
   s_sr2_ignored = PBL_FLASH_NOR_SR2_QE;
   prv_build_sfdp();
-  cl_assert(pbl_device_init(&s_nor_q.flash.dev) != 0);
+  cl_assert(pbl_device_init(&s_nor_q.dev) != 0);
 }
 
 // A part none of the supported ones are is not driven
@@ -1027,7 +1027,7 @@ void test_spi_nor__unsupported_part(void) {
   prv_reset(CHIP_GD25Q256E);
   s_model = CHIP_UNKNOWN;
   prv_build_sfdp();
-  cl_assert_equal_i(pbl_device_init(&s_nor_q.flash.dev), -ENODEV);
+  cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), -ENODEV);
 }
 
 void test_spi_nor__otp_cells(void) {

@@ -118,7 +118,7 @@
 	io-gpios = <&gpio0 20 0>, <&gpio0 21 0>, <&gpio0 22 0>, <&gpio0 23 0>;
 	status = "okay";
 
-	flash@0 {
+	flash0: flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <8000000>;

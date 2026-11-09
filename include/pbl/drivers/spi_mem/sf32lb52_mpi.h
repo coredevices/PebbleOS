@@ -18,15 +18,14 @@
  * only ever holds the bytes the command takes. The memory-mapped window is the read window,
  * programmed with the read operation the memory driver picks.
  *
- * With @ref PBL_SPI_MEM_XIP, the CPU executes from the memory: the boot code's clock, prescaler
- * and sampling setup are kept, the clock is never gated, and everything that runs while the
- * memory is unreadable (status polling, window changes, power down) runs from RAM with
- * interrupts disabled.
+ * The controller is @ref PBL_SPI_MEM_XIP when the firmware runs from its window, at
+ * @c CONFIG_FLASH_BASE: the boot code's clock, prescaler and sampling setup are kept, the clock is
+ * never gated, and everything that runs while the memory is unreadable (status polling, window
+ * changes, power down) runs from RAM with interrupts disabled.
  *
  * @code{.c}
- * PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 2, 32U * 1024U * 1024U,
- *                                 PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2),
- *                                 PBL_SPI_MEM_XIP, nullptr);
+ * PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", SF32LB52_MPI2_BASE, SF32LB52_MPI2_MEM_BASE,
+ *                                 0xe000000, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2));
  * @endcode
  * @{
  */
@@ -35,8 +34,10 @@
 struct pbl_spi_mem_sf32lb52_mpi {
   /** Controller. */
   struct pbl_spi_mem mem;
-  /** Instance, 1 or 2. */
-  uint8_t idx;
+  /** Registers. */
+  uintptr_t base;
+  /** Memory-mapped window. */
+  uintptr_t mem_base;
   /** Memory-mapped window size, in bytes. */
   uint32_t mem_size;
   /** Clock. */
@@ -45,6 +46,11 @@ struct pbl_spi_mem_sf32lb52_mpi {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops;
+
+#define PBL_SPI_MEM_SF32LB52_MPI_XIP(_mem_base, _mem_size)                                 \
+  (((CONFIG_FLASH_BASE >= (_mem_base)) && (CONFIG_FLASH_BASE - (_mem_base) < (_mem_size))) \
+       ? PBL_SPI_MEM_XIP                                                                   \
+       : 0U)
 /** @endcond */
 
 /**
@@ -52,20 +58,17 @@ extern const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops;
  *
  * @param sym Symbol of the controller.
  * @param _name Name.
- * @param _idx Instance, 1 or 2.
+ * @param _base Registers.
+ * @param _mem_base Memory-mapped window.
  * @param _mem_size Memory-mapped window size, in bytes.
  * @param _clk Clock, from PBL_CLK().
- * @param _flags Flags, @c PBL_SPI_MEM_*.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_SPI_MEM_SF32LB52_MPI_DEFINE(sym, _name, _idx, _mem_size, _clk, _flags, _deps) \
-  PBL_SPI_MEM_STATE_DEFINE(sym);                                                          \
-  const struct pbl_spi_mem_sf32lb52_mpi sym = {                                           \
-    .mem = PBL_SPI_MEM_INIT(sym, _name, _deps, &pbl_spi_mem_sf32lb52_mpi_ops, _flags),    \
-    .idx = (_idx),                                                                        \
-    .mem_size = (_mem_size),                                                              \
-    .clk = _clk,                                                                          \
-  };                                                                                      \
-  PBL_DEVICE_REGISTER(sym, &sym.mem.dev)
+#define PBL_SPI_MEM_SF32LB52_MPI_DEFINE(sym, _name, _base, _mem_base, _mem_size, _clk) \
+  PBL_SPI_MEM_STATE_DEFINE(sym);                                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb52_mpi, struct pbl_spi_mem, mem) { \
+    .mem = PBL_SPI_MEM_INIT(sym, _name, nullptr, &pbl_spi_mem_sf32lb52_mpi_ops,        \
+                            PBL_SPI_MEM_SF32LB52_MPI_XIP(_mem_base, _mem_size)),       \
+    .base = (_base), .mem_base = (_mem_base), .mem_size = (_mem_size), .clk = _clk,    \
+  }
 
 /** @} */

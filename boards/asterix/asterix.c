@@ -2,12 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
-#include <pbl/board/otp_layout.h>
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/drivers/audio/nrf5.h>
 #include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/display/sharp_ls013b7dh01.h>
-#include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/input/gpio_keys.h>
@@ -16,28 +14,16 @@
 #include <pbl/drivers/pwm/nrf5_rtc.h>
 #include <pbl/drivers/rtc/retained.h>
 #include <pbl/drivers/spi/nrf5.h>
-#include <pbl/drivers/spi_mem/nrf5_qspi.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
 
-#include <board/otp_layout.h>
 #include <devicetree/devices.h>
 #include <hal/nrf_gpio.h>
 
-PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(&dt_gpio0, 19, 0),
-                             PBL_GPIO(&dt_gpio0, 17, 0), PBL_GPIO(&dt_gpio0, 20, 0),
-                             PBL_GPIO(&dt_gpio0, 21, 0), PBL_GPIO(&dt_gpio0, 22, 0),
-                             PBL_GPIO(&dt_gpio0, 23, 0));
-PBL_IRQ_CONNECT(QSPI, 5, pbl_spi_mem_nrf5_qspi_irq_handler, &s_qspi, 0);
-
-static const struct pbl_flash_otp_cell s_otp_cells[] = {BOARD_OTP_CELLS};
-static const struct pbl_flash_otp_layout s_otp_layout = {s_otp_cells, ARRAY_LENGTH(s_otp_cells)};
-PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi.mem, &s_otp_layout);
-
-const struct pbl_flash *const FLASH = &s_flash.flash;
+const struct pbl_flash *const FLASH = &dt_flash0;
 /* PERIPHERAL ID 43 */
 
 PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0, 1000000, PBL_GPIO(&dt_gpio0, 27, 0),
