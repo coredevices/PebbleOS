@@ -82,6 +82,11 @@ function(_pebble_platform p)
     -ffunction-sections -fdata-sections -fcommon
     -Wall -Wextra -Wno-unused-parameter
     $<$<BOOL:${PEBBLE_WARNINGS_AS_ERRORS}>:-Werror>
+    # __FILE__, which APP_LOG() puts in the binary, relative to the build
+    # directory as it has always been: not the path on the developer's
+    # machine, which costs the app memory and tells where it was built.
+    -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=../
+    -fmacro-prefix-map=${CMAKE_BINARY_DIR}/=
   )
   target_compile_definitions(pebble_${p} INTERFACE
     ${PEBBLE_${p}_DEFINES}
