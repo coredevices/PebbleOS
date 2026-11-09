@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(cmsis_core)
-add_subdirectory(nanopb)
+pbl_add_subdirectory_ifdef(CONFIG_NANOPB nanopb)
 add_subdirectory(tinymt)
-add_subdirectory(qr_code_generator)
+pbl_add_subdirectory_ifdef(CONFIG_QR_CODE_GENERATOR qr_code_generator)
 add_subdirectory(uzlib)
-add_subdirectory(upng)
+pbl_add_subdirectory_ifdef(CONFIG_UPNG upng)
 pbl_add_subdirectory_ifdef(CONFIG_SPEEX speex)
 add_subdirectory(nonfree)
 if(CONFIG_MODDABLE_XS)

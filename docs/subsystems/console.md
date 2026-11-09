@@ -54,7 +54,7 @@ restart.
 ## Flash imaging
 
 `pbl image_resources` and `pbl image_recovery` use this channel where sftool is
-not used. The payload starts with an opcode, and integers are little-endian:
+not used. The firmware enables it with the console (`CONFIG_CONSOLE_IMAGING`). The payload starts with an opcode, and integers are little-endian:
 
 | Opcode | Arguments | Response |
 |---|---|---|

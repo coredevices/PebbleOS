@@ -6,7 +6,6 @@ config SAMSA
     depends on !CPU_CORTEX_M
     # Recovery firmware doesn't run third-party apps, nor generates the SDK.
     depends on !RECOVERY_FW
-    default y if SOC_POSIX
     # The thunks are generated from the SDK built for apps.
     select REQUIRES_ARM_TOOLCHAIN
     help

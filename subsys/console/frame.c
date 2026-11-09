@@ -89,12 +89,14 @@ static void prv_process_frame(void *unused) {
 
   const uint8_t seq = (uint8_t)s_rx_buf[1];
   if (seq == 0U || seq != s_last_seq) {
-    const void *payload = &s_rx_buf[1 + SEQ_LEN];
-    const size_t payload_len = (size_t)raw_len - SEQ_LEN - CRC_LEN;
+    [[maybe_unused]] const void *payload = &s_rx_buf[1 + SEQ_LEN];
+    [[maybe_unused]] const size_t payload_len = (size_t)raw_len - SEQ_LEN - CRC_LEN;
 
+#ifdef CONFIG_CONSOLE_IMAGING
     if (channel == CONSOLE_FRAME_CHANNEL_IMAGING) {
       pbl_console__imaging_handle_frame(payload, payload_len);
     }
+#endif
 #ifdef CONFIG_PP_TRANSPORT_CONSOLE
     if (channel == PBL_CONSOLE_CHANNEL_PP) {
       pbl_pp_console_receive(payload, payload_len);
@@ -110,7 +112,7 @@ static void prv_process_frame(void *unused) {
 
 static void prv_process_ack(void *unused) {
   uint8_t raw[ACK_RAW_LEN];
-  const int raw_len = pbl_base64_decode(raw, sizeof(raw), s_ack_buf, ACK_B64_LEN);
+  [[maybe_unused]] const int raw_len = pbl_base64_decode(raw, sizeof(raw), s_ack_buf, ACK_B64_LEN);
 
 #ifdef CONFIG_PP_TRANSPORT_CONSOLE
   if (raw_len == (int)ACK_RAW_LEN &&
