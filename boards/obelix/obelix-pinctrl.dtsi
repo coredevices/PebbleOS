@@ -1,0 +1,221 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+&pinctrl {
+	lcdc1_default: lcdc1-default-state {
+		vck-pins {
+			pins = "PA39";
+			function = "lcdc1_jdi_vck";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		xrst-pins {
+			pins = "PA40";
+			function = "lcdc1_jdi_xrst";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		hck-pins {
+			pins = "PA41";
+			function = "lcdc1_jdi_hck";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		r2-pins {
+			pins = "PA42";
+			function = "lcdc1_jdi_r2";
+			input-enable;
+			drive-strength = <4>;
+		};
+
+		b2-pins {
+			pins = "PA02";
+			function = "lcdc1_jdi_b2";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		b1-pins {
+			pins = "PA03";
+			function = "lcdc1_jdi_b1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		g1-pins {
+			pins = "PA04";
+			function = "lcdc1_jdi_g1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		r1-pins {
+			pins = "PA05";
+			function = "lcdc1_jdi_r1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		hst-pins {
+			pins = "PA06";
+			function = "lcdc1_jdi_hst";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		enb-pins {
+			pins = "PA07";
+			function = "lcdc1_jdi_enb";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		vst-pins {
+			pins = "PA08";
+			function = "lcdc1_jdi_vst";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		g2-pins {
+			pins = "PA43";
+			function = "lcdc1_jdi_g2";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	lcdc1_sleep: lcdc1-sleep-state {
+		discharge-pins {
+			pins = "PA03", "PA39", "PA40", "PA41", "PA42";
+			function = "gpio";
+			output-low;
+		};
+	};
+
+	lptim2_default: lptim2-default-state {
+		out-pins {
+			pins = "PA24";
+			function = "pbr_lptim2_out";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		inv-out-pins {
+			pins = "PA25";
+			function = "pbr_lptim2_inv_out";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	usart1_default: usart1-default-state {
+		tx-pins {
+			pins = "PA19";
+			function = "usart1_txd";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		rx-pins {
+			pins = "PA18";
+			function = "usart1_rxd";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	i2c1_default: i2c1-default-state {
+		scl-pins {
+			pins = "PA31";
+			function = "i2c1_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA30";
+			function = "i2c1_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c2_default: i2c2-default-state {
+		scl-pins {
+			pins = "PA32";
+			function = "i2c2_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA33";
+			function = "i2c2_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c3_default: i2c3-default-state {
+		scl-pins {
+			pins = "PA11";
+			function = "i2c3_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA10";
+			function = "i2c3_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	i2c4_default: i2c4-default-state {
+		scl-pins {
+			pins = "PA09";
+			function = "i2c4_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA20";
+			function = "i2c4_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	touch_default: touch-default-state {
+		int-pins {
+			pins = "PA27";
+			function = "gpio";
+			input-enable;
+			bias-pull-up;
+		};
+	};
+
+	pdm1_default: pdm1-default-state {
+		clk-pins {
+			pins = "PA22";
+			function = "pdm1_clk";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		data-pins {
+			pins = "PA23";
+			function = "pdm1_data";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+};
