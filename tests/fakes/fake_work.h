@@ -148,3 +148,75 @@ static inline void fake_work_cleanup(void) {
   s_fake_work_num_arm_calls = 0;
   s_fake_work_num_cancel_calls = 0;
 }
+
+// ---- wall clock work --------------------------------------------------------
+
+// Started items, each counting down the boundaries until it is due in its due_ms.
+static struct pbl_wallclock_work *s_fake_wallclock_started[FAKE_WORK_MAX_PENDING];
+
+void pbl_wallclock_work_init(struct pbl_wallclock_work *w, pbl_work_fn_t fn) {
+  *w = (struct pbl_wallclock_work){};
+  w->work.fn = fn;
+}
+
+bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w) {
+  const bool was_running = w->running;
+
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] == w) {
+      s_fake_wallclock_started[i] = nullptr;
+    }
+  }
+  w->running = false;
+  return was_running;
+}
+
+void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w, uint32_t unit_s,
+                              uint32_t every) {
+  pbl_wallclock_work_stop(w);
+  w->q = q;
+  w->unit_ms = unit_s * 1000U;
+  w->every = every;
+  w->due_ms = every;
+  w->running = true;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] == nullptr) {
+      s_fake_wallclock_started[i] = w;
+      return;
+    }
+  }
+  PBL_ASSERTN(false);
+}
+
+bool pbl_wallclock_work_is_running(const struct pbl_wallclock_work *w) {
+  return w->running;
+}
+
+//! Lets @p n boundaries of @p unit_s seconds pass, running each item as it becomes due.
+static inline void fake_wallclock_work_advance(uint32_t unit_s, uint32_t n) {
+  while (n-- > 0U) {
+    for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+      struct pbl_wallclock_work *w = s_fake_wallclock_started[i];
+      if (w != nullptr && w->unit_ms == unit_s * 1000U && --w->due_ms == 0U) {
+        w->due_ms = w->every;
+        w->work.fn(&w->work);
+      }
+    }
+  }
+}
+
+//! Runs a started item's function, as if it were due.
+static inline void fake_wallclock_work_fire(struct pbl_wallclock_work *w) {
+  PBL_ASSERTN(w->running);
+  w->work.fn(&w->work);
+}
+
+//! Forgets every started item. Call from the test's cleanup.
+static inline void fake_wallclock_work_cleanup(void) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    if (s_fake_wallclock_started[i] != nullptr) {
+      s_fake_wallclock_started[i]->running = false;
+      s_fake_wallclock_started[i] = nullptr;
+    }
+  }
+}
