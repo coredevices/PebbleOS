@@ -149,15 +149,16 @@ void pbl_user_call(void (*fn)(void *), void *ctx);
 /**
  * @brief Called on the way out of every syscall made from unprivileged code.
  *
- * Implemented by the application. Runs privileged, on the syscall's stack, just before privilege
- * is dropped; it may block, e.g. to hold a thread that is being killed.
+ * Runs privileged, on the syscall's stack, just before privilege is dropped; it may block. The
+ * default does nothing; an application overrides it, e.g. to hold a thread that is being killed.
  */
 void pbl_kernel_syscall_exit(void);
 
 /**
  * @brief Kill the thread whose syscall failed.
  *
- * Implemented by the application; called by pbl_syscall_fail().
+ * Called by pbl_syscall_fail(). The default ends in pbl_fatal_error_handler(); an application
+ * overrides it to only kill the thread.
  *
  * @param lr Return address of the failed check, for the crash report.
  */

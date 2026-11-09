@@ -193,7 +193,8 @@ void pbl_heap_free(struct pbl_heap *heap, void *ptr, uintptr_t caller);
 /**
  * @brief Handle an allocation failure the caller cannot recover from.
  *
- * Implemented by the platform, called by pbl_heap_oom().
+ * Called by pbl_heap_oom(). The default ends in pbl_fatal_error_handler(); an application
+ * overrides it, e.g. to only kill the process that owns the heap.
  *
  * @param heap Heap the allocation failed on.
  * @param size Number of bytes requested.
