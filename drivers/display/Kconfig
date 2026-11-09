@@ -10,12 +10,19 @@ if DISPLAY
 
 config DISPLAY_SF32LB_LCDC
     bool "SiFli SF32LB LCD controller"
-    default y if SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_LCDC_ENABLED
     depends on CLK_SF32LB && PINCTRL && RESET_SF32LB
     select PANEL
     help
       Support for the SiFli SF32LB LCD controller, driving a JDI
       memory-in-pixel panel.
+
+config DISPLAY_SF32LB_LCDC_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on DISPLAY_SF32LB_LCDC
+    help
+      Priority of the controller interrupt.
 
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"

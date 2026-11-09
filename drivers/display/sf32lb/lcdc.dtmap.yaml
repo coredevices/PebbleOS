@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-lcdc
+config: DISPLAY_SF32LB_LCDC
+class: display
+define: PBL_DISPLAY_SF32LB_LCDC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - reset: 0
+  - self: panel
+    remote: 0
+  - self: width
+    remote: 0
+  - self: height
+    remote: 0
+  - prop: rotation
+    remote: 0
+    default: 0
+  - self: round-mask
+    remote: 0
+  - pinctrl: default
+  - pinctrl: sleep
+    default: nullptr

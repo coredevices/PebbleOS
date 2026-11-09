@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/panel.h>
 #include <pbl/kernel/compiler.h>
@@ -475,21 +476,13 @@ static int prv_init(const struct pbl_display *disp) {
     return -EINVAL;
   }
 
-  for (uint8_t i = 0U; i < lcdc->num_discharge; i++) {
-    if (pbl_device_init(&lcdc->discharge[i].port->dev) != 0) {
-      return -ENODEV;
-    }
-  }
-
   s_lcdc = lcdc;
   pbl_delayed_work_init(&s_silent_loss_timer, prv_silent_loss_handler);
 
-  // Power cycle the panel with its inputs low
-  for (uint8_t i = 0U; i < lcdc->num_discharge; i++) {
-    ret = pbl_gpio_configure(&lcdc->discharge[i], PBL_GPIO_OUTPUT_LOW);
-    if (ret != 0) {
-      return ret;
-    }
+  // Power cycle the panel with its inputs as the sleep state leaves them, e.g. driven low
+  ret = pbl_pinctrl_select_state(&lcdc->pinctrl, PBL_PINCTRL_STATE_SLEEP);
+  if (ret != 0 && ret != -ENOENT) {
+    return ret;
   }
 
   ret = pbl_panel_unprepare(lcdc->panel);
@@ -507,7 +500,7 @@ static int prv_init(const struct pbl_display *disp) {
     return ret;
   }
 
-  pbl_irq_enable(lcdc->irqn);
+  pbl_irq_enable(lcdc->irq);
 
   return prv_panel_on(lcdc);
 }
@@ -582,3 +575,5 @@ void pbl_display_sf32lb_lcdc_test_drop_next_complete(void) {
   s_test_drop_next_complete = true;
 }
 #endif
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_lcdc)
