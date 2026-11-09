@@ -41,14 +41,13 @@ PBL_PINCTRL_STATE_DEFINE(s_dbg_uart_default, SF32LB52_PINCTRL,
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_UP);
 
 static const struct pbl_dma_chan s_dbg_uart_rx_dma =
-    PBL_DMA_CHAN(SF32LB52_DMAC1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
+    PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
 
 PBL_UART_SF32LB_DMA_DEFINE(s_uart1, "uart1", 1, 1000000, &s_dbg_uart_default, &s_dbg_uart_rx_dma,
                            nullptr);
 const struct pbl_uart *const CONSOLE_UART = &s_uart1.uart;
 
 PBL_IRQ_CONNECT(USART1, 5, pbl_uart_sf32lb_irq_handler, &s_uart1, 0);
-PBL_IRQ_CONNECT(DMAC1_CH1, 5, pbl_dma_sf32lb52_irq_handler, &s_dbg_uart_rx_dma, 0);
 
 PBL_PINCTRL_STATE_DEFINE(
     s_display_default, SF32LB52_PINCTRL,
@@ -191,16 +190,15 @@ PBL_GPIO_KEYS_DEFINE(
                       PBL_INPUT_KEY_DOWN, 40));
 
 static const struct pbl_dma_chan s_mic_dma =
-    PBL_DMA_CHAN(SF32LB52_DMAC1, 4, SF32LB52_DMA_REQ_PDM1_L, SF32LB52_DMA_PL_LOW);
+    PBL_DMA_CHAN(&dt_dmac1, 4, SF32LB52_DMA_REQ_PDM1_L, SF32LB52_DMA_PL_LOW);
 PBL_PINCTRL_STATE_DEFINE(s_mic_default, SF32LB52_PINCTRL,
                          SF32LB52_PA22_PDM1_CLK | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA,
                          SF32LB52_PA23_PDM1_DATA | PBL_PINCTRL_SF32LB52_INPUT |
                              PBL_PINCTRL_SF32LB52_DRIVE_8MA | PBL_PINCTRL_SF32LB52_PULL_DOWN);
 PBL_AUDIO_SF32LB52_PDM_DEFINE(s_mic, "mic", PBL_PINCTRL(&s_mic_default, nullptr, 0), PBL_IRQN(PDM1),
-                              &s_mic_dma, PBL_IRQN(DMAC1_CH5), &dt_ldsw2);
+                              &s_mic_dma, &dt_ldsw2);
 PBL_IRQ_CONNECT(PDM1, 5, pbl_audio_sf32lb52_pdm_irq_handler, &s_mic, 0);
-PBL_IRQ_CONNECT(DMAC1_CH5, 5, pbl_dma_sf32lb52_irq_handler, &s_mic_dma, 0);
 
 const struct pbl_audio *const MIC = &s_mic.audio;
 
@@ -213,10 +211,8 @@ static const struct pbl_audio_link s_speaker_link = {
 };
 
 static const struct pbl_dma_chan s_speaker_dma =
-    PBL_DMA_CHAN(SF32LB52_DMAC1, 3, SF32LB52_DMA_REQ_AUDAC_CH0, SF32LB52_DMA_PL_HIGH);
-PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE(s_speaker, "speaker", &s_speaker_dma, PBL_IRQN(DMAC1_CH4),
-                                   &s_speaker_link);
-PBL_IRQ_CONNECT(DMAC1_CH4, 5, pbl_dma_sf32lb52_irq_handler, &s_speaker_dma, 0);
+    PBL_DMA_CHAN(&dt_dmac1, 3, SF32LB52_DMA_REQ_AUDAC_CH0, SF32LB52_DMA_PL_HIGH);
+PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE(s_speaker, "speaker", &s_speaker_dma, &s_speaker_link);
 
 const struct pbl_audio *const SPEAKER = &s_speaker.audio;
 

@@ -209,7 +209,6 @@ static int prv_hw_start(const struct pbl_audio_sf32lb52_pdm *pdm,
     return ret;
   }
 
-  pbl_irq_enable(pdm->dma_irq);
   pbl_irq_enable(pdm->irq);
   pbl_writel(pbl_readl(REG(INT_MSK)) & ~(PDM_INT_MSK_L | PDM_INT_MSK_R), REG(INT_MSK));
   pbl_writel(pbl_readl(REG(CFG0)) | PDM_CFG0_PDMCOREEN, REG(CFG0));
@@ -218,7 +217,6 @@ static int prv_hw_start(const struct pbl_audio_sf32lb52_pdm *pdm,
 }
 
 static void prv_hw_stop(const struct pbl_audio_sf32lb52_pdm *pdm) {
-  pbl_irq_disable(pdm->dma_irq);
   pbl_irq_disable(pdm->irq);
   (void)pbl_dma_terminate(pdm->dma);
   pbl_writel(pbl_readl(REG(CFG0)) & ~PDM_CFG0_PDMCOREEN, REG(CFG0));

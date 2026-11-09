@@ -526,7 +526,6 @@ static int prv_dma_start(const struct pbl_audio_sf32lb52_audcodec *dev,
   }
 
   prv_set(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_DMA_EN);
-  pbl_irq_enable(dev->dma_irq);
 
   return 0;
 }
@@ -582,7 +581,6 @@ static int prv_stop(const struct pbl_audio *audio) {
 
   prv_clock_off(dev);
 
-  pbl_irq_disable(dev->dma_irq);
   ret = pbl_dma_terminate(dev->dma);
   prv_clear(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_DMA_EN);
 
