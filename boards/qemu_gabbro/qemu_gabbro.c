@@ -60,13 +60,17 @@ PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
 PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
 
+#ifdef CONFIG_ACCEL
 const struct pbl_accel *const ACCEL = QEMU_ACCEL;
+#endif
 
 const struct pbl_als *const ALS = QEMU_ALS;
 
 const struct pbl_backlight *const BACKLIGHT = QEMU_BACKLIGHT;
 
+#ifdef CONFIG_VIBE
 const struct pbl_vibe *const VIBE = QEMU_VIBE;
+#endif
 
 const struct pbl_temp *const DIE_TEMP = QEMU_TEMP;
 

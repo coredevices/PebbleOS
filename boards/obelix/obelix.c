@@ -13,7 +13,6 @@
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/drivers/gpio/npm1300.h>
 #include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
@@ -35,6 +34,10 @@
 #include <pbl/drivers/vibe/aw86225.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
+
+#ifdef CONFIG_HRM
+#include <pbl/drivers/hrm/gh3x2x.h>
+#endif
 
 #include <hardware/sf32lb52_memorymap.h>
 
@@ -238,6 +241,7 @@ PBL_I2C_SF32LB_DEFINE(s_i2c4, "i2c4", 4, 400000, &s_i2c4_default, nullptr);
 
 PBL_IRQ_CONNECT(I2C4, 5, pbl_i2c_sf32lb_irq_handler, &s_i2c4, 0);
 
+#ifdef CONFIG_HRM
 static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&s_i2c4.bus, 0x14);
 
 static HRMDeviceState s_hrm_state;
@@ -250,6 +254,7 @@ static HRMDevice s_hrm = {
 };
 
 HRMDevice *const HRM = &s_hrm;
+#endif
 
 // TODO(OBELIX): Adjust to final battery parameters
 const Npm1300Config NPM1300_CONFIG = {

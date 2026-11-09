@@ -7,22 +7,3 @@ config FW_FLASH_SIZE
     default 0x80000 if RECOVERY_FW && !MFG
     # 1 MiB of flash less the 32 KiB bootloader the image is linked past.
     default 0xf8000
-
-
-# The LSM6DSO has a higher noise floor than the accelerometers the activity
-# thresholds were tuned for.
-config SERVICE_ACTIVITY_SLEEP_MAX_MINUTE_SCORE
-    default 500
-
-config SERVICE_ACTIVITY_SLEEP_MIN_VALID_VMC
-    default 30
-
-config SERVICE_ACTIVITY_SLEEP_MAX_AVG_VMC
-    default 250
-
-config SERVICE_ACTIVITY_NOT_WORN_MIN_WORN_VMC
-    default 15
-
-# Longer stillness during deep sleep, still catching time on a desk.
-config SERVICE_ACTIVITY_NOT_WORN_MAX_LOW_VMC_RUN_M
-    default 120

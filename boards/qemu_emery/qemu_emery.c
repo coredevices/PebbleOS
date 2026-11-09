@@ -20,8 +20,10 @@
 
 // UART device for debug serial
 #include <pbl/drivers/audio/qemu.h>
-#include <pbl/drivers/hrm/qemu.h>
 #include <pbl/drivers/uart/qemu.h>
+#ifdef CONFIG_HRM
+#include <pbl/drivers/hrm/qemu.h>
+#endif
 
 PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
 const struct pbl_uart *const CONSOLE_UART = &s_uart2.uart;
@@ -58,11 +60,13 @@ PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
 
 const struct pbl_audio *const MIC = &s_mic.audio;
 
+#ifdef CONFIG_HRM
 static HRMDeviceState s_hrm_state;
 static HRMDevice s_hrm = {
   .state = &s_hrm_state,
 };
 HRMDevice *const HRM = &s_hrm;
+#endif
 
 PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
 PBL_IRQ_CONNECT(UART1, 6, pbl_uart_qemu_irq_handler, &s_uart1, 0);
@@ -71,13 +75,17 @@ PBL_IRQ_CONNECT(UART3, 6, pbl_uart_qemu_irq_handler, &s_uart3, 0);
 #endif
 PBL_IRQ_CONNECT(AUDIO, 5, pbl_audio_qemu_irq_handler, &s_speaker, 0);
 
+#ifdef CONFIG_ACCEL
 const struct pbl_accel *const ACCEL = QEMU_ACCEL;
+#endif
 
 const struct pbl_als *const ALS = QEMU_ALS;
 
 const struct pbl_backlight *const BACKLIGHT = QEMU_BACKLIGHT;
 
+#ifdef CONFIG_VIBE
 const struct pbl_vibe *const VIBE = QEMU_VIBE;
+#endif
 
 const struct pbl_temp *const DIE_TEMP = QEMU_TEMP;
 
