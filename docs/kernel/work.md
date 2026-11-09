@@ -114,6 +114,18 @@ its interrupt, uses `pbl_work_submit_boosted()`. The queue's thread runs at the
 priority set with `pbl_workq_set_boost_prio()` from submission until the
 function returns or the item is canceled, together with any other boosted item.
 
+### Wall clock work
+
+`struct pbl_wallclock_work` follows the wall clock rather than the uptime, for
+periodic work such as a watchface's minute tick. `pbl_wallclock_work_start()`
+submits it at every Nth boundary of a unit, e.g. every minute as the minute
+changes, or every 5 seconds as the second does, until it is stopped. Items due at
+the same boundary expire together, so the system wakes up once for all of them.
+
+Setting the clock moves the boundaries with it. A change that lands in another
+unit counts as one boundary, so minute items run at once when the clock moves to
+another minute.
+
 ## Choosing a mechanism
 
 | Need | Use |
@@ -123,5 +135,6 @@ function returns or the item is canceled, together with any other boosted item.
 | Run something later, in a thread | `struct pbl_delayed_work` |
 | Several pending payloads | `pbl_work_call()` |
 | A payload on the system queue | `pbl_sys_work_call()` |
+| Every second or minute of the wall clock | `struct pbl_wallclock_work` |
 | Not wait behind the app on a low priority queue | `pbl_work_submit_boosted()` |
 | Own priority, or long blocking work | A dedicated `struct pbl_workq` |

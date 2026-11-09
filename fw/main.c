@@ -23,7 +23,6 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/prf_update.h>
-#include <pbl/services/regular_timer.h>
 #include <pbl/services/services.h>
 #include <pbl/task_wdt/task_wdt.h>
 
@@ -161,8 +160,6 @@ int main(void) {
   prv_sys_workq_init();
 
   events_init();
-
-  regular_timer_init();
 
   // After the timer service, which the display may use
   boot_splash_start();

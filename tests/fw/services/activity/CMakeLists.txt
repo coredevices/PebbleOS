@@ -5,7 +5,6 @@ pbl_clar_test(test_activity
   MODULES settings time
   SOURCES
     fw/applib/health_service.c
-    fw/services/regular_timer/service.c
     fw/services/activity/activity.c
     fw/services/activity/activity_metrics.c
     fw/services/activity/activity_sessions.c
@@ -61,7 +60,6 @@ pbl_clar_test(test_kraepelin_algorithm
 pbl_clar_test(test_activity_algorithm_kraepelin
   MODULES settings time
   SOURCES
-    fw/services/regular_timer/service.c
     fw/services/activity/kraepelin/activity_algorithm_kraepelin.c
     tests/fakes/fake_accel_service.c
     tests/fakes/fake_events.c
