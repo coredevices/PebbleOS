@@ -715,7 +715,9 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   }
 
   graphics_context_set_antialiased(ctx, true);
-  const GColor arrow_fill_color = PBL_IF_RECT_ELSE(timeline_layer->sidebar_color, GColorWhite);
+  // On round the arrow is a notch cut into the sidebar, so it takes the background color
+  const GColor arrow_fill_color =
+      PBL_IF_RECT_ELSE(timeline_layer->sidebar_color, system_theme_get_bg_color());
   graphics_context_set_fill_color(ctx, arrow_fill_color);
   gpath_draw_filled(ctx, &arrow_path);
   graphics_context_set_antialiased(ctx, false);
