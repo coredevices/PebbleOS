@@ -10,7 +10,7 @@
 #       Speech, and Signal Processing, Vol. ASSP-35, No. 6, June 1987
 #
 # The firmware uses this same algorithm, but implemented in C in the prv_fft_2radix_real()
-#  method of kraepelin_algorithm.c
+#  method of lib/kraepelin/kraepelin.c
 ##################################################################################################
 
 import argparse

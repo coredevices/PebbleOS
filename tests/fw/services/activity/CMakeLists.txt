@@ -45,7 +45,6 @@ pbl_clar_test(test_activity_insights
 
 pbl_clar_test(test_kraepelin_algorithm
   SOURCES
-    fw/services/activity/kraepelin/kraepelin_algorithm.c
     tests/fakes/fake_rtc.c
     tests/fw/services/activity/step_samples.c
     tests/fw/services/activity/sleep_samples_v1.c
@@ -53,6 +52,7 @@ pbl_clar_test(test_kraepelin_algorithm
     tests/fw/services/activity/kraepelin_reference/helper_worker.c
     tests/fw/services/activity/kraepelin_reference/ProjectK_worker.c
     tests/fw/services/activity/kraepelin_reference/raw_stats.c
+  LIBS libkraepelin
   DEFINES DUMA_DISABLED
   OVERRIDES dummy_board
 )

@@ -418,8 +418,8 @@ class AlgState(Recognizer):
         return state.dereference().address == s_alg_state
 
 
-class KAlgState(Recognizer):
-    type = "KAlgState"
+class KraepelinState(Recognizer):
+    type = "struct pbl_kraepelin"
 
     def is_type(self, state, search_blocks):
         s_alg_state_ref = get_static_variable("s_alg_state")

@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
+#include <pbl/kraepelin/kraepelin.h>
 #include <pbl/util/size.h>
 
 // ----------------------------------------------------------------
 // Sample captured: 2015-08-06 13:31:28 GMT
-struct kalg_sample *activity_sample_30_steps(int *len) {
-  static struct kalg_sample samples[] = {
+struct pbl_kraepelin_sample *activity_sample_30_steps(int *len) {
+  static struct pbl_kraepelin_sample samples[] = {
     {-42, -52, -1027},  {-43, -29, -1054},   {-76, 12, -975},    {-72, -17, -906},
     {-64, -40, -892},   {-81, -37, -933},    {-77, -15, -1008},  {-83, 0, -1041},
     {-81, -27, -1029},  {-80, -57, -993},    {-97, -27, -973},   {-119, -21, -991},
@@ -143,8 +143,8 @@ struct kalg_sample *activity_sample_30_steps(int *len) {
 
 // ----------------------------------------------------------------
 // Sample captured: 2015-08-06 18:38:11 GMT
-struct kalg_sample *activity_sample_working_at_desk(int *len) {
-  static struct kalg_sample samples[] = {
+struct pbl_kraepelin_sample *activity_sample_working_at_desk(int *len) {
+  static struct pbl_kraepelin_sample samples[] = {
     {-26, -168, -982},   {26, -185, -984},   {34, -211, -990},   {-2, -202, -984},
     {-49, -183, -967},   {-67, -189, -990},  {-82, -161, -985},  {-117, -178, -989},
     {-196, -174, -977},  {-73, -168, -1009}, {125, -180, -1016}, {-24, -136, -968},
@@ -340,8 +340,8 @@ struct kalg_sample *activity_sample_working_at_desk(int *len) {
 
 // ----------------------------------------------------------------
 // Sample captured: 2015-09-05 19:50:54 local
-struct kalg_sample *activity_sample_not_moving(int *len) {
-  static struct kalg_sample samples[] = {
+struct pbl_kraepelin_sample *activity_sample_not_moving(int *len) {
+  static struct pbl_kraepelin_sample samples[] = {
     {88, 8, -1000},  {88, 16, -1000}, {80, 16, -1000}, {88, 16, -1000}, {88, 16, -1000},
     {88, 16, -992},  {80, 16, -1000}, {88, 8, -1000},  {88, 0, -1000},  {80, 24, -1000},
     {80, 16, -1000}, {80, 16, -1000}, {88, 16, -1008}, {80, 24, -1000}, {80, 16, -1000},

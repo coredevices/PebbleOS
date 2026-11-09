@@ -18,7 +18,7 @@
  * @brief Step counting, sleep tracking, activity sessions and health metrics.
  *
  * The activity service samples the accelerometer at 25 Hz and feeds the samples to the activity
- * algorithm (see @ref services_activity_kraepelin) on SysWorkq. The algorithm counts steps over
+ * algorithm (see @ref kraepelin) on SysWorkq. The algorithm counts steps over
  * 5 second epochs and, once a minute, produces a minute record (steps, VMC, orientation, light,
  * heart rate, SpO2) that is stored in a minute file and sent to the phone through data logging.
  * From the minute data it detects sleep, restful sleep, walks and runs, reported as

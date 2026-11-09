@@ -6,6 +6,9 @@ tests link against directly.
 
 - **Utilities**: `lib/util`, included as `pbl/util/<module>.h`; see
   {apidoc}`the API reference <util>`.
+- **Kraepelin**: `lib/kraepelin`, the step, sleep and activity session
+  detection algorithm the activity service runs, included as
+  `pbl/kraepelin/kraepelin.h`; see {apidoc}`the API reference <kraepelin>`.
 - **Shared definitions**: headers under `include/pebbleos/` describe data
   exchanged with the bootloader and host tooling, so their layout is fixed;
   see {apidoc}`the API reference <pebbleos>`.

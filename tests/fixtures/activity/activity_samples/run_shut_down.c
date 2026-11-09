@@ -10,7 +10,7 @@
 // Sample captured at: 2016-03-01 20:05:00 local, 2016-03-02 04:05:00 GMT
 AlgDlsMinuteData *activity_sample_run_shut_down_1(int *len) {
   // The unit tests parse the //> TEST_.* lines below for test values
-  // NOTE: The TEST_ACTIVITY_TYPE is one of the KAlgActivityType enum values
+  // NOTE: The TEST_ACTIVITY_TYPE is one of the enum pbl_kraepelin_activity enum values
   //> TEST_NAME run_shut_down_1
   //> TEST_VERSION 3
   //> TEST_ACTIVITY_TYPE 3
@@ -730,7 +730,7 @@ AlgDlsMinuteData *activity_sample_run_shut_down_1(int *len) {
 // Sample captured at: 2016-03-01 20:05:00 local, 2016-03-02 04:05:00 GMT
 AlgDlsMinuteData *activity_sample_run_shut_down_2(int *len) {
   // The unit tests parse the //> TEST_.* lines below for test values
-  // NOTE: The TEST_ACTIVITY_TYPE is one of the KAlgActivityType enum values
+  // NOTE: The TEST_ACTIVITY_TYPE is one of the enum pbl_kraepelin_activity enum values
   //> TEST_NAME run_shut_down_2
   //> TEST_VERSION 3
   //> TEST_ACTIVITY_TYPE 0

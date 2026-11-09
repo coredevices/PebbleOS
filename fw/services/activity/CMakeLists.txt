@@ -11,7 +11,6 @@ set(sources
   hr_util.c
   insights_settings.c
   kraepelin/activity_algorithm_kraepelin.c
-  kraepelin/kraepelin_algorithm.c
   workout_service.c
 )
 pbl_library()

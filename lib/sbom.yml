@@ -10,6 +10,12 @@ components:
     description: mktime() from Nut/OS
     license: BSD-3-Clause
 
+  - name: kraepelin
+    paths: [kraepelin/kraepelin.c, ../include/pbl/kraepelin/kraepelin.h]
+    supplier: Nathaniel T. Stockham
+    description: step counting and sleep detection algorithm
+    license: MIT
+
   - name: snprintf
     path: c/newlib/vsnprintf.c
     supplier: Patrick Powell, Holger Weiss

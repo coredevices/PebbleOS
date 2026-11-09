@@ -30,7 +30,7 @@ Pebble App project.
 #include <stdlib.h>
 #include <string.h>
 
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
+#include <pbl/kraepelin/kraepelin.h>
 #include <pbl/util/assert.h>
 #include <pbl/util/logging.h>
 #include <pbl/util/math.h>
@@ -39,8 +39,9 @@ Pebble App project.
 #include <pbl/util/trig.h>
 #include <pbl/util/units.h>
 
-// Define KALG_TRACE to print the algorithm's trace to stdout, e.g. when running the unit tests
-#ifdef KALG_TRACE
+// Define PBL_KRAEPELIN_TRACE to print the algorithm's trace to stdout, e.g. when running the unit
+// tests
+#ifdef PBL_KRAEPELIN_TRACE
 #define KALG_LOG(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 #else
 #define KALG_LOG(fmt, ...)             \
@@ -151,7 +152,7 @@ typedef struct {
   KAlgSleepMinute minute_history[KALG_SLEEP_FILTER_WIDTH];
 
   KAlgSleepActivityStats current_stats;
-  KAlgOngoingSleepStats summary_stats;
+  struct pbl_kraepelin_sleep_stats summary_stats;
   time_t last_sample_utc;
 } KAlgSleepActivityState;
 
@@ -196,7 +197,7 @@ typedef struct {
   uint16_t min_sleep_len_for_active_pct_check;
 } KAlgSleepParams;
 
-// Default sleep parameters, the ones in struct kalg_params are set by kalg_init()
+// Default sleep parameters, the ones in struct pbl_kraepelin_params are set by pbl_kraepelin_init()
 static const KAlgSleepParams KALG_SLEEP_PARAMS = {
   .force_wake_minute_score = 8000,
   .force_wake_minute_vmc = 10000,
@@ -284,14 +285,15 @@ typedef struct {
   uint16_t max_low_vmc_run_m;
 } KAlgNotWornParams;
 
-// Default not-worn parameters, the ones in struct kalg_params are set by kalg_init()
+// Default not-worn parameters, the ones in struct pbl_kraepelin_params are set by
+// pbl_kraepelin_init()
 static const KAlgNotWornParams KALG_NOT_WORN_PARAMS = {
   .max_non_worn_vmc = 2500,
 };
 
 // ---------------------------------------------------------------------------------------------
-// State variables. Must be allocated by caller and initialized by kalg_init()
-typedef struct KAlgState {
+// State variables. Must be allocated by caller and initialized by pbl_kraepelin_init()
+struct pbl_kraepelin {
   // Character array used for formatting time for log messages
   char log_time_fmt[8];
 
@@ -315,7 +317,7 @@ typedef struct KAlgState {
   bool prev_partial_steps;
 
   // Stats callback
-  KAlgStatsCallback stats_cb;
+  pbl_kraepelin_stats_cb_t stats_cb;
 
   // Detection parameters
   KAlgSleepParams sleep_params;
@@ -333,17 +335,16 @@ typedef struct KAlgState {
   KAlgDeepSleepActivityState deep_sleep_state;
   KAlgNotWornState not_worn_state;
 
-  // Timestamp of the last minute of data passed to kalg_activities_update()
+  // Timestamp of the last minute of data passed to pbl_kraepelin_activities_update()
   time_t last_activity_update_utc;
 
   bool disable_activity_session_tracking; // If true don't automatically track activities
-
-} KAlgState;
+};
 
 // ----------------------------------------------------------------------------------------
 // Print a timestamp in a format useful for log messages (for debugging). This only prints
 // the hour and minute: HH:MM
-static const char *prv_log_time(KAlgState *alg_state, time_t utc) {
+static const char *prv_log_time(struct pbl_kraepelin *alg_state, time_t utc) {
   int minutes = (utc / PBL_SEC_PER_MIN) % PBL_MIN_PER_HOUR;
   int hours = (utc / PBL_SEC_PER_HOUR) % PBL_HOUR_PER_DAY;
 
@@ -398,7 +399,8 @@ static int32_t prv_integral_abs(int16_t *d, int16_t start, int16_t end) {
 
 // -----------------------------------------------------------------------------------------
 // Return the sum(abs(x-mean)) for each x in the array
-static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16_t axis) {
+static uint32_t prv_pim_filter(struct pbl_kraepelin *state, int16_t *d, int16_t dlen,
+                               int16_t axis) {
   // We use a butterworth second order digital filter with a bandpass
   // design of 0.25 to 1.75 hz
   static const Fixed_S64_32 cb[KALG_BUTTERWORTH_NUM_COEFFICIENTS] = {
@@ -450,7 +452,8 @@ static uint32_t prv_pim_filter(KAlgState *state, int16_t *d, int16_t dlen, int16
 //    p[1] = 2 * 10 - 15 = 5
 //    p[2] = 2 * 10 - 9 = 11
 //    p[3] = 2 * 10 - 13 = 7
-static void prv_pim_filter_prime(KAlgState *state, int16_t *d, int16_t dlen, int16_t axis) {
+static void prv_pim_filter_prime(struct pbl_kraepelin *state, int16_t *d, int16_t dlen,
+                                 int16_t axis) {
   const int n = 11;
   int16_t prime_data[n];
 
@@ -905,7 +908,7 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
   }
 
   // Log what we found
-#ifdef KALG_TRACE
+#ifdef PBL_KRAEPELIN_TRACE
   prv_compute_signal_energy(d, d_len, walk_hz, true /*log*/);
 #endif
 
@@ -943,7 +946,7 @@ static uint16_t prv_compute_scores(int16_t *d, uint32_t real_vmc_5s, int16_t d_l
 
 // -----------------------------------------------------------------------------------------
 // Return true if the score and vmc combination indicate that the user is stepping
-static bool prv_is_stepping(KAlgState *state, uint16_t max_mag_hz, uint16_t score_0,
+static bool prv_is_stepping(struct pbl_kraepelin *state, uint16_t max_mag_hz, uint16_t score_0,
                             uint16_t score_high_freq, uint16_t score_low_freq, uint32_t real_vmc_5s,
                             int32_t total_energy, bool *partial_steps) {
   *partial_steps = false;
@@ -1016,9 +1019,9 @@ static bool prv_is_stepping(KAlgState *state, uint16_t max_mag_hz, uint16_t scor
 
 // -----------------------------------------------------------------------------------------
 // On entry the first fft_width/2 elements of state->work contain the FFT magnitudes
-static uint16_t prv_calc_steps_in_epoch(KAlgState *state, int16_t num_samples, int16_t fft_width,
-                                        int16_t fft_width_log_2, uint32_t *pim_epoch,
-                                        int16_t fft_scale) {
+static uint16_t prv_calc_steps_in_epoch(struct pbl_kraepelin *state, int16_t num_samples,
+                                        int16_t fft_width, int16_t fft_width_log_2,
+                                        uint32_t *pim_epoch, int16_t fft_scale) {
   // The Pebble's raw accel readings have 1000 = 1G. We divide each reading by 8 though, so
   // 125 = 1G. We have empirically determined that scaling the VMC by
   // KALG_x100_RAW_1G_PIM_CPM_TO_REAL_CPM / 100 produces values equivalent to the Actigraph values.
@@ -1106,7 +1109,7 @@ static uint8_t prv_get_angle_encoding(int16_t x, int16_t y, uint8_t num_angles) 
 
 // -----------------------------------------------------------------------------------------
 // Analyze and return the # of steps from this epoch.
-static uint32_t prv_analyze_epoch(KAlgState *state) {
+static uint32_t prv_analyze_epoch(struct pbl_kraepelin *state) {
   if (state->num_samples == 0) {
     return 0;
   }
@@ -1115,7 +1118,7 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
   // by prv_pim_filter to avoid getting jumps in VMC due to the discontinuity
   if (!state->pim_filter_primed) {
     for (int16_t axis = 0; axis < KALG_N_AXES; axis++) {
-      prv_pim_filter_prime(state, &state->accel_samples[axis][0], KALG_SAMPLE_HZ, axis);
+      prv_pim_filter_prime(state, &state->accel_samples[axis][0], PBL_KRAEPELIN_SAMPLE_HZ, axis);
     }
     state->pim_filter_primed = true;
   }
@@ -1129,13 +1132,13 @@ static uint32_t prv_analyze_epoch(KAlgState *state) {
     state->summary_mean[axis] += prv_mean(state->accel_samples[axis], state->num_samples, 1);
 
     // calculate the proportional integral mode (pim) for each second:
-    // KALG_N_SAMPLES_EPOCH / KALG_SAMPLE_HZ = num of seconds in epoch
-    for (int16_t sec = 0; sec < state->num_samples / KALG_SAMPLE_HZ; sec++) {
+    // KALG_N_SAMPLES_EPOCH / PBL_KRAEPELIN_SAMPLE_HZ = num of seconds in epoch
+    for (int16_t sec = 0; sec < state->num_samples / PBL_KRAEPELIN_SAMPLE_HZ; sec++) {
       // The proportional integral mode is roughly the sum of the absolute value of all elements
       // after subtracing the mean, then run through a filter
       uint32_t pim;
-      pim = prv_pim_filter(state, &state->accel_samples[axis][sec * KALG_SAMPLE_HZ], KALG_SAMPLE_HZ,
-                           axis);
+      pim = prv_pim_filter(state, &state->accel_samples[axis][sec * PBL_KRAEPELIN_SAMPLE_HZ],
+                           PBL_KRAEPELIN_SAMPLE_HZ, axis);
 
       // Thresholded integral for the VMCPM calculation, Actigraph equivalent
       state->summary_pim[axis] += pim;
@@ -1199,21 +1202,22 @@ static uint32_t prv_compute_sleep_score(KAlgSleepMinute *samples, int i) {
 
 // -----------------------------------------------------------------------------------------
 // Return the size required for the state variables
-uint32_t kalg_state_size(void) {
-  return sizeof(KAlgState);
+uint32_t pbl_kraepelin_state_size(void) {
+  return sizeof(struct pbl_kraepelin);
 }
 
 // -----------------------------------------------------------------------------------------
 // Init the state, return true on success
-bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCallback stats_cb) {
-  static const struct kalg_params default_params = KALG_PARAMS_DEFAULT;
+bool pbl_kraepelin_init(struct pbl_kraepelin *state, const struct pbl_kraepelin_params *params,
+                        pbl_kraepelin_stats_cb_t stats_cb) {
+  static const struct pbl_kraepelin_params default_params = PBL_KRAEPELIN_PARAMS_DEFAULT;
 
   UTIL_ASSERT(state != nullptr);
   if (params == nullptr) {
     params = &default_params;
   }
 
-  *state = (KAlgState){
+  *state = (struct pbl_kraepelin){
     .stats_cb = stats_cb,
     .sleep_params = KALG_SLEEP_PARAMS,
     .not_worn_params = KALG_NOT_WORN_PARAMS,
@@ -1225,13 +1229,14 @@ bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCall
   state->not_worn_params.max_low_vmc_run_m = params->not_worn_max_low_vmc_run_m;
 
   UTIL_ASSERT((state->sleep_params.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
-              KALG_MAX_UNCERTAIN_SLEEP_M);
+              PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M);
   return true;
 }
 
 // ------------------------------------------------------------------------------------
-uint32_t kalg_analyze_samples(KAlgState *state, const struct kalg_sample *data,
-                              uint32_t num_samples, uint32_t *consumed_samples) {
+uint32_t pbl_kraepelin_analyze_samples(struct pbl_kraepelin *state,
+                                       const struct pbl_kraepelin_sample *data,
+                                       uint32_t num_samples, uint32_t *consumed_samples) {
   UTIL_ASSERT(state != nullptr);
   uint32_t new_steps = 0;
   *consumed_samples = 0;
@@ -1260,7 +1265,8 @@ uint32_t kalg_analyze_samples(KAlgState *state, const struct kalg_sample *data,
 }
 
 // ------------------------------------------------------------------------------------
-void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still) {
+void pbl_kraepelin_minute_stats(struct pbl_kraepelin *state, uint16_t *vmc, uint8_t *orientation,
+                                bool *still) {
   UTIL_ASSERT(state != nullptr);
   // -----------------------------------------
   // Compute the orientation
@@ -1296,7 +1302,7 @@ void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bo
 }
 
 // ------------------------------------------------------------------------------------
-uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
+uint32_t pbl_kraepelin_analyze_finish_epoch(struct pbl_kraepelin *state) {
   UTIL_ASSERT(state != nullptr);
   uint32_t new_steps = 0;
 
@@ -1310,7 +1316,7 @@ uint32_t kalg_analyze_finish_epoch(KAlgState *state) {
 // ------------------------------------------------------------------------------------------
 // Update the not-worn detection state machine. This state machine gets called on every minute
 // update. It returns true if it determines the watch was not worn
-static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
+static bool prv_not_worn_update(struct pbl_kraepelin *alg_state, time_t utc_now, uint16_t vmc,
                                 uint8_t orientation, bool definitely_not_worn) {
   // Handy access to some variables
   const KAlgNotWornParams *params = &alg_state->not_worn_params;
@@ -1379,7 +1385,7 @@ static bool prv_not_worn_update(KAlgState *alg_state, time_t utc_now, uint16_t v
 // might have a potential not-worn section that is nearly as long as the sleep section. If that is
 // the case, we reject the sleep session.
 // @return true if not-worn during session
-static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_start_utc,
+static bool prv_not_worn_during_session(struct pbl_kraepelin *alg_state, time_t session_start_utc,
                                         uint16_t session_len_m, bool ongoing) {
   KAlgNotWornState *state = &alg_state->not_worn_state;
 
@@ -1430,8 +1436,9 @@ static bool prv_not_worn_during_session(KAlgState *alg_state, time_t session_sta
 
 // ------------------------------------------------------------------------------------------
 // Register the deep sleep sessions we've found
-static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample_time, bool abort,
-                                             bool ongoing, KAlgActivitySessionCallback sessions_cb,
+static void prv_deep_sleep_register_sessions(struct pbl_kraepelin *alg_state, time_t sample_time,
+                                             bool abort, bool ongoing,
+                                             pbl_kraepelin_session_cb_t sessions_cb,
                                              void *context) {
   // Handy access to some variables
   KAlgDeepSleepActivityState *state = &alg_state->deep_sleep_state;
@@ -1443,7 +1450,7 @@ static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample
   // Register/delete previous sessions we captured
   for (uint8_t i = 0; i < state->num_sessions; i++) {
     time_t start_utc = state->sleep_start_time + state->start_delta_sec[i];
-    sessions_cb(context, KAlgActivityType_RestfulSleep, start_utc,
+    sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP, start_utc,
                 state->len_m[i] * PBL_SEC_PER_MIN, ongoing, abort /*delete*/, 0 /*steps*/,
                 0 /*resting calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
   }
@@ -1451,9 +1458,9 @@ static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample
   // update/delete the session that might still be in progress
   if (state->deep_start_time != KALG_START_TIME_NONE) {
     int len_sec = sample_time - state->deep_start_time;
-    sessions_cb(context, KAlgActivityType_RestfulSleep, state->deep_start_time, len_sec, ongoing,
-                abort /*delete*/, 0 /*steps*/, 0 /*resting calories*/, 0 /*active_calories*/,
-                0 /*distance_mm*/);
+    sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP, state->deep_start_time, len_sec,
+                ongoing, abort /*delete*/, 0 /*steps*/, 0 /*resting calories*/,
+                0 /*active_calories*/, 0 /*distance_mm*/);
   }
 }
 
@@ -1477,9 +1484,9 @@ static void prv_deep_sleep_register_sessions(KAlgState *alg_state, time_t sample
 //    allow registration until we're sure the container sleep session it is in is valid.
 // @param[in] sessions_cb callback used to register deep sleep activities
 // @param[in] context context for the above callback
-static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint32_t score,
-                                  KAlgDeepSleepAction action, bool ok_to_register,
-                                  KAlgActivitySessionCallback sessions_cb, void *context) {
+static void prv_deep_sleep_update(struct pbl_kraepelin *alg_state, time_t sample_time,
+                                  uint32_t score, KAlgDeepSleepAction action, bool ok_to_register,
+                                  pbl_kraepelin_session_cb_t sessions_cb, void *context) {
   // Handy access to some variables
   const KAlgDeepSleepParams *params = &KALG_DEEP_SLEEP_PARAMS;
   KAlgDeepSleepActivityState *state = &alg_state->deep_sleep_state;
@@ -1576,7 +1583,7 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
     }
     // Register/update it as ongoing
     if (state->ok_to_register) {
-      sessions_cb(context, KAlgActivityType_RestfulSleep, start_time, end_time - start_time,
+      sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP, start_time, end_time - start_time,
                   true /*ongoing*/, false /*delete*/, 0 /*steps*/, 0 /*resting calories*/,
                   0 /*active_calories*/, 0 /*distance_mm*/);
     }
@@ -1587,10 +1594,10 @@ static void prv_deep_sleep_update(KAlgState *alg_state, time_t sample_time, uint
 // Collect minute data and update the statistics we need for a sleep update. This gets
 // called at the beginning of prv_sleep_activity_update().
 // @return true if we have enough data to compute the score for this minute
-static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
-                                            uint8_t orientation, bool definitely_not_worn,
-                                            uint32_t *score_ret, time_t *sample_utc_ret,
-                                            bool *is_sleep_minute_ret) {
+static bool prv_sleep_activity_update_stats(struct pbl_kraepelin *alg_state, time_t utc_now,
+                                            uint16_t vmc, uint8_t orientation,
+                                            bool definitely_not_worn, uint32_t *score_ret,
+                                            time_t *sample_utc_ret, bool *is_sleep_minute_ret) {
   // Handy access to some variables
   const KAlgSleepParams *params = &alg_state->sleep_params;
   KAlgSleepActivityState *state = &alg_state->sleep_state;
@@ -1651,9 +1658,9 @@ static bool prv_sleep_activity_update_stats(KAlgState *alg_state, time_t utc_now
 // ------------------------------------------------------------------------------------------
 // See if we should start a new sleep session or end the current one
 static void prv_sleep_activity_update_session_state(
-    KAlgState *alg_state, time_t sample_utc, uint16_t vmc, uint32_t score, bool is_sleep_minute,
-    unsigned minutes_since_sleep_started, bool shutting_down,
-    KAlgActivitySessionCallback sessions_cb, void *context, time_t *sleep_end_time,
+    struct pbl_kraepelin *alg_state, time_t sample_utc, uint16_t vmc, uint32_t score,
+    bool is_sleep_minute, unsigned minutes_since_sleep_started, bool shutting_down,
+    pbl_kraepelin_session_cb_t sessions_cb, void *context, time_t *sleep_end_time,
     bool *reject_session) {
   // Handy access to some variables
   const KAlgSleepParams *params = &alg_state->sleep_params;
@@ -1753,9 +1760,9 @@ static void prv_sleep_activity_update_session_state(
 
 // ------------------------------------------------------------------------------------------
 // Process the minute data for sleep detection
-static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint16_t vmc,
+static void prv_sleep_activity_update(struct pbl_kraepelin *alg_state, time_t utc_now, uint16_t vmc,
                                       uint8_t orientation, bool definitely_not_worn,
-                                      bool shutting_down, KAlgActivitySessionCallback sessions_cb,
+                                      bool shutting_down, pbl_kraepelin_session_cb_t sessions_cb,
                                       void *context) {
   // Handy access to some variables
   const KAlgSleepParams *params = &alg_state->sleep_params;
@@ -1819,7 +1826,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
       KALG_LOG("Detected valid sleep cycle of len %d, starting at %s", session_len_m,
                prv_log_time(alg_state, state->current_stats.start_time));
 
-      sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
+      sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_SLEEP, state->current_stats.start_time,
                   session_len_m * PBL_SEC_PER_MIN, false /*ongoing*/, false /*delete*/, 0 /*steps*/,
                   0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
 
@@ -1827,7 +1834,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
       prv_deep_sleep_update(alg_state, sample_utc, score, KAlgDeepSleepAction_End,
                             true /*ok_to_register*/, sessions_cb, context);
       // Update summary stats
-      state->summary_stats = (KAlgOngoingSleepStats){
+      state->summary_stats = (struct pbl_kraepelin_sleep_stats){
         .sleep_start_utc = state->current_stats.start_time,
         .uncertain_start_utc = 0,
         .sleep_len_m = session_len_m,
@@ -1836,7 +1843,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     } else {
       KALG_LOG("Cycle rejected");
       // Delete the previously registered ongoing session
-      sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
+      sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_SLEEP, state->current_stats.start_time,
                   session_len_m * PBL_SEC_PER_MIN, true /*ongoing*/, true /*delete*/, 0 /*steps*/,
                   0 /*resting_calories*/, 0 /*active_calories*/, 0 /*distance_mm*/);
 
@@ -1846,7 +1853,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
       // Clear summary stats if they included this rejected session
       if (state->summary_stats.sleep_start_utc == state->current_stats.start_time) {
-        state->summary_stats = (KAlgOngoingSleepStats){};
+        state->summary_stats = (struct pbl_kraepelin_sleep_stats){};
       }
     }
     // No current session anymore
@@ -1857,7 +1864,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
     if (state->current_stats.start_time != KALG_START_TIME_NONE) {
       if (minutes_since_sleep_started >= params->min_sleep_cycle_len_minutes) {
         // Register ongoing sleep if we are in sleep
-        sessions_cb(context, KAlgActivityType_Sleep, state->current_stats.start_time,
+        sessions_cb(context, PBL_KRAEPELIN_ACTIVITY_SLEEP, state->current_stats.start_time,
                     minutes_since_sleep_started * PBL_SEC_PER_MIN, true /*ongoing*/,
                     false /*delete*/, 0 /*steps*/, 0 /*resting_calories*/, 0 /*active_calories*/,
                     0 /*distance_mm*/);
@@ -1865,7 +1872,7 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
         // Update summary stats
         state->summary_stats.sleep_start_utc = state->current_stats.start_time;
         state->summary_stats.uncertain_start_utc =
-            utc_now - (KALG_MAX_UNCERTAIN_SLEEP_M * PBL_SEC_PER_MIN);
+            utc_now - (PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M * PBL_SEC_PER_MIN);
         state->summary_stats.sleep_len_m =
             (state->summary_stats.uncertain_start_utc - state->summary_stats.sleep_start_utc) /
             PBL_SEC_PER_MIN;
@@ -1881,24 +1888,25 @@ static void prv_sleep_activity_update(KAlgState *alg_state, time_t utc_now, uint
 
 // ------------------------------------------------------------------------------------------
 // Return activity attributes for the given activity
-static const KAlgActivityAttributes *prv_get_step_activity_attributes(KAlgActivityType activity) {
-  static const KAlgActivityAttributes k_attributes[KAlgActivityTypeCount] = {
+static const KAlgActivityAttributes *prv_get_step_activity_attributes(
+    enum pbl_kraepelin_activity activity) {
+  static const KAlgActivityAttributes k_attributes[PBL_KRAEPELIN_ACTIVITY_COUNT] = {
     // min_steps_per_min, max_steps_per_min
-    {0, 0},     // KAlgActivityType_Sleep
-    {0, 0},     // KAlgActivityType_RestfulSleep
-    {40, 130},  // KAlgActivityType_Walk
-    {130, 255}, // KAlgActivityType_Run
+    {0, 0},     // PBL_KRAEPELIN_ACTIVITY_SLEEP
+    {0, 0},     // PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP
+    {40, 130},  // PBL_KRAEPELIN_ACTIVITY_WALK
+    {130, 255}, // PBL_KRAEPELIN_ACTIVITY_RUN
   };
 
-  UTIL_ASSERT(activity < KAlgActivityTypeCount);
+  UTIL_ASSERT(activity < PBL_KRAEPELIN_ACTIVITY_COUNT);
   return &k_attributes[activity];
 }
 
 // ------------------------------------------------------------------------------------------
 // End a step activity in progress, registering it if it is long enough, and reset its state
 static void prv_end_step_activity(KAlgStepActivityState *state, time_t utc_now,
-                                  KAlgActivitySessionCallback sessions_cb, void *context,
-                                  KAlgActivityType activity_type) {
+                                  pbl_kraepelin_session_cb_t sessions_cb, void *context,
+                                  enum pbl_kraepelin_activity activity_type) {
   if (state->start_time == KALG_START_TIME_NONE) {
     return;
   }
@@ -1922,12 +1930,12 @@ static void prv_end_step_activity(KAlgStepActivityState *state, time_t utc_now,
 
 // ----------------------------------------------------------------------------------------
 // End the step activities in progress as of the last processed minute and reset all detectors
-static void prv_reset_state(KAlgState *state, KAlgActivitySessionCallback sessions_cb,
+static void prv_reset_state(struct pbl_kraepelin *state, pbl_kraepelin_session_cb_t sessions_cb,
                             void *context) {
   prv_end_step_activity(&state->walk_state, state->last_activity_update_utc, sessions_cb, context,
-                        KAlgActivityType_Walk);
+                        PBL_KRAEPELIN_ACTIVITY_WALK);
   prv_end_step_activity(&state->run_state, state->last_activity_update_utc, sessions_cb, context,
-                        KAlgActivityType_Run);
+                        PBL_KRAEPELIN_ACTIVITY_RUN);
   state->sleep_state = (KAlgSleepActivityState){};
   state->deep_sleep_state = (KAlgDeepSleepActivityState){};
   state->not_worn_state = (KAlgNotWornState){};
@@ -1935,11 +1943,11 @@ static void prv_reset_state(KAlgState *state, KAlgActivitySessionCallback sessio
 
 // ------------------------------------------------------------------------------------------
 // Process the minute data for walk or run activity detection
-static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState *state,
+static void prv_step_activity_update(struct pbl_kraepelin *alg_state, KAlgStepActivityState *state,
                                      time_t utc_now, uint16_t steps, uint32_t resting_calories,
                                      uint32_t active_calories, uint32_t distance_mm,
-                                     bool shutting_down, KAlgActivitySessionCallback sessions_cb,
-                                     void *context, KAlgActivityType activity_type) {
+                                     bool shutting_down, pbl_kraepelin_session_cb_t sessions_cb,
+                                     void *context, enum pbl_kraepelin_activity activity_type) {
   // Get the attributes associated with this activity
   const KAlgActivityAttributes *attr = prv_get_step_activity_attributes(activity_type);
 
@@ -2009,11 +2017,11 @@ static void prv_step_activity_update(KAlgState *alg_state, KAlgStepActivityState
 // ---------------------------------------------------------------------------------------
 // Feed new minute data into the activity detection state machine. This logic looks for non-sleep
 // activities, like walks, runs, etc.
-void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
-                            uint8_t orientation, bool definitely_not_worn,
-                            uint32_t resting_calories, uint32_t active_calories,
-                            uint32_t distance_mm, bool shutting_down,
-                            KAlgActivitySessionCallback sessions_cb, void *context) {
+void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now, uint16_t steps,
+                                     uint16_t vmc, uint8_t orientation, bool definitely_not_worn,
+                                     uint32_t resting_calories, uint32_t active_calories,
+                                     uint32_t distance_mm, bool shutting_down,
+                                     pbl_kraepelin_session_cb_t sessions_cb, void *context) {
   // If we've encountered a significant change in UTC time (connecting to a new phone, factory
   // reset, etc.) it could wreak havoc with our activity state machines, so we need to reset
   // state
@@ -2028,12 +2036,12 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
     // Pass onto the walk activity detector
     prv_step_activity_update(state, &state->walk_state, utc_now, steps, resting_calories,
                              active_calories, distance_mm, shutting_down, sessions_cb, context,
-                             KAlgActivityType_Walk);
+                             PBL_KRAEPELIN_ACTIVITY_WALK);
 
     // Pass onto the run activity detector
     prv_step_activity_update(state, &state->run_state, utc_now, steps, resting_calories,
                              active_calories, distance_mm, shutting_down, sessions_cb, context,
-                             KAlgActivityType_Run);
+                             PBL_KRAEPELIN_ACTIVITY_RUN);
 
     // Pass onto the sleep detector
     prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn, shutting_down,
@@ -2042,16 +2050,17 @@ void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, ui
 }
 
 // ---------------------------------------------------------------------------------------
-time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
+time_t pbl_kraepelin_activity_last_processed_time(struct pbl_kraepelin *state,
+                                                  enum pbl_kraepelin_activity activity) {
   switch (activity) {
-    case KAlgActivityType_Sleep:
-    case KAlgActivityType_RestfulSleep:
+    case PBL_KRAEPELIN_ACTIVITY_SLEEP:
+    case PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP:
       return state->last_activity_update_utc - (KALG_SLEEP_HALF_WIDTH * PBL_SEC_PER_MIN);
       break;
-    case KAlgActivityType_Run:
-    case KAlgActivityType_Walk:
+    case PBL_KRAEPELIN_ACTIVITY_RUN:
+    case PBL_KRAEPELIN_ACTIVITY_WALK:
       return state->last_activity_update_utc;
-    case KAlgActivityTypeCount:
+    case PBL_KRAEPELIN_ACTIVITY_COUNT:
       break;
   }
   UTIL_ASSERT(false);
@@ -2059,13 +2068,14 @@ time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType acti
 }
 
 // ---------------------------------------------------------------------------------------
-void kalg_get_step_activity(KAlgState *alg_state, KAlgActivityType activity,
-                            struct kalg_step_activity *step_activity) {
-  UTIL_ASSERT(activity == KAlgActivityType_Walk || activity == KAlgActivityType_Run);
+void pbl_kraepelin_get_step_activity(struct pbl_kraepelin *alg_state,
+                                     enum pbl_kraepelin_activity activity,
+                                     struct pbl_kraepelin_step_activity *step_activity) {
+  UTIL_ASSERT(activity == PBL_KRAEPELIN_ACTIVITY_WALK || activity == PBL_KRAEPELIN_ACTIVITY_RUN);
   const KAlgStepActivityState *state =
-      (activity == KAlgActivityType_Walk) ? &alg_state->walk_state : &alg_state->run_state;
+      (activity == PBL_KRAEPELIN_ACTIVITY_WALK) ? &alg_state->walk_state : &alg_state->run_state;
 
-  *step_activity = (struct kalg_step_activity){};
+  *step_activity = (struct pbl_kraepelin_step_activity){};
   if (state->start_time == KALG_START_TIME_NONE) {
     return;
   }
@@ -2077,14 +2087,15 @@ void kalg_get_step_activity(KAlgState *alg_state, KAlgActivityType activity,
 
 // ---------------------------------------------------------------------------------------
 // Get sleep summary stats
-void kalg_get_sleep_stats(KAlgState *alg_state, KAlgOngoingSleepStats *stats) {
+void pbl_kraepelin_get_sleep_stats(struct pbl_kraepelin *alg_state,
+                                   struct pbl_kraepelin_sleep_stats *stats) {
   KAlgSleepActivityState *state = &alg_state->sleep_state;
   *stats = state->summary_stats;
 }
 
 // ---------------------------------------------------------------------------------------
-void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
-                                   KAlgActivitySessionCallback sessions_cb, void *context) {
+void pbl_kraepelin_enable_activity_tracking(struct pbl_kraepelin *kalg_state, bool enable,
+                                            pbl_kraepelin_session_cb_t sessions_cb, void *context) {
   kalg_state->disable_activity_session_tracking = !enable;
   prv_reset_state(kalg_state, sessions_cb, context);
 }

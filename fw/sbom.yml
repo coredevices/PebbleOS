@@ -16,10 +16,3 @@ components:
     description: gettext message catalog reader from the Citrus Project
     license: BSD-2-Clause
 
-  - name: kraepelin
-    paths:
-      - services/activity/kraepelin/kraepelin_algorithm.c
-      - ../include/pbl/services/activity/kraepelin/kraepelin_algorithm.h
-    supplier: Nathaniel T. Stockham
-    description: step counting and sleep detection algorithm
-    license: MIT

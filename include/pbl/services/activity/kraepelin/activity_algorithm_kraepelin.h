@@ -6,7 +6,9 @@
 #include <pbl/util/units.h>
 
 /**
- * @addtogroup services_activity_kraepelin
+ * @defgroup services_activity_kraepelin Kraepelin glue
+ * @ingroup services_activity
+ * @brief Runs the @ref kraepelin library as the activity algorithm.
  * @{
  */
 

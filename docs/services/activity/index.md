@@ -295,8 +295,9 @@ fw/services/activity/
   activity.c
   activity_insights.c
   kraepelin/
-    kraepelin_algorithm.c
     activity_algorithm_kraepelin.c
+lib/kraepelin/
+  kraepelin.c
 ```
 
 `activity.c`
@@ -307,10 +308,10 @@ fw/services/activity/
 `activity_insights.c`
 : The Health timeline pins and notifications.
 
-`kraepelin/kraepelin_algorithm.c`
-: The step and sleep algorithms themselves. It depends on almost nothing
-  outside itself, and originates from open source code provided by the
-  Stanford Wearables Lab.
+`lib/kraepelin/kraepelin.c`
+: The step and sleep algorithms themselves, a library that depends on
+  nothing but the utility library. It originates from open source code
+  provided by the Stanford Wearables Lab.
 
 `kraepelin/activity_algorithm_kraepelin.c`
 : Adapts the algorithms to the algorithm interface `activity.c` expects,
@@ -360,7 +361,7 @@ byte by taking its square root, and the orientation is one byte as well:
 ## Testing
 
 The unit tests in `tests/fw/services/activity/` run recorded data through
-`kraepelin_algorithm.c` and check its results.
+`lib/kraepelin/kraepelin.c` and check its results.
 
 ### Step samples
 
