@@ -15,6 +15,7 @@ set(kconfig_args
   --appdir ${PBL_APPLICATION_SOURCE_DIR}
   --board ${BOARD}
   --variant ${VARIANT}
+  --cc ${CMAKE_C_COMPILER}
 )
 # Kept by `./pbl menuconfig`; delete it to go back to the board defaults.
 if(EXISTS ${PROJECT_BINARY_DIR}/menuconfig.conf)
@@ -40,7 +41,8 @@ message(STATUS "Kconfig: ${summary}")
 include(${PBL_CONFIG_CMAKE})
 
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-  ${PBL_KCONFIG_DEPENDS} ${PBL_BASE}/tools/cmake/kconfig.py)
+  ${PBL_KCONFIG_DEPENDS} ${PBL_BASE}/tools/cmake/kconfig.py
+  ${PBL_BASE}/tools/devicetree/dtmap.py ${PBL_BASE}/tools/devicetree/fdt.py)
 
 # The recovery firmware is selected with -DVARIANT=prf, which loads
 # prj_prf.conf; keep the two spellings in sync.
