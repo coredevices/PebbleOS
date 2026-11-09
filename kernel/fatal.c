@@ -8,9 +8,16 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 
 #define CORE_NUMBER 0
+
+[[noreturn]] PBL_WEAK void pbl_fatal_error_handler(uintptr_t lr) {
+  pbl_log_panic();
+  pbl_reboot_emergency();
+}
 
 [[noreturn]] static void prv_panic_vargs(const char *filename, int line, uintptr_t lr,
                                          const char *fmt, va_list args) {

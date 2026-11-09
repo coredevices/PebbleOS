@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/heap.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/logging.h>
@@ -555,6 +557,11 @@ char *pbl_heap_strdup(struct pbl_heap *heap, const char *s, uintptr_t caller) {
     memcpy(dup, s, size);
   }
   return dup;
+}
+
+[[noreturn]] PBL_WEAK void pbl_heap_oom_handler(struct pbl_heap *heap, size_t size,
+                                                uintptr_t caller) {
+  pbl_fatal_error_handler(caller);
 }
 
 [[noreturn]] void pbl_heap_oom(struct pbl_heap *heap, size_t size, uintptr_t caller) {

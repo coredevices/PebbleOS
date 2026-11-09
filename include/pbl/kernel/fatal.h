@@ -17,7 +17,7 @@
  * @brief Stop the system on an unrecoverable error.
  *
  * The kernel logs the error with the address of the code that raised it, then hands over to
- * pbl_fatal_error_handler(), which the platform implements.
+ * pbl_fatal_error_handler(), which an application may override.
  *
  * @code{.c}
  * switch (state) {
@@ -35,8 +35,8 @@
 /**
  * @brief Handle a fatal error.
  *
- * Implemented by the platform; the kernel calls it once the error is logged. It must not return,
- * e.g. it saves a core dump and reboots.
+ * The kernel calls it once the error is logged. The default flushes the logs and resets; an
+ * application overrides it, e.g. to save a core dump first. It must not return.
  *
  * @param lr Address of the code that raised the error.
  */

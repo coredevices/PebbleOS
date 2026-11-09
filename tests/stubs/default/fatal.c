@@ -39,3 +39,7 @@ PBL_WEAK [[noreturn]] void util_assertion_failed(const char *filename, int line)
 PBL_WEAK [[noreturn]] void pbl_panic_bare_at(const char *filename, int line_number) {
   pbl_panic_at(filename, line_number, nullptr);
 }
+
+PBL_WEAK [[noreturn]] void pbl_fatal_error_handler(uintptr_t lr) {
+  pbl_panic_at(__FILE__, __LINE__, nullptr);
+}

@@ -8,8 +8,17 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/kernel/compiler.h>
+#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
+
+PBL_WEAK void pbl_kernel_syscall_exit(void) {
+}
+
+[[noreturn]] PBL_WEAK void pbl_kernel_syscall_fault(uintptr_t lr) {
+  pbl_fatal_error_handler(lr);
+}
 
 [[noreturn]] void pbl_syscall_fail(void) {
   const uintptr_t lr = (uintptr_t)PBL_RETURN_ADDRESS(0);
