@@ -19,7 +19,7 @@
  * to their inactive level while the PWM is stopped.
  *
  * @code{.c}
- * PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", 0, NULL, PBL_GPIO(&dt_gpio0, 26, 0));
+ * PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", NRF52_PWM0_BASE, PBL_GPIO(&dt_gpio0, 26, 0));
  * @endcode
  * @{
  */
@@ -42,8 +42,8 @@ struct pbl_pwm_nrf5 {
   struct pbl_pwm_nrf5_state *state;
   /** Output of each channel; unconnected channels cannot be used. */
   struct pbl_gpio out[4];
-  /** Peripheral instance, from 0. */
-  uint8_t index;
+  /** Registers. */
+  uintptr_t base;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -56,19 +56,15 @@ int pbl_pwm_nrf5_init(const struct pbl_device *dev);
  *
  * @param sym Symbol of the controller.
  * @param _name Name.
- * @param _idx Peripheral instance, 0 to 3.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
+ * @param _base Registers.
  * @param ... Outputs of channels 0 to 3, from PBL_GPIO().
  */
-#define PBL_PWM_NRF5_DEFINE(sym, _name, _idx, _deps, ...)                                     \
-  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 4);                                                    \
-  static struct pbl_pwm_nrf5_state sym##_nrf5_state;                                          \
-  const struct pbl_pwm_nrf5 sym = {                                                           \
-    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_init, _deps, &pbl_pwm_nrf5_ops), \
-    .state = &sym##_nrf5_state,                                                               \
-    .out = {__VA_ARGS__},                                                                     \
-    .index = (_idx),                                                                          \
-  };                                                                                          \
-  PBL_DEVICE_REGISTER(sym, &sym.ctrl.dev)
+#define PBL_PWM_NRF5_DEFINE(sym, _name, _base, ...)                                             \
+  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 4);                                                      \
+  static struct pbl_pwm_nrf5_state sym##_nrf5_state;                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5, struct pbl_pwm_controller, ctrl) {              \
+    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_init, nullptr, &pbl_pwm_nrf5_ops), \
+    .state = &sym##_nrf5_state, .out = {__VA_ARGS__}, .base = (_base),                          \
+  }
 
 /** @} */

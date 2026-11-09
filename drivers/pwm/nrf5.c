@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/kernel/barrier.h>
@@ -20,23 +21,16 @@
 // Longest period (COUNTERTOP_MAX counts at the largest prescaler), plus margin
 #define STOP_TIMEOUT_US 300000U
 
-static const uintptr_t s_bases[] = {
-  NRF52_PWM0_BASE,
-  NRF52_PWM1_BASE,
-  NRF52_PWM2_BASE,
-  NRF52_PWM3_BASE,
-};
-
 static const struct pbl_pwm_nrf5 *prv_pwm(const struct pbl_pwm_controller *ctrl) {
   return container_of(ctrl, const struct pbl_pwm_nrf5, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_pwm_nrf5 *pwm, uint32_t offset) {
-  return pbl_readl(s_bases[pwm->index] + offset);
+  return pbl_readl(pwm->base + offset);
 }
 
 static inline void prv_putreg(const struct pbl_pwm_nrf5 *pwm, uint32_t offset, uint32_t value) {
-  pbl_writel(value, s_bases[pwm->index] + offset);
+  pbl_writel(value, pwm->base + offset);
 }
 
 static uint32_t prv_counts(uint32_t ns, uint32_t prescaler) {
@@ -166,10 +160,6 @@ int pbl_pwm_nrf5_init(const struct pbl_device *dev) {
   const struct pbl_pwm_nrf5 *pwm = container_of(dev, const struct pbl_pwm_nrf5, ctrl.dev);
   int ret;
 
-  if (pwm->index >= ARRAY_LENGTH(s_bases)) {
-    return -EINVAL;
-  }
-
   for (uint8_t i = 0U; i < NRF52_PWM_NUM_CHANNELS; i++) {
     uint32_t psel = PWM_PSEL_DISCONNECTED;
 
@@ -208,3 +198,5 @@ int pbl_pwm_nrf5_init(const struct pbl_device *dev) {
 const struct pbl_pwm_controller_ops pbl_pwm_nrf5_ops = {
   .apply = prv_apply,
 };
+
+#include PBL_DT_INSTANCES(nordic_nrf52832_pwm)

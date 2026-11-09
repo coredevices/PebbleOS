@@ -4,12 +4,10 @@
 #include <pbl/board.h>
 #include <pbl/drivers/audio/da7212.h>
 #include <pbl/drivers/audio/nrf5.h>
-#include <pbl/drivers/backlight/pwm.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/pwm/nrf5.h>
 #include <pbl/drivers/rtc/retained.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
@@ -87,13 +85,7 @@ const struct pbl_audio *const SPEAKER = &s_speaker.audio;
 
 /* asterix shares SPI with flash, which we don't support */
 
-PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", 0, nullptr, PBL_GPIO(&dt_gpio0, 26, 0));
-
-PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(&dt_gpio1, 8, 0),
-                         .pwm = PBL_PWM(&s_pwm0.ctrl, 0, PBL_PWM_HZ(256), 0),
-                         .max_duty_cycle_percent = 67);
-
-const struct pbl_backlight *const BACKLIGHT = &s_backlight.backlight;
+const struct pbl_backlight *const BACKLIGHT = &dt_backlight;
 
 const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
 

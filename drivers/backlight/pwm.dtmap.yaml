@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: pwm-backlight
+config: BACKLIGHT_PWM
+class: backlight
+define: PBL_BACKLIGHT_PWM_DEFINE
+args:
+  - name: true
+  - gpio: enable
+    default: PBL_GPIO(nullptr, 0, 0)
+  - pwm: 0
