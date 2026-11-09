@@ -12,8 +12,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_timer.h>
 #include <applib/graphics/gdraw_command_image.h>
@@ -159,7 +159,8 @@ static void prv_fmt_hhmm(char *out, size_t n, int h24, int mm) {
     if (h12 == 0)
       h12 = 12;
     char ampm[8];
-    i18n_get_with_buffer(h24 < 12 ? i18n_noop("AM") : i18n_noop("PM"), ampm, sizeof(ampm));
+    pbl_i18n_get_with_buffer(h24 < 12 ? pbl_i18n_noop("AM") : pbl_i18n_noop("PM"), ampm,
+                             sizeof(ampm));
     snprintf(out, n, "%d:%02d %s", h12, mm, ampm);
   }
 }
@@ -169,7 +170,7 @@ static void prv_fmt_labelled_time(char *out, size_t n, const char *fmt, int h24,
   char hhmm[16];
   char localized_fmt[40];
   prv_fmt_hhmm(hhmm, sizeof(hhmm), h24, mm);
-  i18n_get_with_buffer(fmt, localized_fmt, sizeof(localized_fmt));
+  pbl_i18n_get_with_buffer(fmt, localized_fmt, sizeof(localized_fmt));
   snprintf(out, n, localized_fmt, hhmm);
 }
 
@@ -177,10 +178,10 @@ static void prv_build_sunset(char *out, size_t n, int16_t lat_e2, int16_t lon_e2
                              int16_t utc_off_min) {
   int m = prv_sunset_minutes(lat_e2, lon_e2, utc_off_min);
   if (m < 0) {
-    i18n_get_with_buffer(i18n_noop("Sunset --:--"), out, n);
+    pbl_i18n_get_with_buffer(pbl_i18n_noop("Sunset --:--"), out, n);
     return;
   }
-  prv_fmt_labelled_time(out, n, i18n_noop("Sunset %s"), (m / 60) % 24, m % 60);
+  prv_fmt_labelled_time(out, n, pbl_i18n_noop("Sunset %s"), (m / 60) % 24, m % 60);
 }
 
 static void prv_build_time(char *out, size_t n) {
@@ -205,10 +206,10 @@ void expanded_view_format_updated(const WeatherLocationForecast *f, char *out, s
     lt = localtime(&t);
   }
   if (!lt) {
-    i18n_get_with_buffer(i18n_noop("Last updated --:--"), out, n);
+    pbl_i18n_get_with_buffer(pbl_i18n_noop("Last updated --:--"), out, n);
     return;
   }
-  prv_fmt_labelled_time(out, n, i18n_noop("Last updated %s"), lt->tm_hour, lt->tm_min);
+  prv_fmt_labelled_time(out, n, pbl_i18n_noop("Last updated %s"), lt->tm_hour, lt->tm_min);
 }
 
 void expanded_view_format_glance(const WeatherLocationForecast *f, int16_t lat_e2, int16_t lon_e2,
@@ -394,9 +395,9 @@ static void prv_draw_gauge(GContext *ctx, int cx, int cy, int r, const char *lab
 static void prv_draw_precip_pill(GContext *ctx, int W, int tdx, int precip, const void *owner) {
   char label[40];
   if (precip < 0)
-    snprintf(label, sizeof(label), "%s", i18n_get("PRECIPITATION: --", owner));
+    snprintf(label, sizeof(label), "%s", pbl_i18n_get("PRECIPITATION: --", owner));
   else
-    snprintf(label, sizeof(label), i18n_get("PRECIPITATION: %d%%", owner), precip);
+    snprintf(label, sizeof(label), pbl_i18n_get("PRECIPITATION: %d%%", owner), precip);
   const int inset = 18 + (W - 144) / 2 / 5;
   const GRect pill = GRect(inset + tdx, EV_PRECIP_PILL_Y, W - 2 * inset, EV_PRECIP_PILL_H);
   graphics_context_set_fill_color(ctx, GColorPictonBlue);
@@ -479,7 +480,8 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
     char uvbuf[12];
     snprintf(uvbuf, sizeof(uvbuf), "%d", uv);
     weather_app_layout_draw_uv_bar(ctx, GPoint(W / 2 + tdx, PBL_DISPLAY_HEIGHT / 2), EV_UV_BAR_Y,
-                                   uv, uvbuf, WeatherUvBarCompact, i18n_get("CURRENT UV", owner));
+                                   uv, uvbuf, WeatherUvBarCompact,
+                                   pbl_i18n_get("CURRENT UV", owner));
   }
 #else
   if (EV_SMALL_RECT) {
@@ -488,13 +490,13 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
     char meters[56];
     char uv_part[24], rain_part[28];
     if (uv >= 0)
-      snprintf(uv_part, sizeof(uv_part), i18n_get("UV %d", owner), uv);
+      snprintf(uv_part, sizeof(uv_part), pbl_i18n_get("UV %d", owner), uv);
     else
-      snprintf(uv_part, sizeof(uv_part), "%s", i18n_get("UV --", owner));
+      snprintf(uv_part, sizeof(uv_part), "%s", pbl_i18n_get("UV --", owner));
     if (precip >= 0)
-      snprintf(rain_part, sizeof(rain_part), i18n_get("RAIN %d%%", owner), precip);
+      snprintf(rain_part, sizeof(rain_part), pbl_i18n_get("RAIN %d%%", owner), precip);
     else
-      snprintf(rain_part, sizeof(rain_part), "%s", i18n_get("RAIN --", owner));
+      snprintf(rain_part, sizeof(rain_part), "%s", pbl_i18n_get("RAIN --", owner));
     snprintf(meters, sizeof(meters), "%s   %s", uv_part, rain_part);
     graphics_context_set_text_color(ctx, system_theme_get_fg_color());
     graphics_draw_text(ctx, meters, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
@@ -502,9 +504,9 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
                        GTextAlignmentCenter, nullptr);
   } else {
     prv_draw_gauge(ctx, W / 4 + EV_GAUGE_INSET + tdx, EV_GAUGE_CY, EV_GAUGE_R,
-                   i18n_get("UV", owner), uv, 11, "", uv < 0, prv_uv_severity_color(uv));
+                   pbl_i18n_get("UV", owner), uv, 11, "", uv < 0, prv_uv_severity_color(uv));
     prv_draw_gauge(ctx, 3 * W / 4 - EV_GAUGE_INSET + tdx, EV_GAUGE_CY, EV_GAUGE_R,
-                   i18n_get("RAIN", owner), precip, 100, "%", precip < 0, GColorVividCerulean);
+                   pbl_i18n_get("RAIN", owner), precip, 100, "%", precip < 0, GColorVividCerulean);
   }
 #endif
 }
@@ -854,7 +856,7 @@ static void prv_window_unload(Window *window) {
   }
   window_destroy(window);
   if (s_ev) {
-    i18n_free_all(s_ev);
+    pbl_i18n_free_all(s_ev);
     free(s_ev);
     s_ev = nullptr;
   }

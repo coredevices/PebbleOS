@@ -3,7 +3,7 @@
 
 #include "statusbar_demo.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>

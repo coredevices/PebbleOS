@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/firmware_update.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -54,13 +54,13 @@ typedef struct {
 // Progress Logic
 
 static void prv_quit(void *data) {
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_window_stack_pop_all(true);
 }
 
 static const char *prv_get_dialog_text(ProgressUIData *data, bool success) {
   if (data->progress_source == PROGRESS_UI_SOURCE_FW_UPDATE) {
-    return success ? i18n_get("Update Complete", data) : i18n_get("Update Failed", data);
+    return success ? pbl_i18n_get("Update Complete", data) : pbl_i18n_get("Update Failed", data);
   } else {
     return "";
   }
@@ -161,7 +161,7 @@ static void prv_dialog_unloaded(void *context) {
 static void prv_window_unload_handler(Window *window) {
   ProgressUIData *data = window_get_user_data(window);
   if (data) {
-    i18n_free_all(data);
+    pbl_i18n_free_all(data);
     if (data->timer) {
       app_timer_cancel(data->timer);
     }
@@ -172,7 +172,7 @@ static void prv_window_unload_handler(Window *window) {
 static void prv_push_factory_reset_dialog(ProgressUIData *data) {
   simple_dialog_init(&data->finished_dialog, "Factory Reset");
   Dialog *dialog = simple_dialog_get_dialog(&data->finished_dialog);
-  dialog_set_text(dialog, i18n_get("Resetting...", data));
+  dialog_set_text(dialog, pbl_i18n_get("Resetting...", data));
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_LARGE);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
   dialog_set_destroy_on_pop(dialog, false);

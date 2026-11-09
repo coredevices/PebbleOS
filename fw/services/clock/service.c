@@ -5,6 +5,7 @@
 #include "tz_storage.h"
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
@@ -15,7 +16,6 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timezone_database.h>
 #include <pbl/util/byteorder.h>
@@ -536,8 +536,8 @@ void clock_copy_time_string(char *buffer, uint8_t size) {
 
 static size_t prv_format_time_tm(char *buffer, int buf_size, const char *format,
                                  const struct pbl_tm *time_tm) {
-  const size_t ret_val = pbl_strftime_r(buffer, buf_size, i18n_get(format, buffer), time_tm);
-  i18n_free(format, buffer);
+  const size_t ret_val = pbl_strftime_r(buffer, buf_size, pbl_i18n_get(format, buffer), time_tm);
+  pbl_i18n_free(format, buffer);
   return ret_val;
 }
 
@@ -548,9 +548,9 @@ static size_t prv_format_time(char *buffer, int buf_size, const char *format, ti
 }
 
 size_t clock_get_time_number(char *number_buffer, size_t number_buffer_size, time_t timestamp) {
-  const size_t written =
-      prv_format_time(number_buffer, number_buffer_size,
-                      (clock_is_24h_style() ? i18n_noop("%R") : i18n_noop("%l:%M")), timestamp);
+  const size_t written = prv_format_time(
+      number_buffer, number_buffer_size,
+      (clock_is_24h_style() ? pbl_i18n_noop("%R") : pbl_i18n_noop("%l:%M")), timestamp);
   const char *number_buffer_ptr = string_strip_leading_whitespace(number_buffer);
   memmove(number_buffer, number_buffer_ptr,
           number_buffer_size - (number_buffer_ptr - number_buffer));
@@ -562,7 +562,7 @@ size_t clock_get_time_word(char *buffer, size_t buffer_size, time_t timestamp) {
     buffer[0] = '\0';
     return 0;
   } else {
-    return prv_format_time(buffer, buffer_size, i18n_noop("%p"), timestamp);
+    return prv_format_time(buffer, buffer_size, pbl_i18n_noop("%p"), timestamp);
   }
 }
 
@@ -576,9 +576,9 @@ static void prv_copy_time_string_timestamp(char *number_buffer, uint8_t number_b
 static void prv_get_relative_all_day_string(char *buffer, int buffer_size, time_t timestamp) {
   time_t today = time_util_get_midnight_of(pbl_realtime());
   if (time_util_get_midnight_of(timestamp) == today) {
-    i18n_get_with_buffer("Today", buffer, buffer_size);
+    pbl_i18n_get_with_buffer("Today", buffer, buffer_size);
   } else {
-    i18n_get_with_buffer("All day", buffer, buffer_size);
+    pbl_i18n_get_with_buffer("All day", buffer, buffer_size);
   }
 }
 
@@ -591,11 +591,11 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
   if (midtime > now) { // future
     time_t difference = timestamp - now;
     if (timestamp < now || difference < PBL_SEC_PER_MIN) {
-      i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
+      pbl_i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
     } else if (difference <= PBL_SEC_PER_HOUR) {
       snprintf(number_buffer, number_buffer_size, "%ld", (long)(difference / PBL_SEC_PER_MIN));
-      i18n_get_with_buffer(" MIN. TO", word_buffer, word_buffer_size);
+      pbl_i18n_get_with_buffer(" MIN. TO", word_buffer, word_buffer_size);
     } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,
                                      word_buffer_size, timestamp);
@@ -603,7 +603,7 @@ static void prv_copy_relative_time_string(char *number_buffer, uint8_t number_bu
   } else { // past
     time_t difference = now - timestamp;
     if (now < timestamp || difference < PBL_SEC_PER_MIN) {
-      i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
+      pbl_i18n_get_with_buffer("Now", word_buffer, word_buffer_size);
       strncpy(number_buffer, "", number_buffer_size);
     } else {
       prv_copy_time_string_timestamp(number_buffer, number_buffer_size, word_buffer,
@@ -778,17 +778,17 @@ void clock_get_friendly_date(char *buffer, int buf_size, time_t timestamp) {
   const time_t today_midnight = time_util_get_midnight_of(now);
 
   if (midnight == today_midnight) {
-    i18n_get_with_buffer("Today", buffer, buf_size);
+    pbl_i18n_get_with_buffer("Today", buffer, buf_size);
   } else if (midnight == (today_midnight - PBL_SEC_PER_DAY)) {
-    i18n_get_with_buffer("Yesterday", buffer, buf_size);
+    pbl_i18n_get_with_buffer("Yesterday", buffer, buf_size);
   } else if (midnight == (today_midnight + PBL_SEC_PER_DAY)) {
-    i18n_get_with_buffer("Tomorrow", buffer, buf_size);
+    pbl_i18n_get_with_buffer("Tomorrow", buffer, buf_size);
   } else if (midnight <= (today_midnight + (5 * PBL_SEC_PER_DAY))) {
     // Use weekday name up to 5 days in the future, aka "Sunday"
-    prv_format_time(buffer, buf_size, i18n_noop("%A"), timestamp);
+    prv_format_time(buffer, buf_size, pbl_i18n_noop("%A"), timestamp);
   } else {
     // Otherwise use "Month Day", aka "June 21"
-    prv_format_time(buffer, buf_size, i18n_noop("%B %d"), timestamp);
+    prv_format_time(buffer, buf_size, pbl_i18n_noop("%B %d"), timestamp);
   }
 }
 
@@ -848,11 +848,11 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
     switch (style) {
       case FullStyleLower12h:
       case FullStyleCapital12h:
-        time_fmt = i18n_noop("%l:%M %p");
+        time_fmt = pbl_i18n_noop("%l:%M %p");
         break;
       case FullStyleLower24h:
       case FullStyleCapital24h:
-        time_fmt = i18n_noop("%R");
+        time_fmt = pbl_i18n_noop("%R");
         break;
     }
   } else if (timestamp_midnight == yesterday_midnight) {
@@ -860,17 +860,17 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
       case FullStyleLower12h:
       case FullStyleCapital12h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("Yesterday, %l:%M %p");
+          time_fmt = pbl_i18n_noop("Yesterday, %l:%M %p");
         } else {
-          time_fmt = i18n_noop("Yesterday");
+          time_fmt = pbl_i18n_noop("Yesterday");
         }
         break;
       case FullStyleLower24h:
       case FullStyleCapital24h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("Yesterday, %R");
+          time_fmt = pbl_i18n_noop("Yesterday, %R");
         } else {
-          time_fmt = i18n_noop("Yesterday");
+          time_fmt = pbl_i18n_noop("Yesterday");
         }
         break;
     }
@@ -879,17 +879,17 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
       case FullStyleLower12h:
       case FullStyleCapital12h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("%b %e, %l:%M %p");
+          time_fmt = pbl_i18n_noop("%b %e, %l:%M %p");
         } else {
-          time_fmt = i18n_noop("%B %e");
+          time_fmt = pbl_i18n_noop("%B %e");
         }
         break;
       case FullStyleLower24h:
       case FullStyleCapital24h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("%b %e, %R");
+          time_fmt = pbl_i18n_noop("%b %e, %R");
         } else {
-          time_fmt = i18n_noop("%B %e");
+          time_fmt = pbl_i18n_noop("%B %e");
         }
         break;
     }
@@ -898,17 +898,17 @@ static void prv_clock_get_full_relative_time(char *buffer, int buf_size, time_t 
       case FullStyleLower12h:
       case FullStyleCapital12h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("%a, %l:%M %p");
+          time_fmt = pbl_i18n_noop("%a, %l:%M %p");
         } else {
-          time_fmt = i18n_noop("%A");
+          time_fmt = pbl_i18n_noop("%A");
         }
         break;
       case FullStyleLower24h:
       case FullStyleCapital24h:
         if (with_fulltime) {
-          time_fmt = i18n_noop("%a, %R");
+          time_fmt = pbl_i18n_noop("%a, %R");
         } else {
-          time_fmt = i18n_noop("%A");
+          time_fmt = pbl_i18n_noop("%A");
         }
         break;
     }
@@ -935,13 +935,13 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
 
     const char *str_fmt;
     if (capitalized) {
-      str_fmt = i18n_noop("%lu H AGO");
+      str_fmt = pbl_i18n_noop("%lu H AGO");
     } else if (num_hrs == 1) {
-      str_fmt = i18n_noop("An hour ago");
+      str_fmt = pbl_i18n_noop("An hour ago");
     } else {
-      str_fmt = i18n_noop("%lu hours ago");
+      str_fmt = pbl_i18n_noop("%lu hours ago");
     }
-    snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_hrs);
+    snprintf(buffer, buf_size, pbl_i18n_get(str_fmt, buffer), num_hrs);
 
   } else if (difference >= PBL_SEC_PER_MIN) {
     const int num_minutes =
@@ -949,16 +949,17 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
 
     const char *str_fmt;
     if (capitalized) {
-      str_fmt = i18n_noop("%lu MIN AGO");
+      str_fmt = pbl_i18n_noop("%lu MIN AGO");
     } else if (num_minutes == 1) {
-      str_fmt = i18n_noop("%lu minute ago");
+      str_fmt = pbl_i18n_noop("%lu minute ago");
     } else {
-      str_fmt = i18n_noop("%lu minutes ago");
+      str_fmt = pbl_i18n_noop("%lu minutes ago");
     }
-    snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_minutes);
+    snprintf(buffer, buf_size, pbl_i18n_get(str_fmt, buffer), num_minutes);
 
   } else if (difference >= 0) {
-    strncpy(buffer, capitalized ? i18n_get("NOW", buffer) : i18n_get("Now", buffer), buf_size);
+    strncpy(buffer, capitalized ? pbl_i18n_get("NOW", buffer) : pbl_i18n_get("Now", buffer),
+            buf_size);
 
   } else if (difference >= -(PBL_SEC_PER_HOUR - PBL_SEC_PER_MIN)) {
     const int num_minutes =
@@ -966,13 +967,13 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
 
     const char *str_fmt;
     if (capitalized) {
-      str_fmt = i18n_noop("IN %lu MIN");
+      str_fmt = pbl_i18n_noop("IN %lu MIN");
     } else if (num_minutes == 1) {
-      str_fmt = i18n_noop("In %lu minute");
+      str_fmt = pbl_i18n_noop("In %lu minute");
     } else {
-      str_fmt = i18n_noop("In %lu minutes");
+      str_fmt = pbl_i18n_noop("In %lu minutes");
     }
-    snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_minutes);
+    snprintf(buffer, buf_size, pbl_i18n_get(str_fmt, buffer), num_minutes);
 
   } else if (difference >= -(PBL_SEC_PER_HOUR * max_relative_hrs)) {
     const int num_hrs =
@@ -980,39 +981,39 @@ static void prv_clock_get_relative_time_string(char *buffer, int buf_size, time_
 
     const char *str_fmt;
     if (capitalized) {
-      str_fmt = i18n_noop("IN %lu H");
+      str_fmt = pbl_i18n_noop("IN %lu H");
     } else if (num_hrs == 1) {
-      str_fmt = i18n_noop("In %lu hour");
+      str_fmt = pbl_i18n_noop("In %lu hour");
     } else {
-      str_fmt = i18n_noop("In %lu hours");
+      str_fmt = pbl_i18n_noop("In %lu hours");
     }
-    snprintf(buffer, buf_size, i18n_get(str_fmt, buffer), num_hrs);
+    snprintf(buffer, buf_size, pbl_i18n_get(str_fmt, buffer), num_hrs);
 
   } else {
     prv_clock_get_full_relative_time(buffer, buf_size, timestamp, capitalized, with_fulltime);
   }
-  i18n_free_all(buffer);
+  pbl_i18n_free_all(buffer);
 }
 
 size_t clock_get_date(char *buffer, int buf_size, time_t timestamp) {
-  return prv_format_time(buffer, buf_size, i18n_noop("%m/%d"), timestamp);
+  return prv_format_time(buffer, buf_size, pbl_i18n_noop("%m/%d"), timestamp);
 }
 
 size_t clock_get_date_tm(char *buffer, int buf_size, const struct pbl_tm *time_tm) {
-  return prv_format_time_tm(buffer, buf_size, i18n_noop("%m/%d"), time_tm);
+  return prv_format_time_tm(buffer, buf_size, pbl_i18n_noop("%m/%d"), time_tm);
 }
 
 size_t clock_get_day_date(char *buffer, int buf_size, time_t timestamp) {
-  return prv_format_time(buffer, buf_size, i18n_noop("%d"), timestamp);
+  return prv_format_time(buffer, buf_size, pbl_i18n_noop("%d"), timestamp);
 }
 
 static size_t prv_clock_get_month_named_date(char *buffer, size_t buffer_size, time_t timestamp,
                                              bool abbrev) {
-  const char *format = abbrev ? i18n_noop("%b ") : i18n_noop("%B ");
+  const char *format = abbrev ? pbl_i18n_noop("%b ") : pbl_i18n_noop("%B ");
   const size_t month_size = prv_format_time(buffer, buffer_size, format, timestamp);
   char *day_buffer = buffer + month_size;
   const size_t day_buffer_size = buffer_size - month_size;
-  size_t day_size = prv_format_time(day_buffer, day_buffer_size, i18n_noop("%e"), timestamp);
+  size_t day_size = prv_format_time(day_buffer, day_buffer_size, pbl_i18n_noop("%e"), timestamp);
   const char *day_buffer_ptr = string_strip_leading_whitespace(day_buffer);
   memmove(day_buffer, day_buffer_ptr, day_buffer_size - (day_buffer_ptr - day_buffer));
   return month_size + day_size;
@@ -1063,17 +1064,17 @@ typedef struct daypart_message {
 } daypart_message;
 
 static const daypart_message daypart_messages[] = {
-  {0, i18n_noop("this morning")},            // anything before 12pm of the current day
-  {12, i18n_noop("this afternoon")},         // 12pm today
-  {18, i18n_noop("this evening")},           // 6pm today
-  {21, i18n_noop("tonight")},                // 9pm today
-  {33, i18n_noop("tomorrow morning")},       // 9am tomorrow
-  {36, i18n_noop("tomorrow afternoon")},     // 12pm tomorrow
-  {42, i18n_noop("tomorrow evening")},       // 6pm tomorrow
-  {45, i18n_noop("tomorrow night")},         // 9pm tomorrow
-  {57, i18n_noop("the day after tomorrow")}, // starting 9am 2 days from now
-  {72, i18n_noop("the day after tomorrow")}, // ends midnight 2 days from now
-  {73, i18n_noop("the foreseeable future")}, // Catchall for beyond 3 days
+  {0, pbl_i18n_noop("this morning")},            // anything before 12pm of the current day
+  {12, pbl_i18n_noop("this afternoon")},         // 12pm today
+  {18, pbl_i18n_noop("this evening")},           // 6pm today
+  {21, pbl_i18n_noop("tonight")},                // 9pm today
+  {33, pbl_i18n_noop("tomorrow morning")},       // 9am tomorrow
+  {36, pbl_i18n_noop("tomorrow afternoon")},     // 12pm tomorrow
+  {42, pbl_i18n_noop("tomorrow evening")},       // 6pm tomorrow
+  {45, pbl_i18n_noop("tomorrow night")},         // 9pm tomorrow
+  {57, pbl_i18n_noop("the day after tomorrow")}, // starting 9am 2 days from now
+  {72, pbl_i18n_noop("the day after tomorrow")}, // ends midnight 2 days from now
+  {73, pbl_i18n_noop("the foreseeable future")}, // Catchall for beyond 3 days
 };
 
 //! Daypart string is used internally for battery popups

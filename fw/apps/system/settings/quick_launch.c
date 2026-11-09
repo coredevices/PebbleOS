@@ -15,8 +15,8 @@
 #include "quick_launch_setup_menu.h"
 #include "window.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app_launch_button.h>
 #include <applib/app_launch_reason.h>
@@ -55,31 +55,31 @@ typedef struct QuickLaunchData {
 
 static const char *s_row_titles[NUM_ROWS] = {
   /// Shown in Quick Launch Settings as the title of the tap up button option.
-  [ROW_TAP_UP] = i18n_noop("Tap Up"),
+  [ROW_TAP_UP] = pbl_i18n_noop("Tap Up"),
   /// Shown in Quick Launch Settings as the title of the tap down button option.
-  [ROW_TAP_DOWN] = i18n_noop("Tap Down"),
+  [ROW_TAP_DOWN] = pbl_i18n_noop("Tap Down"),
   /// Shown in Quick Launch Settings as the title of the hold up button quick launch option.
-  [ROW_HOLD_UP] = i18n_noop("Hold Up"),
+  [ROW_HOLD_UP] = pbl_i18n_noop("Hold Up"),
   /// Shown in Quick Launch Settings as the title of the hold center button quick launch option.
-  [ROW_HOLD_SELECT] = i18n_noop("Hold Center"),
+  [ROW_HOLD_SELECT] = pbl_i18n_noop("Hold Center"),
   /// Shown in Quick Launch Settings as the title of the hold down button quick launch option.
-  [ROW_HOLD_DOWN] = i18n_noop("Hold Down"),
+  [ROW_HOLD_DOWN] = pbl_i18n_noop("Hold Down"),
   /// Shown in Quick Launch Settings as the title of the hold back button quick launch option.
-  [ROW_HOLD_BACK] = i18n_noop("Hold Back"),
+  [ROW_HOLD_BACK] = pbl_i18n_noop("Hold Back"),
 };
 
 static const char *s_category_row_titles[CategoryRowCount] = {
   /// Shown in Quick Launch Settings as the title of the list of actions.
-  [CATEGORY_ROW_ACTIONS] = i18n_noop("Actions"),
+  [CATEGORY_ROW_ACTIONS] = pbl_i18n_noop("Actions"),
   /// Shown in Quick Launch Settings as the title of the list of apps.
-  [CATEGORY_ROW_APPS] = i18n_noop("Apps"),
+  [CATEGORY_ROW_APPS] = pbl_i18n_noop("Apps"),
 };
 
 static void prv_get_subtitle_string(AppInstallId app_id, QuickLaunchData *data, char *buffer,
                                     uint8_t buf_len) {
   if (app_id == INSTALL_ID_INVALID) {
     /// Shown in Quick Launch Settings when no action or app is bound to the button.
-    i18n_get_with_buffer("Unassigned", buffer, buf_len);
+    pbl_i18n_get_with_buffer("Unassigned", buffer, buf_len);
     return;
   } else {
     AppInstallEntry entry;
@@ -97,7 +97,7 @@ static void prv_get_subtitle_string(AppInstallId app_id, QuickLaunchData *data, 
 ////////////////////////
 static void prv_deinit_cb(SettingsCallbacks *context) {
   QuickLaunchData *data = (QuickLaunchData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -123,7 +123,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
                             uint16_t row, bool selected) {
   QuickLaunchData *data = (QuickLaunchData *)context;
   PBL_ASSERTN(row < NUM_ROWS);
-  const char *title = i18n_get(s_row_titles[row], data);
+  const char *title = pbl_i18n_get(s_row_titles[row], data);
   char *subtitle_buf = data->app_names[row];
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_buf, nullptr);
 }
@@ -173,7 +173,7 @@ static void prv_category_menu_push(QuickLaunchData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_category_menu_select,
   };
-  settings_option_menu_push(i18n_noop("Quick Launch"), OptionMenuContentType_SingleLine,
+  settings_option_menu_push(pbl_i18n_noop("Quick Launch"), OptionMenuContentType_SingleLine,
                             prv_get_category_row(data), &callbacks, CategoryRowCount,
                             false /* icons_enabled */, s_category_row_titles, data);
 }
@@ -247,7 +247,7 @@ static Window *prv_init(void) {
 const SettingsModuleMetadata *settings_quick_launch_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
     /// Title of the Quick Launch Settings submenu in Settings
-    .name = i18n_noop("Quick Launch"),
+    .name = pbl_i18n_noop("Quick Launch"),
     .init = prv_init,
   };
 

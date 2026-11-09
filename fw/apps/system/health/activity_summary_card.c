@@ -8,8 +8,8 @@
 #include "progress.h"
 #include "ui.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -141,7 +141,7 @@ static void prv_render_typical_steps(GContext *ctx, Layer *base_layer) {
                       data->typical_steps_bin_minute % PBL_MIN_PER_HOUR, false /* add_space */);
 
     health_ui_render_split_typical_text_box(ctx, base_layer, steps_buffer, bin_time, daily_buffer,
-                                            i18n_get("TOTAL", base_layer));
+                                            pbl_i18n_get("TOTAL", base_layer));
     return;
   }
 #endif
@@ -206,7 +206,7 @@ void health_activity_summary_card_select_click_handler(Layer *layer) {
 
 void health_activity_summary_card_destroy(Layer *base_layer) {
   HealthActivitySummaryCardData *data = layer_get_data(base_layer);
-  i18n_free_all(base_layer);
+  pbl_i18n_free_all(base_layer);
   kino_reel_destroy(data->icon);
   layer_destroy(base_layer);
 }

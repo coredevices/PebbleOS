@@ -239,7 +239,7 @@ PBL_SYSCALL(size_t, sys_strftime, (OUT_BUF, char *, s, maxsize), (VAL, size_t, m
     const struct pbl_mpu_region *region = (pebble_task_get_current() == PebbleTask_Worker)
                                               ? process_region_worker()
                                               : process_region_app();
-    if (locale && !pbl_mpu_region_contains_buffer(region, locale, ISO_LOCALE_LENGTH)) {
+    if (locale && !pbl_mpu_region_contains_buffer(region, locale, PBL_I18N_LOCALE_LEN)) {
       locale = nullptr;
     }
   }

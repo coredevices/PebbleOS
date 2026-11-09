@@ -7,12 +7,12 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/contacts/contacts.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/send_text_service.h>
 #include <pbl/services/timeline/timeline.h>
@@ -194,7 +194,7 @@ static void prv_read_contacts_from_prefs(SendTextAppData *data) {
       for (int j = 0; j < contact->addr_list.num_addresses; j++) {
         if (uuid_equal(&contact->addr_list.addresses[j].id, &pref->address_uuid)) {
           const char *name = attribute_get_string(&contact->attr_list, AttributeIdTitle,
-                                                  (char *)i18n_get("Unknown", data));
+                                                  (char *)pbl_i18n_get("Unknown", data));
           const char *number = attribute_get_string(&contact->addr_list.addresses[j].attr_list,
                                                     AttributeIdAddress, "");
           prv_add_contact_to_list(num_contacts++, name, number, pref->is_fav, data);
@@ -253,7 +253,7 @@ static void prv_contact_list_draw_header_callback(GContext *ctx, const Layer *ce
   box.origin.y -= 2;
   graphics_context_set_text_color(ctx,
                                   system_theme_is_dark_mode() ? GColorLightGray : GColorDarkGray);
-  graphics_draw_text(ctx, i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
+  graphics_draw_text(ctx, pbl_i18n_get("Select Contact", data), font, box, GTextOverflowModeFill,
                      GTextAlignmentCenter, nullptr);
 }
 #endif
@@ -337,8 +337,8 @@ static void prv_init(void) {
     // On rect we show the "Select Contact" text in the status bar, but on round the status bar
     // shows the clock time and we use a menu cell header to display "Select Contact" (see above)
 #if PBL_RECT
-    status_bar_layer_set_title(status_layer, i18n_get("Select Contact", data), false /* revert */,
-                               false /* animate */);
+    status_bar_layer_set_title(status_layer, pbl_i18n_get("Select Contact", data),
+                               false /* revert */, false /* animate */);
     status_bar_layer_set_separator_mode(status_layer, StatusBarLayerSeparatorModeDotted);
 #endif
     layer_add_child(window_root_layer, status_bar_layer_get_layer(&data->status_layer));
@@ -351,7 +351,7 @@ static void prv_init(void) {
       .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
     };
     peek_layer_set_icon(peek_layer, &timeline_res);
-    peek_layer_set_title(peek_layer, i18n_get("Add contacts in\nmobile app", data));
+    peek_layer_set_title(peek_layer, pbl_i18n_get("Add contacts in\nmobile app", data));
     peek_layer_set_background_color(peek_layer, GColorLightGray);
     peek_layer_play(peek_layer);
     layer_add_child(window_root_layer, &peek_layer->layer);
@@ -367,7 +367,7 @@ static void prv_deinit(void) {
   status_bar_layer_deinit(&data->status_layer);
   peek_layer_deinit(&data->no_contacts_layer);
   menu_layer_deinit(&data->menu_layer);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   prv_clear_contact_list(data);
   app_free(data);
 }
@@ -385,7 +385,7 @@ const PebbleProcessMd *send_text_app_get_info(void) {
           .main_func = prv_main,
           .uuid = UUID_SEND_TEXT_DATA_SOURCE,
         },
-    .name = i18n_noop("Send Text"),
+    .name = pbl_i18n_noop("Send Text"),
     .icon_resource_id = RESOURCE_ID_SEND_TEXT_APP_GLANCE,
   };
 

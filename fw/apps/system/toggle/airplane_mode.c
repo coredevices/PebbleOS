@@ -3,8 +3,8 @@
 
 #include "airplane_mode.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/ui/action_toggle.h>
@@ -23,10 +23,10 @@ static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {
   .result_icon = RESOURCE_ID_AIRPLANE,
   // Toggling airplane mode involves locks which can block animation, don't animate
   .result_icon_static = true,
-  .prompt_enable_message = i18n_noop("Turn On Airplane Mode?"),
-  .prompt_disable_message = i18n_noop("Turn Off Airplane Mode?"),
-  .result_enable_message = i18n_noop("Airplane\nMode On"),
-  .result_disable_message = i18n_noop("Airplane\nMode Off"),
+  .prompt_enable_message = pbl_i18n_noop("Turn On Airplane Mode?"),
+  .prompt_disable_message = pbl_i18n_noop("Turn Off Airplane Mode?"),
+  .result_enable_message = pbl_i18n_noop("Airplane\nMode On"),
+  .result_disable_message = pbl_i18n_noop("Airplane\nMode Off"),
   .callbacks = {
     .get_state = prv_get_state,
     .set_state = prv_set_state,
@@ -50,7 +50,7 @@ const PebbleProcessMd *airplane_mode_toggle_get_app_info(void) {
           .visibility = ProcessVisibilityQuickLaunch,
         },
     /// The Quick Launch action that toggles Airplane Mode.
-    .name = i18n_noop("Toggle Airplane Mode"),
+    .name = pbl_i18n_noop("Toggle Airplane Mode"),
   };
   return &s_app_info.common;
 }

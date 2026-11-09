@@ -5,10 +5,10 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/alarms/alarm.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -125,7 +125,7 @@ static void prv_day_picker_callback(DayPickerResult result, void *context) {
     data->complete_callback(CREATED, data->alarm_id, data->callback_context);
     time_selection_window_deinit(&data->time_picker_window);
     prv_remove_windows(data);
-    i18n_free_all(data);
+    pbl_i18n_free_all(data);
     app_free(data);
   } else {
     if (data->alarm_kind == ALARM_KIND_CUSTOM) {
@@ -134,7 +134,7 @@ static void prv_day_picker_callback(DayPickerResult result, void *context) {
       alarm_set_kind(data->alarm_id, data->alarm_kind);
     }
     data->complete_callback(EDITED, data->alarm_id, data->callback_context);
-    i18n_free_all(data);
+    pbl_i18n_free_all(data);
     app_free(data);
   }
 }
@@ -153,23 +153,23 @@ static void prv_time_picker_window_unload(Window *window) {
   if (data->time_picker_was_completed) {
     data->complete_callback(EDITED, data->alarm_id, data->callback_context);
   }
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
 static void prv_time_picker_window_appear(Window *window) {
   AlarmEditorData *data = (AlarmEditorData *)window_get_user_data(window);
   const bool is_smart = (data->alarm_type == AlarmType_Smart);
-  const char *label = (!data->creating_alarm ? i18n_noop("Change Time")
-                       : is_smart            ? i18n_noop("New Smart Alarm")
-                                             : i18n_noop("New Alarm"));
+  const char *label = (!data->creating_alarm ? pbl_i18n_noop("Change Time")
+                       : is_smart            ? pbl_i18n_noop("New Smart Alarm")
+                                             : pbl_i18n_noop("New Alarm"));
   const char *range_text =
-      PBL_IF_RECT_ELSE(i18n_noop("Wake up between"), i18n_noop("Wake up interval"));
+      PBL_IF_RECT_ELSE(pbl_i18n_noop("Wake up between"), pbl_i18n_noop("Wake up interval"));
   const TimeSelectionWindowConfig config = {
-    .label = i18n_get(label, data),
+    .label = pbl_i18n_get(label, data),
     .range = {
       .update = true,
-      .text = is_smart ? i18n_get(range_text, data) : nullptr,
+      .text = is_smart ? pbl_i18n_get(range_text, data) : nullptr,
       .duration_m = SMART_ALARM_RANGE_S / PBL_SEC_PER_MIN,
       .enabled = is_smart,
     },
@@ -257,10 +257,10 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
     .unload = prv_type_menu_unload,
   };
   static const char *s_type_labels[AlarmTypeCount] = {
-    [AlarmType_Basic] = i18n_noop("Basic Alarm"),
-    [AlarmType_Smart] = i18n_noop("Smart Alarm"),
+    [AlarmType_Basic] = pbl_i18n_noop("Basic Alarm"),
+    [AlarmType_Smart] = pbl_i18n_noop("Smart Alarm"),
   };
-  const char *title = i18n_get("New Alarm", data);
+  const char *title = pbl_i18n_get("New Alarm", data);
   OptionMenu *option_menu = settings_option_menu_create(
       title, OptionMenuContentType_Default, 0, &callbacks, ARRAY_LENGTH(s_type_labels),
       false /* icons_enabled */, s_type_labels, data);

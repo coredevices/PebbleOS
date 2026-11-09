@@ -8,10 +8,10 @@
 
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/clock.h> // clock_copy_time_string — notification-style top time
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math_fixed.h>
 #include <pbl/util/trig.h>
@@ -1285,7 +1285,7 @@ static void prv_draw_report_caption(GContext *ctx, int dx, bool settled) {
   }
   const GRect mb = layer_get_bounds(s_list->canvas);
   graphics_context_set_text_color(ctx, system_theme_get_fg_color());
-  graphics_draw_text(ctx, i18n_get("WEATHER REPORT", s_list),
+  graphics_draw_text(ctx, pbl_i18n_get("WEATHER REPORT", s_list),
                      fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
                      GRect(dx, R5_SCREEN_CY + 46 + dy, mb.size.w, 24),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
@@ -1606,7 +1606,7 @@ static void prv_draw_bottom_stats(GContext *ctx, const WeatherLocationForecast *
   // scrolled column's air splits evenly — solved for disc->graph = graph->pill =
   // %-row->dot (~10-11px each; the graph auto-centres in its band, so the split
   // holds for any temp spread).
-  prv_draw_stat_pill(ctx, i18n_get("PRECIPITATION", s_list), 145 + slide + R5_BAND_DY, W,
+  prv_draw_stat_pill(ctx, pbl_i18n_get("PRECIPITATION", s_list), 145 + slide + R5_BAND_DY, W,
                      GColorPictonBlue);
   prv_draw_stat_row(ctx, fan, n, col_x, 164 + slide + R5_BAND_DY + R5_BAND_ROW_GAP);
   if (!s_list->clock_fx) {
@@ -2224,7 +2224,7 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       struct pbl_tm *lt = localtime(&now);
       if (lt) {
         pbl_strftime_r(s_list->daydate_cache, sizeof(s_list->daydate_cache),
-                       /* xgettext:no-c-format */ i18n_get("%a, %b %d", s_list),
+                       /* xgettext:no-c-format */ pbl_i18n_get("%a, %b %d", s_list),
                        lt); // title-case "Thu, Jun 25"
         // Cap the expiry at an hour: DST-transition days aren't 86400s long and backward
         // clock/timezone changes would otherwise leave stale strings up for hours. One extra
@@ -3768,7 +3768,7 @@ static void prv_window_unload(Window *window) {
   s_list->canvas = nullptr;
 
   window_destroy(window);
-  i18n_free_all(s_list);
+  pbl_i18n_free_all(s_list);
   free(s_list);
   s_list = nullptr;
 }

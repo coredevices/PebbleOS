@@ -3,7 +3,7 @@
 
 #include "watchfaces.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>
@@ -98,7 +98,7 @@ static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex 
   AppMenuNode *node = app_menu_data_source_get_node_at_index(&data->data_source, cell_index->row);
   GBitmap *bitmap = app_menu_data_source_get_node_icon(&data->data_source, node);
   const char *subtitle =
-      (data->active_watchface_id == node->install_id) ? i18n_get("Active", data) : nullptr;
+      (data->active_watchface_id == node->install_id) ? pbl_i18n_get("Active", data) : nullptr;
 
   const GCompOp op = (gbitmap_get_format(bitmap) == GBitmapFormat1Bit) ? GCompOpTint : GCompOpSet;
   graphics_context_set_compositing_mode(ctx, op);
@@ -178,7 +178,7 @@ static void prv_window_unload(Window *window) {
   menu_layer_deinit(&data->menu_layer);
   app_menu_data_source_deinit(&data->data_source);
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 static void handle_init(void) {
@@ -219,7 +219,7 @@ const PebbleProcessMd *watchfaces_get_app_info() {
               {0x18, 0xe4, 0x43, 0xce, 0x38, 0xfd, 0x47, 0xc8, 0x84, 0xd5, 0x6d, 0x0c, 0x77, 0x5f,
                0xbe, 0x55},
         },
-    .name = i18n_noop("Watchfaces"),
+    .name = pbl_i18n_noop("Watchfaces"),
     .icon_resource_id = RESOURCE_ID_WATCHFACES_APP_GLANCE,
   };
   return (const PebbleProcessMd *)&s_app_md;

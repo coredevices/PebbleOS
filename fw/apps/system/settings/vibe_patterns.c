@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/speaker/speaker_service.h>
@@ -51,25 +51,25 @@ typedef struct SettingsVibePatternsData {
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsVibePatternsData *data = (SettingsVibePatternsData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
 static const char *prv_row_title(uint16_t row) {
   switch (row) {
     case VibeSettingsRow_Notifications:
-      return i18n_noop("Notifications");
+      return pbl_i18n_noop("Notifications");
     case VibeSettingsRow_PhoneCalls:
-      return i18n_noop("Incoming Calls");
+      return pbl_i18n_noop("Incoming Calls");
     case VibeSettingsRow_Alarms:
-      return i18n_noop("Alarms");
+      return pbl_i18n_noop("Alarms");
     case VibeSettingsRow_Hourly:
-      return i18n_noop("Hourly Notice");
+      return pbl_i18n_noop("Hourly Notice");
     case VibeSettingsRow_OnDisconnect:
-      return i18n_noop("On Disconnect");
+      return pbl_i18n_noop("On Disconnect");
     case VibeSettingsRow_System:
       /// Refers to the class of all non-score vibes, e.g. 3rd party app vibes
-      return i18n_noop("System");
+      return pbl_i18n_noop("System");
     default:
       pbl_panic();
   }
@@ -86,17 +86,19 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   switch (row) {
 #ifdef CONFIG_SPEAKER
     case VibeSettingsRow_MuteSpeaker: {
-      title = i18n_noop("Mute Speaker");
-      subtitle = alerts_preferences_get_speaker_muted() ? i18n_noop("On") : i18n_noop("Off");
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data),
+      title = pbl_i18n_noop("Mute Speaker");
+      subtitle =
+          alerts_preferences_get_speaker_muted() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
+      menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
                            nullptr);
       return;
     }
     case VibeSettingsRow_SpeakerVolume: {
-      title = i18n_noop("Volume");
+      title = pbl_i18n_noop("Volume");
       snprintf(data->volume_subtitle, sizeof(data->volume_subtitle), "%u%%",
                alerts_preferences_get_speaker_volume());
-      menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), data->volume_subtitle, nullptr);
+      menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), data->volume_subtitle,
+                           nullptr);
       return;
     }
 #endif
@@ -139,7 +141,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       subtitle = nullptr;
     }
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static void prv_selection_changed_cb(SettingsCallbacks *context, uint16_t new_row,
@@ -400,9 +403,9 @@ static Window *prv_init(void) {
 const SettingsModuleMetadata *settings_vibe_patterns_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
 #ifdef CONFIG_SPEAKER
-    .name = i18n_noop("Sounds & Haptics"),
+    .name = pbl_i18n_noop("Sounds & Haptics"),
 #else
-    .name = i18n_noop("Vibrations"),
+    .name = pbl_i18n_noop("Vibrations"),
 #endif
     .init = prv_init,
   };

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/weather/weather_types.h>
 #include <pbl/util/size.h>
 
@@ -46,21 +46,21 @@ const char *weather_type_get_name(WeatherType weather_type) {
 const char *weather_type_get_phrase(WeatherType weather_type) {
   switch (weather_type) {
     case WeatherType_Sun:
-      return i18n_noop("Sunny");
+      return pbl_i18n_noop("Sunny");
     case WeatherType_PartlyCloudy:
-      return i18n_noop("Partly Cloudy");
+      return pbl_i18n_noop("Partly Cloudy");
     case WeatherType_CloudyDay:
-      return i18n_noop("Cloudy");
+      return pbl_i18n_noop("Cloudy");
     case WeatherType_LightRain:
-      return i18n_noop("Light Rain");
+      return pbl_i18n_noop("Light Rain");
     case WeatherType_HeavyRain:
-      return i18n_noop("Rain");
+      return pbl_i18n_noop("Rain");
     case WeatherType_LightSnow:
-      return i18n_noop("Light Snow");
+      return pbl_i18n_noop("Light Snow");
     case WeatherType_HeavySnow:
-      return i18n_noop("Snow");
+      return pbl_i18n_noop("Snow");
     case WeatherType_RainAndSnow:
-      return i18n_noop("Rain & Snow");
+      return pbl_i18n_noop("Rain & Snow");
     case WeatherType_Generic:
     case WeatherType_Unknown:
     default:

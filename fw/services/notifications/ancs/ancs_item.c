@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -108,7 +108,7 @@ static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer, const ANCSAttri
 
 static int prv_set_multimedia_action_msg(char *buffer, size_t length) {
   const char *emoji_str = PBL_IF_RECT_ELSE(" " MULTIMEDIA_EMOJI, "\n" MULTIMEDIA_EMOJI);
-  return snprintf(buffer, length, "%s%s", i18n_get("sent an attachment", __FILE__), emoji_str);
+  return snprintf(buffer, length, "%s%s", pbl_i18n_get("sent an attachment", __FILE__), emoji_str);
 }
 
 //! @param buffer Pointer to a buffer large enough to hold all attribute strings required by
@@ -147,14 +147,14 @@ static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction
   if (strcmp(action->attr_list.attributes[1].cstring, "Clear") == 0) {
     // We leak this i18n'd string because not leaking it is really hard.
     // We make sure we only ever allocate it once though, so it's not the end of the world.
-    action->attr_list.attributes[1].cstring = (char *)i18n_get("Dismiss", __FILE__);
+    action->attr_list.attributes[1].cstring = (char *)pbl_i18n_get("Dismiss", __FILE__);
   }
 
   // We want to rename the "Dial" action to "Call Back"
   if (strcmp(action->attr_list.attributes[1].cstring, "Dial") == 0) {
     // We leak this i18n'd string because not leaking it is really hard.
     // We make sure we only ever allocate it once though, so it's not the end of the world.
-    action->attr_list.attributes[1].cstring = (char *)i18n_get("Call Back", __FILE__);
+    action->attr_list.attributes[1].cstring = (char *)pbl_i18n_get("Call Back", __FILE__);
   }
 
   return rv;

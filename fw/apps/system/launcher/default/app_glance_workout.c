@@ -5,13 +5,13 @@
 
 #include "app_glance_structured.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/activity/workout_service.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/string.h>
 #include <pbl/util/struct.h>
 
@@ -166,7 +166,7 @@ static void prv_timer_callback(void *data) {
                                            sizeof(workout_glance->subtitle), workout_duration_s,
                                            true, workout_glance);
 
-  i18n_free_all(workout_glance);
+  pbl_i18n_free_all(workout_glance);
 
   // Broadcast to the service that we changed the glance
   launcher_app_glance_structured_notify_service_glance_changed(structured_glance);

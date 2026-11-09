@@ -8,6 +8,7 @@
 
 // Pebble stuff
 #include <pbl/analytics/analytics.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
@@ -16,7 +17,6 @@
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
 #include <pbl/services/compositor/compositor_transitions.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/vibe_pattern.h>
 
@@ -528,7 +528,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
 
   SimpleDialog *crash_dialog = simple_dialog_create("Watchface crashed");
   Dialog *dialog = simple_dialog_get_dialog(crash_dialog);
-  const char *text_fmt = i18n_get("%.*s is not responding", crash_dialog);
+  const char *text_fmt = pbl_i18n_get("%.*s is not responding", crash_dialog);
   unsigned int name_len = 15;
   char text[DIALOG_MAX_MESSAGE_LEN];
   sniprintf(text, DIALOG_MAX_MESSAGE_LEN, text_fmt, name_len, entry.name);
@@ -562,7 +562,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   }
 #endif
 
-  i18n_free_all(crash_dialog);
+  pbl_i18n_free_all(crash_dialog);
 
   const uint32_t elapsed_ms = (pbl_uptime_ticks() - crash_info.crash_ticks) * 1000 / PBL_TICK_HZ;
   PBL_LOG_WRN("Watchface crashed twice in %" PRIu32 "ms (id=%" PRId32

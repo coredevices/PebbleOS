@@ -7,10 +7,10 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -350,7 +350,7 @@ const PebbleProcessMd *sports_app_get_info(void) {
               {0x4d, 0xab, 0x81, 0xa6, 0xd2, 0xfc, 0x45, 0x8a, 0x99, 0x2c, 0x7a, 0x1f, 0x3b, 0x96,
                0xa9, 0x70},
         },
-    .name = i18n_noop("Sports"),
+    .name = pbl_i18n_noop("Sports"),
   };
   return (const PebbleProcessMd *)&s_sports_app_info;
 }

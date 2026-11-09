@@ -14,8 +14,8 @@
 //! Falls back to AlarmTone_Reveille for out-of-range values.
 void alarm_tones_get(AlarmTone tone, const SpeakerNote **notes_out, uint32_t *count_out);
 
-//! Get the i18n_noop()'d display name for a tone. Caller wraps with i18n_get() at display time.
-//! Falls back to the Reveille name for out-of-range values.
+//! Get the pbl_i18n_noop()'d display name for a tone. Caller wraps with pbl_i18n_get() at display
+//! time. Falls back to the Reveille name for out-of-range values.
 const char *alarm_tones_get_name(AlarmTone tone);
 
 //! Get the vibe score this tone is rhythmically aligned with, or

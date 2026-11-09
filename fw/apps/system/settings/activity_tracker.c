@@ -5,7 +5,7 @@
 
 #include "menu.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/app_timer.h>
@@ -153,7 +153,7 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
 
   if (prv_num_rows(data) == 0) {
     // Draw "No background apps" box and exit
-    const char *no_background_apps_string = i18n_get("No background apps", data);
+    const char *no_background_apps_string = pbl_i18n_get("No background apps", data);
     PBL_IF_RECT_ELSE(prv_draw_no_activities_cell_rect, prv_draw_no_activities_cell_round)
     (ctx, cell_layer, no_background_apps_string);
     return;
@@ -161,7 +161,7 @@ static void prv_draw_row_cb(OptionMenu *option_menu, GContext *ctx, const Layer 
 
   const char *title = nullptr;
   if (row == 0) {
-    title = i18n_get("None", data);
+    title = pbl_i18n_get("None", data);
   } else {
     AppMenuNode *node = app_menu_data_source_get_node_at_index(data->data_source, row - 1);
     title = node->name;
@@ -207,7 +207,7 @@ static void prv_unload_cb(OptionMenu *option_menu, void *context) {
 
   option_menu_deinit(&data->option_menu);
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -234,7 +234,7 @@ static Window *prv_init(void) {
   // Not using option_menu_configure because prv_reload_menu_data already sets
   // icons_enabled and chosen row index
   option_menu_set_colors_follow_theme(&data->option_menu);
-  option_menu_set_title(&data->option_menu, i18n_get("Background App", data));
+  option_menu_set_title(&data->option_menu, pbl_i18n_get("Background App", data));
   option_menu_set_content_type(&data->option_menu, OptionMenuContentType_SingleLine);
   option_menu_set_callbacks(&data->option_menu, &option_menu_callbacks, data);
   prv_reload_menu_data(data);
@@ -251,7 +251,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_activity_tracker_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Background App"),
+    .name = pbl_i18n_noop("Background App"),
     .init = prv_init,
   };
 

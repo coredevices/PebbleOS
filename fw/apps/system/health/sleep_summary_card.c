@@ -8,8 +8,8 @@
 #include "sleep_summary_card_segments.h"
 #include "ui.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/health_util.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
@@ -212,7 +212,7 @@ static void prv_render_no_sleep_data_text(GContext *ctx, Layer *base_layer) {
   const int y = PBL_IF_RECT_ELSE(91, 100) + HEALTH_Y_OFFSET;
   const GRect rect = GRect(0, y, base_layer->bounds.size.w, 60);
 
-  const char *text = i18n_get("No sleep data,\nwear your watch\nto sleep", base_layer);
+  const char *text = pbl_i18n_get("No sleep data,\nwear your watch\nto sleep", base_layer);
 
   graphics_context_set_text_color(ctx, NO_DATA_TEXT_COLOR);
   graphics_draw_text(ctx, text, data->typical_font, rect, GTextOverflowModeWordWrap,
@@ -291,7 +291,7 @@ void health_sleep_summary_card_select_click_handler(Layer *layer) {
 
 void health_sleep_summary_card_destroy(Layer *base_layer) {
   HealthSleepSummaryCardData *data = layer_get_data(base_layer);
-  i18n_free_all(base_layer);
+  pbl_i18n_free_all(base_layer);
   kino_reel_destroy(data->icon);
   layer_destroy(base_layer);
 }

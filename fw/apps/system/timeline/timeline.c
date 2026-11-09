@@ -7,6 +7,7 @@
 #include "model.h"
 #include "pin_window.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -14,7 +15,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/compositor/compositor_transitions.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/uuid.h>
@@ -716,7 +716,7 @@ static void prv_blobdb_event_handler(PebbleEvent *event, void *context) {
 
 static void prv_intro_anim_stopped(Animation *anim, bool finished, void *context) {
   TimelineAppData *data = context;
-  i18n_free_all(&data->peek_layer);
+  pbl_i18n_free_all(&data->peek_layer);
   peek_layer_deinit(&data->peek_layer);
   window_set_click_config_provider_with_context(&data->timeline_window, prv_click_config_provider,
                                                 data);
@@ -906,7 +906,7 @@ static void prv_setup_peek_animation(TimelineAppData *data, TimelineResourceInfo
 PBL_T_STATIC void prv_setup_no_events_peek(TimelineAppData *data) {
   PeekLayer *peek_layer = &data->peek_layer;
   // set the text
-  peek_layer_set_fields(peek_layer, "", i18n_get("No events", peek_layer), "");
+  peek_layer_set_fields(peek_layer, "", pbl_i18n_get("No events", peek_layer), "");
   // set the icon resource
   TimelineResourceInfo timeline_res = {
     .res_id = TIMELINE_RESOURCE_NO_EVENTS,
@@ -1282,7 +1282,7 @@ const PebbleProcessMd *timeline_get_app_info() {
           .uuid = TIMELINE_UUID_INIT,
           .visibility = ProcessVisibilityQuickLaunch,
         },
-    .name = i18n_noop("Timeline Future"),
+    .name = pbl_i18n_noop("Timeline Future"),
   };
   return &s_app_md.common;
 }
@@ -1297,7 +1297,7 @@ const PebbleProcessMd *timeline_past_get_app_info() {
         },
     /// The title of Timeline Past in Quick Launch. If the translation is too long, cut out
     /// Timeline and only translate "Past".
-    .name = i18n_noop("Timeline Past"),
+    .name = pbl_i18n_noop("Timeline Past"),
   };
   return &s_app_md.common;
 }
@@ -1310,7 +1310,7 @@ const PebbleProcessMd *timeline_full_get_app_info() {
           .uuid = TIMELINE_FULL_UUID_INIT,
           .visibility = ProcessVisibilityShown,
         },
-    .name = i18n_noop("Timeline"),
+    .name = pbl_i18n_noop("Timeline"),
     .icon_resource_id = RESOURCE_ID_DAY_SEPARATOR_TINY,
   };
   return &s_app_md.common;

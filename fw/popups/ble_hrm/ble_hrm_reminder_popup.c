@@ -3,15 +3,15 @@
 
 #include "ble_hrm_reminder_popup.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/timeline/timeline_resources.h>
 
 void ble_hrm_push_reminder_popup(void) {
   AttributeList attr_list = {};
 
-  const char *body = i18n_get(
+  const char *body = pbl_i18n_get(
       "Your heart rate has been shared with an app on your phone for "
       "several hours. This could affect your battery. Stop sharing now?",
       &attr_list);
@@ -21,11 +21,11 @@ void ble_hrm_push_reminder_popup(void) {
 
   AttributeList dismiss_action_attr_list = {};
   attribute_list_add_cstring(&dismiss_action_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &attr_list));
+                             pbl_i18n_get("Dismiss", &attr_list));
 
   AttributeList stop_action_attr_list = {};
   attribute_list_add_cstring(&stop_action_attr_list, AttributeIdTitle,
-                             i18n_get("Stop Sharing Heart Rate", &attr_list));
+                             pbl_i18n_get("Stop Sharing Heart Rate", &attr_list));
 
   TimelineItemActionGroup action_group = {
     .num_actions = 2,
@@ -46,7 +46,7 @@ void ble_hrm_push_reminder_popup(void) {
   TimelineItem *item =
       timeline_item_create_with_attributes(pbl_realtime(), 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &attr_list, &action_group);
-  i18n_free_all(&attr_list);
+  pbl_i18n_free_all(&attr_list);
   attribute_list_destroy_list(&attr_list);
   attribute_list_destroy_list(&dismiss_action_attr_list);
   attribute_list_destroy_list(&stop_action_attr_list);

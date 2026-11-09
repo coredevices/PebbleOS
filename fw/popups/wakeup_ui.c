@@ -3,8 +3,8 @@
 
 #include "wakeup_ui.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/fonts/fonts.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
@@ -50,8 +50,8 @@ static void prv_show_dialog(void *context) {
   WakeupUICbData *data = context;
 
   const char *missed_text_raw =
-      i18n_noop("While your Pebble was off wakeup events occurred for:\n");
-  const char *missed_text = i18n_get(missed_text_raw, data);
+      pbl_i18n_noop("While your Pebble was off wakeup events occurred for:\n");
+  const char *missed_text = pbl_i18n_get(missed_text_raw, data);
 
   // Find the size of all of the missed_apps names (no max length defined)
   int16_t missed_app_titles_len = 0;
@@ -62,7 +62,7 @@ static void prv_show_dialog(void *context) {
   char *missed_message = pbl_zalloc(missed_message_len + 1);
 
   strncpy(missed_message, missed_text, strlen(missed_text));
-  i18n_free(missed_text, data);
+  pbl_i18n_free(missed_text, data);
 
   prv_each_app_ids(data->count, data->app_ids, prv_string_builder, missed_message);
   missed_message[missed_message_len] = '\0';

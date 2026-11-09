@@ -5,9 +5,9 @@
 
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/string.h>
 
@@ -66,7 +66,7 @@ static GRect prv_render_typical_pill(GContext *ctx, Layer *layer, int pill_heigh
   toupper_str(weekday);
 
   char typical_text[32];
-  snprintf(typical_text, sizeof(typical_text), i18n_get("TYPICAL %s", layer), weekday);
+  snprintf(typical_text, sizeof(typical_text), pbl_i18n_get("TYPICAL %s", layer), weekday);
 
   // Push the pill lower by a third of the display's vertical health-offset.
   // Scales to the slack available — zero on legacy-sized displays (asterix,

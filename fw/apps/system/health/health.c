@@ -75,7 +75,7 @@ static void prv_health_service_event_handler(HealthEventType event, void *contex
 //! Show insights onboarding dialog for first-time users
 static void prv_show_insights_onboarding_dialog(void) {
   /// Insights onboarding message
-  static const char *text = i18n_noop(
+  static const char *text = pbl_i18n_noop(
       "Psst! Want smart tips about your activity and sleep? "
       "You can enable Insights in the mobile app.");
   ExpandableDialog *dialog = expandable_dialog_create_with_params(
@@ -107,7 +107,7 @@ static void prv_finish_initialization_cb(bool in_focus) {
 static void prv_initialize(void) {
   if (!activity_prefs_tracking_is_enabled()) {
     /// Health disabled text
-    static const char *msg = i18n_noop(
+    static const char *msg = pbl_i18n_noop(
         "Track your steps, sleep, and more!"
         " Enable Pebble Health in the mobile app.");
     health_tracking_ui_show_message(RESOURCE_ID_HEART_TINY, msg, true);
@@ -116,7 +116,7 @@ static void prv_initialize(void) {
 
   if (!activity_is_initialized()) {
     /// Health waiting for time sync
-    static const char *msg = i18n_noop(
+    static const char *msg = pbl_i18n_noop(
         "Health requires the time to be synced."
         " Please connect your phone.");
     health_tracking_ui_show_message(RESOURCE_ID_ALARM_CLOCK_TINY, msg, true);
@@ -184,7 +184,7 @@ const PebbleProcessMd *health_app_get_info(void) {
 #endif
         },
     .icon_resource_id = RESOURCE_ID_MENU_ICON_HEALTH,
-    .name = i18n_noop("Health"),
+    .name = pbl_i18n_noop("Health"),
   };
   return (const PebbleProcessMd *)&s_health_app_info;
 }

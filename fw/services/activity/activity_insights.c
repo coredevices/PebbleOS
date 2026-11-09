@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -15,7 +16,6 @@
 #include <pbl/services/activity/hr_util.h>
 #include <pbl/services/activity/insights_settings.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/health_layout.h>
 #include <pbl/services/timeline/timeline.h>
@@ -191,14 +191,14 @@ static const RewardNotifConfig SLEEP_REWARD_NOTIF_CONFIG = {
   .insight_type = ActivityInsightType_SleepReward,
   .settings_key = ActivitySettingsKeyInsightSleepRewardTime,
   .icon = TIMELINE_RESOURCE_SLEEP,
-  .text_body = i18n_noop("How are you feeling? Have you noticed extra focus, better mood or "
-                         "extra energy? You have been sleeping great this week! Keep it up!"),
-  .text_positive_action = i18n_noop("I feel fabulous!"),
-  .text_neutral_action = i18n_noop("About average"),
-  .text_negative_action = i18n_noop("I'm still tired"),
-  .text_positive_response = i18n_noop("Awesome!"),
-  .text_neutral_response = i18n_noop("Keep it up!"),
-  .text_negative_response = i18n_noop("We'll get there!"),
+  .text_body = pbl_i18n_noop("How are you feeling? Have you noticed extra focus, better mood or "
+                             "extra energy? You have been sleeping great this week! Keep it up!"),
+  .text_positive_action = pbl_i18n_noop("I feel fabulous!"),
+  .text_neutral_action = pbl_i18n_noop("About average"),
+  .text_negative_action = pbl_i18n_noop("I'm still tired"),
+  .text_positive_response = pbl_i18n_noop("Awesome!"),
+  .text_neutral_response = pbl_i18n_noop("Keep it up!"),
+  .text_negative_response = pbl_i18n_noop("We'll get there!"),
   .icon_positive_response = TIMELINE_RESOURCE_REWARD_GOOD,
   .icon_neutral_response = TIMELINE_RESOURCE_REWARD_AVERAGE,
   .icon_negative_response = TIMELINE_RESOURCE_REWARD_BAD,
@@ -209,14 +209,14 @@ static const RewardNotifConfig ACTIVITY_REWARD_NOTIF_CONFIG = {
   .insight_type = ActivityInsightType_ActivityReward,
   .settings_key = ActivitySettingsKeyInsightActivityRewardTime,
   .icon = TIMELINE_RESOURCE_ACTIVITY,
-  .text_body = i18n_noop("Congratulations - you're having a super active day! Activity "
-                         "makes you more focused and creative. How do you feel?"),
-  .text_positive_action = i18n_noop("I feel great!"),
-  .text_neutral_action = i18n_noop("About the same"),
-  .text_negative_action = i18n_noop("Not feeling it"),
-  .text_positive_response = i18n_noop("Awesome!"),
-  .text_neutral_response = i18n_noop("Keep it up!"),
-  .text_negative_response = i18n_noop("We'll get there!"),
+  .text_body = pbl_i18n_noop("Congratulations - you're having a super active day! Activity "
+                             "makes you more focused and creative. How do you feel?"),
+  .text_positive_action = pbl_i18n_noop("I feel great!"),
+  .text_neutral_action = pbl_i18n_noop("About the same"),
+  .text_negative_action = pbl_i18n_noop("Not feeling it"),
+  .text_positive_response = pbl_i18n_noop("Awesome!"),
+  .text_neutral_response = pbl_i18n_noop("Keep it up!"),
+  .text_negative_response = pbl_i18n_noop("We'll get there!"),
   .icon_positive_response = TIMELINE_RESOURCE_REWARD_GOOD,
   .icon_neutral_response = TIMELINE_RESOURCE_REWARD_AVERAGE,
   .icon_negative_response = TIMELINE_RESOURCE_REWARD_BAD,
@@ -243,7 +243,7 @@ typedef struct SummaryPinConfig {
 static char s_pin_subtitle_buffer[SUBTITLE_BUFFER_LENGTH] = "";
 static const SummaryPinConfig ACTIVITY_SUMMARY_PIN_CONFIG = {
   .insight_settings = &s_activity_summary_settings,
-  .short_title = i18n_noop("Activity Summary"),
+  .short_title = pbl_i18n_noop("Activity Summary"),
   .short_subtitle = s_pin_subtitle_buffer,
   .health_card_type = HealthCardType_Activity,
   .icon = TIMELINE_RESOURCE_ACTIVITY,
@@ -251,23 +251,24 @@ static const SummaryPinConfig ACTIVITY_SUMMARY_PIN_CONFIG = {
   .percent_config = {
     {
       // PercentTier_AboveAverage
-      .body = i18n_noop("Do you feel more energetic, sharper or optimistic? Being active helps!"),
-      .detail_text = i18n_noop("GREAT DAY TODAY"),
+      .body =
+          pbl_i18n_noop("Do you feel more energetic, sharper or optimistic? Being active helps!"),
+      .detail_text = pbl_i18n_noop("GREAT DAY TODAY"),
     },
     {
       // PercentTier_OnAverage
-      .body = i18n_noop("You're being consistent and that's important, keep at it!"),
-      .detail_text = i18n_noop("CONSISTENT!"),
+      .body = pbl_i18n_noop("You're being consistent and that's important, keep at it!"),
+      .detail_text = pbl_i18n_noop("CONSISTENT!"),
     },
     {
       // PercentTier_BelowAverage
-      .body = i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
-      .detail_text = i18n_noop("NOT VERY ACTIVE"),
+      .body = pbl_i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
+      .detail_text = pbl_i18n_noop("NOT VERY ACTIVE"),
     },
     {
       // PercentTier_Fail
-      .body = i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
-      .detail_text = i18n_noop("NOT VERY ACTIVE"),
+      .body = pbl_i18n_noop("Resting is fine, but try to recover and step it up tomorrow!"),
+      .detail_text = pbl_i18n_noop("NOT VERY ACTIVE"),
     },
   }
 };
@@ -275,7 +276,7 @@ static const SummaryPinConfig ACTIVITY_SUMMARY_PIN_CONFIG = {
 static char s_sleep_period_buffer[SUBTITLE_BUFFER_LENGTH] = "";
 static const SummaryPinConfig SLEEP_SUMMARY_PIN_CONFIG = {
   .insight_settings = &s_sleep_summary_settings,
-  .short_title = i18n_noop("Sleep Summary"),
+  .short_title = pbl_i18n_noop("Sleep Summary"),
   .short_subtitle = s_pin_subtitle_buffer,
   .detail_text = s_sleep_period_buffer,
   .health_card_type = HealthCardType_Sleep,
@@ -284,19 +285,19 @@ static const SummaryPinConfig SLEEP_SUMMARY_PIN_CONFIG = {
   .percent_config = {
     {
       // PercentTier_AboveAverage
-      .body = i18n_noop("You had a good night! Feel the energy 😃"),
+      .body = pbl_i18n_noop("You had a good night! Feel the energy 😃"),
     },
     {
       // PercentTier_OnAverage
-      .body = i18n_noop("It's great that you're keeping a consistent sleep routine!"),
+      .body = pbl_i18n_noop("It's great that you're keeping a consistent sleep routine!"),
     },
     {
       // PercentTier_BelowAverage
-      .body = i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
+      .body = pbl_i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
     },
     {
       // PercentTier_Fail
-      .body = i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
+      .body = pbl_i18n_noop("A good night's sleep goes a long way! Try to get more hours tonight."),
     },
   }
 };
@@ -356,30 +357,30 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
     time_t notif_time, const RewardNotifConfig *notif_config) {
   AttributeList notif_attr_list = {};
   prv_build_notification_attr_list(
-      &notif_attr_list, i18n_get(notif_config->text_body, &notif_attr_list), notif_config->icon,
+      &notif_attr_list, pbl_i18n_get(notif_config->text_body, &notif_attr_list), notif_config->icon,
       notif_config->insight_type, ActivitySessionType_None);
 
   AttributeList positive_attr_list = {};
   attribute_list_add_cstring(&positive_attr_list, AttributeIdTitle,
-                             i18n_get(notif_config->text_positive_action, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_positive_action, &notif_attr_list));
   attribute_list_add_cstring(&positive_attr_list, AttributeIdBody,
-                             i18n_get(notif_config->text_positive_response, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_positive_response, &notif_attr_list));
   attribute_list_add_uint32(&positive_attr_list, AttributeIdIconLarge,
                             notif_config->icon_positive_response);
 
   AttributeList neutral_attr_list = {};
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdTitle,
-                             i18n_get(notif_config->text_neutral_action, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_neutral_action, &notif_attr_list));
   attribute_list_add_cstring(&neutral_attr_list, AttributeIdBody,
-                             i18n_get(notif_config->text_neutral_response, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_neutral_response, &notif_attr_list));
   attribute_list_add_uint32(&neutral_attr_list, AttributeIdIconLarge,
                             notif_config->icon_neutral_response);
 
   AttributeList negative_attr_list = {};
   attribute_list_add_cstring(&negative_attr_list, AttributeIdTitle,
-                             i18n_get(notif_config->text_negative_action, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_negative_action, &notif_attr_list));
   attribute_list_add_cstring(&negative_attr_list, AttributeIdBody,
-                             i18n_get(notif_config->text_negative_response, &notif_attr_list));
+                             pbl_i18n_get(notif_config->text_negative_response, &notif_attr_list));
   attribute_list_add_uint32(&negative_attr_list, AttributeIdIconLarge,
                             notif_config->icon_negative_response);
 
@@ -410,7 +411,7 @@ static PBL_NOINLINE TimelineItem *prv_create_reward_notification(
       timeline_item_create_with_attributes(notif_time, 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &notif_attr_list, &action_group);
 
-  i18n_free_all(&notif_attr_list);
+  pbl_i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
   attribute_list_destroy_list(&positive_attr_list);
   attribute_list_destroy_list(&neutral_attr_list);
@@ -445,7 +446,8 @@ typedef struct ResponseItem {
 
 static void prv_set_open_app_action(AttributeList *action_attr_list, HealthCardType card_type,
                                     void *i18n_owner) {
-  attribute_list_add_cstring(action_attr_list, AttributeIdTitle, i18n_get("Open App", i18n_owner));
+  attribute_list_add_cstring(action_attr_list, AttributeIdTitle,
+                             pbl_i18n_get("Open App", i18n_owner));
   // Set the launch args to open the correct health app card
   HealthLaunchArgs launch_args = {
     .card_type = card_type,
@@ -463,7 +465,7 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
 
   AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
-                             i18n_get("Remove", pin_attr_list));
+                             pbl_i18n_get("Remove", pin_attr_list));
 
   const int num_actions = 2 + num_responses;
   TimelineItemActionGroup action_group = {
@@ -479,7 +481,7 @@ static PBL_NOINLINE TimelineItem *prv_create_pin_with_response_items(
   for (int i = 0; i < num_responses; i++) {
     ResponseItem *response_item = &response_items[i];
     attribute_list_add_cstring(&response_item->attr_list, AttributeIdTitle,
-                               i18n_get(response_item->text, pin_attr_list));
+                               pbl_i18n_get(response_item->text, pin_attr_list));
     action_group.actions[i + 1] = (TimelineItemAction){
       .id = response_items->type,
       .type = TimelineItemActionTypeInsightResponse,
@@ -541,7 +543,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
                                                          const char *body) {
   AttributeList pin_attr_list = {};
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
-                             i18n_get(config->short_title, &pin_attr_list));
+                             pbl_i18n_get(config->short_title, &pin_attr_list));
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortSubtitle, config->short_subtitle);
 
   static struct {
@@ -551,24 +553,24 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   } s_tier_config[PercentTierCount] = {
     [PercentTier_Fail] =
         {
-          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
+          .avg_relation = PBL_IF_RECT_ELSE(pbl_i18n_noop("BELOW AVG"), pbl_i18n_noop("Below avg")),
           .bg_color = GColorOrangeARGB8,
           .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
         },
     [PercentTier_BelowAverage] =
         {
-          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("BELOW AVG"), i18n_noop("Below avg")),
+          .avg_relation = PBL_IF_RECT_ELSE(pbl_i18n_noop("BELOW AVG"), pbl_i18n_noop("Below avg")),
           .bg_color = GColorOrangeARGB8,
           .card_icon = TIMELINE_RESOURCE_ARROW_DOWN,
         },
     [PercentTier_OnAverage] =
         {
-          .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ON AVG"), i18n_noop("On avg")),
+          .avg_relation = PBL_IF_RECT_ELSE(pbl_i18n_noop("ON AVG"), pbl_i18n_noop("On avg")),
           .bg_color = GColorVividCeruleanARGB8,
           .card_icon = TIMELINE_RESOURCE_THUMBS_UP,
         },
     [PercentTier_AboveAverage] = {
-      .avg_relation = PBL_IF_RECT_ELSE(i18n_noop("ABOVE AVG"), i18n_noop("Above avg")),
+      .avg_relation = PBL_IF_RECT_ELSE(pbl_i18n_noop("ABOVE AVG"), pbl_i18n_noop("Above avg")),
       .bg_color = GColorIslamicGreenARGB8,
       .card_icon = TIMELINE_RESOURCE_ARROW_UP,
     },
@@ -581,7 +583,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   attribute_list_add_uint8(&pin_attr_list, AttributeIdBgColor, s_tier_config[tier].bg_color);
   attribute_list_add_cstring(&pin_attr_list,
                              PBL_IF_RECT_ELSE(AttributeIdTitle, AttributeIdLocationName),
-                             i18n_get(s_tier_config[tier].avg_relation, &pin_attr_list));
+                             pbl_i18n_get(s_tier_config[tier].avg_relation, &pin_attr_list));
 
   // Select the correct layout config based on percentage
   const SummaryPinPercentageConfig *percent_config = &config->percent_config[tier];
@@ -589,7 +591,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   // Add the correct text as the LocationName attribute at the bottom of the layout
   const char *detail_text;
   if (percent_config->detail_text) {
-    detail_text = i18n_get(percent_config->detail_text, &pin_attr_list);
+    detail_text = pbl_i18n_get(percent_config->detail_text, &pin_attr_list);
   } else {
     detail_text = config->detail_text;
   }
@@ -597,7 +599,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
       &pin_attr_list, PBL_IF_RECT_ELSE(AttributeIdLocationName, AttributeIdTitle), detail_text);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdBody,
-                             i18n_get(body ? body : percent_config->body, &pin_attr_list));
+                             pbl_i18n_get(body ? body : percent_config->body, &pin_attr_list));
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconTiny, config->icon);
   attribute_list_add_resource_id(&pin_attr_list, AttributeIdIconSmall,
                                  s_tier_config[tier].card_icon);
@@ -617,7 +619,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
                                       config->health_card_type);
 
   pbl_free(percentage_buf);
-  i18n_free_all(&pin_attr_list);
+  pbl_i18n_free_all(&pin_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
 
   return item;
@@ -849,8 +851,8 @@ static void prv_strcat_formatted_time(int32_t time_seconds, char *out_buf, size_
     .tm_min = (time_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN
   };
 
-  const char *format =
-      clock_is_24h_style() ? i18n_get("%H:%M", i18n_owner) : i18n_get("%l:%M%p", i18n_owner);
+  const char *format = clock_is_24h_style() ? pbl_i18n_get("%H:%M", i18n_owner)
+                                            : pbl_i18n_get("%l:%M%p", i18n_owner);
 
   char time_str_buf[TIME_BUFFER_LENGTH];
   pbl_strftime_r(time_str_buf, TIME_BUFFER_LENGTH, format, &time);
@@ -874,9 +876,9 @@ static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds, int32_t 
   int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
   int minutes = (sleep_total_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
   sniprintf(SLEEP_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
-            i18n_get("%uH %uM Sleep", &SLEEP_SUMMARY_PIN_CONFIG), hours, minutes);
+            pbl_i18n_get("%uH %uM Sleep", &SLEEP_SUMMARY_PIN_CONFIG), hours, minutes);
 
-  i18n_free_all(&SLEEP_SUMMARY_PIN_CONFIG);
+  pbl_i18n_free_all(&SLEEP_SUMMARY_PIN_CONFIG);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -903,15 +905,15 @@ PBL_T_STATIC const char *prv_get_sleep_pin_body(int32_t sleep_total_seconds,
                                                  sleep_average_seconds, &percentage);
   switch (prv_get_sleep_band(sleep_total_seconds)) {
     case SleepBand_Short:
-      return i18n_noop("Short night! Try going to bed a little earlier tonight.");
+      return pbl_i18n_noop("Short night! Try going to bed a little earlier tonight.");
     case SleepBand_BelowRecommended:
       if (tier == PercentTier_AboveAverage || tier == PercentTier_OnAverage) {
-        return i18n_noop("Almost there! A little more sleep tonight would help.");
+        return pbl_i18n_noop("Almost there! A little more sleep tonight would help.");
       }
       return nullptr;
     case SleepBand_Long:
     case SleepBand_VeryLong:
-      return i18n_noop("A long night! Great for catching up; a steady routine helps most.");
+      return pbl_i18n_noop("A long night! Great for catching up; a steady routine helps most.");
     case SleepBand_Recommended:
       break;
   }
@@ -942,7 +944,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   attribute_list_add_uint32(&pin_attr_list, AttributeIdTimestamp, session->start_utc);
 
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortTitle,
-                             i18n_get("Nap Time", &pin_attr_list));
+                             pbl_i18n_get("Nap Time", &pin_attr_list));
 
   // Fits the maximum strings "10H 30M of sleep", "10:00AM - 11:00PM" and i18n variants
   const size_t max_attr_length = 64;
@@ -950,20 +952,22 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   char *short_subtitle = pbl_zalloc_check(max_attr_length);
   const uint32_t duration_s = session->length_min * PBL_SEC_PER_MIN;
   health_util_format_hours_and_minutes(elapsed, max_attr_length, duration_s, &pin_attr_list);
-  const char *short_subtitle_fmt = i18n_get("%s of sleep", &pin_attr_list); /// "10H 30M of sleep"
+  const char *short_subtitle_fmt =
+      pbl_i18n_get("%s of sleep", &pin_attr_list); /// "10H 30M of sleep"
   snprintf(short_subtitle, max_attr_length, short_subtitle_fmt, elapsed);
   attribute_list_add_cstring(&pin_attr_list, AttributeIdShortSubtitle, short_subtitle);
   attribute_list_add_cstring(&pin_attr_list, AttributeIdSubtitle, elapsed);
 
-  const char *title_i18n = PBL_IF_RECT_ELSE(i18n_noop("YOU NAPPED"), i18n_noop("Of napping"));
+  const char *title_i18n =
+      PBL_IF_RECT_ELSE(pbl_i18n_noop("YOU NAPPED"), pbl_i18n_noop("Of napping"));
   attribute_list_add_cstring(&pin_attr_list,
                              PBL_IF_RECT_ELSE(AttributeIdTitle, AttributeIdLocationName),
-                             i18n_get(title_i18n, &pin_attr_list));
+                             pbl_i18n_get(title_i18n, &pin_attr_list));
 
   char *start_time = pbl_zalloc_check(TIME_STRING_TIME_LENGTH);
   char *end_time = pbl_zalloc_check(TIME_STRING_TIME_LENGTH);
   char *time_range = pbl_zalloc_check(max_attr_length);
-  const char *time_range_fmt = i18n_get("%s - %s", &pin_attr_list); /// "10:00AM - 11:00PM"
+  const char *time_range_fmt = pbl_i18n_get("%s - %s", &pin_attr_list); /// "10:00AM - 11:00PM"
   clock_copy_time_string_timestamp(start_time, TIME_STRING_TIME_LENGTH, session->start_utc);
   clock_copy_time_string_timestamp(end_time, TIME_STRING_TIME_LENGTH,
                                    session->start_utc + duration_s);
@@ -980,11 +984,11 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   ResponseItem *response_items = pbl_zalloc_check(num_responses * sizeof(ResponseItem));
   response_items[0] = (ResponseItem){
     .type = ActivityInsightResponseTypePositive,
-    .text = i18n_noop("I feel great!"),
+    .text = pbl_i18n_noop("I feel great!"),
   };
   response_items[1] = (ResponseItem){
     .type = ActivityInsightResponseTypeNegative,
-    .text = i18n_noop("I need more"),
+    .text = pbl_i18n_noop("I need more"),
   };
 
   TimelineItem *item = prv_create_pin_with_response_items(
@@ -997,7 +1001,7 @@ static PBL_NOINLINE TimelineItem *prv_create_nap_pin(time_t now_utc, ActivitySes
   pbl_free(start_time);
   pbl_free(short_subtitle);
   pbl_free(elapsed);
-  i18n_free_all(&pin_attr_list);
+  pbl_i18n_free_all(&pin_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
 
   return item;
@@ -1014,8 +1018,8 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
   const int max_notif_length = 128;
   char *body = pbl_malloc_check(max_notif_length);
   snprintf(body, max_notif_length,
-           i18n_get("Aren't naps great? You knocked out for %dH %dM!", body), hours, minutes);
-  i18n_free_all(body);
+           pbl_i18n_get("Aren't naps great? You knocked out for %dH %dM!", body), hours, minutes);
+  pbl_i18n_free_all(body);
   const NotificationConfig config = {
     .notif_time = notif_time,
     .session = session,
@@ -1030,7 +1034,7 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
     .response = {
       .enabled = true,
       .type = ActivityInsightResponseTypeMisclassified,
-      .title = i18n_noop("I didn't nap!?"),
+      .title = pbl_i18n_noop("I didn't nap!?"),
     },
   };
   prv_create_and_push_notification(&config);
@@ -1263,7 +1267,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
 
   AttributeList dismiss_action_attr_list = {};
   attribute_list_add_cstring(&dismiss_action_attr_list, AttributeIdTitle,
-                             i18n_get("Dismiss", &notif_attr_list));
+                             pbl_i18n_get("Dismiss", &notif_attr_list));
 
   AttributeList open_app_action_attr_list = {};
   AttributeList open_pin_action_attr_list = {};
@@ -1271,7 +1275,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
   // Give open pin more precedence since the pin also links to the app
   if (config->open_pin.enabled) {
     attribute_list_add_cstring(&open_pin_action_attr_list, AttributeIdTitle,
-                               i18n_get("Open Pin", &notif_attr_list));
+                               pbl_i18n_get("Open Pin", &notif_attr_list));
   } else if (config->open_app.enabled) {
     prv_set_open_app_action(&open_app_action_attr_list, config->open_app.health_card_type,
                             &notif_attr_list);
@@ -1280,7 +1284,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
   AttributeList response_action_attr_list = {};
   if (config->response.enabled) {
     attribute_list_add_cstring(&response_action_attr_list, AttributeIdTitle,
-                               i18n_get(config->response.title, &notif_attr_list));
+                               pbl_i18n_get(config->response.title, &notif_attr_list));
   }
 
   const int max_num_actions = 4; // dismiss, open app, open pin, response
@@ -1321,7 +1325,7 @@ static PBL_NOINLINE TimelineItem *prv_create_notification(const NotificationConf
   TimelineItem *item =
       timeline_item_create_with_attributes(config->notif_time, 0, TimelineItemTypeNotification,
                                            LayoutIdNotification, &notif_attr_list, &action_group);
-  i18n_free_all(&notif_attr_list);
+  pbl_i18n_free_all(&notif_attr_list);
   attribute_list_destroy_list(&notif_attr_list);
   attribute_list_destroy_list(&dismiss_action_attr_list);
   attribute_list_destroy_list(&open_pin_action_attr_list);
@@ -1356,19 +1360,19 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
           .num_variants = 5,
           .variants =
               {
-                i18n_noop(
+                pbl_i18n_noop(
                     "Killer job! You've walked %d steps today which is %d%% above your typical. "
                     "Do it again tomorrow and you'll be on top of the world!"),
-                i18n_noop(
+                pbl_i18n_noop(
                     "Nice moves! You've walked %d steps today which is %d%% above your typical. "
                     "Crush it again tomorrow 😀"),
-                i18n_noop("Hey rockstar 🎤 You've walked %d steps today "
-                          "which is %d%% above your typical. Nothing can stop you!"),
-                i18n_noop("We can barely keep up! "
-                          "You walked %d steps today which is %d%% above your typical. "
-                          "You're on 🔥"),
-                i18n_noop("You walked %d steps today which is %d%% above your typical. "
-                          "You just outstepped YOURSELF. Mic drop."),
+                pbl_i18n_noop("Hey rockstar 🎤 You've walked %d steps today "
+                              "which is %d%% above your typical. Nothing can stop you!"),
+                pbl_i18n_noop("We can barely keep up! "
+                              "You walked %d steps today which is %d%% above your typical. "
+                              "You're on 🔥"),
+                pbl_i18n_noop("You walked %d steps today which is %d%% above your typical. "
+                              "You just outstepped YOURSELF. Mic drop."),
               },
         },
     [PercentTier_OnAverage] =
@@ -1376,14 +1380,15 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
           .num_variants = 4,
           .variants =
               {
-                i18n_noop("You walked %d steps today; keep it up! "
-                          "Being active is the key to feeling like a million bucks. "
-                          "Try to beat your typical tomorrow."),
-                i18n_noop("Good job! You walked %d steps today–do it again tomorrow."),
-                i18n_noop("Someone's on the move 👊 You walked %d steps today; "
-                          "keep doing what you're doing!"),
-                i18n_noop("You keep moving, we'll keep counting! You've clocked in %d steps today. "
-                          "Keep it rolling, hot stuff."),
+                pbl_i18n_noop("You walked %d steps today; keep it up! "
+                              "Being active is the key to feeling like a million bucks. "
+                              "Try to beat your typical tomorrow."),
+                pbl_i18n_noop("Good job! You walked %d steps today–do it again tomorrow."),
+                pbl_i18n_noop("Someone's on the move 👊 You walked %d steps today; "
+                              "keep doing what you're doing!"),
+                pbl_i18n_noop(
+                    "You keep moving, we'll keep counting! You've clocked in %d steps today. "
+                    "Keep it rolling, hot stuff."),
               },
         },
     [PercentTier_BelowAverage] =
@@ -1391,25 +1396,25 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
           .num_variants = 4,
           .variants =
               {
-                i18n_noop("You walked %d steps today which is %d%% below your typical. "
-                          "Try to be more active tomorrow–you can do it!"),
-                i18n_noop(
+                pbl_i18n_noop("You walked %d steps today which is %d%% below your typical. "
+                              "Try to be more active tomorrow–you can do it!"),
+                pbl_i18n_noop(
                     "You walked %d steps which is %d%% below your typical. "
                     "Being active makes you feel amaaaazing–try to get back on track tomorrow."),
-                i18n_noop("You walked %d steps today which is %d%% below your typical. "
-                          "Don't worry, tomorrow is just around the corner 😀"),
-                i18n_noop("You walked %d steps which is %d%% below your typical, "
-                          "but don't stress. You'll crush it tomorrow 😉"),
+                pbl_i18n_noop("You walked %d steps today which is %d%% below your typical. "
+                              "Don't worry, tomorrow is just around the corner 😀"),
+                pbl_i18n_noop("You walked %d steps which is %d%% below your typical, "
+                              "but don't stress. You'll crush it tomorrow 😉"),
               },
         },
     [PercentTier_Fail] = {
       .num_variants = 3,
       .variants = {
-        i18n_noop("You walked %d steps today. "
-                  "Don't fret, you can get back on track in no time 😉"),
-        i18n_noop("You walked %d steps today. Good news is the sky's the limit!"),
-        i18n_noop("You walked %d steps today. "
-                  "Try to take even more steps tomorrow–show us what you're made of!"),
+        pbl_i18n_noop("You walked %d steps today. "
+                      "Don't fret, you can get back on track in no time 😉"),
+        pbl_i18n_noop("You walked %d steps today. Good news is the sky's the limit!"),
+        pbl_i18n_noop("You walked %d steps today. "
+                      "Try to take even more steps tomorrow–show us what you're made of!"),
       },
     },
   };
@@ -1432,8 +1437,8 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
   }
 
   char *body = pbl_malloc_check(max_notif_length);
-  snprintf(body, max_notif_length, i18n_get(fmt, body), steps_total, ABS(percentage));
-  i18n_free_all(body);
+  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), steps_total, ABS(percentage));
+  pbl_i18n_free_all(body);
 
   const NotificationConfig config = {
     .notif_time = notif_time,
@@ -1458,39 +1463,42 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
     .num_variants = 2,
     .variants = {
       /// Sleep notification on wake up, slept under 6 hours
-      i18n_noop("Short night? You slept for %dH %dM. Most adults need at least 7 hours, so try "
-                "heading to bed earlier tonight."),
-      i18n_noop("You slept for %dH %dM. Sleep fuels everything you do; let's aim for more "
-                "tonight 😉"),
+      pbl_i18n_noop("Short night? You slept for %dH %dM. Most adults need at least 7 hours, so try "
+                    "heading to bed earlier tonight."),
+      pbl_i18n_noop("You slept for %dH %dM. Sleep fuels everything you do; let's aim for more "
+                    "tonight 😉"),
     },
   };
   static const InsightCopyVariants s_almost_copy = {
     .num_variants = 2,
     .variants = {
       /// Sleep notification on wake up, slept 6 to 7 hours, not below their typical
-      i18n_noop("You slept for %dH %dM. You're close! A little extra tonight goes a long way."),
-      i18n_noop("Good morning! You slept for %dH %dM. Just a bit more sleep would help you feel "
-                "your best."),
+      pbl_i18n_noop("You slept for %dH %dM. You're close! A little extra tonight goes a long way."),
+      pbl_i18n_noop(
+          "Good morning! You slept for %dH %dM. Just a bit more sleep would help you feel "
+          "your best."),
     },
   };
   static const InsightCopyVariants s_long_copy = {
     .num_variants = 2,
     .variants = {
       /// Sleep notification on wake up, slept 9 to 10 hours
-      i18n_noop("You slept for %dH %dM. A long night can help you catch up after short ones; a "
-                "steady routine is what counts."),
-      i18n_noop("Well rested? You slept for %dH %dM. Extra sleep helps you recover, but most "
-                "adults do best with 7 to 9 hours."),
+      pbl_i18n_noop("You slept for %dH %dM. A long night can help you catch up after short ones; a "
+                    "steady routine is what counts."),
+      pbl_i18n_noop("Well rested? You slept for %dH %dM. Extra sleep helps you recover, but most "
+                    "adults do best with 7 to 9 hours."),
     },
   };
   static const InsightCopyVariants s_very_long_copy = {
     .num_variants = 2,
     .variants = {
       /// Sleep notification on wake up, slept 10 hours or more
-      i18n_noop("You slept for %dH %dM. That's a long night! Great for recovering, but a regular "
-                "bedtime and wake time will help you feel your best."),
-      i18n_noop("You slept for %dH %dM, more than most adults need. Catching up now and then is "
-                "fine; try to keep a steady routine."),
+      pbl_i18n_noop(
+          "You slept for %dH %dM. That's a long night! Great for recovering, but a regular "
+          "bedtime and wake time will help you feel your best."),
+      pbl_i18n_noop(
+          "You slept for %dH %dM, more than most adults need. Catching up now and then is "
+          "fine; try to keep a steady routine."),
     },
   };
   static const InsightCopyVariants s_tier_config[PercentTierCount] = {
@@ -1500,16 +1508,18 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
           .variants =
               {
                 /// Sleep notification on wake up, slept above their typical sleep duration
-                i18n_noop("Refreshed? You slept for %dH %dM which is %d%% above your typical. "
-                          "Go tackle your day 😃."),
-                i18n_noop("You caught some killer zzz’s! You slept for %dH %dM which is %d%% above "
-                          "your typical. Keep it up."),
-                i18n_noop("Rise and shine! You slept for %dH %dM which is %d%% above your typical. "
-                          "Do it again tonight, sleep master."),
-                i18n_noop(
+                pbl_i18n_noop("Refreshed? You slept for %dH %dM which is %d%% above your typical. "
+                              "Go tackle your day 😃."),
+                pbl_i18n_noop(
+                    "You caught some killer zzz’s! You slept for %dH %dM which is %d%% above "
+                    "your typical. Keep it up."),
+                pbl_i18n_noop(
+                    "Rise and shine! You slept for %dH %dM which is %d%% above your typical. "
+                    "Do it again tonight, sleep master."),
+                pbl_i18n_noop(
                     "Mmmm...what a night. You slept for %dH %dM which is %d%% above your typical. "
                     "That's gotta feel good!"),
-                i18n_noop(
+                pbl_i18n_noop(
                     "That's a lot of sheep you just counted! "
                     "You slept for %dH %dM which is %d%% above your typical. Boom shakalaka."),
               },
@@ -1520,15 +1530,15 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
           .variants =
               {
                 /// Sleep notification on wake up, slept similar to their typical sleep duration
-                i18n_noop("Good mornin’. You slept for %dH %dM. "
-                          "Every good day begins with a solid night’s sleep..."
-                          "kinda like that one 😉 Keep it up!"),
-                i18n_noop("Good morning! You slept for %dH %dM. Consistency is key; "
-                          "keep doing what you're doing 😃."),
-                i18n_noop(
+                pbl_i18n_noop("Good mornin’. You slept for %dH %dM. "
+                              "Every good day begins with a solid night’s sleep..."
+                              "kinda like that one 😉 Keep it up!"),
+                pbl_i18n_noop("Good morning! You slept for %dH %dM. Consistency is key; "
+                              "keep doing what you're doing 😃."),
+                pbl_i18n_noop(
                     "You're rockin' the shut eye! You slept for %dH %dM. Make it a nightly ritual. "
                     "You deserve it."),
-                i18n_noop("Feelin' good? You slept for %dH %dM. Nothing can stop you now 👊"),
+                pbl_i18n_noop("Feelin' good? You slept for %dH %dM. Nothing can stop you now 👊"),
               },
         },
     [PercentTier_BelowAverage] =
@@ -1537,13 +1547,15 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
           .variants =
               {
                 /// Sleep notification on wake up, slept below their typical sleep duration
-                i18n_noop("Hey sleepy head. You slept for %dH %dM which "
-                          "is %d%% below your typical. Try to get more tonight!"),
-                i18n_noop("Groggy? You slept for %dH %dM which is %d%% below your typical. Sleep "
-                          "is important for everything you do-try getting more shut eye tonight!"),
-                i18n_noop("It's a new day! You slept for %dH %dM which is %d%% below your typical. "
-                          "It's not your best, but there's always tonight."),
-                i18n_noop(
+                pbl_i18n_noop("Hey sleepy head. You slept for %dH %dM which "
+                              "is %d%% below your typical. Try to get more tonight!"),
+                pbl_i18n_noop(
+                    "Groggy? You slept for %dH %dM which is %d%% below your typical. Sleep "
+                    "is important for everything you do-try getting more shut eye tonight!"),
+                pbl_i18n_noop(
+                    "It's a new day! You slept for %dH %dM which is %d%% below your typical. "
+                    "It's not your best, but there's always tonight."),
+                pbl_i18n_noop(
                     "Goooood morning! You slept for %dH %dM which is %d%% below your typical. "
                     "Go crush your day and then get back in bed 😉"),
               },
@@ -1551,12 +1563,12 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
     [PercentTier_Fail] = {
       .num_variants = 3,
       .variants = {
-        i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
-                  "Sleep is vital for all your great ideas–how 'bout getting more tonight?"),
-        i18n_noop("You only slept for %dH %dM which is %d%% below your typical. "
-                  "We know you're busy, but try getting more tonight. We believe in you 😉"),
-        i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
-                  "We know stuff happens; take another crack at it tonight."),
+        pbl_i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
+                      "Sleep is vital for all your great ideas–how 'bout getting more tonight?"),
+        pbl_i18n_noop("You only slept for %dH %dM which is %d%% below your typical. "
+                      "We know you're busy, but try getting more tonight. We believe in you 😉"),
+        pbl_i18n_noop("You slept for %dH %dM which is %d%% below your typical. "
+                      "We know stuff happens; take another crack at it tonight."),
       },
     },
   };
@@ -1611,8 +1623,8 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
   }
 
   char *body = pbl_malloc_check(max_notif_length);
-  snprintf(body, max_notif_length, i18n_get(fmt, body), hours, minutes, ABS(percentage));
-  i18n_free_all(body);
+  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), hours, minutes, ABS(percentage));
+  pbl_i18n_free_all(body);
 
   const NotificationConfig config = {
     .notif_time = notif_time,
@@ -1634,9 +1646,9 @@ static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, i
                                           ActivityScalarStore steps,
                                           ActivityScalarStore total_steps_avg, Uuid *uuid) {
   sniprintf(ACTIVITY_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
-            i18n_get("%u Steps", &ACTIVITY_SUMMARY_PIN_CONFIG), steps);
+            pbl_i18n_get("%u Steps", &ACTIVITY_SUMMARY_PIN_CONFIG), steps);
 
-  i18n_free_all(&ACTIVITY_SUMMARY_PIN_CONFIG);
+  pbl_i18n_free_all(&ACTIVITY_SUMMARY_PIN_CONFIG);
 
   return prv_push_summary_pin(pin_time_utc, now_utc, uuid, steps, total_steps_avg,
                               &ACTIVITY_SUMMARY_PIN_CONFIG, nullptr);
@@ -1716,10 +1728,10 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
       static const InsightCopyVariants s_walking_intros = {
         .num_variants = 4,
         .variants = {
-          i18n_noop("Didn’t that walk feel good?"),
-          i18n_noop("Way to keep it active!"),
-          i18n_noop("You got the moves!"),
-          i18n_noop("Gettin' your step on?"),
+          pbl_i18n_noop("Didn’t that walk feel good?"),
+          pbl_i18n_noop("Way to keep it active!"),
+          pbl_i18n_noop("You got the moves!"),
+          pbl_i18n_noop("Gettin' your step on?"),
         },
       };
       return prv_get_variant(&s_walking_intros, VARIANT_RANDOM);
@@ -1729,11 +1741,11 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
       static const InsightCopyVariants s_running_intros = {
         .num_variants = 5,
         .variants = {
-          i18n_noop("Feelin' hot? Cause you're on 🔥"),
-          i18n_noop("Hey lightning bolt, way to go!"),
-          i18n_noop("You're a machine!"),
-          i18n_noop("Hey speedster, we can barely keep up!"),
-          i18n_noop("Way to show us what you're made of 👊"),
+          pbl_i18n_noop("Feelin' hot? Cause you're on 🔥"),
+          pbl_i18n_noop("Hey lightning bolt, way to go!"),
+          pbl_i18n_noop("You're a machine!"),
+          pbl_i18n_noop("Hey speedster, we can barely keep up!"),
+          pbl_i18n_noop("Way to show us what you're made of 👊"),
         },
       };
       return prv_get_variant(&s_running_intros, VARIANT_RANDOM);
@@ -1743,11 +1755,11 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
       static const InsightCopyVariants s_open_intros = {
         .num_variants = 5,
         .variants = {
-          i18n_noop("Workin' up a sweat?"),
-          i18n_noop("Well done 💪"),
-          i18n_noop("Endorphin rush?"),
-          i18n_noop("Can't stop, won't stop 👊"),
-          i18n_noop("Keepin' that heart healthy! ❤"),
+          pbl_i18n_noop("Workin' up a sweat?"),
+          pbl_i18n_noop("Well done 💪"),
+          pbl_i18n_noop("Endorphin rush?"),
+          pbl_i18n_noop("Can't stop, won't stop 👊"),
+          pbl_i18n_noop("Keepin' that heart healthy! ❤"),
         },
       };
       return prv_get_variant(&s_open_intros, VARIANT_RANDOM);
@@ -1763,7 +1775,8 @@ static const char *prv_get_intro_str_for_activity(ActivitySession *session) {
 
 // ------------------------------------------------------------------------------------------------
 static const char *prv_get_distance_unit(void *i18n_owner) {
-  return health_util_get_distance_string(i18n_get("mi", i18n_owner), i18n_get("km", i18n_owner));
+  return health_util_get_distance_string(pbl_i18n_get("mi", i18n_owner),
+                                         pbl_i18n_get("km", i18n_owner));
 }
 
 static void prv_add_metric_duration_info(struct pbl_string_list *headings, int headings_buf_size,
@@ -1775,18 +1788,18 @@ static void prv_add_metric_duration_info(struct pbl_string_list *headings, int h
   const int duration_s = session->length_min * PBL_SEC_PER_MIN;
   const int duration_m = ROUND(duration_s, PBL_SEC_PER_MIN);
   if (duration_m <= PBL_MIN_PER_HOUR) {
-    snprintf(duration_str, duration_buffer_size, i18n_get("%d Min", headings), duration_m);
+    snprintf(duration_str, duration_buffer_size, pbl_i18n_get("%d Min", headings), duration_m);
   } else {
     health_util_format_hours_and_minutes(duration_str, duration_buffer_size, duration_s, headings);
   }
 
   const char *activity_label;
   if (session->type == ActivitySessionType_Run) {
-    activity_label = i18n_get("Run", headings);
+    activity_label = pbl_i18n_get("Run", headings);
   } else if (session->type == ActivitySessionType_Walk) {
-    activity_label = i18n_get("Walk", headings);
+    activity_label = pbl_i18n_get("Walk", headings);
   } else {
-    activity_label = i18n_get("Workout", headings);
+    activity_label = pbl_i18n_get("Workout", headings);
   }
   pbl_string_list_add_string(headings, headings_buf_size, activity_label, headings_buf_size);
   pbl_string_list_add_string(values, values_buf_size, duration_str, values_buf_size);
@@ -1804,7 +1817,7 @@ static void prv_add_avg_pace_metric_info(struct pbl_string_list *headings, int h
 
   snprintf(pace_str + offset, pace_buf_size - offset, " /%s", prv_get_distance_unit(headings));
 
-  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Avg Pace", headings),
+  pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Avg Pace", headings),
                              headings_buf_size);
   pbl_string_list_add_string(values, values_buf_size, pace_str, values_buf_size);
 }
@@ -1820,7 +1833,7 @@ static void prv_add_distance_metric_info(struct pbl_string_list *headings, int h
   snprintf(distance_str + offset, distance_buf_size - offset, " %s",
            prv_get_distance_unit(headings));
 
-  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Distance", headings),
+  pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Distance", headings),
                              headings_buf_size);
   pbl_string_list_add_string(values, values_buf_size, distance_str, values_buf_size);
 }
@@ -1832,7 +1845,7 @@ static void prv_add_step_metric_info(struct pbl_string_list *headings, int headi
   char step_str[step_buf_size];
   snprintf(step_str, step_buf_size, "%d", session->step_data.steps);
 
-  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Steps", headings),
+  pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Steps", headings),
                              headings_buf_size);
   pbl_string_list_add_string(values, values_buf_size, step_str, values_buf_size);
 }
@@ -1846,7 +1859,7 @@ static void prv_add_active_calories_metric_info(struct pbl_string_list *headings
   const int active_calories = session->step_data.active_kcalories;
   snprintf(calories_str, calories_buf_size, "%d", active_calories);
 
-  pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Active Calories", headings),
+  pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Active Calories", headings),
                              headings_buf_size);
   pbl_string_list_add_string(values, values_buf_size, calories_str, values_buf_size);
 }
@@ -1859,7 +1872,7 @@ static void prv_add_hr_metric_info(struct pbl_string_list *headings, int heading
 
   if (avg_hr) {
     snprintf(hr_str, hr_buf_size, "%" PRIi32 "", avg_hr);
-    pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Avg HR", headings),
+    pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Avg HR", headings),
                                headings_buf_size);
     pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
   }
@@ -1867,22 +1880,22 @@ static void prv_add_hr_metric_info(struct pbl_string_list *headings, int heading
   if (hr_zone_time_s) {
     const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], PBL_SEC_PER_MIN);
     if (zone_1_minutes) {
-      snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_1_minutes);
-      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Fat Burn", headings),
+      snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_1_minutes);
+      pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Fat Burn", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], PBL_SEC_PER_MIN);
     if (zone_2_minutes) {
-      snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_2_minutes);
-      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Endurance", headings),
+      snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_2_minutes);
+      pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Endurance", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
     const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], PBL_SEC_PER_MIN);
     if (zone_3_minutes) {
-      snprintf(hr_str, hr_buf_size, i18n_get("%d Min", headings), zone_3_minutes);
-      pbl_string_list_add_string(headings, headings_buf_size, i18n_get("Performance", headings),
+      snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_3_minutes);
+      pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Performance", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
@@ -1904,7 +1917,7 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
   const int body_buf_size = 100;
   char *body = pbl_zalloc_check(body_buf_size);
   const char *intro_str = prv_get_intro_str_for_activity(session);
-  snprintf(body, body_buf_size, "%s", i18n_get(intro_str, body));
+  snprintf(body, body_buf_size, "%s", pbl_i18n_get(intro_str, body));
 
   const int headings_buf_size = 128;
   struct pbl_string_list *headings = pbl_zalloc_check(headings_buf_size);
@@ -1969,9 +1982,9 @@ void activity_insights_push_activity_session_notification(time_t notif_time,
   prv_create_and_push_notification(&config);
 
 cleanup:
-  i18n_free_all(body);
-  i18n_free_all(headings);
-  i18n_free_all(values);
+  pbl_i18n_free_all(body);
+  pbl_i18n_free_all(headings);
+  pbl_i18n_free_all(values);
   pbl_free(body);
   pbl_free(headings);
   pbl_free(values);

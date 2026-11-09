@@ -4,8 +4,8 @@
 #include <locale.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 
 #include <applib/app.h>
@@ -74,7 +74,7 @@ static void prv_unobstructed_area_change_handler(AnimationProgress progress, voi
 static void prv_minute_tick_handler(struct pbl_tm *tick_time, TimeUnits units_changed) {
   TicTocData *data = app_state_get_user_data();
 
-  pbl_strftime_r(data->date_text, sizeof(data->date_text), i18n_get("%B %e", data), tick_time);
+  pbl_strftime_r(data->date_text, sizeof(data->date_text), pbl_i18n_get("%B %e", data), tick_time);
   text_layer_set_text(&data->text_date_layer, data->date_text);
 
   pbl_strftime_r(data->time_text, sizeof(data->time_text), clock_is_24h_style() ? "%R" : "%I:%M",
@@ -93,7 +93,7 @@ static void prv_deinit(void) {
   TicTocData *data = app_state_get_user_data();
   app_unobstructed_area_service_unsubscribe();
   tick_timer_service_unsubscribe();
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

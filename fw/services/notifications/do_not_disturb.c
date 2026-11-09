@@ -4,11 +4,11 @@
 #include <errno.h>
 
 #include <pbl/cron/cron.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -103,13 +103,13 @@ static void prv_push_first_use_dialog(const char *msg, DialogCallback dialog_clo
   ExpandableDialog *first_use_dialog = expandable_dialog_create_with_params(
       "DNDFirstUse", RESOURCE_ID_QUIET_TIME, msg, GColorBlack, GColorMediumAquamarine, &callbacks,
       RESOURCE_ID_ACTION_BAR_ICON_CHECK, expandable_dialog_close_cb);
-  i18n_free(msg, &s_data);
+  pbl_i18n_free(msg, &s_data);
   expandable_dialog_push(first_use_dialog,
                          window_manager_get_window_stack(ModalPriorityNotification));
 }
 
 static void prv_push_smart_dnd_first_use_dialog(void) {
-  const char *msg = i18n_get(
+  const char *msg = pbl_i18n_get(
       "Calendar Aware enables Quiet Time automatically during "
       "calendar events.",
       &s_data);
@@ -117,7 +117,7 @@ static void prv_push_smart_dnd_first_use_dialog(void) {
 }
 
 static void prv_push_manual_dnd_first_use_dialog(ManualDNDFirstUseSource source) {
-  const char *msg = i18n_get(
+  const char *msg = pbl_i18n_get(
       "Press and hold the Back button from a notification to turn "
       "Quiet Time on or off.",
       &s_data);

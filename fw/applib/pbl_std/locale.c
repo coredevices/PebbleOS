@@ -9,13 +9,13 @@
 #include <process_state/app_state/app_state.h>
 
 void locale_init_app_locale(LocaleInfo *info) {
-  strncpy(info->app_locale_strings, "en_US", ISO_LOCALE_LENGTH);
-  strncpy(info->app_locale_time, "en_US", ISO_LOCALE_LENGTH);
+  strncpy(info->app_locale_strings, "en_US", PBL_I18N_LOCALE_LEN);
+  strncpy(info->app_locale_time, "en_US", PBL_I18N_LOCALE_LEN);
 }
 
 static void prv_update_locale(char *locale, const char *new) {
   if (new) {
-    strncpy(locale, new, ISO_LOCALE_LENGTH);
+    strncpy(locale, new, PBL_I18N_LOCALE_LEN);
   }
 }
 

@@ -13,13 +13,13 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_device.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/string.h>
 
 #include <applib/app.h>
@@ -127,7 +127,7 @@ static StoredRemote *stored_remote_create(void) {
 
 static void prv_copy_device_name_with_fallback(StoredRemote *remote, const char *name) {
   if (!name || strlen(name) == 0) {
-    i18n_get_with_buffer("<Untitled>", remote->name, sizeof(remote->name));
+    pbl_i18n_get_with_buffer("<Untitled>", remote->name, sizeof(remote->name));
   } else {
     strncpy(remote->name, name, sizeof(remote->name));
   }
@@ -187,13 +187,13 @@ static void settings_bluetooth_update_remotes_private(SettingsBluetoothData *dat
   prv_reload_remote_list(data);
 
   if (!data->remote_list_head) {
-    strncpy(data->header_buffer, i18n_get("Pairing Instructions", data), HEADER_BUFFER_SIZE);
+    strncpy(data->header_buffer, pbl_i18n_get("Pairing Instructions", data), HEADER_BUFFER_SIZE);
   } else {
     const unsigned int num_remotes = list_count(data->remote_list_head);
-    sniprintf(
-        data->header_buffer, HEADER_BUFFER_SIZE,
-        (num_remotes != 1) ? i18n_get("%u Paired Phones", data) : i18n_get("%u Paired Phone", data),
-        num_remotes);
+    sniprintf(data->header_buffer, HEADER_BUFFER_SIZE,
+              (num_remotes != 1) ? pbl_i18n_get("%u Paired Phones", data)
+                                 : pbl_i18n_get("%u Paired Phone", data),
+              num_remotes);
   }
 }
 
@@ -343,7 +343,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
   const char *le_string = nullptr;
 
   const char *connected_string =
-      connected ? i18n_get("Connected", data) : PBL_IF_RECT_ELSE("", nullptr);
+      connected ? pbl_i18n_get("Connected", data) : PBL_IF_RECT_ELSE("", nullptr);
 
   // Add ellipsis if the name might have been cut off by the mobile
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
@@ -358,7 +358,7 @@ static void draw_stored_remote_item(GContext *ctx, const Layer *cell_layer, uint
 
   const char *is_sharing_heart_rate =
       (settings_bluetooth_is_sharing_heart_rate_for_stored_remote(remote)
-           ? i18n_get("Sharing Heart Rate ❤", data)
+           ? pbl_i18n_get("Sharing Heart Rate ❤", data)
            : nullptr);
 
   PBL_IF_RECT_ELSE(prv_draw_stored_remote_item_rect, prv_draw_stored_remote_item_round)(
@@ -383,12 +383,12 @@ static int16_t prv_get_row_base_height(SettingsBluetoothData *data, uint16_t row
 
 static const char *prv_get_hint(SettingsBluetoothData *data) {
   if (data->remote_list_head) {
-    return i18n_get("Forget this device to pair a new device.", data);
+    return pbl_i18n_get("Forget this device to pair a new device.", data);
   }
   if (bt_ctl_is_airplane_mode_on()) {
-    return i18n_get("Disable Airplane Mode to connect.", data);
+    return pbl_i18n_get("Disable Airplane Mode to connect.", data);
   }
-  return i18n_get("Open the Pebble app on your phone to connect.", data);
+  return pbl_i18n_get("Open the Pebble app on your phone to connect.", data);
 }
 
 static GRect prv_get_hint_box(void) {
@@ -463,11 +463,11 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   if (row == 0) {
     char device_name_buffer[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
     const char *subtitle = nullptr;
-    const char *title = i18n_get("Connection", data);
+    const char *title = pbl_i18n_get("Connection", data);
     GBitmap *icon = nullptr;
     if (data->toggle_state == ToggleStateIdle) {
       if (bt_ctl_is_airplane_mode_on()) {
-        subtitle = i18n_get("Airplane Mode", data);
+        subtitle = pbl_i18n_get("Airplane Mode", data);
         icon = &data->icon_heap_bitmap[AirplaneIconIdx];
       } else {
         // Always show device name as subtitle
@@ -477,8 +477,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       }
     } else {
       subtitle = (data->toggle_state == ToggleStateDisablingBluetooth)
-                     ? i18n_get("Disabling...", data)
-                     : i18n_get("Enabling...", data);
+                     ? pbl_i18n_get("Disabling...", data)
+                     : pbl_i18n_get("Enabling...", data);
       icon = &data->icon_heap_bitmap[BluetoothAltIconIdx];
     }
 
@@ -594,7 +594,7 @@ static void prv_hide_cb(SettingsCallbacks *context) {
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 
   app_idle_timeout_set_duration(APP_IDLE_TIMEOUT_MENU_MS);
 
@@ -631,7 +631,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_bluetooth_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Bluetooth"),
+    .name = pbl_i18n_noop("Bluetooth"),
     .init = prv_init,
   };
 

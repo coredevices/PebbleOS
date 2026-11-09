@@ -12,8 +12,8 @@
 #include <string.h>
 
 #include <pbl/drivers/als.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
@@ -84,7 +84,7 @@ static void prv_language_menu_push(SettingsDisplayData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_language_menu_select,
   };
-  settings_option_menu_push(i18n_noop("Language"), OptionMenuContentType_SingleLine, selected,
+  settings_option_menu_push(pbl_i18n_noop("Language"), OptionMenuContentType_SingleLine, selected,
                             &callbacks, count, false /* icons_enabled */, data->language_labels,
                             data);
 }
@@ -93,9 +93,9 @@ static void prv_language_menu_push(SettingsDisplayData *data) {
 /////////////////////////////
 
 static const char *s_text_size_names[] = {
-  [SettingsContentSize_Small] = i18n_noop("Smaller"),
-  [SettingsContentSize_Default] = i18n_ctx_noop("TextSize", "Default"),
-  [SettingsContentSize_Large] = i18n_noop("Larger"),
+  [SettingsContentSize_Small] = pbl_i18n_noop("Smaller"),
+  [SettingsContentSize_Default] = pbl_i18n_ctx_noop("TextSize", "Default"),
+  [SettingsContentSize_Large] = pbl_i18n_noop("Larger"),
 };
 
 static void prv_text_size_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -108,7 +108,7 @@ static void prv_text_size_menu_push(SettingsDisplayData *data) {
     .select = prv_text_size_menu_select,
   };
   /// The option in the Settings app for choosing the text size of the system UI.
-  const char *title = i18n_noop("Text Size");
+  const char *title = pbl_i18n_noop("Text Size");
   const SettingsContentSize index =
       settings_content_size_from_preferred_size(system_theme_get_content_size());
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
@@ -122,7 +122,7 @@ static void prv_text_size_menu_push(SettingsDisplayData *data) {
 static const uint32_t s_intensity_values[] = {10, 25, 50, 100};
 
 static const char *s_intensity_labels[] = {
-  i18n_noop("Low"), i18n_noop("Medium"), i18n_noop("High"), i18n_noop("Blinding")
+  pbl_i18n_noop("Low"), pbl_i18n_noop("Medium"), pbl_i18n_noop("High"), pbl_i18n_noop("Blinding")
 };
 
 #define BACKLIGHT_SCALE_GRANULARITY 5
@@ -154,7 +154,7 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_intensity_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("INTENSITY"), i18n_noop("Intensity"));
+  const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("INTENSITY"), pbl_i18n_noop("Intensity"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_intensity_labels), true /* icons_enabled */,
                             s_intensity_labels, data);
@@ -164,8 +164,8 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
 // Orientation Settings
 /////////////////////////////
 static const char *s_display_orientation_labels[] = {
-  i18n_ctx_noop("Orientation", "Default"),
-  i18n_noop("Left-Handed"),
+  pbl_i18n_ctx_noop("Orientation", "Default"),
+  pbl_i18n_noop("Left-Handed"),
 };
 
 static int prv_display_orientation_get_selection_index() {
@@ -190,7 +190,7 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
     .select = prv_display_orientation_menu_select,
   };
 
-  const char *title = i18n_noop("Orientation");
+  const char *title = pbl_i18n_noop("Orientation");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_display_orientation_labels), true,
                             s_display_orientation_labels, data);
@@ -203,7 +203,7 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
 static const uint32_t s_timeout_values[] = {3000, 5000, 8000};
 
 static const char *s_timeout_labels[] = {
-  i18n_noop("3 Seconds"), i18n_noop("5 Seconds"), i18n_noop("8 Seconds")
+  pbl_i18n_noop("3 Seconds"), pbl_i18n_noop("5 Seconds"), pbl_i18n_noop("8 Seconds")
 };
 
 static int prv_timeout_get_selection_index() {
@@ -226,7 +226,7 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_timeout_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("TIMEOUT"), i18n_noop("Timeout"));
+  const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("TIMEOUT"), pbl_i18n_noop("Timeout"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_timeout_labels), true /* icons_enabled */,
                             s_timeout_labels, data);
@@ -236,9 +236,9 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
 /////////////////////////////
 #ifdef CONFIG_TOUCH
 static const char *s_touch_wake_labels[] = {
-  [BacklightTouchWake_DoubleTap] = i18n_noop("Double Tap"),
-  [BacklightTouchWake_Tap] = i18n_noop("Tap"),
-  [BacklightTouchWake_Off] = i18n_ctx_noop("TouchWake", "Off"),
+  [BacklightTouchWake_DoubleTap] = pbl_i18n_noop("Double Tap"),
+  [BacklightTouchWake_Tap] = pbl_i18n_noop("Tap"),
+  [BacklightTouchWake_Off] = pbl_i18n_ctx_noop("TouchWake", "Off"),
 };
 
 static void prv_touch_wake_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -251,7 +251,8 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_touch_wake_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("WAKE ON TOUCH"), i18n_noop("Wake on touch"));
+  const char *title =
+      PBL_IF_RECT_ELSE(pbl_i18n_noop("WAKE ON TOUCH"), pbl_i18n_noop("Wake on touch"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_touch_wake_labels), true /* icons_enabled */,
                             s_touch_wake_labels, data);
@@ -262,10 +263,10 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
 /////////////////////////////
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
 static const char *s_dynamic_mode_labels[BacklightDynamicModeCount] = {
-  [BacklightDynamicMode_Off] = i18n_ctx_noop("DynBacklight", "Off"),
-  [BacklightDynamicMode_Bright] = i18n_noop("Bright"),
-  [BacklightDynamicMode_Standard] = i18n_noop("Standard"),
-  [BacklightDynamicMode_Dim] = i18n_noop("Dim"),
+  [BacklightDynamicMode_Off] = pbl_i18n_ctx_noop("DynBacklight", "Off"),
+  [BacklightDynamicMode_Bright] = pbl_i18n_noop("Bright"),
+  [BacklightDynamicMode_Standard] = pbl_i18n_noop("Standard"),
+  [BacklightDynamicMode_Dim] = pbl_i18n_noop("Dim"),
 };
 
 static void prv_dynamic_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -279,7 +280,7 @@ static void prv_dynamic_mode_menu_push(SettingsBacklightData *data) {
     .select = prv_dynamic_mode_menu_select,
   };
   const char *title =
-      PBL_IF_RECT_ELSE(i18n_noop("DYNAMIC BACKLIGHT"), i18n_noop("Dynamic Backlight"));
+      PBL_IF_RECT_ELSE(pbl_i18n_noop("DYNAMIC BACKLIGHT"), pbl_i18n_noop("Dynamic Backlight"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_dynamic_mode_labels), true /* icons_enabled */,
                             s_dynamic_mode_labels, data);
@@ -289,10 +290,10 @@ static void prv_dynamic_mode_menu_push(SettingsBacklightData *data) {
 // Backlight Preset Settings
 /////////////////////////////
 static const char *s_backlight_preset_labels[BacklightPresetCount] = {
-  [BacklightPreset_MaxBrightness] = i18n_noop("Max Brightness"),
-  [BacklightPreset_Standard] = i18n_noop("Standard"),
-  [BacklightPreset_BatterySaver] = i18n_noop("Battery Saver"),
-  [BacklightPreset_Advanced] = i18n_noop("Advanced"),
+  [BacklightPreset_MaxBrightness] = pbl_i18n_noop("Max Brightness"),
+  [BacklightPreset_Standard] = pbl_i18n_noop("Standard"),
+  [BacklightPreset_BatterySaver] = pbl_i18n_noop("Battery Saver"),
+  [BacklightPreset_Advanced] = pbl_i18n_noop("Advanced"),
 };
 
 static void prv_preset_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -312,7 +313,7 @@ static void prv_preset_menu_push(SettingsDisplayData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_preset_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("BACKLIGHT"), i18n_noop("Backlight"));
+  const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("BACKLIGHT"), pbl_i18n_noop("Backlight"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_backlight_preset_labels), true /* icons_enabled */,
                             s_backlight_preset_labels, data);
@@ -322,7 +323,7 @@ static void prv_preset_menu_push(SettingsDisplayData *data) {
 /////////////////////////////
 #ifdef CONFIG_APP_SCALING
 static const char *s_legacy_app_mode_labels[] = {
-  i18n_noop("Centered"), i18n_noop("Scaled (Nearest)"), i18n_noop("Scaled (Bilinear)")
+  pbl_i18n_noop("Centered"), pbl_i18n_noop("Scaled (Nearest)"), pbl_i18n_noop("Scaled (Bilinear)")
 };
 
 static void prv_legacy_app_mode_menu_select(OptionMenu *option_menu, int selection, void *context) {
@@ -335,7 +336,7 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_legacy_app_mode_menu_select,
   };
-  const char *title = i18n_noop("Legacy App Display");
+  const char *title = pbl_i18n_noop("Legacy App Display");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_legacy_app_mode_labels), false /* icons_enabled */,
                             s_legacy_app_mode_labels, data);
@@ -434,68 +435,69 @@ static void prv_backlight_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   const char *subtitle = nullptr;
   switch (prv_backlight_item_from_row(row)) {
     case SettingsBacklightMode:
-      title = i18n_noop("Backlight");
+      title = pbl_i18n_noop("Backlight");
       if (backlight_is_enabled()) {
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
         if (backlight_is_dynamic_intensity_enabled()) {
           uint8_t current_percent = light_get_current_brightness_percent();
           snprintf(data->backlight_percent_buffer, sizeof(data->backlight_percent_buffer),
-                   i18n_get("On - %d%%", data), (int)current_percent);
+                   pbl_i18n_get("On - %d%%", data), (int)current_percent);
           subtitle = data->backlight_percent_buffer;
         } else {
-          subtitle = i18n_ctx_noop("DeviceState", "On");
+          subtitle = pbl_i18n_ctx_noop("DeviceState", "On");
         }
 #else
-        subtitle = i18n_ctx_noop("DeviceState", "On");
+        subtitle = pbl_i18n_ctx_noop("DeviceState", "On");
 #endif
       } else {
-        subtitle = i18n_ctx_noop("DeviceState", "Off");
+        subtitle = pbl_i18n_ctx_noop("DeviceState", "Off");
       }
       break;
     case SettingsBacklightMotionWake:
-      title = i18n_noop("Wake on motion");
-      subtitle = backlight_is_motion_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Wake on motion");
+      subtitle = backlight_is_motion_enabled() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
 #ifdef CONFIG_TOUCH
     case SettingsBacklightTouchWake:
-      title = i18n_noop("Wake on touch");
+      title = pbl_i18n_noop("Wake on touch");
       subtitle = s_touch_wake_labels[backlight_get_touch_wake()];
       break;
 #endif
     case SettingsBacklightAmbientSensor:
-      title = i18n_noop("Ambient Sensor");
+      title = pbl_i18n_noop("Ambient Sensor");
       if (backlight_is_ambient_sensor_enabled()) {
         uint32_t als_value = light_get_ambient_gate_lux();
-        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer), i18n_get("On (%d)", data),
-                 (int)als_value);
+        snprintf(data->als_value_buffer, sizeof(data->als_value_buffer),
+                 pbl_i18n_get("On (%d)", data), (int)als_value);
         subtitle = data->als_value_buffer;
       } else {
-        subtitle = i18n_ctx_noop("DeviceState", "Off");
+        subtitle = pbl_i18n_ctx_noop("DeviceState", "Off");
       }
       break;
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
     case SettingsBacklightDynamicIntensity:
-      title = i18n_noop("Dynamic Backlight");
+      title = pbl_i18n_noop("Dynamic Backlight");
       subtitle = s_dynamic_mode_labels[backlight_get_dynamic_mode()];
       break;
 #endif
     case SettingsBacklightIntensity:
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
-      title = backlight_is_dynamic_intensity_enabled() ? i18n_noop("Max Intensity")
-                                                       : i18n_noop("Intensity");
+      title = backlight_is_dynamic_intensity_enabled() ? pbl_i18n_noop("Max Intensity")
+                                                       : pbl_i18n_noop("Intensity");
 #else
-      title = i18n_noop("Intensity");
+      title = pbl_i18n_noop("Intensity");
 #endif
       subtitle = s_intensity_labels[prv_intensity_get_selection_index()];
       break;
     case SettingsBacklightTimeout:
-      title = i18n_noop("Timeout");
+      title = pbl_i18n_noop("Timeout");
       subtitle = s_timeout_labels[prv_timeout_get_selection_index()];
       break;
     default:
       pbl_panic();
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static uint16_t prv_backlight_num_rows_cb(SettingsCallbacks *context) {
@@ -553,7 +555,7 @@ static void prv_backlight_deinit_cb(SettingsCallbacks *context) {
     pbl_als_release(ALS);
     data->als_primed = false;
   }
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -570,7 +572,7 @@ static void prv_backlight_submenu_push(void) {
     .hide = prv_backlight_hide_cb,
   };
 
-  const char *title = i18n_noop("Backlight Settings");
+  const char *title = pbl_i18n_noop("Backlight Settings");
   Window *window =
       settings_window_create_with_title(SettingsMenuItemDisplay, title, &data->callbacks);
   app_window_stack_push(window, true /* animated */);
@@ -675,51 +677,52 @@ static void prv_display_draw_row_cb(SettingsCallbacks *context, GContext *ctx,
   const char *subtitle = nullptr;
   switch (prv_display_item_from_row(row)) {
     case SettingsDisplayBacklight:
-      title = i18n_noop("Backlight");
+      title = pbl_i18n_noop("Backlight");
       subtitle = backlight_is_enabled() ? s_backlight_preset_labels[backlight_get_preset()]
-                                        : i18n_ctx_noop("DeviceState", "Off");
+                                        : pbl_i18n_ctx_noop("DeviceState", "Off");
       break;
     case SettingsDisplayBacklightSettings:
-      title = i18n_noop("Backlight Settings");
+      title = pbl_i18n_noop("Backlight Settings");
       break;
 #ifdef CONFIG_TOUCH
     case SettingsDisplayTouchNav:
-      title = i18n_noop("Touch");
-      subtitle = touch_is_globally_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Touch");
+      subtitle = touch_is_globally_enabled() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
     case SettingsDisplayTouchNavMenus:
-      title = i18n_noop("Touch Navigation");
-      subtitle = touch_navigation_menu_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Touch Navigation");
+      subtitle = touch_navigation_menu_is_enabled() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
 #endif
 #ifdef CONFIG_ORIENTATION_MANAGER
     case SettingsDisplayOrientation:
-      title = i18n_noop("Orientation");
+      title = pbl_i18n_noop("Orientation");
       subtitle = s_display_orientation_labels[prv_display_orientation_get_selection_index()];
       break;
 #endif
     case SettingsDisplayTextSize: {
       /// String within Settings->Display that describes the text font size
-      title = i18n_noop("Text Size");
+      title = pbl_i18n_noop("Text Size");
       const SettingsContentSize index =
           settings_content_size_from_preferred_size(system_theme_get_content_size());
       subtitle = (index < SettingsContentSizeCount) ? s_text_size_names[index] : "";
       break;
     }
     case SettingsDisplayLanguage:
-      title = i18n_noop("Language");
-      subtitle = i18n_get_lang_name();
+      title = pbl_i18n_noop("Language");
+      subtitle = pbl_i18n_get_lang_name();
       break;
 #ifdef CONFIG_APP_SCALING
     case SettingsDisplayLegacyAppMode:
-      title = i18n_noop("Legacy Apps");
+      title = pbl_i18n_noop("Legacy Apps");
       subtitle = s_legacy_app_mode_labels[shell_prefs_get_legacy_app_render_mode()];
       break;
 #endif
     default:
       pbl_panic();
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static uint16_t prv_display_num_rows_cb(SettingsCallbacks *context) {
@@ -734,7 +737,7 @@ static uint16_t prv_display_num_rows_cb(SettingsCallbacks *context) {
 
 static void prv_display_deinit_cb(SettingsCallbacks *context) {
   SettingsDisplayData *data = (SettingsDisplayData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -754,7 +757,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_display_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Display"),
+    .name = pbl_i18n_noop("Display"),
     .init = prv_init,
   };
 

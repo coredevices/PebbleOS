@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/calendar_layout.h>
 #include <pbl/services/timeline/calendar_layout_resources.h>
 #include <pbl/services/timeline/timeline_layout.h>
@@ -168,7 +168,7 @@ static void prv_set_glance_time_line_round(const TimelineLayout *layout, char *b
   prv_format_glance_start_time(layout, buffer, buffer_size);
   size_t pos = strnlen(buffer, CALENDAR_TIME_LINE_LENGTH);
   if (pos) {
-    const char *delimiter = i18n_get(" - ", layout); // Freed in `timeline_layout_deinit`
+    const char *delimiter = pbl_i18n_get(" - ", layout); // Freed in `timeline_layout_deinit`
     const int max_delimiter_i18n_size = 16;
     const size_t delimiter_size = strnlen(delimiter, max_delimiter_i18n_size);
     strncpy(buffer + pos, delimiter, buffer_size - pos);
@@ -336,7 +336,7 @@ static GTextNode *prv_construct_all_day_or_node(const LayoutLayer *layout_ref,
   const TimelineLayout *layout = (TimelineLayout *)layout_ref;
   static const LayoutNodeTextBufferConfig s_all_day_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("All Day"),
+    .str = pbl_i18n_noop("All Day"),
     .use_i18n = true,
     .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Header,
@@ -380,7 +380,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeTextBufferConfig s_recurring_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("Recurring"),
+    .str = pbl_i18n_noop("Recurring"),
     .use_i18n = true,
     .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_RecurringLabel,

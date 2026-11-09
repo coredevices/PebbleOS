@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/pairing_confirm.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -13,7 +14,6 @@
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
 
@@ -226,10 +226,10 @@ static void prv_add_prf_layers(GRect pair_text_area, BTPairingUIData *data) {
 }
 
 static void prv_initialize_info_text(BTPairingUIData *data) {
-  strncpy(data->info_text_layer_buffer, (char *)i18n_get("Pair?", data), MAX_PAIR_STR_LEN);
+  strncpy(data->info_text_layer_buffer, (char *)pbl_i18n_get("Pair?", data), MAX_PAIR_STR_LEN);
 }
 static void prv_deinitialize_info_text(BTPairingUIData *data) {
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 #endif

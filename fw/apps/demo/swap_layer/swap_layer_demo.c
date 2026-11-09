@@ -5,9 +5,9 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/services/timeline/swap_layer.h>
 #include <pbl/services/timeline/timeline_resources.h>

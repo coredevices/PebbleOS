@@ -27,16 +27,14 @@
 
 #pragma once
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 
-/**
- * @defgroup services_i18n_mo MO file format
- * @ingroup services_i18n
- * @brief Layout of gettext MO files, used for language packs.
+/*
+ * Layout of gettext MO files. Offsets are in bytes from the start of the file:
  *
- * Offsets are in bytes from the start of the file:
- *
- * @verbatim
  *           byte
  *                +------------------------------------------+
  *             0  | magic number = 0x950412de                |
@@ -84,37 +82,13 @@
  *                 ...                                    ...
  *                |                                          |
  *                +------------------------------------------+
- * @endverbatim
- * @{
  */
 
 /** @brief Magic number at the start of an MO file. */
 #define MO_MAGIC 0x950412de
-/**
- * @brief Get the major part of an MO file revision.
- *
- * @param r Revision.
- */
-#define MO_GET_REV_MAJOR(r) (((r) >> 16) & 0xFFFF)
-/**
- * @brief Get the minor part of an MO file revision.
- *
- * @param r Revision.
- */
-#define MO_GET_REV_MINOR(r) ((r) & 0xFFFF)
-/**
- * @brief Build an MO file revision.
- *
- * @param maj Major part.
- * @param min Minor part.
- */
-#define MO_MAKE_REV(maj, min) (((maj) << 16) | (min))
-
-/** @brief Header property holding the ISO locale of the language. */
-#define LANG_PROP_NAME "Language: "
 
 /** @brief MO file header. */
-typedef struct PBL_PACKED {
+struct PBL_PACKED pbl_i18n__mo_header {
   /** Magic number, @ref MO_MAGIC; determines the endianness. */
   uint32_t mo_magic;
   /** File format revision, 0. */
@@ -129,32 +103,28 @@ typedef struct PBL_PACKED {
   uint32_t mo_hsize;
   /** Offset of the hash table (H). */
   uint32_t mo_hoffset;
-} MoHeader;
+};
 
 /** @brief Entry of the original or translated strings table. */
-typedef struct PBL_PACKED {
+struct PBL_PACKED pbl_i18n__mo_entry {
   /** String length without terminator; the string occupies len + 1 bytes. */
   uint32_t len;
   /** Offset of the NUL-terminated string. */
   uint32_t off;
-} MoEntry;
+};
 
 /** @brief Loaded MO file. */
-typedef struct {
+struct pbl_i18n__mo {
   /** File header. */
-  MoHeader hdr;
-  /** Language of the file. Currently unused. */
-  char *mo_lang;
+  struct pbl_i18n__mo_header hdr;
   /** Hash table (H), loaded into RAM. */
   uint32_t *mo_htable;
-} Mo;
+};
 
 /** @brief Handle to a loaded MO file. */
-typedef struct {
+struct pbl_i18n__mo_handle {
   /** Size of the file in bytes. */
   size_t len;
   /** Loaded file. */
-  Mo mo;
-} MoHandle;
-
-/** @} */
+  struct pbl_i18n__mo mo;
+};

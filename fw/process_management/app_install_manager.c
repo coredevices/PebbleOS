@@ -8,6 +8,7 @@
 #include "app_manager.h"
 #include "worker_manager.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -17,7 +18,6 @@
 #include <pbl/services/app_session.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/blob_db/pin_db.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/persist.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/services/time.h>
@@ -676,7 +676,7 @@ static bool prv_app_install_entry_from_resource_registry_entry(const AppRegistry
     .sdk_version = app_header->sdk_version,
   };
 
-  i18n_get_with_buffer(reg_entry->name, entry->name, APP_NAME_SIZE_BYTES);
+  pbl_i18n_get_with_buffer(reg_entry->name, entry->name, APP_NAME_SIZE_BYTES);
   rv = true;
 done:
   pbl_free(app_header);
@@ -703,7 +703,7 @@ bool prv_app_install_entry_from_fw_registry_entry(const AppRegistryEntry *reg_en
     .sdk_version = process_metadata_get_sdk_version((PebbleProcessMd *)md),
   };
 
-  i18n_get_with_buffer(md->name, entry->name, APP_NAME_SIZE_BYTES);
+  pbl_i18n_get_with_buffer(md->name, entry->name, APP_NAME_SIZE_BYTES);
   return true;
 }
 

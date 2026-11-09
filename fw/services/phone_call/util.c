@@ -3,8 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/phone_call_util.h>
 
 PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char *name) {
@@ -14,13 +14,13 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
   }
 
   if ((!name || !strlen(name)) && (!number || !strlen(number))) {
-    const char *i18n_name = i18n_get("Unknown", __FILE__);
+    const char *i18n_name = pbl_i18n_get("Unknown", __FILE__);
 
     caller->name = pbl_malloc(strlen(i18n_name) + 1);
     if (caller->name) {
       strcpy(caller->name, i18n_name);
     }
-    i18n_free(i18n_name, __FILE__);
+    pbl_i18n_free(i18n_name, __FILE__);
 
     return caller;
   }

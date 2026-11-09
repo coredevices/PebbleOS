@@ -3,7 +3,7 @@
 
 #include "quiet_time.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/notifications/do_not_disturb_toggle.h>
 
 #include <applib/app.h>
@@ -23,7 +23,7 @@ const PebbleProcessMd *quiet_time_toggle_get_app_info(void) {
           .visibility = ProcessVisibilityQuickLaunch,
         },
     /// The Quick Launch action that toggles Quiet Time.
-    .name = i18n_noop("Toggle Quiet Time"),
+    .name = pbl_i18n_noop("Toggle Quiet Time"),
   };
   return &s_app_info.common;
 }

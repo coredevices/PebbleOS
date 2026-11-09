@@ -5,8 +5,8 @@
 
 #include "date_time_selection_window_private.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <process_management/process_manager.h>
 #include <shell/system_theme.h>
@@ -82,7 +82,7 @@ static char *prv_handle_to_get_text(unsigned index, void *context) {
 
 static void prv_handle_to_complete(void *context) {
   TimeRangeSelectionWindowData *data = context;
-  i18n_free_all(&data->window);
+  pbl_i18n_free_all(&data->window);
   data->complete_callback(data, data->callback_context);
 }
 
@@ -99,7 +99,7 @@ static void prv_handle_to_dec(unsigned index, void *context) {
 static void prv_text_layer_init(Window *window, TextLayer *text_layer, GRect *rect,
                                 const char *i18n_str) {
   const GFont subtitle_font = system_theme_get_font_for_default_size(TextStyleFont_Subtitle);
-  text_layer_init_with_parameters(text_layer, rect, i18n_get(i18n_str, window), subtitle_font,
+  text_layer_init_with_parameters(text_layer, rect, pbl_i18n_get(i18n_str, window), subtitle_font,
                                   GColorBlack, GColorClear, GTextAlignmentCenter,
                                   GTextOverflowModeTrailingEllipsis);
   text_layer_set_text_color_follows_theme(text_layer);
@@ -177,11 +177,11 @@ void time_range_selection_window_init(TimeRangeSelectionWindowData *time_range_s
   // Label setup
   TextLayer *from_text_layer = &time_range_selection_window->from_text_layer;
   GRect text_rect = GRect(0, config->top_origin, window->layer.bounds.size.w, 30);
-  prv_text_layer_init(window, from_text_layer, &text_rect, i18n_noop("Start"));
+  prv_text_layer_init(window, from_text_layer, &text_rect, pbl_i18n_noop("Start"));
 
   TextLayer *to_text_layer = &time_range_selection_window->to_text_layer;
   text_rect.origin.y += config->start_end_y_offset;
-  prv_text_layer_init(window, to_text_layer, &text_rect, i18n_noop("End"));
+  prv_text_layer_init(window, to_text_layer, &text_rect, pbl_i18n_noop("End"));
 }
 
 void time_range_selection_window_deinit(TimeRangeSelectionWindowData *time_range_selection_window) {

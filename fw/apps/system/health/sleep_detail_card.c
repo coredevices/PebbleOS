@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/health_util.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
 #include <applib/app_malloc.h>
@@ -64,9 +64,9 @@ static void prv_set_deep_sleep(char *buffer, size_t buffer_size, int32_t sleep_d
 
 static void prv_set_avg(char *buffer, size_t buffer_size, int32_t daily_avg, void *i18n_owner) {
 #if PBL_ROUND
-  int avg_len = snprintf(buffer, buffer_size, "%s\n", i18n_get("30 DAY AVG", i18n_owner));
+  int avg_len = snprintf(buffer, buffer_size, "%s\n", pbl_i18n_get("30 DAY AVG", i18n_owner));
 #else
-  int avg_len = snprintf(buffer, buffer_size, "%s ", i18n_get("30 DAY", i18n_owner));
+  int avg_len = snprintf(buffer, buffer_size, "%s ", pbl_i18n_get("30 DAY", i18n_owner));
 #endif
 
   if (daily_avg <= 0) {
@@ -95,7 +95,7 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
   HealthDetailHeading *heading = &card_data->headings[card_data->num_headings++];
 
   *heading = (HealthDetailHeading){
-    .primary_label = (char *)i18n_get("SLEEP SESSION", card_data),
+    .primary_label = (char *)pbl_i18n_get("SLEEP SESSION", card_data),
     .primary_value = app_zalloc_check(buffer_len),
     .fill_color = GColorWhite,
     .outline_color = PBL_IF_COLOR_ELSE(GColorClear, GColorBlack),
@@ -108,7 +108,7 @@ Window *health_sleep_detail_card_create(HealthData *health_data) {
   heading = &card_data->headings[card_data->num_headings++];
 
   *heading = (HealthDetailHeading){
-    .primary_label = (char *)i18n_get("DEEP SLEEP", card_data),
+    .primary_label = (char *)pbl_i18n_get("DEEP SLEEP", card_data),
     .primary_value = app_zalloc_check(buffer_len),
     .fill_color = PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorWhite),
 #if PBL_BW
@@ -157,7 +157,7 @@ void health_sleep_detail_card_destroy(Window *window) {
   for (int i = 0; i < card_data->num_zones; i++) {
     app_free(card_data->zones[i].label);
   }
-  i18n_free_all(card_data);
+  pbl_i18n_free_all(card_data);
   app_free(card_data);
   health_detail_card_destroy(card);
 }

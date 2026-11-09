@@ -3,8 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/pp/send.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <clar.h>
 #include <kernel/language_pack_protocol.h>

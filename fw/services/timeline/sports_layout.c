@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/sports_layout.h>
 #include <pbl/services/timeline/timeline_layout.h>
@@ -58,7 +58,7 @@ static void prv_get_until_time(const LayoutLayer *layout, char *buffer, int buff
   size_t starts_len = 0;
   if (difference <= PBL_SEC_PER_HOUR * max_relative_hrs &&
       time_util_get_midnight_of(now) == time_util_get_midnight_of(timestamp)) {
-    const char *starts = i18n_get("STARTS ", layout); // Freed by `timeline_layout_deinit`
+    const char *starts = pbl_i18n_get("STARTS ", layout); // Freed by `timeline_layout_deinit`
     starts_len = strlen(starts);
     strncpy(buffer, starts, buffer_size);
 #if PBL_ROUND
@@ -146,7 +146,7 @@ static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_r
   }
   static const LayoutNodeTextBufferConfig s_broadcaster_header_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("Broadcaster"),
+    .str = pbl_i18n_noop("Broadcaster"),
     .use_i18n = true,
     .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_ParagraphHeader,

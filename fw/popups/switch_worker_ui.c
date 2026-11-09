@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/app_cache.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/ui/action_bar_layer.h>
@@ -91,7 +91,8 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
 
   ConfirmationDialog *confirmation_dialog = confirmation_dialog_create("Background App");
   Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
-  const char *fmt = i18n_get("Run %s instead of %s as the background app?", confirmation_dialog);
+  const char *fmt =
+      pbl_i18n_get("Run %s instead of %s as the background app?", confirmation_dialog);
   char *msg_buffer = applib_zalloc(DIALOG_MAX_MESSAGE_LEN);
   sniprintf(msg_buffer, DIALOG_MAX_MESSAGE_LEN, fmt, new_entry.name, old_entry.name);
 
@@ -102,7 +103,7 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
   dialog_set_text(dialog, msg_buffer);
 
   applib_free(msg_buffer);
-  i18n_free_all(confirmation_dialog);
+  pbl_i18n_free_all(confirmation_dialog);
 
   SwitchWorkerUIArgs *args = applib_malloc(sizeof(SwitchWorkerUIArgs));
   *args = (SwitchWorkerUIArgs){

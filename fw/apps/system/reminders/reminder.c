@@ -7,6 +7,7 @@
 
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -14,7 +15,6 @@
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/units.h>
@@ -57,15 +57,15 @@ static void prv_create_reminder(ReminderAppData *data) {
 
   AttributeList completed_attr_list = {};
   attribute_list_add_cstring(&completed_attr_list, AttributeIdTitle,
-                             i18n_get("Completed", &pin_attr_list));
+                             pbl_i18n_get("Completed", &pin_attr_list));
 
   AttributeList postpone_attr_list = {};
   attribute_list_add_cstring(&postpone_attr_list, AttributeIdTitle,
-                             i18n_get("Postpone", &pin_attr_list));
+                             pbl_i18n_get("Postpone", &pin_attr_list));
 
   AttributeList remove_attr_list = {};
   attribute_list_add_cstring(&remove_attr_list, AttributeIdTitle,
-                             i18n_get("Remove", &pin_attr_list));
+                             pbl_i18n_get("Remove", &pin_attr_list));
 
   const int num_actions = 3;
   TimelineItemActionGroup action_group = {
@@ -104,7 +104,7 @@ static void prv_create_reminder(ReminderAppData *data) {
   item->header.layout = LayoutIdReminder;
   reminders_insert(item);
 
-  i18n_free_all(&pin_attr_list);
+  pbl_i18n_free_all(&pin_attr_list);
   attribute_list_destroy_list(&pin_attr_list);
   attribute_list_destroy_list(&completed_attr_list);
   attribute_list_destroy_list(&postpone_attr_list);
@@ -115,12 +115,12 @@ static void prv_create_reminder(ReminderAppData *data) {
 static void prv_push_success_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("Reminder Added");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  dialog_set_text(dialog, i18n_get("Added", dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Added", dialog));
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_REMINDER_LARGE);
   dialog_set_background_color(dialog, GColorChromeYellow);
   dialog_set_timeout(dialog, preferred_result_display_duration());
   app_simple_dialog_push(simple_dialog);
-  i18n_free_all(dialog);
+  pbl_i18n_free_all(dialog);
 }
 
 static void prv_confirm_cb(void *context) {
@@ -301,7 +301,7 @@ const PebbleProcessMd *reminder_app_get_info(void) {
           .main_func = prv_main,
           .uuid = UUID_REMINDERS_DATA_SOURCE,
         },
-    .name = i18n_noop("Reminder"),
+    .name = pbl_i18n_noop("Reminder"),
     .icon_resource_id = RESOURCE_ID_GENERIC_REMINDER_TINY,
   };
 

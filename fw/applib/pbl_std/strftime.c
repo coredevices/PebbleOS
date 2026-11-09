@@ -21,7 +21,7 @@
 #include <string.h>
 #include <time.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
 #include <pbl/util/time.h>
@@ -126,7 +126,7 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
   const int hour_12h = (t->tm_hour % 12 == 0) ? 12 : (t->tm_hour % 12);
   // Only use i18n if we're in the kernel, or the app locale is the system locale.
   const bool use_i18n =
-      !locale || (strncmp(locale, app_get_system_locale(), ISO_LOCALE_LENGTH) == 0);
+      !locale || (strncmp(locale, app_get_system_locale(), PBL_I18N_LOCALE_LEN) == 0);
 
   while (left) {
     // Copy up to the next '%'
@@ -258,11 +258,11 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
           i18nstr = nullptr;
         }
         if (i18nstr) {
-          cpystr = i18n_get(i18nstr, dest_str);
+          cpystr = pbl_i18n_get(i18nstr, dest_str);
         }
         length = localized_strftime(dest_str, left, cpystr, t, locale);
         if (i18nstr) {
-          i18n_free(i18nstr, dest_str);
+          pbl_i18n_free(i18nstr, dest_str);
         }
         if (length == 0) {
           goto _out_of_size;

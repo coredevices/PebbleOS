@@ -7,17 +7,17 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/ui/ui.h>
 #include <shell/prefs.h>
 
 static const char *const s_dark_mode_labels[] = {
-  [DarkModeOff] = i18n_noop("Off"),
-  [DarkModeOn] = i18n_noop("On"),
-  [DarkModeScheduled] = i18n_noop("Schedule"),
+  [DarkModeOff] = pbl_i18n_noop("Off"),
+  [DarkModeOn] = pbl_i18n_noop("On"),
+  [DarkModeScheduled] = pbl_i18n_noop("Schedule"),
 };
 
 static void prv_refresh_parent(DarkModeMenu *menu) {
@@ -74,7 +74,7 @@ void dark_mode_menu_push(DarkModeMenu *menu) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_menu_select,
   };
-  const char *title = PBL_IF_RECT_ELSE(i18n_noop("DARK MODE"), i18n_noop("Dark Mode"));
+  const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("DARK MODE"), pbl_i18n_noop("Dark Mode"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_dark_mode_labels), true /* icons_enabled */,
                             (const char **)s_dark_mode_labels, menu);

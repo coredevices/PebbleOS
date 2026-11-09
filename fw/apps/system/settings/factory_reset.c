@@ -5,7 +5,7 @@
 
 #include "bluetooth.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #include <applib/app_malloc.h>
 #include <applib/app_timer.h>
@@ -56,7 +56,7 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, void *context) 
     .res_id = TIMELINE_RESOURCE_GENERIC_WARNING,
   };
   peek_layer_set_icon(peek_layer, &timeline_res);
-  peek_layer_set_title(peek_layer, i18n_get("Resetting...", data));
+  peek_layer_set_title(peek_layer, pbl_i18n_get("Resetting...", data));
   peek_layer_set_background_color(peek_layer, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   peek_layer_play(peek_layer);
   layer_add_child(&window->layer, &peek_layer->layer);
@@ -109,7 +109,7 @@ static void prv_window_load(Window *window) {
     .size = GSize(width - (2 * x_margin_px), msg_text_max_height_px)
   };
   text_layer_init_with_parameters(msg_text_layer, &msg_text_frame,
-                                  i18n_get("Perform factory reset?", data),
+                                  pbl_i18n_get("Perform factory reset?", data),
                                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), text_color,
                                   GColorClear, alignment, overflow_mode);
   layer_add_child(&window->layer, &msg_text_layer->layer);
@@ -130,7 +130,7 @@ static void prv_window_load(Window *window) {
     .size = GSize(width - (2 * x_margin_px), root_layer_bounds->size.h - forget_text_y_offset_px)
   };
   text_layer_init_with_parameters(
-      forget_text_layer, &forget_text_frame, i18n_get(BT_FORGET_PAIRING_STR, data),
+      forget_text_layer, &forget_text_frame, pbl_i18n_get(BT_FORGET_PAIRING_STR, data),
       fonts_get_system_font(FONT_KEY_GOTHIC_18), text_color, GColorClear, alignment, overflow_mode);
   layer_add_child(&window->layer, &forget_text_layer->layer);
 #if PBL_ROUND
@@ -151,7 +151,7 @@ static void prv_window_unload(Window *window) {
   ConfirmUIData *data = window_get_user_data(window);
   gbitmap_destroy(data->action_bar_icon_check);
   gbitmap_destroy(data->action_bar_icon_x);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

@@ -13,9 +13,9 @@
 #include <string.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -214,21 +214,21 @@ static const char *const s_Tstrings[3][3] = {
 static const char *const s_splitters[3][2] = {
   /// The first separator in `<hour>:<minute>:<second>`
   {
-    i18n_ctx_noop("TmplStringSep", ":"),
+    pbl_i18n_ctx_noop("TmplStringSep", ":"),
     /// The second separator in `<hour>:<minute>:<second>`
-    i18n_ctx_noop("TmplStringSep", ":"),
+    pbl_i18n_ctx_noop("TmplStringSep", ":"),
   },
   /// The first separator in `<hour> hr <minute> min <second> sec`
   {
-    i18n_ctx_noop("TmplStringSep", " "),
+    pbl_i18n_ctx_noop("TmplStringSep", " "),
     /// The second separator in `<hour> hr <minute> min <second> sec`
-    i18n_ctx_noop("TmplStringSep", " "),
+    pbl_i18n_ctx_noop("TmplStringSep", " "),
   },
   /// The first separator in `<hour> hours, <minute> minutes, and <second> seconds`
   {
-    i18n_ctx_noop("TmplStringSep", ", "),
+    pbl_i18n_ctx_noop("TmplStringSep", ", "),
     /// The second separator in `<hour> hours, <minute> minutes, and <second> seconds`
-    i18n_ctx_noop("TmplStringSep", ", and "),
+    pbl_i18n_ctx_noop("TmplStringSep", ", and "),
   },
 };
 
@@ -267,7 +267,7 @@ static void prv_append_string_i18n(TemplateStringState *state, const char *str) 
   if (!len) {
     return;
   }
-  // len needs +1 in order for i18n_get_with_buffer to write all the characters we want.
+  // len needs +1 in order for pbl_i18n_get_with_buffer to write all the characters we want.
   // It's ok that it writes the NUL at the end because we've already reserved that space.
   sys_i18n_get_with_buffer(str, state->output, len + 1);
   state->output += len;
@@ -301,77 +301,77 @@ static void prv_append_char(TemplateStringState *state, char c) {
 // two-form languages never select [2].
 static const char *const s_second_strings[3][3] = {
   /// Suffixes for seconds with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for seconds with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " sec"), i18n_ctx_noop("TmplStringPlur", " sec"),
-   i18n_ctx_noop("TmplStringMany", " sec")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " sec"), pbl_i18n_ctx_noop("TmplStringPlur", " sec"),
+   pbl_i18n_ctx_noop("TmplStringMany", " sec")},
   /// Suffixes for seconds with full units
-  {i18n_ctx_noop("TmplStringSing", " second"), i18n_ctx_noop("TmplStringPlur", " seconds"),
-   i18n_ctx_noop("TmplStringMany", " seconds")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " second"), pbl_i18n_ctx_noop("TmplStringPlur", " seconds"),
+   pbl_i18n_ctx_noop("TmplStringMany", " seconds")},
 };
 
 static const char *const s_minute_strings[3][3] = {
   /// Suffixes for minutes with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for minutes with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " min"), i18n_ctx_noop("TmplStringPlur", " min"),
-   i18n_ctx_noop("TmplStringMany", " min")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " min"), pbl_i18n_ctx_noop("TmplStringPlur", " min"),
+   pbl_i18n_ctx_noop("TmplStringMany", " min")},
   /// Suffixes for minutes with full units
-  {i18n_ctx_noop("TmplStringSing", " minute"), i18n_ctx_noop("TmplStringPlur", " minutes"),
-   i18n_ctx_noop("TmplStringMany", " minutes")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " minute"), pbl_i18n_ctx_noop("TmplStringPlur", " minutes"),
+   pbl_i18n_ctx_noop("TmplStringMany", " minutes")},
 };
 
 static const char *const s_hour_strings[3][3] = {
   /// Suffixes for hours with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for hours with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " hr"), i18n_ctx_noop("TmplStringPlur", " hr"),
-   i18n_ctx_noop("TmplStringMany", " hr")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " hr"), pbl_i18n_ctx_noop("TmplStringPlur", " hr"),
+   pbl_i18n_ctx_noop("TmplStringMany", " hr")},
   /// Suffixes for hours with full units
-  {i18n_ctx_noop("TmplStringSing", " hour"), i18n_ctx_noop("TmplStringPlur", " hours"),
-   i18n_ctx_noop("TmplStringMany", " hours")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " hour"), pbl_i18n_ctx_noop("TmplStringPlur", " hours"),
+   pbl_i18n_ctx_noop("TmplStringMany", " hours")},
 };
 
 static const char *const s_day_strings[3][3] = {
   /// Suffixes for days with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for days with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " d"), i18n_ctx_noop("TmplStringPlur", " d"),
-   i18n_ctx_noop("TmplStringMany", " d")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " d"), pbl_i18n_ctx_noop("TmplStringPlur", " d"),
+   pbl_i18n_ctx_noop("TmplStringMany", " d")},
   /// Suffixes for days with full units
-  {i18n_ctx_noop("TmplStringSing", " day"), i18n_ctx_noop("TmplStringPlur", " days"),
-   i18n_ctx_noop("TmplStringMany", " days")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " day"), pbl_i18n_ctx_noop("TmplStringPlur", " days"),
+   pbl_i18n_ctx_noop("TmplStringMany", " days")},
 };
 
 #if SUPPORT_MONTH
 static const char *const s_month_strings[3][3] = {
   /// Suffixes for months with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for months with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " mo"), i18n_ctx_noop("TmplStringPlur", " mo"),
-   i18n_ctx_noop("TmplStringMany", " mo")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " mo"), pbl_i18n_ctx_noop("TmplStringPlur", " mo"),
+   pbl_i18n_ctx_noop("TmplStringMany", " mo")},
   /// Suffixes for months with full units
-  {i18n_ctx_noop("TmplStringSing", " month"), i18n_ctx_noop("TmplStringPlur", " months"),
-   i18n_ctx_noop("TmplStringMany", " months")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " month"), pbl_i18n_ctx_noop("TmplStringPlur", " months"),
+   pbl_i18n_ctx_noop("TmplStringMany", " months")},
 };
 #endif
 
 #if SUPPORT_YEAR
 static const char *const s_year_strings[3][3] = {
   /// Suffixes for years with no units
-  {i18n_ctx_noop("TmplStringSing", ""), i18n_ctx_noop("TmplStringPlur", ""),
-   i18n_ctx_noop("TmplStringMany", "")},
+  {pbl_i18n_ctx_noop("TmplStringSing", ""), pbl_i18n_ctx_noop("TmplStringPlur", ""),
+   pbl_i18n_ctx_noop("TmplStringMany", "")},
   /// Suffixes for years with abbreviated units
-  {i18n_ctx_noop("TmplStringSing", " yr"), i18n_ctx_noop("TmplStringPlur", " yr"),
-   i18n_ctx_noop("TmplStringMany", " yr")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " yr"), pbl_i18n_ctx_noop("TmplStringPlur", " yr"),
+   pbl_i18n_ctx_noop("TmplStringMany", " yr")},
   /// Suffixes for years with full units
-  {i18n_ctx_noop("TmplStringSing", " year"), i18n_ctx_noop("TmplStringPlur", " years"),
-   i18n_ctx_noop("TmplStringMany", " years")},
+  {pbl_i18n_ctx_noop("TmplStringSing", " year"), pbl_i18n_ctx_noop("TmplStringPlur", " years"),
+   pbl_i18n_ctx_noop("TmplStringMany", " years")},
 };
 #endif
 
@@ -381,7 +381,7 @@ static const char *const s_year_strings[3][3] = {
 // column 2. Polish has three forms; its rule mirrors the Plural-Forms header
 // in the pl_PL catalog.
 static int prv_plural_index(intmax_t value) {
-  char locale[ISO_LOCALE_LENGTH];
+  char locale[PBL_I18N_LOCALE_LEN];
   sys_i18n_get_locale(locale);
   uintmax_t n = (value < 0) ? (uintmax_t)(-value) : (uintmax_t)value;
 

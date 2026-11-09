@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/units.h>
 
 #include <applib/applib_malloc.auto.h>
@@ -43,9 +43,11 @@ typedef struct {
 } CustomDayPickerData;
 
 static const char *prv_kind_strings[DayPickerKindNumItems] = {
-  [DayPickerKindEveryday] = i18n_noop("Every Day"), [DayPickerKindWeekdays] = i18n_noop("Weekdays"),
-  [DayPickerKindWeekends] = i18n_noop("Weekends"),  [DayPickerKindCustom] = i18n_noop("Custom"),
-  [DayPickerKindJustOnce] = i18n_noop("Just Once"),
+  [DayPickerKindEveryday] = pbl_i18n_noop("Every Day"),
+  [DayPickerKindWeekdays] = pbl_i18n_noop("Weekdays"),
+  [DayPickerKindWeekends] = pbl_i18n_noop("Weekends"),
+  [DayPickerKindCustom] = pbl_i18n_noop("Custom"),
+  [DayPickerKindJustOnce] = pbl_i18n_noop("Just Once"),
 };
 
 const char *day_picker_kind_get_string(DayPickerKind kind) {
@@ -108,7 +110,7 @@ static void prv_day_picker_draw_row(GContext *ctx, const Layer *cell_layer, Menu
                                     void *callback_context) {
   DayPickerData *data = (DayPickerData *)callback_context;
   DayPickerKind kind = prv_row_to_kind(data->allow_once, cell_index->row);
-  const char *cell_text = i18n_get(day_picker_kind_get_string(kind), &data->window);
+  const char *cell_text = pbl_i18n_get(day_picker_kind_get_string(kind), &data->window);
   menu_cell_basic_draw(ctx, cell_layer, cell_text, nullptr, nullptr);
 }
 
@@ -141,7 +143,7 @@ static void prv_day_picker_handle_selection(MenuLayer *menu_layer, MenuIndex *ce
 static void prv_day_picker_window_unload(Window *window) {
   DayPickerData *data = (DayPickerData *)window_get_user_data(window);
   menu_layer_deinit(&data->menu_layer);
-  i18n_free_all(&data->window);
+  pbl_i18n_free_all(&data->window);
   applib_free(data);
 }
 
@@ -233,7 +235,7 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
         if (data->show_check_something_first_text) {
           box.size = GSize(cell_layer->bounds.size.w, DAY_PICKER_CELL_HEIGHT);
           box.origin = GPoint(0, 4);
-          graphics_draw_text(ctx, i18n_get("Check something first.", &data->window),
+          graphics_draw_text(ctx, pbl_i18n_get("Check something first.", &data->window),
                              fonts_get_system_font(FONT_KEY_GOTHIC_18), box, GTextOverflowModeFill,
                              GTextAlignmentCenter, nullptr);
           return;
@@ -259,7 +261,7 @@ static void prv_custom_day_picker_draw_row(GContext *ctx, const Layer *cell_laye
     const char *cell_text;
     uint16_t day_index = cell_index->row % PBL_DAY_PER_WEEK;
     const struct lc_time_T *time_locale = time_locale_get();
-    cell_text = i18n_get(time_locale->weekday[day_index], &data->window);
+    cell_text = pbl_i18n_get(time_locale->weekday[day_index], &data->window);
 
     if (data->scheduled_days[(cell_index->row) % PBL_DAY_PER_WEEK]) {
       ptr_bitmap = &data->selected_icon;
@@ -311,7 +313,7 @@ static void prv_custom_day_picker_window_unload(Window *window) {
   gbitmap_deinit(&data->selected_icon);
   gbitmap_deinit(&data->deselected_icon);
   gbitmap_deinit(&data->checkmark_icon);
-  i18n_free_all(&data->window);
+  pbl_i18n_free_all(&data->window);
   applib_free(data);
 }
 

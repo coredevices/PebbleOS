@@ -5,8 +5,8 @@
 
 #include "menu.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -77,7 +77,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   PBL_ASSERTN(cell_index->row < SettingsMenuItem_Count);
 
   const char *category_title = settings_menu_get_submodule_info(cell_index->row)->name;
-  const char *title = i18n_get(category_title, data);
+  const char *title = pbl_i18n_get(category_title, data);
   GColor highlight_bg = shell_prefs_get_theme_highlight_color();
   menu_layer_set_highlight_colors(&(data->menu_layer), highlight_bg,
                                   gcolor_legible_over(highlight_bg));
@@ -222,7 +222,7 @@ const PebbleProcessMd *settings_get_app_info() {
               {0x07, 0xe0, 0xd9, 0xcb, 0x89, 0x57, 0x4b, 0xf7, 0x9d, 0x42, 0x35, 0xbf, 0x47, 0xca,
                0xad, 0xfe},
         },
-    .name = i18n_noop("Settings"),
+    .name = pbl_i18n_noop("Settings"),
     .icon_resource_id = RESOURCE_ID_SETTINGS_TINY,
   };
   return (const PebbleProcessMd *)&s_settings_app;

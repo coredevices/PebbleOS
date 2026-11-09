@@ -5,12 +5,12 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/time.h>
 #include <pbl/services/vibes/vibe_client.h>
@@ -57,10 +57,11 @@ static WindowStack *prv_get_window_stack(void) {
 static void prv_show_snooze_confirm_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmSnooze");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  const char *snooze_text = i18n_noop("Snooze for %d minutes");
+  const char *snooze_text = pbl_i18n_noop("Snooze for %d minutes");
   char snooze_buf[32];
-  snprintf(snooze_buf, sizeof(snooze_buf), i18n_get(snooze_text, dialog), alarm_get_snooze_delay());
-  i18n_free(snooze_text, dialog);
+  snprintf(snooze_buf, sizeof(snooze_buf), pbl_i18n_get(snooze_text, dialog),
+           alarm_get_snooze_delay());
+  pbl_i18n_free(snooze_text, dialog);
   dialog_set_text(dialog, snooze_buf);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
@@ -74,9 +75,9 @@ static void prv_show_snooze_confirm_dialog(void) {
 static void prv_show_dismiss_confirm_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmSnooze");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  const char *dismiss_text = i18n_noop("Alarm dismissed");
-  dialog_set_text(dialog, i18n_get(dismiss_text, dialog));
-  i18n_free(dismiss_text, dialog);
+  const char *dismiss_text = pbl_i18n_noop("Alarm dismissed");
+  dialog_set_text(dialog, pbl_i18n_get(dismiss_text, dialog));
+  pbl_i18n_free(dismiss_text, dialog);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
   dialog_set_background_color(dialog, GColorJaegerGreen);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_DISMISS);

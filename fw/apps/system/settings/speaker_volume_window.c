@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/speaker/speaker_service.h>
 
@@ -53,8 +53,9 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   GRect title_frame = content;
   title_frame.origin.y = PBL_IF_ROUND_ELSE(24, 16);
   title_frame.size.h = 30;
-  graphics_draw_text(ctx, i18n_get("Volume", data), fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-                     title_frame, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
+  graphics_draw_text(ctx, pbl_i18n_get("Volume", data),
+                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), title_frame,
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
 
   char value_text[8];
   snprintf(value_text, sizeof(value_text), "%d%%", (int)data->value);
@@ -126,7 +127,7 @@ static void prv_window_unload(Window *window) {
   // Stop any in-flight preview tone.
   speaker_service_stop_for_task(PebbleTask_App);
   action_bar_layer_deinit(&data->action_bar);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

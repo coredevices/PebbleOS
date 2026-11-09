@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 /**
  * @defgroup services_language_pack Language packs
@@ -13,7 +13,7 @@
  * @brief Manages the installed language packs and the one translations come from.
  *
  * A language pack is a file of system resources: a translation catalog and fonts. The catalog of
- * the selected pack is given to @ref services_i18n, and is given again whenever its file changes.
+ * the selected pack is given to @ref i18n, and is given again whenever its file changes.
  * Changing the language puts a @c PEBBLE_LANGUAGE_CHANGE_EVENT.
  * @{
  */

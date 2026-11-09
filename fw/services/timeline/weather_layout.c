@@ -1,9 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/services/timeline/weather_layout.h>
 #include <pbl/util/size.h>
@@ -48,9 +48,9 @@ static const char *prv_get_kind_title(const TimelineLayout *layout) {
                                                   AttributeIdWeatherPinKind, WeatherPinKind_None);
   switch (kind) {
     case WeatherPinKind_Sunrise:
-      return i18n_get("Sunrise", layout);
+      return pbl_i18n_get("Sunrise", layout);
     case WeatherPinKind_Sunset:
-      return i18n_get("Sunset", layout);
+      return pbl_i18n_get("Sunset", layout);
     default:
       return nullptr;
   }

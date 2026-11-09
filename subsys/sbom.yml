@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Third-party code kept in the subsystem tree, see docs/third_party/sbom.md.
+
+components:
+  - name: citrus-mo
+    paths: [i18n/i18n.c, i18n/mo.h, i18n/LICENSE, ../include/pbl/i18n/i18n.h]
+    supplier: Citrus Project
+    description: gettext message catalog reader from the Citrus Project
+    license: BSD-2-Clause

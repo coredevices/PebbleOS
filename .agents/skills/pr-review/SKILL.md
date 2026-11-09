@@ -138,7 +138,7 @@ for what review rounds on this repo keep finding:
   written twice.
 - **Product fit**: duplicates an existing setting, or a design maintainers
   already prefer; new settings default to the old behaviour.
-- **i18n**: user-visible strings reachable by extraction (`i18n_noop`),
+- **i18n**: user-visible strings reachable by extraction (`pbl_i18n_noop`),
   `strncpy` with translated text NUL-terminated.
 - **Tests**: catch the bug they claim to (no pass-by-construction, e.g.
   swapped `memset` arguments); cover the case actually fixed, not a

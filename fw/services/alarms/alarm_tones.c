@@ -3,7 +3,7 @@
 
 #include "alarm_tones.h"
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #define ALARM_TONE_COUNT 4
 
@@ -184,14 +184,15 @@ static const struct {
   VibeScoreId paired_vibe;
 } s_tones[ALARM_TONE_COUNT] = {
   [AlarmTone_Reveille] =
-      {s_reveille, sizeof(s_reveille) / sizeof(s_reveille[0]), i18n_noop("Reveille"),
+      {s_reveille, sizeof(s_reveille) / sizeof(s_reveille[0]), pbl_i18n_noop("Reveille"),
        VibeScoreId_Reveille},
   [AlarmTone_Beacon] =
-      {s_beacon, sizeof(s_beacon) / sizeof(s_beacon[0]), i18n_noop("Beacon"), VibeScoreId_Invalid},
+      {s_beacon, sizeof(s_beacon) / sizeof(s_beacon[0]), pbl_i18n_noop("Beacon"),
+       VibeScoreId_Invalid},
   [AlarmTone_Bell] =
-      {s_bell, sizeof(s_bell) / sizeof(s_bell[0]), i18n_noop("Bell"), VibeScoreId_Invalid},
+      {s_bell, sizeof(s_bell) / sizeof(s_bell[0]), pbl_i18n_noop("Bell"), VibeScoreId_Invalid},
   [AlarmTone_Chime] = {
-    s_chime, sizeof(s_chime) / sizeof(s_chime[0]), i18n_noop("Chime"), VibeScoreId_Invalid
+    s_chime, sizeof(s_chime) / sizeof(s_chime[0]), pbl_i18n_noop("Chime"), VibeScoreId_Invalid
   },
 };
 

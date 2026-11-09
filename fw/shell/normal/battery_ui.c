@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -354,13 +354,13 @@ static void prv_set_charge_reel(Dialog *dialog) {
   kino_layer_play(icon_layer);
 }
 static void prv_update_ui_fully_charged(Dialog *dialog, void *ignored) {
-  dialog_set_text(dialog, i18n_get("Fully Charged", dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Fully Charged", dialog));
   dialog_set_background_color(dialog, GColorKellyGreen);
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_FULL_LARGE);
 }
 
 static void prv_update_ui_charging(Dialog *dialog, void *ignored) {
-  dialog_set_text(dialog, i18n_get("Charging", dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Charging", dialog));
   dialog_set_background_color(dialog, GColorLightGray);
   dialog_set_icon(dialog, RESOURCE_ID_BATTERY_ICON_CHARGING_LARGE);
   if (window_is_loaded(&dialog->window)) {
@@ -378,8 +378,8 @@ static void prv_update_ui_warning(Dialog *dialog, void *context) {
   const char *message = clock_get_relative_daypart_string(pbl_realtime(), battery_hours_left);
 
   if (message) {
-    snprintf(buffer, warning_length, i18n_get("Powered 'til %s", dialog),
-             i18n_get(message, dialog));
+    snprintf(buffer, warning_length, pbl_i18n_get("Powered 'til %s", dialog),
+             pbl_i18n_get(message, dialog));
     dialog_set_text(dialog, buffer);
   }
 
@@ -392,7 +392,7 @@ static void prv_dialog_on_load(void *context) {
 
 static void prv_dialog_on_unload(void *context) {
   Dialog *dialog = context;
-  i18n_free_all(dialog);
+  pbl_i18n_free_all(dialog);
   if (dialog == s_dialog) {
     s_dialog = nullptr;
   }

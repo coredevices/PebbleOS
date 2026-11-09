@@ -29,42 +29,44 @@
 
 #include <stddef.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 
 #define LCTIME_SIZE (sizeof(struct lc_time_T) / sizeof(char *))
 
 static const struct lc_time_T _C_time_locale = {
   .mon =
-      {i18n_ctx_noop("MonthAbbr", "Jan"), i18n_ctx_noop("MonthAbbr", "Feb"),
-       i18n_ctx_noop("MonthAbbr", "Mar"), i18n_ctx_noop("MonthAbbr", "Apr"),
-       i18n_ctx_noop("MonthAbbr", "May"), i18n_ctx_noop("MonthAbbr", "Jun"),
-       i18n_ctx_noop("MonthAbbr", "Jul"), i18n_ctx_noop("MonthAbbr", "Aug"),
-       i18n_ctx_noop("MonthAbbr", "Sep"), i18n_ctx_noop("MonthAbbr", "Oct"),
-       i18n_ctx_noop("MonthAbbr", "Nov"), i18n_ctx_noop("MonthAbbr", "Dec")},
+      {pbl_i18n_ctx_noop("MonthAbbr", "Jan"), pbl_i18n_ctx_noop("MonthAbbr", "Feb"),
+       pbl_i18n_ctx_noop("MonthAbbr", "Mar"), pbl_i18n_ctx_noop("MonthAbbr", "Apr"),
+       pbl_i18n_ctx_noop("MonthAbbr", "May"), pbl_i18n_ctx_noop("MonthAbbr", "Jun"),
+       pbl_i18n_ctx_noop("MonthAbbr", "Jul"), pbl_i18n_ctx_noop("MonthAbbr", "Aug"),
+       pbl_i18n_ctx_noop("MonthAbbr", "Sep"), pbl_i18n_ctx_noop("MonthAbbr", "Oct"),
+       pbl_i18n_ctx_noop("MonthAbbr", "Nov"), pbl_i18n_ctx_noop("MonthAbbr", "Dec")},
   .month =
-      {i18n_noop("January"), i18n_noop("February"), i18n_noop("March"), i18n_noop("April"),
-       i18n_noop("May"), i18n_noop("June"), i18n_noop("July"), i18n_noop("August"),
-       i18n_noop("September"), i18n_noop("October"), i18n_noop("November"), i18n_noop("December")},
+      {pbl_i18n_noop("January"), pbl_i18n_noop("February"), pbl_i18n_noop("March"),
+       pbl_i18n_noop("April"), pbl_i18n_noop("May"), pbl_i18n_noop("June"), pbl_i18n_noop("July"),
+       pbl_i18n_noop("August"), pbl_i18n_noop("September"), pbl_i18n_noop("October"),
+       pbl_i18n_noop("November"), pbl_i18n_noop("December")},
   .wday =
-      {i18n_noop("Sun"), i18n_noop("Mon"), i18n_noop("Tue"), i18n_noop("Wed"), i18n_noop("Thu"),
-       i18n_noop("Fri"), i18n_noop("Sat")},
+      {pbl_i18n_noop("Sun"), pbl_i18n_noop("Mon"), pbl_i18n_noop("Tue"), pbl_i18n_noop("Wed"),
+       pbl_i18n_noop("Thu"), pbl_i18n_noop("Fri"), pbl_i18n_noop("Sat")},
   .weekday =
-      {i18n_noop("Sunday"), i18n_noop("Monday"), i18n_noop("Tuesday"), i18n_noop("Wednesday"),
-       i18n_noop("Thursday"), i18n_noop("Friday"), i18n_noop("Saturday")},
+      {pbl_i18n_noop("Sunday"), pbl_i18n_noop("Monday"), pbl_i18n_noop("Tuesday"),
+       pbl_i18n_noop("Wednesday"), pbl_i18n_noop("Thursday"), pbl_i18n_noop("Friday"),
+       pbl_i18n_noop("Saturday")},
 
-  .X_fmt = i18n_noop("%H:%M:%S"),
-  .x_fmt = i18n_noop("%m/%d/%y"),
-  .c_fmt = i18n_noop("%a %b %e %H:%M:%S %Y"),
-  .r_fmt = i18n_noop("%I:%M:%S %p"),
+  .X_fmt = pbl_i18n_noop("%H:%M:%S"),
+  .x_fmt = pbl_i18n_noop("%m/%d/%y"),
+  .c_fmt = pbl_i18n_noop("%a %b %e %H:%M:%S %Y"),
+  .r_fmt = pbl_i18n_noop("%I:%M:%S %p"),
 
   .am_pm_upcase =
       {
-        i18n_noop("AM"),
-        i18n_noop("PM"),
+        pbl_i18n_noop("AM"),
+        pbl_i18n_noop("PM"),
       },
   .am_pm_downcase = {
-    i18n_noop("am"),
-    i18n_noop("pm"),
+    pbl_i18n_noop("am"),
+    pbl_i18n_noop("pm"),
   },
 };
 

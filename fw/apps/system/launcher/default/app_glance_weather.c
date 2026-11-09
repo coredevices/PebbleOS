@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_types.h>
@@ -115,18 +115,18 @@ static void prv_weather_event_handler([[maybe_unused]] PebbleEvent *event, void 
   if (forecast) {
     if (forecast->current_temp == WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP) {
       /// Shown when the current temperature is unknown
-      const char *no_temperature_string = i18n_get("--°", weather_glance);
+      const char *no_temperature_string = pbl_i18n_get("--°", weather_glance);
       // Subtract 1 from the size as a shortcut for null terminating the subtitle since we zero it
       // out above
       strncpy(weather_glance->subtitle, no_temperature_string, weather_glance_subtitle_size - 1);
     } else {
       /// Shown when today's temperature and conditions phrase is known (e.g. "52° - Fair")
-      const char *temp_and_phrase_formatter = i18n_get("%i° - %s", weather_glance);
+      const char *temp_and_phrase_formatter = pbl_i18n_get("%i° - %s", weather_glance);
       /// Today's current temperature (e.g. "68°")
-      const char *temp_only_formatter = i18n_get("%i°", weather_glance);
+      const char *temp_only_formatter = pbl_i18n_get("%i°", weather_glance);
       const char *phrase = weather_type_get_phrase(forecast->current_weather_type);
       const char *localized_phrase =
-          phrase ? i18n_get(phrase, weather_glance) : forecast->current_weather_phrase;
+          phrase ? pbl_i18n_get(phrase, weather_glance) : forecast->current_weather_phrase;
       const char *formatter_string =
           strlen(localized_phrase) ? temp_and_phrase_formatter : temp_only_formatter;
       // It's safe to pass more arguments to snprintf() than might be used by formatter_string
@@ -135,7 +135,7 @@ static void prv_weather_event_handler([[maybe_unused]] PebbleEvent *event, void 
     }
   }
 
-  i18n_free_all(weather_glance);
+  pbl_i18n_free_all(weather_glance);
 
   weather_service_destroy_default_forecast(forecast);
 

@@ -13,6 +13,7 @@ bluetooth.md
 coredump.md
 crc.md
 fs.md
+i18n.md
 input.md
 logging.md
 pp/index.md

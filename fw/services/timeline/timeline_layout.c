@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/timeline_layout.h>
 #include <pbl/services/timeline/timeline_resources.h>
@@ -187,7 +187,7 @@ void timeline_layout_deinit(TimelineLayout *timeline_layout) {
   timeline_layout_deinit_view(timeline_layout);
   prv_deinit_icon(timeline_layout);
   layer_deinit(&timeline_layout->layout_layer.layer);
-  i18n_free_all(timeline_layout);
+  pbl_i18n_free_all(timeline_layout);
 }
 
 void timeline_layout_init_info(TimelineLayoutInfo *info, TimelineItem *item, time_t current_day) {
@@ -421,7 +421,7 @@ void timeline_layout_deinit_view(TimelineLayout *layout) {
 static GTextNode *prv_create_all_day_text_node(const TimelineLayout *layout) {
   static const LayoutNodeTextBufferConfig s_all_day_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("All day"),
+    .str = pbl_i18n_noop("All day"),
     .use_i18n = true,
     .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_Title,
@@ -800,7 +800,7 @@ GTextNode *timeline_layout_create_card_view_from_config(const TimelineLayout *la
 
   static const LayoutNodeTextBufferConfig s_header_config = {
     .text.extent.node.type = LayoutNodeType_TextBuffer,
-    .str = i18n_noop("Last updated"),
+    .str = pbl_i18n_noop("Last updated"),
     .use_i18n = true,
     .text.style = LayoutContentSize_Auto,
     .text.style_font = TextStyleFont_ParagraphHeader,

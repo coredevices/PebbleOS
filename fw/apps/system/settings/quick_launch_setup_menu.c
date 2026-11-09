@@ -10,8 +10,8 @@
 
 #include "quick_launch_setup_menu.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
-#include <pbl/services/i18n/i18n.h>
 
 #include <applib/app.h>
 #include <applib/ui/dialogs/dialog.h>
@@ -43,9 +43,9 @@ static void prv_handle_quick_launch_confirm(ClickRecognizerRef recognizer, void 
 static void prv_push_first_use_dialog(void) {
   const void *i18n_owner = prv_push_first_use_dialog; // Use this function as the i18n owner
   /// Title for the Quick Launch first use dialog.
-  const char *header = i18n_get("Quick Launch", i18n_owner);
+  const char *header = pbl_i18n_get("Quick Launch", i18n_owner);
   /// Help text for the Quick Launch first use dialog.
-  const char *text = i18n_get(
+  const char *text = pbl_i18n_get(
       "Open favorite apps quickly with a long button press from your "
       "watchface.",
       i18n_owner);
@@ -60,7 +60,7 @@ static void prv_push_first_use_dialog(void) {
   expandable_dialog_set_header_font(expandable_dialog,
                                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 #endif
-  i18n_free_all(i18n_owner);
+  pbl_i18n_free_all(i18n_owner);
   app_expandable_dialog_push(expandable_dialog);
 }
 

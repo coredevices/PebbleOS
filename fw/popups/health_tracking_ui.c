@@ -3,8 +3,8 @@
 
 #include "health_tracking_ui.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 
 #include <applib/ui/dialogs/expandable_dialog.h>
@@ -36,8 +36,8 @@ static void prv_push_enable_in_mobile_dialog(void *context) {
   Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
 
   // Set the base dialog properties
-  dialog_set_text(dialog, i18n_get(data->text, dialog));
-  // i18n_free(data->text, dialog);
+  dialog_set_text(dialog, pbl_i18n_get(data->text, dialog));
+  // pbl_i18n_free(data->text, dialog);
   dialog_set_icon(dialog, data->res_id);
   dialog_set_vibe(dialog, false);
 
@@ -70,7 +70,7 @@ void health_tracking_ui_show_message(uint32_t res_id, const char *text, bool sho
 // ---------------------------------------------------------------------------
 void health_tracking_ui_feature_show_disabled(void) {
   /// Feature requires health dialog
-  static const char *msg = i18n_noop(
+  static const char *msg = pbl_i18n_noop(
       "This feature requires Pebble Health to work. Enable Health in the Pebble"
       " mobile app to continue.");
 

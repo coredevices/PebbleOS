@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 
 #include <applib/ui/dialogs/actionable_dialog.h>
@@ -70,8 +70,8 @@ static void prv_worker_crash_click_config_provider(void *context) {
 //! @param dialog The dialog to configure
 //! @param crash_reason The crash reason text
 static void prv_configure_crash_dialog(Dialog *dialog, const char *crash_reason) {
-  dialog_set_text(dialog, i18n_get(crash_reason, dialog));
-  i18n_free(crash_reason, dialog);
+  dialog_set_text(dialog, pbl_i18n_get(crash_reason, dialog));
+  pbl_i18n_free(crash_reason, dialog);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_TINY);
   dialog_set_vibe(dialog, true);
 }
@@ -89,10 +89,10 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
   const uint8_t MAX_APP_NAME_STRING_LENGTH = 15;
   const uint8_t CRASH_REASON_BUFFER_SIZE = 7 + 1 + MAX_APP_NAME_STRING_LENGTH + 32 + 1;
   char *crash_reason = pbl_zalloc_check(CRASH_REASON_BUFFER_SIZE);
-  const char *crash_str = i18n_noop("%s%.*s is not responding.\n\nOpen app?");
-  sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, i18n_get(crash_str, crash_reason),
+  const char *crash_str = pbl_i18n_noop("%s%.*s is not responding.\n\nOpen app?");
+  sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, pbl_i18n_get(crash_str, crash_reason),
             app_found ? " " : "", MAX_APP_NAME_STRING_LENGTH, app_found ? entry.name : "");
-  i18n_free(crash_str, crash_reason);
+  pbl_i18n_free(crash_str, crash_reason);
   return crash_reason;
 }
 
@@ -144,7 +144,7 @@ void crashed_ui_show_worker_crash(const AppInstallId install_id) {
 
 // ---------------------------------------------------------------------------
 #define CORE_DUMP_COMPLETE               \
-  i18n_noop(                             \
+  pbl_i18n_noop(                         \
       "A bug report has been captured. " \
       "Please finish uploading the bug report using the Pebble phone app.")
 

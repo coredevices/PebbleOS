@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app.h>
@@ -102,7 +102,7 @@ static void prv_decline_config_provider(void *context) {
 static void prv_show_decline_dialog(DialogsData *data) {
   ActionableDialog *actionable_dialog = actionable_dialog_create("Decline Dialog");
   Dialog *dialog = actionable_dialog_get_dialog(actionable_dialog);
-  dialog_set_text(dialog, i18n_get("Decline dialog.", dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Decline dialog.", dialog));
   dialog_set_background_color(dialog, GColorRed);
   dialog_set_icon(dialog, data->resource_id_80);
 
@@ -407,7 +407,7 @@ static void prv_handle_init(void) {
 static void prv_handle_deinit() {
   DialogsData *data = app_state_get_user_data();
   menu_layer_deinit(&data->menu_layer);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 

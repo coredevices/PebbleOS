@@ -10,9 +10,3 @@ components:
     description: locale time formatting tables from FreeBSD libc
     license: BSD-2-Clause
 
-  - name: citrus-mo
-    paths: [services/i18n/i18n.c, ../include/pbl/services/i18n/mo.h]
-    supplier: Citrus Project
-    description: gettext message catalog reader from the Citrus Project
-    license: BSD-2-Clause
-

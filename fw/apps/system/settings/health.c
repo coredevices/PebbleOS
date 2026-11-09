@@ -6,9 +6,9 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/services/activity/activity.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_malloc.h>
@@ -21,8 +21,8 @@ typedef struct SettingsHealthData {
 } SettingsHealthData;
 
 static const char *s_units_distance_labels[] = {
-  i18n_noop("Kilometers"),
-  i18n_noop("Miles"),
+  pbl_i18n_noop("Kilometers"),
+  pbl_i18n_noop("Miles"),
 };
 
 #ifdef CONFIG_HRM
@@ -32,8 +32,8 @@ static const HRMonitoringInterval s_hrm_intervals[] = {
 };
 
 static const char *s_hrm_interval_labels[] = {
-  i18n_noop("5 Minutes"), i18n_noop("10 Minutes"), i18n_noop("30 Minutes"),
-  i18n_noop("1 Hour"),    i18n_noop("Disabled"),
+  pbl_i18n_noop("5 Minutes"), pbl_i18n_noop("10 Minutes"), pbl_i18n_noop("30 Minutes"),
+  pbl_i18n_noop("1 Hour"),    pbl_i18n_noop("Disabled"),
 };
 
 static int prv_hrm_interval_to_index(HRMonitoringInterval interval) {
@@ -53,10 +53,10 @@ static const HRMonitoringInterval s_spo2_intervals[] = {
 };
 
 static const char *s_spo2_interval_labels[] = {
-  i18n_noop("10 Minutes"),
-  i18n_noop("30 Minutes"),
-  i18n_noop("1 Hour"),
-  i18n_noop("Disabled"),
+  pbl_i18n_noop("10 Minutes"),
+  pbl_i18n_noop("30 Minutes"),
+  pbl_i18n_noop("1 Hour"),
+  pbl_i18n_noop("Disabled"),
 };
 
 static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
@@ -97,7 +97,7 @@ static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_hrm_interval_menu_select,
   };
-  const char *title = i18n_noop("HR Monitoring");
+  const char *title = pbl_i18n_noop("HR Monitoring");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_hrm_interval_labels), true /* icons_enabled */,
                             s_hrm_interval_labels, data);
@@ -118,7 +118,7 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_spo2_interval_menu_select,
   };
-  const char *title = i18n_noop("SpO2 Monitoring");
+  const char *title = pbl_i18n_noop("SpO2 Monitoring");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_spo2_interval_labels), true /* icons_enabled */,
                             s_spo2_interval_labels, data);
@@ -131,7 +131,7 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsHealthData *data = (SettingsHealthData *)context;
 
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   app_free(data);
 }
 
@@ -144,15 +144,15 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
 
   switch (row) {
     case SettingsHealthTrackingEnabled: {
-      title = i18n_noop("Health Tracking");
-      subtitle = activity_prefs_tracking_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("Health Tracking");
+      subtitle = activity_prefs_tracking_is_enabled() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
     }
     case SettingsHealthUnitDistance: {
-      title = i18n_noop("Distance Unit");
+      title = pbl_i18n_noop("Distance Unit");
       UnitsDistance unit = shell_prefs_get_units_distance();
       if (unit >= UnitsDistanceCount) {
-        subtitle = i18n_noop("Unknown");
+        subtitle = pbl_i18n_noop("Unknown");
       } else {
         subtitle = s_units_distance_labels[unit];
       }
@@ -160,25 +160,25 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     }
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval: {
-      title = i18n_noop("HR Monitoring");
+      title = pbl_i18n_noop("HR Monitoring");
       HRMonitoringInterval interval = activity_prefs_get_hrm_measurement_interval();
       int idx = prv_hrm_interval_to_index(interval);
       subtitle = s_hrm_interval_labels[idx];
       break;
     }
     case SettingsHealthHRActivityTracking: {
-      title = i18n_noop("HR During Activity");
-      subtitle =
-          activity_prefs_hrm_activity_tracking_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("HR During Activity");
+      subtitle = activity_prefs_hrm_activity_tracking_is_enabled() ? pbl_i18n_noop("On")
+                                                                   : pbl_i18n_noop("Off");
       break;
     }
     case SettingsHealthSpO2Enabled: {
-      title = i18n_noop("SpO2");
-      subtitle = activity_prefs_spo2_is_enabled() ? i18n_noop("On") : i18n_noop("Off");
+      title = pbl_i18n_noop("SpO2");
+      subtitle = activity_prefs_spo2_is_enabled() ? pbl_i18n_noop("On") : pbl_i18n_noop("Off");
       break;
     }
     case SettingsHealthSpO2MonitoringInterval: {
-      title = i18n_noop("SpO2 Monitoring");
+      title = pbl_i18n_noop("SpO2 Monitoring");
       HRMonitoringInterval interval = activity_prefs_get_spo2_measurement_interval();
       int idx = prv_spo2_interval_to_index(interval);
       subtitle = s_spo2_interval_labels[idx];
@@ -188,7 +188,8 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     default:
       pbl_panic();
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, data), i18n_get(subtitle, data), nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, data), pbl_i18n_get(subtitle, data),
+                       nullptr);
 }
 
 static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
@@ -262,7 +263,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_health_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("Health"),
+    .name = pbl_i18n_noop("Health"),
     .init = prv_init,
   };
 

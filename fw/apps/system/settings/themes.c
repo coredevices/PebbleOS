@@ -8,8 +8,8 @@
 #include "option_menu.h"
 #include "window.h"
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_malloc.h>
@@ -105,7 +105,7 @@ static void prv_option_menu_selection_will_change(OptionMenu *option_menu, uint1
 }
 
 static OptionMenu *prv_push_color_menu(void) {
-  const char *title = i18n_noop("Accent Color");
+  const char *title = pbl_i18n_noop("Accent Color");
   int selected =
       prv_color_to_index(shell_prefs_get_theme_highlight_color(), DEFAULT_THEME_HIGHLIGHT_COLOR);
   const char **color_names = prv_get_color_names(false);
@@ -155,20 +155,20 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   char time_buf[32];
   const bool has_schedule = (shell_prefs_get_dark_mode() == DarkModeScheduled);
   if (row == 0) {
-    title = i18n_noop("Dark Mode");
+    title = pbl_i18n_noop("Dark Mode");
     subtitle = dark_mode_menu_get_mode_label();
   } else if (has_schedule && row == 1) {
-    title = i18n_noop("Schedule Time");
+    title = pbl_i18n_noop("Schedule Time");
     dark_mode_menu_format_schedule(time_buf, sizeof(time_buf));
     subtitle = time_buf;
   } else {
     int idx =
         prv_color_to_index(shell_prefs_get_theme_highlight_color(), DEFAULT_THEME_HIGHLIGHT_COLOR);
-    title = i18n_noop("Accent Color");
+    title = pbl_i18n_noop("Accent Color");
     subtitle = s_color_definitions[idx < 0 ? 0 : idx].name;
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(title, context), i18n_get(subtitle, context),
-                       nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(title, context),
+                       pbl_i18n_get(subtitle, context), nullptr);
 }
 
 static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
@@ -180,7 +180,7 @@ static uint16_t prv_num_rows_cb(SettingsCallbacks *context) {
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsThemesData *data = (SettingsThemesData *)context;
   dark_mode_menu_deinit(&data->dark_mode_menu);
-  i18n_free_all(context);
+  pbl_i18n_free_all(context);
   app_free(context);
 }
 
@@ -206,7 +206,7 @@ static Window *prv_init(void) {
 const SettingsModuleMetadata *settings_themes_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
     /// Title of the Themes Settings submenu in Settings
-    .name = i18n_noop("Themes"),
+    .name = pbl_i18n_noop("Themes"),
     .init = prv_init,
   };
 

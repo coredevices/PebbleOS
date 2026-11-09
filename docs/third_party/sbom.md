@@ -43,7 +43,7 @@ new dependencies from being left out silently.
 Components are described in `sbom.yml` files:
 
 - `third_party/sbom.yml`: the submodules
-- `fw/sbom.yml`, `lib/sbom.yml`: third-party code kept in the tree
+- `fw/sbom.yml`, `lib/sbom.yml`, `subsys/sbom.yml`: third-party code kept in the tree
 - `cmake/toolchain/sbom.yml`: the toolchain runtime (C library, libgcc)
 
 Each entry has these fields:

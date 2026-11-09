@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/health_util.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/util/units.h>
 
 #include <shell/prefs.h>
@@ -27,13 +27,13 @@ int health_util_format_hours_and_minutes(char *buffer, size_t buffer_size, int d
   prv_convert_duration_to_hours_and_minutes(duration_s, &hours, &minutes);
   int pos = 0;
   if (hours != INT_MIN) {
-    pos += snprintf(buffer + pos, buffer_size - pos, i18n_get("%dH", i18n_owner), hours);
+    pos += snprintf(buffer + pos, buffer_size - pos, pbl_i18n_get("%dH", i18n_owner), hours);
     if (minutes != INT_MIN && pos < (int)buffer_size - 1) {
       buffer[pos++] = ' ';
     }
   }
   if (minutes != INT_MIN) {
-    pos += snprintf(buffer + pos, buffer_size - pos, i18n_get("%dM", i18n_owner), minutes);
+    pos += snprintf(buffer + pos, buffer_size - pos, pbl_i18n_get("%dM", i18n_owner), minutes);
   }
   return pos;
 }
@@ -45,10 +45,10 @@ int health_util_format_hours_minutes_seconds(char *buffer, size_t buffer_size, i
   const int seconds = (duration_s % PBL_SEC_PER_HOUR) % PBL_SEC_PER_MIN;
   if (hours > 0) {
     const char *fmt = leading_zero ? "%02d:%02d:%02d" : "%d:%02d:%02d";
-    return snprintf(buffer, buffer_size, i18n_get(fmt, i18n_owner), hours, minutes, seconds);
+    return snprintf(buffer, buffer_size, pbl_i18n_get(fmt, i18n_owner), hours, minutes, seconds);
   } else {
     const char *fmt = leading_zero ? "%02d:%02d" : "%d:%02d";
-    return snprintf(buffer, buffer_size, i18n_get(fmt, i18n_owner), minutes, seconds);
+    return snprintf(buffer, buffer_size, pbl_i18n_get(fmt, i18n_owner), minutes, seconds);
   }
 }
 
@@ -56,7 +56,7 @@ int health_util_format_minutes_and_seconds(char *buffer, size_t buffer_size, int
                                            void *i18n_owner) {
   int minutes = duration_s / PBL_SEC_PER_MIN;
   int seconds = duration_s % PBL_SEC_PER_MIN;
-  return snprintf(buffer, buffer_size, i18n_get("%d:%d", i18n_owner), minutes, seconds);
+  return snprintf(buffer, buffer_size, pbl_i18n_get("%d:%d", i18n_owner), minutes, seconds);
 }
 
 GTextNodeText *health_util_create_text_node(int buffer_size, GFont font, GColor color,
@@ -90,26 +90,27 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
     GTextNodeText *hours_text_node =
         health_util_create_text_node(hours_and_minutes_buffer_size, number_font, color, container);
     snprintf((char *)hours_text_node->text, hours_and_minutes_buffer_size,
-             i18n_get("%d", i18n_owner), hours);
+             pbl_i18n_get("%d", i18n_owner), hours);
 
     GTextNodeText *hours_units_text_node = health_util_create_text_node_with_text(
-        i18n_get("h", i18n_owner), units_font, color, container);
+        pbl_i18n_get("h", i18n_owner), units_font, color, container);
     hours_units_text_node->node.offset.y = units_offset_y;
   }
 
   if (hours != INT_MIN && minutes != INT_MIN) {
     // add a space between the H and the number of minutes
-    health_util_create_text_node_with_text(i18n_get(" ", i18n_owner), units_font, color, container);
+    health_util_create_text_node_with_text(pbl_i18n_get(" ", i18n_owner), units_font, color,
+                                           container);
   }
 
   if (minutes != INT_MIN) {
     GTextNodeText *minutes_text_node =
         health_util_create_text_node(hours_and_minutes_buffer_size, number_font, color, container);
     snprintf((char *)minutes_text_node->text, hours_and_minutes_buffer_size,
-             i18n_get("%d", i18n_owner), minutes);
+             pbl_i18n_get("%d", i18n_owner), minutes);
 
     GTextNodeText *minutes_units_text_node = health_util_create_text_node_with_text(
-        i18n_get("min", i18n_owner), units_font, color, container);
+        pbl_i18n_get("min", i18n_owner), units_font, color, container);
     minutes_units_text_node->node.offset.y = units_offset_y;
   }
 }
@@ -127,10 +128,10 @@ int health_util_format_whole_and_decimal(char *buffer, size_t buffer_size, int n
   int converted_distance_decimal_part = 0;
   health_util_convert_fraction_to_whole_and_decimal_part(
       numerator, denominator, &converted_distance_whole_part, &converted_distance_decimal_part);
-  const char *fmt_i18n = i18n_noop("%d.%d");
-  const int rv = snprintf(buffer, buffer_size, i18n_get(fmt_i18n, buffer),
+  const char *fmt_i18n = pbl_i18n_noop("%d.%d");
+  const int rv = snprintf(buffer, buffer_size, pbl_i18n_get(fmt_i18n, buffer),
                           converted_distance_whole_part, converted_distance_decimal_part);
-  i18n_free(fmt_i18n, buffer);
+  pbl_i18n_free(fmt_i18n, buffer);
   return rv;
 }
 

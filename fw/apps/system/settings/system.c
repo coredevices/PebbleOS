@@ -14,12 +14,12 @@
 #include <string.h>
 
 #include <pbl/drivers/als.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/light.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/time.h>
@@ -161,12 +161,12 @@ typedef enum {
 } SystemMenuItem;
 
 static const char *s_item_titles[SystemMenuItem_Count] = {
-  [SystemMenuItemInformation] = i18n_noop("Information"),
-  [SystemMenuItemCertification] = i18n_noop("Certification"),
-  [SystemMenuItemStationaryToggle] = i18n_noop("Stand-By Mode"),
-  [SystemMenuItemDebugging] = i18n_noop("Debugging"),
-  [SystemMenuItemShutDown] = i18n_noop("Shut Down"),
-  [SystemMenuItemFactoryReset] = i18n_noop("Factory Reset"),
+  [SystemMenuItemInformation] = pbl_i18n_noop("Information"),
+  [SystemMenuItemCertification] = pbl_i18n_noop("Certification"),
+  [SystemMenuItemStationaryToggle] = pbl_i18n_noop("Stand-By Mode"),
+  [SystemMenuItemDebugging] = pbl_i18n_noop("Debugging"),
+  [SystemMenuItemShutDown] = pbl_i18n_noop("Shut Down"),
+  [SystemMenuItemFactoryReset] = pbl_i18n_noop("Factory Reset"),
 };
 
 // Common status bar component is used across all windows that need them.
@@ -193,12 +193,12 @@ static ConfirmationDialog *prv_settings_confirm(const char *title, const char *t
   ConfirmationDialog *confirmation_dialog = confirmation_dialog_create(title);
   Dialog *dialog = confirmation_dialog_get_dialog(confirmation_dialog);
 
-  dialog_set_text(dialog, i18n_get(text, confirmation_dialog));
+  dialog_set_text(dialog, pbl_i18n_get(text, confirmation_dialog));
   dialog_set_background_color(dialog, GColorRed);
   dialog_set_text_color(dialog, GColorWhite);
   dialog_set_icon(dialog, resource_id);
 
-  i18n_free_all(confirmation_dialog);
+  pbl_i18n_free_all(confirmation_dialog);
 
   return confirmation_dialog;
 }
@@ -207,15 +207,15 @@ static ConfirmationDialog *prv_settings_confirm(const char *title, const char *t
 //////////////////////
 
 static const char *s_information_titles[SystemInformationItem_Count] = {
-  [SystemInformationItemBtAddress] = i18n_noop("BT Address"),
-  [SystemInformationItemFirmware] = i18n_noop("Firmware"),
-  [SystemInformationItemLanguage] = i18n_noop("Language"),
-  [SystemInformationItemRecovery] = i18n_noop("Recovery"),
-  [SystemInformationItemBootloader] = i18n_noop("Bootloader"),
-  [SystemInformationItemHardware] = i18n_noop("Hardware"),
-  [SystemInformationItemSerial] = i18n_noop("Serial"),
-  [SystemInformationItemUptime] = i18n_noop("Uptime"),
-  [SystemInformationItemLegal] = i18n_noop("Legal")
+  [SystemInformationItemBtAddress] = pbl_i18n_noop("BT Address"),
+  [SystemInformationItemFirmware] = pbl_i18n_noop("Firmware"),
+  [SystemInformationItemLanguage] = pbl_i18n_noop("Language"),
+  [SystemInformationItemRecovery] = pbl_i18n_noop("Recovery"),
+  [SystemInformationItemBootloader] = pbl_i18n_noop("Bootloader"),
+  [SystemInformationItemHardware] = pbl_i18n_noop("Hardware"),
+  [SystemInformationItemSerial] = pbl_i18n_noop("Serial"),
+  [SystemInformationItemUptime] = pbl_i18n_noop("Uptime"),
+  [SystemInformationItemLegal] = pbl_i18n_noop("Legal")
 };
 
 static void prv_populate_uptime_string(SystemInformationData *data) {
@@ -236,7 +236,7 @@ static void prv_information_draw_row_callback(GContext *ctx, const Layer *cell_l
   SettingsSystemData *data = (SettingsSystemData *)context;
   SystemInformationData *info = &data->information_data;
 
-  const char *title = i18n_get(s_information_titles[cell_index->row], data);
+  const char *title = pbl_i18n_get(s_information_titles[cell_index->row], data);
   menu_cell_basic_draw(ctx, cell_layer, title, info->subtitle_text[cell_index->row], nullptr);
 }
 
@@ -256,7 +256,7 @@ static uint16_t prv_information_get_num_rows_callback(MenuLayer *menu_layer, uin
 static void prv_information_window_load(Window *window) {
   SettingsSystemData *data = (SettingsSystemData *)window_get_user_data(window);
 
-  prv_init_status_bar(&data->status_layer, &data->window, i18n_get("Information", data));
+  prv_init_status_bar(&data->status_layer, &data->window, pbl_i18n_get("Information", data));
 
   // Create the menu
   MenuLayer *menu_layer = &data->menu_layer;
@@ -308,8 +308,8 @@ static void prv_information_window_push(SettingsSystemData *data) {
   mfg_info_get_hw_version(info->hw_version_string, MFG_HW_VERSION_SIZE + 1);
   prv_populate_uptime_string(info);
 
-  sniprintf(info->language_string, sizeof(info->language_string), "%s, v%u", i18n_get_locale(),
-            i18n_get_version());
+  sniprintf(info->language_string, sizeof(info->language_string), "%s, v%u", pbl_i18n_get_locale(),
+            pbl_i18n_get_version());
 
   info->subtitle_text[SystemInformationItemBtAddress] = info->bt_mac_addr;
   info->subtitle_text[SystemInformationItemFirmware] =
@@ -352,7 +352,7 @@ static void prv_coredump_click_config(void *context) {
 
 static void prv_maybe_trigger_core_dump() {
   ConfirmationDialog *confirmation_dialog = prv_settings_confirm(
-      "Core Dump", i18n_noop("Core dump and reboot?"), RESOURCE_ID_RESULT_FAILED_LARGE);
+      "Core Dump", pbl_i18n_noop("Core dump and reboot?"), RESOURCE_ID_RESULT_FAILED_LARGE);
   confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_coredump_click_config);
   app_confirmation_dialog_push(confirmation_dialog);
 }
@@ -439,10 +439,11 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
 #ifdef CONFIG_ACCEL_SENSITIVITY
 static const uint8_t s_motion_sensitivity_values[] = {10, 25, 40, 55, 70, 85, 100};
 
-static const char *s_motion_sensitivity_labels[] = {i18n_noop("Very Low"),    i18n_noop("Low"),
-                                                    i18n_noop("Medium-Low"),  i18n_noop("Medium"),
-                                                    i18n_noop("Medium-High"), i18n_noop("High"),
-                                                    i18n_noop("Very High")};
+static const char *s_motion_sensitivity_labels[] = {
+  pbl_i18n_noop("Very Low"), pbl_i18n_noop("Low"),         pbl_i18n_noop("Medium-Low"),
+  pbl_i18n_noop("Medium"),   pbl_i18n_noop("Medium-High"), pbl_i18n_noop("High"),
+  pbl_i18n_noop("Very High")
+};
 
 static int prv_motion_sensitivity_get_selection_index() {
   const uint8_t sensitivity = shell_prefs_get_motion_sensitivity();
@@ -467,7 +468,7 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
   const OptionMenuCallbacks callbacks = {
     .select = prv_motion_sensitivity_menu_select,
   };
-  const char *title = i18n_noop("Motion Sensitivity");
+  const char *title = pbl_i18n_noop("Motion Sensitivity");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
                             ARRAY_LENGTH(s_motion_sensitivity_labels), true /* icons_enabled */,
                             s_motion_sensitivity_labels, data);
@@ -489,17 +490,17 @@ static void prv_compact_settings_dbs(void) {
 ///////////////////////
 
 static const char *s_debugging_titles[DebuggingItem_Count] = {
-  [DebuggingItemCoreDumpNow] = i18n_noop("CoreDump now"),
-  [DebuggingItemCoreDumpShortcut] = i18n_noop("CoreDump shortcut"),
-  [DebuggingItemALSThreshold] = i18n_noop("ALS Threshold"),
+  [DebuggingItemCoreDumpNow] = pbl_i18n_noop("CoreDump now"),
+  [DebuggingItemCoreDumpShortcut] = pbl_i18n_noop("CoreDump shortcut"),
+  [DebuggingItemALSThreshold] = pbl_i18n_noop("ALS Threshold"),
 #ifdef CONFIG_ACCEL_SENSITIVITY
-  [DebuggingItemMotionSensitivity] = i18n_noop("Motion Sensitivity"),
+  [DebuggingItemMotionSensitivity] = pbl_i18n_noop("Motion Sensitivity"),
 #endif
-  [DebuggingItemAccelShakeLogInfo] = i18n_noop("Shake Log Info"),
-  [DebuggingItemVibeLogInfo] = i18n_noop("Vibe Log Info"),
-  [DebuggingItemCompactSettingsDbs] = i18n_noop("Compact Settings DBs"),
+  [DebuggingItemAccelShakeLogInfo] = pbl_i18n_noop("Shake Log Info"),
+  [DebuggingItemVibeLogInfo] = pbl_i18n_noop("Vibe Log Info"),
+  [DebuggingItemCompactSettingsDbs] = pbl_i18n_noop("Compact Settings DBs"),
 #if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
-  [DebuggingItemSpO2Test] = i18n_noop("SpO2 Test"),
+  [DebuggingItemSpO2Test] = pbl_i18n_noop("SpO2 Test"),
 #endif
 };
 
@@ -516,11 +517,12 @@ static void prv_debugging_draw_row_callback(GContext *ctx, const Layer *cell_lay
     light_allow(true);
   }
 
-  const char *title = i18n_get(s_debugging_titles[cell_index->row], data);
+  const char *title = pbl_i18n_get(s_debugging_titles[cell_index->row], data);
   const char *subtitle_text = nullptr;
   if (cell_index->row == DebuggingItemCoreDumpShortcut) {
-    subtitle_text = shell_prefs_can_coredump_on_request() ? i18n_get("10 back-button presses", data)
-                                                          : i18n_get("Disabled", data);
+    subtitle_text = shell_prefs_can_coredump_on_request()
+                        ? pbl_i18n_get("10 back-button presses", data)
+                        : pbl_i18n_get("Disabled", data);
   } else if (cell_index->row == DebuggingItemALSThreshold) {
     // Show current threshold value
     uint32_t current_threshold = backlight_get_ambient_threshold();
@@ -530,16 +532,16 @@ static void prv_debugging_draw_row_callback(GContext *ctx, const Layer *cell_lay
   }
 #ifdef CONFIG_ACCEL_SENSITIVITY
   else if (cell_index->row == DebuggingItemMotionSensitivity) {
-    subtitle_text =
-        i18n_get(s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
+    subtitle_text = pbl_i18n_get(
+        s_motion_sensitivity_labels[prv_motion_sensitivity_get_selection_index()], data);
   }
 #endif
   else if (cell_index->row == DebuggingItemAccelShakeLogInfo) {
-    subtitle_text = shell_prefs_get_accel_shake_log_info_enabled() ? i18n_get("Enabled", data)
-                                                                   : i18n_get("Disabled", data);
+    subtitle_text = shell_prefs_get_accel_shake_log_info_enabled() ? pbl_i18n_get("Enabled", data)
+                                                                   : pbl_i18n_get("Disabled", data);
   } else if (cell_index->row == DebuggingItemVibeLogInfo) {
-    subtitle_text = shell_prefs_get_vibe_log_info_enabled() ? i18n_get("Enabled", data)
-                                                            : i18n_get("Disabled", data);
+    subtitle_text = shell_prefs_get_vibe_log_info_enabled() ? pbl_i18n_get("Enabled", data)
+                                                            : pbl_i18n_get("Disabled", data);
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, nullptr);
 }
@@ -602,7 +604,7 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
 static void prv_debugging_window_load(Window *window) {
   SettingsSystemData *data = (SettingsSystemData *)window_get_user_data(window);
 
-  prv_init_status_bar(&data->status_layer, &data->window, i18n_get("Debugging", data));
+  prv_init_status_bar(&data->status_layer, &data->window, pbl_i18n_get("Debugging", data));
 
   // Create the menu
   MenuLayer *menu_layer = &data->menu_layer;
@@ -677,7 +679,7 @@ static void prv_debugging_interstitial_trigger(SettingsSystemData *context) {
   }
 
   ConfirmationDialog *confirmation_dialog =
-      prv_settings_confirm("Debugging confirmation", i18n_noop("PebbleOS developers only!"),
+      prv_settings_confirm("Debugging confirmation", pbl_i18n_noop("PebbleOS developers only!"),
                            RESOURCE_ID_GENERIC_WARNING_SMALL);
   actionable_dialog_set_user_data((ActionableDialog *)confirmation_dialog, (void *)context);
   confirmation_dialog_set_click_config_provider(confirmation_dialog,
@@ -924,9 +926,9 @@ static void prv_draw_korea_regulatory_cell(GContext *ctx, const Layer *cell_laye
                                            SystemCertificationData *cd, bool is_selected,
                                            const void *arg1, const void *arg2) {
   const char *title = arg1;
-  const char *subtitle = i18n_get("See details...", title);
+  const char *subtitle = pbl_i18n_get("See details...", title);
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle, nullptr);
-  i18n_free(subtitle, title);
+  pbl_i18n_free(subtitle, title);
 }
 
 static void prv_certification_draw_row_callback(GContext *ctx, const Layer *cell_layer,
@@ -960,7 +962,7 @@ static void prv_certification_select_callback(MenuLayer *menu_layer, MenuIndex *
 static void prv_certification_window_load(Window *window) {
   SettingsSystemData *data = (SettingsSystemData *)window_get_user_data(window);
 
-  prv_init_status_bar(&data->status_layer, &data->window, i18n_get("Certification", data));
+  prv_init_status_bar(&data->status_layer, &data->window, pbl_i18n_get("Certification", data));
 
   SystemCertificationData *cd = &data->certification_data;
   *cd = (SystemCertificationData){};
@@ -982,7 +984,7 @@ static void prv_certification_window_load(Window *window) {
   // Add company name
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Company", data),
+                                      .arg1 = pbl_i18n_get("Company", data),
                                       .arg2 = prv_get_company_name(),
                                     });
 
@@ -990,56 +992,56 @@ static void prv_certification_window_load(Window *window) {
   prv_get_model(cd->model_buffer);
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Product Model", data),
+                                      .arg1 = pbl_i18n_get("Product Model", data),
                                       .arg2 = cd->model_buffer,
                                     });
 
   // Add product type
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Product Type", data),
+                                      .arg1 = pbl_i18n_get("Product Type", data),
                                       .arg2 = prv_get_product_type(),
                                     });
 
   // Add trademark
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Trademark", data),
+                                      .arg1 = pbl_i18n_get("Trademark", data),
                                       .arg2 = prv_get_trademark(),
                                     });
 
   // Add place of origin
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Place of Origin", data),
+                                      .arg1 = pbl_i18n_get("Place of Origin", data),
                                       .arg2 = prv_get_place_of_origin(),
                                     });
 
   // Add DC input
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("DC Input", data),
+                                      .arg1 = pbl_i18n_get("DC Input", data),
                                       .arg2 = prv_get_dc_input(),
                                     });
 
   // Add rated voltage
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Rated Voltage", data),
+                                      .arg1 = pbl_i18n_get("Rated Voltage", data),
                                       .arg2 = prv_get_rated_voltage(),
                                     });
 
   // Add milliampere-hour
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Milliampere-hour", data),
+                                      .arg1 = pbl_i18n_get("Milliampere-hour", data),
                                       .arg2 = prv_get_milliampere_hour(),
                                     });
 
   // Add watt-hour
   prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                       .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                      .arg1 = i18n_get("Watt-hour", data),
+                                      .arg1 = pbl_i18n_get("Watt-hour", data),
                                       .arg2 = prv_get_watt_hour(),
                                     });
 
@@ -1053,14 +1055,14 @@ static void prv_certification_window_load(Window *window) {
   if (flags->has_canada_ic) {
     prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                         .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                        .arg1 = i18n_get("Canada IC", data),
+                                        .arg1 = pbl_i18n_get("Canada IC", data),
                                         .arg2 = prv_get_canada_ic_id(),
                                       });
   }
   if (flags->has_canada_ised) {
     prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                         .draw_cell_fn = prv_draw_regulatory_id_cell,
-                                        .arg1 = i18n_get("Canada ISED", data),
+                                        .arg1 = pbl_i18n_get("Canada ISED", data),
                                         .arg2 = prv_get_canada_ised_id(),
                                       });
   }
@@ -1074,7 +1076,7 @@ static void prv_certification_window_load(Window *window) {
   if (flags->has_korea_kcc) {
     prv_append_certification_menu(cd, &(SystemCertificationMenuItem){
                                         .draw_cell_fn = prv_draw_korea_regulatory_cell,
-                                        .arg1 = i18n_get("South Korea KCC", data),
+                                        .arg1 = pbl_i18n_get("South Korea KCC", data),
                                         .select_cb = prv_push_kcc_window,
                                       });
   }
@@ -1182,7 +1184,7 @@ static void prv_kcc_window_load(Window *window) {
   SystemCertificationData *data = (SystemCertificationData *)window_get_user_data(window);
   Layer *window_layer = window_get_root_layer(window);
 
-  const char *title = i18n_get("South Korea KCC", data);
+  const char *title = pbl_i18n_get("South Korea KCC", data);
   prv_init_status_bar(&data->status_layer, &data->kcc_window, title);
 
   GRect window_bounds = window_layer->bounds;
@@ -1233,7 +1235,7 @@ static void prv_kcc_window_unload(Window *window) {
   bitmap_layer_deinit(&data->bmp_layer);
   text_layer_deinit(&data->title_text);
   text_layer_deinit(&data->info_text);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 static void prv_push_kcc_window(SystemCertificationData *data) {
@@ -1253,11 +1255,11 @@ static void prv_push_unplug_to_shut_down_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("Shutdown Unplug");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
 
-  dialog_set_text(dialog, i18n_get("Disconnect the charger to shut down.", simple_dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Disconnect the charger to shut down.", simple_dialog));
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_LARGE);
   dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
 
-  i18n_free_all(simple_dialog);
+  pbl_i18n_free_all(simple_dialog);
 
   simple_dialog_push(simple_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
 }
@@ -1287,17 +1289,17 @@ static void prv_shutdown_cb(void *data) {
 
   dialog_set_text_color(dialog, GColorWhite);
   dialog_set_background_color(dialog, GColorCobaltBlue);
-  dialog_set_text(dialog, i18n_get("Do you want to shut down?", a_dialog));
+  dialog_set_text(dialog, pbl_i18n_get("Do you want to shut down?", a_dialog));
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_QUESTION_LARGE);
 
-  i18n_free_all(a_dialog);
+  pbl_i18n_free_all(a_dialog);
 
   actionable_dialog_push(a_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
 }
 
 static void prv_deinit_cb(SettingsCallbacks *context) {
   SettingsSystemData *data = (SettingsSystemData *)context;
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
 }
 
 static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Layer *cell_layer,
@@ -1307,7 +1309,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   PBL_ASSERTN(row < SystemMenuItem_Count);
   switch (row) {
     case SystemMenuItemStationaryToggle:
-      subtitle = stationary_get_enabled() ? i18n_get("On", data) : i18n_get("Off", data);
+      subtitle = stationary_get_enabled() ? pbl_i18n_get("On", data) : pbl_i18n_get("Off", data);
       break;
     case SystemMenuItemShutDown:
     case SystemMenuItemInformation:
@@ -1319,7 +1321,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
     default:
       pbl_panic();
   }
-  menu_cell_basic_draw(ctx, cell_layer, i18n_get(s_item_titles[row], data), subtitle, nullptr);
+  menu_cell_basic_draw(ctx, cell_layer, pbl_i18n_get(s_item_titles[row], data), subtitle, nullptr);
 }
 
 void factory_reset_select_callback(int index, void *context) {
@@ -1374,7 +1376,7 @@ static Window *prv_init(void) {
 
 const SettingsModuleMetadata *settings_system_get_info(void) {
   static const SettingsModuleMetadata s_module_info = {
-    .name = i18n_noop("System"),
+    .name = pbl_i18n_noop("System"),
     .init = prv_init,
   };
 

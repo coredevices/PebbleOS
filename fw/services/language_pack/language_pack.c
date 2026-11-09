@@ -5,8 +5,8 @@
 #include <string.h>
 
 #include <pbl/fs/fs.h>
+#include <pbl/i18n/i18n.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/language_pack.h>
 
 #include <kernel/event_loop.h>
@@ -102,7 +102,7 @@ static void prv_deselect_pack(uint8_t slot) {
 static void prv_select_installed_pack_cb(void *data) {
   shell_prefs_set_language(ShellLanguageInstalledPack);
   if (s_translating) {
-    language_ui_display_changed(i18n_get_lang_name());
+    language_ui_display_changed(pbl_i18n_get_lang_name());
   }
 }
 

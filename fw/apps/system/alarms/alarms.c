@@ -8,9 +8,9 @@
 
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/i18n/i18n.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/util/units.h>
 
@@ -112,9 +112,9 @@ static bool prv_are_alarms_scheduled(AlarmsAppData *data) {
 static void prv_show_deleted_dialog(void) {
   SimpleDialog *simple_dialog = simple_dialog_create("AlarmDelete");
   Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-  const char *delete_text = i18n_noop("Alarm Deleted");
-  dialog_set_text(dialog, i18n_get(delete_text, dialog));
-  i18n_free(delete_text, dialog);
+  const char *delete_text = pbl_i18n_noop("Alarm Deleted");
+  dialog_set_text(dialog, pbl_i18n_get(delete_text, dialog));
+  pbl_i18n_free(delete_text, dialog);
   dialog_set_icon(dialog, RESOURCE_ID_RESULT_SHREDDED_LARGE);
   dialog_set_background_color(dialog, ALARMS_APP_HIGHLIGHT_COLOR);
   dialog_set_timeout(dialog, preferred_result_display_duration());
@@ -227,7 +227,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
 
           box = GRect(0, 0, cell_layer->bounds.size.w, fonts_get_font_height(font));
 
-          const char *text = i18n_get("Limit reached.", data);
+          const char *text = pbl_i18n_get("Limit reached.", data);
           box.size = graphics_text_layout_get_max_used_size(ctx, text, font, box,
                                                             GTextOverflowModeTrailingEllipsis,
                                                             GTextAlignmentCenter, nullptr);
@@ -271,7 +271,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   char alarm_time_text[9];
   clock_format_time(alarm_time_text, sizeof(alarm_time_text), node->info.hour, node->info.minute,
                     true);
-  const char *enabled = node->info.enabled ? i18n_get("ON", data) : i18n_get("OFF", data);
+  const char *enabled = node->info.enabled ? pbl_i18n_get("ON", data) : pbl_i18n_get("OFF", data);
 
   graphics_context_set_compositing_mode(ctx, GCompOpTint);
   // If the alarm is not smart, use the icon as spacing but don't render it.
@@ -295,7 +295,7 @@ static void prv_alarm_list_draw_row_callback(GContext *ctx, const Layer *cell_la
   };
   if (node->info.kind != ALARM_KIND_CUSTOM) {
     const bool all_caps = false;
-    config.subtitle = i18n_get(alarm_get_string_for_kind(node->info.kind, all_caps), data);
+    config.subtitle = pbl_i18n_get(alarm_get_string_for_kind(node->info.kind, all_caps), data);
   } else {
     alarm_get_string_for_custom(node->scheduled_days, alarm_day_text);
     config.subtitle = alarm_day_text;
@@ -344,11 +344,11 @@ static void prv_alarms_app_opened_click_handler(ClickRecognizerRef recognizer, v
 }
 
 static void prv_push_alarms_app_opened_dialog(AlarmsAppData *data) {
-  const char *first_use_text = i18n_get(
+  const char *first_use_text = pbl_i18n_get(
       "Let us wake you in your lightest sleep so you're fully refreshed! "
       "Smart Alarm wakes you up to 30min before your alarm.",
       data);
-  const char *header = i18n_get("Smart Alarm", data);
+  const char *header = pbl_i18n_get("Smart Alarm", data);
   ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
       header, RESOURCE_ID_SMART_ALARM_TINY, first_use_text, system_theme_get_fg_color(),
       system_theme_get_bg_color(), nullptr, RESOURCE_ID_ACTION_BAR_ICON_CHECK,
@@ -456,7 +456,7 @@ static void prv_handle_deinit(void) {
   AlarmsAppData *data = app_state_get_user_data();
   status_bar_layer_deinit(&data->status_layer);
   menu_layer_deinit(&data->menu_layer);
-  i18n_free_all(data);
+  pbl_i18n_free_all(data);
   prv_clear_alarm_list(data);
   event_service_client_unsubscribe(&data->alarm_event_info);
   app_free(data);
@@ -477,7 +477,7 @@ const PebbleProcessMd *alarms_app_get_info() {
           .main_func = s_main,
           .uuid = UUID_ALARMS_DATA_SOURCE,
         },
-    .name = i18n_noop("Alarms"),
+    .name = pbl_i18n_noop("Alarms"),
     .icon_resource_id = RESOURCE_ID_ALARM_CLOCK_TINY,
   };
   return (const PebbleProcessMd *)&s_alarms_app_info;
