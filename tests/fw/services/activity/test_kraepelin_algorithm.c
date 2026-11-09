@@ -8,10 +8,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kraepelin/kraepelin.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/util/list.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -47,14 +47,14 @@ extern char *strdup(const char *s);
 // #define ACTIVITY_TEST_ONLY "walk_activities_0"
 
 // Implemented in activity/step_samples.c
-struct kalg_sample *activity_sample_30_steps(int *len);
-struct kalg_sample *activity_sample_working_at_desk(int *len);
-struct kalg_sample *activity_sample_not_moving(int *len);
+struct pbl_kraepelin_sample *activity_sample_30_steps(int *len);
+struct pbl_kraepelin_sample *activity_sample_working_at_desk(int *len);
+struct pbl_kraepelin_sample *activity_sample_not_moving(int *len);
 
 // Implemented in activity/sleep_samples_v1.c
 AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len);
 
-typedef struct kalg_sample *(*ActivitySamplesFunc)(int *len);
+typedef struct pbl_kraepelin_sample *(*ActivitySamplesFunc)(int *len);
 
 // These are the values we capture and compare against for every minute of accel data
 typedef struct {
@@ -68,7 +68,7 @@ typedef struct {
 // system
 typedef struct {
   char name[256];
-  struct kalg_sample *samples;
+  struct pbl_kraepelin_sample *samples;
   int num_samples;
   int exp_steps;
   int exp_steps_min;
@@ -149,7 +149,7 @@ typedef struct {
 } ActivityTestResults;
 
 typedef struct {
-  KAlgActivityType activity;
+  enum pbl_kraepelin_activity activity;
   time_t start_utc;
   uint16_t len_minutes;
   bool ongoing;
@@ -328,7 +328,7 @@ static void prv_stats_write(const char *filename, bool create, const char *test_
 // @param[in,out] minute_data_len size of minute_data array on entry, # of filled entries
 //                 on exit
 // @param return number of steps computed.
-static uint32_t prv_feed_kalg_samples(struct kalg_sample *data, int num_samples,
+static uint32_t prv_feed_kalg_samples(struct pbl_kraepelin_sample *data, int num_samples,
                                       TestMinuteData *minute_data_array, int *minute_data_len) {
   uint32_t total_steps = 0;
   uint32_t minute_steps = 0;
@@ -336,25 +336,25 @@ static uint32_t prv_feed_kalg_samples(struct kalg_sample *data, int num_samples,
   int num_samples_left = num_samples;
 
   // Init  state
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
 
   // Run some data through it, 1 minute at a time
   while (num_samples_left) {
-    int chunk_size = MIN(num_samples_left, KALG_SAMPLE_HZ * PBL_SEC_PER_MIN);
+    int chunk_size = MIN(num_samples_left, PBL_KRAEPELIN_SAMPLE_HZ * PBL_SEC_PER_MIN);
     uint32_t steps;
     uint32_t consumed_samples;
-    steps = kalg_analyze_samples(s_kalg_state, data, chunk_size, &consumed_samples);
+    steps = pbl_kraepelin_analyze_samples(s_kalg_state, data, chunk_size, &consumed_samples);
     minute_steps += steps;
     total_steps += steps;
 
-    if (chunk_size == KALG_SAMPLE_HZ * PBL_SEC_PER_MIN) {
+    if (chunk_size == PBL_KRAEPELIN_SAMPLE_HZ * PBL_SEC_PER_MIN) {
       // Capture the minute data for each minute
       TestMinuteData minute_data = {
         .steps = minute_steps,
       };
       bool still;
-      kalg_minute_stats(s_kalg_state, &minute_data.vmc, &minute_data.orientation, &still);
+      pbl_kraepelin_minute_stats(s_kalg_state, &minute_data.vmc, &minute_data.orientation, &still);
 
       PBL_ASSERTN(num_minutes_captured < *minute_data_len);
       minute_data_array[num_minutes_captured++] = minute_data;
@@ -366,13 +366,13 @@ static uint32_t prv_feed_kalg_samples(struct kalg_sample *data, int num_samples,
 
   // -------------------------------------------------------
   // Leftover data in epoch, if any
-  total_steps += kalg_analyze_finish_epoch(s_kalg_state);
+  total_steps += pbl_kraepelin_analyze_finish_epoch(s_kalg_state);
 
   TestMinuteData minute_data = {
     .steps = minute_steps,
   };
   bool still;
-  kalg_minute_stats(s_kalg_state, &minute_data.vmc, &minute_data.orientation, &still);
+  pbl_kraepelin_minute_stats(s_kalg_state, &minute_data.vmc, &minute_data.orientation, &still);
   PBL_ASSERTN(num_minutes_captured < *minute_data_len);
   minute_data_array[num_minutes_captured++] = minute_data;
 
@@ -387,7 +387,7 @@ static uint32_t prv_feed_kalg_samples(struct kalg_sample *data, int num_samples,
 
 // ---------------------------------------------------------------------------------------
 // Run samples through the reference algorithm.
-static uint32_t prv_feed_reference_samples(struct kalg_sample *data, int num_samples) {
+static uint32_t prv_feed_reference_samples(struct pbl_kraepelin_sample *data, int num_samples) {
   extern int ref_accel_data_handler(AccelData * data, uint32_t num_samples);
   extern void ref_init(void);
   extern int ref_finish_epoch(void);
@@ -397,18 +397,18 @@ static uint32_t prv_feed_reference_samples(struct kalg_sample *data, int num_sam
   uint8_t orientation, vmc;
 
   ref_init();
-  AccelData accel_buf[KALG_SAMPLE_HZ];
+  AccelData accel_buf[PBL_KRAEPELIN_SAMPLE_HZ];
 
   int chunk_size = 0;
   int samples_in_minute = 0;
   for (uint32_t i = 0; i < num_samples; i++) {
     accel_buf[chunk_size++] = (AccelData){.x = data[i].x, .y = data[i].y, .z = data[i].z};
     samples_in_minute++;
-    if (chunk_size == KALG_SAMPLE_HZ) {
+    if (chunk_size == PBL_KRAEPELIN_SAMPLE_HZ) {
       steps = ref_accel_data_handler(accel_buf, chunk_size);
       chunk_size = 0;
     }
-    if (samples_in_minute >= KALG_SAMPLE_HZ * PBL_SEC_PER_MIN) {
+    if (samples_in_minute >= PBL_KRAEPELIN_SAMPLE_HZ * PBL_SEC_PER_MIN) {
       ref_minute_stats(&orientation, &vmc);
       samples_in_minute = 0;
     }
@@ -422,7 +422,7 @@ static uint32_t prv_feed_reference_samples(struct kalg_sample *data, int num_sam
   ref_minute_stats(&orientation, &vmc);
 
   PBL_LOG_DBG("processed %d samples (%d seconds) of data: %d steps", num_samples,
-              num_samples / KALG_SAMPLE_HZ, steps);
+              num_samples / PBL_KRAEPELIN_SAMPLE_HZ, steps);
   return steps;
 }
 
@@ -441,10 +441,10 @@ typedef struct {
   SampleFileType type; // type of samples
 } SampleDiscoveryState;
 
-#define ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES (12 * PBL_SEC_PER_MIN * KALG_SAMPLE_HZ)
+#define ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES (12 * PBL_SEC_PER_MIN * PBL_KRAEPELIN_SAMPLE_HZ)
 typedef struct {
   SampleDiscoveryState common;
-  struct kalg_sample samples[ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES];
+  struct pbl_kraepelin_sample samples[ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES];
   StepFileTestEntry test_entry;
 } AccelSampleDiscoveryState;
 static AccelSampleDiscoveryState s_accel_sample_discovery_state;
@@ -501,7 +501,7 @@ static bool prv_parse_accel_samples_file(AccelSampleDiscoveryState *state) {
       continue;
     }
 
-    // If this is an struct kalg_sample line, get the name
+    // If this is an struct pbl_kraepelin_sample line, get the name
     if (strcmp(token, "AccelRawData") == 0) {
       PBL_ASSERT(state->test_entry.name[0] == 0, "Unexpected start of new samples");
 
@@ -541,7 +541,7 @@ static bool prv_parse_accel_samples_file(AccelSampleDiscoveryState *state) {
       fflush(stdout);
 
       PBL_ASSERTN(state->test_entry.num_samples < ACCEL_SAMPLES_DISCOVERY_MAX_SAMPLES);
-      state->samples[state->test_entry.num_samples++] = (struct kalg_sample){
+      state->samples[state->test_entry.num_samples++] = (struct pbl_kraepelin_sample){
         .x = x,
         .y = y,
         .z = z,
@@ -1060,14 +1060,14 @@ typedef struct {
 #define MAX_CAPTURED_SESSIONS 32
 KAlgTestActivitySession s_captured_activity_sessions[MAX_CAPTURED_SESSIONS];
 int s_num_captured_activity_sessions;
-void prv_activity_session_callback(void *context, KAlgActivityType activity_type, time_t start_utc,
-                                   uint32_t len_sec, bool ongoing, bool delete, uint32_t steps,
-                                   uint32_t resting_calories, uint32_t active_calories,
-                                   uint32_t distance_mm) {
+void prv_activity_session_callback(void *context, enum pbl_kraepelin_activity activity_type,
+                                   time_t start_utc, uint32_t len_sec, bool ongoing, bool delete,
+                                   uint32_t steps, uint32_t resting_calories,
+                                   uint32_t active_calories, uint32_t distance_mm) {
   int entry_idx = s_num_captured_activity_sessions;
   // Ignore sleep activities for this test
-  if ((activity_type == KAlgActivityType_Sleep) ||
-      (activity_type == KAlgActivityType_RestfulSleep)) {
+  if ((activity_type == PBL_KRAEPELIN_ACTIVITY_SLEEP) ||
+      (activity_type == PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP)) {
     return;
   }
 
@@ -1285,21 +1285,22 @@ static float prv_compute_test_error(const char *name, ExpectedValue *exp, Actual
 // =========================================================================================
 // Support for capturing sleep sessions detected by the algorithm
 typedef struct {
-  KAlgActivityType activity;
+  enum pbl_kraepelin_activity activity;
   time_t start_utc;
   uint16_t len_m;
 } KAlgTestSleepSession;
 
 KAlgTestSleepSession s_captured_sleep_sessions[MAX_CAPTURED_SESSIONS];
 int s_num_captured_sleep_sessions;
-void prv_sleep_session_callback(void *context, KAlgActivityType activity_type, time_t start_utc,
-                                uint32_t len_sec, bool ongoing, bool delete, uint32_t steps,
-                                uint32_t resting_calories, uint32_t active_calories,
+void prv_sleep_session_callback(void *context, enum pbl_kraepelin_activity activity_type,
+                                time_t start_utc, uint32_t len_sec, bool ongoing, bool delete,
+                                uint32_t steps, uint32_t resting_calories, uint32_t active_calories,
                                 uint32_t distance_mm) {
   int entry_idx = s_num_captured_sleep_sessions;
 
   // If not a sleep session, ignore it
-  if (activity_type != KAlgActivityType_Sleep && activity_type != KAlgActivityType_RestfulSleep) {
+  if (activity_type != PBL_KRAEPELIN_ACTIVITY_SLEEP &&
+      activity_type != PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP) {
     return;
   }
 
@@ -1359,9 +1360,9 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
     // Skip if not a sleep session
     bool is_restful = false;
     switch (session->activity) {
-      case KAlgActivityType_Sleep:
+      case PBL_KRAEPELIN_ACTIVITY_SLEEP:
         break;
-      case KAlgActivityType_RestfulSleep:
+      case PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP:
         is_restful = true;
         break;
       default:
@@ -1431,7 +1432,7 @@ static void prv_get_sleep_summary(SleepTestResults *results, time_t test_start_u
 
 // --------------------------------------------------------------------------------------
 // Run a set of samples through and verify that we got the right minute data
-static void prv_test_minute_data(struct kalg_sample *samples, int num_samples,
+static void prv_test_minute_data(struct pbl_kraepelin_sample *samples, int num_samples,
                                  TestMinuteData *exp_minutes, int exp_num_minutes) {
   int minute_data_len = 100;
   TestMinuteData minute_data[minute_data_len];
@@ -1461,7 +1462,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
   cl_assert(success);
 
   // Init algorithm state
-  s_kalg_state = pbl_zalloc(kalg_state_size());
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
 
   const uint32_t k_max_tests = 1000;
   uint32_t num_tests = 0;
@@ -1491,8 +1492,8 @@ void test_kraepelin_algorithm__sleep_tests(void) {
 
     // It's easier to understand the algorithm log messages if we start at 0 time
     pbl_realtime_set(0);
-    memset(s_kalg_state, 0, kalg_state_size());
-    kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+    memset(s_kalg_state, 0, pbl_kraepelin_state_size());
+    pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
     s_num_captured_sleep_sessions = 0;
 
     // Run samples through the activity detector
@@ -1505,11 +1506,11 @@ void test_kraepelin_algorithm__sleep_tests(void) {
         vmc = vmc * vmc * 1850 / 1250;
       }
       const bool shutting_down = (entry->force_shut_down_at == i);
-      kalg_activities_update(s_kalg_state, now, entry->samples[i].v5_fields.steps, vmc,
-                             entry->samples[i].v5_fields.orientation,
-                             entry->samples[i].v5_fields.plugged_in, 0 /*rest_cals*/,
-                             0 /*active_cals*/, 0 /*distance*/, shutting_down,
-                             prv_sleep_session_callback, nullptr);
+      pbl_kraepelin_activities_update(s_kalg_state, now, entry->samples[i].v5_fields.steps, vmc,
+                                      entry->samples[i].v5_fields.orientation,
+                                      entry->samples[i].v5_fields.plugged_in, 0 /*rest_cals*/,
+                                      0 /*active_cals*/, 0 /*distance*/, shutting_down,
+                                      prv_sleep_session_callback, nullptr);
       if (shutting_down) {
         break;
       }
@@ -1519,7 +1520,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
     }
     time_t test_end_utc = now;
     time_t last_processed_utc =
-        kalg_activity_last_processed_time(s_kalg_state, KAlgActivityType_Sleep);
+        pbl_kraepelin_activity_last_processed_time(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_SLEEP);
 
     // Get summary of the sleep
     SleepTestResults result = {};
@@ -1625,7 +1626,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
   cl_assert(success);
 
   // Init algorithm state
-  s_kalg_state = pbl_zalloc(kalg_state_size());
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
 
   const uint32_t k_max_tests = 1000;
   uint32_t num_tests = 0;
@@ -1653,8 +1654,8 @@ void test_kraepelin_algorithm__activity_tests(void) {
     printf("\n\n========================================================");
     printf("\nRunning activity sample set: \"%s\"\n", entry->name);
 
-    memset(s_kalg_state, 0, kalg_state_size());
-    kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+    memset(s_kalg_state, 0, pbl_kraepelin_state_size());
+    pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
     s_num_captured_activity_sessions = 0;
 
     // Run samples through the activity detector
@@ -1662,10 +1663,10 @@ void test_kraepelin_algorithm__activity_tests(void) {
     time_t test_start_utc = now;
     for (int i = 0; i < entry->num_samples; i++) {
       const bool shutting_down = (entry->force_shut_down_at == i);
-      kalg_activities_update(s_kalg_state, now, entry->samples[i].v5_fields.steps, 0 /*vmc*/,
-                             0 /*orientation*/, false /*definitely_not_worn*/, 0 /*rest_cals*/,
-                             0 /*active_cals*/, 0 /*distance*/, shutting_down,
-                             prv_activity_session_callback, nullptr);
+      pbl_kraepelin_activities_update(s_kalg_state, now, entry->samples[i].v5_fields.steps,
+                                      0 /*vmc*/, 0 /*orientation*/, false /*definitely_not_worn*/,
+                                      0 /*rest_cals*/, 0 /*active_cals*/, 0 /*distance*/,
+                                      shutting_down, prv_activity_session_callback, nullptr);
       if (shutting_down) {
         break;
       }
@@ -1682,16 +1683,16 @@ void test_kraepelin_algorithm__activity_tests(void) {
       // Skip if this is a sleep session
       char *desc = "";
       switch (session->activity) {
-        case KAlgActivityType_Sleep:
-        case KAlgActivityType_RestfulSleep:
+        case PBL_KRAEPELIN_ACTIVITY_SLEEP:
+        case PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP:
           continue;
-        case KAlgActivityType_Walk:
+        case PBL_KRAEPELIN_ACTIVITY_WALK:
           desc = "walk";
           break;
-        case KAlgActivityType_Run:
+        case PBL_KRAEPELIN_ACTIVITY_RUN:
           desc = "run";
           break;
-        case KAlgActivityTypeCount:
+        case PBL_KRAEPELIN_ACTIVITY_COUNT:
           pbl_panic();
           break;
       }
@@ -1808,7 +1809,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    struct kalg_sample *samples = activity_sample_30_steps(&num_samples);
+    struct pbl_kraepelin_sample *samples = activity_sample_30_steps(&num_samples);
     TestMinuteData exp_minutes[] = {
       {
         .steps = 28,
@@ -1823,7 +1824,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    struct kalg_sample *samples = activity_sample_working_at_desk(&num_samples);
+    struct pbl_kraepelin_sample *samples = activity_sample_working_at_desk(&num_samples);
     TestMinuteData exp_minutes[] = {
       {
         .steps = 0,
@@ -1838,7 +1839,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
   // The expected results were obtained empirically on a known good commit
   {
     int num_samples;
-    struct kalg_sample *samples = activity_sample_not_moving(&num_samples);
+    struct pbl_kraepelin_sample *samples = activity_sample_not_moving(&num_samples);
     TestMinuteData exp_minutes[2] = {
       {
         .steps = 0,
@@ -1877,16 +1878,16 @@ static void prv_insert_artificial_activity_session(KAlgTestActivityMinute *sampl
 }
 
 // -----------------------------------------------------------------------------------
-// Feed activity minute data into the kalg_activities_update method
+// Feed activity minute data into the pbl_kraepelin_activities_update method
 static void prv_feed_activity_minutes(KAlgTestActivityMinute *samples, int samples_len) {
   time_t now = pbl_realtime();
   for (int i = 0; i < samples_len; i++) {
     // NOTE: We feed in a significant VMC to simulate activity so that the sleep algorithm
     // doesn't think we're sleeping
-    kalg_activities_update(s_kalg_state, now, samples[i].steps, 7000 /*vmc*/, 0 /*orientation*/,
-                           true /*definitely_not_worn*/, samples[i].resting_calories,
-                           samples[i].active_calories, samples[i].distance_mm,
-                           false /* shutting_down */, prv_activity_session_callback, nullptr);
+    pbl_kraepelin_activities_update(
+        s_kalg_state, now, samples[i].steps, 7000 /*vmc*/, 0 /*orientation*/,
+        true /*definitely_not_worn*/, samples[i].resting_calories, samples[i].active_calories,
+        samples[i].distance_mm, false /* shutting_down */, prv_activity_session_callback, nullptr);
     now += PBL_SEC_PER_MIN;
     pbl_realtime_set(now);
   }
@@ -1899,8 +1900,8 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
   const int k_minute_data_bytes = k_minute_data_len * sizeof(KAlgTestActivityMinute);
 
   // Init  state
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
 
   KAlgTestActivityMinute minute_raw_data[k_minute_data_len];
 
@@ -1913,7 +1914,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
     int len = 20;
     KAlgTestActivitySession exp_session = {
-      .activity = KAlgActivityType_Walk,
+      .activity = PBL_KRAEPELIN_ACTIVITY_WALK,
       .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 80, // 80 steps/min
       .len_minutes = len,
@@ -1939,7 +1940,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
     int len = 30;
     KAlgTestActivitySession exp_session = {
-      .activity = KAlgActivityType_Run,
+      .activity = PBL_KRAEPELIN_ACTIVITY_RUN,
       .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 150, // 150 steps/min
       .len_minutes = len,
@@ -1973,7 +1974,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
     int len = 5;
     KAlgTestActivitySession exp_session = {
-      .activity = KAlgActivityType_Walk,
+      .activity = PBL_KRAEPELIN_ACTIVITY_WALK,
       .start_utc = now + 10 * PBL_SEC_PER_MIN,
       .steps = len * 80, // 80 steps/min
       .len_minutes = len,
@@ -1996,7 +1997,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
     int walk_len = 15;
     KAlgTestActivitySession exp_session_walk = {
-      .activity = KAlgActivityType_Walk,
+      .activity = PBL_KRAEPELIN_ACTIVITY_WALK,
       .start_utc = now + 5 * PBL_SEC_PER_MIN,
       .steps = walk_len * 80, // 80 steps/min
       .len_minutes = walk_len,
@@ -2007,7 +2008,7 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 
     int run_len = 15;
     KAlgTestActivitySession exp_session_run = {
-      .activity = KAlgActivityType_Run,
+      .activity = PBL_KRAEPELIN_ACTIVITY_RUN,
       .start_utc = now + 30 * PBL_SEC_PER_MIN,
       .steps = run_len * 150, // 150 steps/min
       .len_minutes = run_len,
@@ -2034,12 +2035,12 @@ void test_kraepelin_algorithm__walks_and_runs(void) {
 // ---------------------------------------------------------------------------------------
 void test_kraepelin_algorithm__sleep_stats(void) {
   // Init algorithm state
-  s_kalg_state = pbl_zalloc(kalg_state_size());
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
 
   // It's easier to understand the algorithm log messages if we start at 0 time
   pbl_realtime_set(0);
-  memset(s_kalg_state, 0, kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  memset(s_kalg_state, 0, pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_sleep_sessions = 0;
 
   // Get the samples for this test
@@ -2053,18 +2054,18 @@ void test_kraepelin_algorithm__sleep_stats(void) {
     uint16_t vmc = samples[i].vmc;
     // Convert from the old compressed VMC to the new uncompressed one
     vmc = vmc * vmc * 1850 / 1250;
-    kalg_activities_update(s_kalg_state, now, samples[i].steps, vmc, samples[i].orientation,
-                           samples[i].plugged_in, 0 /*rest_cals*/, 0 /*active_cals*/,
-                           0 /*distance*/, false /* shutting_down */, prv_sleep_session_callback,
-                           nullptr);
+    pbl_kraepelin_activities_update(s_kalg_state, now, samples[i].steps, vmc,
+                                    samples[i].orientation, samples[i].plugged_in, 0 /*rest_cals*/,
+                                    0 /*active_cals*/, 0 /*distance*/, false /* shutting_down */,
+                                    prv_sleep_session_callback, nullptr);
 
     // This particular sample has sleep from minute 32 to 353
     const int k_sleep_start_m = 32;
     const int k_sleep_end_m = 353;
     const time_t k_sleep_start_utc = test_start_utc + k_sleep_start_m * PBL_SEC_PER_MIN;
 
-    KAlgOngoingSleepStats stats;
-    kalg_get_sleep_stats(s_kalg_state, &stats);
+    struct pbl_kraepelin_sleep_stats stats;
+    pbl_kraepelin_get_sleep_stats(s_kalg_state, &stats);
 
     // If we ask for the stats before sleep starts, should be no sleep info
     if (i < k_sleep_start_m) {
@@ -2076,13 +2077,14 @@ void test_kraepelin_algorithm__sleep_stats(void) {
     // If we ask once we know for sure sleep has started (at least 1 hour into it)
     if (i >= (k_sleep_start_m + 70) && (i <= k_sleep_end_m)) {
       cl_assert_equal_i(stats.sleep_start_utc, k_sleep_start_utc);
-      cl_assert_equal_i(stats.sleep_len_m, i - k_sleep_start_m - KALG_MAX_UNCERTAIN_SLEEP_M);
+      cl_assert_equal_i(stats.sleep_len_m,
+                        i - k_sleep_start_m - PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M);
       cl_assert_equal_i((now - stats.uncertain_start_utc) / PBL_SEC_PER_MIN,
-                        KALG_MAX_UNCERTAIN_SLEEP_M);
+                        PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M);
     }
 
     // After we're certain sleep ended
-    if (i > k_sleep_end_m + KALG_MAX_UNCERTAIN_SLEEP_M) {
+    if (i > k_sleep_end_m + PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M) {
       cl_assert_equal_i(stats.sleep_start_utc, k_sleep_start_utc);
       cl_assert_equal_i(stats.sleep_len_m, k_sleep_end_m - k_sleep_start_m);
       cl_assert_equal_i(stats.uncertain_start_utc, 0);
@@ -2106,10 +2108,11 @@ void test_kraepelin_algorithm__sleep_stats(void) {
 static void prv_feed_minutes(int num_minutes, uint16_t steps) {
   time_t now = pbl_realtime();
   for (int i = 0; i < num_minutes; i++) {
-    kalg_activities_update(s_kalg_state, now, steps, steps ? 7000 : 0 /*vmc*/, 0 /*orientation*/,
-                           true /*definitely_not_worn*/, 100 /*resting_calories*/,
-                           steps ? 200 : 0 /*active_calories*/, steps ? 1000 : 0 /*distance_mm*/,
-                           false /*shutting_down*/, prv_activity_session_callback, nullptr);
+    pbl_kraepelin_activities_update(s_kalg_state, now, steps, steps ? 7000 : 0 /*vmc*/,
+                                    0 /*orientation*/, true /*definitely_not_worn*/,
+                                    100 /*resting_calories*/, steps ? 200 : 0 /*active_calories*/,
+                                    steps ? 1000 : 0 /*distance_mm*/, false /*shutting_down*/,
+                                    prv_activity_session_callback, nullptr);
     now += PBL_SEC_PER_MIN;
     pbl_realtime_set(now);
   }
@@ -2119,16 +2122,18 @@ static void prv_feed_minutes(int num_minutes, uint16_t steps) {
 // A walk in progress when a workout starts must not resume once it stops, or it gets logged
 // spanning the whole workout.
 void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
   // Too short to be registered before the workout starts
   prv_feed_minutes(6, WALK_STEPS_PER_MIN);
-  kalg_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback, nullptr);
+  pbl_kraepelin_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback,
+                                         nullptr);
   prv_feed_minutes(35, WALK_STEPS_PER_MIN);
-  kalg_enable_activity_tracking(s_kalg_state, true, prv_activity_session_callback, nullptr);
+  pbl_kraepelin_enable_activity_tracking(s_kalg_state, true, prv_activity_session_callback,
+                                         nullptr);
 
   // Too short to be registered on its own, but long enough if it bridged the workout
   prv_feed_minutes(5, WALK_STEPS_PER_MIN);
@@ -2144,8 +2149,8 @@ void test_kraepelin_algorithm__walk_does_not_span_workout(void) {
 // A registered walk in progress when a workout starts ends there, and a walk after the workout
 // is a new one.
 void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
@@ -2153,14 +2158,16 @@ void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
   cl_assert_equal_i(s_num_captured_activity_sessions, 1);
   cl_assert(s_captured_activity_sessions[0].ongoing);
 
-  kalg_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback, nullptr);
+  pbl_kraepelin_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback,
+                                         nullptr);
   cl_assert_equal_i(s_num_captured_activity_sessions, 1);
   cl_assert(!s_captured_activity_sessions[0].ongoing);
   cl_assert_equal_i(s_captured_activity_sessions[0].len_minutes, 12);
   const KAlgTestActivitySession ended = s_captured_activity_sessions[0];
 
   prv_feed_minutes(35, WALK_STEPS_PER_MIN);
-  kalg_enable_activity_tracking(s_kalg_state, true, prv_activity_session_callback, nullptr);
+  pbl_kraepelin_enable_activity_tracking(s_kalg_state, true, prv_activity_session_callback,
+                                         nullptr);
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
 
   cl_assert_equal_i(s_num_captured_activity_sessions, 2);
@@ -2177,8 +2184,8 @@ void test_kraepelin_algorithm__registered_walk_ends_with_workout(void) {
 // A walk in progress ends at the last minute before a time jump instead of carrying its stale
 // start time across it.
 static void prv_walk_ended_on_time_jump(int jump_secs) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
@@ -2192,8 +2199,8 @@ static void prv_walk_ended_on_time_jump(int jump_secs) {
   cl_assert(!s_captured_activity_sessions[0].ongoing);
   cl_assert_equal_i(s_captured_activity_sessions[0].len_minutes, 12);
 
-  struct kalg_step_activity walk;
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  struct pbl_kraepelin_step_activity walk;
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, 0);
 
   prv_feed_minutes(12, WALK_STEPS_PER_MIN);
@@ -2216,14 +2223,14 @@ void test_kraepelin_algorithm__walk_ended_on_forward_time_jump(void) {
 // ---------------------------------------------------------------------------------------
 // The walk in progress is reported from its first active minute until it ends.
 void test_kraepelin_algorithm__step_activity_in_progress(void) {
-  s_kalg_state = pbl_zalloc(kalg_state_size());
-  kalg_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
   s_num_captured_activity_sessions = 0;
   pbl_realtime_set(WALK_TEST_START_UTC);
 
-  struct kalg_step_activity walk;
-  struct kalg_step_activity run;
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  struct pbl_kraepelin_step_activity walk;
+  struct pbl_kraepelin_step_activity run;
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, 0);
   cl_assert_equal_i(walk.len_sec, 0);
   cl_assert(!walk.active);
@@ -2231,36 +2238,37 @@ void test_kraepelin_algorithm__step_activity_in_progress(void) {
   // In progress well before it is long enough to be a session
   prv_feed_minutes(3, WALK_STEPS_PER_MIN);
   cl_assert_equal_i(s_num_captured_activity_sessions, 0);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, WALK_TEST_START_UTC - PBL_SEC_PER_MIN);
   cl_assert_equal_i(walk.len_sec, 3 * PBL_SEC_PER_MIN);
   cl_assert(walk.active);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Run, &run);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_RUN, &run);
   cl_assert_equal_i(run.start_utc, 0);
 
   // Still in progress during a pause
   prv_feed_minutes(2, 0);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, WALK_TEST_START_UTC - PBL_SEC_PER_MIN);
   cl_assert_equal_i(walk.len_sec, 5 * PBL_SEC_PER_MIN);
   cl_assert(!walk.active);
 
   prv_feed_minutes(1, WALK_STEPS_PER_MIN);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.len_sec, 6 * PBL_SEC_PER_MIN);
   cl_assert(walk.active);
 
   // Gone once the pause is too long
   prv_feed_minutes(8, 0);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, 0);
 
   // Gone when activity tracking is disabled, e.g. by a workout
   prv_feed_minutes(3, WALK_STEPS_PER_MIN);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert(walk.start_utc != 0);
-  kalg_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback, nullptr);
-  kalg_get_step_activity(s_kalg_state, KAlgActivityType_Walk, &walk);
+  pbl_kraepelin_enable_activity_tracking(s_kalg_state, false, prv_activity_session_callback,
+                                         nullptr);
+  pbl_kraepelin_get_step_activity(s_kalg_state, PBL_KRAEPELIN_ACTIVITY_WALK, &walk);
   cl_assert_equal_i(walk.start_utc, 0);
 
   pbl_free(s_kalg_state);

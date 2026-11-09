@@ -9,11 +9,11 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
+#include <pbl/kraepelin/kraepelin.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
@@ -41,8 +41,9 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 // How many records we need to store in our circular buffer
 // +1 for mgmt overhead
-#define ALG_MINUTE_CBUF_NUM_RECORDS \
-  (MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + KALG_MAX_UNCERTAIN_SLEEP_M + 1)
+#define ALG_MINUTE_CBUF_NUM_RECORDS                               \
+  (MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + \
+   PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M + 1)
 
 #ifdef CONFIG_HRM
 // A walk or run must be this long before it turns the HRM on, to save battery
@@ -59,7 +60,7 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 typedef struct {
   struct pbl_mutex mutex;
 
-  KAlgState *k_state; // Pointer to Kraepelin state variables
+  struct pbl_kraepelin *k_state; // Pointer to Kraepelin state variables
 
 #ifdef CONFIG_HRM
   // HR subscriptions held by the walk and run in progress
@@ -160,9 +161,10 @@ static void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *context) {
 // ----------------------------------------------------------------------------------------------
 // Take, re-arm or release the HR subscription of a walk or run. Returns true if it was taken or
 // released.
-static bool prv_update_step_activity_hrm(KAlgActivityType activity, HRMSessionRef *session) {
-  struct kalg_step_activity step_activity;
-  kalg_get_step_activity(s_alg_state->k_state, activity, &step_activity);
+static bool prv_update_step_activity_hrm(enum pbl_kraepelin_activity activity,
+                                         HRMSessionRef *session) {
+  struct pbl_kraepelin_step_activity step_activity;
+  pbl_kraepelin_get_step_activity(s_alg_state->k_state, activity, &step_activity);
 
   // An activity that restarted, e.g. after a time jump, is too short again
   const bool long_enough =
@@ -197,9 +199,9 @@ static bool prv_update_step_activity_hrm(KAlgActivityType activity, HRMSessionRe
 static void prv_update_activity_hrm(void) {
 #ifdef CONFIG_HRM
   const bool walk_changed =
-      prv_update_step_activity_hrm(KAlgActivityType_Walk, &s_alg_state->walk_hrm_session);
+      prv_update_step_activity_hrm(PBL_KRAEPELIN_ACTIVITY_WALK, &s_alg_state->walk_hrm_session);
   const bool run_changed =
-      prv_update_step_activity_hrm(KAlgActivityType_Run, &s_alg_state->run_hrm_session);
+      prv_update_step_activity_hrm(PBL_KRAEPELIN_ACTIVITY_RUN, &s_alg_state->run_hrm_session);
   if (!walk_changed && !run_changed) {
     return;
   }
@@ -218,27 +220,27 @@ static void prv_update_activity_hrm(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// Callback provided to kalg_activities_update to create activity sessions.
-static void prv_create_activity_session_cb(void *context, KAlgActivityType kalg_activity,
+// Callback provided to pbl_kraepelin_activities_update to create activity sessions.
+static void prv_create_activity_session_cb(void *context, enum pbl_kraepelin_activity kalg_activity,
                                            time_t start_utc, uint32_t len_sec, bool ongoing,
                                            bool delete, uint32_t steps, uint32_t resting_calories,
                                            uint32_t active_calories, uint32_t distance_mm) {
   // Translate to one of the activity.h activity types
   ActivitySessionType activity = ActivitySessionTypeCount;
   switch (kalg_activity) {
-    case KAlgActivityType_Walk:
+    case PBL_KRAEPELIN_ACTIVITY_WALK:
       activity = ActivitySessionType_Walk;
       break;
-    case KAlgActivityType_Run:
+    case PBL_KRAEPELIN_ACTIVITY_RUN:
       activity = ActivitySessionType_Run;
       break;
-    case KAlgActivityType_RestfulSleep:
+    case PBL_KRAEPELIN_ACTIVITY_RESTFUL_SLEEP:
       activity = ActivitySessionType_RestfulSleep;
       break;
-    case KAlgActivityType_Sleep:
+    case PBL_KRAEPELIN_ACTIVITY_SLEEP:
       activity = ActivitySessionType_Sleep;
       break;
-    case KAlgActivityTypeCount:
+    case PBL_KRAEPELIN_ACTIVITY_COUNT:
       pbl_panic();
       break;
   }
@@ -732,17 +734,17 @@ static void prv_log_minute_data(time_t utc_now, AlgMinuteRecord *minute_rec) {
   // Find the number of "certain" minutes we have in the buffer. When we are asleep, the
   // most recent N minutes in the buffer will be uncertain because we don't know that we woke
   // until we see at least M minutes in a row of activity.
-  KAlgOngoingSleepStats sleep_stats;
-  kalg_get_sleep_stats(s_alg_state->k_state, &sleep_stats);
+  struct pbl_kraepelin_sleep_stats sleep_stats;
+  pbl_kraepelin_get_sleep_stats(s_alg_state->k_state, &sleep_stats);
 
   // If there are any uncertain minutes, they will always be at the end
   int16_t uncertain_m = 0;
   if (sleep_stats.uncertain_start_utc != 0) {
     uncertain_m = (utc_now - sleep_stats.uncertain_start_utc) / PBL_SEC_PER_MIN;
   }
-  if (uncertain_m > KALG_MAX_UNCERTAIN_SLEEP_M) {
+  if (uncertain_m > PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M) {
     PBL_LOG_ERR("Unexpectedly large number of uncertain minutes");
-    uncertain_m = KALG_MAX_UNCERTAIN_SLEEP_M;
+    uncertain_m = PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M;
   }
 
   // Send whatever complete DLS records we have
@@ -759,8 +761,8 @@ void activity_algorithm_send_minutes(void) {
   if (!prv_lock()) {
     return;
   }
-  KAlgOngoingSleepStats sleep_stats;
-  kalg_get_sleep_stats(s_alg_state->k_state, &sleep_stats);
+  struct pbl_kraepelin_sleep_stats sleep_stats;
+  pbl_kraepelin_get_sleep_stats(s_alg_state->k_state, &sleep_stats);
 
   int16_t uncertain_m = 0;
   prv_send_minute_data(uncertain_m, sleep_stats.sleep_start_utc, sleep_stats.sleep_len_m,
@@ -773,7 +775,8 @@ time_t activity_algorithm_get_last_sleep_utc(void) {
   if (!prv_lock()) {
     return 0;
   }
-  time_t rv = kalg_activity_last_processed_time(s_alg_state->k_state, KAlgActivityType_Sleep);
+  time_t rv = pbl_kraepelin_activity_last_processed_time(s_alg_state->k_state,
+                                                         PBL_KRAEPELIN_ACTIVITY_SLEEP);
   prv_unlock();
   return rv;
 }
@@ -868,7 +871,7 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
 bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   // Allocate kraepelin state and our globals
   PBL_ASSERTN(s_alg_state == 0);
-  KAlgState *k_state = pbl_zalloc(kalg_state_size());
+  struct pbl_kraepelin *k_state = pbl_zalloc(pbl_kraepelin_state_size());
   if (k_state) {
     s_alg_state = pbl_zalloc(sizeof(AlgState));
   }
@@ -889,14 +892,14 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   pbl_shared_cbuf_add_client(&s_alg_state->minute_data_cbuf, &s_alg_state->dls_minute_data_client);
 
   // Init the algorithm state
-  const struct kalg_params params = {
+  const struct pbl_kraepelin_params params = {
     .sleep_max_minute_score = CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_MINUTE_SCORE,
     .sleep_min_valid_vmc = CONFIG_SERVICE_ACTIVITY_SLEEP_MIN_VALID_VMC,
     .sleep_max_avg_vmc = CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_AVG_VMC,
     .not_worn_min_worn_vmc = CONFIG_SERVICE_ACTIVITY_NOT_WORN_MIN_WORN_VMC,
     .not_worn_max_low_vmc_run_m = CONFIG_SERVICE_ACTIVITY_NOT_WORN_MAX_LOW_VMC_RUN_M,
   };
-  kalg_init(k_state, &params, nullptr);
+  pbl_kraepelin_init(k_state, &params, nullptr);
 
   // Count # of records in minute file
   uint32_t num_records;
@@ -911,7 +914,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   activity_algorithm_metrics_changed_notification();
 
   // Return desired sampling rate
-  *sampling_rate = KALG_SAMPLE_HZ;
+  *sampling_rate = PBL_KRAEPELIN_SAMPLE_HZ;
   return true;
 }
 
@@ -969,21 +972,22 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
     return;
   }
   // Same layout, the samples are passed as they are
-  static_assert(sizeof(AccelRawData) == sizeof(struct kalg_sample));
-  static_assert(offsetof(AccelRawData, x) == offsetof(struct kalg_sample, x));
-  static_assert(offsetof(AccelRawData, y) == offsetof(struct kalg_sample, y));
-  static_assert(offsetof(AccelRawData, z) == offsetof(struct kalg_sample, z));
+  static_assert(sizeof(AccelRawData) == sizeof(struct pbl_kraepelin_sample));
+  static_assert(offsetof(AccelRawData, x) == offsetof(struct pbl_kraepelin_sample, x));
+  static_assert(offsetof(AccelRawData, y) == offsetof(struct pbl_kraepelin_sample, y));
+  static_assert(offsetof(AccelRawData, z) == offsetof(struct pbl_kraepelin_sample, z));
 
   uint32_t consumed_samples;
-  uint16_t new_steps = kalg_analyze_samples(s_alg_state->k_state, (const struct kalg_sample *)data,
-                                            num_samples, &consumed_samples);
+  uint16_t new_steps =
+      pbl_kraepelin_analyze_samples(s_alg_state->k_state, (const struct pbl_kraepelin_sample *)data,
+                                    num_samples, &consumed_samples);
   s_alg_state->steps += new_steps;
   s_alg_state->minute_steps += new_steps;
 
   // Update our stepping rate if the algorithm just consumed samples
   if (consumed_samples != 0) {
     s_alg_state->rate_steps = new_steps;
-    s_alg_state->rate_elapsed_ms = (consumed_samples * PBL_MSEC_PER_SEC) / KALG_SAMPLE_HZ;
+    s_alg_state->rate_elapsed_ms = (consumed_samples * PBL_MSEC_PER_SEC) / PBL_KRAEPELIN_SAMPLE_HZ;
     s_alg_state->rate_computed_time_s = timestamp_ms / PBL_MSEC_PER_SEC;
   }
   prv_unlock();
@@ -996,7 +1000,7 @@ static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLS
   uint16_t vmc;
   uint8_t orientation;
   bool still;
-  kalg_minute_stats(s_alg_state->k_state, &vmc, &orientation, &still);
+  pbl_kraepelin_minute_stats(s_alg_state->k_state, &vmc, &orientation, &still);
   m_rec->base.vmc = vmc;
   m_rec->base.orientation = orientation;
 
@@ -1075,10 +1079,10 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
               (int)m_rec->base.plugged_in, (int)hrm_offwrist);
 
   // Pass the minute data onto the activity detection logic
-  kalg_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,
-                         m_rec->base.orientation, not_worn, m_rec->resting_calories,
-                         m_rec->active_calories, minute_distance_mm, shutting_down,
-                         prv_create_activity_session_cb, nullptr);
+  pbl_kraepelin_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,
+                                  m_rec->base.orientation, not_worn, m_rec->resting_calories,
+                                  m_rec->active_calories, minute_distance_mm, shutting_down,
+                                  prv_create_activity_session_cb, nullptr);
   prv_update_activity_hrm();
 }
 
@@ -1143,8 +1147,8 @@ void activity_algorithm_enable_activity_tracking(bool enable) {
     return;
   }
 
-  kalg_enable_activity_tracking(s_alg_state->k_state, enable, prv_create_activity_session_cb,
-                                nullptr);
+  pbl_kraepelin_enable_activity_tracking(s_alg_state->k_state, enable,
+                                         prv_create_activity_session_cb, nullptr);
   prv_update_activity_hrm();
 
   prv_unlock();

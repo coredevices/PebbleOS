@@ -9,11 +9,11 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
+#include <pbl/kraepelin/kraepelin.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/kraepelin/activity_algorithm_kraepelin.h>
-#include <pbl/services/activity/kraepelin/kraepelin_algorithm.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
@@ -54,18 +54,18 @@ static bool s_capture_dls_records = true;
 static int s_num_dls_records;
 static AlgMinuteDLSRecord s_dls_records[100];
 
-// Which step count to return from kalg_analyze_samples()
+// Which step count to return from pbl_kraepelin_analyze_samples()
 static uint16_t s_alg_next_steps;
 
-// Which vmc and orientation to return from kalg_minute_stats
+// Which vmc and orientation to return from pbl_kraepelin_minute_stats
 static uint16_t s_alg_next_vmc;
 static uint8_t s_alg_next_orientation;
 static uint8_t s_alg_next_light;
 static bool s_alg_next_plugged_in;
 
-// Which walk and run in progress to return from kalg_get_step_activity()
-static struct kalg_step_activity s_alg_next_walk;
-static struct kalg_step_activity s_alg_next_run;
+// Which walk and run in progress to return from pbl_kraepelin_get_step_activity()
+static struct pbl_kraepelin_step_activity s_alg_next_walk;
+static struct pbl_kraepelin_step_activity s_alg_next_run;
 
 // HRM manager state
 static HRMSessionRef s_hrm_next_session_ref;
@@ -96,10 +96,10 @@ BatteryChargeState battery_get_charge_state(void) {
   return state;
 }
 
-void kalg_enable_activity_tracking(KAlgState *kalg_state, bool enable,
-                                   KAlgActivitySessionCallback sessions_cb, void *context) {
-  s_alg_next_walk = (struct kalg_step_activity){};
-  s_alg_next_run = (struct kalg_step_activity){};
+void pbl_kraepelin_enable_activity_tracking(struct pbl_kraepelin *kalg_state, bool enable,
+                                            pbl_kraepelin_session_cb_t sessions_cb, void *context) {
+  s_alg_next_walk = (struct pbl_kraepelin_step_activity){};
+  s_alg_next_run = (struct pbl_kraepelin_step_activity){};
 }
 
 HRMSessionRef hrm_manager_subscribe_with_callback(AppInstallId app_id, uint32_t update_interval_s,
@@ -275,69 +275,72 @@ bool activity_metrics_prv_is_hrm_offwrist(time_t now_utc) {
 
 // =============================================================================================
 // Algorithm stubs
-uint32_t kalg_state_size(void) {
+uint32_t pbl_kraepelin_state_size(void) {
   return 1;
 }
 
-bool kalg_init(KAlgState *state, const struct kalg_params *params, KAlgStatsCallback stats_cb) {
+bool pbl_kraepelin_init(struct pbl_kraepelin *state, const struct pbl_kraepelin_params *params,
+                        pbl_kraepelin_stats_cb_t stats_cb) {
   return true;
 }
 
-uint32_t kalg_analyze_samples(KAlgState *state, const struct kalg_sample *data,
-                              uint32_t num_samples, uint32_t *consumed_samples) {
+uint32_t pbl_kraepelin_analyze_samples(struct pbl_kraepelin *state,
+                                       const struct pbl_kraepelin_sample *data,
+                                       uint32_t num_samples, uint32_t *consumed_samples) {
   *consumed_samples = 0;
   return s_alg_next_steps;
 }
 
-void kalg_minute_stats(KAlgState *state, uint16_t *vmc, uint8_t *orientation, bool *still) {
+void pbl_kraepelin_minute_stats(struct pbl_kraepelin *state, uint16_t *vmc, uint8_t *orientation,
+                                bool *still) {
   *vmc = s_alg_next_vmc;
   *orientation = s_alg_next_orientation;
   *still = false;
 }
 
-void kalg_set_weight(KAlgState *state, uint32_t grams) {
+void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now, uint16_t steps,
+                                     uint16_t vmc, uint8_t orientation, bool definitely_not_worn,
+                                     uint32_t resting_calories, uint32_t active_calories,
+                                     uint32_t distance_mm, bool shutting_down,
+                                     pbl_kraepelin_session_cb_t sessions_cb, void *context) {
 }
 
-void kalg_activities_update(KAlgState *state, time_t utc_now, uint16_t steps, uint16_t vmc,
-                            uint8_t orientation, bool definitely_not_worn,
-                            uint32_t resting_calories, uint32_t active_calories,
-                            uint32_t distance_mm, bool shutting_down,
-                            KAlgActivitySessionCallback sessions_cb, void *context) {
-}
-
-time_t kalg_activity_last_processed_time(KAlgState *state, KAlgActivityType activity) {
+time_t pbl_kraepelin_activity_last_processed_time(struct pbl_kraepelin *state,
+                                                  enum pbl_kraepelin_activity activity) {
   return pbl_realtime();
 }
 
-void kalg_get_step_activity(KAlgState *state, KAlgActivityType activity,
-                            struct kalg_step_activity *step_activity) {
-  *step_activity = (activity == KAlgActivityType_Run) ? s_alg_next_run : s_alg_next_walk;
+void pbl_kraepelin_get_step_activity(struct pbl_kraepelin *state,
+                                     enum pbl_kraepelin_activity activity,
+                                     struct pbl_kraepelin_step_activity *step_activity) {
+  *step_activity = (activity == PBL_KRAEPELIN_ACTIVITY_RUN) ? s_alg_next_run : s_alg_next_walk;
 }
 
 // Set these to simulate a sleep session (that should result in zeroing out any steps taken)
 static time_t s_kalg_sleep_start_utc;
 static uint16_t s_kalg_sleep_m;
 
-void kalg_get_sleep_stats(KAlgState *alg_state, KAlgOngoingSleepStats *stats) {
+void pbl_kraepelin_get_sleep_stats(struct pbl_kraepelin *alg_state,
+                                   struct pbl_kraepelin_sleep_stats *stats) {
   time_t now = pbl_realtime();
   if (s_kalg_sleep_start_utc == 0 || now < s_kalg_sleep_start_utc + PBL_SEC_PER_HOUR) {
     // We are before the requested sleep time
-    *stats = (KAlgOngoingSleepStats){};
+    *stats = (struct pbl_kraepelin_sleep_stats){};
   } else {
     // We are somewhere after the start of sleep
     time_t sleep_end = s_kalg_sleep_start_utc + s_kalg_sleep_m * PBL_SEC_PER_MIN;
-    if (now < sleep_end + KALG_MAX_UNCERTAIN_SLEEP_M) {
-      // Still haven't detected the end of sleep, the last KALG_MAX_UNCERTAIN_SLEEP_M minutes are
-      // uncertain
-      *stats = (KAlgOngoingSleepStats){
+    if (now < sleep_end + PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M) {
+      // Still haven't detected the end of sleep, the last PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M
+      // minutes are uncertain
+      *stats = (struct pbl_kraepelin_sleep_stats){
         .sleep_start_utc = s_kalg_sleep_start_utc,
         .sleep_len_m =
-            (now - s_kalg_sleep_start_utc) / PBL_SEC_PER_MIN - KALG_MAX_UNCERTAIN_SLEEP_M,
-        .uncertain_start_utc = now - KALG_MAX_UNCERTAIN_SLEEP_M * PBL_SEC_PER_MIN,
+            (now - s_kalg_sleep_start_utc) / PBL_SEC_PER_MIN - PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M,
+        .uncertain_start_utc = now - PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M * PBL_SEC_PER_MIN,
       };
     } else {
       // The sleep was in the past and has ended
-      *stats = (KAlgOngoingSleepStats){
+      *stats = (struct pbl_kraepelin_sleep_stats){
         .sleep_start_utc = s_kalg_sleep_start_utc,
         .sleep_len_m = s_kalg_sleep_m,
         .uncertain_start_utc = 0,
@@ -443,8 +446,8 @@ void test_activity_algorithm_kraepelin__initialize(void) {
   s_activity_next_heart_rate_zone = 0;
   s_kalg_sleep_start_utc = 0;
   s_kalg_sleep_m = 0;
-  s_alg_next_walk = (struct kalg_step_activity){};
-  s_alg_next_run = (struct kalg_step_activity){};
+  s_alg_next_walk = (struct pbl_kraepelin_step_activity){};
+  s_alg_next_run = (struct pbl_kraepelin_step_activity){};
   s_hrm_next_session_ref = 1;
   s_hrm_live_subscriptions = 0;
   s_hrm_last_expire_s = 0;
@@ -1018,17 +1021,17 @@ static void prv_feed_step_activities(uint32_t walk_len_m, bool walk_active, uint
   fake_rtc_increment_time(PBL_SEC_PER_MIN);
   const time_t now = pbl_realtime();
 
-  s_alg_next_walk = (struct kalg_step_activity){};
+  s_alg_next_walk = (struct pbl_kraepelin_step_activity){};
   if (walk_len_m != 0) {
-    s_alg_next_walk = (struct kalg_step_activity){
+    s_alg_next_walk = (struct pbl_kraepelin_step_activity){
       .start_utc = now - walk_len_m * PBL_SEC_PER_MIN,
       .len_sec = walk_len_m * PBL_SEC_PER_MIN,
       .active = walk_active,
     };
   }
-  s_alg_next_run = (struct kalg_step_activity){};
+  s_alg_next_run = (struct pbl_kraepelin_step_activity){};
   if (run_len_m != 0) {
-    s_alg_next_run = (struct kalg_step_activity){
+    s_alg_next_run = (struct pbl_kraepelin_step_activity){
       .start_utc = now - run_len_m * PBL_SEC_PER_MIN,
       .len_sec = run_len_m * PBL_SEC_PER_MIN,
       .active = run_active,

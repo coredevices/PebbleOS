@@ -14,7 +14,7 @@ The public interfaces under @c include are grouped in
 - @ref subsys — @c pbl/analytics, @c pbl/bluetooth, @c pbl/console, @c pbl/crc,
   @c pbl/cron, @c pbl/input, @c pbl/loader, @c pbl/logging, @c pbl/profiler,
   @c pbl/settings, @c pbl/shell, @c pbl/task_wdt
-- @ref lib — @c pbl/util, @c pbl/btutil
+- @ref lib — @c pbl/util, @c pbl/btutil, @c pbl/kraepelin
 - @ref pebbleos — @c pebbleos
 
 Other indexes:
