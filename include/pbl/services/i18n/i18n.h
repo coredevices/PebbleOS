@@ -3,22 +3,20 @@
 
 #pragma once
 
-#include <inttypes.h>
 #include <stddef.h>
-
-#include <pbl/util/list.h>
+#include <stdint.h>
 
 /**
  * @defgroup services_i18n Internationalization
  * @ingroup services
  * @brief Translates firmware strings with the installed language pack.
  *
- * The language pack is a gettext MO file stored as a system resource. Strings are looked up by
- * their English original (the msgid); when no translation exists, or no language pack is
- * installed, the original is returned. A context can be attached to disambiguate identical
- * originals with the @c _ctx_ variants. Mark strings with i18n_noop() or i18n_ctx_noop() where
- * they cannot be translated in place, so they are still extracted for translation. Changing the
- * language puts a @c PEBBLE_LANGUAGE_CHANGE_EVENT.
+ * Translations come from a catalog, a gettext MO file read through a caller-provided reader, set
+ * with pbl_i18n_set_catalog(). Strings are looked up by their English original (the msgid); when
+ * no translation exists, or no catalog is set, the original is returned. A context can be attached
+ * to disambiguate identical originals with the @c _ctx_ variants. Mark strings with i18n_noop() or
+ * i18n_ctx_noop() where they cannot be translated in place, so they are still extracted for
+ * translation.
  *
  * Translations returned by i18n_get() are cached per owner and stay valid until freed:
  *
@@ -34,6 +32,9 @@
  * char buf[32];
  * i18n_ctx_get_with_buffer("Alarm", "Snooze", buf, sizeof(buf));
  * @endcode
+ *
+ * The functions may be called from any thread, but not from ISRs. A catalog reader is called with
+ * the i18n lock held, so it must not call back into i18n.
  * @{
  */
 
@@ -42,19 +43,55 @@
 /** @brief Size of a language name buffer, including the terminator. */
 #define LOCALE_NAME_LENGTH 30
 
-/** @brief Cached translation, stored in a list per language pack. */
-typedef struct {
-  /** Linked list node. */
-  ListNode node;
-  /** Owner the translation was requested for. */
-  const void *owner;
-  /** Hash of the original string. */
-  uint32_t original_hash;
-  /** Original string, stored right after @ref translated_string. */
-  char *original_string;
-  /** Translated string, followed by the storage of the original string. */
-  char translated_string[];
-} I18nString;
+/** @brief Metadata of a catalog. */
+struct pbl_i18n_catalog_info {
+  /** ISO locale such as "fr_FR". */
+  char locale[ISO_LOCALE_LENGTH];
+  /** Language name, the locale if the catalog has none. */
+  char name[LOCALE_NAME_LENGTH];
+  /** Catalog version. */
+  uint16_t version;
+};
+
+/** @brief Catalog of translations, a gettext MO file. */
+struct pbl_i18n_catalog {
+  /**
+   * @brief Read from the catalog.
+   *
+   * @param data @ref pbl_i18n_catalog::data.
+   * @param offset Offset in bytes from the start of the catalog.
+   * @param[out] buf Output buffer.
+   * @param length Number of bytes to read.
+   * @return 0 if @p length bytes were read, negative errno otherwise.
+   */
+  int (*read)(void *data, uint32_t offset, void *buf, size_t length);
+  /** Data passed to @ref pbl_i18n_catalog::read. */
+  void *data;
+  /** Size of the catalog in bytes. */
+  size_t size;
+};
+
+/**
+ * @brief Set the catalog translations come from.
+ *
+ * Frees every cached translation, so pointers returned by i18n_get() become invalid. If the
+ * catalog cannot be used no catalog is set. The catalog is copied, but
+ * @ref pbl_i18n_catalog::data must stay valid until another catalog is set.
+ *
+ * @param catalog Catalog, NULL for none.
+ * @return 0 on success, negative errno otherwise.
+ */
+int pbl_i18n_set_catalog(const struct pbl_i18n_catalog *catalog);
+
+/**
+ * @brief Read the metadata of a catalog without setting it.
+ *
+ * @param catalog Catalog, @ref pbl_i18n_catalog::size is not used.
+ * @param[out] info Metadata, with its strings zero-padded.
+ * @return 0 on success, negative errno otherwise.
+ */
+int pbl_i18n_catalog_get_info(const struct pbl_i18n_catalog *catalog,
+                              struct pbl_i18n_catalog_info *info);
 
 /**
  * @brief Tag a string for extraction without translating it.
@@ -82,7 +119,7 @@ typedef struct {
  *
  * The translation is truncated to 199 characters. There is no reference counting: when the same
  * string is requested several times for the same owner, all returned pointers become invalid
- * once i18n_free() is called on any of them. A language change also invalidates them.
+ * once i18n_free() is called on any of them. Setting a catalog also invalidates them.
  *
  * @param string Original string, possibly with a context from i18n_ctx_noop().
  * @param owner Owner of the cached translation, must not be NULL.
@@ -162,69 +199,24 @@ void i18n_free(const char *string, const void *owner);
 void i18n_free_all(const void *owner);
 
 /**
- * @brief Select the system resource holding the language pack.
+ * @brief Get the ISO locale of the catalog.
  *
- * The resource is watched, so installing a new language pack reloads it. If the user chose
- * English, the language pack is not loaded.
- *
- * @param resource_id System resource ID of the language pack.
- */
-void i18n_set_resource(uint32_t resource_id);
-
-/**
- * @brief Get the ISO locale of the installed language.
- *
- * @return Locale such as "en_US", "en_US" when no language pack is loaded.
+ * @return Locale such as "fr_FR", "en_US" when no catalog is set.
  */
 char *i18n_get_locale(void);
 
 /**
- * @brief Get the version of the installed language pack.
+ * @brief Get the version of the catalog.
  *
- * @return Language pack version, 1 when none is loaded.
+ * @return Catalog version, 1 when no catalog is set.
  */
 uint16_t i18n_get_version(void);
 
 /**
- * @brief Get the name of the installed language.
+ * @brief Get the language name of the catalog.
  *
- * @return Language name, "English" when no language pack is loaded.
+ * @return Language name, "English" when no catalog is set.
  */
 char *i18n_get_lang_name(void);
-
-/**
- * @brief Load or unload the language pack.
- *
- * @param enable true to load the language pack, false to fall back to English.
- */
-void i18n_enable(bool enable);
-
-typedef struct {
-  char locale[ISO_LOCALE_LENGTH];
-  char name[LOCALE_NAME_LENGTH];
-  uint16_t version;
-} I18nPackInfo;
-
-/** @brief Read metadata from an installed pack without changing the UI language. */
-bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info);
-
-/** @brief Whether a pack carries at least one valid font, with or without a translation. */
-bool i18n_pack_has_fonts(uint8_t slot);
-
-/** @brief Remove an installed pack, falling back to English if it was active. */
-bool i18n_remove_pack(uint8_t slot);
-
-/**
- * @brief Resolve the file a PutBytes file transfer writes to.
- *
- * Additive pack installs go to the first free pack slot; other files are unchanged.
- *
- * @param filename Path of the file being transferred.
- * @return Path to write, or NULL if every pack slot is occupied.
- */
-const char *i18n_pack_install_begin(const char *filename);
-
-/** @brief Finish a transfer started with i18n_pack_install_begin(). */
-void i18n_pack_install_end(bool success);
 
 /** @} */

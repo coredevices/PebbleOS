@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_LANGUAGE_PACK
+    bool "Language packs"
+    depends on SERVICE_I18N
+    help
+      Manages the installed language packs and gives the translation
+      catalog of the selected one to the internationalization runtime.
+
+if SERVICE_LANGUAGE_PACK
+
+module = SERVICE_LANGUAGE_PACK
+module-str = Language packs
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

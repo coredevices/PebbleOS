@@ -7,7 +7,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/language_pack.h>
 #include <pbl/services/put_bytes/put_bytes_storage_file.h>
 #include <pbl/util/math.h>
 
@@ -20,7 +20,7 @@ bool pb_storage_file_init(PutBytesStorage *storage, PutBytesObjectType object_ty
                           uint32_t total_size, PutBytesStorageInfo *info, uint32_t append_offset) {
   // Nothing to close in deinit if init bails out before opening the file
   storage->impl_data = nullptr;
-  const char *filename = i18n_pack_install_begin(info->filename);
+  const char *filename = language_pack_install_begin(info->filename);
   if (!filename) {
     return false;
   }
@@ -111,5 +111,5 @@ void pb_storage_file_deinit(PutBytesStorage *storage, bool is_success) {
     pbl_free(pb_file);
     storage->impl_data = nullptr;
   }
-  i18n_pack_install_end(is_success);
+  language_pack_install_end(is_success);
 }

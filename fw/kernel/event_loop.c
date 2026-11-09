@@ -27,7 +27,7 @@
 #include <pbl/services/event_service.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/firmware_update.h>
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/services/put_bytes/put_bytes.h>
@@ -624,7 +624,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   light_button_released();
 
 #ifndef CONFIG_RECOVERY_FW
-  i18n_set_resource(shell_prefs_get_language_resource_id());
+  language_pack_set_resource(shell_prefs_get_language_resource_id());
 #endif
   app_manager_start_first_app();
 

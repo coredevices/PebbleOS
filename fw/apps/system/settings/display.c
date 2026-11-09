@@ -14,6 +14,7 @@
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/services/i18n/i18n.h>
+#include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
 #include <pbl/util/size.h>
 
@@ -29,7 +30,7 @@ static void prv_backlight_submenu_push(void);
 
 typedef struct SettingsDisplayData {
   SettingsCallbacks callbacks;
-  I18nPackInfo packs[LANGUAGE_PACK_COUNT];
+  struct pbl_i18n_catalog_info packs[LANGUAGE_PACK_COUNT];
   uint8_t pack_slots[LANGUAGE_PACK_COUNT];
   uint8_t pack_count;
   const char *language_labels[LANGUAGE_PACK_COUNT + 1];
@@ -47,9 +48,9 @@ static void prv_language_menu_select(OptionMenu *option_menu, int selection, voi
   SettingsDisplayData *data = settings_option_menu_get_context((SettingsOptionMenuData *)context);
   if (selection > 0) {
     const uint8_t slot = data->pack_slots[selection - 1];
-    I18nPackInfo current;
-    const I18nPackInfo *previous = &data->packs[slot];
-    if (!i18n_get_pack_info(slot, &current) || current.version != previous->version ||
+    struct pbl_i18n_catalog_info current;
+    const struct pbl_i18n_catalog_info *previous = &data->packs[slot];
+    if (!language_pack_get_info(slot, &current) || current.version != previous->version ||
         strcmp(current.locale, previous->locale) != 0) {
       app_window_stack_remove(&option_menu->window, true /* animated */);
       return;
@@ -67,8 +68,8 @@ static void prv_language_menu_push(SettingsDisplayData *data) {
   data->language_labels[0] = "English";
   int selected = 0;
   for (uint8_t slot = 0; slot < LANGUAGE_PACK_COUNT; ++slot) {
-    I18nPackInfo *pack = &data->packs[slot];
-    const bool valid = i18n_get_pack_info(slot, pack);
+    struct pbl_i18n_catalog_info *pack = &data->packs[slot];
+    const bool valid = language_pack_get_info(slot, pack);
     if (!valid) {
       continue;
     }

@@ -20,15 +20,15 @@ static size_t s_length;
 static ShellLanguage s_language;
 static int s_removed;
 
-bool i18n_get_pack_info(uint8_t slot, I18nPackInfo *info) {
+bool language_pack_get_info(uint8_t slot, struct pbl_i18n_catalog_info *info) {
   if (slot >= 4 || !s_valid[slot]) {
     return false;
   }
-  *info = (I18nPackInfo){.locale = "fr_FR", .name = "Français", .version = 0x1234};
+  *info = (struct pbl_i18n_catalog_info){.locale = "fr_FR", .name = "Français", .version = 0x1234};
   return true;
 }
 
-bool i18n_pack_has_fonts(uint8_t slot) {
+bool language_pack_has_fonts(uint8_t slot) {
   return slot < 4 && s_fonts[slot];
 }
 
@@ -36,7 +36,7 @@ bool language_pack_is_installed(uint8_t slot) {
   return slot < 4 && s_present[slot];
 }
 
-bool i18n_remove_pack(uint8_t slot) {
+bool language_pack_remove(uint8_t slot) {
   if (!language_pack_is_installed(slot)) {
     return false;
   }

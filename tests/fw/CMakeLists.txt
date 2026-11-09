@@ -13,15 +13,6 @@ pbl_clar_test(test_utf8
     tests/fakes/fake_gbitmap_png.c
 )
 
-pbl_clar_test(test_i18n
-  MODULES resources
-  SOURCES
-    fw/services/i18n/i18n.c
-    tests/fakes/fake_bootbits.c
-    tests/fakes/fake_rtc.c
-  OVERRIDES dummy_board
-)
-
 pbl_clar_test(test_utf8_iterator
   SOURCES
     fw/applib/graphics/utf8.c

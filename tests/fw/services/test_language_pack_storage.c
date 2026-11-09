@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/fs/fs.h>
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/language_pack.h>
 #include <pbl/services/put_bytes/put_bytes_storage_file.h>
 
 #include <clar.h>
@@ -45,7 +45,7 @@ void test_language_pack_storage__initialize(void) {
   fake_pfs_mount();
   pbl_fs_format("/");
   s_language = ShellLanguageInstalledPack;
-  i18n_set_resource(RESOURCE_ID_STRINGS);
+  language_pack_set_resource(RESOURCE_ID_STRINGS);
 }
 
 static bool prv_add_pack(uint8_t value, bool success) {
@@ -169,8 +169,8 @@ void test_language_pack_storage__transfer_blocks_removing_its_slot(void) {
   PutBytesStorage storage = {};
   cl_assert(pb_storage_file_init(&storage, ObjectFile, 1, info, 0));
   cl_assert_equal_s(info->filename, "/lang1");
-  cl_assert(!i18n_remove_pack(1));
-  cl_assert(i18n_remove_pack(0));
+  cl_assert(!language_pack_remove(1));
+  cl_assert(language_pack_remove(0));
   pb_storage_file_deinit(&storage, true);
-  cl_assert(i18n_remove_pack(1));
+  cl_assert(language_pack_remove(1));
 }

@@ -8,7 +8,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>
-#include <pbl/services/i18n/i18n.h>
+#include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/touch/touch_nav_service.h>
@@ -654,7 +654,7 @@ static bool prv_set_s_system_text_size(uint8_t *size) {
 
 static bool prv_set_s_language_english(bool *english) {
   s_language_english = *english;
-  i18n_enable(!s_language_english);
+  language_pack_enable(!s_language_english);
   system_resource_language_changed();
   return true;
 }
@@ -673,7 +673,7 @@ static bool prv_set_s_language(uint8_t *language) {
   bool english = s_language == ShellLanguageEnglish;
   s_language_english = english;
   prv_pref_store(PREF_KEY_LANG_ENGLISH, &english, sizeof(english));
-  i18n_set_resource(shell_prefs_get_language_resource_id());
+  language_pack_set_resource(shell_prefs_get_language_resource_id());
   system_resource_language_changed();
   return true;
 }
