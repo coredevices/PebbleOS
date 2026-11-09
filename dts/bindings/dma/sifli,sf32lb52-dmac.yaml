@@ -23,6 +23,11 @@ properties:
   reg:
     maxItems: 1
 
+  interrupts:
+    description: One per channel, from channel 0.
+    maxItems: 8
+    minItems: 8
+
   clocks:
     maxItems: 1
 
@@ -35,6 +40,7 @@ properties:
 required:
   - compatible
   - reg
+  - interrupts
   - clocks
   - '#dma-cells'
 
@@ -45,6 +51,7 @@ examples:
     dma-controller@50081000 {
         compatible = "sifli,sf32lb52-dmac";
         reg = <0x50081000 0x1000>;
+        interrupts = <50>, <51>, <52>, <53>, <54>, <55>, <56>, <57>;
         clocks = <&rcc 0>;
         #dma-cells = <3>;
         dma-channels = <8>;

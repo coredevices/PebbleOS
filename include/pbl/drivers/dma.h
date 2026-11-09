@@ -21,7 +21,7 @@
  *
  * @code{.c}
  * static const struct pbl_dma_chan s_rx =
- *     PBL_DMA_CHAN(SF32LB52_DMAC1, 5, SF32LB52_DMA_REQ_I2C2, SF32LB52_DMA_PL_HIGH);
+ *     PBL_DMA_CHAN(&dt_dmac1, 5, SF32LB52_DMA_REQ_I2C2, SF32LB52_DMA_PL_HIGH);
  *
  * const struct pbl_dma_slave_config cfg = {
  *   .src_addr = fifo_addr,
