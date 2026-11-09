@@ -4,9 +4,8 @@
 #pragma once
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/uuid.h>
-
-#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_contacts_db Contacts database

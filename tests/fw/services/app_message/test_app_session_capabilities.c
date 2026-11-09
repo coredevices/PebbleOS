@@ -6,11 +6,11 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/app_session.h>
 #include <pbl/settings/settings.h>
+#include <pbl/system/status_codes.h>
 
 #include <clar.h>
 #include <fff.h>
 #include <process_management/pebble_process_md.h>
-#include <system/status_codes.h>
 
 static const enum pbl_pp_capability s_live_capabilities = (PBL_PP_CAP_INFINITE_LOG_DUMPING);
 

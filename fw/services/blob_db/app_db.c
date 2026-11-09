@@ -10,12 +10,12 @@
 #include <pbl/services/app_fetch_endpoint.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/settings/settings.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
 #include <process_management/app_install_manager_private.h>
-#include <system/status_codes.h>
 #include <system/status_errno.h>
 
 #ifdef CONFIG_SERVICE_MIC_CAPTURE

@@ -5,7 +5,7 @@
   "revision" : "113",
   "version" : "2.0",
   "files": [
-    "fw/system/status_codes.h",
+    "include/pbl/system/status_codes.h",
     "fw/applib/dict.h",
     "include/pbl/util/list.h",
     "include/pbl/util/math.h",

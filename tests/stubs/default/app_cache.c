@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/system/status_codes.h>
 
 #include <process_management/app_install_types.h>
-#include <system/status_codes.h>
 
 PBL_WEAK AppInstallId app_cache_get_next_eviction(void) {
   return 0;

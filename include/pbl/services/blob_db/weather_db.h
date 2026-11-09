@@ -10,10 +10,9 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_types.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/pstring.h>
 #include <pbl/util/uuid.h>
-
-#include <system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_weather_db Weather database

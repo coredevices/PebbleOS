@@ -3,8 +3,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/timeline/reminders.h>
-
-#include <system/status_codes.h>
+#include <pbl/system/status_codes.h>
 
 status_t PBL_WEAK reminders_update_timer(void) {
   return S_SUCCESS;

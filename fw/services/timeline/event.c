@@ -14,11 +14,11 @@
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/services/timeline/peek.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
-#include <system/status_codes.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
