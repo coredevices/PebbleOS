@@ -69,7 +69,7 @@ class Console(PblCommand):
         python = shlex.quote(sys.executable)
         terminal = self.script("tools", "console.py")
         console = f"{python} {terminal} {tty} --baudrate {baudrate}"
-        log_dict = os.path.join(build.path, "fw", "loghash_dict.json")
+        log_dict = os.path.join(build.path, "log.dict.json")
         if os.path.exists(log_dict):
             console += f" --dict {shlex.quote(log_dict)}"
 

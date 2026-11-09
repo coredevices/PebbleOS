@@ -113,7 +113,7 @@ class Build:
 
     @property
     def loghash_dict(self):
-        return self.join("fw", "loghash_dict.json")
+        return self.join("log.dict.json")
 
     def tool(self, name):
         """An SDK tool CMake located (PBL_<NAME>), else the one on PATH, or

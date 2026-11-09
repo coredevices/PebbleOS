@@ -274,12 +274,6 @@ def cmd_pblboot_header(args):
         pblboot.insert_header_hex(args.input, args.output, args.offset, priority)
 
 
-def cmd_loghash_merge(args):
-    from log_hashing.newlogging import merge_loghash_dict_json_files
-
-    merge_loghash_dict_json_files(args.output, args.inputs)
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -347,11 +341,6 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--offset", type=int, required=True)
     p.set_defaults(func=cmd_pblboot_header)
-
-    p = sub.add_parser("loghash-merge")
-    p.add_argument("--output", required=True)
-    p.add_argument("inputs", nargs="+")
-    p.set_defaults(func=cmd_loghash_merge)
 
     args = parser.parse_args()
     args.func(args)

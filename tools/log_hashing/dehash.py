@@ -15,8 +15,8 @@ import newlogging
 
 logger = logging.getLogger(__name__)
 
-DICT_FIRMWARE = "build/fw/loghash_dict.json"
-DICT_PRF = "build/prf/fw/loghash_dict.json"
+DICT_FIRMWARE = "build/log.dict.json"
+DICT_PRF = "build/prf/log.dict.json"
 
 
 class Log:

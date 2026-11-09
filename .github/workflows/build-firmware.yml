@@ -152,7 +152,7 @@ jobs:
           cp build/pebbleos.hex "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.hex"
           cp build/pebbleos.bin "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.bin"
           cp build/pebbleos.elf "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.elf"
-          cp build/pebbleos_loghash_dict.json \
+          cp build/log.dict.json \
             "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}_loghash_dict.json"
           if [ -f build/pebbleos.cdx.json ]; then
             cp build/pebbleos.cdx.json "artifacts/firmware_${BOARD}_${version}${SLOT_SUFFIX}.cdx.json"
@@ -181,7 +181,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           pip install awscli
-          aws s3 cp build/pebbleos_loghash_dict.json \
+          aws s3 cp build/log.dict.json \
             "s3://${{ vars.LOG_HASH_BUCKET_NAME }}/${{ steps.build_id.outputs.BUILD_ID }}-${{ github.sha }}-normal.json" \
             --endpoint-url "${{ vars.LOG_HASH_BUCKET_ENDPOINT }}"
 
@@ -258,7 +258,7 @@ jobs:
             build/pebbleos.elf
             build/pebbleos.hex
             build/system_resources.pbpack
-            build/fw/loghash_dict.json
+            build/log.dict.json
             build/normal_*.pbz
 
   upload-translation-source:

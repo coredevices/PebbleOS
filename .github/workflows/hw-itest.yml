@@ -111,7 +111,7 @@ jobs:
             build/pebbleos.elf
             build/pebbleos.hex
             build/system_resources.pbpack
-            build/fw/loghash_dict.json
+            build/log.dict.json
             build/normal_*.pbz
 
   test:
