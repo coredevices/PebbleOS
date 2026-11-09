@@ -661,6 +661,8 @@ static void prv_update_proc(struct Layer *layer, GContext *ctx) {
   // The theme can change while the timeline is open, so keep the stored text color in sync. This
   // only marks the day separator dirty when the color actually changes.
   peek_layer_set_text_color(&timeline_layer->day_separator, system_theme_get_fg_color());
+  // The fin is a child layer, so it draws after this and picks up the current theme.
+  kino_layer_set_invert_colors(&timeline_layer->end_of_timeline, system_theme_is_dark_mode());
 
   AnimationProgress progress;
   if (timeline_layer->animating_intro_or_exit &&
