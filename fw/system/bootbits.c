@@ -4,6 +4,7 @@
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/system/rtc_registers.h>
 
 #include <system/bootbits.h>
 #include <system/version.h>
@@ -28,28 +29,10 @@ extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #include <stdint.h>
 
 #ifdef CONFIG_SOC_NRF52
-static uint32_t PBL_SECTION(".retained") retained[256 / 4];
-
-void retained_write(uint8_t id, uint32_t value) {
-  retained[id] = value;
-  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
-  retained[NRF_RETAINED_REGISTER_CRC] = crc32_computed;
-}
-
-uint32_t retained_read(uint8_t id) {
-  return retained[id];
-}
-
 void boot_bit_init(void) {
   // Make sure that the bootbits have a valid CRC -- otherwise, their
   // in-memory value is probably scrambled and should be reset.
-  uint32_t crc32_computed = pbl_crc32(0, retained, NRF_RETAINED_REGISTER_CRC * 4);
-  if (crc32_computed != retained[NRF_RETAINED_REGISTER_CRC]) {
-    PBL_LOG_WRN(
-        "Retained register CRC failed: expected CRC %08lx, got CRC %08lx.  Clearing bootbits!",
-        crc32_computed, retained[NRF_RETAINED_REGISTER_CRC]);
-    memset(retained, 0, sizeof(retained));
-  }
+  (void)retained_validate();
 
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
     retained_write(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);

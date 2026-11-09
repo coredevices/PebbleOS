@@ -33,6 +33,9 @@
 
 extern void retained_write(uint8_t id, uint32_t value);
 extern uint32_t retained_read(uint8_t id);
+// Zeroes the registers, logging both checksums, unless their checksum holds: a power-on leaves
+// noise in them. Returns whether it held.
+extern bool retained_validate(void);
 
 #elifdef CONFIG_SOC_SF32LB52
 /* sf32lb52 rtc backup register 2/5/6/7/8/9 is freely usable */

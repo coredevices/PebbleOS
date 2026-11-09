@@ -5,9 +5,8 @@
 
 #include <string.h>
 
+#include <pbl/system/rtc_registers.h>
 #include <pbl/util/size.h>
-
-#include <system/rtc_registers.h>
 
 static const uint8_t s_regs[] = {
   RTC_TIMEZONE_ABBR_START, RTC_TIMEZONE_ABBR_END_TZID_DSTID,

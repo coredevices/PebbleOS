@@ -9,5 +9,6 @@ pbl_library_sources(
   sleep.c
   idle.c
   ppi.c
+  retained.c
 )
 pbl_linker_sources(memory linker.ld)
