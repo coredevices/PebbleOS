@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-i2c
+config: I2C_SF32LB
+class: i2c
+define: PBL_I2C_SF32LB_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - prop: clock-frequency
+    default: 100000
+  - pinctrl: default
+  - dma: rx
+    default: nullptr

@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: mag
+type: struct pbl_mag
+include: pbl/drivers/mag.h

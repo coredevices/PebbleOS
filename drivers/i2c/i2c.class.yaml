@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: i2c
+type: struct pbl_i2c_bus
+include: pbl/drivers/i2c.h
+provides:
+  i2c: "&{sym}"

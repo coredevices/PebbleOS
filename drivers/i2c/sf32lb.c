@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
@@ -425,3 +426,5 @@ const struct pbl_i2c_bus_ops pbl_i2c_sf32lb_ops = {
   .start = prv_start,
   .abort = prv_abort,
 };
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_i2c)

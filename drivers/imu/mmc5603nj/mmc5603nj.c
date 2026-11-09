@@ -4,6 +4,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
 #include <pbl/drivers/imu/mmc5603nj/registers.h>
@@ -277,3 +278,5 @@ const struct pbl_mag_ops pbl_mmc5603nj_ops = {
   .set_sampling_interval = prv_set_sampling_interval,
   .peek = prv_peek,
 };
+
+#include PBL_DT_INSTANCES(memsic_mmc5603)

@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c/nrf5.h>
 #include <pbl/kernel/irq.h>
@@ -273,3 +274,5 @@ const struct pbl_i2c_bus_ops pbl_i2c_nrf5_ops = {
   .start = prv_start,
   .abort = prv_abort,
 };
+
+#include PBL_DT_INSTANCES(nordic_nrf52832_twim)
