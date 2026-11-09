@@ -1,0 +1,12 @@
+description: Sleeping barber, a server that sleeps when idle and a waiting room that fills up
+expect:
+  - 'shop: empty, barber asleep: yes'
+  - 'shop: 5 customers arrive at once, for 3 chairs'
+  - 'customer \d: no free chair, leaves'
+  - 'customer \d: no free chair, leaves'
+  - 'customer \d: in the barber chair'
+  - 'customer \d: in the barber chair'
+  - 'customer \d: in the barber chair'
+  - 'shop: 3 haircuts, 2 customers turned away'
+  - 'shop: empty, barber asleep: yes'
+  - 'Sample done'
