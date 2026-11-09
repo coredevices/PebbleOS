@@ -118,6 +118,17 @@ typedef uint16_t pbl_irq_t;
   ARCH_IRQ_CONNECT(PBL_SOC_IRQN_##line, #line, prio, isr, arg, flags)
 
 /**
+ * @brief PBL_IRQ_CONNECT() with the line given by number, for generated code.
+ *
+ * @param n Line number, a literal.
+ * @param prio Priority in controller units, 0 being the most urgent.
+ * @param isr Handler function.
+ * @param arg Argument passed to @p isr, may be empty.
+ * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
+ */
+#define PBL_IRQ_CONNECT_NUM(n, prio, isr, arg, flags) ARCH_IRQ_CONNECT(n, #n, prio, isr, arg, flags)
+
+/**
  * @brief Bind a SoC interrupt line to the handler body that follows the macro.
  *
  * @param line Line name, as in @c soc_irqs.h.
