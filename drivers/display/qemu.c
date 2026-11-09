@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/display/qemu.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/math.h>
@@ -93,3 +94,5 @@ const struct pbl_display_ops pbl_display_qemu_ops = {
   .update = prv_update,
   .clear = prv_clear,
 };
+
+#include PBL_DT_INSTANCES(qemu_pebble_display_display)

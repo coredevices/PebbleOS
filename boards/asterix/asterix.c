@@ -2,16 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
-#include <pbl/drivers/audio/da7212.h>
-#include <pbl/drivers/audio/nrf5.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/rtc/retained.h>
 #include <pbl/drivers/temperature/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
-#include <pbl/input/input.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
 
@@ -23,18 +19,6 @@ const struct pbl_flash *const FLASH = &dt_flash0;
 
 const struct pbl_uart *const CONSOLE_UART = &dt_uart0;
 /* PERIPHERAL ID 8 */
-
-/* buttons */
-PBL_GPIO_KEYS_DEFINE(
-    BUTTONS, "buttons",
-    PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(&dt_gpio0, 28, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-                      PBL_INPUT_KEY_BACK, 40),
-    PBL_GPIO_KEYS_KEY("Up", PBL_GPIO(&dt_gpio0, 29, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-                      PBL_INPUT_KEY_UP, 40),
-    PBL_GPIO_KEYS_KEY("Select", PBL_GPIO(&dt_gpio0, 30, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-                      PBL_INPUT_KEY_SELECT, 40),
-    PBL_GPIO_KEYS_KEY("Down", PBL_GPIO(&dt_gpio0, 31, PBL_GPIO_PULL_UP | PBL_GPIO_ACTIVE_LOW),
-                      PBL_INPUT_KEY_DOWN, 40));
 
 /* display */
 
@@ -55,31 +39,15 @@ const struct pbl_vibe *const VIBE = &dt_drv2604;
 
 const struct pbl_als *const ALS = &dt_opt3001;
 
-PBL_AUDIO_DA7212_DEFINE(s_da7212, "da7212", &dt_i2c0, 0x1A, &dt_ldsw1);
-
 const struct pbl_accel *const ACCEL = &dt_lsm6dso;
 
 const struct pbl_mag *const MAG = &dt_mmc5603nj;
 
 /* PERIPHERAL ID 11 */
 
-PBL_AUDIO_NRF5_PDM_DEFINE(s_mic, "mic", PBL_GPIO(&dt_gpio1, 0, 0), PBL_GPIO(&dt_gpio0, 24, 0), 0);
-PBL_IRQ_CONNECT(PDM, 7, pbl_audio_nrf5_pdm_irq_handler, &s_mic, 0);
+const struct pbl_audio *const MIC = &dt_mic;
 
-const struct pbl_audio *const MIC = &s_mic.audio;
-
-// DA7212 line output, the codec clocked from the I2S master clock and driving BCLK/WCLK
-static const struct pbl_audio_link s_speaker_link = {
-  .codec = &s_da7212.codec,
-  .fmt = PBL_AUDIO_FMT_I2S | PBL_AUDIO_FMT_CODEC_MASTER,
-};
-
-PBL_AUDIO_NRF5_I2S_DEFINE(s_speaker, "speaker", &s_speaker_link, .sck = PBL_GPIO(&dt_gpio0, 12, 0),
-                          .lrck = PBL_GPIO(&dt_gpio0, 7, 0), .mck = PBL_GPIO(&dt_gpio1, 9, 0),
-                          .sdout = PBL_GPIO(&dt_gpio0, 13, 0));
-PBL_IRQ_CONNECT(I2S, 5, pbl_audio_nrf5_i2s_irq_handler, &s_speaker, 0);
-
-const struct pbl_audio *const SPEAKER = &s_speaker.audio;
+const struct pbl_audio *const SPEAKER = &dt_speaker;
 
 /* sensor SPI bus */
 

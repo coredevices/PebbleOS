@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/intc.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_gpio_qemu QEMU GPIO
@@ -30,21 +31,12 @@ struct pbl_gpio_qemu_state {
 struct pbl_gpio_qemu {
   /** GPIO port. */
   struct pbl_gpio_port port;
-  /** Interrupt controller of the pins, child of the port. */
-  struct pbl_intc intc;
   /** Register base address. */
   uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irq;
   /** Runtime state. */
   struct pbl_gpio_qemu_state *state;
 };
-
-/** @cond INTERNAL_HIDDEN */
-extern const struct pbl_gpio_qemu pbl_gpio_qemu_gpio;
-/** @endcond */
-
-/** The QEMU GPIO port. */
-#define QEMU_GPIO (&pbl_gpio_qemu_gpio.port)
-/** Interrupt controller of the QEMU GPIO port. */
-#define QEMU_GPIO_INTC (&pbl_gpio_qemu_gpio.intc)
 
 /** @} */

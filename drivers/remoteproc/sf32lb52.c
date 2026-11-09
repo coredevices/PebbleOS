@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/nvmem/sf32lb52.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/kernel/delay.h>
@@ -156,3 +157,5 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev) {
 
   return pbl_device_init(&lcpu->rx_chan.ctrl->dev);
 }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_lcpu)

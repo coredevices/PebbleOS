@@ -51,15 +51,13 @@ int pbl_audio_da7212_init(const struct pbl_device *dev);
  */
 #define PBL_AUDIO_DA7212_DEFINE(sym, _name, _bus, _addr, _vdd)                              \
   PBL_DEVICE_STATE_DEFINE(sym);                                                             \
-  static const struct pbl_audio_da7212 sym = {                                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_da7212, struct pbl_audio_codec, codec) {        \
     .codec =                                                                                \
         {                                                                                   \
           .dev = PBL_DEVICE_INIT(sym, _name, pbl_audio_da7212_init, &(_bus)->dev, nullptr), \
           .ops = &pbl_audio_da7212_ops,                                                     \
         },                                                                                  \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                                        \
-    .vdd = (_vdd),                                                                          \
-  };                                                                                        \
-  PBL_DEVICE_REGISTER(sym, &sym.codec.dev)
+    .i2c = PBL_I2C_DEV(_bus, _addr), .vdd = (_vdd),                                         \
+  }
 
 /** @} */

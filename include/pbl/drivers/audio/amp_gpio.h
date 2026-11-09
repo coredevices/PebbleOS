@@ -15,11 +15,12 @@
  * @brief Amplifier switched by an enable GPIO, with an optional supply.
  *
  * Some class-D amplifiers select their mode from the number of pulses on the enable line before
- * it stays active: the driver sends @c mode_pulses pulses of @c pulse_us high and low first.
+ * it stays active: the driver sends @c mode_pulses pulses of @c pulse_us high and low first, with
+ * interrupts locked, so the line has to be a GPIO of the SoC, not one behind a bus.
  *
  * @code{.c}
  * PBL_AUDIO_AMP_GPIO_DEFINE(s_amp, "amp", PBL_GPIO(SF32LB_GPIO1, 0, 0), nullptr,
- *                           .mode_pulses = 1, .pulse_us = 200, .settle_us = 2000);
+ *                           .mode_pulses = 1, .pulse_us = 2, .settle_us = 2000);
  * @endcode
  * @{
  */
@@ -56,16 +57,35 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev);
  */
 #define PBL_AUDIO_AMP_GPIO_DEFINE(sym, _name, _enable, _supply, ...)                     \
   PBL_DEVICE_STATE_DEFINE(sym);                                                          \
-  static const struct pbl_audio_amp_gpio sym = {                                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {       \
     .amp =                                                                               \
         {                                                                                \
           .dev = PBL_DEVICE_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, nullptr), \
           .ops = &pbl_audio_amp_gpio_ops,                                                \
         },                                                                               \
-    .enable = _enable,                                                                   \
-    .supply = (_supply),                                                                 \
-    __VA_ARGS__                                                                          \
-  };                                                                                     \
-  PBL_DEVICE_REGISTER(sym, &sym.amp.dev)
+    .enable = _enable, .supply = (_supply), __VA_ARGS__                                  \
+  }
+
+/**
+ * @brief Define an Awinic AW8155 amplifier, its mode selected by pulses on its control line.
+ *
+ * @param sym Symbol of the amplifier.
+ * @param _name Device name.
+ * @param _mode_gpio Control line, from PBL_GPIO().
+ * @param _mode Mode, as the number of rising edges: 1, 2 or 4.
+ * @param _supply Supply, or NULL.
+ */
+#define PBL_AUDIO_AW8155_DEFINE(sym, _name, _mode_gpio, _mode, _supply)                    \
+  static_assert((_mode) == 1 || (_mode) == 2 || (_mode) == 4, "mode 1, 2 or 4");           \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {         \
+    .amp =                                                                                 \
+        {                                                                                  \
+          .dev = PBL_DEVICE_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, nullptr),   \
+          .ops = &pbl_audio_amp_gpio_ops,                                                  \
+        },                                                                                 \
+    .enable = _mode_gpio, .supply = (_supply), .mode_pulses = (_mode) - 1, .pulse_us = 2U, \
+    .settle_us = 2000U,                                                                    \
+  }
 
 /** @} */

@@ -9,11 +9,18 @@ config MBOX
 
 config MBOX_SF32LB52
     bool "SiFli SF32LB52 mailbox"
-    default y if SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_MAILBOX_ENABLED
     depends on CLK_SF32LB
     select MBOX
     help
       SF32LB52 mailbox blocks (MAILBOX1, MAILBOX2), channel 1 doorbells.
+
+config MBOX_SF32LB52_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on MBOX_SF32LB52
+    help
+      Priority of the interrupt of the blocks rung by the remote.
 
 config MBOX_SHELL
     bool "Mailbox shell commands"

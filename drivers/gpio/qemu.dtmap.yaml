@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-gpio
+config: GPIO_QEMU
+class: [gpio, intc]
+define: PBL_GPIO_QEMU_DEFINE
+symbol:
+  gpio: "{sym}"
+  intc: "{sym}_intc"
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - prop: ngpios

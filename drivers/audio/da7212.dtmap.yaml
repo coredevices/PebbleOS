@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: dlg,da7212
+config: AUDIO_DA7212
+class: codec
+define: PBL_AUDIO_DA7212_DEFINE
+args:
+  - name: true
+  - parent: i2c
+  - reg: 0
+  - supply: VDDA

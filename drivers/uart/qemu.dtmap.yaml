@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-simple-uart
+config: UART_QEMU
+class: uart
+define: PBL_UART_QEMU_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - prop: current-speed
+    default: 115200

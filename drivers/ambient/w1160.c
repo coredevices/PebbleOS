@@ -3,9 +3,11 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/ambient/w1160.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/regulator.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -50,7 +52,7 @@ PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
 // Configuration register bits
 #define W1160_ALSCTRL_REG 0xA4
 
-#define W1160_POR_WAIT_TIME           (10) /* ms */
+#define W1160_POR_WAIT_TIME           (40) /* ms, 35 ms and a margin */
 #define W1160_AGCCTRL1_AGC_EN         PBL_BIT(7)
 #define W1160_MANUAL_GAIN_CTRL_MGC_EN PBL_BIT(0)
 #define W1160_AGCCTRL2_SEL_MODE       PBL_BIT(2) /* must be 1 */
@@ -214,8 +216,7 @@ static int prv_read_oneshot(const struct pbl_w1160 *dev, uint32_t *level) {
   return ret_dis;
 }
 
-static int prv_init(const struct pbl_als *als) {
-  const struct pbl_w1160 *dev = prv_get(als);
+static int prv_probe(const struct pbl_w1160 *dev) {
   uint8_t chip_id;
   int ret;
 
@@ -239,6 +240,30 @@ static int prv_init(const struct pbl_als *als) {
   }
 
   return 0;
+}
+
+static int prv_init(const struct pbl_als *als) {
+  const struct pbl_w1160 *dev = prv_get(als);
+  int ret;
+
+  if (dev->supply != nullptr) {
+    ret = pbl_device_init(&dev->supply->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_regulator_enable(dev->supply);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_probe(dev);
+  if (ret != 0 && dev->supply != nullptr) {
+    (void)pbl_regulator_disable(dev->supply);
+  }
+
+  return ret;
 }
 
 static int prv_read(const struct pbl_als *als, uint32_t *level) {
@@ -303,3 +328,5 @@ const struct pbl_als_ops pbl_w1160_ops = {
   .read = prv_read,
   .set_state = prv_set_state,
 };
+
+#include PBL_DT_INSTANCES(sensortek_w1160)

@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-extflash
+config: FLASH_QEMU
+class: flash
+define: PBL_FLASH_QEMU_DEFINE
+args:
+  - name: true
+  - reg: regs
+  - reg: mem
+  - size: mem

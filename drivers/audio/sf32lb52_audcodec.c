@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/dma/sf32lb52.h>
@@ -22,7 +23,7 @@
 
 PBL_LOG_MODULE_DEFINE(driver_audio_sf32lb52, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
-#define REG(name) (SF32LB52_AUDCODEC_BASE + SF32LB52_AUDCODEC_##name##_OFFSET)
+#define REG(name) (dev->base + SF32LB52_AUDCODEC_##name##_OFFSET)
 
 #define GAIN_MIN_MDB  (-36000)
 #define GAIN_MAX_MDB  0
@@ -105,10 +106,8 @@ static const struct prv_rate s_rates[] = {
   {44100U, true, 1U, 0U, false},  {22050U, true, 1U, 5U, true},   {11025U, true, 1U, 7U, true},
 };
 
-static const struct pbl_clk s_clk = PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_AUDCODEC);
-
-static const struct pbl_audio_sf32lb52_audcodec *prv_dev(const struct pbl_audio *audio) {
-  return container_of(audio, const struct pbl_audio_sf32lb52_audcodec, audio);
+static const struct pbl_audio_sf32lb52_audcodec *prv_dev(const struct pbl_audio_dai *dai) {
+  return container_of(dai, const struct pbl_audio_sf32lb52_audcodec, dai);
 }
 
 static inline uint32_t prv_read(uintptr_t reg) {
@@ -141,7 +140,7 @@ static const struct prv_rate *prv_find_rate(uint32_t rate) {
   return nullptr;
 }
 
-static void prv_refgen_on(void) {
+static void prv_refgen_on(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_clear(REG(BG_CFG0), AUDCODEC_BG_CFG0_EN_SMPL);
   prv_clear(REG(REFGEN_CFG), AUDCODEC_REFGEN_CFG_EN_CHOP);
   prv_set(REG(REFGEN_CFG), AUDCODEC_REFGEN_CFG_EN);
@@ -153,7 +152,7 @@ static void prv_refgen_on(void) {
 }
 
 // Bandgap, reference generator and PLL analog: the bias of every analog block
-static void prv_bias_on(void) {
+static void prv_bias_on(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_write(REG(BG_CFG0), AUDCODEC_BG_CFG0_EN |
                               PBL_FIELD_PREP(AUDCODEC_BG_CFG0_VREF_SEL_MASK, BG_VREF_3V3) |
                               AUDCODEC_BG_CFG0_EN_RCFLT |
@@ -175,10 +174,10 @@ static void prv_bias_on(void) {
                                PBL_FIELD_PREP(AUDCODEC_PLL_CFG1_CZ_SEL_MASK, PLL_CZ_SEL));
   pbl_busy_wait_us(PLL_SETTLE_US);
 
-  prv_refgen_on();
+  prv_refgen_on(dev);
 }
 
-static void prv_bias_off(void) {
+static void prv_bias_off(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_clear(REG(PLL_CFG0),
             AUDCODEC_PLL_CFG0_EN_IARY | AUDCODEC_PLL_CFG0_EN_VCO | AUDCODEC_PLL_CFG0_EN_ANA);
   prv_clear(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_DIG);
@@ -191,7 +190,8 @@ static void prv_bias_off(void) {
   prv_clear(REG(BG_CFG0), AUDCODEC_BG_CFG0_EN_SMPL);
 }
 
-static int prv_cal_count(uint32_t fc_vco, uint32_t *count) {
+static int prv_cal_count(const struct pbl_audio_sf32lb52_audcodec *dev, uint32_t fc_vco,
+                         uint32_t *count) {
   int ret;
 
   prv_field(REG(PLL_CFG0), AUDCODEC_PLL_CFG0_FC_VCO_MASK, fc_vco);
@@ -212,7 +212,8 @@ static void prv_update_delta(uint32_t count, uint32_t target, uint32_t *delta) {
   }
 }
 
-static int prv_cal_vco(uint32_t target, uint32_t *deltas, uint32_t *vco) {
+static int prv_cal_vco(const struct pbl_audio_sf32lb52_audcodec *dev, uint32_t target,
+                       uint32_t *deltas, uint32_t *vco) {
   uint32_t fc_vco = FC_VCO_START;
   uint32_t fc_min;
   uint32_t fc_max;
@@ -220,7 +221,7 @@ static int prv_cal_vco(uint32_t target, uint32_t *deltas, uint32_t *vco) {
   int ret;
 
   for (uint32_t step = FC_VCO_STEP; step != 0U; step >>= 1) {
-    ret = prv_cal_count(fc_vco, &count);
+    ret = prv_cal_count(dev, fc_vco, &count);
     if (ret != 0) {
       return ret;
     }
@@ -236,13 +237,13 @@ static int prv_cal_vco(uint32_t target, uint32_t *deltas, uint32_t *vco) {
   fc_min = fc_vco == 0U ? 0U : fc_vco - 1U;
   fc_max = fc_vco == FC_VCO_MAX ? fc_vco : fc_vco + 1U;
 
-  ret = prv_cal_count(fc_min, &count);
+  ret = prv_cal_count(dev, fc_min, &count);
   if (ret != 0) {
     return ret;
   }
   prv_update_delta(count, target, &deltas[1]);
 
-  ret = prv_cal_count(fc_max, &count);
+  ret = prv_cal_count(dev, fc_max, &count);
   if (ret != 0) {
     return ret;
   }
@@ -264,25 +265,25 @@ static int prv_calibrate(const struct pbl_audio_sf32lb52_audcodec *dev) {
   uint32_t deltas[3] = {0U};
   int ret = 0;
 
-  prv_bias_on();
+  prv_bias_on(dev);
 
   prv_set(REG(PLL_CFG0), AUDCODEC_PLL_CFG0_OPEN);
   prv_set(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_LF_VCIN);
   prv_write(REG(PLL_CAL_CFG), PBL_FIELD_PREP(AUDCODEC_PLL_CAL_CFG_LEN_MASK, CAL_LEN));
 
   for (size_t i = 0U; i < ARRAY_LENGTH(s_vco_target) && ret == 0; i++) {
-    ret = prv_cal_vco(s_vco_target[i], deltas, &dev->state->vco[i]);
+    ret = prv_cal_vco(dev, s_vco_target[i], deltas, &dev->state->vco[i]);
   }
 
   prv_clear(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_LF_VCIN);
   prv_clear(REG(PLL_CFG0), AUDCODEC_PLL_CFG0_OPEN);
 
-  prv_bias_off();
+  prv_bias_off(dev);
 
   return ret;
 }
 
-static int prv_pll_lock_44m1(void) {
+static int prv_pll_lock_44m1(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_set(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_RSTB);
   pbl_busy_wait_us(PLL_SETTLE_US);
 
@@ -314,7 +315,7 @@ static int prv_clock_on(const struct pbl_audio_sf32lb52_audcodec *dev,
   int ret = -EIO;
 
   if (state->pll == PLL_OFF) {
-    prv_bias_on();
+    prv_bias_on(dev);
     state->pll = PLL_BIAS;
   }
 
@@ -324,7 +325,7 @@ static int prv_clock_on(const struct pbl_audio_sf32lb52_audcodec *dev,
 
   prv_field(REG(PLL_CFG0), AUDCODEC_PLL_CFG0_FC_VCO_MASK, state->vco[VCO_44M1]);
   for (uint32_t i = 0U; i < PLL_LOCK_TRIES && ret != 0; i++) {
-    ret = prv_pll_lock_44m1();
+    ret = prv_pll_lock_44m1(dev);
   }
   if (ret != 0) {
     PBL_LOG_ERR("PLL did not lock");
@@ -337,11 +338,12 @@ static int prv_clock_on(const struct pbl_audio_sf32lb52_audcodec *dev,
 }
 
 static void prv_clock_off(const struct pbl_audio_sf32lb52_audcodec *dev) {
-  prv_bias_off();
+  prv_bias_off(dev);
   dev->state->pll = PLL_OFF;
 }
 
-static void prv_config_channel(const struct prv_rate *rate) {
+static void prv_config_channel(const struct pbl_audio_sf32lb52_audcodec *dev,
+                               const struct prv_rate *rate) {
   prv_field(REG(CFG), AUDCODEC_CFG_ADC_EN_DLY_SEL_MASK, CFG_EN_DLY);
   prv_write(REG(DAC_CFG), PBL_FIELD_PREP(AUDCODEC_DAC_CFG_OSR_SEL_MASK, rate->osr_sel) |
                               PBL_FIELD_PREP(AUDCODEC_DAC_CFG_OP_MODE_MASK, DAC_OP_MODE) |
@@ -361,7 +363,7 @@ static void prv_config_channel(const struct prv_rate *rate) {
             PBL_FIELD_PREP(AUDCODEC_DAC_CH_DEBUG_DATA_OUT_MASK, DEBUG_DATA_OUT));
 }
 
-static void prv_bypass(bool bypass) {
+static void prv_bypass(const struct pbl_audio_sf32lb52_audcodec *dev, bool bypass) {
   uint32_t debug = PBL_FIELD_PREP(AUDCODEC_DAC_CH_DEBUG_DATA_OUT_MASK, DEBUG_DATA_OUT) |
                    (bypass ? AUDCODEC_DAC_CH_DEBUG_BYPASS : 0U);
 
@@ -379,7 +381,7 @@ static void prv_bypass(bool bypass) {
 }
 
 // Gain is -36 dB plus rough steps of 6 dB and fine steps of 0.5 dB
-static void prv_set_volume(int32_t gain_mdb) {
+static void prv_set_volume(const struct pbl_audio_sf32lb52_audcodec *dev, int32_t gain_mdb) {
   uint32_t steps = (uint32_t)pbl_audio_gain_to_step(gain_mdb, GAIN_MIN_MDB, GAIN_STEP_MDB);
   uint32_t mask = AUDCODEC_DAC_CH_CFG_ROUGH_VOL_MASK | AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK;
   uint32_t value = PBL_FIELD_PREP(AUDCODEC_DAC_CH_CFG_ROUGH_VOL_MASK, steps / FINE_STEPS) |
@@ -389,19 +391,20 @@ static void prv_set_volume(int32_t gain_mdb) {
   pbl_writel((prv_read(REG(DAC_CH1_CFG)) & ~mask) | value, REG(DAC_CH1_CFG));
 }
 
-static void prv_apply(int32_t gain_mdb, bool mute) {
+static void prv_apply(const struct pbl_audio_sf32lb52_audcodec *dev, int32_t gain_mdb, bool mute) {
   if (mute) {
-    prv_bypass(true);
+    prv_bypass(dev, true);
     prv_field(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, FINE_VOL_MUTE);
     prv_field(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, FINE_VOL_MUTE);
     return;
   }
 
-  prv_bypass(false);
-  prv_set_volume(gain_mdb);
+  prv_bypass(dev, false);
+  prv_set_volume(dev, gain_mdb);
 }
 
-static void prv_analog_on(const struct prv_rate *rate) {
+static void prv_analog_on(const struct pbl_audio_sf32lb52_audcodec *dev,
+                          const struct prv_rate *rate) {
   prv_clear(REG(PLL_CFG4), AUDCODEC_PLL_CFG4_SEL_CLK_DAC | AUDCODEC_PLL_CFG4_SEL_CLK_DAC_SOURCE);
   prv_set(REG(PLL_CFG4), AUDCODEC_PLL_CFG4_EN_CLK_CHOP_DAC | AUDCODEC_PLL_CFG4_EN_CLK_DAC |
                              (rate->pll ? AUDCODEC_PLL_CFG4_SEL_CLK_DAC_SOURCE : 0U) |
@@ -432,7 +435,7 @@ static void prv_analog_on(const struct prv_rate *rate) {
   prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
 }
 
-static void prv_analog_off(void) {
+static void prv_analog_off(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_SR);
   prv_set(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
   pbl_busy_wait_us(DAC_STEP_US);
@@ -447,18 +450,18 @@ static void prv_analog_off(void) {
 }
 
 static void prv_dma_done(void *arg, int status) {
-  const struct pbl_audio *audio = arg;
+  const struct pbl_audio_dai *dai = arg;
 
   if (status != 0) {
-    pbl_audio_report_xrun(audio);
+    pbl_audio_report_xrun(pbl_audio_dai_card(dai));
     return;
   }
 
-  pbl_audio_period_elapsed(audio);
+  pbl_audio_period_elapsed(pbl_audio_dai_card(dai));
 }
 
-static int prv_init(const struct pbl_audio *audio) {
-  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(audio);
+static int prv_init(const struct pbl_audio_dai *dai) {
+  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(dai);
   int ret;
 
   if (dcache_line_size() > PBL_AUDIO_BUF_ALIGN) {
@@ -467,19 +470,19 @@ static int prv_init(const struct pbl_audio *audio) {
 
   *dev->state = (struct pbl_audio_sf32lb52_audcodec_state){0};
 
-  ret = pbl_device_init(&s_clk.ctrl->dev);
+  ret = pbl_device_init(&dev->clk.ctrl->dev);
   if (ret != 0) {
     return ret;
   }
 
-  ret = pbl_clk_enable(&s_clk);
+  ret = pbl_clk_enable(&dev->clk);
   if (ret != 0) {
     return ret;
   }
 
   pbl_modifyl(0U, PMUC_HXT_CR1_BUF_AUD_EN, SF32LB52_PMUC_BASE + SF32LB52_PMUC_HXT_CR1_OFFSET);
 
-  prv_config_channel(prv_find_rate(INIT_RATE));
+  prv_config_channel(dev, prv_find_rate(INIT_RATE));
 
   ret = prv_calibrate(dev);
   if (ret != 0) {
@@ -489,7 +492,7 @@ static int prv_init(const struct pbl_audio *audio) {
   return ret;
 }
 
-static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
   for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
     caps->rates |= pbl_audio_rate_bit(s_rates[i].rate);
   }
@@ -520,7 +523,7 @@ static int prv_dma_start(const struct pbl_audio_sf32lb52_audcodec *dev,
   }
 
   ret = pbl_dma_prep_dma_cyclic(dev->dma, stream->buf, dev->state->ring_bytes, period_bytes,
-                                PBL_DMA_MEM_TO_DEV, prv_dma_done, (void *)&dev->audio);
+                                PBL_DMA_MEM_TO_DEV, prv_dma_done, (void *)&dev->dai);
   if (ret != 0) {
     return ret;
   }
@@ -530,9 +533,9 @@ static int prv_dma_start(const struct pbl_audio_sf32lb52_audcodec *dev,
   return 0;
 }
 
-static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream,
+static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                      int32_t gain_mdb, bool mute) {
-  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(audio);
+  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(dai);
   const struct prv_rate *rate = prv_find_rate(stream->rate);
   int ret;
 
@@ -549,7 +552,7 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
     return ret;
   }
 
-  prv_config_channel(rate);
+  prv_config_channel(dev, rate);
 
   ret = prv_dma_start(dev, stream);
   if (ret != 0) {
@@ -559,13 +562,13 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   }
 
   // The gain must be set before the DAC path opens, or startup transients play at 0 dB
-  prv_apply(gain_mdb, mute);
+  prv_apply(dev, gain_mdb, mute);
 
   prv_set(REG(CFG), AUDCODEC_CFG_DAC_ENABLE);
-  prv_bypass(true);
-  prv_analog_on(rate);
+  prv_bypass(dev, true);
+  prv_analog_on(dev, rate);
   if (!mute) {
-    prv_bypass(false);
+    prv_bypass(dev, false);
   }
 
   // The gain ramp keeps volume writes from latching
@@ -575,8 +578,8 @@ static int prv_start(const struct pbl_audio *audio, const struct pbl_audio_strea
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio *audio) {
-  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(audio);
+static int prv_stop(const struct pbl_audio_dai *dai) {
+  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(dai);
   int ret;
 
   prv_clock_off(dev);
@@ -584,8 +587,8 @@ static int prv_stop(const struct pbl_audio *audio) {
   ret = pbl_dma_terminate(dev->dma);
   prv_clear(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_DMA_EN);
 
-  prv_bypass(true);
-  prv_analog_off();
+  prv_bypass(dev, true);
+  prv_analog_off(dev);
   prv_clear(REG(CFG), AUDCODEC_CFG_DAC_ENABLE);
 
   prv_clear(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_ENABLE);
@@ -598,25 +601,25 @@ static int prv_stop(const struct pbl_audio *audio) {
   return ret;
 }
 
-static int prv_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
-  prv_set_volume(gain_mdb);
+static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+  prv_set_volume(prv_dev(dai), gain_mdb);
 
   return 0;
 }
 
-static int prv_set_mute(const struct pbl_audio *audio, bool mute) {
-  prv_apply(audio->state->gain_mdb, mute);
+static int prv_set_mute(const struct pbl_audio_dai *dai, bool mute) {
+  prv_apply(prv_dev(dai), pbl_audio_dai_card(dai)->state->gain_mdb, mute);
 
   return 0;
 }
 
-static void prv_sync_for_device(const struct pbl_audio *audio, void *buf, size_t len) {
+static void prv_sync_for_device(const struct pbl_audio_dai *dai, void *buf, size_t len) {
   dcache_flush(buf, len);
 }
 
-static int prv_pointer(const struct pbl_audio *audio, size_t *frames) {
-  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(audio);
-  const struct pbl_audio_state *state = audio->state;
+static int prv_pointer(const struct pbl_audio_dai *dai, size_t *frames) {
+  const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(dai);
+  const struct pbl_audio_state *state = pbl_audio_dai_card(dai)->state;
   size_t residue;
   int ret;
 
@@ -631,7 +634,7 @@ static int prv_pointer(const struct pbl_audio *audio, size_t *frames) {
   return 0;
 }
 
-const struct pbl_audio_ops pbl_audio_sf32lb52_audcodec_ops = {
+const struct pbl_audio_dai_ops pbl_audio_sf32lb52_audcodec_ops = {
   .init = prv_init,
   .get_caps = prv_get_caps,
   .start = prv_start,
@@ -641,3 +644,5 @@ const struct pbl_audio_ops pbl_audio_sf32lb52_audcodec_ops = {
   .sync_for_device = prv_sync_for_device,
   .pointer = prv_pointer,
 };
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_audcodec)

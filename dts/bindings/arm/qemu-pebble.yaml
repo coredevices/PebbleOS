@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/arm/qemu-pebble.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble machines
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+properties:
+  $nodename:
+    const: "/"
+  compatible:
+    enum:
+      - qemu,pebble-emery
+      - qemu,pebble-flint
+      - qemu,pebble-gabbro
+
+additionalProperties: true

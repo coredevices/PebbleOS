@@ -16,13 +16,7 @@
  * calibrates on start. The controller exchanges HCI with the HCPU over byte rings signalled with
  * a pair of doorbells; the LCPU to HCPU ring sits in LPSYS RAM, the HCPU to LCPU one in HCPU RAM
  * reserved for it, whose address the driver hands to the ROM. The HCI transport takes the
- * doorbells and the region from here:
- *
- * @code{.c}
- * PBL_RPROC_SF32LB52_DEFINE(s_lcpu, "lcpu", PBL_MBOX_CHAN(&s_mailbox1.ctrl, 0),
- *                           PBL_MBOX_CHAN(&s_mailbox2.ctrl, 0),
- *                           PBL_MEM_REGION(SF32LB52_HPSYS_MBOX_BUF_BASE, SF32LB52_MBOX_BUF_SIZE));
- * @endcode
+ * doorbells and the region from here.
  * @{
  */
 
@@ -44,23 +38,21 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
 /** @endcond */
 
 /**
- * @brief Define and register the LCPU.
+ * @brief Define the LCPU.
  *
  * @param sym Symbol.
  * @param _name Device name.
- * @param _tx_chan Doorbell to the LCPU, a PBL_MBOX_CHAN().
- * @param _rx_chan Doorbell from the LCPU, a PBL_MBOX_CHAN().
- * @param _mem HCPU RAM reserved for the HCPU to LCPU ring, a PBL_MEM_REGION().
+ * @param _tx_chan Doorbell to the LCPU, from PBL_MBOX_CHAN().
+ * @param _rx_chan Doorbell from the LCPU, from PBL_MBOX_CHAN().
+ * @param _mem_base Base of the HCPU RAM reserved for the HCPU to LCPU ring.
+ * @param _mem_size Its size, in bytes.
  */
-#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _tx_chan, _rx_chan, _mem)                        \
+#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _tx_chan, _rx_chan, _mem_base, _mem_size)        \
   PBL_RPROC_STATE_DEFINE(sym);                                                                 \
-  const struct pbl_rproc_sf32lb52 sym = {                                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {               \
     .rproc =                                                                                   \
         PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops), \
-    .tx_chan = _tx_chan,                                                                       \
-    .rx_chan = _rx_chan,                                                                       \
-    .mem = _mem,                                                                               \
-  };                                                                                           \
-  PBL_DEVICE_REGISTER(sym, &sym.rproc.dev)
+    .tx_chan = _tx_chan, .rx_chan = _rx_chan, .mem = PBL_MEM_REGION(_mem_base, _mem_size),     \
+  }
 
 /** @} */

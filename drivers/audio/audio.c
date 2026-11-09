@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/audio.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
@@ -16,6 +17,7 @@
 PBL_LOG_MODULE_DEFINE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_audio_class, "audio");
+PBL_DEVICE_CLASS_DEFINE(pbl_audio_dai_class, "dai");
 
 #define US_PER_S 1000000U
 
@@ -41,15 +43,22 @@ static const struct pbl_audio_codec *prv_codec(const struct pbl_audio *audio) {
   return audio->link != nullptr ? audio->link->codec : nullptr;
 }
 
+// A codec without a gain, as a digital microphone, leaves it to the DAI
+static const struct pbl_audio_codec *prv_gain_codec(const struct pbl_audio *audio) {
+  const struct pbl_audio_codec *codec = prv_codec(audio);
+
+  return (codec != nullptr && codec->ops->set_gain != nullptr) ? codec : nullptr;
+}
+
 static const struct pbl_audio_amp *prv_amp(const struct pbl_audio *audio) {
   return audio->link != nullptr ? audio->link->amp : nullptr;
 }
 
 static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
-  const struct pbl_audio_codec *codec = prv_codec(audio);
+  const struct pbl_audio_codec *codec = prv_gain_codec(audio);
 
   *caps = (struct pbl_audio_caps){0};
-  audio->ops->get_caps(audio, caps);
+  audio->dai->ops->get_caps(audio->dai, caps);
 
   if (codec != nullptr) {
     caps->gain_min_mdb = 0;
@@ -62,6 +71,11 @@ static void prv_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *c
   if (caps->max_periods == 0U || caps->max_periods > PBL_AUDIO_MAX_PERIODS) {
     caps->max_periods = PBL_AUDIO_MAX_PERIODS;
   }
+}
+
+// The hardware is brought up by the card, once bound, as it may depend on the link
+int pbl_audio_dai_dev_init(const struct pbl_device *dev) {
+  return 0;
 }
 
 int pbl_audio_dev_init(const struct pbl_device *dev) {
@@ -89,8 +103,13 @@ int pbl_audio_dev_init(const struct pbl_device *dev) {
     }
   }
 
-  if (audio->ops->init != nullptr) {
-    ret = audio->ops->init(audio);
+  if (audio->dai->state->card != nullptr && audio->dai->state->card != audio) {
+    return -EBUSY;
+  }
+  audio->dai->state->card = audio;
+
+  if (audio->dai->ops->init != nullptr) {
+    ret = audio->dai->ops->init(audio->dai);
     if (ret != 0) {
       return ret;
     }
@@ -181,12 +200,13 @@ static int prv_stream_up(const struct pbl_audio *audio, const struct pbl_audio_s
   struct pbl_audio_state *state = audio->state;
   int ret;
 
-  if (codec == nullptr) {
-    return audio->ops->start(audio, stream, state->gain_mdb, state->mute);
+  if (prv_gain_codec(audio) == nullptr) {
+    ret = audio->dai->ops->start(audio->dai, stream, state->gain_mdb, state->mute);
+  } else {
+    ret = audio->dai->ops->start(audio->dai, stream, 0, false);
   }
 
-  ret = audio->ops->start(audio, stream, 0, false);
-  if (ret != 0) {
+  if (ret != 0 || codec == nullptr || codec->ops->enable == nullptr) {
     return ret;
   }
 
@@ -200,13 +220,13 @@ static int prv_stream_up(const struct pbl_audio *audio, const struct pbl_audio_s
 
   ret = codec->ops->enable(codec, &cfg);
   if (ret != 0) {
-    (void)audio->ops->stop(audio);
+    (void)audio->dai->ops->stop(audio->dai);
   }
 
   return ret;
 }
 
-static int prv_power_up(const struct pbl_audio *audio, const struct pbl_audio_stream *stream) {
+static int prv_amp_up(const struct pbl_audio *audio, const struct pbl_audio_stream *stream) {
   const struct pbl_audio_amp *amp = prv_amp(audio);
   int ret;
 
@@ -222,6 +242,28 @@ static int prv_power_up(const struct pbl_audio *audio, const struct pbl_audio_st
   ret = prv_stream_up(audio, stream);
   if (ret != 0) {
     (void)amp->ops->disable(amp);
+  }
+
+  return ret;
+}
+
+// A codec needing power before the stream, as a microphone, is prepared first
+static int prv_power_up(const struct pbl_audio *audio, const struct pbl_audio_stream *stream) {
+  const struct pbl_audio_codec *codec = prv_codec(audio);
+  int ret;
+
+  if (codec == nullptr || codec->ops->prepare == nullptr) {
+    return prv_amp_up(audio, stream);
+  }
+
+  ret = codec->ops->prepare(codec);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_amp_up(audio, stream);
+  if (ret != 0) {
+    (void)codec->ops->unprepare(codec);
   }
 
   return ret;
@@ -302,13 +344,20 @@ static int prv_stop_locked(const struct pbl_audio *audio) {
   prv_set_running(state, false);
 
   // Stop the stream while a master codec still provides its clocks
-  err = audio->ops->stop(audio);
+  err = audio->dai->ops->stop(audio->dai);
   if (ret == 0) {
     ret = err;
   }
 
-  if (codec != nullptr) {
+  if (codec != nullptr && codec->ops->disable != nullptr) {
     err = codec->ops->disable(codec);
+    if (ret == 0) {
+      ret = err;
+    }
+  }
+
+  if (codec != nullptr && codec->ops->unprepare != nullptr) {
+    err = codec->ops->unprepare(codec);
     if (ret == 0) {
       ret = err;
     }
@@ -360,19 +409,19 @@ void pbl_audio_period_elapsed(const struct pbl_audio *audio) {
   pos.frame = state->frame;
   pos.ts_us = state->ts_us;
   pos.xrun = state->xrun || (state->owned & PBL_BIT(next)) != 0U ||
-             (audio->dir == PBL_AUDIO_CAPTURE && (state->owned & PBL_BIT(done)) != 0U);
+             (audio->dai->dir == PBL_AUDIO_CAPTURE && (state->owned & PBL_BIT(done)) != 0U);
   state->xrun = false;
   state->owned |= PBL_BIT(done);
   pbl_irq_unlock();
 
   period = pbl_audio_period(audio, done);
-  if (audio->dir == PBL_AUDIO_PLAYBACK) {
+  if (audio->dai->dir == PBL_AUDIO_PLAYBACK) {
     memset(period, 0, state->period_bytes);
-    if (audio->ops->sync_for_device != nullptr) {
-      audio->ops->sync_for_device(audio, period, state->period_bytes);
+    if (audio->dai->ops->sync_for_device != nullptr) {
+      audio->dai->ops->sync_for_device(audio->dai, period, state->period_bytes);
     }
-  } else if (audio->ops->sync_for_cpu != nullptr) {
-    audio->ops->sync_for_cpu(audio, period, state->period_bytes);
+  } else if (audio->dai->ops->sync_for_cpu != nullptr) {
+    audio->dai->ops->sync_for_cpu(audio->dai, period, state->period_bytes);
   }
 
   stream->period_done(audio, period, &pos, stream->arg);
@@ -409,8 +458,8 @@ int pbl_audio_period_ready(const struct pbl_audio *audio, void *period) {
   }
 
   // The hardware may take the period as soon as it is returned, so flush it first
-  if (audio->dir == PBL_AUDIO_PLAYBACK && audio->ops->sync_for_device != nullptr) {
-    audio->ops->sync_for_device(audio, period, state->period_bytes);
+  if (audio->dai->dir == PBL_AUDIO_PLAYBACK && audio->dai->ops->sync_for_device != nullptr) {
+    audio->dai->ops->sync_for_device(audio->dai, period, state->period_bytes);
   }
 
   state->owned &= ~bit;
@@ -420,7 +469,7 @@ int pbl_audio_period_ready(const struct pbl_audio *audio, void *period) {
 }
 
 static int prv_apply_gain_locked(const struct pbl_audio *audio) {
-  const struct pbl_audio_codec *codec = prv_codec(audio);
+  const struct pbl_audio_codec *codec = prv_gain_codec(audio);
   struct pbl_audio_state *state = audio->state;
 
   if (!state->running) {
@@ -431,15 +480,15 @@ static int prv_apply_gain_locked(const struct pbl_audio *audio) {
     return codec->ops->set_gain(codec, state->gain_mdb);
   }
 
-  if (audio->ops->set_gain == nullptr) {
+  if (audio->dai->ops->set_gain == nullptr) {
     return 0;
   }
 
-  if (state->mute && audio->ops->set_mute == nullptr) {
-    return audio->ops->set_gain(audio, state->gain_min_mdb);
+  if (state->mute && audio->dai->ops->set_mute == nullptr) {
+    return audio->dai->ops->set_gain(audio->dai, state->gain_min_mdb);
   }
 
-  return audio->ops->set_gain(audio, state->gain_mdb);
+  return audio->dai->ops->set_gain(audio->dai, state->gain_mdb);
 }
 
 int pbl_audio_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
@@ -461,7 +510,7 @@ int pbl_audio_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
 }
 
 static int prv_apply_mute_locked(const struct pbl_audio *audio) {
-  const struct pbl_audio_codec *codec = prv_codec(audio);
+  const struct pbl_audio_codec *codec = prv_gain_codec(audio);
   struct pbl_audio_state *state = audio->state;
 
   if (!state->running) {
@@ -472,11 +521,11 @@ static int prv_apply_mute_locked(const struct pbl_audio *audio) {
     return codec->ops->set_mute(codec, state->mute);
   }
 
-  if (audio->ops->set_mute == nullptr) {
+  if (audio->dai->ops->set_mute == nullptr) {
     return prv_apply_gain_locked(audio);
   }
 
-  return audio->ops->set_mute(audio, state->mute);
+  return audio->dai->ops->set_mute(audio->dai, state->mute);
 }
 
 int pbl_audio_set_mute(const struct pbl_audio *audio, bool mute) {
@@ -508,7 +557,7 @@ int pbl_audio_get_position(const struct pbl_audio *audio, struct pbl_audio_pos *
   pos->ts_us = state->ts_us;
   pos->xrun = false;
 
-  if (audio->ops->pointer != nullptr && audio->ops->pointer(audio, &frames) == 0) {
+  if (audio->dai->ops->pointer != nullptr && audio->dai->ops->pointer(audio->dai, &frames) == 0) {
     const size_t period_frames = state->stream.period_frames;
     const size_t periods = state->stream.periods;
     // The hardware may be past a period end whose interrupt has not run yet
@@ -525,3 +574,5 @@ int pbl_audio_get_position(const struct pbl_audio *audio, struct pbl_audio_pos *
 bool pbl_audio_is_running(const struct pbl_audio *audio) {
   return audio->state->running;
 }
+
+#include PBL_DT_INSTANCES(simple_audio_card)

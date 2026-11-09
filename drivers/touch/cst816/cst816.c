@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/touch/cst816.h>
 #include <pbl/input/input.h>
 #include <pbl/kernel/delay.h>
@@ -317,7 +318,7 @@ static int prv_wake(const struct pbl_cst816 *cst) {
 
   state->palm_down = false;
   state->palm_click_pending = false;
-  return pbl_intc_enable(&state->irq);
+  return pbl_intc_enable(&cst->irq);
 }
 
 static void prv_work(struct pbl_work *work) {
@@ -350,7 +351,7 @@ static void prv_work(struct pbl_work *work) {
   if (ret != 0) {
     // ESD and other transients can leave the chip deaf to I2C until it is reset.
     PBL_LOG_ERR("Read failed (%d), resetting", ret);
-    (void)pbl_intc_disable(&state->irq);
+    (void)pbl_intc_disable(&cst->irq);
     ret = prv_wake(cst);
     if (ret != 0) {
       PBL_LOG_ERR("Reset failed (%d)", ret);
@@ -422,7 +423,7 @@ static int prv_sleep(const struct pbl_cst816 *cst, bool awake) {
 
   state->enabled = false;
 
-  ret = pbl_intc_disable(&state->irq);
+  ret = pbl_intc_disable(&cst->irq);
   if (ret != 0) {
     return ret;
   }
@@ -456,22 +457,12 @@ static int prv_init(const struct pbl_touch *touch) {
     return ret;
   }
 
-  ret = pbl_device_init(&cst->int_gpio.port->dev);
-  if (ret != 0) {
+  ret = pbl_pinctrl_select_state(&cst->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0 && ret != -ENOENT) {
     return ret;
   }
 
-  ret = pbl_gpio_configure(&cst->int_gpio, PBL_GPIO_INPUT);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = pbl_gpio_to_irq(&cst->int_gpio, PBL_IRQ_TYPE_EDGE_FALLING, &state->irq);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = pbl_device_init(&state->irq.intc->dev);
+  ret = pbl_device_init(&cst->irq.intc->dev);
   if (ret != 0) {
     return ret;
   }
@@ -486,7 +477,7 @@ static int prv_init(const struct pbl_touch *touch) {
     return ret;
   }
 
-  ret = pbl_intc_request(&state->irq, prv_irq_handler, (void *)cst);
+  ret = pbl_intc_request(&cst->irq, prv_irq_handler, (void *)cst);
   if (ret != 0) {
     return ret;
   }
@@ -518,3 +509,5 @@ const struct pbl_touch_ops pbl_cst816_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
 };
+
+#include PBL_DT_INSTANCES(hynitron_cst816s)

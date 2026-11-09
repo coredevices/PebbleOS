@@ -14,12 +14,7 @@
  * @brief @ref drivers_uart driver for the QEMU simple UART.
  *
  * The port has no line settings: any baud rate is accepted. While reception is disabled, QEMU
- * holds the incoming bytes back. The interrupt is connected by the board:
- *
- * @code{.c}
- * PBL_UART_QEMU_DEFINE(s_uart2, "uart2", QEMU_UART2_BASE, PBL_IRQN(UART2), 115200);
- * PBL_IRQ_CONNECT(UART2, 5, pbl_uart_qemu_irq_handler, &s_uart2, 0);
- * @endcode
+ * holds the incoming bytes back.
  * @{
  */
 
@@ -43,20 +38,20 @@ extern const struct pbl_uart_ops pbl_uart_qemu_ops;
  * @param sym Symbol of the port.
  * @param _name Name.
  * @param _base Register base address.
- * @param _irqn Interrupt line, from PBL_IRQN().
+ * @param _irq Interrupt line.
  * @param _baudrate Initial baud rate, in bits per second.
  */
-#define PBL_UART_QEMU_DEFINE(sym, _name, _base, _irqn, _baudrate)              \
+#define PBL_UART_QEMU_DEFINE(sym, _name, _base, _irq, _baudrate)               \
   PBL_UART_STATE_DEFINE(sym);                                                  \
-  const struct pbl_uart_qemu sym = {                                           \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_qemu, struct pbl_uart, uart){       \
     .uart = PBL_UART_INIT(sym, _name, &pbl_uart_qemu_ops, _baudrate, nullptr), \
     .base = (_base),                                                           \
-    .irqn = (_irqn),                                                           \
+    .irqn = (_irq),                                                            \
   };                                                                           \
-  PBL_DEVICE_REGISTER(sym, &sym.uart.dev)
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UART_QEMU_IRQ_PRIO, pbl_uart_qemu_irq_handler, &sym##_inst, 0)
 
 /**
- * @brief Interrupt handler, to connect with PBL_IRQ_CONNECT().
+ * @brief Interrupt handler, connected by PBL_UART_QEMU_DEFINE().
  *
  * @param uart Port.
  */

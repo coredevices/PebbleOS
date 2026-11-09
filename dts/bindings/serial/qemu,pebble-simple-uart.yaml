@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/serial/qemu,pebble-simple-uart.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble simple UART
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Serial port of the QEMU Pebble machines, connected to a host character
+  device. It has no line settings and accepts any baud rate.
+
+allOf:
+  - $ref: /schemas/serial/serial.yaml#
+
+properties:
+  compatible:
+    const: qemu,pebble-simple-uart
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  current-speed:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Initial baud rate, in bits per second.
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    serial@40002000 {
+        compatible = "qemu,pebble-simple-uart";
+        reg = <0x40002000 0x1000>;
+        interrupts = <2>;
+    };

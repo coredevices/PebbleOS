@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: simple-audio-card
+config: AUDIO
+class: audio
+define: PBL_AUDIO_CARD_DEFINE
+args:
+  - string: simple-audio-card,name
+  - self: dai
+    child: simple-audio-card,cpu
+    of: sound-dai
+  - self: codec
+    child: simple-audio-card,codec
+    of: sound-dai
+    default: nullptr
+  - self: amp
+    of: simple-audio-card,aux-devs
+    default: nullptr
+  - string: simple-audio-card,format
+    values:
+      i2s: PBL_AUDIO_FMT_I2S
+      pdm: 0
+    default: 0
+  - flags:
+      simple-audio-card,bitclock-master: PBL_AUDIO_FMT_CODEC_MASTER

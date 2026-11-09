@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/sound/nordic,nrf52832-i2s.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 I2S interface
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Plays through I2S, as a master or a slave to the codec. It selects its own pins, given as GPIO properties named after the signals.
+
+allOf:
+  - $ref: dai-common.yaml#
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-i2s
+      - items:
+          - enum:
+              - nordic,nrf52833-i2s
+              - nordic,nrf52840-i2s
+          - const: nordic,nrf52832-i2s
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  "#sound-dai-cells":
+    const: 0
+
+  sck-gpios:
+    maxItems: 1
+
+  lrck-gpios:
+    maxItems: 1
+
+  mck-gpios:
+    maxItems: 1
+
+  sdout-gpios:
+    maxItems: 1
+
+  sdin-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - "#sound-dai-cells"
+  - sck-gpios
+  - lrck-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    i2s@40025000 {
+        compatible = "nordic,nrf52840-i2s", "nordic,nrf52832-i2s";
+        reg = <0x40025000 0x1000>;
+        interrupts = <37>;
+        #sound-dai-cells = <0>;
+        sck-gpios = <&gpio0 12 0>;
+        lrck-gpios = <&gpio0 7 0>;
+        mck-gpios = <&gpio1 9 0>;
+        sdout-gpios = <&gpio0 13 0>;
+    };

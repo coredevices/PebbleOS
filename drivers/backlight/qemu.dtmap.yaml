@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-display
+config: BACKLIGHT_QEMU
+class: backlight
+symbol: "{sym}_backlight"
+define: PBL_BACKLIGHT_QEMU_DEFINE
+args:
+  - name: true
+  - reg: regs

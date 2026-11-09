@@ -4,6 +4,8 @@
 #include "sf32lb/sf32lb52x/sf32lb52.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
 
 / {
 	model = "Core Devices Pebble Time 2";
@@ -38,6 +40,79 @@
 			panel_in: endpoint {
 				remote-endpoint = <&lcdc1_out>;
 			};
+		};
+	};
+
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Back";
+			gpios = <&gpio1 34 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <40>;
+		};
+
+		button-up {
+			label = "Up";
+			gpios = <&gpio1 35 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <40>;
+		};
+
+		button-select {
+			label = "Select";
+			gpios = <&gpio1 36 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <40>;
+		};
+
+		button-down {
+			label = "Down";
+			gpios = <&gpio1 37 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <40>;
+		};
+	};
+
+	backlight: backlight {
+		compatible = "led-backlight";
+		leds = <&backlight_led>;
+	};
+
+	dmic: dmic {
+		compatible = "dmic-codec";
+		#sound-dai-cells = <0>;
+		vref-supply = <&ldsw2>;
+	};
+
+	mic: sound-mic {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "mic";
+		simple-audio-card,format = "pdm";
+
+		simple-audio-card,cpu {
+			sound-dai = <&pdm1>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dmic>;
+		};
+	};
+
+	speaker_amp: audio-amplifier {
+		compatible = "awinic,aw8155";
+		mode-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+		awinic,mode = <1>;
+	};
+
+	speaker: sound-speaker {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "speaker";
+		simple-audio-card,aux-devs = <&speaker_amp>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&audcodec>;
 		};
 	};
 };
@@ -233,6 +308,32 @@
 			drive-strength = <8>;
 		};
 	};
+
+	touch_default: touch-default-state {
+		int-pins {
+			pins = "PA27";
+			function = "gpio";
+			input-enable;
+			bias-pull-up;
+		};
+	};
+
+	pdm1_default: pdm1-default-state {
+		clk-pins {
+			pins = "PA22";
+			function = "pdm1_clk";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		data-pins {
+			pins = "PA23";
+			function = "pdm1_data";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
 };
 
 &i2c1 {
@@ -280,6 +381,55 @@
 			};
 		};
 	};
+
+	haptics: haptics@58 {
+		compatible = "awinic,aw86225";
+		reg = <0x58>;
+		reset-gpios = <&gpio1 1 GPIO_ACTIVE_LOW>;
+		vdd-supply = <&ldsw1>;
+		awinic,lra-f0-hz = <240>;
+		awinic,lra-f0-tolerance-hz = <20>;
+		awinic,lra-rated-microvolt = <1200000>;
+		awinic,output-gain-percent = <93>;
+	};
+
+	/*
+	 * Bench-calibrated on three production units (unit spread 1.3%); the dark
+	 * floor is under 20 counts, so no offset is needed.
+	 */
+	w1160: light-sensor@48 {
+		compatible = "sensortek,w1160";
+		reg = <0x48>;
+		vdd-supply = <&ldsw1>;
+		sensortek,lux-scale = <100 483>;
+	};
+
+	led-controller@64 {
+		compatible = "awinic,aw2016";
+		reg = <0x64>;
+
+		backlight_led: multi-led {
+			color = <LED_COLOR_ID_RGB>;
+			function = LED_FUNCTION_BACKLIGHT;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			led@0 {
+				reg = <0>;
+				color = <LED_COLOR_ID_RED>;
+			};
+
+			led@1 {
+				reg = <1>;
+				color = <LED_COLOR_ID_GREEN>;
+			};
+
+			led@2 {
+				reg = <2>;
+				color = <LED_COLOR_ID_BLUE>;
+			};
+		};
+	};
 };
 
 &i2c2 {
@@ -314,6 +464,18 @@
 	pinctrl-names = "default";
 	clock-frequency = <400000>;
 	status = "okay";
+
+	touchscreen: touchscreen@15 {
+		compatible = "hynitron,cst816s";
+		reg = <0x15>;
+		pinctrl-0 = <&touch_default>;
+		pinctrl-names = "default";
+		interrupt-parent = <&gpio1>;
+		interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&pmic 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		touchscreen-size-x = <200>;
+		touchscreen-size-y = <228>;
+	};
 };
 
 &i2c4 {
@@ -433,11 +595,11 @@
 					reg = <0x40 0x20>;
 				};
 
-				soc-config-user@800 {
+				soc_config_user: soc-config-user@800 {
 					reg = <0x800 0x100>;
 				};
 
-				soc-config-cust@1000 {
+				soc_config_cust: soc-config-cust@1000 {
 					reg = <0x1000 0x100>;
 				};
 			};
@@ -475,4 +637,36 @@
 			remote-endpoint = <&panel_in>;
 		};
 	};
+};
+
+&mailbox1 {
+	status = "okay";
+};
+
+&mailbox2 {
+	status = "okay";
+};
+
+&lcpu {
+	status = "okay";
+};
+
+&hxt48 {
+	nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
+	nvmem-cell-names = "soc-config-user", "soc-config-cust";
+	status = "okay";
+};
+
+&pdm1 {
+	pinctrl-0 = <&pdm1_default>;
+	pinctrl-names = "default";
+	dmas = <&dmac1 4 36 0>;
+	dma-names = "rx";
+	status = "okay";
+};
+
+&audcodec {
+	dmas = <&dmac1 3 41 2>;
+	dma-names = "tx";
+	status = "okay";
 };

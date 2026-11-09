@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/uart/qemu.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -111,3 +112,5 @@ const struct pbl_uart_ops pbl_uart_qemu_ops = {
   .rx_enable = prv_rx_enable,
   .rx_disable = prv_rx_disable,
 };
+
+#include PBL_DT_INSTANCES(qemu_pebble_simple_uart)

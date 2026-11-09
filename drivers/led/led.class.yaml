@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: led
+type: struct pbl_led
+include: pbl/drivers/led.h
+provides:
+  led: "&{sym}"

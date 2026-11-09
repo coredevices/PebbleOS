@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/audio.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_audio_nrf5 nRF5 audio
@@ -17,11 +18,6 @@
  * its gain runs from -20 to +20 dB. The I2S interface plays mono at 16 kHz, sent as stereo with
  * both channels equal, and runs as a slave when the link has @ref PBL_AUDIO_FMT_CODEC_MASTER,
  * still providing a 4 MHz master clock. Both keep the high-frequency crystal on while streaming.
- *
- * @code{.c}
- * PBL_IRQ_CONNECT(PDM, 7, pbl_audio_nrf5_pdm_irq_handler, &s_mic, 0);
- * PBL_IRQ_CONNECT(I2S, 5, pbl_audio_nrf5_i2s_irq_handler, &s_speaker, 0);
- * @endcode
  * @{
  */
 
@@ -34,50 +30,54 @@ struct pbl_audio_nrf5_pdm_state {
 
 /** @brief PDM interface. */
 struct pbl_audio_nrf5_pdm {
-  /** Audio device. */
-  struct pbl_audio audio;
+  /** DAI. */
+  struct pbl_audio_dai dai;
+  /** Register base address. */
+  uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irq;
   /** Clock pin. */
   struct pbl_gpio clk;
   /** Data pin. */
   struct pbl_gpio din;
-  /** Gain after initialization, in mdB. */
-  int32_t default_gain_mdb;
   /** Driver runtime state. */
   struct pbl_audio_nrf5_pdm_state *state;
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_audio_ops pbl_audio_nrf5_pdm_ops;
+extern const struct pbl_audio_dai_ops pbl_audio_nrf5_pdm_ops;
 /** @endcond */
 
 /**
- * @brief PDM interrupt handler, to connect with PBL_IRQ_CONNECT().
+ * @brief PDM interrupt handler, connected by the instance.
  *
  * @param pdm PDM interface.
  */
 void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm);
 
 /**
- * @brief Define the PDM interface, a capture device.
+ * @brief Define the PDM interface, a capture DAI.
  *
- * @param sym Symbol of the device.
+ * @param sym Symbol of the DAI.
  * @param _name Device name.
+ * @param _base Register base address.
+ * @param _irq Interrupt line.
  * @param _clk Clock pin, from PBL_GPIO().
  * @param _din Data pin, from PBL_GPIO().
- * @param _default_gain_mdb Gain after initialization, in mdB.
  */
-#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _clk, _din, _default_gain_mdb)                      \
-  PBL_AUDIO_STATE_DEFINE(sym);                                                                    \
-  static struct pbl_audio_nrf5_pdm_state sym##_pdm_state;                                         \
-  static const struct pbl_audio_nrf5_pdm sym = {                                                  \
-    .audio =                                                                                      \
-        PBL_AUDIO_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_nrf5_pdm_ops, nullptr, nullptr), \
-    .clk = _clk,                                                                                  \
-    .din = _din,                                                                                  \
-    .default_gain_mdb = (_default_gain_mdb),                                                      \
-    .state = &sym##_pdm_state,                                                                    \
-  };                                                                                              \
-  PBL_DEVICE_REGISTER(sym, &sym.audio.dev)
+#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _base, _irq, _clk, _din)                          \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                              \
+  static struct pbl_audio_nrf5_pdm_state sym##_pdm_state;                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_pdm, struct pbl_audio_dai, dai){               \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_nrf5_pdm_ops, nullptr), \
+    .base = (_base),                                                                            \
+    .irq = (_irq),                                                                              \
+    .clk = _clk,                                                                                \
+    .din = _din,                                                                                \
+    .state = &sym##_pdm_state,                                                                  \
+  };                                                                                            \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_PDM_IRQ_PRIO, pbl_audio_nrf5_pdm_irq_handler,     \
+                      &sym##_inst, 0)
 
 /** @brief Stereo frames of an I2S bounce buffer. */
 #define PBL_AUDIO_NRF5_I2S_BOUNCE_FRAMES 512U
@@ -92,8 +92,12 @@ struct pbl_audio_nrf5_i2s_state {
 
 /** @brief I2S interface. */
 struct pbl_audio_nrf5_i2s {
-  /** Audio device. */
-  struct pbl_audio audio;
+  /** DAI. */
+  struct pbl_audio_dai dai;
+  /** Register base address. */
+  uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irq;
   /** Bit clock pin. */
   struct pbl_gpio sck;
   /** Frame clock pin. */
@@ -107,35 +111,44 @@ struct pbl_audio_nrf5_i2s {
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_audio_ops pbl_audio_nrf5_i2s_ops;
+extern const struct pbl_audio_dai_ops pbl_audio_nrf5_i2s_ops;
 /** @endcond */
 
 /**
- * @brief I2S interrupt handler, to connect with PBL_IRQ_CONNECT().
+ * @brief I2S interrupt handler, connected by the instance.
  *
  * @param i2s I2S interface.
  */
 void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
 
 /**
- * @brief Define the I2S interface, a playback device.
+ * @brief Define the I2S interface, a playback DAI.
  *
  * Periods are copied into stereo bounce buffers, so a period must fit one.
  *
- * @param sym Symbol of the device.
+ * @param sym Symbol of the DAI.
  * @param _name Device name.
- * @param _link What the interface is wired to.
- * @param ... Pins: @c sck, @c lrck, @c mck and @c sdout, from PBL_GPIO().
+ * @param _base Register base address.
+ * @param _irq Interrupt line.
+ * @param _sck Bit clock pin, from PBL_GPIO().
+ * @param _lrck Frame clock pin, from PBL_GPIO().
+ * @param _mck Master clock pin, from PBL_GPIO().
+ * @param _sdout Data out pin, from PBL_GPIO().
  */
-#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _link, ...)                                        \
-  PBL_AUDIO_STATE_DEFINE(sym);                                                                   \
+#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _sck, _lrck, _mck, _sdout)            \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                               \
   static struct pbl_audio_nrf5_i2s_state sym##_i2s_state;                                        \
-  static const struct pbl_audio_nrf5_i2s sym = {                                                 \
-    .audio =                                                                                     \
-        PBL_AUDIO_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_nrf5_i2s_ops, _link, nullptr), \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_i2s, struct pbl_audio_dai, dai){                \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_nrf5_i2s_ops, nullptr), \
+    .base = (_base),                                                                             \
+    .irq = (_irq),                                                                               \
+    .sck = _sck,                                                                                 \
+    .lrck = _lrck,                                                                               \
+    .mck = _mck,                                                                                 \
+    .sdout = _sdout,                                                                             \
     .state = &sym##_i2s_state,                                                                   \
-    __VA_ARGS__                                                                                  \
   };                                                                                             \
-  PBL_DEVICE_REGISTER(sym, &sym.audio.dev)
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_I2S_IRQ_PRIO, pbl_audio_nrf5_i2s_irq_handler,      \
+                      &sym##_inst, 0)
 
 /** @} */

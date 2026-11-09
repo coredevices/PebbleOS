@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-touch
+config: TOUCH_QEMU
+class: touch
+define: PBL_TOUCH_QEMU_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - prop: touchscreen-size-x
+  - prop: touchscreen-size-y

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/input/gpio_keys.h>
 #include <pbl/input/input.h>
 #include <pbl/util/misc.h>
@@ -81,3 +82,5 @@ int pbl_gpio_keys_init(const struct pbl_device *dev) {
 
   return 0;
 }
+
+#include PBL_DT_INSTANCES(gpio_keys)

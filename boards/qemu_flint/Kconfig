@@ -4,7 +4,6 @@
 config BOARD_QEMU_FLINT
     bool
     default y
-    select BOARD_PARTITIONS_DUAL_SLOT
 
 choice
     prompt "Emulated watch color"

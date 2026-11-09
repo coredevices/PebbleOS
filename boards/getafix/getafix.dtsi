@@ -4,6 +4,7 @@
 #include "sf32lb/sf32lb52x/sf32lb52.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 
 / {
 	model = "Core Devices Pebble Round 2";
@@ -40,6 +41,63 @@
 			panel_in: endpoint {
 				remote-endpoint = <&lcdc1_out>;
 			};
+		};
+	};
+
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Back";
+			gpios = <&gpio1 34 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <40>;
+		};
+
+		button-up {
+			label = "Up";
+			gpios = <&gpio1 35 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <40>;
+		};
+
+		button-select {
+			label = "Select";
+			gpios = <&gpio1 36 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <40>;
+		};
+
+		button-down {
+			label = "Down";
+			gpios = <&gpio1 37 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <40>;
+		};
+	};
+
+	backlight: backlight {
+		compatible = "awinic,aw9364e";
+		enable-gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+	};
+
+	dmic: dmic {
+		compatible = "dmic-codec";
+		#sound-dai-cells = <0>;
+		vref-supply = <&ldsw2>;
+	};
+
+	mic: sound-mic {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "mic";
+		simple-audio-card,format = "pdm";
+
+		simple-audio-card,cpu {
+			sound-dai = <&pdm1>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dmic>;
 		};
 	};
 };
@@ -219,6 +277,32 @@
 			drive-strength = <8>;
 		};
 	};
+
+	touch_default: touch-default-state {
+		int-pins {
+			pins = "PA38";
+			function = "gpio";
+			input-enable;
+			bias-pull-up;
+		};
+	};
+
+	pdm1_default: pdm1-default-state {
+		clk-pins {
+			pins = "PA22";
+			function = "pdm1_clk";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		data-pins {
+			pins = "PA23";
+			function = "pdm1_data";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
 };
 
 &i2c1 {
@@ -253,6 +337,18 @@
 	pinctrl-names = "default";
 	clock-frequency = <400000>;
 	status = "okay";
+
+	touchscreen: touchscreen@15 {
+		compatible = "hynitron,cst816s";
+		reg = <0x15>;
+		pinctrl-0 = <&touch_default>;
+		pinctrl-names = "default";
+		interrupt-parent = <&gpio1>;
+		interrupts = <38 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+		touchscreen-size-x = <260>;
+		touchscreen-size-y = <260>;
+	};
 };
 
 &i2c3 {
@@ -296,6 +392,17 @@
 				regulator-name = "npm1300_ldsw2";
 			};
 		};
+	};
+
+	/*
+	 * Bench-calibrated on one DVT2 unit, fit above 4500 lux; readings below
+	 * about 4000 lux deviated from the fit on that unit and need a re-measure.
+	 */
+	w1160: light-sensor@48 {
+		compatible = "sensortek,w1160";
+		reg = <0x48>;
+		vdd-supply = <&ldsw1>;
+		sensortek,lux-scale = <50 517>;
 	};
 };
 
@@ -409,11 +516,11 @@
 					reg = <0x40 0x20>;
 				};
 
-				soc-config-user@800 {
+				soc_config_user: soc-config-user@800 {
 					reg = <0x800 0x100>;
 				};
 
-				soc-config-cust@1000 {
+				soc_config_cust: soc-config-cust@1000 {
 					reg = <0x1000 0x100>;
 				};
 			};
@@ -451,4 +558,30 @@
 			remote-endpoint = <&panel_in>;
 		};
 	};
+};
+
+&mailbox1 {
+	status = "okay";
+};
+
+&mailbox2 {
+	status = "okay";
+};
+
+&lcpu {
+	status = "okay";
+};
+
+&hxt48 {
+	nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
+	nvmem-cell-names = "soc-config-user", "soc-config-cust";
+	status = "okay";
+};
+
+&pdm1 {
+	pinctrl-0 = <&pdm1_default>;
+	pinctrl-names = "default";
+	dmas = <&dmac1 4 36 0>;
+	dma-names = "rx";
+	status = "okay";
 };

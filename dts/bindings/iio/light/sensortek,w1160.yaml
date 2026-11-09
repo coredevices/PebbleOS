@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/iio/light/sensortek,w1160.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Sensortek W1160 ambient light sensor
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Ambient light sensor over I2C.
+
+properties:
+  compatible:
+    const: sensortek,w1160
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  vdd-supply: true
+
+  sensortek,lux-scale:
+    $ref: /schemas/types.yaml#/definitions/uint32-array
+    description:
+      Illuminance per count, as a numerator and a denominator, through the
+      glass covering the sensor.
+    items:
+      - description: Numerator
+        minimum: 1
+      - description: Denominator
+        minimum: 1
+
+required:
+  - compatible
+  - reg
+  - sensortek,lux-scale
+
+additionalProperties: false
+
+examples:
+  - |
+    i2c {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        light-sensor@48 {
+            compatible = "sensortek,w1160";
+            reg = <0x48>;
+            sensortek,lux-scale = <100 483>;
+        };
+    };

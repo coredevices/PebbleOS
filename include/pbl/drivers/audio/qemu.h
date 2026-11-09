@@ -19,12 +19,6 @@
  * The QEMU audio device plays mono through the host. The host microphone records mono audio the
  * host sends over the QEMU channel, and silence when it sends none, paced by a timer; it also
  * runs on native builds.
- *
- * @code{.c}
- * PBL_AUDIO_QEMU_DEFINE(s_speaker, "speaker", QEMU_AUDIO_BASE, PBL_IRQN(AUDIO));
- * PBL_IRQ_CONNECT(AUDIO, 5, pbl_audio_qemu_irq_handler, &s_speaker, 0);
- * PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
- * @endcode
  * @{
  */
 
@@ -37,8 +31,8 @@ struct pbl_audio_qemu_state {
 
 /** @brief QEMU audio device. */
 struct pbl_audio_qemu {
-  /** Audio device. */
-  struct pbl_audio audio;
+  /** DAI. */
+  struct pbl_audio_dai dai;
   /** Base address of the registers. */
   uintptr_t base;
   /** Interrupt. */
@@ -48,7 +42,7 @@ struct pbl_audio_qemu {
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_audio_ops pbl_audio_qemu_ops;
+extern const struct pbl_audio_dai_ops pbl_audio_qemu_ops;
 /** @endcond */
 
 /**
@@ -57,22 +51,21 @@ extern const struct pbl_audio_ops pbl_audio_qemu_ops;
  * @param sym Symbol of the device.
  * @param _name Device name.
  * @param _base Base address of the registers.
- * @param _irq Interrupt; the board connects pbl_audio_qemu_irq_handler() to it.
+ * @param _irq Interrupt line.
  */
-#define PBL_AUDIO_QEMU_DEFINE(sym, _name, _base, _irq)                                         \
-  PBL_AUDIO_STATE_DEFINE(sym);                                                                 \
-  static struct pbl_audio_qemu_state sym##_qemu_state;                                         \
-  static const struct pbl_audio_qemu sym = {                                                   \
-    .audio =                                                                                   \
-        PBL_AUDIO_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_qemu_ops, nullptr, nullptr), \
-    .base = (_base),                                                                           \
-    .irq = (_irq),                                                                             \
-    .state = &sym##_qemu_state,                                                                \
-  };                                                                                           \
-  PBL_DEVICE_REGISTER(sym, &sym.audio.dev)
+#define PBL_AUDIO_QEMU_DEFINE(sym, _name, _base, _irq)                                       \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                           \
+  static struct pbl_audio_qemu_state sym##_qemu_state;                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_qemu, struct pbl_audio_dai, dai){                \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_qemu_ops, nullptr), \
+    .base = (_base),                                                                         \
+    .irq = (_irq),                                                                           \
+    .state = &sym##_qemu_state,                                                              \
+  };                                                                                         \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_QEMU_IRQ_PRIO, pbl_audio_qemu_irq_handler, &sym##_inst, 0)
 
 /**
- * @brief QEMU audio device interrupt handler, to connect with PBL_IRQ_CONNECT().
+ * @brief QEMU audio device interrupt handler, connected by PBL_AUDIO_QEMU_DEFINE().
  *
  * @param dev Device.
  */
@@ -94,14 +87,14 @@ struct pbl_audio_host_mic_state {
 
 /** @brief Host microphone. */
 struct pbl_audio_host_mic {
-  /** Audio device. */
-  struct pbl_audio audio;
+  /** DAI. */
+  struct pbl_audio_dai dai;
   /** Driver runtime state. */
   struct pbl_audio_host_mic_state *state;
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_audio_ops pbl_audio_host_mic_ops;
+extern const struct pbl_audio_dai_ops pbl_audio_host_mic_ops;
 /** @endcond */
 
 /**
@@ -110,15 +103,14 @@ extern const struct pbl_audio_ops pbl_audio_host_mic_ops;
  * @param sym Symbol of the device.
  * @param _name Device name.
  */
-#define PBL_AUDIO_HOST_MIC_DEFINE(sym, _name)                                                     \
-  PBL_AUDIO_STATE_DEFINE(sym);                                                                    \
-  static struct pbl_audio_host_mic_state sym##_host_mic_state;                                    \
-  static const struct pbl_audio_host_mic sym = {                                                  \
-    .audio =                                                                                      \
-        PBL_AUDIO_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_host_mic_ops, nullptr, nullptr), \
-    .state = &sym##_host_mic_state,                                                               \
-  };                                                                                              \
-  PBL_DEVICE_REGISTER(sym, &sym.audio.dev)
+#define PBL_AUDIO_HOST_MIC_DEFINE(sym, _name)                                                   \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                              \
+  static struct pbl_audio_host_mic_state sym##_host_mic_state;                                  \
+  static const struct pbl_audio_host_mic sym = {                                                \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_host_mic_ops, nullptr), \
+    .state = &sym##_host_mic_state,                                                             \
+  };                                                                                            \
+  PBL_DEVICE_REGISTER(sym, &sym.dai.dev)
 
 /**
  * @brief Handle a @c QemuProtocol_MicAudio message from the host.

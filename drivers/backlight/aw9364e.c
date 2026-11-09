@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/backlight/aw9364e.h>
 #include <pbl/drivers/gpio.h>
@@ -99,3 +100,5 @@ const struct pbl_backlight_ops pbl_aw9364e_ops = {
   .set_brightness = prv_set_brightness,
   .get_level = prv_get_level,
 };
+
+#include PBL_DT_INSTANCES(awinic_aw9364e)

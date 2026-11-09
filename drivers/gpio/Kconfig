@@ -27,10 +27,18 @@ config GPIO_SF32LB
 
 config GPIO_QEMU
     bool "QEMU GPIO"
-    default y if SOC_QEMU
+    default DT_HAS_QEMU_PEBBLE_GPIO_ENABLED
+    depends on SOC_QEMU
     select INTC
     help
       Support for the QEMU GPIO peripheral.
+
+config GPIO_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 6
+    depends on GPIO_QEMU
+    help
+      Priority of the port interrupt.
 
 config GPIO_NPM1300
     bool "Nordic nPM1300 GPIO"

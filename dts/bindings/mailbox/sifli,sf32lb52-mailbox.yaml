@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mailbox/sifli,sf32lb52-mailbox.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 mailbox
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Mailbox block with 16 doorbells, each interrupting the CPU of the other
+  subsystem. MAILBOX1, in HPSYS, rings the LCPU; MAILBOX2, in LPSYS, rings
+  the HCPU, whose interrupt it has. Specifiers take one cell, the doorbell.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-mailbox
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    description: Present when the block's interrupt reaches this CPU.
+    maxItems: 1
+
+  clocks:
+    description: Present when the block's clock is controlled by this CPU.
+    maxItems: 1
+
+  "#mbox-cells":
+    const: 1
+
+required:
+  - compatible
+  - reg
+  - "#mbox-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    mailbox@40002000 {
+        compatible = "sifli,sf32lb52-mailbox";
+        reg = <0x40002000 0x1000>;
+        interrupts = <58>;
+        #mbox-cells = <1>;
+    };

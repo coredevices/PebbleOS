@@ -3,14 +3,15 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/backlight.h>
-#include <pbl/drivers/backlight/aw2016.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/led.h>
+#include <pbl/drivers/led/aw2016.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_led_aw2016, CONFIG_DRIVER_LED_LOG_LEVEL);
 
 #define AW2016_REG_RSTR         0x00U
 #define AW2016_REG_RSTR_CHIP_ID 0x09U
@@ -45,8 +46,8 @@ PBL_LOG_MODULE_DEFINE(driver_backlight_aw2016, CONFIG_DRIVER_BACKLIGHT_LOG_LEVEL
 
 #define AW2016_REG_PWM3 0x36U
 
-static const struct pbl_aw2016 *prv_get(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_aw2016, backlight);
+static const struct pbl_aw2016 *prv_get(const struct pbl_led *led) {
+  return container_of(led, const struct pbl_aw2016, led);
 }
 
 static int prv_read_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t *val) {
@@ -95,16 +96,16 @@ static int prv_enable(const struct pbl_aw2016 *dev) {
 
 static int prv_write_color(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t brightness) {
   const uint8_t regs[][2] = {
-    {AW2016_REG_PWM1, ((rgb_color >> 16) & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX},
-    {AW2016_REG_PWM2, ((rgb_color >> 8) & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX},
-    {AW2016_REG_PWM3, (rgb_color & 0xFFU) * brightness / PBL_BACKLIGHT_BRIGHTNESS_MAX},
+    {AW2016_REG_PWM1, ((rgb_color >> 16) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
+    {AW2016_REG_PWM2, ((rgb_color >> 8) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
+    {AW2016_REG_PWM3, (rgb_color & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
   };
 
   return prv_write_registers(dev, regs, ARRAY_LENGTH(regs));
 }
 
-static int prv_init(const struct pbl_backlight *bl) {
-  const struct pbl_aw2016 *dev = prv_get(bl);
+int pbl_aw2016_init(const struct pbl_device *d) {
+  const struct pbl_aw2016 *dev = prv_get(container_of(d, const struct pbl_led, dev));
   uint8_t id = 0U;
   int ret;
 
@@ -122,48 +123,39 @@ static int prv_init(const struct pbl_backlight *bl) {
   return prv_write_register(dev, AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS);
 }
 
-static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
-  const struct pbl_aw2016 *dev = prv_get(bl);
+static int prv_set(const struct pbl_led *led, uint8_t brightness, uint32_t rgb_color) {
+  const struct pbl_aw2016 *dev = prv_get(led);
   int ret;
 
-  if (brightness == bl->state->brightness) {
-    return 0;
-  }
-
   if (brightness == 0U) {
-    return prv_write_register(dev, AW2016_REG_GCR1,
-                              AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_DIS);
+    ret = prv_write_register(dev, AW2016_REG_GCR1,
+                             AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_DIS);
+    if (ret == 0) {
+      dev->state->enabled = false;
+    }
+    return ret;
   }
 
-  if (bl->state->brightness == 0U) {
+  if (!dev->state->enabled) {
     ret = prv_enable(dev);
     if (ret != 0) {
       return ret;
     }
+    dev->state->enabled = true;
   }
 
-  return prv_write_color(dev, bl->state->color, brightness);
+  return prv_write_color(dev, rgb_color, brightness);
 }
 
-static int prv_refresh(const struct pbl_backlight *bl) {
-  const struct pbl_aw2016 *dev = prv_get(bl);
-  int ret;
+static int prv_refresh(const struct pbl_led *led, uint8_t brightness, uint32_t rgb_color) {
+  prv_get(led)->state->enabled = false;
 
-  ret = prv_enable(dev);
-  if (ret != 0) {
-    return ret;
-  }
-
-  return prv_write_color(dev, bl->state->color, bl->state->brightness);
+  return prv_set(led, brightness, rgb_color);
 }
 
-static int prv_set_color(const struct pbl_backlight *bl, uint32_t rgb_color) {
-  return prv_write_color(prv_get(bl), rgb_color, bl->state->brightness);
-}
-
-const struct pbl_backlight_ops pbl_aw2016_ops = {
-  .init = prv_init,
-  .set_brightness = prv_set_brightness,
+const struct pbl_led_ops pbl_aw2016_ops = {
+  .set = prv_set,
   .refresh = prv_refresh,
-  .set_color = prv_set_color,
 };
+
+#include PBL_DT_INSTANCES(awinic_aw2016)

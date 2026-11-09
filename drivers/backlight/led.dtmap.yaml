@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: led-backlight
+config: BACKLIGHT_LED
+class: backlight
+define: PBL_BACKLIGHT_LED_DEFINE
+args:
+  - name: true
+  - self: led
+    of: leds

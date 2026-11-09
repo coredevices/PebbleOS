@@ -30,9 +30,10 @@ PBL_DISPLAY_SDL_DEFINE(s_display, "display", CONFIG_DISPLAY_SDL_WIDTH, CONFIG_DI
 
 const struct pbl_display *const DISPLAY = &s_display;
 
-PBL_AUDIO_HOST_MIC_DEFINE(s_mic, "mic");
+PBL_AUDIO_HOST_MIC_DEFINE(s_host_mic, "host_mic");
+PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_host_mic.dai, nullptr, nullptr, 0, 0);
 
-const struct pbl_audio *const MIC = &s_mic.audio;
+const struct pbl_audio *const MIC = &s_mic;
 
 const struct pbl_accel *const ACCEL = POSIX_ACCEL;
 

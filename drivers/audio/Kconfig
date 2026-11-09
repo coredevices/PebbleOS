@@ -22,6 +22,7 @@ if AUDIO
 
 config AUDIO_AMP_GPIO
     bool "GPIO amplifier"
+    default DT_HAS_AWINIC_AW8155_ENABLED
     depends on GPIO
     help
       Amplifier switched by an enable GPIO, with an optional supply and
@@ -29,24 +30,38 @@ config AUDIO_AMP_GPIO
 
 config AUDIO_SF32LB52_AUDCODEC
     bool "SiFli SF32LB52 audio codec"
-    default y if SPEAKER
+    default DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED
     depends on SOC_SF32LB52 && DMA_SF32LB52 && CLK_SF32LB
     help
       Playback through the DAC of the SF32LB52 audio codec.
 
 config AUDIO_SF32LB52_PDM
     bool "SiFli SF32LB52 PDM"
-    default y if MIC
-    depends on SOC_SF32LB52 && DMA_SF32LB52 && CLK_SF32LB && RESET_SF32LB && PINCTRL && REGULATOR
+    default DT_HAS_SIFLI_SF32LB52_PDM_ENABLED
+    depends on SOC_SF32LB52 && DMA_SF32LB52 && CLK_SF32LB && RESET_SF32LB && PINCTRL
     help
       Capture from digital microphones on the SF32LB52 PDM interface.
 
+config AUDIO_SF32LB52_PDM_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on AUDIO_SF32LB52_PDM
+    help
+      Priority of the PDM interrupt.
+
 config AUDIO_QEMU
     bool "QEMU audio device"
-    default y if SPEAKER
+    default DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
     depends on SOC_QEMU
     help
       Playback through the QEMU audio device.
+
+config AUDIO_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on AUDIO_QEMU
+    help
+      Priority of the device interrupt.
 
 config AUDIO_HOST_MIC
     bool "Host microphone"
@@ -58,7 +73,7 @@ config AUDIO_HOST_MIC
 
 config AUDIO_NRF5_PDM
     bool "Nordic nRF5 PDM"
-    default y if MIC
+    default DT_HAS_NORDIC_NRF52832_PDM_ENABLED
     depends on SOC_NRF52
     select HAL_NORDIC
     help
@@ -66,14 +81,36 @@ config AUDIO_NRF5_PDM
 
 config AUDIO_NRF5_I2S
     bool "Nordic nRF5 I2S"
-    default y if SPEAKER
+    default DT_HAS_NORDIC_NRF52832_I2S_ENABLED
     depends on SOC_NRF52
     select HAL_NORDIC
     help
       Playback through the nRF5 I2S interface.
 
+config AUDIO_NRF5_PDM_IRQ_PRIO
+    int "PDM interrupt priority"
+    default 7
+    depends on AUDIO_NRF5_PDM
+    help
+      Priority of the PDM interrupt.
+
+config AUDIO_NRF5_I2S_IRQ_PRIO
+    int "I2S interrupt priority"
+    default 5
+    depends on AUDIO_NRF5_I2S
+    help
+      Priority of the I2S interrupt.
+
+config AUDIO_DMIC
+    bool "Digital microphones"
+    default DT_HAS_DMIC_CODEC_ENABLED
+    select REGULATOR
+    help
+      Digital microphones on a PDM interface, powered while recording.
+
 config AUDIO_DA7212
     bool "Dialog DA7212 codec"
+    default DT_HAS_DLG_DA7212_ENABLED
     depends on I2C
     select REGULATOR
     help

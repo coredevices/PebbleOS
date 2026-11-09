@@ -15,11 +15,6 @@
  *
  * Brightness is set by pulse counting on a single enable line, in 16 steps.
  *
- * @code{.c}
- * PBL_AW9364E_DEFINE(s_aw9364e, PBL_GPIO(SF32LB_GPIO1, 1, 0));
- *
- * const struct pbl_backlight *const BACKLIGHT = &s_aw9364e.backlight;
- * @endcode
  * @{
  */
 
@@ -49,14 +44,12 @@ extern const struct pbl_backlight_ops pbl_aw9364e_ops;
  * @param sym Symbol of the instance; the backlight is @c sym.backlight.
  * @param _enable Enable line (struct pbl_gpio).
  */
-#define PBL_AW9364E_DEFINE(sym, _enable)                                        \
-  PBL_BACKLIGHT_STATE_DEFINE(sym);                                              \
-  static struct pbl_aw9364e_state sym##_aw9364e_state;                          \
-  const struct pbl_aw9364e sym = {                                              \
-    .backlight = PBL_BACKLIGHT_INIT(sym, "aw9364e", nullptr, &pbl_aw9364e_ops), \
-    .state = &sym##_aw9364e_state,                                              \
-    .enable = _enable,                                                          \
-  };                                                                            \
-  PBL_DEVICE_REGISTER(sym, &sym.backlight.dev)
+#define PBL_AW9364E_DEFINE(sym, _enable)                                          \
+  PBL_BACKLIGHT_STATE_DEFINE(sym);                                                \
+  static struct pbl_aw9364e_state sym##_aw9364e_state;                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_aw9364e, struct pbl_backlight, backlight) { \
+    .backlight = PBL_BACKLIGHT_INIT(sym, "aw9364e", nullptr, &pbl_aw9364e_ops),   \
+    .state = &sym##_aw9364e_state, .enable = _enable,                             \
+  }
 
 /** @} */

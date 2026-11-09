@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/sf32lb52/hxt.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -117,3 +118,5 @@ int pbl_sf32lb52_hxt_init(const struct pbl_device *dev) {
 
   return 0;
 }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_hxt48)

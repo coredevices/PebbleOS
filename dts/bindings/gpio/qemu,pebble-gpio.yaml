@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/qemu,pebble-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble GPIO
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Input pins of the QEMU Pebble machines, driven by the emulated buttons. Each
+  pin interrupts on both edges through the controller's interrupt; interrupt
+  specifiers take the pin and the trigger type from
+  <dt-bindings/interrupt-controller/irq.h>.
+
+properties:
+  compatible:
+    const: qemu,pebble-gpio
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  ngpios:
+    const: 4
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - gpio-controller
+  - '#gpio-cells'
+  - interrupt-controller
+  - '#interrupt-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    gpio@40006000 {
+        compatible = "qemu,pebble-gpio";
+        reg = <0x40006000 0x1000>;
+        interrupts = <6>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <4>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };

@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/mbox/sf32lb52.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -108,3 +109,5 @@ void pbl_mbox_sf32lb52_irq_handler(const struct pbl_mbox_sf32lb52 *mbox) {
     status &= status - 1U;
   }
 }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_mailbox)

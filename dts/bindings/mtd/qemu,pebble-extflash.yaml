@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mtd/qemu,pebble-extflash.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble external flash
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  NOR flash of the QEMU Pebble machines, read through a memory window and
+  programmed and erased through its registers.
+
+allOf:
+  - $ref: /schemas/mtd/mtd.yaml#
+
+properties:
+  compatible:
+    const: qemu,pebble-extflash
+
+  reg:
+    items:
+      - description: Registers
+      - description: Memory window, the size of the flash
+
+  reg-names:
+    items:
+      - const: regs
+      - const: mem
+
+required:
+  - compatible
+  - reg
+  - reg-names
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    flash@40010000 {
+        compatible = "qemu,pebble-extflash";
+        reg = <0x40010000 0x1000>, <0x10000000 0x2000000>;
+        reg-names = "regs", "mem";
+    };

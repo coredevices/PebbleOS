@@ -85,7 +85,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
   struct prv_session *s = arg;
   const size_t bytes = prv_period_bytes(s);
 
-  if (audio->dir == PBL_AUDIO_CAPTURE) {
+  if (pbl_audio_dir(audio) == PBL_AUDIO_CAPTURE) {
     (void)circular_buffer_write(&s->fifo, period, bytes);
   } else {
     const uint16_t avail = MIN(circular_buffer_get_read_space_remaining(&s->fifo), bytes);

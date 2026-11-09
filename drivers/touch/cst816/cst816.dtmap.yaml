@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: hynitron,cst816s
+config: TOUCH_CST816
+class: touch
+define: PBL_CST816_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - irq: 0
+  - gpio: reset
+  - prop: touchscreen-size-x
+  - prop: touchscreen-size-y
+  - pinctrl: default
+    default: nullptr

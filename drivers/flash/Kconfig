@@ -26,7 +26,8 @@ config FLASH_SPI_NOR
 
 config FLASH_QEMU
     bool "QEMU External Flash"
-    default y if SOC_QEMU
+    default DT_HAS_QEMU_PEBBLE_EXTFLASH_ENABLED
+    depends on SOC_QEMU
     help
       Support for the QEMU external flash peripheral.
 
