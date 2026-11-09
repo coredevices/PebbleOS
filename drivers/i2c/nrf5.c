@@ -15,24 +15,16 @@
 // EasyDMA only reaches data RAM
 #define IS_IN_RAM(p) (((uintptr_t)(p) & 0xe0000000U) == 0x20000000U)
 
-static const struct {
-  uintptr_t base;
-  pbl_irq_t irqn;
-} s_instances[] = {
-  {NRF52_TWIM0_BASE, PBL_IRQN(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0)},
-  {NRF52_TWIM1_BASE, PBL_IRQN(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1)},
-};
-
 static const struct pbl_i2c_nrf5 *prv_i2c(const struct pbl_i2c_bus *bus) {
   return container_of(bus, const struct pbl_i2c_nrf5, bus);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_i2c_nrf5 *i2c, uint32_t offset) {
-  return pbl_readl(s_instances[i2c->index].base + offset);
+  return pbl_readl(i2c->base + offset);
 }
 
 static inline void prv_putreg(const struct pbl_i2c_nrf5 *i2c, uint32_t offset, uint32_t value) {
-  pbl_writel(value, s_instances[i2c->index].base + offset);
+  pbl_writel(value, i2c->base + offset);
 }
 
 static void prv_event_clear(const struct pbl_i2c_nrf5 *i2c, uint32_t offset) {
@@ -70,10 +62,6 @@ static int prv_init(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_nrf5 *i2c = prv_i2c(bus);
   int ret;
 
-  if (i2c->index >= ARRAY_LENGTH(s_instances)) {
-    return -EINVAL;
-  }
-
   ret = prv_frequency(i2c->clock_hz, &i2c->state->frequency);
   if (ret != 0) {
     return ret;
@@ -94,7 +82,7 @@ static int prv_init(const struct pbl_i2c_bus *bus) {
     return ret;
   }
 
-  pbl_irq_enable(s_instances[i2c->index].irqn);
+  pbl_irq_enable(i2c->irq);
 
   return 0;
 }
@@ -116,7 +104,7 @@ static void prv_disable(const struct pbl_i2c_bus *bus) {
   prv_putreg(i2c, NRF52_TWIM_ENABLE_OFFSET, TWIM_ENABLE_DISABLED);
   prv_event_clear(i2c, NRF52_TWIM_EVENTS_STOPPED_OFFSET);
   prv_event_clear(i2c, NRF52_TWIM_EVENTS_ERROR_OFFSET);
-  pbl_irq_clear_pending(s_instances[i2c->index].irqn);
+  pbl_irq_clear_pending(i2c->irq);
 }
 
 static void prv_abort(const struct pbl_i2c_bus *bus) {

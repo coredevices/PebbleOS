@@ -23,13 +23,13 @@
  * interrupt and axis mapping.
  *
  * @code{.c}
- * PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2.bus, 0x6A,
+ * PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2, 0x6A,
  *                    .int1 = ...,
  *                    .int1_in = ...,
  *                    .axis_map = {0, 1, 2},
  *                    .axis_dir = {1, 1, 1});
  *
- * const struct pbl_accel *const ACCEL = &s_lsm6dso.accel;
+ * const struct pbl_accel *const ACCEL = &s_lsm6dso;
  * @endcode
  */
 
@@ -113,21 +113,18 @@ extern const struct pbl_accel_ops pbl_lsm6dso_ops;
  *
  * Only one instance is supported.
  *
- * @param sym Symbol of the instance; the accelerometer is @c sym.accel.
+ * @param sym Symbol of the instance, a struct pbl_accel.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
  *            and @c axis_dir.
  */
-#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, ...)                            \
-  PBL_ACCEL_STATE_DEFINE(sym);                                               \
-  static LSM6DSOState sym##_lsm6dso_state;                                   \
-  const struct pbl_lsm6dso sym = {                                           \
-    .accel = PBL_ACCEL_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops), \
-    .state = &sym##_lsm6dso_state,                                           \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                         \
-    __VA_ARGS__,                                                             \
-  };                                                                         \
-  PBL_DEVICE_REGISTER(sym, &sym.accel.dev)
+#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, ...)                                \
+  PBL_ACCEL_STATE_DEFINE(sym);                                                   \
+  static LSM6DSOState sym##_lsm6dso_state;                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_accel, accel) {        \
+    .accel = PBL_ACCEL_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops),     \
+    .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \
+  }
 
 /** @} */
