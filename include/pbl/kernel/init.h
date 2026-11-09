@@ -11,7 +11,8 @@
  * The kernel owns the reset vector: it copies @c .data (and @c .ramfunc with
  * @c CONFIG_RAMFUNC), zeroes @c .bss and calls pbl_soc_early_init(). It then sets up interrupts,
  * faults, the heap and the early console, prints the boot banner and starts the scheduler. The
- * main thread initializes every registered device (see pbl_device_init_all()) and calls main().
+ * main thread starts logging and the task watchdog, when enabled, initializes every registered
+ * device (see pbl_device_init_all()) and calls main().
  * @{
  */
 

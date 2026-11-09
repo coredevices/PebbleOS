@@ -11,6 +11,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
+#include <pbl/task_wdt/task_wdt.h>
 #include <pbl/version.h>
 
 static struct pbl_thread s_main_thread;
@@ -19,6 +20,12 @@ PBL_THREAD_STACK_DEFINE(s_main_stack, CONFIG_KERNEL_MAIN_STACK_SIZE);
 static void prv_main_entry(void *arg) {
   int (*entry)(void) = arg;
 
+#ifdef CONFIG_LOG
+  pbl_log_init();
+#endif
+#ifdef CONFIG_TASK_WDT
+  pbl_task_wdt_init();
+#endif
   (void)pbl_device_init_all();
 
   entry();
