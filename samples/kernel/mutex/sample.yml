@@ -1,0 +1,7 @@
+description: Protecting shared state with a mutex, with and without a time limit
+expect:
+  - 'main: without the lock, balance is \d+ after 200 deposits'
+  - 'main: with the lock, balance is 200 after 200 deposits'
+  - 'main: lock held by another thread, 10 ms wait returns -EAGAIN'
+  - 'main: locked twice, unlocked once, still the owner: yes'
+  - 'Sample done'
