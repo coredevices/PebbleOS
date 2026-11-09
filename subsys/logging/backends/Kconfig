@@ -22,7 +22,6 @@ endif
 
 config LOG_BACKEND_FLASH
     bool "Flash backend"
-    default y
     help
       Store log messages in the debug flash region, one log generation
       per boot.

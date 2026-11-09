@@ -5,7 +5,6 @@ menu "Core dumps"
 
 config COREDUMP
     bool "Core dumps"
-    default y
     depends on ARCH_HAS_COREDUMP
     help
       Save the state of the system when it crashes, for analysis after

@@ -12,6 +12,21 @@ config MBEDTLS
     help
       Build the mbedTLS cryptography library.
 
+config NANOPB
+    bool "Nanopb"
+    help
+      Build the Nanopb Protocol Buffers library.
+
+config QR_CODE_GENERATOR
+    bool "QR Code generator"
+    help
+      Build the QR Code generator library.
+
+config UPNG
+    bool "uPNG"
+    help
+      Build the uPNG PNG decoder.
+
 config SPEEX
     bool "Speex"
     help

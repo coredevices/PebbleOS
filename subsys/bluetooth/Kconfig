@@ -4,8 +4,7 @@
 menu "Bluetooth"
 
 config BT
-    bool
-    default y
+    bool "Bluetooth"
     select MBEDTLS
     select TASK_WDT
     help

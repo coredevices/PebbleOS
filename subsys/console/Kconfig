@@ -8,6 +8,13 @@ config CONSOLE
       Text console on the board's console port, CONSOLE_UART: logs and
       the shell. Off on release firmware, which leaves the port unused.
 
+config CONSOLE_IMAGING
+    bool "Flash imaging"
+    depends on CONSOLE
+    help
+      Write the system resources and the recovery firmware to flash
+      over the console, as manufacturing does.
+
 config CONSOLE_BAUDRATE
     int "Console baud rate"
     depends on CONSOLE
