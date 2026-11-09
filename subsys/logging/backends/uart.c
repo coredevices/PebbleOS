@@ -3,28 +3,29 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include <time.h>
 
 #include <pbl/board.h>
 #include <pbl/console/console.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
-#include <pbl/services/time.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
 
-#include <kernel/events.h>
-#include <kernel/pebble_tasks.h>
-#include <kernel/util/stack_info.h>
 #include <logging/logging_private.h>
+
+#ifdef CONFIG_LOG_TASK_PREFIX
+#include <kernel/pebble_tasks.h>
+#endif
 
 static void prv_write(const char *str) {
   pbl_console_write_raw(str, strlen(str));
@@ -33,7 +34,7 @@ static void prv_write(const char *str) {
 #define TIMESTAMP_BUFFER_SIZE 40
 static void prv_log_timestamp(void) {
   // Enough stack space to use sprintfs?
-  uint32_t stack_space = stack_free_bytes();
+  uint32_t stack_space = pbl_stack_free();
   if (stack_space < LOGGING_MIN_STACK_FOR_SPRINTF) {
     prv_write(LOGGING_STACK_FULL_MSG);
     prv_write(" ");
@@ -42,14 +43,13 @@ static void prv_log_timestamp(void) {
 
   char buffer[TIMESTAMP_BUFFER_SIZE];
 
+  // Time of day, UTC
   uint64_t now_ms = pbl_realtime_ms();
-  time_t time_seconds = (time_t)(now_ms / 1000U);
-  uint16_t time_ms = (uint16_t)(now_ms % 1000U);
-  struct pbl_tm time_seconds_calendar;
-  pbl_gmtime_r(&time_seconds, &time_seconds_calendar);
+  uint32_t day_s = (uint32_t)((now_ms / 1000U) % (24U * 60U * 60U));
+  unsigned int time_ms = (unsigned int)(now_ms % 1000U);
 
-  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", time_seconds_calendar.tm_hour,
-            time_seconds_calendar.tm_min, time_seconds_calendar.tm_sec, time_ms);
+  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", (unsigned int)(day_s / 3600U),
+            (unsigned int)((day_s / 60U) % 60U), (unsigned int)(day_s % 60U), time_ms);
 
   prv_write(buffer);
 }
@@ -101,8 +101,8 @@ static void prv_log_line(uint8_t log_level, const char *src_filename, int src_li
   pbl_console_log_end();
 }
 
-// Messages from where the port can't be locked wait here for KernelMain, as writing them right
-// away could land in the middle of another user's output, such as a frame.
+// Messages from where the port can't be locked wait here for the system work queue, as writing
+// them right away could land in the middle of another user's output, such as a frame.
 #define ISR_MSG_MAX 128U
 
 static CircularBuffer s_isr_buffer;
@@ -125,7 +125,7 @@ static bool prv_isr_read(void *buf, size_t len) {
   return ok;
 }
 
-static void prv_isr_flush(void *unused) {
+static void prv_isr_flush(struct pbl_work *work) {
   IsrMsgHeader hdr;
 
   while (prv_isr_read(&hdr, sizeof(hdr))) {
@@ -140,6 +140,8 @@ static void prv_isr_flush(void *unused) {
     prv_log_line(hdr.level, "", 0, text);
   }
 }
+
+static PBL_WORK_DEFINE(s_isr_flush_work, prv_isr_flush);
 
 static void prv_isr_enqueue(uint8_t level, const char *text) {
   const size_t len = MIN(strlen(text), ISR_MSG_MAX);
@@ -158,8 +160,7 @@ static void prv_isr_enqueue(uint8_t level, const char *text) {
   }
 
   if (was_empty) {
-    PebbleEvent e = {.type = PEBBLE_CALLBACK_EVENT, .callback = {.callback = prv_isr_flush}};
-    event_put_isr(&e);
+    (void)pbl_work_submit(&pbl_sys_workq, &s_isr_flush_work);
   }
   pbl_irq_unlock();
 }
