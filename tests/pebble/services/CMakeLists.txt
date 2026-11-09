@@ -482,7 +482,8 @@ pbl_clar_test(test_mic_capture
 )
 
 pbl_clar_test(test_voice_speex
-  SOURCES pebble/services/voice/voice_speex.c
+  SOURCES pebble/services/voice/voice_speex.c kernel/scratch.c
+  DEFINES CONFIG_SCRATCH_HEAP_SIZE=1048576
   LIBS speex
   INCLUDES third_party/speex third_party/speex/speex/include
   OVERRIDES dummy_board

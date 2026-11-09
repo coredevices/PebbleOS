@@ -6,10 +6,9 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/scratch.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -31,8 +30,13 @@ PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL
 #define FIFO_STEP_MS   32U
 #define FIFO_BYTES(ms) ((ms) * SAMPLES_PER_MS * MIC_MANAGER_CHANNELS * sizeof(int16_t))
 
+#ifdef CONFIG_SCRATCH_HEAP_SHARED
 // Heap left for the Bluetooth packets that carry the audio
 #define FIFO_HEAP_RESERVE_BYTES 2048U
+#else
+// The queue does not come from the kernel heap the Bluetooth packets use
+#define FIFO_HEAP_RESERVE_BYTES 0U
+#endif
 
 // Frames per SysWorkq callback, leaving time for Bluetooth to drain between batches
 #define MAX_FRAMES_PER_CALLBACK 8U
@@ -115,14 +119,16 @@ static void prv_dispatch(void *data) {
 }
 
 static uint8_t *prv_alloc_fifo(uint16_t *size) {
-  unsigned int used, free_bytes, max_free;
+  struct pbl_scratch_stats stats;
 
-  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
+  pbl_scratch_get_stats(&stats);
+  const size_t max_free = stats.max_free;
+
   for (uint32_t ms = FIFO_MS; ms >= FIFO_MIN_MS; ms -= FIFO_STEP_MS) {
     uint8_t *storage = nullptr;
 
     if (FIFO_BYTES(ms) + FIFO_HEAP_RESERVE_BYTES <= max_free) {
-      storage = pbl_malloc(FIFO_BYTES(ms));
+      storage = pbl_scratch_malloc(FIFO_BYTES(ms));
     }
 
     if (storage != nullptr) {
@@ -134,13 +140,13 @@ static uint8_t *prv_alloc_fifo(uint16_t *size) {
     }
   }
 
-  PBL_LOG_ERR("No memory for the mic queue (max_free %u B)", max_free);
+  PBL_LOG_ERR("No memory for the mic queue (max_free %u B)", (unsigned int)max_free);
   return nullptr;
 }
 
 static void prv_free_locked(void) {
   pbl_audio_buf_free(s_src.ring);
-  pbl_free(s_src.fifo_storage);
+  pbl_scratch_free(s_src.fifo_storage);
   s_src.ring = nullptr;
   s_src.fifo_storage = nullptr;
 }
