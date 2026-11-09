@@ -15,7 +15,7 @@
  * @brief @ref drivers_backlight driver driving the LED with a PWM output.
  *
  * @code{.c}
- * PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(NRF5_GPIO_P1, 8, 0),
+ * PBL_BACKLIGHT_PWM_DEFINE(s_backlight, .enable = PBL_GPIO(&dt_gpio1, 8, 0),
  *                          .pwm = PBL_PWM(&s_pwm0.ctrl, 0, PBL_PWM_HZ(256), 0),
  *                          .max_duty_cycle_percent = 67);
  *

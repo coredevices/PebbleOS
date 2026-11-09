@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-gpio
+config: GPIO_NRF5
+class: [gpio, intc]
+define: PBL_GPIO_NRF5_DEFINE
+symbol:
+  gpio: "{sym}"
+  intc: "{sym}_intc"
+args:
+  - name: true
+  - reg: 0
+  - prop: ngpios
+    default: 32

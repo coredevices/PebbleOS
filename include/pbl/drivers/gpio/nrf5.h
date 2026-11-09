@@ -29,27 +29,6 @@ struct pbl_gpio_nrf5 {
   uint8_t index;
 };
 
-/** @cond INTERNAL_HIDDEN */
-struct pbl_gpio_nrf5_intc {
-  struct pbl_intc intc;
-  const struct pbl_gpio_nrf5 *port;
-};
-
-extern const struct pbl_gpio_port pbl_gpio_nrf5_gpio0_port;
-extern const struct pbl_gpio_port pbl_gpio_nrf5_gpio1_port;
-extern const struct pbl_intc pbl_gpio_nrf5_gpio0_intc;
-extern const struct pbl_intc pbl_gpio_nrf5_gpio1_intc;
-/** @endcond */
-
-/** Port P0. */
-#define NRF5_GPIO_P0 (&pbl_gpio_nrf5_gpio0_port)
-/** Port P1. */
-#define NRF5_GPIO_P1 (&pbl_gpio_nrf5_gpio1_port)
-/** Interrupt controller of port P0. */
-#define NRF5_GPIO_P0_INTC (&pbl_gpio_nrf5_gpio0_intc)
-/** Interrupt controller of port P1. */
-#define NRF5_GPIO_P1_INTC (&pbl_gpio_nrf5_gpio1_intc)
-
 /**
  * @brief Absolute pin number of a pin, as nrfx takes it.
  *

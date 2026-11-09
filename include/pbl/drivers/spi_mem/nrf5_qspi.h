@@ -20,10 +20,10 @@
  * connected by the board:
  *
  * @code{.c}
- * PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(NRF5_GPIO_P0, 19, 0),
- *                              PBL_GPIO(NRF5_GPIO_P0, 17, 0), PBL_GPIO(NRF5_GPIO_P0, 20, 0),
- *                              PBL_GPIO(NRF5_GPIO_P0, 21, 0), PBL_GPIO(NRF5_GPIO_P0, 22, 0),
- *                              PBL_GPIO(NRF5_GPIO_P0, 23, 0));
+ * PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 8000000, PBL_GPIO(&dt_gpio0, 19, 0),
+ *                              PBL_GPIO(&dt_gpio0, 17, 0), PBL_GPIO(&dt_gpio0, 20, 0),
+ *                              PBL_GPIO(&dt_gpio0, 21, 0), PBL_GPIO(&dt_gpio0, 22, 0),
+ *                              PBL_GPIO(&dt_gpio0, 23, 0));
  * PBL_IRQ_CONNECT(QSPI, 5, pbl_spi_mem_nrf5_qspi_irq_handler, &s_qspi, 0);
  * @endcode
  * @{

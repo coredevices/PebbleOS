@@ -19,7 +19,7 @@
  * to their inactive level while the PWM is stopped.
  *
  * @code{.c}
- * PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", 0, NULL, PBL_GPIO(NRF5_GPIO_P0, 26, 0));
+ * PBL_PWM_NRF5_DEFINE(s_pwm0, "pwm0", 0, NULL, PBL_GPIO(&dt_gpio0, 26, 0));
  * @endcode
  * @{
  */

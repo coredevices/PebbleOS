@@ -23,7 +23,7 @@
  *
  * @code{.c}
  * PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
- *   PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(NRF5_GPIO_P0, 28, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
+ *   PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(&dt_gpio0, 28, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
  *                     PBL_INPUT_KEY_BACK, 40),
  *   ...);
  * @endcode
