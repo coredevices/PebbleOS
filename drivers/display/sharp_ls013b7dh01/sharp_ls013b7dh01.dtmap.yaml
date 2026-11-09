@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sharp,ls013b7dh01
+config: DISPLAY_SHARP_LS013B7DH01
+class: display
+define: PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE
+args:
+  - name: true
+  - parent: spi
+  - reg: 0
+  - prop: spi-max-frequency
+  - flags:
+      spi-cpha: PBL_SPI_CPHA
+      spi-cpol: PBL_SPI_CPOL
+      spi-cs-high: PBL_SPI_CS_HIGH
+      spi-lsb-first: PBL_SPI_LSB_FIRST
+  - gpio: enable
+  - prop: rotation
+    default: 0
+  - pwm: 0

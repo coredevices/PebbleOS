@@ -22,9 +22,10 @@
  * from the SPI controller's interrupt.
  *
  * @code{.c}
- * PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(s_display, "display",
- *     PBL_SPI_DEV(&s_spi3.bus, 0, 1000000, PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST),
- *     PBL_GPIO(&dt_gpio0, 4, 0), PBL_PWM(&s_extcomin.ctrl, 0, PBL_PWM_HZ(120), 0), false);
+ * PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(s_display, "display", &s_spi3, 0, 1000000,
+ *                                      PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST,
+ *                                      PBL_GPIO(&dt_gpio0, 4, 0), 0,
+ *                                      PBL_PWM(&s_extcomin, 0, PBL_PWM_HZ(120), 0));
  * @endcode
  * @{
  */
@@ -67,24 +68,25 @@ extern const struct pbl_display_ops pbl_display_sharp_ls013b7dh01_ops;
  *
  * @param sym Symbol of the display.
  * @param _name Name.
- * @param _spi SPI device, from PBL_SPI_DEV().
+ * @param _bus SPI bus.
+ * @param _cs Chip select number.
+ * @param _max_hz Clock frequency, in Hz.
+ * @param _mode SPI mode flags, @c PBL_SPI_*.
  * @param _enable DISP input, from PBL_GPIO().
- * @param _extcomin EXTCOMIN output, from PBL_PWM(), at twice the VCOM frequency.
- * @param _rotated Panel mounted upside down.
- * @param ... Other mounting properties, as for PBL_DISPLAY_INIT().
+ * @param _rotation Panel rotation, 0 or 180 degrees.
+ * @param ... EXTCOMIN output, from PBL_PWM(), at twice the VCOM frequency.
  */
-#define PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(sym, _name, _spi, _enable, _extcomin, _rotated, ...) \
-  PBL_DISPLAY_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_display_sharp_ls013b7dh01_state sym##_sharp_state;                            \
-  const struct pbl_display_sharp_ls013b7dh01 sym = {                                              \
-    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sharp_ls013b7dh01_ops, nullptr,             \
-                             SHARP_LS013B7DH01_WIDTH, SHARP_LS013B7DH01_HEIGHT,                   \
-                             PBL_DISPLAY_FORMAT_MONO, _rotated, __VA_ARGS__),                     \
-    .state = &sym##_sharp_state,                                                                  \
-    .spi = _spi,                                                                                  \
-    .enable = _enable,                                                                            \
-    .extcomin = _extcomin,                                                                        \
-  };                                                                                              \
-  PBL_DEVICE_REGISTER(sym, &sym.disp.dev)
+#define PBL_DISPLAY_SHARP_LS013B7DH01_DEFINE(sym, _name, _bus, _cs, _max_hz, _mode, _enable,       \
+                                             _rotation, ...)                                       \
+  static_assert((_rotation) == 0 || (_rotation) == 180, "rotation of 0 or 180 degrees");           \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
+  static struct pbl_display_sharp_ls013b7dh01_state sym##_sharp_state;                             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_display_sharp_ls013b7dh01, struct pbl_display, disp) {       \
+    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sharp_ls013b7dh01_ops, nullptr,              \
+                             SHARP_LS013B7DH01_WIDTH, SHARP_LS013B7DH01_HEIGHT,                    \
+                             PBL_DISPLAY_FORMAT_MONO, (_rotation) == 180),                         \
+    .state = &sym##_sharp_state, .spi = PBL_SPI_DEV(_bus, _cs, _max_hz, _mode), .enable = _enable, \
+    .extcomin = __VA_ARGS__,                                                                       \
+  }
 
 /** @} */

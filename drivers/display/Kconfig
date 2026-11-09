@@ -26,7 +26,7 @@ config DISPLAY_SF32LB_LCDC_IRQ_PRIO
 
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
-    default y if SOC_NRF52
+    default DT_HAS_SHARP_LS013B7DH01_ENABLED
     depends on PWM && SPI
     help
       Support for the Sharp LS013B7DH01 memory LCD.

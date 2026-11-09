@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-spim
+config: SPI_NRF5
+class: spi
+define: PBL_SPI_NRF5_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - gpio: sck
+  - gpio: mosi
+    default: PBL_GPIO(nullptr, 0, 0)
+  - gpio: miso
+    default: PBL_GPIO(nullptr, 0, 0)
+  - gpio: cs
+    all: true
+    optional: true

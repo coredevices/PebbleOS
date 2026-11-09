@@ -20,7 +20,8 @@
  * cycle stops the RTC and holds the output.
  *
  * @code{.c}
- * PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", 2, PBL_GPIO(&dt_gpio1, 15, 0), NULL);
+ * PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", NRF52_RTC2_BASE, NRF52_GPIOTE_BASE,
+ *                         PBL_GPIO(&dt_gpio1, 15, 0));
  * @endcode
  * @{
  */
@@ -40,8 +41,10 @@ struct pbl_pwm_nrf5_rtc {
   struct pbl_pwm_nrf5_rtc_state *state;
   /** Output. */
   struct pbl_gpio out;
-  /** RTC instance, from 0, not used by anything else. */
-  uint8_t rtc;
+  /** Registers of an RTC not used by anything else. */
+  uintptr_t base;
+  /** Registers of the GPIOTE. */
+  uintptr_t gpiote;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -54,20 +57,17 @@ int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev);
  *
  * @param sym Symbol of the controller.
  * @param _name Name.
- * @param _rtc RTC instance generating the output, 0 to 2.
+ * @param _base Registers of an RTC not used by anything else.
+ * @param _gpiote Registers of the GPIOTE.
  * @param _out Output, from PBL_GPIO().
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _rtc, _out, _deps)                                    \
-  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                                        \
-  static struct pbl_pwm_nrf5_rtc_state sym##_nrf5_rtc_state;                                      \
-  const struct pbl_pwm_nrf5_rtc sym = {                                                           \
-    .ctrl =                                                                                       \
-        PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_rtc_init, _deps, &pbl_pwm_nrf5_rtc_ops), \
-    .state = &sym##_nrf5_rtc_state,                                                               \
-    .out = _out,                                                                                  \
-    .rtc = (_rtc),                                                                                \
-  };                                                                                              \
-  PBL_DEVICE_REGISTER(sym, &sym.ctrl.dev)
+#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _base, _gpiote, _out)                      \
+  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                             \
+  static struct pbl_pwm_nrf5_rtc_state sym##_nrf5_rtc_state;                           \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5_rtc, struct pbl_pwm_controller, ctrl) { \
+    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_rtc_init, nullptr,        \
+                                    &pbl_pwm_nrf5_rtc_ops),                            \
+    .state = &sym##_nrf5_rtc_state, .out = _out, .base = (_base), .gpiote = (_gpiote), \
+  }
 
 /** @} */

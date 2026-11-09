@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: spi
+type: struct pbl_spi_bus
+include: pbl/drivers/spi.h
+provides:
+  spi: "&{sym}"

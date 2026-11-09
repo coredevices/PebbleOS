@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf52832-ppi.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 programmable peripheral interconnect (PPI)
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Connects an event of a peripheral to tasks of others, without the CPU, on a
+  number of channels.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-ppi
+      - items:
+          - enum:
+              - nordic,nrf52833-ppi
+              - nordic,nrf52840-ppi
+          - const: nordic,nrf52832-ppi
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    ppi@4001f000 {
+        compatible = "nordic,nrf52840-ppi", "nordic,nrf52832-ppi";
+        reg = <0x4001f000 0x1000>;
+    };

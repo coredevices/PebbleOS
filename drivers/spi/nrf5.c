@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/drivers/spi/nrf5.h>
 #include <pbl/kernel/irq.h>
@@ -18,16 +19,6 @@
 #define SPIM3_ANOMALY_195_ADDR (NRF52_SPIM3_BASE + 0x0004U)
 
 static const struct {
-  uintptr_t base;
-  pbl_irq_t irqn;
-} s_instances[] = {
-  {NRF52_SPIM0_BASE, PBL_IRQN(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0)},
-  {NRF52_SPIM1_BASE, PBL_IRQN(SPI1_SPIM1_SPIS1_TWI1_TWIM1_TWIS1)},
-  {NRF52_SPIM2_BASE, PBL_IRQN(SPI2_SPIM2_SPIS2)},
-  {NRF52_SPIM3_BASE, PBL_IRQN(SPIM3)},
-};
-
-static const struct {
   uint32_t hz;
   uint32_t frequency;
 } s_frequencies[] = {
@@ -36,16 +27,21 @@ static const struct {
   {500000U, SPIM_FREQUENCY_K500},  {250000U, SPIM_FREQUENCY_K250},  {125000U, SPIM_FREQUENCY_K125},
 };
 
+// SPIM3 runs up to 32 MHz and has its own anomaly
+static bool prv_is_spim3(const struct pbl_spi_nrf5 *spi) {
+  return spi->base == NRF52_SPIM3_BASE;
+}
+
 static const struct pbl_spi_nrf5 *prv_spi(const struct pbl_spi_bus *bus) {
   return container_of(bus, const struct pbl_spi_nrf5, bus);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_spi_nrf5 *spi, uint32_t offset) {
-  return pbl_readl(s_instances[spi->index].base + offset);
+  return pbl_readl(spi->base + offset);
 }
 
 static inline void prv_putreg(const struct pbl_spi_nrf5 *spi, uint32_t offset, uint32_t value) {
-  pbl_writel(value, s_instances[spi->index].base + offset);
+  pbl_writel(value, spi->base + offset);
 }
 
 static void prv_event_clear(const struct pbl_spi_nrf5 *spi, uint32_t offset) {
@@ -73,7 +69,7 @@ static int prv_init(const struct pbl_spi_bus *bus) {
   const struct pbl_spi_nrf5 *spi = prv_spi(bus);
   int ret;
 
-  if (spi->index >= ARRAY_LENGTH(s_instances) || !pbl_gpio_is_connected(&spi->sck)) {
+  if (!pbl_gpio_is_connected(&spi->sck)) {
     return -EINVAL;
   }
 
@@ -97,7 +93,7 @@ static int prv_init(const struct pbl_spi_bus *bus) {
   prv_putreg(spi, NRF52_SPIM_PSEL_MOSI_OFFSET, prv_psel(&spi->mosi));
   prv_putreg(spi, NRF52_SPIM_PSEL_MISO_OFFSET, prv_psel(&spi->miso));
 
-  pbl_irq_enable(s_instances[spi->index].irqn);
+  pbl_irq_enable(spi->irq);
 
   return 0;
 }
@@ -108,7 +104,7 @@ static int prv_configure(const struct pbl_spi_bus *bus, const struct pbl_spi_dev
   size_t i;
 
   // Only SPIM3 runs above 8 MHz
-  for (i = (spi->index == 3U) ? 0U : 2U; i < ARRAY_LENGTH(s_frequencies); i++) {
+  for (i = (prv_is_spim3(spi)) ? 0U : 2U; i < ARRAY_LENGTH(s_frequencies); i++) {
     if (s_frequencies[i].hz <= dev->max_hz) {
       break;
     }
@@ -148,11 +144,11 @@ static void prv_disable(const struct pbl_spi_bus *bus) {
 
   prv_putreg(spi, NRF52_SPIM_INTENCLR_OFFSET, SPIM_INT_END);
   prv_putreg(spi, NRF52_SPIM_ENABLE_OFFSET, SPIM_ENABLE_DISABLED);
-  if (spi->index == 3U) {
+  if (prv_is_spim3(spi)) {
     pbl_writel(1U, SPIM3_ANOMALY_195_ADDR);
   }
   prv_event_clear(spi, NRF52_SPIM_EVENTS_END_OFFSET);
-  pbl_irq_clear_pending(s_instances[spi->index].irqn);
+  pbl_irq_clear_pending(spi->irq);
 }
 
 static int prv_start(const struct pbl_spi_bus *bus, const struct pbl_spi_xfer *xfer) {
@@ -193,3 +189,5 @@ const struct pbl_spi_bus_ops pbl_spi_nrf5_ops = {
   .disable = prv_disable,
   .start = prv_start,
 };
+
+#include PBL_DT_INSTANCES(nordic_nrf52832_spim)
