@@ -178,6 +178,48 @@ struct pbl_mem_region {
   static const struct pbl_device *const sym##_device_entry PBL_USED PBL_DEVICE_TABLE_SECTION = (dev)
 
 /**
+ * @brief Give an instance a second name with the type of its class, for code that does not know
+ * the driver. It is the same object, and usable in constant initializers.
+ *
+ * The name may only be passed to the API of its class: code that needs the type of the driver
+ * uses the instance, or an accessor of the driver.
+ *
+ * @param sym Name to give.
+ * @param inst Symbol of the instance.
+ * @param type Type of the instance.
+ * @param class_type Type of the class object, which has to be its first member.
+ * @param member Name of the class object.
+ */
+#ifdef __APPLE__
+// Mach-O has no alias attribute: a second global symbol at the instance does the same
+#define PBL_DEVICE_ALIAS(sym, inst, type, class_type, member)               \
+  static_assert(offsetof(type, member) == 0, #member " has to come first"); \
+  __asm__(".globl _" #sym "\n.set _" #sym ", _" #inst);                     \
+  extern const class_type sym
+#else
+#define PBL_DEVICE_ALIAS(sym, inst, type, class_type, member)               \
+  static_assert(offsetof(type, member) == 0, #member " has to come first"); \
+  extern const class_type sym __attribute__((alias(#inst)))
+#endif
+
+/**
+ * @brief Start the definition of a registered instance, followed by its initializer.
+ *
+ * The instance is @c sym of the type of its class, for code that does not know the driver, and
+ * <tt>sym ## _inst</tt> of its own type, for the driver.
+ *
+ * @param sym Symbol of the instance.
+ * @param type Type of the instance.
+ * @param class_type Type of the class object, which has to be its first member.
+ * @param member Name of the class object, holding the struct pbl_device as @c dev.
+ */
+#define PBL_DEVICE_INSTANCE(sym, type, class_type, member)     \
+  extern const type sym##_inst;                                \
+  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.member.dev);     \
+  PBL_DEVICE_ALIAS(sym, sym##_inst, type, class_type, member); \
+  const type sym##_inst =
+
+/**
  * @brief Initialize a device, its parent and deps first.
  *
  * A no-op once the device is ready or has failed. A dependency cycle asserts.
