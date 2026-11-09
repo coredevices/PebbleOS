@@ -21,6 +21,7 @@ if ACCEL
 
 config ACCEL_LIS2DW12
     bool "ST LIS2DW12"
+    default DT_HAS_ST_LIS2DW12_ENABLED
     depends on I2C
     help
       Support for the ST LIS2DW12 accelerometer.
