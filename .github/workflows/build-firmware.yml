@@ -318,10 +318,20 @@ jobs:
             --data '{"operation": "push"}' \
             "${WEBLATE_COMPONENT_URL}repository/" | jq -e '.result == true'
 
+      - name: Create app token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ secrets.TRANSLATIONS_APP_ID }}
+          private-key: ${{ secrets.TRANSLATIONS_APP_KEY }}
+          owner: coredevices
+          repositories: pebbleos-translations
+          permission-contents: write
+
       - uses: actions/checkout@v7
         with:
           repository: coredevices/pebbleos-translations
-          ssh-key: ${{ secrets.TRANSLATIONS_DEPLOY_KEY }}
+          token: ${{ steps.app-token.outputs.token }}
           path: translations
 
       - name: Merge the source into the catalogs
