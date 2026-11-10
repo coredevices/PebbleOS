@@ -1,0 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+&mpi1 {
+	psram: psram@0 {
+		compatible = "sifli,sf32lb52-psram";
+		reg = <0>;
+		size = <0x400000>;
+		spi-rx-bus-width = <8>;
+		spi-tx-bus-width = <8>;
+	};
+};

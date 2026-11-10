@@ -21,13 +21,13 @@ properties:
               - coredevices,obelix-dvt
               - coredevices,obelix-pvt
           - const: coredevices,obelix
-          - const: sifli,sf32lb52
+          - const: sifli,sf32lb52j
       - description: Core Devices Pebble Round 2 (getafix)
         items:
           - enum:
               - coredevices,getafix-dvt
               - coredevices,getafix-dvt2
           - const: coredevices,getafix
-          - const: sifli,sf32lb52
+          - const: sifli,sf32lb52j
 
 additionalProperties: true
