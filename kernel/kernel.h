@@ -41,9 +41,8 @@ void waitq_insert(struct pbl_waitq *wq, struct pbl_thread *t);
 void waitq_remove(struct pbl_waitq *wq, struct pbl_thread *t);
 struct pbl_thread *waitq_pop(struct pbl_waitq *wq);
 
-//! Priority-inheritance helpers used by the mutex.
-void sched_inherit(struct pbl_thread *owner, pbl_prio_t prio);
-void sched_disinherit(struct pbl_thread *owner);
+//! Priority @p t runs at: its own, or that of the most urgent thread waiting for a mutex it holds.
+pbl_prio_t mutex_inherited_prio(const struct pbl_thread *t);
 
 //! C entry from the reset vector: sets up RAM, then kernel_init().
 [[noreturn]] void kernel_prep_c(void);

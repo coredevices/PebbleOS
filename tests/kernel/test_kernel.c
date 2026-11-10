@@ -431,6 +431,56 @@ void test_kernel__mutex_priority_inheritance(void) {
   cl_assert_equal_s(s_trace, "lhLHMd");
 }
 
+static void prv_pi_timeout_low(void *arg) {
+  cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_FOREVER), 0);
+  pbl_test_tick(1);
+  cl_assert_equal_i(pbl_thread_current()->prio, 4);
+  // high gives up and runs on ISR exit
+  pbl_test_tick(2);
+}
+
+static void prv_pi_timeout_high(void *arg) {
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_TICKS(2)), -EAGAIN);
+  cl_assert_equal_i(s_threads[0].prio, 1);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__mutex_inheritance_ends_when_waiter_gives_up(void) {
+  pbl_mutex_init(&s_mutex);
+  prv_spawn(0, "low", 1, prv_pi_timeout_low, nullptr);
+  prv_spawn(1, "high", 4, prv_pi_timeout_high, nullptr);
+  pbl_test_kernel_run();
+}
+
+static PBL_MUTEX_DEFINE(s_outer_mutex);
+
+static void prv_pi_nested_low(void *arg) {
+  cl_assert_equal_i(pbl_mutex_lock(&s_outer_mutex, PBL_FOREVER), 0);
+  cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_FOREVER), 0);
+  pbl_test_tick(1);
+  cl_assert_equal_i(pbl_thread_current()->prio, 4);
+  // high takes over here
+  pbl_mutex_unlock(&s_mutex);
+}
+
+static void prv_pi_nested_high(void *arg) {
+  pbl_thread_sleep(PBL_TICKS(1));
+  cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_FOREVER), 0);
+  // low still holds the outer mutex, which nobody waits for
+  cl_assert_equal_i(s_threads[0].prio, 1);
+  pbl_mutex_unlock(&s_mutex);
+  pbl_test_kernel_stop();
+}
+
+void test_kernel__mutex_inheritance_ends_with_the_contended_mutex(void) {
+  pbl_mutex_init(&s_mutex);
+  pbl_mutex_init(&s_outer_mutex);
+  prv_spawn(0, "low", 1, prv_pi_nested_low, nullptr);
+  prv_spawn(1, "high", 4, prv_pi_nested_high, nullptr);
+  pbl_test_kernel_run();
+}
+
 static void prv_recursive(void *arg) {
   cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_FOREVER), 0);
   cl_assert_equal_i(pbl_mutex_lock(&s_mutex, PBL_FOREVER), 0);

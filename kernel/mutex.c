@@ -5,6 +5,38 @@
 
 #include <pbl/kernel/mutex.h>
 
+pbl_prio_t mutex_inherited_prio(const struct pbl_thread *t) {
+  pbl_prio_t prio = t->backend.base_prio;
+
+  for (const struct pbl_mutex *m = t->backend.held; m != nullptr; m = m->backend.next_held) {
+    const struct pbl_thread *waiter = m->backend.waitq.head;
+    if (waiter != nullptr && waiter->prio > prio) {
+      prio = waiter->prio;
+    }
+  }
+  return prio;
+}
+
+static void prv_prio_update(struct pbl_thread *t) {
+  sched_prio_set(t, t->backend.base_prio, mutex_inherited_prio(t));
+}
+
+static void prv_own(struct pbl_mutex *m, struct pbl_thread *t) {
+  m->owner = t;
+  m->count = 1;
+  m->backend.next_held = t->backend.held;
+  t->backend.held = m;
+}
+
+static void prv_disown(struct pbl_mutex *m) {
+  struct pbl_mutex **link = &m->owner->backend.held;
+
+  while (*link != m) {
+    link = &(*link)->backend.next_held;
+  }
+  *link = m->backend.next_held;
+}
+
 void pbl_mutex_init(struct pbl_mutex *m) {
   *m = (struct pbl_mutex)PBL_MUTEX_INITIALIZER;
 }
@@ -20,17 +52,21 @@ int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) 
   unsigned int key = arch_irq_lock();
   struct pbl_thread *me = pbl_cur;
   if (m->owner == nullptr) {
-    m->owner = me;
-    m->count = 1;
-    me->backend.mutexes_held++;
+    prv_own(m, me);
   } else if (m->owner == me) {
     m->count++;
   } else if (pbl_timeout_is_no_wait(timeout)) {
     rc = -EBUSY;
   } else {
-    sched_inherit(m->owner, me->prio);
+    if (me->prio > m->owner->prio) {
+      sched_prio_set(m->owner, m->owner->backend.base_prio, me->prio);
+    }
     // On success the previous owner handed the mutex over to us.
     rc = sched_block(&m->backend.waitq, timeout, key);
+    if (rc != 0 && m->owner != nullptr) {
+      // The owner no longer inherits from us.
+      prv_prio_update(m->owner);
+    }
   }
 #if CONFIG_KERNEL_MUTEX_LOCK_LR
   if (rc == 0 && m->count == 1) {
@@ -48,19 +84,19 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
   PBL_ASSERTN(m->owner == pbl_cur && m->count > 0);
   if (--m->count == 0) {
     struct pbl_thread *prev = m->owner;
-    prev->backend.mutexes_held--;
+    prv_disown(m);
     m->lock_lr = 0;
 
     struct pbl_thread *next = waitq_pop(&m->backend.waitq);
     if (next) {
-      m->owner = next;
-      m->count = 1;
-      next->backend.mutexes_held++;
+      prv_own(m, next);
       sched_wake(next, 0);
     } else {
       m->owner = nullptr;
     }
-    sched_disinherit(prev);
+    if (prev->prio != prev->backend.base_prio) {
+      prv_prio_update(prev);
+    }
   }
   arch_irq_unlock(key);
 }
