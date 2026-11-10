@@ -108,10 +108,14 @@ tree: it defines its options and sources PebbleOS's with
 `source "Kconfig.pebbleos"`. Defaults it gives before that line take
 precedence over PebbleOS's own.
 
-Subsystems are off unless the application asks for them, e.g.
-`CONFIG_BT=y`. A board's defconfig describes its hardware; what an
-application does with it, such as the firmware's backlight levels on
-`obelix`, goes in the application's `boards/obelix.conf`.
+Driver classes and subsystems are off unless the application asks for
+them, e.g. `CONFIG_ACCEL=y` or `CONFIG_BT=y`: a board's defconfig only
+selects its SoC, platform, boot chain and console, so `hello_world` builds
+little more than the kernel. The drivers follow from the board's
+{doc}`devicetree`, and the buses and supplies they use from the drivers.
+What an application does with the hardware, such as the firmware's
+backlight levels on `obelix`, goes in the application's
+`boards/obelix.conf`.
 
 The firmware is built the same way, from `pebble/CMakeLists.txt`, and its
 configuration follows the same layout: `pebble/prj.conf`,
