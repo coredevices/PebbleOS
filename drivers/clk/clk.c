@@ -18,6 +18,13 @@ static bool prv_valid(const struct pbl_clk *clk) {
   return clk->ctrl != nullptr && clk->id < clk->ctrl->num_clks;
 }
 
+// A controller uses its own clocks while it comes up, as to apply its assigned clocks
+static bool prv_up(const struct pbl_clk_controller *ctrl) {
+  uint8_t status = ctrl->dev.state->status;
+
+  return status == PBL_DEVICE_READY || status == PBL_DEVICE_INITIALIZING;
+}
+
 static bool prv_same(const struct pbl_clk *a, const struct pbl_clk *b) {
   return a->ctrl == b->ctrl && a->id == b->id;
 }
@@ -124,7 +131,7 @@ static int prv_get_rate(const struct pbl_clk *clk, uint64_t *rate_mhz, uint8_t d
     return -EINVAL;
   }
 
-  if (!pbl_device_is_ready(&ctrl->dev)) {
+  if (!prv_up(ctrl)) {
     return -ENODEV;
   }
 
@@ -152,7 +159,7 @@ int pbl_clk_enable(const struct pbl_clk *clk) {
   int ret;
 
   if (prv_valid(clk)) {
-    PBL_ASSERTN(pbl_device_is_ready(&clk->ctrl->dev));
+    PBL_ASSERTN(prv_up(clk->ctrl));
   }
 
   pbl_irq_lock();

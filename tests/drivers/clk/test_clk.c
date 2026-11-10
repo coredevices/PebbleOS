@@ -445,3 +445,32 @@ void test_clk__assign_rate_after_parent(void) {
   cl_assert_equal_i(s_mux_sel, 1U);
   cl_assert_equal_i(s_mux_div, 1U);
 }
+
+static int prv_self_init(const struct pbl_device *dev);
+
+static const struct pbl_clk_controller_ops s_self_ops = {
+  .get_rate = prv_get_rate,
+};
+
+PBL_CLK_CONTROLLER_STATE_DEFINE(s_self, 2);
+static const struct pbl_clk_controller s_self =
+    PBL_CLK_CONTROLLER_INIT(s_self, "self", prv_self_init, nullptr, &s_self_ops);
+
+static uint64_t s_self_mhz;
+
+static int prv_self_init(const struct pbl_device *dev) {
+  const struct pbl_clk clk = PBL_CLK(&s_self, 1);
+  int ret;
+
+  ret = pbl_clk_enable(&clk);
+  if (ret == 0) {
+    ret = pbl_clk_get_rate(&clk, &s_self_mhz);
+  }
+  return ret;
+}
+
+void test_clk__own_clocks_while_coming_up(void) {
+  cl_assert_equal_i(pbl_device_init(&s_self.dev), 0);
+  cl_assert_equal_i(s_self_mhz, s_rates_mhz[1]);
+  cl_assert(pbl_clk_is_enabled(&(struct pbl_clk)PBL_CLK(&s_self, 1)));
+}
