@@ -27,6 +27,7 @@ config AMBIENT_LIGHT_W1160
     bool "Sensortek W1160"
     default DT_HAS_SENSORTEK_W1160_ENABLED
     select I2C
+    select REGULATOR
     help
       Support for the Sensortek W1160 ambient light sensor.
 

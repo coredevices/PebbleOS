@@ -5,25 +5,24 @@ config REGULATOR
     bool
     help
       Power rail class (pbl/drivers/regulator.h), selected by the drivers
-      that provide regulators.
+      that use regulators.
+
+if REGULATOR
 
 config REGULATOR_NPM1300
     bool "Nordic nPM1300 regulators"
-    default y
-    depends on MFD_NPM1300
-    select REGULATOR
+    default DT_HAS_NORDIC_NPM1300_ENABLED
+    select MFD
+    select MFD_NPM1300
     help
       Support for the BUCK and LDSW rails of the Nordic nPM1300 PMIC.
 
 config REGULATOR_FIXED
     bool "Fixed regulators"
     default DT_HAS_REGULATOR_FIXED_ENABLED
-    depends on GPIO
-    select REGULATOR
+    select GPIO
     help
       Support for rails switched by a GPIO.
-
-if REGULATOR
 
 module = DRIVER_REGULATOR
 module-str = Regulator
