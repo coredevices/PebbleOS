@@ -27,12 +27,17 @@
  * pbl_clk_disable(&s_clk);
  * @endcode
  *
+ * Clocks form a tree, across controllers: a clock may have a parent, as the gate of a peripheral
+ * has the clock it gates, and its rate follows from the parent's. Enabling a clock enables its
+ * parents first.
+ *
  * A consumer that depends on a clock's rate reads it with pbl_clk_get_rate() and, if the rate
  * can change at run time, registers a struct pbl_clk_notifier to follow it.
  * @{
  */
 
 struct pbl_clk_controller;
+struct pbl_clk;
 
 /** @brief Clock controller driver operations, called with interrupts locked. */
 struct pbl_clk_controller_ops {
@@ -40,8 +45,23 @@ struct pbl_clk_controller_ops {
   int (*enable)(const struct pbl_clk_controller *ctrl, uint32_t id);
   /** Gate a clock, or NULL if the clocks always run. Returns 0 or a negative errno. */
   int (*disable)(const struct pbl_clk_controller *ctrl, uint32_t id);
-  /** Get a clock's rate in mHz, or NULL if unknown. Returns 0 or a negative errno. */
-  int (*get_rate)(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t *rate_mhz);
+  /**
+   * Get a clock's rate in mHz from its parent's, 0 for a clock without one, or NULL if each
+   * clock runs at its parent's rate. Returns 0 or a negative errno.
+   */
+  int (*get_rate)(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
+                  uint64_t *rate_mhz);
+  /**
+   * Get a clock's parent, or NULL if the clocks have none. Returns 0, @c -ENOENT if the clock
+   * has none, or another negative errno.
+   */
+  int (*get_parent)(const struct pbl_clk_controller *ctrl, uint32_t id, struct pbl_clk *parent);
+  /**
+   * Switch a clock to another parent, or NULL if no clock can. Returns 0, @c -EINVAL if it
+   * cannot take that parent, or another negative errno.
+   */
+  int (*set_parent)(const struct pbl_clk_controller *ctrl, uint32_t id,
+                    const struct pbl_clk *parent);
 };
 
 /** @brief A clock controller. */
@@ -104,6 +124,32 @@ struct pbl_clk {
  */
 #define PBL_CLK(_ctrl, _id) {.ctrl = (_ctrl), .id = (_id)}
 
+/** @brief Parent a clock is switched to when its controller comes up. */
+struct pbl_clk_assigned {
+  /** Clock. */
+  struct pbl_clk clk;
+  /** Parent. */
+  struct pbl_clk parent;
+};
+
+/**
+ * @brief Initializer for a struct pbl_clk_assigned.
+ *
+ * @param _clk Clock, a PBL_CLK() initializer.
+ * @param _parent Parent, a PBL_CLK() initializer.
+ */
+#define PBL_CLK_ASSIGNED(_clk, _parent) {.clk = _clk, .parent = _parent}
+
+/**
+ * @brief Define the list of parents a clock controller assigns, for the driver's define macro.
+ *
+ * @param sym Symbol of the list.
+ * @param ... PBL_CLK_ASSIGNED() initializers, from the @c assigned-clocks and
+ * @c assigned-clock-parents properties of the controller's node.
+ */
+#define PBL_CLK_ASSIGNED_DEFINE(sym, ...) \
+  static const struct pbl_clk_assigned sym[] = {__VA_ARGS__ __VA_OPT__(, ){}}
+
 /**
  * @brief Take a reference on a clock, ungating it for the first user.
  *
@@ -137,9 +183,39 @@ bool pbl_clk_is_enabled(const struct pbl_clk *clk);
  *
  * @param clk Clock.
  * @param[out] rate_mhz Rate in mHz.
- * @return 0, @c -ENOTSUP if the controller does not know its rates, or another negative errno.
+ * @return 0, @c -ENOTSUP if the rate is not known, or another negative errno.
  */
 int pbl_clk_get_rate(const struct pbl_clk *clk, uint64_t *rate_mhz);
+
+/**
+ * @brief Get the parent of a clock.
+ *
+ * @param clk Clock.
+ * @param[out] parent Parent.
+ * @return 0, @c -ENOENT if the clock has no parent, or another negative errno.
+ */
+int pbl_clk_get_parent(const struct pbl_clk *clk, struct pbl_clk *parent);
+
+/**
+ * @brief Switch a clock to another parent.
+ *
+ * The references an enabled clock holds move to the new parent. The notifiers of the clock and
+ * of the clocks below it are told the new rates.
+ *
+ * @param clk Clock.
+ * @param parent New parent.
+ * @return 0, @c -ENOTSUP if the clock cannot switch, @c -EINVAL if it cannot take that parent,
+ * or another negative errno.
+ */
+int pbl_clk_set_parent(const struct pbl_clk *clk, const struct pbl_clk *parent);
+
+/**
+ * @brief Switch clocks to their assigned parents, for clock controller drivers.
+ *
+ * @param assigned List from PBL_CLK_ASSIGNED_DEFINE().
+ * @return 0 or the first error of pbl_clk_set_parent().
+ */
+int pbl_clk_assign(const struct pbl_clk_assigned *assigned);
 
 struct pbl_clk_notifier;
 
@@ -173,12 +249,11 @@ struct pbl_clk_notifier {
 void pbl_clk_notifier_register(struct pbl_clk_notifier *nb);
 
 /**
- * @brief Report a new rate to the clock's notifiers, for clock providers.
+ * @brief Report a new rate to the notifiers of a clock and of the clocks below it, for clock
+ * providers.
  *
- * @param ctrl Clock controller.
- * @param id Clock number.
- * @param rate_mhz New rate in mHz.
+ * @param clk Clock whose rate changed.
  */
-void pbl_clk_rate_changed(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t rate_mhz);
+void pbl_clk_rate_changed(const struct pbl_clk *clk);
 
 /** @} */

@@ -4,22 +4,44 @@ A clock controller (`include/pbl/drivers/clk.h`) is a device that provides
 a set of clocks, each named by a number from the controller's header. A
 consumer holds a `struct pbl_clk` for each clock it uses.
 
+## Tree
+
+Clocks form a tree that crosses controllers: a clock may have a parent,
+which the controller reports with its `get_parent` operation, as the gate of
+a peripheral has the bus or kernel clock it gates, a divider the clock it
+divides, and an oscillator the crystal it drives. A clock without one is a
+root. `pbl_clk_get_parent()` returns the parent.
+
 ## Gating
 
 `pbl_clk_enable()` and `pbl_clk_disable()` take and drop a reference on a
 clock. The controller ungates it for the first user and gates it after the
-last, so drivers that share a clock never gate it under each other. Clocks
-that always run leave the `enable` and `disable` operations unset.
+last, so drivers that share a clock never gate it under each other. The
+first reference on a clock takes one on its parent, and the last one dropped
+releases it. Clocks that always run leave the `enable` and `disable`
+operations unset.
 
 ## Rates
 
 `pbl_clk_get_rate()` returns a clock's rate in millihertz, the resolution a
-calibrated low-frequency oscillator needs: 1 mHz at 10 kHz is 0.1 ppm.
+calibrated low-frequency oscillator needs: 1 mHz at 10 kHz is 0.1 ppm. The
+controller's `get_rate` operation gets the parent's rate and returns the
+clock's, as a divider divides it; a controller without one runs each clock
+at its parent's rate.
+
 A consumer whose hardware depends on the rate reads it when it programs the
 hardware. If the rate can change at run time and the consumer must follow
 it, the consumer registers a `struct pbl_clk_notifier`. The provider reports
-each change with `pbl_clk_rate_changed()`, which calls the notifiers in the
-provider's context, possibly an interrupt, so they must not block.
+each change with `pbl_clk_rate_changed()`, which calls the notifiers of that
+clock and of every clock below it with their new rates, in the provider's
+context, possibly an interrupt, so they must not block.
+
+## Parents
+
+`pbl_clk_set_parent()` switches a multiplexer to another of its inputs. An
+enabled clock moves its reference to the new parent before the switch, so the
+new input runs first and the old one is released after. The notifiers below
+the clock are told the new rates.
 
 ## Calibrated clocks
 

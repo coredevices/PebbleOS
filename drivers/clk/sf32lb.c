@@ -72,7 +72,7 @@ static uint32_t prv_pclk1_hz(uintptr_t base) {
          PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV1_MASK, cfgr);
 }
 
-static int prv_clk_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id,
+static int prv_clk_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
                             uint64_t *rate_mhz) {
   if (id != SF32LB52_HPSYS_CLK_EFUSEC) {
     return -ENOTSUP;

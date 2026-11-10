@@ -35,10 +35,18 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     pbl_shell_print(sh, "%s: %u clocks", dev->name, ctrl->num_clks);
     for (uint16_t id = 0U; id < ctrl->num_clks; id++) {
       const struct pbl_clk clk = PBL_CLK(ctrl, id);
+      struct pbl_clk parent;
       uint64_t rate_mhz;
 
-      if (pbl_clk_get_rate(&clk, &rate_mhz) == 0) {
-        pbl_shell_print(sh, "  %u: %" PRIu64 " mHz", id, rate_mhz);
+      if (pbl_clk_get_rate(&clk, &rate_mhz) != 0) {
+        continue;
+      }
+
+      if (pbl_clk_get_parent(&clk, &parent) == 0) {
+        pbl_shell_print(sh, "  %u: %" PRIu64 " mHz, from %s %" PRIu32 ", %u users", id, rate_mhz,
+                        parent.ctrl->dev.name, parent.id, ctrl->use_counts[id]);
+      } else {
+        pbl_shell_print(sh, "  %u: %" PRIu64 " mHz, %u users", id, rate_mhz, ctrl->use_counts[id]);
       }
     }
   }
