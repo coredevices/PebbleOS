@@ -4,15 +4,10 @@
 choice
     prompt "SoC"
     help
-      SoC family. Real boards pick a vendor SoC; QEMU boards pick
+      SoC. Real boards pick their SoC line; QEMU boards pick
       SOC_QEMU and then choose the emulated core.
 
-config SOC_NRF52
-    bool "Nordic nRF52"
-    select HAL_NORDIC
-    select CPU_CORTEX_M4
-    select CPU_HAS_FPU
-
+rsource "nrf/Kconfig.soc"
 rsource "sf32lb/Kconfig.soc"
 
 config SOC_QEMU
@@ -84,4 +79,5 @@ config SOC_QEMU_CORTEX_M33
 
 endchoice
 
+rsource "nrf/Kconfig"
 rsource "sf32lb/Kconfig"
