@@ -197,6 +197,8 @@ void soc_sf32lb_psram_enter_low_power(void) {
     pbl_dcache_flush_all();
     ret = HAL_MPI_PSRAM_ENT_LOWP(&s_handle, s_type->mode);
     PBL_ASSERTN(ret == HAL_OK);
+    // Meet APS tHS (150 us) even if a pending interrupt makes WFI return immediately
+    HAL_Delay_us(150);
     s_state = PsramStateHalfSleep;
     return;
   }
