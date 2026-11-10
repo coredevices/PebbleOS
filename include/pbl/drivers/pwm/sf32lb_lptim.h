@@ -14,8 +14,8 @@
  * @ingroup drivers_pwm
  * @brief @ref drivers_pwm controller driver for the SF32LB low-power timers.
  *
- * One channel, counting the low-power clock, the RC10K, so it keeps running in deep sleep. The
- * period and duty cycle resolution is one RC10K cycle, about 100 us; the frequency is the
+ * One channel, counting clk_rtc, so it keeps running in deep sleep. The period and duty cycle
+ * resolution is one clk_rtc cycle, about 100 us on the LRC10; the frequency is the
  * calibrated one when the output is applied. The pin state can route the inverted output too.
  *
  * @code{.c}
@@ -23,7 +23,7 @@
  *                          SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT,
  *                          SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT);
  * PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", SF32LB52_LPTIM2_BASE,
- *                             PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10), &s_lptim2_default);
+ *                             PBL_CLK(SF32LB52_RTC_CLK, SF32LB52_CLK_RTC), &s_lptim2_default);
  * @endcode
  * @{
  */

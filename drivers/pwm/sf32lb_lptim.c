@@ -13,7 +13,7 @@
 
 #include <hardware/sf32lb52_lptim.h>
 
-// A few RC10K cycles
+// A few clk_rtc cycles
 #define COUNTRST_TIMEOUT_US 1000U
 
 static const struct pbl_pwm_sf32lb_lptim *prv_lptim(const struct pbl_pwm_controller *ctrl) {

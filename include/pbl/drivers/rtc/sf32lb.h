@@ -8,7 +8,7 @@
 /**
  * @defgroup drivers_rtc_sf32lb SF32LB
  * @ingroup drivers_rtc
- * @brief SiFli SF32LB calendar RTC, clocked by the RC10K at its calibrated rate.
+ * @brief SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate.
  * @{
  */
 

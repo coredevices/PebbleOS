@@ -9,7 +9,7 @@
 
 #include <hardware/sf32lb52_lptim.h>
 
-// A few RC10K cycles
+// A few clk_rtc cycles
 #define COUNTRST_TIMEOUT_US 1000U
 
 // A compare value at the counter may not match; one more count covers an increment between
@@ -20,8 +20,8 @@ static uint64_t s_rate_mhz;
 
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
 
-static struct pbl_clk_notifier s_rc10k_nb = {
-  .clk = PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10),
+static struct pbl_clk_notifier s_clk_nb = {
+  .clk = PBL_CLK(SF32LB52_RTC_CLK, SF32LB52_CLK_RTC),
   .fn = prv_rate_changed,
 };
 
@@ -80,7 +80,7 @@ static const struct pbl_clockevent s_lptim1_ce =
 const struct pbl_clocksource *const pbl_system_clocksource = &s_lptim1_cs;
 const struct pbl_clockevent *const pbl_system_clockevent = &s_lptim1_ce;
 
-// Follows the RC10K calibration.
+// Follows the clk_rtc calibration.
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz) {
   s_rate_mhz = rate_mhz;
   pbl_clocksource_set_mhz(&s_lptim1_cs, rate_mhz);
@@ -106,16 +106,16 @@ static int prv_init(const struct pbl_device *dev) {
   int ret;
 
   if (!s_started) {
-    ret = pbl_device_init(&SF32LB52_PMUC->dev);
+    ret = pbl_device_init(&SF32LB52_RTC_CLK->dev);
     if (ret == 0) {
-      ret = pbl_clk_get_rate(&s_rc10k_nb.clk, &s_rate_mhz);
+      ret = pbl_clk_get_rate(&s_clk_nb.clk, &s_rate_mhz);
     }
     if (ret != 0) {
       return ret;
     }
-    pbl_clk_notifier_register(&s_rc10k_nb);
+    pbl_clk_notifier_register(&s_clk_nb);
 
-    // Free running over the whole counter, on the RC10K clock.
+    // Free running over the whole counter, on clk_rtc.
     prv_putreg(SF32LB52_LPTIM_CR_OFFSET, 0U);
     prv_putreg(SF32LB52_LPTIM_IER_OFFSET, 0U);
     prv_putreg(SF32LB52_LPTIM_CFGR_OFFSET, 0U);

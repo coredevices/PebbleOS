@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-rtc
+config: CLK_SF32LB52_RTC
+class: clk
+symbol: pbl_clk_sf32lb52_rtc
+define: PBL_CLK_SF32LB52_RTC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: lrc10
+  - clock: lxt32
+provides:
+  clock: PBL_CLK(&{sym}, 0)
