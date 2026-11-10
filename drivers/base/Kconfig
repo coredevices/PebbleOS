@@ -7,4 +7,11 @@ module = DEVICE
 module-str = Device model
 source "subsys/logging/Kconfig.template.log_level"
 
+config DEVICE_INIT_REVERSE
+    bool "Initialize devices in reverse table order"
+    help
+      Debug option. Walk the device table backwards at boot, to check that
+      no device relies on its place in the table to find what it needs
+      ready.
+
 endmenu

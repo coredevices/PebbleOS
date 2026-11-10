@@ -61,6 +61,10 @@ TEST_DEV_REGISTERED(s_noinit, 'n', nullptr, nullptr, nullptr);
 TEST_DEV(s_cycle_a, 'x', prv_init, nullptr, nullptr);
 TEST_DEV(s_cycle_b, 'y', prv_init, nullptr, PBL_DEVICE_DEPS(&s_cycle_a.dev));
 
+// listed needs gpio and absent's sibling pmic without naming them in its definition
+TEST_DEV(s_listed, 'l', prv_init, nullptr, nullptr);
+PBL_DEVICE_DEPENDS(s_listed, &s_listed.dev, &s_gpio.dev, &s_pmic.dev);
+
 // Two registered devices of a class and an unregistered one
 static PBL_DEVICE_CLASS_DEFINE(s_port_class, "port");
 static PBL_DEVICE_CLASS_DEFINE(s_empty_class, "empty");
@@ -78,8 +82,8 @@ PBL_DEVICE_REGISTER(s_port_b, &s_port_b.dev);
 TEST_CLASS_DEV(s_port_unregistered, "port_c");
 
 static struct test_dev *const s_all[] = {
-  &s_sensor, &s_gpio,   &s_pmic,   &s_i2c,     &s_mfd_child,
-  &s_mfd,    &s_absent, &s_noinit, &s_cycle_a, &s_cycle_b,
+  &s_sensor, &s_gpio,   &s_pmic,    &s_i2c,     &s_mfd_child, &s_mfd,
+  &s_absent, &s_noinit, &s_cycle_a, &s_cycle_b, &s_listed,
 };
 
 void test_device__initialize(void) {
@@ -146,6 +150,18 @@ void test_device__failed_dep_fails_dependents(void) {
   cl_assert_equal_i(pbl_device_init(&s_sensor.dev), -ENODEV);
   cl_assert_equal_i(pbl_device_init(&s_i2c.dev), -ENODEV);
   cl_assert_equal_s(s_order, "g");
+}
+
+void test_device__listed_deps_first(void) {
+  cl_assert_equal_i(pbl_device_init(&s_listed.dev), 0);
+  cl_assert_equal_s(s_order, "gipl");
+}
+
+void test_device__failed_listed_dep_fails_dependents(void) {
+  s_pmic.res = -EIO;
+  cl_assert_equal_i(pbl_device_init(&s_listed.dev), -ENODEV);
+  cl_assert_equal_s(s_order, "gip");
+  cl_assert(!pbl_device_is_ready(&s_listed.dev));
 }
 
 void test_device__absent(void) {
