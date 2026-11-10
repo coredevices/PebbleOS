@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-if SOC_QEMU
+if SOC_QEMU_PEBBLE
 
 choice BT_ID_ADDR_SOURCE
     default BT_ID_ADDR_STORAGE
@@ -36,4 +36,4 @@ config NUM_IRQS
 config NUM_IRQ_PRIO_BITS
     default 3
 
-endif # SOC_QEMU
+endif # SOC_QEMU_PEBBLE

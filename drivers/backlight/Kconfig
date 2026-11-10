@@ -45,7 +45,7 @@ config BACKLIGHT_PWM
 config BACKLIGHT_QEMU
     bool "QEMU"
     default DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     help
       Emulated backlight controller that writes to the QEMU
       pebble-display MMIO registers.

@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_QEMU_PEBBLE
+    bool
+    help
+      Pebble QEMU machine, a custom machine emulating Pebble hardware,
+      selected by its cores.

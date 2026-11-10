@@ -5,7 +5,7 @@ menu "System timer"
 
 config TIMER_ARM_SYSTICK
     bool "Arm SysTick"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     depends on CPU_CORTEX_M
     help
       Clock event device on the Arm SysTick timer, counting CPU cycles. It
@@ -13,7 +13,7 @@ config TIMER_ARM_SYSTICK
 
 config TIMER_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       Clock source on the 1 kHz counter of the QEMU RTC.
 

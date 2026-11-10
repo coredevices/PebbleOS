@@ -28,7 +28,7 @@ config GPIO_SF32LB
 config GPIO_QEMU
     bool "QEMU GPIO"
     default DT_HAS_QEMU_PEBBLE_GPIO_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     select INTC
     help
       Support for the QEMU GPIO peripheral.

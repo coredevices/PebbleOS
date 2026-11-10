@@ -30,7 +30,7 @@ config TEMPERATURE_SF32LB
 
 config TEMPERATURE_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU temperature sensor. QEMU emulates none, so it reports a fixed
       25 degrees Celsius.

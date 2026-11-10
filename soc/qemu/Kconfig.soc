@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_QEMU_PEBBLE_CORTEX_M4
+    bool "Pebble QEMU machine, Cortex-M4"
+    select SOC_QEMU_PEBBLE
+    select CPU_CORTEX_M4
+
+config SOC_QEMU_PEBBLE_CORTEX_M33
+    bool "Pebble QEMU machine, Cortex-M33"
+    select SOC_QEMU_PEBBLE
+    select CPU_CORTEX_M33

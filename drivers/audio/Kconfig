@@ -53,7 +53,7 @@ config AUDIO_SF32LB52_PDM_IRQ_PRIO
 config AUDIO_QEMU
     bool "QEMU audio device"
     default DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     help
       Playback through the QEMU audio device.
 
@@ -67,7 +67,7 @@ config AUDIO_QEMU_IRQ_PRIO
 config AUDIO_HOST_MIC
     bool "Host microphone"
     default y if MIC
-    depends on SOC_QEMU || SOC_POSIX
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Records mono audio the host sends over the QEMU channel
       (`pebble emu-mic`), and silence when it sends none.

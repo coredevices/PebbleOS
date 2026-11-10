@@ -25,7 +25,7 @@ config HRM_HRV
 
 config HRM_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU heart rate monitor. QEMU emulates none, so it can be enabled
       but never delivers samples.

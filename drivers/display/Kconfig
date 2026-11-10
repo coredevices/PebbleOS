@@ -35,7 +35,7 @@ config DISPLAY_SHARP_LS013B7DH01
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
     default DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     help
       Support for the QEMU framebuffer display peripheral.
 

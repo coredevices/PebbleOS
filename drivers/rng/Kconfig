@@ -25,7 +25,7 @@ config RNG_SF32LB
 
 config RNG_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
 
