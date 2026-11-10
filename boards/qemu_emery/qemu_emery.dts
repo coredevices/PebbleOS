@@ -3,7 +3,7 @@
 
 /dts-v1/;
 
-#include "qemu/pebble.dtsi"
+#include "qemu/pebble-cortex-m33.dtsi"
 
 #include <dt-bindings/input/input.h>
 
@@ -52,10 +52,6 @@
 			sound-dai = <&audio>;
 		};
 	};
-};
-
-&nvic {
-	compatible = "arm,v8m-nvic";
 };
 
 &uart1 {
