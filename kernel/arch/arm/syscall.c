@@ -32,6 +32,7 @@ PBL_USED bool arch_syscall_from_kernel(void) {
 }
 
 void pbl_user_mode_enter(void) {
+  arm_cur_user_enter();
   __set_CONTROL(__get_CONTROL() | CONTROL_nPRIV_Msk);
   __ISB();
 }
@@ -56,6 +57,7 @@ static PBL_USED void arch_user_call_enter(void (*fn)(void *), void *ctx, uintptr
     .outer_syscall_lr = arch->syscall_lr,
     .outer_syscall_sp = arch->syscall_sp,
   };
+  arm_cur_user_enter();
 
   for (size_t i = 0; i < 8; ++i) {
     call->saved_r4_r11[i] = saved_regs[i];

@@ -102,12 +102,15 @@ A weak default never pulls an object out of a static library, so a binding
 inside a `stlib` library only takes effect when something else in the same
 object is referenced.
 
-The port defines `pbl_cur` in `.kernel_unpriv_ro_bss`, the firmware's
-unprivileged-readable kernel data, because `pbl_thread_current()` and
-`pebble_task_get_current()` run unprivileged inside apps. Privileged code
-writes that section through `pbl_mpu_user_ro_write()`. `arch_cur_set()`,
-which runs on every context switch, does the same inline for the one
-word of `pbl_cur`.
+`pbl_cur` is privileged kernel data, which PendSV sets with a plain store.
+`pbl_thread_current()` and `pebble_task_get_current()` also run
+unprivileged inside apps, so the port keeps `arch_cur_user` in
+`.kernel_unpriv_ro_bss`, the firmware's unprivileged-readable kernel data:
+the last thread that ran unprivileged, which is what `pbl_thread_current()`
+returns to unprivileged code. Writing that section goes through the MPU on
+ARMv8-M, as `pbl_mpu_user_ro_write()` does, so PendSV only does it when
+switching to an unprivileged thread other than the last one, and a thread
+sets it when it first drops privilege.
 
 ## POSIX arch and tests
 

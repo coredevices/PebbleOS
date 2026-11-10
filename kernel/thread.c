@@ -117,7 +117,7 @@ void pbl_thread_resume(struct pbl_thread *t) {
 }
 
 struct pbl_thread *pbl_thread_current(void) {
-  return pbl_cur;
+  return arch_cur_get();
 }
 
 struct pbl_thread *pbl_thread_idle(void) {

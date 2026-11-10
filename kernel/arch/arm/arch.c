@@ -50,10 +50,32 @@ static_assert(FIRST_MPU_REGION % ARCH_THREAD_MPU_REGIONS == 0, "thread slots mus
 #define SHPR_SVCALL 7
 #define SHPR_PENDSV 10
 
-struct pbl_thread *pbl_cur KERNEL_READONLY_DATA;
+struct pbl_thread *pbl_cur;
+
+#ifdef CONFIG_USERSPACE
+struct pbl_thread *arch_cur_user KERNEL_READONLY_DATA;
+
+PBL_USED void arm_cur_user_set(struct pbl_thread *t) {
+  arm_mpu_user_ro_write32(mpu_user_ro_slot, (uint32_t *)&arch_cur_user, (uint32_t)t);
+}
+
+void arm_cur_user_enter(void) {
+  pbl_irq_lock();
+  pbl_cur->backend.arch.user = true;
+  if (arch_cur_user != pbl_cur) {
+    arm_cur_user_set(pbl_cur);
+  }
+  pbl_irq_unlock();
+}
+#endif
 
 void arch_cur_set(struct pbl_thread *t) {
-  arm_mpu_user_ro_write32(mpu_user_ro_slot, (uint32_t *)&pbl_cur, (uint32_t)t);
+  pbl_cur = t;
+#ifdef CONFIG_USERSPACE
+  if (t != nullptr && t->backend.arch.user) {
+    arm_cur_user_set(t);
+  }
+#endif
 }
 
 //! Saved context, lowest address first. Matches the layout core dump tooling
@@ -131,6 +153,7 @@ void arch_thread_init(struct pbl_thread *t, void (*entry)(void *), void *arg) {
   memset(ctx, 0, sizeof(*ctx));
 #ifdef CONFIG_USERSPACE
   ctx->control = t->privileged ? CONTROL_PRIVILEGED : CONTROL_UNPRIVILEGED;
+  t->backend.arch.user = !t->privileged;
 #else
   ctx->control = CONTROL_PRIVILEGED;
 #endif
@@ -238,6 +261,25 @@ void arch_switch_request(void) {
 #define RESTORE_REGS "  ldmia r0!, {r3, r4-r11, r14} \n msr control, r3 \n"
 #endif
 
+// r4 = next thread; clobbers r0, and r14 on the call. Only a switch from one unprivileged
+// thread to another has to move arch_cur_user, and on ARMv8-M that goes through the MPU.
+#ifdef CONFIG_USERSPACE
+#define SET_CUR_USER            \
+  "  ldrb r0, [r4, %[user]] \n" \
+  "  cbz r0, 1f \n"             \
+  "  ldr r0, =arch_cur_user \n" \
+  "  ldr r0, [r0] \n"           \
+  "  cmp r0, r4 \n"             \
+  "  beq 1f \n"                 \
+  "  mov r0, r4 \n"             \
+  "  bl arm_cur_user_set \n"    \
+  "1: \n"
+#define USER_OFFSET offsetof(struct pbl_thread, backend.arch.user)
+#else
+#define SET_CUR_USER ""
+#define USER_OFFSET  0
+#endif
+
 // r1 -> thread's MPU words; clobbers r2, r4-r11.
 #define RESTORE_MPU \
   "  ldr r2, =0xe000ed98 \n"            /* MPU_RNR */                      \
@@ -254,21 +296,21 @@ PBL_NAKED void PendSV_Handler(void) {
       "  ldr r2, [r3] \n" SAVE_FP SAVE_REGS
       "  str r0, [r2] \n" /* pbl_cur->backend.sp */
       // r4-r11 and r14 are saved, and loaded again below: free to use from here on.
-      "  mov r0, %0 \n"
+      "  mov r0, %[mask] \n"
       "  msr basepri, r0 \n"
       "  ldr r4, =sched_next \n"
       "  ldr r4, [r4] \n"
-      "  mov r0, r4 \n"
-      "  bl arch_cur_set \n"
+      "  str r4, [r3] \n" /* pbl_cur = sched_next */
       "  mov r0, #0 \n"
-      "  msr basepri, r0 \n"
+      "  msr basepri, r0 \n" SET_CUR_USER
       "  ldr r0, [r4] \n"   /* next->backend.sp */
       "  add r1, r4, #4 \n" /* next->backend.arch.mpu */
       RESTORE_MPU RESTORE_REGS RESTORE_FP
       "  msr psp, r0 \n"
       "  isb \n"
       "  bx r14 \n"
-      "  .ltorg \n" ::"i"(PBL_IRQ_PRIO_MAX_SYSCALL));
+      "  .ltorg \n" ::[mask] "i"(PBL_IRQ_PRIO_MAX_SYSCALL),
+      [user] "i"(USER_OFFSET));
 }
 
 // Loads the first thread's context. MSP is reset to the top of the ISR stack.
