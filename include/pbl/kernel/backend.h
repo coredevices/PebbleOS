@@ -27,7 +27,6 @@ struct pbl_thread_backend {
   struct pbl_waitq *waitq;         // object blocked on, NULL for a plain sleep
   uint32_t wake_at;
   uint32_t run_time;
-  uint32_t switched_in_at;
   uint32_t number;
   uint8_t state;
   uint8_t base_prio;

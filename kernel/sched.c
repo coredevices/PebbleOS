@@ -248,7 +248,6 @@ void sched_thread_start(struct pbl_thread *t) {
   t->backend.base_prio = t->prio;
   t->backend.all_next = pbl_all_threads;
   pbl_all_threads = t;
-  t->backend.switched_in_at = (uint32_t)s_ticks;
   prv_ready_push(t);
   sched_request_switch();
 }
@@ -315,11 +314,9 @@ struct pbl_thread *sched_switch_in(void) {
   struct pbl_thread *prev = pbl_cur;
   struct pbl_thread *next = prv_pick();
   if (prev != next) {
-    prev->backend.run_time += (uint32_t)s_ticks - prev->backend.switched_in_at;
     if (prev->backend.state == PBL_THREAD_RUNNING) {
       prev->backend.state = PBL_THREAD_READY;
     }
-    next->backend.switched_in_at = (uint32_t)s_ticks;
     arch_cur_set(next);
   }
   next->backend.state = PBL_THREAD_RUNNING;
@@ -328,6 +325,8 @@ struct pbl_thread *sched_switch_in(void) {
 
 void sched_announce(uint64_t ticks) {
   s_ticks += ticks;
+  // Whoever runs when a tick ends gets it.
+  pbl_cur->backend.run_time += (uint32_t)ticks;
   prv_expire_timeouts();
   // Round-robin among threads sharing the running priority.
   if (s_ready_head[pbl_cur->prio] && s_ready_head[pbl_cur->prio]->backend.next) {
@@ -388,7 +387,6 @@ void sched_start_prepare(void) {
   s_started = true;
   arch_cur_set(prv_pick());
   pbl_cur->backend.state = PBL_THREAD_RUNNING;
-  pbl_cur->backend.switched_in_at = (uint32_t)s_ticks;
 }
 
 void pbl_kernel_start(void) {
