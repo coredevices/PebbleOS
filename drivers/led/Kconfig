@@ -16,7 +16,7 @@ config LED_HAS_COLOR
 config LED_AW2016
     bool "Awinic AW2016"
     default DT_HAS_AWINIC_AW2016_ENABLED
-    depends on I2C
+    select I2C
     select LED_HAS_COLOR
     help
       Support for the Awinic AW2016 RGB LED controller.

@@ -23,7 +23,7 @@ if AUDIO
 config AUDIO_AMP_GPIO
     bool "GPIO amplifier"
     default DT_HAS_AWINIC_AW8155_ENABLED
-    depends on GPIO
+    select GPIO
     help
       Amplifier switched by an enable GPIO, with an optional supply and
       enable mode pulses.
@@ -111,7 +111,7 @@ config AUDIO_DMIC
 config AUDIO_DA7212
     bool "Dialog DA7212 codec"
     default DT_HAS_DLG_DA7212_ENABLED
-    depends on I2C
+    select I2C
     select REGULATOR
     help
       The Dialog DA7212 codec, playing to its line output.

@@ -12,6 +12,7 @@ if MFD
 config MFD_NPM1300
     bool "Nordic nPM1300"
     default DT_HAS_NORDIC_NPM1300_ENABLED
+    select I2C
     help
       Support for the core of the Nordic nPM1300 PMIC: register access
       and its charger, GPIO and regulator cells.

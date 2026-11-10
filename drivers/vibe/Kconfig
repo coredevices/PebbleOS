@@ -18,21 +18,21 @@ config VIBE_SHELL
 config VIBE_AW86225
     bool "Awinic AW86225"
     default DT_HAS_AWINIC_AW86225_ENABLED
-    depends on I2C
+    select I2C
     help
       Support for the Awinic AW86225 haptic driver.
 
 config VIBE_AW8623X
     bool "Awinic AW86233"
     default DT_HAS_AWINIC_AW86233_ENABLED
-    depends on I2C
+    select I2C
     help
       Support for the Awinic AW86233 haptic driver.
 
 config VIBE_DRV2604
     bool "TI DRV2604"
     default DT_HAS_TI_DRV2604_ENABLED
-    depends on I2C
+    select I2C
     help
       Support for the TI DRV2604 haptic driver.
 

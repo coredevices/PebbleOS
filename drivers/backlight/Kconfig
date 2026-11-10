@@ -23,14 +23,14 @@ config BACKLIGHT_HAS_COLOR
 config BACKLIGHT_AW9364E
     bool "AW9364E"
     default DT_HAS_AWINIC_AW9364E_ENABLED
-    depends on GPIO
+    select GPIO
     help
       Support for the AW9364E LED controller.
 
 config BACKLIGHT_LED
     bool "LED"
     default DT_HAS_LED_BACKLIGHT_ENABLED
-    depends on LED
+    select LED
     select BACKLIGHT_HAS_COLOR if LED_HAS_COLOR
     help
       Backlight on an LED, its color mixed by multicolor LEDs.
@@ -38,7 +38,7 @@ config BACKLIGHT_LED
 config BACKLIGHT_PWM
     bool "PWM"
     default DT_HAS_PWM_BACKLIGHT_ENABLED
-    depends on PWM
+    select PWM
     help
       Support for a backlight driven by a PWM peripheral.
 
