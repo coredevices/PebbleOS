@@ -75,13 +75,6 @@ void pbl_soc_early_init(void) {
   watchdog_start();
 
   HAL_PMU_EnableDLL(1);
-#ifdef SF32LB52_USE_LXT
-  HAL_PMU_EnableXTAL32();
-  ret = HAL_PMU_LXTReady();
-  PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RTC_ENABLE_LXT();
-#endif
 
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
@@ -92,7 +85,8 @@ void pbl_soc_early_init(void) {
 
   HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
-  HAL_RCC_Init();
+  HAL_RCC_DisableModule(RCC_MOD_EPIC);
+  HAL_RCC_DisableModule(RCC_MOD_EZIP);
   HAL_PMU_Init();
 
   __HAL_SYSCFG_CLEAR_SECURITY();
@@ -109,9 +103,10 @@ void pbl_soc_early_init(void) {
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LPTIM1, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_GPIO1, AON_PIN_MODE_HIGH);
 
-  // Deep WFI clocks: HCLK = 48 MHz / 12 = 4 MHz, PCLK1 = 4 MHz, PCLK2 = 2 MHz.
+  // Deep WFI clocks: HRC48, HCLK = 48 MHz / 12 = 4 MHz, PCLK1 = 4 MHz, PCLK2 = 2 MHz.
   // TODO(SF32LB52): to use deep WFI when audio is ON, HCLK needs to remain
   // at 48MHz (div=1). Also, clock needs to be forced ON during deep WFI
   // (FORCE_HP bit in HPSYS_RCC_DBGR register)
+  HAL_RCC_HCPU_DeepWFIClockSelect(true, RCC_SYSCLK_HRC48);
   HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
 }
