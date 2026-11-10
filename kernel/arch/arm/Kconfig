@@ -27,6 +27,12 @@ config CPU_STAR_MC1
 	help
 	  Arm China STAR-MC1, compatible with the Cortex-M33.
 
+config ARCH_VECTOR_TABLE_RAM
+	bool
+	help
+	  Point VTOR at a copy of the vector table in RAM, for SoCs whose
+	  vector fetches from flash bypass the cache.
+
 config ARMV7_M
 	bool
 	help
