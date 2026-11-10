@@ -127,9 +127,9 @@ struct pbl_thread *pbl_thread_idle(void) {
 void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {
   PBL_ASSERTN(prio <= PBL_PRIO_MAX);
   unsigned int key = arch_irq_lock();
-  // Keep an inherited boost; only the base moves.
-  pbl_prio_t effective = t->prio > t->backend.base_prio ? (prio > t->prio ? prio : t->prio) : prio;
-  sched_prio_set(t, prio, effective);
+  // Only the base moves: what the thread inherits stays.
+  t->backend.base_prio = prio;
+  sched_prio_set(t, prio, mutex_inherited_prio(t));
   arch_irq_unlock(key);
 }
 

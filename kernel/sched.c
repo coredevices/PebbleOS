@@ -153,7 +153,7 @@ void sched_wake(struct pbl_thread *t, int rc) {
   }
 }
 
-// ---- priority inheritance ---------------------------------------------------
+// ---- priorities ------------------------------------------------------------
 
 void sched_prio_set(struct pbl_thread *t, pbl_prio_t base, pbl_prio_t effective) {
   t->backend.base_prio = base;
@@ -172,18 +172,6 @@ void sched_prio_set(struct pbl_thread *t, pbl_prio_t base, pbl_prio_t effective)
     t->prio = effective;
   }
   sched_request_switch();
-}
-
-void sched_inherit(struct pbl_thread *owner, pbl_prio_t prio) {
-  if (prio > owner->prio) {
-    sched_prio_set(owner, owner->backend.base_prio, prio);
-  }
-}
-
-void sched_disinherit(struct pbl_thread *owner) {
-  if (owner->backend.mutexes_held == 0 && owner->prio != owner->backend.base_prio) {
-    sched_prio_set(owner, owner->backend.base_prio, owner->backend.base_prio);
-  }
 }
 
 // ---- thread lifecycle -------------------------------------------------------

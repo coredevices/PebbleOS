@@ -46,10 +46,11 @@ its head, waking the thread or running the timer callback, and the idle
 thread asks it how long it may sleep. Insertion is O(n) in the number of
 pending timeouts, which on this firmware is a handful.
 
-**Priority inheritance.** Single level, the same as the FreeRTOS fork's
-light mutex: a waiter raises the owner to its own priority; the owner drops
-back to its base priority when it holds no mutex any more. A boosted thread
-is re-sorted in its ready list or wait queue.
+**Priority inheritance.** Single level: a waiter raises the owner to its own
+priority. Each thread keeps the list of the mutexes it holds, and runs at
+the higher of its base priority and the most urgent waiter of any of them,
+worked out again when it unlocks one and when a waiter gives up. A boosted
+thread is re-sorted in its ready list or wait queue.
 
 **Interrupts.** The kernel's own critical sections raise BASEPRI to
 `CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL` with `arch_irq_lock()`, which returns
