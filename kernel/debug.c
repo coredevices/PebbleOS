@@ -69,7 +69,7 @@ size_t pbl_thread_stats_snapshot(struct pbl_thread_stats *out, size_t max,
       .number = t->backend.number,
       .run_time = t->backend.run_time,
       .stack_high_water = stack.high_water,
-      .state = (enum pbl_thread_state)t->backend.state,
+      .state = pbl_thread_state(t),
     };
   }
   pbl_irq_unlock();

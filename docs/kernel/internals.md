@@ -26,7 +26,8 @@ kernel_test.h  harness entry points used by tests/kernel
 
 **Scheduling.** Fixed priorities, `CONFIG_KERNEL_NUM_PRIORITIES` of them,
 one FIFO ready list per priority and a bitmap picked with `clz`, so
-choosing the next thread is O(1). Threads of equal priority round-robin on
+choosing the next thread is O(1). The choice is kept in `sched_next`, updated
+whenever a ready list changes, so a context switch only has to load it. Threads of equal priority round-robin on
 every tick (as FreeRTOS does with time slicing) and on `pbl_thread_yield()`.
 The running thread stays on its ready list; blocking removes it.
 
@@ -76,8 +77,8 @@ initialisers are complete and `pbl_kernel_init()` returns at once.
 The saved context keeps the layout of the FreeRTOS port: CONTROL, r4-r11,
 PSPLIM on ARMv8-M, EXC_RETURN, then the hardware frame, with s16-s31 in
 between when the FP context is active. Core dumps and the fault handler
-read that layout unchanged. PendSV saves the context, picks the next thread
-under BASEPRI, rewrites the four per-thread MPU regions through the RBAR
+read that layout unchanged. PendSV saves the context, makes `sched_next` the
+current thread under BASEPRI, rewrites the four per-thread MPU regions through the RBAR
 alias registers and restores. Supervisor calls keep the port's numbers: 0
 starts the scheduler, 1 yields, 2 raises privilege. SVC 2 is honoured only
 from a syscall stub in `.syscall_text` or from the return of an

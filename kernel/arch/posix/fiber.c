@@ -98,10 +98,11 @@ static void prv_host_turn(emscripten_fiber_t *from) {
 static void prv_switch(void) {
   s_switch_pending = false;
   struct pbl_thread *prev = pbl_cur;
-  struct pbl_thread *next = sched_switch_in();
+  struct pbl_thread *next = sched_next;
   if (next == prev) {
     return;
   }
+  arch_cur_set(next);
   struct posix_thread *pt = prev->backend.arch.pt;
   if (prev->backend.state == PBL_THREAD_DEAD) {
     prev->backend.arch.pt = nullptr;

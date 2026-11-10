@@ -250,20 +250,18 @@ void arch_switch_request(void) {
 PBL_NAKED void PendSV_Handler(void) {
   __asm volatile(
       "  mrs r0, psp \n"
-      "  isb \n"
       "  ldr r3, =pbl_cur \n"
       "  ldr r2, [r3] \n" SAVE_FP SAVE_REGS
       "  str r0, [r2] \n" /* pbl_cur->backend.sp */
-      "  stmdb sp!, {r3, r14} \n"
+      // r4-r11 and r14 are saved, and loaded again below: free to use from here on.
       "  mov r0, %0 \n"
       "  msr basepri, r0 \n"
-      "  dsb \n"
-      "  isb \n"
-      "  bl sched_switch_in \n" /* returns the next thread */
-      "  mov r4, r0 \n"
+      "  ldr r4, =sched_next \n"
+      "  ldr r4, [r4] \n"
+      "  mov r0, r4 \n"
+      "  bl arch_cur_set \n"
       "  mov r0, #0 \n"
       "  msr basepri, r0 \n"
-      "  ldmia sp!, {r3, r14} \n"
       "  ldr r0, [r4] \n"   /* next->backend.sp */
       "  add r1, r4, #4 \n" /* next->backend.arch.mpu */
       RESTORE_MPU RESTORE_REGS RESTORE_FP

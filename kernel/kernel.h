@@ -60,8 +60,11 @@ void irq_reset(void);
 //! Creates the idle thread and picks the first thread to run.
 void sched_start_prepare(void);
 
+//! The thread to run: the first of the most urgent ready ones. On a switch the arch makes it
+//! pbl_cur, with the interrupt lock held from reading it to setting pbl_cur.
+extern struct pbl_thread *sched_next;
+
 //! Arch entry points into the scheduler.
-struct pbl_thread *sched_switch_in(void); // picks and accounts the next thread
 //! Advances the tick count by @p ticks and expires the timeouts that fell due.
 void sched_announce(uint64_t ticks);
 bool sched_idle_confirm(void);

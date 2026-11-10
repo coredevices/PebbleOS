@@ -262,6 +262,8 @@ class QemuGdbProxy:
             )
             name = self._target_read_cstr(ptr + lay.thread_name, lay.thread_name_len)
             running = ptr == current
+            if running and state_name == "Ready":
+                state_name = "Running"
 
             if running:
                 thread_id, registers = QEMU_CURRENT_THREAD_ID, None
