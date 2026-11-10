@@ -13,6 +13,7 @@
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_bt_mac.h>
+#include <hardware/sf32lb52_hpsys_rcc.h>
 #include <hardware/sf32lb52_lpsys_aon.h>
 #include <hardware/sf32lb52_lpsys_rcc.h>
 #include <hardware/sf32lb52_mailbox.h>
@@ -23,6 +24,15 @@ PBL_LOG_MODULE_DEFINE(clk_sf32lb52_pmuc, CONFIG_CLK_SF32LB52_PMUC_LOG_LEVEL);
 
 #define LRC32_HZ 32000U
 #define HRC48_HZ 48000000U
+
+// HRC48 calibration: HXT48 cycles per gate, trim search and the count differences that end it
+#define HRC48_CAL_LENGTH     0x3fffU
+#define HRC48_CAL_TIMEOUT_US 2000U
+#define HRC48_CAL_STEPS      11U
+#define HRC48_TRIM_START     0x200U
+#define HRC48_SETTLE_US      3U
+#define HRC48_CAL_DONE_DIFF  64U
+#define HRC48_CAL_MAX_DIFF   160U
 
 // The RCCAL counter of the Bluetooth controller counts LPSYS clock cycles, from the 48 MHz
 // crystal, over a number of LRC10 cycles. The LCPU calibrates on its own with the same counter,
@@ -179,6 +189,7 @@ static const struct pbl_clk_cal_ops s_cal_ops = {
 struct pbl_clk_sf32lb52_pmuc {
   struct pbl_clk_controller ctrl;
   uintptr_t base;
+  uintptr_t rcc;
   struct pbl_clk hxt48;
   struct pbl_clk lxt32;
 };
@@ -257,7 +268,77 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   return 0;
 }
 
+// Counts HXT48 and HRC48 cycles over the same gate, with the counter of the HPSYS RCC
+static int prv_hrc48_count(const struct pbl_clk_sf32lb52_pmuc *pmuc, uint32_t *hxt, uint32_t *hrc) {
+  const uintptr_t cal1 = pmuc->rcc + SF32LB52_HPSYS_RCC_HRCCAL1_OFFSET;
+  uint32_t cal2;
+  int ret;
+
+  pbl_modifyl(0U, HPSYS_RCC_HRCCAL1_CAL_EN, cal1);
+  ret = PBL_POLL_BUSY_US((pbl_readl(cal1) & HPSYS_RCC_HRCCAL1_CAL_DONE) != 0U, 1U,
+                         HRC48_CAL_TIMEOUT_US);
+  cal2 = pbl_readl(pmuc->rcc + SF32LB52_HPSYS_RCC_HRCCAL2_OFFSET);
+  pbl_modifyl(HPSYS_RCC_HRCCAL1_CAL_EN, 0U, cal1);
+
+  *hxt = PBL_FIELD_GET(HPSYS_RCC_HRCCAL2_HXT_CNT_MASK, cal2);
+  *hrc = PBL_FIELD_GET(HPSYS_RCC_HRCCAL2_HRC_CNT_MASK, cal2);
+
+  return ret;
+}
+
+// Trims HRC48 to HXT48 by binary search, as the boot code of the vendor does
+static int prv_hrc48_calibrate(const struct pbl_clk_sf32lb52_pmuc *pmuc) {
+  const uintptr_t hrc_cr = pmuc->base + SF32LB52_PMUC_HRC_CR_OFFSET;
+  uint32_t trim = HRC48_TRIM_START;
+  uint32_t step = HRC48_TRIM_START / 2U;
+  uint32_t diff = UINT32_MAX;
+  uint32_t hxt;
+  uint32_t hrc;
+  int ret;
+
+  pbl_modifyl(HPSYS_RCC_HRCCAL1_CAL_LENGTH_MASK,
+              PBL_FIELD_PREP(HPSYS_RCC_HRCCAL1_CAL_LENGTH_MASK, HRC48_CAL_LENGTH),
+              pmuc->rcc + SF32LB52_HPSYS_RCC_HRCCAL1_OFFSET);
+  pbl_modifyl(PMUC_HRC_CR_CLKHP_SEL_MASK | PMUC_HRC_CR_CLKLP_SEL_MASK,
+              PMUC_HRC_CR_CLKHP_SEL_MASK | PMUC_HRC_CR_CLKLP_SEL_MASK, hrc_cr);
+
+  for (uint32_t i = 0U; i < HRC48_CAL_STEPS && step > 0U; i++, step >>= 1) {
+    pbl_modifyl(PMUC_HRC_CR_FREQ_TRIM_MASK, PBL_FIELD_PREP(PMUC_HRC_CR_FREQ_TRIM_MASK, trim),
+                hrc_cr);
+    pbl_busy_wait_us(HRC48_SETTLE_US);
+
+    ret = prv_hrc48_count(pmuc, &hxt, &hrc);
+    if (ret != 0) {
+      return ret;
+    }
+
+    if (hxt > hrc) {
+      trim += step;
+      diff = hxt - hrc;
+    } else {
+      trim -= step;
+      diff = hrc - hxt;
+    }
+
+    if (diff < HRC48_CAL_DONE_DIFF) {
+      break;
+    }
+  }
+
+  return (diff <= HRC48_CAL_MAX_DIFF) ? 0 : -EIO;
+}
+
 static int prv_init(const struct pbl_device *dev) {
+  const struct pbl_clk_sf32lb52_pmuc *pmuc =
+      container_of(dev, const struct pbl_clk_sf32lb52_pmuc, ctrl.dev);
+  int ret;
+
+  ret = prv_hrc48_calibrate(pmuc);
+  if (ret != 0) {
+    PBL_LOG_ERR("HRC48 calibration failed (%d)", ret);
+    return ret;
+  }
+
   // Gates fail until the LCPU has moved LPSYS to the crystal, some seconds into boot.
   pbl_clk_cal_start(&s_cal, NOMINAL_HZ);
 
@@ -271,11 +352,11 @@ static const struct pbl_clk_controller_ops s_ops = {
   .get_parent = prv_get_parent,
 };
 
-#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _hxt48, _lxt32)                      \
+#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32)                \
   PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_PMUC_NUM_CLKS);                              \
   PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_pmuc, struct pbl_clk_controller, ctrl) {  \
     .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
-    .hxt48 = _hxt48, .lxt32 = _lxt32,                                                        \
+    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32,                                         \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_clk)

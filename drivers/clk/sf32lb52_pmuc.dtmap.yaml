@@ -9,6 +9,8 @@ define: PBL_CLK_SF32LB52_PMUC_DEFINE
 args:
   - name: true
   - reg: 0
+  - reg: 0
+    of: sifli,hpsys-rcc
   - clock: hxt48
   - clock: lxt32
     default: "{}"
