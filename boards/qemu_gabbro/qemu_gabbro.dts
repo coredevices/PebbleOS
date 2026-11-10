@@ -3,7 +3,7 @@
 
 /dts-v1/;
 
-#include "qemu/pebble.dtsi"
+#include "qemu/pebble-cortex-m33.dtsi"
 
 #include <dt-bindings/input/input.h>
 
@@ -43,10 +43,6 @@
 			debounce-interval = <0>;
 		};
 	};
-};
-
-&nvic {
-	compatible = "arm,v8m-nvic";
 };
 
 &uart1 {
