@@ -34,7 +34,7 @@ static void prv_fake_work_arm(struct pbl_workq *q, struct pbl_delayed_work *dwor
   prv_fake_work_remove(dwork);
   dwork->work.q = q;
   dwork->work.armed = true;
-  dwork->timer.expires = ticks;
+  dwork->timer.timeout.expires = ticks;
   s_fake_work_num_arm_calls++;
   for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
     if (s_fake_work_pending[i] == nullptr) {
@@ -90,7 +90,7 @@ bool pbl_delayed_work_cancel_sync(struct pbl_delayed_work *dwork) {
 }
 
 pbl_tick_t pbl_delayed_work_remaining(const struct pbl_delayed_work *dwork) {
-  return dwork->work.armed ? (pbl_tick_t)dwork->timer.expires : 0U;
+  return dwork->work.armed ? (pbl_tick_t)dwork->timer.timeout.expires : 0U;
 }
 
 bool pbl_work_is_running(const struct pbl_work *work) {
@@ -107,7 +107,7 @@ static inline bool fake_work_is_scheduled(const struct pbl_delayed_work *dwork) 
 //! The delay the item was last scheduled with.
 static inline uint32_t fake_work_timeout_ms(const struct pbl_delayed_work *dwork) {
   // Rounded up, which gets back the exact value pbl_ms_to_ticks() rounded down.
-  return (uint32_t)((dwork->timer.expires * 1000U + PBL_TICK_HZ - 1U) / PBL_TICK_HZ);
+  return (uint32_t)((dwork->timer.timeout.expires * 1000U + PBL_TICK_HZ - 1U) / PBL_TICK_HZ);
 }
 
 //! The pending item with the shortest delay, NULL if none is pending.
@@ -116,7 +116,8 @@ static inline struct pbl_delayed_work *fake_work_get_next(void) {
 
   for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
     struct pbl_delayed_work *dwork = s_fake_work_pending[i];
-    if (dwork != nullptr && (next == nullptr || dwork->timer.expires < next->timer.expires)) {
+    if (dwork != nullptr &&
+        (next == nullptr || dwork->timer.timeout.expires < next->timer.timeout.expires)) {
       next = dwork;
     }
   }

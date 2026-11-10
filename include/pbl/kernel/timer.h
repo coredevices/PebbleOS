@@ -34,9 +34,7 @@ typedef void (*pbl_timer_fn_t)(struct pbl_timer *timer);
 /** @brief Software timer. */
 struct pbl_timer {
   /** @cond INTERNAL_HIDDEN */
-  struct pbl_timer *next;
-  uint64_t expires;
-  bool active;
+  struct pbl_timeout timeout;
   /** @endcond */
   /** Callback. */
   pbl_timer_fn_t fn;

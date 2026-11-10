@@ -55,13 +55,16 @@ static uint64_t prv_uptime_us(void) {
   return prv_now_us();
 }
 
-static void prv_announce(void) {
+// Returns whether time moved on.
+static bool prv_announce(void) {
   uint64_t announced = sched_uptime_ticks();
 
   prv_update();
-  if (s_cs_ticks > announced) {
-    sched_announce(s_cs_ticks - announced);
+  if (s_cs_ticks <= announced) {
+    return false;
   }
+  sched_announce(s_cs_ticks - announced);
+  return true;
 }
 
 // Raise the next clock event at the start of tick @p ticks.
@@ -130,14 +133,19 @@ void pbl_clockevent_set_hz(const struct pbl_clockevent *ce, uint32_t hz) {
 }
 
 void pbl_clockevent_handler(const struct pbl_clockevent *ce) {
+  bool ticked = false;
+
   unsigned int key = arch_irq_lock();
   if (s_running && ce == s_ce) {
-    prv_announce();
+    ticked = prv_announce();
     prv_program(sched_uptime_ticks() + 1U);
   }
   arch_irq_unlock(key);
 
-  timer_expire();
+  timeout_expire();
+  if (ticked) {
+    sched_slice();
+  }
 }
 
 void timekeeping_start(void) {
@@ -203,9 +211,9 @@ void timekeeping_idle(pbl_tick_t ticks) {
   key = arch_irq_lock();
   s_residency_us[i] += prv_now_us() - start_us;
   prv_announce();
-  // Programming drops the tick that woke the CPU up, and only the ISR runs timers.
+  // Programming drops the tick that woke the CPU up, and only the ISR expires timeouts.
   uint64_t now = sched_uptime_ticks();
-  prv_program(timer_ticks_until_next(now) == 0U ? now : now + 1U);
+  prv_program(timeout_ticks_until_next() == 0U ? now : now + 1U);
   arch_irq_unlock(key);
 }
 

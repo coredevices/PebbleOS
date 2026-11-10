@@ -66,12 +66,14 @@ void sched_start_prepare(void);
 extern struct pbl_thread *sched_next;
 
 //! Arch entry points into the scheduler.
-//! Advances the tick count by @p ticks and expires the timeouts that fell due.
+//! Advances the tick count by @p ticks.
 void sched_announce(uint64_t ticks);
+//! Ends the time slice of the running thread; from the tick ISR, after timeout_expire().
+void sched_slice(void);
+//! The timeout of a blocked thread expired.
+void sched_timed_out(struct pbl_thread *t);
 bool sched_idle_confirm(void);
 struct pbl_thread *sched_idle_thread(void);
-//! Current tick count; call with the interrupt lock held.
-pbl_tick_t sched_ticks(void);
 //! Current tick count in 64 bits; call with the interrupt lock held.
 uint64_t sched_uptime_ticks(void);
 
@@ -87,11 +89,16 @@ uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms);
 void wallclock_clock_set(uint64_t old_ms, uint64_t new_ms);
 void wallclock_reset_for_test(void);
 
-//! Runs the callbacks of the expired timers, from the tick ISR.
-void timer_expire(void);
-//! Ticks from @p now until the next timer expires, PBL_TICK_FOREVER if none.
-pbl_tick_t timer_ticks_until_next(uint64_t now);
-void timer_reset_for_test(void);
+//! The timeout queue, of blocked threads and timers alike. Interrupt lock held, but to expire.
+//! @p to expires @p ticks from now.
+void timeout_add(struct pbl_timeout *to, pbl_tick_t ticks);
+//! Does nothing if @p to is not queued.
+void timeout_remove(struct pbl_timeout *to);
+//! Wakes the threads and runs the timers that fell due, from the tick ISR.
+void timeout_expire(void);
+//! Ticks until the next timeout, 0 if it is due and PBL_TICK_FOREVER if there is none.
+pbl_tick_t timeout_ticks_until_next(void);
+void timeout_reset_for_test(void);
 //! Starts the threads of the system work queues.
 void sys_workq_init(void);
 void sys_workq_reset_for_test(void);

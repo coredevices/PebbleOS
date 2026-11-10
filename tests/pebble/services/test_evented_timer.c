@@ -215,7 +215,7 @@ void test_evented_timer__huge_timeout_is_not_forever(void) {
   evented_timer_register(UINT32_MAX, false, stub_evented_timer_callback, 0);
 
   const uint64_t expected = ((uint64_t)UINT32_MAX * PBL_TICK_HZ) / 1000U;
-  cl_assert_equal_i(fake_work_get_next()->timer.expires,
+  cl_assert_equal_i(fake_work_get_next()->timer.timeout.expires,
                     expected < PBL_TICK_FOREVER ? expected : PBL_TICK_FOREVER - 1U);
 }
 

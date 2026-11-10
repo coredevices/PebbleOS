@@ -7,7 +7,8 @@ while both existed.
 ## Layout
 
 ```
-sched.c        ready lists, timeouts, tick, block/wake, idle thread, start
+sched.c        ready lists, tick, block/wake, idle thread, start
+timer.c        timeout queue and timers
 thread.c       thread lifecycle and priorities
 mutex.c        recursive mutex with priority inheritance
 sem.c          counting semaphore
@@ -39,10 +40,11 @@ the wake code. Semaphores and mutexes hand their token straight to the woken
 thread, so a wake is never spurious and a lower-priority giver cannot steal
 it back. Queues and poll groups wake one waiter and let it re-check.
 
-**Timeouts.** One list sorted by absolute wake tick, wrap-safe compare. The
-tick expires the head, sleeps use the same list, and the idle thread asks it
-how long it may sleep. Insertion is O(n) in the number of pending timeouts,
-which on this firmware is a handful.
+**Timeouts.** One queue for blocked threads, sleeps and timers alike, sorted
+by absolute expiry in 64-bit ticks, so nothing wraps. The tick ISR expires
+its head, waking the thread or running the timer callback, and the idle
+thread asks it how long it may sleep. Insertion is O(n) in the number of
+pending timeouts, which on this firmware is a handful.
 
 **Priority inheritance.** Single level, the same as the FreeRTOS fork's
 light mutex: a waiter raises the owner to its own priority; the owner drops

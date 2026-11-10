@@ -410,7 +410,7 @@ bool pbl_delayed_work_reschedule(struct pbl_workq *q, struct pbl_delayed_work *d
 
 void pbl_delayed_work_schedule_next(struct pbl_delayed_work *dwork, pbl_tick_t period) {
   unsigned int key = arch_irq_lock();
-  const uint64_t next = dwork->timer.expires + period;
+  const uint64_t next = dwork->timer.timeout.expires + period;
   const uint64_t now = sched_uptime_ticks();
   const uint64_t delay = next > now ? next - now : 1U;
 
