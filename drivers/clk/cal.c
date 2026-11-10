@@ -27,7 +27,7 @@ static double prv_gate_s(const struct pbl_clk_cal *cal, uint32_t cycles) {
 static void prv_set_rate(struct pbl_clk_cal *cal, uint64_t mhz) {
   if (mhz != cal->rate_mhz) {
     cal->rate_mhz = mhz;
-    pbl_clk_rate_changed(cal->clk.ctrl, cal->clk.id, mhz);
+    pbl_clk_rate_changed(&cal->clk);
   }
 }
 

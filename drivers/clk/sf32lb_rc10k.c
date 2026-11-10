@@ -170,7 +170,8 @@ static const struct pbl_clk_cal_ops s_cal_ops = {
   .finish = prv_cal_finish,
 };
 
-static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t *rate_mhz) {
+static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
+                        uint64_t *rate_mhz) {
   *rate_mhz = pbl_clk_cal_get_rate(&s_cal);
 
   return 0;
