@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Starts the Read the Docs builds that wait for the wasm builds the
+# playground runs: latest once the native firmware run of main has stored
+# them, a tag and stable once its release has them. Read the Docs cancels
+# the builds it starts on push while they are not there (see
+# .readthedocs.yaml).
+name: Docs Playground RTD
+
+on:
+  workflow_run:
+    workflows: [Build Firmware (native), Release]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    if: github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Find the versions
+        id: versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ${{ github.event.workflow_run.name }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          REF: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [ "$WORKFLOW" = Release ]; then
+            echo "slugs=$REF stable" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Read the Docs builds the head of main, so only a run of the
+          # current head starts a build
+          [ "$REF" = main ] || exit 0
+          head=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" -q .sha)
+          if [ "$head" = "$SHA" ]; then
+            echo "slugs=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Start the Read the Docs builds
+        if: steps.versions.outputs.slugs
+        env:
+          RTD_TOKEN: ${{ secrets.READTHEDOCS_TOKEN }}
+          SLUGS: ${{ steps.versions.outputs.slugs }}
+        run: |
+          for slug in $SLUGS; do
+            curl -fsS -X POST -H "Authorization: Token $RTD_TOKEN" \
+              "https://app.readthedocs.org/api/v3/projects/pebbleos/versions/$slug/builds/"
+          done
