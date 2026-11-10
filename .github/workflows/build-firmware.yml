@@ -261,7 +261,13 @@ jobs:
             build/log.dict.json
             build/normal_*.pbz
 
-  upload-translation-source:
+  # Merge the new POT into the catalogs in pebbleos-translations and let
+  # Weblate pull the result. Weblate's own source upload rewrote every catalog
+  # on disk, but its approved-only commit policy left those changes
+  # uncommitted, so its next rebase failed on unstaged changes. Weblate stays
+  # locked from flushing its commits until it has pulled ours, so the two
+  # never edit the checkout at the same time.
+  sync-translation-source:
     needs: build-firmware
     if: >-
       github.repository == 'coredevices/PebbleOS' &&
@@ -269,20 +275,128 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    concurrency:
+      group: translation-source
+      cancel-in-progress: false
+    env:
+      WEBLATE_COMPONENT_URL: ${{ vars.WEBLATE_COMPONENT_URL }}
+      WEBLATE_TOKEN: ${{ secrets.WEBLATE_TOKEN }}
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: firmware-asterix
-      - name: Upload translation source to Weblate
-        env:
-          WEBLATE_SOURCE_URL: ${{ vars.WEBLATE_SOURCE_URL }}
-          WEBLATE_TOKEN: ${{ secrets.WEBLATE_TOKEN }}
+          path: source
+
+      - name: Install gettext and translate-toolkit
         run: |
-          sed -i '/^"POT-Creation-Date:/d' pebbleos.pot
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gettext
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet translate-toolkit==3.20.6
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Lock Weblate
+        id: lock
+        run: |
+          weblate() {
+            curl --silent --show-error --fail-with-body --proto '=https' \
+              --header "Authorization: Token $WEBLATE_TOKEN" \
+              --header 'Content-Type: application/json' "$@"
+          }
+          # A maintainer or a failed merge locked it; leave that for a human.
+          weblate "${WEBLATE_COMPONENT_URL}lock/" | jq -e '.locked == false'
+          weblate --data '{"lock": true}' "${WEBLATE_COMPONENT_URL}lock/" \
+            | jq -e '.locked == true'
+          echo locked=true >> "$GITHUB_OUTPUT"
+
+      - name: Push pending Weblate commits
+        run: |
           curl --silent --show-error --fail-with-body --proto '=https' \
             --header "Authorization: Token $WEBLATE_TOKEN" \
-            --form-string 'method=source' --form 'file=@pebbleos.pot' \
-            "$WEBLATE_SOURCE_URL" | jq -e '.result == true'
+            --header 'Content-Type: application/json' \
+            --data '{"operation": "push"}' \
+            "${WEBLATE_COMPONENT_URL}repository/" | jq -e '.result == true'
+
+      - uses: actions/checkout@v7
+        with:
+          repository: coredevices/pebbleos-translations
+          ssh-key: ${{ secrets.TRANSLATIONS_DEPLOY_KEY }}
+          path: translations
+
+      - name: Merge the source into the catalogs
+        working-directory: translations
+        run: |
+          sed '/^"POT-Creation-Date:/d' ../source/pebbleos.pot > pebbleos.pot
+          catalogs=()
+          for catalog in */tintin.po; do
+            locale=${catalog%/*}
+            # English font-only packs are not translated in Weblate.
+            if [[ ${locale,,} =~ ^en([_@-]|$) ]]; then
+              continue
+            fi
+            msgmerge --quiet --previous --update --backup=none \
+              --lang="$locale" "$catalog" pebbleos.pot
+            catalogs+=("$catalog")
+          done
+          # Re-wrap the way Weblate writes catalogs; GNU gettext wraps CJK
+          # text differently, which would churn every catalog on each sync.
+          python3 - "${catalogs[@]}" <<'EOF'
+          import sys
+          from translate.storage import pypo
+
+          for path in sys.argv[1:]:
+              with open(path, "rb") as f:
+                  store = pypo.pofile(f)
+              for unit in store.units:
+                  if not unit.isheader():
+                      unit.source = unit.source
+                      unit.target = unit.target
+              with open(path, "wb") as f:
+                  store.serialize(f)
+          EOF
+
+      - name: Commit and push the catalogs
+        id: push
+        working-directory: translations
+        env:
+          GIT_AUTHOR_NAME: PebbleOS source CI
+          GIT_AUTHOR_EMAIL: pebbleos-source-ci@users.noreply.github.com
+          GIT_COMMITTER_NAME: PebbleOS source CI
+          GIT_COMMITTER_EMAIL: pebbleos-source-ci@users.noreply.github.com
+        run: |
+          git add pebbleos.pot '*/tintin.po'
+          if git diff --cached --quiet; then
+            echo "Translation sources are unchanged"
+            exit 0
+          fi
+          git commit --quiet \
+            --message 'chore(l10n): update translation sources' \
+            --message "From coredevices/PebbleOS@${GITHUB_SHA}."
+          git push origin HEAD:main
+          echo pushed=true >> "$GITHUB_OUTPUT"
+
+      - name: Pull the catalogs into Weblate
+        id: pull
+        if: steps.push.outputs.pushed == 'true'
+        run: |
+          curl --silent --show-error --fail-with-body --proto '=https' \
+            --header "Authorization: Token $WEBLATE_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data '{"operation": "pull"}' \
+            "${WEBLATE_COMPONENT_URL}repository/" | jq -e '.result == true'
+
+      # If the catalogs reached GitHub but Weblate could not pull them, stay
+      # locked so translators do not keep editing a stale checkout.
+      - name: Unlock Weblate
+        if: >-
+          always() && steps.lock.outputs.locked == 'true' &&
+          (steps.push.outputs.pushed != 'true' || steps.pull.outcome == 'success')
+        run: |
+          curl --silent --show-error --fail-with-body --proto '=https' \
+            --header "Authorization: Token $WEBLATE_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data '{"lock": false}' \
+            "${WEBLATE_COMPONENT_URL}lock/" | jq -e '.locked == false'
 
   merge-firmware:
     needs: build-firmware
