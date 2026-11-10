@@ -78,13 +78,13 @@ if(NOT CONFIG_RECOVERY_FW)
   # One universal catalog, independent of board and enabled services.
   file(GLOB_RECURSE pot_sources CONFIGURE_DEPENDS *.c *.h *.def)
   pbl_firmware_pot(${PROJECT_BINARY_DIR}/pebbleos.pot ${pot_sources}
-    EXCLUDE apps/prf/**)
+    EXCLUDE apps/prf/** apps/samples/** apps/stored/**)
 endif()
 
 # The stored apps are built for the watch, which the recovery firmware runs
 # none on.
 if(NOT CONFIG_RECOVERY_FW AND NOT CONFIG_SOC_POSIX)
-  add_subdirectory(${PBL_BASE}/apps/stored ${CMAKE_BINARY_DIR}/apps/stored)
+  add_subdirectory(apps/stored ${pebble_bin}/apps/stored)
 endif()
 
 pbl_resources()

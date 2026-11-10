@@ -1,6 +1,6 @@
 **/*.template.c
 **/*.template.h
-apps/samples/fps_test/src/test_bitmaps.h
+pebble/apps/samples/fps_test/src/test_bitmaps.h
 sdk/defaults/lib/lib.c
 sdk/defaults/lib/lib.h
 pebble/apps/demo/demo_images/*
