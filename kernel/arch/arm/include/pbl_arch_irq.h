@@ -67,6 +67,15 @@ static PBL_ALWAYS_INLINE void arch_irq_restore_all(unsigned int key) {
   __asm volatile("msr primask, %0" ::"r"(key) : "memory");
 }
 
+// Masks the interrupts allowed to call into the kernel.
+static PBL_ALWAYS_INLINE void arch_irq_disable(void) {
+  __asm volatile("msr basepri, %0\n\tisb" ::"r"(CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL) : "memory");
+}
+
+static PBL_ALWAYS_INLINE void arch_irq_enable(void) {
+  __asm volatile("msr basepri, %0" ::"r"(0U) : "memory");
+}
+
 static PBL_ALWAYS_INLINE uint32_t arch_irq_basepri(void) {
   uint32_t basepri;
 

@@ -19,6 +19,9 @@
   void ARCH_IRQ_HANDLER(_n)(void);                \
   void ARCH_IRQ_HANDLER(_n)(void)
 
+void arch_irq_disable(void);
+void arch_irq_enable(void);
+
 // Hosts run nothing from RAM in place of the flash: nothing to mask or let through
 static inline unsigned int arch_irq_disable_all(void) {
   return 0U;

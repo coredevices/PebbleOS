@@ -65,9 +65,6 @@ bool arch_in_isr(void);
 //! Rate of arch_cycle_get_32() from <pbl_arch_cycle.h>.
 uint32_t arch_cycles_per_sec(void);
 
-void arch_irq_disable(void);
-void arch_irq_enable(void);
-
 //! Lock of the kernel heap, usable before the kernel runs. Not nestable.
 void arch_heap_lock(void);
 void arch_heap_unlock(void);
