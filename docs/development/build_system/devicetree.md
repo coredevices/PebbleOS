@@ -346,7 +346,7 @@ An argument takes its value from one place:
 | `reg: <index or name>` | Address of a `reg` entry, translated through the `ranges` above |
 | `size: <index or name>` | Size of a `reg` entry |
 | `irq: <index or name>` | An interrupt, from `interrupts` or `interrupts-extended` |
-| `clock`, `reset`, `mbox`, `pwm` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, by index or by name |
+| `clock`, `reset`, `mbox`, `pwm` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, by index or by name; a `clock` name missing from `clock-names` is absent, for an input a node may lack |
 | `assigned-clocks: <macro>` | The macro of each clock of `assigned-clocks` and its parent from `assigned-clock-parents`, as two `clock` references; `assigned-clock-rates` is not supported |
 | `dma: <name>` | A specifier of `dmas`, by name |
 | `gpio: <name>` | `<name>-gpios`, or `gpios` for an empty name |
