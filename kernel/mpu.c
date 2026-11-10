@@ -14,7 +14,7 @@
 
 static const struct pbl_mpu_region *s_static_regions[STATIC_SLOTS];
 static unsigned int s_num_static_regions;
-static int s_user_ro_slot = -1;
+int mpu_user_ro_slot = -1;
 
 static bool prv_overlaps(uintptr_t base, size_t size, uintptr_t other_base, size_t other_size) {
   return base < other_base + other_size && other_base < base + size;
@@ -32,8 +32,8 @@ int pbl_mpu_region_add(const struct pbl_mpu_region *region) {
   }
 
   if ((region->attr & PBL_MPU_ACCESS_MSK) == PBL_MPU_P_RW_U_RO) {
-    PBL_ASSERTN(s_user_ro_slot < 0);
-    s_user_ro_slot = s_num_static_regions;
+    PBL_ASSERTN(mpu_user_ro_slot < 0);
+    mpu_user_ro_slot = s_num_static_regions;
   }
 
   arch_mpu_region_set(s_num_static_regions, region);
@@ -97,7 +97,7 @@ void mpu_init(void) {
 }
 
 void pbl_mpu_user_ro_write(void *dst, const void *src, size_t n) {
-  arch_mpu_user_ro_write(s_user_ro_slot, dst, src, n);
+  arch_mpu_user_ro_write(mpu_user_ro_slot, dst, src, n);
 }
 
 const struct pbl_mpu_region *pbl_mpu_region_firmware(void) {

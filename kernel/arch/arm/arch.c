@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_USERSPACE
 #include "arm_mpu.h"
+#ifdef CONFIG_USERSPACE
 #include "arm_syscall.h"
 #endif
 
@@ -53,7 +53,7 @@ static_assert(FIRST_MPU_REGION % ARCH_THREAD_MPU_REGIONS == 0, "thread slots mus
 struct pbl_thread *pbl_cur KERNEL_READONLY_DATA;
 
 void arch_cur_set(struct pbl_thread *t) {
-  pbl_mpu_user_ro_write(&pbl_cur, &t, sizeof(t));
+  arm_mpu_user_ro_write32(mpu_user_ro_slot, (uint32_t *)&pbl_cur, (uint32_t)t);
 }
 
 //! Saved context, lowest address first. Matches the layout core dump tooling
