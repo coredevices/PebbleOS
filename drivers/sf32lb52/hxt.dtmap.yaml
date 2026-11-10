@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-compatible: sifli,sf32lb52-hxt48
+compatible: sifli,sf32lb52-pmuc
 config: SF32LB52_HXT
 class: device
+symbol: "{sym}_hxt48"
 define: PBL_SF32LB52_HXT_DEFINE
 args:
   - name: true

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
 #include <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>
+#include <dt-bindings/clock/sifli,sf32lb52-pmuc.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/reset/sifli,sf32lb52-hpsys-rcc.h>
 
@@ -36,16 +37,10 @@
 		status = "disabled";
 	};
 
-	hxt48: clock-hxt48 {
-		compatible = "sifli,sf32lb52-hxt48";
+	xtal48m: clock-48000000 {
+		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <48000000>;
-		status = "disabled";
-	};
-
-	rc10k: clock-rc10k {
-		compatible = "sifli,sf32lb52-rc10k";
-		#clock-cells = <0>;
 	};
 
 	soc {
@@ -224,7 +219,7 @@
 			compatible = "sifli,sf32lb52-lptim";
 			reg = <0x500c1000 0x1000>;
 			interrupts = <46>;
-			clocks = <&rc10k>;
+			clocks = <&pmuc SF32LB52_PMUC_CLK_LRC10>;
 			status = "disabled";
 
 			lptim1_pwm: pwm {
@@ -238,7 +233,7 @@
 			compatible = "sifli,sf32lb52-lptim";
 			reg = <0x500c2000 0x1000>;
 			interrupts = <47>;
-			clocks = <&rc10k>;
+			clocks = <&pmuc SF32LB52_PMUC_CLK_LRC10>;
 			status = "disabled";
 
 			lptim2_pwm: pwm {
@@ -246,6 +241,15 @@
 				#pwm-cells = <3>;
 				status = "disabled";
 			};
+		};
+
+		pmuc: power-management@500ca000 {
+			compatible = "sifli,sf32lb52-pmuc";
+			reg = <0x500ca000 0x1000>;
+			interrupts = <48>;
+			#clock-cells = <1>;
+			clocks = <&xtal48m>;
+			clock-names = "hxt48";
 		};
 	};
 };

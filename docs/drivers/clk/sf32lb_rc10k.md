@@ -6,14 +6,15 @@ in deep sleep. Its real rate is only known by measurement. It drives the
 system clock source (LPTIM1), the calendar RTC and the LPTIM PWM, so every
 error in its assumed rate is an error in the kernel's time.
 
-`drivers/clk/sf32lb_rc10k.c` provides it as a {doc}`calibrated clock
-<index>`, `SF32LB_RC10K`. This page describes the hardware, the oscillator
-as measured on a watch, the vendor algorithm it replaces and the results.
+`drivers/clk/sf32lb52_pmuc.c` provides it as a {doc}`calibrated clock
+<index>`, the LRC10 clock of the PMUC, `<&pmuc SF32LB52_PMUC_CLK_LRC10>`.
+This page describes the hardware, the oscillator as measured on a watch, the
+vendor algorithm it replaces and the results.
 
 ## Hardware
 
 The Bluetooth controller's RCCAL counter counts 48 MHz crystal cycles over
-$N$ RC10K cycles (`CONFIG_CLK_SF32LB_RC10K_CAL_GATE_CYCLES`, 2000 by default,
+$N$ RC10K cycles (`CONFIG_CLK_SF32LB52_PMUC_LRC10_CAL_GATE_CYCLES`, 2000 by default,
 207 ms). The counter resolution is 0.1 ppm.
 
 The LCPU calibrates the RC10K on its own with the same counter, for its

@@ -65,19 +65,31 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb_hpsys_rcc;
 /** @} */
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_clk_controller pbl_clk_sf32lb_rc10k;
+extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
 /** @endcond */
 
-/**
- * @brief RC10K low-power oscillator, calibrated against the 48 MHz crystal.
- *
- * Its rate is the filtered estimate, updated every @c CONFIG_CLK_SF32LB_RC10K_CAL_PERIOD_S
- * seconds from the tick interrupt, and a placeholder until the first gate, with or without
- * Bluetooth; see the RC10K calibration page in the driver documentation. The clock always runs.
- */
-#define SF32LB_RC10K (&pbl_clk_sf32lb_rc10k)
+/** PMUC clock controller, the oscillators. */
+#define SF32LB52_PMUC (&pbl_clk_sf32lb52_pmuc)
 
-/** RC10K clock number. */
-#define SF32LB52_CLK_RC10K 0
+/**
+ * @name PMUC clocks
+ *
+ * The rate of LRC10 is the filtered estimate of its calibration, updated every
+ * @c CONFIG_CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S seconds from the tick interrupt, and a
+ * placeholder until the first gate, with or without Bluetooth; see the RC10K calibration page in
+ * the driver documentation. The clocks always run.
+ * @{
+ */
+#define SF32LB52_CLK_LRC10 0
+#define SF32LB52_CLK_LRC32 1
+#define SF32LB52_CLK_LXT32 2
+#define SF32LB52_CLK_HRC48 3
+#define SF32LB52_CLK_HXT48 4
+#define SF32LB52_CLK_WDT   5
+/** @} */
+
+/** @cond INTERNAL_HIDDEN */
+#define SF32LB52_PMUC_NUM_CLKS 6
+/** @endcond */
 
 /** @} */

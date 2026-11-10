@@ -20,7 +20,8 @@
 
 /* Register bit definitions */
 
-#define PMUC_CR_REBOOT PBL_BIT(2)
+#define PMUC_CR_SEL_LPCLK PBL_BIT(0)
+#define PMUC_CR_REBOOT    PBL_BIT(2)
 
 #define PMUC_WER_RTC    PBL_BIT(0)
 #define PMUC_WER_WDT1   PBL_BIT(1)
