@@ -249,13 +249,61 @@ int pbl_clk_set_parent(const struct pbl_clk *clk, const struct pbl_clk *parent) 
   return ret;
 }
 
-int pbl_clk_assign(const struct pbl_clk_assigned *assigned) {
+int pbl_clk_set_rate(const struct pbl_clk *clk, uint64_t rate_mhz) {
+  const struct pbl_clk_controller *ctrl = clk->ctrl;
+  struct pbl_clk parent;
+  uint64_t parent_mhz = 0U;
   int ret;
 
-  for (; assigned->clk.ctrl != nullptr; assigned++) {
-    ret = pbl_clk_set_parent(&assigned->clk, &assigned->parent);
-    if (ret != 0) {
-      return ret;
+  if (!prv_valid(clk)) {
+    return -EINVAL;
+  }
+
+  if (ctrl->ops->set_rate == nullptr) {
+    return -ENOTSUP;
+  }
+
+  pbl_irq_lock();
+
+  ret = prv_parent(clk, &parent);
+  if (ret == 0) {
+    ret = prv_get_rate(&parent, &parent_mhz, 0U);
+  } else if (ret == -ENOENT) {
+    ret = 0;
+  }
+
+  if (ret == 0) {
+    ret = ctrl->ops->set_rate(ctrl, clk->id, rate_mhz, parent_mhz);
+  }
+
+  pbl_irq_unlock();
+
+  if (ret == 0) {
+    pbl_clk_rate_changed(clk);
+  }
+
+  return ret;
+}
+
+int pbl_clk_assign(const struct pbl_clk_assigned *assigned) {
+  const struct pbl_clk_assigned *cur;
+  int ret;
+
+  for (cur = assigned; cur->clk.ctrl != nullptr; cur++) {
+    if (cur->parent.ctrl != nullptr) {
+      ret = pbl_clk_set_parent(&cur->clk, &cur->parent);
+      if (ret != 0) {
+        return ret;
+      }
+    }
+  }
+
+  for (cur = assigned; cur->clk.ctrl != nullptr; cur++) {
+    if (cur->rate_hz != 0U) {
+      ret = pbl_clk_set_rate(&cur->clk, (uint64_t)cur->rate_hz * 1000U);
+      if (ret != 0) {
+        return ret;
+      }
     }
   }
 
