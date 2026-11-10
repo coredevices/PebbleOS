@@ -94,6 +94,9 @@ The vector table (`kernel/arch/arm/vector_table.c`) is a constant array in
 definition, `n` being the line's `PBL_SOC_IRQN_<line>`. Each binding also
 drops a `{irq, prio}` record into the `.pbl_irq_prio` section, which
 `pbl_irq_init()` walks to program the NVIC after pointing VTOR at the table.
+With `CONFIG_ARCH_VECTOR_TABLE_RAM`, selected by SoCs whose vector fetches
+from flash bypass the cache, VTOR points at a copy of the table in RAM
+instead.
 A weak default never pulls an object out of a static library, so a binding
 inside a `stlib` library only takes effect when something else in the same
 object is referenced.
