@@ -11,28 +11,33 @@ build:
   tools:
     python: "3.13"
   apt_packages:
-    - cmake
     - doxygen
-    # The playground's firmware build
-    - clang
-    - gettext
-    - librsvg2-bin
   jobs:
     post_checkout:
       # The version comes from git describe, which needs the tags and the
       # history down to them
       - git fetch --unshallow --tags || git fetch --tags
-      # The playground (docs/_ext/pbl_playground.py) builds the firmware as
-      # WebAssembly; pull requests get it with the ci:docs-playground label.
-      - sh docs/_scripts/pbl_playground_check_rtd.sh
-      # Skip build if there are no doc changes in a PR, unless it builds the
-      # playground
+      # Skip build if there are no doc changes in a PR
       # Ref. https://docs.readthedocs.com/platform/stable/build-customization.html#cancel-build-based-on-a-condition
       - |
-        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && [ ! -e .pbl_playground ] &&
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] &&
            git diff --quiet origin/main -- docs/ include/ .readthedocs.yaml;
         then
           exit 183;
+        fi
+    post_system_dependencies:
+      # The playground (docs/_ext/pbl_playground.py) runs the wasm builds of
+      # CI: of the native firmware run for main, of the release for a tag.
+      # Pull request previews go without. While the builds are not there
+      # yet, the build cancels: the Docs Playground RTD workflow starts it
+      # again. Custom environment variables are not there until after the
+      # checkout jobs.
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" != "external" ] &&
+           [ -n "$PBL_PLAYGROUND_GITHUB_TOKEN" ]; then
+          rc=0; python3 docs/_scripts/pbl_playground_fetch_rtd.py || rc=$?
+          if [ $rc -eq 2 ]; then exit 183; fi
+          if [ $rc -ne 0 ] && [ $rc -ne 3 ]; then exit $rc; fi
         fi
     pre_build:
       # Build the Doxygen API reference, published under /apidoc/ via
@@ -41,7 +46,6 @@ build:
       - git clone https://github.com/jothepro/doxygen-awesome-css.git &&
         git -C doxygen-awesome-css checkout d52eafe3e9303399fda15661f3d7bb8fe3d7eabc
       - PBL_DOCS_VERSION=$(git describe) doxygen docs/_doxygen/Doxyfile.rtd
-      - if [ -e .pbl_playground ]; then sh docs/_scripts/pbl_playground_setup_rtd.sh; fi
 
 sphinx:
     configuration: docs/conf.py
