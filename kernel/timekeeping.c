@@ -15,6 +15,9 @@ static uint64_t s_cs_mhz;
 static uint32_t s_ce_hz;
 static bool s_running;
 
+// Furthest a clock event may be programmed, in ticks.
+static uint64_t s_max_ticks;
+
 // Ticks per clock source cycle, in 32.32 fixed point.
 static uint64_t s_mult;
 
@@ -28,6 +31,15 @@ static bool s_idle_disabled;
 
 // Wall clock time minus uptime, in microseconds.
 static int64_t s_realtime_offset_us;
+
+// Read the counter again before it can wrap, and stay within the device limits.
+static void prv_limits_update(void) {
+  if (s_cs == nullptr || s_cs_mhz == 0U || s_ce_hz == 0U) {
+    return;
+  }
+  s_max_ticks = MIN(((uint64_t)(s_cs->mask / 2U) * PBL_TICK_HZ * 1000U) / s_cs_mhz,
+                    ((uint64_t)s_ce->max_delta * PBL_TICK_HZ) / s_ce_hz);
+}
 
 // Brings the clock source time up to date.
 static void prv_update(void) {
@@ -69,9 +81,6 @@ static bool prv_announce(void) {
 
 // Raise the next clock event at the start of tick @p ticks.
 static void prv_program(uint64_t ticks) {
-  // Read the counter again before it can wrap, and stay within the device limits.
-  uint64_t max_ticks = MIN(((uint64_t)(s_cs->mask / 2U) * PBL_TICK_HZ * 1000U) / s_cs_mhz,
-                           ((uint64_t)s_ce->max_delta * PBL_TICK_HZ) / s_ce_hz);
   uint64_t whole;
   uint32_t frac;
   uint64_t delta;
@@ -80,8 +89,8 @@ static void prv_program(uint64_t ticks) {
   if (ticks <= s_cs_ticks) {
     whole = 0U;
     frac = 0U;
-  } else if (ticks - s_cs_ticks > max_ticks) {
-    whole = max_ticks;
+  } else if (ticks - s_cs_ticks > s_max_ticks) {
+    whole = s_max_ticks;
     frac = 0U;
   } else {
     // Ticks to go, minus the fraction of the current one already elapsed.
@@ -113,6 +122,7 @@ void pbl_clocksource_set_mhz(const struct pbl_clocksource *cs, uint64_t mhz) {
   }
   s_cs_mhz = mhz;
   s_mult = (((uint64_t)PBL_TICK_HZ * 1000U) << FRAC_BITS) / mhz;
+  prv_limits_update();
   arch_irq_unlock(key);
 }
 
@@ -129,6 +139,7 @@ void pbl_clockevent_set_hz(const struct pbl_clockevent *ce, uint32_t hz) {
 
   unsigned int key = arch_irq_lock();
   s_ce_hz = hz;
+  prv_limits_update();
   arch_irq_unlock(key);
 }
 
@@ -165,6 +176,7 @@ void timekeeping_start(void) {
   s_cs_last = s_cs->ops->read(s_cs);
   s_cs_ticks = sched_uptime_ticks();
   s_cs_frac = 0U;
+  prv_limits_update();
   s_running = true;
   prv_program(s_cs_ticks + 1U);
   arch_irq_unlock(key);
