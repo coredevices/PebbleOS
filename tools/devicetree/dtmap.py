@@ -765,19 +765,22 @@ class Generator:
         return ", ".join(items)
 
     def _assigned_clocks(self, dev, item):
-        """The parents a clock provider assigns, as Linux does with assigned-clocks, an item
-        macro of the clock and its parent each."""
-        if dev.node.has("assigned-clock-rates"):
-            raise dev.error("'assigned-clock-rates' is not supported")
+        """The parents and rates a clock provider assigns, as Linux does with assigned-clocks:
+        an item macro of the clock, its parent, {} for none, and its rate in Hz, 0 for none."""
         clocks = self._phandles(dev, "assigned-clocks", "#clock-cells")
         parents = self._phandles(dev, "assigned-clock-parents", "#clock-cells", empty=True)
-        if len(parents) != len(clocks) or None in parents:
-            raise dev.error("'assigned-clock-parents' needs a parent for each clock")
+        rates = dev.node.u32s("assigned-clock-rates") if dev.node.has("assigned-clock-rates") else []
+        if len(parents) > len(clocks) or len(rates) > len(clocks):
+            raise dev.error("more assigned parents or rates than 'assigned-clocks'")
+        parents += [None] * (len(clocks) - len(parents))
+        rates += [0] * (len(clocks) - len(rates))
         items = []
-        for (target, cells), (parent, parent_cells) in zip(clocks, parents):
+        for (target, cells), entry, rate in zip(clocks, parents, rates):
+            if entry is None and rate == 0:
+                raise dev.error(f"assigned clock of {target.path} has no parent nor rate")
             clock = self._provided(dev, target, "clock", cells)
-            parent = self._provided(dev, parent, "clock", parent_cells)
-            items.append(f"{item}({clock}, {parent})")
+            parent = "{}" if entry is None else self._provided(dev, entry[0], "clock", entry[1])
+            items.append(f"{item}({clock}, {parent}, {rate})")
         return ", ".join(items)
 
     def _dma(self, dev, src, name):

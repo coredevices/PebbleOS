@@ -1775,12 +1775,14 @@ def assigned_generate(tmp_path, bus):
 def test_assigned_clocks_become_items(tmp_path):
     gen = assigned_generate(
         tmp_path,
-        "assigned-clocks = <&ctrl 3>, <&ctrl 4>;\n"
-        "        assigned-clock-parents = <&ctrl 1>, <&ctrl 2>;",
+        "assigned-clocks = <&ctrl 3>, <&ctrl 4>, <&ctrl 5>;\n"
+        "        assigned-clock-parents = <&ctrl 1>, <0>, <&ctrl 2>;\n"
+        "        assigned-clock-rates = <0>, <1000>;",
     )
     assert (
-        'BUS_DT_DEFINE(dt_bus, "bus", ASSIGNED(CLK(&acme_clk, 3), CLK(&acme_clk, 1)), '
-        "ASSIGNED(CLK(&acme_clk, 4), CLK(&acme_clk, 2)));" in body(gen)
+        'BUS_DT_DEFINE(dt_bus, "bus", ASSIGNED(CLK(&acme_clk, 3), CLK(&acme_clk, 1), 0), '
+        "ASSIGNED(CLK(&acme_clk, 4), {}, 1000), ASSIGNED(CLK(&acme_clk, 5), CLK(&acme_clk, 2), 0));"
+        in body(gen)
     )
 
 
@@ -1792,19 +1794,19 @@ def test_no_assigned_clocks_end_the_arguments(tmp_path):
 @pytest.mark.parametrize(
     "bus, message",
     [
-        (
-            "assigned-clocks = <&ctrl 3>;\n        assigned-clock-rates = <1000>;",
-            "'assigned-clock-rates' is not supported",
-        ),
-        ("assigned-clocks = <&ctrl 3>;", "needs a parent for each clock"),
+        ("assigned-clocks = <&ctrl 3>;", "has no parent nor rate"),
         (
             "assigned-clocks = <&ctrl 3>;\n        assigned-clock-parents = <0>;",
-            "needs a parent for each clock",
+            "has no parent nor rate",
+        ),
+        (
+            "assigned-clocks = <&ctrl 3>;\n        assigned-clock-rates = <1>, <2>;",
+            "more assigned parents or rates",
         ),
     ],
-    ids=["rates", "no-parents", "empty-parent"],
+    ids=["nothing", "empty-parent", "too-many-rates"],
 )
-def test_assigned_clocks_need_parents(tmp_path, bus, message):
+def test_assigned_clocks_need_a_parent_or_rate(tmp_path, bus, message):
     with pytest.raises(DtError, match=message):
         assigned_generate(tmp_path, bus)
 

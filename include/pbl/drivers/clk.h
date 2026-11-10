@@ -62,6 +62,13 @@ struct pbl_clk_controller_ops {
    */
   int (*set_parent)(const struct pbl_clk_controller *ctrl, uint32_t id,
                     const struct pbl_clk *parent);
+  /**
+   * Set a clock's rate in mHz from its parent's, 0 for a clock without one, or NULL if no clock
+   * can. Returns 0, @c -EINVAL if the clock cannot run at that rate exactly, or another negative
+   * errno.
+   */
+  int (*set_rate)(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t rate_mhz,
+                  uint64_t parent_mhz);
 };
 
 /** @brief A clock controller. */
@@ -124,28 +131,33 @@ struct pbl_clk {
  */
 #define PBL_CLK(_ctrl, _id) {.ctrl = (_ctrl), .id = (_id)}
 
-/** @brief Parent a clock is switched to when its controller comes up. */
+/** @brief Parent and rate a clock is set to when its controller comes up. */
 struct pbl_clk_assigned {
   /** Clock. */
   struct pbl_clk clk;
-  /** Parent. */
+  /** Parent, without a controller to keep the current one. */
   struct pbl_clk parent;
+  /** Rate in Hz, or 0 to keep the current one. */
+  uint32_t rate_hz;
 };
 
 /**
  * @brief Initializer for a struct pbl_clk_assigned.
  *
  * @param _clk Clock, a PBL_CLK() initializer.
- * @param _parent Parent, a PBL_CLK() initializer.
+ * @param _parent Parent, a PBL_CLK() initializer, or {} to keep the current one.
+ * @param _rate_hz Rate in Hz, or 0 to keep the current one.
  */
-#define PBL_CLK_ASSIGNED(_clk, _parent) {.clk = _clk, .parent = _parent}
+#define PBL_CLK_ASSIGNED(_clk, _parent, _rate_hz) \
+  {.clk = _clk, .parent = _parent, .rate_hz = (_rate_hz)}
 
 /**
- * @brief Define the list of parents a clock controller assigns, for the driver's define macro.
+ * @brief Define the list of parents and rates a clock controller assigns, for the driver's define
+ * macro.
  *
  * @param sym Symbol of the list.
- * @param ... PBL_CLK_ASSIGNED() initializers, from the @c assigned-clocks and
- * @c assigned-clock-parents properties of the controller's node.
+ * @param ... PBL_CLK_ASSIGNED() initializers, from the @c assigned-clocks,
+ * @c assigned-clock-parents and @c assigned-clock-rates properties of the controller's node.
  */
 #define PBL_CLK_ASSIGNED_DEFINE(sym, ...) \
   static const struct pbl_clk_assigned sym[] = {__VA_ARGS__ __VA_OPT__(, ){}}
@@ -210,10 +222,23 @@ int pbl_clk_get_parent(const struct pbl_clk *clk, struct pbl_clk *parent);
 int pbl_clk_set_parent(const struct pbl_clk *clk, const struct pbl_clk *parent);
 
 /**
- * @brief Switch clocks to their assigned parents, for clock controller drivers.
+ * @brief Set the rate of a clock.
+ *
+ * The notifiers of the clock and of the clocks below it are told the new rates.
+ *
+ * @param clk Clock.
+ * @param rate_mhz Rate in mHz.
+ * @return 0, @c -ENOTSUP if the clock cannot change its rate, @c -EINVAL if it cannot run at that
+ * rate exactly, or another negative errno.
+ */
+int pbl_clk_set_rate(const struct pbl_clk *clk, uint64_t rate_mhz);
+
+/**
+ * @brief Switch clocks to their assigned parents, then set their assigned rates, as Linux does,
+ * for clock controller drivers.
  *
  * @param assigned List from PBL_CLK_ASSIGNED_DEFINE().
- * @return 0 or the first error of pbl_clk_set_parent().
+ * @return 0 or the first error of pbl_clk_set_parent() or pbl_clk_set_rate().
  */
 int pbl_clk_assign(const struct pbl_clk_assigned *assigned);
 

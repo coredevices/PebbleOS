@@ -206,7 +206,9 @@ enum {
 };
 
 static uint32_t s_mux_sel;
+static uint32_t s_mux_div;
 static int s_set_parent_ret;
+static uint32_t s_set_rate_calls;
 static uint32_t s_tree_gates;
 
 static int prv_tree_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
@@ -221,7 +223,19 @@ static int prv_tree_disable(const struct pbl_clk_controller *ctrl, uint32_t id) 
 
 static int prv_tree_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id,
                              uint64_t parent_mhz, uint64_t *rate_mhz) {
-  *rate_mhz = (id == TREE_MUX) ? parent_mhz / 2U : parent_mhz;
+  *rate_mhz = (id == TREE_MUX) ? parent_mhz / s_mux_div : parent_mhz;
+  return 0;
+}
+
+// The mux divides by 1 to 4, after switching: its parent must be set first
+static int prv_tree_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t rate_mhz,
+                             uint64_t parent_mhz) {
+  s_set_rate_calls++;
+  if (id != TREE_MUX || rate_mhz == 0U || parent_mhz % rate_mhz != 0U ||
+      parent_mhz / rate_mhz > 4U) {
+    return -EINVAL;
+  }
+  s_mux_div = (uint32_t)(parent_mhz / rate_mhz);
   return 0;
 }
 
@@ -251,6 +265,7 @@ static const struct pbl_clk_controller_ops s_tree_ops = {
   .get_rate = prv_tree_get_rate,
   .get_parent = prv_tree_get_parent,
   .set_parent = prv_tree_set_parent,
+  .set_rate = prv_tree_set_rate,
 };
 
 PBL_CLK_CONTROLLER_STATE_DEFINE(s_tree, TREE_NUM);
@@ -263,6 +278,8 @@ static const struct pbl_clk s_mux = PBL_CLK(&s_tree, TREE_MUX);
 
 static void prv_tree_reset(void) {
   s_mux_sel = 0U;
+  s_mux_div = 2U;
+  s_set_rate_calls = 0U;
   s_set_parent_ret = 0;
   s_tree_gates = 0U;
   s_rates_mhz[0] = 32768000U;
@@ -376,11 +393,38 @@ void test_clk__notifier_tree(void) {
   cl_assert_equal_i(s_lock_depth, 0);
 }
 
+void test_clk__set_rate(void) {
+  uint64_t rate_mhz = 0U;
+  static struct pbl_clk_notifier nb = {.clk = PBL_CLK(&s_tree, TREE_GATE0)};
+  static bool registered;
+
+  prv_tree_reset();
+  nb.fn = prv_tree_rate_changed;
+  if (!registered) {
+    pbl_clk_notifier_register(&nb);
+    registered = true;
+  }
+  s_tree_calls = 0;
+
+  cl_assert_equal_i(pbl_clk_set_rate(&s_mux, 8192000U), 0);
+  cl_assert_equal_i(pbl_clk_get_rate(&s_gate0, &rate_mhz), 0);
+  cl_assert_equal_i(rate_mhz, 8192000U);
+  cl_assert(s_tree_calls >= 1);
+  cl_assert_equal_i(s_tree_last_mhz, 8192000U);
+
+  cl_assert_equal_i(pbl_clk_set_rate(&s_mux, 1000U), -EINVAL);
+  cl_assert_equal_i(pbl_clk_set_rate(&s_osc0, 1000U), -ENOTSUP);
+  cl_assert_equal_i(s_lock_depth, 0);
+}
+
 PBL_CLK_ASSIGNED_DEFINE(s_assigned,
-                        PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_MUX), PBL_CLK(&s_osc, 1)));
+                        PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_MUX), PBL_CLK(&s_osc, 1), 0));
 PBL_CLK_ASSIGNED_DEFINE(s_assigned_bad,
-                        PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_GATE0), PBL_CLK(&s_osc, 1)));
+                        PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_GATE0), PBL_CLK(&s_osc, 1), 0));
 PBL_CLK_ASSIGNED_DEFINE(s_assigned_none);
+// The rate comes first in the list but is set after the parent: 9658250 mHz / 1
+PBL_CLK_ASSIGNED_DEFINE(s_assigned_rate, PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_MUX), {}, 9658),
+                        PBL_CLK_ASSIGNED(PBL_CLK(&s_tree, TREE_MUX), PBL_CLK(&s_osc, 1), 0));
 
 void test_clk__assign(void) {
   prv_tree_reset();
@@ -389,5 +433,15 @@ void test_clk__assign(void) {
   cl_assert_equal_i(s_mux_sel, 0U);
   cl_assert_equal_i(pbl_clk_assign(s_assigned), 0);
   cl_assert_equal_i(s_mux_sel, 1U);
+  cl_assert_equal_i(s_set_rate_calls, 0U);
   cl_assert_equal_i(pbl_clk_assign(s_assigned_bad), -EINVAL);
+}
+
+void test_clk__assign_rate_after_parent(void) {
+  prv_tree_reset();
+  s_rates_mhz[1] = 9658000U;
+
+  cl_assert_equal_i(pbl_clk_assign(s_assigned_rate), 0);
+  cl_assert_equal_i(s_mux_sel, 1U);
+  cl_assert_equal_i(s_mux_div, 1U);
 }
