@@ -296,6 +296,32 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install --quiet translate-toolkit==3.20.6
           echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
 
+      - name: Add the Weblate repository helper
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          # Locking queues a commit of pending changes, and Weblate answers
+          # 423 while any repository operation runs, so retry until it is free.
+          cat > "$RUNNER_TEMP/bin/weblate-repository" <<'EOF'
+          #!/bin/bash
+          set -euo pipefail
+          response=$(mktemp)
+          for attempt in $(seq 30); do
+            status=$(curl --silent --show-error --proto '=https' \
+              --output "$response" --write-out '%{http_code}' \
+              --header "Authorization: Token $WEBLATE_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data "{\"operation\": \"$1\"}" \
+              "${WEBLATE_COMPONENT_URL}repository/")
+            [ "$status" = 423 ] || break
+            sleep 10
+          done
+          cat "$response"
+          echo
+          [ "$status" = 200 ] && jq -e '.result == true' "$response" > /dev/null
+          EOF
+          chmod +x "$RUNNER_TEMP/bin/weblate-repository"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
       - name: Lock Weblate
         id: lock
         run: |
@@ -311,12 +337,7 @@ jobs:
           echo locked=true >> "$GITHUB_OUTPUT"
 
       - name: Push pending Weblate commits
-        run: |
-          curl --silent --show-error --fail-with-body --proto '=https' \
-            --header "Authorization: Token $WEBLATE_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data '{"operation": "push"}' \
-            "${WEBLATE_COMPONENT_URL}repository/" | jq -e '.result == true'
+        run: weblate-repository push
 
       - name: Create app token
         id: app-token
@@ -389,12 +410,7 @@ jobs:
       - name: Pull the catalogs into Weblate
         id: pull
         if: steps.push.outputs.pushed == 'true'
-        run: |
-          curl --silent --show-error --fail-with-body --proto '=https' \
-            --header "Authorization: Token $WEBLATE_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data '{"operation": "pull"}' \
-            "${WEBLATE_COMPONENT_URL}repository/" | jq -e '.result == true'
+        run: weblate-repository pull
 
       # If the catalogs reached GitHub but Weblate could not pull them, stay
       # locked so translators do not keep editing a stale checkout.
