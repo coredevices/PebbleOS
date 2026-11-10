@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: fixed-clock
+config: CLK_FIXED
+class: clk
+define: PBL_CLK_FIXED_DEFINE
+args:
+  - name: true
+  - prop: clock-frequency
+provides:
+  clock: PBL_CLK(&{sym}, 0)
