@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config POWER_DOMAIN
+    bool
+    help
+      Power domain class (pbl/drivers/power_domain.h), selected by the
+      drivers that provide power domains.

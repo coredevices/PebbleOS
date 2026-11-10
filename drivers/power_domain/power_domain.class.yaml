@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: power_domain
+type: struct pbl_power_domain_provider
+include: pbl/drivers/power_domain.h
+provides:
+  power-domain: "PBL_POWER_DOMAIN(&{sym}, {0})"
