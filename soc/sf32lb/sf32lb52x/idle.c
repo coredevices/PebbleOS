@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
@@ -65,17 +66,12 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
 #ifdef CONFIG_FLASH
 // Runs with the flash powered down
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
-  uint32_t dll1_freq = 0UL;
-  int clk_src;
+  struct pbl_clk_sf32lb52_hxt48_state clocks;
 
   NVIC_EnableIRQ(AON_IRQn);
 
-  clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
-  if (clk_src == RCC_SYSCLK_DLL1) {
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
-    dll1_freq = HAL_RCC_HCPU_GetDLL1Freq();
-    HAL_RCC_HCPU_DisableDLL1();
-  }
+  // HXT48 stops in deep sleep
+  pbl_clk_sf32lb52_hxt48_suspend(&clocks);
 
   HAL_HPAON_DISABLE_PAD();
   HAL_HPAON_DISABLE_VHP();
@@ -101,17 +97,11 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   HAL_HPAON_SET_HP_ACTIVE();
   HAL_HPAON_CLEAR_POWER_MODE();
 
-  // Wait for HXT48 to be ready
-  if (dll1_freq != 0UL) {
-    while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
-      __NOP();
-    }
+  while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
+    __NOP();
   }
 
-  if (clk_src == RCC_SYSCLK_DLL1) {
-    HAL_RCC_HCPU_EnableDLL1(dll1_freq);
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_DLL1);
-  }
+  pbl_clk_sf32lb52_hxt48_resume(&clocks);
 }
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {

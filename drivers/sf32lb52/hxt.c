@@ -7,15 +7,18 @@
 #include <string.h>
 
 #include <pbl/devicetree.h>
+#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/sf32lb52/hxt.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
-#include <bf0_hal.h>
+#include <hardware/sf32lb52_pmuc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_sf32lb52_hxt, CONFIG_DRIVER_SF32LB52_HXT_LOG_LEVEL);
 
@@ -50,30 +53,20 @@ static size_t prv_find_record(const uint8_t *cfg, size_t size, uint8_t id, uint8
   return 0U;
 }
 
-// The system clock leaves the crystal while it changes, and the PLLs relock to it after
-static PBL_SECTION_RAM void prv_apply_cbank(uint32_t cbank) {
+// The system clock leaves the crystal while it changes, and the DLLs relock to it after
+static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_sf32lb52_hxt *hxt, uint32_t cbank) {
+  const uintptr_t cr1 = hxt->base + SF32LB52_PMUC_HXT_CR1_OFFSET;
+  struct pbl_clk_sf32lb52_hxt48_state state;
   unsigned int key;
-  int clk_src;
-  uint32_t dll1_hz;
-  uint32_t dll2_hz;
 
   key = pbl_irq_disable_all();
 
-  clk_src = HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS);
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HRC48);
-  dll1_hz = HAL_RCC_HCPU_GetDLL1Freq();
-  dll2_hz = HAL_RCC_HCPU_GetDLL2Freq();
-
-  HAL_PMU_SET_HXT_CBANK(cbank);
-
+  pbl_clk_sf32lb52_hxt48_suspend(&state);
+  pbl_writel((pbl_readl(cr1) & ~PMUC_HXT_CR1_CBANK_SEL_MASK) |
+                 PBL_FIELD_PREP(PMUC_HXT_CR1_CBANK_SEL_MASK, cbank),
+             cr1);
   pbl_busy_wait_us(CBANK_SETTLE_US);
-
-  HAL_RCC_HCPU_DisableDLL1();
-  HAL_RCC_HCPU_DisableDLL2();
-  HAL_RCC_HCPU_EnableDLL1(dll1_hz);
-  HAL_RCC_HCPU_EnableDLL2(dll2_hz);
-
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, clk_src);
+  pbl_clk_sf32lb52_hxt48_resume(&state);
 
   pbl_irq_restore_all(key);
 }
@@ -111,7 +104,7 @@ int pbl_sf32lb52_hxt_init(const struct pbl_device *dev) {
     }
 
     PBL_LOG_DBG("Crystal trim 0x%03" PRIx32 " from %s", cbank, cell->name);
-    prv_apply_cbank(cbank);
+    prv_apply_cbank(hxt, cbank);
 
     return 0;
   }

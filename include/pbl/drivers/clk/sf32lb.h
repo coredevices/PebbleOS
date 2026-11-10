@@ -93,6 +93,33 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb_hpsys_rcc;
 #define SF32LB52_HPSYS_NUM_CLKS 75
 /** @endcond */
 
+/** @brief HPSYS clocks saved while HXT48 is unusable. */
+struct pbl_clk_sf32lb52_hxt48_state {
+  /** @cond INTERNAL_HIDDEN */
+  uint32_t csr;
+  uint32_t dll1cr;
+  uint32_t dll2cr;
+  /** @endcond */
+};
+
+/**
+ * @brief Move clk_hpsys to HRC48 and stop the DLLs, before HXT48 stops or changes.
+ *
+ * For deep sleep and the crystal trim. Runs from RAM, with the flash down, and interrupts off.
+ *
+ * @param[out] state What pbl_clk_sf32lb52_hxt48_resume() restores.
+ */
+void pbl_clk_sf32lb52_hxt48_suspend(struct pbl_clk_sf32lb52_hxt48_state *state);
+
+/**
+ * @brief Restart the DLLs that ran and move clk_hpsys back, once HXT48 is ready.
+ *
+ * Runs from RAM, with the flash down, and interrupts off.
+ *
+ * @param state What pbl_clk_sf32lb52_hxt48_suspend() saved.
+ */
+void pbl_clk_sf32lb52_hxt48_resume(const struct pbl_clk_sf32lb52_hxt48_state *state);
+
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
 /** @endcond */
