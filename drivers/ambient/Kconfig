@@ -12,7 +12,7 @@ if AMBIENT_LIGHT
 config AMBIENT_LIGHT_OPT3001
     bool "TI OPT3001"
     default DT_HAS_TI_OPT3001_ENABLED
-    depends on I2C
+    select I2C
     help
       Support for the TI OPT3001 ambient light sensor.
 
@@ -26,7 +26,7 @@ config AMBIENT_LIGHT_OPT3001_ALWAYS_ON
 config AMBIENT_LIGHT_W1160
     bool "Sensortek W1160"
     default DT_HAS_SENSORTEK_W1160_ENABLED
-    depends on I2C
+    select I2C
     help
       Support for the Sensortek W1160 ambient light sensor.
 

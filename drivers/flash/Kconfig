@@ -17,7 +17,7 @@ config FLASH_OTP
 
 config FLASH_SPI_NOR
     bool "SPI NOR"
-    depends on SPI_MEM
+    select SPI_MEM
     select FLASH_OTP
     help
       Support for a JEDEC NOR flash on a SPI memory controller, found by

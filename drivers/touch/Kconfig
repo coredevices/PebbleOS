@@ -20,7 +20,7 @@ config TOUCH_SHELL
 config TOUCH_CST816
     bool "Hynitron CST816"
     default DT_HAS_HYNITRON_CST816S_ENABLED
-    depends on I2C
+    select I2C
     select CST816_FW
     select PINCTRL
     help
