@@ -3,7 +3,7 @@
 
 /dts-v1/;
 
-#include "nordic/nrf52840.dtsi"
+#include "nordic/nrf52840-qiaa.dtsi"
 
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/input/ti-drv260x.h>

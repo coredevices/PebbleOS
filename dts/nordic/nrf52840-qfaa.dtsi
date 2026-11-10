@@ -1,0 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include "nrf52840.dtsi"
+
+&gpio0 {
+	gpio-reserved-ranges = <6 1>, <15 2>, <25 3>;
+};
+
+&gpio1 {
+	gpio-reserved-ranges = <1 7>, <10 5>;
+};
