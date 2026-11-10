@@ -15,6 +15,13 @@ config CLK_SHELL
       The clk shell command: list clocks and rates, and sample, hold and
       inspect calibrated clocks.
 
+config CLK_FIXED
+    bool "Fixed-rate clocks"
+    default DT_HAS_FIXED_CLOCK_ENABLED
+    select CLK
+    help
+      Clocks that always run at the same rate, as crystals.
+
 config CLK_SF32LB
     bool "SiFli SF32LB RCC"
     default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED
