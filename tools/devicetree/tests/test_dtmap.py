@@ -1807,3 +1807,18 @@ def test_no_assigned_clocks_end_the_arguments(tmp_path):
 def test_assigned_clocks_need_parents(tmp_path, bus, message):
     with pytest.raises(DtError, match=message):
         assigned_generate(tmp_path, bus)
+
+
+def test_named_clock_a_node_may_lack(tmp_path):
+    data = {
+        **SPECS["acme,bus"],
+        "args": [{"clock": "core"}, {"clock": "ref", "default": "NO_CLK"}],
+    }
+    specs = {"acme,bus": spec("acme,bus", data)}
+    bus = 'clock-names = "core";'
+    assert "BUS_DT_DEFINE(dt_bus, CLK(&acme_clk, 3), NO_CLK);" in body(
+        generate(tmp_path, bus=bus, specs=specs)
+    )
+    data["args"][1] = {"clock": "ref"}
+    with pytest.raises(DtError, match="no 'ref' in 'clock-names'"):
+        generate(tmp_path, bus=bus, specs={"acme,bus": spec("acme,bus", data)})

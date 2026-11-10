@@ -973,6 +973,10 @@ class Generator:
         if kind == "clock":
             if not node.has("clocks"):
                 return None
+            # A named input a node may lack, as an optional crystal
+            names = node.strings("clock-names") if node.has("clock-names") else []
+            if isinstance(key, str) and key not in names and self._may_lack(arg):
+                return None
             index = self._index(src, key, "clock-names")
             entries = self._phandles(src, "clocks", "#clock-cells")
             if index >= len(entries):
@@ -1057,6 +1061,10 @@ class Generator:
         if kind == "pinctrl":
             return self._pinctrl(src, key) if node.has("pinctrl-names") else None
         raise AssertionError(kind)
+
+    @staticmethod
+    def _may_lack(arg):
+        return "default" in arg or bool(arg.get("optional"))
 
     def _arg(self, dev, arg):
         value = self._value(dev, arg)
