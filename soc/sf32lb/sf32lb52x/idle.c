@@ -24,6 +24,7 @@ enum {
 
 static bool s_force_wfi;
 
+#ifdef CONFIG_FLASH
 static uint32_t s_iser_bak[16];
 
 static void prv_save_iser(void) {
@@ -44,6 +45,7 @@ static void prv_restore_iser(void) {
     __COMPILER_BARRIER();
   }
 }
+#endif // CONFIG_FLASH
 
 PBL_SECTION_RAM static void prv_enter_wfi(void) {
   __DSB();
@@ -60,6 +62,7 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
   SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
 }
 
+#ifdef CONFIG_FLASH
 // Runs with the flash powered down
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   uint32_t dll1_freq = 0UL;
@@ -116,16 +119,19 @@ PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
   pbl_flash_power_down(FLASH, prv_deepsleep, nullptr);
   prv_restore_iser();
 }
+#endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
   [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
   [IDLE_DEEPWFI] = {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
+#ifdef CONFIG_FLASH
   [IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
     .min_ticks = PBL_TICK_HZ / 20,
     .exit_ticks = 4,
     .enter = prv_enter_deepsleep
   },
+#endif
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
