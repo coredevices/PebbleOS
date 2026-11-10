@@ -1523,6 +1523,156 @@ def test_nodes_with_the_same_symbol_fail(tmp_path):
         generate(tmp_path, dts=dts)
 
 
+def depends(gen):
+    return [line for line in body(gen).splitlines() if "PBL_DEVICE_DEPENDS" in line]
+
+
+def test_devices_a_node_refers_to_come_first(tmp_path):
+    gen = generate(tmp_path)
+    # The sensor only refers to its bus, which is its parent
+    assert depends(gen) == [
+        "PBL_DEVICE_DEPENDS(dt_bus, &dt_bus.dev, &acme_intc.dev, &acme_clk.dev);"
+    ]
+    assert instances(gen, "acme_bus").endswith(
+        "&dt_bus_default);\nPBL_DEVICE_DEPENDS(dt_bus, &dt_bus.dev, &acme_intc.dev, &acme_clk.dev);\n"
+    )
+
+
+def test_a_needed_device_is_listed_once(tmp_path):
+    args = [{"gpio": "reset"}, {"gpio": "enable"}, {"clock": 0}, {"parent": "bus"}]
+    sensor = "reset-gpios = <&gpio 1 0>; enable-gpios = <&gpio 2 0>; clocks = <&ctrl 1>;"
+    gen = sensor_generate(tmp_path, args, sensor)
+    assert (
+        "PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_gpio.dev, &acme_clk.dev);"
+        in instances(gen, "acme_sensor")
+    )
+    assert set(re.findall(r"#include <(.+)>", instances(gen, "acme_sensor"))) == {
+        "bus.h",
+        "clk.h",
+        "gpio.h",
+        "devicetree/devices.h",
+    }
+
+
+def test_redirected_and_listed_references_are_needed(tmp_path):
+    args = [{"gpio": "reset", "child": "sub"}, {"self": "bus", "of": "link"}]
+    sensor = "link = <&pinctrl>; sub { reset-gpios = <&gpio 9 0>; };"
+    data = {**SPECS["acme,pinctrl"], "class": "bus", "define": "CTL_DEFINE", "args": []}
+    del data["pinctrl"]
+    extra = {"acme,pinctrl": spec("acme,pinctrl", data)}
+    dts = GPIO_DTS.replace("pinctrl-0 = <&bus_default>;", "").replace(
+        'pinctrl-names = "default";', ""
+    )
+    gen = sensor_generate(tmp_path, args, sensor, dts=dts, extra=extra)
+    assert (
+        "PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_gpio.dev, &dt_pinctrl.dev);"
+        in depends(gen)
+    )
+
+
+def test_every_class_object_of_an_instance_gets_what_it_needs(tmp_path):
+    data = {
+        **SPECS["acme,bus"],
+        "class": ["bus", "sensor"],
+        "symbol": {"bus": "{sym}", "sensor": "{sym}_sensor"},
+        "args": [{"clock": 0}],
+    }
+    gen = generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)})
+    assert depends(gen) == [
+        "PBL_DEVICE_DEPENDS(dt_bus, &dt_bus.dev, &acme_clk.dev);",
+        "PBL_DEVICE_DEPENDS(dt_bus_sensor, &dt_bus_sensor.dev, &acme_clk.dev);",
+    ]
+
+
+def test_instances_with_their_own_symbol_get_what_they_need(tmp_path):
+    data = {**SPECS["acme,bus"], "symbol": "acme_bus0", "args": [{"clock": 0}]}
+    gen = generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)})
+    assert depends(gen) == [
+        "PBL_DEVICE_DEPENDS(acme_bus0, &acme_bus0.dev, &acme_clk.dev);"
+    ]
+
+
+def test_classes_say_where_their_device_is(tmp_path):
+    classes = {
+        **CLASSES,
+        "bus": {**CLASSES["bus"], "device": "&{sym}"},
+        "clk": {**CLASSES["clk"], "device": False},
+        "gpio": {**CLASSES["gpio"], "device": "&{sym}.port.dev"},
+    }
+    args = [{"clock": 0}, {"gpio": "reset"}]
+    specs = {
+        "acme,ctrl": dtmap.Spec("ctrl", SPECS["acme,ctrl"], classes),
+        "acme,gpio": dtmap.Spec("gpio", GPIO_SPEC, classes),
+        "acme,bus": dtmap.Spec("bus", {**SPECS["acme,bus"], "args": args}, classes),
+    }
+    bus = "reset-gpios = <&gpio 1 0>;"
+    gen = generate(tmp_path, config=(*ALL, "GPIO"), bus=bus, specs=specs, dts=GPIO_DTS)
+    assert depends(gen) == ["PBL_DEVICE_DEPENDS(dt_bus, &dt_bus, &dt_gpio.port.dev);"]
+
+
+def test_functions_and_children_of_a_device_do_not_need_it(tmp_path):
+    classes = {**CLASSES, **PMIC_CLASSES}
+    classes["regulator"] = {
+        **PMIC_CLASSES["regulator"],
+        "provides": {"regulator": "&{sym}"},
+    }
+    group = [dtmap.Spec(f"p{i}", s, classes) for i, s in enumerate(PMIC_SPECS)]
+    for s in group:
+        s.file = f"acme_pmic_{s.classes[0]}"
+    args = [{"supply": "vdd"}, {"gpio": "reset"}]
+    specs = {
+        "acme,pmic": group,
+        "acme,sensor": spec("acme,sensor", {**SPECS["acme,sensor"], "args": args}),
+    }
+    # The PMIC is its own supply: a device inside it is no dependency of it either
+    dts = PMIC_DTS.replace(
+        "monitored-battery", "vin-supply = <&ldo1>; monitored-battery"
+    ).replace(
+        'mount-matrix = "-1", "0";',
+        'mount-matrix = "-1", "0"; vdd-supply = <&buck1>; reset-gpios = <&pmic 3 0>;',
+    )
+    group[0].args.append({"supply": "vin"})
+    config = (*ALL, "PMIC", "GPIO", "CHARGER", "REGULATOR")
+    gen = generate(tmp_path, config=config, specs=specs, dts=dts)
+    assert "PMIC_DEFINE(dt_pmic, &dt_bus, 0x6b, &dt_ldo1);" in body(gen)
+    assert [line for line in depends(gen) if "dt_bus," not in line] == [
+        "PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_buck1.dev, &dt_pmic_gpio.dev);"
+    ]
+
+
+def test_absent_optional_providers_are_not_needed(tmp_path):
+    args = [{"reg": 0}, {"gpio": "reset", "optional": True}]
+    assert "dt_sensor" not in "".join(depends(sensor_generate(tmp_path, args)))
+
+
+def test_disabled_needed_device_fails(tmp_path):
+    dts = GPIO_DTS.replace("#gpio-cells = <2>;", '#gpio-cells = <2>; status = "disabled";')
+    with pytest.raises(DtError, match="'gpio' from /gpio@900, which is disabled"):
+        sensor_generate(tmp_path, [{"gpio": "reset"}], "reset-gpios = <&gpio 1 0>;", dts=dts)
+
+
+def test_devices_needing_each_other_fail(tmp_path):
+    gate = {
+        "compatible": "acme,gate",
+        "config": "GATE",
+        "class": "clk",
+        "define": "GATE_DEFINE",
+        "args": [{"gpio": "enable"}],
+    }
+    specs = {
+        "acme,gate": spec("acme,gate", gate),
+        "acme,gpio": spec("acme,gpio", {**GPIO_SPEC, "args": [{"clock": 0}]}),
+    }
+    dts = GPIO_DTS.replace(
+        "#gpio-cells = <2>;",
+        "#gpio-cells = <2>;\n        clocks = <&gate 0>;\n    };\n"
+        '    gate: gate@800 {\n        compatible = "acme,gate";\n        reg = <0x800 0x100>;\n'
+        "        #clock-cells = <1>;\n        enable-gpios = <&gpio 1 0>;",
+    )
+    with pytest.raises(DtError, match=r"need each other: &dt_gpio.dev -> &dt_gate.dev -> &dt_gpio.dev"):
+        generate(tmp_path, config=(*ALL, "GPIO", "GATE"), specs=specs, dts=dts)
+
+
 def test_specs_do_not_share_their_arguments():
     data = {**SPECS["acme,sensor"], "args": [{"reg": 0}]}
     spec("acme,sensor", data).args.append({"prop": "x"})

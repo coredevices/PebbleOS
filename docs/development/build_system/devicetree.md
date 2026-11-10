@@ -97,8 +97,9 @@ flowchart TD
    resolved `.config` and the specs of the drivers, and writes, under
    `generated/include/devicetree/`:
    - `instances/<compatible>.inc` for every driver with a spec: one call to
-     its instance macro per enabled node it binds to. The file exists, empty,
-     on boards without such a node or without a tree;
+     its instance macro per enabled node it binds to, followed by the devices
+     it needs; see [](#devicetree-init-order). The file exists, empty, on
+     boards without such a node or without a tree;
    - `devices.h`, declaring `dt_<label>` for every labelled device with a
      driver, with the type of its class, and listing in a comment the enabled
      nodes with no driver in this configuration. A device with several labels
@@ -290,6 +291,11 @@ the symbol of the referenced device, and `{0}`, `{1}`, ... the cells of the
 specifier. Instance files include only class headers, so drivers do not need
 to know each other.
 
+The objects of a class hold their `struct pbl_device` as `dev`. A class that
+differs says so with `device`: a template such as `"&{sym}"` for a class whose
+type is the device itself, or `false` for objects that are not devices, as
+pin states.
+
 (devicetree-specs)=
 
 ### Specs
@@ -420,6 +426,27 @@ config I2C_SOC
     bool "Vendor SoC I2C controller"
     default DT_HAS_VENDOR_SOC_I2C_ENABLED
 ```
+
+(devicetree-init-order)=
+
+### Initialization order
+
+The devices a node refers to are initialized before its own: the provider of
+each clock, reset, DMA channel, GPIO, interrupt, PWM, mailbox and supply, and
+the devices reached with `self`, as a panel through a port. The generator
+lists them after the instance, and `pbl_device_init()` brings them up first,
+so the order of the device table does not matter:
+
+```c
+PBL_SENSOR_VENDOR_DEFINE(dt_sensor, ...);
+PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_ldo1.dev, &dt_gpio0.dev, &dt_rcc.dev,
+                   &dt_timer1_pwm.dev);
+```
+
+The parent of a device is left out, as the instance macro names it, and so
+are the devices of the same node, of the nodes above it and of the nodes
+inside it: a multi-function device brings its functions up from its own init.
+Devices that need each other fail the build.
 
 ## Using devices
 

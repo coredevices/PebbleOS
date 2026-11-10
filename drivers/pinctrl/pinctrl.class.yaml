@@ -4,3 +4,5 @@
 class: pinctrl
 type: struct pbl_pinctrl_state
 include: pbl/drivers/pinctrl.h
+# A pin state, not a device
+device: false

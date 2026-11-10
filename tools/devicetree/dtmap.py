@@ -49,7 +49,7 @@ SPEC_KEYS = {
     "header",
 }
 CHILDREN_KEYS = {"node", "names"}
-CLASS_KEYS = {"class", "type", "include", "provides"}
+CLASS_KEYS = {"class", "type", "include", "provides", "device"}
 PINCTRL_KEYS = {"define", "pin", "flags", "values"}
 IDS_KEYS = {"cell", "header", "prefix", "values"}
 IDS_VALUES_KEYS = {"header", "prefix"}
@@ -318,6 +318,25 @@ def instance_files(specs):
     return sorted({instance_file(s) for s in found if s.define or s.pinctrl})
 
 
+def device_pointer(cls, symbol):
+    """The struct pbl_device of a class object, or None for classes whose objects are not devices."""
+    template = cls.get("device", "&{sym}.dev")
+    return template.replace("{sym}", symbol) if template else None
+
+
+def related(a, b):
+    """Whether two nodes are the same, or one is inside the other."""
+
+    def inside(node, top):
+        while node is not None:
+            if node is top:
+                return True
+            node = node.parent
+        return False
+
+    return inside(a, b) or inside(b, a)
+
+
 def enabled(node):
     while node is not None:
         if not node.status_okay:
@@ -359,6 +378,11 @@ class Generator:
         self.declarations = []
         self.aliases = {}
         self.symbols = {}
+        # While an instance is generated: its node, and what it needs first
+        self.instance = None
+        self.deps = []
+        self.parents = []
+        self.needs = {}
         self.unbound = []
         # Nodes a driver reads as data, as the OTP cells of a flash
         self.consumed = set()
@@ -423,6 +447,25 @@ class Generator:
                     self._instantiate(dev, spec)
                 else:
                     self._declare_device(dev, spec)
+        self._check_cycles()
+
+    def _check_cycles(self):
+        done, path = set(), []
+
+        def visit(device):
+            if device in path:
+                cycle = " -> ".join([*path[path.index(device) :], device])
+                raise DtError(f"devices need each other: {cycle}")
+            if device in done:
+                return
+            path.append(device)
+            for other in self.needs.get(device, ()):
+                visit(other)
+            path.pop()
+            done.add(device)
+
+        for device in self.needs:
+            visit(device)
 
     def _class_symbols(self, dev, spec, sym=None):
         """The symbol of each class object a spec gives a node, by class."""
@@ -481,8 +524,20 @@ class Generator:
         if len(spec.classes) == 1 and spec.symbols:
             first = self._class_symbols(dev, spec)[spec.classes[0]]
         self._define(first, dev.node)
+        for symbol in self._class_symbols(dev, spec).values():
+            self._define(symbol, dev.node)
+        self.instance, self.deps, self.parents = dev.node, [], []
         args = [first, *self._args(dev, spec.args)]
+        self.instance = None
         self.out.body.append(f"{spec.define}({', '.join(args)});")
+        for name, symbol in self._class_symbols(dev, spec).items():
+            own = device_pointer(spec.class_info[name], symbol)
+            if own is None:
+                continue
+            self.needs[own] = [*self.deps, *self.parents]
+            if self.deps:
+                deps = ", ".join([symbol, own, *self.deps])
+                self.out.body.append(f"PBL_DEVICE_DEPENDS({deps});")
         if dev.label or spec.singleton:
             self._declare_device(dev, spec)
 
@@ -517,17 +572,20 @@ class Generator:
         for spec in self._bound(dev):
             if kind in spec.provides:
                 self.out.includes.update(spec.includes)
-                symbol = None
-                if spec.classes and (dev.label or not spec.define or spec.singleton):
-                    symbol = self._class_symbols(dev, spec).get(spec.classes[0])
-                return spec.provides[kind], symbol, None, spec
+                symbol, device = None, None
+                if spec.classes:
+                    device = self._class_symbols(dev, spec).get(spec.classes[0])
+                    if dev.label or not spec.define or spec.singleton:
+                        symbol = device
+                owner = spec.class_info[spec.classes[0]] if spec.classes else None
+                return spec.provides[kind], symbol, None, spec, owner, device
             for name, cls in spec.class_info.items():
                 if kind in cls.get("provides", {}):
                     device = self._class_symbols(dev, spec).get(name)
                     symbol = None
                     if dev.label or not spec.define or spec.singleton:
-                        symbol = self._class_symbols(dev, spec).get(name)
-                    return cls["provides"][kind], symbol, cls, spec
+                        symbol = device
+                    return cls["provides"][kind], symbol, cls, spec, cls, device
         raise consumer.error(f"{dev.node.path} provides no '{kind}'")
 
     def _transform(self, consumer, dev, spec, kind, cells):
@@ -541,10 +599,27 @@ class Generator:
             raise consumer.error(f"'{kind}' from {dev.node.path}: no ID {cells[cell]}")
         return [*cells[:cell], table[cells[cell]], *cells[cell + 1 :]]
 
-    def _provided(self, consumer, node, kind, cells):
+    def _need(self, node, cls, symbol, parent):
+        """Note the device an instance refers to. Its parent, and the devices of its own node, of
+        the nodes above and of those inside, come up with it, so they are not dependencies."""
+        if self.instance is None or symbol is None or cls is None:
+            return
+        device = device_pointer(cls, symbol)
+        if device is None:
+            return
+        if parent:
+            self.parents.append(device)
+        elif not related(self.instance, node) and device not in self.deps:
+            self.deps.append(device)
+            # An unlabelled provider is declared only for this
+            self._declare(cls, symbol)
+            self.out.includes.update((cls["include"], "devicetree/devices.h"))
+
+    def _provided(self, consumer, node, kind, cells, parent=False):
         dev = self._provider(consumer, node, kind)
-        template, symbol, cls, spec = self._template(consumer, dev, kind)
+        template, symbol, cls, spec, owner, device = self._template(consumer, dev, kind)
         cells = self._transform(consumer, dev, spec, kind, cells)
+        self._need(node, owner, device, parent)
         if cls is not None:
             self.out.includes.add(cls["include"])
 
@@ -847,7 +922,7 @@ class Generator:
             return self._list(dev, node, as_list(key), arg["item"])
         if kind == "parent":
             owner = dev.owner.node if dev.owner else node.parent
-            return self._provided(dev, owner, key, [])
+            return self._provided(dev, owner, key, [], parent=True)
         if kind == "self":
             # A node inside a device, as an nvmem cell of a flash, refers to that device
             while node.parent is not None and not self._device(node).specs:
