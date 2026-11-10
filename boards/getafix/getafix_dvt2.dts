@@ -6,7 +6,7 @@
 #include "getafix.dtsi"
 
 / {
-	compatible = "coredevices,getafix-dvt2", "coredevices,getafix", "sifli,sf32lb52";
+	compatible = "coredevices,getafix-dvt2", "coredevices,getafix", "sifli,sf32lb52j";
 };
 
 &i2c3 {

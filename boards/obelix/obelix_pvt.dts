@@ -6,5 +6,5 @@
 #include "obelix.dtsi"
 
 / {
-	compatible = "coredevices,obelix-pvt", "coredevices,obelix", "sifli,sf32lb52";
+	compatible = "coredevices,obelix-pvt", "coredevices,obelix", "sifli,sf32lb52j";
 };

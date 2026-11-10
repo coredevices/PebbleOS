@@ -36,6 +36,8 @@ properties:
   ngpios:
     maximum: 45
 
+  gpio-reserved-ranges: true
+
   interrupt-controller: true
 
   '#interrupt-cells':

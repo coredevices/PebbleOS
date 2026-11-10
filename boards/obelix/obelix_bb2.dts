@@ -6,7 +6,7 @@
 #include "obelix.dtsi"
 
 / {
-	compatible = "coredevices,obelix-bb2", "coredevices,obelix", "sifli,sf32lb52";
+	compatible = "coredevices,obelix-bb2", "coredevices,obelix", "sifli,sf32lb52j";
 };
 
 &lsm6dso {
