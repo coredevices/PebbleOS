@@ -141,13 +141,14 @@ def build_firmware(app):
             run(
                 "cmake",
                 "-S",
-                str(ROOT),
+                str(ROOT / "pebble"),
                 "-B",
                 str(builddir),
                 "-G",
                 "Ninja",
                 f"-DBOARD={board}",
                 f"-DPython3_EXECUTABLE={sys.executable}",
+                f"-DPebbleOS_DIR={ROOT / 'cmake'}",
                 # The page downloads the module: no DWARF, a fraction of the size.
                 "-DCONFIG_DEBUG_INFO=n",
             )
