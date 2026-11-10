@@ -21,7 +21,6 @@
   (PBL_PINCTRL_SF32LB52_FSEL_MSK | PBL_PINCTRL_SF32LB52_PULL_UP | PBL_PINCTRL_SF32LB52_INPUT)
 
 void pbl_soc_early_init(void) {
-  HAL_StatusTypeDef ret;
   uint32_t bootopt;
 
   SystemInit();
@@ -77,9 +76,6 @@ void pbl_soc_early_init(void) {
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
-
-  ret = HAL_RCC_CalibrateRC48();
-  PBL_ASSERTN(ret == HAL_OK);
 
   HAL_RCC_DisableModule(RCC_MOD_EPIC);
   HAL_RCC_DisableModule(RCC_MOD_EZIP);

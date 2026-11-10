@@ -17,7 +17,8 @@ description: |
   - LRC10, the RC oscillator of about 10 kHz that runs in deep sleep;
   - LRC32, the RC oscillator of about 32 kHz;
   - LXT32, the oscillator of the 32.768 kHz crystal, on boards that fit one;
-  - HRC48, the 48 MHz RC oscillator, once calibrated against HXT48;
+  - HRC48, the 48 MHz RC oscillator, which the unit trims against HXT48 with
+    the calibration counter of the HPSYS RCC;
   - HXT48, the oscillator of the 48 MHz crystal, and HXT48_DLL, the same
     through the buffer that feeds the DLLs;
   - WDT, clk_wdt, LRC10 or LRC32, which clocks the watchdogs and the unit
@@ -56,6 +57,10 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS configuration, for the voltage mode and memory timings.
 
+  sifli,hpsys-rcc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS RCC, for its HRC48 calibration counter.
+
   clocks:
     minItems: 1
     items:
@@ -86,6 +91,7 @@ required:
   - "#power-domain-cells"
   - operating-points-v2
   - sifli,hpsys-cfg
+  - sifli,hpsys-rcc
   - clocks
   - clock-names
 
@@ -103,6 +109,7 @@ examples:
         clock-names = "hxt48";
         operating-points-v2 = <&hpsys_opp_table>;
         sifli,hpsys-cfg = <&hpsys_cfg>;
+        sifli,hpsys-rcc = <&hpsys_rcc>;
         nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
         nvmem-cell-names = "soc-config-user", "soc-config-cust";
     };
