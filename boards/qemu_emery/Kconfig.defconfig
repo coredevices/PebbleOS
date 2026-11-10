@@ -3,3 +3,6 @@
 
 config QEMU_MACHINE
     default "pebble-emery"
+
+config BACKLIGHT_QEMU_COLOR
+    default y

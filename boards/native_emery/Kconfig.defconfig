@@ -3,3 +3,9 @@
 
 config RESOURCES_BOARD
     default "qemu_emery"
+
+config DISPLAY_SDL_WIDTH
+    default 200
+
+config DISPLAY_SDL_HEIGHT
+    default 228

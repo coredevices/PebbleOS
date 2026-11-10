@@ -3,3 +3,12 @@
 
 config RESOURCES_BOARD
     default "qemu_flint"
+
+config DISPLAY_SDL_WIDTH
+    default 144
+
+config DISPLAY_SDL_HEIGHT
+    default 168
+
+config DISPLAY_SDL_MONO
+    default y
