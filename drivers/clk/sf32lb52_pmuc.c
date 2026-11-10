@@ -23,7 +23,9 @@
 PBL_LOG_MODULE_DEFINE(clk_sf32lb52_pmuc, CONFIG_CLK_SF32LB52_PMUC_LOG_LEVEL);
 
 #define LRC32_HZ 32000U
-#define HRC48_HZ 48000000U
+// At about 32 kHz, it starts within a few periods
+#define LRC32_READY_US 1000U
+#define HRC48_HZ       48000000U
 
 // HRC48 calibration: HXT48 cycles per gate, trim search and the count differences that end it
 #define HRC48_CAL_LENGTH     0x3fffU
@@ -192,6 +194,7 @@ struct pbl_clk_sf32lb52_pmuc {
   uintptr_t rcc;
   struct pbl_clk hxt48;
   struct pbl_clk lxt32;
+  const struct pbl_clk_assigned *assigned;
 };
 
 static const struct pbl_clk_sf32lb52_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
@@ -253,17 +256,57 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
 }
 
 static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
-  if (id == SF32LB52_CLK_HXT48_DLL) {
-    pbl_modifyl(0U, PMUC_HXT_CR1_BUF_DLL_EN, prv_pmuc(ctrl)->base + SF32LB52_PMUC_HXT_CR1_OFFSET);
-  }
+  const uintptr_t base = prv_pmuc(ctrl)->base;
 
-  return 0;
+  switch (id) {
+    case SF32LB52_CLK_HXT48_DLL:
+      pbl_modifyl(0U, PMUC_HXT_CR1_BUF_DLL_EN, base + SF32LB52_PMUC_HXT_CR1_OFFSET);
+      return 0;
+    case SF32LB52_CLK_LRC32:
+      pbl_modifyl(0U, PMUC_LRC32_CR_EN, base + SF32LB52_PMUC_LRC32_CR_OFFSET);
+      return PBL_POLL_BUSY_US(
+          (pbl_readl(base + SF32LB52_PMUC_LRC32_CR_OFFSET) & PMUC_LRC32_CR_RDY) != 0U, 10U,
+          LRC32_READY_US);
+    default:
+      return 0;
+  }
 }
 
 static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
-  if (id == SF32LB52_CLK_HXT48_DLL) {
-    pbl_modifyl(PMUC_HXT_CR1_BUF_DLL_EN, 0U, prv_pmuc(ctrl)->base + SF32LB52_PMUC_HXT_CR1_OFFSET);
+  const uintptr_t base = prv_pmuc(ctrl)->base;
+
+  switch (id) {
+    case SF32LB52_CLK_HXT48_DLL:
+      pbl_modifyl(PMUC_HXT_CR1_BUF_DLL_EN, 0U, base + SF32LB52_PMUC_HXT_CR1_OFFSET);
+      return 0;
+    case SF32LB52_CLK_LRC32:
+      pbl_modifyl(PMUC_LRC32_CR_EN, 0U, base + SF32LB52_PMUC_LRC32_CR_OFFSET);
+      return 0;
+    default:
+      return 0;
   }
+}
+
+static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
+                          const struct pbl_clk *parent) {
+  uint32_t sel;
+
+  if (id != SF32LB52_CLK_WDT || parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case SF32LB52_CLK_LRC10:
+      sel = 0U;
+      break;
+    case SF32LB52_CLK_LRC32:
+      sel = PMUC_CR_SEL_LPCLK;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  pbl_modifyl(PMUC_CR_SEL_LPCLK, sel, prv_pmuc(ctrl)->base + SF32LB52_PMUC_CR_OFFSET);
 
   return 0;
 }
@@ -339,6 +382,17 @@ static int prv_init(const struct pbl_device *dev) {
     return ret;
   }
 
+  // The unit itself runs from it
+  ret = pbl_clk_enable(&(struct pbl_clk)PBL_CLK(&pmuc->ctrl, SF32LB52_CLK_WDT));
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_clk_assign(pmuc->assigned);
+  if (ret != 0) {
+    return ret;
+  }
+
   // Gates fail until the LCPU has moved LPSYS to the crystal, some seconds into boot.
   pbl_clk_cal_start(&s_cal, NOMINAL_HZ);
 
@@ -350,13 +404,15 @@ static const struct pbl_clk_controller_ops s_ops = {
   .disable = prv_disable,
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
+  .set_parent = prv_set_parent,
 };
 
-#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32)                \
+#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32, ...)           \
   PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_PMUC_NUM_CLKS);                              \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
   PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_pmuc, struct pbl_clk_controller, ctrl) {  \
     .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
-    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32,                                         \
+    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_clk)

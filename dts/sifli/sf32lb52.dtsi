@@ -196,6 +196,13 @@
 			status = "disabled";
 		};
 
+		wdt1: watchdog@50094000 {
+			compatible = "sifli,sf32lb52-wdt";
+			reg = <0x50094000 0x1000>;
+			clocks = <&pmuc SF32LB52_PMUC_CLK_WDT>;
+			status = "disabled";
+		};
+
 		pdm1: audio-controller@5009a000 {
 			compatible = "sifli,sf32lb52-pdm";
 			reg = <0x5009a000 0x1000>;
@@ -298,6 +305,8 @@
 			operating-points-v2 = <&hpsys_opp_table>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,hpsys-rcc = <&hpsys_rcc>;
+			assigned-clocks = <&pmuc SF32LB52_PMUC_CLK_WDT>;
+			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_LRC32>;
 		};
 
 		rtc: rtc@500cb000 {

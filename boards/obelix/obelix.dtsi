@@ -452,3 +452,7 @@
 	dma-names = "tx";
 	status = "okay";
 };
+
+&wdt1 {
+	status = "okay";
+};

@@ -383,3 +383,7 @@
 	dma-names = "rx";
 	status = "okay";
 };
+
+&wdt1 {
+	status = "okay";
+};
