@@ -19,6 +19,7 @@ config VIBE_AW86225
     bool "Awinic AW86225"
     default DT_HAS_AWINIC_AW86225_ENABLED
     select I2C
+    select REGULATOR
     help
       Support for the Awinic AW86225 haptic driver.
 
@@ -26,6 +27,7 @@ config VIBE_AW8623X
     bool "Awinic AW86233"
     default DT_HAS_AWINIC_AW86233_ENABLED
     select I2C
+    select REGULATOR
     help
       Support for the Awinic AW86233 haptic driver.
 

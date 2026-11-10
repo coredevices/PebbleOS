@@ -24,6 +24,7 @@ config AUDIO_AMP_GPIO
     bool "GPIO amplifier"
     default DT_HAS_AWINIC_AW8155_ENABLED
     select GPIO
+    select REGULATOR
     help
       Amplifier switched by an enable GPIO, with an optional supply and
       enable mode pulses.

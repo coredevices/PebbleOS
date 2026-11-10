@@ -9,7 +9,9 @@ config PANEL
 config PANEL_JDI_MIP
     bool "Memory-in-pixel panels"
     default DT_HAS_JDI_LPM015M135A_ENABLED || DT_HAS_SHARP_LS013B7DD02_ENABLED
-    depends on PANEL && PWM && REGULATOR
+    depends on PANEL
+    select PWM
+    select REGULATOR
     help
       Support for the JDI LPM015M135A and Sharp LS013B7DD02 memory-in-pixel
       panels on the JDI parallel interface.
