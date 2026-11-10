@@ -19,8 +19,9 @@
   void ARCH_IRQ_HANDLER(_n)(void);                \
   void ARCH_IRQ_HANDLER(_n)(void)
 
-void arch_irq_disable(void);
-void arch_irq_enable(void);
+unsigned int arch_irq_lock(void);
+void arch_irq_unlock(unsigned int key);
+bool arch_irq_is_locked(void);
 
 // Hosts run nothing from RAM in place of the flash: nothing to mask or let through
 static inline unsigned int arch_irq_disable_all(void) {

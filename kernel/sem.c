@@ -17,34 +17,34 @@ void pbl_sem_deinit(struct pbl_sem *s) {
 
 int pbl_sem_take(struct pbl_sem *s, pbl_timeout_t timeout) {
   int rc = 0;
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (s->backend.count > 0) {
     s->backend.count--;
   } else if (pbl_timeout_is_no_wait(timeout) || arch_in_isr()) {
     rc = -EBUSY;
   } else {
     // A give hands the token straight to the woken thread.
-    rc = sched_block(&s->backend.waitq, timeout);
+    rc = sched_block(&s->backend.waitq, timeout, key);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return rc;
 }
 
 void pbl_sem_give(struct pbl_sem *s) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   struct pbl_thread *t = waitq_pop(&s->backend.waitq);
   if (t) {
     sched_wake(t, 0);
   } else if (s->backend.count < s->limit) {
     s->backend.count++;
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_sem_reset(struct pbl_sem *s) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   s->backend.count = s->initial;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 uint32_t pbl_sem_count(const struct pbl_sem *s) {

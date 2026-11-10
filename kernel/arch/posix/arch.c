@@ -155,10 +155,28 @@ void arch_heap_lock(void) {
 void arch_heap_unlock(void) {
 }
 
-void arch_irq_disable(void) {
+static unsigned int s_irq_locked;
+
+unsigned int arch_irq_lock(void) {
+  unsigned int key = s_irq_locked;
+  s_irq_locked = 1;
+  return key;
 }
 
-void arch_irq_enable(void) {
+void posix_irq_reset(void) {
+  s_irq_locked = 0;
+  irq_reset_for_test();
+}
+
+bool arch_irq_is_locked(void) {
+  return s_irq_locked != 0;
+}
+
+void arch_irq_unlock(unsigned int key) {
+  s_irq_locked = key;
+  if (key != 0) {
+    return;
+  }
   if (!posix_in_isr && posix_switch_pending && pbl_kernel_is_started()) {
     posix_switch();
   }

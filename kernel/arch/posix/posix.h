@@ -36,3 +36,6 @@ void posix_park(struct posix_thread *pt);
 
 // A pthread that will never run again; the test harness reaps them.
 void posix_add_zombie(pthread_t tid);
+
+// Drops the interrupt lock without switching, as the first thread starts.
+void posix_irq_reset(void);

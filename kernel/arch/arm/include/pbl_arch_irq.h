@@ -67,21 +67,33 @@ static PBL_ALWAYS_INLINE void arch_irq_restore_all(unsigned int key) {
   __asm volatile("msr primask, %0" ::"r"(key) : "memory");
 }
 
-// Masks the interrupts allowed to call into the kernel.
-static PBL_ALWAYS_INLINE void arch_irq_disable(void) {
-  __asm volatile("msr basepri, %0\n\tisb" ::"r"(CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL) : "memory");
-}
-
-static PBL_ALWAYS_INLINE void arch_irq_enable(void) {
-  __asm volatile("msr basepri, %0" ::"r"(0U) : "memory");
-}
-
 static PBL_ALWAYS_INLINE uint32_t arch_irq_basepri(void) {
   uint32_t basepri;
 
   __asm volatile("mrs %0, basepri" : "=r"(basepri));
 
   return basepri;
+}
+
+// Masks the interrupts allowed to call into the kernel, never unmasking any.
+static PBL_ALWAYS_INLINE unsigned int arch_irq_lock(void) {
+  unsigned int key;
+
+  __asm volatile("mrs %0, basepri\n\tmsr basepri_max, %1\n\tisb"
+                 : "=&r"(key)
+                 : "r"(CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL)
+                 : "memory");
+
+  return key;
+}
+
+// The barrier has a pending interrupt, a context switch included, taken here.
+static PBL_ALWAYS_INLINE void arch_irq_unlock(unsigned int key) {
+  __asm volatile("msr basepri, %0\n\tisb" ::"r"(key) : "memory");
+}
+
+static PBL_ALWAYS_INLINE bool arch_irq_is_locked(void) {
+  return arch_irq_basepri() != 0U;
 }
 
 // The more urgent of the kernel's own priority and the caller's mask

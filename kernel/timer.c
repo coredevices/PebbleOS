@@ -25,7 +25,7 @@ void pbl_timer_init(struct pbl_timer *timer, pbl_timer_fn_t fn) {
 void pbl_timer_start(struct pbl_timer *timer, pbl_timeout_t delay) {
   PBL_ASSERTN(!pbl_timeout_is_forever(delay));
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (timer->active) {
     prv_remove(timer);
   }
@@ -37,15 +37,15 @@ void pbl_timer_start(struct pbl_timer *timer, pbl_timeout_t delay) {
   timer->next = *link;
   *link = timer;
   timer->active = true;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_timer_stop(struct pbl_timer *timer) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (timer->active) {
     prv_remove(timer);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 bool pbl_timer_is_active(const struct pbl_timer *timer) {
@@ -55,26 +55,26 @@ bool pbl_timer_is_active(const struct pbl_timer *timer) {
 pbl_tick_t pbl_timer_remaining(const struct pbl_timer *timer) {
   pbl_tick_t remaining = 0;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   uint64_t now = sched_uptime_ticks();
   if (timer->active && timer->expires > now) {
     remaining = (pbl_tick_t)(timer->expires - now);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return remaining;
 }
 
 void timer_expire(void) {
   for (;;) {
-    pbl_irq_lock();
+    unsigned int key = arch_irq_lock();
     struct pbl_timer *timer = s_timers;
     if (timer == nullptr || sched_uptime_ticks() < timer->expires) {
-      pbl_irq_unlock();
+      arch_irq_unlock(key);
       return;
     }
     s_timers = timer->next;
     timer->active = false;
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
 
     timer->fn(timer);
   }

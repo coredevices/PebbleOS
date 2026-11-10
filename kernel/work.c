@@ -128,7 +128,7 @@ bool pbl_workq_is_current(const struct pbl_workq *q) {
 void pbl_workq_thread(void *arg) {
   struct pbl_workq *q = arg;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (q->thread == nullptr) {
     q->thread = pbl_thread_current();
     // Boosted work submitted before the queue had a thread.
@@ -136,10 +136,10 @@ void pbl_workq_thread(void *arg) {
       prv_boost_apply(q);
     }
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   for (;;) {
-    pbl_irq_lock();
+    key = arch_irq_lock();
     struct pbl_work *work = q->head;
     pbl_work_fn_t fn = nullptr;
     bool boosted = false;
@@ -155,7 +155,7 @@ void pbl_workq_thread(void *arg) {
       q->current = work;
       q->current_fn = (void *)fn;
     }
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
 
     if (!work) {
       if (q->ops && q->ops->wait) {
@@ -173,13 +173,13 @@ void pbl_workq_thread(void *arg) {
     // Or the next items pay for stacking the FPU registers on every context switch.
     mcu_fpu_cleanup();
 
-    pbl_irq_lock();
+    key = arch_irq_lock();
     q->current = nullptr;
     q->current_fn = nullptr;
     if (boosted) {
       prv_boost(q, false);
     }
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
 
     if (q->ops && q->ops->done) {
       q->ops->done(q);
@@ -228,9 +228,9 @@ void pbl_workq_flush(struct pbl_workq *q) {
   PBL_ASSERTN(!pbl_in_isr() && pbl_thread_current() != q->thread);
   prv_barrier_init(&barrier, q);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   prv_insert(q, q->tail, &barrier.work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   prv_barrier_wait(&barrier);
 }
@@ -246,14 +246,14 @@ void pbl_work_init(struct pbl_work *work, pbl_work_fn_t fn) {
 bool pbl_work_submit(struct pbl_workq *q, struct pbl_work *work) {
   bool queued = false;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (!work->pending) {
     work->q = q;
     work->pending = true;
     prv_insert(q, q->tail, work);
     queued = true;
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return queued;
 }
 
@@ -264,7 +264,7 @@ void pbl_workq_set_boost_prio(struct pbl_workq *q, pbl_prio_t prio) {
 bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work) {
   bool queued = false;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (!work->pending) {
     work->q = q;
     work->pending = true;
@@ -275,14 +275,14 @@ bool pbl_work_submit_boosted(struct pbl_workq *q, struct pbl_work *work) {
     work->boosted = true;
     prv_boost(work->q, true);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return queued;
 }
 
 bool pbl_work_cancel(struct pbl_work *work) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool was_pending = prv_remove(work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return was_pending;
 }
 
@@ -290,15 +290,15 @@ bool pbl_work_cancel(struct pbl_work *work) {
 static void prv_wait_running(const struct pbl_work *work) {
   struct pbl_work__barrier barrier;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (!prv_running_elsewhere(work)) {
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
     return;
   }
   // First in the queue, so it runs right after the function returns.
   prv_barrier_init(&barrier, work->q);
   prv_insert(work->q, nullptr, &barrier.work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   prv_barrier_wait(&barrier);
 }
@@ -317,16 +317,16 @@ bool pbl_work_flush(struct pbl_work *work) {
 
   PBL_ASSERTN(!pbl_in_isr());
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   struct pbl_workq *q = work->q;
   if (q == nullptr || (!work->pending && q->current != work)) {
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
     return false;
   }
   PBL_ASSERTN(pbl_thread_current() != q->thread);
   prv_barrier_init(&barrier, q);
   prv_insert(q, work->pending ? work : nullptr, &barrier.work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   prv_barrier_wait(&barrier);
   return true;
@@ -337,9 +337,9 @@ bool pbl_work_is_pending(const struct pbl_work *work) {
 }
 
 bool pbl_work_is_running(const struct pbl_work *work) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool running = work->q != nullptr && work->q->current == work;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return running;
 }
 
@@ -348,13 +348,13 @@ bool pbl_work_is_running(const struct pbl_work *work) {
 void pbl_delayed_work_expired(struct pbl_timer *timer) {
   struct pbl_delayed_work *dwork = container_of(timer, struct pbl_delayed_work, timer);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   // An ISR preempting the tick may have canceled or restarted the delay since the timer expired.
   if (dwork->work.armed && !pbl_timer_is_active(timer)) {
     dwork->work.armed = false;
     pbl_work_submit(dwork->work.q, &dwork->work);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_delayed_work_init(struct pbl_delayed_work *dwork, pbl_work_fn_t fn) {
@@ -372,51 +372,51 @@ static void prv_arm(struct pbl_workq *q, struct pbl_delayed_work *dwork, pbl_tim
 }
 
 bool pbl_delayed_work_is_pending(const struct pbl_delayed_work *dwork) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool pending = dwork->work.pending || dwork->work.armed;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return pending;
 }
 
 bool pbl_delayed_work_schedule(struct pbl_workq *q, struct pbl_delayed_work *dwork,
                                pbl_timeout_t delay) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool schedule = !pbl_delayed_work_is_pending(dwork);
   if (schedule) {
     prv_arm(q, dwork, delay);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return schedule;
 }
 
 bool pbl_delayed_work_cancel(struct pbl_delayed_work *dwork) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool was_pending = pbl_delayed_work_is_pending(dwork);
   dwork->work.armed = false;
   pbl_timer_stop(&dwork->timer);
   prv_remove(&dwork->work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return was_pending;
 }
 
 bool pbl_delayed_work_reschedule(struct pbl_workq *q, struct pbl_delayed_work *dwork,
                                  pbl_timeout_t delay) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool was_pending = pbl_delayed_work_cancel(dwork);
   prv_arm(q, dwork, delay);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return was_pending;
 }
 
 void pbl_delayed_work_schedule_next(struct pbl_delayed_work *dwork, pbl_tick_t period) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   const uint64_t next = dwork->timer.expires + period;
   const uint64_t now = sched_uptime_ticks();
   const uint64_t delay = next > now ? next - now : 1U;
 
   pbl_delayed_work_reschedule(dwork->work.q, dwork,
                               PBL_TICKS(delay < PBL_TICK_FOREVER ? delay : PBL_TICK_FOREVER - 1U));
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 bool pbl_delayed_work_cancel_sync(struct pbl_delayed_work *dwork) {
@@ -452,13 +452,13 @@ static void prv_call_fn(struct pbl_work *work) {
   pbl_work_call_fn_t fn = call->fn;
   void *data = call->data;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   work->q->current_fn = (void *)fn;
   // Not an item callers can wait on, and the slot can be reused from here on.
   work->q->current = nullptr;
   call->work.next = (struct pbl_work *)pool->free_head;
   pool->free_head = call;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   pbl_sem_give(&pool->free);
 
   fn(data);
@@ -467,14 +467,14 @@ static void prv_call_fn(struct pbl_work *work) {
 static struct pbl_work_call *prv_call_alloc(struct pbl_work_pool *pool) {
   struct pbl_work_call *call;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (pool->num_used < pool->num_slots) {
     call = &pool->slots[pool->num_used++];
   } else {
     call = pool->free_head;
     pool->free_head = (struct pbl_work_call *)call->work.next;
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return call;
 }
 

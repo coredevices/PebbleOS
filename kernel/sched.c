@@ -172,7 +172,7 @@ struct pbl_thread *waitq_pop(struct pbl_waitq *wq) {
 
 // ---- blocking and waking ----------------------------------------------------
 
-int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout) {
+int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout, unsigned int key) {
   struct pbl_thread *t = pbl_cur;
   PBL_ASSERTN(!arch_in_isr());
   PBL_ASSERTN(s_sched_lock == 0);
@@ -190,8 +190,8 @@ int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout) {
   arch_switch_request();
 
   // Drop the lock so the switch can happen; we come back here once woken.
-  pbl_irq_unlock();
-  pbl_irq_lock();
+  arch_irq_unlock(key);
+  (void)arch_irq_lock();
 
   return t->backend.wake_rc;
 }
@@ -339,7 +339,7 @@ struct pbl_thread *sched_idle_thread(void) {
 static void prv_idle_entry(void *arg) {
   (void)arg;
   for (;;) {
-    pbl_irq_lock();
+    unsigned int key = arch_irq_lock();
     // Give other threads at the idle priority their turn first.
     if (s_ready_head[PBL_PRIO_IDLE]->backend.next) {
       sched_yield_current();
@@ -349,7 +349,7 @@ static void prv_idle_entry(void *arg) {
     if (timer_ticks < idle_ticks) {
       idle_ticks = timer_ticks;
     }
-    pbl_irq_unlock();
+    arch_irq_unlock(key);
     arch_idle(idle_ticks);
   }
 }
@@ -368,7 +368,7 @@ void sched_start_prepare(void) {
   int rc = pbl_thread_create(&s_idle_thread, &attr);
   PBL_ASSERTN(rc == 0);
 
-  pbl_irq_lock();
+  (void)arch_irq_lock();
   s_started = true;
   arch_cur_set(sched_next);
 }
@@ -388,19 +388,19 @@ bool pbl_kernel_is_running(void) {
 }
 
 void pbl_sched_lock(void) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   s_sched_lock++;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_sched_unlock(void) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   PBL_ASSERTN(s_sched_lock > 0);
   if (--s_sched_lock == 0 && s_switch_deferred) {
     s_switch_deferred = false;
     sched_request_switch();
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 bool pbl_sched_is_locked(void) {
@@ -408,16 +408,16 @@ bool pbl_sched_is_locked(void) {
 }
 
 uint64_t pbl_uptime_ticks(void) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   uint64_t ticks = s_ticks;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return ticks;
 }
 
 void pbl_thread_yield(void) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   sched_yield_current();
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_thread_sleep(pbl_timeout_t timeout) {
@@ -425,9 +425,9 @@ void pbl_thread_sleep(pbl_timeout_t timeout) {
     pbl_thread_yield();
     return;
   }
-  pbl_irq_lock();
-  sched_block(nullptr, timeout);
-  pbl_irq_unlock();
+  unsigned int key = arch_irq_lock();
+  sched_block(nullptr, timeout, key);
+  arch_irq_unlock(key);
 }
 
 void sched_reset_for_test(void) {

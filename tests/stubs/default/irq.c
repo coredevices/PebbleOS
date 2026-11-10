@@ -20,3 +20,14 @@ PBL_WEAK bool pbl_in_isr(void) {
 
 PBL_WEAK void sys_psleep(int millis) {
 }
+
+PBL_WEAK unsigned int arch_irq_lock(void) {
+  return 0;
+}
+
+PBL_WEAK void arch_irq_unlock(unsigned int key) {
+}
+
+PBL_WEAK bool arch_irq_is_locked(void) {
+  return false;
+}

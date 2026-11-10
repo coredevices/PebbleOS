@@ -11,7 +11,7 @@ void pbl_poll_group_init(struct pbl_poll_group *g) {
 
 void pbl_poll_group_add(struct pbl_poll_group *g, struct pbl_msgq *q) {
   PBL_ASSERTN(q->group == nullptr);
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   q->group = g;
   // Keep members in the order they were added.
   struct pbl_msgq **link = &g->members;
@@ -20,7 +20,7 @@ void pbl_poll_group_add(struct pbl_poll_group *g, struct pbl_msgq *q) {
   }
   *link = q;
   g->capacity += q->max_msgs;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 // Scans the members starting after the one returned last time so a busy
@@ -49,13 +49,13 @@ static struct pbl_msgq *prv_ready_member(struct pbl_poll_group *g) {
 struct pbl_msgq *pbl_poll_group_wait(struct pbl_poll_group *g, pbl_timeout_t timeout) {
   PBL_ASSERTN(!arch_in_isr() && g->members != nullptr);
   struct pbl_msgq *ready;
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   while ((ready = prv_ready_member(g)) == nullptr) {
-    if (pbl_timeout_is_no_wait(timeout) || sched_block(&g->backend.waitq, timeout) != 0) {
+    if (pbl_timeout_is_no_wait(timeout) || sched_block(&g->backend.waitq, timeout, key) != 0) {
       break;
     }
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return ready;
 }
 

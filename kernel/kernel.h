@@ -30,9 +30,9 @@ void sched_yield_current(void);
 void sched_request_switch(void);
 
 //! Blocks the current thread on @p wq (NULL for a plain sleep) until woken or
-//! the timeout expires. Releases and re-takes the interrupt lock; the caller
-//! must hold it exactly once. @return the wake code, -EAGAIN on timeout.
-int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout);
+//! the timeout expires. Releases the interrupt lock, taken with @p key, to
+//! switch, and holds it again on return. @return the wake code, -EAGAIN on timeout.
+int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout, unsigned int key);
 
 //! Makes a blocked thread ready with @p rc as its wake code.
 void sched_wake(struct pbl_thread *t, int rc);
@@ -54,10 +54,11 @@ void sched_disinherit(struct pbl_thread *owner);
 //! Starts the scheduler: creates the idle thread and switches to the highest priority thread.
 [[noreturn]] void pbl_kernel_start(void);
 
-//! Resets the interrupt lock nesting when the first thread starts.
-void irq_reset(void);
+//! Forgets the pbl_irq_lock() nesting of threads a test left behind.
+void irq_reset_for_test(void);
 
-//! Creates the idle thread and picks the first thread to run.
+//! Creates the idle thread and picks the first thread to run. Returns with the interrupt lock
+//! held, which the arch drops as it starts that thread.
 void sched_start_prepare(void);
 
 //! The thread to run: the first of the most urgent ready ones. On a switch the arch makes it
