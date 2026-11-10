@@ -1,6 +1,6 @@
 # getafix board configuration
 
-CONFIG_SOC_SF32LB52=y
+CONFIG_SOC_SF32LB52J=y
 
 CONFIG_HAL_SIFLI_SF32LB52=y
 

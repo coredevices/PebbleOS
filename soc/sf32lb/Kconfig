@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SF32LB52
+    bool
+    select HAL_SIFLI
+    select CPU_STAR_MC1
+    select CPU_HAS_FPU
+    select ARCH_VECTOR_TABLE_RAM
+    select KERNEL_MPU_IN_FAULTS
+    select RAMFUNC
+    select SOC_HAS_MPU_REGIONS
+    select SOC_HAS_RESET
+    help
+      SiFli SF32LB52 series, selected by its lines.

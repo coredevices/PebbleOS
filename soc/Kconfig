@@ -13,16 +13,7 @@ config SOC_NRF52
     select CPU_CORTEX_M4
     select CPU_HAS_FPU
 
-config SOC_SF32LB52
-    bool "SiFli SF32LB52"
-    select HAL_SIFLI
-    select CPU_STAR_MC1
-    select CPU_HAS_FPU
-    select ARCH_VECTOR_TABLE_RAM
-    select KERNEL_MPU_IN_FAULTS
-    select RAMFUNC
-    select SOC_HAS_MPU_REGIONS
-    select SOC_HAS_RESET
+rsource "sf32lb/Kconfig.soc"
 
 config SOC_QEMU
     bool "QEMU emulated"
@@ -92,3 +83,5 @@ config SOC_QEMU_CORTEX_M33
     select CPU_CORTEX_M33
 
 endchoice
+
+rsource "sf32lb/Kconfig"
