@@ -63,6 +63,10 @@
 			reg = <0x50000000 0x1000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
+			clocks = <&pmuc SF32LB52_PMUC_CLK_HRC48>, <&pmuc SF32LB52_PMUC_CLK_HXT48>;
+			clock-names = "hrc48", "hxt48";
+			assigned-clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PERI>;
+			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_HRC48>;
 		};
 
 		pinctrl: pinctrl@50003000 {
@@ -122,6 +126,7 @@
 			compatible = "sifli,sf32lb52-usart";
 			reg = <0x50084000 0x1000>;
 			interrupts = <59>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PERI>;
 			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART1>;
 			status = "disabled";
 		};

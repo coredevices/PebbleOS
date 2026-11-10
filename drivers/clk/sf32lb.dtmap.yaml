@@ -9,6 +9,10 @@ define: PBL_CLK_SF32LB_DEFINE
 args:
   - name: true
   - reg: 0
+  - clock: hrc48
+  - clock: hxt48
+  - assigned-clocks: PBL_CLK_ASSIGNED
+    optional: true
 ids:
   clock:
     cell: 0
