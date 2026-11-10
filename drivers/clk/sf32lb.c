@@ -9,6 +9,7 @@
 #include <pbl/drivers/power_domain.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/section.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -30,6 +31,10 @@
 
 // The CPU clock, which the busy waits count
 extern uint32_t SystemCoreClock;
+
+// For the code that runs with the flash down, which cannot read the device
+static uintptr_t s_base;
+static uintptr_t s_cfg;
 
 struct pbl_clk_sf32lb {
   struct pbl_clk_controller ctrl;
@@ -547,9 +552,47 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
   }
 }
 
+// With the flash down: plain accesses, as the locked ones run from flash
+PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_suspend(struct pbl_clk_sf32lb52_hxt48_state *state) {
+  state->csr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
+  state->dll1cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL1CR_OFFSET);
+  state->dll2cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL2CR_OFFSET);
+
+  pbl_writel((state->csr & ~(HPSYS_RCC_CSR_SEL_SYS_MASK | HPSYS_RCC_CSR_SEL_SYS_LP)) |
+                 PBL_FIELD_PREP(HPSYS_RCC_CSR_SEL_SYS_MASK, HPSYS_RCC_CSR_SEL_SYS_HRC48),
+             s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
+  pbl_writel(state->dll1cr & ~HPSYS_RCC_DLLCR_EN, s_base + SF32LB52_HPSYS_RCC_DLL1CR_OFFSET);
+  pbl_writel(state->dll2cr & ~HPSYS_RCC_DLLCR_EN, s_base + SF32LB52_HPSYS_RCC_DLL2CR_OFFSET);
+}
+
+PBL_SECTION_RAM static void prv_dll_restart(uint32_t offset, uint32_t cr) {
+  if ((cr & HPSYS_RCC_DLLCR_EN) == 0U) {
+    return;
+  }
+
+  pbl_writel(cr & ~HPSYS_RCC_DLLCR_EN, s_base + offset);
+  pbl_writel(cr, s_base + offset);
+  pbl_busy_wait_us(DLL_LOCK_US);
+  while ((pbl_readl(s_base + offset) & HPSYS_RCC_DLLCR_READY) == 0U) {
+  }
+}
+
+PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_resume(
+    const struct pbl_clk_sf32lb52_hxt48_state *state) {
+  const uintptr_t cau2 = s_cfg + SF32LB52_HPSYS_CFG_CAU2_CR_OFFSET;
+
+  pbl_writel(pbl_readl(cau2) | HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN | HPSYS_CFG_CAU2_CR_HPBG_EN, cau2);
+  prv_dll_restart(SF32LB52_HPSYS_RCC_DLL1CR_OFFSET, state->dll1cr);
+  prv_dll_restart(SF32LB52_HPSYS_RCC_DLL2CR_OFFSET, state->dll2cr);
+  pbl_writel(state->csr, s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
+}
+
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb *rcc = container_of(dev, const struct pbl_clk_sf32lb, ctrl.dev);
   int ret;
+
+  s_base = rcc->base;
+  s_cfg = rcc->cfg;
 
   // The voltage the assigned rates need, before they are set
   ret = pbl_power_domain_set_performance_state(&rcc->pd, rcc->pd_level);

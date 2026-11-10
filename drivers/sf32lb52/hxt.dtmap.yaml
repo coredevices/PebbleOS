@@ -8,6 +8,7 @@ symbol: "{sym}_hxt48"
 define: PBL_SF32LB52_HXT_DEFINE
 args:
   - name: true
+  - reg: 0
   - self: flash
     of: nvmem-cells
   - strings: nvmem-cell-names
