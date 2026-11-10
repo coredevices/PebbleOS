@@ -55,7 +55,7 @@ jobs:
         include:
           - host: linux
             os: ubuntu-24.04
-            container: ghcr.io/coredevices/pebbleos-docker:v11
+            container: ghcr.io/coredevices/pebbleos-docker:v12
           - host: macos
             os: macos-15
 

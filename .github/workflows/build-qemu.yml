@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v11
+      image: ghcr.io/coredevices/pebbleos-docker:v12
 
     strategy:
       matrix:
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v11
+      image: ghcr.io/coredevices/pebbleos-docker:v12
 
     strategy:
       fail-fast: false
