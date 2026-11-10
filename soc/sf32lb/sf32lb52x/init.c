@@ -12,7 +12,6 @@
 #include <pbl/kernel/mmio.h>
 
 #include <bf0_hal.h>
-#include <drivers/watchdog.h>
 #include <hardware/sf32lb52_wdt.h>
 
 #define PWRKEY_RESET_CNT (32000 * 15)
@@ -55,23 +54,13 @@ void pbl_soc_early_init(void) {
 
   HAL_HPAON_StartGTimer();
 
-  HAL_PMU_EnableRC32K(1);
-
-#ifdef CONFIG_WATCHDOG
-  // Stop and restart WDT in case it was clocked by RC10K before
-  watchdog_stop();
-#else
-  // The bootloader leaves its watchdog running
+#ifndef CONFIG_WATCHDOG
+  // The bootloader leaves its watchdog running, which the watchdog driver takes over otherwise
   pbl_writel(WDT_CCR_STOP, SF32LB52_WDT1_BASE + SF32LB52_WDT_CCR_OFFSET);
   (void)PBL_POLL_BUSY_US(
       (pbl_readl(SF32LB52_WDT1_BASE + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U,
       48000U);
 #endif
-
-  HAL_PMU_LpCLockSelect(PMU_LPCLK_RC32);
-
-  watchdog_init();
-  watchdog_start();
 
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
