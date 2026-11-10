@@ -12,6 +12,7 @@ if FS
 
 config FS_PFS
     bool "Pebble File System (PFS)"
+    select CRC
     default y
     help
       PFS, the wear-leveled file system on the external NOR flash.

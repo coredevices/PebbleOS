@@ -3,6 +3,7 @@
 
 menuconfig CRC_HW
     bool "Hardware CRC units"
+    depends on CRC
     help
       Drivers of hardware CRC units (pbl/drivers/crc.h), which the CRC
       subsystem uses instead of computing in software.

@@ -1,7 +1,8 @@
 # CRC
 
 `subsys/crc/` computes every checksum the firmware stores or exchanges. Its
-public API is `include/pbl/crc/crc.h`:
+public API is `include/pbl/crc/crc.h`. It is built with `CONFIG_CRC`, which
+the code that uses it selects:
 
 | Function | Algorithm | Used by |
 | --- | --- | --- |

@@ -5,6 +5,7 @@ menu "Bluetooth"
 
 config BT
     bool "Bluetooth"
+    select BTUTIL
     select MBEDTLS
     select TASK_WDT
     help

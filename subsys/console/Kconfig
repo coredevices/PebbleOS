@@ -3,6 +3,7 @@
 
 config CONSOLE
     bool "Serial console"
+    select CRC
     help
       Text console on the board's console port, CONSOLE_UART: logs and
       the shell. Off on release firmware, which leaves the port unused.
