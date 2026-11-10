@@ -371,10 +371,9 @@
 	status = "okay";
 };
 
-&hxt48 {
+&pmuc {
 	nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
 	nvmem-cell-names = "soc-config-user", "soc-config-cust";
-	status = "okay";
 };
 
 &pdm1 {

@@ -119,4 +119,4 @@ int pbl_sf32lb52_hxt_init(const struct pbl_device *dev) {
   return 0;
 }
 
-#include PBL_DT_INSTANCES(sifli_sf32lb52_hxt48)
+#include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_device)

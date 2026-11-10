@@ -21,7 +21,7 @@ static uint64_t s_rate_mhz;
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
 
 static struct pbl_clk_notifier s_rc10k_nb = {
-  .clk = PBL_CLK(SF32LB_RC10K, SF32LB52_CLK_RC10K),
+  .clk = PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10),
   .fn = prv_rate_changed,
 };
 
@@ -106,7 +106,7 @@ static int prv_init(const struct pbl_device *dev) {
   int ret;
 
   if (!s_started) {
-    ret = pbl_device_init(&SF32LB_RC10K->dev);
+    ret = pbl_device_init(&SF32LB52_PMUC->dev);
     if (ret == 0) {
       ret = pbl_clk_get_rate(&s_rc10k_nb.clk, &s_rate_mhz);
     }

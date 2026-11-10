@@ -3,28 +3,34 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/clk/cal.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_bt_mac.h>
 #include <hardware/sf32lb52_lpsys_aon.h>
 #include <hardware/sf32lb52_lpsys_rcc.h>
 #include <hardware/sf32lb52_mailbox.h>
+#include <hardware/sf32lb52_pmuc.h>
 #include <lpsys.h>
 
-PBL_LOG_MODULE_DEFINE(clk_sf32lb_rc10k, CONFIG_CLK_SF32LB_RC10K_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(clk_sf32lb52_pmuc, CONFIG_CLK_SF32LB52_PMUC_LOG_LEVEL);
+
+#define LRC32_HZ 32000U
+#define HRC48_HZ 48000000U
 
 // The RCCAL counter of the Bluetooth controller counts LPSYS clock cycles, from the 48 MHz
-// crystal, over a number of RC10K cycles. The LCPU calibrates on its own with the same counter,
+// crystal, over a number of LRC10 cycles. The LCPU calibrates on its own with the same counter,
 // under a mailbox mutex, and never uses this estimate.
 #define REF_HZ 48000000.0
 
-#define GATE_CYCLES CONFIG_CLK_SF32LB_RC10K_CAL_GATE_CYCLES
-#define PERIOD_MS   (CONFIG_CLK_SF32LB_RC10K_CAL_PERIOD_S * 1000U)
+#define GATE_CYCLES CONFIG_CLK_SF32LB52_PMUC_LRC10_CAL_GATE_CYCLES
+#define PERIOD_MS   (CONFIG_CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S * 1000U)
 
 // Only until the first gate, whatever the real rate is.
 #define NOMINAL_HZ 10000.0
@@ -44,7 +50,7 @@ static const struct pbl_freq_track_params s_params = {
 static const struct pbl_clk_cal_ops s_cal_ops;
 
 static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(
-    &s_cal_ops, &s_params, PBL_CLK(SF32LB_RC10K, SF32LB52_CLK_RC10K), GATE_CYCLES, PERIOD_MS);
+    &s_cal_ops, &s_params, PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10), GATE_CYCLES, PERIOD_MS);
 
 static bool s_hxt48_requested;
 
@@ -170,11 +176,65 @@ static const struct pbl_clk_cal_ops s_cal_ops = {
   .finish = prv_cal_finish,
 };
 
+struct pbl_clk_sf32lb52_pmuc {
+  struct pbl_clk_controller ctrl;
+  uintptr_t base;
+  struct pbl_clk hxt48;
+  struct pbl_clk lxt32;
+};
+
+static const struct pbl_clk_sf32lb52_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
+  return container_of(ctrl, const struct pbl_clk_sf32lb52_pmuc, ctrl);
+}
+
 static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
                         uint64_t *rate_mhz) {
-  *rate_mhz = pbl_clk_cal_get_rate(&s_cal);
+  switch (id) {
+    case SF32LB52_CLK_LRC10:
+      *rate_mhz = pbl_clk_cal_get_rate(&s_cal);
+      return 0;
+    case SF32LB52_CLK_LRC32:
+      *rate_mhz = LRC32_HZ * 1000ULL;
+      return 0;
+    case SF32LB52_CLK_HRC48:
+      *rate_mhz = HRC48_HZ * 1000ULL;
+      return 0;
+    case SF32LB52_CLK_LXT32:
+    case SF32LB52_CLK_HXT48:
+    case SF32LB52_CLK_WDT:
+      if (parent_mhz == 0U) {
+        return -ENODEV;
+      }
+      *rate_mhz = parent_mhz;
+      return 0;
+    default:
+      return -EINVAL;
+  }
+}
 
-  return 0;
+static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
+                          struct pbl_clk *parent) {
+  const struct pbl_clk_sf32lb52_pmuc *pmuc = prv_pmuc(ctrl);
+
+  switch (id) {
+    case SF32LB52_CLK_LXT32:
+      if (pmuc->lxt32.ctrl == nullptr) {
+        return -ENOENT;
+      }
+      *parent = pmuc->lxt32;
+      return 0;
+    case SF32LB52_CLK_HXT48:
+      *parent = pmuc->hxt48;
+      return 0;
+    case SF32LB52_CLK_WDT:
+      *parent = (struct pbl_clk)PBL_CLK(
+          ctrl, (pbl_readl(pmuc->base + SF32LB52_PMUC_CR_OFFSET) & PMUC_CR_SEL_LPCLK) != 0U
+                    ? SF32LB52_CLK_LRC32
+                    : SF32LB52_CLK_LRC10);
+      return 0;
+    default:
+      return -ENOENT;
+  }
 }
 
 static int prv_init(const struct pbl_device *dev) {
@@ -186,9 +246,14 @@ static int prv_init(const struct pbl_device *dev) {
 
 static const struct pbl_clk_controller_ops s_ops = {
   .get_rate = prv_get_rate,
+  .get_parent = prv_get_parent,
 };
 
-PBL_CLK_CONTROLLER_STATE_DEFINE(pbl_clk_sf32lb_rc10k, 1);
-const struct pbl_clk_controller pbl_clk_sf32lb_rc10k =
-    PBL_CLK_CONTROLLER_INIT(pbl_clk_sf32lb_rc10k, "rc10k", prv_init, nullptr, &s_ops);
-PBL_DEVICE_REGISTER(pbl_clk_sf32lb_rc10k, &pbl_clk_sf32lb_rc10k.dev);
+#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _hxt48, _lxt32)                      \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_PMUC_NUM_CLKS);                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_pmuc, struct pbl_clk_controller, ctrl) {  \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
+    .hxt48 = _hxt48, .lxt32 = _lxt32,                                                        \
+  }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_clk)
