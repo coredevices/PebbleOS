@@ -6,6 +6,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/drivers/power_domain.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -37,6 +38,8 @@ struct pbl_clk_sf32lb {
   struct pbl_clk hrc48;
   struct pbl_clk hxt48;
   struct pbl_clk hxt48_dll;
+  struct pbl_power_domain pd;
+  uint32_t pd_level;
   const struct pbl_clk_assigned *assigned;
 };
 
@@ -548,6 +551,12 @@ static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb *rcc = container_of(dev, const struct pbl_clk_sf32lb, ctrl.dev);
   int ret;
 
+  // The voltage the assigned rates need, before they are set
+  ret = pbl_power_domain_set_performance_state(&rcc->pd, rcc->pd_level);
+  if (ret != 0) {
+    return ret;
+  }
+
   // The CPU runs from it
   ret = pbl_clk_enable(&(struct pbl_clk)PBL_CLK(&rcc->ctrl, SF32LB52_HPSYS_CLK_SYS));
   if (ret != 0) {
@@ -566,13 +575,14 @@ static const struct pbl_clk_controller_ops s_clk_ops = {
   .set_rate = prv_clk_set_rate,
 };
 
-#define PBL_CLK_SF32LB_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, ...)          \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_HPSYS_NUM_CLKS);                                 \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                          \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {             \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops), .base = (_base), \
-    .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48, .hxt48_dll = _hxt48_dll,                    \
-    .assigned = sym##_assigned,                                                                  \
+#define PBL_CLK_SF32LB_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd, _pd_level, \
+                              ...)                                                                 \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_HPSYS_NUM_CLKS);                                   \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {               \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops), .base = (_base),   \
+    .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48, .hxt48_dll = _hxt48_dll, .pd = _pd,           \
+    .pd_level = (_pd_level), .assigned = sym##_assigned,                                           \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_clk)

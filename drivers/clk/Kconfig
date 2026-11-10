@@ -26,6 +26,7 @@ config CLK_FIXED
 config CLK_SF32LB
     bool "SiFli SF32LB RCC"
     default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED
+    select POWER_DOMAIN
     help
       Clock controller of the SiFli SF32LB52 HPSYS RCC.
 

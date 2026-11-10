@@ -15,7 +15,6 @@
 #include <drivers/watchdog.h>
 #include <hardware/sf32lb52_wdt.h>
 
-#define HCPU_FREQ_MHZ    240
 #define PWRKEY_RESET_CNT (32000 * 15)
 
 #define PIN_FUNC_MSK \
@@ -41,8 +40,9 @@ void pbl_soc_early_init(void) {
   // Disable default PA21 pull-down, causing leakage
   (void)pbl_pinctrl_sf32lb52_modify(SF32LB52_PA21_GPIO | PBL_PINCTRL_SF32LB52_INPUT, PIN_FUNC_MSK);
 
+  // HXT48 runs the DLLs, and the CPU until HRC48 is calibrated
+  HAL_HPAON_EnableXT48();
   if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
-    HAL_HPAON_EnableXT48();
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
   }
 
@@ -74,16 +74,12 @@ void pbl_soc_early_init(void) {
   watchdog_init();
   watchdog_start();
 
-  HAL_PMU_EnableDLL(1);
-
   HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
 
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 
   ret = HAL_RCC_CalibrateRC48();
   PBL_ASSERTN(ret == HAL_OK);
-
-  HAL_RCC_HCPU_ConfigHCLK(HCPU_FREQ_MHZ);
 
   HAL_RCC_DisableModule(RCC_MOD_EPIC);
   HAL_RCC_DisableModule(RCC_MOD_EZIP);
