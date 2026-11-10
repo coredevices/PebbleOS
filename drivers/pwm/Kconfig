@@ -24,7 +24,9 @@ config PWM_NRF5_RTC
 config PWM_SF32LB_LPTIM
     bool "SiFli SF32LB LPTIM"
     default DT_HAS_SIFLI_SF32LB52_LPTIM_PWM_ENABLED
-    depends on PINCTRL
+    depends on SOC_SF32LB52
+    select CLK
+    select PINCTRL
     help
       Support for PWM outputs of the SiFli SF32LB low-power timers.
 

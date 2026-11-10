@@ -15,6 +15,7 @@ config SOC_POSIX
     bool "POSIX host"
     select ARCH_POSIX
     select SOC_HAS_RESET
+    select TIMER_POSIX
     help
       Run the firmware as a native application on a POSIX host
       (Linux, macOS), with emulated peripherals.
@@ -58,7 +59,6 @@ config SDL
 
 config QEMU
     bool
-    default y if SOC_QEMU_PEBBLE
     help
       Derived alias for SOC_QEMU_PEBBLE. Gates features that don't make
       sense under emulation.

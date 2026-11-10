@@ -1,16 +1,17 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config PINCTRL
-    bool
+menuconfig PINCTRL
+    bool "Pin controllers"
     help
       Pin controller class (pbl/drivers/pinctrl.h), selected by the drivers
       that route peripheral signals to pins.
 
+if PINCTRL
+
 config PINCTRL_SF32LB52
     bool "SiFli SF32LB52 pin controller"
-    default y if SOC_SF32LB52
-    select PINCTRL
+    default DT_HAS_SIFLI_SF32LB52_PINCTRL_ENABLED
     help
       Pin multiplexer and pad configuration of the SiFli SF32LB52 HPSYS
       pads.
@@ -24,7 +25,9 @@ config PINCTRL_SF32LB52_OUTPUT_LOW
 config PINCTRL_SHELL
     bool "Pin controller shell commands"
     default DRIVER_SHELL
-    depends on PINCTRL && SHELL
+    depends on SHELL
     help
       The pinctrl shell command, to dump the pad registers of every pin
       controller.
+
+endif # PINCTRL

@@ -27,7 +27,8 @@ config RTC_RETAINED
 config RTC_SF32LB
     bool "SiFli SF32LB"
     default y if SOC_SF32LB52
-    depends on CLK_SF32LB52_RTC
+    depends on SOC_SF32LB52
+    select CLK
     help
       SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate.
 

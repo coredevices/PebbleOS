@@ -1,10 +1,19 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+menuconfig CRC_HW
+    bool "Hardware CRC units"
+    help
+      Drivers of hardware CRC units (pbl/drivers/crc.h), which the CRC
+      subsystem uses instead of computing in software.
+
+if CRC_HW
+
 config CRC_SF32LB
     bool "SiFli SF32LB CRC unit"
     default y if SOC_SF32LB52
-    depends on CLK_SF32LB
+    depends on SOC_SF32LB52
+    select CLK
     select CRC_HW_ACCEL
     help
       Computes CRC-32 and the legacy checksum on the SF32LB CRC unit.
@@ -24,3 +33,5 @@ module-str = CRC
 source "subsys/logging/Kconfig.template.log_level"
 
 endif
+
+endif # CRC_HW
