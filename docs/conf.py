@@ -73,11 +73,12 @@ html_context = {
     "source_docs_path": "/docs/",
 }
 
-# The firmware build behind the playground, left out of Read the Docs pull
-# request previews unless labelled ci:docs-playground (see .readthedocs.yaml)
-pbl_playground = os.environ.get("READTHEDOCS_VERSION_TYPE") != "external" or (
-    os.path.exists(os.path.join(os.path.dirname(__file__), "..", ".pbl_playground"))
+# The firmware builds behind the playground: on Read the Docs, those of CI
+# when it downloaded them (see .readthedocs.yaml), built here elsewhere
+pbl_playground_prebuilt = os.path.exists(
+    os.path.join(os.path.dirname(__file__), "_build", "playground", ".prebuilt")
 )
+pbl_playground = pbl_playground_prebuilt or "READTHEDOCS" not in os.environ
 
 # Boards the playground offers, with their label; the first one is the default
 pbl_playground_boards = {
