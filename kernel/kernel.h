@@ -101,3 +101,6 @@ static_assert(THREAD_REGION_SYSCALL_GUARD + 1 == ARCH_THREAD_MPU_REGIONS,
 
 //! Takes over the MPU, adds the static regions it knows about and enables it.
 void mpu_init(void);
+
+//! MPU slot of the user read-only kernel data, -1 until it is added.
+extern int mpu_user_ro_slot;
