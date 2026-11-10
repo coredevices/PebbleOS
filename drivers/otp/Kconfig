@@ -10,6 +10,7 @@ if OTP
 
 config OTP_FLASH
     bool "Flash security registers"
+    default y
     depends on FLASH_OTP
     help
       OTP slots in the cells the board lays out in the flash OTP area
