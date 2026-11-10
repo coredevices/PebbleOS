@@ -15,7 +15,8 @@ description: |
 
   - SYS, clk_hpsys, from HRC48, HXT48 or DLL1, divided into HCLK, the AHB
     clock, itself divided into PCLK and PCLK2, the APB clocks;
-  - DLL1 and DLL2, from HXT48;
+  - DLL1 and DLL2, from HXT48 through the DLL buffer of the PMUC, on the
+    HPSYS bandgap, which the HPSYS configuration enables;
   - PERI, clk_peri_hpsys, from HRC48 or HXT48, for the serial peripherals,
     and PERI_DIV2, half of it, for some timers;
   - MPI1_K and MPI2_K, the kernel clocks of the MPI controllers, from PERI,
@@ -43,11 +44,17 @@ properties:
     items:
       - description: HRC48 oscillator
       - description: HXT48 oscillator
+      - description: HXT48 through the DLL buffer
 
   clock-names:
     items:
       - const: hrc48
       - const: hxt48
+      - const: hxt48-dll
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration, for the HPSYS bandgap.
 
 required:
   - compatible
@@ -56,6 +63,7 @@ required:
   - '#reset-cells'
   - clocks
   - clock-names
+  - sifli,hpsys-cfg
 
 additionalProperties: false
 
@@ -66,8 +74,9 @@ examples:
         reg = <0x50000000 0x1000>;
         #clock-cells = <1>;
         #reset-cells = <1>;
-        clocks = <&pmuc 3>, <&pmuc 4>;
-        clock-names = "hrc48", "hxt48";
+        clocks = <&pmuc 3>, <&pmuc 4>, <&pmuc 6>;
+        clock-names = "hrc48", "hxt48", "hxt48-dll";
+        sifli,hpsys-cfg = <&hpsys_cfg>;
         assigned-clocks = <&rcc 44>;
         assigned-clock-parents = <&pmuc 3>;
     };

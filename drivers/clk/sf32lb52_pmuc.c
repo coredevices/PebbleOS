@@ -201,6 +201,7 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
       return 0;
     case SF32LB52_CLK_LXT32:
     case SF32LB52_CLK_HXT48:
+    case SF32LB52_CLK_HXT48_DLL:
     case SF32LB52_CLK_WDT:
       if (parent_mhz == 0U) {
         return -ENODEV;
@@ -226,6 +227,9 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
     case SF32LB52_CLK_HXT48:
       *parent = pmuc->hxt48;
       return 0;
+    case SF32LB52_CLK_HXT48_DLL:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB52_CLK_HXT48);
+      return 0;
     case SF32LB52_CLK_WDT:
       *parent = (struct pbl_clk)PBL_CLK(
           ctrl, (pbl_readl(pmuc->base + SF32LB52_PMUC_CR_OFFSET) & PMUC_CR_SEL_LPCLK) != 0U
@@ -237,6 +241,22 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
   }
 }
 
+static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
+  if (id == SF32LB52_CLK_HXT48_DLL) {
+    pbl_modifyl(0U, PMUC_HXT_CR1_BUF_DLL_EN, prv_pmuc(ctrl)->base + SF32LB52_PMUC_HXT_CR1_OFFSET);
+  }
+
+  return 0;
+}
+
+static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
+  if (id == SF32LB52_CLK_HXT48_DLL) {
+    pbl_modifyl(PMUC_HXT_CR1_BUF_DLL_EN, 0U, prv_pmuc(ctrl)->base + SF32LB52_PMUC_HXT_CR1_OFFSET);
+  }
+
+  return 0;
+}
+
 static int prv_init(const struct pbl_device *dev) {
   // Gates fail until the LCPU has moved LPSYS to the crystal, some seconds into boot.
   pbl_clk_cal_start(&s_cal, NOMINAL_HZ);
@@ -245,6 +265,8 @@ static int prv_init(const struct pbl_device *dev) {
 }
 
 static const struct pbl_clk_controller_ops s_ops = {
+  .enable = prv_enable,
+  .disable = prv_disable,
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
 };

@@ -106,7 +106,7 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
  * The rate of LRC10 is the filtered estimate of its calibration, updated every
  * @c CONFIG_CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S seconds from the tick interrupt, and a
  * placeholder until the first gate, with or without Bluetooth; see the RC10K calibration page in
- * the driver documentation. The clocks always run.
+ * the driver documentation. The oscillators always run; HXT48_DLL gates the DLL buffer.
  * @{
  */
 #define SF32LB52_CLK_LRC10 0
@@ -115,10 +115,12 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
 #define SF32LB52_CLK_HRC48 3
 #define SF32LB52_CLK_HXT48 4
 #define SF32LB52_CLK_WDT   5
+/** HXT48 as the DLLs take it, through a buffer of its own. */
+#define SF32LB52_CLK_HXT48_DLL 6
 /** @} */
 
 /** @cond INTERNAL_HIDDEN */
-#define SF32LB52_PMUC_NUM_CLKS 6
+#define SF32LB52_PMUC_NUM_CLKS 7
 /** @endcond */
 
 /** @cond INTERNAL_HIDDEN */

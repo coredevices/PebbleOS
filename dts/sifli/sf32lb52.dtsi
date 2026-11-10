@@ -63,8 +63,10 @@
 			reg = <0x50000000 0x1000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
-			clocks = <&pmuc SF32LB52_PMUC_CLK_HRC48>, <&pmuc SF32LB52_PMUC_CLK_HXT48>;
-			clock-names = "hrc48", "hxt48";
+			clocks = <&pmuc SF32LB52_PMUC_CLK_HRC48>, <&pmuc SF32LB52_PMUC_CLK_HXT48>,
+				 <&pmuc SF32LB52_PMUC_CLK_HXT48_DLL>;
+			clock-names = "hrc48", "hxt48", "hxt48-dll";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
 			assigned-clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PERI>;
 			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_HRC48>;
 		};
@@ -81,6 +83,11 @@
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_LCDC1>;
 			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_LCDC1>;
 			status = "disabled";
+		};
+
+		hpsys_cfg: syscon@5000b000 {
+			compatible = "sifli,sf32lb52-hpsys-cfg", "syscon";
+			reg = <0x5000b000 0x1000>;
 		};
 
 		mpi1: spi@50041000 {

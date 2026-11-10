@@ -18,7 +18,8 @@ description: |
   - LRC32, the RC oscillator of about 32 kHz;
   - LXT32, the oscillator of the 32.768 kHz crystal, on boards that fit one;
   - HRC48, the 48 MHz RC oscillator, once calibrated against HXT48;
-  - HXT48, the oscillator of the 48 MHz crystal;
+  - HXT48, the oscillator of the 48 MHz crystal, and HXT48_DLL, the same
+    through the buffer that feeds the DLLs;
   - WDT, clk_wdt, LRC10 or LRC32, which clocks the watchdogs and the unit
     itself.
 
