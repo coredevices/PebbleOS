@@ -11,6 +11,9 @@ runs so only what changed is rebuilt, and publishes them under
 ``_playground/<board>/``. The page asks for each build's files with
 ``?v=<hash of the build>``, so no cache ever mixes files from two builds.
 
+``pbl_playground_prebuilt = True`` takes the builds already in the build
+directories, e.g. downloaded from CI, instead of building them.
+
 ``pbl_playground = False`` (or ``-D pbl_playground=0``) leaves the build out,
 for faster builds; the page then says the playground is not part of this
 build.
@@ -136,6 +139,14 @@ def build_firmware(app):
     app.pbl_playground_dirs = {}
     for board in app.config.pbl_playground_boards:
         builddir = topdir / _dirname(board)
+        if app.config.pbl_playground_prebuilt:
+            missing = [f for f in VERSIONED if not (builddir / f).exists()]
+            if missing:
+                raise ExtensionError(
+                    f"playground: no prebuilt {', '.join(missing)} in {builddir}"
+                )
+            app.pbl_playground_dirs[_dirname(board)] = builddir
+            continue
         if not (builddir / "CMakeCache.txt").exists():
             logger.info("configuring the playground (%s) in %s", board, builddir)
             run(
@@ -201,6 +212,7 @@ def setup(app):
         dict,
     )
     app.add_config_value("pbl_playground_build_dir", "_build/playground", "env", str)
+    app.add_config_value("pbl_playground_prebuilt", False, "env", bool)
     app.add_directive("pbl-playground", PlaygroundDirective)
     app.connect("builder-inited", build_firmware)
     app.connect("build-finished", publish_firmware)
