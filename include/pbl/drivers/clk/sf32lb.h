@@ -165,4 +165,26 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb52_rtc;
 /** clk_rtc clock number. */
 #define SF32LB52_CLK_RTC 0
 
+/**
+ * @name LPSYS RCC clocks
+ *
+ * The clocks of the LCPU. The LCPU changes them itself once it runs.
+ * @{
+ */
+/** clk_lpsys: HRC48 or HXT48. */
+#define SF32LB52_LPSYS_CLK_SYS 0
+/** hclk_lpsys, clk_lpsys divided: the LCPU. */
+#define SF32LB52_LPSYS_CLK_HCLK 1
+/** pclk_lpsys, hclk_lpsys divided. */
+#define SF32LB52_LPSYS_CLK_PCLK 2
+/** pclk2_lpsys, hclk_lpsys divided. */
+#define SF32LB52_LPSYS_CLK_PCLK2 3
+/** clk_peri_lpsys: HRC48 or HXT48. */
+#define SF32LB52_LPSYS_CLK_PERI 4
+/** @} */
+
+/** @cond INTERNAL_HIDDEN */
+#define SF32LB52_LPSYS_NUM_CLKS 5
+/** @endcond */
+
 /** @} */

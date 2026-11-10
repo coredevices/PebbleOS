@@ -4,6 +4,7 @@
 #pragma once
 
 #include <pbl/device.h>
+#include <pbl/drivers/clk.h>
 #include <pbl/drivers/mbox.h>
 #include <pbl/drivers/remoteproc.h>
 
@@ -30,6 +31,12 @@ struct pbl_rproc_sf32lb52 {
   struct pbl_mbox_chan rx_chan;
   /** HCPU RAM reserved for the HCPU to LCPU ring (@c memory-region). */
   struct pbl_mem_region mem;
+  /** LCPU clock, and the APB clocks of LPSYS, set for the LCPU to load. */
+  struct pbl_clk hclk;
+  /** LPSYS APB clock. */
+  struct pbl_clk pclk;
+  /** LPSYS second APB clock. */
+  struct pbl_clk pclk2;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -46,13 +53,18 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
  * @param _rx_chan Doorbell from the LCPU, from PBL_MBOX_CHAN().
  * @param _mem_base Base of the HCPU RAM reserved for the HCPU to LCPU ring.
  * @param _mem_size Its size, in bytes.
+ * @param _hclk LCPU clock, from PBL_CLK().
+ * @param _pclk LPSYS APB clock, from PBL_CLK().
+ * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _tx_chan, _rx_chan, _mem_base, _mem_size)        \
+#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _tx_chan, _rx_chan, _mem_base, _mem_size, _hclk, \
+                                  _pclk, _pclk2)                                               \
   PBL_RPROC_STATE_DEFINE(sym);                                                                 \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {               \
     .rproc =                                                                                   \
         PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops), \
     .tx_chan = _tx_chan, .rx_chan = _rx_chan, .mem = PBL_MEM_REGION(_mem_base, _mem_size),     \
+    .hclk = _hclk, .pclk = _pclk, .pclk2 = _pclk2,                                             \
   }
 
 /** @} */
