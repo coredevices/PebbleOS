@@ -83,7 +83,7 @@ Each backend in `subsys/logging/backends/` takes its initial level from
 
 ## Hashing
 
-With `CONFIG_LOG_HASHED`, the default, format strings are replaced by
+With `CONFIG_LOG_HASHED`, which the firmware enables, format strings are replaced by
 tokens at build time: the binary only carries a hash and the arguments, and
 the console dehashes them with the dictionary the build writes (see
 {doc}`../pbl/console`). A hashed message takes at most 7 conversions, 2 of
@@ -96,9 +96,9 @@ in one message.
 Default log level, where `<LEVEL>` is one of `ERROR`, `WARNING`, `INFO`
 (default), `DEBUG` or `DEBUG_VERBOSE`.
 
-:`CONFIG_LOG_HASHED=n`:
-Disable log message hashing. This increases ROM usage, but logs no longer
-need a dictionary to decode.
+:`CONFIG_LOG_HASHED`:
+Hash log messages. This saves ROM, but logs need the dictionary of the
+build to decode.
 
 :`CONFIG_<MODULE>_LOG_LEVEL_RUNTIME=y`:
 Keep all log messages of a module in the image and filter them at runtime,

@@ -67,7 +67,6 @@ config ARCH_HAS_STACK_GUARD
 
 config KERNEL_STACK_GUARD
 	bool "Trap stack overflows"
-	default y
 	depends on ARCH_HAS_STACK_GUARD
 	help
 	  Fault as soon as a thread or the ISR stack overflows, instead of
@@ -157,7 +156,6 @@ config KERNEL_STACK_ALIGN
 
 config KERNEL_MUTEX_LOCK_LR
 	bool "Record the caller of the outermost mutex lock"
-	default y
 
 config ARCH_HAS_DEBUGGER_DETECT
 	bool
@@ -172,7 +170,6 @@ config ARCH_HAS_USERSPACE
 
 config USERSPACE
 	bool "Unprivileged threads and syscalls"
-	default y
 	depends on ARCH_HAS_USERSPACE
 	help
 	  Let threads run unprivileged, confined by the MPU, and enter

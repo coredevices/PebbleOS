@@ -3,7 +3,6 @@
 
 menuconfig SHELL
     bool "Shell"
-    default y
     depends on CONSOLE
     help
       Command shell. Commands register themselves with

@@ -6,6 +6,9 @@ mainmenu "Pebble Firmware Configuration"
 # Defaults for options of PebbleOS that the firmware wants wherever they are
 # available, which a prj.conf cannot express.
 
+config CONSOLE
+    default y if !RELEASE || MFG
+
 config CONSOLE_IMAGING
     default y
     depends on CONSOLE
@@ -13,6 +16,26 @@ config CONSOLE_IMAGING
 config COREDUMP
     default y
     depends on ARCH_HAS_COREDUMP
+
+config DEBUGGER_AWARE
+    default y if !RELEASE
+    depends on ARCH_HAS_DEBUGGER_DETECT
+
+config KERNEL_STACK_GUARD
+    default y
+    depends on ARCH_HAS_STACK_GUARD
+
+config LOG_HASHED
+    default y
+    depends on LOG && !QEMU
+
+config SHELL
+    default y
+    depends on CONSOLE
+
+config USERSPACE
+    default y
+    depends on ARCH_HAS_USERSPACE
 
 config SAMSA
     default y

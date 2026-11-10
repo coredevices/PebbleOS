@@ -88,7 +88,6 @@ config DEBUG_INFO_MACROS
 
 config DEBUGGER_AWARE
     bool "Adapt to an attached debugger"
-    default y if !RELEASE
     depends on ARCH_HAS_DEBUGGER_DETECT
     help
       While a debugger is attached, stop the hardware watchdog and only

@@ -5,13 +5,11 @@ menu "Logging"
 
 config LOG
     bool "Logging"
-    default y
     help
       Build the PBL_LOG macros. Disable to save space.
 
 config LOG_HASHED
     bool "Hashed logs"
-    default y
     depends on LOG && !QEMU
     help
       Replace log format strings with hashes to save space. Disable
