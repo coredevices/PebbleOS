@@ -26,8 +26,10 @@ config I2C_NRF5_IRQ_PRIO
 config I2C_SF32LB
     bool "SiFli SF32LB I2C Controller"
     default DT_HAS_SIFLI_SF32LB52_I2C_ENABLED
-    depends on CLK_SF32LB && PINCTRL
+    depends on SOC_SF32LB52
+    select CLK
     select DMA
+    select PINCTRL
     help
       Support for the SiFli SF32LB I2C controller.
 

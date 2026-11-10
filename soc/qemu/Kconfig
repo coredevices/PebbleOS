@@ -3,6 +3,9 @@
 
 config SOC_QEMU_PEBBLE
     bool
+    select QEMU
+    select TIMER_ARM_SYSTICK
+    select TIMER_QEMU
     help
       Pebble QEMU machine, a custom machine emulating Pebble hardware,
       selected by its cores.

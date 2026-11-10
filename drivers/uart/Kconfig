@@ -35,6 +35,10 @@ config UART_NRF5_RX_TIMER
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
     default y if SOC_SF32LB52
+    depends on SOC_SF32LB52
+    select CLK
+    select DMA
+    select PINCTRL
     help
       Support for the SiFli SF32LB UART controller.
 

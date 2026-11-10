@@ -1,17 +1,19 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config NVMEM
-    bool
+menuconfig NVMEM
+    bool "Non-volatile memories"
     help
       Non-volatile memory class (pbl/drivers/nvmem.h), selected by the
-      providers.
+      code that reads cells.
+
+if NVMEM
 
 config NVMEM_SF32LB52
     bool "SiFli SF32LB52 eFuse"
     default y if SOC_SF32LB52
-    depends on CLK_SF32LB
-    select NVMEM
+    depends on SOC_SF32LB52
+    select CLK
     help
       Read access to the SF32LB52 eFuse, which holds the unique ID and the
       factory calibration.
@@ -19,6 +21,8 @@ config NVMEM_SF32LB52
 config NVMEM_SHELL
     bool "Non-volatile memory shell commands"
     default DRIVER_SHELL
-    depends on NVMEM && SHELL
+    depends on SHELL
     help
       The nvmem shell command, to list the memories and read from them.
+
+endif # NVMEM

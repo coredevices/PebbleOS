@@ -11,5 +11,8 @@ config SOC_SF32LB52
     select RAMFUNC
     select SOC_HAS_MPU_REGIONS
     select SOC_HAS_RESET
+    select NVMEM
+    select PINCTRL
+    select TIMER_SF32LB_LPTIM
     help
       SiFli SF32LB52 series, selected by its lines.

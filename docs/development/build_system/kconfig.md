@@ -85,9 +85,11 @@ Every symbol reaches all three consumers:
 
 Driver classes
 : A class is a `menuconfig` symbol, with one symbol per driver inside its
-  `if` block. The application enables the classes it uses; the board's
-  defconfig does not. A driver whose devices come from the board's
-  {doc}`devicetree` defaults to the tree having one
+  `if` block. No class is on by default: the application enables the
+  classes it uses, drivers select the classes they use, and a SoC selects
+  the ones its own code calls, such as its system timer. The board's
+  defconfig enables none. Inside an enabled class, a driver whose devices
+  come from the board's {doc}`devicetree` defaults to the tree having one
   (`default DT_HAS_NORDIC_NRF52832_TWIM_ENABLED`). Otherwise, a driver that
   only exists on one SoC defaults to `y` there (`default y if SOC_QEMU_PEBBLE`).
 
@@ -95,9 +97,8 @@ What drivers use
 : A driver `select`s the classes it uses, such as the bus it sits on
   (`select I2C`) or the supplies it takes (`select REGULATOR`), so an
   application asks for an accelerometer without knowing how the board
-  wires it. This is safe because only drivers inside a class the
-  application enables select, and the selected classes have no
-  dependencies of their own. A driver that is not inside such a class,
+  wires it. This is safe because only drivers inside an enabled class
+  select, and the selected classes have no dependencies of their own. A driver that is not inside such a class,
   such as a regulator or a GPIO key, does not select: it sits inside the
   class its users select, or the one the application enables.
 

@@ -5,7 +5,6 @@ menu "System timer"
 
 config TIMER_ARM_SYSTICK
     bool "Arm SysTick"
-    default y if SOC_QEMU_PEBBLE
     depends on CPU_CORTEX_M
     help
       Clock event device on the Arm SysTick timer, counting CPU cycles. It
@@ -13,21 +12,18 @@ config TIMER_ARM_SYSTICK
 
 config TIMER_QEMU
     bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
     help
       Clock source on the 1 kHz counter of the QEMU RTC.
 
 config TIMER_NRF5_RTC
     bool "Nordic nRF5 RTC"
-    default y if SOC_NRF52
     help
       Clock source and clock event device on RTC1, counting the 32.768 kHz
       low-frequency clock. It keeps running in every sleep mode.
 
 config TIMER_SF32LB_LPTIM
     bool "SiFli SF32LB LPTIM"
-    default y if SOC_SF32LB52
-    depends on CLK_SF32LB52_RTC
+    select CLK
     help
       Clock source and clock event device on LPTIM1, counting clk_rtc, the
       calibrated LRC10 or the 32 kHz crystal. It keeps running and wakes the
@@ -35,7 +31,6 @@ config TIMER_SF32LB_LPTIM
 
 config TIMER_POSIX
     bool "POSIX"
-    default y if SOC_POSIX
     help
       Clock source and clock event device on the host monotonic clock.
 

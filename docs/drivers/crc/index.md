@@ -6,7 +6,8 @@ every CRC in software.
 
 ## Interface
 
-A driver selects the hidden `CONFIG_CRC_HW_ACCEL` symbol and implements the
+A driver sits under `CONFIG_CRC_HW`, which the application enables, selects
+the hidden `CONFIG_CRC_HW_ACCEL` symbol and implements the
 two functions in `include/pbl/drivers/crc.h`, one per algorithm. Each takes
 a running value and a buffer, processes a prefix of it that is a whole
 number of 32-bit words, and returns its length in bytes.
