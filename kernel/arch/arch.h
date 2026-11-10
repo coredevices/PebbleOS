@@ -12,11 +12,11 @@
 
 //! What the portable kernel needs from an architecture.
 
-//! The running thread. The arch defines it so it can live where unprivileged
-//! threads may read it: pbl_thread_current() runs without privilege.
+//! The running thread, for privileged code. The arch defines it, along with arch_cur_get() in
+//! <pbl_arch_thread.h>, which unprivileged code can call too.
 extern struct pbl_thread *pbl_cur;
 
-//! Sets pbl_cur, which may live in memory unprivileged threads cannot write.
+//! Sets pbl_cur outside of a context switch.
 void arch_cur_set(struct pbl_thread *t);
 
 //! Early arch setup, before main(): fault exceptions.
