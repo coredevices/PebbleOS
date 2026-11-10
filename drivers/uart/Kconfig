@@ -12,6 +12,7 @@ config UART_NRF5
     bool "Nordic nRF5 UART Controller"
     default DT_HAS_NORDIC_NRF52832_UARTE_ENABLED
     depends on SOC_NRF52
+    select GPIO
     help
       Support for the Nordic nRF5 UART controller.
 
