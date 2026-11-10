@@ -124,7 +124,10 @@ static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_mi
   const int64_t den = (int64_t)cosLat * cosDec;
   if (den == 0)
     return -1;
-  int64_t cosH = -((int64_t)sinLat * sinDec) * 1000000 / den; // ratio *1e6
+  // -0.83 deg: refraction plus solar radius
+  const int32_t sinH0 = sin_lookup(prv_angle_from_cdeg(-83));
+  int64_t cosH =
+      ((int64_t)sinH0 * TRIG_MAX_RATIO - (int64_t)sinLat * sinDec) * 1000000 / den; // ratio *1e6
   if (cosH > 1000000)
     cosH = 1000000;
   if (cosH < -1000000)
