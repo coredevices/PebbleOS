@@ -102,7 +102,7 @@ The same tree builds three firmwares:
   functions.
 
 The variant, and everything else that is optional, is chosen at build time
-with Kconfig, from the board's defconfig and the variant's configuration;
+with Kconfig, from the board's defconfig and the firmware's configuration;
 see {doc}`../development/build_system/index`.
 
 ## Hardware support

@@ -5,8 +5,8 @@ The Moddable integration provides a lightweight sandbox for running JavaScript a
 
 ## Building with Moddable
 
-Moddable is enabled by default on platforms whose board defconfig sets
-`CONFIG_MODDABLE_XS=y`. You can override this at configure time by
+Moddable is enabled on the boards whose firmware configuration,
+`pebble/boards/<board>.conf`, sets `CONFIG_MODDABLE_XS=y`. You can override this at configure time by
 passing `-DCONFIG_MODDABLE_XS=y` or `-DCONFIG_MODDABLE_XS=n` to
 `pbl configure`. PRF (recovery) builds always disable the engine.
 
