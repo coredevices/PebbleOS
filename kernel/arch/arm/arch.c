@@ -234,10 +234,9 @@ void arch_heap_unlock(void) {
   }
 }
 
+// Taken when the interrupt lock is dropped, which ends in a barrier, or the ISR returns.
 void arch_switch_request(void) {
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
-  __DSB();
-  __ISB();
 }
 
 // ---- context switch ---------------------------------------------------------
