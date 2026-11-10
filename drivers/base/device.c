@@ -14,10 +14,26 @@ PBL_LOG_MODULE_DEFINE(device, CONFIG_DEVICE_LOG_LEVEL);
 #ifdef PBL_NO_LINKER_SCRIPT
 extern const struct pbl_device *const __pbl_devices_start[] PBL_UNSORTED_SECTION_START(pbl_devices);
 extern const struct pbl_device *const __pbl_devices_end[] PBL_UNSORTED_SECTION_END(pbl_devices);
+extern const struct pbl_device_depends __pbl_dev_deps_start[] PBL_UNSORTED_SECTION_START(
+    pbl_dev_deps);
+extern const struct pbl_device_depends __pbl_dev_deps_end[] PBL_UNSORTED_SECTION_END(pbl_dev_deps);
 #else
 extern const struct pbl_device *const __pbl_devices_start[];
 extern const struct pbl_device *const __pbl_devices_end[];
+extern const struct pbl_device_depends __pbl_dev_deps_start[];
+extern const struct pbl_device_depends __pbl_dev_deps_end[];
 #endif
+
+static int prv_init_list(const struct pbl_device *dev, const struct pbl_device *const *deps) {
+  for (const struct pbl_device *const *dep = deps; *dep != nullptr; dep++) {
+    if (pbl_device_init(*dep) != 0) {
+      PBL_LOG_DBG("%s: dependency %s unavailable", dev->name, (*dep)->name);
+      return -ENODEV;
+    }
+  }
+
+  return 0;
+}
 
 static int prv_init_deps(const struct pbl_device *dev) {
   const struct pbl_device *parent = dev->parent;
@@ -29,13 +45,12 @@ static int prv_init_deps(const struct pbl_device *dev) {
     return -ENODEV;
   }
 
-  if (dev->deps == nullptr) {
-    return 0;
+  if (dev->deps != nullptr && prv_init_list(dev, dev->deps) != 0) {
+    return -ENODEV;
   }
 
-  for (const struct pbl_device *const *dep = dev->deps; *dep != nullptr; dep++) {
-    if (pbl_device_init(*dep) != 0) {
-      PBL_LOG_DBG("%s: dependency %s unavailable", dev->name, (*dep)->name);
+  for (const struct pbl_device_depends *d = __pbl_dev_deps_start; d < __pbl_dev_deps_end; d++) {
+    if (d->dev == dev && prv_init_list(dev, d->deps) != 0) {
       return -ENODEV;
     }
   }
@@ -84,7 +99,11 @@ bool pbl_device_is_ready(const struct pbl_device *dev) {
 int pbl_device_init_all(void) {
   int failures = 0;
 
+#ifdef CONFIG_DEVICE_INIT_REVERSE
+  for (const struct pbl_device *const *dev = __pbl_devices_end; dev-- > __pbl_devices_start;) {
+#else
   for (const struct pbl_device *const *dev = __pbl_devices_start; dev < __pbl_devices_end; dev++) {
+#endif
     if (pbl_device_init(*dev) != 0) {
       failures++;
     }

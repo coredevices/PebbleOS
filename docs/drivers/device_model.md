@@ -68,7 +68,11 @@ table position:
 - a driver's init calls `pbl_device_init()` on the other devices it uses, so
   structural dependencies are not written down twice;
 - anything else, such as a supply that has to be up first, goes in the
-  instance's `PBL_DEVICE_DEPS()`.
+  instance's `PBL_DEVICE_DEPS()`;
+- an instance defined from devicetree also gets the devices its node refers
+  to, listed next to it with `PBL_DEVICE_DEPENDS()` in the `.pbl_dev_deps`
+  section. `CONFIG_DEVICE_INIT_REVERSE` walks the table backwards, to check
+  that nothing relies on its position.
 
 This is a synchronous take on Linux's deferred probe and `fw_devlink`.
 `pbl_device_init()` is idempotent, so a device is initialized exactly once
