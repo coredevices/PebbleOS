@@ -8,9 +8,12 @@
 /**
  * @defgroup drivers_clk_sf32lb SF32LB RCC clocks
  * @ingroup drivers_clk
- * @brief @ref drivers_clk controller of the SF32LB52 HPSYS RCC.
+ * @brief @ref drivers_clk controllers of the SF32LB52: the HPSYS RCC, the PMUC oscillators and
+ * the RTC clock.
  *
- * Clock numbers are (register index << 5) | bit, register 0 being ENR1.
+ * The HPSYS RCC derives the system and peripheral clocks from the HRC48 and HXT48 oscillators.
+ * Gate numbers are (register index << 5) | bit, register 0 being ENR1, and a gate runs at the
+ * rate of the clock it gates; the clocks before the gates follow.
  * @{
  */
 
@@ -62,7 +65,33 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb_hpsys_rcc;
 #define SF32LB52_HPSYS_CLK_GPADC    54
 #define SF32LB52_HPSYS_CLK_TSEN     55
 #define SF32LB52_HPSYS_CLK_I2C4     57
+/** clk_hpsys: HRC48, HXT48 or DLL1. */
+#define SF32LB52_HPSYS_CLK_SYS 64
+/** hclk_hpsys, clk_hpsys divided: AHB, CPU and memories. */
+#define SF32LB52_HPSYS_CLK_HCLK 65
+/** pclk_hpsys, hclk_hpsys divided: APB. */
+#define SF32LB52_HPSYS_CLK_PCLK 66
+/** pclk2_hpsys, hclk_hpsys divided: HPSYS AON registers. */
+#define SF32LB52_HPSYS_CLK_PCLK2 67
+/** DLL1, from HXT48. */
+#define SF32LB52_HPSYS_CLK_DLL1 68
+/** DLL2, from HXT48. */
+#define SF32LB52_HPSYS_CLK_DLL2 69
+/** clk_peri_hpsys: HRC48 or HXT48, for USART, SPI and I2C. */
+#define SF32LB52_HPSYS_CLK_PERI 70
+/** clk_peri_hpsys divided by 2, for GPTIM2 and BTIM2. */
+#define SF32LB52_HPSYS_CLK_PERI_DIV2 71
+/** MPI1 kernel clock: clk_peri_hpsys, DLL1 or DLL2. */
+#define SF32LB52_HPSYS_CLK_MPI1_K 72
+/** MPI2 kernel clock: clk_peri_hpsys, DLL1 or DLL2. */
+#define SF32LB52_HPSYS_CLK_MPI2_K 73
+/** USB kernel clock: clk_hpsys or DLL2, divided. */
+#define SF32LB52_HPSYS_CLK_USBC_K 74
 /** @} */
+
+/** @cond INTERNAL_HIDDEN */
+#define SF32LB52_HPSYS_NUM_CLKS 75
+/** @endcond */
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
