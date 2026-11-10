@@ -30,6 +30,7 @@ extensions = [
     "sphinxcontrib.mermaid",
     "matplotlib.sphinxext.plot_directive",
     "pbl_docs",
+    "pbl_samples",
     "pbl_playground",
     "kconfig",
 ]
