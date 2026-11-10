@@ -30,6 +30,10 @@ jobs:
     uses: ./.github/workflows/build-qemu-sdkshell.yml
     secrets: inherit
 
+  build-native:
+    uses: ./.github/workflows/build-native.yml
+    secrets: inherit
+
   release:
     runs-on: ubuntu-24.04
 
@@ -38,6 +42,7 @@ jobs:
       - build-prf
       - build-qemu
       - build-qemu-sdkshell
+      - build-native
     permissions:
       contents: write
 
@@ -60,10 +65,21 @@ jobs:
           pattern: prf-*
           path: artifacts
 
+      # The documentation playground of the release downloads these
+      - name: Download wasm artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: wasm-*
+          path: wasm
+
       - name: Collect release files
         run: |
           mkdir release
           find artifacts -type f -exec cp {} release/ \;
+          for dir in wasm/wasm-*; do
+            board=${dir#wasm/wasm-}
+            (cd "$dir" && zip -q "$GITHUB_WORKSPACE/release/wasm_${board}_${TAG}.zip" *)
+          done
           ls -l release
 
       - name: Check if tag is on main
