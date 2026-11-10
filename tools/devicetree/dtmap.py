@@ -72,6 +72,7 @@ ARG_KINDS = {
     "size",
     "list",
     "mbox",
+    "power-domain",
     "pwm",
     "supply",
     "referrer",
@@ -1017,6 +1018,15 @@ class Generator:
                 raise src.error(f"no reset {index}")
             target, cells = entries[index]
             return self._provided(src, target, "reset", cells)
+        if kind == "power-domain":
+            if not node.has("power-domains"):
+                return None
+            index = self._index(src, key, "power-domain-names")
+            entries = self._phandles(src, "power-domains", "#power-domain-cells")
+            if index >= len(entries):
+                raise src.error(f"no power domain {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "power-domain", cells)
         if kind == "mbox":
             if not node.has("mboxes"):
                 return None

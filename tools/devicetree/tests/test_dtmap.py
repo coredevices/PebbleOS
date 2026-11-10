@@ -1824,3 +1824,57 @@ def test_named_clock_a_node_may_lack(tmp_path):
     data["args"][1] = {"clock": "ref"}
     with pytest.raises(DtError, match="no 'ref' in 'clock-names'"):
         generate(tmp_path, bus=bus, specs={"acme,bus": spec("acme,bus", data)})
+
+
+def test_power_domains_and_required_opps(tmp_path):
+    classes = {
+        **CLASSES,
+        "pd": {
+            "class": "pd",
+            "type": "struct pd",
+            "include": "pd.h",
+            "provides": {"power-domain": "PD(&{sym}, {0})"},
+        },
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    opp-table {
+        compatible = "operating-points-v2";
+        fast: opp-4 { opp-level = <4>; };
+    };
+    pmu: pmu@1000 {
+        compatible = "acme,pmu";
+        reg = <0x1000 0x100>;
+        #power-domain-cells = <1>;
+    };
+    rcc: rcc@2000 {
+        compatible = "acme,rcc";
+        reg = <0x2000 0x100>;
+        power-domains = <&pmu 0>;
+        required-opps = <&fast>;
+    };
+};
+"""
+    specs = {
+        "acme,pmu": {"compatible": "acme,pmu", "config": "PMU", "class": "pd", "define": "PMU"},
+        "acme,rcc": {
+            "compatible": "acme,rcc",
+            "config": "RCC",
+            "class": "pd",
+            "define": "RCC",
+            "args": [{"power-domain": 0}, {"prop": "opp-level", "of": "required-opps"}],
+        },
+    }
+    path, dtb = tmp_path / "pd.dts", tmp_path / "pd.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {"PMU", "RCC"})
+    gen.run()
+    assert "RCC(dt_rcc, PD(&dt_pmu, 0), 4);" in body(gen)
+    assert "PBL_DEVICE_DEPENDS(dt_rcc, &dt_rcc.dev, &dt_pmu.dev);" in body(gen)
