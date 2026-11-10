@@ -21,8 +21,11 @@
 #define LCPU_EM_BASE    0x20408000UL
 #define LCPU_EM_SIZE    0x5000U
 
-#define LCPU_LOAD_HCLK_MAX_HZ 24000000UL
-#define LCPU_BOOT_DELAY_US    5000U
+// The LCPU loads at these rates, or slower
+#define LCPU_LOAD_HCLK_HZ  24000000ULL
+#define LCPU_LOAD_PCLK_HZ  12000000ULL
+#define LCPU_LOAD_PCLK2_HZ 750000ULL
+#define LCPU_BOOT_DELAY_US 5000U
 
 // Factory RF calibration, efuse bank 1
 #define RF_CAL_OFFSET 32U
@@ -103,14 +106,39 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu) {
   HAL_LCPU_CONFIG_set(HAL_LCPU_CONFIG_BT_KE_BUF, &ble, sizeof(ble));
 }
 
+static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
+  uint64_t rate_mhz;
+  int ret;
+
+  ret = pbl_clk_get_rate(&lcpu->hclk, &rate_mhz);
+  if (ret != 0 || rate_mhz <= LCPU_LOAD_HCLK_HZ * 1000U) {
+    return ret;
+  }
+
+  ret = pbl_clk_set_rate(&lcpu->hclk, LCPU_LOAD_HCLK_HZ * 1000U);
+  if (ret == 0) {
+    ret = pbl_clk_set_rate(&lcpu->pclk, LCPU_LOAD_PCLK_HZ * 1000U);
+  }
+  if (ret == 0) {
+    ret = pbl_clk_set_rate(&lcpu->pclk2, LCPU_LOAD_PCLK2_HZ * 1000U);
+  }
+
+  return ret;
+}
+
 static int prv_start(const struct pbl_rproc *rproc) {
+  const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
+  int ret;
+
   HAL_HPAON_WakeCore(CORE_ID_LCPU);
   soc_sf32lb52_lpsys_halt(false);
 
-  prv_rom_config(prv_lcpu(rproc));
+  prv_rom_config(lcpu);
 
-  if (HAL_RCC_GetHCLKFreq(CORE_ID_LCPU) > LCPU_LOAD_HCLK_MAX_HZ) {
-    HAL_RCC_LCPU_SetDiv(2, 1, 5);
+  ret = prv_load_clocks(lcpu);
+  if (ret != 0) {
+    HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+    return ret;
   }
 
   HAL_LPAON_ConfigStartAddr((uint32_t *)LCPU_CODE_BASE);

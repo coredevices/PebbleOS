@@ -32,11 +32,25 @@ properties:
     description: HCPU memory holding the HCPU to LCPU ring.
     maxItems: 1
 
+  clocks:
+    items:
+      - description: LCPU clock
+      - description: LPSYS APB clock
+      - description: LPSYS second APB clock
+
+  clock-names:
+    items:
+      - const: hclk
+      - const: pclk
+      - const: pclk2
+
 required:
   - compatible
   - mboxes
   - mbox-names
   - memory-region
+  - clocks
+  - clock-names
 
 additionalProperties: false
 
@@ -47,4 +61,6 @@ examples:
         mboxes = <&mailbox1 0>, <&mailbox2 0>;
         mbox-names = "tx", "rx";
         memory-region = <&lcpu_ipc>;
+        clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>;
+        clock-names = "hclk", "pclk", "pclk2";
     };

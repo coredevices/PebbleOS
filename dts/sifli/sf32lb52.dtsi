@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
 #include <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>
+#include <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb52-pmuc.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/power/sifli,sf32lb52-pmuc.h>
@@ -35,6 +36,10 @@
 		mboxes = <&mailbox1 0>, <&mailbox2 0>;
 		mbox-names = "tx", "rx";
 		memory-region = <&lcpu_ipc>;
+		clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
+			 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
+			 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>;
+		clock-names = "hclk", "pclk", "pclk2";
 		status = "disabled";
 	};
 
@@ -70,6 +75,16 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+
+		lpsys_rcc: clock-controller@40000000 {
+			compatible = "sifli,sf32lb52-lpsys-rcc";
+			reg = <0x40000000 0x1000>;
+			#clock-cells = <1>;
+			clocks = <&pmuc SF32LB52_PMUC_CLK_HRC48>, <&pmuc SF32LB52_PMUC_CLK_HXT48>;
+			clock-names = "hrc48", "hxt48";
+			assigned-clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PERI>;
+			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_HXT48>;
+		};
 
 		mailbox2: mailbox@40002000 {
 			compatible = "sifli,sf32lb52-mailbox";

@@ -62,8 +62,6 @@ void pbl_soc_early_init(void) {
       48000U);
 #endif
 
-  HAL_RCC_LCPU_ClockSelect(RCC_CLK_MOD_LP_PERI, RCC_CLK_PERI_HXT48);
-
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 
   HAL_RCC_DisableModule(RCC_MOD_EPIC);

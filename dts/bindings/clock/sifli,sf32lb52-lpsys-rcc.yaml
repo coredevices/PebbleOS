@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/sifli,sf32lb52-lpsys-rcc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 LPSYS reset and clock controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  Derives the clocks of the LPSYS, which the LCPU runs from, from the HRC48
+  and HXT48 oscillators:
+
+  - SYS, clk_lpsys, from HRC48 or HXT48, divided into HCLK, the clock of the
+    LCPU, itself divided into PCLK and PCLK2, the APB clocks;
+  - PERI, clk_peri_lpsys, from HRC48 or HXT48.
+
+  The LCPU changes them itself once it runs. Its registers only answer while
+  the LPSYS is awake. Clock specifiers take one cell, an ID from
+  <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-lpsys-rcc
+
+  reg:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+
+  clocks:
+    items:
+      - description: HRC48 oscillator
+      - description: HXT48 oscillator
+
+  clock-names:
+    items:
+      - const: hrc48
+      - const: hxt48
+
+required:
+  - compatible
+  - reg
+  - '#clock-cells'
+  - clocks
+  - clock-names
+
+additionalProperties: false
+
+examples:
+  - |
+    lpsys_rcc: clock-controller@40000000 {
+        compatible = "sifli,sf32lb52-lpsys-rcc";
+        reg = <0x40000000 0x1000>;
+        #clock-cells = <1>;
+        clocks = <&pmuc 3>, <&pmuc 4>;
+        clock-names = "hrc48", "hxt48";
+        assigned-clocks = <&lpsys_rcc 4>;
+        assigned-clock-parents = <&pmuc 4>;
+    };
