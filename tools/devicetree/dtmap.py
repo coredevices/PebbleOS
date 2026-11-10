@@ -60,6 +60,7 @@ ARG_KINDS = {
     "strings",
     "irq",
     "clock",
+    "assigned-clocks",
     "dma",
     "gpio",
     "pinctrl",
@@ -638,11 +639,16 @@ class Generator:
 
         return re.sub(r"\{(sym|\d+)\}", field, template)
 
-    def _phandles(self, dev, prop, cells_prop):
-        values = dev.node.u32s(prop)
+    def _phandles(self, dev, prop, cells_prop, empty=False):
+        """The entries of a phandle list. With empty, a 0 phandle is an entry left empty."""
+        values = dev.node.u32s(prop) if dev.node.has(prop) else []
         entries = []
         pos = 0
         while pos < len(values):
+            if empty and values[pos] == 0:
+                entries.append(None)
+                pos += 1
+                continue
             target = self.tree.phandle(values[pos], f"{dev.node.path}: '{prop}'")
             count = target.u32(cells_prop)
             cells = values[pos + 1 : pos + 1 + count]
@@ -756,6 +762,22 @@ class Generator:
                 items.append(item.format(*cells, name=child.basename))
             except (KeyError, IndexError) as error:
                 raise dev.error(f"{child.path}: no {error} for {item!r}") from None
+        return ", ".join(items)
+
+    def _assigned_clocks(self, dev, item):
+        """The parents a clock provider assigns, as Linux does with assigned-clocks, an item
+        macro of the clock and its parent each."""
+        if dev.node.has("assigned-clock-rates"):
+            raise dev.error("'assigned-clock-rates' is not supported")
+        clocks = self._phandles(dev, "assigned-clocks", "#clock-cells")
+        parents = self._phandles(dev, "assigned-clock-parents", "#clock-cells", empty=True)
+        if len(parents) != len(clocks) or None in parents:
+            raise dev.error("'assigned-clock-parents' needs a parent for each clock")
+        items = []
+        for (target, cells), (parent, parent_cells) in zip(clocks, parents):
+            clock = self._provided(dev, target, "clock", cells)
+            parent = self._provided(dev, parent, "clock", parent_cells)
+            items.append(f"{item}({clock}, {parent})")
         return ", ".join(items)
 
     def _dma(self, dev, src, name):
@@ -957,6 +979,8 @@ class Generator:
                 raise src.error(f"no clock {index}")
             target, cells = entries[index]
             return self._provided(src, target, "clock", cells)
+        if kind == "assigned-clocks":
+            return self._assigned_clocks(src, key) if node.has("assigned-clocks") else None
         if kind == "prop":
             if not node.has(key):
                 return None

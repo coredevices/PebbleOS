@@ -43,6 +43,19 @@ enabled clock moves its reference to the new parent before the switch, so the
 new input runs first and the old one is released after. The notifiers below
 the clock are told the new rates.
 
+A controller whose node has `assigned-clocks` and `assigned-clock-parents`
+switches those clocks when it comes up, as Linux does: its spec takes them
+with an `assigned-clocks: PBL_CLK_ASSIGNED` argument, its instance macro
+lists them with `PBL_CLK_ASSIGNED_DEFINE()`, and its init passes the list to
+`pbl_clk_assign()`:
+
+```dts
+&rcc {
+	assigned-clocks = <&rcc RCC_CLK_PERI>;
+	assigned-clock-parents = <&pmu PMU_CLK_HRC48>;
+};
+```
+
 ## Calibrated clocks
 
 Some oscillators are only known by measurement, such as an RC oscillator

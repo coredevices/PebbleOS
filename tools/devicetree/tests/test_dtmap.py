@@ -1762,3 +1762,48 @@ def test_board_trees_generate_with_every_driver(tmp_path, dts):
 
 def test_every_board_has_its_tree():
     assert len(BOARD_TREES) >= 9
+
+
+def assigned_generate(tmp_path, bus):
+    data = {
+        **SPECS["acme,bus"],
+        "args": [{"name": True}, {"assigned-clocks": "ASSIGNED", "optional": True}],
+    }
+    return generate(tmp_path, bus=bus, specs={"acme,bus": spec("acme,bus", data)})
+
+
+def test_assigned_clocks_become_items(tmp_path):
+    gen = assigned_generate(
+        tmp_path,
+        "assigned-clocks = <&ctrl 3>, <&ctrl 4>;\n"
+        "        assigned-clock-parents = <&ctrl 1>, <&ctrl 2>;",
+    )
+    assert (
+        'BUS_DT_DEFINE(dt_bus, "bus", ASSIGNED(CLK(&acme_clk, 3), CLK(&acme_clk, 1)), '
+        "ASSIGNED(CLK(&acme_clk, 4), CLK(&acme_clk, 2)));" in body(gen)
+    )
+
+
+def test_no_assigned_clocks_end_the_arguments(tmp_path):
+    gen = assigned_generate(tmp_path, "")
+    assert 'BUS_DT_DEFINE(dt_bus, "bus");' in body(gen)
+
+
+@pytest.mark.parametrize(
+    "bus, message",
+    [
+        (
+            "assigned-clocks = <&ctrl 3>;\n        assigned-clock-rates = <1000>;",
+            "'assigned-clock-rates' is not supported",
+        ),
+        ("assigned-clocks = <&ctrl 3>;", "needs a parent for each clock"),
+        (
+            "assigned-clocks = <&ctrl 3>;\n        assigned-clock-parents = <0>;",
+            "needs a parent for each clock",
+        ),
+    ],
+    ids=["rates", "no-parents", "empty-parent"],
+)
+def test_assigned_clocks_need_parents(tmp_path, bus, message):
+    with pytest.raises(DtError, match=message):
+        assigned_generate(tmp_path, bus)
