@@ -4,3 +4,4 @@
 class: input
 type: struct pbl_device
 include: pbl/device.h
+device: "&{sym}"
