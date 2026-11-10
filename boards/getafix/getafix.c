@@ -35,26 +35,50 @@ PBL_UART_SF32LB_DEFINE(s_usart3, "usart3", SF32LB52_USART3_BASE, PBL_SOC_IRQN_US
 const struct pbl_uart *const HCI_TRACE_UART = &s_usart3;
 #endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
+#ifdef CONFIG_FLASH
 const struct pbl_flash *const FLASH = &dt_flash0;
+#endif
 
+#ifdef CONFIG_DISPLAY
 const struct pbl_display *const DISPLAY = &dt_lcdc1;
+#endif
 
+#ifdef CONFIG_BACKLIGHT
 const struct pbl_backlight *const BACKLIGHT = &dt_backlight;
+#endif
 
+#ifdef CONFIG_ACCEL
 const struct pbl_accel *const ACCEL = &dt_lis2dw12;
+#endif
 
+#ifdef CONFIG_MAG
 const struct pbl_mag *const MAG = &dt_mmc5603nj;
+#endif
 
+#ifdef CONFIG_TOUCH
 const struct pbl_touch *const TOUCH = &dt_touchscreen;
+#endif
 
+#ifdef CONFIG_PMIC_NPM1300
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
+#endif
 
+#ifdef CONFIG_AMBIENT_LIGHT
 const struct pbl_als *const ALS = &dt_w1160;
+#endif
 
+#ifdef CONFIG_VIBE
 const struct pbl_vibe *const VIBE = &dt_haptics;
+#endif
 
+#ifdef CONFIG_MIC
 const struct pbl_audio *const MIC = &dt_mic;
+#endif
 
+#ifdef CONFIG_TEMPERATURE
 const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
+#endif
 
+#ifdef CONFIG_RTC
 const struct pbl_rtc *const RTC = SF32LB_RTC;
+#endif
