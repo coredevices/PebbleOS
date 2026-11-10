@@ -230,8 +230,9 @@ static void prv_report_result(bool passed) {
 static void prv_enter_fail(AppData *data, const char *reason) {
   if (data->state == AgingStateDraining) {
     prv_drain_light_enable(data, false);
+  } else if (data->state == AgingStateChargingAndCycling) {
+    prv_cleanup_component(data);
   }
-  prv_cleanup_component(data);
   // Restore charging in case we disabled it during the charge+cycle phase,
   // so the device is left in a normal state on exit.
   battery_set_charge_enable(true);
