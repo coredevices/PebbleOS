@@ -101,10 +101,11 @@ void posix_run(struct pbl_thread *t) {
 void posix_switch(void) {
   posix_switch_pending = false;
   struct pbl_thread *prev = pbl_cur;
-  struct pbl_thread *next = sched_switch_in();
+  struct pbl_thread *next = sched_next;
   if (next == prev) {
     return;
   }
+  arch_cur_set(next);
   struct posix_thread *pt = prev->backend.arch.pt;
   posix_run(next);
   if (prev->backend.state == PBL_THREAD_DEAD) {

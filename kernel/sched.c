@@ -11,6 +11,7 @@
 static_assert(NUM_PRIO <= 32, "the ready bitmap is 32 bits wide");
 
 struct pbl_thread *pbl_all_threads;
+struct pbl_thread *sched_next;
 
 static struct pbl_thread *s_ready_head[NUM_PRIO];
 static struct pbl_thread *s_ready_tail[NUM_PRIO];
@@ -42,6 +43,9 @@ static void prv_ready_push(struct pbl_thread *t) {
   }
   s_ready_tail[p] = t;
   t->backend.state = PBL_THREAD_READY;
+  if (sched_next == nullptr || p > sched_next->prio) {
+    sched_next = t;
+  }
 }
 
 static void prv_ready_remove(struct pbl_thread *t) {
@@ -63,11 +67,9 @@ static void prv_ready_remove(struct pbl_thread *t) {
     s_ready_mask &= ~(1u << p);
   }
   t->backend.next = nullptr;
-}
-
-static struct pbl_thread *prv_pick(void) {
-  PBL_ASSERTN(s_ready_mask != 0);
-  return s_ready_head[31 - PBL_CLZ(s_ready_mask)];
+  if (sched_next == t) {
+    sched_next = s_ready_mask ? s_ready_head[31 - PBL_CLZ(s_ready_mask)] : nullptr;
+  }
 }
 
 static void prv_rotate(pbl_prio_t p) {
@@ -83,7 +85,7 @@ void sched_request_switch(void) {
     s_switch_deferred = true;
     return;
   }
-  if (s_started && prv_pick() != pbl_cur) {
+  if (s_started && sched_next != pbl_cur) {
     arch_switch_request();
   }
 }
@@ -212,13 +214,10 @@ void sched_prio_set(struct pbl_thread *t, pbl_prio_t base, pbl_prio_t effective)
   if (effective == t->prio) {
     return;
   }
-  if (t->backend.state == PBL_THREAD_READY || t->backend.state == PBL_THREAD_RUNNING) {
+  if (t->backend.state == PBL_THREAD_READY) {
     prv_ready_remove(t);
     t->prio = effective;
     prv_ready_push(t);
-    if (t == pbl_cur) {
-      t->backend.state = PBL_THREAD_RUNNING;
-    }
   } else if (t->backend.state == PBL_THREAD_BLOCKED && t->backend.waitq) {
     waitq_remove(t->backend.waitq, t);
     t->prio = effective;
@@ -255,7 +254,6 @@ void sched_thread_start(struct pbl_thread *t) {
 static void prv_detach(struct pbl_thread *t) {
   switch (t->backend.state) {
     case PBL_THREAD_READY:
-    case PBL_THREAD_RUNNING:
       prv_ready_remove(t);
       break;
     case PBL_THREAD_BLOCKED:
@@ -310,19 +308,6 @@ void sched_yield_current(void) {
 
 // ---- arch entry points ------------------------------------------------------
 
-struct pbl_thread *sched_switch_in(void) {
-  struct pbl_thread *prev = pbl_cur;
-  struct pbl_thread *next = prv_pick();
-  if (prev != next) {
-    if (prev->backend.state == PBL_THREAD_RUNNING) {
-      prev->backend.state = PBL_THREAD_READY;
-    }
-    arch_cur_set(next);
-  }
-  next->backend.state = PBL_THREAD_RUNNING;
-  return next;
-}
-
 void sched_announce(uint64_t ticks) {
   s_ticks += ticks;
   // Whoever runs when a tick ends gets it.
@@ -336,7 +321,7 @@ void sched_announce(uint64_t ticks) {
 }
 
 bool sched_idle_confirm(void) {
-  return prv_pick() == &s_idle_thread && !s_switch_deferred;
+  return sched_next == &s_idle_thread && !s_switch_deferred;
 }
 
 pbl_tick_t sched_ticks(void) {
@@ -385,8 +370,7 @@ void sched_start_prepare(void) {
 
   pbl_irq_lock();
   s_started = true;
-  arch_cur_set(prv_pick());
-  pbl_cur->backend.state = PBL_THREAD_RUNNING;
+  arch_cur_set(sched_next);
 }
 
 void pbl_kernel_start(void) {
@@ -450,6 +434,7 @@ void sched_reset_for_test(void) {
   memset(&s_idle_thread, 0, sizeof(s_idle_thread));
   arch_cur_set(nullptr);
   pbl_all_threads = nullptr;
+  sched_next = nullptr;
   for (int i = 0; i < NUM_PRIO; i++) {
     s_ready_head[i] = s_ready_tail[i] = nullptr;
   }

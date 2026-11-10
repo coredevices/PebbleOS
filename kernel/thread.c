@@ -138,6 +138,10 @@ pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t) {
 }
 
 enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
+  // Running threads stay on their ready list.
+  if (t == pbl_cur && t->backend.state == PBL_THREAD_READY) {
+    return PBL_THREAD_RUNNING;
+  }
   return (enum pbl_thread_state)t->backend.state;
 }
 
