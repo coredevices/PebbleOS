@@ -16,7 +16,6 @@ struct pbl_thread *sched_next;
 static struct pbl_thread *s_ready_head[NUM_PRIO];
 static struct pbl_thread *s_ready_tail[NUM_PRIO];
 static uint32_t s_ready_mask;
-static struct pbl_thread *s_timeouts;
 static uint64_t s_ticks;
 static uint32_t s_sched_lock;
 static bool s_switch_deferred;
@@ -25,10 +24,6 @@ static uint32_t s_next_number;
 
 static struct pbl_thread s_idle_thread;
 PBL_THREAD_STACK_DEFINE(s_idle_stack, CONFIG_KERNEL_IDLE_STACK_SIZE);
-
-static inline bool prv_before(pbl_tick_t a, pbl_tick_t b) {
-  return (int32_t)(a - b) < 0;
-}
 
 // ---- ready lists ------------------------------------------------------------
 
@@ -90,55 +85,6 @@ void sched_request_switch(void) {
   }
 }
 
-// ---- timeouts ---------------------------------------------------------------
-
-static void prv_timeout_add(struct pbl_thread *t, pbl_tick_t ticks) {
-  t->backend.wake_at = (pbl_tick_t)s_ticks + ticks;
-  struct pbl_thread **link = &s_timeouts;
-  while (*link && !prv_before(t->backend.wake_at, (*link)->backend.wake_at)) {
-    link = &(*link)->backend.timeout_next;
-  }
-  t->backend.timeout_next = *link;
-  *link = t;
-  t->backend.on_timeout_list = true;
-}
-
-static void prv_timeout_remove(struct pbl_thread *t) {
-  if (!t->backend.on_timeout_list) {
-    return;
-  }
-  struct pbl_thread **link = &s_timeouts;
-  while (*link && *link != t) {
-    link = &(*link)->backend.timeout_next;
-  }
-  if (*link) {
-    *link = t->backend.timeout_next;
-  }
-  t->backend.on_timeout_list = false;
-}
-
-static void prv_expire_timeouts(void) {
-  while (s_timeouts && !prv_before((pbl_tick_t)s_ticks, s_timeouts->backend.wake_at)) {
-    struct pbl_thread *t = s_timeouts;
-    s_timeouts = t->backend.timeout_next;
-    t->backend.on_timeout_list = false;
-    if (t->backend.waitq) {
-      waitq_remove(t->backend.waitq, t);
-      t->backend.waitq = nullptr;
-    }
-    t->backend.wake_rc = -EAGAIN;
-    prv_ready_push(t);
-  }
-}
-
-static pbl_tick_t prv_ticks_until_next_timeout(void) {
-  if (s_timeouts == nullptr) {
-    return PBL_TICK_FOREVER;
-  }
-  int32_t delta = (int32_t)(s_timeouts->backend.wake_at - (pbl_tick_t)s_ticks);
-  return delta > 0 ? (pbl_tick_t)delta : 0;
-}
-
 // ---- wait queues ------------------------------------------------------------
 
 void waitq_insert(struct pbl_waitq *wq, struct pbl_thread *t) {
@@ -185,7 +131,7 @@ int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout, unsigned int key) {
     waitq_insert(wq, t);
   }
   if (!pbl_timeout_is_forever(timeout)) {
-    prv_timeout_add(t, timeout.ticks);
+    timeout_add(&t->backend.timeout, timeout.ticks);
   }
   arch_switch_request();
 
@@ -198,7 +144,7 @@ int sched_block(struct pbl_waitq *wq, pbl_timeout_t timeout, unsigned int key) {
 
 void sched_wake(struct pbl_thread *t, int rc) {
   PBL_ASSERTN(t->backend.state == PBL_THREAD_BLOCKED);
-  prv_timeout_remove(t);
+  timeout_remove(&t->backend.timeout);
   t->backend.waitq = nullptr;
   t->backend.wake_rc = rc;
   prv_ready_push(t);
@@ -243,6 +189,7 @@ void sched_disinherit(struct pbl_thread *owner) {
 // ---- thread lifecycle -------------------------------------------------------
 
 void sched_thread_start(struct pbl_thread *t) {
+  t->backend.timeout.thread = t;
   t->backend.number = ++s_next_number;
   t->backend.base_prio = t->prio;
   t->backend.all_next = pbl_all_threads;
@@ -257,7 +204,7 @@ static void prv_detach(struct pbl_thread *t) {
       prv_ready_remove(t);
       break;
     case PBL_THREAD_BLOCKED:
-      prv_timeout_remove(t);
+      timeout_remove(&t->backend.timeout);
       if (t->backend.waitq) {
         waitq_remove(t->backend.waitq, t);
         t->backend.waitq = nullptr;
@@ -312,20 +259,28 @@ void sched_announce(uint64_t ticks) {
   s_ticks += ticks;
   // Whoever runs when a tick ends gets it.
   pbl_cur->backend.run_time += (uint32_t)ticks;
-  prv_expire_timeouts();
-  // Round-robin among threads sharing the running priority.
-  if (s_ready_head[pbl_cur->prio] && s_ready_head[pbl_cur->prio]->backend.next) {
-    prv_rotate(pbl_cur->prio);
+}
+
+void sched_timed_out(struct pbl_thread *t) {
+  if (t->backend.waitq) {
+    waitq_remove(t->backend.waitq, t);
+    t->backend.waitq = nullptr;
   }
+  t->backend.wake_rc = -EAGAIN;
+  prv_ready_push(t);
   sched_request_switch();
+}
+
+void sched_slice(void) {
+  unsigned int key = arch_irq_lock();
+  // Round-robin among threads sharing the running priority.
+  prv_rotate(pbl_cur->prio);
+  sched_request_switch();
+  arch_irq_unlock(key);
 }
 
 bool sched_idle_confirm(void) {
   return sched_next == &s_idle_thread && !s_switch_deferred;
-}
-
-pbl_tick_t sched_ticks(void) {
-  return (pbl_tick_t)s_ticks;
 }
 
 uint64_t sched_uptime_ticks(void) {
@@ -344,11 +299,7 @@ static void prv_idle_entry(void *arg) {
     if (s_ready_head[PBL_PRIO_IDLE]->backend.next) {
       sched_yield_current();
     }
-    pbl_tick_t idle_ticks = prv_ticks_until_next_timeout();
-    pbl_tick_t timer_ticks = timer_ticks_until_next(s_ticks);
-    if (timer_ticks < idle_ticks) {
-      idle_ticks = timer_ticks;
-    }
+    pbl_tick_t idle_ticks = timeout_ticks_until_next();
     arch_irq_unlock(key);
     arch_idle(idle_ticks);
   }
@@ -439,12 +390,11 @@ void sched_reset_for_test(void) {
     s_ready_head[i] = s_ready_tail[i] = nullptr;
   }
   s_ready_mask = 0;
-  s_timeouts = nullptr;
   s_ticks = 0;
   s_sched_lock = 0;
   s_switch_deferred = false;
   s_started = false;
   s_next_number = 0;
-  timer_reset_for_test();
+  timeout_reset_for_test();
   wallclock_reset_for_test();
 }

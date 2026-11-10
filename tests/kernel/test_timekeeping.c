@@ -82,11 +82,14 @@ void sched_announce(uint64_t ticks) {
 void wallclock_clock_set(uint64_t old_ms, uint64_t new_ms) {
 }
 
-pbl_tick_t timer_ticks_until_next(uint64_t now) {
+pbl_tick_t timeout_ticks_until_next(void) {
   return s_until_next_timer;
 }
 
-void timer_expire(void) {
+void timeout_expire(void) {
+}
+
+void sched_slice(void) {
 }
 
 void pbl_irq_lock(void) {
