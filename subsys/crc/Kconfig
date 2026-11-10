@@ -1,7 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-menu "CRC"
+menuconfig CRC
+    bool "CRC"
+    help
+      CRC-8 and CRC-32 computation (pbl/crc), in software or on a
+      hardware CRC unit.
+
+if CRC
 
 config CRC_HW_ACCEL
     bool
@@ -17,4 +23,4 @@ config CRC_HW_MIN_LEN
       Buffers shorter than this are computed in software, where
       programming the CRC unit would cost more than it saves.
 
-endmenu
+endif # CRC

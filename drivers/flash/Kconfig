@@ -3,6 +3,7 @@
 
 menuconfig FLASH
     bool "Flash"
+    select CRC
     select TASK_WDT
     help
       Flash Drivers

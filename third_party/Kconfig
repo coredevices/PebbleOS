@@ -34,6 +34,16 @@ config SPEEX
     help
       Build the Speex audio codec.
 
+config TINYMT
+    bool "TinyMT"
+    help
+      Build the TinyMT pseudo-random number generator.
+
+config UZLIB
+    bool "uzlib"
+    help
+      Build the uzlib deflate decompressor.
+
 config CST816_FW
     bool
     help

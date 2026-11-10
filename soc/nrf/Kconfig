@@ -6,6 +6,7 @@ config SOC_NRF52
     select HAL_NORDIC
     select CPU_CORTEX_M4
     select CPU_HAS_FPU
+    select CRC
     select TIMER_NRF5_RTC
     help
       Nordic nRF52 series, selected by its lines.

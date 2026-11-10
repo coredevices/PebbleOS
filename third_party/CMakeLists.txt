@@ -3,9 +3,9 @@
 
 add_subdirectory(cmsis_core)
 pbl_add_subdirectory_ifdef(CONFIG_NANOPB nanopb)
-add_subdirectory(tinymt)
+pbl_add_subdirectory_ifdef(CONFIG_TINYMT tinymt)
 pbl_add_subdirectory_ifdef(CONFIG_QR_CODE_GENERATOR qr_code_generator)
-add_subdirectory(uzlib)
+pbl_add_subdirectory_ifdef(CONFIG_UZLIB uzlib)
 pbl_add_subdirectory_ifdef(CONFIG_UPNG upng)
 pbl_add_subdirectory_ifdef(CONFIG_SPEEX speex)
 add_subdirectory(nonfree)
