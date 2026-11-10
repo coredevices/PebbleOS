@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SF32LB520
+    bool "SiFli SF32LB520"
+    select SOC_SF32LB52
+
+config SOC_SF32LB523
+    bool "SiFli SF32LB523"
+    select SOC_SF32LB52
+
+config SOC_SF32LB525
+    bool "SiFli SF32LB525"
+    select SOC_SF32LB52
+
+config SOC_SF32LB527
+    bool "SiFli SF32LB527"
+    select SOC_SF32LB52
+
+config SOC_SF32LB52B
+    bool "SiFli SF32LB52B"
+    select SOC_SF32LB52
+
+config SOC_SF32LB52D
+    bool "SiFli SF32LB52D"
+    select SOC_SF32LB52
+
+config SOC_SF32LB52E
+    bool "SiFli SF32LB52E"
+    select SOC_SF32LB52
+
+config SOC_SF32LB52G
+    bool "SiFli SF32LB52G"
+    select SOC_SF32LB52
+
+config SOC_SF32LB52J
+    bool "SiFli SF32LB52J"
+    select SOC_SF32LB52
