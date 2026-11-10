@@ -17,9 +17,6 @@
 
 #include <hardware/sf32lb52_i2c.h>
 
-// The controller clock is always 48 MHz on the SF32LB52
-#define I2C_CLK_HZ 48000000U
-
 #define RESET_TIMEOUT_US 1000U
 
 #define IER_PIO (I2C_IER_TEIE | I2C_IER_RFIE | I2C_IER_BEDIE | I2C_IER_MSDIE)
@@ -52,7 +49,7 @@ static void prv_sleep_allow(const struct pbl_i2c_sf32lb *i2c) {
 }
 
 static void prv_configure(const struct pbl_i2c_sf32lb *i2c) {
-  uint32_t flv = ((I2C_CLK_HZ + i2c->clock_hz / 2U) / i2c->clock_hz - 7U + 1U) / 2U;
+  uint32_t flv = i2c->state->flv;
   uint32_t cnt = flv / 2U;
 
   cnt = (cnt < 3U) ? 0U : cnt - 3U;
@@ -341,6 +338,7 @@ static int prv_start(const struct pbl_i2c_bus *bus, uint16_t addr, struct pbl_i2
     .num_msgs = num_msgs,
     .addr = addr,
     .sleep_blocked = true,
+    .flv = state->flv,
   };
   soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
 
@@ -380,6 +378,9 @@ static void prv_disable(const struct pbl_i2c_bus *bus) {
 
 static int prv_init(const struct pbl_i2c_bus *bus) {
   const struct pbl_i2c_sf32lb *i2c = prv_i2c(bus);
+  uint64_t rate_mhz;
+  uint32_t clk_hz;
+  uint32_t flv;
   int ret;
 
   if (i2c->clock_hz == 0U) {
@@ -390,6 +391,18 @@ static int prv_init(const struct pbl_i2c_bus *bus) {
   if (ret != 0) {
     return ret;
   }
+
+  ret = pbl_clk_get_rate(&i2c->clk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+
+  clk_hz = (uint32_t)(rate_mhz / 1000U);
+  flv = ((clk_hz + i2c->clock_hz / 2U) / i2c->clock_hz - 7U + 1U) / 2U;
+  if (flv == 0U || flv > PBL_FIELD_GET(I2C_LCR_FLV_MASK, UINT32_MAX)) {
+    return -EINVAL;
+  }
+  i2c->state->flv = (uint16_t)flv;
 
   if (i2c->dma != nullptr) {
     const struct pbl_dma_slave_config cfg = {

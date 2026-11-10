@@ -23,9 +23,6 @@
 
 PBL_LOG_MODULE_DEFINE(driver_display_sf32lb_lcdc, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
-// HPSYS HCLK
-#define LCDC_CLK_HZ 240000000U
-
 #define LCDC_BUSY_TIMEOUT_US 100000U
 
 // XRST to the first VST, and the start of the transfer once enabled
@@ -121,9 +118,18 @@ static int prv_hw_init(const struct pbl_display_sf32lb_lcdc *lcdc) {
   const struct pbl_panel_timing *timing = lcdc->panel->timing;
   uint32_t max_col = (timing->hback_porch + timing->hactive + timing->hfront_porch) / 2U;
   uint32_t max_line = (timing->vback_porch + timing->vactive + timing->vfront_porch) * 2U;
-  uint32_t hck = ((LCDC_CLK_HZ + timing->clock_hz - 1U) / timing->clock_hz) / 2U;
-  uint32_t vck = hck * max_col;
+  uint64_t rate_mhz;
+  uint32_t hck;
+  uint32_t vck;
   int ret;
+
+  ret = pbl_clk_get_rate(&lcdc->clk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+
+  hck = (((uint32_t)(rate_mhz / 1000U) + timing->clock_hz - 1U) / timing->clock_hz) / 2U;
+  vck = hck * max_col;
 
   if (hck == 0U || vck > PBL_FIELD_GET(LCDC_JDI_PAR_CONF5_VCK_WIDTH_MASK, UINT32_MAX)) {
     return -EINVAL;

@@ -10,7 +10,6 @@ args:
   - reg: 0
   - irq: 0
   - clock: 0
-    default: PBL_CLK(nullptr, 0)
   - prop: current-speed
     default: 115200
   - pinctrl: default

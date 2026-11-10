@@ -53,6 +53,7 @@ struct pbl_i2c_sf32lb_state {
   bool dma;
   bool sleep_blocked;
   int error;
+  uint16_t flv;
 };
 /** @endcond */
 
