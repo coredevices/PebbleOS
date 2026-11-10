@@ -1,0 +1,163 @@
+SPDX-License-Identifier: Apache-2.0
+SPDX-FileCopyrightText: 2026 Core Devices LLC
+
+Add a fast-memfuncs option.
+
+A size-optimized build (-Os, or --buildtype minsize) swaps memcpy,
+memmove and memset for byte-at-a-time loops, about 5 cycles per byte on a
+Cortex-M33. fast-memfuncs keeps their speed versions, the ARM assembly
+ones included, while the rest of the library stays optimized for size,
+as fast-strcmp does for strcmp.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2c8de0f41f..15b0d5e138 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -80,6 +80,11 @@ if(NOT DEFINED __FAST_STRCMP)
+   option(__FAST_STRCMP "Always optimize strcmp for performance" ON)
+ endif()
+ 
++# Always optimize memcpy, memmove and memset for performance
++if(NOT DEFINED __FAST_MEMFUNCS)
++  option(__FAST_MEMFUNCS "Always optimize memcpy, memmove and memset for performance" OFF)
++endif()
++
+ # use global errno variable
+ if(NOT DEFINED __GLOBAL_ERRNO)
+   option(__GLOBAL_ERRNO "use global errno variable" OFF)
+diff --git a/libc/machine/arm/memcpy.S b/libc/machine/arm/memcpy.S
+index 29a7e29440..04da7dc467 100644
+--- a/libc/machine/arm/memcpy.S
++++ b/libc/machine/arm/memcpy.S
+@@ -33,7 +33,7 @@
+ 
+ #include "machine/acle-compat.h"
+ 
+-#if defined (__OPTIMIZE_SIZE__) || defined (__PREFER_SIZE_OVER_SPEED)
++#if (defined (__OPTIMIZE_SIZE__) || defined (__PREFER_SIZE_OVER_SPEED)) && !defined (__FAST_MEMFUNCS)
+   /* Defined in memcpy-stub.c.  */
+ 
+ #elif (__ARM_ARCH >= 7 && __ARM_ARCH_PROFILE == 'A' \
+diff --git a/libc/machine/arm/memcpy.c b/libc/machine/arm/memcpy.c
+index ec963ab36b..39f100dbda 100644
+--- a/libc/machine/arm/memcpy.c
++++ b/libc/machine/arm/memcpy.c
+@@ -31,7 +31,7 @@
+ 
+ #include "machine/acle-compat.h"
+ 
+-#if (defined(__OPTIMIZE_SIZE__) || defined(__PREFER_SIZE_OVER_SPEED))
++#if (defined(__OPTIMIZE_SIZE__) || defined(__PREFER_SIZE_OVER_SPEED)) && !defined(__FAST_MEMFUNCS)
+ #define MEMCPY_FALLBACK
+ #elif (__ARM_ARCH >= 7 && __ARM_ARCH_PROFILE == 'A' && defined(__ARM_FEATURE_UNALIGNED))
+ /* Defined in memcpy-armv7a.S.  */
+diff --git a/libc/machine/arm/memset.S b/libc/machine/arm/memset.S
+index 3de5550a56..614b33a0ca 100644
+--- a/libc/machine/arm/memset.S
++++ b/libc/machine/arm/memset.S
+@@ -29,7 +29,7 @@
+ /* NOTE: This ifdef MUST match the one in memset.c.  */
+ #include <picolibc.h>
+ 
+-#if __ARM_FP != 0 && !defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)
++#if __ARM_FP != 0 && ((!defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)) || defined(__FAST_MEMFUNCS))
+ 
+ # if defined (__thumb2__)
+ #  include "memset-thumb2.S"
+diff --git a/libc/machine/arm/memset.c b/libc/machine/arm/memset.c
+index e61b579cdd..8e0fe0b281 100644
+--- a/libc/machine/arm/memset.c
++++ b/libc/machine/arm/memset.c
+@@ -42,7 +42,7 @@
+    aeabi_memset-soft.S).  */
+ 
+ /* NOTE: This ifdef MUST match the one in memset-soft.S.  */
+-#if __ARM_FP != 0 && !defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)
++#if __ARM_FP != 0 && ((!defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)) || defined(__FAST_MEMFUNCS))
+ 
+ /* Defined in memset-soft.S.  */
+ 
+diff --git a/libc/string/memcpy.c b/libc/string/memcpy.c
+index abd3d95297..aa3c48f27d 100644
+--- a/libc/string/memcpy.c
++++ b/libc/string/memcpy.c
+@@ -54,7 +54,7 @@ memcpy(void * __restrict dst0, const void * __restrict src0, size_t len0)
+ {
+     char       *dst = dst0;
+     const char *src = src0;
+-#if !(defined(__PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__))
++#if !(defined(__PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)) || defined(__FAST_MEMFUNCS)
+     unsigned long       *aligned_dst;
+     const unsigned long *aligned_src;
+ 
+diff --git a/libc/string/memmove.c b/libc/string/memmove.c
+index 5602fbdfe1..7421aca98c 100644
+--- a/libc/string/memmove.c
++++ b/libc/string/memmove.c
+@@ -56,7 +56,7 @@ QUICKREF
+ void * __no_builtin
+ memmove(void *dst_void, const void *src_void, size_t length)
+ {
+-#if defined(__PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)
++#if (defined(__PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)) && !defined(__FAST_MEMFUNCS)
+     char       *dst = dst_void;
+     const char *src = src_void;
+ 
+diff --git a/libc/string/memset.c b/libc/string/memset.c
+index 37c2c1e3cb..ae5ff65d7b 100644
+--- a/libc/string/memset.c
++++ b/libc/string/memset.c
+@@ -53,7 +53,7 @@ memset(void *m, int c, size_t n)
+ {
+     char *s = (char *)m;
+ 
+-#if !defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)
++#if (!defined(__PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)) || defined(__FAST_MEMFUNCS)
+     unsigned int   i;
+     unsigned long  buffer;
+     unsigned long *aligned_addr;
+diff --git a/meson.build b/meson.build
+index 45f85de852..6ba452f6b0 100644
+--- a/meson.build
++++ b/meson.build
+@@ -473,6 +473,7 @@ foreach ld : test_link_args_extra
+ endforeach
+ 
+ fast_strcmp = get_option('fast-strcmp')
++fast_memfuncs = get_option('fast-memfuncs')
+ 
+ mb_capable = get_option('mb-capable')
+ mb_extended_charsets = mb_capable and get_option('mb-extended-charsets')
+@@ -1477,6 +1478,7 @@ conf_data.set('__IEEE_LIBM', not get_option('want-math-errno'), description: 'ma
+ conf_data.set('__MATH_ERRNO', get_option('want-math-errno'), description: 'math library sets errno')
+ conf_data.set('__PREFER_SIZE_OVER_SPEED', get_option('optimization') == 's', description: 'Optimize for space over speed')
+ conf_data.set('__FAST_STRCMP', fast_strcmp, description: 'Always optimize strcmp for performance')
++conf_data.set('__FAST_MEMFUNCS', fast_memfuncs, description: 'Always optimize memcpy, memmove and memset for performance')
+ conf_data.set('__GLOBAL_ERRNO', get_option('newlib-global-errno'), description: 'use global errno variable')
+ conf_data.set('__INIT_FINI_ARRAY', get_option('initfini-array'), description: 'Support INIT_ARRAY linker sections')
+ conf_data.set('__INIT_FINI_FUNCS', get_option('initfini'), description: 'Support _init() and _fini() functions')
+diff --git a/meson_options.txt b/meson_options.txt
+index 5c81fdb6c0..448e142885 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -59,6 +59,8 @@ option('assert-verbose', type: 'boolean', value: true,
+        description: 'Assert provides verbose information')
+ option('fast-strcmp', type: 'boolean', value: true,
+        description: 'Always optimize strcmp for performance')
++option('fast-memfuncs', type: 'boolean', value: false,
++       description: 'Always optimize memcpy, memmove and memset for performance')
+ option('sanitize', type: 'string', value: 'none',
+        description: 'Code sanitizer to use')
+ option('use-hlt-semihosting', type: 'boolean', value: 'false',
+diff --git a/picolibc.h.in b/picolibc.h.in
+index e1a9871892..bcd978162a 100644
+--- a/picolibc.h.in
++++ b/picolibc.h.in
+@@ -10,6 +10,7 @@
+ 
+ /* Always optimize strcmp for performance */
+ #cmakedefine __FAST_STRCMP
++#cmakedefine __FAST_MEMFUNCS
+ 
+ /* use global errno variable */
+ #cmakedefine __GLOBAL_ERRNO

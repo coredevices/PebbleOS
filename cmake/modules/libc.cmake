@@ -51,6 +51,51 @@ function(pbl_arch_flags out)
   set(${out} "${arch}" PARENT_SCOPE)
 endfunction()
 
+# Copies the picolibc checkout into the build directory and applies the
+# patches in lib/c/picolibc/, leaving the submodule untouched. The copy is
+# redone when the checkout, its local changes or the patches change.
+function(pbl_picolibc_patched_source src out_dir build_dir out)
+  find_program(PATCH patch REQUIRED)
+  set(copy ${out_dir}/src)
+  set(stamp_file ${out_dir}/src.stamp)
+
+  file(GLOB patches ${PBL_BASE}/lib/c/picolibc/*.patch)
+  list(SORT patches)
+  execute_process(COMMAND git -C ${src} rev-parse HEAD
+                  OUTPUT_VARIABLE stamp ERROR_QUIET)
+  execute_process(COMMAND git -C ${src} diff HEAD
+                  OUTPUT_VARIABLE local_changes ERROR_QUIET)
+  string(APPEND stamp "${local_changes}")
+  foreach(patch ${patches})
+    file(READ ${patch} content)
+    string(APPEND stamp "${content}")
+  endforeach()
+  string(SHA256 stamp "${stamp}")
+
+  set(old_stamp "")
+  if(EXISTS ${stamp_file})
+    file(READ ${stamp_file} old_stamp)
+  else()
+    # Configured against the submodule itself before the copy existed.
+    file(REMOVE_RECURSE ${build_dir})
+  endif()
+
+  if(NOT old_stamp STREQUAL stamp)
+    message(STATUS "Copying and patching picolibc")
+    file(REMOVE_RECURSE ${copy})
+    file(GLOB entries LIST_DIRECTORIES true ${src}/*)
+    list(FILTER entries EXCLUDE REGEX "/(\\.git|test)$")
+    file(COPY ${entries} DESTINATION ${copy})
+    foreach(patch ${patches})
+      execute_process(COMMAND ${PATCH} -s -p1 -d ${copy} -i ${patch}
+                      COMMAND_ERROR_IS_FATAL ANY)
+    endforeach()
+    file(WRITE ${stamp_file} "${stamp}")
+  endif()
+
+  set(${out} ${copy} PARENT_SCOPE)
+endfunction()
+
 # Build third_party/picolibc for the current architecture; returns the
 # specs file the compile and link lines then point at.
 function(pbl_build_picolibc out)
@@ -66,6 +111,7 @@ function(pbl_build_picolibc out)
   set(out_dir ${PROJECT_BINARY_DIR}/picolibc)
   set(build_dir ${out_dir}/build)
   set(install_dir ${out_dir}/install)
+  pbl_picolibc_patched_source(${src} ${out_dir} ${build_dir} src)
   pbl_picolibc_time_override(override)
   pbl_arch_flags(arch)
   list(APPEND arch -include ${override})
@@ -108,6 +154,7 @@ skip_sanity_check = true
         -Dio-long-long=true
         -Dformat-default=long-long
         -Dthread-local-storage=false
+        -Dfast-memfuncs=true
       COMMAND_ERROR_IS_FATAL ANY
     )
   endif()
