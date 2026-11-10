@@ -14,12 +14,6 @@ menuconfig BATTERY
 
 if BATTERY
 
-config BATTERY_PMIC
-    bool "PMIC-based"
-    help
-      Battery management via external PMIC. Used on platforms where the
-      PMIC handles battery monitoring (asterix, obelix, getafix).
-
 config BATTERY_QEMU
     bool "QEMU Battery"
     default y if SOC_QEMU
