@@ -92,4 +92,18 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb52_pmuc;
 #define SF32LB52_PMUC_NUM_CLKS 6
 /** @endcond */
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_clk_controller pbl_clk_sf32lb52_rtc;
+/** @endcond */
+
+/**
+ * @brief RTC clock controller, with one clock, clk_rtc: LRC10 or LXT32, as the RTC selects.
+ *
+ * The RTC, LPTIM1 and LPTIM2 count it.
+ */
+#define SF32LB52_RTC_CLK (&pbl_clk_sf32lb52_rtc)
+
+/** clk_rtc clock number. */
+#define SF32LB52_CLK_RTC 0
+
 /** @} */

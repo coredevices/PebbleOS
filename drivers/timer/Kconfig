@@ -27,11 +27,11 @@ config TIMER_NRF5_RTC
 config TIMER_SF32LB_LPTIM
     bool "SiFli SF32LB LPTIM"
     default y if SOC_SF32LB52
-    depends on CLK_SF32LB52_PMUC
+    depends on CLK_SF32LB52_RTC
     help
-      Clock source and clock event device on LPTIM1, counting the calibrated
-      RC10K low-power clock. It keeps running and wakes the CPU up in deep
-      sleep.
+      Clock source and clock event device on LPTIM1, counting clk_rtc, the
+      calibrated LRC10 or the 32 kHz crystal. It keeps running and wakes the
+      CPU up in deep sleep.
 
 config TIMER_POSIX
     bool "POSIX"

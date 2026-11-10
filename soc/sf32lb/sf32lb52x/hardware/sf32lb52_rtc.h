@@ -39,6 +39,7 @@
 #define RTC_DR_CB      PBL_BIT(24)
 #define RTC_DR_ERR     PBL_BIT(31)
 
+#define RTC_CR_LPCKSEL   PBL_BIT(0)
 #define RTC_CR_FMT       PBL_BIT(6)
 #define RTC_CR_POL       PBL_BIT(18)
 #define RTC_CR_OSEL_MASK PBL_GENMASK(20, 19)

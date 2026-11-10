@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/rtc/sifli,sf32lb52-rtc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 real-time clock
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Calendar RTC of the SF32LB52. It selects clk_rtc, LRC10 or LXT32, which it
+  counts and provides to the low-power timers and the Bluetooth sleep timer.
+
+allOf:
+  - $ref: rtc.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-rtc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  "#clock-cells":
+    const: 0
+
+  clocks:
+    items:
+      - description: LRC10 oscillator
+      - description: LXT32 oscillator
+
+  clock-names:
+    items:
+      - const: lrc10
+      - const: lxt32
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - "#clock-cells"
+  - clocks
+  - clock-names
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    rtc@500cb000 {
+        compatible = "sifli,sf32lb52-rtc";
+        reg = <0x500cb000 0x1000>;
+        interrupts = <49>;
+        #clock-cells = <0>;
+        clocks = <&pmuc 0>, <&pmuc 2>;
+        clock-names = "lrc10", "lxt32";
+    };

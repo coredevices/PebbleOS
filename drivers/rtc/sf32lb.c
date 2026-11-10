@@ -14,8 +14,7 @@
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_rtc.h>
 
-// The 1 Hz calendar clock is CLK_RTC / (DIVA_INT + DIVA_FRAC / 2^14) / DIVB, CLK_RTC being the
-// RC10K.
+// The 1 Hz calendar clock is clk_rtc / (DIVA_INT + DIVA_FRAC / 2^14) / DIVB.
 #define DIVB           256U
 #define DIVA_FRAC_BITS 14U
 
@@ -35,8 +34,8 @@ static inline void prv_modreg(uint32_t offset, uint32_t clear, uint32_t set) {
 
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
 
-static struct pbl_clk_notifier s_rc10k_nb = {
-  .clk = PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10),
+static struct pbl_clk_notifier s_clk_nb = {
+  .clk = PBL_CLK(SF32LB52_RTC_CLK, SF32LB52_CLK_RTC),
   .fn = prv_rate_changed,
 };
 
@@ -151,7 +150,7 @@ static int prv_init(const struct pbl_device *dev) {
   uint64_t rate_mhz;
   int ret;
 
-  ret = pbl_device_init(&SF32LB52_PMUC->dev);
+  ret = pbl_device_init(&SF32LB52_RTC_CLK->dev);
   if (ret != 0) {
     return ret;
   }
@@ -165,12 +164,12 @@ static int prv_init(const struct pbl_device *dev) {
   prv_modreg(SF32LB52_RTC_CR_OFFSET, RTC_CR_FMT | RTC_CR_OSEL_MASK | RTC_CR_POL, 0U);
   prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
 
-  ret = pbl_clk_get_rate(&s_rc10k_nb.clk, &rate_mhz);
+  ret = pbl_clk_get_rate(&s_clk_nb.clk, &rate_mhz);
   if (ret != 0) {
     return ret;
   }
   prv_set_prescaler(rate_mhz);
-  pbl_clk_notifier_register(&s_rc10k_nb);
+  pbl_clk_notifier_register(&s_clk_nb);
 
   return prv_exit_init();
 }

@@ -74,3 +74,11 @@ module-str = SF32LB52 PMUC clocks
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # CLK_SF32LB52_PMUC
+
+config CLK_SF32LB52_RTC
+    bool "SiFli SF32LB52 RTC clock"
+    default DT_HAS_SIFLI_SF32LB52_RTC_ENABLED
+    select CLK
+    help
+      clk_rtc of the SiFli SF32LB52 RTC, LRC10 or LXT32, which the RTC and
+      the low-power timers count.
