@@ -51,5 +51,5 @@
 	url = https://github.com/coredevices/samsa.git
 [submodule "third_party/devicetree/devicetree-rebasing"]
 	path = third_party/devicetree/devicetree-rebasing
-	url = https://git.kernel.org/pub/scm/linux/kernel/git/devicetree/devicetree-rebasing.git
+	url = https://github.com/coredevices/devicetree-rebasing.git
 	shallow = true
