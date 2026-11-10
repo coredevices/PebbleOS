@@ -28,7 +28,8 @@
  *     PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
  *
  * PBL_UART_SF32LB_DEFINE(s_usart1, "usart1", SF32LB52_USART1_BASE, PBL_SOC_IRQN_USART1,
- *                        PBL_CLK(nullptr, 0), 1000000, &s_usart1_default, &s_usart1_rx_dma);
+ *                        PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_PERI), 1000000,
+ *                        &s_usart1_default, &s_usart1_rx_dma);
  * @endcode
  * @{
  */
@@ -53,7 +54,7 @@ struct pbl_uart_sf32lb {
   uintptr_t base;
   /** Interrupt line. */
   pbl_irq_t irq;
-  /** Clock, without a controller when it cannot be gated. */
+  /** Clock. */
   struct pbl_clk clk;
   /** Pins. */
   struct pbl_pinctrl pinctrl;
@@ -76,7 +77,7 @@ extern const struct pbl_uart_ops pbl_uart_sf32lb_ops;
  * @param _name Name.
  * @param _base Registers.
  * @param _irq Interrupt line.
- * @param _clk Clock, from PBL_CLK(), with a NULL controller when it cannot be gated.
+ * @param _clk Clock, from PBL_CLK().
  * @param _baudrate Initial baud rate, in bits per second.
  * @param _pinctrl Default pin control state.
  * @param ... Receive DMA channel, if any, which also gives the port its receive buffer.

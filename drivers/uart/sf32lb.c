@@ -15,7 +15,6 @@
 #include <hardware/sf32lb52_usart.h>
 
 // The USART kernel clock is always 48 MHz on the SF32LB52
-#define USART_CLK_HZ 48000000U
 
 #define ICR_ERRORS (UART_ICR_PECF | UART_ICR_FECF | UART_ICR_NCF | UART_ICR_ORECF)
 
@@ -51,24 +50,20 @@ static void prv_flush(const struct pbl_uart *uart) {
 
 static int prv_early_init(const struct pbl_uart *uart) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
-  const struct pbl_clk *clk;
   int ret;
 
   if ((usart->rx_dma != nullptr) != (usart->rx_buf != nullptr)) {
     return -EINVAL;
   }
 
-  clk = &usart->clk;
-  if (clk->ctrl != nullptr) {
-    ret = pbl_device_init(&clk->ctrl->dev);
-    if (ret != 0) {
-      return ret;
-    }
+  ret = pbl_device_init(&usart->clk.ctrl->dev);
+  if (ret != 0) {
+    return ret;
+  }
 
-    ret = pbl_clk_enable(clk);
-    if (ret != 0) {
-      return ret;
-    }
+  ret = pbl_clk_enable(&usart->clk);
+  if (ret != 0) {
+    return ret;
   }
 
   ret = pbl_pinctrl_select_state(&usart->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
@@ -120,10 +115,21 @@ static int prv_init(const struct pbl_uart *uart) {
 // Frame settings need the USART disabled, the baud rate only takes once it is enabled
 static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_config *cfg) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
-  uint32_t brr = USART_CLK_HZ / cfg->baudrate;
   uint32_t cr1 = PBL_FIELD_PREP(UART_CR1_M_MASK, UART_CR1_M_8BIT);
   uint32_t cr3 = 0U;
   uint32_t smplini = UART_MISCR_SMPLINI_16X;
+  uint64_t rate_mhz;
+  uint32_t clk_hz;
+  uint32_t brr;
+  int ret;
+
+  ret = pbl_clk_get_rate(&usart->clk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+
+  clk_hz = (uint32_t)(rate_mhz / 1000U);
+  brr = clk_hz / cfg->baudrate;
 
   switch (cfg->parity) {
     case PBL_UART_PARITY_NONE:
@@ -149,7 +155,7 @@ static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_conf
   }
 
   if (brr < USART_BRR_MIN) {
-    brr = (2U * USART_CLK_HZ) / cfg->baudrate;
+    brr = (2U * clk_hz) / cfg->baudrate;
     cr1 |= UART_CR1_OVER8;
     smplini = UART_MISCR_SMPLINI_8X;
   }
