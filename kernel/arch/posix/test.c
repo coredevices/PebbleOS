@@ -118,7 +118,7 @@ static void prv_run_until_stopped(void) {
 }
 
 void arch_start(void) {
-  irq_reset();
+  posix_irq_reset();
   prv_run_until_stopped();
   // Only the test harness gets here; it re-enters through pbl_test_kernel_run().
   pthread_exit(nullptr);
@@ -130,7 +130,7 @@ void pbl_test_kernel_run(void) {
   posix_in_isr = false;
   sched_start_prepare();
   timekeeping_start();
-  irq_reset();
+  posix_irq_reset();
   prv_run_until_stopped();
   for (size_t i = 0; i < s_num_zombies; i++) {
     pthread_cancel(s_zombies[i]);

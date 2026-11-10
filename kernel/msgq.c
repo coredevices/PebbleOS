@@ -37,13 +37,13 @@ static void prv_notify_getter(struct pbl_msgq *q) {
 
 static int prv_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout, bool front) {
   int rc = 0;
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   while (q->backend.count == q->max_msgs) {
     if (pbl_timeout_is_no_wait(timeout) || arch_in_isr()) {
       rc = -EBUSY;
       goto out;
     }
-    rc = sched_block(&q->backend.putters, timeout);
+    rc = sched_block(&q->backend.putters, timeout, key);
     if (rc != 0) {
       goto out;
     }
@@ -58,7 +58,7 @@ static int prv_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout, b
   q->backend.count++;
   prv_notify_getter(q);
 out:
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return rc;
 }
 
@@ -72,13 +72,13 @@ int pbl_msgq_put_front(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeou
 
 int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) {
   int rc = 0;
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   while (q->backend.count == 0) {
     if (pbl_timeout_is_no_wait(timeout) || arch_in_isr()) {
       rc = -EBUSY;
       goto out;
     }
-    rc = sched_block(&q->backend.getters, timeout);
+    rc = sched_block(&q->backend.getters, timeout, key);
     if (rc != 0) {
       goto out;
     }
@@ -91,29 +91,29 @@ int pbl_msgq_get(struct pbl_msgq *q, void *msg, pbl_timeout_t timeout) {
     sched_wake(t, 0);
   }
 out:
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return rc;
 }
 
 int pbl_msgq_peek(struct pbl_msgq *q, void *msg) {
   int rc = -EBUSY;
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (q->backend.count > 0) {
     memcpy(msg, prv_slot(q, q->backend.head), q->msg_size);
     rc = 0;
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return rc;
 }
 
 void pbl_msgq_purge(struct pbl_msgq *q) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   q->backend.head = q->backend.tail = q->backend.count = 0;
   struct pbl_thread *t;
   while ((t = waitq_pop(&q->backend.putters)) != nullptr) {
     sched_wake(t, 0);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 uint32_t pbl_msgq_num_used(const struct pbl_msgq *q) {

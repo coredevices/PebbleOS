@@ -43,11 +43,11 @@ Each kernel thread is a GDB thread, with its name and state:
   Id   Target Id                                               Frame
 * 1    Thread 1.1 (IDLE 0x2001E8B0: Running)                   pbl_soc_idle (max_ticks=max_ticks@entry=33)
     at ./soc/qemu/idle.c:19
-  4    Thread 1.536989952 (SysWorkqHigh 0x2001D100: Blocked)   0x00143666 in arch_irq_enable ()
+  4    Thread 1.536989952 (SysWorkqHigh 0x2001D100: Blocked)   0x00143666 in arch_irq_unlock ()
     at ./kernel/arch/arm/include/pbl_arch_irq.h:76
-  5    Thread 1.536989376 (NimbleHost 0x2001CEC0: Blocked)     0x00143666 in arch_irq_enable ()
+  5    Thread 1.536989376 (NimbleHost 0x2001CEC0: Blocked)     0x00143666 in arch_irq_unlock ()
     at ./kernel/arch/arm/include/pbl_arch_irq.h:76
-  6    Thread 1.536989184 (App <Launcher> 0x2001CE00: Blocked) 0x00143666 in arch_irq_enable ()
+  6    Thread 1.536989184 (App <Launcher> 0x2001CE00: Blocked) 0x00143666 in arch_irq_unlock ()
     at ./kernel/arch/arm/include/pbl_arch_irq.h:76
 ...
 ```
@@ -58,10 +58,10 @@ its backtrace:
 ```
 (gdb) thread 5
 [Switching to thread 5 (Thread 1.536989376)]
-#0  0x00143666 in arch_irq_enable () at ./kernel/arch/arm/include/pbl_arch_irq.h:76
+#0  0x00143666 in arch_irq_unlock () at ./kernel/arch/arm/include/pbl_arch_irq.h:76
 76	  __asm volatile("msr basepri, %0" ::"r"(0U) : "memory");
 (gdb) bt
-#0  0x00143666 in arch_irq_enable () at ./kernel/arch/arm/include/pbl_arch_irq.h:76
+#0  0x00143666 in arch_irq_unlock () at ./kernel/arch/arm/include/pbl_arch_irq.h:76
 #1  pbl_irq_unlock () at ./kernel/irq.c:16
 #2  0x000eceee in sched_block (wq=wq@entry=0x2000cb38 <g_eventq_dflt+20>, timeout=timeout@entry=...)
     at ./kernel/sched.c:192

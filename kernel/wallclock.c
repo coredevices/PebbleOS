@@ -28,7 +28,7 @@ static uint64_t prv_boundary(const struct pbl_wallclock_work *w, uint64_t ms, ui
 static void prv_expired(struct pbl_timer *timer) {
   struct pbl_wallclock_work *w = container_of(timer, struct pbl_wallclock_work, timer);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   // Stopped, restarted or moved by a clock change since the timer expired.
   if (w->running && !pbl_timer_is_active(timer)) {
     pbl_work_submit(w->q, &w->work);
@@ -39,7 +39,7 @@ static void prv_expired(struct pbl_timer *timer) {
     } while (w->due_ms <= now);
     prv_arm(w);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_wallclock_work_init(struct pbl_wallclock_work *w, pbl_work_fn_t fn) {
@@ -61,7 +61,7 @@ void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w,
                               uint32_t every) {
   PBL_ASSERTN(unit_s > 0U && every > 0U);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (!w->running) {
     w->next = s_running;
     s_running = w;
@@ -72,11 +72,11 @@ void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w,
   w->running = true;
   w->due_ms = prv_boundary(w, pbl_realtime_ms(), every);
   prv_arm(w);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   const bool was_running = w->running;
   if (was_running) {
     prv_unlink(w);
@@ -84,7 +84,7 @@ bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w) {
   }
   pbl_timer_stop(&w->timer);
   pbl_work_cancel(&w->work);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return was_running;
 }
 

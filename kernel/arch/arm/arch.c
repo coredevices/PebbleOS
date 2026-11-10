@@ -458,7 +458,6 @@ void arch_start(void) {
   FPU->FPCCR |= FPCCR_ASPEN_LSPEN;
 #endif
 
-  irq_reset();
   __asm volatile("  dsb \n svc %0 \n isb \n" ::"i"(SVC_START));
   for (;;) {
   }

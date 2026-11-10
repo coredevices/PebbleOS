@@ -39,6 +39,7 @@ void arch_cur_set(struct pbl_thread *t) {
 
 static bool s_switch_pending;
 static bool s_in_isr;
+static unsigned int s_irq_locked;
 
 static emscripten_fiber_t s_host_fiber;
 static uint8_t s_host_async_stack[FIBER_ASYNC_STACK_SIZE];
@@ -125,7 +126,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *
 }
 
 void arch_start(void) {
-  irq_reset();
+  s_irq_locked = 0;
   // The boot fiber is done; it is never resumed.
   emscripten_fiber_swap(&s_boot->fiber, &pbl_cur->backend.arch.pt->fiber);
   PBL_ASSERTN(false);
@@ -163,11 +164,19 @@ void arch_heap_lock(void) {
 void arch_heap_unlock(void) {
 }
 
-void arch_irq_disable(void) {
+unsigned int arch_irq_lock(void) {
+  unsigned int key = s_irq_locked;
+  s_irq_locked = 1;
+  return key;
 }
 
-void arch_irq_enable(void) {
-  if (s_in_isr || !pbl_kernel_is_started()) {
+bool arch_irq_is_locked(void) {
+  return s_irq_locked != 0;
+}
+
+void arch_irq_unlock(unsigned int key) {
+  s_irq_locked = key;
+  if (key != 0 || s_in_isr || !pbl_kernel_is_started()) {
     return;
   }
   if (emscripten_get_now() - s_host_turn_ms > HOST_TURN_MS) {

@@ -104,13 +104,13 @@ void pbl_clocksource_set_mhz(const struct pbl_clocksource *cs, uint64_t mhz) {
     return;
   }
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (s_running) {
     prv_update();
   }
   s_cs_mhz = mhz;
   s_mult = (((uint64_t)PBL_TICK_HZ * 1000U) << FRAC_BITS) / mhz;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_clocksource_set_hz(const struct pbl_clocksource *cs, uint32_t hz) {
@@ -124,18 +124,18 @@ void pbl_clockevent_set_hz(const struct pbl_clockevent *ce, uint32_t hz) {
     return;
   }
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   s_ce_hz = hz;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_clockevent_handler(const struct pbl_clockevent *ce) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   if (s_running && ce == s_ce) {
     prv_announce();
     prv_program(sched_uptime_ticks() + 1U);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   timer_expire();
 }
@@ -153,19 +153,19 @@ void timekeeping_start(void) {
   PBL_ASSERTN(s_cs_mhz != 0U && s_ce_hz != 0U);
   PBL_ASSERTN(pbl_soc_num_idle_states <= PBL_IDLE_STATES_MAX);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   s_cs_last = s_cs->ops->read(s_cs);
   s_cs_ticks = sched_uptime_ticks();
   s_cs_frac = 0U;
   s_running = true;
   prv_program(s_cs_ticks + 1U);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void timekeeping_announce(void) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   prv_announce();
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void timekeeping_idle(pbl_tick_t ticks) {
@@ -188,33 +188,33 @@ void timekeeping_idle(pbl_tick_t ticks) {
     return;
   }
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   uint64_t wake = UINT64_MAX / 2U;
   if (ticks != PBL_TICK_FOREVER) {
     wake = sched_uptime_ticks() + ticks - MIN(state->exit_ticks, ticks - 1U);
   }
   prv_program(wake);
   uint64_t start_us = prv_now_us();
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   // The lock would keep the kernel's interrupts from waking the CPU up.
   state->enter();
 
-  pbl_irq_lock();
+  key = arch_irq_lock();
   s_residency_us[i] += prv_now_us() - start_us;
   prv_announce();
   // Programming drops the tick that woke the CPU up, and only the ISR runs timers.
   uint64_t now = sched_uptime_ticks();
   prv_program(timer_ticks_until_next(now) == 0U ? now : now + 1U);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 uint64_t pbl_realtime_ms(void) {
   int64_t us;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   us = (int64_t)prv_uptime_us() + s_realtime_offset_us;
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   return (us > 0) ? (uint64_t)us / 1000U : 0U;
 }
@@ -224,11 +224,11 @@ time_t pbl_realtime(void) {
 }
 
 void pbl_realtime_set(time_t t) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   const uint64_t old_ms = pbl_realtime_ms();
   s_realtime_offset_us = (int64_t)t * 1000000 - (int64_t)prv_uptime_us();
   wallclock_clock_set(old_ms, pbl_realtime_ms());
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms) {
@@ -252,9 +252,9 @@ uint64_t pbl_idle_residency_us(size_t state) {
     return 0U;
   }
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   us = s_residency_us[state];
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 
   return us;
 }

@@ -84,20 +84,20 @@ int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) 
   }
   prv_regions_set(t, attr->regions);
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   sched_thread_start(t);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return 0;
 }
 
 void pbl_thread_abort(struct pbl_thread *t) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   bool self = (t == nullptr || t == pbl_cur);
   sched_thread_remove(self ? pbl_cur : t);
   if (!self) {
     arch_thread_aborted(t);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   if (self) {
     // The switch requested above takes over; this never returns.
     arch_thread_exit();
@@ -105,15 +105,15 @@ void pbl_thread_abort(struct pbl_thread *t) {
 }
 
 void pbl_thread_suspend(struct pbl_thread *t) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   sched_thread_suspend(t ? t : pbl_cur);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 void pbl_thread_resume(struct pbl_thread *t) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   sched_thread_resume(t);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 struct pbl_thread *pbl_thread_current(void) {
@@ -126,11 +126,11 @@ struct pbl_thread *pbl_thread_idle(void) {
 
 void pbl_thread_prio_set(struct pbl_thread *t, pbl_prio_t prio) {
   PBL_ASSERTN(prio <= PBL_PRIO_MAX);
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   // Keep an inherited boost; only the base moves.
   pbl_prio_t effective = t->prio > t->backend.base_prio ? (prio > t->prio ? prio : t->prio) : prio;
   sched_prio_set(t, prio, effective);
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 pbl_prio_t pbl_thread_prio_get(const struct pbl_thread *t) {
@@ -146,7 +146,7 @@ enum pbl_thread_state pbl_thread_state(const struct pbl_thread *t) {
 }
 
 void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     s_default_regions[i] = regions[i];
   }
@@ -155,5 +155,5 @@ void pbl_thread_regions_default_set(const struct pbl_mpu_region *const *regions)
       prv_regions_set(t, nullptr);
     }
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }

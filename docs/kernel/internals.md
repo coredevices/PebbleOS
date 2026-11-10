@@ -49,11 +49,13 @@ light mutex: a waiter raises the owner to its own priority; the owner drops
 back to its base priority when it holds no mutex any more. A boosted thread
 is re-sorted in its ready list or wait queue.
 
-**Interrupts.** `pbl_irq_lock()` raises BASEPRI to
-`CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL` with a nesting counter, exactly the
-FreeRTOS critical section. ISRs above that priority may not call the kernel.
-Object operations run under that lock; there is no separate scheduler lock
-inside the kernel. `pbl_sched_lock()` defers switches until unlocked.
+**Interrupts.** The kernel's own critical sections raise BASEPRI to
+`CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL` with `arch_irq_lock()`, which returns
+the previous level for `arch_irq_unlock()` to restore: a few inline
+instructions, and nothing to keep count of. `pbl_irq_lock()` is that plus a
+nesting counter, for callers with nowhere to keep the key. ISRs above that
+priority may not call the kernel. Object operations run under that lock;
+there is no separate scheduler lock inside the kernel. `pbl_sched_lock()` defers switches until unlocked.
 
 **Idle.** The idle thread yields to other threads at its priority, then
 calls the arch idle hook with the ticks until the next timeout. The arch

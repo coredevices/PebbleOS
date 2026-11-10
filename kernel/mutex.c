@@ -17,7 +17,7 @@ int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) 
   PBL_ASSERTN(!arch_in_isr());
   int rc = 0;
 
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   struct pbl_thread *me = pbl_cur;
   if (m->owner == nullptr) {
     m->owner = me;
@@ -30,7 +30,7 @@ int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) 
   } else {
     sched_inherit(m->owner, me->prio);
     // On success the previous owner handed the mutex over to us.
-    rc = sched_block(&m->backend.waitq, timeout);
+    rc = sched_block(&m->backend.waitq, timeout, key);
   }
 #if CONFIG_KERNEL_MUTEX_LOCK_LR
   if (rc == 0 && m->count == 1) {
@@ -39,12 +39,12 @@ int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) 
 #else
   (void)lr;
 #endif
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
   return rc;
 }
 
 void pbl_mutex_unlock(struct pbl_mutex *m) {
-  pbl_irq_lock();
+  unsigned int key = arch_irq_lock();
   PBL_ASSERTN(m->owner == pbl_cur && m->count > 0);
   if (--m->count == 0) {
     struct pbl_thread *prev = m->owner;
@@ -62,7 +62,7 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
     }
     sched_disinherit(prev);
   }
-  pbl_irq_unlock();
+  arch_irq_unlock(key);
 }
 
 bool pbl_mutex_is_owner(const struct pbl_mutex *m) {
