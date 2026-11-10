@@ -19,6 +19,7 @@ static void prv_wfi(void) {
   __ISB();
 }
 
+#ifdef CONFIG_FLASH
 static void prv_wfi_cb(void *arg) {
   prv_wfi();
 }
@@ -27,10 +28,13 @@ static void prv_wfi_cb(void *arg) {
 static void prv_full_sleep(void) {
   pbl_flash_power_down(FLASH, prv_wfi_cb, nullptr);
 }
+#endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
   [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+#ifdef CONFIG_FLASH
   [IDLE_FULL] = {.name = "full", .min_ticks = 5, .exit_ticks = 2, .enter = prv_full_sleep},
+#endif
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
