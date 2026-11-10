@@ -5,7 +5,9 @@ menu "Third-party"
 
 rsource "hal_nordic/Kconfig"
 rsource "hal_sifli/Kconfig"
+if BT
 rsource "nimble/Kconfig"
+endif
 
 config MBEDTLS
     bool "mbedTLS"
