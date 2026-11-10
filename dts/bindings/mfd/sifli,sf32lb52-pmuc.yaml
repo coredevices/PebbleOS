@@ -23,6 +23,13 @@ description: |
   - WDT, clk_wdt, LRC10 or LRC32, which clocks the watchdogs and the unit
     itself.
 
+  It also powers the HPSYS, a power domain whose specifiers take one cell, an
+  ID from <dt-bindings/power/sifli,sf32lb52-pmuc.h>. Its performance states
+  are the voltage modes of the HPSYS, D0, D1, S0 and S1, the opp-level values
+  of its OPP table, from the same header: each sets the buck and HPSYS LDO
+  voltages, trimmed at the factory, and the voltage mode and memory timings of
+  the HPSYS configuration.
+
   The load capacitance of the 48 MHz crystal is trimmed from the factory
   configuration of the SoC, kept in nvmem cells.
 
@@ -38,6 +45,16 @@ properties:
 
   "#clock-cells":
     const: 1
+
+  "#power-domain-cells":
+    const: 1
+
+  operating-points-v2:
+    maxItems: 1
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration, for the voltage mode and memory timings.
 
   clocks:
     minItems: 1
@@ -66,6 +83,9 @@ required:
   - compatible
   - reg
   - "#clock-cells"
+  - "#power-domain-cells"
+  - operating-points-v2
+  - sifli,hpsys-cfg
   - clocks
   - clock-names
 
@@ -78,8 +98,11 @@ examples:
         reg = <0x500ca000 0x1000>;
         interrupts = <48>;
         #clock-cells = <1>;
+        #power-domain-cells = <1>;
         clocks = <&xtal48m>;
         clock-names = "hxt48";
+        operating-points-v2 = <&hpsys_opp_table>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
         nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
         nvmem-cell-names = "soc-config-user", "soc-config-cust";
     };

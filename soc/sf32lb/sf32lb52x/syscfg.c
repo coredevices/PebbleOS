@@ -3,6 +3,7 @@
 
 #include "syscfg.h"
 
+#include <errno.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -79,4 +80,17 @@ int BSP_CONFIG_get(int type, uint8_t *buf, int length) {
   }
 
   return length;
+}
+
+int soc_sf32lb52_hpsys_ldo_trims(uint8_t *s0, uint8_t *s1) {
+  FACTORY_CFG_VBK_LDO_T cfg;
+
+  if (BSP_CONFIG_get(FACTORY_CFG_ID_VBUCK, (uint8_t *)&cfg, sizeof(cfg)) == 0) {
+    return -ENODATA;
+  }
+
+  *s0 = cfg.hpsys_ldo_vout;
+  *s1 = cfg.hpsys_ldo_vout2;
+
+  return 0;
 }
