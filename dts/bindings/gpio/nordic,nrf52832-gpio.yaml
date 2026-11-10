@@ -38,6 +38,8 @@ properties:
     minimum: 1
     maximum: 32
 
+  gpio-reserved-ranges: true
+
   interrupt-controller: true
 
   '#interrupt-cells':
