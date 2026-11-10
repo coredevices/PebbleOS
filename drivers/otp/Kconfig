@@ -18,7 +18,7 @@ config OTP_FLASH
 
 config OTP_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU OTP. QEMU emulates none, so all slots read as locked and empty.
 

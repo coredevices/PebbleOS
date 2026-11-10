@@ -40,7 +40,7 @@ config VIBE_DRV2604
 
 config VIBE_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU vibration motor, reporting its state to the QEMU host.
 

@@ -48,7 +48,7 @@ config UART_SF32LB_IRQ_PRIO
 config UART_QEMU
     bool "QEMU Simple UART"
     default DT_HAS_QEMU_PEBBLE_SIMPLE_UART_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     help
       Support for the QEMU simple UART peripheral.
 

@@ -33,7 +33,7 @@ config AMBIENT_LIGHT_W1160
 
 config AMBIENT_LIGHT_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU ambient light sensor. QEMU emulates none, so it always reads
       complete darkness.

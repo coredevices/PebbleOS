@@ -89,7 +89,7 @@ Driver classes
   defconfig does not. A driver whose devices come from the board's
   {doc}`devicetree` defaults to the tree having one
   (`default DT_HAS_NORDIC_NRF52832_TWIM_ENABLED`). Otherwise, a driver that
-  only exists on one SoC defaults to `y` there (`default y if SOC_QEMU`).
+  only exists on one SoC defaults to `y` there (`default y if SOC_QEMU_PEBBLE`).
 
 What drivers use
 : A driver `select`s the classes it uses, such as the bus it sits on

@@ -4,14 +4,12 @@
 choice
     prompt "SoC"
     help
-      SoC. Real boards pick their SoC line; QEMU boards pick
-      SOC_QEMU and then choose the emulated core.
+      SoC. Real boards pick their SoC line; QEMU boards pick the core of
+      the Pebble QEMU machine.
 
 rsource "nrf/Kconfig.soc"
 rsource "sf32lb/Kconfig.soc"
-
-config SOC_QEMU
-    bool "QEMU emulated"
+rsource "qemu/Kconfig.soc"
 
 config SOC_POSIX
     bool "POSIX host"
@@ -60,24 +58,11 @@ config SDL
 
 config QEMU
     bool
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
-      Derived alias for SOC_QEMU. Gates features that don't make
+      Derived alias for SOC_QEMU_PEBBLE. Gates features that don't make
       sense under emulation.
 
-choice
-    prompt "Emulated core"
-    depends on SOC_QEMU
-
-config SOC_QEMU_CORTEX_M4
-    bool "Cortex-M4"
-    select CPU_CORTEX_M4
-
-config SOC_QEMU_CORTEX_M33
-    bool "Cortex-M33"
-    select CPU_CORTEX_M33
-
-endchoice
-
 rsource "nrf/Kconfig"
+rsource "qemu/Kconfig"
 rsource "sf32lb/Kconfig"

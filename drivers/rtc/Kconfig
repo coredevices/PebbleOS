@@ -32,7 +32,7 @@ config RTC_SF32LB
 
 config RTC_QEMU
     bool "QEMU RTC"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU RTC, following the host clock.
 

@@ -29,7 +29,7 @@ config TOUCH_CST816
 config TOUCH_QEMU
     bool "QEMU Touchscreen"
     default DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
-    depends on SOC_QEMU
+    depends on SOC_QEMU_PEBBLE
     help
       Support for the QEMU touchscreen peripheral.
 

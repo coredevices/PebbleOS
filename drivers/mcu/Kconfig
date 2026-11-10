@@ -19,7 +19,7 @@ config MCU_SF32LB
 
 config MCU_QEMU
     bool "QEMU"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       QEMU MCU information. QEMU emulates no unique ID, so it reports a
       fixed serial.

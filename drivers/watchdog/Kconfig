@@ -40,7 +40,7 @@ config WATCHDOG_SF32LB
 
 config WATCHDOG_QEMU
     bool "QEMU Watchdog"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       Support for the CMSDK APB watchdog of the QEMU Pebble machines.
 

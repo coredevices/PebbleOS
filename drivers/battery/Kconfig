@@ -16,7 +16,7 @@ if BATTERY
 
 config BATTERY_QEMU
     bool "QEMU Battery"
-    default y if SOC_QEMU
+    default y if SOC_QEMU_PEBBLE
     help
       Stub battery driver for QEMU (fixed values).
 
