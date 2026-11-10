@@ -190,16 +190,6 @@ PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
   return SystemCoreClock;
 }
 
-void arch_irq_disable(void) {
-  __set_BASEPRI(PBL_IRQ_PRIO_MAX_SYSCALL);
-  __DSB();
-  __ISB();
-}
-
-void arch_irq_enable(void) {
-  __set_BASEPRI(0);
-}
-
 // Faults and the most urgent interrupts stay enabled.
 #define HEAP_LOCK_BASEPRI (2 << (8 - __NVIC_PRIO_BITS))
 
