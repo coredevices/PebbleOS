@@ -95,11 +95,13 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   if ((rv == S_SUCCESS) && (entry->version == WEATHER_DB_CURRENT_VERSION) &&
       (len >= (int)WEATHER_DB_V4_0_FIXED_SIZE)) {
     out->is_v4 = true;
+    // Cap the phone's values to their schema ranges: UV*10 at 254 like the daily and hourly
+    // figures, and the chance at 100%.
     if (entry->today_uv_index_x10 >= 0) {
-      out->today_uv = entry->today_uv_index_x10 / 10; // schema stores UV*10
+      out->today_uv = MIN(entry->today_uv_index_x10, 254) / 10; // schema stores UV*10
     }
     if (entry->today_precip_probability >= 0) {
-      out->today_precip = entry->today_precip_probability;
+      out->today_precip = MIN(entry->today_precip_probability, 100);
     }
     if (entry->today_wind_speed > 0) {
       out->today_wind = entry->today_wind_speed;
@@ -138,7 +140,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       for (uint8_t i = 0; i < nd; i++) {
         const WeatherDBDailyMetrics *m = &entry->daily_metrics[i];
         if (m->precip_probability != 255)
-          out->daily[i].precip = m->precip_probability;
+          out->daily[i].precip = MIN(m->precip_probability, 100); // capped like today's
         if (m->wind_speed != 255)
           out->daily[i].wind = m->wind_speed;
         if (m->uv_index_x10 != 255)
@@ -174,7 +176,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       if (entry->today_wmo_code != 0xFF)
         out->today_wmo = entry->today_wmo_code;
       if (entry->today_humidity_pct != 0xFF)
-        out->today_humidity = entry->today_humidity_pct;
+        out->today_humidity = MIN(entry->today_humidity_pct, 100);
       if (entry->today_visibility_m != 0xFFFF)
         out->today_visibility_m = entry->today_visibility_m;
       if (entry->today_precip_sum_mm != 0xFFFF)
