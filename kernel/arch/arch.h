@@ -19,6 +19,9 @@ extern struct pbl_thread *pbl_cur;
 //! Sets pbl_cur outside of a context switch.
 void arch_cur_set(struct pbl_thread *t);
 
+//! First arch setup, before the SoC's: FPU access and caches.
+void arch_early_init(void);
+
 //! Early arch setup, before main(): fault exceptions.
 void arch_init(void);
 
