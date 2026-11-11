@@ -108,6 +108,11 @@
 			status = "disabled";
 		};
 
+		lpsys_aon: syscon@40040000 {
+			compatible = "sifli,sf32lb52-lpsys-aon", "syscon";
+			reg = <0x40040000 0x1000>;
+		};
+
 		hpsys_rcc: clock-controller@50000000 {
 			compatible = "sifli,sf32lb52-hpsys-rcc";
 			reg = <0x50000000 0x1000>;
@@ -293,6 +298,11 @@
 			ngpios = <45>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
+		};
+
+		hpsys_aon: syscon@500c0000 {
+			compatible = "sifli,sf32lb52-hpsys-aon", "syscon";
+			reg = <0x500c0000 0x1000>;
 		};
 
 		lptim1: timer@500c1000 {
