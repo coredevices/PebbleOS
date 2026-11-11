@@ -12,6 +12,7 @@
 #include <pbl/kernel/mmio.h>
 
 #include <bf0_hal.h>
+#include <devicetree/regs.h>
 #include <hardware/sf32lb52_wdt.h>
 
 #define PWRKEY_RESET_CNT (32000 * 15)
@@ -56,10 +57,9 @@ void pbl_soc_early_init(void) {
 
 #ifndef CONFIG_WATCHDOG
   // The bootloader leaves its watchdog running, which the watchdog driver takes over otherwise
-  pbl_writel(WDT_CCR_STOP, SF32LB52_WDT1_BASE + SF32LB52_WDT_CCR_OFFSET);
+  pbl_writel(WDT_CCR_STOP, PBL_DT_REG_WDT1 + SF32LB52_WDT_CCR_OFFSET);
   (void)PBL_POLL_BUSY_US(
-      (pbl_readl(SF32LB52_WDT1_BASE + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U,
-      48000U);
+      (pbl_readl(PBL_DT_REG_WDT1 + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U, 48000U);
 #endif
 
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();

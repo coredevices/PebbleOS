@@ -13,6 +13,7 @@
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_patch.h>
 #include <lcpu_patch_rev_b.h>
+#include <revid.h>
 
 // LCPU ROM layout of its SRAM region: header, then code
 #define PATCH_BUF_OFFSET  0x5000U
@@ -42,8 +43,7 @@ void pbl_rproc_sf32lb52__patch_install(const struct pbl_rproc_sf32lb52 *lcpu) {
   memcpy((void *)code, sf32lb52_lcpu_patch_code, sizeof(sf32lb52_lcpu_patch_code));
 
   // Revisions before A4 do not take these entries
-  rev =
-      pbl_readl(SF32LB52_HPSYS_CFG_BASE + SF32LB52_HPSYS_CFG_IDR_OFFSET) & HPSYS_CFG_IDR_REVID_MASK;
+  rev = soc_sf32lb52_revid();
   if (rev < HPSYS_CFG_IDR_REVID_A4) {
     return;
   }
