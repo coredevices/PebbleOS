@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "globe_view.h"
 #include "weather_types.h"
 
 // 144x168 displays run the same layout at a smaller scale.
@@ -35,8 +36,12 @@ typedef enum {
 // (pebble/services/timeline/weather_layout.c): the status time over three outlined cards for the
 // conditions, a row of readings and the sunset.
 //
-// It sits above the forecast list. DOWN and BACK fire on_down. SELECT slides the card out to the
-// left, then fires on_select. UP does nothing.
+// It sits above the forecast list. DOWN and BACK fire on_down.
+// On colour displays, UP and SELECT slide in the locations page above the card. There UP and DOWN
+// move between the SAVED LOCATIONS pill, where SELECT fires on_locations, and the city-select box,
+// where SELECT fires on_select. DOWN past the box and BACK return to the card.
+// On black and white displays, SELECT slides the card out to the left, then fires on_select. UP
+// does nothing.
 //
 // `today` is borrowed only for the duration of this call; the fields are copied, so
 // the caller may free/reuse its forecast afterward. lat_e2/lon_e2 are the active
@@ -51,10 +56,16 @@ typedef enum {
 //! run never reaches unload, so the next launch would read stale pointers).
 void expanded_view_reset(void);
 
+// on_locations fires from the locations page's SAVED LOCATIONS pill. The city-select box draws
+// `globe`'s art, or a plain globe when `globe` is NULL or its art fails to load.
 void expanded_view_push(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
                         int16_t utc_off_min, ExpandedViewEntrance entrance,
                         void (*on_down)(void *ctx), void *on_down_ctx, void (*on_select)(void *ctx),
-                        void *on_select_ctx);
+                        void *on_select_ctx, void (*on_locations)(void *ctx),
+                        void *on_locations_ctx, GlobeView *globe);
+
+// 0 for the sunset card, 1 for the locations page above it (colour displays only)
+int expanded_view_get_page(void);
 
 // The card body's text, formatted once so the card and the forecast's hero icon-fly draw the same
 // strings. Every field a display has is filled, drawn there or not.
@@ -78,6 +89,7 @@ typedef struct {
   char humidity[12]; // "64%", "--" if unknown
   char uv_text[32];  // "UV 4"
   char uv_value[8];  // "4", shown without the label when the readings are tight
+  char city[64];     // the active location's name, for the locations page
 } ExpandedViewGlance;
 
 // Format the glance as the card renders it. `owner` scopes the i18n lookups. The caller frees
@@ -97,8 +109,13 @@ void expanded_view_draw_glance_content(GContext *ctx, int W, int tdx, const char
 // on black and white displays.
 void expanded_view_prime_body(GContext *ctx, int W, const ExpandedViewGlance *glance);
 
-// Free the body mask and the sunset box's icon.
+// Free the body masks and the sunset box's icon, and release the city-select box's globe art.
 void expanded_view_drop_body(void);
+
+// Free the sunset page's mask where the locations page and its backdrop do not paint it, which
+// is on round, where they draw the conditions card live. Call it before the globe is pushed
+// from the locations page. No-op on other displays.
+void expanded_view_drop_card_mask(void);
 
 // Format "Last updated H:MM" from the forecast's time_updated_utc, exactly as the card shows it.
 void expanded_view_format_updated(const WeatherLocationForecast *today, char *out, size_t out_sz);
@@ -112,3 +129,15 @@ bool expanded_view_is_showing(void);
 // No-op if the card is not currently showing.
 void expanded_view_update_data(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
                                int16_t utc_off_min);
+
+// The locations page as globe_view_push_unwrap's backdrop, without the box's globe: the status
+// time, the pill and the box rise off the top by the fraction `away` while the conditions card
+// sinks off the bottom. Draws nothing on black and white displays.
+void expanded_view_draw_locations_backdrop(GContext *ctx, AnimationProgress away,
+                                           AnimationProgress lit, GRect *fill_out, GRect *box_out,
+                                           void *context);
+
+// Where the city-select box draws the globe art with globe_view_draw_art: the art frame's
+// top-left in 1/8 px and its scale (256 = native). False on black and white displays, or when
+// the art fails to load.
+bool expanded_view_locations_globe_placement(GPoint *origin8, int32_t *scale_q8);
