@@ -7,7 +7,6 @@
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/reboot.h>
-#include <pbl/mcu/cache.h>
 
 #include <hardware/nrf52_approtect.h>
 #include <hardware/nrf52_clock.h>
@@ -80,7 +79,4 @@ void pbl_soc_early_init(void) {
   prv_lfclk_init();
 
   pbl_writel(NVMC_ICACHECNF_CACHEEN, NRF52_NVMC_BASE + NRF52_NVMC_ICACHECNF_OFFSET);
-
-  icache_enable();
-  dcache_enable();
 }
