@@ -250,6 +250,7 @@
 			reg = <0x50088000 0x1000>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_AUDCODEC>;
 			#sound-dai-cells = <0>;
+			sifli,pmuc = <&pmuc>;
 			status = "disabled";
 		};
 

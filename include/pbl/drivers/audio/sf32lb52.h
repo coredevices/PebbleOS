@@ -44,6 +44,8 @@ struct pbl_audio_sf32lb52_audcodec {
   struct pbl_clk clk;
   /** DAC DMA channel. */
   const struct pbl_dma_chan *dma;
+  /** PMUC registers, holding the HXT48 buffer to the codec. */
+  uintptr_t pmuc;
   /** Driver runtime state. */
   struct pbl_audio_sf32lb52_audcodec_state *state;
 };
@@ -60,14 +62,15 @@ extern const struct pbl_audio_dai_ops pbl_audio_sf32lb52_audcodec_ops;
  * @param _base Register base address.
  * @param _clk Clock, from PBL_CLK().
  * @param _dma DAC DMA channel.
+ * @param _pmuc PMUC registers.
  */
-#define PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE(sym, _name, _base, _clk, _dma)                       \
-  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                              \
-  static struct pbl_audio_sf32lb52_audcodec_state sym##_audcodec_state;                         \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_sf32lb52_audcodec, struct pbl_audio_dai, dai) {     \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_sf32lb52_audcodec_ops, \
-                              PBL_DEVICE_DEPS(&(_dma)->ctrl->dev)),                             \
-    .base = (_base), .clk = _clk, .dma = (_dma), .state = &sym##_audcodec_state,                \
+#define PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE(sym, _name, _base, _clk, _dma, _pmuc)                  \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                                \
+  static struct pbl_audio_sf32lb52_audcodec_state sym##_audcodec_state;                           \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_sf32lb52_audcodec, struct pbl_audio_dai, dai) {       \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_sf32lb52_audcodec_ops,   \
+                              PBL_DEVICE_DEPS(&(_dma)->ctrl->dev)),                               \
+    .base = (_base), .clk = _clk, .dma = (_dma), .pmuc = (_pmuc), .state = &sym##_audcodec_state, \
   }
 
 /** @cond INTERNAL_HIDDEN */

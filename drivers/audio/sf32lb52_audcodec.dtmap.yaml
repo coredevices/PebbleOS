@@ -10,3 +10,5 @@ args:
   - reg: 0
   - clock: 0
   - dma: tx
+  - reg: 0
+    of: sifli,pmuc

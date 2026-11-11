@@ -35,11 +35,16 @@ properties:
   "#sound-dai-cells":
     const: 0
 
+  sifli,pmuc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: PMUC, holding the HXT48 buffer to the codec.
+
 required:
   - compatible
   - reg
   - clocks
   - "#sound-dai-cells"
+  - sifli,pmuc
 
 unevaluatedProperties: false
 
@@ -52,4 +57,5 @@ examples:
         dmas = <&dmac1 3 41 2>;
         dma-names = "tx";
         #sound-dai-cells = <0>;
+        sifli,pmuc = <&pmuc>;
     };
