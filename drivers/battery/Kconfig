@@ -21,16 +21,11 @@ menuconfig BATTERY
 
 if BATTERY
 
-config BATTERY_QEMU
-    bool "QEMU Battery"
-    default y if SOC_QEMU_PEBBLE
+config BATTERY_SIM
+    bool "Simulator"
+    default y if SOC_QEMU_PEBBLE || SOC_POSIX
     help
-      Stub battery driver for QEMU (fixed values).
-
-config BATTERY_POSIX
-    bool "POSIX Battery"
-    default y if SOC_POSIX
-    help
-      Battery driver for a native build (fixed values).
+      Simulated battery, set through its simulator API
+      (pbl/drivers/battery/sim.h).
 
 endif # BATTERY
