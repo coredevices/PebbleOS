@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include <pbl/kernel/irq.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/mcu/fpu.h>
 
 #include <arch.h>
@@ -32,29 +31,6 @@ void pbl_irq_clear_pending(pbl_irq_t irq) {
 }
 
 void mcu_fpu_cleanup(void) {
-}
-
-bool icache_is_enabled(void) {
-  return false;
-}
-
-void icache_invalidate(void *addr, size_t size) {
-}
-
-void icache_align(uintptr_t *addr, size_t *size) {
-}
-
-bool dcache_is_enabled(void) {
-  return false;
-}
-
-void dcache_flush(const void *addr, size_t size) {
-}
-
-void dcache_invalidate(void *addr, size_t size) {
-}
-
-void dcache_align(uintptr_t *addr, size_t *size) {
 }
 
 void arch_mpu_init(void) {
