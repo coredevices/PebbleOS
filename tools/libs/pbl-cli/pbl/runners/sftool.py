@@ -33,6 +33,9 @@ class SfToolRunner(Runner):
     def do_run(self, command):
         if command == "flash":
             files = [self.cfg.hex_file]
+            build = self.cfg.build
+            if build and build.config.CONFIG_SF32LB52_FTAB:
+                files.append(build.join("ftab.hex"))
             if self.cfg.resources_file:
                 files.append(
                     f"{self.cfg.resources_file}@{FLASH_XIP_BASE + self.cfg.resources_address:#x}"
