@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
-#include <pbl/drivers/ambient/posix.h>
+#include <pbl/drivers/als/posix.h>
 #include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/backlight/posix.h>
 #include <pbl/drivers/display/sdl.h>
@@ -44,7 +44,7 @@ const struct pbl_audio *const MIC = &s_mic;
 const struct pbl_accel *const ACCEL = POSIX_ACCEL;
 #endif
 
-#ifdef CONFIG_AMBIENT_LIGHT
+#ifdef CONFIG_ALS
 const struct pbl_als *const ALS = POSIX_ALS;
 #endif
 

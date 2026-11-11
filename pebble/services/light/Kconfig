@@ -40,7 +40,7 @@ config SERVICE_LIGHT_BACKLIGHT_DEFAULT_COLOR
 
 config ALS_SCREEN_COMPENSATION
     bool "Compensate ALS readings for on-screen luminance"
-    depends on AMBIENT_LIGHT && PLATFORM_COLOR
+    depends on ALS && PLATFORM_COLOR
     help
       For boards whose ambient light sensor sits under the display, correct the
       raw ALS reading by the transmittance of the pixels in front of the sensor

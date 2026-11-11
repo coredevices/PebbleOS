@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include <pbl/drivers/als.h> // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/als.h> // PBL_ALS_LEVEL_MAX
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
@@ -86,13 +86,13 @@ void test_als_screen_compensation__apply_zero_raw(void) {
 }
 
 void test_als_screen_compensation__apply_clamps_to_max(void) {
-  // 20000 * 8 == 160000 > AMBIENT_LIGHT_LEVEL_MAX (65536 for 16-bit).
-  cl_assert_equal_i(als_compensation_apply(20000, 0, SCALE_8X_Q8), AMBIENT_LIGHT_LEVEL_MAX);
+  // 20000 * 8 == 160000 > PBL_ALS_LEVEL_MAX (65536 for 16-bit).
+  cl_assert_equal_i(als_compensation_apply(20000, 0, SCALE_8X_Q8), PBL_ALS_LEVEL_MAX);
 }
 
 void test_als_screen_compensation__apply_no_overflow(void) {
   // Largest possible inputs must not overflow the 64-bit intermediate.
-  cl_assert_equal_i(als_compensation_apply(65535, 0, 65535), AMBIENT_LIGHT_LEVEL_MAX);
+  cl_assert_equal_i(als_compensation_apply(65535, 0, 65535), PBL_ALS_LEVEL_MAX);
 }
 
 void test_als_screen_compensation__apply_luminance_above_unity_clamped(void) {

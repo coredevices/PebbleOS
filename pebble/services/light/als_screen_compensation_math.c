@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/als.h> // AMBIENT_LIGHT_LEVEL_MAX
+#include <pbl/drivers/als.h> // PBL_ALS_LEVEL_MAX
 
 #include <services/light/als_screen_compensation.h>
 
@@ -36,8 +36,8 @@ uint32_t als_compensation_apply(uint32_t raw_level, uint16_t avg_luminance_q8,
 
   // 64-bit intermediate: raw (up to 1<<16) * gain_q8 can exceed 32 bits.
   const uint64_t corrected = ((uint64_t)raw_level * gain_q8) / ALS_COMP_UNITY_Q8;
-  if (corrected > AMBIENT_LIGHT_LEVEL_MAX) {
-    return AMBIENT_LIGHT_LEVEL_MAX;
+  if (corrected > PBL_ALS_LEVEL_MAX) {
+    return PBL_ALS_LEVEL_MAX;
   }
   return (uint32_t)corrected;
 }

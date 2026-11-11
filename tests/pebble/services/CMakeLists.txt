@@ -148,7 +148,7 @@ pbl_clar_test(test_als_screen_compensation
   SOURCES
     pebble/services/light/als_screen_compensation_math.c
     pebble/services/light/als_screen_compensation_region.c
-  DEFINES CONFIG_ALS_SCREEN_COMPENSATION CONFIG_AMBIENT_LIGHT_BITS=16
+  DEFINES CONFIG_ALS_SCREEN_COMPENSATION CONFIG_ALS_BITS=16
   OVERRIDES dummy_board
 )
 

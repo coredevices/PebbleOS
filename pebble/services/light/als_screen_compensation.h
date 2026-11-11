@@ -20,7 +20,7 @@ struct GBitmap;
 //! @param raw_level        raw ALS reading in sensor units
 //! @param avg_luminance_q8 average front-pixel luminance, Q8 (0=black..256=white)
 //! @param black_scale_q8   max gain (region ~black), Q8 (256 == 1.0x disables it)
-//! @return corrected reading, clamped to AMBIENT_LIGHT_LEVEL_MAX. No graphics deps.
+//! @return corrected reading, clamped to PBL_ALS_LEVEL_MAX. No graphics deps.
 uint32_t als_compensation_apply(uint32_t raw_level, uint16_t avg_luminance_q8,
                                 uint16_t black_scale_q8);
 

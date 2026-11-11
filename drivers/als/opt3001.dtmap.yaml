@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: ti,opt3001
-config: AMBIENT_LIGHT_OPT3001
+config: ALS_OPT3001
 class: als
 define: PBL_OPT3001_DEFINE
 args:
