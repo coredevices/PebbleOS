@@ -124,7 +124,7 @@ Appended after the v4.2 fields (same append-only pattern; stamp minor 3):
 | `daily_wind_dir_deg[7]` | i16[7] | daily `winddirection_10m_dominant` | -1 |
 
 Degrees 0..359, meteorological (0 = N, clockwise). Used by the day screen's
-forecast description ("Winds SW at 12mph") — 8-point compass rendering on-watch.
+forecast description ("Winds SW 12mph") — 8-point compass rendering on-watch.
 
 ## v4 minor 5 — tomorrow's hourly series
 
