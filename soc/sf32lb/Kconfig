@@ -3,7 +3,6 @@
 
 config SOC_SF32LB52
     bool
-    select HAL_SIFLI
     select CPU_STAR_MC1
     select CPU_HAS_FPU
     select CPU_HAS_ICACHE

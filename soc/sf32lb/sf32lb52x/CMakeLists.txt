@@ -14,7 +14,6 @@ pbl_library_sources(
   mpu_regions.c
   retained.c
 )
-pbl_linker_sources(ramfunc ramfunc.ld)
 
 if(CONFIG_SF32LB52_FTAB)
   set(ftab ${PROJECT_BINARY_DIR}/ftab.hex)
