@@ -610,8 +610,8 @@ static bool prv_set_s_motion_sensitivity(uint8_t *sensitivity) {
 
 static bool prv_set_s_backlight_ambient_threshold(uint32_t *threshold) {
   // Validate and constrain the threshold
-  if (*threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    s_backlight_ambient_threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  if (*threshold > PBL_ALS_LEVEL_MAX) {
+    s_backlight_ambient_threshold = PBL_ALS_LEVEL_MAX;
     return false;
   }
   if (*threshold < 1) {
@@ -1227,7 +1227,7 @@ void shell_prefs_init(void) {
     s_backlight_preset = BacklightPreset_Advanced;
   }
 
-#if defined(CONFIG_AMBIENT_LIGHT_W1160)
+#if defined(CONFIG_ALS_W1160)
   // One-time: the W1160 scale rework left old-scale ambient thresholds far below
   // current readings (backlight stuck off). Drop any stored override so the
   // device follows the new board default.
@@ -1742,8 +1742,8 @@ uint32_t backlight_get_ambient_threshold(void) {
 
 void backlight_set_ambient_threshold(uint32_t threshold) {
   // Validate threshold is within acceptable range
-  if (threshold > AMBIENT_LIGHT_LEVEL_MAX) {
-    threshold = AMBIENT_LIGHT_LEVEL_MAX;
+  if (threshold > PBL_ALS_LEVEL_MAX) {
+    threshold = PBL_ALS_LEVEL_MAX;
   }
   if (threshold < 1) {
     threshold = 1;

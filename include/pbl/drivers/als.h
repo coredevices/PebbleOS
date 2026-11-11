@@ -15,7 +15,7 @@
  * @brief Ambient light sensor (ALS) class.
  *
  * An ambient light sensor is a struct pbl_als device. Readings are raw counts between 0 and
- * #AMBIENT_LIGHT_LEVEL_MAX; a calibrated instance converts them to lux with pbl_als_to_lux().
+ * #PBL_ALS_LEVEL_MAX; a calibrated instance converts them to lux with pbl_als_to_lux().
  *
  * Sampling is controlled by two reference counts kept by the class: a consumer that will read the
  * sensor soon primes it, and code that would disturb the reading (e.g. backlight bleed-through)
@@ -38,14 +38,14 @@
  */
 
 /** @cond INTERNAL_HIDDEN */
-#ifndef CONFIG_AMBIENT_LIGHT_BITS
+#ifndef CONFIG_ALS_BITS
 // Fallback for builds without Kconfig, e.g. unit tests.
-#define CONFIG_AMBIENT_LIGHT_BITS 12
+#define CONFIG_ALS_BITS 12
 #endif
 /** @endcond */
 
-/** @brief Upper bound of the raw light level scale (@c CONFIG_AMBIENT_LIGHT_BITS bits). */
-static const uint32_t AMBIENT_LIGHT_LEVEL_MAX = (1U << CONFIG_AMBIENT_LIGHT_BITS);
+/** @brief Upper bound of the raw light level scale (@c CONFIG_ALS_BITS bits). */
+static const uint32_t PBL_ALS_LEVEL_MAX = (1U << CONFIG_ALS_BITS);
 
 struct pbl_als;
 
@@ -135,7 +135,7 @@ int pbl_als_dev_init(const struct pbl_device *dev);
  * @brief Read the light level.
  *
  * @param als Ambient light sensor.
- * @param[out] level Raw light level between 0 and #AMBIENT_LIGHT_LEVEL_MAX.
+ * @param[out] level Raw light level between 0 and #PBL_ALS_LEVEL_MAX.
  * @return 0, -ENODEV if the sensor is not ready, or a negative errno.
  */
 int pbl_als_read(const struct pbl_als *als, uint32_t *level);

@@ -1,29 +1,29 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-menuconfig AMBIENT_LIGHT
+menuconfig ALS
     bool "Ambient Light Sensor"
     help
       Ambient light sensor drivers (pbl/drivers/als.h). The board
       instantiates the sensor it has and exports it as ALS.
 
-if AMBIENT_LIGHT
+if ALS
 
-config AMBIENT_LIGHT_OPT3001
+config ALS_OPT3001
     bool "TI OPT3001"
     default DT_HAS_TI_OPT3001_ENABLED
     select I2C
     help
       Support for the TI OPT3001 ambient light sensor.
 
-config AMBIENT_LIGHT_OPT3001_ALWAYS_ON
+config ALS_OPT3001_ALWAYS_ON
     bool "Convert continuously"
-    depends on AMBIENT_LIGHT_OPT3001
+    depends on ALS_OPT3001
     help
       Keep converting instead of converting once per read, for faster reads
       at the cost of power.
 
-config AMBIENT_LIGHT_W1160
+config ALS_W1160
     bool "Sensortek W1160"
     default DT_HAS_SENSORTEK_W1160_ENABLED
     select I2C
@@ -31,32 +31,32 @@ config AMBIENT_LIGHT_W1160
     help
       Support for the Sensortek W1160 ambient light sensor.
 
-config AMBIENT_LIGHT_QEMU
+config ALS_QEMU
     bool "QEMU"
     default y if SOC_QEMU_PEBBLE
     help
       QEMU ambient light sensor. QEMU emulates none, so it always reads
       complete darkness.
 
-config AMBIENT_LIGHT_POSIX
+config ALS_POSIX
     bool "POSIX"
     default y if SOC_POSIX
     help
       Ambient light driver for a native build (always dark).
 
-config AMBIENT_LIGHT_BITS
+config ALS_BITS
     int "Ambient light sensor resolution (bits)"
-    default 12 if AMBIENT_LIGHT_OPT3001
-    default 16 if AMBIENT_LIGHT_W1160
-    default 12 if AMBIENT_LIGHT_QEMU
-    default 12 if AMBIENT_LIGHT_POSIX
+    default 12 if ALS_OPT3001
+    default 16 if ALS_W1160
+    default 12 if ALS_QEMU
+    default 12 if ALS_POSIX
     help
       Number of bits in the ambient light sensor reading. Used to derive
-      AMBIENT_LIGHT_LEVEL_MAX, which bounds the dark/backlight thresholds
+      PBL_ALS_LEVEL_MAX, which bounds the dark/backlight thresholds
       exposed to the shell and settings UI.
 
-module = DRIVER_AMBIENT
+module = DRIVER_ALS
 module-str = Ambient Light Sensor
 source "subsys/logging/Kconfig.template.log_level"
 
-endif # AMBIENT_LIGHT
+endif # ALS

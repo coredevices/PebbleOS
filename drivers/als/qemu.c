@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/als.h>
-#include <pbl/drivers/ambient/qemu.h>
+#include <pbl/drivers/als/qemu.h>
 
 static int prv_init(const struct pbl_als *als) {
   return 0;

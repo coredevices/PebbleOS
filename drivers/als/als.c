@@ -9,7 +9,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_als, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_als, CONFIG_DRIVER_ALS_LOG_LEVEL);
 
 static void prv_lock(const struct pbl_als *als) {
   pbl_mutex_lock(&als->state->lock, PBL_FOREVER);

@@ -77,7 +77,7 @@ static HRMDevice s_hrm = {
 HRMDevice *const HRM = &s_hrm;
 #endif
 
-#ifdef CONFIG_AMBIENT_LIGHT
+#ifdef CONFIG_ALS
 const struct pbl_als *const ALS = &dt_w1160;
 #endif
 

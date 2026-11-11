@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
-#include <pbl/drivers/ambient/qemu.h>
+#include <pbl/drivers/als/qemu.h>
 #include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/rtc/qemu.h>
@@ -39,7 +39,7 @@ const struct pbl_audio *const MIC = &s_mic;
 const struct pbl_accel *const ACCEL = QEMU_ACCEL;
 #endif
 
-#ifdef CONFIG_AMBIENT_LIGHT
+#ifdef CONFIG_ALS
 const struct pbl_als *const ALS = QEMU_ALS;
 #endif
 

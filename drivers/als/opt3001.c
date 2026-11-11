@@ -5,19 +5,19 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/als.h>
-#include <pbl/drivers/ambient/opt3001.h>
+#include <pbl/drivers/als/opt3001.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
-#ifdef CONFIG_AMBIENT_LIGHT_OPT3001_ALWAYS_ON
+#ifdef CONFIG_ALS_OPT3001_ALWAYS_ON
 #define ALWAYS_ON true
 #else
 #define ALWAYS_ON false
 #endif
 
-PBL_LOG_MODULE_DEFINE(driver_ambient_opt3001, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_als_opt3001, CONFIG_DRIVER_ALS_LOG_LEVEL);
 
 #define OPT3001_RESULT                 0x00
 #define OPT3001_RESULT_EXPONENT_MASK   PBL_GENMASK(15, 12)

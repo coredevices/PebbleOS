@@ -44,7 +44,7 @@ const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
 const struct pbl_vibe *const VIBE = &dt_drv2604;
 #endif
 
-#ifdef CONFIG_AMBIENT_LIGHT
+#ifdef CONFIG_ALS
 const struct pbl_als *const ALS = &dt_opt3001;
 #endif
 

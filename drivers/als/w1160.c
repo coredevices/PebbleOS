@@ -5,7 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/als.h>
-#include <pbl/drivers/ambient/w1160.h>
+#include <pbl/drivers/als/w1160.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/delay.h>
@@ -15,7 +15,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_ambient_w1160, CONFIG_DRIVER_AMBIENT_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_als_w1160, CONFIG_DRIVER_ALS_LOG_LEVEL);
 
 // Registers
 #define W1160_STATE_REG            0x00

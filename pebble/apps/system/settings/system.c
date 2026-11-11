@@ -426,7 +426,7 @@ static void prv_als_threshold_menu_push(SettingsSystemData *data) {
 
   // Set reasonable min/max values for ALS threshold (lux domain)
   number_window_set_min(number_window, 0);
-  number_window_set_max(number_window, pbl_als_to_lux(ALS, AMBIENT_LIGHT_LEVEL_MAX));
+  number_window_set_max(number_window, pbl_als_to_lux(ALS, PBL_ALS_LEVEL_MAX));
   number_window_set_step_size(number_window, 1);
   number_window_set_value(number_window, (int32_t)current_threshold);
 

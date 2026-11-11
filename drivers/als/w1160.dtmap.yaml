@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: sensortek,w1160
-config: AMBIENT_LIGHT_W1160
+config: ALS_W1160
 class: als
 define: PBL_W1160_DEFINE
 args:
