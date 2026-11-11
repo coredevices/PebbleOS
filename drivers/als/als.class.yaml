@@ -4,3 +4,5 @@
 class: als
 type: struct pbl_als
 include: pbl/drivers/als.h
+roles:
+  als: ALS

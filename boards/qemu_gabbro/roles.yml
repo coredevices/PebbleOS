@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+console_uart: uart2
+qemu_uart: uart1
+bt_hci_uart: uart3
+display: display
+backlight: display
+flash: flash0
+accel:
+  symbol: QEMU_ACCEL
+  include: pbl/drivers/imu/qemu.h
+als:
+  symbol: QEMU_ALS
+  include: pbl/drivers/als/qemu.h
+touch: touchscreen
+vibe:
+  symbol: QEMU_VIBE
+  include: pbl/drivers/vibe/qemu.h
+mic:
+  symbol: HOST_MIC
+  include: pbl/drivers/audio/qemu.h
+die_temp:
+  symbol: QEMU_TEMP
+  include: pbl/drivers/temp/qemu.h
+rtc:
+  symbol: QEMU_RTC
+  include: pbl/drivers/rtc/qemu.h

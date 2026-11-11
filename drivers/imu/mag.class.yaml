@@ -4,3 +4,5 @@
 class: mag
 type: struct pbl_mag
 include: pbl/drivers/mag.h
+roles:
+  mag: MAG

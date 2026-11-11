@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+console_uart: uart0
+display: display
+backlight: backlight
+flash: flash0
+accel: lsm6dso
+mag: mmc5603nj
+als: opt3001
+vibe: drv2604
+mic: mic
+speaker: speaker
+die_temp:
+  symbol: NRF5_TEMP
+  include: pbl/drivers/temp/nrf5.h
+rtc:
+  symbol: RETAINED_RTC
+  include: pbl/drivers/rtc/retained.h

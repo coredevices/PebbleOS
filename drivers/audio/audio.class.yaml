@@ -4,3 +4,6 @@
 class: audio
 type: struct pbl_audio
 include: pbl/drivers/audio.h
+roles:
+  mic: MIC
+  speaker: SPEAKER

@@ -4,3 +4,5 @@
 class: rtc
 type: struct pbl_rtc
 include: pbl/drivers/rtc.h
+roles:
+  rtc: RTC

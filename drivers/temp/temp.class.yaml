@@ -4,3 +4,5 @@
 class: temp
 type: struct pbl_temp
 include: pbl/drivers/temp.h
+roles:
+  die_temp: TEMP

@@ -2063,6 +2063,12 @@ def test_bad_roles_files_are_rejected(tmp_path, text, message):
         dtmap.merge_roles([path])
 
 
+def test_roles_of_the_classes():
+    roles = dtmap.load_roles(dtmap.load_classes(REPO))
+    assert roles["accel"][1] == "ACCEL"
+    assert roles["console_uart"][1] is None
+
+
 def test_role_in_two_classes_fails():
     classes = {
         "a": {**CLASSES["bus"], "roles": {"main_bus": None}},
