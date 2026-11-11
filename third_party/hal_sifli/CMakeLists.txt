@@ -35,11 +35,6 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND micro_sources
     sf32lb52/system_bf0_ap.c
   )
-  if(CONFIG_HAL_SIFLI_LCPU)
-    list(APPEND micro_sources
-      SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c
-    )
-  endif()
 endif()
 set(micro_includes
   SiFli-SDK/customer/boards/include
