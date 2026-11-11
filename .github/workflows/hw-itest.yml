@@ -112,6 +112,7 @@ jobs:
             build/pebbleos.hex
             build/system_resources.pbpack
             build/log.dict.json
+            build/generated/include/devicetree/partitions.h
             build/normal_*.pbz
 
   test:
