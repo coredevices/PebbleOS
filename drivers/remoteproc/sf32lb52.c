@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "sf32lb52_priv.h"
+
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
@@ -15,11 +17,11 @@
 #include <bf0_hal.h>
 #include <lpsys.h>
 
-// LPSYS RAM areas used by the LCPU ROM
-#define LCPU_CODE_BASE  0x20400000UL
-#define LCPU_PATCH_SIZE 0x500U
-#define LCPU_EM_BASE    0x20408000UL
-#define LCPU_EM_SIZE    0x5000U
+// LCPU ROM layout of its SRAM region
+#define LCPU_CODE_OFFSET 0x0000U
+#define LCPU_CODE_SIZE   0x500U
+#define LCPU_EM_OFFSET   0x8000U
+#define LCPU_EM_SIZE     0x5000U
 
 // The LCPU loads at these rates, or slower
 #define LCPU_LOAD_HCLK_HZ  24000000ULL
@@ -31,7 +33,6 @@
 #define RF_CAL_OFFSET 32U
 #define RF_CAL_SIZE   20U
 
-extern void lcpu_patch_install_rev_b(void);
 extern void bt_rf_cal(void);
 int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_cal,
                                   uint8_t *dac_lsb_cnt_cal);
@@ -141,13 +142,13 @@ static int prv_start(const struct pbl_rproc *rproc) {
     return ret;
   }
 
-  HAL_LPAON_ConfigStartAddr((uint32_t *)LCPU_CODE_BASE);
+  HAL_LPAON_ConfigStartAddr((uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET));
 
-  memset((void *)LCPU_CODE_BASE, 0, LCPU_PATCH_SIZE);
-  lcpu_patch_install_rev_b();
+  memset((void *)(lcpu->sram.base + LCPU_CODE_OFFSET), 0, LCPU_CODE_SIZE);
+  pbl_rproc_sf32lb52__patch_install(lcpu);
   bt_rf_cal();
   // calibration leaves data in the exchange memory
-  memset((void *)LCPU_EM_BASE, 0, LCPU_EM_SIZE);
+  memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
 
   HAL_RCC_ReleaseLCPU();
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
@@ -174,7 +175,7 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev) {
       container_of(dev, const struct pbl_rproc_sf32lb52, rproc.dev);
   int ret;
 
-  if (lcpu->mem.size == 0U) {
+  if (lcpu->mem.size == 0U || lcpu->sram.size < LCPU_EM_OFFSET + LCPU_EM_SIZE) {
     return -EINVAL;
   }
 
