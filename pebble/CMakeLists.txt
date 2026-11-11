@@ -69,9 +69,6 @@ foreach(dir ${dirs})
 endforeach()
 
 file(GLOB sources CONFIGURE_DEPENDS *.c)
-if(CONFIG_ARCH_POSIX)
-  pbl_filter_sources(sources EXCLUDE hardfault_handler.c)
-endif()
 target_sources(app PRIVATE ${sources})
 
 if(NOT CONFIG_RECOVERY_FW)

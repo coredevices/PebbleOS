@@ -19,6 +19,15 @@
   pbl_reboot_emergency();
 }
 
+[[noreturn]] PBL_WEAK void pbl_fault_fatal_handler(const struct pbl_fault_info *info) {
+  pbl_log_panic();
+  pbl_reboot_emergency();
+}
+
+[[noreturn]] PBL_WEAK void pbl_fault_thread_handler(const struct pbl_fault_info *info) {
+  pbl_fault_fatal_handler(info);
+}
+
 [[noreturn]] static void prv_panic_vargs(const char *filename, int line, uintptr_t lr,
                                          const char *fmt, va_list args) {
   char buffer[160];

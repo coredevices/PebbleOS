@@ -63,13 +63,5 @@ void kernel_pbl_log_verify_user(const LogBinaryMessage *log_message);
 void kernel_pbl_log_from_fault_handler(const char *src_filename, uint16_t src_line_number,
                                        const char *message);
 
-void kernel_pbl_log_from_fault_handler_fmt(const char *src_filename, uint16_t src_line_number,
-                                           char *buffer, unsigned int buffer_len, const char *fmt,
-                                           ...);
-
 #define PBL_LOG_FROM_FAULT_HANDLER(message) \
   kernel_pbl_log_from_fault_handler(__FILE_NAME__, __LINE__, message)
-
-#define PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, buffer_len, fmt, ...)                      \
-  kernel_pbl_log_from_fault_handler_fmt(__FILE_NAME__, __LINE__, buffer, buffer_len, fmt, \
-                                        __VA_ARGS__)
