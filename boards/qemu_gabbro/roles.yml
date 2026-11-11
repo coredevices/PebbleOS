@@ -11,8 +11,8 @@ accel:
   symbol: QEMU_ACCEL
   include: pbl/drivers/imu/qemu.h
 als:
-  symbol: QEMU_ALS
-  include: pbl/drivers/als/qemu.h
+  symbol: SIM_ALS
+  include: pbl/drivers/als/sim.h
 touch: touchscreen
 vibe:
   symbol: QEMU_VIBE

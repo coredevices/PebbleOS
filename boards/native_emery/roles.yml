@@ -23,8 +23,8 @@ accel:
   symbol: POSIX_ACCEL
   include: pbl/drivers/imu/posix.h
 als:
-  symbol: POSIX_ALS
-  include: pbl/drivers/als/posix.h
+  symbol: SIM_ALS
+  include: pbl/drivers/als/sim.h
 touch:
   symbol: SDL_TOUCH
   include: pbl/drivers/touch/sdl.h
