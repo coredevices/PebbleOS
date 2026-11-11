@@ -67,7 +67,6 @@ typedef struct {
   GBitmap *icons[MAX_ROWS];
   GFont day_font;
   GFont condition_font;
-  GFont loc_font;
   char condition_str[MAX_ROWS][32]; // pre-formatted condition strings
   int row_height;                   // computed at load: (screen_h - LOCATION_BAR_H) / ROWS_VISIBLE
 #ifdef CONFIG_TOUCH
@@ -90,8 +89,8 @@ typedef struct {
   // Cached so the 40ms animation redraw never re-runs expensive text layout (which was
   // starving the background work queue that services touch). Recomputed only on load / data update.
   int16_t today_icon_x;    // today icon left-x (centred over the date string)
-  void *today_cond_font;   // GFont for today's condition phrase
-  bool today_header_dirty; // recompute today_icon_x/font (set on data change)
+  int16_t today_cond_x;    // rect: condition text's left edge, just past the date
+  bool today_header_dirty; // recompute today_icon_x and today_cond_x (set on data or date change)
   char daydate_cache[24];  // "Sat, Jul 04" — refreshed at local midnight
   char weekday_cache[PBL_IF_ROUND_ELSE(6, 5)][8]; // fan weekday labels ([R5_MAX_COLS])
   time_t date_cache_expiry;                       // next local midnight (0 = caches not built yet)
@@ -381,8 +380,8 @@ static void *s_select_exit_ctx;
 // top intact. Emery's rectangle has no such limit, so it keeps 38.
 // Round steps re-spread each tier opens to its OWN chord's comfort, not a uniform
 // pitch — icons/day-names and highs sit near the equator where the glass is wide (26px of
-// slack was going unused), the lows stay at 42 because their row's chord is only 7px clear
-// already. The widen amplifies the existing fan-inward-as-it-descends grammar.
+// slack), the lows close to 40 because their labels reach row 221, where the display starts
+// at x=38.
 // The wide values apply ONLY at the resting mainscreen; the *_SCROLLED values are the
 // originals, and the column build interpolates between them on the section scroll so the
 // precipitation view's icon row lands PIXEL-IDENTICAL to its pre-spread layout (the spread applies
@@ -391,18 +390,25 @@ static void *s_select_exit_ctx;
 #define R5_COL_STEP_HIGH          PBL_IF_ROUND_ELSE(50, 38) // high temps at REST (was 45)
 #define R5_COL_STEP_ICON_SCROLLED PBL_IF_ROUND_ELSE(42, 38) // precip view: original pitch
 #define R5_COL_STEP_HIGH_SCROLLED PBL_IF_ROUND_ELSE(45, 38)
-#define R5_COL_STEP_LOW           PBL_IF_ROUND_ELSE(42, 38) // low temps — chord-bound, unchanged
+#define R5_COL_STEP_LOW           PBL_IF_ROUND_ELSE(40, 38) // low temps at rest, inside the circle
+#define R5_COL_STEP_LOW_SCROLLED  PBL_IF_ROUND_ELSE(42, 38) // precip view: under the discs
 #define R5_HEADER_Y               14 // header pinned at top; everything below is centred
 #define R5_DAYNAME_Y              PBL_IF_ROUND_ELSE(94, 84)
-#define R5_ICON_CY                PBL_IF_ROUND_ELSE(130, 120) // icon row centre-y
-#define R5_ICON_SIZE              25
-#define R5_DISC_R                 (R5_ICON_SIZE * 7 / 10) // 17 — same disc as old list + mainscreen
-#define R5_PRECIP_Y               150
-#define R5_GRAPH_TOP              PBL_IF_ROUND_ELSE(172, 166) // y of the warmest dot
-#define R5_GRAPH_BOT              PBL_IF_ROUND_ELSE(202, 202) // y of the coolest dot
-#define R5_DOT_R                  5                           // outer coloured dot radius
-#define R5_DOT_INNER              2                           // inner white radius (hollow dot)
-#define R5_HAIRLINE_Y             PBL_IF_ROUND_ELSE(88, 80)   // hairline rule under today header
+// Weekday label box offset from R5_DAYNAME_Y. Bold Gothic 18 capitals sit 7 to 17 rows down the
+// box, between the hairline and the discs.
+#define R5_DAYNAME_TEXT_DY (-5)
+// Rect keeps the weekday labels during the scroll and lowers them by this much at its end, so
+// their capitals end on rows 5 to 15, 4 rows above the discs.
+#define R5_DAYNAME_SCROLL_DY PBL_IF_ROUND_ELSE(0, 2)
+#define R5_ICON_CY           PBL_IF_ROUND_ELSE(130, 120) // icon row centre-y
+#define R5_ICON_SIZE         25
+#define R5_DISC_R            (R5_ICON_SIZE * 7 / 10) // 17 px
+#define R5_PRECIP_Y          150
+#define R5_GRAPH_TOP         PBL_IF_ROUND_ELSE(172, 166) // y of the warmest dot
+#define R5_GRAPH_BOT         PBL_IF_ROUND_ELSE(202, 202) // y of the coolest dot
+#define R5_DOT_R             5                           // outer coloured dot radius
+#define R5_DOT_INNER         2                           // hollow centre radius
+#define R5_HAIRLINE_Y        PBL_IF_ROUND_ELSE(88, 80)   // hairline rule under today header
 // The emery "today" banner blue. Used by BOTH the banner fill AND the icon crossfade's
 // erase-to-background — they MUST stay the same colour or the animated↔static icon fade
 // shows a coloured box on the banner. Change only here.
@@ -411,8 +417,10 @@ static void *s_select_exit_ctx;
 // icon (STATUS_BAR_LAYER_HEIGHT 20 + CARD_ICON_UPPER_PADDING 0 on emery) — so the top clock has
 // the same clearance above the icon that a Gmail-style notification gives. Date row follows so
 // the header block stays clear of the moved icon and the hairline below it.
-#define R5_TODAY_Y   PBL_IF_ROUND_ELSE(26, 20)
-#define R5_DAYDATE_Y PBL_IF_ROUND_ELSE(68, 62) // day + date, below the today icon
+#define R5_TODAY_Y PBL_IF_ROUND_ELSE(26, 20)
+// Date and condition box top. Gothic 18 capitals start 7 rows down the box and descenders end
+// 20 rows down, 3 rows above the hairline.
+#define R5_DAYDATE_Y PBL_IF_ROUND_ELSE(64, 56)
 
 // DOWN/UP header transition travel (emery / !PBL_ROUND). HEADER_TRAVEL slides the today
 // header (icon/temp/date/condition/hairline) fully off the top; SECTION_TRAVEL lifts the
@@ -424,7 +432,7 @@ static void *s_select_exit_ctx;
 // Extra lift past today's old slot, applied uniformly to the whole scrolled 5-day section
 // (day names, discs, graph, icon rest + its stretch travel all key off SECTION_TRAVEL, so they
 // stay in lockstep) to free more room at the bottom of the scrolled screen for the new stats.
-// Emery lifts PAST today's old slot (+19) so the day names top out at y6. Round cannot:
+// Emery lifts past today's old slot (+19) so the day names' capitals top out at y5. Round cannot:
 // at y6 the circle is only ~100px wide. Round lifts 14px SHORT instead, landing the day
 // names at y40 and the discs at cy76 — the highest the 4-column row fits uncut.
 // Round's scrolled column is SOLVED, not nudged: every element is placed against the
@@ -441,6 +449,10 @@ static void *s_select_exit_ctx;
 // Emery packs the values 1px under the pill because it has no spare height. Round does —
 // open it to 8px so the percentages read as their own row, not a caption on the pill.
 #define R5_BAND_ROW_GAP PBL_IF_ROUND_ELSE(4, 0)
+// Top of the percentages row on the scrolled screen. Bold Gothic 18 digits fill rows 7 to 17 of
+// it, so R5_STAT_ROW_INK_END is the first clear row below them.
+#define R5_STAT_ROW_Y       (164 + R5_BAND_DY + R5_BAND_ROW_GAP)
+#define R5_STAT_ROW_INK_END (R5_STAT_ROW_Y + 18)
 // Scrolled, round's graph must sit LOWER (the bowed outer discs drop into where the high
 // labels were — this is what made the temps overlap the icons) and SHORTER (the circle
 // closes in below). Both scale with the lift, so the mainscreen graph is untouched.
@@ -746,7 +758,7 @@ static void prv_start_header_transition(bool to_scrolled) {
 // in lockstep, while the bottom dot decouples and flies to screen centre. STAGE 2 (ported from the
 // original burst): the centred dot does the orbital shake, then hands off to the clock. ----
 // header_scroll value that clears ALL content off the top. The lift must be shape-specific:
-// round's scrolled content sits ~35px lower than emery's (dot rest 233 vs 198), so emery's
+// round's scrolled content sits ~30px lower than emery's (dot rest 235 vs 204), so emery's
 // fixed 200 left the low-temp graph line, its labels and the precip %-row stranded at rows
 // 3..37 (measured) for the whole of stage 2 — the "graph pops in at the top" bug. It was
 // invisible until the stranded-squash_mode fix, because a permanently-squashed frame had been
@@ -758,9 +770,9 @@ static void prv_start_header_transition(bool to_scrolled) {
 // (ball + unfolding paper). Was hardcoded to rect's 228/2, which put round's animation
 // 16px high and off the SELECT nub it is supposed to grow out of.
 #define R5_SCREEN_CY PBL_IF_ROUND_ELSE(130, 114)
-// Dot's resting y on the scrolled screen. Round: the precip values end at y216 and the
-// glass ends at 260, so 238 centres it in that gap (the circle is still 145px wide there).
-#define R5_DOT_REST_Y PBL_IF_ROUND_ELSE(233, 198)
+// Dot centre on the scrolled screen, midway between the percentages and the bottom edge: 204 on
+// emery, 235 on round, where the display is still about 150px wide.
+#define R5_DOT_REST_Y ((R5_STAT_ROW_INK_END + PBL_DISPLAY_HEIGHT - 1) / 2)
 
 static void prv_start_clock_stage2(void);
 
@@ -1505,11 +1517,11 @@ static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, G
   graphics_context_set_fill_color(ctx, fill);
   graphics_fill_round_rect(ctx, &pill, 3, GCornersAll);
   graphics_context_set_text_color(ctx, GColorBlack);
-  // Vertically centre the label. graphics_draw_text top-aligns, and GOTHIC_14_BOLD carries ~7px of
-  // top padding inside its ascent (measured: in an 18px pill the caps land 7px down / 2px up), so
+  // Vertically centre the label. graphics_draw_text top-aligns, and bold Gothic 18 carries 7px of
+  // top padding inside its ascent, so
   // centring the line box reads low. Lift it by that asymmetry so the caps sit on the pill's
   // centre.
-  GFont lf = s_list->day_font; // GOTHIC_14_BOLD, cached at load — this draws per scroll frame
+  GFont lf = s_list->day_font; // cached at load: this draws every scroll frame
   const int th = fonts_get_font_height(lf);
   graphics_draw_text(ctx, label, lf,
                      GRect(inset, y + (R5_STAT_PILL_H - th) / 2 - 3, W - 2 * inset, th),
@@ -1519,7 +1531,7 @@ static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, G
 // One row of five per-day precip-% values, each centred under its day column.
 static void prv_draw_stat_row(GContext *ctx, const WeatherLocationForecast *fan, int n,
                               const int *col_x, int y) {
-  GFont vfont = s_list->day_font; // GOTHIC_14_BOLD, cached at load
+  GFont vfont = s_list->day_font; // cached at load
   const int cw = R5_COL_STEP_ICON;
   graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   for (int i = 0; i < n; i++) {
@@ -1544,17 +1556,14 @@ static void prv_draw_bottom_stats(GContext *ctx, const WeatherLocationForecast *
   // stay in the frame to exit with it; in stage 2 (header_scroll = R5_CLOCK_EXIT) slide puts
   // it far off-screen. The burst dot is decoupled — drawn AFTER the squash in prv_canvas_draw.
   // Pill at 145 / row at 164: with the deeper section lift (EXTRA_LIFT 19) the
-  // scrolled column's air splits evenly — solved for disc->graph = graph->pill =
-  // %-row->dot (~10-11px each; the graph auto-centres in its band, so the split
-  // holds for any temp spread).
+  // scrolled column's gaps from disc to graph and from graph to pill are equal (the graph
+  // centres itself in its band, so they stay equal for any temperature spread).
   prv_draw_stat_pill(ctx, pbl_i18n_get("PRECIPITATION", s_list), 145 + slide + R5_BAND_DY, W,
                      GColorPictonBlue);
-  prv_draw_stat_row(ctx, fan, n, col_x, 164 + slide + R5_BAND_DY + R5_BAND_ROW_GAP);
+  prv_draw_stat_row(ctx, fan, n, col_x, R5_STAT_ROW_Y + slide);
   if (!s_list->clock_fx) {
     // Timeline's day-separator peek dot (the one that unwinds into "Tomorrow"/"Tuesday"): a 12px
-    // black circle, horizontally centred, the same 30px above the bottom edge as Timeline. On emery
-    // (>=200px height -> s_style_large) its centre lands at y = future_top_margin(7) + fat_pin(131)
-    // + future_dot_offset(16) + thin_pin(88)/2 = 198 on the 228px screen.
+    // circle, horizontally centred, resting in the gap under the percentages (R5_DOT_REST_Y).
     graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
     graphics_fill_circle(ctx, GPoint(W / 2, R5_DOT_REST_Y + slide), 6);
   }
@@ -2038,7 +2047,7 @@ static void prv_draw_ring_dot(GContext *ctx, GPoint p, GColor ring, GColor cente
 static void prv_draw_temp_centered(GContext *ctx, int temp, GFont font, int cx, int y) {
   char b[8];
   snprintf(b, sizeof(b), "%d\xC2\xB0", temp);
-  graphics_draw_text(ctx, b, font, GRect(cx - 26, y, 52, 16), GTextOverflowModeTrailingEllipsis,
+  graphics_draw_text(ctx, b, font, GRect(cx - 26, y, 52, 22), GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentCenter, nullptr);
 }
 
@@ -2145,16 +2154,19 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
         R5_COL_STEP_ICON - (R5_COL_STEP_ICON - R5_COL_STEP_ICON_SCROLLED) * ssc / R5_SECTION_TRAVEL;
     const int step_high =
         R5_COL_STEP_HIGH - (R5_COL_STEP_HIGH - R5_COL_STEP_HIGH_SCROLLED) * ssc / R5_SECTION_TRAVEL;
+    const int step_low =
+        R5_COL_STEP_LOW - (R5_COL_STEP_LOW - R5_COL_STEP_LOW_SCROLLED) * ssc / R5_SECTION_TRAVEL;
     for (int i = 0; i < n; i++) {
       col_icon[i] = W / 2 - (n - 1) * step_icon / 2 + i * step_icon;
       col_high[i] = W / 2 - (n - 1) * step_high / 2 + i * step_high;
-      col_low[i] = W / 2 - (n - 1) * R5_COL_STEP_LOW / 2 + i * R5_COL_STEP_LOW;
+      col_low[i] = W / 2 - (n - 1) * step_low / 2 + i * step_low;
     }
   }
   const int box_w = 52; // text box; centred short text never overlaps neighbours
-  // Fan weekday row demoted to match the today header weight (so TODAY outranks the fan).
-  GFont day_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
-  GFont small_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+  // Gothic 18 is the system Caption font at the large content size, the smallest it uses.
+  // The weekday labels use its bold.
+  GFont caption_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+  GFont day_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
   // Today's date caption + fan weekday labels change only at local midnight (or on a data
   // refresh) — the 6 localtime+strftime pairs this draw used to run per frame were real work
@@ -2187,29 +2199,20 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   const char *daydate = s_list->daydate_cache;
   // Recompute the expensive text-layout-dependent header geometry ONLY when the data
   // changed — never every animation frame (that re-measuring was starving the background work queue
-  // that services touch). today_icon_x centres the icon over the date; today_cond_font
-  // steps the condition phrase down a size if it won't fit its band.
+  // that services touch). today_icon_x centres the icon over the date.
   if (s_list->today_header_dirty) {
     s_list->today_icon_x = R5_TODAY_X;
 #if !PBL_ROUND
-    const GSize dsz = graphics_text_layout_get_content_size(daydate, day_font, GRect(0, 0, W, 20),
-                                                            GTextOverflowModeTrailingEllipsis,
-                                                            GTextAlignmentLeft);
+    const GSize dsz = graphics_text_layout_get_content_size(
+        daydate, caption_font, GRect(0, 0, W, 24), GTextOverflowModeTrailingEllipsis,
+        GTextAlignmentLeft);
     s_list->today_icon_x = R5_TODAY_X + (dsz.w - R5_TODAY_ICON) / 2;
     if (s_list->today_icon_x < R5_TODAY_X)
       s_list->today_icon_x = R5_TODAY_X;
+    // The condition text starts just past the date, at most at mid-screen, so a phrase a little
+    // wider than half the row still shows whole.
+    s_list->today_cond_x = MIN(W / 2, R5_TODAY_X + dsz.w + 6);
 #endif
-    const char *cph =
-        (s_list->days[0].current_weather_phrase && s_list->days[0].current_weather_phrase[0])
-            ? s_list->days[0].current_weather_phrase
-            : "--";
-    const int cl = PBL_IF_ROUND_ELSE(110, W / 2), cr = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
-    GFont cf = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
-    const GSize cw0 = graphics_text_layout_get_content_size(
-        cph, cf, GRect(0, 0, 300, 20), GTextOverflowModeWordWrap, GTextAlignmentLeft);
-    if (cw0.w > cr - cl)
-      cf = fonts_get_system_font(FONT_KEY_GOTHIC_14);
-    s_list->today_cond_font = cf;
     s_list->today_header_dirty = false;
   }
   const int today_x = s_list->today_icon_x;
@@ -2314,17 +2317,17 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, page_fg); // foreground on the page
   // Condition: right-anchored at x=230 (mirrors the left date, aligned to the fan's
   // 30/230 columns), growing LEFT as it lengthens down to x=110 (just clear of the
-  // date). Length-dependent: measure the phrase + step the font down one size if even
-  // that band can't hold it, so long phrases like "PARTLY CLOUDY" are never clipped.
-  const int cond_l = PBL_IF_ROUND_ELSE(110, W / 2), cond_r = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
-  GFont cond_font = (GFont)s_list->today_cond_font; // measured once on data change, not per frame
-  graphics_draw_text(ctx, cond, cond_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 16),
+  // date). The box fits every condition name the app derives: "Partly Cloudy", the longest, is
+  // 77px and the box on emery is at least 82px. Longer phrases from the phone end in an ellipsis.
+  const int cond_l = PBL_IF_ROUND_ELSE(110, s_list->today_cond_x);
+  const int cond_r = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
+  graphics_draw_text(ctx, cond, caption_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
   graphics_context_set_text_color(ctx, page_fg); // foreground on the page
   // Date: left box, left-aligned (the today icon above is centred over this string).
-  graphics_draw_text(ctx, daydate, day_font, // day_font IS GOTHIC_14_BOLD — no re-lookup
+  graphics_draw_text(ctx, daydate, caption_font,
                      GRect(PBL_IF_ROUND_ELSE(30, R5_TODAY_X), R5_DAYDATE_Y - hs,
-                           PBL_IF_ROUND_ELSE(95, W / 2 - R5_TODAY_X), 16),
+                           PBL_IF_ROUND_ELSE(95, W / 2 - R5_TODAY_X), 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 
   // Hairline rule separating the today header from the 5-day fan (timeline-card idiom).
@@ -2342,8 +2345,9 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     graphics_context_set_text_color(ctx, page_fg);
     const int bow = R5_BOW_DY(i, n, ss); // slight follow-the-glass curve (round only)
     if (!R5_DAYNAME_SCROLL_HIDE || ss * 4 < R5_SECTION_TRAVEL) {
-      graphics_draw_text(ctx, weekday, day_font,
-                         GRect(cx - box_w / 2, R5_DAYNAME_Y - ss + bow, box_w, 22),
+      const int name_y = R5_DAYNAME_Y + R5_DAYNAME_TEXT_DY +
+                         R5_DAYNAME_SCROLL_DY * ss / R5_SECTION_TRAVEL - ss + bow;
+      graphics_draw_text(ctx, weekday, day_font, GRect(cx - box_w / 2, name_y, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
 
@@ -2489,13 +2493,14 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       if (okh[i])
         prv_draw_ring_dot(ctx, GPoint(col_high[i], yh[i]), GColorOrange, dot_center);
     }
-    // Numerals: both bold black/white — high ABOVE its dot, low BELOW its dot.
+    // High above its dot, low below it. Bold Gothic 18 digits run 7 to 17 rows down their box:
+    // 2 rows clear above the high dot, 4 below the low.
     graphics_context_set_text_color(ctx, page_fg);
     for (int i = 0; i < n; i++) {
       if (okh[i])
-        prv_draw_temp_centered(ctx, th[i], day_font, col_high[i], yh[i] - 4 - 16);
+        prv_draw_temp_centered(ctx, th[i], day_font, col_high[i], yh[i] - 24);
       if (okl[i])
-        prv_draw_temp_centered(ctx, tl[i], day_font, col_low[i], yl[i] + 4);
+        prv_draw_temp_centered(ctx, tl[i], day_font, col_low[i], yl[i] + 2);
     }
   }
   // Bottom-gap banner stats (the PRECIPITATION pill with per-day values), slid up
@@ -2575,20 +2580,21 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       graphics_fill_circle(ctx, GPoint(col_low[i], y_lo[i]), R5_DOT_INNER);
     }
   }
-  // Temperature labels: high ABOVE its warm dot, low BELOW its cool dot.
+  // High above its dot, low below it. Gothic 18 digits run 7 to 17 rows down their box, 3 rows
+  // clear of each dot.
   for (int i = 0; i < n; i++) {
     char hs[16], ls[16];
     graphics_context_set_text_color(ctx, page_fg); // numerals; dots/lines stay coloured
     if (okh[i]) {
       snprintf(hs, sizeof(hs), "%d\xC2\xB0", fan[i].today_high);
-      graphics_draw_text(ctx, hs, small_font,
-                         GRect(col_high[i] - box_w / 2, y_hi[i] - R5_DOT_R - 17, box_w, 16),
+      graphics_draw_text(ctx, hs, caption_font,
+                         GRect(col_high[i] - box_w / 2, y_hi[i] - R5_DOT_R - 21, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
     if (okl[i]) {
       snprintf(ls, sizeof(ls), "%d\xC2\xB0", fan[i].today_low);
-      graphics_draw_text(ctx, ls, small_font,
-                         GRect(col_low[i] - box_w / 2, y_lo[i] + R5_DOT_R + 1, box_w, 16),
+      graphics_draw_text(ctx, ls, caption_font,
+                         GRect(col_low[i] - box_w / 2, y_lo[i] + R5_DOT_R - 3, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
   }
@@ -3482,7 +3488,6 @@ static void prv_window_load(Window *window) {
 
   s_list->day_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
   s_list->condition_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-  s_list->loc_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
 
   prv_load_icons();
   prv_format_conditions();
