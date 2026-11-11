@@ -5,8 +5,9 @@
 #include <string.h>
 
 #include <pbl/device.h>
-#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/crc.h>
+#include <pbl/drivers/crc/sf32lb.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -39,15 +40,17 @@ enum state {
   STATE_BROKEN,
 };
 
-static const struct pbl_clk s_clk = PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_CRC1);
+extern const struct pbl_crc_sf32lb pbl_crc_sf32lb_inst;
+
+static const struct pbl_crc_sf32lb *const s_crc = &pbl_crc_sf32lb_inst;
 static volatile enum state s_state = STATE_UNTESTED;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(SF32LB52_CRC1_BASE + offset);
+  return pbl_readl(s_crc->base + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, SF32LB52_CRC1_BASE + offset);
+  pbl_writel(value, s_crc->base + offset);
 }
 
 static uint32_t prv_burst(enum algo algo, uint32_t value, const uint8_t *data, size_t len) {
@@ -83,12 +86,12 @@ static size_t prv_compute(enum algo algo, uint32_t *value, const void *data, siz
     const size_t burst = (total - done < BURST_LEN) ? (total - done) : BURST_LEN;
 
     pbl_irq_lock();
-    if (pbl_clk_enable(&s_clk) != 0) {
+    if (pbl_clk_enable(&s_crc->clk) != 0) {
       pbl_irq_unlock();
       break;
     }
     *value = prv_burst(algo, *value, &bytes[done], burst);
-    pbl_clk_disable(&s_clk);
+    pbl_clk_disable(&s_crc->clk);
     pbl_irq_unlock();
     done += burst;
   }
@@ -118,7 +121,7 @@ static bool prv_check(enum algo algo, uint32_t init, uint32_t expected) {
 
 static bool prv_ready(void) {
   if (s_state == STATE_UNTESTED) {
-    if (pbl_device_init(&s_clk.ctrl->dev) != 0) {
+    if (pbl_device_init(&s_crc->clk.ctrl->dev) != 0) {
       s_state = STATE_BROKEN;
       return false;
     }
@@ -137,3 +140,5 @@ size_t pbl_crc_hw_crc32(uint32_t *crc, const void *data, size_t len) {
 size_t pbl_crc_hw_crc32_legacy(uint32_t *reg, const void *data, size_t len) {
   return prv_ready() ? prv_compute(ALGO_CRC32_LEGACY, reg, data, len) : 0;
 }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_crc)
