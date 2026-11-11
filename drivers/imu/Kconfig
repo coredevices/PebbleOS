@@ -33,15 +33,11 @@ config ACCEL_LSM6DSO
     help
       Support for the ST LSM6DSO accelerometer/gyroscope.
 
-config ACCEL_QEMU
-    bool "QEMU"
+config ACCEL_SIM
+    bool "Simulator"
     help
-      QEMU accelerometer, fed with samples from the QEMU host.
-
-config ACCEL_POSIX
-    bool "POSIX"
-    help
-      Accelerometer of a native build: a watch lying still, face up.
+      Simulated accelerometer, replaying samples and events fed through
+      its simulator API (pbl/drivers/imu/sim.h).
 
 endif # ACCEL
 
