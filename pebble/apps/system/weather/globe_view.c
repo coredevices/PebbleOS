@@ -1126,12 +1126,8 @@ static void ensure_visual_resources(GlobeView *view) {
   load_starfield_resource(view);
 }
 
-static void release_visual_resources(GlobeView *view) {
-  if (!view)
-    return;
-
-  unload_cubemap_resource(view);
-  unload_starfield_resource(view);
+// Frees the world and the stand and clears the flags, so the next load scales them again.
+static void prv_free_intro_art(GlobeView *view) {
   if (view->bw_sequence) {
     gdraw_command_sequence_destroy(view->bw_sequence);
     view->bw_sequence = nullptr;
@@ -1140,6 +1136,17 @@ static void release_visual_resources(GlobeView *view) {
     gdraw_command_image_destroy(view->cradle_pdc);
     view->cradle_pdc = nullptr;
   }
+  view->bw_sequence_scaled = false;
+  view->cradle_pdc_scaled = false;
+}
+
+static void release_visual_resources(GlobeView *view) {
+  if (!view)
+    return;
+
+  unload_cubemap_resource(view);
+  unload_starfield_resource(view);
+  prv_free_intro_art(view);
 }
 
 // Returns the packed cubemap PALETTE INDEX (0..11); the caller picks the
