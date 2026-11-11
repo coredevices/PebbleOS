@@ -6,7 +6,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/types.h>
+
+#include <pbl_arch_idle.h>
 
 /**
  * @defgroup kernel_idle Idle states
@@ -19,14 +22,8 @@
  * system clock source. The SoC only puts the CPU to sleep.
  *
  * @code{.c}
- * static void prv_wfi(void) {
- *   __DSB();
- *   __WFI();
- *   __ISB();
- * }
- *
  * const struct pbl_idle_state pbl_soc_idle_states[] = {
- *   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+ *   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
  * };
  * const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
  *
@@ -54,6 +51,16 @@ struct pbl_idle_state {
    */
   void (*enter)(void);
 };
+
+/**
+ * @brief Wait for an interrupt.
+ *
+ * The shallowest idle state; deeper ones wrap it. Returns once an interrupt is pending, even a
+ * masked one. Always inlined, so it can run while the flash is powered down.
+ */
+static PBL_ALWAYS_INLINE void pbl_cpu_idle(void) {
+  arch_cpu_idle();
+}
 
 /** @brief Idle states, shallowest first. Defined by the SoC. */
 extern const struct pbl_idle_state pbl_soc_idle_states[];
