@@ -216,7 +216,9 @@ class Spec:
                 raise self._error(f"argument {arg}: 'default' has no value")
             item = arg.get("item")
             if isinstance(item, dict):
-                check_keys(self._error, item, {"define", "args"}, "item", ("define", "args"))
+                check_keys(
+                    self._error, item, {"define", "args"}, "item", ("define", "args")
+                )
                 self._check_args(item["args"])
 
     def _load_ids(self, kind, ids, include_dir):
@@ -295,9 +297,7 @@ def load_specs(srcdir, appdir=None):
             # Drivers sharing a node, each with its own instance file
             for spec in found:
                 if not spec.classes:
-                    raise DtError(
-                        f"{spec.path}: sharing '{compatible}' needs a class"
-                    )
+                    raise DtError(f"{spec.path}: sharing '{compatible}' needs a class")
                 first = c_ident(spec.compatibles[0])
                 spec.file = f"{first}_{c_ident(spec.classes[0])}"
     for spec in {id(s): s for found in specs.values() for s in found}.values():
@@ -337,6 +337,38 @@ def related(a, b):
         return False
 
     return inside(a, b) or inside(b, a)
+
+
+def translate(node, address):
+    """A reg address as the CPU sees it, through the ranges of the buses above."""
+    bus = node.parent
+    while bus is not None and bus.parent is not None:
+        if not bus.has("ranges"):
+            # Not memory mapped, as an I2C bus: addresses are the bus's own
+            return address
+        entries = bus.u32s("ranges") if bus.props["ranges"] else []
+        child_cells = bus.cells_of("#address-cells", 2)
+        parent_cells = bus.address_cells
+        size_cells = bus.cells_of("#size-cells", 1)
+        step = child_cells + parent_cells + size_cells
+        for start in range(0, len(entries), step):
+            child = cells_number(entries[start : start + child_cells])
+            parent = cells_number(
+                entries[start + child_cells : start + child_cells + parent_cells]
+            )
+            size = cells_number(
+                entries[start + child_cells + parent_cells : start + step]
+            )
+            if child <= address < child + size:
+                address = parent + address - child
+                break
+        else:
+            if entries:
+                raise DtError(
+                    f"{node.path}: {address:#x} is outside the ranges of {bus.path}"
+                )
+        bus = bus.parent
+    return address
 
 
 def enabled(node):
@@ -415,9 +447,14 @@ class Generator:
                 continue
             for spec in self._device(owner).specs:
                 children = spec.children or {}
-                if children.get("node") == container and name in children.get("names", {}):
+                if children.get("node") == container and name in children.get(
+                    "names", {}
+                ):
                     return Device(
-                        node, [spec], owner=self._device(owner), child_id=children["names"][name]
+                        node,
+                        [spec],
+                        owner=self._device(owner),
+                        child_id=children["names"][name],
                     )
         return None
 
@@ -691,32 +728,7 @@ class Generator:
 
     def _translate(self, dev, address):
         """A reg address as the CPU sees it, through the ranges of the buses above."""
-        bus = dev.node.parent
-        while bus is not None and bus.parent is not None:
-            if not bus.has("ranges"):
-                # Not memory mapped, as an I2C bus: addresses are the bus's own
-                return address
-            entries = bus.u32s("ranges") if bus.props["ranges"] else []
-            child_cells = bus.cells_of("#address-cells", 2)
-            parent_cells = bus.address_cells
-            size_cells = bus.cells_of("#size-cells", 1)
-            step = child_cells + parent_cells + size_cells
-            for start in range(0, len(entries), step):
-                child = cells_number(entries[start : start + child_cells])
-                parent = cells_number(
-                    entries[start + child_cells : start + child_cells + parent_cells]
-                )
-                size = cells_number(
-                    entries[start + child_cells + parent_cells : start + step]
-                )
-                if child <= address < child + size:
-                    address = parent + address - child
-                    break
-            else:
-                if entries:
-                    raise dev.error(f"{address:#x} is outside the ranges of {bus.path}")
-            bus = bus.parent
-        return address
+        return translate(dev.node, address)
 
     def _reg_entry(self, dev, key):
         index = self._index(dev, key, "reg-names")
@@ -769,8 +781,14 @@ class Generator:
         """The parents and rates a clock provider assigns, as Linux does with assigned-clocks:
         an item macro of the clock, its parent, {} for none, and its rate in Hz, 0 for none."""
         clocks = self._phandles(dev, "assigned-clocks", "#clock-cells")
-        parents = self._phandles(dev, "assigned-clock-parents", "#clock-cells", empty=True)
-        rates = dev.node.u32s("assigned-clock-rates") if dev.node.has("assigned-clock-rates") else []
+        parents = self._phandles(
+            dev, "assigned-clock-parents", "#clock-cells", empty=True
+        )
+        rates = (
+            dev.node.u32s("assigned-clock-rates")
+            if dev.node.has("assigned-clock-rates")
+            else []
+        )
         if len(parents) > len(clocks) or len(rates) > len(clocks):
             raise dev.error("more assigned parents or rates than 'assigned-clocks'")
         parents += [None] * (len(clocks) - len(parents))
@@ -778,9 +796,15 @@ class Generator:
         items = []
         for (target, cells), entry, rate in zip(clocks, parents, rates):
             if entry is None and rate == 0:
-                raise dev.error(f"assigned clock of {target.path} has no parent nor rate")
+                raise dev.error(
+                    f"assigned clock of {target.path} has no parent nor rate"
+                )
             clock = self._provided(dev, target, "clock", cells)
-            parent = "{}" if entry is None else self._provided(dev, entry[0], "clock", entry[1])
+            parent = (
+                "{}"
+                if entry is None
+                else self._provided(dev, entry[0], "clock", entry[1])
+            )
             items.append(f"{item}({clock}, {parent}, {rate})")
         return ", ".join(items)
 
@@ -968,7 +992,9 @@ class Generator:
                 return f'"{value}"'
             # An enumerated string property, as C
             if value not in arg["values"]:
-                raise dev.error(f"'{key}' of '{value}', not one of {sorted(arg['values'])}")
+                raise dev.error(
+                    f"'{key}' of '{value}', not one of {sorted(arg['values'])}"
+                )
             return c_value(arg["values"][value])
         if kind == "irq":
             if not (node.has("interrupts") or node.has("interrupts-extended")):
@@ -988,7 +1014,9 @@ class Generator:
             target, cells = entries[index]
             return self._provided(src, target, "clock", cells)
         if kind == "assigned-clocks":
-            return self._assigned_clocks(src, key) if node.has("assigned-clocks") else None
+            return (
+                self._assigned_clocks(src, key) if node.has("assigned-clocks") else None
+            )
         if kind == "prop":
             if not node.has(key):
                 return None
@@ -1122,6 +1150,8 @@ class Generator:
 
 PARTITIONS = "fixed-partitions"
 PARTITIONS_HEADER = "devicetree/partitions.h"
+REGS_HEADER = "devicetree/regs.h"
+REGS_KEYS = {"config", "labels"}
 KIB = 1024
 MIB = 1024 * KIB
 
@@ -1170,6 +1200,50 @@ def partitions_header(tree):
         for (_, end, path), (start, _, other) in itertools.pairwise(regions):
             if start < end:
                 raise DtError(f"{other}: overlaps {path}")
+    return "\n".join(lines) + "\n"
+
+
+def load_regs(srcdir, appdir=None):
+    """The labels whose registers code reaches before there are devices, from *.regs.yaml."""
+    regs = []
+    for path in find_files(srcdir, "*.regs.yaml", appdir):
+        with open(path) as f:
+            data = yaml.safe_load(f)
+
+        def error(message, path=path):
+            return DtError(f"{path}: {message}")
+
+        check_keys(error, data, REGS_KEYS, "regs", ("config", "labels"))
+        regs.append((data["config"], as_list(data["labels"]), error))
+    return regs
+
+
+def regs_header(tree, regs, config):
+    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code."""
+    lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
+    nodes = {}
+    if tree is not None:
+        nodes = {label: node for node in tree.nodes() for label in node.labels}
+    defines = {}
+    for symbol, labels, error in regs:
+        if symbol not in config:
+            continue
+        for label in labels:
+            node = nodes.get(label)
+            if node is None:
+                raise error(f"no node labelled '{label}'")
+            cells = node.u32s("reg") if node.has("reg") else []
+            entry = node.address_cells + node.size_cells
+            if len(cells) < entry:
+                raise error(f"{node.path} has no reg")
+            address = translate(node, cells_number(cells[: node.address_cells]))
+            size = cells_number(cells[node.address_cells : entry])
+            name = c_ident(label).upper()
+            defines[f"PBL_DT_REG_{name}"] = f"{address:#x}UL"
+            defines[f"PBL_DT_SIZE_{name}"] = f"{size:#x}U"
+    if defines:
+        lines.append("")
+        lines += [f"#define {name} {value}" for name, value in sorted(defines.items())]
     return "\n".join(lines) + "\n"
 
 
@@ -1278,6 +1352,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     specs = load_specs(srcdir, appdir)
     deps = [str(path) for path in find_files(srcdir, "*.dtmap.yaml", appdir)]
     deps += [str(path) for path in find_files(srcdir, "*.class.yaml", appdir)]
+    deps += [str(path) for path in find_files(srcdir, "*.regs.yaml", appdir)]
     deps += sorted(
         {src for group in specs.values() for spec in group for src in spec.sources}
     )
@@ -1292,7 +1367,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
         tree = fdt.load(dtb)
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, [*specs, PARTITIONS]).encode())
-    outputs = [PARTITIONS_HEADER, *instance_files(specs)]
+    outputs = [PARTITIONS_HEADER, REGS_HEADER, *instance_files(specs)]
     return str(dtb) if dtb else None, outputs, deps
 
 
@@ -1309,7 +1384,9 @@ def load_config(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--srcdir", required=True)
-    parser.add_argument("--appdir", help="the application, for the specs of its drivers")
+    parser.add_argument(
+        "--appdir", help="the application, for the specs of its drivers"
+    )
     parser.add_argument("--dtb", help="the compiled tree, if the board has one")
     parser.add_argument("--config", required=True, help="the .config file")
     parser.add_argument(
@@ -1320,15 +1397,18 @@ def main():
     try:
         tree = fdt.load(args.dtb) if args.dtb else None
         specs = load_specs(args.srcdir, args.appdir)
-        generator = Generator(tree, specs, load_config(args.config))
+        config = load_config(args.config)
+        generator = Generator(tree, specs, config)
         generator.run()
         partitions = partitions_header(tree)
+        regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
     except DtError as error:
         sys.exit(f"devicetree: {error}")
 
     outputs = {
         "devicetree/devices.h": generator.header(),
         PARTITIONS_HEADER: partitions,
+        REGS_HEADER: regs,
         **generator.instances(),
     }
     for name, text in outputs.items():
