@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-pmuc
+config: CLK_SF32LB57_PMUC
+class: clk
+symbol: pbl_clk_sf32lb57_pmuc
+define: PBL_CLK_SF32LB57_PMUC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: hxt48
+  - clock: lxt32
+    default: "{}"
+  - assigned-clocks: PBL_CLK_ASSIGNED
+    optional: true
+ids:
+  clock:
+    cell: 0
+    header: dt-bindings/clock/sifli,sf32lb57-pmuc.h
+    prefix: SF32LB57_PMUC_CLK_
+    values:
+      header: pbl/drivers/clk/sf32lb.h
+      prefix: SF32LB57_CLK_

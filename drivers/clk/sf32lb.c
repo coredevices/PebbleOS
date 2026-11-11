@@ -16,6 +16,7 @@
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_hpsys_rcc.h>
+#include <hardware/sf32lb57_hpsys_rcc.h>
 
 #define NUM_GATES 64U
 
@@ -32,12 +33,47 @@
 // The CPU clock, which the busy waits count
 extern uint32_t SystemCoreClock;
 
+#define PRV_SAME_ID(name)                                               \
+  static_assert(SF32LB52_HPSYS_CLK_##name == SF32LB_HPSYS_CLK_##name && \
+                SF32LB57_HPSYS_CLK_##name == SF32LB_HPSYS_CLK_##name)
+
+// The clocks before the gates are the same on every series
+PRV_SAME_ID(SYS);
+PRV_SAME_ID(HCLK);
+PRV_SAME_ID(PCLK);
+PRV_SAME_ID(PCLK2);
+PRV_SAME_ID(DLL1);
+PRV_SAME_ID(DLL2);
+PRV_SAME_ID(PERI);
+PRV_SAME_ID(PERI_DIV2);
+PRV_SAME_ID(MPI1_K);
+PRV_SAME_ID(MPI2_K);
+PRV_SAME_ID(USBC_K);
+static_assert(SF32LB57_HPSYS_CLK_MPI3_K == SF32LB_HPSYS_CLK_MPI3_K);
+
+// What differs between the series
+struct prv_soc {
+  const uint8_t *gate_parents;
+  // CSR.SEL_SYS_LP, 0 if none
+  uint32_t sel_sys_lp;
+  uint32_t dll_in_div2;
+  uint32_t dll_out_div2;
+  // The HPSYS bandgap the DLLs run from, in HPSYS_CFG, 0 if always on
+  uint32_t bg_offset;
+  uint32_t bg_en;
+  bool mpi3;
+};
+
 // For the code that runs with the flash down, which cannot read the device
 static uintptr_t s_base;
 static uintptr_t s_cfg;
+static uint32_t s_sel_sys_lp;
+static uint32_t s_bg_offset;
+static uint32_t s_bg_en;
 
 struct pbl_clk_sf32lb {
   struct pbl_clk_controller ctrl;
+  const struct prv_soc *soc;
   uintptr_t base;
   uintptr_t cfg;
   struct pbl_clk hrc48;
@@ -50,45 +86,111 @@ struct pbl_clk_sf32lb {
 
 // The clock each gate gates. The audio blocks pick their own kernel clock, HXT48 or the audio
 // PLL, so their gates are on the bus clock.
-static const uint8_t s_gate_parents[NUM_GATES] = {
-  [SF32LB52_HPSYS_CLK_DMAC1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_MAILBOX1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_PINMUX1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_USART2] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_EZIP1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_EPIC] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_LCDC1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_I2S1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_SYSCFG1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_EFUSEC] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_AES] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_CRC1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_TRNG] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_GPTIM1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_GPTIM2] = SF32LB52_HPSYS_CLK_PERI_DIV2,
-  [SF32LB52_HPSYS_CLK_BTIM1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_BTIM2] = SF32LB52_HPSYS_CLK_PERI_DIV2,
-  [SF32LB52_HPSYS_CLK_SPI1] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_SPI2] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_EXTDMA] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_SECU1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_PDM1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_I2C1] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_I2C2] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_PTC1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_GPIO1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_MPI1] = SF32LB52_HPSYS_CLK_MPI1_K,
-  [SF32LB52_HPSYS_CLK_MPI2] = SF32LB52_HPSYS_CLK_MPI2_K,
-  [SF32LB52_HPSYS_CLK_SDMMC1] = SF32LB52_HPSYS_CLK_HCLK,
-  [SF32LB52_HPSYS_CLK_USBC] = SF32LB52_HPSYS_CLK_USBC_K,
-  [SF32LB52_HPSYS_CLK_I2C3] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_ATIM1] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_USART3] = SF32LB52_HPSYS_CLK_PERI,
-  [SF32LB52_HPSYS_CLK_AUDCODEC] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_AUDPRC] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_GPADC] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_TSEN] = SF32LB52_HPSYS_CLK_PCLK,
-  [SF32LB52_HPSYS_CLK_I2C4] = SF32LB52_HPSYS_CLK_PERI,
+static const uint8_t s_sf32lb52_gate_parents[NUM_GATES] = {
+  [SF32LB52_HPSYS_CLK_DMAC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_MAILBOX1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_PINMUX1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_USART2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_EZIP1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_EPIC] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_LCDC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_I2S1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_SYSCFG1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_EFUSEC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_AES] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_CRC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_TRNG] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_GPTIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_GPTIM2] = SF32LB_HPSYS_CLK_PERI_DIV2,
+  [SF32LB52_HPSYS_CLK_BTIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_BTIM2] = SF32LB_HPSYS_CLK_PERI_DIV2,
+  [SF32LB52_HPSYS_CLK_SPI1] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_SPI2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_EXTDMA] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_SECU1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_PDM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_I2C1] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_I2C2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_PTC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_GPIO1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_MPI1] = SF32LB_HPSYS_CLK_MPI1_K,
+  [SF32LB52_HPSYS_CLK_MPI2] = SF32LB_HPSYS_CLK_MPI2_K,
+  [SF32LB52_HPSYS_CLK_SDMMC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB52_HPSYS_CLK_USBC] = SF32LB_HPSYS_CLK_USBC_K,
+  [SF32LB52_HPSYS_CLK_I2C3] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_ATIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_USART3] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB52_HPSYS_CLK_AUDCODEC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_AUDPRC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_GPADC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_TSEN] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB52_HPSYS_CLK_I2C4] = SF32LB_HPSYS_CLK_PERI,
+};
+
+static const uint8_t s_sf32lb57_gate_parents[NUM_GATES] = {
+  [SF32LB57_HPSYS_CLK_DMAC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_MAILBOX1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_PINMUX1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_USART2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_EZIP1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_EPIC] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_LCDC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_I2S1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_I2S2] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_SYSCFG1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_EFUSEC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_AES] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_CRC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_TRNG] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_GPTIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_GPTIM2] = SF32LB_HPSYS_CLK_PERI_DIV2,
+  [SF32LB57_HPSYS_CLK_BTIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_BTIM2] = SF32LB_HPSYS_CLK_PERI_DIV2,
+  [SF32LB57_HPSYS_CLK_PWM1] = SF32LB_HPSYS_CLK_PERI_DIV2,
+  [SF32LB57_HPSYS_CLK_SPI1] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_SPI2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_SECU1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_PDM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_PDM2] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_I2C1] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_I2C2] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_PTM1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_GPIO1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_MPI1] = SF32LB_HPSYS_CLK_MPI1_K,
+  [SF32LB57_HPSYS_CLK_MPI2] = SF32LB_HPSYS_CLK_MPI2_K,
+  [SF32LB57_HPSYS_CLK_MPI3] = SF32LB_HPSYS_CLK_MPI3_K,
+  [SF32LB57_HPSYS_CLK_SDMMC1] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_SDMMC2] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_USBC] = SF32LB_HPSYS_CLK_USBC_K,
+  [SF32LB57_HPSYS_CLK_I2C3] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_ATIM1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_ATIM2] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_USART3] = SF32LB_HPSYS_CLK_PERI,
+  [SF32LB57_HPSYS_CLK_DCMI] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_CAN1] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_CAN2] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_AUDCODEC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_AUDPRC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_GPADC] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_TSEN] = SF32LB_HPSYS_CLK_PCLK,
+  [SF32LB57_HPSYS_CLK_JPEGD] = SF32LB_HPSYS_CLK_HCLK,
+  [SF32LB57_HPSYS_CLK_I2C4] = SF32LB_HPSYS_CLK_PERI,
+};
+
+[[maybe_unused]] static const struct prv_soc s_sf32lb52 = {
+  .gate_parents = s_sf32lb52_gate_parents,
+  .sel_sys_lp = HPSYS_RCC_CSR_SEL_SYS_LP,
+  .dll_in_div2 = HPSYS_RCC_DLLCR_IN_DIV2_EN,
+  .dll_out_div2 = HPSYS_RCC_DLLCR_OUT_DIV2_EN,
+  .bg_offset = SF32LB52_HPSYS_CFG_CAU2_CR_OFFSET,
+  .bg_en = HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN | HPSYS_CFG_CAU2_CR_HPBG_EN,
+};
+
+[[maybe_unused]] static const struct prv_soc s_sf32lb57 = {
+  .gate_parents = s_sf32lb57_gate_parents,
+  .dll_in_div2 = SF32LB57_HPSYS_RCC_DLLCR_IN_DIV2_EN,
+  .dll_out_div2 = SF32LB57_HPSYS_RCC_DLLCR_OUT_DIV2_EN,
+  .mpi3 = true,
 };
 
 static const struct pbl_clk_sf32lb *prv_rcc(const struct pbl_clk_controller *ctrl) {
@@ -113,16 +215,16 @@ static void prv_modify(const struct pbl_clk_controller *ctrl, uint32_t offset, u
 }
 
 static uint32_t prv_dll_offset(uint32_t id) {
-  return (id == SF32LB52_HPSYS_CLK_DLL1) ? SF32LB52_HPSYS_RCC_DLL1CR_OFFSET
-                                         : SF32LB52_HPSYS_RCC_DLL2CR_OFFSET;
+  return (id == SF32LB_HPSYS_CLK_DLL1) ? SF32LB52_HPSYS_RCC_DLL1CR_OFFSET
+                                       : SF32LB52_HPSYS_RCC_DLL2CR_OFFSET;
 }
 
 static bool prv_is_dll(uint32_t id) {
-  return id == SF32LB52_HPSYS_CLK_DLL1 || id == SF32LB52_HPSYS_CLK_DLL2;
+  return id == SF32LB_HPSYS_CLK_DLL1 || id == SF32LB_HPSYS_CLK_DLL2;
 }
 
-static bool prv_sys_on_dll1(uint32_t csr) {
-  return (csr & HPSYS_RCC_CSR_SEL_SYS_LP) == 0U &&
+static bool prv_sys_on_dll1(const struct prv_soc *soc, uint32_t csr) {
+  return (csr & soc->sel_sys_lp) == 0U &&
          PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK, csr) == HPSYS_RCC_CSR_SEL_SYS_DLL1;
 }
 
@@ -130,14 +232,16 @@ static bool prv_sys_on_dll1(uint32_t csr) {
 static bool prv_dll_feeds_peripheral(const struct pbl_clk_controller *ctrl, uint32_t id) {
   uint32_t csr = prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET);
   uint32_t sel =
-      (id == SF32LB52_HPSYS_CLK_DLL1) ? HPSYS_RCC_CSR_SEL_MPI_DLL1 : HPSYS_RCC_CSR_SEL_MPI_DLL2;
+      (id == SF32LB_HPSYS_CLK_DLL1) ? HPSYS_RCC_CSR_SEL_MPI_DLL1 : HPSYS_RCC_CSR_SEL_MPI_DLL2;
 
   return PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_MPI1_MASK, csr) == sel ||
          PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_MPI2_MASK, csr) == sel ||
-         (id == SF32LB52_HPSYS_CLK_DLL2 && (csr & HPSYS_RCC_CSR_SEL_USBC) != 0U);
+         (prv_rcc(ctrl)->soc->mpi3 && PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_MPI3_MASK, csr) == sel) ||
+         (id == SF32LB_HPSYS_CLK_DLL2 && (csr & HPSYS_RCC_CSR_SEL_USBC) != 0U);
 }
 
 static int prv_dll_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
+  const struct prv_soc *soc = prv_rcc(ctrl)->soc;
   uint32_t offset = prv_dll_offset(id);
   uint32_t cr = prv_read(ctrl, offset);
 
@@ -147,11 +251,12 @@ static int prv_dll_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   }
 
   // The DLLs run from the HPSYS bandgap
-  pbl_modifyl(0U, HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN | HPSYS_CFG_CAU2_CR_HPBG_EN,
-              prv_rcc(ctrl)->cfg + SF32LB52_HPSYS_CFG_CAU2_CR_OFFSET);
+  if (soc->bg_en != 0U) {
+    pbl_modifyl(0U, soc->bg_en, prv_rcc(ctrl)->cfg + soc->bg_offset);
+  }
 
-  cr &= ~(HPSYS_RCC_DLLCR_EN | HPSYS_RCC_DLLCR_OUT_DIV2_EN);
-  cr |= HPSYS_RCC_DLLCR_IN_DIV2_EN;
+  cr &= ~(HPSYS_RCC_DLLCR_EN | soc->dll_out_div2);
+  cr |= soc->dll_in_div2;
   prv_write(ctrl, offset, cr);
   prv_write(ctrl, offset, cr | HPSYS_RCC_DLLCR_EN);
 
@@ -161,8 +266,8 @@ static int prv_dll_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
 }
 
 static int prv_dll_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
-  if ((id == SF32LB52_HPSYS_CLK_DLL1 &&
-       prv_sys_on_dll1(prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET))) ||
+  if ((id == SF32LB_HPSYS_CLK_DLL1 &&
+       prv_sys_on_dll1(prv_rcc(ctrl)->soc, prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET))) ||
       prv_dll_feeds_peripheral(ctrl, id)) {
     return -EBUSY;
   }
@@ -211,24 +316,24 @@ static int prv_clk_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
   uint32_t div;
 
   switch (id) {
-    case SF32LB52_HPSYS_CLK_DLL1:
+    case SF32LB_HPSYS_CLK_DLL1:
       return prv_dll_rate(ctrl, SF32LB52_HPSYS_RCC_DLL1CR_OFFSET, rate_mhz);
-    case SF32LB52_HPSYS_CLK_DLL2:
+    case SF32LB_HPSYS_CLK_DLL2:
       return prv_dll_rate(ctrl, SF32LB52_HPSYS_RCC_DLL2CR_OFFSET, rate_mhz);
-    case SF32LB52_HPSYS_CLK_HCLK:
+    case SF32LB_HPSYS_CLK_HCLK:
       div = MAX(PBL_FIELD_GET(HPSYS_RCC_CFGR_HDIV_MASK, cfgr), 1U);
       *rate_mhz = parent_mhz / div;
       break;
-    case SF32LB52_HPSYS_CLK_PCLK:
+    case SF32LB_HPSYS_CLK_PCLK:
       *rate_mhz = parent_mhz >> PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV1_MASK, cfgr);
       break;
-    case SF32LB52_HPSYS_CLK_PCLK2:
+    case SF32LB_HPSYS_CLK_PCLK2:
       *rate_mhz = parent_mhz >> PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV2_MASK, cfgr);
       break;
-    case SF32LB52_HPSYS_CLK_PERI_DIV2:
+    case SF32LB_HPSYS_CLK_PERI_DIV2:
       *rate_mhz = parent_mhz / 2U;
       break;
-    case SF32LB52_HPSYS_CLK_USBC_K:
+    case SF32LB_HPSYS_CLK_USBC_K:
       div =
           PBL_FIELD_GET(HPSYS_RCC_USBCR_DIV_MASK, prv_read(ctrl, SF32LB52_HPSYS_RCC_USBCR_OFFSET));
       *rate_mhz = parent_mhz / MAX(div, 1U);
@@ -245,13 +350,13 @@ static int prv_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t mask,
                           struct pbl_clk *parent) {
   switch (PBL_FIELD_GET(mask, prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET))) {
     case HPSYS_RCC_CSR_SEL_MPI_PERI:
-      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB52_HPSYS_CLK_PERI);
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_PERI);
       return 0;
     case HPSYS_RCC_CSR_SEL_MPI_DLL1:
-      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB52_HPSYS_CLK_DLL1);
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL1);
       return 0;
     case HPSYS_RCC_CSR_SEL_MPI_DLL2:
-      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB52_HPSYS_CLK_DLL2);
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL2);
       return 0;
     default:
       return -ENOENT;
@@ -262,7 +367,7 @@ static int prv_sys_parent(const struct pbl_clk_controller *ctrl, uint32_t csr,
                           struct pbl_clk *parent) {
   const struct pbl_clk_sf32lb *rcc = prv_rcc(ctrl);
 
-  if ((csr & HPSYS_RCC_CSR_SEL_SYS_LP) != 0U) {
+  if ((csr & rcc->soc->sel_sys_lp) != 0U) {
     return -ENOENT;
   }
 
@@ -274,7 +379,7 @@ static int prv_sys_parent(const struct pbl_clk_controller *ctrl, uint32_t csr,
       *parent = rcc->hxt48;
       return 0;
     case HPSYS_RCC_CSR_SEL_SYS_DLL1:
-      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB52_HPSYS_CLK_DLL1);
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL1);
       return 0;
     default:
       return -ENOENT;
@@ -288,38 +393,43 @@ static int prv_clk_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id
   uint32_t parent_id;
 
   switch (id) {
-    case SF32LB52_HPSYS_CLK_SYS:
+    case SF32LB_HPSYS_CLK_SYS:
       return prv_sys_parent(ctrl, csr, parent);
-    case SF32LB52_HPSYS_CLK_DLL1:
-    case SF32LB52_HPSYS_CLK_DLL2:
+    case SF32LB_HPSYS_CLK_DLL1:
+    case SF32LB_HPSYS_CLK_DLL2:
       *parent = rcc->hxt48_dll;
       return 0;
-    case SF32LB52_HPSYS_CLK_PERI:
+    case SF32LB_HPSYS_CLK_PERI:
       *parent = (csr & HPSYS_RCC_CSR_SEL_PERI) != 0U ? rcc->hxt48 : rcc->hrc48;
       return 0;
-    case SF32LB52_HPSYS_CLK_MPI1_K:
+    case SF32LB_HPSYS_CLK_MPI1_K:
       return prv_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI1_MASK, parent);
-    case SF32LB52_HPSYS_CLK_MPI2_K:
+    case SF32LB_HPSYS_CLK_MPI2_K:
       return prv_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI2_MASK, parent);
-    case SF32LB52_HPSYS_CLK_HCLK:
-      parent_id = SF32LB52_HPSYS_CLK_SYS;
-      break;
-    case SF32LB52_HPSYS_CLK_PCLK:
-    case SF32LB52_HPSYS_CLK_PCLK2:
-      parent_id = SF32LB52_HPSYS_CLK_HCLK;
-      break;
-    case SF32LB52_HPSYS_CLK_PERI_DIV2:
-      parent_id = SF32LB52_HPSYS_CLK_PERI;
-      break;
-    case SF32LB52_HPSYS_CLK_USBC_K:
-      parent_id =
-          (csr & HPSYS_RCC_CSR_SEL_USBC) != 0U ? SF32LB52_HPSYS_CLK_DLL2 : SF32LB52_HPSYS_CLK_SYS;
-      break;
-    default:
-      if (id >= NUM_GATES || s_gate_parents[id] == 0U) {
+    case SF32LB_HPSYS_CLK_MPI3_K:
+      if (!rcc->soc->mpi3) {
         return -ENOENT;
       }
-      parent_id = s_gate_parents[id];
+      return prv_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI3_MASK, parent);
+    case SF32LB_HPSYS_CLK_HCLK:
+      parent_id = SF32LB_HPSYS_CLK_SYS;
+      break;
+    case SF32LB_HPSYS_CLK_PCLK:
+    case SF32LB_HPSYS_CLK_PCLK2:
+      parent_id = SF32LB_HPSYS_CLK_HCLK;
+      break;
+    case SF32LB_HPSYS_CLK_PERI_DIV2:
+      parent_id = SF32LB_HPSYS_CLK_PERI;
+      break;
+    case SF32LB_HPSYS_CLK_USBC_K:
+      parent_id =
+          (csr & HPSYS_RCC_CSR_SEL_USBC) != 0U ? SF32LB_HPSYS_CLK_DLL2 : SF32LB_HPSYS_CLK_SYS;
+      break;
+    default:
+      if (id >= NUM_GATES || rcc->soc->gate_parents[id] == 0U) {
+        return -ENOENT;
+      }
+      parent_id = rcc->soc->gate_parents[id];
       break;
   }
 
@@ -360,7 +470,7 @@ static void prv_limit_pclks(const struct pbl_clk_controller *ctrl, uint64_t hclk
 }
 
 static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
-  uint64_t hclk_mhz = prv_rate(ctrl, SF32LB52_HPSYS_CLK_HCLK);
+  uint64_t hclk_mhz = prv_rate(ctrl, SF32LB_HPSYS_CLK_HCLK);
 
   if (hclk_mhz != 0U) {
     SystemCoreClock = (uint32_t)(hclk_mhz / MILLIHZ_PER_HZ);
@@ -374,7 +484,7 @@ static void prv_sys_select(const struct pbl_clk_controller *ctrl, uint32_t sel, 
 
   prv_limit_pclks(ctrl, sys_mhz / hdiv);
   prv_modify(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET,
-             HPSYS_RCC_CSR_SEL_SYS_MASK | HPSYS_RCC_CSR_SEL_SYS_LP,
+             HPSYS_RCC_CSR_SEL_SYS_MASK | prv_rcc(ctrl)->soc->sel_sys_lp,
              PBL_FIELD_PREP(HPSYS_RCC_CSR_SEL_SYS_MASK, sel));
   prv_update_core_clock(ctrl);
 }
@@ -389,7 +499,7 @@ static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struc
     sel = HPSYS_RCC_CSR_SEL_SYS_HRC48;
   } else if (prv_same(parent, &rcc->hxt48)) {
     sel = HPSYS_RCC_CSR_SEL_SYS_HXT48;
-  } else if (prv_same(parent, &(struct pbl_clk)PBL_CLK(ctrl, SF32LB52_HPSYS_CLK_DLL1))) {
+  } else if (prv_same(parent, &(struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL1))) {
     sel = HPSYS_RCC_CSR_SEL_SYS_DLL1;
   } else {
     return -EINVAL;
@@ -414,13 +524,13 @@ static int prv_set_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t ma
   }
 
   switch (parent->id) {
-    case SF32LB52_HPSYS_CLK_PERI:
+    case SF32LB_HPSYS_CLK_PERI:
       sel = HPSYS_RCC_CSR_SEL_MPI_PERI;
       break;
-    case SF32LB52_HPSYS_CLK_DLL1:
+    case SF32LB_HPSYS_CLK_DLL1:
       sel = HPSYS_RCC_CSR_SEL_MPI_DLL1;
       break;
-    case SF32LB52_HPSYS_CLK_DLL2:
+    case SF32LB_HPSYS_CLK_DLL2:
       sel = HPSYS_RCC_CSR_SEL_MPI_DLL2;
       break;
     default:
@@ -438,13 +548,18 @@ static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id
   uint32_t sel;
 
   switch (id) {
-    case SF32LB52_HPSYS_CLK_SYS:
+    case SF32LB_HPSYS_CLK_SYS:
       return prv_set_sys_parent(ctrl, parent);
-    case SF32LB52_HPSYS_CLK_MPI1_K:
+    case SF32LB_HPSYS_CLK_MPI1_K:
       return prv_set_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI1_MASK, parent);
-    case SF32LB52_HPSYS_CLK_MPI2_K:
+    case SF32LB_HPSYS_CLK_MPI2_K:
       return prv_set_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI2_MASK, parent);
-    case SF32LB52_HPSYS_CLK_PERI:
+    case SF32LB_HPSYS_CLK_MPI3_K:
+      if (!rcc->soc->mpi3) {
+        return -EINVAL;
+      }
+      return prv_set_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI3_MASK, parent);
+    case SF32LB_HPSYS_CLK_PERI:
       break;
     default:
       return -EINVAL;
@@ -486,8 +601,8 @@ static int prv_dll_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
     return -EBUSY;
   }
 
-  sys_on = id == SF32LB52_HPSYS_CLK_DLL1 &&
-           prv_sys_on_dll1(prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET));
+  sys_on = id == SF32LB_HPSYS_CLK_DLL1 &&
+           prv_sys_on_dll1(prv_rcc(ctrl)->soc, prv_read(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET));
   if (sys_on) {
     uint64_t hrc48_mhz = 0U;
 
@@ -523,7 +638,7 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
   div = (uint32_t)(parent_mhz / rate_mhz);
 
   switch (id) {
-    case SF32LB52_HPSYS_CLK_HCLK:
+    case SF32LB_HPSYS_CLK_HCLK:
       if (div > HDIV_MAX) {
         return -EINVAL;
       }
@@ -532,9 +647,9 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
                  PBL_FIELD_PREP(HPSYS_RCC_CFGR_HDIV_MASK, div));
       prv_update_core_clock(ctrl);
       return 0;
-    case SF32LB52_HPSYS_CLK_PCLK:
-    case SF32LB52_HPSYS_CLK_PCLK2: {
-      bool pclk2 = id == SF32LB52_HPSYS_CLK_PCLK2;
+    case SF32LB_HPSYS_CLK_PCLK:
+    case SF32LB_HPSYS_CLK_PCLK2: {
+      bool pclk2 = id == SF32LB_HPSYS_CLK_PCLK2;
       uint32_t mask = pclk2 ? HPSYS_RCC_CFGR_PDIV2_MASK : HPSYS_RCC_CFGR_PDIV1_MASK;
       uint32_t max_hz = pclk2 ? PCLK2_MAX_HZ : PCLK_MAX_HZ;
       uint32_t pdiv = (uint32_t)__builtin_ctz(div);
@@ -558,7 +673,7 @@ PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_suspend(struct pbl_clk_sf32lb52_hxt4
   state->dll1cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL1CR_OFFSET);
   state->dll2cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL2CR_OFFSET);
 
-  pbl_writel((state->csr & ~(HPSYS_RCC_CSR_SEL_SYS_MASK | HPSYS_RCC_CSR_SEL_SYS_LP)) |
+  pbl_writel((state->csr & ~(HPSYS_RCC_CSR_SEL_SYS_MASK | s_sel_sys_lp)) |
                  PBL_FIELD_PREP(HPSYS_RCC_CSR_SEL_SYS_MASK, HPSYS_RCC_CSR_SEL_SYS_HRC48),
              s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
   pbl_writel(state->dll1cr & ~HPSYS_RCC_DLLCR_EN, s_base + SF32LB52_HPSYS_RCC_DLL1CR_OFFSET);
@@ -579,9 +694,11 @@ PBL_SECTION_RAM static void prv_dll_restart(uint32_t offset, uint32_t cr) {
 
 PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_resume(
     const struct pbl_clk_sf32lb52_hxt48_state *state) {
-  const uintptr_t cau2 = s_cfg + SF32LB52_HPSYS_CFG_CAU2_CR_OFFSET;
+  if (s_bg_en != 0U) {
+    const uintptr_t bg = s_cfg + s_bg_offset;
 
-  pbl_writel(pbl_readl(cau2) | HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN | HPSYS_CFG_CAU2_CR_HPBG_EN, cau2);
+    pbl_writel(pbl_readl(bg) | s_bg_en, bg);
+  }
   prv_dll_restart(SF32LB52_HPSYS_RCC_DLL1CR_OFFSET, state->dll1cr);
   prv_dll_restart(SF32LB52_HPSYS_RCC_DLL2CR_OFFSET, state->dll2cr);
   pbl_writel(state->csr, s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
@@ -593,15 +710,20 @@ static int prv_init(const struct pbl_device *dev) {
 
   s_base = rcc->base;
   s_cfg = rcc->cfg;
+  s_sel_sys_lp = rcc->soc->sel_sys_lp;
+  s_bg_offset = rcc->soc->bg_offset;
+  s_bg_en = rcc->soc->bg_en;
 
   // The voltage the assigned rates need, before they are set
-  ret = pbl_power_domain_set_performance_state(&rcc->pd, rcc->pd_level);
-  if (ret != 0) {
-    return ret;
+  if (rcc->pd.provider != nullptr) {
+    ret = pbl_power_domain_set_performance_state(&rcc->pd, rcc->pd_level);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   // The CPU runs from it
-  ret = pbl_clk_enable(&(struct pbl_clk)PBL_CLK(&rcc->ctrl, SF32LB52_HPSYS_CLK_SYS));
+  ret = pbl_clk_enable(&(struct pbl_clk)PBL_CLK(&rcc->ctrl, SF32LB_HPSYS_CLK_SYS));
   if (ret != 0) {
     return ret;
   }
@@ -618,14 +740,25 @@ static const struct pbl_clk_controller_ops s_clk_ops = {
   .set_rate = prv_clk_set_rate,
 };
 
-#define PBL_CLK_SF32LB_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd, _pd_level, \
-                              ...)                                                                 \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_HPSYS_NUM_CLKS);                                   \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                            \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {               \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops), .base = (_base),   \
-    .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48, .hxt48_dll = _hxt48_dll, .pd = _pd,           \
-    .pd_level = (_pd_level), .assigned = sym##_assigned,                                           \
+#define PBL_CLK_SF32LB52_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd,    \
+                                _pd_level, ...)                                              \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                               \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {         \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),              \
+    .soc = &s_sf32lb52, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48,    \
+    .hxt48_dll = _hxt48_dll, .pd = _pd, .pd_level = (_pd_level), .assigned = sym##_assigned, \
+  }
+
+// No boot operating point yet: the clocks stay within the voltage the boot ROM leaves
+#define PBL_CLK_SF32LB57_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, ...) \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                            \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {      \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),           \
+    .soc = &s_sf32lb57, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48, \
+    .hxt48_dll = _hxt48_dll, .assigned = sym##_assigned,                                  \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_clk)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_hpsys_rcc_clk)
