@@ -15,8 +15,10 @@
 // EasyDMA only reaches data RAM
 #define IS_IN_RAM(p) (((uintptr_t)(p) & 0xe0000000U) == 0x20000000U)
 
+#define SPIM3_BASE 0x4002f000U
+
 // nRF52840 anomaly 195: SPIM3 keeps drawing current once disabled unless this is written
-#define SPIM3_ANOMALY_195_ADDR (NRF52_SPIM3_BASE + 0x0004U)
+#define SPIM3_ANOMALY_195_OFFSET 0x0004U
 
 static const struct {
   uint32_t hz;
@@ -29,7 +31,7 @@ static const struct {
 
 // SPIM3 runs up to 32 MHz and has its own anomaly
 static bool prv_is_spim3(const struct pbl_spi_nrf5 *spi) {
-  return spi->base == NRF52_SPIM3_BASE;
+  return spi->base == SPIM3_BASE;
 }
 
 static const struct pbl_spi_nrf5 *prv_spi(const struct pbl_spi_bus *bus) {
@@ -145,7 +147,7 @@ static void prv_disable(const struct pbl_spi_bus *bus) {
   prv_putreg(spi, NRF52_SPIM_INTENCLR_OFFSET, SPIM_INT_END);
   prv_putreg(spi, NRF52_SPIM_ENABLE_OFFSET, SPIM_ENABLE_DISABLED);
   if (prv_is_spim3(spi)) {
-    pbl_writel(1U, SPIM3_ANOMALY_195_ADDR);
+    prv_putreg(spi, SPIM3_ANOMALY_195_OFFSET, 1U);
   }
   prv_event_clear(spi, NRF52_SPIM_EVENTS_END_OFFSET);
   pbl_irq_clear_pending(spi->irq);
