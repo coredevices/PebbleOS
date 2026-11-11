@@ -11,8 +11,8 @@
 #include <comm/qemu/settings.h>
 #endif
 #endif
-#ifdef CONFIG_AUDIO_HOST_MIC
-#include <pbl/drivers/audio/qemu.h>
+#ifdef CONFIG_AUDIO_SIM_MIC
+#include <pbl/drivers/audio/sim.h>
 #endif
 #ifdef CONFIG_VIBE_SIM
 #include <pbl/drivers/vibe/sim.h>
@@ -285,6 +285,15 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
 #endif
 }
 
+#ifdef CONFIG_AUDIO_SIM_MIC
+// -----------------------------------------------------------------------------------------
+// Handle incoming microphone audio (QemuProtocol_MicAudio)
+static void prv_mic_msg_callback(const uint8_t *data, uint32_t len) {
+  // The host sends little-endian PCM, the byte order of every supported target
+  pbl_audio_sim_mic_write(MIC, data, len / sizeof(int16_t));
+}
+#endif
+
 // -----------------------------------------------------------------------------------------
 // List of incoming message handlers
 static const QemuMessageHandler s_qemu_endpoints[] = {
@@ -310,8 +319,8 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   {QemuProtocol_ContentSize, prv_content_size_msg_callback},
   {QemuProtocol_HealthMetric, prv_health_metric_msg_callback},
   {QemuProtocol_HeartRate, prv_heart_rate_msg_callback},
-#ifdef CONFIG_AUDIO_HOST_MIC
-  {QemuProtocol_MicAudio, qemu_mic_msg_callback},
+#ifdef CONFIG_AUDIO_SIM_MIC
+  {QemuProtocol_MicAudio, prv_mic_msg_callback},
 #endif
   // Button messages are handled by QEMU directly
 };

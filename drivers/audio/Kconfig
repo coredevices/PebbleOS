@@ -72,13 +72,12 @@ config AUDIO_QEMU_IRQ_PRIO
     help
       Priority of the device interrupt.
 
-config AUDIO_HOST_MIC
-    bool "Host microphone"
-    default y if MIC
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+config AUDIO_SIM_MIC
+    bool "Simulated microphone"
+    default y if MIC && (SOC_QEMU_PEBBLE || SOC_POSIX)
     help
-      Records mono audio the host sends over the QEMU channel
-      (`pebble emu-mic`), and silence when it sends none.
+      Simulated microphone, recording the audio written through its
+      simulator API (pbl/drivers/audio/sim.h), and silence when none is.
 
 config AUDIO_NRF5_PDM
     bool "Nordic nRF5 PDM"
