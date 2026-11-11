@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/nvmem/sifli,sf32lb52-efuse.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 eFuse controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  The 128-byte eFuse of the SF32LB52, in four banks, holding the unique ID and
+  the factory calibration. Reads need the HPSYS LDO raised, in the PMUC.
+
+allOf:
+  - $ref: nvmem.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-efuse
+
+  reg:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  sifli,pmuc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: PMUC, holding the HPSYS LDO that reads raise.
+
+required:
+  - compatible
+  - reg
+  - clocks
+  - sifli,pmuc
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    efuse@5000c000 {
+        compatible = "sifli,sf32lb52-efuse";
+        reg = <0x5000c000 0x1000>;
+        clocks = <&hpsys_rcc 9>;
+        sifli,pmuc = <&pmuc>;
+        read-only;
+    };

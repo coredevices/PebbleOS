@@ -11,7 +11,7 @@ if NVMEM
 
 config NVMEM_SF32LB52
     bool "SiFli SF32LB52 eFuse"
-    default y if SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_EFUSE_ENABLED
     depends on SOC_SF32LB52
     select CLK
     help

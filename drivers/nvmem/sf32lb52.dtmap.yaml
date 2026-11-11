@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-efuse
+config: NVMEM_SF32LB52
+class: nvmem
+symbol: pbl_nvmem_sf32lb52_efuse
+define: PBL_NVMEM_SF32LB52_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - reg: 0
+    of: sifli,pmuc
