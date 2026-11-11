@@ -4,6 +4,7 @@
 //! the only one that includes the firmware weather headers.
 #include "weather_data_source.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -79,12 +80,20 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   WeatherDBKey key = prefs->locations[location_id];
   watch_app_prefs_destroy_weather(prefs);
 
-  const int len = weather_db_get_len((uint8_t *)&key, sizeof(key));
-  if (len < (int)sizeof(WeatherDBEntryV3)) {
-    return;
+  // The read refuses a record that has grown since its length was taken, so ask again once.
+  WeatherDBEntry *entry = nullptr;
+  int len = 0;
+  int rv = -EINVAL;
+  for (int attempt = 0; attempt < 2 && rv == -EINVAL; attempt++) {
+    app_free(entry);
+    entry = nullptr;
+    len = weather_db_get_len((uint8_t *)&key, sizeof(key));
+    if (len < (int)sizeof(WeatherDBEntryV3)) {
+      return;
+    }
+    entry = app_zalloc_check(len);
+    rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   }
-  WeatherDBEntry *entry = app_zalloc_check(len);
-  const int rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   // Version alone isn't enough: a truncated/corrupt record can carry version==4 with a
   // v3-sized payload (weather_db_insert validates length, insert_stale does not) — reading
   // the v4 fields below would then run past the allocation. Gate on the minor-0 base size;
