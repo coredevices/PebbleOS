@@ -11,6 +11,14 @@ args:
   - reg: 0
   - reg: 0
     of: sifli,hpsys-rcc
+  - reg: 0
+    of: sifli,bt-mac
+  - reg: 0
+    of: sifli,lpsys-aon
+  - reg: 0
+    of: sifli,lpsys-rcc
+  - reg: 0
+    of: hwlocks
   - clock: hxt48
   - clock: lxt32
     default: "{}"

@@ -59,46 +59,61 @@ static const struct pbl_freq_track_params s_params = {
   .max_rejects = 3U,
 };
 
+struct pbl_clk_sf32lb52_pmuc {
+  struct pbl_clk_controller ctrl;
+  uintptr_t base;
+  uintptr_t rcc;
+  // LRC10 calibration: the counter of the Bluetooth controller, LPSYS and the lock shared with
+  // the LCPU
+  uintptr_t bt_mac;
+  uintptr_t lpsys_aon;
+  uintptr_t lpsys_rcc;
+  uintptr_t lock;
+  struct pbl_clk hxt48;
+  struct pbl_clk lxt32;
+  const struct pbl_clk_assigned *assigned;
+};
+
 static const struct pbl_clk_cal_ops s_cal_ops;
 
 static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(
     &s_cal_ops, &s_params, PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10), GATE_CYCLES, PERIOD_MS);
 
+static const struct pbl_clk_sf32lb52_pmuc *s_pmuc;
 static bool s_hxt48_requested;
 
 static inline uint32_t prv_result(void) {
-  return pbl_readl(SF32LB52_BT_MAC_BASE + SF32LB52_BT_MAC_RCCAL_RESULT_OFFSET);
+  return pbl_readl(s_pmuc->bt_mac + SF32LB52_BT_MAC_RCCAL_RESULT_OFFSET);
 }
 
 static inline void prv_acr_modify(uint32_t clear, uint32_t set) {
-  pbl_modifyl(clear, set, SF32LB52_LPSYS_AON_BASE + SF32LB52_LPSYS_AON_ACR_OFFSET);
+  pbl_modifyl(clear, set, s_pmuc->lpsys_aon + SF32LB52_LPSYS_AON_ACR_OFFSET);
 }
 
 static inline void prv_unlock(void) {
-  pbl_writel(MAILBOX_CxEXR_EX, SF32LB52_MAILBOX2_BASE + SF32LB52_MAILBOX_C1EXR_OFFSET);
+  pbl_writel(MAILBOX_CxEXR_EX, s_pmuc->lock + SF32LB52_MAILBOX_C1EXR_OFFSET);
 }
 
 // Takes LPSYS, the counter and the reference clock. Returns 0, -EBUSY if the LCPU holds the
 // counter, or another negative errno.
 static int prv_acquire(void) {
-  uintptr_t csr_addr = SF32LB52_LPSYS_RCC_BASE + SF32LB52_LPSYS_RCC_CSR_OFFSET;
+  uintptr_t csr_addr = s_pmuc->lpsys_rcc + SF32LB52_LPSYS_RCC_CSR_OFFSET;
   int ret;
 
   soc_sf32lb52_lpsys_wake();
 
   // Reading the register takes the mutex if it is free.
-  if ((pbl_readl(SF32LB52_MAILBOX2_BASE + SF32LB52_MAILBOX_C1EXR_OFFSET) & MAILBOX_CxEXR_EX) ==
-      0U) {
+  if ((pbl_readl(s_pmuc->lock + SF32LB52_MAILBOX_C1EXR_OFFSET) & MAILBOX_CxEXR_EX) == 0U) {
     soc_sf32lb52_lpsys_release();
     return -EBUSY;
   }
 
-  s_hxt48_requested = (pbl_readl(SF32LB52_LPSYS_AON_BASE + SF32LB52_LPSYS_AON_ACR_OFFSET) &
+  s_hxt48_requested = (pbl_readl(s_pmuc->lpsys_aon + SF32LB52_LPSYS_AON_ACR_OFFSET) &
                        LPSYS_AON_ACR_HXT48_REQ) == 0U;
   if (s_hxt48_requested) {
     prv_acr_modify(0U, LPSYS_AON_ACR_HXT48_REQ);
   }
-  ret = PBL_POLL_BUSY_US((pbl_readl(SF32LB52_LPSYS_AON_BASE + SF32LB52_LPSYS_AON_ACR_OFFSET) &
+  ret = PBL_POLL_BUSY_US((pbl_readl(s_pmuc->lpsys_aon + SF32LB52_LPSYS_AON_ACR_OFFSET) &
                           LPSYS_AON_ACR_HXT48_RDY) != 0U,
                          10U, HXT48_TIMEOUT_US);
   if (ret == 0) {
@@ -129,7 +144,7 @@ static void prv_release(void) {
 }
 
 static int prv_start_gate(uint32_t cycles) {
-  uintptr_t ctrl_addr = SF32LB52_BT_MAC_BASE + SF32LB52_BT_MAC_RCCAL_CTRL_OFFSET;
+  uintptr_t ctrl_addr = s_pmuc->bt_mac + SF32LB52_BT_MAC_RCCAL_CTRL_OFFSET;
   uint32_t ctrl = pbl_readl(ctrl_addr);
 
   ctrl &= ~(BT_MAC_RCCAL_CTRL_LENGTH_MASK | BT_MAC_RCCAL_CTRL_AUTO | BT_MAC_RCCAL_CTRL_STOP |
@@ -186,15 +201,6 @@ static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
 static const struct pbl_clk_cal_ops s_cal_ops = {
   .start = prv_cal_start,
   .finish = prv_cal_finish,
-};
-
-struct pbl_clk_sf32lb52_pmuc {
-  struct pbl_clk_controller ctrl;
-  uintptr_t base;
-  uintptr_t rcc;
-  struct pbl_clk hxt48;
-  struct pbl_clk lxt32;
-  const struct pbl_clk_assigned *assigned;
 };
 
 static const struct pbl_clk_sf32lb52_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
@@ -376,6 +382,8 @@ static int prv_init(const struct pbl_device *dev) {
       container_of(dev, const struct pbl_clk_sf32lb52_pmuc, ctrl.dev);
   int ret;
 
+  s_pmuc = pmuc;
+
   ret = prv_hrc48_calibrate(pmuc);
   if (ret != 0) {
     PBL_LOG_ERR("HRC48 calibration failed (%d)", ret);
@@ -407,12 +415,14 @@ static const struct pbl_clk_controller_ops s_ops = {
   .set_parent = prv_set_parent,
 };
 
-#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32, ...)           \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_PMUC_NUM_CLKS);                              \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_pmuc, struct pbl_clk_controller, ctrl) {  \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
-    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
+#define PBL_CLK_SF32LB52_PMUC_DEFINE(sym, _name, _base, _rcc, _bt_mac, _lpsys_aon, _lpsys_rcc, \
+                                     _lock, _hxt48, _lxt32, ...)                               \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_PMUC_NUM_CLKS);                                \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                        \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_pmuc, struct pbl_clk_controller, ctrl) {    \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base),   \
+    .rcc = (_rcc), .bt_mac = (_bt_mac), .lpsys_aon = (_lpsys_aon), .lpsys_rcc = (_lpsys_rcc),  \
+    .lock = (_lock), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_clk)

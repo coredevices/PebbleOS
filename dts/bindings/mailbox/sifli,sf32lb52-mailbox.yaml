@@ -32,6 +32,10 @@ properties:
   "#mbox-cells":
     const: 1
 
+  "#hwlock-cells":
+    description: Its mutex channels, as hardware locks.
+    const: 1
+
 required:
   - compatible
   - reg
