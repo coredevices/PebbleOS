@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-hpsys-rcc
+config: RESET_SF32LB
+class: reset
+symbol: pbl_reset_sf32lb_hpsys_rcc
+define: PBL_RESET_SF32LB_DEFINE
+args:
+  - name: true
+  - reg: 0
+ids:
+  reset:
+    cell: 0
+    header: dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h
+    prefix: SF32LB57_HPSYS_RCC_RST_
+    values:
+      header: pbl/drivers/reset/sf32lb.h
+      prefix: SF32LB57_HPSYS_RST_

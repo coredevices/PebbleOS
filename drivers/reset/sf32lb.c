@@ -49,3 +49,4 @@ static const struct pbl_reset_controller_ops s_reset_ops = {
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_reset)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_hpsys_rcc_reset)
