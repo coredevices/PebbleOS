@@ -33,3 +33,4 @@ args:
   - clock: hclk
   - clock: pclk
   - clock: pclk2
+  - clock: lpclk

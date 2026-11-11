@@ -57,6 +57,8 @@ struct pbl_rproc_sf32lb52 {
   struct pbl_clk pclk;
   /** LPSYS second APB clock. */
   struct pbl_clk pclk2;
+  /** Low-power clock, from the RTC: the crystal or the RC oscillator. */
+  struct pbl_clk lpclk;
 };
 
 /**
@@ -106,7 +108,7 @@ void pbl_rproc_sf32lb52_coredump_prepare(void);
  */
 #define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,          \
                                   _mem_size, _sram_base, _sram_size, _r0_da, _r0_pa, _r0_size,     \
-                                  _r1_da, _r1_pa, _r1_size, _hclk, _pclk, _pclk2)                  \
+                                  _r1_da, _r1_pa, _r1_size, _hclk, _pclk, _pclk2, _lpclk)          \
   PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                 \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                   \
@@ -115,7 +117,7 @@ void pbl_rproc_sf32lb52_coredump_prepare(void);
     .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                           \
     .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size),   \
     .ranges = {{(_r0_da), (_r0_pa), (_r0_size)}, {(_r1_da), (_r1_pa), (_r1_size)}}, .hclk = _hclk, \
-    .pclk = _pclk, .pclk2 = _pclk2,                                                                \
+    .pclk = _pclk, .pclk2 = _pclk2, .lpclk = _lpclk,                                               \
   }
 
 /** @} */
