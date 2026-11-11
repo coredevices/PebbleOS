@@ -25,8 +25,8 @@ config UART_NRF5_IRQ_PRIO
 
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
-    default y if SOC_SF32LB52
-    depends on SOC_SF32LB52
+    default y if SOC_FAMILY_SF32LB
+    depends on SOC_FAMILY_SF32LB
     select CLK
     select DMA
     select PINCTRL
