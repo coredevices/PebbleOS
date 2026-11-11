@@ -31,14 +31,7 @@ config HAL_SIFLI_AON
 config HAL_SIFLI_LCPU
     bool "BT RF calibration"
     depends on HAL_SIFLI_SF32LB52
-    select HAL_SIFLI_LCPU_CONFIG
     help
       Enable the BT RF calibration, used by the LCPU driver.
-
-config HAL_SIFLI_LCPU_CONFIG
-    bool "LCPU_CONFIG HAL module"
-    help
-      Enable the LCPU_CONFIG (LCPU configuration exchange) SiFli
-      HAL module.
 
 endif # HAL_SIFLI

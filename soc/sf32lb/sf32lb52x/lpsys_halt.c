@@ -35,3 +35,12 @@ void soc_sf32lb52_lpsys_halt(bool all) {
 
   pbl_modifyl(lines, 0U, LPSYS_RSTR1);
 }
+
+void soc_sf32lb52_lpsys_set_entry(uint32_t sp, uint32_t pc) {
+  pbl_writel(sp, LPSYS_AON(SPR));
+  pbl_writel(pc, LPSYS_AON(PCR));
+}
+
+void soc_sf32lb52_lpsys_run(void) {
+  pbl_modifyl(LPSYS_AON_PMR_CPUWAIT, 0U, LPSYS_AON(PMR));
+}
