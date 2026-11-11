@@ -41,21 +41,22 @@
 #define ARM_EXC_SVCALL     11U
 #define ARM_EXC_PENDSV     14U
 
-// Cache identification and maintenance
-#define ARM_CCSIDR_LINESIZE(x) ((x) & 0x7UL)
+// Cache identification and set/way maintenance
 #define ARM_CCSIDR_WAYS(x)     (((x) >> 3) & 0x3FFUL)
 #define ARM_CCSIDR_SETS(x)     (((x) >> 13) & 0x7FFFUL)
 #define ARM_CSSELR_L1_DCACHE   0U
-#define ARM_CSSELR_L1_ICACHE   1U
-#define ARM_DCSW(set, way)     ((((set) << 5) & 0x3FE0UL) | (((way) << 30) & 0xC0000000UL))
+#define ARM_DCSW_SET_SHIFT     5U
+#define ARM_DCSW(set, way)     (((set) << ARM_DCSW_SET_SHIFT) | ((way) << 30))
 #define ARM_ICIALLU            0xE000EF50UL
+#define ARM_DCISW              0xE000EF60UL
+#define ARM_DCCSW              0xE000EF6CUL
+#define ARM_DCCISW             0xE000EF74UL
+#define ARM_CCSIDR_LINESIZE(x) ((x) & 0x7UL)
+#define ARM_CSSELR_L1_ICACHE   1U
 #define ARM_ICIMVAU            0xE000EF58UL
 #define ARM_DCIMVAC            0xE000EF5CUL
-#define ARM_DCISW              0xE000EF60UL
 #define ARM_DCCMVAC            0xE000EF68UL
-#define ARM_DCCSW              0xE000EF6CUL
 #define ARM_DCCIMVAC           0xE000EF70UL
-#define ARM_DCCISW             0xE000EF74UL
 
 // Floating point extension
 #define ARM_FPU_FPCCR       0xE000EF34UL

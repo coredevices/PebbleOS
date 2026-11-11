@@ -69,3 +69,17 @@ config CPU_HAS_DCACHE
 	bool
 	help
 	  L1 data cache maintained through the SCB.
+
+config ICACHE_LINE_SIZE
+	int
+	depends on CPU_HAS_ICACHE
+	default 32 if CPU_STAR_MC1
+	help
+	  Instruction cache line size in bytes.
+
+config DCACHE_LINE_SIZE
+	int
+	depends on CPU_HAS_DCACHE
+	default 32 if CPU_STAR_MC1
+	help
+	  Data cache line size in bytes.
