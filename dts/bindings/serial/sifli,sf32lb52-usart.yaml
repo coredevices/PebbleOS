@@ -14,7 +14,11 @@ allOf:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-usart
+    oneOf:
+      - const: sifli,sf32lb52-usart
+      - items:
+          - const: sifli,sf32lb57-usart
+          - const: sifli,sf32lb52-usart
 
   reg:
     maxItems: 1

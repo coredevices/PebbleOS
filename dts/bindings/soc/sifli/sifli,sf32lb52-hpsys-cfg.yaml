@@ -17,7 +17,9 @@ description:
 properties:
   compatible:
     items:
-      - const: sifli,sf32lb52-hpsys-cfg
+      - enum:
+          - sifli,sf32lb52-hpsys-cfg
+          - sifli,sf32lb57-hpsys-cfg
       - const: syscon
 
   reg:
