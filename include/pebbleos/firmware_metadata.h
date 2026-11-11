@@ -152,17 +152,6 @@ static_assert(sizeof(struct FirmwareMetadata) ==
               "FirmwareMetadata bitfields not packed correctly");
 
 /**
- * @brief Value of @ref FirmwareMetadata::is_recovery_firmware for this build.
- *
- * true when built with @c CONFIG_RECOVERY_FW.
- */
-#ifdef CONFIG_RECOVERY_FW
-#define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (true)
-#else
-#define FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE (false)
-#endif
-
-/**
  * @brief Value of @ref FirmwareMetadata::hw_platform for the board being built.
  *
  * @ref FirmwareMetadataPlatformUnknown for boards without an entry.
