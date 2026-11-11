@@ -13,5 +13,9 @@
 //! Local sunset in minutes from midnight [0,1440), or -1 if unknown.
 int weather_sun_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min);
 
+//! Local start of the evening golden hour (the sun 6 degrees up) in minutes from midnight
+//! [0,1440), or -1 if unknown or the sun does not cross that elevation today.
+int weather_sun_golden_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min);
+
 //! Whether the sun is below the horizon at the location now; false if unknown.
 bool weather_sun_is_down(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min);

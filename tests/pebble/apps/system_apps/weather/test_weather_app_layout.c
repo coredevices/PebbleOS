@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/i18n/i18n.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/buffer.h>
 #include <pbl/util/hash.h>
@@ -31,6 +32,7 @@
 #include <fake_content_indicator.h>
 #include <fake_pbl_std.h>
 #include <fake_pfs.h>
+#include <fake_rtc.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
 
@@ -48,6 +50,7 @@
 // Undo the libc remaps the harness itself needs.
 #include <apps/system/weather/weather_app_layout.h>
 #include <apps/system/weather/weather_math.h>
+#include <apps/system/weather/weather_sun.h>
 #undef malloc
 #undef calloc
 #undef free
@@ -62,6 +65,19 @@
 
 static GContext s_ctx;
 static FrameBuffer *fb = nullptr;
+
+// {msgid, translation} pairs ending in {NULL}, for the tests that need one. Other strings
+// come back as their msgid.
+static const char *const (*s_translations)[2];
+
+const char *pbl_i18n_get(const char *msgid, const void *owner) {
+  for (const char *const(*t)[2] = s_translations; t && (*t)[0]; t++) {
+    if (strcmp((*t)[0], msgid) == 0)
+      return (*t)[1];
+  }
+  const char *message = strchr(msgid, '\4'); // skip a context
+  return message ? message + 1 : msgid;
+}
 
 KinoReel *kino_reel_morph_square_create(KinoReel *from_reel, bool take_ownership) {
   return from_reel;
@@ -93,6 +109,7 @@ UnitsTemperature shell_prefs_get_units_temperature(void) {
 }
 
 void test_weather_app_layout__initialize(void) {
+  s_translations = nullptr;
   s_units_distance = UnitsDistance_Miles;
   s_units_wind = UnitsWind_Mph;
   s_units_temperature = UnitsTemperature_FromDistance;
@@ -683,6 +700,24 @@ void test_weather_app_layout__store_hourly_precip(void) {
   cl_assert_equal_i(weather_store_hourly_precip(hours, precip, WEATHER_PRECIP_HOURS), 0);
 }
 
+void test_weather_app_layout__golden_hour_comes_before_the_sunset(void) {
+  fake_rtc_init(0, 1781956800); // 2026-06-20 12:00 UTC
+  // London on summer time: the sun is 6 degrees up most of an hour before it sets
+  cl_assert_equal_i(weather_sun_sunset_minutes(5150, -12, 60), 21 * 60 + 20);
+  cl_assert_equal_i(weather_sun_golden_minutes(5150, -12, 60), 20 * 60 + 26);
+  // Quito, where the sun drops steeply: half an hour
+  cl_assert_equal_i(weather_sun_sunset_minutes(-22, -7847, -300), 18 * 60 + 18);
+  cl_assert_equal_i(weather_sun_golden_minutes(-22, -7847, -300), 17 * 60 + 48);
+  // Longyearbyen keeps the sun above 6 degrees all day in June: there is no golden hour,
+  // while the sunset keeps its clamped time
+  cl_assert_equal_i(weather_sun_golden_minutes(7822, 1565, 120), -1);
+  cl_assert(weather_sun_sunset_minutes(7822, 1565, 120) >= 0);
+  // And never lifts it that high in December
+  fake_rtc_init(0, 1797854400); // 2026-12-21 12:00 UTC
+  cl_assert_equal_i(weather_sun_golden_minutes(7822, 1565, 60), -1);
+  cl_assert_equal_i(weather_sun_golden_minutes(INT16_MIN, INT16_MIN, 0), -1);
+}
+
 void test_weather_app_layout__copy_text_cuts_on_character_boundary(void) {
   char buf[8];
   weather_copy_text(buf, sizeof(buf), "Oslo");
@@ -705,4 +740,25 @@ void test_weather_app_layout__copy_text_cuts_on_character_boundary(void) {
   char one[1] = {'x'};
   weather_copy_text(one, sizeof(one), "Lima");
   cl_assert_equal_s(one, "");
+}
+
+void test_weather_app_layout__uv_value_does_not_depend_on_the_translation(void) {
+  char text[32];
+  char value[8];
+  weather_app_layout_format_uv(7, nullptr, text, sizeof(text), value, sizeof(value));
+  cl_assert_equal_s(text, "UV 7");
+  cl_assert_equal_s(value, "7");
+  weather_app_layout_format_uv(-1, nullptr, text, sizeof(text), value, sizeof(value));
+  cl_assert_equal_s(text, "UV --");
+  cl_assert_equal_s(value, "--");
+
+  // The value first, and a label longer than the English one
+  static const char *const value_first[][2] = {
+    {"UV %d", "%d \xC3\x8Dndice UV"},
+    {nullptr},
+  };
+  s_translations = value_first;
+  weather_app_layout_format_uv(11, nullptr, text, sizeof(text), value, sizeof(value));
+  cl_assert_equal_s(text, "11 \xC3\x8Dndice UV");
+  cl_assert_equal_s(value, "11");
 }

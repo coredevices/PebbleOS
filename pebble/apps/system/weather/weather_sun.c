@@ -22,10 +22,16 @@ static int32_t prv_angle_from_cdeg(int32_t cdeg) { // degrees*100 -> trig angle
   return prv_norm_angle((int32_t)(((int64_t)cdeg * TRIG_MAX_ANGLE) / 36000));
 }
 
-// Solar noon and half the day length, both local minutes * 1000, plus the
-// location's local time now in minutes. False if the location is unknown.
-static bool prv_solar_day(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min, int *noon_m1000,
-                          int *half_m1000, int *now_min) {
+// -0.83 deg: refraction plus solar radius
+#define SUNSET_ELEV_CDEG (-83)
+// The evening golden hour starts with the sun 6 degrees above the horizon
+#define GOLDEN_ELEV_CDEG (600)
+
+// Solar noon and the time from it to the sun standing at elev_cdeg (degrees * 100), both local
+// minutes * 1000, plus the location's local time now in minutes. False if the location is
+// unknown, or if strict and the sun does not cross that elevation today.
+static bool prv_solar_day(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min, int elev_cdeg,
+                          bool strict, int *noon_m1000, int *half_m1000, int *now_min) {
   if (lat_e2 == INT16_MIN || lon_e2 == INT16_MIN) {
     return false;
   }
@@ -56,10 +62,11 @@ static bool prv_solar_day(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min, i
   const int64_t den = (int64_t)cosLat * cosDec;
   if (den == 0)
     return false;
-  // -0.83 deg: refraction plus solar radius
-  const int32_t sinH0 = sin_lookup(prv_angle_from_cdeg(-83));
+  const int32_t sinH0 = sin_lookup(prv_angle_from_cdeg(elev_cdeg));
   int64_t cosH =
       ((int64_t)sinH0 * TRIG_MAX_RATIO - (int64_t)sinLat * sinDec) * 1000000 / den; // ratio *1e6
+  if (strict && (cosH > 1000000 || cosH < -1000000))
+    return false;
   // Clamped: polar night gives omega 0 (no day), polar day omega 180 (no night).
   if (cosH > 1000000)
     cosH = 1000000;
@@ -87,21 +94,33 @@ static bool prv_solar_day(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min, i
   return true;
 }
 
-int weather_sun_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min) {
+// The evening minute the sun stands at elev_cdeg, [0,1440), or -1
+static int prv_evening_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min, int elev_cdeg,
+                               bool strict) {
   int noon_m1000, half_m1000, now_min;
-  if (!prv_solar_day(lat_e2, lon_e2, utc_off_min, &noon_m1000, &half_m1000, &now_min)) {
+  if (!prv_solar_day(lat_e2, lon_e2, utc_off_min, elev_cdeg, strict, &noon_m1000, &half_m1000,
+                     &now_min)) {
     return -1;
   }
-  int sunset_min = (noon_m1000 + half_m1000) / 1000;
-  sunset_min %= 1440;
-  if (sunset_min < 0)
-    sunset_min += 1440;
-  return sunset_min;
+  int minute = (noon_m1000 + half_m1000) / 1000;
+  minute %= 1440;
+  if (minute < 0)
+    minute += 1440;
+  return minute;
+}
+
+int weather_sun_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min) {
+  return prv_evening_minutes(lat_e2, lon_e2, utc_off_min, SUNSET_ELEV_CDEG, false);
+}
+
+int weather_sun_golden_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min) {
+  return prv_evening_minutes(lat_e2, lon_e2, utc_off_min, GOLDEN_ELEV_CDEG, true);
 }
 
 bool weather_sun_is_down(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min) {
   int noon_m1000, half_m1000, now_min;
-  if (!prv_solar_day(lat_e2, lon_e2, utc_off_min, &noon_m1000, &half_m1000, &now_min)) {
+  if (!prv_solar_day(lat_e2, lon_e2, utc_off_min, SUNSET_ELEV_CDEG, false, &noon_m1000, &half_m1000,
+                     &now_min)) {
     return false;
   }
   // Minutes from solar noon, wrapped to [-720, 720).
