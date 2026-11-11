@@ -14,6 +14,7 @@
 /* Register bit definitions */
 
 #define LPSYS_RCC_RSTR1_LCPU PBL_BIT(0)
+#define LPSYS_RCC_RSTR1_RFC  PBL_BIT(18)
 #define LPSYS_RCC_RSTR1_MAC  PBL_BIT(20)
 
 #define LPSYS_RCC_CSR_SEL_SYS_MASK  PBL_GENMASK(1, 0)
