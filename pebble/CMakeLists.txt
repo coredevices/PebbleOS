@@ -14,6 +14,12 @@ cmake_minimum_required(VERSION 3.20)
 find_package(PebbleOS REQUIRED HINTS ${CMAKE_CURRENT_SOURCE_DIR}/..)
 project(pebble LANGUAGES C ASM)
 
+# The recovery firmware is selected with -DVARIANT=prf, which loads
+# prj_prf.conf; keep the two spellings in sync.
+if(VARIANT STREQUAL "prf" AND NOT CONFIG_RECOVERY_FW)
+  message(FATAL_ERROR "VARIANT=prf but CONFIG_RECOVERY_FW is not set")
+endif()
+
 include(gettext)
 include(nanopb)
 include(resources)

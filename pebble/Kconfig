@@ -83,6 +83,19 @@ config SAMSA
 
 source "Kconfig.pebbleos"
 
+config RECOVERY_FW
+    bool "Recovery firmware (PRF)"
+    help
+      Build the recovery firmware variant. Set via prj_prf.conf when
+      configuring with --variant=prf; do not set manually.
+
+config MFG
+    bool "Manufacturing firmware"
+    depends on RECOVERY_FW
+    help
+      Enable manufacturing-only functionality in the PRF build, which
+      MFG firmwares are built on.
+
 rsource "apps/Kconfig"
 rsource "kernel/Kconfig"
 rsource "services/Kconfig"

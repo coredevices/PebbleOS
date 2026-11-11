@@ -16,19 +16,6 @@ config RELEASE
       `-DCONFIG_RELEASE=y` to `./waf configure` to enable. Gates
       features that should only run on shipping firmware.
 
-config RECOVERY_FW
-    bool "Recovery firmware (PRF)"
-    help
-      Build the recovery firmware variant. Set via prj_prf.conf when
-      configuring with --variant=prf; do not set manually.
-
-config MFG
-    bool "Manufacturing firmware"
-    help
-      Enable manufacturing-only functionality in the PRF build. PRF
-      and MFG firmwares are mostly the same, so MFG builds also
-      define the recovery-firmware symbols.
-
 config PBLBOOT
     bool "PBLBOOT bootloader"
     help
