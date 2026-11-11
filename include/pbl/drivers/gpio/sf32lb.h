@@ -8,6 +8,7 @@
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/intc.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_gpio_sf32lb SF32LB GPIO
@@ -30,20 +31,14 @@ struct pbl_gpio_sf32lb {
   struct pbl_gpio_port port;
   /** Register base address. */
   uintptr_t base;
+  /** Interrupt line. */
+  pbl_irq_t irq;
   /** Clock. */
   struct pbl_clk clk;
+  /** HPSYS always-on block base address, where wakeup pins latch. */
+  uintptr_t aon;
   /** Runtime state. */
   struct pbl_gpio_sf32lb_state *state;
 };
-
-/** @cond INTERNAL_HIDDEN */
-extern const struct pbl_gpio_sf32lb pbl_gpio_sf32lb_gpio1;
-extern const struct pbl_intc pbl_gpio_sf32lb_gpio1_intc;
-/** @endcond */
-
-/** Port GPIO1 (PA). */
-#define SF32LB_GPIO1 (&pbl_gpio_sf32lb_gpio1.port)
-/** Interrupt controller of port GPIO1. */
-#define SF32LB_GPIO1_INTC (&pbl_gpio_sf32lb_gpio1_intc)
 
 /** @} */

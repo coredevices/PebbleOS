@@ -22,7 +22,7 @@
  * requests the line once and enables it while it wants interrupts:
  *
  * @code{.c}
- * .int1 = PBL_IRQ_SPEC(SF32LB_GPIO1_INTC, 38, PBL_IRQ_TYPE_EDGE_RISING),
+ * .int1 = PBL_IRQ_SPEC(&dt_gpio1_intc, 38, PBL_IRQ_TYPE_EDGE_RISING),
  *
  * static void prv_int1_handler(void *arg) {
  *   // ISR context

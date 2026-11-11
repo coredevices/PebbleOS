@@ -19,7 +19,7 @@
  * drain), so callers deal in logical levels.
  *
  * @code{.c}
- * static const struct pbl_gpio s_reset = PBL_GPIO(SF32LB_GPIO1, 28, PBL_GPIO_ACTIVE_LOW);
+ * static const struct pbl_gpio s_reset = PBL_GPIO(&dt_gpio1, 28, PBL_GPIO_ACTIVE_LOW);
  *
  * pbl_gpio_configure(&s_reset, PBL_GPIO_OUTPUT_ACTIVE);
  * pbl_gpio_set(&s_reset, false);
