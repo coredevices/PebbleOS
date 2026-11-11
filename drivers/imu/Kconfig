@@ -137,6 +137,12 @@ config MAG_MMC5603NJ
     help
       Support for the MEMSIC MMC5603NJ magnetometer.
 
+config MAG_SIM
+    bool "Simulator"
+    help
+      Simulated magnetometer, measuring a field set through its
+      simulator API (pbl/drivers/imu/sim.h).
+
 endif # MAG
 
 module = DRIVER_IMU

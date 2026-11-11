@@ -42,6 +42,18 @@ pbl_clar_test(test_accel_sim
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_mag_sim
+  SOURCES
+    drivers/base/device.c
+    drivers/imu/mag.c
+    drivers/imu/mag_sim.c
+    tests/fakes/fake_rtc.c
+  DEFINES
+    CONFIG_DEVICE_LOG_LEVEL=0
+    PBL_NO_LINKER_SCRIPT
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_flash_partition
   SOURCES
     tests/fakes/fake_spi_flash.c

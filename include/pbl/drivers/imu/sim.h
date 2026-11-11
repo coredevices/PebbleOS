@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/accel.h>
+#include <pbl/drivers/mag.h>
 
 /**
  * @defgroup drivers_accel_sim Simulator
@@ -67,5 +68,31 @@ void pbl_accel_sim_flush(const struct pbl_accel *accel);
  * @param event Event.
  */
 void pbl_accel_sim_report_event(const struct pbl_accel *accel, const struct pbl_accel_event *event);
+
+/** @} */
+
+/**
+ * @defgroup drivers_mag_sim Simulator
+ * @ingroup drivers_mag
+ * @brief Simulated magnetometer, measuring the field pbl_mag_sim_set() sets.
+ *
+ * While sampling, the field is reported once per sampling interval. It is zero until set.
+ * @{
+ */
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_mag pbl_mag_sim;
+/** @endcond */
+
+/** @brief The simulated magnetometer. */
+#define SIM_MAG (&pbl_mag_sim)
+
+/**
+ * @brief Set the magnetic field the magnetometer measures.
+ *
+ * @param mag Device.
+ * @param field Field, in milligauss, in the watch frame.
+ */
+void pbl_mag_sim_set(const struct pbl_mag *mag, const MagData *field);
 
 /** @} */
