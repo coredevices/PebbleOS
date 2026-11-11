@@ -16,6 +16,16 @@
 		constant-charge-current-max-microamp = <70000>;
 		charge-term-current-microamp = <7000>;
 		constant-charge-voltage-max-microvolt = <4450000>;
+		charge-full-design-microamp-hours = <70860>;
+		factory-internal-resistance-micro-ohms = <3000000>;
+		ocv-capacity-celsius = <25>;
+		ocv-capacity-table-0 = <4394100 100>, <4338800 95>, <4284400 90>, <4226700 85>,
+				       <4170700 80>, <4115800 75>, <4061000 70>, <4002900 65>,
+				       <3951500 60>, <3912000 55>, <3878700 50>, <3849700 45>,
+				       <3824900 40>, <3802800 35>, <3779900 30>, <3757400 25>,
+				       <3734400 20>, <3701800 15>, <3682600 10>, <3675700 8>,
+				       <3641300 5>, <3516500 3>, <3470300 2>, <3378700 1>,
+				       <3113100 0>;
 	};
 
 	vddp: regulator-vddp {
