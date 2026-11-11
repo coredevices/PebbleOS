@@ -36,11 +36,6 @@ if(CONFIG_HAL_SIFLI_LCPU_CONFIG)
     SiFli-SDK/drivers/hal/bf0_hal_lcpu_config.c
   )
 endif()
-if(CONFIG_HAL_SIFLI_LCPU_PATCH)
-  list(APPEND micro_sources
-    SiFli-SDK/drivers/hal/bf0_hal_patch.c
-  )
-endif()
 if(CONFIG_HAL_SIFLI_SF32LB52)
   list(APPEND micro_sources
     sf32lb52/system_bf0_ap.c
@@ -52,7 +47,6 @@ if(CONFIG_HAL_SIFLI_SF32LB52)
   endif()
   if(CONFIG_HAL_SIFLI_LCPU)
     list(APPEND micro_sources
-      ../nonfree/pebbleos-nonfree/sf32lb52/lcpu_patch_rev_b.c
       SiFli-SDK/drivers/cmsis/sf32lb52x/bt_rf_fulcal.c
     )
   endif()
