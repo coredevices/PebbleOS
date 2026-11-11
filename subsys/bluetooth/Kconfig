@@ -130,6 +130,13 @@ module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
 
+config BT_REPEAT_PAIRING_ALWAYS
+    bool "Always accept repeat pairing"
+    help
+      Forget the keys of a bonded peer that pairs again and accept it, even
+      without secure connections and user confirmation. For firmware with
+      no other way to forget a pairing.
+
 config BT_HRM_SERVICE
     bool
     help

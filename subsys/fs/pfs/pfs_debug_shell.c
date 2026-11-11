@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_RELEASE)
-
 #include "pfs.h"
 
 #include <errno.h>
@@ -48,5 +46,3 @@ static int prv_cmd_litter(const struct pbl_shell *sh, size_t argc, char **argv) 
 
 PBL_SHELL_SUBCMD_ADD(sub_pfs, litter, nullptr, "Fragment the filesystem <files> <size>",
                      prv_cmd_litter, 3, 0);
-
-#endif

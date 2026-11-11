@@ -350,10 +350,7 @@ static int prv_handle_pairing_request_event(struct ble_gap_event *event) {
 }
 
 static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
-  // In recovery mode there is no UI that allows to manually delete a pairing,
-  // so we unconditionally enable repeat pairing. In main firmware, only allow
-  // repeat pairing if using secure connections and we support user confirmation.
-#if defined(CONFIG_RECOVERY_FW) || \
+#if defined(CONFIG_BT_REPEAT_PAIRING_ALWAYS) || \
     (MYNEWT_VAL(BLE_SM_SC_ONLY) && (MYNEWT_VAL(BLE_SM_IO_CAP) == BLE_HS_IO_DISPLAY_YESNO))
   struct ble_gap_conn_desc desc;
   int ret;
