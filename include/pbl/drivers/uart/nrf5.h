@@ -15,16 +15,16 @@
  * @brief @ref drivers_uart driver for the nRF5 UARTE peripheral.
  *
  * Bytes are sent one at a time through EasyDMA. Reception runs through EasyDMA into the two
- * halves of a receive buffer, while TIMER @c CONFIG_UART_NRF5_RX_TIMER in counter mode counts the
- * received bytes through a PPI channel. Odd parity and flow control are not supported.
+ * halves of a receive buffer, while a TIMER of its own in counter mode counts the received bytes
+ * through a PPI channel. Odd parity and flow control are not supported.
  *
  * TX is an output, idle high. RX is an input with its wiring flags, e.g. a pull, connected when
  * reception first starts. An instance connects its interrupt itself, with priority
  * @c CONFIG_UART_NRF5_IRQ_PRIO:
  *
  * @code{.c}
- * PBL_UART_NRF5_DEFINE(s_uart0, "uart0", NRF52_UARTE0_BASE, PBL_SOC_IRQN_UART0_UARTE0, 1000000,
- *                      PBL_GPIO(&dt_gpio0, 27, 0), PBL_GPIO(&dt_gpio0, 5, 0));
+ * PBL_UART_NRF5_DEFINE(s_uart0, "uart0", 0x40002000, PBL_SOC_IRQN_UART0_UARTE0, 1000000,
+ *                      PBL_GPIO(&dt_gpio0, 27, 0), PBL_GPIO(&dt_gpio0, 5, 0), 0x4000a000);
  * @endcode
  * @{
  */
@@ -55,6 +55,8 @@ struct pbl_uart_nrf5 {
   uintptr_t base;
   /** Interrupt line. */
   pbl_irq_t irq;
+  /** Registers of the TIMER counting received bytes. */
+  uintptr_t timer;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -71,20 +73,20 @@ extern const struct pbl_uart_ops pbl_uart_nrf5_ops;
  * @param _baudrate Initial baud rate, in bits per second.
  * @param _tx TX pin, from PBL_GPIO().
  * @param _rx RX pin, from PBL_GPIO().
+ * @param _timer Registers of the TIMER counting received bytes.
  */
-#define PBL_UART_NRF5_DEFINE(sym, _name, _base, _irq, _baudrate, _tx, _rx)     \
-  PBL_UART_STATE_DEFINE(sym);                                                  \
-  static struct pbl_uart_nrf5_state sym##_nrf5_state;                          \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_nrf5, struct pbl_uart, uart){       \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_nrf5_ops, _baudrate, nullptr), \
-    .state = &sym##_nrf5_state,                                                \
-    .base = (_base),                                                           \
-    .irq = (_irq),                                                             \
-    .tx = _tx,                                                                 \
-    .rx = _rx,                                                                 \
-  };                                                                           \
-  /* A second port would share the TIMER: it fails to link */                  \
-  const uint8_t pbl_uart_nrf5_one_port_per_rx_timer = 0;                       \
+#define PBL_UART_NRF5_DEFINE(sym, _name, _base, _irq, _baudrate, _tx, _rx, _timer) \
+  PBL_UART_STATE_DEFINE(sym);                                                      \
+  static struct pbl_uart_nrf5_state sym##_nrf5_state;                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_nrf5, struct pbl_uart, uart){           \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_nrf5_ops, _baudrate, nullptr),     \
+    .state = &sym##_nrf5_state,                                                    \
+    .base = (_base),                                                               \
+    .irq = (_irq),                                                                 \
+    .tx = _tx,                                                                     \
+    .rx = _rx,                                                                     \
+    .timer = (_timer),                                                             \
+  };                                                                               \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UART_NRF5_IRQ_PRIO, pbl_uart_nrf5_irq_handler, &sym##_inst, 0)
 
 /**

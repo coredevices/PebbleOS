@@ -23,15 +23,6 @@ config UART_NRF5_IRQ_PRIO
     help
       Priority of the port interrupts.
 
-config UART_NRF5_RX_TIMER
-    int "TIMER instance counting received bytes"
-    default 2
-    range 0 4
-    depends on UART_NRF5
-    help
-      The TIMER the driver counts received bytes with, so only one port
-      can receive.
-
 config UART_SF32LB
     bool "SiFli SF32LB UART Controller"
     default y if SOC_SF32LB52

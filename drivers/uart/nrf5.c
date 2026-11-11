@@ -22,11 +22,6 @@
 static_assert((PBL_UART_NRF5_RX_BUF_SIZE & (PBL_UART_NRF5_RX_BUF_SIZE - 1U)) == 0U);
 static_assert(RX_HALF_SIZE <= UARTE_MAXCNT_MASK);
 
-static const uintptr_t s_timers[] = {
-  NRF52_TIMER0_BASE, NRF52_TIMER1_BASE, NRF52_TIMER2_BASE, NRF52_TIMER3_BASE, NRF52_TIMER4_BASE,
-};
-static_assert(CONFIG_UART_NRF5_RX_TIMER < ARRAY_LENGTH(s_timers));
-
 static const struct {
   uint32_t baudrate;
   uint32_t reg;
@@ -59,7 +54,7 @@ static inline void prv_putreg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset,
 }
 
 static inline uintptr_t prv_timer_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {
-  return s_timers[CONFIG_UART_NRF5_RX_TIMER] + offset;
+  return nrf5->timer + offset;
 }
 
 static void prv_event_clear(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {

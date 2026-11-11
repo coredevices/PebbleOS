@@ -13,3 +13,5 @@ args:
     default: 115200
   - gpio: tx
   - gpio: rx
+  - reg: 0
+    of: nordic,timer
