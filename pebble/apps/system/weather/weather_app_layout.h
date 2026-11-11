@@ -74,6 +74,9 @@ typedef struct WeatherAppLayout {
     WeatherType outgoing_weather_type;
     WeatherType incoming_weather_type;
     WeatherType tomorrow_exit_weather_type; // weather type of tomorrow icon while it exits/enters
+    // Y in root_layer coordinates where the new day's sidebar color meets the old one. It moves
+    // with the incoming icon, and the new color fills the bar as the icon lands.
+    int16_t sidebar_edge_y;
     bool animate_down;
     bool tomorrow_reparented; // true when tomorrow_layer lives in root_layer during animation
     bool tomorrow_incoming;   // true when tomorrow_layer is animating IN during DOWN animation
