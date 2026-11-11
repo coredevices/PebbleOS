@@ -27,6 +27,8 @@ struct pbl_watchdog_sf32lb {
   uintptr_t base;
   /** Clock. */
   struct pbl_clk clk;
+  /** HPSYS configuration registers, routing the watchdog to the reboot. */
+  uintptr_t cfg;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -40,8 +42,9 @@ int pbl_watchdog_sf32lb_init(const struct pbl_device *dev);
  * @param _name Name.
  * @param _base Registers.
  * @param _clk Clock, from PBL_CLK().
+ * @param _cfg HPSYS configuration registers.
  */
-#define PBL_WATCHDOG_SF32LB_DEFINE(sym, _name, _base, _clk)                              \
+#define PBL_WATCHDOG_SF32LB_DEFINE(sym, _name, _base, _clk, _cfg)                        \
   PBL_DEVICE_STATE_DEFINE(sym);                                                          \
   extern const struct pbl_watchdog_sf32lb sym##_inst;                                    \
   PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                      \
@@ -50,6 +53,7 @@ int pbl_watchdog_sf32lb_init(const struct pbl_device *dev);
     .dev = PBL_DEVICE_INIT(sym, _name, pbl_watchdog_sf32lb_init, nullptr, nullptr),      \
     .base = (_base),                                                                     \
     .clk = _clk,                                                                         \
+    .cfg = (_cfg),                                                                       \
   }
 
 /** @} */

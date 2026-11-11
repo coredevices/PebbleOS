@@ -26,10 +26,15 @@ properties:
   clocks:
     maxItems: 1
 
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration block, routing the watchdog to the reboot.
+
 required:
   - compatible
   - reg
   - clocks
+  - sifli,hpsys-cfg
 
 unevaluatedProperties: false
 
@@ -39,4 +44,5 @@ examples:
         compatible = "sifli,sf32lb52-wdt";
         reg = <0x50094000 0x1000>;
         clocks = <&pmuc 5>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
     };
