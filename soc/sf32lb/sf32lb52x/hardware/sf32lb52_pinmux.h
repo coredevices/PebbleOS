@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 /* Register offsets */
 
 #define SF32LB52_PINMUX_PAD_SA_OFFSET(n) (0x0000 + ((n) * 4))

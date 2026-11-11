@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 /* Register offsets */
 
 #define SF32LB52_BT_MAC_RCCAL_CTRL_OFFSET   0x0114

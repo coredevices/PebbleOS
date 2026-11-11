@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 /* Register offsets */
 
 #define SF32LB52_LPSYS_AON_PMR_OFFSET      0x0000

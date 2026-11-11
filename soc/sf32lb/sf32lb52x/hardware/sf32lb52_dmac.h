@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 #define SF32LB52_DMAC_NUM_CHANNELS 8U
 
 /* Register offsets, of channel n from 0 */

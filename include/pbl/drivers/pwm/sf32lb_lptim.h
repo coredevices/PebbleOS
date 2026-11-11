@@ -22,7 +22,7 @@
  * PBL_PINCTRL_STATE_DEFINE(s_lptim2_default, SF32LB52_PINCTRL,
  *                          SF32LB52_PA24_PBR_LPTIM2_OUT | PBL_PINCTRL_SF32LB52_INPUT,
  *                          SF32LB52_PA25_PBR_LPTIM2_INV_OUT | PBL_PINCTRL_SF32LB52_INPUT);
- * PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", SF32LB52_LPTIM2_BASE,
+ * PBL_PWM_SF32LB_LPTIM_DEFINE(s_lptim2, "lptim2", 0x500c2000,
  *                             PBL_CLK(SF32LB52_RTC_CLK, SF32LB52_CLK_RTC), &s_lptim2_default);
  * @endcode
  * @{
