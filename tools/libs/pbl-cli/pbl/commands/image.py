@@ -7,7 +7,7 @@ import sys
 
 from pbl import lock
 from pbl.command import PblCommand
-from pbl.runners.sftool import FLASH_XIP_BASE
+from pbl.runners.sftool import flash_xip_base
 
 
 class _ImageCommand(PblCommand):
@@ -47,7 +47,7 @@ class _ImageCommand(PblCommand):
         tool_args = ""
         if tool_name == "sftool_flash_imaging":
             offset, _ = build.flash_region(self.region)
-            tool_args = f"--address {FLASH_XIP_BASE + offset:#x} "
+            tool_args = f"--address {flash_xip_base(build) + offset:#x} "
         self.inf(f'writing "{path}" to {tty}')
         with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
             self.check_shell(
