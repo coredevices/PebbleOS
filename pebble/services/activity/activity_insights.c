@@ -10,6 +10,7 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_util.h>
@@ -1991,6 +1992,35 @@ cleanup:
 }
 
 // ------------------------------------------------------------------------------------------------
+// Detected sessions have no live heart rate tracking, so use the stored minute data.
+static void prv_get_session_hr(const ActivitySession *session, int32_t *avg_hr,
+                               int32_t *hr_zone_time_s) {
+#ifdef CONFIG_HRM
+  uint8_t *bpm = pbl_zalloc(session->length_min);
+  if (!bpm) {
+    return;
+  }
+
+  if (activity_algorithm_get_minute_heart_rate(bpm, session->length_min, session->start_utc)) {
+    int32_t sum = 0;
+    int32_t count = 0;
+    for (uint16_t i = 0; i < session->length_min; i++) {
+      if (bpm[i] == 0) {
+        continue;
+      }
+      sum += bpm[i];
+      count++;
+      hr_zone_time_s[hr_util_get_hr_zone(bpm[i])] += PBL_SEC_PER_MIN;
+    }
+    if (count) {
+      *avg_hr = ROUND(sum, count);
+    }
+  }
+  pbl_free(bpm);
+#endif
+}
+
+// ------------------------------------------------------------------------------------------------
 static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
   if (!activity_prefs_activity_insights_are_enabled()) {
     return;
@@ -2034,7 +2064,10 @@ static void prv_do_activity_session(time_t now_utc, ActivitySession *session) {
                  sizeof(s_session_pin_state.start_utc));
 
   if (s_activity_session_settings.session.show_notification) {
-    activity_insights_push_activity_session_notification(now_utc, session, 0, nullptr);
+    int32_t avg_hr = 0;
+    int32_t hr_zone_time_s[HRZoneCount] = {};
+    prv_get_session_hr(session, &avg_hr, hr_zone_time_s);
+    activity_insights_push_activity_session_notification(now_utc, session, avg_hr, hr_zone_time_s);
   }
 }
 
