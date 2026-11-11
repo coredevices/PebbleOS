@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/nordic,nrf52832-clock.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 clock control
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  Runs the two clocks of the system:
+
+  - HFCLK, the 64 MHz clock of the CPU and the peripherals, from the internal
+    RC oscillator, or from the HFXO crystal oscillator while a consumer asks
+    for it, as the radio and the audio interfaces do for its accuracy;
+  - LFCLK, the 32768 Hz clock of the RTCs, from the LFXO crystal oscillator,
+    the internal RC oscillator or HFCLK.
+
+  It shares its registers and interrupt with the power control block. Clock
+  specifiers take one cell, an ID from
+  <dt-bindings/clock/nordic,nrf52832-clock.h>.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-clock
+      - items:
+          - enum:
+              - nordic,nrf52833-clock
+              - nordic,nrf52840-clock
+          - const: nordic,nrf52832-clock
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+
+  clocks:
+    minItems: 1
+    items:
+      - description: 32 MHz crystal
+      - description: 32768 Hz crystal, if fitted
+
+  clock-names:
+    minItems: 1
+    items:
+      - const: hfxo
+      - const: lfxo
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - '#clock-cells'
+  - clocks
+  - clock-names
+
+additionalProperties: false
+
+examples:
+  - |
+    clock: clock-controller@40000000 {
+        compatible = "nordic,nrf52840-clock", "nordic,nrf52832-clock";
+        reg = <0x40000000 0x1000>;
+        interrupts = <0>;
+        #clock-cells = <1>;
+        clocks = <&hfxo>, <&lfxo>;
+        clock-names = "hfxo", "lfxo";
+    };

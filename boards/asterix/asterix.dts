@@ -13,6 +13,12 @@
 
 	compatible = "coredevices,asterix", "nordic,nrf52840";
 
+	lfxo: clock-32768 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+	};
+
 	battery: battery {
 		compatible = "simple-battery";
 		constant-charge-current-max-microamp = <128000>;
@@ -92,6 +98,11 @@
 			sound-dai = <&da7212>;
 		};
 	};
+};
+
+&clock {
+	clocks = <&hfxo>, <&lfxo>;
+	clock-names = "hfxo", "lfxo";
 };
 
 &i2c0 {
