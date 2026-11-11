@@ -74,7 +74,6 @@ if(CONFIG_BT_HCI_NRF52)
 elseif(CONFIG_BT_HCI_SF32LB52)
   list(APPEND sources
     transport/hci_sf32lb52.c
-    ../nonfree/pebbleos-nonfree/sf32lb52/lcpu_52x.c
   )
   if(CONFIG_NIMBLE_HCI_SF32LB52_TRACE_LOG)
     pbl_compile_definitions(NIMBLE_HCI_SF32LB52_TRACE NIMBLE_HCI_SF32LB52_TRACE_LOG)
