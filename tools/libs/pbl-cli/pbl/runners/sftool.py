@@ -3,8 +3,10 @@
 
 from .core import Runner, RunnerCaps, RunnerError
 
-# Where the SF32LB52 maps its flash, the addresses sftool programs it at.
-FLASH_XIP_BASE = 0x12000000
+
+def flash_xip_base(build):
+    """Where the SoC maps the boot flash, the addresses sftool programs it at."""
+    return build.config.CONFIG_FLASH_BASE
 
 
 class SfToolRunner(Runner):
@@ -31,18 +33,19 @@ class SfToolRunner(Runner):
         )
 
     def do_run(self, command):
+        build = self.cfg.build
+        if not build:
+            raise RunnerError("sftool needs the build, for the flash address")
+        base = flash_xip_base(build)
         if command == "flash":
             files = [self.cfg.hex_file]
-            build = self.cfg.build
-            if build and build.config.CONFIG_SF32LB52_FTAB:
+            if build.config.CONFIG_SF32LB_FTAB:
                 files.append(build.join("ftab.hex"))
             if self.cfg.resources_file:
                 files.append(
-                    f"{self.cfg.resources_file}@{FLASH_XIP_BASE + self.cfg.resources_address:#x}"
+                    f"{self.cfg.resources_file}@{base + self.cfg.resources_address:#x}"
                 )
             self._sftool("write_flash " + self.quote(*files))
         elif command == "erase":
-            ranges = [
-                f"{FLASH_XIP_BASE + a:#x}:{s:#x}" for a, s in self.cfg.erase_ranges
-            ]
+            ranges = [f"{base + a:#x}:{s:#x}" for a, s in self.cfg.erase_ranges]
             self._sftool("erase_region " + self.quote(*ranges))
