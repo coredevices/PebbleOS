@@ -28,7 +28,9 @@ registers, and hands a portable `struct pbl_fault_info` to one of two hooks:
 - `pbl_fault_thread_handler()` when an unprivileged thread faulted on its own
   stack: the arch leaves the faulting code for the hook, on the same thread, now
   privileged, moving its stack pointer out of the guard first on an overflow;
-- `pbl_fault_fatal_handler()` otherwise, from the exception.
+- `pbl_fault_fatal_handler()` otherwise, from the exception. The arch passes the
+  fault to `pbl_fault_fatal_record()` before logging anything, so a fault or
+  hang while logging still leaves a record behind.
 
 The firmware's hooks, also in `pebble/kernel/fault_handling.c`, kill the app or
 worker that faulted, or record a hard fault or stack overflow reboot reason and

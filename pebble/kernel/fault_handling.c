@@ -200,7 +200,7 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
   sys_app_fault(lr);
 }
 
-[[noreturn]] void pbl_fault_fatal_handler(const struct pbl_fault_info *info) {
+void pbl_fault_fatal_record(const struct pbl_fault_info *info) {
   RebootReason reason;
   if (info->reason == PBL_FAULT_STACK_OVERFLOW) {
     reason = (RebootReason){
@@ -214,6 +214,9 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
     reason = (RebootReason){.code = RebootReasonCode_HardFault, .extra = {.value = addr}};
   }
   reboot_reason_set(&reason);
+}
+
+[[noreturn]] void pbl_fault_fatal_handler(const struct pbl_fault_info *info) {
   reset_due_to_software_failure();
 }
 
