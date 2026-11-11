@@ -35,10 +35,6 @@ int32_t weather_norm_square(int32_t value);
 int32_t weather_norm_bell(int32_t value);
 void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect, int dst_x);
 
-#define WEATHER_GLOW_WRAP_SPIN_TICKS  12
-#define WEATHER_GLOW_WRAP_CLOSE_TICKS 4
-#define WEATHER_GLOW_WRAP_TICKS       (WEATHER_GLOW_WRAP_SPIN_TICKS + WEATHER_GLOW_WRAP_CLOSE_TICKS)
-
 // Card<->globe horizontal slide duration (SELECT out-left / BACK in-left): a snappy fraction
 // of the moook default so the two-phase transition feels quick. Shared by expanded_view.c and
 // globe_view.c so the pair can't drift apart.
@@ -53,6 +49,20 @@ int64_t weather_interpolate_moook_soft1(int32_t n, int64_t from, int64_t to);
 void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buffer,
                                  size_t buffer_size);
 
+// Whether `then` is in the same hour of the watch's local time as `now`, and not after it.
+bool weather_same_local_hour(time_t now, time_t then);
+
+// An hourly chance of precipitation the phone has no figure for
+#define WEATHER_PRECIP_UNKNOWN 255
+// Hours in the clock's chance of precipitation series: today's, then tomorrow's
+#define WEATHER_PRECIP_HOURS 48
+
+// Stores a series of 24 or WEATHER_PRECIP_HOURS chances of precipitation in `hours`. Values over
+// 100 percent and the hours past the series are stored as unknown. Returns the hours stored, or
+// 0 when no hour is known.
+uint8_t weather_store_hourly_precip(uint8_t hours[WEATHER_PRECIP_HOURS], const uint8_t *precip,
+                                    size_t count);
+
 // Diurnal curve (0..100): cool overnight, peak mid-afternoon. Shared by the hourly
 // synth in weather.c and the v4 test seed in weather_data_source.c.
 extern const uint8_t weather_diurnal_curve[24];
@@ -60,8 +70,11 @@ extern const uint8_t weather_diurnal_curve[24];
 //! WHO UV severity ramp (shared by the card dial + the report UV bar).
 GColor weather_uv_severity_color(int uv);
 
+// Two half-turn arcs starting at `phase` and at -`phase`, with sparks in the theme background
+// color at their starts and three beads. When idle both start at `phase`, with no sparks or
+// beads. extra_span lengthens both arcs (TRIG_MAX_ANGLE / 2 closes the ring).
 void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor glow_color,
-                            uint32_t phase, uint8_t idle_progress);
+                            uint32_t phase, bool idle, int32_t extra_span);
 
 // Whole-screen Timeline jelly squash-stretch blit, shared by forecast_list and clock_face.
 // `scratch` = W*H one-shot framebuffer snapshot. Modes 1-3 match forecast_list's

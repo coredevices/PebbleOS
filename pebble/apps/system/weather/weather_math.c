@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <pbl/services/time.h>
+#include <pbl/util/units.h>
 
 #include <applib/graphics/gdraw_command_sequence.h>
 #include <applib/ui/animation_interpolate.h>
@@ -213,6 +214,30 @@ void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buf
   }
 }
 
+bool weather_same_local_hour(time_t now, time_t then) {
+  if (then <= 0 || now < then || now - then >= PBL_SEC_PER_HOUR)
+    return false;
+  // localtime() returns one shared buffer, so take the first hour before asking again.
+  const struct pbl_tm *lt = localtime(&now);
+  if (!lt)
+    return false;
+  const int hour = lt->tm_hour;
+  lt = localtime(&then);
+  return lt && lt->tm_hour == hour;
+}
+
+uint8_t weather_store_hourly_precip(uint8_t hours[WEATHER_PRECIP_HOURS], const uint8_t *precip,
+                                    size_t count) {
+  const size_t n = (count >= WEATHER_PRECIP_HOURS) ? WEATHER_PRECIP_HOURS : (count >= 24) ? 24 : 0;
+  bool any_known = false;
+  for (size_t i = 0; i < WEATHER_PRECIP_HOURS; i++) {
+    const bool known = i < n && precip[i] <= 100;
+    hours[i] = known ? precip[i] : WEATHER_PRECIP_UNKNOWN;
+    any_known |= known;
+  }
+  return any_known ? (uint8_t)n : 0;
+}
+
 uint32_t weather_scale_u32(uint32_t value, uint32_t numerator, uint32_t denominator) {
   if (denominator == 0)
     return 0;
@@ -338,19 +363,11 @@ static void prv_fill_wrapped_radial(GContext *ctx, GRect rect, uint16_t inset, i
 }
 
 void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor glow_color,
-                            uint32_t phase_u, uint8_t idle_progress) {
+                            uint32_t phase_u, bool idle, int32_t extra_span) {
   int32_t phase = (int32_t)phase_u & ((int32_t)TRIG_MAX_ANGLE - 1);
   int32_t half = (int32_t)(TRIG_MAX_ANGLE / 2);
-  int32_t span = half;
-  bool idle = idle_progress > 0;
+  int32_t span = half + extra_span;
   int32_t neg = idle ? phase : (-phase & ((int32_t)TRIG_MAX_ANGLE - 1));
-
-  if (idle_progress > WEATHER_GLOW_WRAP_SPIN_TICKS) {
-    uint8_t close = idle_progress - WEATHER_GLOW_WRAP_SPIN_TICKS;
-    if (close > WEATHER_GLOW_WRAP_CLOSE_TICKS)
-      close = WEATHER_GLOW_WRAP_CLOSE_TICKS;
-    span += (int32_t)close * (half / WEATHER_GLOW_WRAP_CLOSE_TICKS);
-  }
 
   // (The faded Celeste outer halo ring was removed by design —
   // the temp keeps just the solid condition-colored ring + sparks/beads.)

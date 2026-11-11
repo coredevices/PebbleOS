@@ -65,6 +65,10 @@ typedef struct WeatherAppData {
   uint8_t tomorrow_hourly_type[24];
   int8_t tomorrow_hourly_temp[24];
   bool tomorrow_hourly_valid;
+  // Chance of precipitation per hour in percent, 255 if unknown: today's hours 0-23, then
+  // tomorrow's (v4 minor 6).
+  uint8_t hourly_precip[48];
+  bool hourly_precip_valid;
   // Active location coordinates (v4; for the 3D globe).
   int16_t latitude_e2;
   int16_t longitude_e2;
@@ -211,6 +215,10 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     memcpy(data->tomorrow_hourly_temp, ds->tomorrow_hourly_temp,
            sizeof(data->tomorrow_hourly_temp));
   }
+  data->hourly_precip_valid = ds->has_hourly_precip;
+  if (data->hourly_precip_valid) {
+    memcpy(data->hourly_precip, ds->hourly_precip, sizeof(data->hourly_precip));
+  }
   data->latitude_e2 = ds->latitude_e2;
   data->longitude_e2 = ds->longitude_e2;
   data->utc_offset_min = ds->utc_offset_min;
@@ -266,14 +274,8 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     // A reading synced during this very hour beats the hourly forecast bucket: it is the
     // fresher value, and it is what the launcher glance shows (it only has the record's
     // current fields), so every view then agrees on the current temperature.
-    bool synced_this_hour = false;
-    if (hour >= 0 && ds->current_temp != WX_DS_UNKNOWN_TEMP && ds->time_updated_utc > 0 &&
-        now_t >= (time_t)ds->time_updated_utc &&
-        now_t - (time_t)ds->time_updated_utc < PBL_SEC_PER_HOUR) {
-      time_t upd_t = ds->time_updated_utc;
-      struct pbl_tm *lt_u = localtime(&upd_t);
-      synced_this_hour = lt_u && lt_u->tm_hour == hour;
-    }
+    const bool synced_this_hour = ds->current_temp != WX_DS_UNKNOWN_TEMP &&
+                                  weather_same_local_hour(now_t, (time_t)ds->time_updated_utc);
     if (!synced_this_hour && ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {
       data->days[0].current_type_now = (WeatherType)ds->hourly_type[hour];
@@ -485,19 +487,28 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
       s_hourly_type[h] = d->current_weather_type;
       s_hourly_temp[h] = (int8_t)(lo + (span * weather_diurnal_curve[h]) / 100);
     }
-    hourly_types = s_hourly_type;
+    // Not for today: its dial falls back to the day's type, and the clock treats a series
+    // passed for today as the phone's forecast.
+    if (di != 0)
+      hourly_types = s_hourly_type;
     have_hourly = true;
   }
 
   if (static_push) {
     clock_face_push_static(data->days, data->days_received, (int)di, hourly_types,
-                           have_hourly ? 24 : 0, false);
+                           hourly_types ? 24 : 0, false);
   } else {
-    clock_face_push(data->days, data->days_received, (int)di, hourly_types, have_hourly ? 24 : 0,
+    clock_face_push(data->days, data->days_received, (int)di, hourly_types, hourly_types ? 24 : 0,
                     false);
   }
   if (have_hourly) {
     clock_face_update_hourly_temps_for_day((int)di, s_hourly_temp, 24);
+  }
+  // Today's dial runs into tomorrow, so it gets both days. Later days have no hourly series, and
+  // without one the clock skips its precipitation mode.
+  if (data->hourly_precip_valid && di <= 1) {
+    clock_face_update_hourly_precip_for_day((int)di, data->hourly_precip + di * 24,
+                                            di == 0 ? 48 : 24);
   }
   // Day 0's dial crosses midnight from early afternoon — hand it tomorrow's
   // hourly series (v4 minor 5) so those positions show real data.

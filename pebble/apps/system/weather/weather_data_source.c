@@ -41,6 +41,7 @@ static void prv_fill_from_fw(WxDsForecast *out, const WeatherLocationForecast *f
   // them from the v4 WeatherDBEntry directly (no-op for v3 records).
   out->today_uv = -1;
   out->has_hourly_uv = false;
+  memset(out->hourly_precip, 255, sizeof(out->hourly_precip));
   for (int i = 0; i < WX_DS_HOURLY; i++)
     out->hourly_uv[i] = -1;
   out->today_precip = -1;
@@ -157,6 +158,13 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       out->tomorrow_hourly_count = WX_DS_HOURLY;
       memcpy(out->tomorrow_hourly_type, entry->tomorrow_hourly_weather_type, WX_DS_HOURLY);
       memcpy(out->tomorrow_hourly_temp, entry->tomorrow_hourly_temp, WX_DS_HOURLY);
+    }
+    // v4.6 appended block (hourly chance of precipitation, today then tomorrow).
+    if (entry->minor_version >= 6 && len >= (int)WEATHER_DB_V4_FIXED_SIZE) {
+      memcpy(out->hourly_precip, entry->today_hourly_precip_probability, WX_DS_HOURLY);
+      memcpy(out->hourly_precip + WX_DS_HOURLY, entry->tomorrow_hourly_precip_probability,
+             WX_DS_HOURLY);
+      out->has_hourly_precip = true;
     }
     // v4.2 appended block (today's raw warning readings + per-day feels-like).
     if (entry->minor_version >= 2 && len >= (int)WEATHER_DB_V4_2_FIXED_SIZE) {

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/buffer.h>
@@ -46,6 +47,7 @@
 // (SDK->firmware name remaps) would otherwise rewrite the stub headers above.
 // Undo the libc remaps the harness itself needs.
 #include <apps/system/weather/weather_app_layout.h>
+#include <apps/system/weather/weather_math.h>
 #undef malloc
 #undef calloc
 #undef free
@@ -651,4 +653,32 @@ void test_weather_app_layout__render_long_current_location_name_pbl_38049(void) 
 
   prv_create_layout_and_render(&today, &next);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_weather_app_layout__store_hourly_precip(void) {
+  uint8_t hours[WEATHER_PRECIP_HOURS];
+  uint8_t precip[WEATHER_PRECIP_HOURS];
+  for (int i = 0; i < WEATHER_PRECIP_HOURS; i++)
+    precip[i] = (uint8_t)i;
+  precip[5] = 101; // more than certain
+  precip[30] = WEATHER_PRECIP_UNKNOWN;
+  cl_assert_equal_i(weather_store_hourly_precip(hours, precip, WEATHER_PRECIP_HOURS), 48);
+  cl_assert_equal_i(hours[4], 4);
+  cl_assert_equal_i(hours[5], WEATHER_PRECIP_UNKNOWN);
+  cl_assert_equal_i(hours[30], WEATHER_PRECIP_UNKNOWN);
+  cl_assert_equal_i(hours[47], 47);
+
+  // A day's series after a two-day one leaves no hour of the old tomorrow behind
+  cl_assert_equal_i(weather_store_hourly_precip(hours, precip, 24), 24);
+  cl_assert_equal_i(hours[23], 23);
+  for (int i = 24; i < WEATHER_PRECIP_HOURS; i++)
+    cl_assert_equal_i(hours[i], WEATHER_PRECIP_UNKNOWN);
+
+  // Less than a day is no series
+  cl_assert_equal_i(weather_store_hourly_precip(hours, precip, 23), 0);
+  cl_assert_equal_i(hours[0], WEATHER_PRECIP_UNKNOWN);
+
+  // No known hour makes the series unavailable, which takes the clock off its precipitation mode
+  memset(precip, WEATHER_PRECIP_UNKNOWN, sizeof(precip));
+  cl_assert_equal_i(weather_store_hourly_precip(hours, precip, WEATHER_PRECIP_HOURS), 0);
 }
