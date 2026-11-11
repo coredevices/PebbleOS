@@ -48,8 +48,8 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 #define BLE_HCI_EXT_SF32LB52_BLE_READY 0xFC11U
 
-// Controller NVDS, read by the LCPU ROM on boot
-#define NVDS_BASE    0x2040fe00UL
+// Controller NVDS, read by the LCPU ROM on boot, in its SRAM region
+#define NVDS_OFFSET  0xfe00U
 #define NVDS_MAGIC   0x4e564453UL
 #define NVDS_HDR_LEN 8U
 
@@ -84,9 +84,10 @@ static_assert(sizeof(struct ring) == 20U);
 
 #define RING_POOL_SIZE(region_size) (((region_size) - sizeof(struct ring)) & ~3U)
 
-// LCPU to HCPU ring, in LPSYS RAM
-#define RX_RING_BASE      SF32LB52_LPSYS_MBOX_BUF_BASE
-#define RX_RING_POOL_SIZE RING_POOL_SIZE(SF32LB52_MBOX_BUF_SIZE)
+// LCPU to HCPU ring, in the LCPU SRAM region
+#define RX_RING_OFFSET    0x2800U
+#define RX_RING_SIZE      512U
+#define RX_RING_POOL_SIZE RING_POOL_SIZE(RX_RING_SIZE)
 
 static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_BT_HCI_THREAD_STACK_SIZE);
@@ -232,7 +233,7 @@ static inline volatile struct ring *prv_tx(void) {
 }
 
 static inline volatile struct ring *prv_rx(void) {
-  return (volatile struct ring *)RX_RING_BASE;
+  return (volatile struct ring *)(LCPU->sram.base + RX_RING_OFFSET);
 }
 
 static uint32_t prv_ring_used(uint32_t rd, uint32_t wr, uint32_t size) {
@@ -466,7 +467,7 @@ static void prv_hci_task_main(void *unused) {
 }
 
 static void prv_nvds_config(const uint8_t *bd_addr) {
-  uint8_t *nvds = (uint8_t *)NVDS_BASE;
+  uint8_t *nvds = (uint8_t *)(LCPU->sram.base + NVDS_OFFSET);
   uint8_t *p = nvds + NVDS_HDR_LEN;
 
   if (bd_addr != nullptr) {
