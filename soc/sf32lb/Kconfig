@@ -24,6 +24,21 @@ config SOC_SF32LB52
     help
       SiFli SF32LB52 series, selected by its lines.
 
+config SOC_SF32LB57
+    bool
+    select SOC_FAMILY_SF32LB
+    select CPU_STAR_MC1
+    select CPU_HAS_FPU
+    select CPU_HAS_ICACHE
+    select CPU_HAS_DCACHE
+    select ARCH_VECTOR_TABLE_RAM
+    select KERNEL_MPU_IN_FAULTS
+    select SOC_HAS_MPU_REGIONS
+    select PINCTRL
+    select TIMER_SF32LB_LPTIM
+    help
+      SiFli SF32LB57 series, selected by its lines.
+
 config SF32LB_FTAB
     bool "Boot ROM flash table"
     default y
