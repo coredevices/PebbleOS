@@ -1,8 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config SOC_FAMILY_SF32LB
+    bool
+    help
+      SiFli SF32LB family, selected by its series.
+
 config SOC_SF32LB52
     bool
+    select SOC_FAMILY_SF32LB
     select CPU_STAR_MC1
     select CPU_HAS_FPU
     select CPU_HAS_ICACHE
