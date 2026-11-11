@@ -19,6 +19,7 @@
 /* Register bit definitions */
 
 #define HPSYS_CFG_IDR_REVID_MASK PBL_GENMASK(7, 0)
+#define HPSYS_CFG_IDR_PID_MASK   PBL_GENMASK(15, 8)
 #define HPSYS_CFG_IDR_REVID_A4   0x07U
 #define HPSYS_CFG_IDR_REVID_B4   0x0fU
 
