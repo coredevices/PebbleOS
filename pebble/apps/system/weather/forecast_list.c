@@ -3727,6 +3727,25 @@ static void prv_window_unload(Window *window) {
 
 // ---- Public API ----
 
+void forecast_list_reset(void) {
+  s_list = nullptr;
+  s_select_exit_anim = nullptr;
+  s_select_exit_done = nullptr;
+  s_select_exit_ctx = nullptr;
+#ifdef CONFIG_TOUCH
+  s_pending_squash_mode = 0;
+  s_pending_hslide_in = false;
+  s_hslide_anim = nullptr;
+  s_pending_return_fly = false;
+  s_report_anim = nullptr;
+#else
+  s_list_hold_timer = nullptr;
+  s_list_hold_down = false;
+  s_list_velocity = 0;
+  s_list_subpx = 0;
+#endif
+}
+
 static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t num_days,
                                    int start_day_index, bool animated, void (*on_pop)(void *ctx),
                                    void *on_pop_ctx, void (*on_city_select)(void *ctx),

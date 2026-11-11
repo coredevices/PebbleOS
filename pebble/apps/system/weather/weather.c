@@ -737,6 +737,8 @@ static PBL_NOINLINE void prv_init(void) {
   clock_face_reset();
   expanded_view_reset();
   weather_report_reset();
+  forecast_list_reset();
+  saved_locations_reset();
 
   WeatherAppData *data = app_zalloc_check(sizeof(WeatherAppData));
   app_state_set_user_data(data);
