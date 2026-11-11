@@ -31,6 +31,10 @@ properties:
   interrupts:
     maxItems: 1
 
+  clocks:
+    items:
+      - description: HFCLK, run from the crystal while streaming
+
   "#sound-dai-cells":
     const: 0
 
@@ -44,6 +48,7 @@ required:
   - compatible
   - reg
   - interrupts
+  - clocks
   - "#sound-dai-cells"
   - clk-gpios
   - din-gpios
@@ -56,6 +61,7 @@ examples:
         compatible = "nordic,nrf52840-pdm", "nordic,nrf52832-pdm";
         reg = <0x4001d000 0x1000>;
         interrupts = <29>;
+        clocks = <&clock 0>;
         #sound-dai-cells = <0>;
         clk-gpios = <&gpio1 0 0>;
         din-gpios = <&gpio0 24 0>;

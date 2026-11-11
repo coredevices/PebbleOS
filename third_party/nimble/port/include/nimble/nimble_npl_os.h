@@ -25,7 +25,7 @@
 #if NRF52_SERIES
 #include "pbl/soc/nrf/sleep.h"
 
-#include <pbl/drivers/clocksource.h>
+#include <pbl/drivers/clk/nrf52.h>
 #endif
 
 // Pool blocks hold pointers.
@@ -245,6 +245,8 @@ static inline bool ble_npl_hw_is_in_critical(void) {
 }
 #if NRF52_SERIES
 
+static const struct pbl_clk ble_npl_hfclk = PBL_CLK(NRF52_CLOCK, NRF52_CLK_HFCLK);
+
 static inline void nrf52_clock_hfxo_request(void) {
   /* Any time NimBLE wants to turn on the HFXO, we are also going to have
    * pretty stringent wake latency requirements, so we must not do expensive
@@ -253,11 +255,11 @@ static inline void nrf52_clock_hfxo_request(void) {
    * HFXO.
    */
   soc_nrf_sleep_full_block();
-  clocksource_hfxo_request();
+  (void)pbl_clk_enable(&ble_npl_hfclk);
 }
 
 static inline void nrf52_clock_hfxo_release(void) {
-  clocksource_hfxo_release();
+  (void)pbl_clk_disable(&ble_npl_hfclk);
   soc_nrf_sleep_full_release();
 }
 

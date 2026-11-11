@@ -5,7 +5,6 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/audio/nrf5.h>
-#include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -118,8 +117,14 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
     return -EINVAL;
   }
 
+  ret = pbl_clk_enable(&pdm->hfclk);
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = pbl_gpio_configure(&pdm->din, PBL_GPIO_INPUT);
   if (ret != 0) {
+    (void)pbl_clk_disable(&pdm->hfclk);
     return ret;
   }
 
@@ -138,8 +143,6 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
 
   prv_event_clear(pdm, NRF52_PDM_EVENTS_STARTED_OFFSET);
   prv_event_clear(pdm, NRF52_PDM_EVENTS_STOPPED_OFFSET);
-
-  clocksource_hfxo_request();
 
   prv_putreg(pdm, NRF52_PDM_ENABLE_OFFSET, PDM_ENABLE_ENABLED);
   prv_putreg(pdm, NRF52_PDM_TASKS_START_OFFSET, 1U);
@@ -162,7 +165,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   prv_event_clear(pdm, NRF52_PDM_EVENTS_STOPPED_OFFSET);
   pbl_irq_clear_pending(pdm->irq);
 
-  clocksource_hfxo_release();
+  (void)pbl_clk_disable(&pdm->hfclk);
 
   (void)prv_din_idle(pdm);
 

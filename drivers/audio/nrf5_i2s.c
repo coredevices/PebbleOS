@@ -5,7 +5,6 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/audio/nrf5.h>
-#include <pbl/drivers/clocksource.h>
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -157,8 +156,15 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
     }
   }
 
+  ret = pbl_clk_enable(&i2s->hfclk);
+  if (ret != 0) {
+    prv_free(state);
+    return ret;
+  }
+
   ret = prv_clocks_configure(i2s, false);
   if (ret != 0) {
+    (void)pbl_clk_disable(&i2s->hfclk);
     prv_free(state);
     return ret;
   }
@@ -185,8 +191,6 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
              stream->period_frames * STEREO * sizeof(int16_t) / sizeof(uint32_t));
 
   prv_fill(i2s);
-
-  clocksource_hfxo_request();
 
   prv_putreg(i2s, NRF52_I2S_ENABLE_OFFSET, I2S_ENABLE_ENABLED);
   // nRF52 anomaly 55: enabling may raise spurious pointer update events
@@ -221,7 +225,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   prv_event_clear(i2s, NRF52_I2S_EVENTS_STOPPED_OFFSET);
   pbl_irq_clear_pending(i2s->irq);
 
-  clocksource_hfxo_release();
+  (void)pbl_clk_disable(&i2s->hfclk);
   prv_free(i2s->state);
 
   (void)prv_clocks_configure(i2s, true);

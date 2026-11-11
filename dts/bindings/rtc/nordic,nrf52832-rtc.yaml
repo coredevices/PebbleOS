@@ -29,6 +29,10 @@ properties:
   interrupts:
     maxItems: 1
 
+  clocks:
+    items:
+      - description: LFCLK
+
   pwm:
     type: object
     additionalProperties: false
@@ -68,6 +72,7 @@ required:
   - compatible
   - reg
   - interrupts
+  - clocks
 
 additionalProperties: false
 
@@ -77,6 +82,7 @@ examples:
         compatible = "nordic,nrf52840-rtc", "nordic,nrf52832-rtc";
         reg = <0x40024000 0x1000>;
         interrupts = <36>;
+        clocks = <&clock 1>;
 
         pwm {
             compatible = "nordic,nrf52832-rtc-pwm";

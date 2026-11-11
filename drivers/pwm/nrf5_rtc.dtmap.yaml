@@ -11,4 +11,6 @@ args:
     up: true
   - reg: 0
     of: nordic,gpiote
+  - clock: 0
+    up: true
   - gpio: ""
