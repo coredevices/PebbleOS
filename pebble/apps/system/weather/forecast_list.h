@@ -17,6 +17,10 @@
 // the next appear replays it — call on a globe city commit before the reveal.
 void forecast_list_replay_location_intro(void);
 
+//! Clear the launch-persistent statics; call once from the app's init (a crashed
+//! run never reaches unload, so the next launch would read stale pointers).
+void forecast_list_reset(void);
+
 void forecast_list_push(const WeatherLocationForecast *days, size_t num_days, int start_day_index,
                         bool animated, void (*on_pop)(void *ctx), void *on_pop_ctx,
                         void (*on_city_select)(void *ctx), void *on_city_select_ctx);
