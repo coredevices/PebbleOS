@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "expanded_view.h"
 #include "weather_types.h"
 
 // Push the condensed weekly forecast list onto the window stack.
@@ -55,7 +56,6 @@ void forecast_list_start_select_exit(void (*done_cb)(void *ctx), void *ctx);
 // No-op if the list window is not currently showing.
 void forecast_list_update_data(const WeatherLocationForecast *days, size_t num_days);
 
-// The expanded card's glance data (sunset title + high/low° strings, UV + rain %). The UP-to-card
-// hero transition animates this identical content (time, text, meters) in from the left, synced to
-// the icon-fly landing.
-void forecast_list_set_glance(const char *sunset, const char *temp, int uv, int precip, int wind);
+// The expanded card's glance data. The UP transition to the card slides it in from the left,
+// landing with the icon.
+void forecast_list_set_glance(const ExpandedViewGlance *glance);

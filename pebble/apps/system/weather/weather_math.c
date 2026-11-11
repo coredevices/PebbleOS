@@ -17,9 +17,7 @@ int64_t weather_interpolate_moook_soft1(int32_t n, int64_t from, int64_t to) {
   return interpolate_moook_soft(n, from, to, 1);
 }
 
-// WHO UV-index severity color — ONE copy for every UV readout in the app
-// (the expanded card's dial + the report page's UV bar tell the same story):
-// 0-2 green, 3-5 yellow, 6-7 orange, 8+ red (incl. off-scale).
+// Bands of the WHO UV index scale
 GColor weather_uv_severity_color(int uv) {
   return (uv <= 2)   ? GColorIslamicGreen
          : (uv <= 5) ? GColorChromeYellow

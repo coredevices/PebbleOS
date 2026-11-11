@@ -26,6 +26,7 @@ pbl_clar_test(test_weather_app_layout
     pebble/applib/graphics/gdraw_command_transforms.c
     pebble/apps/system/weather/weather_app_layout.c
     pebble/apps/system/weather/weather_math.c
+    pebble/apps/system/weather/weather_sun.c
     pebble/services/timeline/timeline_resources.c
     pebble/apps/system/weather/weather_types.c
     tests/fixtures/resources/timeline_resource_table.auto.c

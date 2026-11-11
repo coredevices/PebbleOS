@@ -107,11 +107,8 @@ typedef struct {
   GDrawCommandImage *fly_pdc;    // LARGE weather PDC (writable clone), owned
   GPointIndexLookup *fly_lookup; // delay-by-distance lookup — deterministic for the
                                  // whole fly, built once on its first frame, owned
-  char fly_sunset[40];           // card glance data, slid in from the left during the fly
-  char fly_temp[16];             // (synced to the icon landing) so the card can then
-  int fly_uv;                    // appear static — see forecast_list_set_glance
-  int fly_precip;
-  int fly_wind;
+  ExpandedViewGlance fly_glance; // card body drawn during the fly, from forecast_list_set_glance
+  char fly_status[40];           // status line over fly_glance, formatted when the fly starts
   // DOWN/UP "header scroll" transition (emery / !PBL_ROUND only): today header slides UP off
   // the top while the 5-day section rises to take over the top, driven by the SAME 330ms
   // interpolate_moook_soft curve Pebble Timeline uses for its card slide (identical bounce).
@@ -147,8 +144,7 @@ typedef struct {
   Animation *squash_in_anim;
   int squash_mode;         // 0 = inactive; else SQUASH_DROP_IN / _DOWN_EXIT / _RISE_IN
   uint8_t *squash_scratch; // full-screen snapshot, re-sampled while overwriting the fb
-  bool squash_captured;    // ROUND capture-once: snapshot filled — later frames skip
-                           // the scene render + fb copy and only resample (step 2)
+  bool squash_captured;    // squash_scratch is filled, so later frames only resample it
   bool refresh_deferred;   // BOTH shapes: a phone sync landed mid-report-scene;
                            // the heavy visual reload waits for the scene end (see
                            // forecast_list_update_data / prv_apply_deferred_refresh)
@@ -534,18 +530,14 @@ static void prv_clear_fly(void) {
 static void prv_render_squash_in(GContext *ctx) {
   if (!s_list || !s_list->squash_scratch)
     return;
-#if PBL_ROUND
-  // Capture-once (gabbro smoothness step 2): the source scene is static during every
-  // squash (nub/arrows/dot all exclude themselves or draw after), so the first frame
-  // fills the snapshot and every later frame only resamples it — dropping both the
-  // full scene render and the 67.6KB framebuffer copy from the per-frame cost.
+  // The scene is static during a squash, so only the first frame renders it and copies the
+  // framebuffer. Later frames resample the snapshot.
   if (s_list->squash_captured) {
     weather_render_squash_cached(ctx, s_list->squash_scratch, s_list->squash_in_p,
                                  s_list->squash_mode);
     return;
   }
   s_list->squash_captured = true;
-#endif
   weather_render_squash(ctx, s_list->squash_scratch, s_list->squash_in_p, s_list->squash_mode);
 }
 
@@ -610,7 +602,7 @@ static void prv_start_squash(int mode) {
   }
   s_list->squash_mode = mode;
   s_list->squash_in_p = 0;
-  s_list->squash_captured = false; // round capture-once: fresh squash, fresh snapshot
+  s_list->squash_captured = false;
   if (s_list->squash_in_anim) {
     animation_unschedule(s_list->squash_in_anim);
     animation_destroy(s_list->squash_in_anim);
@@ -658,7 +650,16 @@ static void prv_start_up_to_card(void) {
   s_list->fly_src = GRect(s_list->today_icon_x, R5_TODAY_Y, R5_TODAY_ICON, R5_TODAY_ICON);
   // Must match expanded_view.c's static card icon — shared constants keep the fly landing
   // pixel-exact.
-  s_list->fly_dest = GRect((W - EV_ICON_SIZE) / 2, EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+  s_list->fly_dest = GRect(EV_ICON_X(W), EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+  // Must match the status line the card shows when it takes over, or the line visibly changes.
+#if PBL_ROUND
+  clock_copy_time_string(s_list->fly_status, sizeof(s_list->fly_status));
+#else
+  s_list->fly_status[0] = '\0';
+  if (s_list->num_days > 0) { // the card shows "Last updated ..." for its first 2s
+    expanded_view_format_updated(&s_list->days[0], s_list->fly_status, sizeof(s_list->fly_status));
+  }
+#endif
   s_list->flying_icon = true;
   prv_start_squash(SQUASH_DOWN_EXIT);
   if (!s_list->squash_mode)
@@ -895,7 +896,7 @@ static void prv_start_clock_stage1(void) {
     if (s_list->squash_scratch) {
       s_list->squash_mode = SQUASH_UP_EXIT;
       s_list->squash_in_p = 0;
-      s_list->squash_captured = false; // round capture-once
+      s_list->squash_captured = false;
     }
   }
   // 330ms — Timeline feel. LINEAR like every other squash driver: the jelly edges (and the
@@ -1428,9 +1429,8 @@ static void prv_draw_flying_icon(GContext *ctx) {
   gdraw_command_image_destroy(clone);
 }
 
-// The whole card body (status time + sunset title + high/low° + UV/RAIN meters) slid in FROM THE
-// LEFT + bounced, synced to the icon-fly's progress so it lands the moment the icon does. Drawn by
-// the card's OWN shared routine so the sliding content and the static card are pixel-identical.
+// Slides the card's body in from the left, timed to land with the flying icon. It is drawn by
+// expanded_view_draw_glance_content, so it matches the static card.
 static void prv_draw_flying_content(GContext *ctx) {
   const int W = layer_get_bounds(s_list->canvas).size.w;
   // Staged entrance: hold the text off-screen for the first 40% of the
@@ -1445,18 +1445,7 @@ static void prv_draw_flying_content(GContext *ctx) {
   if (local > MAXN)
     local = MAXN;
   const int tdx = (int)prv_moook_soft3(local, -W, 0);
-  // This preview must match what the card will REST on, or the status line visibly changes
-  // in the first frames after the hand-off.
-  char updated[40] = "";
-#if PBL_ROUND
-  clock_copy_time_string(updated, sizeof(updated)); // round's card shows the time only
-#else
-  if (s_list->num_days > 0) { // rect starts on "Last updated ..." for its first 2s
-    expanded_view_format_updated(&s_list->days[0], updated, sizeof(updated));
-  }
-#endif
-  expanded_view_draw_glance_content(ctx, W, tdx, updated, s_list->fly_sunset, s_list->fly_temp,
-                                    s_list->fly_uv, s_list->fly_precip, s_list->fly_wind, s_list);
+  expanded_view_draw_glance_content(ctx, W, tdx, s_list->fly_status, &s_list->fly_glance);
 }
 
 // The disc behind each 5-day icon must stretch across the SAME travel as its icon: a capsule whose
@@ -2622,6 +2611,15 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     return;
 #endif
 #ifdef CONFIG_TOUCH
+  // Capture the card body's mask while the forecast is at rest, or failing that on the fly's
+  // first frame. A capture paints the whole screen, so not while a stack transition slides this
+  // window in.
+  const GPoint at = ctx->draw_state.drawing_box.origin;
+  const bool resting = !s_list->squash_mode && !s_list->fx_active && !s_list->clock_fx &&
+                       !s_list->report_fx && !s_list->flying_icon && at.x == 0 && at.y == 0;
+  if (resting || (s_list->flying_icon && s_list->squash_mode != SQUASH_RISE_IN)) {
+    expanded_view_prime_body(ctx, layer_get_bounds(layer).size.w, &s_list->fly_glance);
+  }
   if (s_list->report_fx == 4) {
     // Stage 4 — the paper's bow: card, the paper squash-stretching off the left
     // (its own points deform — Timeline smiley exit), the caption sliding out with it.
@@ -2632,12 +2630,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     prv_draw_report_caption(ctx, dx, true);
     return;
   }
-  if (PBL_IF_ROUND_ELSE(
-          s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != nullptr,
-          false)) {
-    // Capture-once (gabbro smoothness step 2): the squash snapshot is already filled, and
-    // prv_render_squash_in below overwrites every pixel from it — re-rendering the scene
-    // here would be pure per-frame waste. Skip it.
+  if (s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != nullptr) {
+    // Skip the scene: prv_render_squash_in overwrites every pixel from the filled snapshot
   } else if (s_list->report_fx >= 2 && !PBL_IF_ROUND_ELSE(0, s_list->squash_mode)) {
     /// Report scene, content cleared off-left: a title-card backdrop (matches the
     // squash memset and the report window bg — seamless at both cuts).
@@ -2714,10 +2708,11 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // card transition. On the reverse fly (card -> forecast, riding the RISE_IN) only the icon
   // flies — there is no incoming card text.
   if (s_list->flying_icon) {
-    prv_draw_flying_icon(ctx);
+    // Draw the card body first so the icon stays on top
     if (s_list->squash_mode != SQUASH_RISE_IN) {
       prv_draw_flying_content(ctx);
     }
+    prv_draw_flying_icon(ctx);
   }
 #if PBL_ROUND
   // Round's report scene. (Rect draws it inside the block above, paired with the burst
@@ -3148,7 +3143,7 @@ void forecast_list_start_select_exit(void (*done_cb)(void *ctx), void *ctx) {
     if (s_list->squash_scratch) {
       s_list->squash_mode = SQUASH_LEFT_EXIT;
       s_list->squash_in_p = 0;
-      s_list->squash_captured = false; // round capture-once
+      s_list->squash_captured = false;
       s_list->report_fx = 1;
       // The ball is born on the SELECT nub's own spot (decoupled from the squash, like
       // the burst dot) — the indicator visibly becomes the ball.
@@ -3388,7 +3383,8 @@ static void prv_sun_tick(void *ctx) {
   if (!s_list)
     return;
   s_list->sun_timer = nullptr;
-  if (prv_sun_step()) {
+  // A squash shows one captured frame: hold the icon at that pose, or it jumps on landing.
+  if (s_list->squash_mode || prv_sun_step()) {
     s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, nullptr);
   }
 }
@@ -3593,7 +3589,7 @@ static void prv_window_appear(Window *window) {
       if (pdc) {
         const int W = layer_get_bounds(s_list->canvas).size.w;
         s_list->fly_pdc = pdc;
-        s_list->fly_src = GRect((W - EV_ICON_SIZE) / 2, EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+        s_list->fly_src = GRect(EV_ICON_X(W), EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
         s_list->fly_dest = GRect(s_list->today_icon_x, R5_TODAY_Y, R5_TODAY_ICON, R5_TODAY_ICON);
         s_list->flying_icon = true;
       }
@@ -3604,6 +3600,14 @@ static void prv_window_appear(Window *window) {
       prv_clear_fly(); // squash couldn't start (OOM)
   }
 #endif
+}
+
+// Free the card body mask when another screen (the clock, the report) covers the forecast. The
+// card keeps it while it is showing and frees it on unload.
+static void prv_window_disappear(Window *window) {
+  (void)window;
+  if (!expanded_view_is_showing())
+    expanded_view_drop_body();
 }
 
 static void prv_window_unload(Window *window) {
@@ -3792,6 +3796,7 @@ static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t n
   window_set_window_handlers(s_list->window, (WindowHandlers){
                                                .load = prv_window_load,
                                                .appear = prv_window_appear,
+                                               .disappear = prv_window_disappear,
                                                .unload = prv_window_unload,
                                              });
   window_set_click_config_provider(s_list->window, prv_click_provider);
@@ -3880,20 +3885,16 @@ void forecast_list_update_data(const WeatherLocationForecast *days, size_t num_d
   }
 }
 
-void forecast_list_set_glance(const char *sunset, const char *temp, int uv, int precip, int wind) {
+void forecast_list_set_glance(const ExpandedViewGlance *glance) {
 #ifdef CONFIG_TOUCH
   if (!s_list)
     return;
-  snprintf(s_list->fly_sunset, sizeof(s_list->fly_sunset), "%s", sunset ? sunset : "");
-  snprintf(s_list->fly_temp, sizeof(s_list->fly_temp), "%s", temp ? temp : "");
-  s_list->fly_uv = uv;
-  s_list->fly_precip = precip;
-  s_list->fly_wind = wind;
+  if (glance) {
+    s_list->fly_glance = *glance;
+  } else {
+    memset(&s_list->fly_glance, 0, sizeof(s_list->fly_glance));
+  }
 #else
-  (void)sunset;
-  (void)temp;
-  (void)uv;
-  (void)precip;
-  (void)wind;
+  (void)glance;
 #endif
 }

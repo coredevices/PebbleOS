@@ -71,7 +71,7 @@ uint8_t weather_store_hourly_precip(uint8_t hours[WEATHER_PRECIP_HOURS], const u
 // synth in weather.c and the v4 test seed in weather_data_source.c.
 extern const uint8_t weather_diurnal_curve[24];
 
-//! WHO UV severity ramp (shared by the card dial + the report UV bar).
+//! Color for a UV index on the WHO severity scale
 GColor weather_uv_severity_color(int uv);
 
 // Two half-turn arcs starting at `phase` and at -`phase`, with sparks in the theme background
@@ -100,8 +100,7 @@ void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor gl
 // jelly-stretches IN from the RIGHT (left edge leads into place, right trails).
 void weather_render_squash(GContext *ctx, uint8_t *scratch, AnimationProgress m, int mode);
 // Capture-once fast path: re-blit from a snapshot a prior weather_render_squash call
-// filled, skipping the per-frame framebuffer copy. Round-only callers (gabbro
-// smoothness step 2); rect keeps calling weather_render_squash unchanged.
+// filled, skipping the per-frame framebuffer copy.
 void weather_render_squash_cached(GContext *ctx, const uint8_t *scratch, AnimationProgress m,
                                   int mode);
 //! Invert PDC icon black/white colors when system is in dark mode.
