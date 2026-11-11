@@ -2401,8 +2401,7 @@ void weather_app_layout_deinit(WeatherAppLayout *layout) {
 void weather_app_layout_set_location(WeatherAppLayout *layout, const char *name) {
   if (!name)
     return;
-  strncpy(layout->location_name, name, sizeof(layout->location_name) - 1);
-  layout->location_name[sizeof(layout->location_name) - 1] = '\0';
+  weather_copy_text(layout->location_name, sizeof(layout->location_name), name);
 #if PBL_ROUND
   if (layout->city_layer)
     layer_mark_dirty(layout->city_layer);

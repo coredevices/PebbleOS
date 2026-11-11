@@ -44,6 +44,10 @@ void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect,
 // transitions. Its built-in 4px overshoot is the "bounce".
 int64_t weather_interpolate_moook_soft1(int32_t n, int64_t from, int64_t to);
 
+// Copies `src` (NULL as "") into `dst`, cut short on a UTF-8 character boundary when it does
+// not fit. The text renderer draws nothing for a string with a split character.
+void weather_copy_text(char *dst, size_t dst_size, const char *src);
+
 // Uppercase 3-letter weekday abbreviation for the day `day_offset` days from now ("MON").
 // Falls back to (up to 3 chars of) `fallback`, or "---", if localtime/strftime fail.
 void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buffer,
