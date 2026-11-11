@@ -81,6 +81,7 @@ ARG_KINDS = {
     "pwm",
     "supply",
     "referrer",
+    "phandle",
     "reset",
     "flags",
 }
@@ -98,6 +99,7 @@ ARG_OPTIONS = {
     "remote",
     "all",
     "values",
+    "cells",
 }
 
 
@@ -198,7 +200,10 @@ class Spec:
         self.file = c_ident(self.compatibles[0])
         self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
-        trailing = [bool(arg.get("optional")) or "list" in arg for arg in self.args]
+        trailing = [
+            bool(arg.get("optional")) or "list" in arg or ("prop" in arg and "item" in arg)
+            for arg in self.args
+        ]
         if any(trailing[i] and not all(trailing[i:]) for i in range(len(trailing))):
             raise self._error("optional and list arguments must come last")
         if self.pinctrl is not None:
@@ -1059,6 +1064,14 @@ class Generator:
                 if arg["index"] >= len(cells):
                     raise dev.error(f"no cell {arg['index']} in '{key}'")
                 return str(cells[arg["index"]])
+            if "item" in arg:
+                # A table of rows, as the OCV points of a battery
+                cells = node.u32s(key)
+                width = arg.get("cells", 1)
+                if len(cells) % width:
+                    raise dev.error(f"'{key}' is not rows of {width} cells")
+                rows = [cells[i : i + width] for i in range(0, len(cells), width)]
+                return ", ".join(arg["item"].format(*row) for row in rows)
             return str(node.u32(key))
         if kind == "strings":
             if not node.has(key):
@@ -1113,6 +1126,11 @@ class Generator:
                 return None
             target = self.tree.phandle(node.u32(prop), f"{node.path}: '{prop}'")
             return self._provided(dev, target, "regulator", [])
+        if kind == "phandle":
+            if not node.has(key):
+                return None
+            target = self.tree.phandle(node.u32(key), f"{node.path}: '{key}'")
+            return self._provided(dev, target, arg.get("as", key), [])
         if kind == "referrer":
             target = self._referrer(dev, key)
             if target is None:
