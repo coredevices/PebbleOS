@@ -40,6 +40,10 @@ properties:
 
   gpio-reserved-ranges: true
 
+  nordic,gpiote:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: GPIOTE the pins interrupt through, on its IN channels.
+
   interrupt-controller: true
 
   '#interrupt-cells':
@@ -52,6 +56,7 @@ required:
   - '#gpio-cells'
   - interrupt-controller
   - '#interrupt-cells'
+  - nordic,gpiote
 
 additionalProperties: false
 
@@ -65,4 +70,5 @@ examples:
         ngpios = <32>;
         interrupt-controller;
         #interrupt-cells = <2>;
+        nordic,gpiote = <&gpiote>;
     };

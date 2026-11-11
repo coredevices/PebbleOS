@@ -13,7 +13,9 @@
 
 #define MAX_PORTS 2U
 
-#define PORT_INDEX(base) (((base) - NRF52_P0_BASE) / (NRF52_P1_BASE - NRF52_P0_BASE))
+// The ports share a 4 KiB peripheral, each at its number times the stride
+#define PORT_STRIDE      0x300U
+#define PORT_INDEX(base) (((base) & 0xFFFU) / PORT_STRIDE)
 
 #define CHANNEL_FREE     0xffU
 #define CHANNEL_RESERVED 0xfeU
@@ -30,6 +32,7 @@ struct pbl_gpio_nrf5_intc {
 
 // Interrupt controller of each port, for the shared GPIOTE interrupt
 static const struct pbl_intc *s_intcs[MAX_PORTS];
+static uintptr_t s_gpiote;
 
 static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
   return container_of(port, const struct pbl_gpio_nrf5, port);
@@ -48,11 +51,11 @@ static inline uint32_t prv_getreg(const struct pbl_gpio_nrf5 *gpio, uint32_t off
 }
 
 static inline uint32_t prv_gpiote_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_GPIOTE_BASE + offset);
+  return pbl_readl(s_gpiote + offset);
 }
 
 static inline void prv_gpiote_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_GPIOTE_BASE + offset);
+  pbl_writel(value, s_gpiote + offset);
 }
 
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
@@ -197,7 +200,7 @@ static int prv_intc_enable(const struct pbl_intc *intc, uint32_t hwirq) {
   prv_gpiote_putreg(NRF52_GPIOTE_EVENTS_IN_OFFSET(ch), 0U);
   pbl_modifyl(GPIOTE_CONFIG_MODE_MASK,
               PBL_FIELD_PREP(GPIOTE_CONFIG_MODE_MASK, GPIOTE_CONFIG_MODE_EVENT),
-              NRF52_GPIOTE_BASE + NRF52_GPIOTE_CONFIG_OFFSET(ch));
+              s_gpiote + NRF52_GPIOTE_CONFIG_OFFSET(ch));
   prv_gpiote_putreg(NRF52_GPIOTE_INTENSET_OFFSET, GPIOTE_INT_IN(ch));
 
   return 0;
@@ -213,7 +216,7 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   }
 
   prv_gpiote_putreg(NRF52_GPIOTE_INTENCLR_OFFSET, GPIOTE_INT_IN(ch));
-  pbl_modifyl(GPIOTE_CONFIG_MODE_MASK, 0U, NRF52_GPIOTE_BASE + NRF52_GPIOTE_CONFIG_OFFSET(ch));
+  pbl_modifyl(GPIOTE_CONFIG_MODE_MASK, 0U, s_gpiote + NRF52_GPIOTE_CONFIG_OFFSET(ch));
   prv_gpiote_putreg(NRF52_GPIOTE_EVENTS_IN_OFFSET(ch), 0U);
 
   return 0;
@@ -255,13 +258,14 @@ static int prv_init(const struct pbl_device *dev) {
   }
 
   s_intcs[gpio->index] = gpio->port.intc;
+  s_gpiote = gpio->gpiote;
 
   pbl_irq_enable(PBL_IRQN(GPIOTE));
 
   return 0;
 }
 
-#define PBL_GPIO_NRF5_DEFINE(sym, _name, _base, _num_pins)                                        \
+#define PBL_GPIO_NRF5_DEFINE(sym, _name, _base, _gpiote, _num_pins)                               \
   extern const struct pbl_intc sym##_intc;                                                        \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
   PBL_INTC_STATE_DEFINE(sym##_intc, _num_pins);                                                   \
@@ -270,6 +274,7 @@ static int prv_init(const struct pbl_device *dev) {
         PBL_GPIO_PORT_INIT(sym, _name, prv_init, nullptr, &s_port_ops, _num_pins, &sym##_intc),   \
     .base = (_base),                                                                              \
     .index = PORT_INDEX(_base),                                                                   \
+    .gpiote = (_gpiote),                                                                          \
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_nrf5_intc, struct pbl_intc, intc) {             \
     .intc = PBL_INTC_INIT(sym##_intc, _name "_intc", nullptr, &sym##_inst.port.dev, &s_intc_ops), \
