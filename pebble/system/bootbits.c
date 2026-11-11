@@ -9,10 +9,6 @@
 #include <system/bootbits.h>
 #include <system/version.h>
 
-#ifdef CONFIG_SOC_SF32LB52
-#include <bf0_hal.h>
-#endif
-
 #if MICRO_FAMILY_STM32F4
 #include <pbl/kernel/compiler.h>
 
@@ -71,33 +67,33 @@ uint32_t boot_version_read(void) {
 #elifdef CONFIG_SOC_SF32LB52
 void boot_bit_init(void) {
   if (!boot_bit_test(BOOT_BIT_INITIALIZED)) {
-    HAL_Set_backup(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
+    retained_write(RTC_BKP_BOOTBIT_DR, BOOT_BIT_INITIALIZED);
   }
 }
 
 void boot_bit_set(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
   current_value |= bit;
-  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
+  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 void boot_bit_clear(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
   current_value &= ~bit;
-  HAL_Set_backup(RTC_BKP_BOOTBIT_DR, current_value);
+  retained_write(RTC_BKP_BOOTBIT_DR, current_value);
 }
 
 bool boot_bit_test(BootBitValue bit) {
-  uint32_t current_value = HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  uint32_t current_value = retained_read(RTC_BKP_BOOTBIT_DR);
   return (current_value & bit);
 }
 
 void boot_bit_dump(void) {
-  PBL_LOG_DBG("0x%" PRIx32, HAL_Get_backup(RTC_BKP_BOOTBIT_DR));
+  PBL_LOG_DBG("0x%" PRIx32, retained_read(RTC_BKP_BOOTBIT_DR));
 }
 
 uint32_t boot_bits_get(void) {
-  return HAL_Get_backup(RTC_BKP_BOOTBIT_DR);
+  return retained_read(RTC_BKP_BOOTBIT_DR);
 }
 
 #define PB_VERSION_MAGIC 0x50425652UL
