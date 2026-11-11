@@ -12,7 +12,6 @@ config I2C_NRF5
     bool "Nordic nRF5 I2C Controller"
     default DT_HAS_NORDIC_NRF52832_TWIM_ENABLED
     depends on SOC_NRF52
-    select HAL_NORDIC
     help
       Support for the Nordic nRF5 I2C controller.
 
