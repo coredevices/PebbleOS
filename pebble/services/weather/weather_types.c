@@ -36,7 +36,9 @@ static TimelineResourceId s_weather_type_timeline_resource_ids[] = {
 static const size_t s_num_weather_types = ARRAY_LENGTH(s_weather_type_names);
 
 static size_t prv_get_array_index_of_type(WeatherType type) {
-  return (type == WeatherType_Unknown) ? (s_num_weather_types - 1) : type;
+  // The type is a byte of the phone's record; unnumbered values use Unknown's last slot.
+  const size_t unknown_index = s_num_weather_types - 1;
+  return ((size_t)type < unknown_index) ? (size_t)type : unknown_index;
 }
 
 const char *weather_type_get_name(WeatherType weather_type) {
