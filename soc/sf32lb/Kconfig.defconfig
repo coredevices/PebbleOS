@@ -21,12 +21,12 @@ config FLASH_SIZE
     default 0x2000000
 
 config FLASH_OFFSET
-    default 0xa20000 if RECOVERY_FW && !MFG && !RECOVERY_FW_AS_FW
+    default 0xa20000 if FIRMWARE_AREA_RECOVERY
     default 0x320000 if FIRMWARE_SLOT = 1
     default 0x20000
 
 config FW_FLASH_SIZE
-    default 0x90000 if RECOVERY_FW && !MFG && !RECOVERY_FW_AS_FW
+    default 0x90000 if FIRMWARE_AREA_RECOVERY
     default 0x300000
 
 # 512 KiB of SRAM, last 1 KiB reserved for LCPU IPC.

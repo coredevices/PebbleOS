@@ -6,6 +6,10 @@ mainmenu "Pebble Firmware Configuration"
 # Defaults for options of PebbleOS that the firmware wants wherever they are
 # available, which a prj.conf cannot express.
 
+choice FIRMWARE_AREA
+    default FIRMWARE_AREA_RECOVERY if RECOVERY_FW && !MFG
+endchoice
+
 config CONSOLE
     default y if !RELEASE || MFG
 

@@ -86,7 +86,7 @@ static PBL_DELAYED_WORK_DEFINE(s_uptime_timer, uptime_callback);
 
 #ifdef CONFIG_SOC_SF32LB52
 // The linker script places the image from Kconfig, which can't see the partitions
-#if defined(CONFIG_RECOVERY_FW) && !defined(CONFIG_MFG) && !defined(CONFIG_RECOVERY_FW_AS_FW)
+#ifdef CONFIG_FIRMWARE_AREA_RECOVERY
 static_assert(CONFIG_FLASH_OFFSET == PART_SAFE_FIRMWARE_OFFSET);
 static_assert(CONFIG_FW_FLASH_SIZE == PART_SAFE_FIRMWARE_SIZE);
 #elif CONFIG_FIRMWARE_SLOT == 1
