@@ -32,11 +32,7 @@ const struct pbl_audio *const SPEAKER = &dt_speaker;
 #endif
 
 #ifdef CONFIG_MIC
-// Microphone fed by the host
-PBL_AUDIO_HOST_MIC_DEFINE(s_host_mic, "host_mic");
-PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_host_mic.dai, nullptr, nullptr, 0, 0);
-
-const struct pbl_audio *const MIC = &s_mic;
+const struct pbl_audio *const MIC = HOST_MIC;
 #endif
 
 #ifdef CONFIG_HRM

@@ -34,4 +34,11 @@ extern const struct pbl_display_ops pbl_display_sdl_ops;
                                                   _width, _height, _format, false, __VA_ARGS__); \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_display pbl_display_sdl;
+/** @endcond */
+
+/** @brief The SDL display, of @c CONFIG_DISPLAY_SDL_WIDTH by @c CONFIG_DISPLAY_SDL_HEIGHT. */
+#define SDL_DISPLAY (&pbl_display_sdl)
+
 /** @} */

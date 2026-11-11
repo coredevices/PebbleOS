@@ -112,6 +112,13 @@ extern const struct pbl_audio_dai_ops pbl_audio_host_mic_ops;
   };                                                                                            \
   PBL_DEVICE_REGISTER(sym, &sym.dai.dev)
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_audio pbl_audio_host_mic;
+/** @endcond */
+
+/** @brief The host microphone, as a capture device. */
+#define HOST_MIC (&pbl_audio_host_mic)
+
 /**
  * @brief Handle a @c QemuProtocol_MicAudio message from the host.
  *

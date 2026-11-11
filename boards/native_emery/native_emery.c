@@ -14,29 +14,20 @@
 #include <pbl/drivers/uart/posix.h>
 #include <pbl/drivers/vibe/posix.h>
 
-PBL_UART_POSIX_DEFINE(s_dbg_uart, "console", PBL_UART_POSIX_CONSOLE, 115200);
-const struct pbl_uart *const CONSOLE_UART = &s_dbg_uart.uart;
+const struct pbl_uart *const CONSOLE_UART = POSIX_CONSOLE_UART;
 
-PBL_UART_POSIX_DEFINE(s_qemu_uart, "qemu", PBL_UART_POSIX_QEMU, 115200);
-const struct pbl_uart *const QEMU_UART = &s_qemu_uart.uart;
+const struct pbl_uart *const QEMU_UART = POSIX_QEMU_UART;
 
 #ifdef CONFIG_BT_HCI_UART
-PBL_UART_POSIX_DEFINE(s_bt_hci_uart, "bt_hci", PBL_UART_POSIX_BT_HCI, 115200);
-const struct pbl_uart *const BT_HCI_UART = &s_bt_hci_uart.uart;
+const struct pbl_uart *const BT_HCI_UART = POSIX_BT_HCI_UART;
 #endif
 
 #ifdef CONFIG_DISPLAY
-PBL_DISPLAY_SDL_DEFINE(s_display, "display", CONFIG_DISPLAY_SDL_WIDTH, CONFIG_DISPLAY_SDL_HEIGHT,
-                       PBL_DISPLAY_FORMAT_ARGB2222, .round_mask = nullptr);
-
-const struct pbl_display *const DISPLAY = &s_display;
+const struct pbl_display *const DISPLAY = SDL_DISPLAY;
 #endif
 
 #ifdef CONFIG_MIC
-PBL_AUDIO_HOST_MIC_DEFINE(s_host_mic, "host_mic");
-PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_host_mic.dai, nullptr, nullptr, 0, 0);
-
-const struct pbl_audio *const MIC = &s_mic;
+const struct pbl_audio *const MIC = HOST_MIC;
 #endif
 
 #ifdef CONFIG_ACCEL

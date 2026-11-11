@@ -66,6 +66,12 @@ config DISPLAY_SDL_MONO
     help
       The SDL display takes a 1-bit framebuffer, 8-bit color otherwise.
 
+config DISPLAY_SDL_ROUND
+    bool "SDL display is round"
+    help
+      The SDL display hides the pixels outside the circle of the
+      LS013B7DD02 panel.
+
 endif # DISPLAY_SDL
 
 config DISPLAY_SHELL

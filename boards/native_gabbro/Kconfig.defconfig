@@ -9,3 +9,6 @@ config DISPLAY_SDL_WIDTH
 
 config DISPLAY_SDL_HEIGHT
     default 260
+
+config DISPLAY_SDL_ROUND
+    default y
