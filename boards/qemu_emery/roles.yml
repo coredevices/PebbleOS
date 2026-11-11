@@ -18,8 +18,8 @@ vibe:
   symbol: SIM_VIBE
   include: pbl/drivers/vibe/sim.h
 mic:
-  symbol: HOST_MIC
-  include: pbl/drivers/audio/qemu.h
+  symbol: SIM_MIC
+  include: pbl/drivers/audio/sim.h
 speaker: speaker
 die_temp:
   symbol: SIM_TEMP

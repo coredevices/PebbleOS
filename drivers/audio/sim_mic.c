@@ -3,24 +3,41 @@
 
 #include <string.h>
 
-#include <pbl/drivers/audio/qemu.h>
+#include <pbl/drivers/audio/sim.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
 #define RATE     16000U
 #define MS_PER_S 1000U
-// Host audio queued ahead of the client, enough to absorb host pacing jitter
+// Audio queued ahead of the client, enough to absorb the writer pacing jitter
 #define RING_SAMPLES (RATE / 4U)
 
-static const struct pbl_audio_host_mic *s_running;
+struct pbl_audio_sim_mic_state {
+  const struct pbl_audio_sim_mic *mic;
+  struct pbl_delayed_work timer;
+  pbl_tick_t period_ticks;
+  bool repeat;
+  struct pbl_mutex lock;
+  int16_t *ring;
+  size_t ring_read;
+  size_t ring_count;
+  uint8_t idx;
+};
 
-static const struct pbl_audio_host_mic *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_host_mic, dai);
+struct pbl_audio_sim_mic {
+  struct pbl_audio_dai dai;
+  struct pbl_audio_sim_mic_state *state;
+};
+
+static const struct pbl_audio_sim_mic *prv_dev(const struct pbl_audio_dai *dai) {
+  return container_of(dai, const struct pbl_audio_sim_mic, dai);
 }
 
-static void prv_fill(struct pbl_audio_host_mic_state *state, int16_t *out, size_t count) {
+static void prv_fill(struct pbl_audio_sim_mic_state *state, int16_t *out, size_t count) {
   size_t filled = 0U;
 
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
@@ -38,9 +55,9 @@ static void prv_fill(struct pbl_audio_host_mic_state *state, int16_t *out, size_
 }
 
 static void prv_timer_fn(struct pbl_work *work) {
-  struct pbl_audio_host_mic_state *state =
-      container_of(work, struct pbl_audio_host_mic_state, timer.work);
-  const struct pbl_audio_host_mic *mic = state->mic;
+  struct pbl_audio_sim_mic_state *state =
+      container_of(work, struct pbl_audio_sim_mic_state, timer.work);
+  const struct pbl_audio_sim_mic *mic = state->mic;
   const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&mic->dai)->state;
 
   if (pbl_audio_is_running(pbl_audio_dai_card(&mic->dai))) {
@@ -58,18 +75,12 @@ static void prv_timer_fn(struct pbl_work *work) {
   pbl_irq_unlock();
 }
 
-void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
-  const struct pbl_audio_host_mic *mic = s_running;
-  struct pbl_audio_host_mic_state *state;
-  size_t count = len / sizeof(int16_t);
+void pbl_audio_sim_mic_write(const struct pbl_audio *mic, const void *pcm, size_t count) {
+  struct pbl_audio_sim_mic_state *state = prv_dev(mic->dai)->state;
+  const uint8_t *data = pcm;
   size_t overflow;
   size_t write;
 
-  if (mic == nullptr) {
-    return;
-  }
-
-  state = mic->state;
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
   if (state->ring == nullptr) {
     pbl_mutex_unlock(&state->lock);
@@ -100,10 +111,10 @@ void qemu_mic_msg_callback(const uint8_t *data, uint32_t len) {
 }
 
 static int prv_init(const struct pbl_audio_dai *dai) {
-  const struct pbl_audio_host_mic *mic = prv_dev(dai);
-  struct pbl_audio_host_mic_state *state = mic->state;
+  const struct pbl_audio_sim_mic *mic = prv_dev(dai);
+  struct pbl_audio_sim_mic_state *state = mic->state;
 
-  *state = (struct pbl_audio_host_mic_state){.mic = mic};
+  *state = (struct pbl_audio_sim_mic_state){.mic = mic};
   pbl_mutex_init(&state->lock);
   pbl_delayed_work_init(&state->timer, prv_timer_fn);
 
@@ -116,7 +127,7 @@ static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps 
   caps->max_channels = 1U;
 }
 
-static void prv_free_ring(struct pbl_audio_host_mic_state *state) {
+static void prv_free_ring(struct pbl_audio_sim_mic_state *state) {
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
   pbl_free(state->ring);
   state->ring = nullptr;
@@ -126,8 +137,8 @@ static void prv_free_ring(struct pbl_audio_host_mic_state *state) {
 
 static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
                      int32_t gain_mdb, bool mute) {
-  const struct pbl_audio_host_mic *mic = prv_dev(dai);
-  struct pbl_audio_host_mic_state *state = mic->state;
+  const struct pbl_audio_sim_mic *mic = prv_dev(dai);
+  struct pbl_audio_sim_mic_state *state = mic->state;
   uint32_t period_ms = DIVIDE_CEIL(stream->period_frames * MS_PER_S, stream->rate);
 
   // Without the ring the host audio is dropped and the client records silence
@@ -142,15 +153,12 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   state->repeat = true;
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &state->timer, PBL_MSEC(period_ms));
 
-  s_running = mic;
-
   return 0;
 }
 
 static int prv_stop(const struct pbl_audio_dai *dai) {
-  struct pbl_audio_host_mic_state *state = prv_dev(dai)->state;
+  struct pbl_audio_sim_mic_state *state = prv_dev(dai)->state;
 
-  s_running = nullptr;
   pbl_irq_lock();
   state->repeat = false;
   pbl_delayed_work_cancel(&state->timer);
@@ -160,12 +168,18 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-const struct pbl_audio_dai_ops pbl_audio_host_mic_ops = {
+static const struct pbl_audio_dai_ops s_ops = {
   .init = prv_init,
   .get_caps = prv_get_caps,
   .start = prv_start,
   .stop = prv_stop,
 };
 
-PBL_AUDIO_HOST_MIC_DEFINE(s_host_mic, "host_mic");
-PBL_AUDIO_CARD_DEFINE(pbl_audio_host_mic, "mic", &s_host_mic.dai, nullptr, nullptr, 0, 0);
+PBL_AUDIO_DAI_STATE_DEFINE(s_sim_mic);
+static struct pbl_audio_sim_mic_state s_sim_mic_state;
+static const struct pbl_audio_sim_mic s_sim_mic = {
+  .dai = PBL_AUDIO_DAI_INIT(s_sim_mic, "sim_mic", PBL_AUDIO_CAPTURE, &s_ops, nullptr),
+  .state = &s_sim_mic_state,
+};
+PBL_DEVICE_REGISTER(s_sim_mic, &s_sim_mic.dai.dev);
+PBL_AUDIO_CARD_DEFINE(pbl_audio_sim_mic, "mic", &s_sim_mic.dai, nullptr, nullptr, 0, 0);
