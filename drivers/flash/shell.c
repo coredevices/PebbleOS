@@ -147,7 +147,7 @@ PBL_SHELL_SUBCMD_ADD(sub_flash, dump, nullptr, "Hex dump <addr> <len>", prv_cmd_
 PBL_SHELL_SUBCMD_ADD(sub_flash, unprotect, nullptr, "Remove the flash write protection",
                      prv_cmd_unprotect, 0, 0);
 
-#ifdef CONFIG_RECOVERY_FW
+#ifdef CONFIG_FLASH_SHELL_TEST
 #define MAX_READ_SIZE     1024U
 #define FILL_CHUNK_SIZE   64U
 #define VALIDATE_BUF_SIZE 256U
@@ -344,7 +344,9 @@ PBL_SHELL_SUBCMD_ADD(sub_flash, validate, nullptr, "Erase, write and read back a
                      prv_cmd_validate, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_flash, erased_sectors, nullptr,
                      "List erased sectors [1 = show subsectors]", prv_cmd_erased_sectors, 1, 1);
-#else
+#endif
+
+#ifdef CONFIG_FLASH_SHELL_STRESS
 #define STRESS_MAX_CHUNK  1024U
 #define STRESS_READBACKS  8U
 #define BENCH_MIN_TICKS   300U

@@ -41,11 +41,25 @@ config FLASH_POSIX
 
 config FLASH_SHELL
     bool "Shell commands"
-    default y if MFG
     default DRIVER_SHELL
     depends on SHELL
     help
       The flash shell command, to inspect, erase and test the flash.
+
+config FLASH_SHELL_TEST
+    bool "Test commands"
+    depends on FLASH_SHELL
+    help
+      The flash read, fill, validate and erased_sectors commands, to dump
+      and verify the flash from a host.
+
+config FLASH_SHELL_STRESS
+    bool "Stress and benchmark commands"
+    default y
+    depends on FLASH_SHELL
+    help
+      The flash stress and benchmark commands. The stress test writes the
+      firmware update area.
 
 module = DRIVER_FLASH
 module-str = Flash

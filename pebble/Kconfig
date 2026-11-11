@@ -25,6 +25,18 @@ config DEBUGGER_AWARE
     default y if !RELEASE
     depends on ARCH_HAS_DEBUGGER_DETECT
 
+config FLASH_SHELL
+    default y if MFG
+    depends on FLASH && SHELL
+
+config FLASH_SHELL_TEST
+    default y if RECOVERY_FW
+    depends on FLASH_SHELL
+
+config FLASH_SHELL_STRESS
+    default !RECOVERY_FW
+    depends on FLASH_SHELL
+
 config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
