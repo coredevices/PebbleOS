@@ -7,7 +7,6 @@
 
 #include <pbl/util/size.h>
 
-#include <cmsis_core.h>
 #include <kernel.h>
 
 #define TYPE_IDX(attr) (((attr) & PBL_MPU_TYPE_MSK) >> 3)
@@ -20,10 +19,10 @@ static const uint8_t s_access_to_ap[] = {
 };
 
 static const uint32_t s_type_to_tex_c_b[] = {
-  [TYPE_IDX(PBL_MPU_NORMAL_NC)] = (0x1 << MPU_RASR_TEX_Pos),
-  [TYPE_IDX(PBL_MPU_NORMAL_WT)] = MPU_RASR_C_Msk,
-  [TYPE_IDX(PBL_MPU_NORMAL_WB)] = (0x1 << MPU_RASR_TEX_Pos) | MPU_RASR_C_Msk | MPU_RASR_B_Msk,
-  [TYPE_IDX(PBL_MPU_DEVICE)] = MPU_RASR_B_Msk,
+  [TYPE_IDX(PBL_MPU_NORMAL_NC)] = (0x1 << ARM_MPU_RASR_TEX_POS),
+  [TYPE_IDX(PBL_MPU_NORMAL_WT)] = ARM_MPU_RASR_C,
+  [TYPE_IDX(PBL_MPU_NORMAL_WB)] = (0x1 << ARM_MPU_RASR_TEX_POS) | ARM_MPU_RASR_C | ARM_MPU_RASR_B,
+  [TYPE_IDX(PBL_MPU_DEVICE)] = ARM_MPU_RASR_B,
 };
 
 static uint32_t prv_ap_to_access(uint32_t ap) {
@@ -104,20 +103,20 @@ static uint32_t get_size_field(uint32_t block_size) {
 }
 
 void arch_mpu_init(void) {
-  PBL_ASSERTN(((MPU->TYPE & MPU_TYPE_DREGION_Msk) >> MPU_TYPE_DREGION_Pos) >=
-              CONFIG_KERNEL_MPU_REGIONS);
+  PBL_ASSERTN(ARM_MPU_TYPE_DREGION(arch_readl(ARM_MPU_TYPE)) >= CONFIG_KERNEL_MPU_REGIONS);
 
-  ARM_MPU_Disable();
+  arm_mpu_disable();
   for (uint32_t i = 0U; i < CONFIG_KERNEL_MPU_REGIONS; i++) {
-    ARM_MPU_ClrRegion(i);
+    arch_writel(i, ARM_MPU_RNR);
+    arch_writel(0U, ARM_MPU_RASR);
   }
 }
 
 void arch_mpu_enable(void) {
 #ifdef CONFIG_KERNEL_MPU_IN_FAULTS
-  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk | MPU_CTRL_HFNMIENA_Msk);
+  arm_mpu_enable(ARM_MPU_CTRL_PRIVDEFENA | ARM_MPU_CTRL_HFNMIENA);
 #else
-  ARM_MPU_Enable(MPU_CTRL_PRIVDEFENA_Msk);
+  arm_mpu_enable(ARM_MPU_CTRL_PRIVDEFENA);
 #endif
 }
 
@@ -128,13 +127,13 @@ void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *regio
 
   const BlockLayout layout = compute_block_layout(region->base, region->size);
 
-  *rbar = layout.block_base | MPU_RBAR_VALID_Msk | slot;
-  *attr = (((region->attr & PBL_MPU_EXEC) ? 0U : 1U) << MPU_RASR_XN_Pos) |
-          ((uint32_t)s_access_to_ap[region->attr & PBL_MPU_ACCESS_MSK] << MPU_RASR_AP_Pos) |
+  *rbar = layout.block_base | ARM_MPU_RBAR_VALID | slot;
+  *attr = ((region->attr & PBL_MPU_EXEC) ? 0U : ARM_MPU_RASR_XN) |
+          ((uint32_t)s_access_to_ap[region->attr & PBL_MPU_ACCESS_MSK] << ARM_MPU_RASR_AP_POS) |
           s_type_to_tex_c_b[TYPE_IDX(region->attr)] |
-          ((region->attr & PBL_MPU_SHAREABLE) ? MPU_RASR_S_Msk : 0U) |
-          ((uint32_t)layout.disabled_subregions << MPU_RASR_SRD_Pos) |
-          (get_size_field(layout.block_size) << MPU_RASR_SIZE_Pos) | MPU_RASR_ENABLE_Msk;
+          ((region->attr & PBL_MPU_SHAREABLE) ? ARM_MPU_RASR_S : 0U) |
+          ((uint32_t)layout.disabled_subregions << ARM_MPU_RASR_SRD_POS) |
+          (get_size_field(layout.block_size) << ARM_MPU_RASR_SIZE_POS) | ARM_MPU_RASR_ENABLE;
 }
 
 void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region) {
@@ -142,13 +141,13 @@ void arch_mpu_region_set(unsigned int slot, const struct pbl_mpu_region *region)
   arm_mpu_region_encode(slot, region, &rbar, &rasr);
 
   // A context switch also goes through RNR, which RBAR's VALID bit updates.
-  const uint32_t primask = __get_PRIMASK();
-  __disable_irq();
-  MPU->RBAR = rbar;
-  MPU->RASR = rasr;
-  __DSB();
-  __ISB();
-  __set_PRIMASK(primask);
+  const uint32_t primask = arm_primask_get();
+  arm_irq_disable();
+  arch_writel(rbar, ARM_MPU_RBAR);
+  arch_writel(rasr, ARM_MPU_RASR);
+  arm_dsb();
+  arm_isb();
+  arm_primask_set(primask);
 }
 
 void arch_mpu_user_ro_write(int slot, void *dst, const void *src, size_t n) {
@@ -157,20 +156,20 @@ void arch_mpu_user_ro_write(int slot, void *dst, const void *src, size_t n) {
 }
 
 bool arch_mpu_region_get(unsigned int slot, struct pbl_mpu_region *region) {
-  const uint32_t primask = __get_PRIMASK();
-  __disable_irq();
-  MPU->RNR = slot;
-  const uint32_t rbar = MPU->RBAR;
-  const uint32_t rasr = MPU->RASR;
-  __set_PRIMASK(primask);
+  const uint32_t primask = arm_primask_get();
+  arm_irq_disable();
+  arch_writel(slot, ARM_MPU_RNR);
+  const uint32_t rbar = arch_readl(ARM_MPU_RBAR);
+  const uint32_t rasr = arch_readl(ARM_MPU_RASR);
+  arm_primask_set(primask);
 
-  if ((rasr & MPU_RASR_ENABLE_Msk) == 0U) {
+  if ((rasr & ARM_MPU_RASR_ENABLE) == 0U) {
     return false;
   }
 
-  const uint32_t size_field = (rasr & MPU_RASR_SIZE_Msk) >> MPU_RASR_SIZE_Pos;
+  const uint32_t size_field = (rasr & ARM_MPU_RASR_SIZE_MSK) >> ARM_MPU_RASR_SIZE_POS;
   const uint32_t block_size = 32U << (size_field - 4U);
-  const uint32_t disabled_subregions = (rasr & MPU_RASR_SRD_Msk) >> MPU_RASR_SRD_Pos;
+  const uint32_t disabled_subregions = (rasr & ARM_MPU_RASR_SRD_MSK) >> ARM_MPU_RASR_SRD_POS;
 
   // Decode the contiguous enabled subregions, as compute_block_layout() lays them out.
   const uint32_t subregion = block_size / MPU_ARMV7M_NUM_SUBREGIONS;
@@ -186,8 +185,8 @@ bool arch_mpu_region_get(unsigned int slot, struct pbl_mpu_region *region) {
   *region = (struct pbl_mpu_region){
     .base = (rbar & ~(block_size - 1U)) + start_sub * subregion,
     .size = (end_sub - start_sub) * subregion,
-    .attr = prv_ap_to_access((rasr & MPU_RASR_AP_Msk) >> MPU_RASR_AP_Pos) |
-            ((rasr & MPU_RASR_XN_Msk) ? 0U : PBL_MPU_EXEC),
+    .attr = prv_ap_to_access((rasr & ARM_MPU_RASR_AP_MSK) >> ARM_MPU_RASR_AP_POS) |
+            ((rasr & ARM_MPU_RASR_XN) ? 0U : PBL_MPU_EXEC),
   };
   return true;
 }

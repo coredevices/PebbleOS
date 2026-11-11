@@ -1,11 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
+
 #include <stdint.h>
 
 #include <pbl/mcu/fpu.h>
-
-#include <cmsis_core.h>
 
 void mcu_fpu_cleanup(void) {
   // The lazy stacking mechanism for the Cortex M4 starts stacking FPU
@@ -15,11 +15,9 @@ void mcu_fpu_cleanup(void) {
   // controls whether or not this stacking takes place
   // For the Cortex M3, this routine is a no-op
 
-  const uint32_t fpca_bit_mask = 0x4;
-  uint32_t control = __get_CONTROL();
+  uint32_t control = arm_control_get();
 
-  if ((control & fpca_bit_mask) != 0) {
-    control &= ~fpca_bit_mask;
-    __set_CONTROL(control);
+  if ((control & ARM_CONTROL_FPCA) != 0) {
+    arm_control_set(control & ~ARM_CONTROL_FPCA);
   }
 }

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
 #include "arm_mpu.h"
 #ifdef CONFIG_USERSPACE
 #include "arm_syscall.h"
@@ -11,10 +12,13 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/section.h>
+#include <pbl/mcu/cache.h>
 #include <pbl/mcu/interrupts.h>
 
-#include <cmsis_core.h>
 #include <kernel.h>
+
+// Kept up to date by the SoC clock code
+extern uint32_t SystemCoreClock;
 
 #ifdef CONFIG_CPU_HAS_FPU
 #define HAS_FPU 1
@@ -43,12 +47,6 @@ static_assert(FIRST_MPU_REGION % ARCH_THREAD_MPU_REGIONS == 0, "thread slots mus
 #define CONTROL_UNPRIVILEGED   0x03u
 #define EXC_RETURN_FP_INACTIVE 0x10u
 #define XPSR_STACK_PADDING     0x200u
-#define FPCCR_ASPEN_LSPEN      (0x3u << 30)
-
-// System handler priority registers, byte-indexed like the NVIC ones.
-#define SHPR_BYTES  ((volatile uint8_t *)0xE000ED18u)
-#define SHPR_SVCALL 7
-#define SHPR_PENDSV 10
 
 struct pbl_thread *pbl_cur;
 
@@ -179,7 +177,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *
     uint32_t rbar = 0;
     uint32_t attr = 0;
 #ifndef CONFIG_ARMV8_M_MAINLINE
-    rbar = MPU_RBAR_VALID_Msk | (FIRST_MPU_REGION + i);
+    rbar = ARM_MPU_RBAR_VALID | (FIRST_MPU_REGION + i);
 #endif
     if (r != nullptr) {
       arm_mpu_region_encode(FIRST_MPU_REGION + i, r, &rbar, &attr);
@@ -188,7 +186,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *
     t->backend.arch.mpu[2 * i + 1] = attr;
   }
 #ifdef CONFIG_CPU_HAS_DCACHE
-  SCB_CleanDCache();
+  dcache_flush_all();
 #endif
 }
 
@@ -199,7 +197,7 @@ void arch_thread_aborted(struct pbl_thread *t) {
 void arch_thread_exit(void) {
   // The switch requested by the abort takes over as soon as we get here.
   for (;;) {
-    __WFI();
+    arm_wfi();
   }
 }
 
@@ -214,29 +212,29 @@ PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
 }
 
 // Faults and the most urgent interrupts stay enabled.
-#define HEAP_LOCK_BASEPRI (2 << (8 - __NVIC_PRIO_BITS))
+#define HEAP_LOCK_BASEPRI (2 << (8 - CONFIG_NUM_IRQ_PRIO_BITS))
 
 static bool s_heap_locked;
 static uint32_t s_heap_basepri;
 
 void arch_heap_lock(void) {
   if (mcu_state_are_interrupts_enabled()) {
-    s_heap_basepri = __get_BASEPRI();
-    __set_BASEPRI(HEAP_LOCK_BASEPRI);
+    s_heap_basepri = arm_basepri_get();
+    arm_basepri_set(HEAP_LOCK_BASEPRI);
     s_heap_locked = true;
   }
 }
 
 void arch_heap_unlock(void) {
   if (s_heap_locked) {
-    __set_BASEPRI(s_heap_basepri);
+    arm_basepri_set(s_heap_basepri);
     s_heap_locked = false;
   }
 }
 
 // Taken when the interrupt lock is dropped, which ends in a barrier, or the ISR returns.
 void arch_switch_request(void) {
-  SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
+  arch_writel(ARM_SCB_ICSR_PENDSVSET, ARM_SCB_ICSR);
 }
 
 // ---- context switch ---------------------------------------------------------
@@ -379,12 +377,12 @@ static uint32_t *prv_relocate_to_syscall_stack(uint32_t *frame, uint32_t exc_ret
   dst[7] &= ~XPSR_STACK_PADDING;
 
 #if HAS_PSPLIM && defined(CONFIG_KERNEL_STACK_GUARD)
-  __set_PSPLIM(base);
+  arm_psplim_set(base);
 #else
   (void)base;
 #endif
-  __set_PSP((uint32_t)dst);
-  __ISB();
+  arm_psp_set((uint32_t)dst);
+  arm_isb();
   return &dst[5];
 }
 
@@ -397,8 +395,8 @@ static void prv_raise_privilege(uint32_t *frame, uint32_t exc_return) {
     uint32_t *lr_slot = prv_relocate_to_syscall_stack(frame, exc_return, orig_sp);
     arch_syscall_entered(orig_sp, lr_slot);
   }
-  __set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
-  __ISB();
+  arm_control_set(arm_control_get() & ~ARM_CONTROL_NPRIV);
+  arm_isb();
 }
 #endif
 
@@ -407,7 +405,7 @@ PBL_NOINLINE PBL_USED static void prv_svc(uint32_t *frame, uint32_t exc_return) 
   switch (number) {
     case SVC_START:
       // SVC at the same priority as the other kernel exceptions from here on.
-      SHPR_BYTES[SHPR_SVCALL] = (uint8_t)PBL_IRQ_PRIO_KERNEL;
+      arm_shpr_set(ARM_EXC_SVCALL, (uint8_t)PBL_IRQ_PRIO_KERNEL);
       prv_restore_first_thread();
       break;
     case SVC_YIELD:
@@ -436,25 +434,25 @@ PBL_NAKED void SVC_Handler(void) {
 // ---- start and idle ---------------------------------------------------------
 
 void arch_init(void) {
-  // NVIC_SetPriority() takes the unshifted priority; PBL_IRQ_PRIO_* are register values.
-  const uint32_t prio = PBL_IRQ_PRIO_MAX_SYSCALL >> (8U - __NVIC_PRIO_BITS);
-  NVIC_SetPriority(MemoryManagement_IRQn, prio);
-  NVIC_SetPriority(BusFault_IRQn, prio);
-  NVIC_SetPriority(UsageFault_IRQn, prio);
+  arm_shpr_set(ARM_EXC_MEMMANAGE, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
+  arm_shpr_set(ARM_EXC_BUSFAULT, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
+  arm_shpr_set(ARM_EXC_USAGEFAULT, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
 
-  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk | SCB_SHCSR_USGFAULTENA_Msk;
-  SCB->CCR &= ~SCB_CCR_DIV_0_TRP_Msk;
-  __DSB();
-  __ISB();
+  arch_writel(arch_readl(ARM_SCB_SHCSR) | ARM_SCB_SHCSR_MEMFAULTENA | ARM_SCB_SHCSR_BUSFAULTENA |
+                  ARM_SCB_SHCSR_USGFAULTENA,
+              ARM_SCB_SHCSR);
+  arch_writel(arch_readl(ARM_SCB_CCR) & ~ARM_SCB_CCR_DIV_0_TRP, ARM_SCB_CCR);
+  arm_dsb();
+  arm_isb();
 }
 
 void arch_start(void) {
   // PendSV at the lowest priority; SVC follows once started.
-  SHPR_BYTES[SHPR_PENDSV] = (uint8_t)PBL_IRQ_PRIO_KERNEL;
+  arm_shpr_set(ARM_EXC_PENDSV, (uint8_t)PBL_IRQ_PRIO_KERNEL);
 
 #if HAS_FPU
-  SCB->CPACR |= (0xfu << 20);
-  FPU->FPCCR |= FPCCR_ASPEN_LSPEN;
+  arch_writel(arch_readl(ARM_SCB_CPACR) | ARM_SCB_CPACR_CP10_CP11_FULL, ARM_SCB_CPACR);
+  arch_writel(arch_readl(ARM_FPU_FPCCR) | ARM_FPU_FPCCR_ASPEN | ARM_FPU_FPCCR_LSPEN, ARM_FPU_FPCCR);
 #endif
 
   __asm volatile("  dsb \n svc %0 \n isb \n" ::"i"(SVC_START));
@@ -464,11 +462,11 @@ void arch_start(void) {
 
 void arch_idle(pbl_tick_t max_ticks) {
   // PRIMASK: an interrupt still wakes the CPU up, but only runs once the tick is back.
-  __disable_irq();
+  arm_irq_disable();
   if (sched_idle_confirm()) {
     timekeeping_idle(max_ticks);
   }
-  __enable_irq();
+  arm_irq_enable();
 }
 
 // ---- introspection ----------------------------------------------------------
@@ -476,9 +474,12 @@ void arch_idle(pbl_tick_t max_ticks) {
 void arch_thread_saved_regs(const struct pbl_thread *t, struct pbl_thread_saved_regs *regs) {
   if (t == pbl_cur && arch_in_isr()) {
     // The running thread's registers are live on its stack, not saved.
-    const uint32_t *frame = (const uint32_t *)__get_PSP();
-    *regs =
-        (struct pbl_thread_saved_regs){.pc = frame[6], .lr = frame[5], .control = __get_CONTROL()};
+    const uint32_t *frame = (const uint32_t *)arm_psp_get();
+    *regs = (struct pbl_thread_saved_regs){
+      .pc = frame[6],
+      .lr = frame[5],
+      .control = arm_control_get()
+    };
     return;
   }
   const struct saved_context *ctx = t->backend.sp;
