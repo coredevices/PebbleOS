@@ -159,6 +159,12 @@
 			reg = <0x5000b000 0x1000>;
 		};
 
+		trng: rng@5000f000 {
+			compatible = "sifli,sf32lb52-trng";
+			reg = <0x5000f000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_TRNG>;
+		};
+
 		mpi1: spi@50041000 {
 			compatible = "sifli,sf32lb52-mpi";
 			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>;
