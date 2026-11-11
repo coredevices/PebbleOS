@@ -612,6 +612,30 @@ static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void
   }
 }
 
+void weather_app_layout_format_wind(int mph, const void *owner, char *buf, size_t buf_size) {
+  if (mph < 0) {
+    snprintf(buf, buf_size, "--");
+    return;
+  }
+  int speed;
+  const char *unit;
+  prv_wind_in_user_units(mph, owner, &speed, &unit);
+  snprintf(buf, buf_size, "%d%s", speed, unit);
+}
+
+void weather_app_layout_format_uv(int uv, const void *owner, char *text, size_t text_size,
+                                  char *value, size_t value_size) {
+  if (uv < 0) {
+    snprintf(value, value_size, "--");
+    /// The UV index when it is unknown
+    snprintf(text, text_size, "%s", pbl_i18n_get("UV --", owner));
+    return;
+  }
+  snprintf(value, value_size, "%d", uv);
+  /// The UV index and its value
+  snprintf(text, text_size, pbl_i18n_get("UV %d", owner), uv);
+}
+
 // Little radiant sun for the UV bar: core disc + 8 rays.
 static void prv_draw_sun_glyph(GContext *ctx, GPoint c) {
   graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
@@ -629,44 +653,7 @@ static void prv_draw_sun_glyph(GContext *ctx, GPoint c) {
 }
 
 #if PBL_ROUND
-// These MUST track the two fonts weather_app_layout_init resolves for this board, and its gate
-// is `PBL_DISPLAY_HEIGHT >= 200` — NOT shape. Gabbro is 260 tall so it takes the tall branch
-// (metrics_value_font = GOTHIC_18, temperature_font = LECO_36). Assuming the short branch here
-// silently shifted the report's UV value up ~13px and out to x217; caught by a row-signature
-// diff of the report page against its pre-refactor capture.
-// Compact preset — the sunset card's bar (rows 189..220), which hangs BELOW that card's centred
-// group where the glass chord is much shorter than at the report's rows 157..190.
-//
-// SAME STACK ORDER AS THE REPORT: sun + "UV INDEX" on top, the ten squares beneath, the LECO
-// value up the right. The squares stay FULL SIZE (10px); only the pitch tightens 13 -> 12, the
-// same pitch the report itself uses for uv>10.
-//
-// The one real difference is HORIZONTAL: every element is pushed toward the centre column,
-// because down here the chord clips the corners. The squares' bottom row (219) has a half-chord
-// of only 74px, so a left-railed row at x42 (what the report uses) would hang outside the arc —
-// at SQ_DX -72 they start at x58. Nothing needed to be reordered; the earlier squares-on-top
-// version was solving the wrong problem.
-//
-// DEPTH: h=36 (vs the report's 34). The frame paints 2px rails top AND bottom, so at h=32 the
-// squares' last row landed INSIDE the bottom rail and read as touching it; h=36 leaves 3 clear
-// rows beneath them. The bar also sits 5px lower now (EV_UV_BAR_Y 194), which costs chord width
-// — hence the compact-only arcs at r=124/122 instead of 116/114. That is still well inside the
-// glass (7-10px) and still narrower than the report's bar, which is 225px at its top row.
-#define WX_UVC_H        36
-#define WX_UVC_R_OUT    124
-#define WX_UVC_R_IN     122
-#define WX_UVC_SQ_SIZE  10
-#define WX_UVC_SQ_PITCH 12
-#define WX_UVC_SQ_DX    (-72)
-#define WX_UVC_SQ_DY    21
-#define WX_UVC_NUM_DX   32
-#define WX_UVC_NUM_W    46
-#define WX_UVC_NUM_DY   (-6)
-#define WX_UVC_SUN_DX   (-78)
-#define WX_UVC_SUN_DY   10
-#define WX_UVC_HDR_DX   (-68)
-#define WX_UVC_HDR_DY   (-2)
-
+// Match the fonts weather_app_layout_init picks, which depend on display height, not shape
 #if PBL_DISPLAY_HEIGHT >= 200
 #define WX_UV_HDR_FONT FONT_KEY_GOTHIC_18
 #define WX_UV_NUM_FONT FONT_KEY_LECO_36_BOLD_NUMBERS
@@ -675,46 +662,29 @@ static void prv_draw_sun_glyph(GContext *ctx, GPoint c) {
 #define WX_UV_NUM_FONT FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM
 #endif
 
-// The UV bar as a shared component (declared in weather_app_layout.h). The weather report and
-// the sunset card both call this, so there is ONE implementation.
-//
-// Every element hangs off `gc` — the glass centre in the CALLER'S coordinate space — so the bar
-// renders identically whether it is drawn into the report's content layer (inset 12px, glass
-// centre at content x 118) or the card's full-screen canvas (glass centre 130). The fonts are
-// looked up here rather than taken from a layout so a caller without one can use it; they are
-// the same two the report's layout resolves to on round.
-int weather_app_layout_uv_bar_height(WeatherUvBarSize size) {
-  return (size == WeatherUvBarCompact) ? WX_UVC_H : WEATHER_APP_LAYOUT_ROUND_UV_BOX_H;
-}
-
-void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_value,
-                                    const char *uv_text, WeatherUvBarSize size, const char *label) {
-  const bool c = (size == WeatherUvBarCompact);
-  const int h = c ? WX_UVC_H : WEATHER_APP_LAYOUT_ROUND_UV_BOX_H;
-  const int r_out = c ? WX_UVC_R_OUT : WEATHER_APP_LAYOUT_ROUND_UV_ARC_R_OUT;
-  const int r_in = c ? WX_UVC_R_IN : WEATHER_APP_LAYOUT_ROUND_UV_ARC_R_IN;
-  const int sun_dx = c ? WX_UVC_SUN_DX : WEATHER_APP_LAYOUT_ROUND_UV_SUN_DX;
-  const int hdr_dx = c ? WX_UVC_HDR_DX : WEATHER_APP_LAYOUT_ROUND_UV_HDR_DX;
-  const int hdr_dy = c ? WX_UVC_HDR_DY : WEATHER_APP_LAYOUT_ROUND_UV_HDR_DY;
-  const int sq_dx = c ? WX_UVC_SQ_DX : WEATHER_APP_LAYOUT_ROUND_UV_SQ_DX;
-  const int sq_dy = c ? WX_UVC_SQ_DY : WEATHER_APP_LAYOUT_ROUND_UV_SQ_DY;
-  const int sq_sz = c ? WX_UVC_SQ_SIZE : 10;
-  const int num_dx = c ? WX_UVC_NUM_DX : WEATHER_APP_LAYOUT_ROUND_UV_NUM_DX;
-  const int num_dy = c ? WX_UVC_NUM_DY : WEATHER_APP_LAYOUT_ROUND_UV_NUM_DY;
-  const int num_w = c ? WX_UVC_NUM_W : 46;
-  const char *hdr_font = WX_UV_HDR_FONT; // both sizes use the report's label font
+// The UV bar on round displays: arc ends concentric with the display, the sun glyph, the label, ten
+// squares and the value. `gc` is the display centre and `by` the bar's top row, both in content
+// layer coordinates. `uv_value` sets the fill and the severity colour.
+static void prv_draw_round_uv_bar(GContext *ctx, GPoint gc, int by, int uv_value,
+                                  const char *uv_text, const char *label) {
+  const int h = WEATHER_APP_LAYOUT_ROUND_UV_BOX_H;
+  const int sq_dx = WEATHER_APP_LAYOUT_ROUND_UV_SQ_DX;
+  const int sq_dy = WEATHER_APP_LAYOUT_ROUND_UV_SQ_DY;
+  const int sq_sz = 10;
 
   graphics_context_set_stroke_color(ctx, system_theme_get_fg_color());
   graphics_context_set_stroke_width(ctx, 1);
-  prv_draw_uv_bar_frame(ctx, gc, by, h, r_out, r_in);
-  prv_draw_sun_glyph(
-      ctx, GPoint(gc.x + sun_dx, by + (c ? WX_UVC_SUN_DY : WEATHER_APP_LAYOUT_ROUND_UV_SUN_DY)));
+  prv_draw_uv_bar_frame(ctx, gc, by, h, WEATHER_APP_LAYOUT_ROUND_UV_ARC_R_OUT,
+                        WEATHER_APP_LAYOUT_ROUND_UV_ARC_R_IN);
+  prv_draw_sun_glyph(ctx, GPoint(gc.x + WEATHER_APP_LAYOUT_ROUND_UV_SUN_DX,
+                                 by + WEATHER_APP_LAYOUT_ROUND_UV_SUN_DY));
   graphics_context_set_text_color(ctx, system_theme_get_fg_color());
-  graphics_draw_text(ctx, label, fonts_get_system_font(hdr_font),
-                     GRect(gc.x + hdr_dx, by + hdr_dy, c ? 96 : 70, 20), GTextOverflowModeFill,
-                     GTextAlignmentLeft, nullptr);
+  graphics_draw_text(ctx, label, fonts_get_system_font(WX_UV_HDR_FONT),
+                     GRect(gc.x + WEATHER_APP_LAYOUT_ROUND_UV_HDR_DX,
+                           by + WEATHER_APP_LAYOUT_ROUND_UV_HDR_DY, 70, 20),
+                     GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
   const int filled = uv_value < 10 ? uv_value : 10;
-  const int pitch = c ? WX_UVC_SQ_PITCH : ((uv_value > 10) ? 12 : 13);
+  const int pitch = (uv_value > 10) ? 12 : 13;
   for (int i = 0; i < 10; i++) {
     const GRect sq = GRect(gc.x + sq_dx + i * pitch, by + sq_dy, sq_sz, sq_sz);
     if (i < filled) {
@@ -732,11 +702,10 @@ void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_val
     graphics_context_set_stroke_width(ctx, 1);
   }
   graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
-  // The VALUE stays LECO_36 in both sizes — the compact bar shrinks its squares and pulls the
-  // value box in, never the digit itself.
   graphics_draw_text(ctx, uv_text, fonts_get_system_font(WX_UV_NUM_FONT),
-                     GRect(gc.x + num_dx, by + num_dy, num_w, 44), GTextOverflowModeFill,
-                     GTextAlignmentRight, nullptr);
+                     GRect(gc.x + WEATHER_APP_LAYOUT_ROUND_UV_NUM_DX,
+                           by + WEATHER_APP_LAYOUT_ROUND_UV_NUM_DY, 46, 44),
+                     GTextOverflowModeFill, GTextAlignmentRight, nullptr);
 }
 #endif // PBL_ROUND
 
@@ -1010,8 +979,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
     // stays concentric if the content layer ever moves.
     const GPoint gc = GPoint(PBL_DISPLAY_WIDTH / 2 - layout->content_layer_origin.x,
                              PBL_DISPLAY_HEIGHT / 2 - layout->content_layer_origin.y);
-    weather_app_layout_draw_uv_bar(ctx, gc, by, uvv, t->uv, WeatherUvBarFull,
-                                   pbl_i18n_get("UV INDEX", layout));
+    prv_draw_round_uv_bar(ctx, gc, by, uvv, t->uv, pbl_i18n_get("UV INDEX", layout));
   }
 #else
   // Rect: the ORIGINAL flow layout (the original condensed layout / a14c2675, styled to the

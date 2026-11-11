@@ -358,15 +358,13 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   }
 }
 
-// Push the card's glance strings (sunset title, high/low°, location) to the forecast so its
-// hero icon-fly can animate the identical text in, synced to the icon landing.
+// Give the forecast the card's glance, which its hero icon-fly draws
 static void prv_sync_glance_strings(WeatherAppData *data) {
   const WeatherLocationForecast *today = data->days_received >= 1 ? &data->days[0] : nullptr;
-  char sunset[40], temp[16], loc[64];
+  ExpandedViewGlance glance;
   expanded_view_format_glance(today, data->latitude_e2, data->longitude_e2, data->utc_offset_min,
-                              sunset, sizeof(sunset), temp, sizeof(temp), loc, sizeof(loc));
-  forecast_list_set_glance(sunset, temp, today ? today->today_uv : -1,
-                           today ? today->today_precip_mm : -1, today ? today->today_wind_mph : -1);
+                              &glance, data);
+  forecast_list_set_glance(&glance);
 }
 
 // Refresh the GPS ("My Location") identity from the record flagged is_current_location
