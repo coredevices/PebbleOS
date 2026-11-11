@@ -64,6 +64,18 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		lpsys_sram: sram@20400000 {
+			compatible = "mmio-sram";
+			reg = <0x20400000 0x10000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x20400000 0x10000>;
+
+			lcpu_sram: lcpu-sram@0 {
+				reg = <0x0 0x10000>;
+			};
+		};
+
 		lpsys_rcc: clock-controller@40000000 {
 			compatible = "sifli,sf32lb52-lpsys-rcc";
 			reg = <0x40000000 0x1000>;
@@ -88,6 +100,7 @@
 			mboxes = <&mailbox1 0>, <&mailbox2 0>;
 			mbox-names = "tx", "rx";
 			memory-region = <&lcpu_ipc>;
+			sram = <&lcpu_sram>;
 			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
 				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
 				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>;

@@ -14,6 +14,10 @@ args:
     of: memory-region
   - size: 0
     of: memory-region
+  - reg: 0
+    of: sram
+  - size: 0
+    of: sram
   - clock: hclk
   - clock: pclk
   - clock: pclk2

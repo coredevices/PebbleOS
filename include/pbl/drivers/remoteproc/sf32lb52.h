@@ -33,6 +33,8 @@ struct pbl_rproc_sf32lb52 {
   struct pbl_mbox_chan rx_chan;
   /** HCPU RAM reserved for the HCPU to LCPU ring (@c memory-region). */
   struct pbl_mem_region mem;
+  /** LPSYS SRAM region the LCPU works in (@c sram). */
+  struct pbl_mem_region sram;
   /** LCPU clock, and the APB clocks of LPSYS, set for the LCPU to load. */
   struct pbl_clk hclk;
   /** LPSYS APB clock. */
@@ -56,18 +58,21 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
  * @param _rx_chan Doorbell from the LCPU, from PBL_MBOX_CHAN().
  * @param _mem_base Base of the HCPU RAM reserved for the HCPU to LCPU ring.
  * @param _mem_size Its size, in bytes.
+ * @param _sram_base Base of the LPSYS SRAM region the LCPU works in.
+ * @param _sram_size Its size, in bytes.
  * @param _hclk LCPU clock, from PBL_CLK().
  * @param _pclk LPSYS APB clock, from PBL_CLK().
  * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,       \
-                                  _mem_size, _hclk, _pclk, _pclk2)                              \
-  PBL_RPROC_STATE_DEFINE(sym);                                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                \
-    .rproc =                                                                                    \
-        PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops),  \
-    .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                        \
-    .mem = PBL_MEM_REGION(_mem_base, _mem_size), .hclk = _hclk, .pclk = _pclk, .pclk2 = _pclk2, \
+#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,        \
+                                  _mem_size, _sram_base, _sram_size, _hclk, _pclk, _pclk2)       \
+  PBL_RPROC_STATE_DEFINE(sym);                                                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                 \
+    .rproc =                                                                                     \
+        PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops),   \
+    .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                         \
+    .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size), \
+    .hclk = _hclk, .pclk = _pclk, .pclk2 = _pclk2,                                               \
   }
 
 /** @} */

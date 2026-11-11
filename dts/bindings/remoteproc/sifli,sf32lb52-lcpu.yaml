@@ -36,6 +36,10 @@ properties:
     description: HCPU memory holding the HCPU to LCPU ring.
     maxItems: 1
 
+  sram:
+    description: LPSYS SRAM region the LCPU works in.
+    maxItems: 1
+
   clocks:
     items:
       - description: LCPU clock
@@ -54,6 +58,7 @@ required:
   - mboxes
   - mbox-names
   - memory-region
+  - sram
   - clocks
   - clock-names
 
@@ -67,6 +72,7 @@ examples:
         mboxes = <&mailbox1 0>, <&mailbox2 0>;
         mbox-names = "tx", "rx";
         memory-region = <&lcpu_ipc>;
+        sram = <&lcpu_sram>;
         clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>;
         clock-names = "hclk", "pclk", "pclk2";
     };
