@@ -110,7 +110,6 @@ void pbl_soc_early_init(void) {
 
   soc_sf32lb52_lpsys_release();
 
-  pbl_modifyl(HPSYS_RCC_ENR1_EPIC | HPSYS_RCC_ENR1_EZIP1, 0U, HPSYS_RCC(ENR1));
   soc_sf32lb52_pmu_init();
 
   pbl_modifyl(HPSYS_CFG_SCR_FKEY_MODE, 0U, PBL_DT_REG_HPSYS_CFG + SF32LB52_HPSYS_CFG_SCR_OFFSET);

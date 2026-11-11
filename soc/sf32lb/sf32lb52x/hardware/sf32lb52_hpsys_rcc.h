@@ -26,9 +26,6 @@
 
 /* Register bit definitions */
 
-#define HPSYS_RCC_ENR1_EZIP1 PBL_BIT(5)
-#define HPSYS_RCC_ENR1_EPIC  PBL_BIT(6)
-
 #define HPSYS_RCC_CSR_SEL_SYS_MASK  PBL_GENMASK(1, 0)
 #define HPSYS_RCC_CSR_SEL_SYS_HRC48 0U
 #define HPSYS_RCC_CSR_SEL_SYS_HXT48 1U
