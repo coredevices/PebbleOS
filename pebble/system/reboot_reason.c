@@ -3,6 +3,7 @@
 
 #include "reboot_reason.h"
 
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/types.h>
@@ -18,13 +19,6 @@ extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
 #endif
 
-#ifdef CONFIG_SOC_POSIX
-// The host has no interrupt priority masking.
-#define prv_get_basepri() (0U)
-#else
-#define prv_get_basepri() __get_BASEPRI()
-#endif
-
 static_assert(sizeof(RebootReason) == sizeof(uint32_t[4]), "RebootReason is a funny size");
 
 void reboot_reason_set(RebootReason *reason) {
@@ -34,7 +28,7 @@ void reboot_reason_set(RebootReason *reason) {
   if (retained_read(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && !pbl_irq_is_locked() && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -50,7 +44,7 @@ void reboot_reason_set(RebootReason *reason) {
   if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && !pbl_irq_is_locked() && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
@@ -66,7 +60,7 @@ void reboot_reason_set(RebootReason *reason) {
   if (RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
-    if (!mcu_state_is_isr() && prv_get_basepri() == 0 && pbl_kernel_is_running()) {
+    if (!mcu_state_is_isr() && !pbl_irq_is_locked() && pbl_kernel_is_running()) {
       PBL_LOG_WRN("Reboot reason is already set");
     }
     return;
