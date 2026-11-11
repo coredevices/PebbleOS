@@ -29,6 +29,15 @@
 #define ARM_SCB_SHCSR_MEMFAULTENA    (1UL << 16)
 #define ARM_SCB_SHCSR_BUSFAULTENA    (1UL << 17)
 #define ARM_SCB_SHCSR_USGFAULTENA    (1UL << 18)
+#define ARM_SCB_CFSR                 0xE000ED28UL
+#define ARM_SCB_CFSR_MSTKERR         (1UL << 4)
+#define ARM_SCB_CFSR_MMARVALID       (1UL << 7)
+#define ARM_SCB_CFSR_BFARVALID       (1UL << 15)
+#define ARM_SCB_CFSR_STKOF           (1UL << 20)
+#define ARM_SCB_HFSR                 0xE000ED2CUL
+#define ARM_SCB_HFSR_FORCED          (1UL << 30)
+#define ARM_SCB_MMFAR                0xE000ED34UL
+#define ARM_SCB_BFAR                 0xE000ED38UL
 #define ARM_SCB_CCSIDR               0xE000ED80UL
 #define ARM_SCB_CSSELR               0xE000ED84UL
 #define ARM_SCB_CPACR                0xE000ED88UL

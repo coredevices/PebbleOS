@@ -4,6 +4,7 @@
 pbl_library_sources(
   arch.c
   debug.c
+  fault.c
   fpu.c
   interrupts.c
   irq.c

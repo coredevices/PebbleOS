@@ -1,6 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
+#include <stdio.h>
+
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/irq.h>
@@ -15,7 +18,6 @@
 
 #include <applib/app_logging.h>
 #include <kernel/fault_handling.h>
-#include <logging/logging_private.h>
 #include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
 #include <process_management/worker_manager.h>
@@ -24,14 +26,6 @@
 #include <syscall/syscall.h>
 #include <system/die.h>
 #include <system/reboot_reason.h>
-
-#ifndef CONFIG_ARCH_POSIX
-#include <cmsis_core.h>
-#include <pbl_arch_coredump.h>
-#endif
-
-#include <stdint.h>
-#include <stdio.h>
 
 typedef struct CrashInfo {
   PebbleTask task;
@@ -45,10 +39,6 @@ typedef struct CrashInfo {
 
 CrashInfo make_crash_info_pc(uintptr_t pc) {
   return (CrashInfo){.pc = pc, .pc_known = true};
-}
-
-CrashInfo make_crash_info_pc_lr(uintptr_t pc, uintptr_t lr) {
-  return (CrashInfo){.pc = pc, .pc_known = true, .lr = lr, .lr_known = true};
 }
 
 static void prv_log_app_lr_and_pc_sys_work(void *data) {
@@ -183,7 +173,7 @@ static void prv_kill_user_process(uint32_t stashed_lr) {
     kernel_fault(RebootReasonCode_WorkerHardFault, stashed_lr);
 #endif
   } else {
-    PBL_LOG_FROM_FAULT_HANDLER("WTF?");
+    PBL_LOG_FAULT("WTF?");
     kernel_fault(RebootReasonCode_HardFault, stashed_lr);
   }
 
@@ -210,25 +200,34 @@ PBL_SYSCALL_NORETURN(sys_app_fault, (VAL, uint32_t, stashed_lr)) {
   sys_app_fault(lr);
 }
 
-// The hardware fault handlers; a native build gets signals instead.
-#ifndef CONFIG_ARCH_POSIX
-// These variables are assigned values when the watch faults
-// Saved here rather than in CrashInfo because they are easy to pull out through GDB.
-static uint32_t s_fault_saved_sp;
-static uint32_t s_fault_saved_lr;
-static uint32_t s_fault_saved_pc;
-
-static void prv_save_debug_registers(unsigned int *stacked_args) {
-  s_fault_saved_lr = (uint32_t)stacked_args[5];
-  s_fault_saved_pc = (uint32_t)stacked_args[6];
-  s_fault_saved_sp = (uint32_t)&stacked_args[8];
+[[noreturn]] void pbl_fault_fatal_handler(const struct pbl_fault_info *info) {
+  RebootReason reason;
+  if (info->reason == PBL_FAULT_STACK_OVERFLOW) {
+    reason = (RebootReason){
+      .code = RebootReasonCode_StackOverflow,
+      .data8[0] = pebble_task_get_current(),
+      .extra = {.value = info->pc ? info->pc : info->addr},
+    };
+  } else {
+    // Prefer LR, PC is often madness on a fault; crash reports need a non-zero address.
+    uintptr_t addr = info->lr ? info->lr : (info->pc ? info->pc : info->addr);
+    reason = (RebootReason){.code = RebootReasonCode_HardFault, .extra = {.value = addr}};
+  }
+  reboot_reason_set(&reason);
+  reset_due_to_software_failure();
 }
 
-static void hardware_fault_landing_zone(void) {
+[[noreturn]] void pbl_fault_thread_handler(const struct pbl_fault_info *info) {
+  CrashInfo crash_info = {
+    .pc = info->pc,
+    .pc_known = info->pc != 0,
+    .lr = info->lr,
+    .lr_known = info->lr != 0,
+  };
+  setup_log_app_crash_info(crash_info);
   prv_log_app_lr_and_pc_sys_work(&s_current_app_crash_info);
 
-  // Pass the original LR/PC down so a Worker hardfault gets a real address
-  // when it routes to kernel_fault.
+  // A Worker fault that resets reports the original address.
   uintptr_t lr = 0;
   if (s_current_app_crash_info.lr_known && s_current_app_crash_info.lr != 0) {
     lr = s_current_app_crash_info.lr;
@@ -236,251 +235,6 @@ static void hardware_fault_landing_zone(void) {
     lr = s_current_app_crash_info.pc;
   }
   prv_kill_user_process(lr);
-}
-
-static void prv_return_to_landing_zone(uintptr_t stacked_pc, uintptr_t stacked_lr,
-                                       unsigned int *stacked_args) {
-  // We got this! Let's redirect this task to a spin function and tell the app manager to kill us.
-
-  // Log about the terrible thing that just happened.
-  CrashInfo crash_info = make_crash_info_pc_lr(stacked_pc, stacked_lr);
-  setup_log_app_crash_info(crash_info);
-
-  // Alright, now to neuter the current task. We're going to do some work to make it so when we
-  // return from this fault handler we'll end up in a perfectly safe place while we wait to die.
-
-  SCB->BFAR &= 1 << 7;  // Clear Bus Fault Address Register "address is valid" bit
-  SCB->MMFAR &= 1 << 7; // Clear Memory Manage Address Register "address is valid" bit
-  SCB->CFSR &= ~0;      // Clear the complete status register
-
-  // Redirect this task to nowhere by changing the stacked PC register.
-  // We can't let this task resume to where it crashed or else it will just crash again.
-  // The kernel should come by and kill the task soon, but if it's busy doing something else just
-  // spin. We don't want to just spin in the fault handler because that will prevent other tasks
-  // from being executed, as we're currently in a higher priority interrupt.
-  stacked_args[6] = (int)hardware_fault_landing_zone;
-
-  // Clear the ICI bits in the Program Status Register. These bits refer to microprocessor state if
-  // we get interrupted during a certain set of instructions. Since we're returning to a different
-  // place, we need to clean up this state or else we'll just hit an INVSTATE UsageFault
-  // immediately. The only bit we leave set is the bit that says we're in thumb state, which must
-  // always be set on Cortex-M3, since the micro doesn't even support non-thumb instructions. See:
-  // https://pebbletech.campfirenow.com/room/508662/transcript/message/1111369053#message_1111369053
-  //      http://stackoverflow.com/a/9538628/1546
-  stacked_args[7] = 1 << 24;
-
-  // Return to it privileged.
-  __set_CONTROL(__get_CONTROL() & ~CONTROL_nPRIV_Msk);
-
-  // Now return to hardware_fault_landing_zone...
-}
-
-// Only an unprivileged thread, faulting on its own stack, can be redirected to the landing zone.
-static bool prv_fault_is_recoverable(unsigned int exc_return) {
-  return (exc_return & 0x04) && (__get_CONTROL() & CONTROL_nPRIV_Msk);
-}
-
-static void attempt_handle_stack_overflow(unsigned int *stacked_args, uintptr_t fault_pc,
-                                          unsigned int exc_return) {
-  PebbleTask task = pebble_task_get_current();
-  PBL_LOG_SYNC_ERR("Stack overflow [task: %s]", pebble_task_get_name(task));
-
-  if (!prv_fault_is_recoverable(exc_return)) {
-    // We're hosed! We can't recover so just reboot everything.
-    RebootReason reason = {
-      .code = RebootReasonCode_StackOverflow,
-      .data8[0] = task,
-      .extra = {.value = fault_pc},
-    };
-    reboot_reason_set(&reason);
-    reset_due_to_software_failure();
-    return;
-  }
-
-  // We got this! Let's redirect this task to a spin function and tell the app manager to kill us.
-  prv_return_to_landing_zone(0, 0, stacked_args); // We can't get LR or PC, so just set to 0's.
-}
-
-static void attempt_handle_generic_fault(unsigned int *stacked_args, unsigned int exc_return) {
-  uintptr_t stacked_lr = (uintptr_t)stacked_args[5];
-  ;
-  uintptr_t stacked_pc = (uintptr_t)stacked_args[6];
-  ;
-  ;
-
-  if (!prv_fault_is_recoverable(exc_return)) {
-    // We're hosed! We can't recover so just reboot everything.
-    kernel_fault(RebootReasonCode_HardFault, stacked_lr ? stacked_lr : stacked_pc);
-    return;
-  }
-
-  // We got this! Let's redirect this task to a spin function and tell the app manager to kill us.
-  prv_return_to_landing_zone(stacked_pc, stacked_lr,
-                             stacked_args); // We can't get LR or PC, so just set to 0's.
-}
-
-// Hardware Fault Handlers
-///////////////////////////////////////////////////////////
-extern void fault_handler_dump(char buffer[80], unsigned int *stacked_args);
-extern void fault_handler_dump_cfsr(char buffer[80]);
-
-bool fault_handling_hit_stack_guard(const unsigned int *stacked_args, unsigned int exc_return) {
-  const uint8_t mmfsr = SCB->CFSR & 0xff;
-  if (mmfsr & (1 << 7) /* MMARVALID */) {
-    const uintptr_t fault_addr = SCB->MMFAR;
-    return pbl_mpu_region_is_stack_guard(fault_addr, fault_addr + 1);
-  }
-  if (mmfsr & (1 << 4) /* MSTKERR */) {
-    // Stacking faults leave MMFAR invalid, but SP already points at the frame.
-    const uintptr_t frame = (uintptr_t)stacked_args;
-    const size_t frame_words = (exc_return & 0x10) ? 8 : 26;
-    return pbl_mpu_region_is_stack_guard(frame, frame + frame_words * sizeof(uint32_t));
-  }
-  return false;
-}
-
-static void prv_log_mpu_line(void *ctx, const char *line) {
-  char buffer[90];
-  PBL_LOG_FROM_FAULT_HANDLER_FMT(buffer, sizeof(buffer), "%s", line);
-}
-
-static void mem_manage_handler_c(unsigned int *stacked_args, unsigned int lr) {
-  // Be very careful about touching stacked_args in this function. We can end up in the
-  // memfault handler because we hit the stack guard, which indicates that we've run out of stack
-  // space and therefore won't have any room to stack the args. Accessing stacked_args in this
-  // case will end up triggering a hardfault.
-
-  PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[Memory Management Failure!]");
-
-  char buffer[80];
-  PBL_LOG_FROM_FAULT_HANDLER("Configured Regions: ");
-  pbl_mpu_regions_print(prv_log_mpu_line, nullptr);
-  PBL_LOG_FROM_FAULT_HANDLER("");
-
-  // If if we faulted in a stack guard region, this indicates a stack overflow
-  const bool stack_overflow = fault_handling_hit_stack_guard(stacked_args, lr);
-  const uint8_t mmfsr = SCB->CFSR & 0xff;
-
-  // If it's a stack overflow, backup the stack so that attempt_handle_hardware_fault() can jam in
-  // our landing zone to return to
-  if (stack_overflow) {
-    // Zero out the saved registers. We won't have new values in them, and we want to make sure
-    // that they don't contain bogus values from a fault we previously handled without crashing.
-    s_fault_saved_lr = 0;
-    s_fault_saved_pc = 0;
-    s_fault_saved_sp = 0;
-
-    // We can't call fault_handler_dump because stacked_args isn't going to be valid, but we can at
-    // least dump the cfsr.
-    fault_handler_dump_cfsr(buffer);
-
-    // Read user PC before moving SP up; only safe if MMSTKERR is clear
-    // (frame was pushed). Otherwise fall back to MMFAR.
-    uintptr_t fault_pc = 0;
-    if (!(mmfsr & (1 << 4)) /* MMSTKERR */) {
-      fault_pc = (uintptr_t)stacked_args[6];
-    }
-    if (fault_pc == 0) {
-      fault_pc = SCB->MMFAR;
-    }
-
-    if (lr & 0x04) {
-      stacked_args += 256; // Should be enough to get above the guard region and execute
-                           // hardware_fault_landing_zone
-      __set_PSP((uint32_t)stacked_args);
-    }
-    attempt_handle_stack_overflow(stacked_args, fault_pc, lr);
-
-  } else {
-    prv_save_debug_registers(stacked_args);
-
-    fault_handler_dump(buffer, stacked_args);
-
-    // BREAKPOINT;
-    // NOTE: If you want to get a stack trace at this point. Set a breakpoint here (you can compile
-    // in the above BREAKPOINT call if you want) and issue the following commands in gdb:
-    //    set var $sp=<value of SP above>
-    //    set var $lr=<value of LR above>
-    //    set var $pc=<value of PC above>
-    //    bt
-    attempt_handle_generic_fault(stacked_args, lr);
+  for (;;) {
   }
 }
-
-void PBL_NAKED MemManage_Handler(void) {
-  // Grab the stack pointer, shove it into a register and call
-  // the c function above.
-  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
-        "tst lr, #4\n"
-        "ite eq\n"
-        "mrseq r0, msp\n"
-        "mrsne r0, psp\n"
-        "mov r1, lr\n"
-        "b %0\n" ::"i"(mem_manage_handler_c));
-}
-
-static void busfault_handler_c(unsigned int *stacked_args, unsigned int lr) {
-  PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[BusFault_Handler!]");
-  prv_save_debug_registers(stacked_args);
-
-  char buffer[80];
-  fault_handler_dump(buffer, stacked_args);
-
-  PBL_LOG_FROM_FAULT_HANDLER("");
-
-  attempt_handle_generic_fault(stacked_args, lr);
-}
-
-void PBL_NAKED BusFault_Handler(void) {
-  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
-        "tst lr, #4\n"
-        "ite eq\n"
-        "mrseq r0, msp\n"
-        "mrsne r0, psp\n"
-        "mov r1, lr\n"
-        "b %0\n" ::"i"(busfault_handler_c));
-}
-
-// STKOF = bit 4 of UFSR = bit 20 of CFSR (ARMv8-M only, reads as 0 on CM3/CM4)
-#ifndef SCB_CFSR_STKOF_Msk
-#define SCB_CFSR_STKOF_Msk (1UL << 20)
-#endif
-
-static void usagefault_handler_c(unsigned int *stacked_args, unsigned int lr) {
-  PBL_LOG_FROM_FAULT_HANDLER("\r\n\r\n[UsageFault_Handler!]");
-
-  const uint32_t cfsr = SCB->CFSR;
-
-  // STKOF: stack limit violation (PSPLIM/MSPLIM)
-  if (cfsr & SCB_CFSR_STKOF_Msk) {
-    SCB->CFSR = SCB_CFSR_STKOF_Msk; // Clear by writing 1
-
-    // No exception frame stacked on STKOF, so no PC available.
-    if (lr & 0x04) {
-      stacked_args += 256; // Back up SP to give landing zone room (see mem_manage_handler_c)
-      __set_PSP((uint32_t)stacked_args);
-    }
-    attempt_handle_stack_overflow(stacked_args, 0, lr);
-    return;
-  }
-
-  prv_save_debug_registers(stacked_args);
-
-  char buffer[80];
-  fault_handler_dump(buffer, stacked_args);
-
-  PBL_LOG_FROM_FAULT_HANDLER("");
-
-  attempt_handle_generic_fault(stacked_args, lr);
-}
-
-void PBL_NAKED UsageFault_Handler(void) {
-  __asm(PBL_ARCH_COREDUMP_FAULT_ENTRY
-        "tst lr, #4\n"
-        "ite eq\n"
-        "mrseq r0, msp\n"
-        "mrsne r0, psp\n"
-        "mov r1, lr\n"
-        "b %0\n" ::"i"(usagefault_handler_c));
-}
-#endif
