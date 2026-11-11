@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 
 /**
- * @defgroup drivers_temperature_qemu QEMU
- * @ingroup drivers_temperature
+ * @defgroup drivers_temp_qemu QEMU
+ * @ingroup drivers_temp
  * @brief QEMU temperature sensor. QEMU emulates none, so it reports a fixed 25 degrees Celsius.
  * @{
  */

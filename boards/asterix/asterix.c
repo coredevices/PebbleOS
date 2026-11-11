@@ -6,7 +6,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/drivers/rtc/retained.h>
-#include <pbl/drivers/temperature/nrf5.h>
+#include <pbl/drivers/temp/nrf5.h>
 #include <pbl/drivers/uart/nrf5.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/util/size.h>
@@ -74,7 +74,7 @@ const struct pbl_audio *const SPEAKER = &dt_speaker;
 const struct pbl_backlight *const BACKLIGHT = &dt_backlight;
 #endif
 
-#ifdef CONFIG_TEMPERATURE
+#ifdef CONFIG_TEMP
 const struct pbl_temp *const DIE_TEMP = NRF5_TEMP;
 #endif
 

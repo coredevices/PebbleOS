@@ -3,8 +3,8 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/temperature.h>
-#include <pbl/drivers/temperature/nrf5.h>
+#include <pbl/drivers/temp.h>
+#include <pbl/drivers/temp/nrf5.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 

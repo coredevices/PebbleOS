@@ -4,7 +4,7 @@
 add_subdirectory(base)
 pbl_add_subdirectory_ifdef(CONFIG_ALS als)
 pbl_add_subdirectory_ifdef(CONFIG_AUDIO audio)
-pbl_add_subdirectory_ifdef(CONFIG_TEMPERATURE temperature)
+pbl_add_subdirectory_ifdef(CONFIG_TEMP temp)
 pbl_add_subdirectory_ifdef(CONFIG_BATTERY battery)
 pbl_add_subdirectory_ifdef(CONFIG_CLK clk)
 pbl_add_subdirectory_ifdef(CONFIG_CRC_HW crc)

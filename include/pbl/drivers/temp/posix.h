@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 
 /**
- * @defgroup drivers_temperature_posix POSIX
- * @ingroup drivers_temperature
+ * @defgroup drivers_temp_posix POSIX
+ * @ingroup drivers_temp
  * @brief Temperature sensor of a native build, which reports a fixed 25 degrees Celsius.
  * @{
  */

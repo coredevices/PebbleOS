@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 
 /**
- * @defgroup drivers_temperature_nrf5 nRF5
- * @ingroup drivers_temperature
+ * @defgroup drivers_temp_nrf5 nRF5
+ * @ingroup drivers_temp
  * @brief Nordic nRF5 die temperature sensor (TEMP).
  * @{
  */

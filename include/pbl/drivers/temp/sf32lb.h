@@ -6,11 +6,11 @@
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 
 /**
- * @defgroup drivers_temperature_sf32lb SF32LB
- * @ingroup drivers_temperature
+ * @defgroup drivers_temp_sf32lb SF32LB
+ * @ingroup drivers_temp
  * @brief SiFli SF32LB die temperature sensor (TSEN).
  * @{
  */

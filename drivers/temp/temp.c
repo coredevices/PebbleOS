@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 #include <pbl/util/misc.h>
 
 PBL_DEVICE_CLASS_DEFINE(pbl_temp_class, "temp");

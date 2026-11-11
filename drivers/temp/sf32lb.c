@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/temperature.h>
-#include <pbl/drivers/temperature/sf32lb.h>
+#include <pbl/drivers/temp.h>
+#include <pbl/drivers/temp/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/misc.h>

@@ -9,7 +9,7 @@
 #include <pbl/drivers/flash/posix.h>
 #include <pbl/drivers/imu/posix.h>
 #include <pbl/drivers/rtc/posix.h>
-#include <pbl/drivers/temperature/posix.h>
+#include <pbl/drivers/temp/posix.h>
 #include <pbl/drivers/touch/sdl.h>
 #include <pbl/drivers/uart/posix.h>
 #include <pbl/drivers/vibe/posix.h>
@@ -55,7 +55,7 @@ const struct pbl_backlight *const BACKLIGHT = POSIX_BACKLIGHT;
 const struct pbl_vibe *const VIBE = POSIX_VIBE;
 #endif
 
-#ifdef CONFIG_TEMPERATURE
+#ifdef CONFIG_TEMP
 const struct pbl_temp *const DIE_TEMP = POSIX_TEMP;
 #endif
 

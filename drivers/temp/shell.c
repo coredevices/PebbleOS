@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_temp(const struct pbl_shell *sh, size_t argc, char **argv) {

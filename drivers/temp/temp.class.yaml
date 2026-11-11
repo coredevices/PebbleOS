@@ -3,4 +3,4 @@
 
 class: temp
 type: struct pbl_temp
-include: pbl/drivers/temperature.h
+include: pbl/drivers/temp.h
