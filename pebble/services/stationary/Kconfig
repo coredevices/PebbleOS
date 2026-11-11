@@ -8,6 +8,14 @@ config SERVICE_STATIONARY
 
 if SERVICE_STATIONARY
 
+config SERVICE_STATIONARY_MODE
+    bool
+    default y
+    depends on !QEMU && !SOC_POSIX && !SHELL_SDK
+    help
+      Enter stationary mode when the watch is left still. Only on watch
+      hardware running the normal shell.
+
 module = SERVICE_STATIONARY
 module-str = Stationary
 source "subsys/logging/Kconfig.template.log_level"

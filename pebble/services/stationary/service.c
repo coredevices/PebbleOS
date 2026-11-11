@@ -159,7 +159,7 @@ void stationary_handle_prefs_changed(void) {
 }
 
 void stationary_run_level_enable(bool enable) {
-#if !STATIONARY_MODE
+#ifndef CONFIG_SERVICE_STATIONARY_MODE
   return;
 #endif
 

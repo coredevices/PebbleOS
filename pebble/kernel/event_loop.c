@@ -259,7 +259,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
         light_enable_interaction();
       } else {
       }
-#if STATIONARY_MODE
+#ifdef CONFIG_SERVICE_STATIONARY_MODE
       stationary_handle_battery_connection_change_event();
 #endif
       return;
@@ -620,7 +620,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
 
   shell_event_loop_init();
 
-#if STATIONARY_MODE
+#ifdef CONFIG_SERVICE_STATIONARY_MODE
   stationary_init();
 #endif
 
