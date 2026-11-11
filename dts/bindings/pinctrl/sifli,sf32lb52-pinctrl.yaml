@@ -22,6 +22,18 @@ properties:
   reg:
     maxItems: 1
 
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration block, holding the pin routing crossbar.
+
+  sifli,rtc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: RTC, holding the always-on pad pulls and backup outputs.
+
+  sifli,hpsys-aon:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS always-on block, selecting the backup timer outputs.
+
 patternProperties:
   '-state$':
     type: object
@@ -65,6 +77,9 @@ patternProperties:
 required:
   - compatible
   - reg
+  - sifli,hpsys-cfg
+  - sifli,rtc
+  - sifli,hpsys-aon
 
 additionalProperties: false
 
@@ -73,6 +88,9 @@ examples:
     pinctrl@50003000 {
         compatible = "sifli,sf32lb52-pinctrl";
         reg = <0x50003000 0x100>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
+        sifli,rtc = <&rtc>;
+        sifli,hpsys-aon = <&hpsys_aon>;
 
         i2c1-default-state {
             scl-pins {

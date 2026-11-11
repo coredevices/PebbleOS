@@ -140,6 +140,9 @@
 		pinctrl: pinctrl@50003000 {
 			compatible = "sifli,sf32lb52-pinctrl";
 			reg = <0x50003000 0x100>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			sifli,rtc = <&rtc>;
+			sifli,hpsys-aon = <&hpsys_aon>;
 		};
 
 		lcdc1: display-controller@50008000 {

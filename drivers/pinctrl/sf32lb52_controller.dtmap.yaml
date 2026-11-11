@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-pinctrl
+config: PINCTRL_SF32LB52
+class: pinctrl_controller
+define: PBL_PINCTRL_SF32LB52_DEFINE
+symbol: pbl_pinctrl_sf32lb52_hpsys
+args:
+  - name: true
+  - reg: 0
+  - reg: 0
+    of: sifli,hpsys-cfg
+  - reg: 0
+    of: sifli,rtc
+  - reg: 0
+    of: sifli,hpsys-aon
