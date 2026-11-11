@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-pinctrl
+config: PINCTRL_SF32LB57
+class: pinctrl
+pinctrl:
+  define: PBL_PINCTRL_SF32LB57_DT_STATE
+  # An impossible pin and function pair has no macro, and fails to compile
+  pin: "SF32LB57_{pin}_{function}"
+  flags:
+    input-enable: PBL_PINCTRL_SF32LB57_INPUT
+    bias-pull-up: PBL_PINCTRL_SF32LB57_PULL_UP
+    bias-pull-down: PBL_PINCTRL_SF32LB57_PULL_DOWN
+  values:
+    drive-strength: "PBL_PINCTRL_SF32LB57_DRIVE_{value}MA"
