@@ -10,6 +10,10 @@ choice FIRMWARE_AREA
     default FIRMWARE_AREA_RECOVERY if RECOVERY_FW && !MFG
 endchoice
 
+config BT_REPEAT_PAIRING_ALWAYS
+    default y if RECOVERY_FW
+    depends on BT
+
 config CONSOLE
     default y if !RELEASE || MFG
 
@@ -37,6 +41,10 @@ config FLASH_SHELL_STRESS
     default !RECOVERY_FW
     depends on FLASH_SHELL
 
+config FS_PFS_SHELL_LITTER
+    default !RECOVERY_FW && !RELEASE
+    depends on FS_PFS && SHELL
+
 config GH3X2X_ALGO
     default !RECOVERY_FW || MFG
     depends on HRM_GH3X2X && BOARD_OBELIX
@@ -52,6 +60,10 @@ config KERNEL_STACK_GUARD
 config LOG_HASHED
     default y
     depends on LOG && !QEMU
+
+config PP_TRANSPORT_GATT_SYSTEM_ONLY
+    default y if RECOVERY_FW
+    depends on PP_TRANSPORT_GATT
 
 config SHELL
     default y

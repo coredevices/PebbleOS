@@ -20,6 +20,13 @@ config PP_TRANSPORT_GATT
     help
       Pebble protocol over GATT (PPoGATT), the transport phones use.
 
+config PP_TRANSPORT_GATT_SYSTEM_ONLY
+    bool "PPoGATT with the system app only"
+    depends on PP_TRANSPORT_GATT
+    help
+      Only connect to PPoGATT servers of the phone's system app, not to
+      those of third-party phone apps.
+
 config PP_TRANSPORT_CONSOLE
     bool
     default y
