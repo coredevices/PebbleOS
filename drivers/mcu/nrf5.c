@@ -4,14 +4,14 @@
 #include <string.h>
 
 #include <pbl/drivers/mcu.h>
+#include <pbl/kernel/mmio.h>
 
-#include <hal/nrf_ficr.h>
-#include <nrfx.h>
+#include <hardware/nrf52_ficr.h>
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   const uint32_t id[2] = {
-    nrf_ficr_deviceid_get(NRF_FICR, 0),
-    nrf_ficr_deviceid_get(NRF_FICR, 1),
+    pbl_readl(NRF52_FICR_BASE + NRF52_FICR_DEVICEID_OFFSET(0)),
+    pbl_readl(NRF52_FICR_BASE + NRF52_FICR_DEVICEID_OFFSET(1)),
   };
 
   if (*buf_sz < sizeof(id)) {

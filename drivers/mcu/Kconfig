@@ -11,7 +11,6 @@ if MCU
 config MCU_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52
-    select HAL_NORDIC
     help
       Support for Nordic nRF5 MCU information.
 
