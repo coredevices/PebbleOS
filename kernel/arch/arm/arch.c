@@ -187,7 +187,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *
     t->backend.arch.mpu[2 * i] = rbar;
     t->backend.arch.mpu[2 * i + 1] = attr;
   }
-#if __DCACHE_PRESENT
+#ifdef CONFIG_CPU_HAS_DCACHE
   SCB_CleanDCache();
 #endif
 }

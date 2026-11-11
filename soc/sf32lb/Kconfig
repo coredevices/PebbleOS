@@ -6,6 +6,8 @@ config SOC_SF32LB52
     select HAL_SIFLI
     select CPU_STAR_MC1
     select CPU_HAS_FPU
+    select CPU_HAS_ICACHE
+    select CPU_HAS_DCACHE
     select ARCH_VECTOR_TABLE_RAM
     select KERNEL_MPU_IN_FAULTS
     select RAMFUNC
