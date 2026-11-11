@@ -139,7 +139,7 @@ def cmd_bundle(args):
 
     config = read_config(args.config)
     version_string, version_ts, version_commit = version_info()
-    fw_type = "recovery" if enabled(config, "CONFIG_RECOVERY_FW") else "normal"
+    fw_type = "recovery" if enabled(config, "CONFIG_FIRMWARE_AREA_RECOVERY") else "normal"
     slot = args.slot if fw_type == "normal" and args.slot != -1 else None
 
     bundle = mkbundle.PebbleBundle()
