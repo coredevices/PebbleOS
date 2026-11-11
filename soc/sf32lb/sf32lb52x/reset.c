@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "lpsys.h"
+#include "revid.h"
 
 #include <stdint.h>
 
@@ -11,12 +12,13 @@
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/section.h>
 
+#include <devicetree/regs.h>
 #include <hardware/sf32lb52_hpsys_aon.h>
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_hpsys_rcc.h>
 #include <hardware/sf32lb52_pmuc.h>
 
-#define PMUC(reg) (SF32LB52_PMUC_BASE + SF32LB52_PMUC_##reg##_OFFSET)
+#define PMUC(reg) (PBL_DT_REG_PMUC + SF32LB52_PMUC_##reg##_OFFSET)
 
 #define HRC_CR_DEFAULT 0x0a50c015U
 
@@ -26,8 +28,7 @@
 
 // Letter series parts have no 3.3 V peripheral LDOs
 static PBL_ALWAYS_INLINE bool prv_has_flash_ldo(void) {
-  uint32_t rev =
-      pbl_readl(SF32LB52_HPSYS_CFG_BASE + SF32LB52_HPSYS_CFG_IDR_OFFSET) & HPSYS_CFG_IDR_REVID_MASK;
+  uint32_t rev = soc_sf32lb52_revid();
 
   return rev != HPSYS_CFG_IDR_REVID_A4 && rev != HPSYS_CFG_IDR_REVID_B4;
 }
@@ -39,8 +40,8 @@ static PBL_ALWAYS_INLINE void prv_update(uint32_t clear, uint32_t set, uintptr_t
 
 // Powers the flash down, so that it boots back in 3-byte address mode
 [[noreturn]] PBL_SECTION_RAM static void prv_reset(void) {
-  const uintptr_t csr = SF32LB52_HPSYS_RCC_BASE + SF32LB52_HPSYS_RCC_CSR_OFFSET;
-  const uintptr_t acr = SF32LB52_HPSYS_AON_BASE + SF32LB52_HPSYS_AON_ACR_OFFSET;
+  const uintptr_t csr = PBL_DT_REG_HPSYS_RCC + SF32LB52_HPSYS_RCC_CSR_OFFSET;
+  const uintptr_t acr = PBL_DT_REG_HPSYS_AON + SF32LB52_HPSYS_AON_ACR_OFFSET;
 
   if (prv_has_flash_ldo()) {
     prv_update(PMUC_PERI_LDO_EN_VDD33_LDO2, PMUC_PERI_LDO_VDD33_LDO2_PD, PMUC(PERI_LDO));

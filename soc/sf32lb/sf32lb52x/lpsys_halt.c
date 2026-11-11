@@ -7,11 +7,12 @@
 
 #include <pbl/kernel/mmio.h>
 
+#include <devicetree/regs.h>
 #include <hardware/sf32lb52_lpsys_aon.h>
 #include <hardware/sf32lb52_lpsys_rcc.h>
 
-#define LPSYS_AON(reg) (SF32LB52_LPSYS_AON_BASE + SF32LB52_LPSYS_AON_##reg##_OFFSET)
-#define LPSYS_RSTR1    (SF32LB52_LPSYS_RCC_BASE + SF32LB52_LPSYS_RCC_RSTR1_OFFSET)
+#define LPSYS_AON(reg) (PBL_DT_REG_LPSYS_AON + SF32LB52_LPSYS_AON_##reg##_OFFSET)
+#define LPSYS_RSTR1    (PBL_DT_REG_LPSYS_RCC + SF32LB52_LPSYS_RCC_RSTR1_OFFSET)
 
 void soc_sf32lb52_lpsys_halt(bool all) {
   const uint32_t lines = all ? UINT32_MAX : (LPSYS_RCC_RSTR1_LCPU | LPSYS_RCC_RSTR1_MAC);
