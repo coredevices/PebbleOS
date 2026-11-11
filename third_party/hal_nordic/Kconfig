@@ -3,6 +3,7 @@
 
 menuconfig HAL_NORDIC
     bool "Nordic nrfx HAL"
+    select CMSIS_CORE
     help
       Provide the Nordic MDK and nrfx HAL headers.
 

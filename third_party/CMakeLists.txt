@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(cmsis_core)
+pbl_add_subdirectory_ifdef(CONFIG_CMSIS_CORE cmsis_core)
 pbl_add_subdirectory_ifdef(CONFIG_NANOPB nanopb)
 pbl_add_subdirectory_ifdef(CONFIG_TINYMT tinymt)
 pbl_add_subdirectory_ifdef(CONFIG_QR_CODE_GENERATOR qr_code_generator)

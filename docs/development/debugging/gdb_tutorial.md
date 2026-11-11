@@ -26,8 +26,8 @@ GDB stops the firmware wherever it was, most of the time idling:
 
 ```
 Remote debugging using :1233
-__ISB () at ./third_party/cmsis_core/CMSIS/CMSIS/Core/Include/cmsis_gcc.h:266
-266	  __ASM volatile ("isb 0xF":::"memory");
+arch_cpu_idle () at ./kernel/arch/arm/include/pbl_arch_idle.h:16
+16	  __asm volatile("isb 0xf" ::: "memory");
 (gdb)
 ```
 
