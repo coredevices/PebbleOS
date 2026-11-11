@@ -834,7 +834,8 @@ static const AnimationImplementation s_fin_anim_impl = {
 };
 
 // ---- Text animation snapshot helpers ----
-// Featured temperature: current temp, or the daily high on future days.
+// Featured temperature: the current-hour temp (same as the mainscreen header and the
+// clock), or the daily high on future days.
 static void prv_fill_featured_temp_buffer(const WeatherLocationForecast *f, char *buffer,
                                           size_t buffer_size) {
   if (f->current_temp == WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP) {
@@ -843,7 +844,7 @@ static void prv_fill_featured_temp_buffer(const WeatherLocationForecast *f, char
     else
       snprintf(buffer, buffer_size, "--\xC2\xB0");
   } else {
-    snprintf(buffer, buffer_size, "%d\xC2\xB0", f->current_temp);
+    snprintf(buffer, buffer_size, "%d\xC2\xB0", f->current_temp_now);
   }
 }
 

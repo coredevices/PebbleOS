@@ -253,7 +253,18 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     time_t now_t = pbl_realtime();
     struct pbl_tm *lt_h = localtime(&now_t);
     const int hour = lt_h ? lt_h->tm_hour : -1;
-    if (ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
+    // A reading synced during this very hour beats the hourly forecast bucket: it is the
+    // fresher value, and it is what the launcher glance shows (it only has the record's
+    // current fields), so every view then agrees on the current temperature.
+    bool synced_this_hour = false;
+    if (hour >= 0 && ds->current_temp != WX_DS_UNKNOWN_TEMP && ds->time_updated_utc > 0 &&
+        now_t >= (time_t)ds->time_updated_utc &&
+        now_t - (time_t)ds->time_updated_utc < PBL_SEC_PER_HOUR) {
+      time_t upd_t = ds->time_updated_utc;
+      struct pbl_tm *lt_u = localtime(&upd_t);
+      synced_this_hour = lt_u && lt_u->tm_hour == hour;
+    }
+    if (!synced_this_hour && ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {
       data->days[0].current_type_now = (WeatherType)ds->hourly_type[hour];
       data->days[0].current_temp_now = ds->hourly_temp[hour];
