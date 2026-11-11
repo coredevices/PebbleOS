@@ -2,15 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 if(CONFIG_HAL_NORDIC_NRF52840)
-  pbl_compile_definitions(
-    NRF52840_XXAA
-    NRF_CONFIG_NFCT_PINS_AS_GPIOS
-    CONFIG_GPIO_AS_PINRESET
-  )
+  pbl_compile_definitions(NRF52840_XXAA)
 endif()
-file(GLOB_RECURSE micro_sources CONFIGURE_DEPENDS nrfx/*.c)
-pbl_filter_sources(micro_sources EXCLUDE **/system_nrf*.c **/startup_nrf_common.c **/nrfx_twi_twim.c)
-set(micro_includes
+pbl_include_directories(
   .
   nrfx
   nrfx/hal
@@ -19,8 +13,3 @@ set(micro_includes
   nrfx/drivers/include
   nrfx/templates
 )
-pbl_include_directories(${micro_includes})
-pbl_library_named(hal_nordic)
-pbl_library_kind(stlib)
-pbl_library_sources(${micro_sources})
-pbl_library_compile_options(-Wno-unused-variable)

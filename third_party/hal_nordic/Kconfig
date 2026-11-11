@@ -4,17 +4,14 @@
 menuconfig HAL_NORDIC
     bool "Nordic nrfx HAL"
     help
-      Build the Nordic nrfx HAL.
+      Provide the Nordic MDK and nrfx HAL headers.
 
 if HAL_NORDIC
 
 config HAL_NORDIC_NRF52840
     bool
+    default y if SOC_NRF52840
     help
-      Configure the nrfx HAL for the Nordic nRF52840 SoC. This sets
-      the NRF52840_XXAA target define and enables the nrfx drivers
-      used by Pebble (I2S, GPIOTE, PDM, PPI, PWM, SPIM3, TIMER1/2,
-      TWIM0/1, UARTE0). It also disables NFCT pin usage so those pins
-      can be used as GPIOs and enables GPIO-as-pin-reset.
+      Configure the nrfx HAL headers for the Nordic nRF52840 SoC.
 
 endif # HAL_NORDIC

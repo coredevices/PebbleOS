@@ -45,4 +45,8 @@ rsource "Kconfig.controller"
 rsource "Kconfig.drivers"
 rsource "Kconfig.port"
 
+config NIMBLE_DRIVER_NRF5X
+    bool
+    select HAL_NORDIC
+
 endmenu
