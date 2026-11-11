@@ -5,8 +5,11 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 
-#include <hal/nrf_clock.h>
+#include <hardware/nrf52_clock.h>
+
+#define HFCLKSTAT_XTAL_RUNNING (CLOCK_HFCLKSTAT_SRC_XTAL | CLOCK_HFCLKSTAT_STATE)
 
 static uint8_t prv_refcnt;
 
@@ -15,10 +18,11 @@ void clocksource_hfxo_request(void) {
 
   PBL_ASSERT(prv_refcnt < UINT8_MAX, "HFXO refcount overflow");
 
-  if (prv_refcnt == 0U && !nrf_clock_hf_is_running(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY)) {
-    nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED);
-    nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
-    while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_HFCLKSTARTED)) {
+  if (prv_refcnt == 0U && (pbl_readl(NRF52_CLOCK_BASE + NRF52_CLOCK_HFCLKSTAT_OFFSET) &
+                           HFCLKSTAT_XTAL_RUNNING) != HFCLKSTAT_XTAL_RUNNING) {
+    pbl_writel(0U, NRF52_CLOCK_BASE + NRF52_CLOCK_EVENTS_HFCLKSTARTED_OFFSET);
+    pbl_writel(1U, NRF52_CLOCK_BASE + NRF52_CLOCK_TASKS_HFCLKSTART_OFFSET);
+    while (pbl_readl(NRF52_CLOCK_BASE + NRF52_CLOCK_EVENTS_HFCLKSTARTED_OFFSET) == 0U) {
     }
   }
 
@@ -34,7 +38,7 @@ void clocksource_hfxo_release(void) {
 
   prv_refcnt--;
   if (prv_refcnt == 0U) {
-    nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTOP);
+    pbl_writel(1U, NRF52_CLOCK_BASE + NRF52_CLOCK_TASKS_HFCLKSTOP_OFFSET);
   }
 
   pbl_irq_unlock();
