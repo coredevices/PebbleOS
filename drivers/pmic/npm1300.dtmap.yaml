@@ -9,12 +9,8 @@ symbol: "{sym}_charger"
 args:
   - self: npm1300
   - irq: 0
-  - prop: constant-charge-current-max-microamp
-    of: monitored-battery
-  - prop: charge-term-current-microamp
-    of: monitored-battery
-  - prop: constant-charge-voltage-max-microvolt
-    of: monitored-battery
+  - phandle: monitored-battery
+    as: battery
   - prop: nordic,reduced-charge-voltage-microvolt
   - prop: nordic,thermistor-ohms
   - prop: nordic,thermistor-beta

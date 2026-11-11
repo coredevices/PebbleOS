@@ -23,8 +23,9 @@
  *
  * @code{.c}
  * PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1, 0x6B);
+ * PBL_BATTERY_DEFINE(s_battery, 0, 0, 128000, 12800, 4200000);
  * PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, PBL_IRQ_SPEC(&s_gpio1_intc, 12, 1),
- *                            128000, 12800, 4200000, 4000000, 10000, 3380, 45, 200000, 0, 0);
+ *                            &s_battery, 4000000, 10000, 3380, 45, 200000, 0, 0);
  * PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
  * PBL_NPM1300_REGULATOR_DEFINE(s_ldo2, "ldo2", &s_npm1300, PBL_NPM1300_LDSW2, 3300000, true,
  *                              false);

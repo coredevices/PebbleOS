@@ -300,6 +300,10 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
       container_of(dev, const struct pbl_npm1300_charger, dev);
   const struct pbl_npm1300 *pmic = pbl_npm1300_from_cell(dev);
   const Npm1300Config *cfg = charger->cfg;
+  const struct pbl_battery *battery = charger->battery;
+  uint32_t chg_current_ma = battery->constant_charge_current_ua / 1000U;
+  uint32_t vterm_mv = battery->constant_charge_voltage_uv / 1000U;
+  uint32_t term_current_pct = 0U;
   uint16_t ntc_hot;
   uint8_t vterm;
   uint8_t vtermr;
@@ -309,20 +313,20 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
   charger->state->dischg_limit_ma = 0;
   pbl_delayed_work_init(&charger->state->debounce_timer, prv_handle_charge_state_change);
 
-  if ((cfg->chg_current_ma < 32U) || (cfg->chg_current_ma > 800U) ||
-      (cfg->chg_current_ma % 2U != 0U)) {
-    PBL_LOG_ERR("Invalid charge current: %d mA", cfg->chg_current_ma);
+  if ((chg_current_ma < 32U) || (chg_current_ma > 800U) || (chg_current_ma % 2U != 0U)) {
+    PBL_LOG_ERR("Invalid charge current: %d mA", (int)chg_current_ma);
     return -EINVAL;
   }
 
-  if ((cfg->term_current_pct != 10U) && (cfg->term_current_pct != 20U)) {
-    PBL_LOG_ERR("Invalid termination current: %d", cfg->term_current_pct);
+  term_current_pct = battery->charge_term_current_ua * 100U / battery->constant_charge_current_ua;
+  if ((term_current_pct != 10U) && (term_current_pct != 20U)) {
+    PBL_LOG_ERR("Invalid termination current: %d", (int)term_current_pct);
     return -EINVAL;
   }
 
-  ret = prv_vterm_code(cfg->vterm_mv, &vterm);
+  ret = prv_vterm_code(vterm_mv, &vterm);
   if (ret != 0) {
-    PBL_LOG_ERR("Invalid termination voltage: %d mV", cfg->vterm_mv);
+    PBL_LOG_ERR("Invalid termination voltage: %d mV", (int)vterm_mv);
     return ret;
   }
 
@@ -361,8 +365,8 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
     {NPM1300_BCHGVTERMR, vtermr},
     {NPM1300_NTCHOT, PBL_FIELD_GET(NPM1300_10BIT_MSB_MASK, ntc_hot)},
     {NPM1300_NTCHOTLSB, PBL_FIELD_GET(NPM1300_10BIT_LSB_MASK, ntc_hot)},
-    {NPM1300_BCHGISETMSB, PBL_FIELD_GET(NPM1300_BCHGISET_MSB_MASK, cfg->chg_current_ma / 2U)},
-    {NPM1300_BCHGISETLSB, PBL_FIELD_GET(NPM1300_BCHGISET_LSB_MASK, cfg->chg_current_ma / 2U)},
+    {NPM1300_BCHGISETMSB, PBL_FIELD_GET(NPM1300_BCHGISET_MSB_MASK, chg_current_ma / 2U)},
+    {NPM1300_BCHGISETLSB, PBL_FIELD_GET(NPM1300_BCHGISET_LSB_MASK, chg_current_ma / 2U)},
   };
 
   ret = prv_write_seq(pmic, setup, ARRAY_LENGTH(setup));
@@ -387,7 +391,7 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
 
   const struct prv_reg_val charge_setup[] = {
     {NPM1300_BCHGITERMSEL,
-     (cfg->term_current_pct == 10U) ? NPM1300_BCHGITERMSEL_SEL10 : NPM1300_BCHGITERMSEL_SEL20},
+     (term_current_pct == 10U) ? NPM1300_BCHGITERMSEL_SEL10 : NPM1300_BCHGITERMSEL_SEL20},
     {NPM1300_TESTACCESS, NPM1300_TESTACCESS_VAL0},
     {NPM1300_TESTACCESS, NPM1300_TESTACCESS_VAL1},
     {NPM1300_TESTACCESS, NPM1300_TESTACCESS_VAL2},
@@ -615,7 +619,7 @@ int battery_get_constants(BatteryConstants *constants) {
 
   if (PBL_FIELD_GET(NPM1300_ADCIBATMEASSTATUS_MODE_MASK, ibat_status) ==
       NPM1300_ADCIBATMEASSTATUS_MODE_CHRG) {
-    full_scale_ua = ((int32_t)NPM1300_CHARGER->cfg->chg_current_ma * 1000 *
+    full_scale_ua = ((int32_t)NPM1300_CHARGER->battery->constant_charge_current_ua *
                      NPM1300_BCHARGER_ADC_CALC_CHARGE_MUL) /
                     NPM1300_BCHARGER_ADC_CALC_CHARGE_DIV;
   } else {
