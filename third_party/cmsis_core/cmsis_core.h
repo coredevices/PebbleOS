@@ -10,10 +10,7 @@
 #elif defined(MICRO_FAMILY_STM32F4)
 #include <stm32f4xx.h>
 #elif defined(CONFIG_SOC_NRF52)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-declarations"
-#include <nrf52840.h>
-#pragma GCC diagnostic pop
+#include "pebble/nrf52.h"
 #elif defined(CONFIG_SOC_SF32LB52)
 #include <bf0_hal.h>
 #else
