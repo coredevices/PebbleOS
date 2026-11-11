@@ -90,10 +90,9 @@ config ORIENTATION_MANAGER
 
 config MODDABLE_XS
     bool "Moddable XS JavaScript engine"
-    depends on USERSPACE
+    depends on USERSPACE && !RECOVERY_FW
     help
-      Build Moddable XS support for running JavaScript apps. PRF
-      variant builds force this off regardless of the board default.
+      Build Moddable XS support for running JavaScript apps.
 
 config MMAP_RESOURCES
     bool "Memory-mapped (zero-copy) resource reads"

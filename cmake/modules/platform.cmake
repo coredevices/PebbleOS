@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Board- and platform-level facts derived from the configuration: the SDK
-# platform the firmware exposes, and the JavaScript engine.
+# platform the firmware exposes.
 
 if(CONFIG_PLATFORM_EMERY)
   set(PBL_PLATFORM_NAME emery)
@@ -19,19 +19,6 @@ endif()
 
 if(NOT PBL_BOARD_RUNNERS AND NOT CONFIG_QEMU AND NOT CONFIG_SOC_POSIX)
   message(FATAL_ERROR "Board ${PBL_BOARD} does not define any supported runners")
-endif()
-
-# The PRF variant never ships the JS engine, even when the board's
-# defconfig asks for it: undefine the symbol the sources guard on so they
-# match what is actually linked.
-if(CONFIG_MODDABLE_XS AND NOT CONFIG_RECOVERY_FW)
-  set(PBL_JS_ENGINE moddable)
-else()
-  set(PBL_JS_ENGINE none)
-  if(CONFIG_MODDABLE_XS)
-    add_compile_options(-UCONFIG_MODDABLE_XS)
-    unset(CONFIG_MODDABLE_XS)
-  endif()
 endif()
 
 # Used for pblboot image naming; -1 when the board has no slots.
