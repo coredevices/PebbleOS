@@ -182,6 +182,20 @@ void pbl_log_filtered_sync(uint8_t log_level, const char *src_filename, int src_
                            const char *fmt, ...) PBL_FORMAT_PRINTF(4, 5);
 
 /**
+ * @brief Log a message from a fault handler, sent before returning.
+ *
+ * For contexts where OS services can't be trusted: never filtered, never recorded to flash, and
+ * formatted on a small stack buffer. Prefer PBL_LOG_FAULT().
+ *
+ * @param src_filename Source file name.
+ * @param src_line_number Source line number.
+ * @param fmt printf-style format.
+ * @param ... Format arguments.
+ */
+void pbl_log_fault(const char *src_filename, int src_line_number, const char *fmt, ...)
+    PBL_FORMAT_PRINTF(3, 4);
+
+/**
  * @brief Log data as xxd-style lines of 16 bytes, sent before returning.
  *
  * Each line has the offset, the bytes in hex and their printable ASCII characters. Prefer the
@@ -576,6 +590,14 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
  */
 #define PBL_LOG_VERBOSE(fmt, ...) \
   PBL_LOG_COLOR(LOG_LEVEL_DEBUG_VERBOSE, LOG_COLOR_FOR_VERBOSE, fmt, ##__VA_ARGS__)
+
+/**
+ * @brief Log a message from a fault handler, sent before returning.
+ *
+ * @param fmt printf-style format, a string literal.
+ * @param ... Format arguments.
+ */
+#define PBL_LOG_FAULT(fmt, ...) pbl_log_fault(__FILE_NAME__, __LINE__, fmt, ##__VA_ARGS__)
 
 // Level-named sync macros
 /**
