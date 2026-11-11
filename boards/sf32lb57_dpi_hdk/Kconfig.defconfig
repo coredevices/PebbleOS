@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# 8 MiB SiP NOR flash on MPI2, which the boot ROM boots from: the flash table,
+# then the firmware.
+config FLASH_BASE
+    default 0x12000000
+
+config FLASH_SIZE
+    default 0x800000
+
+config FLASH_OFFSET
+    default 0x20000
+
+config FW_FLASH_SIZE
+    default 0x300000
