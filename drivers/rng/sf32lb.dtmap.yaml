@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-trng
+config: RNG_SF32LB
+class: device
+symbol: pbl_rng_sf32lb
+define: PBL_RNG_SF32LB_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0

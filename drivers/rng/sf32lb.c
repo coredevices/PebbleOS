@@ -4,8 +4,9 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/devicetree.h>
 #include <pbl/drivers/rng.h>
+#include <pbl/drivers/rng/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
@@ -17,15 +18,17 @@ PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
 
 #define TRNG_TIMEOUT_US 3000U
 
-static const struct pbl_clk s_clk = PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_TRNG);
+extern const struct pbl_rng_sf32lb pbl_rng_sf32lb_inst;
+
+static const struct pbl_rng_sf32lb *const s_rng = &pbl_rng_sf32lb_inst;
 static bool s_inited;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(SF32LB52_TRNG_BASE + offset);
+  return pbl_readl(s_rng->base + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, SF32LB52_TRNG_BASE + offset);
+  pbl_writel(value, s_rng->base + offset);
 }
 
 static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t *out) {
@@ -46,10 +49,10 @@ bool rng_rand(uint32_t *rand_out) {
   int ret;
 
   if (!s_inited) {
-    PBL_ASSERTN(pbl_device_init(&s_clk.ctrl->dev) == 0);
+    PBL_ASSERTN(pbl_device_init(&s_rng->clk.ctrl->dev) == 0);
   }
 
-  ret = pbl_clk_enable(&s_clk);
+  ret = pbl_clk_enable(&s_rng->clk);
   if (ret != 0) {
     return false;
   }
@@ -72,7 +75,9 @@ bool rng_rand(uint32_t *rand_out) {
     PBL_LOG_ERR("Random number generation failed: %d", ret);
   }
 
-  pbl_clk_disable(&s_clk);
+  pbl_clk_disable(&s_rng->clk);
 
   return ret == 0;
 }
+
+#include PBL_DT_INSTANCES(sifli_sf32lb52_trng)
