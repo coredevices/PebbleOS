@@ -37,7 +37,7 @@ config SRAM_SIZE
     default 0x7fc00
 
 config FIRMWARE_OFFSET
-    default 4096
+    default 4096 if PBLBOOT
 
 if BT
 
