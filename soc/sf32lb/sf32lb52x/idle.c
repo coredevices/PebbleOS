@@ -49,9 +49,7 @@ static void prv_restore_iser(void) {
 #endif // CONFIG_FLASH
 
 PBL_SECTION_RAM static void prv_enter_wfi(void) {
-  __DSB();
-  __WFI();
-  __ISB();
+  pbl_cpu_idle();
 }
 
 PBL_SECTION_RAM static void prv_enter_deepwfi(void) {

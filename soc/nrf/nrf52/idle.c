@@ -6,22 +6,14 @@
 #include <pbl/soc/nrf/sleep.h>
 #include <pbl/util/size.h>
 
-#include <cmsis_core.h>
-
 enum {
   IDLE_WFI,
   IDLE_FULL,
 };
 
-static void prv_wfi(void) {
-  __DSB();
-  __WFI();
-  __ISB();
-}
-
 #ifdef CONFIG_FLASH
 static void prv_wfi_cb(void *arg) {
-  prv_wfi();
+  pbl_cpu_idle();
 }
 
 // WFI with the external flash powered down.
@@ -31,7 +23,7 @@ static void prv_full_sleep(void) {
 #endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
-  [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_wfi},
+  [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
 #ifdef CONFIG_FLASH
   [IDLE_FULL] = {.name = "full", .min_ticks = 5, .exit_ticks = 2, .enter = prv_full_sleep},
 #endif

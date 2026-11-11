@@ -8,7 +8,8 @@ decision; the SoC only describes how its CPU can sleep, through
 - `pbl_soc_idle_states[]` lists the idle states, shallowest first. Each has
   the shortest time until the next timeout worth entering it for, the time it
   takes to wake up from, and an `enter()` function that sleeps until an
-  interrupt is pending.
+  interrupt is pending. `pbl_cpu_idle()` is the plain wait for interrupt,
+  for the shallowest state and for deeper ones to wrap.
 - `pbl_soc_idle_state_limit()` returns the deepest state allowed right now,
   or -1 to keep the CPU running, from whatever the SoC tracks: peripherals
   that cannot run in deep sleep, an IPC queue still busy, a debug override.
