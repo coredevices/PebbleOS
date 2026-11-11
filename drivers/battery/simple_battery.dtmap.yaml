@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: simple-battery
+config: BATTERY_SIMPLE
+class: battery
+define: PBL_BATTERY_DEFINE
+args:
+  - prop: charge-full-design-microamp-hours
+    default: 0
+  - prop: factory-internal-resistance-micro-ohms
+    default: 0
+  - prop: constant-charge-current-max-microamp
+    default: 0
+  - prop: charge-term-current-microamp
+    default: 0
+  - prop: constant-charge-voltage-max-microvolt
+    default: 0
+  # The curve of the first temperature of ocv-capacity-celsius
+  - prop: ocv-capacity-table-0
+    cells: 2
+    item: "{{{0}, {1}}}"
+    optional: true

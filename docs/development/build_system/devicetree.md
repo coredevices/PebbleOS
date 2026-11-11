@@ -271,6 +271,7 @@ class header, as `SPEAKER`:
 | `speaker` | `audio` | `SPEAKER` |
 | `die_temp` | `temp` | `TEMP` |
 | `rtc` | `rtc` | `RTC` |
+| `battery` | `battery` | |
 
 A board gives each role it has a device in `boards/<board>/roles.yml`, and
 a revision changes them in `roles.<revision>.yml`. A device is the label of

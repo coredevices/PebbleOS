@@ -17,3 +17,4 @@ die_temp:
 rtc:
   symbol: RETAINED_RTC
   include: pbl/drivers/rtc/retained.h
+battery: battery
