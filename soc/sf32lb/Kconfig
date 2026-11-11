@@ -18,3 +18,12 @@ config SOC_SF32LB52
     select TIMER_SF32LB_LPTIM
     help
       SiFli SF32LB52 series, selected by its lines.
+
+config SF32LB52_FTAB
+    bool "Boot ROM flash table"
+    default y
+    depends on SOC_SF32LB52 && !PBLBOOT
+    help
+      Generate the flash table (FTAB) the boot ROM reads from the ptable
+      partition, pointing it at the firmware image, and flash it along with
+      the firmware. Builds for PBLBOOT leave the table to the bootloader.
