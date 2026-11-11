@@ -108,12 +108,18 @@ static void prv_dump_frame(const uint32_t *frame) {
   PBL_LOG_FAULT("PSR = 0x%" PRIx32, frame[FRAME_XPSR]);
 }
 
+// No thread runs before the scheduler starts.
+static const char *prv_thread_name(void) {
+  const struct pbl_thread *t = pbl_thread_current();
+  return (t != nullptr) ? pbl_thread_name(t) : "none";
+}
+
 static void prv_dump(const uint32_t *frame, uint32_t cfsr) {
   if (frame != nullptr) {
     prv_dump_frame(frame);
   }
   prv_dump_cfsr(cfsr);
-  PBL_LOG_FAULT("Thread: %s", pbl_thread_name(pbl_thread_current()));
+  PBL_LOG_FAULT("Thread: %s", prv_thread_name());
 }
 
 static bool prv_hit_stack_guard(const uint32_t *frame, uint32_t exc_return, uint32_t cfsr) {
@@ -200,7 +206,7 @@ static void prv_stack_overflow(uint32_t *frame, uint32_t exc_return, uint32_t cf
   struct pbl_fault_info info;
   prv_fill_info(&info, PBL_FAULT_STACK_OVERFLOW, frame_valid ? frame : nullptr, cfsr);
 
-  PBL_LOG_FAULT("Stack overflow [thread: %s]", pbl_thread_name(pbl_thread_current()));
+  PBL_LOG_FAULT("Stack overflow [thread: %s]", prv_thread_name());
   prv_dump(frame_valid ? frame : nullptr, cfsr);
 
   if (!can_recover || !prv_is_recoverable(exc_return)) {
