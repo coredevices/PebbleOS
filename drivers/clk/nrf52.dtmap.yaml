@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-clock
+config: CLK_NRF52
+class: clk
+symbol: pbl_clk_nrf52
+define: PBL_CLK_NRF52_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: hfxo
+  - clock: lfxo
+ids:
+  clock:
+    cell: 0
+    header: dt-bindings/clock/nordic,nrf52832-clock.h
+    prefix: NRF52_CLOCK_
+    values:
+      header: pbl/drivers/clk/nrf52.h
+      prefix: NRF52_CLK_

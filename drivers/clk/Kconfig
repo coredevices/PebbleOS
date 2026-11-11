@@ -30,6 +30,12 @@ config CLK_SF32LB
     help
       Clock controller of the SiFli SF32LB52 HPSYS RCC.
 
+config CLK_NRF52
+    bool "Nordic nRF52 clock control"
+    default DT_HAS_NORDIC_NRF52832_CLOCK_ENABLED
+    help
+      HFCLK and LFCLK of the Nordic nRF52, from their crystal oscillators.
+
 config CLK_CAL
     bool
     help

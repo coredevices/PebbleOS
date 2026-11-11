@@ -1,12 +1,19 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
+#include <dt-bindings/clock/nordic,nrf52832-clock.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
+
+	hfxo: clock-32000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32000000>;
+	};
 
 	nvic: interrupt-controller@e000e100 {
 		compatible = "arm,v7m-nvic";
@@ -22,6 +29,15 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+
+		clock: clock-controller@40000000 {
+			compatible = "nordic,nrf52840-clock", "nordic,nrf52832-clock";
+			reg = <0x40000000 0x1000>;
+			interrupts = <0>;
+			#clock-cells = <1>;
+			clocks = <&hfxo>;
+			clock-names = "hfxo";
+		};
 
 		uart0: serial@40002000 {
 			compatible = "nordic,nrf52840-uarte", "nordic,nrf52832-uarte";
