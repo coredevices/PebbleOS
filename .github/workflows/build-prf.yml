@@ -137,8 +137,9 @@ jobs:
           BOARD: ${{ steps.artifact_board.outputs.NAME }}
           MODE: ${{ matrix.mode }}
         run: |
-          pbz=$(ls build/recovery_${BOARD}_*.pbz)
-          version=$(basename "$pbz" | sed -E "s/^recovery_${BOARD}_//; s/\.pbz$//")
+          # MFG images link for the main area and bundle as normal firmware.
+          pbz=$(ls build/*_${BOARD}_*.pbz)
+          version=$(basename "$pbz" | sed -E "s/^(recovery|normal)_${BOARD}_//; s/(_slot[01])?\.pbz$//")
 
           mkdir artifacts
           if [ "$MODE" = "mfg" ]; then
