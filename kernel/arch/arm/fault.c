@@ -189,9 +189,9 @@ static void prv_redirect(uint32_t *frame, const struct pbl_fault_info *info) {
 }
 #endif
 
-static void prv_handle(const struct pbl_fault_info *info, uint32_t *frame, uint32_t exc_return) {
+static void prv_handle(const struct pbl_fault_info *info, uint32_t *frame, bool recoverable) {
 #ifdef CONFIG_USERSPACE
-  if (prv_is_recoverable(exc_return)) {
+  if (recoverable) {
     prv_redirect(frame, info);
     return;
   }
@@ -206,17 +206,22 @@ static void prv_stack_overflow(uint32_t *frame, uint32_t exc_return, uint32_t cf
   struct pbl_fault_info info;
   prv_fill_info(&info, PBL_FAULT_STACK_OVERFLOW, frame_valid ? frame : nullptr, cfsr);
 
+  const bool recoverable = can_recover && prv_is_recoverable(exc_return);
+  if (!recoverable) {
+    pbl_fault_fatal_record(&info);
+  }
+
   PBL_LOG_FAULT("Stack overflow [thread: %s]", prv_thread_name());
   prv_dump(frame_valid ? frame : nullptr, cfsr);
 
-  if (!can_recover || !prv_is_recoverable(exc_return)) {
+  if (!recoverable) {
     pbl_fault_fatal_handler(&info);
   }
 
   // Move SP back up into the stack, out of the guard, for the landing function.
   frame += OVERFLOW_SP_SKIP_WORDS;
   arm_psp_set((uint32_t)(uintptr_t)frame);
-  prv_handle(&info, frame, exc_return);
+  prv_handle(&info, frame, true);
 }
 
 static void prv_fault(enum pbl_fault_reason reason, uint32_t *frame, uint32_t exc_return) {
@@ -224,9 +229,15 @@ static void prv_fault(enum pbl_fault_reason reason, uint32_t *frame, uint32_t ex
 
   struct pbl_fault_info info;
   prv_fill_info(&info, reason, frame, cfsr);
+
+  const bool recoverable = prv_is_recoverable(exc_return);
+  if (!recoverable) {
+    pbl_fault_fatal_record(&info);
+  }
+
   prv_dump(frame, cfsr);
 
-  prv_handle(&info, frame, exc_return);
+  prv_handle(&info, frame, recoverable);
 }
 
 static void prv_log_mpu_line(void *ctx, const char *line) {
@@ -276,6 +287,7 @@ static PBL_USED void prv_hard_fault(uint32_t *frame, uint32_t exc_return) {
 
   struct pbl_fault_info info;
   prv_fill_info(&info, PBL_FAULT_HARD, frame, cfsr);
+  pbl_fault_fatal_record(&info);
 
   const uint32_t hfsr = arch_readl(ARM_SCB_HFSR);
   PBL_LOG_FAULT("\r\n\r\n[Hard fault handler]");

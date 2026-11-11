@@ -71,11 +71,22 @@ struct pbl_fault_info {
 };
 
 /**
+ * @brief Record a CPU fault the system can't recover from.
+ *
+ * The kernel calls it from the fault exception before logging anything, so the record survives a
+ * fault or hang while logging. The default does nothing; an application overrides it, e.g. to
+ * record why the system is about to reset. It must not log.
+ *
+ * @param info Fault.
+ */
+void pbl_fault_fatal_record(const struct pbl_fault_info *info);
+
+/**
  * @brief Handle a CPU fault the system can't recover from.
  *
- * The kernel calls it from the fault exception once the fault is logged. The default flushes the
- * logs and resets; an application overrides it, e.g. to record why and save a core dump. It must
- * not return.
+ * The kernel calls it from the fault exception once the fault is recorded and logged. The default
+ * flushes the logs and resets; an application overrides it, e.g. to save a core dump. It must not
+ * return.
  *
  * @param info Fault.
  */
