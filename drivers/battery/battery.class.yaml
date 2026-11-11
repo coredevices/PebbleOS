@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: battery
+type: struct pbl_battery
+include: pbl/drivers/battery.h
+# The cell's data, not a device
+device: false
+provides:
+  battery: "&{sym}"
+roles:
+  battery:

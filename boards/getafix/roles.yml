@@ -13,3 +13,4 @@ vibe: haptics
 mic: mic
 die_temp: tsen
 rtc: rtc
+battery: battery
