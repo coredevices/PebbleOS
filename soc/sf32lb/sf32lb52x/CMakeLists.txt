@@ -12,6 +12,7 @@ pbl_library_sources(
   lpsys.c
   lpsys_halt.c
   mpu_regions.c
+  retained.c
 )
 pbl_linker_sources(ramfunc ramfunc.ld)
 

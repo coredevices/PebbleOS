@@ -10,10 +10,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/mcu/interrupts.h>
 
-#ifdef CONFIG_SOC_SF32LB52
-#include <bf0_hal.h>
-#endif
-
 #if defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
 extern void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value);
 extern uint32_t RTC_ReadBackupRegister(uint32_t reg_id);
@@ -41,7 +37,7 @@ void reboot_reason_set(RebootReason *reason) {
 #elifdef CONFIG_SOC_SF32LB52
   uint32_t *raw = (uint32_t *)reason;
 
-  if (HAL_Get_backup(REBOOT_REASON_REGISTER_1)) {
+  if (retained_read(REBOOT_REASON_REGISTER_1)) {
     // It's not safe to log if we're called from an ISR or from a FreeRTOS critical section (basepri
     // != 0)
     if (!mcu_state_is_isr() && !pbl_irq_is_locked() && pbl_kernel_is_running()) {
@@ -50,10 +46,10 @@ void reboot_reason_set(RebootReason *reason) {
     return;
   }
 
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, raw[0]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
+  retained_write(REBOOT_REASON_REGISTER_1, raw[0]);
+  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
+  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
+  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)reason;
 
@@ -83,7 +79,7 @@ static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
   retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elifdef CONFIG_SOC_SF32LB52
   uint32_t *raw = (uint32_t *)&reason;
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, *raw);
+  retained_write(REBOOT_REASON_REGISTER_1, *raw);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)&reason;
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, *raw);
@@ -104,10 +100,10 @@ void reboot_reason_get(RebootReason *reason) {
   raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
 #elifdef CONFIG_SOC_SF32LB52
   uint32_t *raw = (uint32_t *)reason;
-  raw[0] = HAL_Get_backup(REBOOT_REASON_REGISTER_1);
-  raw[1] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_PC);
-  raw[2] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_LR);
-  raw[3] = HAL_Get_backup(REBOOT_REASON_STUCK_TASK_CALLBACK);
+  raw[0] = retained_read(REBOOT_REASON_REGISTER_1);
+  raw[1] = retained_read(REBOOT_REASON_STUCK_TASK_PC);
+  raw[2] = retained_read(REBOOT_REASON_STUCK_TASK_LR);
+  raw[3] = retained_read(REBOOT_REASON_STUCK_TASK_CALLBACK);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   uint32_t *raw = (uint32_t *)reason;
   raw[0] = RTC_ReadBackupRegister(REBOOT_REASON_REGISTER_1);
@@ -124,10 +120,10 @@ void reboot_reason_clear(void) {
   retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
   retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
 #elifdef CONFIG_SOC_SF32LB52
-  HAL_Set_backup(REBOOT_REASON_REGISTER_1, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_PC, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_LR, 0);
-  HAL_Set_backup(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
+  retained_write(REBOOT_REASON_REGISTER_1, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_PC, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_LR, 0);
+  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, 0);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   RTC_WriteBackupRegister(REBOOT_REASON_REGISTER_1, 0);
   RTC_WriteBackupRegister(REBOOT_REASON_STUCK_TASK_PC, 0);
@@ -140,7 +136,7 @@ uint32_t reboot_get_slot_of_last_launched_app(void) {
 #ifdef CONFIG_SOC_NRF52
   return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
 #elifdef CONFIG_SOC_SF32LB52
-  return HAL_Get_backup(SLOT_OF_LAST_LAUNCHED_APP);
+  return retained_read(SLOT_OF_LAST_LAUNCHED_APP);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   return RTC_ReadBackupRegister(SLOT_OF_LAST_LAUNCHED_APP);
 #endif
@@ -150,7 +146,7 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
 #ifdef CONFIG_SOC_NRF52
   retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #elifdef CONFIG_SOC_SF32LB52
-  HAL_Set_backup(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
+  retained_write(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #elif defined(CONFIG_QEMU) || defined(CONFIG_SOC_POSIX)
   RTC_WriteBackupRegister(SLOT_OF_LAST_LAUNCHED_APP, app_slot);
 #endif

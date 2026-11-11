@@ -11,4 +11,5 @@ labels:
   - lpsys_aon
   - lpsys_rcc
   - pmuc
+  - rtc
   - wdt1
