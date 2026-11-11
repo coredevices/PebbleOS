@@ -5,6 +5,7 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
 #include <pbl/soc/sf32lb/sleep.h>
@@ -15,7 +16,13 @@
 #include <pbl/shell/shell.h>
 #endif
 
-#include <bf0_hal.h>
+#include <devicetree/regs.h>
+#include <hardware/sf32lb52_hpsys_aon.h>
+
+#define HPSYS_AON(reg) (PBL_DT_REG_HPSYS_AON + SF32LB52_HPSYS_AON_##reg##_OFFSET)
+
+// Settling time after waking up from deep sleep
+#define DEEPSLEEP_EXIT_NOPS 10
 
 enum {
   IDLE_WFI,
@@ -26,25 +33,34 @@ enum {
 static bool s_force_wfi;
 
 #ifdef CONFIG_FLASH
-static uint32_t s_iser_bak[16];
+static uint32_t s_enabled[(CONFIG_NUM_IRQS + 31) / 32];
 
-static void prv_save_iser(void) {
-  uint32_t i;
-  for (i = 0; i < 16; i++) {
-    s_iser_bak[i] = NVIC->ISER[i];
-    NVIC->ICER[i] = 0xFFFFFFFF;
-    __DSB();
-    __ISB();
+// Leave AON as the only wakeup source, the other handlers run from flash
+static void prv_irqs_aon_only(void) {
+  for (pbl_irq_t irq = 0; irq < CONFIG_NUM_IRQS; irq++) {
+    if (pbl_irq_is_enabled(irq)) {
+      s_enabled[irq / 32] |= PBL_BIT(irq % 32);
+      pbl_irq_disable(irq);
+    } else {
+      s_enabled[irq / 32] &= ~PBL_BIT(irq % 32);
+    }
+  }
+
+  pbl_irq_enable(PBL_IRQN(AON));
+}
+
+// AON stays enabled: its handler clears the wakeup status, then disables it
+static void prv_irqs_restore(void) {
+  for (pbl_irq_t irq = 0; irq < CONFIG_NUM_IRQS; irq++) {
+    if ((s_enabled[irq / 32] & PBL_BIT(irq % 32)) != 0U) {
+      pbl_irq_enable(irq);
+    }
   }
 }
 
-static void prv_restore_iser(void) {
-  uint32_t i;
-  for (i = 0; i < 16; i++) {
-    __COMPILER_BARRIER();
-    NVIC->ISER[i] = s_iser_bak[i];
-    __COMPILER_BARRIER();
-  }
+// Inline, unlike pbl_modifyl(): the flash is down
+static PBL_ALWAYS_INLINE void prv_update(uint32_t clear, uint32_t set, uintptr_t addr) {
+  pbl_writel((pbl_readl(addr) & ~clear) | set, addr);
 }
 #endif // CONFIG_FLASH
 
@@ -53,12 +69,7 @@ PBL_SECTION_RAM static void prv_enter_wfi(void) {
 }
 
 PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
-  __DSB();
-  __ISB();
-
-  SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-  __WFI();
-  SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+  pbl_cpu_idle_deep();
 }
 
 #ifdef CONFIG_FLASH
@@ -66,46 +77,37 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   struct pbl_clk_sf32lb52_hxt48_state clocks;
 
-  NVIC_EnableIRQ(AON_IRQn);
-
   // HXT48 stops in deep sleep
   pbl_clk_sf32lb52_hxt48_suspend(&clocks);
 
-  HAL_HPAON_DISABLE_PAD();
-  HAL_HPAON_DISABLE_VHP();
+  prv_update(0U, HPSYS_AON_ANACR_PA_ISO, HPSYS_AON(ANACR));
+  prv_update(0U, HPSYS_AON_ANACR_VHP_ISO, HPSYS_AON(ANACR));
 
-  HAL_HPAON_CLEAR_HP_ACTIVE();
-  HAL_HPAON_SET_POWER_MODE(AON_PMR_DEEP_SLEEP);
+  prv_update(HPSYS_AON_ISSR_HP_ACTIVE, 0U, HPSYS_AON(ISSR));
+  pbl_writel(PBL_FIELD_PREP(HPSYS_AON_PMR_MODE_MASK, HPSYS_AON_PMR_MODE_DEEP_SLEEP),
+             HPSYS_AON(PMR));
 
-  __WFI();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
-  __NOP();
+  pbl_cpu_idle();
+  for (int i = 0; i < DEEPSLEEP_EXIT_NOPS; i++) {
+    __asm volatile("nop");
+  }
 
-  HAL_HPAON_ENABLE_PAD();
-  HAL_HPAON_ENABLE_VHP();
+  prv_update(HPSYS_AON_ANACR_PA_ISO, 0U, HPSYS_AON(ANACR));
+  prv_update(HPSYS_AON_ANACR_VHP_ISO, 0U, HPSYS_AON(ANACR));
 
-  HAL_HPAON_SET_HP_ACTIVE();
-  HAL_HPAON_CLEAR_POWER_MODE();
+  prv_update(0U, HPSYS_AON_ISSR_HP_ACTIVE, HPSYS_AON(ISSR));
+  pbl_writel(0U, HPSYS_AON(PMR));
 
-  while (0 == (hwp_hpsys_aon->ACR & HPSYS_AON_ACR_HXT48_RDY)) {
-    __NOP();
+  while ((pbl_readl(HPSYS_AON(ACR)) & HPSYS_AON_ACR_HXT48_RDY) == 0U) {
   }
 
   pbl_clk_sf32lb52_hxt48_resume(&clocks);
 }
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
-  prv_save_iser();
+  prv_irqs_aon_only();
   pbl_flash_power_down(FLASH, prv_deepsleep, nullptr);
-  prv_restore_iser();
+  prv_irqs_restore();
 }
 #endif // CONFIG_FLASH
 
@@ -138,12 +140,11 @@ PBL_SECTION_RAM int pbl_soc_idle_state_limit(void) {
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   uint32_t status;
 
-  NVIC_DisableIRQ(AON_IRQn);
-  HAL_HPAON_CLEAR_POWER_MODE();
+  pbl_irq_disable(PBL_IRQN(AON));
+  pbl_writel(0U, HPSYS_AON(PMR));
 
-  status = HAL_HPAON_GET_WSR();
-  status &= ~HPSYS_AON_WSR_PIN_ALL;
-  HAL_HPAON_CLEAR_WSR(status);
+  status = pbl_readl(HPSYS_AON(WSR)) & ~HPSYS_AON_WSR_PIN_ALL;
+  pbl_writel(status | HPSYS_AON_WCR_AON, HPSYS_AON(WCR));
 }
 
 #ifdef CONFIG_SHELL
