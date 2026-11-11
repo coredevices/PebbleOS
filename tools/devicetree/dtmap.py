@@ -1269,13 +1269,28 @@ def depfile_sources(text):
     return [s.replace("\\ ", " ") for s in re.findall(r"(?:\\ |\S)+", sources)]
 
 
-def compile_dts(dts, cc, include_dirs, outdir):
-    """Compile to outdir/board.dtb, returning it and the sources it came from."""
+def overlay_files(board, appdir):
+    """The devicetree overlays of the application, in the order they apply."""
+    if appdir is None:
+        return []
+    return [Path(appdir) / "app.overlay", Path(appdir) / "boards" / f"{board}.overlay"]
+
+
+def compile_dts(dts, cc, include_dirs, outdir, overlays=()):
+    """Compile to outdir/board.dtb, returning it and the sources it came from.
+
+    Overlays follow the tree, so that they can change its nodes by label.
+    """
     dtc = shutil.which("dtc")
     if dtc is None:
         raise DtError(f"{dts} needs dtc: install it")
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
+    source = Path(dts)
+    if overlays:
+        source = outdir / "board.overlaid.dts"
+        text = "".join(f'#include "{Path(path).resolve()}"\n' for path in [dts, *overlays])
+        write_if_changed(source, text.encode())
     pre, depfile, dtb = (
         outdir / "board.dts.pre",
         outdir / "board.dts.d",
@@ -1294,7 +1309,7 @@ def compile_dts(dts, cc, include_dirs, outdir):
     cpp += ["-MD", "-MF", str(depfile), "-MT", "board.dtb"]
     cpp += [flag for path in include_dirs for flag in ("-I", str(path))]
     result = subprocess.run(
-        [*cpp, "-o", str(pre), str(dts)], capture_output=True, text=True, check=False
+        [*cpp, "-o", str(pre), str(source)], capture_output=True, text=True, check=False
     )
     if result.returncode != 0:
         raise DtError(f"preprocessing {dts} failed:\n{result.stderr}")
@@ -1320,7 +1335,8 @@ def compile_dts(dts, cc, include_dirs, outdir):
         raise DtError(f"dtc failed on {dts}:\n{result.stderr}")
     write_if_changed(dtb, tmp.read_bytes())
     tmp.unlink()
-    return dtb, depfile_sources(depfile.read_text())
+    sources = depfile_sources(depfile.read_text())
+    return dtb, [src for src in sources if not overlays or Path(src) != source]
 
 
 def kconfig_symbol(compatible):
@@ -1358,13 +1374,16 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     )
     tree, dtb = None, None
     dts = find_dts(srcdir, board, revision)
+    overlays = [path for path in overlay_files(board, appdir) if path.exists()]
     if dts is not None:
-        srcdir = Path(srcdir)
+        root = Path(srcdir)
         dtb, sources = compile_dts(
-            dts, cc, [srcdir / "boards", srcdir / "dts", srcdir / "include"], outdir
+            dts, cc, [root / "boards", root / "dts", root / "include"], outdir, overlays
         )
         deps += sources
         tree = fdt.load(dtb)
+    elif overlays:
+        raise DtError(f"{overlays[0]}: board {board} has no devicetree to overlay")
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, [*specs, PARTITIONS]).encode())
     outputs = [PARTITIONS_HEADER, REGS_HEADER, *instance_files(specs)]

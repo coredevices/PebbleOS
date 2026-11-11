@@ -1968,3 +1968,17 @@ def test_regs_of_unknown_label_fail(tmp_path):
 def test_regs_of_node_without_reg_fail(tmp_path):
     with pytest.raises(DtError, match="bus-node has no reg"):
         regs(tmp_path, ["nameless"])
+
+def test_overlays_change_the_tree(tmp_path):
+    dtc()
+    if shutil.which("cc") is None:
+        pytest.skip("needs cc")
+    dts = tmp_path / "board.dts"
+    dts.write_text(DTS % {"bus": "", "sensor": ""})
+    overlay = tmp_path / "app.overlay"
+    overlay.write_text('&sensor {\n    status = "disabled";\n};\n')
+    dtb, sources = dtmap.compile_dts(dts, "cc", [], tmp_path / "out", [overlay])
+    sensor = next(n for n in fdt.load(dtb).nodes() if "sensor" in n.labels)
+    assert not sensor.status_okay
+    assert str(overlay) in sources
+    assert not any(src.endswith("board.overlaid.dts") for src in sources)

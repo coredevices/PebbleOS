@@ -60,7 +60,7 @@ supplies switched by GPIOs.
 
 ```{mermaid}
 flowchart TD
-  dts["boards/&lt;board&gt;/*.dts<br/>dts/*/*.dtsi"]
+  dts["boards/&lt;board&gt;/*.dts<br/>dts/*/*.dtsi<br/>application overlays"]
   dtc["dtmap.py: C preprocessor, dtc"]
   dtb["board.dtb"]
   kdt["Kconfig.dt<br/>DT_HAS_*_ENABLED"]
@@ -84,8 +84,10 @@ flowchart TD
 
 1. **Compile.** When the build directory is configured,
    `tools/cmake/kconfig.py` has `tools/devicetree/dtmap.py` compile the
-   board's tree before Kconfig runs: the C preprocessor first, with `boards/`,
-   `dts/` and `include/` on the include path, then `dtc`, into
+   board's tree before Kconfig runs, followed by the overlays of the
+   application, if any; see [](#devicetree-overlays). The C preprocessor
+   runs first, with `boards/`, `dts/` and `include/` on the include path,
+   then `dtc`, into
    `devicetree/board.dtb` in the build. `dtc`'s default checks apply, with
    `unique_unit_address_if_enabled` in place of `unique_unit_address`; a
    warning fails the build.
@@ -244,6 +246,27 @@ Making these choices in the board file is temporary. They are expected to
 move to a description of their own, such as YAML files that an application
 can overlay, so that boards end up with no C file.
 ```
+
+(devicetree-overlays)=
+
+### Overlays
+
+An application changes the board's tree with overlays, applied after it in
+this order: `app.overlay`, for every board, then `boards/<board>.overlay`.
+An overlay changes nodes by their label, and can add new ones:
+
+```dts
+&lsm6dso {
+	status = "disabled";
+};
+
+&i2c2 {
+	status = "okay";
+};
+```
+
+They take the include path and preprocessor of the board's tree. A board
+without a tree has nothing to overlay, which fails the build.
 
 ### Validating
 
