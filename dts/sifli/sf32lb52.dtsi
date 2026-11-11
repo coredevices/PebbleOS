@@ -181,6 +181,12 @@
 			status = "disabled";
 		};
 
+		crc1: crc@50048000 {
+			compatible = "sifli,sf32lb52-crc";
+			reg = <0x50048000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_CRC1>;
+		};
+
 		dmac1: dma-controller@50081000 {
 			compatible = "sifli,sf32lb52-dmac";
 			reg = <0x50081000 0x1000>;
