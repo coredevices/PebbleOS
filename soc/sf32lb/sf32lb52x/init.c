@@ -4,56 +4,102 @@
 #include "lpsys.h"
 #include "syscfg.h"
 
+#include <stdint.h>
+
 #include <pbl/drivers/pinctrl/sf32lb52.h>
 #include <pbl/drivers/pinctrl/sf32lb52_pins.h>
-#include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/util/bits.h>
 
-#include <bf0_hal.h>
 #include <devicetree/regs.h>
+#include <hardware/sf32lb52_hpsys_aon.h>
+#include <hardware/sf32lb52_hpsys_cfg.h>
+#include <hardware/sf32lb52_hpsys_rcc.h>
+#include <hardware/sf32lb52_lpsys_aon.h>
+#include <hardware/sf32lb52_pmuc.h>
 #include <hardware/sf32lb52_wdt.h>
 
+#define HPSYS_AON(reg) (PBL_DT_REG_HPSYS_AON + SF32LB52_HPSYS_AON_##reg##_OFFSET)
+#define HPSYS_RCC(reg) (PBL_DT_REG_HPSYS_RCC + SF32LB52_HPSYS_RCC_##reg##_OFFSET)
+#define PMUC(reg)      (PBL_DT_REG_PMUC + SF32LB52_PMUC_##reg##_OFFSET)
+
+#define SYSCLK_HZ   48000000U
+#define DLL_STEP_HZ 24000000U
+
 #define PWRKEY_RESET_CNT (32000 * 15)
+
+#define DEEPWFI_HDIV  12U
+#define DEEPWFI_PDIV1 0U
+#define DEEPWFI_PDIV2 1U
 
 #define PIN_FUNC_MSK \
   (PBL_PINCTRL_SF32LB52_FSEL_MSK | PBL_PINCTRL_SF32LB52_PULL_UP | PBL_PINCTRL_SF32LB52_INPUT)
 
+uint32_t SystemCoreClock = SYSCLK_HZ;
+
+static uint32_t prv_hclk_hz(void) {
+  uint32_t csr = pbl_readl(HPSYS_RCC(CSR));
+  uint32_t hdiv = PBL_FIELD_GET(HPSYS_RCC_CFGR_HDIV_MASK, pbl_readl(HPSYS_RCC(CFGR)));
+  uint32_t sys = SYSCLK_HZ;
+
+  if (PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK, csr) == HPSYS_RCC_CSR_SEL_SYS_DLL1) {
+    uint32_t dll = pbl_readl(HPSYS_RCC(DLL1CR));
+
+    sys = (dll & HPSYS_RCC_DLLCR_EN) != 0U
+              ? (PBL_FIELD_GET(HPSYS_RCC_DLLCR_STG_MASK, dll) + 1U) * DLL_STEP_HZ
+              : 0U;
+  }
+
+  return sys / (hdiv != 0U ? hdiv : 1U);
+}
+
+static void prv_hxt48_on(void) {
+  pbl_modifyl(0U, HPSYS_AON_ACR_HXT48_REQ, HPSYS_AON(ACR));
+  while ((pbl_readl(HPSYS_AON(ACR)) & HPSYS_AON_ACR_HXT48_RDY) == 0U) {
+  }
+}
+
+// Starts the global timer of both subsystems in sync, LPSYS must be awake
+static void prv_gtimer_start(void) {
+  if ((pbl_readl(HPSYS_AON(ISSR)) & HPSYS_AON_ISSR_LP_ACTIVE) == 0U) {
+    return;
+  }
+
+  pbl_modifyl(0U, LPSYS_AON_CR1_GTIM_EN, PBL_DT_REG_LPSYS_AON + SF32LB52_LPSYS_AON_CR1_OFFSET);
+  pbl_modifyl(0U, HPSYS_AON_CR1_GTIM_EN, HPSYS_AON(CR1));
+  pbl_writel(1U, HPSYS_AON(GTIMR));
+}
+
 void pbl_soc_early_init(void) {
-  uint32_t bootopt;
-
-  SystemInit();
-
   // Busy waits count cycles, and the bootloader may have left any clock running
-  SystemCoreClock = HAL_RCC_GetHCLKFreq(CORE_ID_HCPU);
+  SystemCoreClock = prv_hclk_hz();
 
-  // Make the boot ROM power cycle the flash through PA21 on reset: the
-  // bootloader leaves it in 4-byte address mode, which the ROM cannot read,
-  // and a reset can come before the flash driver takes it out.
-  bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
-  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
-  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
-  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
+  soc_sf32lb52_boot_flash_delays();
 
   // Disable default PA21 pull-down, causing leakage
   (void)pbl_pinctrl_sf32lb52_modify(SF32LB52_PA21_GPIO | PBL_PINCTRL_SF32LB52_INPUT, PIN_FUNC_MSK);
 
   // HXT48 runs the DLLs, and the CPU until HRC48 is calibrated
-  HAL_HPAON_EnableXT48();
-  if (HAL_RCC_HCPU_GetClockSrc(RCC_CLK_MOD_SYS) == RCC_SYSCLK_HRC48) {
-    HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_SYS, RCC_SYSCLK_HXT48);
+  prv_hxt48_on();
+  if (PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK, pbl_readl(HPSYS_RCC(CSR))) ==
+      HPSYS_RCC_CSR_SEL_SYS_HRC48) {
+    pbl_modifyl(HPSYS_RCC_CSR_SEL_SYS_MASK,
+                PBL_FIELD_PREP(HPSYS_RCC_CSR_SEL_SYS_MASK, HPSYS_RCC_CSR_SEL_SYS_HXT48),
+                HPSYS_RCC(CSR));
+    SystemCoreClock = prv_hclk_hz();
   }
 
-  HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HXT48);
+  pbl_modifyl(0U, HPSYS_RCC_CSR_SEL_PERI, HPSYS_RCC(CSR));
 
   // Halt LCPU first to avoid LCPU in running state
-  HAL_HPAON_WakeCore(CORE_ID_LCPU);
+  soc_sf32lb52_lpsys_wake();
   soc_sf32lb52_lpsys_halt(true);
 
   soc_sf32lb52_syscfg_init();
 
-  HAL_HPAON_StartGTimer();
+  prv_gtimer_start();
 
 #ifndef CONFIG_WATCHDOG
   // The bootloader leaves its watchdog running, which the watchdog driver takes over otherwise
@@ -62,30 +108,34 @@ void pbl_soc_early_init(void) {
       (pbl_readl(PBL_DT_REG_WDT1 + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U, 48000U);
 #endif
 
-  HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
+  soc_sf32lb52_lpsys_release();
 
-  HAL_RCC_DisableModule(RCC_MOD_EPIC);
-  HAL_RCC_DisableModule(RCC_MOD_EZIP);
-  HAL_PMU_Init();
+  pbl_modifyl(HPSYS_RCC_ENR1_EPIC | HPSYS_RCC_ENR1_EZIP1, 0U, HPSYS_RCC(ENR1));
+  soc_sf32lb52_pmu_init();
 
-  __HAL_SYSCFG_CLEAR_SECURITY();
+  pbl_modifyl(HPSYS_CFG_SCR_FKEY_MODE, 0U, PBL_DT_REG_HPSYS_CFG + SF32LB52_HPSYS_CFG_SCR_OFFSET);
 
-  // set Sifli chipset pwrkey reset time to 15s, so it always use PMIC cold reboot for long press
-  hwp_pmuc->PWRKEY_CNT = PWRKEY_RESET_CNT;
+  // Long power key presses always take the PMIC cold reboot
+  pbl_writel(PWRKEY_RESET_CNT, PMUC(PWRKEY_CNT));
 
   // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
-  hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
-  hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+  pbl_modifyl(PMUC_PERI_LDO_EN_LDO18, PMUC_PERI_LDO_LDO18_PD, PMUC(PERI_LDO));
 
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_REQ, AON_PIN_MODE_HIGH);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LPTIM1, AON_PIN_MODE_HIGH);
-  HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_GPIO1, AON_PIN_MODE_HIGH);
+  pbl_modifyl(0U,
+              HPSYS_AON_WER_LP2HP_REQ | HPSYS_AON_WER_LP2HP_IRQ | HPSYS_AON_WER_LPTIM1 |
+                  HPSYS_AON_WER_GPIO1,
+              HPSYS_AON(WER));
 
   // Deep WFI clocks: HRC48, HCLK = 48 MHz / 12 = 4 MHz, PCLK1 = 4 MHz, PCLK2 = 2 MHz.
   // TODO(SF32LB52): to use deep WFI when audio is ON, HCLK needs to remain
   // at 48MHz (div=1). Also, clock needs to be forced ON during deep WFI
   // (FORCE_HP bit in HPSYS_RCC_DBGR register)
-  HAL_RCC_HCPU_DeepWFIClockSelect(true, RCC_SYSCLK_HRC48);
-  HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
+  pbl_modifyl(HPSYS_RCC_DWCFGR_SEL_SYS_LP | HPSYS_RCC_DWCFGR_SEL_SYS_MASK |
+                  HPSYS_RCC_DWCFGR_HDIV_MASK | HPSYS_RCC_DWCFGR_PDIV1_MASK |
+                  HPSYS_RCC_DWCFGR_PDIV2_MASK,
+              PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_SEL_SYS_MASK, HPSYS_RCC_CSR_SEL_SYS_HRC48) |
+                  PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_HDIV_MASK, DEEPWFI_HDIV) |
+                  PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_PDIV1_MASK, DEEPWFI_PDIV1) |
+                  PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_PDIV2_MASK, DEEPWFI_PDIV2),
+              HPSYS_RCC(DWCFGR));
 }

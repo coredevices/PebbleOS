@@ -19,6 +19,20 @@
 
 #define PID_D 4U
 
+// The bootloader leaves the flash in 4-byte address mode, which the ROM cannot read, and a reset
+// can come before the flash driver takes it out: power cycle it through PA21 instead.
+void soc_sf32lb52_boot_flash_delays(void) {
+  uint32_t bootopt = HAL_Get_backup(RTC_BACKUP_BOOTOPT);
+
+  bootopt &= ~(RTC_BACKUP_BOOTOPT_PD_DELAY_Msk | RTC_BACKUP_BOOTOPT_PU_DELAY_Msk);
+  bootopt |= RTC_BACKUP_BOOTOPT_PD_DELAY_MS(100) | RTC_BACKUP_BOOTOPT_PU_DELAY_MS(10);
+  HAL_Set_backup(RTC_BACKUP_BOOTOPT, bootopt);
+}
+
+void soc_sf32lb52_pmu_init(void) {
+  HAL_PMU_Init();
+}
+
 static const struct pbl_nvmem_cell s_ate_cell =
     PBL_NVMEM_CELL(SF32LB52_EFUSE, ATE_OFFSET, ATE_SIZE);
 static uint8_t s_ate[ATE_SIZE];
