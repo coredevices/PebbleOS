@@ -245,6 +245,14 @@
 			status = "disabled";
 		};
 
+		tsen: thermal-sensor@50089000 {
+			compatible = "sifli,sf32lb52-tsen";
+			reg = <0x50089000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_TSEN>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			#thermal-sensor-cells = <0>;
+		};
+
 		wdt1: watchdog@50094000 {
 			compatible = "sifli,sf32lb52-wdt";
 			reg = <0x50094000 0x1000>;
