@@ -86,6 +86,16 @@
 			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_HXT48>;
 		};
 
+		dmac2: dma-controller@40001000 {
+			compatible = "sifli,sf32lb52-dmac";
+			reg = <0x40001000 0x1000>;
+			interrupts = <2>, <3>, <4>, <5>, <6>, <7>, <8>, <9>;
+			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>;
+			#dma-cells = <3>;
+			dma-channels = <8>;
+			status = "disabled";
+		};
+
 		mailbox2: mailbox@40002000 {
 			compatible = "sifli,sf32lb52-mailbox";
 			reg = <0x40002000 0x1000>;
@@ -112,12 +122,31 @@
 				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>,
 				 <&rtc>;
 			clock-names = "hclk", "pclk", "pclk2", "lpclk";
+			sifli,bt-rfc = <&bt_rfc>;
+			sifli,bt-phy = <&bt_phy>;
+			sifli,bt-mac = <&bt_mac>;
+			sifli,gpadc = <&gpadc>;
+			sifli,dmac = <&dmac2>;
+			sifli,lpsys-rcc = <&lpsys_rcc>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			sifli,pmuc = <&pmuc>;
 			status = "disabled";
 		};
 
 		lpsys_aon: syscon@40040000 {
 			compatible = "sifli,sf32lb52-lpsys-aon", "syscon";
 			reg = <0x40040000 0x1000>;
+		};
+
+		bt_rfc: syscon@40082000 {
+			compatible = "sifli,sf32lb52-bt-rfc", "syscon";
+			reg = <0x40082000 0x1000>;
+		};
+
+		bt_phy: syscon@40084000 {
+			compatible = "sifli,sf32lb52-bt-phy", "syscon";
+			reg = <0x40084000 0x1000>, <0x400c0000 0x1000>;
+			reg-names = "regs", "capture";
 		};
 
 		bt_mac: syscon@40090000 {
@@ -254,6 +283,15 @@
 			interrupts = <95>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_USART3>;
 			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_USART3>;
+			status = "disabled";
+		};
+
+		gpadc: adc@50087000 {
+			compatible = "sifli,sf32lb52-gpadc";
+			reg = <0x50087000 0x1000>;
+			interrupts = <65>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_GPADC>;
+			#io-channel-cells = <1>;
 			status = "disabled";
 		};
 

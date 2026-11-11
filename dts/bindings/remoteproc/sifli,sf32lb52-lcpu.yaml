@@ -68,6 +68,38 @@ properties:
       - const: pclk2
       - const: lpclk
 
+  sifli,bt-rfc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Bluetooth RF controller, calibrated before the LCPU boots.
+
+  sifli,bt-phy:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Bluetooth PHY, set up by the radio calibration.
+
+  sifli,bt-mac:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Bluetooth controller, forced to transmit during calibration.
+
+  sifli,gpadc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: ADC measuring the transmitter output during calibration.
+
+  sifli,dmac:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: DMA controller capturing samples during calibration.
+
+  sifli,lpsys-rcc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: LPSYS clock and reset controller.
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration registers, for the bandgap.
+
+  sifli,pmuc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Power management unit, for the buck during calibration.
+
 required:
   - compatible
   - reg
@@ -80,6 +112,14 @@ required:
   - sram
   - clocks
   - clock-names
+  - sifli,bt-rfc
+  - sifli,bt-phy
+  - sifli,bt-mac
+  - sifli,gpadc
+  - sifli,dmac
+  - sifli,lpsys-rcc
+  - sifli,hpsys-cfg
+  - sifli,pmuc
 
 additionalProperties: false
 
@@ -98,4 +138,12 @@ examples:
         sram = <&lcpu_sram>;
         clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>, <&rtc>;
         clock-names = "hclk", "pclk", "pclk2", "lpclk";
+        sifli,bt-rfc = <&bt_rfc>;
+        sifli,bt-phy = <&bt_phy>;
+        sifli,bt-mac = <&bt_mac>;
+        sifli,gpadc = <&gpadc>;
+        sifli,dmac = <&dmac2>;
+        sifli,lpsys-rcc = <&lpsys_rcc>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
+        sifli,pmuc = <&pmuc>;
     };

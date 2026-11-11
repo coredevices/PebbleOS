@@ -34,3 +34,21 @@ args:
   - clock: pclk
   - clock: pclk2
   - clock: lpclk
+  - reg: 0
+    of: sifli,bt-rfc
+  - reg: 0
+    of: sifli,bt-phy
+  - reg: 1
+    of: sifli,bt-phy
+  - reg: 0
+    of: sifli,bt-mac
+  - reg: 0
+    of: sifli,gpadc
+  - reg: 0
+    of: sifli,dmac
+  - reg: 0
+    of: sifli,lpsys-rcc
+  - reg: 0
+    of: sifli,hpsys-cfg
+  - reg: 0
+    of: sifli,pmuc
