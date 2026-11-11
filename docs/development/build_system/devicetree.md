@@ -67,8 +67,8 @@ flowchart TD
   kconfig["Kconfig"]
   cfg[".config"]
   dtmap["dtmap.py"]
-  specs["*.dtmap.yaml, *.class.yaml"]
-  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/instances/*.inc"]
+  specs["*.dtmap.yaml, *.class.yaml, *.regs.yaml"]
+  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc"]
   drv["drivers, board file"]
   dts --> dtc --> dtb --> kdt --> kconfig --> cfg --> dtmap
   dtb --> dtmap
@@ -105,7 +105,9 @@ flowchart TD
      nodes with no driver in this configuration. A device with several labels
      is defined under the first in alphabetical order, and the others are
      macros for it;
-   - `partitions.h`, the flash partitions; see [](#devicetree-partitions).
+   - `partitions.h`, the flash partitions; see [](#devicetree-partitions);
+   - `regs.h`, the registers of the blocks code reaches before there are
+     devices; see [](#devicetree-regs).
 
 `dtc` is needed to configure a board with a tree; see
 {doc}`../../getting_started/index`.
@@ -488,6 +490,26 @@ They become `devicetree/partitions.h`, with `PART_<LABEL>_OFFSET`,
 `include/pbl/board/` give them for boards without a tree.
 `CONFIG_BOARD_PARTITIONS_DT` selects them, and `pbl` reads the generated file
 to find a partition.
+
+(devicetree-regs)=
+
+## Registers before devices
+
+Code that runs before any device is up, as the SoC's early init, its reset
+path or the kernel timer, takes the registers of the blocks it touches from
+the tree too. A `*.regs.yaml` next to it names their labels, and the Kconfig
+symbol of that code:
+
+```yaml
+config: SOC_SF32LB52
+labels: [hpsys_rcc, pmuc]
+```
+
+When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` and
+`PBL_DT_SIZE_<LABEL>` for the first `reg` entry of each, translated through the
+`ranges` above as for instances. The node may be disabled, as its registers
+are there all the same. Only the labels listed get a constant: everything else
+reaches the tree through its instance.
 
 ## Tests
 

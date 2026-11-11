@@ -26,6 +26,7 @@ def dtc():
         pytest.skip("needs dtc")
     return "dtc"
 
+
 CLASSES = {
     "clk": {
         "class": "clk",
@@ -864,9 +865,14 @@ def test_list_items_read_from_each_child(tmp_path):
             },
         ],
     }
-    gen = dtmap.Generator(fdt.load(dtb), {"acme,keys": spec("acme,keys", keys)}, {"KEYS"})
+    gen = dtmap.Generator(
+        fdt.load(dtb), {"acme,keys": spec("acme,keys", keys)}, {"KEYS"}
+    )
     gen.run()
-    assert 'KEYS_DEFINE(dt_keys, "keys", KEY("A", 30, 40, 7), KEY("B", 48, 5, 0));' in body(gen)
+    assert (
+        'KEYS_DEFINE(dt_keys, "keys", KEY("A", 30, 40, 7), KEY("B", 48, 5, 0));'
+        in body(gen)
+    )
 
 
 def test_list_item_arguments_are_checked():
@@ -1347,7 +1353,9 @@ def test_first_compatible_with_an_enabled_driver_binds(tmp_path):
         'compatible = "acme,sensor";', 'compatible = "acme,new", "acme,sensor";'
     )
     specs = {"acme,new": spec("acme,new", new)}
-    assert "SENSOR_DT_DEFINE(dt_sensor," in body(generate(tmp_path, specs=specs, dts=dts))
+    assert "SENSOR_DT_DEFINE(dt_sensor," in body(
+        generate(tmp_path, specs=specs, dts=dts)
+    )
     gen = generate(tmp_path, config=(*ALL, "NEW"), specs=specs, dts=dts)
     assert "NEW_DT_DEFINE(dt_sensor," in body(gen)
     assert "SENSOR_DT_DEFINE" not in body(gen)
@@ -1486,7 +1494,9 @@ def test_depfile_paths_may_have_spaces():
 
 
 def test_main_only_writes_what_changed_and_drops_stale_files(tmp_path, monkeypatch):
-    write_specs(tmp_path, {"a": "compatible: acme,a\nconfig: A\nclass: clk\ndefine: A\n"})
+    write_specs(
+        tmp_path, {"a": "compatible: acme,a\nconfig: A\nclass: clk\ndefine: A\n"}
+    )
     (tmp_path / ".config").write_text("")
     out = tmp_path / "out"
     stale = out / "devicetree" / "instances" / "gone.inc"
@@ -1540,7 +1550,9 @@ def test_devices_a_node_refers_to_come_first(tmp_path):
 
 def test_a_needed_device_is_listed_once(tmp_path):
     args = [{"gpio": "reset"}, {"gpio": "enable"}, {"clock": 0}, {"parent": "bus"}]
-    sensor = "reset-gpios = <&gpio 1 0>; enable-gpios = <&gpio 2 0>; clocks = <&ctrl 1>;"
+    sensor = (
+        "reset-gpios = <&gpio 1 0>; enable-gpios = <&gpio 2 0>; clocks = <&ctrl 1>;"
+    )
     gen = sensor_generate(tmp_path, args, sensor)
     assert (
         "PBL_DEVICE_DEPENDS(dt_sensor, &dt_sensor.dev, &dt_gpio.dev, &acme_clk.dev);"
@@ -1646,9 +1658,13 @@ def test_absent_optional_providers_are_not_needed(tmp_path):
 
 
 def test_disabled_needed_device_fails(tmp_path):
-    dts = GPIO_DTS.replace("#gpio-cells = <2>;", '#gpio-cells = <2>; status = "disabled";')
+    dts = GPIO_DTS.replace(
+        "#gpio-cells = <2>;", '#gpio-cells = <2>; status = "disabled";'
+    )
     with pytest.raises(DtError, match="'gpio' from /gpio@900, which is disabled"):
-        sensor_generate(tmp_path, [{"gpio": "reset"}], "reset-gpios = <&gpio 1 0>;", dts=dts)
+        sensor_generate(
+            tmp_path, [{"gpio": "reset"}], "reset-gpios = <&gpio 1 0>;", dts=dts
+        )
 
 
 def test_devices_needing_each_other_fail(tmp_path):
@@ -1669,7 +1685,9 @@ def test_devices_needing_each_other_fail(tmp_path):
         '    gate: gate@800 {\n        compatible = "acme,gate";\n        reg = <0x800 0x100>;\n'
         "        #clock-cells = <1>;\n        enable-gpios = <&gpio 1 0>;",
     )
-    with pytest.raises(DtError, match=r"need each other: &dt_gpio.dev -> &dt_gate.dev -> &dt_gpio.dev"):
+    with pytest.raises(
+        DtError, match=r"need each other: &dt_gpio.dev -> &dt_gate.dev -> &dt_gpio.dev"
+    ):
         generate(tmp_path, config=(*ALL, "GPIO", "GATE"), specs=specs, dts=dts)
 
 
@@ -1680,7 +1698,10 @@ def test_specs_do_not_share_their_arguments():
 
 
 def test_children_of_a_disabled_container_are_left_out(tmp_path):
-    dts = PMIC_DTS.replace("            regulators {", '            regulators {\n                status = "disabled";')
+    dts = PMIC_DTS.replace(
+        "            regulators {",
+        '            regulators {\n                status = "disabled";',
+    )
     gen = pmic_generate(tmp_path, dts=dts)
     assert "REG_DEFINE" not in instances(gen, "acme_pmic_regulator")
 
@@ -1694,7 +1715,11 @@ def test_label_clashing_with_a_class_object_fails(tmp_path):
 
 
 def test_unlabelled_providers_are_needed(tmp_path):
-    reg_class = {"class": "regulator", "type": "struct regulator", "include": "regulator.h"}
+    reg_class = {
+        "class": "regulator",
+        "type": "struct regulator",
+        "include": "regulator.h",
+    }
     classes = {**CLASSES, "regulator": reg_class}
     ldo = dtmap.Spec(
         "ldo",
@@ -1715,7 +1740,11 @@ def test_unlabelled_providers_are_needed(tmp_path):
         "        phandle = <0x99>;\n    };\n    ctrl: ctrl@1000 {",
     )
     gen = sensor_generate(
-        tmp_path, args, "vdd-supply = <0x99>;", dts=dts, extra={"acme,ldo": [ldo]},
+        tmp_path,
+        args,
+        "vdd-supply = <0x99>;",
+        dts=dts,
+        extra={"acme,ldo": [ldo]},
         config=(*ALL, "LDO"),
     )
     assert "SENSOR_DT_DEFINE(dt_sensor, LDO_ID);" in body(gen)
@@ -1858,7 +1887,12 @@ def test_power_domains_and_required_opps(tmp_path):
 };
 """
     specs = {
-        "acme,pmu": {"compatible": "acme,pmu", "config": "PMU", "class": "pd", "define": "PMU"},
+        "acme,pmu": {
+            "compatible": "acme,pmu",
+            "config": "PMU",
+            "class": "pd",
+            "define": "PMU",
+        },
         "acme,rcc": {
             "compatible": "acme,rcc",
             "config": "RCC",
@@ -1878,3 +1912,59 @@ def test_power_domains_and_required_opps(tmp_path):
     gen.run()
     assert "RCC(dt_rcc, PD(&dt_pmu, 0), 4);" in body(gen)
     assert "PBL_DEVICE_DEPENDS(dt_rcc, &dt_rcc.dev, &dt_pmu.dev);" in body(gen)
+
+
+REGS_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    soc {
+        compatible = "simple-bus";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges = <0x0 0x40000000 0x100000>;
+
+        rcc: clock-controller@1000 {
+            reg = <0x1000 0x400>;
+        };
+
+        nameless: bus-node {
+        };
+    };
+};
+"""
+
+
+def regs(tmp_path, labels, config="SOC_ACME"):
+    def error(message):
+        return DtError(f"acme.regs.yaml: {message}")
+
+    path, dtb = tmp_path / "r.dts", tmp_path / "r.dtb"
+    path.write_text(REGS_DTS)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    return dtmap.regs_header(fdt.load(dtb), [("SOC_ACME", labels, error)], {config})
+
+
+def test_regs_are_translated_through_ranges(tmp_path):
+    text = regs(tmp_path, ["rcc"])
+    assert "#define PBL_DT_REG_RCC 0x40001000UL" in text
+    assert "#define PBL_DT_SIZE_RCC 0x400U" in text
+
+
+def test_regs_of_disabled_code_are_left_out(tmp_path):
+    assert "PBL_DT_" not in regs(tmp_path, ["rcc"], config="OTHER")
+    assert "PBL_DT_" not in dtmap.regs_header(None, [], set())
+
+
+def test_regs_of_unknown_label_fail(tmp_path):
+    with pytest.raises(DtError, match="no node labelled 'pmu'"):
+        regs(tmp_path, ["pmu"])
+
+
+def test_regs_of_node_without_reg_fail(tmp_path):
+    with pytest.raises(DtError, match="bus-node has no reg"):
+        regs(tmp_path, ["nameless"])
