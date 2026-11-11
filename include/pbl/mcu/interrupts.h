@@ -22,16 +22,6 @@
 inline static bool mcu_state_is_isr(void);
 
 /**
- * @brief Get the priority of the exception handler being executed.
- *
- * Lower numbers mean higher priority. Handlers more urgent than @ref PBL_IRQ_PRIO_MAX_SYSCALL
- * must not call the kernel.
- *
- * @return NVIC priority in controller units, or ~0 outside an exception handler.
- */
-inline static uint32_t mcu_state_get_isr_priority(void);
-
-/**
  * @brief Check whether interrupts are globally enabled.
  *
  * @return false if PRIMASK masks every configurable-priority interrupt.
