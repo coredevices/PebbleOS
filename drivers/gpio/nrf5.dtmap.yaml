@@ -11,5 +11,7 @@ symbol:
 args:
   - name: true
   - reg: 0
+  - reg: 0
+    of: nordic,gpiote
   - prop: ngpios
     default: 32

@@ -234,6 +234,7 @@
 			ngpios = <32>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
+			nordic,gpiote = <&gpiote>;
 		};
 
 		gpio1: gpio@50000300 {
@@ -244,6 +245,7 @@
 			ngpios = <16>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
+			nordic,gpiote = <&gpiote>;
 		};
 	};
 };

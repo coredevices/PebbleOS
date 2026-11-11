@@ -27,6 +27,8 @@ struct pbl_gpio_nrf5 {
   uintptr_t base;
   /** Port index. */
   uint8_t index;
+  /** Registers of the GPIOTE. */
+  uintptr_t gpiote;
 };
 
 /**
