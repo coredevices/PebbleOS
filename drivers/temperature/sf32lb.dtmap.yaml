@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-tsen
+config: TEMPERATURE_SF32LB
+class: temp
+define: PBL_TEMP_SF32LB_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - reg: 0
+    of: sifli,hpsys-cfg

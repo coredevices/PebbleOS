@@ -90,7 +90,7 @@ const struct pbl_audio *const SPEAKER = &dt_speaker;
 #endif
 
 #ifdef CONFIG_TEMPERATURE
-const struct pbl_temp *const DIE_TEMP = SF32LB_TEMP;
+const struct pbl_temp *const DIE_TEMP = &dt_tsen;
 #endif
 
 #ifdef CONFIG_RTC
