@@ -159,6 +159,14 @@
 			reg = <0x5000b000 0x1000>;
 		};
 
+		efuse: efuse@5000c000 {
+			compatible = "sifli,sf32lb52-efuse";
+			reg = <0x5000c000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_EFUSEC>;
+			sifli,pmuc = <&pmuc>;
+			read-only;
+		};
+
 		trng: rng@5000f000 {
 			compatible = "sifli,sf32lb52-trng";
 			reg = <0x5000f000 0x1000>;
