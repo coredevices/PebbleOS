@@ -29,8 +29,8 @@ touch:
   symbol: SDL_TOUCH
   include: pbl/drivers/touch/sdl.h
 vibe:
-  symbol: POSIX_VIBE
-  include: pbl/drivers/vibe/posix.h
+  symbol: SIM_VIBE
+  include: pbl/drivers/vibe/sim.h
 mic:
   symbol: HOST_MIC
   include: pbl/drivers/audio/qemu.h
