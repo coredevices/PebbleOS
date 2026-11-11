@@ -3260,8 +3260,12 @@ static int s_list_subpx = 0;
 
 static void prv_list_tick_cb(void *ctx) {
   s_list_hold_timer = nullptr;
-  if (!s_list)
+  // A modal or a pushed window can swallow the release; stop once the list is covered.
+  if (!s_list || !window_is_on_screen(s_list->window)) {
+    s_list_velocity = 0;
+    s_list_subpx = 0;
     return;
+  }
 
   s_list_velocity += SCROLL_VEL_ACCEL;
   if (s_list_velocity > SCROLL_VEL_MAX)
