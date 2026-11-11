@@ -10,7 +10,7 @@
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/drivers/rtc/sf32lb.h>
-#include <pbl/drivers/temperature/sf32lb.h>
+#include <pbl/drivers/temp/sf32lb.h>
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/kernel/irq.h>
 
@@ -89,7 +89,7 @@ const struct pbl_audio *const MIC = &dt_mic;
 const struct pbl_audio *const SPEAKER = &dt_speaker;
 #endif
 
-#ifdef CONFIG_TEMPERATURE
+#ifdef CONFIG_TEMP
 const struct pbl_temp *const DIE_TEMP = &dt_tsen;
 #endif
 

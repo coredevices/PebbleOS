@@ -6,7 +6,7 @@
 #include <pbl/drivers/audio/qemu.h>
 #include <pbl/drivers/imu/qemu.h>
 #include <pbl/drivers/rtc/qemu.h>
-#include <pbl/drivers/temperature/qemu.h>
+#include <pbl/drivers/temp/qemu.h>
 #include <pbl/drivers/vibe/qemu.h>
 
 #include <devicetree/devices.h>
@@ -51,7 +51,7 @@ const struct pbl_backlight *const BACKLIGHT = &dt_display_backlight;
 const struct pbl_vibe *const VIBE = QEMU_VIBE;
 #endif
 
-#ifdef CONFIG_TEMPERATURE
+#ifdef CONFIG_TEMP
 const struct pbl_temp *const DIE_TEMP = QEMU_TEMP;
 #endif
 

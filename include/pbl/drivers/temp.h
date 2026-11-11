@@ -9,7 +9,7 @@
 #include <pbl/kernel/mutex.h>
 
 /**
- * @defgroup drivers_temperature Temperature sensor
+ * @defgroup drivers_temp Temperature sensor
  * @ingroup drivers
  * @brief Temperature sensor class.
  *

@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/temperature.h>
+#include <pbl/drivers/temp.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
