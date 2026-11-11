@@ -44,6 +44,9 @@ config BT_LL_THREAD_PRIO
 
 config BT_HCI_THREAD_STACK_SIZE
     int "HCI transport thread stack size in bytes"
+    # The SF32LB52 transport boots the LCPU from this thread at startup, and
+    # the radio calibration that does needs about 1 KiB.
+    default 2048 if BT_HCI_SF32LB52
     default 1024
 
 config BT_HCI_THREAD_PRIO
