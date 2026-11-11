@@ -3,6 +3,7 @@
 
 menu "Third-party"
 
+rsource "cmsis_core/Kconfig"
 rsource "hal_nordic/Kconfig"
 rsource "hal_sifli/Kconfig"
 if BT

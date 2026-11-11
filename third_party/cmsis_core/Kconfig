@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CMSIS_CORE
+    bool
+    help
+      Provide the Arm CMSIS Cortex-M core headers, for vendor headers built
+      on them.

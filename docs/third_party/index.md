@@ -10,7 +10,7 @@ symbol that enables it. Some are forks under
 
 | Component | Used for | License |
 | --- | --- | --- |
-| [CMSIS](https://github.com/ARM-software/CMSIS_5) | Arm Cortex-M core headers | Apache-2.0 |
+| [CMSIS](https://github.com/ARM-software/CMSIS_5) | Arm Cortex-M core headers, for the nRF52840 MDK | Apache-2.0 |
 | [nrfx](https://github.com/NordicSemiconductor/nrfx) | nRF52840 MDK and HAL headers, for the NimBLE radio driver | BSD-3-Clause |
 | [SiFli-SDK](https://github.com/coredevices/SiFli-SDK) | SF32LB52 HAL and peripheral drivers (fork) | Apache-2.0 |
 | [NimBLE](https://github.com/coredevices/mynewt-nimble) | Bluetooth Low Energy host stack (fork) | Apache-2.0 |
