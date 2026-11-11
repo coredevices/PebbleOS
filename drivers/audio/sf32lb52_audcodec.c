@@ -479,7 +479,7 @@ static int prv_init(const struct pbl_audio_dai *dai) {
     return ret;
   }
 
-  pbl_modifyl(0U, PMUC_HXT_CR1_BUF_AUD_EN, SF32LB52_PMUC_BASE + SF32LB52_PMUC_HXT_CR1_OFFSET);
+  pbl_modifyl(0U, PMUC_HXT_CR1_BUF_AUD_EN, dev->pmuc + SF32LB52_PMUC_HXT_CR1_OFFSET);
 
   prv_config_channel(dev, prv_find_rate(INIT_RATE));
 
