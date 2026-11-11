@@ -166,3 +166,6 @@ const struct pbl_audio_dai_ops pbl_audio_host_mic_ops = {
   .start = prv_start,
   .stop = prv_stop,
 };
+
+PBL_AUDIO_HOST_MIC_DEFINE(s_host_mic, "host_mic");
+PBL_AUDIO_CARD_DEFINE(pbl_audio_host_mic, "mic", &s_host_mic.dai, nullptr, nullptr, 0, 0);

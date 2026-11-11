@@ -8,6 +8,10 @@
 
 #include <pbl/drivers/display/sdl.h>
 
+#ifdef CONFIG_DISPLAY_SDL_ROUND
+#include <pbl/drivers/panel/ls013b7dd02.h>
+#endif
+
 static uint8_t s_fb[CONFIG_DISPLAY_SDL_WIDTH * CONFIG_DISPLAY_SDL_HEIGHT];
 static bool s_enabled;
 
@@ -79,3 +83,18 @@ const struct pbl_display_ops pbl_display_sdl_ops = {
   .update = prv_update,
   .clear = prv_clear,
 };
+
+#ifdef CONFIG_DISPLAY_SDL_MONO
+#define FORMAT PBL_DISPLAY_FORMAT_MONO
+#else
+#define FORMAT PBL_DISPLAY_FORMAT_ARGB2222
+#endif
+
+#ifdef CONFIG_DISPLAY_SDL_ROUND
+#define ROUND_MASK pbl_panel_ls013b7dd02_round_mask
+#else
+#define ROUND_MASK nullptr
+#endif
+
+PBL_DISPLAY_SDL_DEFINE(pbl_display_sdl, "display", CONFIG_DISPLAY_SDL_WIDTH,
+                       CONFIG_DISPLAY_SDL_HEIGHT, FORMAT, .round_mask = ROUND_MASK);
