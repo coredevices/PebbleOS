@@ -1,18 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/mcu/cache.h>
 #include <pbl/util/testing.h>
-
-#include <cmsis_core.h>
-
-// Most of these implementations are derived from CMSIS
-#define CCSIDR_LINESIZE(x) (((x) & SCB_CCSIDR_LINESIZE_Msk) >> SCB_CCSIDR_LINESIZE_Pos)
-#define CCSIDR_WAYS(x)     (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Pos)
-
-#define CSSELR_L1_DCACHE 0
-#define CSSELR_L1_ICACHE 1
 
 #ifdef CONFIG_CPU_HAS_ICACHE
 static uint32_t s_icache_cssidr;
@@ -24,75 +17,74 @@ static uint32_t s_dcache_cssidr;
 
 #if defined(CONFIG_CPU_HAS_ICACHE) || defined(CONFIG_CPU_HAS_DCACHE)
 static uint32_t prv_get_line_size(uint32_t ccsidr) {
-  return ((CCSIDR_LINESIZE(ccsidr)) + 1) << 4;
+  return (ARM_CCSIDR_LINESIZE(ccsidr) + 1) << 4;
 }
 
-static void prv_cache_operation_range(volatile uint32_t *reg, uint32_t line_size, uintptr_t addr,
+static void prv_cache_operation_range(uintptr_t reg, uint32_t line_size, uintptr_t addr,
                                       size_t size) {
   intptr_t op_size = size;
 
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
 
   while (op_size > 0) {
-    *reg = addr;
+    arch_writel(addr, reg);
     addr += line_size;
     op_size -= line_size;
   }
 
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
 }
 #endif
 
 #ifdef CONFIG_CPU_HAS_DCACHE
-static void prv_dcache_operation_all(volatile uint32_t *reg) {
+// Reads the geometry itself: the cache may have been enabled before dcache_enable().
+static void prv_dcache_operation_all(uintptr_t reg) {
   uint32_t ccsidr;
   uint32_t sets;
   uint32_t ways;
 
-  ccsidr = s_dcache_cssidr;
+  arch_writel(ARM_CSSELR_L1_DCACHE, ARM_SCB_CSSELR);
+  arm_dsb();
+  ccsidr = arch_readl(ARM_SCB_CCSIDR);
 
-  sets = CCSIDR_SETS(ccsidr);
+  sets = ARM_CCSIDR_SETS(ccsidr);
   do {
-    ways = CCSIDR_WAYS(ccsidr);
+    ways = ARM_CCSIDR_WAYS(ccsidr);
     do {
-      *reg = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
-              ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk));
-#if defined(__CC_ARM)
-      __schedule_barrier();
-#endif
+      arch_writel(ARM_DCSW(sets, ways), reg);
     } while (ways--);
   } while (sets--);
 
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
 }
 #endif
 
 PBL_T_MOCKABLE void icache_enable(void) {
 #ifdef CONFIG_CPU_HAS_ICACHE
-  SCB->CSSELR = CSSELR_L1_ICACHE;
-  __DMB();
-  s_icache_cssidr = SCB->CCSIDR;
+  arch_writel(ARM_CSSELR_L1_ICACHE, ARM_SCB_CSSELR);
+  arm_dmb();
+  s_icache_cssidr = arch_readl(ARM_SCB_CCSIDR);
 
   icache_invalidate_all();
 
-  __DSB();
-  __ISB();
-  SCB->CCR |= SCB_CCR_IC_Msk; // enable I-Cache
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
+  arch_writel(arch_readl(ARM_SCB_CCR) | ARM_SCB_CCR_IC, ARM_SCB_CCR);
+  arm_dsb();
+  arm_isb();
 #endif
 }
 
 PBL_T_MOCKABLE void icache_disable(void) {
 #ifdef CONFIG_CPU_HAS_ICACHE
-  __DSB();
-  __ISB();
-  SCB->CCR &= ~SCB_CCR_IC_Msk; // disable I-Cache
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
+  arch_writel(arch_readl(ARM_SCB_CCR) & ~ARM_SCB_CCR_IC, ARM_SCB_CCR);
+  arm_dsb();
+  arm_isb();
 
   icache_invalidate_all();
 #endif
@@ -100,7 +92,7 @@ PBL_T_MOCKABLE void icache_disable(void) {
 
 PBL_T_MOCKABLE bool icache_is_enabled(void) {
 #ifdef CONFIG_CPU_HAS_ICACHE
-  return SCB->CCR & SCB_CCR_IC_Msk;
+  return (arch_readl(ARM_SCB_CCR) & ARM_SCB_CCR_IC) != 0U;
 #endif
   return false;
 }
@@ -114,31 +106,31 @@ PBL_T_MOCKABLE uint32_t icache_line_size(void) {
 
 PBL_T_MOCKABLE void dcache_enable(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  SCB->CSSELR = CSSELR_L1_DCACHE;
-  __DMB();
-  s_dcache_cssidr = SCB->CCSIDR;
+  arch_writel(ARM_CSSELR_L1_DCACHE, ARM_SCB_CSSELR);
+  arm_dmb();
+  s_dcache_cssidr = arch_readl(ARM_SCB_CCSIDR);
 
   dcache_invalidate_all();
-  __DSB();
-  SCB->CCR |= SCB_CCR_DC_Msk; // enable D-Cache
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arch_writel(arch_readl(ARM_SCB_CCR) | ARM_SCB_CCR_DC, ARM_SCB_CCR);
+  arm_dsb();
+  arm_isb();
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_disable(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
   dcache_flush_invalidate_all();
-  __DSB();
-  SCB->CCR &= ~SCB_CCR_DC_Msk; // disable D-Cache
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arch_writel(arch_readl(ARM_SCB_CCR) & ~ARM_SCB_CCR_DC, ARM_SCB_CCR);
+  arm_dsb();
+  arm_isb();
 #endif
 }
 
 PBL_T_MOCKABLE bool dcache_is_enabled(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  return SCB->CCR & SCB_CCR_DC_Msk;
+  return (arch_readl(ARM_SCB_CCR) & ARM_SCB_CCR_DC) != 0U;
 #endif
   return false;
 }
@@ -162,53 +154,53 @@ PBL_T_MOCKABLE uint32_t dcache_alignment_mask_minimum(uint32_t min) {
 
 PBL_T_MOCKABLE void icache_invalidate_all(void) {
 #ifdef CONFIG_CPU_HAS_ICACHE
-  __DSB();
-  __ISB();
-  SCB->ICIALLU = 0;
-  __DSB();
-  __ISB();
+  arm_dsb();
+  arm_isb();
+  arch_writel(0U, ARM_ICIALLU);
+  arm_dsb();
+  arm_isb();
 #endif
 }
 
 PBL_T_MOCKABLE void icache_invalidate(void *addr, size_t size) {
 #ifdef CONFIG_CPU_HAS_ICACHE
-  prv_cache_operation_range(&SCB->ICIMVAU, icache_line_size(), (uintptr_t)addr, size);
+  prv_cache_operation_range(ARM_ICIMVAU, icache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_flush_all(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_dcache_operation_all(&SCB->DCCSW);
+  prv_dcache_operation_all(ARM_DCCSW);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_invalidate_all(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_dcache_operation_all(&SCB->DCISW);
+  prv_dcache_operation_all(ARM_DCISW);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_flush_invalidate_all(void) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_dcache_operation_all(&SCB->DCCISW);
+  prv_dcache_operation_all(ARM_DCCISW);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_flush(const void *addr, size_t size) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_cache_operation_range(&SCB->DCCMVAC, dcache_line_size(), (uintptr_t)addr, size);
+  prv_cache_operation_range(ARM_DCCMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_invalidate(void *addr, size_t size) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_cache_operation_range(&SCB->DCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
+  prv_cache_operation_range(ARM_DCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 
 PBL_T_MOCKABLE void dcache_flush_invalidate(const void *addr, size_t size) {
 #ifdef CONFIG_CPU_HAS_DCACHE
-  prv_cache_operation_range(&SCB->DCCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
+  prv_cache_operation_range(ARM_DCCIMVAC, dcache_line_size(), (uintptr_t)addr, size);
 #endif
 }
 

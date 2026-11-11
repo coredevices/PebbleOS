@@ -2,6 +2,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
 #include "arm_syscall.h"
 
 #include <stddef.h>
@@ -11,7 +12,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/syscall.h>
 
-#include <cmsis_core.h>
 #include <kernel.h>
 #include <pbl_arch_syscall.h>
 
@@ -33,8 +33,8 @@ PBL_USED bool arch_syscall_from_kernel(void) {
 
 void pbl_user_mode_enter(void) {
   arm_cur_user_enter();
-  __set_CONTROL(__get_CONTROL() | CONTROL_nPRIV_Msk);
-  __ISB();
+  arm_control_set(arm_control_get() | ARM_CONTROL_NPRIV);
+  arm_isb();
 }
 
 // ---- kernel-to-user calls ---------------------------------------------------
@@ -161,7 +161,7 @@ PBL_EXTERNALLY_VISIBLE PBL_NAKED PBL_USED void arch_user_call_resume(void) {
 // stack, packed as (psplim << 32 | sp) to return in r0:r1; 0 = no switch needed.
 PBL_USED uint64_t arch_syscall_stack_restore(void) {
   const struct pbl_thread *t = pbl_cur;
-  const uintptr_t psp = __get_PSP();
+  const uintptr_t psp = arm_psp_get();
   const uintptr_t base = (uintptr_t)t->syscall_stack;
   if (t->syscall_stack != nullptr && psp > base && psp <= base + t->syscall_stack_size) {
     const uint32_t sp = (uint32_t)t->backend.arch.syscall_sp;

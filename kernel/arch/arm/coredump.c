@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -8,7 +10,7 @@
 #include <pbl/coredump/coredump.h>
 #include <pbl/kernel/compiler.h>
 
-#include <cmsis_core.h>
+#include <pbl_arch_irq.h>
 
 #define RETURNS_TO_PSP(exc_return) (((exc_return) & 0x4) == 0x4)
 
@@ -32,9 +34,9 @@ extern uint8_t __RAM_start__;
 extern uint8_t __RAM_size__;
 
 PBL_COREDUMP_REGION_DEFINE(ram, &__RAM_start__, (size_t)&__RAM_size__);
-PBL_COREDUMP_REGION_DEFINE(nvic_iser, (const void *)&NVIC->ISER, sizeof(NVIC->ISER));
-PBL_COREDUMP_REGION_DEFINE(nvic_ispr, (const void *)&NVIC->ISPR, sizeof(NVIC->ISPR));
-PBL_COREDUMP_REGION_DEFINE(nvic_iabr, (const void *)&NVIC->IABR, sizeof(NVIC->IABR));
+PBL_COREDUMP_REGION_DEFINE(nvic_iser, (const void *)ARCH_NVIC_ISER(0), ARCH_NVIC_WORDS * 4U);
+PBL_COREDUMP_REGION_DEFINE(nvic_ispr, (const void *)ARCH_NVIC_ISPR(0), ARCH_NVIC_WORDS * 4U);
+PBL_COREDUMP_REGION_DEFINE(nvic_iabr, (const void *)ARM_NVIC_IABR(0), ARCH_NVIC_WORDS * 4U);
 
 /*
  * Written by NMI_Handler, whose assembly depends on the layout. Tools can find it through the
@@ -62,9 +64,9 @@ PBL_USED struct {
 static bool s_in_fault_handler;
 
 void arch_coredump_trigger(void) {
-  SCB->ICSR = SCB_ICSR_NMIPENDSET_Msk;
-  __DSB();
-  __ISB();
+  arch_writel(ARM_SCB_ICSR_NMIPENDSET, ARM_SCB_ICSR);
+  arm_dsb();
+  arm_isb();
 }
 
 void PBL_NAKED NMI_Handler(void) {
@@ -96,10 +98,10 @@ PBL_EXTERNALLY_VISIBLE void arch_coredump_handler_c(void) {
   s_saved_registers.core_reg[PBL_THREAD_REG_R12] = process_sp[4];
   // Make it look like the processor had halted at the start of the handler.
   s_saved_registers.core_reg[PBL_THREAD_REG_PC] = (uint32_t)NMI_Handler;
-  s_saved_registers.extra_reg.primask = __get_PRIMASK();
-  s_saved_registers.extra_reg.basepri = __get_BASEPRI();
-  s_saved_registers.extra_reg.faultmask = __get_FAULTMASK();
-  s_saved_registers.extra_reg.control = __get_CONTROL();
+  s_saved_registers.extra_reg.primask = arm_primask_get();
+  s_saved_registers.extra_reg.basepri = arm_basepri_get();
+  s_saved_registers.extra_reg.faultmask = arm_faultmask_get();
+  s_saved_registers.extra_reg.control = arm_control_get();
 
   if (!RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])) {
     const uint32_t exception = process_sp[7] & IPSR_MASK;

@@ -1,10 +1,11 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "arm_cpu.h"
+
 #include <pbl/kernel/compiler.h>
 
 #include <arch.h>
-#include <cmsis_core.h>
 #include <kernel.h>
 
 [[noreturn]] PBL_NAKED void Reset_Handler(void) {
@@ -24,5 +25,11 @@
 }
 
 [[noreturn]] void arch_reset(void) {
-  NVIC_SystemReset();
+  arm_dsb();
+  arch_writel(ARM_SCB_AIRCR_VECTKEY | (arch_readl(ARM_SCB_AIRCR) & ARM_SCB_AIRCR_PRIGROUP_MSK) |
+                  ARM_SCB_AIRCR_SYSRESETREQ,
+              ARM_SCB_AIRCR);
+  arm_dsb();
+  for (;;) {
+  }
 }
