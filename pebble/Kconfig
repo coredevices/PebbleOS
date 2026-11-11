@@ -41,6 +41,10 @@ config GH3X2X_ALGO
     default !RECOVERY_FW || MFG
     depends on HRM_GH3X2X && BOARD_OBELIX
 
+config HRM_GH3X2X_FACTORY_TEST
+    default y if MFG
+    depends on HRM && GH3X2X_ALGO
+
 config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
