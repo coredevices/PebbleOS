@@ -30,9 +30,3 @@ static inline void arch_icache_invalidate_range(uintptr_t addr, size_t size) {
   (void)addr;
   (void)size;
 }
-
-static inline void arch_dcache_invalidate_lines(uintptr_t addr, size_t size, uint32_t line_size) {
-  (void)addr;
-  (void)size;
-  (void)line_size;
-}

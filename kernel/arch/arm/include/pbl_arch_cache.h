@@ -74,8 +74,3 @@ static PBL_ALWAYS_INLINE void arch_icache_invalidate_range(uintptr_t addr, size_
   (void)size;
 #endif
 }
-
-static PBL_ALWAYS_INLINE void arch_dcache_invalidate_lines(uintptr_t addr, size_t size,
-                                                           uint32_t line_size) {
-  arch_cache_lines(ARCH_DCIMVAC, addr, size, line_size);
-}
