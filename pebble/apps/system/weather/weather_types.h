@@ -97,3 +97,5 @@ uint32_t weather_type_icon_tiny_resource(WeatherType weather_type);
 uint32_t weather_type_icon_small_resource(WeatherType weather_type);
 // 80x80 PDC (GDrawCommandImage) — the Timeline weather pin's big icon.
 uint32_t weather_type_icon_large_resource(WeatherType weather_type);
+//! PDC icon resource for a weather type: Pebble_25x25_*, or Pebble_50x50_* when `small` is set.
+uint32_t weather_type_pdc_resource(WeatherType weather_type, bool small);
