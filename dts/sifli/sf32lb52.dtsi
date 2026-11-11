@@ -98,6 +98,11 @@
 		lcpu: remoteproc@40004000 {
 			compatible = "sifli,sf32lb52-lcpu";
 			reg = <0x40004000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			/* LPSYS SRAM through the code bus, HPSYS SRAM */
+			dma-ranges = <0x00400000 0x20400000 0x10000>,
+				     <0x2a000000 0x20000000 0x80000>;
 			mboxes = <&mailbox1 0>, <&mailbox2 0>;
 			mbox-names = "tx", "rx";
 			memory-region = <&lcpu_ipc>;

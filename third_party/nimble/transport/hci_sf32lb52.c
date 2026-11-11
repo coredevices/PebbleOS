@@ -20,7 +20,6 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
-#include <hardware/sf32lb52_memorymap.h>
 #include <kernel/pebble_tasks.h>
 
 // NOTE: transport.h needs os_mbuf.h to be included first
@@ -227,7 +226,7 @@ static void prv_ring_reset_tx(void) {
   tx->rd_idx = 0U;
   tx->wr_idx = 0U;
   tx->wr_buf = LCPU->mem.base + sizeof(struct ring);
-  tx->rd_buf = tx->wr_buf + SF32LB52_HPSYS_SRAM_LCPU_OFFSET;
+  tx->rd_buf = pbl_rproc_sf32lb52_da(LCPU, tx->wr_buf);
   tx->size = (int16_t)RING_POOL_SIZE(LCPU->mem.size);
   pbl_wmb();
 }

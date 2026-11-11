@@ -22,6 +22,20 @@ properties:
     description: ROM patch controller
     maxItems: 1
 
+  "#address-cells":
+    const: 1
+
+  "#size-cells":
+    const: 1
+
+  dma-ranges:
+    description:
+      Memory as the LCPU sees it, LPSYS SRAM through its code bus first, then
+      HPSYS SRAM.
+    items:
+      - description: LPSYS SRAM through the code bus
+      - description: HPSYS SRAM
+
   mboxes:
     items:
       - description: Doorbell to the LCPU
@@ -55,6 +69,9 @@ properties:
 required:
   - compatible
   - reg
+  - "#address-cells"
+  - "#size-cells"
+  - dma-ranges
   - mboxes
   - mbox-names
   - memory-region
@@ -69,6 +86,10 @@ examples:
     remoteproc@40004000 {
         compatible = "sifli,sf32lb52-lcpu";
         reg = <0x40004000 0x1000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        dma-ranges = <0x00400000 0x20400000 0x10000>,
+                     <0x2a000000 0x20000000 0x80000>;
         mboxes = <&mailbox1 0>, <&mailbox2 0>;
         mbox-names = "tx", "rx";
         memory-region = <&lcpu_ipc>;

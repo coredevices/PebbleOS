@@ -20,9 +20,6 @@
 #define PATCH_CODE_OFFSET 0x500cU
 #define PATCH_CODE_SIZE   0x2ff4U
 
-// The LCPU code bus sees LPSYS SRAM this far below the system bus
-#define LCPU_CBUS_OFFSET 0x20000000UL
-
 static_assert(PATCH_CODE_OFFSET ==
               PATCH_BUF_OFFSET + sizeof(sf32lb52_lcpu_patch_hdr) + sizeof(uint32_t));
 static_assert(sizeof(sf32lb52_lcpu_patch_code) <= PATCH_CODE_SIZE);
@@ -37,7 +34,7 @@ void pbl_rproc_sf32lb52__patch_install(const struct pbl_rproc_sf32lb52 *lcpu) {
 
   hdr[0] = sf32lb52_lcpu_patch_hdr[0];
   hdr[1] = sf32lb52_lcpu_patch_hdr[1];
-  hdr[2] = (code - LCPU_CBUS_OFFSET) | 1U;
+  hdr[2] = pbl_rproc_sf32lb52_da(lcpu, code) | 1U;
 
   memset((void *)code, 0, PATCH_CODE_SIZE);
   memcpy((void *)code, sf32lb52_lcpu_patch_code, sizeof(sf32lb52_lcpu_patch_code));
