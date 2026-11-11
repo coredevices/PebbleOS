@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/drivers/rtc/sf32lb.h>
@@ -20,16 +21,20 @@
 
 #define TIMEOUT_US 1000000U
 
+extern const struct pbl_rtc_sf32lb pbl_rtc_sf32lb_inst;
+
+static const struct pbl_rtc_sf32lb *const s_rtc = &pbl_rtc_sf32lb_inst;
+
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(SF32LB52_RTC_BASE + offset);
+  return pbl_readl(s_rtc->base + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, SF32LB52_RTC_BASE + offset);
+  pbl_writel(value, s_rtc->base + offset);
 }
 
 static inline void prv_modreg(uint32_t offset, uint32_t clear, uint32_t set) {
-  pbl_modifyl(clear, set, SF32LB52_RTC_BASE + offset);
+  pbl_modifyl(clear, set, s_rtc->base + offset);
 }
 
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
@@ -90,8 +95,8 @@ static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
 
   // The date reads with ERR set when it rolled over since the time was read.
   do {
-    tr = pbl_readl(SF32LB52_HPSYS_CFG_BASE + SF32LB52_HPSYS_CFG_RTC_TR_OFFSET);
-    dr = pbl_readl(SF32LB52_HPSYS_CFG_BASE + SF32LB52_HPSYS_CFG_RTC_DR_OFFSET);
+    tr = pbl_readl(s_rtc->cfg + SF32LB52_HPSYS_CFG_RTC_TR_OFFSET);
+    dr = pbl_readl(s_rtc->cfg + SF32LB52_HPSYS_CFG_RTC_DR_OFFSET);
   } while ((dr & RTC_DR_ERR) != 0U);
 
   struct pbl_tm tm = {
@@ -146,7 +151,7 @@ static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
   return prv_exit_init();
 }
 
-static int prv_init(const struct pbl_device *dev) {
+int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
   uint64_t rate_mhz;
   int ret;
 
@@ -174,11 +179,9 @@ static int prv_init(const struct pbl_device *dev) {
   return prv_exit_init();
 }
 
-static const struct pbl_rtc_ops s_ops = {
+const struct pbl_rtc_ops pbl_rtc_sf32lb_ops = {
   .get_time = prv_get_time,
   .set_time = prv_set_time,
 };
 
-PBL_DEVICE_STATE_DEFINE(pbl_rtc_sf32lb);
-const struct pbl_rtc pbl_rtc_sf32lb = PBL_RTC_INIT(pbl_rtc_sf32lb, "rtc", prv_init, &s_ops);
-PBL_DEVICE_REGISTER(pbl_rtc_sf32lb, &pbl_rtc_sf32lb.dev);
+#include PBL_DT_INSTANCES(sifli_sf32lb52_rtc_rtc)

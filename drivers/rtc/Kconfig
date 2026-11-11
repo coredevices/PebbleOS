@@ -26,7 +26,7 @@ config RTC_RETAINED
 
 config RTC_SF32LB
     bool "SiFli SF32LB"
-    default y if SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_RTC_ENABLED
     depends on SOC_SF32LB52
     select CLK
     help

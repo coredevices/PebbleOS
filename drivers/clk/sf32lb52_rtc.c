@@ -37,4 +37,4 @@ static const struct pbl_clk_controller_ops s_ops = {
     .lrc10 = _lrc10, .lxt32 = _lxt32,                                                       \
   }
 
-#include PBL_DT_INSTANCES(sifli_sf32lb52_rtc)
+#include PBL_DT_INSTANCES(sifli_sf32lb52_rtc_clk)
