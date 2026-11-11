@@ -10,6 +10,9 @@
 #ifdef CONFIG_AUDIO_HOST_MIC
 #include <pbl/drivers/audio/qemu.h>
 #endif
+#ifdef CONFIG_VIBE_SIM
+#include <pbl/drivers/vibe/sim.h>
+#endif
 
 #include <pbl/board.h>
 #include <pbl/drivers/uart.h>
@@ -269,6 +272,25 @@ static const QemuMessageHandler *prv_find_handler(uint16_t protocol_id) {
   return nullptr;
 }
 
+#ifdef CONFIG_VIBE_SIM
+static bool s_vibe_on;
+
+static void prv_vibe_observer(const struct pbl_vibe *vibe, int8_t strength, void *arg) {
+  bool on = (strength != 0);
+
+  if (on == s_vibe_on) {
+    return;
+  }
+
+  s_vibe_on = on;
+
+  QemuProtocolVibrationNotificationHeader notification = {
+    .on = on ? 1 : 0,
+  };
+  qemu_serial_send(QemuProtocol_Vibration, (const uint8_t *)&notification, sizeof(notification));
+}
+#endif
+
 // -----------------------------------------------------------------------------------------
 void qemu_serial_init(void) {
   // Init our state variables
@@ -278,6 +300,10 @@ void qemu_serial_init(void) {
 
   (void)pbl_uart_configure(QEMU_UART, &cfg);
   (void)pbl_uart_rx_enable(QEMU_UART, prv_uart_rx, nullptr);
+
+#ifdef CONFIG_VIBE_SIM
+  pbl_vibe_sim_set_observer(VIBE, prv_vibe_observer, nullptr);
+#endif
 }
 
 // -----------------------------------------------------------------------------------------

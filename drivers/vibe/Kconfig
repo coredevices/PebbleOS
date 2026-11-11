@@ -38,17 +38,12 @@ config VIBE_DRV2604
     help
       Support for the TI DRV2604 haptic driver.
 
-config VIBE_QEMU
-    bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+config VIBE_SIM
+    bool "Simulator"
+    default y if SOC_QEMU_PEBBLE || SOC_POSIX
     help
-      QEMU vibration motor, reporting its state to the QEMU host.
-
-config VIBE_POSIX
-    bool "POSIX"
-    default y if SOC_POSIX
-    help
-      Vibration motor of a native build, which does nothing.
+      Simulated vibration motor, reporting its state through its
+      simulator API (pbl/drivers/vibe/sim.h).
 
 module = DRIVER_VIBE
 module-str = Vibration Motor

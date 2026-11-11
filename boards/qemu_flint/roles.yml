@@ -14,8 +14,8 @@ als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h
 vibe:
-  symbol: QEMU_VIBE
-  include: pbl/drivers/vibe/qemu.h
+  symbol: SIM_VIBE
+  include: pbl/drivers/vibe/sim.h
 mic:
   symbol: HOST_MIC
   include: pbl/drivers/audio/qemu.h
