@@ -42,12 +42,19 @@ properties:
   rx-gpios:
     maxItems: 1
 
+  nordic,timer:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description:
+      TIMER counting the received bytes, through PPI, in counter mode. Each
+      port needs its own.
+
 required:
   - compatible
   - reg
   - interrupts
   - tx-gpios
   - rx-gpios
+  - nordic,timer
 
 unevaluatedProperties: false
 
@@ -60,4 +67,5 @@ examples:
         current-speed = <1000000>;
         tx-gpios = <&gpio0 27 0>;
         rx-gpios = <&gpio0 5 0>;
+        nordic,timer = <&timer2>;
     };

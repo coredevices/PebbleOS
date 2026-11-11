@@ -301,6 +301,7 @@
 	current-speed = <1000000>;
 	tx-gpios = <&gpio0 27 0>;
 	rx-gpios = <&gpio0 5 0>;
+	nordic,timer = <&timer2>;
 	status = "okay";
 };
 
