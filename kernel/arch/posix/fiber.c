@@ -113,6 +113,9 @@ static void prv_switch(void) {
   prv_reap();
 }
 
+void arch_early_init(void) {
+}
+
 void arch_init(void) {
 }
 

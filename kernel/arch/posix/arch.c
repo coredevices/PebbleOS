@@ -69,6 +69,9 @@ static void *prv_thread_main(void *arg) {
   return nullptr;
 }
 
+void arch_early_init(void) {
+}
+
 void arch_init(void) {
 }
 

@@ -433,6 +433,20 @@ PBL_NAKED void SVC_Handler(void) {
 
 // ---- start and idle ---------------------------------------------------------
 
+void arch_early_init(void) {
+#if HAS_FPU
+  arch_writel(arch_readl(ARM_SCB_CPACR) | ARM_SCB_CPACR_CP10_CP11_FULL, ARM_SCB_CPACR);
+  arm_dsb();
+  arm_isb();
+#endif
+#ifdef CONFIG_CPU_HAS_ICACHE
+  pbl_icache_enable();
+#endif
+#ifdef CONFIG_CPU_HAS_DCACHE
+  pbl_dcache_enable();
+#endif
+}
+
 void arch_init(void) {
   arm_shpr_set(ARM_EXC_MEMMANAGE, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
   arm_shpr_set(ARM_EXC_BUSFAULT, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
@@ -451,7 +465,6 @@ void arch_start(void) {
   arm_shpr_set(ARM_EXC_PENDSV, (uint8_t)PBL_IRQ_PRIO_KERNEL);
 
 #if HAS_FPU
-  arch_writel(arch_readl(ARM_SCB_CPACR) | ARM_SCB_CPACR_CP10_CP11_FULL, ARM_SCB_CPACR);
   arch_writel(arch_readl(ARM_FPU_FPCCR) | ARM_FPU_FPCCR_ASPEN | ARM_FPU_FPCCR_LSPEN, ARM_FPU_FPCCR);
 #endif
 
