@@ -91,6 +91,7 @@
 			reg = <0x40002000 0x1000>;
 			interrupts = <58>;
 			#mbox-cells = <1>;
+			#hwlock-cells = <1>;
 			status = "disabled";
 		};
 
@@ -111,6 +112,11 @@
 		lpsys_aon: syscon@40040000 {
 			compatible = "sifli,sf32lb52-lpsys-aon", "syscon";
 			reg = <0x40040000 0x1000>;
+		};
+
+		bt_mac: syscon@40090000 {
+			compatible = "sifli,sf32lb52-bt-mac", "syscon";
+			reg = <0x40090000 0x1000>;
 		};
 
 		hpsys_rcc: clock-controller@50000000 {
@@ -378,6 +384,10 @@
 			operating-points-v2 = <&hpsys_opp_table>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,hpsys-rcc = <&hpsys_rcc>;
+			sifli,bt-mac = <&bt_mac>;
+			sifli,lpsys-aon = <&lpsys_aon>;
+			sifli,lpsys-rcc = <&lpsys_rcc>;
+			hwlocks = <&mailbox2 0>;
 			assigned-clocks = <&pmuc SF32LB52_PMUC_CLK_WDT>;
 			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_LRC32>;
 		};

@@ -61,6 +61,22 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS RCC, for its HRC48 calibration counter.
 
+  sifli,bt-mac:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Bluetooth controller, for its LRC10 calibration counter.
+
+  sifli,lpsys-aon:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: LPSYS always-on block, requesting the crystal LRC10 is counted against.
+
+  sifli,lpsys-rcc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: LPSYS RCC, running LPSYS from the crystal while LRC10 is counted.
+
+  hwlocks:
+    description: Lock of the LRC10 calibration counter, shared with the LCPU.
+    maxItems: 1
+
   clocks:
     minItems: 1
     items:
@@ -92,6 +108,10 @@ required:
   - operating-points-v2
   - sifli,hpsys-cfg
   - sifli,hpsys-rcc
+  - sifli,bt-mac
+  - sifli,lpsys-aon
+  - sifli,lpsys-rcc
+  - hwlocks
   - clocks
   - clock-names
 
@@ -110,6 +130,10 @@ examples:
         operating-points-v2 = <&hpsys_opp_table>;
         sifli,hpsys-cfg = <&hpsys_cfg>;
         sifli,hpsys-rcc = <&hpsys_rcc>;
+        sifli,bt-mac = <&bt_mac>;
+        sifli,lpsys-aon = <&lpsys_aon>;
+        sifli,lpsys-rcc = <&lpsys_rcc>;
+        hwlocks = <&mailbox2 0>;
         nvmem-cells = <&soc_config_user>, <&soc_config_cust>;
         nvmem-cell-names = "soc-config-user", "soc-config-cust";
     };
