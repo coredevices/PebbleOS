@@ -13,6 +13,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
 #include <bf0_hal.h>
 #include <lpsys.h>
@@ -173,6 +174,18 @@ void pbl_rproc_sf32lb52_coredump_prepare(void) {
   soc_sf32lb52_lpsys_wake();
 }
 #endif
+
+uintptr_t pbl_rproc_sf32lb52_da(const struct pbl_rproc_sf32lb52 *lcpu, uintptr_t pa) {
+  for (size_t i = 0U; i < ARRAY_LENGTH(lcpu->ranges); i++) {
+    const struct pbl_rproc_sf32lb52_range *range = &lcpu->ranges[i];
+
+    if (pa >= range->pa && pa - range->pa < range->size) {
+      return range->da + (pa - range->pa);
+    }
+  }
+
+  return 0U;
+}
 
 const struct pbl_rproc_ops pbl_rproc_sf32lb52_ops = {
   .start = prv_start,

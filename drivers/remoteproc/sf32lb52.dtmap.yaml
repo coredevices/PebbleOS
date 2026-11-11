@@ -18,6 +18,18 @@ args:
     of: sram
   - size: 0
     of: sram
+  - prop: dma-ranges
+    index: 0
+  - prop: dma-ranges
+    index: 1
+  - prop: dma-ranges
+    index: 2
+  - prop: dma-ranges
+    index: 3
+  - prop: dma-ranges
+    index: 4
+  - prop: dma-ranges
+    index: 5
   - clock: hclk
   - clock: pclk
   - clock: pclk2
