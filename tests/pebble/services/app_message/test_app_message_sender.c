@@ -84,11 +84,15 @@ bool pbl_pp__session_is_open(const struct pbl_pp_session *session) {
 
 FAKE_VOID_FUNC(pbl_pp_session_send_next, struct pbl_pp_session *);
 
+static int s_fast_connection_requests;
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs,
                                        pbl_bt_responsiveness_granted_cb_t granted) {
+  if (state == PBL_BT_RESPONSE_TIME_MIN) {
+    ++s_fast_connection_requests;
+  }
 }
 
 void app_session_sanitize(struct pbl_pp_session **session_in_out) {
@@ -160,6 +164,7 @@ void test_app_message_sender__initialize(void) {
   app_outbox_service_consume_message_fake.custom_fake = prv_consume_message;
 
   s_is_message_cancelled = false;
+  s_fast_connection_requests = 0;
 
   s_process_md.allow_js = false;
 
@@ -231,6 +236,27 @@ void test_app_message_sender__auto_select_not_js_app(void) {
 
   prv_process_send_queue(s_app_session_ptr);
   assert_consumed(AppMessageSenderErrorSuccess, 1);
+
+  app_free(outbox_data);
+}
+
+void test_app_message_sender__small_message_keeps_connection_relaxed(void) {
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, TEST_PAYLOAD, sizeof(TEST_PAYLOAD));
+  prv_process_send_queue(s_app_session_ptr);
+  assert_consumed(AppMessageSenderErrorSuccess, 1);
+  cl_assert_equal_i(s_fast_connection_requests, 0);
+
+  app_free(outbox_data);
+}
+
+void test_app_message_sender__large_message_requests_fast_connection(void) {
+  static uint8_t large_payload[APP_MESSAGE_FAST_CONNECTION_MIN_SIZE + 1];
+  AppMessageAppOutboxData *outbox_data = prv_create_and_send_outbox_message(
+      nullptr /* auto-select */, ALLOWED_ENDPOINT_ID, large_payload, sizeof(large_payload));
+  prv_process_send_queue(s_app_session_ptr);
+  assert_consumed(AppMessageSenderErrorSuccess, 1);
+  cl_assert(s_fast_connection_requests > 0);
 
   app_free(outbox_data);
 }
