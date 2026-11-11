@@ -27,7 +27,11 @@ const FirmwareMetadata TINTIN_METADATA PBL_SECTION(".pbl_fw_version") = {
   .version_tag = PBL_VERSION_TAG,
   .version_short = PBL_VERSION_GIT_SHA,
 
-  .is_recovery_firmware = FIRMWARE_METADATA_IS_RECOVERY_FIRMWARE,
+#ifdef CONFIG_RECOVERY_FW
+  .is_recovery_firmware = true,
+#else
+  .is_recovery_firmware = false,
+#endif
   .is_ble_firmware = false,
 #ifdef CONFIG_PBLBOOT
   .is_dual_slot = true,
