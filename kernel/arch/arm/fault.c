@@ -96,6 +96,11 @@ static void prv_dump_cfsr(uint32_t cfsr) {
   }
 }
 
+// The faulting registers, for the debugger's "pbl fault_wizard"; 0 when unknown.
+static PBL_USED uint32_t s_fault_saved_sp;
+static PBL_USED uint32_t s_fault_saved_lr;
+static PBL_USED uint32_t s_fault_saved_pc;
+
 static void prv_dump_frame(const uint32_t *frame) {
   PBL_LOG_FAULT("R0 = 0x%" PRIx32, frame[FRAME_R0]);
   PBL_LOG_FAULT("R1 = 0x%" PRIx32, frame[FRAME_R1]);
@@ -115,7 +120,13 @@ static const char *prv_thread_name(void) {
 }
 
 static void prv_dump(const uint32_t *frame, uint32_t cfsr) {
+  s_fault_saved_sp = 0U;
+  s_fault_saved_lr = 0U;
+  s_fault_saved_pc = 0U;
   if (frame != nullptr) {
+    s_fault_saved_sp = (uint32_t)(uintptr_t)&frame[FRAME_WORDS];
+    s_fault_saved_lr = frame[FRAME_LR];
+    s_fault_saved_pc = frame[FRAME_PC];
     prv_dump_frame(frame);
   }
   prv_dump_cfsr(cfsr);
