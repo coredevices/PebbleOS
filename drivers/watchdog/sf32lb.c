@@ -11,6 +11,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/misc.h>
 
+#include <devicetree/regs.h>
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_pmuc.h>
 #include <hardware/sf32lb52_wdt.h>
@@ -20,6 +21,7 @@
 static McuRebootReason s_cached_reset_flag;
 // Registers, and counts per timeout at the rate of the clock, once the device is up
 static uintptr_t s_base;
+static uintptr_t s_cfg;
 static uint32_t s_reload;
 
 static inline uint32_t prv_wdt_getreg(uint32_t offset) {
@@ -31,11 +33,11 @@ static inline void prv_wdt_putreg(uint32_t offset, uint32_t value) {
 }
 
 static inline uint32_t prv_pmuc_getreg(uint32_t offset) {
-  return pbl_readl(SF32LB52_PMUC_BASE + offset);
+  return pbl_readl(PBL_DT_REG_PMUC + offset);
 }
 
 static inline void prv_pmuc_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, SF32LB52_PMUC_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_PMUC + offset);
 }
 
 static void prv_wdt_command(uint32_t cmd, bool active) {
@@ -61,9 +63,8 @@ void watchdog_init(void) {
 
   prv_wdt_putreg(SF32LB52_WDT_CVR0_OFFSET, s_reload);
 
-  pbl_modifyl(0U, PMUC_WER_WDT1, SF32LB52_PMUC_BASE + SF32LB52_PMUC_WER_OFFSET);
-  pbl_modifyl(0U, HPSYS_CFG_SYSCR_WDT1_REBOOT,
-              SF32LB52_HPSYS_CFG_BASE + SF32LB52_HPSYS_CFG_SYSCR_OFFSET);
+  pbl_modifyl(0U, PMUC_WER_WDT1, PBL_DT_REG_PMUC + SF32LB52_PMUC_WER_OFFSET);
+  pbl_modifyl(0U, HPSYS_CFG_SYSCR_WDT1_REBOOT, s_cfg + SF32LB52_HPSYS_CFG_SYSCR_OFFSET);
 }
 
 void watchdog_start(void) {
@@ -142,6 +143,7 @@ int pbl_watchdog_sf32lb_init(const struct pbl_device *dev) {
     return -EINVAL;
   }
   s_base = wdt->base;
+  s_cfg = wdt->cfg;
 
   watchdog_init();
   watchdog_start();

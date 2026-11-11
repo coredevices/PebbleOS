@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The reset reason is read from the PMUC before the device is up
+config: WATCHDOG_SF32LB
+labels:
+  - pmuc

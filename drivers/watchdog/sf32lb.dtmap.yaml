@@ -10,3 +10,5 @@ args:
   - name: true
   - reg: 0
   - clock: 0
+  - reg: 0
+    of: sifli,hpsys-cfg

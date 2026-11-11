@@ -265,6 +265,7 @@
 			compatible = "sifli,sf32lb52-wdt";
 			reg = <0x50094000 0x1000>;
 			clocks = <&pmuc SF32LB52_PMUC_CLK_WDT>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
 			status = "disabled";
 		};
 
