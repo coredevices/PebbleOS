@@ -24,7 +24,7 @@
  * changes, power down) runs from RAM with interrupts disabled.
  *
  * @code{.c}
- * PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", SF32LB52_MPI2_BASE, SF32LB52_MPI2_MEM_BASE,
+ * PBL_SPI_MEM_SF32LB52_MPI_DEFINE(s_mpi2, "mpi2", 0x50042000, 0x12000000,
  *                                 0xe000000, PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2));
  * @endcode
  * @{

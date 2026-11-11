@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 /* Register offsets, of bank n (pins 32n to 32n + 31) */
 
 #define SF32LB52_GPIO_BANK_OFFSET(n) ((n) * 0x80)

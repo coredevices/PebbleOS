@@ -26,7 +26,7 @@
  * at init with the pins in their sleep state, if any, e.g. driven low.
  *
  * @code{.c}
- * PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", SF32LB52_LCDC1_BASE, PBL_SOC_IRQN_LCDC1,
+ * PBL_DISPLAY_SF32LB_LCDC_DEFINE(s_display, "display", 0x50008000, PBL_SOC_IRQN_LCDC1,
  *                                PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_LCDC1),
  *                                PBL_RESET(SF32LB_HPSYS_RCC_RESET, SF32LB52_HPSYS_RST_LCDC1),
  *                                &s_panel, 200, 228, 0, nullptr, &s_lcdc_default, &s_lcdc_sleep);

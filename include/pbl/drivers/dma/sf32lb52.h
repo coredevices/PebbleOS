@@ -18,7 +18,7 @@
  * @c CONFIG_DMA_SF32LB52_IRQ_PRIO, and enables a channel's while a transfer with a callback runs.
  *
  * @code{.c}
- * PBL_DMA_SF32LB52_DEFINE(s_dmac1, "dmac1", SF32LB52_DMAC1_BASE,
+ * PBL_DMA_SF32LB52_DEFINE(s_dmac1, "dmac1", 0x50081000,
  *                         PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_DMAC1), 50, 51, 52, 53,
  *                         54, 55, 56, 57);
  * static const struct pbl_dma_chan s_rx =

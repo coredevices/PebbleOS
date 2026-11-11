@@ -30,7 +30,7 @@
  *                          SF32LB52_PA33_I2C2_SDA | PBL_PINCTRL_SF32LB52_INPUT);
  * static const struct pbl_dma_chan s_i2c2_dma =
  *     PBL_DMA_CHAN(&dt_dmac1, 5, SF32LB52_DMA_REQ_I2C2, SF32LB52_DMA_PL_HIGH);
- * PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", SF32LB52_I2C2_BASE, PBL_SOC_IRQN_I2C2,
+ * PBL_I2C_SF32LB_DEFINE(s_i2c2, "i2c2", 0x5009d000, PBL_SOC_IRQN_I2C2,
  *                       PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_I2C2), 400000,
  *                       &s_i2c2_default, &s_i2c2_dma);
  * @endcode

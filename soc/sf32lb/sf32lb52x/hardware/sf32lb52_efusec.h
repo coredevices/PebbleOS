@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/sf32lb52_memorymap.h>
-
 #define SF32LB52_EFUSEC_NUM_BANKS 4U
 #define SF32LB52_EFUSEC_BANK_SIZE 32U
 
