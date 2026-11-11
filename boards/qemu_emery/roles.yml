@@ -8,8 +8,8 @@ display: display
 backlight: display
 flash: flash0
 accel:
-  symbol: QEMU_ACCEL
-  include: pbl/drivers/imu/qemu.h
+  symbol: SIM_ACCEL
+  include: pbl/drivers/imu/sim.h
 als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h

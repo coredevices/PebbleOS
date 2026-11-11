@@ -281,8 +281,8 @@ a node, or a symbol for a device defined in C, with the header declaring it:
 console_uart: uart2
 flash: flash0
 accel:
-  symbol: QEMU_ACCEL
-  include: pbl/drivers/imu/qemu.h
+  symbol: SIM_ACCEL
+  include: pbl/drivers/imu/sim.h
 ```
 
 An application changes them in its `roles.yml`, then in

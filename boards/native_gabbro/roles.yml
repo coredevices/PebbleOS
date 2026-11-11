@@ -20,8 +20,8 @@ flash:
   symbol: POSIX_FLASH
   include: pbl/drivers/flash/posix.h
 accel:
-  symbol: POSIX_ACCEL
-  include: pbl/drivers/imu/posix.h
+  symbol: SIM_ACCEL
+  include: pbl/drivers/imu/sim.h
 als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h
