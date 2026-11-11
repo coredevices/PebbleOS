@@ -47,6 +47,7 @@ patternProperties:
           bias-pull-up: true
           bias-pull-down: true
           input-enable: true
+          input-schmitt-enable: true
 
           drive-strength:
             enum: [2, 4, 8, 12]
