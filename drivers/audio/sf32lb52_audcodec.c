@@ -7,12 +7,12 @@
 #include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -22,6 +22,9 @@
 #include <hardware/sf32lb52_pmuc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_audio_sf32lb52, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
+
+static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
+              "ring buffers must own their cache lines");
 
 #define REG(name) (dev->base + SF32LB52_AUDCODEC_##name##_OFFSET)
 
@@ -464,10 +467,6 @@ static int prv_init(const struct pbl_audio_dai *dai) {
   const struct pbl_audio_sf32lb52_audcodec *dev = prv_dev(dai);
   int ret;
 
-  if (dcache_line_size() > PBL_AUDIO_BUF_ALIGN) {
-    return -EINVAL;
-  }
-
   *dev->state = (struct pbl_audio_sf32lb52_audcodec_state){0};
 
   ret = pbl_device_init(&dev->clk.ctrl->dev);
@@ -515,7 +514,7 @@ static int prv_dma_start(const struct pbl_audio_sf32lb52_audcodec *dev,
   int ret;
 
   dev->state->ring_bytes = period_bytes * stream->periods;
-  dcache_flush(stream->buf, dev->state->ring_bytes);
+  pbl_dcache_flush_range(stream->buf, dev->state->ring_bytes);
 
   ret = pbl_dma_slave_config(dev->dma, &cfg);
   if (ret != 0) {
@@ -614,7 +613,7 @@ static int prv_set_mute(const struct pbl_audio_dai *dai, bool mute) {
 }
 
 static void prv_sync_for_device(const struct pbl_audio_dai *dai, void *buf, size_t len) {
-  dcache_flush(buf, len);
+  pbl_dcache_flush_range(buf, len);
 }
 
 static int prv_pointer(const struct pbl_audio_dai *dai, size_t *frames) {

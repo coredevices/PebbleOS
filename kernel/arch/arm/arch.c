@@ -10,9 +10,9 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/section.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/mcu/interrupts.h>
 
 #include <kernel.h>
@@ -186,7 +186,7 @@ void arch_thread_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *
     t->backend.arch.mpu[2 * i + 1] = attr;
   }
 #ifdef CONFIG_CPU_HAS_DCACHE
-  dcache_flush_all();
+  pbl_dcache_flush_all();
 #endif
 }
 

@@ -5,9 +5,9 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/uart/sf32lb.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -201,7 +201,7 @@ static void prv_dma_drain(const struct pbl_uart_sf32lb *usart) {
   }
 
   head = (PBL_UART_SF32LB_RX_BUF_SIZE - residue) % PBL_UART_SF32LB_RX_BUF_SIZE;
-  dcache_invalidate(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
+  pbl_dcache_invalidate_range(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
 
   while (state->rx_pos != head) {
     uint8_t c = usart->rx_buf[state->rx_pos];
@@ -229,7 +229,7 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
 
   if (usart->rx_dma != nullptr) {
     // The buffer is invalidated whole, so it must not share cache lines with anything else
-    dcache_flush_invalidate(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
+    pbl_dcache_flush_invalidate_range(usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE);
     usart->state->rx_pos = 0U;
 
     ret = pbl_dma_prep_dma_cyclic(usart->rx_dma, usart->rx_buf, PBL_UART_SF32LB_RX_BUF_SIZE,

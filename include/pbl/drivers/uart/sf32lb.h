@@ -9,9 +9,9 @@
 #include <pbl/drivers/dma.h>
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/uart.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/mcu/cache.h>
 
 /**
  * @defgroup drivers_uart_sf32lb SF32LB
@@ -86,7 +86,7 @@ extern const struct pbl_uart_ops pbl_uart_sf32lb_ops;
   PBL_UART_STATE_DEFINE(sym);                                                                      \
   static struct pbl_uart_sf32lb_state sym##_sf32lb_state;                                          \
   __VA_OPT__(                                                                                      \
-      static uint8_t sym##_rx_buf[PBL_UART_SF32LB_RX_BUF_SIZE] PBL_ALIGNED(DCACHE_LINE_SIZE_MAX);) \
+      static uint8_t sym##_rx_buf[PBL_UART_SF32LB_RX_BUF_SIZE] PBL_ALIGNED(PBL_DCACHE_LINE_SIZE);) \
   PBL_DEVICE_INSTANCE(sym, struct pbl_uart_sf32lb, struct pbl_uart, uart){                         \
     .uart = PBL_UART_INIT(sym, _name, &pbl_uart_sf32lb_ops, _baudrate, nullptr),                   \
     .state = &sym##_sf32lb_state,                                                                  \
