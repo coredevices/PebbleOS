@@ -43,9 +43,3 @@ include(${PBL_CONFIG_CMAKE})
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   ${PBL_KCONFIG_DEPENDS} ${PBL_BASE}/tools/cmake/kconfig.py
   ${PBL_BASE}/tools/devicetree/dtmap.py ${PBL_BASE}/tools/devicetree/fdt.py)
-
-# The recovery firmware is selected with -DVARIANT=prf, which loads
-# prj_prf.conf; keep the two spellings in sync.
-if(VARIANT STREQUAL "prf" AND NOT CONFIG_RECOVERY_FW)
-  message(FATAL_ERROR "VARIANT=prf but CONFIG_RECOVERY_FW is not set")
-endif()

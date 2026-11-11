@@ -53,7 +53,7 @@ A release image: strips debug aids, enables shipping defaults and reduces
 battery usage compared to a debug build.
 
 :`-DCONFIG_MFG=y`:
-Manufacturing-only functionality in the PRF build.
+Manufacturing-only functionality in the PRF build, so with `--variant=prf`.
 
 Options for debugging and logging are listed with
 {doc}`../development/debugging/index` and {doc}`../subsystems/logging`. To browse
