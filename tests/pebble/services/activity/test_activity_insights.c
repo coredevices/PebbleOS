@@ -8,8 +8,10 @@
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/activity/activity.h>
+#include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/hr_util.h>
 #include <pbl/services/activity/insights_settings.h>
 
 #include <clar.h>
@@ -60,6 +62,9 @@ typedef struct StaticData {
   // Enough room for 3 days worth of sessions
   ActivitySession activity_sessions[3 * MAX_ACTIVITY_SESSIONS];
   uint32_t num_sessions;
+
+  // Heart rate reported for every stored minute, 0 for no readings
+  uint8_t minute_heart_rate_bpm;
 
   int pins_added;
   int pins_removed;
@@ -270,6 +275,18 @@ uint8_t activity_prefs_get_health_app_opened_version(void) {
   return s_health_app_opened_version;
 }
 
+bool activity_algorithm_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minutes,
+                                              time_t utc_start) {
+  memset(heart_rate_bpm, s_data.minute_heart_rate_bpm, num_minutes);
+  // Leave a gap, as when the sensor has no lock
+  heart_rate_bpm[0] = 0;
+  return true;
+}
+
+HRZone hr_util_get_hr_zone(int bpm) {
+  return (bpm >= 160) ? HRZone_Zone2 : (bpm >= 140) ? HRZone_Zone1 : HRZone_Zone0;
+}
+
 ActivityScalarStore activity_metrics_prv_steps_per_minute(void) {
   return s_data.steps_per_minute;
 }
@@ -292,7 +309,7 @@ void pbl_fs_watch_remove(struct pbl_fs_watch *watch) {
 // We keep the headings/paragraphs of the most recently built timeline item so tests can assert
 // on the metrics a notification reports. The strings are copied out here because the insight
 // code frees its StringLists right after the notification is pushed.
-#define MAX_CAPTURED_METRICS 8
+#define MAX_CAPTURED_METRICS 10
 
 static TimelineItem s_item = {};
 static char s_captured_headings[MAX_CAPTURED_METRICS][32];
@@ -924,6 +941,37 @@ void test_activity_insights__walk_session_power_cycle(void) {
   pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
   activity_insights_process_minute_data(pbl_realtime());
   cl_assert_equal_i(s_data.notifs_shown, 2);
+}
+
+// ---------------------------------------------------------------------------------------
+// A detected session reports the heart rate stored in its minute data
+static void prv_push_detected_walk_session(uint8_t minute_heart_rate_bpm) {
+  activity_insights_init(pbl_realtime());
+  s_data.metric_history[ActivityMetricSleepState][0] = ActivitySleepStateAwake;
+  s_data.metric_history[ActivityMetricSleepStateSeconds][0] = 30 * PBL_SEC_PER_MIN;
+  s_data.minute_heart_rate_bpm = minute_heart_rate_bpm;
+
+  pbl_realtime_set(pbl_realtime() + 5 * PBL_SEC_PER_HOUR);
+  prv_add_walk_session(0, 1);
+  pbl_realtime_set(pbl_realtime() + 2 * PBL_SEC_PER_HOUR);
+  activity_insights_process_minute_data(pbl_realtime());
+  cl_assert_equal_i(s_data.notifs_shown, 1);
+}
+
+void test_activity_insights__walk_session_notification_includes_hr(void) {
+  prv_push_detected_walk_session(145);
+  cl_assert_equal_i(prv_get_notification_metric("Avg HR"), 145);
+  // The minute without a reading is left out
+  cl_assert_equal_i(prv_get_notification_metric("Fat Burn"), 59);
+  cl_assert_equal_i(prv_get_notification_metric("Endurance"), -1);
+  cl_assert_equal_i(prv_get_notification_metric("Steps"), 3600);
+}
+
+void test_activity_insights__walk_session_notification_omits_missing_hr(void) {
+  prv_push_detected_walk_session(0);
+  cl_assert_equal_i(prv_get_notification_metric("Avg HR"), -1);
+  cl_assert_equal_i(prv_get_notification_metric("Fat Burn"), -1);
+  cl_assert_equal_i(prv_get_notification_metric("Steps"), 3600);
 }
 
 // ---------------------------------------------------------------------------------------

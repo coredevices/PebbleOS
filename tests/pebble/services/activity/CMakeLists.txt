@@ -40,6 +40,7 @@ pbl_clar_test(test_activity_insights
     tests/fakes/fake_rtc.c
     pebble/applib/pbl_std/strftime.c
     pebble/applib/pbl_std/timelocal.c
+  DEFINES CONFIG_HRM
   OVERRIDES dummy_board
 )
 
