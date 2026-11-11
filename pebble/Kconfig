@@ -37,6 +37,10 @@ config FLASH_SHELL_STRESS
     default !RECOVERY_FW
     depends on FLASH_SHELL
 
+config GH3X2X_ALGO
+    default !RECOVERY_FW || MFG
+    depends on HRM_GH3X2X && BOARD_OBELIX
+
 config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
@@ -48,6 +52,10 @@ config LOG_HASHED
 config SHELL
     default y
     depends on CONSOLE
+
+config TEMP_SHELL
+    default n if RECOVERY_FW
+    depends on TEMP && SHELL
 
 config USERSPACE
     default y

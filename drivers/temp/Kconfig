@@ -11,7 +11,7 @@ if TEMP
 config TEMP_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
-    depends on SHELL && !RECOVERY_FW
+    depends on SHELL
     help
       The temp shell command, to read the die temperature.
 
