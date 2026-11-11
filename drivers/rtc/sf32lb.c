@@ -40,7 +40,7 @@ static inline void prv_modreg(uint32_t offset, uint32_t clear, uint32_t set) {
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
 
 static struct pbl_clk_notifier s_clk_nb = {
-  .clk = PBL_CLK(SF32LB52_RTC_CLK, SF32LB52_CLK_RTC),
+  .clk = PBL_CLK(SF32LB_CLK_RTC_CTRL, SF32LB_CLK_RTC_ID),
   .fn = prv_rate_changed,
 };
 
@@ -155,7 +155,7 @@ int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
   uint64_t rate_mhz;
   int ret;
 
-  ret = pbl_device_init(&SF32LB52_RTC_CLK->dev);
+  ret = pbl_device_init(&SF32LB_CLK_RTC_CTRL->dev);
   if (ret != 0) {
     return ret;
   }

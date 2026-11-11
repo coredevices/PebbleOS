@@ -11,8 +11,8 @@ if RESET
 
 config RESET_SF32LB
     bool "SiFli SF32LB RCC"
-    default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED
+    default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED || DT_HAS_SIFLI_SF32LB57_HPSYS_RCC_ENABLED
     help
-      Reset controller of the SiFli SF32LB52 HPSYS RCC.
+      Reset controller of the SiFli SF32LB52 and SF32LB57 HPSYS RCC.
 
 endif # RESET
