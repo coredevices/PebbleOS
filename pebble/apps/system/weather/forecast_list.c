@@ -2910,6 +2910,9 @@ static void prv_clock_loc_city(char *dst, size_t dst_size, const char *src) {
   size_t i = 0;
   for (; src && src[i] && src[i] != ',' && i < dst_size - 1; i++)
     dst[i] = src[i];
+  // Drop a UTF-8 character the buffer cut short. Invalid UTF-8 draws as nothing.
+  while (src && i > 0 && ((uint8_t)src[i] & 0xC0) == 0x80)
+    i--;
   while (i > 0 && dst[i - 1] == ' ')
     i--;
   dst[i] = '\0';

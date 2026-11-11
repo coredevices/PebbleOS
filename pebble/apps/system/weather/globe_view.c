@@ -2203,20 +2203,21 @@ static void format_selected_label(GlobeView *view, char *buffer, size_t buffer_s
       abbr = "SA";
 
     if (city_len > 0 && (abbr || country_len > 0)) {
+      // ", " can make the result a byte longer than the label; cut it on a character boundary.
+      char joined[SAVED_LOCATION_LABEL_SIZE + 2];
       if (abbr) {
-        snprintf(buffer, buffer_size, "%.*s, %s", (int)city_len, label, abbr);
+        snprintf(joined, sizeof(joined), "%.*s, %s", (int)city_len, label, abbr);
       } else {
-        snprintf(buffer, buffer_size, "%.*s, %.*s", (int)city_len, label, (int)country_len,
+        snprintf(joined, sizeof(joined), "%.*s, %.*s", (int)city_len, label, (int)country_len,
                  country_start);
       }
-      buffer[buffer_size - 1] = '\0';
+      weather_copy_text(buffer, buffer_size, joined);
       return;
     }
   }
 #endif
 
-  strncpy(buffer, label, buffer_size - 1);
-  buffer[buffer_size - 1] = '\0';
+  weather_copy_text(buffer, buffer_size, label);
 }
 
 static void update_city_label_layer(GlobeView *view) {
@@ -3748,8 +3749,7 @@ void globe_view_set_current_location(GlobeView *view, const char *label, int16_t
   view->current_location_latitude_e2 = latitude_e2;
   view->current_location_longitude_e2 = longitude_e2;
   if (label && label[0]) {
-    strncpy(view->current_location_label, label, sizeof(view->current_location_label) - 1);
-    view->current_location_label[sizeof(view->current_location_label) - 1] = '\0';
+    weather_copy_text(view->current_location_label, sizeof(view->current_location_label), label);
   } else {
     strncpy(view->current_location_label, pbl_i18n_get("Current Location", view),
             sizeof(view->current_location_label) - 1);

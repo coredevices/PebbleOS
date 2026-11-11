@@ -682,3 +682,27 @@ void test_weather_app_layout__store_hourly_precip(void) {
   memset(precip, WEATHER_PRECIP_UNKNOWN, sizeof(precip));
   cl_assert_equal_i(weather_store_hourly_precip(hours, precip, WEATHER_PRECIP_HOURS), 0);
 }
+
+void test_weather_app_layout__copy_text_cuts_on_character_boundary(void) {
+  char buf[8];
+  weather_copy_text(buf, sizeof(buf), "Oslo");
+  cl_assert_equal_s(buf, "Oslo");
+  weather_copy_text(buf, sizeof(buf), "Ottawa!"); // exactly fills the buffer
+  cl_assert_equal_s(buf, "Ottawa!");
+  weather_copy_text(buf, sizeof(buf), "Montreal");
+  cl_assert_equal_s(buf, "Montrea");
+  weather_copy_text(buf, sizeof(buf), "Bogot\xC3\xA1 DC"); // U+00E1 ends at the 7th byte: kept
+  cl_assert_equal_s(buf, "Bogot\xC3\xA1");
+  weather_copy_text(buf, sizeof(buf), "Malm\xC3\xB6\xC3\xA9x"); // U+00E9 would straddle the end
+  cl_assert_equal_s(buf, "Malm\xC3\xB6");
+  weather_copy_text(buf, sizeof(buf), "Tok\xE6\x9D\xB1\xE4\xBA\xAC"); // U+4EAC would be cut
+  cl_assert_equal_s(buf, "Tok\xE6\x9D\xB1");
+  weather_copy_text(buf, sizeof(buf),
+                    "\x80\x80\x80\x80\x80\x80\x80\x80\x80"); // continuation bytes only
+  cl_assert_equal_s(buf, "");
+  weather_copy_text(buf, sizeof(buf), nullptr);
+  cl_assert_equal_s(buf, "");
+  char one[1] = {'x'};
+  weather_copy_text(one, sizeof(one), "Lima");
+  cl_assert_equal_s(one, "");
+}

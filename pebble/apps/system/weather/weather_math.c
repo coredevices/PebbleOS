@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include <pbl/services/time.h>
+#include <pbl/util/string.h>
 #include <pbl/util/units.h>
 
 #include <applib/graphics/gdraw_command_sequence.h>
@@ -193,6 +194,21 @@ void weather_render_squash_cached(GContext *ctx, const uint8_t *scratch, Animati
     return;
   prv_squash_resample(fb, scratch, m, mode);
   graphics_release_frame_buffer(ctx, fb);
+}
+
+void weather_copy_text(char *dst, size_t dst_size, const char *src) {
+  if (dst_size == 0)
+    return;
+  size_t len = src ? strnlen(src, dst_size) : 0;
+  if (len == dst_size) {
+    // Too long: back up past UTF-8 continuation bytes so no character is cut in two.
+    len = dst_size - 1;
+    while (len > 0 && ((uint8_t)src[len] & 0xC0) == 0x80)
+      len--;
+  }
+  if (len)
+    memcpy(dst, src, len);
+  dst[len] = '\0';
 }
 
 void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buffer,

@@ -4,6 +4,8 @@
 //! the only one that includes the firmware weather headers.
 #include "weather_data_source.h"
 
+#include "weather_math.h"
+
 #include <string.h>
 
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -13,20 +15,11 @@
 
 #include <applib/app_malloc.h>
 
-static void prv_copy_str(char *dst, size_t dst_size, const char *src) {
-  if (!src) {
-    dst[0] = '\0';
-    return;
-  }
-  strncpy(dst, src, dst_size - 1);
-  dst[dst_size - 1] = '\0';
-}
-
 static void prv_fill_from_fw(WxDsForecast *out, const WeatherLocationForecast *f, int index) {
   (void)index;
   memset(out, 0, sizeof(*out));
-  prv_copy_str(out->location_name, sizeof(out->location_name), f->location_name);
-  prv_copy_str(out->short_phrase, sizeof(out->short_phrase), f->current_weather_phrase);
+  weather_copy_text(out->location_name, sizeof(out->location_name), f->location_name);
+  weather_copy_text(out->short_phrase, sizeof(out->short_phrase), f->current_weather_phrase);
   // The record carries the real flag — list position is NOT it (the current
   // location need not be first, and may be absent entirely).
   out->is_current_location = f->is_current_location;
