@@ -15,7 +15,6 @@
 #include <pbl/kernel/irq.h>
 
 #include <devicetree/devices.h>
-#include <hardware/sf32lb52_memorymap.h>
 
 const struct pbl_uart *const CONSOLE_UART = &dt_usart1;
 
@@ -23,17 +22,6 @@ const struct pbl_uart *const CONSOLE_UART = &dt_usart1;
 const struct pbl_rproc_sf32lb52 *const LCPU =
     container_of(&dt_lcpu, const struct pbl_rproc_sf32lb52, rproc);
 #endif // CONFIG_REMOTEPROC_SF32LB52
-
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-PBL_PINCTRL_STATE_DEFINE(s_hci_trace_uart_default, SF32LB52_PINCTRL,
-                         SF32LB52_PA27_USART3_TXD | PBL_PINCTRL_SF32LB52_INPUT |
-                             PBL_PINCTRL_SF32LB52_DRIVE_8MA);
-
-PBL_UART_SF32LB_DEFINE(s_usart3, "usart3", SF32LB52_USART3_BASE, PBL_SOC_IRQN_USART3,
-                       PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_USART3), 1000000,
-                       &s_hci_trace_uart_default);
-const struct pbl_uart *const HCI_TRACE_UART = &s_usart3;
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
 
 #ifdef CONFIG_FLASH
 const struct pbl_flash *const FLASH = &dt_flash0;
