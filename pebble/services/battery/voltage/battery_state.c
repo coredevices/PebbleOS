@@ -4,8 +4,8 @@
 #include <pbl/kernel/time.h>
 #include <pbl/services/battery/battery_state.h>
 
-#ifdef CONFIG_QEMU
-#include <pbl/drivers/battery/qemu.h>
+#ifdef CONFIG_BATTERY_SIM
+#include <pbl/drivers/battery/sim.h>
 #endif
 
 #include <pbl/analytics/analytics.h>
@@ -273,11 +273,10 @@ PBL_SYSCALL(BatteryChargeState, sys_battery_get_charge_state) {
 BatteryChargeState battery_get_charge_state(void) {
   bool is_plugged = (s_last_battery_state.connection != ConnectionStateDischargingUnplugged);
 
-#ifdef CONFIG_QEMU
-  // Read the exact percent the host set via `pebble emu-battery --percent N`,
-  // skipping the lossy voltage-curve roundtrip and the low-power-reserve remap
-  // so the watch displays exactly what was requested.
-  int32_t percent = MIN((int32_t)qemu_battery_get_percent(), 100);
+#ifdef CONFIG_BATTERY_SIM
+  // Read the exact percent the simulator was set to, skipping the lossy voltage-curve roundtrip
+  // and the low-power-reserve remap so the watch displays exactly what was requested.
+  int32_t percent = MIN((int32_t)pbl_battery_sim_get_percent(), 100);
   int32_t percent_normalized = percent;
   uint8_t charge_percent = (uint8_t)percent;
 #else
