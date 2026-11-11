@@ -28,10 +28,4 @@ config HAL_SIFLI_AON
       Enable the AON (always-on, HPSYS/LPSYS power and wakeup)
       SiFli HAL module driver.
 
-config HAL_SIFLI_LCPU
-    bool "BT RF calibration"
-    depends on HAL_SIFLI_SF32LB52
-    help
-      Enable the BT RF calibration, used by the LCPU driver.
-
 endif # HAL_SIFLI

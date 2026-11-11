@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/nvmem/sf32lb52.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/util/bits.h>
@@ -47,20 +46,7 @@
 #define CONFIG_A4_BT_CONFIG     172U
 #define CONFIG_A4_HCPU_TX_QUEUE 200U
 
-// Configuration type of the TX power that bt_rf_cal() sets
-#define CONFIG_TYPE_BT_TX_PWR 6
-
 #define LXT32_HZ 32768U
-
-// Factory RF calibration, efuse bank 1
-#define RF_CAL_OFFSET 32U
-#define RF_CAL_SIZE   20U
-
-extern void bt_rf_cal(void);
-int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_cal,
-                                  uint8_t *dac_lsb_cnt_cal);
-int8_t bt_rf_get_tmxcap_sel_efuse(uint8_t *tmxcap_sel_efuse_flag, uint32_t *tmxcal_sel0,
-                                  uint32_t *tmxcal_sel78);
 
 struct lcpu_bt_config {
   uint32_t bit_valid;
@@ -89,45 +75,6 @@ struct lcpu_ke_buf_config {
 };
 static_assert(sizeof(struct lcpu_ke_buf_config) == 44U, "ROM layout");
 
-static const struct pbl_nvmem_cell s_rf_cal_cell =
-    PBL_NVMEM_CELL(SF32LB52_EFUSE, RF_CAL_OFFSET, RF_CAL_SIZE);
-
-// Called by bt_rf_cal(), replacing its weak versions
-int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_cal,
-                                  uint8_t *dac_lsb_cnt_cal) {
-  uint8_t cal[RF_CAL_SIZE];
-
-  if (pbl_nvmem_cell_read(&s_rf_cal_cell, cal, sizeof(cal)) != 0) {
-    *edr_cal_flag = 0U;
-    return 1;
-  }
-
-  *edr_cal_flag = (cal[15] & 0x20U) >> 5;
-  *pa_bm_cal = (cal[15] & 0xc0U) >> 6;
-  *dac_lsb_cnt_cal = cal[16] & 0x3U;
-
-  return 0;
-}
-
-int8_t bt_rf_get_tmxcap_sel_efuse(uint8_t *tmxcap_sel_efuse_flag, uint32_t *tmxcal_sel0,
-                                  uint32_t *tmxcal_sel78) {
-  uint8_t cal[RF_CAL_SIZE];
-
-  if (pbl_nvmem_cell_read(&s_rf_cal_cell, cal, sizeof(cal)) != 0) {
-    *tmxcap_sel_efuse_flag = 0U;
-    return 1;
-  }
-
-  *tmxcap_sel_efuse_flag = (cal[16] & 0x4U) >> 2;
-  *tmxcal_sel78 = (cal[16] & 0x78U) >> 3;
-  *tmxcal_sel0 = ((cal[16] & 0x80U) >> 7) | ((cal[17] & 0x7U) << 1);
-
-  return 0;
-}
-
-// The configuration block bt_rf_cal() writes to, set while the LCPU starts
-static uint8_t *s_config;
-
 static const struct pbl_rproc_sf32lb52 *prv_lcpu(const struct pbl_rproc *rproc) {
   return container_of(rproc, const struct pbl_rproc_sf32lb52, rproc);
 }
@@ -150,18 +97,6 @@ static uint8_t *prv_config(const struct pbl_rproc_sf32lb52 *lcpu) {
   }
 
   return config;
-}
-
-// Called by bt_rf_cal() for the TX power, replacing the HAL's
-int HAL_LCPU_CONFIG_set(int type, void *value, uint16_t length);
-int HAL_LCPU_CONFIG_set(int type, void *value, uint16_t length) {
-  if (s_config == nullptr || type != CONFIG_TYPE_BT_TX_PWR || length != sizeof(uint32_t)) {
-    return 1;
-  }
-
-  memcpy(s_config + CONFIG_BT_TX_PWR, value, length);
-
-  return 0;
 }
 
 static bool prv_xtal_enabled(const struct pbl_rproc_sf32lb52 *lcpu) {
@@ -224,17 +159,30 @@ static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
 static int prv_start(const struct pbl_rproc *rproc) {
   const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
   const uint32_t *vectors = (const uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET);
+  const struct pbl_rproc_sf32lb52__rf rf = {
+    .rfc = lcpu->rf.rfc,
+    .phy = lcpu->rf.phy,
+    .capture = lcpu->rf.capture,
+    .mac = lcpu->rf.mac,
+    .gpadc = lcpu->rf.gpadc,
+    .dmac = lcpu->rf.dmac,
+    .lpsys_rcc = lcpu->rf.lpsys_rcc,
+    .hpsys_cfg = lcpu->rf.hpsys_cfg,
+    .pmuc = lcpu->rf.pmuc,
+    .dma_buf = lcpu->sram.base + LCPU_EM_OFFSET,
+  };
+  uint8_t *config;
+  uint32_t tx_pwr;
   int ret;
 
   soc_sf32lb52_lpsys_wake();
   soc_sf32lb52_lpsys_halt(false);
 
-  s_config = prv_config(lcpu);
-  prv_rom_config(lcpu, s_config);
+  config = prv_config(lcpu);
+  prv_rom_config(lcpu, config);
 
   ret = prv_load_clocks(lcpu);
   if (ret != 0) {
-    s_config = nullptr;
     soc_sf32lb52_lpsys_release();
     return ret;
   }
@@ -243,8 +191,8 @@ static int prv_start(const struct pbl_rproc *rproc) {
 
   memset((void *)(lcpu->sram.base + LCPU_CODE_OFFSET), 0, LCPU_CODE_SIZE);
   pbl_rproc_sf32lb52__patch_install(lcpu);
-  bt_rf_cal();
-  s_config = nullptr;
+  tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
+  memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
   // calibration leaves data in the exchange memory
   memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
 
