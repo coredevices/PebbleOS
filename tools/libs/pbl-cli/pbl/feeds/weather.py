@@ -15,7 +15,7 @@ from pbl.feeds import BlobDb, Feed
 PREFS_KEY = b"weatherApp"
 
 DB_VERSION = 4
-DB_MINOR_VERSION = 5
+DB_MINOR_VERSION = 6
 DAYS = 7
 HOURS = 24
 
@@ -60,6 +60,30 @@ WMO_CODES = {
 
 # How much of the clear-sky UV gets through each kind of sky.
 SKY_UV = {SUN: 1.0, PARTLY_CLOUDY: 0.7, CLOUDY: 0.4, GENERIC: 0.3}
+
+WET = (LIGHT_RAIN, HEAVY_RAIN, LIGHT_SNOW, HEAVY_SNOW, SLEET)
+# How likely each sky is to be precipitating in a given hour.
+SKY_PRECIP = {
+    SUN: 0.0,
+    PARTLY_CLOUDY: 0.15,
+    CLOUDY: 0.35,
+    GENERIC: 0.3,
+    LIGHT_RAIN: 0.8,
+    LIGHT_SNOW: 0.8,
+    SLEET: 0.85,
+    HEAVY_RAIN: 1.0,
+    HEAVY_SNOW: 1.0,
+}
+# Precipitation per hour while it falls, tenths of a mm.
+SKY_RATE = {
+    CLOUDY: 1,
+    GENERIC: 1,
+    LIGHT_RAIN: 8,
+    LIGHT_SNOW: 5,
+    SLEET: 10,
+    HEAVY_RAIN: 40,
+    HEAVY_SNOW: 25,
+}
 
 # Each city is a weather regime: metric temperatures and wind, the sky types
 # it cycles through, and how wet, windy and hazy it tends to be.
@@ -143,8 +167,13 @@ FIXED = struct.Struct(
     + "B"
     + "B" * HOURS
     + "b" * HOURS  # v4.5: tomorrow's hourly series
+    + "H"  # v4.6: size of the fixed part
+    + "B" * HOURS * 4  # then hourly precip chance, today and tomorrow, then amount
 )
-assert FIXED.size == 250
+assert FIXED.size == 348
+
+# Where each minor's fixed part ends, and its strings start.
+FIXED_SIZE_BY_MINOR = {0: 118, 1: 141, 2: 161, 3: 177, 4: 201, 5: 250, 6: 348}
 
 
 def _day(rng, city, offset):
@@ -175,6 +204,28 @@ def _day(rng, city, offset):
     }
 
 
+def _precip_hours(rng, day):
+    """Hourly chance (%) and amount (0.1 mm): showers that build and fade
+    around the wet hours, peaking at the day's chance."""
+    shower = [0.0] * HOURS
+    wet = [h for h, sky in enumerate(day["types"]) if sky in WET] or [
+        rng.randint(13, 19)
+    ]
+    for _ in range(rng.randint(1, 2)):
+        centre, width = rng.choice(wet), rng.uniform(1.5, 3.5)
+        for hour in range(HOURS):
+            bump = math.exp(-(((hour - centre) / width) ** 2))
+            shower[hour] = max(shower[hour], bump)
+    raw = [max(SKY_PRECIP.get(s, 0.2), b) for s, b in zip(day["types"], shower)]
+    peak = max(raw)
+    chance = [round(day["precip"] * r / peak) for r in raw]
+    amount = []
+    for sky, bump, percent in zip(day["types"], shower, chance):
+        rate = max(SKY_RATE.get(sky, 0), 6 * bump)
+        amount.append(min(254, round(rate * percent / 100 * rng.uniform(0.6, 1.4))))
+    return chance, amount
+
+
 def _to_f(celsius):
     return round(celsius * 9 / 5 + 32)
 
@@ -183,11 +234,14 @@ def _to_mph(kmh):
     return round(kmh / 1.609)
 
 
-def simulate(name, rng, now, current, fahrenheit):
-    """The blob DB value for one city as the phone would build it now."""
+def simulate(name, rng, now, current, fahrenheit, minor=DB_MINOR_VERSION):
+    """The blob DB value for one city as the phone would build it now, as a
+    record of the given v4 minor version."""
     city = CITIES[name]
     days = [_day(rng, city, offset) for offset in range(DAYS)]
     today, tomorrow = days[0], days[1]
+    today_chance, today_amount = _precip_hours(rng, today)
+    tomorrow_chance, tomorrow_amount = _precip_hours(rng, tomorrow)
     local_hour = int(((now + city["utc"] * 60) % 86400) // 3600)
 
     temp = _to_f if fahrenheit else (lambda c: c)
@@ -210,7 +264,7 @@ def simulate(name, rng, now, current, fahrenheit):
         temp(min(tomorrow["temps"])),
         int(now),
         current,
-        DB_MINOR_VERSION,
+        minor,
         temp(feels),
         round(max(today["uvs"]) * 10),
         today["precip"],
@@ -237,11 +291,14 @@ def simulate(name, rng, now, current, fahrenheit):
     fields += [day["wind_dir"] for day in days]
     fields += [round(uv * 10) for uv in today["uvs"]]
     fields += [HOURS, *tomorrow["types"], *(temp(t) for t in tomorrow["temps"])]
+    fields.append(FIXED.size)
+    fields += [*today_chance, *tomorrow_chance, *today_amount, *tomorrow_amount]
 
     strings = b"".join(
         struct.pack("<H", len(s)) + s for s in (name.encode(), PHRASES[sky].encode())
     )
-    return FIXED.pack(*fields) + struct.pack("<H", len(strings)) + strings
+    fixed = FIXED.pack(*fields)[: FIXED_SIZE_BY_MINOR[minor]]
+    return fixed + struct.pack("<H", len(strings)) + strings
 
 
 def location_key(name):
@@ -272,6 +329,13 @@ class Weather(Feed):
             "--seed", type=int, help="Seed for the forecast generator (default: random)"
         )
         parser.add_argument(
+            "--minor",
+            type=int,
+            choices=sorted(FIXED_SIZE_BY_MINOR),
+            default=DB_MINOR_VERSION,
+            help="Write records of this v4 minor version (default: %(default)s)",
+        )
+        parser.add_argument(
             "--clear", action="store_true", help="Remove every location instead"
         )
 
@@ -289,7 +353,12 @@ class Weather(Feed):
             watch.blobdb_clear(BlobDb.WEATHER)
         for index, name in enumerate(cities):
             record = simulate(
-                name, random.Random(f"{seed}:{name}"), now, index == 0, args.fahrenheit
+                name,
+                random.Random(f"{seed}:{name}"),
+                now,
+                index == 0,
+                args.fahrenheit,
+                args.minor,
             )
             watch.blobdb_insert(BlobDb.WEATHER, location_key(name), record)
         prefs = bytes([len(cities)]) + b"".join(location_key(n).bytes for n in cities)

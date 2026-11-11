@@ -152,7 +152,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
     }
     // v4.5 appended block (TOMORROW's hourly series) — fills the clock dial's
     // post-midnight positions with real data instead of blanks.
-    if (entry->minor_version >= 5 && len >= (int)WEATHER_DB_V4_FIXED_SIZE &&
+    if (entry->minor_version >= 5 && len >= (int)WEATHER_DB_V4_5_FIXED_SIZE &&
         entry->tomorrow_hourly_count == WEATHER_DB_HOURLY_COUNT) {
       out->tomorrow_hourly_count = WX_DS_HOURLY;
       memcpy(out->tomorrow_hourly_type, entry->tomorrow_hourly_weather_type, WX_DS_HOURLY);

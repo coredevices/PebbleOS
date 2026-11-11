@@ -19,6 +19,17 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
 
+#ifndef UNITTEST
+// The phone writes v4 records at these offsets (weather_db_v4_example.md). The unit tests' host
+// build lays enums out wider, so the check holds on the watch only.
+static_assert(WEATHER_DB_V4_5_FIXED_SIZE == 250, "v4.5 strings offset moved");
+static_assert(WEATHER_DB_V4_FIXED_SIZE == 348, "v4.6 strings offset moved");
+#endif
+static_assert(MAX_ENTRY_SIZE >= sizeof(WeatherDBEntry) +
+                                    WEATHER_SERVICE_MAX_WEATHER_LOCATION_BUFFER_SIZE +
+                                    WEATHER_SERVICE_MAX_SHORT_PHRASE_BUFFER_SIZE,
+              "a current record with the longest strings must fit");
+
 static struct {
   struct pbl_settings_file settings_file;
   struct pbl_mutex mutex;
@@ -77,6 +88,29 @@ static bool prv_strings_block_is_valid(const uint8_t *val, size_t val_len, size_
   return true;
 }
 
+// Whether a record can be handed to a reader: a version the firmware parses, the fixed fields of
+// its minor, and its strings inside val_len. Stored records are checked as well, since a reader
+// takes the strings offset of a sized record from the record itself.
+static bool prv_record_is_valid(const uint8_t *val, size_t val_len) {
+  if (val_len < MIN_ENTRY_SIZE) {
+    return false;
+  }
+  const WeatherDBEntry *entry = (const WeatherDBEntry *)val;
+  if (!weather_db_entry_is_supported(entry)) {
+    return false;
+  }
+  const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
+  size_t strings_offset = weather_db_entry_strings_offset(entry->version, minor);
+  if (minor >= WEATHER_DB_SIZED_MINOR_VERSION) {
+    // The stated size covers at least the fields this firmware reads for that minor
+    if (val_len < strings_offset || entry->fixed_size < strings_offset) {
+      return false;
+    }
+    strings_offset = entry->fixed_size;
+  }
+  return prv_strings_block_is_valid(val, val_len, strings_offset);
+}
+
 static bool prv_weather_db_for_each_cb(struct pbl_settings_file *file,
                                        struct pbl_settings_record *info, void *context) {
   if ((info->val_len < (int)MIN_ENTRY_SIZE) || (info->key_len != sizeof(WeatherDBKey))) {
@@ -88,8 +122,8 @@ static bool prv_weather_db_for_each_cb(struct pbl_settings_file *file,
 
   WeatherDBEntry *entry = pbl_zalloc_check(info->val_len);
   pbl_settings_read_val(file, entry, info->val_len);
-  if (!weather_db_entry_is_supported(entry)) {
-    PBL_LOG_WRN("Unsupported weather entry version: %" PRIu8, entry->version);
+  if (!prv_record_is_valid((const uint8_t *)entry, info->val_len)) {
+    PBL_LOG_WRN("Unsupported or malformed weather entry, version %" PRIu8, entry->version);
     goto cleanup;
   }
 
@@ -167,8 +201,7 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
   // phone that has not shipped the latest block yet), and the trailing string block
   // must lie fully inside val_len.
   const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
-  const size_t strings_offset = weather_db_entry_strings_offset(entry->version, minor);
-  if (!prv_strings_block_is_valid(val, (size_t)val_len, strings_offset)) {
+  if (!prv_record_is_valid(val, (size_t)val_len)) {
     PBL_LOG_WRN("Malformed v%" PRIu8 ".%" PRIu8 " weather record (len %d)", entry->version, minor,
                 val_len);
     return E_INVALID_ARGUMENT;
@@ -209,9 +242,9 @@ status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int 
 
   rv = status_from_errno(
       pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len));
-  if ((rv == S_SUCCESS) && !weather_db_entry_is_supported((WeatherDBEntry *)val_out)) {
+  if ((rv == S_SUCCESS) && !prv_record_is_valid(val_out, (size_t)val_out_len)) {
     // We might as well clear out the unparseable entry
-    PBL_LOG_WRN("Read an unsupported weather DB entry");
+    PBL_LOG_WRN("Read an unsupported or malformed weather DB entry");
     pbl_settings_delete(&s_weather_db.settings_file, key, key_len);
     rv = E_DOES_NOT_EXIST;
   }
