@@ -83,7 +83,10 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   if (len < (int)sizeof(WeatherDBEntryV3)) {
     return;
   }
-  WeatherDBEntry *entry = app_zalloc_check(len);
+  WeatherDBEntry *entry = app_zalloc(len);
+  if (!entry) {
+    return; // keep the v3 fields, as for a v3 record
+  }
   const status_t rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   // Version alone isn't enough: a truncated/corrupt record can carry version==4 with a
   // v3-sized payload (weather_db_insert validates length, insert_stale does not) — reading
