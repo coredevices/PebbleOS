@@ -3,14 +3,23 @@
 
 #pragma once
 
+#include <pbl/util/bits.h>
+
 #include <hardware/nrf52_memorymap.h>
 
 /* Register offsets */
 
+#define NRF52_CLOCK_TASKS_HFCLKSTART_OFFSET    0x0000
+#define NRF52_CLOCK_TASKS_HFCLKSTOP_OFFSET     0x0004
 #define NRF52_CLOCK_TASKS_LFCLKSTART_OFFSET    0x0008
+#define NRF52_CLOCK_EVENTS_HFCLKSTARTED_OFFSET 0x0100
 #define NRF52_CLOCK_EVENTS_LFCLKSTARTED_OFFSET 0x0104
+#define NRF52_CLOCK_HFCLKSTAT_OFFSET           0x040C
 #define NRF52_CLOCK_LFCLKSRC_OFFSET            0x0518
 
 /* Register bit definitions */
+
+#define CLOCK_HFCLKSTAT_SRC_XTAL PBL_BIT(0)
+#define CLOCK_HFCLKSTAT_STATE    PBL_BIT(16)
 
 #define CLOCK_LFCLKSRC_SRC_XTAL 1U
