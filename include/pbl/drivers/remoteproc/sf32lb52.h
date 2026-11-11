@@ -59,6 +59,27 @@ struct pbl_rproc_sf32lb52 {
   struct pbl_clk pclk2;
   /** Low-power clock, from the RTC: the crystal or the RC oscillator. */
   struct pbl_clk lpclk;
+  /** Blocks the radio calibration programs, by base address. */
+  struct {
+    /** Bluetooth RF controller (@c sifli,bt-rfc). */
+    uintptr_t rfc;
+    /** Bluetooth PHY (@c sifli,bt-phy). */
+    uintptr_t phy;
+    /** PHY sample capture window (@c sifli,bt-phy, second region). */
+    uintptr_t capture;
+    /** Bluetooth controller (@c sifli,bt-mac). */
+    uintptr_t mac;
+    /** ADC (@c sifli,gpadc). */
+    uintptr_t gpadc;
+    /** DMA controller (@c sifli,dmac). */
+    uintptr_t dmac;
+    /** LPSYS clock and reset controller (@c sifli,lpsys-rcc). */
+    uintptr_t lpsys_rcc;
+    /** HPSYS configuration (@c sifli,hpsys-cfg). */
+    uintptr_t hpsys_cfg;
+    /** Power management unit (@c sifli,pmuc). */
+    uintptr_t pmuc;
+  } rf;
 };
 
 /**
@@ -106,9 +127,10 @@ void pbl_rproc_sf32lb52_coredump_prepare(void);
  * @param _pclk LPSYS APB clock, from PBL_CLK().
  * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,          \
-                                  _mem_size, _sram_base, _sram_size, _r0_da, _r0_pa, _r0_size,     \
-                                  _r1_da, _r1_pa, _r1_size, _hclk, _pclk, _pclk2, _lpclk)          \
+#define PBL_RPROC_SF32LB52_DEFINE(                                                                 \
+    sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base, _mem_size, _sram_base, _sram_size,     \
+    _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa, _r1_size, _hclk, _pclk, _pclk2, _lpclk, _rfc, _phy,  \
+    _capture, _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc)                                  \
   PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                 \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                   \
@@ -118,6 +140,17 @@ void pbl_rproc_sf32lb52_coredump_prepare(void);
     .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size),   \
     .ranges = {{(_r0_da), (_r0_pa), (_r0_size)}, {(_r1_da), (_r1_pa), (_r1_size)}}, .hclk = _hclk, \
     .pclk = _pclk, .pclk2 = _pclk2, .lpclk = _lpclk,                                               \
+    .rf = {                                                                                        \
+      .rfc = _rfc,                                                                                 \
+      .phy = _phy,                                                                                 \
+      .capture = _capture,                                                                         \
+      .mac = _mac,                                                                                 \
+      .gpadc = _gpadc,                                                                             \
+      .dmac = _dmac,                                                                               \
+      .lpsys_rcc = _lpsys_rcc,                                                                     \
+      .hpsys_cfg = _hpsys_cfg,                                                                     \
+      .pmuc = _pmuc                                                                                \
+    },                                                                                             \
   }
 
 /** @} */

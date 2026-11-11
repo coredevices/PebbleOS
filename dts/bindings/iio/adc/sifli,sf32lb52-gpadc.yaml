@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/iio/adc/sifli,sf32lb52-gpadc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 general purpose ADC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  General purpose ADC with eight conversion slots. The radio calibration
+  borrows it to measure the transmitter output.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-gpadc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  "#io-channel-cells":
+    const: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - "#io-channel-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    adc@50087000 {
+        compatible = "sifli,sf32lb52-gpadc";
+        reg = <0x50087000 0x1000>;
+        interrupts = <65>;
+        clocks = <&rcc 35>;
+        #io-channel-cells = <1>;
+    };
