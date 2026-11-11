@@ -30,8 +30,11 @@ function(pbl_resource_command)
 endfunction()
 
 # Called once, after every directory has been added, so the dynamic
-# resources are all registered.
+# resources are all registered. BUILTIN_ONLY builds only the resources linked
+# into the firmware: no system resource pack, timezone database, timeline
+# tables or layouts.
 function(pbl_resources)
+  cmake_parse_arguments(ARG "BUILTIN_ONLY" "" "" ${ARGN})
   set(fw_bin ${PROJECT_BINARY_DIR}/pebble)
   set(manifest ${PROJECT_BINARY_DIR}/resources/manifest.pickle)
   set(ball ${PROJECT_BINARY_DIR}/system_resources.resball)
@@ -40,7 +43,7 @@ function(pbl_resources)
   get_property(dynamic GLOBAL PROPERTY PBL_DYNAMIC_RESOURCES)
 
   # The timezone database is built straight into a resource.
-  if(NOT CONFIG_RECOVERY_FW)
+  if(NOT ARG_BUILTIN_ONLY)
     set(tzdata ${PROJECT_BINARY_DIR}/resources/normal/base/tzdata/tzdata.bin.reso)
     set(olson ${PBL_BASE}/resources/normal/base/tzdata/timezones_olson.txt)
     pbl_resource_command(
@@ -87,7 +90,7 @@ function(pbl_resources)
     COMMENT "Building resource ball"
   )
 
-  if(NOT CONFIG_RECOVERY_FW)
+  if(NOT ARG_BUILTIN_ONLY)
     add_custom_command(
       OUTPUT ${pbpack}
       COMMAND ${PBL_TOOLCHAIN_ENV} ${PYTHON_EXECUTABLE} ${PBL_RESOURCES_PY} pbpack
@@ -150,7 +153,7 @@ function(pbl_resources)
   )
   set(sources ${fw_bin}/builtin_resources.auto.c)
 
-  if(NOT CONFIG_RECOVERY_FW)
+  if(NOT ARG_BUILTIN_ONLY)
     pbl_resource_command(
       OUTPUT ${fw_bin}/resource/timeline_resource_table.auto.c
       ARGS timeline-table --manifest ${manifest}
