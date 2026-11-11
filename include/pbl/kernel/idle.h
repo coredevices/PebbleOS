@@ -62,6 +62,15 @@ static PBL_ALWAYS_INLINE void pbl_cpu_idle(void) {
   arch_cpu_idle();
 }
 
+/**
+ * @brief Wait for an interrupt in the CPU's deep sleep.
+ *
+ * What deep sleep stops is up to the SoC. Always inlined, like pbl_cpu_idle().
+ */
+static PBL_ALWAYS_INLINE void pbl_cpu_idle_deep(void) {
+  arch_cpu_idle_deep();
+}
+
 /** @brief Idle states, shallowest first. Defined by the SoC. */
 extern const struct pbl_idle_state pbl_soc_idle_states[];
 
