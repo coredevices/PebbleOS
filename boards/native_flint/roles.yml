@@ -35,8 +35,8 @@ mic:
   symbol: HOST_MIC
   include: pbl/drivers/audio/qemu.h
 die_temp:
-  symbol: POSIX_TEMP
-  include: pbl/drivers/temp/posix.h
+  symbol: SIM_TEMP
+  include: pbl/drivers/temp/sim.h
 rtc:
   symbol: POSIX_RTC
   include: pbl/drivers/rtc/posix.h
