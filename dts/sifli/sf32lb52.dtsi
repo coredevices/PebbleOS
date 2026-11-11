@@ -388,6 +388,7 @@
 			#clock-cells = <0>;
 			clocks = <&pmuc SF32LB52_PMUC_CLK_LRC10>, <&pmuc SF32LB52_PMUC_CLK_LXT32>;
 			clock-names = "lrc10", "lxt32";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
 		};
 	};
 };

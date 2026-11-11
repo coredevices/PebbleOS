@@ -39,6 +39,10 @@ properties:
       - const: lrc10
       - const: lxt32
 
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration block, holding the shadow time and date.
+
 required:
   - compatible
   - reg
@@ -46,6 +50,7 @@ required:
   - "#clock-cells"
   - clocks
   - clock-names
+  - sifli,hpsys-cfg
 
 unevaluatedProperties: false
 
@@ -58,4 +63,5 @@ examples:
         #clock-cells = <0>;
         clocks = <&pmuc 0>, <&pmuc 2>;
         clock-names = "lrc10", "lxt32";
+        sifli,hpsys-cfg = <&hpsys_cfg>;
     };
