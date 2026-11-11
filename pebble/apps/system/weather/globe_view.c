@@ -9,6 +9,7 @@
 #include "globe_view.h"
 
 #include <pbl/i18n/i18n.h>
+#include <pbl/util/math.h>
 // GLOBE_* resource ids come from the real resource_ids.auto.h (via
 // pebble_compat.h); the stored-app pinned header is not used in the system app.
 
@@ -21,7 +22,9 @@
 #include <pbl/kernel/compiler.h>
 
 #include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gdraw_command_private.h> // the art is rescaled command by command
 #include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/animation_interpolate.h>
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/vibes.h>
 #include <uzlib.h>
@@ -71,25 +74,41 @@
 // Small rect (flint/asterix 144x168): the intro art was drawn for taller
 // screens — the cradle sequence, stand and arm scale down to fit between a
 // slimmer title band and a slimmer saved-locations bar.
-#define GLOBE_SMALL_RECT                      (!PBL_ROUND && PBL_DISPLAY_HEIGHT < 200)
-#define GLOBE_CRADLE_SCALE_PCT                (GLOBE_SMALL_RECT ? 78 : 100)
-#define GLOBE_REVEAL_DURATION_MS              900
-#define GLOBE_REVEAL_REVERSE_DURATION_MS      420
-#define GLOBE_REVEAL_SPIN_STEPS               4
-#define GLOBE_REVEAL_COLOR_SPIN_DEGREES_E2    72000
-#define GLOBE_REVEAL_BW_SPEED_NUM             4
-#define GLOBE_REVEAL_BW_SPEED_DEN             1
-#define GLOBE_CRADLE_DROP_PX                  24
-#define GLOBE_COLOR_FINAL_SCALE_PERCENT       PBL_IF_ROUND_ELSE(164, 150)
-#define GLOBE_COLOR_GROW_START_PERCENT        22
-#define GLOBE_CRADLE_ARM_CENTER_X             62
-#define GLOBE_CRADLE_ARM_CENTER_Y             60
-#define GLOBE_CRADLE_ARM_OUTER_RADIUS         64
-#define GLOBE_CRADLE_ARM_THICKNESS            6
-#define GLOBE_CRADLE_ARM_START_ANGLE          DEG_TO_TRIGANGLE(20)
-#define GLOBE_CRADLE_ARM_END_ANGLE            DEG_TO_TRIGANGLE(205)
-#define GLOBE_CRADLE_WIPE_MARGIN              8
-#define GLOBE_TAP_THRESHOLD                   20
+#define GLOBE_SMALL_RECT                   (!PBL_ROUND && PBL_DISPLAY_HEIGHT < 200)
+#define GLOBE_CRADLE_SCALE_PCT             (GLOBE_SMALL_RECT ? 78 : 100)
+#define GLOBE_REVEAL_DURATION_MS           900
+#define GLOBE_REVEAL_REVERSE_DURATION_MS   420
+#define GLOBE_REVEAL_SPIN_STEPS            4
+#define GLOBE_REVEAL_COLOR_SPIN_DEGREES_E2 72000
+#define GLOBE_REVEAL_BW_SPEED_NUM          4
+#define GLOBE_REVEAL_BW_SPEED_DEN          1
+#define GLOBE_CRADLE_DROP_PX               24
+#define GLOBE_COLOR_FINAL_SCALE_PERCENT    PBL_IF_ROUND_ELSE(164, 150)
+#define GLOBE_COLOR_GROW_START_PERCENT     22
+#define GLOBE_CRADLE_WIPE_MARGIN           8
+#define GLOBE_TAP_THRESHOLD                20
+// Middle frames of the lift's moook curve. The box's highlight fades over the quarter of the
+// lift nearest the box.
+#define GLOBE_LIFT_MOOOK_MID 3
+#define GLOBE_LIFT_LIT_DIV   4
+// Unwrap: the frames the world turns back during the lift, the land's stretch at the top of the
+// lift (Q8, added to 256), and the frames the wrapper spins forward as it crumples.
+#define GLOBE_LIFT_REV_FRAMES       9
+#define GLOBE_LIFT_STRETCH_Q8       96
+#define GLOBE_WRAPPER_SPIN_FRAMES   15
+#define GLOBE_DISC_CX               62 // the disc's center in the art's frame
+#define GLOBE_DISC_CY               58
+#define GLOBE_DISC_R                50
+#define GLOBE_RETURN_SPACE_MS       160
+#define GLOBE_RETURN_WRAP_START_PCT 68 // percent of the un-reveal before the wrapper closes
+// The art's layout box, fixed rather than measured from the art: its even corner and height
+// start the sunset card's half-size art on a whole pixel. Every stroke lies inside the box.
+#define GLOBE_ART_BOX_X 8
+#define GLOBE_ART_BOX_Y 0
+#define GLOBE_ART_BOX_W 122
+#define GLOBE_ART_BOX_H 128
+// How long the world keeps turning after it lands on the return
+#define GLOBE_SETTLE_SPIN_MS                  310
 #define GLOBE_DRAG_AXIS_THRESHOLD             5
 #define GLOBE_COAST_FRAME_MS                  48
 #define GLOBE_COAST_STEP_NUM                  3
@@ -218,6 +237,8 @@ static void set_free_roam_enabled(GlobeView *view, bool enabled);
 static void show_intro_canvas(GlobeView *view);
 static void show_revealed_space_layers(GlobeView *view);
 static void mark_dynamic_globe_dirty(GlobeView *view);
+static void ensure_intro_art(GlobeView *view);
+static void start_lift(GlobeView *view, int dir);
 static int32_t ease_out_quad(AnimationProgress progress);
 static void start_lock_pulse(GlobeView *view);
 static void ensure_visual_resources(GlobeView *view);
@@ -462,22 +483,87 @@ static GSize get_vector_or_bitmap_size(GlobeView *view) {
   return GSize(124, 144);
 }
 
-static void draw_bw_frame(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size) {
-  (void)frame_size;
-  if (view->bw_sequence) {
-    uint32_t duration = bw_sequence_duration_for_view(view);
-    uint32_t elapsed = duration > 0 ? view->bw_elapsed_ms % duration : 0;
-    GDrawCommandFrame *frame =
-        gdraw_command_sequence_get_frame_by_elapsed(view->bw_sequence, elapsed);
-    if (!frame) {
-      frame = gdraw_command_sequence_get_frame_by_index(
-          view->bw_sequence, bw_frame_index_for_view(view, view->current_frame));
-    }
-    if (frame) {
-      gdraw_command_frame_draw(ctx, view->bw_sequence, frame, origin);
-      return;
-    }
+// The world's current frame on the cradle screen
+static GDrawCommandFrame *current_bw_frame(GlobeView *view) {
+  if (!view->bw_sequence)
+    return nullptr;
+  uint32_t duration = bw_sequence_duration_for_view(view);
+  uint32_t elapsed = duration > 0 ? view->bw_elapsed_ms % duration : 0;
+  GDrawCommandFrame *frame =
+      gdraw_command_sequence_get_frame_by_elapsed(view->bw_sequence, elapsed);
+  if (!frame) {
+    frame = gdraw_command_sequence_get_frame_by_index(
+        view->bw_sequence, bw_frame_index_for_view(view, view->current_frame));
   }
+  return frame;
+}
+
+// ---- The art's colors ---------------------------------------------------------------------
+// The art is stored black on white. It is recolored in place around each draw and its stored
+// colors are put back after. It is on the heap, never in mapped flash.
+typedef struct {
+  GColor ink;     // stroke color
+  GColor paper;   // fill for plain line art: the background color
+  bool in_colour; // fill the ocean and land in color instead
+} WorldInk;
+
+static bool ink_bw_command(GDrawCommand *command, uint32_t index, void *context) {
+  const WorldInk *w = context;
+  gdraw_command_set_stroke_color(command, w->ink);
+  GColor fill = w->paper;
+  if (w->in_colour) {
+    // Command 0 of every frame is the rim, the ocean's disc. The land commands follow it.
+#if PBL_BW
+    // The color fills quantize to solid black on 1-bit: shade only the ocean 50% and leave the
+    // land as plain line art.
+    if (index == 0)
+      fill = GColorLightGray;
+#else
+    fill = index == 0 ? GColorVividCerulean : GColorScreaminGreen;
+#endif
+  }
+  gdraw_command_set_fill_color(command, fill);
+  return true;
+}
+
+// Sets a frame's strokes to `ink` and its fills to color or the theme's background.
+// unink_bw_commands restores the stored colors.
+static void ink_bw_commands(GDrawCommandList *list, GColor ink, bool in_colour) {
+  WorldInk w = {.ink = ink, .paper = system_theme_get_bg_color(), .in_colour = in_colour};
+  gdraw_command_list_iterate(list, ink_bw_command, &w);
+}
+
+static void unink_bw_commands(GDrawCommandList *list) {
+  WorldInk stored = {.ink = GColorBlack, .paper = GColorWhite, .in_colour = false};
+  gdraw_command_list_iterate(list, ink_bw_command, &stored);
+}
+
+// Sets the stand's strokes and its one opaque fill, the knob, to `ink`. Black restores the stored
+// colors.
+static bool ink_stand_command(GDrawCommand *command, uint32_t index, void *context) {
+  (void)index;
+  const GColor ink = *(const GColor *)context;
+  gdraw_command_set_stroke_color(command, ink);
+  if (gdraw_command_get_fill_color(command).a != 0)
+    gdraw_command_set_fill_color(command, ink);
+  return true;
+}
+
+static void ink_stand_commands(GlobeView *view, GColor ink) {
+  gdraw_command_list_iterate(gdraw_command_image_get_command_list(view->cradle_pdc),
+                             ink_stand_command, &ink);
+}
+
+// The current frame at the art's own size in the theme's colors, or with ocean and land in color
+// when `in_colour`.
+static void draw_bw_frame(GContext *ctx, GlobeView *view, GPoint origin, bool in_colour) {
+  GDrawCommandFrame *frame = current_bw_frame(view);
+  GDrawCommandList *list = frame ? gdraw_command_frame_get_command_list(frame) : nullptr;
+  if (!list)
+    return;
+  ink_bw_commands(list, system_theme_get_fg_color(), in_colour);
+  gdraw_command_frame_draw(ctx, view->bw_sequence, frame, origin);
+  unink_bw_commands(list);
 }
 
 static AnimationProgress ease_in_out(AnimationProgress progress) {
@@ -526,11 +612,12 @@ typedef struct {
   GPoint origin;
   GPoint center;
   AnimationProgress amount;
+  int32_t stretch_q8; // land stretch about `center`, Q8: 256 (or 0) = none
+  int32_t scale_q8;   // scale about the art's origin, Q8: 256 (or 0) = native
   bool drew_command;
 } DirectCrumpleContext;
 
 static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, void *context) {
-  (void)index;
   DirectCrumpleContext *crumple = context;
   if (!command || gdraw_command_get_hidden(command))
     return true;
@@ -542,6 +629,9 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
   uint32_t stroke_scale = ANIMATION_NORMALIZED_MAX - ((uint32_t)crumple->amount * 55 / 100);
   uint8_t scaled_stroke =
       (uint8_t)((uint32_t)stroke_width * stroke_scale / ANIMATION_NORMALIZED_MAX);
+  const bool sized = crumple->scale_q8 > 0 && crumple->scale_q8 != 256;
+  if (sized)
+    scaled_stroke = (uint8_t)((scaled_stroke * crumple->scale_q8 + 128) / 256);
   if (scaled_stroke == 0)
     scaled_stroke = 1;
 
@@ -555,6 +645,12 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
     }
 
     GPoint center = gdraw_command_get_point(command, 0);
+    if (sized) {
+      // About the art's origin, as the paths' points are below.
+      center.x = (int16_t)(center.x * crumple->scale_q8 / 256);
+      center.y = (int16_t)(center.y * crumple->scale_q8 / 256);
+      scaled_radius = (uint16_t)(scaled_radius * crumple->scale_q8 / 256);
+    }
     center = GPoint(center.x + crumple->origin.x, center.y + crumple->origin.y);
 
     if (!gcolor_equal(fill_color, GColorClear)) {
@@ -588,7 +684,19 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
   int16_t max_y = INT16_MIN;
   for (uint16_t i = 0; i < num_points; i++) {
     GPoint point = gdraw_command_get_point(command, i);
+    if (crumple->stretch_q8 > 0 && crumple->stretch_q8 != 256 && index > 0) {
+      // Stretch the land (every command but the rim) and squash it half as much vertically.
+      point.x =
+          (int16_t)(crumple->center.x + (point.x - crumple->center.x) * crumple->stretch_q8 / 256);
+      point.y = (int16_t)(crumple->center.y + (point.y - crumple->center.y) *
+                                                  (256 - (crumple->stretch_q8 - 256) / 2) / 256);
+    }
     GPoint crumpled = crumple_point(point, crumple->center, crumple->amount);
+    if (sized) {
+      // About the art's origin, like the circle's center above.
+      crumpled.x = (int16_t)(crumpled.x * crumple->scale_q8 / 256);
+      crumpled.y = (int16_t)(crumpled.y * crumple->scale_q8 / 256);
+    }
     crumpled = GPoint(crumpled.x + crumple->origin.x, crumpled.y + crumple->origin.y);
     points[i] = crumpled;
 
@@ -631,7 +739,7 @@ static bool draw_direct_crumple_command(GDrawCommand *command, uint32_t index, v
 }
 
 static bool draw_bw_crumple_frame(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size,
-                                  int amount) {
+                                  int amount, int32_t stretch_q8, int32_t scale_q8) {
   if (!view || !view->bw_sequence)
     return false;
 
@@ -649,82 +757,120 @@ static bool draw_bw_crumple_frame(GContext *ctx, GlobeView *view, GPoint origin,
     .origin = origin,
     .center = GPoint(frame_size.w / 2, (frame_size.h / 2) + GLOBE_PLANET_CENTER_Y_OFFSET),
     .amount = (AnimationProgress)amount,
+    .stretch_q8 = stretch_q8,
+    .scale_q8 = scale_q8,
     .drew_command = false,
   };
   gdraw_command_list_iterate(list, draw_direct_crumple_command, &context);
   return context.drew_command;
 }
 
-static bool color_highlight_bw_command(GDrawCommand *command, uint32_t index, void *context) {
-  (void)context;
-
-  // Command 0 of every frame is the (low-poly) ocean disc; the land
-  // polygons follow it, so recolor by position rather than command type.
-  gdraw_command_set_stroke_color(command, GColorBlack);
-#if PBL_BW
-  // The colour tints quantize to a solid black blob on 1-bit — shade just
-  // the ocean disc 50% instead; land stays white line-art.
-  gdraw_command_set_fill_color(command, index == 0 ? GColorLightGray : GColorWhite);
-#else
-  gdraw_command_set_fill_color(command, index == 0 ? GColorVividCerulean : GColorScreaminGreen);
-#endif
-  return true;
+// The stand in the theme's foreground. It uses the caller's anti-aliasing, as the world does, so
+// the two match.
+static void draw_cradle(GContext *ctx, GlobeView *view, GPoint origin) {
+  if (!view->cradle_pdc)
+    return;
+  ink_stand_commands(view, system_theme_get_fg_color());
+  gdraw_command_image_draw(ctx, view->cradle_pdc, origin);
+  ink_stand_commands(view, GColorBlack);
 }
 
-// Restore pass for the in-place highlight below: the bw art is UNIFORMLY
-// stroke-Black / fill-White (byte-verified across all 60 frames, widths vary
-// but are never touched), so constant restore is exactly invertible.
-static bool restore_bw_command(GDrawCommand *command, uint32_t index, void *context) {
-  (void)index;
-  (void)context;
-  gdraw_command_set_stroke_color(command, GColorBlack);
-  gdraw_command_set_fill_color(command, GColorWhite);
-  return true;
-}
+// ---- The art at any size -----------------------------------------------------------------
+// A draw-command processor that scales a command's points about the art's origin into a precise
+// path in 1/8 px, with its stroke width. A circle's radius is scaled and its center rounded.
+// The stored strokes are odd (5 and 3), as the integer paths widen an even width by a pixel.
+typedef struct {
+  GDrawCommandProcessor processor; // first: prv_scale_command casts it back to ArtScale
+  GPoint origin8;
+  int32_t scale_q8;
+  int32_t stretch_q8;      // land stretch about the disc's center, Q8: 256 (or 0) = none
+  const GDrawCommand *rim; // the command the stretch skips
+} ArtScale;
 
-static void draw_intro_world_frame(GContext *ctx, GlobeView *view, GPoint origin,
-                                   GSize frame_size) {
-  // Highlight IN PLACE: recolor the single frame being drawn, draw, restore —
-  // this replaced an 18.7 KB full-sequence clone (size pass). The
-  // sequence lives on the heap (prv_load_inflated), never in mmap'd flash.
-  if (view && view->intro_world_selected && view->bw_sequence) {
-    uint32_t duration = bw_sequence_duration_for_view(view);
-    uint32_t elapsed = duration > 0 ? view->bw_elapsed_ms % duration : 0;
-    GDrawCommandFrame *frame =
-        gdraw_command_sequence_get_frame_by_elapsed(view->bw_sequence, elapsed);
-    if (!frame) {
-      frame = gdraw_command_sequence_get_frame_by_index(
-          view->bw_sequence, bw_frame_index_for_view(view, view->current_frame));
-    }
-    if (frame) {
-      GDrawCommandList *list = gdraw_command_frame_get_command_list(frame);
-      if (list) {
-        gdraw_command_list_iterate(list, color_highlight_bw_command, nullptr);
-        gdraw_command_frame_draw(ctx, view->bw_sequence, frame, origin);
-        gdraw_command_list_iterate(list, restore_bw_command, nullptr);
-        return;
-      }
-    }
+static void prv_scale_command(GDrawCommandProcessor *processor, GDrawCommand *command,
+                              size_t max_size, const GDrawCommandList *list,
+                              const GDrawCommand *source) {
+  (void)max_size;
+  (void)list;
+  const ArtScale *s = (const ArtScale *)processor;
+  const uint8_t width = gdraw_command_get_stroke_width(command);
+  if (width)
+    gdraw_command_set_stroke_width(command, (uint8_t)MAX(1, (width * s->scale_q8 + 128) / 256));
+  if (command->type == GDrawCommandTypeCircle) {
+    command->radius = (uint16_t)((command->radius * s->scale_q8 + 128) / 256);
+    // A shift floors, so negative coordinates round the same way as positive ones.
+    const GPoint c = command->points[0];
+    command->points[0] = GPoint((int16_t)((s->origin8.x + c.x * s->scale_q8 / 32 + 4) >> 3),
+                                (int16_t)((s->origin8.y + c.y * s->scale_q8 / 32 + 4) >> 3));
+    return;
   }
-  draw_bw_frame(ctx, view, origin, frame_size);
+  if (command->type != GDrawCommandTypePath && command->type != GDrawCommandTypePrecisePath)
+    return;
+  const bool precise = command->type == GDrawCommandTypePrecisePath;
+  const bool stretch = s->stretch_q8 > 0 && s->stretch_q8 != 256 && source != s->rim;
+  for (uint16_t i = 0; i < command->num_points; i++) {
+    // In 1/8 px. points and precise_points share storage.
+    int32_t x8 = precise ? command->precise_points[i].x.raw_value : command->points[i].x * 8;
+    int32_t y8 = precise ? command->precise_points[i].y.raw_value : command->points[i].y * 8;
+    if (stretch) {
+      x8 = GLOBE_DISC_CX * 8 + (x8 - GLOBE_DISC_CX * 8) * s->stretch_q8 / 256;
+      y8 = GLOBE_DISC_CY * 8 + (y8 - GLOBE_DISC_CY * 8) * (256 - (s->stretch_q8 - 256) / 2) / 256;
+    }
+    command->precise_points[i].x.raw_value = (int16_t)(s->origin8.x + x8 * s->scale_q8 / 256);
+    command->precise_points[i].y.raw_value = (int16_t)(s->origin8.y + y8 * s->scale_q8 / 256);
+  }
+  command->type = GDrawCommandTypePrecisePath;
 }
 
-static void draw_cradle(GContext *ctx, GlobeView *view, GPoint origin, GSize frame_size) {
-  (void)frame_size;
-  graphics_context_set_antialiased(ctx, false);
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  const int acx = GLOBE_CRADLE_ARM_CENTER_X * GLOBE_CRADLE_SCALE_PCT / 100;
-  const int acy = GLOBE_CRADLE_ARM_CENTER_Y * GLOBE_CRADLE_SCALE_PCT / 100;
-  const int aor = GLOBE_CRADLE_ARM_OUTER_RADIUS * GLOBE_CRADLE_SCALE_PCT / 100;
-  const int ath = GLOBE_CRADLE_ARM_THICKNESS * GLOBE_CRADLE_SCALE_PCT / 100;
-  graphics_fill_radial(ctx, GRect(origin.x + acx - aor, origin.y + acy - aor, aor * 2, aor * 2),
-                       GOvalScaleModeFitCircle, ath, GLOBE_CRADLE_ARM_START_ANGLE,
-                       GLOBE_CRADLE_ARM_END_ANGLE);
+// The stand at `origin8` and `scale_q8`, in `ink`.
+static void prv_draw_stand_at(GlobeView *view, GContext *ctx, GPoint origin8, int32_t scale_q8,
+                              GColor ink) {
+  if (!view->cradle_pdc)
+    return;
+  ink_stand_commands(view, ink);
+  ArtScale s = {
+    .processor = {.command = prv_scale_command},
+    .origin8 = origin8,
+    .scale_q8 = scale_q8,
+    .stretch_q8 = 256,
+    .rim = nullptr
+  };
+  gdraw_command_image_draw_processed(ctx, view->cradle_pdc, GPointZero, &s.processor);
+  ink_stand_commands(view, GColorBlack);
+}
 
-  if (view->cradle_pdc) {
-    gdraw_command_image_draw(ctx, view->cradle_pdc, origin);
-  }
-  graphics_context_set_antialiased(ctx, true);
+// Frame `frame` of the world at `origin8` and `scale_q8`, stroked in `ink` and filled in color or
+// with the theme's background.
+static void prv_draw_world_at(GlobeView *view, GContext *ctx, GPoint origin8, int32_t scale_q8,
+                              GColor ink, int frame, bool in_colour, int32_t stretch_q8) {
+  if (!view->bw_sequence)
+    return;
+  GDrawCommandFrame *f = gdraw_command_sequence_get_frame_by_index(
+      view->bw_sequence, (uint32_t)bw_frame_index_for_view(view, frame));
+  GDrawCommandList *list = f ? gdraw_command_frame_get_command_list(f) : nullptr;
+  if (!list)
+    return;
+  ink_bw_commands(list, ink, in_colour);
+  ArtScale s = {
+    .processor = {.command = prv_scale_command},
+    .origin8 = origin8,
+    .scale_q8 = scale_q8,
+    .stretch_q8 = stretch_q8,
+    .rim = gdraw_command_list_get_command(list, 0)
+  };
+  gdraw_command_frame_draw_processed(ctx, view->bw_sequence, f, GPointZero, &s.processor);
+  unink_bw_commands(list);
+}
+
+void globe_view_draw_art(GlobeView *view, GContext *ctx, GPoint origin8, int32_t scale_q8,
+                         GColor ink, int frame, bool in_colour) {
+  if (!view)
+    return;
+  ensure_intro_art(view);
+  if (!view->bw_sequence)
+    return;
+  prv_draw_stand_at(view, ctx, origin8, scale_q8, ink);
+  prv_draw_world_at(view, ctx, origin8, scale_q8, ink, frame, in_colour, 256);
 }
 
 static int32_t normalize_longitude_e2(int32_t longitude_e2) {
@@ -1060,11 +1206,26 @@ static void unload_starfield_resource(GlobeView *view) {
   view->starfield_size = 0;
 }
 
-static void ensure_visual_resources(GlobeView *view) {
+#if GLOBE_SMALL_RECT
+// gdraw_command_list_scale moves a circle's center but not its radius.
+static bool scale_circle_radius(GDrawCommand *command, uint32_t index, void *context) {
+  (void)index;
+  (void)context;
+  if (gdraw_command_get_type(command) == GDrawCommandTypeCircle) {
+    const uint32_t radius = gdraw_command_get_radius(command);
+    gdraw_command_set_radius(command, (uint16_t)((radius * GLOBE_CRADLE_SCALE_PCT + 50) / 100));
+  }
+  return true;
+}
+#endif
+
+// Loads the world sequence and the stand, scaled on small rect displays. The sunset card's
+// city-select box also uses it, without the cubemap and starfield.
+static void ensure_intro_art(GlobeView *view) {
   if (!view)
     return;
 
-  if (!view->bw_sequence) {
+  if (!view->bw_sequence && !view->bw_sequence_missing) {
     // Stored payload-deflated: inflate into an applib_malloc buffer and
     // validate with the exact gate create_with_resource uses. Ownership
     // passes to the sequence — gdraw_command_sequence_destroy applib_free()s
@@ -1086,15 +1247,30 @@ static void ensure_visual_resources(GlobeView *view) {
         view->bw_sequence_duration_ms = view->bw_frame_count * GLOBE_FRAME_INTERVAL_MS;
       }
     }
+    // A failed load is not retried every frame.
+    view->bw_sequence_missing = !view->bw_sequence;
   }
 
-  if (!view->cradle_pdc) {
-    view->cradle_pdc = gdraw_command_image_create_with_resource(RESOURCE_ID_GLOBE_CRADLE_PDC);
+  if (!view->cradle_pdc && !view->cradle_pdc_missing) {
+    // The stand is recolored and scaled in place, and the resource may be mapped read-only, so
+    // draw a writable copy.
+    GDrawCommandImage *raw = gdraw_command_image_create_with_resource(RESOURCE_ID_GLOBE_CRADLE_PDC);
+    if (raw) {
+      const size_t size = gdraw_command_image_get_data_size(raw);
+      GDrawCommandImage *copy = malloc_try(size);
+      if (copy && gdraw_command_image_copy(copy, size, raw)) {
+        view->cradle_pdc = copy;
+      } else {
+        free(copy);
+      }
+      gdraw_command_image_destroy(raw);
+    }
+    view->cradle_pdc_missing = !view->cradle_pdc;
   }
 
 #if GLOBE_SMALL_RECT
-  // Scale the writable clones once, right after load. (Both live in RAM —
-  // scaling an mmap'd resource would write read-only flash.)
+  // Scale the art once after load. Stroke widths stay 5 and 3, as this screen draws integer
+  // paths and they widen an even width by a pixel.
   if (view->bw_sequence && !view->bw_sequence_scaled) {
     const GSize from = gdraw_command_sequence_get_bounds_size(view->bw_sequence);
     if (from.w > 0 && from.h > 0) {
@@ -1117,16 +1293,24 @@ static void ensure_visual_resources(GlobeView *view) {
       gdraw_command_image_scale(view->cradle_pdc,
                                 GSize((int16_t)(from.w * GLOBE_CRADLE_SCALE_PCT / 100),
                                       (int16_t)(from.h * GLOBE_CRADLE_SCALE_PCT / 100)));
+      gdraw_command_list_iterate(gdraw_command_image_get_command_list(view->cradle_pdc),
+                                 scale_circle_radius, nullptr);
     }
     view->cradle_pdc_scaled = true;
   }
 #endif
+}
 
+static void ensure_visual_resources(GlobeView *view) {
+  if (!view)
+    return;
+  ensure_intro_art(view);
   load_cubemap_resource(view);
   load_starfield_resource(view);
 }
 
-// Frees the world and the stand and clears the flags, so the next load scales them again.
+// Frees the world and the stand and clears the flags, so the next load scales again and retries
+// a failed load.
 static void prv_free_intro_art(GlobeView *view) {
   if (view->bw_sequence) {
     gdraw_command_sequence_destroy(view->bw_sequence);
@@ -1138,6 +1322,8 @@ static void prv_free_intro_art(GlobeView *view) {
   }
   view->bw_sequence_scaled = false;
   view->cradle_pdc_scaled = false;
+  view->bw_sequence_missing = false;
+  view->cradle_pdc_missing = false;
 }
 
 static void release_visual_resources(GlobeView *view) {
@@ -1341,8 +1527,9 @@ static void clear_framebuffer_rect(GBitmap *fb, GRect rect) {
   }
 }
 
-static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bounds,
-                                       GRect clip_rect) {
+// The stars: all of them, or (radius >= 0) only those inside the disc of `radius` about `centre`.
+static void framebuffer_draw_starfield_in(GBitmap *fb, GlobeView *view, GRect bounds,
+                                          GRect clip_rect, GPoint centre, int radius) {
   if (!fb || !view || !view->starfield_data || view->starfield_size <= 2 || bounds.size.w <= 0 ||
       bounds.size.h <= 0) {
     return;
@@ -1389,6 +1576,10 @@ static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bound
         if (ay < clip_top || ay > clip_bottom || ax < clip_left || ax > clip_right) {
           continue;
         }
+        if (radius >= 0 && (ax - centre.x) * (ax - centre.x) + (ay - centre.y) * (ay - centre.y) >=
+                               radius * radius) {
+          continue;
+        }
 
         GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)ay);
         if (ax < (int)ri.min_x || ax > (int)ri.max_x)
@@ -1397,6 +1588,11 @@ static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bound
       }
     }
   }
+}
+
+static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bounds,
+                                       GRect clip_rect) {
+  framebuffer_draw_starfield_in(fb, view, bounds, clip_rect, GPointZero, -1);
 }
 
 static void draw_space_background(GContext *ctx, GRect bounds, GlobeView *view) {
@@ -2057,6 +2253,23 @@ static int transition_color_amount(GlobeView *view) {
 
 static int transition_bw_amount(GlobeView *view) {
   int amount = transition_color_amount(view);
+  if (view && view->unwrap && view->reveal_direction < 0) {
+    // On the unwrap's return the wrapper stays open until GLOBE_RETURN_WRAP_START_PCT of the
+    // un-reveal's duration has elapsed, then closes.
+    const int32_t total = view->reveal_anim
+                              ? (int32_t)animation_get_duration(view->reveal_anim, false, false)
+                              : GLOBE_REVEAL_REVERSE_DURATION_MS;
+    int32_t tau_ms = 0;
+    if (!view->reveal_anim || !animation_get_elapsed(view->reveal_anim, &tau_ms))
+      tau_ms = total - (int32_t)((int64_t)amount * total / ANIMATION_NORMALIZED_MAX);
+    const int32_t start = total * GLOBE_RETURN_WRAP_START_PCT / 100;
+    if (tau_ms <= start)
+      return ANIMATION_NORMALIZED_MAX;
+    const int32_t t =
+        (int32_t)MIN(ANIMATION_NORMALIZED_MAX,
+                     (int64_t)(tau_ms - start) * ANIMATION_NORMALIZED_MAX / MAX(1, total - start));
+    return ANIMATION_NORMALIZED_MAX - ease_out_quad((AnimationProgress)t);
+  }
   if (view && view->reveal_direction > 0) {
     amount = (amount * GLOBE_REVEAL_BW_SPEED_NUM) / GLOBE_REVEAL_BW_SPEED_DEN;
     if (amount > ANIMATION_NORMALIZED_MAX) {
@@ -2831,6 +3044,33 @@ static bool start_globe_coast(GlobeView *view) {
 }
 #endif
 
+// Frames with land in view, where the world may come to rest on the return
+static const uint8_t s_rest_frames[] = {0, 5, 10, 15, 20, 45, 50, 55};
+
+// Plans the return spin: one whole turn back (frames falling) from the current frame, plus the
+// distance to the nearest rest frame.
+static void prv_plan_spin_back(GlobeView *view) {
+  const int n = (int)bw_frame_count_for_view(view);
+  const int from = positive_modulo(bw_frame_for_longitude_e2((int16_t)view->color_longitude_e2), n);
+  int best = -1;
+  for (size_t i = 0; i < sizeof(s_rest_frames) / sizeof(s_rest_frames[0]); i++) {
+    const int back = positive_modulo(from - s_rest_frames[i], n);
+    if (best < 0 || back < best)
+      best = back;
+  }
+  view->spin_from_frame = from;
+  view->spin_back_frames = n + best;
+}
+
+// How far the world has turned back `tau_ms` into the return, in 1/256 frame. The spin covers
+// the descent and GLOBE_SETTLE_SPIN_MS after it, decelerating at a constant rate to rest.
+static int32_t prv_spin_back_at(GlobeView *view, int32_t tau_ms) {
+  const int32_t total_ms =
+      (int32_t)interpolate_moook_soft_duration(GLOBE_LIFT_MOOOK_MID) + GLOBE_SETTLE_SPIN_MS;
+  const int64_t r = 1024 - MAX(0, MIN(1024, tau_ms * 1024 / total_ms)); // time remaining, Q10
+  return (int32_t)((int64_t)view->spin_back_frames * 256 * (1024 * 1024 - r * r) / (1024 * 1024));
+}
+
 static void reveal_anim_update(Animation *anim, AnimationProgress progress) {
   GlobeView *view = (GlobeView *)animation_get_context(anim);
   if (!view)
@@ -2853,15 +3093,50 @@ static void reveal_anim_update(Animation *anim, AnimationProgress progress) {
     int32_t reveal_spin_e2 =
         weather_scale_i32(GLOBE_REVEAL_COLOR_SPIN_DEGREES_E2, spin_eased, ANIMATION_NORMALIZED_MAX);
     next_longitude_e2 = normalize_longitude_e2(base_longitude_e2 - reveal_spin_e2);
+    if (view->unwrap) {
+      // The wrapper spins forward ever faster as it crumples, over the reveal's first quarter.
+      const int32_t crumple =
+          MIN(ANIMATION_NORMALIZED_MAX,
+              (int32_t)progress * GLOBE_REVEAL_BW_SPEED_NUM / GLOBE_REVEAL_BW_SPEED_DEN);
+      const int spun = (int)((int32_t)GLOBE_WRAPPER_SPIN_FRAMES * weather_norm_square(crumple) /
+                             ANIMATION_NORMALIZED_MAX);
+      view->transition_bw_frame =
+          positive_modulo(view->lift_frame_to + spun, (int)bw_frame_count_for_view(view));
+    }
   } else {
     next_latitude_e2 = 0;
-    next_longitude_e2 =
-        normalize_longitude_e2(view->transition_color_start_longitude_e2 -
-                               weather_scale_i32((int32_t)progress, GLOBE_REVEAL_SPIN_STEPS * 1500,
-                                                 ANIMATION_NORMALIZED_MAX));
+    if (view->unwrap) {
+      // Tilt to the equator over the animation.
+      next_latitude_e2 =
+          weather_scale_i32(view->transition_color_start_latitude_e2,
+                            ANIMATION_NORMALIZED_MAX - (int32_t)progress, ANIMATION_NORMALIZED_MAX);
+      // The start of the return spin (frames falling is longitude rising), which the descent
+      // continues. Timed on elapsed ms, not on the eased progress.
+      int32_t tau_ms = 0;
+      if (!animation_get_elapsed(anim, &tau_ms))
+        tau_ms = (int32_t)progress * GLOBE_REVEAL_REVERSE_DURATION_MS / ANIMATION_NORMALIZED_MAX;
+      next_longitude_e2 = normalize_longitude_e2(view->transition_color_start_longitude_e2 +
+                                                 prv_spin_back_at(view, tau_ms) * 600 / 256);
+    } else {
+      next_longitude_e2 = normalize_longitude_e2(view->transition_color_start_longitude_e2 -
+                                                 weather_scale_i32((int32_t)progress,
+                                                                   GLOBE_REVEAL_SPIN_STEPS * 1500,
+                                                                   ANIMATION_NORMALIZED_MAX));
+    }
   }
 
+#ifdef CONFIG_TOUCH
+  // On the unwrap's return the stars stay put while the world turns.
+  const int32_t star_x_q8 = view->starfield_offset_x_q8;
+  const int32_t star_y_q8 = view->starfield_offset_y_q8;
+#endif
   set_color_orientation(view, next_latitude_e2, next_longitude_e2);
+#ifdef CONFIG_TOUCH
+  if (view->unwrap && view->reveal_direction < 0) {
+    view->starfield_offset_x_q8 = star_x_q8;
+    view->starfield_offset_y_q8 = star_y_q8;
+  }
+#endif
   if (view->reveal_direction < 0) {
     view->transition_bw_frame = view->current_frame;
   }
@@ -2896,11 +3171,14 @@ static void reveal_anim_stopped(Animation *anim, bool finished, void *context) {
       sync_bw_elapsed_to_current_frame(view);
       view->bw_idle = false;
       view->bw_idle_slowdown_step = 0;
-      if (view->is_animating && !view->animation_timer) {
-        schedule_frame_timer(view);
-      }
-      start_globe_idle_timer(view);
       show_intro_canvas(view);
+      // The unwrap's lift animation is still running, so only the cradle screen restarts its spin.
+      if (!view->unwrap) {
+        if (view->is_animating && !view->animation_timer) {
+          schedule_frame_timer(view);
+        }
+        start_globe_idle_timer(view);
+      }
     }
   }
 
@@ -2921,6 +3199,8 @@ static void cancel_all_view_animations(GlobeView *view) {
   cancel_city_animation(view);
   cancel_bounce_animation(view);
   cancel_lock_pulse_animation(view);
+  cancel_animation_slot(&view->lift_anim);
+  view->is_lifting = false;
 }
 
 static void toggle_reveal(GlobeView *view) {
@@ -2943,7 +3223,10 @@ static void toggle_reveal(GlobeView *view) {
   view->reveal_direction = view->is_revealed ? -1 : 1;
   view->is_revealing = true;
   view->transition_bw_frame = view->current_frame;
-  set_color_orientation(view, 0, longitude_e2_for_bw_frame(view->current_frame));
+  // The unwrap's return keeps the planet's current orientation. Every other transition starts on
+  // the equator at the frame's longitude.
+  if (!(view->unwrap && view->reveal_direction < 0))
+    set_color_orientation(view, 0, longitude_e2_for_bw_frame(view->current_frame));
   view->transition_color_start_latitude_e2 = view->color_latitude_e2;
   view->transition_color_start_longitude_e2 = view->color_longitude_e2;
   view->transition_color_target_latitude_e2 = selected_city_latitude_e2(view);
@@ -2951,11 +3234,260 @@ static void toggle_reveal(GlobeView *view) {
   view->reveal_progress = 0;
   show_intro_canvas(view);
 
+  // On the unwrap's return the descent runs alongside the un-reveal, which ends one frame after
+  // the landing. The spin is timed on elapsed ms, not on the un-reveal's eased progress.
+  const bool returning = view->unwrap && view->reveal_direction < 0;
+  if (returning)
+    prv_plan_spin_back(view);
   cancel_all_view_animations(view);
-  view->reveal_anim = start_view_animation(
+  uint32_t duration_ms = GLOBE_REVEAL_DURATION_MS;
+  if (view->reveal_direction < 0) {
+    duration_ms = returning ? interpolate_moook_soft_duration(GLOBE_LIFT_MOOOK_MID) +
+                                  ANIMATION_TARGET_FRAME_INTERVAL_MS
+                            : GLOBE_REVEAL_REVERSE_DURATION_MS;
+  }
+  view->reveal_anim = start_view_animation(view, duration_ms, AnimationCurveEaseOut, &s_reveal_impl,
+                                           reveal_anim_stopped);
+  if (returning)
+    start_lift(view, -1);
+}
+
+// ---- The unwrap's lift -------------------------------------------------------------------
+// SELECT on the sunset card's city-select box lifts its globe to the planet's position and
+// native size while the backdrop clears the page, then the reveal unwraps it. BACK reverses both.
+
+static GPoint prv_art_home_origin8(GlobeView *view) {
+  // Where canvas_layer_draw lays the art out.
+  const GRect bounds = layer_get_bounds(view->canvas_layer);
+  const GSize frame = get_vector_or_bitmap_size(view);
+  return GPoint((int16_t)(((bounds.size.w - frame.w) / 2) * 8),
+                (int16_t)((((bounds.size.h - frame.h) / 2) + GLOBE_CRADLE_CENTER_Y_OFFSET) * 8));
+}
+
+// The return at `origin8` and `scale_q8`: the shrinking planet under the closing wrapper, on
+// frame `frame`.
+static void prv_draw_return_at(GlobeView *view, GContext *ctx, GPoint origin8, int32_t scale_q8,
+                               int frame, GRect bounds) {
+  const int bw_amount = transition_bw_amount(view);
+  const GSize fs = get_vector_or_bitmap_size(view);
+  const GPoint origin = GPoint((int16_t)((origin8.x + 4) / 8), (int16_t)((origin8.y + 4) / 8));
+  // The planet shrinks with its travel, to the largest size whose glow fits inside the wrapper's
+  // disc. The glow does not scale.
+  const int32_t travel = (256 - scale_q8) * ANIMATION_NORMALIZED_MAX /
+                         MAX(1, 256 - view->lift_from_scale_q8); // 0 at the top, full in the box
+  const int32_t k = MAX(0, MIN(ANIMATION_NORMALIZED_MAX, travel));
+  const int disc_px = 2 * GLOBE_DISC_R * view->lift_from_scale_q8 / 256;
+  const int pct_end =
+      MAX(0, (disc_px - 2 * GLOBE_ATMOSPHERE_GLOW_PX - 2) * 100 / GLOBE_RENDER_BASE_DIAMETER);
+  const int pct =
+      MAX(0, GLOBE_COLOR_FINAL_SCALE_PERCENT -
+                 (GLOBE_COLOR_FINAL_SCALE_PERCENT - pct_end) * k / ANIMATION_NORMALIZED_MAX);
+  // The center moves with the same travel, from the planet's position to the disc's center.
+  const int cx_art = fs.w / 2 + (GLOBE_DISC_CX - fs.w / 2) * k / ANIMATION_NORMALIZED_MAX;
+  const int cy_art = fs.h / 2 + GLOBE_COLOR_PLANET_CENTER_Y_OFFSET +
+                     (GLOBE_DISC_CY - fs.h / 2 - GLOBE_COLOR_PLANET_CENTER_Y_OFFSET) * k /
+                         ANIMATION_NORMALIZED_MAX;
+  const GPoint centre = GPoint((int16_t)(origin.x + cx_art * scale_q8 / 256),
+                               (int16_t)(origin.y + cy_art * scale_q8 / 256));
+  // Over GLOBE_RETURN_SPACE_MS, space and its stars shrink to a disc around the planet, from the
+  // farthest corner to the edge of its glow, slowing as they close.
+  int32_t tau_ms = 0;
+  if (!view->reveal_anim || !animation_get_elapsed(view->reveal_anim, &tau_ms))
+    tau_ms = GLOBE_RETURN_SPACE_MS;
+  if (tau_ms < GLOBE_RETURN_SPACE_MS) {
+    // The span is measured from the planet's starting position. Measured from the moving planet
+    // it would grow, and the collapse would speed up.
+    const int r_glow = (GLOBE_RENDER_BASE_DIAMETER * pct / 100) / 2 + GLOBE_ATMOSPHERE_GLOW_PX;
+    const GPoint home8 = prv_art_home_origin8(view);
+    const int cx0 = (home8.x + 4) / 8 + fs.w / 2;
+    const int cy0 = (home8.y + 4) / 8 + fs.h / 2 + GLOBE_COLOR_PLANET_CENTER_Y_OFFSET;
+    const int dx = MAX(cx0 - bounds.origin.x, bounds.origin.x + bounds.size.w - cx0);
+    const int dy = MAX(cy0 - bounds.origin.y, bounds.origin.y + bounds.size.h - cy0);
+    const int r_far0 = weather_isqrt(dx * dx + dy * dy) + 1;
+    const int r_glow0 = (GLOBE_RENDER_BASE_DIAMETER * GLOBE_COLOR_FINAL_SCALE_PERCENT / 100) / 2 +
+                        GLOBE_ATMOSPHERE_GLOW_PX;
+    const int32_t left = GLOBE_RETURN_SPACE_MS - tau_ms;
+    const int radius = r_glow + (int)((int64_t)MAX(0, r_far0 - r_glow0) * left * left /
+                                      ((int64_t)GLOBE_RETURN_SPACE_MS * GLOBE_RETURN_SPACE_MS));
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_circle(ctx, centre, (uint16_t)radius);
+    GBitmap *fb = graphics_capture_frame_buffer(ctx);
+    if (fb) {
+      framebuffer_draw_starfield_in(
+          fb, view, bounds, clip_rect_to_bounds(bounds, gbitmap_get_bounds(fb)), centre, radius);
+      graphics_release_frame_buffer(ctx, fb);
+    }
+  }
+  draw_cubemap_globe_at_center(ctx, view, centre, pct, bounds, false);
+  view->transition_bw_frame = frame;
+  GDrawCommandFrame *f = gdraw_command_sequence_get_frame_by_index(
+      view->bw_sequence, (uint32_t)bw_frame_index_for_view(view, frame));
+  GDrawCommandList *list = f ? gdraw_command_frame_get_command_list(f) : nullptr;
+  if (list)
+    ink_bw_commands(list, system_theme_get_fg_color(), true);
+  draw_bw_crumple_frame(ctx, view, origin, fs, bw_amount, 256, scale_q8);
+  if (list)
+    unink_bw_commands(list);
+}
+
+static void draw_lift_state(GContext *ctx, GlobeView *view, GRect bounds) {
+  // `p` runs from the box (0) to the planet's position (full) in both directions. `e` is the
+  // eased travel.
+  int32_t lift = (int32_t)view->lift_p;
+  const int32_t descent_ms = (int32_t)interpolate_moook_soft_duration(GLOBE_LIFT_MOOOK_MID);
+  int32_t tau_ms = 0; // elapsed time on the return
+  if (view->lift_dir < 0) {
+    // The descent takes the moook duration, then the settle spin runs for GLOBE_SETTLE_SPIN_MS.
+    if (!view->lift_anim || !animation_get_elapsed(view->lift_anim, &tau_ms))
+      tau_ms =
+          (int32_t)((int64_t)lift * (descent_ms + GLOBE_SETTLE_SPIN_MS) / ANIMATION_NORMALIZED_MAX);
+    lift = (int32_t)MIN((int64_t)ANIMATION_NORMALIZED_MAX,
+                        (int64_t)tau_ms * ANIMATION_NORMALIZED_MAX / descent_ms);
+  }
+  int32_t p, e;
+  if (view->lift_dir > 0) {
+    // Up: the moook curve played in reverse.
+    p = lift;
+    e = ANIMATION_NORMALIZED_MAX - (int32_t)interpolate_moook_soft(ANIMATION_NORMALIZED_MAX - lift,
+                                                                   0, ANIMATION_NORMALIZED_MAX,
+                                                                   GLOBE_LIFT_MOOOK_MID);
+  } else {
+    // Down: a constant deceleration like the spin's, on the same clock.
+    p = ANIMATION_NORMALIZED_MAX - lift;
+    e = weather_norm_square(ANIMATION_NORMALIZED_MAX - lift);
+  }
+  const int32_t lit_span = ANIMATION_NORMALIZED_MAX / GLOBE_LIFT_LIT_DIV;
+  const int32_t lit =
+      p >= lit_span ? 0 : ANIMATION_NORMALIZED_MAX - p * ANIMATION_NORMALIZED_MAX / lit_span;
+  GRect fill = GRectZero;
+  GRect box = GRectZero;
+  if (view->backdrop_draw) {
+    view->backdrop_draw(ctx, (AnimationProgress)e, (AnimationProgress)lit, &fill, &box,
+                        view->backdrop_ctx);
+  } else {
+    graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+    graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+  }
+  // Drawn in the theme's foreground even over the box's highlight, as the box draws it.
+  const GColor ink = system_theme_get_fg_color();
+  // The stand is drawn only on the return, rising into the box in step with the world's descent.
+  if (view->lift_dir < 0) {
+    const int32_t e_in = MAX(0, MIN(ANIMATION_NORMALIZED_MAX, e));
+    const int32_t drop8 = (int32_t)(((int64_t)weather_norm_square(e_in) * bounds.size.h * 8) /
+                                    ANIMATION_NORMALIZED_MAX);
+    if (drop8 < bounds.size.h * 8) {
+      // Clipped to the box's inside, so it rises from the box's floor.
+      const GDrawState saved = ctx->draw_state;
+      bool shown = true;
+      if (box.size.h > 0) {
+        const GRect c = saved.clip_box;
+        const int x0 = MAX(c.origin.x, box.origin.x), y0 = MAX(c.origin.y, box.origin.y);
+        const int x1 = MIN(c.origin.x + c.size.w, box.origin.x + box.size.w);
+        const int y1 = MIN(c.origin.y + c.size.h, box.origin.y + box.size.h);
+        shown = x1 > x0 && y1 > y0;
+        if (shown)
+          ctx->draw_state.clip_box = GRect(x0, y0, x1 - x0, y1 - y0);
+      }
+      if (shown)
+        prv_draw_stand_at(
+            view, ctx,
+            GPoint(view->lift_from_origin8.x, (int16_t)(view->lift_from_origin8.y + drop8)),
+            view->lift_from_scale_q8, ink);
+      ctx->draw_state = saved;
+    }
+  }
+  // The world rises and grows.
+  const GPoint home8 = prv_art_home_origin8(view);
+  const GPoint origin8 =
+      GPoint((int16_t)(view->lift_from_origin8.x + (int32_t)(home8.x - view->lift_from_origin8.x) *
+                                                       e / ANIMATION_NORMALIZED_MAX),
+             (int16_t)(view->lift_from_origin8.y + (int32_t)(home8.y - view->lift_from_origin8.y) *
+                                                       e / ANIMATION_NORMALIZED_MAX));
+  const int32_t scale_q8 =
+      view->lift_from_scale_q8 + (256 - view->lift_from_scale_q8) * e / ANIMATION_NORMALIZED_MAX;
+  // Up, the world turns back GLOBE_LIFT_REV_FRAMES from the box's frame and its land stretches.
+  // Down, it continues the return spin the un-reveal started.
+  const int n = (int)bw_frame_count_for_view(view);
+  int frame;
+  int32_t stretch = 256;
+  if (view->lift_dir > 0) {
+    const int32_t rise = MAX(0, MIN(ANIMATION_NORMALIZED_MAX, e));
+    frame = positive_modulo(
+        view->rest_frame - (int)((int32_t)GLOBE_LIFT_REV_FRAMES * rise / ANIMATION_NORMALIZED_MAX),
+        n);
+    stretch = 256 + (int32_t)GLOBE_LIFT_STRETCH_Q8 * rise / ANIMATION_NORMALIZED_MAX;
+  } else {
+    // Timed on elapsed ms, like the un-reveal's part of the spin.
+    const int32_t back256 = prv_spin_back_at(view, tau_ms);
+    frame = positive_modulo(view->spin_from_frame - (back256 + 128) / 256, n);
+  }
+  if (view->lift_dir < 0 && view->is_revealing) {
+    prv_draw_return_at(view, ctx, origin8, scale_q8, frame, bounds); // un-reveal still running
+  } else {
+    prv_draw_world_at(view, ctx, origin8, scale_q8, ink, frame, true,
+                      stretch); // in color, as the highlighted box draws it
+  }
+}
+
+static void lift_anim_update(Animation *anim, AnimationProgress progress) {
+  GlobeView *view = (GlobeView *)animation_get_context(anim);
+  if (!view)
+    return;
+  view->lift_p = progress;
+  if (view->canvas_layer)
+    layer_mark_dirty(view->canvas_layer);
+}
+
+static void lift_anim_stopped(Animation *anim, bool finished, void *context) {
+  GlobeView *view = (GlobeView *)context;
+  if (!view)
+    return;
+  const bool owns_anim = view->lift_anim == anim;
+  if (owns_anim)
+    view->lift_anim = nullptr;
+  view->is_lifting = false;
+  if (owns_anim && finished) {
+    if (view->lift_dir > 0) {
+      // The backdrop is not drawn again until the return, so its memory is free for the load
+      if (view->backdrop_gone)
+        view->backdrop_gone(view->backdrop_ctx);
+      // Load the cubemap and starfield here, so their inflate delay falls before the reveal and
+      // not between SELECT and the first lift frame.
+      ensure_visual_resources(view);
+      view->current_frame = view->lift_frame_to;
+      sync_bw_elapsed_to_current_frame(view);
+      toggle_reveal(view);
+    } else {
+      // The box shows the frame the world stopped on.
+      view->rest_frame = positive_modulo(view->spin_from_frame - view->spin_back_frames,
+                                         (int)bw_frame_count_for_view(view));
+      if (view->back_callback)
+        view->back_callback(view->back_context); // the card beneath shows this same picture
+    }
+  }
+  if (owns_anim)
+    animation_destroy(anim);
+}
+
+static const AnimationImplementation s_lift_impl = {.update = lift_anim_update};
+
+static void start_lift(GlobeView *view, int dir) {
+  cancel_animation_slot(&view->lift_anim);
+  view->lift_dir = (int8_t)dir;
+  if (dir > 0) {
+    // The lift ends GLOBE_LIFT_REV_FRAMES behind the box's frame, and the reveal spins forward
+    // from there.
+    view->lift_frame_to = positive_modulo(view->rest_frame - GLOBE_LIFT_REV_FRAMES,
+                                          (int)bw_frame_count_for_view(view));
+  }
+  view->lift_p = 0;
+  view->is_lifting = true;
+  view->lift_anim = start_view_animation(
       view,
-      view->reveal_direction < 0 ? GLOBE_REVEAL_REVERSE_DURATION_MS : GLOBE_REVEAL_DURATION_MS,
-      AnimationCurveEaseOut, &s_reveal_impl, reveal_anim_stopped);
+      interpolate_moook_soft_duration(GLOBE_LIFT_MOOOK_MID) + (dir < 0 ? GLOBE_SETTLE_SPIN_MS : 0),
+      AnimationCurveLinear, &s_lift_impl, lift_anim_stopped);
+  if (view->canvas_layer)
+    layer_mark_dirty(view->canvas_layer);
 }
 
 static void schedule_frame_timer(GlobeView *view) {
@@ -2969,7 +3501,7 @@ static void note_globe_interaction(GlobeView *view) {
   cancel_timer_slot(&view->idle_timer);
   view->bw_idle = false;
   view->bw_idle_slowdown_step = 0;
-  if (view->is_animating && !view->is_revealed && !view->animation_timer) {
+  if (view->is_animating && !view->is_revealed && !view->animation_timer && !view->unwrap) {
     schedule_frame_timer(view);
   }
   start_globe_idle_timer(view);
@@ -3045,8 +3577,6 @@ static void draw_transition_state(GContext *ctx, GlobeView *view, GPoint origin,
                                   GRect bounds) {
   if (!view->bw_sequence)
     return;
-  if (!view->cradle_pdc)
-    return;
 
   const int color_amount = transition_color_amount(view);
   const int bw_amount = transition_bw_amount(view);
@@ -3057,26 +3587,45 @@ static void draw_transition_state(GContext *ctx, GlobeView *view, GPoint origin,
     draw_forward_space_fade(ctx, bounds, color_amount, view);
   }
 
-  draw_cradle(ctx, view, GPoint(origin.x, origin.y + drop), frame_size);
+  if (!view->unwrap) {
+    draw_cradle(ctx, view, GPoint(origin.x, origin.y + drop));
 
-  int wipe_h = (frame_size.h * bw_amount) / ANIMATION_NORMALIZED_MAX;
-  if (wipe_h > 0) {
-    GRect wipe_rect = GRect(
-        origin.x - GLOBE_CRADLE_WIPE_MARGIN, origin.y + drop - GLOBE_CRADLE_WIPE_MARGIN,
-        frame_size.w + (GLOBE_CRADLE_WIPE_MARGIN * 2), wipe_h + (GLOBE_CRADLE_WIPE_MARGIN * 2));
+    int wipe_h = (frame_size.h * bw_amount) / ANIMATION_NORMALIZED_MAX;
+    if (wipe_h > 0) {
+      GRect wipe_rect = GRect(
+          origin.x - GLOBE_CRADLE_WIPE_MARGIN, origin.y + drop - GLOBE_CRADLE_WIPE_MARGIN,
+          frame_size.w + (GLOBE_CRADLE_WIPE_MARGIN * 2), wipe_h + (GLOBE_CRADLE_WIPE_MARGIN * 2));
 
-    graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
-    graphics_fill_rect(ctx, wipe_rect, 0, GCornerNone);
-    if (view->reveal_direction > 0) {
-      draw_forward_space_fade(ctx, wipe_rect, color_amount, view);
+      graphics_context_set_fill_color(ctx, system_theme_get_bg_color());
+      graphics_fill_rect(ctx, wipe_rect, 0, GCornerNone);
+      if (view->reveal_direction > 0) {
+        draw_forward_space_fade(ctx, wipe_rect, color_amount, view);
+      }
     }
   }
 
   draw_cubemap_globe(ctx, view, origin, frame_size, color_transition_scale_percent(color_amount),
                      bounds, false);
 
-  if (!draw_bw_crumple_frame(ctx, view, origin, frame_size, bw_amount) && bw_amount <= 0) {
-    draw_bw_frame(ctx, view, origin, frame_size);
+  // The unwrap's wrapper crumples in color, the cradle screen's as plain line art. The crumple
+  // draws each command in its current colors, so recolor them first.
+  GDrawCommandFrame *wrapper = gdraw_command_sequence_get_frame_by_index(
+      view->bw_sequence, (uint32_t)bw_frame_index_for_view(view, view->transition_bw_frame));
+  GDrawCommandList *list = wrapper ? gdraw_command_frame_get_command_list(wrapper) : nullptr;
+  if (list)
+    ink_bw_commands(list, system_theme_get_fg_color(), view->unwrap);
+  // The lift's land stretch relaxes as the wrapper crumples.
+  const int32_t stretch =
+      (view->unwrap && view->reveal_direction > 0)
+          ? 256 + (int32_t)GLOBE_LIFT_STRETCH_Q8 *
+                      weather_norm_square(ANIMATION_NORMALIZED_MAX - bw_amount) /
+                      ANIMATION_NORMALIZED_MAX
+          : 256;
+  const bool drew = draw_bw_crumple_frame(ctx, view, origin, frame_size, bw_amount, stretch, 256);
+  if (list)
+    unink_bw_commands(list);
+  if (!drew && bw_amount <= 0) {
+    draw_bw_frame(ctx, view, origin, view->unwrap);
   }
 }
 
@@ -3264,6 +3813,11 @@ static void canvas_layer_draw(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   GSize frame_size = get_vector_or_bitmap_size(view);
 
+  if (view->is_lifting) {
+    draw_lift_state(ctx, view, bounds);
+    return;
+  }
+
   // Center the planet itself; the cradle extends below the globe bitmap.
   int x = (bounds.size.w - frame_size.w) / 2;
   int y = ((bounds.size.h - frame_size.h) / 2) + GLOBE_CRADLE_CENTER_Y_OFFSET;
@@ -3281,8 +3835,8 @@ static void canvas_layer_draw(Layer *layer, GContext *ctx) {
     if (view->intro_world_selected) {
       y += intro_selection_offset(view);
     }
-    draw_cradle(ctx, view, GPoint(x, y), frame_size);
-    draw_intro_world_frame(ctx, view, GPoint(x, y), frame_size);
+    draw_cradle(ctx, view, GPoint(x, y));
+    draw_bw_frame(ctx, view, GPoint(x, y), view->intro_world_selected);
     draw_saved_locations_label(ctx, view, bounds, !view->intro_world_selected);
   }
 }
@@ -3333,6 +3887,8 @@ static void activate_intro_selection(GlobeView *view) {
  */
 static void window_click_handler(ClickRecognizerRef recognizer, void *context) {
   GlobeView *view = (GlobeView *)context;
+  if (view->is_lifting)
+    return;
   note_globe_interaction(view);
 
   ButtonId button = click_recognizer_get_button_id(recognizer);
@@ -3421,7 +3977,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
   // async window pop finishes, but touch stays subscribed until disappear.
   // Ignore events in that window — a drag could re-arm timers the disappear
   // handler already skipped, and a tap could double-pop the stack.
-  if (!view->is_animating)
+  if (!view->is_animating || view->is_lifting)
     return;
 
   if (event->type == TouchEvent_Touchdown) {
@@ -3537,8 +4093,11 @@ static void window_appear_handler(Window *window) {
   if (!view || !view->is_animating)
     return;
 
-  ensure_visual_resources(view);
-  if (!view->is_revealed && !view->animation_timer) {
+  if (view->unwrap && !view->is_revealed)
+    ensure_intro_art(view); // the rest loads when the lift ends
+  else
+    ensure_visual_resources(view);
+  if (!view->is_revealed && !view->animation_timer && !view->unwrap) {
     schedule_frame_timer(view);
     start_globe_idle_timer(view);
   }
@@ -3853,12 +4412,17 @@ void globe_view_start_animation(GlobeView *view) {
   view->hover_lock_active = false;
 #endif
   cancel_all_view_animations(view);
-  ensure_visual_resources(view);
+  if (view->unwrap)
+    ensure_intro_art(view); // the rest loads when the lift ends
+  else
+    ensure_visual_resources(view);
 
   show_intro_canvas(view);
   layer_mark_dirty(view->canvas_layer);
-  schedule_frame_timer(view);
-  start_globe_idle_timer(view);
+  if (!view->unwrap) { // the unwrap's world holds its frame
+    schedule_frame_timer(view);
+    start_globe_idle_timer(view);
+  }
 #ifdef CONFIG_TOUCH
   touch_service_subscribe(touch_handler, view);
 #endif
@@ -3919,6 +4483,26 @@ static void prv_drop_stopped(Animation *anim, bool finished, void *context) {
   }
 }
 
+GRect globe_view_intro_art_bounds(GlobeView *view) {
+  if (!view)
+    return GRectZero;
+  ensure_intro_art(view);
+  if (!view->bw_sequence)
+    return GRectZero;
+  // GLOBE_ART_BOX at the loaded art's scale. It does not depend on the frame or on the stand
+  // having loaded, so the sunset card's box draws the world in the same place.
+  return GRect(GLOBE_ART_BOX_X * GLOBE_CRADLE_SCALE_PCT / 100,
+               GLOBE_ART_BOX_Y * GLOBE_CRADLE_SCALE_PCT / 100,
+               GLOBE_ART_BOX_W * GLOBE_CRADLE_SCALE_PCT / 100,
+               GLOBE_ART_BOX_H * GLOBE_CRADLE_SCALE_PCT / 100);
+}
+
+void globe_view_release_intro_art(GlobeView *view) {
+  if (!view || (view->window && window_is_loaded(view->window)))
+    return; // the globe's own window is using it
+  prv_free_intro_art(view);
+}
+
 // Shared moook horizontal slide for the intro canvas: create + configure +
 // schedule; returns false when the PropertyAnimation could not be created so
 // callers can run their fallback.
@@ -3943,6 +4527,7 @@ void globe_view_push_slide_in_right(GlobeView *view) {
     globe_view_push_animated(view, false);
     return;
   }
+  view->unwrap = false;
   GRect to = layer_get_frame(view->canvas_layer);
   GRect from = to;
   from.origin.x += to.size.w;                // start one screen-width off the right
@@ -4056,6 +4641,7 @@ void globe_view_push_animated(GlobeView *view, bool animated) {
   if (!view)
     return;
 
+  view->unwrap = false;
   window_stack_push(view->window, animated);
   globe_view_start_animation(view);
 }
@@ -4077,4 +4663,27 @@ void globe_view_dismiss(GlobeView *view, bool animated) {
 
   globe_view_stop_animation(view);
   window_stack_remove(view->window, animated);
+}
+
+void globe_view_push_unwrap(GlobeView *view, GPoint from_origin8, int32_t from_scale_q8,
+                            GlobeBackdropDrawFn backdrop, GlobeMainCallback backdrop_gone,
+                            void *backdrop_ctx) {
+  if (!view)
+    return;
+  view->unwrap = true;
+  view->backdrop_draw = backdrop;
+  view->backdrop_gone = backdrop_gone;
+  view->backdrop_ctx = backdrop_ctx;
+  view->lift_from_origin8 = from_origin8;
+  view->lift_from_scale_q8 = from_scale_q8;
+  // Reset the canvas frame, which a cancelled slide may have left offset.
+  if (view->canvas_layer && view->window)
+    layer_set_frame(view->canvas_layer, layer_get_bounds(window_get_root_layer(view->window)));
+  window_stack_push(view->window, false);
+  globe_view_start_animation(view);
+  start_lift(view, 1);
+}
+
+int globe_view_rest_frame(GlobeView *view) {
+  return view ? view->rest_frame : 0;
 }

@@ -16,6 +16,7 @@
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #include <applib/app_timer.h>
 #include <applib/graphics/gdraw_command_image.h>
@@ -27,13 +28,18 @@
 #include <shell/prefs.h>
 
 // The sunset card, reached by UP from the forecast: three outlined cards (see prv_draw_cards)
-// under the status time.
+// under the status time. On colour screens a locations page sits above it, with the SAVED
+// LOCATIONS pill and the city-select box.
 //
-// SELECT slides the card out and opens the globe, and DOWN or BACK returns to the forecast. Taps
-// and swipes map onto the same actions.
+// On the card, UP or SELECT slides to the locations page and DOWN or BACK returns to the
+// forecast. Without the locations page, SELECT slides the card out and opens the globe. On the
+// locations page, UP and DOWN move the focus, DOWN past the box or BACK slides back to the card,
+// and SELECT opens the globe from the box or the list from the pill. Taps and swipes map onto
+// the same actions.
 typedef struct {
   Window *window;
   Layer *canvas;
+  GlobeView *globe;          // not owned, draws the city-select box's globe (may be NULL)
   GDrawCommandImage *icon;   // the weather icon, scaled to EV_ICON_SIZE (owned)
   ExpandedViewGlance glance; // the body's strings and readings
   int16_t lat_e2;            // degrees*100, INT16_MIN unknown (for sunset)
@@ -60,10 +66,18 @@ typedef struct {
   int16_t touch_start_x, touch_start_y; // Touchdown origin for swipe detection
   bool touch_active;
 #endif
+  // The locations page (colour screens). The slide between the pages plays on page_p.
+  int page;  // 0 = the sunset card, 1 = the locations page
+  int focus; // on page 1: 0 = the SAVED LOCATIONS pill, 1 = the city-select box
+  AnimationProgress page_p;
+  Animation *page_anim;
+  bool page_active;
   void (*on_down)(void *ctx);
   void *on_down_ctx; // DOWN/BACK -> forecast
   void (*on_select)(void *ctx);
-  void *on_select_ctx; // SELECT -> globe (slide-in from right)
+  void *on_select_ctx; // opens the globe: the city-select box, or SELECT on black and white
+  void (*on_locations)(void *ctx);
+  void *on_locations_ctx; // opens the list from the SAVED LOCATIONS pill
 } ExpandedViewData;
 
 static ExpandedViewData *s_ev;
@@ -71,6 +85,13 @@ static ExpandedViewData *s_ev;
 // Colour screens paint the body from masks drawn once (see prv_mask_capture). Black and white
 // screens draw it live: they have no antialiasing to keep and little heap to spare.
 #define EV_BODY_MASK PBL_COLOR
+
+// The locations page above the sunset card. Its slide and
+// expanded_view_draw_locations_backdrop paint from the body masks.
+#define EV_LOC_PAGE PBL_COLOR
+#if EV_LOC_PAGE && !EV_BODY_MASK
+#error "the locations page paints from the body masks"
+#endif
 
 #if EV_BODY_MASK
 // A page's body mask (see prv_mask_capture), EV_BODY_STRIDE(W) * EV_BODY_H bytes or NULL, with
@@ -82,7 +103,7 @@ typedef struct {
 } BodyMask;
 // One mask per page, allocated by the first capture and freed by expanded_view_drop_body. They
 // are not part of s_ev: the forecast's hero fly captures the body before the card exists.
-#define EV_MASKS 1
+#define EV_MASKS 2
 static BodyMask *s_masks;
 #endif
 
@@ -225,6 +246,7 @@ void expanded_view_format_glance(const WeatherLocationForecast *f, int16_t lat_e
   if (!f) {
     snprintf(g->temp, sizeof(g->temp), "--");
     snprintf(g->now, sizeof(g->now), "--");
+    snprintf(g->city, sizeof(g->city), "--");
     snprintf(g->wind, sizeof(g->wind), "--");
     snprintf(g->humidity, sizeof(g->humidity), "--");
     weather_app_layout_format_uv(-1, owner, g->uv_text, sizeof(g->uv_text), g->uv_value,
@@ -252,6 +274,7 @@ void expanded_view_format_glance(const WeatherLocationForecast *f, int16_t lat_e
   // The current hour's UV once the phone sends hourly UV, else the day's figure
   weather_app_layout_format_uv(f->today_uv_now, owner, g->uv_text, sizeof(g->uv_text), g->uv_value,
                                sizeof(g->uv_value));
+  snprintf(g->city, sizeof(g->city), "%s", f->location_name ? f->location_name : "--");
 }
 
 static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_e2, int16_t lon_e2,
@@ -363,6 +386,34 @@ static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_
 #define EV_SUNBOX_ROW2_DY    (EV_SUNBOX_ROW1_DY + (EV_SMALL_RECT ? 16 : 20))
 #endif
 #define EV_SUNBOX_FILL GColorChromeYellow
+#if EV_LOC_PAGE
+// The locations page: the stack slides down EV_PAGE_SCROLL rows and the SAVED LOCATIONS pill and
+// the city-select box come in above it. On round, card 1's top edge also moves down
+// EV_PAGE_TRIM rows to make room for them.
+#if PBL_ROUND
+#define EV_LOC_B_Y     28 // the pill
+#define EV_LOC_B_H     26
+#define EV_LOC_A_Y     58 // the box
+#define EV_PAGE_SCROLL 91 // card 1 from 28 to 119
+#define EV_PAGE_TRIM   12 // and its top edge at 131
+#else
+#define EV_LOC_B_Y     22 // the pill
+#define EV_LOC_B_H     30
+#define EV_LOC_A_Y     57  // the box
+#define EV_PAGE_SCROLL 110 // card 1 from 22 to 132
+#endif
+#define EV_LOC_A_H  70
+#define EV_THUMB_H  64 // the box's inner height for the art
+#define EV_LOC_A_CY (EV_LOC_A_Y + EV_LOC_A_H / 2)
+#if PBL_ROUND
+// How far card 1's top edge has moved down at `scroll`, 0 to EV_PAGE_TRIM
+static int prv_card1_trim(int scroll) {
+  return EV_PAGE_TRIM * MAX(0, MIN(scroll, EV_PAGE_SCROLL)) / EV_PAGE_SCROLL;
+}
+#endif
+// The globe screen's saved-locations selector colour. Text over it is in the background colour.
+#define EV_FOCUS_FILL GColorVividCerulean
+#endif
 // Reading glyph widths, and the gap between a glyph and its value
 #define EV_GLYPH_GAP (EV_SMALL_RECT ? 3 : 4)
 #define EV_WIND_W    (EV_SMALL_RECT ? 12 : 18)
@@ -411,12 +462,41 @@ static int prv_inner_right(int W, int y0, int y1) {
 }
 
 #if !PBL_ROUND
-// One card's outline over rows y to y+h-1, shifted right by dx. On round prv_draw_frames_live
-// draws them instead.
+// One card's outline over rows y to y+h-1, shifted right by dx. Round outlines change shape as
+// the page slides, so prv_draw_frames_live draws them instead.
 static void prv_draw_card(GContext *ctx, int W, int dx, int y, int h) {
   graphics_draw_round_rect(ctx, GRect(EV_CARD_X + dx, y, EV_CARD_W(W), h), EV_CARD_CORNER);
 }
 #endif
+
+#if EV_LOC_PAGE
+// Fill a card's shape over rows y to y+h-1, shifted right by dx. On round it spans the outer arcs.
+static void prv_fill_card_shape(GContext *ctx, int W, int dx, int y, int h, GColor color) {
+  graphics_context_set_fill_color(ctx, color);
+#if PBL_ROUND
+  for (int row = y; row < y + h; row++) {
+    const int dy = row - EV_GLASS_R;
+    const int q = EV_CARD_R * EV_CARD_R - dy * dy;
+    if (q > 0) {
+      const int hc = (int)weather_isqrt(q);
+      graphics_fill_rect(ctx, GRect(W / 2 - hc + dx, row, 2 * hc + 1, 1), 0, GCornerNone);
+    }
+  }
+#else
+  graphics_fill_rect(ctx, GRect(EV_CARD_X + dx, y, EV_CARD_W(W), h), MIN(EV_CARD_CORNER, h / 2),
+                     GCornersAll);
+#endif
+}
+
+// Bounds of a card over rows y to y+h-1, shifted right by dx. On round it spans the screen width.
+static GRect prv_card_bounds(int W, int dx, int y, int h) {
+#if PBL_ROUND
+  return GRect(dx, y, W, h);
+#else
+  return GRect(EV_CARD_X + dx, y, EV_CARD_W(W), h);
+#endif
+}
+#endif // EV_LOC_PAGE
 
 static GSize prv_measure(const char *text, GFont font, int W) {
   return graphics_text_layout_get_content_size(text, font, GRect(0, 0, W, 64),
@@ -718,11 +798,95 @@ static void prv_draw_card1(GContext *ctx, int W, int tdx, int dy, const Expanded
   const int foot_r = prv_inner_right(W, EV_HILO_Y + 4 + dy, EV_HILO_Y + 18 + dy) + tdx;
   graphics_draw_text(ctx, g->temp, unit_font, GRect(foot_l, EV_HILO_Y + dy, EV_HILO_W, 24),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
-  // The feels-like label takes the rest of the row
+  // The feels-like label takes the rest of the row, which round needs on the locations page
   const int feels_x = foot_l + MIN(prv_measure(g->temp, unit_font, W).w, EV_HILO_W) + EV_FOOT_GAP;
   graphics_draw_text(ctx, g->feels, text_font, GRect(feels_x, EV_HILO_Y + dy, foot_r - feels_x, 24),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
 }
+
+#if EV_LOC_PAGE
+// Left edge of the city-select box's globe
+static int prv_thumb_x(int W) {
+  return prv_inner_left(W, EV_LOC_A_Y, EV_LOC_A_Y + EV_LOC_A_H);
+}
+
+// Used when the globe view has no art: a circle with an equator and a meridian, on a stand
+static void prv_draw_globe(GContext *ctx, GPoint c, GColor fg) {
+  const int r = EV_THUMB_H / 2 - 6;
+  prv_set_ink(ctx, fg);
+  graphics_draw_circle(ctx, c, r);
+  graphics_draw_line(ctx, GPoint(c.x - r + 1, c.y), GPoint(c.x + r - 1, c.y));
+  const int a = r / 2; // the lens's half-width, and the run of its slanted sides
+  const GPoint lens[] = {
+    {c.x, c.y - r}, {c.x + a, c.y - r + a}, {c.x + a, c.y + r - a},
+    {c.x, c.y + r}, {c.x - a, c.y + r - a}, {c.x - a, c.y - r + a},
+  };
+  for (int i = 0; i < (int)ARRAY_LENGTH(lens); i++) {
+    graphics_draw_line(ctx, lens[i], lens[(i + 1) % ARRAY_LENGTH(lens)]);
+  }
+  graphics_draw_line(ctx, GPoint(c.x, c.y + r), GPoint(c.x, c.y + r + 5));
+  graphics_fill_rect(ctx, GRect(c.x - 13, c.y + r + 5, 27, 4), 2, GCornersAll);
+}
+
+// A map pin in the style of the reading glyphs
+#define EV_PIN_W 12
+static void prv_draw_pin(GContext *ctx, GPoint c) {
+  static const uint32_t rows[17] = {
+    0x001F8, // ...######...
+    0x003FC, // ..########..
+    0x0070E, // .###....###.
+    0x00E07, // ###......###
+    0x00C63, // ##...##...##
+    0x00C63, // ##...##...##
+    0x00C03, // ##........##
+    0x00606, // .##......##.
+    0x00606, // .##......##.
+    0x0030C, // ..##....##..
+    0x0030C, // ..##....##..
+    0x00198, // ...##..##...
+    0x00198, // ...##..##...
+    0x000F0, // ....####....
+    0x000F0, // ....####....
+    0x00060, // .....##.....
+    0x00060, // .....##.....
+  };
+  prv_draw_pixel_glyph(ctx, c, rows, EV_PIN_W, 17);
+}
+
+// The SAVED LOCATIONS pill and the city-select box, shifted right by tdx. The box's globe is
+// drawn live by prv_draw_box_globe, and the conditions card below is the sunset page's, slid down.
+static void prv_draw_locations_page(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g,
+                                    GColor fg) {
+  prv_set_ink(ctx, fg);
+  // The system text styles' paragraph header and menu subtitle fonts
+  GFont label_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  GFont city_font = fonts_get_system_font(FONT_KEY_GOTHIC_24);
+  const int ir = prv_inner_right(W, EV_LOC_A_Y, EV_LOC_A_Y + EV_LOC_A_H) + tdx;
+  const int text_x = prv_thumb_x(W) + EV_THUMB_H + tdx;
+#if !PBL_ROUND
+  prv_draw_card(ctx, W, tdx, EV_LOC_B_Y, EV_LOC_B_H);
+  prv_draw_card(ctx, W, tdx, EV_LOC_A_Y, EV_LOC_A_H);
+#endif
+  // Owned by the card; uncapped so a long translation stays whole.
+  const char *label = pbl_i18n_get("SAVED LOCATIONS", s_ev);
+  const GSize lsz = prv_measure(label, label_font, W);
+  const int cell_w = EV_PIN_W + 4 + lsz.w; // pin, gap, label
+  const int cell_x = (W - cell_w) / 2 + tdx;
+  prv_draw_pin(ctx, GPoint(cell_x + EV_PIN_W / 2, EV_LOC_B_Y + EV_LOC_B_H / 2));
+  // Gothic 18 capitals span rows 7 to 17 of the box, centred on the pill
+  graphics_draw_text(ctx, label, label_font,
+                     GRect(cell_x + EV_PIN_W + 4, EV_LOC_B_Y + EV_LOC_B_H / 2 - 12, lsz.w + 4, 24),
+                     GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
+  // Title over the active city, right-aligned, centred as a block on the box
+  const char *title = pbl_i18n_get("CITY SELECT", s_ev);
+  // Title capitals 16 to 6 rows above the box's middle row, the city's 2 to 15 below it
+  // (Gothic 24 capitals span rows 10 to 23 of the box)
+  graphics_draw_text(ctx, title, label_font, GRect(text_x, EV_LOC_A_CY - 23, ir - text_x, 24),
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
+  graphics_draw_text(ctx, g->city, city_font, GRect(text_x, EV_LOC_A_CY - 8, ir - text_x, 30),
+                     GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
+}
+#endif // EV_LOC_PAGE
 
 static void prv_draw_cards(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g, GColor fg) {
   prv_set_ink(ctx, fg);
@@ -778,6 +942,21 @@ static void prv_draw_cards(GContext *ctx, int W, int tdx, const ExpandedViewGlan
 #endif
 }
 
+// How far the stack has slid down towards the locations page. 0 before the card exists, when
+// the forecast's hero fly draws the body.
+static int prv_page_scroll(void) {
+#if EV_LOC_PAGE
+  if (!s_ev)
+    return 0;
+  if (s_ev->page_active)
+    return (int)interpolate_moook_soft(s_ev->page_p, s_ev->page ? 0 : EV_PAGE_SCROLL,
+                                       s_ev->page ? EV_PAGE_SCROLL : 0, 3);
+  return s_ev->page ? EV_PAGE_SCROLL : 0;
+#else
+  return 0;
+#endif
+}
+
 #if EV_BODY_MASK
 // ---- Body caches ------------------------------------------------------------------------
 // Each page is drawn once at rest and read back from the framebuffer as 2-bit levels: 0 is the
@@ -798,6 +977,13 @@ static BodyMask *prv_mask(int page) {
 static bool prv_mask_holds(const BodyMask *m, const ExpandedViewGlance *g, int W) {
   return m && m->bits && m->w == W && memcmp(&m->glance, g, sizeof(*g)) == 0;
 }
+
+#if EV_LOC_PAGE
+// The locations page shows only the city from the glance
+static bool prv_page_mask_holds(const BodyMask *m, const ExpandedViewGlance *g, int W) {
+  return m && m->bits && m->w == W && strcmp(m->glance.city, g->city) == 0;
+}
+#endif
 
 static void prv_mask_free(BodyMask *m) {
   free(m->bits);
@@ -865,12 +1051,14 @@ static bool prv_mask_capture(int page, BodyDrawFn draw, GContext *ctx, int W,
 }
 
 // Paint `m` shifted by (dx, dy), skipping rows above `top`. Level 3 takes the foreground colour,
-// levels 1 and 2 blend it with the pixel beneath.
-static void prv_mask_draw(GContext *ctx, const BodyMask *m, int W, int dx, int dy, int top) {
+// levels 1 and 2 blend it with the pixel beneath. Inside `invert` the background colour is used.
+static void prv_mask_draw(GContext *ctx, const BodyMask *m, int W, int dx, int dy,
+                          const GRect *invert, int top) {
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
   if (!fb)
     return;
   const GColor fg = system_theme_get_fg_color();
+  const GColor bg = system_theme_get_bg_color();
   const GPoint o = ctx->draw_state.drawing_box.origin;
   const GRect clip = ctx->draw_state.clip_box;
   const int fb_h = gbitmap_get_bounds(fb).size.h;
@@ -882,6 +1070,7 @@ static void prv_mask_draw(GContext *ctx, const BodyMask *m, int W, int dx, int d
     const int y = o.y + ly;
     if (y < 0 || y >= fb_h || y < clip.origin.y || y >= clip.origin.y + clip.size.h)
       continue;
+    const bool inv_row = invert && ly >= invert->origin.y && ly < invert->origin.y + invert->size.h;
     const GBitmapDataRowInfo ri = gbitmap_get_data_row_info(fb, (uint16_t)y);
     const int lo = MAX((int)clip.origin.x, (int)ri.min_x);
     const int hi = MIN(clip.origin.x + clip.size.w - 1, (int)ri.max_x);
@@ -898,22 +1087,56 @@ static void prv_mask_draw(GContext *ctx, const BodyMask *m, int W, int dx, int d
         const int x = o.x + lx;
         if (x < lo || x > hi)
           continue;
+        const bool inv =
+            inv_row && lx >= invert->origin.x && lx < invert->origin.x + invert->size.w;
+        const GColor ink = inv ? bg : fg;
         if (level == 3) {
-          weather_fb_row_set(ri.data, x, fg.argb);
+          weather_fb_row_set(ri.data, x, ink.argb);
           continue;
         }
         const GColor under = {.argb = weather_fb_row_get(ri.data, x)};
         GColor c = {.argb = 0};
         c.a = 3;
-        c.r = (uint8_t)((under.r * (3 - level) + fg.r * level + 1) / 3);
-        c.g = (uint8_t)((under.g * (3 - level) + fg.g * level + 1) / 3);
-        c.b = (uint8_t)((under.b * (3 - level) + fg.b * level + 1) / 3);
+        c.r = (uint8_t)((under.r * (3 - level) + ink.r * level + 1) / 3);
+        c.g = (uint8_t)((under.g * (3 - level) + ink.g * level + 1) / 3);
+        c.b = (uint8_t)((under.b * (3 - level) + ink.b * level + 1) / 3);
         weather_fb_row_set(ri.data, x, c.argb);
       }
     }
   }
   graphics_release_frame_buffer(ctx, fb);
 }
+
+#if EV_LOC_PAGE
+// Where globe_view_draw_art places the box's globe, EV_THUMB_H rows tall, and where the globe
+// view's lift starts. The art bounds' offset in the frame is subtracted.
+static bool prv_globe_placement(GPoint *origin8, int32_t *scale_q8) {
+  if (!s_ev || !s_ev->globe)
+    return false;
+  const GRect art = globe_view_intro_art_bounds(s_ev->globe);
+  if (art.size.h <= 0)
+    return false;
+  *scale_q8 = EV_THUMB_H * 256 / art.size.h;
+  *origin8 = GPoint((int16_t)(prv_thumb_x(PBL_DISPLAY_WIDTH) * 8 - art.origin.x * *scale_q8 / 32),
+                    (int16_t)((EV_LOC_A_CY - EV_THUMB_H / 2) * 8 - art.origin.y * *scale_q8 / 32));
+  return true;
+}
+
+// The box's globe in `ink`: the globe view's art, in colour if `in_colour`, or prv_draw_globe
+// when there is no art. `dy` is the page slide offset.
+static void prv_draw_box_globe(GContext *ctx, int tdx, int dy, GColor ink, bool in_colour) {
+  GPoint origin8;
+  int32_t scale_q8;
+  if (prv_globe_placement(&origin8, &scale_q8)) {
+    globe_view_draw_art(s_ev->globe, ctx,
+                        GPoint((int16_t)(origin8.x + tdx * 8), (int16_t)(origin8.y + dy * 8)),
+                        scale_q8, ink, globe_view_rest_frame(s_ev->globe), in_colour);
+  } else {
+    prv_draw_globe(
+        ctx, GPoint(prv_thumb_x(PBL_DISPLAY_WIDTH) + EV_THUMB_H / 2 + tdx, EV_LOC_A_CY + dy), ink);
+  }
+}
+#endif // EV_LOC_PAGE
 
 #if PBL_ROUND
 // One round card outline over rows y to y+h-1, shifted right by dx, skipping rows above `top`
@@ -938,15 +1161,27 @@ static void prv_draw_round_frame(GContext *ctx, int W, int dx, int y, int h, GCo
   }
 }
 
-// The three card outlines on round, drawn live over the body
-static void prv_draw_frames_live(GContext *ctx, int W, int tdx, GColor fg) {
-  const int frames[][2] = {
-    {EV_CARD1_Y, EV_CARD1_H},
-    {EV_CARD2_Y, EV_CARD2_H},
-    {EV_CARD3_Y, EV_CARD3_H},
+// Card outlines on round, drawn live at the page slide's rows. The pill and the box show once
+// the stack has moved, the focused one at rest in the background colour.
+static void prv_draw_frames_live(GContext *ctx, int W, int tdx, int scroll, int focus_y,
+                                 GColor fg) {
+  const GColor bg = system_theme_get_bg_color();
+  const int frames[][3] = {
+    {EV_CARD1_Y + prv_card1_trim(scroll), EV_CARD1_H - prv_card1_trim(scroll), scroll},
+    {EV_CARD2_Y, EV_CARD2_H, scroll},
+    {EV_CARD3_Y, EV_CARD3_H, scroll},
+#if EV_LOC_PAGE
+    {EV_LOC_B_Y, EV_LOC_B_H, scroll - EV_PAGE_SCROLL},
+    {EV_LOC_A_Y, EV_LOC_A_H, scroll - EV_PAGE_SCROLL},
+#endif
   };
   for (int i = 0; i < (int)(sizeof(frames) / sizeof(frames[0])); i++) {
-    prv_draw_round_frame(ctx, W, tdx, frames[i][0], frames[i][1], fg, EV_BODY_Y);
+    const int y = frames[i][0] + frames[i][2];
+    const int h = frames[i][1];
+    if (i >= 3 && scroll <= 0)
+      continue; // the locations page has not come down yet
+    const bool focused = (i >= 3) && frames[i][2] == 0 && frames[i][0] == focus_y;
+    prv_draw_round_frame(ctx, W, tdx, y, h, focused ? bg : fg, EV_BODY_Y);
   }
 }
 #endif
@@ -961,7 +1196,19 @@ static void prv_clip_to_body(GContext *ctx) {
   }
 }
 
-// Draw the cards live, dy rows down and clipped to the body, when there is no memory for a mask
+#if PBL_ROUND
+// Clip to the canvas rows from y0 to just above y1. The caller saves and restores the draw state.
+static void prv_clip_rows(GContext *ctx, int y0, int y1) {
+  const int o = ctx->draw_state.drawing_box.origin.y;
+  const int c0 = ctx->draw_state.clip_box.origin.y;
+  const int c1 = c0 + ctx->draw_state.clip_box.size.h;
+  const int r0 = MAX(c0, o + y0), r1 = MIN(c1, o + y1);
+  ctx->draw_state.clip_box.origin.y = (int16_t)r0;
+  ctx->draw_state.clip_box.size.h = (int16_t)MAX(0, r1 - r0);
+}
+#endif
+
+// Draw a page live, dy rows down and clipped to the body, when there is no memory for a mask
 static void prv_draw_live_at(GContext *ctx, BodyDrawFn draw, int W, int tdx,
                              const ExpandedViewGlance *g, GColor fg, int dy) {
   const GDrawState saved = ctx->draw_state;
@@ -971,22 +1218,120 @@ static void prv_draw_live_at(GContext *ctx, BodyDrawFn draw, int W, int tdx,
   ctx->draw_state = saved;
 }
 
-// The body at `tdx`: the sunset box's fill, then the mask. The body is drawn live when
-// there is no memory for a mask.
+#if EV_LOC_PAGE
+// The locations page drawn live as its mask would paint it. Rows inside `invert` (drawing box
+// coordinates) are drawn in the background colour, so the page is drawn in three bands.
+static void prv_draw_page_live(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g,
+                               GColor fg, const GRect *invert) {
+  if (!invert || invert->size.h <= 0) {
+    prv_draw_locations_page(ctx, W, tdx, g, fg);
+    return;
+  }
+  const GDrawState saved = ctx->draw_state;
+  const int c0 = saved.clip_box.origin.y;
+  const int c1 = c0 + saved.clip_box.size.h;
+  const int r0 = saved.drawing_box.origin.y + invert->origin.y;
+  const int r1 = r0 + invert->size.h;
+  const int bands[3][2] = {{c0, MIN(c1, r0)}, {MAX(c0, r0), MIN(c1, r1)}, {MAX(c0, r1), c1}};
+  for (int i = 0; i < 3; i++) {
+    if (bands[i][1] <= bands[i][0])
+      continue;
+    ctx->draw_state.clip_box.origin.y = (int16_t)bands[i][0];
+    ctx->draw_state.clip_box.size.h = (int16_t)(bands[i][1] - bands[i][0]);
+    prv_draw_locations_page(ctx, W, tdx, g, i == 1 ? system_theme_get_bg_color() : fg);
+  }
+  ctx->draw_state = saved;
+}
+#endif
+
+// The body at `tdx`: the sunset box's fill, the focus highlight, then the pages' masks.
+// Pages are drawn live when there is no memory for a mask.
 static void prv_draw_body(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g, GColor fg) {
-  // Capture the mask before painting anything else: a capture clears its rows to the background.
+  const int scroll = prv_page_scroll();
+  // Capture masks before painting anything else: a capture clears its rows to the background.
   if (!prv_mask_holds(prv_mask(0), g, W))
     prv_mask_capture(0, prv_draw_cards, ctx, W, g);
-  // The fill goes under the mask
-  prv_fill_sunbox(ctx, W, tdx, 0);
-#if PBL_ROUND
-  prv_draw_frames_live(ctx, W, tdx, fg);
+#if EV_LOC_PAGE
+  // The forecast's hero fly draws the body before the card exists, when the locations page
+  // cannot show. Its mask is captured on the card's own frames.
+  if (s_ev && !prv_page_mask_holds(prv_mask(1), g, W))
+    prv_mask_capture(1, prv_draw_locations_page, ctx, W, g);
 #endif
-  if (prv_mask_holds(prv_mask(0), g, W))
-    prv_mask_draw(ctx, prv_mask(0), W, tdx, 0, EV_BODY_Y);
-  else
-    prv_draw_live_at(ctx, prv_draw_cards, W, tdx, g, fg, 0); // no memory for a mask
-  prv_draw_sunbox_icon(ctx, W, tdx, 0, g);
+  GDrawState saved = ctx->draw_state;
+#if !PBL_ROUND
+  // The sunset box's fill goes under the masks. The slide's bounce overshoots, so it is clipped
+  // to the body.
+  prv_clip_to_body(ctx);
+  prv_fill_sunbox(ctx, W, tdx, scroll);
+  ctx->draw_state = saved;
+#endif
+#if EV_LOC_PAGE
+  GRect focus_rect = GRectZero;
+  const GRect *invert = nullptr;
+  if (s_ev && s_ev->page == 1 && !s_ev->page_active && scroll == EV_PAGE_SCROLL) {
+    const int fy = s_ev->focus == 0 ? EV_LOC_B_Y : EV_LOC_A_Y;
+    const int fh = s_ev->focus == 0 ? EV_LOC_B_H : EV_LOC_A_H;
+    prv_fill_card_shape(ctx, W, tdx, fy, fh, EV_FOCUS_FILL);
+    focus_rect = prv_card_bounds(W, tdx, fy, fh);
+    invert = &focus_rect;
+  }
+#endif
+#if PBL_ROUND
+  // Once the stack moves, round draws the conditions card live at its current rows, as the
+  // display narrows lower down, and clips cards 2 and 3 at low_line.
+  const bool card1_live = scroll > 0;
+  const int travel = MIN(scroll, EV_PAGE_SCROLL);
+  const int page_line = EV_CARD2_Y - 2 + EV_PAGE_SCROLL;
+  const int low_line =
+      MAX(PBL_DISPLAY_HEIGHT - (PBL_DISPLAY_HEIGHT - page_line) * MAX(travel, 0) / EV_PAGE_SCROLL,
+          EV_CARD1_Y + EV_CARD1_H + scroll + 2);
+  saved = ctx->draw_state;
+  prv_clip_rows(ctx, 0, low_line);
+  prv_fill_sunbox(ctx, W, tdx, scroll);
+  prv_draw_frames_live(ctx, W, tdx, scroll, invert ? focus_rect.origin.y : -1, fg);
+  ctx->draw_state = saved;
+#endif
+  if (scroll < EV_BODY_H) {
+    saved = ctx->draw_state;
+#if PBL_ROUND
+    prv_clip_rows(ctx, card1_live ? EV_CARD2_Y - 2 + scroll : 0, low_line);
+#endif
+    if (prv_mask_holds(prv_mask(0), g, W))
+      prv_mask_draw(ctx, prv_mask(0), W, tdx, scroll, nullptr, EV_BODY_Y);
+    else
+      prv_draw_live_at(ctx, prv_draw_cards, W, tdx, g, fg, scroll); // no memory for a mask
+    prv_draw_sunbox_icon(ctx, W, tdx, scroll, g);
+    ctx->draw_state = saved;
+  }
+#if PBL_ROUND
+  if (card1_live) {
+    // Laid out no lower than its place on the page. The bounce's overshoot moves it unchanged.
+    saved = ctx->draw_state;
+    prv_clip_to_body(ctx);
+    ctx->draw_state.drawing_box.origin.y += scroll - travel;
+    prv_set_ink(ctx, fg);
+    prv_draw_card1(ctx, W, tdx, travel, g);
+    ctx->draw_state = saved;
+  }
+#endif
+#if EV_LOC_PAGE
+  if (scroll > 0) {
+    if (prv_page_mask_holds(prv_mask(1), g, W)) {
+      prv_mask_draw(ctx, prv_mask(1), W, tdx, scroll - EV_PAGE_SCROLL, invert, EV_BODY_Y);
+    } else {
+      saved = ctx->draw_state; // no memory for a mask
+      prv_clip_to_body(ctx);
+      ctx->draw_state.drawing_box.origin.y += scroll - EV_PAGE_SCROLL;
+      prv_draw_page_live(ctx, W, tdx, g, fg, invert);
+      ctx->draw_state = saved;
+    }
+    // In colour only while the box is focused. Clipped to the body to stay below the status text.
+    saved = ctx->draw_state;
+    prv_clip_to_body(ctx);
+    prv_draw_box_globe(ctx, tdx, scroll - EV_PAGE_SCROLL, fg, invert && s_ev->focus == 1);
+    ctx->draw_state = saved;
+  }
+#endif
 }
 #else
 static void prv_draw_body(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g, GColor fg) {
@@ -1019,6 +1364,17 @@ void expanded_view_drop_body(void) {
     free(s_masks);
     s_masks = nullptr;
   }
+#endif
+#if EV_LOC_PAGE
+  if (s_ev && s_ev->globe)
+    globe_view_release_intro_art(s_ev->globe); // the box's art, unless the globe's window holds it
+#endif
+}
+
+void expanded_view_drop_card_mask(void) {
+#if EV_BODY_MASK && PBL_ROUND
+  if (s_masks)
+    prv_mask_free(&s_masks[0]);
 #endif
 }
 
@@ -1072,7 +1428,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // Drawn over the body. EV_ICON_X, EV_ICON_Y and EV_ICON_SIZE match fly_dest in
   // forecast_list.c.
   if (s_ev->icon) {
-    gdraw_command_image_draw(ctx, s_ev->icon, GPoint(EV_ICON_X(W), EV_ICON_Y));
+    gdraw_command_image_draw(ctx, s_ev->icon, GPoint(EV_ICON_X(W), EV_ICON_Y + prv_page_scroll()));
   }
 
 #if PBL_ROUND
@@ -1088,14 +1444,12 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
 }
 
 // ---- SELECT -> globe: slide the whole card out to the left ----------------
-// The card's canvas layer slides one screen-width left with the same moook bounce the globe uses
-// for its entrance; the vacated area is the window's white background (no base flash). On
-// completion on_select fires and weather.c pushes the globe sliding in from the right.
+// Without the locations page, SELECT slides the canvas one screen width left, then calls
+// on_select to open the globe.
 
 // Slide duration + interpolation are shared with globe_view via weather_math.h
 // (WEATHER_HSLIDE_MS / weather_interpolate_moook_soft1) so the pair can't drift.
-
-// BOTH shapes.
+#if !EV_LOC_PAGE
 static void prv_slide_out_stopped(Animation *anim, bool finished, void *context) {
   if (!s_ev)
     return;
@@ -1124,6 +1478,7 @@ static void prv_start_slide_out_left(void) {
   s_ev->slide_anim = a;
   animation_schedule(a);
 }
+#endif // !EV_LOC_PAGE
 
 // Globe-BACK entrance: the whole card starts one screen-width to the left (set in prv_window_load)
 // and slides home with the same moook bounce — the mirror of the SELECT slide-out-left.
@@ -1151,15 +1506,123 @@ static void prv_start_slide_in_left(void) {
   animation_schedule(a);
 }
 
+// ---- The page slide (colour screens) -----------------------------------------
+// The stack slides down EV_PAGE_SCROLL rows to show the locations page above the conditions
+// card. The icon moves with the card and the status time stays put.
+#if EV_LOC_PAGE
+static void prv_page_update(Animation *anim, AnimationProgress progress) {
+  if (!s_ev)
+    return;
+  s_ev->page_p = progress;
+  if (s_ev->canvas)
+    layer_mark_dirty(s_ev->canvas);
+}
+static void prv_page_stopped(Animation *anim, bool finished, void *context) {
+  if (s_ev) {
+    s_ev->page_active = false;
+    s_ev->page_anim = nullptr;
+    if (s_ev->canvas)
+      layer_mark_dirty(s_ev->canvas);
+  }
+  animation_destroy(anim);
+}
+static const AnimationImplementation s_page_impl = {.update = prv_page_update};
+
+static void prv_start_page_slide(int page) {
+  if (!s_ev || s_ev->page_anim || s_ev->slide_anim || s_ev->page == page)
+    return;
+  s_ev->page = page;
+  s_ev->focus = 1; // city select first
+  s_ev->page_active = true;
+  s_ev->page_p = 0;
+  s_ev->page_anim = animation_create();
+  animation_set_implementation(s_ev->page_anim, &s_page_impl);
+  animation_set_duration(s_ev->page_anim, interpolate_moook_soft_duration(3));
+  animation_set_curve(s_ev->page_anim, AnimationCurveLinear); // interpolate_moook_soft shapes it
+  animation_set_handlers(s_ev->page_anim, (AnimationHandlers){.stopped = prv_page_stopped},
+                         nullptr);
+  animation_schedule(s_ev->page_anim);
+}
+
+static void prv_set_focus(int focus) {
+  if (!s_ev || s_ev->focus == focus)
+    return;
+  s_ev->focus = focus;
+  if (s_ev->canvas)
+    layer_mark_dirty(s_ev->canvas);
+}
+
+// SELECT on the locations page: the globe for the city-select box, the list for the pill
+static void prv_activate_focus(void) {
+  if (!s_ev || s_ev->page_active || s_ev->slide_anim)
+    return;
+  if (s_ev->focus == 1) {
+    if (s_ev->on_select)
+      s_ev->on_select(s_ev->on_select_ctx);
+  } else if (s_ev->on_locations) {
+    s_ev->on_locations(s_ev->on_locations_ctx);
+  }
+}
+#endif // EV_LOC_PAGE
+
 // ---- Navigation -----------------------------------------------------------
 
+static void prv_click_up(ClickRecognizerRef r, void *ctx) {
+#if EV_LOC_PAGE
+  if (!s_ev || s_ev->page_active || s_ev->slide_anim)
+    return;
+  if (s_ev->page == 0)
+    prv_start_page_slide(1); // up to the locations page
+  else
+    prv_set_focus(0);
+#endif
+}
 static void prv_click_down(ClickRecognizerRef r, void *ctx) {
-  if (s_ev && s_ev->on_down)
+  if (!s_ev)
+    return;
+#if EV_LOC_PAGE
+  if (s_ev->page_active || s_ev->slide_anim)
+    return;
+  if (s_ev->page == 1) {
+    if (s_ev->focus == 0)
+      prv_set_focus(1);
+    else
+      prv_start_page_slide(0); // past the box: back down to the sunset card
+    return;
+  }
+#endif
+  if (s_ev->on_down)
+    s_ev->on_down(s_ev->on_down_ctx); // -> forecast
+}
+static void prv_click_back(ClickRecognizerRef r, void *ctx) {
+  if (!s_ev)
+    return;
+#if EV_LOC_PAGE
+  if (s_ev->page_active || s_ev->slide_anim)
+    return;
+  if (s_ev->page == 1) {
+    prv_start_page_slide(0); // one step back: the sunset card
+    return;
+  }
+#endif
+  if (s_ev->on_down)
     s_ev->on_down(s_ev->on_down_ctx); // -> forecast
 }
 static void prv_click_select(ClickRecognizerRef r, void *ctx) {
-  if (s_ev && s_ev->on_select && !s_ev->slide_anim)
-    prv_start_slide_out_left(); // -> globe
+  if (!s_ev || s_ev->slide_anim)
+    return;
+#if EV_LOC_PAGE
+  if (s_ev->page_active)
+    return;
+  if (s_ev->page == 1) {
+    prv_activate_focus();
+    return;
+  }
+  prv_start_page_slide(1); // to the locations page
+#else
+  if (s_ev->on_select)
+    prv_start_slide_out_left(); // slides out, then opens the globe
+#endif
 }
 
 // ---- Touch input (touch colour platforms) ----
@@ -1182,6 +1645,49 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     int16_t dy = event->y - s_ev->touch_start_y;
     int16_t adx = dx < 0 ? -dx : dx;
     int16_t ady = dy < 0 ? -dy : dy;
+#if EV_LOC_PAGE
+    if (s_ev->page_active)
+      return;
+    if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD) {
+      // A tap on one of the locations page's boxes is its SELECT.
+      if (s_ev->page == 1) {
+        if (event->y >= EV_LOC_A_Y && event->y < EV_LOC_A_Y + EV_LOC_A_H) {
+          s_ev->focus = 1;
+          prv_activate_focus();
+        } else if (event->y >= EV_LOC_B_Y && event->y < EV_LOC_B_Y + EV_LOC_B_H) {
+          s_ev->focus = 0;
+          prv_activate_focus();
+        }
+      }
+      return; // a tap anywhere else does nothing
+    }
+    if (adx > ady) {
+      // Swipe left is SELECT: the box's globe from the locations page, the page from the card.
+      if (dx < 0) {
+        if (s_ev->page == 1) {
+          s_ev->focus = 1;
+          prv_activate_focus();
+        } else {
+          prv_start_page_slide(1);
+        }
+      }
+      return;
+    }
+    // Swipe down shows the locations page and swipe up hides it. On the sunset card, swipe up
+    // acts as DOWN.
+    if (dy > 0) {
+      if (s_ev->page == 0)
+        prv_start_page_slide(1);
+      return;
+    }
+    if (s_ev->page == 1) {
+      prv_start_page_slide(0);
+      return;
+    }
+    if (dy < 0 && s_ev->on_down) {
+      s_ev->on_down(s_ev->on_down_ctx); // swipe up -> back DOWN to the forecast (mirrors DOWN)
+    }
+#else
     if (adx <= SWIPE_THRESHOLD && ady <= SWIPE_THRESHOLD)
       return; // tap — no action
     if (adx > ady) {
@@ -1192,14 +1698,16 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     } else if (dy < 0 && s_ev->on_down) {
       s_ev->on_down(s_ev->on_down_ctx); // swipe up -> back DOWN to the forecast (mirrors DOWN)
     }
+#endif
   }
 }
 #endif
 
 static void prv_click_provider(void *ctx) {
-  window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_down);     // -> forecast
-  window_single_click_subscribe(BUTTON_ID_BACK, prv_click_down);     // -> forecast
-  window_single_click_subscribe(BUTTON_ID_SELECT, prv_click_select); // -> globe (slide-in-right)
+  window_single_click_subscribe(BUTTON_ID_UP, prv_click_up);
+  window_single_click_subscribe(BUTTON_ID_DOWN, prv_click_down);
+  window_single_click_subscribe(BUTTON_ID_BACK, prv_click_back);
+  window_single_click_subscribe(BUTTON_ID_SELECT, prv_click_select);
 }
 
 // ---- Content entrance: slide in from the left + bounce --------------------
@@ -1347,6 +1855,9 @@ static void prv_window_unload(Window *window) {
   if (s_ev && s_ev->slide_anim) {
     animation_unschedule(s_ev->slide_anim); // fires prv_slide_*_stopped -> NULLs it
   }
+  if (s_ev && s_ev->page_anim) {
+    animation_unschedule(s_ev->page_anim); // fires prv_page_stopped -> destroys + NULLs it
+  }
   if (s_ev) {
     if (s_ev->icon) {
       gdraw_command_image_destroy(s_ev->icon);
@@ -1371,16 +1882,20 @@ static void prv_window_unload(Window *window) {
 void expanded_view_push(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
                         int16_t utc_off_min, ExpandedViewEntrance entrance,
                         void (*on_down)(void *ctx), void *on_down_ctx, void (*on_select)(void *ctx),
-                        void *on_select_ctx) {
+                        void *on_select_ctx, void (*on_locations)(void *ctx),
+                        void *on_locations_ctx, GlobeView *globe) {
   if (s_ev)
     return;
   s_ev = calloc(1, sizeof(ExpandedViewData));
   if (!s_ev)
     return;
+  s_ev->globe = globe;
   s_ev->on_down = on_down;
   s_ev->on_down_ctx = on_down_ctx;
   s_ev->on_select = on_select;
   s_ev->on_select_ctx = on_select_ctx;
+  s_ev->on_locations = on_locations;
+  s_ev->on_locations_ctx = on_locations_ctx;
   s_ev->entrance = entrance;
   // Round's status band is a narrow chord — no room for "Last updated H:MM" at this size,
   // and shrinking or moving it was rejected. It rests on the TIME from the outset, so the
@@ -1418,6 +1933,10 @@ bool expanded_view_is_showing(void) {
   return s_ev && s_ev->window;
 }
 
+int expanded_view_get_page(void) {
+  return s_ev ? s_ev->page : 0;
+}
+
 void expanded_view_update_data(const WeatherLocationForecast *today, int16_t lat_e2, int16_t lon_e2,
                                int16_t utc_off_min) {
   if (!s_ev)
@@ -1426,3 +1945,158 @@ void expanded_view_update_data(const WeatherLocationForecast *today, int16_t lat
   if (s_ev->canvas)
     layer_mark_dirty(s_ev->canvas);
 }
+
+#if EV_LOC_PAGE
+bool expanded_view_locations_globe_placement(GPoint *origin8, int32_t *scale_q8) {
+  return prv_globe_placement(origin8, scale_q8);
+}
+
+void expanded_view_draw_locations_backdrop(GContext *ctx, AnimationProgress away,
+                                           AnimationProgress lit, GRect *fill_out, GRect *box_out,
+                                           void *context) {
+  (void)context;
+  if (fill_out)
+    *fill_out = GRectZero;
+  if (box_out)
+    *box_out = GRectZero;
+  if (!s_ev)
+    return;
+  const int W = PBL_DISPLAY_WIDTH, H = PBL_DISPLAY_HEIGHT;
+  const GColor fg = system_theme_get_fg_color();
+  const GColor bg = system_theme_get_bg_color();
+  graphics_context_set_fill_color(ctx, bg);
+  graphics_fill_rect(ctx, GRect(0, 0, W, H), 0, GCornerNone);
+  // New weather can arrive while the globe hides the card, so stale masks are captured again
+  // here, before anything else is painted.
+#if !PBL_ROUND
+  if (!prv_mask_holds(prv_mask(0), &s_ev->glance, W))
+    prv_mask_capture(0, prv_draw_cards, ctx, W, &s_ev->glance);
+#endif
+  if (!prv_page_mask_holds(prv_mask(1), &s_ev->glance, W))
+    prv_mask_capture(1, prv_draw_locations_page, ctx, W, &s_ev->glance);
+  // The time, the pill and the box rise off the top and the conditions card sinks off the
+  // bottom, both `clear` rows further so that the bounce leaves no stroke along the edge.
+  const int clear = EV_CARD_STROKE + 10;
+  const int up =
+      -(int)(((int64_t)(EV_LOC_A_Y + EV_LOC_A_H + clear) * away) / ANIMATION_NORMALIZED_MAX);
+  const int sink = (int)(((int64_t)(H - (EV_CARD1_Y + EV_PAGE_SCROLL) + clear) * away) /
+                         ANIMATION_NORMALIZED_MAX);
+  if (box_out) {
+    // The box's inside: on round, between its inner arcs at their narrowest row.
+#if PBL_ROUND
+    const int box_l = prv_inner_left(W, EV_LOC_A_Y, EV_LOC_A_Y + EV_LOC_A_H) - EV_CARD_PAD;
+    const int box_r = prv_inner_right(W, EV_LOC_A_Y, EV_LOC_A_Y + EV_LOC_A_H) + EV_CARD_PAD;
+#else
+    const int box_l = EV_CARD_X + EV_CARD_STROKE;
+    const int box_r = W - EV_CARD_X - EV_CARD_STROKE;
+#endif
+    *box_out = GRect(box_l, EV_LOC_A_Y + up + EV_CARD_STROKE, box_r - box_l,
+                     EV_LOC_A_H - 2 * EV_CARD_STROKE);
+  }
+  char time_str[10];
+  prv_build_time(time_str, sizeof(time_str));
+  graphics_context_set_text_color(ctx, fg);
+  graphics_draw_text(ctx, s_ev->show_updated ? s_ev->updated_str : time_str,
+                     fonts_get_system_font(EV_STATUS_FONT),
+                     GRect(0, EV_STATUS_Y + up, W, EV_STATUS_H), GTextOverflowModeTrailingEllipsis,
+                     GTextAlignmentCenter, nullptr);
+  // The conditions card and its icon
+#if PBL_ROUND
+  // On round, laid out at its rows on the locations page as prv_draw_body draws it, and sunk as
+  // one piece with the DOWN arrow, so the first and last frames match the card.
+  {
+    const GDrawState card_saved = ctx->draw_state;
+    ctx->draw_state.drawing_box.origin.y += sink;
+    prv_set_ink(ctx, fg);
+    prv_draw_card1(ctx, W, 0, EV_PAGE_SCROLL, &s_ev->glance);
+    prv_draw_round_frame(ctx, W, 0, EV_CARD1_Y + EV_PAGE_SCROLL + EV_PAGE_TRIM,
+                         EV_CARD1_H - EV_PAGE_TRIM, fg, 0);
+    if (s_ev->icon)
+      gdraw_command_image_draw(ctx, s_ev->icon, GPoint(EV_ICON_X(W), EV_ICON_Y + EV_PAGE_SCROLL));
+    const int arrow_band = 18;
+    const GRect down_frame = GRect(0, H - arrow_band, W, arrow_band);
+    content_indicator_draw_arrow(ctx, &down_frame, ContentIndicatorDirectionDown, fg, bg,
+                                 GAlignCenter);
+    ctx->draw_state = card_saved;
+  }
+#else
+  const int card_dy = EV_PAGE_SCROLL + sink;
+  if (prv_mask_holds(prv_mask(0), &s_ev->glance, W)) {
+    prv_mask_draw(ctx, prv_mask(0), W, 0, card_dy, nullptr, EV_BODY_Y);
+  } else {
+    // No memory for its mask
+    const GDrawState card_saved = ctx->draw_state;
+    ctx->draw_state.drawing_box.origin.y += card_dy;
+    prv_set_ink(ctx, fg);
+    prv_draw_card1(ctx, W, 0, 0, &s_ev->glance);
+    ctx->draw_state = card_saved;
+  }
+  if (s_ev->icon)
+    gdraw_command_image_draw(ctx, s_ev->icon, GPoint(EV_ICON_X(W), EV_ICON_Y + card_dy));
+#endif
+  // The box's highlight, `lit` of its height about its middle row, then the pill and the box over
+  // it, clipped above the conditions card's top edge.
+  int fill_h = (int)(((int64_t)EV_LOC_A_H * lit) / ANIMATION_NORMALIZED_MAX);
+  fill_h = MAX(0, MIN(EV_LOC_A_H, fill_h));
+  const int fill_y = EV_LOC_A_Y + up + (EV_LOC_A_H - fill_h) / 2;
+  const GRect fill = prv_card_bounds(W, 0, fill_y, fill_h);
+  if (fill_h > 0) {
+    prv_fill_card_shape(ctx, W, 0, fill_y, fill_h, EV_FOCUS_FILL);
+    if (fill_out)
+      *fill_out = fill;
+  }
+  const GDrawState saved = ctx->draw_state;
+  // The conditions card's top edge, EV_PAGE_TRIM rows lower on round
+  const int card_head = EV_CARD1_Y + EV_PAGE_SCROLL + PBL_IF_ROUND_ELSE(EV_PAGE_TRIM, 0) + up;
+  ctx->draw_state.clip_box.size.h =
+      (int16_t)MAX(0, MIN((int)saved.clip_box.size.h, card_head - saved.clip_box.origin.y));
+#if PBL_ROUND
+  // Pill and box outlines. Over the highlight the box outline is in the background colour.
+  prv_draw_round_frame(ctx, W, 0, EV_LOC_B_Y + up, EV_LOC_B_H, fg, 0);
+  prv_draw_round_frame(ctx, W, 0, EV_LOC_A_Y + up, EV_LOC_A_H, fg, 0);
+  if (fill_h > 0) {
+    const GDrawState lit_saved = ctx->draw_state;
+    const int fill_top = ctx->draw_state.drawing_box.origin.y + fill.origin.y;
+    if (ctx->draw_state.clip_box.origin.y < fill_top) {
+      const int bottom = ctx->draw_state.clip_box.origin.y + ctx->draw_state.clip_box.size.h;
+      ctx->draw_state.clip_box.origin.y = (int16_t)fill_top;
+      ctx->draw_state.clip_box.size.h = (int16_t)MAX(0, bottom - fill_top);
+    }
+    ctx->draw_state.clip_box.size.h =
+        (int16_t)MIN((int)ctx->draw_state.clip_box.size.h,
+                     MAX(0, fill_top + fill_h - ctx->draw_state.clip_box.origin.y));
+    prv_draw_round_frame(ctx, W, 0, EV_LOC_A_Y + up, EV_LOC_A_H, bg, 0);
+    ctx->draw_state = lit_saved;
+  }
+#endif
+  if (prv_page_mask_holds(prv_mask(1), &s_ev->glance, W)) {
+    prv_mask_draw(ctx, prv_mask(1), W, 0, up, fill_h > 0 ? &fill : nullptr, 0);
+  } else {
+    // No memory for its mask
+    ctx->draw_state.drawing_box.origin.y += up;
+    GRect lit_rows = fill;
+    lit_rows.origin.y -= up;
+    prv_draw_page_live(ctx, W, 0, &s_ev->glance, fg, fill_h > 0 ? &lit_rows : nullptr);
+  }
+  ctx->draw_state = saved;
+}
+#else
+bool expanded_view_locations_globe_placement(GPoint *origin8, int32_t *scale_q8) {
+  (void)origin8;
+  (void)scale_q8;
+  return false;
+}
+
+void expanded_view_draw_locations_backdrop(GContext *ctx, AnimationProgress away,
+                                           AnimationProgress lit, GRect *fill_out, GRect *box_out,
+                                           void *context) {
+  (void)ctx;
+  (void)away;
+  (void)lit;
+  (void)context;
+  if (fill_out)
+    *fill_out = GRectZero;
+  if (box_out)
+    *box_out = GRectZero;
+}
+#endif
