@@ -474,16 +474,15 @@ void battery_state_init(void) {
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-        .charge_current_limit = (float)NPM1300_CHARGER->cfg->chg_current_ma / 1000.0f
+        .charge_current_limit =
+            (float)NPM1300_CHARGER->battery->constant_charge_current_ua / 1000000.0f
       });
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_TERM_CURRENT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-        .charge_term_current = (float)(NPM1300_CHARGER->cfg->chg_current_ma *
-                                       NPM1300_CHARGER->cfg->term_current_pct / 100U) /
-                               1000.0f
+        .charge_term_current = (float)NPM1300_CHARGER->battery->charge_term_current_ua / 1000000.0f
       });
   PBL_ASSERTN(ret == 0);
 

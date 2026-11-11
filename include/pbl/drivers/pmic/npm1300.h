@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/battery.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/kernel/work.h>
@@ -21,15 +22,10 @@
 
 /** @brief nPM1300 board configuration. */
 typedef struct {
-  /** Charge current in mA, 32 to 800 in 2 mA steps. */
-  uint16_t chg_current_ma;
   /** Discharge current limit in mA, 200 or 1000. */
   uint16_t dischg_limit_ma;
-  /** Charge termination current, in percent of the charge current: 10 or 20. */
-  uint8_t term_current_pct;
-  /** Charge termination voltage in mV: 3500 to 3650 or 4000 to 4450, in 50 mV steps. */
-  uint16_t vterm_mv;
-  /** Charge termination voltage in the warm and cool regions, same range. */
+  /** Charge termination voltage in the warm and cool regions in mV: 3500 to 3650 or 4000 to
+   * 4450, in 50 mV steps. */
   uint16_t vterm_reduced_mv;
   /** NTC thermistor nominal resistance in kOhm: 10, 47 or 100. */
   uint8_t ntc_kohm;
@@ -60,6 +56,9 @@ struct pbl_npm1300_charger {
   struct pbl_device dev;
   /** Charger configuration. */
   const Npm1300Config *cfg;
+  /** The battery charged: charge current 32 to 800 mA in 2 mA steps, termination current 10 or
+   * 20% of it, and termination voltage 3500 to 3650 or 4000 to 4450 mV, in 50 mV steps. */
+  const struct pbl_battery *battery;
   /** Interrupt line, from the PMIC's GPIO1. */
   struct pbl_irq_spec irq;
   /** Runtime state. */
@@ -81,9 +80,7 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
  * @param sym Symbol of the charger.
  * @param _pmic Core, a struct pbl_npm1300.
  * @param _irq Interrupt line, a struct pbl_irq_spec initializer.
- * @param _chg_ua Charge current, in uA.
- * @param _term_ua Charge termination current, in uA.
- * @param _vterm_uv Charge termination voltage, in uV.
+ * @param _battery The battery charged, a struct pbl_battery.
  * @param _vterm_reduced_uv Termination voltage in the warm and cool regions, in uV.
  * @param _ntc_ohms NTC thermistor nominal resistance, in ohm.
  * @param _beta Thermistor beta value.
@@ -92,16 +89,12 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
  * @param _vbus_ua VBUS current limit with USB connected, in uA, 0 to keep the default.
  * @param _vbus_startup_ua VBUS current limit at startup, in uA, 0 to keep the default.
  */
-#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _irq, _chg_ua, _term_ua, _vterm_uv,                 \
-                                   _vterm_reduced_uv, _ntc_ohms, _beta, _hot_celsius, _dischg_ua,  \
-                                   _vbus_ua, _vbus_startup_ua)                                     \
+#define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _irq, _battery, _vterm_reduced_uv, _ntc_ohms,       \
+                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua)    \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
   static struct pbl_npm1300_charger_state sym##_npm1300_charger_state;                             \
   static const Npm1300Config sym##_cfg = {                                                         \
-    .chg_current_ma = (_chg_ua) / 1000,                                                            \
     .dischg_limit_ma = (_dischg_ua) / 1000,                                                        \
-    .term_current_pct = (_term_ua) * 100 / (_chg_ua),                                              \
-    .vterm_mv = (_vterm_uv) / 1000,                                                                \
     .vterm_reduced_mv = (_vterm_reduced_uv) / 1000,                                                \
     .ntc_kohm = (_ntc_ohms) / 1000,                                                                \
     .thermistor_beta = (_beta),                                                                    \
@@ -113,6 +106,7 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
     .dev =                                                                                         \
         PBL_DEVICE_INIT(sym, "npm1300_charger", pbl_npm1300_charger_init, &(_pmic)->dev, nullptr), \
     .cfg = &sym##_cfg,                                                                             \
+    .battery = (_battery),                                                                         \
     .irq = _irq,                                                                                   \
     .state = &sym##_npm1300_charger_state,                                                         \
   };                                                                                               \
