@@ -12,7 +12,6 @@
 #include <pbl/util/size.h>
 
 #include <devicetree/devices.h>
-#include <hal/nrf_gpio.h>
 
 #ifdef CONFIG_FLASH
 const struct pbl_flash *const FLASH = &dt_flash0;
