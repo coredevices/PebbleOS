@@ -15,6 +15,8 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/circular_buffer.h>
 
+#include <kernel/volatile_heap.h>
+
 PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL);
 
 #define MS_PER_S       1000U
@@ -31,8 +33,13 @@ PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL
 #define FIFO_STEP_MS   32U
 #define FIFO_BYTES(ms) ((ms) * SAMPLES_PER_MS * MIC_MANAGER_CHANNELS * sizeof(int16_t))
 
+#ifdef CONFIG_KERNEL_VOLATILE_HEAP
+// The queue does not come from the kernel heap the Bluetooth packets use
+#define FIFO_HEAP_RESERVE_BYTES 0U
+#else
 // Heap left for the Bluetooth packets that carry the audio
 #define FIFO_HEAP_RESERVE_BYTES 2048U
+#endif
 
 // Frames per SysWorkq callback, leaving time for Bluetooth to drain between batches
 #define MAX_FRAMES_PER_CALLBACK 8U
@@ -114,15 +121,27 @@ static void prv_dispatch(void *data) {
   pbl_mutex_unlock(&s_src.lock);
 }
 
-static uint8_t *prv_alloc_fifo(uint16_t *size) {
+// Free space of the heap the queue comes from
+static unsigned int prv_fifo_heap_max_free(void) {
+#ifdef CONFIG_KERNEL_VOLATILE_HEAP
+  unsigned int used, high_water, allocations;
+  kernel_volatile_heap_stats(&used, &high_water, &allocations);
+  return CONFIG_KERNEL_VOLATILE_HEAP_SIZE - used;
+#else
   unsigned int used, free_bytes, max_free;
-
   pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &max_free);
+  return max_free;
+#endif
+}
+
+static uint8_t *prv_alloc_fifo(uint16_t *size) {
+  unsigned int max_free = prv_fifo_heap_max_free();
+
   for (uint32_t ms = FIFO_MS; ms >= FIFO_MIN_MS; ms -= FIFO_STEP_MS) {
     uint8_t *storage = nullptr;
 
     if (FIFO_BYTES(ms) + FIFO_HEAP_RESERVE_BYTES <= max_free) {
-      storage = pbl_malloc(FIFO_BYTES(ms));
+      storage = kernel_volatile_malloc(FIFO_BYTES(ms));
     }
 
     if (storage != nullptr) {
@@ -140,7 +159,7 @@ static uint8_t *prv_alloc_fifo(uint16_t *size) {
 
 static void prv_free_locked(void) {
   pbl_audio_buf_free(s_src.ring);
-  pbl_free(s_src.fifo_storage);
+  kernel_volatile_free(s_src.fifo_storage);
   s_src.ring = nullptr;
   s_src.fifo_storage = nullptr;
 }

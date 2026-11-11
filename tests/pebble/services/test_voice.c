@@ -92,6 +92,9 @@ bool voice_speex_init(void) {
   return true;
 }
 
+void voice_speex_deinit(void) {
+}
+
 void voice_speex_get_transfer_info(AudioTransferInfoSpeex *info) {
   *info = (AudioTransferInfoSpeex){.sample_rate = 16000, .bit_rate = 12800, .frame_size = 320};
 }

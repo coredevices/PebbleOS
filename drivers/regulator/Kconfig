@@ -17,6 +17,14 @@ config REGULATOR_NPM1300
     help
       Support for the BUCK and LDSW rails of the Nordic nPM1300 PMIC.
 
+config REGULATOR_NPM1300_BUCK1_ALWAYS_ON
+    bool
+    depends on REGULATOR_NPM1300
+    help
+      Keep BUCK1 on, whatever the devicetree says. Set by boards where it
+      supplies memory that has to stay powered only in some
+      configurations, as the SF32LB52 SiP PSRAM.
+
 config REGULATOR_FIXED
     bool "Fixed regulators"
     default DT_HAS_REGULATOR_FIXED_ENABLED

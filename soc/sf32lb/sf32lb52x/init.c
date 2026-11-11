@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "lpsys.h"
+#include "psram.h"
 #include "syscfg.h"
 
 #include <pbl/drivers/pinctrl/sf32lb52.h>
@@ -75,7 +76,13 @@ void pbl_soc_early_init(void) {
 
   // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
   hwp_pmuc->PERI_LDO &= ~(PMUC_PERI_LDO_EN_LDO18_Msk | PMUC_PERI_LDO_LDO18_PD_Msk);
+#ifndef CONFIG_SF32LB52_PSRAM
   hwp_pmuc->PERI_LDO |= PMUC_PERI_LDO_LDO18_PD_Msk;
+#endif
+
+#ifdef CONFIG_SF32LB52_PSRAM
+  soc_sf32lb_psram_init();
+#endif
 
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_REQ, AON_PIN_MODE_HIGH);
   HAL_HPAON_EnableWakeupSrc(HPAON_WAKEUP_SRC_LP2HP_IRQ, AON_PIN_MODE_HIGH);

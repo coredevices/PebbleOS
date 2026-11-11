@@ -13,4 +13,5 @@ pbl_library_sources(
   lpsys_halt.c
   mpu_regions.c
 )
+pbl_library_sources_ifdef(CONFIG_SF32LB52_PSRAM psram.c)
 pbl_linker_sources(ramfunc ramfunc.ld)

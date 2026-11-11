@@ -14,6 +14,13 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/version.h>
 
+#ifdef CONFIG_EXTRAM
+extern uint8_t __extram_bss_start[];
+extern uint8_t __extram_bss_end[];
+extern uint8_t __disposable_bss_start[];
+extern uint8_t __disposable_bss_end[];
+#endif
+
 static struct pbl_thread s_main_thread;
 PBL_THREAD_STACK_DEFINE(s_main_stack, CONFIG_KERNEL_MAIN_STACK_SIZE);
 
@@ -34,6 +41,10 @@ static void prv_main_entry(void *arg) {
 void kernel_init(int (*entry)(void)) {
   mpu_init();
   pbl_soc_early_init();
+#ifdef CONFIG_EXTRAM
+  memset(__extram_bss_start, 0, __extram_bss_end - __extram_bss_start);
+  memset(__disposable_bss_start, 0, __disposable_bss_end - __disposable_bss_start);
+#endif
   pbl_irq_init();
   arch_init();
   pbl_malloc_init();
