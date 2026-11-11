@@ -7,6 +7,7 @@ class: rproc
 define: PBL_RPROC_SF32LB52_DEFINE
 args:
   - name: true
+  - reg: 0
   - mbox: tx
   - mbox: rx
   - reg: 0

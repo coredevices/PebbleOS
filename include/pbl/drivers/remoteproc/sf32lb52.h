@@ -25,6 +25,8 @@
 struct pbl_rproc_sf32lb52 {
   /** Remote processor. */
   struct pbl_rproc rproc;
+  /** ROM patch controller base address. */
+  uintptr_t patch_base;
   /** Doorbell to the LCPU (@c mboxes entry @c tx). */
   struct pbl_mbox_chan tx_chan;
   /** Doorbell from the LCPU (@c mboxes entry @c rx). */
@@ -49,6 +51,7 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
  *
  * @param sym Symbol.
  * @param _name Device name.
+ * @param _patch_base ROM patch controller base address.
  * @param _tx_chan Doorbell to the LCPU, from PBL_MBOX_CHAN().
  * @param _rx_chan Doorbell from the LCPU, from PBL_MBOX_CHAN().
  * @param _mem_base Base of the HCPU RAM reserved for the HCPU to LCPU ring.
@@ -57,14 +60,14 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
  * @param _pclk LPSYS APB clock, from PBL_CLK().
  * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _tx_chan, _rx_chan, _mem_base, _mem_size, _hclk, \
-                                  _pclk, _pclk2)                                               \
-  PBL_RPROC_STATE_DEFINE(sym);                                                                 \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {               \
-    .rproc =                                                                                   \
-        PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops), \
-    .tx_chan = _tx_chan, .rx_chan = _rx_chan, .mem = PBL_MEM_REGION(_mem_base, _mem_size),     \
-    .hclk = _hclk, .pclk = _pclk, .pclk2 = _pclk2,                                             \
+#define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,       \
+                                  _mem_size, _hclk, _pclk, _pclk2)                              \
+  PBL_RPROC_STATE_DEFINE(sym);                                                                  \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                \
+    .rproc =                                                                                    \
+        PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops),  \
+    .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                        \
+    .mem = PBL_MEM_REGION(_mem_base, _mem_size), .hclk = _hclk, .pclk = _pclk, .pclk2 = _pclk2, \
   }
 
 /** @} */

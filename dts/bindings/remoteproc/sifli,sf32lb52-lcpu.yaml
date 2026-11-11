@@ -18,6 +18,10 @@ properties:
   compatible:
     const: sifli,sf32lb52-lcpu
 
+  reg:
+    description: ROM patch controller
+    maxItems: 1
+
   mboxes:
     items:
       - description: Doorbell to the LCPU
@@ -46,6 +50,7 @@ properties:
 
 required:
   - compatible
+  - reg
   - mboxes
   - mbox-names
   - memory-region
@@ -56,8 +61,9 @@ additionalProperties: false
 
 examples:
   - |
-    remoteproc-lcpu {
+    remoteproc@40004000 {
         compatible = "sifli,sf32lb52-lcpu";
+        reg = <0x40004000 0x1000>;
         mboxes = <&mailbox1 0>, <&mailbox2 0>;
         mbox-names = "tx", "rx";
         memory-region = <&lcpu_ipc>;

@@ -31,18 +31,6 @@
 		};
 	};
 
-	lcpu: remoteproc-lcpu {
-		compatible = "sifli,sf32lb52-lcpu";
-		mboxes = <&mailbox1 0>, <&mailbox2 0>;
-		mbox-names = "tx", "rx";
-		memory-region = <&lcpu_ipc>;
-		clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
-			 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
-			 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>;
-		clock-names = "hclk", "pclk", "pclk2";
-		status = "disabled";
-	};
-
 	xtal48m: clock-48000000 {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -91,6 +79,19 @@
 			reg = <0x40002000 0x1000>;
 			interrupts = <58>;
 			#mbox-cells = <1>;
+			status = "disabled";
+		};
+
+		lcpu: remoteproc@40004000 {
+			compatible = "sifli,sf32lb52-lcpu";
+			reg = <0x40004000 0x1000>;
+			mboxes = <&mailbox1 0>, <&mailbox2 0>;
+			mbox-names = "tx", "rx";
+			memory-region = <&lcpu_ipc>;
+			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>;
+			clock-names = "hclk", "pclk", "pclk2";
 			status = "disabled";
 		};
 
