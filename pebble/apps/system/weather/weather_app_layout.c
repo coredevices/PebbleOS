@@ -401,11 +401,11 @@ static const char *prv_precip_likely(WeatherType t) {
   switch (t) {
     case WeatherType_LightSnow:
     case WeatherType_HeavySnow:
-      return pbl_i18n_noop("Snow likely");
+      return pbl_i18n_noop("Snow likely.");
     case WeatherType_RainAndSnow:
-      return pbl_i18n_noop("Sleet likely");
+      return pbl_i18n_noop("Sleet likely.");
     default:
-      return pbl_i18n_noop("Rain likely");
+      return pbl_i18n_noop("Rain likely.");
   }
 }
 
@@ -413,11 +413,11 @@ static const char *prv_precip_chance(WeatherType t) {
   switch (t) {
     case WeatherType_LightSnow:
     case WeatherType_HeavySnow:
-      return pbl_i18n_noop("Chance of snow");
+      return pbl_i18n_noop("Chance of snow.");
     case WeatherType_RainAndSnow:
-      return pbl_i18n_noop("Chance of sleet");
+      return pbl_i18n_noop("Chance of sleet.");
     default:
-      return pbl_i18n_noop("Chance of rain");
+      return pbl_i18n_noop("Chance of rain.");
   }
 }
 
@@ -447,6 +447,7 @@ static int prv_temp(int celsius) {
 // (the newspaper version's ladder, verbatim). v4.2 raw readings are -1 on older
 // records and those rungs simply never fire.
 // wind_out: the warning already speaks of wind, so the wind sentence drops its prefix.
+// Each warning is a whole sentence, so that a translation carries its own punctuation.
 static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t buf_size,
                             bool *wind_out) {
   const WeatherType t = f->current_weather_type;
@@ -458,44 +459,44 @@ static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t 
   const char *alert;
   bool wind = false;
   if (wmo == 96 || wmo == 99) { // thunderstorm with hail
-    alert = pbl_i18n_noop("Hail");
+    alert = pbl_i18n_noop("Hail.");
   } else if (wmo >= 95 && wmo <= 99) { // thunderstorm codes
-    alert = pbl_i18n_noop("Chance of storms");
+    alert = pbl_i18n_noop("Chance of storms.");
   } else if (t == WeatherType_HeavySnow || wmo == 75 || wmo == 86) {
-    alert = pbl_i18n_noop("Heavy snow");
+    alert = pbl_i18n_noop("Heavy snow.");
   } else if (t == WeatherType_HeavyRain) {
-    alert = pbl_i18n_noop("Heavy rain");
+    alert = pbl_i18n_noop("Heavy rain.");
   } else if (t == WeatherType_RainAndSnow) {
-    alert = pbl_i18n_noop("Wintry mix");
+    alert = pbl_i18n_noop("Wintry mix.");
   } else if (f->today_precip_sum_mm >= 30) { // a real soaking on the day
-    alert = pbl_i18n_noop("Flood risk");
+    alert = pbl_i18n_noop("Flood risk.");
   } else if (f->today_wind_mph >= 25) {
-    alert = pbl_i18n_noop("Strong winds");
+    alert = pbl_i18n_noop("Strong winds.");
     wind = true;
   } else if (high_known && f->today_high <= prv_temp(0)) { // an ice day
-    alert = pbl_i18n_noop("Below freezing");
+    alert = pbl_i18n_noop("Below freezing.");
   } else if (low_known && f->today_low <= prv_temp(-4)) {
-    alert = pbl_i18n_noop("Hard frost");
+    alert = pbl_i18n_noop("Hard frost.");
   } else if (feels_known && f->today_feels <= prv_temp(0) && temp_known &&
              f->current_temp > prv_temp(0)) { // wind chill crosses zero
-    alert = pbl_i18n_noop("Feels below freezing");
+    alert = pbl_i18n_noop("Feels below freezing.");
   } else if (high_known && f->today_high >= prv_temp(30)) {
-    alert = pbl_i18n_noop("Heatwave");
+    alert = pbl_i18n_noop("Heatwave.");
   } else if (f->today_uv >= 8) {
-    alert = pbl_i18n_noop("Very high UV");
+    alert = pbl_i18n_noop("Very high UV.");
   } else if (f->today_uv >= 6) {
-    alert = pbl_i18n_noop("High UV");
+    alert = pbl_i18n_noop("High UV.");
   } else if (wmo == 45 || wmo == 48 || // fog / depositing rime fog
              (f->today_visibility_m >= 0 && f->today_visibility_m <= 1000)) {
-    alert = pbl_i18n_noop("Poor visibility");
+    alert = pbl_i18n_noop("Poor visibility.");
   } else if (f->today_humidity >= 85 && high_known && f->today_high >= prv_temp(20)) {
-    alert = pbl_i18n_noop("High humidity");
+    alert = pbl_i18n_noop("High humidity.");
   } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm >= 60) {
     alert = prv_precip_likely(t);
   } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm >= PRECIP_CHANCE_MIN_PCT) {
     alert = prv_precip_chance(t);
   } else if (f->today_wind_mph >= 20) {
-    alert = pbl_i18n_noop("Windy");
+    alert = pbl_i18n_noop("Windy.");
     wind = true;
   } else if (prv_precip_is_the_headline(t)) {
     // A wet day must not fall through to a calm sign-off like "All clear".
@@ -504,19 +505,19 @@ static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t 
   } else {
     // No warning on file — a calm sign-off, deterministic per day's conditions.
     if (t == WeatherType_Sun) {
-      alert = pbl_i18n_noop("Clear skies");
+      alert = pbl_i18n_noop("Clear skies.");
     } else if (f->today_wind_mph >= 10) {
-      alert = pbl_i18n_noop("Light winds");
+      alert = pbl_i18n_noop("Light winds.");
       wind = true;
     } else if (f->today_wind_mph >= 0 && f->today_wind_mph <= 4) {
-      alert = pbl_i18n_noop("Calm breeze");
+      alert = pbl_i18n_noop("Calm breeze.");
       wind = true;
     } else if (t == WeatherType_PartlyCloudy) {
-      alert = pbl_i18n_noop("Fair conditions");
+      alert = pbl_i18n_noop("Fair conditions.");
     } else if (temp_known && f->current_temp >= prv_temp(12) && f->current_temp <= prv_temp(24)) {
-      alert = pbl_i18n_noop("Mild conditions");
+      alert = pbl_i18n_noop("Mild conditions.");
     } else {
-      alert = pbl_i18n_noop("All clear");
+      alert = pbl_i18n_noop("All clear.");
     }
   }
   pbl_i18n_get_with_buffer(alert, buf, buf_size);
@@ -556,7 +557,43 @@ static void prv_wind_in_user_units(int mph, const void *owner, int *speed, const
   }
 }
 
-// The forecast description: "High UV. Winds SW at 12mph. Precipitation 20%." —
+// Appends the wind sentence at buf[n] and returns the new length, unchanged when there is no wind
+// reading or no room. After a wind warning the sentence drops its "Winds" prefix.
+static int prv_append_wind_sentence(const WeatherLocationForecast *f, const void *owner,
+                                    bool wind_alert, char *buf, size_t buf_size, int n) {
+  if (f->today_wind_mph < 0 || n < 0 || (size_t)n >= buf_size)
+    return n;
+  int speed;
+  const char *unit;
+  prv_wind_in_user_units(f->today_wind_mph, owner, &speed, &unit);
+  n += snprintf(buf + n, buf_size - n, " ");
+  if ((size_t)n >= buf_size)
+    return n;
+  const char *fmt;
+  if (f->today_wind_dir_deg >= 0) {
+    if (wind_alert) {
+      /// Wind after a warning about wind: direction, speed, unit ("Light winds. SW 12mph.")
+      fmt = pbl_i18n_noop("%s %d%s.");
+    } else {
+      /// Wind: direction, speed, unit ("Winds SW 12mph.")
+      fmt = pbl_i18n_noop("Winds %s %d%s.");
+    }
+    n += snprintf(buf + n, buf_size - n, pbl_i18n_get(fmt, owner),
+                  pbl_i18n_get(prv_compass8(f->today_wind_dir_deg), owner), speed, unit);
+  } else {
+    if (wind_alert) {
+      /// Wind after a warning about wind, no direction: speed, unit ("Light winds. 12mph.")
+      fmt = pbl_i18n_noop("%d%s.");
+    } else {
+      /// Wind, no direction: speed, unit ("Winds 12mph.")
+      fmt = pbl_i18n_noop("Winds %d%s.");
+    }
+    n += snprintf(buf + n, buf_size - n, pbl_i18n_get(fmt, owner), speed, unit);
+  }
+  return n;
+}
+
+// The forecast description: "High UV. Winds SW 12mph. Precipitation 20%." —
 // warning first, then wind (direction when the record carries it), then precip.
 // Sentences drop out cleanly when their reading is off the wire.
 static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void *owner, char *buf,
@@ -564,29 +601,10 @@ static void prv_build_forecast_desc(const WeatherLocationForecast *f, const void
   char alert[64];
   bool wind_alert;
   prv_build_alert(f, alert, sizeof(alert), &wind_alert);
-  int n = snprintf(buf, buf_size, "%s.", alert);
+  int n = snprintf(buf, buf_size, "%s", alert);
   if (n < 0)
     return;
-  // A wind-flavored warning already said "winds" -- the wind sentence then
-  // drops its prefix ("Light winds. SW at 12mph.", not "...Winds SW at...").
-  if (f->today_wind_mph >= 0 && (size_t)n < buf_size) {
-    int speed;
-    const char *unit;
-    prv_wind_in_user_units(f->today_wind_mph, owner, &speed, &unit);
-    if (f->today_wind_dir_deg >= 0) {
-      const char *fmt =
-          wind_alert ? pbl_i18n_noop("%s at %d%s.") : pbl_i18n_noop("Winds %s at %d%s.");
-      n += snprintf(buf + n, buf_size - n, " ");
-      n += snprintf(buf + n, buf_size - n, pbl_i18n_get(fmt, owner),
-                    pbl_i18n_get(prv_compass8(f->today_wind_dir_deg), owner), speed, unit);
-    } else {
-      const char *fmt = wind_alert ? pbl_i18n_noop("At %d%s.") : pbl_i18n_noop("Winds at %d%s.");
-      n += snprintf(buf + n, buf_size - n, " ");
-      n += snprintf(buf + n, buf_size - n, pbl_i18n_get(fmt, owner), speed, unit);
-    }
-    if (n < 0)
-      return;
-  }
+  n = prv_append_wind_sentence(f, owner, wind_alert, buf, buf_size, n);
   if (f->today_precip_mm >= 0 && (size_t)n < buf_size) {
     n += snprintf(buf + n, buf_size - n, " ");
     snprintf(buf + n, buf_size - n, pbl_i18n_get(pbl_i18n_noop("Precipitation %d%%."), owner),
@@ -969,7 +987,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
               off->y + WEATHER_APP_LAYOUT_ROUND_PHRASE_Y, WEATHER_APP_LAYOUT_ROUND_PHRASE_W, 20),
         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
   }
-  // Emery's sentence, verbatim -- "Light winds. SW at 12mph. Precipitation 20%."
+  // Emery's sentence, verbatim -- "Light winds. SW 12mph. Precipitation 20%."
   // It wraps to two lines at this measure, which is why it gets DESC_H and the
   // row the rain/wind glyphs used to occupy.
   if (t->desc && t->desc[0]) {
@@ -1037,7 +1055,7 @@ static void prv_draw_top_rows(const WeatherAppLayout *layout, GPoint *off, int c
                             system_theme_get_fg_color(), GTextAlignmentLeft) -
               2;
   }
-  // Forecast description ("High UV. Winds SW at 12mph. Precipitation 20%."):
+  // Forecast description ("High UV. Winds SW 12mph. Precipitation 20%."):
   // warning, wind, precip. Measured and CENTERED in the band between the
   // condition text's bottom (the flow's current line) and the UV box top —
   // one- and two-line descriptions both float mid-band.
