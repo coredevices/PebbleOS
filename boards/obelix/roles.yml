@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+console_uart: usart1
+display: lcdc1
+backlight: backlight
+flash: flash0
+accel: lsm6dso
+mag: mmc5603nj
+als: w1160
+touch: touchscreen
+vibe: haptics
+mic: mic
+speaker: speaker
+die_temp: tsen
+rtc: rtc

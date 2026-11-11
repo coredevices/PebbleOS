@@ -5,9 +5,6 @@
 
 #include <stdint.h>
 
-//! Console port.
-extern const struct pbl_uart *const CONSOLE_UART;
-
 #ifdef CONFIG_BOARD_DISPLAY_CORNERS
 //! Pixels hidden at each end of the first rows of the display, mirrored in the last rows, by
 //! tinted rounded corners on the glass.

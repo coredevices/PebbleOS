@@ -4,3 +4,5 @@
 class: touch
 type: struct pbl_touch
 include: pbl/drivers/touch.h
+roles:
+  touch: TOUCH

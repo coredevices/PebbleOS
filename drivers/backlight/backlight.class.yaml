@@ -4,3 +4,5 @@
 class: backlight
 type: struct pbl_backlight
 include: pbl/drivers/backlight.h
+roles:
+  backlight: BACKLIGHT

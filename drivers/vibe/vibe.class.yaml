@@ -4,3 +4,5 @@
 class: vibe
 type: struct pbl_vibe
 include: pbl/drivers/vibe.h
+roles:
+  vibe: VIBE

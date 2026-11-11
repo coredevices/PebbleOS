@@ -6,3 +6,5 @@ type: struct pbl_flash
 include: pbl/drivers/flash.h
 provides:
   flash: "&{sym}"
+roles:
+  flash: FLASH

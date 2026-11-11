@@ -4,3 +4,5 @@
 class: accel
 type: struct pbl_accel
 include: pbl/drivers/accel.h
+roles:
+  accel: ACCEL

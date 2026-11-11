@@ -84,6 +84,15 @@ typedef void (*pbl_uart_rx_callback_t)(const struct pbl_uart *uart, uint8_t c, v
 /** @brief Class of the serial ports. */
 extern const struct pbl_device_class pbl_uart_class;
 
+/** @brief The board's console port. */
+extern const struct pbl_uart *const CONSOLE_UART;
+
+/** @brief The board's port to the host of the QEMU serial protocol. */
+extern const struct pbl_uart *const QEMU_UART;
+
+/** @brief The board's Bluetooth HCI port, with @c CONFIG_BT_HCI_UART. */
+extern const struct pbl_uart *const BT_HCI_UART;
+
 /** @cond INTERNAL_HIDDEN */
 struct pbl_uart_state {
   struct pbl_uart_config cfg;

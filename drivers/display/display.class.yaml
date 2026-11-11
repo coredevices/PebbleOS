@@ -4,3 +4,5 @@
 class: display
 type: struct pbl_display
 include: pbl/drivers/display.h
+roles:
+  display: DISPLAY

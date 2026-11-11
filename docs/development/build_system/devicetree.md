@@ -15,7 +15,8 @@ The devicetree decides two things:
   driver is enabled becomes a call to that driver's instance macro.
 
 The native boards, such as `native_emery`, run on the host and have no
-hardware to describe, so they define their devices in C. The QEMU boards run on
+hardware to describe: their drivers define their devices in C, and their
+roles name them; see [](#devicetree-roles). The QEMU boards run on
 emulated hardware, which a tree describes like any other: `dts/qemu/pebble.dtsi`
 for the machine, a board tree for each.
 
@@ -70,7 +71,7 @@ flowchart TD
   specs["*.dtmap.yaml, *.class.yaml, *.regs.yaml"]
   roles["roles.yml"]
   out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc<br/>devicetree/roles.c"]
-  drv["drivers, board file"]
+  drv["drivers"]
   dts --> dtc --> dtb --> kdt --> kconfig --> cfg --> dtmap
   dtb --> dtmap
   specs --> dtmap --> out --> drv
@@ -251,7 +252,25 @@ roles:
 ```
 
 A role is reached from C as its name in capitals, a pointer declared by the
-class header, as `SPEAKER`.
+class header, as `SPEAKER`:
+
+| Role | Class | Needed by |
+| --- | --- | --- |
+| `console_uart` | `uart` | |
+| `qemu_uart` | `uart` | |
+| `bt_hci_uart` | `uart` | `BT_HCI_UART` |
+| `display` | `display` | `DISPLAY` |
+| `backlight` | `backlight` | `BACKLIGHT` |
+| `flash` | `flash` | `FLASH` |
+| `accel` | `accel` | `ACCEL` |
+| `mag` | `mag` | `MAG` |
+| `als` | `als` | `ALS` |
+| `touch` | `touch` | `TOUCH` |
+| `vibe` | `vibe` | `VIBE` |
+| `mic` | `audio` | `MIC` |
+| `speaker` | `audio` | `SPEAKER` |
+| `die_temp` | `temp` | `TEMP` |
+| `rtc` | `rtc` | `RTC` |
 
 A board gives each role it has a device in `boards/<board>/roles.yml`, and
 a revision changes them in `roles.<revision>.yml`. A device is the label of
