@@ -1,0 +1,25 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define SF32LB57_HPSYS_AON_PMR_OFFSET   0x0000
+#define SF32LB57_HPSYS_AON_CR_OFFSET    0x0004
+#define SF32LB57_HPSYS_AON_ACR_OFFSET   0x0008
+#define SF32LB57_HPSYS_AON_WER_OFFSET   0x0018
+#define SF32LB57_HPSYS_AON_WSR_OFFSET   0x001C
+#define SF32LB57_HPSYS_AON_WCR_OFFSET   0x0020
+#define SF32LB57_HPSYS_AON_ISSR_OFFSET  0x0024
+#define SF32LB57_HPSYS_AON_ANACR_OFFSET 0x0028
+#define SF32LB57_HPSYS_AON_GTIMR_OFFSET 0x002C
+
+/* Register bit definitions */
+
+#define HPSYS_AON_ACR_HRC48_REQ PBL_BIT(0)
+#define HPSYS_AON_ACR_HXT48_REQ PBL_BIT(1)
+#define HPSYS_AON_ACR_HRC48_RDY PBL_BIT(30)
+#define HPSYS_AON_ACR_HXT48_RDY PBL_BIT(31)

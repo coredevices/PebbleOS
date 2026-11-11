@@ -7,6 +7,8 @@ pbl_library_sources(sleep.c)
 
 if(CONFIG_SOC_SF32LB52)
   add_subdirectory(sf32lb52x)
+elseif(CONFIG_SOC_SF32LB57)
+  add_subdirectory(sf32lb57x)
 endif()
 
 if(CONFIG_SF32LB_FTAB)
