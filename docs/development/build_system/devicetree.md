@@ -429,11 +429,12 @@ An argument takes its value from one place:
 | `gpio: <name>` | `<name>-gpios`, or `gpios` for an empty name |
 | `supply: <name>` | The regulator of `<name>-supply` |
 | `pinctrl: <state>` | A pin control state, by name |
-| `prop`, `string`, `strings` | A property, as a number, a string or a list of strings |
+| `prop`, `string`, `strings` | A property, as a number, a string or a list of strings; with `item`, a `prop` is a table whose rows of `cells` cells are each formatted by `item`, as the OCV points of a battery |
 | `flag: <property>` | `true` when a boolean property is present |
 | `flags: {<property>: <C>}` | The C of each present boolean property, ORed |
 | `parent: <kind>` | What the parent provides, as the bus of a device on it |
 | `self: <kind>` | What a node provides, with `remote`, the device at the other end of a port |
+| `phandle: <property>` | What the node this phandle property points to provides, as the battery of `monitored-battery` |
 | `referrer: <property>` | What the node pointing at this one with that property provides |
 | `list: [<compatible>, ...]` | One `item` per enabled child of the node reached through children of these compatibles, or of the node itself for `[]`: a template of the child's `reg` cells and name, or a `define` with `args` read from the child, as the keys of `gpio-keys` |
 | `id: true` | For `children`, the ID of the child |
@@ -443,8 +444,9 @@ with these options:
 | Option | Meaning |
 | --- | --- |
 | `default` | Value when the node does not have it; without one, the build fails |
-| `optional` | Leave the argument out when absent, for the trailing arguments of a variadic macro. A node that has an argument after an absent one fails the build |
+| `optional` | Leave the argument out when absent, for the trailing arguments of a variadic macro. A node that has an argument after an absent one fails the build. `list` arguments and `prop` tables are variadic too, so they come last |
 | `index` | Which cell of a `prop`, or which entry of a `gpio` list |
+| `cells` | The width of the rows of a `prop` table, 1 by default |
 | `all` | Every entry of a `gpio` list |
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller |

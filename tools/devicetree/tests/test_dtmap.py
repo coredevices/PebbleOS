@@ -581,6 +581,91 @@ def test_unknown_child_fails(tmp_path):
         pmic_generate(tmp_path, dts=PMIC_DTS.replace("ldo1: LDO1", "ldo9: LDO9"))
 
 
+BATTERY_CLASS = {
+    "class": "battery",
+    "type": "struct battery",
+    "include": "battery.h",
+    "device": False,
+    "provides": {"battery": "&{sym}"},
+}
+BATTERY_SPEC = {
+    "compatible": "simple-battery",
+    "config": "BATTERY",
+    "class": "battery",
+    "define": "BATTERY_DEFINE",
+    "args": [
+        {"prop": "charge-current-microamp"},
+        {
+            "prop": "ocv-capacity-table-0",
+            "cells": 2,
+            "item": "{{{0}, {1}}}",
+            "optional": True,
+        },
+    ],
+}
+OCV_DTS = PMIC_DTS.replace(
+    "charge-current-microamp = <190000>;",
+    "charge-current-microamp = <190000>;\n"
+    "        ocv-capacity-table-0 = <4200000 100>, <3700000 50>, <3300000 0>;",
+)
+
+
+def battery_generate(tmp_path, config=(*ALL, "PMIC", "CHARGER", "BATTERY"), dts=OCV_DTS):
+    classes = {**CLASSES, **PMIC_CLASSES, "battery": BATTERY_CLASS}
+    charger = {
+        **PMIC_SPECS[2],
+        "args": [{"self": "pmic"}, {"phandle": "monitored-battery", "as": "battery"}],
+    }
+    group = [dtmap.Spec(f"p{i}", s, classes) for i, s in enumerate([PMIC_SPECS[0], charger])]
+    for s in group:
+        s.file = f"acme_pmic_{s.classes[0]}"
+    battery = dtmap.Spec("battery", BATTERY_SPEC, classes)
+    return generate(
+        tmp_path,
+        config=config,
+        specs={"acme,pmic": group, "simple-battery": [battery]},
+        dts=dts,
+    )
+
+
+def test_phandle_refers_to_what_the_node_provides(tmp_path):
+    gen = battery_generate(tmp_path)
+    charger = instances(gen, "acme_pmic_sensor")
+    assert "CHARGER_DEFINE(dt_pmic_charger, &dt_pmic, &dt_battery);" in charger
+    # A battery is no device: nothing to bring up first
+    assert "PBL_DEVICE_DEPENDS" not in charger
+
+
+def test_prop_rows_become_items(tmp_path):
+    gen = battery_generate(tmp_path)
+    assert (
+        "BATTERY_DEFINE(dt_battery, 190000, {4200000, 100}, {3700000, 50}, {3300000, 0});"
+        in instances(gen, "simple_battery")
+    )
+
+
+def test_absent_prop_rows_end_the_arguments(tmp_path):
+    gen = battery_generate(tmp_path, dts=PMIC_DTS)
+    assert "BATTERY_DEFINE(dt_battery, 190000);" in instances(gen, "simple_battery")
+
+
+def test_prop_rows_of_another_width_fail(tmp_path):
+    dts = OCV_DTS.replace("<3300000 0>;", "<3300000>;")
+    with pytest.raises(DtError, match="not rows of 2 cells"):
+        battery_generate(tmp_path, dts=dts)
+
+
+def test_phandle_to_a_node_without_driver_fails(tmp_path):
+    with pytest.raises(DtError, match="has no enabled driver"):
+        battery_generate(tmp_path, config=(*ALL, "PMIC", "CHARGER"))
+
+
+def test_prop_rows_must_come_last():
+    args = [{"prop": "table", "cells": 2, "item": "{0}"}, {"prop": "other"}]
+    with pytest.raises(DtError, match="must come last"):
+        dtmap.Spec("s", {**BATTERY_SPEC, "args": args}, {"battery": BATTERY_CLASS})
+
+
 def test_ranges_translate_addresses(tmp_path):
     dts = DTS.replace(
         "    bus: bus@2000 {",
