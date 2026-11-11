@@ -7,6 +7,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
+#include <devicetree/regs.h>
 #include <hardware/sf32lb52_lptim.h>
 
 // A few clk_rtc cycles
@@ -26,11 +27,11 @@ static struct pbl_clk_notifier s_clk_nb = {
 };
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(SF32LB52_LPTIM1_BASE + offset);
+  return pbl_readl(PBL_DT_REG_LPTIM1 + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, SF32LB52_LPTIM1_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_LPTIM1 + offset);
 }
 
 // The counter runs on the low-power clock: read until two reads agree.
