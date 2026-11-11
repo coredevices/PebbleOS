@@ -13,12 +13,6 @@ choice
 config NIMBLE_HCI_SF32LB52_TRACE_NONE
     bool "Disabled"
 
-config NIMBLE_HCI_SF32LB52_TRACE_BINARY
-    bool "Binary"
-    help
-      Capture raw HCI traffic in a binary format suitable for offline
-      decoding.
-
 config NIMBLE_HCI_SF32LB52_TRACE_LOG
     bool "Log"
     help

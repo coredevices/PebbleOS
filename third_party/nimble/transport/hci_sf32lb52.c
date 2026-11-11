@@ -1,10 +1,6 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef NIMBLE_HCI_SF32LB52_TRACE_BINARY
-#include <pbl/drivers/uart.h>
-#endif // NIMBLE_HCI_SF32LB52_TRACE_BINARY
-
 #include <errno.h>
 #include <string.h>
 
@@ -40,8 +36,6 @@
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 #define HCI_WRITE_TIMEOUT_MS 10U
-
-#define HCI_TRACE_HEADER_LEN 16
 
 #define H4TL_PACKET_HOST 0x61
 #define H4TL_PACKET_CTRL 0x62
@@ -148,11 +142,7 @@ static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
   .evt = prv_alloc_evt,
 };
 
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
-static uint16_t s_hci_trace_seq;
-#endif
-
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY) || defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
 #define MAX_HCI_PKT_SIZE 1024
 static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 #endif
@@ -182,43 +172,11 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
   PBL_LOG_DBG("%s, %s %" PRIu16, type_str, (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
   PBL_LOG_HEXDUMP_DBG(data, len);
 }
-#elif defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
-  uint8_t trace_hdr[HCI_TRACE_HEADER_LEN];
-
-  // Magic for Pebble HCI, 'PBTS'
-  trace_hdr[0] = 0x50U;
-  trace_hdr[1] = 0x42U;
-  trace_hdr[2] = 0x54U;
-  trace_hdr[3] = 0x53U;
-  trace_hdr[4] = 0x06U;
-  trace_hdr[5] = 0x01U;
-  trace_hdr[6] = (len + 8U) & 0xFFU;
-  trace_hdr[7] = (len + 8U) >> 8U;
-  trace_hdr[8] = s_hci_trace_seq & 0xFFU;
-  trace_hdr[9] = s_hci_trace_seq >> 8U;
-  trace_hdr[10] = 0U;
-  trace_hdr[11] = 0U;
-  trace_hdr[12] = 0U;
-  trace_hdr[13] = 0U;
-  trace_hdr[14] = h4tl_packet;
-  trace_hdr[15] = type;
-
-  s_hci_trace_seq++;
-
-  for (uint8_t i = 0U; i < HCI_TRACE_HEADER_LEN; i++) {
-    pbl_uart_poll_out(HCI_TRACE_UART, trace_hdr[i]);
-  }
-
-  for (uint16_t i = 0U; i < len; i++) {
-    pbl_uart_poll_out(HCI_TRACE_UART, data[i]);
-  }
-}
 #else
 #define prv_hci_trace(type, data, len, h4tl_packet)
 #endif
 
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_BINARY) || defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
 void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet) {
   PBL_ASSERTN(os_mbuf_len(om) < MAX_HCI_PKT_SIZE);
   os_mbuf_copydata(om, 0, os_mbuf_len(om), s_hci_buf);
