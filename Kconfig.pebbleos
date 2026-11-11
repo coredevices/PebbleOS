@@ -354,6 +354,22 @@ config FIRMWARE_OFFSET
       Offset of the firmware image within its flash slot, reserving room
       for the image header. Defaulted per SoC in soc/*/Kconfig.defconfig.
 
+choice FIRMWARE_AREA
+    prompt "Firmware flash area to link for"
+    default FIRMWARE_AREA_MAIN
+
+config FIRMWARE_AREA_MAIN
+    bool "Main firmware"
+    help
+      The main firmware area, in the slot FIRMWARE_SLOT selects.
+
+config FIRMWARE_AREA_RECOVERY
+    bool "Recovery firmware"
+    help
+      The recovery firmware area.
+
+endchoice
+
 config FIRMWARE_SLOT
     int "Firmware flash slot to link for"
     range 0 1
@@ -362,12 +378,6 @@ config FIRMWARE_SLOT
       On boards with multiple firmware slots (PBLBOOT), which slot this
       image is linked for. Select with -DCONFIG_FIRMWARE_SLOT=1 at
       configure time.
-
-config RECOVERY_FW_AS_FW
-    bool "Link the recovery firmware into the normal firmware area"
-    help
-      Build PRF linked to the normal firmware flash area instead of its
-      own. Select with -DCONFIG_RECOVERY_FW_AS_FW=y at configure time.
 
 config FW_FLASH_SIZE
     hex

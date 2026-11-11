@@ -4,7 +4,7 @@
 # The recovery firmware shares the 1 MiB flash bank with the normal
 # firmware and is linked in the upper half.
 config FW_FLASH_SIZE
-    default 0x80000 if RECOVERY_FW && !MFG
+    default 0x80000 if FIRMWARE_AREA_RECOVERY
     # 1 MiB of flash less the 32 KiB bootloader the image is linked past.
     default 0xf8000
 
