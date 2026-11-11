@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/audio.h>
+#include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/kernel/irq.h>
 
@@ -17,7 +18,7 @@
  * The PDM interface records one or two digital microphones at 16 kHz from a 1.28 MHz clock;
  * its gain runs from -20 to +20 dB. The I2S interface plays mono at 16 kHz, sent as stereo with
  * both channels equal, and runs as a slave when the link has @ref PBL_AUDIO_FMT_CODEC_MASTER,
- * still providing a 4 MHz master clock. Both keep the high-frequency crystal on while streaming.
+ * still providing a 4 MHz master clock. Both run HFCLK from the crystal while streaming.
  * @{
  */
 
@@ -36,6 +37,8 @@ struct pbl_audio_nrf5_pdm {
   uintptr_t base;
   /** Interrupt line. */
   pbl_irq_t irq;
+  /** HFCLK, run from the crystal while streaming. */
+  struct pbl_clk hfclk;
   /** Clock pin. */
   struct pbl_gpio clk;
   /** Data pin. */
@@ -62,16 +65,18 @@ void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm);
  * @param _name Device name.
  * @param _base Register base address.
  * @param _irq Interrupt line.
+ * @param _hfclk HFCLK, from PBL_CLK().
  * @param _clk Clock pin, from PBL_GPIO().
  * @param _din Data pin, from PBL_GPIO().
  */
-#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _base, _irq, _clk, _din)                          \
+#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _base, _irq, _hfclk, _clk, _din)                  \
   PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                              \
   static struct pbl_audio_nrf5_pdm_state sym##_pdm_state;                                       \
   PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_pdm, struct pbl_audio_dai, dai){               \
     .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_nrf5_pdm_ops, nullptr), \
     .base = (_base),                                                                            \
     .irq = (_irq),                                                                              \
+    .hfclk = _hfclk,                                                                            \
     .clk = _clk,                                                                                \
     .din = _din,                                                                                \
     .state = &sym##_pdm_state,                                                                  \
@@ -98,6 +103,8 @@ struct pbl_audio_nrf5_i2s {
   uintptr_t base;
   /** Interrupt line. */
   pbl_irq_t irq;
+  /** HFCLK, run from the crystal while streaming. */
+  struct pbl_clk hfclk;
   /** Bit clock pin. */
   struct pbl_gpio sck;
   /** Frame clock pin. */
@@ -130,18 +137,20 @@ void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
  * @param _name Device name.
  * @param _base Register base address.
  * @param _irq Interrupt line.
+ * @param _hfclk HFCLK, from PBL_CLK().
  * @param _sck Bit clock pin, from PBL_GPIO().
  * @param _lrck Frame clock pin, from PBL_GPIO().
  * @param _mck Master clock pin, from PBL_GPIO().
  * @param _sdout Data out pin, from PBL_GPIO().
  */
-#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _sck, _lrck, _mck, _sdout)            \
+#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _hfclk, _sck, _lrck, _mck, _sdout)    \
   PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                               \
   static struct pbl_audio_nrf5_i2s_state sym##_i2s_state;                                        \
   PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_i2s, struct pbl_audio_dai, dai){                \
     .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_nrf5_i2s_ops, nullptr), \
     .base = (_base),                                                                             \
     .irq = (_irq),                                                                               \
+    .hfclk = _hfclk,                                                                             \
     .sck = _sck,                                                                                 \
     .lrck = _lrck,                                                                               \
     .mck = _mck,                                                                                 \

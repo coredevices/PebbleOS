@@ -17,6 +17,7 @@ config TIMER_QEMU
 
 config TIMER_NRF5_RTC
     bool "Nordic nRF5 RTC"
+    select CLK
     help
       Clock source and clock event device on RTC1, counting the 32.768 kHz
       low-frequency clock. It keeps running in every sleep mode.

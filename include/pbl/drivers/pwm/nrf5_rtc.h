@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 
+#include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/pwm.h>
 
@@ -21,13 +22,14 @@
  *
  * @code{.c}
  * PBL_PWM_NRF5_RTC_DEFINE(s_extcomin, "extcomin", NRF52_RTC2_BASE, NRF52_GPIOTE_BASE,
- *                         PBL_GPIO(&dt_gpio1, 15, 0));
+ *                         PBL_CLK(NRF52_CLOCK, NRF52_CLK_LFCLK), PBL_GPIO(&dt_gpio1, 15, 0));
  * @endcode
  * @{
  */
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_pwm_nrf5_rtc_state {
+  uint32_t rate_hz;
   uint8_t gpiote_ch;
   uint8_t ppi_ch[2];
 };
@@ -45,6 +47,8 @@ struct pbl_pwm_nrf5_rtc {
   uintptr_t base;
   /** Registers of the GPIOTE. */
   uintptr_t gpiote;
+  /** LFCLK, which the RTC counts. */
+  struct pbl_clk lfclk;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -59,15 +63,17 @@ int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev);
  * @param _name Name.
  * @param _base Registers of an RTC not used by anything else.
  * @param _gpiote Registers of the GPIOTE.
+ * @param _lfclk LFCLK, from PBL_CLK().
  * @param _out Output, from PBL_GPIO().
  */
-#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _base, _gpiote, _out)                      \
+#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _base, _gpiote, _lfclk, _out)              \
   PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                             \
   static struct pbl_pwm_nrf5_rtc_state sym##_nrf5_rtc_state;                           \
   PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5_rtc, struct pbl_pwm_controller, ctrl) { \
     .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_rtc_init, nullptr,        \
                                     &pbl_pwm_nrf5_rtc_ops),                            \
     .state = &sym##_nrf5_rtc_state, .out = _out, .base = (_base), .gpiote = (_gpiote), \
+    .lfclk = _lfclk,                                                                   \
   }
 
 /** @} */

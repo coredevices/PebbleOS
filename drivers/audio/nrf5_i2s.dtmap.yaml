@@ -9,6 +9,7 @@ args:
   - name: true
   - reg: 0
   - irq: 0
+  - clock: 0
   - gpio: sck
   - gpio: lrck
   - gpio: mck

@@ -84,6 +84,7 @@ config AUDIO_NRF5_PDM
     bool "Nordic nRF5 PDM"
     default DT_HAS_NORDIC_NRF52832_PDM_ENABLED
     depends on SOC_NRF52
+    select CLK
     help
       Capture from digital microphones on the nRF5 PDM interface.
 
@@ -91,6 +92,7 @@ config AUDIO_NRF5_I2S
     bool "Nordic nRF5 I2S"
     default DT_HAS_NORDIC_NRF52832_I2S_ENABLED
     depends on SOC_NRF52
+    select CLK
     help
       Playback through the nRF5 I2S interface.
 

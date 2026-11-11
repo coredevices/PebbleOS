@@ -57,12 +57,12 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
   uint64_t period;
   uint64_t duty;
 
-  period = ((uint64_t)state->period * NRF52_RTC_CLOCK_HZ) / PBL_NSEC_PER_SEC;
+  period = ((uint64_t)state->period * st->rate_hz) / PBL_NSEC_PER_SEC;
   if (period < 2U || period > RTC_COUNTER_MASK + 1ULL) {
     return -EINVAL;
   }
 
-  duty = ((uint64_t)state->duty_cycle * NRF52_RTC_CLOCK_HZ) / PBL_NSEC_PER_SEC;
+  duty = ((uint64_t)state->duty_cycle * st->rate_hz) / PBL_NSEC_PER_SEC;
 
   prv_stop(pwm);
 
@@ -98,12 +98,19 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
 int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev) {
   const struct pbl_pwm_nrf5_rtc *pwm = container_of(dev, const struct pbl_pwm_nrf5_rtc, ctrl.dev);
   struct pbl_pwm_nrf5_rtc_state *st = pwm->state;
+  uint64_t rate_mhz;
   uint32_t pin;
   int ret;
 
   if (pbl_device_init(&pwm->out.port->dev) != 0) {
     return -ENODEV;
   }
+
+  ret = pbl_clk_get_rate(&pwm->lfclk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+  st->rate_hz = (uint32_t)(rate_mhz / 1000U);
 
   ret = pbl_gpio_configure(&pwm->out, PBL_GPIO_OUTPUT_LOW);
   if (ret != 0) {
@@ -121,6 +128,11 @@ int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev) {
   }
 
   ret = soc_nrf_ppi_alloc(&st->ppi_ch[1]);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_clk_enable(&pwm->lfclk);
   if (ret != 0) {
     return ret;
   }
