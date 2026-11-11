@@ -10,6 +10,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
+#include <devicetree/devices.h>
 #include <hardware/sf32lb52_hpsys_aon.h>
 #include <hardware/sf32lb52_memorymap.h>
 #include <hardware/sf32lb52_pinmux.h>
@@ -195,15 +196,14 @@ static int prv_configure_pin(const struct pbl_pinctrl_sf32lb52 *ctrl, uint32_t p
 #ifdef CONFIG_PINCTRL_SF32LB52_OUTPUT_LOW
 // The GPIO driver drives the pad and selects its GPIO function
 static int prv_output_low(uint32_t pin) {
-  struct pbl_gpio gpio =
-      PBL_GPIO(SF32LB_GPIO1, PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_PAD_MSK, pin), 0);
+  struct pbl_gpio gpio = PBL_GPIO(&dt_gpio1, PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_PAD_MSK, pin), 0);
 
   if (PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_PORT_MSK, pin) != PBL_PINCTRL_SF32LB52_PORT_PA ||
       PBL_FIELD_GET(PBL_PINCTRL_SF32LB52_FSEL_MSK, pin) != 0U) {
     return -EINVAL;
   }
 
-  if (pbl_device_init(&SF32LB_GPIO1->dev) != 0) {
+  if (pbl_device_init(&dt_gpio1.dev) != 0) {
     return -ENODEV;
   }
 

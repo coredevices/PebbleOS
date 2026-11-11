@@ -38,6 +38,10 @@ properties:
 
   gpio-reserved-ranges: true
 
+  sifli,hpsys-aon:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS always-on block, where wakeup pins latch.
+
   interrupt-controller: true
 
   '#interrupt-cells':
@@ -47,8 +51,11 @@ required:
   - compatible
   - reg
   - interrupts
+  - clocks
   - gpio-controller
   - '#gpio-cells'
+  - ngpios
+  - sifli,hpsys-aon
   - interrupt-controller
   - '#interrupt-cells'
 
@@ -60,9 +67,11 @@ examples:
         compatible = "sifli,sf32lb52-gpio";
         reg = <0x500a0000 0x1000>;
         interrupts = <84>;
+        clocks = <&hpsys_rcc 25>;
         gpio-controller;
         #gpio-cells = <2>;
         ngpios = <45>;
+        sifli,hpsys-aon = <&hpsys_aon>;
         interrupt-controller;
         #interrupt-cells = <2>;
     };

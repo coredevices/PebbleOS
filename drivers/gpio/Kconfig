@@ -27,6 +27,13 @@ config GPIO_SF32LB
     help
       Support for the SiFli SF32LB GPIO controller.
 
+config GPIO_SF32LB_IRQ_PRIO
+    int "Interrupt priority"
+    default 6
+    depends on GPIO_SF32LB
+    help
+      Priority of the port interrupt.
+
 config GPIO_QEMU
     bool "QEMU GPIO"
     default DT_HAS_QEMU_PEBBLE_GPIO_ENABLED

@@ -19,7 +19,7 @@
  * interrupts locked, so the line has to be a GPIO of the SoC, not one behind a bus.
  *
  * @code{.c}
- * PBL_AUDIO_AMP_GPIO_DEFINE(s_amp, "amp", PBL_GPIO(SF32LB_GPIO1, 0, 0), nullptr,
+ * PBL_AUDIO_AMP_GPIO_DEFINE(s_amp, "amp", PBL_GPIO(&dt_gpio1, 0, 0), nullptr,
  *                           .mode_pulses = 1, .pulse_us = 2, .settle_us = 2000);
  * @endcode
  * @{

@@ -4,6 +4,15 @@
 compatible: sifli,sf32lb52-gpio
 config: GPIO_SF32LB
 class: [gpio, intc]
+define: PBL_GPIO_SF32LB_DEFINE
 symbol:
-  gpio: pbl_gpio_sf32lb_gpio1_port
-  intc: pbl_gpio_sf32lb_gpio1_intc
+  gpio: "{sym}"
+  intc: "{sym}_intc"
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - prop: ngpios
+  - reg: 0
+    of: sifli,hpsys-aon
