@@ -24,10 +24,10 @@ config SOC_SF32LB52
     help
       SiFli SF32LB52 series, selected by its lines.
 
-config SF32LB52_FTAB
+config SF32LB_FTAB
     bool "Boot ROM flash table"
     default y
-    depends on SOC_SF32LB52 && !PBLBOOT
+    depends on SOC_FAMILY_SF32LB && !PBLBOOT
     help
       Generate the flash table (FTAB) the boot ROM reads from the ptable
       partition, pointing it at the firmware image, and flash it along with
