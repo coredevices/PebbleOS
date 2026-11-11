@@ -448,3 +448,12 @@ void test_weather_db__read_stale_entries(void) {
   cl_assert_equal_i(E_DOES_NOT_EXIST,
                     weather_db_read((uint8_t *)&key, sizeof(WeatherDBKey), buf, entry_size));
 }
+
+void test_weather_db__read_into_shorter_buffer_fails(void) {
+  const WeatherDBKey *key = weather_shared_data_get_key(0);
+  const size_t size = weather_shared_data_get_entry_size(0) - 1;
+  uint8_t *buf = pbl_zalloc_check(size);
+  cl_assert_equal_i(E_INVALID_ARGUMENT,
+                    weather_db_read((uint8_t *)key, sizeof(WeatherDBKey), buf, size));
+  pbl_free(buf);
+}

@@ -240,6 +240,12 @@ status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int 
 
   PBL_ASSERTN(key_len == sizeof(WeatherDBKey));
 
+  // A record replaced by a longer one since the caller's get_len would be read cut short.
+  if (pbl_settings_get_len(&s_weather_db.settings_file, key, key_len) > (size_t)val_out_len) {
+    prv_close_file_and_unlock_mutex();
+    return E_INVALID_ARGUMENT;
+  }
+
   rv = status_from_errno(
       pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len));
   if ((rv == S_SUCCESS) && !prv_record_is_valid(val_out, (size_t)val_out_len)) {
