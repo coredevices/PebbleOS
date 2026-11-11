@@ -29,17 +29,11 @@ config TEMP_SF32LB
     help
       Support for the SiFli SF32LB temperature sensor.
 
-config TEMP_QEMU
-    bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+config TEMP_SIM
+    bool "Simulator"
+    default y if SOC_QEMU_PEBBLE || SOC_POSIX
     help
-      QEMU temperature sensor. QEMU emulates none, so it reports a fixed
-      25 degrees Celsius.
-
-config TEMP_POSIX
-    bool "POSIX"
-    default y if SOC_POSIX
-    help
-      Temperature driver for a native build (fixed value).
+      Simulated temperature sensor, reading a value set through its
+      simulator API (pbl/drivers/temp/sim.h).
 
 endif # TEMP
