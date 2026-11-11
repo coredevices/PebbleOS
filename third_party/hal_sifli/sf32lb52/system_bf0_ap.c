@@ -11,15 +11,6 @@
 #define DCACHE_SIZE 16384
 #define ICACHE_SIZE (DCACHE_SIZE << 1)
 
-#if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)
-uint32_t __Vectors;
-#endif
-
-uint32_t SystemCoreClock = 48000000UL;
-
-void SystemCoreClockUpdate(void) {
-}
-
 int mpu_dcache_invalidate(void *data, uint32_t size) {
   int r = 0;
 
@@ -50,23 +41,6 @@ int mpu_icache_invalidate(void *data, uint32_t size) {
 
 pm_power_on_mode_t SystemPowerOnModeGet(void) {
   return PM_COLD_BOOT;
-}
-
-void SystemInit(void) {
-#if defined(__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)
-  SCB->VTOR = (uint32_t)&__Vectors;
-#endif
-
-  // enable CP0/CP1/CP2 Full Access
-  SCB->CPACR |= (3U << (0U * 2U)) | (3U << (1U * 2U)) | (3U << (2U * 2U));
-
-#if defined(__FPU_USED) && (__FPU_USED == 1U)
-  SCB->CPACR |= ((3U << 10U * 2U) | // enable CP10 Full Access
-                 (3U << 11U * 2U)); // enable CP11 Full Access
-#endif
-
-  SCB_EnableICache();
-  SCB_EnableDCache();
 }
 
 // The overrides of the HAL's weak functions live here because an archive member holding only them
