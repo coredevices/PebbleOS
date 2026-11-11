@@ -10,6 +10,7 @@
 
 #include <hardware/nrf52_approtect.h>
 #include <hardware/nrf52_ficr.h>
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_nvmc.h>
 #include <hardware/nrf52_uicr.h>
 

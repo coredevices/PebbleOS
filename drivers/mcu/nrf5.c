@@ -7,6 +7,7 @@
 #include <pbl/kernel/mmio.h>
 
 #include <hardware/nrf52_ficr.h>
+#include <hardware/nrf52_memorymap.h>
 
 StatusCode mcu_get_serial(void *buf, size_t *buf_sz) {
   const uint32_t id[2] = {

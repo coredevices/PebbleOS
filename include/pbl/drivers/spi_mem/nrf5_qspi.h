@@ -21,7 +21,7 @@
  * @c CONFIG_SPI_MEM_NRF5_QSPI_IRQ_PRIO:
  *
  * @code{.c}
- * PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", NRF52_QSPI_BASE, PBL_SOC_IRQN_QSPI, 8000000,
+ * PBL_SPI_MEM_NRF5_QSPI_DEFINE(s_qspi, "qspi", 0x40029000, PBL_SOC_IRQN_QSPI, 8000000,
  *                              PBL_GPIO(&dt_gpio0, 19, 0), PBL_GPIO(&dt_gpio0, 17, 0),
  *                              PBL_GPIO(&dt_gpio0, 20, 0), PBL_GPIO(&dt_gpio0, 21, 0),
  *                              PBL_GPIO(&dt_gpio0, 22, 0), PBL_GPIO(&dt_gpio0, 23, 0));

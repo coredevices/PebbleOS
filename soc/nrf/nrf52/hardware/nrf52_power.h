@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 /* Register offsets */
 
 #define NRF52_POWER_RESETREAS_OFFSET 0x0400

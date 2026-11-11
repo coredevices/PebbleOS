@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 /* Register offsets */
 
 #define NRF52_I2S_TASKS_START_OFFSET     0x0000

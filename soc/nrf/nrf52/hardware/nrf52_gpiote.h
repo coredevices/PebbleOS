@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 #define NRF52_GPIOTE_NUM_CHANNELS 8U
 
 /* Register offsets */

@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 /* Register offsets */
 
 #define NRF52_TWIM_TASKS_STARTRX_OFFSET  0x0000

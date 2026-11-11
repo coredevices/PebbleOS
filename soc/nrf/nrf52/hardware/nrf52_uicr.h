@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 /* Register offsets */
 
 #define NRF52_UICR_PSELRESET_OFFSET(n) (0x0200 + (n) * 4)
