@@ -205,6 +205,10 @@ static void prv_stack_overflow(uint32_t *frame, uint32_t exc_return, uint32_t cf
   const bool frame_valid = !(cfsr & (ARM_SCB_CFSR_MSTKERR | ARM_SCB_CFSR_STKOF));
   struct pbl_fault_info info;
   prv_fill_info(&info, PBL_FAULT_STACK_OVERFLOW, frame_valid ? frame : nullptr, cfsr);
+  if (info.addr == 0U) {
+    // Where the frame went, for want of a valid MMFAR.
+    info.addr = (uintptr_t)frame;
+  }
 
   const bool recoverable = can_recover && prv_is_recoverable(exc_return);
   if (!recoverable) {
