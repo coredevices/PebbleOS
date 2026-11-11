@@ -5,8 +5,6 @@
 
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
-
 #define NRF52_PWM_NUM_CHANNELS 4U
 
 /* Register offsets */

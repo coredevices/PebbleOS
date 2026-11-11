@@ -8,6 +8,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_rng.h>
 
 #define CACHE_SIZE 32U

@@ -23,7 +23,7 @@
  * itself, with priority @c CONFIG_I2C_NRF5_IRQ_PRIO:
  *
  * @code{.c}
- * PBL_I2C_NRF5_DEFINE(s_i2c0, "i2c0", NRF52_TWIM0_BASE,
+ * PBL_I2C_NRF5_DEFINE(s_i2c0, "i2c0", 0x40003000,
  * PBL_SOC_IRQN_SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, 400000, PBL_GPIO(&dt_gpio0, 25,
  * PBL_GPIO_PULL_UP), PBL_GPIO(&dt_gpio0, 11, PBL_GPIO_PULL_UP));
  * @endcode

@@ -8,6 +8,7 @@
 #include <pbl/soc/nrf/ppi.h>
 #include <pbl/util/bits.h>
 
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_ppi.h>
 
 #ifdef CONFIG_NIMBLE_DRIVER_NRF5X

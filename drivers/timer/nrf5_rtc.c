@@ -6,6 +6,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_rtc.h>
 
 #define CC_EVENT 0U

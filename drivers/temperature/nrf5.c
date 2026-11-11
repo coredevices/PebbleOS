@@ -8,6 +8,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_temp.h>
 
 #define CONVERSION_TIMEOUT_US 100U

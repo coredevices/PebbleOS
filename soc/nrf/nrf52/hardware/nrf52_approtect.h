@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <hardware/nrf52_memorymap.h>
-
 /* Register offsets */
 
 #define NRF52_APPROTECT_DISABLE_OFFSET 0x0558

@@ -6,6 +6,7 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/mmio.h>
 
+#include <hardware/nrf52_memorymap.h>
 #include <hardware/nrf52_power.h>
 #include <hardware/nrf52_wdt.h>
 
