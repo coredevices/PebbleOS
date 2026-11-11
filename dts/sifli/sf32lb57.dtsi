@@ -1,0 +1,152 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
+#include <dt-bindings/clock/sifli,sf32lb57-pmuc.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v8m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+	};
+
+	xtal48m: clock-48000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <48000000>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&nvic>;
+		ranges;
+
+		hpsys_rcc: clock-controller@50000000 {
+			compatible = "sifli,sf32lb57-hpsys-rcc";
+			reg = <0x50000000 0x1000>;
+			#clock-cells = <1>;
+			#reset-cells = <1>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_HRC48>, <&pmuc SF32LB57_PMUC_CLK_HXT48>,
+				 <&pmuc SF32LB57_PMUC_CLK_HXT48_DLL>;
+			clock-names = "hrc48", "hxt48", "hxt48-dll";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+		};
+
+		pinctrl: pinctrl@50003000 {
+			compatible = "sifli,sf32lb57-pinctrl";
+			reg = <0x50003000 0x150>;
+		};
+
+		hpsys_cfg: syscon@5000b000 {
+			compatible = "sifli,sf32lb57-hpsys-cfg", "syscon";
+			reg = <0x5000b000 0x1000>;
+		};
+
+		mpi1: spi@50041000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <85>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		mpi2: spi@50042000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50042000 0x1000>, <0x12000000 0x2000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <86>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		mpi3: spi@50043000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50043000 0x1000>, <0x14000000 0xc000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <87>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		usart1: serial@50084000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50084000 0x1000>;
+			interrupts = <59>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PERI>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART1>;
+			status = "disabled";
+		};
+
+		usart2: serial@50085000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50085000 0x1000>;
+			interrupts = <74>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USART2>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART2>;
+			status = "disabled";
+		};
+
+		usart3: serial@50086000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50086000 0x1000>;
+			interrupts = <95>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USART3>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART3>;
+			status = "disabled";
+		};
+
+		wdt1: watchdog@50094000 {
+			compatible = "sifli,sf32lb57-wdt";
+			reg = <0x50094000 0x1000>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_WDT>;
+			status = "disabled";
+		};
+
+		hpsys_aon: syscon@500c0000 {
+			compatible = "sifli,sf32lb57-hpsys-aon", "syscon";
+			reg = <0x500c0000 0x1000>;
+		};
+
+		lptim1: timer@500c1000 {
+			compatible = "sifli,sf32lb57-lptim", "sifli,sf32lb52-lptim";
+			reg = <0x500c1000 0x1000>;
+			interrupts = <46>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			status = "disabled";
+		};
+
+		lptim2: timer@500c2000 {
+			compatible = "sifli,sf32lb57-lptim", "sifli,sf32lb52-lptim";
+			reg = <0x500c2000 0x1000>;
+			interrupts = <47>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			status = "disabled";
+		};
+
+		pmuc: power-management@500ca000 {
+			compatible = "sifli,sf32lb57-pmuc";
+			reg = <0x500ca000 0x1000>;
+			interrupts = <48>;
+			#clock-cells = <1>;
+			clocks = <&xtal48m>;
+			clock-names = "hxt48";
+		};
+	};
+};

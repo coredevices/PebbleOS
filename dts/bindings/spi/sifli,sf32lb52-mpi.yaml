@@ -18,7 +18,9 @@ allOf:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-mpi
+    enum:
+      - sifli,sf32lb52-mpi
+      - sifli,sf32lb57-mpi
 
   reg:
     items:
