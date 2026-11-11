@@ -68,16 +68,18 @@ flowchart TD
   cfg[".config"]
   dtmap["dtmap.py"]
   specs["*.dtmap.yaml, *.class.yaml, *.regs.yaml"]
-  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc"]
+  roles["roles.yml"]
+  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc<br/>devicetree/roles.c"]
   drv["drivers, board file"]
   dts --> dtc --> dtb --> kdt --> kconfig --> cfg --> dtmap
   dtb --> dtmap
   specs --> dtmap --> out --> drv
+  roles --> dtmap
 
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
   classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
   classDef base fill:#525252,stroke:#525252,color:#ffffff
-  class dts,out app
+  class dts,roles,out app
   class dtc,kconfig,dtmap system
   class dtb,kdt,cfg,specs,drv base
 ```
@@ -109,7 +111,8 @@ flowchart TD
      macros for it;
    - `partitions.h`, the flash partitions; see [](#devicetree-partitions);
    - `regs.h`, the registers of the blocks code reaches before there are
-     devices; see [](#devicetree-regs).
+     devices; see [](#devicetree-regs);
+   - `roles.c`, the device of each role; see [](#devicetree-roles).
 
 `dtc` is needed to configure a board with a tree; see
 {doc}`../../getting_started/index`.
@@ -229,23 +232,53 @@ that is disabled, or whose driver is not enabled, fails the build, and the
 provider is initialized before the consumer; see
 [](#devicetree-init-order).
 
-### Choices
+(devicetree-roles)=
 
-Choices between devices are not in the tree: which UART is the console, which
-flash holds the filesystem, which sensor is `ACCEL`. The board file makes them
-by name:
+### Roles
+
+Which device code uses for a purpose is not in the tree: which UART is the
+console, which flash holds the filesystem, which sensor is the accelerometer.
+These are roles. Each class lists the roles of its devices, with the Kconfig
+symbol that needs them, if any:
+
+```yaml
+class: audio
+type: struct pbl_audio
+include: pbl/drivers/audio.h
+roles:
+  mic: MIC
+  speaker: SPEAKER
+```
+
+A role is reached from C as its name in capitals, a pointer declared by the
+class header, as `SPEAKER`.
+
+A board gives each role it has a device in `boards/<board>/roles.yml`, and
+a revision changes them in `roles.<revision>.yml`. A device is the label of
+a node, or a symbol for a device defined in C, with the header declaring it:
+
+```yaml
+console_uart: uart2
+flash: flash0
+accel:
+  symbol: QEMU_ACCEL
+  include: pbl/drivers/imu/qemu.h
+```
+
+An application changes them in its `roles.yml`, then in
+`boards/<board>.roles.yml`: a role there replaces the board's, and `null`
+removes it. A class object of the node is taken, so a node implementing
+several classes, as a display with its backlight, can have several roles.
+
+`dtmap.py` writes `devicetree/roles.c`, defining each role whose symbol is
+enabled:
 
 ```c
-const struct pbl_uart *const CONSOLE_UART = &dt_usart1;
-const struct pbl_flash *const FLASH = &dt_flash0;
 const struct pbl_accel *const ACCEL = &dt_lsm6dso;
 ```
 
-```{warning}
-Making these choices in the board file is temporary. They are expected to
-move to a description of their own, such as YAML files that an application
-can overlay, so that boards end up with no C file.
-```
+An enabled symbol whose role has no device, or a device with no driver, fails
+the build. A role no symbol needs is left out when its device has no driver.
 
 (devicetree-overlays)=
 
@@ -482,11 +515,12 @@ Code reaches a labelled device as `dt_<label>`, declared in
 ```c
 #include <devicetree/devices.h>
 
-const struct pbl_display *const DISPLAY = &dt_lcdc0;
+pbl_display_clear(&dt_lcdc0);
 ```
 
 Unlabelled devices can only be reached through other nodes, such as a sensor
-through its bus.
+through its bus. Code that needs a kind of device rather than a particular
+one uses its role, such as `DISPLAY`; see [](#devicetree-roles).
 
 (devicetree-partitions)=
 

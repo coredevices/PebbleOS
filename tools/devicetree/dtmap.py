@@ -13,6 +13,10 @@ Instance files only include class headers, so drivers do not need to know each o
 
 A labelled node is reached from other code as dt_<label>, of the type of its class, declared in
 devicetree/devices.h.
+
+Roles name the device code uses for a purpose, as ACCEL or CONSOLE_UART. Classes list the roles of
+their devices, and roles.yml files of the board and the application give each role a device, which
+devicetree/roles.c points the role at.
 """
 
 import argparse
@@ -49,7 +53,8 @@ SPEC_KEYS = {
     "header",
 }
 CHILDREN_KEYS = {"node", "names"}
-CLASS_KEYS = {"class", "type", "include", "provides", "device"}
+CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
+ROLE_KEYS = {"symbol", "include"}
 PINCTRL_KEYS = {"define", "pin", "flags", "values"}
 IDS_KEYS = {"cell", "header", "prefix", "values"}
 IDS_VALUES_KEYS = {"header", "prefix"}
@@ -270,10 +275,18 @@ def load_class(path, data):
         return DtError(f"{path}: {message}")
 
     check_keys(error, data, CLASS_KEYS, "class", ("class", "type", "include"))
+    roles = data.get("roles", {})
+    if not isinstance(roles, dict):
+        raise error("roles: not a mapping of each role to the Kconfig symbol needing it")
+    for role, config in roles.items():
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", str(role)):
+            raise error(f"role '{role}': not a lowercase C identifier")
+        if config is not None and not isinstance(config, str):
+            raise error(f"role '{role}': {config!r} is not a Kconfig symbol")
     return data
 
 
-def load_specs(srcdir, appdir=None):
+def load_classes(srcdir, appdir=None):
     classes = {}
     for path in find_files(srcdir, "*.class.yaml", appdir):
         with open(path) as f:
@@ -281,6 +294,23 @@ def load_specs(srcdir, appdir=None):
         if data["class"] in classes:
             raise DtError(f"{path}: another file has class '{data['class']}'")
         classes[data["class"]] = data
+    return classes
+
+
+def load_roles(classes):
+    """The class of each role, and the Kconfig symbol needing it, as {role: (class, config)}."""
+    roles = {}
+    for cls in classes.values():
+        for role, config in cls.get("roles", {}).items():
+            if role in roles:
+                other = roles[role][0]["class"]
+                raise DtError(f"role '{role}' is in classes {other} and {cls['class']}")
+            roles[role] = (cls, config)
+    return roles
+
+
+def load_specs(srcdir, appdir=None):
+    classes = load_classes(srcdir, appdir)
     specs = {}
     include_dir = Path(srcdir) / "include"
     for path in find_files(srcdir, "*.dtmap.yaml", appdir):
@@ -422,6 +452,8 @@ class Generator:
         self.consumed = set()
         self.devices = {}
         self.pin_states = {}
+        # The class objects of each labelled device, as {label: {class: symbol}}
+        self.labelled = {}
 
     def _device(self, node):
         if node.path not in self.devices:
@@ -529,6 +561,8 @@ class Generator:
         symbols = self._class_symbols(dev, spec)
         for name, symbol in symbols.items():
             self._declare(spec.class_info[name], symbol)
+        for label in [dev.label, *dev.aliases] if dev.label else []:
+            self.labelled.setdefault(label, {}).update(symbols)
         for label in dev.aliases:
             others = self._class_symbols(dev, spec, f"dt_{label}")
             for name, alias in others.items():
@@ -1247,6 +1281,93 @@ def regs_header(tree, regs, config):
     return "\n".join(lines) + "\n"
 
 
+ROLES_SOURCE = "devicetree/roles.c"
+ROLES_FILE = "roles.yml"
+
+
+def role_files(srcdir, board, revision, appdir=None):
+    """The roles files of the board, its revision and the application, in the order they apply."""
+    paths = [Path(srcdir) / "boards" / board / ROLES_FILE]
+    if revision:
+        paths.append(Path(srcdir) / "boards" / board / f"roles.{revision}.yml")
+    if appdir is not None:
+        paths += [Path(appdir) / ROLES_FILE, Path(appdir) / "boards" / f"{board}.{ROLES_FILE}"]
+    return paths
+
+
+def merge_roles(paths):
+    """The device of each role: a later file replaces a role, or removes it with null."""
+    roles = {}
+    for path in paths:
+        if not Path(path).exists():
+            continue
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+        if not isinstance(data, dict):
+            raise DtError(f"{path}: not a mapping of roles to devices")
+        for role, device in data.items():
+            if device is None:
+                roles.pop(role, None)
+                continue
+            if isinstance(device, dict):
+                check_keys(
+                    lambda message, path=path: DtError(f"{path}: {message}"),
+                    device,
+                    ROLE_KEYS,
+                    f"role '{role}'",
+                    ("symbol",),
+                )
+            elif not isinstance(device, str):
+                raise DtError(f"{path}: role '{role}': {device!r} is not a label or a symbol")
+            roles[role] = device
+    return roles
+
+
+def roles_source(gen, roles, chosen, config):
+    """devicetree/roles.c: each role pointing at its device.
+
+    A role needed by an enabled Kconfig symbol must have a device with a driver. Other roles are
+    left out while their symbol is disabled, or their device has no driver.
+    """
+    labels = set()
+    if gen.tree is not None:
+        labels = {label for node in gen.tree.nodes() for label in node.labels}
+    includes = {"devicetree/devices.h"}
+    lines = []
+    for role, device in sorted(chosen.items()):
+        if role not in roles:
+            raise DtError(f"unknown role '{role}', not one of {sorted(roles)}")
+        cls, needed_by = roles[role]
+        if needed_by is not None and needed_by not in config:
+            continue
+        if isinstance(device, dict):
+            target = device["symbol"]
+            includes.update(as_list(device.get("include", [])))
+        else:
+            if device not in labels:
+                raise DtError(f"role '{role}': no node is labelled '{device}'")
+            symbol = gen.labelled.get(device, {}).get(cls["class"])
+            if symbol is None:
+                if needed_by is None and device not in gen.labelled:
+                    continue
+                if device in gen.labelled:
+                    raise DtError(f"role '{role}': '{device}' is no {cls['class']}")
+                raise DtError(
+                    f"role '{role}': '{device}' has no driver, and CONFIG_{needed_by} needs it"
+                )
+            target = f"&{symbol}"
+        includes.add(cls["include"])
+        lines.append(f"const {cls['type']} *const {role.upper()} = {target};")
+    for role, (_, needed_by) in sorted(roles.items()):
+        if needed_by in config and role not in chosen:
+            raise DtError(f"role '{role}' has no device, and CONFIG_{needed_by} needs it")
+    out = ["/* Generated from the device roles of the board. */", ""]
+    out += [f"#include <{include}>" for include in sorted(includes)]
+    if lines:
+        out += ["", *lines]
+    return "\n".join(out) + "\n"
+
+
 def write_if_changed(path, content):
     path = Path(path)
     if path.exists() and path.read_bytes() == content:
@@ -1386,7 +1507,11 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
         raise DtError(f"{overlays[0]}: board {board} has no devicetree to overlay")
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, [*specs, PARTITIONS]).encode())
-    outputs = [PARTITIONS_HEADER, REGS_HEADER, *instance_files(specs)]
+    paths = role_files(srcdir, board, revision, appdir)
+    deps += [str(path) for path in paths if path.exists()]
+    roles = merge_roles(paths)
+    write_if_changed(outdir / ROLES_FILE, yaml.safe_dump(roles, sort_keys=True).encode())
+    outputs = [PARTITIONS_HEADER, REGS_HEADER, ROLES_SOURCE, *instance_files(specs)]
     return str(dtb) if dtb else None, outputs, deps
 
 
@@ -1408,6 +1533,7 @@ def main():
     )
     parser.add_argument("--dtb", help="the compiled tree, if the board has one")
     parser.add_argument("--config", required=True, help="the .config file")
+    parser.add_argument("--roles", help="the device of each role, merged at configuration")
     parser.add_argument(
         "--outdir", required=True, help="include directory to generate into"
     )
@@ -1421,6 +1547,13 @@ def main():
         generator.run()
         partitions = partitions_header(tree)
         regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
+        chosen = {}
+        if args.roles:
+            with open(args.roles) as f:
+                chosen = yaml.safe_load(f) or {}
+        roles = roles_source(
+            generator, load_roles(load_classes(args.srcdir, args.appdir)), chosen, config
+        )
     except DtError as error:
         sys.exit(f"devicetree: {error}")
 
@@ -1428,6 +1561,7 @@ def main():
         "devicetree/devices.h": generator.header(),
         PARTITIONS_HEADER: partitions,
         REGS_HEADER: regs,
+        ROLES_SOURCE: roles,
         **generator.instances(),
     }
     for name, text in outputs.items():

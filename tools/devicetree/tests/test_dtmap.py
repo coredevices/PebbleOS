@@ -1969,6 +1969,109 @@ def test_regs_of_node_without_reg_fail(tmp_path):
     with pytest.raises(DtError, match="bus-node has no reg"):
         regs(tmp_path, ["nameless"])
 
+
+ROLES = {
+    "sensor": (CLASSES["sensor"], "SENSOR"),
+    "main_bus": (CLASSES["bus"], None),
+    "aux_bus": (CLASSES["bus"], None),
+}
+
+
+def roles_c(tmp_path, chosen, config=ALL, roles=ROLES, **kwargs):
+    gen = generate(tmp_path, config=config, **kwargs)
+    return dtmap.roles_source(gen, roles, chosen, set(config))
+
+
+def test_roles_point_at_their_device(tmp_path):
+    source = roles_c(tmp_path, {"sensor": "sensor", "main_bus": "bus"})
+    assert "#include <devicetree/devices.h>" in source
+    assert "#include <sensor.h>" in source
+    assert "const struct sensor *const SENSOR = &dt_sensor;" in source
+    assert "const struct bus *const MAIN_BUS = &dt_bus;" in source
+
+
+def test_roles_take_symbols_of_c_devices(tmp_path):
+    chosen = {"sensor": {"symbol": "HOST_SENSOR", "include": "host/sensor.h"}}
+    source = roles_c(tmp_path, chosen)
+    assert "#include <host/sensor.h>" in source
+    assert "const struct sensor *const SENSOR = HOST_SENSOR;" in source
+
+
+def test_roles_of_disabled_symbols_are_left_out(tmp_path):
+    source = roles_c(tmp_path, {"sensor": "sensor"}, config=("CTRL", "PINCTRL", "BUS"))
+    assert "SENSOR" not in source
+
+
+def test_roles_without_a_symbol_need_no_driver(tmp_path):
+    source = roles_c(tmp_path, {"main_bus": "bus"}, config=("CTRL", "PINCTRL"))
+    assert "MAIN_BUS" not in source
+
+
+def test_needed_role_without_a_device_fails(tmp_path):
+    with pytest.raises(DtError, match="role 'sensor' has no device, and CONFIG_SENSOR"):
+        roles_c(tmp_path, {})
+
+
+def test_needed_role_without_a_driver_fails(tmp_path):
+    with pytest.raises(DtError, match="'sensor' has no driver, and CONFIG_SENSOR"):
+        roles_c(tmp_path, {"sensor": "sensor"}, sensor='status = "disabled";')
+
+
+def test_role_of_another_class_fails(tmp_path):
+    with pytest.raises(DtError, match="'bus' is no sensor"):
+        roles_c(tmp_path, {"sensor": "bus"})
+
+
+def test_unknown_role_fails(tmp_path):
+    with pytest.raises(DtError, match="unknown role 'gyro'"):
+        roles_c(tmp_path, {"gyro": "sensor", "sensor": "sensor"})
+
+
+def test_unknown_label_fails(tmp_path):
+    with pytest.raises(DtError, match="no node is labelled 'nope'"):
+        roles_c(tmp_path, {"sensor": "nope"})
+
+
+def test_roles_follow_other_labels(tmp_path):
+    chosen = {"sensor": "sensor", "aux_bus": "abus"}
+    source = roles_c(tmp_path, chosen, dts=DTS + "abus: &bus { };\n")
+    assert "const struct bus *const AUX_BUS = &dt_abus;" in source
+
+
+def test_later_roles_files_override(tmp_path):
+    board = tmp_path / "board.yml"
+    board.write_text("sensor: sensor\nmain_bus: bus\naux_bus: bus\n")
+    app = tmp_path / "app.yml"
+    app.write_text("main_bus: other\naux_bus: null\n")
+    roles = dtmap.merge_roles([board, tmp_path / "missing.yml", app])
+    assert roles == {"sensor": "sensor", "main_bus": "other"}
+
+
+@pytest.mark.parametrize(
+    "text, message",
+    [
+        ("- sensor\n", "not a mapping"),
+        ("sensor: 3\n", "is not a label or a symbol"),
+        ("sensor: {include: a.h}\n", "missing \\['symbol'\\]"),
+        ("sensor: {symbol: A, other: 1}\n", "unknown \\['other'\\]"),
+    ],
+)
+def test_bad_roles_files_are_rejected(tmp_path, text, message):
+    path = tmp_path / "roles.yml"
+    path.write_text(text)
+    with pytest.raises(DtError, match=message):
+        dtmap.merge_roles([path])
+
+
+def test_role_in_two_classes_fails():
+    classes = {
+        "a": {**CLASSES["bus"], "roles": {"main_bus": None}},
+        "b": {**CLASSES["sensor"], "roles": {"main_bus": None}},
+    }
+    with pytest.raises(DtError, match="role 'main_bus' is in classes bus and sensor"):
+        dtmap.load_roles(classes)
+
+
 def test_overlays_change_the_tree(tmp_path):
     dtc()
     if shutil.which("cc") is None:

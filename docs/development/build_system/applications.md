@@ -102,6 +102,8 @@ on top of the board's defconfig (see {doc}`kconfig`):
 | `boards/<board>.conf` | What it enables or tunes on one board |
 | `boards/<board>_<variant>.conf` | The same, for one variant only |
 | `Kconfig` | The application's own options |
+| `roles.yml` | The device of each role, over the board's; see {ref}`devicetree-roles` |
+| `boards/<board>.roles.yml` | The same, on one board |
 | `app.overlay` | Changes to the board's devicetree; see {ref}`devicetree-overlays` |
 | `boards/<board>.overlay` | The same, on one board |
 
