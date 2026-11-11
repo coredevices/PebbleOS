@@ -6,6 +6,7 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/display/sf32lb_lcdc.h>
 #include <pbl/drivers/panel.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
@@ -14,7 +15,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -275,10 +275,7 @@ static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
   uint32_t layer;
   int ret;
 
-  uintptr_t fb_addr = (uintptr_t)first;
-  size_t fb_size = (size_t)(state->y1 - state->y0 + 1) * state->pitch;
-  dcache_align(&fb_addr, &fb_size);
-  dcache_flush((const void *)fb_addr, fb_size);
+  pbl_dcache_flush_range(first, (size_t)(state->y1 - state->y0 + 1) * state->pitch);
 
   uint16_t roi_y0 = state->y0;
   uint16_t roi_y1 = state->y1;
@@ -377,10 +374,7 @@ static void prv_silent_loss_handler(struct pbl_work *work) {
   }
 
   prv_snapshot_lcdc_regs(s_lcdc);
-  uintptr_t snap_addr = (uintptr_t)s_lcdc_pre_crash_regs;
-  size_t snap_size = sizeof(s_lcdc_pre_crash_regs);
-  dcache_align(&snap_addr, &snap_size);
-  dcache_flush((const void *)snap_addr, snap_size);
+  pbl_dcache_flush_range((const void *)s_lcdc_pre_crash_regs, sizeof(s_lcdc_pre_crash_regs));
   pbl_panic("LCDC silent loss: no EOF in %ums (STATUS=0x%lx y=%u..%u)",
             (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS,
             (unsigned long)prv_read(s_lcdc, SF32LB52_LCDC_STATUS_OFFSET), (unsigned)state->y0,

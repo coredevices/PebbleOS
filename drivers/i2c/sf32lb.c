@@ -6,10 +6,10 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/i2c/sf32lb.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
@@ -198,7 +198,7 @@ static int prv_dma_start(const struct pbl_i2c_sf32lb *i2c) {
   int ret;
 
   // Dropping the buffer's lines now keeps a dirty one from being evicted over the DMA data
-  dcache_invalidate(msg->buf, DCACHE_ROUND_UP(msg->len));
+  pbl_dcache_invalidate_range(msg->buf, msg->len);
 
   ret =
       pbl_dma_prep_slave_single(i2c->dma, msg->buf, msg->len, PBL_DMA_DEV_TO_MEM, nullptr, nullptr);
@@ -220,7 +220,7 @@ static void prv_dma_finish(const struct pbl_i2c_sf32lb *i2c) {
   (void)pbl_dma_terminate(i2c->dma);
   pbl_modifyl(I2C_CR_DMAEN | I2C_CR_LASTNACK | I2C_CR_LASTSTOP, 0U,
               i2c->base + SF32LB52_I2C_CR_OFFSET);
-  dcache_invalidate(msg->buf, DCACHE_ROUND_UP(msg->len));
+  pbl_dcache_invalidate_range(msg->buf, msg->len);
   state->dma = false;
 }
 
@@ -410,7 +410,6 @@ static int prv_init(const struct pbl_i2c_bus *bus) {
       .src_addr_width = PBL_DMA_SLAVE_BUSWIDTH_1_BYTE,
     };
 
-    PBL_ASSERTN(dcache_line_size() <= DCACHE_LINE_SIZE_MAX);
     ret = pbl_device_init(&i2c->dma->ctrl->dev);
     if (ret != 0) {
       return ret;

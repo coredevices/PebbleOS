@@ -8,12 +8,12 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
 #include <pbl/kernel/barrier.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
-#include <pbl/mcu/cache.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -245,9 +245,8 @@ static PBL_SECTION_RAM void prv_ram_poll(uintptr_t base, const struct ccr_op *cm
   pbl_irq_restore_all(key);
 }
 
-static PBL_ALWAYS_INLINE void prv_read_window(uintptr_t mem_base, uint32_t *words,
-                                              uint32_t line_size) {
-  dcache_invalidate_inline(mem_base, CHECK_WORDS * WORD_SIZE, line_size);
+static PBL_ALWAYS_INLINE void prv_read_window(uintptr_t mem_base, uint32_t *words) {
+  pbl_dcache_invalidate_range((void *)mem_base, CHECK_WORDS * WORD_SIZE);
 
   for (size_t i = 0U; i < CHECK_WORDS; i++) {
     words[i] = *(const volatile uint32_t *)(mem_base + (i * WORD_SIZE));
@@ -289,7 +288,7 @@ static PBL_SECTION_RAM void prv_ram_poll_suspend(uintptr_t base, const struct cc
 
 // Changes the window's read command, keeping the previous one if the window reads differently
 static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, uint8_t opcode,
-                                            uint32_t ccr, uint32_t line_size) {
+                                            uint32_t ccr) {
   const unsigned int key = pbl_irq_disable_all();
   uint32_t before[CHECK_WORDS];
   uint32_t after[CHECK_WORDS];
@@ -298,14 +297,14 @@ static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, 
   uint32_t hrabr = pbl_readl(base + SF32LB52_MPI_HRABR_OFFSET);
   int ret = 0;
 
-  prv_read_window(mem_base, before, line_size);
+  prv_read_window(mem_base, before);
 
   pbl_writel(ALT_BYTE, base + SF32LB52_MPI_HRABR_OFFSET);
   pbl_writel(ccr, base + SF32LB52_MPI_HRCCR_OFFSET);
   pbl_writel((hcmdr & ~MPI_HCMDR_RCMD_MASK) | PBL_FIELD_PREP(MPI_HCMDR_RCMD_MASK, opcode),
              base + SF32LB52_MPI_HCMDR_OFFSET);
 
-  prv_read_window(mem_base, after, line_size);
+  prv_read_window(mem_base, after);
 
   for (size_t i = 0U; i < CHECK_WORDS; i++) {
     if (before[i] != after[i]) {
@@ -317,7 +316,7 @@ static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, 
     pbl_writel(hrabr, base + SF32LB52_MPI_HRABR_OFFSET);
     pbl_writel(hrccr, base + SF32LB52_MPI_HRCCR_OFFSET);
     pbl_writel(hcmdr, base + SF32LB52_MPI_HCMDR_OFFSET);
-    prv_read_window(mem_base, after, line_size);
+    prv_read_window(mem_base, after);
   }
 
   pbl_irq_restore_all(key);
@@ -461,7 +460,7 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
     return 0;
   }
 
-  return prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr, dcache_line_size());
+  return prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr);
 }
 
 static int prv_dirmap_read(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_dirmap *desc,
@@ -475,7 +474,6 @@ static void prv_dirmap_invalidate(const struct pbl_spi_mem *mem,
                                   const struct pbl_spi_mem_dirmap *desc, uint32_t offs,
                                   size_t len) {
   uintptr_t addr;
-  size_t size;
 
   if (offs >= desc->offset + desc->length) {
     return;
@@ -483,14 +481,8 @@ static void prv_dirmap_invalidate(const struct pbl_spi_mem *mem,
 
   len = MIN(len, desc->offset + desc->length - offs);
   addr = prv_mem_base(prv_mpi(mem)) + offs;
-  size = len;
-  dcache_align(&addr, &size);
-  dcache_invalidate((void *)addr, size);
-
-  addr = prv_mem_base(prv_mpi(mem)) + offs;
-  size = len;
-  icache_align(&addr, &size);
-  icache_invalidate((void *)addr, size);
+  pbl_dcache_invalidate_range((void *)addr, len);
+  pbl_icache_invalidate_range((const void *)addr, len);
 }
 
 static int prv_init(const struct pbl_spi_mem *mem) {

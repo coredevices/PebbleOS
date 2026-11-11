@@ -55,9 +55,9 @@
 /** Continue the previous write without a repeated START or address. Writes only. */
 #define PBL_I2C_MSG_NOSTART PBL_BIT(1)
 /**
- * The buffer may be accessed through DMA: aligned to @ref DCACHE_LINE_SIZE_MAX and owning the
- * whole cache lines it covers, @c DCACHE_ROUND_UP(len) bytes. Declare it with
- * @c PBL_ALIGNED(DCACHE_LINE_SIZE_MAX) and that size.
+ * The buffer may be accessed through DMA: aligned to @ref PBL_DCACHE_LINE_SIZE and owning the
+ * whole cache lines it covers, @c PBL_DCACHE_ROUND_UP(len) bytes. Declare it with
+ * @c PBL_ALIGNED(PBL_DCACHE_LINE_SIZE) and that size.
  */
 #define PBL_I2C_MSG_DMA_SAFE PBL_BIT(2)
 /** @} */
