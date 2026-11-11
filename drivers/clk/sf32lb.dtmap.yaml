@@ -5,7 +5,7 @@ compatible: sifli,sf32lb52-hpsys-rcc
 config: CLK_SF32LB
 class: clk
 symbol: pbl_clk_sf32lb_hpsys_rcc
-define: PBL_CLK_SF32LB_DEFINE
+define: PBL_CLK_SF32LB52_DEFINE
 args:
   - name: true
   - reg: 0
