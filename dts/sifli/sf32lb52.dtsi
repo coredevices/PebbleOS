@@ -109,8 +109,9 @@
 			sram = <&lcpu_sram>;
 			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
 				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
-				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>;
-			clock-names = "hclk", "pclk", "pclk2";
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>,
+				 <&rtc>;
+			clock-names = "hclk", "pclk", "pclk2", "lpclk";
 			status = "disabled";
 		};
 

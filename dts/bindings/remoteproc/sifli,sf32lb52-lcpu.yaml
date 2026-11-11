@@ -59,12 +59,14 @@ properties:
       - description: LCPU clock
       - description: LPSYS APB clock
       - description: LPSYS second APB clock
+      - description: Low-power clock, from the RTC
 
   clock-names:
     items:
       - const: hclk
       - const: pclk
       - const: pclk2
+      - const: lpclk
 
 required:
   - compatible
@@ -94,6 +96,6 @@ examples:
         mbox-names = "tx", "rx";
         memory-region = <&lcpu_ipc>;
         sram = <&lcpu_sram>;
-        clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>;
-        clock-names = "hclk", "pclk", "pclk2";
+        clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>, <&rtc>;
+        clock-names = "hclk", "pclk", "pclk2", "lpclk";
     };
