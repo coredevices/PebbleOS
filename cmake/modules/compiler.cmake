@@ -171,9 +171,4 @@ execute_process(
 )
 add_compile_definitions(MAX_FONT_GLYPH_SIZE=${PBL_MAX_FONT_GLYPH_SIZE})
 
-# Stationary mode is for shipping watch firmware only.
-if(NOT CONFIG_RECOVERY_FW AND NOT CONFIG_QEMU AND NOT CONFIG_SOC_POSIX AND NOT CONFIG_SHELL_SDK)
-  add_compile_definitions(STATIONARY_MODE)
-endif()
-
 add_compile_definitions(FIRMWARE_OFFSET=${CONFIG_FIRMWARE_OFFSET})
