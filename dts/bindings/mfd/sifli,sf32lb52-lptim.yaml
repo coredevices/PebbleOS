@@ -15,7 +15,11 @@ description:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-lptim
+    oneOf:
+      - const: sifli,sf32lb52-lptim
+      - items:
+          - const: sifli,sf32lb57-lptim
+          - const: sifli,sf32lb52-lptim
 
   reg:
     maxItems: 1
