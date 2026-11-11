@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pbl/coredump/coredump.h>
 #include <pbl/device.h>
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/mbox.h>
@@ -46,6 +47,15 @@ struct pbl_rproc_sf32lb52 {
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_rproc_ops pbl_rproc_sf32lb52_ops;
 int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
+void pbl_rproc_sf32lb52_coredump_prepare(void);
+
+#ifdef CONFIG_COREDUMP
+#define PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size)               \
+  PBL_COREDUMP_LATE_REGION_DEFINE(sym##_sram, (const void *)(_sram_base), _sram_size, \
+                                  pbl_rproc_sf32lb52_coredump_prepare)
+#else
+#define PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size) static_assert(true)
+#endif
 /** @endcond */
 
 /**
@@ -66,6 +76,7 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
  */
 #define PBL_RPROC_SF32LB52_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base,        \
                                   _mem_size, _sram_base, _sram_size, _hclk, _pclk, _pclk2)       \
+  PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                               \
   PBL_RPROC_STATE_DEFINE(sym);                                                                   \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                 \
     .rproc =                                                                                     \

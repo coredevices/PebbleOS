@@ -165,6 +165,15 @@ static void prv_stop(const struct pbl_rproc *rproc) {
   HAL_HPAON_CANCEL_LP_ACTIVE_REQUEST();
 }
 
+#ifdef CONFIG_COREDUMP
+// Waking the LCPU busy-waits for its ack. If it is fully powered down this blocks until the
+// watchdog reboots us, costing only the end of the dump. We reset right after, so the wake is
+// never balanced.
+void pbl_rproc_sf32lb52_coredump_prepare(void) {
+  soc_sf32lb52_lpsys_wake();
+}
+#endif
+
 const struct pbl_rproc_ops pbl_rproc_sf32lb52_ops = {
   .start = prv_start,
   .stop = prv_stop,
