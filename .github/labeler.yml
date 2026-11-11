@@ -6,7 +6,6 @@ pending:hw-validation:
           - soc/**
           - subsys/bluetooth/**
           - third_party/hal_nordic/**
-          - third_party/hal_sifli/**
           - third_party/nimble/**
 
 pending:sdk-review:

@@ -42,23 +42,6 @@ components:
     purl: pkg:github/NordicSemiconductor/nrfx@v3.11.0
     url: https://github.com/NordicSemiconductor/nrfx
 
-  - name: SiFli-SDK
-    path: hal_sifli/SiFli-SDK
-    nested: [external]
-    supplier: SiFli Technology
-    description: SiFli-SDK v2.4.0 with PebbleOS changes
-    commit: 1f7536a53379207a048a846a804c2eefe165ebe1
-    license: Apache-2.0
-    purl: pkg:github/coredevices/SiFli-SDK@1f7536a53379207a048a846a804c2eefe165ebe1
-    url: https://github.com/coredevices/SiFli-SDK
-
-  - name: SiFli-SDK-CMSIS
-    path: hal_sifli/SiFli-SDK/external/CMSIS
-    supplier: Arm Limited
-    description: CMSIS headers as bundled in SiFli-SDK
-    commit: 1f7536a53379207a048a846a804c2eefe165ebe1
-    license: Apache-2.0
-
   - name: mbedtls
     path: mbedtls/mbedtls
     nested: [3rdparty]
