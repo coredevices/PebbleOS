@@ -69,6 +69,7 @@ ARG_KINDS = {
     "assigned-clocks",
     "dma",
     "gpio",
+    "io-channel",
     "pinctrl",
     "parent",
     "self",
@@ -1146,6 +1147,15 @@ class Generator:
                 raise src.error(f"no pwm {index}")
             target, cells = entries[index]
             return self._provided(src, target, "pwm", cells)
+        if kind == "io-channel":
+            if not node.has("io-channels"):
+                return None
+            index = self._index(src, key, "io-channel-names")
+            entries = self._phandles(src, "io-channels", "#io-channel-cells")
+            if index >= len(entries):
+                raise src.error(f"no io-channel {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "io-channel", cells)
         if kind == "supply":
             prop = f"{key}-supply"
             if not node.has(prop):
