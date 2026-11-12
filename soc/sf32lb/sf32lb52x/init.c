@@ -30,6 +30,8 @@
 
 #define PWRKEY_RESET_CNT (32000 * 15)
 
+#define WDT_CMD_TIMEOUT_US 48000U
+
 #define DEEPWFI_HDIV  12U
 #define DEEPWFI_PDIV1 0U
 #define DEEPWFI_PDIV2 1U
@@ -72,6 +74,31 @@ static void prv_gtimer_start(void) {
   pbl_writel(1U, HPSYS_AON(GTIMR));
 }
 
+#ifdef CONFIG_PBLBOOT
+static void prv_wdt_command(uint32_t cmd, bool active) {
+  pbl_writel(cmd, PBL_DT_REG_WDT1 + SF32LB52_WDT_CCR_OFFSET);
+  (void)PBL_POLL_BUSY_US(
+      ((pbl_readl(PBL_DT_REG_WDT1 + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) != 0U) == active,
+      1U, WDT_CMD_TIMEOUT_US);
+}
+
+//! PBLBOOT leaves its watchdog running with a timeout of a few seconds, which the watchdog
+//! device only takes over once it is up, after slow devices such as a touch controller updating
+//! its firmware. Give it our timeout until then, or stop it without the watchdog.
+static void prv_wdt_takeover(void) {
+  if ((pbl_readl(PBL_DT_REG_WDT1 + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U) {
+    return;
+  }
+
+  prv_wdt_command(WDT_CCR_STOP, false);
+#ifdef CONFIG_WATCHDOG
+  // At most 32 kHz, the fastest of its clocks
+  pbl_writel(32U * CONFIG_WATCHDOG_TIMEOUT_MS, PBL_DT_REG_WDT1 + SF32LB52_WDT_CVR0_OFFSET);
+  prv_wdt_command(WDT_CCR_START, true);
+#endif
+}
+#endif
+
 void pbl_soc_early_init(void) {
   // Busy waits count cycles, and the bootloader may have left any clock running
   SystemCoreClock = prv_hclk_hz();
@@ -101,11 +128,8 @@ void pbl_soc_early_init(void) {
 
   prv_gtimer_start();
 
-#ifndef CONFIG_WATCHDOG
-  // The bootloader leaves its watchdog running, which the watchdog driver takes over otherwise
-  pbl_writel(WDT_CCR_STOP, PBL_DT_REG_WDT1 + SF32LB52_WDT_CCR_OFFSET);
-  (void)PBL_POLL_BUSY_US(
-      (pbl_readl(PBL_DT_REG_WDT1 + SF32LB52_WDT_SR_OFFSET) & WDT_SR_WDT_ACTIVE) == 0U, 1U, 48000U);
+#ifdef CONFIG_PBLBOOT
+  prv_wdt_takeover();
 #endif
 
   soc_sf32lb52_lpsys_release();
