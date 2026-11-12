@@ -764,6 +764,7 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
 static const struct pbl_flash_nor_part *const s_parts[] = {
   &pbl_flash_nor_gd25lq255e,
   &pbl_flash_nor_gd25q256e,
+  &pbl_flash_nor_py25q128ha,
 };
 
 static const struct pbl_flash_nor_part *prv_find_part(uint32_t jedec_id) {
