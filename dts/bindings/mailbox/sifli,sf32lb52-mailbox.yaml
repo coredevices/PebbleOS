@@ -16,7 +16,11 @@ description:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-mailbox
+    oneOf:
+      - const: sifli,sf32lb52-mailbox
+      - items:
+          - const: sifli,sf32lb57-mailbox
+          - const: sifli,sf32lb52-mailbox
 
   reg:
     maxItems: 1

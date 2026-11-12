@@ -21,6 +21,7 @@ properties:
           - sifli,sf32lb52-hpsys-aon
           - sifli,sf32lb52-lpsys-aon
           - sifli,sf32lb57-hpsys-aon
+          - sifli,sf32lb57-lpsys-aon
       - const: syscon
 
   reg:
