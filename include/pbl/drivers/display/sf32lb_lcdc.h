@@ -123,14 +123,4 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  */
 void pbl_display_sf32lb_lcdc_irq_handler(const struct pbl_display_sf32lb_lcdc *lcdc);
 
-#ifndef CONFIG_RELEASE
-/**
- * @brief Drop the next transfer-complete interrupt.
- *
- * Test hook simulating a lost completion. The silent-loss timer then fires about 500 ms later
- * and crashes the system, producing a coredump. Not available in release builds.
- */
-void pbl_display_sf32lb_lcdc_test_drop_next_complete(void);
-#endif
-
 /** @} */
