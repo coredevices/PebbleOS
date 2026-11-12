@@ -18,6 +18,15 @@ config NVMEM_SF32LB52
       Read access to the SF32LB52 eFuse, which holds the unique ID and the
       factory calibration.
 
+config NVMEM_SF32LB57
+    bool "SiFli SF32LB57 eFuse"
+    default DT_HAS_SIFLI_SF32LB57_EFUSE_ENABLED
+    depends on SOC_SF32LB57
+    select CLK
+    help
+      Read access to the SF32LB57 eFuse, which holds the unique ID and the
+      factory calibration.
+
 config NVMEM_SHELL
     bool "Non-volatile memory shell commands"
     default DRIVER_SHELL
