@@ -29,5 +29,9 @@ properties:
               - coredevices,getafix-dvt2
           - const: coredevices,getafix
           - const: sifli,sf32lb52j
+      - description: SiFli SF32LB57x-DPI-HDK
+        items:
+          - const: sifli,sf32lb57-dpi-hdk
+          - const: sifli,sf32lb579
 
 additionalProperties: true

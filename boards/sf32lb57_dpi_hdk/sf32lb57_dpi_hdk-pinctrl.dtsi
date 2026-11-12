@@ -1,0 +1,22 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+&pinctrl {
+	usart1_default: usart1-default-state {
+		tx-pins {
+			pins = "PA19";
+			function = "usart1_txd";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		rx-pins {
+			pins = "PA18";
+			function = "usart1_rxd";
+			input-enable;
+			input-schmitt-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+	};
+};

@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: ["qemu_emery", "asterix", "obelix@pvt"]
+        board: ["qemu_emery", "asterix", "obelix@pvt", "sf32lb57_dpi_hdk"]
 
     steps:
       - name: Mark Github workspace as safe
