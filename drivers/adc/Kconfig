@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig ADC
+    bool "ADCs"
+    help
+      Analog-to-digital converter class (pbl/drivers/adc.h), selected by the
+      drivers that read analog inputs.
+
+if ADC
+
+config ADC_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The adc shell command, to list the ADCs and convert a channel.
+
+endif # ADC
