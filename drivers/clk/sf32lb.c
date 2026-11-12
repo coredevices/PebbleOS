@@ -15,6 +15,7 @@
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
+#include <hardware/sf32lb57_hpsys_cfg.h>
 #include <hardware/sf32lb52_hpsys_rcc.h>
 #include <hardware/sf32lb57_hpsys_rcc.h>
 
@@ -190,6 +191,8 @@ static const uint8_t s_sf32lb57_gate_parents[NUM_GATES] = {
   .gate_parents = s_sf32lb57_gate_parents,
   .dll_in_div2 = SF32LB57_HPSYS_RCC_DLLCR_IN_DIV2_EN,
   .dll_out_div2 = SF32LB57_HPSYS_RCC_DLLCR_OUT_DIV2_EN,
+  .bg_offset = SF32LB57_HPSYS_CFG_ANAU_CR_OFFSET,
+  .bg_en = HPSYS_CFG_ANAU_CR_EN_BG,
   .mpi3 = true,
 };
 
