@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-lcpu
+config: REMOTEPROC_SF32LB52
+class: rproc
+define: PBL_RPROC_SF32LB57_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - mbox: tx
+  - mbox: rx
+  - reg: 0
+    of: memory-region
+  - size: 0
+    of: memory-region
+  - reg: 0
+    of: sram
+  - size: 0
+    of: sram
+  - prop: dma-ranges
+    index: 0
+  - prop: dma-ranges
+    index: 1
+  - prop: dma-ranges
+    index: 2
+  - prop: dma-ranges
+    index: 3
+  - prop: dma-ranges
+    index: 4
+  - prop: dma-ranges
+    index: 5
+  - clock: hclk
+  - clock: pclk
+  - clock: pclk2
+  - clock: lpclk

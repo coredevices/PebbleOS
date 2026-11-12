@@ -15,7 +15,9 @@
 #include <pbl/util/size.h>
 
 #include <lpsys.h>
+#ifndef CONFIG_SOC_SF32LB57
 #include <revid.h>
+#endif
 
 // LCPU ROM layout of its SRAM region
 #define LCPU_CODE_OFFSET 0x0000U
@@ -34,6 +36,8 @@
 #define CONFIG_A4_OFFSET 0x2a00U
 #define CONFIG_SIZE      0x40U
 #define CONFIG_A4_SIZE   0xccU
+#define CONFIG_57_OFFSET 0x13800U
+#define CONFIG_57_SIZE   0x100U
 #define CONFIG_MAGIC     0x45457878U
 
 #define CONFIG_WDT_TIME         12U
@@ -79,19 +83,26 @@ static const struct pbl_rproc_sf32lb52 *prv_lcpu(const struct pbl_rproc *rproc) 
   return container_of(rproc, const struct pbl_rproc_sf32lb52, rproc);
 }
 
+#ifdef CONFIG_SOC_SF32LB57
+#define CONFIG_BLOCK_OFFSET CONFIG_57_OFFSET
+#define CONFIG_BLOCK_SIZE   CONFIG_57_SIZE
+#else
 static bool prv_rev_a4(void) {
   return soc_sf32lb52_revid() >= HPSYS_CFG_IDR_REVID_A4;
 }
 
+#define CONFIG_BLOCK_OFFSET (prv_rev_a4() ? CONFIG_A4_OFFSET : CONFIG_OFFSET)
+#define CONFIG_BLOCK_SIZE   (prv_rev_a4() ? CONFIG_A4_SIZE : CONFIG_SIZE)
+#endif
+
 // Cleared once, as the LCPU keeps its own values across restarts
 static uint8_t *prv_config(const struct pbl_rproc_sf32lb52 *lcpu) {
   static bool initialized;
-  const bool a4 = prv_rev_a4();
-  uint8_t *config = (uint8_t *)(lcpu->sram.base + (a4 ? CONFIG_A4_OFFSET : CONFIG_OFFSET));
+  uint8_t *config = (uint8_t *)(lcpu->sram.base + CONFIG_BLOCK_OFFSET);
   const uint32_t magic = CONFIG_MAGIC;
 
   if (!initialized) {
-    memset(config, 0, a4 ? CONFIG_A4_SIZE : CONFIG_SIZE);
+    memset(config, 0, CONFIG_BLOCK_SIZE);
     memcpy(config, &magic, sizeof(magic));
     initialized = true;
   }
@@ -111,6 +122,21 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *confi
   const uint32_t wdt_status = 0xffU;
   const uint32_t wdt_time = 10U;
   const uint16_t wdt_clk = 32768U;
+
+  memcpy(config + CONFIG_WDT_STATUS, &wdt_status, sizeof(wdt_status));
+  memcpy(config + CONFIG_WDT_TIME, &wdt_time, sizeof(wdt_time));
+  memcpy(config + CONFIG_WDT_CLK, &wdt_clk, sizeof(wdt_clk));
+  memcpy(config + CONFIG_RC_CAL_IN_L, &rc_cal, sizeof(rc_cal));
+
+#ifdef CONFIG_SOC_SF32LB57
+  // As the vendor HAL configures the SF32LB57 ROM, which has its own defaults for the rest
+  const struct lcpu_bt_config bt = {
+    .bit_valid = PBL_BIT(6),
+    .default_xtal_enabled = xtal_enabled,
+  };
+
+  memcpy(config + CONFIG_A4_BT_CONFIG, &bt, sizeof(bt));
+#else
   const uint32_t tx_queue = lcpu->mem.base;
   const struct lcpu_bt_config bt = {
     .bit_valid = PBL_BIT(10) | PBL_BIT(6) | PBL_BIT(2),
@@ -124,16 +150,13 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *confi
   };
 
   memcpy(config + CONFIG_XTAL_ENABLED, &xtal_enabled, sizeof(xtal_enabled));
-  memcpy(config + CONFIG_WDT_STATUS, &wdt_status, sizeof(wdt_status));
-  memcpy(config + CONFIG_WDT_TIME, &wdt_time, sizeof(wdt_time));
-  memcpy(config + CONFIG_WDT_CLK, &wdt_clk, sizeof(wdt_clk));
-  memcpy(config + CONFIG_RC_CAL_IN_L, &rc_cal, sizeof(rc_cal));
 
   if (prv_rev_a4()) {
     memcpy(config + CONFIG_A4_HCPU_TX_QUEUE, &tx_queue, sizeof(tx_queue));
     memcpy(config + CONFIG_A4_BT_CONFIG, &bt, sizeof(bt));
     memcpy(config + CONFIG_A4_BT_KE_BUF, &ke, sizeof(ke));
   }
+#endif
 }
 
 static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
@@ -156,9 +179,9 @@ static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
   return ret;
 }
 
-static int prv_start(const struct pbl_rproc *rproc) {
-  const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
-  const uint32_t *vectors = (const uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET);
+#ifndef CONFIG_SOC_SF32LB57
+// Calibrates the radio, then hands the LCPU its TX power configuration
+static void prv_rf_cal(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *config) {
   const struct pbl_rproc_sf32lb52__rf rf = {
     .rfc = lcpu->rf.rfc,
     .phy = lcpu->rf.phy,
@@ -171,8 +194,18 @@ static int prv_start(const struct pbl_rproc *rproc) {
     .pmuc = lcpu->rf.pmuc,
     .dma_buf = lcpu->sram.base + LCPU_EM_OFFSET,
   };
-  uint8_t *config;
   uint32_t tx_pwr;
+
+  tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
+  memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
+  // calibration leaves data in the exchange memory
+  memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
+}
+#endif
+
+static int prv_start(const struct pbl_rproc *rproc) {
+  const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
+  uint8_t *config;
   int ret;
 
   soc_sf32lb_lpsys_wake();
@@ -187,14 +220,19 @@ static int prv_start(const struct pbl_rproc *rproc) {
     return ret;
   }
 
+#ifdef CONFIG_SOC_SF32LB57
+  // The SF32LB57 ROM boots from its own vectors
+  soc_sf32lb_lpsys_set_entry(0U, 0U);
+  pbl_rproc_sf32lb52__patch_install(lcpu);
+#else
+  const uint32_t *vectors = (const uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET);
+
   soc_sf32lb_lpsys_set_entry(vectors[0], vectors[1]);
 
   memset((void *)(lcpu->sram.base + LCPU_CODE_OFFSET), 0, LCPU_CODE_SIZE);
   pbl_rproc_sf32lb52__patch_install(lcpu);
-  tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
-  memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
-  // calibration leaves data in the exchange memory
-  memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
+  prv_rf_cal(lcpu, config);
+#endif
 
   soc_sf32lb_lpsys_run();
   soc_sf32lb_lpsys_release();
@@ -254,4 +292,8 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev) {
   return pbl_device_init(&lcpu->rx_chan.ctrl->dev);
 }
 
+#ifdef CONFIG_SOC_SF32LB57
+#include PBL_DT_INSTANCES(sifli_sf32lb57_lcpu)
+#else
 #include PBL_DT_INSTANCES(sifli_sf32lb52_lcpu)
+#endif

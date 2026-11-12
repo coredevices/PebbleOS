@@ -11,13 +11,14 @@ if REMOTEPROC
 
 config REMOTEPROC_SF32LB52
     bool "SiFli SF32LB52 LCPU"
-    default DT_HAS_SIFLI_SF32LB52_LCPU_ENABLED
-    depends on SOC_SF32LB52
+    default DT_HAS_SIFLI_SF32LB52_LCPU_ENABLED || DT_HAS_SIFLI_SF32LB57_LCPU_ENABLED
+    depends on SOC_SF32LB52 || SOC_SF32LB57
     select MBOX
     select NVMEM
     help
-      The SF32LB52 low-power CPU, running the Bluetooth controller from
-      ROM: configuration, ROM patches and radio calibration on boot.
+      The SF32LB52 and SF32LB57 low-power CPU, running the Bluetooth
+      controller from ROM: configuration, ROM patches and, on the
+      SF32LB52, radio calibration on boot.
 
 config REMOTEPROC_SHELL
     bool "Remote processor shell commands"
