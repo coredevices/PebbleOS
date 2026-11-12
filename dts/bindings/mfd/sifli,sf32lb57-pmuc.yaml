@@ -50,12 +50,17 @@ properties:
       - const: hxt48
       - const: lxt32
 
+  sifli,hpsys-rcc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS RCC, whose RC10CAL counter measures LRC10 against the 48 MHz crystal.
+
 required:
   - compatible
   - reg
   - "#clock-cells"
   - clocks
   - clock-names
+  - sifli,hpsys-rcc
 
 additionalProperties: false
 
@@ -68,4 +73,5 @@ examples:
         #clock-cells = <1>;
         clocks = <&xtal48m>;
         clock-names = "hxt48";
+        sifli,hpsys-rcc = <&hpsys_rcc>;
     };

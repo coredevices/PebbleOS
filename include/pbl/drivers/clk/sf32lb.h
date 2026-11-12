@@ -247,8 +247,10 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb57_pmuc;
 /**
  * @name SF32LB57 PMUC clocks
  *
- * LRC10 runs at its nominal rate, uncalibrated. LRC32 and LXT32 run while used, HXT48_DLL gates
- * the DLL buffer, and the other oscillators always run.
+ * The rate of LRC10 is the filtered estimate of its calibration against HXT48, updated every
+ * @c CONFIG_CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S seconds, and its nominal rate until the first
+ * gate. LRC32 and LXT32 run while used, HXT48_DLL gates the DLL buffer, and the other oscillators
+ * always run.
  * @{
  */
 #define SF32LB57_CLK_LRC10 0

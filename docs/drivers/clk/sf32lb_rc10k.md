@@ -38,6 +38,19 @@ RTC prescaler can be rewritten while the calendar runs, so the calendar keeps
 its time across updates. The PWM reads the rate when it programs its
 prescaler.
 
+## SF32LB57
+
+The SF32LB57 has the same counter in its HPSYS RCC, RC10CAL, so
+`drivers/clk/sf32lb57_pmuc.c` measures the RC10K without the low-power
+domain, the LCPU or its mutex. The vendor HAL does not use it, and calibrates
+through the Bluetooth controller as on the SF32LB52. The driver holds off deep
+WFI for the 207 ms of a gate, so the crystal keeps counting. RC10CAL1.CAL_SEL
+switches the counter to the LRC32, which a gate measured at 26.86 kHz.
+
+On a SiFli SF32LB57x-DPI-HDK the RC10K ran at 9666 Hz, with gates within 1 Hz
+of each other. The oscillator is not characterized on this series: the driver
+uses the SF32LB52 model below.
+
 ## The oscillator
 
 ### White frequency noise
