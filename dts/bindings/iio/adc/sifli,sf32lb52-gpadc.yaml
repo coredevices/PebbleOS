@@ -15,7 +15,9 @@ description:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-gpadc
+    enum:
+      - sifli,sf32lb52-gpadc
+      - sifli,sf32lb57-gpadc
 
   reg:
     maxItems: 1
@@ -29,12 +31,32 @@ properties:
   "#io-channel-cells":
     const: 1
 
+  nvmem-cells:
+    maxItems: 1
+    description: Factory calibration of the SF32LB57 transfer, two points and the VBAT reference.
+
+  nvmem-cell-names:
+    const: calibration
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration, enabling the bandgap the SF32LB57 reference runs from.
+
 required:
   - compatible
   - reg
   - interrupts
   - clocks
   - "#io-channel-cells"
+
+allOf:
+  - if:
+      properties:
+        compatible:
+          const: sifli,sf32lb57-gpadc
+    then:
+      required:
+        - sifli,hpsys-cfg
 
 additionalProperties: false
 

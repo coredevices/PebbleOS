@@ -149,6 +149,18 @@
 			#interrupt-cells = <2>;
 		};
 
+		gpadc: adc@500b2000 {
+			compatible = "sifli,sf32lb57-gpadc";
+			reg = <0x500b2000 0x1000>;
+			interrupts = <65>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPADC>;
+			#io-channel-cells = <1>;
+			nvmem-cells = <&gpadc_calibration>;
+			nvmem-cell-names = "calibration";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			status = "disabled";
+		};
+
 		hpsys_aon: syscon@500c0000 {
 			compatible = "sifli,sf32lb57-hpsys-aon", "syscon";
 			reg = <0x500c0000 0x1000>;
