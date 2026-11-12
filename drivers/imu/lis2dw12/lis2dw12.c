@@ -63,6 +63,9 @@ static const struct pbl_lis2dw12 *s_dev;
 // Scale range when in 12-bit mode (low-power mode 1)
 #define LIS2DW12_S12_SCALE_RANGE PBL_BIT(11)
 
+// I2C address bit set by the SA0 pin
+#define LIS2DW12_ADDR_SA0 PBL_BIT(0)
+
 // Registers
 #define LIS2DW12_WHO_AM_I            0x0FU
 #define LIS2DW12_UNDOC               0x17U
@@ -726,22 +729,22 @@ static int prv_init(const struct pbl_accel *accel) {
     }
   } while ((val & LIS2DW12_CTRL2_BOOT) != 0U);
 
-  // Disable ADDR pull-up if requested
-  // NOTE: This is an undocumented register (provided by FAE)
-#ifdef CONFIG_ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP
-  ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
-    return -EIO;
-  }
+  // The address LSB is SA0: a grounded SA0 leaks through its pull-up
+  // (undocumented register, provided by the FAE)
+  if ((s_dev->i2c.addr & LIS2DW12_ADDR_SA0) == 0U) {
+    ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
+      return -EIO;
+    }
 
-  val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
-  ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
-    return -EIO;
+    val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
+    ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
+      return -EIO;
+    }
   }
-#endif
 
   // Single-data conversion via SLP_MODE_1, latch function IRQ
   val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
