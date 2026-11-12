@@ -57,6 +57,16 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS configuration.
 
+  power-domains:
+    maxItems: 1
+    description: The HPSYS power domain, which the clocks of the RCC run in.
+
+  required-opps:
+    maxItems: 1
+    description:
+      The voltage mode of the HPSYS that the assigned rates need, set before
+      the RCC changes its clocks.
+
 required:
   - compatible
   - reg
@@ -65,6 +75,8 @@ required:
   - clocks
   - clock-names
   - sifli,hpsys-cfg
+  - power-domains
+  - required-opps
 
 additionalProperties: false
 
@@ -78,4 +90,6 @@ examples:
         clocks = <&pmuc 3>, <&pmuc 4>, <&pmuc 6>;
         clock-names = "hrc48", "hxt48", "hxt48-dll";
         sifli,hpsys-cfg = <&hpsys_cfg>;
+        power-domains = <&pmuc 0>;
+        required-opps = <&hpsys_s1>;
     };

@@ -14,6 +14,9 @@ args:
   - clock: hrc48
   - clock: hxt48
   - clock: hxt48-dll
+  - power-domain: 0
+  - prop: opp-level
+    of: required-opps
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true
 ids:
