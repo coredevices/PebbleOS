@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The USART the SoC debugger listens to
+config: SF32LB_DEBUG_UART
+labels:
+  - usart1
