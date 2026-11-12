@@ -2353,3 +2353,90 @@ def test_bad_io_channels_fail(tmp_path, keys, message):
             IO_CHANNEL_CLASSES,
         )
 
+
+NVMEM_CLASSES = {
+    **GRAPH_CLASSES,
+    "nvmem": {
+        "class": "nvmem",
+        "type": "struct nvmem",
+        "include": "nvmem.h",
+        "provides": {"nvmem-cell": "NVMEM_CELL(&{sym}, {0}, {1})"},
+    },
+    "adc": {"class": "adc", "type": "struct adc", "include": "adc.h"},
+}
+
+NVMEM_SPECS = {
+    "acme,efuse": {
+        "compatible": "acme,efuse",
+        "config": "EFUSE",
+        "class": "nvmem",
+        "define": "EFUSE_DEFINE",
+        "args": [{"reg": 0}],
+    },
+    "acme,adc": {
+        "compatible": "acme,adc",
+        "config": "ADC",
+        "class": "adc",
+        "define": "ADC_DEFINE",
+        "args": [{"nvmem-cell": "calibration"}],
+    },
+}
+
+NVMEM_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    efuse: efuse@1000 {
+        compatible = "acme,efuse";
+        reg = <0x1000 0x100>;
+
+        nvmem-layout {
+            compatible = "fixed-layout";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            id: id@0 {
+                reg = <0x0 0x8>;
+            };
+
+            cal: calibration@24 {
+                reg = <%(cal)s>;
+            };
+        };
+    };
+
+    adc@2000 {
+        compatible = "acme,adc";
+        reg = <0x2000 0x100>;
+        nvmem-cells = <&id>, <&cal>;
+        nvmem-cell-names = %(names)s;
+    };
+};
+"""
+
+
+def test_nvmem_cells(tmp_path):
+    text = NVMEM_DTS % {"cal": "0x24 0x8", "names": '"id", "calibration"'}
+    gen = generate_with(tmp_path, text, NVMEM_SPECS, NVMEM_CLASSES)
+    assert "ADC_DEFINE(dt_node_adc_2000, NVMEM_CELL(&dt_efuse, 36, 8));" in body(gen)
+    assert "PBL_DEVICE_DEPENDS(dt_node_adc_2000, &dt_node_adc_2000.dev, &dt_efuse.dev);" in (
+        depends(gen)
+    )
+
+
+@pytest.mark.parametrize(
+    "cal, names, message",
+    [
+        ("0x24 0x8", '"id", "other"', "no 'calibration' in"),
+        ("0x24", '"id", "calibration"', "'reg' must be one offset and size"),
+    ],
+)
+def test_bad_nvmem_cells_fail(tmp_path, cal, names, message):
+    with pytest.raises(DtError, match=message):
+        generate_with(
+            tmp_path,
+            NVMEM_DTS % {"cal": cal, "names": names},
+            NVMEM_SPECS,
+            NVMEM_CLASSES,
+        )
