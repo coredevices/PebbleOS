@@ -1,24 +1,22 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/util/hash.h>
 
-// Based on DJB2 Hash
 uint32_t hash(const uint8_t *bytes, const uint32_t length) {
-  uint32_t hash = 5381;
+  return hash_update(HASH_INIT, bytes, length);
+}
 
-  if (length == 0) {
-    return hash;
+// DJB2
+uint32_t hash_update(uint32_t h, const void *data, size_t len) {
+  const uint8_t *bytes = data;
+
+  for (size_t i = 0; i < len; i++) {
+    h = (h << 5) + h + bytes[i];
   }
 
-  uint8_t c;
-  const uint8_t *last_byte = bytes + length;
-  while (bytes != last_byte) {
-    c = *bytes;
-    hash = ((hash << 5) + hash) + c;
-    bytes++;
-  }
-  return hash;
+  return h;
 }
