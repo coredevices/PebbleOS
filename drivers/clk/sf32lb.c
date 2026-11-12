@@ -671,7 +671,7 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
 }
 
 // With the flash down: plain accesses, as the locked ones run from flash
-PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_suspend(struct pbl_clk_sf32lb52_hxt48_state *state) {
+PBL_SECTION_RAM void pbl_clk_sf32lb_hxt48_suspend(struct pbl_clk_sf32lb_hxt48_state *state) {
   state->csr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
   state->dll1cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL1CR_OFFSET);
   state->dll2cr = pbl_readl(s_base + SF32LB52_HPSYS_RCC_DLL2CR_OFFSET);
@@ -695,8 +695,7 @@ PBL_SECTION_RAM static void prv_dll_restart(uint32_t offset, uint32_t cr) {
   }
 }
 
-PBL_SECTION_RAM void pbl_clk_sf32lb52_hxt48_resume(
-    const struct pbl_clk_sf32lb52_hxt48_state *state) {
+PBL_SECTION_RAM void pbl_clk_sf32lb_hxt48_resume(const struct pbl_clk_sf32lb_hxt48_state *state) {
   if (s_bg_en != 0U) {
     const uintptr_t bg = s_cfg + s_bg_offset;
 
