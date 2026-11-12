@@ -17,8 +17,8 @@ config REMOTEPROC_SF32LB
     select NVMEM
     help
       The SF32LB52 and SF32LB57 low-power CPU, running the Bluetooth
-      controller from ROM: configuration, ROM patches and, on the
-      SF32LB52, radio calibration on boot.
+      controller from ROM: configuration, ROM patches and radio
+      calibration on boot.
 
 config REMOTEPROC_SHELL
     bool "Remote processor shell commands"
