@@ -3,6 +3,16 @@
 
 menu "Input"
 
+config INPUT_ADC_KEYS
+    bool "ADC keys"
+    default DT_HAS_ADC_KEYS_IRQ_ENABLED
+    depends on INPUT
+    select ADC
+    select GPIO
+    help
+      Keys on a resistor ladder read through an ADC channel on an
+      interrupt that a press or release raises.
+
 config INPUT_GPIO_KEYS
     bool "GPIO keys"
     default DT_HAS_GPIO_KEYS_ENABLED

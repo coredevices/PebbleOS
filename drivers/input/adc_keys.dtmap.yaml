@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: adc-keys-irq
+config: INPUT_ADC_KEYS
+class: input
+define: PBL_ADC_KEYS_DEFINE
+args:
+  - name: true
+  - io-channel: buttons
+  - prop: keyup-threshold-microvolt
+  - irq: 0
+  - pinctrl: default
+    default: nullptr
+  - list: []
+    item:
+      define: PBL_ADC_KEYS_KEY
+      args:
+        - string: label
+          default: '""'
+        - prop: linux,code
+        - prop: press-threshold-microvolt
