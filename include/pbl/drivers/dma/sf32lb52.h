@@ -10,7 +10,8 @@
 /**
  * @defgroup drivers_dma_sf32lb52 SF32LB52 DMAC
  * @ingroup drivers_dma
- * @brief @ref drivers_dma controller of the SF32LB52 HPSYS (DMAC1).
+ * @brief @ref drivers_dma controller of the SF32LB52 HPSYS (DMAC1), and of the SF32LB57
+ * HPSYS (GPDMA1) used as one.
  *
  * Channels are numbered from 0, so channel 5 is the one the reference manual and the interrupt
  * line call CH6. The configuration of a channel is its priority, @c SF32LB52_DMA_PL_*. Each
@@ -121,6 +122,8 @@ struct pbl_dma_sf32lb52 {
   struct pbl_clk clk;
   /** Interrupt line of each channel. */
   pbl_irq_t irqs[PBL_DMA_SF32LB52_NUM_CHANNELS];
+  /** GPDMA, which has a status register where the DMAC has the burst size. */
+  bool gpdma;
 };
 
 /** @brief A channel of a controller, as its interrupt handler gets it. */
@@ -153,20 +156,37 @@ void pbl_dma_sf32lb52_irq_handler(const struct pbl_dma_sf32lb52_chan_irq *irq);
  */
 #define PBL_DMA_SF32LB52_DEFINE(sym, _name, _base, _clk, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5, \
                                 _irq6, _irq7)                                                      \
-  PBL_DMA_CONTROLLER_STATE_DEFINE(sym, PBL_DMA_SF32LB52_NUM_CHANNELS);                             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_dma_sf32lb52, struct pbl_dma_controller, ctrl){              \
-    .ctrl = PBL_DMA_CONTROLLER_INIT(sym, _name, pbl_dma_sf32lb52_init, &pbl_dma_sf32lb52_ops),     \
-    .base = (_base),                                                                               \
-    .clk = _clk,                                                                                   \
-    .irqs = {_irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, _irq7},                              \
-  };                                                                                               \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 0, _irq0);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 1, _irq1);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 2, _irq2);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 3, _irq3);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 4, _irq4);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 5, _irq5);                                                        \
-  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 6, _irq6);                                                        \
+  PBL_DMA_SF32LB_DEFINE_(sym, false, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5,       \
+                         _irq6, _irq7, _clk)
+
+/**
+ * @brief Define the SF32LB57 GPDMA1, as for PBL_DMA_SF32LB52_DEFINE().
+ */
+#define PBL_DMA_SF32LB57_GPDMA_DEFINE(sym, _name, _base, _clk, _irq0, _irq1, _irq2, _irq3, _irq4,  \
+                                      _irq5, _irq6, _irq7)                                         \
+  PBL_DMA_SF32LB_DEFINE_(sym, true, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, \
+                         _irq7, _clk)
+
+/** @cond INTERNAL_HIDDEN */
+// The clock goes last, as its initializer holds commas
+#define PBL_DMA_SF32LB_DEFINE_(sym, _gpdma, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4,   \
+                               _irq5, _irq6, _irq7, ...)                                       \
+  PBL_DMA_CONTROLLER_STATE_DEFINE(sym, PBL_DMA_SF32LB52_NUM_CHANNELS);                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_dma_sf32lb52, struct pbl_dma_controller, ctrl){          \
+    .ctrl = PBL_DMA_CONTROLLER_INIT(sym, _name, pbl_dma_sf32lb52_init, &pbl_dma_sf32lb52_ops), \
+    .base = (_base),                                                                           \
+    .clk = __VA_ARGS__,                                                                        \
+    .irqs = {_irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, _irq7},                          \
+    .gpdma = (_gpdma),                                                                         \
+  };                                                                                           \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 0, _irq0);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 1, _irq1);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 2, _irq2);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 3, _irq3);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 4, _irq4);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 5, _irq5);                                                    \
+  PBL_DMA_SF32LB52_CHAN_IRQ(sym, 6, _irq6);                                                    \
   PBL_DMA_SF32LB52_CHAN_IRQ(sym, 7, _irq7)
+/** @endcond */
 
 /** @} */

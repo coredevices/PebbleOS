@@ -56,7 +56,9 @@ static int prv_slave_config(const struct pbl_dma_controller *ctrl, const struct 
 
   prv_putreg(ctrl, SF32LB52_DMAC_CCR_OFFSET(channel),
              PBL_FIELD_PREP(DMAC_CCR_PL_MASK, chan->config & SF32LB52_DMA_PL_MSK));
-  prv_putreg(ctrl, SF32LB52_DMAC_CBSR_OFFSET(channel), 0U);
+  if (!prv_dmac(ctrl)->gpdma) {
+    prv_putreg(ctrl, SF32LB52_DMAC_CBSR_OFFSET(channel), 0U);
+  }
   pbl_modifyl(DMAC_CSELR_CS_MASK(channel), (uint32_t)chan->request << DMAC_CSELR_CS_POS(channel),
               prv_dmac(ctrl)->base + SF32LB52_DMAC_CSELR_OFFSET(channel));
 
@@ -204,3 +206,4 @@ const struct pbl_dma_controller_ops pbl_dma_sf32lb52_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_dmac)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_gpdma)
