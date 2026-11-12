@@ -36,7 +36,7 @@ static void prv_job_unschedule_callback(GAPLEAdvertisingJobRef job, bool complet
 //! We don't want to be advertising at a high rate infinitely. When duration
 //! is 0, a short period of high-rate advertising will be used. When this short
 //! period is completed, an indefinite, low-rate job will be scheduled.
-static void prv_schedule_ad_job(bool fast) {
+static void prv_schedule_ad_job(void) {
   struct pbl_bt_ad_data *ad = ble_ad_create();
 
   // Advertisement part:
@@ -127,9 +127,8 @@ static void prv_schedule_ad_job(bool fast) {
     },
   };
 
-  const size_t first_term = fast ? 0 : 1;
   s_discovery_advert_job =
-      gap_le_advert_schedule(ad, &advert_terms[first_term], ARRAY_LENGTH(advert_terms) - first_term,
+      gap_le_advert_schedule(ad, advert_terms, ARRAY_LENGTH(advert_terms),
                              prv_job_unschedule_callback, nullptr, GAPLEAdvertisingJobTagDiscovery);
 
   ble_ad_destroy(ad);
@@ -153,7 +152,7 @@ void gap_le_slave_set_discoverable(bool discoverable) {
     // Always stop and re-start, so we start with the high rate again:
     gap_le_advert_unschedule(s_discovery_advert_job);
     if (discoverable) {
-      prv_schedule_ad_job(true);
+      prv_schedule_ad_job();
     }
   }
   bt_unlock();
@@ -176,29 +175,3 @@ void gap_le_slave_discovery_deinit(void) {
   }
   bt_unlock();
 }
-
-#ifdef CONFIG_SHELL
-#include <errno.h>
-
-#include <pbl/shell/shell.h>
-
-static int prv_cmd_adv_slow(const struct pbl_shell *sh, size_t argc, char **argv) {
-  int rv = 0;
-
-  bt_lock();
-  {
-    if (s_discovery_advert_job) {
-      gap_le_advert_unschedule(s_discovery_advert_job);
-      prv_schedule_ad_job(false);
-    } else {
-      pbl_shell_error(sh, "not discoverable");
-      rv = -EINVAL;
-    }
-  }
-  bt_unlock();
-  return rv;
-}
-
-PBL_SHELL_SUBCMD_ADD(sub_bt, adv_slow, nullptr, "Advertise for discovery at the slow rate",
-                     prv_cmd_adv_slow, 0, 0);
-#endif
