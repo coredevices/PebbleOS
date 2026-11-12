@@ -410,7 +410,14 @@ jobs:
       - name: Pull the catalogs into Weblate
         id: pull
         if: steps.push.outputs.pushed == 'true'
-        run: weblate-repository pull
+        # Weblate's rebase has failed on files that were briefly modified in
+        # its checkout and clean again moments later; retry before giving up.
+        run: |
+          for attempt in 1 2 3 4 5; do
+            weblate-repository pull && exit 0
+            sleep 30
+          done
+          exit 1
 
       # If the catalogs reached GitHub but Weblate could not pull them, stay
       # locked so translators do not keep editing a stale checkout.
