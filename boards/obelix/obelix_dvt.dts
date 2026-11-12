@@ -8,3 +8,11 @@
 / {
 	compatible = "coredevices,obelix-dvt", "coredevices,obelix", "sifli,sf32lb52j";
 };
+
+&i2c2 {
+	/* Unused, but powered: its INT1 shares the LSM6DSO INT1 pad */
+	lis2dw12: accelerometer@18 {
+		compatible = "st,lis2dw12";
+		reg = <0x18>;
+	};
+};
