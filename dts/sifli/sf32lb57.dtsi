@@ -52,6 +52,23 @@
 			reg = <0x5000b000 0x1000>;
 		};
 
+		efuse: efuse@5000c000 {
+			compatible = "sifli,sf32lb57-efuse";
+			reg = <0x5000c000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_EFUSEC>;
+			read-only;
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				gpadc_calibration: gpadc-calibration@24 {
+					reg = <0x24 0x8>;
+				};
+			};
+		};
+
 		mpi1: spi@50041000 {
 			compatible = "sifli,sf32lb57-mpi";
 			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>;
