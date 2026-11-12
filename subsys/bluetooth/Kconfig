@@ -106,7 +106,7 @@ config BT_ID_ADDR_CONTROLLER
 
 config BT_ID_ADDR_SF32LB52_EFUSE
     bool "SF32LB52 eFUSE"
-    depends on NVMEM_SF32LB
+    depends on SOC_SF32LB52 && NVMEM_SF32LB
     select BT_ID_ADDR
     help
       Public address derived from the unique ID in the SoC's eFUSE.
