@@ -4,6 +4,7 @@
 #include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb57-pmuc.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/power/sifli,sf32lb57-pmuc.h>
 #include <dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h>
 
 / {
@@ -22,6 +23,26 @@
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <48000000>;
+	};
+
+	hpsys_opp_table: opp-table-hpsys {
+		compatible = "operating-points-v2";
+
+		hpsys_d0: opp-1 {
+			opp-level = <SF32LB57_PMUC_HPSYS_D0>;
+		};
+
+		hpsys_d1: opp-2 {
+			opp-level = <SF32LB57_PMUC_HPSYS_D1>;
+		};
+
+		hpsys_s0: opp-3 {
+			opp-level = <SF32LB57_PMUC_HPSYS_S0>;
+		};
+
+		hpsys_s1: opp-4 {
+			opp-level = <SF32LB57_PMUC_HPSYS_S1>;
+		};
 	};
 
 	soc {
@@ -196,8 +217,11 @@
 			reg = <0x500ca000 0x1000>;
 			interrupts = <48>;
 			#clock-cells = <1>;
+			#power-domain-cells = <1>;
 			clocks = <&xtal48m>;
 			clock-names = "hxt48";
+			operating-points-v2 = <&hpsys_opp_table>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,hpsys-rcc = <&hpsys_rcc>;
 		};
 

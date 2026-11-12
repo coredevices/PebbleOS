@@ -50,6 +50,16 @@ properties:
       - const: hxt48
       - const: lxt32
 
+  "#power-domain-cells":
+    const: 1
+
+  operating-points-v2:
+    maxItems: 1
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration, for the voltage mode and memory timings.
+
   sifli,hpsys-rcc:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS RCC, whose RC10CAL counter measures LRC10 against the 48 MHz crystal.
@@ -60,6 +70,9 @@ required:
   - "#clock-cells"
   - clocks
   - clock-names
+  - "#power-domain-cells"
+  - operating-points-v2
+  - sifli,hpsys-cfg
   - sifli,hpsys-rcc
 
 additionalProperties: false
@@ -73,5 +86,8 @@ examples:
         #clock-cells = <1>;
         clocks = <&xtal48m>;
         clock-names = "hxt48";
+        #power-domain-cells = <1>;
+        operating-points-v2 = <&hpsys_opp_table>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
         sifli,hpsys-rcc = <&hpsys_rcc>;
     };

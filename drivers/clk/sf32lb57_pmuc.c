@@ -291,4 +291,4 @@ static const struct pbl_clk_controller_ops s_ops = {
     .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
   }
 
-#include PBL_DT_INSTANCES(sifli_sf32lb57_pmuc)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_pmuc_clk)
