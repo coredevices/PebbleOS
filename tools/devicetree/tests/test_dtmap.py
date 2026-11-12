@@ -2176,3 +2176,61 @@ def test_overlays_change_the_tree(tmp_path):
     assert not sensor.status_okay
     assert str(overlay) in sources
     assert not any(src.endswith("board.overlaid.dts") for src in sources)
+
+
+def test_io_channels(tmp_path):
+    classes = {
+        **GRAPH_CLASSES,
+        "adc": {
+            "class": "adc",
+            "type": "struct adc",
+            "include": "adc.h",
+            "provides": {"io-channel": "ADC_CHANNEL(&{sym}, {0})"},
+        },
+        "input": {"class": "input", "type": "struct input", "include": "input.h"},
+    }
+    specs = {
+        "acme,adc": {
+            "compatible": "acme,adc",
+            "config": "ADC",
+            "class": "adc",
+            "define": "ADC_DEFINE",
+            "args": [{"reg": 0}],
+        },
+        "acme,keys": {
+            "compatible": "acme,keys",
+            "config": "KEYS",
+            "class": "input",
+            "define": "KEYS_DEFINE",
+            "args": [{"io-channel": "buttons"}],
+        },
+    }
+    text = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    adc: adc@1000 {
+        compatible = "acme,adc";
+        reg = <0x1000 0x100>;
+        #io-channel-cells = <1>;
+    };
+
+    keys {
+        compatible = "acme,keys";
+        io-channels = <&adc 7>, <&adc 6>;
+        io-channel-names = "other", "buttons";
+    };
+};
+"""
+    path, dtb = tmp_path / "a.dts", tmp_path / "a.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
+    gen.run()
+    assert "KEYS_DEFINE(dt_node_keys, ADC_CHANNEL(&dt_adc, 6));" in body(gen)
+
