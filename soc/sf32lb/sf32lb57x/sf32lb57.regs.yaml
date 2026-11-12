@@ -6,4 +6,6 @@ config: SOC_SF32LB57
 labels:
   - hpsys_aon
   - hpsys_rcc
+  - lpsys_aon
+  - lpsys_rcc
   - wdt1
