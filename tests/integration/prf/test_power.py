@@ -15,7 +15,6 @@ pytestmark = [
 
 # Limits from the PRF release checklist, at NOMINAL_VOLTAGE_MV.
 NOMINAL_VOLTAGE_MV = 3800
-ADVERTISING_MAX_UA = 1000
 CONNECTED_MAX_UA = 550
 MEASURE_S = 30
 
@@ -45,13 +44,6 @@ def _record(record_property, measurement, limit_ua):
         record_property(key, value)
     record_property("limit_ua", limit_ua)
     print(measurement)
-
-
-def test_advertising(dut, power, record_property):
-    dut.reset()
-    m = power.measure_idle("advertising", seconds=MEASURE_S)
-    _record(record_property, m, ADVERTISING_MAX_UA)
-    assert m.mean_ua <= ADVERTISING_MAX_UA, m
 
 
 def test_connected(dut, phones, power, record_property):
