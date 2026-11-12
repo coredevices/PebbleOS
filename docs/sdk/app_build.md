@@ -133,7 +133,13 @@ does not matter. Plain npm packages are only seen by webpack.
 
 ## Porting from waf
 
-A project whose `wscript` is the SDK's default ports by adding a
+`pebble convert-project` ports a project: it writes a `CMakeLists.txt`
+listing the C files and the JS the `wscript` builds, with the compiler
+and linker flags it appends, and keeps the `wscript` as `wscript.backup`.
+What else the `wscript` does it cannot translate; it lists those lines,
+on the terminal and at the end of the `CMakeLists.txt`, to port by hand.
+
+By hand, a project whose `wscript` is the SDK's default ports by adding a
 `CMakeLists.txt` like the one above, listing the C files under `src/c/`
 (and `worker_src/c/`) and the JS under `src/pkjs/` that the `wscript`
 built, and deleting the `wscript`. Customised wscripts translate to plain
