@@ -1,0 +1,6 @@
+description: Every event of the input devices, keys, touch and gestures, logged for 30 seconds
+expect:
+  - 'input: logging events for 30 s'
+  - 'input: \d+ events'
+  - 'Sample done'
+timeout: 40
