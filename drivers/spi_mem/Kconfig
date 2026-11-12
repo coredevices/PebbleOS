@@ -25,11 +25,13 @@ config SPI_MEM_NRF5_QSPI_IRQ_PRIO
 
 config SPI_MEM_SF32LB52_MPI
     bool "SiFli SF32LB52 MPI"
-    default y if SOC_SF32LB52
-    depends on SOC_SF32LB52
+    default y if SOC_SF32LB52 || SOC_SF32LB57
+    depends on SOC_SF32LB52 || SOC_SF32LB57
     select CLK
+    select PINCTRL
     help
-      Support for the SiFli SF32LB52 MPI controller in NOR mode.
+      Support for the SiFli SF32LB52 and SF32LB57 MPI controllers in NOR
+      mode.
 
 module = DRIVER_SPI_MEM
 module-str = SPI memory

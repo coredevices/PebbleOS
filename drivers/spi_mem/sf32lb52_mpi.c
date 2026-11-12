@@ -20,6 +20,16 @@
 
 #include <hardware/sf32lb52_mpi.h>
 
+#ifdef CONFIG_SOC_SF32LB57
+#include <hardware/sf32lb57_mpi.h>
+
+#define CIR_OFFSET  SF32LB57_MPI_CIR_OFFSET
+#define TIMR_OFFSET SF32LB57_MPI_TIMR_OFFSET
+#else
+#define CIR_OFFSET  SF32LB52_MPI_CIR_OFFSET
+#define TIMR_OFFSET SF32LB52_MPI_TIMR_OFFSET
+#endif
+
 #define FIFO_SIZE      64U
 #define WORD_SIZE      sizeof(uint32_t)
 #define MAX_DCYC       31U
@@ -460,6 +470,15 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
     return 0;
   }
 
+  if (!pbl_spi_mem_is_xip(mem)) {
+    // The window has no read command yet: reading it before would stall the bus
+    pbl_writel(ALT_BYTE, base + SF32LB52_MPI_HRABR_OFFSET);
+    pbl_writel(cmd.ccr, base + SF32LB52_MPI_HRCCR_OFFSET);
+    pbl_modifyl(MPI_HCMDR_RCMD_MASK, PBL_FIELD_PREP(MPI_HCMDR_RCMD_MASK, cmd.opcode),
+                base + SF32LB52_MPI_HCMDR_OFFSET);
+    return 0;
+  }
+
   return prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr);
 }
 
@@ -497,12 +516,21 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   }
 
   if (!pbl_spi_mem_is_xip(mem)) {
+    ret = pbl_pinctrl_select_state(&mpi->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+    if (ret != 0 && ret != -ENOENT) {
+      return ret;
+    }
+
+#ifdef CONFIG_SOC_SF32LB57
+    // Reads sample on the inverted clock, as the boot ROM sets the memory it boots from
+    pbl_modifyl(0U, SF32LB57_MPI_MISCR_SCKINV, base + SF32LB52_MPI_MISCR_OFFSET);
+#endif
     pbl_modifyl(MPI_CR_DFM, MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
   }
 
   pbl_writel(ALT_BYTE, base + SF32LB52_MPI_ABR1_OFFSET);
-  pbl_writel(CMD_INTERVAL, base + SF32LB52_MPI_CIR_OFFSET);
-  pbl_writel(TIMEOUT, base + SF32LB52_MPI_TIMR_OFFSET);
+  pbl_writel(CMD_INTERVAL, base + CIR_OFFSET);
+  pbl_writel(TIMEOUT, base + TIMR_OFFSET);
 
   pbl_modifyl(MPI_FIFOCR_TXSLOTS_MASK, PBL_FIELD_PREP(MPI_FIFOCR_TXSLOTS_MASK, 1U),
               base + SF32LB52_MPI_FIFOCR_OFFSET);
@@ -523,3 +551,4 @@ const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_mpi)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_mpi)

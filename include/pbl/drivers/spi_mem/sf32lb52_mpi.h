@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
+#include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/spi_mem.h>
 
 /**
@@ -42,6 +43,8 @@ struct pbl_spi_mem_sf32lb52_mpi {
   uint32_t mem_size;
   /** Clock. */
   struct pbl_clk clk;
+  /** Pads, if the boot ROM leaves them unset. */
+  struct pbl_pinctrl pinctrl;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -63,12 +66,13 @@ extern const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops;
  * @param _mem_size Memory-mapped window size, in bytes.
  * @param _clk Clock, from PBL_CLK().
  */
-#define PBL_SPI_MEM_SF32LB52_MPI_DEFINE(sym, _name, _base, _mem_base, _mem_size, _clk) \
-  PBL_SPI_MEM_STATE_DEFINE(sym);                                                       \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb52_mpi, struct pbl_spi_mem, mem) { \
-    .mem = PBL_SPI_MEM_INIT(sym, _name, nullptr, &pbl_spi_mem_sf32lb52_mpi_ops,        \
-                            PBL_SPI_MEM_SF32LB52_MPI_XIP(_mem_base, _mem_size)),       \
-    .base = (_base), .mem_base = (_mem_base), .mem_size = (_mem_size), .clk = _clk,    \
+#define PBL_SPI_MEM_SF32LB52_MPI_DEFINE(sym, _name, _base, _mem_base, _mem_size, _clk, _pins) \
+  PBL_SPI_MEM_STATE_DEFINE(sym);                                                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb52_mpi, struct pbl_spi_mem, mem) {        \
+    .mem = PBL_SPI_MEM_INIT(sym, _name, nullptr, &pbl_spi_mem_sf32lb52_mpi_ops,               \
+                            PBL_SPI_MEM_SF32LB52_MPI_XIP(_mem_base, _mem_size)),              \
+    .base = (_base), .mem_base = (_mem_base), .mem_size = (_mem_size), .clk = _clk,           \
+    .pinctrl = PBL_PINCTRL(_pins, nullptr, _base),                                            \
   }
 
 /** @} */

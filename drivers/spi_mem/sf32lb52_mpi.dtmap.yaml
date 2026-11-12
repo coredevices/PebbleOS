@@ -11,3 +11,5 @@ args:
   - reg: mpi_mm
   - size: mpi_mm
   - clock: 0
+  - pinctrl: default
+    default: nullptr
