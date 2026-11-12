@@ -59,13 +59,14 @@ endif # SOC_SF32LB52
 
 if SOC_SF32LB57
 
-# 512 KiB of SRAM. The flash is the board's: the boot ROM reads it from the
-# boot device the part and its strapping select.
+# 512 KiB of SRAM, last 2 KiB reserved for LCPU and ACPU IPC. The flash is
+# the board's: the boot ROM reads it from the boot device the part and its
+# strapping select.
 config SRAM_BASE
     default 0x20000000
 
 config SRAM_SIZE
-    default 0x80000
+    default 0x7f800
 
 config NUM_IRQS
     default 106
