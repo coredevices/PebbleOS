@@ -7,9 +7,41 @@
 #include "sifli/sf32lb57xv6e.dtsi"
 #include "sf32lb57_dpi_hdk-pinctrl.dtsi"
 
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
 / {
 	model = "SiFli SF32LB57x-DPI-HDK";
 	compatible = "sifli,sf32lb57-dpi-hdk", "sifli,sf32lb579";
+
+	// KEY-1..3 pull PA34 up through a ladder, which raises its GPIO too
+	adc-keys {
+		compatible = "adc-keys-irq";
+		io-channels = <&gpadc 6>;
+		io-channel-names = "buttons";
+		interrupts-extended = <&gpio1 34 IRQ_TYPE_EDGE_BOTH>;
+		pinctrl-0 = <&keys_default>;
+		pinctrl-names = "default";
+		keyup-threshold-microvolt = <0>;
+
+		button-up {
+			label = "KEY-1";
+			linux,code = <KEY_UP>;
+			press-threshold-microvolt = <2970000>;
+		};
+
+		button-select {
+			label = "KEY-2";
+			linux,code = <KEY_SELECT>;
+			press-threshold-microvolt = <2580000>;
+		};
+
+		button-down {
+			label = "KEY-3";
+			linux,code = <KEY_DOWN>;
+			press-threshold-microvolt = <2190000>;
+		};
+	};
 };
 
 &usart1 {
@@ -20,6 +52,10 @@
 };
 
 &lptim1 {
+	status = "okay";
+};
+
+&gpadc {
 	status = "okay";
 };
 

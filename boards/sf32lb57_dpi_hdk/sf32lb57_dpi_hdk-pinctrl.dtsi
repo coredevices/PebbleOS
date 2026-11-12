@@ -19,4 +19,13 @@
 			drive-strength = <8>;
 		};
 	};
+
+	// No Schmitt trigger, whose threshold KEY-3 stays below, nor pull-down, which shifts the levels
+	keys_default: keys-default-state {
+		key-pins {
+			pins = "PA34";
+			function = "gpio";
+			input-enable;
+		};
+	};
 };
