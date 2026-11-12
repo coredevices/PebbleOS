@@ -100,11 +100,11 @@ static int prv_acquire(void) {
   uintptr_t csr_addr = s_pmuc->lpsys_rcc + SF32LB52_LPSYS_RCC_CSR_OFFSET;
   int ret;
 
-  soc_sf32lb52_lpsys_wake();
+  soc_sf32lb_lpsys_wake();
 
   // Reading the register takes the mutex if it is free.
   if ((pbl_readl(s_pmuc->lock + SF32LB52_MAILBOX_C1EXR_OFFSET) & MAILBOX_CxEXR_EX) == 0U) {
-    soc_sf32lb52_lpsys_release();
+    soc_sf32lb_lpsys_release();
     return -EBUSY;
   }
 
@@ -131,7 +131,7 @@ static int prv_acquire(void) {
     prv_acr_modify(LPSYS_AON_ACR_HXT48_REQ, 0U);
   }
   prv_unlock();
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_release();
   return ret;
 }
 
@@ -140,7 +140,7 @@ static void prv_release(void) {
     prv_acr_modify(LPSYS_AON_ACR_HXT48_REQ, 0U);
   }
   prv_unlock();
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_release();
 }
 
 static int prv_start_gate(uint32_t cycles) {

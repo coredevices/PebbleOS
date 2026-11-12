@@ -175,19 +175,19 @@ static int prv_start(const struct pbl_rproc *rproc) {
   uint32_t tx_pwr;
   int ret;
 
-  soc_sf32lb52_lpsys_wake();
-  soc_sf32lb52_lpsys_halt(false);
+  soc_sf32lb_lpsys_wake();
+  soc_sf32lb_lpsys_halt(false);
 
   config = prv_config(lcpu);
   prv_rom_config(lcpu, config);
 
   ret = prv_load_clocks(lcpu);
   if (ret != 0) {
-    soc_sf32lb52_lpsys_release();
+    soc_sf32lb_lpsys_release();
     return ret;
   }
 
-  soc_sf32lb52_lpsys_set_entry(vectors[0], vectors[1]);
+  soc_sf32lb_lpsys_set_entry(vectors[0], vectors[1]);
 
   memset((void *)(lcpu->sram.base + LCPU_CODE_OFFSET), 0, LCPU_CODE_SIZE);
   pbl_rproc_sf32lb52__patch_install(lcpu);
@@ -196,8 +196,8 @@ static int prv_start(const struct pbl_rproc *rproc) {
   // calibration leaves data in the exchange memory
   memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
 
-  soc_sf32lb52_lpsys_run();
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_run();
+  soc_sf32lb_lpsys_release();
 
   pbl_busy_wait_us(LCPU_BOOT_DELAY_US);
 
@@ -206,9 +206,9 @@ static int prv_start(const struct pbl_rproc *rproc) {
 
 static void prv_stop(const struct pbl_rproc *rproc) {
   // LPSYS_AON is only reachable while the wake request is held
-  soc_sf32lb52_lpsys_wake();
-  soc_sf32lb52_lpsys_halt(false);
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_wake();
+  soc_sf32lb_lpsys_halt(false);
+  soc_sf32lb_lpsys_release();
 }
 
 #ifdef CONFIG_COREDUMP
@@ -216,7 +216,7 @@ static void prv_stop(const struct pbl_rproc *rproc) {
 // watchdog reboots us, costing only the end of the dump. We reset right after, so the wake is
 // never balanced.
 void pbl_rproc_sf32lb52_coredump_prepare(void) {
-  soc_sf32lb52_lpsys_wake();
+  soc_sf32lb_lpsys_wake();
 }
 #endif
 
