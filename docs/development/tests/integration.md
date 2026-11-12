@@ -399,13 +399,13 @@ averages); record them with `record_property` to have them in the JUnit
 report. A measurement that lost samples fails rather than report a wrong
 figure.
 
-The power tests measure TicToc idling while advertising fast and slow for
-discovery, and in airplane mode. They wipe the watch first (`dut.wipe()`),
-so run them on a test watch, with no phone bonded to it nearby. Each passes
-within 10% of the board's nominal figure in `power/test_idle.py`, measured
-at 3.8 V, and one out of range is rerun once; update the nominals when a
-change moves them on purpose. Boards
-without nominals record their figures with a warning.
+The power tests measure TicToc idling in airplane mode. They wipe the watch
+first (`dut.wipe()`), so run them on a test watch. Each passes within 10% of
+the board's nominal figure in `power/test_idle.py`, measured at 3.8 V, and
+one out of range is rerun once; update the nominals when a change moves them
+on purpose. Boards without nominals record their figures with a warning.
+Advertising current is not measured: scans from phones and computers nearby
+add scan responses to it, so it depends on where the watch is.
 
 ## Recovery firmware
 
@@ -418,7 +418,7 @@ over the single bond,
 installing the normal firmware from the phone and "Reset to PRF" from it,
 the backlight timeout, turning off after 10 minutes unplugged and
 unconnected (not while a phone or a charger is connected), the low battery
-screen, and the current advertising, connected and off. On the emulator
+screen, and the current connected and off. On the emulator
 the screens are compared with golden images, the backlight is timed on the
 display, and `dut.set_battery()` sets the emulated battery's charge and
 charger; on a watch the current is measured with a PPK2, the backlight
