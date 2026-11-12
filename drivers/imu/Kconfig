@@ -43,11 +43,6 @@ endif # ACCEL
 
 if ACCEL_LIS2DW12
 
-config ACCEL_LIS2DW12_DISABLE_ADDR_PULLUP
-    bool "Disable ADDR pin pull-up"
-    help
-      Disable the internal pull-up resistor on the ADDR pin.
-
 config ACCEL_LIS2DW12_WK_DUR_DEFAULT
     int "Default wake duration"
     range 0 3
