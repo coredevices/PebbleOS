@@ -1,0 +1,5 @@
+# sf32lb57_dpi_hdk board configuration
+
+CONFIG_SOC_SF32LB579=y
+
+CONFIG_UART=y
