@@ -40,6 +40,9 @@
 #define CONFIG_57_SIZE   0x100U
 #define CONFIG_MAGIC     0x45457878U
 
+// TX power table the SF32LB57 LCPU reads
+#define RF_CONFIG_57_OFFSET 0x13900U
+
 #define CONFIG_WDT_TIME         12U
 #define CONFIG_WDT_STATUS       16U
 #define CONFIG_BT_TX_PWR        20U
@@ -179,7 +182,6 @@ static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
   return ret;
 }
 
-#ifndef CONFIG_SOC_SF32LB57
 // Calibrates the radio, then hands the LCPU its TX power configuration
 static void prv_rf_cal(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *config) {
   const struct pbl_rproc_sf32lb52__rf rf = {
@@ -193,15 +195,22 @@ static void prv_rf_cal(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *config) {
     .hpsys_cfg = lcpu->rf.hpsys_cfg,
     .pmuc = lcpu->rf.pmuc,
     .dma_buf = lcpu->sram.base + LCPU_EM_OFFSET,
+#ifdef CONFIG_SOC_SF32LB57
+    .rf_config = lcpu->sram.base + RF_CONFIG_57_OFFSET,
+#endif
   };
-  uint32_t tx_pwr;
 
-  tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
+#ifdef CONFIG_SOC_SF32LB57
+  // The SF32LB57 LCPU takes its TX power from the table instead
+  pbl_rproc_sf32lb57__rf_cal(&rf);
+#else
+  uint32_t tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
+
   memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
+#endif
   // calibration leaves data in the exchange memory
   memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
 }
-#endif
 
 static int prv_start(const struct pbl_rproc *rproc) {
   const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
@@ -224,6 +233,7 @@ static int prv_start(const struct pbl_rproc *rproc) {
   // The SF32LB57 ROM boots from its own vectors
   soc_sf32lb_lpsys_set_entry(0U, 0U);
   pbl_rproc_sf32lb52__patch_install(lcpu);
+  prv_rf_cal(lcpu, config);
 #else
   const uint32_t *vectors = (const uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET);
 

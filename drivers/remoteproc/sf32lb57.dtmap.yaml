@@ -4,7 +4,7 @@
 compatible: sifli,sf32lb57-lcpu
 config: REMOTEPROC_SF32LB52
 class: rproc
-define: PBL_RPROC_SF32LB57_DEFINE
+define: PBL_RPROC_SF32LB52_DEFINE
 args:
   - name: true
   - reg: 0
@@ -34,3 +34,21 @@ args:
   - clock: pclk
   - clock: pclk2
   - clock: lpclk
+  - reg: 0
+    of: sifli,bt-rfc
+  - reg: 0
+    of: sifli,bt-phy
+  - reg: 1
+    of: sifli,bt-phy
+  - reg: 0
+    of: sifli,bt-mac
+  - reg: 0
+    of: sifli,gpadc
+  - reg: 0
+    of: sifli,dmac
+  - reg: 0
+    of: sifli,lpsys-rcc
+  - reg: 0
+    of: sifli,hpsys-cfg
+  - reg: 0
+    of: sifli,pmuc

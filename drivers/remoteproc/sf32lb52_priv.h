@@ -26,8 +26,14 @@ struct pbl_rproc_sf32lb52__rf {
   uintptr_t pmuc;
   // LPSYS SRAM the samples are captured to
   uintptr_t dma_buf;
+  // LPSYS SRAM the TX power table is written to, SF32LB57 only
+  uintptr_t rf_config;
 };
 
 // Calibrate the radio. LPSYS must be awake and the LCPU held. Returns the TX power
 // configuration word for the LCPU.
 uint32_t pbl_rproc_sf32lb52__rf_cal(const struct pbl_rproc_sf32lb52__rf *rf);
+
+// Calibrate the SF32LB57 radio and write the TX power table. LPSYS must be awake and the LCPU
+// held. Returns the TX power configuration word for the LCPU.
+uint32_t pbl_rproc_sf32lb57__rf_cal(const struct pbl_rproc_sf32lb52__rf *rf);
