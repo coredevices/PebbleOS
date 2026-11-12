@@ -48,6 +48,8 @@
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
 	current-speed = <1000000>;
+	dmas = <&gpdma1 6 5 2>;
+	dma-names = "rx";
 	status = "okay";
 };
 
