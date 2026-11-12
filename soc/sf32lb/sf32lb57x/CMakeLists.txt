@@ -6,5 +6,6 @@ pbl_include_directories(.)
 pbl_library_sources(
   idle.c
   init.c
+  lpsys.c
   mpu_regions.c
 )
