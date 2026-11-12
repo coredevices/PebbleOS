@@ -2260,3 +2260,96 @@ def test_overlays_change_the_tree(tmp_path):
     assert not sensor.status_okay
     assert str(overlay) in sources
     assert not any(src.endswith("board.overlaid.dts") for src in sources)
+
+
+IO_CHANNEL_CLASSES = {
+    **GRAPH_CLASSES,
+    "adc": {
+        "class": "adc",
+        "type": "struct adc",
+        "include": "adc.h",
+        "provides": {"io-channel": "ADC_CHANNEL(&{sym}, {0})"},
+    },
+    "input": {"class": "input", "type": "struct input", "include": "input.h"},
+}
+
+IO_CHANNEL_SPECS = {
+    "acme,adc": {
+        "compatible": "acme,adc",
+        "config": "ADC",
+        "class": "adc",
+        "define": "ADC_DEFINE",
+        "args": [{"reg": 0}],
+    },
+    "acme,keys": {
+        "compatible": "acme,keys",
+        "config": "KEYS",
+        "class": "input",
+        "define": "KEYS_DEFINE",
+        "args": [{"io-channel": "buttons"}],
+    },
+}
+
+IO_CHANNEL_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    adc: adc@1000 {
+        compatible = "acme,adc";
+        reg = <0x1000 0x100>;
+        #io-channel-cells = <1>;
+    };
+
+    keys {
+        compatible = "acme,keys";
+        %(keys)s
+    };
+};
+"""
+
+
+def generate_with(tmp_path, text, specs, classes):
+    path, dtb = tmp_path / "t.dts", tmp_path / "t.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
+    gen.run()
+    return gen
+
+
+def test_io_channels(tmp_path):
+    keys = 'io-channels = <&adc 7>, <&adc 6>;\n        io-channel-names = "other", "buttons";'
+    gen = generate_with(
+        tmp_path, IO_CHANNEL_DTS % {"keys": keys}, IO_CHANNEL_SPECS, IO_CHANNEL_CLASSES
+    )
+    assert "KEYS_DEFINE(dt_node_keys, ADC_CHANNEL(&dt_adc, 6));" in body(gen)
+    assert "PBL_DEVICE_DEPENDS(dt_node_keys, &dt_node_keys.dev, &dt_adc.dev);" in depends(gen)
+
+
+@pytest.mark.parametrize(
+    "keys, message",
+    [
+        (
+            'io-channels = <&adc 7>;\n        io-channel-names = "other";',
+            "no 'buttons' in",
+        ),
+        (
+            'io-channels = <&adc 7>;\n        io-channel-names = "other", "buttons";',
+            "no io-channel 1",
+        ),
+    ],
+)
+def test_bad_io_channels_fail(tmp_path, keys, message):
+    with pytest.raises(DtError, match=message):
+        generate_with(
+            tmp_path,
+            IO_CHANNEL_DTS % {"keys": keys},
+            IO_CHANNEL_SPECS,
+            IO_CHANNEL_CLASSES,
+        )
+
