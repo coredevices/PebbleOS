@@ -4,30 +4,116 @@
 #include <errno.h>
 
 #include <pbl/devicetree.h>
+#include <pbl/drivers/clk/cal.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
+#include <hardware/sf32lb57_hpsys_rcc.h>
 #include <hardware/sf32lb57_pmuc.h>
 
+// Nominal, until the first gate
 #define LRC10_HZ 10000U
 #define LRC32_HZ 32000U
 #define HRC48_HZ 48000000U
 // At about 32 kHz, it starts within a few periods
 #define LRC32_READY_US 1000U
 
+// The RC10CAL counter of the HPSYS RCC counts 48 MHz crystal cycles over a number of LRC10 cycles
+#define REF_HZ          48000000.0
+#define GATE_CYCLES     CONFIG_CLK_SF32LB57_PMUC_LRC10_CAL_GATE_CYCLES
+#define PERIOD_MS       (CONFIG_CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S * 1000U)
+#define DONE_TIMEOUT_US 2000U
+
+// The SF32LB52 LRC10 model; see the RC10K page of the clock driver documentation.
+static const struct pbl_freq_track_params s_params = {
+  .wfm = 7.2e-6,
+  .wander = 8e-6,
+  .rw = 1.1e-6,
+  .reject_sigma = 5.0,
+  .max_rejects = 3U,
+};
+
 struct pbl_clk_sf32lb57_pmuc {
   struct pbl_clk_controller ctrl;
   uintptr_t base;
+  // HPSYS RCC, whose counter measures LRC10
+  uintptr_t rcc;
   struct pbl_clk hxt48;
   struct pbl_clk lxt32;
   const struct pbl_clk_assigned *assigned;
 };
 
+static const struct pbl_clk_cal_ops s_cal_ops;
+
+static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(
+    &s_cal_ops, &s_params, PBL_CLK(SF32LB57_PMUC, SF32LB57_CLK_LRC10), GATE_CYCLES, PERIOD_MS);
+
+static uintptr_t s_rcc;
+
 static const struct pbl_clk_sf32lb57_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
   return container_of(ctrl, const struct pbl_clk_sf32lb57_pmuc, ctrl);
 }
+
+static inline uint32_t prv_cal_result(void) {
+  return pbl_readl(s_rcc + SF32LB57_HPSYS_RCC_RC10CAL2_OFFSET);
+}
+
+static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
+  uint32_t ctrl;
+  int ret;
+
+  if (cycles == 0U || cycles > PBL_FIELD_GET(HPSYS_RCC_RC10CAL1_CAL_LENGTH_MASK, UINT32_MAX)) {
+    return -EINVAL;
+  }
+
+  // The crystal must keep counting through the gate
+  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+
+  // One gate, on LRC10 (CAL_SEL clear)
+  ctrl = PBL_FIELD_PREP(HPSYS_RCC_RC10CAL1_CAL_LENGTH_MASK, cycles) |
+         PBL_FIELD_PREP(HPSYS_RCC_RC10CAL1_CON_NUM_MASK, 1U) | HPSYS_RCC_RC10CAL1_CON_MODE;
+  pbl_writel(ctrl, s_rcc + SF32LB57_HPSYS_RCC_RC10CAL1_OFFSET);
+  pbl_writel(ctrl | HPSYS_RCC_RC10CAL1_CAL_START, s_rcc + SF32LB57_HPSYS_RCC_RC10CAL1_OFFSET);
+
+  // DONE stays set from the previous gate until this one starts
+  ret =
+      PBL_POLL_BUSY_US((prv_cal_result() & HPSYS_RCC_RC10CAL2_CAL_DONE) == 0U, 0U, DONE_TIMEOUT_US);
+  if (ret != 0) {
+    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  }
+
+  return ret;
+}
+
+static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
+  uint32_t count;
+  int ret;
+
+  ret = PBL_POLL_BUSY_US((prv_cal_result() & HPSYS_RCC_RC10CAL2_CAL_DONE) != 0U, 10U,
+                         DONE_TIMEOUT_US);
+  count = PBL_FIELD_GET(HPSYS_RCC_RC10CAL2_CAL_RSLT_MASK, prv_cal_result());
+  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (count == 0U) {
+    return -EIO;
+  }
+
+  *hz = REF_HZ * cycles / count;
+
+  return 0;
+}
+
+static const struct pbl_clk_cal_ops s_cal_ops = {
+  .start = prv_cal_start,
+  .finish = prv_cal_finish,
+};
 
 static uint32_t prv_read(const struct pbl_clk_controller *ctrl, uint32_t offset) {
   return pbl_readl(prv_pmuc(ctrl)->base + offset);
@@ -37,7 +123,7 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
                         uint64_t *rate_mhz) {
   switch (id) {
     case SF32LB57_CLK_LRC10:
-      *rate_mhz = LRC10_HZ * 1000ULL;
+      *rate_mhz = pbl_clk_cal_get_rate(&s_cal);
       return 0;
     case SF32LB57_CLK_LRC32:
       *rate_mhz = LRC32_HZ * 1000ULL;
@@ -178,7 +264,15 @@ static int prv_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  return pbl_clk_assign(pmuc->assigned);
+  ret = pbl_clk_assign(pmuc->assigned);
+  if (ret != 0) {
+    return ret;
+  }
+
+  s_rcc = pmuc->rcc;
+  pbl_clk_cal_start(&s_cal, LRC10_HZ);
+
+  return 0;
 }
 
 static const struct pbl_clk_controller_ops s_ops = {
@@ -189,12 +283,12 @@ static const struct pbl_clk_controller_ops s_ops = {
   .set_parent = prv_set_parent,
 };
 
-#define PBL_CLK_SF32LB57_PMUC_DEFINE(sym, _name, _base, _hxt48, _lxt32, ...)                 \
+#define PBL_CLK_SF32LB57_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32, ...)           \
   PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB57_PMUC_NUM_CLKS);                              \
   PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
   PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb57_pmuc, struct pbl_clk_controller, ctrl) {  \
     .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
-    .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,                            \
+    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_pmuc)

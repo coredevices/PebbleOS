@@ -198,6 +198,7 @@
 			#clock-cells = <1>;
 			clocks = <&xtal48m>;
 			clock-names = "hxt48";
+			sifli,hpsys-rcc = <&hpsys_rcc>;
 		};
 
 		iwdt: watchdog@500cc000 {
