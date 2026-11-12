@@ -63,3 +63,23 @@ config PLATFORM_LEGACY_3X_DISPLAY_HEIGHT
     int
     default 180 if PLATFORM_GABBRO
     default 168
+
+# Animation timing apps see.
+
+config PLATFORM_ANIMATION_FRAME_INTERVAL_MS
+    int
+    default 28 if PLATFORM_GABBRO
+    default 33
+    help
+      Design frame interval animation durations derive from. Gabbro's is
+      quicker, as its ~21 Hz display shows fewer, larger motion steps that
+      read as sluggish at design speed.
+
+config PLATFORM_ANIMATION_RENDER_INTERVAL_MS
+    int
+    default 48 if PLATFORM_GABBRO
+    default PLATFORM_ANIMATION_FRAME_INTERVAL_MS
+    help
+      Interval at which animation frames are rendered. Gabbro's display shows
+      a full frame in about 47 ms: rendering faster coalesces frames into
+      uneven motion steps.
