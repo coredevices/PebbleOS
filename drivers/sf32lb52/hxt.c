@@ -56,17 +56,17 @@ static size_t prv_find_record(const uint8_t *cfg, size_t size, uint8_t id, uint8
 // The system clock leaves the crystal while it changes, and the DLLs relock to it after
 static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_sf32lb52_hxt *hxt, uint32_t cbank) {
   const uintptr_t cr1 = hxt->base + SF32LB52_PMUC_HXT_CR1_OFFSET;
-  struct pbl_clk_sf32lb52_hxt48_state state;
+  struct pbl_clk_sf32lb_hxt48_state state;
   unsigned int key;
 
   key = pbl_irq_disable_all();
 
-  pbl_clk_sf32lb52_hxt48_suspend(&state);
+  pbl_clk_sf32lb_hxt48_suspend(&state);
   pbl_writel((pbl_readl(cr1) & ~PMUC_HXT_CR1_CBANK_SEL_MASK) |
                  PBL_FIELD_PREP(PMUC_HXT_CR1_CBANK_SEL_MASK, cbank),
              cr1);
   pbl_busy_wait_us(CBANK_SETTLE_US);
-  pbl_clk_sf32lb52_hxt48_resume(&state);
+  pbl_clk_sf32lb_hxt48_resume(&state);
 
   pbl_irq_restore_all(key);
 }
