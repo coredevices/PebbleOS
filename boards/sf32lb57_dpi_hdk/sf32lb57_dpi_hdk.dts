@@ -65,7 +65,10 @@
 	status = "okay";
 };
 
-// No MPI driver on the SF32LB57 yet: the flash runs as the boot ROM sets it up
+&mpi2 {
+	status = "okay";
+};
+
 &sip_flash {
 	partitions {
 		compatible = "fixed-partitions";
@@ -85,6 +88,10 @@
 };
 
 &mpi3 {
+	pinctrl-0 = <&mpi3_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
 	flash0: flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
