@@ -95,7 +95,7 @@ config KERNEL_USER_STACK_GUARD_SIZE
 
 config KERNEL_MPU_REGIONS
 	int
-	default 12 if SOC_SF32LB52
+	default 12 if SOC_SF32LB52 || SOC_SF32LB57
 	default 8
 	help
 	  MPU slots the core implements. The last four switch with the thread, and
