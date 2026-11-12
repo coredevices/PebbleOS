@@ -9,11 +9,8 @@
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
-#include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/kernel/time.h>
-#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/soc/sf32lb/sleep.h>
 #include <pbl/util/bits.h>
@@ -37,62 +34,6 @@ PBL_LOG_MODULE_DEFINE(driver_display_sf32lb_lcdc, CONFIG_DRIVER_DISPLAY_LOG_LEVE
 #define LCDC_MPI_CBUS_START  0x10000000U
 #define LCDC_MPI_CBUS_END    0x20000000U
 #define LCDC_MPI_SBUS_OFFSET 0x50000000U
-
-// Timeout for detecting a silent loss: the LCDC kicks off a transfer but never
-// delivers the EOF interrupt, so the compositor would block forever. A normal
-// full-frame transfer takes well under 20ms; 500ms is a conservative threshold
-// that won't fire on transient stalls but catches a real wedge well before the
-// user perceives the freeze.
-#define DISPLAY_SILENT_LOSS_TIMEOUT_MS 500
-
-// Bytes of the LCDC peripheral register file snapshotted into BSS before
-// crashing. The PebbleOS coredump captures all of HPSYS SRAM but does not
-// capture MMIO; copying registers into SRAM gets them into the coredump that
-// gets shared with Sifli. 2KB covers IRQ/SETTING/COMMAND/CANVAS/LAYER0/JDI_PAR
-// (lcd_if.h struct ends around offset 0x100).
-#define DISPLAY_LCDC_REG_DUMP_BYTES 2048
-
-static const struct pbl_display_sf32lb_lcdc *s_lcdc;
-
-static struct pbl_delayed_work s_silent_loss_timer;
-// Generation of the update in flight, and of the last one the EOF callback
-// completed. The silent-loss handler only crashes if its generation never
-// completed, so a timer left running after a completion is harmless.
-static uint32_t s_update_gen;
-static volatile uint32_t s_completed_gen;
-// Captured at silent-loss time so the coredump shipped to Sifli carries the
-// LCDC register state at the moment of the wedge. uint32_t storage (not
-// uint8_t) so the linker word-aligns it — prv_snapshot_lcdc_regs reads MMIO
-// as 32-bit volatiles and would fault on a misaligned destination. Marked
-// volatile because the only consumer is the postmortem coredump tool, not
-// any C code in this image — without it, the compiler eliminates the stores.
-static volatile uint32_t s_lcdc_pre_crash_regs[DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t)];
-
-// Ring buffer of recent LCDC interrupts, recorded by the interrupt handler
-#define DISPLAY_IRQ_LOG_ENTRIES 32
-
-typedef struct {
-  uint32_t timestamp;    // pbl_uptime_ticks() low 32 bits
-  uint32_t irq_before;   // LCD_IF.IRQ as the handler reads it
-  uint32_t irq_after;    // LCD_IF.IRQ after the handler cleared bits
-  uint32_t jdi_par_ctrl; // LCD_IF.JDI_PAR_CTRL before the handler (INT_LINE_NUM)
-  uint32_t status;       // LCD_IF.STATUS before the handler
-  uint32_t flags;        // bit0: EOF callback fired; bit1: update in progress at entry
-} DisplayIrqLogEntry;
-
-typedef struct {
-  uint32_t write_count; // total IRQs logged; newest = (write_count-1) % N
-  DisplayIrqLogEntry entries[DISPLAY_IRQ_LOG_ENTRIES];
-} DisplayIrqLog;
-
-static volatile DisplayIrqLog s_lcdc_irq_log;
-
-#ifndef CONFIG_RELEASE
-// Test hook: arm a one-shot drop of the next LCDC transfer-complete callback,
-// simulating the silent-loss failure mode. The silent-loss timer should fire
-// ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and a panic.
-static volatile bool s_test_drop_next_complete;
-#endif
 
 static const struct pbl_display_sf32lb_lcdc *prv_lcdc(const struct pbl_display *disp) {
   return container_of(disp, const struct pbl_display_sf32lb_lcdc, disp);
@@ -438,33 +379,6 @@ static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
   return 0;
 }
 
-static void prv_snapshot_lcdc_regs(const struct pbl_display_sf32lb_lcdc *lcdc) {
-  for (size_t i = 0; i < DISPLAY_LCDC_REG_DUMP_BYTES / sizeof(uint32_t); i++) {
-    s_lcdc_pre_crash_regs[i] = prv_read(lcdc, i * sizeof(uint32_t));
-  }
-}
-
-static void prv_silent_loss_handler(struct pbl_work *work) {
-  struct pbl_display_sf32lb_lcdc_state *state = s_lcdc->state;
-
-  // A new update may have rearmed the timer after it expired
-  pbl_irq_lock();
-  const bool rearmed = pbl_delayed_work_is_pending(&s_silent_loss_timer);
-  const uint32_t gen = s_update_gen;
-  pbl_irq_unlock();
-
-  if (rearmed || s_completed_gen == gen) {
-    return;
-  }
-
-  prv_snapshot_lcdc_regs(s_lcdc);
-  pbl_dcache_flush_range((const void *)s_lcdc_pre_crash_regs, sizeof(s_lcdc_pre_crash_regs));
-  pbl_panic("LCDC silent loss: no EOF in %ums (STATUS=0x%lx y=%u..%u)",
-            (unsigned)DISPLAY_SILENT_LOSS_TIMEOUT_MS,
-            (unsigned long)prv_read(s_lcdc, SF32LB52_LCDC_STATUS_OFFSET), (unsigned)state->y0,
-            (unsigned)state->y1);
-}
-
 static void prv_update_end(const struct pbl_display_sf32lb_lcdc *lcdc, int status) {
   prv_rows_convert(lcdc, prv_to_222);
   soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
@@ -504,40 +418,12 @@ static bool prv_handle_irq(const struct pbl_display_sf32lb_lcdc *lcdc, uint32_t 
 void pbl_display_sf32lb_lcdc_irq_handler(const struct pbl_display_sf32lb_lcdc *lcdc) {
   uint32_t irq = prv_read(lcdc, SF32LB52_LCDC_IRQ_OFFSET);
   int status = 0;
-  bool eof;
-
-  volatile DisplayIrqLogEntry *entry =
-      &s_lcdc_irq_log.entries[s_lcdc_irq_log.write_count % DISPLAY_IRQ_LOG_ENTRIES];
-  entry->timestamp = (uint32_t)pbl_uptime_ticks();
-  entry->irq_before = irq;
-  entry->jdi_par_ctrl = prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET);
-  entry->status = prv_read(lcdc, SF32LB52_LCDC_STATUS_OFFSET);
-  entry->flags = pbl_display_update_in_progress(&lcdc->disp) ? 0x2u : 0x0u;
 
   prv_write(lcdc, SF32LB52_LCDC_IRQ_OFFSET, irq);
-  eof = prv_handle_irq(lcdc, irq, &status);
-
-  entry->irq_after = prv_read(lcdc, SF32LB52_LCDC_IRQ_OFFSET);
-  if (eof) {
-    entry->flags |= 0x1u;
-  }
-  s_lcdc_irq_log.write_count++;
-
-  if (!eof) {
+  if (!prv_handle_irq(lcdc, irq, &status)) {
     return;
   }
 
-#ifndef CONFIG_RELEASE
-  if (s_test_drop_next_complete && pbl_display_update_in_progress(&lcdc->disp)) {
-    s_test_drop_next_complete = false;
-    // Simulate the lost-completion failure mode: leave the generation
-    // incomplete and don't end the update. The silent-loss timer should fire
-    // ~DISPLAY_SILENT_LOSS_TIMEOUT_MS later and a panic.
-    return;
-  }
-#endif
-
-  s_completed_gen = s_update_gen;
   prv_update_end(lcdc, status);
 }
 
@@ -556,9 +442,6 @@ static int prv_init(const struct pbl_display *disp) {
       (disp->width % 4U) != 0U) {
     return -EINVAL;
   }
-
-  s_lcdc = lcdc;
-  pbl_delayed_work_init(&s_silent_loss_timer, prv_silent_loss_handler);
 
   // Power cycle the panel with its inputs as the sleep state leaves them, e.g. driven low
   ret = pbl_pinctrl_select_state(&lcdc->pinctrl, PBL_PINCTRL_STATE_SLEEP);
@@ -622,19 +505,9 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
 
   soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
 
-  // Arm the timer before kickoff so the EOF IRQ, which can fire as soon as
-  // the transfer starts, never races us into a state where the timer
-  // isn't yet armed.
-  pbl_irq_lock();
-  s_update_gen++;
-  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_silent_loss_timer,
-                              PBL_MSEC(DISPLAY_SILENT_LOSS_TIMEOUT_MS));
-  pbl_irq_unlock();
-
   ret = prv_update_start(lcdc);
   if (ret != 0) {
     PBL_LOG_ERR("display: update start failed (%d)", ret);
-    s_completed_gen = s_update_gen;
     prv_rows_convert(lcdc, prv_to_222);
     soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
     return ret;
@@ -650,11 +523,5 @@ const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops = {
   .set_rotated = prv_set_rotated,
   .update = prv_update,
 };
-
-#ifndef CONFIG_RELEASE
-void pbl_display_sf32lb_lcdc_test_drop_next_complete(void) {
-  s_test_drop_next_complete = true;
-}
-#endif
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_lcdc)
