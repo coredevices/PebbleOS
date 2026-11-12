@@ -61,6 +61,17 @@
 				 <&pmuc SF32LB57_PMUC_CLK_HXT48_DLL>;
 			clock-names = "hrc48", "hxt48", "hxt48-dll";
 			sifli,hpsys-cfg = <&hpsys_cfg>;
+			power-domains = <&pmuc SF32LB57_PMUC_PD_HPSYS>;
+			required-opps = <&hpsys_s1>;
+			assigned-clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DLL1>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SYS>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_HCLK>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PCLK>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PCLK2>;
+			assigned-clock-parents = <0>, <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DLL1>,
+						 <0>, <0>, <0>;
+			assigned-clock-rates = <240000000>, <0>, <240000000>, <120000000>,
+					       <3750000>;
 		};
 
 		pinctrl: pinctrl@50003000 {

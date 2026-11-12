@@ -15,8 +15,8 @@
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
-#include <hardware/sf32lb57_hpsys_cfg.h>
 #include <hardware/sf32lb52_hpsys_rcc.h>
+#include <hardware/sf32lb57_hpsys_cfg.h>
 #include <hardware/sf32lb57_hpsys_rcc.h>
 
 #define NUM_GATES 64U
@@ -753,14 +753,14 @@ static const struct pbl_clk_controller_ops s_clk_ops = {
     .hxt48_dll = _hxt48_dll, .pd = _pd, .pd_level = (_pd_level), .assigned = sym##_assigned, \
   }
 
-// No boot operating point yet: the clocks stay within the voltage the boot ROM leaves
-#define PBL_CLK_SF32LB57_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, ...) \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                            \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {      \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),           \
-    .soc = &s_sf32lb57, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48, \
-    .hxt48_dll = _hxt48_dll, .assigned = sym##_assigned,                                  \
+#define PBL_CLK_SF32LB57_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd,    \
+                                _pd_level, ...)                                              \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                               \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {         \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),              \
+    .soc = &s_sf32lb57, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48,    \
+    .hxt48_dll = _hxt48_dll, .pd = _pd, .pd_level = (_pd_level), .assigned = sym##_assigned, \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_clk)
