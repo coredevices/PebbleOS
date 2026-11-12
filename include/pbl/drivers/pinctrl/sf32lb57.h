@@ -98,6 +98,10 @@ struct pbl_pinctrl_sf32lb57 {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_pinctrl_controller pbl_pinctrl_sf32lb57_hpsys;
+extern const struct pbl_pinctrl_sf32lb57 pbl_pinctrl_sf32lb57_hpsys_inst;
+
+/* Set the @p mask bits of the pad of @p pin to its value, for the GPIO driver */
+int pbl_pinctrl_sf32lb57_modify(uint32_t pin, uint32_t mask);
 /** @endcond */
 
 /** HPSYS pin controller. */

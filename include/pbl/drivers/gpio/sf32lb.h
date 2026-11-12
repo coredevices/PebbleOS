@@ -20,6 +20,10 @@
  */
 
 /** @cond INTERNAL_HIDDEN */
+/** @cond INTERNAL_HIDDEN */
+struct pbl_gpio_sf32lb_pads;
+/** @endcond */
+
 struct pbl_gpio_sf32lb_state {
   uint32_t od[2];
 };
@@ -29,6 +33,8 @@ struct pbl_gpio_sf32lb_state {
 struct pbl_gpio_sf32lb {
   /** GPIO port. */
   struct pbl_gpio_port port;
+  /** Pads of the series. */
+  const struct pbl_gpio_sf32lb_pads *pads;
   /** Register base address. */
   uintptr_t base;
   /** Interrupt line. */
