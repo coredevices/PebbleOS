@@ -42,7 +42,11 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 #define BLE_HCI_EXT_SF32LB52_BLE_READY 0xFC11U
 
 // Controller NVDS, read by the LCPU ROM on boot, in its SRAM region
-#define NVDS_OFFSET  0xfe00U
+#ifdef CONFIG_SOC_SF32LB57
+#define NVDS_OFFSET 0x13600U
+#else
+#define NVDS_OFFSET 0xfe00U
+#endif
 #define NVDS_MAGIC   0x4e564453UL
 #define NVDS_HDR_LEN 8U
 
@@ -78,7 +82,11 @@ static_assert(sizeof(struct ring) == 20U);
 #define RING_POOL_SIZE(region_size) (((region_size) - sizeof(struct ring)) & ~3U)
 
 // LCPU to HCPU ring, in the LCPU SRAM region
-#define RX_RING_OFFSET    0x2800U
+#ifdef CONFIG_SOC_SF32LB57
+#define RX_RING_OFFSET 0x13a00U
+#else
+#define RX_RING_OFFSET 0x2800U
+#endif
 #define RX_RING_SIZE      512U
 #define RX_RING_POOL_SIZE RING_POOL_SIZE(RX_RING_SIZE)
 
