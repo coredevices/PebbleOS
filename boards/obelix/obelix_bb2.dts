@@ -20,3 +20,11 @@
 		       "1", "0", "0",
 		       "0", "0", "1";
 };
+
+&i2c2 {
+	/* Unused, but powered: its INT1 shares the LSM6DSO INT1 pad */
+	lis2dw12: accelerometer@18 {
+		compatible = "st,lis2dw12";
+		reg = <0x18>;
+	};
+};
