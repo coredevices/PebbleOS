@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
+#include <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb57-pmuc.h>
 #include <dt-bindings/interrupt-controller/irq.h>
@@ -17,6 +18,17 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		lcpu_ipc: memory@2007fe00 {
+			reg = <0x2007fe00 0x200>;
+			no-map;
+		};
 	};
 
 	xtal48m: clock-48000000 {
@@ -51,6 +63,67 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+
+		lpsys_sram: sram@20400000 {
+			compatible = "mmio-sram";
+			reg = <0x20400000 0x14000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x20400000 0x14000>;
+
+			lcpu_sram: lcpu-sram@0 {
+				reg = <0x0 0x14000>;
+			};
+		};
+
+		lpsys_rcc: clock-controller@40000000 {
+			compatible = "sifli,sf32lb57-lpsys-rcc", "sifli,sf32lb52-lpsys-rcc";
+			reg = <0x40000000 0x1000>;
+			#clock-cells = <1>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_HRC48>, <&pmuc SF32LB57_PMUC_CLK_HXT48>;
+			clock-names = "hrc48", "hxt48";
+			assigned-clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PERI>;
+			assigned-clock-parents = <&pmuc SF32LB57_PMUC_CLK_HXT48>;
+		};
+
+		mailbox2: mailbox@40002000 {
+			compatible = "sifli,sf32lb57-mailbox", "sifli,sf32lb52-mailbox";
+			reg = <0x40002000 0x1000>;
+			interrupts = <58>;
+			#mbox-cells = <1>;
+			#hwlock-cells = <1>;
+			status = "disabled";
+		};
+
+		lcpu: remoteproc@40004000 {
+			compatible = "sifli,sf32lb57-lcpu";
+			reg = <0x40004000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			/* LPSYS SRAM through the code bus, HPSYS SRAM */
+			dma-ranges = <0x00400000 0x20400000 0x14000>,
+				     <0x2a000000 0x20000000 0x80000>;
+			mboxes = <&mailbox1 0>, <&mailbox2 0>;
+			mbox-names = "tx", "rx";
+			memory-region = <&lcpu_ipc>;
+			sram = <&lcpu_sram>;
+			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>,
+				 <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			clock-names = "hclk", "pclk", "pclk2", "lpclk";
+			status = "disabled";
+		};
+
+		lpsys_aon: syscon@40040000 {
+			compatible = "sifli,sf32lb57-lpsys-aon", "syscon";
+			reg = <0x40040000 0x1000>;
+		};
+
+		bt_mac: syscon@40090000 {
+			compatible = "sifli,sf32lb57-bt-mac", "syscon";
+			reg = <0x40090000 0x1000>;
+		};
 
 		hpsys_rcc: clock-controller@50000000 {
 			compatible = "sifli,sf32lb57-hpsys-rcc";
@@ -141,6 +214,14 @@
 			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DMAC1>;
 			#dma-cells = <3>;
 			dma-channels = <8>;
+		};
+
+		mailbox1: mailbox@50082000 {
+			compatible = "sifli,sf32lb57-mailbox", "sifli,sf32lb52-mailbox";
+			reg = <0x50082000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MAILBOX1>;
+			#mbox-cells = <1>;
+			status = "disabled";
 		};
 
 		usart1: serial@50084000 {

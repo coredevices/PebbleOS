@@ -17,7 +17,9 @@ description:
 properties:
   compatible:
     items:
-      - const: sifli,sf32lb52-bt-mac
+      - enum:
+          - sifli,sf32lb52-bt-mac
+          - sifli,sf32lb57-bt-mac
       - const: syscon
 
   reg:
