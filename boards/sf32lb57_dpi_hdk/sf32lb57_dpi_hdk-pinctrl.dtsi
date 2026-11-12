@@ -20,6 +20,55 @@
 		};
 	};
 
+	// The module NOR U2. U6, on the SB pads, can be MPI3 instead.
+	mpi3_default: mpi3-default-state {
+		cs-pins {
+			pins = "PA12";
+			function = "mpi3_cs";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		clk-pins {
+			pins = "PA16";
+			function = "mpi3_clk";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		dio0-pins {
+			pins = "PA15";
+			function = "mpi3_dio0";
+			input-enable;
+			bias-pull-down;
+			drive-strength = <8>;
+		};
+
+		dio1-pins {
+			pins = "PA13";
+			function = "mpi3_dio1";
+			input-enable;
+			bias-pull-down;
+			drive-strength = <8>;
+		};
+
+		dio2-pins {
+			pins = "PA14";
+			function = "mpi3_dio2";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		dio3-pins {
+			pins = "PA17";
+			function = "mpi3_dio3";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+	};
+
 	// No Schmitt trigger, whose threshold KEY-3 stays below, nor pull-down, which shifts the levels
 	keys_default: keys-default-state {
 		key-pins {
