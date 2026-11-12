@@ -109,10 +109,11 @@ config CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S
 endif # CLK_SF32LB57_PMUC
 
 config CLK_SF32LB_LPSYS_RCC
-    bool "SiFli SF32LB52 LPSYS RCC"
+    bool "SiFli SF32LB LPSYS RCC"
     default DT_HAS_SIFLI_SF32LB52_LPSYS_RCC_ENABLED
     help
-      Clocks of the SiFli SF32LB52 LPSYS, which the LCPU runs from.
+      Clocks of the SiFli SF32LB52 and SF32LB57 LPSYS, which the LCPU runs
+      from.
 
 config CLK_SF32LB52_RTC
     bool "SiFli SF32LB52 RTC clock"
