@@ -119,6 +119,19 @@
 			status = "disabled";
 		};
 
+		gpio1: gpio@500a0000 {
+			compatible = "sifli,sf32lb57-gpio";
+			reg = <0x500a0000 0x1000>;
+			interrupts = <84>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPIO1>;
+			gpio-controller;
+			gpio-ranges = <&pinctrl 0 26 58>;
+			#gpio-cells = <2>;
+			ngpios = <58>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
 		hpsys_aon: syscon@500c0000 {
 			compatible = "sifli,sf32lb57-hpsys-aon", "syscon";
 			reg = <0x500c0000 0x1000>;

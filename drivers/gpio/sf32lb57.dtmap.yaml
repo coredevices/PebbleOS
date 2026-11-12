@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-gpio
+config: GPIO_SF32LB
+class: [gpio, intc]
+define: PBL_GPIO_SF32LB57_DEFINE
+symbol:
+  gpio: "{sym}"
+  intc: "{sym}_intc"
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - prop: ngpios

@@ -38,7 +38,7 @@ static int prv_pad_reg(const struct pbl_pinctrl_sf32lb57 *ctrl, uint32_t idx, ui
   return 0;
 }
 
-static int prv_configure_pin(const struct pbl_pinctrl_sf32lb57 *ctrl, uint32_t pin) {
+static int prv_configure_pin(const struct pbl_pinctrl_sf32lb57 *ctrl, uint32_t pin, uint32_t mask) {
   uint32_t port = PBL_FIELD_GET(PBL_PINCTRL_SF32LB57_PORT_MSK, pin);
   uint32_t pad = PBL_FIELD_GET(PBL_PINCTRL_SF32LB57_PAD_MSK, pin);
   uintptr_t reg;
@@ -64,7 +64,8 @@ static int prv_configure_pin(const struct pbl_pinctrl_sf32lb57 *ctrl, uint32_t p
   }
 
   // The pad options are encoded where the pad register has them
-  pbl_modifyl(PAD_MSK, pin & PAD_MSK, reg);
+  mask &= PAD_MSK;
+  pbl_modifyl(mask, pin & mask, reg);
 
   return 0;
 }
@@ -72,7 +73,7 @@ static int prv_configure_pin(const struct pbl_pinctrl_sf32lb57 *ctrl, uint32_t p
 static int prv_configure(const struct pbl_pinctrl_controller *ctrl, const uint32_t *pins,
                          uint8_t num_pins, uintptr_t reg) {
   for (uint8_t i = 0U; i < num_pins; i++) {
-    int ret = prv_configure_pin(prv_ctrl(ctrl), pins[i]);
+    int ret = prv_configure_pin(prv_ctrl(ctrl), pins[i], PAD_MSK);
 
     if (ret != 0) {
       return ret;
@@ -94,6 +95,10 @@ static int prv_get(const struct pbl_pinctrl_controller *ctrl, uint16_t pad, uint
   *val = pbl_readl(reg);
 
   return 0;
+}
+
+int pbl_pinctrl_sf32lb57_modify(uint32_t pin, uint32_t mask) {
+  return prv_configure_pin(&pbl_pinctrl_sf32lb57_hpsys_inst, pin, mask);
 }
 
 static const struct pbl_pinctrl_controller_ops s_ops = {
