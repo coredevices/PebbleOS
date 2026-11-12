@@ -16,4 +16,17 @@ config ADC_SHELL
     help
       The adc shell command, to list the ADCs and convert a channel.
 
+config ADC_SF32LB57_GPADC
+    bool "SiFli SF32LB57 GPADC"
+    default DT_HAS_SIFLI_SF32LB57_GPADC_ENABLED
+    select CLK
+    select NVMEM
+    help
+      General purpose ADC of the SiFli SF32LB57, read one channel at a
+      time, with the factory calibration in its eFuse.
+
+module = ADC
+module-str = ADC
+source "subsys/logging/Kconfig.template.log_level"
+
 endif # ADC
