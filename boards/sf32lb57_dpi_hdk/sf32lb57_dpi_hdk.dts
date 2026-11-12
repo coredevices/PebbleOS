@@ -55,6 +55,10 @@
 	status = "okay";
 };
 
+&iwdt {
+	status = "okay";
+};
+
 &gpadc {
 	status = "okay";
 };
