@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "sifli/sf32lb579.dtsi"
+#include "sifli/sf32lb57xv6e.dtsi"
+#include "sf32lb57_dpi_hdk-pinctrl.dtsi"
+
+/ {
+	model = "SiFli SF32LB57x-DPI-HDK";
+	compatible = "sifli,sf32lb57-dpi-hdk", "sifli,sf32lb579";
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_default>;
+	pinctrl-names = "default";
+	current-speed = <1000000>;
+	status = "okay";
+};
+
+&lptim1 {
+	status = "okay";
+};
+
+// No MPI driver on the SF32LB57 yet: the flash runs as the boot ROM sets it up
+&sip_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "ptable";
+			reg = <0x0 0x10000>;
+		};
+
+		partition@20000 {
+			label = "firmware-slot-0";
+			reg = <0x20000 0x300000>;
+		};
+	};
+};
+
+&mpi3 {
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};
