@@ -793,6 +793,12 @@ static int prv_init(const struct pbl_accel *accel) {
 
   s_dev->state->wk_ths_curr = CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT;
 
+  pbl_wallclock_work_init(&s_dev->state->int1_wdt_timer, prv_int1_wdt_cb);
+
+  if (s_dev->int1.intc == nullptr) {
+    return 0;
+  }
+
   err = pbl_device_init(&s_dev->int1.intc->dev);
   if (err != 0) {
     PBL_LOG_ERR("INT1 interrupt controller unavailable");
@@ -816,8 +822,6 @@ static int prv_init(const struct pbl_accel *accel) {
     PBL_LOG_ERR("Could not enable INT1 (%d)", err);
     return err;
   }
-
-  pbl_wallclock_work_init(&s_dev->state->int1_wdt_timer, prv_int1_wdt_cb);
 
   return 0;
 }
@@ -857,6 +861,10 @@ static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
 static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
   bool ret;
   uint8_t val;
+
+  if (num_samples > 0U && s_dev->int1.intc == nullptr) {
+    return -ENOTSUP;
+  }
 
   // Limit to FIFO threshold
   if (num_samples > LIS2DW12_FIFO_SIZE) {
@@ -1010,6 +1018,10 @@ end:
 
 static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
   bool ret;
+
+  if (on && s_dev->int1.intc == nullptr) {
+    return -ENOTSUP;
+  }
 
   // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
   ret = prv_configure_odr(s_dev->state->sampling_interval_us, on);
