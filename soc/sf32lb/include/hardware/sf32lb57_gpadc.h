@@ -17,6 +17,7 @@
 
 /* Register bit definitions */
 
+#define GPADC_CFG_REG1_P_INT_EN  PBL_BIT(2)
 #define GPADC_CFG_REG1_EN_V18    PBL_BIT(6)
 #define GPADC_CFG_REG1_SE        PBL_BIT(7)
 #define GPADC_CFG_REG1_MUTE      PBL_BIT(8)
