@@ -2,3 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 console_uart: usart1
+flash: sip_flash
