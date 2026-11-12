@@ -250,22 +250,34 @@ function(_pebble_js_outputs out)
       VERBATIM
     )
   else()
-    # Copied over as they are, src/ dropped from their paths.
+    # Copied over as they are, src/ dropped from their paths. A file the
+    # project generates in the build directory is where it goes already.
     set(outputs "")
+    set(copies "")
+    set(originals "")
     foreach(source ${sources})
+      cmake_path(IS_PREFIX build ${source} NORMALIZE generated)
+      if(generated)
+        list(APPEND outputs ${source})
+        continue()
+      endif()
       file(RELATIVE_PATH rel ${CMAKE_SOURCE_DIR}/src ${source})
       if(rel MATCHES "^\\.\\./")
         file(RELATIVE_PATH rel ${CMAKE_SOURCE_DIR} ${source})
       endif()
-      list(APPEND outputs ${build}/${rel})
+      list(APPEND copies ${build}/${rel})
+      list(APPEND originals ${source})
     endforeach()
-    add_custom_command(
-      OUTPUT ${outputs}
-      COMMAND ${PEBBLE_PYTHON} ${_PEBBLE_TOOL} js --project ${PEBBLE_PROJECT_JSON} ${sources}
-      DEPENDS ${sources} ${PEBBLE_PROJECT_JSON}
-      COMMENT "Copying JS"
-      VERBATIM
-    )
+    if(originals)
+      add_custom_command(
+        OUTPUT ${copies}
+        COMMAND ${PEBBLE_PYTHON} ${_PEBBLE_TOOL} js --project ${PEBBLE_PROJECT_JSON} ${originals}
+        DEPENDS ${originals} ${PEBBLE_PROJECT_JSON}
+        COMMENT "Copying JS"
+        VERBATIM
+      )
+      list(APPEND outputs ${copies})
+    endif()
   endif()
   set(${out} ${outputs} PARENT_SCOPE)
 endfunction()

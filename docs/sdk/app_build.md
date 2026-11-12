@@ -91,7 +91,8 @@ before.
 : PebbleKit JS. With `enableMultiJS`, webpack bundles the sources into
   `pebble-js-app.js` starting from `ENTRY` (by default `main.pkjs` in
   `package.json`, else `src/pkjs/index.js`); without it, the files are
-  copied into the pbw as they are. In a package, the JS it ships.
+  copied into the pbw as they are, and one the project generates in the
+  build directory is taken from there. In a package, the JS it ships.
 
 `pebble_package(SOURCES ... HEADERS ...)`
 : A Pebble package (`"projectType": "package"`): a `lib<name>.a` per
