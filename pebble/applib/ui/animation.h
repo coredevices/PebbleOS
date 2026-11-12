@@ -65,28 +65,8 @@ typedef struct ImmutableAnimation ImmutableAnimation;
 #define ANIMATION_DEFAULT_DURATION_MS 250
 
 //! @internal
-//! aimed to duration of a single frame
-//! Animation durations are derived from this, so it defines the design speed
-//! of animations
-#if defined(CONFIG_PLATFORM_GABBRO)
-//! Slightly quicker than the 33 ms design value: gabbro's ~21 Hz display
-//! shows fewer, larger motion steps, which read as sluggish at design speed
-#define ANIMATION_TARGET_FRAME_INTERVAL_MS 28
-#else
-//! 1000ms / 30 Hz
-#define ANIMATION_TARGET_FRAME_INTERVAL_MS 33
-#endif
-
-//! @internal
-//! interval at which the animation service schedules frames
-#if defined(CONFIG_PLATFORM_GABBRO)
-//! Gabbro's display (Sharp LS013B7DD02) is spec-limited to ~21 Hz full-frame
-//! updates; scheduling frames faster than the panel can show them produces
-//! uneven, coalesced updates
-#define ANIMATION_RENDER_FRAME_INTERVAL_MS 48
-#else
-#define ANIMATION_RENDER_FRAME_INTERVAL_MS ANIMATION_TARGET_FRAME_INTERVAL_MS
-#endif
+//! aimed to duration of a single frame, from which animation durations derive
+#define ANIMATION_TARGET_FRAME_INTERVAL_MS CONFIG_PLATFORM_ANIMATION_FRAME_INTERVAL_MS
 
 //! The type used to represent how far an animation has progressed. This is passed to the
 //! animation's update handler
