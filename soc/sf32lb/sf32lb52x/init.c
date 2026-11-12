@@ -121,8 +121,8 @@ void pbl_soc_early_init(void) {
   pbl_modifyl(0U, HPSYS_RCC_CSR_SEL_PERI, HPSYS_RCC(CSR));
 
   // Halt LCPU first to avoid LCPU in running state
-  soc_sf32lb52_lpsys_wake();
-  soc_sf32lb52_lpsys_halt(true);
+  soc_sf32lb_lpsys_wake();
+  soc_sf32lb_lpsys_halt(true);
 
   soc_sf32lb52_syscfg_init();
 
@@ -132,7 +132,7 @@ void pbl_soc_early_init(void) {
   prv_wdt_takeover();
 #endif
 
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_release();
 
   soc_sf32lb52_pmu_init();
 

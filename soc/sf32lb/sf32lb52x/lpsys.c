@@ -29,7 +29,7 @@ static void prv_wait_active(void) {
   }
 }
 
-void soc_sf32lb52_lpsys_wake(void) {
+void soc_sf32lb_lpsys_wake(void) {
   pbl_modifyl(0U, HPSYS_AON_ISSR_HP2LP_REQ, ISSR);
   pbl_busy_wait_us(WAKE_REQ_DELAY_US);
   prv_wait_active();
@@ -42,7 +42,7 @@ void soc_sf32lb52_lpsys_wake(void) {
   pbl_irq_unlock();
 }
 
-void soc_sf32lb52_lpsys_release(void) {
+void soc_sf32lb_lpsys_release(void) {
   pbl_irq_lock();
   PBL_ASSERTN(s_wake_count > 0U);
   if (--s_wake_count == 0U) {
