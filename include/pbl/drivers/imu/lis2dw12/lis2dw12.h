@@ -70,9 +70,12 @@ struct pbl_lis2dw12 {
   LIS2DW12State *state;
   /** I2C device. */
   struct pbl_i2c_dev i2c;
-  /** INT1 interrupt line. */
+  /**
+   * INT1 interrupt line. Without one the part is only reset and left powered down, and
+   * streaming and shake detection are not supported.
+   */
   struct pbl_irq_spec int1;
-  /** INT1 input, to read back the pad level. */
+  /** INT1 input, to read back the pad level, none without @ref int1. */
   struct pbl_gpio int1_in;
   /** Sensor axis feeding each watch axis (0: X, 1: Y, 2: Z). */
   uint8_t axis_map[3];
@@ -92,8 +95,8 @@ extern const struct pbl_accel_ops pbl_lis2dw12_ops;
  * @param sym Symbol of the instance, a struct pbl_accel.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
- * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
- *            and @c axis_dir.
+ * @param ... Designated initializers of the remaining fields: @c axis_map, @c axis_dir and,
+ *            optionally, @c int1 and @c int1_in.
  */
 #define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                                \
   PBL_ACCEL_STATE_DEFINE(sym);                                                    \
