@@ -11,25 +11,9 @@ maintainers:
 
 description:
   The LCPU of the SF32LB52 and SF32LB57, running the Bluetooth controller
-  from ROM. It
-  exchanges messages with the HCPU over rings signalled with a doorbell in
-  each direction; the HCPU to LCPU ring is in HCPU memory reserved for it.
-
-allOf:
-  - if:
-      properties:
-        compatible:
-          const: sifli,sf32lb52-lcpu
-    then:
-      required:
-        - sifli,bt-rfc
-        - sifli,bt-phy
-        - sifli,bt-mac
-        - sifli,gpadc
-        - sifli,dmac
-        - sifli,lpsys-rcc
-        - sifli,hpsys-cfg
-        - sifli,pmuc
+  from ROM. It exchanges messages with the HCPU over rings signalled with a
+  doorbell in each direction; the HCPU to LCPU ring is in HCPU memory
+  reserved for it.
 
 properties:
   compatible:
@@ -131,6 +115,14 @@ required:
   - sram
   - clocks
   - clock-names
+  - sifli,bt-rfc
+  - sifli,bt-phy
+  - sifli,bt-mac
+  - sifli,gpadc
+  - sifli,dmac
+  - sifli,lpsys-rcc
+  - sifli,hpsys-cfg
+  - sifli,pmuc
 
 additionalProperties: false
 
