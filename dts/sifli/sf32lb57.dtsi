@@ -190,5 +190,12 @@
 			clocks = <&xtal48m>;
 			clock-names = "hxt48";
 		};
+
+		iwdt: watchdog@500cc000 {
+			compatible = "sifli,sf32lb57-iwdt";
+			reg = <0x500cc000 0x1000>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_WDT>;
+			status = "disabled";
+		};
 	};
 };

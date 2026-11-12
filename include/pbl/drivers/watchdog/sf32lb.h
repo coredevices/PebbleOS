@@ -27,7 +27,7 @@ struct pbl_watchdog_sf32lb {
   uintptr_t base;
   /** Clock. */
   struct pbl_clk clk;
-  /** HPSYS configuration registers, routing the watchdog to the reboot. */
+  /** HPSYS configuration registers, routing the watchdog to the reboot, 0 if unused. */
   uintptr_t cfg;
 };
 
