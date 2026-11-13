@@ -29,7 +29,7 @@ config GPIO_SF32LB
 
 config GPIO_SF32LB_IRQ_PRIO
     int "Interrupt priority"
-    default 6
+    default 5
     depends on GPIO_SF32LB
     help
       Priority of the port interrupt.
@@ -44,7 +44,7 @@ config GPIO_QEMU
 
 config GPIO_QEMU_IRQ_PRIO
     int "Interrupt priority"
-    default 6
+    default 5
     depends on GPIO_QEMU
     help
       Priority of the port interrupt.
