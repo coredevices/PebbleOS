@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: ram
+type: struct pbl_ram
+include: pbl/drivers/ram.h
+roles:
+  extram: RAM

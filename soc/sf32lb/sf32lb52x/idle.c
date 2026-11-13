@@ -3,6 +3,7 @@
 
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/drivers/ram.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -69,6 +70,9 @@ PBL_SECTION_RAM static void prv_enter_wfi(void) {
 }
 
 PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
+#ifdef CONFIG_RAM
+  pbl_ram_quiesce(EXTRAM);
+#endif
   pbl_cpu_idle_deep();
 }
 
@@ -106,7 +110,13 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
   prv_irqs_aon_only();
+#ifdef CONFIG_RAM
+  pbl_ram_suspend(EXTRAM);
+#endif
   pbl_flash_power_down(FLASH, prv_deepsleep, nullptr);
+#ifdef CONFIG_RAM
+  pbl_ram_resume(EXTRAM);
+#endif
   prv_irqs_restore();
 }
 #endif // CONFIG_FLASH

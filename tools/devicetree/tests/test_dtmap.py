@@ -576,6 +576,56 @@ def test_children_matched_by_name(tmp_path):
     assert 'REG_DEFINE(dt_ldo1, "ldo1", &dt_pmic, RAIL_LDO1, 0, false);' in regs
 
 
+def test_driver_bound_by_what_the_node_drives(tmp_path):
+    specs = [
+        spec("acme,bus"),
+        spec(
+            "acme,bus",
+            {
+                "compatible": "acme,bus",
+                "config": "SENSOR",
+                "class": "sensor",
+                "define": "FOR_SENSOR_DEFINE",
+                "symbol": "{sym}_for_sensor",
+                "drives": "acme,sensor",
+            },
+        ),
+        spec(
+            "acme,bus",
+            {
+                "compatible": "acme,bus",
+                "config": "SENSOR",
+                "class": "sensor",
+                "define": "FOR_OTHER_DEFINE",
+                "symbol": "{sym}_for_other",
+                "drives": ["acme,other"],
+            },
+        ),
+    ]
+    for i, s in enumerate(specs):
+        s.file = f"acme_bus_{i}"
+    gen = generate(tmp_path, specs={"acme,bus": specs})
+    assert "FOR_SENSOR_DEFINE(dt_bus_for_sensor);" in instances(gen, "acme_bus_1")
+    assert "FOR_OTHER_DEFINE" not in body(gen)
+
+
+def test_child_reads_from_its_device(tmp_path):
+    specs = [dict(s) for s in PMIC_SPECS]
+    specs[-1]["args"] = [{"reg": 0, "up": True}, {"id": True}]
+    classes = {**CLASSES, **PMIC_CLASSES}
+    group = [dtmap.Spec(f"p{i}", s, classes) for i, s in enumerate(specs)]
+    for s in group:
+        s.file = f"acme_pmic_{s.classes[0]}"
+    gen = generate(
+        tmp_path,
+        config=(*ALL, "PMIC", "GPIO", "CHARGER", "REGULATOR"),
+        specs={"acme,pmic": group},
+        dts=PMIC_DTS,
+    )
+    regs = instances(gen, "acme_pmic_regulator")
+    assert "REG_DEFINE(dt_buck1, 0x6b, RAIL_BUCK1);" in regs
+
+
 def test_unknown_child_fails(tmp_path):
     with pytest.raises(DtError, match="not one of"):
         pmic_generate(tmp_path, dts=PMIC_DTS.replace("ldo1: LDO1", "ldo9: LDO9"))

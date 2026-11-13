@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-mpi
+config: HYPERBUS_SF32LB52_MPI
+class: hyperbus
+symbol: "{sym}_hyperbus"
+define: PBL_HYPERBUS_SF32LB52_MPI_DEFINE
+drives: cypress,hyperram
+args:
+  - name: true
+  - self: sf32lb52_mpi

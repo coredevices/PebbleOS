@@ -184,6 +184,23 @@ config RAMFUNC
 	  section is loaded from flash and copied to RAM at boot. Selected
 	  by SoCs that need code to run while flash is unavailable.
 
+config SCRATCH_HEAP_SHARED
+	bool "Scratch heap in the kernel heap" if RAM
+	default y
+	help
+	  Have the scratch heap (pbl/kernel/scratch.h) share the kernel
+	  heap. Without it, the scratch heap has memory of its own, the
+	  external RAM of the board (its EXTRAM device), which is then only
+	  powered while something is allocated.
+
+config SCRATCH_HEAP_SIZE
+	int "Scratch heap size in bytes"
+	depends on !SCRATCH_HEAP_SHARED
+	default 2097152
+	help
+	  Most the scratch heap takes of its memory. Its map takes one
+	  bit of internal RAM per 512 bytes.
+
 endmenu
 
 rsource "arch/arm/Kconfig"

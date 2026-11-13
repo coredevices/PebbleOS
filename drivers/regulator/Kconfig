@@ -7,6 +7,16 @@ config REGULATOR
       Power rail class (pbl/drivers/regulator.h), selected by the drivers
       that use regulators.
 
+# Not only for its consumers: it also switches off a regulator nothing uses
+config REGULATOR_SF32LB52_PMUC
+    bool "SiFli SF32LB52 PMUC regulators"
+    default DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
+    depends on SOC_SF32LB52
+    select REGULATOR
+    help
+      Support for LDO18, the supply of the package memory in the
+      SF32LB52 PMUC.
+
 if REGULATOR
 
 config REGULATOR_NPM1300
