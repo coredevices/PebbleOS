@@ -452,7 +452,7 @@ with these options:
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller |
 | `remote: <port>` | Read from the device connected to a port |
-| `up: true` | Read from the parent, for a function of a block |
+| `up: true` | Read from the parent, for a function of a block, or from the device a child of `children` is part of |
 | `wrap`, `field`, `as`, `item` | Wrap the value in a macro, make it a designated initializer, take another kind from a provider, format list items |
 | `values` | For `string`, the C of each value the property may take |
 

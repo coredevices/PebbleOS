@@ -964,8 +964,9 @@ class Generator:
         kind = next(iter(arg.keys() & ARG_KINDS))
         key = arg[kind]
         if arg.get("up"):
-            # The function of a block read from the block, as the PWM of a timer
-            dev = Device(dev.node.parent, [])
+            # The function of a block read from the block, as the PWM of a timer, and a child
+            # from the device it is part of, as the regulator of a PMIC
+            dev = Device(dev.owner.node if dev.owner else dev.node.parent, [])
         node = dev.node
         if "remote" in arg:
             node = self._remote(dev, arg["remote"])
