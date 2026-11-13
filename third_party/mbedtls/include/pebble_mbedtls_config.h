@@ -6,8 +6,8 @@
 #pragma once
 
 /* Minimal Mbed TLS configuration for PebbleOS. Only the primitives required
- * by the NimBLE host (SM pairing and GATT database hash) are enabled:
- * AES-128 (ECB/CMAC) and P-256 ECDH.
+ * by the NimBLE host (SM pairing and GATT database hash) and the crypto
+ * subsystem are enabled: AES (ECB/CMAC), SHA-256 and P-256 ECDH.
  */
 
 #include <pbl/kernel/malloc.h>
@@ -21,6 +21,9 @@
 #define MBEDTLS_AES_ROM_TABLES
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CMAC_C
+
+#define MBEDTLS_SHA256_C
+#define MBEDTLS_SHA256_SMALLER
 
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_ECP_C
