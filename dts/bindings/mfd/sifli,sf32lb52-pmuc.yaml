@@ -89,6 +89,19 @@ properties:
       - const: hxt48
       - const: lxt32
 
+  regulators:
+    type: object
+    additionalProperties: false
+
+    properties:
+      LDO18:
+        type: object
+        $ref: /schemas/regulator/regulator.yaml#
+        unevaluatedProperties: false
+        description:
+          1.8 V LDO supplying the memory in the package through VDD_SIP, on
+          boards that do not supply that pin themselves.
+
   nvmem-cells:
     description: Cells holding the factory configuration, in search order.
     minItems: 1

@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb52-pmuc
+config: REGULATOR_SF32LB52_PMUC
+class: regulator
+define: PBL_SF32LB52_PMUC_REGULATOR_DEFINE
+children:
+  node: regulators
+  names:
+    LDO18: PBL_SF32LB52_PMUC_LDO18
+args:
+  - string: regulator-name
+  - reg: 0
+    up: true
+  - id: true
+  - flag: regulator-pull-down
+  - flag: regulator-always-on
