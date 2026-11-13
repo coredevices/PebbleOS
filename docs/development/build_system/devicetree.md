@@ -410,6 +410,7 @@ args:
 | `ids` | How the abstract IDs of a binding map to the numbers of the driver; see below |
 | `pinctrl` | For pin controllers: how pins and their configuration become C |
 | `children` | For devices made of named children, such as the regulators of a PMIC |
+| `drives` | Compatibles of the child a node must have for the driver to bind to it, for a controller with a driver per kind of memory it can drive |
 
 Several drivers may bind to one compatible, each with its own spec, class and
 instance file `<compatible>_<class>.inc`, as the clock and the reset drivers
