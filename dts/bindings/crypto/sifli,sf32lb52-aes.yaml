@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/crypto/sifli,sf32lb52-aes.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 AES and hash accelerator
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Crypto engine with its own bus master. Its AES unit runs ECB, CBC and CTR
+  with 128, 192 or 256-bit keys, given by software or the root key in
+  eFuse. Its hash unit computes SHA-1, SHA-224, SHA-256 and SM3, and can
+  resume from an intermediate state.
+
+properties:
+  compatible:
+    const: sifli,sf32lb52-aes
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - resets
+
+additionalProperties: false
+
+examples:
+  - |
+    crypto@5000d000 {
+        compatible = "sifli,sf32lb52-aes";
+        reg = <0x5000d000 0x1000>;
+        interrupts = <67>;
+        clocks = <&hpsys_rcc 10>;
+        resets = <&hpsys_rcc 11>;
+    };
