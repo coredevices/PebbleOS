@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CRYPTO_HW
+    bool "Hardware crypto accelerators"
+    depends on CRYPTO
+    help
+      Drivers of hardware hash and cipher engines (pbl/drivers/crypto.h),
+      which the crypto subsystem uses instead of computing in software.
+
+if CRYPTO_HW
+
+config CRYPTO_SF32LB
+    bool "SiFli SF32LB AES and hash accelerator"
+    default DT_HAS_SIFLI_SF32LB52_AES_ENABLED
+    depends on SOC_SF32LB52
+    select CLK
+    select CRYPTO_SHA256_HW_ACCEL
+    select CRYPTO_AES_HW_ACCEL
+    help
+      Computes SHA-256 and AES in ECB mode on the SF32LB crypto engine.
+
+endif # CRYPTO_HW

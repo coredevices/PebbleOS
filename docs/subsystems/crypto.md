@@ -41,8 +41,7 @@ only runs block functions, on a temporary context loaded with that state, so
 its types never reach the public headers. Bluetooth already links all of
 mbedTLS's AES, and SHA-256 is built with `MBEDTLS_SHA256_SMALLER`.
 
-Hardware acceleration comes from a driver implementing
-`include/pbl/drivers/crypto.h` (see the {apidoc}`API reference <drivers_crypto>`),
+Hardware acceleration comes from a {doc}`crypto driver <../drivers/crypto/index>`,
 which may process any number of the blocks it is given: the subsystem
 always finishes in software, so callers never see a failure.
 
