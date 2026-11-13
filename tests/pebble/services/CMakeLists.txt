@@ -127,6 +127,12 @@ pbl_clar_test(test_imaging
   DEFINES CONFIG_SCRATCH_HEAP_SHARED
 )
 
+pbl_clar_test(test_notification_image
+  SOURCES
+    pebble/services/notifications/notification_image.c
+  DEFINES CONFIG_NOTIFICATION_IMAGE_RECENTS=2
+)
+
 pbl_clar_test(test_compass_cal
   SOURCES
     pebble/services/ecompass/correction.c

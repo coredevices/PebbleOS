@@ -1189,8 +1189,12 @@ static void prv_maybe_request_notification_image(LayoutLayer *layout, TimelineIt
   GSize size;
   uint8_t token;
   if (!notification_layout_get_image_size(layout, &size) ||
-      !imaging_is_type_supported(ImagingImageTypeNotification) ||
-      !notification_image_claim(&item->header.id, &token)) {
+      !imaging_is_type_supported(ImagingImageTypeNotification)) {
+    return;
+  }
+  if (!notification_image_claim(&item->header.id, &token)) {
+    // An image kept from the last time it was shown may be back
+    layer_mark_dirty(&layout->layer);
     return;
   }
   imaging_request_notification_image(token, ImagingFormat4BitPalette, size.w, size.h,

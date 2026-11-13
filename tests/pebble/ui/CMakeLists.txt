@@ -328,7 +328,7 @@ pbl_clar_test(test_notification_window
     tests/stubs/stubs_clock.c
     pebble/services/clock/time.c
   PLATFORMS emery gabbro flint
-  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_NOTIFICATION_IMAGE_RECENTS=0
   OVERRIDES dummy_board
   TEST_IMAGES
 )
