@@ -9,3 +9,7 @@ pbl_library_sources(
 )
 
 pbl_library_sources_ifdef(CONFIG_CRYPTO_SELFTEST selftest.c)
+
+# Registers itself, so it cannot sit in the static library.
+pbl_library_named(subsys__crypto__shell)
+pbl_library_sources_ifdef(CONFIG_CRYPTO_SHELL shell.c)

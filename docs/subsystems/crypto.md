@@ -59,6 +59,14 @@ It also provides `pbl_crypto_selftest()` (`include/pbl/crypto/selftest.h`), to
 run the check on demand. It returns 0, `-EIO` on a wrong result or `-ENODEV`
 without a ready accelerator.
 
+## Shell
+
+The `crypto` shell command (`CONFIG_CRYPTO_SHELL`, on with
+`CONFIG_SUBSYS_SHELL` where an accelerator is present) compares the
+accelerators against software on random buffers, aligned and unaligned
+(`crypto check [len]`), times both (`crypto bench [len]`) and, with
+`CONFIG_CRYPTO_SELFTEST`, runs the self-test (`crypto selftest`).
+
 ## Thresholds
 
 Programming an accelerator costs a fixed setup, so short runs stay in
