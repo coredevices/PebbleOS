@@ -87,6 +87,9 @@ PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(pfs_space_free_kb)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(flash_spi_write_bytes)
 PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(flash_spi_erase_bytes)
 
+// RAM
+PBL_ANALYTICS_METRIC_DEFINE_TIMER(ram_used_ms)
+
 // BLE
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_adv_short_intvl_time_ms)
 PBL_ANALYTICS_METRIC_DEFINE_TIMER(ble_adv_long_intvl_time_ms)
