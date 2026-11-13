@@ -62,9 +62,7 @@ void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *fre
 
 static void prv_free_last_bitmap(void) {
   if (s_last_bitmap) {
-    pbl_free(s_last_bitmap->addr);
-    pbl_free(s_last_bitmap->palette);
-    pbl_free(s_last_bitmap);
+    imaging_image_destroy(s_last_bitmap);
     s_last_bitmap = nullptr;
   }
 }
