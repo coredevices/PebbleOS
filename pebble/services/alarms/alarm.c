@@ -703,7 +703,7 @@ static void prv_set_day_for_just_once_alarm(AlarmConfig *config, int hour, int m
 static void prv_refresh_just_once_alarm_days(struct pbl_settings_file *file) {
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmConfig config;
-    if (!prv_alarm_get_config(file, i, &config) || config.kind != ALARM_KIND_JUST_ONCE ||
+    if (!prv_alarm_get_config(file, i, &config) || !prv_is_just_once_kind(config.kind) ||
         config.is_disabled) {
       continue;
     }
@@ -1188,17 +1188,17 @@ void alarm_set_snooze_delay(uint16_t delay_m) {
 bool alarm_dismiss_alarm(void) {
   prv_clear_snooze_timer();
 
-  if (s_most_recent_alarm_id != ALARM_INVALID_ID) {
-    AlarmKind current_kind;
-    if (alarm_get_kind(s_most_recent_alarm_id, &current_kind) &&
-        current_kind == ALARM_KIND_JUST_ONCE_DELETE) {
-      alarm_delete(s_most_recent_alarm_id);
-      PebbleEvent e = {.type = PEBBLE_ALARM_UPDATED_EVENT};
-      event_put(&e);
-      return true;
-    }
+  const AlarmId id = s_most_recent_alarm_id;
+  AlarmKind kind;
+  if (id == ALARM_INVALID_ID || !alarm_get_kind(id, &kind) || kind != ALARM_KIND_JUST_ONCE_DELETE ||
+      alarm_get_enabled(id)) {
+    return false;
   }
-  return false;
+
+  alarm_delete(id);
+  PebbleEvent e = {.type = PEBBLE_ALARM_UPDATED_EVENT};
+  event_put(&e);
+  return true;
 }
 
 // ----------------------------------------------------------------------------------------------
