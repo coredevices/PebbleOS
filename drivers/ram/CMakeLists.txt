@@ -4,3 +4,4 @@
 pbl_library()
 pbl_library_sources(ram.c)
 pbl_library_sources_ifdef(CONFIG_RAM_HYPERRAM hyperram.c)
+pbl_library_sources_ifdef(CONFIG_RAM_SHELL shell.c)

@@ -10,6 +10,14 @@ menuconfig RAM
 
 if RAM
 
+config RAM_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL && !SCRATCH_HEAP_SHARED
+    help
+      The ram shell command, to show the use and power state of the
+      external RAM, and to check that it keeps what is written to it.
+
 config RAM_HYPERRAM
     bool "HyperRAM"
     default DT_HAS_CYPRESS_HYPERRAM_ENABLED
