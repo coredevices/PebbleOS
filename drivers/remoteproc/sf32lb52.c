@@ -10,6 +10,8 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/remoteproc/sf32lb52.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/work.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -43,6 +45,7 @@
 // TX power table the SF32LB57 LCPU reads
 #define RF_CONFIG_57_OFFSET 0x13900U
 
+#define CONFIG_LPCYCLE_CURR     4U
 #define CONFIG_WDT_TIME         12U
 #define CONFIG_WDT_STATUS       16U
 #define CONFIG_BT_TX_PWR        20U
@@ -98,20 +101,61 @@ static bool prv_rev_a4(void) {
 #define CONFIG_BLOCK_SIZE   (prv_rev_a4() ? CONFIG_A4_SIZE : CONFIG_SIZE)
 #endif
 
+static bool s_config_ready;
+
 // Cleared once, as the LCPU keeps its own values across restarts
 static uint8_t *prv_config(const struct pbl_rproc_sf32lb52 *lcpu) {
-  static bool initialized;
   uint8_t *config = (uint8_t *)(lcpu->sram.base + CONFIG_BLOCK_OFFSET);
   const uint32_t magic = CONFIG_MAGIC;
 
-  if (!initialized) {
+  if (!s_config_ready) {
     memset(config, 0, CONFIG_BLOCK_SIZE);
     memcpy(config, &magic, sizeof(magic));
-    initialized = true;
+    s_config_ready = true;
   }
 
   return config;
 }
+
+// Without the crystal the LCPU times its sleep from the RC oscillator frequency, in Hz, which
+// follows its calibration
+static const struct pbl_rproc_sf32lb52 *s_lp_lcpu;
+static uint64_t s_lp_rate_mhz;
+
+static void prv_lpcycle_set(uint8_t *config, uint64_t rate_mhz) {
+  const float lp_hz = (float)rate_mhz / 1000.0f;
+
+  if (rate_mhz != 0U && rate_mhz != LXT32_HZ * 1000ULL) {
+    memcpy(config + CONFIG_LPCYCLE_CURR, &lp_hz, sizeof(lp_hz));
+  }
+}
+
+static void prv_lpcycle_work(struct pbl_work *work) {
+  uint64_t rate_mhz;
+
+  if (!s_config_ready) {
+    return;
+  }
+
+  pbl_irq_lock();
+  rate_mhz = s_lp_rate_mhz;
+  pbl_irq_unlock();
+
+  soc_sf32lb_lpsys_wake();
+  prv_lpcycle_set(prv_config(s_lp_lcpu), rate_mhz);
+  soc_sf32lb_lpsys_release();
+}
+
+static PBL_WORK_DEFINE(s_lpcycle_work, prv_lpcycle_work);
+
+static void prv_lpclk_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz) {
+  s_lp_rate_mhz = rate_mhz;
+  (void)pbl_work_submit(&pbl_sys_workq, &s_lpcycle_work);
+}
+
+static struct pbl_clk_notifier s_lpclk_nb = {
+  .fn = prv_lpclk_changed,
+};
 
 static bool prv_xtal_enabled(const struct pbl_rproc_sf32lb52 *lcpu) {
   uint64_t rate_mhz;
@@ -130,6 +174,14 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *confi
   memcpy(config + CONFIG_WDT_TIME, &wdt_time, sizeof(wdt_time));
   memcpy(config + CONFIG_WDT_CLK, &wdt_clk, sizeof(wdt_clk));
   memcpy(config + CONFIG_RC_CAL_IN_L, &rc_cal, sizeof(rc_cal));
+
+  if (xtal_enabled == 0U) {
+    uint64_t rate_mhz;
+
+    if (pbl_clk_get_rate(&lcpu->lpclk, &rate_mhz) == 0) {
+      prv_lpcycle_set(config, rate_mhz);
+    }
+  }
 
 #ifdef CONFIG_SOC_SF32LB57
   // As the vendor HAL configures the SF32LB57 ROM, which has its own defaults for the rest
@@ -299,7 +351,16 @@ int pbl_rproc_sf32lb52_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  return pbl_device_init(&lcpu->rx_chan.ctrl->dev);
+  ret = pbl_device_init(&lcpu->rx_chan.ctrl->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  s_lp_lcpu = lcpu;
+  s_lpclk_nb.clk = lcpu->lpclk;
+  pbl_clk_notifier_register(&s_lpclk_nb);
+
+  return 0;
 }
 
 #ifdef CONFIG_SOC_SF32LB57
