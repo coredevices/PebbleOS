@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config HYPERBUS
+    bool
+    help
+      HyperBus controller class (pbl/drivers/hyperbus.h), selected by
+      the drivers of HyperBus memories.
