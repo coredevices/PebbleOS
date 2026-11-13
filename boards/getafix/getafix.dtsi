@@ -215,6 +215,19 @@
 	};
 };
 
+&mpi1 {
+	status = "okay";
+};
+
+/* VDD_SIP is supplied by BUCK1, more efficient than LDO18 */
+&ldo18 {
+	/delete-property/ regulator-pull-down;
+};
+
+&psram {
+	vcc-supply = <&buck1>;
+};
+
 &mpi2 {
 	status = "okay";
 
