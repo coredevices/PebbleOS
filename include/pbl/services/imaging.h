@@ -40,8 +40,7 @@ struct pbl_pp_session;
  *
  * @param token Token of the request.
  * @param bitmap Received image, or NULL if the phone has none (@ref ImagingResponseFlagNoImage).
- *               Ownership of a non-NULL bitmap and its pixel and palette buffers passes to the
- *               handler.
+ *               Ownership passes to the handler, which frees it with imaging_image_destroy().
  */
 typedef void (*ImagingReceivedHandler)(uint8_t token, struct GBitmap *bitmap);
 
@@ -58,6 +57,16 @@ typedef void (*ImagingWillReceiveHandler)(uint8_t token);
  * @param token Token of the request.
  */
 typedef void (*ImagingTransferFailedHandler)(uint8_t token);
+
+/**
+ * @brief Free a received image.
+ *
+ * An image is in the scratch heap (see @ref kernel_scratch) for as long as it lives, so it is
+ * freed once it is no longer shown.
+ *
+ * @param bitmap Image, or NULL.
+ */
+void imaging_image_destroy(struct GBitmap *bitmap);
 
 /**
  * @brief Register the handler for an image type.

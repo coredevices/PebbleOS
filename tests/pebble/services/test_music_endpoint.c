@@ -150,10 +150,7 @@ static void prv_set_dummy_server_connected(bool connected) {
 }
 
 static GBitmap *prv_make_album_art(void) {
-  GBitmap *bitmap = pbl_zalloc(sizeof(*bitmap));
-  bitmap->addr = pbl_zalloc(4);
-  bitmap->palette = pbl_zalloc(sizeof(GColor));
-  return bitmap;
+  return pbl_zalloc(sizeof(GBitmap));
 }
 
 static void prv_assert_no_data_sent_cb(uint16_t endpoint_id, const uint8_t *data,
