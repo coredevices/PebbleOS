@@ -12,6 +12,7 @@ analytics.md
 bluetooth.md
 coredump.md
 crc.md
+crypto.md
 fs.md
 i18n.md
 input.md

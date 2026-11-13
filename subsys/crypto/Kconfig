@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CRYPTO
+    bool "Cryptography"
+    select MBEDTLS
+    help
+      SHA-256 and AES (pbl/crypto), on mbedTLS or on a hardware
+      accelerator.
+
+if CRYPTO
+
+config CRYPTO_SHA256_HW_ACCEL
+    bool
+    help
+      Selected by drivers implementing pbl_crypto_hw_sha256_blocks()
+      from pbl/drivers/crypto.h.
+
+config CRYPTO_SHA256_HW_MIN_LEN
+    int "Minimum length to hash in hardware"
+    depends on CRYPTO_SHA256_HW_ACCEL
+    default 64
+    help
+      Runs of whole blocks shorter than this are hashed in software,
+      where programming the accelerator would cost more than it saves.
+
+config CRYPTO_AES_HW_ACCEL
+    bool
+    help
+      Selected by drivers implementing pbl_crypto_hw_aes_ecb_encrypt()
+      and pbl_crypto_hw_aes_ecb_decrypt() from pbl/drivers/crypto.h.
+
+config CRYPTO_AES_HW_MIN_LEN
+    int "Minimum length to encrypt or decrypt in hardware"
+    depends on CRYPTO_AES_HW_ACCEL
+    default 32
+    help
+      Shorter runs of blocks are processed in software, where
+      programming the accelerator would cost more than it saves.
+
+config CRYPTO_SELFTEST
+    bool "Check the accelerators before first use"
+    depends on CRYPTO_SHA256_HW_ACCEL || CRYPTO_AES_HW_ACCEL
+    help
+      Run known-answer tests through the hardware hooks before the
+      first hardware use of each algorithm, and keep that algorithm in
+      software if they fail. Also adds the pbl_crypto_selftest() API.
+
+if CRYPTO_SHA256_HW_ACCEL || CRYPTO_AES_HW_ACCEL
+
+module = CRYPTO
+module-str = Crypto
+source "subsys/logging/Kconfig.template.log_level"
+
+endif
+
+endif # CRYPTO
