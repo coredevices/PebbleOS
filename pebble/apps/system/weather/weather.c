@@ -25,6 +25,7 @@
 #include "weather_data_source.h"
 #include "weather_math.h"
 #include "weather_report.h"
+#include "weather_sun.h"
 #include "weather_types.h"
 
 #include <pbl/i18n/i18n.h>
@@ -122,6 +123,15 @@ static const char *prv_phrase_for_type(uint8_t type) {
   }
 }
 
+// The phrase for the conditions right now: a sunny type after dark is a clear sky.
+static const char *prv_current_phrase_for_type(uint8_t type, const WxDsForecast *ds) {
+  if ((WeatherType)type == WeatherType_Sun &&
+      weather_sun_is_down(ds->latitude_e2, ds->longitude_e2, ds->utc_offset_min)) {
+    return pbl_i18n_noop("Clear");
+  }
+  return prv_phrase_for_type(type);
+}
+
 static void prv_fill_phrase(uint8_t type, char *buf, size_t bufsize) {
   const char *phrase = prv_phrase_for_type(type);
   if (phrase) {
@@ -208,7 +218,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   // Day 0 = today (full current metrics; v4 fills UV/precip/wind, else -1).
   // Prefer a translated phrase derived from the type (like the other days); the
   // record's own phrase is phone text and only used when the type has no name.
-  const char *phrase0 = prv_phrase_for_type(ds->current_weather_type);
+  const char *phrase0 = prv_current_phrase_for_type(ds->current_weather_type, ds);
   if (phrase0) {
     pbl_i18n_get_with_buffer(phrase0, data->phrase_buf0, sizeof(data->phrase_buf0));
   } else {
@@ -270,7 +280,7 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
       data->days[0].current_temp_now = ds->hourly_temp[hour];
       // The hourly block has no phrase; derive and translate one from the type.
       // Leave the record's own phrase in place when the type has no name.
-      const char *hourly_phrase = prv_phrase_for_type(ds->hourly_type[hour]);
+      const char *hourly_phrase = prv_current_phrase_for_type(ds->hourly_type[hour], ds);
       if (hourly_phrase) {
         pbl_i18n_get_with_buffer(hourly_phrase, data->current_now_buf,
                                  sizeof(data->current_now_buf));
