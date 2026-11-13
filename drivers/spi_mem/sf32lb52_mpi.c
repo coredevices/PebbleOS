@@ -46,11 +46,11 @@ static const struct pbl_spi_mem_sf32lb52_mpi *prv_mpi(const struct pbl_spi_mem *
 }
 
 static uintptr_t prv_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
-  return mpi->base;
+  return mpi->mpi->base;
 }
 
 static uintptr_t prv_mem_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
-  return mpi->mem_base;
+  return mpi->mpi->mem_base;
 }
 
 static PBL_ALWAYS_INLINE uint32_t prv_mode(uint8_t buswidth) {
@@ -358,6 +358,43 @@ static PBL_SECTION_RAM void prv_power_down(const struct pbl_spi_mem *mem,
   }
 }
 
+// Brings the controller up in NOR mode, once. The clock is never released: with XIP it must stay
+// on.
+static int prv_start(const struct pbl_spi_mem *mem) {
+  const struct pbl_spi_mem_sf32lb52_mpi *mpi = prv_mpi(mem);
+  const uintptr_t base = prv_base(mpi);
+  int ret;
+
+  if (mpi->data->started) {
+    return 0;
+  }
+
+  ret = pbl_sf32lb52_mpi_prepare(mpi->mpi);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_clk_enable(&mpi->mpi->clk);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (!pbl_spi_mem_is_xip(mem)) {
+    pbl_modifyl(MPI_CR_DFM, MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+  }
+
+  pbl_writel(ALT_BYTE, base + SF32LB52_MPI_ABR1_OFFSET);
+  pbl_writel(CMD_INTERVAL, base + SF32LB52_MPI_CIR_OFFSET);
+  pbl_writel(TIMEOUT, base + SF32LB52_MPI_TIMR_OFFSET);
+
+  pbl_modifyl(MPI_FIFOCR_TXSLOTS_MASK, PBL_FIELD_PREP(MPI_FIFOCR_TXSLOTS_MASK, 1U),
+              base + SF32LB52_MPI_FIFOCR_OFFSET);
+
+  mpi->data->started = true;
+
+  return 0;
+}
+
 static int prv_write(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op *op,
                      const struct pbl_spi_mem_op *status, uint8_t mask, uint8_t match) {
   const uintptr_t base = prv_base(prv_mpi(mem));
@@ -384,6 +421,12 @@ static int prv_write(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op 
 static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op *op) {
   const uintptr_t base = prv_base(prv_mpi(mem));
   struct ccr_op cmd = prv_encode(op);
+  int ret;
+
+  ret = prv_start(mem);
+  if (ret != 0) {
+    return ret;
+  }
 
   if (op->data.dir == PBL_SPI_MEM_DATA_IN) {
     uint8_t *buf = op->data.buf.in;
@@ -416,6 +459,12 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
   const uintptr_t base = prv_base(prv_mpi(mem));
   const struct ccr_op cmd = prv_encode(op);
   const struct ccr_op st = prv_encode(status);
+  int ret;
+
+  ret = prv_start(mem);
+  if (ret != 0) {
+    return ret;
+  }
 
   if (op->data.dir == PBL_SPI_MEM_DATA_IN) {
     return -ENOTSUP;
@@ -445,12 +494,18 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
   const struct pbl_spi_mem_sf32lb52_mpi *mpi = prv_mpi(mem);
   const uintptr_t base = prv_base(mpi);
   struct ccr_op cmd = prv_encode(&desc->op);
+  int ret;
 
-  if (desc->offset >= mpi->mem_size) {
+  ret = prv_start(mem);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (desc->offset >= mpi->mpi->mem_size) {
     return -ENOTSUP;
   }
 
-  desc->length = MIN(desc->length, mpi->mem_size - desc->offset);
+  desc->length = MIN(desc->length, mpi->mpi->mem_size - desc->offset);
   desc->ptr = (const void *)(prv_mem_base(mpi) + desc->offset);
 
   if (PBL_FIELD_GET(MPI_HCMDR_RCMD_MASK, pbl_readl(base + SF32LB52_MPI_HCMDR_OFFSET)) ==
@@ -486,28 +541,13 @@ static void prv_dirmap_invalidate(const struct pbl_spi_mem *mem,
 }
 
 static int prv_init(const struct pbl_spi_mem *mem) {
-  const struct pbl_spi_mem_sf32lb52_mpi *mpi = prv_mpi(mem);
-  const uintptr_t base = prv_base(mpi);
-  int ret;
-
-  // Never released: with XIP the clock must stay on
-  ret = pbl_clk_enable(&mpi->clk);
-  if (ret != 0) {
-    return ret;
-  }
-
+  // A controller the firmware does not run from is brought up by its first use, so that its
+  // clock stays off until then
   if (!pbl_spi_mem_is_xip(mem)) {
-    pbl_modifyl(MPI_CR_DFM, MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+    return 0;
   }
 
-  pbl_writel(ALT_BYTE, base + SF32LB52_MPI_ABR1_OFFSET);
-  pbl_writel(CMD_INTERVAL, base + SF32LB52_MPI_CIR_OFFSET);
-  pbl_writel(TIMEOUT, base + SF32LB52_MPI_TIMR_OFFSET);
-
-  pbl_modifyl(MPI_FIFOCR_TXSLOTS_MASK, PBL_FIELD_PREP(MPI_FIFOCR_TXSLOTS_MASK, 1U),
-              base + SF32LB52_MPI_FIFOCR_OFFSET);
-
-  return 0;
+  return prv_start(mem);
 }
 
 const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops = {
@@ -522,4 +562,4 @@ const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops = {
   .power_down = prv_power_down,
 };
 
-#include PBL_DT_INSTANCES(sifli_sf32lb52_mpi)
+#include PBL_DT_INSTANCES(sifli_sf32lb52_mpi_spi_mem)

@@ -4,10 +4,11 @@
 compatible: sifli,sf32lb52-mpi
 config: SPI_MEM_SF32LB52_MPI
 class: spi_mem
+symbol: "{sym}_spi_mem"
 define: PBL_SPI_MEM_SF32LB52_MPI_DEFINE
+drives: jedec,spi-nor
 args:
   - name: true
-  - reg: mpi
+  - self: sf32lb52_mpi
   - reg: mpi_mm
   - size: mpi_mm
-  - clock: 0
