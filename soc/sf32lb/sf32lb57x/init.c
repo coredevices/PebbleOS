@@ -12,7 +12,9 @@
 #include <hardware/sf32lb52_hpsys_rcc.h>
 #include <hardware/sf32lb57_hpsys_aon.h>
 #include <hardware/sf32lb57_hpsys_rcc.h>
+#include <hardware/sf32lb57_lpsys_aon.h>
 #include <hardware/sf32lb57_wdt.h>
+#include <lpsys.h>
 
 #define HPSYS_AON(reg) (PBL_DT_REG_HPSYS_AON + SF32LB57_HPSYS_AON_##reg##_OFFSET)
 #define HPSYS_RCC(reg) (PBL_DT_REG_HPSYS_RCC + SF32LB52_HPSYS_RCC_##reg##_OFFSET)
@@ -47,6 +49,18 @@ static uint32_t prv_hclk_hz(void) {
   return sys / (hdiv != 0U ? hdiv : 1U);
 }
 
+// Starts the global timer of both subsystems in sync, which the LCPU times its sleep with. LPSYS
+// must be awake.
+static void prv_gtimer_start(void) {
+  if ((pbl_readl(HPSYS_AON(ISSR)) & HPSYS_AON_ISSR_LP_ACTIVE) == 0U) {
+    return;
+  }
+
+  pbl_modifyl(0U, LPSYS_AON_CR_GTIM_EN, PBL_DT_REG_LPSYS_AON + SF32LB57_LPSYS_AON_CR_OFFSET);
+  pbl_modifyl(0U, HPSYS_AON_CR_GTIM_EN, HPSYS_AON(CR));
+  pbl_writel(1U, HPSYS_AON(GTIMR));
+}
+
 void pbl_soc_early_init(void) {
   // Busy waits count cycles, and the boot ROM may have left any clock running
   SystemCoreClock = prv_hclk_hz();
@@ -63,6 +77,10 @@ void pbl_soc_early_init(void) {
     SystemCoreClock = prv_hclk_hz();
   }
   pbl_modifyl(0U, HPSYS_RCC_CSR_SEL_PERI, HPSYS_RCC(CSR));
+
+  soc_sf32lb_lpsys_wake();
+  prv_gtimer_start();
+  soc_sf32lb_lpsys_release();
 
 #ifndef CONFIG_WATCHDOG
   // The boot ROM may leave its watchdog running
