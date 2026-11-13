@@ -122,6 +122,8 @@ pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
     pebble/services/imaging/imaging.c
+    kernel/scratch.c
+  DEFINES CONFIG_SCRATCH_HEAP_SHARED
 )
 
 pbl_clar_test(test_compass_cal

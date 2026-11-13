@@ -4,9 +4,8 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include <pbl/kernel/heap.h>
-#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/scratch.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/send.h>
@@ -44,19 +43,21 @@ static struct {
   bool active;
   uint8_t token;
   uint8_t type;
-  GBitmapFormat format;
-  uint16_t width;
-  uint16_t height;
-  uint16_t row_size_bytes;
   uint32_t total_bytes;
   uint32_t received_bytes;
-  uint8_t *pixels;
-  GColor *palette; // NULL for non-palette formats
+  GBitmap *bitmap;
 } s_rx;
 
+// An image is one block: the bitmap, its palette, then its pixels
+#define PALETTE_OFFSET (sizeof(GBitmap))
+#define PIXELS_OFFSET  (PALETTE_OFFSET + IMAGING_PALETTE_ENTRIES * sizeof(GColor))
+
+void imaging_image_destroy(GBitmap *bitmap) {
+  pbl_scratch_free(bitmap);
+}
+
 static void prv_rx_reset(void) {
-  pbl_free(s_rx.pixels);
-  pbl_free(s_rx.palette);
+  imaging_image_destroy(s_rx.bitmap);
   s_rx = (typeof(s_rx)){};
 }
 
@@ -76,11 +77,10 @@ void imaging_register_transfer_handlers(ImagingImageType image_type,
 }
 
 static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *reason) {
-  unsigned int used;
-  unsigned int free_bytes;
-  unsigned int largest_free;
-  pbl_heap_stats(pbl_malloc_heap(), &used, &free_bytes, &largest_free);
-  PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size, largest_free);
+  struct pbl_scratch_stats stats;
+  pbl_scratch_get_stats(&stats);
+  PBL_LOG_WRN("Drop %s token=%u size=%" PRIu32 " largest=%u", reason, token, size,
+              (unsigned int)stats.max_free);
 
   prv_rx_reset();
   ImagingTransferFailedHandler handler = (type < ARRAY_LENGTH(s_transfer_failed_handlers))
@@ -102,10 +102,8 @@ static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
   ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : nullptr;
   if (handler) {
     handler(token, bitmap);
-  } else if (bitmap) {
-    pbl_free(bitmap->addr);
-    pbl_free(bitmap->palette);
-    pbl_free(bitmap);
+  } else {
+    imaging_image_destroy(bitmap);
   }
 }
 
@@ -267,29 +265,28 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       will_receive(hdr->token);
     }
 
-    s_rx.pixels = pbl_zalloc(total);
-    if (!s_rx.pixels) {
-      prv_drop(type, hdr->token, total, "pixel allocation failed");
+    s_rx.bitmap = pbl_scratch_zalloc(PIXELS_OFFSET + total);
+    if (!s_rx.bitmap) {
+      prv_drop(type, hdr->token, total, "image allocation failed");
       return;
     }
+    *s_rx.bitmap = (GBitmap){
+      .addr = (uint8_t *)s_rx.bitmap + PIXELS_OFFSET,
+      .row_size_bytes = row_size,
+      .info.format = gformat,
+      .info.version = GBITMAP_VERSION_CURRENT,
+      .bounds = (GRect){{0, 0}, {width, height}},
+    };
     if (max_palette > 0) {
-      s_rx.palette = pbl_zalloc(IMAGING_PALETTE_ENTRIES * sizeof(GColor));
-      if (!s_rx.palette) {
-        prv_drop(type, hdr->token, total, "palette allocation failed");
-        return;
-      }
+      s_rx.bitmap->palette = (GColor *)((uint8_t *)s_rx.bitmap + PALETTE_OFFSET);
       for (uint8_t i = 0; i < palette_count; ++i) {
-        s_rx.palette[i] = (GColor){.argb = cursor[i]};
+        s_rx.bitmap->palette[i] = (GColor){.argb = cursor[i]};
       }
       cursor += palette_count;
     }
     s_rx.active = true;
     s_rx.token = hdr->token;
     s_rx.type = type;
-    s_rx.format = gformat;
-    s_rx.width = width;
-    s_rx.height = height;
-    s_rx.row_size_bytes = row_size;
     s_rx.total_bytes = total;
     s_rx.received_bytes = 0;
   }
@@ -312,7 +309,7 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "invalid chunk");
     return;
   }
-  memcpy(s_rx.pixels + hdr->offset, cursor, hdr->chunk_len);
+  memcpy((uint8_t *)s_rx.bitmap->addr + hdr->offset, cursor, hdr->chunk_len);
   s_rx.received_bytes += hdr->chunk_len;
 
   if (hdr->flags & ImagingResponseFlagLast) {
@@ -320,21 +317,10 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "incomplete image");
       return;
     }
-    GBitmap *bmp = pbl_zalloc(sizeof(GBitmap));
-    if (!bmp) {
-      prv_drop(s_rx.type, s_rx.token, s_rx.total_bytes, "bitmap allocation failed");
-      return;
-    }
-    bmp->addr = s_rx.pixels;
-    bmp->row_size_bytes = s_rx.row_size_bytes;
-    bmp->info.format = s_rx.format;
-    bmp->info.version = GBITMAP_VERSION_CURRENT;
-    bmp->bounds = (GRect){{0, 0}, {s_rx.width, s_rx.height}};
-    bmp->palette = s_rx.palette;
-    // Ownership of the pixel and palette buffers moves into the bitmap.
+    // Ownership of the image moves to the handler
+    GBitmap *bmp = s_rx.bitmap;
     const uint8_t token = s_rx.token;
-    s_rx.pixels = nullptr;
-    s_rx.palette = nullptr;
+    s_rx.bitmap = nullptr;
     prv_rx_reset();
     prv_deliver(token, type, bmp);
   }
