@@ -208,6 +208,14 @@
 			read-only;
 		};
 
+		crypto: crypto@5000d000 {
+			compatible = "sifli,sf32lb52-aes";
+			reg = <0x5000d000 0x1000>;
+			interrupts = <67>;
+			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_AES>;
+			resets = <&hpsys_rcc SF32LB52_HPSYS_RCC_RST_AES>;
+		};
+
 		trng: rng@5000f000 {
 			compatible = "sifli,sf32lb52-trng";
 			reg = <0x5000f000 0x1000>;
