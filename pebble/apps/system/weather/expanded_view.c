@@ -6,6 +6,7 @@
 #include "pebble_compat.h"
 #include "weather_app_layout.h" // the shared UV bar (round)
 #include "weather_math.h"
+#include "weather_sun.h"
 #include "weather_types.h"
 
 #include <stdint.h>
@@ -82,78 +83,6 @@ void expanded_view_reset(void) {
   s_ev = nullptr;
 }
 
-// ---- Sunset computation (fixed-point) -------------------------------------
-// There is no sunset field in the synced weather data and no firmware sunset API,
-// so compute it from lat/lon + date with the standard sunrise/sunset algorithm,
-// using Pebble's integer trig (sin_lookup/cos_lookup; acos via binary search).
-// Returns local minutes-from-midnight [0,1440), or -1 if unknown/degenerate.
-
-static int32_t prv_norm_angle(int32_t a) {
-  a %= TRIG_MAX_ANGLE;
-  if (a < 0)
-    a += TRIG_MAX_ANGLE;
-  return a;
-}
-static int32_t prv_angle_from_cdeg(int32_t cdeg) { // degrees*100 -> trig angle
-  return prv_norm_angle((int32_t)(((int64_t)cdeg * TRIG_MAX_ANGLE) / 36000));
-}
-
-static int prv_sunset_minutes(int16_t lat_e2, int16_t lon_e2, int16_t utc_off_min) {
-  if (lat_e2 == INT16_MIN || lon_e2 == INT16_MIN) {
-    return -1;
-  }
-  time_t now = pbl_realtime();
-  struct pbl_tm lt = *localtime(&now);
-  const int N = lt.tm_yday + 1; // day of year 1..366
-  // The LOCATION's UTC offset when the phone synced one (v4.1) — so a saved city's
-  // sunset reads in that city's local clock; otherwise the watch's own offset.
-  // tm_gmtoff, not time_get_gmtoffset(): the latter excludes DST while lt does not.
-  const int tz_min = (utc_off_min != INT16_MIN) ? utc_off_min : (lt.tm_gmtoff / 60);
-
-  const int b_cdeg = (36000 * (N - 81)) / 365; // B = (360/365)*(N-81), deg*100
-  const int32_t sinB = sin_lookup(prv_angle_from_cdeg(b_cdeg));
-  const int32_t cosB = cos_lookup(prv_angle_from_cdeg(b_cdeg));
-  const int32_t sin2B = sin_lookup(prv_angle_from_cdeg(2 * b_cdeg));
-
-  const int decl_cdeg = (int)(((int64_t)2345 * sinB) / TRIG_MAX_RATIO); // 23.45*sin(B)
-  const int32_t sinDec = sin_lookup(prv_angle_from_cdeg(decl_cdeg));
-  const int32_t cosDec = cos_lookup(prv_angle_from_cdeg(decl_cdeg));
-  const int32_t sinLat = sin_lookup(prv_angle_from_cdeg(lat_e2));
-  const int32_t cosLat = cos_lookup(prv_angle_from_cdeg(lat_e2));
-
-  const int64_t den = (int64_t)cosLat * cosDec;
-  if (den == 0)
-    return -1;
-  // -0.83 deg: refraction plus solar radius
-  const int32_t sinH0 = sin_lookup(prv_angle_from_cdeg(-83));
-  int64_t cosH =
-      ((int64_t)sinH0 * TRIG_MAX_RATIO - (int64_t)sinLat * sinDec) * 1000000 / den; // ratio *1e6
-  if (cosH > 1000000)
-    cosH = 1000000;
-  if (cosH < -1000000)
-    cosH = -1000000;
-
-  int32_t alo = 0, ahi = TRIG_MAX_ANGLE / 2; // omega = acos(cosH), binary search
-  for (int i = 0; i < 22; i++) {
-    int32_t amid = (alo + ahi) / 2;
-    int64_t c = (int64_t)cos_lookup(amid) * 1000000 / TRIG_MAX_RATIO;
-    if (c > cosH)
-      alo = amid;
-    else
-      ahi = amid;
-  }
-  const int omega_cdeg = (int)(((int64_t)((alo + ahi) / 2) * 36000) / TRIG_MAX_ANGLE);
-
-  const int eot_m1000 =
-      (int)(((int64_t)9870 * sin2B - (int64_t)7530 * cosB - (int64_t)1500 * sinB) / TRIG_MAX_RATIO);
-  const int tc_m1000 = 40 * (int)lon_e2 - tz_min * 1000 + eot_m1000;
-  int sunset_min = (720000 + 40 * omega_cdeg - tc_m1000) / 1000;
-  sunset_min %= 1440;
-  if (sunset_min < 0)
-    sunset_min += 1440;
-  return sunset_min;
-}
-
 static void prv_fmt_hhmm(char *out, size_t n, int h24, int mm) {
   if (clock_is_24h_style()) {
     snprintf(out, n, "%d:%02d", h24, mm);
@@ -179,7 +108,7 @@ static void prv_fmt_labelled_time(char *out, size_t n, const char *fmt, int h24,
 
 static void prv_build_sunset(char *out, size_t n, int16_t lat_e2, int16_t lon_e2,
                              int16_t utc_off_min) {
-  int m = prv_sunset_minutes(lat_e2, lon_e2, utc_off_min);
+  int m = weather_sun_sunset_minutes(lat_e2, lon_e2, utc_off_min);
   if (m < 0) {
     pbl_i18n_get_with_buffer(pbl_i18n_noop("Sunset --:--"), out, n);
     return;
