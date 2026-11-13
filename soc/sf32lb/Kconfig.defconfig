@@ -59,6 +59,10 @@ endif # SOC_SF32LB52
 
 if SOC_SF32LB57
 
+choice BT_HCI
+    default BT_HCI_SF32LB52
+endchoice
+
 # 512 KiB of SRAM, last 2 KiB reserved for LCPU and ACPU IPC. The flash is
 # the board's: the boot ROM reads it from the boot device the part and its
 # strapping select.
