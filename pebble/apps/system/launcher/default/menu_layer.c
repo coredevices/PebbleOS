@@ -17,7 +17,7 @@
 #include <shell/prefs.h>
 #include <shell/system_theme.h>
 
-#define LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT (32)
+#define LAUNCHER_MENU_LAYER_CONTENT_INDICATOR_LAYER_HEIGHT (16)
 #define LAUNCHER_MENU_LAYER_GENERIC_APP_ICON (RESOURCE_ID_MENU_LAYER_GENERIC_WATCHAPP_ICON)
 
 ////////////////////////
@@ -236,6 +236,8 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   menu_layer_set_scroll_vibe_on_blocked(
       menu_layer, shell_prefs_get_menu_scroll_vibe_behavior() == MenuScrollVibeOnLocked);
 
+  layer_add_child(container_layer, menu_layer_get_layer(menu_layer));
+
   // Only setup the content indicator on round
 #if PBL_ROUND
   const GSize arrow_layer_frame_size =
@@ -260,8 +262,7 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
       scroll_layer_get_content_indicator(&menu_layer->scroll_layer);
   ContentIndicatorConfig content_indicator_config = (ContentIndicatorConfig){
     .layer = up_arrow_layer,
-    .colors.background = GColorWhite,
-    .colors.foreground = GColorDarkGray,
+    .colors.background = GColorClear,
   };
   content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionUp,
                                         &content_indicator_config);
@@ -269,15 +270,10 @@ void launcher_menu_layer_init(LauncherMenuLayer *launcher_menu_layer,
   content_indicator_configure_direction(content_indicator, ContentIndicatorDirectionDown,
                                         &content_indicator_config);
   content_indicator_set_colors_follow_theme(content_indicator, ContentIndicatorDirectionUp,
-                                            false /* foreground */);
+                                            true /* foreground */);
   content_indicator_set_colors_follow_theme(content_indicator, ContentIndicatorDirectionDown,
-                                            false /* foreground */);
+                                            true /* foreground */);
 #endif
-
-  // Wait to add the menu layer until after we might have added the content indicators because
-  // the indicator arrows only get positioned properly if their layers overlap with the menu layer's
-  // edges
-  layer_add_child(container_layer, menu_layer_get_layer(menu_layer));
 
   launcher_app_glance_service_init(&launcher_menu_layer->glance_service,
                                    LAUNCHER_MENU_LAYER_GENERIC_APP_ICON);
