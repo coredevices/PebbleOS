@@ -442,6 +442,13 @@
 			hwlocks = <&mailbox2 0>;
 			assigned-clocks = <&pmuc SF32LB52_PMUC_CLK_WDT>;
 			assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_LRC32>;
+
+			regulators {
+				ldo18: LDO18 {
+					regulator-name = "ldo18";
+					regulator-pull-down;
+				};
+			};
 		};
 
 		rtc: rtc@500cb000 {
