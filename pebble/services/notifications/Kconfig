@@ -12,6 +12,15 @@ module = SERVICE_NOTIFICATIONS
 module-str = Notifications
 source "subsys/logging/Kconfig.template.log_level"
 
+config NOTIFICATION_IMAGE_RECENTS
+    int "Notification images kept of recent notifications"
+    default 0 if SCRATCH_HEAP_SHARED
+    default 3
+    help
+      While notifications are on screen, the images of this many of
+      them other than the one shown are kept, so going back to one
+      needs no transfer. Each takes up to 40 KiB of the scratch heap.
+
 config SERVICE_ALERTS_LOG_LEVEL_RUNTIME
     default y if !RECOVERY_FW
 
