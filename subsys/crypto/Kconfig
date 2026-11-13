@@ -44,7 +44,17 @@ config CRYPTO_SELFTEST
     help
       Run known-answer tests through the hardware hooks before the
       first hardware use of each algorithm, and keep that algorithm in
-      software if they fail. Also adds the pbl_crypto_selftest() API.
+      software if they fail. Also adds the pbl_crypto_selftest() API
+      and, with CONFIG_CRYPTO_SHELL, the "crypto selftest" command.
+
+config CRYPTO_SHELL
+    bool "Shell commands"
+    default SUBSYS_SHELL
+    depends on SHELL && (CRYPTO_SHA256_HW_ACCEL || CRYPTO_AES_HW_ACCEL)
+    help
+      The crypto command: run the self-test, check the accelerators
+      against software and time both. Its buffers take about 12 KB of
+      RAM.
 
 if CRYPTO_SHA256_HW_ACCEL || CRYPTO_AES_HW_ACCEL
 
