@@ -279,7 +279,9 @@ for tests that do not depend on the board, or that take too long for every
 pull request.
 
 The lab's watches run the suite nightly, normal and recovery firmware. A
-maintainer can run it on a pull request by adding the `ci:hw-itest` label;
+maintainer can also run it on a branch of the repository, such as `main`,
+with `gh workflow run hw-itest.yml --ref <branch>`, or on a pull request
+by adding the `ci:hw-itest` label;
 each time the label is added, the pull request runs once more. The run
 executes the pull request's own code on the lab machine, so review all of
 it first, including tooling and Python requirements. On someone else's

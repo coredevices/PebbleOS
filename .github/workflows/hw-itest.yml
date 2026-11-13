@@ -5,6 +5,7 @@ on:
     - cron: "0 2 * * *"
   pull_request_target:
     types: [labeled]
+  workflow_dispatch:
 
 permissions: {}
 
@@ -43,7 +44,9 @@ jobs:
     needs: authorize
     if: >
       !cancelled() &&
-      (github.event_name == 'schedule' || needs.authorize.result == 'success')
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       needs.authorize.result == 'success')
     runs-on: ubuntu-24.04
     permissions:
       contents: read
