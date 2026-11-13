@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig RAM
+    bool "RAM"
+    help
+      Memory-mapped RAM outside the SoC's own, only powered while it
+      has users (pbl/drivers/ram.h). The kernel scratch heap can use
+      the one a board gives the EXTRAM role.
