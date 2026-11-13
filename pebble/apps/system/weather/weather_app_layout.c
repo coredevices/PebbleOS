@@ -421,6 +421,9 @@ static const char *prv_precip_chance(WeatherType t) {
   }
 }
 
+// Below this rain chance the day reads as dry: "Chance of rain" at 5% is noise.
+#define PRECIP_CHANCE_MIN_PCT 20
+
 // "Chance of X"/"X likely" are only news when X is NOT already the headline — a
 // light-rain day announcing "Chance of rain" reads like the paper didn't look outside.
 static bool prv_precip_is_the_headline(WeatherType t) {
@@ -489,7 +492,7 @@ static void prv_build_alert(const WeatherLocationForecast *f, char *buf, size_t 
     alert = pbl_i18n_noop("High humidity");
   } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm >= 60) {
     alert = prv_precip_likely(t);
-  } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm > 0) {
+  } else if (!prv_precip_is_the_headline(t) && f->today_precip_mm >= PRECIP_CHANCE_MIN_PCT) {
     alert = prv_precip_chance(t);
   } else if (f->today_wind_mph >= 20) {
     alert = pbl_i18n_noop("Windy");
