@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: sf32lb52_mpi
+type: struct pbl_sf32lb52_mpi
+include: pbl/drivers/memc/sf32lb52_mpi.h
+provides:
+  sf32lb52_mpi: "&{sym}"

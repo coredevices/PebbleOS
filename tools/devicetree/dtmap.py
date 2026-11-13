@@ -51,6 +51,7 @@ SPEC_KEYS = {
     "ids",
     "children",
     "header",
+    "drives",
 }
 CHILDREN_KEYS = {"node", "names"}
 CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
@@ -157,6 +158,8 @@ class Spec:
         # Driver headers the provides templates need, as the modes of the parts of a panel driver
         self.includes = as_list(data.get("header", []))
         self.pinctrl = data.get("pinctrl")
+        # The compatibles of the child a node must have for the driver to bind to it
+        self.drives = as_list(data.get("drives", []))
         self.children = data.get("children")
         if self.children is not None:
             check_keys(
@@ -496,8 +499,19 @@ class Generator:
         return None
 
     def _bound(self, dev):
-        """The specs of the node whose driver is enabled."""
-        return [spec for spec in dev.specs if spec.config in self.config]
+        """The specs of the node whose driver is enabled, and that drive what is on it."""
+        return [
+            spec
+            for spec in dev.specs
+            if spec.config in self.config and self._drives(dev, spec)
+        ]
+
+    @staticmethod
+    def _drives(dev, spec):
+        return not spec.drives or any(
+            enabled(child) and set(child.compatibles) & set(spec.drives)
+            for child in dev.node.children
+        )
 
     def run(self):
         if self.tree is None:
@@ -964,8 +978,9 @@ class Generator:
         kind = next(iter(arg.keys() & ARG_KINDS))
         key = arg[kind]
         if arg.get("up"):
-            # The function of a block read from the block, as the PWM of a timer
-            dev = Device(dev.node.parent, [])
+            # The function of a block read from the block, as the PWM of a timer, and a child
+            # from the device it is part of, as the regulator of a PMIC
+            dev = Device(dev.owner.node if dev.owner else dev.node.parent, [])
         node = dev.node
         if "remote" in arg:
             node = self._remote(dev, arg["remote"])

@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: cypress,hyperram
+config: RAM_HYPERRAM
+class: ram
+define: PBL_RAM_HYPERRAM_DEFINE
+args:
+  - name: true
+  - parent: hyperbus
+  - supply: vcc
+    default: nullptr

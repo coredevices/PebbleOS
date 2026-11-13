@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig RAM
+    bool "RAM"
+    help
+      Memory-mapped RAM outside the SoC's own, only powered while it
+      has users (pbl/drivers/ram.h). The kernel scratch heap can use
+      the one a board gives the EXTRAM role.
+
+if RAM
+
+config RAM_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL && !SCRATCH_HEAP_SHARED
+    help
+      The ram shell command, to show the use and power state of the
+      external RAM, and to check that it keeps what is written to it.
+
+config RAM_HYPERRAM
+    bool "HyperRAM"
+    default DT_HAS_CYPRESS_HYPERRAM_ENABLED
+    select REGULATOR
+    select HYPERBUS
+    help
+      Support for HyperRAM, PSRAM with a HyperBus interface, on a
+      HyperBus controller.
+
+endif # RAM

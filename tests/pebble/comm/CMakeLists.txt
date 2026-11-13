@@ -10,6 +10,7 @@ pbl_clar_test(test_ams
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_rtc.c
+  DEFINES CONFIG_MUSIC_ALBUM_ART_RECENTS=0
 )
 
 pbl_clar_test(test_ams_util

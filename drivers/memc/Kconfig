@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MEMC
+    bool
+    help
+      Cores of the memory controllers that drive memories of more than
+      one kind, each kind with a driver in its own subsystem. Selected
+      by those drivers.
+
+config MEMC_SF32LB52_MPI
+    bool
+    select MEMC
+    select CLK
+    select PINCTRL
+    help
+      Core of the SiFli SF32LB52 MPI controller: what its SPI memory
+      and HyperBus drivers share.

@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/malloc.h>
 #include <pbl/services/imaging.h>
 
 PBL_WEAK ImagingReceivedHandler s_imaging_received_handlers[ImagingImageTypeCount];
@@ -35,4 +36,8 @@ bool PBL_WEAK imaging_request_notification_image(uint8_t token, ImagingFormat fo
                                                  uint16_t width, uint16_t height,
                                                  const Uuid *item_id) {
   return false;
+}
+
+void PBL_WEAK imaging_image_destroy(struct GBitmap *bitmap) {
+  pbl_free(bitmap);
 }

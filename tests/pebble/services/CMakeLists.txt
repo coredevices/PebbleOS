@@ -111,6 +111,7 @@ pbl_clar_test(test_music_endpoint
     tests/fakes/fake_rtc.c
     pebble/services/music/endpoint.c
     pebble/services/music/service.c
+  DEFINES CONFIG_MUSIC_ALBUM_ART_RECENTS=2
 )
 
 pbl_clar_test(test_ping
@@ -122,6 +123,14 @@ pbl_clar_test(test_imaging
   SOURCES
     tests/fakes/fake_session.c
     pebble/services/imaging/imaging.c
+    kernel/scratch.c
+  DEFINES CONFIG_SCRATCH_HEAP_SHARED
+)
+
+pbl_clar_test(test_notification_image
+  SOURCES
+    pebble/services/notifications/notification_image.c
+  DEFINES CONFIG_NOTIFICATION_IMAGE_RECENTS=2
 )
 
 pbl_clar_test(test_compass_cal
@@ -478,5 +487,13 @@ pbl_clar_test(test_mic_capture
     tests/fakes/fake_events.c
     tests/fakes/fake_settings.c
   DEFINES CONFIG_SERVICE_MIC_CAPTURE
+  OVERRIDES dummy_board
+)
+
+pbl_clar_test(test_voice_speex
+  SOURCES pebble/services/voice/voice_speex.c kernel/scratch.c
+  DEFINES CONFIG_SCRATCH_HEAP_SIZE=1048576
+  LIBS speex
+  INCLUDES third_party/speex third_party/speex/speex/include
   OVERRIDES dummy_board
 )

@@ -141,9 +141,6 @@ void pbl_soc_early_init(void) {
   // Long power key presses always take the PMIC cold reboot
   pbl_writel(PWRKEY_RESET_CNT, PMUC(PWRKEY_CNT));
 
-  // Disable 1V8 LDO (feeds PSRAM, we use VDD_SiP to power it)
-  pbl_modifyl(PMUC_PERI_LDO_EN_LDO18, PMUC_PERI_LDO_LDO18_PD, PMUC(PERI_LDO));
-
   pbl_modifyl(0U,
               HPSYS_AON_WER_LP2HP_REQ | HPSYS_AON_WER_LP2HP_IRQ | HPSYS_AON_WER_LPTIM1 |
                   HPSYS_AON_WER_GPIO1,

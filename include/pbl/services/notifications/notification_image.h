@@ -39,13 +39,15 @@ void notification_image_service_init(void);
 /**
  * @brief Claim the slot for an item.
  *
- * Drops any image held for a previous item.
+ * The images of the last @c CONFIG_NOTIFICATION_IMAGE_RECENTS items the slot belonged to are kept
+ * until notification_image_clear(): claiming it for one of them again brings its image back, with
+ * nothing to request.
  *
  * @param item_id Item to claim the slot for.
  * @param[out] token_out Token to send with the image request.
- * @return false if the slot already belongs to @p item_id, whether the image is in flight,
- *         delivered or the phone said it has none, so callers can drive this from a redraw; also
- *         false if an argument is NULL.
+ * @return false if there is nothing to request: the slot already belongs to @p item_id, whether
+ *         the image is in flight, delivered or the phone said it has none, so callers can drive
+ *         this from a redraw, or its image was still kept; also false if an argument is NULL.
  */
 bool notification_image_claim(const Uuid *item_id, uint8_t *token_out);
 
@@ -76,8 +78,7 @@ bool notification_image_is_pending(const Uuid *item_id);
 /**
  * @brief Store a delivered image.
  *
- * Takes ownership of @p bitmap; it, its pixel data and its palette must be allocated on the kernel
- * heap. A stale token frees the bitmap.
+ * Takes ownership of @p bitmap, an image from the imaging service. A stale token frees it.
  *
  * @param token Token returned by notification_image_claim().
  * @param bitmap Delivered image, or NULL when the phone had no image.
@@ -86,7 +87,7 @@ bool notification_image_is_pending(const Uuid *item_id);
  */
 bool notification_image_store(uint8_t token, struct GBitmap *bitmap);
 
-/** @brief Release the slot and free the stored image. */
+/** @brief Release the slot and free every image kept. */
 void notification_image_clear(void);
 
 /** @} */

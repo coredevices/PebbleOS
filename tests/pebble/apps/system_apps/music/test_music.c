@@ -108,6 +108,12 @@ void music_album_art_unlock(void) {
   s_album_art_lock_depth--;
 }
 
+void music_album_art_retain(void) {
+}
+
+void music_album_art_release(void) {
+}
+
 bool music_album_art_is_current(void) {
   return s_album_art_current;
 }

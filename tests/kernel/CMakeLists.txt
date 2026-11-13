@@ -79,3 +79,10 @@ pbl_clar_test(test_kernel_sys_work
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
 )
+
+pbl_clar_test(test_scratch
+  SOURCES
+    kernel/scratch.c
+  DEFINES
+    CONFIG_SCRATCH_HEAP_SIZE=65536
+)

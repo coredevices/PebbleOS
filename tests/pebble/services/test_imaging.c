@@ -62,9 +62,7 @@ void pbl_heap_stats(struct pbl_heap *heap, unsigned int *used, unsigned int *fre
 
 static void prv_free_last_bitmap(void) {
   if (s_last_bitmap) {
-    pbl_free(s_last_bitmap->addr);
-    pbl_free(s_last_bitmap->palette);
-    pbl_free(s_last_bitmap);
+    imaging_image_destroy(s_last_bitmap);
     s_last_bitmap = nullptr;
   }
 }
@@ -452,4 +450,27 @@ void test_imaging__unsupported_latches_per_type(void) {
   cl_assert_equal_i(s_notif_deliveries, 1);
   cl_assert(!imaging_is_type_supported(ImagingImageTypeNotification));
   cl_assert(imaging_is_type_supported(ImagingImageTypeAlbumArt));
+}
+
+void test_imaging__concurrent_transfers_of_different_types(void) {
+  uint8_t buf[64];
+  size_t len =
+      prv_build_response(buf, 7, ImagingResponseFlagFirst, 0, 2, 4, 2, ImagingFormat4BitPalette,
+                         s_palette, sizeof(s_palette), s_pixels, 2);
+  prv_receive(buf, len);
+  // A notification image arrives in the middle of the album art
+  len = prv_build_response(
+      buf, 9,
+      prv_typed(ImagingImageTypeNotification, ImagingResponseFlagFirst | ImagingResponseFlagLast),
+      0, sizeof(s_pixels), 4, 2, ImagingFormat4BitPalette, s_palette, sizeof(s_palette), s_pixels,
+      sizeof(s_pixels));
+  prv_receive(buf, len);
+  cl_assert_equal_i(s_notif_deliveries, 1);
+
+  len = prv_build_response(buf, 7, ImagingResponseFlagLast, 2, 2, 0, 0, 0, nullptr, 0, s_pixels + 2,
+                           2);
+  prv_receive(buf, len);
+  cl_assert_equal_i(s_failures, 0);
+  cl_assert_equal_i(s_deliveries, 1);
+  cl_assert(memcmp(s_last_bitmap->addr, s_pixels, sizeof(s_pixels)) == 0);
 }
