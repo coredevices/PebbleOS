@@ -44,7 +44,7 @@ config GPIO_QEMU
 
 config GPIO_QEMU_IRQ_PRIO
     int "Interrupt priority"
-    default 6
+    default 5
     depends on GPIO_QEMU
     help
       Priority of the port interrupt.
