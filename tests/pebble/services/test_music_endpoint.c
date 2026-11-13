@@ -209,6 +209,7 @@ void test_music_endpoint__initialize(void) {
   fake_rtc_init(0, 0);
   fake_comm_session_init();
   music_init();
+  music_album_art_retain();
 
   s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
@@ -218,6 +219,7 @@ void test_music_endpoint__initialize(void) {
 }
 
 void test_music_endpoint__cleanup(void) {
+  music_album_art_release();
   fake_comm_session_process_send_next();
 
   // Simulate disconnecting Pebble mobile app:
@@ -319,6 +321,60 @@ void test_music_endpoint__held_art_is_released_when_transfer_starts(void) {
   s_imaging_will_receive_handlers[ImagingImageTypeAlbumArt](generation);
   cl_assert(music_album_art_lock() == nullptr);
   music_album_art_unlock();
+}
+
+static GBitmap *prv_play_with_art(const char *title) {
+  GBitmap *art = prv_make_album_art();
+
+  music_update_now_playing(title, strlen(title), "artist", 6, "album", 5);
+  music_set_album_art(art, music_get_now_playing_generation());
+  return art;
+}
+
+void test_music_endpoint__recent_art_needs_no_transfer(void) {
+  const GBitmap *first = prv_play_with_art("first");
+  prv_play_with_art("second");
+
+  fake_event_clear_last();
+  music_update_now_playing("first", 5, "artist", 6, "album", 5);
+
+  cl_assert(music_album_art_is_current());
+  cl_assert(music_album_art_lock() == first);
+  music_album_art_unlock();
+  cl_assert_equal_i(fake_event_get_last().media.type, PebbleMediaEventTypeAlbumArtUpdated);
+}
+
+void test_music_endpoint__oldest_recent_art_is_dropped(void) {
+  prv_play_with_art("first");
+  const GBitmap *second = prv_play_with_art("second");
+  prv_play_with_art("third");
+  prv_play_with_art("fourth");
+
+  music_update_now_playing("first", 5, "artist", 6, "album", 5);
+  cl_assert(!music_album_art_is_current());
+
+  music_update_now_playing("second", 6, "artist", 6, "album", 5);
+  cl_assert(music_album_art_is_current());
+  cl_assert(music_album_art_lock() == second);
+  music_album_art_unlock();
+}
+
+void test_music_endpoint__art_is_only_kept_while_in_use(void) {
+  prv_play_with_art("first");
+  prv_play_with_art("second");
+
+  music_album_art_release();
+  cl_assert(!music_album_art_is_current());
+  cl_assert(music_album_art_lock() == nullptr);
+  music_album_art_unlock();
+
+  // Neither is art that arrives late
+  music_set_album_art(prv_make_album_art(), music_get_now_playing_generation());
+  cl_assert(music_album_art_lock() == nullptr);
+  music_album_art_unlock();
+
+  music_update_now_playing("first", 5, "artist", 6, "album", 5);
+  cl_assert(!music_album_art_is_current());
 }
 
 void test_music_endpoint__ignore_now_playing_while_not_connected(void) {

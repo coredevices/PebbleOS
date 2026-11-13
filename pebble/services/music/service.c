@@ -66,11 +66,15 @@ struct MusicServiceContext {
   //! @see music_skip_seeks_within_track
   bool skip_seeks_within_track;
 
-  //! Album art for the current track, or NULL if none. Owned by the service; freed with
-  //! imaging_image_destroy. Deliberately kept (up to ~34 KB of kernel heap on the largest displays)
-  //! even while the Music app is closed, so reopening it shows the cover instantly; a track change,
-  //! NoArt reply or server disconnect replaces or frees it.
-  GBitmap *album_art;
+  //! Album art, most recent first: the one shown, then those of the tracks before it. Only kept
+  //! while it has users.
+  struct {
+    GBitmap *bitmap;
+    char title[MUSIC_BUFFER_LENGTH];
+    char artist[MUSIC_BUFFER_LENGTH];
+    char album[MUSIC_BUFFER_LENGTH];
+  } album_art[1 + CONFIG_MUSIC_ALBUM_ART_RECENTS];
+  bool album_art_in_use;
 
   //! The now_playing_generation the current album art response was for. A track change bumps
   //! now_playing_generation without clearing the art (so the previous art stays on screen until the
@@ -88,6 +92,8 @@ struct MusicServiceContext {
 } s_music_ctx;
 
 static void prv_free_album_art_locked(void);
+static void prv_retire_album_art_locked(void);
+static void prv_put_album_art_updated_event(void);
 
 // Album art arrives via the generic image-fetch service; store it against the requesting token.
 static void prv_imaging_album_art_received(uint8_t token, GBitmap *bitmap) {
@@ -97,7 +103,7 @@ static void prv_imaging_album_art_received(uint8_t token, GBitmap *bitmap) {
 static void prv_imaging_album_art_will_receive(uint8_t token) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   if (token == s_music_ctx.now_playing_generation) {
-    prv_free_album_art_locked();
+    prv_retire_album_art_locked();
   }
   pbl_mutex_unlock(&s_music_ctx.mutex);
 }
@@ -145,10 +151,43 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
-  if (s_music_ctx.album_art) {
-    imaging_image_destroy(s_music_ctx.album_art);
-    s_music_ctx.album_art = nullptr;
+  for (size_t i = 0; i < ARRAY_LENGTH(s_music_ctx.album_art); i++) {
+    imaging_image_destroy(s_music_ctx.album_art[i].bitmap);
+    s_music_ctx.album_art[i].bitmap = nullptr;
   }
+}
+
+// Makes room for the art of another track, at the cost of the oldest one
+static void prv_retire_album_art_locked(void) {
+  const size_t last = ARRAY_LENGTH(s_music_ctx.album_art) - 1;
+
+  if (!s_music_ctx.album_art[0].bitmap) {
+    return;
+  }
+
+  imaging_image_destroy(s_music_ctx.album_art[last].bitmap);
+  memmove(&s_music_ctx.album_art[1], &s_music_ctx.album_art[0],
+          last * sizeof(s_music_ctx.album_art[0]));
+  s_music_ctx.album_art[0].bitmap = nullptr;
+}
+
+// Shows the art kept of the current track, if there is any
+static bool prv_recall_album_art_locked(void) {
+  for (size_t i = 0; i < ARRAY_LENGTH(s_music_ctx.album_art); i++) {
+    typeof(s_music_ctx.album_art[0]) art = s_music_ctx.album_art[i];
+
+    if (art.bitmap && (strcmp(art.title, s_music_ctx.title) == 0) &&
+        (strcmp(art.artist, s_music_ctx.artist) == 0) &&
+        (strcmp(art.album, s_music_ctx.album) == 0)) {
+      memmove(&s_music_ctx.album_art[1], &s_music_ctx.album_art[0],
+              i * sizeof(s_music_ctx.album_art[0]));
+      s_music_ctx.album_art[0] = art;
+      s_music_ctx.album_art_generation = s_music_ctx.now_playing_generation;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 static void prv_put_coalesced_event(PebbleMediaEventType type, bool *pending) {
@@ -276,9 +315,14 @@ void music_update_now_playing(const char *title, size_t title_length, const char
   copy_and_truncate(s_music_ctx.artist, artist, artist_length);
   copy_and_truncate(s_music_ctx.album, album, album_length);
 
+  const bool recalled = track_changed && prv_recall_album_art_locked();
+
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
   prv_put_now_playing_changed_event();
+  if (recalled) {
+    prv_put_album_art_updated_event();
+  }
 }
 
 static void prv_update_string_and_put_event(const char *value, size_t value_length, off_t offset) {
@@ -571,8 +615,8 @@ static void prv_put_album_art_updated_event(void) {
 void music_set_album_art(GBitmap *bitmap, uint8_t token) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
 
-  if (token != s_music_ctx.now_playing_generation) {
-    // The track changed while the art was in flight; it's for the wrong song. Drop it.
+  if ((token != s_music_ctx.now_playing_generation) || !s_music_ctx.album_art_in_use) {
+    // The track changed while the art was in flight, or nothing shows it any more
     PBL_LOG_DBG("Drop stale album art token=%u current=%u", token,
                 s_music_ctx.now_playing_generation);
     imaging_image_destroy(bitmap);
@@ -580,8 +624,13 @@ void music_set_album_art(GBitmap *bitmap, uint8_t token) {
     return;
   }
 
-  prv_free_album_art_locked();
-  s_music_ctx.album_art = bitmap;
+  prv_retire_album_art_locked();
+  if (bitmap) {
+    s_music_ctx.album_art[0].bitmap = bitmap;
+    strcpy(s_music_ctx.album_art[0].title, s_music_ctx.title);
+    strcpy(s_music_ctx.album_art[0].artist, s_music_ctx.artist);
+    strcpy(s_music_ctx.album_art[0].album, s_music_ctx.album);
+  }
   // Record that we've now got a response (art, or NULL for NoArt) for this track, so the Music app
   // stops re-requesting until the track changes again.
   s_music_ctx.album_art_generation = token;
@@ -589,6 +638,21 @@ void music_set_album_art(GBitmap *bitmap, uint8_t token) {
   pbl_mutex_unlock(&s_music_ctx.mutex);
 
   prv_put_album_art_updated_event();
+}
+
+void music_album_art_retain(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  s_music_ctx.album_art_in_use = true;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
+}
+
+void music_album_art_release(void) {
+  pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
+  s_music_ctx.album_art_in_use = false;
+  prv_free_album_art_locked();
+  // Fetched again the next time it is shown
+  s_music_ctx.album_art_generation = s_music_ctx.now_playing_generation - 1;
+  pbl_mutex_unlock(&s_music_ctx.mutex);
 }
 
 void music_album_art_transfer_failed(uint8_t token) {
@@ -615,7 +679,7 @@ const GBitmap *music_album_art_lock(void) {
   pbl_mutex_lock(&s_music_ctx.mutex, PBL_FOREVER);
   // Held until music_album_art_unlock so the bitmap can't be freed mid-draw. The recursive mutex is
   // released by the matching unlock call.
-  return s_music_ctx.album_art;
+  return s_music_ctx.album_art[0].bitmap;
 }
 
 void music_album_art_unlock(void) {

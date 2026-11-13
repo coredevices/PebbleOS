@@ -6,6 +6,16 @@ config SERVICE_MUSIC
     help
       Music control service.
 
+config MUSIC_ALBUM_ART_RECENTS
+    int "Album art kept of recent tracks"
+    depends on SERVICE_MUSIC
+    default 0 if SCRATCH_HEAP_SHARED
+    default 3
+    help
+      While the Music app is open, the album art of this many tracks
+      before the current one is kept, so going back to one of them
+      needs no transfer. Each takes up to 40 KiB of the scratch heap.
+
 if SERVICE_MUSIC
 
 module = SERVICE_MUSIC

@@ -1763,6 +1763,9 @@ static void prv_handle_init(void) {
   MusicAppData *data = app_malloc_check(sizeof(MusicAppData));
   *data = (MusicAppData){};
   app_state_set_user_data(data);
+#if MUSIC_ALBUM_ART_SUPPORTED
+  music_album_art_retain();
+#endif
 
   data->event_info = (EventServiceInfo){
     .type = PEBBLE_MEDIA_EVENT,
@@ -1827,6 +1830,9 @@ static void prv_handle_deinit(void) {
   if (data->temporarily_show_progress_timer) {
     app_timer_cancel(data->temporarily_show_progress_timer);
   }
+#if MUSIC_ALBUM_ART_SUPPORTED
+  music_album_art_release();
+#endif
   // Detach the action bar so its touch-nav snapshot does not keep routing taps after the app exits.
   action_bar_layer_remove_from_window(&data->action_bar);
   pbl_i18n_free_all(data);

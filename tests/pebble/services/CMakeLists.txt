@@ -111,6 +111,7 @@ pbl_clar_test(test_music_endpoint
     tests/fakes/fake_rtc.c
     pebble/services/music/endpoint.c
     pebble/services/music/service.c
+  DEFINES CONFIG_MUSIC_ALBUM_ART_RECENTS=2
 )
 
 pbl_clar_test(test_ping
