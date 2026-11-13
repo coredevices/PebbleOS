@@ -252,6 +252,22 @@ uint8_t music_get_now_playing_generation(void);
 bool music_album_art_is_current(void);
 
 /**
+ * @brief Start using album art.
+ *
+ * Album art is only kept while it has a user: the art of the current track, and of the last
+ * @c CONFIG_MUSIC_ALBUM_ART_RECENTS tracks before it, so that going back to one of them needs no
+ * transfer.
+ */
+void music_album_art_retain(void);
+
+/**
+ * @brief Stop using album art, which frees it.
+ *
+ * The art of the current track is fetched again the next time it is used.
+ */
+void music_album_art_release(void);
+
+/**
  * @brief Borrow the current album art for drawing.
  *
  * Holds the service lock until music_album_art_unlock(), which must always be called, even when
