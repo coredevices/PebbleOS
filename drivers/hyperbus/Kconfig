@@ -6,3 +6,16 @@ config HYPERBUS
     help
       HyperBus controller class (pbl/drivers/hyperbus.h), selected by
       the drivers of HyperBus memories.
+
+if HYPERBUS
+
+config HYPERBUS_SF32LB52_MPI
+    bool "SiFli SF32LB52 MPI"
+    default DT_HAS_SIFLI_SF32LB52_MPI_ENABLED
+    depends on SOC_SF32LB52
+    select MEMC_SF32LB52_MPI
+    help
+      Support for a HyperBus memory on the SiFli SF32LB52 MPI
+      controller.
+
+endif # HYPERBUS
