@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: hyperbus
+type: struct pbl_hyperbus
+include: pbl/drivers/hyperbus.h
+provides:
+  hyperbus: "&{sym}"
