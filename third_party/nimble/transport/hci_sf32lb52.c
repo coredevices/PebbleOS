@@ -85,6 +85,7 @@ static_assert(sizeof(struct ring) == 20U);
 static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_BT_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
+static PBL_SEM_DEFINE(s_lcpu_ready, 0, 1);
 /* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
  * to the transport pool; taken by the HCI RX task when an alloc fails so we
  * unblock as soon as the host has freed something instead of polling.
@@ -398,7 +399,19 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
+static void prv_boot_lcpu(void) {
+  int ret = pbl_rproc_boot(&LCPU->rproc);
+  PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
+}
+
 static void prv_hci_task_main(void *unused) {
+  // Booting the LCPU calibrates the radio, which keeps the CPU busy for about a second. Do it
+  // below the app and KernelMain so the rest of the boot and the first app go on meanwhile.
+  pbl_thread_prio_set(pbl_thread_current(), PBL_PRIO_IDLE + 1);
+  prv_boot_lcpu();
+  pbl_thread_prio_set(pbl_thread_current(), CONFIG_BT_HCI_THREAD_PRIO);
+  pbl_sem_give(&s_lcpu_ready);
+
   while (true) {
     const uint8_t *data;
     size_t len;
@@ -462,7 +475,7 @@ static void prv_controller_config(void) {
 #endif
 }
 
-void ble_transport_ll_reinit(void) {
+static void prv_open(void) {
   int ret;
 
   hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
@@ -478,13 +491,21 @@ void ble_transport_ll_reinit(void) {
   s_open = true;
 
   prv_controller_config();
+}
 
-  ret = pbl_rproc_boot(&LCPU->rproc);
-  PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
+void ble_transport_ll_reinit(void) {
+  prv_open();
+  prv_boot_lcpu();
+}
+
+void ble_transport_ll_wait_ready(void) {
+  pbl_sem_take(&s_lcpu_ready, PBL_FOREVER);
+  pbl_sem_give(&s_lcpu_ready);
 }
 
 void ble_transport_ll_init(void) {
-  ble_transport_ll_reinit();
+  // The HCI task boots the LCPU once it runs, see prv_hci_task_main().
+  prv_open();
 
   ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
 
