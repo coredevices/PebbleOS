@@ -7,3 +7,16 @@ menuconfig RAM
       Memory-mapped RAM outside the SoC's own, only powered while it
       has users (pbl/drivers/ram.h). The kernel scratch heap can use
       the one a board gives the EXTRAM role.
+
+if RAM
+
+config RAM_HYPERRAM
+    bool "HyperRAM"
+    default DT_HAS_CYPRESS_HYPERRAM_ENABLED
+    select REGULATOR
+    select HYPERBUS
+    help
+      Support for HyperRAM, PSRAM with a HyperBus interface, on a
+      HyperBus controller.
+
+endif # RAM
