@@ -35,23 +35,13 @@
  */
 
 /** @cond INTERNAL_HIDDEN */
-struct pbl_display_sf32lb_lcdc_line_event {
-  uint16_t line;
-  uint8_t action;
-};
-
 struct pbl_display_sf32lb_lcdc_state {
   uint8_t *fb;
   uint32_t pitch;
-  uint32_t vck;
-  uint32_t fast_vck;
   uint16_t y0;
   uint16_t y1;
   uint16_t max_line;
   bool rotated;
-  struct pbl_display_sf32lb_lcdc_line_event events[4];
-  uint8_t num_events;
-  uint8_t next_event;
 };
 /** @endcond */
 

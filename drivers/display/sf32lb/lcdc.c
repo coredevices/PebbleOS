@@ -22,10 +22,6 @@ PBL_LOG_MODULE_DEFINE(driver_display_sf32lb_lcdc, CONFIG_DRIVER_DISPLAY_LOG_LEVE
 
 #define LCDC_BUSY_TIMEOUT_US 100000U
 
-// Gate clock for lines after the updated ones, normal again this many lines before the end
-#define LCDC_FAST_VCK_US     2U
-#define LCDC_FAST_VCK_MARGIN 32U
-
 // XRST to the first VST, and the start of the transfer once enabled
 #define LCDC_XRST_DELAY_US  35U
 #define LCDC_START_DELAY_US 1U
@@ -91,8 +87,6 @@ static int prv_hw_init(const struct pbl_display_sf32lb_lcdc *lcdc) {
   }
 
   lcdc->state->max_line = max_line;
-  lcdc->state->vck = vck;
-  lcdc->state->fast_vck = (uint32_t)(rate_mhz / 1000000000U) * LCDC_FAST_VCK_US;
 
   prv_modify(lcdc, SF32LB52_LCDC_SETTING_OFFSET, 0U, LCDC_SETTING_AUTO_GATE_EN);
 
@@ -212,83 +206,6 @@ static uint32_t prv_bus_addr(const uint8_t *p) {
   return addr;
 }
 
-enum lcdc_line_action {
-  LCDC_LINE_HALF,
-  LCDC_LINE_FAST_VCK,
-  LCDC_LINE_NORMAL_VCK,
-  LCDC_LINE_END,
-};
-
-// The gate clock edge sits halfway through the line
-static void prv_set_vck(const struct pbl_display_sf32lb_lcdc *lcdc, uint32_t vck) {
-  prv_modify(lcdc, SF32LB52_LCDC_JDI_PAR_CONF6_OFFSET, LCDC_JDI_PAR_CONF6_VCK_DLY_MASK,
-             PBL_FIELD_PREP(LCDC_JDI_PAR_CONF6_VCK_DLY_MASK, vck / 2U));
-  prv_modify(lcdc, SF32LB52_LCDC_JDI_PAR_CONF5_OFFSET, LCDC_JDI_PAR_CONF5_VCK_WIDTH_MASK,
-             PBL_FIELD_PREP(LCDC_JDI_PAR_CONF5_VCK_WIDTH_MASK, vck));
-}
-
-static void prv_add_line_event(struct pbl_display_sf32lb_lcdc_state *state, uint16_t line,
-                               enum lcdc_line_action action) {
-  uint8_t i = state->num_events++;
-
-  while (i > 0U && state->events[i - 1U].line > line) {
-    state->events[i] = state->events[i - 1U];
-    i--;
-  }
-  state->events[i] = (struct pbl_display_sf32lb_lcdc_line_event){
-    .line = line,
-    .action = action,
-  };
-}
-
-// Lines after the updated ones are shifted through with a fast gate clock
-static void prv_plan_line_events(struct pbl_display_sf32lb_lcdc_state *state, uint32_t end_line) {
-  uint32_t last_line = state->max_line - 1U;
-
-  state->num_events = 0U;
-  state->next_event = 0U;
-
-  prv_add_line_event(state, state->max_line / 2U - 1U, LCDC_LINE_HALF);
-  if (end_line + 2U + 2U * LCDC_FAST_VCK_MARGIN < last_line) {
-    prv_add_line_event(state, end_line + 2U, LCDC_LINE_FAST_VCK);
-    prv_add_line_event(state, last_line - LCDC_FAST_VCK_MARGIN, LCDC_LINE_NORMAL_VCK);
-  }
-  prv_add_line_event(state, last_line, LCDC_LINE_END);
-}
-
-// Runs the interrupting event, and those the fast clock already went past
-static void prv_run_line_events(const struct pbl_display_sf32lb_lcdc *lcdc) {
-  struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
-  bool due = true;
-
-  while (state->events[state->next_event].action != LCDC_LINE_END) {
-    const struct pbl_display_sf32lb_lcdc_line_event *ev = &state->events[state->next_event];
-
-    if (!due) {
-      uint32_t vpos = PBL_FIELD_GET(LCDC_JDI_PAR_STAT_VPOS_MASK,
-                                    prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_STAT_OFFSET));
-      if (vpos + 1U < ev->line) {
-        break;
-      }
-    }
-    due = false;
-    state->next_event++;
-
-    if (ev->action == LCDC_LINE_HALF) {
-      // Send the frame only once
-      prv_modify(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET, LCDC_JDI_PAR_CTRL_ENABLE, 0U);
-    } else if (ev->action == LCDC_LINE_FAST_VCK) {
-      prv_set_vck(lcdc, state->fast_vck);
-    } else {
-      prv_set_vck(lcdc, state->vck);
-    }
-  }
-
-  prv_modify(
-      lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET, LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK,
-      PBL_FIELD_PREP(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK, state->events[state->next_event].line));
-}
-
 static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
   struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
   const struct pbl_panel_timing *timing = lcdc->panel->timing;
@@ -364,10 +281,9 @@ static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
             PBL_FIELD_PREP(LCDC_JDI_PAR_CONF10_HC_ST_LINE_MASK, start_line) |
                 PBL_FIELD_PREP(LCDC_JDI_PAR_CONF10_HC_END_LINE_MASK, end_line + 2U));
 
-  prv_plan_line_events(state, end_line);
-  prv_set_vck(lcdc, state->vck);
+  // First interrupt halfway through the frame
   prv_modify(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET, LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK,
-             PBL_FIELD_PREP(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK, state->events[0].line));
+             PBL_FIELD_PREP(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK, state->max_line / 2U - 1U));
   prv_modify(lcdc, SF32LB52_LCDC_SETTING_OFFSET, 0U,
              LCDC_SETTING_JDI_PARL_INTR_MASK | LCDC_SETTING_EOF_MASK);
 
@@ -392,12 +308,15 @@ static bool prv_handle_irq(const struct pbl_display_sf32lb_lcdc *lcdc, uint32_t 
   }
 
   if ((irq & LCDC_IRQ_JDI_PARL_INTR_RAW_STAT) != 0U) {
-    struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
-    uint32_t int_line = PBL_FIELD_GET(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK,
-                                      prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET));
+    uint32_t ctrl = prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET);
+    uint32_t max_line = PBL_FIELD_GET(LCDC_JDI_PAR_CONF1_MAX_LINE_MASK,
+                                      prv_read(lcdc, SF32LB52_LCDC_JDI_PAR_CONF1_OFFSET));
 
-    if (int_line != state->max_line - 1U) {
-      prv_run_line_events(lcdc);
+    if (PBL_FIELD_GET(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK, ctrl) != max_line) {
+      // Halfway: interrupt again at the end, and send the frame only once
+      ctrl &= ~(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK | LCDC_JDI_PAR_CTRL_ENABLE);
+      ctrl |= PBL_FIELD_PREP(LCDC_JDI_PAR_CTRL_INT_LINE_NUM_MASK, max_line);
+      prv_write(lcdc, SF32LB52_LCDC_JDI_PAR_CTRL_OFFSET, ctrl);
       return false;
     }
 
