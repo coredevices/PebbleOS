@@ -15,6 +15,9 @@ struct pbl_pp_session;
 #define ACK_NACK_TIME_OUT_MS    (10000)
 #define APP_MESSAGE_ENDPOINT_ID (0x30)
 
+//! Messages larger than this, in bytes, ask for the fastest connection while they transfer.
+#define APP_MESSAGE_FAST_CONNECTION_MIN_SIZE (500)
+
 typedef enum {
   CMD_PUSH = 0x01,
   CMD_REQUEST = 0x02,
