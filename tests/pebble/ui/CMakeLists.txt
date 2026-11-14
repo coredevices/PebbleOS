@@ -1,6 +1,13 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+if(APPLE)
+  set(day_picker_test_link_flags -Wl,-dead_strip)
+else()
+  set(day_picker_test_link_flags -Wl,--gc-sections)
+endif()
+pbl_clar_test(test_day_picker LIBS ${day_picker_test_link_flags})
+
 pbl_clar_test(test_layer
   SOURCES
     pebble/applib/graphics/gtypes.c

@@ -131,6 +131,7 @@ typedef enum {
   //! Emitted when the effective dark mode flips, whether the cause is the mode pref or the
   //! schedule. Only emitted on changes of \ref system_theme_is_dark_mode.
   PEBBLE_DARK_MODE_CHANGE_EVENT,
+  PEBBLE_ALARM_UPDATED_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
