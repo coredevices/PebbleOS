@@ -844,6 +844,63 @@ def test_partition_defined_twice_fails(tmp_path):
         dtmap.partitions_header(compile_tree(tmp_path, text))
 
 
+IDLE_STATES_DTS = """/dts-v1/;
+/ {
+    cpus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        cpu@0 {
+            compatible = "arm,cortex-m33";
+            device_type = "cpu";
+            reg = <0>;
+            cpu-idle-states = <&deepsleep>;
+        };
+
+        idle-states {
+            deepsleep: cpu-sleep-0 {
+                compatible = "arm,idle-state";
+                entry-latency-us = <200>;
+                exit-latency-us = <500>;
+                min-residency-us = <10000>;
+            };
+        };
+    };
+};
+"""
+
+
+def compile_tree_with_labels(tmp_path, text):
+    path, dtb = tmp_path / "p.dts", tmp_path / "p.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    return fdt.load(dtb)
+
+
+def test_idle_states_become_their_latencies(tmp_path):
+    text = dtmap.idle_states_header(
+        compile_tree_with_labels(tmp_path, IDLE_STATES_DTS)
+    )
+    assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_ENTRY_LATENCY_US 200U" in text
+    assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_EXIT_LATENCY_US 500U" in text
+    assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_MIN_RESIDENCY_US 10000U" in text
+
+
+def test_no_idle_states_give_an_empty_header(tmp_path):
+    assert "PBL_DT_IDLE_STATE_" not in dtmap.idle_states_header(None)
+
+
+def test_idle_state_without_a_label_fails(tmp_path):
+    text = IDLE_STATES_DTS.replace("deepsleep: cpu-sleep-0", "cpu-sleep-0").replace(
+        "cpu-idle-states = <&deepsleep>;", ""
+    )
+    with pytest.raises(DtError, match="needs a label"):
+        dtmap.idle_states_header(compile_tree_with_labels(tmp_path, text))
+
+
 LIST_DTS = """/dts-v1/;
 / {
     #address-cells = <1>;

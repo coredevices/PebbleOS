@@ -1308,6 +1308,30 @@ def partitions_header(tree):
     return "\n".join(lines) + "\n"
 
 
+IDLE_STATE = "arm,idle-state"
+IDLE_STATES_HEADER = "devicetree/idle_states.h"
+IDLE_STATE_PROPS = ("entry-latency-us", "exit-latency-us", "min-residency-us")
+
+
+def idle_states_header(tree):
+    """PBL_DT_IDLE_STATE_* of the labelled idle states, from the idle-states node of the CPUs."""
+    lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
+    states = []
+    if tree is not None:
+        states = [n for n in tree.nodes() if IDLE_STATE in n.compatibles and enabled(n)]
+    for state in states:
+        if not state.labels:
+            raise DtError(f"{state.path}: an idle state needs a label")
+        name = f"PBL_DT_IDLE_STATE_{c_ident(state.labels[0]).upper()}"
+        lines.append("")
+        for prop in IDLE_STATE_PROPS:
+            if not state.has(prop):
+                raise DtError(f"{state.path}: no '{prop}'")
+            suffix = c_ident(prop).upper()
+            lines.append(f"#define {name}_{suffix} {state.u32s(prop)[0]}U")
+    return "\n".join(lines) + "\n"
+
+
 def load_regs(srcdir, appdir=None):
     """The labels whose registers code reaches before there are devices, from *.regs.yaml."""
     regs = []
@@ -1588,7 +1612,13 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
     write_if_changed(outdir / ROLES_FILE, yaml.safe_dump(roles, sort_keys=True).encode())
-    outputs = [PARTITIONS_HEADER, REGS_HEADER, ROLES_SOURCE, *instance_files(specs)]
+    outputs = [
+        PARTITIONS_HEADER,
+        IDLE_STATES_HEADER,
+        REGS_HEADER,
+        ROLES_SOURCE,
+        *instance_files(specs),
+    ]
     return str(dtb) if dtb else None, outputs, deps
 
 
@@ -1623,6 +1653,7 @@ def main():
         generator = Generator(tree, specs, config)
         generator.run()
         partitions = partitions_header(tree)
+        idle_states = idle_states_header(tree)
         regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
         chosen = {}
         if args.roles:
@@ -1637,6 +1668,7 @@ def main():
     outputs = {
         "devicetree/devices.h": generator.header(),
         PARTITIONS_HEADER: partitions,
+        IDLE_STATES_HEADER: idle_states,
         REGS_HEADER: regs,
         ROLES_SOURCE: roles,
         **generator.instances(),
