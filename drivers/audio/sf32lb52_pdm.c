@@ -8,9 +8,10 @@
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/reset/sf32lb.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -240,11 +241,11 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
     return -EINVAL;
   }
 
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
 
   ret = prv_powered_start(pdm, stream, mute ? GAIN_MIN_MDB : gain_mdb);
   if (ret != 0) {
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
   }
 
   return ret;
@@ -257,7 +258,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   prv_hw_stop(pdm);
   ret = pbl_clk_disable(&pdm->clk);
 
-  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
 
   return ret;
 }

@@ -7,9 +7,10 @@
 #include <pbl/drivers/clk/cal.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/time.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -75,7 +76,7 @@ static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
   }
 
   // The crystal must keep counting through the gate
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
 
   // One gate, on LRC10 (CAL_SEL clear)
   ctrl = PBL_FIELD_PREP(HPSYS_RCC_RC10CAL1_CAL_LENGTH_MASK, cycles) |
@@ -88,7 +89,7 @@ static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
   ret =
       PBL_POLL_BUSY_US((prv_cal_result() & HPSYS_RCC_RC10CAL2_CAL_DONE) == 0U, 0U, DONE_TIMEOUT_US);
   if (ret != 0) {
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
   }
 
   return ret;
@@ -102,12 +103,12 @@ static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) 
     if (pbl_uptime_ms() - s_gate_start_ms <= (uint64_t)cycles * 1000U / LRC10_MIN_HZ) {
       return -EINPROGRESS;
     }
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
     return -ETIMEDOUT;
   }
 
   count = PBL_FIELD_GET(HPSYS_RCC_RC10CAL2_CAL_RSLT_MASK, result);
-  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
 
   if (count == 0U) {
     return -EIO;

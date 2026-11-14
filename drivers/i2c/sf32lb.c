@@ -8,9 +8,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -44,7 +45,7 @@ static void prv_sleep_allow(const struct pbl_i2c_sf32lb *i2c) {
   pbl_irq_unlock();
 
   if (blocked) {
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPSLEEP);
   }
 }
 
@@ -340,7 +341,7 @@ static int prv_start(const struct pbl_i2c_bus *bus, uint16_t addr, struct pbl_i2
     .sleep_blocked = true,
     .flv = state->flv,
   };
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
+  pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPSLEEP);
 
   prv_putreg(i2c, SF32LB52_I2C_SR_OFFSET, prv_getreg(i2c, SF32LB52_I2C_SR_OFFSET));
   prv_send_addr(i2c);

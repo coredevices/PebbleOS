@@ -11,12 +11,13 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/barrier.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
@@ -312,9 +313,9 @@ static void prv_set_busy(bool busy) {
 
   s_busy = busy;
   if (busy) {
-    soc_sf32lb_sleep_block(SOC_SF32LB_WFI);
+    pbl_idle_state_block(SOC_SF32LB_IDLE_WFI);
   } else {
-    soc_sf32lb_sleep_release(SOC_SF32LB_WFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_WFI);
   }
 }
 

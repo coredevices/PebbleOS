@@ -9,7 +9,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -24,14 +24,6 @@
 
 // Settling time after waking up from deep sleep
 #define DEEPSLEEP_EXIT_NOPS 10
-
-enum {
-  IDLE_WFI,
-  IDLE_DEEPWFI,
-  IDLE_DEEPSLEEP,
-};
-
-static bool s_force_wfi;
 
 #ifdef CONFIG_FLASH
 static uint32_t s_enabled[(CONFIG_NUM_IRQS + 31) / 32];
@@ -122,10 +114,11 @@ PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
 #endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
-  [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
-  [IDLE_DEEPWFI] = {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
+  [SOC_SF32LB_IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
+  [SOC_SF32LB_IDLE_DEEPWFI] =
+      {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
 #ifdef CONFIG_FLASH
-  [IDLE_DEEPSLEEP] = {
+  [SOC_SF32LB_IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
     .min_ticks = PBL_TICK_HZ / 20,
     .exit_ticks = 4,
@@ -135,16 +128,8 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
-static_assert(IDLE_WFI == SOC_SF32LB_WFI - 1 && IDLE_DEEPSLEEP == SOC_SF32LB_DEEPSLEEP - 1,
-              "idle states follow the sleep levels");
-
-PBL_SECTION_RAM int pbl_soc_idle_state_limit(void) {
-  // The debug flag forces plain WFI (deep WFI and deep sleep disabled).
-  if (s_force_wfi) {
-    return IDLE_WFI;
-  }
-
-  return (int)soc_sf32lb_sleep_max_level() - 1;
+int pbl_soc_idle_state_limit(void) {
+  return SOC_SF32LB_IDLE_DEEPSLEEP;
 }
 
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
@@ -158,14 +143,20 @@ PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
 }
 
 #ifdef CONFIG_SHELL
+static bool s_force_wfi;
+
 static int prv_cmd_wfi(const struct pbl_shell *sh, size_t argc, char **argv) {
-  if (argv[1][0] == '1') {
-    s_force_wfi = true;
-    pbl_shell_print(sh, "WFI forced ON (deep WFI and deep sleep disabled)");
-  } else {
-    s_force_wfi = false;
-    pbl_shell_print(sh, "WFI forced OFF (deep WFI and deep sleep allowed)");
+  bool force = argv[1][0] == '1';
+
+  if (force && !s_force_wfi) {
+    pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
+  } else if (!force && s_force_wfi) {
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
   }
+  s_force_wfi = force;
+
+  pbl_shell_print(sh, "WFI forced %s (deep WFI and deep sleep %s)", force ? "ON" : "OFF",
+                  force ? "disabled" : "allowed");
   return 0;
 }
 
