@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/arm/arm,cortex-m33.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: ARM Cortex-M33 CPU
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  The upstream ARM CPUs binding lists the Cortex-M cores up to the
+  Cortex-M4. This one describes the Cortex-M33 the same way.
+
+allOf:
+  - $ref: /schemas/cpu.yaml#
+
+properties:
+  compatible:
+    const: arm,cortex-m33
+
+  reg:
+    maxItems: 1
+
+  cpu-idle-states:
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    items:
+      maxItems: 1
+    description:
+      Idle states of the CPU, beyond the wait for interrupt, see
+      /schemas/cpu/idle-states.yaml.
+
+required:
+  - compatible
+  - device_type
+  - reg
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    cpus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        cpu@0 {
+            compatible = "arm,cortex-m33";
+            device_type = "cpu";
+            reg = <0>;
+            cpu-idle-states = <&cpu_sleep>;
+        };
+
+        idle-states {
+            cpu_sleep: cpu-sleep-0 {
+                compatible = "arm,idle-state";
+                entry-latency-us = <200>;
+                exit-latency-us = <500>;
+                min-residency-us = <10000>;
+            };
+        };
+    };
