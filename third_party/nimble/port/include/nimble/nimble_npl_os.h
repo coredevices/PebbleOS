@@ -23,9 +23,9 @@
 #include <string.h>
 
 #if NRF52_SERIES
-#include "pbl/soc/nrf/sleep.h"
-
 #include <pbl/drivers/clk/nrf52.h>
+#include <pbl/kernel/idle.h>
+#include <pbl/soc/nrf/idle.h>
 #endif
 
 // Pool blocks hold pointers.
@@ -254,13 +254,13 @@ static inline void nrf52_clock_hfxo_request(void) {
    * So, we disable full sleep at the same time as actually enabling the
    * HFXO.
    */
-  soc_nrf_sleep_full_block();
+  pbl_idle_state_block(SOC_NRF_IDLE_FULL);
   (void)pbl_clk_enable(&ble_npl_hfclk);
 }
 
 static inline void nrf52_clock_hfxo_release(void) {
   (void)pbl_clk_disable(&ble_npl_hfclk);
-  soc_nrf_sleep_full_release();
+  pbl_idle_state_release(SOC_NRF_IDLE_FULL);
 }
 
 #endif
