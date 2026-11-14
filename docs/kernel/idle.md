@@ -15,7 +15,9 @@ shallowest first. Each has the shortest time until the next timeout worth
 entering it for, the time it takes to wake up from, and an `enter()`
 function that sleeps until an interrupt is pending. `pbl_cpu_idle()` is the
 plain wait for interrupt, for the shallowest state and for deeper ones to
-wrap, and `pbl_cpu_idle_deep()` the same in the CPU's deep sleep.
+wrap, and `pbl_cpu_idle_deep()` the same in the CPU's deep sleep. The times
+of the states the hardware defines come from the devicetree; see
+{ref}`devicetree-idle-states`.
 
 A driver whose peripheral does not work in a state keeps the CPU out of it,
 and of every deeper one, while busy, with `pbl_idle_state_block()` and
