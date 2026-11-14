@@ -6,9 +6,10 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/uart/sf32lb.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -246,7 +247,7 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
   pbl_modifyl(0U, cr1, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
 
   // The USART does not receive in deep sleep
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPSLEEP);
+  pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPSLEEP);
 
   return 0;
 }
@@ -262,7 +263,7 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
     pbl_modifyl(UART_CR3_DMAR, 0U, prv_reg(usart, SF32LB52_USART_CR3_OFFSET));
   }
 
-  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPSLEEP);
+  pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPSLEEP);
 }
 
 void pbl_uart_sf32lb_irq_handler(const struct pbl_uart_sf32lb *usart) {

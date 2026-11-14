@@ -9,11 +9,12 @@
 #include <pbl/drivers/dma/sf32lb.h>
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -542,12 +543,12 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
     return -EINVAL;
   }
 
-  soc_sf32lb_sleep_block(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
 
   ret = prv_clock_on(dev, rate);
   if (ret != 0) {
     prv_clock_off(dev);
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
     return ret;
   }
 
@@ -556,7 +557,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   ret = prv_dma_start(dev, stream);
   if (ret != 0) {
     prv_clock_off(dev);
-    soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
     return ret;
   }
 
@@ -595,7 +596,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   prv_set(REG(DAC_CFG), AUDCODEC_DAC_CFG_PATH_RESET);
   prv_clear(REG(DAC_CFG), AUDCODEC_DAC_CFG_PATH_RESET);
 
-  soc_sf32lb_sleep_release(SOC_SF32LB_DEEPWFI);
+  pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
 
   return ret;
 }

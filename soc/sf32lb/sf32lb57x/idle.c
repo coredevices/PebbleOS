@@ -9,7 +9,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
-#include <pbl/soc/sf32lb/sleep.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/size.h>
 
@@ -20,12 +20,6 @@
 
 // Settling time after waking up from deep sleep
 #define DEEPSLEEP_EXIT_NOPS 10
-
-enum {
-  IDLE_WFI,
-  IDLE_DEEPWFI,
-  IDLE_DEEPSLEEP,
-};
 
 #ifdef CONFIG_FLASH
 static uint32_t s_enabled[(CONFIG_NUM_IRQS + 31) / 32];
@@ -114,10 +108,11 @@ PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
 #endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
-  [IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
-  [IDLE_DEEPWFI] = {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
+  [SOC_SF32LB_IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
+  [SOC_SF32LB_IDLE_DEEPWFI] =
+      {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
 #ifdef CONFIG_FLASH
-  [IDLE_DEEPSLEEP] = {
+  [SOC_SF32LB_IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
     .min_ticks = PBL_TICK_HZ / 20,
     .exit_ticks = 4,
@@ -127,11 +122,8 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
-static_assert(IDLE_WFI == SOC_SF32LB_WFI - 1 && IDLE_DEEPSLEEP == SOC_SF32LB_DEEPSLEEP - 1,
-              "idle states follow the sleep levels");
-
-PBL_SECTION_RAM int pbl_soc_idle_state_limit(void) {
-  return (int)soc_sf32lb_sleep_max_level() - 1;
+int pbl_soc_idle_state_limit(void) {
+  return SOC_SF32LB_IDLE_DEEPSLEEP;
 }
 
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
