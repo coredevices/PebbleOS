@@ -9,6 +9,7 @@ while both existed.
 ```
 sched.c        ready lists, tick, block/wake, idle thread, start
 timer.c        timeout queue and timers
+idle.c         idle states, with CONFIG_CPU_IDLE
 thread.c       thread lifecycle and priorities
 mutex.c        recursive mutex with priority inheritance
 sem.c          counting semaphore
@@ -62,9 +63,10 @@ there is no separate scheduler lock inside the kernel. `pbl_sched_lock()` defers
 
 **Idle.** The idle thread yields to other threads at its priority, then
 calls the arch idle hook with the ticks until the next timeout. The arch
-masks interrupts and hands over to the kernel's tickless idle, which picks
-one of the SoC's idle states and reprograms the clock event device around
-it (see {doc}`idle`).
+masks interrupts and hands over to the kernel's idle, which either waits
+for the next tick or, with `CONFIG_CPU_IDLE`, picks one of the SoC's idle
+states (`idle.c`) and reprograms the clock event device around it (see
+{doc}`idle`).
 
 **Threads.** `struct pbl_thread` is caller-owned; the backend state lives in
 its `backend` member, first in the struct so the arch code can find the

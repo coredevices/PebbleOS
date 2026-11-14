@@ -33,6 +33,7 @@ pbl_clar_test(test_kernel
 
 pbl_clar_test(test_timekeeping
   SOURCES
+    kernel/idle.c
     kernel/timekeeping.c
     drivers/base/device.c
     drivers/timer/timer.c
@@ -42,6 +43,7 @@ pbl_clar_test(test_timekeeping
     kernel/arch/posix/include
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
+    CONFIG_CPU_IDLE=1
 )
 
 pbl_clar_test(test_mmio)

@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/debug.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/kernel/thread.h>
@@ -80,8 +81,23 @@ uint64_t sched_uptime_ticks(void);
 void timekeeping_start(void);
 //! Catches the tick count up with the system clock source.
 void timekeeping_announce(void);
+//! Programs the wake-up @p exit_ticks ahead of the timeout @p ticks away. Returns the time in us.
+uint64_t timekeeping_idle_begin(pbl_tick_t ticks, pbl_tick_t exit_ticks);
+//! Catches the tick count up after idling and goes back to a tick at a time. Returns the time in
+//! us.
+uint64_t timekeeping_idle_end(void);
+
 //! Idles the CPU for up to @p ticks; call with every interrupt masked and idle confirmed.
-void timekeeping_idle(pbl_tick_t ticks);
+#ifdef CONFIG_CPU_IDLE
+void idle_enter(pbl_tick_t ticks);
+#else
+static inline void idle_enter(pbl_tick_t ticks) {
+  // The next tick is already programmed.
+  if (ticks != 0U) {
+    pbl_cpu_idle();
+  }
+}
+#endif
 //! The uptime tick at which the wall clock reaches @p realtime_ms, rounded up. Interrupt lock held.
 uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms);
 //! Realigns the wall clock work after the clock moved. Interrupt lock held.

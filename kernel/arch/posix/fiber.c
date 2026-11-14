@@ -200,7 +200,7 @@ void arch_thread_info_regs(const struct pbl_thread *t, uint32_t regs[PBL_THREAD_
 
 void arch_idle(pbl_tick_t max_ticks) {
   if (sched_idle_confirm()) {
-    timekeeping_idle(max_ticks);
+    idle_enter(max_ticks);
   }
 }
 

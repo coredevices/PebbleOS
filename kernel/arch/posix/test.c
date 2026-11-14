@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <pbl/drivers/timer.h>
-#include <pbl/kernel/idle.h>
 
 #include <kernel.h>
 #include <kernel_test.h>
@@ -70,13 +69,6 @@ static int prv_fake_cs_init(const struct pbl_device *dev) {
 static int prv_fake_ce_init(const struct pbl_device *dev) {
   pbl_clockevent_set_hz(&s_fake_ce, PBL_TICK_HZ);
   return 0;
-}
-
-const struct pbl_idle_state pbl_soc_idle_states[] = {};
-const size_t pbl_soc_num_idle_states = 0;
-
-int pbl_soc_idle_state_limit(void) {
-  return -1;
 }
 
 // Idle means nothing can run until the next timeout: jump the clock there.

@@ -21,6 +21,9 @@
  * the CPU up early enough, enters the state, and accounts for the time spent in it from the
  * system clock source. The SoC only puts the CPU to sleep.
  *
+ * Idle states need @c CONFIG_CPU_IDLE. Without it the kernel only calls pbl_cpu_idle(), a tick at
+ * a time, and nothing else here is available.
+ *
  * @code{.c}
  * const struct pbl_idle_state pbl_soc_idle_states[] = {
  *   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},

@@ -106,14 +106,14 @@ void test_timekeeping__initialize(void) {
 
 void test_timekeeping__waking_up_with_a_timer_due_raises_the_event_at_once(void) {
   s_timer_due_on_wake = true;
-  timekeeping_idle(1U);
+  idle_enter(1U);
   cl_assert_equal_i(s_ticks, 1);
   cl_assert_equal_i(s_last_delta, 1);
 }
 
 void test_timekeeping__waking_up_with_no_timer_due_raises_the_next_tick(void) {
   s_timer_due_on_wake = false;
-  timekeeping_idle(1U);
+  idle_enter(1U);
   cl_assert_equal_i(s_ticks, 1);
   cl_assert_equal_i(s_last_delta, CYCLES_PER_TICK);
 }

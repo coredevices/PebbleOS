@@ -7,6 +7,7 @@ pbl_library_sources(
   memory.c
   soc.c
 )
+pbl_library_sources_ifdef(CONFIG_CPU_IDLE idle.c)
 
 pbl_host_include_directories(include)
 pbl_host_sources(host/main.c)
