@@ -30,7 +30,7 @@ typedef enum {
 #endif
   MfgTestId_ALS,
   MfgTestId_Vibration,
-#if defined(CONFIG_BOARD_OBELIX) && defined(CONFIG_MFG)
+#ifdef CONFIG_MFG_HRM_CTR_LEAKAGE
   MfgTestId_HrmCtrLeakage,
 #endif
   MfgTestId_ProgramColor,

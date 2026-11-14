@@ -772,13 +772,13 @@ bool activity_prefs_heart_rate_is_enabled(void);
 /**
  * @brief Check whether background SpO2 monitoring is enabled.
  *
- * Declared regardless of @c CONFIG_HRM since the HRM manager gates sensor power on it.
+ * Declared regardless of @c CONFIG_SERVICE_HRM since the HRM manager gates sensor power on it.
  *
  * @return true if enabled.
  */
 bool activity_prefs_spo2_is_enabled(void);
 
-#ifdef CONFIG_HRM
+#ifdef CONFIG_SERVICE_HRM
 /**
  * @brief Get the background heart rate measurement interval.
  *

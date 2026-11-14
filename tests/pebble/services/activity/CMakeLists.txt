@@ -20,7 +20,7 @@ pbl_clar_test(test_activity
   DEFINES
     DUMA_DISABLED
     CAPABILITY_HAS_HEALTH_TRACKING=1
-    CONFIG_HRM
+    CONFIG_SERVICE_HRM
     CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES=25
     CONFIG_SERVICE_LIGHT_DARK_THRESHOLD=0
     CONFIG_SERVICE_ACCEL_MANAGER_DEFAULT_SENSITIVITY=55
@@ -67,7 +67,7 @@ pbl_clar_test(test_activity_algorithm_kraepelin
     tests/fakes/fake_rtc.c
   DEFINES
     DUMA_DISABLED
-    CONFIG_HRM
+    CONFIG_SERVICE_HRM
     CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_MINUTE_SCORE=330
     CONFIG_SERVICE_ACTIVITY_SLEEP_MIN_VALID_VMC=20
     CONFIG_SERVICE_ACTIVITY_SLEEP_MAX_AVG_VMC=180
@@ -95,7 +95,7 @@ pbl_clar_test(test_workout_service
     pebble/services/activity/workout_service.c
     tests/fakes/fake_events.c
     tests/fakes/fake_rtc.c
-  DEFINES CONFIG_HRM
+  DEFINES CONFIG_SERVICE_HRM
   OVERRIDES dummy_board
 )
 

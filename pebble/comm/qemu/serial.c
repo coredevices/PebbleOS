@@ -26,7 +26,7 @@
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/clock.h>
-#include <pbl/services/hrm/hrm_manager.h>
+#include <pbl/services/hrm/hrm_qemu.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -265,21 +265,8 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
   }
 
   PBL_LOG_DBG("Got heart rate msg: bpm: %d, quality: %d", hdr->bpm, hdr->quality);
-#if defined(CONFIG_HRM)
-  // The protocol carries a grade, -1 (off wrist) or 0 (worst) to 4 (excellent); map it to a
-  // representative algorithm confidence.
-  static const uint8_t s_confidence_for_grade[] = {20, 50, 70, 85, 95};
-  const bool off_wrist = (hdr->quality < 0);
-  HRMData hrm_data = {
-    .features = HRMFeature_BPM,
-    .off_wrist = off_wrist,
-    .hrm_bpm = hdr->bpm,
-    .hrm_confidence = off_wrist
-                          ? 0
-                          : s_confidence_for_grade[MIN(
-                                hdr->quality, (int8_t)ARRAY_LENGTH(s_confidence_for_grade) - 1)],
-  };
-  hrm_manager_new_data_cb(&hrm_data);
+#ifdef CONFIG_HRM_BACKEND_QEMU
+  hrm_qemu_set_heart_rate(hdr->bpm, hdr->quality);
 #else
   PBL_LOG_WRN("Heart rate injection unsupported on this board (no HRM)");
 #endif

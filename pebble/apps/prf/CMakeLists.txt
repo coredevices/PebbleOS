@@ -12,7 +12,7 @@ if(NOT (CONFIG_MIC AND CONFIG_SPEAKER))
     mfg_mic.c
   )
 endif()
-if(NOT CONFIG_HRM_GH3X2X_FACTORY_TEST)
+if(NOT CONFIG_MFG_HRM_CTR_LEAKAGE)
   list(APPEND excl
     mfg_hrm_ctr_leakage_obelix.c
   )

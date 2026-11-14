@@ -4,5 +4,3 @@
 #pragma once
 
 #include <stdint.h>
-
-static HRMDevice *const HRM = (void *)0;

@@ -6,4 +6,3 @@
 #ifdef CONFIG_REMOTEPROC_SF32LB52
 extern const struct pbl_rproc_sf32lb52 *const LCPU;
 #endif // CONFIG_REMOTEPROC_SF32LB52
-extern HRMDevice *const HRM;

@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/iio/health/goodix,gh3026.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Goodix GH3026 optical front end
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Optical front end for heart rate and blood oxygen measurements, over I2C.
+  It drives LEDs and samples photodiode receivers in time slots, and raises
+  an interrupt when its FIFO fills.
+
+properties:
+  compatible:
+    const: goodix,gh3026
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  reset-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+    #include <dt-bindings/interrupt-controller/irq.h>
+
+    i2c {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        heart-rate@14 {
+            compatible = "goodix,gh3026";
+            reg = <0x14>;
+            interrupt-parent = <&gpio1>;
+            interrupts = <44 IRQ_TYPE_EDGE_FALLING>;
+            reset-gpios = <&pmic 3 GPIO_ACTIVE_LOW>;
+        };
+    };

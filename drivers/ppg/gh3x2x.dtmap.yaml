@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: goodix,gh3026
+config: PPG_GH3X2X
+class: ppg
+define: PBL_GH3X2X_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - irq: 0
+    field: irq
+  - irq: 0
+    as: irq-gpio
+    field: irq_input
+  - gpio: reset
+    field: reset
+    optional: true

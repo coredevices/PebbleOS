@@ -5,7 +5,6 @@ menu "Services"
 
 rsource "bas/Kconfig"
 rsource "dis/Kconfig"
-rsource "gh3x2x_tuning/Kconfig"
 rsource "ppog_reversed/Kconfig"
 rsource "pps/Kconfig"
 

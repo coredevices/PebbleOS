@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PPG
+    bool "PPG front end"
+    help
+      Optical front end drivers (pbl/drivers/ppg.h): LEDs and
+      photodiode receivers sampled in time slots. The board gives its
+      front end the ppg role.
+
+if PPG
+
+config PPG_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The ppg shell command, to inspect the front end and read raw
+      samples.
+
+config PPG_GH3X2X
+    bool "Goodix GH3x2x"
+    default DT_HAS_GOODIX_GH3026_ENABLED
+    select GPIO
+    select I2C
+    help
+      Support for the Goodix GH3x2x optical front ends.
+
+config PPG_QEMU
+    bool "QEMU"
+    default y if SOC_QEMU_PEBBLE
+    help
+      Synthetic front end for QEMU, which emulates no optical sensor: it
+      models a wrist with a pulse set by the host.
+
+module = DRIVER_PPG
+module-str = PPG front end
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # PPG

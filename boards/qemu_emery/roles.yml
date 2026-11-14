@@ -14,6 +14,9 @@ als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h
 touch: touchscreen
+ppg:
+  symbol: QEMU_PPG
+  include: pbl/drivers/ppg/qemu.h
 vibe:
   symbol: SIM_VIBE
   include: pbl/drivers/vibe/sim.h
