@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "113",
+  "revision" : "114",
   "version" : "2.0",
   "files": [
     "include/pbl/system/status_codes.h",
@@ -41,6 +41,7 @@
     "pebble/applib/cpu_cache.h",
     "pebble/applib/health_service.h",
     "pebble/applib/moddable/moddable.h",
+    "pebble/applib/notification_service.h",
     "pebble/applib/platform.h",
     "pebble/applib/tick_timer_service.h",
     "pebble/applib/touch_service.h",
@@ -474,6 +475,29 @@
                   "type": "function",
                   "name": "backlight_service_unsubscribe",
                   "addedRevision": "101"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "NotificationService",
+              "appOnly": true,
+              "exports": [
+                {
+                  "type": "type",
+                  "name": "NotificationCountHandler",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_subscribe",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_unsubscribe",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "notification_service_peek_count",
+                  "addedRevision": "114"
                 }
               ]
             }, {
