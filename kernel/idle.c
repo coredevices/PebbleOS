@@ -4,7 +4,6 @@
 #include "kernel.h"
 
 #include <pbl/kernel/idle.h>
-#include <pbl/util/math.h>
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
 static uint8_t s_blocks[PBL_IDLE_STATES_MAX];
@@ -21,10 +20,10 @@ void idle_enter(pbl_tick_t ticks) {
 
   PBL_ASSERTN(pbl_soc_num_idle_states <= PBL_IDLE_STATES_MAX);
 
-  // Up to the shallowest blocked state, and what the SoC allows.
+  // The deepest state short of the shallowest blocked one that is worth entering.
   for (i = 0; i < (int)pbl_soc_num_idle_states && s_blocks[i] == 0U; i++) {
   }
-  for (i = MIN(pbl_soc_idle_state_limit(), i - 1); i >= 0; i--) {
+  for (i--; i >= 0; i--) {
     if (ticks >= pbl_soc_idle_states[i].min_ticks) {
       break;
     }

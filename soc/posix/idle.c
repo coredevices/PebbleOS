@@ -8,7 +8,3 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
   {.name = "wait", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
-
-int pbl_soc_idle_state_limit(void) {
-  return 0;
-}
