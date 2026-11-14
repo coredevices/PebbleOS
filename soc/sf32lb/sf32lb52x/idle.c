@@ -16,6 +16,7 @@
 #include <pbl/shell/shell.h>
 #endif
 
+#include <devicetree/idle_states.h>
 #include <devicetree/regs.h>
 #include <hardware/sf32lb52_hpsys_aon.h>
 
@@ -116,8 +117,8 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 #ifdef CONFIG_FLASH
   [SOC_SF32LB_IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
-    .min_ticks = PBL_TICK_HZ / 100,
-    .exit_ticks = PBL_TICK_HZ / 1000,
+    .min_ticks = PBL_US_TO_TICKS_CEIL(PBL_DT_IDLE_STATE_DEEPSLEEP_MIN_RESIDENCY_US),
+    .exit_ticks = PBL_US_TO_TICKS_CEIL(PBL_DT_IDLE_STATE_DEEPSLEEP_EXIT_LATENCY_US),
     .enter = prv_enter_deepsleep
   },
 #endif
