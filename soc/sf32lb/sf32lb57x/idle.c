@@ -110,8 +110,8 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 #ifdef CONFIG_FLASH
   [SOC_SF32LB_IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
-    .min_ticks = PBL_TICK_HZ / 20,
-    .exit_ticks = 4,
+    .min_ticks = PBL_TICK_HZ / 100,
+    .exit_ticks = PBL_TICK_HZ / 1000,
     .enter = prv_enter_deepsleep
   },
 #endif
