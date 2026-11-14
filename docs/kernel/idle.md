@@ -23,10 +23,30 @@ and of every deeper one, while busy, with `pbl_idle_state_block()` and
 those calls. They do nothing without `CONFIG_CPU_IDLE`, so drivers call them
 unconditionally.
 
-The kernel picks the deepest state that is not blocked and is worth entering, programs the
-system clock event device to fire that state's wake-up time ahead of the
-next timeout, enters it with every interrupt masked, then catches the tick
-count up from the system clock source and goes back to a tick at a time.
+A driver that has something to do while the CPU idles, e.g. power its
+peripheral down, defines a hook with `PBL_IDLE_HOOK_DEFINE()`: a function
+called before the CPU enters a state and another after it left it, both told
+which state. A hook has its own costs, like a state: the shortest time until
+the next timeout worth calling it for, and the time its exit function takes.
+They often depend on the part behind the driver, so the driver sets them
+once it knows them, with `pbl_idle_hook_set_times()`; the hook is not called
+before. The kernel calls the hooks that are worth it around whichever state it
+enters, and wakes the CPU up that much earlier for them. Hooks run with
+every interrupt masked, and on the way out in the opposite order.
+
+Where code runs from the flash and a state powers it down, what must happen
+once the flash is down goes in late hooks, defined with
+`PBL_IDLE_HOOK_LATE_DEFINE()`. They belong to such states: the SoC calls
+them from the innermost part of `enter()`, with
+`pbl_idle_hooks_late_enter()` and `pbl_idle_hooks_late_exit()`. Their
+functions, and all they call, run from RAM (`PBL_SECTION_RAM`); the kernel
+checks the functions themselves at boot.
+
+The kernel picks the deepest state that is not blocked and is worth
+entering, then the hooks worth calling, programs the system clock event
+device to fire their wake-up time ahead of the next timeout, enters the
+state with every interrupt masked, then catches the tick count up from the
+system clock source and goes back to a tick at a time.
 Interrupts that woke the CPU run once the tick is back.
 
 The time spent in each state is kept per state

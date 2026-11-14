@@ -315,6 +315,7 @@ void sched_start_prepare(void) {
 void pbl_kernel_start(void) {
   sched_start_prepare();
   timekeeping_start();
+  idle_init();
   arch_start();
 }
 

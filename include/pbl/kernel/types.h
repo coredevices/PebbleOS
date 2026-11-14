@@ -83,6 +83,13 @@ pbl_tick_t pbl_ms_to_ticks(uint32_t ms);
 uint32_t pbl_ticks_to_ms(pbl_tick_t ticks);
 
 /**
+ * @brief Convert microseconds to ticks, rounding up; a constant expression.
+ *
+ * @param us Microseconds.
+ */
+#define PBL_US_TO_TICKS_CEIL(us) ((pbl_tick_t)(((uint64_t)(us) * PBL_TICK_HZ + 999999U) / 1000000U))
+
+/**
  * @brief Check whether a timeout is @ref PBL_FOREVER.
  *
  * @param t Timeout.
