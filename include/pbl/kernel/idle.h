@@ -16,7 +16,7 @@
  * @ingroup kernel
  * @brief Low-power states the CPU idles in, provided by the SoC.
  *
- * When nothing is runnable, the kernel picks the deepest state that is allowed now and worth
+ * When nothing is runnable, the kernel picks the deepest state that no driver blocks and is worth
  * entering for the time until the next timeout, programs the system clock event device to wake
  * the CPU up early enough, enters the state, and accounts for the time spent in it from the
  * system clock source. The SoC only puts the CPU to sleep.
@@ -30,10 +30,6 @@
  *   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
  * };
  * const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
- *
- * int pbl_soc_idle_state_limit(void) {
- *   return 0;
- * }
  * @endcode
  * @{
  */
@@ -83,15 +79,6 @@ extern const struct pbl_idle_state pbl_soc_idle_states[];
 
 /** @brief Number of entries in @ref pbl_soc_idle_states. Defined by the SoC. */
 extern const size_t pbl_soc_num_idle_states;
-
-/**
- * @brief Get the deepest idle state allowed now.
- *
- * Implemented by the SoC. Called with every interrupt masked.
- *
- * @return Index in @ref pbl_soc_idle_states, or -1 to keep the CPU running.
- */
-int pbl_soc_idle_state_limit(void);
 
 /**
  * @brief Keep the CPU out of an idle state and of every deeper one.

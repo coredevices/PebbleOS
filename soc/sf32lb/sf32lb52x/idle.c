@@ -128,10 +128,6 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
-int pbl_soc_idle_state_limit(void) {
-  return SOC_SF32LB_IDLE_DEEPSLEEP;
-}
-
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   uint32_t status;
 

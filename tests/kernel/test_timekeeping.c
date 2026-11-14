@@ -67,10 +67,6 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 };
 const size_t pbl_soc_num_idle_states = 1;
 
-int pbl_soc_idle_state_limit(void) {
-  return 0;
-}
-
 uint64_t sched_uptime_ticks(void) {
   return s_ticks;
 }

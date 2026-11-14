@@ -10,17 +10,12 @@ where power does not matter, e.g. a bootloader.
 
 With `CONFIG_CPU_IDLE` the kernel owns everything about time in the
 decision; the SoC only describes how its CPU can sleep, through
-`pbl/kernel/idle.h`:
-
-- `pbl_soc_idle_states[]` lists the idle states, shallowest first. Each has
-  the shortest time until the next timeout worth entering it for, the time it
-  takes to wake up from, and an `enter()` function that sleeps until an
-  interrupt is pending. `pbl_cpu_idle()` is the plain wait for interrupt,
-  for the shallowest state and for deeper ones to wrap, and
-  `pbl_cpu_idle_deep()` the same in the CPU's deep sleep.
-- `pbl_soc_idle_state_limit()` returns the deepest state allowed right now,
-  or -1 to keep the CPU running, from whatever the SoC tracks: peripherals
-  that cannot run in deep sleep, an IPC queue still busy, a debug override.
+`pbl/kernel/idle.h`. `pbl_soc_idle_states[]` lists the idle states,
+shallowest first. Each has the shortest time until the next timeout worth
+entering it for, the time it takes to wake up from, and an `enter()`
+function that sleeps until an interrupt is pending. `pbl_cpu_idle()` is the
+plain wait for interrupt, for the shallowest state and for deeper ones to
+wrap, and `pbl_cpu_idle_deep()` the same in the CPU's deep sleep.
 
 A driver whose peripheral does not work in a state keeps the CPU out of it,
 and of every deeper one, while busy, with `pbl_idle_state_block()` and
@@ -28,7 +23,7 @@ and of every deeper one, while busy, with `pbl_idle_state_block()` and
 those calls. They do nothing without `CONFIG_CPU_IDLE`, so drivers call them
 unconditionally.
 
-The kernel picks the deepest allowed state worth entering, programs the
+The kernel picks the deepest state that is not blocked and is worth entering, programs the
 system clock event device to fire that state's wake-up time ahead of the
 next timeout, enters it with every interrupt masked, then catches the tick
 count up from the system clock source and goes back to a tick at a time.

@@ -24,7 +24,3 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
 #endif
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
-
-int pbl_soc_idle_state_limit(void) {
-  return SOC_NRF_IDLE_FULL;
-}
