@@ -7,6 +7,7 @@
 
 #include <pbl/kernel/idle.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_idle_hook, idle_hooks);
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_idle_hook, idle_late);
@@ -17,6 +18,9 @@ typedef uint32_t idle_hook_mask_t;
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
 static uint8_t s_blocks[PBL_IDLE_STATES_MAX];
+static struct pbl_idle_latency_request *s_requests;
+// Longest time to wake up every request tolerates.
+static pbl_tick_t s_latency_ticks = PBL_TICK_FOREVER;
 static bool s_disabled;
 
 #ifdef CONFIG_RAMFUNC
@@ -39,7 +43,8 @@ void idle_init(void) {
 #endif
 }
 
-// The hooks worth calling for @p ticks, one bit each; adds the time they take to wake up.
+// The hooks worth calling for @p ticks that wake up in time, one bit each; adds the time they
+// take to wake up.
 static idle_hook_mask_t prv_hooks_select(pbl_tick_t ticks, pbl_tick_t *exit_ticks) {
   idle_hook_mask_t hooks = 0U;
   size_t n = 0U;
@@ -48,7 +53,8 @@ static idle_hook_mask_t prv_hooks_select(pbl_tick_t ticks, pbl_tick_t *exit_tick
        hook < PBL_ITERABLE_SECTION_END(idle_hooks); hook++, n++) {
     const struct pbl_idle_hook_times *times = hook->times;
 
-    if (times->min_ticks != 0U && ticks >= times->min_ticks) {
+    if (times->min_ticks != 0U && ticks >= times->min_ticks &&
+        *exit_ticks + times->exit_ticks <= s_latency_ticks) {
       hooks |= PBL_BIT(n);
       *exit_ticks += times->exit_ticks;
     }
@@ -95,11 +101,13 @@ void idle_enter(pbl_tick_t ticks) {
 
   PBL_ASSERTN(pbl_soc_num_idle_states <= PBL_IDLE_STATES_MAX);
 
-  // The deepest state short of the shallowest blocked one that is worth entering.
+  // The deepest state short of the shallowest blocked one that is worth entering and wakes up
+  // in time.
   for (i = 0; i < (int)pbl_soc_num_idle_states && s_blocks[i] == 0U; i++) {
   }
   for (i--; i >= 0; i--) {
-    if (ticks >= pbl_soc_idle_states[i].min_ticks) {
+    if (ticks >= pbl_soc_idle_states[i].min_ticks &&
+        pbl_soc_idle_states[i].exit_ticks <= s_latency_ticks) {
       break;
     }
   }
@@ -161,6 +169,35 @@ void pbl_idle_state_release(pbl_idle_state_id_t state) {
   unsigned int key = arch_irq_lock();
   PBL_ASSERTN(s_blocks[state] > 0U);
   s_blocks[state]--;
+  arch_irq_unlock(key);
+}
+
+static void prv_latency_update(void) {
+  s_latency_ticks = PBL_TICK_FOREVER;
+  for (const struct pbl_idle_latency_request *req = s_requests; req != nullptr; req = req->next) {
+    s_latency_ticks = MIN(s_latency_ticks, req->ticks);
+  }
+}
+
+void pbl_idle_latency_request_add(struct pbl_idle_latency_request *req, uint32_t us) {
+  req->ticks = (pbl_tick_t)(((uint64_t)us * PBL_TICK_HZ) / 1000000U);
+
+  unsigned int key = arch_irq_lock();
+  req->next = s_requests;
+  s_requests = req;
+  prv_latency_update();
+  arch_irq_unlock(key);
+}
+
+void pbl_idle_latency_request_remove(struct pbl_idle_latency_request *req) {
+  unsigned int key = arch_irq_lock();
+  for (struct pbl_idle_latency_request **it = &s_requests; *it != nullptr; it = &(*it)->next) {
+    if (*it == req) {
+      *it = req->next;
+      break;
+    }
+  }
+  prv_latency_update();
   arch_irq_unlock(key);
 }
 

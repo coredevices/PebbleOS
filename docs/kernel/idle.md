@@ -23,6 +23,11 @@ and of every deeper one, while busy, with `pbl_idle_state_block()` and
 those calls. They do nothing without `CONFIG_CPU_IDLE`, so drivers call them
 unconditionally.
 
+Code that must run within some time of an interrupt, whatever the state,
+asks for it instead, with `pbl_idle_latency_request_add()`: the kernel then
+skips the states and hooks that take longer to wake up from, and the
+shortest request applies.
+
 A driver that has something to do while the CPU idles, e.g. power its
 peripheral down, defines a hook with `PBL_IDLE_HOOK_DEFINE()`: a function
 called before the CPU enters a state and another after it left it, both told
