@@ -12,6 +12,9 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
+#ifdef CONFIG_SF32LB_DEBUG_UART
+#include <devicetree/regs.h>
+#endif
 #include <hardware/sf32lb52_usart.h>
 
 // The USART kernel clock is always 48 MHz on the SF32LB52
@@ -20,6 +23,15 @@
 
 static const struct pbl_uart_sf32lb *prv_sf32lb(const struct pbl_uart *uart) {
   return container_of(uart, const struct pbl_uart_sf32lb, uart);
+}
+
+// The SoC debugger listens to the receiver of USART1
+static bool prv_debug_rx(const struct pbl_uart_sf32lb *usart) {
+#ifdef CONFIG_SF32LB_DEBUG_UART
+  return usart->base == PBL_DT_REG_USART1;
+#else
+  return false;
+#endif
 }
 
 static inline uintptr_t prv_reg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {
@@ -76,7 +88,8 @@ static int prv_early_init(const struct pbl_uart *uart) {
   prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, 0U);
   prv_putreg(usart, SF32LB52_USART_CR2_OFFSET, 0U);
   prv_putreg(usart, SF32LB52_USART_CR3_OFFSET, 0U);
-  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_UE);
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET,
+             UART_CR1_TE | UART_CR1_UE | (prv_debug_rx(usart) ? UART_CR1_RE : 0U));
 
   return 0;
 }
@@ -254,7 +267,7 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
 static void prv_rx_disable(const struct pbl_uart *uart) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
 
-  pbl_modifyl(UART_CR1_RE | UART_CR1_RXNEIE | UART_CR1_IDLEIE, 0U,
+  pbl_modifyl((prv_debug_rx(usart) ? 0U : UART_CR1_RE) | UART_CR1_RXNEIE | UART_CR1_IDLEIE, 0U,
               prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
 
   if (usart->rx_dma != nullptr) {

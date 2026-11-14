@@ -10,15 +10,26 @@ maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  WDT1 of the SF32LB52, which resets the system through the PMUC. It counts
-  clk_wdt of the PMUC.
+  WDT1 of the SF32LB52 and SF32LB57, and the IWDT of the SF32LB57, in its
+  always-on domain. They count clk_wdt of the PMUC. On the SF32LB52 WDT1
+  resets the system through the PMUC, on the SF32LB57 only the IWDT does.
 
 allOf:
   - $ref: watchdog.yaml#
+  - if:
+      properties:
+        compatible:
+          const: sifli,sf32lb52-wdt
+    then:
+      required:
+        - sifli,hpsys-cfg
 
 properties:
   compatible:
-    const: sifli,sf32lb52-wdt
+    enum:
+      - sifli,sf32lb52-wdt
+      - sifli,sf32lb57-iwdt
+      - sifli,sf32lb57-wdt
 
   reg:
     maxItems: 1
@@ -34,7 +45,6 @@ required:
   - compatible
   - reg
   - clocks
-  - sifli,hpsys-cfg
 
 unevaluatedProperties: false
 

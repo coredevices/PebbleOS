@@ -12,9 +12,23 @@ maintainers:
 description:
   GPIO controller of the PA pads. Each pad is also an interrupt source.
 
+allOf:
+  - if:
+      properties:
+        compatible:
+          const: sifli,sf32lb52-gpio
+    then:
+      required:
+        - sifli,hpsys-aon
+      properties:
+        ngpios:
+          maximum: 45
+
 properties:
   compatible:
-    const: sifli,sf32lb52-gpio
+    enum:
+      - sifli,sf32lb52-gpio
+      - sifli,sf32lb57-gpio
 
   reg:
     maxItems: 1
@@ -34,13 +48,13 @@ properties:
     const: 2
 
   ngpios:
-    maximum: 45
+    maximum: 58
 
   gpio-reserved-ranges: true
 
   sifli,hpsys-aon:
     $ref: /schemas/types.yaml#/definitions/phandle
-    description: HPSYS always-on block, where wakeup pins latch.
+    description: HPSYS always-on block, where SF32LB52 wakeup pins latch.
 
   interrupt-controller: true
 
@@ -55,7 +69,6 @@ required:
   - gpio-controller
   - '#gpio-cells'
   - ngpios
-  - sifli,hpsys-aon
   - interrupt-controller
   - '#interrupt-cells'
 

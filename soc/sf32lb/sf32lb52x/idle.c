@@ -75,10 +75,10 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
 #ifdef CONFIG_FLASH
 // Runs with the flash powered down
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
-  struct pbl_clk_sf32lb52_hxt48_state clocks;
+  struct pbl_clk_sf32lb_hxt48_state clocks;
 
   // HXT48 stops in deep sleep
-  pbl_clk_sf32lb52_hxt48_suspend(&clocks);
+  pbl_clk_sf32lb_hxt48_suspend(&clocks);
 
   prv_update(0U, HPSYS_AON_ANACR_PA_ISO, HPSYS_AON(ANACR));
   prv_update(0U, HPSYS_AON_ANACR_VHP_ISO, HPSYS_AON(ANACR));
@@ -101,7 +101,7 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   while ((pbl_readl(HPSYS_AON(ACR)) & HPSYS_AON_ACR_HXT48_RDY) == 0U) {
   }
 
-  pbl_clk_sf32lb52_hxt48_resume(&clocks);
+  pbl_clk_sf32lb_hxt48_resume(&clocks);
 }
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {

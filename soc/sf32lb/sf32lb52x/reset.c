@@ -72,8 +72,8 @@ static PBL_ALWAYS_INLINE void prv_update(uint32_t clear, uint32_t set, uintptr_t
 [[noreturn]] void pbl_soc_reset(void) {
   (void)pbl_irq_disable_all();
 
-  soc_sf32lb52_lpsys_wake();
-  soc_sf32lb52_lpsys_halt(true);
+  soc_sf32lb_lpsys_wake();
+  soc_sf32lb_lpsys_halt(true);
 
   prv_reset();
 }

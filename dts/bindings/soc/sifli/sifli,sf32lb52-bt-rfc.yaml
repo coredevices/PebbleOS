@@ -4,7 +4,7 @@
 $id: http://devicetree.org/schemas/soc/sifli/sifli,sf32lb52-bt-rfc.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
-title: SiFli SF32LB52 Bluetooth RF controller
+title: SiFli SF32LB52 and SF32LB57 Bluetooth RF controller
 
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
@@ -17,7 +17,9 @@ description:
 properties:
   compatible:
     items:
-      - const: sifli,sf32lb52-bt-rfc
+      - enum:
+          - sifli,sf32lb52-bt-rfc
+          - sifli,sf32lb57-bt-rfc
       - const: syscon
 
   reg:

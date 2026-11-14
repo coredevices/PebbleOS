@@ -2176,3 +2176,131 @@ def test_overlays_change_the_tree(tmp_path):
     assert not sensor.status_okay
     assert str(overlay) in sources
     assert not any(src.endswith("board.overlaid.dts") for src in sources)
+
+
+def test_io_channels(tmp_path):
+    classes = {
+        **GRAPH_CLASSES,
+        "adc": {
+            "class": "adc",
+            "type": "struct adc",
+            "include": "adc.h",
+            "provides": {"io-channel": "ADC_CHANNEL(&{sym}, {0})"},
+        },
+        "input": {"class": "input", "type": "struct input", "include": "input.h"},
+    }
+    specs = {
+        "acme,adc": {
+            "compatible": "acme,adc",
+            "config": "ADC",
+            "class": "adc",
+            "define": "ADC_DEFINE",
+            "args": [{"reg": 0}],
+        },
+        "acme,keys": {
+            "compatible": "acme,keys",
+            "config": "KEYS",
+            "class": "input",
+            "define": "KEYS_DEFINE",
+            "args": [{"io-channel": "buttons"}],
+        },
+    }
+    text = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    adc: adc@1000 {
+        compatible = "acme,adc";
+        reg = <0x1000 0x100>;
+        #io-channel-cells = <1>;
+    };
+
+    keys {
+        compatible = "acme,keys";
+        io-channels = <&adc 7>, <&adc 6>;
+        io-channel-names = "other", "buttons";
+    };
+};
+"""
+    path, dtb = tmp_path / "a.dts", tmp_path / "a.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
+    gen.run()
+    assert "KEYS_DEFINE(dt_node_keys, ADC_CHANNEL(&dt_adc, 6));" in body(gen)
+
+
+def test_nvmem_cells(tmp_path):
+    classes = {
+        **GRAPH_CLASSES,
+        "nvmem": {
+            "class": "nvmem",
+            "type": "struct nvmem",
+            "include": "nvmem.h",
+            "provides": {"nvmem-cell": "NVMEM_CELL(&{sym}, {0}, {1})"},
+        },
+        "adc": {"class": "adc", "type": "struct adc", "include": "adc.h"},
+    }
+    specs = {
+        "acme,efuse": {
+            "compatible": "acme,efuse",
+            "config": "EFUSE",
+            "class": "nvmem",
+            "define": "EFUSE_DEFINE",
+            "args": [{"reg": 0}],
+        },
+        "acme,adc": {
+            "compatible": "acme,adc",
+            "config": "ADC",
+            "class": "adc",
+            "define": "ADC_DEFINE",
+            "args": [{"nvmem-cell": "calibration"}],
+        },
+    }
+    text = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    efuse: efuse@1000 {
+        compatible = "acme,efuse";
+        reg = <0x1000 0x100>;
+
+        nvmem-layout {
+            compatible = "fixed-layout";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            id: id@0 {
+                reg = <0x0 0x8>;
+            };
+
+            cal: calibration@24 {
+                reg = <0x24 0x8>;
+            };
+        };
+    };
+
+    adc@2000 {
+        compatible = "acme,adc";
+        reg = <0x2000 0x100>;
+        nvmem-cells = <&id>, <&cal>;
+        nvmem-cell-names = "id", "calibration";
+    };
+};
+"""
+    path, dtb = tmp_path / "n.dts", tmp_path / "n.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
+    gen.run()
+    assert "ADC_DEFINE(dt_node_adc_2000, NVMEM_CELL(&dt_efuse, 36, 8));" in body(gen)

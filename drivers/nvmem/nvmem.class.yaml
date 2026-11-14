@@ -4,3 +4,5 @@
 class: nvmem
 type: struct pbl_nvmem
 include: pbl/drivers/nvmem.h
+provides:
+  nvmem-cell: "PBL_NVMEM_CELL(&{sym}, {0}, {1})"

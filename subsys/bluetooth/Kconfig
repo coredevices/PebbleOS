@@ -68,7 +68,7 @@ config BT_HCI_NRF52
 
 config BT_HCI_SF32LB52
     bool "SiFli LCPU over IPC"
-    depends on SOC_SF32LB52
+    depends on SOC_SF32LB52 || SOC_SF32LB57
     select REMOTEPROC
     help
       Talk H4 HCI to the SiFli controller running on the LCPU, over the

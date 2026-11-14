@@ -95,7 +95,7 @@ config KERNEL_USER_STACK_GUARD_SIZE
 
 config KERNEL_MPU_REGIONS
 	int
-	default 12 if SOC_SF32LB52
+	default 12 if SOC_SF32LB52 || SOC_SF32LB57
 	default 8
 	help
 	  MPU slots the core implements. The last four switch with the thread, and
@@ -108,7 +108,7 @@ config KERNEL_MPU_IN_FAULTS
 
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
-	default 1000 if QEMU || SOC_SF32LB52 || SOC_POSIX
+	default 1000 if QEMU || SOC_FAMILY_SF32LB || SOC_POSIX
 	default 1024
 
 config KERNEL_IRQ_PRIO_KERNEL

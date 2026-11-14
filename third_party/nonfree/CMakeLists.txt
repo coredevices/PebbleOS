@@ -27,7 +27,11 @@ if(CONFIG_CST816_FW)
 endif()
 
 if(CONFIG_REMOTEPROC_SF32LB52)
-  pbl_include_directories(${nonfree}/sf32lb52)
+  if(CONFIG_SOC_SF32LB57)
+    pbl_include_directories(${nonfree}/sf32lb57)
+  else()
+    pbl_include_directories(${nonfree}/sf32lb52)
+  endif()
 endif()
 
 if(CONFIG_GH3X2X_ALGO)

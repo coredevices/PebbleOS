@@ -35,18 +35,18 @@ static const struct pbl_clk_sf32lb52_lpsys_rcc *prv_rcc(const struct pbl_clk_con
 static uint32_t prv_read(const struct pbl_clk_controller *ctrl, uint32_t offset) {
   uint32_t val;
 
-  soc_sf32lb52_lpsys_wake();
+  soc_sf32lb_lpsys_wake();
   val = pbl_readl(prv_rcc(ctrl)->base + offset);
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_release();
 
   return val;
 }
 
 static void prv_modify(const struct pbl_clk_controller *ctrl, uint32_t offset, uint32_t clear,
                        uint32_t set) {
-  soc_sf32lb52_lpsys_wake();
+  soc_sf32lb_lpsys_wake();
   pbl_modifyl(clear, set, prv_rcc(ctrl)->base + offset);
-  soc_sf32lb52_lpsys_release();
+  soc_sf32lb_lpsys_release();
 }
 
 static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,

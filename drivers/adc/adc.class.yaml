@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: adc
+type: struct pbl_adc
+include: pbl/drivers/adc.h
+provides:
+  io-channel: "PBL_ADC_CHANNEL(&{sym}, {0})"

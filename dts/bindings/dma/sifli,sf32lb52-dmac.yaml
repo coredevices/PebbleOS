@@ -10,7 +10,8 @@ maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Eight-channel DMA controller. DMA specifiers take three cells, the channel
+  Eight-channel DMA controller of the SF32LB52, and the GPDMA and LPSYS DMA
+  controller of the SF32LB57, a superset of it. DMA specifiers take three cells, the channel
   (0 to 7), the request line (0 to 63) and the priority (0 low to 3 very high).
 
 allOf:
@@ -18,7 +19,10 @@ allOf:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-dmac
+    enum:
+      - sifli,sf32lb52-dmac
+      - sifli,sf32lb57-dmac
+      - sifli,sf32lb57-gpdma
 
   reg:
     maxItems: 1

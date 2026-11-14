@@ -1,8 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config SOC_FAMILY_SF32LB
+    bool
+    help
+      SiFli SF32LB family, selected by its series.
+
 config SOC_SF32LB52
     bool
+    select SOC_FAMILY_SF32LB
     select CPU_STAR_MC1
     select CPU_HAS_FPU
     select CPU_HAS_ICACHE
@@ -18,10 +24,35 @@ config SOC_SF32LB52
     help
       SiFli SF32LB52 series, selected by its lines.
 
-config SF32LB52_FTAB
+config SOC_SF32LB57
+    bool
+    select SOC_FAMILY_SF32LB
+    select CPU_STAR_MC1
+    select CPU_HAS_FPU
+    select CPU_HAS_ICACHE
+    select CPU_HAS_DCACHE
+    select ARCH_VECTOR_TABLE_RAM
+    select KERNEL_MPU_IN_FAULTS
+    select RAMFUNC
+    select SOC_HAS_MPU_REGIONS
+    select PINCTRL
+    select TIMER_SF32LB_LPTIM
+    help
+      SiFli SF32LB57 series, selected by its lines.
+
+config SF32LB_DEBUG_UART
+    bool "Keep the SoC debugger reachable over USART1"
+    default y if !RELEASE
+    depends on SOC_FAMILY_SF32LB
+    help
+      The SoC debugger, which sftool attaches through, listens to the
+      receiver of USART1. Keep that receiver on whatever uses the port, so
+      that the chip can be flashed and debugged while the firmware runs.
+
+config SF32LB_FTAB
     bool "Boot ROM flash table"
     default y
-    depends on SOC_SF32LB52 && !PBLBOOT
+    depends on SOC_FAMILY_SF32LB && !PBLBOOT
     help
       Generate the flash table (FTAB) the boot ROM reads from the ptable
       partition, pointing it at the firmware image, and flash it along with

@@ -25,10 +25,10 @@ config CLK_FIXED
 
 config CLK_SF32LB
     bool "SiFli SF32LB RCC"
-    default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED
+    default DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED || DT_HAS_SIFLI_SF32LB57_HPSYS_RCC_ENABLED
     select POWER_DOMAIN
     help
-      Clock controller of the SiFli SF32LB52 HPSYS RCC.
+      Clock controller of the SiFli SF32LB52 and SF32LB57 HPSYS RCC.
 
 config CLK_NRF52
     bool "Nordic nRF52 clock control"
@@ -80,6 +80,33 @@ module-str = SF32LB52 PMUC clocks
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # CLK_SF32LB52_PMUC
+
+config CLK_SF32LB57_PMUC
+    bool "SiFli SF32LB57 PMUC"
+    default DT_HAS_SIFLI_SF32LB57_PMUC_ENABLED
+    select CLK_CAL
+    help
+      Oscillators of the SiFli SF32LB57 PMUC: the LRC10 low-power RC
+      oscillator, whose rate is calibrated against the 48 MHz crystal, the
+      LRC32 and HRC48 RC oscillators at their nominal rates, the crystal
+      oscillators, clk_wdt and clk_rtc.
+
+if CLK_SF32LB57_PMUC
+
+config CLK_SF32LB57_PMUC_LRC10_CAL_GATE_CYCLES
+    int "LRC10 calibration gate (LRC10 cycles)"
+    range 200 65535
+    default 2000
+    help
+      Length of each LRC10 measurement against the 48 MHz crystal, by the
+      RC10CAL counter of the HPSYS RCC. Deep WFI is held off for the gate.
+
+config CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S
+    int "LRC10 calibration period (seconds)"
+    range 10 3600
+    default 60
+
+endif # CLK_SF32LB57_PMUC
 
 config CLK_SF32LB52_LPSYS_RCC
     bool "SiFli SF32LB52 LPSYS RCC"

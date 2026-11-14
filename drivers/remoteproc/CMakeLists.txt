@@ -3,6 +3,11 @@
 
 pbl_library()
 pbl_library_sources(remoteproc.c)
-pbl_library_sources_ifdef(CONFIG_REMOTEPROC_SF32LB52 sf32lb52.c sf32lb52_patch.c
-  sf32lb52_rfcal.c)
+pbl_library_sources_ifdef(CONFIG_REMOTEPROC_SF32LB52 sf32lb52.c sf32lb52_patch.c)
+if(CONFIG_REMOTEPROC_SF32LB52 AND CONFIG_SOC_SF32LB52)
+  pbl_library_sources(sf32lb52_rfcal.c)
+endif()
+if(CONFIG_REMOTEPROC_SF32LB52 AND CONFIG_SOC_SF32LB57)
+  pbl_library_sources(sf32lb57_rfcal.c)
+endif()
 pbl_library_sources_ifdef(CONFIG_REMOTEPROC_SHELL shell.c)

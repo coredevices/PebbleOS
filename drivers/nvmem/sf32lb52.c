@@ -55,16 +55,13 @@ static int prv_set_timing(const struct pbl_nvmem_sf32lb52 *efuse) {
 }
 
 static_assert(SF32LB52_EFUSE_SIZE == SF32LB52_EFUSEC_BANK_SIZE * SF32LB52_EFUSEC_NUM_BANKS);
+static_assert(SF32LB57_EFUSE_SIZE == SF32LB52_EFUSEC_BANK_SIZE * 3U);
 
-static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int bank,
-                         unsigned int offset, uint8_t *val, size_t bytes) {
-  const uintptr_t data = efuse->base + SF32LB52_EFUSEC_BANK_DATA_OFFSET(bank);
-  const uintptr_t sr = efuse->base + SF32LB52_EFUSEC_SR_OFFSET;
-  const uintptr_t cr = efuse->base + SF32LB52_EFUSEC_CR_OFFSET;
+// Raise the HPSYS LDO for a read, where the series needs it, returning what to restore
+static uint32_t prv_vout_boost(const struct pbl_nvmem_sf32lb52 *efuse) {
   const uintptr_t vout = efuse->pmuc + SF32LB52_PMUC_HPSYS_VOUT_OFFSET;
   const uint32_t vout_saved = pbl_readl(vout);
   uint32_t vout_read = vout_saved + VOUT_BOOST;
-  int ret;
 
   if (vout_read < VOUT_READ_MIN) {
     vout_read = VOUT_READ_MIN;
@@ -74,6 +71,21 @@ static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int ba
 
   pbl_writel(vout_read, vout);
   pbl_busy_wait_us(VOUT_SETTLE_US);
+
+  return vout_saved;
+}
+
+static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int bank,
+                         unsigned int offset, uint8_t *val, size_t bytes) {
+  const uintptr_t data = efuse->base + SF32LB52_EFUSEC_BANK_DATA_OFFSET(bank);
+  const uintptr_t sr = efuse->base + SF32LB52_EFUSEC_SR_OFFSET;
+  const uintptr_t cr = efuse->base + SF32LB52_EFUSEC_CR_OFFSET;
+  uint32_t vout_saved = 0U;
+  int ret;
+
+  if (efuse->pmuc != 0U) {
+    vout_saved = prv_vout_boost(efuse);
+  }
 
   pbl_writel(PBL_FIELD_PREP(EFUSEC_CR_BANKSEL_MASK, bank), cr);
   pbl_modifyl(0U, EFUSEC_CR_EN, cr);
@@ -89,7 +101,9 @@ static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int ba
     }
   }
 
-  pbl_writel(vout_saved, vout);
+  if (efuse->pmuc != 0U) {
+    pbl_writel(vout_saved, efuse->pmuc + SF32LB52_PMUC_HPSYS_VOUT_OFFSET);
+  }
 
   return ret;
 }
@@ -98,9 +112,11 @@ static int prv_read_locked(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int 
                            uint8_t *val, size_t bytes) {
   int ret;
 
-  ret = prv_set_timing(efuse);
-  if (ret != 0) {
-    return ret;
+  if (efuse->read_timing) {
+    ret = prv_set_timing(efuse);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   while (bytes > 0U) {
@@ -144,3 +160,4 @@ const struct pbl_nvmem_ops pbl_nvmem_sf32lb52_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_efuse)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_efuse)

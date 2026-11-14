@@ -2,12 +2,12 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""SF32LB52 flash table (FTAB), which tells the boot ROM what image to boot.
+"""SF32LB flash table (FTAB), which tells the boot ROM what image to boot.
 
-The table goes in the ptable partition. Only the entries the ROM needs to boot
-from flash are filled: the table itself and the image it boots, in the
-secondary bootloader slot. See the SiFli SDK documentation on the SF32LB52x
-bootloader for the layout.
+The table goes in the ptable partition, at the start of the boot flash. Only
+the entries the ROM needs to boot from flash are filled: the table itself and
+the image it boots, in the secondary bootloader slot. The SF32LB52 and SF32LB57
+ROMs read the same layout; see the SiFli SDK documentation on the bootloader.
 """
 
 import argparse

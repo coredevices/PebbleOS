@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(base)
+pbl_add_subdirectory_ifdef(CONFIG_ADC adc)
 pbl_add_subdirectory_ifdef(CONFIG_ALS als)
 pbl_add_subdirectory_ifdef(CONFIG_AUDIO audio)
 pbl_add_subdirectory_ifdef(CONFIG_TEMP temp)

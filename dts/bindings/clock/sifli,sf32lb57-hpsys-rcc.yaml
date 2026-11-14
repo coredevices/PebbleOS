@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/sifli,sf32lb57-hpsys-rcc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB57 HPSYS reset and clock controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  Derives the clocks of the HPSYS from the HRC48 and HXT48 oscillators, gates
+  those of its peripherals and drives their reset lines, as the SF32LB52 one
+  does, with a third memory controller and the gates of the blocks of its own:
+
+  - SYS, clk_hpsys, from HRC48, HXT48 or DLL1, divided into HCLK, the AHB
+    clock, itself divided into PCLK and PCLK2, the APB clocks;
+  - DLL1 and DLL2, from HXT48 through the DLL buffer of the PMUC;
+  - PERI, clk_peri_hpsys, from HRC48 or HXT48, for the serial peripherals,
+    and PERI_DIV2, half of it, for some timers;
+  - MPI1_K, MPI2_K and MPI3_K, the kernel clocks of the MPI controllers, from
+    PERI, DLL1 or DLL2, and USBC_K, that of the USB controller, from SYS or
+    DLL2;
+  - a gate for each peripheral, which runs at the rate of the clock it gates.
+
+  Clock and reset specifiers take one cell, an ID from
+  <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h> or
+  <dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h>.
+
+properties:
+  compatible:
+    const: sifli,sf32lb57-hpsys-rcc
+
+  reg:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+
+  '#reset-cells':
+    const: 1
+
+  clocks:
+    items:
+      - description: HRC48 oscillator
+      - description: HXT48 oscillator
+      - description: HXT48 through the DLL buffer
+
+  clock-names:
+    items:
+      - const: hrc48
+      - const: hxt48
+      - const: hxt48-dll
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration.
+
+  power-domains:
+    maxItems: 1
+    description: The HPSYS power domain, which the clocks of the RCC run in.
+
+  required-opps:
+    maxItems: 1
+    description:
+      The voltage mode of the HPSYS that the assigned rates need, set before
+      the RCC changes its clocks.
+
+required:
+  - compatible
+  - reg
+  - '#clock-cells'
+  - '#reset-cells'
+  - clocks
+  - clock-names
+  - sifli,hpsys-cfg
+  - power-domains
+  - required-opps
+
+additionalProperties: false
+
+examples:
+  - |
+    rcc: clock-controller@50000000 {
+        compatible = "sifli,sf32lb57-hpsys-rcc";
+        reg = <0x50000000 0x1000>;
+        #clock-cells = <1>;
+        #reset-cells = <1>;
+        clocks = <&pmuc 3>, <&pmuc 4>, <&pmuc 6>;
+        clock-names = "hrc48", "hxt48", "hxt48-dll";
+        sifli,hpsys-cfg = <&hpsys_cfg>;
+        power-domains = <&pmuc 0>;
+        required-opps = <&hpsys_s1>;
+    };

@@ -1,0 +1,101 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "sifli/sf32lb579.dtsi"
+#include "sifli/sf32lb57xv6e.dtsi"
+#include "sf32lb57_dpi_hdk-pinctrl.dtsi"
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	model = "SiFli SF32LB57x-DPI-HDK";
+	compatible = "sifli,sf32lb57-dpi-hdk", "sifli,sf32lb579";
+
+	// KEY-1..3 pull PA34 up through a ladder, which raises its GPIO too
+	adc-keys {
+		compatible = "adc-keys-irq";
+		io-channels = <&gpadc 6>;
+		io-channel-names = "buttons";
+		interrupts-extended = <&gpio1 34 IRQ_TYPE_EDGE_BOTH>;
+		pinctrl-0 = <&keys_default>;
+		pinctrl-names = "default";
+		keyup-threshold-microvolt = <0>;
+
+		button-up {
+			label = "KEY-1";
+			linux,code = <KEY_UP>;
+			press-threshold-microvolt = <2970000>;
+		};
+
+		button-select {
+			label = "KEY-2";
+			linux,code = <KEY_SELECT>;
+			press-threshold-microvolt = <2580000>;
+		};
+
+		button-down {
+			label = "KEY-3";
+			linux,code = <KEY_DOWN>;
+			press-threshold-microvolt = <2190000>;
+		};
+	};
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_default>;
+	pinctrl-names = "default";
+	current-speed = <1000000>;
+	dmas = <&gpdma1 6 5 2>;
+	dma-names = "rx";
+	status = "okay";
+};
+
+&lptim1 {
+	status = "okay";
+};
+
+&iwdt {
+	status = "okay";
+};
+
+&gpadc {
+	status = "okay";
+};
+
+&mpi2 {
+	status = "okay";
+};
+
+&sip_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "ptable";
+			reg = <0x0 0x10000>;
+		};
+
+		partition@20000 {
+			label = "firmware-slot-0";
+			reg = <0x20000 0x300000>;
+		};
+	};
+};
+
+&mpi3 {
+	pinctrl-0 = <&mpi3_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};

@@ -18,12 +18,12 @@ config GPIO_NRF5
 
 config GPIO_SF32LB
     bool "SiFli SF32LB"
-    default y if SOC_SF32LB52
-    depends on SOC_SF32LB52
+    default y if SOC_FAMILY_SF32LB
+    depends on SOC_FAMILY_SF32LB
     select CLK
     select INTC
     select PINCTRL
-    select PINCTRL_SF32LB52_OUTPUT_LOW
+    select PINCTRL_SF32LB52_OUTPUT_LOW if PINCTRL_SF32LB52
     help
       Support for the SiFli SF32LB GPIO controller.
 

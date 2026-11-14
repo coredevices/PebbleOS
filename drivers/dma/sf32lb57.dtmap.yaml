@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-gpdma
+config: DMA_SF32LB52
+class: dma
+define: PBL_DMA_SF32LB57_GPDMA_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - irq: 0
+  - irq: 1
+  - irq: 2
+  - irq: 3
+  - irq: 4
+  - irq: 5
+  - irq: 6
+  - irq: 7

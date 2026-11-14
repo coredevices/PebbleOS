@@ -23,7 +23,11 @@ description: |
 
 properties:
   compatible:
-    const: sifli,sf32lb52-lpsys-rcc
+    oneOf:
+      - const: sifli,sf32lb52-lpsys-rcc
+      - items:
+          - const: sifli,sf32lb57-lpsys-rcc
+          - const: sifli,sf32lb52-lpsys-rcc
 
   reg:
     maxItems: 1

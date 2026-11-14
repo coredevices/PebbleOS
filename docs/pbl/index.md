@@ -90,7 +90,7 @@ board can be flashed with one runner and debugged with another;
 | --- | --- | --- |
 | `openocd` | asterix | flash (with resources), erase, debug, debugserver |
 | `nrfutil` | asterix | flash (with resources), erase |
-| `sftool` | obelix, getafix | flash (with resources), erase |
+| `sftool` | obelix, getafix, sf32lb57_dpi_hdk | flash (with resources), erase |
 | `probe-rs` | asterix, obelix, getafix | debug, debugserver |
 | `phone` | asterix, obelix, getafix | flash (always with resources) |
 | `qemu` | qemu_* | run, debug, debugserver |

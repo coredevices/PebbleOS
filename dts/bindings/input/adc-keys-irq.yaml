@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/input/adc-keys-irq.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: ADC attached resistor ladder buttons with an interrupt
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Keys on a resistor ladder, read through one ADC channel when an interrupt
+  that a press or release raises fires, rather than polled. The key whose
+  press-threshold-microvolt is the nearest to the voltage read is pressed,
+  none is if keyup-threshold-microvolt is the nearest, so the ladder may rest
+  at either end of the range of the keys.
+
+allOf:
+  - $ref: input.yaml#
+
+properties:
+  compatible:
+    const: adc-keys-irq
+
+  io-channels:
+    maxItems: 1
+
+  io-channel-names:
+    const: buttons
+
+  interrupts:
+    maxItems: 1
+    description:
+      Raised when a key is pressed or released, typically a GPIO that the
+      ladder also drives, on both edges.
+
+  keyup-threshold-microvolt:
+    description:
+      Voltage of the ladder with no key pressed.
+
+  pinctrl-0: true
+  pinctrl-names: true
+  autorepeat: true
+  wakeup-source: true
+
+patternProperties:
+  '^button-':
+    type: object
+    $ref: input.yaml#
+    additionalProperties: false
+    description:
+      Each button (key) is represented as a sub-node.
+
+    properties:
+      label: true
+
+      linux,code: true
+
+      press-threshold-microvolt:
+        description:
+          Voltage of the ladder while this key is pressed. No two values of
+          press-threshold-microvolt may be the same, nor equal to
+          keyup-threshold-microvolt.
+
+    required:
+      - linux,code
+      - press-threshold-microvolt
+
+required:
+  - compatible
+  - io-channels
+  - io-channel-names
+  - interrupts
+  - keyup-threshold-microvolt
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/input/input.h>
+    #include <dt-bindings/interrupt-controller/irq.h>
+
+    // A ladder at 0 V with no key pressed, whose keys pull it up
+    adc-keys {
+        compatible = "adc-keys-irq";
+        io-channels = <&adc 6>;
+        io-channel-names = "buttons";
+        interrupts-extended = <&gpio1 34 IRQ_TYPE_EDGE_BOTH>;
+        keyup-threshold-microvolt = <0>;
+        wakeup-source;
+
+        button-up {
+            label = "Up";
+            linux,code = <KEY_UP>;
+            press-threshold-microvolt = <2970000>;
+        };
+
+        button-select {
+            label = "Select";
+            linux,code = <KEY_SELECT>;
+            press-threshold-microvolt = <2580000>;
+        };
+
+        button-down {
+            label = "Down";
+            linux,code = <KEY_DOWN>;
+            press-threshold-microvolt = <2190000>;
+        };
+    };
+...

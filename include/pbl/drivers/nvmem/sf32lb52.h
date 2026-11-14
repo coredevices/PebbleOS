@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
@@ -23,13 +24,16 @@ struct pbl_nvmem_sf32lb52 {
   uintptr_t base;
   /** Clock. */
   struct pbl_clk clk;
-  /** PMUC registers, holding the HPSYS LDO that reads raise. */
+  /** PMUC registers, holding the HPSYS LDO that reads raise, or 0 if reads need no boost. */
   uintptr_t pmuc;
+  /** Whether the read strobe timing is set from the bus clock. */
+  bool read_timing;
 };
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_nvmem_ops pbl_nvmem_sf32lb52_ops;
 extern const struct pbl_nvmem pbl_nvmem_sf32lb52_efuse;
+extern const struct pbl_nvmem pbl_nvmem_sf32lb57_efuse;
 /** @endcond */
 
 /**
@@ -47,15 +51,26 @@ extern const struct pbl_nvmem pbl_nvmem_sf32lb52_efuse;
     .nvmem =                                                                                       \
         PBL_NVMEM_INIT(sym, _name, nullptr, nullptr, &pbl_nvmem_sf32lb52_ops, SF32LB52_EFUSE_SIZE, \
                        SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),                        \
-    .base = (_base), .clk = _clk, .pmuc = (_pmuc),                                                 \
+    .base = (_base), .clk = _clk, .pmuc = (_pmuc), .read_timing = true,                            \
+  }
+
+#define PBL_NVMEM_SF32LB57_DEFINE(sym, _name, _base, _clk)                                         \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_nvmem_sf32lb52, struct pbl_nvmem, nvmem) {                   \
+    .nvmem =                                                                                       \
+        PBL_NVMEM_INIT(sym, _name, nullptr, nullptr, &pbl_nvmem_sf32lb52_ops, SF32LB57_EFUSE_SIZE, \
+                       SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),                        \
+    .base = (_base), .clk = _clk,                                                                  \
   }
 
 /** eFuse size: four 32-byte banks. */
 #define SF32LB52_EFUSE_SIZE 128U
+#define SF32LB57_EFUSE_SIZE 96U
 /** eFuse read size and alignment. */
 #define SF32LB52_EFUSE_WORD_SIZE 4U
 
 /** eFuse. */
 #define SF32LB52_EFUSE (&pbl_nvmem_sf32lb52_efuse)
+#define SF32LB57_EFUSE (&pbl_nvmem_sf32lb57_efuse)
 
 /** @} */

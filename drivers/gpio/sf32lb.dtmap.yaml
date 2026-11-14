@@ -4,7 +4,7 @@
 compatible: sifli,sf32lb52-gpio
 config: GPIO_SF32LB
 class: [gpio, intc]
-define: PBL_GPIO_SF32LB_DEFINE
+define: PBL_GPIO_SF32LB52_DEFINE
 symbol:
   gpio: "{sym}"
   intc: "{sym}_intc"

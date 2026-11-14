@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library()
+pbl_library_sources_ifdef(CONFIG_INPUT_ADC_KEYS adc_keys.c)
 pbl_library_sources_ifdef(CONFIG_INPUT_GPIO_KEYS gpio_keys.c)
 if(CONFIG_INPUT_SDL)
   pbl_library_sources(sdl/input_sdl.c)

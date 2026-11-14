@@ -35,6 +35,13 @@ kernel/classic/barrier.md
 
 ```{toctree}
 :maxdepth: 1
+:caption: Input
+
+input/events.md
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Benchmarks
 
 benchmarks/kernel.md

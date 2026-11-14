@@ -68,6 +68,8 @@ ARG_KINDS = {
     "assigned-clocks",
     "dma",
     "gpio",
+    "io-channel",
+    "nvmem-cell",
     "pinctrl",
     "parent",
     "self",
@@ -1120,6 +1122,31 @@ class Generator:
                 raise src.error(f"no pwm {index}")
             target, cells = entries[index]
             return self._provided(src, target, "pwm", cells)
+        if kind == "io-channel":
+            if not node.has("io-channels"):
+                return None
+            index = self._index(src, key, "io-channel-names")
+            entries = self._phandles(src, "io-channels", "#io-channel-cells")
+            if index >= len(entries):
+                raise src.error(f"no io-channel {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "io-channel", cells)
+        if kind == "nvmem-cell":
+            if not node.has("nvmem-cells"):
+                return None
+            index = self._index(src, key, "nvmem-cell-names")
+            phandles = node.u32s("nvmem-cells")
+            if index >= len(phandles):
+                raise src.error(f"no nvmem cell {index}")
+            cell = self.tree.phandle(phandles[index], f"{node.path}: 'nvmem-cells'")
+            cells = cell.u32s("reg") if cell.has("reg") else []
+            if len(cells) != 2:
+                raise src.error(f"{cell.path}: 'reg' must be one offset and size")
+            # The device of the cell, through the layout of its cells
+            provider = cell.parent
+            if "fixed-layout" in provider.compatibles:
+                provider = provider.parent
+            return self._provided(src, provider, "nvmem-cell", cells)
         if kind == "supply":
             prop = f"{key}-supply"
             if not node.has(prop):

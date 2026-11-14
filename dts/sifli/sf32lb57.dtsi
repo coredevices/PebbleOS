@@ -1,0 +1,356 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>
+#include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
+#include <dt-bindings/clock/sifli,sf32lb57-pmuc.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/power/sifli,sf32lb57-pmuc.h>
+#include <dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v8m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		lcpu_ipc: memory@2007fe00 {
+			reg = <0x2007fe00 0x200>;
+			no-map;
+		};
+	};
+
+	xtal48m: clock-48000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <48000000>;
+	};
+
+	hpsys_opp_table: opp-table-hpsys {
+		compatible = "operating-points-v2";
+
+		hpsys_d0: opp-1 {
+			opp-level = <SF32LB57_PMUC_HPSYS_D0>;
+		};
+
+		hpsys_d1: opp-2 {
+			opp-level = <SF32LB57_PMUC_HPSYS_D1>;
+		};
+
+		hpsys_s0: opp-3 {
+			opp-level = <SF32LB57_PMUC_HPSYS_S0>;
+		};
+
+		hpsys_s1: opp-4 {
+			opp-level = <SF32LB57_PMUC_HPSYS_S1>;
+		};
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&nvic>;
+		ranges;
+
+		lpsys_sram: sram@20400000 {
+			compatible = "mmio-sram";
+			reg = <0x20400000 0x14000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x20400000 0x14000>;
+
+			lcpu_sram: lcpu-sram@0 {
+				reg = <0x0 0x14000>;
+			};
+		};
+
+		lpsys_rcc: clock-controller@40000000 {
+			compatible = "sifli,sf32lb57-lpsys-rcc", "sifli,sf32lb52-lpsys-rcc";
+			reg = <0x40000000 0x1000>;
+			#clock-cells = <1>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_HRC48>, <&pmuc SF32LB57_PMUC_CLK_HXT48>;
+			clock-names = "hrc48", "hxt48";
+			assigned-clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PERI>;
+			assigned-clock-parents = <&pmuc SF32LB57_PMUC_CLK_HXT48>;
+		};
+
+		dmac2: dma-controller@40001000 {
+			compatible = "sifli,sf32lb57-dmac";
+			reg = <0x40001000 0x1000>;
+			interrupts = <2>, <3>, <4>, <5>, <6>, <7>, <8>, <9>;
+			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>;
+			#dma-cells = <3>;
+			dma-channels = <8>;
+			status = "disabled";
+		};
+
+		mailbox2: mailbox@40002000 {
+			compatible = "sifli,sf32lb57-mailbox", "sifli,sf32lb52-mailbox";
+			reg = <0x40002000 0x1000>;
+			interrupts = <58>;
+			#mbox-cells = <1>;
+			#hwlock-cells = <1>;
+			status = "disabled";
+		};
+
+		lcpu: remoteproc@40004000 {
+			compatible = "sifli,sf32lb57-lcpu";
+			reg = <0x40004000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			/* LPSYS SRAM through the code bus, HPSYS SRAM */
+			dma-ranges = <0x00400000 0x20400000 0x14000>,
+				     <0x2a000000 0x20000000 0x80000>;
+			mboxes = <&mailbox1 0>, <&mailbox2 0>;
+			mbox-names = "tx", "rx";
+			memory-region = <&lcpu_ipc>;
+			sram = <&lcpu_sram>;
+			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK>,
+				 <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_PCLK2>,
+				 <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			clock-names = "hclk", "pclk", "pclk2", "lpclk";
+			sifli,bt-rfc = <&bt_rfc>;
+			sifli,bt-phy = <&bt_phy>;
+			sifli,bt-mac = <&bt_mac>;
+			sifli,gpadc = <&gpadc>;
+			sifli,dmac = <&dmac2>;
+			sifli,lpsys-rcc = <&lpsys_rcc>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			sifli,pmuc = <&pmuc>;
+			status = "disabled";
+		};
+
+		lpsys_aon: syscon@40040000 {
+			compatible = "sifli,sf32lb57-lpsys-aon", "syscon";
+			reg = <0x40040000 0x1000>;
+		};
+
+		bt_rfc: syscon@40082000 {
+			compatible = "sifli,sf32lb57-bt-rfc", "syscon";
+			reg = <0x40082000 0x1000>;
+		};
+
+		bt_phy: syscon@40084000 {
+			compatible = "sifli,sf32lb57-bt-phy", "syscon";
+			reg = <0x40084000 0x1000>, <0x400c0000 0x1000>;
+			reg-names = "regs", "capture";
+		};
+
+		bt_mac: syscon@40090000 {
+			compatible = "sifli,sf32lb57-bt-mac", "syscon";
+			reg = <0x40090000 0x1000>;
+		};
+
+		hpsys_rcc: clock-controller@50000000 {
+			compatible = "sifli,sf32lb57-hpsys-rcc";
+			reg = <0x50000000 0x1000>;
+			#clock-cells = <1>;
+			#reset-cells = <1>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_HRC48>, <&pmuc SF32LB57_PMUC_CLK_HXT48>,
+				 <&pmuc SF32LB57_PMUC_CLK_HXT48_DLL>;
+			clock-names = "hrc48", "hxt48", "hxt48-dll";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			power-domains = <&pmuc SF32LB57_PMUC_PD_HPSYS>;
+			required-opps = <&hpsys_s1>;
+			assigned-clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DLL1>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SYS>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_HCLK>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PCLK>,
+					  <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PCLK2>;
+			assigned-clock-parents = <0>, <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DLL1>,
+						 <0>, <0>, <0>;
+			assigned-clock-rates = <240000000>, <0>, <240000000>, <120000000>,
+					       <3750000>;
+		};
+
+		pinctrl: pinctrl@50003000 {
+			compatible = "sifli,sf32lb57-pinctrl";
+			reg = <0x50003000 0x150>;
+		};
+
+		hpsys_cfg: syscon@5000b000 {
+			compatible = "sifli,sf32lb57-hpsys-cfg", "syscon";
+			reg = <0x5000b000 0x1000>;
+		};
+
+		efuse: efuse@5000c000 {
+			compatible = "sifli,sf32lb57-efuse";
+			reg = <0x5000c000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_EFUSEC>;
+			read-only;
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				gpadc_calibration: gpadc-calibration@24 {
+					reg = <0x24 0x8>;
+				};
+			};
+		};
+
+		mpi1: spi@50041000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <85>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		mpi2: spi@50042000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50042000 0x1000>, <0x12000000 0x2000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <86>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		mpi3: spi@50043000 {
+			compatible = "sifli,sf32lb57-mpi";
+			reg = <0x50043000 0x1000>, <0x14000000 0xc000000>;
+			reg-names = "mpi", "mpi_mm";
+			interrupts = <87>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		gpdma1: dma-controller@50081000 {
+			compatible = "sifli,sf32lb57-gpdma";
+			reg = <0x50081000 0x1000>;
+			interrupts = <50>, <51>, <52>, <53>, <54>, <55>, <56>, <57>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DMAC1>;
+			#dma-cells = <3>;
+			dma-channels = <8>;
+		};
+
+		mailbox1: mailbox@50082000 {
+			compatible = "sifli,sf32lb57-mailbox", "sifli,sf32lb52-mailbox";
+			reg = <0x50082000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MAILBOX1>;
+			#mbox-cells = <1>;
+			status = "disabled";
+		};
+
+		usart1: serial@50084000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50084000 0x1000>;
+			interrupts = <59>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PERI>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART1>;
+			status = "disabled";
+		};
+
+		usart2: serial@50085000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50085000 0x1000>;
+			interrupts = <74>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USART2>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART2>;
+			status = "disabled";
+		};
+
+		usart3: serial@50086000 {
+			compatible = "sifli,sf32lb57-usart", "sifli,sf32lb52-usart";
+			reg = <0x50086000 0x1000>;
+			interrupts = <95>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USART3>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_USART3>;
+			status = "disabled";
+		};
+
+		wdt1: watchdog@50094000 {
+			compatible = "sifli,sf32lb57-wdt";
+			reg = <0x50094000 0x1000>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_WDT>;
+			status = "disabled";
+		};
+
+		gpio1: gpio@500a0000 {
+			compatible = "sifli,sf32lb57-gpio";
+			reg = <0x500a0000 0x1000>;
+			interrupts = <84>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPIO1>;
+			gpio-controller;
+			gpio-ranges = <&pinctrl 0 26 58>;
+			#gpio-cells = <2>;
+			ngpios = <58>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		gpadc: adc@500b2000 {
+			compatible = "sifli,sf32lb57-gpadc";
+			reg = <0x500b2000 0x1000>;
+			interrupts = <65>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPADC>;
+			#io-channel-cells = <1>;
+			nvmem-cells = <&gpadc_calibration>;
+			nvmem-cell-names = "calibration";
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			status = "disabled";
+		};
+
+		hpsys_aon: syscon@500c0000 {
+			compatible = "sifli,sf32lb57-hpsys-aon", "syscon";
+			reg = <0x500c0000 0x1000>;
+		};
+
+		lptim1: timer@500c1000 {
+			compatible = "sifli,sf32lb57-lptim", "sifli,sf32lb52-lptim";
+			reg = <0x500c1000 0x1000>;
+			interrupts = <46>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			status = "disabled";
+		};
+
+		lptim2: timer@500c2000 {
+			compatible = "sifli,sf32lb57-lptim", "sifli,sf32lb52-lptim";
+			reg = <0x500c2000 0x1000>;
+			interrupts = <47>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
+			status = "disabled";
+		};
+
+		pmuc: power-management@500ca000 {
+			compatible = "sifli,sf32lb57-pmuc";
+			reg = <0x500ca000 0x1000>;
+			interrupts = <48>;
+			#clock-cells = <1>;
+			#power-domain-cells = <1>;
+			clocks = <&xtal48m>;
+			clock-names = "hxt48";
+			operating-points-v2 = <&hpsys_opp_table>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			sifli,hpsys-rcc = <&hpsys_rcc>;
+		};
+
+		iwdt: watchdog@500cc000 {
+			compatible = "sifli,sf32lb57-iwdt";
+			reg = <0x500cc000 0x1000>;
+			clocks = <&pmuc SF32LB57_PMUC_CLK_WDT>;
+			status = "disabled";
+		};
+	};
+};
