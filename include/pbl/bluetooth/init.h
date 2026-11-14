@@ -26,7 +26,7 @@
  *
  * The NimBLE host reaches its controller through the HCI transport selected with the
  * @c BT_HCI_* Kconfig choice: the in-image NimBLE link layer (@c BT_HCI_NRF52), the SiFli LCPU
- * over IPC (@c BT_HCI_SF32LB52), H4 over UART (@c BT_HCI_UART) or a fake controller
+ * over IPC (@c BT_HCI_SF32LB), H4 over UART (@c BT_HCI_UART) or a fake controller
  * (@c BT_HCI_FAKE). The fake controller, used on QEMU, accepts every HCI command and never raises
  * an event: the host synchronizes and the GATT server runs, but no link is ever established.
  *

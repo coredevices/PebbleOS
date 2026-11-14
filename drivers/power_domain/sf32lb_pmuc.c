@@ -26,7 +26,7 @@
 #define S0_LDO_DEFAULT 0xbU
 #define S1_LDO_DEFAULT 0xdU
 
-struct pbl_pd_sf32lb52_pmuc {
+struct pbl_pd_sf32lb_pmuc {
   struct pbl_power_domain_provider provider;
   uintptr_t base;
   uintptr_t cfg;
@@ -57,8 +57,8 @@ static void prv_trims(uint8_t *s0, uint8_t *s1) {
 // The clocks of the domain must already run at what the mode allows when it lowers the voltage
 static int prv_set_performance_state(const struct pbl_power_domain_provider *provider, uint32_t id,
                                      uint32_t level) {
-  const struct pbl_pd_sf32lb52_pmuc *pmuc =
-      container_of(provider, const struct pbl_pd_sf32lb52_pmuc, provider);
+  const struct pbl_pd_sf32lb_pmuc *pmuc =
+      container_of(provider, const struct pbl_pd_sf32lb_pmuc, provider);
   const uintptr_t syscr = pmuc->cfg + SF32LB52_HPSYS_CFG_SYSCR_OFFSET;
   const struct hpsys_mode *mode;
   uint8_t s0;
@@ -100,12 +100,12 @@ static const struct pbl_power_domain_provider_ops s_ops = {
   .set_performance_state = prv_set_performance_state,
 };
 
-#define PBL_PD_SF32LB52_PMUC_DEFINE(sym, _name, _base, _cfg)                              \
-  PBL_POWER_DOMAIN_PROVIDER_STATE_DEFINE(sym, NUM_DOMAINS);                               \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pd_sf32lb52_pmuc, struct pbl_power_domain_provider, \
-                      provider) {                                                         \
-    .provider = PBL_POWER_DOMAIN_PROVIDER_INIT(sym, _name, nullptr, nullptr, &s_ops),     \
-    .base = (_base), .cfg = (_cfg),                                                       \
+#define PBL_PD_SF32LB_PMUC_DEFINE(sym, _name, _base, _cfg)                              \
+  PBL_POWER_DOMAIN_PROVIDER_STATE_DEFINE(sym, NUM_DOMAINS);                             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pd_sf32lb_pmuc, struct pbl_power_domain_provider, \
+                      provider) {                                                       \
+    .provider = PBL_POWER_DOMAIN_PROVIDER_INIT(sym, _name, nullptr, nullptr, &s_ops),   \
+    .base = (_base), .cfg = (_cfg),                                                     \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_power_domain)

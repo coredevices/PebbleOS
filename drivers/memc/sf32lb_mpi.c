@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/memc/sf32lb52_mpi.h>
+#include <pbl/drivers/memc/sf32lb_mpi.h>
 
-int pbl_sf32lb52_mpi_prepare(const struct pbl_sf32lb52_mpi *mpi) {
+int pbl_sf32lb_mpi_prepare(const struct pbl_sf32lb_mpi *mpi) {
   int ret;
 
   if (mpi->state->prepared) {
@@ -27,4 +27,4 @@ int pbl_sf32lb52_mpi_prepare(const struct pbl_sf32lb52_mpi *mpi) {
   return 0;
 }
 
-#include PBL_DT_INSTANCES(sifli_sf32lb52_mpi_sf32lb52_mpi)
+#include PBL_DT_INSTANCES(sifli_sf32lb52_mpi_sf32lb_mpi)

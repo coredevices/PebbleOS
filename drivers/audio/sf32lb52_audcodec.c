@@ -6,7 +6,7 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/audio/sf32lb52.h>
 #include <pbl/drivers/clk/sf32lb.h>
-#include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/drivers/dma/sf32lb.h>
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>

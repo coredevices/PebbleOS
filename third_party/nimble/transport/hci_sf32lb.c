@@ -7,7 +7,7 @@
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/board.h>
 #include <pbl/drivers/mbox.h>
-#include <pbl/drivers/remoteproc/sf32lb52.h>
+#include <pbl/drivers/remoteproc/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/barrier.h>
 #include <pbl/kernel/fatal.h>
@@ -141,12 +141,12 @@ static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
   .evt = prv_alloc_evt,
 };
 
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
 #define MAX_HCI_PKT_SIZE 1024
 static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
 #endif
 
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
 void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
   const char *type_str;
 
@@ -175,7 +175,7 @@ void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl
 #define prv_hci_trace(type, data, len, h4tl_packet)
 #endif
 
-#if defined(NIMBLE_HCI_SF32LB52_TRACE_LOG)
+#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
 void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet) {
   PBL_ASSERTN(os_mbuf_len(om) < MAX_HCI_PKT_SIZE);
   os_mbuf_copydata(om, 0, os_mbuf_len(om), s_hci_buf);
@@ -226,7 +226,7 @@ static void prv_ring_reset_tx(void) {
   tx->rd_idx = 0U;
   tx->wr_idx = 0U;
   tx->wr_buf = LCPU->mem.base + sizeof(struct ring);
-  tx->rd_buf = pbl_rproc_sf32lb52_da(LCPU, tx->wr_buf);
+  tx->rd_buf = pbl_rproc_sf32lb_da(LCPU, tx->wr_buf);
   tx->size = (int16_t)RING_POOL_SIZE(LCPU->mem.size);
   pbl_wmb();
 }

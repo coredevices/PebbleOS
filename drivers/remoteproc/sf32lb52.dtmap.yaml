@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: sifli,sf32lb52-lcpu
-config: REMOTEPROC_SF32LB52
+config: REMOTEPROC_SF32LB
 class: rproc
-define: PBL_RPROC_SF32LB52_DEFINE
+define: PBL_RPROC_SF32LB_DEFINE
 args:
   - name: true
   - reg: 0

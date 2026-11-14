@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: sifli,sf32lb52-dmac
-config: DMA_SF32LB52
+config: DMA_SF32LB
 class: dma
-define: PBL_DMA_SF32LB52_DEFINE
+define: PBL_DMA_SF32LB_DEFINE
 args:
   - name: true
   - reg: 0

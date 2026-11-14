@@ -9,17 +9,17 @@ menuconfig MBOX
 
 if MBOX
 
-config MBOX_SF32LB52
+config MBOX_SF32LB
     bool "SiFli SF32LB52 mailbox"
     default DT_HAS_SIFLI_SF32LB52_MAILBOX_ENABLED
     select CLK
     help
       SF32LB52 mailbox blocks (MAILBOX1, MAILBOX2), channel 1 doorbells.
 
-config MBOX_SF32LB52_IRQ_PRIO
+config MBOX_SF32LB_IRQ_PRIO
     int "Interrupt priority"
     default 5
-    depends on MBOX_SF32LB52
+    depends on MBOX_SF32LB
     help
       Priority of the interrupt of the blocks rung by the remote.
 

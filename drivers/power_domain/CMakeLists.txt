@@ -3,7 +3,7 @@
 
 pbl_library()
 set(sources power_domain.c)
-if(CONFIG_POWER_DOMAIN_SF32LB52_PMUC)
-  list(APPEND sources sf32lb52_pmuc.c)
+if(CONFIG_POWER_DOMAIN_SF32LB_PMUC)
+  list(APPEND sources sf32lb_pmuc.c)
 endif()
 pbl_library_sources(${sources})

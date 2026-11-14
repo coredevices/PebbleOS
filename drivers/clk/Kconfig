@@ -81,7 +81,7 @@ source "subsys/logging/Kconfig.template.log_level"
 
 endif # CLK_SF32LB52_PMUC
 
-config CLK_SF32LB52_LPSYS_RCC
+config CLK_SF32LB_LPSYS_RCC
     bool "SiFli SF32LB52 LPSYS RCC"
     default DT_HAS_SIFLI_SF32LB52_LPSYS_RCC_ENABLED
     help

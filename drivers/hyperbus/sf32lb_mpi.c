@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/hyperbus/sf32lb52_mpi.h>
+#include <pbl/drivers/hyperbus/sf32lb_mpi.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -43,8 +43,8 @@
 // Data goes through the system bus alias of the window, not its code bus address
 #define SBUS_OFFSET 0x50000000U
 
-static const struct pbl_hyperbus_sf32lb52_mpi *prv_hb(const struct pbl_hyperbus *bus) {
-  return container_of(bus, const struct pbl_hyperbus_sf32lb52_mpi, bus);
+static const struct pbl_hyperbus_sf32lb_mpi *prv_hb(const struct pbl_hyperbus *bus) {
+  return container_of(bus, const struct pbl_hyperbus_sf32lb_mpi, bus);
 }
 
 static uint32_t prv_ccr(uint32_t dcyc, uint32_t abmode) {
@@ -79,7 +79,7 @@ static uint16_t prv_swap(uint16_t val) {
   return (uint16_t)((val << 8) | (val >> 8));
 }
 
-static int prv_clk_rate(const struct pbl_sf32lb52_mpi *mpi, uint32_t *rate_hz) {
+static int prv_clk_rate(const struct pbl_sf32lb_mpi *mpi, uint32_t *rate_hz) {
   uint64_t rate_mhz;
   int ret;
 
@@ -93,11 +93,11 @@ static int prv_clk_rate(const struct pbl_sf32lb52_mpi *mpi, uint32_t *rate_hz) {
 }
 
 static int prv_enable(const struct pbl_hyperbus *bus) {
-  const struct pbl_sf32lb52_mpi *mpi = prv_hb(bus)->mpi;
+  const struct pbl_sf32lb_mpi *mpi = prv_hb(bus)->mpi;
   const uintptr_t base = mpi->base;
   int ret;
 
-  ret = pbl_sf32lb52_mpi_prepare(mpi);
+  ret = pbl_sf32lb_mpi_prepare(mpi);
   if (ret != 0) {
     return ret;
   }
@@ -166,8 +166,8 @@ static uint32_t prv_cycles(uint32_t ns, uint32_t rate_hz) {
 
 static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperbus_config *cfg,
                          uintptr_t *mem_base) {
-  const struct pbl_hyperbus_sf32lb52_mpi *hb = prv_hb(bus);
-  const struct pbl_sf32lb52_mpi *mpi = hb->mpi;
+  const struct pbl_hyperbus_sf32lb_mpi *hb = prv_hb(bus);
+  const struct pbl_sf32lb_mpi *mpi = hb->mpi;
   const uintptr_t base = mpi->base;
   uint32_t rate_hz;
   uint32_t cs_low_max;
@@ -216,7 +216,7 @@ static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperb
 }
 
 static int prv_read_reg(const struct pbl_hyperbus *bus, uint32_t addr, uint16_t *val) {
-  const struct pbl_hyperbus_sf32lb52_mpi *hb = prv_hb(bus);
+  const struct pbl_hyperbus_sf32lb_mpi *hb = prv_hb(bus);
   const uintptr_t base = hb->mpi->base;
   uint32_t ar;
   int ret;
@@ -249,7 +249,7 @@ static int prv_wake(const struct pbl_hyperbus *bus) {
   return prv_cmd(base, prv_ccr(7U, MPI_CCR_MODE_NONE) | MPI_CCR_FMODE_WRITE, 0U, 0U);
 }
 
-const struct pbl_hyperbus_ops pbl_hyperbus_sf32lb52_mpi_ops = {
+const struct pbl_hyperbus_ops pbl_hyperbus_sf32lb_mpi_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .get_rate = prv_get_rate,

@@ -6,7 +6,7 @@
 /**
  * @defgroup soc_sf32lb SF32LB
  * @ingroup soc
- * @brief SiFli SF32LB52 SoC interfaces.
+ * @brief SiFli SF32LB SoC interfaces.
  *
  * The idle thread enters the deepest sleep level that no driver has blocked. A driver whose
  * peripheral would not survive a level blocks it while active:

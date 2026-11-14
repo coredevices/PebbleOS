@@ -4,7 +4,7 @@
 #include <errno.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/dma/sf32lb52.h>
+#include <pbl/drivers/dma/sf32lb.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -14,15 +14,15 @@
 
 #define MAX_REQUEST 0x3fU
 
-static_assert(PBL_DMA_SF32LB52_NUM_CHANNELS == SF32LB52_DMAC_NUM_CHANNELS);
+static_assert(PBL_DMA_SF32LB_NUM_CHANNELS == SF32LB52_DMAC_NUM_CHANNELS);
 
 // The MPI (XIP flash) code bus window, which the DMAC reaches through the system bus instead
 #define MPI_CBUS_START  0x10000000U
 #define MPI_CBUS_END    0x20000000U
 #define MPI_CBUS_2_SBUS 0x50000000U
 
-static const struct pbl_dma_sf32lb52 *prv_dmac(const struct pbl_dma_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_dma_sf32lb52, ctrl);
+static const struct pbl_dma_sf32lb *prv_dmac(const struct pbl_dma_controller *ctrl) {
+  return container_of(ctrl, const struct pbl_dma_sf32lb, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_dma_controller *ctrl, uint32_t offset) {
@@ -50,12 +50,12 @@ static int prv_slave_config(const struct pbl_dma_controller *ctrl, const struct 
     return -EBUSY;
   }
 
-  if (chan->request > MAX_REQUEST || (chan->config & ~SF32LB52_DMA_PL_MSK) != 0U) {
+  if (chan->request > MAX_REQUEST || (chan->config & ~SF32LB_DMA_PL_MSK) != 0U) {
     return -EINVAL;
   }
 
   prv_putreg(ctrl, SF32LB52_DMAC_CCR_OFFSET(channel),
-             PBL_FIELD_PREP(DMAC_CCR_PL_MASK, chan->config & SF32LB52_DMA_PL_MSK));
+             PBL_FIELD_PREP(DMAC_CCR_PL_MASK, chan->config & SF32LB_DMA_PL_MSK));
   prv_putreg(ctrl, SF32LB52_DMAC_CBSR_OFFSET(channel), 0U);
   pbl_modifyl(DMAC_CSELR_CS_MASK(channel), (uint32_t)chan->request << DMAC_CSELR_CS_POS(channel),
               prv_dmac(ctrl)->base + SF32LB52_DMAC_CSELR_OFFSET(channel));
@@ -152,7 +152,7 @@ static int prv_tx_status(const struct pbl_dma_controller *ctrl, uint8_t channel,
   return 0;
 }
 
-void pbl_dma_sf32lb52_irq_handler(const struct pbl_dma_sf32lb52_chan_irq *irq) {
+void pbl_dma_sf32lb_irq_handler(const struct pbl_dma_sf32lb_chan_irq *irq) {
   const struct pbl_dma_controller *ctrl = &irq->dmac->ctrl;
   uint8_t channel = irq->channel;
   uint32_t isr = prv_getreg(ctrl, SF32LB52_DMAC_ISR_OFFSET);
@@ -184,8 +184,8 @@ void pbl_dma_sf32lb52_irq_handler(const struct pbl_dma_sf32lb52_chan_irq *irq) {
   pbl_dma_complete(ctrl, channel, 0);
 }
 
-int pbl_dma_sf32lb52_init(const struct pbl_device *dev) {
-  const struct pbl_dma_sf32lb52 *dmac = container_of(dev, const struct pbl_dma_sf32lb52, ctrl.dev);
+int pbl_dma_sf32lb_init(const struct pbl_device *dev) {
+  const struct pbl_dma_sf32lb *dmac = container_of(dev, const struct pbl_dma_sf32lb, ctrl.dev);
   int ret = pbl_device_init(&dmac->clk.ctrl->dev);
 
   if (ret != 0) {
@@ -195,7 +195,7 @@ int pbl_dma_sf32lb52_init(const struct pbl_device *dev) {
   return pbl_clk_enable(&dmac->clk);
 }
 
-const struct pbl_dma_controller_ops pbl_dma_sf32lb52_ops = {
+const struct pbl_dma_controller_ops pbl_dma_sf32lb_ops = {
   .slave_config = prv_slave_config,
   .prep_slave_single = prv_prep_slave_single,
   .prep_dma_cyclic = prv_prep_dma_cyclic,
