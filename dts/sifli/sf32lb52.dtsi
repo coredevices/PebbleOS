@@ -12,6 +12,27 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m33";
+			device_type = "cpu";
+			reg = <0>;
+			cpu-idle-states = <&deepsleep>;
+		};
+
+		idle-states {
+			deepsleep: cpu-sleep-0 {
+				compatible = "arm,idle-state";
+				entry-latency-us = <200>;
+				exit-latency-us = <500>;
+				min-residency-us = <10000>;
+			};
+		};
+	};
+
 	nvic: interrupt-controller@e000e100 {
 		compatible = "arm,v8m-nvic";
 		reg = <0xe000e100 0xc00>;
