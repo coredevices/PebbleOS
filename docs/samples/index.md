@@ -19,6 +19,7 @@ kernel/work.md
 kernel/delayed_work.md
 kernel/heap.md
 kernel/time.md
+kernel/idle.md
 ```
 
 ```{toctree}
