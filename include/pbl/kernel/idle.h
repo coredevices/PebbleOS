@@ -231,6 +231,54 @@ static inline void pbl_idle_state_release(pbl_idle_state_id_t state) {
 }
 #endif
 
+/** @brief Request on the time the CPU takes to wake up, see pbl_idle_latency_request_add(). */
+struct pbl_idle_latency_request {
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_idle_latency_request *next;
+  pbl_tick_t ticks;
+  /** @endcond */
+};
+
+/**
+ * @brief Keep the CPU out of the idle states, and off the hooks, that take longer to wake up from.
+ *
+ * For code that must run within some time of an interrupt, whatever the state the CPU idles in,
+ * as opposed to a peripheral that does not work in a state, see pbl_idle_state_block(). The
+ * shortest request applies. Can be called from ISRs. Does nothing without @c CONFIG_CPU_IDLE.
+ *
+ * @code{.c}
+ * static struct pbl_idle_latency_request s_request;
+ *
+ * pbl_idle_latency_request_add(&s_request, 500); // the radio is served within 500 us
+ * prv_radio_event();
+ * pbl_idle_latency_request_remove(&s_request);
+ * @endcode
+ *
+ * @param req Request, not added yet. Must stay valid until removed.
+ * @param us Longest time to wake up tolerated, in microseconds.
+ */
+#ifdef CONFIG_CPU_IDLE
+void pbl_idle_latency_request_add(struct pbl_idle_latency_request *req, uint32_t us);
+#else
+static inline void pbl_idle_latency_request_add(struct pbl_idle_latency_request *req, uint32_t us) {
+  (void)req;
+  (void)us;
+}
+#endif
+
+/**
+ * @brief Remove a request added with pbl_idle_latency_request_add().
+ *
+ * @param req Request.
+ */
+#ifdef CONFIG_CPU_IDLE
+void pbl_idle_latency_request_remove(struct pbl_idle_latency_request *req);
+#else
+static inline void pbl_idle_latency_request_remove(struct pbl_idle_latency_request *req) {
+  (void)req;
+}
+#endif
+
 /**
  * @brief Allow the CPU to idle or keep it running, e.g. while measuring.
  *

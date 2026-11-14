@@ -202,3 +202,34 @@ void test_idle__entering_a_state_calls_no_late_hook(void) {
   idle_enter(PBL_TICK_FOREVER);
   cl_assert(strchr(s_calls, 'X') == nullptr);
 }
+
+void test_idle__a_latency_request_keeps_out_of_the_states_slower_to_wake_up(void) {
+  struct pbl_idle_latency_request slow;
+  struct pbl_idle_latency_request fast;
+
+  pbl_idle_latency_request_add(&slow, (DEEP_EXIT_TICKS + 1U) * TICK_US);
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert_equal_i(s_entered[STATE_DEEP], 1);
+
+  // The shortest request applies.
+  pbl_idle_latency_request_add(&fast, (DEEP_EXIT_TICKS - 1U) * TICK_US);
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert_equal_i(s_entered[STATE_SHALLOW], 1);
+  cl_assert_equal_i(s_entered[STATE_DEEP], 1);
+
+  pbl_idle_latency_request_remove(&fast);
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert_equal_i(s_entered[STATE_DEEP], 2);
+
+  pbl_idle_latency_request_remove(&slow);
+}
+
+void test_idle__a_latency_request_keeps_the_hooks_slower_to_wake_up_from_being_called(void) {
+  struct pbl_idle_latency_request req;
+
+  pbl_idle_latency_request_add(&req, (DEEP_EXIT_TICKS + HOOK_EXIT_TICKS - 1U) * TICK_US);
+  idle_enter(PBL_TICK_FOREVER);
+  pbl_idle_latency_request_remove(&req);
+  cl_assert_equal_i(s_entered[STATE_DEEP], 1);
+  cl_assert_equal_s(s_calls, "ABa");
+}
