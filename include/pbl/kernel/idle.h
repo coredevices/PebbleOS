@@ -22,7 +22,8 @@
  * system clock source. The SoC only puts the CPU to sleep.
  *
  * Idle states need @c CONFIG_CPU_IDLE. Without it the kernel only calls pbl_cpu_idle(), a tick at
- * a time, and nothing else here is available.
+ * a time, pbl_idle_state_block() and pbl_idle_state_release() do nothing, and nothing else here is
+ * available.
  *
  * @code{.c}
  * const struct pbl_idle_state pbl_soc_idle_states[] = {
@@ -91,6 +92,44 @@ extern const size_t pbl_soc_num_idle_states;
  * @return Index in @ref pbl_soc_idle_states, or -1 to keep the CPU running.
  */
 int pbl_soc_idle_state_limit(void);
+
+/**
+ * @brief Keep the CPU out of an idle state and of every deeper one.
+ *
+ * For a peripheral that does not work in the state, while it is busy. SoCs name their states, so
+ * that the call reads like the datasheet:
+ *
+ * @code{.c}
+ * pbl_idle_state_block(SOC_FOO_IDLE_STOP); // the UART does not receive in stop mode
+ * prv_receive();
+ * pbl_idle_state_release(SOC_FOO_IDLE_STOP);
+ * @endcode
+ *
+ * Counted: balance each call with pbl_idle_state_release(). Can be called from ISRs. Does nothing
+ * without @c CONFIG_CPU_IDLE.
+ *
+ * @param state Index in @ref pbl_soc_idle_states; 0 keeps the CPU running.
+ */
+#ifdef CONFIG_CPU_IDLE
+void pbl_idle_state_block(pbl_idle_state_id_t state);
+#else
+static inline void pbl_idle_state_block(pbl_idle_state_id_t state) {
+  (void)state;
+}
+#endif
+
+/**
+ * @brief Release a block taken with pbl_idle_state_block().
+ *
+ * @param state State passed to pbl_idle_state_block().
+ */
+#ifdef CONFIG_CPU_IDLE
+void pbl_idle_state_release(pbl_idle_state_id_t state);
+#else
+static inline void pbl_idle_state_release(pbl_idle_state_id_t state) {
+  (void)state;
+}
+#endif
 
 /**
  * @brief Allow the CPU to idle or keep it running, e.g. while measuring.

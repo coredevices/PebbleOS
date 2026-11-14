@@ -46,6 +46,17 @@ pbl_clar_test(test_timekeeping
     CONFIG_CPU_IDLE=1
 )
 
+pbl_clar_test(test_idle
+  SOURCES
+    kernel/idle.c
+  INCLUDES
+    kernel
+    kernel/arch
+    kernel/arch/posix/include
+  DEFINES
+    CONFIG_CPU_IDLE=1
+)
+
 pbl_clar_test(test_mmio)
 
 pbl_clar_test(test_kernel_sys_work
