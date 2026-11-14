@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/kernel/idle.h>
 #include <pbl/util/size.h>
 
@@ -10,6 +12,9 @@
 #define DEEP_MIN_TICKS  10U
 #define DEEP_EXIT_TICKS 2U
 #define SLEEP_US        500U
+#define HOOK_MIN_TICKS  20U
+#define HOOK_EXIT_TICKS 3U
+#define TICK_US         (1000000U / PBL_TICK_HZ)
 
 enum {
   STATE_SHALLOW,
@@ -58,9 +63,41 @@ unsigned int arch_irq_lock(void) {
 void arch_irq_unlock(unsigned int key) {
 }
 
+// What the hooks were called with, in order: 'A' to 'C' on enter, 'a' to 'c' on exit.
+static char s_calls[32];
+static size_t s_num_calls;
+static pbl_idle_state_id_t s_hook_state;
+
+static void prv_hook_enter(pbl_idle_state_id_t state, void *arg) {
+  s_hook_state = state;
+  if (s_num_calls < sizeof(s_calls) - 1U) {
+    s_calls[s_num_calls++] = *(const char *)arg;
+  }
+}
+
+static void prv_hook_exit(pbl_idle_state_id_t state, void *arg) {
+  s_hook_state = state;
+  if (s_num_calls < sizeof(s_calls) - 1U) {
+    s_calls[s_num_calls++] = (char)(*(const char *)arg + ('a' - 'A'));
+  }
+}
+
+PBL_IDLE_HOOK_DEFINE(a, prv_hook_enter, prv_hook_exit, "A");
+PBL_IDLE_HOOK_DEFINE(b, prv_hook_enter, nullptr, "B");
+PBL_IDLE_HOOK_DEFINE(c, nullptr, prv_hook_exit, "C");
+PBL_IDLE_HOOK_DEFINE(d, prv_hook_enter, prv_hook_exit, "D");
+PBL_IDLE_HOOK_LATE_DEFINE(x, prv_hook_enter, prv_hook_exit, "X");
+PBL_IDLE_HOOK_LATE_DEFINE(y, prv_hook_enter, prv_hook_exit, "Y");
+
 void test_idle__initialize(void) {
   s_entered[STATE_SHALLOW] = 0U;
   s_entered[STATE_DEEP] = 0U;
+  memset(s_calls, 0, sizeof(s_calls));
+  s_num_calls = 0U;
+
+  pbl_idle_hook_set_times(PBL_IDLE_HOOK(a), 0U, 0U);
+  pbl_idle_hook_set_times(PBL_IDLE_HOOK(b), 0U, 0U);
+  pbl_idle_hook_set_times(PBL_IDLE_HOOK(c), HOOK_MIN_TICKS * TICK_US, HOOK_EXIT_TICKS * TICK_US);
 }
 
 void test_idle__a_long_idle_enters_the_deepest_state(void) {
@@ -122,4 +159,46 @@ void test_idle__the_time_in_a_state_adds_to_its_residency(void) {
   idle_enter(PBL_TICK_FOREVER);
   idle_enter(PBL_TICK_FOREVER);
   cl_assert_equal_i(pbl_idle_residency_us(STATE_DEEP) - before_us, 2U * SLEEP_US);
+}
+
+void test_idle__hooks_exit_in_the_opposite_order_they_enter(void) {
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert_equal_s(s_calls, "ABca");
+}
+
+void test_idle__hooks_are_told_the_state(void) {
+  idle_enter(DEEP_MIN_TICKS - 1U);
+  cl_assert_equal_i(s_hook_state, STATE_SHALLOW);
+
+  idle_enter(DEEP_MIN_TICKS);
+  cl_assert_equal_i(s_hook_state, STATE_DEEP);
+}
+
+void test_idle__a_hook_is_not_called_for_an_idle_shorter_than_its_minimum(void) {
+  idle_enter(HOOK_MIN_TICKS - 1U);
+  cl_assert_equal_s(s_calls, "ABa");
+  cl_assert_equal_i(s_exit_ticks, DEEP_EXIT_TICKS);
+}
+
+void test_idle__the_cpu_wakes_up_earlier_for_the_hooks(void) {
+  idle_enter(HOOK_MIN_TICKS);
+  cl_assert_equal_s(s_calls, "ABca");
+  cl_assert_equal_i(s_exit_ticks, DEEP_EXIT_TICKS + HOOK_EXIT_TICKS);
+}
+
+void test_idle__a_hook_is_not_called_until_its_times_are_set(void) {
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert(strchr(s_calls, 'D') == nullptr);
+  cl_assert(strchr(s_calls, 'd') == nullptr);
+}
+
+void test_idle__late_hooks_are_called_apart(void) {
+  pbl_idle_hooks_late_enter(STATE_DEEP);
+  pbl_idle_hooks_late_exit(STATE_DEEP);
+  cl_assert_equal_s(s_calls, "XYyx");
+}
+
+void test_idle__entering_a_state_calls_no_late_hook(void) {
+  idle_enter(PBL_TICK_FOREVER);
+  cl_assert(strchr(s_calls, 'X') == nullptr);
 }

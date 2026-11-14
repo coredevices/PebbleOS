@@ -87,10 +87,15 @@ uint64_t timekeeping_idle_begin(pbl_tick_t ticks, pbl_tick_t exit_ticks);
 //! us.
 uint64_t timekeeping_idle_end(void);
 
-//! Idles the CPU for up to @p ticks; call with every interrupt masked and idle confirmed.
+//! idle_init() checks the idle hooks, when the scheduler starts. idle_enter() idles the CPU for
+//! up to @p ticks; call with every interrupt masked and idle confirmed.
 #ifdef CONFIG_CPU_IDLE
+void idle_init(void);
 void idle_enter(pbl_tick_t ticks);
 #else
+static inline void idle_init(void) {
+}
+
 static inline void idle_enter(pbl_tick_t ticks) {
   // The next tick is already programmed.
   if (ticks != 0U) {
