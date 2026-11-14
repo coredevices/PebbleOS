@@ -5,11 +5,11 @@
 // Bluetooth RF calibration, run by the HCPU before the LCPU boots: LO, EDR LO and TX DC/power
 // calibration tables written to the RF controller memory, then the PHY and RF settings.
 
-#include "sf32lb52_priv.h"
+#include "sf32lb_priv.h"
 
 #include <stdint.h>
 
-#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/drivers/nvmem/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/malloc.h>
@@ -75,7 +75,7 @@
 #define RF_CAL_OFFSET 32U
 #define RF_CAL_SIZE   20U
 
-static struct pbl_rproc_sf32lb52__rf s_rf;
+static struct pbl_rproc_sf32lb__rf s_rf;
 
 static const struct pbl_nvmem_cell s_rf_cal_cell =
     PBL_NVMEM_CELL(SF32LB52_EFUSE, RF_CAL_OFFSET, RF_CAL_SIZE);
@@ -2299,7 +2299,7 @@ static void prv_reset_rf(void) {
   prv_and(LPRCC(RSTR1), ~LPSYS_RCC_RSTR1_RFC);
 }
 
-uint32_t pbl_rproc_sf32lb52__rf_cal(const struct pbl_rproc_sf32lb52__rf *rf) {
+uint32_t pbl_rproc_sf32lb__rf_cal(const struct pbl_rproc_sf32lb__rf *rf) {
   uint32_t addr;
 
   s_rf = *rf;

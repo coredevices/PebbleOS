@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sf32lb52_priv.h"
+#include "sf32lb_priv.h"
 
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/remoteproc/sf32lb52.h>
+#include <pbl/drivers/remoteproc/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -75,8 +75,8 @@ struct lcpu_ke_buf_config {
 };
 static_assert(sizeof(struct lcpu_ke_buf_config) == 44U, "ROM layout");
 
-static const struct pbl_rproc_sf32lb52 *prv_lcpu(const struct pbl_rproc *rproc) {
-  return container_of(rproc, const struct pbl_rproc_sf32lb52, rproc);
+static const struct pbl_rproc_sf32lb *prv_lcpu(const struct pbl_rproc *rproc) {
+  return container_of(rproc, const struct pbl_rproc_sf32lb, rproc);
 }
 
 static bool prv_rev_a4(void) {
@@ -84,7 +84,7 @@ static bool prv_rev_a4(void) {
 }
 
 // Cleared once, as the LCPU keeps its own values across restarts
-static uint8_t *prv_config(const struct pbl_rproc_sf32lb52 *lcpu) {
+static uint8_t *prv_config(const struct pbl_rproc_sf32lb *lcpu) {
   static bool initialized;
   const bool a4 = prv_rev_a4();
   uint8_t *config = (uint8_t *)(lcpu->sram.base + (a4 ? CONFIG_A4_OFFSET : CONFIG_OFFSET));
@@ -99,13 +99,13 @@ static uint8_t *prv_config(const struct pbl_rproc_sf32lb52 *lcpu) {
   return config;
 }
 
-static bool prv_xtal_enabled(const struct pbl_rproc_sf32lb52 *lcpu) {
+static bool prv_xtal_enabled(const struct pbl_rproc_sf32lb *lcpu) {
   uint64_t rate_mhz;
 
   return pbl_clk_get_rate(&lcpu->lpclk, &rate_mhz) == 0 && rate_mhz == LXT32_HZ * 1000ULL;
 }
 
-static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *config) {
+static void prv_rom_config(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config) {
   const uint8_t xtal_enabled = prv_xtal_enabled(lcpu) ? 1U : 0U;
   const uint8_t rc_cal = 1U - xtal_enabled;
   const uint32_t wdt_status = 0xffU;
@@ -136,7 +136,7 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb52 *lcpu, uint8_t *confi
   }
 }
 
-static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
+static int prv_load_clocks(const struct pbl_rproc_sf32lb *lcpu) {
   uint64_t rate_mhz;
   int ret;
 
@@ -157,9 +157,9 @@ static int prv_load_clocks(const struct pbl_rproc_sf32lb52 *lcpu) {
 }
 
 static int prv_start(const struct pbl_rproc *rproc) {
-  const struct pbl_rproc_sf32lb52 *lcpu = prv_lcpu(rproc);
+  const struct pbl_rproc_sf32lb *lcpu = prv_lcpu(rproc);
   const uint32_t *vectors = (const uint32_t *)(lcpu->sram.base + LCPU_CODE_OFFSET);
-  const struct pbl_rproc_sf32lb52__rf rf = {
+  const struct pbl_rproc_sf32lb__rf rf = {
     .rfc = lcpu->rf.rfc,
     .phy = lcpu->rf.phy,
     .capture = lcpu->rf.capture,
@@ -190,8 +190,8 @@ static int prv_start(const struct pbl_rproc *rproc) {
   soc_sf32lb52_lpsys_set_entry(vectors[0], vectors[1]);
 
   memset((void *)(lcpu->sram.base + LCPU_CODE_OFFSET), 0, LCPU_CODE_SIZE);
-  pbl_rproc_sf32lb52__patch_install(lcpu);
-  tx_pwr = pbl_rproc_sf32lb52__rf_cal(&rf);
+  pbl_rproc_sf32lb__patch_install(lcpu);
+  tx_pwr = pbl_rproc_sf32lb__rf_cal(&rf);
   memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
   // calibration leaves data in the exchange memory
   memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
@@ -215,14 +215,14 @@ static void prv_stop(const struct pbl_rproc *rproc) {
 // Waking the LCPU busy-waits for its ack. If it is fully powered down this blocks until the
 // watchdog reboots us, costing only the end of the dump. We reset right after, so the wake is
 // never balanced.
-void pbl_rproc_sf32lb52_coredump_prepare(void) {
+void pbl_rproc_sf32lb_coredump_prepare(void) {
   soc_sf32lb52_lpsys_wake();
 }
 #endif
 
-uintptr_t pbl_rproc_sf32lb52_da(const struct pbl_rproc_sf32lb52 *lcpu, uintptr_t pa) {
+uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc_sf32lb *lcpu, uintptr_t pa) {
   for (size_t i = 0U; i < ARRAY_LENGTH(lcpu->ranges); i++) {
-    const struct pbl_rproc_sf32lb52_range *range = &lcpu->ranges[i];
+    const struct pbl_rproc_sf32lb_range *range = &lcpu->ranges[i];
 
     if (pa >= range->pa && pa - range->pa < range->size) {
       return range->da + (pa - range->pa);
@@ -232,14 +232,13 @@ uintptr_t pbl_rproc_sf32lb52_da(const struct pbl_rproc_sf32lb52 *lcpu, uintptr_t
   return 0U;
 }
 
-const struct pbl_rproc_ops pbl_rproc_sf32lb52_ops = {
+const struct pbl_rproc_ops pbl_rproc_sf32lb_ops = {
   .start = prv_start,
   .stop = prv_stop,
 };
 
-int pbl_rproc_sf32lb52_init(const struct pbl_device *dev) {
-  const struct pbl_rproc_sf32lb52 *lcpu =
-      container_of(dev, const struct pbl_rproc_sf32lb52, rproc.dev);
+int pbl_rproc_sf32lb_init(const struct pbl_device *dev) {
+  const struct pbl_rproc_sf32lb *lcpu = container_of(dev, const struct pbl_rproc_sf32lb, rproc.dev);
   int ret;
 
   if (lcpu->mem.size == 0U || lcpu->sram.size < LCPU_EM_OFFSET + LCPU_EM_SIZE) {

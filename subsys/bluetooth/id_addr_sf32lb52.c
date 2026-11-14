@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/id_addr.h>
-#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/drivers/nvmem/sf32lb.h>
 
 #define UID_SIZE  8U
 #define UID_MAGIC 0xA5U

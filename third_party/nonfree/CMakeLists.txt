@@ -26,7 +26,7 @@ if(CONFIG_CST816_FW)
   endif()
 endif()
 
-if(CONFIG_REMOTEPROC_SF32LB52)
+if(CONFIG_REMOTEPROC_SF32LB)
   pbl_include_directories(${nonfree}/sf32lb52)
 endif()
 

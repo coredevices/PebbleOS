@@ -13,9 +13,9 @@
 #include <pbl/drivers/remoteproc.h>
 
 /**
- * @defgroup drivers_remoteproc_sf32lb52 SF32LB52 LCPU
+ * @defgroup drivers_remoteproc_sf32lb SF32LB LCPU
  * @ingroup drivers_remoteproc
- * @brief SiFli SF32LB52 low-power CPU.
+ * @brief SiFli SF32LB low-power CPU.
  *
  * The LCPU runs the Bluetooth controller from ROM, which the driver configures, patches and
  * calibrates on start. The controller exchanges HCI with the HCPU over byte rings signalled with
@@ -26,7 +26,7 @@
  */
 
 /** @brief Memory as the LCPU sees it, from @c dma-ranges. */
-struct pbl_rproc_sf32lb52_range {
+struct pbl_rproc_sf32lb_range {
   /** Address on the LCPU. */
   uintptr_t da;
   /** Address on this CPU. */
@@ -35,8 +35,8 @@ struct pbl_rproc_sf32lb52_range {
   size_t size;
 };
 
-/** @brief SF32LB52 LCPU. */
-struct pbl_rproc_sf32lb52 {
+/** @brief SF32LB LCPU. */
+struct pbl_rproc_sf32lb {
   /** Remote processor. */
   struct pbl_rproc rproc;
   /** ROM patch controller base address. */
@@ -50,7 +50,7 @@ struct pbl_rproc_sf32lb52 {
   /** LPSYS SRAM region the LCPU works in (@c sram). */
   struct pbl_mem_region sram;
   /** Memory as the LCPU sees it: LPSYS SRAM through its code bus, then HPSYS SRAM. */
-  struct pbl_rproc_sf32lb52_range ranges[2];
+  struct pbl_rproc_sf32lb_range ranges[2];
   /** LCPU clock, and the APB clocks of LPSYS, set for the LCPU to load. */
   struct pbl_clk hclk;
   /** LPSYS APB clock. */
@@ -89,19 +89,19 @@ struct pbl_rproc_sf32lb52 {
  * @param pa Address on this CPU.
  * @return The address on the LCPU, or 0 if it cannot reach @p pa.
  */
-uintptr_t pbl_rproc_sf32lb52_da(const struct pbl_rproc_sf32lb52 *lcpu, uintptr_t pa);
+uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc_sf32lb *lcpu, uintptr_t pa);
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_rproc_ops pbl_rproc_sf32lb52_ops;
-int pbl_rproc_sf32lb52_init(const struct pbl_device *dev);
-void pbl_rproc_sf32lb52_coredump_prepare(void);
+extern const struct pbl_rproc_ops pbl_rproc_sf32lb_ops;
+int pbl_rproc_sf32lb_init(const struct pbl_device *dev);
+void pbl_rproc_sf32lb_coredump_prepare(void);
 
 #ifdef CONFIG_COREDUMP
-#define PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size)               \
+#define PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size)                 \
   PBL_COREDUMP_LATE_REGION_DEFINE(sym##_sram, (const void *)(_sram_base), _sram_size, \
-                                  pbl_rproc_sf32lb52_coredump_prepare)
+                                  pbl_rproc_sf32lb_coredump_prepare)
 #else
-#define PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size) static_assert(true)
+#define PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size) static_assert(true)
 #endif
 /** @endcond */
 
@@ -127,15 +127,14 @@ void pbl_rproc_sf32lb52_coredump_prepare(void);
  * @param _pclk LPSYS APB clock, from PBL_CLK().
  * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB52_DEFINE(                                                                 \
-    sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base, _mem_size, _sram_base, _sram_size,     \
-    _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa, _r1_size, _hclk, _pclk, _pclk2, _lpclk, _rfc, _phy,  \
-    _capture, _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc)                                  \
-  PBL_RPROC_SF32LB52_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                 \
+#define PBL_RPROC_SF32LB_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base, _mem_size, \
+                                _sram_base, _sram_size, _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa,  \
+                                _r1_size, _hclk, _pclk, _pclk2, _lpclk, _rfc, _phy, _capture,      \
+                                _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc)                \
+  PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                   \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb52, struct pbl_rproc, rproc) {                   \
-    .rproc =                                                                                       \
-        PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb52_init, nullptr, &pbl_rproc_sf32lb52_ops),     \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb, struct pbl_rproc, rproc) {                     \
+    .rproc = PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb_init, nullptr, &pbl_rproc_sf32lb_ops),    \
     .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                           \
     .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size),   \
     .ranges = {{(_r0_da), (_r0_pa), (_r0_size)}, {(_r1_da), (_r1_pa), (_r1_size)}}, .hclk = _hclk, \

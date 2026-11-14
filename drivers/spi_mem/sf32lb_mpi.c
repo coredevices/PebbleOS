@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/spi_mem/sf32lb52_mpi.h>
+#include <pbl/drivers/spi_mem/sf32lb_mpi.h>
 #include <pbl/kernel/barrier.h>
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/compiler.h>
@@ -41,15 +41,15 @@ struct ccr_op {
   uint8_t opcode;
 };
 
-static const struct pbl_spi_mem_sf32lb52_mpi *prv_mpi(const struct pbl_spi_mem *mem) {
-  return container_of(mem, const struct pbl_spi_mem_sf32lb52_mpi, mem);
+static const struct pbl_spi_mem_sf32lb_mpi *prv_mpi(const struct pbl_spi_mem *mem) {
+  return container_of(mem, const struct pbl_spi_mem_sf32lb_mpi, mem);
 }
 
-static uintptr_t prv_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
+static uintptr_t prv_base(const struct pbl_spi_mem_sf32lb_mpi *mpi) {
   return mpi->mpi->base;
 }
 
-static uintptr_t prv_mem_base(const struct pbl_spi_mem_sf32lb52_mpi *mpi) {
+static uintptr_t prv_mem_base(const struct pbl_spi_mem_sf32lb_mpi *mpi) {
   return mpi->mpi->mem_base;
 }
 
@@ -361,7 +361,7 @@ static PBL_SECTION_RAM void prv_power_down(const struct pbl_spi_mem *mem,
 // Brings the controller up in NOR mode, once. The clock is never released: with XIP it must stay
 // on.
 static int prv_start(const struct pbl_spi_mem *mem) {
-  const struct pbl_spi_mem_sf32lb52_mpi *mpi = prv_mpi(mem);
+  const struct pbl_spi_mem_sf32lb_mpi *mpi = prv_mpi(mem);
   const uintptr_t base = prv_base(mpi);
   int ret;
 
@@ -369,7 +369,7 @@ static int prv_start(const struct pbl_spi_mem *mem) {
     return 0;
   }
 
-  ret = pbl_sf32lb52_mpi_prepare(mpi->mpi);
+  ret = pbl_sf32lb_mpi_prepare(mpi->mpi);
   if (ret != 0) {
     return ret;
   }
@@ -491,7 +491,7 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
 }
 
 static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_dirmap *desc) {
-  const struct pbl_spi_mem_sf32lb52_mpi *mpi = prv_mpi(mem);
+  const struct pbl_spi_mem_sf32lb_mpi *mpi = prv_mpi(mem);
   const uintptr_t base = prv_base(mpi);
   struct ccr_op cmd = prv_encode(&desc->op);
   int ret;
@@ -550,7 +550,7 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   return prv_start(mem);
 }
 
-const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb52_mpi_ops = {
+const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb_mpi_ops = {
   .init = prv_init,
   .supports_op = prv_supports_op,
   .adjust_op_size = prv_adjust_op_size,

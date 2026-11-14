@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/drivers/mcu.h>
-#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/drivers/nvmem/sf32lb.h>
 
 #define EFUSE_UID_OFFSET 0U
 #define EFUSE_UID_SIZE   16U

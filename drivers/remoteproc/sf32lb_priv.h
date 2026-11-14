@@ -5,14 +5,14 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/remoteproc/sf32lb52.h>
+#include <pbl/drivers/remoteproc/sf32lb.h>
 
 // Load the LCPU ROM patch into its SRAM region and program the patch controller. LPSYS must be
 // awake.
-void pbl_rproc_sf32lb52__patch_install(const struct pbl_rproc_sf32lb52 *lcpu);
+void pbl_rproc_sf32lb__patch_install(const struct pbl_rproc_sf32lb *lcpu);
 
 // Blocks the radio calibration programs
-struct pbl_rproc_sf32lb52__rf {
+struct pbl_rproc_sf32lb__rf {
   // RF controller: command and calibration memory, then registers
   uintptr_t rfc;
   uintptr_t phy;
@@ -30,4 +30,4 @@ struct pbl_rproc_sf32lb52__rf {
 
 // Calibrate the radio. LPSYS must be awake and the LCPU held. Returns the TX power
 // configuration word for the LCPU.
-uint32_t pbl_rproc_sf32lb52__rf_cal(const struct pbl_rproc_sf32lb52__rf *rf);
+uint32_t pbl_rproc_sf32lb__rf_cal(const struct pbl_rproc_sf32lb__rf *rf);

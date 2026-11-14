@@ -25,7 +25,7 @@
  *
  * @code{.c}
  * static const struct pbl_dma_chan s_usart1_rx_dma =
- *     PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB52_DMA_PL_MEDIUM);
+ *     PBL_DMA_CHAN(&dt_dmac1, 0, SF32LB52_DMA_REQ_USART1_RX, SF32LB_DMA_PL_MEDIUM);
  *
  * PBL_UART_SF32LB_DEFINE(s_usart1, "usart1", 0x50084000, PBL_SOC_IRQN_USART1,
  *                        PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_PERI), 1000000,

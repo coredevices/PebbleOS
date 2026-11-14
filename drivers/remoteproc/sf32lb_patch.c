@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "sf32lb52_priv.h"
+#include "sf32lb_priv.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -25,7 +25,7 @@ static_assert(PATCH_CODE_OFFSET ==
 static_assert(sizeof(sf32lb52_lcpu_patch_code) <= PATCH_CODE_SIZE);
 static_assert(ARRAY_LENGTH(sf32lb52_lcpu_patch_entries) <= SF32LB52_PATCH_NUM_CHANNELS);
 
-void pbl_rproc_sf32lb52__patch_install(const struct pbl_rproc_sf32lb52 *lcpu) {
+void pbl_rproc_sf32lb__patch_install(const struct pbl_rproc_sf32lb *lcpu) {
   uintptr_t base = lcpu->patch_base;
   uintptr_t code = lcpu->sram.base + PATCH_CODE_OFFSET;
   uint32_t *hdr = (uint32_t *)(lcpu->sram.base + PATCH_BUF_OFFSET);
@@ -34,7 +34,7 @@ void pbl_rproc_sf32lb52__patch_install(const struct pbl_rproc_sf32lb52 *lcpu) {
 
   hdr[0] = sf32lb52_lcpu_patch_hdr[0];
   hdr[1] = sf32lb52_lcpu_patch_hdr[1];
-  hdr[2] = pbl_rproc_sf32lb52_da(lcpu, code) | 1U;
+  hdr[2] = pbl_rproc_sf32lb_da(lcpu, code) | 1U;
 
   memset((void *)code, 0, PATCH_CODE_SIZE);
   memcpy((void *)code, sf32lb52_lcpu_patch_code, sizeof(sf32lb52_lcpu_patch_code));

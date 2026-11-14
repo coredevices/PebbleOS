@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: sifli,sf32lb52-pmuc
-config: POWER_DOMAIN_SF32LB52_PMUC
+config: POWER_DOMAIN_SF32LB_PMUC
 class: power_domain
 symbol: "{sym}_pd"
-define: PBL_PD_SF32LB52_PMUC_DEFINE
+define: PBL_PD_SF32LB_PMUC_DEFINE
 args:
   - name: true
   - reg: 0

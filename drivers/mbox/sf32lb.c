@@ -4,7 +4,7 @@
 #include <errno.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/mbox/sf32lb52.h>
+#include <pbl/drivers/mbox/sf32lb.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -12,18 +12,18 @@
 
 #include <hardware/sf32lb52_mailbox.h>
 
-static_assert(PBL_MBOX_SF32LB52_NUM_DOORBELLS == SF32LB52_MAILBOX_NUM_CHANNELS);
+static_assert(PBL_MBOX_SF32LB_NUM_DOORBELLS == SF32LB52_MAILBOX_NUM_CHANNELS);
 
-static const struct pbl_mbox_sf32lb52 *prv_mbox(const struct pbl_mbox_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_mbox_sf32lb52, ctrl);
+static const struct pbl_mbox_sf32lb *prv_mbox(const struct pbl_mbox_controller *ctrl) {
+  return container_of(ctrl, const struct pbl_mbox_sf32lb, ctrl);
 }
 
-static bool prv_is_rx(const struct pbl_mbox_sf32lb52 *mbox) {
-  return mbox->irqn != PBL_MBOX_SF32LB52_NO_IRQ;
+static bool prv_is_rx(const struct pbl_mbox_sf32lb *mbox) {
+  return mbox->irqn != PBL_MBOX_SF32LB_NO_IRQ;
 }
 
 static int prv_xlate(const struct pbl_mbox_controller *ctrl, const struct pbl_mbox_chan *chan) {
-  if (chan->cells[0] >= PBL_MBOX_SF32LB52_NUM_DOORBELLS) {
+  if (chan->cells[0] >= PBL_MBOX_SF32LB_NUM_DOORBELLS) {
     return -EINVAL;
   }
 
@@ -41,7 +41,7 @@ static bool prv_any_active(const struct pbl_mbox_controller *ctrl, uint8_t excep
 }
 
 static int prv_startup(const struct pbl_mbox_controller *ctrl, uint8_t idx) {
-  const struct pbl_mbox_sf32lb52 *mbox = prv_mbox(ctrl);
+  const struct pbl_mbox_sf32lb *mbox = prv_mbox(ctrl);
 
   if (prv_is_rx(mbox)) {
     pbl_irq_enable(mbox->irqn);
@@ -53,7 +53,7 @@ static int prv_startup(const struct pbl_mbox_controller *ctrl, uint8_t idx) {
 }
 
 static void prv_shutdown(const struct pbl_mbox_controller *ctrl, uint8_t idx) {
-  const struct pbl_mbox_sf32lb52 *mbox = prv_mbox(ctrl);
+  const struct pbl_mbox_sf32lb *mbox = prv_mbox(ctrl);
 
   if (!prv_is_rx(mbox)) {
     pbl_modifyl(PBL_BIT(idx), 0U, mbox->base + SF32LB52_MAILBOX_C1IER_OFFSET);
@@ -63,7 +63,7 @@ static void prv_shutdown(const struct pbl_mbox_controller *ctrl, uint8_t idx) {
 }
 
 static int prv_send_data(const struct pbl_mbox_controller *ctrl, uint8_t idx, const void *msg) {
-  const struct pbl_mbox_sf32lb52 *mbox = prv_mbox(ctrl);
+  const struct pbl_mbox_sf32lb *mbox = prv_mbox(ctrl);
 
   if (prv_is_rx(mbox)) {
     return -EOPNOTSUPP;
@@ -78,7 +78,7 @@ static bool prv_last_tx_done(const struct pbl_mbox_controller *ctrl, uint8_t idx
   return (pbl_readl(prv_mbox(ctrl)->base + SF32LB52_MAILBOX_C1ISR_OFFSET) & PBL_BIT(idx)) == 0U;
 }
 
-const struct pbl_mbox_controller_ops pbl_mbox_sf32lb52_ops = {
+const struct pbl_mbox_controller_ops pbl_mbox_sf32lb_ops = {
   .xlate = prv_xlate,
   .startup = prv_startup,
   .shutdown = prv_shutdown,
@@ -86,9 +86,8 @@ const struct pbl_mbox_controller_ops pbl_mbox_sf32lb52_ops = {
   .last_tx_done = prv_last_tx_done,
 };
 
-int pbl_mbox_sf32lb52_init(const struct pbl_device *dev) {
-  const struct pbl_mbox_sf32lb52 *mbox =
-      container_of(dev, const struct pbl_mbox_sf32lb52, ctrl.dev);
+int pbl_mbox_sf32lb_init(const struct pbl_device *dev) {
+  const struct pbl_mbox_sf32lb *mbox = container_of(dev, const struct pbl_mbox_sf32lb, ctrl.dev);
 
   if (mbox->clk.ctrl == nullptr) {
     return 0;
@@ -97,7 +96,7 @@ int pbl_mbox_sf32lb52_init(const struct pbl_device *dev) {
   return pbl_clk_enable(&mbox->clk);
 }
 
-void pbl_mbox_sf32lb52_irq_handler(const struct pbl_mbox_sf32lb52 *mbox) {
+void pbl_mbox_sf32lb_irq_handler(const struct pbl_mbox_sf32lb *mbox) {
   uint32_t status = pbl_readl(mbox->base + SF32LB52_MAILBOX_C1MISR_OFFSET);
 
   pbl_writel(status, mbox->base + SF32LB52_MAILBOX_C1ICR_OFFSET);

@@ -8,7 +8,7 @@ config MEMC
       one kind, each kind with a driver in its own subsystem. Selected
       by those drivers.
 
-config MEMC_SF32LB52_MPI
+config MEMC_SF32LB_MPI
     bool
     select MEMC
     select CLK

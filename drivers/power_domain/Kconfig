@@ -7,7 +7,7 @@ config POWER_DOMAIN
       Power domain class (pbl/drivers/power_domain.h), selected by the
       drivers that provide power domains.
 
-config POWER_DOMAIN_SF32LB52_PMUC
+config POWER_DOMAIN_SF32LB_PMUC
     bool "SiFli SF32LB52 PMUC power domains"
     default DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
     depends on SOC_SF32LB52

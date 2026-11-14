@@ -66,7 +66,7 @@ config BT_HCI_NRF52
     help
       Run the NimBLE link layer in the same image, on the nRF52 radio.
 
-config BT_HCI_SF32LB52
+config BT_HCI_SF32LB
     bool "SiFli LCPU over IPC"
     depends on SOC_SF32LB52
     select REMOTEPROC
@@ -106,7 +106,7 @@ config BT_ID_ADDR_CONTROLLER
 
 config BT_ID_ADDR_SF32LB52_EFUSE
     bool "SF32LB52 eFUSE"
-    depends on NVMEM_SF32LB52
+    depends on NVMEM_SF32LB
     select BT_ID_ADDR
     help
       Public address derived from the unique ID in the SoC's eFUSE.

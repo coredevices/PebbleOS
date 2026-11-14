@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/drivers/nvmem/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -27,11 +27,11 @@
 #define VOUT_READ_MAX  0xfU
 #define VOUT_SETTLE_US 20U
 
-static const struct pbl_nvmem_sf32lb52 *prv_efuse(const struct pbl_nvmem *nvmem) {
-  return container_of(nvmem, const struct pbl_nvmem_sf32lb52, nvmem);
+static const struct pbl_nvmem_sf32lb *prv_efuse(const struct pbl_nvmem *nvmem) {
+  return container_of(nvmem, const struct pbl_nvmem_sf32lb, nvmem);
 }
 
-static int prv_set_timing(const struct pbl_nvmem_sf32lb52 *efuse) {
+static int prv_set_timing(const struct pbl_nvmem_sf32lb *efuse) {
   uint64_t rate_mhz;
   uint32_t pclk_hz;
   uint32_t thrck;
@@ -56,7 +56,7 @@ static int prv_set_timing(const struct pbl_nvmem_sf32lb52 *efuse) {
 
 static_assert(SF32LB52_EFUSE_SIZE == SF32LB52_EFUSEC_BANK_SIZE * SF32LB52_EFUSEC_NUM_BANKS);
 
-static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int bank,
+static int prv_read_bank(const struct pbl_nvmem_sf32lb *efuse, unsigned int bank,
                          unsigned int offset, uint8_t *val, size_t bytes) {
   const uintptr_t data = efuse->base + SF32LB52_EFUSEC_BANK_DATA_OFFSET(bank);
   const uintptr_t sr = efuse->base + SF32LB52_EFUSEC_SR_OFFSET;
@@ -94,8 +94,8 @@ static int prv_read_bank(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int ba
   return ret;
 }
 
-static int prv_read_locked(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int offset,
-                           uint8_t *val, size_t bytes) {
+static int prv_read_locked(const struct pbl_nvmem_sf32lb *efuse, unsigned int offset, uint8_t *val,
+                           size_t bytes) {
   int ret;
 
   ret = prv_set_timing(efuse);
@@ -122,7 +122,7 @@ static int prv_read_locked(const struct pbl_nvmem_sf32lb52 *efuse, unsigned int 
 
 static int prv_reg_read(const struct pbl_nvmem *nvmem, unsigned int offset, void *val,
                         size_t bytes) {
-  const struct pbl_nvmem_sf32lb52 *efuse = prv_efuse(nvmem);
+  const struct pbl_nvmem_sf32lb *efuse = prv_efuse(nvmem);
   int ret;
 
   ret = pbl_clk_enable(&efuse->clk);
@@ -139,7 +139,7 @@ static int prv_reg_read(const struct pbl_nvmem *nvmem, unsigned int offset, void
   return ret;
 }
 
-const struct pbl_nvmem_ops pbl_nvmem_sf32lb52_ops = {
+const struct pbl_nvmem_ops pbl_nvmem_sf32lb_ops = {
   .reg_read = prv_reg_read,
 };
 

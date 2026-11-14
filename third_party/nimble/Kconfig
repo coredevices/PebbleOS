@@ -4,16 +4,16 @@
 menu "NimBLE BLE stack"
 
 choice
-    prompt "SF32LB52 HCI trace"
-    default NIMBLE_HCI_SF32LB52_TRACE_NONE
-    depends on BT_HCI_SF32LB52
+    prompt "SF32LB HCI trace"
+    default NIMBLE_HCI_SF32LB_TRACE_NONE
+    depends on BT_HCI_SF32LB
     help
-      Trace mode for the SF32LB52 HCI transport.
+      Trace mode for the SF32LB HCI transport.
 
-config NIMBLE_HCI_SF32LB52_TRACE_NONE
+config NIMBLE_HCI_SF32LB_TRACE_NONE
     bool "Disabled"
 
-config NIMBLE_HCI_SF32LB52_TRACE_LOG
+config NIMBLE_HCI_SF32LB_TRACE_LOG
     bool "Log"
     help
       Emit human-readable HCI trace lines through the standard logger.

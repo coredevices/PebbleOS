@@ -2,4 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library()
-pbl_library_sources_ifdef(CONFIG_MEMC_SF32LB52_MPI sf32lb52_mpi.c)
+pbl_library_sources_ifdef(CONFIG_MEMC_SF32LB_MPI sf32lb_mpi.c)

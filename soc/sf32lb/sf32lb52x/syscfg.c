@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <pbl/drivers/nvmem/sf32lb52.h>
+#include <pbl/drivers/nvmem/sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
