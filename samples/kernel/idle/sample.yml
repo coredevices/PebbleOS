@@ -1,0 +1,5 @@
+description: Time the CPU spends in an idle state, and a block that keeps it out of it
+expect:
+  - 'main: idled for most of a 200 ms sleep: yes'
+  - 'main: idled for any of a 200 ms sleep with the state blocked: no'
+  - 'Sample done'
