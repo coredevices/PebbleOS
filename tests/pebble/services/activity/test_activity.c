@@ -2636,15 +2636,25 @@ void test_activity__hrm_ignore(void) {
 
   // Should fire off an event. OffWrist, tell clients
   prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, OFF_WRIST, true /*force_continuous*/);
+  int32_t raw_bpm;
+  int32_t raw_confidence;
   cl_assert_equal_i(s_num_hr_events, 2);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
   cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
+  activity_get_metric(ActivityMetricHeartRateRawBPM, 1, &raw_bpm);
+  activity_get_metric(ActivityMetricHeartRateRawConfidence, 1, &raw_confidence);
+  cl_assert_equal_i(raw_bpm, 0);
+  cl_assert_equal_i(raw_confidence, 0);
 
   // Should fire off an event. OffWrist, tell clients
   prv_advance_time_hr(1 /*sec*/, 0 /*hr*/, OFF_WRIST, true /*force_continuous*/);
   cl_assert_equal_i(s_num_hr_events, 3);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 0);
   cl_assert(s_last_hr_event.data.heart_rate_update.off_wrist);
+  activity_get_metric(ActivityMetricHeartRateRawBPM, 1, &raw_bpm);
+  activity_get_metric(ActivityMetricHeartRateRawConfidence, 1, &raw_confidence);
+  cl_assert_equal_i(raw_bpm, 0);
+  cl_assert_equal_i(raw_confidence, 0);
 
   // Should fire off an event. Good HR and Good Quality
   prv_advance_time_hr(1 /*sec*/, 120 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);
@@ -2652,6 +2662,10 @@ void test_activity__hrm_ignore(void) {
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.current_bpm, 120);
   cl_assert(!s_last_hr_event.data.heart_rate_update.off_wrist);
   cl_assert_equal_i(s_last_hr_event.data.heart_rate_update.confidence, CONF_EXCELLENT);
+  activity_get_metric(ActivityMetricHeartRateRawBPM, 1, &raw_bpm);
+  activity_get_metric(ActivityMetricHeartRateRawConfidence, 1, &raw_confidence);
+  cl_assert_equal_i(raw_bpm, 120);
+  cl_assert_equal_i(raw_confidence, CONF_EXCELLENT);
 
   // Should not fire off an event. Bad HR reading
   prv_advance_time_hr(1 /*sec*/, 20 /*hr*/, CONF_EXCELLENT, true /*force_continuous*/);

@@ -196,7 +196,9 @@ PBL_T_STATIC void prv_hrm_subscription_cb(PebbleHRMEvent *hrm_event, void *conte
     // signal (PPG off-wrist detection is far more reliable than the accel-only heuristics).
     activity_metrics_prv_set_hrm_worn_status(now_utc, hrm_event->bpm.off_wrist);
 
-    if (valid_hr_reading) {
+    if (hrm_event->bpm.off_wrist) {
+      activity_metrics_prv_set_raw_hr_offwrist(now_utc);
+    } else if (valid_hr_reading) {
       // Update the heart rate metrics
       activity_metrics_prv_add_median_hr_sample(hrm_event, now_utc, now_uptime_ts);
 
