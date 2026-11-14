@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/ram.h>
 #include <pbl/kernel/idle.h>
@@ -71,10 +70,7 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
 #ifdef CONFIG_FLASH
 // Runs with the flash powered down
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
-  struct pbl_clk_sf32lb_hxt48_state clocks;
-
-  // HXT48 stops in deep sleep
-  pbl_clk_sf32lb_hxt48_suspend(&clocks);
+  pbl_idle_hooks_late_enter(SOC_SF32LB_IDLE_DEEPSLEEP);
 
   prv_update(0U, HPSYS_AON_ANACR_PA_ISO, HPSYS_AON(ANACR));
   prv_update(0U, HPSYS_AON_ANACR_VHP_ISO, HPSYS_AON(ANACR));
@@ -97,7 +93,7 @@ PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   while ((pbl_readl(HPSYS_AON(ACR)) & HPSYS_AON_ACR_HXT48_RDY) == 0U) {
   }
 
-  pbl_clk_sf32lb_hxt48_resume(&clocks);
+  pbl_idle_hooks_late_exit(SOC_SF32LB_IDLE_DEEPSLEEP);
 }
 
 PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
