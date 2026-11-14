@@ -2,14 +2,17 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/power_domain.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
+#include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -708,6 +711,23 @@ PBL_SECTION_RAM void pbl_clk_sf32lb_hxt48_resume(const struct pbl_clk_sf32lb_hxt
   prv_dll_restart(SF32LB52_HPSYS_RCC_DLL2CR_OFFSET, state->dll2cr);
   pbl_writel(state->csr, s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
 }
+
+static struct pbl_clk_sf32lb_hxt48_state s_idle_hxt48;
+
+// HXT48 stops in deep sleep
+PBL_SECTION_RAM static void prv_idle_enter(pbl_idle_state_id_t state, void *arg) {
+  if (state == SOC_SF32LB_IDLE_DEEPSLEEP) {
+    pbl_clk_sf32lb_hxt48_suspend(&s_idle_hxt48);
+  }
+}
+
+PBL_SECTION_RAM static void prv_idle_exit(pbl_idle_state_id_t state, void *arg) {
+  if (state == SOC_SF32LB_IDLE_DEEPSLEEP) {
+    pbl_clk_sf32lb_hxt48_resume(&s_idle_hxt48);
+  }
+}
+
+PBL_IDLE_HOOK_LATE_DEFINE(clk_sf32lb_hxt48, prv_idle_enter, prv_idle_exit, nullptr);
 
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb *rcc = container_of(dev, const struct pbl_clk_sf32lb, ctrl.dev);
