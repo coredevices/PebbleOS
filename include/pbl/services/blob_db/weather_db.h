@@ -37,18 +37,27 @@
  * - 3: dominant wind direction, today and per day.
  * - 4: today's hourly UV.
  * - 5: tomorrow's hourly type and temperature series.
+ * - 6: the size of the fixed part, then hourly chance and amount of precipitation, today and
+ *   tomorrow.
  *
  * Older minors remain parseable: readers gate the appended fields on @c minor_version and the
  * record length, and the trailing strings offset is resolved per minor (see
- * weather_db_entry_get_strings()). Unknown future minors are rejected on insert since their
- * strings offset is unknowable, so the phone must gate each new minor on firmware support.
+ * weather_db_entry_get_strings()).
+ *
+ * From minor 6 a record states the size of its fixed part, so a minor newer than
+ * ::WEATHER_DB_CURRENT_MINOR_VERSION is accepted: the firmware reads the fields it knows and
+ * finds the strings at the stated size. A newer minor may only append fixed fields. Firmware
+ * whose newest minor is 5 refuses anything newer, so the phone has to know which firmware it
+ * writes to before it sends minor 6 or later.
  * @{
  */
 
 /** @brief Current major version of the record schema. */
 #define WEATHER_DB_CURRENT_VERSION (4)
 /** @brief Newest minor version of the v4 schema understood by the firmware. */
-#define WEATHER_DB_CURRENT_MINOR_VERSION (5)
+#define WEATHER_DB_CURRENT_MINOR_VERSION (6)
+/** @brief First minor version of the v4 schema whose records state their fixed size. */
+#define WEATHER_DB_SIZED_MINOR_VERSION (6)
 /** @brief Major version of the legacy record schema. */
 #define WEATHER_DB_LEGACY_VERSION (3)
 
@@ -222,6 +231,31 @@ typedef struct PBL_PACKED {
   int8_t tomorrow_hourly_temp[WEATHER_DB_HOURLY_COUNT];
 
   /**
+   * Size of the fixed part in bytes, which is where the strings start. Minor 6.
+   *
+   * A newer minor appends its fields before the strings and states a larger size.
+   */
+  uint16_t fixed_size;
+  /**
+   * Chance of precipitation for each hour of today, percent (0 to 100), 255 if unknown. Minor 6.
+   *
+   * Hours are 0 to 23 of the location-local day, like @ref today_hourly_temp. The weather app
+   * reads the hourly type, temperature and precipitation series at the watch's own hour, so for
+   * a location in another time zone they are off by the zone difference, or by that less a day
+   * while the watch and the location are on different dates.
+   */
+  uint8_t today_hourly_precip_probability[WEATHER_DB_HOURLY_COUNT];
+  /** Chance of precipitation for each hour of tomorrow, as above. Minor 6. */
+  uint8_t tomorrow_hourly_precip_probability[WEATHER_DB_HOURLY_COUNT];
+  /**
+   * Precipitation for each hour of today in tenths of a millimeter (0 to 254, larger amounts
+   * clamped to 254), 255 if unknown. Always millimeters, whatever the user's units. Minor 6.
+   */
+  uint8_t today_hourly_precip_mm_x10[WEATHER_DB_HOURLY_COUNT];
+  /** Precipitation for each hour of tomorrow, as above. Minor 6. */
+  uint8_t tomorrow_hourly_precip_mm_x10[WEATHER_DB_HOURLY_COUNT];
+
+  /**
    * Location name and short phrase, see ::WeatherDbStringIndex. Must stay last.
    *
    * Only at this offset in current minor records; use weather_db_entry_get_strings().
@@ -251,15 +285,20 @@ typedef enum WeatherDbStringIndex {
 #define WEATHER_DB_V4_3_FIXED_SIZE (offsetof(WeatherDBEntry, today_hourly_uv_x10))
 /** @brief Fixed size of a v4.4 record, where its strings start. */
 #define WEATHER_DB_V4_4_FIXED_SIZE (offsetof(WeatherDBEntry, tomorrow_hourly_count))
-/** @brief Fixed size of a current (v4.5) record, everything but the trailing strings. */
+/** @brief Fixed size of a v4.5 record, where its strings start. */
+#define WEATHER_DB_V4_5_FIXED_SIZE (offsetof(WeatherDBEntry, fixed_size))
+/** @brief Fixed size of a current (v4.6) record, everything but the trailing strings. */
 #define WEATHER_DB_V4_FIXED_SIZE (offsetof(WeatherDBEntry, pstring16s))
 
 /** @brief Smallest acceptable record, a legacy v3 record. */
 #define MIN_ENTRY_SIZE (sizeof(WeatherDBEntryV3))
-/** @brief Largest acceptable record. */
-#define MAX_ENTRY_SIZE                                                         \
-  (sizeof(WeatherDBEntry) + WEATHER_SERVICE_MAX_WEATHER_LOCATION_BUFFER_SIZE + \
-   WEATHER_SERVICE_MAX_SHORT_PHRASE_BUFFER_SIZE)
+/**
+ * @brief Largest acceptable record.
+ *
+ * A fixed number rather than this firmware's own layout, so that a newer minor with more fixed
+ * fields still fits.
+ */
+#define MAX_ENTRY_SIZE (1024)
 
 /**
  * @brief Check whether the firmware can parse a major version.
@@ -272,26 +311,23 @@ static inline bool weather_db_version_is_supported(uint8_t version) {
 }
 
 /**
- * @brief Check whether the firmware can parse a record.
+ * @brief Check whether the firmware can parse a record's version.
  *
- * A v4 record with a minor newer than ::WEATHER_DB_CURRENT_MINOR_VERSION is rejected: a newer
- * minor appends fixed fields, which moves the trailing strings.
+ * Any v4 minor is supported: one newer than ::WEATHER_DB_CURRENT_MINOR_VERSION only appends
+ * fixed fields, which the firmware skips.
  *
  * @param entry Record.
  * @return true if supported.
  */
 static inline bool weather_db_entry_is_supported(const WeatherDBEntry *entry) {
-  if (!weather_db_version_is_supported(entry->version)) {
-    return false;
-  }
-  return (entry->version < WEATHER_DB_CURRENT_VERSION) ||
-         (entry->minor_version <= WEATHER_DB_CURRENT_MINOR_VERSION);
+  return weather_db_version_is_supported(entry->version);
 }
 
 /**
  * @brief Get the offset of the trailing strings for a record version.
  *
- * Each minor places them differently: at the first field the next minor appends.
+ * Each minor places them differently: at the first field the next minor appends. From
+ * ::WEATHER_DB_SIZED_MINOR_VERSION this is the smallest offset a record may state.
  *
  * @param version Major version.
  * @param minor_version Minor version, ignored for v3.
@@ -301,8 +337,10 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
   if (version < WEATHER_DB_CURRENT_VERSION) {
     return offsetof(WeatherDBEntryV3, pstring16s);
   }
-  if (minor_version >= 5)
+  if (minor_version >= WEATHER_DB_SIZED_MINOR_VERSION)
     return offsetof(WeatherDBEntry, pstring16s);
+  if (minor_version >= 5)
+    return WEATHER_DB_V4_5_FIXED_SIZE;
   if (minor_version >= 4)
     return WEATHER_DB_V4_4_FIXED_SIZE;
   if (minor_version >= 3)
@@ -319,13 +357,17 @@ static inline size_t weather_db_entry_strings_offset(uint8_t version, uint8_t mi
  *
  * Use this instead of @c &entry->pstring16s, which is only valid for current minor records.
  *
- * @param entry Record of any supported version.
+ * @param entry Record of any supported version, as weather_db_read() or weather_db_for_each()
+ * hand it out: they check the size a record states.
  * @return Pointer to the pstring16s array.
  */
 static inline struct pbl_serialized_array *weather_db_entry_get_strings(WeatherDBEntry *entry) {
   const uint8_t minor = (entry->version >= WEATHER_DB_CURRENT_VERSION) ? entry->minor_version : 0;
-  return (struct pbl_serialized_array *)((uint8_t *)entry +
-                                         weather_db_entry_strings_offset(entry->version, minor));
+  size_t offset = weather_db_entry_strings_offset(entry->version, minor);
+  if (minor >= WEATHER_DB_SIZED_MINOR_VERSION) {
+    offset = entry->fixed_size;
+  }
+  return (struct pbl_serialized_array *)((uint8_t *)entry + offset);
 }
 
 /**
@@ -338,7 +380,7 @@ static inline struct pbl_serialized_array *weather_db_entry_get_strings(WeatherD
 typedef void (*WeatherDBIteratorCallback)(WeatherDBKey *key, WeatherDBEntry *entry, void *context);
 
 /**
- * @brief Call a function for every supported record.
+ * @brief Call a function for every supported, well-formed record.
  *
  * The database is locked during the iteration.
  *
@@ -397,7 +439,7 @@ int weather_db_get_len(const uint8_t *key, int key_len);
 /**
  * @brief Read a record from the weather database.
  *
- * The key is the location UUID. Unsupported records are deleted and reported as
+ * The key is the location UUID. Unsupported or malformed records are deleted and reported as
  * @c E_DOES_NOT_EXIST.
  *
  * @param key Key data.

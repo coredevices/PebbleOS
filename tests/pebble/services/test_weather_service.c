@@ -3,7 +3,10 @@
 
 #include "./blob_db/weather_data_shared.h"
 
+#include <string.h>
+
 #include <pbl/fs/fs.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/services/blob_db/weather_db.h>
 #include <pbl/services/weather/weather_service.h>
@@ -40,7 +43,28 @@ void bt_persistent_storage_get_cached_system_capabilities(
   capabilities->weather_app_support = 1;
 }
 
+// A record written to the DB when `s_write_on_unlock_mutex` is next unlocked, as the phone can
+// between two DB calls
+static const struct pbl_mutex *s_last_unlocked;
+static const struct pbl_mutex *s_write_on_unlock_mutex;
+static const WeatherDBKey *s_write_on_unlock_key;
+static WeatherDBEntry *s_write_on_unlock_entry;
+static size_t s_write_on_unlock_size;
+
+void pbl_mutex_unlock(struct pbl_mutex *m) {
+  s_last_unlocked = m;
+  if (!s_write_on_unlock_entry || m != s_write_on_unlock_mutex) {
+    return;
+  }
+  WeatherDBEntry *entry = s_write_on_unlock_entry;
+  s_write_on_unlock_entry = nullptr;
+  cl_assert_equal_i(S_SUCCESS,
+                    weather_db_insert((uint8_t *)s_write_on_unlock_key, sizeof(WeatherDBKey),
+                                      (uint8_t *)entry, s_write_on_unlock_size));
+}
+
 void test_weather_service__initialize(void) {
+  s_write_on_unlock_entry = nullptr;
   fake_spi_flash_init(0, 0x1000000);
   fake_pfs_mount();
   weather_db_init();
@@ -190,4 +214,46 @@ void test_weather_service__get_default_location_forecast_from_watch_app_prefs_db
   cl_assert(forecast);
   prv_assert_forecast_equal(forecast, &s_forecasts[0]);
   weather_service_destroy_default_forecast(forecast);
+}
+
+void test_weather_service__default_forecast_survives_a_record_growing_mid_read(void) {
+  const int default_location_index = 0;
+  const WeatherDBKey *key = weather_shared_data_get_key(default_location_index);
+
+  // The default location's record again, with a longer phrase
+  const char *name = weather_shared_data_get_entry_name(default_location_index);
+  const char *phrase = "Sunny with a longer phrase";
+  const size_t data_size = strlen(name) + strlen(phrase) + 2 * sizeof(uint16_t);
+  const size_t grown_size = sizeof(WeatherDBEntry) + data_size;
+  cl_assert(grown_size > weather_shared_data_get_entry_size(default_location_index));
+  WeatherDBEntry *grown = pbl_zalloc_check(grown_size);
+  *grown = *weather_shared_data_get_entry(default_location_index);
+  grown->pstring16s.data_size = data_size;
+  weather_shared_data_write_strings(&grown->pstring16s, name, phrase);
+
+  // It lands right after the cache has taken the old record's length: the DB's mutex is the
+  // last one weather_db_get_len() unlocks
+  cl_assert(weather_db_get_len((uint8_t *)key, sizeof(WeatherDBKey)) > 0);
+  s_write_on_unlock_mutex = s_last_unlocked;
+  s_write_on_unlock_key = key;
+  s_write_on_unlock_size = grown_size;
+  s_write_on_unlock_entry = grown;
+
+  PebbleEvent insert_event = (PebbleEvent){
+    .type = PEBBLE_BLOBDB_EVENT,
+    .blob_db = {
+      .db_id = BlobDBIdWeather,
+      .type = BlobDBEventTypeInsert,
+      .key = (uint8_t *)key,
+      .key_len = sizeof(WeatherDBKey),
+    }
+  };
+  s_event_info->handler(&insert_event, s_event_info->context);
+  cl_assert(!s_write_on_unlock_entry); // written
+
+  WeatherLocationForecast *forecast = weather_service_create_default_forecast();
+  cl_assert(forecast);
+  cl_assert_equal_s(forecast->current_weather_phrase, phrase);
+  weather_service_destroy_default_forecast(forecast);
+  pbl_free(grown);
 }

@@ -64,8 +64,12 @@ typedef struct {
   uint8_t tomorrow_hourly_count;     // 0 or WX_DS_HOURLY (v4 minor 5+)
   uint8_t tomorrow_hourly_type[WX_DS_HOURLY]; // WeatherType per hour 0-23 of TOMORROW
   int8_t tomorrow_hourly_temp[WX_DS_HOURLY];  // temperature per hour 0-23 of TOMORROW
-  int16_t latitude_e2;                        // latitude * 100 (for the globe), INT16_MIN unknown
-  int16_t longitude_e2;                       // longitude * 100 (for the globe), INT16_MIN unknown
+  // Chance of precipitation per hour, % (0-100), 255 unknown: today's hours 0-23, then
+  // tomorrow's (v4 minor 6+).
+  uint8_t hourly_precip[2 * WX_DS_HOURLY];
+  bool has_hourly_precip; // true when the phone sent the minor-6 block
+  int16_t latitude_e2;    // latitude * 100 (for the globe), INT16_MIN unknown
+  int16_t longitude_e2;   // longitude * 100 (for the globe), INT16_MIN unknown
   int16_t utc_offset_min; // location's tz, minutes east of UTC (v4.1), INT16_MIN unknown
 } WxDsForecast;
 

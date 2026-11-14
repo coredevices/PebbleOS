@@ -4,6 +4,8 @@
 //! the only one that includes the firmware weather headers.
 #include "weather_data_source.h"
 
+#include "weather_math.h"
+
 #include <string.h>
 
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -13,20 +15,11 @@
 
 #include <applib/app_malloc.h>
 
-static void prv_copy_str(char *dst, size_t dst_size, const char *src) {
-  if (!src) {
-    dst[0] = '\0';
-    return;
-  }
-  strncpy(dst, src, dst_size - 1);
-  dst[dst_size - 1] = '\0';
-}
-
 static void prv_fill_from_fw(WxDsForecast *out, const WeatherLocationForecast *f, int index) {
   (void)index;
   memset(out, 0, sizeof(*out));
-  prv_copy_str(out->location_name, sizeof(out->location_name), f->location_name);
-  prv_copy_str(out->short_phrase, sizeof(out->short_phrase), f->current_weather_phrase);
+  weather_copy_text(out->location_name, sizeof(out->location_name), f->location_name);
+  weather_copy_text(out->short_phrase, sizeof(out->short_phrase), f->current_weather_phrase);
   // The record carries the real flag — list position is NOT it (the current
   // location need not be first, and may be absent entirely).
   out->is_current_location = f->is_current_location;
@@ -41,6 +34,7 @@ static void prv_fill_from_fw(WxDsForecast *out, const WeatherLocationForecast *f
   // them from the v4 WeatherDBEntry directly (no-op for v3 records).
   out->today_uv = -1;
   out->has_hourly_uv = false;
+  memset(out->hourly_precip, 255, sizeof(out->hourly_precip));
   for (int i = 0; i < WX_DS_HOURLY; i++)
     out->hourly_uv[i] = -1;
   out->today_precip = -1;
@@ -82,7 +76,10 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   if (len < (int)sizeof(WeatherDBEntryV3)) {
     return;
   }
-  WeatherDBEntry *entry = app_zalloc_check(len);
+  WeatherDBEntry *entry = app_zalloc(len);
+  if (!entry) {
+    return; // keep the v3 fields, as for a v3 record
+  }
   const status_t rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   // Version alone isn't enough: a truncated/corrupt record can carry version==4 with a
   // v3-sized payload (weather_db_insert validates length, insert_stale does not) — reading
@@ -91,11 +88,13 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
   if ((rv == S_SUCCESS) && (entry->version == WEATHER_DB_CURRENT_VERSION) &&
       (len >= (int)WEATHER_DB_V4_0_FIXED_SIZE)) {
     out->is_v4 = true;
+    // Cap the phone's values to their schema ranges: UV*10 at 254 like the daily and hourly
+    // figures, and the chance at 100%.
     if (entry->today_uv_index_x10 >= 0) {
-      out->today_uv = entry->today_uv_index_x10 / 10; // schema stores UV*10
+      out->today_uv = MIN(entry->today_uv_index_x10, 254) / 10; // schema stores UV*10
     }
     if (entry->today_precip_probability >= 0) {
-      out->today_precip = entry->today_precip_probability;
+      out->today_precip = MIN(entry->today_precip_probability, 100);
     }
     if (entry->today_wind_speed > 0) {
       out->today_wind = entry->today_wind_speed;
@@ -134,7 +133,7 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
       for (uint8_t i = 0; i < nd; i++) {
         const WeatherDBDailyMetrics *m = &entry->daily_metrics[i];
         if (m->precip_probability != 255)
-          out->daily[i].precip = m->precip_probability;
+          out->daily[i].precip = MIN(m->precip_probability, 100); // capped like today's
         if (m->wind_speed != 255)
           out->daily[i].wind = m->wind_speed;
         if (m->uv_index_x10 != 255)
@@ -152,18 +151,25 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
     }
     // v4.5 appended block (TOMORROW's hourly series) — fills the clock dial's
     // post-midnight positions with real data instead of blanks.
-    if (entry->minor_version >= 5 && len >= (int)WEATHER_DB_V4_FIXED_SIZE &&
+    if (entry->minor_version >= 5 && len >= (int)WEATHER_DB_V4_5_FIXED_SIZE &&
         entry->tomorrow_hourly_count == WEATHER_DB_HOURLY_COUNT) {
       out->tomorrow_hourly_count = WX_DS_HOURLY;
       memcpy(out->tomorrow_hourly_type, entry->tomorrow_hourly_weather_type, WX_DS_HOURLY);
       memcpy(out->tomorrow_hourly_temp, entry->tomorrow_hourly_temp, WX_DS_HOURLY);
+    }
+    // v4.6 appended block (hourly chance of precipitation, today then tomorrow).
+    if (entry->minor_version >= 6 && len >= (int)WEATHER_DB_V4_FIXED_SIZE) {
+      memcpy(out->hourly_precip, entry->today_hourly_precip_probability, WX_DS_HOURLY);
+      memcpy(out->hourly_precip + WX_DS_HOURLY, entry->tomorrow_hourly_precip_probability,
+             WX_DS_HOURLY);
+      out->has_hourly_precip = true;
     }
     // v4.2 appended block (today's raw warning readings + per-day feels-like).
     if (entry->minor_version >= 2 && len >= (int)WEATHER_DB_V4_2_FIXED_SIZE) {
       if (entry->today_wmo_code != 0xFF)
         out->today_wmo = entry->today_wmo_code;
       if (entry->today_humidity_pct != 0xFF)
-        out->today_humidity = entry->today_humidity_pct;
+        out->today_humidity = MIN(entry->today_humidity_pct, 100);
       if (entry->today_visibility_m != 0xFFFF)
         out->today_visibility_m = entry->today_visibility_m;
       if (entry->today_precip_sum_mm != 0xFFFF)

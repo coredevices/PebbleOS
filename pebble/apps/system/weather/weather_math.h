@@ -35,10 +35,6 @@ int32_t weather_norm_square(int32_t value);
 int32_t weather_norm_bell(int32_t value);
 void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect, int dst_x);
 
-#define WEATHER_GLOW_WRAP_SPIN_TICKS  12
-#define WEATHER_GLOW_WRAP_CLOSE_TICKS 4
-#define WEATHER_GLOW_WRAP_TICKS       (WEATHER_GLOW_WRAP_SPIN_TICKS + WEATHER_GLOW_WRAP_CLOSE_TICKS)
-
 // Card<->globe horizontal slide duration (SELECT out-left / BACK in-left): a snappy fraction
 // of the moook default so the two-phase transition feels quick. Shared by expanded_view.c and
 // globe_view.c so the pair can't drift apart.
@@ -48,20 +44,41 @@ void weather_capture_framebuffer_rect(GBitmap *fb, GBitmap *dst, GRect src_rect,
 // transitions. Its built-in 4px overshoot is the "bounce".
 int64_t weather_interpolate_moook_soft1(int32_t n, int64_t from, int64_t to);
 
+// Copies `src` (NULL as "") into `dst`, cut short on a UTF-8 character boundary when it does
+// not fit. The text renderer draws nothing for a string with a split character.
+void weather_copy_text(char *dst, size_t dst_size, const char *src);
+
 // Uppercase 3-letter weekday abbreviation for the day `day_offset` days from now ("MON").
 // Falls back to (up to 3 chars of) `fallback`, or "---", if localtime/strftime fail.
 void weather_fill_weekday_abbrev(int day_offset, const char *fallback, char *buffer,
                                  size_t buffer_size);
 
+// Whether `then` is in the same hour of the watch's local time as `now`, and not after it.
+bool weather_same_local_hour(time_t now, time_t then);
+
+// An hourly chance of precipitation the phone has no figure for
+#define WEATHER_PRECIP_UNKNOWN 255
+// Hours in the clock's chance of precipitation series: today's, then tomorrow's
+#define WEATHER_PRECIP_HOURS 48
+
+// Stores a series of 24 or WEATHER_PRECIP_HOURS chances of precipitation in `hours`. Values over
+// 100 percent and the hours past the series are stored as unknown. Returns the hours stored, or
+// 0 when no hour is known.
+uint8_t weather_store_hourly_precip(uint8_t hours[WEATHER_PRECIP_HOURS], const uint8_t *precip,
+                                    size_t count);
+
 // Diurnal curve (0..100): cool overnight, peak mid-afternoon. Shared by the hourly
 // synth in weather.c and the v4 test seed in weather_data_source.c.
 extern const uint8_t weather_diurnal_curve[24];
 
-//! WHO UV severity ramp (shared by the card dial + the report UV bar).
+//! Color for a UV index on the WHO severity scale
 GColor weather_uv_severity_color(int uv);
 
+// Two half-turn arcs starting at `phase` and at -`phase`, with sparks in the theme background
+// color at their starts and three beads. When idle both start at `phase`, with no sparks or
+// beads. extra_span lengthens both arcs (TRIG_MAX_ANGLE / 2 closes the ring).
 void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor glow_color,
-                            uint32_t phase, uint8_t idle_progress);
+                            uint32_t phase, bool idle, int32_t extra_span);
 
 // Whole-screen Timeline jelly squash-stretch blit, shared by forecast_list and clock_face.
 // `scratch` = W*H one-shot framebuffer snapshot. Modes 1-3 match forecast_list's
@@ -83,8 +100,7 @@ void weather_draw_lava_ring(GContext *ctx, GPoint center, int outer_r, GColor gl
 // jelly-stretches IN from the RIGHT (left edge leads into place, right trails).
 void weather_render_squash(GContext *ctx, uint8_t *scratch, AnimationProgress m, int mode);
 // Capture-once fast path: re-blit from a snapshot a prior weather_render_squash call
-// filled, skipping the per-frame framebuffer copy. Round-only callers (gabbro
-// smoothness step 2); rect keeps calling weather_render_squash unchanged.
+// filled, skipping the per-frame framebuffer copy.
 void weather_render_squash_cached(GContext *ctx, const uint8_t *scratch, AnimationProgress m,
                                   int mode);
 //! Invert PDC icon black/white colors when system is in dark mode.

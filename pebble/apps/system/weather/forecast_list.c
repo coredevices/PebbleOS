@@ -67,7 +67,6 @@ typedef struct {
   GBitmap *icons[MAX_ROWS];
   GFont day_font;
   GFont condition_font;
-  GFont loc_font;
   char condition_str[MAX_ROWS][32]; // pre-formatted condition strings
   int row_height;                   // computed at load: (screen_h - LOCATION_BAR_H) / ROWS_VISIBLE
 #ifdef CONFIG_TOUCH
@@ -90,8 +89,8 @@ typedef struct {
   // Cached so the 40ms animation redraw never re-runs expensive text layout (which was
   // starving the background work queue that services touch). Recomputed only on load / data update.
   int16_t today_icon_x;    // today icon left-x (centred over the date string)
-  void *today_cond_font;   // GFont for today's condition phrase
-  bool today_header_dirty; // recompute today_icon_x/font (set on data change)
+  int16_t today_cond_x;    // rect: condition text's left edge, just past the date
+  bool today_header_dirty; // recompute today_icon_x and today_cond_x (set on data or date change)
   char daydate_cache[24];  // "Sat, Jul 04" — refreshed at local midnight
   char weekday_cache[PBL_IF_ROUND_ELSE(6, 5)][8]; // fan weekday labels ([R5_MAX_COLS])
   time_t date_cache_expiry;                       // next local midnight (0 = caches not built yet)
@@ -107,11 +106,8 @@ typedef struct {
   GDrawCommandImage *fly_pdc;    // LARGE weather PDC (writable clone), owned
   GPointIndexLookup *fly_lookup; // delay-by-distance lookup — deterministic for the
                                  // whole fly, built once on its first frame, owned
-  char fly_sunset[40];           // card glance data, slid in from the left during the fly
-  char fly_temp[16];             // (synced to the icon landing) so the card can then
-  int fly_uv;                    // appear static — see forecast_list_set_glance
-  int fly_precip;
-  int fly_wind;
+  ExpandedViewGlance fly_glance; // card body drawn during the fly, from forecast_list_set_glance
+  char fly_status[40];           // status line over fly_glance, formatted when the fly starts
   // DOWN/UP "header scroll" transition (emery / !PBL_ROUND only): today header slides UP off
   // the top while the 5-day section rises to take over the top, driven by the SAME 330ms
   // interpolate_moook_soft curve Pebble Timeline uses for its card slide (identical bounce).
@@ -147,8 +143,7 @@ typedef struct {
   Animation *squash_in_anim;
   int squash_mode;         // 0 = inactive; else SQUASH_DROP_IN / _DOWN_EXIT / _RISE_IN
   uint8_t *squash_scratch; // full-screen snapshot, re-sampled while overwriting the fb
-  bool squash_captured;    // ROUND capture-once: snapshot filled — later frames skip
-                           // the scene render + fb copy and only resample (step 2)
+  bool squash_captured;    // squash_scratch is filled, so later frames only resample it
   bool refresh_deferred;   // BOTH shapes: a phone sync landed mid-report-scene;
                            // the heavy visual reload waits for the scene end (see
                            // forecast_list_update_data / prv_apply_deferred_refresh)
@@ -218,54 +213,6 @@ static void prv_fill_weekday_label(int day_index, const char *fallback, char *bu
 
 #ifdef CONFIG_TOUCH
 #define R5_TODAY_ICON 40 // scaled size of the today-summary header icon
-
-// Official PebbleOS weather PDC icon (Pebble_25x25_*) for each app WeatherType.
-static uint32_t prv_official_weather_pdc_res(WeatherType t) {
-  switch (t) {
-    case WeatherType_Sun:
-      return RESOURCE_ID_SUNNY_DAY_TINY;
-    case WeatherType_PartlyCloudy:
-      return RESOURCE_ID_PARTLY_CLOUDY_TINY;
-    case WeatherType_CloudyDay:
-      return RESOURCE_ID_CLOUDY_DAY_TINY;
-    case WeatherType_LightRain:
-      return RESOURCE_ID_LIGHT_RAIN_TINY;
-    case WeatherType_HeavyRain:
-      return RESOURCE_ID_HEAVY_RAIN_TINY;
-    case WeatherType_LightSnow:
-      return RESOURCE_ID_LIGHT_SNOW_TINY;
-    case WeatherType_HeavySnow:
-      return RESOURCE_ID_HEAVY_SNOW_TINY;
-    case WeatherType_RainAndSnow:
-      return RESOURCE_ID_RAINING_AND_SNOWING_TINY;
-    default:
-      return RESOURCE_ID_GENERIC_WEATHER_TINY;
-  }
-}
-
-// Larger (Pebble_50x50_*) official PDC, scaled down for the today-summary header.
-static uint32_t prv_official_weather_pdc_res_small(WeatherType t) {
-  switch (t) {
-    case WeatherType_Sun:
-      return RESOURCE_ID_SUNNY_DAY_SMALL;
-    case WeatherType_PartlyCloudy:
-      return RESOURCE_ID_PARTLY_CLOUDY_SMALL;
-    case WeatherType_CloudyDay:
-      return RESOURCE_ID_CLOUDY_DAY_SMALL;
-    case WeatherType_LightRain:
-      return RESOURCE_ID_LIGHT_RAIN_SMALL;
-    case WeatherType_HeavyRain:
-      return RESOURCE_ID_HEAVY_RAIN_SMALL;
-    case WeatherType_LightSnow:
-      return RESOURCE_ID_LIGHT_SNOW_SMALL;
-    case WeatherType_HeavySnow:
-      return RESOURCE_ID_HEAVY_SNOW_SMALL;
-    case WeatherType_RainAndSnow:
-      return RESOURCE_ID_RAINING_AND_SNOWING_SMALL;
-    default:
-      return RESOURCE_ID_GENERIC_WEATHER_SMALL;
-  }
-}
 #endif
 
 #ifdef CONFIG_TOUCH
@@ -285,7 +232,7 @@ static void prv_load_icons(void) {
       s_list->pdc_icons[i] = nullptr;
     }
     GDrawCommandImage *raw = gdraw_command_image_create_with_resource(
-        prv_official_weather_pdc_res(s_list->days[i].current_weather_type));
+        weather_type_pdc_resource(s_list->days[i].current_weather_type, false));
     s_list->pdc_icons[i] = raw ? gdraw_command_image_clone(raw) : nullptr;
     if (raw)
       gdraw_command_image_destroy(raw);
@@ -297,7 +244,7 @@ static void prv_load_icons(void) {
   }
   if (s_list->num_days > 0) {
     GDrawCommandImage *traw = gdraw_command_image_create_with_resource(
-        prv_official_weather_pdc_res_small(prv_header_type()));
+        weather_type_pdc_resource(prv_header_type(), true));
     if (traw) {
       s_list->today_pdc = gdraw_command_image_clone(traw);
       gdraw_command_image_destroy(traw);
@@ -433,8 +380,8 @@ static void *s_select_exit_ctx;
 // top intact. Emery's rectangle has no such limit, so it keeps 38.
 // Round steps re-spread each tier opens to its OWN chord's comfort, not a uniform
 // pitch — icons/day-names and highs sit near the equator where the glass is wide (26px of
-// slack was going unused), the lows stay at 42 because their row's chord is only 7px clear
-// already. The widen amplifies the existing fan-inward-as-it-descends grammar.
+// slack), the lows close to 40 because their labels reach row 221, where the display starts
+// at x=38.
 // The wide values apply ONLY at the resting mainscreen; the *_SCROLLED values are the
 // originals, and the column build interpolates between them on the section scroll so the
 // precipitation view's icon row lands PIXEL-IDENTICAL to its pre-spread layout (the spread applies
@@ -443,18 +390,25 @@ static void *s_select_exit_ctx;
 #define R5_COL_STEP_HIGH          PBL_IF_ROUND_ELSE(50, 38) // high temps at REST (was 45)
 #define R5_COL_STEP_ICON_SCROLLED PBL_IF_ROUND_ELSE(42, 38) // precip view: original pitch
 #define R5_COL_STEP_HIGH_SCROLLED PBL_IF_ROUND_ELSE(45, 38)
-#define R5_COL_STEP_LOW           PBL_IF_ROUND_ELSE(42, 38) // low temps — chord-bound, unchanged
+#define R5_COL_STEP_LOW           PBL_IF_ROUND_ELSE(40, 38) // low temps at rest, inside the circle
+#define R5_COL_STEP_LOW_SCROLLED  PBL_IF_ROUND_ELSE(42, 38) // precip view: under the discs
 #define R5_HEADER_Y               14 // header pinned at top; everything below is centred
 #define R5_DAYNAME_Y              PBL_IF_ROUND_ELSE(94, 84)
-#define R5_ICON_CY                PBL_IF_ROUND_ELSE(130, 120) // icon row centre-y
-#define R5_ICON_SIZE              25
-#define R5_DISC_R                 (R5_ICON_SIZE * 7 / 10) // 17 — same disc as old list + mainscreen
-#define R5_PRECIP_Y               150
-#define R5_GRAPH_TOP              PBL_IF_ROUND_ELSE(172, 166) // y of the warmest dot
-#define R5_GRAPH_BOT              PBL_IF_ROUND_ELSE(202, 202) // y of the coolest dot
-#define R5_DOT_R                  5                           // outer coloured dot radius
-#define R5_DOT_INNER              2                           // inner white radius (hollow dot)
-#define R5_HAIRLINE_Y             PBL_IF_ROUND_ELSE(88, 80)   // hairline rule under today header
+// Weekday label box offset from R5_DAYNAME_Y. Bold Gothic 18 capitals sit 7 to 17 rows down the
+// box, between the hairline and the discs.
+#define R5_DAYNAME_TEXT_DY (-5)
+// Rect keeps the weekday labels during the scroll and lowers them by this much at its end, so
+// their capitals end on rows 5 to 15, 4 rows above the discs.
+#define R5_DAYNAME_SCROLL_DY PBL_IF_ROUND_ELSE(0, 2)
+#define R5_ICON_CY           PBL_IF_ROUND_ELSE(130, 120) // icon row centre-y
+#define R5_ICON_SIZE         25
+#define R5_DISC_R            (R5_ICON_SIZE * 7 / 10) // 17 px
+#define R5_PRECIP_Y          150
+#define R5_GRAPH_TOP         PBL_IF_ROUND_ELSE(172, 166) // y of the warmest dot
+#define R5_GRAPH_BOT         PBL_IF_ROUND_ELSE(202, 202) // y of the coolest dot
+#define R5_DOT_R             5                           // outer coloured dot radius
+#define R5_DOT_INNER         2                           // hollow centre radius
+#define R5_HAIRLINE_Y        PBL_IF_ROUND_ELSE(88, 80)   // hairline rule under today header
 // The emery "today" banner blue. Used by BOTH the banner fill AND the icon crossfade's
 // erase-to-background — they MUST stay the same colour or the animated↔static icon fade
 // shows a coloured box on the banner. Change only here.
@@ -463,8 +417,10 @@ static void *s_select_exit_ctx;
 // icon (STATUS_BAR_LAYER_HEIGHT 20 + CARD_ICON_UPPER_PADDING 0 on emery) — so the top clock has
 // the same clearance above the icon that a Gmail-style notification gives. Date row follows so
 // the header block stays clear of the moved icon and the hairline below it.
-#define R5_TODAY_Y   PBL_IF_ROUND_ELSE(26, 20)
-#define R5_DAYDATE_Y PBL_IF_ROUND_ELSE(68, 62) // day + date, below the today icon
+#define R5_TODAY_Y PBL_IF_ROUND_ELSE(26, 20)
+// Date and condition box top. Gothic 18 capitals start 7 rows down the box and descenders end
+// 20 rows down, 3 rows above the hairline.
+#define R5_DAYDATE_Y PBL_IF_ROUND_ELSE(64, 56)
 
 // DOWN/UP header transition travel (emery / !PBL_ROUND). HEADER_TRAVEL slides the today
 // header (icon/temp/date/condition/hairline) fully off the top; SECTION_TRAVEL lifts the
@@ -476,7 +432,7 @@ static void *s_select_exit_ctx;
 // Extra lift past today's old slot, applied uniformly to the whole scrolled 5-day section
 // (day names, discs, graph, icon rest + its stretch travel all key off SECTION_TRAVEL, so they
 // stay in lockstep) to free more room at the bottom of the scrolled screen for the new stats.
-// Emery lifts PAST today's old slot (+19) so the day names top out at y6. Round cannot:
+// Emery lifts past today's old slot (+19) so the day names' capitals top out at y5. Round cannot:
 // at y6 the circle is only ~100px wide. Round lifts 14px SHORT instead, landing the day
 // names at y40 and the discs at cy76 — the highest the 4-column row fits uncut.
 // Round's scrolled column is SOLVED, not nudged: every element is placed against the
@@ -493,6 +449,10 @@ static void *s_select_exit_ctx;
 // Emery packs the values 1px under the pill because it has no spare height. Round does —
 // open it to 8px so the percentages read as their own row, not a caption on the pill.
 #define R5_BAND_ROW_GAP PBL_IF_ROUND_ELSE(4, 0)
+// Top of the percentages row on the scrolled screen. Bold Gothic 18 digits fill rows 7 to 17 of
+// it, so R5_STAT_ROW_INK_END is the first clear row below them.
+#define R5_STAT_ROW_Y       (164 + R5_BAND_DY + R5_BAND_ROW_GAP)
+#define R5_STAT_ROW_INK_END (R5_STAT_ROW_Y + 18)
 // Scrolled, round's graph must sit LOWER (the bowed outer discs drop into where the high
 // labels were — this is what made the temps overlap the icons) and SHORTER (the circle
 // closes in below). Both scale with the lift, so the mainscreen graph is untouched.
@@ -582,18 +542,14 @@ static void prv_clear_fly(void) {
 static void prv_render_squash_in(GContext *ctx) {
   if (!s_list || !s_list->squash_scratch)
     return;
-#if PBL_ROUND
-  // Capture-once (gabbro smoothness step 2): the source scene is static during every
-  // squash (nub/arrows/dot all exclude themselves or draw after), so the first frame
-  // fills the snapshot and every later frame only resamples it — dropping both the
-  // full scene render and the 67.6KB framebuffer copy from the per-frame cost.
+  // The scene is static during a squash, so only the first frame renders it and copies the
+  // framebuffer. Later frames resample the snapshot.
   if (s_list->squash_captured) {
     weather_render_squash_cached(ctx, s_list->squash_scratch, s_list->squash_in_p,
                                  s_list->squash_mode);
     return;
   }
   s_list->squash_captured = true;
-#endif
   weather_render_squash(ctx, s_list->squash_scratch, s_list->squash_in_p, s_list->squash_mode);
 }
 
@@ -658,7 +614,7 @@ static void prv_start_squash(int mode) {
   }
   s_list->squash_mode = mode;
   s_list->squash_in_p = 0;
-  s_list->squash_captured = false; // round capture-once: fresh squash, fresh snapshot
+  s_list->squash_captured = false;
   if (s_list->squash_in_anim) {
     animation_unschedule(s_list->squash_in_anim);
     animation_destroy(s_list->squash_in_anim);
@@ -706,7 +662,16 @@ static void prv_start_up_to_card(void) {
   s_list->fly_src = GRect(s_list->today_icon_x, R5_TODAY_Y, R5_TODAY_ICON, R5_TODAY_ICON);
   // Must match expanded_view.c's static card icon — shared constants keep the fly landing
   // pixel-exact.
-  s_list->fly_dest = GRect((W - EV_ICON_SIZE) / 2, EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+  s_list->fly_dest = GRect(EV_ICON_X(W), EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+  // Must match the status line the card shows when it takes over, or the line visibly changes.
+#if PBL_ROUND
+  clock_copy_time_string(s_list->fly_status, sizeof(s_list->fly_status));
+#else
+  s_list->fly_status[0] = '\0';
+  if (s_list->num_days > 0) { // the card shows "Last updated ..." for its first 2s
+    expanded_view_format_updated(&s_list->days[0], s_list->fly_status, sizeof(s_list->fly_status));
+  }
+#endif
   s_list->flying_icon = true;
   prv_start_squash(SQUASH_DOWN_EXIT);
   if (!s_list->squash_mode)
@@ -793,7 +758,7 @@ static void prv_start_header_transition(bool to_scrolled) {
 // in lockstep, while the bottom dot decouples and flies to screen centre. STAGE 2 (ported from the
 // original burst): the centred dot does the orbital shake, then hands off to the clock. ----
 // header_scroll value that clears ALL content off the top. The lift must be shape-specific:
-// round's scrolled content sits ~35px lower than emery's (dot rest 233 vs 198), so emery's
+// round's scrolled content sits ~30px lower than emery's (dot rest 235 vs 204), so emery's
 // fixed 200 left the low-temp graph line, its labels and the precip %-row stranded at rows
 // 3..37 (measured) for the whole of stage 2 — the "graph pops in at the top" bug. It was
 // invisible until the stranded-squash_mode fix, because a permanently-squashed frame had been
@@ -805,9 +770,9 @@ static void prv_start_header_transition(bool to_scrolled) {
 // (ball + unfolding paper). Was hardcoded to rect's 228/2, which put round's animation
 // 16px high and off the SELECT nub it is supposed to grow out of.
 #define R5_SCREEN_CY PBL_IF_ROUND_ELSE(130, 114)
-// Dot's resting y on the scrolled screen. Round: the precip values end at y216 and the
-// glass ends at 260, so 238 centres it in that gap (the circle is still 145px wide there).
-#define R5_DOT_REST_Y PBL_IF_ROUND_ELSE(233, 198)
+// Dot centre on the scrolled screen, midway between the percentages and the bottom edge: 204 on
+// emery, 235 on round, where the display is still about 150px wide.
+#define R5_DOT_REST_Y ((R5_STAT_ROW_INK_END + PBL_DISPLAY_HEIGHT - 1) / 2)
 
 static void prv_start_clock_stage2(void);
 
@@ -943,7 +908,7 @@ static void prv_start_clock_stage1(void) {
     if (s_list->squash_scratch) {
       s_list->squash_mode = SQUASH_UP_EXIT;
       s_list->squash_in_p = 0;
-      s_list->squash_captured = false; // round capture-once
+      s_list->squash_captured = false;
     }
   }
   // 330ms — Timeline feel. LINEAR like every other squash driver: the jelly edges (and the
@@ -1476,9 +1441,8 @@ static void prv_draw_flying_icon(GContext *ctx) {
   gdraw_command_image_destroy(clone);
 }
 
-// The whole card body (status time + sunset title + high/low° + UV/RAIN meters) slid in FROM THE
-// LEFT + bounced, synced to the icon-fly's progress so it lands the moment the icon does. Drawn by
-// the card's OWN shared routine so the sliding content and the static card are pixel-identical.
+// Slides the card's body in from the left, timed to land with the flying icon. It is drawn by
+// expanded_view_draw_glance_content, so it matches the static card.
 static void prv_draw_flying_content(GContext *ctx) {
   const int W = layer_get_bounds(s_list->canvas).size.w;
   // Staged entrance: hold the text off-screen for the first 40% of the
@@ -1493,18 +1457,7 @@ static void prv_draw_flying_content(GContext *ctx) {
   if (local > MAXN)
     local = MAXN;
   const int tdx = (int)prv_moook_soft3(local, -W, 0);
-  // This preview must match what the card will REST on, or the status line visibly changes
-  // in the first frames after the hand-off.
-  char updated[40] = "";
-#if PBL_ROUND
-  clock_copy_time_string(updated, sizeof(updated)); // round's card shows the time only
-#else
-  if (s_list->num_days > 0) { // rect starts on "Last updated ..." for its first 2s
-    expanded_view_format_updated(&s_list->days[0], updated, sizeof(updated));
-  }
-#endif
-  expanded_view_draw_glance_content(ctx, W, tdx, updated, s_list->fly_sunset, s_list->fly_temp,
-                                    s_list->fly_uv, s_list->fly_precip, s_list->fly_wind, s_list);
+  expanded_view_draw_glance_content(ctx, W, tdx, s_list->fly_status, &s_list->fly_glance);
 }
 
 // The disc behind each 5-day icon must stretch across the SAME travel as its icon: a capsule whose
@@ -1564,11 +1517,11 @@ static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, G
   graphics_context_set_fill_color(ctx, fill);
   graphics_fill_round_rect(ctx, &pill, 3, GCornersAll);
   graphics_context_set_text_color(ctx, GColorBlack);
-  // Vertically centre the label. graphics_draw_text top-aligns, and GOTHIC_14_BOLD carries ~7px of
-  // top padding inside its ascent (measured: in an 18px pill the caps land 7px down / 2px up), so
+  // Vertically centre the label. graphics_draw_text top-aligns, and bold Gothic 18 carries 7px of
+  // top padding inside its ascent, so
   // centring the line box reads low. Lift it by that asymmetry so the caps sit on the pill's
   // centre.
-  GFont lf = s_list->day_font; // GOTHIC_14_BOLD, cached at load — this draws per scroll frame
+  GFont lf = s_list->day_font; // cached at load: this draws every scroll frame
   const int th = fonts_get_font_height(lf);
   graphics_draw_text(ctx, label, lf,
                      GRect(inset, y + (R5_STAT_PILL_H - th) / 2 - 3, W - 2 * inset, th),
@@ -1578,7 +1531,7 @@ static void prv_draw_stat_pill(GContext *ctx, const char *label, int y, int W, G
 // One row of five per-day precip-% values, each centred under its day column.
 static void prv_draw_stat_row(GContext *ctx, const WeatherLocationForecast *fan, int n,
                               const int *col_x, int y) {
-  GFont vfont = s_list->day_font; // GOTHIC_14_BOLD, cached at load
+  GFont vfont = s_list->day_font; // cached at load
   const int cw = R5_COL_STEP_ICON;
   graphics_context_set_text_color(ctx, system_theme_get_fg_color());
   for (int i = 0; i < n; i++) {
@@ -1603,17 +1556,14 @@ static void prv_draw_bottom_stats(GContext *ctx, const WeatherLocationForecast *
   // stay in the frame to exit with it; in stage 2 (header_scroll = R5_CLOCK_EXIT) slide puts
   // it far off-screen. The burst dot is decoupled — drawn AFTER the squash in prv_canvas_draw.
   // Pill at 145 / row at 164: with the deeper section lift (EXTRA_LIFT 19) the
-  // scrolled column's air splits evenly — solved for disc->graph = graph->pill =
-  // %-row->dot (~10-11px each; the graph auto-centres in its band, so the split
-  // holds for any temp spread).
+  // scrolled column's gaps from disc to graph and from graph to pill are equal (the graph
+  // centres itself in its band, so they stay equal for any temperature spread).
   prv_draw_stat_pill(ctx, pbl_i18n_get("PRECIPITATION", s_list), 145 + slide + R5_BAND_DY, W,
                      GColorPictonBlue);
-  prv_draw_stat_row(ctx, fan, n, col_x, 164 + slide + R5_BAND_DY + R5_BAND_ROW_GAP);
+  prv_draw_stat_row(ctx, fan, n, col_x, R5_STAT_ROW_Y + slide);
   if (!s_list->clock_fx) {
     // Timeline's day-separator peek dot (the one that unwinds into "Tomorrow"/"Tuesday"): a 12px
-    // black circle, horizontally centred, the same 30px above the bottom edge as Timeline. On emery
-    // (>=200px height -> s_style_large) its centre lands at y = future_top_margin(7) + fat_pin(131)
-    // + future_dot_offset(16) + thin_pin(88)/2 = 198 on the 228px screen.
+    // circle, horizontally centred, resting in the gap under the percentages (R5_DOT_REST_Y).
     graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
     graphics_fill_circle(ctx, GPoint(W / 2, R5_DOT_REST_Y + slide), 6);
   }
@@ -2097,7 +2047,7 @@ static void prv_draw_ring_dot(GContext *ctx, GPoint p, GColor ring, GColor cente
 static void prv_draw_temp_centered(GContext *ctx, int temp, GFont font, int cx, int y) {
   char b[8];
   snprintf(b, sizeof(b), "%d\xC2\xB0", temp);
-  graphics_draw_text(ctx, b, font, GRect(cx - 26, y, 52, 16), GTextOverflowModeTrailingEllipsis,
+  graphics_draw_text(ctx, b, font, GRect(cx - 26, y, 52, 22), GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentCenter, nullptr);
 }
 
@@ -2204,16 +2154,19 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
         R5_COL_STEP_ICON - (R5_COL_STEP_ICON - R5_COL_STEP_ICON_SCROLLED) * ssc / R5_SECTION_TRAVEL;
     const int step_high =
         R5_COL_STEP_HIGH - (R5_COL_STEP_HIGH - R5_COL_STEP_HIGH_SCROLLED) * ssc / R5_SECTION_TRAVEL;
+    const int step_low =
+        R5_COL_STEP_LOW - (R5_COL_STEP_LOW - R5_COL_STEP_LOW_SCROLLED) * ssc / R5_SECTION_TRAVEL;
     for (int i = 0; i < n; i++) {
       col_icon[i] = W / 2 - (n - 1) * step_icon / 2 + i * step_icon;
       col_high[i] = W / 2 - (n - 1) * step_high / 2 + i * step_high;
-      col_low[i] = W / 2 - (n - 1) * R5_COL_STEP_LOW / 2 + i * R5_COL_STEP_LOW;
+      col_low[i] = W / 2 - (n - 1) * step_low / 2 + i * step_low;
     }
   }
   const int box_w = 52; // text box; centred short text never overlaps neighbours
-  // Fan weekday row demoted to match the today header weight (so TODAY outranks the fan).
-  GFont day_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
-  GFont small_font = fonts_get_system_font(FONT_KEY_GOTHIC_14);
+  // Gothic 18 is the system Caption font at the large content size, the smallest it uses.
+  // The weekday labels use its bold.
+  GFont caption_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+  GFont day_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
   // Today's date caption + fan weekday labels change only at local midnight (or on a data
   // refresh) — the 6 localtime+strftime pairs this draw used to run per frame were real work
@@ -2246,29 +2199,20 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   const char *daydate = s_list->daydate_cache;
   // Recompute the expensive text-layout-dependent header geometry ONLY when the data
   // changed — never every animation frame (that re-measuring was starving the background work queue
-  // that services touch). today_icon_x centres the icon over the date; today_cond_font
-  // steps the condition phrase down a size if it won't fit its band.
+  // that services touch). today_icon_x centres the icon over the date.
   if (s_list->today_header_dirty) {
     s_list->today_icon_x = R5_TODAY_X;
 #if !PBL_ROUND
-    const GSize dsz = graphics_text_layout_get_content_size(daydate, day_font, GRect(0, 0, W, 20),
-                                                            GTextOverflowModeTrailingEllipsis,
-                                                            GTextAlignmentLeft);
+    const GSize dsz = graphics_text_layout_get_content_size(
+        daydate, caption_font, GRect(0, 0, W, 24), GTextOverflowModeTrailingEllipsis,
+        GTextAlignmentLeft);
     s_list->today_icon_x = R5_TODAY_X + (dsz.w - R5_TODAY_ICON) / 2;
     if (s_list->today_icon_x < R5_TODAY_X)
       s_list->today_icon_x = R5_TODAY_X;
+    // The condition text starts just past the date, at most at mid-screen, so a phrase a little
+    // wider than half the row still shows whole.
+    s_list->today_cond_x = MIN(W / 2, R5_TODAY_X + dsz.w + 6);
 #endif
-    const char *cph =
-        (s_list->days[0].current_weather_phrase && s_list->days[0].current_weather_phrase[0])
-            ? s_list->days[0].current_weather_phrase
-            : "--";
-    const int cl = PBL_IF_ROUND_ELSE(110, W / 2), cr = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
-    GFont cf = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
-    const GSize cw0 = graphics_text_layout_get_content_size(
-        cph, cf, GRect(0, 0, 300, 20), GTextOverflowModeWordWrap, GTextAlignmentLeft);
-    if (cw0.w > cr - cl)
-      cf = fonts_get_system_font(FONT_KEY_GOTHIC_14);
-    s_list->today_cond_font = cf;
     s_list->today_header_dirty = false;
   }
   const int today_x = s_list->today_icon_x;
@@ -2373,17 +2317,17 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, page_fg); // foreground on the page
   // Condition: right-anchored at x=230 (mirrors the left date, aligned to the fan's
   // 30/230 columns), growing LEFT as it lengthens down to x=110 (just clear of the
-  // date). Length-dependent: measure the phrase + step the font down one size if even
-  // that band can't hold it, so long phrases like "PARTLY CLOUDY" are never clipped.
-  const int cond_l = PBL_IF_ROUND_ELSE(110, W / 2), cond_r = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
-  GFont cond_font = (GFont)s_list->today_cond_font; // measured once on data change, not per frame
-  graphics_draw_text(ctx, cond, cond_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 16),
+  // date). The box fits every condition name the app derives: "Partly Cloudy", the longest, is
+  // 77px and the box on emery is at least 82px. Longer phrases from the phone end in an ellipsis.
+  const int cond_l = PBL_IF_ROUND_ELSE(110, s_list->today_cond_x);
+  const int cond_r = PBL_IF_ROUND_ELSE(230, W - R5_TODAY_X);
+  graphics_draw_text(ctx, cond, caption_font, GRect(cond_l, R5_DAYDATE_Y - hs, cond_r - cond_l, 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, nullptr);
   graphics_context_set_text_color(ctx, page_fg); // foreground on the page
   // Date: left box, left-aligned (the today icon above is centred over this string).
-  graphics_draw_text(ctx, daydate, day_font, // day_font IS GOTHIC_14_BOLD — no re-lookup
+  graphics_draw_text(ctx, daydate, caption_font,
                      GRect(PBL_IF_ROUND_ELSE(30, R5_TODAY_X), R5_DAYDATE_Y - hs,
-                           PBL_IF_ROUND_ELSE(95, W / 2 - R5_TODAY_X), 16),
+                           PBL_IF_ROUND_ELSE(95, W / 2 - R5_TODAY_X), 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, nullptr);
 
   // Hairline rule separating the today header from the 5-day fan (timeline-card idiom).
@@ -2401,8 +2345,9 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     graphics_context_set_text_color(ctx, page_fg);
     const int bow = R5_BOW_DY(i, n, ss); // slight follow-the-glass curve (round only)
     if (!R5_DAYNAME_SCROLL_HIDE || ss * 4 < R5_SECTION_TRAVEL) {
-      graphics_draw_text(ctx, weekday, day_font,
-                         GRect(cx - box_w / 2, R5_DAYNAME_Y - ss + bow, box_w, 22),
+      const int name_y = R5_DAYNAME_Y + R5_DAYNAME_TEXT_DY +
+                         R5_DAYNAME_SCROLL_DY * ss / R5_SECTION_TRAVEL - ss + bow;
+      graphics_draw_text(ctx, weekday, day_font, GRect(cx - box_w / 2, name_y, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
 
@@ -2548,13 +2493,14 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       if (okh[i])
         prv_draw_ring_dot(ctx, GPoint(col_high[i], yh[i]), GColorOrange, dot_center);
     }
-    // Numerals: both bold black/white — high ABOVE its dot, low BELOW its dot.
+    // High above its dot, low below it. Bold Gothic 18 digits run 7 to 17 rows down their box:
+    // 2 rows clear above the high dot, 4 below the low.
     graphics_context_set_text_color(ctx, page_fg);
     for (int i = 0; i < n; i++) {
       if (okh[i])
-        prv_draw_temp_centered(ctx, th[i], day_font, col_high[i], yh[i] - 4 - 16);
+        prv_draw_temp_centered(ctx, th[i], day_font, col_high[i], yh[i] - 24);
       if (okl[i])
-        prv_draw_temp_centered(ctx, tl[i], day_font, col_low[i], yl[i] + 4);
+        prv_draw_temp_centered(ctx, tl[i], day_font, col_low[i], yl[i] + 2);
     }
   }
   // Bottom-gap banner stats (the PRECIPITATION pill with per-day values), slid up
@@ -2634,20 +2580,21 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
       graphics_fill_circle(ctx, GPoint(col_low[i], y_lo[i]), R5_DOT_INNER);
     }
   }
-  // Temperature labels: high ABOVE its warm dot, low BELOW its cool dot.
+  // High above its dot, low below it. Gothic 18 digits run 7 to 17 rows down their box, 3 rows
+  // clear of each dot.
   for (int i = 0; i < n; i++) {
     char hs[16], ls[16];
     graphics_context_set_text_color(ctx, page_fg); // numerals; dots/lines stay coloured
     if (okh[i]) {
       snprintf(hs, sizeof(hs), "%d\xC2\xB0", fan[i].today_high);
-      graphics_draw_text(ctx, hs, small_font,
-                         GRect(col_high[i] - box_w / 2, y_hi[i] - R5_DOT_R - 17, box_w, 16),
+      graphics_draw_text(ctx, hs, caption_font,
+                         GRect(col_high[i] - box_w / 2, y_hi[i] - R5_DOT_R - 21, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
     if (okl[i]) {
       snprintf(ls, sizeof(ls), "%d\xC2\xB0", fan[i].today_low);
-      graphics_draw_text(ctx, ls, small_font,
-                         GRect(col_low[i] - box_w / 2, y_lo[i] + R5_DOT_R + 1, box_w, 16),
+      graphics_draw_text(ctx, ls, caption_font,
+                         GRect(col_low[i] - box_w / 2, y_lo[i] + R5_DOT_R - 3, box_w, 22),
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, nullptr);
     }
   }
@@ -2670,6 +2617,15 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     return;
 #endif
 #ifdef CONFIG_TOUCH
+  // Capture the card body's mask while the forecast is at rest, or failing that on the fly's
+  // first frame. A capture paints the whole screen, so not while a stack transition slides this
+  // window in.
+  const GPoint at = ctx->draw_state.drawing_box.origin;
+  const bool resting = !s_list->squash_mode && !s_list->fx_active && !s_list->clock_fx &&
+                       !s_list->report_fx && !s_list->flying_icon && at.x == 0 && at.y == 0;
+  if (resting || (s_list->flying_icon && s_list->squash_mode != SQUASH_RISE_IN)) {
+    expanded_view_prime_body(ctx, layer_get_bounds(layer).size.w, &s_list->fly_glance);
+  }
   if (s_list->report_fx == 4) {
     // Stage 4 — the paper's bow: card, the paper squash-stretching off the left
     // (its own points deform — Timeline smiley exit), the caption sliding out with it.
@@ -2680,12 +2636,8 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
     prv_draw_report_caption(ctx, dx, true);
     return;
   }
-  if (PBL_IF_ROUND_ELSE(
-          s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != nullptr,
-          false)) {
-    // Capture-once (gabbro smoothness step 2): the squash snapshot is already filled, and
-    // prv_render_squash_in below overwrites every pixel from it — re-rendering the scene
-    // here would be pure per-frame waste. Skip it.
+  if (s_list->squash_mode && s_list->squash_captured && s_list->squash_scratch != nullptr) {
+    // Skip the scene: prv_render_squash_in overwrites every pixel from the filled snapshot
   } else if (s_list->report_fx >= 2 && !PBL_IF_ROUND_ELSE(0, s_list->squash_mode)) {
     /// Report scene, content cleared off-left: a title-card backdrop (matches the
     // squash memset and the report window bg — seamless at both cuts).
@@ -2762,10 +2714,11 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   // card transition. On the reverse fly (card -> forecast, riding the RISE_IN) only the icon
   // flies — there is no incoming card text.
   if (s_list->flying_icon) {
-    prv_draw_flying_icon(ctx);
+    // Draw the card body first so the icon stays on top
     if (s_list->squash_mode != SQUASH_RISE_IN) {
       prv_draw_flying_content(ctx);
     }
+    prv_draw_flying_icon(ctx);
   }
 #if PBL_ROUND
   // Round's report scene. (Rect draws it inside the block above, paired with the burst
@@ -2958,6 +2911,9 @@ static void prv_clock_loc_city(char *dst, size_t dst_size, const char *src) {
   size_t i = 0;
   for (; src && src[i] && src[i] != ',' && i < dst_size - 1; i++)
     dst[i] = src[i];
+  // Drop a UTF-8 character the buffer cut short. Invalid UTF-8 draws as nothing.
+  while (src && i > 0 && ((uint8_t)src[i] & 0xC0) == 0x80)
+    i--;
   while (i > 0 && dst[i - 1] == ' ')
     i--;
   dst[i] = '\0';
@@ -3193,7 +3149,7 @@ void forecast_list_start_select_exit(void (*done_cb)(void *ctx), void *ctx) {
     if (s_list->squash_scratch) {
       s_list->squash_mode = SQUASH_LEFT_EXIT;
       s_list->squash_in_p = 0;
-      s_list->squash_captured = false; // round capture-once
+      s_list->squash_captured = false;
       s_list->report_fx = 1;
       // The ball is born on the SELECT nub's own spot (decoupled from the squash, like
       // the burst dot) — the indicator visibly becomes the ball.
@@ -3308,8 +3264,12 @@ static int s_list_subpx = 0;
 
 static void prv_list_tick_cb(void *ctx) {
   s_list_hold_timer = nullptr;
-  if (!s_list)
+  // A modal or a pushed window can swallow the release; stop once the list is covered.
+  if (!s_list || !window_is_on_screen(s_list->window)) {
+    s_list_velocity = 0;
+    s_list_subpx = 0;
     return;
+  }
 
   s_list_velocity += SCROLL_VEL_ACCEL;
   if (s_list_velocity > SCROLL_VEL_MAX)
@@ -3429,7 +3389,8 @@ static void prv_sun_tick(void *ctx) {
   if (!s_list)
     return;
   s_list->sun_timer = nullptr;
-  if (prv_sun_step()) {
+  // A squash shows one captured frame: hold the icon at that pose, or it jumps on landing.
+  if (s_list->squash_mode || prv_sun_step()) {
     s_list->sun_timer = app_timer_register(R5_SUN_PERIOD_MS, prv_sun_tick, nullptr);
   }
 }
@@ -3527,7 +3488,6 @@ static void prv_window_load(Window *window) {
 
   s_list->day_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
   s_list->condition_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
-  s_list->loc_font = fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
 
   prv_load_icons();
   prv_format_conditions();
@@ -3634,7 +3594,7 @@ static void prv_window_appear(Window *window) {
       if (pdc) {
         const int W = layer_get_bounds(s_list->canvas).size.w;
         s_list->fly_pdc = pdc;
-        s_list->fly_src = GRect((W - EV_ICON_SIZE) / 2, EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
+        s_list->fly_src = GRect(EV_ICON_X(W), EV_ICON_Y, EV_ICON_SIZE, EV_ICON_SIZE);
         s_list->fly_dest = GRect(s_list->today_icon_x, R5_TODAY_Y, R5_TODAY_ICON, R5_TODAY_ICON);
         s_list->flying_icon = true;
       }
@@ -3645,6 +3605,14 @@ static void prv_window_appear(Window *window) {
       prv_clear_fly(); // squash couldn't start (OOM)
   }
 #endif
+}
+
+// Free the card body mask when another screen (the clock, the report) covers the forecast. The
+// card keeps it while it is showing and frees it on unload.
+static void prv_window_disappear(Window *window) {
+  (void)window;
+  if (!expanded_view_is_showing())
+    expanded_view_drop_body();
 }
 
 static void prv_window_unload(Window *window) {
@@ -3775,6 +3743,25 @@ static void prv_window_unload(Window *window) {
 
 // ---- Public API ----
 
+void forecast_list_reset(void) {
+  s_list = nullptr;
+  s_select_exit_anim = nullptr;
+  s_select_exit_done = nullptr;
+  s_select_exit_ctx = nullptr;
+#ifdef CONFIG_TOUCH
+  s_pending_squash_mode = 0;
+  s_pending_hslide_in = false;
+  s_hslide_anim = nullptr;
+  s_pending_return_fly = false;
+  s_report_anim = nullptr;
+#else
+  s_list_hold_timer = nullptr;
+  s_list_hold_down = false;
+  s_list_velocity = 0;
+  s_list_subpx = 0;
+#endif
+}
+
 static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t num_days,
                                    int start_day_index, bool animated, void (*on_pop)(void *ctx),
                                    void *on_pop_ctx, void (*on_city_select)(void *ctx),
@@ -3814,6 +3801,7 @@ static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t n
   window_set_window_handlers(s_list->window, (WindowHandlers){
                                                .load = prv_window_load,
                                                .appear = prv_window_appear,
+                                               .disappear = prv_window_disappear,
                                                .unload = prv_window_unload,
                                              });
   window_set_click_config_provider(s_list->window, prv_click_provider);
@@ -3902,20 +3890,16 @@ void forecast_list_update_data(const WeatherLocationForecast *days, size_t num_d
   }
 }
 
-void forecast_list_set_glance(const char *sunset, const char *temp, int uv, int precip, int wind) {
+void forecast_list_set_glance(const ExpandedViewGlance *glance) {
 #ifdef CONFIG_TOUCH
   if (!s_list)
     return;
-  snprintf(s_list->fly_sunset, sizeof(s_list->fly_sunset), "%s", sunset ? sunset : "");
-  snprintf(s_list->fly_temp, sizeof(s_list->fly_temp), "%s", temp ? temp : "");
-  s_list->fly_uv = uv;
-  s_list->fly_precip = precip;
-  s_list->fly_wind = wind;
+  if (glance) {
+    s_list->fly_glance = *glance;
+  } else {
+    memset(&s_list->fly_glance, 0, sizeof(s_list->fly_glance));
+  }
 #else
-  (void)sunset;
-  (void)temp;
-  (void)uv;
-  (void)precip;
-  (void)wind;
+  (void)glance;
 #endif
 }

@@ -124,7 +124,7 @@ Appended after the v4.2 fields (same append-only pattern; stamp minor 3):
 | `daily_wind_dir_deg[7]` | i16[7] | daily `winddirection_10m_dominant` | -1 |
 
 Degrees 0..359, meteorological (0 = N, clockwise). Used by the day screen's
-forecast description ("Winds SW at 12mph") — 8-point compass rendering on-watch.
+forecast description ("Winds SW 12mph") — 8-point compass rendering on-watch.
 
 ## v4 minor 5 — tomorrow's hourly series
 
@@ -141,6 +141,43 @@ NEXT calendar day (location-local): Open-Meteo hourly `weather_code` +
 
 Fixed part ends at **250** (was 201 for minor 4); strings follow as before.
 
-⚠️ Firmware with this schema **rejects records stamped with a minor it does not
-know** (a strict-validation change — unknown minors used to be mis-parsed).
+⚠️ Firmware whose newest minor is 5 or lower **rejects records stamped with a
+minor it does not know** (a strict-validation change — unknown minors used to
+be mis-parsed).
 Gate minor 5 on firmware support, or retry a bounced insert as minor 4.
+
+## v4 minor 6 — record size and hourly precipitation
+
+Appended after `tomorrow_hourly_temp[24]`, immediately before the trailing
+pstrings; stamp `minor_version = 6`. Hours are 0-23 of the location-local day,
+as in the other hourly series. Tomorrow's series lets the clock face show the
+next 12 hours of precipitation across midnight.
+
+The weather app reads the hourly weather type, temperature and precipitation
+series at the watch's own hour, not the location's (the hourly UV is read at
+the location's). For a saved location in another time zone its main screen,
+sunset card and clock face are therefore off by the zone difference, or by
+that less a day while the watch and the location are on different dates.
+
+| offset | field | type | Open-Meteo source | notes |
+|---|---|---|---|---|
+| 250 | `fixed_size` | u16 | — | size of the fixed part, where the strings start: `348` for minor 6 |
+| 252 | `today_hourly_precip_probability[24]` | u8 × 24 | hourly `precipitation_probability`, today | whole percent 0-100, `255` unknown |
+| 276 | `tomorrow_hourly_precip_probability[24]` | u8 × 24 | the same, tomorrow | as above |
+| 300 | `today_hourly_precip_mm_x10[24]` | u8 × 24 | hourly `precipitation`, today, mm × 10 | clamp 254, `255` unknown; always mm |
+| 324 | `tomorrow_hourly_precip_mm_x10[24]` | u8 × 24 | the same, tomorrow | as above |
+
+Fixed part ends at **348** (250 for minor 5); strings follow as before.
+
+From minor 6 the record states the size of its fixed part, so a later minor
+needs nothing new from the firmware to be accepted: it appends its fields after
+these, before the strings, and writes the larger size at offset 250. Firmware
+that knows minor 6 reads the fields it knows and finds the strings at the
+stated size. A record may be up to 1024 bytes, and a minor may only append
+fields, never move or resize one.
+
+Firmware whose newest minor is 5 (releases v4.34.0 to v4.46.0) accepts no
+record over 348 bytes and no minor above 5: it answers `BLOB_DB_INVALID_DATA`
+(0x05) and keeps the record it had. Write minor 6 or later only to firmware
+that has this rule, and minor 5 otherwise. The phone can tell by the firmware
+version: the first release with this rule is the first to accept minor 6.
