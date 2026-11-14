@@ -4,7 +4,6 @@
 #include "kernel.h"
 
 #include <pbl/drivers/timer.h>
-#include <pbl/kernel/idle.h>
 #include <pbl/util/math.h>
 
 #define FRAC_BITS 32U
@@ -25,9 +24,6 @@ static uint64_t s_mult;
 static uint32_t s_cs_last;
 static uint64_t s_cs_ticks;
 static uint32_t s_cs_frac;
-
-static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
-static bool s_idle_disabled;
 
 // Wall clock time minus uptime, in microseconds.
 static int64_t s_realtime_offset_us;
@@ -170,7 +166,6 @@ void timekeeping_start(void) {
   ret = pbl_device_init(&s_ce->dev);
   PBL_ASSERTN(ret == 0);
   PBL_ASSERTN(s_cs_mhz != 0U && s_ce_hz != 0U);
-  PBL_ASSERTN(pbl_soc_num_idle_states <= PBL_IDLE_STATES_MAX);
 
   unsigned int key = arch_irq_lock();
   s_cs_last = s_cs->ops->read(s_cs);
@@ -188,45 +183,34 @@ void timekeeping_announce(void) {
   arch_irq_unlock(key);
 }
 
-void timekeeping_idle(pbl_tick_t ticks) {
-  const struct pbl_idle_state *state = nullptr;
-  int limit;
-  int i;
-
-  if (!s_running || s_idle_disabled || ticks == 0U) {
-    return;
-  }
-
-  limit = pbl_soc_idle_state_limit();
-  for (i = MIN(limit, (int)pbl_soc_num_idle_states - 1); i >= 0; i--) {
-    if (ticks >= pbl_soc_idle_states[i].min_ticks) {
-      state = &pbl_soc_idle_states[i];
-      break;
-    }
-  }
-  if (state == nullptr) {
-    return;
-  }
+uint64_t timekeeping_idle_begin(pbl_tick_t ticks, pbl_tick_t exit_ticks) {
+  uint64_t wake = UINT64_MAX / 2U;
+  uint64_t now_us;
 
   unsigned int key = arch_irq_lock();
-  uint64_t wake = UINT64_MAX / 2U;
   if (ticks != PBL_TICK_FOREVER) {
-    wake = sched_uptime_ticks() + ticks - MIN(state->exit_ticks, ticks - 1U);
+    wake = sched_uptime_ticks() + ticks - MIN(exit_ticks, ticks - 1U);
   }
   prv_program(wake);
-  uint64_t start_us = prv_now_us();
+  now_us = prv_now_us();
   arch_irq_unlock(key);
 
-  // The lock would keep the kernel's interrupts from waking the CPU up.
-  state->enter();
+  return now_us;
+}
 
-  key = arch_irq_lock();
-  s_residency_us[i] += prv_now_us() - start_us;
+uint64_t timekeeping_idle_end(void) {
+  uint64_t now_us;
+  uint64_t now;
+
+  unsigned int key = arch_irq_lock();
+  now_us = prv_now_us();
   prv_announce();
   // Programming drops the tick that woke the CPU up, and only the ISR expires timeouts.
-  uint64_t now = sched_uptime_ticks();
+  now = sched_uptime_ticks();
   prv_program(timeout_ticks_until_next() == 0U ? now : now + 1U);
   arch_irq_unlock(key);
+
+  return now_us;
 }
 
 uint64_t pbl_realtime_ms(void) {
@@ -259,22 +243,4 @@ uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms) {
   }
   // Rounded up, so the wall clock has reached it by then.
   return ((uint64_t)uptime_us * PBL_TICK_HZ + 999999U) / 1000000U;
-}
-
-void pbl_idle_set_enabled(bool enable) {
-  s_idle_disabled = !enable;
-}
-
-uint64_t pbl_idle_residency_us(pbl_idle_state_id_t state) {
-  uint64_t us;
-
-  if (state >= PBL_IDLE_STATES_MAX) {
-    return 0U;
-  }
-
-  unsigned int key = arch_irq_lock();
-  us = s_residency_us[state];
-  arch_irq_unlock(key);
-
-  return us;
 }

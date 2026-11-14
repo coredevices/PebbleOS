@@ -25,6 +25,9 @@ config COREDUMP
     default y
     depends on ARCH_HAS_COREDUMP
 
+config CPU_IDLE
+    default y
+
 config DEBUGGER_AWARE
     default y if !RELEASE
     depends on ARCH_HAS_DEBUGGER_DETECT

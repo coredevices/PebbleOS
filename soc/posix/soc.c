@@ -3,11 +3,9 @@
 
 #include <stdint.h>
 
-#include <pbl/kernel/idle.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
-#include <pbl/util/size.h>
 
 #include <pbl_arch_posix.h>
 #include <posix_host.h>
@@ -24,15 +22,6 @@ POSIX_HOST_HOOK(.poll = prv_kernel_poll)
 #endif
 
 void pbl_soc_early_init(void) {
-}
-
-const struct pbl_idle_state pbl_soc_idle_states[] = {
-  {.name = "wait", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
-};
-const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
-
-int pbl_soc_idle_state_limit(void) {
-  return 0;
 }
 
 [[noreturn]] void pbl_soc_reset(void) {

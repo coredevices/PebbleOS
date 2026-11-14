@@ -78,7 +78,7 @@ void arch_idle(pbl_tick_t max_ticks) {
     pbl_posix_cpu_wait(IDLE_YIELD_US);
     return;
   }
-  timekeeping_idle(max_ticks);
+  idle_enter(max_ticks);
 }
 
 void arch_start(void) {

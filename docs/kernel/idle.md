@@ -1,7 +1,14 @@
 # Idle
 
 When nothing is runnable, the idle thread asks the kernel to idle the CPU
-until the next timeout. The kernel owns everything about time in that
+until the next timeout.
+
+Idle states are optional. Without `CONFIG_CPU_IDLE` the kernel waits for an
+interrupt (`pbl_cpu_idle()`) a tick at a time: the tick keeps running, the
+SoC provides nothing and none of what follows is built. That is enough
+where power does not matter, e.g. a bootloader.
+
+With `CONFIG_CPU_IDLE` the kernel owns everything about time in the
 decision; the SoC only describes how its CPU can sleep, through
 `pbl/kernel/idle.h`:
 

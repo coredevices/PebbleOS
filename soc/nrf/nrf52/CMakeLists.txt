@@ -6,9 +6,9 @@ pbl_include_directories(.)
 pbl_library_sources(
   init.c
   sleep.c
-  idle.c
   power_off.c
   ppi.c
   retained.c
 )
+pbl_library_sources_ifdef(CONFIG_CPU_IDLE idle.c)
 pbl_linker_sources(memory linker.ld)

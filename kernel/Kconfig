@@ -7,6 +7,15 @@ config KERNEL_IDLE_STACK_SIZE
 	int "Idle thread stack size in bytes"
 	default 1024
 
+config CPU_IDLE
+	bool "CPU idle states"
+	help
+	  Idle the CPU in the low-power states of the SoC, the deepest one
+	  allowed and worth entering for the time until the next timeout,
+	  with the tick stopped meanwhile. Without it the CPU waits for an
+	  interrupt a tick at a time, which is enough where power does not
+	  matter, e.g. a bootloader.
+
 config KERNEL_MAIN_STACK_SIZE
 	int "Main thread stack size in bytes"
 	default 4096

@@ -30,6 +30,7 @@ pbl_library_sources(
   sys_work.c
   work.c
 )
+pbl_library_sources_ifdef(CONFIG_CPU_IDLE idle.c)
 # The heap poisons what it hands out but walks its own memory freely.
 if(CONFIG_ASAN)
   set_source_files_properties(heap.c PROPERTIES COMPILE_OPTIONS -fno-sanitize=address)
