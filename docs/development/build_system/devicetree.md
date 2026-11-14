@@ -70,7 +70,7 @@ flowchart TD
   dtmap["dtmap.py"]
   specs["*.dtmap.yaml, *.class.yaml, *.regs.yaml"]
   roles["roles.yml"]
-  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc<br/>devicetree/roles.c"]
+  out["devicetree/devices.h<br/>devicetree/partitions.h<br/>devicetree/idle_states.h<br/>devicetree/regs.h<br/>devicetree/instances/*.inc<br/>devicetree/roles.c"]
   drv["drivers"]
   dts --> dtc --> dtb --> kdt --> kconfig --> cfg --> dtmap
   dtb --> dtmap
@@ -112,6 +112,7 @@ flowchart TD
      is defined under the first in alphabetical order, and the others are
      macros for it;
    - `partitions.h`, the flash partitions; see [](#devicetree-partitions);
+   - `idle_states.h`, the idle states of the CPU; see [](#devicetree-idle-states);
    - `regs.h`, the registers of the blocks code reaches before there are
      devices; see [](#devicetree-regs);
    - `roles.c`, the device of each role; see [](#devicetree-roles).
@@ -574,6 +575,45 @@ They become `devicetree/partitions.h`, with `PART_<LABEL>_OFFSET`,
 to find a partition.
 
 (devicetree-regs)=
+
+(devicetree-idle-states)=
+
+## Idle states
+
+The states a CPU idles in beyond the wait for interrupt are `arm,idle-state`
+nodes in the `idle-states` node of `/cpus`, as in Linux, with the times the
+SoC takes to enter and leave each and the shortest idle it pays off for. The
+CPU lists them in `cpu-idle-states`:
+
+```dts
+cpus {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	cpu0: cpu@0 {
+		compatible = "arm,cortex-m33";
+		device_type = "cpu";
+		reg = <0>;
+		cpu-idle-states = <&deepsleep>;
+	};
+
+	idle-states {
+		deepsleep: cpu-sleep-0 {
+			compatible = "arm,idle-state";
+			entry-latency-us = <200>;
+			exit-latency-us = <500>;
+			min-residency-us = <10000>;
+		};
+	};
+};
+```
+
+They become `devicetree/idle_states.h`, with
+`PBL_DT_IDLE_STATE_<LABEL>_ENTRY_LATENCY_US`, `_EXIT_LATENCY_US` and
+`_MIN_RESIDENCY_US` for each labelled state. The SoC, which knows how to
+enter each state, fills its {doc}`idle states <../../kernel/idle>` from
+them with `PBL_US_TO_TICKS_CEIL()`. A board overrides the times of a state
+when its crystal or its flash take longer to come back.
 
 ## Registers before devices
 
