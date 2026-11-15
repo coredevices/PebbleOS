@@ -1522,6 +1522,10 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
   const int w = size.w - (paused ? PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, 0) : 0);
   const int top = workout_status_height(size);
   const DashboardPage page = paused ? DashboardPage_Main : prv_dashboard_page(window);
+  // Content is laid out from x = 0; shift it past a left-hand action bar.
+  const int16_t content_x =
+      (paused && !action_bar_layer_side_is_right(&window->action_bar)) ? size.w - w : 0;
+  ctx->draw_state.drawing_box.origin.x += content_x;
 
   if (!(PBL_IF_ROUND_ELSE(page == DashboardPage_Gauge, false))) {
     prv_draw_status(ctx, window, size, w);
@@ -1543,9 +1547,11 @@ static void prv_dashboard_update_proc(Layer *layer, GContext *ctx) {
 #if !PBL_COLOR
   if (paused) {
     graphics_context_set_stroke_color(ctx, GColorWhite);
-    graphics_draw_line(ctx, GPoint(w - 1, 0), GPoint(w - 1, size.h - 1));
+    const int16_t line_x = content_x ? 0 : w - 1;
+    graphics_draw_line(ctx, GPoint(line_x, 0), GPoint(line_x, size.h - 1));
   }
 #endif
+  ctx->draw_state.drawing_box.origin.x -= content_x;
   if (!paused) {
     prv_draw_page_indicator(ctx, window, size, page == DashboardPage_Main && window->has_hrm);
     if (!window->finished) {
@@ -1752,7 +1758,10 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     // Pausing is button only; taps just reach the sidebar actions.
     const int h = active_window->window.layer.bounds.size.h;
     const int w = active_window->window.layer.bounds.size.w;
-    if (event->x >= w - ACTION_BAR_WIDTH) {
+    const bool on_bar = action_bar_layer_side_is_right(&active_window->action_bar)
+                            ? event->x >= w - ACTION_BAR_WIDTH
+                            : event->x < ACTION_BAR_WIDTH;
+    if (on_bar) {
       if (event->y >= 2 * h / 3) {
         prv_down_click_handler(nullptr, active_window);
       } else if (event->y >= h / 3) {
