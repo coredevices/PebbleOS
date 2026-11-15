@@ -20,9 +20,14 @@
 static bool s_left_handed;
 static PebbleTask s_task = PebbleTask_App;
 static ProcessAppSDKType s_sdk_type = ProcessAppSDKType_System;
-static const PebbleProcessMd s_md;
+static GRect s_drawn_icon_rect;
 
 bool display_orientation_is_left(void) {
+  cl_assert_(false, "applib must read orientation through a syscall");
+  return false;
+}
+
+bool sys_display_orientation_is_left(void) {
   return s_left_handed;
 }
 
@@ -31,11 +36,16 @@ PebbleTask pebble_task_get_current(void) {
 }
 
 const PebbleProcessMd *sys_process_manager_get_current_process_md(void) {
-  return &s_md;
+  cl_assert_(false, "applib must not dereference process metadata");
+  return nullptr;
 }
 
 ProcessAppSDKType process_metadata_get_app_sdk_type(const PebbleProcessMd *md) {
-  (void)md;
+  cl_assert_(false, "applib must not dereference process metadata");
+  return ProcessAppSDKType_System;
+}
+
+ProcessAppSDKType sys_process_manager_get_current_process_sdk_type(void) {
   return s_sdk_type;
 }
 
@@ -154,7 +164,7 @@ void graphics_fill_oval(GContext *ctx, GRect rect, GOvalScaleMode scale_mode) {
 void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GRect *rect) {
   (void)ctx;
   (void)bitmap;
-  (void)rect;
+  s_drawn_icon_rect = *rect;
 }
 
 uint16_t time_ms(time_t *tloc, uint16_t *out_ms) {
@@ -225,4 +235,34 @@ void test_action_bar_layer__inset_bounds_shifts_origin_when_on_left(void) {
       action_bar_layer_inset_bounds(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
   cl_assert_equal_i(inset.origin.x, ACTION_BAR_WIDTH);
   cl_assert_equal_i(inset.size.w, PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH);
+}
+
+void test_action_bar_layer__attached_bar_keeps_drawing_side_after_pref_change(void) {
+  s_left_handed = true;
+  Window window = {};
+  layer_init(&window.layer, &GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT));
+  ActionBarLayer bar;
+  action_bar_layer_init(&bar);
+  action_bar_layer_add_to_window(&bar, &window);
+  GBitmap icon = {.bounds = GRect(0, 0, 10, 10)};
+  bar.icons[0] = &icon;
+  bar.is_highlighted = 1;
+  bar.animation[0] = ActionBarLayerIconPressAnimationMoveLeft;
+  GContext ctx = {};
+  bar.layer.update_proc(&bar.layer, &ctx);
+  const int16_t before = s_drawn_icon_rect.origin.x;
+
+  s_left_handed = false;
+  GRect sliding_frame = bar.layer.frame;
+  sliding_frame.origin.x = -1;
+  layer_set_frame(&bar.layer, &sliding_frame);
+  bar.layer.update_proc(&bar.layer, &ctx);
+  cl_assert_equal_i(s_drawn_icon_rect.origin.x, before);
+
+  action_bar_layer_add_to_window(&bar, &window);
+  cl_assert_equal_i(bar.layer.frame.origin.x, PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH);
+  bar.layer.update_proc(&bar.layer, &ctx);
+  cl_assert(s_drawn_icon_rect.origin.x < before);
+  action_bar_layer_deinit(&bar);
+  layer_deinit(&window.layer);
 }

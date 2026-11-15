@@ -17,6 +17,7 @@ pbl_clar_test(test_action_bar_layer
     tests/fakes/fake_gbitmap_png.c
     pebble/applib/ui/layer.c
     pebble/applib/ui/action_bar_layer.c
+  PLATFORMS emery gabbro
   DEFINES CONFIG_ORIENTATION_MANAGER
 )
 

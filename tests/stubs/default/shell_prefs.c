@@ -107,6 +107,10 @@ bool PBL_WEAK display_orientation_is_left(void) {
   return s_display_orientation_left;
 }
 
+bool PBL_WEAK sys_display_orientation_is_left(void) {
+  return s_display_orientation_left;
+}
+
 void PBL_WEAK display_orientation_set_left(bool left) {
   s_display_orientation_left = left;
 }
