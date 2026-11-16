@@ -9,8 +9,6 @@
 #include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
-#include <kernel/pebble_tasks.h>
-
 /*
  * Pebble File System (PFS) on the external NOR flash, the backend behind the "/" mount (see
  * pfs_fs.c). Private to the file system subsystem.

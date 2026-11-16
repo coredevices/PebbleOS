@@ -26,8 +26,6 @@
 #include <pbl/task_wdt/task_wdt.h>
 #include <pbl/util/math.h>
 
-#include <kernel/pebble_tasks.h>
-
 PBL_LOG_MODULE_DECLARE(fs, CONFIG_FS_LOG_LEVEL);
 
 static PBL_MUTEX_DEFINE(s_pfs_mutex);
