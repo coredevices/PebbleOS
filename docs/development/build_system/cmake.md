@@ -103,7 +103,7 @@ can use Kconfig symbols, `#include` and `#if`. Libraries add to it at fixed
 hook points:
 
 ```cmake
-pbl_linker_sources(rom-start shell.ld)
+pbl_iterable_section(shell_root)
 pbl_library_ramfunc(${ramfunc_sources})
 ```
 
@@ -115,6 +115,13 @@ pbl_library_ramfunc(${ramfunc_sources})
 : Include linker script fragments at a hook point: `memory`, `rom-start`,
   `ram-sections`, `ramfunc` or `footer`. Fragments are included sorted by
   sort key, then by registration order.
+
+`pbl_iterable_section(tag [UNSORTED])`
+: Gather the table `tag` of the objects placed with
+  `PBL_ITERABLE_SECTION()` in flash, in section `.i_<tag>` between
+  `__start_i_<tag>` and `__stop_i_<tag>`.
+  Entries are sorted by their key, or kept in link order with `UNSORTED`. A
+  no-op for builds linked without the firmware linker script.
 
 `pbl_library_ramfunc(src...)`
 : Place the code and read-only data of some of the current library's

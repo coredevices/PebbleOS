@@ -11,7 +11,7 @@
 # links with the host's default one instead: Mach-O linkers cannot gather
 # sections sorted by name, and ELF hosts do not insert the fragments (yet).
 # Without the script, PBL_SECTION() is a no-op and code collecting objects
-# across files uses PBL_UNSORTED_SECTION().
+# across files uses PBL_ITERABLE_SECTION().
 if(CONFIG_ARCH_POSIX)
   set(PBL_LINKER_SCRIPT OFF)
   add_compile_definitions(PBL_NO_LINKER_SCRIPT)
@@ -64,6 +64,29 @@ function(pbl_linker_sources location)
     set_property(GLOBAL APPEND PROPERTY PBL_LINKER_SNIPPETS_${location}
       "${ARG_SORT_KEY}|${src}")
   endforeach()
+endfunction()
+
+# Gathers the iterable section i_<tag> (PBL_ITERABLE_SECTION()) in flash, its
+# entries sorted by key, or in link order with UNSORTED.
+function(pbl_iterable_section tag)
+  cmake_parse_arguments(ARG "UNSORTED" "" "" ${ARGN})
+  if(NOT PBL_LINKER_SCRIPT)
+    return()
+  endif()
+  if(ARG_UNSORTED)
+    set(input "*(.i_${tag}.*)")
+  else()
+    set(input "*(SORT_BY_NAME(.i_${tag}.*))")
+  endif()
+  set(fragment ${PROJECT_BINARY_DIR}/linker/iterable/${tag}.ld)
+  file(CONFIGURE OUTPUT ${fragment} CONTENT
+"    .i_${tag} : ALIGN(4) {
+        __start_i_${tag} = .;
+        KEEP(${input})
+        __stop_i_${tag} = .;
+    } >FLASH
+")
+  pbl_linker_sources(rom-start ${fragment})
 endfunction()
 
 # Run the given sources of the current library from RAM: their code and
