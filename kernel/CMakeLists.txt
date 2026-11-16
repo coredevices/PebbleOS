@@ -15,6 +15,7 @@ pbl_library_sources(
   msgq.c
   mutex.c
   poll.c
+  print.c
   reboot.c
   sched.c
   scratch.c

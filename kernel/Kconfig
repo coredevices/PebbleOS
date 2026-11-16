@@ -55,6 +55,13 @@ config KERNEL_ISR_STACK_SIZE
 	int "ISR stack size in bytes"
 	default 1024
 
+config KERNEL_PRINT_BUFFER_SIZE
+	int "pbl_print() buffer size in bytes"
+	default 128
+	help
+	  Buffer on the caller's stack that pbl_print() formats into. Text is cut
+	  at one byte less.
+
 config ARCH_HAS_COREDUMP
 	bool
 	help

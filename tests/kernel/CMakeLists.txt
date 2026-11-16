@@ -86,3 +86,10 @@ pbl_clar_test(test_scratch
   DEFINES
     CONFIG_SCRATCH_HEAP_SIZE=65536
 )
+
+pbl_clar_test(test_print
+  SOURCES
+    kernel/print.c
+  DEFINES
+    CONFIG_KERNEL_PRINT_BUFFER_SIZE=128
+)
