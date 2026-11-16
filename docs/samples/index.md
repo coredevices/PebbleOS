@@ -42,6 +42,13 @@ subsys/input/events.md
 
 ```{toctree}
 :maxdepth: 1
+:caption: Drivers
+
+drivers/temp.md
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Benchmarks
 
 benchmarks/kernel.md
