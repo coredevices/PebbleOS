@@ -1,0 +1,10 @@
+description: A small image copied to RAM, its zero-filled part cleared and its pointers relocated, and two broken images rejected
+# Relocated pointers are 32-bit: the native boards are 64-bit hosts.
+skip: [native_emery, native_flint, native_gabbro]
+expect:
+  - 'loader: image IMG0 version 1, 44 bytes stored, 60 in memory'
+  - 'loader: greeting "Hello", farewell "Goodbye"'
+  - 'loader: counter in the zero-filled part: yes, starts at 0'
+  - 'loader: relocation into the header: -EINVAL'
+  - 'loader: image larger than its memory: -ENOMEM'
+  - 'Sample done'

@@ -44,6 +44,7 @@ subsys/fs/files.md
 subsys/settings/store.md
 subsys/i18n/catalog.md
 subsys/input/events.md
+subsys/loader/image.md
 ```
 
 ```{toctree}
