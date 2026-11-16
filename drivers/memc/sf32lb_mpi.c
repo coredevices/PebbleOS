@@ -28,3 +28,4 @@ int pbl_sf32lb_mpi_prepare(const struct pbl_sf32lb_mpi *mpi) {
 }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_mpi_sf32lb_mpi)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_mpi_sf32lb_mpi)

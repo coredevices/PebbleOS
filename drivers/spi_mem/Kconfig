@@ -24,12 +24,13 @@ config SPI_MEM_NRF5_QSPI_IRQ_PRIO
       Priority of the controller interrupt.
 
 config SPI_MEM_SF32LB_MPI
-    bool "SiFli SF32LB52 MPI"
-    default y if SOC_SF32LB52
-    depends on SOC_SF32LB52
+    bool "SiFli SF32LB MPI"
+    default y if SOC_SF32LB52 || SOC_SF32LB57
+    depends on SOC_SF32LB52 || SOC_SF32LB57
     select MEMC_SF32LB_MPI
     help
-      Support for a SPI NOR flash on the SiFli SF32LB52 MPI controller.
+      Support for a SPI NOR flash on the SiFli SF32LB52 and SF32LB57 MPI
+      controllers.
 
 module = DRIVER_SPI_MEM
 module-str = SPI memory
