@@ -14,5 +14,5 @@ config MEMC_SF32LB_MPI
     select CLK
     select PINCTRL
     help
-      Core of the SiFli SF32LB52 MPI controller: what its SPI memory
-      and HyperBus drivers share.
+      Core of the SiFli SF32LB52 and SF32LB57 MPI controllers: what
+      their SPI memory and HyperBus drivers share.
