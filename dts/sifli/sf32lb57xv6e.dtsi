@@ -1,6 +1,109 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
+#include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
+
+&pinctrl {
+	mpi1_default: mpi1-default-state {
+		dio0-pins {
+			pins = "SA01";
+			function = "mpi1_dio0";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio1-pins {
+			pins = "SA02";
+			function = "mpi1_dio1";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio2-pins {
+			pins = "SA03";
+			function = "mpi1_dio2";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio3-pins {
+			pins = "SA04";
+			function = "mpi1_dio3";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio4-pins {
+			pins = "SA08";
+			function = "mpi1_dio4";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio5-pins {
+			pins = "SA09";
+			function = "mpi1_dio5";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio6-pins {
+			pins = "SA10";
+			function = "mpi1_dio6";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		dio7-pins {
+			pins = "SA11";
+			function = "mpi1_dio7";
+			input-enable;
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		clk-pins {
+			pins = "SA07";
+			function = "mpi1_clk";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		cs-pins {
+			pins = "SA05";
+			function = "mpi1_cs";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		dqsdm-pins {
+			pins = "SA12";
+			function = "mpi1_dqsdm";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+};
+
+&mpi1 {
+	pinctrl-0 = <&mpi1_default>;
+	pinctrl-names = "default";
+	assigned-clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_MPI1_K>;
+	assigned-clock-parents = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_DLL1>;
+
+	psram: psram@0 {
+		compatible = "cypress,hyperram";
+		reg = <0>;
+	};
+};
+
 &mpi2 {
 	sip_flash: flash@0 {
 		compatible = "puya,py25q128ha", "jedec,spi-nor";
