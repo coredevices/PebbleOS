@@ -66,10 +66,11 @@ function(pbl_linker_sources location)
   endforeach()
 endfunction()
 
-# Gathers the iterable section i_<tag> (PBL_ITERABLE_SECTION()) in flash, its
-# entries sorted by key, or in link order with UNSORTED.
+# Gathers the iterable section i_<tag> (PBL_ITERABLE_SECTION()) in flash, or
+# in .ramfunc with RAMFUNC when CONFIG_RAMFUNC is set, its entries sorted by
+# key, or in link order with UNSORTED.
 function(pbl_iterable_section tag)
-  cmake_parse_arguments(ARG "UNSORTED" "" "" ${ARGN})
+  cmake_parse_arguments(ARG "UNSORTED;RAMFUNC" "" "" ${ARGN})
   if(NOT PBL_LINKER_SCRIPT)
     return()
   endif()
@@ -79,14 +80,24 @@ function(pbl_iterable_section tag)
     set(input "*(SORT_BY_NAME(.i_${tag}.*))")
   endif()
   set(fragment ${PROJECT_BINARY_DIR}/linker/iterable/${tag}.ld)
-  file(CONFIGURE OUTPUT ${fragment} CONTENT
+  if(ARG_RAMFUNC AND CONFIG_RAMFUNC)
+    file(CONFIGURE OUTPUT ${fragment} CONTENT
+"        . = ALIGN(4);
+        __start_i_${tag} = .;
+        KEEP(${input})
+        __stop_i_${tag} = .;
+")
+    pbl_linker_sources(ramfunc ${fragment})
+  else()
+    file(CONFIGURE OUTPUT ${fragment} CONTENT
 "    .i_${tag} : ALIGN(4) {
         __start_i_${tag} = .;
         KEEP(${input})
         __stop_i_${tag} = .;
     } >FLASH
 ")
-  pbl_linker_sources(rom-start ${fragment})
+    pbl_linker_sources(rom-start ${fragment})
+  endif()
 endfunction()
 
 # Run the given sources of the current library from RAM: their code and
