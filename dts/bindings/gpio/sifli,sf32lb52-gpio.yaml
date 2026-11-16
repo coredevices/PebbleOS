@@ -56,6 +56,10 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS always-on block, where SF32LB52 wakeup pins latch.
 
+  sifli,pmuc:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: PMU, whose wake pins wake the system from hibernate.
+
   interrupt-controller: true
 
   '#interrupt-cells':
@@ -69,6 +73,7 @@ required:
   - gpio-controller
   - '#gpio-cells'
   - ngpios
+  - sifli,pmuc
   - interrupt-controller
   - '#interrupt-cells'
 
@@ -85,6 +90,7 @@ examples:
         #gpio-cells = <2>;
         ngpios = <45>;
         sifli,hpsys-aon = <&hpsys_aon>;
+        sifli,pmuc = <&pmuc>;
         interrupt-controller;
         #interrupt-cells = <2>;
     };

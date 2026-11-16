@@ -14,3 +14,5 @@ args:
   - irq: 0
   - clock: 0
   - prop: ngpios
+  - reg: 0
+    of: sifli,pmuc

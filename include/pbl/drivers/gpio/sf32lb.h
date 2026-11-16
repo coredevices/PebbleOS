@@ -43,6 +43,8 @@ struct pbl_gpio_sf32lb {
   struct pbl_clk clk;
   /** HPSYS always-on block base address, where wakeup pins latch. */
   uintptr_t aon;
+  /** PMU base address, whose wake pins wake the SF32LB52 from hibernate. */
+  uintptr_t pmuc;
   /** Runtime state. */
   struct pbl_gpio_sf32lb_state *state;
 };

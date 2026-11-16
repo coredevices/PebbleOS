@@ -388,6 +388,7 @@
 			#gpio-cells = <2>;
 			ngpios = <45>;
 			sifli,hpsys-aon = <&hpsys_aon>;
+			sifli,pmuc = <&pmuc>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
 		};

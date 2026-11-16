@@ -33,8 +33,13 @@
 
 /* Register bit definitions */
 
-#define PMUC_CR_SEL_LPCLK PBL_BIT(0)
-#define PMUC_CR_REBOOT    PBL_BIT(2)
+#define PMUC_CR_SEL_LPCLK        PBL_BIT(0)
+#define PMUC_CR_HIBER_EN         PBL_BIT(1)
+#define PMUC_CR_REBOOT           PBL_BIT(2)
+#define PMUC_CR_PIN_MODE_MASK(n) PBL_GENMASK(6 + 3 * (n), 4 + 3 * (n))
+#define PMUC_CR_PIN_MODE_HIGH    0U
+#define PMUC_CR_PIN_MODE_LOW     1U
+#define PMUC_CR_PIN_SEL_MASK(n)  PBL_GENMASK(14 + 5 * (n), 10 + 5 * (n))
 
 #define PMUC_WER_RTC    PBL_BIT(0)
 #define PMUC_WER_WDT1   PBL_BIT(1)
@@ -43,6 +48,9 @@
 #define PMUC_WER_PIN1   PBL_BIT(4)
 #define PMUC_WER_LOWBAT PBL_BIT(7)
 #define PMUC_WER_CHG    PBL_BIT(8)
+
+#define PMUC_WCR_PIN0 PBL_BIT(3)
+#define PMUC_WCR_PIN1 PBL_BIT(4)
 
 #define PMUC_WSR_RTC    PBL_BIT(0)
 #define PMUC_WSR_WDT1   PBL_BIT(1)

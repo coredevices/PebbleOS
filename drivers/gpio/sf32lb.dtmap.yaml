@@ -16,3 +16,5 @@ args:
   - prop: ngpios
   - reg: 0
     of: sifli,hpsys-aon
+  - reg: 0
+    of: sifli,pmuc

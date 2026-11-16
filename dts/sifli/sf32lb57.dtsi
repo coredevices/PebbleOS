@@ -296,6 +296,7 @@
 			gpio-ranges = <&pinctrl 0 26 58>;
 			#gpio-cells = <2>;
 			ngpios = <58>;
+			sifli,pmuc = <&pmuc>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
 		};
