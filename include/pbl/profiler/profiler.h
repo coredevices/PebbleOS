@@ -46,21 +46,15 @@ struct pbl_profiler_node {
 
 #ifdef CONFIG_PROFILER
 
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PRV_PROFILER_NODE_SECTION(_name) PBL_UNSORTED_SECTION(pbl_prof_nodes)
-#else
-#define PRV_PROFILER_NODE_SECTION(_name) PBL_ALIGNED(4) PBL_SECTION(".pbl_profiler_nodes." #_name)
-#endif
-
 /**
  * @brief Define a profiler node.
  *
  * @param _name Name, an identifier unique across the firmware.
  */
-#define PBL_PROFILER_NODE_DEFINE(_name)                                         \
-  struct pbl_profiler_node pbl_profiler_node_##_name = {.name = #_name};        \
-  static struct pbl_profiler_node *const pbl_profiler_node_ref_##_name PBL_USED \
-  PRV_PROFILER_NODE_SECTION(_name) = &pbl_profiler_node_##_name
+#define PBL_PROFILER_NODE_DEFINE(_name)                                                      \
+  struct pbl_profiler_node pbl_profiler_node_##_name = {.name = #_name};                     \
+  static struct pbl_profiler_node *const pbl_profiler_node_ref_##_name PBL_ITERABLE_SECTION( \
+      struct pbl_profiler_node *const, profiler_nodes, #_name) = &pbl_profiler_node_##_name
 
 /**
  * @brief Declare a profiler node defined in another file.

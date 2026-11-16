@@ -4,4 +4,4 @@
 pbl_library()
 pbl_library_sources(profiler.c)
 pbl_library_sources_ifdef(CONFIG_PROFILER_SHELL shell.c)
-pbl_linker_sources(rom-start profiler.ld)
+pbl_iterable_section(profiler_nodes)

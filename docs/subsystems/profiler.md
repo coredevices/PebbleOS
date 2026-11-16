@@ -7,7 +7,7 @@
 
 A node accumulates the cycles spent between its start and stop calls, and
 how many times it was stopped. Nodes are defined next to the code they
-measure and collected at link time in the `.pbl_profiler_nodes` linker
+measure and collected at link time in the `profiler_nodes` iterable
 section, sorted by name:
 
 ```c
