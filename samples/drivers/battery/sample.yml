@@ -1,0 +1,10 @@
+description: The battery voltage, current and temperature, and the charger state, read three times
+expect:
+  - 'battery: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'battery: USB (dis)?connected, (not )?charging, charge [a-z ]+'
+  - 'battery: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'battery: USB (dis)?connected, (not )?charging, charge [a-z ]+'
+  - 'battery: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'battery: USB (dis)?connected, (not )?charging, charge [a-z ]+'
+  - 'Sample done'
+roles: [battery]
