@@ -50,6 +50,7 @@ drivers/display.md
 drivers/rng.md
 drivers/rtc.md
 drivers/temp.md
+drivers/touch.md
 drivers/vibe.md
 ```
 

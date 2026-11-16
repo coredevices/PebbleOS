@@ -1,0 +1,9 @@
+description: The touchscreen powered up for 10 seconds, its touches logged as they come and go
+expect:
+  - 'touch: \d+x\d+, inverted x: (yes|no), inverted y: (yes|no), swapped: (yes|no)'
+  - 'touch: listening for 10 s'
+  - 'touch: \d+ touches'
+  - 'touch: enabled after disable: no'
+  - 'Sample done'
+timeout: 20
+roles: [touch]
