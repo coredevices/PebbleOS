@@ -37,6 +37,7 @@ kernel/classic/barrier.md
 :maxdepth: 1
 :caption: Subsystems
 
+subsys/crc/checksums.md
 subsys/input/events.md
 ```
 
