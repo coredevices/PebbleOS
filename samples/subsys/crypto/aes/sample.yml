@@ -1,0 +1,9 @@
+description: AES-128 and AES-256 on the FIPS 197 example block, and a message encrypted and decrypted in ECB mode
+expect:
+  - 'aes: AES-128: 69c4e0d86a7b0430d8cdb78070b4c55a'
+  - 'aes: AES-256: 8ea2b7ca516745bfeafc49904b496089'
+  - 'aes: decrypted back to the plaintext: yes'
+  - 'aes: 48 bytes in ECB mode, decrypted back: yes'
+  - 'aes: equal blocks encrypt to equal blocks in ECB mode: yes'
+  - 'aes: 20 bytes, not whole blocks: -EINVAL'
+  - 'Sample done'
