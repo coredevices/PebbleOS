@@ -9,7 +9,7 @@
 static bool s_shell_enabled;
 
 static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
-  const struct pbl_touch_props *props = &TOUCH->props;
+  const struct pbl_touch_props *props = pbl_touch_get_props(TOUCH);
 
   pbl_shell_print(sh, "device: %s (%s)", TOUCH->dev.name,
                   pbl_device_is_ready(&TOUCH->dev) ? "ready" : "not ready");
