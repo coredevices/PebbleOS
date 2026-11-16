@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
-#include <pbl/logging/logging.h>
 
 /* main() is the high priority thread. */
 #define MEDIUM_PRIO (CONFIG_KERNEL_MAIN_THREAD_PRIO - 1)
@@ -39,19 +39,19 @@ static void prv_low(void *arg) {
   }
   prv_use_cpu(10);
   /* While high waits for the lock, its holder runs at high's priority. */
-  PBL_LOG_INFO("low: ends its work at the priority of high: %s",
-               self->prio == s_high->prio ? "yes" : "no");
+  printf("low: ends its work at the priority of high: %s\n",
+         self->prio == s_high->prio ? "yes" : "no");
   pbl_mutex_unlock(&s_bus_lock);
 
-  PBL_LOG_INFO("low: back to its own priority: %s",
-               self->prio == pbl_thread_prio_get(self) ? "yes" : "no");
+  printf("low: back to its own priority: %s\n",
+         self->prio == pbl_thread_prio_get(self) ? "yes" : "no");
 }
 
 /* Needs no lock, only the CPU, and for longer than high can wait. */
 static void prv_medium(void *arg) {
   prv_use_cpu(100);
   s_medium_done = true;
-  PBL_LOG_INFO("medium: done");
+  printf("medium: done\n");
 }
 
 static void prv_start(struct pbl_thread *t, const char *name, pbl_thread_entry_t entry,
@@ -82,19 +82,19 @@ int main(void) {
   s_high_waits = true;
   ret = pbl_mutex_lock(&s_bus_lock, PBL_FOREVER);
   if (ret != 0) {
-    PBL_LOG_ERR("high: cannot take the lock (%d)", ret);
+    fprintf(stderr, "high: cannot take the lock (%d)\n", ret);
     return ret;
   }
-  PBL_LOG_INFO("high: got the lock %s medium had the CPU", s_medium_done ? "after" : "before");
+  printf("high: got the lock %s medium had the CPU\n", s_medium_done ? "after" : "before");
   pbl_mutex_unlock(&s_bus_lock);
 
   ret = PBL_POLL_SLEEP_MS(pbl_thread_state(&s_low) == PBL_THREAD_DEAD, 5, 1000);
   if (ret != 0) {
-    PBL_LOG_ERR("high: low did not end (%d)", ret);
+    fprintf(stderr, "high: low did not end (%d)\n", ret);
     return ret;
   }
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

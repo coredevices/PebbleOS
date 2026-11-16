@@ -1,3 +1,3 @@
-description: Smallest application, which logs a message from main()
+description: Smallest application, which prints a message from main()
 expect:
   - 'Hello World! \w+'

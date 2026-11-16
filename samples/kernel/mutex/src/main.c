@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define DEPOSITS    100
 #define WORKER_PRIO (CONFIG_KERNEL_MAIN_THREAD_PRIO - 1)
@@ -88,12 +88,12 @@ static int prv_run_depositors(bool use_lock) {
     ret = prv_join(&s_thread_b);
   }
   if (ret != 0) {
-    PBL_LOG_ERR("main: depositors did not end (%d)", ret);
+    fprintf(stderr, "main: depositors did not end (%d)\n", ret);
     return ret;
   }
 
-  PBL_LOG_INFO("main: %s the lock, balance is %u after %u deposits", use_lock ? "with" : "without",
-               s_account.balance, 2 * DEPOSITS);
+  printf("main: %s the lock, balance is %u after %u deposits\n", use_lock ? "with" : "without",
+         s_account.balance, 2 * DEPOSITS);
 
   return 0;
 }
@@ -116,24 +116,24 @@ int main(void) {
   pbl_sleep_ms(10);
 
   ret = pbl_mutex_lock(&s_account.lock, PBL_MSEC(10));
-  PBL_LOG_INFO("main: lock held by another thread, 10 ms wait returns %s",
-               ret == -EAGAIN ? "-EAGAIN" : "something else");
+  printf("main: lock held by another thread, 10 ms wait returns %s\n",
+         ret == -EAGAIN ? "-EAGAIN" : "something else");
 
   pbl_sem_give(&s_holder_release);
   ret = pbl_mutex_lock(&s_account.lock, PBL_FOREVER);
   if (ret != 0) {
-    PBL_LOG_ERR("main: cannot take the released lock (%d)", ret);
+    fprintf(stderr, "main: cannot take the released lock (%d)\n", ret);
     return ret;
   }
 
   /* The owner may lock again, e.g. in a function called with the lock held. */
   pbl_mutex_lock(&s_account.lock, PBL_FOREVER);
   pbl_mutex_unlock(&s_account.lock);
-  PBL_LOG_INFO("main: locked twice, unlocked once, still the owner: %s",
-               pbl_mutex_is_owner(&s_account.lock) ? "yes" : "no");
+  printf("main: locked twice, unlocked once, still the owner: %s\n",
+         pbl_mutex_is_owner(&s_account.lock) ? "yes" : "no");
   pbl_mutex_unlock(&s_account.lock);
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

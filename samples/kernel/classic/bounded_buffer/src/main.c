@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define CAPACITY           4
 #define ITEMS_PER_PRODUCER 50
@@ -113,8 +114,8 @@ int main(void) {
   for (unsigned int i = 0; i < NUM_PRODUCERS + NUM_CONSUMERS; i++) {
     ret = PBL_POLL_SLEEP_MS(pbl_thread_state(&s_threads[i]) == PBL_THREAD_DEAD, 1, 1000);
     if (ret != 0) {
-      PBL_LOG_ERR("main: %s did not end (%d)", i < NUM_PRODUCERS ? "a producer" : "a consumer",
-                  ret);
+      fprintf(stderr, "main: %s did not end (%d)\n",
+              i < NUM_PRODUCERS ? "a producer" : "a consumer", ret);
       return ret;
     }
   }
@@ -123,12 +124,12 @@ int main(void) {
     sum += s_sums[i];
   }
 
-  PBL_LOG_INFO("buffer: %u items produced, consumed items add up to %u of %u",
-               NUM_PRODUCERS * ITEMS_PER_PRODUCER, sum, expected);
-  PBL_LOG_INFO("buffer: held at most %u of %u items, %u left", s_buffer.max_used, CAPACITY,
-               s_buffer.used);
+  printf("buffer: %u items produced, consumed items add up to %u of %u\n",
+         NUM_PRODUCERS * ITEMS_PER_PRODUCER, sum, expected);
+  printf("buffer: held at most %u of %u items, %u left\n", s_buffer.max_used, CAPACITY,
+         s_buffer.used);
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

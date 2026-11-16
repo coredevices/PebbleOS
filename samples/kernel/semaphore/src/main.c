@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/timer.h>
-#include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
 #define NUM_WORKERS  4
@@ -72,10 +72,10 @@ int main(void) {
   int ret;
 
   ret = prv_transfer(10);
-  PBL_LOG_INFO("main: 10 ms transfer returns %d", ret);
+  printf("main: 10 ms transfer returns %d\n", ret);
 
   ret = prv_transfer(5000);
-  PBL_LOG_INFO("main: 5 s transfer returns %s", ret == -ETIMEDOUT ? "-ETIMEDOUT" : "other");
+  printf("main: 5 s transfer returns %s\n", ret == -ETIMEDOUT ? "-ETIMEDOUT" : "other");
 
   for (unsigned int i = 0; i < NUM_WORKERS; i++) {
     const struct pbl_thread_attr attr = {
@@ -93,16 +93,16 @@ int main(void) {
   for (unsigned int i = 0; i < NUM_WORKERS; i++) {
     ret = PBL_POLL_SLEEP_MS(pbl_thread_state(&s_workers[i]) == PBL_THREAD_DEAD, 1, 1000);
     if (ret != 0) {
-      PBL_LOG_ERR("main: worker %u did not end (%d)", i, ret);
+      fprintf(stderr, "main: worker %u did not end (%d)\n", i, ret);
       return ret;
     }
   }
 
-  PBL_LOG_INFO("main: %u workers shared %u channels, at most %u busy at once", NUM_WORKERS,
-               NUM_CHANNELS, s_max_busy_channels);
-  PBL_LOG_INFO("main: %u channels free again", (unsigned int)pbl_sem_count(&s_channels));
+  printf("main: %u workers shared %u channels, at most %u busy at once\n", NUM_WORKERS,
+         NUM_CHANNELS, s_max_busy_channels);
+  printf("main: %u channels free again\n", (unsigned int)pbl_sem_count(&s_channels));
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

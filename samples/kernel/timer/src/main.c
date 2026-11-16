@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/timer.h>
-#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 
 #define BLINKS          5
@@ -49,27 +49,27 @@ int main(void) {
 
   ret = pbl_sem_take(&s_blinker.done, PBL_SEC(1));
   if (ret != 0) {
-    PBL_LOG_ERR("main: timer did not expire (%d)", ret);
+    fprintf(stderr, "main: timer did not expire (%d)\n", ret);
     return ret;
   }
 
-  PBL_LOG_INFO("main: %u blinks, the last one %s %u ms after the start", s_blinker.blinks,
-               s_blinker.last_ms - start_ms >= BLINKS * BLINK_PERIOD_MS ? "at least" : "less than",
-               BLINKS * BLINK_PERIOD_MS);
+  printf("main: %u blinks, the last one %s %u ms after the start\n", s_blinker.blinks,
+         s_blinker.last_ms - start_ms >= BLINKS * BLINK_PERIOD_MS ? "at least" : "less than",
+         BLINKS * BLINK_PERIOD_MS);
 
   s_blinker.blinks = 0;
   pbl_timer_start(&s_blinker.timer, PBL_SEC(10));
   pbl_sleep_ms(10);
-  PBL_LOG_INFO("main: started for 10 s, active: %s, more than 5 s left: %s",
-               pbl_timer_is_active(&s_blinker.timer) ? "yes" : "no",
-               pbl_ticks_to_ms(pbl_timer_remaining(&s_blinker.timer)) > 5000 ? "yes" : "no");
+  printf("main: started for 10 s, active: %s, more than 5 s left: %s\n",
+         pbl_timer_is_active(&s_blinker.timer) ? "yes" : "no",
+         pbl_ticks_to_ms(pbl_timer_remaining(&s_blinker.timer)) > 5000 ? "yes" : "no");
 
   pbl_timer_stop(&s_blinker.timer);
-  PBL_LOG_INFO("main: stopped, active: %s", pbl_timer_is_active(&s_blinker.timer) ? "yes" : "no");
+  printf("main: stopped, active: %s\n", pbl_timer_is_active(&s_blinker.timer) ? "yes" : "no");
   pbl_sleep_ms(20);
-  PBL_LOG_INFO("main: stopped before it expired, %u blinks since", s_blinker.blinks);
+  printf("main: stopped before it expired, %u blinks since\n", s_blinker.blinks);
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

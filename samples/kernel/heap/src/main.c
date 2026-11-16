@@ -3,11 +3,11 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/heap.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/logging/logging.h>
 #include <pbl/util/size.h>
 
 #define CALLER     ((uintptr_t)PBL_RETURN_ADDRESS(0))
@@ -32,7 +32,7 @@ static void prv_log_usage(const char *when) {
   unsigned int max_free;
 
   pbl_heap_stats(&s_heap, &used, &free, &max_free);
-  PBL_LOG_INFO("heap: %s: %u used, %u free, largest free block %u", when, used, free, max_free);
+  printf("heap: %s: %u used, %u free, largest free block %u\n", when, used, free, max_free);
 }
 
 int main(void) {
@@ -52,12 +52,12 @@ int main(void) {
 
   name = pbl_heap_strdup(&s_heap, "a string on the heap", CALLER);
   if (name == NULL) {
-    PBL_LOG_ERR("heap: out of memory");
+    fprintf(stderr, "heap: out of memory\n");
     return -ENOMEM;
   }
-  PBL_LOG_INFO("heap: block is in the heap: %s, allocated: %s",
-               pbl_heap_contains(&s_heap, name) ? "yes" : "no",
-               pbl_heap_is_allocated(&s_heap, name) ? "yes" : "no");
+  printf("heap: block is in the heap: %s, allocated: %s\n",
+         pbl_heap_contains(&s_heap, name) ? "yes" : "no",
+         pbl_heap_is_allocated(&s_heap, name) ? "yes" : "no");
   pbl_heap_free(&s_heap, name, CALLER);
 
   /* Allocation fails with NULL, which the caller handles. */
@@ -68,7 +68,7 @@ int main(void) {
     }
     num_blocks++;
   }
-  PBL_LOG_INFO("heap: full after %u blocks of %u bytes", (unsigned int)num_blocks, BLOCK_SIZE);
+  printf("heap: full after %u blocks of %u bytes\n", (unsigned int)num_blocks, BLOCK_SIZE);
   prv_log_usage("full");
 
   /* Every other block freed: plenty of memory in total, but in pieces. */
@@ -77,8 +77,8 @@ int main(void) {
   }
   prv_log_usage("every other block freed");
   big = pbl_heap_alloc(&s_heap, 2 * BLOCK_SIZE, CALLER);
-  PBL_LOG_INFO("heap: %u bytes from a fragmented heap: %s", 2 * BLOCK_SIZE,
-               big == NULL ? "refused" : "allocated");
+  printf("heap: %u bytes from a fragmented heap: %s\n", 2 * BLOCK_SIZE,
+         big == NULL ? "refused" : "allocated");
 
   /* Freed neighbors merge, so the pieces become one block again. */
   for (size_t i = 1; i < num_blocks; i += 2) {
@@ -86,10 +86,10 @@ int main(void) {
   }
   prv_log_usage("all freed");
 
-  PBL_LOG_INFO("heap: least memory it ever had left: %u of %u bytes",
-               (unsigned int)pbl_heap_min_headroom(&s_heap), (unsigned int)pbl_heap_size(&s_heap));
+  printf("heap: least memory it ever had left: %u of %u bytes\n",
+         (unsigned int)pbl_heap_min_headroom(&s_heap), (unsigned int)pbl_heap_size(&s_heap));
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/logging/logging.h>
+#include <stdio.h>
 
 int main(void) {
-  PBL_LOG_ALWAYS("Hello World! %s", CONFIG_BOARD);
+  printf("Hello World! %s\n", CONFIG_BOARD);
 
   return 0;
 }

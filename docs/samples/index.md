@@ -104,24 +104,22 @@ Single quotes keep YAML from reading the backslashes.
 samples/<area>/<name>/
   CMakeLists.txt
   sample.yml
-  prj.conf           what it enables, at least the console and logging
+  prj.conf           what it enables, at least the console and its stdout
   boards/<board>.conf
   src/main.c
 ```
 
 - **One subject.** A sample shows one API, in the way it is meant to be
   used, in about a hundred lines. What needs two belongs in two samples.
-- **It ends, and says so.** A sample logs what it does as it goes and
+- **It ends, and says so.** A sample prints what it does as it goes and
   finishes with `Sample done`, the last line of `expect`.
 - **The same output every time.** `expect` only names lines whose order the
   code guarantees, by priorities or by waiting on each other, never by how
   long something happens to take: the emulator's clock can run late and then
   catch up, so two sleeps that end close to each other may end together.
-- **Plain log formats.** The firmware hashes its logs on watches, which
-  takes `%s`, `%d` and the like without widths or padding, so samples keep
-  to those for their code to work there too.
 - **Code to copy.** Errors are checked and returned as in the rest of the
-  tree, and logged before `main()` returns one, so a failing run says why.
+  tree, and printed to `stderr` before `main()` returns one, so a failing
+  run says why.
   What threads share is guarded, even a counter: threads of equal priority
   are time-sliced. Nothing is specific to a board: what differs between
   boards goes in `boards/<board>.conf`.

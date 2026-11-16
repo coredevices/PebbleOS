@@ -3,10 +3,10 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define QUEUE_LEN   2
 #define NUM_SAMPLES 5
@@ -29,7 +29,7 @@ static void prv_producer(void *arg) {
     /* Blocks while the queue is full: a slow consumer slows the producer down. */
     int ret = pbl_msgq_put(&s_samples, &sample, PBL_FOREVER);
     if (ret != 0) {
-      PBL_LOG_ERR("producer: put failed (%d)", ret);
+      fprintf(stderr, "producer: put failed (%d)\n", ret);
       return;
     }
   }
@@ -48,11 +48,11 @@ static int prv_consume(void) {
       return ret;
     }
 
-    PBL_LOG_INFO("consumer: sample %" PRIu32 " = %" PRId32, sample.seq, sample.value);
+    printf("consumer: sample %" PRIu32 " = %" PRId32 "\n", sample.seq, sample.value);
     received++;
   }
 
-  PBL_LOG_INFO("consumer: no sample for 100 ms, %" PRIu32 " received", received);
+  printf("consumer: no sample for 100 ms, %" PRIu32 " received\n", received);
 
   return received == NUM_SAMPLES ? 0 : -EIO;
 }
@@ -75,14 +75,14 @@ static int prv_jump_the_queue(void) {
 
   /* The queue is full: without waiting, a third message is refused. */
   ret = pbl_msgq_put(&s_samples, &routine, PBL_NO_WAIT);
-  PBL_LOG_INFO("main: put on a full queue returns %s", ret == -EBUSY ? "-EBUSY" : "something else");
+  printf("main: put on a full queue returns %s\n", ret == -EBUSY ? "-EBUSY" : "something else");
 
   ret = pbl_msgq_get(&s_samples, &sample, PBL_NO_WAIT);
   if (ret != 0) {
     return ret;
   }
 
-  PBL_LOG_INFO("main: sample %" PRIu32 " was put last and comes out first", sample.seq);
+  printf("main: sample %" PRIu32 " was put last and comes out first\n", sample.seq);
   pbl_msgq_purge(&s_samples);
 
   return 0;
@@ -104,29 +104,29 @@ int main(void) {
 
   /* Let the producer run until the queue stops it. */
   pbl_thread_sleep(PBL_MSEC(50));
-  PBL_LOG_INFO("main: producer is blocked with %" PRIu32 " of %u samples queued",
-               pbl_msgq_num_used(&s_samples), NUM_SAMPLES);
+  printf("main: producer is blocked with %" PRIu32 " of %u samples queued\n",
+         pbl_msgq_num_used(&s_samples), NUM_SAMPLES);
 
   ret = pbl_msgq_peek(&s_samples, &sample);
   if (ret != 0) {
-    PBL_LOG_ERR("main: peek failed (%d)", ret);
+    fprintf(stderr, "main: peek failed (%d)\n", ret);
     return ret;
   }
-  PBL_LOG_INFO("main: sample %" PRIu32 " is next, and still queued", sample.seq);
+  printf("main: sample %" PRIu32 " is next, and still queued\n", sample.seq);
 
   ret = prv_consume();
   if (ret != 0) {
-    PBL_LOG_ERR("main: consuming failed (%d)", ret);
+    fprintf(stderr, "main: consuming failed (%d)\n", ret);
     return ret;
   }
 
   ret = prv_jump_the_queue();
   if (ret != 0) {
-    PBL_LOG_ERR("main: jumping the queue failed (%d)", ret);
+    fprintf(stderr, "main: jumping the queue failed (%d)\n", ret);
     return ret;
   }
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

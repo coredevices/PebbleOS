@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/malloc.h>
@@ -12,7 +13,6 @@
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
-#include <pbl/logging/logging.h>
 
 #define ITERATIONS 1000U
 
@@ -50,8 +50,8 @@ static void prv_report(const char *name, uint32_t average, uint32_t best) {
   uint32_t ns = (uint32_t)((uint64_t)average * 1000000000U / pbl_cycles_per_sec());
 
   /* No padding: hashed logs take plain conversions only. */
-  PBL_LOG_INFO("bench: %s: avg %" PRIu32 " cycles (%" PRIu32 " ns), best %" PRIu32 " cycles", name,
-               average, ns, best);
+  printf("bench: %s: avg %" PRIu32 " cycles (%" PRIu32 " ns), best %" PRIu32 " cycles\n", name,
+         average, ns, best);
 }
 
 static void prv_peer(void *arg) {
@@ -96,12 +96,12 @@ int main(void) {
   start = pbl_cycle_get_32();
   pbl_sleep_ms(10);
   if (pbl_cycle_get_32() == start) {
-    PBL_LOG_ERR("bench: the cycle counter does not count on this board");
+    fprintf(stderr, "bench: the cycle counter does not count on this board\n");
     return -ENOTSUP;
   }
 
-  PBL_LOG_INFO("bench: %u iterations each, %" PRIu32 " cycles per second", ITERATIONS,
-               pbl_cycles_per_sec());
+  printf("bench: %u iterations each, %" PRIu32 " cycles per second\n", ITERATIONS,
+         pbl_cycles_per_sec());
 
   BENCH("empty measurement", {});
 
@@ -155,7 +155,7 @@ int main(void) {
     prv_report("work submit to start", total / ITERATIONS, best);
   }
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

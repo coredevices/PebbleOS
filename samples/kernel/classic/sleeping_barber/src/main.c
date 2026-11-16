@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define NUM_CHAIRS    3
 #define NUM_CUSTOMERS 5
@@ -72,13 +73,13 @@ static void prv_customer(void *arg) {
   pbl_mutex_unlock(&s_shop_lock);
 
   if (!seated) {
-    PBL_LOG_INFO("customer %u: no free chair, leaves", customer->id);
+    printf("customer %u: no free chair, leaves\n", customer->id);
     return;
   }
 
   pbl_sem_give(&s_customers);
   pbl_sem_take(&s_barber_chair, PBL_FOREVER);
-  PBL_LOG_INFO("customer %u: in the barber chair", customer->id);
+  printf("customer %u: in the barber chair\n", customer->id);
 }
 
 static void prv_start(struct pbl_thread *t, const char *name, pbl_thread_entry_t entry, void *arg,
@@ -102,10 +103,10 @@ int main(void) {
 
   prv_start(&s_barber, "barber", prv_barber, NULL, BARBER_PRIO, s_barber_stack);
   pbl_sleep_ms(10);
-  PBL_LOG_INFO("shop: empty, barber asleep: %s",
-               pbl_thread_state(&s_barber) == PBL_THREAD_BLOCKED ? "yes" : "no");
+  printf("shop: empty, barber asleep: %s\n",
+         pbl_thread_state(&s_barber) == PBL_THREAD_BLOCKED ? "yes" : "no");
 
-  PBL_LOG_INFO("shop: %u customers arrive at once, for %u chairs", NUM_CUSTOMERS, NUM_CHAIRS);
+  printf("shop: %u customers arrive at once, for %u chairs\n", NUM_CUSTOMERS, NUM_CHAIRS);
   for (unsigned int i = 0; i < NUM_CUSTOMERS; i++) {
     s_customers_list[i].id = i;
     prv_start(&s_customers_list[i].thread, "customer", prv_customer, &s_customers_list[i],
@@ -114,16 +115,16 @@ int main(void) {
 
   ret = PBL_POLL_SLEEP_MS(s_haircuts + s_turned_away == NUM_CUSTOMERS, 5, 1000);
   if (ret != 0) {
-    PBL_LOG_ERR("shop: customers still waiting (%d)", ret);
+    fprintf(stderr, "shop: customers still waiting (%d)\n", ret);
     return ret;
   }
 
   pbl_sleep_ms(10);
-  PBL_LOG_INFO("shop: %u haircuts, %u customers turned away", s_haircuts, s_turned_away);
-  PBL_LOG_INFO("shop: empty, barber asleep: %s",
-               pbl_thread_state(&s_barber) == PBL_THREAD_BLOCKED ? "yes" : "no");
+  printf("shop: %u haircuts, %u customers turned away\n", s_haircuts, s_turned_away);
+  printf("shop: empty, barber asleep: %s\n",
+         pbl_thread_state(&s_barber) == PBL_THREAD_BLOCKED ? "yes" : "no");
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }
