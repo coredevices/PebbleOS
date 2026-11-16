@@ -4,6 +4,7 @@
 pbl_library()
 pbl_library_sources(
   assert.c
+  libutil.c
   syscalls.c
 )
 pbl_library_sources_ifdef(CONFIG_LIBC_NEWLIB lock.c)

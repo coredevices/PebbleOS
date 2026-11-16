@@ -12,7 +12,7 @@
  * @brief Generic helpers shared by the firmware, the bootloader and host tools (@c lib/util).
  *
  * The library does not depend on the kernel. Logging and assertions go through util_log() and
- * util_assertion_failed(), weak functions the firmware overrides.
+ * util_assertion_failed(), weak functions PebbleOS overrides in @c lib/c.
  *
  * @code{.c}
  * static const uint16_t s_rates[] = {10, 25, 50, 100};
