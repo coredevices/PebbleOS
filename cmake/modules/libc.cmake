@@ -93,7 +93,8 @@ skip_sanity_check = true
 
   # A single architecture, no crt0 or semihosting (the firmware supplies
   # its own startup and syscalls), C99 + long long formatted I/O, and one
-  # global TLS block (per-task TLS is a separate integration).
+  # global TLS block (per-task TLS is a separate integration), and locked
+  # stdio streams.
   if(NOT EXISTS ${build_dir}/build.ninja)
     message(STATUS "Configuring picolibc")
     execute_process(
@@ -108,6 +109,7 @@ skip_sanity_check = true
         -Dio-long-long=true
         -Dformat-default=long-long
         -Dthread-local-storage=false
+        -Dstdio-locking=true
       COMMAND_ERROR_IS_FATAL ANY
     )
   endif()
