@@ -13,6 +13,11 @@ PBL_WEAK void pbl_power_off(void) {
   PBL_ASSERT(false, "System power-off triggered!");
 }
 
+PBL_WEAK int pbl_power_cut(void) {
+  PBL_ASSERT(false, "System power cut triggered!");
+  return 0;
+}
+
 PBL_WEAK void pbl_reboot_emergency(void) {
   PBL_ASSERT(false, "System reset triggered!");
 }

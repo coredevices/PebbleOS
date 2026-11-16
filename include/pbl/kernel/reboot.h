@@ -11,8 +11,9 @@
  * @ingroup kernel
  * @brief Restart or power off the system, with handlers to shut down in order.
  *
- * pbl_reboot() and pbl_power_off() run the handlers of the matching prepare mode, then the
- * handlers that restart or power off the system, highest priority first. Prepare handlers shut
+ * pbl_reboot(), pbl_power_off() and pbl_power_cut() run the handlers of the matching prepare mode,
+ * then the handlers that restart, power off or cut the power of the system, highest priority
+ * first. Prepare handlers shut
  * down what must not be cut off midway, e.g. a radio link or a flash erase. Restart and power-off
  * handlers end the system; one that returns has declined or failed, and the next one runs. If none
  * ends the system, the kernel powers the SoC off with pbl_soc_power_off() when the SoC selects
@@ -47,6 +48,8 @@ enum pbl_sys_off_mode {
   PBL_SYS_OFF_RESTART,
   /** Power off the system. */
   PBL_SYS_OFF_POWER_OFF,
+  /** Cut the power of the system. */
+  PBL_SYS_OFF_POWER_CUT,
 };
 
 /** @brief Priority of handlers that must run after the others of their mode. */
@@ -60,13 +63,27 @@ enum pbl_sys_off_mode {
 struct pbl_sys_off_handler {
   /** Called in @ref mode. */
   void (*handler)(enum pbl_sys_off_mode mode, void *user_data);
-  /** Data passed to @ref handler. */
+  /** For @ref PBL_SYS_OFF_POWER_CUT handlers, whether they can cut the power now, or NULL. */
+  int (*check)(void *user_data);
+  /** Data passed to @ref handler and @ref check. */
   void *user_data;
   /** Mode the handler runs in. */
   enum pbl_sys_off_mode mode;
   /** Order among the handlers of @ref mode, highest first. */
   int priority;
 };
+
+/** @cond INTERNAL_HIDDEN */
+#define PBL_SYS_OFF_HANDLER_DEFINE_IMPL(_name, _mode, _priority, _check, _handler, _user_data) \
+  static const struct pbl_sys_off_handler pbl_sys_off_handler_##_name PBL_ITERABLE_SECTION(    \
+      const struct pbl_sys_off_handler, sys_off, #_name) = {                                   \
+    .handler = (_handler),                                                                     \
+    .check = (_check),                                                                         \
+    .user_data = (_user_data),                                                                 \
+    .mode = (_mode),                                                                           \
+    .priority = (_priority),                                                                   \
+  }
+/** @endcond */
 
 /**
  * @brief Define a restart or power-off handler.
@@ -77,14 +94,23 @@ struct pbl_sys_off_handler {
  * @param _handler Function called in @p _mode.
  * @param _user_data Data passed to @p _handler.
  */
-#define PBL_SYS_OFF_HANDLER_DEFINE(_name, _mode, _priority, _handler, _user_data)           \
-  static const struct pbl_sys_off_handler pbl_sys_off_handler_##_name PBL_ITERABLE_SECTION( \
-      const struct pbl_sys_off_handler, sys_off, #_name) = {                                \
-    .handler = (_handler),                                                                  \
-    .user_data = (_user_data),                                                              \
-    .mode = (_mode),                                                                        \
-    .priority = (_priority),                                                                \
-  }
+#define PBL_SYS_OFF_HANDLER_DEFINE(_name, _mode, _priority, _handler, _user_data) \
+  PBL_SYS_OFF_HANDLER_DEFINE_IMPL(_name, _mode, _priority, nullptr, _handler, _user_data)
+
+/**
+ * @brief Define a power-cut handler.
+ *
+ * @param _name Name of the handler, unique across the firmware.
+ * @param _priority Order among the power-cut handlers, highest first.
+ * @param _check Function telling whether the handler can cut the power now, called from the
+ * thread requesting it before anything is torn down: 0, @c -ENOTSUP if the handler never cuts the
+ * power, or another negative errno for why it can't now. NULL if it always can.
+ * @param _handler Function called in @ref PBL_SYS_OFF_POWER_CUT.
+ * @param _user_data Data passed to @p _check and @p _handler.
+ */
+#define PBL_SYS_OFF_POWER_CUT_HANDLER_DEFINE(_name, _priority, _check, _handler, _user_data) \
+  PBL_SYS_OFF_HANDLER_DEFINE_IMPL(_name, PBL_SYS_OFF_POWER_CUT, _priority, _check, _handler, \
+                                  _user_data)
 
 /**
  * @brief Restart the system in order.
@@ -102,6 +128,22 @@ struct pbl_sys_off_handler {
  * Callable from any context.
  */
 [[noreturn]] void pbl_power_off(void);
+
+/**
+ * @brief Cut the power of the system in order.
+ *
+ * First asks the @ref PBL_SYS_OFF_POWER_CUT handlers whether they can cut the power now, and
+ * returns if none can, with nothing torn down. Otherwise runs the
+ * @ref PBL_SYS_OFF_POWER_OFF_PREPARE handlers, then the power-cut ones, which cut the power of the
+ * whole system, e.g. a PMIC entering ship mode. Unlike a power-off, it may lose what the SoC keeps
+ * when off, depending on what the board keeps powered, so it is only made on request. If none of
+ * the handlers cuts the power after all, resets the SoC: it never falls back to a power-off.
+ * Callable from a thread.
+ *
+ * @return Only on failure: @c -ENOTSUP if no handler cuts the power, or the error of the handler
+ * that can't cut it now, e.g. @c -EBUSY.
+ */
+int pbl_power_cut(void);
 
 /**
  * @brief Reset the SoC at once, without running any handler.

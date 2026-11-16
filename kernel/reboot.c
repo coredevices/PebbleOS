@@ -3,6 +3,7 @@
 
 #include "kernel.h"
 
+#include <errno.h>
 #include <limits.h>
 #include <stdatomic.h>
 #include <stddef.h>
@@ -10,6 +11,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
+#include <pbl/logging/logging.h>
 
 #include <arch.h>
 
@@ -70,6 +72,8 @@ static void prv_prepare(enum pbl_sys_off_mode mode) {
 }
 
 [[noreturn]] void pbl_power_off(void) {
+  PBL_LOG_INFO("Powering off");
+
   prv_prepare(PBL_SYS_OFF_POWER_OFF_PREPARE);
   prv_run(PBL_SYS_OFF_POWER_OFF);
 #ifdef CONFIG_SOC_HAS_POWER_OFF
@@ -78,6 +82,46 @@ static void prv_prepare(enum pbl_sys_off_mode mode) {
 #else
   prv_reset();
 #endif
+}
+
+static int prv_check_power_cut(void) {
+  bool can_cut = false;
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_sys_off_handler, sys_off, h) {
+    int ret;
+
+    if (h->mode != PBL_SYS_OFF_POWER_CUT) {
+      continue;
+    }
+
+    ret = (h->check != nullptr) ? h->check(h->user_data) : 0;
+    if (ret == -ENOTSUP) {
+      continue;
+    }
+    if (ret != 0) {
+      return ret;
+    }
+
+    can_cut = true;
+  }
+
+  return can_cut ? 0 : -ENOTSUP;
+}
+
+int pbl_power_cut(void) {
+  int ret;
+
+  ret = prv_check_power_cut();
+  if (ret != 0) {
+    PBL_LOG_WRN("Cannot cut the power (%d)", ret);
+    return ret;
+  }
+
+  PBL_LOG_INFO("Cutting the power");
+
+  prv_prepare(PBL_SYS_OFF_POWER_OFF_PREPARE);
+  prv_run(PBL_SYS_OFF_POWER_CUT);
+  prv_reset();
 }
 
 [[noreturn]] void pbl_reboot_emergency(void) {
