@@ -1,0 +1,8 @@
+description: The external RAM powered on, and a pattern written to its first MiB and read back
+expect:
+  - 'ram: \d+ KiB'
+  - 'ram: mapped at 0x[0-9a-f]+'
+  - 'ram: wrote and read back \d+ KiB in \d+ ms'
+  - 'ram: all words match'
+  - 'Sample done'
+roles: [extram]
