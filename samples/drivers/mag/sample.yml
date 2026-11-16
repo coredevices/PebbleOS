@@ -1,0 +1,8 @@
+description: The magnetic field, sampled five times a second for 3 seconds
+expect:
+  - 'mag: before sampling: no data'
+  - 'mag: sampling every \d+ us'
+  - 'mag: x=-?\d+ y=-?\d+ z=-?\d+ mG, \d+ samples so far'
+  - 'mag: \d+ samples'
+  - 'Sample done'
+roles: [mag]
