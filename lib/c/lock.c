@@ -12,6 +12,9 @@ struct __lock {
   struct pbl_mutex mutex;
 };
 
+#ifdef CONFIG_LIBC_PICOLIBC
+struct __lock __lock___libc_recursive_mutex = {PBL_MUTEX_INITIALIZER};
+#else
 struct __lock __lock___arc4random_mutex = {PBL_MUTEX_INITIALIZER};
 struct __lock __lock___at_quick_exit_mutex = {PBL_MUTEX_INITIALIZER};
 struct __lock __lock___atexit_recursive_mutex = {PBL_MUTEX_INITIALIZER};
@@ -20,6 +23,7 @@ struct __lock __lock___env_recursive_mutex = {PBL_MUTEX_INITIALIZER};
 struct __lock __lock___malloc_recursive_mutex = {PBL_MUTEX_INITIALIZER};
 struct __lock __lock___sfp_recursive_mutex = {PBL_MUTEX_INITIALIZER};
 struct __lock __lock___tz_mutex = {PBL_MUTEX_INITIALIZER};
+#endif
 
 static bool prv_can_lock(_LOCK_T lock) {
   return lock != nullptr && !(pbl_in_isr() || pbl_irq_is_locked() || !pbl_kernel_is_running() ||
