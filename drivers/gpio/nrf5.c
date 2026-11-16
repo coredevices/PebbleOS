@@ -7,6 +7,7 @@
 #include <pbl/drivers/gpio/nrf5.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
 
 #include <hardware/nrf52_gpio.h>
 #include <hardware/nrf52_gpiote.h>
@@ -32,6 +33,9 @@ struct pbl_gpio_nrf5_intc {
 
 // Interrupt controller of each port, for the shared GPIOTE interrupt
 static const struct pbl_intc *s_intcs[MAX_PORTS];
+static const struct pbl_gpio_nrf5 *s_ports[MAX_PORTS];
+// Pins of each port that wake the system from System OFF
+static uint32_t s_wake[MAX_PORTS];
 static uintptr_t s_gpiote;
 
 static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
@@ -222,11 +226,61 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+  const struct pbl_gpio_nrf5 *gpio = prv_intc_port(intc);
+
+  if (on) {
+    s_wake[gpio->index] |= PBL_BIT(hwirq);
+  } else {
+    s_wake[gpio->index] &= ~PBL_BIT(hwirq);
+  }
+
+  return 0;
+}
+
 static const struct pbl_intc_ops s_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
+  .set_wake = prv_intc_set_wake,
 };
+
+// Only SENSE wakes from System OFF; sensing the level opposite to the current
+// one keeps a pin held at power-off from waking at once
+static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
+  for (uint32_t index = 0U; index < MAX_PORTS; index++) {
+    const struct pbl_gpio_nrf5 *gpio = s_ports[index];
+    uint32_t pins = s_wake[index];
+
+    if (gpio == nullptr) {
+      continue;
+    }
+
+    for (uint32_t pin = 0U; pin < 32U; pin++) {
+      int ch;
+      bool high;
+
+      if ((pins & PBL_BIT(pin)) == 0U) {
+        continue;
+      }
+
+      ch = prv_channel_find((uint8_t)(index * 32U + pin));
+      high = (prv_getreg(gpio, NRF52_GPIO_IN_OFFSET) & PBL_BIT(pin)) != 0U;
+      if (ch >= 0) {
+        prv_gpiote_putreg(NRF52_GPIOTE_CONFIG_OFFSET(ch), 0U);
+      }
+
+      pbl_modifyl(GPIO_PIN_CNF_SENSE_MASK,
+                  PBL_FIELD_PREP(GPIO_PIN_CNF_SENSE_MASK,
+                                 high ? GPIO_PIN_CNF_SENSE_LOW : GPIO_PIN_CNF_SENSE_HIGH),
+                  gpio->base + NRF52_GPIO_PIN_CNF_OFFSET(pin));
+    }
+  }
+}
+
+// Last, so that power-off handlers that end the system run first
+PBL_SYS_OFF_HANDLER_DEFINE(gpio_nrf5_wake, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW,
+                           prv_arm_wake, nullptr);
 
 static void prv_gpiote_irq_handler(void) {
   uint32_t inten = prv_gpiote_getreg(NRF52_GPIOTE_INTENSET_OFFSET);
@@ -258,6 +312,7 @@ static int prv_init(const struct pbl_device *dev) {
   }
 
   s_intcs[gpio->index] = gpio->port.intc;
+  s_ports[gpio->index] = gpio;
   s_gpiote = gpio->gpiote;
 
   pbl_irq_enable(PBL_IRQN(GPIOTE));

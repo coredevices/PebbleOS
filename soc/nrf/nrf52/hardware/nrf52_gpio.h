@@ -28,3 +28,5 @@
 #define GPIO_PIN_CNF_DRIVE_S0S1       0U
 #define GPIO_PIN_CNF_DRIVE_S0D1       6U
 #define GPIO_PIN_CNF_SENSE_MASK       PBL_GENMASK(17, 16)
+#define GPIO_PIN_CNF_SENSE_HIGH       2U
+#define GPIO_PIN_CNF_SENSE_LOW        3U
