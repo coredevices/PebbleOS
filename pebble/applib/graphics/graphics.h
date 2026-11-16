@@ -47,7 +47,7 @@ void graphics_draw_pixel(GContext *ctx, GPoint point);
 //! @see graphics_fill_round_rect
 void graphics_fill_rect(GContext *ctx, const GRect *rect);
 
-//! Draws a 1-pixel wide rectangle outline in the current stroke color
+//! Draws a rectangle outline in the current stroke color
 //! @param ctx The destination graphics context in which to draw
 //! @param rect The rectangle for which to draw the outline
 void graphics_draw_rect_by_value(GContext *ctx, GRect rect);
