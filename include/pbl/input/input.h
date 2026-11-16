@@ -98,18 +98,10 @@ struct pbl_input_callback {
  * @param _callback Function called for every event.
  * @param _user_data Data passed to @p _callback.
  */
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_INPUT_CALLBACK_DEFINE(_callback, _user_data)                         \
-  static const struct pbl_input_callback pbl_input_callback_##_callback PBL_USED \
-  PBL_UNSORTED_SECTION(pbl_input_cb) = {.callback = (_callback), .user_data = (_user_data)}
-#else
-#define PBL_INPUT_CALLBACK_DEFINE(_callback, _user_data)                                        \
-  static const struct pbl_input_callback pbl_input_callback_##_callback PBL_USED PBL_ALIGNED(4) \
-      PBL_SECTION(".pbl_input_callbacks." #_callback) = {                                       \
-        .callback = (_callback),                                                                \
-        .user_data = (_user_data)                                                               \
-  }
-#endif
+#define PBL_INPUT_CALLBACK_DEFINE(_callback, _user_data)                                      \
+  static const struct pbl_input_callback pbl_input_callback_##_callback PBL_ITERABLE_SECTION( \
+      const struct pbl_input_callback, input_cbs,                                             \
+      #_callback) = {.callback = (_callback), .user_data = (_user_data)}
 
 /**
  * @brief Report an input event to every listener.
