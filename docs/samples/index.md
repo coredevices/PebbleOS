@@ -48,6 +48,7 @@ subsys/loader/image.md
 subsys/logging/levels.md
 subsys/profiler/nodes.md
 subsys/shell/commands.md
+subsys/task_wdt/stall.md
 ```
 
 ```{toctree}
