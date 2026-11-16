@@ -1,0 +1,10 @@
+description: The flash geometry, and a read of its first 64 KiB checked against the CRC the class computes
+expect:
+  - 'flash: \d+ KiB, pages of \d+ bytes'
+  - 'flash: erases \d+ KiB sectors and \d+ KiB subsectors'
+  - 'flash: read \d+ KiB in \d+ ms'
+  - 'flash: CRC-32 0x[0-9a-f]+'
+  - 'flash: the same as the class computes: yes'
+  - 'flash: last subsector erased: (yes|no)'
+  - 'Sample done'
+roles: [flash]
