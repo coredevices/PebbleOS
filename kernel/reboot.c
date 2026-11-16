@@ -72,7 +72,12 @@ static void prv_prepare(enum pbl_sys_off_mode mode) {
 [[noreturn]] void pbl_power_off(void) {
   prv_prepare(PBL_SYS_OFF_POWER_OFF_PREPARE);
   prv_run(PBL_SYS_OFF_POWER_OFF);
+#ifdef CONFIG_SOC_HAS_POWER_OFF
+  pbl_irq_lock();
+  pbl_soc_power_off();
+#else
   prv_reset();
+#endif
 }
 
 [[noreturn]] void pbl_reboot_emergency(void) {

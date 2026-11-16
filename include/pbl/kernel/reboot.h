@@ -15,7 +15,8 @@
  * handlers that restart or power off the system, highest priority first. Prepare handlers shut
  * down what must not be cut off midway, e.g. a radio link or a flash erase. Restart and power-off
  * handlers end the system; one that returns has declined or failed, and the next one runs. If none
- * ends the system, the kernel resets the SoC with pbl_soc_reset() when the SoC selects
+ * ends the system, the kernel powers the SoC off with pbl_soc_power_off() when the SoC selects
+ * @c CONFIG_SOC_HAS_POWER_OFF, or resets it with pbl_soc_reset() when it selects
  * @c CONFIG_SOC_HAS_RESET, else with the architecture's reset.
  *
  * Prepare handlers only run on the first request made from a thread with interrupts and the
@@ -97,7 +98,8 @@ struct pbl_sys_off_handler {
  * @brief Power off the system in order.
  *
  * Runs the @ref PBL_SYS_OFF_POWER_OFF_PREPARE handlers, then the @ref PBL_SYS_OFF_POWER_OFF ones.
- * Resets the SoC if none of them powers off. Callable from any context.
+ * If none of them powers off, powers the SoC off, or resets it if the SoC cannot power off.
+ * Callable from any context.
  */
 [[noreturn]] void pbl_power_off(void);
 
@@ -115,5 +117,13 @@ struct pbl_sys_off_handler {
  * doesn't suit. Called with interrupts locked.
  */
 [[noreturn]] void pbl_soc_reset(void);
+
+/**
+ * @brief Power off the SoC.
+ *
+ * Implemented by SoCs that select @c CONFIG_SOC_HAS_POWER_OFF. Only the wake sources drivers have
+ * armed stay on; the system boots from reset when one fires. Called with interrupts locked.
+ */
+[[noreturn]] void pbl_soc_power_off(void);
 
 /** @} */
