@@ -13,6 +13,10 @@
  * @{
  */
 
+//! Set the port up for polled output, before the device model is initialized, and make it the
+//! output of pbl_print(). Called by the kernel.
+void pbl_console_early_init(void);
+
 //! Start taking input, once the system can handle commands.
 void pbl_console_enable_prompt(void);
 

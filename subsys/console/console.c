@@ -6,6 +6,7 @@
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/print.h>
 #include <pbl/kernel/sched.h>
 #include <pbl/mcu/interrupts.h>
 
@@ -60,6 +61,28 @@ void pbl_console_write(const char *data, size_t len) {
   pbl_console_lock();
   pbl_console_write_raw(data, len);
   pbl_console_unlock();
+}
+
+void pbl_console__write_text(const char *data, size_t len) {
+  size_t start = 0;
+
+  pbl_console_lock();
+  for (size_t i = 0; i < len; i++) {
+    if (data[i] == '\n') {
+      pbl_console_write_raw(&data[start], i - start);
+      pbl_console_write_raw("\r\n", 2);
+      start = i + 1;
+    }
+  }
+  pbl_console_write_raw(&data[start], len - start);
+  pbl_console_unlock();
+}
+
+void pbl_console_early_init(void) {
+  const struct pbl_uart_config cfg = {.baudrate = CONFIG_CONSOLE_BAUDRATE};
+
+  (void)pbl_uart_early_init(CONSOLE_UART, &cfg);
+  pbl_print_set_output(pbl_console__write_text);
 }
 
 void pbl_console_log_begin(void) {
