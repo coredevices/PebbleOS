@@ -1,4 +1,7 @@
 name: Integration Tests (hardware)
+run-name: >-
+  ${{ inputs.ref && format('Integration Tests (hardware): {0}', inputs.ref) ||
+      github.event.pull_request.title || 'Integration Tests (hardware)' }}
 
 on:
   schedule:
@@ -6,6 +9,11 @@ on:
   pull_request_target:
     types: [labeled]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to test, defaults to the selected branch
+        required: false
+        default: ""
 
 permissions: {}
 
@@ -78,7 +86,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref }}
           fetch-depth: 0
           submodules: true
           persist-credentials: false
@@ -147,7 +155,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref }}
           persist-credentials: false
           allow-unsafe-pr-checkout: true
 
