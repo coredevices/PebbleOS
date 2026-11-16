@@ -74,18 +74,12 @@ struct pbl_pp_session_listener {
  * @param _callback Function called for every event.
  * @param _user_data Data passed to @p _callback.
  */
-#ifdef PBL_NO_LINKER_SCRIPT
 #define PBL_PP_SESSION_LISTENER_DEFINE(_name, _callback, _user_data)                   \
-  static const struct pbl_pp_session_listener pbl_pp_session_listener_##_name PBL_USED \
-  PBL_UNSORTED_SECTION(pbl_pp_lsn) = {.callback = (_callback), .user_data = (_user_data)}
-#else
-#define PBL_PP_SESSION_LISTENER_DEFINE(_name, _callback, _user_data)                   \
-  static const struct pbl_pp_session_listener pbl_pp_session_listener_##_name PBL_USED \
-      PBL_ALIGNED(4) PBL_SECTION(".pbl_pp_session_listeners." #_name) = {              \
-        .callback = (_callback),                                                       \
-        .user_data = (_user_data),                                                     \
+  static const struct pbl_pp_session_listener pbl_pp_session_listener_##_name          \
+  PBL_ITERABLE_SECTION(const struct pbl_pp_session_listener, pp_listeners, #_name) = { \
+    .callback = (_callback),                                                           \
+    .user_data = (_user_data),                                                         \
   }
-#endif
 
 /**
  * @brief Get the system session.

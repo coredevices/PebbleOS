@@ -16,15 +16,7 @@
 
 PBL_LOG_MODULE_DEFINE(pp, CONFIG_PP_LOG_LEVEL);
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_pp_session_listener __pbl_pp_session_listeners_start[];
-extern const struct pbl_pp_session_listener __pbl_pp_session_listeners_end[];
-#else
-extern const struct pbl_pp_session_listener
-    __pbl_pp_session_listeners_start[] PBL_UNSORTED_SECTION_START(pbl_pp_lsn);
-extern const struct pbl_pp_session_listener
-    __pbl_pp_session_listeners_end[] PBL_UNSORTED_SECTION_END(pbl_pp_lsn);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_pp_session_listener, pp_listeners);
 
 static PBL_MUTEX_DEFINE(s_lock);
 
@@ -63,8 +55,7 @@ static const struct pbl_pp_transport *prv_get_transport(const struct pbl_pp_sess
 }
 
 static void prv_notify(struct pbl_pp_session *session, enum pbl_pp_session_event event) {
-  for (const struct pbl_pp_session_listener *l = __pbl_pp_session_listeners_start;
-       l < __pbl_pp_session_listeners_end; l++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_pp_session_listener, pp_listeners, l) {
     l->callback(session, event, l->user_data);
   }
 }

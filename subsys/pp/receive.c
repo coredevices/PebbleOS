@@ -12,18 +12,10 @@
 
 PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_pp_endpoint __pbl_pp_endpoints_start[];
-extern const struct pbl_pp_endpoint __pbl_pp_endpoints_end[];
-#else
-extern const struct pbl_pp_endpoint __pbl_pp_endpoints_start[] PBL_UNSORTED_SECTION_START(
-    pbl_pp_ep);
-extern const struct pbl_pp_endpoint __pbl_pp_endpoints_end[] PBL_UNSORTED_SECTION_END(pbl_pp_ep);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_pp_endpoint, pp_endpoints);
 
 static const struct pbl_pp_endpoint *prv_find_endpoint(uint16_t id) {
-  for (const struct pbl_pp_endpoint *e = __pbl_pp_endpoints_start; e < __pbl_pp_endpoints_end;
-       e++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_pp_endpoint, pp_endpoints, e) {
     if (e->id == id) {
       return e;
     }
