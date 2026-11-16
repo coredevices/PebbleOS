@@ -44,6 +44,7 @@ subsys/input/events.md
 :maxdepth: 1
 :caption: Drivers
 
+drivers/accel.md
 drivers/als.md
 drivers/backlight.md
 drivers/display.md
