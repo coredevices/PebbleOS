@@ -16,11 +16,6 @@ typedef enum BatteryUIWarningLevel {
 //! Process the incoming battery state change notification
 void battery_ui_handle_state_change_event(PreciseBatteryChargeState new_state);
 
-//! Handle shutting down the watch.
-//!
-//! @retval -EBUSY The watch can't shut down while it is plugged in.
-int battery_ui_handle_shut_down(void);
-
 //! Show the 'battery charging' modal dialog
 void battery_ui_display_plugged(uint8_t percent);
 

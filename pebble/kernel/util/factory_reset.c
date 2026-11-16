@@ -14,7 +14,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/util/factory_reset.h>
-#include <kernel/util/standby.h>
 #include <process_management/worker_manager.h>
 #include <shell/normal/app_idle_timeout.h>
 #include <system/bootbits.h>
@@ -64,9 +63,8 @@ void factory_reset_set_reason_and_reset(void) {
 }
 
 static void prv_factory_reset_post(bool should_shutdown) {
-  // Reset instead if the watch can't power off, e.g. while charging
   if (should_shutdown) {
-    enter_standby(RebootReasonCode_FactoryResetShutdown);
+    pbl_power_off();
   }
   factory_reset_set_reason_and_reset();
 }

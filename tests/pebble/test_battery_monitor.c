@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <setjmp.h>
+
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
@@ -80,7 +82,27 @@ static uint32_t standby_timer_get_timeout() {
   return fake_work_timeout_ms(timer);
 }
 
-FAKE_VALUE_FUNC(int, enter_standby, RebootReasonCode);
+static jmp_buf s_power_off_jmp;
+static int s_power_off_count;
+
+void pbl_power_off(void) {
+  s_power_off_count++;
+  longjmp(s_power_off_jmp, 1);
+}
+
+// Runs a standby timer expiry, which may power off
+static void prv_standby_timer_trigger(void) {
+  PebbleTask task = pebble_task_get_current();
+
+  if (setjmp(s_power_off_jmp) == 0) {
+    standby_timer_trigger(1);
+    return;
+  }
+
+  // The jump skipped the sys work queue bookkeeping
+  fake_sys_work_callbacks_cleanup();
+  stub_pebble_tasks_set_current(task);
+}
 
 void event_put(PebbleEvent *event) {
   s_last_event_put = *event;
@@ -100,7 +122,7 @@ void test_battery_monitor__initialize(void) {
   // g_pbl_log_level = 255;
 
   RESET_FAKE(low_power_standby);
-  RESET_FAKE(enter_standby);
+  s_power_off_count = 0;
   s_error_window_shown = false;
   s_warning_window_shown = false;
   s_in_low_power = false;
@@ -114,6 +136,7 @@ void test_battery_monitor__initialize(void) {
 }
 
 void test_battery_monitor__cleanup(void) {
+  fake_sys_work_callbacks_cleanup();
   fake_work_cleanup();
 }
 
@@ -341,10 +364,9 @@ void test_battery_monitor__low_first_run(void) {
   cl_assert(battery_monitor_critical_lockout());
 
   cl_assert_equal_i(standby_timer_get_timeout(), 2000);
-  standby_timer_trigger(1);
+  prv_standby_timer_trigger();
   cl_assert_equal_i(low_power_standby_fake.call_count, 0);
-  cl_assert_equal_i(enter_standby_fake.call_count, 1);
-  cl_assert_equal_i(enter_standby_fake.arg0_val, RebootReasonCode_LowBattery);
+  cl_assert_equal_i(s_power_off_count, 1);
 }
 
 void test_battery_monitor__critical(void) {
@@ -366,7 +388,7 @@ void test_battery_monitor__critical(void) {
   // Low power mode is active by now, so it handles the standby
   cl_assert(low_power_is_active());
   cl_assert_equal_i(low_power_standby_fake.call_count, 1);
-  cl_assert_equal_i(enter_standby_fake.call_count, 0);
+  cl_assert_equal_i(s_power_off_count, 0);
 }
 
 void test_battery_monitor__critical_plugged_in(void) {
@@ -392,7 +414,7 @@ void test_battery_monitor__critical_plugged_in(void) {
   periodic_timer_trigger(1);
   cl_assert(!standby_timer_is_scheduled());
   cl_assert_equal_i(low_power_standby_fake.call_count, 0);
-  cl_assert_equal_i(enter_standby_fake.call_count, 0);
+  cl_assert_equal_i(s_power_off_count, 0);
 }
 
 void test_battery_monitor__increase_discharging(void) {

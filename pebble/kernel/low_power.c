@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/runlevel.h>
 
@@ -9,7 +10,6 @@
 #include <kernel/event_loop.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <kernel/util/standby.h>
 #include <mfg/mfg_mode/mfg_factory_mode.h>
 #include <process_management/app_manager.h>
 #include <process_management/worker_manager.h>
@@ -67,7 +67,7 @@ static void prv_low_power_transition(bool active) {
 
 void low_power_standby(void) {
   PBL_ANALYTICS_TIMER_STOP(low_power_time_ms);
-  enter_standby(RebootReasonCode_LowBattery);
+  pbl_power_off();
 }
 
 void low_power_enter(void) {

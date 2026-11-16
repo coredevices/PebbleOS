@@ -14,7 +14,7 @@ pytestmark = [
 IDLE_S = 10 * 60
 CHECK_MARGIN_S = 2 * 60
 CHARGING_PERCENT = 50
-STANDBY = r"Preparing to enter standby mode \(reason 12\)"
+STANDBY = r"Cutting the power"
 
 
 @pytest.fixture

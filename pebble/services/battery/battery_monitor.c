@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/battery/battery_monitor.h>
@@ -11,7 +12,6 @@
 #include <pbl/util/testing.h>
 
 #include <kernel/low_power.h>
-#include <kernel/util/standby.h>
 
 PBL_LOG_MODULE_DEFINE(service_battery, CONFIG_SERVICE_BATTERY_LOG_LEVEL);
 
@@ -126,7 +126,7 @@ static void sys_work_handle_battery_critical(void *data) {
   if (low_power_is_active()) {
     low_power_standby();
   } else {
-    enter_standby(RebootReasonCode_LowBattery);
+    pbl_power_off();
   }
 }
 
