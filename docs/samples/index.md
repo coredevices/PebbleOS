@@ -47,6 +47,7 @@ subsys/input/events.md
 drivers/accel.md
 drivers/als.md
 drivers/backlight.md
+drivers/battery.md
 drivers/display.md
 drivers/flash.md
 drivers/mag.md
