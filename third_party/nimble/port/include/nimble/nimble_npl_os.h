@@ -24,8 +24,6 @@
 
 #if NRF52_SERIES
 #include <pbl/drivers/clk/nrf52.h>
-#include <pbl/kernel/idle.h>
-#include <pbl/soc/nrf/idle.h>
 #endif
 
 // Pool blocks hold pointers.
@@ -248,19 +246,11 @@ static inline bool ble_npl_hw_is_in_critical(void) {
 static const struct pbl_clk ble_npl_hfclk = PBL_CLK(NRF52_CLOCK, NRF52_CLK_HFCLK);
 
 static inline void nrf52_clock_hfxo_request(void) {
-  /* Any time NimBLE wants to turn on the HFXO, we are also going to have
-   * pretty stringent wake latency requirements, so we must not do expensive
-   * and slow things like waking the NOR flash up from DPD on interrupts.
-   * So, we disable full sleep at the same time as actually enabling the
-   * HFXO.
-   */
-  pbl_idle_state_block(SOC_NRF_IDLE_FULL);
   (void)pbl_clk_enable(&ble_npl_hfclk);
 }
 
 static inline void nrf52_clock_hfxo_release(void) {
   (void)pbl_clk_disable(&ble_npl_hfclk);
-  pbl_idle_state_release(SOC_NRF_IDLE_FULL);
 }
 
 #endif
