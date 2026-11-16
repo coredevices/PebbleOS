@@ -45,6 +45,7 @@ subsys/input/events.md
 :caption: Drivers
 
 drivers/als.md
+drivers/backlight.md
 drivers/rng.md
 drivers/rtc.md
 drivers/temp.md
