@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/drivers/hyperbus.h>
@@ -22,6 +23,9 @@
 /** @cond INTERNAL_HIDDEN */
 struct pbl_hyperbus_sf32lb_mpi_data {
   uint8_t latency;
+  bool calibrated;
+  uint8_t sck;
+  uint8_t dqs;
 };
 /** @endcond */
 
@@ -47,11 +51,11 @@ extern const struct pbl_hyperbus_ops pbl_hyperbus_sf32lb_mpi_ops;
  * @param _mpi Core of the MPI, from PBL_SF32LB_MPI_DEFINE().
  */
 #define PBL_HYPERBUS_SF32LB_MPI_DEFINE(sym, _name, _mpi)                               \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                          \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                        \
   static struct pbl_hyperbus_sf32lb_mpi_data sym##_data;                               \
   PBL_DEVICE_INSTANCE(sym, struct pbl_hyperbus_sf32lb_mpi, struct pbl_hyperbus, bus) { \
     .bus = PBL_HYPERBUS_INIT(sym, _name, &(_mpi)->dev, &pbl_hyperbus_sf32lb_mpi_ops),  \
-    .mpi = (_mpi), .data = &sym##_data,                                                  \
+    .mpi = (_mpi), .data = &sym##_data,                                                \
   }
 
 /** @} */
