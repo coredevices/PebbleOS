@@ -44,6 +44,8 @@ struct pbl_timer {
  * @brief Static initializer for a timer.
  *
  * @param _fn Callback.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
  */
 #define PBL_TIMER_INITIALIZER(_fn) {.fn = (_fn)}
 

@@ -87,7 +87,41 @@ profile, so an application needs none.
 | --- | --- |
 | `rust/pebbleos-sys` | The C API as bindgen makes it: unsafe functions, C structs, and every Kconfig symbol as a `CONFIG_*` constant |
 | `rust/pebbleos-macros` | `#[main]`, which `pebbleos` re-exports |
-| `rust/pebbleos` | The API for applications, safe and in the language's terms: `print!` and `println!`, `#[main]`, the panic handler. `pebbleos::sys` is `pebbleos-sys` |
+| `rust/pebbleos` | The API for applications, safe and in the language's terms: `print!` and `println!`, `#[main]`, the panic handler, and the kernel API. `pebbleos::sys` is `pebbleos-sys` |
+
+`main()` returns nothing or a `pebbleos::Result`, whose error, an `Errno`,
+is printed and returned as a negative error number.
+
+## Kernel API
+
+| Module | Contents |
+| --- | --- |
+| `thread` | `Thread`, `Priority`, `current()`, `sleep()`, `yield_now()` |
+| `sync` | `Mutex`, `ReentrantMutex`, `Semaphore` |
+| `msgq`, `poll` | `MsgQueue`, `PollGroup` |
+| `timer` | `Timer` |
+| `work` | `WorkQueue`, `Work`, `DelayedWork` |
+| `heap` | `Heap` and its `Block`s |
+| `time` | `Timeout`, `Instant`, the wall clock, `poll()` |
+
+Kernel objects are statics, built by `const fn`, and need no memory
+allocation. A `Thread` owns its stack, of 1 KiB unless its type says
+otherwise, and runs a closure, which waits at the top of the stack buffer
+for the thread to start: the closure takes its size out of the stack. A
+stack too small for it fails to build.
+
+```rust
+static WORKER: Thread<2048> = Thread::new();
+
+WORKER.spawn(c"worker", Priority::MAIN.lower(1), || work())?;
+WORKER.join(Duration::from_secs(1))?;
+```
+
+The data of a `Mutex` is only reached through the guard `lock()` returns,
+which unlocks it when dropped. A `Timer`, `Work` or `DelayedWork` holds data
+of its own, which its function gets through it, where C embeds the object in
+a structure of its own. Calls that block take a `Duration`, or a `Timeout`
+for `NO_WAIT` and `FOREVER`.
 
 A panic is a kernel panic: its message and location go to the log and the
 system stops as a failed assertion does, through
