@@ -7,6 +7,7 @@ pbl_library_sources(
   init.c
   sleep.c
   idle.c
+  power_off.c
   ppi.c
   retained.c
 )
