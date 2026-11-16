@@ -215,3 +215,15 @@ void test_expandable_dialog__left_hand_content_mirrors_right_hand_margins(void) 
     window_deinit(&expandable->dialog.window);
   }
 }
+
+void test_expandable_dialog__left_hand_dismiss_tutorial(void) {
+  display_orientation_set_left(true);
+  ExpandableDialog *expandable_dialog = expandable_dialog_create_with_params(
+      "Dismiss First Use", RESOURCE_ID_QUICK_DISMISS,
+      "Quickly dismiss all notifications by holding Select for 2 seconds from any notification.",
+      gcolor_legible_over(GColorLightGray), GColorLightGray, nullptr,
+      RESOURCE_ID_ACTION_BAR_ICON_CHECK, nullptr);
+  expandable_dialog_set_header(expandable_dialog, "Quick Dismiss");
+  prv_push_and_render_expandable_dialog(expandable_dialog, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
