@@ -2346,6 +2346,9 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
   } else {
     snprintf(tnow, sizeof(tnow), "--\xC2\xB0");
   }
+#if !PBL_ROUND
+  const bool disc_outline = !system_theme_is_dark_mode(); // syscall: once per frame
+#endif
   // Large temp, sized + vertically aligned to balance the 40px today icon.
   const GColor page_fg = system_theme_get_fg_color(); // syscall: once per frame
   graphics_context_set_text_color(ctx, page_fg);
@@ -2426,12 +2429,15 @@ static void prv_canvas_draw_round_5day(Layer *layer, GContext *ctx) {
     }
     // Emery: a 1px outline so every disc has a defined edge on the white field (the pale
     // condition colours otherwise dissolve into the background). Capsule outline mid-transition.
-    graphics_context_set_stroke_color(ctx, GColorLightGray);
-    graphics_context_set_stroke_width(ctx, 1);
-    if (disc_capsule) {
-      graphics_draw_round_rect_by_value(ctx, disc_rect, R5_DISC_R);
-    } else {
-      graphics_draw_circle(ctx, GPoint(cx, dcy), R5_DISC_R);
+    // Dark mode skips it: the discs already stand out and the ring reads as a white halo.
+    if (disc_outline) {
+      graphics_context_set_stroke_color(ctx, GColorLightGray);
+      graphics_context_set_stroke_width(ctx, 1);
+      if (disc_capsule) {
+        graphics_draw_round_rect_by_value(ctx, disc_rect, R5_DISC_R);
+      } else {
+        graphics_draw_circle(ctx, GPoint(cx, dcy), R5_DISC_R);
+      }
     }
 #else
     if (!gcolor_equal(bg, GColorClear)) {
