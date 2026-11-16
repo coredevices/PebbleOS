@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
@@ -13,6 +14,28 @@
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_mpi.h>
+
+#ifdef CONFIG_SOC_SF32LB57
+#include <hardware/sf32lb57_mpi.h>
+
+#define CIR_OFFSET   SF32LB57_MPI_CIR_OFFSET
+#define TIMR_OFFSET  SF32LB57_MPI_TIMR_OFFSET
+#define WDTR_OFFSET  SF32LB57_MPI_WDTR_OFFSET
+#define DCR_PROTOCOL SF32LB57_MPI_DCR_PROT_MASK
+#define DCR_HYPERBUS PBL_FIELD_PREP(SF32LB57_MPI_DCR_PROT_MASK, SF32LB57_MPI_DCR_PROT_HYPERBUS)
+#define MISCR_DQSDLY SF32LB57_MPI_MISCR_DQSDLY_MASK
+#define MISCR_SCKDLY SF32LB57_MPI_MISCR_SCKDLY_MASK
+#define MISCR_SCKINV SF32LB57_MPI_MISCR_SCKINV
+#else
+#define CIR_OFFSET   SF32LB52_MPI_CIR_OFFSET
+#define TIMR_OFFSET  SF32LB52_MPI_TIMR_OFFSET
+#define WDTR_OFFSET  SF32LB52_MPI_WDTR_OFFSET
+#define DCR_PROTOCOL (MPI_DCR_DQSE | MPI_DCR_HYPER | MPI_DCR_FIXLAT)
+#define DCR_HYPERBUS (MPI_DCR_DQSE | MPI_DCR_HYPER | MPI_DCR_FIXLAT)
+#define MISCR_DQSDLY MPI_MISCR_DQSDLY_MASK
+#define MISCR_SCKDLY MPI_MISCR_SCKDLY_MASK
+#define MISCR_SCKINV MPI_MISCR_SCKINV
+#endif
 
 #define OCTAL MPI_CCR_MODE_OCTAL_DTR
 
@@ -27,16 +50,25 @@
 #define CS_LOW_MIN   6U
 #define WDT_TIMEOUT  0xffffU
 
-// Calibration runs at half the rate, then the bus runs at half the controller clock, in DDR
-#define CAL_DIV 2U
+// The bus runs at half the controller clock, in DDR
 #define BUS_DIV 1U
 
 #define CMD_TIMEOUT_US 1000U
-#define CAL_TIME_US    20U
-#define CAL_TIMEOUT_US 1000U
+#ifdef CONFIG_SOC_SF32LB57
+#define CAL_DELAY_MAX 127U
+#define CAL_SETTLE_US 10U
+#define CAL_SAMPLES   5U
+// Taken off half the measured clock period
+#define SCK_DELAY_BACKOFF 5U
+#else
+// Calibration runs at half the rate
+#define CAL_DIV           2U
+#define CAL_TIME_US       20U
+#define CAL_TIMEOUT_US    1000U
 // Taken off the measured delay
 #define SCK_DELAY_BACKOFF 1U
 #define DQS_DELAY_BACKOFF 4U
+#endif
 // Kept off the longest CS low time
 #define CS_LOW_MARGIN 10U
 
@@ -109,8 +141,8 @@ static int prv_enable(const struct pbl_hyperbus *bus) {
 
   pbl_writel(ALT_BYTE, base + SF32LB52_MPI_ABR1_OFFSET);
   pbl_writel(ALT_BYTE, base + SF32LB52_MPI_HRABR_OFFSET);
-  pbl_writel(CMD_INTERVAL, base + SF32LB52_MPI_CIR_OFFSET);
-  pbl_writel(TIMEOUT, base + SF32LB52_MPI_TIMR_OFFSET);
+  pbl_writel(CMD_INTERVAL, base + CIR_OFFSET);
+  pbl_writel(TIMEOUT, base + TIMR_OFFSET);
   pbl_modifyl(MPI_CR_DFM, MPI_CR_EN | MPI_CR_OPIE, base + SF32LB52_MPI_CR_OFFSET);
 
   return 0;
@@ -132,6 +164,53 @@ static int prv_get_rate(const struct pbl_hyperbus *bus, uint32_t *rate_hz) {
   return 0;
 }
 
+#ifdef CONFIG_SOC_SF32LB57
+// Whether the controller samples its clock at a level, at the SCK delay set
+static bool prv_cal_samples(uintptr_t base, uint32_t delay, bool level) {
+  pbl_writel(PBL_FIELD_PREP(MISCR_SCKDLY, delay), base + SF32LB52_MPI_MISCR_OFFSET);
+  pbl_busy_wait_us(CAL_SETTLE_US);
+
+  for (uint32_t i = 0U; i < CAL_SAMPLES; i++) {
+    if (((pbl_readl(base + SF32LB57_MPI_CALRR_OFFSET) & SF32LB57_MPI_CALRR_CSMP) != 0U) != level) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// Sweeps the SCK delay line from a low to a high sample of the clock: the distance is half a
+// clock period, in delay steps. It only runs with the controller disabled.
+static int prv_calibrate(uintptr_t base, uint8_t *sck, uint8_t *dqs) {
+  const uint32_t cr = pbl_readl(base + SF32LB52_MPI_CR_OFFSET);
+  uint32_t low;
+  uint32_t high;
+  uint32_t half;
+
+  pbl_writel(BUS_DIV, base + SF32LB52_MPI_PSCLR_OFFSET);
+  pbl_writel(cr & ~MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+  pbl_writel(SF32LB57_MPI_CALCR_START, base + SF32LB57_MPI_CALCR_OFFSET);
+  for (low = 0U; low <= CAL_DELAY_MAX && !prv_cal_samples(base, low, false); low++) {
+  }
+  for (high = low + 1U; high <= CAL_DELAY_MAX && !prv_cal_samples(base, high, true); high++) {
+  }
+  pbl_writel(SF32LB57_MPI_CALCR_STOP, base + SF32LB57_MPI_CALCR_OFFSET);
+  pbl_writel(cr, base + SF32LB52_MPI_CR_OFFSET);
+
+  if (high > CAL_DELAY_MAX) {
+    return -EIO;
+  }
+  half = (high - low) / 2U;
+  if (half < SCK_DELAY_BACKOFF) {
+    return -EIO;
+  }
+
+  *sck = (uint8_t)(half - SCK_DELAY_BACKOFF);
+  *dqs = (uint8_t)half;
+
+  return 0;
+}
+#else
 // Measures the SCK and DQS delay lines against the controller's own reference
 static int prv_calibrate(uintptr_t base, uint8_t *sck, uint8_t *dqs) {
   uint32_t delay;
@@ -158,6 +237,7 @@ static int prv_calibrate(uintptr_t base, uint8_t *sck, uint8_t *dqs) {
 
   return 0;
 }
+#endif
 
 // Clock cycles covering a time, less the one the controller adds
 static uint32_t prv_cycles(uint32_t ns, uint32_t rate_hz) {
@@ -181,25 +261,36 @@ static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperb
     return ret;
   }
 
+#ifdef CONFIG_SOC_SF32LB57
+  // A sweep after deep sleep leaves the bus stalling, so the delays of the first one are kept
+  if (!hb->data->calibrated) {
+    ret = prv_calibrate(base, &hb->data->sck, &hb->data->dqs);
+    if (ret != 0) {
+      return ret;
+    }
+    hb->data->calibrated = true;
+  }
+  sck = hb->data->sck;
+  dqs = hb->data->dqs;
+#else
   ret = prv_calibrate(base, &sck, &dqs);
   if (ret != 0) {
     return ret;
   }
+#endif
 
   cs_low_max = (uint32_t)(((uint64_t)cfg->cs_low_max_ns * rate_hz) / 1000000000ULL) - CS_LOW_MARGIN;
   pbl_modifyl(MPI_DCR_CSLMIN_MASK | MPI_DCR_CSLMAX_MASK | MPI_DCR_CSHMIN_MASK |
-                  MPI_DCR_TRCMIN_MASK | MPI_DCR_RBSIZE_MASK,
+                  MPI_DCR_TRCMIN_MASK | MPI_DCR_RBSIZE_MASK | DCR_PROTOCOL,
               PBL_FIELD_PREP(MPI_DCR_CSLMIN_MASK, CS_LOW_MIN) |
                   PBL_FIELD_PREP(MPI_DCR_CSLMAX_MASK, cs_low_max) |
                   PBL_FIELD_PREP(MPI_DCR_CSHMIN_MASK, prv_cycles(cfg->cs_high_min_ns, rate_hz)) |
                   PBL_FIELD_PREP(MPI_DCR_TRCMIN_MASK, prv_cycles(cfg->read_recovery_ns, rate_hz)) |
-                  PBL_FIELD_PREP(MPI_DCR_RBSIZE_MASK, ROW_BOUNDARY) | MPI_DCR_DQSE | MPI_DCR_HYPER |
-                  MPI_DCR_FIXLAT,
+                  PBL_FIELD_PREP(MPI_DCR_RBSIZE_MASK, ROW_BOUNDARY) | DCR_HYPERBUS,
               base + SF32LB52_MPI_DCR_OFFSET);
-  pbl_modifyl(
-      MPI_MISCR_DQSDLY_MASK | MPI_MISCR_SCKDLY_MASK | MPI_MISCR_SCKINV,
-      PBL_FIELD_PREP(MPI_MISCR_DQSDLY_MASK, dqs) | PBL_FIELD_PREP(MPI_MISCR_SCKDLY_MASK, sck),
-      base + SF32LB52_MPI_MISCR_OFFSET);
+  pbl_modifyl(MISCR_DQSDLY | MISCR_SCKDLY | MISCR_SCKINV,
+              PBL_FIELD_PREP(MISCR_DQSDLY, dqs) | PBL_FIELD_PREP(MISCR_SCKDLY, sck),
+              base + SF32LB52_MPI_MISCR_OFFSET);
 
   // The memory-mapped read and write commands
   hb->data->latency = cfg->latency;
@@ -207,8 +298,7 @@ static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperb
   pbl_writel(ccr, base + SF32LB52_MPI_HRCCR_OFFSET);
   pbl_writel(ccr, base + SF32LB52_MPI_HWCCR_OFFSET);
 
-  pbl_writel(PBL_FIELD_PREP(MPI_WDTR_TIMEOUT_MASK, WDT_TIMEOUT) | MPI_WDTR_EN,
-             base + SF32LB52_MPI_WDTR_OFFSET);
+  pbl_writel(PBL_FIELD_PREP(MPI_WDTR_TIMEOUT_MASK, WDT_TIMEOUT) | MPI_WDTR_EN, base + WDTR_OFFSET);
 
   *mem_base = mpi->mem_base + SBUS_OFFSET;
 
@@ -260,3 +350,4 @@ const struct pbl_hyperbus_ops pbl_hyperbus_sf32lb_mpi_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_mpi_hyperbus)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_mpi_hyperbus)
