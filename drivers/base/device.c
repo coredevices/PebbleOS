@@ -11,18 +11,8 @@
 
 PBL_LOG_MODULE_DEFINE(device, CONFIG_DEVICE_LOG_LEVEL);
 
-#ifdef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_device *const __pbl_devices_start[] PBL_UNSORTED_SECTION_START(pbl_devices);
-extern const struct pbl_device *const __pbl_devices_end[] PBL_UNSORTED_SECTION_END(pbl_devices);
-extern const struct pbl_device_depends __pbl_dev_deps_start[] PBL_UNSORTED_SECTION_START(
-    pbl_dev_deps);
-extern const struct pbl_device_depends __pbl_dev_deps_end[] PBL_UNSORTED_SECTION_END(pbl_dev_deps);
-#else
-extern const struct pbl_device *const __pbl_devices_start[];
-extern const struct pbl_device *const __pbl_devices_end[];
-extern const struct pbl_device_depends __pbl_dev_deps_start[];
-extern const struct pbl_device_depends __pbl_dev_deps_end[];
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device *const, devices);
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device_depends, dev_deps);
 
 static int prv_init_list(const struct pbl_device *dev, const struct pbl_device *const *deps) {
   for (const struct pbl_device *const *dep = deps; *dep != nullptr; dep++) {
@@ -49,7 +39,7 @@ static int prv_init_deps(const struct pbl_device *dev) {
     return -ENODEV;
   }
 
-  for (const struct pbl_device_depends *d = __pbl_dev_deps_start; d < __pbl_dev_deps_end; d++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_device_depends, dev_deps, d) {
     if (d->dev == dev && prv_init_list(dev, d->deps) != 0) {
       return -ENODEV;
     }
@@ -100,9 +90,10 @@ int pbl_device_init_all(void) {
   int failures = 0;
 
 #ifdef CONFIG_DEVICE_INIT_REVERSE
-  for (const struct pbl_device *const *dev = __pbl_devices_end; dev-- > __pbl_devices_start;) {
+  for (const struct pbl_device *const *dev = PBL_ITERABLE_SECTION_END(devices);
+       dev-- > PBL_ITERABLE_SECTION_START(devices);) {
 #else
-  for (const struct pbl_device *const *dev = __pbl_devices_start; dev < __pbl_devices_end; dev++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_device *const, devices, dev) {
 #endif
     if (pbl_device_init(*dev) != 0) {
       failures++;
@@ -115,7 +106,7 @@ int pbl_device_init_all(void) {
 int pbl_device_init_children(const struct pbl_device *parent) {
   int failures = 0;
 
-  for (const struct pbl_device *const *dev = __pbl_devices_start; dev < __pbl_devices_end; dev++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_device *const, devices, dev) {
     if ((*dev)->parent == parent && pbl_device_init(*dev) != 0) {
       failures++;
     }
@@ -126,16 +117,16 @@ int pbl_device_init_children(const struct pbl_device *parent) {
 
 const struct pbl_device *pbl_device_class_next(const struct pbl_device_class *cls,
                                                const struct pbl_device *prev) {
-  const struct pbl_device *const *dev = __pbl_devices_start;
+  const struct pbl_device *const *dev = PBL_ITERABLE_SECTION_START(devices);
 
   if (prev != nullptr) {
-    while (dev < __pbl_devices_end && *dev != prev) {
+    while (dev < PBL_ITERABLE_SECTION_END(devices) && *dev != prev) {
       dev++;
     }
     dev++;
   }
 
-  for (; dev < __pbl_devices_end; dev++) {
+  for (; dev < PBL_ITERABLE_SECTION_END(devices); dev++) {
     if ((*dev)->cls == cls) {
       return *dev;
     }

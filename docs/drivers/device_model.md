@@ -49,7 +49,7 @@ core pieces:
 - `PBL_DEVICE_INIT(sym, name, init, parent, deps)` initializes the embedded
   `struct pbl_device`;
 - `PBL_DEVICE_REGISTER(sym, dev)` adds a pointer to the device to the device
-  table, the `.pbl_devices` section (`drivers/base/device.ld`).
+  table, the `devices` iterable section.
 
 Things that are not devices of their own (a pin, a bus address) are plain
 structs that point at their device.
@@ -70,8 +70,8 @@ table position:
 - anything else, such as a supply that has to be up first, goes in the
   instance's `PBL_DEVICE_DEPS()`;
 - an instance defined from devicetree also gets the devices its node refers
-  to, listed next to it with `PBL_DEVICE_DEPENDS()` in the `.pbl_dev_deps`
-  section. `CONFIG_DEVICE_INIT_REVERSE` walks the table backwards, to check
+  to, listed next to it with `PBL_DEVICE_DEPENDS()` in the `dev_deps`
+  iterable section. `CONFIG_DEVICE_INIT_REVERSE` walks the table backwards, to check
   that nothing relies on its position.
 
 This is a synchronous take on Linux's deferred probe and `fw_devlink`.
