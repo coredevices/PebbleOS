@@ -1,6 +1,8 @@
 build
 build-test
 build-sdk
+/target
+/samples/**/Cargo.lock
 xcode
 
 .ycm*

@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+[toolchain]
+channel = "1.100"
+components = ["clippy", "rustfmt"]
+targets = [
+  "thumbv7em-none-eabi",
+  "thumbv7em-none-eabihf",
+  "thumbv8m.main-none-eabi",
+  "thumbv8m.main-none-eabihf",
+  "wasm32-unknown-emscripten",
+]

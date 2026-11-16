@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+[workspace]
+resolver = "3"
+members = ["rust/*"]
+# Applications, the samples too, are crates of their own.
+exclude = ["samples"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.100"
+publish = false
+
+[workspace.dependencies]
+pebbleos-macros = { path = "rust/pebbleos-macros" }
+pebbleos-sys = { path = "rust/pebbleos-sys" }
+

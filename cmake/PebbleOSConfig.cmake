@@ -13,6 +13,7 @@
 # library the application's sources go to. The application's prj.conf and
 # boards/<board>.conf are applied on top of the board's configuration, and
 # its Kconfig, when it has one, is the root of the configuration tree.
+# An application in Rust calls pbl_rust_app() instead (cmake/modules/rust.cmake).
 
 include_guard(GLOBAL)
 
@@ -30,3 +31,5 @@ set_property(GLOBAL APPEND PROPERTY PBL_OBJECT_LIBS app)
 if(CONFIG_ARCH_POSIX)
   target_compile_definitions(app PRIVATE main=pbl_app_main)
 endif()
+
+include(rust)
