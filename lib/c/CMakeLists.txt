@@ -6,6 +6,6 @@ pbl_library_sources(
   assert.c
   syscalls.c
 )
-if(CONFIG_LIBC_NEWLIB_NANO)
+if(CONFIG_LIBC_NEWLIB OR CONFIG_LIBC_NEWLIB_NANO)
   add_subdirectory(newlib)
 endif()
