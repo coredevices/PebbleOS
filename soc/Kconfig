@@ -33,6 +33,12 @@ config SOC_HAS_RESET
       The SoC implements pbl_soc_reset(), which the kernel uses instead
       of the architecture's reset.
 
+config SOC_HAS_POWER_OFF
+    bool
+    help
+      The SoC implements pbl_soc_power_off(), which the kernel uses to
+      power off when no power-off handler does.
+
 config SOC
     string
     default "NRF52" if SOC_NRF52

@@ -3,7 +3,7 @@
 `pbl/kernel/reboot.h` restarts or powers off the system:
 
 - `pbl_reboot()` restarts in order;
-- `pbl_power_off()` powers off in order, and restarts if that fails;
+- `pbl_power_off()` powers off in order;
 - `pbl_reboot_emergency()` resets at once, for contexts where nothing else can
   be trusted, e.g. a fault handler or the reset-buttons back door.
 
@@ -19,7 +19,7 @@ Code that must shut down before the system goes away registers a handler with
 
 Handlers of a mode run highest priority first. A restart or power-off handler
 that returns has declined or failed, and the next one runs; once none is left,
-the kernel resets the SoC.
+the kernel powers off or resets the SoC.
 
 Prepare handlers only run on the first request, made from a thread with
 interrupts and the scheduler unlocked. A request from an interrupt, with
@@ -31,6 +31,10 @@ The final reset is the SoC's `pbl_soc_reset()` when it selects
 `CONFIG_SOC_HAS_RESET`, e.g. SF32LB52 resets through its PMU and the POSIX host
 restarts the process; otherwise the architecture's, the NVIC system reset on
 Cortex-M.
+
+The final power-off is the SoC's `pbl_soc_power_off()` when it selects
+`CONFIG_SOC_HAS_POWER_OFF`, which leaves on only the wake sources drivers have
+armed; otherwise the SoC is reset.
 
 The firmware's handlers:
 
