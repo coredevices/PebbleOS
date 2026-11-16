@@ -17,14 +17,15 @@
  *
  * Each edge of a key restarts its debounce timer; when the timer expires the key is read and, if
  * it changed, reported. A key must therefore be stable for its debounce interval to be reported.
- * Keys held at initialization are reported once their debounce interval has elapsed.
+ * Keys held at initialization are reported once their debounce interval has elapsed. Keys marked
+ * as wake sources wake the system from power-off.
  *
  * The configuration follows the devicetree gpio-keys binding, one key per child node:
  *
  * @code{.c}
  * PBL_GPIO_KEYS_DEFINE(BUTTONS, "buttons",
  *   PBL_GPIO_KEYS_KEY("Back", PBL_GPIO(&dt_gpio0, 28, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_PULL_UP),
- *                     PBL_INPUT_KEY_BACK, 40),
+ *                     PBL_INPUT_KEY_BACK, 40, true),
  *   ...);
  * @endcode
  * @{
@@ -40,6 +41,8 @@ struct pbl_gpio_keys_key {
   uint16_t code;
   /** Time the key must be stable to be reported, in ms, @c debounce-interval. */
   uint16_t debounce_interval_ms;
+  /** Whether the key wakes the system from power-off, @c wakeup-source. */
+  bool wakeup_source;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -73,13 +76,15 @@ int pbl_gpio_keys_init(const struct pbl_device *dev);
  * @param _gpio GPIO, a @ref PBL_GPIO.
  * @param _code @ref PBL_INPUT_EV_KEY code.
  * @param _debounce_interval_ms Debounce interval in ms.
+ * @param _wakeup_source Whether the key wakes the system from power-off.
  */
-#define PBL_GPIO_KEYS_KEY(_label, _gpio, _code, _debounce_interval_ms) \
-  {                                                                    \
-    .label = (_label),                                                 \
-    .gpio = _gpio,                                                     \
-    .code = (_code),                                                   \
-    .debounce_interval_ms = (_debounce_interval_ms),                   \
+#define PBL_GPIO_KEYS_KEY(_label, _gpio, _code, _debounce_interval_ms, _wakeup_source) \
+  {                                                                                    \
+    .label = (_label),                                                                 \
+    .gpio = _gpio,                                                                     \
+    .code = (_code),                                                                   \
+    .debounce_interval_ms = (_debounce_interval_ms),                                   \
+    .wakeup_source = (_wakeup_source),                                                 \
   }
 
 /**

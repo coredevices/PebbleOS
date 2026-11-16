@@ -59,6 +59,13 @@ static int prv_key_init(const struct pbl_gpio_keys_key *key,
     return ret;
   }
 
+  if (key->wakeup_source) {
+    ret = pbl_intc_set_wake(&irq, true);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
   ret = pbl_intc_enable(&irq);
   if (ret != 0) {
     return ret;
