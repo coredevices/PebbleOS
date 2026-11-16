@@ -96,8 +96,9 @@ flowchart TD
    warning fails the build.
 2. **Kconfig.** In the same step, `dtmap.py` writes `devicetree/Kconfig.dt`,
    with one `DT_HAS_<compatible>_ENABLED` symbol for every compatible a driver
-   binds to, set when the tree has an enabled node of that compatible. The
-   root `Kconfig` sources it, and drivers default to it.
+   binds to or a `compatible` argument names, set when the tree has an enabled
+   node of that compatible. The root `Kconfig` sources it, and drivers default
+   to it.
 3. **Generate.** At build time, `dtmap.py` reads the compiled tree, the
    resolved `.config` and the specs of the drivers, and writes, under
    `generated/include/devicetree/`:
@@ -440,6 +441,7 @@ An argument takes its value from one place:
 | `referrer: <property>` | What the node pointing at this one with that property provides |
 | `list: [<compatible>, ...]` | One `item` per enabled child of the node reached through children of these compatibles, or of the node itself for `[]`: a template of the child's `reg` cells and name, or a `define` with `args` read from the child, as the keys of `gpio-keys` |
 | `id: true` | For `children`, the ID of the child |
+| `compatible: true` | The C of the first of the node's compatibles found in `values`, for a model named before the generic compatible the driver binds to, as the part of a flash |
 
 with these options:
 
@@ -455,7 +457,7 @@ with these options:
 | `remote: <port>` | Read from the device connected to a port |
 | `up: true` | Read from the parent, for a function of a block, or from the device a child of `children` is part of |
 | `wrap`, `field`, `as`, `item` | Wrap the value in a macro, make it a designated initializer, take another kind from a provider, format list items |
-| `values` | For `string`, the C of each value the property may take |
+| `values` | For `string`, the C of each value the property may take; for `compatible`, the C of each model |
 
 A spec with `ids` maps the IDs a binding defines to the numbers of the driver,
 by the prefix of their names in two headers: the binding's, and one of the

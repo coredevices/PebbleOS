@@ -85,6 +85,7 @@ ARG_KINDS = {
     "phandle",
     "reset",
     "flags",
+    "compatible",
 }
 ARG_OPTIONS = {
     "default",
@@ -215,6 +216,10 @@ class Spec:
             )
             if len(self.classes) != 1:
                 raise self._error("'pinctrl' needs exactly one class")
+        # Models named by a compatible argument, which Kconfig can build only when present
+        self.models = [
+            model for arg in self.args if "compatible" in arg for model in arg["values"]
+        ]
         self.ids = {
             kind: self._load_ids(kind, ids, include_dir)
             for kind, ids in data.get("ids", {}).items()
@@ -227,6 +232,8 @@ class Spec:
                 raise self._error(f"argument {arg}: needs one of {sorted(ARG_KINDS)}")
             if "default" in arg and arg["default"] is None:
                 raise self._error(f"argument {arg}: 'default' has no value")
+            if "compatible" in arg and not isinstance(arg.get("values"), dict):
+                raise self._error(f"argument {arg}: 'compatible' needs 'values'")
             item = arg.get("item")
             if isinstance(item, dict):
                 check_keys(
@@ -1038,6 +1045,10 @@ class Generator:
             return str(dev.child_id)
         if kind == "flag":
             return "true" if node.has(key) else "false"
+        if kind == "compatible":
+            # The model a node names before its generic compatible, as the part of a flash
+            found = next((c for c in node.compatibles if c in arg["values"]), None)
+            return None if found is None else c_value(arg["values"][found])
         if kind == "string":
             if not node.has(key):
                 return None
@@ -1497,6 +1508,12 @@ def kconfig_symbol(compatible):
     return "DT_HAS_" + re.sub(r"[^A-Z0-9]", "_", compatible.upper()) + "_ENABLED"
 
 
+def kconfig_compatibles(specs):
+    """Those with a DT_HAS symbol: of the drivers, the models they name, and the partitions."""
+    models = {model for group in specs.values() for spec in group for model in spec.models}
+    return sorted({*specs, *models, PARTITIONS})
+
+
 def kconfig_text(tree, compatibles):
     present = set()
     if tree is not None:
@@ -1539,7 +1556,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     elif overlays:
         raise DtError(f"{overlays[0]}: board {board} has no devicetree to overlay")
     kconfig = outdir / "Kconfig.dt"
-    write_if_changed(kconfig, kconfig_text(tree, [*specs, PARTITIONS]).encode())
+    write_if_changed(kconfig, kconfig_text(tree, kconfig_compatibles(specs)).encode())
     paths = role_files(srcdir, board, revision, appdir)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)

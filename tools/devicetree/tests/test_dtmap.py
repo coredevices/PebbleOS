@@ -1568,6 +1568,40 @@ def test_boolean_defaults_and_values_are_c(tmp_path):
     assert "SENSOR_DT_DEFINE(dt_sensor, false, true, true);" in body(gen)
 
 
+MODELS = {"acme,s1": "&s1_part", "acme,s2": "&s2_part"}
+
+
+@pytest.mark.parametrize(
+    "compatible, expected",
+    [('"acme,s2", "acme,sensor"', "&s2_part"), ('"acme,sensor"', "&any_part")],
+)
+def test_compatible_names_the_model(tmp_path, compatible, expected):
+    dts = GPIO_DTS.replace('compatible = "acme,sensor";', f"compatible = {compatible};")
+    args = [{"compatible": True, "values": MODELS, "default": "&any_part"}]
+    gen = sensor_generate(tmp_path, args, dts=dts)
+    assert f"SENSOR_DT_DEFINE(dt_sensor, {expected});" in body(gen)
+
+
+def test_compatible_model_is_required_without_default(tmp_path):
+    args = [{"compatible": True, "values": MODELS}]
+    with pytest.raises(DtError, match="missing what"):
+        sensor_generate(tmp_path, args)
+
+
+def test_compatible_needs_values():
+    data = {**SPECS["acme,sensor"], "args": [{"compatible": True}]}
+    with pytest.raises(DtError, match="'compatible' needs 'values'"):
+        spec("acme,sensor", data)
+
+
+def test_compatible_models_get_kconfig_symbols():
+    data = {**SPECS["acme,sensor"], "args": [{"compatible": True, "values": MODELS}]}
+    specs = {"acme,sensor": [spec("acme,sensor", data)]}
+    assert dtmap.kconfig_compatibles(specs) == sorted(
+        ["acme,s1", "acme,s2", "acme,sensor", dtmap.PARTITIONS]
+    )
+
+
 def test_null_default_is_rejected():
     data = {**SPECS["acme,sensor"], "args": [{"prop": "x", "default": None}]}
     with pytest.raises(DtError, match="'default' has no value"):
