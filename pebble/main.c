@@ -45,17 +45,22 @@
 #include <comm/qemu/serial.h>
 #endif
 
-static void print_splash_screen(void) {
 #if defined(CONFIG_MFG)
-  PBL_LOG_ALWAYS("Manufacturing mode");
+#define MODE ", manufacturing mode"
 #elifdef CONFIG_RECOVERY_FW
-  PBL_LOG_ALWAYS("Recovery mode");
+#define MODE ", recovery mode"
+#else
+#define MODE ""
 #endif
+
+static void print_splash_screen(void) {
+  const char *slot = "";
+
   if (TINTIN_METADATA.is_dual_slot && !TINTIN_METADATA.is_recovery_firmware) {
-    PBL_LOG_ALWAYS("Slot %d", TINTIN_METADATA.is_slot_0 ? 0 : 1);
+    slot = TINTIN_METADATA.is_slot_0 ? ", slot 0" : ", slot 1";
   }
-  PBL_LOG_ALWAYS("(c) 2013-2026 The PebbleOS contributors");
-  PBL_LOG_ALWAYS(" ");
+
+  PBL_LOG_ALWAYS("PebbleOS %s" MODE "%s", TINTIN_METADATA.version_tag, slot);
 }
 
 static void init_drivers(void) {
