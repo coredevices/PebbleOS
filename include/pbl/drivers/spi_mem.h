@@ -208,6 +208,14 @@ struct pbl_spi_mem_ops {
    */
   void (*power_down)(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm,
                      pbl_spi_mem_pm_fn_t fn, void *arg);
+  /**
+   * Optional, not with @ref PBL_SPI_MEM_XIP. Run @p pm->enter, if @p pm is not NULL, and power
+   * the controller down until @c pm_resume, with interrupts disabled. Returns 0, or @c -EBUSY
+   * while a transfer is in progress.
+   */
+  int (*pm_suspend)(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm);
+  /** With @c pm_suspend. Power the controller back up and run @p pm->exit. */
+  void (*pm_resume)(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm);
 };
 
 /**
@@ -393,6 +401,28 @@ void pbl_spi_mem_dirmap_invalidate(const struct pbl_spi_mem *mem,
  */
 void pbl_spi_mem_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm,
                             pbl_spi_mem_pm_fn_t fn, void *arg);
+
+/**
+ * @brief Power the memory and the controller down until pbl_spi_mem_pm_resume(), with interrupts
+ * disabled.
+ *
+ * For a memory the CPU does not execute from, see pbl_spi_mem_power_down() otherwise.
+ *
+ * @param mem Controller.
+ * @param pm Memory low power commands, or NULL to leave the memory as is.
+ * @retval 0 Powered down.
+ * @retval -EBUSY A transfer is in progress.
+ * @retval -ENOTSUP The controller cannot.
+ */
+int pbl_spi_mem_pm_suspend(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm);
+
+/**
+ * @brief Power the memory and the controller back up after pbl_spi_mem_pm_suspend().
+ *
+ * @param mem Controller.
+ * @param pm Memory low power commands given to pbl_spi_mem_pm_suspend().
+ */
+void pbl_spi_mem_pm_resume(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm);
 
 /**
  * @brief Poll for completion instead of sleeping, e.g. from a fault handler.
