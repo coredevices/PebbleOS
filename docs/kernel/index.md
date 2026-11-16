@@ -19,6 +19,7 @@ idle.md
 memory.md
 fatal.md
 reboot.md
+print.md
 compiler.md
 internals.md
 ```
