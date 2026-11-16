@@ -1038,3 +1038,13 @@ void test_workout_active__left_hand_metrics_use_parent_coordinates(void) {
   }
 #endif
 }
+
+void test_workout_active__left_hand_workout_render_paused(void) {
+  display_orientation_set_left(true);
+  s_workout_data = (WorkoutData){.duration_s = 754, .distance_m = 2400, .avg_pace = 314};
+  workout_service_pause_workout(true);
+  WorkoutActiveWindow *window = workout_active_create_for_activity_type(
+      ActivitySessionType_Run, &s_workout_data, &s_workout_controller);
+  prv_create_window_and_render(window, 0);
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}

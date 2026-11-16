@@ -508,3 +508,39 @@ void test_timeline_list_view__left_hand_overlap_bars_mirror_right_hand(void) {
   free(right);
 #endif
 }
+
+void test_timeline_list_view__left_hand_title_and_subtitle_overlap_future(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_title_and_subtitle(false /* past */, PBL_MIN_PER_HOUR);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__left_hand_title_and_subtitle_free_time_past(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_title_and_subtitle(true /* past */, 5 /* first_duration_m */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__left_hand_pin_and_dot_future(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_pin_and_dot(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__left_hand_day_sep_tomorrow_future(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_day_sep_tomorrow(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__left_hand_pin_and_fin_past(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_pin_and_fin(true /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}
+
+void test_timeline_list_view__left_hand_all_day_future(void) {
+  s_action_bar_on_right = false;
+  prv_create_and_render_all_day(false /* past */);
+  FAKE_GRAPHICS_CONTEXT_CHECK_DEST_BITMAP_FILE();
+}

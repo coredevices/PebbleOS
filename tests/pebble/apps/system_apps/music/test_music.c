@@ -628,3 +628,45 @@ void test_music__left_hand_album_art_uses_content_bounds(void) {
   cl_assert_equal_i(grect_get_max_x(&title), PBL_DISPLAY_WIDTH - 7);
 #endif
 }
+
+void test_music__left_hand_playing(void) {
+  s_left_handed = true;
+  prv_set_now_playing("Just Like Heaven", "The Cure");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_track_pos_ms = 75 * 1000;
+  s_music_track_length_ms = 245 * 1000;
+  s_music_progress_supported = true;
+
+  prv_launch_app_and_render();
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_music__left_hand_playing_long_text(void) {
+  s_left_handed = true;
+  prv_set_now_playing("It Could Be The First Day Of Springtime", "Godspeed You! Black Emperor");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_track_pos_ms = 754 * 1000;
+  s_music_track_length_ms = 3945 * 1000;
+  s_music_progress_supported = true;
+
+  prv_launch_app_and_render();
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_music__left_hand_playing_album_art(void) {
+#if MUSIC_ALBUM_ART_SUPPORTED
+  s_left_handed = true;
+  prv_set_now_playing("Crumbling Castle", "King Gizzard & The Lizard Wizard");
+  s_music_play_state = MusicPlayStatePlaying;
+  s_music_track_pos_ms = 75 * 1000;
+  s_music_track_length_ms = 644 * 1000;
+  s_music_progress_supported = true;
+  s_music_now_playing_generation = 1;
+  s_imaging_supported = true;
+  s_prefs_music_show_album_art = true;
+  prv_receive_album_art();
+
+  prv_launch_app_and_render();
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+#endif
+}

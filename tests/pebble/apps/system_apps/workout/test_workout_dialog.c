@@ -6,6 +6,7 @@
 
 #include <apps/system/workout/dialog.h>
 #include <resource/resource_ids.auto.h>
+#include <shell/prefs.h>
 
 // Fakes
 /////////////////////
@@ -25,6 +26,8 @@ GContext *graphics_context_get_current_context(void) {
 }
 
 void test_workout_dialog__initialize(void) {
+  display_orientation_set_left(false);
+
   // Setup graphics context
   framebuffer_init(&s_fb, &(GSize){PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT});
   framebuffer_clear(&s_fb);
@@ -50,7 +53,7 @@ void test_workout_dialog__cleanup(void) {
 // Tests
 //////////////////////
 
-void test_workout_dialog__render_end_workout(void) {
+static void prv_render_end_workout(void) {
   WorkoutDialog *workout_dialog = workout_dialog_create("Workout End");
   Dialog *dialog = workout_dialog_get_dialog(workout_dialog);
 
@@ -64,11 +67,14 @@ void test_workout_dialog__render_end_workout(void) {
 
   window_set_on_screen(&dialog->window, true, true);
   window_render(&dialog->window, &s_ctx);
+}
 
+void test_workout_dialog__render_end_workout(void) {
+  prv_render_end_workout();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
-void test_workout_dialog__render_detected_workout(void) {
+static void prv_render_detected_workout(void) {
   WorkoutDialog *workout_dialog = workout_dialog_create("Workout Detected");
   Dialog *dialog = workout_dialog_get_dialog(workout_dialog);
 
@@ -84,7 +90,10 @@ void test_workout_dialog__render_detected_workout(void) {
 
   window_set_on_screen(&dialog->window, true, true);
   window_render(&dialog->window, &s_ctx);
+}
 
+void test_workout_dialog__render_detected_workout(void) {
+  prv_render_detected_workout();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
@@ -105,5 +114,17 @@ void test_workout_dialog__render_workout_ended(void) {
   window_set_on_screen(&dialog->window, true, true);
   window_render(&dialog->window, &s_ctx);
 
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_dialog__left_hand_render_end_workout(void) {
+  display_orientation_set_left(true);
+  prv_render_end_workout();
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_workout_dialog__left_hand_render_detected_workout(void) {
+  display_orientation_set_left(true);
+  prv_render_detected_workout();
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
