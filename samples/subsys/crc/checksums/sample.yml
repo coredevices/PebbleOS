@@ -1,0 +1,9 @@
+description: CRC-8 and CRC-32 of a message, computed in one go and in chunks, and checked with the CRC-32 residue
+expect:
+  - 'crc: CRC-8 of "123456789": 0x3e'
+  - 'crc: CRC-32 of "123456789": 0xcbf43926'
+  - 'crc: CRC-32 in chunks: 0xcbf43926'
+  - 'crc: message with its CRC-32 appended is intact: yes'
+  - 'crc: after flipping a bit: no'
+  - 'crc: legacy checksum: 0x[0-9a-f]{8}, in chunks: the same'
+  - 'Sample done'
