@@ -123,6 +123,28 @@ int pbl_intc_disable(const struct pbl_irq_spec *spec) {
   return prv_set_enabled(spec, false);
 }
 
+int pbl_intc_set_wake(const struct pbl_irq_spec *spec, bool on) {
+  const struct pbl_intc *intc = spec->intc;
+  int ret;
+
+  if (intc->ops->set_wake == nullptr) {
+    return -ENOTSUP;
+  }
+
+  pbl_irq_lock();
+
+  if (prv_requested_line(spec) == nullptr) {
+    pbl_irq_unlock();
+    return -EINVAL;
+  }
+
+  ret = intc->ops->set_wake(intc, spec->hwirq, on);
+
+  pbl_irq_unlock();
+
+  return ret;
+}
+
 void pbl_intc_dispatch(const struct pbl_intc *intc, uint32_t hwirq) {
   const struct pbl_intc_line *line;
 
