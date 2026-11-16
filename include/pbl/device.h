@@ -164,20 +164,15 @@ struct pbl_mem_region {
 #define PBL_DEVICE_INIT(sym, _name, _init, _parent, _deps) \
   PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _deps, nullptr)
 
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_DEVICE_TABLE_SECTION PBL_UNSORTED_SECTION(pbl_devices)
-#else
-#define PBL_DEVICE_TABLE_SECTION PBL_SECTION(".pbl_devices")
-#endif
-
 /**
  * @brief Add a device to the table pbl_device_init_all() walks.
  *
  * @param sym Symbol of the device instance.
  * @param dev Pointer to its struct pbl_device.
  */
-#define PBL_DEVICE_REGISTER(sym, dev) \
-  static const struct pbl_device *const sym##_device_entry PBL_USED PBL_DEVICE_TABLE_SECTION = (dev)
+#define PBL_DEVICE_REGISTER(sym, dev)                                            \
+  static const struct pbl_device *const sym##_device_entry PBL_ITERABLE_SECTION( \
+      const struct pbl_device *const, devices, #sym) = (dev)
 
 /** @brief Devices that device @c dev needs, on top of its parent and deps. */
 struct pbl_device_depends {
@@ -186,12 +181,6 @@ struct pbl_device_depends {
   /** NULL-terminated. Devices initialized first. */
   const struct pbl_device *const *deps;
 };
-
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_DEVICE_DEPENDS_SECTION PBL_UNSORTED_SECTION(pbl_dev_deps)
-#else
-#define PBL_DEVICE_DEPENDS_SECTION PBL_SECTION(".pbl_dev_deps")
-#endif
 
 /**
  * @brief List devices a device needs, without touching its definition.
@@ -203,9 +192,12 @@ struct pbl_device_depends {
  * @param _dev Pointer to its struct pbl_device.
  * @param ... Pointers to the struct pbl_device of each device it needs.
  */
-#define PBL_DEVICE_DEPENDS(sym, _dev, ...)                             \
-  static const struct pbl_device_depends sym##_device_depends PBL_USED \
-      PBL_DEVICE_DEPENDS_SECTION = {.dev = (_dev), .deps = PBL_DEVICE_DEPS(__VA_ARGS__)}
+#define PBL_DEVICE_DEPENDS(sym, _dev, ...)                                          \
+  static const struct pbl_device_depends sym##_device_depends PBL_ITERABLE_SECTION( \
+      const struct pbl_device_depends, dev_deps, #sym) = {                          \
+    .dev = (_dev),                                                                  \
+    .deps = PBL_DEVICE_DEPS(__VA_ARGS__),                                           \
+  }
 
 /**
  * @brief Give an instance a second name with the type of its class, for code that does not know

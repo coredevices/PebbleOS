@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources(device.c)
-pbl_linker_sources(rom-start device.ld)
+pbl_iterable_section(devices UNSORTED)
+pbl_iterable_section(dev_deps UNSORTED)
