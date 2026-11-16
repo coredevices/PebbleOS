@@ -32,25 +32,11 @@ static_assert(PBL_COREDUMP_NUM_REGISTERS == PBL_THREAD_REG_COUNT, "register layo
 // Feeding the watchdog this often keeps it quiet however slow the backends are.
 #define REGION_WRITE_SIZE 0x10000
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_coredump_backend __pbl_coredump_backends_start[];
-extern const struct pbl_coredump_backend __pbl_coredump_backends_end[];
-extern const struct pbl_coredump_region __pbl_coredump_regions_start[];
-extern const struct pbl_coredump_region __pbl_coredump_regions_end[];
-#else
-extern const struct pbl_coredump_backend __pbl_coredump_backends_start[] PBL_UNSORTED_SECTION_START(
-    pbl_cd_be);
-extern const struct pbl_coredump_backend __pbl_coredump_backends_end[] PBL_UNSORTED_SECTION_END(
-    pbl_cd_be);
-extern const struct pbl_coredump_region __pbl_coredump_regions_start[] PBL_UNSORTED_SECTION_START(
-    pbl_cd_regs);
-extern const struct pbl_coredump_region __pbl_coredump_regions_end[] PBL_UNSORTED_SECTION_END(
-    pbl_cd_regs);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_coredump_backend, cd_backends);
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_coredump_region, cd_regions);
 
-#define PRV_FOREACH_BACKEND(_be)                                               \
-  for (const struct pbl_coredump_backend *_be = __pbl_coredump_backends_start; \
-       _be < __pbl_coredump_backends_end; _be++)
+#define PRV_FOREACH_BACKEND(_be) \
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_coredump_backend, cd_backends, _be)
 
 // Backends still receiving the dump, by position.
 static uint32_t s_active;
@@ -109,7 +95,7 @@ void pbl_coredump__log_int(const char *msg, uint32_t value, int base) {
 }
 
 static uint32_t prv_backend_bit(const struct pbl_coredump_backend *backend) {
-  return 1U << (backend - __pbl_coredump_backends_start);
+  return 1U << (backend - PBL_ITERABLE_SECTION_START(cd_backends));
 }
 
 static void prv_backend_end(const struct pbl_coredump_backend *backend) {
@@ -164,8 +150,7 @@ static void prv_chunk_begin(uint32_t key, uint32_t size) {
 }
 
 static void prv_regions_write(bool late) {
-  for (const struct pbl_coredump_region *region = __pbl_coredump_regions_start;
-       region < __pbl_coredump_regions_end; region++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_coredump_region, cd_regions, region) {
     if (region->late != late) {
       continue;
     }

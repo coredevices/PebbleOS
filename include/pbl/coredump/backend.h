@@ -98,14 +98,8 @@ struct pbl_coredump_backend {
  * @param _name Backend name, also its identifier.
  * @param _api Backend operations.
  */
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_COREDUMP_BACKEND_DEFINE(_name, _api)                                  \
-  static const struct pbl_coredump_backend _pbl_coredump_backend_##_name PBL_USED \
-  PBL_UNSORTED_SECTION(pbl_cd_be) = {.name = #_name, .api = &(_api)}
-#else
-#define PBL_COREDUMP_BACKEND_DEFINE(_name, _api)                                                 \
-  static const struct pbl_coredump_backend _pbl_coredump_backend_##_name PBL_USED PBL_ALIGNED(4) \
-      PBL_SECTION(".pbl_coredump_backends." #_name) = {.name = #_name, .api = &(_api)}
-#endif
+#define PBL_COREDUMP_BACKEND_DEFINE(_name, _api)                                               \
+  static const struct pbl_coredump_backend _pbl_coredump_backend_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_coredump_backend, cd_backends, #_name) = {.name = #_name, .api = &(_api)}
 
 /** @} */
