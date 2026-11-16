@@ -184,20 +184,26 @@ typedef struct {
 // - Caller ID text area
 // - Status text area
 // Extra vertical space on larger displays is distributed to improve spacing
-#define PHONE_EXTRA_HEIGHT     PBL_IF_RECT_ELSE((PBL_DISPLAY_HEIGHT - 168), 0)
-#define PHONE_ICON_POS_Y_ROUND (22 + ((PBL_DISPLAY_HEIGHT > 180) ? 10 : 0))
+#define PHONE_EXTRA_HEIGHT PBL_IF_RECT_ELSE((PBL_DISPLAY_HEIGHT - 168), 0)
+// Larger round displays shift the whole stack down to keep the 180px spacing
+#define PHONE_ROUND_EXTRA_Y    ((PBL_DISPLAY_HEIGHT > 180) ? 10 : 0)
+#define PHONE_ICON_POS_Y_ROUND (22 + PHONE_ROUND_EXTRA_Y)
 
 // Default style: icon near top, text below
 #define PHONE_ICON_POS_Y_DEFAULT \
   PBL_IF_RECT_ELSE((25 + PHONE_EXTRA_HEIGHT / 4), PHONE_ICON_POS_Y_ROUND)
-#define PHONE_CALLER_ID_POS_Y_DEFAULT PBL_IF_RECT_ELSE((102 + PHONE_EXTRA_HEIGHT / 2), 93)
-#define PHONE_STATUS_POS_Y_DEFAULT    PBL_IF_RECT_ELSE((142 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
+#define PHONE_CALLER_ID_POS_Y_DEFAULT \
+  PBL_IF_RECT_ELSE((102 + PHONE_EXTRA_HEIGHT / 2), 93 + PHONE_ROUND_EXTRA_Y)
+#define PHONE_STATUS_POS_Y_DEFAULT \
+  PBL_IF_RECT_ELSE((142 + PHONE_EXTRA_HEIGHT * 3 / 4), 144 + PHONE_ROUND_EXTRA_Y)
 
 // Large style: more compact icon placement, larger text area
 #define PHONE_ICON_POS_Y_LARGE \
   PBL_IF_RECT_ELSE((11 + PHONE_EXTRA_HEIGHT / 4), PHONE_ICON_POS_Y_ROUND)
-#define PHONE_CALLER_ID_POS_Y_LARGE PBL_IF_RECT_ELSE((80 + PHONE_EXTRA_HEIGHT / 2), 88)
-#define PHONE_STATUS_POS_Y_LARGE    PBL_IF_RECT_ELSE((138 + PHONE_EXTRA_HEIGHT * 3 / 4), 144)
+#define PHONE_CALLER_ID_POS_Y_LARGE \
+  PBL_IF_RECT_ELSE((80 + PHONE_EXTRA_HEIGHT / 2), 88 + PHONE_ROUND_EXTRA_Y)
+#define PHONE_STATUS_POS_Y_LARGE \
+  PBL_IF_RECT_ELSE((138 + PHONE_EXTRA_HEIGHT * 3 / 4), 144 + PHONE_ROUND_EXTRA_Y)
 
 static const PhoneStyle s_phone_style_default = {
   .icon_size = TimelineResourceSizeLarge,
