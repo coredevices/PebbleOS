@@ -1,0 +1,10 @@
+description: The ambient light level, read five times a second apart, in lux where calibrated
+expect:
+  - 'als: levels 0 to \d+, lux: (yes|no)'
+  - 'als: level \d+, \d+ (lux|counts)'
+  - 'als: level \d+, \d+ (lux|counts)'
+  - 'als: level \d+, \d+ (lux|counts)'
+  - 'als: level \d+, \d+ (lux|counts)'
+  - 'als: level \d+, \d+ (lux|counts)'
+  - 'Sample done'
+roles: [als]
