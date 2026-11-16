@@ -12,12 +12,20 @@
 #ifdef CONFIG_PINCTRL_SF32LB57
 #include <pbl/drivers/pinctrl/sf32lb57.h>
 #endif
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_gpio.h>
 #include <hardware/sf32lb52_hpsys_aon.h>
+#ifdef CONFIG_PINCTRL_SF32LB52
+#include <hardware/sf32lb52_pmuc.h>
+#endif
+#ifdef CONFIG_PINCTRL_SF32LB57
+#include <hardware/sf32lb57_pmuc.h>
+#endif
 
 // PA pads, as the pin controller of the series takes them
 struct pbl_gpio_sf32lb_pads {
@@ -29,6 +37,10 @@ struct pbl_gpio_sf32lb_pads {
 
 #ifdef CONFIG_PINCTRL_SF32LB52
 #define WAKEUP_FIRST_PIN 24U
+
+// Hibernate wakes on two PMU pins, each routed from one of PA24-PA44
+#define PMU_NUM_WAKE_LINES 21U
+#define PMU_MAX_WAKE_LINES 2U
 
 #define SF32LB52_PAD_GPIO(pin) \
   PBL_PINCTRL_SF32LB52_PIN(PBL_PINCTRL_SF32LB52_PORT_PA, pin, 0U, 0U, 0U)
@@ -57,6 +69,44 @@ static const struct pbl_gpio_sf32lb_pads s_sf32lb52_pads = {
   .configure = prv_sf32lb52_configure,
   .input = prv_sf32lb52_input,
 };
+
+static int prv_pmu_line(uint32_t pin) {
+  if (pin < WAKEUP_FIRST_PIN || pin >= WAKEUP_FIRST_PIN + PMU_NUM_WAKE_LINES) {
+    return -1;
+  }
+
+  return (int)(pin - WAKEUP_FIRST_PIN);
+}
+
+static uint32_t prv_pmu_line_pin(uint32_t line) {
+  return WAKEUP_FIRST_PIN + line;
+}
+
+static void prv_pmu_arm(uintptr_t pmuc, uint32_t lines, uint32_t high) {
+  uint32_t clear = 0U;
+  uint32_t set = 0U;
+  uint32_t wer = 0U;
+  uint32_t n = 0U;
+
+  for (uint32_t line = 0U; line < PMU_NUM_WAKE_LINES; line++) {
+    if ((lines & PBL_BIT(line)) == 0U) {
+      continue;
+    }
+
+    clear |= PMUC_CR_PIN_SEL_MASK(n) | PMUC_CR_PIN_MODE_MASK(n);
+    set |=
+        PBL_FIELD_PREP(PMUC_CR_PIN_SEL_MASK(n), line) |
+        PBL_FIELD_PREP(PMUC_CR_PIN_MODE_MASK(n),
+                       (high & PBL_BIT(line)) != 0U ? PMUC_CR_PIN_MODE_LOW : PMUC_CR_PIN_MODE_HIGH);
+    wer |= PMUC_WER_PIN0 << n;
+    n++;
+  }
+
+  pbl_modifyl(clear, set, pmuc + SF32LB52_PMUC_CR_OFFSET);
+  // A pin status may be latched from before
+  pbl_writel(wer, pmuc + SF32LB52_PMUC_WCR_OFFSET);
+  pbl_modifyl(0U, wer, pmuc + SF32LB52_PMUC_WER_OFFSET);
+}
 #endif
 
 #ifdef CONFIG_PINCTRL_SF32LB57
@@ -86,12 +136,55 @@ static const struct pbl_gpio_sf32lb_pads s_sf32lb57_pads = {
   .configure = prv_sf32lb57_configure,
   .input = prv_sf32lb57_input,
 };
+
+// Hibernate wakes on PA33-PA42 and PA24-PA27, each with a PMU line of its own
+#define PMU_NUM_WAKE_LINES 14U
+#define PMU_MAX_WAKE_LINES PMU_NUM_WAKE_LINES
+
+static int prv_pmu_line(uint32_t pin) {
+  if (pin >= 33U && pin <= 42U) {
+    return (int)(pin - 33U);
+  }
+  if (pin >= 24U && pin <= 27U) {
+    return (int)(pin - 14U);
+  }
+
+  return -1;
+}
+
+static uint32_t prv_pmu_line_pin(uint32_t line) {
+  return line < 10U ? 33U + line : 14U + line;
+}
+
+static void prv_pmu_arm(uintptr_t pmuc, uint32_t lines, uint32_t high) {
+  uint32_t clear = 0U;
+  uint32_t set = 0U;
+
+  for (uint32_t line = 0U; line < PMU_NUM_WAKE_LINES; line++) {
+    if ((lines & PBL_BIT(line)) == 0U) {
+      continue;
+    }
+
+    clear |= PMUC_WKUP_MODE_MASK(line);
+    set |= PBL_FIELD_PREP(PMUC_WKUP_MODE_MASK(line),
+                          (high & PBL_BIT(line)) != 0U ? PMUC_WKUP_MODE_LOW : PMUC_WKUP_MODE_HIGH);
+  }
+
+  pbl_modifyl(clear, set, pmuc + SF32LB57_PMUC_WKUP_MODE_OFFSET);
+  // A pin status may be latched from before
+  pbl_writel(lines, pmuc + SF32LB57_PMUC_WCR_OFFSET);
+  pbl_modifyl(0U, lines, pmuc + SF32LB57_PMUC_WER_OFFSET);
+}
 #endif
 
 struct pbl_gpio_sf32lb_intc {
   struct pbl_intc intc;
   const struct pbl_gpio_sf32lb *port;
 };
+
+// Wake lines, one bit per PMU wake line, and their port
+static const struct pbl_gpio_sf32lb *s_wake_port;
+static uint32_t s_wake;
 
 static const struct pbl_gpio_sf32lb *prv_port(const struct pbl_gpio_port *port) {
   return container_of(port, const struct pbl_gpio_sf32lb, port);
@@ -213,11 +306,60 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+  const struct pbl_gpio_sf32lb *gpio = prv_intc_port(intc);
+  int line = prv_pmu_line(hwirq);
+  uint32_t bit;
+
+  if (gpio->pmuc == 0U || line < 0) {
+    return on ? -ENOTSUP : 0;
+  }
+
+  bit = PBL_BIT((uint32_t)line);
+  if (!on) {
+    s_wake &= ~bit;
+    return 0;
+  }
+
+  if ((s_wake & bit) == 0U && (uint32_t)PBL_POPCOUNT(s_wake) >= PMU_MAX_WAKE_LINES) {
+    return -ENOSPC;
+  }
+
+  s_wake |= bit;
+  s_wake_port = gpio;
+
+  return 0;
+}
+
 static const struct pbl_intc_ops s_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
+  .set_wake = prv_intc_set_wake,
 };
+
+// Waking on the level opposite to the current one keeps a pin held at
+// power-off from waking at once
+static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
+  uint32_t high = 0U;
+
+  if (s_wake == 0U) {
+    return;
+  }
+
+  for (uint32_t line = 0U; line < PMU_NUM_WAKE_LINES; line++) {
+    if ((s_wake & PBL_BIT(line)) != 0U &&
+        prv_get(&s_wake_port->port, (uint8_t)prv_pmu_line_pin(line)) != 0) {
+      high |= PBL_BIT(line);
+    }
+  }
+
+  prv_pmu_arm(s_wake_port->pmuc, s_wake, high);
+}
+
+// Last, so that power-off handlers that end the system run first
+PBL_SYS_OFF_HANDLER_DEFINE(gpio_sf32lb_wake, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW,
+                           prv_arm_wake, nullptr);
 
 // SF32LB52 wakeup pins also latch in HPAON, which the AON handler leaves for us to clear
 static void prv_clear_wakeup(const struct pbl_gpio_sf32lb *gpio, uint32_t bank, uint32_t pending) {
@@ -269,7 +411,7 @@ static int prv_init(const struct pbl_device *dev) {
   return 0;
 }
 
-#define PBL_GPIO_SF32LB52_DEFINE(sym, _name, _base, _irq, _clk, _num_pins, _aon)                  \
+#define PBL_GPIO_SF32LB52_DEFINE(sym, _name, _base, _irq, _clk, _num_pins, _aon, _pmuc)           \
   extern const struct pbl_intc sym##_intc;                                                        \
   static struct pbl_gpio_sf32lb_state sym##_sf32lb_state;                                         \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
@@ -282,6 +424,7 @@ static int prv_init(const struct pbl_device *dev) {
     .irq = (_irq),                                                                                \
     .clk = _clk,                                                                                  \
     .aon = (_aon),                                                                                \
+    .pmuc = (_pmuc),                                                                              \
     .state = &sym##_sf32lb_state,                                                                 \
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_sf32lb_intc, struct pbl_intc, intc){            \
@@ -291,7 +434,7 @@ static int prv_init(const struct pbl_device *dev) {
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_GPIO_SF32LB_IRQ_PRIO, prv_irq_handler, &sym##_inst, 0)
 
 // No wakeup latches in HPAON on the SF32LB57
-#define PBL_GPIO_SF32LB57_DEFINE(sym, _name, _base, _irq, _clk, _num_pins)                        \
+#define PBL_GPIO_SF32LB57_DEFINE(sym, _name, _base, _irq, _clk, _num_pins, _pmuc)                 \
   extern const struct pbl_intc sym##_intc;                                                        \
   static struct pbl_gpio_sf32lb_state sym##_sf32lb_state;                                         \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
@@ -304,6 +447,7 @@ static int prv_init(const struct pbl_device *dev) {
     .irq = (_irq),                                                                                \
     .clk = _clk,                                                                                  \
     .aon = (0U),                                                                                  \
+    .pmuc = (_pmuc),                                                                              \
     .state = &sym##_sf32lb_state,                                                                 \
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_sf32lb_intc, struct pbl_intc, intc){            \
