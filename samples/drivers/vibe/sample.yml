@@ -1,0 +1,8 @@
+description: Short pulses of the vibration motor, then the same pulses braked where it can brake
+expect:
+  - 'vibe: pulse 1'
+  - 'vibe: pulse 2'
+  - 'vibe: pulse 3'
+  - 'vibe: (no braking|braked pulse 3, braking at -?\d+)'
+  - 'Sample done'
+roles: [vibe]

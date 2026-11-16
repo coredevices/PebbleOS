@@ -49,6 +49,7 @@ drivers/backlight.md
 drivers/rng.md
 drivers/rtc.md
 drivers/temp.md
+drivers/vibe.md
 ```
 
 ```{toctree}
