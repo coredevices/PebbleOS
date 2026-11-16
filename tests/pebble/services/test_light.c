@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/cron/cron.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
@@ -81,9 +83,13 @@ bool backlight_is_motion_enabled(void) {
 }
 
 static uint32_t s_als_raw;
+static int s_als_read_ret;
 static uint32_t s_als_compensation_gain;
 
 int pbl_als_read(const struct pbl_als *als, uint32_t *level) {
+  if (s_als_read_ret != 0) {
+    return s_als_read_ret;
+  }
   *level = s_als_raw;
   return 0;
 }
@@ -212,6 +218,7 @@ void test_light__initialize(void) {
   s_backlight_color = 0;
   s_ambient_sensor_enabled = false;
   s_als_raw = 0;
+  s_als_read_ret = 0;
   s_als_compensation_gain = 1;
   prv_set_schedule(false, 6, 18);
 }
@@ -263,6 +270,23 @@ void test_light__ambient_gate_ignores_screen_compensation(void) {
   cl_assert_equal_i(light_get_ambient_gate_lux(), 100);
   light_enable_interaction();
   check_on_timed_and_consume();
+}
+
+void test_light__ambient_read_error_is_not_cached_while_lit(void) {
+  fake_rtc_set_ticks(1000);
+  light_enable(true);
+
+  // No sample available yet (e.g. the sensor's sampling is suspended)
+  s_als_raw = 500;
+  s_als_read_ret = -ENODATA;
+  cl_assert_equal_i(light_get_ambient_lux(), 0);
+
+  // The next successful read must not be masked by a cached 0
+  s_als_read_ret = 0;
+  cl_assert_equal_i(light_get_ambient_lux(), 500);
+  cl_assert_equal_i(light_get_ambient_gate_lux(), 500);
+
+  light_enable(false);
 }
 
 void test_light__ambient_gate_blocks_bright_room(void) {
