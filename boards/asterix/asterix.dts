@@ -40,6 +40,7 @@
 			gpios = <&gpio0 28 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 			linux,code = <KEY_BACK>;
 			debounce-interval = <40>;
+			wakeup-source;
 		};
 
 		button-up {
