@@ -1,0 +1,12 @@
+description: A thread watched by the task watchdog, feeding it, waiting for work, and getting stuck until the channel callback frees it
+expect:
+  - 'task_wdt: main watched on channel \d+, fed every 1000 ms at least'
+  - 'task_wdt: 2000 ms of work fed in time'
+  - 'task_wdt: waited 3000 ms for work, not reported'
+  - 'task_wdt: main gets stuck'
+  - '<KernelMain> not fed for \d+ ms'
+  - 'task_wdt: channel \d+ expired, freeing what main waits on'
+  - 'task_wdt: stalled, channels in use 0x[0-9a-f]{2}, fed in time 0x[0-9a-f]{2}'
+  - 'task_wdt: recovered'
+  - 'Sample done'
+timeout: 15
