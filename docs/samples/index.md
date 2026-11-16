@@ -46,6 +46,7 @@ subsys/i18n/catalog.md
 subsys/input/events.md
 subsys/loader/image.md
 subsys/logging/levels.md
+subsys/profiler/nodes.md
 ```
 
 ```{toctree}
