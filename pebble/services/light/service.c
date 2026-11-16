@@ -227,7 +227,10 @@ static void prv_als_sample(void) {
   }
   uint32_t raw = 0U;
 
-  (void)pbl_als_read(ALS, &raw);
+  // A failed read keeps the last good reading instead of caching 0.
+  if (pbl_als_read(ALS, &raw) != 0) {
+    return;
+  }
   uint32_t level = raw;
 #if defined(CONFIG_ALS_SCREEN_COMPENSATION) && !defined(CONFIG_RECOVERY_FW)
   // The ALS sits under the display; correct the reading for the transmittance
