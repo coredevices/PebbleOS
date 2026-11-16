@@ -405,11 +405,15 @@ void touch_handle_gesture(TouchGesture gesture, int16_t x, int16_t y) {
 
 // Reported X and Y ranges, after the touchscreen's axis swap.
 static uint16_t prv_range_x(void) {
-  return TOUCH->props.swapped_x_y ? TOUCH->props.size_y : TOUCH->props.size_x;
+  const struct pbl_touch_props *props = pbl_touch_get_props(TOUCH);
+
+  return props->swapped_x_y ? props->size_y : props->size_x;
 }
 
 static uint16_t prv_range_y(void) {
-  return TOUCH->props.swapped_x_y ? TOUCH->props.size_x : TOUCH->props.size_y;
+  const struct pbl_touch_props *props = pbl_touch_get_props(TOUCH);
+
+  return props->swapped_x_y ? props->size_x : props->size_y;
 }
 
 // Maps a coordinate from the touchscreen's range to the framebuffer's.
