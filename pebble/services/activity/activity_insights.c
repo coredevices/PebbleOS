@@ -1016,7 +1016,7 @@ static void prv_push_nap_session_notification(time_t notif_time, ActivitySession
   const int minutes = session->length_min % PBL_MIN_PER_HOUR;
 
   // Enough to fit the filled out format string below and i18n variants
-  const int max_notif_length = 128;
+  const int max_notif_length = 256;
   char *body = pbl_malloc_check(max_notif_length);
   snprintf(body, max_notif_length,
            pbl_i18n_get("Aren't naps great? You knocked out for %dH %dM!", body), hours, minutes);
@@ -1431,7 +1431,7 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
   }
 
   // Enough to fit any filled out format string above and i18n variants
-  const int max_notif_length = 256;
+  const int max_notif_length = 512;
   const char *fmt = prv_get_variant(&s_tier_config[tier], variant);
   if (fmt == nullptr) {
     return;
@@ -1616,7 +1616,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
                         &percentage);
 
   // Enough to fit any filled out format string above and i18n variants
-  const int max_notif_length = 256;
+  const int max_notif_length = 512;
   const char *fmt = prv_get_sleep_summary_fmt(sleep_total_seconds, sleep_average_seconds, variant);
   if (fmt == nullptr) {
     // invalid variant
