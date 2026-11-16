@@ -35,9 +35,9 @@ kernel/classic/barrier.md
 
 ```{toctree}
 :maxdepth: 1
-:caption: Input
+:caption: Subsystems
 
-input/events.md
+subsys/input/events.md
 ```
 
 ```{toctree}

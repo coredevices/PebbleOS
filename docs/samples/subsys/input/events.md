@@ -9,7 +9,7 @@ Run it on a board and press its keys or touch its screen while it listens;
 on the emulator nothing comes, and it reports 0 events.
 
 ```{pebbleos-sample}
-:path: samples/input/events
+:path: samples/subsys/input/events
 :sources: src/main.c
 :output:
 ```
