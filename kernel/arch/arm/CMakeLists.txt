@@ -20,4 +20,4 @@ pbl_library_sources_ifdef(CONFIG_ARMV8_M_MAINLINE mpu_armv8m.c)
 
 pbl_include_directories(include)
 pbl_linker_include_directories(linker)
-pbl_linker_sources(rom-start irq.ld)
+pbl_iterable_section(irq_prio UNSORTED)

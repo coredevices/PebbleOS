@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/section.h>
 
 #include <pbl_arch_mmio.h>
 #include <soc_irqs.h>
@@ -24,15 +25,16 @@ struct arch_irq_prio {
 #define ARCH_IRQ_PRIO(_n)     ARCH_IRQ_PRIO_(_n)
 #define ARCH_IRQ_PRIO_(_n)    pbl_irq_prio_##_n
 
-#define ARCH_IRQ_DECLARE(_n, _name, _prio, _flags)                                              \
-  static_assert((_prio) >= 0 && (_prio) < (1 << CONFIG_NUM_IRQ_PRIO_BITS),                      \
-                _name ": priority out of range");                                               \
-  static_assert(((_flags) & PBL_IRQ_ZERO_LATENCY) || (_prio) >= ARCH_IRQ_PRIO_MAX_SYSCALL,      \
-                _name ": priority above PBL_IRQ_PRIO_MAX_SYSCALL needs PBL_IRQ_ZERO_LATENCY");  \
-  PBL_USED PBL_SECTION(".pbl_irq_prio") static const struct arch_irq_prio ARCH_IRQ_PRIO(_n) = { \
-    .irq = (_n),                                                                                \
-    .prio = (_prio),                                                                            \
-  };                                                                                            \
+#define ARCH_IRQ_DECLARE(_n, _name, _prio, _flags)                                             \
+  static_assert((_prio) >= 0 && (_prio) < (1 << CONFIG_NUM_IRQ_PRIO_BITS),                     \
+                _name ": priority out of range");                                              \
+  static_assert(((_flags) & PBL_IRQ_ZERO_LATENCY) || (_prio) >= ARCH_IRQ_PRIO_MAX_SYSCALL,     \
+                _name ": priority above PBL_IRQ_PRIO_MAX_SYSCALL needs PBL_IRQ_ZERO_LATENCY"); \
+  static const struct arch_irq_prio ARCH_IRQ_PRIO(_n)                                          \
+      PBL_ITERABLE_SECTION(const struct arch_irq_prio, irq_prio, "") = {                       \
+        .irq = (_n),                                                                           \
+        .prio = (_prio),                                                                       \
+  };                                                                                           \
   void ARCH_IRQ_HANDLER(_n)(void)
 
 #define ARCH_IRQ_CONNECT(_n, _name, _prio, _isr, _arg, _flags) \
