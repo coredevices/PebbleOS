@@ -27,6 +27,7 @@ properties:
           - enum:
               - gigadevice,gd25lq255e
               - gigadevice,gd25q256e
+              - puya,py25q128ha
           - const: jedec,spi-nor
       - const: jedec,spi-nor
 

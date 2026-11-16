@@ -170,4 +170,7 @@ extern const struct pbl_flash_nor_part pbl_flash_nor_gd25lq255e;
 /** @brief GigaDevice GD25Q256E. */
 extern const struct pbl_flash_nor_part pbl_flash_nor_gd25q256e;
 
+/** @brief Puya PY25Q128HA. */
+extern const struct pbl_flash_nor_part pbl_flash_nor_py25q128ha;
+
 /** @} */

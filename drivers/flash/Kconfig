@@ -36,6 +36,11 @@ config FLASH_SPI_NOR_GD25Q256E
     default DT_HAS_GIGADEVICE_GD25Q256E_ENABLED
     depends on FLASH_SPI_NOR
 
+config FLASH_SPI_NOR_PY25Q128HA
+    bool "Puya PY25Q128HA"
+    default DT_HAS_PUYA_PY25Q128HA_ENABLED
+    depends on FLASH_SPI_NOR
+
 config FLASH_QEMU
     bool "QEMU External Flash"
     default DT_HAS_QEMU_PEBBLE_EXTFLASH_ENABLED

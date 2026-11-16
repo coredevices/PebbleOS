@@ -18,6 +18,7 @@ pbl_clar_test(test_spi_nor
     drivers/flash/flash.c
     drivers/flash/gd25lq255e.c
     drivers/flash/gd25q256e.c
+    drivers/flash/py25q128ha.c
     drivers/flash/otp.c
     drivers/flash/spi_nor.c
     drivers/otp/otp_flash.c

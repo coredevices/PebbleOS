@@ -86,7 +86,7 @@
 
 &mpi3 {
 	flash0: flash@0 {
-		compatible = "jedec,spi-nor";
+		compatible = "puya,py25q128ha", "jedec,spi-nor";
 		reg = <0>;
 		spi-rx-bus-width = <4>;
 		spi-tx-bus-width = <4>;
