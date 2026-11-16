@@ -123,6 +123,8 @@ of its own, which its function gets through it, where C embeds the object in
 a structure of its own. Calls that block take a `Duration`, or a `Timeout`
 for `NO_WAIT` and `FOREVER`.
 
+The kernel samples are also in Rust, in `samples/rust/kernel`.
+
 A panic is a kernel panic: its message and location go to the log and the
 system stops as a failed assertion does, through
 `pbl_fatal_error_handler()`. Crates are built with `panic = "abort"`.

@@ -1,0 +1,7 @@
+description: Barrier, threads that wait for each other before going on together
+expect:
+  - 'worker \d: ready'
+  - 'worker \d: ready'
+  - 'worker \d: ready'
+  - 'main: 3 past the barrier, 0 of them before the last was ready'
+  - 'Sample done'

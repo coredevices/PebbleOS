@@ -1,0 +1,5 @@
+description: Dining philosophers, a deadlock between mutexes and the lock order that prevents it
+expect:
+  - 'dinner: left fork first: 0 meals eaten, 5 of 5 philosophers stuck with one fork'
+  - 'dinner: lower fork first: 15 meals eaten, 0 of 5 philosophers stuck with one fork'
+  - 'Sample done'

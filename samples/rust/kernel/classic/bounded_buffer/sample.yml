@@ -1,0 +1,5 @@
+description: Bounded buffer, producers and consumers held back by two semaphores and a mutex
+expect:
+  - 'buffer: 100 items produced, consumed items add up to 2550 of 2550'
+  - 'buffer: held at most \d of 4 items, 0 left'
+  - 'Sample done'

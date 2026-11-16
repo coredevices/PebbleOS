@@ -1,0 +1,8 @@
+description: Work run after a delay, for debouncing, periodic jobs and timeouts
+expect:
+  - 'main: five edges 5 ms apart, each pushing the work back'
+  - 'button: settled, press 1'
+  - 'main: scheduled twice, first delay kept: yes'
+  - 'button: settled, press 2'
+  - 'main: heartbeat stopped after \d beats, pending: no'
+  - 'Sample done'
