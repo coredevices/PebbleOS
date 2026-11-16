@@ -146,22 +146,15 @@ struct pbl_pp_endpoint {
 #define PBL_PP__STR_(_a)           #_a
 #define PBL_PP__ENDPOINT_NAME(_id) PBL_PP__CAT(pbl_pp_endpoint_, _id)
 
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_PP__ENDPOINT_SECTION(_id) PBL_UNSORTED_SECTION(pbl_pp_ep)
-#else
-#define PBL_PP__ENDPOINT_SECTION(_id) \
-  PBL_ALIGNED(4) PBL_SECTION(".pbl_pp_endpoints." PBL_PP__STR(_id))
-#endif
-
-#define PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, _receiver, _task) \
-  extern const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id);         \
-  const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id)                 \
-      PBL_USED PBL_PP__ENDPOINT_SECTION(_id) = {                          \
-        .handler = (_handler),                                            \
-        .receiver = (_receiver),                                          \
-        .id = (_id),                                                      \
-        .access = (_access),                                              \
-        .task = (_task),                                                  \
+#define PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, _receiver, _task)                    \
+  extern const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id);                            \
+  const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id)                                    \
+      PBL_ITERABLE_SECTION(const struct pbl_pp_endpoint, pp_endpoints, PBL_PP__STR(_id)) = { \
+        .handler = (_handler),                                                               \
+        .receiver = (_receiver),                                                             \
+        .id = (_id),                                                                         \
+        .access = (_access),                                                                 \
+        .task = (_task),                                                                     \
   }
 /** @endcond */
 
