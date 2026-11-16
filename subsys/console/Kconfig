@@ -21,3 +21,12 @@ config CONSOLE_BAUDRATE
     default 1000000
     help
       Line rate of the board's console port, CONSOLE_UART.
+
+config CONSOLE_STDOUT
+    bool "Standard output"
+    depends on CONSOLE
+    help
+      Send the C library's standard output and error, printf() and
+      friends, to the console. Newlines go out as CR LF. Not for
+      interrupt context. Native builds print to the process's
+      standard output and error unbuffered, where their console goes.

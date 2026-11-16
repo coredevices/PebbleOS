@@ -15,6 +15,14 @@ The console is set up during boot, before the device model, and is where the
 kernel's `pbl_print()` writes, such as the boot banner: see
 {doc}`../kernel/print`.
 
+With `CONFIG_CONSOLE_STDOUT`, the C library's standard output and error go to
+the console too, so `printf()` prints there, under the console lock. Picolibc
+writes one character at a time, so a log line can land in the middle of a
+printed one; interrupts must not print. With newlib, stdio is made thread safe
+with kernel mutexes, and the full newlib's `printf()` takes about 2.5 KB of
+stack. Native builds print to the process's standard output and error,
+unbuffered, as their console goes there.
+
 ## Frames
 
 Binary data travels in frames between the text lines:
