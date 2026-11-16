@@ -10,6 +10,13 @@ menuconfig FLASH
 
 if FLASH
 
+config FLASH_IDLE_PM
+    bool
+    depends on CPU_IDLE
+    help
+      Selected by SoCs that do not execute from the flash, to power it
+      down from an idle hook, see pbl_flash_pm_suspend().
+
 config FLASH_OTP
     bool
     help

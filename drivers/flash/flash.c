@@ -13,6 +13,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -341,6 +342,35 @@ static void prv_blocking_erase_cb(int status, void *arg) {
   *(int *)arg = status;
 }
 
+#ifdef CONFIG_FLASH_IDLE_PM
+static bool s_idle_suspended;
+
+static void prv_idle_enter(pbl_idle_state_id_t state, void *arg) {
+  s_idle_suspended = pbl_flash_pm_suspend(FLASH) == 0;
+}
+
+static void prv_idle_exit(pbl_idle_state_id_t state, void *arg) {
+  if (s_idle_suspended) {
+    pbl_flash_pm_resume(FLASH);
+  }
+}
+
+PBL_IDLE_HOOK_DEFINE(flash, prv_idle_enter, prv_idle_exit, nullptr);
+
+// Worth it for an idle at least as long as the part takes to power down and back up
+static void prv_idle_pm_init(const struct pbl_flash *flash) {
+  uint32_t enter_us;
+  uint32_t exit_us;
+
+  if (flash != FLASH || flash->ops->pm_times == nullptr) {
+    return;
+  }
+
+  flash->ops->pm_times(flash, &enter_us, &exit_us);
+  pbl_idle_hook_set_times(PBL_IDLE_HOOK(flash), enter_us + exit_us, exit_us);
+}
+#endif // CONFIG_FLASH_IDLE_PM
+
 int pbl_flash_dev_init(const struct pbl_device *dev) {
   const struct pbl_flash *flash = container_of(dev, const struct pbl_flash, dev);
   struct pbl_flash_state *st = flash->state;
@@ -357,6 +387,12 @@ int pbl_flash_dev_init(const struct pbl_device *dev) {
   pbl_mutex_lock(&st->lock, PBL_FOREVER);
   ret = flash->ops->init(flash);
   pbl_mutex_unlock(&st->lock);
+
+#ifdef CONFIG_FLASH_IDLE_PM
+  if (ret == 0) {
+    prv_idle_pm_init(flash);
+  }
+#endif
 
   return ret;
 }
