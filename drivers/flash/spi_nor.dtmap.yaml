@@ -8,6 +8,10 @@ define: PBL_FLASH_SPI_NOR_DEFINE
 args:
   - name: true
   - parent: spi_mem
+  - compatible: true
+    values:
+      gigadevice,gd25lq255e: "&pbl_flash_nor_gd25lq255e"
+      gigadevice,gd25q256e: "&pbl_flash_nor_gd25q256e"
   - list: [user-otp, fixed-layout]
     item: 'PBL_FLASH_OTP_CELL("{name}", {0:#x}, {1})'
     default: []

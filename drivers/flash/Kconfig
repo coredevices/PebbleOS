@@ -22,9 +22,19 @@ config FLASH_SPI_NOR
     select SPI_MEM
     select FLASH_OTP
     help
-      Support for a JEDEC NOR flash on a SPI memory controller, found by
-      its JEDEC ID among the supported parts and described by its SFDP
-      tables and the part description.
+      Support for a JEDEC NOR flash on a SPI memory controller, of the
+      part the board names, described by its SFDP tables and the part
+      description.
+
+config FLASH_SPI_NOR_GD25LQ255E
+    bool "GigaDevice GD25LQ255E"
+    default DT_HAS_GIGADEVICE_GD25LQ255E_ENABLED
+    depends on FLASH_SPI_NOR
+
+config FLASH_SPI_NOR_GD25Q256E
+    bool "GigaDevice GD25Q256E"
+    default DT_HAS_GIGADEVICE_GD25Q256E_ENABLED
+    depends on FLASH_SPI_NOR
 
 config FLASH_QEMU
     bool "QEMU External Flash"
