@@ -44,6 +44,7 @@ subsys/input/events.md
 :maxdepth: 1
 :caption: Drivers
 
+drivers/rtc.md
 drivers/temp.md
 ```
 
