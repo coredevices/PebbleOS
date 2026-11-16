@@ -66,6 +66,9 @@ static int prv_write_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t
   int ret;
 
   ret = pbl_i2c_reg_write_byte(&dev->i2c, reg, val);
+  if (ret != 0) {
+    PBL_LOG_ERR("Write of 0x%02x to 0x%02x failed (%d)", val, reg, ret);
+  }
 
   return ret;
 }
@@ -84,17 +87,26 @@ static int prv_write_registers(const struct pbl_aw2016 *dev, const uint8_t (*reg
   return 0;
 }
 
-static int prv_enable(const struct pbl_aw2016 *dev) {
-  static const uint8_t s_config[][2] = {
-    {AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN},
-    {AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_30MA},
-    {AW2016_REG_LCTR, AW2016_REG_LCTR_EXP_LINEAR | AW2016_REG_LCTR_LE3_EN | AW2016_REG_LCTR_LE2_EN |
-                          AW2016_REG_LCTR_LE1_EN},
-    {AW2016_REG_LCFG1, AW2016_REG_LCFG1_CUR_MAX},
-    {AW2016_REG_LCFG2, AW2016_REG_LCFG2_CUR_MAX},
-    {AW2016_REG_LCFG3, AW2016_REG_LCFG3_CUR_MAX},
-  };
+static const uint8_t s_config[][2] = {
+  {AW2016_REG_GCR1, AW2016_REG_GCR1_CHGDIS_DIS | AW2016_REG_GCR1_CHIPEN_EN},
+  {AW2016_REG_GCR2, AW2016_REG_GCR2_IMAX_30MA},
+  {AW2016_REG_LCTR, AW2016_REG_LCTR_EXP_LINEAR | AW2016_REG_LCTR_LE3_EN | AW2016_REG_LCTR_LE2_EN |
+                        AW2016_REG_LCTR_LE1_EN},
+  {AW2016_REG_LCFG1, AW2016_REG_LCFG1_CUR_MAX},
+  {AW2016_REG_LCFG2, AW2016_REG_LCFG2_CUR_MAX},
+  {AW2016_REG_LCFG3, AW2016_REG_LCFG3_CUR_MAX},
+};
 
+static void prv_color_regs(uint8_t regs[3][2], uint32_t rgb_color, uint8_t brightness) {
+  regs[0][0] = AW2016_REG_PWM1;
+  regs[0][1] = ((rgb_color >> 16) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX;
+  regs[1][0] = AW2016_REG_PWM2;
+  regs[1][1] = ((rgb_color >> 8) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX;
+  regs[2][0] = AW2016_REG_PWM3;
+  regs[2][1] = (rgb_color & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX;
+}
+
+static int prv_enable(const struct pbl_aw2016 *dev) {
   int ret;
 
   ret = prv_write_register(dev, s_config[0][0], s_config[0][1]);
@@ -109,13 +121,36 @@ static int prv_enable(const struct pbl_aw2016 *dev) {
 }
 
 static int prv_write_color(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t brightness) {
-  const uint8_t regs[][2] = {
-    {AW2016_REG_PWM1, ((rgb_color >> 16) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
-    {AW2016_REG_PWM2, ((rgb_color >> 8) & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
-    {AW2016_REG_PWM3, (rgb_color & 0xFFU) * brightness / PBL_LED_BRIGHTNESS_MAX},
-  };
+  uint8_t regs[3][2];
+
+  prv_color_regs(regs, rgb_color, brightness);
 
   return prv_write_registers(dev, regs, ARRAY_LENGTH(regs));
+}
+
+// Tells a chip that lost its configuration apart from a fault downstream of it
+static void prv_verify_registers(const struct pbl_aw2016 *dev, const uint8_t (*regs)[2],
+                                 size_t count) {
+  for (size_t i = 0; i < count; i++) {
+    uint8_t val = 0U;
+    int ret;
+
+    ret = prv_read_register(dev, regs[i][0], &val);
+    if (ret != 0) {
+      PBL_LOG_ERR("Read of 0x%02x failed (%d)", regs[i][0], ret);
+    } else if (val != regs[i][1]) {
+      PBL_LOG_WRN("0x%02x reads 0x%02x, wrote 0x%02x", regs[i][0], val, regs[i][1]);
+    }
+  }
+}
+
+static void prv_verify(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t brightness) {
+  uint8_t regs[3][2];
+
+  prv_color_regs(regs, rgb_color, brightness);
+
+  prv_verify_registers(dev, s_config, ARRAY_LENGTH(s_config));
+  prv_verify_registers(dev, regs, ARRAY_LENGTH(regs));
 }
 
 int pbl_aw2016_init(const struct pbl_device *d) {
@@ -150,15 +185,22 @@ static int prv_set(const struct pbl_led *led, uint8_t brightness, uint32_t rgb_c
     return ret;
   }
 
-  if (!dev->state->enabled) {
-    ret = prv_enable(dev);
-    if (ret != 0) {
-      return ret;
-    }
-    dev->state->enabled = true;
+  if (dev->state->enabled) {
+    return prv_write_color(dev, rgb_color, brightness);
   }
 
-  return prv_write_color(dev, rgb_color, brightness);
+  ret = prv_enable(dev);
+  if (ret != 0) {
+    return ret;
+  }
+  dev->state->enabled = true;
+
+  ret = prv_write_color(dev, rgb_color, brightness);
+  if (ret == 0) {
+    prv_verify(dev, rgb_color, brightness);
+  }
+
+  return ret;
 }
 
 static int prv_refresh(const struct pbl_led *led, uint8_t brightness, uint32_t rgb_color) {
