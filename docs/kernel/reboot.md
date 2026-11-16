@@ -54,7 +54,7 @@ The firmware's handlers:
 | wait for flash erases, then hold flash | prepare | default |
 | mark the reboot reason as a safe restart | prepare | low |
 | core dump after a software failure | restart | high |
-| nPM1300 ship mode | power-off | default |
+| nPM1300 ship mode | power cut | default |
 | arm the GPIO wake lines | power-off | low |
 
 Reboot reasons and boot bits stay firmware policy: callers set them before

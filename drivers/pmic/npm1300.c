@@ -432,8 +432,21 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev) {
   return 0;
 }
 
+static int prv_power_cut_check(void *user_data) {
+  if (!NPM1300_CHARGER->cfg->system_power_controller) {
+    return -ENOTSUP;
+  }
+
+  // Ship mode exits as soon as VBUS is present
+  if (pmic_is_usb_connected()) {
+    return -EBUSY;
+  }
+
+  return 0;
+}
+
 // Ship mode: everything but the RTC loses power until a button press
-static void prv_power_off(enum pbl_sys_off_mode mode, void *user_data) {
+static void prv_power_cut(enum pbl_sys_off_mode mode, void *user_data) {
   int ret;
 
   // I2C transfers need the scheduler
@@ -441,9 +454,9 @@ static void prv_power_off(enum pbl_sys_off_mode mode, void *user_data) {
     return;
   }
 
-  // Ship mode exits as soon as VBUS is present
-  if (pmic_is_usb_connected()) {
-    PBL_LOG_ERR("Cannot power off, USB is connected");
+  ret = prv_power_cut_check(user_data);
+  if (ret != 0) {
+    PBL_LOG_ERR("Cannot enter ship mode (%d)", ret);
     return;
   }
 
@@ -459,8 +472,8 @@ static void prv_power_off(enum pbl_sys_off_mode mode, void *user_data) {
   PBL_LOG_ERR("Still powered after entering ship mode");
 }
 
-PBL_SYS_OFF_HANDLER_DEFINE(npm1300_power_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_DEFAULT,
-                           prv_power_off, nullptr);
+PBL_SYS_OFF_POWER_CUT_HANDLER_DEFINE(npm1300_power_cut, PBL_SYS_OFF_PRIO_DEFAULT,
+                                     prv_power_cut_check, prv_power_cut, nullptr);
 
 uint16_t pmic_get_vsys(void) {
   if (prv_write_register(NPM1300_EVENTSADCCLR, NPM1300_EVENTSADC_VSYSRDY) != 0) {
