@@ -39,6 +39,7 @@ kernel/classic/barrier.md
 
 subsys/crc/checksums.md
 subsys/crypto/sha256.md
+subsys/crypto/aes.md
 subsys/input/events.md
 ```
 
