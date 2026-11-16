@@ -235,10 +235,11 @@ touchscreen (`TOUCH_SDL`, the mouse). It runs on the main thread, as macOS
 requires.
 
 A native build is linked without the firmware linker script
-(`PBL_NO_LINKER_SCRIPT`, decided in `cmake/modules/linker.cmake`). Code that
-gathers objects from many files, like the shell commands, then uses
-`PBL_UNSORTED_SECTION()`: the host linker collects the section on its own but
-cannot sort it, so the shell picks commands by name when looking them up.
+(`PBL_NO_LINKER_SCRIPT`, decided in `cmake/modules/linker.cmake`). Tables
+gathered from many files, like the shell commands, are iterable sections
+(`PBL_ITERABLE_SECTION()`): the host linker collects them on its own but
+cannot sort them, so code that lists their entries in order sorts them
+itself.
 
 In a browser there is a single thread. The kernel's posix architecture then
 runs kernel threads as Emscripten fibers (`ARCH_POSIX_FIBERS`, with Asyncify)

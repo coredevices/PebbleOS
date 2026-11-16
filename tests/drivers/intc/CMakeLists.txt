@@ -6,6 +6,5 @@ pbl_clar_test(test_intc
     drivers/base/device.c
     drivers/intc/intc.c
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
 )

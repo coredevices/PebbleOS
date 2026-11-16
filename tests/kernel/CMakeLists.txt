@@ -27,7 +27,6 @@ pbl_clar_test(test_kernel
     kernel/arch
     kernel/arch/posix/include
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
 )
@@ -42,7 +41,6 @@ pbl_clar_test(test_timekeeping
     kernel/arch
     kernel/arch/posix/include
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
 )
 
@@ -75,7 +73,6 @@ pbl_clar_test(test_kernel_sys_work
     kernel/arch
     kernel/arch/posix/include
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_KERNEL_IDLE_STACK_SIZE=1024
 )

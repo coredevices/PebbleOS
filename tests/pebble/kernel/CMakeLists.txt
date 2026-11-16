@@ -14,7 +14,6 @@ pbl_clar_test(test_remote_input
     subsys/input/input.c
   DEFINES
     CONFIG_SERVICE_TOUCH
-    PBL_NO_LINKER_SCRIPT=1
 )
 
 pbl_clar_test(test_rand
