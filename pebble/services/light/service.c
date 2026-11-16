@@ -393,11 +393,11 @@ static uint32_t prv_get_system_color(void) {
   return prv_is_daytime(&now) ? backlight_get_default_color() : backlight_get_night_color();
 }
 
-static void prv_apply_rgb_color(void) {
+static int prv_apply_rgb_color(void) {
   const bool preempted = (s_color_preempt_refcount > 0);
   const uint32_t color =
       (preempted || !s_app_rgb_override_valid) ? prv_get_system_color() : s_app_rgb_override;
-  (void)pbl_backlight_set_color(BACKLIGHT, color);
+  return pbl_backlight_set_color(BACKLIGHT, color);
 }
 
 static void prv_apply_system_color_locked(void) {
@@ -464,7 +464,7 @@ static void prv_change_brightness(uint8_t new_brightness) {
   if (turning_on) {
     pbl_als_suspend(ALS);
   }
-  (void)pbl_backlight_set_brightness(BACKLIGHT, scaled_brightness);
+  int ret = pbl_backlight_set_brightness(BACKLIGHT, scaled_brightness);
   if (turning_off) {
     pbl_als_resume(ALS);
   }
@@ -474,8 +474,16 @@ static void prv_change_brightness(uint8_t new_brightness) {
   // pbl_backlight_set_brightness() re-applies the last RGB color at the new
   // intensity; follow up with the app override (or default white) so the
   // LED reflects the current color request for this state change.
-  prv_apply_rgb_color();
+  const int color_ret = prv_apply_rgb_color();
+  if (ret == 0) {
+    ret = color_ret;
+  }
 #endif
+
+  // Only when turning on, not on every step of a fade
+  if (turning_on && ret != 0) {
+    PBL_LOG_WRN("Could not turn the backlight on (%d)", ret);
+  }
 }
 
 //! Hardware backlight level a given intensity would produce.
