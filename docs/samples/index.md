@@ -52,6 +52,7 @@ drivers/display.md
 drivers/flash.md
 drivers/mag.md
 drivers/mic.md
+drivers/ram.md
 drivers/rng.md
 drivers/rtc.md
 drivers/speaker.md
