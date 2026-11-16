@@ -54,7 +54,8 @@ struct pbl_clk_cal_ops {
   int (*start)(struct pbl_clk_cal *cal, uint32_t cycles);
   /**
    * Read the gate started last, of @p cycles cycles, once its time has passed, and release the
-   * hardware. Returns 0 with the measured frequency in Hz, or a negative errno.
+   * hardware. Returns 0 with the measured frequency in Hz, @c -EINPROGRESS if the gate has not
+   * ended yet, to be read again shortly, or another negative errno once it cannot end.
    */
   int (*finish)(struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
 };
