@@ -538,8 +538,19 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
   } while (0)
 #endif
 #else // !CONFIG_LOG
-#define PBL_LOG_COLOR(level, color, fmt, ...)
-#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...)
+/** @cond INTERNAL_HIDDEN */
+static inline void _pbl_log_unused(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
+static inline void _pbl_log_unused(const char *fmt, ...) {
+}
+/** @endcond */
+// Arguments stay used, and the format checked, but nothing is evaluated.
+#define PBL_LOG_COLOR(level, color, fmt, ...) \
+  do {                                        \
+    if (0) {                                  \
+      _pbl_log_unused(fmt, ##__VA_ARGS__);    \
+    }                                         \
+  } while (0)
+#define PBL_LOG_COLOR_SYNC(level, color, fmt, ...) PBL_LOG_COLOR(level, color, fmt, ##__VA_ARGS__)
 #endif // CONFIG_LOG
 
 // Level-named macros (async)
@@ -667,7 +678,13 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
     }                                                                \
   } while (0)
 #else
-#define PBL_LOG_HEXDUMP(level, data, length)
+#define PBL_LOG_HEXDUMP(level, data, length) \
+  do {                                       \
+    if (0) {                                 \
+      (void)(data);                          \
+      (void)(length);                        \
+    }                                        \
+  } while (0)
 #endif
 
 /**
