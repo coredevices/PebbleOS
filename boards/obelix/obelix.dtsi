@@ -53,6 +53,7 @@
 			gpios = <&gpio1 34 GPIO_ACTIVE_HIGH>;
 			linux,code = <KEY_BACK>;
 			debounce-interval = <40>;
+			wakeup-source;
 		};
 
 		button-up {
