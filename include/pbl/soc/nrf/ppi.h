@@ -6,6 +6,12 @@
 #include <stdint.h>
 
 /**
+ * @defgroup soc_nrf nRF
+ * @ingroup soc
+ * @brief Nordic nRF52 SoC interfaces.
+ */
+
+/**
  * @defgroup soc_nrf_ppi PPI
  * @ingroup soc_nrf
  * @brief nRF52 programmable peripheral interconnect channels.
