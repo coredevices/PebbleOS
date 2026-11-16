@@ -1,0 +1,8 @@
+description: Accelerometer samples and shake and double-tap events, collected for 5 seconds
+expect:
+  - 'accel: now x=-?\d+ y=-?\d+ z=-?\d+ mg'
+  - 'accel: sampling every \d+ us, batches of up to \d+'
+  - 'accel: x=-?\d+ y=-?\d+ z=-?\d+ mg, \d+ samples so far'
+  - 'accel: \d+ samples, \d+ shakes, \d+ double taps'
+  - 'Sample done'
+roles: [accel]
