@@ -16,3 +16,4 @@ args:
         - prop: linux,code
         - prop: debounce-interval
           default: 5
+        - flag: wakeup-source
