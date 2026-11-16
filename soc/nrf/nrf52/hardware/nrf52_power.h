@@ -8,6 +8,7 @@
 /* Register offsets */
 
 #define NRF52_POWER_RESETREAS_OFFSET 0x0400
+#define NRF52_POWER_SYSTEMOFF_OFFSET 0x0500
 
 /* Register bit definitions */
 
@@ -20,3 +21,5 @@
 #define POWER_RESETREAS_DIF      PBL_BIT(18)
 #define POWER_RESETREAS_NFC      PBL_BIT(19)
 #define POWER_RESETREAS_VBUS     PBL_BIT(20)
+
+#define POWER_SYSTEMOFF_SYSTEMOFF PBL_BIT(0)
