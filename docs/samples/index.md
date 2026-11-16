@@ -38,6 +38,7 @@ kernel/classic/barrier.md
 :caption: Subsystems
 
 subsys/crc/checksums.md
+subsys/crypto/sha256.md
 subsys/input/events.md
 ```
 
