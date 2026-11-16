@@ -75,6 +75,13 @@ drivers/vibe.md
 
 ```{toctree}
 :maxdepth: 1
+:caption: Rust
+
+rust/index.md
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Benchmarks
 
 benchmarks/kernel.md
