@@ -1034,8 +1034,8 @@ static void prv_phone_ui_init(void) {
 
   // Status bar
   status_bar_layer_init(&s_phone_ui_data->status_bar);
-  GRect status_bar_frame =
-      PBL_IF_RECT_ELSE(action_bar_layer_inset_bounds(window->layer.bounds), window->layer.bounds);
+  GRect status_bar_frame = PBL_IF_RECT_ELSE(
+      action_bar_layer_preferred_inset_bounds(window->layer.bounds), window->layer.bounds);
   status_bar_frame.size.h = STATUS_BAR_LAYER_HEIGHT;
   layer_set_frame(&s_phone_ui_data->status_bar.layer, &status_bar_frame);
   status_bar_layer_set_colors(&s_phone_ui_data->status_bar,

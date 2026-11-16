@@ -21,7 +21,7 @@ bool action_bar_layer_side_is_right(const ActionBarLayer *action_bar);
 int16_t action_bar_layer_get_content_origin_x(void);
 
 //! Copy of \a bounds with the action-bar strip removed from the button side.
-GRect action_bar_layer_inset_bounds(GRect bounds);
+GRect action_bar_layer_preferred_inset_bounds(GRect bounds);
 
 //! Horizontal insets that leave \a other_margin on the content side and room for the bar.
 GEdgeInsets action_bar_layer_content_insets(int16_t other_margin);

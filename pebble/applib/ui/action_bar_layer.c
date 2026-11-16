@@ -44,39 +44,51 @@ static int prv_width(void) {
 }
 
 #ifdef CONFIG_ORIENTATION_MANAGER
-static bool prv_current_ui_follows_orientation(void) {
+// System and kernel UI always follow orientation; third-party bars only when opted in.
+static bool prv_follows_orientation(const ActionBarLayer *action_bar) {
   const PebbleTask task = pebble_task_get_current();
   if (task != PebbleTask_App && task != PebbleTask_Worker) {
     return true;
   }
-  return sys_process_manager_get_current_process_sdk_type() == ProcessAppSDKType_System;
+  if (sys_process_manager_get_current_process_sdk_type() == ProcessAppSDKType_System) {
+    return true;
+  }
+  return action_bar && action_bar->follows_orientation;
 }
 #endif
 
-bool action_bar_layer_is_on_right(void) {
+static bool prv_preferred_side_is_right(const ActionBarLayer *action_bar) {
 #ifdef CONFIG_ORIENTATION_MANAGER
-  if (sys_display_orientation_is_left() && prv_current_ui_follows_orientation()) {
+  if (sys_display_orientation_is_left() && prv_follows_orientation(action_bar)) {
     return false;
   }
 #endif
   return true;
 }
 
+static GRect prv_inset_bounds(GRect bounds, bool bar_on_right) {
+  const int16_t width = prv_width();
+  bounds.size.w -= width;
+  if (!bar_on_right) {
+    bounds.origin.x += width;
+  }
+  return bounds;
+}
+
+bool action_bar_layer_is_on_right(void) {
+  return prv_preferred_side_is_right(nullptr);
+}
+
 bool action_bar_layer_side_is_right(const ActionBarLayer *action_bar) {
-  return action_bar->window ? !action_bar->on_left : action_bar_layer_is_on_right();
+  return action_bar->window ? !action_bar->on_left : prv_preferred_side_is_right(action_bar);
 }
 
 int16_t action_bar_layer_get_content_origin_x(void) {
   return action_bar_layer_is_on_right() ? 0 : prv_width();
 }
 
-GRect action_bar_layer_inset_bounds(GRect bounds) {
-  const int16_t width = prv_width();
-  bounds.size.w -= width;
-  if (!action_bar_layer_is_on_right()) {
-    bounds.origin.x += width;
-  }
-  return bounds;
+GRect action_bar_layer_preferred_inset_bounds(GRect bounds) {
+  return prv_inset_bounds(bounds, action_bar_layer_is_on_right());
 }
 
 GEdgeInsets action_bar_layer_content_insets(int16_t other_margin) {
@@ -85,6 +97,14 @@ GEdgeInsets action_bar_layer_content_insets(int16_t other_margin) {
     return GEdgeInsets(0, bar_margin, 0, other_margin);
   }
   return GEdgeInsets(0, other_margin, 0, bar_margin);
+}
+
+bool action_bar_layer_is_on_left(const ActionBarLayer *action_bar) {
+  return !action_bar_layer_side_is_right(action_bar);
+}
+
+GRect action_bar_layer_inset_bounds(const ActionBarLayer *action_bar, GRect bounds) {
+  return prv_inset_bounds(bounds, action_bar_layer_side_is_right(action_bar));
 }
 
 static int prv_vertical_icon_margin(void) {
@@ -455,20 +475,37 @@ void action_bar_layer_set_icon_press_animation(ActionBarLayer *action_bar, Butto
   action_bar->animation[button_id - 1] = animation;
 }
 
-void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *window) {
-  const GRect *window_bounds = &window->layer.bounds;
+static void prv_place_in_window(ActionBarLayer *action_bar) {
+  const GRect *window_bounds = &action_bar->window->layer.bounds;
   const int16_t width = prv_width();
   GRect rect = GRect(0, 0, width, window_bounds->size.h);
   layer_set_bounds(&action_bar->layer, &rect);
-  action_bar->on_left = !action_bar_layer_is_on_right();
+  action_bar->on_left = !prv_preferred_side_is_right(action_bar);
   rect.origin.x = action_bar->on_left ? 0 : (window_bounds->size.w - width);
   layer_set_frame(&action_bar->layer, &rect);
+}
+
+void action_bar_layer_add_to_window(ActionBarLayer *action_bar, struct Window *window) {
+  action_bar->window = window;
+  prv_place_in_window(action_bar);
   layer_add_child(&window->layer, &action_bar->layer);
 
-  action_bar->window = window;
   action_bar_update_click_config_provider(action_bar);
   // Publish the bar geometry + icon mask so taps on it are zoned to UP/SELECT/DOWN.
   prv_publish_touch_nav_snapshot(action_bar);
+}
+
+void action_bar_layer_set_follows_orientation(ActionBarLayer *action_bar, bool follow) {
+  action_bar->follows_orientation = follow;
+  if (!action_bar->window) {
+    return;
+  }
+  const bool was_on_left = action_bar->on_left;
+  prv_place_in_window(action_bar);
+  if (action_bar->on_left != was_on_left) {
+    layer_mark_dirty(&action_bar->layer);
+    prv_publish_touch_nav_snapshot(action_bar);
+  }
 }
 
 void action_bar_layer_remove_from_window(ActionBarLayer *action_bar) {
