@@ -7,7 +7,7 @@ use proc_macro::{TokenStream, TokenTree};
 
 /// Makes the function the kernel runs as the application's `main()`.
 ///
-/// It takes no arguments and returns nothing.
+/// It takes no arguments and returns nothing or a `pebbleos::Result`.
 #[proc_macro_attribute]
 pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
     if !attr.is_empty() {
@@ -22,9 +22,8 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg_attr(target_os = "none", unsafe(export_name = "main"))]
         #[cfg_attr(not(target_os = "none"), unsafe(export_name = "pbl_app_main"))]
         extern "C" fn __pbl_main() -> ::core::ffi::c_int {{
-            let main: fn() = {name};
-            main();
-            0
+            let main: fn() -> _ = {name};
+            ::pebbleos::Termination::report(main())
         }}
         "#
     )

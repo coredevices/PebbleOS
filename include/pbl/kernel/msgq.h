@@ -64,6 +64,8 @@ struct pbl_msgq {
  * @param buffer Storage of at least @p size * @p max bytes.
  * @param size Size of one message in bytes.
  * @param max Capacity in messages.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
  */
 #define PBL_MSGQ_INITIALIZER(buffer, size, max) \
   {.buf = (buffer), .msg_size = (size), .max_msgs = (max)}

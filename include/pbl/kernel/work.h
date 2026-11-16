@@ -142,6 +142,8 @@ struct pbl_work_pool {
  * @brief Static initializer for a work item.
  *
  * @param _fn Function.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
  */
 #define PBL_WORK_INITIALIZER(_fn) {.fn = (_fn)}
 
@@ -157,6 +159,8 @@ struct pbl_work_pool {
  * @brief Static initializer for a delayed work item.
  *
  * @param _fn Function.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
  */
 #define PBL_DELAYED_WORK_INITIALIZER(_fn)                     \
   {                                                           \
@@ -173,7 +177,11 @@ struct pbl_work_pool {
 #define PBL_DELAYED_WORK_DEFINE(name, fn) \
   struct pbl_delayed_work name = PBL_DELAYED_WORK_INITIALIZER(fn)
 
-/** @brief Static initializer for a work queue. */
+/**
+ * @brief Static initializer for a work queue.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
+ */
 #define PBL_WORKQ_INITIALIZER {.wake = PBL_SEM_INITIALIZER(0, 1)}
 
 /**

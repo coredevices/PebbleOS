@@ -50,6 +50,8 @@ struct pbl_sem {
  *
  * @param init Initial count.
  * @param lim Maximum count.
+ *
+ * @note rust/pebbleos builds the same object: change both together.
  */
 #define PBL_SEM_INITIALIZER(init, lim) \
   {.initial = (init), .limit = (lim), .backend = PBL_SEM_BACKEND_INITIALIZER(init)}
