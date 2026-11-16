@@ -60,7 +60,7 @@ static int prv_parse_range(const struct pbl_shell *sh, const char *addr_str, con
 }
 
 static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
-  const struct pbl_flash_geometry *geo = FLASH->geometry;
+  const struct pbl_flash_geometry *geo = pbl_flash_get_geometry(FLASH);
 
   pbl_shell_print(sh, "%s: %" PRIu32 " bytes%s", FLASH->dev.name, geo->size,
                   pbl_device_is_ready(&FLASH->dev) ? "" : " (not ready)");
@@ -250,7 +250,7 @@ static int prv_validate_erase(const struct pbl_shell *sh, uint32_t addr, uint32_
 
 static int prv_cmd_validate(const struct pbl_shell *sh, size_t argc, char **argv) {
   const uint32_t test_addr = PART_FIRMWARE_DEST_OFFSET;
-  const uint32_t test_len = FLASH->geometry->sector_size;
+  const uint32_t test_len = pbl_flash_get_geometry(FLASH)->sector_size;
   uint8_t buf[VALIDATE_BUF_SIZE];
   int ret;
 
@@ -317,7 +317,7 @@ static int prv_cmd_validate(const struct pbl_shell *sh, size_t argc, char **argv
 }
 
 static int prv_cmd_erased_sectors(const struct pbl_shell *sh, size_t argc, char **argv) {
-  const struct pbl_flash_geometry *geo = FLASH->geometry;
+  const struct pbl_flash_geometry *geo = pbl_flash_get_geometry(FLASH);
   const bool show_subsectors = (argc > 1) && (strcmp(argv[1], "1") == 0);
 
   for (uint32_t addr = 0U; addr < geo->size; addr += geo->sector_size) {
@@ -364,7 +364,7 @@ static uint32_t prv_xorshift32(uint32_t x) {
 }
 
 static void prv_stress_cb(void *data) {
-  const uint32_t sector_size = FLASH->geometry->sector_size;
+  const uint32_t sector_size = pbl_flash_get_geometry(FLASH)->sector_size;
   uint32_t iters = (uint32_t)(uintptr_t)data;
   uint32_t len = pbl_rand32() % STRESS_MAX_CHUNK;
   uint32_t seed = pbl_rand32() | 1U;
@@ -451,7 +451,7 @@ static int prv_cmd_stress(const struct pbl_shell *sh, size_t argc, char **argv) 
 }
 
 static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
-  const uint32_t window = 2U * FLASH->geometry->subsector_size;
+  const uint32_t window = 2U * pbl_flash_get_geometry(FLASH)->subsector_size;
   uint64_t elapsed;
   uint32_t iters = BENCH_START_ITERS / 2U;
   void *buf;

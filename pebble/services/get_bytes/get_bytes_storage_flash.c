@@ -9,7 +9,8 @@
 
 bool gb_storage_flash_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                             GetBytesStorageInfo *info) {
-  if (!info->flash_len || (info->flash_start_addr + info->flash_len) > FLASH->geometry->size) {
+  if (!info->flash_len ||
+      (info->flash_start_addr + info->flash_len) > pbl_flash_get_geometry(FLASH)->size) {
     return false;
   }
   storage->impl_data = pbl_zalloc_check(sizeof(*info));
