@@ -49,6 +49,7 @@ drivers/als.md
 drivers/backlight.md
 drivers/display.md
 drivers/mag.md
+drivers/mic.md
 drivers/rng.md
 drivers/rtc.md
 drivers/speaker.md
