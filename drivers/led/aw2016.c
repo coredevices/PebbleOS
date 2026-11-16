@@ -7,6 +7,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/led.h>
 #include <pbl/drivers/led/aw2016.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -45,6 +46,9 @@ PBL_LOG_MODULE_DEFINE(driver_led_aw2016, CONFIG_DRIVER_LED_LOG_LEVEL);
 #define AW2016_REG_PWM2 0x35U
 
 #define AW2016_REG_PWM3 0x36U
+
+// Not in datasheet: measured empirically
+#define AW2016_STARTUP_MS 1U
 
 static const struct pbl_aw2016 *prv_get(const struct pbl_led *led) {
   return container_of(led, const struct pbl_aw2016, led);
@@ -91,7 +95,17 @@ static int prv_enable(const struct pbl_aw2016 *dev) {
     {AW2016_REG_LCFG3, AW2016_REG_LCFG3_CUR_MAX},
   };
 
-  return prv_write_registers(dev, s_config, ARRAY_LENGTH(s_config));
+  int ret;
+
+  ret = prv_write_register(dev, s_config[0][0], s_config[0][1]);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // Only GCR1 is writable until the oscillator runs, and writes are still acknowledged
+  pbl_sleep_ms(AW2016_STARTUP_MS);
+
+  return prv_write_registers(dev, &s_config[1], ARRAY_LENGTH(s_config) - 1U);
 }
 
 static int prv_write_color(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t brightness) {
