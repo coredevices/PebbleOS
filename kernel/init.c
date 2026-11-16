@@ -10,6 +10,7 @@
 #include <pbl/device.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/print.h>
 #include <pbl/logging/backend.h>
 #include <pbl/logging/logging.h>
 #include <pbl/task_wdt/task_wdt.h>
@@ -43,7 +44,7 @@ void kernel_init(int (*entry)(void)) {
   pbl_console_early_init();
 #endif
 
-  PBL_LOG_ALWAYS("*** Booting PebbleOS %s ***", PBL_VERSION_TAG);
+  pbl_print("*** Booting PebbleOS %s ***\n", PBL_VERSION_TAG);
 
   const struct pbl_thread_attr attr = {
     .name = "KernelMain",
