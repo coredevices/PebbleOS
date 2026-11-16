@@ -17,12 +17,12 @@ static bool s_enabled;
 
 static void prv_flush(const struct pbl_display *disp) {
   if (s_enabled) {
-    display_sdl_bottom_update(s_fb, disp->width, disp->height);
+    display_sdl_bottom_update(s_fb, disp->props.width, disp->props.height);
   }
 }
 
 static int prv_init(const struct pbl_display *disp) {
-  if ((uint32_t)disp->width * disp->height > sizeof(s_fb)) {
+  if ((uint32_t)disp->props.width * disp->props.height > sizeof(s_fb)) {
     return -EINVAL;
   }
 
@@ -51,14 +51,14 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
                       uint16_t y0, uint16_t y1) {
   for (uint16_t y = y0; y <= y1; y++) {
     const uint8_t *src = &buf->data[y * buf->pitch];
-    uint8_t *dst = &s_fb[y * disp->width];
+    uint8_t *dst = &s_fb[y * disp->props.width];
 
-    if (disp->format == PBL_DISPLAY_FORMAT_MONO) {
-      for (uint16_t x = 0U; x < disp->width; x++) {
+    if (disp->props.format == PBL_DISPLAY_FORMAT_MONO) {
+      for (uint16_t x = 0U; x < disp->props.width; x++) {
         dst[x] = (src[x / 8U] & (1U << (x % 8U))) != 0U ? 0xffU : 0xc0U;
       }
     } else {
-      memcpy(dst, src, disp->width);
+      memcpy(dst, src, disp->props.width);
     }
   }
 

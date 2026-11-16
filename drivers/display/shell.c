@@ -16,10 +16,11 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_display_class, dev) {
-    const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
+    const struct pbl_display_props *props =
+        pbl_display_get_props(container_of(dev, const struct pbl_display, dev));
 
-    pbl_shell_print(sh, "%s: %ux%u %s%s%s", dev->name, disp->width, disp->height,
-                    s_formats[disp->format], disp->rotated ? " mounted upside down" : "",
+    pbl_shell_print(sh, "%s: %ux%u %s%s%s", dev->name, props->width, props->height,
+                    s_formats[props->format], props->rotated ? " mounted upside down" : "",
                     pbl_device_is_ready(dev) ? "" : " (not ready)");
   }
 
