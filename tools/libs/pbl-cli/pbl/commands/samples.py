@@ -79,7 +79,8 @@ class Samples(PblCommand):
         failed = []
         counts = {}
         for sample in found:
-            if not sample.supports(args.board):
+            reason = self._skip_reason(sample, args.board)
+            if reason:
                 outcome = "skipped"
             else:
                 build_dir = os.path.join(
@@ -90,7 +91,7 @@ class Samples(PblCommand):
                 outcome_time = time.monotonic() - start
             counts[outcome] = counts.get(outcome, 0) + 1
             if outcome == "skipped":
-                self.inf(f"SKIP  {sample.name} (not for {args.board})", color="yellow")
+                self.inf(f"SKIP  {sample.name} ({reason})", color="yellow")
             elif outcome == "failed":
                 failed.append(sample.name)
                 self.inf(f"FAIL  {sample.name} ({outcome_time:.1f} s)", color="red")
@@ -101,6 +102,17 @@ class Samples(PblCommand):
         summary = ", ".join(f"{n} {outcome}" for outcome, n in sorted(counts.items()))
         self.inf(f"{args.board}: {summary}", color="red" if failed else "green")
         return 1 if failed else 0
+
+    def _skip_reason(self, sample, board):
+        if not sample.supports(board):
+            return f"not for {board}"
+        try:
+            missing = sample.missing_roles(self.topdir, board)
+        except samples.SampleError as e:
+            self.die(str(e))
+        if missing:
+            return f"{board} has no {', '.join(missing)}"
+        return None
 
     def _one(self, sample, build_dir, args):
         """Build and run one sample: "passed", "built" or "failed"."""

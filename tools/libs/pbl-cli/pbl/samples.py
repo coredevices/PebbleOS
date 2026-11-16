@@ -14,12 +14,15 @@ A sample is a directory with a ``sample.yml`` next to its ``CMakeLists.txt``:
     timeout: 10
     boards: [qemu_emery]
     skip: [native_emery]
+    roles: [accel]
 
 ``expect`` is what makes the sample a test: the lines its console has to
 print, in that order, with any others in between, and before it boots a
 second time: a sample that panics and starts over fails. ``timeout`` is how many
 seconds it gets (default 10). ``boards`` limits it to the boards that have
 what it needs (default: all of them), and ``skip`` names those that lack it.
+``roles`` names the roles it uses: boards without them, after the board's and
+the sample's roles files, are skipped too.
 """
 
 import os
@@ -37,7 +40,7 @@ DEFAULT_TIMEOUT = 10
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _BOOT = re.compile(r"\*\*\* Booting PebbleOS ")
-_KEYS = {"description", "expect", "timeout", "boards", "skip"}
+_KEYS = {"description", "expect", "timeout", "boards", "skip", "roles"}
 
 
 class SampleError(Exception):
@@ -54,11 +57,26 @@ class Sample:
     timeout: float = DEFAULT_TIMEOUT
     boards: tuple = ()
     skip: tuple = ()
+    roles: tuple = ()
 
     def supports(self, board):
         """Whether the sample is for ``board``, given as ``name[@revision]``."""
         name = board.partition("@")[0]
         return name not in self.skip and (not self.boards or name in self.boards)
+
+    def missing_roles(self, srcdir, board):
+        """The roles the sample uses that ``board`` gives no device."""
+        if not self.roles:
+            return []
+        from tools.devicetree import dtmap
+
+        name, _, revision = board.partition("/")[0].partition("@")
+        files = dtmap.role_files(srcdir, name, revision or None, self.path)
+        try:
+            have = dtmap.merge_roles(files)
+        except dtmap.DtError as e:
+            raise SampleError(str(e)) from e
+        return [role for role in self.roles if role not in have]
 
 
 def load(path, name=None):
@@ -108,13 +126,13 @@ def load(path, name=None):
         raise SampleError(f"invalid {manifest}: timeout must be a number of seconds")
 
     lists = {}
-    for key in ("boards", "skip"):
+    for key, what in (("boards", "board"), ("skip", "board"), ("roles", "role")):
         lists[key] = data.get(key, [])
         if not isinstance(lists[key], list) or not all(
             isinstance(b, str) for b in lists[key]
         ):
             raise SampleError(
-                f"invalid {manifest}: {key} must be a list of board names"
+                f"invalid {manifest}: {key} must be a list of {what} names"
             )
 
     return Sample(
@@ -125,6 +143,7 @@ def load(path, name=None):
         timeout=timeout,
         boards=tuple(lists["boards"]),
         skip=tuple(lists["skip"]),
+        roles=tuple(lists["roles"]),
     )
 
 
