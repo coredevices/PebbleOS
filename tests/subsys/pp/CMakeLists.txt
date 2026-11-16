@@ -7,7 +7,6 @@ pbl_clar_test(test_session
     subsys/pp/send_queue.c
   INCLUDES subsys/pp
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_PP_LOG_LEVEL=0
 )
 
@@ -18,7 +17,6 @@ pbl_clar_test(test_receive
     subsys/pp/receive.c
   INCLUDES subsys/pp
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_PP_LOG_LEVEL=0
 )
 

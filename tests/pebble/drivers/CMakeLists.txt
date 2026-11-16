@@ -8,7 +8,6 @@ pbl_clar_test(test_flash_api
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_DRIVER_FLASH_LOG_LEVEL=0
-    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 
@@ -27,7 +26,6 @@ pbl_clar_test(test_spi_nor
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_DRIVER_FLASH_LOG_LEVEL=0
     CONFIG_DRIVER_SPI_MEM_LOG_LEVEL=0
-    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 
@@ -39,7 +37,6 @@ pbl_clar_test(test_accel_sim
     tests/fakes/fake_rtc.c
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
-    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 
@@ -51,7 +48,6 @@ pbl_clar_test(test_mag_sim
     tests/fakes/fake_rtc.c
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
-    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 

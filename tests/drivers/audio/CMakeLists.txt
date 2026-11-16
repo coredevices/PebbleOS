@@ -6,7 +6,6 @@ pbl_clar_test(test_audio
     drivers/base/device.c
     drivers/audio/audio.c
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_DRIVER_AUDIO_LOG_LEVEL=0
 )

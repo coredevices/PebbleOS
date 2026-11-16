@@ -6,6 +6,5 @@ pbl_clar_test(test_clk
     drivers/base/device.c
     drivers/clk/clk.c
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
 )

@@ -4,6 +4,4 @@
 pbl_clar_test(test_input
   SOURCES
     subsys/input/input.c
-  DEFINES
-    PBL_NO_LINKER_SCRIPT=1
 )

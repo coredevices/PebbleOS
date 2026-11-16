@@ -378,11 +378,9 @@ pbl_clar_test(test_accel_manager
     pebble/services/accel_manager/service.c
     tests/fakes/fake_events.c
   DEFINES
-    PBL_NO_LINKER_SCRIPT
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25
     CONFIG_DEVICE_LOG_LEVEL=0
-    PBL_NO_LINKER_SCRIPT
   OVERRIDES dummy_board
 )
 

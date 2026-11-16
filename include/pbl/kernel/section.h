@@ -128,44 +128,4 @@
   extern type PBL_ITERABLE_SECTION_END(tag)[]
 #endif
 
-/**
- * @def PBL_UNSORTED_SECTION
- * @brief Gather the object in a named section, without a linker script.
- *
- * For builds linked without the firmware linker script (@c PBL_NO_LINKER_SCRIPT), where
- * @ref PBL_SECTION is a no-op: the linker collects such a section on its own, in no particular
- * order, and names its bounds PBL_UNSORTED_SECTION_START() and PBL_UNSORTED_SECTION_END(). The
- * objects must be @ref PBL_USED. The section may be empty.
- *
- * @code{.c}
- * extern const struct foo foo_start[] PBL_UNSORTED_SECTION_START(foos);
- * extern const struct foo foo_end[] PBL_UNSORTED_SECTION_END(foos);
- *
- * static const struct foo s_foo PBL_USED PBL_UNSORTED_SECTION(foos) = {...};
- * @endcode
- *
- * @param name Section name, a C identifier of at most 14 characters (Mach-O allows 16).
- */
-
-/**
- * @def PBL_UNSORTED_SECTION_START
- * @brief Name a declaration after the start of a @ref PBL_UNSORTED_SECTION.
- */
-
-/**
- * @def PBL_UNSORTED_SECTION_END
- * @brief Name a declaration after the end of a @ref PBL_UNSORTED_SECTION.
- */
-
-#ifdef __APPLE__
-#define PBL_UNSORTED_SECTION(name) PBL_SECTION_IMPL("__DATA_CONST,__" #name) PBL_NO_SANITIZE_ADDRESS
-#define PBL_UNSORTED_SECTION_START(name) __asm("section$start$__DATA_CONST$__" #name)
-#define PBL_UNSORTED_SECTION_END(name)   __asm("section$end$__DATA_CONST$__" #name)
-#else
-#define PBL_UNSORTED_SECTION(name)       PBL_SECTION_IMPL(#name) PBL_NO_SANITIZE_ADDRESS
-// ELF linkers only define the bounds of a section that exists
-#define PBL_UNSORTED_SECTION_START(name) __asm("__start_" #name) PBL_WEAK
-#define PBL_UNSORTED_SECTION_END(name)   __asm("__stop_" #name) PBL_WEAK
-#endif
-
 /** @} */

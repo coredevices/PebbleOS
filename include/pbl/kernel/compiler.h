@@ -116,7 +116,8 @@
  * @brief Place the symbol in a linker section.
  *
  * A no-op in unit tests and in builds linked without the firmware linker script
- * (@c PBL_NO_LINKER_SCRIPT), where nothing would gather the sections.
+ * (@c PBL_NO_LINKER_SCRIPT), where nothing would gather the sections; tables gathered from
+ * many files use @ref PBL_ITERABLE_SECTION instead.
  *
  * @param name Section name, as a string.
  */
