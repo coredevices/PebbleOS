@@ -344,6 +344,13 @@
 			operating-points-v2 = <&hpsys_opp_table>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,hpsys-rcc = <&hpsys_rcc>;
+
+			regulators {
+				ldo18: LDO18 {
+					regulator-name = "ldo18";
+					regulator-pull-down;
+				};
+			};
 		};
 
 		iwdt: watchdog@500cc000 {
