@@ -14,18 +14,10 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_log_backend __pbl_log_backends_start[];
-extern const struct pbl_log_backend __pbl_log_backends_end[];
-#else
-extern const struct pbl_log_backend __pbl_log_backends_start[] PBL_UNSORTED_SECTION_START(
-    pbl_log_be);
-extern const struct pbl_log_backend __pbl_log_backends_end[] PBL_UNSORTED_SECTION_END(pbl_log_be);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_log_backend, log_backends);
 
-#define PRV_FOREACH_BACKEND(_backend)                                     \
-  for (const struct pbl_log_backend *_backend = __pbl_log_backends_start; \
-       _backend < __pbl_log_backends_end; _backend++)
+#define PRV_FOREACH_BACKEND(_backend) \
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_log_backend, log_backends, _backend)
 
 bool g_pbl_log_enabled = true;
 
