@@ -17,19 +17,10 @@
 
 PBL_LOG_MODULE_DEFINE(profiler, CONFIG_PROFILER_LOG_LEVEL);
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern struct pbl_profiler_node *const __pbl_profiler_nodes_start[];
-extern struct pbl_profiler_node *const __pbl_profiler_nodes_end[];
-#else
-extern struct pbl_profiler_node *const __pbl_profiler_nodes_start[] PBL_UNSORTED_SECTION_START(
-    pbl_prof_nodes);
-extern struct pbl_profiler_node *const __pbl_profiler_nodes_end[] PBL_UNSORTED_SECTION_END(
-    pbl_prof_nodes);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(struct pbl_profiler_node *const, profiler_nodes);
 
-#define FOREACH_NODE(_ref)                                                 \
-  for (struct pbl_profiler_node *const *_ref = __pbl_profiler_nodes_start; \
-       _ref < __pbl_profiler_nodes_end; _ref++)
+#define FOREACH_NODE(_ref) \
+  PBL_ITERABLE_SECTION_FOREACH(struct pbl_profiler_node *const, profiler_nodes, _ref)
 
 static uint32_t s_start;
 static uint32_t s_end;
