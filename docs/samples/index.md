@@ -46,6 +46,7 @@ subsys/input/events.md
 
 drivers/als.md
 drivers/backlight.md
+drivers/display.md
 drivers/rng.md
 drivers/rtc.md
 drivers/temp.md

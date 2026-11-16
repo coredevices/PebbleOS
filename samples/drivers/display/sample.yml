@@ -1,0 +1,7 @@
+description: Colour bars drawn on the whole display, then a checkerboard updated in the background over its lower third
+expect:
+  - 'display: \d+x\d+, (mono|argb2222)'
+  - 'display: bars shown'
+  - 'display: checkerboard shown'
+  - 'Sample done'
+roles: [display]
