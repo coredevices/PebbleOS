@@ -83,8 +83,13 @@ static void prv_timer_cb(struct pbl_timer *timer) {
       PBL_LOG_DBG("Calibration not ready (%d)", ret);
     }
   } else {
-    cal->gate_running = false;
     ret = cal->ops->finish(cal, cal->gate_cycles, &hz);
+    // Kernel time may run from another clock than the one measured, so a gate can end late
+    if (ret == -EINPROGRESS) {
+      prv_schedule(cal, POLL_MS);
+      return;
+    }
+    cal->gate_running = false;
     if (ret == 0) {
       prv_feed(cal, hz);
     } else {
@@ -145,6 +150,10 @@ int pbl_clk_cal_sample(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
   if (ret == 0) {
     pbl_thread_sleep(PBL_MSEC((uint32_t)(prv_gate_s(cal, cycles) * 1000.0) + 1U));
     ret = cal->ops->finish(cal, cycles, hz);
+    while (ret == -EINPROGRESS) {
+      pbl_thread_sleep(PBL_MSEC(POLL_MS));
+      ret = cal->ops->finish(cal, cycles, hz);
+    }
   }
 
   cal->paused = false;
