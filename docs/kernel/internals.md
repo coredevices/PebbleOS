@@ -98,7 +98,7 @@ The vector table (`kernel/arch/arm/vector_table.c`) is a constant array in
 `pbl_isr_<n>`, each a weak alias of `arch_irq_spurious()` that
 `PBL_IRQ_CONNECT()` or `PBL_IRQ_DIRECT()` overrides with a strong
 definition, `n` being the line's `PBL_SOC_IRQN_<line>`. Each binding also
-drops a `{irq, prio}` record into the `.pbl_irq_prio` section, which
+drops a `{irq, prio}` record into the `irq_prio` iterable section, which
 `pbl_irq_init()` walks to program the NVIC after pointing VTOR at the table.
 With `CONFIG_ARCH_VECTOR_TABLE_RAM`, selected by SoCs whose vector fetches
 from flash bypass the cache, VTOR points at a copy of the table in RAM
