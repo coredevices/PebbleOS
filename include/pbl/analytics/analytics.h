@@ -199,15 +199,10 @@ void sys_pbl_analytics_add(enum pbl_analytics_key key, int32_t amount);
  *
  * @param _collect Function to call, an identifier unique among collectors.
  */
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)                                          \
-  static const struct pbl_analytics_collector pbl_analytics_collector_##_collect PBL_USED \
-  PBL_UNSORTED_SECTION(pbl_analytics) = {.collect = (_collect)}
-#else
-#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)                                          \
-  static const struct pbl_analytics_collector pbl_analytics_collector_##_collect PBL_USED \
-      PBL_ALIGNED(4) PBL_SECTION(".pbl_analytics_collectors." #_collect) = {.collect = (_collect)}
-#endif
+#define PBL_ANALYTICS_COLLECTOR_DEFINE(_collect)                                 \
+  static const struct pbl_analytics_collector pbl_analytics_collector_##_collect \
+  PBL_ITERABLE_SECTION(const struct pbl_analytics_collector, analytics,          \
+                       #_collect) = {.collect = (_collect)}
 
 #else
 
