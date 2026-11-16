@@ -13,6 +13,7 @@
 #include <hardware/sf32lb57_hpsys_aon.h>
 #include <hardware/sf32lb57_hpsys_rcc.h>
 #include <hardware/sf32lb57_lpsys_aon.h>
+#include <hardware/sf32lb57_pmuc.h>
 #include <hardware/sf32lb57_wdt.h>
 #include <lpsys.h>
 
@@ -77,6 +78,9 @@ void pbl_soc_early_init(void) {
     SystemCoreClock = prv_hclk_hz();
   }
   pbl_modifyl(0U, HPSYS_RCC_CSR_SEL_PERI, HPSYS_RCC(CSR));
+
+  // Waking up from hibernate leaves it requested
+  pbl_modifyl(PMUC_CR_HIBER_EN, 0U, PBL_DT_REG_PMUC + SF32LB57_PMUC_CR_OFFSET);
 
   soc_sf32lb_lpsys_wake();
   prv_gtimer_start();
