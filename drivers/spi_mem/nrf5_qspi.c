@@ -449,6 +449,15 @@ static int prv_dirmap_read(const struct pbl_spi_mem *mem, const struct pbl_spi_m
   return 0;
 }
 
+// nRF52 anomaly 122: the QSPI keeps drawing current once disabled, unless it is deactivated
+// again and an undocumented register is written
+#define ANOMALY_122_OFFSET 0x054U
+
+static void prv_anomaly_122_workaround(const struct pbl_spi_mem_nrf5_qspi *qspi) {
+  prv_putreg(qspi, NRF52_QSPI_TASKS_DEACTIVATE_OFFSET, 1U);
+  prv_putreg(qspi, ANOMALY_122_OFFSET, 1U);
+}
+
 static void prv_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm,
                            pbl_spi_mem_pm_fn_t fn, void *arg) {
   const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
@@ -462,6 +471,7 @@ static void prv_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_m
   prv_putreg(qspi, NRF52_QSPI_TASKS_DEACTIVATE_OFFSET, 1U);
   prv_event_clear(qspi);
   prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_DISABLED);
+  prv_anomaly_122_workaround(qspi);
 
   fn(arg);
 
