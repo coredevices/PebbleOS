@@ -59,7 +59,7 @@ jobs:
             | awk '{print $2}')
 
           for file in $(git diff --name-only --diff-filter=d "$base"...HEAD -- \
-            '*.c' '*.h' '*.S' '*.py' '*.sh'); do
+            '*.c' '*.h' '*.S' '*.py' '*.sh' '*.rs'); do
             # skip files inside git submodules
             skip=false
             for sm in $submodules; do
@@ -140,6 +140,21 @@ jobs:
 
       - name: Check the SBOM component metadata
         run: python3 tools/cmake/sbom.py check
+
+  rustfmt:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
+      # rustup installs the toolchain of rust-toolchain.toml.
+      - name: Run rustfmt
+        run: rustfmt --check --edition 2024 $(git ls-files '*.rs')
 
   clang-format:
     runs-on: ubuntu-24.04
