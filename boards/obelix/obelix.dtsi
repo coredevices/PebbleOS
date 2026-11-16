@@ -134,6 +134,7 @@
 		gpio-controller;
 		#gpio-cells = <2>;
 		monitored-battery = <&battery>;
+		system-power-controller;
 		nordic,reduced-charge-voltage-microvolt = <4000000>;
 		nordic,thermistor-ohms = <10000>;
 		nordic,thermistor-beta = <3380>;

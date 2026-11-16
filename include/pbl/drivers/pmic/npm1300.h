@@ -37,6 +37,8 @@ typedef struct {
   uint16_t vbus_current_lim0;
   /** VBUS current limit in mA applied at startup, 0 to keep the default. */
   uint16_t vbus_current_startup;
+  /** Whether ship mode cuts the power of the system, @c system-power-controller. */
+  bool system_power_controller;
 } Npm1300Config;
 
 /** @brief Maximum discharge current limit in mA. */
@@ -88,9 +90,11 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
  * @param _dischg_ua Discharge current limit, in uA.
  * @param _vbus_ua VBUS current limit with USB connected, in uA, 0 to keep the default.
  * @param _vbus_startup_ua VBUS current limit at startup, in uA, 0 to keep the default.
+ * @param _system_power_controller Whether ship mode cuts the power of the system.
  */
 #define PBL_NPM1300_CHARGER_DEFINE(sym, _pmic, _irq, _battery, _vterm_reduced_uv, _ntc_ohms,       \
-                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua)    \
+                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua,    \
+                                   _system_power_controller)                                       \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
   static struct pbl_npm1300_charger_state sym##_npm1300_charger_state;                             \
   static const Npm1300Config sym##_cfg = {                                                         \
@@ -101,6 +105,7 @@ int pbl_npm1300_charger_init(const struct pbl_device *dev);
     .ntc_hot_celsius = (_hot_celsius),                                                             \
     .vbus_current_lim0 = (_vbus_ua) / 1000,                                                        \
     .vbus_current_startup = (_vbus_startup_ua) / 1000,                                             \
+    .system_power_controller = (_system_power_controller),                                         \
   };                                                                                               \
   const struct pbl_npm1300_charger sym = {                                                         \
     .dev =                                                                                         \

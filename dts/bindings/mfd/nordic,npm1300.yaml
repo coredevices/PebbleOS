@@ -66,6 +66,8 @@ properties:
     minimum: 100000
     maximum: 1500000
 
+  system-power-controller: true
+
   regulators:
     type: object
     additionalProperties: false
@@ -118,6 +120,7 @@ examples:
             nordic,thermistor-beta = <3380>;
             nordic,thermistor-hot-celsius = <45>;
             nordic,discharge-current-limit-microamp = <200000>;
+            system-power-controller;
 
             regulators {
                 BUCK1 {
