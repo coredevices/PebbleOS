@@ -143,11 +143,12 @@ void compositor_display_init(void) {
 #else
   const enum pbl_display_format format = PBL_DISPLAY_FORMAT_ARGB2222;
 #endif
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
 
-  PBL_ASSERTN((DISPLAY->width == PBL_DISPLAY_WIDTH) && (DISPLAY->height == PBL_DISPLAY_HEIGHT) &&
-              (DISPLAY->format == format));
+  PBL_ASSERTN((props->width == PBL_DISPLAY_WIDTH) && (props->height == PBL_DISPLAY_HEIGHT) &&
+              (props->format == format));
 #if PBL_ROUND
-  PBL_ASSERTN(DISPLAY->round_mask != nullptr);
+  PBL_ASSERTN(props->round_mask != nullptr);
 #endif
 
 #ifdef CONFIG_BOARD_DISPLAY_CORNERS

@@ -27,7 +27,7 @@ int pbl_display_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  return disp->ops->set_rotated(disp, disp->rotated);
+  return disp->ops->set_rotated(disp, disp->props.rotated);
 }
 
 void pbl_display_complete(const struct pbl_display *disp, int status) {
@@ -62,7 +62,7 @@ int pbl_display_set_rotated(const struct pbl_display *disp, bool rotated) {
     return -ENODEV;
   }
 
-  ret = disp->ops->set_rotated(disp, rotated != disp->rotated);
+  ret = disp->ops->set_rotated(disp, rotated != disp->props.rotated);
   if (ret != 0) {
     return ret;
   }
@@ -97,7 +97,7 @@ int pbl_display_update(const struct pbl_display *disp, const struct pbl_display_
     return -ENODEV;
   }
 
-  if (y0 > y1 || y1 >= disp->height) {
+  if (y0 > y1 || y1 >= disp->props.height) {
     return -EINVAL;
   }
 

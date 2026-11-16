@@ -45,6 +45,23 @@ enum pbl_display_format {
   PBL_DISPLAY_FORMAT_ARGB2222,
 };
 
+/** @brief Properties of a display. */
+struct pbl_display_props {
+  /** Width, in pixels. */
+  uint16_t width;
+  /** Height, in pixels. */
+  uint16_t height;
+  /** Framebuffer format. */
+  enum pbl_display_format format;
+  /** Panel mounted upside down. */
+  bool rotated;
+  /**
+   * Pixels hidden at each end of the rows of the top half of a round panel, mirrored in the bottom
+   * half, or NULL.
+   */
+  const uint8_t *round_mask;
+};
+
 /** @brief Framebuffer handed to an update. */
 struct pbl_display_buffer {
   /** First row. */
@@ -111,33 +128,35 @@ struct pbl_display {
   const struct pbl_display_ops *ops;
   /** Runtime state. */
   struct pbl_display_state *state;
-  /** Width, in pixels. */
-  uint16_t width;
-  /** Height, in pixels. */
-  uint16_t height;
-  /** Framebuffer format. */
-  enum pbl_display_format format;
-  /** Panel mounted upside down. */
-  bool rotated;
-  /**
-   * Pixels hidden at each end of the rows of the top half of a round panel, mirrored in the bottom
-   * half, or NULL.
-   */
-  const uint8_t *round_mask;
+  /** Properties. */
+  struct pbl_display_props props;
 };
 
 /** @brief The display, defined by the board. */
 extern const struct pbl_display *const DISPLAY;
 
 /**
+ * @brief Get the properties of a display.
+ *
+ * @param disp Display.
+ * @return Its properties.
+ */
+static inline const struct pbl_display_props *pbl_display_get_props(
+    const struct pbl_display *disp) {
+  return &disp->props;
+}
+
+/**
  * @brief Get the pixels hidden at each end of a row of a round panel.
  *
- * @param disp Display, with a @ref pbl_display.round_mask.
+ * @param disp Display, with a @ref pbl_display_props.round_mask.
  * @param y Row.
  * @return Pixels hidden at each end of the row.
  */
 static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, uint16_t y) {
-  return disp->round_mask[(y < disp->height / 2) ? y : (disp->height - 1 - y)];
+  const struct pbl_display_props *props = &disp->props;
+
+  return props->round_mask[(y < props->height / 2) ? y : (props->height - 1 - y)];
 }
 
 /**
@@ -161,17 +180,22 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param _height Height, in pixels.
  * @param _format Framebuffer format.
  * @param _rotated Panel mounted upside down.
- * @param ... Other mounting properties, designated initializers of struct pbl_display.
+ * @param ... Other properties, designated initializers of struct pbl_display_props.
  */
-#define PBL_DISPLAY_INIT(sym, _name, _ops, _deps, _width, _height, _format, _rotated, ...)         \
-  {.dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_init, nullptr, _deps, &pbl_display_class), \
-   .ops = (_ops),                                                                                  \
-   .state = &sym##_display_state,                                                                  \
-   .width = (_width),                                                                              \
-   .height = (_height),                                                                            \
-   .format = (_format),                                                                            \
-   .rotated = (_rotated),                                                                          \
-   __VA_ARGS__}
+#define PBL_DISPLAY_INIT(sym, _name, _ops, _deps, _width, _height, _format, _rotated, ...)       \
+  {                                                                                              \
+    .dev =                                                                                       \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_init, nullptr, _deps, &pbl_display_class), \
+    .ops = (_ops),                                                                               \
+    .state = &sym##_display_state,                                                               \
+    .props = {                                                                                   \
+      .width = (_width),                                                                         \
+      .height = (_height),                                                                       \
+      .format = (_format),                                                                       \
+      .rotated = (_rotated),                                                                     \
+      __VA_ARGS__                                                                                \
+    },                                                                                           \
+  }
 
 /**
  * @brief Device init of every display: sets the class state up, then calls the driver's init.

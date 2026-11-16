@@ -183,7 +183,7 @@ static PBL_ALWAYS_INLINE void prv_row_convert_mirror(uint32_t *row, uint32_t wor
 static void prv_rows_convert(const struct pbl_display_sf32lb_lcdc *lcdc,
                              uint32_t (*conv)(uint32_t)) {
   struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
-  uint32_t words = lcdc->disp.width / 4U;
+  uint32_t words = lcdc->disp.props.width / 4U;
 
   for (uint16_t y = state->y0; y <= state->y1; y++) {
     uint32_t *row = (uint32_t *)&state->fb[y * state->pitch];
@@ -209,8 +209,8 @@ static uint32_t prv_bus_addr(const uint8_t *p) {
 static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
   struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
   const struct pbl_panel_timing *timing = lcdc->panel->timing;
-  uint16_t width = lcdc->disp.width;
-  uint16_t height = lcdc->disp.height;
+  uint16_t width = lcdc->disp.props.width;
+  uint16_t height = lcdc->disp.props.height;
   uint8_t *first = &state->fb[state->y0 * state->pitch];
   uint32_t src = prv_bus_addr(first);
   uint32_t layer;
@@ -357,8 +357,8 @@ static int prv_init(const struct pbl_display *disp) {
   }
 
   if (lcdc->panel->bus_format != PBL_PANEL_BUS_FORMAT_JDI_RGB222 ||
-      timing->hactive != disp->width || timing->vactive != disp->height ||
-      (disp->width % 4U) != 0U) {
+      timing->hactive != disp->props.width || timing->vactive != disp->props.height ||
+      (disp->props.width % 4U) != 0U) {
     return -EINVAL;
   }
 
@@ -410,7 +410,7 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
   struct pbl_display_sf32lb_lcdc_state *state = lcdc->state;
   int ret;
 
-  if (buf->pitch != disp->width) {
+  if (buf->pitch != disp->props.width) {
     return -EINVAL;
   }
 

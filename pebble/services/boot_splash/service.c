@@ -43,26 +43,32 @@ static volatile bool s_boot_splash_running;
 static struct pbl_display_buffer s_boot_splash_fb;
 
 static uint32_t prv_pitch(void) {
-  if (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) {
-    return ROUND_TO_MOD_CEIL(DISPLAY->width, 32U) / 8U;
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+
+  if (props->format == PBL_DISPLAY_FORMAT_MONO) {
+    return ROUND_TO_MOD_CEIL(props->width, 32U) / 8U;
   }
 
-  return DISPLAY->width;
+  return props->width;
 }
 
 static size_t prv_fb_bytes(void) {
-  return prv_pitch() * DISPLAY->height;
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+
+  return prv_pitch() * props->height;
 }
 
 static void prv_set_pixel(const struct pbl_display_buffer *fb, int16_t x, int16_t y,
                           enum splash_color color) {
-  if (x < 0 || x >= DISPLAY->width || y < 0 || y >= DISPLAY->height) {
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+
+  if (x < 0 || x >= props->width || y < 0 || y >= props->height) {
     return;
   }
 
   uint8_t *row = &fb->data[(uint32_t)y * fb->pitch];
 
-  if (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) {
+  if (props->format == PBL_DISPLAY_FORMAT_MONO) {
     // Light gray shows as white, the indicator as black
     if (color == SPLASH_COLOR_BLACK) {
       row[x / 8] &= ~(1U << (x % 8));
@@ -75,8 +81,10 @@ static void prv_set_pixel(const struct pbl_display_buffer *fb, int16_t x, int16_
 }
 
 static void prv_clear(const struct pbl_display_buffer *fb) {
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+
   memset(fb->data,
-         (DISPLAY->format == PBL_DISPLAY_FORMAT_MONO) ? 0xFF : s_argb2222[SPLASH_COLOR_WHITE],
+         (props->format == PBL_DISPLAY_FORMAT_MONO) ? 0xFF : s_argb2222[SPLASH_COLOR_WHITE],
          prv_fb_bytes());
 }
 
@@ -92,8 +100,9 @@ static void prv_draw_filled_rect(const struct pbl_display_buffer *fb, int16_t x0
 
 // Draw the logo, centered
 static void prv_draw_logo(const struct pbl_display_buffer *fb) {
-  int16_t logo_x0 = (DISPLAY->width - splash_width) / 2;
-  int16_t logo_y0 = (DISPLAY->height - splash_height) / 2;
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+  int16_t logo_x0 = (props->width - splash_width) / 2;
+  int16_t logo_y0 = (props->height - splash_height) / 2;
 
   for (uint16_t y = 0U; y < splash_height; y++) {
     for (uint16_t x = 0U; x < splash_width; x++) {
@@ -134,17 +143,20 @@ static void prv_draw_progress_bar(const struct pbl_display_buffer *fb, int16_t c
 }
 
 static void prv_show(const struct pbl_display_buffer *fb) {
-  (void)pbl_display_update_sync(DISPLAY, fb, 0U, DISPLAY->height - 1U);
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
+
+  (void)pbl_display_update_sync(DISPLAY, fb, 0U, props->height - 1U);
 }
 
 // Boot splash task - runs until stopped
 static void prv_boot_splash_task(void *param) {
+  const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
   const struct pbl_display_buffer *fb = &s_boot_splash_fb;
   uint16_t frame = 0;
 
   // Progress bar below the centered logo
-  int16_t progress_cx = DISPLAY->width / 2;
-  int16_t progress_cy = (DISPLAY->height - splash_height) / 2 + splash_height + 20;
+  int16_t progress_cx = props->width / 2;
+  int16_t progress_cy = (props->height - splash_height) / 2 + splash_height + 20;
 
   // Animation loop - runs until s_boot_splash_running is cleared
   while (s_boot_splash_running) {

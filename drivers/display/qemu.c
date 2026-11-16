@@ -22,11 +22,11 @@ static const struct pbl_display_qemu *prv_qemu(const struct pbl_display *disp) {
 }
 
 static uint32_t prv_row_bytes(const struct pbl_display *disp) {
-  if (disp->format == PBL_DISPLAY_FORMAT_MONO) {
-    return ROUND_TO_MOD_CEIL(disp->width, 32U) / 8U;
+  if (disp->props.format == PBL_DISPLAY_FORMAT_MONO) {
+    return ROUND_TO_MOD_CEIL(disp->props.width, 32U) / 8U;
   }
 
-  return disp->width;
+  return disp->props.width;
 }
 
 static void prv_refresh(const struct pbl_display_qemu *qemu) {
@@ -80,7 +80,7 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
 static int prv_clear(const struct pbl_display *disp) {
   const struct pbl_display_qemu *qemu = prv_qemu(disp);
 
-  memset((void *)qemu->fb, 0, prv_row_bytes(disp) * disp->height);
+  memset((void *)qemu->fb, 0, prv_row_bytes(disp) * disp->props.height);
   prv_refresh(qemu);
 
   return 0;
