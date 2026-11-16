@@ -1,0 +1,9 @@
+description: Reading the RTC, setting it, seeing it count on, and putting the time back
+expect:
+  - 'rtc: now \d+-\d+-\d+ \d+:\d+:\d+ UTC'
+  - 'rtc: set to 2026-01-01 00:00:00 UTC'
+  - 'rtc: read back 2026-01-01 00:00:0\d UTC'
+  - 'rtc: 2 s later it counted on: yes'
+  - 'rtc: restored'
+  - 'Sample done'
+roles: [rtc]
