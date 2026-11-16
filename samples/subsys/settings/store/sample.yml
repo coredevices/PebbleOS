@@ -1,0 +1,16 @@
+description: A settings file of key-value records on the flash, kept across runs, read, listed, watched and deleted from
+expect:
+  - 'settings: changed runs'
+  - 'settings: run \d+'
+  - 'settings: changed name'
+  - 'settings: changed level'
+  - 'settings: name is Pebble'
+  - 'settings: level is 3'
+  - 'settings: reading 4 bytes of a 1-byte value: -ERANGE'
+  - 'settings: 3 records'
+  - 'settings: changed level'
+  - 'settings: level exists after deleting it: no'
+  - 'Sample done'
+roles: [flash]
+# The board has no file system partition.
+skip: [sf32lb57_dpi_hdk]

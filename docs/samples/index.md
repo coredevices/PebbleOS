@@ -41,6 +41,7 @@ subsys/crc/checksums.md
 subsys/crypto/sha256.md
 subsys/crypto/aes.md
 subsys/fs/files.md
+subsys/settings/store.md
 subsys/input/events.md
 ```
 
