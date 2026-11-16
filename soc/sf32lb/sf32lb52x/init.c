@@ -138,6 +138,9 @@ void pbl_soc_early_init(void) {
 
   pbl_modifyl(HPSYS_CFG_SCR_FKEY_MODE, 0U, PBL_DT_REG_HPSYS_CFG + SF32LB52_HPSYS_CFG_SCR_OFFSET);
 
+  // Waking up from hibernate leaves it requested
+  pbl_modifyl(PMUC_CR_HIBER_EN, 0U, PMUC(CR));
+
   // Long power key presses always take the PMIC cold reboot
   pbl_writel(PWRKEY_RESET_CNT, PMUC(PWRKEY_CNT));
 

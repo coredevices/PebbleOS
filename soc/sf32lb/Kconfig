@@ -17,6 +17,7 @@ config SOC_SF32LB52
     select KERNEL_MPU_IN_FAULTS
     select RAMFUNC
     select SOC_HAS_MPU_REGIONS
+    select SOC_HAS_POWER_OFF
     select SOC_HAS_RESET
     select NVMEM
     select PINCTRL
@@ -35,6 +36,7 @@ config SOC_SF32LB57
     select KERNEL_MPU_IN_FAULTS
     select RAMFUNC
     select SOC_HAS_MPU_REGIONS
+    select SOC_HAS_POWER_OFF
     select PINCTRL
     select TIMER_SF32LB_LPTIM
     help

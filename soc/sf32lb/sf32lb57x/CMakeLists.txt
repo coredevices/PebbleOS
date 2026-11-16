@@ -8,4 +8,5 @@ pbl_library_sources(
   init.c
   lpsys.c
   mpu_regions.c
+  power_off.c
 )
