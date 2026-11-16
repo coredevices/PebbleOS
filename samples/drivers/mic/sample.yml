@@ -1,0 +1,15 @@
+description: Two seconds from the microphone, its peak and RMS level every 200 ms
+expect:
+  - 'mic: capturing 2000 ms at 16000 Hz'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'mic: peak \d+, rms \d+'
+  - 'Sample done'
+roles: [mic]
