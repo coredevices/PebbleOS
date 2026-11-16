@@ -37,6 +37,8 @@ LANGUAGES = {
     ".h": "c",
     ".cmake": "cmake",
     ".py": "python",
+    ".rs": "rust",
+    ".toml": "toml",
     ".yml": "yaml",
     ".yaml": "yaml",
 }
