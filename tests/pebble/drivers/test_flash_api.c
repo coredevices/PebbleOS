@@ -27,6 +27,8 @@ static int s_suspends;
 static int s_resumes;
 static int s_writes;
 static int s_power_downs;
+static int s_pm_suspends;
+static int s_pm_resumes;
 static int s_erase_ret;
 static int s_status_calls;
 
@@ -79,6 +81,15 @@ static void prv_power_down(const struct pbl_flash *flash, pbl_flash_pm_fn_t fn, 
   fn(arg);
 }
 
+static int prv_pm_suspend(const struct pbl_flash *flash) {
+  s_pm_suspends++;
+  return 0;
+}
+
+static void prv_pm_resume(const struct pbl_flash *flash) {
+  s_pm_resumes++;
+}
+
 static void prv_stop(const struct pbl_flash *flash) {
   s_stops++;
 }
@@ -95,6 +106,8 @@ static const struct pbl_flash_ops s_async_ops = {
   .erase_suspend = prv_erase_suspend,
   .erase_resume = prv_erase_resume,
   .power_down = prv_power_down,
+  .pm_suspend = prv_pm_suspend,
+  .pm_resume = prv_pm_resume,
   .stop = prv_stop,
 };
 
@@ -151,6 +164,8 @@ void test_flash_api__initialize(void) {
   s_resumes = 0;
   s_writes = 0;
   s_power_downs = 0;
+  s_pm_suspends = 0;
+  s_pm_resumes = 0;
   s_fn_calls = 0;
   s_stops = 0;
   s_erase_ret = 0;
@@ -365,6 +380,27 @@ void test_flash_api__stays_powered_during_erase(void) {
   pbl_flash_power_down(&s_async, prv_fn, nullptr);
   cl_assert_equal_i(s_power_downs, 1);
   cl_assert_equal_i(s_fn_calls, 2);
+}
+
+void test_flash_api__stays_powered_up_during_erase(void) {
+  s_erase_status = -EBUSY;
+
+  cl_assert_equal_i(pbl_flash_erase_async(&s_async, SECTOR_SIZE, SECTOR_SIZE, prv_cb, nullptr), 0);
+  cl_assert_equal_i(pbl_flash_pm_suspend(&s_async), -EBUSY);
+  cl_assert_equal_i(s_pm_suspends, 0);
+
+  s_erase_status = 0;
+  prv_fire_timers(1);
+  cl_assert_equal_i(s_cb_calls, 1);
+
+  cl_assert_equal_i(pbl_flash_pm_suspend(&s_async), 0);
+  pbl_flash_pm_resume(&s_async);
+  cl_assert_equal_i(s_pm_suspends, 1);
+  cl_assert_equal_i(s_pm_resumes, 1);
+}
+
+void test_flash_api__suspend_needs_the_driver(void) {
+  cl_assert_equal_i(pbl_flash_pm_suspend(&s_sync), -ENOTSUP);
 }
 
 void test_flash_api__stop_refuses_access(void) {

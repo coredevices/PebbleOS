@@ -725,3 +725,19 @@ void pbl_flash_power_down(const struct pbl_flash *flash, pbl_flash_pm_fn_t fn, v
 
   flash->ops->power_down(flash, fn, arg);
 }
+
+int pbl_flash_pm_suspend(const struct pbl_flash *flash) {
+  if (flash->ops->pm_suspend == nullptr) {
+    return -ENOTSUP;
+  }
+
+  if (!prv_can_power_down(flash)) {
+    return -EBUSY;
+  }
+
+  return flash->ops->pm_suspend(flash);
+}
+
+void pbl_flash_pm_resume(const struct pbl_flash *flash) {
+  flash->ops->pm_resume(flash);
+}

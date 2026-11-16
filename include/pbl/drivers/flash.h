@@ -162,6 +162,18 @@ struct pbl_flash_ops {
   int (*erase_resume)(const struct pbl_flash *flash);
   /** Optional. Power down while @p fn runs, with interrupts disabled. */
   void (*power_down)(const struct pbl_flash *flash, pbl_flash_pm_fn_t fn, void *arg);
+  /**
+   * Optional, not for a flash the CPU executes from. Power down until @c pm_resume, with
+   * interrupts disabled. Returns 0, or @c -EBUSY while a transfer is in progress.
+   */
+  int (*pm_suspend)(const struct pbl_flash *flash);
+  /** With @c pm_suspend. Power back up. */
+  void (*pm_resume)(const struct pbl_flash *flash);
+  /**
+   * With @c pm_suspend. Get the time the part takes to power down and back up, in microseconds;
+   * valid once initialized.
+   */
+  void (*pm_times)(const struct pbl_flash *flash, uint32_t *enter_us, uint32_t *exit_us);
   /** Optional. Return the hardware to the state the boot code expects, before a reset. */
   void (*stop)(const struct pbl_flash *flash);
   /** With OTP. Read @p len bytes at @p offs of OTP region @p region. */
@@ -406,6 +418,25 @@ int pbl_flash_coredump_init(const struct pbl_flash *flash);
  * @param arg Argument of @p fn.
  */
 void pbl_flash_power_down(const struct pbl_flash *flash, pbl_flash_pm_fn_t fn, void *arg);
+
+/**
+ * @brief Power the flash down until pbl_flash_pm_resume(), with interrupts disabled.
+ *
+ * For a flash the CPU does not execute from, see pbl_flash_power_down() otherwise.
+ *
+ * @param flash Flash.
+ * @retval 0 Powered down.
+ * @retval -EBUSY An erase or a transfer is in progress.
+ * @retval -ENOTSUP The driver cannot.
+ */
+int pbl_flash_pm_suspend(const struct pbl_flash *flash);
+
+/**
+ * @brief Power the flash back up after pbl_flash_pm_suspend().
+ *
+ * @param flash Flash.
+ */
+void pbl_flash_pm_resume(const struct pbl_flash *flash);
 
 /**
  * @brief CRC-32 of a range.

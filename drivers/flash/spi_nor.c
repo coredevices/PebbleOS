@@ -1004,6 +1004,25 @@ static void prv_power_down(const struct pbl_flash *flash, pbl_flash_pm_fn_t fn, 
   pbl_spi_mem_power_down(nor->bus, &nor->data->pm, fn, arg);
 }
 
+static int prv_pm_suspend(const struct pbl_flash *flash) {
+  const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+
+  return pbl_spi_mem_pm_suspend(nor->bus, &nor->data->pm);
+}
+
+static void prv_pm_resume(const struct pbl_flash *flash) {
+  const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+
+  pbl_spi_mem_pm_resume(nor->bus, &nor->data->pm);
+}
+
+static void prv_pm_times(const struct pbl_flash *flash, uint32_t *enter_us, uint32_t *exit_us) {
+  const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+
+  *enter_us = nor->data->pm.enter_us;
+  *exit_us = nor->data->pm.exit_us;
+}
+
 // Leaves the part as it powers up; the next init probes it again
 static void prv_stop(const struct pbl_flash *flash) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
@@ -1140,6 +1159,9 @@ const struct pbl_flash_ops pbl_flash_spi_nor_ops = {
   .erase_suspend = prv_erase_suspend,
   .erase_resume = prv_erase_resume,
   .power_down = prv_power_down,
+  .pm_suspend = prv_pm_suspend,
+  .pm_resume = prv_pm_resume,
+  .pm_times = prv_pm_times,
   .stop = prv_stop,
   .otp_read = prv_otp_read,
   .otp_write = prv_otp_write,
