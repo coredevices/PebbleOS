@@ -112,6 +112,9 @@
               meson
               ninja
               pkg-config
+              # Applications in Rust; rustup installs rust-toolchain.toml.
+              rust-bindgen
+              rustup
               uv
               # Host compiler for Moddable and tests; x86 Linux tests need multilib.
               (if stdenv.isLinux && stdenv.hostPlatform.isx86_64 then clang_multi else clang)

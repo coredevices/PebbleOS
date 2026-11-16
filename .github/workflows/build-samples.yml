@@ -29,15 +29,19 @@ jobs:
               - 'include/**'
               - 'kernel/**'
               - 'lib/**'
+              - 'rust/**'
               - 'samples/**'
               - 'soc/**'
               - 'subsys/**'
               - 'third_party/**'
               - 'tools/**'
               - 'Kconfig*'
+              - 'Cargo.lock'
+              - 'Cargo.toml'
               - 'SDK_VERSION'
               - 'pbl.yml'
               - 'requirements.txt'
+              - 'rust-toolchain.toml'
 
   # The samples only need PebbleOS: building them keeps it from depending on
   # the firmware again.
