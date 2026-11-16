@@ -1,0 +1,13 @@
+description: A log module of the sample's own, its messages at each level, a hex dump, and its level changed while running
+expect:
+  - 'E .* sample: an error'
+  - 'W .* sample: a warning'
+  - 'I .* sample: an event worth attention'
+  - 'D .* sample: a routine state change'
+  - 'D .* sample: read 16 bytes'
+  - 'I .* 0000  a0 a1 a2 a3 a4 a5 a6 a7  a8 a9 aa ab ac ad ae af'
+  - 'W .* sample: read of 32 bytes, at most 16'
+  - 'W .* sample: level now 50, warning'
+  - 'E .* sample: an error'
+  - 'W .* sample: a warning'
+  - 'Sample done'
