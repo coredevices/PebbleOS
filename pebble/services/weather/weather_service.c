@@ -168,14 +168,21 @@ static void prv_update_default_location_cache(void) {
     goto cleanup;
   }
 
-  const int entry_len =
-      weather_db_get_len((uint8_t *)&default_location_key, sizeof(default_location_key));
-  if (entry_len == 0) {
-    goto cleanup;
+  // The read refuses a record that has grown since its length was taken, so ask again once.
+  WeatherDBEntry *entry = nullptr;
+  status_t rv = E_INVALID_ARGUMENT;
+  for (int attempt = 0; attempt < 2 && rv == E_INVALID_ARGUMENT; attempt++) {
+    pbl_free(entry);
+    entry = nullptr;
+    const int entry_len =
+        weather_db_get_len((uint8_t *)&default_location_key, sizeof(default_location_key));
+    if (entry_len == 0) {
+      goto cleanup;
+    }
+    entry = pbl_zalloc_check(entry_len);
+    rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
+                         (uint8_t *)entry, entry_len);
   }
-  WeatherDBEntry *entry = pbl_zalloc_check(entry_len);
-  status_t rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
-                                (uint8_t *)entry, entry_len);
   if (rv != S_SUCCESS) {
     goto free_entry;
   }

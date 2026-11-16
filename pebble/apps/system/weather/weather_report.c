@@ -185,8 +185,11 @@ static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
   s_hold_timer = nullptr;
-  if (!s_report)
+  // A modal can swallow the release; stop once the page is covered.
+  if (!s_report || !window_is_on_screen(s_report->window)) {
+    s_hold_repeat = 0;
     return;
+  }
   prv_navigate(s_hold_is_down);
   s_hold_repeat++;
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;
@@ -541,8 +544,11 @@ static int s_hold_repeat = 0;
 
 static void prv_hold_timer_cb(void *ctx) {
   s_hold_timer = nullptr;
-  if (!s_report)
+  // A modal can swallow the release; stop once the page is covered.
+  if (!s_report || !window_is_on_screen(s_report->window)) {
+    s_hold_repeat = 0;
     return;
+  }
   prv_navigate(s_hold_is_down);
   s_hold_repeat++;
   int interval = HOLD_INITIAL_MS - s_hold_repeat * 50;

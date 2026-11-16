@@ -144,6 +144,7 @@ struct PBL_PACKED pbl_pp_capabilities {
       bool notification_window_state_support : 1;
       bool app_permissions_support : 1;
       bool multiple_language_packs_support : 1;
+      bool weather_db_sized_records_support : 1;
     };
     /** All capability bits. */
     uint64_t flags;

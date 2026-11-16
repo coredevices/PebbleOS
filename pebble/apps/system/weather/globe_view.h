@@ -15,6 +15,12 @@
 typedef void (*GlobeLocationSelectCallback)(int ds_index, bool force, void *context);
 typedef void (*GlobeSavedLocationsCallback)(void *context);
 typedef void (*GlobeMainCallback)(void *context);
+//! Draws the page behind globe_view_push_unwrap, cleared by the fraction `away`, which can
+//! overshoot the end, without the city-select box's globe. The box's highlight covers the fraction
+//! `lit` of its height, with its rect left in `fill_out` (GRectZero once gone). The box's inside
+//! is left in `box_out`.
+typedef void (*GlobeBackdropDrawFn)(GContext *ctx, AnimationProgress away, AnimationProgress lit,
+                                    GRect *fill_out, GRect *box_out, void *context);
 
 typedef struct {
   Window *window;
@@ -81,11 +87,29 @@ typedef struct {
   bool has_custom_location;
   bool is_free_roam;
   bool intro_world_selected;
+  // globe_view_push_unwrap: the box's globe lifts to the planet's place and unwraps, and BACK
+  // reverses it. backdrop_draw paints the sunset card's page behind it.
+  Animation *lift_anim;
+  AnimationProgress lift_p;
+  GPoint lift_from_origin8; // the art frame's top-left in the box, in 1/8 px
+  int32_t lift_from_scale_q8;
+  int lift_frame_to;    // the frame the lift up ends on, GLOBE_LIFT_REV_FRAMES before rest_frame
+  int rest_frame;       // the frame the box's globe shows at rest
+  int spin_from_frame;  // the frame the spin back starts from
+  int spin_back_frames; // how many frames the spin back turns through
+  int8_t lift_dir;
+  bool is_lifting;
+  bool unwrap; // pushed by globe_view_push_unwrap
+  GlobeBackdropDrawFn backdrop_draw;
+  GlobeMainCallback backdrop_gone;
+  void *backdrop_ctx;
   bool bw_idle;
   uint8_t bw_idle_slowdown_step;
   uint8_t intro_selection_ms;
   bool bw_sequence_scaled; // small-rect: writable clones scaled once at load
   bool cradle_pdc_scaled;
+  bool bw_sequence_missing; // failed to load, retried once the intro art is freed
+  bool cradle_pdc_missing;  // failed to load, drawn without the stand until the intro art is freed
 #ifdef CONFIG_TOUCH
   int16_t touch_start_x;
   int16_t touch_start_y;
@@ -159,6 +183,30 @@ void globe_view_focus_coords(GlobeView *view, int16_t lat_e2, int16_t lon_e2);
 // rect only, falls back to a plain push on round). Pairs with the card's slide-out-left on
 // SELECT-from-expanded-card.
 void globe_view_push_slide_in_right(GlobeView *view);
+
+// The bounds of the globe's art and stand at native size, relative to the art frame's top-left.
+// GRectZero if the art fails to load. Loads the art if needed.
+// globe_view_release_intro_art frees it unless the globe's own window is loaded.
+GRect globe_view_intro_art_bounds(GlobeView *view);
+void globe_view_release_intro_art(GlobeView *view);
+
+// Draw frame `frame` of the black and white sequence, scaled by `scale_q8` (256 = native), with
+// the art frame's top-left at `origin8` in 1/8 px. Lines are drawn in `ink`. `in_colour` fills
+// ocean and land in colour, otherwise with the theme's background. Draws the globe on its stand
+// and loads the art if needed.
+void globe_view_draw_art(GlobeView *view, GContext *ctx, GPoint origin8, int32_t scale_q8,
+                         GColor ink, int frame, bool in_colour);
+
+// The frame the box's globe shows at rest: 0 at first, then where the last spin back stopped.
+int globe_view_rest_frame(GlobeView *view);
+
+// Push the globe from the sunset card's city-select box. The art starts at `from_origin8` and
+// `from_scale_q8`, lifts to the planet's place over `backdrop`, then unwraps into the colour
+// planet. `backdrop_gone` fires once the lift has cleared the backdrop, before the planet's data
+// loads. BACK reverses it and fires back_callback. The caller keeps the card on the stack beneath.
+void globe_view_push_unwrap(GlobeView *view, GPoint from_origin8, int32_t from_scale_q8,
+                            GlobeBackdropDrawFn backdrop, GlobeMainCallback backdrop_gone,
+                            void *backdrop_ctx);
 
 // Reverse of the slide-in-from-right: slide the intro cradle out to the RIGHT (same moook bounce),
 // then fire back_callback so weather.c can bring the card back in from the LEFT. Cradle BACK.
