@@ -468,9 +468,9 @@ PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
       PBL_FLASH_OTP_CELL("soc-config-user", 0x0800U, 256U),                                      \
       PBL_FLASH_OTP_CELL("soc-config-cust", 0x1000U, 256U)
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, OTP_CELLS);
 
 const struct pbl_flash *const FLASH = &s_nor_q;
 
@@ -1022,10 +1022,16 @@ void test_spi_nor__quad_enable_checked(void) {
   cl_assert(pbl_device_init(&s_nor_q.dev) != 0);
 }
 
-// A part none of the supported ones are is not driven
+// A part other than the one the board names is not driven
 void test_spi_nor__unsupported_part(void) {
   prv_reset(CHIP_GD25Q256E);
   s_model = CHIP_UNKNOWN;
+  prv_build_sfdp();
+  cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), -ENODEV);
+}
+
+void test_spi_nor__other_part(void) {
+  prv_reset(CHIP_GD25LQ255E);
   prv_build_sfdp();
   cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), -ENODEV);
 }
