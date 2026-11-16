@@ -1847,7 +1847,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
   GRect base_layer_bounds = window->layer.bounds;
 #if PBL_RECT
   if (active_window->layout != WorkoutLayout_Dashboard) {
-    base_layer_bounds = action_bar_layer_inset_bounds(base_layer_bounds);
+    base_layer_bounds = action_bar_layer_preferred_inset_bounds(base_layer_bounds);
   }
 #endif
 
@@ -1902,7 +1902,7 @@ static void prv_create_window_common(WorkoutActiveWindow *active_window, void *w
     status_bar_layer_set_colors(status_layer, GColorClear, GColorBlack);
     layer_add_child(&window->layer, status_bar_layer_get_layer(status_layer));
 #if PBL_RECT
-    GRect status_layer_bounds = action_bar_layer_inset_bounds(window->layer.bounds);
+    GRect status_layer_bounds = action_bar_layer_preferred_inset_bounds(window->layer.bounds);
     layer_set_frame(&status_layer->layer, &status_layer_bounds);
 #endif
     action_bar_layer_add_to_window(action_bar, window);
