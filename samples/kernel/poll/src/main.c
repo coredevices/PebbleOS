@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <inttypes.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/poll.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 struct button_event {
   uint8_t button;
@@ -46,13 +46,13 @@ static void prv_handle(struct pbl_msgq *q) {
     struct button_event event;
 
     if (pbl_msgq_get(q, &event, PBL_NO_WAIT) == 0) {
-      PBL_LOG_INFO("loop: button %u %s", event.button, event.pressed ? "pressed" : "released");
+      printf("loop: button %u %s\n", event.button, event.pressed ? "pressed" : "released");
     }
   } else if (q == &s_accel) {
     struct accel_sample sample;
 
     if (pbl_msgq_get(q, &sample, PBL_NO_WAIT) == 0) {
-      PBL_LOG_INFO("loop: accel %d %d %d", sample.x, sample.y, sample.z);
+      printf("loop: accel %d %d %d\n", sample.x, sample.y, sample.z);
     }
   }
 }
@@ -76,14 +76,14 @@ int main(void) {
   for (;;) {
     struct pbl_msgq *q = pbl_poll_group_wait(&s_events, PBL_MSEC(100));
     if (q == NULL) {
-      PBL_LOG_INFO("loop: nothing for 100 ms");
+      printf("loop: nothing for 100 ms\n");
       break;
     }
 
     prv_handle(q);
   }
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

@@ -2,12 +2,12 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <stdatomic.h>
+#include <stdio.h>
 
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define NUM_PHILOSOPHERS 5
 #define MEALS            3
@@ -112,14 +112,14 @@ static int prv_dinner(bool ordered) {
     ret =
         PBL_POLL_SLEEP_MS(pbl_thread_state(&s_philosophers[i].thread) == PBL_THREAD_DEAD, 1, 1000);
     if (ret != 0) {
-      PBL_LOG_ERR("dinner: philosopher %u did not leave (%d)", i, ret);
+      fprintf(stderr, "dinner: philosopher %u did not leave (%d)\n", i, ret);
       return ret;
     }
   }
   pbl_sem_reset(&s_give_up);
 
-  PBL_LOG_INFO("dinner: %s: %u meals eaten, %u of %u philosophers stuck with one fork",
-               ordered ? "lower fork first" : "left fork first", meals, stuck, NUM_PHILOSOPHERS);
+  printf("dinner: %s: %u meals eaten, %u of %u philosophers stuck with one fork\n",
+         ordered ? "lower fork first" : "left fork first", meals, stuck, NUM_PHILOSOPHERS);
 
   return 0;
 }
@@ -141,7 +141,7 @@ int main(void) {
     return ret;
   }
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

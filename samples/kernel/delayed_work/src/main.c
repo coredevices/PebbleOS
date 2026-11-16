@@ -1,9 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/work.h>
-#include <pbl/logging/logging.h>
 
 #define DEBOUNCE_MS  200
 #define HEARTBEAT_MS 20
@@ -13,7 +14,7 @@ static unsigned int s_heartbeats;
 
 static void prv_button_settled(struct pbl_work *work) {
   s_presses++;
-  PBL_LOG_INFO("button: settled, press %u", s_presses);
+  printf("button: settled, press %u\n", s_presses);
 }
 
 static void prv_heartbeat(struct pbl_work *work);
@@ -36,7 +37,7 @@ static void prv_button_edge(void) {
 int main(void) {
   bool kept;
 
-  PBL_LOG_INFO("main: five edges 5 ms apart, each pushing the work back");
+  printf("main: five edges 5 ms apart, each pushing the work back\n");
   for (unsigned int i = 0; i < 5; i++) {
     prv_button_edge();
     pbl_sleep_ms(5);
@@ -46,7 +47,7 @@ int main(void) {
   /* schedule() keeps a delay that is running, where reschedule() replaces it. */
   pbl_delayed_work_schedule(&pbl_sys_workq, &s_debounce, PBL_MSEC(DEBOUNCE_MS));
   kept = !pbl_delayed_work_schedule(&pbl_sys_workq, &s_debounce, PBL_SEC(10));
-  PBL_LOG_INFO("main: scheduled twice, first delay kept: %s", kept ? "yes" : "no");
+  printf("main: scheduled twice, first delay kept: %s\n", kept ? "yes" : "no");
   pbl_sleep_ms(2 * DEBOUNCE_MS);
 
   pbl_delayed_work_schedule(&pbl_sys_workq, &s_heartbeat, PBL_MSEC(HEARTBEAT_MS));
@@ -54,10 +55,10 @@ int main(void) {
 
   /* Stops it for good, even though its function schedules it again. */
   pbl_delayed_work_cancel_sync(&s_heartbeat);
-  PBL_LOG_INFO("main: heartbeat stopped after %u beats, pending: %s", s_heartbeats,
-               pbl_delayed_work_is_pending(&s_heartbeat) ? "yes" : "no");
+  printf("main: heartbeat stopped after %u beats, pending: %s\n", s_heartbeats,
+         pbl_delayed_work_is_pending(&s_heartbeat) ? "yes" : "no");
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

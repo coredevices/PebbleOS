@@ -1,8 +1,9 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define ROUNDS 3
 
@@ -19,7 +20,7 @@ static struct pbl_thread s_ping;
 static struct pbl_thread s_pong;
 
 static void prv_urgent(void *arg) {
-  PBL_LOG_INFO("urgent: preempted main, which is still inside pbl_thread_create()");
+  printf("urgent: preempted main, which is still inside pbl_thread_create()\n");
 }
 
 static void prv_peer(void *arg) {
@@ -27,7 +28,7 @@ static void prv_peer(void *arg) {
   const char *name = pbl_thread_name(pbl_thread_current());
 
   for (*rounds = 0; *rounds < ROUNDS; (*rounds)++) {
-    PBL_LOG_INFO("%s: round %u", name, *rounds);
+    printf("%s: round %u\n", name, *rounds);
     /* Threads of equal priority also take turns on every tick; yielding does it now. */
     pbl_thread_yield();
   }
@@ -52,25 +53,25 @@ int main(void) {
   static unsigned int s_ping_rounds;
   static unsigned int s_pong_rounds;
 
-  PBL_LOG_INFO("main: creating a thread of higher priority");
+  printf("main: creating a thread of higher priority\n");
   prv_start(&s_urgent, "urgent", prv_urgent, NULL, URGENT_PRIO, s_urgent_stack,
             sizeof(s_urgent_stack));
-  PBL_LOG_INFO("main: urgent has %s",
-               pbl_thread_state(&s_urgent) == PBL_THREAD_DEAD ? "ended" : "not ended");
+  printf("main: urgent has %s\n",
+         pbl_thread_state(&s_urgent) == PBL_THREAD_DEAD ? "ended" : "not ended");
 
   prv_start(&s_ping, "ping", prv_peer, &s_ping_rounds, PEER_PRIO, s_ping_stack,
             sizeof(s_ping_stack));
   prv_start(&s_pong, "pong", prv_peer, &s_pong_rounds, PEER_PRIO, s_pong_stack,
             sizeof(s_pong_stack));
-  PBL_LOG_INFO("main: created two threads of lower priority, which wait for main to block");
+  printf("main: created two threads of lower priority, which wait for main to block\n");
 
   while (pbl_thread_state(&s_ping) != PBL_THREAD_DEAD ||
          pbl_thread_state(&s_pong) != PBL_THREAD_DEAD) {
     pbl_thread_sleep(PBL_MSEC(10));
   }
 
-  PBL_LOG_INFO("main: ping ran %u rounds, pong ran %u rounds", s_ping_rounds, s_pong_rounds);
-  PBL_LOG_INFO("Sample done");
+  printf("main: ping ran %u rounds, pong ran %u rounds\n", s_ping_rounds, s_pong_rounds);
+  printf("Sample done\n");
 
   return 0;
 }

@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define NUM_WORKERS 3
 
@@ -62,7 +63,7 @@ static void prv_worker(void *arg) {
   pbl_mutex_lock(&s_stats_lock, PBL_FOREVER);
   s_ready++;
   pbl_mutex_unlock(&s_stats_lock);
-  PBL_LOG_INFO("worker %u: ready", worker->id);
+  printf("worker %u: ready\n", worker->id);
 
   prv_barrier_wait(&s_start_line);
 
@@ -96,15 +97,15 @@ int main(void) {
   for (unsigned int i = 0; i < NUM_WORKERS; i++) {
     ret = PBL_POLL_SLEEP_MS(pbl_thread_state(&s_workers[i].thread) == PBL_THREAD_DEAD, 1, 1000);
     if (ret != 0) {
-      PBL_LOG_ERR("main: worker %u did not end (%d)", i, ret);
+      fprintf(stderr, "main: worker %u did not end (%d)\n", i, ret);
       return ret;
     }
   }
 
-  PBL_LOG_INFO("main: %u past the barrier, %u of them before the last was ready", s_passed,
-               s_passed_early);
+  printf("main: %u past the barrier, %u of them before the last was ready\n", s_passed,
+         s_passed_early);
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }

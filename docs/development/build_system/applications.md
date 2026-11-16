@@ -26,10 +26,10 @@ target_sources(app PRIVATE src/main.c)
 ```
 
 ```c
-#include <pbl/logging/logging.h>
+#include <stdio.h>
 
 int main(void) {
-  PBL_LOG_ALWAYS("Hello World! %s", CONFIG_BOARD);
+  printf("Hello World! %s\n", CONFIG_BOARD);
 
   return 0;
 }
@@ -56,8 +56,8 @@ from another shell, then restart the emulator with `system_reset` in the
 QEMU monitor:
 
 ```text
-* - 00:00:00.000 init.c:38> *** Booting PebbleOS v4.45.0 ***
-* - 00:00:00.004 main.c:7> Hello World! qemu_emery
+*** Booting PebbleOS v4.47.0 ***
+Hello World! qemu_emery
 ```
 
 Plain CMake needs to be told where PebbleOS is, with the `PEBBLEOS_BASE`
@@ -116,9 +116,9 @@ Driver classes, subsystems and optional kernel features are off unless
 the application asks for them, e.g. `CONFIG_ACCEL=y` or `CONFIG_BT=y`: a
 board's defconfig only selects its SoC, platform, boot chain and console
 UART, so `hello_world` builds little more than the kernel. Even the
-console and logging are the application's choice: `hello_world` enables
-them with `CONFIG_CONSOLE=y` and `CONFIG_LOG=y` in its `prj.conf`. The drivers follow from the board's
-{doc}`devicetree`, and the buses and supplies they use from the drivers.
+console is the application's choice: `hello_world` enables it, and
+`printf()` on it, with `CONFIG_CONSOLE=y` and `CONFIG_CONSOLE_STDOUT=y` in its
+`prj.conf`. The drivers follow from the board's {doc}`devicetree`, and the buses and supplies they use from the drivers.
 What an application does with the hardware, such as the firmware's
 backlight levels on `obelix`, goes in the application's
 `boards/obelix.conf`.

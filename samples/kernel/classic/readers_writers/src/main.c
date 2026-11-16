@@ -1,11 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdio.h>
+
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
-#include <pbl/logging/logging.h>
 
 #define NUM_READERS 3
 #define READS       10
@@ -140,17 +141,18 @@ int main(void) {
   for (unsigned int i = 0; i < NUM_READERS + 1; i++) {
     ret = PBL_POLL_SLEEP_MS(pbl_thread_state(&s_threads[i]) == PBL_THREAD_DEAD, 1, 2000);
     if (ret != 0) {
-      PBL_LOG_ERR("main: %s did not end (%d)", i < NUM_READERS ? "a reader" : "the writer", ret);
+      fprintf(stderr, "main: %s did not end (%d)\n", i < NUM_READERS ? "a reader" : "the writer",
+              ret);
       return ret;
     }
   }
 
-  PBL_LOG_INFO("record: version %u after %u writes", s_record.version, WRITES);
-  PBL_LOG_INFO("record: up to %u readers at once, %u half written records read", s_max_reading,
-               s_torn_reads);
-  PBL_LOG_INFO("record: %u writes made with a reader in the room", s_writes_with_readers);
+  printf("record: version %u after %u writes\n", s_record.version, WRITES);
+  printf("record: up to %u readers at once, %u half written records read\n", s_max_reading,
+         s_torn_reads);
+  printf("record: %u writes made with a reader in the room\n", s_writes_with_readers);
 
-  PBL_LOG_INFO("Sample done");
+  printf("Sample done\n");
 
   return 0;
 }
