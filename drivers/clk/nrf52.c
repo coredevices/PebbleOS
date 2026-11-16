@@ -5,6 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/nrf52.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/misc.h>
 
@@ -16,12 +17,17 @@
 #define LFCLKSTAT_MASK         (CLOCK_LFCLKSTAT_SRC_MASK | CLOCK_LFCLKSTAT_STATE)
 #define LFCLKSTAT_XTAL_RUNNING (CLOCK_LFCLKSTAT_SRC_XTAL | CLOCK_LFCLKSTAT_STATE)
 
+// What runs on HFXO, as the radio or audio, is served within this long of its interrupts
+#define HFXO_WAKE_LATENCY_US 1000U
+
 struct pbl_clk_nrf52 {
   struct pbl_clk_controller ctrl;
   uintptr_t base;
   struct pbl_clk hfxo;
   struct pbl_clk lfxo;
 };
+
+static struct pbl_idle_latency_request s_hfxo_latency;
 
 static const struct pbl_clk_nrf52 *prv_clock(const struct pbl_clk_controller *ctrl) {
   return container_of(ctrl, const struct pbl_clk_nrf52, ctrl);
@@ -50,6 +56,7 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
 
   switch (id) {
     case NRF52_CLK_HFCLK:
+      pbl_idle_latency_request_add(&s_hfxo_latency, HFXO_WAKE_LATENCY_US);
       if ((prv_getreg(clock, NRF52_CLOCK_HFCLKSTAT_OFFSET) & HFCLKSTAT_XTAL_RUNNING) !=
           HFCLKSTAT_XTAL_RUNNING) {
         prv_start(clock, NRF52_CLOCK_TASKS_HFCLKSTART_OFFSET,
@@ -75,6 +82,7 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   switch (id) {
     case NRF52_CLK_HFCLK:
       prv_putreg(clock, NRF52_CLOCK_TASKS_HFCLKSTOP_OFFSET, 1U);
+      pbl_idle_latency_request_remove(&s_hfxo_latency);
       return 0;
     case NRF52_CLK_LFCLK:
       prv_putreg(clock, NRF52_CLOCK_TASKS_LFCLKSTOP_OFFSET, 1U);
