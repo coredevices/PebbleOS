@@ -35,13 +35,6 @@ struct pbl_coredump_region {
   bool late;
 };
 
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_COREDUMP__REGION_SECTION(_name) PBL_UNSORTED_SECTION(pbl_cd_regs)
-#else
-#define PBL_COREDUMP__REGION_SECTION(_name) \
-  PBL_ALIGNED(4) PBL_SECTION(".pbl_coredump_regions." #_name)
-#endif
-
 /**
  * @brief Define a memory region to dump.
  *
@@ -49,9 +42,9 @@ struct pbl_coredump_region {
  * @param _start Start address, a constant expression.
  * @param _size Size in bytes, a constant expression.
  */
-#define PBL_COREDUMP_REGION_DEFINE(_name, _start, _size)                        \
-  static const struct pbl_coredump_region _pbl_coredump_region_##_name PBL_USED \
-  PBL_COREDUMP__REGION_SECTION(_name) = {.start = (_start), .size = (_size)}
+#define PBL_COREDUMP_REGION_DEFINE(_name, _start, _size)                                     \
+  static const struct pbl_coredump_region _pbl_coredump_region_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_coredump_region, cd_regions, #_name) = {.start = (_start), .size = (_size)}
 
 /**
  * @brief Define a memory region that is dumped after the threads.
@@ -63,10 +56,14 @@ struct pbl_coredump_region {
  * @param _size Size in bytes, a constant expression.
  * @param _prepare Function that makes the region readable, or NULL.
  */
-#define PBL_COREDUMP_LATE_REGION_DEFINE(_name, _start, _size, _prepare)         \
-  static const struct pbl_coredump_region _pbl_coredump_region_##_name PBL_USED \
-  PBL_COREDUMP__REGION_SECTION(                                                 \
-      _name) = {.start = (_start), .size = (_size), .prepare = (_prepare), .late = true}
+#define PBL_COREDUMP_LATE_REGION_DEFINE(_name, _start, _size, _prepare)                      \
+  static const struct pbl_coredump_region _pbl_coredump_region_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_coredump_region, cd_regions, #_name) = {                              \
+    .start = (_start),                                                                       \
+    .size = (_size),                                                                         \
+    .prepare = (_prepare),                                                                   \
+    .late = true,                                                                            \
+  }
 
 /**
  * @brief Write a core dump and reset.
