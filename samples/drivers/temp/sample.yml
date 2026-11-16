@@ -1,0 +1,9 @@
+description: The die temperature, read five times a second apart
+expect:
+  - 'temp: -?\d+\.\d+ C'
+  - 'temp: -?\d+\.\d+ C'
+  - 'temp: -?\d+\.\d+ C'
+  - 'temp: -?\d+\.\d+ C'
+  - 'temp: -?\d+\.\d+ C'
+  - 'Sample done'
+roles: [die_temp]
