@@ -76,25 +76,14 @@ struct pbl_sys_off_handler {
  * @param _handler Function called in @p _mode.
  * @param _user_data Data passed to @p _handler.
  */
-#ifdef PBL_NO_LINKER_SCRIPT
-#define PBL_SYS_OFF_HANDLER_DEFINE(_name, _mode, _priority, _handler, _user_data) \
-  static const struct pbl_sys_off_handler pbl_sys_off_handler_##_name PBL_USED    \
-  PBL_UNSORTED_SECTION(pbl_sys_off) = {                                           \
-    .handler = (_handler),                                                        \
-    .user_data = (_user_data),                                                    \
-    .mode = (_mode),                                                              \
-    .priority = (_priority),                                                      \
+#define PBL_SYS_OFF_HANDLER_DEFINE(_name, _mode, _priority, _handler, _user_data)           \
+  static const struct pbl_sys_off_handler pbl_sys_off_handler_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_sys_off_handler, sys_off, #_name) = {                                \
+    .handler = (_handler),                                                                  \
+    .user_data = (_user_data),                                                              \
+    .mode = (_mode),                                                                        \
+    .priority = (_priority),                                                                \
   }
-#else
-#define PBL_SYS_OFF_HANDLER_DEFINE(_name, _mode, _priority, _handler, _user_data)             \
-  static const struct pbl_sys_off_handler pbl_sys_off_handler_##_name PBL_USED PBL_ALIGNED(4) \
-      PBL_SECTION(".pbl_sys_off_handlers." #_name) = {                                        \
-        .handler = (_handler),                                                                \
-        .user_data = (_user_data),                                                            \
-        .mode = (_mode),                                                                      \
-        .priority = (_priority),                                                              \
-  }
-#endif
 
 /**
  * @brief Restart the system in order.

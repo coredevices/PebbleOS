@@ -13,15 +13,7 @@
 
 #include <arch.h>
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_sys_off_handler __pbl_sys_off_handlers_start[];
-extern const struct pbl_sys_off_handler __pbl_sys_off_handlers_end[];
-#else
-extern const struct pbl_sys_off_handler __pbl_sys_off_handlers_start[] PBL_UNSORTED_SECTION_START(
-    pbl_sys_off);
-extern const struct pbl_sys_off_handler __pbl_sys_off_handlers_end[] PBL_UNSORTED_SECTION_END(
-    pbl_sys_off);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_sys_off_handler, sys_off);
 
 static atomic_bool s_in_progress;
 
@@ -33,8 +25,7 @@ static void prv_run(enum pbl_sys_off_mode mode) {
   for (;;) {
     const struct pbl_sys_off_handler *next = nullptr;
 
-    for (const struct pbl_sys_off_handler *h = __pbl_sys_off_handlers_start;
-         h < __pbl_sys_off_handlers_end; h++) {
+    PBL_ITERABLE_SECTION_FOREACH(const struct pbl_sys_off_handler, sys_off, h) {
       if (h->mode != mode) {
         continue;
       }
