@@ -18,15 +18,7 @@
 #define HEARTBEAT_PERIOD_SEC     3600
 #define ANALYTICS_STRING_MAX_LEN 64
 
-#ifndef PBL_NO_LINKER_SCRIPT
-extern const struct pbl_analytics_collector __pbl_analytics_collectors_start[];
-extern const struct pbl_analytics_collector __pbl_analytics_collectors_end[];
-#else
-extern const struct pbl_analytics_collector
-    __pbl_analytics_collectors_start[] PBL_UNSORTED_SECTION_START(pbl_analytics);
-extern const struct pbl_analytics_collector
-    __pbl_analytics_collectors_end[] PBL_UNSORTED_SECTION_END(pbl_analytics);
-#endif
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_analytics_collector, analytics);
 
 extern void pbl_analytics__native_init(void);
 extern void pbl_analytics__native_heartbeat(void);
@@ -82,8 +74,7 @@ static void prv_heartbeat_sys_work_cb(void *data) {
 
   prv_collect_kernel_heap_stats();
 
-  for (const struct pbl_analytics_collector *c = __pbl_analytics_collectors_start;
-       c < __pbl_analytics_collectors_end; c++) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_analytics_collector, analytics, c) {
     c->collect();
   }
 
