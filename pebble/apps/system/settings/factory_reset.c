@@ -68,15 +68,6 @@ static void confirm_click_handler(ClickRecognizerRef recognizer, void *context) 
                      nullptr);
 }
 
-//! Wipe registry + Enter Standby (for factory)
-static void confirm_long_click_handler(ClickRecognizerRef recognizer, void *context) {
-  Window *window = context;
-  // Need to lock-out inputs after starting the factory reset.
-  prv_lockout_back_button(window);
-
-  factory_reset(true /* should_shutdown */);
-}
-
 static void decline_click_handler(ClickRecognizerRef recognizer, void *context) {
   const bool animated = true;
   app_window_stack_pop(animated);
@@ -86,7 +77,6 @@ static void decline_click_handler(ClickRecognizerRef recognizer, void *context) 
 
 static void config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, confirm_click_handler);
-  window_long_click_subscribe(BUTTON_ID_UP, 1200, confirm_long_click_handler, nullptr);
   window_single_click_subscribe(BUTTON_ID_DOWN, decline_click_handler);
   (void)context;
 }
