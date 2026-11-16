@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdatomic.h>
 #include <stdint.h>
 
 #include <pbl/drivers/gpio.h>
@@ -32,6 +33,7 @@
 /** @cond INTERNAL_HIDDEN */
 struct pbl_spi_mem_nrf5_qspi_data {
   struct pbl_sem done;
+  atomic_bool busy;
   uint32_t psel[6];
   uint8_t readoc;
   uint8_t writeoc;

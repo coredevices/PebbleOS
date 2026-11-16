@@ -244,6 +244,7 @@ static PBL_ALWAYS_INLINE void prv_xfer(const struct pbl_spi_mem *mem, uint32_t t
 
   if (irq) {
     prv_putreg(qspi, NRF52_QSPI_INTENSET_OFFSET, QSPI_INT_READY);
+    atomic_store(&qspi->data->busy, true);
     pbl_idle_state_block(SOC_NRF_IDLE_FULL);
   } else if (polling) {
     prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
@@ -255,6 +256,7 @@ static PBL_ALWAYS_INLINE void prv_xfer(const struct pbl_spi_mem *mem, uint32_t t
     pbl_sem_take(&qspi->data->done, PBL_FOREVER);
     prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
     pbl_idle_state_release(SOC_NRF_IDLE_FULL);
+    atomic_store(&qspi->data->busy, false);
   } else {
     prv_wait_ready(qspi);
   }
@@ -459,9 +461,13 @@ static void prv_anomaly_122_workaround(const struct pbl_spi_mem_nrf5_qspi *qspi)
   prv_putreg(qspi, ANOMALY_122_OFFSET, 1U);
 }
 
-static void prv_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm,
-                           pbl_spi_mem_pm_fn_t fn, void *arg) {
+// An interrupt driven transfer waits for the controller while the CPU idles
+static int prv_pm_suspend(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm) {
   const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
+
+  if (atomic_load(&qspi->data->busy)) {
+    return -EBUSY;
+  }
 
   if (pm != nullptr) {
     prv_exec_cinstr(qspi, &pm->enter);
@@ -474,7 +480,11 @@ static void prv_power_down(const struct pbl_spi_mem *mem, const struct pbl_spi_m
   prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_DISABLED);
   prv_anomaly_122_workaround(qspi);
 
-  fn(arg);
+  return 0;
+}
+
+static void prv_pm_resume(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm) {
+  const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
 
   prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
   prv_activate(qspi);
@@ -532,7 +542,8 @@ const struct pbl_spi_mem_ops pbl_spi_mem_nrf5_qspi_ops = {
   .exec_op = prv_exec_op,
   .dirmap_create = prv_dirmap_create,
   .dirmap_read = prv_dirmap_read,
-  .power_down = prv_power_down,
+  .pm_suspend = prv_pm_suspend,
+  .pm_resume = prv_pm_resume,
 };
 
 #include PBL_DT_INSTANCES(nordic_nrf52840_qspi)
