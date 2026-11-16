@@ -48,6 +48,7 @@ drivers/accel.md
 drivers/als.md
 drivers/backlight.md
 drivers/display.md
+drivers/flash.md
 drivers/mag.md
 drivers/mic.md
 drivers/rng.md
