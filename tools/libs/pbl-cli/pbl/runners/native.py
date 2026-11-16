@@ -43,11 +43,7 @@ class NativeRunner(Runner):
         if self.bt_hci and not hci_uart:
             raise RunnerError("--bt-hci needs a build with CONFIG_BT_HCI_UART=y")
 
-        argv = [
-            program,
-            "-f", build.join(FLASH_FILE),
-            "-p", str(emulator.PEBBLE_TOOL_PORT),
-        ]  # fmt: skip
+        argv = [program, *self._flash_args(), "-p", str(emulator.PEBBLE_TOOL_PORT)]
         if self.bt_hci:
             argv += ["-b", self.bt_hci]
         if command == "debug":
@@ -58,8 +54,15 @@ class NativeRunner(Runner):
 
     def console_command(self):
         build = self.cfg.build
-        argv = [build.join(build.project), "-f", build.join(FLASH_FILE)]
+        argv = [build.join(build.project), *self._flash_args()]
         return argv, {"SDL_VIDEODRIVER": "dummy"}
+
+    def _flash_args(self):
+        """The flash file option, for the builds that take one."""
+        build = self.cfg.build
+        if not build.config.CONFIG_FLASH_POSIX:
+            return []
+        return ["-f", build.join(FLASH_FILE)]
 
     def _debugger(self):
         """The host's debugger, set to start the program given after it."""
