@@ -207,3 +207,5 @@ pbl run -r phone --via adb|cloud|ip [--address $IP]
 - {doc}`../development/tests/index` covers the unit and integration test
   suites.
 - {doc}`../architecture/index` explains how the firmware is put together.
+- {doc}`../development/build_system/rust` covers applications in Rust, and
+  what they need installed.

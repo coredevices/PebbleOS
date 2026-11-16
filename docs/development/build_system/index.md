@@ -133,4 +133,5 @@ cmake.md
 devicetree.md
 kconfig.md
 applications.md
+rust.md
 ```
