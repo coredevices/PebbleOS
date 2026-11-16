@@ -1,0 +1,6 @@
+description: A short melody, a sine generated period by period in the stream callback
+expect:
+  - 'speaker: playing 4 notes at 16000 Hz'
+  - 'speaker: done, \d+ xruns'
+  - 'Sample done'
+roles: [speaker]
