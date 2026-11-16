@@ -11,15 +11,14 @@ A command is a `struct pbl_shell_cmd`: a name, a help string, a handler and
 optionally a table of subcommands, so commands form a tree (`bt disc start`).
 
 - `PBL_SHELL_CMD_REGISTER()` / `PBL_SHELL_CMD_ARG_REGISTER()` register a root
-  command from any file. The entries land in the `.pbl_shell_root_cmds`
-  linker section, sorted by name.
+  command from any file. The entries land in the `shell_root` iterable
+  section and are listed sorted by name.
 - A file-local subcommand table is a plain `struct pbl_shell_cmd` array of
   `PBL_SHELL_CMD()` entries ending with `PBL_SHELL_SUBCMD_SET_END`.
 - `PBL_SHELL_SUBCMD_SET_CREATE()` builds a subcommand set that other files
   extend with `PBL_SHELL_SUBCMD_ADD()`, without referencing any symbol of
-  the owner. The entries live in `.pbl_shell_subcmds.<set>.<name>` input
-  sections, sorted between a start marker and a terminator, so a set is a
-  contiguous, NULL-terminated array once linked. This is how, for
+  the owner. The entries land in the `shell_subcmds` iterable section, each
+  naming its set, and are listed sorted by name. This is how, for
   instance, the Bluetooth, console and driver code all add to `bt` or
   `flash`.
 

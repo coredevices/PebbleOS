@@ -15,102 +15,63 @@
 #define ESC_START 1
 #define ESC_CSI   2
 
-static const struct pbl_shell_cmd *prv_array_get(const struct pbl_shell_cmd *cmds, size_t idx) {
-  return (cmds[idx].syntax != nullptr) ? &cmds[idx] : nullptr;
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_shell_cmd, shell_root);
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_shell_subcmd_entry, shell_subcmds);
+
+// A set is a one-entry array without a name, its help naming the set.
+static bool prv_is_set(const struct pbl_shell_cmd *subcmd) {
+  return subcmd->syntax == nullptr && subcmd->help != nullptr;
 }
 
-#ifndef PBL_NO_LINKER_SCRIPT
-// The linker script gathers the root commands sorted by name, and the entries of each set
-// between the set's two markers.
-
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_start[];
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_end[];
-
-static const struct pbl_shell_cmd *prv_root_get(size_t idx) {
-  const struct pbl_shell_cmd *cmd = &__pbl_shell_root_cmds_start[idx];
-  return (cmd < __pbl_shell_root_cmds_end) ? cmd : nullptr;
-}
-
-static const struct pbl_shell_cmd *prv_subcmd_get(const struct pbl_shell_cmd *subcmd, size_t idx) {
-  return prv_array_get(subcmd, idx);
-}
-#else
-// Without the linker script the commands are gathered unsorted, and the entries of a set apart
-// from each other, each naming its set: pick them by name when looked up.
-
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_start[] PBL_UNSORTED_SECTION_START(
-    pbl_shroot);
-extern const struct pbl_shell_cmd __pbl_shell_root_cmds_end[] PBL_UNSORTED_SECTION_END(pbl_shroot);
-extern const struct pbl_shell_cmd __pbl_shell_sets_start[] PBL_UNSORTED_SECTION_START(pbl_shset);
-extern const struct pbl_shell_cmd __pbl_shell_sets_end[] PBL_UNSORTED_SECTION_END(pbl_shset);
-extern const struct pbl_shell_subcmd_entry __pbl_shell_subcmds_start[] PBL_UNSORTED_SECTION_START(
-    pbl_shsub);
-extern const struct pbl_shell_subcmd_entry __pbl_shell_subcmds_end[] PBL_UNSORTED_SECTION_END(
-    pbl_shsub);
-
-// The idx-th command of a set, or of the root commands if @p set is NULL, in no order.
-static const struct pbl_shell_cmd *prv_unsorted_get(const char *set, size_t idx) {
-  if (set == nullptr) {
-    return (&__pbl_shell_root_cmds_start[idx] < __pbl_shell_root_cmds_end)
-               ? &__pbl_shell_root_cmds_start[idx]
-               : nullptr;
+// @p cmd if its name sorts between those of @p prev and @p next, else @p next.
+static const struct pbl_shell_cmd *prv_pick(const struct pbl_shell_cmd *cmd,
+                                            const struct pbl_shell_cmd *prev,
+                                            const struct pbl_shell_cmd *next) {
+  if (prev != nullptr && strcmp(cmd->syntax, prev->syntax) <= 0) {
+    return next;
   }
-  for (const struct pbl_shell_subcmd_entry *e = __pbl_shell_subcmds_start;
-       e < __pbl_shell_subcmds_end; e++) {
-    if (strcmp(e->set, set) == 0 && idx-- == 0) {
-      return &e->cmd;
-    }
+  if (next != nullptr && strcmp(cmd->syntax, next->syntax) >= 0) {
+    return next;
   }
-  return nullptr;
+  return cmd;
 }
 
-static const struct pbl_shell_cmd *prv_sorted_get(const char *set, size_t idx) {
-  const struct pbl_shell_cmd *prev = nullptr;
+// The command of a level after @p prev, or its first one if @p prev is NULL. Commands gathered
+// from many files come in name order, whatever order the linker left them in.
+static const struct pbl_shell_cmd *prv_next(const struct pbl_shell_cmd *parent,
+                                            const struct pbl_shell_cmd *prev) {
+  const struct pbl_shell_cmd *next = nullptr;
+  const struct pbl_shell_cmd *subcmd;
 
-  for (size_t n = 0; n <= idx; n++) {
-    const struct pbl_shell_cmd *next = nullptr;
-    const struct pbl_shell_cmd *cmd;
-    for (size_t i = 0; (cmd = prv_unsorted_get(set, i)) != nullptr; i++) {
-      if ((prev == nullptr || strcmp(cmd->syntax, prev->syntax) > 0) &&
-          (next == nullptr || strcmp(cmd->syntax, next->syntax) < 0)) {
-        next = cmd;
-      }
-    }
-    if (next == nullptr) {
-      return nullptr;
-    }
-    prev = next;
-  }
-
-  return prev;
-}
-
-static const struct pbl_shell_cmd *prv_root_get(size_t idx) {
-  return prv_sorted_get(nullptr, idx);
-}
-
-static const struct pbl_shell_cmd *prv_subcmd_get(const struct pbl_shell_cmd *subcmd, size_t idx) {
-  if (subcmd >= __pbl_shell_sets_start && subcmd < __pbl_shell_sets_end) {
-    return prv_sorted_get(subcmd->help, idx);
-  }
-  return prv_array_get(subcmd, idx);
-}
-#endif
-
-static const struct pbl_shell_cmd *prv_level_get(const struct pbl_shell_cmd *parent, size_t idx) {
   if (parent == nullptr) {
-    return prv_root_get(idx);
+    PBL_ITERABLE_SECTION_FOREACH(const struct pbl_shell_cmd, shell_root, cmd) {
+      next = prv_pick(cmd, prev, next);
+    }
+    return next;
   }
-  if (parent->subcmd == nullptr) {
+
+  subcmd = parent->subcmd;
+  if (subcmd == nullptr) {
     return nullptr;
   }
-  return prv_subcmd_get(parent->subcmd, idx);
+
+  if (!prv_is_set(subcmd)) {
+    next = (prev == nullptr) ? subcmd : prev + 1;
+    return (next->syntax != nullptr) ? next : nullptr;
+  }
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_shell_subcmd_entry, shell_subcmds, e) {
+    if (strcmp(e->set, subcmd->help) == 0) {
+      next = prv_pick(&e->cmd, prev, next);
+    }
+  }
+  return next;
 }
 
 static const struct pbl_shell_cmd *prv_find(const struct pbl_shell_cmd *parent, const char *name) {
   const struct pbl_shell_cmd *cmd;
 
-  for (size_t i = 0; (cmd = prv_level_get(parent, i)) != nullptr; i++) {
+  for (cmd = prv_next(parent, nullptr); cmd != nullptr; cmd = prv_next(parent, cmd)) {
     if (strcmp(cmd->syntax, name) == 0) {
       return cmd;
     }
@@ -207,14 +168,14 @@ static void prv_print_level(const struct pbl_shell *sh, const struct pbl_shell_c
   const struct pbl_shell_cmd *cmd;
   int width = 0;
 
-  for (size_t i = 0; (cmd = prv_level_get(parent, i)) != nullptr; i++) {
+  for (cmd = prv_next(parent, nullptr); cmd != nullptr; cmd = prv_next(parent, cmd)) {
     int len = strlen(cmd->syntax);
     if (len > width) {
       width = len;
     }
   }
 
-  for (size_t i = 0; (cmd = prv_level_get(parent, i)) != nullptr; i++) {
+  for (cmd = prv_next(parent, nullptr); cmd != nullptr; cmd = prv_next(parent, cmd)) {
     pbl_shell_print(sh, "  %-*s  %s", width, cmd->syntax, cmd->help ? cmd->help : "");
   }
 }
@@ -459,7 +420,7 @@ static void prv_complete(const struct pbl_shell *sh) {
   prefix = &ctx->line[start];
   plen = ctx->len - start;
 
-  for (size_t i = 0; (cmd = prv_level_get(parent, i)) != nullptr; i++) {
+  for (cmd = prv_next(parent, nullptr); cmd != nullptr; cmd = prv_next(parent, cmd)) {
     if (strncmp(cmd->syntax, prefix, plen) != 0) {
       continue;
     }
@@ -493,7 +454,7 @@ static void prv_complete(const struct pbl_shell *sh) {
   }
 
   prv_puts(sh, "\r\n");
-  for (size_t i = 0; (cmd = prv_level_get(parent, i)) != nullptr; i++) {
+  for (cmd = prv_next(parent, nullptr); cmd != nullptr; cmd = prv_next(parent, cmd)) {
     if (strncmp(cmd->syntax, prefix, plen) == 0) {
       pbl_shell_print(sh, "  %s", cmd->syntax);
     }

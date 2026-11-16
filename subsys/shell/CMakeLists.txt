@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources(shell.c)
-pbl_linker_sources(rom-start shell.ld)
+pbl_iterable_section(shell_root)
+pbl_iterable_section(shell_subcmds)
