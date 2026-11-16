@@ -11,11 +11,9 @@
 #include <pbl/drivers/spi_mem/nrf5_qspi.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
-#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
-#include <pbl/soc/nrf/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -245,7 +243,6 @@ static PBL_ALWAYS_INLINE void prv_xfer(const struct pbl_spi_mem *mem, uint32_t t
   if (irq) {
     prv_putreg(qspi, NRF52_QSPI_INTENSET_OFFSET, QSPI_INT_READY);
     atomic_store(&qspi->data->busy, true);
-    pbl_idle_state_block(SOC_NRF_IDLE_FULL);
   } else if (polling) {
     prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
   }
@@ -255,7 +252,6 @@ static PBL_ALWAYS_INLINE void prv_xfer(const struct pbl_spi_mem *mem, uint32_t t
   if (irq) {
     pbl_sem_take(&qspi->data->done, PBL_FOREVER);
     prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
-    pbl_idle_state_release(SOC_NRF_IDLE_FULL);
     atomic_store(&qspi->data->busy, false);
   } else {
     prv_wait_ready(qspi);
