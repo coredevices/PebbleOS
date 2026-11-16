@@ -1,0 +1,8 @@
+description: The backlight ramped up and down, then through a few colors where it has them
+expect:
+  - 'backlight: ramped up to 100'
+  - 'backlight: ramped down to 0'
+  - 'backlight: (no color|color 0xff0000)'
+  - 'backlight: off'
+  - 'Sample done'
+roles: [backlight]
