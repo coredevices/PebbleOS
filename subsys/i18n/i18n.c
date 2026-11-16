@@ -104,6 +104,30 @@ static uint32_t prv_next_index(uint32_t curidx, uint32_t hashsize, uint32_t step
   return curidx + step - (curidx >= hashsize - step ? hashsize : 0);
 }
 
+// Drop a trailing incomplete UTF-8 sequence left by a truncated read.
+static size_t prv_utf8_trim(const char *str, size_t len, bool truncated) {
+  if (!truncated || len == 0) {
+    return len;
+  }
+
+  size_t start = len - 1;
+  while (start > 0 && ((uint8_t)str[start] & 0xC0) == 0x80) {
+    start--;
+  }
+
+  const uint8_t lead = (uint8_t)str[start];
+  size_t seq_len = 1;
+  if ((lead & 0xE0) == 0xC0) {
+    seq_len = 2;
+  } else if ((lead & 0xF0) == 0xE0) {
+    seq_len = 3;
+  } else if ((lead & 0xF8) == 0xF0) {
+    seq_len = 4;
+  }
+
+  return (start + seq_len > len) ? start : len;
+}
+
 //! Lookup a translated string.
 //! @param msgid The message id (original string) to look up.
 //! @param db The domain binding containing the translations.
@@ -162,7 +186,7 @@ static void prv_lookup(const char *msgid, struct pbl_i18n__domain *db, size_t *r
             return;
           }
 
-          rstring[read_length] = '\0';
+          rstring[prv_utf8_trim(rstring, read_length, read_length < tentry.len)] = '\0';
         }
         if (rlen) { // If we want the translated string length, copy it out.
           *rlen = tentry.len;
@@ -197,6 +221,9 @@ static bool prv_get_property(const char *header, const char *name, char *buffer,
 }
 
 #define HEADER_BUFFER_SIZE 400
+
+// Upper bound for a single cached translation, in bytes.
+#define I18N_MAX_TRANSLATION_LEN 1024
 
 static bool prv_parse_metadata(const char *header, struct pbl_i18n_catalog_info *info) {
   // Isolate the language substring
@@ -431,15 +458,21 @@ static const char *prv_get_locked(const char *msgid, const void *owner) {
   }
 
   // Lookup the translation from the language pack and add it to our cache
-  char translated[200];
   size_t len = 0;
-  prv_lookup(msgid, db, &len, translated, sizeof(translated));
-  if (len >= sizeof(translated)) {
-    PBL_LOG_WRN("Truncated string: <%s>", msgid);
-  }
+  prv_lookup(msgid, db, &len, nullptr, 0);
 
   if (len) {
-    return prv_list_add_string(msgid, translated, owner);
+    const size_t size = MIN(len, I18N_MAX_TRANSLATION_LEN) + 1;
+    char *translated = pbl_malloc_check(size);
+    translated[0] = '\0';
+    prv_lookup(msgid, db, &len, translated, size);
+    if (len >= size) {
+      PBL_LOG_WRN("Truncated string: <%s>", msgid);
+    }
+
+    const char *result = prv_list_add_string(msgid, translated, owner);
+    pbl_free(translated);
+    return result;
   } else {
     // Add to cache as an untranslatable string so we don't waste time looking for it again.
     prv_list_add_string(msgid, (const char *)"", owner);
