@@ -52,6 +52,7 @@ The firmware's handlers:
 |---------|------|----------|
 | services to `RunLevel_BareMinimum` (Bluetooth off) | prepare | high |
 | wait for flash erases, then hold flash | prepare | default |
+| clear and disable the displays | power-off prepare | default |
 | mark the reboot reason as a safe restart | prepare | low |
 | core dump after a software failure | restart | high |
 | nPM1300 ship mode | power cut | default |

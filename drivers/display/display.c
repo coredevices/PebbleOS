@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/util/misc.h>
@@ -148,3 +149,18 @@ int pbl_display_update_sync(const struct pbl_display *disp, const struct pbl_dis
 bool pbl_display_update_in_progress(const struct pbl_display *disp) {
   return disp->state->busy;
 }
+
+// The panels keep their image while powered, which a power-off may leave them
+static void prv_power_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
+  const struct pbl_device *dev;
+
+  PBL_DEVICE_CLASS_FOREACH(&pbl_display_class, dev) {
+    const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
+
+    (void)pbl_display_clear(disp);
+    (void)pbl_display_disable(disp);
+  }
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(display_power_off, PBL_SYS_OFF_POWER_OFF_PREPARE,
+                           PBL_SYS_OFF_PRIO_DEFAULT, prv_power_off_prepare, nullptr);
