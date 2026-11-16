@@ -1,0 +1,7 @@
+description: An event loop that waits on several message queues at once
+expect:
+  - 'loop: button 1 pressed'
+  - 'loop: accel 10 -20 1000'
+  - 'loop: button 1 released'
+  - 'loop: nothing for 100 ms'
+  - 'Sample done'

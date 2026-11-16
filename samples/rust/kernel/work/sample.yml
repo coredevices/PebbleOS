@@ -1,0 +1,11 @@
+description: Deferring work to the system work queue and to a queue of its own
+expect:
+  - 'accel: already pending, not queued again'
+  - 'accel: already pending, not queued again'
+  - 'accel: handling 3 events on SysWorkq'
+  - 'main: accel work ran 1 time\(s\)'
+  - 'touch: handling 1 events on sensor_q'
+  - 'accel: handling 1 events on sensor_q'
+  - 'main: touch work was pending and will not run'
+  - 'main: touch work ran 1 time\(s\)'
+  - 'Sample done'
