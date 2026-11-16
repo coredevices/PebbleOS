@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "113",
+  "revision" : "114",
   "version" : "2.0",
   "files": [
     "include/pbl/system/status_codes.h",
@@ -3958,6 +3958,26 @@
                   "type": "function",
                   "name": "action_bar_layer_set_icon_press_animation",
                   "addedRevision": "46"
+                }, {
+                  "type": "function",
+                  "name": "action_bar_layer_set_follows_display_orientation",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "action_bar_layer_is_on_right",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "action_bar_layer_get_content_origin_x",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "action_bar_layer_inset_bounds",
+                  "addedRevision": "114"
+                }, {
+                  "type": "function",
+                  "name": "action_bar_layer_content_insets",
+                  "addedRevision": "114"
                 }
               ]
             }, {
