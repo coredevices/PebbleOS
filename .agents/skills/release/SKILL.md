@@ -44,15 +44,19 @@ Before tagging, run the hardware integration test workflow
 passes. A green nightly run also counts if it tested the same SHA you will
 tag.
 
+Always dispatch from `main` and pass the commit as `ref`: the lab runners
+only accept the workflow from `main`, so a run dispatched with
+`--ref vX.Y-branch` queues forever.
+
 ```
-gh workflow run hw-itest.yml -R coredevices/PebbleOS --ref main      # or vX.Y-branch
+sha=$(git rev-parse upstream/main)                                   # or upstream/vX.Y-branch
+gh workflow run hw-itest.yml -R coredevices/PebbleOS -f ref=$sha
 gh run list -R coredevices/PebbleOS --workflow hw-itest.yml -L 3     # find the run
 gh run watch -R coredevices/PebbleOS <run-id> --exit-status
 ```
 
-- Check that the run's `headSha` is the commit you will tag. If the branch
-  moves while the tests run, run them again or tag the commit that was
-  tested.
+- The run is titled with the SHA it tested; its `headSha` is `main`'s, not
+  the tested commit. Tag the SHA in the title.
 - Any failure stops the release. Find out why before tagging. Do not rerun
   until it goes green. A flake you have already seen elsewhere is the one
   exception, and you have to say so.
