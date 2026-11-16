@@ -35,6 +35,7 @@ config ACCEL_LSM6DSO
 
 config ACCEL_SIM
     bool "Simulator"
+    default y if SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Simulated accelerometer, replaying samples and events fed through
       its simulator API (pbl/drivers/imu/sim.h).
