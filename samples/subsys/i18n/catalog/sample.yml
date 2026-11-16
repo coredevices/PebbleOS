@@ -1,0 +1,9 @@
+description: Strings translated with a French gettext catalog embedded in the image, with contexts, and without it
+expect:
+  - 'i18n: no catalog: Hello / Watch / Watch / Good night'
+  - 'i18n: catalog fr_FR, Français, version 3'
+  - 'i18n: locale is now fr_FR'
+  - 'i18n: French catalog: Bonjour / Montre / Regarder / Good night'
+  - 'i18n: 26 characters, in 16 bytes: Votre montre es'
+  - 'i18n: catalog removed: Hello / Watch / Watch / Good night'
+  - 'Sample done'
