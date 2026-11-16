@@ -1,0 +1,14 @@
+description: Files on the PFS file system of the external flash, written, read, listed, watched and removed
+expect:
+  - 'fs: \d+ KiB, \d+ KiB free'
+  - 'fs: run \d+ of this sample on this flash'
+  - 'fs: watch saw the file closed after writing: yes'
+  - 'fs: read 13 of 13 bytes: Hello, flash!'
+  - 'fs: from offset 7: flash!'
+  - 'fs: one more byte: -EFBIG'
+  - 'fs: listed sample-greeting, 13 bytes'
+  - 'fs: after removing it, stat returns -ENOENT'
+  - 'Sample done'
+roles: [flash]
+# The board has no file system partition.
+skip: [sf32lb57_dpi_hdk]
