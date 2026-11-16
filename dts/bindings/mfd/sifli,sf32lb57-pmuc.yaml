@@ -64,6 +64,19 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS RCC, whose RC10CAL counter measures LRC10 against the 48 MHz crystal.
 
+  regulators:
+    type: object
+    additionalProperties: false
+
+    properties:
+      LDO18:
+        type: object
+        $ref: /schemas/regulator/regulator.yaml#
+        unevaluatedProperties: false
+        description:
+          1.8 V LDO supplying the memory in the package through VDD_SIP, on
+          boards that do not supply that pin themselves.
+
 required:
   - compatible
   - reg
