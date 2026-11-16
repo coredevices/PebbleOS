@@ -43,6 +43,7 @@ config TOUCH_QEMU_IRQ_PRIO
 config TOUCH_SDL
     bool "SDL mouse"
     default y if SOC_POSIX
+    depends on DISPLAY_SDL
     select SDL
     help
       Touchscreen driven by the mouse, through SDL, in a native build.
