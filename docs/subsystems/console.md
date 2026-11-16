@@ -11,6 +11,10 @@ firmware: no shell, no serial logs, and nothing listening on the port.
 Use `pbl console` to get log lines dehashed on builds that hash them; it is
 otherwise a plain terminal.
 
+The console is set up during boot, before the device model, and is where the
+kernel's `pbl_print()` writes, such as the boot banner: see
+{doc}`../kernel/print`.
+
 ## Frames
 
 Binary data travels in frames between the text lines:

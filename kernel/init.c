@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/console/console.h>
 #include <pbl/device.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/malloc.h>
@@ -38,7 +39,9 @@ void kernel_init(int (*entry)(void)) {
   pbl_irq_init();
   arch_init();
   pbl_malloc_init();
-  pbl_log_early_init();
+#ifdef CONFIG_CONSOLE
+  pbl_console_early_init();
+#endif
 
   PBL_LOG_ALWAYS("*** Booting PebbleOS %s ***", PBL_VERSION_TAG);
 

@@ -4,9 +4,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include <pbl/board.h>
 #include <pbl/console/console.h>
-#include <pbl/drivers/uart.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/debug.h>
 #include <pbl/kernel/irq.h>
@@ -190,14 +188,7 @@ static void prv_backend_process(const struct pbl_log_backend *backend,
   prv_log_line(msg->level, msg->file, msg->line, msg->text);
 }
 
-static void prv_backend_early_init(const struct pbl_log_backend *backend) {
-  const struct pbl_uart_config cfg = {.baudrate = CONFIG_CONSOLE_BAUDRATE};
-
-  (void)pbl_uart_early_init(CONSOLE_UART, &cfg);
-}
-
 static const struct pbl_log_backend_api s_api = {
-  .early_init = prv_backend_early_init,
   .init = prv_backend_init,
   .process = prv_backend_process,
   .panic = prv_backend_panic,

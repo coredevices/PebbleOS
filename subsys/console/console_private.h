@@ -11,6 +11,9 @@
 #define CONSOLE_FRAME_CHANNEL_ACK     'A'
 #define CONSOLE_FRAME_CHANNEL_IMAGING 'B'
 
+//! Write text under the lock, with newlines sent as CR LF.
+void pbl_console__write_text(const char *data, size_t len);
+
 //! Feed a received character, passing those outside frames to @p text_input.
 void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c));
 
