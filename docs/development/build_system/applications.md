@@ -72,6 +72,8 @@ cmake --build build
 The image is `pebbleos.elf`, `.hex` and `.bin` in the build directory,
 whatever the application calls its project.
 
+An application can also be written in Rust; see {doc}`rust`.
+
 ## Before main()
 
 The kernel brings the system up before it calls `main()`, on the main
