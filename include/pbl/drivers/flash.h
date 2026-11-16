@@ -233,6 +233,17 @@ struct pbl_flash {
 extern const struct pbl_flash *const FLASH;
 
 /**
+ * @brief Get the geometry of a flash.
+ *
+ * @param flash Flash.
+ * @return Its geometry.
+ */
+static inline const struct pbl_flash_geometry *pbl_flash_get_geometry(
+    const struct pbl_flash *flash) {
+  return flash->geometry;
+}
+
+/**
  * @brief Define the class state of flash @p sym, for the @c PBL_FLASH_*_DEFINE() macro of a
  * driver.
  *
