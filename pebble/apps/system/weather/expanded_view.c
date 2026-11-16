@@ -19,6 +19,7 @@
 #include <applib/app_timer.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_transforms.h>
+#include <applib/ui/action_bar_layer_private.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/content_indicator.h> // Health's nav arrow
@@ -486,7 +487,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
                                       s_ev->uv, s_ev->precip, s_ev->wind, s_ev);
   }
 
-  // SELECT marker: black half-circle nub on the centre-right edge — the same radius-13 oval the
+  // SELECT marker: black half-circle nub on the button-side edge — the same radius-13 oval the
   // mainscreen draws (forecast_list.c), pushed off-screen so only ~5px protrudes. BOTH shapes:
   // SELECT opens the globe from this card on round too, so the affordance belongs there as well.
   // The nub sits on the glass's widest rows (117..142, where the chord still reaches x259), so
@@ -496,8 +497,9 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
   if (!EV_SMALL_RECT) {
     const int select_protrusion = 5;
     graphics_context_set_fill_color(ctx, system_theme_get_fg_color());
-    graphics_fill_oval(ctx, GRect(W - select_protrusion, (b.size.h - 26) / 2, 26, 26),
-                       GOvalScaleModeFitCircle);
+    const int nub_x =
+        action_bar_layer_is_on_right() ? (W - select_protrusion) : (select_protrusion - 26);
+    graphics_fill_oval(ctx, GRect(nub_x, (b.size.h - 26) / 2, 26, 26), GOvalScaleModeFitCircle);
   }
 
 #if PBL_ROUND
