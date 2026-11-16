@@ -105,6 +105,25 @@ void test_i18n__get_with_buffer(void) {
   cl_assert_equal_i(buffer[0], 'x');
 }
 
+void test_i18n__get_long(void) {
+  // 150 two-byte characters, longer than the old 200-byte lookup buffer.
+  const char *translated = pbl_i18n_get("Long", __FILE__);
+  cl_assert_equal_i(strlen(translated), 300);
+  for (size_t i = 0; i < 300; i += 2) {
+    cl_assert(memcmp(&translated[i], "ж", 2) == 0);
+  }
+  pbl_i18n_free_all(__FILE__);
+}
+
+void test_i18n__get_with_buffer_utf8_boundary(void) {
+  char buffer[8];
+  // 7 bytes of room: 3 full characters fit, the 4th would be split.
+  pbl_i18n_get_with_buffer("Long", buffer, sizeof(buffer));
+  cl_assert_equal_s(buffer, "жжж");
+  pbl_i18n_get_with_buffer("Long", buffer, 2);
+  cl_assert_equal_s(buffer, "");
+}
+
 void test_i18n__get_length(void) {
   cl_assert_equal_i(pbl_i18n_get_length("Music"), strlen("Musique"));
   cl_assert_equal_i(pbl_i18n_get_length("Untranslated"), strlen("Untranslated"));
