@@ -16,6 +16,7 @@
 #include <applib/graphics/text_resources.h>
 #include <applib/graphics/utf8.h>
 #include <applib/preferred_content_size.h>
+#include <applib/ui/action_button.h>
 #include <applib/ui/ui.h>
 #include <apps/system/timeline/layer.h>
 #include <apps/system/timeline/text_node.h>
@@ -747,7 +748,15 @@ static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
 
 static void prv_get_card_view_bounds(TimelineLayout *layout, GRect *box_out) {
   const GRect *frame = &((Layer *)layout)->frame;
-  *box_out = GRect(TIMELINE_CARD_MARGIN, 0, frame->size.w - 2 * TIMELINE_CARD_MARGIN,
+  int16_t left_margin = TIMELINE_CARD_MARGIN;
+#if PBL_RECT
+  if (!timeline_layer_sidebar_is_on_right()) {
+    // Keep the text clear of the action button on the left edge
+    const int16_t action_button_gap = 2;
+    left_margin = MAX(left_margin, action_button_get_visible_width() + action_button_gap);
+  }
+#endif
+  *box_out = GRect(left_margin, 0, frame->size.w - left_margin - TIMELINE_CARD_MARGIN,
                    TIMELINE_MAX_BOX_HEIGHT);
 }
 
