@@ -1,0 +1,9 @@
+description: Random words from the hardware generator, and how many of their bits are set
+expect:
+  - 'rng: 0x[0-9a-f]+'
+  - 'rng: 0x[0-9a-f]+'
+  - 'rng: 0x[0-9a-f]+'
+  - 'rng: 0x[0-9a-f]+'
+  - 'rng: 1000 words, \d+ repeated, \d+ per mille of the bits set'
+  - 'Sample done'
+skip: [sf32lb57_dpi_hdk]
