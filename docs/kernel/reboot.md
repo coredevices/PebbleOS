@@ -45,6 +45,7 @@ The firmware's handlers:
 | mark the reboot reason as a safe restart | prepare | low |
 | core dump after a software failure | restart | high |
 | nPM1300 ship mode | power-off | default |
+| arm the GPIO wake lines | power-off | low |
 
 Reboot reasons and boot bits stay firmware policy: callers set them before
 calling into the kernel.
