@@ -8,10 +8,10 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/shell/shell.h>
 
 #include <kernel/util/factory_reset.h>
-#include <kernel/util/standby.h>
 #include <mfg/mfg_info.h>
 #include <system/bootbits.h>
 
@@ -22,7 +22,7 @@
 #endif
 
 static int prv_cmd_standby(const struct pbl_shell *sh, size_t argc, char **argv) {
-  return enter_standby(RebootReasonCode_MfgShutdown);
+  return pbl_power_cut();
 }
 
 static int prv_cmd_consumer(const struct pbl_shell *sh, size_t argc, char **argv) {

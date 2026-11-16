@@ -16,7 +16,6 @@
 #include <apps/system_app_ids.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <kernel/util/standby.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/watchface.h>
 
@@ -260,10 +259,6 @@ void battery_ui_handle_state_change_event(PreciseBatteryChargeState charge_state
   } else if (next_state == BatteryCharging && s_state == BatteryCharging) {
     battery_ui_update_charge_level(charge_state.pct);
   }
-}
-
-int battery_ui_handle_shut_down(void) {
-  return enter_standby(RebootReasonCode_ShutdownMenuItem);
 }
 
 void battery_ui_reset_fsm_for_tests(void) {

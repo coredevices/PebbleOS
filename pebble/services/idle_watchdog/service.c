@@ -3,13 +3,12 @@
 
 #include <stdatomic.h>
 
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/idle_watchdog.h>
 
 #include <applib/event_service_client.h>
 #include <comm/ble/gap_le_connection.h>
-#include <kernel/util/standby.h>
-#include <system/reboot_reason.h>
 
 #define PRF_IDLE_TIMEOUT_MINUTES 10
 static struct pbl_wallclock_work s_is_idle_timer;
@@ -32,7 +31,7 @@ static void prv_handle_watchdog_timeout_cb(void *not_used) {
     return;
   }
 
-  enter_standby(RebootReasonCode_PrfIdle);
+  (void)pbl_power_cut();
 }
 
 static void prv_handle_watchdog_timeout(struct pbl_work *work) {

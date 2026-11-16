@@ -9,7 +9,6 @@
 #include "option_menu.h"
 #include "window.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -17,6 +16,7 @@
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/local_id.h>
@@ -34,7 +34,6 @@
 #include <applib/ui/dialogs/confirmation_dialog.h>
 #include <applib/ui/dialogs/dialog.h>
 #include <applib/ui/dialogs/expandable_dialog.h>
-#include <applib/ui/dialogs/simple_dialog.h>
 #include <applib/ui/option_menu_window.h>
 #include <applib/ui/ui.h>
 #include <kernel/event_loop.h>
@@ -1251,24 +1250,9 @@ static void prv_push_kcc_window(SystemCertificationData *data) {
 // Callbacks for the main settings filter list menu.
 ////////////////////////////////////////////////////
 
-static void prv_push_unplug_to_shut_down_dialog(void) {
-  SimpleDialog *simple_dialog = simple_dialog_create("Shutdown Unplug");
-  Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
-
-  dialog_set_text(dialog, pbl_i18n_get("Disconnect the charger to shut down.", simple_dialog));
-  dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_LARGE);
-  dialog_set_timeout(dialog, DIALOG_TIMEOUT_INFINITE);
-
-  pbl_i18n_free_all(simple_dialog);
-
-  simple_dialog_push(simple_dialog, modal_manager_get_window_stack(ModalPriorityGeneric));
-}
-
 static void prv_shutdown_confirm_cb(ClickRecognizerRef recognizer, void *context) {
   actionable_dialog_pop((ActionableDialog *)context);
-  if (battery_ui_handle_shut_down() == -EBUSY) {
-    prv_push_unplug_to_shut_down_dialog();
-  }
+  pbl_power_off();
 }
 
 static void prv_shutdown_back_cb(ClickRecognizerRef recognizer, void *context) {

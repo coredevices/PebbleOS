@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,7 +13,6 @@
 #include <fff.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <kernel/util/standby.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/battery_ui.h>
 
@@ -48,7 +46,6 @@ bool low_power_is_active(void) {
   return s_state == PowerLow;
 }
 
-FAKE_VALUE_FUNC(int, enter_standby, RebootReasonCode);
 FAKE_VALUE_FUNC(bool, do_not_disturb_is_active);
 FAKE_VOID_FUNC(vibes_short_pulse);
 
@@ -126,7 +123,6 @@ BatteryChargeState battery_get_charge_state(void) {
 void test_battery_ui_fsm__initialize(void) {
   prv_set_state(PowerGood);
 
-  RESET_FAKE(enter_standby);
   RESET_FAKE(do_not_disturb_is_active);
   RESET_FAKE(vibes_short_pulse);
   s_modal_onscreen = false;
@@ -209,28 +205,6 @@ void test_battery_ui_fsm__transitions(void) {
   prv_set_state(PowerGood);
   prv_change_state(charging);
   cl_assert(!s_critical && s_modal_onscreen);
-
-  // Shutdown while charging - refused, the modal stays up
-  enter_standby_fake.return_val = -EBUSY;
-  cl_assert_equal_i(battery_ui_handle_shut_down(), -EBUSY);
-  cl_assert(s_modal_onscreen && enter_standby_fake.call_count == 1);
-}
-
-void test_battery_ui_fsm__shutdown(void) {
-  PreciseBatteryChargeState nop = prv_make_state(50, false, false),
-                            charging = prv_make_state(50, true, true);
-
-  // Shutdown while normal - enter standby
-  prv_change_state(nop);
-  battery_ui_handle_shut_down();
-  cl_assert_equal_i(enter_standby_fake.call_count, 1);
-
-  // Shutdown while charging - the error is passed on
-  RESET_FAKE(enter_standby);
-  enter_standby_fake.return_val = -EBUSY;
-  prv_change_state(charging);
-  cl_assert_equal_i(battery_ui_handle_shut_down(), -EBUSY);
-  cl_assert_equal_i(enter_standby_fake.call_count, 1);
 }
 
 void test_battery_ui_fsm__warning(void) {

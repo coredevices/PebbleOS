@@ -20,7 +20,6 @@
 #include <apps/prf/mfg_test_menu.h>
 #include <apps/prf/mfg_utilities.h>
 #include <kernel/event_loop.h>
-#include <kernel/util/standby.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_management/app_manager.h>
@@ -76,7 +75,7 @@ static void prv_select_utilities(int index, void *context) {
 }
 
 static void prv_select_shutdown(int index, void *context) {
-  enter_standby(RebootReasonCode_ShutdownMenuItem);
+  (void)pbl_power_cut();
 }
 
 #ifdef CONFIG_MFG
