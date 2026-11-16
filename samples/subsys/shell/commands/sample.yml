@@ -1,0 +1,20 @@
+description: Commands, subcommands and a command that finishes later, run on a line shell the sample defines
+expect:
+  - 'shell> greet World'
+  - 'Hello, World!'
+  - 'shell: returned 0'
+  - 'Hi, Pebble!'
+  - 'shell> greet$'
+  - 'error: greet: wrong parameter count'
+  - 'shell: returned -\d+'
+  - 'shell> led$'
+  - 'toggle +Toggle it'
+  - 'led is on'
+  - 'led is off'
+  - "error: led: unknown subcommand 'blink'"
+  - 'shell> wait 100'
+  - 'waited'
+  - 'shell: returned 0'
+  - 'error: not a number: soon'
+  - "error: beep: command not found, try 'help'"
+  - 'Sample done'

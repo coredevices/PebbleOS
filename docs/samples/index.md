@@ -47,6 +47,7 @@ subsys/input/events.md
 subsys/loader/image.md
 subsys/logging/levels.md
 subsys/profiler/nodes.md
+subsys/shell/commands.md
 ```
 
 ```{toctree}
