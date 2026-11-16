@@ -10,7 +10,7 @@ pbl_library_sources_ifdef(CONFIG_LOG_BACKEND_FLASH
   backends/flash_shell.c
   backends/flash_storage.c
 )
-pbl_linker_sources(rom-start backends.ld)
+pbl_iterable_section(log_backends)
 
 # Hashed messages only carry the hash of their format string: the strings
 # are read from the linked image into the dictionary the console and the
