@@ -211,7 +211,7 @@
 	status = "okay";
 
 	flash0: flash@0 {
-		compatible = "jedec,spi-nor";
+		compatible = "gigadevice,gd25lq255e", "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <8000000>;
 		spi-rx-bus-width = <4>;
