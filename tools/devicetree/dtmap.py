@@ -386,6 +386,63 @@ def related(a, b):
     return inside(a, b) or inside(b, a)
 
 
+def map_specifier(tree, target, cells, stem):
+    """The provider and specifier behind a nexus node, which maps the specifiers given to it with
+    its <stem>-map, <stem>-map-mask and <stem>-map-pass-thru, as a connector does to the pins of a
+    board. An interrupt nexus has no unit address, so takes #address-cells = <0>."""
+    seen = []
+    while target.has(f"{stem}-map"):
+        if target in seen:
+            raise DtError(f"{target.path}: '{stem}-map' maps back to itself")
+        seen.append(target)
+        if stem == "interrupt" and target.cells_of("#address-cells", None) != 0:
+            raise DtError(
+                f"{target.path}: an interrupt nexus takes #address-cells = <0>"
+            )
+        size = len(cells)
+        masks = {}
+        for suffix, default in (("mask", 0xFFFFFFFF), ("pass-thru", 0)):
+            prop = f"{stem}-map-{suffix}"
+            masks[suffix] = target.u32s(prop) if target.has(prop) else [default] * size
+            if len(masks[suffix]) != size:
+                raise DtError(f"{target.path}: '{prop}' is not {size} cells")
+        key = [cell & mask for cell, mask in zip(cells, masks["mask"])]
+        values = target.u32s(f"{stem}-map")
+        found = None
+        pos = 0
+        while pos < len(values):
+            child = values[pos : pos + size]
+            if pos + size >= len(values):
+                raise DtError(
+                    f"{target.path}: '{stem}-map' ends in the middle of an entry"
+                )
+            parent = tree.phandle(values[pos + size], f"{target.path}: '{stem}-map'")
+            # The unit address of an interrupt parent comes first, and is of no use here
+            skip = parent.cells_of("#address-cells", 0) if stem == "interrupt" else 0
+            count = skip + parent.u32(f"#{stem}-cells")
+            pos += size + 1
+            spec = values[pos + skip : pos + count]
+            if pos + count > len(values):
+                raise DtError(
+                    f"{target.path}: '{stem}-map' ends in the middle of an entry"
+                )
+            pos += count
+            if found is None and child == key:
+                found = parent, spec
+        if found is None:
+            raise DtError(
+                f"{target.path}: '{stem}-map' does not map <{' '.join(map(str, cells))}>"
+            )
+        target, spec = found
+        passed = masks["pass-thru"] + [0] * len(spec)
+        given = cells + [0] * len(spec)
+        cells = [
+            (value & ~passed[i]) | (given[i] & passed[i])
+            for i, value in enumerate(spec)
+        ]
+    return target, cells
+
+
 def translate(node, address):
     """A reg address as the CPU sees it, through the ranges of the buses above."""
     bus = node.parent
@@ -754,7 +811,7 @@ class Generator:
             cells = values[pos + 1 : pos + 1 + count]
             if len(cells) != count:
                 raise dev.error(f"'{prop}': {target.path} takes {count} cells")
-            entries.append((target, cells))
+            entries.append(map_specifier(self.tree, target, cells, cells_prop[1:-6]))
             pos += 1 + count
         return entries
 
@@ -786,6 +843,7 @@ class Generator:
         entry = cells[index * count : (index + 1) * count]
         if len(entry) != count:
             raise dev.error(f"no interrupt {index}")
+        parent, entry = map_specifier(self.tree, parent, entry, "interrupt")
         return self._provided(dev, parent, kind, entry)
 
     def _translate(self, dev, address):
