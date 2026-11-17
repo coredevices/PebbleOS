@@ -33,20 +33,18 @@
 
 PBL_LOG_MODULE_DECLARE(samsa, CONFIG_SAMSA_LOG_LEVEL);
 
-// The platform directories of a .pbw to take an app from, best first.
+// The platform directories of a .pbw to take an app from, best first: the
+// platform's own, then that of the frozen platform of its shape and colour
+// depth, then the root, where 2.x apps are.
 static const char *const s_platforms[] = {
-#if defined(CONFIG_PLATFORM_EMERY)
-  "emery/",
+  CONFIG_PLATFORM_NAME "/",
+#if defined(CONFIG_PLATFORM_ROUND)
+  "chalk/",
+#elif defined(CONFIG_PLATFORM_COLOR)
   "basalt/",
   "",
-#elif defined(CONFIG_PLATFORM_GABBRO)
-  "gabbro/",
-  "chalk/",
-#elif defined(CONFIG_PLATFORM_FLINT)
-  "flint/",
-  "diorite/",
-  "",
 #else
+  "diorite/",
   "",
 #endif
 };
