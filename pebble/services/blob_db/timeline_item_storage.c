@@ -274,8 +274,8 @@ static bool prv_migrate_item_cb(struct pbl_settings_file *old_file,
     return false;
   }
   // Flags and status are stored inverted, which widening leaves alone
-  int rv = pbl_settings_set_with_timestamp(
-      migrate->new_file, key, sizeof(key), wide, wide_len, info->last_modified);
+  int rv = pbl_settings_set_with_timestamp(migrate->new_file, key, sizeof(key), wide, wide_len,
+                                           info->last_modified);
   pbl_free(wide);
   if ((rv == 0) && !info->dirty) {
     rv = pbl_settings_mark_synced(migrate->new_file, key, sizeof(key));
@@ -303,10 +303,12 @@ static int prv_migrate_time32(TimelineItemStorage *storage, const char *legacy_n
     return rv;
   }
 
-  // Size the new file up front: every item grows by its timestamp
+  // Size the new file up front: every item grows by its timestamp, and its record header time
+  // grows too once record times need 64 bits.
   int items = 0;
   pbl_settings_each(&old_file, prv_count_item_cb, &items);
-  const int growth = (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE);
+  const int growth = (int)(sizeof(SerializedTimelineItemHeader) - TIMELINE_ITEM_HEADER_TIME32_SIZE +
+                           sizeof(int64_t) - sizeof(uint32_t));
   const int needed = old_file.used_space + (items + 1) * growth;
 
   // Start over from the old file, also after an earlier attempt or a downgrade
@@ -420,8 +422,8 @@ int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *k
 }
 
 int timeline_item_storage_insert_from_phone(TimelineItemStorage *storage, const uint8_t *key,
-                                                 int key_len, const uint8_t *val, int val_len,
-                                                 bool mark_as_synced) {
+                                            int key_len, const uint8_t *val, int val_len,
+                                            bool mark_as_synced) {
   if (timeline_item_phone_has_time64()) {
     return timeline_item_storage_insert(storage, key, key_len, val, val_len, mark_as_synced);
   }
@@ -449,7 +451,7 @@ int timeline_item_storage_get_len_for_phone(TimelineItemStorage *storage, const 
 }
 
 int timeline_item_storage_read_for_phone(TimelineItemStorage *storage, const uint8_t *key,
-                                              int key_len, uint8_t *val_out, int val_len) {
+                                         int key_len, uint8_t *val_out, int val_len) {
   if (timeline_item_phone_has_time64()) {
     return timeline_item_storage_read(storage, key, key_len, val_out, val_len);
   }
@@ -472,7 +474,7 @@ int timeline_item_storage_read_for_phone(TimelineItemStorage *storage, const uin
 }
 
 int timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
-                                    uint8_t *val_out, int val_len) {
+                               uint8_t *val_out, int val_len) {
   if (key_len != UUID_SIZE) {
     return -EINVAL;
   }

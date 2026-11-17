@@ -18,7 +18,7 @@ struct {
   uint32_t val_lens[UINT8_MAX];
   uint32_t key_lens[UINT8_MAX];
   bool dirty[UINT8_MAX];
-  uint32_t last_modified[UINT8_MAX];
+  time_t last_modified[UINT8_MAX];
 } s_settings_file;
 
 void fake_settings_reset(void) {
@@ -80,7 +80,7 @@ int pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key
 }
 
 int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *key, size_t key_len,
-                                    const void *val, size_t val_len, uint32_t timestamp) {
+                                    const void *val, size_t val_len, time_t timestamp) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -101,8 +101,7 @@ int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *
 
 int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
                      const void *val, size_t val_len) {
-  return pbl_settings_set_with_timestamp(file, key, key_len, val, val_len,
-                                         (uint32_t)pbl_realtime());
+  return pbl_settings_set_with_timestamp(file, key, key_len, val, val_len, pbl_realtime());
 }
 
 int pbl_settings_get_time(struct pbl_settings_file *file, const void *key, size_t key_len,
@@ -216,7 +215,7 @@ static struct {
   uint32_t val_lens[UINT8_MAX];
   uint32_t key_lens[UINT8_MAX];
   bool dirty[UINT8_MAX];
-  uint32_t last_modified[UINT8_MAX];
+  time_t last_modified[UINT8_MAX];
 } s_rewrite_old;
 
 void pbl_settings_read_key(struct pbl_settings_file *file, void *key, size_t key_len) {

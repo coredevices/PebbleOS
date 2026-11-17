@@ -36,8 +36,17 @@ static int prv_close_and_remove(struct pbl_settings_file *file, const char *name
   return pbl_fs_unlink(name);
 }
 
+static time_t utc_time(void);
+
+// Version 1 files stay readable by earlier firmware, so files only move to version 2 once a
+// record time needs it.
+static uint16_t prv_version_for_time(time_t t) {
+  return pbl_settings__time_fits_time32(t) ? SETTINGS_FILE_VERSION_TIME32 : SETTINGS_FILE_VERSION;
+}
+
 static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t flags,
-                    int max_used_space, int alloc_used_space, int min_alloc_used_space) {
+                    int max_used_space, int alloc_used_space, int min_alloc_used_space,
+                    uint16_t new_version) {
   // Making the max_space_total at least a little bit larger than the
   // alloc_used_space allows us to avoid thrashing. Without it, if
   // max_space_total == alloc_used_space, then if the file is full, changing a
@@ -83,7 +92,7 @@ static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t f
   if (file_hdr_is_uninitialized(&file_hdr)) {
     // Newly created file, create & write out header.
     memcpy(&file_hdr.magic, SETTINGS_FILE_MAGIC, sizeof(file_hdr.magic));
-    file_hdr.version = SETTINGS_FILE_VERSION;
+    file_hdr.version = new_version;
     pbl_settings__raw_iter_write_file_header(&file->iter, &file_hdr);
   }
 
@@ -94,17 +103,19 @@ static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t f
       PBL_LOG_ERR("Could not remove corrupt settings file %s: %d", name, rv);
       return rv;
     }
-    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
+    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space,
+                    new_version);
   }
 
-  if (file_hdr.version > SETTINGS_FILE_VERSION) {
+  if (file_hdr.version < SETTINGS_FILE_VERSION_TIME32 || file_hdr.version > SETTINGS_FILE_VERSION) {
     PBL_LOG_WRN("Unrecognized version %d for file %s, removing...", file_hdr.version, name);
     int rv = prv_close_and_remove(file, name);
     if (rv < 0) {
       PBL_LOG_ERR("Could not remove old-version settings file %s: %d", name, rv);
       return rv;
     }
-    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
+    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space,
+                    new_version);
   }
 
   // For growable files, adopt the actual file size before bootup_check so that
@@ -123,7 +134,8 @@ static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t f
         "Attempting to recover by deleting %s...",
         ret, name);
     prv_close_and_remove(file, name);
-    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
+    return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space,
+                    new_version);
   }
 
   // There's a chance that the caller increased the desired size of the settings file since
@@ -136,7 +148,8 @@ static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t f
     ret = pbl_settings_rewrite_filtered(file, nullptr, nullptr);
     if (ret < 0) {
       PBL_LOG_ERR("Could not resize file %s (error %d). Creating new one", name, ret);
-      return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space);
+      return prv_open(file, name, flags, max_used_space, alloc_used_space, min_alloc_used_space,
+                      new_version);
     }
   }
 
@@ -147,7 +160,7 @@ static int prv_open(struct pbl_settings_file *file, const char *name, uint32_t f
 
 int pbl_settings_open(struct pbl_settings_file *file, const char *name, int max_used_space) {
   return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, max_used_space,
-                  max_used_space);
+                  max_used_space, prv_version_for_time(utc_time()));
 }
 
 int pbl_settings_open_growable(struct pbl_settings_file *file, const char *name, int max_used_space,
@@ -155,7 +168,7 @@ int pbl_settings_open_growable(struct pbl_settings_file *file, const char *name,
   // prv_grow doubles alloc_used_space; a zero seed would loop forever.
   PBL_ASSERTN(initial_alloc_size > 0);
   return prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, max_used_space, initial_alloc_size,
-                  initial_alloc_size);
+                  initial_alloc_size, prv_version_for_time(utc_time()));
 }
 
 void pbl_settings_close(struct pbl_settings_file *file) {
@@ -164,8 +177,8 @@ void pbl_settings_close(struct pbl_settings_file *file) {
   file->name = nullptr;
 }
 
-static int record_size(struct pbl_settings_record_hdr *hdr) {
-  return sizeof(*hdr) + hdr->key_len + hdr->val_len;
+static int record_size(struct pbl_settings_file *file, struct pbl_settings_record_hdr *hdr) {
+  return pbl_settings__raw_iter_hdr_size(&file->iter) + hdr->key_len + hdr->val_len;
 }
 
 // Flags are stored in flash the inverse of how you might normally expect- a
@@ -206,7 +219,7 @@ static bool overwritten(struct pbl_settings_record_hdr *hdr) {
          flag_is_set(hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
 }
 
-static uint32_t utc_time() {
+static time_t utc_time(void) {
   return pbl_realtime();
 }
 
@@ -219,13 +232,13 @@ static void compute_stats(struct pbl_settings_file *file) {
   file->used_space = 0;
   file->last_modified = 0;
   file->used_space += sizeof(struct pbl_settings_file_hdr);
-  file->used_space += sizeof(struct pbl_settings_record_hdr); // EOF Marker
+  file->used_space += pbl_settings__raw_iter_hdr_size(&file->iter); // EOF Marker
   for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
        pbl_settings__raw_iter_next(&file->iter)) {
     if (overwritten(&file->iter.hdr) || deleted(&file->iter.hdr)) {
-      file->dead_space += record_size(&file->iter.hdr);
+      file->dead_space += record_size(file, &file->iter.hdr);
     } else {
-      file->used_space += record_size(&file->iter.hdr);
+      file->used_space += record_size(file, &file->iter.hdr);
     }
     if (file->iter.hdr.last_modified > file->last_modified) {
       file->last_modified = file->iter.hdr.last_modified;
@@ -253,8 +266,8 @@ static size_t prv_max_live_key_val_len(struct pbl_settings_file *file) {
   return max_len;
 }
 
-int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
-                                  pbl_settings_filter_cb_t filter_cb, void *context) {
+static int prv_rewrite_filtered(struct pbl_settings_file *file, pbl_settings_filter_cb_t filter_cb,
+                                void *context, uint16_t version) {
   // One reusable buffer for key+val per record, sized to the largest record
   // rather than the worst case: a ~2 KiB allocation can fail on a fragmented
   // kernel heap, and then every write to a full file fails too.
@@ -273,7 +286,7 @@ int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
 
   struct pbl_settings_file new_file;
   int ret = prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
-                     file->alloc_used_space, file->min_alloc_used_space);
+                     file->alloc_used_space, file->min_alloc_used_space, version);
   if (ret < 0) {
     PBL_LOG_ERR("Could not open temporary file to compact settings file. Error %d.", ret);
     pbl_free(kv_buf);
@@ -329,12 +342,17 @@ int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
   int min_alloc_used_space = new_file.min_alloc_used_space;
   pbl_settings_close(&new_file);
   ret = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
-                 alloc_used_space, min_alloc_used_space);
+                 alloc_used_space, min_alloc_used_space, version);
   pbl_free(name);
 
   pbl_task_wdt_resume();
 
   return ret;
+}
+
+int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
+                                  pbl_settings_filter_cb_t filter_cb, void *context) {
+  return prv_rewrite_filtered(file, filter_cb, context, file->iter.file_hdr.version);
 }
 
 void pbl_settings_watch_add(struct pbl_settings_watch *watch) {
@@ -565,6 +583,35 @@ static int prv_grow(struct pbl_settings_file *file, int needed_used_space) {
   return ret;
 }
 
+// Rewrite a version 1 file as version 2, so that it can hold 64-bit record times. Fails if the
+// larger record headers would not fit.
+static int prv_upgrade_to_time64(struct pbl_settings_file *file, int extra_rec_size) {
+  int live_records = 0;
+  for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
+       pbl_settings__raw_iter_next(&file->iter)) {
+    if (!overwritten(&file->iter.hdr) && !deleted(&file->iter.hdr)) {
+      live_records++;
+    }
+  }
+  // Every live record and the end marker grow
+  const int growth = (int)(sizeof(struct pbl_settings__record_hdr_time64) -
+                           sizeof(struct pbl_settings__record_hdr_time32));
+  const int needed = file->used_space + (live_records + 1) * growth + extra_rec_size;
+  if (needed > file->max_used_space) {
+    return -ENOSPC;
+  }
+  const int old_alloc = file->alloc_used_space;
+  while (file->alloc_used_space < needed) {
+    file->alloc_used_space = PBL_MIN(file->alloc_used_space * 2, file->max_used_space);
+  }
+  PBL_LOG_INFO("Upgrading settings file %s to 64-bit times", file->name);
+  const int ret = prv_rewrite_filtered(file, nullptr, nullptr, SETTINGS_FILE_VERSION);
+  if (ret < 0) {
+    file->alloc_used_space = old_alloc;
+  }
+  return ret;
+}
+
 // Internal implementation that takes a timestamp parameter
 // Note that this operation is designed to be atomic from the perspective of
 // an outside observer. That is, either the new value will be completely
@@ -573,7 +620,7 @@ static int prv_grow(struct pbl_settings_file *file, int needed_used_space) {
 // We should never run into a case where neither value exists.
 static int prv_settings_file_set_internal(struct pbl_settings_file *file, const void *key,
                                           size_t key_len, const void *val, size_t val_len,
-                                          uint32_t timestamp) {
+                                          time_t timestamp) {
   // Cannot set keys while iterating (Try pbl_settings_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
   if (key_len > PBL_SETTINGS_KEY_MAX_LEN) {
@@ -583,7 +630,19 @@ static int prv_settings_file_set_internal(struct pbl_settings_file *file, const 
     return -ERANGE;
   }
   const bool is_delete = (val_len == 0);
-  const int rec_size = sizeof(struct pbl_settings_record_hdr) + key_len + val_len;
+  if (file->iter.file_hdr.version == SETTINGS_FILE_VERSION_TIME32 &&
+      !pbl_settings__time_fits_time32(timestamp)) {
+    const int ret = prv_upgrade_to_time64(
+        file, sizeof(struct pbl_settings__record_hdr_time64) + key_len + val_len);
+    if (ret == -ENOSPC && is_delete) {
+      // A full file has no room for wider headers, but a delete must still be able to free
+      // space: keep the 32-bit format and clamp the time (UINT32_MAX means unset).
+      timestamp = (timestamp < 0) ? 0 : (time_t)UINT32_MAX - 1;
+    } else if (ret < 0) {
+      return ret;
+    }
+  }
+  const int rec_size = pbl_settings__raw_iter_hdr_size(&file->iter) + key_len + val_len;
   if (!is_delete && file->used_space + rec_size > file->max_used_space) {
     return -ENOSPC;
   }
@@ -639,8 +698,8 @@ static int prv_settings_file_set_internal(struct pbl_settings_file *file, const 
     pbl_settings__raw_iter_set_current_record_pos(&file->iter, overwritten_record);
     set_flag(&file->iter.hdr, SETTINGS_FLAG_OVERWRITE_COMPLETE);
     pbl_settings__raw_iter_write_header(&file->iter, &file->iter.hdr);
-    file->dead_space += record_size(&file->iter.hdr);
-    file->used_space -= record_size(&file->iter.hdr);
+    file->dead_space += record_size(file, &file->iter.hdr);
+    file->used_space -= record_size(file, &file->iter.hdr);
   }
 
   for (struct pbl_settings_watch *w = s_watches; w != nullptr; w = w->next) {
@@ -658,7 +717,7 @@ int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key
 }
 
 int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *key, size_t key_len,
-                                    const void *val, size_t val_len, uint32_t timestamp) {
+                                    const void *val, size_t val_len, time_t timestamp) {
   return prv_settings_file_set_internal(file, key, key_len, val, val_len, timestamp);
 }
 
@@ -762,9 +821,11 @@ int pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb
     PBL_LOG_ERR("Could not allocate name to rewrite settings file %s", file->name);
     return -ENOMEM;
   }
+  // The callback writes either the old record times or the current time
+  const uint16_t version = PBL_MAX(file->iter.file_hdr.version, prv_version_for_time(utc_time()));
   struct pbl_settings_file new_file;
   int ret = prv_open(&new_file, file->name, PBL_FS_O_REPLACE | PBL_FS_O_READ, file->max_used_space,
-                     file->alloc_used_space, file->min_alloc_used_space);
+                     file->alloc_used_space, file->min_alloc_used_space, version);
   if (ret < 0) {
     pbl_free(name);
     return ret;
@@ -784,7 +845,7 @@ int pbl_settings_rewrite(struct pbl_settings_file *file, pbl_settings_rewrite_cb
   int min_alloc_used_space = new_file.min_alloc_used_space;
   pbl_settings_close(&new_file);
   ret = prv_open(file, name, PBL_FS_O_RDWR | PBL_FS_O_CREATE, file->max_used_space,
-                 alloc_used_space, min_alloc_used_space);
+                 alloc_used_space, min_alloc_used_space, version);
   pbl_free(name);
 
   return ret;
