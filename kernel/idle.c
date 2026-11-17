@@ -8,6 +8,7 @@
 #include <pbl/kernel/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_idle_hook, idle_hooks);
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_idle_hook, idle_late);
@@ -15,6 +16,13 @@ PBL_ITERABLE_SECTION_DECLARE(const struct pbl_idle_hook, idle_late);
 // One bit per hook.
 typedef uint32_t idle_hook_mask_t;
 #define IDLE_HOOKS_MAX (sizeof(idle_hook_mask_t) * CHAR_BIT)
+
+#ifndef CONFIG_SOC_HAS_IDLE_STATES
+const struct pbl_idle_state pbl_soc_idle_states[] = {
+  {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
+};
+const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
+#endif
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];
 static uint8_t s_blocks[PBL_IDLE_STATES_MAX];

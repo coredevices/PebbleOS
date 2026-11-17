@@ -9,5 +9,4 @@ pbl_library_sources(
   ppi.c
   retained.c
 )
-pbl_library_sources_ifdef(CONFIG_CPU_IDLE idle.c)
 pbl_linker_sources(memory linker.ld)

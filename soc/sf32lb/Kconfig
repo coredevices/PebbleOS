@@ -17,6 +17,7 @@ config SOC_SF32LB52
     select KERNEL_MPU_IN_FAULTS
     select FLASH if CPU_IDLE
     select RAMFUNC
+    select SOC_HAS_IDLE_STATES
     select SOC_HAS_MPU_REGIONS
     select SOC_HAS_POWER_OFF
     select SOC_HAS_RESET
@@ -37,6 +38,7 @@ config SOC_SF32LB57
     select KERNEL_MPU_IN_FAULTS
     select FLASH if CPU_IDLE
     select RAMFUNC
+    select SOC_HAS_IDLE_STATES
     select SOC_HAS_MPU_REGIONS
     select SOC_HAS_POWER_OFF
     select PINCTRL
