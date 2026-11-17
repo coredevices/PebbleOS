@@ -10,7 +10,8 @@ config CONSOLE
 
 config CONSOLE_IMAGING
     bool "Flash imaging"
-    depends on CONSOLE
+    depends on CONSOLE && FLASH
+    select FLASH_CRC
     help
       Write the system resources and the recovery firmware to flash
       over the console, as manufacturing does.

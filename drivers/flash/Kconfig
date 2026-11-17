@@ -3,7 +3,6 @@
 
 menuconfig FLASH
     bool "Flash"
-    select CRC
     select TASK_WDT
     help
       Flash Drivers
@@ -16,6 +15,12 @@ config FLASH_IDLE_PM
     help
       Selected by SoCs that do not execute from the flash, to power it
       down from an idle hook, see pbl_flash_pm_suspend().
+
+config FLASH_CRC
+    bool "CRC of a range"
+    select CRC
+    help
+      pbl_flash_crc32() and pbl_flash_crc32_legacy().
 
 config FLASH_OTP
     bool
