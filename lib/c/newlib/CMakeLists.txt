@@ -3,4 +3,4 @@
 
 pbl_library()
 pbl_library_sources_ifdef(CONFIG_LIBC_NEWLIB_NANO vsnprintf.c)
-pbl_library_compile_options(-fno-builtin -fno-lto)
+pbl_library_compile_options(-fno-builtin)
