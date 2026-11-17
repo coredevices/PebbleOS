@@ -22,7 +22,7 @@ if(CONFIG_SF32LB_FTAB)
             --image-size ${image_size}
             --output ${ftab}
     DEPENDS ${PBL_DTB} ${PBL_BASE}/tools/cmake/sf32lb_ftab.py
-            ${PBL_BASE}/tools/devicetree/fdt.py
+            ${PBL_BASE}/tools/devicetree/dtmap.py ${PBL_BASE}/tools/devicetree/fdt.py
     COMMENT "Generating the boot ROM flash table"
     VERBATIM)
   add_custom_target(pbl_ftab ALL DEPENDS ${ftab})

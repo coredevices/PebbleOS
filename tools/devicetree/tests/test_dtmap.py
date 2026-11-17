@@ -845,6 +845,98 @@ def test_partition_defined_twice_fails(tmp_path):
         dtmap.partitions_header(compile_tree(tmp_path, text))
 
 
+TWO_FLASHES_DTS = """/dts-v1/;
+/ {
+    internal: flash-a {
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            partition@8000 {
+                label = "code";
+                reg = <0x8000 0xf8000>;
+            };
+        };
+    };
+
+    external: flash-b {
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            partition@100000 {
+                label = "filesystem";
+                reg = <0x100000 0x100000>;
+            };
+
+            partition@0 {
+                label = "mfg-info";
+                reg = <0x0 0x1000>;
+            };
+        };
+    };
+};
+"""
+
+
+def test_partitions_of_every_flash(tmp_path):
+    parts = dtmap.partitions(compile_tree(tmp_path, TWO_FLASHES_DTS))
+    assert parts == {
+        "code": (0x8000, 0xF8000),
+        "filesystem": (0x100000, 0x100000),
+        "mfg-info": (0x0, 0x1000),
+    }
+
+
+def test_part_table_is_the_flash_role_one_sorted(tmp_path):
+    path, dtb = tmp_path / "p.dts", tmp_path / "p.dtb"
+    path.write_text(TWO_FLASHES_DTS)
+    subprocess.run([dtc(), "-q", "-@", "-o", str(dtb), str(path)], check=True)
+    text = dtmap.partitions_header(fdt.load(dtb), "external")
+    assert "PART_CODE" not in text
+    assert text.index("PART_MFG_INFO_OFFSET") < text.index("PART_FILESYSTEM_OFFSET")
+
+
+def test_several_flashes_need_the_flash_role(tmp_path):
+    with pytest.raises(DtError, match="no flash role"):
+        dtmap.partitions_header(compile_tree(tmp_path, TWO_FLASHES_DTS))
+
+
+def test_label_on_two_flashes_fails(tmp_path):
+    text = TWO_FLASHES_DTS.replace('"filesystem"', '"code"')
+    with pytest.raises(DtError, match="defined twice"):
+        dtmap.partitions(compile_tree(tmp_path, text))
+
+
+def test_kconfig_has_partition_holds_without_a_tree(tmp_path, monkeypatch):
+    import kconfigfunctions
+
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path / "none"))
+    assert kconfigfunctions.has_partition(None, None, "cd") == "y"
+    assert kconfigfunctions.dt_has_partition(None, None, "cd") == "n"
+
+
+def test_kconfig_functions_read_the_partitions(tmp_path, monkeypatch):
+    import kconfigfunctions
+
+    path = tmp_path / "board.dts"
+    path.write_text(TWO_FLASHES_DTS)
+    subprocess.run(
+        [dtc(), "-q", "-I", "dts", "-O", "dtb", "-o", str(tmp_path / "board.dtb"), str(path)],
+        check=True,
+    )
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path))
+    assert kconfigfunctions.dt_has_partition(None, None, "code") == "y"
+    assert kconfigfunctions.dt_partition_offset(None, None, "code") == "0x8000"
+    assert kconfigfunctions.dt_partition_size(None, None, "code") == "0xf8000"
+    assert kconfigfunctions.dt_has_partition(None, None, "cd") == "n"
+    assert kconfigfunctions.dt_partition_offset(None, None, "cd") == "0x0"
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path / "none"))
+    assert kconfigfunctions.dt_has_partition(None, None, "code") == "n"
+
+
 IDLE_STATES_DTS = """/dts-v1/;
 / {
     cpus {
@@ -2013,7 +2105,8 @@ def test_board_trees_generate_with_every_driver(tmp_path, dts):
     gen.run()
     assert "_DEFINE(" in "".join(gen.instances().values())
     assert "extern const" in gen.header()
-    dtmap.partitions_header(tree)
+    roles = yaml.safe_load(((REPO / dts).parent / "roles.yml").read_text())
+    assert "PART_" in dtmap.partitions_header(tree, roles["flash"])
 
 
 def test_every_board_has_its_tree():

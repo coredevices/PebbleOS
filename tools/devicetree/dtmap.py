@@ -1327,42 +1327,69 @@ def size_expr(size):
     return f"{size:#x}"
 
 
-def partitions_header(tree):
-    """The PART_* table of the board's flash, from its fixed-partitions node."""
-    lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
-    tables = []
-    if tree is not None:
-        tables = [n for n in tree.nodes() if PARTITIONS in n.compatibles and enabled(n)]
-    if len(tables) > 1:
-        raise DtError(f"{tables[1].path}: only one flash may have fixed partitions")
-    if tables:
-        lines += ["", "#include <pbl/util/units.h>"]
-        names = set()
-        regions = []
-        for part in tables[0].children:
-            if not part.status_okay:
-                continue
-            label = part.string("label") if part.has("label") else part.basename
-            name = "PART_" + c_ident(label).upper()
-            if name in names:
+def partition_tables(tree):
+    """The enabled fixed-partitions nodes, one per flash."""
+    if tree is None:
+        return []
+    return [n for n in tree.nodes() if PARTITIONS in n.compatibles and enabled(n)]
+
+
+def table_partitions(table):
+    """``[(label, offset, size, node)]`` of a fixed-partitions node, checked for overlaps."""
+    parts = []
+    for part in table.children:
+        if not part.status_okay:
+            continue
+        label = part.string("label") if part.has("label") else part.basename
+        cells = part.u32s("reg")
+        if len(cells) != part.address_cells + part.size_cells:
+            raise DtError(f"{part.path}: 'reg' must be one offset and size")
+        offset = cells_number(cells[: part.address_cells])
+        size = cells_number(cells[part.address_cells :])
+        parts.append((label, offset, size, part))
+    regions = sorted((offset, offset + size, part.path) for _, offset, size, part in parts)
+    for (_, end, path), (start, _, other) in itertools.pairwise(regions):
+        if start < end:
+            raise DtError(f"{other}: overlaps {path}")
+    return parts
+
+
+def partitions(tree):
+    """``{label: (offset, size)}`` of the partitions of every flash, offsets within their flash."""
+    found = {}
+    for table in partition_tables(tree):
+        for label, offset, size, part in table_partitions(table):
+            if label in found:
                 raise DtError(f"{part.path}: partition {label} is defined twice")
-            names.add(name)
-            cells = part.u32s("reg")
-            if len(cells) != part.address_cells + part.size_cells:
-                raise DtError(f"{part.path}: 'reg' must be one offset and size")
-            offset = cells_number(cells[: part.address_cells])
-            size = cells_number(cells[part.address_cells :])
-            regions.append((offset, offset + size, part.path))
+            found[label] = (offset, size)
+    return found
+
+
+def flash_table(tree, flash=None):
+    """The fixed-partitions node of ``flash``, a node label, or of the only flash with one."""
+    tables = partition_tables(tree)
+    if flash is not None:
+        tables = [t for t in tables if flash in t.parent.labels]
+    elif len(tables) > 1:
+        raise DtError(f"{tables[1].path}: several flashes have partitions, but no flash role")
+    return tables[0] if tables else None
+
+
+def partitions_header(tree, flash=None):
+    """The PART_* table of the flash serving the flash role, from its fixed-partitions node."""
+    lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
+    partitions(tree)
+    table = flash_table(tree, flash)
+    if table is not None:
+        lines += ["", "#include <pbl/util/units.h>"]
+        for label, offset, size, _ in sorted(table_partitions(table), key=lambda p: p[1]):
+            name = "PART_" + c_ident(label).upper()
             lines += [
                 "",
                 f"#define {name}_OFFSET {offset:#09x}",
                 f"#define {name}_SIZE   {size_expr(size)}",
                 f"#define {name}        PBL_FLASH_PARTITION({name})",
             ]
-        regions.sort()
-        for (_, end, path), (start, _, other) in itertools.pairwise(regions):
-            if start < end:
-                raise DtError(f"{other}: overlaps {path}")
     return "\n".join(lines) + "\n"
 
 
@@ -1731,6 +1758,8 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
         raise DtError(f"board {board} has no devicetree for add-ons")
     elif overlays:
         raise DtError(f"{overlays[0]}: board {board} has no devicetree to overlay")
+    else:
+        (outdir / "board.dtb").unlink(missing_ok=True)
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, kconfig_compatibles(specs)).encode())
     paths = role_files(srcdir, board, revision, appdir, addons)
@@ -1777,13 +1806,14 @@ def main():
         config = load_config(args.config)
         generator = Generator(tree, specs, config)
         generator.run()
-        partitions = partitions_header(tree)
-        idle_states = idle_states_header(tree)
-        regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
         chosen = {}
         if args.roles:
             with open(args.roles) as f:
                 chosen = yaml.safe_load(f) or {}
+        flash = chosen.get("flash")
+        partitions = partitions_header(tree, flash if isinstance(flash, str) else None)
+        idle_states = idle_states_header(tree)
+        regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
         roles = roles_source(
             generator, load_roles(load_classes(args.srcdir, args.appdir)), chosen, config
         )
