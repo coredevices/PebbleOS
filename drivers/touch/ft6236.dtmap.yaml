@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: focaltech,ft6236
+config: TOUCH_FT6236
+class: touch
+define: PBL_FT6236_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
+  - irq: 0
+  - gpio: reset
+  - prop: touchscreen-size-x
+  - prop: touchscreen-size-y
+  - flag: touchscreen-inverted-x
+  - flag: touchscreen-inverted-y
+  - flag: touchscreen-swapped-x-y
+  - pinctrl: default
+    default: nullptr
