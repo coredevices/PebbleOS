@@ -63,6 +63,17 @@ components:
     purl: pkg:github/NordicSemiconductor/nrfx@v3.11.0
     url: https://github.com/NordicSemiconductor/nrfx
 
+  - name: lvgl
+    path: lvgl/lvgl
+    supplier: LVGL Kft
+    description: LVGL graphics library
+    version: 9.6.0
+    commit: 80ca777e37a2b176770726a02e07a6fb79ef0b39
+    license: MIT
+    cpe: cpe:2.3:a:lvgl:lvgl:{version}:*:*:*:*:*:*:*
+    purl: pkg:github/lvgl/lvgl@v9.6.0
+    url: https://github.com/lvgl/lvgl
+
   - name: mbedtls
     path: mbedtls/mbedtls
     nested: [3rdparty]

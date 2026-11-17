@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig LVGL
+    bool "LVGL"
+    depends on DISPLAY
+    help
+      Build the LVGL graphics library and its port to the display and
+      input devices of the board. LVGL is configured with its own
+      options, the LV_* symbols.
+
+if LVGL
+
+config LVGL_DRAW_BUFFER_ROWS
+    int "Rows of the draw buffer"
+    default 32
+    range 1 65535
+    help
+      Where LVGL does not render straight into the frame of the
+      display, it renders in bands of this many rows that the port
+      copies or converts. More rows render faster and take more of the
+      kernel heap.
+
+config LVGL_KEY_QUEUE_LEN
+    int "Key events queued between two reads"
+    depends on INPUT
+    default 8
+
+module = LVGL
+module-str = LVGL
+source "subsys/logging/Kconfig.template.log_level"
+
+orsource "lvgl/Kconfig"
+
+endif # LVGL
