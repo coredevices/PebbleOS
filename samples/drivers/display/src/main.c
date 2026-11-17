@@ -33,6 +33,13 @@ static void prv_set_pixel(const struct pbl_display_props *props,
 
   if (props->format == PBL_DISPLAY_FORMAT_ARGB2222) {
     row[x] = color;
+  } else if (props->format == PBL_DISPLAY_FORMAT_RGB565) {
+    /* Each 2-bit channel scaled to 5, 6 and 5 bits. */
+    uint16_t r = ((color >> 4) & 3U) * 31U / 3U;
+    uint16_t g = ((color >> 2) & 3U) * 63U / 3U;
+    uint16_t b = (color & 3U) * 31U / 3U;
+
+    ((uint16_t *)row)[x] = (uint16_t)((r << 11) | (g << 5) | b);
   } else if ((color & 0x3FU) != 0U) {
     /* Mono: anything but black is white, the leftmost pixel in the lowest bit. */
     row[x / 8U] |= (uint8_t)(1U << (x % 8U));
@@ -69,20 +76,30 @@ static void prv_update_done(int status, void *arg) {
 int main(void) {
   /* Size and pixel format: what a framebuffer for this display looks like. */
   const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
-  bool mono = props->format == PBL_DISPLAY_FORMAT_MONO;
+  static const char *const formats[] = {
+    [PBL_DISPLAY_FORMAT_MONO] = "mono",
+    [PBL_DISPLAY_FORMAT_ARGB2222] = "argb2222",
+    [PBL_DISPLAY_FORMAT_RGB565] = "rgb565",
+  };
   uint16_t y0 = props->height * 2U / 3U;
   uint16_t y1 = props->height - 1U;
   struct pbl_display_buffer fb;
   int ret;
 
-  printf("display: %dx%d, %s\n", props->width, props->height, mono ? "mono" : "argb2222");
+  printf("display: %dx%d, %s\n", props->width, props->height, formats[props->format]);
 
   /* The buffer is the whole frame: updates send rows of it, by their position on the display. */
-  fb.pitch = mono ? (props->width + 7U) / 8U : props->width;
-  fb.data = pbl_zalloc(fb.pitch * props->height);
-  if (fb.data == nullptr) {
-    fprintf(stderr, "display: no memory for a frame\n");
-    return -ENOMEM;
+  /* The frame the board reserves for the display, if any, or one from the heap. */
+  bool reserved = pbl_display_get_framebuffer(DISPLAY, &fb) == 0;
+  if (!reserved) {
+    fb.pitch = props->format == PBL_DISPLAY_FORMAT_MONO     ? (props->width + 7U) / 8U
+               : props->format == PBL_DISPLAY_FORMAT_RGB565 ? props->width * 2U
+                                                            : props->width;
+    fb.data = pbl_zalloc(fb.pitch * props->height);
+    if (fb.data == nullptr) {
+      fprintf(stderr, "display: no memory for a frame\n");
+      return -ENOMEM;
+    }
   }
 
   prv_draw_bars(props, &fb);
@@ -113,7 +130,9 @@ int main(void) {
   printf("Sample done\n");
 
 out:
-  pbl_free(fb.data);
+  if (!reserved) {
+    pbl_free(fb.data);
+  }
 
   return ret;
 }
