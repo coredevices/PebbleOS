@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/settings/settings.h>
@@ -10,8 +11,9 @@
 /*
  * On-flash format of settings files and a cursor over their records.
  *
- * A settings file is a @ref pbl_settings_file_hdr followed by records, each a
- * @ref pbl_settings_record_hdr, the key and the value. Unwritten flash (all ones) marks the end.
+ * A settings file is a @ref pbl_settings_file_hdr followed by records, each a record header, the
+ * key and the value. Unwritten flash (all ones) marks the end. The record header holds a 32-bit
+ * time in version 1 files and a 64-bit one in version 2 files.
  * Record flags are active low: a flag is set by clearing its bit, so it can be written in place.
  *
  * Any PFS error during iteration is treated as a fatal logic error: the file is removed and the
@@ -20,8 +22,10 @@
 
 /** @brief Magic at the start of every settings file. */
 #define SETTINGS_FILE_MAGIC "set"
-/** @brief Current settings file format version. */
-#define SETTINGS_FILE_VERSION 1
+/** @brief Latest settings file format version, with 64-bit record times. */
+#define SETTINGS_FILE_VERSION 2
+/** @brief Settings file format version with 32-bit record times. */
+#define SETTINGS_FILE_VERSION_TIME32 1
 
 static_assert(sizeof((struct pbl_settings_file_hdr){}.magic) == sizeof(SETTINGS_FILE_MAGIC),
               "The magic has been broken!");
@@ -49,6 +53,33 @@ static_assert(KEY_LEN_BITS + VAL_LEN_BITS + FLAGS_BITS == 24,
               "The record header bitfields must add up to 24!");
 static_assert(PBL_SETTINGS_KEY_MAX_LEN == (1 << KEY_LEN_BITS) - 1);
 static_assert(PBL_SETTINGS_VAL_MAX_LEN == SETTINGS_EOF_MARKER - 1);
+
+// Record header of version 1 files
+struct PBL_PACKED pbl_settings__record_hdr_time32 {
+  uint32_t last_modified;
+  uint8_t key_hash;
+  uint8_t flags : FLAGS_BITS;
+  unsigned int key_len : KEY_LEN_BITS;
+  unsigned int val_len : VAL_LEN_BITS;
+};
+
+// Record header of version 2 files
+struct PBL_PACKED pbl_settings__record_hdr_time64 {
+  int64_t last_modified;
+  uint8_t key_hash;
+  uint8_t flags : FLAGS_BITS;
+  unsigned int key_len : KEY_LEN_BITS;
+  unsigned int val_len : VAL_LEN_BITS;
+};
+
+// Whether a record time can be stored in a version 1 file. The all-ones time is reserved for the
+// end marker.
+static inline bool pbl_settings__time_fits_time32(int64_t t) {
+  return t >= 0 && t < UINT32_MAX;
+}
+
+// Size of a record header in the file, which depends on its version.
+int pbl_settings__raw_iter_hdr_size(const struct pbl_settings_raw_iter *iter);
 
 /**
  * @brief Initialize an iterator and read the file header.

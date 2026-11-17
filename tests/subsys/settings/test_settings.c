@@ -44,7 +44,7 @@ void settings_file_dump(struct pbl_settings_file *file) {
   for (pbl_settings__raw_iter_begin(&file->iter); !pbl_settings__raw_iter_end(&file->iter);
        pbl_settings__raw_iter_next(&file->iter)) {
     struct pbl_settings_record_hdr hdr = file->iter.hdr;
-    printf("Record { last_modified: %d, ", hdr.last_modified);
+    printf("Record { last_modified: %" PRId64 ", ", hdr.last_modified);
     printf("flags: " BIN8_FMT ", ", TO_BINARY(hdr.flags));
     printf("key_hash: %" PRIu8 ", key_len: %d, val_len: %d }\n", hdr.key_hash, hdr.key_len,
            hdr.val_len);
@@ -1001,7 +1001,7 @@ static int s_watch_calls;
 static uint8_t s_watch_key[8];
 static size_t s_watch_key_len;
 
-static void prv_watch_cb(const void *key, size_t key_len, uint32_t last_modified, void *user_data) {
+static void prv_watch_cb(const void *key, size_t key_len, time_t last_modified, void *user_data) {
   cl_assert_equal_p(user_data, &s_watch_calls);
   memcpy(s_watch_key, key, key_len);
   s_watch_key_len = key_len;
@@ -1067,5 +1067,143 @@ void test_settings__time_32_and_64_bit(void) {
   cl_assert_equal_i(pbl_settings_get_time(&file, &key_bad, sizeof(key_bad), &t), -ERANGE);
   cl_assert(t == 0);
   cl_assert_equal_i(pbl_settings_get_time(&file, &key_none, sizeof(key_none), &t), -ENOENT);
+  pbl_settings_close(&file);
+}
+
+typedef struct {
+  int count;
+  time_t old_time;
+  time_t new_time;
+  uint8_t new_key;
+} RecordTimesContext;
+
+static bool prv_check_record_times_cb(struct pbl_settings_file *file,
+                                      struct pbl_settings_record *info, void *context) {
+  RecordTimesContext *ctx = context;
+  uint8_t key;
+  pbl_settings_read_key(file, &key, sizeof(key));
+  cl_assert(info->last_modified == ((key == ctx->new_key) ? ctx->new_time : ctx->old_time));
+  ctx->count++;
+  return true;
+}
+
+void test_settings__upgrades_for_64_bit_record_times(void) {
+  const time_t now = 1388563200;
+  fake_rtc_init(0, now);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/UPG", 4096));
+  // Readable by earlier firmware until a time needs 64 bits
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION_TIME32);
+
+  const int num_keys = 20;
+  for (uint8_t k = 0; k < num_keys; k++) {
+    uint32_t val = 1000 + k;
+    set_and_verify(&file, &k, sizeof(k), (uint8_t *)&val, sizeof(val));
+  }
+
+  // Past 2106
+  const time_t far = 5000000000LL;
+  const uint8_t new_key = 100;
+  const uint32_t new_val = 42;
+  cl_must_pass(pbl_settings_set_with_timestamp(&file, &new_key, sizeof(new_key), &new_val,
+                                               sizeof(new_val), far));
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION);
+
+  for (int pass = 0; pass < 2; pass++) {
+    for (uint8_t k = 0; k < num_keys; k++) {
+      uint32_t val = 1000 + k;
+      verify(&file, &k, sizeof(k), (uint8_t *)&val, sizeof(val));
+    }
+    verify(&file, (uint8_t *)&new_key, sizeof(new_key), (uint8_t *)&new_val, sizeof(new_val));
+    RecordTimesContext ctx = {.old_time = now, .new_time = far, .new_key = new_key};
+    pbl_settings_each(&file, prv_check_record_times_cb, &ctx);
+    cl_assert_equal_i(ctx.count, num_keys + 1);
+
+    pbl_settings_close(&file);
+    cl_must_pass(pbl_settings_open(&file, "/UPG", 4096));
+    cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION);
+    cl_assert(file.last_modified == far);
+  }
+
+  // Compaction keeps the format
+  cl_must_pass(pbl_settings_compact(&file));
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION);
+  verify(&file, (uint8_t *)&new_key, sizeof(new_key), (uint8_t *)&new_val, sizeof(new_val));
+  pbl_settings_close(&file);
+}
+
+void test_settings__64_bit_files_past_2106(void) {
+  fake_rtc_init(0, 5000000000LL);
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/NEW", 2048));
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION);
+  pbl_settings_close(&file);
+
+  // Compaction with 64-bit record headers
+  prv_test_settings_file_compaction(true /*manual*/);
+}
+
+void test_settings__time32_file_upgrade_without_room(void) {
+  fake_rtc_init(0, 1388563200);
+  struct pbl_settings_file file;
+  const int max = 512;
+  cl_must_pass(pbl_settings_open(&file, "/FULL", max));
+  uint16_t k = 0;
+  const uint8_t val = 7;
+  while (pbl_settings_set(&file, &k, sizeof(k), &val, sizeof(val)) == 0) {
+    k++;
+  }
+  const uint16_t num_keys = k;
+  cl_assert(num_keys > 10);
+
+  const uint16_t new_key = 0xffff;
+  cl_assert_equal_i(pbl_settings_set_with_timestamp(&file, &new_key, sizeof(new_key), &val,
+                                                    sizeof(val), 5000000000LL),
+                    -ENOSPC);
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION_TIME32);
+
+  pbl_settings_close(&file);
+  cl_must_pass(pbl_settings_open(&file, "/FULL", max));
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION_TIME32);
+  for (k = 0; k < num_keys; k++) {
+    verify(&file, (uint8_t *)&k, sizeof(k), (uint8_t *)&val, sizeof(val));
+  }
+  pbl_settings_close(&file);
+}
+
+void test_settings__time32_full_file_delete_past_2106(void) {
+  fake_rtc_init(0, 1388563200);
+  struct pbl_settings_file file;
+  const int max = 512;
+  cl_must_pass(pbl_settings_open(&file, "/FULL", max));
+  uint16_t k = 0;
+  const uint8_t val = 7;
+  while (pbl_settings_set(&file, &k, sizeof(k), &val, sizeof(val)) == 0) {
+    k++;
+  }
+  const uint16_t num_keys = k;
+
+  // Past 2106 the wider headers don't fit, but deletes still free space
+  pbl_realtime_set(5000000000LL);
+  const uint16_t new_key = 0xffff;
+  cl_assert_equal_i(pbl_settings_set(&file, &new_key, sizeof(new_key), &val, sizeof(val)), -ENOSPC);
+  k = 0;
+  cl_must_pass(pbl_settings_delete(&file, &k, sizeof(k)));
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION_TIME32);
+  cl_assert(!pbl_settings_exists(&file, &k, sizeof(k)));
+
+  // Until there is room to upgrade the file
+  int rv;
+  while ((rv = pbl_settings_set(&file, &new_key, sizeof(new_key), &val, sizeof(val))) == -ENOSPC) {
+    k++;
+    cl_assert(k < num_keys);
+    cl_must_pass(pbl_settings_delete(&file, &k, sizeof(k)));
+  }
+  cl_must_pass(rv);
+  cl_assert_equal_i(file.iter.file_hdr.version, SETTINGS_FILE_VERSION);
+  verify(&file, (uint8_t *)&new_key, sizeof(new_key), (uint8_t *)&val, sizeof(val));
+  for (uint16_t i = k + 1; i < num_keys; i++) {
+    verify(&file, (uint8_t *)&i, sizeof(i), (uint8_t *)&val, sizeof(val));
+  }
   pbl_settings_close(&file);
 }

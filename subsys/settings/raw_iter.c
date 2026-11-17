@@ -136,13 +136,60 @@ void pbl_settings__raw_iter_write_file_header(struct pbl_settings_raw_iter *iter
   iter->resumed_pos = -1;
 }
 
+static bool prv_is_time32(const struct pbl_settings_raw_iter *iter) {
+  return iter->file_hdr.version == SETTINGS_FILE_VERSION_TIME32;
+}
+
+int pbl_settings__raw_iter_hdr_size(const struct pbl_settings_raw_iter *iter) {
+  return prv_is_time32(iter) ? sizeof(struct pbl_settings__record_hdr_time32)
+                             : sizeof(struct pbl_settings__record_hdr_time64);
+}
+
+#define COPY_HDR_FIELDS(dst, src)      \
+  do {                                 \
+    (dst)->key_hash = (src)->key_hash; \
+    (dst)->flags = (src)->flags;       \
+    (dst)->key_len = (src)->key_len;   \
+    (dst)->val_len = (src)->val_len;   \
+  } while (0)
+
+static void prv_read_hdr(struct pbl_settings_raw_iter *iter) {
+  if (prv_is_time32(iter)) {
+    struct pbl_settings__record_hdr_time32 raw;
+    sfs_read(iter, (uint8_t *)&raw, sizeof(raw));
+    // Keep the all-ones end marker all ones
+    iter->hdr.last_modified =
+        (raw.last_modified == UINT32_MAX) ? (int64_t)-1 : (int64_t)raw.last_modified;
+    COPY_HDR_FIELDS(&iter->hdr, &raw);
+  } else {
+    struct pbl_settings__record_hdr_time64 raw;
+    sfs_read(iter, (uint8_t *)&raw, sizeof(raw));
+    iter->hdr.last_modified = raw.last_modified;
+    COPY_HDR_FIELDS(&iter->hdr, &raw);
+  }
+}
+
+static void prv_write_hdr(struct pbl_settings_raw_iter *iter,
+                          const struct pbl_settings_record_hdr *hdr) {
+  if (prv_is_time32(iter)) {
+    PBL_ASSERTN(hdr->last_modified == -1 || pbl_settings__time_fits_time32(hdr->last_modified));
+    struct pbl_settings__record_hdr_time32 raw = {.last_modified = (uint32_t)hdr->last_modified};
+    COPY_HDR_FIELDS(&raw, hdr);
+    sfs_write(iter, (uint8_t *)&raw, sizeof(raw));
+  } else {
+    struct pbl_settings__record_hdr_time64 raw = {.last_modified = hdr->last_modified};
+    COPY_HDR_FIELDS(&raw, hdr);
+    sfs_write(iter, (uint8_t *)&raw, sizeof(raw));
+  }
+}
+
 void pbl_settings__raw_iter_begin(struct pbl_settings_raw_iter *iter) {
   sfs_seek(iter, sizeof(iter->file_hdr), PBL_FS_SEEK_SET);
 
   // Read header for first record.
   iter->hdr_pos = sfs_pos(iter);
   iter->resumed_pos = iter->hdr_pos;
-  sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
+  prv_read_hdr(iter);
 }
 
 void pbl_settings__raw_iter_resume(struct pbl_settings_raw_iter *iter) {
@@ -151,12 +198,12 @@ void pbl_settings__raw_iter_resume(struct pbl_settings_raw_iter *iter) {
 
 void pbl_settings__raw_iter_next(struct pbl_settings_raw_iter *iter) {
   // Seek to start of next record header.
-  int record_len = sizeof(iter->hdr) + iter->hdr.key_len + iter->hdr.val_len;
+  int record_len = pbl_settings__raw_iter_hdr_size(iter) + iter->hdr.key_len + iter->hdr.val_len;
   sfs_seek(iter, iter->hdr_pos + record_len, PBL_FS_SEEK_SET);
 
   // Read the next header
   iter->hdr_pos = sfs_pos(iter);
-  sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
+  prv_read_hdr(iter);
 
 #if UNITTEST
   s_num_record_changes++;
@@ -164,7 +211,7 @@ void pbl_settings__raw_iter_next(struct pbl_settings_raw_iter *iter) {
 }
 bool pbl_settings__raw_iter_end(struct pbl_settings_raw_iter *iter) {
   struct pbl_settings_record_hdr *hdr = &iter->hdr;
-  return (hdr->last_modified == 0xffffffff) &&
+  return (hdr->last_modified == -1) &&
          (hdr->flags == ((1 << FLAGS_BITS) - 1) && (hdr->key_hash == 0xff) &&
           (hdr->key_len == ((1 << KEY_LEN_BITS) - 1)) && (hdr->val_len == SETTINGS_EOF_MARKER));
 }
@@ -180,20 +227,20 @@ int pbl_settings__raw_iter_get_resumed_record_pos(struct pbl_settings_raw_iter *
 void pbl_settings__raw_iter_set_current_record_pos(struct pbl_settings_raw_iter *iter, int pos) {
   sfs_seek(iter, pos, PBL_FS_SEEK_SET);
   iter->hdr_pos = pos;
-  sfs_read(iter, (uint8_t *)&iter->hdr, sizeof(iter->hdr));
+  prv_read_hdr(iter);
 }
 
 void pbl_settings__raw_iter_read_key(struct pbl_settings_raw_iter *iter, uint8_t *key_out) {
   if (iter->hdr.key_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter), PBL_FS_SEEK_SET);
   sfs_read(iter, key_out, iter->hdr.key_len);
 }
 void pbl_settings__raw_iter_read_val(struct pbl_settings_raw_iter *iter, uint8_t *val_out,
                                      int val_len) {
   if (iter->hdr.val_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len,
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter) + iter->hdr.key_len,
            PBL_FS_SEEK_SET);
   sfs_read(iter, val_out, val_len);
 }
@@ -202,7 +249,7 @@ void pbl_settings__raw_iter_read_key_val(struct pbl_settings_raw_iter *iter, uin
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
   if (kv_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter), PBL_FS_SEEK_SET);
   sfs_read(iter, key_val_out, kv_len);
 }
 
@@ -211,19 +258,19 @@ void pbl_settings__raw_iter_write_header(struct pbl_settings_raw_iter *iter,
   PBL_ASSERTN(hdr->key_len <= PBL_SETTINGS_KEY_MAX_LEN);
   PBL_ASSERTN(hdr->val_len <= PBL_SETTINGS_VAL_MAX_LEN);
   sfs_seek(iter, iter->hdr_pos, PBL_FS_SEEK_SET);
-  sfs_write(iter, (uint8_t *)hdr, sizeof(*hdr));
+  prv_write_hdr(iter, hdr);
   iter->hdr = *hdr;
 }
 void pbl_settings__raw_iter_write_key(struct pbl_settings_raw_iter *iter, const uint8_t *key) {
   if (iter->hdr.key_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter), PBL_FS_SEEK_SET);
   sfs_write(iter, key, iter->hdr.key_len);
 }
 void pbl_settings__raw_iter_write_val(struct pbl_settings_raw_iter *iter, const uint8_t *val) {
   if (iter->hdr.val_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len,
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter) + iter->hdr.key_len,
            PBL_FS_SEEK_SET);
   sfs_write(iter, val, iter->hdr.val_len);
 }
@@ -233,13 +280,12 @@ void pbl_settings__raw_iter_write_key_val(struct pbl_settings_raw_iter *iter,
   const int kv_len = iter->hdr.key_len + iter->hdr.val_len;
   if (kv_len == 0)
     return;
-  sfs_seek(iter, iter->hdr_pos + sizeof(struct pbl_settings_record_hdr), PBL_FS_SEEK_SET);
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter), PBL_FS_SEEK_SET);
   sfs_write(iter, key_val, kv_len);
 }
 void pbl_settings__raw_iter_write_byte(struct pbl_settings_raw_iter *iter, int offset,
                                        uint8_t byte) {
-  sfs_seek(iter,
-           iter->hdr_pos + sizeof(struct pbl_settings_record_hdr) + iter->hdr.key_len + offset,
+  sfs_seek(iter, iter->hdr_pos + pbl_settings__raw_iter_hdr_size(iter) + iter->hdr.key_len + offset,
            PBL_FS_SEEK_SET);
   sfs_write(iter, &byte, 1);
 }
