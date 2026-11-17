@@ -39,6 +39,23 @@ console, the kernel and its system timer work so far.
 FPC1 (8080) and FPC3 (40-pin RGB) share pads with FPC2, so one of them works
 at a time; only FPC2 is described.
 
+## Add-ons
+
+### SiFli 1.85" AMOLED module
+
+[`sifli_lcm_1p85`](../addons/sifli_lcm_1p85/index.md), on FPC2, with these
+jumpers fitted:
+
+- H20, for the 3.3 V supply of the connector.
+- H15 and H16, for the touchscreen I2C on PA22 and PA23.
+- H14, for its pull-ups.
+
+The panel is upright with its flex on the right. A frame of 390x450 in
+RGB565 is reserved for it at the start of the PSRAM, so an application
+using the display enables the PSRAM too, with `CONFIG_RAM=y`. The display
+takes ARGB2222 framebuffers unless the application picks
+`CONFIG_DISPLAY_SF32LB57_LCDC_FORMAT_RGB565=y`.
+
 ## Flashing
 
 The board is flashed with the `sftool` runner, over the debug UART, which

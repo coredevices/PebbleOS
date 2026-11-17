@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+display: lcd_qspi_lcdc
+backlight: lcd_qspi_panel
+touch: lcd_qspi_touchscreen

@@ -1,0 +1,48 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+// SiFli 1.85" 390x450 AMOLED module: a CO5300 panel and an FT6146 touchscreen
+
+#include <dt-bindings/connector/sifli-lcd-qspi.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&lcd_qspi_lcdc {
+	status = "okay";
+
+	lcd_qspi_panel: panel {
+		compatible = "chipone,co5300";
+		reset-gpios = <&lcd_qspi_connector SIFLI_LCD_QSPI_RESET GPIO_ACTIVE_LOW>;
+		te-gpios = <&lcd_qspi_connector SIFLI_LCD_QSPI_TE GPIO_ACTIVE_HIGH>;
+		spi-max-frequency = <48000000>;
+
+		panel-timing {
+			clock-frequency = <10530000>;
+			hactive = <390>;
+			vactive = <450>;
+			hback-porch = <0>;
+			hfront-porch = <0>;
+			hsync-len = <0>;
+			vback-porch = <0>;
+			vfront-porch = <0>;
+			vsync-len = <0>;
+		};
+	};
+};
+
+&lcd_qspi_i2c {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	lcd_qspi_touchscreen: touchscreen@38 {
+		compatible = "focaltech,ft6236";
+		reg = <0x38>;
+		pinctrl-0 = <&lcd_qspi_touch_default>;
+		pinctrl-names = "default";
+		interrupt-parent = <&lcd_qspi_connector>;
+		interrupts = <SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&lcd_qspi_connector SIFLI_LCD_QSPI_TP_RESET GPIO_ACTIVE_LOW>;
+		touchscreen-size-x = <390>;
+		touchscreen-size-y = <450>;
+	};
+};
