@@ -14,7 +14,11 @@ allOf:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-i2c
+    oneOf:
+      - const: sifli,sf32lb52-i2c
+      - items:
+          - const: sifli,sf32lb57-i2c
+          - const: sifli,sf32lb52-i2c
 
   reg:
     maxItems: 1
