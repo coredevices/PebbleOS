@@ -1,6 +1,4 @@
 description: Time of the kernel's basic operations, in CPU cycles
-# The emulator's cycle counter does not count.
-skip: [qemu_emery, qemu_flint, qemu_gabbro]
 expect:
   - 'bench: 1000 iterations each, \d+ cycles per second'
   - 'bench: empty measurement: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
