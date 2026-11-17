@@ -10,6 +10,7 @@ args:
   - reg: mpi
   - reg: mpi_mm
   - size: mpi_mm
+  - reg: mpi_mm_sbus
   - clock: 0
   - pinctrl: default
     default: nullptr

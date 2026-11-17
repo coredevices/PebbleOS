@@ -26,12 +26,16 @@ properties:
   reg:
     items:
       - description: registers
-      - description: memory-mapped window
+      - description: memory-mapped window, on the code bus
+      - description:
+          the same window on the system bus, which data and the other bus
+          masters, as DMA, go through
 
   reg-names:
     items:
       - const: mpi
       - const: mpi_mm
+      - const: mpi_mm_sbus
 
   interrupts:
     maxItems: 1
@@ -52,8 +56,9 @@ examples:
   - |
     spi@50042000 {
         compatible = "sifli,sf32lb52-mpi";
-        reg = <0x50042000 0x1000>, <0x12000000 0xe000000>;
-        reg-names = "mpi", "mpi_mm";
+        reg = <0x50042000 0x1000>, <0x12000000 0xe000000>,
+              <0x62000000 0xe000000>;
+        reg-names = "mpi", "mpi_mm", "mpi_mm_sbus";
         interrupts = <86>;
         clocks = <&hpsys_rcc 27>;
         #address-cells = <1>;

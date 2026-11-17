@@ -72,9 +72,6 @@
 // Kept off the longest CS low time
 #define CS_LOW_MARGIN 10U
 
-// Data goes through the system bus alias of the window, not its code bus address
-#define SBUS_OFFSET 0x50000000U
-
 static const struct pbl_hyperbus_sf32lb_mpi *prv_hb(const struct pbl_hyperbus *bus) {
   return container_of(bus, const struct pbl_hyperbus_sf32lb_mpi, bus);
 }
@@ -300,7 +297,8 @@ static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperb
 
   pbl_writel(PBL_FIELD_PREP(MPI_WDTR_TIMEOUT_MASK, WDT_TIMEOUT) | MPI_WDTR_EN, base + WDTR_OFFSET);
 
-  *mem_base = mpi->mem_base + SBUS_OFFSET;
+  // Data goes through the system bus
+  *mem_base = mpi->mem_sbus_base;
 
   return 0;
 }
