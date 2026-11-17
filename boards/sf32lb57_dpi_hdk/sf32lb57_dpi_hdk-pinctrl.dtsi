@@ -77,4 +77,73 @@
 			input-enable;
 		};
 	};
+
+	// FPC2 (LCDC-QSPI) display, through the LCDC1 matrix outputs
+	lcdc1_default: lcdc1-default-state {
+		cs-pins {
+			pins = "PA49";
+			function = "lcdc1_spi_cs";
+			drive-strength = <8>;
+		};
+
+		clk-pins {
+			pins = "PA50";
+			function = "lcdc1_spi_clk";
+			drive-strength = <8>;
+		};
+
+		dio0-pins {
+			pins = "PA48";
+			function = "lcdc1_spi_dio0";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		dio1-pins {
+			pins = "PA46";
+			function = "lcdc1_spi_dio1";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		dio2-pins {
+			pins = "PA44";
+			function = "lcdc1_spi_dio2";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		dio3-pins {
+			pins = "PA42";
+			function = "lcdc1_spi_dio3";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	// FPC2 touchscreen, with H15 and H16 on PA22 and PA23, pulled up through H14
+	i2c1_default: i2c1-default-state {
+		scl-pins {
+			pins = "PA23";
+			function = "i2c1_scl";
+			input-enable;
+			drive-strength = <8>;
+		};
+
+		sda-pins {
+			pins = "PA22";
+			function = "i2c1_sda";
+			input-enable;
+			drive-strength = <8>;
+		};
+	};
+
+	lcd_qspi_touch_default: touch-default-state {
+		int-pins {
+			pins = "PA06";
+			function = "gpio";
+			input-enable;
+			bias-pull-up;
+		};
+	};
 };
