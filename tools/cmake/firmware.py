@@ -193,14 +193,15 @@ def qemu_resources_offset(config_path):
 
 
 def cmd_qemu_image_spi(args):
-    resources_begin = qemu_resources_offset(args.config)
     image_size = 32 * 1024 * 1024
-
-    pprint(f"Writing SPI flash image to {args.output}")
     resources = b""
+    resources_begin = 0
     if args.pbpack:
         with open(args.pbpack, "rb") as f:
             resources = f.read()
+        resources_begin = qemu_resources_offset(args.config)
+
+    pprint(f"Writing SPI flash image to {args.output}")
     with open(args.output, "wb") as f:
         # Pad the region ahead of the system resources with 0xff
         f.write(b"\xff" * resources_begin)
