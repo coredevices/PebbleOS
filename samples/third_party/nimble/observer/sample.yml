@@ -1,0 +1,6 @@
+description: A passive scan for five seconds, listing the devices that advertise
+timeout: 15
+expect:
+  - 'observer: scanning for 5 seconds'
+  - 'observer: \d+ devices? found'
+  - 'Sample done'

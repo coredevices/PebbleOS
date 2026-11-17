@@ -78,6 +78,7 @@ drivers/vibe.md
 :caption: NimBLE
 
 third_party/nimble/broadcaster.md
+third_party/nimble/observer.md
 ```
 
 ```{toctree}
