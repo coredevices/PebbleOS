@@ -55,7 +55,6 @@ else()
     # let --gc-sections drop unreferenced const/data objects too
     -fdata-sections
     -fbuiltin
-    -fno-builtin-itoa
   )
 endif()
 
