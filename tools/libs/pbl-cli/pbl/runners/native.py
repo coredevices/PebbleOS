@@ -39,9 +39,9 @@ class NativeRunner(Runner):
         if not self.cfg.dry_run and not os.path.isfile(program):
             raise RunnerError(f"no {program}; run 'pbl build' first")
 
-        hci_uart = bool(build.config.CONFIG_BT_HCI_UART)
+        hci_uart = bool(build.config.CONFIG_NIMBLE_HCI_UART)
         if self.bt_hci and not hci_uart:
-            raise RunnerError("--bt-hci needs a build with CONFIG_BT_HCI_UART=y")
+            raise RunnerError("--bt-hci needs a build with CONFIG_NIMBLE_HCI_UART=y")
 
         argv = [program, *self._flash_args(), "-p", str(emulator.PEBBLE_TOOL_PORT)]
         if self.bt_hci:

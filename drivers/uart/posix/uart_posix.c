@@ -96,6 +96,6 @@ const struct pbl_uart_ops pbl_uart_posix_ops = {
 
 PBL_UART_POSIX_DEFINE(pbl_uart_posix_console, "console", PBL_UART_POSIX_CONSOLE, 115200);
 PBL_UART_POSIX_DEFINE(pbl_uart_posix_qemu, "qemu", PBL_UART_POSIX_QEMU, 115200);
-#ifdef CONFIG_BT_HCI_UART
+#ifdef CONFIG_NIMBLE_HCI_UART
 PBL_UART_POSIX_DEFINE(pbl_uart_posix_bt_hci, "bt_hci", PBL_UART_POSIX_BT_HCI, 115200);
 #endif

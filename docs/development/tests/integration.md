@@ -89,7 +89,7 @@ what plays the phone. The same tests run on any of:
 
 | Watch | Phone | How |
 |---|---|---|
-| Emulator or native | Bumble, software controllers | a `CONFIG_BT_HCI_UART` build, by default |
+| Emulator or native | Bumble, software controllers | a `CONFIG_NIMBLE_HCI_UART` build, by default |
 | Emulator or native | Bumble, on a dongle | `--bt-hci lab`: the lab's first dongle for the watch, its second for the phone |
 | Watch, serial console | Bumble, on a dongle | the lab's watch, and its first dongle for the phone |
 | Watch, serial console | CoreApp | `--phone coreapp` (not supported yet) |
@@ -167,18 +167,18 @@ opens the link with and declines the watch's requests to change them:
 those updates stall the watch's sending for seconds, and some fail and
 drop the link.
 
-An emulator or a native build with `CONFIG_BT_HCI_UART` needs a controller
+An emulator or a native build with `CONFIG_NIMBLE_HCI_UART` needs a controller
 of its own (QEMU's fourth serial port, the native program's `-b`).
 By default it gets Bumble's software controllers (`virtual`), two linked
 in memory, one for the watch and one for the harness: they cover the host
 stacks and the protocols above them, not a radio, and are what CI uses: it
 runs the normal tests on a normal build and the PRF tests on a PRF build,
-both with `CONFIG_BT_HCI_UART`, so that tests needing a phone run too.
+both with `CONFIG_NIMBLE_HCI_UART`, so that tests needing a phone run too.
 With real ones it takes two dongles, one for the watch and one for the
 harness: the lab's (`--bt-hci lab`), or given on the command line:
 
 ```shell
-pbl configure --board qemu_emery -DCONFIG_BT_HCI_UART=y
+pbl configure --board qemu_emery -DCONFIG_NIMBLE_HCI_UART=y
 pbl itest --bt-hci /dev/cu.usbmodem1101 --ble-controller /dev/cu.usbmodem1201
 ```
 
@@ -435,7 +435,7 @@ Installing the firmware takes a normal build of the same board, bundled:
 ```shell
 pbl -b build-main configure --board qemu_emery
 pbl -b build-main build bundle
-pbl -b build-prf configure --board qemu_emery --variant prf -DCONFIG_BT_HCI_UART=y
+pbl -b build-prf configure --board qemu_emery --variant prf -DCONFIG_NIMBLE_HCI_UART=y
 pbl -b build-prf build qemu_image_micro qemu_image_spi
 pbl -b build-prf itest --no-build --bt-hci virtual --main-build "$PWD/build-main"
 ```

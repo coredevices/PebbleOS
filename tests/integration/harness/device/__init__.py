@@ -162,19 +162,19 @@ class DeviceAdapter(ABC):
             self.wait_ready()
 
     def _start_bluetooth(self):
-        """Get the H4 controller the build's CONFIG_BT_HCI_UART needs: the
+        """Get the H4 controller the build's CONFIG_NIMBLE_HCI_UART needs: the
         given one (a serial port, or what the device takes for one), or
         Bumble's software controllers ('virtual'), whose other end is the
         harness's. Returns the given one, the TCP port of the virtual one,
-        or None without CONFIG_BT_HCI_UART."""
-        hci_uart = bool(self.build.config.get("CONFIG_BT_HCI_UART"))
+        or None without CONFIG_NIMBLE_HCI_UART."""
+        hci_uart = bool(self.build.config.get("CONFIG_NIMBLE_HCI_UART"))
         controller = self.config.bt_hci
         if hci_uart and not controller:
             raise HarnessError(
-                "the build uses CONFIG_BT_HCI_UART: its Bluetooth needs a controller"
+                "the build uses CONFIG_NIMBLE_HCI_UART: its Bluetooth needs a controller"
             )
         if controller and not hci_uart:
-            raise HarnessError("--bt-hci needs a build with CONFIG_BT_HCI_UART=y")
+            raise HarnessError("--bt-hci needs a build with CONFIG_NIMBLE_HCI_UART=y")
         if controller != VIRTUAL:
             return controller
         from harness.ble.virtual import VirtualLink

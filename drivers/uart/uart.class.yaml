@@ -7,4 +7,4 @@ include: pbl/drivers/uart.h
 roles:
   console_uart:
   qemu_uart:
-  bt_hci_uart: BT_HCI_UART
+  bt_hci_uart: NIMBLE_HCI_UART

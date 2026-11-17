@@ -3,12 +3,12 @@
 
 if SOC_SF32LB52
 
-choice BT_HCI
-    default BT_HCI_SF32LB
+choice NIMBLE_HCI
+    default NIMBLE_HCI_SF32LB
 endchoice
 
-choice BT_ID_ADDR_SOURCE
-    default BT_ID_ADDR_SF32LB52_EFUSE
+choice NIMBLE_ID_ADDR_SOURCE
+    default NIMBLE_ID_ADDR_SF32LB52_EFUSE
 endchoice
 
 # 32 MiB of external flash, memory-mapped through MPI.
@@ -48,8 +48,8 @@ endif # SOC_SF32LB52
 
 if SOC_SF32LB57
 
-choice BT_HCI
-    default BT_HCI_SF32LB
+choice NIMBLE_HCI
+    default NIMBLE_HCI_SF32LB
 endchoice
 
 # 512 KiB of SRAM, last 2 KiB reserved for LCPU and ACPU IPC. The flash is

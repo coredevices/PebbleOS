@@ -147,7 +147,7 @@ def pytest_addoption(parser):
         "--bt-hci",
         metavar="CONTROLLER",
         help="H4 controller for emulator and native builds with "
-        "CONFIG_BT_HCI_UART: 'virtual' for Bumble's software controllers, "
+        "CONFIG_NIMBLE_HCI_UART: 'virtual' for Bumble's software controllers, "
         "which also give the phone one (the default), 'lab' for the lab's "
         "first dongle (the phone taking its second), or the serial port of an "
         "hci_uart dongle (for QEMU, any -serial spec)",

@@ -3,8 +3,8 @@
 
 if SOC_NRF52
 
-choice BT_HCI
-    default BT_HCI_NRF52
+choice NIMBLE_HCI
+    default NIMBLE_HCI_NRF52
 endchoice
 
 # 1 MiB of internal flash.

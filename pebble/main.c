@@ -209,7 +209,7 @@ int main(void) {
 #if NIMBLE_CFG_CONTROLLER
   pebble_task_register(PebbleTask_BTController, nimble_port_pebble_ll_thread());
 #endif
-#if defined(CONFIG_BT_HCI_SF32LB) || defined(CONFIG_BT_HCI_UART)
+#if defined(CONFIG_NIMBLE_HCI_SF32LB) || defined(CONFIG_NIMBLE_HCI_UART)
   pebble_task_register(PebbleTask_BTHCI, nimble_port_pebble_hci_thread());
 #endif
 

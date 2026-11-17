@@ -66,26 +66,26 @@ if(CONFIG_NIMBLE_DRIVER_NRF5X)
   list(PREPEND includes ${nimble}/nimble/drivers/nrf5x/include)
 endif()
 
-if(CONFIG_BT_HCI_NRF52)
+if(CONFIG_NIMBLE_HCI_NRF52)
   list(APPEND sources
     ${nimble}/porting/nimble/src/hal_timer.c
     port/src/nrf52.c
   )
   list(APPEND defines FREERTOS=1 PEBBLEOS NRF52_SERIES)
-elseif(CONFIG_BT_HCI_SF32LB)
+elseif(CONFIG_NIMBLE_HCI_SF32LB)
   list(APPEND sources
     transport/hci_sf32lb.c
   )
   if(CONFIG_NIMBLE_HCI_SF32LB_TRACE_LOG)
     pbl_compile_definitions(NIMBLE_HCI_SF32LB_TRACE NIMBLE_HCI_SF32LB_TRACE_LOG)
   endif()
-elseif(CONFIG_BT_HCI_UART)
+elseif(CONFIG_NIMBLE_HCI_UART)
   list(APPEND sources transport/hci_uart.c)
-elseif(CONFIG_BT_HCI_FAKE)
+elseif(CONFIG_NIMBLE_HCI_FAKE)
   list(APPEND sources transport/hci_fake.c)
 endif()
 
-if(CONFIG_BT_ID_ADDR_SF32LB52_EFUSE)
+if(CONFIG_NIMBLE_ID_ADDR_SF32LB52_EFUSE)
   list(APPEND sources port/src/id_addr_sf32lb52.c)
 endif()
 

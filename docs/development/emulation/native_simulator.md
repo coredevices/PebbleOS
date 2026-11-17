@@ -106,7 +106,7 @@ always listening, with log lines printing above its prompt. `Ctrl-\` quits.
 - `-p PORT`: serve the QEMU serial protocol on a TCP port, where a phone
   connects with libpebble2's QEMU transport (`pebble --qemu`).
   {doc}`../../pbl/run` serves it on 12344.
-- `-b PORT|DEVICE`: with `CONFIG_BT_HCI_UART`, connect the Bluetooth HCI
+- `-b PORT|DEVICE`: with `CONFIG_NIMBLE_HCI_UART`, connect the Bluetooth HCI
   UART to an H4 controller: a TCP port on the local host (e.g. Bumble's
   `tcp-server` transport) or a serial device, such as an nRF52840 dongle
   running `hci_uart`, as described for the {doc}`emulator <emulator>`.

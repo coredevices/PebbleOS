@@ -54,7 +54,7 @@ pbl build
 pbl run -- -s 2
 ```
 
-`--bt-hci` connects the Bluetooth HCI UART of a `CONFIG_BT_HCI_UART` build
+`--bt-hci` connects the Bluetooth HCI UART of a `CONFIG_NIMBLE_HCI_UART` build
 to a controller, as in the emulator.
 
 ## In a browser
