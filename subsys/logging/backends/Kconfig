@@ -22,6 +22,7 @@ endif
 
 config LOG_BACKEND_FLASH
     bool "Flash backend"
+    depends on FLASH && $(has_partition,debug-db)
     help
       Store log messages in the debug flash region, one log generation
       per boot.

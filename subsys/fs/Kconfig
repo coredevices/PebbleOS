@@ -12,7 +12,7 @@ if FS
 
 config FS_PFS
     bool "Pebble File System (PFS)"
-    depends on FLASH
+    depends on FLASH && $(has_partition,filesystem)
     select CRC
     default y
     help
