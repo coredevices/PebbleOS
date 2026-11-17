@@ -60,9 +60,10 @@ function(pbl_link_native)
       target_link_options(pebbleos PRIVATE --preload-file ${PBL_PBPACK}@/system_resources.pbpack)
       set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS ${PBL_PBPACK})
     endif()
-    # The page lays out the platform's watch frames.
+    # The page lays out the frames of the watch the board stands for.
+    set(PBL_EMSCRIPTEN_FRAME ${CONFIG_POSIX_EMSCRIPTEN_FRAME})
     configure_file(${PBL_BASE}/soc/posix/emscripten/shell.html shell.html @ONLY)
-    file(GLOB frames ${PBL_BASE}/soc/posix/emscripten/frames/${PBL_PLATFORM_NAME}/*.png)
+    file(GLOB frames ${PBL_BASE}/soc/posix/emscripten/frames/${PBL_EMSCRIPTEN_FRAME}/*.png)
     foreach(frame ${frames})
       cmake_path(GET frame FILENAME name)
       configure_file(${frame} ${name} COPYONLY)

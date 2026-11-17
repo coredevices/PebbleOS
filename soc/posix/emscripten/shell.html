@@ -196,7 +196,7 @@
       },
     },
   };
-  const PLATFORM = PLATFORMS['@PBL_PLATFORM_NAME@'];
+  const PLATFORM = PLATFORMS['@PBL_EMSCRIPTEN_FRAME@'];
   if (screenOnly) {
     const [, , sw, sh] = PLATFORM.screen;
     PLATFORM.size = [sw, sh];
@@ -298,7 +298,7 @@
     });
   }
 
-  const SKIN_KEY = 'pebbleos-skin-@PBL_PLATFORM_NAME@';
+  const SKIN_KEY = 'pebbleos-skin-@PBL_EMSCRIPTEN_FRAME@';
   function setSkin(skin, save = true) {
     $('frame').src = $('shadow').src = skin + '.png';
     for (const s of document.querySelectorAll('.swatch')) {

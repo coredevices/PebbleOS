@@ -64,6 +64,13 @@ config POSIX_EMSCRIPTEN
       with Emscripten. Kernel threads are fibers on the browser's single
       thread, and the browser's event loop drives the host side.
 
+config POSIX_EMSCRIPTEN_FRAME
+    string
+    help
+      The watch the Emscripten page draws around the display: a directory of
+      soc/posix/emscripten/frames and an entry of the page's table of
+      frames. Set per board in boards/<board>/Kconfig.defconfig.
+
 config SDL
     bool
     depends on SOC_POSIX
