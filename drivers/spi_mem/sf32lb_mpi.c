@@ -39,6 +39,12 @@
 #define CMD_INTERVAL 0x50005000U
 // Controller timeout, as previous flash drivers always set it
 #define TIMEOUT 0xFFU
+
+// Divider that keeps the bus slow enough for any memory on any of the clocks of the controller
+#define DIV_SLOW 8U
+
+// Wait after the controller is enabled again with a new divider
+#define DIV_SETTLE_US 20U
 // Window words compared before and after changing the read command
 #define CHECK_WORDS 4U
 
@@ -296,15 +302,18 @@ static PBL_SECTION_RAM void prv_ram_poll_suspend(uintptr_t base, const struct cc
   pbl_irq_restore_all(key);
 }
 
-// Changes the window's read command, keeping the previous one if the window reads differently
+// Changes the window's read command and, with a divider, the bus clock, keeping the previous
+// ones if the window reads differently
 static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, uint8_t opcode,
-                                            uint32_t ccr) {
+                                            uint32_t ccr, uint32_t div, uint32_t settle) {
   const unsigned int key = pbl_irq_disable_all();
   uint32_t before[CHECK_WORDS];
   uint32_t after[CHECK_WORDS];
   uint32_t hcmdr = pbl_readl(base + SF32LB52_MPI_HCMDR_OFFSET);
   uint32_t hrccr = pbl_readl(base + SF32LB52_MPI_HRCCR_OFFSET);
   uint32_t hrabr = pbl_readl(base + SF32LB52_MPI_HRABR_OFFSET);
+  uint32_t psclr = pbl_readl(base + SF32LB52_MPI_PSCLR_OFFSET);
+  uint32_t cr = pbl_readl(base + SF32LB52_MPI_CR_OFFSET);
   int ret = 0;
 
   prv_read_window(mem_base, before);
@@ -313,6 +322,15 @@ static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, 
   pbl_writel(ccr, base + SF32LB52_MPI_HRCCR_OFFSET);
   pbl_writel((hcmdr & ~MPI_HCMDR_RCMD_MASK) | PBL_FIELD_PREP(MPI_HCMDR_RCMD_MASK, opcode),
              base + SF32LB52_MPI_HCMDR_OFFSET);
+  if (div != 0U) {
+    // The controller only takes a divider while disabled
+    pbl_writel(cr & ~MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+    pbl_writel(div, base + SF32LB52_MPI_PSCLR_OFFSET);
+    pbl_writel(cr, base + SF32LB52_MPI_CR_OFFSET);
+    prv_delay_cycles(settle);
+    // The first read after the controller is back is not checked
+    prv_read_window(mem_base, after);
+  }
 
   prv_read_window(mem_base, after);
 
@@ -323,6 +341,10 @@ static PBL_SECTION_RAM int prv_ram_set_read(uintptr_t base, uintptr_t mem_base, 
   }
 
   if (ret != 0) {
+    pbl_writel(cr & ~MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+    pbl_writel(psclr, base + SF32LB52_MPI_PSCLR_OFFSET);
+    pbl_writel(cr, base + SF32LB52_MPI_CR_OFFSET);
+    prv_delay_cycles(settle);
     pbl_writel(hrabr, base + SF32LB52_MPI_HRABR_OFFSET);
     pbl_writel(hrccr, base + SF32LB52_MPI_HRCCR_OFFSET);
     pbl_writel(hcmdr, base + SF32LB52_MPI_HCMDR_OFFSET);
@@ -368,6 +390,51 @@ static PBL_SECTION_RAM void prv_power_down(const struct pbl_spi_mem *mem,
   }
 }
 
+// Sets the bus divider, which the controller only takes while disabled
+static PBL_SECTION_RAM void prv_ram_set_div(uintptr_t base, uint32_t div, uint32_t settle) {
+  const unsigned int key = pbl_irq_disable_all();
+  const uint32_t cr = pbl_readl(base + SF32LB52_MPI_CR_OFFSET);
+
+  pbl_writel(cr & ~MPI_CR_EN, base + SF32LB52_MPI_CR_OFFSET);
+  pbl_writel(div, base + SF32LB52_MPI_PSCLR_OFFSET);
+  pbl_writel(cr, base + SF32LB52_MPI_CR_OFFSET);
+  // The memory is not readable right away
+  prv_delay_cycles(settle);
+
+  pbl_irq_restore_all(key);
+}
+
+// Computed before the memory goes down
+static uint32_t prv_settle_cycles(void) {
+  return (uint32_t)((uint64_t)pbl_cycles_per_sec() * DIV_SETTLE_US / 1000000U);
+}
+
+// Divider that takes a clock down to a bus clock or less
+static uint32_t prv_div(uint64_t rate_mhz, uint64_t bus_mhz) {
+  const uint64_t div = (rate_mhz + bus_mhz - 1U) / MAX(bus_mhz, 1U);
+
+  return (uint32_t)MIN(MAX(div, 1U), MPI_PSCLR_DIV_MASK);
+}
+
+static bool prv_clock_late(const struct pbl_spi_mem *mem) {
+  return pbl_spi_mem_is_xip(mem) && prv_mpi(mem)->max_hz != 0U;
+}
+
+// Divider for the highest clock of the memory
+static int prv_fast_div(const struct pbl_spi_mem_sf32lb_mpi *mpi, uint8_t *div) {
+  uint64_t rate_mhz;
+  int ret;
+
+  ret = pbl_clk_get_rate(&mpi->mpi->clk, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+
+  *div = (uint8_t)prv_div(rate_mhz, (uint64_t)mpi->max_hz * 1000U);
+
+  return 0;
+}
+
 // Brings the controller up in NOR mode, once. The clock is never released: with XIP it must stay
 // on.
 static int prv_start(const struct pbl_spi_mem *mem) {
@@ -379,14 +446,25 @@ static int prv_start(const struct pbl_spi_mem *mem) {
     return 0;
   }
 
-  ret = pbl_sf32lb_mpi_prepare(mpi->mpi);
-  if (ret != 0) {
-    return ret;
+  // The clocks of a memory the firmware runs from that states its highest clock wait for its
+  // read operation: it may not take a faster bus with the one it boots with
+  if (!prv_clock_late(mem)) {
+    ret = pbl_sf32lb_mpi_prepare(mpi->mpi);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   ret = pbl_clk_enable(&mpi->mpi->clk);
   if (ret != 0) {
     return ret;
+  }
+
+  if (mpi->max_hz != 0U && !prv_clock_late(mem)) {
+    ret = prv_fast_div(mpi, &mpi->data->div);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   if (!pbl_spi_mem_is_xip(mem)) {
@@ -508,12 +586,16 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
   const struct pbl_spi_mem_sf32lb_mpi *mpi = prv_mpi(mem);
   const uintptr_t base = prv_base(mpi);
   struct ccr_op cmd = prv_encode(&desc->op);
+  uint32_t div;
   int ret;
 
   ret = prv_start(mem);
   if (ret != 0) {
     return ret;
   }
+
+  // The bus goes to the clock of the memory with the read operation it is good for
+  div = mpi->data->div;
 
   if (desc->offset >= mpi->mpi->mem_size) {
     return -ENOTSUP;
@@ -525,7 +607,8 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
   if (PBL_FIELD_GET(MPI_HCMDR_RCMD_MASK, pbl_readl(base + SF32LB52_MPI_HCMDR_OFFSET)) ==
           cmd.opcode &&
       pbl_readl(base + SF32LB52_MPI_HRCCR_OFFSET) == cmd.ccr &&
-      pbl_readl(base + SF32LB52_MPI_HRABR_OFFSET) == ALT_BYTE) {
+      pbl_readl(base + SF32LB52_MPI_HRABR_OFFSET) == ALT_BYTE &&
+      (div == 0U || (pbl_readl(base + SF32LB52_MPI_PSCLR_OFFSET) & MPI_PSCLR_DIV_MASK) == div)) {
     return 0;
   }
 
@@ -535,10 +618,43 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
     pbl_writel(cmd.ccr, base + SF32LB52_MPI_HRCCR_OFFSET);
     pbl_modifyl(MPI_HCMDR_RCMD_MASK, PBL_FIELD_PREP(MPI_HCMDR_RCMD_MASK, cmd.opcode),
                 base + SF32LB52_MPI_HCMDR_OFFSET);
+    if (div != 0U) {
+      prv_ram_set_div(base, div, prv_settle_cycles());
+    }
     return 0;
   }
 
-  return prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr);
+  if (mpi->max_hz != 0U && !mpi->data->clocked) {
+    // The read operation first, on a bus slow enough for any of the clocks of the controller,
+    // then its clocks, and then the divider for the clock they leave
+    ret = prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr, DIV_SLOW,
+                           prv_settle_cycles());
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_sf32lb_mpi_prepare(mpi->mpi);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = prv_fast_div(mpi, &mpi->data->div);
+    if (ret != 0) {
+      return ret;
+    }
+
+    mpi->data->clocked = true;
+    div = mpi->data->div;
+  }
+
+  // A memory that does not read the same on the faster bus stays on the slow one
+  ret = prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr, div, prv_settle_cycles());
+  if (ret != 0 && div != 0U) {
+    ret = prv_ram_set_read(base, prv_mem_base(mpi), cmd.opcode, cmd.ccr, DIV_SLOW,
+                           prv_settle_cycles());
+  }
+
+  return ret;
 }
 
 static int prv_dirmap_read(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_dirmap *desc,

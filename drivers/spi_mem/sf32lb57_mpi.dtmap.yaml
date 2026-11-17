@@ -12,3 +12,6 @@ args:
   - self: sf32lb_mpi
   - reg: mpi_mm
   - size: mpi_mm
+  - prop: spi-max-frequency
+    child: 0
+    default: 0

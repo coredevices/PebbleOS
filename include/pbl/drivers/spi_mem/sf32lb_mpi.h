@@ -20,14 +20,17 @@
  * programmed with the read operation the memory driver picks.
  *
  * The controller is @ref PBL_SPI_MEM_XIP when the firmware runs from its window, at
- * @c CONFIG_FLASH_BASE: the boot code's clock, prescaler and sampling setup are kept, the clock is
+ * @c CONFIG_FLASH_BASE: the boot code's sampling setup is kept, and so is its bus clock until
+ * the memory driver sets the read operation of a memory that states its highest clock. The
+ * clocks assigned to the controller and the divider are then applied in steps, each checked
+ * against what the memory read before. The clock is
  * never gated, and everything that runs while the memory is unreadable (status polling, window
  * changes, power down) runs from RAM with interrupts disabled.
  *
  * @code{.c}
  * PBL_SF32LB_MPI_DEFINE(s_mpi2, "mpi2", 0x50042000, 0x12000000, 0xe000000,
  *                         PBL_CLK(SF32LB_HPSYS_RCC, SF32LB52_HPSYS_CLK_MPI2), nullptr);
- * PBL_SPI_MEM_SF32LB_MPI_DEFINE(s_mpi2_spi_mem, "mpi2", &s_mpi2, 0x12000000, 0xe000000);
+ * PBL_SPI_MEM_SF32LB_MPI_DEFINE(s_mpi2_spi_mem, "mpi2", &s_mpi2, 0x12000000, 0xe000000, 0);
  * @endcode
  * @{
  */
@@ -35,6 +38,8 @@
 /** @cond INTERNAL_HIDDEN */
 struct pbl_spi_mem_sf32lb_mpi_data {
   bool started;
+  bool clocked;
+  uint8_t div;
 };
 /** @endcond */
 
@@ -46,6 +51,8 @@ struct pbl_spi_mem_sf32lb_mpi {
   const struct pbl_sf32lb_mpi *mpi;
   /** Runtime data. */
   struct pbl_spi_mem_sf32lb_mpi_data *data;
+  /** Highest bus clock, in Hz, or 0 to keep the divider the boot code left. */
+  uint32_t max_hz;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -65,15 +72,16 @@ extern const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb_mpi_ops;
  * @param _mpi Core of the MPI, from PBL_SF32LB_MPI_DEFINE().
  * @param _mem_base Memory-mapped window of the MPI.
  * @param _mem_size Memory-mapped window size, in bytes.
+ * @param _max_hz Highest bus clock, in Hz, or 0 to keep the divider the boot code left.
  */
-#define PBL_SPI_MEM_SF32LB_MPI_DEFINE(sym, _name, _mpi, _mem_base, _mem_size)                    \
+#define PBL_SPI_MEM_SF32LB_MPI_DEFINE(sym, _name, _mpi, _mem_base, _mem_size, _max_hz)           \
   PBL_SPI_MEM_STATE_DEFINE(sym);                                                                 \
   static struct pbl_spi_mem_sf32lb_mpi_data sym##_data;                                          \
   PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb_mpi, struct pbl_spi_mem, mem) {             \
     .mem =                                                                                       \
         PBL_SPI_MEM_INIT(sym, _name, PBL_DEVICE_DEPS(&(_mpi)->dev), &pbl_spi_mem_sf32lb_mpi_ops, \
                          PBL_SPI_MEM_SF32LB_MPI_XIP(_mem_base, _mem_size)),                      \
-    .mpi = (_mpi), .data = &sym##_data,                                                          \
+    .mpi = (_mpi), .data = &sym##_data, .max_hz = (_max_hz),                                     \
   }
 
 /** @} */
