@@ -110,6 +110,10 @@ lcd_qspi_i2c: &i2c1 {
 	vcc-supply = <&ldo18>;
 };
 
+&epic {
+	status = "okay";
+};
+
 &mpi2 {
 	status = "okay";
 };
