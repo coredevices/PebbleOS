@@ -4,6 +4,7 @@
 import os
 
 import inject_metadata
+import pebble_project
 from waflib import Logs
 from waflib.Configure import conf
 
@@ -153,6 +154,7 @@ def gen_inject_metadata_rule(
     has_pkjs,
     has_worker,
     max_binary_size=None,
+    project_info=None,
 ):
     """
     Copy from src_bin_file to dst_bin_file and inject the correct meta-data into the
@@ -166,6 +168,7 @@ def gen_inject_metadata_rule(
     :param has_pkjs: boolean for whether the project contains code using PebbleKit JS
     :param has_worker: boolean for whether the project has a worker binary
     :param max_binary_size: the platform's maximum app image size, or None for the default
+    :param project_info: the project info, to check its permissions against the binary
     """
 
     def inject_data_rule(task):
@@ -176,6 +179,14 @@ def gen_inject_metadata_rule(
         else:
             res_path = None
         tgt_path = task.outputs[0].abspath()
+
+        if project_info is not None:
+            error = pebble_project.undeclared_health_error(
+                project_info, inject_metadata.elf_symbol_names(elf_path)
+            )
+            if error:
+                Logs.error(error)
+                return 1
 
         # First copy the raw bin that the compiler produced to a new location. This way we'll have
         # the raw binary around to inspect just in case anything went wrong while we were injecting

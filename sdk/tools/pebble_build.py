@@ -151,13 +151,17 @@ def _resource_definitions(project, platform):
     if project["type"] == "moddable":
         from resources.types.resource_definition import ResourceDefinition
 
-        mod = os.path.join(project["build_dir"], "mods", platform, "mc.xsa")
+        mod = _mod_path(project, platform)
         definitions.append(
             ResourceDefinition(
                 type="raw", name="MOD", file=mod, target_platforms=[platform]
             )
         )
     return definitions
+
+
+def _mod_path(project, platform):
+    return os.path.join(project["build_dir"], "mods", platform, "mc.xsa")
 
 
 def _package_resources(project, platform):
@@ -604,6 +608,11 @@ def resources(args):
 
     definitions = _resource_definitions(project, platform)
     bld = _Bld(project["project_dir"], build_dir, platform)
+    if project["type"] == "moddable" and os.path.exists(_mod_path(project, platform)):
+        with open(_mod_path(project, platform), "rb") as f:
+            error = pebble_project.undeclared_moddable_health_error(project["info"], f.read())
+        if error:
+            raise ProjectError(error)
 
     # One resource object per resource, named after the file package.json
     # declares (not the platform's variant of it): that is how a package's
@@ -710,6 +719,11 @@ def binary(args):
     os.environ["PATH"] = args.toolchain_bin + os.pathsep + os.environ["PATH"]
     project = _load_project(args.project)
     platform = project["platforms"][args.platform]
+    error = pebble_project.undeclared_health_error(
+        project["info"], inject_metadata.elf_symbol_names(args.elf)
+    )
+    if error:
+        raise ProjectError(error)
     if args.sources_list:
         with open(args.sources_list) as f:
             sources = [s for s in f.read().split(";") if s.endswith(".c")]

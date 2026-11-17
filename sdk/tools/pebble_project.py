@@ -25,6 +25,8 @@ MANIFEST_V2_KEYS = ("plugin", "usesPermissions", "configPage")
 
 # What the phone app calls the watch microphone, in usesPermissions.
 WATCH_MICROPHONE = "WatchMicrophone"
+# And health data. The phone app only enforces it for apps built with an SDK that has this check.
+HEALTH = "Health"
 _MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
 
 # Message keys are numbered from here, in the order they are declared.
@@ -160,13 +162,8 @@ def undeclared_microphone_warning(project_info, sources):
     start is refused.
 
     sources: (file name, file contents) pairs of the app's C sources."""
-    declared = {
-        p if isinstance(p, str) else p.get("name")
-        for p in project_info.get("usesPermissions") or []
-        if isinstance(p, (str, dict))
-    }
     legacy = project_info.get("manifestVersion", 2) < 2
-    if WATCH_MICROPHONE in declared and not legacy:
+    if WATCH_MICROPHONE in _declared_permissions(project_info) and not legacy:
         return None
     for name, text in sources:
         match = _MICROPHONE_CALL.search(text)
@@ -183,6 +180,64 @@ def undeclared_microphone_warning(project_info, sources):
             f"'{WATCH_MICROPHONE}' in usesPermissions, so the phone app will deny the microphone"
         )
     return None
+
+
+# Health API functions that return no health data.
+_HEALTH_DATA_FREE = ("health_service_get_measurement_system_for_display",)
+
+
+def undeclared_health_error(project_info, symbols):
+    """An error when a linked app or worker uses the health API without
+    declaring the permission, or None. Linking, so libraries count too.
+
+    symbols: the names of the symbols in the linked binary."""
+    used = sorted(
+        s for s in symbols if s.startswith("health_service_") and s not in _HEALTH_DATA_FREE
+    )
+    return _health_error(project_info, f"{used[0]}()") if used else None
+
+
+def _xs_string(s):
+    """A string constant as compiled XS code holds it: its length counting the
+    NUL, then the string and the NUL."""
+    b = s.encode() + b"\0"
+    return bytes([len(b)]) + b
+
+
+# How a Moddable app reaches health data, which the firmware runtime serves.
+_MODDABLE_HEALTH = (
+    (_xs_string("pebble/health"), '"pebble/health"'),
+    (_xs_string("health"), 'the "health" event'),
+)
+
+
+def undeclared_moddable_health_error(project_info, mod):
+    """As undeclared_health_error, for a Moddable app's JavaScript.
+
+    mod: the compiled mod (mc.xsa)."""
+    used = next((name for code, name in _MODDABLE_HEALTH if code in mod), None)
+    return _health_error(project_info, used) if used else None
+
+
+def _health_error(project_info, used):
+    if project_info.get("manifestVersion", 2) < 2:
+        return (
+            f"The app uses {used}, but manifestVersion 1 apps can't use health data: remove "
+            f"'\"manifestVersion\": 1' and declare '{HEALTH}' in usesPermissions"
+        )
+    if HEALTH in _declared_permissions(project_info):
+        return None
+    return (
+        f"The app uses {used}, but package.json doesn't declare '{HEALTH}' in usesPermissions"
+    )
+
+
+def _declared_permissions(project_info):
+    return {
+        p if isinstance(p, str) else p.get("name")
+        for p in project_info.get("usesPermissions") or []
+        if isinstance(p, (str, dict))
+    }
 
 
 def no_permissions_warning(project_info):
