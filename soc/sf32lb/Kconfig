@@ -49,8 +49,9 @@ config SOC_SF32LB57
 config SF32LB_FTAB
     bool "Boot ROM flash table"
     default y
-    depends on SOC_FAMILY_SF32LB && !PBLBOOT
+    depends on SOC_FAMILY_SF32LB
     help
       Generate the flash table (FTAB) the boot ROM reads from the ptable
-      partition, pointing it at the firmware image, and flash it along with
-      the firmware. Builds for PBLBOOT leave the table to the bootloader.
+      partition, pointing it at the first image of the build: the
+      bootloader the application boots with, or the application itself.
+      It is flashed with that image.

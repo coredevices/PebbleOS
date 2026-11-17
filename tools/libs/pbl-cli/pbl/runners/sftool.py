@@ -38,9 +38,7 @@ class SfToolRunner(Runner):
             raise RunnerError("sftool needs the build, for the flash address")
         base = flash_xip_base(build)
         if command == "flash":
-            files = [self.cfg.hex_file]
-            if build.config.CONFIG_SF32LB_FTAB:
-                files.append(build.join("ftab.hex"))
+            files = list(self.cfg.flash_files)
             if self.cfg.resources_file:
                 files.append(
                     f"{self.cfg.resources_file}@{base + self.cfg.resources_address:#x}"

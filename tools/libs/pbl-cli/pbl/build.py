@@ -17,6 +17,7 @@ CACHE_FILE = "CMakeCache.txt"
 DOTCONFIG_FILE = ".config"
 
 # CONFIG_PLATFORM_* -> the SDK platform name, mirroring cmake/modules/platform.cmake.
+IMAGES_FILE = "images.yaml"
 _PLATFORMS = ("emery", "flint", "gabbro")
 
 
@@ -192,6 +193,17 @@ class BuildDir:
     @property
     def bin(self):
         return self.join(f"{self.project}.bin")
+
+    def images(self):
+        """``[(name, files)]`` the build flashes, in order, from its images.yaml."""
+        path = self.join(IMAGES_FILE)
+        if not os.path.exists(path):
+            return [("app", [self.hex])]
+        import yaml
+
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+        return [(image["name"], list(image["files"])) for image in data.get("images", [])]
 
     @property
     def pbpack(self):
