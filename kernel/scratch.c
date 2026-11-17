@@ -14,6 +14,8 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
+#include <devicetree/reserved_memory.h>
+
 // First fit in granules. Both maps are in internal RAM, so nothing of the heap is kept in the
 // memory itself, which is only powered while something is allocated.
 #define GRANULE  1024U
@@ -26,6 +28,8 @@ static uint32_t s_last[WORDS];
 static size_t s_used_granules;
 static size_t s_peak_granules;
 static uint32_t s_allocations;
+static size_t s_reserved_granules;
+static bool s_reserved_marked;
 static PBL_MUTEX_DEFINE(s_lock);
 
 static uintptr_t prv_base(void) {
@@ -54,6 +58,39 @@ static void prv_set(uint32_t *map, size_t i, bool set) {
   } else {
     map[i / 32U] &= ~PBL_BIT(i % 32U);
   }
+}
+
+// Granules of a region the board reserves, as a framebuffer, stay used as blocks of their own
+[[maybe_unused]] static void prv_reserve(uintptr_t base, uintptr_t end, uintptr_t rbase,
+                                         size_t rsize) {
+  const uintptr_t rend = rbase + rsize;
+
+  if ((rend <= base) || (rbase >= end)) {
+    return;
+  }
+
+  for (size_t i = (MAX(rbase, base) - base) / GRANULE;
+       i < (MIN(rend, end) - base + GRANULE - 1U) / GRANULE; i++) {
+    if (!prv_test(s_used, i)) {
+      prv_set(s_used, i, true);
+      prv_set(s_last, i, true);
+      s_reserved_granules++;
+    }
+  }
+}
+
+static void prv_mark_reserved(void) {
+  const uintptr_t base = prv_base();
+  const uintptr_t end = base + prv_total() * GRANULE;
+
+  if (s_reserved_marked || (end == base)) {
+    return;
+  }
+
+  s_reserved_marked = true;
+#define PRV_RESERVE(rbase, rsize) prv_reserve(base, end, (uintptr_t)(rbase), (rsize));
+  PBL_DT_RESERVED_MEMORY_FOREACH(PRV_RESERVE)
+#undef PRV_RESERVE
 }
 
 // First free run of n granules, or the largest one with n = 0
@@ -90,6 +127,7 @@ void *pbl_scratch_malloc(size_t size) {
   }
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  prv_mark_reserved();
   first = prv_find(n, &largest);
   if ((first == prv_total()) || ((s_allocations == 0U) && (pbl_ram_get(EXTRAM) != 0))) {
     pbl_mutex_unlock(&s_lock);
@@ -144,9 +182,10 @@ void pbl_scratch_get_stats(struct pbl_scratch_stats *stats) {
   size_t largest;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  prv_mark_reserved();
   (void)prv_find(0U, &largest);
   *stats = (struct pbl_scratch_stats){
-    .size = prv_total() * GRANULE,
+    .size = (prv_total() - s_reserved_granules) * GRANULE,
     .used = s_used_granules * GRANULE,
     .peak = s_peak_granules * GRANULE,
     .max_free = largest * GRANULE,
