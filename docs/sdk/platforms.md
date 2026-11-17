@@ -15,30 +15,33 @@ description.
 
 ## Where platforms are defined
 
-`Kconfig.platform` lists the platforms and declares what a platform
+The platform is the firmware's: nothing below it (the kernel, the drivers,
+a board) knows of it, and another application built on PebbleOS has none.
+`pebble/Kconfig.platform` lists the platforms and declares what a platform
 is described by. Each platform states its own values in
-`platforms/Kconfig.<name>`. A board picks one in its `defconfig`:
+`pebble/platforms/Kconfig.<name>`. The firmware picks one for each board it
+runs on, in its settings for the board, `pebble/boards/<board>.conf`:
 
 ```kconfig
 CONFIG_PLATFORM_EMERY=y
 ```
 
-A board cannot describe or alter a platform, so two boards of one platform
-cannot differ. The frozen platforms (Aplite, Basalt, Chalk and Diorite),
+Neither a board nor these settings can describe or alter a platform, so two
+boards of one platform cannot differ. The frozen platforms (Aplite, Basalt, Chalk and Diorite),
 which no firmware is built for, are described in
 `tools/pebble_sdk_platform.py`.
 
 ## Adding a platform
 
 Hardware that fits no platform gets one of its own: an entry in the choice
-of `Kconfig.platform`,
+of `pebble/Kconfig.platform`,
 
 ```kconfig
 config PLATFORM_SLATE
     bool "Slate"
 ```
 
-and a `platforms/Kconfig.slate` with a default for each property it
+and a `pebble/platforms/Kconfig.slate` with a default for each property it
 has. What it leaves out keeps the default of `Kconfig.platform`: black and
 white, rectangular, no feature, 64K for an app.
 
@@ -66,9 +69,9 @@ endif # PLATFORM_SLATE
 The board its SDK is packaged from is added to `sdk/boards.yml`
 ({doc}`building`).
 
-It also states the RAM of its apps, `APP_RAM_4X_SEGMENT_SIZE` and
-`APP_RAM_4X_RUNTIME_SIZE` in `Kconfig.pebbleos`. The RAM of the 2.x and 3.x
-apps it runs follows from its shape and colour depth.
+The same file states the RAM of its apps, `APP_RAM_4X_SEGMENT_SIZE` and
+`APP_RAM_4X_RUNTIME_SIZE`. The RAM of the 2.x and 3.x apps it runs follows
+from its shape and colour depth.
 
 No tool is told about the platform. `tools/pebble_sdk_platform.py` derives
 from the description what the builds read:

@@ -337,7 +337,7 @@ def _load_platforms():
     here = os.path.dirname(os.path.abspath(__file__))
     descriptors = list(FROZEN_DESCRIPTORS)
 
-    kconfig = os.path.join(os.path.dirname(here), "Kconfig.platform")
+    kconfig = os.path.join(os.path.dirname(here), "pebble", "Kconfig.platform")
     if os.path.isfile(kconfig):
         descriptors += kconfig_descriptors(kconfig)
     else:

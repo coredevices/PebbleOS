@@ -35,7 +35,6 @@ jobs:
               - 'tests/**'
               - 'third_party/**'
               - 'tools/**'
-              - 'Kconfig.platform'
               - 'SDK_VERSION'
               - 'requirements.txt'
 

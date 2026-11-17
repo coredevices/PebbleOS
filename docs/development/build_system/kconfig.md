@@ -32,12 +32,12 @@ A build's configuration is resolved from these fragments, in this order:
 
 | Fragment | Purpose |
 | --- | --- |
-| `boards/<board>/defconfig` | What the board is: SoC, platform, boot chain and console |
+| `boards/<board>/defconfig` | What the board is: SoC, boot chain and console |
 | `boards/<board>/defconfig.<revision>` | What a revision changes |
 | `boards/<board>/defconfig.<board variant>` | What a board variant (`native_emery/wasm`) changes |
 | `pebble/prj.conf` | Driver classes, subsystems, services and features every firmware enables |
 | `pebble/prj_<variant>.conf` | What the `normal` or `prf` variant adds or removes |
-| `pebble/boards/<board>.conf` | What the firmware enables or tunes on one board |
+| `pebble/boards/<board>.conf` | What the firmware enables or tunes on one board, and the SDK platform it offers there |
 | `pebble/boards/<board>_<variant>.conf` | The same, for one variant only |
 | `<build>/menuconfig.conf` | Changes made with {doc}`../../pbl/menuconfig` |
 | `-DCONFIG_<SYMBOL>=<value>` | Overrides given when configuring |

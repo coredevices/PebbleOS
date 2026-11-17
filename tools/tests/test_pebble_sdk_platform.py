@@ -14,7 +14,7 @@ sys.path.insert(0, root_dir)
 import pebble_sdk_platform as sdk_platform
 from pebble_sdk_platform import PlatformError, pebble_platforms
 
-KCONFIG = os.path.join(os.path.dirname(root_dir), "Kconfig.platform")
+KCONFIG = os.path.join(os.path.dirname(root_dir), "pebble", "Kconfig.platform")
 
 # A platform no board has.
 SLATE = {

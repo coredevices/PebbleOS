@@ -86,7 +86,7 @@ function(_pbl_test_platform_defines platform out_defines out_bitdepth)
     endif()
     set_property(GLOBAL PROPERTY PBL_TEST_PLATFORM_${platform} "${defines}")
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-      ${PBL_BASE}/Kconfig.platform ${PBL_BASE}/platforms/Kconfig.${platform}
+      ${PBL_BASE}/pebble/Kconfig.platform ${PBL_BASE}/pebble/platforms/Kconfig.${platform}
       ${PBL_BASE}/tools/cmake/platform_config.py
       ${PBL_BASE}/tools/pebble_sdk_platform.py)
   endif()
