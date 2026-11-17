@@ -42,11 +42,8 @@ int ceil_log_two(uint32_t n) {
   return ((power_of_two) ? msb : (msb + 1));
 }
 
-//! newton's method for floor(sqrt(x)) -> should always converge
-int32_t integer_sqrt(int64_t x) {
-  if (x < 0) {
-    return 0;
-  }
+//! Newton's method, 15 steps from 0x3fff. One 64-bit division per step.
+static int32_t prv_newton_sqrt(int64_t x) {
   int64_t last_res = 0x3fff;
   uint16_t iterations = 0;
   while ((last_res > 0) && (iterations < 15)) {
@@ -54,6 +51,54 @@ int32_t integer_sqrt(int64_t x) {
     iterations++;
   }
   return (last_res);
+}
+
+//! The same steps for x < 2^32, with 32-bit division. The steps never go below floor(sqrt(x)),
+//! so the sum cannot overflow.
+static uint32_t prv_newton_sqrt_u32(uint32_t x) {
+  uint32_t last_res = 0x3fff;
+  uint16_t iterations = 0;
+  while ((last_res > 0) && (iterations < 15)) {
+    last_res = ((x / last_res) + last_res) / 2;
+    iterations++;
+  }
+  return last_res;
+}
+
+//! floor(sqrt(x)), one result bit per step, no division.
+static uint32_t prv_sqrt_u32(uint32_t x) {
+  if (x == 0) {
+    return 0;
+  }
+  uint32_t res = 0;
+  // Highest power of four <= x.
+  uint32_t bit = 1u << ((31 - PBL_CLZ(x)) & ~1);
+  while (bit != 0) {
+    if (x >= res + bit) {
+      x -= res + bit;
+      res = (res >> 1) + bit;
+    } else {
+      res >>= 1;
+    }
+    bit >>= 2;
+  }
+  return res;
+}
+
+int32_t integer_sqrt(int64_t x) {
+  if (x < 0) {
+    return 0;
+  }
+  // Below 2^32 Newton's method lands on floor(sqrt(x)), except at x = (r + 1)^2 - 1 (0 among
+  // them), where it alternates between r and r + 1 and stops on either one. Keep its results there.
+  if (x <= (int64_t)UINT32_MAX) {
+    const uint32_t r = prv_sqrt_u32((uint32_t)x);
+    if ((uint64_t)x != (uint64_t)r * r + 2u * r) {
+      return r;
+    }
+    return prv_newton_sqrt_u32((uint32_t)x);
+  }
+  return prv_newton_sqrt(x);
 }
 
 uint32_t next_exponential_backoff(uint32_t *attempt, uint32_t initial_value, uint32_t max_value) {
