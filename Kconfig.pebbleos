@@ -39,9 +39,6 @@ config COMPILER_WARNINGS_AS_ERRORS
     help
       Compile with -Werror.
 
-config LTO
-    bool "Link-time optimization"
-
 choice
     prompt "Optimization level"
     default SIZE_OPTIMIZATIONS

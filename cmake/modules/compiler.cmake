@@ -75,27 +75,6 @@ if(CONFIG_COMPILER_SAVE_TEMPS)
   list(APPEND pbl_arch_flags -save-temps=obj)
 endif()
 
-if(CONFIG_LTO)
-  list(APPEND pbl_arch_flags
-    -flto
-    -flto-partition=balanced
-    --param lto-partitions=128
-    -fuse-linker-plugin
-    -fno-if-conversion
-    -fno-caller-saves
-    -fira-region=mixed
-    -finline-functions
-    -fconserve-stack
-    --param inline-unit-growth=1
-    --param max-inline-insns-auto=1
-    --param max-cse-path-length=1000
-    --param max-grow-copy-bb-insns=1
-    -fno-hoist-adjacent-loads
-    -fno-optimize-sibling-calls
-    -fno-schedule-insns2
-  )
-endif()
-
 if(CONFIG_ARCH_POSIX)
 elseif(CONFIG_CPU_STAR_MC1)
   set(pbl_cpu star-mc1)
