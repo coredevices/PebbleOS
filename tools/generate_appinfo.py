@@ -6,6 +6,9 @@ import json
 import string
 import uuid
 
+# The platforms PebbleProcessInfoFlags has a value for.
+PLATFORM_FLAGS = ("aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro")
+
 # This file parses appinfo.json and generates a C file that get's built into
 # the pebble app binary.
 # See http://wiki.hq.getpebble.com/wiki/index.php/Software/Formats/AppinfoJson
@@ -115,8 +118,11 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         flags.append("PROCESS_INFO_VISIBILITY_HIDDEN")
     if is_moddable:
         flags.append("PROCESS_INFO_MODDABLE_APP")
-    if platform_name:
+    if platform_name in PLATFORM_FLAGS:
         flags.append(f"PROCESS_INFO_PLATFORM_{platform_name.upper()}")
+    elif platform_name:
+        # The firmware takes an app without a value to be for its own platform.
+        flags.append("PROCESS_INFO_PLATFORM_UNKNOWN")
 
     if len(flags):
         flags_string = " | ".join(flags)
