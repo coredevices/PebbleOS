@@ -4,6 +4,7 @@ osource "soc/*/Kconfig.defconfig"
 # Defaults for the options third_party/nimble generates from NimBLE's own
 # syscfg.yml files; same reason, they have to come before the definitions.
 rsource "subsys/bluetooth/Kconfig.defconfig"
+rsource "third_party/nimble/Kconfig.defconfig"
 
 osource "$(DT_BUILD_DIR)/Kconfig.dt"
 
