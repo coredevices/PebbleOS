@@ -73,16 +73,16 @@ void bt_local_id_copy_address(struct pbl_bt_addr *addr_out) {
 void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]) {
   static const struct pbl_bt_addr null_addr = {};
   if (0 != memcmp(&null_addr, &s_local_address, sizeof(s_local_address))) {
-    sniprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
-              PBL_BT_ADDR_XPLODE(s_local_address));
+    snprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
+             PBL_BT_ADDR_XPLODE(s_local_address));
   } else {
-    sniprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, "Unknown");
+    snprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, "Unknown");
   }
 }
 
 void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]) {
-  sniprintf(addr_mac_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
-            PBL_BT_ADDR_XPLODE(s_local_address));
+  snprintf(addr_mac_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
+           PBL_BT_ADDR_XPLODE(s_local_address));
 }
 
 PBL_T_STATIC void prv_generate_address(struct pbl_bt_addr *addr_out) {

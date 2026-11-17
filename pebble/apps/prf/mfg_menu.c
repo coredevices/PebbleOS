@@ -117,8 +117,8 @@ static void prv_select_load_prf(int index, void *context) {
 static void prv_update_device_info_subtitle(MfgMenuAppData *data, uint8_t charge_percent) {
   char serial[MFG_SERIAL_NUMBER_SIZE + 1];
   mfg_info_get_serialnumber(serial, sizeof(serial));
-  sniprintf(data->device_info_subtitle, sizeof(data->device_info_subtitle), "%s - %" PRIu8 "%%",
-            serial, charge_percent);
+  snprintf(data->device_info_subtitle, sizeof(data->device_info_subtitle), "%s - %" PRIu8 "%%",
+           serial, charge_percent);
 }
 
 static void prv_battery_state_handler(BatteryChargeState charge) {

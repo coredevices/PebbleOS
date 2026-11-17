@@ -612,7 +612,7 @@ static PBL_NOINLINE TimelineItem *prv_create_summary_pin(time_t pin_time_utc, ti
   if (percentage == 0) {
     strcpy(percentage_buf, "0%");
   } else {
-    sniprintf(percentage_buf, SUBTITLE_BUFFER_LENGTH, "%+d%%", percentage);
+    snprintf(percentage_buf, SUBTITLE_BUFFER_LENGTH, "%+d%%", percentage);
   }
   attribute_list_add_cstring(&pin_attr_list, AttributeIdSubtitle, percentage_buf);
 
@@ -876,8 +876,8 @@ static void prv_generate_sleep_pin_strings(int32_t sleep_enter_seconds, int32_t 
   // Generate short subtitle text with the current step count
   int hours = sleep_total_seconds / PBL_SEC_PER_HOUR;
   int minutes = (sleep_total_seconds % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
-  sniprintf(SLEEP_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
-            pbl_i18n_get("%uH %uM Sleep", &SLEEP_SUMMARY_PIN_CONFIG), hours, minutes);
+  snprintf(SLEEP_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
+           pbl_i18n_get("%uH %uM Sleep", &SLEEP_SUMMARY_PIN_CONFIG), hours, minutes);
 
   pbl_i18n_free_all(&SLEEP_SUMMARY_PIN_CONFIG);
 }
@@ -1646,8 +1646,8 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
 static bool prv_push_activity_summary_pin(time_t now_utc, time_t pin_time_utc, int minute_of_day,
                                           ActivityScalarStore steps,
                                           ActivityScalarStore total_steps_avg, Uuid *uuid) {
-  sniprintf(ACTIVITY_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
-            pbl_i18n_get("%u Steps", &ACTIVITY_SUMMARY_PIN_CONFIG), steps);
+  snprintf(ACTIVITY_SUMMARY_PIN_CONFIG.short_subtitle, SUBTITLE_BUFFER_LENGTH,
+           pbl_i18n_get("%u Steps", &ACTIVITY_SUMMARY_PIN_CONFIG), steps);
 
   pbl_i18n_free_all(&ACTIVITY_SUMMARY_PIN_CONFIG);
 

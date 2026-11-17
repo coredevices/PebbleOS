@@ -36,7 +36,7 @@ PBL_WEAK void pbl_fault_fatal_record(const struct pbl_fault_info *info) {
                                          const char *fmt, va_list args) {
   char buffer[160];
 
-  vsniprintf(buffer, sizeof(buffer), fmt, args);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
   pbl_log_sync(LOG_LEVEL_ALWAYS, filename, line, "%s", buffer);
 
   pbl_fatal_error_handler(lr);

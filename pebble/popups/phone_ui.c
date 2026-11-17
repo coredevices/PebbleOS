@@ -552,11 +552,11 @@ static void prv_update_call_time(void *unused) {
   if (minutes >= PBL_MIN_PER_HOUR) {
     const int hours = minutes / PBL_MIN_PER_HOUR;
     minutes = minutes % PBL_MIN_PER_HOUR;
-    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u:%02u",
-              hours, minutes, seconds);
+    snprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u:%02u",
+             hours, minutes, seconds);
   } else {
-    sniprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u", minutes,
-              seconds);
+    snprintf(s_phone_ui_data->call_status_text_buf, CALL_STATUS_BUFFER_LENGTH, "%u:%02u", minutes,
+             seconds);
   }
   text_layer_set_text(&s_phone_ui_data->call_status_text_layer,
                       s_phone_ui_data->call_status_text_buf);

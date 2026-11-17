@@ -108,15 +108,15 @@ static void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
 
   switch (cell_index->row % 2) {
     case 0:
-      sniprintf(title, BUFFER_SIZE, "Title %i/%i ", cell_index->section, cell_index->row);
-      sniprintf(subtitle, BUFFER_SIZE, "Subtitle %i/%i", cell_index->section, cell_index->row);
+      snprintf(title, BUFFER_SIZE, "Title %i/%i ", cell_index->section, cell_index->row);
+      snprintf(subtitle, BUFFER_SIZE, "Subtitle %i/%i", cell_index->section, cell_index->row);
       menu_cell_basic_draw(ctx, cell_layer, title, subtitle,
                            (GBitmap *)&s_music_launcher_icon_bitmap);
       break;
 
     default:
     case 1:
-      sniprintf(title, BUFFER_SIZE, "Only Title %i/%i", cell_index->section, cell_index->row);
+      snprintf(title, BUFFER_SIZE, "Only Title %i/%i", cell_index->section, cell_index->row);
       menu_cell_title_draw(ctx, cell_layer, title);
       break;
   }
@@ -126,7 +126,7 @@ static void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_
 static void draw_header_callback(GContext *ctx, Layer *cell_layer, uint16_t section_index,
                                  AppData *data) {
   char title[BUFFER_SIZE];
-  sniprintf(title, BUFFER_SIZE, "Section Header (%i)", section_index);
+  snprintf(title, BUFFER_SIZE, "Section Header (%i)", section_index);
   menu_cell_basic_header_draw(ctx, cell_layer, title);
   (void)data;
 }
@@ -140,9 +140,9 @@ static void detail_window_load(Window *window) {
 }
 
 static void push_detail_window(AppData *data, MenuIndex *index, bool is_long_click) {
-  sniprintf(data->detail_text_buffer, sizeof(data->detail_text_buffer),
-            "SELECTION:\n\nSection %i, Row %i\nLong click: %c", index->section, index->row,
-            is_long_click ? 'Y' : 'N');
+  snprintf(data->detail_text_buffer, sizeof(data->detail_text_buffer),
+           "SELECTION:\n\nSection %i, Row %i\nLong click: %c", index->section, index->row,
+           is_long_click ? 'Y' : 'N');
 
   Window *detail_window = &data->detail_window;
   window_init(detail_window, WINDOW_NAME("Demo Menu Detail"));

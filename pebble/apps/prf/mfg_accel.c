@@ -67,7 +67,7 @@ static void prv_update_display(void *context) {
   int ret = pbl_accel_peek(ACCEL, &sample);
 
   if (ret != 0) {
-    sniprintf(data->status_string, sizeof(data->status_string), "ACCEL ERROR:\n%d", ret);
+    snprintf(data->status_string, sizeof(data->status_string), "ACCEL ERROR:\n%d", ret);
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
@@ -78,9 +78,9 @@ static void prv_update_display(void *context) {
 
   switch (data->state) {
     case STATE_IDLE: {
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "X: %" PRIi16 " mG\nY: %" PRIi16 " mG\nZ: %" PRIi16 " mG\n\nPress SEL", sample.x,
-                sample.y, sample.z);
+      snprintf(data->status_string, sizeof(data->status_string),
+               "X: %" PRIi16 " mG\nY: %" PRIi16 " mG\nZ: %" PRIi16 " mG\n\nPress SEL", sample.x,
+               sample.y, sample.z);
       break;
     }
 
@@ -111,10 +111,10 @@ static void prv_update_display(void *context) {
       int16_t curr_var_y = data->max_y - data->min_y;
       int16_t curr_var_z = data->max_z - data->min_z;
 
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "Testing...\nRotate device\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16
-                " mG\n\n%" PRIu32 " sec remaining",
-                curr_var_x, curr_var_y, curr_var_z, (TEST_DURATION_MS - elapsed) / 1000 + 1);
+      snprintf(data->status_string, sizeof(data->status_string),
+               "Testing...\nRotate device\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16
+               " mG\n\n%" PRIu32 " sec remaining",
+               curr_var_x, curr_var_y, curr_var_z, (TEST_DURATION_MS - elapsed) / 1000 + 1);
 
       if (elapsed >= TEST_DURATION_MS) {
         // Store final variations
@@ -140,10 +140,10 @@ static void prv_update_display(void *context) {
         app_window_stack_pop(false);
         return;
       }
-      sniprintf(data->status_string, sizeof(data->status_string),
-                "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16 " mG",
-                data->test_passed ? "PASS" : "FAIL", data->variation_x, data->variation_y,
-                data->variation_z);
+      snprintf(data->status_string, sizeof(data->status_string),
+               "ACCEL: %s\n\nX: %" PRId16 " mG\nY: %" PRId16 " mG\nZ: %" PRId16 " mG",
+               data->test_passed ? "PASS" : "FAIL", data->variation_x, data->variation_y,
+               data->variation_z);
       break;
     }
   }

@@ -92,7 +92,7 @@ void pbl_shell_vfprintf(const struct pbl_shell *sh, const char *fmt, va_list arg
   char buf[CONFIG_SHELL_PRINTF_BUFF_SIZE];
   int len;
 
-  len = vsniprintf(buf, sizeof(buf), fmt, args);
+  len = vsnprintf(buf, sizeof(buf), fmt, args);
   if (len <= 0) {
     return;
   }
@@ -116,7 +116,7 @@ static void prv_vprintln(const struct pbl_shell *sh, const char *prefix, const c
   int len;
 
   memcpy(buf, prefix, pos);
-  len = vsniprintf(&buf[pos], space, fmt, args);
+  len = vsnprintf(&buf[pos], space, fmt, args);
   if (len > 0) {
     pos += ((size_t)len < space) ? (size_t)len : space - 1U;
   }

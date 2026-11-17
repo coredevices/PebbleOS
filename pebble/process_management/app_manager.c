@@ -532,7 +532,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   const char *text_fmt = pbl_i18n_get("%.*s is not responding", crash_dialog);
   unsigned int name_len = 15;
   char text[DIALOG_MAX_MESSAGE_LEN];
-  sniprintf(text, DIALOG_MAX_MESSAGE_LEN, text_fmt, name_len, entry.name);
+  snprintf(text, DIALOG_MAX_MESSAGE_LEN, text_fmt, name_len, entry.name);
 
   dialog_set_text(dialog, text);
   dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_LARGE);
@@ -557,7 +557,7 @@ static void prv_app_show_crash_ui(AppInstallId install_id) {
   // Until the text_height fits max_text_height or the app name is min_text_len
   while (text_height > max_text_height && name_len > min_text_len) {
     name_len--;
-    sniprintf(text, DIALOG_MAX_MESSAGE_LEN, text_fmt, name_len, entry.name);
+    snprintf(text, DIALOG_MAX_MESSAGE_LEN, text_fmt, name_len, entry.name);
     dialog_set_text(dialog, text);
     text_height = text_layer_get_content_size(ctx, text_layer).h;
   }

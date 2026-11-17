@@ -225,8 +225,8 @@ static void prv_populate_uptime_string(SystemInformationData *data) {
   uint32_t days, hours, minutes, seconds;
   pbl_time_split_seconds(seconds_since_reboot, &days, &hours, &minutes, &seconds);
 
-  sniprintf(data->uptime_string, sizeof(data->uptime_string),
-            "%" PRIu32 "d %" PRIu32 "h %" PRIu32 "m %" PRIu32 "s", days, hours, minutes, seconds);
+  snprintf(data->uptime_string, sizeof(data->uptime_string),
+           "%" PRIu32 "d %" PRIu32 "h %" PRIu32 "m %" PRIu32 "s", days, hours, minutes, seconds);
 }
 
 static void prv_information_draw_row_callback(GContext *ctx, const Layer *cell_layer,
@@ -300,8 +300,8 @@ static void prv_information_window_push(SettingsSystemData *data) {
     info->recovery_version_string[0] = '\0';
   }
 
-  sniprintf(info->boot_version_string, sizeof(info->boot_version_string), "0x%08" PRIx32,
-            boot_version_read());
+  snprintf(info->boot_version_string, sizeof(info->boot_version_string), "0x%08" PRIx32,
+           boot_version_read());
   bt_local_id_copy_address_mac_string(info->bt_mac_addr);
 
   // Ensure OTP strings are null-terminated
@@ -309,8 +309,8 @@ static void prv_information_window_push(SettingsSystemData *data) {
   mfg_info_get_hw_version(info->hw_version_string, MFG_HW_VERSION_SIZE + 1);
   prv_populate_uptime_string(info);
 
-  sniprintf(info->language_string, sizeof(info->language_string), "%s, v%u", pbl_i18n_get_locale(),
-            pbl_i18n_get_version());
+  snprintf(info->language_string, sizeof(info->language_string), "%s, v%u", pbl_i18n_get_locale(),
+           pbl_i18n_get_version());
 
   info->subtitle_text[SystemInformationItemBtAddress] = info->bt_mac_addr;
   info->subtitle_text[SystemInformationItemFirmware] =

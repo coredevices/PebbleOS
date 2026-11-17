@@ -46,14 +46,14 @@ static void prv_log_app_lr_and_pc_sys_work(void *data) {
 
   char lr_str[16];
   if (crash_info->lr_known) {
-    sniprintf(lr_str, sizeof(lr_str), "%p", (void *)crash_info->lr);
+    snprintf(lr_str, sizeof(lr_str), "%p", (void *)crash_info->lr);
   } else {
     strncpy(lr_str, "???", sizeof(lr_str));
   }
 
   char pc_str[16];
   if (crash_info->pc_known) {
-    sniprintf(pc_str, sizeof(pc_str), "%p", (void *)crash_info->pc);
+    snprintf(pc_str, sizeof(pc_str), "%p", (void *)crash_info->pc);
   } else {
     strncpy(pc_str, "???", sizeof(pc_str));
   }

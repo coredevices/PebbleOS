@@ -36,8 +36,8 @@ static void prv_set_firmware_revision(struct pbl_bt_dis_info *info) {
 static void prv_set_software_revision(struct pbl_bt_dis_info *info) {
   // Fmt: xx.xx\0
   char sdk_version[PBL_BT_DIS_SW_REVISION_LEN];
-  sniprintf(sdk_version, PBL_BT_DIS_SW_REVISION_LEN, "%2u.%02u",
-            PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
+  snprintf(sdk_version, PBL_BT_DIS_SW_REVISION_LEN, "%2u.%02u",
+           PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR, PROCESS_INFO_CURRENT_SDK_VERSION_MINOR);
   strncpy(info->sw_revision, sdk_version, PBL_BT_DIS_SW_REVISION_LEN);
 }
 

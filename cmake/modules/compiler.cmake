@@ -121,10 +121,6 @@ if(CONFIG_CPU_HAS_FPU)
   endif()
 endif()
 
-if(CONFIG_QEMU)
-  list(APPEND pbl_arch_flags -Dsniprintf=snprintf -D_USE_LONG_TIME_T)
-endif()
-
 # Reproducibility: strip the absolute source-root prefix from every
 # embedded path, so binaries do not depend on where the tree sits.
 # -ffile-prefix-map covers debug info and __FILE__; -fdebug-prefix-map is

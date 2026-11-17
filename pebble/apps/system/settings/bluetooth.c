@@ -190,10 +190,10 @@ static void settings_bluetooth_update_remotes_private(SettingsBluetoothData *dat
     strncpy(data->header_buffer, pbl_i18n_get("Pairing Instructions", data), HEADER_BUFFER_SIZE);
   } else {
     const unsigned int num_remotes = list_count(data->remote_list_head);
-    sniprintf(data->header_buffer, HEADER_BUFFER_SIZE,
-              (num_remotes != 1) ? pbl_i18n_get("%u Paired Phones", data)
-                                 : pbl_i18n_get("%u Paired Phone", data),
-              num_remotes);
+    snprintf(data->header_buffer, HEADER_BUFFER_SIZE,
+             (num_remotes != 1) ? pbl_i18n_get("%u Paired Phones", data)
+                                : pbl_i18n_get("%u Paired Phone", data),
+             num_remotes);
   }
 }
 
