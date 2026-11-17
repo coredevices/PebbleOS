@@ -38,3 +38,15 @@ int pbl_panel_unprepare(const struct pbl_panel *panel) {
 
   return panel->ops->unprepare(panel);
 }
+
+int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip) {
+  if (!pbl_device_is_ready(&panel->dev)) {
+    return -ENODEV;
+  }
+
+  if (panel->ops->set_h_flip == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return panel->ops->set_h_flip(panel, flip);
+}
