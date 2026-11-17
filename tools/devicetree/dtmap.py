@@ -1608,7 +1608,7 @@ def kconfig_text(tree, compatibles):
     return "\n".join(lines) + "\n"
 
 
-def configure(srcdir, builddir, board, revision, cc, appdir=None):
+def configure(srcdir, builddir, board, revision, cc, appdir=None, extra_overlays=()):
     """Prepare what Kconfig needs.
 
     Writes Kconfig.dt. Returns the dtb or None, the files generated from it, and what it all depends on.
@@ -1624,6 +1624,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     tree, dtb = None, None
     dts = find_dts(srcdir, board, revision)
     overlays = [path for path in overlay_files(board, appdir) if path.exists()]
+    overlays += [Path(path) for path in extra_overlays]
     if dts is not None:
         root = Path(srcdir)
         dtb, sources = compile_dts(

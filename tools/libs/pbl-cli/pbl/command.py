@@ -278,7 +278,15 @@ class PblCommand(ABC):
         return rc
 
     def cmake_configure(
-        self, build, board, app=None, variant="normal", generator="Ninja", extra=(), **kwargs
+        self,
+        build,
+        board,
+        app=None,
+        variant="normal",
+        generator="Ninja",
+        snippets=(),
+        extra=(),
+        **kwargs,
     ):
         """Run CMake in ``build`` for the application in ``app``, the
         firmware by default. Returns its status."""
@@ -292,6 +300,7 @@ class PblCommand(ABC):
             generator,
             f"-DBOARD={board}",
             f"-DVARIANT={variant}",
+            f"-DSNIPPET={';'.join(snippets)}",
             # Where find_package(PebbleOS) finds this checkout.
             f"-DPebbleOS_DIR={os.path.join(self.topdir, 'cmake')}",
         ]

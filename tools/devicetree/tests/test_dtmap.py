@@ -910,6 +910,21 @@ def test_label_on_two_flashes_fails(tmp_path):
         dtmap.partitions(compile_tree(tmp_path, text))
 
 
+def test_extra_overlays_apply_after_the_board(tmp_path):
+    dtc()
+    if shutil.which("cc") is None:
+        pytest.skip("needs cc")
+    srcdir = tmp_path / "src"
+    (srcdir / "boards" / "b").mkdir(parents=True)
+    (srcdir / "boards" / "b" / "b.dts").write_text(TWO_FLASHES_DTS)
+    extra = tmp_path / "extra.overlay"
+    extra.write_text(
+        '&external { partitions { partition@200000 { label = "x"; reg = <0x200000 0x1000>; }; }; };'
+    )
+    dtb, _, _ = dtmap.configure(srcdir, tmp_path / "build", "b", None, "cc", None, [extra])
+    assert "x" in dtmap.partitions(fdt.load(dtb))
+
+
 def test_kconfig_has_partition_holds_without_a_tree(tmp_path, monkeypatch):
     import kconfigfunctions
 

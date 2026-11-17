@@ -48,6 +48,14 @@ class Configure(PblCommand):
             help="Firmware variant (default: normal)",
         )
         parser.add_argument(
+            "-S",
+            "--snippet",
+            action="append",
+            default=[],
+            metavar="SNIPPET",
+            help="Snippet to apply, a preset under snippets/ (repeatable)",
+        )
+        parser.add_argument(
             "app",
             nargs="?",
             metavar="APP",
@@ -73,5 +81,6 @@ class Configure(PblCommand):
             app=args.app,
             variant=args.variant,
             generator=args.generator,
+            snippets=args.snippet,
             extra=unknown,
         )

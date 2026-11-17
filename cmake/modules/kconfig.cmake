@@ -22,6 +22,10 @@ if(EXISTS ${PROJECT_BINARY_DIR}/menuconfig.conf)
   list(APPEND kconfig_args --fragment ${PROJECT_BINARY_DIR}/menuconfig.conf)
 endif()
 
+foreach(snippet ${SNIPPET})
+  list(APPEND kconfig_args --snippet ${snippet})
+endforeach()
+
 foreach(override ${CONFIG_OVERRIDES})
   list(APPEND kconfig_args --override ${override})
 endforeach()
@@ -42,4 +46,5 @@ include(${PBL_CONFIG_CMAKE})
 
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   ${PBL_KCONFIG_DEPENDS} ${PBL_BASE}/tools/cmake/kconfig.py
-  ${PBL_BASE}/tools/devicetree/dtmap.py ${PBL_BASE}/tools/devicetree/fdt.py)
+  ${PBL_BASE}/tools/devicetree/dtmap.py ${PBL_BASE}/tools/devicetree/fdt.py
+  ${PBL_BASE}/tools/snippets.py)

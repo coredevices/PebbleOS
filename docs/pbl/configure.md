@@ -27,6 +27,16 @@ give its directory (see
 pbl configure --board qemu_emery samples/hello_world
 ```
 
+## Snippets
+
+`--snippet` (`-S`) adds a {doc}`snippet <../development/build_system/snippets>`,
+a preset under `snippets/`, such as a file system partition. It can be
+repeated.
+
+```shell
+pbl configure --board qemu_emery -S filesystem samples/subsys/fs/files
+```
+
 ## Variants
 
 `--variant` picks the image to build: `normal`, the main firmware, or

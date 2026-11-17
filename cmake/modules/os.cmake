@@ -15,6 +15,7 @@ set(PBL_APPLICATION_SOURCE_DIR ${PBL_APPLICATION_SOURCE_DIR} CACHE INTERNAL
 set(BOARD "" CACHE STRING "Board to build for, e.g. asterix or obelix@pvt")
 set(VARIANT "normal" CACHE STRING "Firmware variant: normal or prf")
 set_property(CACHE VARIANT PROPERTY STRINGS normal prf)
+set(SNIPPET "" CACHE STRING "Snippets to apply, separated by semicolons")
 
 if(NOT BOARD)
   message(FATAL_ERROR

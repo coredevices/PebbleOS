@@ -107,6 +107,9 @@ on top of the board's defconfig (see {doc}`kconfig`):
 | `app.overlay` | Changes to the board's devicetree; see {ref}`devicetree-overlays` |
 | `boards/<board>.overlay` | The same, on one board |
 
+Presets shared by several applications, such as a file system partition,
+come as {doc}`snippets` selected at configuration.
+
 An application with a `Kconfig` makes it the root of the configuration
 tree: it defines its options and sources PebbleOS's with
 `source "Kconfig.pebbleos"`. Defaults it gives before that line take

@@ -18,7 +18,7 @@ sys.path.insert(0, REPO_ROOT)
 
 import kconfiglib
 
-from tools import boards
+from tools import boards, snippets
 
 sys.path.insert(0, os.path.join(REPO_ROOT, "tools", "devicetree"))
 
@@ -113,6 +113,9 @@ def main():
     parser.add_argument("--cc", required=True, help="C compiler, to preprocess the devicetree")
     parser.add_argument("--override", action="append", default=[])
     parser.add_argument("--fragment", help="extra .conf applied last")
+    parser.add_argument(
+        "--snippet", action="append", default=[], help="snippet to apply, see tools/snippets.py"
+    )
     args = parser.parse_args()
 
     srcdir = os.path.abspath(args.srcdir)
@@ -135,8 +138,13 @@ def main():
     os.environ["BOARD_REVISION"] = board.revision or boards.NO_REVISION
 
     try:
+        snippet_confs, snippet_overlays = snippets.files(srcdir, args.snippet, board.name, appdir)
+    except snippets.SnippetError as e:
+        sys.exit(str(e))
+
+    try:
         dtb, dt_outputs, dt_deps = dtmap.configure(
-            srcdir, builddir, board.name, board.revision, args.cc, appdir
+            srcdir, builddir, board.name, board.revision, args.cc, appdir, snippet_overlays
         )
     except DtError as e:
         sys.exit(f"devicetree: {e}")
@@ -182,6 +190,10 @@ def main():
         if os.path.exists(app_conf):
             kconf.load_config(app_conf, replace=False)
             sources.append(app_conf)
+
+    for snippet_conf in snippet_confs:
+        kconf.load_config(str(snippet_conf), replace=False)
+        sources.append(str(snippet_conf))
 
     # An interactively edited configuration, kept across reconfigurations. It
     # overrides the fragments above on purpose, like the -D overrides below.

@@ -108,10 +108,13 @@ class Samples(PblCommand):
             return f"not for {board}"
         try:
             missing = sample.missing_roles(self.topdir, board)
+            no_snippets = sample.missing_snippets(self.topdir, board)
         except samples.SampleError as e:
             self.die(str(e))
         if missing:
             return f"{board} has no {', '.join(missing)}"
+        if no_snippets:
+            return f"no {', '.join(no_snippets)} snippet for {board}"
         return None
 
     def _one(self, sample, build_dir, args):
@@ -120,7 +123,7 @@ class Samples(PblCommand):
 
         build = BuildDir(build_dir, self.topdir)
         if self.dry_run:
-            self.cmake_configure(build, args.board, app=sample.path)
+            self.cmake_configure(build, args.board, app=sample.path, snippets=sample.snippets)
             self.cmake_build(build)
             return "built"
 
@@ -128,7 +131,7 @@ class Samples(PblCommand):
         log_path = build.join(LOG_FILE)
         with open(log_path, "w") as log:
             quiet = {"stdout": log, "stderr": log}
-            rc = self.cmake_configure(build, args.board, app=sample.path, **quiet)
+            rc = self.cmake_configure(build, args.board, app=sample.path, snippets=sample.snippets, **quiet)
             rc = rc or self.run_cmd(["cmake", "--build", str(build)], **quiet)
         if rc:
             self._show(log_path)
