@@ -99,6 +99,7 @@ rust/index.md
 :caption: Third-party
 
 third_party/lvgl/hello_world.md
+third_party/lvgl/input.md
 ```
 
 ```{toctree}
