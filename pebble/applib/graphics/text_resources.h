@@ -77,13 +77,9 @@ typedef struct PBL_PACKED {
   uint16_t offset;
 } OffsetTableEntry_4_2;
 
-#if !defined(MAX_FONT_GLYPH_SIZE)
-#define MAX_FONT_GLYPH_SIZE 256
-#endif
-
 // Slightly bigger than the biggest glyph we have
 // This is the size in bytes for the glyph bitmap data.
-#define CACHE_GLYPH_SIZE MAX_FONT_GLYPH_SIZE
+#define CACHE_GLYPH_SIZE CONFIG_PLATFORM_MAX_FONT_GLYPH_SIZE
 
 typedef struct {
   uint32_t resource_offset;

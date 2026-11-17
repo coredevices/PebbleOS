@@ -160,8 +160,5 @@ endif()
 # otherwise fold the repeated -include options into one.
 add_compile_options("SHELL:-include ${PBL_AUTOCONF_H}")
 
-# MAX_FONT_GLYPH_SIZE comes from the SDK platform.
-set(PBL_MAX_FONT_GLYPH_SIZE ${CONFIG_PLATFORM_MAX_FONT_GLYPH_SIZE})
-add_compile_definitions(MAX_FONT_GLYPH_SIZE=${PBL_MAX_FONT_GLYPH_SIZE})
 
 add_compile_definitions(FIRMWARE_OFFSET=${CONFIG_FIRMWARE_OFFSET})
