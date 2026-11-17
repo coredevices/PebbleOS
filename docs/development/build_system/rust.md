@@ -157,14 +157,18 @@ The configuration decides how the crate is compiled:
 | --- | --- |
 | Cortex-M4 | `thumbv7em-none-eabi`, with `-Ctarget-cpu=cortex-m4` when it has an FPU |
 | Cortex-M33, STAR-MC1 | `thumbv8m.main-none-eabi`, with `-Ctarget-cpu=cortex-m33` when it has an FPU and the DSP extension |
+| An FPU, without `CONFIG_FP_SOFTFP_ABI` | The `eabihf` target of the core |
 | `CONFIG_ARCH_POSIX` | The host's target |
 | `CONFIG_ARCH_POSIX` with Emscripten | `wasm32-unknown-emscripten` |
 | `CONFIG_NO_OPTIMIZATIONS`, `CONFIG_DEBUG_OPTIMIZATIONS` | `opt-level` 0 and 1, `s` otherwise |
 | `CONFIG_DEBUG_INFO` | `debug` |
 
-The C code uses the soft-float calling convention, also with an FPU
-(`-mfloat-abi=softfp`), so Rust uses the `eabi` targets, not `eabihf`, and
-only uses the FPU within functions.
+Rust follows the float ABI of the C code. With an FPU that is the hard-float
+calling convention (`-mfloat-abi=hard`), so Rust uses the `eabihf` targets.
+Where `CONFIG_FP_SOFTFP_ABI` is selected, as in the Pebble firmware, the C
+code passes floating-point arguments in core registers
+(`-mfloat-abi=softfp`), and Rust uses the `eabi` targets and only uses the
+FPU within functions.
 
 With Emscripten, the firmware is linked as C++ with exception catching on:
 Rust's prebuilt `compiler_builtins` has landing pads, which need the
