@@ -307,5 +307,18 @@ function(pbl_link_firmware)
       WORKING_DIRECTORY ${PBL_BASE}
       VERBATIM
     )
+    # What the SDK emulates the platform with, next to its headers.
+    if(PBL_PBPACK)
+      add_custom_target(sdk_emulator
+        COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/sdk_emulator.py
+                --platform ${PBL_PLATFORM_NAME} --elf ${elf}
+                --spi-flash ${PROJECT_BINARY_DIR}/qemu_spi_flash.bin
+                --layouts ${PBL_LAYOUTS}
+                --output ${PROJECT_BINARY_DIR}/sdk/${PBL_PLATFORM_NAME}/qemu
+        DEPENDS qemu_image_spi
+        COMMENT "Packaging the emulator into ${PROJECT_BINARY_DIR}/sdk"
+        VERBATIM
+      )
+    endif()
   endif()
 endfunction()
