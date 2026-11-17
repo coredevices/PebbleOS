@@ -16,6 +16,8 @@ from pbl.errors import CommandContextError
 CACHE_FILE = "CMakeCache.txt"
 DOTCONFIG_FILE = ".config"
 
+IMAGES_FILE = "images.yaml"
+
 
 def _parse_dotconfig(path):
     """Read a Kconfig ``.config`` into a dict of native Python values."""
@@ -187,6 +189,17 @@ class BuildDir:
     @property
     def bin(self):
         return self.join(f"{self.project}.bin")
+
+    def images(self):
+        """``[(name, files)]`` the build flashes, in order, from its images.yaml."""
+        path = self.join(IMAGES_FILE)
+        if not os.path.exists(path):
+            return [("app", [self.hex])]
+        import yaml
+
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+        return [(image["name"], list(image["files"])) for image in data.get("images", [])]
 
     @property
     def pbpack(self):

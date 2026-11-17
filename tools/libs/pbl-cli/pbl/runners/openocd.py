@@ -64,10 +64,13 @@ class OpenOcdRunner(Runner):
             enforce_expect=True,
         )
 
+    def _program(self):
+        return "".join(f"program {{{f}}}; " for f in self.cfg.flash_files)
+
     def _flash_resources(self):
         self._check_flash_cfg("flash resources")
         self._run_command(
-            f"init; reset halt; program {self.cfg.hex_file}; "
+            f"init; reset halt; {self._program()}"
             f"source {{{self._flash_cfg}}}; "
             f"pbl_flash_resources {{{self.cfg.resources_file}}} "
             f"{self.cfg.resources_address:#x}; "
@@ -86,7 +89,7 @@ class OpenOcdRunner(Runner):
             self._flash_resources()
         elif command == "flash":
             self._run_command(
-                f"init; reset halt; program {self.cfg.hex_file} reset;",
+                f"init; reset halt; {self._program()}reset;",
                 expect=["Programming Started", "Programming Finished", "shutdown"],
                 enforce_expect=True,
             )

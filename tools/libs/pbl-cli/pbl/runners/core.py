@@ -60,6 +60,7 @@ class RunnerConfig(NamedTuple):
     board_dir: str  # boards/<board>
     soc: str | None = None  # CONFIG_SOC, e.g. "NRF52", "SF32LB52"
     hex_file: str | None = None
+    flash_files: tuple = ()  # Intel HEX files to flash, in order
     elf_file: str | None = None
     bin_file: str | None = None
     pbpack_file: str | None = None  # None on PRF builds
