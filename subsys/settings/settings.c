@@ -657,6 +657,11 @@ int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key
   return prv_settings_file_set_internal(file, key, key_len, val, val_len, utc_time());
 }
 
+int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                    const void *val, size_t val_len, uint32_t timestamp) {
+  return prv_settings_file_set_internal(file, key, key_len, val, val_len, timestamp);
+}
+
 int pbl_settings_mark_synced(struct pbl_settings_file *file, const void *key, size_t key_len) {
   // Cannot set keys while iterating (Try pbl_settings_rewrite)
   PBL_ASSERTN(file->cur_record_pos == 0);
