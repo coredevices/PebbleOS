@@ -120,6 +120,7 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 
+#ifdef CONFIG_FLASH_CRC
 static int prv_cmd_crc(const struct pbl_shell *sh, size_t argc, char **argv) {
   uint32_t addr;
   uint32_t len;
@@ -134,6 +135,7 @@ static int prv_cmd_crc(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   return 0;
 }
+#endif
 
 static int prv_cmd_unprotect(const struct pbl_shell *sh, size_t argc, char **argv) {
   return pbl_flash_unprotect(FLASH);
@@ -142,7 +144,9 @@ static int prv_cmd_unprotect(const struct pbl_shell *sh, size_t argc, char **arg
 PBL_SHELL_SUBCMD_ADD(sub_flash, info, nullptr, "Show the flash", prv_cmd_info, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_flash, erase, nullptr, "Erase the subsectors covering <addr> <len>",
                      prv_cmd_erase, 3, 0);
+#ifdef CONFIG_FLASH_CRC
 PBL_SHELL_SUBCMD_ADD(sub_flash, crc, nullptr, "Legacy CRC of <addr> <len>", prv_cmd_crc, 3, 0);
+#endif
 PBL_SHELL_SUBCMD_ADD(sub_flash, dump, nullptr, "Hex dump <addr> <len>", prv_cmd_dump, 3, 0);
 PBL_SHELL_SUBCMD_ADD(sub_flash, unprotect, nullptr, "Remove the flash write protection",
                      prv_cmd_unprotect, 0, 0);
