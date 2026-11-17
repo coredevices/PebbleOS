@@ -27,7 +27,7 @@ flowchart TD
   nrf["NimBLE controller<br/>nRF52 radio"]
   sifli["SiFli LCPU<br/>IPC, SF32LB52"]
   fake["Fake controller<br/>QEMU"]
-  uart["H4 controller<br/>CONFIG_BT_HCI_UART"]
+  uart["H4 controller<br/>CONFIG_NIMBLE_HCI_UART"]
   ble --> glue --> nimble
   nimble -- HCI --> nrf
   nimble -- HCI --> sifli
@@ -43,7 +43,7 @@ flowchart TD
 ```
 
 Beneath it sits NimBLE (`third_party/nimble`), glued in by
-`subsys/bluetooth/`. The HCI transport is chosen per SoC (`BT_HCI`): the
+`subsys/bluetooth/`. The HCI transport is chosen per SoC (`NIMBLE_HCI`): the
 NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
 and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial

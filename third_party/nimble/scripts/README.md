@@ -100,7 +100,7 @@ whose packages a build can leave out carries an `enable`: the generator
 defines it as a bool, off unless something selects it, and the build compiles
 the packages' sources only when it is set. It is the Kconfig counterpart of a
 newt target depending on the package; PebbleOS selects it from the option
-that needs the package, e.g. `BT_HCI_NRF52` selects `NIMBLE_CONTROLLER`.
+that needs the package, e.g. `NIMBLE_HCI_NRF52` selects `NIMBLE_CONTROLLER`.
 
 Where it is off, the area's options take 0, the same value NimBLE sees for a
 package a newt target leaves out, and its fixed values are left undefined.

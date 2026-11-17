@@ -146,7 +146,7 @@ def resolve(build, device_type, options, lab=None):
                 setup.supply_type, setup.supply_port = supply.type, supply.port
         phone_controller = dongles[0] if dongles else None
     elif device_type in ("qemu", "native") and build is not None:
-        if build.config.get("CONFIG_BT_HCI_UART"):
+        if build.config.get("CONFIG_NIMBLE_HCI_UART"):
             setup.bt_hci = options.get("bt_hci") or VIRTUAL
         if setup.bt_hci == FROM_LAB:
             if len(dongles) < 2:

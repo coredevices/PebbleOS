@@ -10,8 +10,8 @@
  * @ingroup bluetooth
  * @brief Where the watch's identity address comes from.
  *
- * Implemented by the backend chosen with the @c BT_ID_ADDR_SOURCE Kconfig choice, available when
- * @c BT_ID_ADDR is enabled. Read by pbl_bt_start().
+ * Implemented by the backend chosen with the @c NIMBLE_ID_ADDR_SOURCE Kconfig choice, available
+ * when @c NIMBLE_ID_ADDR is enabled. Read by pbl_bt_start().
  * @{
  */
 

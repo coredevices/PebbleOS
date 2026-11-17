@@ -90,7 +90,7 @@ extern const struct pbl_uart *const CONSOLE_UART;
 /** @brief The board's port to the host of the QEMU serial protocol. */
 extern const struct pbl_uart *const QEMU_UART;
 
-/** @brief The board's Bluetooth HCI port, with @c CONFIG_BT_HCI_UART. */
+/** @brief The board's Bluetooth HCI port, with @c CONFIG_NIMBLE_HCI_UART. */
 extern const struct pbl_uart *const BT_HCI_UART;
 
 /** @cond INTERNAL_HIDDEN */

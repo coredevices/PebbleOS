@@ -9,7 +9,7 @@ if NIMBLE
 # NimBLE's transport choice says where the link layer lives. PebbleOS supplies
 # its own transport for every controller other than the in-image NimBLE one.
 choice NIMBLE_BLE_TRANSPORT_LL_CHOICE
-    default NIMBLE_BLE_TRANSPORT_LL_NATIVE if BT_HCI_NRF52
+    default NIMBLE_BLE_TRANSPORT_LL_NATIVE if NIMBLE_HCI_NRF52
     default NIMBLE_BLE_TRANSPORT_LL_CUSTOM
 endchoice
 

@@ -122,7 +122,7 @@ void pbl_pp_qemu_receive(const uint8_t *data, uint32_t length) {
   pbl_mutex_unlock(&s_lock);
 }
 
-#ifndef CONFIG_BT_HCI_UART
+#ifndef CONFIG_NIMBLE_HCI_UART
 static bool prv_default_connected(void) {
 #ifdef CONFIG_QEMU
   return qemu_setting_get(QemuSetting_DefaultConnected);
@@ -136,7 +136,7 @@ static bool prv_default_connected(void) {
 #endif
 
 void pbl_pp_qemu_start(void) {
-#ifndef CONFIG_BT_HCI_UART
+#ifndef CONFIG_NIMBLE_HCI_UART
   // Open the session synchronously: the host may send a WatchVersionRequest
   // as soon as it sees "Ready for communication".
   if (prv_default_connected()) {

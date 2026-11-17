@@ -23,7 +23,7 @@ struct pbl_thread *nimble_port_pebble_host_thread(void);
 struct pbl_thread *nimble_port_pebble_ll_thread(void);
 #endif
 
-#if defined(CONFIG_BT_HCI_SF32LB) || defined(CONFIG_BT_HCI_UART)
+#if defined(CONFIG_NIMBLE_HCI_SF32LB) || defined(CONFIG_NIMBLE_HCI_UART)
 /** @brief The HCI transport's thread, created by nimble_port_init(). */
 struct pbl_thread *nimble_port_pebble_hci_thread(void);
 #endif

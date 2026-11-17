@@ -11,7 +11,7 @@ if RNG
 config RNG_NRF5
     bool "Nordic nRF5"
     default y if SOC_NRF52
-    select NIMBLE_TRNG if BT_HCI_NRF52
+    select NIMBLE_TRNG if NIMBLE_HCI_NRF52
     help
       Support for the Nordic nRF5 RNG. The driver owns the peripheral, so
       the NimBLE nRF5 controller takes its random numbers from it.

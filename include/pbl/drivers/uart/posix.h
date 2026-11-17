@@ -61,7 +61,7 @@ extern const struct pbl_uart_posix pbl_uart_posix_bt_hci;
 #define POSIX_CONSOLE_UART (&pbl_uart_posix_console.uart)
 /** @brief The POSIX QEMU serial protocol port. */
 #define POSIX_QEMU_UART (&pbl_uart_posix_qemu.uart)
-/** @brief The POSIX Bluetooth HCI port, with @c CONFIG_BT_HCI_UART. */
+/** @brief The POSIX Bluetooth HCI port, with @c CONFIG_NIMBLE_HCI_UART. */
 #define POSIX_BT_HCI_UART (&pbl_uart_posix_bt_hci.uart)
 
 /** @} */

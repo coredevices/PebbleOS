@@ -10,15 +10,15 @@ menuconfig NIMBLE
 
 if NIMBLE
 
-choice BT_HCI
+choice NIMBLE_HCI
     prompt "HCI transport"
-    default BT_HCI_FAKE
+    default NIMBLE_HCI_FAKE
     help
       How the NimBLE host reaches its controller. The default is derived
       from the SoC (see each soc/<soc>/Kconfig.defconfig); the fake
       controller is the fallback where there is no radio.
 
-config BT_HCI_NRF52
+config NIMBLE_HCI_NRF52
     bool "NimBLE controller on the nRF52 radio"
     depends on SOC_NRF52
     select NIMBLE_CONTROLLER
@@ -26,7 +26,7 @@ config BT_HCI_NRF52
     help
       Run the NimBLE link layer in the same image, on the nRF52 radio.
 
-config BT_HCI_SF32LB
+config NIMBLE_HCI_SF32LB
     bool "SiFli LCPU over IPC"
     depends on SOC_SF32LB52 || SOC_SF32LB57
     select REMOTEPROC
@@ -34,7 +34,7 @@ config BT_HCI_SF32LB
       Talk H4 HCI to the SiFli controller running on the LCPU, over the
       byte rings its ROM shares with the HCPU.
 
-config BT_HCI_UART
+config NIMBLE_HCI_UART
     bool "H4 over UART"
     depends on QEMU || SOC_POSIX
     help
@@ -43,7 +43,7 @@ config BT_HCI_UART
       option; either can be attached to a host controller such as an
       nRF52840 dongle running an H4 HCI firmware.
 
-config BT_HCI_FAKE
+config NIMBLE_HCI_FAKE
     bool "Fake controller"
     help
       Answer every HCI command locally with success and never raise an
@@ -52,65 +52,65 @@ config BT_HCI_FAKE
 
 endchoice
 
-choice BT_ID_ADDR_SOURCE
+choice NIMBLE_ID_ADDR_SOURCE
     prompt "Identity address"
-    default BT_ID_ADDR_CONTROLLER
+    default NIMBLE_ID_ADDR_CONTROLLER
     help
       Where the watch's Bluetooth identity address comes from. The default
       is derived from the SoC (see each soc/<soc>/Kconfig.defconfig).
 
-config BT_ID_ADDR_CONTROLLER
+config NIMBLE_ID_ADDR_CONTROLLER
     bool "Controller"
     help
       Use the address the controller reports, or let NimBLE pick one.
 
-config BT_ID_ADDR_SF32LB52_EFUSE
+config NIMBLE_ID_ADDR_SF32LB52_EFUSE
     bool "SF32LB52 eFUSE"
     depends on SOC_SF32LB52 && NVMEM_SF32LB
-    select BT_ID_ADDR
+    select NIMBLE_ID_ADDR
     help
       Public address derived from the unique ID in the SoC's eFUSE.
 
 endchoice
 
-config BT_ID_ADDR
+config NIMBLE_ID_ADDR
     bool
     help
       An identity address backend is selected (pbl/bluetooth/id_addr.h).
       The HCI transport programs it into its controller.
 
-config BT_HOST_THREAD_STACK_SIZE
+config NIMBLE_HOST_THREAD_STACK_SIZE
     int "Host thread stack size in bytes"
     default 5000
 
-config BT_HOST_THREAD_PRIO
+config NIMBLE_HOST_THREAD_PRIO
     int "Host thread priority"
     default 3
 
-config BT_LL_THREAD_STACK_SIZE
+config NIMBLE_LL_THREAD_STACK_SIZE
     int "Link layer thread stack size in bytes"
     depends on NIMBLE_CONTROLLER
     default 1384
 
-config BT_LL_THREAD_PRIO
+config NIMBLE_LL_THREAD_PRIO
     int "Link layer thread priority"
     depends on NIMBLE_CONTROLLER
     default 4
 
-config BT_HCI_THREAD_STACK_SIZE
+config NIMBLE_HCI_THREAD_STACK_SIZE
     int "HCI transport thread stack size in bytes"
-    depends on BT_HCI_SF32LB || BT_HCI_UART
+    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART
     default 1024
 
-config BT_HCI_THREAD_PRIO
+config NIMBLE_HCI_THREAD_PRIO
     int "HCI transport thread priority"
-    depends on BT_HCI_SF32LB || BT_HCI_UART
+    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART
     default 3
 
 choice
     prompt "SF32LB HCI trace"
     default NIMBLE_HCI_SF32LB_TRACE_NONE
-    depends on BT_HCI_SF32LB
+    depends on NIMBLE_HCI_SF32LB
     help
       Trace mode for the SF32LB HCI transport.
 

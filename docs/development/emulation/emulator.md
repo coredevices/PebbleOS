@@ -185,7 +185,7 @@ nrfutil dfu usb-serial -pkg hci_uart.zip -p /dev/cu.usbmodemXXXX
 Then build with the UART transport and pass the controller's port:
 
 ```shell
-pbl configure --board qemu_flint -DCONFIG_BT_HCI_UART=y
+pbl configure --board qemu_flint -DCONFIG_NIMBLE_HCI_UART=y
 pbl build
 pbl run --bt-hci /dev/cu.usbmodemXXXX
 ```

@@ -91,7 +91,7 @@ static_assert(sizeof(struct ring) == 20U);
 #define RX_RING_POOL_SIZE RING_POOL_SIZE(RX_RING_SIZE)
 
 static struct pbl_thread s_hci_thread;
-PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_BT_HCI_THREAD_STACK_SIZE);
+PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_NIMBLE_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
 /* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
  * to the transport pool; taken by the HCI RX task when an alloc fails so we
@@ -456,7 +456,7 @@ static void prv_nvds_config(const uint8_t *bd_addr) {
 }
 
 static void prv_controller_config(void) {
-#ifdef CONFIG_BT_ID_ADDR
+#ifdef CONFIG_NIMBLE_ID_ADDR
   struct pbl_bt_addr addr;
   enum pbl_bt_id_addr_type type;
   int rc;
@@ -499,7 +499,7 @@ void ble_transport_ll_init(void) {
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
     .entry = prv_hci_task_main,
-    .prio = CONFIG_BT_HCI_THREAD_PRIO,
+    .prio = CONFIG_NIMBLE_HCI_THREAD_PRIO,
     .privileged = true,
     .stack = s_hci_task_stack,
     .stack_size = sizeof(s_hci_task_stack),

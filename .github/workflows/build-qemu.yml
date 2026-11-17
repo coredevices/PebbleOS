@@ -171,7 +171,7 @@ jobs:
 
       - name: Build
         run: |
-          pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} -DCONFIG_BT_HCI_UART=y
+          pbl configure --board ${{ matrix.board }} --variant ${{ matrix.variant }} -DCONFIG_NIMBLE_HCI_UART=y
           pbl build qemu_image_micro qemu_image_spi bundle
 
       - name: Save the compiler cache

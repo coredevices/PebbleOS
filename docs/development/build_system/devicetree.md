@@ -310,7 +310,7 @@ class header, as `SPEAKER`:
 | --- | --- | --- |
 | `console_uart` | `uart` | |
 | `qemu_uart` | `uart` | |
-| `bt_hci_uart` | `uart` | `BT_HCI_UART` |
+| `bt_hci_uart` | `uart` | `NIMBLE_HCI_UART` |
 | `display` | `display` | `DISPLAY` |
 | `backlight` | `backlight` | `BACKLIGHT` |
 | `flash` | `flash` | `FLASH` |

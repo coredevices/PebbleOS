@@ -63,7 +63,7 @@ class QemuRunner(Runner):
         parser.add_argument(
             "--bt-hci",
             metavar="CHARDEV",
-            help="H4 Bluetooth controller for builds with CONFIG_BT_HCI_UART, "
+            help="H4 Bluetooth controller for builds with CONFIG_NIMBLE_HCI_UART, "
             "e.g. the serial port /dev/cu.usbmodem1101",
         )
 
@@ -92,14 +92,14 @@ class QemuRunner(Runner):
         build = self.cfg.build
         decoration = self._decoration(build)
 
-        hci_uart = bool(build.config.CONFIG_BT_HCI_UART)
+        hci_uart = bool(build.config.CONFIG_NIMBLE_HCI_UART)
         if hci_uart and not self.bt_hci:
             raise RunnerError(
-                "the build uses CONFIG_BT_HCI_UART; pass --bt-hci with the "
+                "the build uses CONFIG_NIMBLE_HCI_UART; pass --bt-hci with the "
                 "controller's serial port"
             )
         if self.bt_hci and not hci_uart:
-            raise RunnerError("--bt-hci needs a build with CONFIG_BT_HCI_UART=y")
+            raise RunnerError("--bt-hci needs a build with CONFIG_NIMBLE_HCI_UART=y")
 
         return self.run_program(
             self._command_line(build, decoration, self._flash_images(build)),

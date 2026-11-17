@@ -14,11 +14,11 @@
 PBL_LOG_MODULE_DEFINE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 static struct pbl_thread s_host_thread;
-PBL_THREAD_STACK_DEFINE(s_host_stack, CONFIG_BT_HOST_THREAD_STACK_SIZE);
+PBL_THREAD_STACK_DEFINE(s_host_stack, CONFIG_NIMBLE_HOST_THREAD_STACK_SIZE);
 
 #if NIMBLE_CFG_CONTROLLER
 static struct pbl_thread s_ll_thread;
-PBL_THREAD_STACK_DEFINE(s_ll_stack, CONFIG_BT_LL_THREAD_STACK_SIZE);
+PBL_THREAD_STACK_DEFINE(s_ll_stack, CONFIG_NIMBLE_LL_THREAD_STACK_SIZE);
 #endif
 
 static void prv_host_main(void *arg) {
@@ -44,7 +44,7 @@ void nimble_port_pebble_init(void) {
   struct pbl_thread_attr host_attr = {
     .name = "NimbleHost",
     .entry = prv_host_main,
-    .prio = CONFIG_BT_HOST_THREAD_PRIO,
+    .prio = CONFIG_NIMBLE_HOST_THREAD_PRIO,
     .privileged = true,
     .stack = s_host_stack,
     .stack_size = sizeof(s_host_stack),
@@ -56,7 +56,7 @@ void nimble_port_pebble_init(void) {
   struct pbl_thread_attr ll_attr = {
     .name = "NimbleLL",
     .entry = nimble_port_ll_task_func,
-    .prio = CONFIG_BT_LL_THREAD_PRIO,
+    .prio = CONFIG_NIMBLE_LL_THREAD_PRIO,
     .privileged = true,
     .stack = s_ll_stack,
     .stack_size = sizeof(s_ll_stack),
