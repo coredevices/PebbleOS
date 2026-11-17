@@ -40,10 +40,6 @@ config FLASH_SHELL_TEST
     default y if RECOVERY_FW
     depends on FLASH_SHELL
 
-config FLASH_SHELL_STRESS
-    default !RECOVERY_FW
-    depends on FLASH_SHELL
-
 config FS_PFS_SHELL_LITTER
     default !RECOVERY_FW && !RELEASE
     depends on FS_PFS && SHELL
