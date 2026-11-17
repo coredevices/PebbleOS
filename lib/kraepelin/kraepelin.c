@@ -77,6 +77,7 @@ Pebble App project.
 // For each minute, take a weighted integral of the N minutes before and after it.
 #define KALG_SLEEP_HALF_WIDTH   4
 #define KALG_SLEEP_FILTER_WIDTH (2 * KALG_SLEEP_HALF_WIDTH + 1)
+static_assert(KALG_SLEEP_HALF_WIDTH == PBL_KRAEPELIN_SLEEP_SCORE_LAG_M);
 
 // 2^7 = 128 elements > 125 to allow fft
 #define KALG_FFT_WIDTH 128
@@ -155,6 +156,13 @@ typedef struct {
   struct pbl_kraepelin_sleep_stats summary_stats;
   time_t last_sample_utc;
 } KAlgSleepActivityState;
+
+// Verdict of an external sleep classifier, which then replaces the sleep score
+typedef enum {
+  KAlgSleepMinuteVerdict_None,
+  KAlgSleepMinuteVerdict_Asleep,
+  KAlgSleepMinuteVerdict_Awake,
+} KAlgSleepMinuteVerdict;
 
 // Params used for sleep detection
 typedef struct {
@@ -339,6 +347,9 @@ struct pbl_kraepelin {
   time_t last_activity_update_utc;
 
   bool disable_activity_session_tracking; // If true don't automatically track activities
+
+  // Verdict of pbl_kraepelin_set_sleep_minute() for the next minute scored
+  KAlgSleepMinuteVerdict sleep_minute_verdict;
 };
 
 // ----------------------------------------------------------------------------------------
@@ -1627,7 +1638,11 @@ static bool prv_sleep_activity_update_stats(struct pbl_kraepelin *alg_state, tim
   // The minute we are computing the score for *starts* at KALG_SLEEP_HALF_WIDTH + 1
   time_t sample_utc = utc_now - ((KALG_SLEEP_HALF_WIDTH + 1) * PBL_SEC_PER_MIN);
   uint32_t score = prv_compute_sleep_score(state->minute_history, KALG_SLEEP_HALF_WIDTH);
-  bool is_sleep_minute = ((score <= params->max_sleep_minute_score) && !not_worn);
+  bool is_sleep_minute = (score <= params->max_sleep_minute_score);
+  if (alg_state->sleep_minute_verdict != KAlgSleepMinuteVerdict_None) {
+    is_sleep_minute = (alg_state->sleep_minute_verdict == KAlgSleepMinuteVerdict_Asleep);
+  }
+  is_sleep_minute = is_sleep_minute && !not_worn;
 
   // ----------------------------------------------------------------------------------
   // Update stats
@@ -1700,7 +1715,9 @@ static void prv_sleep_activity_update_session_state(
     }
 
   } else {
-    // We have detected a bedtime, see if we should wake yet.
+    // We have detected a bedtime, see if we should wake yet. The VMC and score checks belong to
+    // the sleep score: an external classifier decides alone.
+    const bool check_vmc = (alg_state->sleep_minute_verdict == KAlgSleepMinuteVerdict_None);
     uint32_t wake_minutes_threshold =
         (minutes_since_sleep_started < params->max_wake_minute_early_offset)
             ? params->max_wake_minutes_early
@@ -1718,17 +1735,18 @@ static void prv_sleep_activity_update_session_state(
       *sleep_end_time =
           sample_utc - (state->current_stats.consecutive_awake_minutes * PBL_SEC_PER_MIN);
 
-    } else if (vmc > params->force_wake_minute_vmc) {
+    } else if (check_vmc && (vmc > params->force_wake_minute_vmc)) {
       // VMC for this minute is way too high
       *sleep_end_time = sample_utc;
       KALG_LOG("Cycle ended because VMC was too high for this minute");
 
-    } else if (score > params->force_wake_minute_score) {
+    } else if (check_vmc && (score > params->force_wake_minute_score)) {
       // Score for this minute is way too high
       *sleep_end_time = sample_utc;
       KALG_LOG("Cycle ended because score was too high for this minute");
 
-    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
+    } else if (check_vmc &&
+               (minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
                (pct_non_zero > params->max_active_minutes_pct)) {
       // Too high a percent of awake minutes
       // If the percentage of non-zero minutes is too high, reject this cycle.
@@ -1736,7 +1754,8 @@ static void prv_sleep_activity_update_session_state(
       *reject_session = true;
       KALG_LOG("Cycle rejected because too many non-zero minutes (%d pct)", pct_non_zero);
 
-    } else if ((minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
+    } else if (check_vmc &&
+               (minutes_since_sleep_started > params->min_sleep_len_for_active_pct_check) &&
                (avg_vmc > params->max_avg_vmc)) {
       // Too high an average VMC, reject this cycle
       // If the percentage of non-zero minutes is too high, reject this cycle.
@@ -2047,6 +2066,13 @@ void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now
     prv_sleep_activity_update(state, utc_now, vmc, orientation, definitely_not_worn, shutting_down,
                               sessions_cb, context);
   }
+  state->sleep_minute_verdict = KAlgSleepMinuteVerdict_None;
+}
+
+// ---------------------------------------------------------------------------------------
+void pbl_kraepelin_set_sleep_minute(struct pbl_kraepelin *state, bool asleep) {
+  state->sleep_minute_verdict =
+      asleep ? KAlgSleepMinuteVerdict_Asleep : KAlgSleepMinuteVerdict_Awake;
 }
 
 // ---------------------------------------------------------------------------------------

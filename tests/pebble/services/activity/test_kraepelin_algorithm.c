@@ -2274,3 +2274,98 @@ void test_kraepelin_algorithm__step_activity_in_progress(void) {
   pbl_free(s_kalg_state);
   s_kalg_state = nullptr;
 }
+
+// ---------------------------------------------------------------------------------------
+// Feed worn minutes, with the verdict of an external sleep classifier if not negative
+#define SLEEP_VERDICT_NONE (-1)
+
+static void prv_feed_sleep_minutes(int num_minutes, uint16_t vmc, int asleep) {
+  time_t now = pbl_realtime();
+  for (int i = 0; i < num_minutes; i++) {
+    if (asleep != SLEEP_VERDICT_NONE) {
+      pbl_kraepelin_set_sleep_minute(s_kalg_state, asleep);
+    }
+    // The orientation keeps changing, as it does on a wrist
+    const uint8_t orientation = ((now / PBL_SEC_PER_MIN) % 2) ? 0x35 : 0x47;
+    pbl_kraepelin_activities_update(s_kalg_state, now, 0 /*steps*/, vmc, orientation,
+                                    false /*definitely_not_worn*/, 0 /*resting_calories*/,
+                                    0 /*active_calories*/, 0 /*distance_mm*/,
+                                    false /*shutting_down*/, prv_sleep_session_callback, nullptr);
+    now += PBL_SEC_PER_MIN;
+    pbl_realtime_set(now);
+  }
+}
+
+static const KAlgTestSleepSession *prv_only_sleep_session(void) {
+  const KAlgTestSleepSession *found = nullptr;
+  for (int i = 0; i < s_num_captured_sleep_sessions; i++) {
+    if (s_captured_sleep_sessions[i].activity == PBL_KRAEPELIN_ACTIVITY_SLEEP) {
+      cl_assert(!found);
+      found = &s_captured_sleep_sessions[i];
+    }
+  }
+  return found;
+}
+
+static void prv_sleep_verdict_test_init(void) {
+  s_kalg_state = pbl_zalloc(pbl_kraepelin_state_size());
+  pbl_kraepelin_init(s_kalg_state, nullptr, prv_stats_cb);
+  s_num_captured_sleep_sessions = 0;
+  pbl_realtime_set(WALK_TEST_START_UTC);
+}
+
+static void prv_sleep_verdict_test_deinit(void) {
+  pbl_free(s_kalg_state);
+  s_kalg_state = nullptr;
+}
+
+// VMC far too high for the sleep score, and for the average VMC of a sleep session
+#define SLEEP_VERDICT_AWAKE_VMC  2000
+#define SLEEP_VERDICT_ASLEEP_VMC 10
+
+// An external classifier finds sleep that the sleep score rejects
+void test_kraepelin_algorithm__sleep_verdict_asleep(void) {
+  const int k_awake_m = 20;
+  const int k_asleep_m = 120;
+
+  // Without verdict there is no sleep
+  prv_sleep_verdict_test_init();
+  prv_feed_sleep_minutes(k_awake_m + k_asleep_m + 30, SLEEP_VERDICT_AWAKE_VMC, SLEEP_VERDICT_NONE);
+  cl_assert(!prv_only_sleep_session());
+  prv_sleep_verdict_test_deinit();
+
+  prv_sleep_verdict_test_init();
+  prv_feed_sleep_minutes(k_awake_m, SLEEP_VERDICT_AWAKE_VMC, false);
+  prv_feed_sleep_minutes(k_asleep_m, SLEEP_VERDICT_AWAKE_VMC, true);
+  prv_feed_sleep_minutes(30, SLEEP_VERDICT_AWAKE_VMC, false);
+
+  // The verdicts are for the minutes scored, which lag the ones fed
+  const KAlgTestSleepSession *session = prv_only_sleep_session();
+  cl_assert(session);
+  const int start_m = (session->start_utc - WALK_TEST_START_UTC) / PBL_SEC_PER_MIN;
+  cl_assert_equal_i(start_m, k_awake_m - PBL_KRAEPELIN_SLEEP_SCORE_LAG_M - 2);
+  cl_assert_equal_i(session->len_m, k_asleep_m);
+  prv_sleep_verdict_test_deinit();
+}
+
+// An external classifier rejects sleep that the sleep score finds
+void test_kraepelin_algorithm__sleep_verdict_awake(void) {
+  prv_sleep_verdict_test_init();
+  prv_feed_sleep_minutes(150, SLEEP_VERDICT_ASLEEP_VMC, SLEEP_VERDICT_NONE);
+  cl_assert(prv_only_sleep_session());
+  prv_sleep_verdict_test_deinit();
+
+  prv_sleep_verdict_test_init();
+  prv_feed_sleep_minutes(150, SLEEP_VERDICT_ASLEEP_VMC, false);
+  cl_assert(!prv_only_sleep_session());
+  prv_sleep_verdict_test_deinit();
+}
+
+// A verdict only applies to the next update
+void test_kraepelin_algorithm__sleep_verdict_is_one_shot(void) {
+  prv_sleep_verdict_test_init();
+  prv_feed_sleep_minutes(20, SLEEP_VERDICT_AWAKE_VMC, true);
+  prv_feed_sleep_minutes(150, SLEEP_VERDICT_AWAKE_VMC, SLEEP_VERDICT_NONE);
+  cl_assert(!prv_only_sleep_session());
+  prv_sleep_verdict_test_deinit();
+}
