@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/connector/sifli,lcd-qspi-connector.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli quad SPI LCD connector
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  The FPC of SiFli development kits for quad SPI display modules, of 16, 22 or
+  40 pins depending on the kit, which modules reach through a cable: the quad
+  SPI bus of a display controller, an I2C bus for the touchscreen, and the
+  signals of dt-bindings/connector/sifli-lcd-qspi.h, as GPIOs and the
+  touchscreen interrupt.
+
+  The node maps those signals to the pins of the board, so that a module
+  refers to the connector alone. The trigger of the touchscreen interrupt is
+  the module's: the map has an entry for each one the pin takes. The board
+  labels the display controller lcd_qspi_lcdc, the I2C bus lcd_qspi_i2c and
+  the pin state of the touchscreen interrupt lcd_qspi_touch_default.
+
+allOf:
+  - $ref: /schemas/gpio/gpio-nexus-node.yaml#
+
+properties:
+  compatible:
+    const: sifli,lcd-qspi-connector
+
+  '#address-cells':
+    const: 0
+
+  '#interrupt-cells':
+    const: 2
+
+  interrupt-map: true
+
+required:
+  - compatible
+  - '#gpio-cells'
+  - gpio-map
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/connector/sifli-lcd-qspi.h>
+    #include <dt-bindings/interrupt-controller/irq.h>
+    connector {
+        compatible = "sifli,lcd-qspi-connector";
+        #address-cells = <0>;
+        #gpio-cells = <2>;
+        gpio-map-mask = <0xffffffff 0x0>;
+        gpio-map-pass-thru = <0x0 0xffffffff>;
+        gpio-map = <SIFLI_LCD_QSPI_RESET 0 &gpio1 43 0>,
+                   <SIFLI_LCD_QSPI_TP_INT 0 &gpio1 6 0>;
+        #interrupt-cells = <2>;
+        interrupt-map = <SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_EDGE_FALLING
+                         &gpio1 6 IRQ_TYPE_EDGE_FALLING>,
+                        <SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_LEVEL_LOW
+                         &gpio1 6 IRQ_TYPE_LEVEL_LOW>;
+    };
