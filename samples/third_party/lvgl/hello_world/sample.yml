@@ -1,0 +1,6 @@
+description: LVGL on the display, a label and a spinner rendered for 5 seconds
+expect:
+  - 'lvgl: \d+\.\d+\.\d+, showing for 5 s'
+  - 'Sample done'
+timeout: 20
+roles: [display]
