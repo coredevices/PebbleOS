@@ -131,6 +131,7 @@ Single quotes keep YAML from reading the backslashes.
 | `boards` | The boards the sample is for, when it needs hardware not all have (default: every board) |
 | `skip` | The boards the sample is not for, when few lack what it needs |
 | `roles` | The roles the sample uses, as in `roles.yml`: it is skipped on boards that give one of them no device, counting its own `roles.yml` and `boards/<board>.roles.yml` |
+| `addons` | The add-ons plugged into the board, from `boards/addons`: their devices and roles count for it |
 
 ## Writing a sample
 

@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -2582,3 +2583,49 @@ def test_interrupt_nexus_needs_no_unit_address(tmp_path):
     with pytest.raises(DtError, match="takes #address-cells = <0>"):
         generate_with(tmp_path, text, NEXUS_SPECS, NEXUS_CLASSES)
 
+
+def addon_tree(tmp_path, connector="acme,conn"):
+    dtc()
+    if shutil.which("cc") is None:
+        pytest.skip("needs cc")
+    board = tmp_path / "boards" / "board"
+    board.mkdir(parents=True)
+    (board / "board.dts").write_text(
+        (DTS % {"bus": "", "sensor": 'status = "disabled";'}).replace(
+            "    bus: bus@2000 {",
+            f'    conn: connector {{\n        compatible = "{connector}";\n    }};\n'
+            "    bus: bus@2000 {",
+        )
+    )
+    (board / "roles.yml").write_text("main_bus: bus\n")
+    addon = tmp_path / "boards" / "addons" / "module"
+    (addon / "boards").mkdir(parents=True)
+    (addon / "addon.yml").write_text("connectors:\n  - acme,conn\n")
+    (addon / "module.overlay").write_text('&sensor {\n    status = "okay";\n};\n')
+    (addon / "boards" / "board.overlay").write_text("&sensor {\n    mount-matrix = \"1\";\n};\n")
+    (addon / "roles.yml").write_text("accel: sensor\n")
+    return tmp_path
+
+
+def test_addons_overlay_the_tree_and_give_roles(tmp_path):
+    srcdir = addon_tree(tmp_path)
+    assert dtmap.available_addons(srcdir) == ["module"]
+    dtb, _, deps = dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["module"])
+    sensor = next(n for n in fdt.load(dtb).nodes() if "sensor" in n.labels)
+    assert sensor.status_okay
+    assert sensor.strings("mount-matrix") == ["1"]
+    assert str(srcdir / "boards" / "addons" / "module" / "addon.yml") in deps
+    roles = yaml.safe_load((tmp_path / "build" / "devicetree" / dtmap.ROLES_FILE).read_text())
+    assert roles == {"main_bus": "bus", "accel": "sensor"}
+
+
+def test_addons_need_their_connectors(tmp_path):
+    srcdir = addon_tree(tmp_path, connector="acme,other")
+    with pytest.raises(DtError, match="add-on module needs a acme,conn connector: board has none"):
+        dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["module"])
+
+
+def test_unknown_addons_fail(tmp_path):
+    srcdir = addon_tree(tmp_path)
+    with pytest.raises(DtError, match="no add-on 'missing'"):
+        dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["missing"])

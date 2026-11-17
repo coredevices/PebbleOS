@@ -15,6 +15,7 @@ A sample is a directory with a ``sample.yml`` next to its ``CMakeLists.txt``:
     boards: [qemu_emery]
     skip: [native_emery]
     roles: [accel]
+    addons: [sifli_lcm_1p85]
 
 ``expect`` is what makes the sample a test: the lines its console has to
 print, in that order, with any others in between, and before it boots a
@@ -22,7 +23,8 @@ second time: a sample that panics and starts over fails. ``timeout`` is how many
 seconds it gets (default 10). ``boards`` limits it to the boards that have
 what it needs (default: all of them), and ``skip`` names those that lack it.
 ``roles`` names the roles it uses: boards without them, after the board's and
-the sample's roles files, are skipped too.
+the sample's roles files, are skipped too. ``addons`` are plugged into the
+board, from ``boards/addons``, and give it roles too.
 """
 
 import os
@@ -40,7 +42,7 @@ DEFAULT_TIMEOUT = 10
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _BOOT = re.compile(r"\*\*\* Booting PebbleOS ")
-_KEYS = {"description", "expect", "timeout", "boards", "skip", "roles"}
+_KEYS = {"description", "expect", "timeout", "boards", "skip", "roles", "addons"}
 
 
 class SampleError(Exception):
@@ -58,6 +60,7 @@ class Sample:
     boards: tuple = ()
     skip: tuple = ()
     roles: tuple = ()
+    addons: tuple = ()
 
     def supports(self, board):
         """Whether the sample is for ``board``, given as ``name[@revision]``."""
@@ -71,7 +74,10 @@ class Sample:
         from tools.devicetree import dtmap
 
         name, _, revision = board.partition("/")[0].partition("@")
-        files = dtmap.role_files(srcdir, name, revision or None, self.path)
+        try:
+            files = dtmap.role_files(srcdir, name, revision or None, self.path, self.addons)
+        except dtmap.DtError as e:
+            raise SampleError(str(e)) from e
         try:
             have = dtmap.merge_roles(files)
         except dtmap.DtError as e:
@@ -126,7 +132,12 @@ def load(path, name=None):
         raise SampleError(f"invalid {manifest}: timeout must be a number of seconds")
 
     lists = {}
-    for key, what in (("boards", "board"), ("skip", "board"), ("roles", "role")):
+    for key, what in (
+        ("boards", "board"),
+        ("skip", "board"),
+        ("roles", "role"),
+        ("addons", "add-on"),
+    ):
         lists[key] = data.get(key, [])
         if not isinstance(lists[key], list) or not all(
             isinstance(b, str) for b in lists[key]
@@ -144,6 +155,7 @@ def load(path, name=None):
         boards=tuple(lists["boards"]),
         skip=tuple(lists["skip"]),
         roles=tuple(lists["roles"]),
+        addons=tuple(lists["addons"]),
     )
 
 
