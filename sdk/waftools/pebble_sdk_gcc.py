@@ -4,8 +4,8 @@
 import os
 
 import inject_metadata
+from waflib import Logs
 from waflib.Configure import conf
-from waflib.Errors import BuildError
 
 
 def configure(conf):
@@ -182,7 +182,8 @@ def gen_inject_metadata_rule(
         # metadata.
         cp_result = task.exec_command(f'cp "{bin_path}" "{tgt_path}"')
         if cp_result < 0:
-            raise BuildError(f"Failed to copy {bin_path} to {tgt_path}!")
+            Logs.error(f"Failed to copy {bin_path} to {tgt_path}!")
+            return 1
 
         # Now actually inject the metadata into the new copy of the binary.
         inject_metadata.inject_metadata(
