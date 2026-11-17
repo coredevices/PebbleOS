@@ -21,6 +21,9 @@
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
 #include <pbl/services/mic_capture.h>
 #endif
+#ifdef CONFIG_SERVICE_ACTIVITY
+#include <pbl/services/activity/health_permission.h>
+#endif
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -106,6 +109,9 @@ static void prv_permissions_changed(const Uuid *uuid, uint32_t permissions) {
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
   mic_capture_service_handle_permission_changed(uuid,
                                                 (permissions & APP_DB_PERMISSION_MICROPHONE) != 0);
+#endif
+#ifdef CONFIG_SERVICE_ACTIVITY
+  health_permission_handle_changed(uuid);
 #endif
 }
 
@@ -501,6 +507,17 @@ bool app_db_microphone_granted(const Uuid *uuid) {
   const uint32_t permissions = prv_read_permissions(&s_app_db.settings_file, uuid);
   prv_close_file_and_unlock_mutex();
   return (permissions & APP_DB_PERMISSION_MICROPHONE) != 0;
+}
+
+bool app_db_health_allowed(const Uuid *uuid) {
+  // Unreadable counts as no bits sent, which allows health
+  if (!uuid || (prv_lock_mutex_and_open_file() != S_SUCCESS)) {
+    return true;
+  }
+  const uint32_t permissions = prv_read_permissions(&s_app_db.settings_file, uuid);
+  prv_close_file_and_unlock_mutex();
+  return !(permissions & APP_DB_PERMISSION_HEALTH_ENFORCED) ||
+         (permissions & APP_DB_PERMISSION_HEALTH_GRANTED);
 }
 
 status_t app_db_compact(void) {

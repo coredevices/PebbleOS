@@ -41,14 +41,19 @@ typedef struct PBL_PACKED {
   /** App name. */
   char name[APP_NAME_SIZE_BYTES];
   /** Optional phone-authorized permissions; absent on legacy records. Only app_db_read() fills
-   *  it; use app_db_microphone_granted() to check a grant. */
+   *  it; use app_db_microphone_granted() or app_db_health_allowed() to check a grant. */
   uint32_t permissions;
 } AppDBEntry;
 
 #define APP_DB_LEGACY_ENTRY_SIZE     offsetof(AppDBEntry, permissions)
 #define APP_DB_PERMISSION_MICROPHONE (1u << 0)
+//! Without it health is allowed, as it is for a phone that never sends permissions.
+#define APP_DB_PERMISSION_HEALTH_ENFORCED (1u << 1)
+#define APP_DB_PERMISSION_HEALTH_GRANTED  (1u << 2)
 
 bool app_db_microphone_granted(const Uuid *uuid);
+
+bool app_db_health_allowed(const Uuid *uuid);
 
 /**
  * @brief Callback of app_db_enumerate_entries().

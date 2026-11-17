@@ -10,6 +10,7 @@
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/health_permission.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/time.h>
 #include <pbl/util/size.h>
@@ -706,5 +707,8 @@ bool activity_sessions_is_session_type_ongoing(ActivitySessionType type) {
 
 // ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_sessions_is_session_type_ongoing, (VAL, ActivitySessionType, type)) {
+  if (from_user && !health_permission_allowed(pebble_task_get_current())) {
+    return false;
+  }
   return activity_sessions_is_session_type_ongoing(type);
 }

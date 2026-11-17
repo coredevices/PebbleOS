@@ -110,3 +110,12 @@ pbl_clar_test(test_activity_calculators
     pebble/services/activity/activity_calculators.c
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_health_permission
+  SOURCES
+    pebble/services/activity/health_permission.c
+    pebble/services/blob_db/app_db.c
+    tests/fakes/fake_settings.c
+  DEFINES CONFIG_SERVICE_ACTIVITY
+  OVERRIDES dummy_board
+)
