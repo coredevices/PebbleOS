@@ -33,6 +33,8 @@ PBL_LOG_MODULE_DEFINE(driver_panel_co5300, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 #define CO5300_HBM_MAX         0xFFU
 #define CO5300_BRIGHTNESS_MAX  0xFFU
 
+#define CO5300_ADDRESS_MODE_H_FLIP 0x02U
+
 struct prv_cmd {
   uint8_t cmd;
   uint8_t param;
@@ -61,6 +63,12 @@ static const struct pbl_panel_co5300 *prv_co5300(const struct pbl_panel *panel) 
 static int prv_write(const struct pbl_panel_co5300 *co5300, uint8_t cmd, const uint8_t *data,
                      size_t len) {
   return pbl_mipi_dbi_command_write(co5300->dbi, cmd, data, len);
+}
+
+static int prv_set_address_mode(const struct pbl_panel_co5300 *co5300) {
+  uint8_t mode = co5300->state->h_flip ? CO5300_ADDRESS_MODE_H_FLIP : 0U;
+
+  return prv_write(co5300, PBL_MIPI_DCS_SET_ADDRESS_MODE, &mode, sizeof(mode));
 }
 
 static int prv_set_brightness(const struct pbl_panel_co5300 *co5300, uint8_t brightness) {
@@ -114,6 +122,11 @@ static int prv_prepare(const struct pbl_panel *panel) {
     if (ret != 0) {
       return ret;
     }
+  }
+
+  ret = prv_set_address_mode(co5300);
+  if (ret != 0) {
+    return ret;
   }
 
   const uint16_t x1 = timing->hback_porch + timing->hactive - 1U;
@@ -195,11 +208,22 @@ static int prv_unprepare(const struct pbl_panel *panel) {
   return pbl_gpio_set(&co5300->reset, true);
 }
 
+static int prv_set_h_flip(const struct pbl_panel *panel, bool flip) {
+  const struct pbl_panel_co5300 *co5300 = prv_co5300(panel);
+  struct pbl_panel_co5300_state *state = co5300->state;
+
+  state->h_flip = flip;
+
+  // A panel that is down takes it as it comes up
+  return state->awake ? prv_set_address_mode(co5300) : 0;
+}
+
 const struct pbl_panel_ops pbl_panel_co5300_ops = {
   .prepare = prv_prepare,
   .enable = prv_enable,
   .disable = prv_disable,
   .unprepare = prv_unprepare,
+  .set_h_flip = prv_set_h_flip,
 };
 
 static const struct pbl_panel_co5300 *prv_bl_co5300(const struct pbl_backlight *bl) {

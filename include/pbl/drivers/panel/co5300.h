@@ -28,6 +28,7 @@ struct pbl_panel_co5300_state {
   uint8_t brightness;
   bool awake;
   bool on;
+  bool h_flip;
 };
 /** @endcond */
 
