@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig GPU
+    bool "GPU"
+    help
+      2D graphics accelerators: fills and blits into pixel buffers, with
+      blending, rotation and scaling where the hardware can.
+
+if GPU
+
+endif # GPU
