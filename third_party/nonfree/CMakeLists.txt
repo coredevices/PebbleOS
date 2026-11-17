@@ -4,10 +4,15 @@
 set(nonfree pebbleos-nonfree)
 
 if(CONFIG_NRF_FUEL_GAUGE)
+  if(CONFIG_CPU_HAS_FPU AND NOT CONFIG_FP_SOFTFP_ABI)
+    set(fuel_gauge_float hard-float)
+  else()
+    set(fuel_gauge_float soft-float)
+  endif()
   if(CONFIG_CPU_CORTEX_M4)
-    set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m4/soft-float)
+    set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m4/${fuel_gauge_float})
   elseif(CONFIG_CPU_CORTEX_M33)
-    set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m33/soft-float)
+    set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m33/${fuel_gauge_float})
   endif()
   pbl_include_directories(
     ${nonfree}/npm1300/nrf_fuel_gauge/include

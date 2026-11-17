@@ -60,6 +60,14 @@ config CPU_HAS_FPU
 	help
 	  Single-precision FPU: FPv4-SP on ARMv7-M, FPv5-SP on ARMv8-M.
 
+config FP_SOFTFP_ABI
+	bool
+	depends on CPU_HAS_FPU
+	help
+	  Pass floating-point arguments in core registers (softfp) rather
+	  than in FPU registers (hard), for binary compatibility with
+	  soft-float code. Selected by what needs it.
+
 config CPU_HAS_ICACHE
 	bool
 	help
