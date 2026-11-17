@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources(panel.c)
+pbl_library_sources_ifdef(CONFIG_PANEL_CO5300 co5300.c)
 pbl_library_sources_ifdef(CONFIG_PANEL_JDI_MIP jdi_mip.c)

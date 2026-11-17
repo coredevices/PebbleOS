@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: chipone,co5300
+config: PANEL_CO5300
+class: [panel, backlight]
+define: PBL_PANEL_CO5300_DEFINE
+symbol:
+  panel: "{sym}"
+  backlight: "{sym}_backlight"
+args:
+  - name: true
+  - parent: mipi_dbi
+  - gpio: reset
+  - prop: spi-max-frequency
+  - prop: hactive
+    child: panel-timing
+  - prop: vactive
+    child: panel-timing
+  - prop: hback-porch
+    child: panel-timing
+  - prop: vback-porch
+    child: panel-timing
