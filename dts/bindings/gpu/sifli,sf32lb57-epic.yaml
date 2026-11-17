@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpu/sifli,sf32lb57-epic.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB57 ePIC graphics accelerator
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  2D graphics accelerator that composes layers read from memory into a buffer
+  in memory, with blending, rotation and scaling.
+
+properties:
+  compatible:
+    const: sifli,sf32lb57-epic
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - resets
+
+additionalProperties: false
+
+examples:
+  - |
+    gpu@50007000 {
+        compatible = "sifli,sf32lb57-epic";
+        reg = <0x50007000 0x1000>;
+        interrupts = <62>;
+        clocks = <&hpsys_rcc 5>;
+        resets = <&hpsys_rcc 6>;
+    };
