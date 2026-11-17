@@ -167,6 +167,17 @@
 			status = "disabled";
 		};
 
+		nvmc: flash-controller@4001e000 {
+			compatible = "nordic,nrf52840-nvmc", "nordic,nrf52832-nvmc";
+			reg = <0x4001e000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			internal_flash: flash@0 {
+				reg = <0x0 0x100000>;
+			};
+		};
+
 		ppi: ppi@4001f000 {
 			compatible = "nordic,nrf52840-ppi", "nordic,nrf52832-ppi";
 			reg = <0x4001f000 0x1000>;
