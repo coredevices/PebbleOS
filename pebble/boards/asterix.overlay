@@ -25,7 +25,7 @@
 		};
 
 		partition@100000 {
-			label = "firmware-slot-1";
+			label = "scratch";
 			reg = <0x100000 0x100000>;
 		};
 

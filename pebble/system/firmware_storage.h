@@ -11,12 +11,14 @@
 #include <pbl/board/partitions.h>
 #include <pbl/kernel/compiler.h>
 
-//! Where a firmware update is written, and read back from once the transfer is over. Without
-//! pblboot there is a single slot; with it, the one not running, or slot 0 from recovery.
-#if !defined(CONFIG_PBLBOOT)
-#define PART_FIRMWARE_DEST_OFFSET PART_FIRMWARE_SLOT_1_OFFSET
-#define PART_FIRMWARE_DEST_SIZE   PART_FIRMWARE_SLOT_1_SIZE
-#elif defined(CONFIG_FIRMWARE_AREA_RECOVERY) || CONFIG_FIRMWARE_SLOT == 1
+//! Where a firmware update is written, and read back from once the transfer is over: the
+//! scratch area where the board has one; otherwise, with pblboot, the slot not running, or slot 0
+//! from recovery, and without it slot 1.
+#ifdef PART_SCRATCH_OFFSET
+#define PART_FIRMWARE_DEST_OFFSET PART_SCRATCH_OFFSET
+#define PART_FIRMWARE_DEST_SIZE   PART_SCRATCH_SIZE
+#elif defined(CONFIG_PBLBOOT) && \
+    (defined(CONFIG_FIRMWARE_AREA_RECOVERY) || CONFIG_FIRMWARE_SLOT == 1)
 #define PART_FIRMWARE_DEST_OFFSET PART_FIRMWARE_SLOT_0_OFFSET
 #define PART_FIRMWARE_DEST_SIZE   PART_FIRMWARE_SLOT_0_SIZE
 #else
