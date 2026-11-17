@@ -2497,3 +2497,88 @@ def test_bad_nvmem_cells_fail(tmp_path, cal, names, message):
             NVMEM_SPECS,
             NVMEM_CLASSES,
         )
+
+
+NEXUS_DTS = """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ctrl: ctrl@1000 {
+        compatible = "acme,ctrl";
+        reg = <0x1000 0x100>;
+        #clock-cells = <1>;
+        #interrupt-cells = <2>;
+        interrupt-controller;
+    };
+    gpio: gpio@2000 {
+        compatible = "acme,gpio";
+        reg = <0x2000 0x100>;
+        gpio-controller;
+        #gpio-cells = <2>;
+    };
+    conn: connector {
+        #address-cells = <0>;
+        #gpio-cells = <2>;
+        gpio-map-mask = <0xffffffff 0x0>;
+        gpio-map-pass-thru = <0x0 0xffffffff>;
+        gpio-map = <0 0 &gpio 43 0>, <1 0 &gpio 7 0>;
+        #interrupt-cells = <2>;
+        interrupt-map = <1 2 &ctrl 6 2>;
+    };
+    dev@3000 {
+        compatible = "acme,dev";
+        reg = <0x3000 0x100>;
+        interrupt-parent = <&conn>;
+        interrupts = <%(irq)s>;
+        reset-gpios = <&conn 1 1>, <&conn 0 0>;
+    };
+};
+"""
+
+NEXUS_CLASSES = {
+    **CLASSES,
+    "intc": {**CLASSES["intc"], "provides": {"irq": "IRQ(&{sym}, {0}, {1})"}},
+    "dev": {"class": "dev", "type": "struct dev", "include": "dev.h"},
+}
+
+NEXUS_SPECS = {
+    "acme,ctrl": SPECS["acme,ctrl"],
+    "acme,gpio": {
+        "compatible": "acme,gpio",
+        "config": "GPIO",
+        "class": "gpio",
+        "symbol": "acme_gpio",
+    },
+    "acme,dev": {
+        "compatible": "acme,dev",
+        "config": "DEV",
+        "class": "dev",
+        "define": "DEV_DEFINE",
+        "args": [{"irq": 0}, {"gpio": "reset", "all": True}],
+    },
+}
+
+
+def test_nexus_maps_gpios_and_interrupts(tmp_path):
+    gen = generate_with(
+        tmp_path, NEXUS_DTS % {"irq": "1 2"}, NEXUS_SPECS, NEXUS_CLASSES
+    )
+    assert (
+        "DEV_DEFINE(dt_node_dev_3000, IRQ(&acme_intc, 6, 2), PIN(&acme_gpio, 7, 1), "
+        "PIN(&acme_gpio, 43, 0));" in body(gen)
+    )
+
+
+def test_nexus_without_a_mapping_fails(tmp_path):
+    with pytest.raises(DtError, match=r"'interrupt-map' does not map <1 1>"):
+        generate_with(tmp_path, NEXUS_DTS % {"irq": "1 1"}, NEXUS_SPECS, NEXUS_CLASSES)
+
+
+def test_interrupt_nexus_needs_no_unit_address(tmp_path):
+    text = (NEXUS_DTS % {"irq": "1 2"}).replace(
+        "#address-cells = <0>;\n        #gpio", "#gpio"
+    )
+    with pytest.raises(DtError, match="takes #address-cells = <0>"):
+        generate_with(tmp_path, text, NEXUS_SPECS, NEXUS_CLASSES)
+

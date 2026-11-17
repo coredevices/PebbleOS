@@ -235,6 +235,55 @@ that is disabled, or whose driver is not enabled, fails the build, and the
 provider is initialized before the consumer; see
 [](#devicetree-init-order).
 
+(devicetree-connectors)=
+
+### Connectors
+
+A connector is a set of pins that another board plugs into. Its node is a
+nexus: references to it give a pin or an interrupt of the connector, and the
+node maps them to those of the board, with `gpio-map` and `interrupt-map`, as
+in the devicetree specification. What plugs in then refers to the connector
+alone, whatever board it is on:
+
+```dts
+lcm: connector {
+	compatible = "vendor,lcm-connector";
+	#gpio-cells = <2>;
+	/* connector pin, flags: the pin selects the entry, the flags pass through */
+	gpio-map-mask = <0xffffffff 0x0>;
+	gpio-map-pass-thru = <0x0 0xffffffff>;
+	gpio-map = <0 0 &gpio1 43 0>,  /* reset */
+	           <1 0 &gpio1 7 0>;   /* touch reset */
+	#address-cells = <0>;
+	#interrupt-cells = <2>;
+	interrupt-map = <2 IRQ_TYPE_EDGE_FALLING &gpio1 6 IRQ_TYPE_EDGE_FALLING>;
+};
+
+touchscreen@38 {
+	interrupt-parent = <&lcm>;
+	interrupts = <2 IRQ_TYPE_EDGE_FALLING>;
+	reset-gpios = <&lcm 1 GPIO_ACTIVE_LOW>;
+};
+```
+
+Each reference is followed through the maps to the provider: the specifier,
+masked by `<name>-map-mask`, selects the entry, and the bits of
+`<name>-map-pass-thru` come from the specifier given. This holds for every
+kind of reference with `#<name>-cells`. An interrupt map has no
+`interrupt-map-pass-thru`, so it lists each flag it accepts, and the connector
+takes `#address-cells = <0>`. A specifier no entry maps fails the build.
+
+The buses and controllers wired to the connector get a label of their own
+in the board's tree, next to their usual one, as do the pin states they take,
+so that what plugs in can refer to them without knowing the board:
+
+```dts
+lcm_i2c: &i2c1 {
+	pinctrl-0 = <&i2c1_default>;
+	pinctrl-names = "default";
+};
+```
+
 (devicetree-roles)=
 
 ### Roles
