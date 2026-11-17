@@ -43,6 +43,9 @@ enum pbl_display_format {
   PBL_DISPLAY_FORMAT_MONO,
   /** 8 bits per pixel, 2 bits per alpha, red, green and blue, from the most significant bit. */
   PBL_DISPLAY_FORMAT_ARGB2222,
+  /** 16 bits per pixel, little-endian, 5 bits of red, 6 of green and 5 of blue, from the most
+   *  significant bit. */
+  PBL_DISPLAY_FORMAT_RGB565,
 };
 
 /** @brief Properties of a display. */
