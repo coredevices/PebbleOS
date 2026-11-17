@@ -4,7 +4,8 @@
 config COREDUMP_BACKEND_FLASH
     bool "Flash backend"
     default y
-    depends on FLASH
+    depends on FLASH && $(has_partition,safe-firmware)
+    depends on (PBLBOOT && $(has_partition,cd)) || (!PBLBOOT && $(has_partition,firmware-slot-1))
     help
       Keep dumps in flash until they are read back, in the core dump
       partition or, without one, in the firmware update slot.
