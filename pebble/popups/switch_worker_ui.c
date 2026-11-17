@@ -94,7 +94,7 @@ void switch_worker_confirm(AppInstallId new_worker_id, bool set_as_default,
   const char *fmt =
       pbl_i18n_get("Run %s instead of %s as the background app?", confirmation_dialog);
   char *msg_buffer = applib_zalloc(DIALOG_MAX_MESSAGE_LEN);
-  sniprintf(msg_buffer, DIALOG_MAX_MESSAGE_LEN, fmt, new_entry.name, old_entry.name);
+  snprintf(msg_buffer, DIALOG_MAX_MESSAGE_LEN, fmt, new_entry.name, old_entry.name);
 
   confirmation_dialog_set_click_config_provider(confirmation_dialog, prv_click_config_provider);
 

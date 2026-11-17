@@ -83,7 +83,7 @@ static Codepoint prv_codepoint_at(unsigned int index) {
 
 static void prv_refresh(AppState *data) {
   const unsigned int page_count = (data->emoji_count + EMOJIS_PER_PAGE - 1) / EMOJIS_PER_PAGE;
-  sniprintf(data->header, sizeof(data->header), "Emoji %u/%u", data->page + 1, page_count);
+  snprintf(data->header, sizeof(data->header), "Emoji %u/%u", data->page + 1, page_count);
 
   utf8_t *cursor = (utf8_t *)data->emojis;
   const unsigned int first = data->page * EMOJIS_PER_PAGE;

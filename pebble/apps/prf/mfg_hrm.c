@@ -71,7 +71,7 @@ static void prv_handle_init(void) {
   text_layer_set_text(title, "HRM TEST");
   layer_add_child(&window->layer, &title->layer);
 
-  sniprintf(data->status_string, STATUS_STRING_LEN, "Starting...");
+  snprintf(data->status_string, STATUS_STRING_LEN, "Starting...");
 
   snprintf(data->bpm_string, BPM_STRING_LEN, "HR:--");
   snprintf(data->spo2_string, SPO2_STRING_LEN, "SpO2:--");

@@ -78,7 +78,7 @@ size_t clock_format_time(char *buffer, uint8_t size, int16_t hours, int16_t minu
       format = add_space ? "%u:%02u PM" : "%u:%02uPM";
     }
   }
-  return sniprintf(buffer, size, format, pbl_time_display_hour(hours, is24h), minutes);
+  return snprintf(buffer, size, format, pbl_time_display_hour(hours, is24h), minutes);
 }
 
 size_t clock_copy_time_string_timestamp(char *buffer, uint8_t size, time_t timestamp) {

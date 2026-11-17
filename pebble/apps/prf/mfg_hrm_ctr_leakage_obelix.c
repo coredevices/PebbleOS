@@ -238,7 +238,7 @@ static void prv_handle_init(void) {
   text_layer_set_text(title, "HRM TEST");
   layer_add_child(&window->layer, &title->layer);
 
-  sniprintf(data->status_string, STATUS_STRING_LEN, "Press Sel to Start");
+  snprintf(data->status_string, STATUS_STRING_LEN, "Press Sel to Start");
 
   snprintf(data->ctr_string, CTR_STRING_LEN, "CTR:--");
   snprintf(data->leak_string, LEAKAGE_STRING_LEN, "Leak:--");

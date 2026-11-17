@@ -108,8 +108,8 @@ static bool prv_use_default_log_msg(LogBinaryMessage *msg, const int max_message
 // -------------------------------------------------------------------------------------------
 static void prv_sprintf_to_msg(LogBinaryMessage *msg, const uint32_t max_message_len,
                                const char *fmt, va_list fmt_args) {
-  int message_length = vsniprintf(msg->message + msg->message_length,
-                                  max_message_len - msg->message_length, fmt, fmt_args);
+  int message_length = vsnprintf(msg->message + msg->message_length,
+                                 max_message_len - msg->message_length, fmt, fmt_args);
   msg->message_length += message_length;
   if (msg->message_length > max_message_len) {
     msg->message_length = max_message_len;
@@ -287,7 +287,7 @@ static void prv_log_hashed(uint32_t flags, uint32_t core_number, uint32_t packed
    */
   const int max_message_length = buffer_len - sizeof(LogBinaryMessage);
 
-  // Only use vsniprintf if we have sufficient stack space
+  // Only use vsnprintf if we have sufficient stack space
   if (!prv_use_default_log_msg(msg, max_message_length)) {
     // add the hashed value for the 'New Log' message
     sprintf(msg->message, "NL:%x", hash);

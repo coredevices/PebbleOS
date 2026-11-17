@@ -74,7 +74,7 @@ static void prv_complete_test(AppData *data, bool passed) {
 
   mfg_test_result_report(MfgTestId_Touch, passed, data->best_progress);
 
-  sniprintf(data->status_string, sizeof(data->status_string), "%s", passed ? "PASS!" : "FAIL!");
+  snprintf(data->status_string, sizeof(data->status_string), "%s", passed ? "PASS!" : "FAIL!");
   text_layer_set_text(&data->status, data->status_string);
   // The status overlay is transparent: repaint the whole window under it
   layer_mark_dirty(&data->window.layer);
@@ -93,8 +93,8 @@ static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_cha
   if (data->seconds_remaining == 0) {
     prv_complete_test(data, false);
   } else {
-    sniprintf(data->status_string, sizeof(data->status_string), "%" PRIu32 "s",
-              data->seconds_remaining);
+    snprintf(data->status_string, sizeof(data->status_string), "%" PRIu32 "s",
+             data->seconds_remaining);
     text_layer_set_text(&data->status, data->status_string);
     layer_mark_dirty(&data->window.layer);
     data->seconds_remaining--;

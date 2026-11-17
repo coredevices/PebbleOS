@@ -90,8 +90,8 @@ static char *prv_create_worker_crash_reason_string(AppInstallId app_install_id) 
   const uint8_t CRASH_REASON_BUFFER_SIZE = 7 + 1 + MAX_APP_NAME_STRING_LENGTH + 32 + 1;
   char *crash_reason = pbl_zalloc_check(CRASH_REASON_BUFFER_SIZE);
   const char *crash_str = pbl_i18n_noop("%s%.*s is not responding.\n\nOpen app?");
-  sniprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, pbl_i18n_get(crash_str, crash_reason),
-            app_found ? " " : "", MAX_APP_NAME_STRING_LENGTH, app_found ? entry.name : "");
+  snprintf(crash_reason, CRASH_REASON_BUFFER_SIZE, pbl_i18n_get(crash_str, crash_reason),
+           app_found ? " " : "", MAX_APP_NAME_STRING_LENGTH, app_found ? entry.name : "");
   pbl_i18n_free(crash_str, crash_reason);
   return crash_reason;
 }

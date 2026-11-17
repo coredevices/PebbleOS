@@ -17,5 +17,4 @@ pbl_clar_test(test_log_modules
     tests/subsys/logging/static_module_peer.c
   DEFINES CONFIG_DEFAULT_LOG_LEVEL=100 CONFIG_LOG_BOOT_BUFFER_SIZE=256
           CONFIG_TEST_RUNTIME_LOG_LEVEL=100 CONFIG_TEST_RUNTIME_LOG_LEVEL_RUNTIME=1
-          vsniprintf=vsnprintf
 )

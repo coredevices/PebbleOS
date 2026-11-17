@@ -57,14 +57,14 @@ static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_cha
     mfg_test_result_report(MfgTestId_Buttons, test_passed, 0);
 
     if (test_passed) {
-      sniprintf(data->status_string, sizeof(data->status_string), "PASS!");
+      snprintf(data->status_string, sizeof(data->status_string), "PASS!");
     } else {
-      sniprintf(data->status_string, sizeof(data->status_string), "FAIL!");
+      snprintf(data->status_string, sizeof(data->status_string), "FAIL!");
     }
     data->seconds_remaining = WINDOW_POP_TIME_S;
   } else {
-    sniprintf(data->status_string, sizeof(data->status_string), "TIME REMAINING: %" PRIu32 "s",
-              data->seconds_remaining);
+    snprintf(data->status_string, sizeof(data->status_string), "TIME REMAINING: %" PRIu32 "s",
+             data->seconds_remaining);
     data->seconds_remaining--;
   }
 

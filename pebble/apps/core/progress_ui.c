@@ -97,8 +97,8 @@ static void prv_handle_finished(ProgressUIData *data, bool success) {
 }
 
 static void prv_update_progress_text(ProgressUIData *data) {
-  sniprintf(data->percent_done_text_buffer, sizeof(data->percent_done_text_buffer), "%u%%",
-            data->percent_complete);
+  snprintf(data->percent_done_text_buffer, sizeof(data->percent_done_text_buffer), "%u%%",
+           data->percent_complete);
   layer_mark_dirty(&data->percent_done_text_layer.layer);
 }
 

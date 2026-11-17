@@ -46,8 +46,8 @@ static void prv_log_timestamp(void) {
   uint32_t day_s = (uint32_t)((now_ms / 1000U) % (24U * 60U * 60U));
   unsigned int time_ms = (unsigned int)(now_ms % 1000U);
 
-  sniprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", (unsigned int)(day_s / 3600U),
-            (unsigned int)((day_s / 60U) % 60U), (unsigned int)(day_s % 60U), time_ms);
+  snprintf(buffer, TIMESTAMP_BUFFER_SIZE, "%02u:%02u:%02u.%03u ", (unsigned int)(day_s / 3600U),
+           (unsigned int)((day_s / 60U) % 60U), (unsigned int)(day_s % 60U), time_ms);
 
   prv_write(buffer);
 }

@@ -47,10 +47,9 @@ typedef struct {
 } AppState;
 
 static void prv_refresh(AppState *data) {
-  sniprintf(data->header_buf, sizeof(data->header_buf), "%u/%u %s", data->font_index + 1,
-            (unsigned int)ARRAY_LENGTH(s_fonts), s_fonts[data->font_index].label);
-  sniprintf(data->info_buf, sizeof(data->info_buf), "U+%04X '%c'", data->codepoint,
-            data->codepoint);
+  snprintf(data->header_buf, sizeof(data->header_buf), "%u/%u %s", data->font_index + 1,
+           (unsigned int)ARRAY_LENGTH(s_fonts), s_fonts[data->font_index].label);
+  snprintf(data->info_buf, sizeof(data->info_buf), "U+%04X '%c'", data->codepoint, data->codepoint);
   data->glyph_buf[0] = (char)data->codepoint;
   data->glyph_buf[1] = '\0';
 

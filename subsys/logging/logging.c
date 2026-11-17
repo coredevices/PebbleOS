@@ -271,7 +271,7 @@ void pbl_log_fault(const char *src_filename, int src_line_number, const char *fm
   char buffer[96];
   va_list ap;
   va_start(ap, fmt);
-  vsniprintf(buffer, sizeof(buffer), fmt, ap);
+  vsnprintf(buffer, sizeof(buffer), fmt, ap);
   va_end(ap);
 
   kernel_pbl_log_from_fault_handler(src_filename, (uint16_t)src_line_number, buffer);

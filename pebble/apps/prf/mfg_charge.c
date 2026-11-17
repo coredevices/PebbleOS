@@ -110,16 +110,16 @@ static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_cha
 
   data->test_state = next_state;
 
-  sniprintf(data->status_string, sizeof(data->status_string), "CHARGE\n%s",
-            status_text[data->test_state]);
+  snprintf(data->status_string, sizeof(data->status_string), "CHARGE\n%s",
+           status_text[data->test_state]);
   text_layer_set_text(&data->status, data->status_string);
 
   int8_t temp_c = (int8_t)(temp_mc / 1000);
   uint8_t temp_c_frac = ((temp_mc > 0 ? temp_mc : -temp_mc) % 1000) / 10;
-  sniprintf(data->details_string, sizeof(data->details_string),
-            "%umV %" PRId8 ".%02" PRIu8 "C\r\nUSB: %s\r\nCharging: %s", charge_mv, temp_c,
-            temp_c_frac, charge_state.is_plugged ? "yes" : "no",
-            charge_state.is_charging ? "yes" : "no");
+  snprintf(data->details_string, sizeof(data->details_string),
+           "%umV %" PRId8 ".%02" PRIu8 "C\r\nUSB: %s\r\nCharging: %s", charge_mv, temp_c,
+           temp_c_frac, charge_state.is_plugged ? "yes" : "no",
+           charge_state.is_charging ? "yes" : "no");
   text_layer_set_text(&data->details, data->details_string);
 }
 

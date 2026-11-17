@@ -144,7 +144,7 @@ void gh3x2x_print_fmt(const char *fmt, ...) {
   char buffer[128];
   va_list ap;
   va_start(ap, fmt);
-  vsniprintf(buffer, sizeof(buffer), fmt, ap);
+  vsnprintf(buffer, sizeof(buffer), fmt, ap);
   va_end(ap);
   PBL_LOG_ALWAYS("%s", buffer);
 #endif

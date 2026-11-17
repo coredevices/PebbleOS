@@ -136,7 +136,7 @@ static bool write_buffer_locking(const LogBinaryMessage *header, const char *tex
     pbl_mutex_lock(&s_buffer_mutex, PBL_FOREVER);
     if (pbl_shared_cbuf_get_write_space_remaining(&s_buffer) >= length + 1) {
       // Ideally we could figure out a way to skip out on this copy but then you'd potentially need
-      // to sniprintf into a non-contiguous buffer... whatever, we have CPU to burn.
+      // to snprintf into a non-contiguous buffer... whatever, we have CPU to burn.
       uint8_t msg_length = length;
 
       // Do not advance slackers. Data loss and/or corruption will occur! See write_message()

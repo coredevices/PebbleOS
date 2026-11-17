@@ -73,7 +73,7 @@ void pbl_coredump__test_reset(void) {
 }
 #endif
 
-// vsniprintf and cohorts are avoided to keep the stack small.
+// vsnprintf and cohorts are avoided to keep the stack small.
 void pbl_coredump__log(const char *msg) {
   kernel_pbl_log_from_fault_handler(__FILE_NAME__, 0, msg);
 }
