@@ -26,7 +26,6 @@ function(pbl_rust_target triple_out rustflags_out)
     set(triple ${CMAKE_MATCH_1})
   elseif(CONFIG_ARMV8_M_MAINLINE)
     set(triple thumbv8m.main-none-eabi)
-    # The soft-float ABI of the C code, with the FPU used inside functions.
     # Other cores take the baseline, as the DSP feature is unstable in Rust.
     if(CONFIG_CPU_HAS_FPU AND CONFIG_ARMV8_M_DSP)
       list(APPEND rustflags -Ctarget-cpu=cortex-m33)
@@ -38,6 +37,13 @@ function(pbl_rust_target triple_out rustflags_out)
     endif()
   else()
     message(FATAL_ERROR "Rust: no target for this CPU")
+  endif()
+
+  # The float ABI of the C code. With an FPU it passes floating-point
+  # arguments in FPU registers, unless something needs them in core
+  # registers; the FPU is used inside functions either way.
+  if(triple MATCHES "-none-eabi$" AND CONFIG_CPU_HAS_FPU AND NOT CONFIG_FP_SOFTFP_ABI)
+    string(APPEND triple hf)
   endif()
 
   set(${triple_out} ${triple} PARENT_SCOPE)
