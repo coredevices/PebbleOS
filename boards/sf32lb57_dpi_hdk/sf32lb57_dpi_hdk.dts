@@ -7,12 +7,39 @@
 #include "sifli/sf32lb57xv6e.dtsi"
 #include "sf32lb57_dpi_hdk-pinctrl.dtsi"
 
+#include <dt-bindings/connector/sifli-lcd-qspi.h>
+#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 
 / {
 	model = "SiFli SF32LB57x-DPI-HDK";
 	compatible = "sifli,sf32lb57-dpi-hdk", "sifli,sf32lb579";
+
+	// FPC2 (LCDC-QSPI), with H20 fitted for its supply, H15 and H16 for the
+	// touchscreen I2C on PA22 and PA23, and H14 for its pull-ups
+	lcd_qspi_connector: lcd-qspi-connector {
+		compatible = "sifli,lcd-qspi-connector";
+		#address-cells = <0>;
+		#gpio-cells = <2>;
+		gpio-map-mask = <0xffffffff 0x0>;
+		gpio-map-pass-thru = <0x0 0xffffffff>;
+		gpio-map = <SIFLI_LCD_QSPI_RESET 0 &gpio1 43 0>,
+			   <SIFLI_LCD_QSPI_TE 0 &gpio1 47 0>,
+			   <SIFLI_LCD_QSPI_TP_RESET 0 &gpio1 7 0>,
+			   <SIFLI_LCD_QSPI_TP_INT 0 &gpio1 6 0>;
+		#interrupt-cells = <2>;
+		interrupt-map = <SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_EDGE_RISING
+				 &gpio1 6 IRQ_TYPE_EDGE_RISING>,
+				<SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_EDGE_FALLING
+				 &gpio1 6 IRQ_TYPE_EDGE_FALLING>,
+				<SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_EDGE_BOTH
+				 &gpio1 6 IRQ_TYPE_EDGE_BOTH>,
+				<SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_LEVEL_HIGH
+				 &gpio1 6 IRQ_TYPE_LEVEL_HIGH>,
+				<SIFLI_LCD_QSPI_TP_INT IRQ_TYPE_LEVEL_LOW
+				 &gpio1 6 IRQ_TYPE_LEVEL_LOW>;
+	};
 
 	// KEY-1..3 pull PA34 up through a ladder, which raises its GPIO too
 	adc-keys {
@@ -51,6 +78,16 @@
 	dmas = <&gpdma1 6 5 2>;
 	dma-names = "rx";
 	status = "okay";
+};
+
+lcd_qspi_lcdc: &lcdc1 {
+	pinctrl-0 = <&lcdc1_default>;
+	pinctrl-names = "default";
+};
+
+lcd_qspi_i2c: &i2c1 {
+	pinctrl-0 = <&i2c1_default>;
+	pinctrl-names = "default";
 };
 
 &lptim1 {

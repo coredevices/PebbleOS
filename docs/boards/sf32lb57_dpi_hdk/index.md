@@ -30,6 +30,15 @@ console, the kernel and its system timer work so far.
 - **Clocks**: 48 MHz crystal; the 32.768 kHz crystal is not fitted
 - **Debug UART**: PA18 (RX) and PA19 (TX), to a WCH CH343P USB to UART bridge
 
+## Connectors
+
+| Connector | Type | Signals |
+| --- | --- | --- |
+| FPC2 (LCDC-QSPI) | SiFli quad SPI LCD | LCDC1 through the FreeIO matrix (PA42-PA50), I2C1 on PA22/PA23 with H15/H16, reset PA43, TE PA47, touch interrupt PA06 and reset PA07; 3.3 V with H20 |
+
+FPC1 (8080) and FPC3 (40-pin RGB) share pads with FPC2, so one of them works
+at a time; only FPC2 is described.
+
 ## Flashing
 
 The board is flashed with the `sftool` runner, over the debug UART, which
