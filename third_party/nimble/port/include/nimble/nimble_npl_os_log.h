@@ -16,7 +16,11 @@
 #define NIMBLE_LOG_LEVEL_CRITICAL LOG_LEVEL_ALWAYS
 
 /* Host sources cannot declare a PBL log module, so check the NimBLE module level directly */
+#ifdef CONFIG_LOG
 #define NIMBLE_SHOULD_LOG(level) ((level) <= CONFIG_NIMBLE_LOG_LEVEL)
+#else
+#define NIMBLE_SHOULD_LOG(level) false
+#endif
 
 #define BLE_NPL_LOG_IMPL(lvl)                                                        \
   static inline void _BLE_NPL_LOG_CAT(BLE_NPL_LOG_MODULE, _BLE_NPL_LOG_CAT(_, lvl))( \
