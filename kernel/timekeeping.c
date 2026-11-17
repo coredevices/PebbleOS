@@ -265,7 +265,7 @@ void pbl_idle_set_enabled(bool enable) {
   s_idle_disabled = !enable;
 }
 
-uint64_t pbl_idle_residency_us(size_t state) {
+uint64_t pbl_idle_residency_us(pbl_idle_state_id_t state) {
   uint64_t us;
 
   if (state >= PBL_IDLE_STATES_MAX) {
