@@ -1,0 +1,8 @@
+description: LVGL widgets driven by the keys and the touchscreen, a counter with two buttons used for 30 seconds
+expect:
+  - 'lvgl: keypad: yes, pointer: (yes|no)'
+  - 'lvgl: listening for 30 s'
+  - 'lvgl: \d+ clicks'
+  - 'Sample done'
+timeout: 45
+roles: [display]
