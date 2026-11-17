@@ -27,6 +27,46 @@ config DISPLAY_SF32LB_LCDC_IRQ_PRIO
     help
       Priority of the controller interrupt.
 
+config DISPLAY_SF32LB57_LCDC
+    bool "SiFli SF32LB57 LCD controller"
+    default DT_HAS_SIFLI_SF32LB57_LCDC_ENABLED
+    depends on SOC_SF32LB57
+    select CLK
+    select MIPI_DBI
+    select PANEL
+    select PINCTRL
+    select RESET
+    help
+      Support for the SiFli SF32LB57 LCD controller, driving a panel with
+      frame memory over quad SPI.
+
+config DISPLAY_SF32LB57_LCDC_IRQ_PRIO
+    int "Interrupt priority"
+    default 5
+    depends on DISPLAY_SF32LB57_LCDC
+    help
+      Priority of the controller interrupt.
+
+choice DISPLAY_SF32LB57_LCDC_FORMAT
+    prompt "Framebuffer format"
+    default DISPLAY_SF32LB57_LCDC_FORMAT_ARGB2222
+    depends on DISPLAY_SF32LB57_LCDC
+    help
+      Format of the framebuffers the display takes, whatever the one its
+      panel is written in.
+
+config DISPLAY_SF32LB57_LCDC_FORMAT_ARGB2222
+    bool "ARGB2222"
+    help
+      8 bits per pixel, the Pebble color format.
+
+config DISPLAY_SF32LB57_LCDC_FORMAT_RGB565
+    bool "RGB565"
+    help
+      16 bits per pixel.
+
+endchoice
+
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
     default DT_HAS_SHARP_LS013B7DH01_ENABLED

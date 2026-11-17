@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-lcdc
+config: DISPLAY_SF32LB57_LCDC
+class: [display, mipi_dbi]
+define: PBL_DISPLAY_SF32LB57_LCDC_DEFINE
+symbol:
+  display: "{sym}"
+  mipi_dbi: "{sym}_dbi"
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - reset: 0
+  - self: panel
+    child: panel
+  - prop: hactive
+    child: panel/panel-timing
+  - prop: vactive
+    child: panel/panel-timing
+  - prop: rotation
+    child: panel
+    default: 0
+  - reg: 0
+    of: memory-region
+    default: 0
+  - size: 0
+    of: memory-region
+    default: 0
+  - memory: memory-region
+    default: nullptr
+  - pinctrl: default
