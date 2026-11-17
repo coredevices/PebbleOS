@@ -113,6 +113,9 @@ def main():
     parser.add_argument("--cc", required=True, help="C compiler, to preprocess the devicetree")
     parser.add_argument("--override", action="append", default=[])
     parser.add_argument("--fragment", help="extra .conf applied last")
+    parser.add_argument(
+        "--addon", action="append", default=[], help="add-on plugged into the board"
+    )
     args = parser.parse_args()
 
     srcdir = os.path.abspath(args.srcdir)
@@ -136,7 +139,7 @@ def main():
 
     try:
         dtb, dt_outputs, dt_deps = dtmap.configure(
-            srcdir, builddir, board.name, board.revision, args.cc, appdir
+            srcdir, builddir, board.name, board.revision, args.cc, appdir, args.addon
         )
     except DtError as e:
         sys.exit(f"devicetree: {e}")

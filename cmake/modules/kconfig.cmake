@@ -22,6 +22,11 @@ if(EXISTS ${PROJECT_BINARY_DIR}/menuconfig.conf)
   list(APPEND kconfig_args --fragment ${PROJECT_BINARY_DIR}/menuconfig.conf)
 endif()
 
+# Add-ons plugged into the board, from boards/addons
+foreach(addon ${ADDONS})
+  list(APPEND kconfig_args --addon ${addon})
+endforeach()
+
 foreach(override ${CONFIG_OVERRIDES})
   list(APPEND kconfig_args --override ${override})
 endforeach()

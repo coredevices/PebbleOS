@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dtmap
+import fdt
 
 # Those upstream gives dtc for binding examples
 EXAMPLE_DTC_FLAGS = (
@@ -174,20 +175,35 @@ def check_dtbs(args, dtbs, schema):
 
 
 def compile_trees(args, tmp):
-    """Every board tree, compiled as the build does."""
+    """Every board tree, compiled as the build does, then with each add-on that fits it."""
     root = args.root
+    include_dirs = [root / "boards", root / "dts", root / "include"]
+    addons = dtmap.available_addons(root)
     dtbs = []
     for dts in sorted((root / "boards").glob("*/*.dts")):
-        outdir = tmp / "trees" / dts.stem
+        board = dts.parent.name
         try:
-            dtb, _ = dtmap.compile_dts(
-                dts, args.cc, [root / "boards", root / "dts", root / "include"], outdir
-            )
+            outdir = tmp / "trees" / dts.stem
+            dtb, _ = dtmap.compile_dts(dts, args.cc, include_dirs, outdir)
+            fitting = [
+                addon
+                for addon in addons
+                if not dtmap.missing_connectors(fdt.load(dtb), root, [addon])
+            ]
+            named = outdir / f"{dts.stem}.dtb"
+            Path(dtb).rename(named)
+            dtbs.append(named)
+            for addon in fitting:
+                overlays = dtmap.addon_overlays(root, board, [addon])
+                outdir = tmp / "trees" / f"{dts.stem}+{addon}"
+                dtb, _ = dtmap.compile_dts(
+                    dts, args.cc, include_dirs, outdir, [p for p in overlays if p.exists()]
+                )
+                named = outdir / f"{dts.stem}+{addon}.dtb"
+                Path(dtb).rename(named)
+                dtbs.append(named)
         except dtmap.DtError as e:
             sys.exit(f"validate: {e}")
-        named = outdir / f"{dts.stem}.dtb"
-        Path(dtb).rename(named)
-        dtbs.append(named)
     return dtbs
 
 

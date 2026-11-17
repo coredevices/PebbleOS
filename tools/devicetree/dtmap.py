@@ -1438,11 +1438,13 @@ ROLES_SOURCE = "devicetree/roles.c"
 ROLES_FILE = "roles.yml"
 
 
-def role_files(srcdir, board, revision, appdir=None):
-    """The roles files of the board, its revision and the application, in the order they apply."""
+def role_files(srcdir, board, revision, appdir=None, addons=()):
+    """The roles files of the board, its revision, its add-ons and the application, in the order
+    they apply."""
     paths = [Path(srcdir) / "boards" / board / ROLES_FILE]
     if revision:
         paths.append(Path(srcdir) / "boards" / board / f"roles.{revision}.yml")
+    paths += [addon_dir(srcdir, addon) / ROLES_FILE for addon in addons]
     if appdir is not None:
         paths += [Path(appdir) / ROLES_FILE, Path(appdir) / "boards" / f"{board}.{ROLES_FILE}"]
     return paths
@@ -1543,6 +1545,61 @@ def depfile_sources(text):
     return [s.replace("\\ ", " ") for s in re.findall(r"(?:\\ |\S)+", sources)]
 
 
+ADDONS_DIR = Path("boards") / "addons"
+ADDON_FILE = "addon.yml"
+
+
+def addon_dir(srcdir, addon):
+    """The directory of an add-on: hardware plugged into a connector of the board."""
+    directory = Path(srcdir) / ADDONS_DIR / addon
+    if not (directory / ADDON_FILE).exists():
+        raise DtError(f"no add-on '{addon}' in {directory.parent}")
+    return directory
+
+
+def available_addons(srcdir):
+    directory = Path(srcdir) / ADDONS_DIR
+    if not directory.is_dir():
+        return []
+    return sorted(path.parent.name for path in directory.glob(f"*/{ADDON_FILE}"))
+
+
+def addon_connectors(srcdir, addon):
+    """The compatibles of the connectors an add-on plugs into."""
+    path = addon_dir(srcdir, addon) / ADDON_FILE
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    def error(message):
+        return DtError(f"{path}: {message}")
+
+    check_keys(error, data, {"connectors"}, "add-on", ("connectors",))
+    connectors = data["connectors"]
+    if not isinstance(connectors, list) or not all(isinstance(c, str) for c in connectors):
+        raise error("connectors: not a list of compatibles")
+    return connectors
+
+
+def addon_overlays(srcdir, board, addons):
+    """The devicetree overlays of the add-ons, each followed by the one for the board."""
+    paths = []
+    for addon in addons:
+        directory = addon_dir(srcdir, addon)
+        paths += [directory / f"{addon}.overlay", directory / "boards" / f"{board}.overlay"]
+    return paths
+
+
+def missing_connectors(tree, srcdir, addons):
+    """The add-ons whose connectors the tree lacks, with those connectors."""
+    present = {compatible for node in tree.nodes() for compatible in node.compatibles}
+    missing = {}
+    for addon in addons:
+        lacking = [c for c in addon_connectors(srcdir, addon) if c not in present]
+        if lacking:
+            missing[addon] = lacking
+    return missing
+
+
 def overlay_files(board, appdir):
     """The devicetree overlays of the application, in the order they apply."""
     if appdir is None:
@@ -1639,7 +1696,7 @@ def kconfig_text(tree, compatibles):
     return "\n".join(lines) + "\n"
 
 
-def configure(srcdir, builddir, board, revision, cc, appdir=None):
+def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     """Prepare what Kconfig needs.
 
     Writes Kconfig.dt. Returns the dtb or None, the files generated from it, and what it all depends on.
@@ -1654,19 +1711,29 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None):
     )
     tree, dtb = None, None
     dts = find_dts(srcdir, board, revision)
-    overlays = [path for path in overlay_files(board, appdir) if path.exists()]
+    deps += [str(addon_dir(srcdir, addon) / ADDON_FILE) for addon in addons]
+    overlays = [
+        path
+        for path in [*addon_overlays(srcdir, board, addons), *overlay_files(board, appdir)]
+        if path.exists()
+    ]
+    root = Path(srcdir)
+    include_dirs = [root / "boards", root / "dts", root / "include"]
+    if dts is not None and addons:
+        base, _ = compile_dts(dts, cc, include_dirs, outdir / "board")
+        for addon, lacking in missing_connectors(fdt.load(base), srcdir, addons).items():
+            raise DtError(f"add-on {addon} needs a {', '.join(lacking)} connector: {board} has none")
     if dts is not None:
-        root = Path(srcdir)
-        dtb, sources = compile_dts(
-            dts, cc, [root / "boards", root / "dts", root / "include"], outdir, overlays
-        )
+        dtb, sources = compile_dts(dts, cc, include_dirs, outdir, overlays)
         deps += sources
         tree = fdt.load(dtb)
+    elif addons:
+        raise DtError(f"board {board} has no devicetree for add-ons")
     elif overlays:
         raise DtError(f"{overlays[0]}: board {board} has no devicetree to overlay")
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, kconfig_compatibles(specs)).encode())
-    paths = role_files(srcdir, board, revision, appdir)
+    paths = role_files(srcdir, board, revision, appdir, addons)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
     write_if_changed(outdir / ROLES_FILE, yaml.safe_dump(roles, sort_keys=True).encode())

@@ -61,7 +61,7 @@ supplies switched by GPIOs.
 
 ```{mermaid}
 flowchart TD
-  dts["boards/&lt;board&gt;/*.dts<br/>dts/*/*.dtsi<br/>application overlays"]
+  dts["boards/&lt;board&gt;/*.dts<br/>dts/*/*.dtsi<br/>add-on and application overlays"]
   dtc["dtmap.py: C preprocessor, dtc"]
   dtb["board.dtb"]
   kdt["Kconfig.dt<br/>DT_HAS_*_ENABLED"]
@@ -87,8 +87,9 @@ flowchart TD
 
 1. **Compile.** When the build directory is configured,
    `tools/cmake/kconfig.py` has `tools/devicetree/dtmap.py` compile the
-   board's tree before Kconfig runs, followed by the overlays of the
-   application, if any; see [](#devicetree-overlays). The C preprocessor
+   board's tree before Kconfig runs, followed by the overlays of its add-ons
+   and of the application, if any; see [](#devicetree-addons) and
+   [](#devicetree-overlays). The C preprocessor
    runs first, with `boards/`, `dts/` and `include/` on the include path,
    then `dtc`, into
    `devicetree/board.dtb` in the build. `dtc`'s default checks apply, with
@@ -336,7 +337,8 @@ accel:
   include: pbl/drivers/imu/sim.h
 ```
 
-An application changes them in its `roles.yml`, then in
+The add-ons of the board add theirs in their `roles.yml`; see
+[](#devicetree-addons). An application changes them in its `roles.yml`, then in
 `boards/<board>.roles.yml`: a role there replaces the board's, and `null`
 removes it. A class object of the node is taken, so a node implementing
 several classes, as a display with its backlight, can have several roles.
@@ -351,12 +353,46 @@ const struct pbl_accel *const ACCEL = &dt_lsm6dso;
 An enabled symbol whose role has no device, or a device with no driver, fails
 the build. A role no symbol needs is left out when its device has no driver.
 
+(devicetree-addons)=
+
+### Add-ons
+
+An add-on is hardware plugged into a connector of the board: a display
+module, an expansion board on a header. It lives in
+`boards/addons/<addon>/`, and is plugged in when the build is configured:
+
+```shell
+pbl configure --board sf32lb57_dpi_hdk --addon <addon> samples/demos/logo
+```
+
+`--addon` can be repeated. A sample plugs in those of its `addons` list; see
+{doc}`/samples/index`. An add-on has:
+
+- `addon.yml`, with the compatibles of the connectors it needs:
+
+  ```yaml
+  connectors:
+    - vendor,lcm-connector
+  ```
+
+  A board whose tree has no node of each fails the build.
+- `<addon>.overlay`, the overlay of its devices, which refers to the
+  connector, and to the labels the board gives what is wired to it, only.
+- `boards/<board>.overlay`, optionally: what depends on the board too, as
+  how the add-on sits on it.
+- `roles.yml`, optionally: the roles of its devices, applied after the
+  board's.
+
+Its overlays apply after the board's tree, and before the application's.
+Each add-on has a page in {doc}`/boards/addons/index`.
+
 (devicetree-overlays)=
 
 ### Overlays
 
-An application changes the board's tree with overlays, applied after it in
-this order: `app.overlay`, for every board, then `boards/<board>.overlay`.
+An application changes the board's tree with overlays, applied after it and
+its add-ons in this order: `app.overlay`, for every board, then
+`boards/<board>.overlay`.
 An overlay changes nodes by their label, and can add new ones:
 
 ```dts
@@ -387,7 +423,8 @@ python3 tools/devicetree/validate.py \
 
 `--bindings` checks bindings as upstream checks its own: against the
 meta-schema, and their examples against the bindings. `--all-trees` compiles
-every board tree and checks it; compiled trees, such as
+every board tree and checks it, then again with each add-on whose connectors
+it has; compiled trees, such as
 `build/devicetree/board.dtb`, can be given instead. CI checks the bindings a
 pull request adds or changes, and every tree.
 

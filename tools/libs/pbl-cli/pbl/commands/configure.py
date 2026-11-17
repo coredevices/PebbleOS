@@ -30,6 +30,15 @@ class Configure(PblCommand):
         except (AttributeError, ImportError, OSError, TypeError, ValueError):
             return None
 
+    def _addons(self):
+        """The add-ons to offer, or None when they cannot be listed."""
+        try:
+            from tools.devicetree import dtmap
+
+            return dtmap.available_addons(self.workspace.topdir)
+        except (AttributeError, ImportError, OSError):
+            return None
+
     def do_add_parser(self, parser_adder):
         parser = self.add_subparser(parser_adder)
         available = self._boards()
@@ -46,6 +55,16 @@ class Configure(PblCommand):
             default="normal",
             choices=["normal", "prf"],
             help="Firmware variant (default: normal)",
+        )
+        addons = self._addons()
+        parser.add_argument(
+            "--addon",
+            action="append",
+            default=[],
+            metavar="ADDON",
+            choices=addons,
+            help="Add-on plugged into the board, can be repeated"
+            + (f" ({', '.join(addons)})" if addons else ""),
         )
         parser.add_argument(
             "app",
@@ -74,4 +93,5 @@ class Configure(PblCommand):
             variant=args.variant,
             generator=args.generator,
             extra=unknown,
+            addons=args.addon,
         )

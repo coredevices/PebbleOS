@@ -14,6 +14,7 @@ set(PBL_APPLICATION_SOURCE_DIR ${PBL_APPLICATION_SOURCE_DIR} CACHE INTERNAL
 
 set(BOARD "" CACHE STRING "Board to build for, e.g. asterix or obelix@pvt")
 set(VARIANT "normal" CACHE STRING "Firmware variant: normal or prf")
+set(ADDONS "" CACHE STRING "Add-ons plugged into the board, from boards/addons")
 set_property(CACHE VARIANT PROPERTY STRINGS normal prf)
 
 if(NOT BOARD)
@@ -90,6 +91,9 @@ include(firmware)
 include(devicetree)
 
 message(STATUS "Board: ${PBL_BOARD} (${PBL_PLATFORM_NAME}), variant: ${VARIANT}")
+if(ADDONS)
+  message(STATUS "Add-ons: ${ADDONS}")
+endif()
 
 pbl_init()
 if(PBL_LIBC_DEFINITIONS)

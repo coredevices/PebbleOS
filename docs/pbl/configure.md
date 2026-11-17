@@ -16,6 +16,16 @@ after `/`: `native_emery/wasm` builds the native watch as WebAssembly. It
 applies `boards/<board>/defconfig.<variant>` and can bring its own
 toolchain (`toolchain.<variant>.cmake`).
 
+## Add-ons
+
+`--addon` plugs an add-on, such as a display module, into a connector of
+the board, and can be repeated. They are listed in
+{doc}`../boards/addons/index`:
+
+```shell
+pbl configure --board sf32lb57_dpi_hdk --addon <addon> samples/demos/logo
+```
+
 ## Applications
 
 Without more arguments, the build is for the watch firmware, the
