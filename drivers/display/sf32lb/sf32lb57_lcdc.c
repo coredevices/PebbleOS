@@ -361,10 +361,11 @@ static void prv_row_mirror_565(uint16_t *row, uint16_t width) {
 
 // RGB565 rows are sent as they are, unless mirrored
 static bool prv_rows_changed(const struct pbl_display_sf32lb57_lcdc *lcdc) {
-  return !prv_rgb565(lcdc) || lcdc->state->frame_rotated;
+  return !prv_rgb565(lcdc) || lcdc->state->frame_mirrored;
 }
 
-// HMirror is done in software, VMirror by the LCDC. Applied before an update and undone after.
+// A turned image is read from its last line up, and flipped left to right by the panel or,
+// where it cannot, here, before an update and back after it.
 static void prv_rows_convert(const struct pbl_display_sf32lb57_lcdc *lcdc, bool to_lcdc) {
   struct pbl_display_sf32lb57_lcdc_state *state = lcdc->state;
   uint16_t width = lcdc->disp.props.width;
@@ -382,7 +383,7 @@ static void prv_rows_convert(const struct pbl_display_sf32lb57_lcdc *lcdc, bool 
       continue;
     }
 
-    if (!state->frame_rotated) {
+    if (!state->frame_mirrored) {
       for (uint16_t x = 0U; x < width; x++) {
         row[x] = conv(row[x]);
       }
@@ -557,7 +558,17 @@ static int prv_disable(const struct pbl_display *disp) {
 }
 
 static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
-  prv_lcdc(disp)->state->rotated = rotated;
+  const struct pbl_display_sf32lb57_lcdc *lcdc = prv_lcdc(disp);
+  struct pbl_display_sf32lb57_lcdc_state *state = lcdc->state;
+  int ret;
+
+  ret = pbl_panel_set_h_flip(lcdc->panel, rotated);
+  if (ret != 0 && ret != -ENOTSUP) {
+    return ret;
+  }
+
+  state->rotated = rotated;
+  state->mirrored = rotated && ret == -ENOTSUP;
 
   return 0;
 }
@@ -584,6 +595,7 @@ static int prv_update(const struct pbl_display *disp, const struct pbl_display_b
   state->y0 = y0 - (y0 % rows);
   state->y1 = y1 + (rows - 1U - (y1 % rows));
   state->frame_rotated = state->rotated;
+  state->frame_mirrored = state->mirrored;
 
   // Converted in place, to save a framebuffer of RAM
   prv_rows_convert(lcdc, true);

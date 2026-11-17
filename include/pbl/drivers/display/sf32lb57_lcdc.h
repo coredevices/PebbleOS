@@ -27,7 +27,9 @@
  * four lines in RGB565, at the fastest clock the panel takes. The framebuffer format is
  * @c CONFIG_DISPLAY_SF32LB57_LCDC_FORMAT: @ref PBL_DISPLAY_FORMAT_RGB565 rows are sent as they
  * are, and @ref PBL_DISPLAY_FORMAT_ARGB2222 ones are converted in place to the controller's RGB332
- * while an update runs, for a framebuffer half the size. Framebuffers are at addresses the
+ * while an update runs, for a framebuffer half the size. A panel turned by 180 degrees is read
+ * from its last line up and flipped left to right by the panel, or by mirroring the rows in
+ * place while an update runs if the panel cannot. Framebuffers are at addresses the
  * controller reaches: the RAM of the SoC, or external RAM. Updates cover the multiples of rows the
  * panel takes. They complete from the controller's interrupt, which an instance connects itself,
  * with priority @c CONFIG_DISPLAY_SF32LB57_LCDC_IRQ_PRIO, or from the system work queue when rows
@@ -61,6 +63,8 @@ struct pbl_display_sf32lb57_lcdc_state {
   volatile bool frame;
   bool rotated;
   bool frame_rotated;
+  bool mirrored;
+  bool frame_mirrored;
 };
 /** @endcond */
 
