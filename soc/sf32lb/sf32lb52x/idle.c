@@ -25,7 +25,6 @@
 // Settling time after waking up from deep sleep
 #define DEEPSLEEP_EXIT_NOPS 10
 
-#ifdef CONFIG_FLASH
 static uint32_t s_enabled[(CONFIG_NUM_IRQS + 31) / 32];
 
 // Leave AON as the only wakeup source, the other handlers run from flash
@@ -55,7 +54,6 @@ static void prv_irqs_restore(void) {
 static PBL_ALWAYS_INLINE void prv_update(uint32_t clear, uint32_t set, uintptr_t addr) {
   pbl_writel((pbl_readl(addr) & ~clear) | set, addr);
 }
-#endif // CONFIG_FLASH
 
 PBL_SECTION_RAM static void prv_enter_wfi(void) {
   pbl_cpu_idle();
@@ -68,7 +66,6 @@ PBL_SECTION_RAM static void prv_enter_deepwfi(void) {
   pbl_cpu_idle_deep();
 }
 
-#ifdef CONFIG_FLASH
 // Runs with the flash powered down
 PBL_SECTION_RAM static void prv_deepsleep(void *arg) {
   pbl_idle_hooks_late_enter(SOC_SF32LB_IDLE_DEEPSLEEP);
@@ -108,20 +105,17 @@ PBL_SECTION_RAM static void prv_enter_deepsleep(void) {
 #endif
   prv_irqs_restore();
 }
-#endif // CONFIG_FLASH
 
 const struct pbl_idle_state pbl_soc_idle_states[] = {
   [SOC_SF32LB_IDLE_WFI] = {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_wfi},
   [SOC_SF32LB_IDLE_DEEPWFI] =
       {.name = "deepwfi", .min_ticks = 1, .exit_ticks = 0, .enter = prv_enter_deepwfi},
-#ifdef CONFIG_FLASH
   [SOC_SF32LB_IDLE_DEEPSLEEP] = {
     .name = "deepsleep",
     .min_ticks = PBL_US_TO_TICKS_CEIL(PBL_DT_IDLE_STATE_DEEPSLEEP_MIN_RESIDENCY_US),
     .exit_ticks = PBL_US_TO_TICKS_CEIL(PBL_DT_IDLE_STATE_DEEPSLEEP_EXIT_LATENCY_US),
     .enter = prv_enter_deepsleep
   },
-#endif
 };
 const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
 
