@@ -8,7 +8,7 @@
  * SRAM is carved up sequentially from CONFIG_SRAM_BASE: the kernel gets
  * whatever is left after the worker and the app take their share at the end.
  * The app segment is sized for the largest app execution environment (2x, 3x
- * or 4x) supported by the platform.
+ * or 4x) the application supports, and is empty when it runs no apps.
  *
  * The worker and app segments are not memory regions: the firmware overwrites
  * them wholesale at runtime, so nothing may ever be linked into them. Only
@@ -72,6 +72,5 @@ ASSERT(CONFIG_APP_RAM_4X_SEGMENT_SIZE % 8 == 0,
 ASSERT(CONFIG_WORKER_RAM_SEGMENT_SIZE % 8 == 0,
        "The worker segment size is not a multiple of eight bytes");
 
-/* Basic sanity checks: apps must fit, and the kernel needs at least 64k. */
-ASSERT(PBL_APP_RAM_SIZE > 0, "App RAM is too small!")
+/* Basic sanity check: the kernel needs at least 64k. */
 ASSERT(PBL_RAM_SIZE >= 64K, "Kernel RAM is too small!")
