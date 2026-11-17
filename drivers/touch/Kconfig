@@ -26,6 +26,15 @@ config TOUCH_CST816
     help
       Support for the Hynitron CST816 touch controller.
 
+config TOUCH_FT6236
+    bool "FocalTech FT6x36"
+    default DT_HAS_FOCALTECH_FT6236_ENABLED
+    select I2C
+    select PINCTRL
+    help
+      Support for the FocalTech FT6x36 touch controllers, such as the
+      FT6236 and the FT6146.
+
 config TOUCH_QEMU
     bool "QEMU Touchscreen"
     default DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
