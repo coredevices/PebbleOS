@@ -21,13 +21,12 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 
-#include <kernel/pebble_tasks.h>
-
 // NOTE: transport.h needs os_mbuf.h to be included first
 // clang-format off
 #include <os/os_mbuf.h>
 // clang-format on
 #include <nimble/hci_common.h>
+#include <nimble/nimble_port_pebble.h>
 #include <nimble/transport.h>
 #include <nimble/transport/hci_h4.h>
 #include <nimble/transport_impl.h>
@@ -507,7 +506,6 @@ void ble_transport_ll_init(void) {
   };
 
   PBL_ASSERTN(pbl_thread_create(&s_hci_thread, &attr) == 0);
-  pebble_task_register(PebbleTask_BTHCI, &s_hci_thread);
 }
 
 void ble_transport_ll_deinit(void) {
@@ -593,4 +591,8 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   }
 
   return 0;
+}
+
+struct pbl_thread *nimble_port_pebble_hci_thread(void) {
+  return &s_hci_thread;
 }

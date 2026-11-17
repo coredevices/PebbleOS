@@ -9,17 +9,15 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/sem.h>
-#include <pbl/kernel/thread.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/task_wdt/task_wdt.h>
 
 #include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>
 #include <host/util/util.h>
-#include <kernel/pebble_tasks.h>
 #include <nimble/nimble_port.h>
+#include <nimble/nimble_port_pebble.h>
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 
@@ -30,12 +28,6 @@ static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
-#if NIMBLE_CFG_CONTROLLER
-static struct pbl_thread s_ll_thread;
-PBL_THREAD_STACK_DEFINE(s_ll_task_stack, CONFIG_BT_LL_THREAD_STACK_SIZE);
-#endif
-static struct pbl_thread s_host_thread;
-PBL_THREAD_STACK_DEFINE(s_host_task_stack, CONFIG_BT_HOST_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
 static struct ble_hs_stop_listener s_listener;
@@ -100,23 +92,6 @@ static int prv_ensure_addr(void) {
   return ble_hs_util_ensure_addr(0);
 }
 
-static void prv_host_task_main(void *unused) {
-  PBL_LOG_DBG("NimBLE host task started");
-
-  ble_hs_cfg.sync_cb = prv_sync_cb;
-  ble_hs_cfg.reset_cb = prv_reset_cb;
-
-  PBL_ASSERTN(pbl_task_wdt_add(nullptr, CONFIG_TASK_WDT_TIMEOUT_MS, nullptr, nullptr) >= 0);
-
-  struct ble_npl_eventq *evq = nimble_port_get_dflt_eventq();
-  while (1) {
-    pbl_task_wdt_set_waiting(true);
-    struct ble_npl_event *ev = ble_npl_eventq_get(evq, BLE_NPL_TIME_FOREVER);
-    pbl_task_wdt_set_waiting(false);
-    ble_npl_event_run(ev);
-  }
-}
-
 static void prv_ble_hs_stop_cb(int status, void *arg) {
   pbl_sem_give(&s_host_stopped);
 }
@@ -131,31 +106,10 @@ void pbl_bt_init(void) {
   nimble_port_init();
   nimble_store_init();
 
-  struct pbl_thread_attr host_attr = {
-    .name = "NimbleHost",
-    .entry = prv_host_task_main,
-    .prio = CONFIG_BT_HOST_THREAD_PRIO,
-    .privileged = true,
-    .stack = s_host_task_stack,
-    .stack_size = sizeof(s_host_task_stack),
-  };
+  ble_hs_cfg.sync_cb = prv_sync_cb;
+  ble_hs_cfg.reset_cb = prv_reset_cb;
 
-  PBL_ASSERTN(pbl_thread_create(&s_host_thread, &host_attr) == 0);
-  pebble_task_register(PebbleTask_BTHost, &s_host_thread);
-
-#if NIMBLE_CFG_CONTROLLER
-  struct pbl_thread_attr ll_attr = {
-    .name = "NimbleLL",
-    .entry = nimble_port_ll_task_func,
-    .prio = CONFIG_BT_LL_THREAD_PRIO,
-    .privileged = true,
-    .stack = s_ll_task_stack,
-    .stack_size = sizeof(s_ll_task_stack),
-  };
-
-  PBL_ASSERTN(pbl_thread_create(&s_ll_thread, &ll_attr) == 0);
-  pebble_task_register(PebbleTask_BTController, &s_ll_thread);
-#endif
+  nimble_port_pebble_init();
 }
 
 bool pbl_bt_start(struct pbl_bt_config *config) {

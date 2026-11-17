@@ -34,6 +34,7 @@
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/util/task_init.h>
 #include <mfg/mfg_info.h>
+#include <nimble/nimble_port_pebble.h>
 #include <process_management/app_throttle.h>
 #include <process_management/process_regions.h>
 #include <resource/resource.h>
@@ -204,6 +205,13 @@ int main(void) {
   qemu_serial_init();
 #endif
   pbl_bt_init();
+  pebble_task_register(PebbleTask_BTHost, nimble_port_pebble_host_thread());
+#if NIMBLE_CFG_CONTROLLER
+  pebble_task_register(PebbleTask_BTController, nimble_port_pebble_ll_thread());
+#endif
+#if defined(CONFIG_BT_HCI_SF32LB) || defined(CONFIG_BT_HCI_UART)
+  pebble_task_register(PebbleTask_BTHCI, nimble_port_pebble_hci_thread());
+#endif
 
   services_init();
 
