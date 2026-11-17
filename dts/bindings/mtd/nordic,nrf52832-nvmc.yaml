@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mtd/nordic,nrf52832-nvmc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 non-volatile memory controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Controller that writes and erases the internal flash, which the CPU reads
+  and executes from at its own address. The flash is a child node.
+
+properties:
+  compatible:
+    items:
+      - enum:
+          - nordic,nrf52840-nvmc
+      - const: nordic,nrf52832-nvmc
+
+  reg:
+    maxItems: 1
+
+  "#address-cells":
+    const: 1
+
+  "#size-cells":
+    const: 1
+
+patternProperties:
+  "^flash@[0-9a-f]+$":
+    type: object
+    $ref: /schemas/mtd/mtd.yaml#
+    description: The internal flash, at its CPU address.
+
+    properties:
+      reg:
+        maxItems: 1
+
+    required:
+      - reg
+
+    unevaluatedProperties: false
+
+required:
+  - compatible
+  - reg
+  - "#address-cells"
+  - "#size-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    flash-controller@4001e000 {
+        compatible = "nordic,nrf52840-nvmc", "nordic,nrf52832-nvmc";
+        reg = <0x4001e000 0x1000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        flash@0 {
+            reg = <0x0 0x100000>;
+
+            partitions {
+                compatible = "fixed-partitions";
+                #address-cells = <1>;
+                #size-cells = <1>;
+
+                partition@0 {
+                    label = "code";
+                    reg = <0x0 0x100000>;
+                };
+            };
+        };
+    };
