@@ -1,7 +1,84 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-menu "NimBLE BLE stack"
+menuconfig NIMBLE
+    bool "NimBLE"
+    select MBEDTLS
+    help
+      The NimBLE Bluetooth Low Energy stack: its host, its porting layer
+      on the PebbleOS kernel, and the HCI transport to the controller.
+
+if NIMBLE
+
+choice BT_HCI
+    prompt "HCI transport"
+    default BT_HCI_FAKE
+    help
+      How the NimBLE host reaches its controller. The default is derived
+      from the SoC (see each soc/<soc>/Kconfig.defconfig); the fake
+      controller is the fallback where there is no radio.
+
+config BT_HCI_NRF52
+    bool "NimBLE controller on the nRF52 radio"
+    depends on SOC_NRF52
+    select NIMBLE_CONTROLLER
+    select NIMBLE_DRIVER_NRF5X
+    help
+      Run the NimBLE link layer in the same image, on the nRF52 radio.
+
+config BT_HCI_SF32LB
+    bool "SiFli LCPU over IPC"
+    depends on SOC_SF32LB52 || SOC_SF32LB57
+    select REMOTEPROC
+    help
+      Talk H4 HCI to the SiFli controller running on the LCPU, over the
+      byte rings its ROM shares with the HCPU.
+
+config BT_HCI_UART
+    bool "H4 over UART"
+    depends on QEMU || SOC_POSIX
+    help
+      Talk H4 HCI to an external controller over the board's BT_HCI_UART.
+      On QEMU this is the fourth serial port, on native boards the -b
+      option; either can be attached to a host controller such as an
+      nRF52840 dongle running an H4 HCI firmware.
+
+config BT_HCI_FAKE
+    bool "Fake controller"
+    help
+      Answer every HCI command locally with success and never raise an
+      event. The host synchronises and the GATT server runs, but no link
+      can be established. For targets without a radio, such as QEMU.
+
+endchoice
+
+config BT_HOST_THREAD_STACK_SIZE
+    int "Host thread stack size in bytes"
+    default 5000
+
+config BT_HOST_THREAD_PRIO
+    int "Host thread priority"
+    default 3
+
+config BT_LL_THREAD_STACK_SIZE
+    int "Link layer thread stack size in bytes"
+    depends on NIMBLE_CONTROLLER
+    default 1384
+
+config BT_LL_THREAD_PRIO
+    int "Link layer thread priority"
+    depends on NIMBLE_CONTROLLER
+    default 4
+
+config BT_HCI_THREAD_STACK_SIZE
+    int "HCI transport thread stack size in bytes"
+    depends on BT_HCI_SF32LB || BT_HCI_UART
+    default 1024
+
+config BT_HCI_THREAD_PRIO
+    int "HCI transport thread priority"
+    depends on BT_HCI_SF32LB || BT_HCI_UART
+    default 3
 
 choice
     prompt "SF32LB HCI trace"
@@ -29,8 +106,9 @@ module-str = NimBLE host
 source "subsys/logging/Kconfig.template.log_level"
 
 # NimBLE's own options, generated from its syscfg.yml files by
-# scripts/gen_syscfg.py. PebbleOS-wide values live in
-# subsys/bluetooth/Kconfig.defconfig, per-SoC ones in soc/*/Kconfig.defconfig.
+# scripts/gen_syscfg.py. Their defaults go in Kconfig.defconfig files sourced
+# before them: the porting ones here, the Bluetooth subsystem's in
+# subsys/bluetooth, per-SoC ones in soc/*.
 rsource "Kconfig.ble"
 rsource "Kconfig.host"
 rsource "Kconfig.svcs"
@@ -43,4 +121,4 @@ config NIMBLE_DRIVER_NRF5X
     bool
     select HAL_NORDIC
 
-endmenu
+endif # NIMBLE

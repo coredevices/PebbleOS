@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# Porting defaults for the NimBLE options generated in this directory. Sourced
+# before them so these defaults win.
+
+if NIMBLE
+
+# NimBLE's transport choice says where the link layer lives. PebbleOS supplies
+# its own transport for every controller other than the in-image NimBLE one.
+choice NIMBLE_BLE_TRANSPORT_LL_CHOICE
+    default NIMBLE_BLE_TRANSPORT_LL_NATIVE if BT_HCI_NRF52
+    default NIMBLE_BLE_TRANSPORT_LL_CUSTOM
+endchoice
+
+endif # NIMBLE

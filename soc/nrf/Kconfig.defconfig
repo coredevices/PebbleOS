@@ -21,7 +21,7 @@ config SRAM_BASE
 config SRAM_SIZE
     default 0x3ff00
 
-if BT
+if NIMBLE
 
 # The NimBLE link layer runs on this SoC's radio, so its porting layer drives
 # cputime from the 32.768 kHz RTC on TIMER5.
@@ -47,7 +47,7 @@ config NIMBLE_MSYS_1_BLOCK_COUNT
 config NIMBLE_MSYS_1_BLOCK_SIZE
     default 304
 
-endif # BT
+endif # NIMBLE
 
 
 config NUM_IRQS
