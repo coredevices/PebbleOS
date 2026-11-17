@@ -159,6 +159,3 @@ endif()
 # SHELL: keeps the flag and its argument together; CMake would
 # otherwise fold the repeated -include options into one.
 add_compile_options("SHELL:-include ${PBL_AUTOCONF_H}")
-
-
-add_compile_definitions(FIRMWARE_OFFSET=${CONFIG_FIRMWARE_OFFSET})
