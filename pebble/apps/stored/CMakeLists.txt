@@ -64,7 +64,7 @@ print(';'.join(pebble_platforms['${PBL_PLATFORM_NAME}']['DEFINES']))"
 
 set_directory_properties(PROPERTIES
   COMPILE_OPTIONS "${sdk_flags}"
-  COMPILE_DEFINITIONS "MAX_FONT_GLYPH_SIZE=${PBL_MAX_FONT_GLYPH_SIZE}"
+  COMPILE_DEFINITIONS ""
   INCLUDE_DIRECTORIES ""
   LINK_OPTIONS ""
 )
