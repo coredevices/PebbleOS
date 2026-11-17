@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+from pebble_sdk_platform import platform_matches
 from resources.find_resource_filename import find_most_specific_filename
 from resources.types.resource_declaration import ResourceDeclaration
 
@@ -39,7 +40,7 @@ class ResourceDefinition(ResourceDeclaration):
         if self.target_platforms is None:
             return True
 
-        return bld.env.PLATFORM_NAME in self.target_platforms
+        return platform_matches(bld.env.PLATFORM_NAME, self.target_platforms)
 
     def find_specific_filename(self, task_gen):
         return find_most_specific_filename(

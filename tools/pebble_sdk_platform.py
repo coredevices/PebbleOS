@@ -361,4 +361,15 @@ def bundle_description(platform_name):
     }
 
 
+def platform_matches(platform_name, selectors):
+    """Whether a platform is one a targetPlatforms list asks for. An entry
+    names a platform or the capabilities it has to have, as the tags
+    resource file names use: "emery", "round", "color~rect"."""
+    platform = pebble_platforms.get(platform_name)
+    if platform is None:
+        return platform_name in selectors
+    tags = set(platform["TAGS"])
+    return any(set(selector.split("~")) <= tags for selector in selectors)
+
+
 pebble_platforms = _load_platforms()

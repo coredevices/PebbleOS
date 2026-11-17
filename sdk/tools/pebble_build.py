@@ -30,7 +30,7 @@ if SDK_TOOLS not in sys.path:
 
 import pebble_project
 from pebble_project import ProjectError
-from pebble_sdk_platform import bundle_description, pebble_platforms
+from pebble_sdk_platform import bundle_description, pebble_platforms, platform_matches
 
 # Platforms whose SDK is older than this are 2.x: no PNG resources, and a
 # different SDK define.
@@ -178,7 +178,9 @@ def _package_resources(project, platform):
                 f"Package {lib['name']} is missing resources for the {platform} platform"
             )
         for resource in media:
-            if platform not in resource.get("targetPlatforms", [platform]):
+            if not platform_matches(
+                platform, resource.get("targetPlatforms", [platform])
+            ):
                 continue
             reso = os.path.join(
                 resources_dir, f"{resource['file']}.{resource['name']}.reso"
@@ -294,8 +296,18 @@ def configure(args):
 
     # Platforms.
     installed = _installed_platforms(sdk_root)
+    # In the order they are asked for; an entry may ask for capabilities, and
+    # so for several platforms.
     requested = info.get("targetPlatforms") or installed
-    platforms = [p for p in requested if p in installed]
+    platforms, names = [], []
+    for selector in requested:
+        matched = [p for p in installed if platform_matches(p, [selector])]
+        platforms += [p for p in matched if p not in platforms]
+        # What installs the pbw only knows platforms by name.
+        by_name = selector in pebble_platforms or not matched
+        names += [n for n in ([selector] if by_name else matched) if n not in names]
+    if "targetPlatforms" in info:
+        info["targetPlatforms"] = names
     if args.platforms:
         unknown = sorted(set(args.platforms) - set(platforms))
         if unknown:

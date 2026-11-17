@@ -189,5 +189,29 @@ class TestDescriptor(unittest.TestCase):
                 sdk_platform.sdk_descriptors(sdk)
 
 
+class TestTargetPlatforms(unittest.TestCase):
+    def test_by_name(self):
+        self.assertTrue(sdk_platform.platform_matches("emery", ["flint", "emery"]))
+        self.assertFalse(sdk_platform.platform_matches("emery", ["flint"]))
+        self.assertFalse(sdk_platform.platform_matches("emery", []))
+
+    def test_by_capability(self):
+        self.assertTrue(sdk_platform.platform_matches("gabbro", ["round"]))
+        self.assertFalse(sdk_platform.platform_matches("emery", ["round"]))
+        self.assertTrue(sdk_platform.platform_matches("flint", ["bw", "round"]))
+        self.assertTrue(sdk_platform.platform_matches("emery", ["200w"]))
+        self.assertTrue(sdk_platform.platform_matches("chalk", ["round"]))
+
+    def test_all_of_several(self):
+        self.assertTrue(sdk_platform.platform_matches("emery", ["color~rect"]))
+        self.assertFalse(sdk_platform.platform_matches("gabbro", ["color~rect"]))
+        self.assertFalse(sdk_platform.platform_matches("flint", ["color~rect"]))
+        self.assertTrue(sdk_platform.platform_matches("flint", ["mic~speaker"]))
+
+    def test_unknown_platform(self):
+        self.assertTrue(sdk_platform.platform_matches("slate", ["slate"]))
+        self.assertFalse(sdk_platform.platform_matches("slate", ["color"]))
+
+
 if __name__ == "__main__":
     unittest.main()

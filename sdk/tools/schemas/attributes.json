@@ -57,7 +57,7 @@
   "sdkVersion": { "enum": [ "2", "3" ] },
   "targetPlatforms": {
     "type": "array",
-    "items": { "enum": [ "aplite", "basalt", "chalk", "diorite", "emery", "flint" ] },
+    "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_]*(~[a-z0-9][a-z0-9_]*)*$" },
     "uniqueItems": true
   },
   "uuid": {
