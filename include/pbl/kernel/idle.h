@@ -75,10 +75,15 @@ static PBL_ALWAYS_INLINE void pbl_cpu_idle_deep(void) {
   arch_cpu_idle_deep();
 }
 
-/** @brief Idle states, shallowest first. Defined by the SoC. */
+/**
+ * @brief Idle states, shallowest first.
+ *
+ * Defined by SoCs that select @c CONFIG_SOC_HAS_IDLE_STATES; for the others the kernel defines a
+ * single state that calls pbl_cpu_idle().
+ */
 extern const struct pbl_idle_state pbl_soc_idle_states[];
 
-/** @brief Number of entries in @ref pbl_soc_idle_states. Defined by the SoC. */
+/** @brief Number of entries in @ref pbl_soc_idle_states. */
 extern const size_t pbl_soc_num_idle_states;
 
 /** @brief Times of an idle hook, see pbl_idle_hook_set_times(). */

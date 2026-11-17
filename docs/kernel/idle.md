@@ -11,7 +11,8 @@ where power does not matter, e.g. a bootloader.
 With `CONFIG_CPU_IDLE` the kernel owns everything about time in the
 decision; the SoC only describes how its CPU can sleep, through
 `pbl/kernel/idle.h`. `pbl_soc_idle_states[]` lists the idle states,
-shallowest first. Each has the shortest time until the next timeout worth
+shallowest first. A SoC that only waits for an interrupt provides nothing:
+without `CONFIG_SOC_HAS_IDLE_STATES` the kernel defines that single state. Each has the shortest time until the next timeout worth
 entering it for, the time it takes to wake up from, and an `enter()`
 function that sleeps until an interrupt is pending. `pbl_cpu_idle()` is the
 plain wait for interrupt, for the shallowest state and for deeper ones to

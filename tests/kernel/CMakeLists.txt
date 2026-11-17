@@ -44,6 +44,7 @@ pbl_clar_test(test_timekeeping
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
     CONFIG_CPU_IDLE=1
+    CONFIG_SOC_HAS_IDLE_STATES=1
 )
 
 pbl_clar_test(test_idle
@@ -55,6 +56,7 @@ pbl_clar_test(test_idle
     kernel/arch/posix/include
   DEFINES
     CONFIG_CPU_IDLE=1
+    CONFIG_SOC_HAS_IDLE_STATES=1
 )
 
 pbl_clar_test(test_mmio)
