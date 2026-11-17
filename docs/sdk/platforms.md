@@ -63,6 +63,9 @@ config PLATFORM_MICROPHONE
 endif # PLATFORM_SLATE
 ```
 
+The board its SDK is packaged from is added to `sdk/boards.yml`
+({doc}`building`).
+
 It also states the RAM of its apps, `APP_RAM_4X_SEGMENT_SIZE` and
 `APP_RAM_4X_RUNTIME_SIZE` in `Kconfig.pebbleos`. The RAM of the 2.x and 3.x
 apps it runs follows from its shape and colour depth.
