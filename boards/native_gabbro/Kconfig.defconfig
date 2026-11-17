@@ -12,3 +12,6 @@ config DISPLAY_SDL_HEIGHT
 
 config DISPLAY_SDL_ROUND
     default y
+
+config POSIX_EMSCRIPTEN_FRAME
+    default "gabbro"

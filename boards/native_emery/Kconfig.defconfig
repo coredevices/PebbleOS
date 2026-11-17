@@ -9,3 +9,6 @@ config DISPLAY_SDL_WIDTH
 
 config DISPLAY_SDL_HEIGHT
     default 228
+
+config POSIX_EMSCRIPTEN_FRAME
+    default "emery"
