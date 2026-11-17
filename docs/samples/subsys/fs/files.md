@@ -12,6 +12,10 @@ writing.
 
 The flash may hold other files, so the sample lists only its own.
 
+It is built with the `filesystem` {doc}`snippet
+<../../../development/build_system/snippets>`, which enables the file system
+and gives the board a partition for it.
+
 ```{pebbleos-sample}
 :path: samples/subsys/fs/files
 :sources: src/main.c

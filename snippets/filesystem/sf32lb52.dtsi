@@ -1,0 +1,14 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: Apache-2.0
+
+// The 32 MiB flash of the SF32LB52 watches: past the code partition, up to
+// the factory data.
+
+&flash0 {
+	partitions {
+		partition@400000 {
+			label = "filesystem";
+			reg = <0x400000 0x1bf0000>;
+		};
+	};
+};

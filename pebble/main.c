@@ -89,20 +89,6 @@ static void uptime_callback(struct pbl_work *work) {
 static PBL_DELAYED_WORK_DEFINE(s_uptime_timer, uptime_callback);
 #endif
 
-#ifdef CONFIG_SOC_SF32LB52
-// The linker script places the image from Kconfig, which can't see the partitions
-#ifdef CONFIG_FIRMWARE_AREA_RECOVERY
-static_assert(CONFIG_FLASH_OFFSET == PART_SAFE_FIRMWARE_OFFSET);
-static_assert(CONFIG_FW_FLASH_SIZE == PART_SAFE_FIRMWARE_SIZE);
-#elif CONFIG_FIRMWARE_SLOT == 1
-static_assert(CONFIG_FLASH_OFFSET == PART_FIRMWARE_SLOT_1_OFFSET);
-static_assert(CONFIG_FW_FLASH_SIZE == PART_FIRMWARE_SLOT_1_SIZE);
-#else
-static_assert(CONFIG_FLASH_OFFSET == PART_FIRMWARE_SLOT_0_OFFSET);
-static_assert(CONFIG_FW_FLASH_SIZE == PART_FIRMWARE_SLOT_0_SIZE);
-#endif
-#endif
-
 static void prv_resource_banks_region_add(void) {
 #ifdef CONFIG_MMAP_RESOURCES
   static_assert(PART_SYSTEM_RESOURCES_BANK_0_OFFSET + PART_SYSTEM_RESOURCES_BANK_0_SIZE ==

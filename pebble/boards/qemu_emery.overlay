@@ -1,0 +1,17 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: Apache-2.0
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+#include "flash-32m.dtsi"
+
+		partition@1ffe000 {
+			label = "mfg-info";
+			reg = <0x1ffe000 0x1000>;
+		};
+	};
+};

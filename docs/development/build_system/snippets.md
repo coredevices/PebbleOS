@@ -38,3 +38,9 @@ the same file from their overlays:
 `pbl samples` skips a sample on a board that none of its snippets has
 anything for.
 
+## Snippets
+
+`filesystem`
+: Enables the file system (`CONFIG_FS`) and gives the board's storage flash
+  a `filesystem` partition. Boards without a devicetree take it from their C
+  layout.

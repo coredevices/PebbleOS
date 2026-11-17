@@ -117,8 +117,8 @@ Board and SoC defaults
   `Kconfig.defconfig`, which is read before the definitions:
 
   ```kconfig
-  config FW_FLASH_SIZE
-      default 0xf8000
+  config FLASH_SIZE
+      default 0x100000
   ```
 
 Log levels

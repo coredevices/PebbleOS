@@ -10,6 +10,18 @@ choice FIRMWARE_AREA
     default FIRMWARE_AREA_RECOVERY if RECOVERY_FW && !MFG
 endchoice
 
+# PBLBOOT runs the image in place from its slot. The recovery image has to fit
+# the partition it is stored in.
+config FLASH_OFFSET
+    default $(dt_partition_offset,safe-firmware) if PBLBOOT && FIRMWARE_AREA_RECOVERY
+    default $(dt_partition_offset,firmware-slot-1) if PBLBOOT && FIRMWARE_SLOT = 1
+    default $(dt_partition_offset,firmware-slot-0) if PBLBOOT
+
+config FW_FLASH_SIZE
+    default $(dt_partition_size,safe-firmware) if FIRMWARE_AREA_RECOVERY && $(dt_has_partition,safe-firmware)
+    default $(dt_partition_size,firmware-slot-1) if PBLBOOT && FIRMWARE_SLOT = 1
+    default $(dt_partition_size,firmware-slot-0) if PBLBOOT
+
 config BT_REPEAT_PAIRING_ALWAYS
     default y if RECOVERY_FW
     depends on BT

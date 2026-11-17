@@ -11,6 +11,10 @@ Keys and values are bytes: the keys here are strings without their
 terminator. A watch, registered before the file is written, reports each
 change.
 
+It is built with the `filesystem` {doc}`snippet
+<../../../development/build_system/snippets>`, which enables the file system
+and gives the board a partition for it.
+
 ```{pebbleos-sample}
 :path: samples/subsys/settings/store
 :sources: src/main.c
