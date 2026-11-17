@@ -58,6 +58,14 @@ struct pbl_kraepelin;
  */
 #define PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M 19
 
+/**
+ * @brief Minutes between the end of a minute and pbl_kraepelin_activities_update() scoring it for
+ * sleep.
+ *
+ * The sleep score of a minute is filtered over the minutes around it.
+ */
+#define PBL_KRAEPELIN_SLEEP_SCORE_LAG_M 4
+
 /** @brief Activity types reported to @ref pbl_kraepelin_session_cb_t. */
 enum pbl_kraepelin_activity {
   /**
@@ -246,6 +254,20 @@ void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now
                                      uint32_t resting_calories, uint32_t active_calories,
                                      uint32_t distance_mm, bool shutting_down,
                                      pbl_kraepelin_session_cb_t sessions_cb, void *context);
+
+/**
+ * @brief Give the verdict of an external sleep classifier for the next minute scored.
+ *
+ * The next pbl_kraepelin_activities_update() then takes @p asleep, not the sleep score, to tell
+ * whether the minute that ended @ref PBL_KRAEPELIN_SLEEP_SCORE_LAG_M minutes before is a sleep
+ * minute, and skips the VMC checks that end or reject a sleep session. Not-worn detection and
+ * restful sleep, which keeps using the sleep score, are unchanged. It applies to that update
+ * only.
+ *
+ * @param state State passed to pbl_kraepelin_init().
+ * @param asleep true if the minute is a sleep minute.
+ */
+void pbl_kraepelin_set_sleep_minute(struct pbl_kraepelin *state, bool asleep);
 
 /**
  * @brief Get the last minute processed for an activity type.
