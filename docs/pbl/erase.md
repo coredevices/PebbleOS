@@ -12,8 +12,8 @@ watch.
 pbl erase --region FILESYSTEM --region SHARED_PRF_STORAGE
 ```
 
-The regions are the partitions in the
-`include/pbl/board/partitions_*.h` header of the board's layout.
+The regions are the partitions of the build: those of its devicetree, or of
+the `include/pbl/board/partitions_*.h` header of the board's layout.
 `--region NAME:SIZE` erases only the first `SIZE` bytes of a
 region, and `--range OFFSET:SIZE` any range; both can be repeated. Ranges
 start at offset 0 of the flash, and must be aligned to its erase size

@@ -7,15 +7,12 @@ choice BT_HCI
     default BT_HCI_NRF52
 endchoice
 
-# 1 MiB of internal flash; the bootloader occupies the first 32 KiB.
+# 1 MiB of internal flash.
 config FLASH_BASE
     default 0x00000000
 
 config FLASH_SIZE
     default 0x100000
-
-config FLASH_OFFSET
-    default 0x8000
 
 # 256 KiB of SRAM, first 256 bytes reserved for the RETAINED region.
 config SRAM_BASE

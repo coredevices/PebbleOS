@@ -155,7 +155,7 @@ config BOARD_PARTITIONS_SINGLE_SLOT
 # exports $(BOARD) and $(BOARD_REVISION) from the --board argument.
 rsource "boards/$(BOARD)/Kconfig"
 osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
-rsource "boards/$(BOARD)/Kconfig.defconfig"
+osource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
 
 config BOARD
@@ -329,11 +329,11 @@ config FLASH_SIZE
 
 config FLASH_OFFSET
     hex
+    default $(dt_partition_offset,code) if $(dt_has_partition,code)
     help
       Offset of the flash area this firmware image is linked to run
-      from, relative to FLASH_BASE (e.g. past the bootloader, or past
-      the first slot when linking for the second one). Defaulted per
-      SoC in soc/*/Kconfig.defconfig.
+      from, relative to FLASH_BASE. Defaults to the flash partition
+      labelled "code".
 
 config FIRMWARE_OFFSET
     int
@@ -369,10 +369,10 @@ config FIRMWARE_SLOT
 
 config FW_FLASH_SIZE
     hex
+    default $(dt_partition_size,code) if $(dt_has_partition,code)
     help
-      Flash space available to this firmware image. Defaulted per SoC or
-      board; a board may shrink it, e.g. when the recovery firmware
-      shares a flash bank with the normal firmware.
+      Flash space available to this firmware image. Defaults to the size
+      of the flash partition labelled "code".
 
 config SCREEN_COLOR_DEPTH_BITS
     int

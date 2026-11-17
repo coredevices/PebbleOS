@@ -10,5 +10,3 @@ expect:
   - 'fs: after removing it, stat returns -ENOENT'
   - 'Sample done'
 roles: [flash]
-# The board has no file system partition.
-skip: [sf32lb57_dpi_hdk]
