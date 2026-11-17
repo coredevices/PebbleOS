@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <pbl/device.h>
@@ -83,6 +84,11 @@ struct pbl_panel_ops {
   int (*disable)(const struct pbl_panel *panel);
   /** Power the panel down. Returns 0 or a negative errno. */
   int (*unprepare)(const struct pbl_panel *panel);
+  /**
+   * Flip what is written to the panel left to right, from the next frame and through power
+   * cycles. Optional. Returns 0 or a negative errno.
+   */
+  int (*set_h_flip)(const struct pbl_panel *panel, bool flip);
 };
 
 /** @brief A panel. */
@@ -152,5 +158,16 @@ int pbl_panel_disable(const struct pbl_panel *panel);
  * @return 0 or a negative errno.
  */
 int pbl_panel_unprepare(const struct pbl_panel *panel);
+
+/**
+ * @brief Flip what is written to a panel left to right, if the panel can.
+ *
+ * Takes effect from the next frame written, and is kept through power cycles of the panel.
+ *
+ * @param panel Panel.
+ * @param flip Flip the image.
+ * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
+ */
+int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip);
 
 /** @} */
