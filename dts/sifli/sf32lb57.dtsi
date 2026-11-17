@@ -202,6 +202,15 @@
 			reg = <0x50003000 0x150>;
 		};
 
+		epic: gpu@50007000 {
+			compatible = "sifli,sf32lb57-epic";
+			reg = <0x50007000 0x1000>;
+			interrupts = <62>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_EPIC>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_EPIC>;
+			status = "disabled";
+		};
+
 		lcdc1: display-controller@50008000 {
 			compatible = "sifli,sf32lb57-lcdc";
 			reg = <0x50008000 0x1000>;
