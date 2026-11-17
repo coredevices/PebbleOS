@@ -8,7 +8,6 @@ import shutil
 
 from harness.errors import HarnessError
 
-_PLATFORMS = ("emery", "flint", "gabbro")
 _TOPDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
@@ -89,10 +88,7 @@ class Build:
 
     @property
     def platform(self):
-        for platform in _PLATFORMS:
-            if self.config.get(f"CONFIG_PLATFORM_{platform.upper()}"):
-                return platform
-        return None
+        return self.config.get("CONFIG_PLATFORM_NAME") or None
 
     @property
     def emulated(self):
