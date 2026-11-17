@@ -205,6 +205,8 @@ void prv_dump_start_app_info(const PebbleProcessMd *app_md) {
 #endif
 #define APP_STACK_SYSTEM_SIZE (4 * 1024)
 
+_Static_assert(CONFIG_APP_RAM_4X_SEGMENT_SIZE > 0, "The platform gives its apps no RAM");
+
 static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
 #ifdef CONFIG_SAMSA
   // The firmware objects an app allocates hold host pointers, twice the size
