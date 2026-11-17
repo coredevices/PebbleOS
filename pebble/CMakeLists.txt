@@ -14,6 +14,20 @@ cmake_minimum_required(VERSION 3.20)
 find_package(PebbleOS REQUIRED HINTS ${CMAKE_CURRENT_SOURCE_DIR}/..)
 project(pebble LANGUAGES C ASM)
 
+# The SDK platform the firmware offers apps: the one of Kconfig.platform its
+# settings for the board pick. Tools are told it by name, and find what it
+# is like in tools/pebble_sdk_platform.py.
+set(PBL_PLATFORM_NAME ${CONFIG_PLATFORM_NAME})
+message(STATUS "Platform: ${PBL_PLATFORM_NAME}")
+
+# The oldest SDK whose apps run: 2.x apps are black and white, and
+# rectangular.
+if(CONFIG_PLATFORM_COLOR OR CONFIG_PLATFORM_ROUND)
+  set(PBL_MIN_SDK_VERSION 3)
+else()
+  set(PBL_MIN_SDK_VERSION 2)
+endif()
+
 # The recovery firmware is selected with -DVARIANT=prf, which loads
 # prj_prf.conf; keep the two spellings in sync.
 if(VARIANT STREQUAL "prf" AND NOT CONFIG_RECOVERY_FW)
