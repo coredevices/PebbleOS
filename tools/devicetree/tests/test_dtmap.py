@@ -1611,6 +1611,13 @@ def test_references_of_a_redirected_node_alone(tmp_path):
     assert "SENSOR_DT_DEFINE(dt_sensor, PIN(&dt_gpio, 9, 0));" in body(gen)
 
 
+def test_child_path_reads_from_a_grandchild(tmp_path):
+    sensor = "sub { timing { hactive = <390>; }; };"
+    arg = {"prop": "hactive", "child": "sub/timing"}
+    gen = sensor_generate(tmp_path, [arg], sensor)
+    assert "SENSOR_DT_DEFINE(dt_sensor, 390);" in body(gen)
+
+
 OPTIONAL_ARGS = [
     {"reg": 0},
     {"gpio": "reset", "optional": True},
