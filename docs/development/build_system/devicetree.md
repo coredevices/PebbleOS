@@ -512,6 +512,7 @@ An argument takes its value from one place:
 | `name: true` | The device name, from the label or the node name |
 | `reg: <index or name>` | Address of a `reg` entry, translated through the `ranges` above |
 | `size: <index or name>` | Size of a `reg` entry |
+| `memory: <property>` | The RAM the region this phandle property points to is in, absent when it is no device; see [](#devicetree-reserved-memory) |
 | `irq: <index or name>` | An interrupt, from `interrupts` or `interrupts-extended` |
 | `clock`, `reset`, `mbox`, `pwm`, `power-domain` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, `power-domains`, by index or by name; a `clock` name missing from `clock-names` is absent, for an input a node may lack |
 | `assigned-clocks: <macro>` | The macro of each clock of `assigned-clocks`, with its parent from `assigned-clock-parents`, `{}` for none, and its rate in Hz from `assigned-clock-rates`, 0 for none |
@@ -717,6 +718,8 @@ enter each state, fills its {doc}`idle states <../../kernel/idle>` from
 them with `PBL_US_TO_TICKS_CEIL()`. A board overrides the times of a state
 when its crystal or its flash take longer to come back.
 
+(devicetree-reserved-memory)=
+
 ## Reserved memory
 
 Memory set aside for one device, as in Linux, is a child of
@@ -738,7 +741,10 @@ framebuffer of a display too large for the heap:
 ```
 
 The driver takes its base and size with `reg` and `size` read `of:
-memory-region`. Every region also becomes `devicetree/reserved_memory.h`,
+memory-region`, and with `memory: memory-region` the RAM the region is in,
+when that is a device, as a PSRAM in the window of its controller, so that it
+can keep it powered. A region in a RAM whose driver is not enabled fails the
+build. Every region also becomes `devicetree/reserved_memory.h`,
 whose `PBL_DT_RESERVED_MEMORY_FOREACH(fn)` calls `fn(base, size)` for each:
 the scratch heap leaves those in the external RAM out.
 
