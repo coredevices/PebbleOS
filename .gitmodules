@@ -50,3 +50,6 @@
 	path = third_party/devicetree/devicetree-rebasing
 	url = https://github.com/coredevices/devicetree-rebasing.git
 	shallow = true
+[submodule "third_party/bootloaders/pebbleos-bootloaders"]
+	path = third_party/bootloaders/pebbleos-bootloaders
+	url = https://github.com/coredevices/PebbleOS-bootloaders.git
