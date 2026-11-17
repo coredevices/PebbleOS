@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: gpu
+type: struct pbl_gpu
+include: pbl/drivers/gpu.h
+roles:
+  gpu: GPU
