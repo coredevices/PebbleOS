@@ -50,6 +50,20 @@ code (`appinfo.json`, the per-platform `appinfo.auto.c`, the message key
 sources, the linker scripts). Changing `package.json`, adding a file to
 `resources/` or installing a package reconfigures the project.
 
+A project builds for the platforms its `targetPlatforms` lists, out of
+those the SDK has, and for all of them without the list. An entry names a
+platform, or the capabilities a platform has to have, written as the tags
+resource file names use and joined by `~`:
+
+```json
+"targetPlatforms": ["emery", "round", "bw~mic"]
+```
+
+That is Emery, every round platform, and every black and white platform
+with a microphone. A resource's own `targetPlatforms` reads the same way.
+The built `appinfo.json` lists platforms by name. The deprecated waf build
+only takes names.
+
 One build directory builds every platform the project targets. The code is
 described once, on an interface target, and built once per platform with
 that platform's `pebble.h` and flags:
