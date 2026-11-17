@@ -27,6 +27,7 @@
 #include <pbl/util/shared_cbuf.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
+#include <pbl/vanhees/vanhees.h>
 
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
@@ -61,6 +62,7 @@ typedef struct {
   struct pbl_mutex mutex;
 
   struct pbl_kraepelin *k_state; // Pointer to Kraepelin state variables
+  struct pbl_vanhees *vh_state;  // Pointer to van Hees state variables
 
 #ifdef CONFIG_HRM
   // HR subscriptions held by the walk and run in progress
@@ -872,18 +874,21 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
   // Allocate kraepelin state and our globals
   PBL_ASSERTN(s_alg_state == 0);
   struct pbl_kraepelin *k_state = pbl_zalloc(pbl_kraepelin_state_size());
-  if (k_state) {
+  struct pbl_vanhees *vh_state = pbl_zalloc(pbl_vanhees_state_size());
+  if (k_state && vh_state) {
     s_alg_state = pbl_zalloc(sizeof(AlgState));
   }
   if (!s_alg_state) {
     PBL_LOG_ERR("Not enough memory");
     pbl_free(k_state);
+    pbl_free(vh_state);
     return false;
   }
 
   // Init globals
   *s_alg_state = (AlgState){
     .k_state = k_state,
+    .vh_state = vh_state,
   };
   pbl_mutex_init(&s_alg_state->mutex);
   pbl_shared_cbuf_init(&s_alg_state->minute_data_cbuf, (uint8_t *)s_alg_state->minute_data_storage,
@@ -900,6 +905,7 @@ bool activity_algorithm_init(AccelSamplingRate *sampling_rate) {
     .not_worn_max_low_vmc_run_m = CONFIG_SERVICE_ACTIVITY_NOT_WORN_MAX_LOW_VMC_RUN_M,
   };
   pbl_kraepelin_init(k_state, &params, nullptr);
+  pbl_vanhees_init(vh_state);
 
   // Count # of records in minute file
   uint32_t num_records;
@@ -953,6 +959,7 @@ bool activity_algorithm_deinit(void) {
   }
 #endif
   pbl_free(s_alg_state->k_state);
+  pbl_free(s_alg_state->vh_state);
 
   pbl_free(s_alg_state);
   s_alg_state = nullptr;
@@ -976,6 +983,15 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples,
   static_assert(offsetof(AccelRawData, x) == offsetof(struct pbl_kraepelin_sample, x));
   static_assert(offsetof(AccelRawData, y) == offsetof(struct pbl_kraepelin_sample, y));
   static_assert(offsetof(AccelRawData, z) == offsetof(struct pbl_kraepelin_sample, z));
+  static_assert(sizeof(AccelRawData) == sizeof(struct pbl_vanhees_sample));
+  static_assert(offsetof(AccelRawData, x) == offsetof(struct pbl_vanhees_sample, x));
+  static_assert(offsetof(AccelRawData, y) == offsetof(struct pbl_vanhees_sample, y));
+  static_assert(offsetof(AccelRawData, z) == offsetof(struct pbl_vanhees_sample, z));
+  static_assert(PBL_VANHEES_SAMPLE_HZ == PBL_KRAEPELIN_SAMPLE_HZ);
+
+  // Runs whichever sleep algorithm is selected, so that it is ready when the user switches
+  pbl_vanhees_analyze_samples(s_alg_state->vh_state, (const struct pbl_vanhees_sample *)data,
+                              num_samples);
 
   uint32_t consumed_samples;
   uint16_t new_steps =
@@ -1077,6 +1093,17 @@ static void prv_activity_update_states(time_t utc_sec, AlgMinuteRecord *record_o
               "light: %" PRIu8 ", plugged_in: %d, hrm_offwrist: %d",
               m_rec->base.steps, m_rec->base.orientation, m_rec->base.vmc, m_rec->base.light,
               (int)m_rec->base.plugged_in, (int)hrm_offwrist);
+
+  // The van Hees verdict is for the minute Kraepelin is about to score for sleep
+  static_assert(PBL_VANHEES_LAG_M == PBL_KRAEPELIN_SLEEP_SCORE_LAG_M);
+  if (!shutting_down) {
+    bool inactive;
+    const bool valid = pbl_vanhees_minute_update(s_alg_state->vh_state, &inactive);
+    PBL_LOG_DBG("van Hees: valid: %d, inactive: %d", (int)valid, (int)inactive);
+    if (activity_prefs_get_sleep_algorithm() == ActivitySleepAlgorithm_VanHees) {
+      pbl_kraepelin_set_sleep_minute(s_alg_state->k_state, inactive);
+    }
+  }
 
   // Pass the minute data onto the activity detection logic
   pbl_kraepelin_activities_update(s_alg_state->k_state, utc_sec, m_rec->base.steps, m_rec->base.vmc,

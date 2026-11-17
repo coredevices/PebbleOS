@@ -253,6 +253,29 @@ With some exceptions:
   non-sleep threshold, the user is considered awake.
 - If the watch was not worn, the session is discarded; see below.
 
+### van Hees sleep detection
+
+By default, sleep minutes are not told apart by the sleep threshold above
+but by the method of van Hees et al., _A Novel, Open Access Method to
+Assess Sleep Duration Using a Wrist-Worn Accelerometer_ (PLOS ONE, 2015).
+It looks at the posture of the wrist rather than at how much it moves. The
+sleep threshold can be selected instead in Settings > System > Debugging >
+Sleep Algorithm.
+
+For each 5 second epoch, the median of each axis gives the angle of the Z
+axis, perpendicular to the skin, to the horizontal plane. A _posture
+change_ is a difference of more than 5 degrees between the angles of two
+successive epochs. A minute is a sleep minute when it lies entirely in a
+period of at least 5 minutes without posture change.
+
+The rules above then build sleep sessions out of the sleep minutes, with
+the same not-worn detection. The exceptions that depend on the VMC do not
+apply: the wrist angle alone decides. Restful sleep is still found from
+the filtered VMC, as the method has no notion of it.
+
+Both algorithms see every sample, so the setting applies from the next
+minute on, to a sleep session in progress too.
+
 ### Restful sleep
 
 A second pass over a sleep session finds its _restful sleep_. A _restful
@@ -298,6 +321,8 @@ pebble/services/activity/
     activity_algorithm_kraepelin.c
 lib/kraepelin/
   kraepelin.c
+lib/vanhees/
+  vanhees.c
 ```
 
 `activity.c`
@@ -312,6 +337,11 @@ lib/kraepelin/
 : The step and sleep algorithms themselves, a library that depends on
   nothing but the utility library. It originates from open source code
   provided by the Stanford Wearables Lab.
+
+`lib/vanhees/vanhees.c`
+: The van Hees sleep minute classifier, a library with the same
+  dependencies. It only classifies minutes; its verdicts are passed to
+  Kraepelin, which builds the sleep sessions.
 
 `kraepelin/activity_algorithm_kraepelin.c`
 : Adapts the algorithms to the algorithm interface `activity.c` expects,
@@ -361,7 +391,9 @@ byte by taking its square root, and the orientation is one byte as well:
 ## Testing
 
 The unit tests in `tests/pebble/services/activity/` run recorded data through
-`lib/kraepelin/kraepelin.c` and check its results.
+`lib/kraepelin/kraepelin.c` and check its results. The van Hees classifier
+is tested with generated samples: the recorded sleep samples are minute
+data, which it cannot use.
 
 ### Step samples
 

@@ -4,6 +4,7 @@
 config SERVICE_ACTIVITY
     bool "Activity"
     select KRAEPELIN
+    select VANHEES
     help
       Activity (step/sleep/workout) tracking service.
 
