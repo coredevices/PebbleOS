@@ -280,6 +280,22 @@ int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key
                      const void *val, size_t val_len);
 
 /**
+ * @brief Write a value with a given modification timestamp.
+ *
+ * As pbl_settings_set(), for copying a record and its timestamp from another file.
+ *
+ * @param file Settings file.
+ * @param key Key, at most @ref PBL_SETTINGS_KEY_MAX_LEN bytes.
+ * @param key_len Length of @p key in bytes.
+ * @param val Value, at most @ref PBL_SETTINGS_VAL_MAX_LEN bytes.
+ * @param val_len Length of @p val in bytes.
+ * @param timestamp Modification timestamp.
+ * @return Same as pbl_settings_set().
+ */
+int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                    const void *val, size_t val_len, uint32_t timestamp);
+
+/**
  * @brief Mark a record as synced.
  *
  * The flag stays until the record is overwritten.

@@ -80,8 +80,8 @@ int pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key
   return -ENOENT;
 }
 
-int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
-                     const void *val, size_t val_len) {
+int pbl_settings_set_with_timestamp(struct pbl_settings_file *file, const void *key, size_t key_len,
+                                    const void *val, size_t val_len, uint32_t timestamp) {
   void *val_copy = malloc(val_len);
   void *key_copy = malloc(key_len);
   cl_assert(val_copy && key_copy);
@@ -96,8 +96,14 @@ int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key
   s_settings_file.val_lens[key_crc8] = val_len;
   s_settings_file.key_lens[key_crc8] = key_len;
   s_settings_file.dirty[key_crc8] = true;
-  s_settings_file.last_modified[key_crc8] = (uint32_t)pbl_realtime();
+  s_settings_file.last_modified[key_crc8] = timestamp;
   return 0;
+}
+
+int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key_len,
+                     const void *val, size_t val_len) {
+  return pbl_settings_set_with_timestamp(file, key, key_len, val, val_len,
+                                         (uint32_t)pbl_realtime());
 }
 
 int pbl_settings_get_time(struct pbl_settings_file *file, const void *key, size_t key_len,
