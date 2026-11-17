@@ -18,6 +18,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
+#include <pbl/services/activity/activity.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/light.h>
@@ -72,6 +73,7 @@ enum {
 #endif
   DebuggingItemAccelShakeLogInfo,
   DebuggingItemVibeLogInfo,
+  DebuggingItemSleepAlgorithm,
   DebuggingItemCompactSettingsDbs,
 #if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
   DebuggingItemSpO2Test,
@@ -474,6 +476,34 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
 }
 #endif
 
+// Sleep algorithm
+///////////////////
+
+// Indexed by ActivitySleepAlgorithm
+static const char *s_sleep_algorithm_labels[] = {
+  pbl_i18n_noop("Kraepelin"),
+  pbl_i18n_noop("van Hees"),
+};
+static_assert(ARRAY_LENGTH(s_sleep_algorithm_labels) == ActivitySleepAlgorithmCount);
+
+static void prv_sleep_algorithm_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  if (selection >= 0 && selection < ActivitySleepAlgorithmCount) {
+    activity_prefs_set_sleep_algorithm((ActivitySleepAlgorithm)selection);
+  }
+  app_window_stack_remove(&option_menu->window, true /* animated */);
+}
+
+static void prv_sleep_algorithm_menu_push(SettingsSystemData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_sleep_algorithm_menu_select,
+  };
+  const char *title = pbl_i18n_noop("Sleep Algorithm");
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            activity_prefs_get_sleep_algorithm(), &callbacks,
+                            ARRAY_LENGTH(s_sleep_algorithm_labels), true /* icons_enabled */,
+                            s_sleep_algorithm_labels, data);
+}
+
 // Compact growable settings DBs
 ////////////////////////////////
 
@@ -497,6 +527,7 @@ static const char *s_debugging_titles[DebuggingItem_Count] = {
 #endif
   [DebuggingItemAccelShakeLogInfo] = pbl_i18n_noop("Shake Log Info"),
   [DebuggingItemVibeLogInfo] = pbl_i18n_noop("Vibe Log Info"),
+  [DebuggingItemSleepAlgorithm] = pbl_i18n_noop("Sleep Algorithm"),
   [DebuggingItemCompactSettingsDbs] = pbl_i18n_noop("Compact Settings DBs"),
 #if defined(CONFIG_HRM) && defined(CONFIG_DEMO_APP_SPO2_TEST)
   [DebuggingItemSpO2Test] = pbl_i18n_noop("SpO2 Test"),
@@ -541,6 +572,9 @@ static void prv_debugging_draw_row_callback(GContext *ctx, const Layer *cell_lay
   } else if (cell_index->row == DebuggingItemVibeLogInfo) {
     subtitle_text = shell_prefs_get_vibe_log_info_enabled() ? pbl_i18n_get("Enabled", data)
                                                             : pbl_i18n_get("Disabled", data);
+  } else if (cell_index->row == DebuggingItemSleepAlgorithm) {
+    subtitle_text =
+        pbl_i18n_get(s_sleep_algorithm_labels[activity_prefs_get_sleep_algorithm()], data);
   }
   menu_cell_basic_draw(ctx, cell_layer, title, subtitle_text, nullptr);
 }
@@ -582,6 +616,9 @@ static void prv_debugging_select_callback(MenuLayer *menu_layer, MenuIndex *cell
       break;
     case DebuggingItemVibeLogInfo:
       shell_prefs_set_vibe_log_info_enabled(!shell_prefs_get_vibe_log_info_enabled());
+      break;
+    case DebuggingItemSleepAlgorithm:
+      prv_sleep_algorithm_menu_push(data);
       break;
     case DebuggingItemCompactSettingsDbs:
       prv_compact_settings_dbs();
