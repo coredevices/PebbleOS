@@ -47,15 +47,20 @@ typedef enum PlatformType {
 #define DISPLAY_FRAMEBUFFER_BYTES (PBL_DISPLAY_WIDTH * PBL_DISPLAY_HEIGHT)
 #endif
 
-// Variant boards should go before their base platforms, as they define the base platform too.
+// A platform that is not one of these is the one it is most like: PlatformType only tells
+// apart what the system draws differently, and that goes by shape and colour depth.
 #ifdef CONFIG_PLATFORM_EMERY
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
 #elifdef CONFIG_PLATFORM_FLINT
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
 #elifdef CONFIG_PLATFORM_GABBRO
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+#elifdef CONFIG_PLATFORM_ROUND
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+#elifdef CONFIG_PLATFORM_COLOR
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
 #else
-#error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PLATFORM_* defined!"
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
 #endif
 #else
 #if PBL_PLATFORM_APLITE
@@ -72,6 +77,12 @@ typedef enum PlatformType {
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
 #elif PBL_PLATFORM_GABBRO
 #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+#elif defined(PBL_ROUND)
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro
+#elif defined(PBL_COLOR)
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery
+#elif defined(PBL_BW)
+#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint
 #else
 #error "PBL_PLATFORM_TYPE_CURRENT couldn't be determined: No PBL_PLATFORM_* defined!"
 #endif
