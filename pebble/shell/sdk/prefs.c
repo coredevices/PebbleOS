@@ -189,6 +189,13 @@ bool activity_prefs_tracking_is_enabled(void) {
 void activity_prefs_tracking_set_enabled(bool enable) {
 }
 
+ActivitySleepAlgorithm activity_prefs_get_sleep_algorithm(void) {
+  return ActivitySleepAlgorithm_VanHees;
+}
+
+void activity_prefs_set_sleep_algorithm(ActivitySleepAlgorithm algorithm) {
+}
+
 bool activity_prefs_activity_insights_are_enabled(void) {
   return false;
 }

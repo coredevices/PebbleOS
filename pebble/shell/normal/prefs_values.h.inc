@@ -52,6 +52,7 @@
   PREFS_MACRO(PREF_KEY_ACTIVITY_ACTIVATION_DELAY_INSIGHT, s_activity_activation_delay_insight)
   PREFS_MACRO(PREF_KEY_ACTIVITY_HEALTH_APP_OPENED, s_activity_prefs_health_app_opened)
   PREFS_MACRO(PREF_KEY_ACTIVITY_WORKOUT_APP_OPENED, s_activity_prefs_workout_app_opened)
+  PREFS_MACRO(PREF_KEY_ACTIVITY_SLEEP_ALGORITHM, s_activity_sleep_algorithm)
   PREFS_MACRO(PREF_KEY_ALARMS_APP_OPENED, s_alarms_app_opened)
   PREFS_MACRO(PREF_KEY_ACTIVITY_HRM_PREFERENCES, s_activity_hrm_preferences)
   PREFS_MACRO(PREF_KEY_ACTIVITY_SPO2_PREFERENCES, s_activity_spo2_preferences)
