@@ -16,7 +16,9 @@
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/logging/logging.h>
+#ifdef CONFIG_TASK_WDT
 #include <pbl/task_wdt/task_wdt.h>
+#endif
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -86,7 +88,9 @@ static void prv_erase_pause(const struct pbl_flash *flash) {
 
   // Without a minimum slice back-to-back accesses would starve the erase
   pbl_sleep_ms(ERASE_MIN_SLICE_MS);
+#ifdef CONFIG_TASK_WDT
   pbl_task_wdt_feed_thread(st->erase.thread);
+#endif
 
   ret = flash->ops->erase_suspend(flash);
   PBL_ASSERT(ret >= 0, "Erase suspend failed: %d", ret);
@@ -606,8 +610,10 @@ int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
   struct pbl_flash_state *st = flash->state;
   int status = 0;
   uint32_t wait_ms;
+#ifdef CONFIG_TASK_WDT
   uint32_t unit_waited_ms = 0U;
   uint32_t last_next = addr;
+#endif
   uint32_t steps = 0U;
   int ret;
 
@@ -642,6 +648,7 @@ int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
       prv_resume(flash);
     }
 
+#ifdef CONFIG_TASK_WDT
     if (st->erase.next != last_next) {
       last_next = st->erase.next;
       unit_waited_ms = 0U;
@@ -653,6 +660,7 @@ int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
     if (unit_waited_ms < ERASE_UNIT_WDT_MAX_MS) {
       pbl_task_wdt_feed_self();
     }
+#endif
   }
 
   PBL_ASSERT(status == 0 || status == -EACCES || status == -ENODEV, "Flash erase failed: %d",
