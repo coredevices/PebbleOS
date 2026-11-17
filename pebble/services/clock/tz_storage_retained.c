@@ -12,7 +12,8 @@
 static const uint8_t s_regs[] = {
   RTC_TIMEZONE_ABBR_START, RTC_TIMEZONE_ABBR_END_TZID_DSTID,
   RTC_TIMEZONE_GMTOFFSET,  RTC_TIMEZONE_DST_START,
-  RTC_TIMEZONE_DST_END,
+  RTC_TIMEZONE_DST_END,    RTC_TIMEZONE_DST_START_HI,
+  RTC_TIMEZONE_DST_END_HI,
 };
 
 // The fields up to tm_gmtoff are stored as raw words, the DST times as 32 bits.
@@ -29,7 +30,9 @@ void tz_storage_save(const TimezoneInfo *tz_info) {
     retained_write(s_regs[i], raw[i]);
   }
   retained_write(RTC_TIMEZONE_DST_START, (uint32_t)tz_info->dst_start);
+  retained_write(RTC_TIMEZONE_DST_START_HI, (uint32_t)((uint64_t)tz_info->dst_start >> 32));
   retained_write(RTC_TIMEZONE_DST_END, (uint32_t)tz_info->dst_end);
+  retained_write(RTC_TIMEZONE_DST_END_HI, (uint32_t)((uint64_t)tz_info->dst_end >> 32));
 }
 
 void tz_storage_load(TimezoneInfo *tz_info) {
@@ -40,8 +43,10 @@ void tz_storage_load(TimezoneInfo *tz_info) {
   }
   *tz_info = (TimezoneInfo){};
   memcpy(tz_info, raw, sizeof(raw));
-  tz_info->dst_start = retained_read(RTC_TIMEZONE_DST_START);
-  tz_info->dst_end = retained_read(RTC_TIMEZONE_DST_END);
+  tz_info->dst_start = (time_t)(((uint64_t)retained_read(RTC_TIMEZONE_DST_START_HI) << 32) |
+                                retained_read(RTC_TIMEZONE_DST_START));
+  tz_info->dst_end = (time_t)(((uint64_t)retained_read(RTC_TIMEZONE_DST_END_HI) << 32) |
+                              retained_read(RTC_TIMEZONE_DST_END));
 }
 
 bool tz_storage_is_set(void) {

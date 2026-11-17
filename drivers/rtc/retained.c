@@ -11,14 +11,17 @@
 static uint64_t s_set_uptime_ms;
 
 static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
-  *t = (time_t)retained_read(CURRENT_TIME_REGISTER) +
-       (time_t)((pbl_uptime_ms() - s_set_uptime_ms) / 1000U);
+  const uint64_t set = ((uint64_t)retained_read(CURRENT_TIME_HI_REGISTER) << 32) |
+                       retained_read(CURRENT_TIME_REGISTER);
+
+  *t = (time_t)set + (time_t)((pbl_uptime_ms() - s_set_uptime_ms) / 1000U);
 
   return 0;
 }
 
 static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
   retained_write(CURRENT_TIME_REGISTER, (uint32_t)t);
+  retained_write(CURRENT_TIME_HI_REGISTER, (uint32_t)((uint64_t)t >> 32));
   s_set_uptime_ms = pbl_uptime_ms();
 
   return 0;

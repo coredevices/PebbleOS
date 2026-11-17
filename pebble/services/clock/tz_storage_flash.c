@@ -16,6 +16,7 @@ typedef struct PBL_PACKED {
   uint8_t dst_id;
   int16_t timezone_id;
   int32_t tm_gmtoff;
+  // DST times stay 32 bits so earlier firmware keeps reading this layout.
   uint32_t dst_start;
   uint32_t dst_end;
 } TzinfoFlashStorage;
