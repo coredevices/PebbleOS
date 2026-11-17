@@ -62,6 +62,7 @@ drivers/backlight.md
 drivers/battery.md
 drivers/display.md
 drivers/flash.md
+drivers/gpu.md
 drivers/mag.md
 drivers/mic.md
 drivers/ram.md

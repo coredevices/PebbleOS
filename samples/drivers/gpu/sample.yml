@@ -1,0 +1,14 @@
+description: Fills and blits drawn by the GPU into the display's frame, plain, blended, rotated and scaled, each checked or timed
+expect:
+  - 'gpu: \d+x\d+ frame'
+  - 'gpu: opaque fill: ok, \d+ us'
+  - 'gpu: blended fill: ok, \d+ us'
+  - 'gpu: blit: ok, \d+ us'
+  - 'gpu: blended blit: ok, \d+ us'
+  - 'gpu: rotated blit: (ok, \d+ us|not supported)'
+  - 'gpu: scaled blit: (ok, \d+ us|not supported)'
+  - 'gpu: rotated and scaled blit: (ok, \d+ us|not supported)'
+  - 'Sample done'
+boards: [sf32lb57_dpi_hdk]
+roles: [display, backlight, gpu]
+addons: [sifli_lcm_1p85]
