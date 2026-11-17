@@ -38,8 +38,8 @@ core ends the image between chunks on one that is running out of room.
 `pbl/coredump/backend.h` documents the interface. Backends must not use OS
 services while a dump is being written.
 
-`CONFIG_COREDUMP_BACKEND_FLASH` keeps dumps in flash, in the core dump partition
-or, on boards without one, in the firmware update slot. A dump replaces an older
+`CONFIG_COREDUMP_BACKEND_FLASH` keeps dumps in flash, in the `cd` partition or,
+without one, in the `scratch` partition. A dump replaces an older
 one, but not one less than a day old that has not been read, unless it is
 forced. `CONFIG_COREDUMP_BACKEND_FLASH_IMAGES` sets how many dumps fit.
 
