@@ -22,6 +22,8 @@
 #include <hardware/sf32lb57_hpsys_cfg.h>
 #include <hardware/sf32lb57_hpsys_rcc.h>
 
+#define MPI_MUX_SETTLE_LOOPS 1000U
+
 #define NUM_GATES 64U
 
 #define DLL_STEP_HZ    24000000U
@@ -524,6 +526,18 @@ static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struc
   return 0;
 }
 
+// The firmware may be running from the memory behind the MPI: its clock switches while nothing
+// is fetched from it, and is left a moment before anything is
+PBL_SECTION_RAM static void prv_ram_mpi_mux(uintptr_t reg, uint32_t mask, uint32_t sel) {
+  const unsigned int key = pbl_irq_disable_all();
+
+  pbl_writel((pbl_readl(reg) & ~mask) | sel, reg);
+  for (volatile uint32_t i = 0U; i < MPI_MUX_SETTLE_LOOPS; i++) {
+  }
+
+  pbl_irq_restore_all(key);
+}
+
 static int prv_set_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t mask,
                               const struct pbl_clk *parent) {
   uint32_t sel;
@@ -546,7 +560,8 @@ static int prv_set_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t ma
       return -EINVAL;
   }
 
-  prv_modify(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET, mask, PBL_FIELD_PREP(mask, sel));
+  prv_ram_mpi_mux(prv_rcc(ctrl)->base + SF32LB52_HPSYS_RCC_CSR_OFFSET, mask,
+                  PBL_FIELD_PREP(mask, sel));
 
   return 0;
 }
