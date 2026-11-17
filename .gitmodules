@@ -53,3 +53,7 @@
 [submodule "third_party/bootloaders/pebbleos-bootloaders"]
 	path = third_party/bootloaders/pebbleos-bootloaders
 	url = https://github.com/coredevices/PebbleOS-bootloaders.git
+[submodule "third_party/lvgl/lvgl"]
+	path = third_party/lvgl/lvgl
+	url = https://github.com/lvgl/lvgl
+	shallow = true

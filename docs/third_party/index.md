@@ -13,6 +13,7 @@ symbol that enables it. Some are forks under
 | [CMSIS](https://github.com/ARM-software/CMSIS_5) | Arm Cortex-M core headers, for the nRF52840 MDK | Apache-2.0 |
 | [nrfx](https://github.com/NordicSemiconductor/nrfx) | nRF52840 MDK and HAL headers, for the NimBLE radio driver | BSD-3-Clause |
 | [NimBLE](https://github.com/coredevices/mynewt-nimble) | Bluetooth Low Energy host stack (fork) | Apache-2.0 |
+| [LVGL](https://github.com/lvgl/lvgl) | Graphics library, for applications; see {doc}`lvgl` | MIT |
 | [Mbed TLS](https://github.com/Mbed-TLS/mbedtls) | Cryptography | Apache-2.0 OR GPL-2.0-or-later |
 | [Moddable](https://github.com/coredevices/moddable) | XS JavaScript engine (fork); see {doc}`moddable` | LGPL-3.0-or-later AND Apache-2.0 |
 | [picolibc](https://github.com/picolibc/picolibc) | C library | BSD-3-Clause AND BSD-2-Clause |
@@ -46,6 +47,7 @@ python3 tools/cmake/sbom.py check
 ```{toctree}
 :hidden:
 
+lvgl.md
 moddable.md
 sbom.md
 ```
