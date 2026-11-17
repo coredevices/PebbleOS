@@ -61,6 +61,7 @@ IDS_KEYS = {"cell", "header", "prefix", "values"}
 IDS_VALUES_KEYS = {"header", "prefix"}
 ARG_KINDS = {
     "name",
+    "memory",
     "reg",
     "prop",
     "strings",
@@ -864,6 +865,35 @@ class Generator:
     def _reg(self, dev, key):
         return f"{self._translate(dev, self._reg_entry(dev, key)[0]):#x}"
 
+    def _memory(self, dev, region):
+        """The RAM a memory region is in: the node, or a child of the node, one of whose reg
+        entries holds the region, as the PSRAM in the window of its controller. None when the
+        region is in memory that is no device, as the RAM of the SoC."""
+        src = Device(region, [])
+        base, size = self._reg_entry(src, 0)
+        base = self._translate(src, base)
+        for node in self.tree.nodes():
+            if not enabled(node) or not node.has("reg") or node.size_cells == 0:
+                continue
+            width = node.address_cells + node.size_cells
+            cells = node.u32s("reg")
+            holder = Device(node, [])
+            for pos in range(0, len(cells) - width + 1, width):
+                start = cells_number(cells[pos : pos + node.address_cells])
+                length = cells_number(cells[pos + node.address_cells : pos + width])
+                try:
+                    start = self._translate(holder, start)
+                except DtError:
+                    continue
+                if not (start <= base and base + size <= start + length):
+                    continue
+                for ram in (node, *node.children):
+                    if enabled(ram) and any(
+                        "ram" in spec.classes for spec in self._device(ram).specs
+                    ):
+                        return ram
+        return None
+
     def _list(self, dev, node, path, item):
         """An item per enabled child of the node reached through children of the given compatibles:
         a template of the child's reg cells and name, or a macro with arguments read from the child.
@@ -1086,6 +1116,13 @@ class Generator:
         src = dev if node is dev.node else Device(node, [])
         if kind == "reg":
             return self._reg(src, key)
+        if kind == "memory":
+            # The RAM behind a region, for a device that keeps it powered, as a framebuffer
+            if not node.has(key):
+                return None
+            region = self.tree.phandle(node.u32s(key)[0], f"{dev.node.path}: '{key}'")
+            ram = self._memory(dev, region)
+            return None if ram is None else self._provided(dev, ram, "ram", [])
         if kind == "size":
             return f"{self._reg_entry(src, key)[1]:#x}"
         if kind == "list":

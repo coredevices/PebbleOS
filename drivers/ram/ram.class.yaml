@@ -4,5 +4,7 @@
 class: ram
 type: struct pbl_ram
 include: pbl/drivers/ram.h
+provides:
+  ram: "&{sym}"
 roles:
   extram: RAM

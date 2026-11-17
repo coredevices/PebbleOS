@@ -661,13 +661,17 @@ OCV_DTS = PMIC_DTS.replace(
 )
 
 
-def battery_generate(tmp_path, config=(*ALL, "PMIC", "CHARGER", "BATTERY"), dts=OCV_DTS):
+def battery_generate(
+    tmp_path, config=(*ALL, "PMIC", "CHARGER", "BATTERY"), dts=OCV_DTS
+):
     classes = {**CLASSES, **PMIC_CLASSES, "battery": BATTERY_CLASS}
     charger = {
         **PMIC_SPECS[2],
         "args": [{"self": "pmic"}, {"phandle": "monitored-battery", "as": "battery"}],
     }
-    group = [dtmap.Spec(f"p{i}", s, classes) for i, s in enumerate([PMIC_SPECS[0], charger])]
+    group = [
+        dtmap.Spec(f"p{i}", s, classes) for i, s in enumerate([PMIC_SPECS[0], charger])
+    ]
     for s in group:
         s.file = f"acme_pmic_{s.classes[0]}"
     battery = dtmap.Spec("battery", BATTERY_SPEC, classes)
@@ -924,7 +928,17 @@ def test_kconfig_functions_read_the_partitions(tmp_path, monkeypatch):
     path = tmp_path / "board.dts"
     path.write_text(TWO_FLASHES_DTS)
     subprocess.run(
-        [dtc(), "-q", "-I", "dts", "-O", "dtb", "-o", str(tmp_path / "board.dtb"), str(path)],
+        [
+            dtc(),
+            "-q",
+            "-I",
+            "dts",
+            "-O",
+            "dtb",
+            "-o",
+            str(tmp_path / "board.dtb"),
+            str(path),
+        ],
         check=True,
     )
     monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path))
@@ -974,9 +988,7 @@ def compile_tree_with_labels(tmp_path, text):
 
 
 def test_idle_states_become_their_latencies(tmp_path):
-    text = dtmap.idle_states_header(
-        compile_tree_with_labels(tmp_path, IDLE_STATES_DTS)
-    )
+    text = dtmap.idle_states_header(compile_tree_with_labels(tmp_path, IDLE_STATES_DTS))
     assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_ENTRY_LATENCY_US 200U" in text
     assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_EXIT_LATENCY_US 500U" in text
     assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_MIN_RESIDENCY_US 10000U" in text
@@ -1646,6 +1658,79 @@ def test_references_of_a_redirected_node_alone(tmp_path):
     sensor = "sub { reset-gpios = <&gpio 9 0>; };"
     gen = sensor_generate(tmp_path, [{"gpio": "reset", "child": "sub"}], sensor)
     assert "SENSOR_DT_DEFINE(dt_sensor, PIN(&dt_gpio, 9, 0));" in body(gen)
+
+
+MEMORY_DTS = DTS.replace(
+    "    ctrl: ctrl@1000 {",
+    """    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        fb: framebuffer@60000000 {
+            reg = <0x60000000 0x1000>;
+        };
+        ipc: memory@20000000 {
+            reg = <0x20000000 0x100>;
+        };
+    };
+    memc@3000 {
+        compatible = "acme,memc";
+        reg = <0x3000 0x100>, <0x60000000 0x100000>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        psram: psram@0 {
+            compatible = "acme,ram";
+            reg = <0>;
+        };
+    };
+    ctrl: ctrl@1000 {""",
+)
+RAM_CLASS = {
+    "class": "ram",
+    "type": "struct ram",
+    "include": "ram.h",
+    "provides": {"ram": "&{sym}"},
+}
+RAM_SPEC = {
+    "compatible": "acme,ram",
+    "config": "RAM",
+    "class": "ram",
+    "define": "RAM_DEFINE",
+    "args": [{"name": True}],
+}
+
+
+def memory_generate(tmp_path, region, config=(*ALL, "RAM")):
+    classes = {**CLASSES, "ram": RAM_CLASS}
+    args = [{"memory": "memory-region", "default": "nullptr"}]
+    specs = {
+        "acme,ram": dtmap.Spec("acme,ram", RAM_SPEC, classes),
+        "acme,sensor": dtmap.Spec(
+            "acme,sensor", {**SPECS["acme,sensor"], "args": args}, classes
+        ),
+    }
+    return generate(
+        tmp_path,
+        config=config,
+        sensor=f"memory-region = <&{region}>;",
+        specs=specs,
+        dts=MEMORY_DTS,
+    )
+
+
+def test_memory_is_the_ram_a_region_is_in(tmp_path):
+    gen = memory_generate(tmp_path, "fb")
+    assert "SENSOR_DT_DEFINE(dt_sensor, &dt_psram);" in body(gen)
+
+
+def test_memory_of_a_region_in_no_device_is_absent(tmp_path):
+    gen = memory_generate(tmp_path, "ipc")
+    assert "SENSOR_DT_DEFINE(dt_sensor, nullptr);" in body(gen)
+
+
+def test_memory_in_a_ram_without_driver_fails(tmp_path):
+    with pytest.raises(DtError, match="has no enabled driver"):
+        memory_generate(tmp_path, "fb", config=ALL)
 
 
 def test_child_path_reads_from_a_grandchild(tmp_path):
@@ -2523,7 +2608,10 @@ def test_io_channels(tmp_path):
         tmp_path, IO_CHANNEL_DTS % {"keys": keys}, IO_CHANNEL_SPECS, IO_CHANNEL_CLASSES
     )
     assert "KEYS_DEFINE(dt_node_keys, ADC_CHANNEL(&dt_adc, 6));" in body(gen)
-    assert "PBL_DEVICE_DEPENDS(dt_node_keys, &dt_node_keys.dev, &dt_adc.dev);" in depends(gen)
+    assert (
+        "PBL_DEVICE_DEPENDS(dt_node_keys, &dt_node_keys.dev, &dt_adc.dev);"
+        in depends(gen)
+    )
 
 
 @pytest.mark.parametrize(
@@ -2615,8 +2703,9 @@ def test_nvmem_cells(tmp_path):
     text = NVMEM_DTS % {"cal": "0x24 0x8", "names": '"id", "calibration"'}
     gen = generate_with(tmp_path, text, NVMEM_SPECS, NVMEM_CLASSES)
     assert "ADC_DEFINE(dt_node_adc_2000, NVMEM_CELL(&dt_efuse, 36, 8));" in body(gen)
-    assert "PBL_DEVICE_DEPENDS(dt_node_adc_2000, &dt_node_adc_2000.dev, &dt_efuse.dev);" in (
-        depends(gen)
+    assert (
+        "PBL_DEVICE_DEPENDS(dt_node_adc_2000, &dt_node_adc_2000.dev, &dt_efuse.dev);"
+        in (depends(gen))
     )
 
 
@@ -2739,7 +2828,9 @@ def addon_tree(tmp_path, connector="acme,conn"):
     (addon / "boards").mkdir(parents=True)
     (addon / "addon.yml").write_text("connectors:\n  - acme,conn\n")
     (addon / "module.overlay").write_text('&sensor {\n    status = "okay";\n};\n')
-    (addon / "boards" / "board.overlay").write_text("&sensor {\n    mount-matrix = \"1\";\n};\n")
+    (addon / "boards" / "board.overlay").write_text(
+        '&sensor {\n    mount-matrix = "1";\n};\n'
+    )
     (addon / "roles.yml").write_text("accel: sensor\n")
     return tmp_path
 
@@ -2747,22 +2838,32 @@ def addon_tree(tmp_path, connector="acme,conn"):
 def test_addons_overlay_the_tree_and_give_roles(tmp_path):
     srcdir = addon_tree(tmp_path)
     assert dtmap.available_addons(srcdir) == ["module"]
-    dtb, _, deps = dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["module"])
+    dtb, _, deps = dtmap.configure(
+        srcdir, tmp_path / "build", "board", None, "cc", None, ["module"]
+    )
     sensor = next(n for n in fdt.load(dtb).nodes() if "sensor" in n.labels)
     assert sensor.status_okay
     assert sensor.strings("mount-matrix") == ["1"]
     assert str(srcdir / "boards" / "addons" / "module" / "addon.yml") in deps
-    roles = yaml.safe_load((tmp_path / "build" / "devicetree" / dtmap.ROLES_FILE).read_text())
+    roles = yaml.safe_load(
+        (tmp_path / "build" / "devicetree" / dtmap.ROLES_FILE).read_text()
+    )
     assert roles == {"main_bus": "bus", "accel": "sensor"}
 
 
 def test_addons_need_their_connectors(tmp_path):
     srcdir = addon_tree(tmp_path, connector="acme,other")
-    with pytest.raises(DtError, match="add-on module needs a acme,conn connector: board has none"):
-        dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["module"])
+    with pytest.raises(
+        DtError, match="add-on module needs a acme,conn connector: board has none"
+    ):
+        dtmap.configure(
+            srcdir, tmp_path / "build", "board", None, "cc", None, ["module"]
+        )
 
 
 def test_unknown_addons_fail(tmp_path):
     srcdir = addon_tree(tmp_path)
     with pytest.raises(DtError, match="no add-on 'missing'"):
-        dtmap.configure(srcdir, tmp_path / "build", "board", None, "cc", None, ["missing"])
+        dtmap.configure(
+            srcdir, tmp_path / "build", "board", None, "cc", None, ["missing"]
+        )
