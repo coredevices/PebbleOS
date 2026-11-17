@@ -89,6 +89,16 @@ if(NOT CONFIG_RECOVERY_FW AND NOT CONFIG_SOC_POSIX)
   add_subdirectory(apps/stored ${pebble_bin}/apps/stored)
 endif()
 
+# The bootloader each watch boots the firmware with, flashed ahead of it.
+set(bootloader_asterix p2d-bootloader.hex)
+set(bootloader_getafix pr2-bootloader.hex)
+set(bootloader_obelix pt2-bootloader.hex)
+if(bootloader_${PBL_BOARD_NAME})
+  pbl_image(bootloader
+    HEX ${PBL_BASE}/third_party/bootloaders/pebbleos-bootloaders/${bootloader_${PBL_BOARD_NAME}}
+    PARTITION bootloader)
+endif()
+
 if(CONFIG_RECOVERY_FW)
   pbl_resources(BUILTIN_ONLY)
 else()
