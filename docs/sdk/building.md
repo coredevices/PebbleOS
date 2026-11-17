@@ -43,5 +43,11 @@ the deprecated `waf` binary older projects build with. That waf is the only
 one left in the tree: everything it needs lives under `sdk/`, and it is
 built out of tree, so packaging leaves the checkout untouched.
 
+It also writes `build/sdk/<platform>/platform.json`, the description of the
+platform out of the build's Kconfig. The SDK has no other record of what
+its platforms are like: the app build derives the `PBL_*` defines, resource
+tags and size limits of each platform from that file. An SDK put together
+from several firmware builds needs the `platform.json` of each.
+
 Both app builds read `package.json` through `sdk/tools/pebble_project.py`;
 the CMake build's steps are `sdk/tools/pebble_build.py`.

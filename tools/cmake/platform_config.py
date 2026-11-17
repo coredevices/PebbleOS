@@ -2,75 +2,89 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-"""Evaluate the Kconfig of an SDK platform, without a board.
+"""The SDK platform of a build, out of Kconfig.
 
-Prints the platform's CONFIG_PLATFORM_* symbols as a CMake list of
-defines, after checking them against the SDK's platform table.
+With a platform name, evaluates Kconfig.platform for that platform, without
+a board, and prints its CONFIG_PLATFORM_* symbols as a CMake list of
+defines. With --dotconfig, reads the platform a board configured instead.
+--json writes the platform's description, the SDK's platform.json.
 """
 
 import argparse
+import json
 import os
+import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(REPO_ROOT, "tools"))
 
 import kconfiglib
-from pebble_sdk_platform import pebble_platforms
+from pebble_sdk_platform import (
+    PlatformError,
+    descriptor_from_kconfig,
+    kconfig_platform,
+    kconfig_symbols,
+)
+
+KCONFIG = os.path.join(REPO_ROOT, "Kconfig.platform")
 
 
-def platform_symbols(platform):
-    os.environ["srctree"] = REPO_ROOT
-    kconf = kconfiglib.Kconfig(os.path.join(REPO_ROOT, "Kconfig.platform"), warn=False)
-
-    choice = kconf.syms.get(f"PLATFORM_{platform.upper()}")
-    if choice is None or choice.choice is None:
-        sys.exit(f"Unknown platform '{platform}'")
-    choice.set_value(2)
-
+def dotconfig_symbols(path):
     symbols = {}
-    for sym in kconf.unique_defined_syms:
-        if not sym.name.startswith("PLATFORM_"):
-            continue
-        if sym.type == kconfiglib.BOOL:
-            if sym.tri_value == 2:
-                symbols[sym.name] = "1"
-        elif sym.type == kconfiglib.STRING:
-            # Quoted, as in autoconf.h.
-            symbols[sym.name] = f'"{sym.str_value}"'
-        elif sym.str_value:
-            symbols[sym.name] = sym.str_value
-
+    with open(path) as f:
+        for line in f:
+            match = re.match(r"CONFIG_(PLATFORM_\w+)=(.*)", line.strip())
+            if match:
+                value = match.group(2)
+                symbols[match.group(1)] = "1" if value == "y" else value.strip('"')
     return symbols
 
 
-def check_sdk(platform, symbols):
-    defines = set(pebble_platforms[platform]["DEFINES"])
-    expected = {
-        "PBL_COLOR" if "PLATFORM_COLOR" in symbols else "PBL_BW",
-        "PBL_ROUND" if "PLATFORM_ROUND" in symbols else "PBL_RECT",
-        f"PBL_DISPLAY_WIDTH={symbols['PLATFORM_DISPLAY_WIDTH']}",
-        f"PBL_DISPLAY_HEIGHT={symbols['PLATFORM_DISPLAY_HEIGHT']}",
-    }
-    missing = sorted(expected - defines)
-    if missing:
-        sys.exit(
-            f"Kconfig.platform and tools/pebble_sdk_platform.py disagree on {platform}: "
-            f"the SDK lacks {', '.join(missing)}"
-        )
+def _write_if_changed(path, content):
+    try:
+        with open(path) as f:
+            if f.read() == content:
+                return
+    except OSError:
+        pass
+    with open(path, "w") as f:
+        f.write(content)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("platform")
+    parser.add_argument("platform", nargs="?", help="a platform of Kconfig.platform")
+    parser.add_argument("--dotconfig", help="the .config of a configured build")
+    parser.add_argument("--json", help="write the platform's description here")
     args = parser.parse_args()
 
-    symbols = platform_symbols(args.platform)
-    check_sdk(args.platform, symbols)
-    print(
-        ";".join(f"CONFIG_{name}={value}" for name, value in sorted(symbols.items())),
-        end="",
-    )
+    if bool(args.platform) == bool(args.dotconfig):
+        parser.error("give a platform or --dotconfig")
+
+    kconf = None
+    try:
+        if args.dotconfig:
+            symbols = dotconfig_symbols(args.dotconfig)
+        else:
+            kconf = kconfig_platform(KCONFIG, f"PLATFORM_{args.platform.upper()}")
+            symbols = kconfig_symbols(kconf)
+        descriptor = descriptor_from_kconfig(symbols)
+    except (PlatformError, KeyError) as e:
+        sys.exit(f"Kconfig does not describe an SDK platform: {e}")
+
+    if args.json:
+        _write_if_changed(args.json, json.dumps(descriptor, indent=2) + "\n")
+    if kconf is None:
+        return
+
+    def define(name, value):
+        # Strings are quoted, as in autoconf.h.
+        if kconf.syms[name].type == kconfiglib.STRING:
+            value = f'"{value}"'
+        return f"CONFIG_{name}={value}"
+
+    print(";".join(define(n, v) for n, v in sorted(symbols.items())), end="")
 
 
 if __name__ == "__main__":

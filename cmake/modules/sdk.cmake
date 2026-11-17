@@ -13,6 +13,10 @@ function(pbl_sdk)
     COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/sdk.py
             --output ${PROJECT_BINARY_DIR}/sdk --platform ${PBL_PLATFORM_NAME}
             --work-dir ${PROJECT_BINARY_DIR}/sdk-waf
+    # What the app build knows the platform by.
+    COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/platform_config.py
+            --dotconfig ${PBL_DOTCONFIG}
+            --json ${PROJECT_BINARY_DIR}/sdk/${PBL_PLATFORM_NAME}/platform.json
     DEPENDS pbl_native_sdk
     COMMENT "Packaging the SDK into ${PROJECT_BINARY_DIR}/sdk"
     VERBATIM
