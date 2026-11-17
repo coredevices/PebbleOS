@@ -1,0 +1,6 @@
+description: A heart rate sensor, with the standard Heart Rate, Battery and Device Information services
+expect:
+  - 'peripheral_hr: address ([0-9a-f]{2}:){5}[0-9a-f]{2} \((public|random)\)'
+  - 'peripheral_hr: advertising as PebbleOS HR'
+  - 'peripheral_hr: battery at 99%'
+timeout: 20
