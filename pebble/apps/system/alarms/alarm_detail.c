@@ -34,9 +34,9 @@
 #endif
 
 #ifdef CONFIG_SPEAKER
-#define MAX_DETAIL_MENU_ITEMS 8
+#define MAX_DETAIL_MENU_ITEMS 9
 #else
-#define MAX_DETAIL_MENU_ITEMS 7
+#define MAX_DETAIL_MENU_ITEMS 8
 #endif
 
 typedef struct AlarmDetailData {
@@ -75,6 +75,15 @@ static void prv_toggle_enable_alarm_handler(ActionMenu *action_menu, const Actio
                                             void *context) {
   AlarmDetailData *data = (AlarmDetailData *)context;
   alarm_set_enabled(data->alarm_id, !data->alarm_info.enabled);
+  if (data->alarm_editor_callback) {
+    data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
+  }
+}
+
+static void prv_toggle_skip_next_handler(ActionMenu *action_menu, const ActionMenuItem *item,
+                                         void *context) {
+  AlarmDetailData *data = (AlarmDetailData *)context;
+  alarm_set_skip_next(data->alarm_id, !data->alarm_info.skip_next);
   if (data->alarm_editor_callback) {
     data->alarm_editor_callback(EDITED, data->alarm_id, data->callback_context);
   }
@@ -270,6 +279,14 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
     .perform_action = prv_toggle_enable_alarm_handler,
     .action_data = data,
   };
+  if (data->alarm_info.enabled && data->alarm_info.kind != ALARM_KIND_JUST_ONCE) {
+    main_menu->items[main_menu->num_items++] = (ActionMenuItem){
+      .label = data->alarm_info.skip_next ? pbl_i18n_get("Don't Skip", data)
+                                          : pbl_i18n_get("Skip Next Alarm", data),
+      .perform_action = prv_toggle_skip_next_handler,
+      .action_data = data,
+    };
+  }
   main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = pbl_i18n_get("Delete", data),
     .perform_action = prv_delete_alarm_handler,
