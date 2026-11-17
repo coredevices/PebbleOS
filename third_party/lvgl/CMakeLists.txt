@@ -258,3 +258,4 @@ endif()
 
 pbl_library_named(lvgl_port)
 pbl_library_sources(port/src/pbl_lvgl.c)
+pbl_library_sources_ifdef(CONFIG_LVGL_DRAW_GPU port/src/pbl_lvgl_draw_gpu.c)
