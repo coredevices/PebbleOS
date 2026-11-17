@@ -27,7 +27,7 @@ from pebble_sdk_platform import (
     kconfig_symbols,
 )
 
-KCONFIG = os.path.join(REPO_ROOT, "Kconfig.platform")
+KCONFIG = os.path.join(REPO_ROOT, "pebble", "Kconfig.platform")
 
 
 def dotconfig_symbols(path):

@@ -188,109 +188,36 @@ config QEMU_MACHINE
       `-machine` flag. Set per board in
       boards/<board>/Kconfig.defconfig.
 
-rsource "Kconfig.platform"
-
-# App RAM sizes for each SDK app execution environment (2x/3x/4x) supported by
-# the model. For each environment, SEGMENT is the RAM given to the app itself
-# (stack + text + data + bss + heap) and RUNTIME is the RAM reserved for the
-# application runtime (AppState). A SEGMENT of 0 means the environment is
-# unsupported. SEGMENT must be a multiple of eight bytes, as the process loader
-# enforces eight-byte alignment on all segments.
-#
-# emery and gabbro use a 4 KiB app stack (see APP_STACK_NORMAL_SIZE); their
-# segment is sized 2 KiB larger to compensate. All other platforms keep the
-# 2 KiB stack and the historical segment sizes.
-#
-# The per-platform constants below are the source of truth; each environment
-# just selects which legacy SDK platform it maps to.
-
-config APP_RAM_APLITE_SEGMENT_SIZE
-    int
-    default 25952
-
-config APP_RAM_APLITE_RUNTIME_SIZE
-    int
-    default 6820
-
-config APP_RAM_BASALT_SEGMENT_SIZE
-    int
-    default 67584
-
-config APP_RAM_BASALT_RUNTIME_SIZE
-    int
-    default 30720
-
-config APP_RAM_CHALK_SEGMENT_SIZE
-    int
-    default 67584
-
-config APP_RAM_CHALK_RUNTIME_SIZE
-    int
-    default 30720
-
-config APP_RAM_FLINT_SEGMENT_SIZE
-    int
-    default 67584
-
-config APP_RAM_FLINT_RUNTIME_SIZE
-    int
-    default 30720
-
-config APP_RAM_EMERY_SEGMENT_SIZE
-    int
-    default 135168
-
-config APP_RAM_EMERY_RUNTIME_SIZE
-    int
-    default 63488
-
-config APP_RAM_GABBRO_SEGMENT_SIZE
-    int
-    default 135168
-
-config APP_RAM_GABBRO_RUNTIME_SIZE
-    int
-    default 96256
-
-# 2.x apps are rectangular; 3.x apps are those of the frozen platform of
-# the same shape and colour depth.
+# App RAM. An application that runs apps reserves RAM for them, per SDK app
+# execution environment (2x/3x/4x). For each environment, SEGMENT is the RAM
+# given to the app itself (stack + text + data + bss + heap) and RUNTIME is
+# the RAM reserved for the application runtime (AppState). A SEGMENT of 0
+# means the environment is unsupported. SEGMENT must be a multiple of eight
+# bytes, as the process loader enforces eight-byte alignment on all segments.
+# The app segment is sized for the largest environment.
 
 config APP_RAM_2X_SEGMENT_SIZE
     int
-    default 0 if PLATFORM_ROUND
-    default APP_RAM_APLITE_SEGMENT_SIZE
+    default 0
 
 config APP_RAM_2X_RUNTIME_SIZE
     int
-    default 0 if PLATFORM_ROUND
-    default APP_RAM_APLITE_RUNTIME_SIZE
+    default 0
 
 config APP_RAM_3X_SEGMENT_SIZE
     int
-    default APP_RAM_CHALK_SEGMENT_SIZE if PLATFORM_ROUND
-    default APP_RAM_BASALT_SEGMENT_SIZE if PLATFORM_COLOR
-    default APP_RAM_APLITE_SEGMENT_SIZE
+    default 0
 
 config APP_RAM_3X_RUNTIME_SIZE
     int
-    default APP_RAM_CHALK_RUNTIME_SIZE if PLATFORM_ROUND
-    default APP_RAM_BASALT_RUNTIME_SIZE if PLATFORM_COLOR
-    default APP_RAM_APLITE_RUNTIME_SIZE
-
-# 4.x apps: each platform states its own sizes.
+    default 0
 
 config APP_RAM_4X_SEGMENT_SIZE
     int
-    default APP_RAM_EMERY_SEGMENT_SIZE if PLATFORM_EMERY
-    default APP_RAM_FLINT_SEGMENT_SIZE if PLATFORM_FLINT
-    default APP_RAM_GABBRO_SEGMENT_SIZE if PLATFORM_GABBRO
     default 0
 
 config APP_RAM_4X_RUNTIME_SIZE
     int
-    default APP_RAM_EMERY_RUNTIME_SIZE if PLATFORM_EMERY
-    default APP_RAM_FLINT_RUNTIME_SIZE if PLATFORM_FLINT
-    default APP_RAM_GABBRO_RUNTIME_SIZE if PLATFORM_GABBRO
     default 0
 
 # Worker RAM. SEGMENT is the RAM given to the worker itself (stack + text +
@@ -376,11 +303,6 @@ config FW_FLASH_SIZE
     help
       Flash space available to this firmware image. Defaults to the size
       of the flash partition labelled "code".
-
-config SCREEN_COLOR_DEPTH_BITS
-    int
-    default 8 if PLATFORM_COLOR
-    default 1
 
 rsource "lib/Kconfig"
 rsource "kernel/Kconfig"

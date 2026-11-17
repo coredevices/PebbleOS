@@ -116,7 +116,7 @@ precedence over PebbleOS's own.
 
 Driver classes, subsystems and optional kernel features are off unless
 the application asks for them, e.g. `CONFIG_ACCEL=y` or `CONFIG_BT=y`: a
-board's defconfig only selects its SoC, platform, boot chain and console
+board's defconfig only selects its SoC, boot chain and console
 UART, so `hello_world` builds little more than the kernel. Even the
 console is the application's choice: `hello_world` enables it, and
 `printf()` on it, with `CONFIG_CONSOLE=y` and `CONFIG_CONSOLE_STDOUT=y` in its
