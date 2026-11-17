@@ -8,6 +8,7 @@
 #include <hardware/qemu_memorymap.h>
 
 #define RTC_TIME_LO_OFFSET 0x00U
+#define RTC_TIME_HI_OFFSET 0x04U
 #define RTC_CTRL_OFFSET    0x0CU
 #define RTC_BACKUP_OFFSET  0x40U
 
@@ -29,7 +30,15 @@ uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
 }
 
 static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
-  *t = (time_t)pbl_readl(QEMU_RTC_BASE + RTC_TIME_LO_OFFSET);
+  uint32_t hi;
+  uint32_t lo;
+
+  // Read the high word on both sides of the low one, in case the low one wraps in between.
+  do {
+    hi = pbl_readl(QEMU_RTC_BASE + RTC_TIME_HI_OFFSET);
+    lo = pbl_readl(QEMU_RTC_BASE + RTC_TIME_LO_OFFSET);
+  } while (hi != pbl_readl(QEMU_RTC_BASE + RTC_TIME_HI_OFFSET));
+  *t = (time_t)(((uint64_t)hi << 32) | lo);
 
   return 0;
 }
