@@ -12,15 +12,13 @@
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/partition.h>
 
-#include <system/firmware_storage.h>
-
-#ifdef CONFIG_PBLBOOT
+#ifdef PART_CD_OFFSET
 #define STORAGE_START PART_CD_OFFSET
 #define STORAGE_SIZE  PART_CD_SIZE
 #else
-// Shares the only firmware slot
-#define STORAGE_START PART_FIRMWARE_DEST_OFFSET
-#define STORAGE_SIZE  PART_FIRMWARE_DEST_SIZE
+// Shares the firmware update slot
+#define STORAGE_START PART_FIRMWARE_SLOT_1_OFFSET
+#define STORAGE_SIZE  PART_FIRMWARE_SLOT_1_SIZE
 #endif
 
 #define IMAGES CONFIG_COREDUMP_BACKEND_FLASH_IMAGES
