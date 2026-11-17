@@ -21,6 +21,11 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		internal_flash: flash@0 {
+			compatible = "qemu,pebble-flash";
+			reg = <0x0 0x400000>;
+		};
+
 		uart0: serial@40000000 {
 			compatible = "qemu,pebble-simple-uart";
 			reg = <0x40000000 0x1000>;
