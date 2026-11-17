@@ -106,7 +106,7 @@ class QemuAdapter(DeviceAdapter):
         if not machine or machine == "unknown":
             raise HarnessError(f"board {self.build.board} declares no QEMU machine")
 
-        if config.get("CONFIG_PLATFORM_EMERY") or config.get("CONFIG_PLATFORM_FLINT"):
+        if config.get("CONFIG_DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED"):
             machine_args = [
                 "-machine",
                 f"{machine},audiodev=snd0",

@@ -168,7 +168,7 @@ class QemuRunner(Runner):
         if not machine or machine == "unknown":
             raise RunnerError(f"board {build.board} declares no QEMU machine")
 
-        if build.config.CONFIG_PLATFORM_EMERY or build.config.CONFIG_PLATFORM_FLINT:
+        if build.config.CONFIG_DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED:
             driver = "coreaudio" if platform.system() == "Darwin" else "sdl"
             if not audio:
                 driver = "none"
