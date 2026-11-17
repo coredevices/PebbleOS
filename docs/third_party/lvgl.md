@@ -86,6 +86,17 @@ Display
   `CONFIG_LV_DRAW_SW_SUPPORT_RGB565` or `CONFIG_LV_DRAW_SW_SUPPORT_I1`:
   both are on by default.
 
+GPU
+: With `CONFIG_GPU`, and unless `CONFIG_LVGL_DRAW_GPU` is turned off, the
+  port adds a draw unit that hands what the GPU of the board can take to
+  the GPU class: fills, including rounded ones where the corners are not
+  drawn, images and layers in its formats, with their opacity, rotation
+  and scale, and the glyphs of labels from
+  `CONFIG_LVGL_DRAW_GPU_GLYPH_MIN_PIXELS` up, which leaves text at reading
+  sizes to software, where it is as fast. Everything else, areas under `CONFIG_LVGL_DRAW_GPU_MIN_PIXELS`
+  and what the GPU refuses are drawn by LVGL in software, so the result is
+  the same with any GPU, or none.
+
 Touchscreen
 : With `CONFIG_TOUCH`, the touchscreen is a pointer,
   `pbl_lvgl_get_pointer()`, and the port keeps it powered.

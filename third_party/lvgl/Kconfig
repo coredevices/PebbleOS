@@ -21,6 +21,31 @@ config LVGL_DRAW_BUFFER_ROWS
       copies or converts. More rows render faster and take more of the
       kernel heap.
 
+config LVGL_DRAW_GPU
+    bool "Draw with the GPU"
+    depends on GPU
+    default y
+    help
+      Hand the fills and the image and layer blits the GPU of the board
+      can take to it, through the GPU class. Everything else, and what
+      the GPU refuses, is drawn in software.
+
+config LVGL_DRAW_GPU_MIN_PIXELS
+    int "Smallest area drawn with the GPU, in pixels"
+    depends on LVGL_DRAW_GPU
+    default 1024
+    help
+      Smaller areas are drawn in software, where setting the GPU up
+      costs more than drawing them.
+
+config LVGL_DRAW_GPU_GLYPH_MIN_PIXELS
+    int "Smallest glyph drawn with the GPU, in pixels"
+    depends on LVGL_DRAW_GPU
+    default 1024
+    help
+      Smaller glyphs of a label are blended in software, which is as
+      fast as a GPU job for the glyphs of text at reading sizes.
+
 config LVGL_KEY_QUEUE_LEN
     int "Key events queued between two reads"
     depends on INPUT

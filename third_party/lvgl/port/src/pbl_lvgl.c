@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "pbl_lvgl_priv.h"
+
 #include <errno.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -360,6 +362,10 @@ int pbl_lvgl_init(void) {
 
   lv_init();
   lv_tick_set_cb(prv_tick);
+
+#ifdef CONFIG_LVGL_DRAW_GPU
+  pbl_lvgl__draw_gpu_init();
+#endif
 
   ret = prv_display_init();
   if (ret != 0) {
