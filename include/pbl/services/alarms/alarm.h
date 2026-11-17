@@ -108,6 +108,8 @@ typedef struct AlarmInfo {
   bool vibrate_enabled;
   /** Tone played when @ref sound_enabled is set. */
   AlarmTone tone;
+  /** Whether the next occurrence is skipped. Ignored by alarm_create(). */
+  bool skip_next;
 } AlarmInfo;
 
 /**
@@ -187,6 +189,18 @@ void alarm_set_vibrate_enabled(AlarmId id, bool enabled);
  * @param tone Tone to play when sound is enabled.
  */
 void alarm_set_tone(AlarmId id, AlarmTone tone);
+
+/**
+ * @brief Skip the next occurrence of a recurring alarm, or cancel the skip.
+ *
+ * The alarm goes off again at the occurrence after the skipped one. Changing the time, days or
+ * type of the alarm, or disabling it, cancels the skip. No effect on a disabled alarm or an
+ * @ref ALARM_KIND_JUST_ONCE alarm.
+ *
+ * @param id Alarm to update.
+ * @param skip Whether to skip the next occurrence.
+ */
+void alarm_set_skip_next(AlarmId id, bool skip);
 
 /**
  * @brief Get the configuration of an alarm.
