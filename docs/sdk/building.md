@@ -49,5 +49,36 @@ its platforms are like: the app build derives the `PBL_*` defines, resource
 tags and size limits of each platform from that file. An SDK put together
 from several firmware builds needs the `platform.json` of each.
 
+## The whole SDK
+
+A released SDK holds every platform. {doc}`../pbl/sdk` builds it:
+
+```shell
+pbl sdk $VERSION --frozen $FROZEN --tarball
+```
+
+Each platform is packaged from one board, listed in `sdk/boards.yml`. For
+each of them the command configures a build of the SDK shell firmware and builds two targets:
+
+- `sdk`, as above;
+- `sdk_emulator`, on boards that run in QEMU, which adds what the `pebble`
+  tool emulates the platform with to `build/sdk/<platform>/qemu/`: the
+  firmware, the SPI flash image with the system resources, and the timeline
+  layouts.
+
+It then adds the frozen platforms, whose headers `tools/build_sdk.py`
+generates at the SDK revision each was frozen at, and whose `libpebble.a`
+and emulator come from the directory given with `--frozen`, as they are the
+ones those platforms were frozen with. The result is `build-sdk/sdk-core/`:
+
+```
+sdk-core/
+  manifest.json            version and requirements, for the pebble tool
+  package.json, requirements.txt, use_requirements.json
+  pebble/
+    cmake/, common/, waf   what the platforms share
+    <platform>/            include/, lib/, qemu/, platform.json
+```
+
 Both app builds read `package.json` through `sdk/tools/pebble_project.py`;
 the CMake build's steps are `sdk/tools/pebble_build.py`.

@@ -35,7 +35,7 @@ command's own options.
 | {doc}`test` | {doc}`image_resources` |
 | {doc}`itest` | {doc}`image_recovery` |
 | {doc}`samples` | {doc}`erase` |
-| | {doc}`lab` |
+| {doc}`sdk` | {doc}`lab` |
 | | {doc}`power` |
 
 ## Shared options
@@ -129,6 +129,7 @@ clean.md
 test.md
 itest.md
 samples.md
+sdk.md
 ```
 
 ```{toctree}
