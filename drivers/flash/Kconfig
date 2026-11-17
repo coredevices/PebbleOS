@@ -76,16 +76,8 @@ config FLASH_SHELL_TEST
     bool "Test commands"
     depends on FLASH_SHELL
     help
-      The flash read, fill, validate and erased_sectors commands, to dump
-      and verify the flash from a host.
-
-config FLASH_SHELL_STRESS
-    bool "Stress and benchmark commands"
-    default y
-    depends on FLASH_SHELL
-    help
-      The flash stress and benchmark commands. The stress test writes the
-      firmware update area.
+      The flash read, fill and erased_sectors commands, to dump and verify
+      the flash from a host.
 
 module = DRIVER_FLASH
 module-str = Flash
