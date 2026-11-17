@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
@@ -228,6 +229,34 @@ size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, siz
  */
 int pbl_settings_get(struct pbl_settings_file *file, const void *key, size_t key_len, void *val_out,
                      size_t val_out_len);
+
+/**
+ * @brief Read a time stored with pbl_settings_set_time().
+ *
+ * Also reads times stored as 4 bytes by earlier firmware, as unsigned seconds.
+ *
+ * @param file Settings file.
+ * @param key Key.
+ * @param key_len Length of @p key in bytes.
+ * @param[out] time_out The time, 0 on failure.
+ * @retval 0 Time read.
+ * @retval -ENOENT No such record, or it was deleted.
+ * @retval -ERANGE The stored value is neither 4 nor 8 bytes long.
+ */
+int pbl_settings_get_time(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          time_t *time_out);
+
+/**
+ * @brief Write a time, as 8 bytes.
+ *
+ * @param file Settings file.
+ * @param key Key.
+ * @param key_len Length of @p key in bytes.
+ * @param time The time.
+ * @return Same as pbl_settings_set().
+ */
+int pbl_settings_set_time(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          time_t time);
 
 /**
  * @brief Write a value, timestamped with the current time.

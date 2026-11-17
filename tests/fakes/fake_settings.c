@@ -66,6 +66,34 @@ int pbl_settings_set(struct pbl_settings_file *file, const void *key, size_t key
   return 0;
 }
 
+int pbl_settings_get_time(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          time_t *time_out) {
+  *time_out = 0;
+  const size_t len = pbl_settings_get_len(file, key, key_len);
+  if (len == 0) {
+    return -ENOENT;
+  }
+  if (len == sizeof(uint32_t)) {
+    uint32_t t32;
+    pbl_settings_get(file, key, key_len, &t32, sizeof(t32));
+    *time_out = t32;
+    return 0;
+  }
+  if (len == sizeof(int64_t)) {
+    int64_t t64;
+    pbl_settings_get(file, key, key_len, &t64, sizeof(t64));
+    *time_out = t64;
+    return 0;
+  }
+  return -ERANGE;
+}
+
+int pbl_settings_set_time(struct pbl_settings_file *file, const void *key, size_t key_len,
+                          time_t time) {
+  const int64_t t64 = time;
+  return pbl_settings_set(file, key, key_len, &t64, sizeof(t64));
+}
+
 size_t pbl_settings_get_len(struct pbl_settings_file *file, const void *key, size_t key_len) {
   if (pbl_settings_exists(file, key, key_len)) {
     const uint8_t key_crc8 = pbl_crc8(0, key, key_len);
