@@ -18,4 +18,9 @@ config KRAEPELIN
 
 rsource "fuel_gauge/Kconfig"
 
+config VANHEES
+    bool "van Hees"
+    help
+      Build the van Hees wrist angle sleep classifier.
+
 endmenu

@@ -58,6 +58,12 @@ pbl_clar_test(test_kraepelin_algorithm
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_vanhees
+  LIBS libvanhees libkraepelin
+  DEFINES DUMA_DISABLED
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_activity_algorithm_kraepelin
   MODULES settings time
   SOURCES
