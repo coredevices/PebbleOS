@@ -1055,23 +1055,24 @@ class Generator:
                 return None
         if "child" in arg:
             # A property of the device on this bus, as the clock of the memory a controller drives,
-            # or of a child node by name
+            # or of a child node by name, or by a path of names, as the timing of a panel
             child = arg["child"]
-            node = next(
-                (
-                    c
-                    for c in node.children
-                    if enabled(c)
-                    and (
-                        c.name == child
-                        if isinstance(child, str)
-                        else c.unit_address == f"{child:x}"
-                    )
-                ),
-                None,
-            )
-            if node is None:
-                return None
+            for step in child.split("/") if isinstance(child, str) else [child]:
+                node = next(
+                    (
+                        c
+                        for c in node.children
+                        if enabled(c)
+                        and (
+                            c.name == step
+                            if isinstance(step, str)
+                            else c.unit_address == f"{step:x}"
+                        )
+                    ),
+                    None,
+                )
+                if node is None:
+                    return None
         if "of" in arg:
             if not node.has(arg["of"]):
                 return None
