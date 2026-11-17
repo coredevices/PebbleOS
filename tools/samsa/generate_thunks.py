@@ -61,8 +61,8 @@ UNSIGNED_KINDS = {
     TK.ULONGLONG,
 }
 # Typedefs that are 32 bits for the app but may be wider on the host, which
-# host code declares by the same name. The SDK makes an app's time_t a long;
-# samsa_time_t keeps its name through that.
+# host code declares by the same name. samsa_time_t keeps the name of an
+# app's time_t through the SDK's spelling of it.
 HOST_WIDE_TYPEDEFS = {
     "samsa_time_t",
     "size_t",
@@ -119,9 +119,56 @@ typedef struct ActionBarLayerLegacy2 ActionBarLayerLegacy2;
 typedef struct AnimationLegacy2 AnimationLegacy2;
 typedef struct PropertyAnimationLegacy2 PropertyAnimationLegacy2;
 typedef struct GBitmapLegacy2 GBitmapLegacy2;
-time_t time__deprecated(time_t *tloc);
-struct tm *localtime__deprecated(const time_t *timep);
-uint16_t time_ms_deprecated(time_t *t, uint16_t *out_ms);
+samsa_time32_t time__deprecated(samsa_time32_t *tloc);
+struct tm *localtime__deprecated(const samsa_time32_t *timep);
+uint16_t time_ms_deprecated(samsa_time32_t *t, uint16_t *out_ms);
+typedef struct AppGlanceSlice32 {
+  AppGlanceSliceLayout layout;
+  samsa_time32_t expiration_time;
+} AppGlanceSlice32;
+typedef bool (*HealthActivityIteratorCB32)(HealthActivity activity, samsa_time32_t time_start,
+                                           samsa_time32_t time_end, void *context);
+samsa_time32_t time__pre112(samsa_time32_t *tloc);
+double difftime__pre112(samsa_time32_t end, samsa_time32_t beginning);
+uint16_t time_ms__pre112(samsa_time32_t *tloc, uint16_t *out_ms);
+samsa_time32_t mktime__pre112(struct tm *tb);
+struct tm *gmtime__pre112(const samsa_time32_t *timep);
+struct tm *localtime__pre112(const samsa_time32_t *timep);
+samsa_time32_t time_start_of_today__pre112(void);
+samsa_time32_t clock_to_timestamp__pre112(WeekDay day, int hour, int minute);
+WakeupId wakeup_schedule__pre112(samsa_time32_t timestamp, int32_t cookie, bool notify_if_missed);
+bool wakeup_query__pre112(WakeupId wakeup_id, samsa_time32_t *timestamp);
+bool alarm_service_peek_next__pre112(samsa_time32_t *timestamp_out);
+AppGlanceResult app_glance_add_slice__pre112(AppGlanceReloadSession *session,
+                                             AppGlanceSlice32 slice);
+HealthValue health_service_sum__pre112(HealthMetric metric, samsa_time32_t time_start,
+                                       samsa_time32_t time_end);
+HealthValue health_service_sum_averaged__pre112(HealthMetric metric, samsa_time32_t time_start,
+                                                samsa_time32_t time_end,
+                                                HealthServiceTimeScope scope);
+HealthValue health_service_aggregate_averaged__pre112(HealthMetric metric,
+                                                      samsa_time32_t time_start,
+                                                      samsa_time32_t time_end,
+                                                      HealthAggregation aggregation,
+                                                      HealthServiceTimeScope scope);
+void health_service_activities_iterate__pre112(HealthActivityMask activity_mask,
+                                               samsa_time32_t time_start, samsa_time32_t time_end,
+                                               HealthIterationDirection direction,
+                                               HealthActivityIteratorCB32 callback, void *context);
+HealthServiceAccessibilityMask health_service_metric_accessible__pre112(
+    HealthMetric metric, samsa_time32_t time_start, samsa_time32_t time_end);
+HealthServiceAccessibilityMask health_service_metric_averaged_accessible__pre112(
+    HealthMetric metric, samsa_time32_t time_start, samsa_time32_t time_end,
+    HealthServiceTimeScope scope);
+HealthServiceAccessibilityMask health_service_metric_aggregate_averaged_accessible__pre112(
+    HealthMetric metric, samsa_time32_t time_start, samsa_time32_t time_end,
+    HealthAggregation aggregation, HealthServiceTimeScope scope);
+HealthServiceAccessibilityMask health_service_any_activity_accessible__pre112(
+    HealthActivityMask activity_mask, samsa_time32_t time_start, samsa_time32_t time_end);
+uint32_t health_service_get_minute_history__pre112(HealthMinuteData *minute_data,
+                                                   uint32_t max_records,
+                                                   samsa_time32_t *time_start,
+                                                   samsa_time32_t *time_end);
 int persist_read_data__deprecated(const uint32_t key, const size_t buffer_size, void *buffer);
 int persist_read_string__deprecated(const uint32_t key, const size_t buffer_size, char *buffer);
 int persist_write_data__deprecated(const uint32_t key, const size_t size, const void *data);
@@ -943,11 +990,12 @@ def main():
     cflags += [f"-D{d}" for d in defines]
     for inc in toolchain_includes():
         cflags += ["-isystem", inc]
-    # Headers an app build generates, and the app's time_t.
+    # Headers an app build generates, and the app's time_t, with the 32-bit one
+    # of apps built before it widened.
     unsaved = [
         (
             os.path.join(args.sdk_include, "samsa_prelude.h"),
-            "typedef long samsa_time_t;\n",
+            "typedef long samsa_time_t;\ntypedef int samsa_time32_t;\n",
         ),
         (os.path.join(args.sdk_include, "message_keys.auto.h"), ""),
         (os.path.join(args.sdk_include, "src", "resource_ids.auto.h"), ""),
@@ -1030,7 +1078,8 @@ def main():
         '#include "all_sdk_headers.h"',
         '#include "samsa_runtime.h"',
         "",
-        "typedef pbl_time32_t samsa_time_t;",
+        "typedef time_t samsa_time_t;",
+        "typedef pbl_time32_t samsa_time32_t;",
         "",
         '#pragma GCC diagnostic ignored "-Wunused-variable"',
         '#pragma GCC diagnostic ignored "-Wunused-but-set-variable"',
