@@ -96,6 +96,13 @@ rust/index.md
 
 ```{toctree}
 :maxdepth: 1
+:caption: Third-party
+
+third_party/lvgl/hello_world.md
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Benchmarks
 
 benchmarks/kernel.md
