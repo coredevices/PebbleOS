@@ -28,7 +28,7 @@ config NIMBLE_HCI_NRF52
 
 config NIMBLE_HCI_SF32LB
     bool "SiFli LCPU over IPC"
-    depends on SOC_SF32LB52 || SOC_SF32LB57
+    depends on DT_HAS_SIFLI_SF32LB52_LCPU_ENABLED || DT_HAS_SIFLI_SF32LB57_LCPU_ENABLED
     select REMOTEPROC
     help
       Talk H4 HCI to the SiFli controller running on the LCPU, over the
