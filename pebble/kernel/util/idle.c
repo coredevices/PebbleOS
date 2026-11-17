@@ -24,7 +24,7 @@ static struct cpu_stats s_last;
 
 static void prv_snapshot(struct cpu_stats *stats) {
   stats->total_us = (pbl_uptime_ticks() * 1000000U) / PBL_TICK_HZ;
-  for (size_t i = 0; i < PBL_IDLE_STATES_MAX; i++) {
+  for (pbl_idle_state_id_t i = 0U; i < PBL_IDLE_STATES_MAX; i++) {
     stats->idle_us[i] = pbl_idle_residency_us(i);
   }
 }

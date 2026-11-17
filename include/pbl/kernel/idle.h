@@ -37,6 +37,9 @@
 /** @brief Maximum number of idle states. */
 #define PBL_IDLE_STATES_MAX 4
 
+/** @brief Index of an idle state in @ref pbl_soc_idle_states. */
+typedef uint8_t pbl_idle_state_id_t;
+
 /** @brief Idle state. */
 struct pbl_idle_state {
   /** Name, for statistics. */
@@ -101,6 +104,6 @@ void pbl_idle_set_enabled(bool enable);
  * @param state Index in @ref pbl_soc_idle_states.
  * @return Microseconds.
  */
-uint64_t pbl_idle_residency_us(size_t state);
+uint64_t pbl_idle_residency_us(pbl_idle_state_id_t state);
 
 /** @} */
