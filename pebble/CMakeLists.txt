@@ -28,13 +28,12 @@ include(sdk)
 
 # Third-party apps call the firmware through the SDK shims. The recovery
 # firmware runs none, and a firmware for a CPU other than a watch's only runs
-# them with Samsa interpreting them. The shippable SDK is for the watch's.
+# them with Samsa interpreting them. Either way the apps are the watch's, so
+# the SDK to build them with can be packaged from both.
 if(NOT CONFIG_RECOVERY_FW AND (CONFIG_CPU_CORTEX_M OR CONFIG_SAMSA))
   pbl_native_sdk()
   add_dependencies(pbl_generated_headers pbl_native_sdk)
   set(PBL_FIRMWARE_SOURCES ${PBL_PEBBLE_AUTO_C})
-endif()
-if(NOT CONFIG_RECOVERY_FW AND CONFIG_CPU_CORTEX_M)
   pbl_sdk()
 endif()
 
