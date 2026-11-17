@@ -5,6 +5,27 @@
 # submodule record the commit their version was taken from.
 
 components:
+  - name: pblboot
+    paths:
+      - bootloaders/pebbleos-bootloaders/pr2-bootloader.hex
+      - bootloaders/pebbleos-bootloaders/pt2-bootloader.hex
+    type: firmware
+    supplier: Core Devices LLC
+    description: Bootloader of PR2 and PT2, flashed along with the firmware
+    version: 0.9.21
+    commit: 2cb5d5330d1fb4929dccf13dfa88ac1b4b8bcc75
+    license: Apache-2.0
+    url: https://github.com/coredevices/pblboot
+
+  - name: asterix-bootloader
+    path: bootloaders/pebbleos-bootloaders/p2d-bootloader.hex
+    type: firmware
+    supplier: Core Devices LLC
+    description: Bootloader of P2D, flashed along with the firmware
+    commit: 2cb5d5330d1fb4929dccf13dfa88ac1b4b8bcc75
+    license: Apache-2.0
+    url: https://github.com/coredevices/PebbleOS-legacy-bootloaders
+
   - name: CMSIS
     path: cmsis_core/CMSIS
     supplier: Arm Limited
