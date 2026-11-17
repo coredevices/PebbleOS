@@ -16,9 +16,6 @@ from pbl.errors import CommandContextError
 CACHE_FILE = "CMakeCache.txt"
 DOTCONFIG_FILE = ".config"
 
-# CONFIG_PLATFORM_* -> the SDK platform name, mirroring cmake/modules/platform.cmake.
-_PLATFORMS = ("emery", "flint", "gabbro")
-
 
 def _parse_dotconfig(path):
     """Read a Kconfig ``.config`` into a dict of native Python values."""
@@ -131,10 +128,8 @@ class BuildDir:
             if not os.path.isfile(path):
                 raise CommandContextError(f"no {DOTCONFIG_FILE} in {self.path}")
             data = _parse_dotconfig(path)
-            for platform in _PLATFORMS:
-                if data.get(f"CONFIG_PLATFORM_{platform.upper()}"):
-                    data["PLATFORM_NAME"] = platform
-                    break
+            if data.get("CONFIG_PLATFORM_NAME"):
+                data["PLATFORM_NAME"] = data["CONFIG_PLATFORM_NAME"]
             self._config = Config(data)
         return self._config
 

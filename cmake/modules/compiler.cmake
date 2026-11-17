@@ -160,15 +160,8 @@ endif()
 # otherwise fold the repeated -include options into one.
 add_compile_options("SHELL:-include ${PBL_AUTOCONF_H}")
 
-# MAX_FONT_GLYPH_SIZE comes from the SDK platform description.
-execute_process(
-  COMMAND ${PYTHON_EXECUTABLE} -c
-    "import sys; sys.path.insert(0, 'tools'); from pebble_sdk_platform import pebble_platforms; print(pebble_platforms['${PBL_PLATFORM_NAME}']['MAX_FONT_GLYPH_SIZE'])"
-  WORKING_DIRECTORY ${PBL_BASE}
-  OUTPUT_VARIABLE PBL_MAX_FONT_GLYPH_SIZE
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  COMMAND_ERROR_IS_FATAL ANY
-)
+# MAX_FONT_GLYPH_SIZE comes from the SDK platform.
+set(PBL_MAX_FONT_GLYPH_SIZE ${CONFIG_PLATFORM_MAX_FONT_GLYPH_SIZE})
 add_compile_definitions(MAX_FONT_GLYPH_SIZE=${PBL_MAX_FONT_GLYPH_SIZE})
 
 add_compile_definitions(FIRMWARE_OFFSET=${CONFIG_FIRMWARE_OFFSET})
