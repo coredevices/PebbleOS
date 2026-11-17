@@ -2,8 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <string.h>
 
 #include <pbl/drivers/display.h>
+#include <pbl/drivers/ram.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
@@ -17,18 +19,76 @@ struct prv_sync {
   int status;
 };
 
+static uint32_t prv_pitch(const struct pbl_display_props *props) {
+  switch (props->format) {
+    case PBL_DISPLAY_FORMAT_MONO:
+      return (props->width + 7U) / 8U;
+    case PBL_DISPLAY_FORMAT_RGB565:
+      return props->width * 2U;
+    default:
+      return props->width;
+  }
+}
+
+// A framebuffer in a RAM device keeps it powered, for as long as the display is there
+static int prv_framebuffer_init(const struct pbl_display *disp) {
+  if (disp->framebuffer == nullptr) {
+    return 0;
+  }
+
+  if (disp->framebuffer_size < prv_pitch(&disp->props) * disp->props.height) {
+    return -EINVAL;
+  }
+
+#ifdef CONFIG_RAM
+  if (disp->framebuffer_ram != nullptr) {
+    int ret;
+
+    ret = pbl_device_init(&disp->framebuffer_ram->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_ram_get(disp->framebuffer_ram);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+#endif
+
+  memset(disp->framebuffer, 0, disp->framebuffer_size);
+
+  return 0;
+}
+
+static void prv_framebuffer_deinit(const struct pbl_display *disp) {
+#ifdef CONFIG_RAM
+  if (disp->framebuffer != nullptr && disp->framebuffer_ram != nullptr) {
+    pbl_ram_put(disp->framebuffer_ram);
+  }
+#endif
+}
+
 int pbl_display_init(const struct pbl_device *dev) {
   const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
   int ret;
 
   *disp->state = (struct pbl_display_state){0};
 
-  ret = disp->ops->init(disp);
+  ret = prv_framebuffer_init(disp);
   if (ret != 0) {
     return ret;
   }
 
-  return disp->ops->set_rotated(disp, disp->props.rotated);
+  ret = disp->ops->init(disp);
+  if (ret == 0) {
+    ret = disp->ops->set_rotated(disp, disp->props.rotated);
+  }
+  if (ret != 0) {
+    prv_framebuffer_deinit(disp);
+  }
+
+  return ret;
 }
 
 void pbl_display_complete(const struct pbl_display *disp, int status) {
@@ -69,6 +129,23 @@ int pbl_display_set_rotated(const struct pbl_display *disp, bool rotated) {
   }
 
   disp->state->rotated = rotated;
+
+  return 0;
+}
+
+int pbl_display_get_framebuffer(const struct pbl_display *disp, struct pbl_display_buffer *buf) {
+  if (!pbl_device_is_ready(&disp->dev)) {
+    return -ENODEV;
+  }
+
+  if (disp->framebuffer == nullptr) {
+    return -ENOENT;
+  }
+
+  *buf = (struct pbl_display_buffer){
+    .data = disp->framebuffer,
+    .pitch = prv_pitch(&disp->props),
+  };
 
   return 0;
 }
