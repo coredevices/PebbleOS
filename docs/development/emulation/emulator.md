@@ -55,6 +55,13 @@ and the firmware boots. Each board offers a few bezels, in different
 colors; `--decoration` picks another, or `none`. The terminal that launched it is the QEMU monitor;
 quit with `quit` there or by closing the window.
 
+`--sunlight` shows the colors as a watch's panel does in sunlight, like
+the native simulator's `-l`:
+
+```shell
+pbl run --sunlight
+```
+
 The emulated watch keeps its data in two flash images in the build
 directory: the internal flash, holding the firmware, and the external
 flash, holding the resources, the file system and with it the installed

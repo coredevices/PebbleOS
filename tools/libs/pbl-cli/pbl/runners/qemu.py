@@ -24,10 +24,13 @@ GDB_PROXY_PORT = 1233
 class QemuRunner(Runner):
     name = "qemu"
 
-    def __init__(self, cfg, keep_flash_image=False, decoration=None, bt_hci=None):
+    def __init__(
+        self, cfg, keep_flash_image=False, decoration=None, sunlight=False, bt_hci=None
+    ):
         super().__init__(cfg)
         self.keep_flash_image = keep_flash_image
         self.decoration = decoration
+        self.sunlight = sunlight
         self.bt_hci = bt_hci
 
     @classmethod
@@ -53,6 +56,11 @@ class QemuRunner(Runner):
             "'none' (default: the board's first)",
         )
         parser.add_argument(
+            "--sunlight",
+            action="store_true",
+            help="Show the colors as a watch's panel does in sunlight",
+        )
+        parser.add_argument(
             "--bt-hci",
             metavar="CHARDEV",
             help="H4 Bluetooth controller for builds with CONFIG_BT_HCI_UART, "
@@ -65,6 +73,7 @@ class QemuRunner(Runner):
             cfg,
             keep_flash_image=getattr(args, "keep_flash_image", False),
             decoration=getattr(args, "decoration", None),
+            sunlight=getattr(args, "sunlight", False),
             bt_hci=getattr(args, "bt_hci", None),
         )
 
@@ -182,6 +191,8 @@ class QemuRunner(Runner):
 
         display = f"sdl,decoration={decoration}" if decoration else "sdl"
         machine_args += ["-display", f"{display},show-cursor=on"]
+        if self.sunlight:
+            machine_args += ["-global", "pebble-display.sunlight=true"]
 
         # Both control sockets are recreated on every launch.
         monitor = build.join(emulator.MONITOR_SOCKET)
