@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 #include <pbl/util/trig.h>
 
 #include <clar.h>
@@ -298,4 +299,88 @@ void test_math__size_mul_overflow(void) {
   cl_assert(!pbl_size_mul_overflow(SIZE_MAX / 4, 4, &r));
   cl_assert(r == SIZE_MAX / 4 * 4);
   cl_assert(pbl_size_mul_overflow(SIZE_MAX / 4 + 1, 4, &r));
+}
+
+// integer_sqrt() as first written: Newton's method, 15 steps from 0x3fff. Drawing code depends on
+// its exact results, so any rewrite must return the same values.
+static int32_t prv_integer_sqrt_reference(int64_t x) {
+  if (x < 0) {
+    return 0;
+  }
+  int64_t last_res = 0x3fff;
+  uint16_t iterations = 0;
+  while ((last_res > 0) && (iterations < 15)) {
+    last_res = ((x / last_res) + last_res) / 2;
+    iterations++;
+  }
+  return last_res;
+}
+
+static void prv_check_integer_sqrt(int64_t x) {
+  const int32_t expected = prv_integer_sqrt_reference(x);
+  const int32_t actual = integer_sqrt(x);
+  if (actual != expected) {
+    printf("integer_sqrt(%" PRId64 ") = %" PRId32 ", expected %" PRId32 "\n", x, actual, expected);
+  }
+  cl_assert_equal_i(actual, expected);
+}
+
+static uint64_t prv_xorshift64(uint64_t *state) {
+  *state ^= *state << 13;
+  *state ^= *state >> 7;
+  *state ^= *state << 17;
+  return *state;
+}
+
+void test_math__integer_sqrt_small(void) {
+  for (int64_t x = 0; x < (1 << 20); x++) {
+    prv_check_integer_sqrt(x);
+  }
+}
+
+void test_math__integer_sqrt_around_squares(void) {
+  // Newton alternates between r and r + 1 at (r + 1)^2 - 1 and stops on either one.
+  for (int64_t r = 1; r <= 65536; r++) {
+    for (int64_t d = -2; d <= 2; d++) {
+      prv_check_integer_sqrt(r * r + d);
+      prv_check_integer_sqrt(r * r + 2 * r + d);
+    }
+  }
+}
+
+void test_math__integer_sqrt_random(void) {
+  uint64_t state = 0x9e3779b97f4a7c15ULL;
+  for (int i = 0; i < 1000000; i++) {
+    prv_check_integer_sqrt((int64_t)(uint32_t)prv_xorshift64(&state));
+  }
+  for (int i = 0; i < 100000; i++) {
+    const int64_t x = (int64_t)(prv_xorshift64(&state) >> 1);
+    prv_check_integer_sqrt(x);
+    prv_check_integer_sqrt(-x);
+  }
+}
+
+void test_math__integer_sqrt_limits(void) {
+  const int64_t values[] = {
+    INT64_MIN,
+    -1,
+    0,
+    1,
+    2,
+    3,
+    4,
+    0x3fff,
+    0x3fffLL * 0x3fff,
+    0x4000LL * 0x4000,
+    INT32_MAX,
+    (int64_t)UINT32_MAX - 1,
+    UINT32_MAX,
+    (int64_t)UINT32_MAX + 1,
+    1LL << 40,
+    1LL << 52,
+    INT64_MAX,
+  };
+  for (size_t i = 0; i < ARRAY_LENGTH(values); i++) {
+    prv_check_integer_sqrt(values[i]);
+  }
 }
