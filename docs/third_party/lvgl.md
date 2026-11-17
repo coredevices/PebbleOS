@@ -114,3 +114,8 @@ Time
 Memory
 : LVGL allocates from its own pool of `CONFIG_LV_MEM_SIZE` bytes, 64 KiB
   unless set.
+
+The samples under `samples/third_party/lvgl` show it in use:
+{doc}`../samples/third_party/lvgl/hello_world`,
+{doc}`../samples/third_party/lvgl/input` and
+{doc}`../samples/third_party/lvgl/music`.

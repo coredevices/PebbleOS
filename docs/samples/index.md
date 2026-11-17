@@ -100,6 +100,7 @@ rust/index.md
 
 third_party/lvgl/hello_world.md
 third_party/lvgl/input.md
+third_party/lvgl/music.md
 ```
 
 ```{toctree}
