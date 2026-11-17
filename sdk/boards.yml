@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+#
+# The boards the SDK is packaged from, one for each platform. `pbl sdk`
+# builds them all; see docs/sdk/building.md.
+
+boards:
+  - qemu_emery
+  - qemu_flint
+  - qemu_gabbro
