@@ -110,6 +110,8 @@ enum pbl_pp_capability : uint32_t {
   PBL_PP_CAP_SETTINGS_SYNC = 1U << 23,
   /** Phone tracks which notification the watch is displaying. */
   PBL_PP_CAP_NOTIFICATION_WINDOW_STATE = 1U << 26,
+  /** Phone reads and writes 64-bit times where a format has a 64-bit variant. */
+  PBL_PP_CAP_TIME64 = 1U << 29,
 };
 
 /** @brief Capabilities as sent by the phone, bit for bit as @ref pbl_pp_capability. */
@@ -144,7 +146,11 @@ struct PBL_PACKED pbl_pp_capabilities {
       bool notification_window_state_support : 1;
       bool app_permissions_support : 1;
       bool multiple_language_packs_support : 1;
-      uint8_t even_more_padded_bits : 1;
+      /**
+       * 64-bit times in the protocol: the side that sets it reads 64-bit times wherever a
+       * format has a 64-bit variant, and expects them from the other side if both set it.
+       */
+      bool time64_support : 1;
       /** A description of the watch's platform ends the version response. */
       bool platform_info_appended : 1;
     };
