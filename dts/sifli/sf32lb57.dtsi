@@ -202,6 +202,15 @@
 			reg = <0x50003000 0x150>;
 		};
 
+		lcdc1: display-controller@50008000 {
+			compatible = "sifli,sf32lb57-lcdc";
+			reg = <0x50008000 0x1000>;
+			interrupts = <63>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_LCDC1>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_LCDC1>;
+			status = "disabled";
+		};
+
 		hpsys_cfg: syscon@5000b000 {
 			compatible = "sifli,sf32lb57-hpsys-cfg", "syscon";
 			reg = <0x5000b000 0x1000>;

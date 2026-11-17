@@ -4,18 +4,22 @@
 $id: http://devicetree.org/schemas/display/sifli,sf32lb52-lcdc.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
-title: SiFli SF32LB52 LCD controller
+title: SiFli SF32LB52 and SF32LB57 LCD controllers
 
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Display controller scanning out to a panel, here on the JDI parallel
-  interface, connected through its port.
+  Display controller scanning out to a panel on the JDI parallel interface,
+  connected through its port, or, on the SF32LB57, sending its frames to a
+  panel with frame memory over quad SPI, as the MIPI DBI host of the panel
+  child node.
 
 properties:
   compatible:
-    const: sifli,sf32lb52-lcdc
+    enum:
+      - sifli,sf32lb52-lcdc
+      - sifli,sf32lb57-lcdc
 
   reg:
     maxItems: 1
@@ -45,13 +49,39 @@ properties:
     $ref: /schemas/graph.yaml#/properties/port
     description: Output to the panel.
 
+  panel:
+    type: object
+    description: Panel with frame memory, of which the controller is the host.
+
+  memory-region:
+    maxItems: 1
+    description:
+      Memory reserved for the framebuffer, of at least a frame, for frames too
+      large for the heap.
+
 required:
   - compatible
   - reg
   - interrupts
   - clocks
   - resets
-  - port
+
+allOf:
+  - if:
+      properties:
+        compatible:
+          const: sifli,sf32lb52-lcdc
+    then:
+      required:
+        - port
+      properties:
+        panel: false
+    else:
+      oneOf:
+        - required:
+            - port
+        - required:
+            - panel
 
 additionalProperties: false
 
