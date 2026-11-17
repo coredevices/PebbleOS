@@ -32,6 +32,8 @@ functions only some platforms have.
 | Emery | 200 × 228, color | Pebble Time 2 |
 | Gabbro | 260 × 260 round, color | Pebble Round 2 |
 
+{doc}`platforms` describes what a platform is made of and how one is added.
+
 ## Versions and compatibility
 
 Every app records the SDK version it was built with, a major and a minor
@@ -49,6 +51,7 @@ an app's calls reach the firmware.
 :hidden:
 
 app_build.md
+platforms.md
 how_it_works.md
 exporting.md
 building.md

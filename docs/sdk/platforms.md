@@ -1,0 +1,111 @@
+# Platforms
+
+A platform is what apps are built against. It is a name and a description:
+
+| Part | Values |
+| --- | --- |
+| Display | width and height; rectangular or round; colour (8-bit) or black and white (1-bit) |
+| Features | `microphone`, `smartstrap`, `smartstrap_power`, `health`, `compass`, `touch`, `rgb_backlight`, `speaker` |
+| Limits | what an app may take: code and memory, worker memory, resources, the largest font glyph |
+| ABI | what app binaries are compiled for; `armv7m` is Cortex-M3 Thumb code with soft float |
+
+The name labels the platform's directory in the SDK and in a `.pbw`.
+Everything the builds need to know of a platform follows from its
+description.
+
+## Where platforms are defined
+
+`Kconfig.platform` lists the platforms and declares what a platform
+is described by. Each platform states its own values in
+`platforms/Kconfig.<name>`. A board picks one in its `defconfig`:
+
+```kconfig
+CONFIG_PLATFORM_EMERY=y
+```
+
+A board cannot describe or alter a platform, so two boards of one platform
+cannot differ. The frozen platforms (Aplite, Basalt, Chalk and Diorite),
+which no firmware is built for, are described in
+`tools/pebble_sdk_platform.py`.
+
+## Adding a platform
+
+Hardware that fits no platform gets one of its own: an entry in the choice
+of `Kconfig.platform`,
+
+```kconfig
+config PLATFORM_SLATE
+    bool "Slate"
+```
+
+and a `platforms/Kconfig.slate` with a default for each property it
+has. What it leaves out keeps the default of `Kconfig.platform`: black and
+white, rectangular, no feature, 64K for an app.
+
+```kconfig
+if PLATFORM_SLATE
+
+config PLATFORM_NAME
+    default "slate"
+
+config PLATFORM_COLOR
+    default y
+
+config PLATFORM_DISPLAY_WIDTH
+    default 240
+
+config PLATFORM_DISPLAY_HEIGHT
+    default 240
+
+config PLATFORM_MICROPHONE
+    default y
+
+endif # PLATFORM_SLATE
+```
+
+It also states the RAM of its apps, `APP_RAM_4X_SEGMENT_SIZE` and
+`APP_RAM_4X_RUNTIME_SIZE` in `Kconfig.pebbleos`. The RAM of the 2.x and 3.x
+apps it runs follows from its shape and colour depth.
+
+No tool is told about the platform. `tools/pebble_sdk_platform.py` derives
+from the description what the builds read:
+
+- the defines apps are compiled with: `PBL_PLATFORM_SLATE`, `PBL_COLOR` or
+  `PBL_BW`, `PBL_RECT` or `PBL_ROUND`, `PBL_DISPLAY_WIDTH` and `_HEIGHT`,
+  and one per feature, such as `PBL_MICROPHONE`;
+- the tags of resource file names: `slate`, `color`, `rect`, `mic`, `240w`,
+  `240h`;
+- the size limits.
+
+What the system draws differently per platform (the status bar, the action
+bar, default text sizes) is that of the nearest of Emery, Flint and Gabbro:
+Gabbro if the display is round, Emery if it is rectangular and colour, Flint
+otherwise.
+
+## In the SDK
+
+`pbl build sdk` writes the description of the build's platform to
+`build/sdk/<platform>/platform.json`, beside its headers and library:
+
+```json
+{
+  "version": 1,
+  "name": "emery",
+  "abi": "armv7m",
+  "display": { "width": 200, "height": 228, "shape": "rect", "color": true },
+  "features": ["microphone", "smartstrap", "smartstrap_power", "health",
+               "compass", "touch", "rgb_backlight", "speaker"],
+  "limits": { "app_binary": 131072, "app_memory": 131072,
+              "worker_memory": 10240, "resources": 1048576,
+              "resources_appstore": 262144, "font_glyph": 512 },
+  "moddable": true
+}
+```
+
+The app build lists the platforms of an SDK from these files, so a platform
+is added to an SDK by adding its directory. A project picks among them by
+name, with `targetPlatforms` ({doc}`app_build`).
+
+An app built for a platform that `PebbleProcessInfoFlags` has no value for
+carries `PROCESS_INFO_PLATFORM_UNKNOWN`, which the firmware takes to mean
+its own platform.
