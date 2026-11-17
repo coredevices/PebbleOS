@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if PLATFORM_GABBRO
+
+config PLATFORM_NAME
+    default "gabbro"
+
+config PLATFORM_COLOR
+    default y
+
+config PLATFORM_ROUND
+    default y
+
+config PLATFORM_DISPLAY_WIDTH
+    default 260
+
+config PLATFORM_DISPLAY_HEIGHT
+    default 260
+
+config PLATFORM_MICROPHONE
+    default y
+
+config PLATFORM_HEALTH
+    default y
+
+config PLATFORM_COMPASS
+    default y
+
+config PLATFORM_TOUCH
+    default y
+
+config PLATFORM_MODDABLE_XS
+    default y
+
+config PLATFORM_MAX_APP_MEMORY_SIZE
+    default 131072
+
+config PLATFORM_MAX_FONT_GLYPH_SIZE
+    default 512
+
+config PLATFORM_ANIMATION_FRAME_INTERVAL_MS
+    default 28
+
+config PLATFORM_ANIMATION_RENDER_INTERVAL_MS
+    default 48
+
+endif # PLATFORM_GABBRO
