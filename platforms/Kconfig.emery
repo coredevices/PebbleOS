@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if PLATFORM_EMERY
+
+config PLATFORM_NAME
+    default "emery"
+
+config PLATFORM_COLOR
+    default y
+
+config PLATFORM_DISPLAY_WIDTH
+    default 200
+
+config PLATFORM_DISPLAY_HEIGHT
+    default 228
+
+config PLATFORM_MICROPHONE
+    default y
+
+config PLATFORM_SMARTSTRAP
+    default y
+
+config PLATFORM_SMARTSTRAP_POWER
+    default y
+
+config PLATFORM_HEALTH
+    default y
+
+config PLATFORM_COMPASS
+    default y
+
+config PLATFORM_TOUCH
+    default y
+
+config PLATFORM_RGB_BACKLIGHT
+    default y
+
+config PLATFORM_SPEAKER
+    default y
+
+config PLATFORM_MODDABLE_XS
+    default y
+
+config PLATFORM_MAX_APP_MEMORY_SIZE
+    default 131072
+
+config PLATFORM_MAX_FONT_GLYPH_SIZE
+    default 512
+
+endif # PLATFORM_EMERY

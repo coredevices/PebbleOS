@@ -5,7 +5,7 @@ menu "Watch faces"
 
 choice
     prompt "TicToc watch face"
-    default APPS_WATCH_TICTOC_ROUND if PLATFORM_GABBRO
+    default APPS_WATCH_TICTOC_ROUND if PLATFORM_ROUND
     default APPS_WATCH_TICTOC_BW if !PLATFORM_COLOR
     default APPS_WATCH_TICTOC_DEFAULT
     help

@@ -249,31 +249,32 @@ config APP_RAM_GABBRO_RUNTIME_SIZE
     int
     default 96256
 
+# 2.x apps are rectangular; 3.x apps are those of the frozen platform of
+# the same shape and colour depth.
+
 config APP_RAM_2X_SEGMENT_SIZE
     int
-    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_EMERY
-    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_FLINT
-    default 0
+    default 0 if PLATFORM_ROUND
+    default APP_RAM_APLITE_SEGMENT_SIZE
 
 config APP_RAM_2X_RUNTIME_SIZE
     int
-    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_EMERY
-    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_FLINT
-    default 0
+    default 0 if PLATFORM_ROUND
+    default APP_RAM_APLITE_RUNTIME_SIZE
 
 config APP_RAM_3X_SEGMENT_SIZE
     int
-    default APP_RAM_BASALT_SEGMENT_SIZE if PLATFORM_EMERY
-    default APP_RAM_APLITE_SEGMENT_SIZE if PLATFORM_FLINT
-    default APP_RAM_CHALK_SEGMENT_SIZE if PLATFORM_GABBRO
-    default 0
+    default APP_RAM_CHALK_SEGMENT_SIZE if PLATFORM_ROUND
+    default APP_RAM_BASALT_SEGMENT_SIZE if PLATFORM_COLOR
+    default APP_RAM_APLITE_SEGMENT_SIZE
 
 config APP_RAM_3X_RUNTIME_SIZE
     int
-    default APP_RAM_BASALT_RUNTIME_SIZE if PLATFORM_EMERY
-    default APP_RAM_APLITE_RUNTIME_SIZE if PLATFORM_FLINT
-    default APP_RAM_CHALK_RUNTIME_SIZE if PLATFORM_GABBRO
-    default 0
+    default APP_RAM_CHALK_RUNTIME_SIZE if PLATFORM_ROUND
+    default APP_RAM_BASALT_RUNTIME_SIZE if PLATFORM_COLOR
+    default APP_RAM_APLITE_RUNTIME_SIZE
+
+# 4.x apps: each platform states its own sizes.
 
 config APP_RAM_4X_SEGMENT_SIZE
     int

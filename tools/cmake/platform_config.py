@@ -35,6 +35,9 @@ def platform_symbols(platform):
         if sym.type == kconfiglib.BOOL:
             if sym.tri_value == 2:
                 symbols[sym.name] = "1"
+        elif sym.type == kconfiglib.STRING:
+            # Quoted, as in autoconf.h.
+            symbols[sym.name] = f'"{sym.str_value}"'
         elif sym.str_value:
             symbols[sym.name] = sym.str_value
 

@@ -1,21 +1,40 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-# SDK platforms and the properties apps are built against. Self-contained,
-# so tools can evaluate it without a board.
+# The SDK platform: what apps are built against. A platform is a name and a
+# description (display, features, app memory, ABI); nothing but the name
+# tells two platforms of the same description apart. Self-contained, so
+# tools can evaluate it without a board.
+#
+# A board picks a platform. A platform is an entry in the choice and a
+# platforms/Kconfig.<name> with its defaults for the symbols below. See
+# docs/sdk/platforms.md.
 
 choice
     prompt "SDK platform"
 config PLATFORM_EMERY
     bool "Emery"
-    select PLATFORM_COLOR
 config PLATFORM_FLINT
     bool "Flint"
 config PLATFORM_GABBRO
     bool "Gabbro"
-    select PLATFORM_COLOR
-    select PLATFORM_ROUND
 endchoice
+
+# Before the symbols, so that a platform's defaults come first.
+rsource "platforms/Kconfig.*"
+
+config PLATFORM_NAME
+    string
+    help
+      Lowercase letters, digits and underscores. Names the directory of the
+      platform in the SDK and of its binaries in a pbw.
+
+config PLATFORM_ABI
+    string
+    default "armv7m"
+    help
+      What app binaries are compiled for. armv7m is Cortex-M3 Thumb code
+      with soft float.
 
 # Display properties apps are built against. The display hardware may differ;
 # its own properties belong to its driver.
@@ -32,43 +51,98 @@ config PLATFORM_ROUND
 
 config PLATFORM_DISPLAY_WIDTH
     int
-    default 200 if PLATFORM_EMERY
-    default 144 if PLATFORM_FLINT
-    default 260 if PLATFORM_GABBRO
 
 config PLATFORM_DISPLAY_HEIGHT
     int
-    default 228 if PLATFORM_EMERY
-    default 168 if PLATFORM_FLINT
-    default 260 if PLATFORM_GABBRO
+
+# What apps may assume the watch has. An app built for the platform is
+# given the matching PBL_* define; the firmware answers for hardware that
+# is missing all the same.
+
+config PLATFORM_MICROPHONE
+    bool
+
+config PLATFORM_SMARTSTRAP
+    bool
+
+config PLATFORM_SMARTSTRAP_POWER
+    bool
+    depends on PLATFORM_SMARTSTRAP
+
+config PLATFORM_HEALTH
+    bool
+
+config PLATFORM_COMPASS
+    bool
+
+config PLATFORM_TOUCH
+    bool
+
+config PLATFORM_RGB_BACKLIGHT
+    bool
+
+config PLATFORM_SPEAKER
+    bool
+
+config PLATFORM_MODDABLE_XS
+    bool
+    help
+      Apps may embed the Moddable XS JavaScript engine.
+
+# What an app may take, in bytes.
+
+config PLATFORM_MAX_APP_MEMORY_SIZE
+    int
+    default 65536
+    help
+      Code and memory of an app.
+
+config PLATFORM_MAX_APP_BINARY_SIZE
+    int
+    default PLATFORM_MAX_APP_MEMORY_SIZE
+
+config PLATFORM_MAX_WORKER_MEMORY_SIZE
+    int
+    default 10240
+
+config PLATFORM_MAX_RESOURCES_SIZE
+    int
+    default 1048576
+
+config PLATFORM_MAX_RESOURCES_SIZE_APPSTORE
+    int
+    default 262144
+
+config PLATFORM_MAX_FONT_GLYPH_SIZE
+    int
+    default 256
 
 # Display size given to apps of each legacy SDK execution environment.
 
 config PLATFORM_LEGACY_2X_DISPLAY_WIDTH
     int
-    default 180 if PLATFORM_GABBRO
+    default 180 if PLATFORM_ROUND
     default 144
 
 config PLATFORM_LEGACY_2X_DISPLAY_HEIGHT
     int
-    default 180 if PLATFORM_GABBRO
+    default 180 if PLATFORM_ROUND
     default 168
 
 config PLATFORM_LEGACY_3X_DISPLAY_WIDTH
     int
-    default 180 if PLATFORM_GABBRO
+    default 180 if PLATFORM_ROUND
     default 144
 
 config PLATFORM_LEGACY_3X_DISPLAY_HEIGHT
     int
-    default 180 if PLATFORM_GABBRO
+    default 180 if PLATFORM_ROUND
     default 168
 
 # Animation timing apps see.
 
 config PLATFORM_ANIMATION_FRAME_INTERVAL_MS
     int
-    default 28 if PLATFORM_GABBRO
     default 33
     help
       Design frame interval animation durations derive from. Gabbro's is
@@ -77,7 +151,6 @@ config PLATFORM_ANIMATION_FRAME_INTERVAL_MS
 
 config PLATFORM_ANIMATION_RENDER_INTERVAL_MS
     int
-    default 48 if PLATFORM_GABBRO
     default PLATFORM_ANIMATION_FRAME_INTERVAL_MS
     help
       Interval at which animation frames are rendered. Gabbro's display shows
