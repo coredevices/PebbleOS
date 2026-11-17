@@ -32,6 +32,7 @@ file(GLOB sources CONFIGURE_DEPENDS
   ${nimble}/nimble/host/services/gatt/src/*.c
   ${nimble}/nimble/transport/src/*.c
   ${nimble}/nimble/transport/common/hci_h4/src/*.c
+  port/src/nimble_port_pebble.c
   port/src/npl_os_pebble.c
 )
 if(CONFIG_NIMBLE_BLE_SVC_BAS)
