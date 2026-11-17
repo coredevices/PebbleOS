@@ -53,13 +53,15 @@ function(pbl_link_native)
       -sSTACK_SIZE=1048576
       -sINITIAL_MEMORY=134217728
       -sALLOW_MEMORY_GROWTH
-      --preload-file ${PBL_PBPACK}@/system_resources.pbpack
       --shell-file ${CMAKE_CURRENT_BINARY_DIR}/shell.html
     )
+    set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell.html)
+    if(PBL_PBPACK)
+      target_link_options(pebbleos PRIVATE --preload-file ${PBL_PBPACK}@/system_resources.pbpack)
+      set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS ${PBL_PBPACK})
+    endif()
     # The page lays out the platform's watch frames.
     configure_file(${PBL_BASE}/soc/posix/emscripten/shell.html shell.html @ONLY)
-    set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS
-      ${PBL_PBPACK} ${CMAKE_CURRENT_BINARY_DIR}/shell.html)
     file(GLOB frames ${PBL_BASE}/soc/posix/emscripten/frames/${PBL_PLATFORM_NAME}/*.png)
     foreach(frame ${frames})
       cmake_path(GET frame FILENAME name)
