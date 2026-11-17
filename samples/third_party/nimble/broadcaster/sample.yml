@@ -1,0 +1,6 @@
+description: Non-connectable advertising, with manufacturer data updated every second
+expect:
+  - 'broadcaster: address ([0-9a-f]{2}:){5}[0-9a-f]{2} \((public|random)\)'
+  - 'broadcaster: advertising'
+  - 'broadcaster: counter 5'
+  - 'Sample done'

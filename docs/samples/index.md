@@ -76,6 +76,13 @@ drivers/vibe.md
 
 ```{toctree}
 :maxdepth: 1
+:caption: NimBLE
+
+third_party/nimble/broadcaster.md
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Rust
 
 rust/index.md
