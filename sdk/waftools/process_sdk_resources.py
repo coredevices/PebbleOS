@@ -9,6 +9,7 @@ import resources.resource_map.resource_generator_js
 import resources.resource_map.resource_generator_pbi
 import resources.resource_map.resource_generator_png
 import resources.resource_map.resource_generator_raw  # noqa: F401
+from pebble_project import undeclared_moddable_health_error
 from resources.find_resource_filename import find_most_specific_filename
 from resources.resource_map import resource_generator
 from resources.types.resource_definition import ResourceDefinition
@@ -131,6 +132,10 @@ def generate_resources(bld, resource_source_path):
         mod_path = f"build/mods/{platform}/mc.xsa"
         full_mod_path = os.path.join(bld.path.abspath(), mod_path)
         if os.path.exists(full_mod_path):
+            with open(full_mod_path, "rb") as f:
+                error = undeclared_moddable_health_error(bld.env.PROJECT_INFO, f.read())
+            if error:
+                bld.fatal(error)
             mod_definition = ResourceDefinition(
                 type="raw", name="MOD", file=mod_path, target_platforms=[platform]
             )

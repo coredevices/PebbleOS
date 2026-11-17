@@ -81,6 +81,21 @@ class InvalidBinaryError(Exception):
     pass
 
 
+def get_nm_output(elf_file):
+    nm_process = Popen(["arm-none-eabi-nm", elf_file], stdout=PIPE)
+    # Popen.communicate returns a tuple of (stdout, stderr)
+    nm_output = nm_process.communicate()[0].decode("utf8")
+
+    if not nm_output:
+        raise InvalidBinaryError()
+
+    return [line.split() for line in nm_output.splitlines()]
+
+
+def elf_symbol_names(elf_file):
+    return [line[-1] for line in get_nm_output(elf_file)]
+
+
 def inject_metadata(
     target_binary,
     target_elf,
@@ -97,17 +112,6 @@ def inject_metadata(
         raise RuntimeError(
             f"Invalid filename <{target_binary}>! The filename should end in .bin"
         )
-
-    def get_nm_output(elf_file):
-        nm_process = Popen(["arm-none-eabi-nm", elf_file], stdout=PIPE)
-        # Popen.communicate returns a tuple of (stdout, stderr)
-        nm_output = nm_process.communicate()[0].decode("utf8")
-
-        if not nm_output:
-            raise InvalidBinaryError()
-
-        nm_output = [line.split() for line in nm_output.splitlines()]
-        return nm_output
 
     def get_symbol_addr(nm_output, symbol):
         # nm output looks like the following...
