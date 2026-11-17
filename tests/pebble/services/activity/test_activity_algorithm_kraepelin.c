@@ -21,6 +21,7 @@
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
+#include <pbl/vanhees/vanhees.h>
 
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
@@ -73,6 +74,18 @@ static int s_hrm_live_subscriptions;
 static uint16_t s_hrm_last_expire_s;
 static bool s_hrm_activity_tracking_enabled;
 static HRMActivityScene s_hrm_activity_scene;
+
+// Sleep algorithm pref, and what the van Hees stub returns from pbl_vanhees_minute_update()
+static ActivitySleepAlgorithm s_sleep_algorithm;
+static bool s_vanhees_next_valid;
+static bool s_vanhees_next_inactive;
+static uint32_t s_vanhees_num_samples;
+
+// Verdicts passed to pbl_kraepelin_set_sleep_minute() and not yet used by an update
+static int s_kalg_num_pending_verdicts;
+static bool s_kalg_last_verdict;
+// Updates that had a verdict
+static int s_kalg_num_verdict_updates;
 
 static struct pbl_tm s_start_time_tm = {.tm_hour = 17, .tm_mday = 1, .tm_mon = 0, .tm_year = 115};
 
@@ -131,6 +144,10 @@ void hrm_manager_set_activity_scene(HRMActivityScene scene) {
 
 bool activity_prefs_hrm_activity_tracking_is_enabled(void) {
   return s_hrm_activity_tracking_enabled;
+}
+
+ActivitySleepAlgorithm activity_prefs_get_sleep_algorithm(void) {
+  return s_sleep_algorithm;
 }
 
 bool activity_tracking_on(void) {
@@ -303,6 +320,31 @@ void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now
                                      uint32_t resting_calories, uint32_t active_calories,
                                      uint32_t distance_mm, bool shutting_down,
                                      pbl_kraepelin_session_cb_t sessions_cb, void *context) {
+  cl_assert(s_kalg_num_pending_verdicts <= 1);
+  s_kalg_num_verdict_updates += s_kalg_num_pending_verdicts;
+  s_kalg_num_pending_verdicts = 0;
+}
+
+void pbl_kraepelin_set_sleep_minute(struct pbl_kraepelin *state, bool asleep) {
+  s_kalg_num_pending_verdicts++;
+  s_kalg_last_verdict = asleep;
+}
+
+uint32_t pbl_vanhees_state_size(void) {
+  return 1;
+}
+
+void pbl_vanhees_init(struct pbl_vanhees *state) {
+}
+
+void pbl_vanhees_analyze_samples(struct pbl_vanhees *state,
+                                 const struct pbl_vanhees_sample *samples, uint32_t num_samples) {
+  s_vanhees_num_samples += num_samples;
+}
+
+bool pbl_vanhees_minute_update(struct pbl_vanhees *state, bool *inactive) {
+  *inactive = s_vanhees_next_valid && s_vanhees_next_inactive;
+  return s_vanhees_next_valid;
 }
 
 time_t pbl_kraepelin_activity_last_processed_time(struct pbl_kraepelin *state,
@@ -453,6 +495,12 @@ void test_activity_algorithm_kraepelin__initialize(void) {
   s_hrm_last_expire_s = 0;
   s_hrm_activity_tracking_enabled = true;
   s_hrm_activity_scene = HRMActivityScene_Default;
+  s_sleep_algorithm = ActivitySleepAlgorithm_Kraepelin;
+  s_vanhees_next_valid = false;
+  s_vanhees_next_inactive = false;
+  s_vanhees_num_samples = 0;
+  s_kalg_num_pending_verdicts = 0;
+  s_kalg_num_verdict_updates = 0;
   activity_algorithm_init(&s_sample_rate);
 }
 
@@ -1154,4 +1202,38 @@ void test_activity_algorithm_kraepelin__hrm_released_on_deinit(void) {
 
   // For the cleanup
   activity_algorithm_init(&s_sample_rate);
+}
+
+// ---------------------------------------------------------------------------------------
+// The van Hees classifier always gets the samples, but only decides when it is selected
+void test_activity_algorithm_kraepelin__sleep_algorithm(void) {
+  const int k_num_minutes = 5;
+  AlgMinuteDLSSample minute_data[k_num_minutes];
+  prv_create_test_data(k_num_minutes, minute_data);
+
+  s_vanhees_next_valid = true;
+  s_vanhees_next_inactive = true;
+  prv_feed_minute_data(k_num_minutes, minute_data, false /*simulate_bg_delays*/);
+  cl_assert_equal_i(s_vanhees_num_samples, k_num_minutes * s_sample_rate);
+  cl_assert_equal_i(s_kalg_num_verdict_updates, 0);
+
+  s_sleep_algorithm = ActivitySleepAlgorithm_VanHees;
+  prv_feed_minute_data(k_num_minutes, minute_data, false /*simulate_bg_delays*/);
+  cl_assert_equal_i(s_kalg_num_verdict_updates, k_num_minutes);
+  cl_assert(s_kalg_last_verdict);
+
+  s_vanhees_next_inactive = false;
+  prv_feed_minute_data(1, minute_data, false /*simulate_bg_delays*/);
+  cl_assert(!s_kalg_last_verdict);
+
+  // Without enough history, the minute is not a sleep minute
+  s_vanhees_next_inactive = true;
+  s_vanhees_next_valid = false;
+  prv_feed_minute_data(1, minute_data, false /*simulate_bg_delays*/);
+  cl_assert_equal_i(s_kalg_num_verdict_updates, k_num_minutes + 2);
+  cl_assert(!s_kalg_last_verdict);
+
+  s_sleep_algorithm = ActivitySleepAlgorithm_Kraepelin;
+  prv_feed_minute_data(k_num_minutes, minute_data, false /*simulate_bg_delays*/);
+  cl_assert_equal_i(s_kalg_num_verdict_updates, k_num_minutes + 2);
 }
