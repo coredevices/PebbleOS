@@ -26,32 +26,6 @@ config BT_VENDOR_NAME
     help
       Manufacturer name in the Device Information Service.
 
-choice BT_ID_ADDR_SOURCE
-    prompt "Identity address"
-    default BT_ID_ADDR_CONTROLLER
-    help
-      Where the watch's Bluetooth identity address comes from. The default
-      is derived from the SoC (see each soc/<soc>/Kconfig.defconfig).
-
-config BT_ID_ADDR_CONTROLLER
-    bool "Controller"
-    help
-      Use the address the controller reports, or let NimBLE pick one.
-
-config BT_ID_ADDR_SF32LB52_EFUSE
-    bool "SF32LB52 eFUSE"
-    depends on SOC_SF32LB52 && NVMEM_SF32LB
-    select BT_ID_ADDR
-    help
-      Public address derived from the unique ID in the SoC's eFUSE.
-
-endchoice
-
-config BT_ID_ADDR
-    bool
-    help
-      An identity address backend is selected (pbl/bluetooth/id_addr.h).
-
 module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
