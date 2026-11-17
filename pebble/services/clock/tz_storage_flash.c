@@ -16,8 +16,8 @@ typedef struct PBL_PACKED {
   uint8_t dst_id;
   int16_t timezone_id;
   int32_t tm_gmtoff;
-  time_t dst_start;
-  time_t dst_end;
+  uint32_t dst_start;
+  uint32_t dst_end;
 } TzinfoFlashStorage;
 
 #define TZINFO_VERSION 1
