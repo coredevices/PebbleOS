@@ -3,3 +3,10 @@
 
 config QEMU_MACHINE
     default "pebble-gabbro"
+
+# The machine mirrors the SRAM layout of the watch it emulates.
+config SRAM_BASE
+    default 0x20000000
+
+config SRAM_SIZE
+    default 0x7fc00

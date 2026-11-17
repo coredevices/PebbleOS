@@ -14,15 +14,7 @@ config FLASH_BASE
 config FLASH_SIZE
     default 0x400000
 
-# QEMU mirrors the SRAM layout of the platform it emulates.
-config SRAM_BASE
-    default 0x20000100 if PLATFORM_FLINT
-    default 0x20000000
-
-config SRAM_SIZE
-    default 0x3ff00 if PLATFORM_FLINT
-    default 0x7fc00
-
+# The SRAM layout is the machine's, and so given by the board.
 
 config NUM_IRQS
     default 13

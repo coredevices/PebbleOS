@@ -3,3 +3,10 @@
 
 config QEMU_MACHINE
     default "pebble-flint"
+
+# The machine mirrors the SRAM layout of the watch it emulates.
+config SRAM_BASE
+    default 0x20000100
+
+config SRAM_SIZE
+    default 0x3ff00
