@@ -7,6 +7,7 @@ set(sources
   activity_insights.c
   activity_metrics.c
   activity_sessions.c
+  health_permission.c
   health_util.c
   hr_util.c
   insights_settings.c

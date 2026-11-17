@@ -11,6 +11,9 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/event_service.h>
+#ifdef CONFIG_SERVICE_ACTIVITY
+#include <pbl/services/activity/health_permission.h>
+#endif
 
 #include <applib/event_service_client.h>
 #include <kernel/pebble_tasks.h>
@@ -244,6 +247,17 @@ static void prv_mask_plugin_event_recipients(PebbleEvent *e) {
   }
 }
 
+#ifdef CONFIG_SERVICE_ACTIVITY
+static void prv_mask_health_event_recipients(PebbleEvent *e) {
+  if (!health_permission_allowed(PebbleTask_App)) {
+    e->task_mask |= (1 << PebbleTask_App);
+  }
+  if (!health_permission_allowed(PebbleTask_Worker)) {
+    e->task_mask |= (1 << PebbleTask_Worker);
+  }
+}
+#endif
+
 void event_service_handle_event(PebbleEvent *e) {
   EventServiceEntry *service = s_event_services[e->type];
   if (service == nullptr) {
@@ -253,6 +267,11 @@ void event_service_handle_event(PebbleEvent *e) {
   if (e->type == PEBBLE_PLUGIN_SERVICE_EVENT) {
     prv_mask_plugin_event_recipients(e);
   }
+#ifdef CONFIG_SERVICE_ACTIVITY
+  if (e->type == PEBBLE_HEALTH_SERVICE_EVENT) {
+    prv_mask_health_event_recipients(e);
+  }
+#endif
 
   bool stolen = false;
   void *buf = event_get_buffer(e);

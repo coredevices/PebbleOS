@@ -468,7 +468,9 @@ static HealthServiceAccessibilityMask prv_get_range_and_daily_history(
     HealthServiceTimeRange *time_range, HealthServiceDailyHistory *daily_history) {
   PBL_ASSERTN((time_range != nullptr) && (daily_history != nullptr));
 
-  // TODO: reply with HealthServiceAccessibilityMaskNoPermission once permissions exist
+  if (!sys_activity_health_allowed()) {
+    return HealthServiceAccessibilityMaskNoPermission;
+  }
 
   if (!prv_get_metric_daily_history(state, metric, daily_history)) {
     return HealthServiceAccessibilityMaskNotAvailable;
@@ -1487,7 +1489,9 @@ HealthServiceAccessibilityMask health_service_any_activity_accessible(
     HealthActivityMask activity_mask, pbl_time32_t start_time32, pbl_time32_t end_time32) {
   const time_t start_time = app_time_from_time32(start_time32);
   const time_t end_time = app_time_from_time32(end_time32);
-  // TODO: reply with HealthServiceAccessibilityMaskNoPermission once permissions exist
+  if (!sys_activity_health_allowed()) {
+    return HealthServiceAccessibilityMaskNoPermission;
+  }
 
   if (activity_mask == HealthActivityNone) {
     return HealthServiceAccessibilityMaskNotAvailable;

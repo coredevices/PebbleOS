@@ -12,6 +12,7 @@
 #include <pbl/services/activity/activity_algorithm.h>
 #include <pbl/services/activity/activity_calculators.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/health_permission.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>
 #include <pbl/services/time.h>
 #include <pbl/util/math.h>
@@ -775,6 +776,9 @@ unlock:
 // ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_get_metric, (VAL, ActivityMetric, metric),
             (VAL, uint32_t, history_len), (VAL, int32_t *, history)) {
+  if (from_user && !health_permission_allowed(pebble_task_get_current())) {
+    return false;
+  }
   if (from_user) {
     // activity_get_metric() unconditionally writes history_len int32_t entries
     // to `history` before later clamping to ACTIVITY_HISTORY_DAYS. A huge

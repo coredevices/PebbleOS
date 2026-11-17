@@ -15,6 +15,9 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
+#ifdef CONFIG_SERVICE_ACTIVITY
+#include <pbl/services/activity/health_permission.h>
+#endif
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/math.h>
@@ -646,6 +649,13 @@ static void prv_populate_hrm_event(PebbleHRMEvent *event, HRMFeature feature, co
 }
 
 static bool prv_event_put(HRMSubscriberState *state, PebbleHRMEvent *event) {
+#ifdef CONFIG_SERVICE_ACTIVITY
+  // A session started before a revoke keeps running, so its readings are dropped here
+  if ((state->task == PebbleTask_App || state->task == PebbleTask_Worker) &&
+      !health_permission_allowed(state->task)) {
+    return true;
+  }
+#endif
   bool success;
   if (state->queue) {
     PebbleEvent e = {
@@ -925,6 +935,11 @@ PBL_SYSCALL(HRMSessionRef, sys_hrm_manager_app_subscribe, (VAL, AppInstallId, ap
             (VAL, uint32_t, update_interval_s), (VAL, uint16_t, expire_sec),
             (VAL, HRMFeature, features)) {
   if (from_user) {
+#ifdef CONFIG_SERVICE_ACTIVITY
+    if (!health_permission_allowed(pebble_task_get_current())) {
+      return HRM_INVALID_SESSION_REF;
+    }
+#endif
     app_id = sys_process_manager_get_current_process_id();
   }
   const bool low_latency = prv_wants_low_latency(pebble_task_get_current(), update_interval_s);

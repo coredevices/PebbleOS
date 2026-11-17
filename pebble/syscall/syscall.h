@@ -158,6 +158,9 @@ bool sys_activity_prefs_heart_rate_is_enabled(void);
 // Expose whether Activity is initialized to user/applib code.
 bool sys_activity_is_initialized(void);
 
+//! Whether the current process may read health data.
+bool sys_activity_health_allowed(void);
+
 void sys_app_comm_set_responsiveness(SniffInterval interval);
 
 bool sys_light_is_on(void);

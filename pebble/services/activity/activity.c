@@ -18,6 +18,7 @@
 #include <pbl/services/activity/activity_calculators.h>
 #include <pbl/services/activity/activity_insights.h>
 #include <pbl/services/activity/activity_private.h>
+#include <pbl/services/activity/health_permission.h>
 #include <pbl/services/alarms/alarm.h>
 #include <pbl/services/blob_db/health_db.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
@@ -1355,6 +1356,9 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
 // ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_get_sessions, (INOUT_OPT, uint32_t *, session_entries),
             (VAL, ActivitySession *, sessions)) {
+  if (from_user && !health_permission_allowed(pebble_task_get_current())) {
+    return false;
+  }
   if (from_user) {
     if (!session_entries) {
       // The implementation dereferences session_entries unconditionally.
@@ -1513,6 +1517,9 @@ bool activity_get_minute_heart_rate(uint8_t *heart_rate_bpm, uint32_t num_minute
 // ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_get_minute_history, (VAL, HealthMinuteData *, minute_data),
             (INOUT, uint32_t *, num_records), (INOUT, time_t *, utc_start)) {
+  if (from_user && !health_permission_allowed(pebble_task_get_current())) {
+    return false;
+  }
   if (from_user) {
     // num_records is a kernel copy here, so an app racing the SysWorkq callback
     // can't swap it after it is validated (TOCTOU). An overflowing size would
@@ -1540,6 +1547,9 @@ bool activity_get_step_averages(enum pbl_weekday day_of_week, ActivityMetricAver
 // ------------------------------------------------------------------------------------------------
 PBL_SYSCALL(bool, sys_activity_get_step_averages, (VAL, enum pbl_weekday, day_of_week),
             (OUT_BUF, ActivityMetricAverages *, averages, sizeof(*averages))) {
+  if (from_user && !health_permission_allowed(pebble_task_get_current())) {
+    return false;
+  }
   if (from_user && (unsigned int)day_of_week > PBL_SATURDAY) {
     pbl_syscall_fail();
   }
