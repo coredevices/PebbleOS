@@ -52,6 +52,11 @@ config FLASH_SHELL_TEST
     default y if RECOVERY_FW
     depends on FLASH_SHELL
 
+# Apps are built soft-float and call into the firmware.
+config FP_SOFTFP_ABI
+    default y
+    depends on CPU_HAS_FPU
+
 config FS_PFS_SHELL_LITTER
     default !RECOVERY_FW && !RELEASE
     depends on FS_PFS && SHELL
