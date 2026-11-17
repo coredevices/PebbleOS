@@ -3,4 +3,5 @@
 
 console_uart: usart1
 flash: sip_flash
+gpu: epic
 extram: psram
