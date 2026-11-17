@@ -1,0 +1,4 @@
+description: The music player demo of LVGL, playing by itself and driven by the touchscreen
+expect:
+  - 'lvgl: music player on \d+x\d+'
+roles: [display]
