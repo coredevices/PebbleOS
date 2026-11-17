@@ -291,6 +291,9 @@ static uint8_t s_activity_prefs_health_app_opened = 0;
 #define PREF_KEY_ACTIVITY_WORKOUT_APP_OPENED "activityWorkoutAppOpened"
 static uint8_t s_activity_prefs_workout_app_opened = 0;
 
+#define PREF_KEY_ACTIVITY_SLEEP_ALGORITHM "activitySleepAlgorithm"
+static uint8_t s_activity_sleep_algorithm = ActivitySleepAlgorithm_VanHees;
+
 #define PREF_KEY_ALARMS_APP_OPENED "alarmsAppOpened"
 static uint8_t s_alarms_app_opened = 0;
 
@@ -811,6 +814,14 @@ static bool prv_set_s_activity_prefs_health_app_opened(uint8_t *version) {
 
 static bool prv_set_s_activity_prefs_workout_app_opened(uint8_t *version) {
   s_activity_prefs_workout_app_opened = *version;
+  return true;
+}
+
+static bool prv_set_s_activity_sleep_algorithm(uint8_t *algorithm) {
+  if (*algorithm >= ActivitySleepAlgorithmCount) {
+    return false;
+  }
+  s_activity_sleep_algorithm = *algorithm;
   return true;
 }
 
@@ -2169,6 +2180,18 @@ void activity_prefs_sleep_insights_set_enabled(bool enable) {
 
 bool activity_prefs_tracking_is_enabled(void) {
   return s_activity_preferences.tracking_enabled;
+}
+
+ActivitySleepAlgorithm activity_prefs_get_sleep_algorithm(void) {
+  return s_activity_sleep_algorithm;
+}
+
+void activity_prefs_set_sleep_algorithm(ActivitySleepAlgorithm algorithm) {
+  if ((algorithm < ActivitySleepAlgorithmCount) &&
+      (s_activity_sleep_algorithm != (uint8_t)algorithm)) {
+    uint8_t value = algorithm;
+    prv_pref_set(PREF_KEY_ACTIVITY_SLEEP_ALGORITHM, &value, sizeof(value));
+  }
 }
 
 void activity_prefs_tracking_set_enabled(bool enable) {

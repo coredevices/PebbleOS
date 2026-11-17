@@ -141,6 +141,20 @@ typedef enum {
   HRMonitoringIntervalCount,
 } HRMonitoringInterval;
 
+/**
+ * @brief Algorithm telling sleep minutes from awake ones.
+ *
+ * Stored in prefs: values must not change.
+ */
+typedef enum {
+  /** Kraepelin: filtered VMC (movement) below a threshold. */
+  ActivitySleepAlgorithm_Kraepelin = 0,
+  /** van Hees: no change of the wrist angle for 5 minutes. */
+  ActivitySleepAlgorithm_VanHees,
+  /** Number of algorithms. */
+  ActivitySleepAlgorithmCount,
+} ActivitySleepAlgorithm;
+
 /** @brief Heart rate monitor preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivityHRMSettings {
   /** Heart rate monitoring enabled. */
@@ -575,6 +589,22 @@ void activity_prefs_tracking_set_enabled(bool enable);
  * @return true if enabled.
  */
 bool activity_prefs_tracking_is_enabled(void);
+
+/**
+ * @brief Get the sleep algorithm.
+ *
+ * @return Algorithm; @ref ActivitySleepAlgorithm_VanHees if the stored value is invalid.
+ */
+ActivitySleepAlgorithm activity_prefs_get_sleep_algorithm(void);
+
+/**
+ * @brief Set the sleep algorithm.
+ *
+ * It applies from the next minute on; a sleep session in progress carries on.
+ *
+ * @param algorithm Algorithm.
+ */
+void activity_prefs_set_sleep_algorithm(ActivitySleepAlgorithm algorithm);
 
 /**
  * @brief Record the activation time, if not recorded yet.

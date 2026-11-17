@@ -35,6 +35,10 @@ bool PBL_WEAK activity_prefs_tracking_is_enabled(void) {
   return false;
 }
 
+ActivitySleepAlgorithm PBL_WEAK activity_prefs_get_sleep_algorithm(void) {
+  return ActivitySleepAlgorithm_VanHees;
+}
+
 uint8_t PBL_WEAK activity_prefs_get_age_years(void) {
   return 30; // This is our current default
 }
