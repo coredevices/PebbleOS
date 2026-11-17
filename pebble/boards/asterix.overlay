@@ -1,0 +1,67 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: Apache-2.0
+
+&internal_flash {
+	partitions {
+		/delete-node/ partition@0;
+
+		partition@0 {
+			label = "bootloader";
+			reg = <0x0 0x8000>;
+		};
+
+		partition@8000 {
+			label = "code";
+			reg = <0x8000 0xf8000>;
+		};
+	};
+};
+
+&flash0 {
+	partitions {
+		partition@0 {
+			label = "safe-firmware";
+			reg = <0x0 0x80000>;
+		};
+
+		partition@100000 {
+			label = "firmware-slot-1";
+			reg = <0x100000 0x100000>;
+		};
+
+		partition@200000 {
+			label = "system-resources-bank-0";
+			reg = <0x200000 0x100000>;
+		};
+
+		partition@300000 {
+			label = "system-resources-bank-1";
+			reg = <0x300000 0x100000>;
+		};
+
+		partition@400000 {
+			label = "filesystem";
+			reg = <0x400000 0x19d0000>;
+		};
+
+		partition@1fd0000 {
+			label = "debug-db";
+			reg = <0x1fd0000 0x20000>;
+		};
+
+		partition@1ffd000 {
+			label = "mfg-results";
+			reg = <0x1ffd000 0x1000>;
+		};
+
+		partition@1ffe000 {
+			label = "mfg-battery-state";
+			reg = <0x1ffe000 0x1000>;
+		};
+
+		partition@1fff000 {
+			label = "shared-prf-storage";
+			reg = <0x1fff000 0x1000>;
+		};
+	};
+};

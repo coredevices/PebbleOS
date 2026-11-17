@@ -638,8 +638,12 @@ one uses its role, such as `DISPLAY`; see [](#devicetree-roles).
 
 ## Flash partitions
 
-The partitions of the board's flash are a `fixed-partitions` node under the
-flash, as in Linux, each with a `label`:
+The partitions of a flash are a `fixed-partitions` node under it, as in Linux,
+each with a `label`. Code finds a partition by its label, which is the
+contract between the tree and the code using it.
+
+A board defines only what any image needs: `code`, where an image runs from
+by default, and what has to stay whatever is flashed.
 
 ```dts
 partitions {
@@ -647,18 +651,30 @@ partitions {
 	#address-cells = <1>;
 	#size-cells = <1>;
 
-	partition@20000 {
-		label = "firmware-slot-0";
-		reg = <0x20000 0x300000>;
+	partition@10000 {
+		label = "code";
+		reg = <0x10000 0x3f0000>;
 	};
 };
 ```
 
-They become `devicetree/partitions.h`, with `PART_<LABEL>_OFFSET`,
-`PART_<LABEL>_SIZE` and `PART_<LABEL>` for each, as the C layouts of
-`include/pbl/board/` give them for boards without a tree.
-`CONFIG_BOARD_PARTITIONS_DT` selects them, and `pbl` reads the generated file
-to find a partition.
+An application lays out the rest in its overlay, deleting `code` when it
+runs from elsewhere.
+
+The partitions of the flash serving the `flash` role become
+`devicetree/partitions.h`, with `PART_<LABEL>_OFFSET`, `PART_<LABEL>_SIZE` and
+`PART_<LABEL>` for each, as the C layouts of `include/pbl/board/` give them
+for boards without a tree. `CONFIG_BOARD_PARTITIONS_DT` selects them, and
+`pbl` reads the generated file to find a partition. Partitions on other
+flashes are only seen by Kconfig.
+
+Kconfig reads the partitions of every flash through preprocessor functions:
+`$(dt_has_partition,LABEL)`, `$(dt_partition_offset,LABEL)` and
+`$(dt_partition_size,LABEL)`. Code using a partition depends on
+`$(has_partition,LABEL)`, which also holds on boards without a tree, whose C
+layout has every partition. The image is linked at `CONFIG_FLASH_OFFSET`,
+for `CONFIG_FW_FLASH_SIZE` bytes, which default to the `code` partition. An
+application that runs from another partition sets them from its label.
 
 (devicetree-regs)=
 

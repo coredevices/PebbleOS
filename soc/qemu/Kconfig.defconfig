@@ -7,17 +7,11 @@ choice BT_ID_ADDR_SOURCE
     default BT_ID_ADDR_STORAGE
 endchoice
 
-# 4 MiB of emulated flash, all of it available to the firmware.
+# 4 MiB of emulated flash.
 config FLASH_BASE
     default 0x00000000
 
 config FLASH_SIZE
-    default 0x400000
-
-config FLASH_OFFSET
-    default 0x0
-
-config FW_FLASH_SIZE
     default 0x400000
 
 # QEMU mirrors the SRAM layout of the platform it emulates.

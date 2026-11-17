@@ -83,14 +83,15 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
+		/* Boot ROM flash table, then the factory calibration data */
 		partition@0 {
 			label = "ptable";
 			reg = <0x0 0x10000>;
 		};
 
-		partition@20000 {
-			label = "firmware-slot-0";
-			reg = <0x20000 0x300000>;
+		partition@10000 {
+			label = "code";
+			reg = <0x10000 0x3f0000>;
 		};
 	};
 };
