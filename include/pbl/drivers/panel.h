@@ -32,12 +32,20 @@ enum pbl_panel_bus_format {
    * lines, with HST/HCK, VST/VCK, ENB and XRST.
    */
   PBL_PANEL_BUS_FORMAT_JDI_RGB222,
+  /**
+   * Quad SPI to a panel with frame memory, on a @ref drivers_mipi_dbi host: commands on one line
+   * with opcode 0x02 and RGB565 pixels on four with opcode 0x32, each with the command in the
+   * middle byte of a 24-bit address, and reads with opcode 0x03.
+   */
+  PBL_PANEL_BUS_FORMAT_QSPI_RGB565,
 };
 
 /**
  * @brief Timing of a panel scanned by its controller.
  *
- * Horizontal values are in clock periods, vertical values in lines.
+ * Horizontal values are in clock periods, vertical values in lines. A panel with frame memory is
+ * not scanned: the porches before the visible columns and lines are where they start in its
+ * memory.
  */
 struct pbl_panel_timing {
   /** Horizontal clock frequency (HCK), in Hz. */
@@ -87,6 +95,10 @@ struct pbl_panel {
   const struct pbl_panel_timing *timing;
   /** Bus format. */
   enum pbl_panel_bus_format bus_format;
+  /** Fastest clock of the bus a panel with frame memory takes its pixels on, in Hz. */
+  uint32_t bus_max_hz;
+  /** Rows a panel with frame memory is written in multiples of, 0 for any number. */
+  uint8_t row_multiple;
 };
 
 /**
@@ -100,14 +112,14 @@ struct pbl_panel {
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _timing Timing.
  * @param _bus_format Bus format.
+ * @param ... Other fields, designated initializers of struct pbl_panel.
  */
-#define PBL_PANEL_INIT(sym, _name, _init, _ops, _deps, _timing, _bus_format)           \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, _deps, &pbl_panel_class), \
-    .ops = (_ops),                                                                     \
-    .timing = (_timing),                                                               \
-    .bus_format = (_bus_format),                                                       \
-  }
+#define PBL_PANEL_INIT(sym, _name, _init, _ops, _deps, _timing, _bus_format, ...)     \
+  {.dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, _deps, &pbl_panel_class), \
+   .ops = (_ops),                                                                     \
+   .timing = (_timing),                                                               \
+   .bus_format = (_bus_format),                                                       \
+   __VA_ARGS__}
 
 /**
  * @brief Power a panel up.
