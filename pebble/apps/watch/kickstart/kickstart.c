@@ -26,10 +26,12 @@
 #include <process_state/app_state/app_state.h>
 #include <resource/resource_ids.auto.h>
 
-#define EMERY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 200 && PBL_DISPLAY_HEIGHT == 228)
-#define SNOWY_SCREEN_RES    (PBL_DISPLAY_WIDTH == 144 && PBL_DISPLAY_HEIGHT == 168)
-#define SPALDING_SCREEN_RES (PBL_DISPLAY_WIDTH == 180 && PBL_DISPLAY_HEIGHT == 180)
-#define GETAFIX_SCREEN_RES  (PBL_DISPLAY_WIDTH == 260 && PBL_DISPLAY_HEIGHT == 260)
+// The face is laid out for four displays. Any other takes the layout of the one of its shape
+// that is nearest in size.
+#define EMERY_SCREEN_RES  (PBL_RECT && PBL_DISPLAY_HEIGHT >= 228)
+#define BASALT_SCREEN_RES (PBL_RECT && PBL_DISPLAY_HEIGHT < 228)
+#define CHALK_SCREEN_RES  (PBL_ROUND && PBL_DISPLAY_WIDTH < 260)
+#define GABBRO_SCREEN_RES (PBL_ROUND && PBL_DISPLAY_WIDTH >= 260)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI Utils
@@ -256,7 +258,7 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
   bounds.origin.y += screen_is_obstructed ? (has_bpm ? 74 : 66) : (has_bpm ? 114 : 96);
 #elif EMERY_SCREEN_RES
   bounds.origin.y += screen_is_obstructed ? 113 : 158;
-#elif SNOWY_SCREEN_RES
+#elif BASALT_SCREEN_RES
   if (screen_is_obstructed) {
     bounds = grect_inset(bounds, GEdgeInsets(0, 20));
   }
@@ -269,14 +271,14 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
   icon_bounds.origin.y += 9;  // icon top offset
 #elif EMERY_SCREEN_RES
   icon_bounds.origin.y += (46 - icon_bounds.size.h); // icon top offset
-#elif SNOWY_SCREEN_RES
+#elif BASALT_SCREEN_RES
   icon_bounds.origin.x = screen_is_obstructed ? bounds.origin.x // icon_left offset
                                               : (bounds.size.w / 2) - (icon_bounds.size.w / 2);
   icon_bounds.origin.y += screen_is_obstructed ? 84 : 22; // icon top offset
-#elif SPALDING_SCREEN_RES
+#elif CHALK_SCREEN_RES
   icon_bounds.origin.x = (bounds.size.w / 2) - (icon_bounds.size.w / 2);
   icon_bounds.origin.y += 27; // icon top offset
-#elif GETAFIX_SCREEN_RES
+#elif GABBRO_SCREEN_RES
   icon_bounds.origin.x = (bounds.size.w / 2) - (icon_bounds.size.w / 2);
   icon_bounds.origin.y += 39; // icon top offset
 #endif
@@ -289,14 +291,14 @@ static void prv_draw_steps_and_shoe(GContext *ctx, const char *steps_buffer, GFo
   bounds.origin.x += 62; // steps text left offset
 #elif EMERY_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentRight;
-#elif SNOWY_SCREEN_RES
+#elif BASALT_SCREEN_RES
   const GTextAlignment alignment =
       screen_is_obstructed ? GTextAlignmentRight : GTextAlignmentCenter;
   bounds.origin.y += screen_is_obstructed ? 65 : 108; // steps text top offset
-#elif SPALDING_SCREEN_RES
+#elif CHALK_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentCenter;
   bounds.origin.y += 113; // steps text top offset
-#elif GETAFIX_SCREEN_RES
+#elif GABBRO_SCREEN_RES
   const GTextAlignment alignment = GTextAlignmentCenter;
   bounds.origin.y += 163; // steps text top offset
 #endif
@@ -331,11 +333,11 @@ static void prv_draw_time(GContext *ctx, GFont time_font, GFont am_pm_font, GRec
   bounds.origin.y = screen_is_obstructed ? (has_bpm ? 13 : 23) : (has_bpm ? 36 : 53);
 #elif EMERY_SCREEN_RES
   bounds.origin.y = screen_is_obstructed ? -12 : 6;
-#elif SNOWY_SCREEN_RES
+#elif BASALT_SCREEN_RES
   bounds.origin.y = screen_is_obstructed ? 4 : 47;
-#elif SPALDING_SCREEN_RES
+#elif CHALK_SCREEN_RES
   bounds.origin.y = 50;
-#elif GETAFIX_SCREEN_RES
+#elif GABBRO_SCREEN_RES
   bounds.origin.y = 72;
 #endif
 
@@ -394,13 +396,13 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
 
   bounds.size.h = unobstructed_bounds.size.h;
 
-#if SNOWY_SCREEN_RES
+#if BASALT_SCREEN_RES
   const int16_t fill_thickness = screen_is_obstructed ? 10 : 11;
 #elif EMERY_SCREEN_RES
   const int16_t fill_thickness = screen_is_obstructed ? 5 : 13;
-#elif SPALDING_SCREEN_RES
+#elif CHALK_SCREEN_RES
   const int16_t fill_thickness = (bounds.size.h - grect_inset(bounds, GEdgeInsets(15)).size.h) / 2;
-#elif GETAFIX_SCREEN_RES
+#elif GABBRO_SCREEN_RES
   const int16_t fill_thickness = (bounds.size.h - grect_inset(bounds, GEdgeInsets(20)).size.h) / 2;
 #endif
 
@@ -408,13 +410,13 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const bool has_passed_goal = (data->current_steps > data->typical_steps);
   const GColor fill_color = has_passed_goal ? GColorJaegerGreen : GColorVividCerulean;
   const GColor text_color = has_passed_goal ? GColorJaegerGreen : GColorVividCerulean;
-#if SNOWY_SCREEN_RES
+#if BASALT_SCREEN_RES
   GBitmap *shoe = has_passed_goal
                       ? (screen_is_obstructed ? &data->shoe_green_small : &data->shoe_green)
                       : (screen_is_obstructed ? &data->shoe_blue_small : &data->shoe_blue);
 #else
   GBitmap *shoe = has_passed_goal ? &data->shoe_green : &data->shoe_blue;
-#endif // SNOWY_SCREEN_RES
+#endif // BASALT_SCREEN_RES
 #else
   const GColor fill_color = GColorDarkGray;
   const GColor text_color = GColorWhite;
@@ -560,12 +562,12 @@ PBL_T_STATIC void prv_window_load_handler(Window *window) {
 #else
   gbitmap_init_with_resource(&data->shoe_blue, RESOURCE_ID_STRIDE_SHOE_BLUE);
   gbitmap_init_with_resource(&data->shoe_green, RESOURCE_ID_STRIDE_SHOE_GREEN);
-#if EMERY_SCREEN_RES || GETAFIX_SCREEN_RES
+#if EMERY_SCREEN_RES || GABBRO_SCREEN_RES
   gbitmap_init_with_resource(&data->heart_icon, RESOURCE_ID_STRIDE_HEART);
   data->steps_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_46_NUMBERS_AM_PM);
   data->time_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_88_NUMBERS_AM_PM);
   data->am_pm_font = fonts_get_system_font(FONT_KEY_AGENCY_FB_88_THIN_NUMBERS_AM_PM);
-#elif SNOWY_SCREEN_RES || SPALDING_SCREEN_RES
+#elif BASALT_SCREEN_RES || CHALK_SCREEN_RES
 #if PBL_RECT
   gbitmap_init_with_resource(&data->shoe_blue_small, RESOURCE_ID_STRIDE_SHOE_BLUE_SMALL);
   gbitmap_init_with_resource(&data->shoe_green_small, RESOURCE_ID_STRIDE_SHOE_GREEN_SMALL);
@@ -612,7 +614,7 @@ PBL_T_STATIC void prv_window_unload_handler(Window *window) {
   gbitmap_deinit(&data->shoe_blue);
   gbitmap_deinit(&data->shoe_green);
 #endif
-#if PBL_COLOR && SNOWY_SCREEN_RES
+#if PBL_COLOR && BASALT_SCREEN_RES
   gbitmap_deinit(&data->shoe_blue_small);
   gbitmap_deinit(&data->shoe_green_small);
 #endif
