@@ -1,0 +1,4 @@
+description: The PebbleOS logo bouncing around. On a touchscreen, a tap turns it upside down, and a finger dragged up brightens the display and down dims it
+expect:
+  - 'logo: \d+x\d+, bouncing'
+roles: [display, backlight]
