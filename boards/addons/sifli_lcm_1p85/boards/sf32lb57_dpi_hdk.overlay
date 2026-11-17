@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/ {
+	reserved-memory {
+		// A 390x450 RGB565 frame, at the start of the PSRAM data window
+		lcd_qspi_framebuffer: framebuffer@60000000 {
+			reg = <0x60000000 0x55c00>;
+		};
+	};
+};
+
+&lcd_qspi_lcdc {
+	memory-region = <&lcd_qspi_framebuffer>;
+};
+
+// Upright with the flex on the right
+&lcd_qspi_panel {
+	rotation = <180>;
+};
+
+&lcd_qspi_touchscreen {
+	touchscreen-inverted-x;
+	touchscreen-inverted-y;
+};
