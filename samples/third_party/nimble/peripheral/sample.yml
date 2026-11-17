@@ -1,0 +1,4 @@
+description: A connectable peripheral with a GATT service of its own, to read, write and subscribe to
+expect:
+  - 'peripheral: address ([0-9a-f]{2}:){5}[0-9a-f]{2} \((public|random)\)'
+  - 'peripheral: advertising as PebbleOS'

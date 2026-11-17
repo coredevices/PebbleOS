@@ -79,6 +79,7 @@ drivers/vibe.md
 
 third_party/nimble/broadcaster.md
 third_party/nimble/observer.md
+third_party/nimble/peripheral.md
 ```
 
 ```{toctree}
