@@ -89,6 +89,12 @@ runner, and the `openocd` and `nrfutil` ones on asterix, take `--resources`;
 otherwise, image them over the serial console once the firmware is running,
 with {doc}`image_resources`.
 
+`pbl run` flashes every image of the build (see
+{ref}`application-images`): the firmware's bootloader first, pblboot on
+obelix and getafix or the legacy bootloader on asterix, then the firmware.
+Flashing the firmware after a sample, which runs without a bootloader, so
+puts it back. `--image app` flashes only the firmware.
+
 When both firmware and resources are written, the watch boots into the
 main application; {doc}`console` shows its logs.
 
