@@ -33,19 +33,11 @@
 #define NUM_SOUND_MENU_ITEMS 5
 #endif
 
-typedef enum DetailMenuItemIndex {
-  DetailMenuItemIndexEnable = 0,
-  DetailMenuItemIndexDelete,
-  DetailMenuItemIndexChangeTime,
-  DetailMenuItemIndexChangeDays,
-  DetailMenuItemIndexConvertSmart,
 #ifdef CONFIG_SPEAKER
-  DetailMenuItemIndexSound,
+#define MAX_DETAIL_MENU_ITEMS 8
+#else
+#define MAX_DETAIL_MENU_ITEMS 7
 #endif
-  DetailMenuItemIndexVibration,
-  DetailMenuItemIndexSnooze,
-  DetailMenuItemIndexNum,
-} DetailMenuItemIndex;
 
 typedef struct AlarmDetailData {
   ActionMenuConfig menu_config;
@@ -186,11 +178,11 @@ static void prv_sound_highlight_handler(const ActionMenuItem *item, void *contex
 
 static ActionMenuLevel *prv_create_main_menu(void) {
   ActionMenuLevel *level =
-      app_malloc(sizeof(ActionMenuLevel) + DetailMenuItemIndexNum * sizeof(ActionMenuItem));
+      app_malloc(sizeof(ActionMenuLevel) + MAX_DETAIL_MENU_ITEMS * sizeof(ActionMenuItem));
   if (!level)
     return nullptr;
   *level = (ActionMenuLevel){
-    .num_items = DetailMenuItemIndexNum,
+    .max_items = MAX_DETAIL_MENU_ITEMS,
     .parent_level = nullptr,
     .display_mode = ActionMenuLevelDisplayModeWide,
   };
@@ -242,10 +234,11 @@ void prv_cleanup_alarm_detail_menu(ActionMenu *action_menu, const ActionMenuItem
   ActionMenuLevel *root_level = action_menu_get_root_level(action_menu);
   AlarmDetailData *data = (AlarmDetailData *)context;
   pbl_i18n_free_all(data);
-  app_free((void *)root_level->items[DetailMenuItemIndexSnooze].next_level);
-#ifdef CONFIG_SPEAKER
-  app_free((void *)root_level->items[DetailMenuItemIndexSound].next_level);
-#endif
+  for (unsigned i = 0; i < root_level->num_items; i++) {
+    if (!root_level->items[i].is_leaf) {
+      app_free(root_level->items[i].next_level);
+    }
+  }
   app_free((void *)root_level);
   app_free(data);
   data = nullptr;
@@ -271,56 +264,57 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
   // Setup main menu items
   ActionMenuLevel *main_menu = prv_create_main_menu();
 
-  main_menu->items[DetailMenuItemIndexDelete] = (ActionMenuItem){
-    .label = pbl_i18n_get("Delete", data),
-    .perform_action = prv_delete_alarm_handler,
-    .action_data = data,
-  };
-  main_menu->items[DetailMenuItemIndexEnable] = (ActionMenuItem){
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label =
         data->alarm_info.enabled ? pbl_i18n_get("Disable", data) : pbl_i18n_get("Enable", data),
     .perform_action = prv_toggle_enable_alarm_handler,
     .action_data = data,
   };
-  main_menu->items[DetailMenuItemIndexChangeTime] = (ActionMenuItem){
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
+    .label = pbl_i18n_get("Delete", data),
+    .perform_action = prv_delete_alarm_handler,
+    .action_data = data,
+  };
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = pbl_i18n_get("Change Time", data),
     .perform_action = prv_edit_time_handler,
     .action_data = data,
   };
-  main_menu->items[DetailMenuItemIndexChangeDays] = (ActionMenuItem){
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = pbl_i18n_get("Change Days", data),
     .perform_action = prv_edit_day_handler,
     .action_data = data,
   };
-  main_menu->items[DetailMenuItemIndexConvertSmart] = (ActionMenuItem){
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = data->alarm_info.is_smart ? pbl_i18n_get("Convert to Basic Alarm", data)
                                        : pbl_i18n_get("Convert to Smart Alarm", data),
     .perform_action = prv_toggle_smart_alarm_handler,
     .action_data = data,
   };
 #ifdef CONFIG_SPEAKER
-  main_menu->items[DetailMenuItemIndexSound] = (ActionMenuItem){
+  ActionMenuLevel *sound_level = prv_create_sound_menu(main_menu);
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = pbl_i18n_get("Sound", data),
     .is_leaf = 0,
-    .next_level = prv_create_sound_menu(main_menu),
+    .next_level = sound_level,
   };
 #endif
-  main_menu->items[DetailMenuItemIndexVibration] = (ActionMenuItem){
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = data->alarm_info.vibrate_enabled ? pbl_i18n_get("Vibration: On", data)
                                               : pbl_i18n_get("Vibration: Off", data),
     .perform_action = prv_toggle_vibrate_handler,
     .action_data = data,
   };
-  main_menu->items[DetailMenuItemIndexSnooze] = (ActionMenuItem){
+  ActionMenuLevel *snooze_level = prv_create_snooze_menu(main_menu);
+  main_menu->separator_index = main_menu->num_items;
+  main_menu->items[main_menu->num_items++] = (ActionMenuItem){
     .label = pbl_i18n_get("Snooze Delay", data),
     .is_leaf = 0,
-    .next_level = prv_create_snooze_menu(main_menu),
+    .next_level = snooze_level,
   };
-  main_menu->separator_index = DetailMenuItemIndexSnooze;
   data->menu_config.root_level = main_menu;
 
   // Setup snooze menu items
-  ActionMenuLevel *snooze_level = main_menu->items[DetailMenuItemIndexSnooze].next_level;
   static const unsigned snooze_delays[NUM_SNOOZE_MENU_ITEMS] = {5, 10, 15, 30, 60};
   static const char *snooze_delay_strs[NUM_SNOOZE_MENU_ITEMS] = {
     pbl_i18n_noop("5 minutes"), pbl_i18n_noop("10 minutes"), pbl_i18n_noop("15 minutes"),
@@ -342,7 +336,6 @@ void alarm_detail_window_push(AlarmId alarm_id, AlarmInfo *alarm_info,
 
 #ifdef CONFIG_SPEAKER
   // Setup sound menu items: Off + one entry per AlarmTone.
-  ActionMenuLevel *sound_level = main_menu->items[DetailMenuItemIndexSound].next_level;
   static const AlarmTone tone_values[] = {
     AlarmTone_Reveille,
     AlarmTone_Beacon,
