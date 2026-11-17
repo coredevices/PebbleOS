@@ -10,6 +10,7 @@
 static const char *const s_formats[] = {
   [PBL_DISPLAY_FORMAT_MONO] = "mono",
   [PBL_DISPLAY_FORMAT_ARGB2222] = "argb2222",
+  [PBL_DISPLAY_FORMAT_RGB565] = "rgb565",
 };
 
 static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
