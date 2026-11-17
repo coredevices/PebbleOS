@@ -15,3 +15,14 @@ config PANEL_JDI_MIP
     help
       Support for the JDI LPM015M135A and Sharp LS013B7DD02 memory-in-pixel
       panels on the JDI parallel interface.
+
+config PANEL_CO5300
+    bool "ChipOne CO5300 AMOLED panels"
+    default DT_HAS_CHIPONE_CO5300_ENABLED
+    depends on PANEL
+    select BACKLIGHT
+    select GPIO
+    select MIPI_DBI
+    help
+      Support for AMOLED panels on the ChipOne CO5300 driver IC, over quad
+      SPI, with their brightness as a backlight.

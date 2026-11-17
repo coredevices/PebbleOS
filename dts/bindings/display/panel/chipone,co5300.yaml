@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/chipone,co5300.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: AMOLED panels on the ChipOne CO5300 driver IC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  AMOLED panels with frame memory, written in RGB565 over quad SPI by the
+  display controller the panel node is a child of, at up to spi-max-frequency.
+  The size of the glass and where it starts in the frame memory are in
+  panel-timing, as hactive and vactive and as hback-porch and vback-porch. Its
+  clock-frequency is the pixel clock of the glass, and the other timings are 0.
+  Brightness is set by command.
+
+allOf:
+  - $ref: panel-common.yaml#
+  - $ref: /schemas/spi/spi-peripheral-props.yaml#
+
+properties:
+  compatible:
+    const: chipone,co5300
+
+  reset-gpios:
+    maxItems: 1
+
+  te-gpios:
+    maxItems: 1
+    description: Tearing effect output of the driver IC.
+
+  spi-max-frequency: true
+
+  panel-timing: true
+
+required:
+  - compatible
+  - reset-gpios
+  - spi-max-frequency
+  - panel-timing
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+    display-controller {
+        panel {
+            compatible = "chipone,co5300";
+            reset-gpios = <&gpio1 43 GPIO_ACTIVE_LOW>;
+            te-gpios = <&gpio1 47 GPIO_ACTIVE_HIGH>;
+            spi-max-frequency = <48000000>;
+
+            panel-timing {
+                clock-frequency = <10530000>;
+                hactive = <390>;
+                vactive = <450>;
+                hback-porch = <0>;
+                hfront-porch = <0>;
+                hsync-len = <0>;
+                vback-porch = <0>;
+                vfront-porch = <0>;
+                vsync-len = <0>;
+            };
+        };
+    };
