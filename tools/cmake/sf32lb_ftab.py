@@ -19,6 +19,7 @@ from intelhex import IntelHex
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "devicetree"))
 
+import dtmap
 import fdt
 
 MAGIC = 0x53454346
@@ -64,21 +65,6 @@ def generate(table_base, image_base, image_size):
     return bytes(data)
 
 
-def partition(tree, label):
-    """``(offset, size)`` of the flash partition ``label``."""
-    for node in tree.nodes():
-        if node.parent is None or "fixed-partitions" not in node.parent.compatibles:
-            continue
-        name = node.string("label") if node.has("label") else node.basename
-        if name != label or not node.status_okay:
-            continue
-        cells = node.u32s("reg")
-        if len(cells) != 2:
-            raise fdt.DtError(f"{node.path}: 'reg' must be one 32-bit offset and size")
-        return cells[0], cells[1]
-    raise fdt.DtError(f"no '{label}' flash partition")
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dtb", required=True, help="the board's compiled devicetree")
@@ -94,9 +80,12 @@ def main():
     args = parser.parse_args()
 
     try:
-        offset, size = partition(fdt.load(args.dtb), "ptable")
+        ptable = dtmap.partitions(fdt.load(args.dtb)).get("ptable")
     except fdt.DtError as error:
         sys.exit(f"ftab: {error}")
+    if ptable is None:
+        sys.exit("ftab: no 'ptable' flash partition")
+    offset, size = ptable
     if size < TABLE_SIZE:
         sys.exit(f"ftab: the ptable partition is smaller than {TABLE_SIZE:#x} bytes")
 

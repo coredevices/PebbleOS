@@ -69,6 +69,15 @@ class Menuconfig(PblCommand):
             BOARD_REVISION=spec.revision or boards.NO_REVISION,
             KCONFIG_CONFIG=dotconfig,
             DT_BUILD_DIR=build.join("devicetree"),
+            PYTHONPATH=os.pathsep.join(
+                filter(
+                    None,
+                    [
+                        os.path.join(self.topdir, "tools", "devicetree"),
+                        os.environ.get("PYTHONPATH"),
+                    ],
+                )
+            ),
         )
         if self.dry_run:
             self.inf("[dry-run] menuconfig", dotconfig, color="yellow")
