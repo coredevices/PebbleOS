@@ -245,8 +245,9 @@
 
 		mpi1: spi@50041000 {
 			compatible = "sifli,sf32lb52-mpi";
-			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>;
-			reg-names = "mpi", "mpi_mm";
+			reg = <0x50041000 0x1000>, <0x10000000 0x2000000>,
+			      <0x60000000 0x2000000>;
+			reg-names = "mpi", "mpi_mm", "mpi_mm_sbus";
 			interrupts = <85>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_MPI1>;
 			#address-cells = <1>;
@@ -256,8 +257,9 @@
 
 		mpi2: spi@50042000 {
 			compatible = "sifli,sf32lb52-mpi";
-			reg = <0x50042000 0x1000>, <0x12000000 0xe000000>;
-			reg-names = "mpi", "mpi_mm";
+			reg = <0x50042000 0x1000>, <0x12000000 0xe000000>,
+			      <0x62000000 0xe000000>;
+			reg-names = "mpi", "mpi_mm", "mpi_mm_sbus";
 			interrupts = <86>;
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_MPI2>;
 			#address-cells = <1>;

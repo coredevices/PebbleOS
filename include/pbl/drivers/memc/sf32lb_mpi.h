@@ -38,6 +38,8 @@ struct pbl_sf32lb_mpi {
   uintptr_t mem_base;
   /** Memory-mapped window size, in bytes. */
   uint32_t mem_size;
+  /** The window on the system bus, which data goes through. */
+  uintptr_t mem_sbus_base;
   /** Clock. */
   struct pbl_clk clk;
   /** Pins, when the boot code did not set them up. */
@@ -56,24 +58,27 @@ struct pbl_sf32lb_mpi {
  * @param _base Registers.
  * @param _mem_base Memory-mapped window.
  * @param _mem_size Memory-mapped window size, in bytes.
+ * @param _mem_sbus_base The window on the system bus.
  * @param _clk Clock, from PBL_CLK().
  * @param _pinctrl Default state of its pins, or NULL when the boot code set them up.
  * @param ... PBL_CLK_ASSIGNED() initializers, applied by pbl_sf32lb_mpi_prepare().
  */
-#define PBL_SF32LB_MPI_DEFINE(sym, _name, _base, _mem_base, _mem_size, _clk, _pinctrl, ...) \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                             \
-  static struct pbl_sf32lb_mpi_state sym##_mpi_state;                                       \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                     \
-  const struct pbl_sf32lb_mpi sym = {                                                       \
-    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr),                          \
-    .base = (_base),                                                                        \
-    .mem_base = (_mem_base),                                                                \
-    .mem_size = (_mem_size),                                                                \
-    .clk = _clk,                                                                            \
-    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),                                           \
-    .assigned = sym##_assigned,                                                             \
-    .state = &sym##_mpi_state,                                                              \
-  };                                                                                        \
+#define PBL_SF32LB_MPI_DEFINE(sym, _name, _base, _mem_base, _mem_size, _mem_sbus_base, _clk, \
+                              _pinctrl, ...)                                                 \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                              \
+  static struct pbl_sf32lb_mpi_state sym##_mpi_state;                                        \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
+  const struct pbl_sf32lb_mpi sym = {                                                        \
+    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr),                           \
+    .base = (_base),                                                                         \
+    .mem_base = (_mem_base),                                                                 \
+    .mem_size = (_mem_size),                                                                 \
+    .mem_sbus_base = (_mem_sbus_base),                                                       \
+    .clk = _clk,                                                                             \
+    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),                                            \
+    .assigned = sym##_assigned,                                                              \
+    .state = &sym##_mpi_state,                                                               \
+  };                                                                                         \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 /**
