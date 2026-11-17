@@ -13,7 +13,9 @@ add_compile_options(
   -Wno-missing-field-initializers
 )
 
-add_compile_options(-Werror)
+if(CONFIG_COMPILER_WARNINGS_AS_ERRORS)
+  add_compile_options(-Werror)
+endif()
 
 if(CONFIG_ARCH_POSIX)
   # Host clang does not know some of the GCC-only flags shared with ARM.

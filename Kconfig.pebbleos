@@ -33,6 +33,12 @@ config REQUIRES_ARM_TOOLCHAIN
 
 menu "Compiler options"
 
+config COMPILER_WARNINGS_AS_ERRORS
+    bool "Treat warnings as errors"
+    default y
+    help
+      Compile with -Werror.
+
 config LTO
     bool "Link-time optimization"
 
