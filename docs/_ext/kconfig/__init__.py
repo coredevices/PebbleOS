@@ -34,6 +34,7 @@ Options
 
 import json
 import os
+import sys
 from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
@@ -58,6 +59,9 @@ import kconfiglib
 
 RESOURCES_DIR = Path(__file__).parent / "static"
 PBL_BASE = Path(__file__).parents[3]
+
+# The preprocessor functions reading the devicetree, which the tree uses
+sys.path.insert(0, str(PBL_BASE / "tools" / "devicetree"))
 
 
 def kconfig_load(app: Sphinx) -> tuple[kconfiglib.Kconfig, dict[str, str]]:
