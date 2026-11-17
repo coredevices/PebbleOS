@@ -12,7 +12,9 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/shell/shell.h>
+#ifdef CONFIG_TASK_WDT
 #include <pbl/task_wdt/task_wdt.h>
+#endif
 #include <pbl/util/math.h>
 #include <pbl/util/rand32.h>
 #include <pbl/util/size.h>
@@ -114,7 +116,9 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
 
     addr += chunk;
     len -= chunk;
+#ifdef CONFIG_TASK_WDT
     pbl_task_wdt_feed_self();
+#endif
   }
 
   return 0;
@@ -334,7 +338,9 @@ static int prv_cmd_erased_sectors(const struct pbl_shell *sh, size_t argc, char 
                         pbl_flash_is_erased(FLASH, sub, geo->subsector_size) ? "true" : "false");
       }
     }
+#ifdef CONFIG_TASK_WDT
     pbl_task_wdt_feed_self();
+#endif
   }
 
   return 0;
@@ -484,7 +490,9 @@ static int prv_benchmark(const struct pbl_shell *sh, size_t size) {
                   (uint32_t)((elapsed * 1000000U) / ((uint64_t)iters * PBL_TICK_HZ)));
 
   pbl_free(buf);
+#ifdef CONFIG_TASK_WDT
   pbl_task_wdt_feed_self();
+#endif
 
   return 0;
 }
