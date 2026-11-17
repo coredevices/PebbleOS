@@ -6,7 +6,8 @@
 
 The table goes in the ptable partition, at the start of the boot flash. Only
 the entries the ROM needs to boot from flash are filled: the table itself and
-the image it boots, in the secondary bootloader slot. The SF32LB52 and SF32LB57
+the image it boots in place, in the secondary bootloader slot: the firmware,
+or the bootloader that boots it. The SF32LB52 and SF32LB57
 ROMs read the same layout; see the SiFli SDK documentation on the bootloader.
 """
 
@@ -69,28 +70,39 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dtb", required=True, help="the board's compiled devicetree")
     parser.add_argument("--flash-base", type=lambda s: int(s, 0), required=True)
-    parser.add_argument(
+    boot = parser.add_mutually_exclusive_group(required=True)
+    boot.add_argument(
         "--image-offset",
         type=lambda s: int(s, 0),
-        required=True,
         help="offset of the image the ROM boots, from the flash base",
     )
-    parser.add_argument("--image-size", type=lambda s: int(s, 0), required=True)
+    boot.add_argument(
+        "--boot-partition", help="the partition the ROM boots, e.g. the bootloader's"
+    )
+    parser.add_argument("--image-size", type=lambda s: int(s, 0))
     parser.add_argument("--output", required=True, help="the Intel HEX to write")
     args = parser.parse_args()
 
     try:
-        ptable = dtmap.partitions(fdt.load(args.dtb)).get("ptable")
+        parts = dtmap.partitions(fdt.load(args.dtb))
     except fdt.DtError as error:
         sys.exit(f"ftab: {error}")
-    if ptable is None:
+    if "ptable" not in parts:
         sys.exit("ftab: no 'ptable' flash partition")
-    offset, size = ptable
+    offset, size = parts["ptable"]
+    if args.boot_partition:
+        if args.boot_partition not in parts:
+            sys.exit(f"ftab: no '{args.boot_partition}' flash partition")
+        image_offset, image_size = parts[args.boot_partition]
+    elif args.image_size is None:
+        sys.exit("ftab: --image-offset needs --image-size")
+    else:
+        image_offset, image_size = args.image_offset, args.image_size
     if size < TABLE_SIZE:
         sys.exit(f"ftab: the ptable partition is smaller than {TABLE_SIZE:#x} bytes")
 
     table_base = args.flash_base + offset
-    data = generate(table_base, args.flash_base + args.image_offset, args.image_size)
+    data = generate(table_base, args.flash_base + image_offset, image_size)
     image = IntelHex()
     image.frombytes(data, offset=table_base)
     image.write_hex_file(args.output)

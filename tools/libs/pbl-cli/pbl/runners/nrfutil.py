@@ -75,7 +75,8 @@ class NrfUtilRunner(Runner):
         if command == "flash":
             if self.cfg.resources_file:
                 self._check_ext_mem("flash resources")
-            self._program(self.cfg.hex_file)
+            for hex_file in self.cfg.flash_files:
+                self._program(hex_file)
             if self.cfg.resources_file:
                 self._program_resources()
             self._nrfutil("reset")

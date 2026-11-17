@@ -27,6 +27,19 @@ def runner_options(parser):
     runners.register_args(group)
 
 
+def _flash_files(build, names):
+    images = build.images()
+    if names:
+        known = [name for name, _ in images]
+        unknown = [name for name in names if name not in known]
+        if unknown:
+            raise CommandContextError(
+                f"no image {', '.join(unknown)} in the build; images: {', '.join(known)}"
+            )
+        images = [(name, files) for name, files in images if name in names]
+    return tuple(f for _, files in images for f in files)
+
+
 def make_runner(
     build,
     args,
@@ -35,12 +48,14 @@ def make_runner(
     erase_ranges=(),
     extra_args=(),
     watch=None,
+    images=None,
 ):
     """Create the runner for ``build``, honoring ``--runner``.
 
     Without it, the board's first runner that can handle the build and one
     of ``commands`` is picked. ``watch``, the lab's (:class:`pbl.lab.Watch`),
-    gives the ports the command line leaves out.
+    gives the ports the command line leaves out. ``images`` names the images
+    of the build to flash, all of them by default.
     """
     resources_file = None
     resources_address = None
@@ -53,6 +68,7 @@ def make_runner(
         board_dir=os.path.join(build.topdir, "boards", build.board_spec.name),
         soc=build.config.CONFIG_SOC or None,
         hex_file=build.hex,
+        flash_files=_flash_files(build, images),
         elf_file=build.elf,
         bin_file=build.bin,
         pbpack_file=build.pbpack if build.variant != "prf" else None,

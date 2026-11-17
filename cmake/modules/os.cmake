@@ -88,6 +88,7 @@ include(compiler)
 include(libc)
 include(linker)
 include(firmware)
+include(images)
 include(devicetree)
 
 message(STATUS "Board: ${PBL_BOARD} (${PBL_PLATFORM_NAME}), variant: ${VARIANT}")

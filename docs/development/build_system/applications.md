@@ -127,3 +127,21 @@ The firmware is built the same way, from `pebble/CMakeLists.txt`, and its
 configuration follows the same layout: `pebble/prj.conf`,
 `pebble/prj_normal.conf`, `pebble/prj_prf.conf`, `pebble/boards/` and
 `pebble/Kconfig`.
+
+(application-images)=
+
+## Images
+
+A build flashes images: the application, and those it boots with, such as
+a bootloader. An application adds one from an Intel HEX file placed in a
+partition of the flash it runs from:
+
+```cmake
+pbl_image(bootloader HEX bootloader.hex PARTITION bootloader)
+```
+
+What the file has in that flash has to fall in the partition; what it has
+elsewhere, such as RAM, is left out. Images flash in the order added, the
+application last, and the build lists them in `images.yaml`. The first is
+the one the boot ROM starts, so what the ROM reads to start it is flashed
+with it. `pbl run` flashes them all, or those given with `--image`.

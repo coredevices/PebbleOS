@@ -209,6 +209,7 @@ function(pbl_link_firmware)
     list(APPEND artifacts ${sizes_stamp})
   endif()
   add_custom_target(pbl_firmware ALL DEPENDS ${artifacts})
+  pbl_images(${hex})
   # So is the log dictionary, which the logging subsystem builds.
   if(TARGET pbl_log_dict)
     add_dependencies(pbl_firmware pbl_log_dict)
