@@ -717,6 +717,31 @@ enter each state, fills its {doc}`idle states <../../kernel/idle>` from
 them with `PBL_US_TO_TICKS_CEIL()`. A board overrides the times of a state
 when its crystal or its flash take longer to come back.
 
+## Reserved memory
+
+Memory set aside for one device, as in Linux, is a child of
+`/reserved-memory` that the device points at with `memory-region`, as the
+framebuffer of a display too large for the heap:
+
+```dts
+/ {
+	reserved-memory {
+		framebuffer: framebuffer@60000000 {
+			reg = <0x60000000 0x55c00>;
+		};
+	};
+};
+
+&lcdc1 {
+	memory-region = <&framebuffer>;
+};
+```
+
+The driver takes its base and size with `reg` and `size` read `of:
+memory-region`. Every region also becomes `devicetree/reserved_memory.h`,
+whose `PBL_DT_RESERVED_MEMORY_FOREACH(fn)` calls `fn(base, size)` for each:
+the scratch heap leaves those in the external RAM out.
+
 ## Registers before devices
 
 Code that runs before any device is up, as the SoC's early init, its reset

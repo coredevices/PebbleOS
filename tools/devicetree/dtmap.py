@@ -1394,6 +1394,30 @@ def partitions_header(tree, flash=None):
     return "\n".join(lines) + "\n"
 
 
+RESERVED_MEMORY_HEADER = "devicetree/reserved_memory.h"
+
+
+def reserved_memory_header(tree):
+    """PBL_DT_RESERVED_MEMORY_FOREACH() of the /reserved-memory regions, as base, size."""
+    lines = ["/* Generated from the board devicetree. */", "", "#pragma once", ""]
+    regions = []
+    if tree is not None:
+        parents = [n for n in tree.nodes() if n.path == "/reserved-memory"]
+        for region in parents[0].children if parents else []:
+            if not region.status_okay or not region.has("reg"):
+                continue
+            cells = region.u32s("reg")
+            if len(cells) != region.address_cells + region.size_cells:
+                raise DtError(f"{region.path}: 'reg' must be one base and size")
+            base = cells_number(cells[: region.address_cells])
+            size = cells_number(cells[region.address_cells :])
+            regions.append(f"  fn({base:#010x}U, {size:#x}U)")
+    cont = [" \\"] * len(regions) + [""]
+    lines.append("#define PBL_DT_RESERVED_MEMORY_FOREACH(fn)" + cont[0])
+    lines += [region + cont[i + 1] for i, region in enumerate(regions)]
+    return "\n".join(lines) + "\n"
+
+
 IDLE_STATE = "arm,idle-state"
 IDLE_STATES_HEADER = "devicetree/idle_states.h"
 IDLE_STATE_PROPS = ("entry-latency-us", "exit-latency-us", "min-residency-us")
@@ -1770,6 +1794,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     outputs = [
         PARTITIONS_HEADER,
         IDLE_STATES_HEADER,
+        RESERVED_MEMORY_HEADER,
         REGS_HEADER,
         ROLES_SOURCE,
         *instance_files(specs),
@@ -1814,6 +1839,7 @@ def main():
         flash = chosen.get("flash")
         partitions = partitions_header(tree, flash if isinstance(flash, str) else None)
         idle_states = idle_states_header(tree)
+        reserved_memory = reserved_memory_header(tree)
         regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
         roles = roles_source(
             generator, load_roles(load_classes(args.srcdir, args.appdir)), chosen, config
@@ -1825,6 +1851,7 @@ def main():
         "devicetree/devices.h": generator.header(),
         PARTITIONS_HEADER: partitions,
         IDLE_STATES_HEADER: idle_states,
+        RESERVED_MEMORY_HEADER: reserved_memory,
         REGS_HEADER: regs,
         ROLES_SOURCE: roles,
         **generator.instances(),
