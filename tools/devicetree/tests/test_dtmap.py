@@ -982,6 +982,43 @@ def test_idle_states_become_their_latencies(tmp_path):
     assert "#define PBL_DT_IDLE_STATE_DEEPSLEEP_MIN_RESIDENCY_US 10000U" in text
 
 
+RESERVED_MEMORY_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        ipc: memory@2007fe00 {
+            reg = <0x2007fe00 0x200>;
+        };
+        fb: framebuffer@60000000 {
+            reg = <0x60000000 0x56000>;
+        };
+        off: memory@70000000 {
+            reg = <0x70000000 0x1000>;
+            status = "disabled";
+        };
+    };
+};
+"""
+
+
+def test_reserved_memory_becomes_a_table(tmp_path):
+    text = dtmap.reserved_memory_header(
+        compile_tree_with_labels(tmp_path, RESERVED_MEMORY_DTS)
+    )
+    assert "fn(0x2007fe00U, 0x200U)" in text
+    assert "fn(0x60000000U, 0x56000U)" in text
+    assert "0x70000000" not in text
+
+
+def test_no_reserved_memory_gives_an_empty_table():
+    text = dtmap.reserved_memory_header(None)
+    assert "#define PBL_DT_RESERVED_MEMORY_FOREACH(fn)\n" in text
+
+
 def test_no_idle_states_give_an_empty_header(tmp_path):
     assert "PBL_DT_IDLE_STATE_" not in dtmap.idle_states_header(None)
 
