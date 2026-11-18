@@ -55,7 +55,8 @@ pbl run -- -s 2
 ```
 
 `--bt-hci` connects the Bluetooth HCI UART of a `CONFIG_NIMBLE_HCI_UART` build
-to a controller, as in the emulator.
+to a controller, and `--bt-addr` gives the watch its Bluetooth address, as in
+the emulator.
 
 ## In a browser
 

@@ -8,6 +8,7 @@ import shutil
 from pbl import emulator
 
 from .core import Runner, RunnerCaps, RunnerError
+from .qemu import bt_address
 
 # Backs the external flash; kept across runs, like a watch's.
 FLASH_FILE = "pebbleos-flash.bin"
@@ -16,9 +17,10 @@ FLASH_FILE = "pebbleos-flash.bin"
 class NativeRunner(Runner):
     name = "native"
 
-    def __init__(self, cfg, bt_hci=None):
+    def __init__(self, cfg, bt_hci=None, bt_addr=None):
         super().__init__(cfg)
         self.bt_hci = bt_hci
+        self.bt_addr = bt_addr
 
     @classmethod
     def capabilities(cls):
@@ -30,8 +32,12 @@ class NativeRunner(Runner):
 
     @classmethod
     def do_create(cls, cfg, args):
-        # --bt-hci is the qemu runner's, shared with this one.
-        return cls(cfg, bt_hci=getattr(args, "bt_hci", None))
+        # --bt-hci and --bt-addr are the qemu runner's, shared with this one.
+        return cls(
+            cfg,
+            bt_hci=getattr(args, "bt_hci", None),
+            bt_addr=getattr(args, "bt_addr", None),
+        )
 
     def do_run(self, command):
         build = self.cfg.build
@@ -46,6 +52,10 @@ class NativeRunner(Runner):
         argv = [program, *self._flash_args(), "-p", str(emulator.PEBBLE_TOOL_PORT)]
         if self.bt_hci:
             argv += ["-b", self.bt_hci]
+        if self.bt_addr:
+            if not build.config.CONFIG_NIMBLE_ID_ADDR_POSIX:
+                raise RunnerError("--bt-addr needs a build with CONFIG_NIMBLE_ID_ADDR_POSIX=y")
+            argv += ["-a", bt_address(self.bt_addr)]
         if command == "debug":
             # The terminal belongs to the debugger: Ctrl-C has to reach it.
             argv = self._debugger() + argv + ["-c", str(emulator.CONSOLE_PORT)]

@@ -21,17 +21,32 @@ NO_DECORATION = "none"
 GDB_PROXY_PORT = 1233
 
 
+def bt_address(value):
+    """The address --bt-addr was given, checked."""
+    try:
+        return emulator.bt_static_address(value)
+    except ValueError as e:
+        raise RunnerError(f"--bt-addr: {e}") from None
+
+
 class QemuRunner(Runner):
     name = "qemu"
 
     def __init__(
-        self, cfg, keep_flash_image=False, decoration=None, sunlight=False, bt_hci=None
+        self,
+        cfg,
+        keep_flash_image=False,
+        decoration=None,
+        sunlight=False,
+        bt_hci=None,
+        bt_addr=None,
     ):
         super().__init__(cfg)
         self.keep_flash_image = keep_flash_image
         self.decoration = decoration
         self.sunlight = sunlight
         self.bt_hci = bt_hci
+        self.bt_addr = bt_addr
 
     @classmethod
     def capabilities(cls):
@@ -66,6 +81,12 @@ class QemuRunner(Runner):
             help="H4 Bluetooth controller for builds with CONFIG_NIMBLE_HCI_UART, "
             "e.g. the serial port /dev/cu.usbmodem1101",
         )
+        parser.add_argument(
+            "--bt-addr",
+            metavar="ADDRESS",
+            help="Random static Bluetooth address the watch uses, e.g. "
+            "C0:00:00:00:00:01, instead of its controller's",
+        )
 
     @classmethod
     def do_create(cls, cfg, args):
@@ -75,6 +96,7 @@ class QemuRunner(Runner):
             decoration=getattr(args, "decoration", None),
             sunlight=getattr(args, "sunlight", False),
             bt_hci=getattr(args, "bt_hci", None),
+            bt_addr=getattr(args, "bt_addr", None),
         )
 
     def locks(self, command):
@@ -100,6 +122,10 @@ class QemuRunner(Runner):
             )
         if self.bt_hci and not hci_uart:
             raise RunnerError("--bt-hci needs a build with CONFIG_NIMBLE_HCI_UART=y")
+        if self.bt_addr:
+            if not build.config.CONFIG_NIMBLE_ID_ADDR_QEMU:
+                raise RunnerError("--bt-addr needs a build with CONFIG_NIMBLE_ID_ADDR_QEMU=y")
+            self.bt_addr = bt_address(self.bt_addr)
 
         return self.run_program(
             self._command_line(build, decoration, self._flash_images(build)),
@@ -215,4 +241,6 @@ class QemuRunner(Runner):
         ]
         if self.bt_hci:
             launch += ["-serial", self.bt_hci]
+        if self.bt_addr:
+            machine_args += ["-global", f"pebble-sysctrl.bt-addr={self.bt_addr}"]
         return launch + machine_args + list(self.cfg.extra_args)
