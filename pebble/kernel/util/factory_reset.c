@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/board/partitions.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/reboot.h>
@@ -9,7 +10,6 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/runlevel.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/task_wdt/task_wdt.h>
 
 #include <kernel/event_loop.h>
@@ -43,7 +43,7 @@ static void prv_factory_reset_non_pfs_data() {
   worker_manager_disable();
   event_service_clear_process_subscriptions(PebbleTask_App);
 
-  shared_prf_storage_wipe_all();
+  pbl_bt_prf_store_wipe();
 
   services_set_runlevel(RunLevel_BareMinimum);
   app_idle_timeout_stop();

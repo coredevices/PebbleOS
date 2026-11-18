@@ -1,18 +1,17 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/prf_store.h>
+#include <pbl/bluetooth/prf_store_layout.h>
 #include <pbl/board/partitions.h>
-#include <pbl/btutil/sm_util.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
-#include <pbl/services/shared_prf_storage/v3_sprf/shared_prf_storage_private.h>
 
-PBL_LOG_MODULE_DEFINE(service_shared_prf_storage, CONFIG_SERVICE_SHARED_PRF_STORAGE_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 #define SPRF_NUM_PAGES (PART_SHARED_PRF_STORAGE_SIZE / sizeof(SharedPRFData))
 
@@ -277,7 +276,7 @@ static bool prv_fetch_field(uint8_t *field_out, size_t offset, size_t field_size
 //! (Should only ever be one!) If we are > 75% through the shared PRF region,
 //! erase the sector and re-write the info at offset 0. We want to make the chance
 //! of blocking on an erase ~0, by doing this prep on init.
-void shared_prf_storage_init(void) {
+void pbl_bt_prf_store_init(void) {
   prv_lock();
   {
     s_valid_page_idx = SPRF_PAGE_IDX_INVALID;
@@ -307,7 +306,7 @@ void shared_prf_storage_init(void) {
   prv_unlock();
 }
 
-void shared_prf_storage_wipe_all(void) {
+void pbl_bt_prf_store_wipe(void) {
   prv_lock();
   prv_invalidate_current_page();
   prv_unlock();
@@ -317,8 +316,8 @@ void shared_prf_storage_wipe_all(void) {
 //! BLE Root Key APIs
 //!
 
-bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
-                                     struct pbl_bt_sm_key *key_out) {
+bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
+                                   struct pbl_bt_sm_key *key_out) {
   bool rv;
   prv_lock();
   {
@@ -345,7 +344,7 @@ unlock:
   return rv;
 }
 
-void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
+void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   prv_lock();
   {
     SprfRootKeys data = {};
@@ -361,8 +360,8 @@ void shared_prf_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 //! BLE Pairing Data APIs
 //!
 
-bool shared_prf_storage_get_ble_pairing_data(struct pbl_bt_sm_pairing_info *pairing_info_out,
-                                             char *name_out, uint8_t *flags) {
+bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_out, char *name_out,
+                                  uint8_t *flags) {
   bool rv;
   prv_lock();
   {
@@ -427,9 +426,12 @@ unlock:
   return rv;
 }
 
-void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_info *pairing_info,
-                                               const char *name, uint8_t flags) {
-  if (!pairing_info || sm_is_pairing_info_empty(pairing_info)) {
+void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_info,
+                                  const char *name, uint8_t flags) {
+  if (!pairing_info || !(pairing_info->is_local_encryption_info_valid ||
+                         pairing_info->is_remote_encryption_info_valid ||
+                         pairing_info->is_remote_identity_info_valid ||
+                         pairing_info->is_remote_signing_info_valid)) {
     PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
   }
@@ -476,7 +478,7 @@ void shared_prf_storage_store_ble_pairing_data(const struct pbl_bt_sm_pairing_in
   prv_unlock();
 }
 
-void shared_prf_storage_erase_ble_pairing_data(void) {
+void pbl_bt_prf_store_erase_pairing(void) {
   prv_lock();
   {
     SPRF_ERASE_FIELD(ble_pairing_data);
@@ -486,62 +488,13 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 }
 
 //!
-//! Getting started bit
-//!
-
-//!
-//! Local identity address
-//!
-
-bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_out) {
-  bool rv = false;
-  prv_lock();
-  {
-    // Not part of the page validation: a bad value only reads as absent, so
-    // bytes left in this former scratch area can never invalidate a page.
-    SprfLocalIdentityAddress data;
-    const size_t offset = offsetof(SharedPRFData, local_identity_address);
-    pbl_flash_read(FLASH, prv_current_page_flash_addr() + offset, (uint8_t *)&data, sizeof(data));
-
-    const uint32_t crc = pbl_crc32(0, SPRF_FIELD_DATA(&data), SPRF_FIELD_DATA_SIZE(sizeof(data)));
-    if (data.crc == SPRF_UNWRITTEN_CRC || data.crc != crc) {
-      goto unlock;
-    }
-
-    if (address_out) {
-      *address_out = data.address;
-    }
-    rv = true;
-  }
-
-unlock:
-  prv_unlock();
-  return rv;
-}
-
-void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address) {
-  prv_lock();
-  {
-    if (address) {
-      SprfLocalIdentityAddress data = {
-        .address = *address,
-      };
-      SPRF_PERSIST_FIELD(data, local_identity_address);
-    } else {
-      SPRF_ERASE_FIELD(local_identity_address);
-    }
-  }
-  prv_unlock();
-}
-
-//!
 //! Unit test functions
 //!
 
-uint16_t shared_prf_storage_get_valid_page_number(void) {
+uint16_t pbl_bt_prf_store__get_page(void) {
   return s_valid_page_idx;
 }
 
-void shared_prf_storage_set_valid_page_number(uint32_t page_num) {
+void pbl_bt_prf_store__set_page(uint32_t page_num) {
   s_valid_page_idx = page_num;
 }

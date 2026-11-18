@@ -82,9 +82,9 @@ areas:
 #
 # `depends` is what the port needs for an option, as a Kconfig expression.
 overrides:
-  # The store persists in a settings file.
+  # The store persists with any backend but the RAM one.
   BLE_STORE_CONFIG_PERSIST:
-    depends: SETTINGS
+    depends: "!NIMBLE_STORE_BACKEND_RAM"
   BLE_SM_IO_CAP:
     default: NO_INPUT_OUTPUT
     enum:

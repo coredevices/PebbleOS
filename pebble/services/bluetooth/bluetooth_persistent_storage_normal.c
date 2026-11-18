@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/assert.h>
@@ -13,7 +14,6 @@
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
 #include <pbl/util/string.h>
@@ -113,7 +113,7 @@ static void prv_update_bondings(pbl_bt_bonding_id_t id, BtPersistBondingType typ
                                                               &flags)) {
       // only send the ble_name if we have a name to send!
       char *ble_name_ptr = (strlen(ble_name) == 0) ? nullptr : &ble_name[0];
-      shared_prf_storage_store_ble_pairing_data(&pairing_info, ble_name_ptr, flags);
+      pbl_bt_prf_store_set_pairing(&pairing_info, ble_name_ptr, flags);
     }
   }
 }
@@ -265,10 +265,10 @@ cleanup:
 
 static void prv_load_local_data_from_prf(void) {
   struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
-  if (shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
-                                      &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
-      shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
-                                      &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
+  if (pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
+                                    &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
+      pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
+                                    &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
     bt_persistent_storage_set_root_keys(keys);
     return;
   }
@@ -281,7 +281,7 @@ static void prv_load_local_data_from_prf(void) {
       bt_persistent_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
                                          &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
     PBL_LOG_DBG("Storing root keys to PRF storage");
-    shared_prf_storage_set_root_keys(keys);
+    pbl_bt_prf_store_set_root_keys(keys);
   }
 }
 
@@ -297,7 +297,7 @@ static void prv_load_ble_pairing_from_prf(void) {
   struct pbl_bt_sm_pairing_info prf_pairing_info;
   char device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   uint8_t flags;
-  if (!shared_prf_storage_get_ble_pairing_data(&prf_pairing_info, device_name, &flags)) {
+  if (!pbl_bt_prf_store_get_pairing(&prf_pairing_info, device_name, &flags)) {
     // No pairing available, check to see if we have a pairing in the gapDB
     prv_push_ble_persist_to_shared_prf();
     return;
@@ -753,7 +753,7 @@ void bt_persistent_storage_delete_ble_pairing_by_id(pbl_bt_bonding_id_t bonding)
     return;
   }
   // TODO: Make sure this matches what we have stored
-  shared_prf_storage_erase_ble_pairing_data();
+  pbl_bt_prf_store_erase_pairing();
 }
 
 typedef struct {
@@ -1142,7 +1142,7 @@ void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   if (!keys_in) {
     return;
   }
-  shared_prf_storage_set_root_keys(keys_in);
+  pbl_bt_prf_store_set_root_keys(keys_in);
 
   prv_file_set(&ROOT_KEYS_KEY, sizeof(ROOT_KEYS_KEY), keys_in,
                PBL_BT_SM_ROOT_KEY_TYPE_NUM * sizeof(struct pbl_bt_sm_key));
@@ -1282,7 +1282,7 @@ void bt_persistent_storage_delete_all_pairings(void) {
   }
   prv_unlock();
 
-  shared_prf_storage_erase_ble_pairing_data();
+  pbl_bt_prf_store_erase_pairing();
 }
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RELEASE)
@@ -1306,7 +1306,7 @@ static void prv_dump_bonding_db_data(const struct pbl_shell *sh, pbl_bt_bonding_
 
     struct pbl_bt_sm_pairing_info sprf_info = {};
     uint8_t flags;
-    shared_prf_storage_get_ble_pairing_data(&sprf_info, nullptr, &flags);
+    pbl_bt_prf_store_get_pairing(&sprf_info, nullptr, &flags);
     matches_prf = (memcmp(&sprf_info, &info, sizeof(sprf_info)) == 0);
     matches_prf &= (flags == data->ble_data.flags);
     pbl_shell_print(sh, " Pairing info matches Shared PRF: %s", bool_to_str(matches_prf));
@@ -1364,10 +1364,10 @@ static bool prv_dump_bt_persistent_storage_contents(struct pbl_settings_file *fi
         sh, &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY],
         &root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]);
 
-    if (shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
-                                        &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
-        shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
-                                        &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
+    if (pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
+                                      &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
+        pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
+                                      &sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
       bool root_keys_match = memcmp(&root_keys, &sprf_root_keys, sizeof(root_keys)) == 0;
       pbl_shell_print(sh, " Root keys match shared prf: %s", bool_to_str(root_keys_match));
     }

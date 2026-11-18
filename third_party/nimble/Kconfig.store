@@ -10,7 +10,7 @@ visible if NIMBLE_STORE_CONFIG
 
 config NIMBLE_BLE_STORE_CONFIG_PERSIST
     bool "Whether to save data to sys/config, or just keep it in RAM"
-    depends on SETTINGS
+    depends on !NIMBLE_STORE_BACKEND_RAM
     default y if NIMBLE_STORE_CONFIG
 
 config NIMBLE_BLE_STORE_SYSINIT_STAGE

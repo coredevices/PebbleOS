@@ -1,11 +1,49 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+choice NIMBLE_STORE_BACKEND
+    prompt "Store backend"
+    depends on NIMBLE_STORE_CONFIG
+    default NIMBLE_STORE_BACKEND_SETTINGS if SETTINGS
+    default NIMBLE_STORE_BACKEND_RAM
+    help
+      Where the store keeps the keys of bonded peers and their CCCDs.
+
+config NIMBLE_STORE_BACKEND_RAM
+    bool "RAM"
+    help
+      Keep them in RAM only: they are lost on reset.
+
+config NIMBLE_STORE_BACKEND_SETTINGS
+    bool "Settings file"
+    depends on SETTINGS
+    help
+      Keep them in a settings file, along with a local IRK generated once.
+
+config NIMBLE_STORE_BACKEND_PRF
+    bool "PRF store"
+    select NIMBLE_STORE_PRF
+    help
+      Keep one bonding in the PRF store, the flash partition the
+      recovery firmware and the normal firmware share. CCCDs stay in RAM.
+      The local IRK is the identity root key of that partition.
+
+endchoice
+
 config NIMBLE_STORE_SETTINGS_FILE_SIZE
     int "Store file size in bytes"
-    depends on NIMBLE_BLE_STORE_CONFIG_PERSIST
+    depends on NIMBLE_STORE_BACKEND_SETTINGS
     default 4096
     help
       Space the settings file of the store may use. The store keeps the
       keys of up to BLE_STORE_MAX_BONDS peers and BLE_STORE_MAX_CCCDS
       subscriptions; the file needs room to rewrite them as they change.
+
+config NIMBLE_STORE_PRF
+    bool "PRF store"
+    depends on FLASH
+    help
+      The bonding and root keys the recovery firmware and the normal
+      firmware share, in a flash partition of its own
+      (pbl/bluetooth/prf_store.h). Its layout is the one recovery
+      firmware in the field reads.
