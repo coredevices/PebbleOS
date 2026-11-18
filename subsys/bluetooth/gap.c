@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nimble_gattc_op_queue.h"
+#include "clients/op_queue.h"
 #include "nimble_type_conversions.h"
 #include "pairability_priv.h"
 
 #include <stdio.h>
 
+#include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
@@ -266,6 +267,12 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
+
+  if (pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
+                             event->notify_rx.om)) {
+    return;
+  }
+
   if (ble_gap_conn_find(event->notify_rx.conn_handle, &desc) != 0) {
     PBL_LOG_ERR("prv_handle_notification_rx_event: Failed to find connection descriptor");
     return;
