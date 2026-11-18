@@ -7,14 +7,6 @@
 PBL_WEAK void shared_prf_storage_erase_ble_pairing_data(void) {
 }
 
-PBL_WEAK bool shared_prf_storage_get_local_device_name(char *local_device_name_out,
-                                                       size_t max_size) {
-  return false;
-}
-
-PBL_WEAK void shared_prf_storage_set_local_device_name(const char *local_device_name) {
-}
-
 PBL_WEAK bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
                                               struct pbl_bt_sm_key *key_out) {
   return false;

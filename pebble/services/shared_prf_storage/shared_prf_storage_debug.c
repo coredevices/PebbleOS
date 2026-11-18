@@ -36,12 +36,6 @@ void shared_prf_storage_dump_contents(const struct pbl_shell *sh) {
     pbl_shell_print(sh, "Missing IRK and/or ERK root key(s)!");
   }
 
-  if (shared_prf_storage_get_local_device_name(name, PBL_BT_DEVICE_NAME_BUFFER_SIZE)) {
-    pbl_shell_print(sh, "Local device name: %s", name);
-  } else {
-    pbl_shell_print(sh, "No Device Name");
-  }
-
   pbl_shell_print(sh, "Started Complete: %s",
                   bool_to_str(shared_prf_storage_get_getting_started_complete()));
 }

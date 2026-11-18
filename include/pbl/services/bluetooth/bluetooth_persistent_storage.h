@@ -226,23 +226,6 @@ bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
 void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in);
 
 /**
- * @brief Get the stored local device name.
- *
- * @param[out] local_device_name_out Destination buffer.
- * @param max_size Size of @p local_device_name_out in bytes.
- * @return True if a name is stored.
- */
-bool bt_persistent_storage_get_local_device_name(char *local_device_name_out, size_t max_size);
-
-/**
- * @brief Store the local device name.
- *
- * @param local_device_name Name to store. Ignored if NULL.
- * @param max_size Number of bytes to store.
- */
-void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t max_size);
-
-/**
  * @brief Get the stored airplane mode setting.
  *
  * @return True if airplane mode is on; false by default.

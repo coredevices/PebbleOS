@@ -47,10 +47,7 @@ void bt_local_id_configure_driver(void) {
   pbl_bt_id_copy_local_identity_address(&s_local_address);
 
   if (!prv_has_device_name()) {
-    if (!bt_persistent_storage_get_local_device_name(s_local_device_name,
-                                                     sizeof(s_local_device_name))) {
-      prv_set_default_device_name();
-    }
+    prv_set_default_device_name();
   }
 
   prv_configure_device_name();
