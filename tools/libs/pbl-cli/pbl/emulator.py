@@ -30,6 +30,28 @@ CONSOLE_PORT = 12345
 ABS_MAX = 32767
 
 
+def bt_static_address(value):
+    """``value`` as the random static Bluetooth address an emulator is given:
+    ``XX:XX:XX:XX:XX:XX`` with its two top bits set, in upper case. Raises
+    ValueError."""
+    octets = value.split(":")
+    try:
+        if len(octets) != 6 or any(len(octet) != 2 for octet in octets):
+            raise ValueError
+        top = int(octets[0], 16)
+        for octet in octets[1:]:
+            int(octet, 16)
+    except ValueError:
+        raise ValueError(
+            f"{value} is not a Bluetooth address (XX:XX:XX:XX:XX:XX)"
+        ) from None
+    if top >> 6 != 0b11:
+        raise ValueError(
+            f"{value} is not a random static address: its two top bits are not set"
+        )
+    return value.upper()
+
+
 def _connect(path, what):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

@@ -193,6 +193,17 @@ pbl run --bt-hci /dev/cu.usbmodemXXXX
 `--bt-hci` takes any QEMU `-serial` spec, e.g. `tcp:localhost:9000`. On
 macOS use the `cu.*` device: opening `tty.*` blocks until carrier detect.
 
-Pass `--keep-flash-image` to keep existing bondings across launches.
+The watch uses its controller's address, or a random one that changes on
+every boot if the controller has none, as an nRF52840 dongle does. Give it
+one with `--bt-addr`, a random static address (its two top bits set), and
+pass `--keep-flash-image` to keep existing bondings across launches:
+
+```shell
+pbl run --bt-hci /dev/cu.usbmodemXXXX --bt-addr C0:00:00:00:00:01 --keep-flash-image
+```
+
+The address is a property of the machine's system controller
+(`-global pebble-sysctrl.bt-addr=ADDRESS`), read by the firmware with
+`CONFIG_NIMBLE_ID_ADDR_QEMU`.
 
 
