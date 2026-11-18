@@ -22,8 +22,16 @@ HARNESS_ROOT = os.path.dirname(
 )
 
 
+# The watch's controller's public address: the watch keeps its identity
+# across resets.
+WATCH_ADDRESS = "02:00:00:00:00:01"
+
+
 class VirtualLink:
-    def __init__(self, log_path):
+    def __init__(self, log_path, watch_address=WATCH_ADDRESS):
+        """``watch_address`` is the public address of the watch's controller,
+        None for one without an address of its own."""
+        self._watch_address = watch_address
         self.watch_port = None
         self.host_port = None
         self.control_port = None
@@ -57,7 +65,13 @@ class VirtualLink:
             )
             fds = [listener.fileno() for listener in listeners]
             self._process = subprocess.Popen(
-                [sys.executable, "-m", "harness.ble.virtual", *map(str, fds)],
+                [
+                    sys.executable,
+                    "-m",
+                    "harness.ble.virtual",
+                    self._watch_address or "",
+                    *map(str, fds),
+                ],
                 stdout=self._log,
                 stderr=subprocess.STDOUT,
                 env=env,
@@ -146,20 +160,50 @@ def _controller_class():
     return ScanResponseController
 
 
-def _serve(controller_fds, control_fd):
+def _link_class():
+    """Bumble's link, carrying a connection's data from the address the
+    connection uses: Bumble's own always sends from the random one, which a
+    controller advertising from its public address is not known by."""
+    import asyncio
+
+    from bumble import core
+    from bumble.link import LocalLink
+
+    class AddressedLink(LocalLink):
+        def send_acl_data(self, sender_controller, destination_address, transport, data):
+            connection = sender_controller.le_connections.get(destination_address)
+            if transport != core.PhysicalTransport.LE or connection is None:
+                super().send_acl_data(
+                    sender_controller, destination_address, transport, data
+                )
+                return
+            destination = self.find_le_controller(destination_address)
+            if destination is not None:
+                asyncio.get_running_loop().call_soon(
+                    destination.on_link_acl_data,
+                    connection.self_address,
+                    transport,
+                    data,
+                )
+
+    return AddressedLink
+
+
+def _serve(watch_address, controller_fds, control_fd):
     """Run linked software controllers, one per listening socket, and power
-    cycle the one a line on the ``control_fd`` socket names."""
+    cycle the one a line on the ``control_fd`` socket names. The first is
+    the watch's, with ``watch_address`` for its public address if any."""
     import asyncio
 
     import bumble.logging
     from bumble import core, hci, ll
-    from bumble.link import LocalLink
     from bumble.transport.tcp_server import open_tcp_server_transport_with_socket
 
     Controller = _controller_class()
+    Link = _link_class()
 
     async def main():
-        link = LocalLink()
+        link = Link()
         opened = []
         controllers = []
 
@@ -171,6 +215,7 @@ def _serve(controller_fds, control_fd):
                 host_source=transport.source,
                 host_sink=transport.sink,
                 link=link,
+                public_address=(watch_address or None) if index == 0 else None,
             )
 
         def power_off(controller):
@@ -209,4 +254,4 @@ def _serve(controller_fds, control_fd):
 
 
 if __name__ == "__main__":
-    _serve([int(fd) for fd in sys.argv[1:-1]], int(sys.argv[-1]))
+    _serve(sys.argv[1], [int(fd) for fd in sys.argv[2:-1]], int(sys.argv[-1]))
