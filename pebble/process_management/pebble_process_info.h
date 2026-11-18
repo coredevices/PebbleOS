@@ -50,6 +50,11 @@ typedef enum {
   //! Values that are actually added by SDK 4.9+
   PROCESS_INFO_PLATFORM_FLINT = 0x6 << 6,
   PROCESS_INFO_PLATFORM_GABBRO = 0x7 << 6,
+  //! A platform without a value of its own, described by its PebblePlatformInfo
+  PROCESS_INFO_PLATFORM_OTHER = 0xf << 6,
+
+  //! True, if a PebblePlatformInfo follows the build ID
+  PROCESS_INFO_HAS_PLATFORM_INFO = 1 << 11,
 } PebbleProcessInfoFlags;
 
 //!   @} // group App
@@ -271,6 +276,29 @@ typedef struct PBL_PACKED {
   //! Bits 16 to 23 of virtual_size. Only read from struct version 0x10.0x01.
   uint8_t virtual_size_hi;
 } PebbleProcessInfo;
+
+//! @internal
+//! What the platform a process was built for is like. It follows the GNU build ID note, which
+//! follows PebbleProcessInfo, so neither moves; PROCESS_INFO_HAS_PLATFORM_INFO says it is there.
+// WARNING: changes in this struct must be reflected in:
+// - tools/generate_appinfo.py
+typedef struct PBL_PACKED {
+  uint8_t version; //!< PROCESS_PLATFORM_INFO_VERSION
+  //! Size of the record in bytes. Fields are only added at the end, so a reader skips those it
+  //! does not know.
+  uint8_t length;
+  uint8_t abi;             //!< PebblePlatformAbi, in pebble_process_md.h
+  uint8_t display_shape;   //!< PebblePlatformDisplayShape
+  uint16_t display_width;  //!< In pixels
+  uint16_t display_height; //!< In pixels
+  uint32_t features;       //!< Bitwise OR of PebblePlatformFeature
+  uint16_t app_memory_kib; //!< Memory the process needs for its code and heap, in KiB
+  //! Bits of colour a pixel has: 1 on a black and white display, 6 for 64 colours
+  uint8_t display_color_depth;
+  uint8_t reserved; //!< Zero
+} PebblePlatformInfo;
+
+#define PROCESS_PLATFORM_INFO_VERSION 1
 
 //! The app CRC runs from here to the end of the image. It is the end of the 0x10.0x00 header, so
 //! the CRC takes in load_size_hi and virtual_size_hi, and every struct version checks the same
