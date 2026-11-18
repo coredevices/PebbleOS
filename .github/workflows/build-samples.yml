@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v15
+      image: ghcr.io/coredevices/pebbleos-docker:v16
 
     strategy:
       fail-fast: false

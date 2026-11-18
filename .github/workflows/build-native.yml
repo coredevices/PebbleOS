@@ -55,7 +55,7 @@ jobs:
         include:
           - host: linux
             os: ubuntu-24.04
-            container: ghcr.io/coredevices/pebbleos-docker:v15
+            container: ghcr.io/coredevices/pebbleos-docker:v16
           - host: macos
             os: macos-15
 
@@ -139,7 +139,7 @@ jobs:
     needs: changes-native
     if: needs.changes-native.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
-    container: ghcr.io/coredevices/pebbleos-docker:v15
+    container: ghcr.io/coredevices/pebbleos-docker:v16
 
     strategy:
       fail-fast: false
