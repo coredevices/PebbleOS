@@ -226,6 +226,22 @@ void test_log_modules__start_replays_messages_logged_while_disabled(void) {
   cl_assert_equal_s(s_flash_message, "live");
 }
 
+void test_log_modules__long_message_length_matches_text(void) {
+  char buffer[LOG_BUFFER_LENGTH];
+  char text[300];
+  memset(text, 'a', sizeof(text) - 1);
+  text[sizeof(text) - 1] = '\0';
+
+  int len = pbl_log_get_bin_format(buffer, sizeof(buffer), LOG_LEVEL_DEBUG, __FILE__, __LINE__,
+                                   "%s", text);
+
+  const LogBinaryMessage *msg = (const LogBinaryMessage *)buffer;
+  const size_t max_message_length = sizeof(buffer) - sizeof(LogBinaryMessage);
+  cl_assert_equal_i(msg->message_length, max_message_length - 1);
+  cl_assert_equal_i(strlen(msg->message), msg->message_length);
+  cl_assert_equal_i(len, sizeof(LogBinaryMessage) + msg->message_length);
+}
+
 void test_log_modules__start_does_not_replay_without_replay(void) {
   const struct pbl_log_backend *serial = PBL_LOG_BACKEND_GET(test_serial);
   pbl_log_backend_disable(serial);
