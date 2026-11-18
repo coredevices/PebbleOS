@@ -111,5 +111,9 @@ deep power-down with its controller gated when off, and in hybrid sleep in
 deep sleep while used. It reaches it through its HyperBus controller
 (`pbl/drivers/hyperbus.h`), the parent of its node.
 
+The QEMU PSRAM driver (`pbl/drivers/ram/qemu.h`) is for the external RAM of
+the emulated Emery and Gabbro machines, which is always mapped and powered:
+it has nothing to power on or off.
+
 `ram info` shows the power state and the scratch heap use, and `ram check`
 writes and checks a buffer.

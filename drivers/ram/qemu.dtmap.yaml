@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: qemu,pebble-psram
+config: RAM_QEMU
+class: ram
+define: PBL_RAM_QEMU_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - size: 0
