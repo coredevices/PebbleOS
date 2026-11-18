@@ -77,7 +77,8 @@ static int prv_early_init(const struct pbl_uart *uart) {
   prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, 0U);
   prv_putreg(usart, SF32LB52_USART_CR2_OFFSET, 0U);
   prv_putreg(usart, SF32LB52_USART_CR3_OFFSET, 0U);
-  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_UE);
+  // The receiver stays on, the SoC serial debug port listens through it
+  prv_putreg(usart, SF32LB52_USART_CR1_OFFSET, UART_CR1_TE | UART_CR1_RE | UART_CR1_UE);
 
   return 0;
 }
@@ -222,7 +223,7 @@ static void prv_dma_callback(void *arg, int status) {
 
 static int prv_rx_enable(const struct pbl_uart *uart) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
-  uint32_t cr1 = UART_CR1_RE | UART_CR1_RXNEIE;
+  uint32_t cr1 = UART_CR1_RXNEIE;
   int ret;
 
   (void)prv_getreg(usart, SF32LB52_USART_RDR_OFFSET);
@@ -241,7 +242,7 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
     }
 
     pbl_modifyl(0U, UART_CR3_DMAR, prv_reg(usart, SF32LB52_USART_CR3_OFFSET));
-    cr1 = UART_CR1_RE | UART_CR1_IDLEIE;
+    cr1 = UART_CR1_IDLEIE;
   }
 
   pbl_modifyl(0U, cr1, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
@@ -255,8 +256,7 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
 static void prv_rx_disable(const struct pbl_uart *uart) {
   const struct pbl_uart_sf32lb *usart = prv_sf32lb(uart);
 
-  pbl_modifyl(UART_CR1_RE | UART_CR1_RXNEIE | UART_CR1_IDLEIE, 0U,
-              prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
+  pbl_modifyl(UART_CR1_RXNEIE | UART_CR1_IDLEIE, 0U, prv_reg(usart, SF32LB52_USART_CR1_OFFSET));
 
   if (usart->rx_dma != nullptr) {
     (void)pbl_dma_terminate(usart->rx_dma);
