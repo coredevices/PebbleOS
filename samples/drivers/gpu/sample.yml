@@ -10,5 +10,5 @@ expect:
   - 'gpu: rotated and scaled blit: (ok, \d+ us|not supported)'
   - 'Sample done'
 boards: [sf32lb57_dpi_hdk]
-roles: [display, backlight, gpu]
+roles: [display, gpu]
 addons: [sifli_lcm_1p85]

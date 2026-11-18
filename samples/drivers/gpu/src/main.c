@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/backlight.h>
 #include <pbl/drivers/display.h>
 #include <pbl/drivers/gpu.h>
 #include <pbl/kernel/malloc.h>
@@ -199,7 +198,6 @@ int main(void) {
     }
   }
 
-  (void)pbl_backlight_set_brightness(BACKLIGHT, PBL_BACKLIGHT_BRIGHTNESS_MAX);
   ret = pbl_display_update_sync(DISPLAY, &frame, 0U, props->height - 1U);
   if (ret != 0) {
     fprintf(stderr, "gpu: display update failed (%d)\n", ret);
