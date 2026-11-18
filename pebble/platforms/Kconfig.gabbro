@@ -39,12 +39,6 @@ config PLATFORM_MAX_APP_MEMORY_SIZE
 config PLATFORM_MAX_FONT_GLYPH_SIZE
     default 512
 
-config PLATFORM_ANIMATION_FRAME_INTERVAL_MS
-    default 28
-
-config PLATFORM_ANIMATION_RENDER_INTERVAL_MS
-    default 48
-
 # RAM of an app and of its runtime. The segment holds a 4 KiB app stack.
 
 config APP_RAM_4X_SEGMENT_SIZE

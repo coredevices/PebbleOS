@@ -52,7 +52,7 @@
 		jdi,enable-end = <128>;
 
 		panel-timing {
-			clock-frequency = <746268>;
+			clock-frequency = <1250000>;
 			hactive = <260>;
 			vactive = <260>;
 			hback-porch = <0>;
