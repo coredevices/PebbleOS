@@ -93,10 +93,27 @@ config NIMBLE_ID_ADDR_SF32LB52_EFUSE
     help
       Public address derived from the unique ID in the SoC's eFUSE.
 
+config NIMBLE_ID_ADDR_QEMU
+    bool "QEMU machine"
+    depends on SOC_QEMU_PEBBLE
+    select NIMBLE_ID_ADDR
+    help
+      Random static address given to the machine at launch, with
+      -global pebble-sysctrl.bt-addr=ADDRESS. The controller's address
+      is used if none is given.
+
+config NIMBLE_ID_ADDR_POSIX
+    bool "Host option"
+    depends on SOC_POSIX
+    select NIMBLE_ID_ADDR
+    help
+      Random static address given on the command line, with -a ADDRESS.
+      The controller's address is used if none is given.
+
 endchoice
 
 config NIMBLE_ID_ADDR
     bool
     help
       An identity address backend is selected (pbl/bluetooth/id_addr.h).
-      The HCI transport programs it into its controller.
+      The HCI transport programs a public one into its controller.

@@ -3,6 +3,10 @@
 
 if SOC_QEMU_PEBBLE
 
+choice NIMBLE_ID_ADDR_SOURCE
+    default NIMBLE_ID_ADDR_QEMU
+endchoice
+
 # 4 MiB of emulated flash.
 config FLASH_BASE
     default 0x00000000

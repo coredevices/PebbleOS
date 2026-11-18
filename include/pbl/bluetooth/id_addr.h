@@ -11,7 +11,8 @@
  * @brief Where the watch's identity address comes from.
  *
  * Implemented by the backend chosen with the @c NIMBLE_ID_ADDR_SOURCE Kconfig choice, available
- * when @c NIMBLE_ID_ADDR is enabled. Read by pbl_bt_start().
+ * when @c NIMBLE_ID_ADDR is enabled. A public address is programmed into the controller by the
+ * NimBLE HCI transport, a random static one is set by pbl_bt_start().
  * @{
  */
 
@@ -28,7 +29,9 @@ enum pbl_bt_id_addr_type {
  *
  * @param[out] addr The address.
  * @param[out] type How the address is applied.
- * @return 0 on success, a negative errno otherwise.
+ * @retval 0 on success.
+ * @retval -ENOENT if the source has none: the controller's address is used.
+ * @return Another negative errno otherwise.
  */
 int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type);
 

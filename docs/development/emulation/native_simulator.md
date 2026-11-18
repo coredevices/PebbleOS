@@ -110,6 +110,9 @@ always listening, with log lines printing above its prompt. `Ctrl-\` quits.
   UART to an H4 controller: a TCP port on the local host (e.g. Bumble's
   `tcp-server` transport) or a serial device, such as an nRF52840 dongle
   running `hci_uart`, as described for the {doc}`emulator <emulator>`.
+- `-a ADDRESS`: with `CONFIG_NIMBLE_ID_ADDR_POSIX`, the random static Bluetooth
+  address the watch uses (`XX:XX:XX:XX:XX:XX`, its two top bits set) instead
+  of its controller's.
 - `-S FILE`: save the last frame to a BMP file on quitting.
 - `-l`: start with the colors as in sunlight.
 - `-i FILE`: install a `.pbw` app and launch it; repeat for more.
