@@ -1,0 +1,3 @@
+description: A central that finds a heart rate sensor, subscribes to its measurements and prints ten
+expect:
+  - 'central_hr: scanning for a heart rate sensor'
