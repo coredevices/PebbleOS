@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-set(nimble mynewt-nimble)
+set(nimble ${CMAKE_CURRENT_SOURCE_DIR}/mynewt-nimble)
 
 set(includes
   # Ahead of porting/nimble/include, whose syscfg.h is a placeholder.
@@ -35,6 +35,10 @@ file(GLOB sources CONFIGURE_DEPENDS
 )
 if(CONFIG_NIMBLE_BLE_SVC_BAS)
   list(APPEND sources ${nimble}/nimble/host/services/bas/src/ble_svc_bas.c)
+endif()
+if(CONFIG_NIMBLE_STORE_CONFIG)
+  list(APPEND sources ${nimble}/nimble/host/store/config/src/ble_store_config.c)
+  list(APPEND includes ${nimble}/nimble/host/store/config/include)
 endif()
 if(CONFIG_NIMBLE_BLE_SVC_DIS)
   list(APPEND sources ${nimble}/nimble/host/services/dis/src/ble_svc_dis.c)
@@ -86,3 +90,4 @@ pbl_library_compile_options(
 # The PebbleOS side, built with the usual warnings.
 add_subdirectory(port)
 add_subdirectory(transport)
+add_subdirectory(store)

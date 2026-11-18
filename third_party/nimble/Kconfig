@@ -12,6 +12,7 @@ if NIMBLE
 
 rsource "port/Kconfig"
 rsource "transport/Kconfig"
+rsource "store/Kconfig"
 
 choice "NIMBLE_LOG_LEVEL_CHOICE"
     default NIMBLE_LOG_LEVEL_OFF
@@ -28,6 +29,7 @@ source "subsys/logging/Kconfig.template.log_level"
 rsource "Kconfig.ble"
 rsource "Kconfig.host"
 rsource "Kconfig.svcs"
+rsource "Kconfig.store"
 rsource "Kconfig.transport"
 rsource "Kconfig.controller"
 rsource "Kconfig.drivers"

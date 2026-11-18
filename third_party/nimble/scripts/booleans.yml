@@ -170,3 +170,6 @@ booleans:
   - BLE_MONITOR_RTT
   - BLE_MONITOR_RTT_BUFFERED
   - BLE_MONITOR_UART
+
+  # nimble/host/store/config
+  - BLE_STORE_CONFIG_PERSIST

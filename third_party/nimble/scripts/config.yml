@@ -46,6 +46,12 @@ areas:
     packages:
       - nimble/host/services/dis
 
+  - id: store
+    title: "Store"
+    enable: NIMBLE_STORE_CONFIG
+    packages:
+      - nimble/host/store/config
+
   - id: transport
     title: "HCI transport"
     packages:
@@ -73,7 +79,12 @@ areas:
 # NimBLE options whose value is a C macro rather than a number. Listing the
 # macros here turns the option into a Kconfig choice; without it the option
 # would be fixed at NimBLE's default by the generated header.
+#
+# `depends` is what the port needs for an option, as a Kconfig expression.
 overrides:
+  # The store persists in a settings file.
+  BLE_STORE_CONFIG_PERSIST:
+    depends: SETTINGS
   BLE_SM_IO_CAP:
     default: NO_INPUT_OUTPUT
     enum:
