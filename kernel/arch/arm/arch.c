@@ -466,6 +466,9 @@ void arch_start(void) {
 
 #if HAS_FPU
   arch_writel(arch_readl(ARM_FPU_FPCCR) | ARM_FPU_FPCCR_ASPEN | ARM_FPU_FPCCR_LSPEN, ARM_FPU_FPCCR);
+  // This context is never returned to: with FP state, its exception frame would leave a lazy
+  // save pending, written later over the stack the handlers use
+  arm_control_set(arm_control_get() & ~ARM_CONTROL_FPCA);
 #endif
 
   __asm volatile("  dsb \n svc %0 \n isb \n" ::"i"(SVC_START));
