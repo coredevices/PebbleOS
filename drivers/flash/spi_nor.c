@@ -13,10 +13,10 @@
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 
-#define US_PER_MS            1000U
 #define ID_LEN               3U
 #define ADDR_3BYTE           3U
 #define ADDR_4BYTE           4U
@@ -798,7 +798,7 @@ static int prv_init(const struct pbl_flash *flash) {
     }
 
     if (pbl_flash_in_coredump(flash)) {
-      pbl_busy_wait_us(nor->part->reset_ms * US_PER_MS);
+      pbl_busy_wait_us(nor->part->reset_ms * PBL_USEC_PER_MSEC);
     } else {
       pbl_sleep_ms(nor->part->reset_ms);
     }
