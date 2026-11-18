@@ -347,4 +347,18 @@ def _load_platforms():
     return {desc["name"]: platform_from_descriptor(desc) for desc in descriptors}
 
 
+def bundle_description(platform_name):
+    """What a pbw says of the platform one of its binaries was built for: the
+    part of the platform's description a binary is matched to a watch by."""
+    desc = pebble_platforms[platform_name]["DESCRIPTOR"]
+    return {
+        "version": DESCRIPTOR_VERSION,
+        "name": desc["name"],
+        "abi": desc["abi"],
+        "display": dict(desc["display"]),
+        "features": [f for f in FEATURES if f in desc.get("features", [])],
+        "limits": {"app_memory": desc["limits"]["app_memory"]},
+    }
+
+
 pebble_platforms = _load_platforms()

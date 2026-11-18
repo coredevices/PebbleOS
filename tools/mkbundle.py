@@ -360,6 +360,9 @@ def make_watchapp_bundle(
         'subfolder' -- path to subfolder in PBW for platform binary
         'layouts' -- (optional) path to the platform's layouts.json, by default
                      build/<subfolder>/layouts.json if it exists
+        'platform' -- (optional) what the platform the binary was built for is
+                      like, for the subfolder's manifest. Whoever installs the
+                      pbw matches the binary to a watch by it.
     js -- (optional) a list of paths to javascript files to be included
     outfile -- path to write the pbw to
     named_files -- (optional) {path in the pbw: path on disk} of loose files, such as a plugin
@@ -381,6 +384,8 @@ def make_watchapp_bundle(
     for binary in binaries:
         bundle.has_children = True
         platform_bundle = PebbleBundle(subfolder=binary["subfolder"])
+        if binary.get("platform"):
+            platform_bundle.bundle_manifest["platform"] = binary["platform"]
 
         if binary["watchapp"]:
             watchapp_path = os.path.expanduser(binary["watchapp"])

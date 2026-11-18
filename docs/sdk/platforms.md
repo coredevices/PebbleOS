@@ -142,3 +142,23 @@ A platform that `PebbleProcessInfoFlags` has no value for is
 such an app to be for its own platform. Apps for the frozen platforms carry
 no record: the firmware knows those platforms, and their SDK does not know
 the record.
+
+## What a pbw says
+
+The `manifest.json` of each binary's directory in a pbw describes the
+platform the binary was built for, so whoever installs the pbw can match a
+binary to a watch without knowing the platform's name:
+
+```json
+"platform": {
+  "version": 1,
+  "name": "flint",
+  "abi": "armv7m",
+  "display": { "width": 144, "height": 168, "shape": "rect", "color": false },
+  "features": ["microphone", "health", "compass", "speaker"],
+  "limits": { "app_memory": 65536 }
+}
+```
+
+It is the part of `platform.json` a binary is matched by. A directory whose
+manifest has no `platform` is of the platform it is named after.
