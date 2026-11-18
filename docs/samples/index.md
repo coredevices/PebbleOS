@@ -83,6 +83,7 @@ third_party/nimble/peripheral.md
 third_party/nimble/central.md
 third_party/nimble/peripheral_hr.md
 third_party/nimble/central_hr.md
+third_party/nimble/peripheral_sc_only.md
 ```
 
 ```{toctree}

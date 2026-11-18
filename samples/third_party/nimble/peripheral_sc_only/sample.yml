@@ -1,0 +1,4 @@
+description: A peripheral that only pairs with Secure Connections and a passkey, and keeps its bonds across reboots
+expect:
+  - 'peripheral_sc_only: \d+ bonded peers?'
+  - 'peripheral_sc_only: advertising as PebbleOS SC'
