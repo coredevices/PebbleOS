@@ -81,6 +81,7 @@ drivers/vibe.md
 third_party/nimble/broadcaster.md
 third_party/nimble/observer.md
 third_party/nimble/peripheral.md
+third_party/nimble/central.md
 third_party/nimble/peripheral_hr.md
 ```
 

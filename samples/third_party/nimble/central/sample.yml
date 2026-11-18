@@ -1,0 +1,3 @@
+description: A central that finds the peripheral sample, reads and writes its message and follows its counter
+expect:
+  - 'central: scanning for the peripheral sample'
