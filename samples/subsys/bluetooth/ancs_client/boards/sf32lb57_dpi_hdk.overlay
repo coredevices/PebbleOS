@@ -1,0 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: Apache-2.0
+
+&sip_flash {
+	partitions {
+		partition@400000 {
+			label = "filesystem";
+			reg = <0x400000 0xc00000>;
+		};
+	};
+};

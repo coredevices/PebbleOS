@@ -38,6 +38,7 @@ kernel/classic/barrier.md
 :maxdepth: 1
 :caption: Subsystems
 
+subsys/bluetooth/ancs_client.md
 subsys/crc/checksums.md
 subsys/crypto/sha256.md
 subsys/crypto/aes.md
