@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/i18n/i18n.h>
+#include <pbl/services/compositor/compositor.h>
 #include <pbl/services/mic_manager.h>
 #include <pbl/util/math.h>
 
@@ -161,9 +162,10 @@ static int16_t prv_obstruction_for_shape_y(int16_t shape_y) {
   app_manager_get_framebuffer_size(&fb_size);
   int16_t y = MIN(shape_y, PBL_DISPLAY_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
-    y = (y * fb_size.h) / PBL_DISPLAY_HEIGHT;
+    const GRect frame = compositor_get_scaled_app_frame(fb_size);
+    y = ((y - frame.origin.y) * fb_size.h) / frame.size.h;
   }
-  return MIN(y, fb_size.h);
+  return CLIP(y, 0, fb_size.h);
 }
 
 static int16_t prv_compose(int16_t banner_y) {
@@ -206,9 +208,10 @@ bool mic_banner_get_accessory_area(GRect *area_out) {
   }
   GRect area = GRect(SQUARE_SIZE, top, PBL_DISPLAY_WIDTH - SQUARE_SIZE, MIC_BANNER_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
-    area.origin.x = (SQUARE_SIZE * fb_size.w) / PBL_DISPLAY_WIDTH;
+    const GRect frame = compositor_get_scaled_app_frame(fb_size);
+    area.origin.x = MAX(((SQUARE_SIZE - frame.origin.x) * fb_size.w) / frame.size.w, 0);
     area.size.w = fb_size.w - area.origin.x;
-    area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / PBL_DISPLAY_HEIGHT;
+    area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / frame.size.h;
   }
   *area_out = area;
   return true;

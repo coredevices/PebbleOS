@@ -162,3 +162,21 @@ binary to a watch without knowing the platform's name:
 
 It is the part of `platform.json` a binary is matched by. A directory whose
 manifest has no `platform` is of the platform it is named after.
+
+## Apps built for a smaller display
+
+A watch runs an app built for a display of its own shape that is no larger
+than its own in either direction. The app draws to a framebuffer of the size
+it was built for, taken from its `PebblePlatformInfo`, or from its platform
+when the binary carries none, and the compositor shows it either
+
+- centered in a black bezel, the only way on black and white displays, or
+- scaled up as far as its aspect ratio allows, with black bars beside it or
+  above and below it.
+
+On boards with `CONFIG_APP_SCALING` the user picks between the two in the
+display settings. An app is not stretched, with one exception that
+predates this: on Emery and Gabbro a scaled app of a legacy size (144x168,
+or 180x180 on Gabbro) fills the display, as it always has. No other
+platform does that. A round display only shows the sizes that have a row
+table: its own and 180x180.

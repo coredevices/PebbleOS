@@ -753,6 +753,27 @@ static bool prv_app_frame_fit_is_verbatim(const AppFrameFit *fit) {
   return fit->matches_display && !fit->squish_for_peek && !fit->shift_for_peek;
 }
 
+GRect compositor_get_scaled_app_frame(GSize app_size) {
+  const GSize display_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+#if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
+  // On these two displays apps of the legacy sizes fill the display, as they always have. No
+  // other display stretches an app.
+  if (gsize_equal(&app_size, &GSize(LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS)) ||
+      gsize_equal(&app_size, &GSize(LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS))) {
+    return (GRect){GPointZero, display_size};
+  }
+#endif
+  if ((app_size.w <= 0) || (app_size.h <= 0)) {
+    return (GRect){GPointZero, display_size};
+  }
+  // As wide as the display, unless that makes it too high
+  GSize size = GSize(display_size.w, ((int32_t)app_size.h * display_size.w) / app_size.w);
+  if (size.h > display_size.h) {
+    size = GSize(((int32_t)app_size.w * display_size.h) / app_size.h, display_size.h);
+  }
+  return GRect((display_size.w - size.w) / 2, (display_size.h - size.h) / 2, size.w, size.h);
+}
+
 void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin) {
   compositor_scaled_app_fb_copy_offset(update_rect, copy_relative_to_origin, 0 /* offset_y */);
 }
@@ -814,9 +835,12 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
   if (should_scale_app) {
     const bool bilinear = (render_mode == LegacyAppRenderMode_ScalingBilinear);
     const bool shift_scaled_watchface_for_peek = fit->shift_for_peek && !fit->squish_for_peek;
+    // A smaller app keeps its aspect ratio, with black bars beside or above and below it, but
+    // for legacy apps on Emery and Gabbro. A watchface the user asked to squish above the peek
+    // is stretched.
     const GRect scale_to = fit->squish_for_peek
                                ? GRect(0, 0, disp_width, timeline_peek_get_origin_y())
-                               : GRect(0, 0, disp_width, disp_height);
+                               : compositor_get_scaled_app_frame(src_bitmap.bounds.size);
 
     if (shift_scaled_watchface_for_peek) {
       int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
@@ -837,7 +861,7 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
     // This gives us sub-pixel precision for better scaling
     const uint32_t scale_x = ((uint32_t)app_width << 16) / scale_to.size.w;
     const uint32_t scale_y = ((uint32_t)app_height << 16) / scale_to.size.h;
-    const int16_t app_shift_y = timeline_peek_get_origin_y() - scale_to.size.h;
+    const int16_t app_shift_y = timeline_peek_get_origin_y() - disp_height;
 
     for (int16_t dst_y = 0; dst_y < update_rect.size.h; dst_y++) {
       const int16_t dst_y_offset = dst_y + update_rect.origin.y + offset_y;
@@ -849,17 +873,26 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
         continue;
       }
 
-      uint16_t dst_y_coord;
+      // The row within scale_to
+      int16_t dst_y_coord;
       if (fit->squish_for_peek) {
         dst_y_coord = dst_y_offset - scale_to.origin.y;
-      } else if (shift_scaled_watchface_for_peek) {
-        const int16_t shifted_y = dst_y_offset - app_shift_y;
-        if (shifted_y < 0 || shifted_y >= scale_to.size.h) {
+      } else {
+        if (shift_scaled_watchface_for_peek) {
+          dst_y_coord = dst_y_offset - app_shift_y;
+          if (dst_y_coord < 0 || dst_y_coord >= disp_height) {
+            continue;
+          }
+        } else {
+          dst_y_coord = copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+        }
+        dst_y_coord -= scale_to.origin.y;
+        if (dst_y_coord < 0 || dst_y_coord >= scale_to.size.h) {
+          // The bar above or below the app
+          prv_fill_row_black(&dst_bitmap, dst_y_offset, update_rect.origin.x,
+                             update_rect.origin.x + update_rect.size.w);
           continue;
         }
-        dst_y_coord = shifted_y;
-      } else {
-        dst_y_coord = copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
       }
       const uint32_t src_y_fixed = (uint32_t)dst_y_coord * scale_y;
       const int16_t src_y = src_y_fixed >> 16;
@@ -894,10 +927,17 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
           continue;
         }
 
-        const uint16_t dst_x_coord = fit->squish_for_peek ? (dst_x_offset - scale_to.origin.x)
-                                     : copy_relative_to_origin
-                                         ? CLIP(dst_x_offset, 0, disp_width - 1)
-                                         : dst_x;
+        // The column within scale_to
+        const int16_t dst_x_coord =
+            (fit->squish_for_peek      ? dst_x_offset
+             : copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1)
+                                       : dst_x) -
+            scale_to.origin.x;
+        if (dst_x_coord < 0 || dst_x_coord >= scale_to.size.w) {
+          // The bar beside the app
+          dst_line[dst_x_offset] = GColorBlack.argb;
+          continue;
+        }
         const uint32_t src_x_fixed = (uint32_t)dst_x_coord * scale_x;
         const int16_t src_x = src_x_fixed >> 16;
 

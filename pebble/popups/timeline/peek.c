@@ -7,7 +7,9 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/compositor/compositor.h>
 #include <pbl/services/time.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
@@ -203,8 +205,10 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   }
   GSize app_framebuffer_size;
   app_manager_get_framebuffer_size(&app_framebuffer_size);
-  // Scale from display coordinates to framebuffer coordinates
-  return (display_y * app_framebuffer_size.h) / PBL_DISPLAY_HEIGHT;
+  // From display coordinates to framebuffer coordinates, through where the app is shown
+  const GRect frame = compositor_get_scaled_app_frame(app_framebuffer_size);
+  const int16_t y = ((display_y - frame.origin.y) * app_framebuffer_size.h) / frame.size.h;
+  return CLIP(y, 0, app_framebuffer_size.h);
 }
 
 static int16_t prv_compose_obstruction_y(int16_t peek_y) {

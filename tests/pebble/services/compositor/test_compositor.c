@@ -811,3 +811,37 @@ void test_compositor__freeze_waits_for_display_update(void) {
   cl_assert_equal_i(s_count_display_update, 1);
   cl_assert_equal_i(s_count_frozen, 1);
 }
+
+static void prv_assert_scaled_app_frame(GSize app_size, GRect expected) {
+  const GRect frame = compositor_get_scaled_app_frame(app_size);
+  cl_assert_equal_i(frame.origin.x, expected.origin.x);
+  cl_assert_equal_i(frame.origin.y, expected.origin.y);
+  cl_assert_equal_i(frame.size.w, expected.size.w);
+  cl_assert_equal_i(frame.size.h, expected.size.h);
+}
+
+void test_compositor__scaled_app_frame_keeps_the_aspect_ratio(void) {
+  const int16_t w = PBL_DISPLAY_WIDTH;
+  const int16_t h = PBL_DISPLAY_HEIGHT;
+
+  // An app of the display's size or shape fills it
+  prv_assert_scaled_app_frame(GSize(w, h), GRect(0, 0, w, h));
+  prv_assert_scaled_app_frame(GSize(w / 2, h / 2), GRect(0, 0, w, h));
+
+  // A wider one has bars above and below
+  prv_assert_scaled_app_frame(GSize(w / 2, h / 4), GRect(0, h / 4, w, h / 2));
+
+  // A higher one has bars beside it
+  prv_assert_scaled_app_frame(GSize(w / 4, h / 2), GRect(w / 4, 0, w / 2, h));
+
+#if defined(CONFIG_PLATFORM_EMERY) || defined(CONFIG_PLATFORM_GABBRO)
+  // On Emery and Gabbro the legacy sizes fill the display, as they always have
+  prv_assert_scaled_app_frame(GSize(LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS), GRect(0, 0, w, h));
+  prv_assert_scaled_app_frame(GSize(LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS), GRect(0, 0, w, h));
+#else
+#error "Test the frame of a legacy app on this platform"
+#endif
+
+  // Nothing to scale
+  prv_assert_scaled_app_frame(GSizeZero, GRect(0, 0, w, h));
+}

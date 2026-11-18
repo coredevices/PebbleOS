@@ -6,3 +6,7 @@
 
 PBL_WEAK void compositor_transition(const CompositorTransition *type) {
 }
+
+PBL_WEAK GRect compositor_get_scaled_app_frame(GSize app_size) {
+  return GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+}
