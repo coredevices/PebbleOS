@@ -33,9 +33,12 @@ struct pbl_ram_ops {
    * Returns 0 or a negative errno.
    */
   int (*init)(const struct pbl_ram *ram);
-  /** Power the memory on. Returns 0 or a negative errno. */
+  /** Optional. Power the memory on. Returns 0 or a negative errno. */
   int (*power_on)(const struct pbl_ram *ram);
-  /** Power the memory off, losing its contents. Runs with interrupts disabled. */
+  /**
+   * Optional, with @c power_on. Power the memory off, losing its contents. Runs with interrupts
+   * disabled.
+   */
   void (*power_off)(const struct pbl_ram *ram);
   /**
    * Optional. Put the memory in a state that keeps its contents with less power. Runs in deep

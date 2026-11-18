@@ -33,7 +33,9 @@ int pbl_ram_get(const struct pbl_ram *ram) {
   pbl_mutex_lock(&st->lock, PBL_FOREVER);
   if (!st->on) {
     st->busy = true;
-    ret = ram->ops->power_on(ram);
+    if (ram->ops->power_on != nullptr) {
+      ret = ram->ops->power_on(ram);
+    }
     if (ret == 0) {
       st->on = true;
       st->power_cycles++;
@@ -74,7 +76,9 @@ void pbl_ram_suspend(const struct pbl_ram *ram) {
 #endif
 
   if (st->users == 0U) {
-    ram->ops->power_off(ram);
+    if (ram->ops->power_off != nullptr) {
+      ram->ops->power_off(ram);
+    }
     st->on = false;
     return;
   }
