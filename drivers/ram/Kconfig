@@ -27,4 +27,11 @@ config RAM_HYPERRAM
       Support for HyperRAM, PSRAM with a HyperBus interface, on a
       HyperBus controller.
 
+config RAM_QEMU
+    bool "QEMU PSRAM"
+    default DT_HAS_QEMU_PEBBLE_PSRAM_ENABLED
+    depends on SOC_QEMU_PEBBLE
+    help
+      Support for the PSRAM of the QEMU Pebble machines.
+
 endif # RAM
