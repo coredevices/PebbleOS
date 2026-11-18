@@ -19,4 +19,6 @@ args:
   - prop: regulator-max-microvolt
     default: 0
   - flag: nordic,ldo-mode
+  - prop: regulator-enable-ramp-delay
+    default: 0
   - flag: regulator-always-on

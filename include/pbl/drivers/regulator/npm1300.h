@@ -52,13 +52,16 @@ extern const struct pbl_regulator_ops pbl_npm1300_regulator_ops;
  * @param _rail Rail, an @ref pbl_npm1300_rail.
  * @param _voltage_uv Output voltage in uV.
  * @param _ldo LDSW rails only: run as an LDO.
+ * @param _enable_time_us Time from switching on until the rail is up, in microseconds.
  * @param _always_on Switched on at init and never off.
  */
-#define PBL_NPM1300_REGULATOR_DEFINE(sym, _name, _pmic, _rail, _voltage_uv, _ldo, _always_on)     \
-  PBL_REGULATOR_STATE_DEFINE(sym);                                                                \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_npm1300_regulator, struct pbl_regulator, reg) {             \
-    .reg = PBL_REGULATOR_INIT(sym, _name, &(_pmic)->dev, &pbl_npm1300_regulator_ops, _always_on), \
-    .rail = (_rail), .voltage_mv = (_voltage_uv) / 1000, .ldo = (_ldo),                           \
+#define PBL_NPM1300_REGULATOR_DEFINE(sym, _name, _pmic, _rail, _voltage_uv, _ldo, _enable_time_us, \
+                                     _always_on)                                                   \
+  PBL_REGULATOR_STATE_DEFINE(sym);                                                                 \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_npm1300_regulator, struct pbl_regulator, reg) {              \
+    .reg = PBL_REGULATOR_INIT(sym, _name, &(_pmic)->dev, &pbl_npm1300_regulator_ops,               \
+                              _enable_time_us, _always_on),                                        \
+    .rail = (_rail), .voltage_mv = (_voltage_uv) / 1000, .ldo = (_ldo),                            \
   }
 
 /** @} */

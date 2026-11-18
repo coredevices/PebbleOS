@@ -15,4 +15,6 @@ args:
     up: true
   - id: true
   - flag: regulator-pull-down
+  - prop: regulator-enable-ramp-delay
+    default: 0
   - flag: regulator-always-on

@@ -49,13 +49,16 @@ extern const struct pbl_regulator_ops pbl_sf32lb52_pmuc_regulator_ops;
  * @param _base PMUC base address.
  * @param _id Which one, a @ref pbl_sf32lb52_pmuc_regulator_id.
  * @param _pull_down Pull the output down while disabled.
+ * @param _enable_time_us Time from switching on until the rail is up, in microseconds.
  * @param _always_on Switched on at init and never off.
  */
-#define PBL_SF32LB52_PMUC_REGULATOR_DEFINE(sym, _name, _base, _id, _pull_down, _always_on)        \
-  PBL_REGULATOR_STATE_DEFINE(sym);                                                                \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_sf32lb52_pmuc_regulator, struct pbl_regulator, reg) {       \
-    .reg = PBL_REGULATOR_INIT(sym, _name, nullptr, &pbl_sf32lb52_pmuc_regulator_ops, _always_on), \
-    .base = (_base), .id = (_id), .pull_down = (_pull_down),                                      \
+#define PBL_SF32LB52_PMUC_REGULATOR_DEFINE(sym, _name, _base, _id, _pull_down, _enable_time_us, \
+                                           _always_on)                                          \
+  PBL_REGULATOR_STATE_DEFINE(sym);                                                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_sf32lb52_pmuc_regulator, struct pbl_regulator, reg) {     \
+    .reg = PBL_REGULATOR_INIT(sym, _name, nullptr, &pbl_sf32lb52_pmuc_regulator_ops,            \
+                              _enable_time_us, _always_on),                                     \
+    .base = (_base), .id = (_id), .pull_down = (_pull_down),                                    \
   }
 
 /** @} */

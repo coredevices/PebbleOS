@@ -5,7 +5,6 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/regulator/fixed.h>
-#include <pbl/kernel/delay.h>
 #include <pbl/util/misc.h>
 
 static const struct pbl_regulator_fixed *prv_fixed(const struct pbl_regulator *reg) {
@@ -34,19 +33,7 @@ static int prv_init(const struct pbl_regulator *reg) {
 }
 
 static int prv_enable(const struct pbl_regulator *reg) {
-  const struct pbl_regulator_fixed *fixed = prv_fixed(reg);
-  int ret;
-
-  ret = prv_set(fixed, true);
-  if (ret != 0) {
-    return ret;
-  }
-
-  if (fixed->startup_delay_us != 0U) {
-    pbl_busy_wait_us(fixed->startup_delay_us);
-  }
-
-  return 0;
+  return prv_set(prv_fixed(reg), true);
 }
 
 static int prv_disable(const struct pbl_regulator *reg) {
