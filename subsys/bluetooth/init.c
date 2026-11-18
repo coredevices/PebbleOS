@@ -4,6 +4,8 @@
 #include "services/services.h"
 #include "store.h"
 
+#include <errno.h>
+
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/assert.h>
@@ -75,6 +77,9 @@ static int prv_ensure_addr(void) {
   int rc;
 
   rc = pbl_bt_id_addr_get(&addr, &type);
+  if (rc == -ENOENT) {
+    return ble_hs_util_ensure_addr(0);
+  }
   if (rc != 0) {
     PBL_LOG_ERR("No identity address (%d)", rc);
     return BLE_HS_ENOADDR;

@@ -3,6 +3,10 @@
 
 if SOC_POSIX
 
+choice NIMBLE_ID_ADDR_SOURCE
+    default NIMBLE_ID_ADDR_POSIX
+endchoice
+
 # Emulated external flash, backed by a file on the host.
 config FLASH_BASE
     default 0x00000000
