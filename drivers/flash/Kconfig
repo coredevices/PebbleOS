@@ -32,6 +32,7 @@ config FLASH_SPI_NOR
     default DT_HAS_JEDEC_SPI_NOR_ENABLED
     select SPI_MEM
     select FLASH_OTP
+    select REGULATOR
     help
       Support for a JEDEC NOR flash on a SPI memory controller, of the
       part the board names, described by its SFDP tables and the part
