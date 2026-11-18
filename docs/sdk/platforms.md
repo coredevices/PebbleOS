@@ -208,3 +208,34 @@ predates this: on Emery and Gabbro a scaled app of a legacy size (144x168,
 or 180x180 on Gabbro) fills the display, as it always has. No other
 platform does that. A round display only shows the sizes that have a row
 table: its own and 180x180.
+
+## Which binary a watch runs
+
+Whatever installs a pbw, the phone app or `pebble-tool`, picks one of its
+binaries for the watch. It compares what the watch says of its platform
+with what each directory's manifest says, by one rule.
+
+A binary **fits** a watch when
+
+- it is of the watch's ABI,
+- its display has the watch's shape and is no larger in either direction,
+- it has no colour if the watch has none, and
+- it needs no more app memory than the watch gives.
+
+Features are not part of the rule: the firmware answers for hardware that
+is missing. Among the binaries that fit, the best is, in this order,
+
+1. that of the watch's own platform,
+2. one for the very display of the watch,
+3. one for the largest display,
+4. one of the watch's colour depth,
+5. that of the newest platform, where a platform the installer has not
+   heard of is newer than those it has, and
+6. the first by name.
+
+Watches of the frozen platforms are not asked: they take the directories
+they always took.
+
+`tools/tests/platform_fit_cases.json` is a table of watches, binaries and
+the order they come out in, which every implementation of the rule is held
+to. `tools/platform_fit.py` is one, there to check the table.
