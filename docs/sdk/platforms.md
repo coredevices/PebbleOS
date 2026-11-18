@@ -210,4 +210,6 @@ they always took.
 
 `tools/tests/platform_fit_cases.json` is a table of watches, binaries and
 the order they come out in, which every implementation of the rule is held
-to. `tools/platform_fit.py` is one, there to check the table.
+to. `tools/platform_fit.py` is one, there to check the table. The native
+simulator, which installs a pbw itself, goes by directory names in the same
+order.

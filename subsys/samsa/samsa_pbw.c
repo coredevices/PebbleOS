@@ -34,17 +34,28 @@
 PBL_LOG_MODULE_DECLARE(samsa, CONFIG_SAMSA_LOG_LEVEL);
 
 // The platform directories of a .pbw to take an app from, best first: the
-// platform's own, then that of the frozen platform of its shape and colour
-// depth, then the root, where 2.x apps are.
+// platform's own, then those of the platforms whose apps fit this one, as
+// docs/sdk/platforms.md ranks them, then the root, where 2.x apps are. By
+// name: a directory is not read for what it says of its platform.
 static const char *const s_platforms[] = {
   CONFIG_PLATFORM_NAME "/",
 #if defined(CONFIG_PLATFORM_ROUND)
+#if CONFIG_PLATFORM_DISPLAY_WIDTH >= 260 && CONFIG_PLATFORM_DISPLAY_HEIGHT >= 260 && \
+    CONFIG_PLATFORM_MAX_APP_MEMORY_SIZE >= 131072
+  "gabbro/",
+#endif
   "chalk/",
-#elif defined(CONFIG_PLATFORM_COLOR)
-  "basalt/",
-  "",
 #else
+#if defined(CONFIG_PLATFORM_COLOR)
+#if CONFIG_PLATFORM_DISPLAY_WIDTH >= 200 && CONFIG_PLATFORM_DISPLAY_HEIGHT >= 228 && \
+    CONFIG_PLATFORM_MAX_APP_MEMORY_SIZE >= 131072
+  "emery/",
+#endif
+  "basalt/",
+#endif
+  "flint/",
   "diorite/",
+  "aplite/",
   "",
 #endif
 };
