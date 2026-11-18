@@ -58,11 +58,6 @@ typedef struct PBL_PACKED {
   unsigned value_changed : 1;
 } BtPersistCCCDData;
 
-typedef struct PBL_PACKED {
-  pbl_bt_cccd_id_t id;
-  BtPersistCCCDData data;
-} BtPersistCCCD;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Settings File
 
@@ -264,33 +259,6 @@ static pbl_bt_bonding_id_t prv_get_free_key() {
 cleanup:
   prv_unlock();
   return free_key;
-}
-
-//! Get the next available CCCDID
-static pbl_bt_cccd_id_t prv_get_free_cccd() {
-  pbl_bt_cccd_id_t free_cccd = PBL_BT_CCCD_ID_INVALID;
-
-  prv_lock();
-  {
-    struct pbl_settings_file fd;
-    status_t rv = status_from_errno(
-        pbl_settings_open(&fd, BT_PERSISTENT_STORAGE_FILE_NAME, BT_PERSISTENT_STORAGE_FILE_SIZE));
-    if (rv) {
-      goto cleanup;
-    }
-
-    for (pbl_bt_cccd_id_t id = 0U; id < PBL_BT_CCCD_ID_INVALID; id++) {
-      if (!pbl_settings_exists(&fd, &id, sizeof(id))) {
-        free_cccd = id;
-        break;
-      }
-    }
-
-    pbl_settings_close(&fd);
-  }
-cleanup:
-  prv_unlock();
-  return free_cccd;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -755,15 +723,6 @@ status_t prv_delete_all_cccd_for_addr(const struct pbl_bt_device_internal *dev) 
         }
 
         if (bt_device_internal_equal(dev, &stored_data.peer)) {
-          struct pbl_bt_cccd cccd_to_delete = {
-            .peer = *dev,
-            .chr_val_handle = stored_data.chr_val_handle,
-            .flags = stored_data.flags,
-            .value_changed = stored_data.value_changed,
-          };
-
-          pbl_bt_handle_host_removed_cccd(&cccd_to_delete);
-
           rv = status_from_errno(pbl_settings_delete(&fd, &id, sizeof(id)));
           if (rv) {
             goto cleanup;
@@ -986,14 +945,6 @@ typedef struct {
   void *cb_data;
 } ForEachBLEPairingInternalData;
 
-typedef void (*BtPersistCCCDDBEachBLEInternal)(pbl_bt_cccd_id_t key, BtPersistCCCDData *stored_data,
-                                               void *ctx);
-
-typedef struct {
-  BtPersistCCCDDBEachBLEInternal cb;
-  void *cb_data;
-} ForEachBLECCCDInternalData;
-
 typedef struct {
   BtPersistBondingDBEachBLE cb;
   void *cb_data;
@@ -1029,26 +980,6 @@ static bool prv_ble_pairing_internal_for_each_itr(struct pbl_settings_file *file
   return true;
 }
 
-static bool prv_ble_cccd_internal_for_each_itr(struct pbl_settings_file *file,
-                                               struct pbl_settings_record *info, void *context) {
-  // check entry is valid
-  if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_cccd_id_t)) {
-    return true; // continue iterating
-  }
-
-  ForEachBLECCCDInternalData *internal_itr_data = (ForEachBLECCCDInternalData *)context;
-
-  pbl_bt_cccd_id_t key;
-  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
-
-  BtPersistCCCDData stored_data;
-  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
-
-  internal_itr_data->cb(key, &stored_data, internal_itr_data->cb_data);
-
-  return true;
-}
-
 void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, void *context) {
   ForEachBLEPairingData itr_data = {
     .cb = cb,
@@ -1071,16 +1002,73 @@ static void prv_register_bondings_for_each_ble_cb(pbl_bt_bonding_id_t key,
   pbl_bt_handle_host_added_bonding(&bonding);
 }
 
-static void prv_register_cccd_for_each_ble_cb(pbl_bt_cccd_id_t key, BtPersistCCCDData *stored_data,
-                                              void *context) {
-  struct pbl_bt_cccd cccd = {
-    .peer = stored_data->peer,
-    .chr_val_handle = stored_data->chr_val_handle,
-    .flags = stored_data->flags,
-    .value_changed = stored_data->value_changed,
-  };
+#define CCCD_MIGRATE_BATCH 16
 
-  pbl_bt_handle_host_added_cccd(&cccd);
+typedef struct {
+  pbl_bt_cccd_id_t ids[CCCD_MIGRATE_BATCH];
+  uint8_t count;
+  uint16_t skip;
+} CollectCCCDItrData;
+
+static bool prv_collect_cccds_itr(struct pbl_settings_file *file, struct pbl_settings_record *info,
+                                  void *context) {
+  CollectCCCDItrData *itr_data = context;
+
+  if (info->val_len != sizeof(BtPersistCCCDData) || info->key_len != sizeof(pbl_bt_cccd_id_t)) {
+    return true;
+  }
+  if (itr_data->skip > 0U) {
+    itr_data->skip--;
+    return true;
+  }
+
+  pbl_settings_read_key(file, &itr_data->ids[itr_data->count++], info->key_len);
+
+  return itr_data->count < CCCD_MIGRATE_BATCH;
+}
+
+//! The Bluetooth stack keeps the CCCDs now. Hand it those stored here before, and drop the ones
+//! it took and the ones of peers it has no bonding for, which are of no use. The ones it could
+//! not take stay, for another try.
+static void prv_migrate_cccds(void) {
+  CollectCCCDItrData itr_data;
+  uint16_t kept = 0U;
+
+  do {
+    itr_data.count = 0U;
+    itr_data.skip = kept;
+    prv_file_each(prv_collect_cccds_itr, &itr_data);
+
+    for (uint8_t i = 0U; i < itr_data.count; i++) {
+      BtPersistCCCDData stored_data;
+      int ret = -ENOENT;
+
+      if (prv_file_get(&itr_data.ids[i], sizeof(itr_data.ids[i]), &stored_data,
+                       sizeof(stored_data))) {
+        struct pbl_bt_cccd cccd = {
+          .peer = stored_data.peer,
+          .chr_val_handle = stored_data.chr_val_handle,
+          .flags = stored_data.flags,
+          .value_changed = stored_data.value_changed,
+        };
+        ret = pbl_bt_handle_host_added_cccd(&cccd);
+      }
+
+      if (ret != 0 && ret != -ENOENT) {
+        kept++;
+        continue;
+      }
+
+      if (prv_file_set(&itr_data.ids[i], sizeof(itr_data.ids[i]), nullptr, 0) ==
+          GapBondingFileSetFail) {
+        return;
+      }
+    }
+  } while (itr_data.count == CCCD_MIGRATE_BATCH);
+
+  if (kept > 0U) {
+    PBL_LOG_WRN("%u CCCDs were not taken by the stack", (unsigned int)kept);
+  }
 }
 
 void bt_persistent_storage_register_existing_ble_bondings(void) {
@@ -1089,101 +1077,7 @@ void bt_persistent_storage_register_existing_ble_bondings(void) {
   };
   prv_file_each(prv_ble_pairing_internal_for_each_itr, &internal_itr_data_bonding);
 
-  ForEachBLECCCDInternalData internal_itr_data_cccd = {
-    .cb = prv_register_cccd_for_each_ble_cb,
-  };
-  prv_file_each(prv_ble_cccd_internal_for_each_itr, &internal_itr_data_cccd);
-}
-
-typedef struct {
-  const struct pbl_bt_device_internal *peer;
-  uint16_t chr_val_handle;
-  pbl_bt_cccd_id_t id;
-} FindCCCDItrData;
-
-static bool prv_find_cccd_itr(struct pbl_settings_file *file, struct pbl_settings_record *info,
-                              void *context) {
-  if (info->val_len == 0 || info->key_len != sizeof(pbl_bt_cccd_id_t)) {
-    return true; // continue iterating
-  }
-
-  FindCCCDItrData *itr_data = (FindCCCDItrData *)context;
-
-  pbl_bt_cccd_id_t key;
-  pbl_settings_read_key(file, (uint8_t *)&key, info->key_len);
-
-  BtPersistCCCDData stored_data;
-  pbl_settings_read_val(file, (uint8_t *)&stored_data, MIN(info->val_len, sizeof(stored_data)));
-
-  if (bt_device_internal_equal(itr_data->peer, &stored_data.peer) &&
-      stored_data.chr_val_handle == itr_data->chr_val_handle) {
-    itr_data->id = key;
-    return false; // stop iterating
-  }
-
-  return true;
-}
-
-pbl_bt_cccd_id_t bt_persistent_storage_store_cccd(const struct pbl_bt_cccd *cccd) {
-  PBL_ASSERTN(cccd != nullptr);
-
-  FindCCCDItrData itr_data = {
-    .peer = &cccd->peer,
-    .chr_val_handle = cccd->chr_val_handle,
-    .id = PBL_BT_CCCD_ID_INVALID,
-  };
-  prv_file_each(prv_find_cccd_itr, &itr_data);
-
-  pbl_bt_cccd_id_t cccd_id = itr_data.id;
-  if (cccd_id == PBL_BT_CCCD_ID_INVALID) {
-    cccd_id = prv_get_free_cccd();
-    if (cccd_id == PBL_BT_CCCD_ID_INVALID) {
-      return PBL_BT_CCCD_ID_INVALID;
-    }
-  }
-
-  BtPersistCCCDData stored_data = {
-    .peer = cccd->peer,
-    .chr_val_handle = cccd->chr_val_handle,
-    .flags = cccd->flags,
-    .value_changed = cccd->value_changed,
-  };
-
-  BtPersistCCCD stored_cccd = {
-    .id = cccd_id,
-    .data = stored_data,
-  };
-
-  GapBondingFileSetStatus status = prv_file_set(&stored_cccd.id, sizeof(stored_cccd.id),
-                                                &stored_cccd.data, sizeof(stored_cccd.data));
-  if (status == GapBondingFileSetFail) {
-    return PBL_BT_CCCD_ID_INVALID;
-  }
-
-  return cccd_id;
-}
-
-bool bt_persistent_storage_delete_cccd(const struct pbl_bt_device_internal *peer,
-                                       uint16_t chr_val_handle) {
-  pbl_bt_cccd_id_t cccd_id;
-
-  FindCCCDItrData itr_data = {
-    .peer = peer,
-    .chr_val_handle = chr_val_handle,
-    .id = PBL_BT_CCCD_ID_INVALID
-  };
-  prv_file_each(prv_find_cccd_itr, &itr_data);
-
-  if (itr_data.id == PBL_BT_CCCD_ID_INVALID) {
-    return false;
-  }
-
-  cccd_id = itr_data.id;
-  if (prv_file_set(&cccd_id, sizeof(cccd_id), nullptr, 0) == GapBondingFileSetFail) {
-    return false;
-  }
-
-  return true;
+  prv_migrate_cccds();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

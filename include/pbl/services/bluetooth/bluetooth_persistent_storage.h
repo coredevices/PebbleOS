@@ -173,24 +173,6 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
 void bt_persistent_storage_register_existing_ble_bondings(void);
 
 /**
- * @brief Store a CCCD, replacing the one for the same peer and characteristic.
- *
- * @param cccd CCCD to store.
- * @return CCCD ID, or @c PBL_BT_CCCD_ID_INVALID on failure.
- */
-pbl_bt_cccd_id_t bt_persistent_storage_store_cccd(const struct pbl_bt_cccd *cccd);
-
-/**
- * @brief Delete a stored CCCD.
- *
- * @param peer Peer identity address.
- * @param chr_val_handle Characteristic value handle.
- * @return True if found and deleted.
- */
-bool bt_persistent_storage_delete_cccd(const struct pbl_bt_device_internal *peer,
-                                       uint16_t chr_val_handle);
-
-/**
  * @brief Set the active gateway, the bonding that implements Pebble Protocol.
  *
  * On change, marks the watch unfaithful and clears the cached system capabilities.
