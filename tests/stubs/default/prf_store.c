@@ -26,3 +26,6 @@ PBL_WEAK void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *
 
 PBL_WEAK void pbl_bt_prf_store_wipe(void) {
 }
+
+PBL_WEAK void pbl_bt_prf_store_set_pairing_name(const char *name) {
+}

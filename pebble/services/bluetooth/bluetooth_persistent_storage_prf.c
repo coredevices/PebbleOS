@@ -31,76 +31,64 @@ static void prv_call_ble_bonding_change_handlers(pbl_bt_bonding_id_t bonding,
   bt_pairability_update_due_to_bonding_change();
 }
 
-static pbl_bt_bonding_id_t prv_bt_persistent_storage_store_ble_pairing(
-    const struct pbl_bt_sm_pairing_info *new_pairing_info, bool is_gateway, uint8_t flags,
-    const char *device_name, BtPersistBondingOp op) {
-  if (new_pairing_info && is_gateway) {
-    PBL_LOG_INFO("Storing BLE pairing: addr=" PBL_BT_ADDR_FMT " random=%u",
-                 PBL_BT_ADDR_XPLODE(new_pairing_info->identity.address),
-                 new_pairing_info->identity.is_random_address);
-    PBL_LOG_INFO("Storing BLE pairing: irk=%u remote_enc=%u local_enc=%u",
-                 new_pairing_info->is_remote_identity_info_valid,
-                 new_pairing_info->is_remote_encryption_info_valid,
-                 new_pairing_info->is_local_encryption_info_valid);
-    pbl_bt_prf_store_set_pairing(new_pairing_info, device_name, flags);
-    prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, op);
-    return BLE_BONDING_ID;
-  }
-
-  PBL_LOG_WRN("BLE pairing not stored (gateway=%u)", is_gateway);
-  return PBL_BT_BONDING_ID_INVALID;
-}
+// The Bluetooth stack keeps the pairing in the PRF store itself. Tracked here to tell a new
+// pairing from an update of the one there was.
+static struct pbl_bt_sm_pairing_info s_pairing_info;
+static bool s_has_pairing;
 
 pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
     const struct pbl_bt_sm_pairing_info *new_pairing_info, bool is_gateway, const char *device_name,
     uint8_t flags) {
-  // We only have one slot in PRF and all pairing info (except the device
-  // name) will arrive in one-shot so anytime this routine gets called it
-  // means we have 'added' a new pairing
+  BtPersistBondingOp op = BtPersistBondingOpDidAdd;
 
-  bool is_updating_existing = false;
-  struct pbl_bt_sm_pairing_info existing_pairing_info;
-  if (pbl_bt_prf_store_get_pairing(&existing_pairing_info, nullptr, nullptr)) {
-    if (sm_is_pairing_info_equal_identity(new_pairing_info, &existing_pairing_info)) {
-      // Treat re-pairing an existing device as an "update" instead of deletion+addition,
-      // because there is only one bonding ID that gets re-used, a deletion would otherwise cause a
-      // disconnection to happen.
+  if (!new_pairing_info || !is_gateway) {
+    PBL_LOG_WRN("BLE pairing not stored (gateway=%u)", is_gateway);
+    return PBL_BT_BONDING_ID_INVALID;
+  }
+
+  if (s_has_pairing) {
+    if (sm_is_pairing_info_equal_identity(new_pairing_info, &s_pairing_info)) {
+      // There is only one bonding ID: a deletion and an addition would disconnect.
       PBL_LOG_INFO("Re-pairing previously paired LE device");
-      is_updating_existing = true;
+      op = BtPersistBondingOpDidChange;
     } else {
-      // Since we only have one slot, this means we are about to delete what was
-      // already there so handle the deletion if a valid pairing was stored
       prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, BtPersistBondingOpWillDelete);
     }
   }
 
-  BtPersistBondingOp pairing_op =
-      is_updating_existing ? BtPersistBondingOpDidChange : BtPersistBondingOpDidAdd;
-  return (prv_bt_persistent_storage_store_ble_pairing(new_pairing_info, is_gateway, flags,
-                                                      device_name, pairing_op));
+  PBL_LOG_INFO("Storing BLE pairing: addr=" PBL_BT_ADDR_FMT " random=%u",
+               PBL_BT_ADDR_XPLODE(new_pairing_info->identity.address),
+               new_pairing_info->identity.is_random_address);
+
+  s_pairing_info = *new_pairing_info;
+  s_has_pairing = true;
+
+  if (device_name) {
+    pbl_bt_prf_store_set_pairing_name(device_name);
+  }
+
+  prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, op);
+
+  return BLE_BONDING_ID;
 }
 
 bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
                                                   const char *device_name) {
-  // A device name has come in, update the name of our currently paired device
-  struct pbl_bt_sm_pairing_info data = {};
   char existing_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
-  uint8_t flags = 0;
-  if (!pbl_bt_prf_store_get_pairing(&data, existing_name, &flags)) {
+
+  if (!pbl_bt_prf_store_get_pairing(nullptr, existing_name, nullptr)) {
     PBL_LOG_ERR("Tried to store device name, but pairing no longer around.");
     return false;
   }
 
   if (strncmp(existing_name, device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE) == 0) {
-    // Unchanged: skip the flash rewrite and bonding change handlers. Returning
-    // true means the caller may still emit a name-updated event; that's
-    // harmless (the stored name is correct).
     return true;
   }
-  // In PRF, only the gateway should get paired, so default to "true":
-  return (PBL_BT_BONDING_ID_INVALID !=
-          prv_bt_persistent_storage_store_ble_pairing(&data, true /* is_gateway */, flags,
-                                                      device_name, BtPersistBondingOpDidChange));
+
+  pbl_bt_prf_store_set_pairing_name(device_name);
+  prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, BtPersistBondingOpDidChange);
+
+  return true;
 }
 
 static void prv_remove_ble_bonding_from_backend(void) {
@@ -120,6 +108,7 @@ void bt_persistent_storage_delete_ble_pairing_by_id(pbl_bt_bonding_id_t bonding)
   PBL_LOG_INFO("Deleting stored BLE pairing");
   prv_remove_ble_bonding_from_backend();
   pbl_bt_prf_store_erase_pairing();
+  s_has_pairing = false;
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
 }
 
@@ -182,16 +171,8 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
   return;
 }
 
+// The Bluetooth stack loads the pairing from the PRF store itself.
 void bt_persistent_storage_register_existing_ble_bondings(void) {
-  struct pbl_bt_bonding bonding = {};
-  uint8_t flags;
-  if (!pbl_bt_prf_store_get_pairing(&bonding.pairing_info, nullptr, &flags)) {
-    PBL_LOG_INFO("No existing BLE bonding to register");
-    return;
-  }
-  bonding.is_gateway = true;
-  bonding.flags = flags;
-  pbl_bt_handle_host_added_bonding(&bonding);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +219,7 @@ void bt_persistent_storage_set_cached_system_capabilities(
 //! Common
 
 void bt_persistent_storage_init(void) {
+  s_has_pairing = pbl_bt_prf_store_get_pairing(&s_pairing_info, nullptr, nullptr);
 }
 
 void bt_persistent_storage_delete_all(void) {
