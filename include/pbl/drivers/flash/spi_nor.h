@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/nor.h>
+#include <pbl/drivers/regulator.h>
 #include <pbl/drivers/spi_mem.h>
 #include <pbl/util/size.h>
 
@@ -32,7 +33,7 @@
  * The user OTP area is made of the part's security registers, laid out in cells:
  *
  * @code{.c}
- * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi, &pbl_flash_nor_gd25q256e,
+ * PBL_FLASH_SPI_NOR_DEFINE(s_flash, "flash", &s_qspi, &pbl_flash_nor_gd25q256e, nullptr,
  *                          PBL_FLASH_OTP_CELL("serial-number", 0x20, 32));
  * @endcode
  * @{
@@ -68,6 +69,8 @@ struct pbl_flash_spi_nor {
   const struct pbl_spi_mem *bus;
   /** Part. */
   const struct pbl_flash_nor_part *part;
+  /** Supply, or NULL. */
+  const struct pbl_regulator *vcc;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -81,9 +84,10 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
  * @param _name Name.
  * @param _bus Controller, a struct pbl_spi_mem.
  * @param _part Part, a struct pbl_flash_nor_part.
+ * @param _vcc Supply, a struct pbl_regulator, or NULL.
  * @param ... OTP cells, from PBL_FLASH_OTP_CELL(), if any.
  */
-#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _part, ...)                          \
+#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _part, _vcc, ...)                    \
   PBL_FLASH_STATE_DEFINE(sym);                                                          \
   static struct pbl_flash_spi_nor_data sym##_data;                                      \
   __VA_OPT__(static const struct pbl_flash_otp_cell sym##_otp_cells[] = {__VA_ARGS__};) \
@@ -93,7 +97,7 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
   PBL_DEVICE_INSTANCE(sym, struct pbl_flash_spi_nor, struct pbl_flash, flash) {         \
     .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_flash_spi_nor_ops,  \
                             &sym##_data.geometry, &sym##_data.otp, &sym##_otp_layout),  \
-    .data = &sym##_data, .bus = (_bus), .part = (_part),                                \
+    .data = &sym##_data, .bus = (_bus), .part = (_part), .vcc = (_vcc),                 \
   }
 
 /** @} */

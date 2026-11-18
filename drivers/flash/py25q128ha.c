@@ -19,6 +19,7 @@ const struct pbl_flash_nor_part pbl_flash_nor_py25q128ha = {
   .otp = PBL_FLASH_NOR_OTP(1024U, 3U, 0x1000U, 0x1000U, 3U),
   .qe = PBL_FLASH_NOR_QE_SR2_BIT1,
   .sr1_bp_mask = 0x7CU,
+  .power_up_us = 2500U,
   .reset_ms = 1U,
   .suspend_us = 30U,
   .resume_us = 100U,

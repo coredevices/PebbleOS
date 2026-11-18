@@ -468,9 +468,10 @@ PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
       PBL_FLASH_OTP_CELL("soc-config-user", 0x0800U, 256U),                                      \
       PBL_FLASH_OTP_CELL("soc-config-cust", 0x1000U, 256U)
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, nullptr, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, nullptr, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, nullptr,
+                         OTP_CELLS);
 
 const struct pbl_flash *const FLASH = &s_nor_q;
 

@@ -21,6 +21,7 @@ pbl_clar_test(test_spi_nor
     drivers/flash/otp.c
     drivers/flash/spi_nor.c
     drivers/otp/otp_flash.c
+    drivers/regulator/regulator.c
     drivers/spi_mem/spi_mem.c
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0

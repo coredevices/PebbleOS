@@ -777,6 +777,14 @@ static int prv_init(const struct pbl_flash *flash) {
     return -ENODEV;
   }
 
+  if (nor->vcc != nullptr) {
+    ret = pbl_regulator_enable(nor->vcc);
+    if (ret != 0) {
+      return ret;
+    }
+    pbl_sleep_us(nor->part->power_up_us);
+  }
+
   // Abort any program or erase left over from before the reset, unless the CPU runs from the part
   if (!pbl_spi_mem_is_xip(nor->bus)) {
     ret = prv_cmd(nor, PBL_FLASH_NOR_CMD_RSTEN);
