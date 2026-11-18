@@ -621,6 +621,12 @@ static int prv_dll_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
     return 0;
   }
 
+  // Left running at this rate by an earlier image
+  if ((prv_read(ctrl, offset) & (HPSYS_RCC_DLLCR_READY | HPSYS_RCC_DLLCR_STG_MASK)) ==
+      (HPSYS_RCC_DLLCR_READY | PBL_FIELD_PREP(HPSYS_RCC_DLLCR_STG_MASK, stg))) {
+    return 0;
+  }
+
   if (prv_dll_feeds_peripheral(ctrl, id)) {
     return -EBUSY;
   }
