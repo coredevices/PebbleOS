@@ -891,36 +891,7 @@ void app_manager_get_framebuffer_size(GSize *size) {
     return;
   }
 
-  // Platform matches current platform
-  const PlatformType sdk_platform =
-      process_metadata_get_app_sdk_platform(s_app_task_context.app_md);
-
-  if (sdk_platform == PBL_PLATFORM_TYPE_CURRENT) {
-    *size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
-    return;
-  }
-
-  // We cannot use the SDK type for this compatibility check but there's
-  // also no easy way to get the resolutions per platform.
-  // so we re-use the suboptimal defines from each display_<model>.h
-  switch (sdk_platform) {
-    case PlatformTypeAplite:
-      *size = GSize(LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS);
-      return;
-    case PlatformTypeBasalt:
-    case PlatformTypeChalk:
-      // yes, this is misleading, e.g. on Spalding, these defines are always 180x180
-      // oh dear...
-      *size = GSize(LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS);
-      return;
-    case PlatformTypeDiorite:
-    case PlatformTypeEmery:
-    case PlatformTypeFlint:
-    case PlatformTypeGabbro:
-      *size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
-      return;
-  }
-  pbl_panic();
+  *size = process_metadata_get_app_framebuffer_size(s_app_task_context.app_md);
 }
 
 bool app_manager_is_app_supported(const PebbleProcessMd *md) {

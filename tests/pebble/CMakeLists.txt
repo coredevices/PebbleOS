@@ -182,7 +182,7 @@ pbl_clar_test(test_pebble_process_md
   SOURCES
     pebble/process_management/pebble_process_info.c
     pebble/process_management/pebble_process_md.c
-  PLATFORMS emery gabbro
+  PLATFORMS emery flint gabbro
 )
 
 pbl_clar_test(test_phone_formatting
