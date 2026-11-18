@@ -53,23 +53,6 @@ config NIMBLE_HCI_THREAD_PRIO
     depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART
     default 3
 
-choice
-    prompt "SF32LB HCI trace"
-    default NIMBLE_HCI_SF32LB_TRACE_NONE
-    depends on NIMBLE_HCI_SF32LB
-    help
-      Trace mode for the SF32LB HCI transport.
-
-config NIMBLE_HCI_SF32LB_TRACE_NONE
-    bool "Disabled"
-
-config NIMBLE_HCI_SF32LB_TRACE_LOG
-    bool "Log"
-    help
-      Emit human-readable HCI trace lines through the standard logger.
-
-endchoice
-
 config NIMBLE_DRIVER_NRF5X
     bool
     select HAL_NORDIC

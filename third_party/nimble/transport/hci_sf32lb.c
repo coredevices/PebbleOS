@@ -36,9 +36,6 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 #define HCI_WRITE_TIMEOUT_MS 10U
 
-#define H4TL_PACKET_HOST 0x61
-#define H4TL_PACKET_CTRL 0x62
-
 #define BLE_HCI_EXT_SF32LB52_BLE_READY 0xFC11U
 
 // Controller NVDS, read by the LCPU ROM on boot, in its SRAM region
@@ -148,50 +145,6 @@ static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
   .acl = prv_alloc_acl_from_ll,
   .evt = prv_alloc_evt,
 };
-
-#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
-#define MAX_HCI_PKT_SIZE 1024
-static uint8_t s_hci_buf[MAX_HCI_PKT_SIZE];
-#endif
-
-#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
-void prv_hci_trace(uint8_t type, const uint8_t *data, uint16_t len, uint8_t h4tl_packet) {
-  const char *type_str;
-
-  switch (type) {
-    case HCI_H4_CMD:
-      type_str = "CMD";
-      break;
-    case HCI_H4_ACL:
-      type_str = "ACL";
-      break;
-    case HCI_H4_EVT:
-      type_str = "EVT";
-      break;
-    case HCI_H4_ISO:
-      type_str = "ISO";
-      break;
-    default:
-      type_str = "UKN";
-      break;
-  }
-
-  PBL_LOG_DBG("%s, %s %" PRIu16, type_str, (h4tl_packet == H4TL_PACKET_HOST) ? "TX" : "RX", len);
-  PBL_LOG_HEXDUMP_DBG(data, len);
-}
-#else
-#define prv_hci_trace(type, data, len, h4tl_packet)
-#endif
-
-#if defined(NIMBLE_HCI_SF32LB_TRACE_LOG)
-void prv_hci_trace_mbuf(uint8_t type, struct os_mbuf *om, uint8_t h4tl_packet) {
-  PBL_ASSERTN(os_mbuf_len(om) < MAX_HCI_PKT_SIZE);
-  os_mbuf_copydata(om, 0, os_mbuf_len(om), s_hci_buf);
-  prv_hci_trace(type, s_hci_buf, os_mbuf_len(om), h4tl_packet);
-}
-#else
-#define prv_hci_trace_mbuf(type, om, h4tl_packet)
-#endif
 
 static inline volatile struct ring *prv_tx(void) {
   return (volatile struct ring *)LCPU->mem.base;
@@ -390,13 +343,8 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
         }
       }
 
-      prv_hci_trace(pkt_type, data, ev->length + sizeof(*ev), H4TL_PACKET_CTRL);
-
       return ble_transport_to_hs_evt(data);
     case HCI_H4_ACL:
-      prv_hci_trace(pkt_type, OS_MBUF_DATA((struct os_mbuf *)data, uint8_t *),
-                    OS_MBUF_PKTLEN((struct os_mbuf *)data), H4TL_PACKET_CTRL);
-
       return ble_transport_to_hs_acl(data);
     default:
       pbl_panic();
@@ -544,8 +492,6 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
   uint8_t h4_cmd = HCI_H4_CMD;
   int ret;
 
-  prv_hci_trace(HCI_H4_CMD, (uint8_t *)cmd, sizeof(*cmd) + cmd->length, H4TL_PACKET_HOST);
-
   ret = prv_write(&h4_cmd, 1U);
   if (ret == 0) {
     ret = prv_write(cmd, sizeof(*cmd) + cmd->length);
@@ -564,8 +510,6 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
 int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   int ret;
 
-  prv_hci_trace_mbuf(HCI_H4_ACL, om, H4TL_PACKET_HOST);
-
   ret = prv_write_mbuf(HCI_H4_ACL, om);
   os_mbuf_free_chain(om);
 
@@ -579,8 +523,6 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
 
 int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   int ret;
-
-  prv_hci_trace_mbuf(HCI_H4_ISO, om, H4TL_PACKET_HOST);
 
   ret = prv_write_mbuf(HCI_H4_ISO, om);
   os_mbuf_free_chain(om);
