@@ -153,6 +153,14 @@ def pytest_addoption(parser):
         "hci_uart dongle (for QEMU, any -serial spec)",
     )
     group.addoption(
+        "--bt-addr",
+        metavar="ADDRESS",
+        help="Random static Bluetooth address an emulator or native build "
+        "uses, e.g. C0:00:00:00:00:01, to keep its identity across runs with "
+        "a controller that has no address of its own (default: its "
+        "controller's)",
+    )
+    group.addoption(
         "--ble-controller",
         metavar="TRANSPORT",
         help="Controller the phone uses: the serial port of an H4 controller, "

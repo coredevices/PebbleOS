@@ -116,6 +116,10 @@ class QemuAdapter(DeviceAdapter):
         else:
             machine_args = ["-machine", machine]
 
+        bt_addr = self._bt_addr("CONFIG_NIMBLE_ID_ADDR_QEMU")
+        if bt_addr:
+            machine_args += ["-global", f"pebble-sysctrl.bt-addr={bt_addr}"]
+
         return [
             self._qemu(),
             "-rtc", f"base={self.config.qemu_rtc or 'localtime'}",

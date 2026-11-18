@@ -183,7 +183,10 @@ pbl itest --bt-hci /dev/cu.usbmodem1101 --ble-controller /dev/cu.usbmodem1201
 ```
 
 The watch's software controller has a fixed public address, so the watch
-keeps its identity across resets.
+keeps its identity across resets. A dongle may have none, and the watch then
+takes a random address on every boot: `--bt-addr ADDRESS` gives it a random
+static one (its two top bits set) for the whole run, e.g.
+`--bt-addr C0:00:00:00:00:01`.
 
 Tests that need a phone take the `phones` fixture: `phones()` makes the
 setup's phone, and `connect()` pairs and opens the Pebble protocol session

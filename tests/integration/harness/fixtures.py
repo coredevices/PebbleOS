@@ -112,6 +112,7 @@ def device_object(request, build, results_dir, lab_setup, lab_locks, supply):
             flash_command=config.getoption("flash_command"),
             qemu_rtc=config.getoption("qemu_rtc"),
             bt_hci=lab_setup.bt_hci,
+            bt_addr=config.getoption("bt_addr"),
             ble_controller=lab_setup.phone.controller if lab_setup.phone else None,
             power_supply=supply,
             main_build=Build(main_build) if main_build else None,
