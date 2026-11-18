@@ -1,0 +1,8 @@
+description: The render demo of LVGL, a scene per drawing primitive
+expect:
+  - 'lvgl: render on \d+x\d+'
+  - 'lvgl: fill'
+  - 'lvgl: blend_mode'
+  - 'Sample done'
+timeout: 120
+roles: [display]

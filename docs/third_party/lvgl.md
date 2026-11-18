@@ -116,6 +116,12 @@ Memory
   unless set.
 
 The samples under `samples/third_party/lvgl` show it in use:
-{doc}`../samples/third_party/lvgl/hello_world`,
-{doc}`../samples/third_party/lvgl/input` and
-{doc}`../samples/third_party/lvgl/music`.
+{doc}`../samples/third_party/lvgl/hello_world` and
+{doc}`../samples/third_party/lvgl/input` with as little of LVGL as they
+need, and the demos that come with it:
+{doc}`../samples/third_party/lvgl/benchmark`,
+{doc}`../samples/third_party/lvgl/keypad_encoder`,
+{doc}`../samples/third_party/lvgl/music`,
+{doc}`../samples/third_party/lvgl/render`,
+{doc}`../samples/third_party/lvgl/stress` and
+{doc}`../samples/third_party/lvgl/widgets`.
