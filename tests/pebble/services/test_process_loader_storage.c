@@ -141,6 +141,40 @@ static void prv_build_wide_image(void) {
   prv_set_crc();
 }
 
+//! Where the build ID note and the platform info sit in an image
+#define BUILD_ID_NOTE_OFFSET 0x84
+#define PLATFORM_INFO_OFFSET 0xa8
+
+static void prv_set_build_id(const uint8_t *build_id) {
+  ElfExternalNote *note = (ElfExternalNote *)&s_image[BUILD_ID_NOTE_OFFSET];
+  note->name_length = BUILD_ID_NAME_EXPECTED_LEN;
+  note->data_length = BUILD_ID_EXPECTED_LEN;
+  note->type = 3;
+  memcpy(note->data, "GNU", BUILD_ID_NAME_EXPECTED_LEN);
+  memcpy(note->data + BUILD_ID_NAME_EXPECTED_LEN, build_id, BUILD_ID_EXPECTED_LEN);
+}
+
+static const PebblePlatformInfo s_platform_info = {
+  .version = PROCESS_PLATFORM_INFO_VERSION,
+  .length = sizeof(PebblePlatformInfo),
+  .abi = PLATFORM_ABI_ARMV7M,
+  .display_shape = PLATFORM_DISPLAY_SHAPE_RECT,
+  .display_width = 200,
+  .display_height = 228,
+  .features = PLATFORM_FEATURE_MICROPHONE | PLATFORM_FEATURE_TOUCH,
+  .app_memory_kib = 128,
+  .display_color_depth = PLATFORM_DISPLAY_COLOR_DEPTH_64_COLORS,
+};
+
+//! A wide image with a build ID and a platform info
+static void prv_build_image_with_platform_info(const PebblePlatformInfo *platform_info) {
+  const uint8_t build_id[BUILD_ID_EXPECTED_LEN] = {};
+  prv_build_wide_image();
+  prv_set_build_id(build_id);
+  prv_header()->flags |= PROCESS_INFO_HAS_PLATFORM_INFO;
+  memcpy(&s_image[PLATFORM_INFO_OFFSET], platform_info, sizeof(*platform_info));
+}
+
 static void prv_load_fixture(const char *name) {
   char path[256];
   snprintf(path, sizeof(path), "%s/%s", CLAR_FIXTURE_PATH, name);
@@ -163,7 +197,7 @@ static void *prv_load_from_resource(PebbleProcessMdResource *md, MemorySegment *
 }
 
 static void *prv_load_from_flash(PebbleProcessMdFlash *md, MemorySegment *segment) {
-  process_metadata_init_with_flash_header(md, prv_header(), 1, PebbleTask_App, nullptr);
+  process_metadata_init_with_flash_header(md, prv_header(), 1, PebbleTask_App, nullptr, nullptr);
   *segment = (MemorySegment){s_ram, s_ram + sizeof(s_ram)};
   return process_loader_load(&md->common, PebbleTask_App, segment);
 }
@@ -185,7 +219,7 @@ void test_process_loader_storage__app_info_accepts_an_image_over_64k(void) {
 
   PebbleProcessInfo info;
   const AppStorageGetAppInfoResult result =
-      app_storage_get_process_info(&info, nullptr, 1, PebbleTask_App);
+      app_storage_get_process_info(&info, nullptr, nullptr, 1, PebbleTask_App);
 
   cl_assert_equal_i(result, GET_APP_INFO_SUCCESS);
   cl_assert_equal_i(process_info_get_virtual_size(&info), WIDE_VIRTUAL_SIZE);
@@ -273,7 +307,7 @@ void test_process_loader_storage__loads_legacy_app_and_worker_from_flash(void) {
   for (size_t i = 0; i < sizeof(tasks) / sizeof(tasks[0]); ++i) {
     const PebbleTask task = tasks[i];
     PebbleProcessMdFlash md;
-    process_metadata_init_with_flash_header(&md, prv_header(), 1, task, nullptr);
+    process_metadata_init_with_flash_header(&md, prv_header(), 1, task, nullptr, nullptr);
     MemorySegment segment = {s_ram, s_ram + sizeof(s_ram)};
     cl_assert(process_loader_load(&md.common, task, &segment) != nullptr);
     char expected_name[APP_FILENAME_MAX_LENGTH];
@@ -348,16 +382,98 @@ void test_process_loader_storage__reads_build_id_for_both_header_versions(void) 
   for (uint8_t minor = 0; minor <= 1; ++minor) {
     prv_build_wide_image();
     prv_header()->struct_version.minor = minor;
-    ElfExternalNote *note = (ElfExternalNote *)&s_image[0x84];
-    note->name_length = BUILD_ID_NAME_EXPECTED_LEN;
-    note->data_length = BUILD_ID_EXPECTED_LEN;
-    note->type = 3;
-    memcpy(note->data, "GNU", BUILD_ID_NAME_EXPECTED_LEN);
-    memcpy(note->data + BUILD_ID_NAME_EXPECTED_LEN, expected, sizeof(expected));
+    prv_set_build_id(expected);
     uint8_t actual[BUILD_ID_EXPECTED_LEN];
     PebbleProcessInfo info;
-    cl_assert_equal_i(app_storage_get_process_info(&info, actual, 1, PebbleTask_App),
+    cl_assert_equal_i(app_storage_get_process_info(&info, actual, nullptr, 1, PebbleTask_App),
                       GET_APP_INFO_SUCCESS);
     cl_assert_equal_i(memcmp(actual, expected, sizeof(expected)), 0);
   }
+}
+
+void test_process_loader_storage__reads_platform_info(void) {
+  prv_build_image_with_platform_info(&s_platform_info);
+
+  PebbleProcessInfo info;
+  PebblePlatformInfo platform_info;
+  cl_assert_equal_i(app_storage_get_process_info(&info, nullptr, &platform_info, 1, PebbleTask_App),
+                    GET_APP_INFO_SUCCESS);
+  cl_assert_equal_m(&platform_info, &s_platform_info, sizeof(platform_info));
+
+  PebbleProcessMdFlash md;
+  process_metadata_init_with_flash_header(&md, &info, 1, PebbleTask_App, nullptr, &platform_info);
+  const PebblePlatformInfo *md_platform_info = process_metadata_get_platform_info(&md.common);
+  cl_assert(md_platform_info != nullptr);
+  cl_assert_equal_i(md_platform_info->display_width, 200);
+  cl_assert_equal_i(md_platform_info->display_height, 228);
+}
+
+void test_process_loader_storage__reads_longer_platform_info(void) {
+  // A later SDK may add fields at the end
+  PebblePlatformInfo longer = s_platform_info;
+  longer.length = sizeof(PebblePlatformInfo) + 8;
+  prv_build_image_with_platform_info(&longer);
+
+  PebbleProcessInfo info;
+  PebblePlatformInfo platform_info;
+  cl_assert_equal_i(app_storage_get_process_info(&info, nullptr, &platform_info, 1, PebbleTask_App),
+                    GET_APP_INFO_SUCCESS);
+  cl_assert_equal_i(platform_info.version, PROCESS_PLATFORM_INFO_VERSION);
+  cl_assert_equal_i(platform_info.display_width, 200);
+}
+
+static void prv_assert_no_platform_info(void) {
+  PebbleProcessInfo info;
+  PebblePlatformInfo platform_info;
+  memset(&platform_info, 0xff, sizeof(platform_info));
+  cl_assert_equal_i(app_storage_get_process_info(&info, nullptr, &platform_info, 1, PebbleTask_App),
+                    GET_APP_INFO_SUCCESS);
+  cl_assert_equal_i(platform_info.version, 0);
+
+  PebbleProcessMdFlash md;
+  process_metadata_init_with_flash_header(&md, &info, 1, PebbleTask_App, nullptr, &platform_info);
+  cl_assert(process_metadata_get_platform_info(&md.common) == nullptr);
+}
+
+void test_process_loader_storage__no_platform_info_without_flag(void) {
+  prv_build_image_with_platform_info(&s_platform_info);
+  prv_header()->flags &= ~PROCESS_INFO_HAS_PLATFORM_INFO;
+  prv_assert_no_platform_info();
+}
+
+void test_process_loader_storage__no_platform_info_without_build_id(void) {
+  prv_build_image_with_platform_info(&s_platform_info);
+  memset(&s_image[BUILD_ID_NOTE_OFFSET], 0, BUILD_ID_TOTAL_EXPECTED_LEN);
+  prv_assert_no_platform_info();
+}
+
+void test_process_loader_storage__ignores_platform_info_it_cannot_read(void) {
+  PebblePlatformInfo platform_info = s_platform_info;
+  platform_info.version = PROCESS_PLATFORM_INFO_VERSION + 1;
+  prv_build_image_with_platform_info(&platform_info);
+  prv_assert_no_platform_info();
+
+  platform_info = s_platform_info;
+  platform_info.length = sizeof(PebblePlatformInfo) - 1;
+  prv_build_image_with_platform_info(&platform_info);
+  prv_assert_no_platform_info();
+
+  platform_info = s_platform_info;
+  platform_info.display_width = 0;
+  prv_build_image_with_platform_info(&platform_info);
+  prv_assert_no_platform_info();
+}
+
+void test_process_loader_storage__platform_info_layout(void) {
+  cl_assert_equal_i(sizeof(PebblePlatformInfo), 16);
+  cl_assert_equal_i(
+      sizeof(PebbleProcessInfo) + sizeof(PebbleProcessInfo) % 4 + BUILD_ID_TOTAL_EXPECTED_LEN,
+      PLATFORM_INFO_OFFSET);
+}
+
+void test_process_loader_storage__no_platform_info_for_other_storage(void) {
+  prv_build_wide_image();
+  PebbleProcessMdResource md;
+  process_metadata_init_with_resource_header(&md, prv_header(), 1, PebbleTask_App);
+  cl_assert(process_metadata_get_platform_info(&md.common) == nullptr);
 }

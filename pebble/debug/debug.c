@@ -39,8 +39,9 @@ void debug_print_last_launched_app(void) {
   } else if ((last_launched_app_slot != (uint32_t)INVALID_BANK_ID)) {
     PebbleProcessInfo last_launched_app;
     uint8_t build_id[BUILD_ID_EXPECTED_LEN];
-    AppStorageGetAppInfoResult result = app_storage_get_process_info(
-        &last_launched_app, build_id, (AppInstallId)last_launched_app_slot, PebbleTask_App);
+    AppStorageGetAppInfoResult result =
+        app_storage_get_process_info(&last_launched_app, build_id, nullptr,
+                                     (AppInstallId)last_launched_app_slot, PebbleTask_App);
 
     if (result == GET_APP_INFO_SUCCESS) {
       PBL_LOG_INFO("Last launched app: %s", last_launched_app.name);
