@@ -13,7 +13,7 @@
 typedef struct GAPLEConnection GAPLEConnection;
 
 typedef struct StoredRemoteBLE {
-  pbl_bt_bonding_id_t bonding;
+  struct pbl_bt_device_internal identity;
   GAPLEConnection *connection;
 #ifdef CONFIG_HRM
   bool is_sharing_heart_rate;

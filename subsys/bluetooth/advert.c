@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include <pbl/bluetooth/advert.h>
-#include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/kernel/assert.h>

@@ -230,22 +230,6 @@ static_assert(sizeof(pbl_bt_characteristic_t) == sizeof(uintptr_t),
 /** @brief Invalid descriptor reference. */
 #define PBL_BT_DESCRIPTOR_INVALID ((pbl_bt_descriptor_t)0)
 
-/**
- * @brief Identifier of a bonding.
- *
- * Stable across reboots, so it can be persisted.
- */
-typedef uint8_t pbl_bt_bonding_id_t;
-
-/** @brief Invalid bonding identifier. */
-#define PBL_BT_BONDING_ID_INVALID (0xFFU)
-
-/** @brief Identifier of a stored Client Characteristic Configuration Descriptor entry. */
-typedef uint16_t pbl_bt_cccd_id_t;
-
-/** @brief Invalid CCCD entry identifier. */
-#define PBL_BT_CCCD_ID_INVALID (0xFFU)
-
 /** @brief Bluetooth device address. */
 struct PBL_PACKED pbl_bt_addr {
   /** Address octets, least significant first. */

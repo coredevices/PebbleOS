@@ -136,6 +136,8 @@ bool pbl_bt_start(struct pbl_bt_config *config) {
   // so we wait for *this* start to sync.
   (void)(pbl_sem_take(&s_host_started, PBL_NO_WAIT) == 0);
 
+  pbl_bt__store_set_local_irk(&config->root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]);
+
   ble_svc_gap_init();
   ble_svc_gatt_init();
   rc = pbl_bt__services_init(&config->dis_info);

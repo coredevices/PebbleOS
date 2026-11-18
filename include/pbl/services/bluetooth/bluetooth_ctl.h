@@ -8,7 +8,7 @@
  * @ingroup services
  * @brief Firmware-side Bluetooth management on top of the Bluetooth stack.
  *
- * Covers starting and stopping the stack, the bonding database, the local identity and
+ * Covers starting and stopping the stack, the local identity and
  * address, pairability, and the GATT services the firmware implements (battery, heart rate,
  * device information).
  *

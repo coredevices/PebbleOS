@@ -6,11 +6,11 @@
 #include "gap_le_advert.h"
 #include "gap_le_connect.h"
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/util/size.h>
 
 #include <applib/bluetooth/ble_ad_parse.h>
@@ -196,8 +196,7 @@ void gap_le_slave_reconnect_start(void) {
       goto unlock;
     }
 
-    if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
-        !bt_persistent_storage_has_ble_ancs_bonding()) {
+    if (pbl_bt_bond_count() == 0) {
       PBL_LOG_DBG("No bonded master device");
       goto unlock;
     }

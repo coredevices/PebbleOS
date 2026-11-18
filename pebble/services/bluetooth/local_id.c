@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/id.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/util/hash.h>
 #include <pbl/util/size.h>

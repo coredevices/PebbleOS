@@ -5,11 +5,12 @@
 
 #include <string.h>
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/id.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/shell/shell.h>
 
@@ -37,8 +38,7 @@ static int prv_cmd_name(const struct pbl_shell *sh, size_t argc, char **argv) {
 PBL_SHELL_SUBCMD_ADD(sub_bt, name, nullptr, "Set the device name <name>", prv_cmd_name, 2, 0);
 
 static int prv_cmd_prefs_wipe(const struct pbl_shell *sh, size_t argc, char **argv) {
-  bt_persistent_storage_delete_all_pairings();
-  return 0;
+  return pbl_bt_unpair(nullptr);
 }
 
 PBL_SHELL_SUBCMD_ADD(sub_bt, prefs_wipe, nullptr, "Delete all pairings", prv_cmd_prefs_wipe, 0, 0);
@@ -73,6 +73,41 @@ static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) 
 PBL_SHELL_SUBCMD_ADD(sub_bt, status, nullptr, "Show the Bluetooth status", prv_cmd_status, 0, 0);
 
 #ifndef CONFIG_RELEASE
+static void prv_print_bond(const struct pbl_bt_bond_info *info, void *user_data) {
+  const struct pbl_shell *sh = user_data;
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+
+  if (!bt_bonding_get_peer_name(&info->addr, name)) {
+    strncpy(name, "<Unknown>", sizeof(name));
+  }
+
+  pbl_shell_print(sh, "Bond: " PBL_BT_ADDR_FMT " random=%u irk=%u",
+                  PBL_BT_ADDR_XPLODE(info->addr.address), info->addr.is_random_address,
+                  info->irk_valid);
+  pbl_shell_print(sh, " Name: %s", name);
+}
+
+static int prv_cmd_bonds(const struct pbl_shell *sh, size_t argc, char **argv) {
+  struct pbl_bt_sm_pairing_info info;
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  uint8_t flags;
+
+  pbl_bt_foreach_bond(prv_print_bond, (void *)sh);
+
+  if (pbl_bt_prf_store_get_pairing(&info, name, &flags)) {
+    pbl_shell_print(sh, "PRF store: " PBL_BT_ADDR_FMT " random=%u flags=0x%x",
+                    PBL_BT_ADDR_XPLODE(info.identity.address), info.identity.is_random_address,
+                    flags);
+    pbl_shell_print(sh, " Name: %s", name);
+  } else {
+    pbl_shell_print(sh, "PRF store: no pairing");
+  }
+
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, bonds, nullptr, "Dump the bonds", prv_cmd_bonds, 0, 0);
+
 static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_bt_prf_store_wipe();
 #ifdef CONFIG_RECOVERY_FW
