@@ -285,6 +285,67 @@ const PebblePlatformInfo *process_metadata_get_platform_info(const PebbleProcess
   return (platform_info->version != 0) ? platform_info : nullptr;
 }
 
+//! Whether an app built for a display of this size and shape can be shown on ours: a smaller
+//! display of the same shape, centered or scaled by the compositor.
+static bool prv_app_display_fits(GSize size, bool round) {
+  if (round != PBL_IF_ROUND_ELSE(true, false)) {
+    return false;
+  }
+#if PBL_ROUND
+  // A round framebuffer needs a row table, and there is only one beside the display's own.
+  return ((size.w == PBL_DISPLAY_WIDTH) && (size.h == PBL_DISPLAY_HEIGHT)) ||
+         ((size.w == LEGACY_3X_DISP_COLS) && (size.h == LEGACY_3X_DISP_ROWS));
+#else
+  return (size.w > 0) && (size.h > 0) && (size.w <= PBL_DISPLAY_WIDTH) &&
+         (size.h <= PBL_DISPLAY_HEIGHT);
+#endif
+}
+
+GSize process_metadata_get_app_framebuffer_size(const PebbleProcessMd *md) {
+  const GSize display_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
+
+  // An app that says which display it was built for draws to a framebuffer of that size
+  const PebblePlatformInfo *platform_info = process_metadata_get_platform_info(md);
+  if (platform_info) {
+    const GSize size = GSize(platform_info->display_width, platform_info->display_height);
+    const bool round = (platform_info->display_shape == PLATFORM_DISPLAY_SHAPE_ROUND);
+    // A shape this firmware does not know is one it cannot show
+    const bool known_shape = round || (platform_info->display_shape == PLATFORM_DISPLAY_SHAPE_RECT);
+    return (known_shape && prv_app_display_fits(size, round)) ? size : display_size;
+  }
+
+  const PlatformType sdk_platform = process_metadata_get_app_sdk_platform(md);
+  if (sdk_platform == PBL_PLATFORM_TYPE_CURRENT) {
+    return display_size;
+  }
+
+  // The others are known by their platform
+  GSize size;
+  bool round = false;
+  switch (sdk_platform) {
+    case PlatformTypeAplite:
+      return GSize(LEGACY_2X_DISP_COLS, LEGACY_2X_DISP_ROWS);
+    case PlatformTypeBasalt:
+    case PlatformTypeChalk:
+      // On a round display both are 180x180, the only round size before 4.9
+      return GSize(LEGACY_3X_DISP_COLS, LEGACY_3X_DISP_ROWS);
+    case PlatformTypeDiorite:
+    case PlatformTypeFlint:
+      size = GSize(144, 168);
+      break;
+    case PlatformTypeEmery:
+      size = GSize(200, 228);
+      break;
+    case PlatformTypeGabbro:
+      size = GSize(260, 260);
+      round = true;
+      break;
+    default:
+      return display_size;
+  }
+  return prv_app_display_fits(size, round) ? size : display_size;
+}
+
 ProcessAppSDKType process_metadata_get_app_sdk_type(const PebbleProcessMd *md) {
   if (!md->is_unprivileged) {
     return ProcessAppSDKType_System;

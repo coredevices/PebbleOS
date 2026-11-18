@@ -9,6 +9,7 @@
 #include <pbl/util/build_id.h>
 #include <pbl/util/uuid.h>
 
+#include <applib/graphics/gtypes.h>
 #include <applib/platform.h>
 #include <kernel/pebble_tasks.h>
 #include <resource/resource.h>
@@ -236,6 +237,10 @@ typedef enum {
   PLATFORM_FEATURE_RGB_BACKLIGHT = PBL_BIT(6),
   PLATFORM_FEATURE_SPEAKER = PBL_BIT(7),
 } PebblePlatformFeature;
+
+//! The size of the framebuffer an app draws to: that of the display it was built for when ours
+//! can show it, which is one of the same shape and no smaller, else that of our display.
+GSize process_metadata_get_app_framebuffer_size(const PebbleProcessMd *md);
 
 //! What the platform the process was built for is like, as its binary says.
 //! @return NULL if the binary does not say: system apps, and apps of SDKs that predate the record
