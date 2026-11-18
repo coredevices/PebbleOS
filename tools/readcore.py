@@ -17,11 +17,10 @@ import binascii
 import json
 from enum import Enum
 
-# We use a truly ancient `construct` because it's what libpebble etc need.
-# Don't try reading the `construct` readthedocs, the entire API has changed
-# since 2.5 to now...
-import construct as cs
-import elftools.construct as ecs  # Sigh...
+# The ancient `construct` 2.5 API, which pyelftools still carries as
+# elftools.construct. Don't try reading the `construct` readthedocs, the
+# entire API has changed since 2.5 to now...
+import elftools.construct as cs
 from elftools.elf.enums import *
 from elftools.elf.structs import ELFStructs
 
@@ -242,8 +241,8 @@ class Coredump:
         ### ELF header.
         def mk_ehdr():
             return structs.Elf_Ehdr.build(
-                ecs.Container(
-                    e_ident=ecs.Container(
+                cs.Container(
+                    e_ident=cs.Container(
                         EI_MAG=b"\x7fELF",
                         EI_CLASS="ELFCLASS32",
                         EI_DATA="ELFDATA2LSB",
@@ -272,7 +271,7 @@ class Coredump:
 
         ### Boilerplate ELF sections.
         shdrs.append(
-            ecs.Container(
+            cs.Container(
                 sh_name=0,
                 sh_type="SHT_NULL",
                 sh_flags=0,
@@ -289,7 +288,7 @@ class Coredump:
         strings = b"\0shstrtab\0note0\0load\0\0"
 
         shdrs.append(
-            ecs.Container(
+            cs.Container(
                 sh_name=1,
                 sh_type="SHT_STRTAB",
                 sh_flags=0,
@@ -311,7 +310,7 @@ class Coredump:
         # add a build-ID tag that matches the theorized build-id from the ELF we are debugging
         build_id = binascii.unhexlify(self.build_id)
         notes += structs.Elf_Nhdr.build(
-            ecs.Container(
+            cs.Container(
                 n_namesz=4,
                 n_descsz=len(build_id),
                 n_type=3,  # NT_GNU_BUILD_ID
@@ -325,7 +324,7 @@ class Coredump:
             {"timestamp": self.timestamp, "serial_number": self.serial_number}
         ).encode()
         notes += structs.Elf_Nhdr.build(
-            ecs.Container(
+            cs.Container(
                 n_namesz=7,
                 n_descsz=len(pebble_notes),
                 n_type=0,
@@ -383,7 +382,7 @@ class Coredump:
                 )
             )
             notes += structs.Elf_Nhdr.build(
-                ecs.Container(
+                cs.Container(
                     n_namesz=5,
                     n_descsz=len(pr_status),
                     n_type=ENUM_CORE_NOTE_N_TYPE["NT_PRSTATUS"],
@@ -413,7 +412,7 @@ class Coredump:
                 )
             )
             notes += structs.Elf_Nhdr.build(
-                ecs.Container(
+                cs.Container(
                     n_namesz=5,
                     n_descsz=len(prpsinfo),
                     n_type=ENUM_CORE_NOTE_N_TYPE["NT_PRPSINFO"],
@@ -424,7 +423,7 @@ class Coredump:
 
         # Now write the notes out.
         shdrs.append(
-            ecs.Container(
+            cs.Container(
                 sh_name=10,
                 sh_type="SHT_NOTE",
                 sh_flags=0x2,  # alloc
@@ -439,7 +438,7 @@ class Coredump:
         )
 
         phdrs.append(
-            ecs.Container(
+            cs.Container(
                 p_type="PT_NOTE",
                 p_offset=position,
                 p_vaddr=0,
@@ -457,7 +456,7 @@ class Coredump:
         ### Memory sections.
         for m in self.memory:
             phdrs.append(
-                ecs.Container(
+                cs.Container(
                     p_type="PT_LOAD",
                     p_offset=position,
                     p_vaddr=m.start,
@@ -470,7 +469,7 @@ class Coredump:
             )
 
             shdrs.append(
-                ecs.Container(
+                cs.Container(
                     sh_name=16,
                     sh_type="SHT_PROGBITS",
                     sh_flags=0x7,  # write | alloc | exec
