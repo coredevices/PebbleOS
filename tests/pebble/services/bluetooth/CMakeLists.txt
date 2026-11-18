@@ -8,24 +8,12 @@ pbl_clar_test(test_ble_hrm
   DEFINES CONFIG_HRM
 )
 
-pbl_clar_test(test_bluetooth_persistent_storage_prf
+pbl_clar_test(test_bonding
   SOURCES
-    pebble/services/bluetooth/bluetooth_persistent_storage_prf.c
+    pebble/services/bluetooth/bonding.c
     third_party/nimble/store/prf.c
     tests/fakes/fake_spi_flash.c
-    tests/fakes/fake_events.c
   PLATFORMS emery
-)
-
-pbl_clar_test(test_bluetooth_persistent_storage
-  MODULES settings
-  SOURCES
-    pebble/services/bluetooth/bluetooth_persistent_storage_normal.c
-    subsys/logging/hexdump.c
-    tests/fakes/fake_prf_store.c
-    tests/fakes/fake_events.c
-    tests/fakes/fake_rtc.c
-  OVERRIDES dummy_board bluetooth_persistent_storage_v2
 )
 
 pbl_clar_test(test_bt_settings

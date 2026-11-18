@@ -95,7 +95,7 @@ static bool prv_get_bool(const char *key, bool default_value) {
   return value != 0U;
 }
 
-// These settings used to be kept with the bondings.
+// These settings were kept with the bondings, which the Bluetooth stack stores now.
 static void prv_migrate(void) {
   struct pbl_settings_file legacy;
   struct pbl_fs_dirent entry;
@@ -118,12 +118,12 @@ static void prv_migrate(void) {
       }
 
       prv_set(s_legacy_keys[i].key, val, len);
-      (void)pbl_settings_delete(&legacy, s_legacy_keys[i].legacy_key,
-                                s_legacy_keys[i].legacy_key_len);
     }
 
     pbl_settings_close(&legacy);
   }
+
+  (void)pbl_fs_unlink(LEGACY_FILE_NAME);
 }
 
 void bt_settings_init(void) {

@@ -11,7 +11,7 @@
 #include <pbl/cron/cron.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/app_session.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/hrm/hrm_manager.h>
@@ -38,7 +38,7 @@ void services_common_init(void) {
 
   pbl_bt_prf_store_init();
   bt_settings_init();
-  bt_persistent_storage_init();
+  bt_bonding_init();
 
 #if !defined(CONFIG_RECOVERY_FW)
   app_session_capabilities_init();

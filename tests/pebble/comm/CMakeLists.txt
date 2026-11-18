@@ -140,7 +140,6 @@ pbl_clar_test(test_gap_le_connect
     pebble/comm/internals/bt_conn_mgr.c
     tests/fakes/fake_events.c
     tests/fakes/fake_GAPAPI.c
-    tests/fakes/fake_bluetooth_persistent_storage.c
     tests/fakes/fake_gap_le_connect_params.c
     tests/fakes/fake_HCIAPI.c
     tests/fakes/fake_rtc.c

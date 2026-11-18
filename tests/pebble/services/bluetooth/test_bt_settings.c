@@ -59,6 +59,7 @@ void test_bt_settings__migrate(void) {
   const struct pbl_pp_capabilities capabilities = {.flags = 0x3};
   struct pbl_pp_capabilities capabilities_out;
   struct pbl_settings_file file;
+  struct pbl_fs_dirent entry;
 
   cl_assert_equal_i(pbl_settings_open(&file, "/gap_bonding_db", 4096), 0);
   cl_assert_equal_i(pbl_settings_set(&file, "AIRPLANE_MODE", sizeof("AIRPLANE_MODE"),
@@ -79,7 +80,5 @@ void test_bt_settings__migrate(void) {
   bt_settings_get_capabilities(&capabilities_out);
   cl_assert_equal_i(capabilities_out.flags, capabilities.flags);
 
-  cl_assert_equal_i(pbl_settings_open(&file, "/gap_bonding_db", 4096), 0);
-  cl_assert(!pbl_settings_exists(&file, "AIRPLANE_MODE", sizeof("AIRPLANE_MODE")));
-  pbl_settings_close(&file);
+  cl_assert(pbl_fs_stat("/gap_bonding_db", &entry) != 0);
 }

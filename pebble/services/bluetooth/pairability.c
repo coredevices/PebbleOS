@@ -1,12 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/pairability.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/pairability.h>
 
 #include <comm/ble/gap_le_slave_discovery.h>
@@ -86,8 +86,7 @@ void bt_pairability_release_ble(void) {
 void bt_pairability_update_due_to_bonding_change(void) {
   static bool s_pairable_due_to_no_gateway_bondings = false;
 
-  if (!bt_persistent_storage_has_active_ble_gateway_bonding() &&
-      !bt_persistent_storage_has_ble_ancs_bonding()) {
+  if (pbl_bt_bond_count() == 0) {
     if (!s_pairable_due_to_no_gateway_bondings) {
       bt_pairability_use();
       s_pairable_due_to_no_gateway_bondings = true;

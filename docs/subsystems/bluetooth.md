@@ -81,12 +81,20 @@ partition of its own with the one bonding and the root keys the recovery
 firmware and the normal firmware share. Recovery firmware in the field reads
 it, so its layout is fixed.
 
-The Bluetooth subsystem uses that store too. The normal firmware keeps it in
-the settings file: it hands it the bondings of its own database at start,
-which moves those of older firmware into it, and copies its active bonding to
-the PRF store, for the recovery firmware. The recovery firmware has no
-filesystem and uses the PRF backend. Both take the local IRK from the root
-keys, so that a phone sees one watch.
+The Bluetooth subsystem uses that store too, and it is the only place bonds
+are kept. `pbl/bluetooth/bond.h` lists them by the peer's identity address,
+deletes them, and reports the ones the stack adds, changes and deletes.
+
+The firmware builds on that in its Bluetooth service:
+
+- It keeps one bond, the phone's: a new one replaces the others.
+- The normal firmware keeps the store in the settings file and copies its bond
+  to the PRF store, for the recovery firmware. At start it takes the pairing
+  of the PRF store instead, which is how a bond made in recovery firmware, or
+  by firmware that kept bonds in a database of its own, comes in.
+- The recovery firmware has no filesystem and uses the PRF backend.
+- Both take the local IRK from the root keys in the PRF store, so that a phone
+  sees one watch. The phone's name is kept there as well.
 
 ## Modules
 

@@ -37,8 +37,6 @@
  *
  * struct pbl_bt_config *config = pbl_zalloc_check(sizeof(*config));
  * dis_get_info(&config->dis_info);
- * // Bondings registered before starting are restored by the host.
- * bt_persistent_storage_register_existing_ble_bondings();
  * bool running = pbl_bt_start(config);
  * pbl_free(config);
  *
@@ -54,8 +52,8 @@ struct PBL_PACKED pbl_bt_config {
   /**
    * @brief Root keys, indexed by enum pbl_bt_sm_root_key_type.
    *
-   * Not used by the NimBLE backend, which reads and generates the root keys through the
-   * persistent storage service.
+   * The identity root key is the local Identity Resolving Key. The encryption root key is not
+   * used: the keys of a bond are generated and stored by the host.
    */
   struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   /** Values served by the Device Information Service. */
@@ -70,7 +68,7 @@ struct PBL_PACKED pbl_bt_config {
  * @brief One-time initialization of the Bluetooth stack.
  *
  * Creates the NimBLE host task (and the link layer task when the controller runs in the same
- * image) and installs the bonding store. Call once at boot, before any other function of this
+ * image) and installs the bond store. Call once at boot, before any other function of this
  * API.
  */
 void pbl_bt_init(void);
@@ -89,8 +87,7 @@ bool pbl_bt_start(struct pbl_bt_config *config);
 /**
  * @brief Stop the Bluetooth stack.
  *
- * Blocks until the host has stopped, then resets the GATT server and drops the in-memory bonding
- * store. No bonding removal callbacks are issued.
+ * Blocks until the host has stopped, then resets the GATT server. Bonds are kept.
  */
 void pbl_bt_stop(void);
 
