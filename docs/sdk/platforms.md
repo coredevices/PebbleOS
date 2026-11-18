@@ -112,6 +112,33 @@ The app build lists the platforms of an SDK from these files, so a platform
 is added to an SDK by adding its directory. A project picks among them by
 name, with `targetPlatforms` ({doc}`app_build`).
 
-An app built for a platform that `PebbleProcessInfoFlags` has no value for
-carries `PROCESS_INFO_PLATFORM_UNKNOWN`, which the firmware takes to mean
-its own platform.
+## What an app binary says
+
+An app binary says what the platform it was built for is like, in a 16-byte
+`PebblePlatformInfo` that follows the GNU build ID note. Neither the
+`PebbleProcessInfo` header nor the note moves, so firmware that predates the
+record finds both where they were. `PROCESS_INFO_HAS_PLATFORM_INFO` in the
+header's flags says the record is there.
+
+| Offset | Size | Field |
+| --- | --- | --- |
+| 0xA8 | 1 | version (1) |
+| 0xA9 | 1 | length of the record in bytes (16) |
+| 0xAA | 1 | ABI (1 is `armv7m`) |
+| 0xAB | 1 | display shape: 0 rectangular, 1 round |
+| 0xAC | 2 | display width |
+| 0xAE | 2 | display height |
+| 0xB0 | 4 | features, one bit each in the order of the list above |
+| 0xB4 | 2 | app memory the binary needs, in KiB |
+| 0xB6 | 1 | bits of colour of a pixel: 1 for black and white, 6 for 64 colours |
+| 0xB7 | 1 | reserved, zero |
+
+Fields are only added at the end and the length grows with them, so a reader
+skips what it does not know. It also ignores the feature bits it does not
+know, and takes a display shape it does not know as one it cannot show.
+
+A platform that `PebbleProcessInfoFlags` has no value for is
+`PROCESS_INFO_PLATFORM_OTHER` there. Firmware that predates the record takes
+such an app to be for its own platform. Apps for the frozen platforms carry
+no record: the firmware knows those platforms, and their SDK does not know
+the record.

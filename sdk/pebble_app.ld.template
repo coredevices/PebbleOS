@@ -22,6 +22,12 @@ SECTIONS
         KEEP(*(.note.gnu.build-id))
     } > APP
 
+    /* The PebblePlatformInfo, when there is one, follows the build ID. */
+    .platform ALIGN(1) :
+    {
+        KEEP(*(.pbl_platform))
+    } > APP
+
     .text :
     {
         *(.text)

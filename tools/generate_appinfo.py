@@ -24,6 +24,47 @@ def generate_appinfo(input_filename, output_filename):
     generate_appinfo_c(app_info, output_filename)
 
 
+def platform_info_initializer(desc):
+    """The PebblePlatformInfo of a platform, from its description."""
+    from pebble_sdk_platform import ABIS, FEATURES
+
+    display = desc["display"]
+    # PebblePlatformDisplayShape
+    shape = {"rect": 0, "round": 1}[display["shape"]]
+    # 64 colours, or black and white
+    color_depth = 6 if display["color"] else 1
+    features = sum(
+        1 << bit
+        for bit, feature in enumerate(FEATURES)
+        if feature in desc.get("features", [])
+    )
+    fields = (
+        "PROCESS_PLATFORM_INFO_VERSION",
+        "sizeof(PebblePlatformInfo)",
+        str(ABIS.index(desc["abi"]) + 1),
+        str(shape),
+        str(display["width"]),
+        str(display["height"]),
+        f"{features:#x}",
+        # What an app of the platform is given, rounded up
+        str(-(-desc["limits"]["app_memory"] // 1024)),
+        str(color_depth),
+        "0",
+    )
+    return f"{{ {', '.join(fields)} }}"
+
+
+def _platform_info(platform_name):
+    """The PebblePlatformInfo of a platform, or None for a frozen one: the
+    firmware knows those, and their SDK does not know the record."""
+    from pebble_sdk_platform import pebble_platforms
+
+    platform = pebble_platforms[platform_name]
+    if "FROZEN_AT_REVISION" in platform:
+        return None
+    return platform_info_initializer(platform["DESCRIPTOR"])
+
+
 def generate_appinfo_c(app_info, output_filename, platform_name=None):
     # Handle top level options
     try:
@@ -118,11 +159,15 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
         flags.append("PROCESS_INFO_VISIBILITY_HIDDEN")
     if is_moddable:
         flags.append("PROCESS_INFO_MODDABLE_APP")
+    platform_info = None
     if platform_name in PLATFORM_FLAGS:
         flags.append(f"PROCESS_INFO_PLATFORM_{platform_name.upper()}")
     elif platform_name:
-        # The firmware takes an app without a value to be for its own platform.
-        flags.append("PROCESS_INFO_PLATFORM_UNKNOWN")
+        flags.append("PROCESS_INFO_PLATFORM_OTHER")
+    if platform_name:
+        platform_info = _platform_info(platform_name)
+        if platform_info:
+            flags.append("PROCESS_INFO_HAS_PLATFORM_INFO")
 
     if len(flags):
         flags_string = " | ".join(flags)
@@ -143,6 +188,10 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
                 uuid=uuid_initializer_string,
             )
         )
+        if platform_info:
+            f.write(
+                PEBBLE_PLATFORM_INFO_TEMPLATE.substitute(platform_info=platform_info)
+            )
 
 
 PEBBLE_APP_INFO_TEMPLATE = string.Template("""
@@ -163,4 +212,8 @@ const PebbleProcessInfo __pbl_app_info __attribute__((__section__(".pbl_header")
   .uuid = ${uuid},
   .virtual_size = 0xb6b6
 };
+""")
+
+PEBBLE_PLATFORM_INFO_TEMPLATE = string.Template("""
+const PebblePlatformInfo __pbl_platform_info __attribute__((__section__(".pbl_platform"), __used__)) = ${platform_info};
 """)
