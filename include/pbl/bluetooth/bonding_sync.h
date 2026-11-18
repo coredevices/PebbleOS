@@ -51,8 +51,9 @@ struct PBL_PACKED pbl_bt_cccd {
 /**
  * @brief Register an existing bonding with the stack.
  *
- * Called by the firmware for each stored bonding, before starting the stack so they can be
- * restored. There are no matching removal calls when the stack stops.
+ * Called by the firmware for each stored bonding, before starting the stack. The stack keeps
+ * bondings itself, and takes the ones it does not have yet. There are no matching removal calls
+ * when the stack stops.
  *
  * @param bonding The bonding.
  */
@@ -66,18 +67,15 @@ void pbl_bt_handle_host_added_bonding(const struct pbl_bt_bonding *bonding);
 void pbl_bt_handle_host_removed_bonding(const struct pbl_bt_bonding *bonding);
 
 /**
- * @brief Register a stored CCCD state with the stack.
+ * @brief Hand the stack a CCCD state the firmware stored, before the stack kept them itself.
  *
  * @param cccd The CCCD state.
+ * @retval 0 The stack has it.
+ * @retval -ENOENT The stack has no bonding for its peer, and does not keep it.
+ * @retval -ENOSPC The stack has no room for it.
+ * @retval -EIO The stack could not store it.
  */
-void pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd);
-
-/**
- * @brief Unregister a stored CCCD state.
- *
- * @param cccd The CCCD state.
- */
-void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd);
+int pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd);
 
 /**
  * @brief Called after a new device was paired, to persist the bonding.

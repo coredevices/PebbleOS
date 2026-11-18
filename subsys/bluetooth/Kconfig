@@ -7,6 +7,7 @@ config BT
     bool "Bluetooth"
     select BTUTIL
     select NIMBLE
+    select NIMBLE_STORE_CONFIG
     select TASK_WDT
     help
       The Bluetooth subsystem: the pbl_bt API, implemented on the NimBLE

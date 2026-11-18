@@ -1,8 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nimble_store.h"
 #include "services/services.h"
+#include "store.h"
 
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
@@ -104,7 +104,7 @@ void pbl_bt_init(void) {
   nimble_gattc_op_queue_init();
 
   nimble_port_init();
-  nimble_store_init();
+  pbl_bt__store_init();
 
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
@@ -188,8 +188,6 @@ void pbl_bt_stop(void) {
   s_driver_state = DriverStateStopped;
 
   ble_gatts_reset();
-
-  nimble_store_unload();
 }
 
 void pbl_bt_power_down_controller_on_boot(void) {

@@ -52,4 +52,12 @@ config NIMBLE_BLE_SVC_DIS_DEFAULT_READ_PERM
 config NIMBLE_BLE_GATT_MAX_PROCS
     default 8
 
+# The firmware keeps one bonding: room for a second lets a new phone pair
+# before the old bonding goes. Each bonding has a few subscriptions.
+config NIMBLE_BLE_STORE_MAX_BONDS
+    default 2
+
+config NIMBLE_BLE_STORE_MAX_CCCDS
+    default 16
+
 endif # BT

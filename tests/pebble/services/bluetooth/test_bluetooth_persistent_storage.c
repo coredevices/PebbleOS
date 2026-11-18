@@ -95,10 +95,8 @@ bool launcher_task_is_current_task(void) {
   return true;
 }
 
-void pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd) {
-}
-
-void pbl_bt_handle_host_removed_cccd(const struct pbl_bt_cccd *cccd) {
+int pbl_bt_handle_host_added_cccd(const struct pbl_bt_cccd *cccd) {
+  return 0;
 }
 
 void sys_pbl_analytics_set_unsigned(enum pbl_analytics_key key, uint32_t unsigned_value) {
