@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "about": "Which binaries of a pbw fit a watch, best first. See docs/sdk/platforms.md, 'Which binary a watch runs'. A case names its watch and binaries in 'platforms'; a binary's directory in the pbw is its name.",
+  "age": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+  "platforms": {
+    "aplite": {"name": "aplite", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": ["compass"], "limits": {"app_memory": 24576}},
+    "basalt": {"name": "basalt", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "rect", "color": true}, "features": ["microphone", "smartstrap", "smartstrap_power", "health", "compass"], "limits": {"app_memory": 65536}},
+    "chalk": {"name": "chalk", "abi": "armv7m", "display": {"width": 180, "height": 180, "shape": "round", "color": true}, "features": ["microphone", "smartstrap", "smartstrap_power", "health", "compass"], "limits": {"app_memory": 65536}},
+    "diorite": {"name": "diorite", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": ["microphone", "smartstrap", "health"], "limits": {"app_memory": 65536}},
+    "emery": {"name": "emery", "abi": "armv7m", "display": {"width": 200, "height": 228, "shape": "rect", "color": true}, "features": ["microphone", "smartstrap", "smartstrap_power", "health", "compass", "touch", "rgb_backlight", "speaker"], "limits": {"app_memory": 131072}},
+    "flint": {"name": "flint", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": ["microphone", "health", "compass", "speaker"], "limits": {"app_memory": 65536}},
+    "gabbro": {"name": "gabbro", "abi": "armv7m", "display": {"width": 260, "height": 260, "shape": "round", "color": true}, "features": ["microphone", "health", "compass", "touch"], "limits": {"app_memory": 131072}},
+    "slate": {"name": "slate", "abi": "armv7m", "display": {"width": 240, "height": 280, "shape": "rect", "color": true}, "features": ["touch"], "limits": {"app_memory": 131072}},
+    "granite": {"name": "granite", "abi": "armv7m", "display": {"width": 240, "height": 280, "shape": "rect", "color": true}, "features": [], "limits": {"app_memory": 131072}},
+    "shale": {"name": "shale", "abi": "armv7m", "display": {"width": 240, "height": 280, "shape": "rect", "color": true}, "features": [], "limits": {"app_memory": 65536}},
+    "paper": {"name": "paper", "abi": "armv7m", "display": {"width": 200, "height": 228, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
+    "wide": {"name": "wide", "abi": "armv7m", "display": {"width": 400, "height": 240, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
+    "widecolor": {"name": "widecolor", "abi": "armv7m", "display": {"width": 400, "height": 200, "shape": "rect", "color": true}, "features": [], "limits": {"app_memory": 131072}},
+    "mini": {"name": "mini", "abi": "armv7m", "display": {"width": 144, "height": 144, "shape": "rect", "color": true}, "features": [], "limits": {"app_memory": 131072}},
+    "orb": {"name": "orb", "abi": "armv7m", "display": {"width": 360, "height": 360, "shape": "round", "color": true}, "features": [], "limits": {"app_memory": 131072}},
+    "chalkboard": {"name": "chalkboard", "abi": "armv7m", "display": {"width": 240, "height": 240, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
+    "riscv": {"name": "riscv", "abi": "rv32", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
+    "hex": {"name": "hex", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "hexagon", "color": false}, "features": [], "limits": {"app_memory": 65536}}
+  },
+  "cases": [
+    {
+      "name": "Emery takes what it took, and what else fits its display",
+      "watch": "emery",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["emery", "basalt", "flint", "diorite", "aplite"]
+    },
+    {
+      "name": "Flint: binaries for its exact display, newest first",
+      "watch": "flint",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["flint", "diorite", "aplite"]
+    },
+    {
+      "name": "Gabbro: round only",
+      "watch": "gabbro",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["gabbro", "chalk"]
+    },
+    {
+      "name": "A new platform without a binary of its own takes the largest that fits",
+      "watch": "slate",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["emery", "basalt", "flint", "diorite", "aplite"]
+    },
+    {
+      "name": "Its own platform comes first",
+      "watch": "slate",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro", "slate"],
+      "expected": ["slate", "emery", "basalt", "flint", "diorite", "aplite"]
+    },
+    {
+      "name": "The same display under another name comes next",
+      "watch": "slate",
+      "binaries": ["emery", "granite", "slate"],
+      "expected": ["slate", "granite", "emery"]
+    },
+    {
+      "name": "The same display without the watch's own binary",
+      "watch": "slate",
+      "binaries": ["basalt", "granite"],
+      "expected": ["granite", "basalt"]
+    },
+    {
+      "name": "A binary that needs more app memory than the watch gives does not fit",
+      "watch": "shale",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro", "slate"],
+      "expected": ["basalt", "flint", "diorite", "aplite"]
+    },
+    {
+      "name": "A binary that needs less app memory fits",
+      "watch": "slate",
+      "binaries": ["shale"],
+      "expected": ["shale"]
+    },
+    {
+      "name": "A black and white watch takes no colour binary",
+      "watch": "paper",
+      "binaries": ["emery", "basalt", "flint"],
+      "expected": ["flint"]
+    },
+    {
+      "name": "A wide black and white watch",
+      "watch": "wide",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["flint", "diorite", "aplite"]
+    },
+    {
+      "name": "A display has to be no larger in either direction",
+      "watch": "widecolor",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["basalt", "flint", "diorite", "aplite"]
+    },
+    {
+      "name": "Nothing fits a display smaller than all of them",
+      "watch": "mini",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": []
+    },
+    {
+      "name": "A new round platform",
+      "watch": "orb",
+      "binaries": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
+      "expected": ["gabbro", "chalk"]
+    },
+    {
+      "name": "The larger display beats the same colour depth",
+      "watch": "slate",
+      "binaries": ["emery", "chalkboard"],
+      "expected": ["chalkboard", "emery"]
+    },
+    {
+      "name": "Features are not part of the rule",
+      "watch": "wide",
+      "binaries": ["flint"],
+      "expected": ["flint"]
+    },
+    {
+      "name": "A binary of another ABI does not fit",
+      "watch": "flint",
+      "binaries": ["riscv", "aplite"],
+      "expected": ["aplite"]
+    },
+    {
+      "name": "A shape the reader does not know fits nothing",
+      "watch": "flint",
+      "binaries": ["hex", "aplite"],
+      "expected": ["aplite"]
+    },
+    {
+      "name": "Platforms the reader does not know are newer than those it knows, and go by name",
+      "watch": "slate",
+      "binaries": ["shale", "granite", "emery"],
+      "expected": ["granite", "shale", "emery"]
+    }
+  ]
+}
