@@ -37,6 +37,20 @@
 		vddp-supply = <&vddp>;
 		vlcd-supply = <&vlcd>;
 		pwms = <&lptim2_pwm 0 16666666 0>;
+		jdi,enable-start = <3>;
+		jdi,enable-end = <99>;
+
+		panel-timing {
+			clock-frequency = <746268>;
+			hactive = <200>;
+			vactive = <228>;
+			hback-porch = <2>;
+			hfront-porch = <6>;
+			hsync-len = <0>;
+			vback-porch = <0>;
+			vfront-porch = <6>;
+			vsync-len = <0>;
+		};
 
 		port {
 			panel_in: endpoint {

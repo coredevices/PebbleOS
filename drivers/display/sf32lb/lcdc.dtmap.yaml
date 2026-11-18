@@ -13,10 +13,12 @@ args:
   - reset: 0
   - self: panel
     remote: 0
-  - self: width
+  - prop: hactive
     remote: 0
-  - self: height
+    child: panel-timing
+  - prop: vactive
     remote: 0
+    child: panel-timing
   - prop: rotation
     remote: 0
     default: 0

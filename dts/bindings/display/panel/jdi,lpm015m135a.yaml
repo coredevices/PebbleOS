@@ -12,7 +12,8 @@ maintainers:
 description:
   Reflective color panels that keep their image, written over the JDI
   parallel interface with two bits per color. VCOM is inverted by an external
-  signal while the image is on.
+  signal while the image is on. Its timing is in panel-timing, with the
+  horizontal clock (HCK) as clock-frequency, and hsync-len and vsync-len 0.
 
 allOf:
   - $ref: panel-common.yaml#
@@ -33,6 +34,15 @@ properties:
     maxItems: 1
     description: VCOM inversion signal.
 
+  jdi,enable-start:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: First column of the write enable (ENB) pulse.
+
+  jdi,enable-end:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Last column of the write enable (ENB) pulse.
+
+  panel-timing: true
   port: true
   rotation: true
 
@@ -41,6 +51,9 @@ required:
   - vddp-supply
   - vlcd-supply
   - pwms
+  - jdi,enable-start
+  - jdi,enable-end
+  - panel-timing
   - port
 
 unevaluatedProperties: false
@@ -52,6 +65,20 @@ examples:
         vddp-supply = <&vddp>;
         vlcd-supply = <&vlcd>;
         pwms = <&lptim2_pwm 0 16666666 0>;
+        jdi,enable-start = <3>;
+        jdi,enable-end = <99>;
+
+        panel-timing {
+            clock-frequency = <746268>;
+            hactive = <200>;
+            vactive = <228>;
+            hback-porch = <2>;
+            hfront-porch = <6>;
+            hsync-len = <0>;
+            vback-porch = <0>;
+            vfront-porch = <6>;
+            vsync-len = <0>;
+        };
 
         port {
             endpoint {

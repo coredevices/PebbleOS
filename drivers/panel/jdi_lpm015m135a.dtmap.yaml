@@ -4,14 +4,28 @@
 compatible: jdi,lpm015m135a
 config: PANEL_JDI_MIP
 class: panel
-define: PBL_PANEL_JDI_LPM015M135A_DEFINE
+define: PBL_PANEL_JDI_MIP_DEFINE
 header: pbl/drivers/panel/jdi_mip.h
 provides:
-  width: PBL_PANEL_JDI_LPM015M135A_WIDTH
-  height: PBL_PANEL_JDI_LPM015M135A_HEIGHT
-  round-mask: PBL_PANEL_JDI_LPM015M135A_ROUND_MASK
+  round-mask: nullptr
 args:
   - name: true
   - supply: vddp
   - supply: vlcd
+  - prop: clock-frequency
+    child: panel-timing
+  - prop: hactive
+    child: panel-timing
+  - prop: hback-porch
+    child: panel-timing
+  - prop: hfront-porch
+    child: panel-timing
+  - prop: vactive
+    child: panel-timing
+  - prop: vback-porch
+    child: panel-timing
+  - prop: vfront-porch
+    child: panel-timing
+  - prop: jdi,enable-start
+  - prop: jdi,enable-end
   - pwm: 0
