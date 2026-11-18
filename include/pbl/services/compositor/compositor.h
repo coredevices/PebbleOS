@@ -250,6 +250,18 @@ void compositor_unfreeze(void);
 void compositor_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin);
 
 /**
+ * @brief Where an app framebuffer smaller than the display is shown when it is scaled up.
+ *
+ * The app keeps its aspect ratio: it is made as large as fits the display and centered, with
+ * black bars beside it or above and below it. On Emery and Gabbro an app of a legacy size
+ * (144x168, or 180x180 on Gabbro) fills the display instead, as it always has.
+ *
+ * @param app_size Size of the app framebuffer.
+ * @return The frame of the app on the display.
+ */
+GRect compositor_get_scaled_app_frame(GSize app_size);
+
+/**
  * @brief compositor_scaled_app_fb_copy() with a vertical offset applied to the source.
  *
  * @param update_rect Region of the system framebuffer to update.
