@@ -63,18 +63,30 @@ PebbleOS side of it is split by what it does:
 | --- | --- |
 | `port/` | The NPL on the kernel, `nimble_port_pebble_init()` and the threads it starts, the nRF52 interrupts and the TRNG |
 | `transport/` | The HCI transports, chosen with `NIMBLE_HCI`, and the identity address the controller is given |
-| `store/` | Saving NimBLE's config store in a settings file |
+| `store/` | The backends NimBLE's config store persists in, and the PRF store |
 
 An application brings NimBLE up as on its other ports: `nimble_port_init()`,
 then `ble_hs_cfg`, the store with `ble_store_config_init()` and the GATT
-services, then `nimble_port_pebble_init()`. With
-`NIMBLE_BLE_STORE_CONFIG_PERSIST`, on by default with `CONFIG_SETTINGS`, the
-store keeps the keys of bonded peers and their CCCDs in `/nimble_store`.
+services, then `nimble_port_pebble_init()`. The store keeps the keys of bonded
+peers and their CCCDs where its backend, `NIMBLE_STORE_BACKEND`, says:
 
-The Bluetooth subsystem uses that store too. The firmware hands it the
-bondings of its own database at start, which moves those of older firmware
-into it, and the recovery firmware those of shared PRF storage, as it has no
-filesystem.
+| Backend | Keeps |
+| --- | --- |
+| `NIMBLE_STORE_BACKEND_RAM` | Nothing across a reset |
+| `NIMBLE_STORE_BACKEND_SETTINGS` | Everything in `/nimble_store`, along with a local IRK generated once. The default with `CONFIG_SETTINGS` |
+| `NIMBLE_STORE_BACKEND_PRF` | One bonding in the PRF store; its local IRK is the identity root key kept there |
+
+The PRF store (`pbl/bluetooth/prf_store.h`, `NIMBLE_STORE_PRF`) is a flash
+partition of its own with the one bonding and the root keys the recovery
+firmware and the normal firmware share. Recovery firmware in the field reads
+it, so its layout is fixed.
+
+The Bluetooth subsystem uses that store too. The normal firmware keeps it in
+the settings file: it hands it the bondings of its own database at start,
+which moves those of older firmware into it, and copies its active bonding to
+the PRF store, for the recovery firmware. The recovery firmware has no
+filesystem and uses the PRF backend. Both take the local IRK from the root
+keys, so that a phone sees one watch.
 
 ## Modules
 

@@ -24,8 +24,9 @@ config NIMBLE_STORE_BACKEND_PRF
     bool "PRF store"
     select NIMBLE_STORE_PRF
     help
-      Keep one bonding in the PRF store, the flash partition the
-      recovery firmware and the normal firmware share. CCCDs stay in RAM.
+      Keep one bonding, the last one written, in the PRF store, the
+      flash partition the recovery firmware and the normal firmware
+      share. The others, and the CCCDs, stay in RAM.
       The local IRK is the identity root key of that partition.
 
 endchoice

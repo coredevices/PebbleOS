@@ -20,20 +20,70 @@
 #define FLAG_SECURE_CONNECTIONS 0x01U
 #define FLAG_AUTHENTICATED      0x02U
 
-/* The PRF store keeps one bonding: the last one of the store. */
+/* The PRF store keeps one bonding: the one written last. */
+static struct ble_store_value_sec s_seen_our_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+static struct ble_store_value_sec s_seen_peer_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+static int s_num_seen_our_secs;
+static int s_num_seen_peer_secs;
+static ble_addr_t s_last_addr;
+
+static bool prv_sec_equal(const struct ble_store_value_sec *a,
+                          const struct ble_store_value_sec *b) {
+  return ble_addr_cmp(&a->peer_addr, &b->peer_addr) == 0 && a->key_size == b->key_size &&
+         a->ediv == b->ediv && a->rand_num == b->rand_num && a->ltk_present == b->ltk_present &&
+         memcmp(a->ltk, b->ltk, sizeof(a->ltk)) == 0 && a->irk_present == b->irk_present &&
+         memcmp(a->irk, b->irk, sizeof(a->irk)) == 0 && a->authenticated == b->authenticated &&
+         a->sc == b->sc;
+}
+
+/* Note the peer of a value that was not there the last time, if any. */
+static void prv_note_written(const struct ble_store_value_sec *secs, int num,
+                             struct ble_store_value_sec *seen, int *num_seen) {
+  for (int i = 0; i < num; i++) {
+    bool found = false;
+
+    for (int j = 0; j < *num_seen && !found; j++) {
+      found = prv_sec_equal(&secs[i], &seen[j]);
+    }
+    if (!found) {
+      s_last_addr = secs[i].peer_addr;
+    }
+  }
+
+  memcpy(seen, secs, (size_t)num * sizeof(*secs));
+  *num_seen = num;
+}
+
+static const struct ble_store_value_sec *prv_find(const struct ble_store_value_sec *secs, int num) {
+  for (int i = 0; i < num; i++) {
+    if (ble_addr_cmp(&secs[i].peer_addr, &s_last_addr) == 0) {
+      return &secs[i];
+    }
+  }
+
+  return nullptr;
+}
+
 static int prv_save(void) {
   struct pbl_bt_sm_pairing_info info = {};
   const struct ble_store_value_sec *peer;
+  const struct ble_store_value_sec *our;
   uint8_t flags = 0U;
 
-  if (ble_store_config_num_peer_secs == 0) {
-    if (ble_store_config_num_our_secs == 0) {
+  prv_note_written(ble_store_config_our_secs, ble_store_config_num_our_secs, s_seen_our_secs,
+                   &s_num_seen_our_secs);
+  prv_note_written(ble_store_config_peer_secs, ble_store_config_num_peer_secs, s_seen_peer_secs,
+                   &s_num_seen_peer_secs);
+
+  peer = prv_find(ble_store_config_peer_secs, ble_store_config_num_peer_secs);
+  our = prv_find(ble_store_config_our_secs, ble_store_config_num_our_secs);
+  if (peer == nullptr) {
+    // Gone, or its keys are still to come.
+    if (our == nullptr) {
       pbl_bt_prf_store_erase_pairing();
     }
     return 0;
   }
-
-  peer = &ble_store_config_peer_secs[ble_store_config_num_peer_secs - 1];
 
   info.identity.is_random_address = peer->peer_addr.type == BLE_ADDR_RANDOM;
   memcpy(info.identity.address.octets, peer->peer_addr.val, sizeof(info.identity.address.octets));
@@ -50,16 +100,11 @@ static int prv_save(void) {
     memcpy(info.irk.data, peer->irk, KEY_SIZE);
   }
 
-  for (int i = 0; i < ble_store_config_num_our_secs; i++) {
-    const struct ble_store_value_sec *our = &ble_store_config_our_secs[i];
-
-    if (ble_addr_cmp(&our->peer_addr, &peer->peer_addr) == 0 && our->ltk_present) {
-      info.is_local_encryption_info_valid = true;
-      info.local_encryption_info.ediv = our->ediv;
-      info.local_encryption_info.rand = our->rand_num;
-      memcpy(info.local_encryption_info.ltk.data, our->ltk, KEY_SIZE);
-      break;
-    }
+  if (our != nullptr && our->ltk_present) {
+    info.is_local_encryption_info_valid = true;
+    info.local_encryption_info.ediv = our->ediv;
+    info.local_encryption_info.rand = our->rand_num;
+    memcpy(info.local_encryption_info.ltk.data, our->ltk, KEY_SIZE);
   }
 
   if (peer->sc) {
@@ -119,6 +164,8 @@ void ble_store_config_conf_init(void) {
 
   ble_hs_cfg.store_gen_key_cb = prv_gen_key;
 
+  pbl_bt_prf_store_init();
+
   if (!pbl_bt_prf_store_get_pairing(&info, nullptr, &flags)) {
     return;
   }
@@ -143,6 +190,9 @@ void ble_store_config_conf_init(void) {
     memcpy(sec->irk, info.irk.data, KEY_SIZE);
   }
   ble_store_config_num_peer_secs = 1;
+  s_seen_peer_secs[0] = *sec;
+  s_num_seen_peer_secs = 1;
+  s_last_addr = addr;
 
   if (!info.is_local_encryption_info_valid) {
     return;
@@ -159,4 +209,6 @@ void ble_store_config_conf_init(void) {
   sec->ltk_present = 1;
   memcpy(sec->ltk, info.local_encryption_info.ltk.data, KEY_SIZE);
   ble_store_config_num_our_secs = 1;
+  s_seen_our_secs[0] = *sec;
+  s_num_seen_our_secs = 1;
 }

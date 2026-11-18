@@ -66,6 +66,13 @@ bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_ou
 void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_info,
                                   const char *name, uint8_t flags);
 
+/**
+ * @brief Store the device name of the BLE pairing. Does nothing without a pairing.
+ *
+ * @param name Device name.
+ */
+void pbl_bt_prf_store_set_pairing_name(const char *name);
+
 /** @brief Erase the BLE pairing and its device name. */
 void pbl_bt_prf_store_erase_pairing(void);
 

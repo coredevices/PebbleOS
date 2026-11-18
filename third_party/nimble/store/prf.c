@@ -478,6 +478,20 @@ void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_i
   prv_unlock();
 }
 
+void pbl_bt_prf_store_set_pairing_name(const char *name) {
+  prv_lock();
+  {
+    SprfBlePairingData data;
+    SprfBlePairingName name_data = {};
+
+    if (SPRF_FETCH_FIELD(data, ble_pairing_data) && data.fields) {
+      strncpy(name_data.name, name, sizeof(name_data.name));
+      SPRF_PERSIST_FIELD(name_data, ble_pairing_name);
+    }
+  }
+  prv_unlock();
+}
+
 void pbl_bt_prf_store_erase_pairing(void) {
   prv_lock();
   {
