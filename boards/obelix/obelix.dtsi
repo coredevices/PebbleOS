@@ -297,12 +297,31 @@
 	vcc-supply = <&buck1>;
 };
 
+/* DLL2 clocks the flash */
+&hpsys_rcc {
+	assigned-clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PERI>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DLL1>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DLL2>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_SYS>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_HCLK>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PCLK>,
+			  <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_PCLK2>;
+	assigned-clock-parents = <&pmuc SF32LB52_PMUC_CLK_HRC48>, <0>, <0>,
+				 <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DLL1>,
+				 <0>, <0>, <0>;
+	assigned-clock-rates = <0>, <240000000>, <288000000>, <0>, <240000000>,
+			       <120000000>, <3750000>;
+};
+
 &mpi2 {
 	status = "okay";
+	assigned-clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_MPI2_K>;
+	assigned-clock-parents = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DLL2>;
 
 	flash0: flash@0 {
 		compatible = "gigadevice,gd25q256e", "jedec,spi-nor";
 		reg = <0>;
+		spi-max-frequency = <72000000>;
 		spi-rx-bus-width = <4>;
 		spi-tx-bus-width = <4>;
 
