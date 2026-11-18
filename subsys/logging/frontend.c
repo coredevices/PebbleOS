@@ -108,12 +108,20 @@ static bool prv_use_default_log_msg(LogBinaryMessage *msg, const int max_message
 // -------------------------------------------------------------------------------------------
 static void prv_sprintf_to_msg(LogBinaryMessage *msg, const uint32_t max_message_len,
                                const char *fmt, va_list fmt_args) {
-  int message_length = vsniprintf(msg->message + msg->message_length,
-                                  max_message_len - msg->message_length, fmt, fmt_args);
-  msg->message_length += message_length;
-  if (msg->message_length > max_message_len) {
-    msg->message_length = max_message_len;
+  const size_t avail = max_message_len - msg->message_length;
+  if (avail == 0) {
+    return;
   }
+
+  // vsnprintf() returns the untruncated length, which can exceed both the
+  // buffer and the uint8_t message_length. Only count what was written.
+  int written = vsnprintf(msg->message + msg->message_length, avail, fmt, fmt_args);
+  if (written < 0) {
+    written = 0;
+  } else if ((size_t)written >= avail) {
+    written = avail - 1;
+  }
+  msg->message_length += written;
 }
 
 // -------------------------------------------------------------------------------------------
