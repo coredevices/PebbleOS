@@ -111,7 +111,8 @@ static void prv_init_from_info_common(PebbleProcessMd *common, const PebbleProce
 
 void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
                                              const PebbleProcessInfo *info, int code_bank_num,
-                                             PebbleTask task, uint8_t *build_id_buffer) {
+                                             PebbleTask task, uint8_t *build_id_buffer,
+                                             const PebblePlatformInfo *platform_info) {
   *md = (PebbleProcessMdFlash){};
   prv_init_from_info_common(&md->common, info, task, ProcessStorageFlash);
 
@@ -132,6 +133,9 @@ void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
 
   if (build_id_buffer) {
     memcpy(md->build_id, build_id_buffer, BUILD_ID_EXPECTED_LEN);
+  }
+  if (platform_info) {
+    md->platform_info = *platform_info;
   }
 }
 
@@ -271,6 +275,14 @@ PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md) {
       return PBL_PLATFORM_TYPE_CURRENT;
     }
   }
+}
+
+const PebblePlatformInfo *process_metadata_get_platform_info(const PebbleProcessMd *md) {
+  if (md->process_storage != ProcessStorageFlash) {
+    return nullptr;
+  }
+  const PebblePlatformInfo *platform_info = &((const PebbleProcessMdFlash *)md)->platform_info;
+  return (platform_info->version != 0) ? platform_info : nullptr;
 }
 
 ProcessAppSDKType process_metadata_get_app_sdk_type(const PebbleProcessMd *md) {

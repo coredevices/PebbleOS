@@ -5,6 +5,7 @@
 
 #include "pebble_process_info.h"
 
+#include <pbl/util/bits.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/uuid.h>
 
@@ -128,6 +129,9 @@ typedef struct PebbleProcessMdFlash {
 
   //! Build id of the application
   uint8_t build_id[BUILD_ID_EXPECTED_LEN];
+
+  //! What the platform the process was built for is like; version 0 if its binary does not say
+  PebblePlatformInfo platform_info;
 } PebbleProcessMdFlash;
 
 //! Metadata for processes that are dynamically loaded from a system resource.
@@ -170,10 +174,13 @@ const uint8_t *process_metadata_get_build_id(const PebbleProcessMd *md);
 //! @param process_bank_num The flash bank the process binary is stored in
 //! @param task The task the process will run as
 //! @param build_id_buffer Optional buffer holding the build id to copy, may be NULL
+//! @param platform_info What the platform the process was built for is like, as read with the
+//! header, may be NULL
 void process_metadata_init_with_flash_header(PebbleProcessMdFlash *md,
                                              const PebbleProcessInfo *flash_header,
                                              int process_bank_num, PebbleTask task,
-                                             uint8_t *build_id_buffer);
+                                             uint8_t *build_id_buffer,
+                                             const PebblePlatformInfo *platform_info);
 
 //! @param[out] md
 //! @param info The process info header
@@ -200,3 +207,36 @@ uint16_t process_metadata_flags_stored_sdk_platform(PebbleProcessInfoFlags flags
 ProcessAppSDKType process_metadata_get_app_sdk_type(const PebbleProcessMd *md);
 
 PlatformType process_metadata_get_app_sdk_platform(const PebbleProcessMd *md);
+
+//! The values of PebblePlatformInfo. They are here rather than beside the struct because that
+//! header is also the SDK's, which has no PBL_BIT().
+typedef enum {
+  PLATFORM_ABI_ARMV7M = 1, //!< Cortex-M3 Thumb, soft float
+} PebblePlatformAbi;
+
+//! A reader takes a shape it does not know as one it cannot show.
+typedef enum {
+  PLATFORM_DISPLAY_SHAPE_RECT = 0,
+  PLATFORM_DISPLAY_SHAPE_ROUND = 1,
+} PebblePlatformDisplayShape;
+
+//! Values of PebblePlatformInfo.display_color_depth
+#define PLATFORM_DISPLAY_COLOR_DEPTH_BW        1
+#define PLATFORM_DISPLAY_COLOR_DEPTH_64_COLORS 6
+
+// In the order of FEATURES in tools/pebble_sdk_platform.py. A reader ignores the bits it does not
+// know.
+typedef enum {
+  PLATFORM_FEATURE_MICROPHONE = PBL_BIT(0),
+  PLATFORM_FEATURE_SMARTSTRAP = PBL_BIT(1),
+  PLATFORM_FEATURE_SMARTSTRAP_POWER = PBL_BIT(2),
+  PLATFORM_FEATURE_HEALTH = PBL_BIT(3),
+  PLATFORM_FEATURE_COMPASS = PBL_BIT(4),
+  PLATFORM_FEATURE_TOUCH = PBL_BIT(5),
+  PLATFORM_FEATURE_RGB_BACKLIGHT = PBL_BIT(6),
+  PLATFORM_FEATURE_SPEAKER = PBL_BIT(7),
+} PebblePlatformFeature;
+
+//! What the platform the process was built for is like, as its binary says.
+//! @return NULL if the binary does not say: system apps, and apps of SDKs that predate the record
+const PebblePlatformInfo *process_metadata_get_platform_info(const PebbleProcessMd *md);

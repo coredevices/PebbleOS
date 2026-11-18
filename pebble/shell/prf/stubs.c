@@ -149,8 +149,9 @@ void *process_loader_load(const PebbleProcessMd *app_md, PebbleTask task,
 
 #include <pbl/services/process_management/app_storage.h>
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
-                                                        uint8_t *build_id_out, AppInstallId app_id,
-                                                        PebbleTask task) {
+                                                        uint8_t *build_id_out,
+                                                        PebblePlatformInfo *platform_info_out,
+                                                        AppInstallId app_id, PebbleTask task) {
   return GET_APP_INFO_COULD_NOT_READ_FORMAT;
 }
 

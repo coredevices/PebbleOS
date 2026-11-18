@@ -19,9 +19,17 @@
 
 PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGEMENT_LOG_LEVEL);
 
+//! Whether a platform info read from a binary is one this firmware understands.
+static bool prv_platform_info_is_valid(const PebblePlatformInfo *platform_info) {
+  return (platform_info->version == PROCESS_PLATFORM_INFO_VERSION) &&
+         (platform_info->length >= sizeof(PebblePlatformInfo)) &&
+         (platform_info->display_width > 0) && (platform_info->display_height > 0);
+}
+
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
-                                                        uint8_t *build_id_out, AppInstallId app_id,
-                                                        PebbleTask task_type) {
+                                                        uint8_t *build_id_out,
+                                                        PebblePlatformInfo *platform_info_out,
+                                                        AppInstallId app_id, PebbleTask task_type) {
   char process_name[APP_FILENAME_MAX_LENGTH];
   app_storage_get_file_name(process_name, sizeof(process_name), app_id, task_type);
   struct pbl_fs_file file;
@@ -33,16 +41,32 @@ AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_i
     pbl_fs_close(&file);
     return (GET_APP_INFO_COULD_NOT_READ_FORMAT);
   }
-  if (build_id_out) {
+  if (platform_info_out) {
+    *platform_info_out = (PebblePlatformInfo){};
+  }
+  if (build_id_out || platform_info_out) {
     const uint8_t padding_size = sizeof(PebbleProcessInfo) % 4;
     // The note.gnu.build-id section seems to have a hard-coded word-alignment requirement...
-    uint8_t note_buffer[BUILD_ID_TOTAL_EXPECTED_LEN + padding_size];
-    const ElfExternalNote *note = (const ElfExternalNote *)(note_buffer + padding_size);
-    int result = pbl_fs_read(&file, note_buffer, sizeof(note_buffer));
-    if ((result == (int)sizeof(note_buffer)) && build_id_contains_gnu_build_id(note)) {
-      memcpy(build_id_out, note->data + note->name_length, BUILD_ID_EXPECTED_LEN);
-    } else {
-      memset(build_id_out, 0, BUILD_ID_EXPECTED_LEN);
+    // The platform info, when there is one, follows the note.
+    uint8_t buffer[padding_size + BUILD_ID_TOTAL_EXPECTED_LEN + sizeof(PebblePlatformInfo)];
+    const ElfExternalNote *note = (const ElfExternalNote *)(buffer + padding_size);
+    const int note_end = padding_size + BUILD_ID_TOTAL_EXPECTED_LEN;
+    const int result = pbl_fs_read(&file, buffer, sizeof(buffer));
+    const bool has_build_id = (result >= note_end) && build_id_contains_gnu_build_id(note);
+    if (build_id_out) {
+      if (has_build_id) {
+        memcpy(build_id_out, note->data + note->name_length, BUILD_ID_EXPECTED_LEN);
+      } else {
+        memset(build_id_out, 0, BUILD_ID_EXPECTED_LEN);
+      }
+    }
+    if (platform_info_out && has_build_id && (result == (int)sizeof(buffer)) &&
+        (app_info->flags & PROCESS_INFO_HAS_PLATFORM_INFO)) {
+      PebblePlatformInfo platform_info;
+      memcpy(&platform_info, buffer + note_end, sizeof(platform_info));
+      if (prv_platform_info_is_valid(&platform_info)) {
+        *platform_info_out = platform_info;
+      }
     }
   }
   pbl_fs_close(&file);

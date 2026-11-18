@@ -804,16 +804,18 @@ static const PebbleProcessMd *prv_get_md_for_flash_id(AppInstallId id, bool work
 
   PebbleProcessInfo app_header;
   uint8_t build_id_buffer[BUILD_ID_EXPECTED_LEN];
+  PebblePlatformInfo platform_info;
   const PebbleTask task = worker ? PebbleTask_Worker : PebbleTask_App;
   if (GET_APP_INFO_SUCCESS !=
-      app_storage_get_process_info(&app_header, build_id_buffer, id, task)) {
+      app_storage_get_process_info(&app_header, build_id_buffer, &platform_info, id, task)) {
     PBL_LOG_WRN("Failed to get app from flash with id %" PRIu32, id);
     return nullptr;
   }
 
   // freed in process_manager.c
   PebbleProcessMdFlash *md = pbl_malloc_check(sizeof(PebbleProcessMdFlash));
-  process_metadata_init_with_flash_header(md, &app_header, id, task, build_id_buffer);
+  process_metadata_init_with_flash_header(md, &app_header, id, task, build_id_buffer,
+                                          &platform_info);
   const PebbleProcessMd *const_md = (PebbleProcessMd *)md;
   return const_md;
 }

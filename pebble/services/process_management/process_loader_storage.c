@@ -189,7 +189,7 @@ static bool prv_load_from_flash(const PebbleProcessMd *app_md, PebbleTask task,
   AppStorageGetAppInfoResult result;
   AppInstallId app_id = process_metadata_get_code_bank_num(app_md);
 
-  result = app_storage_get_process_info(&info, nullptr, app_id, task);
+  result = app_storage_get_process_info(&info, nullptr, nullptr, app_id, task);
 
   if (result != GET_APP_INFO_SUCCESS) {
     // Failed to load the app out of flash, this function will have already printed an error.

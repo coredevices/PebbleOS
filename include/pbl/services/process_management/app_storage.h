@@ -46,13 +46,16 @@ typedef enum AppStorageGetAppInfoResult {
  * @param[out] app_info Metadata read from flash.
  * @param[out] build_id_out Buffer of at least @c BUILD_ID_EXPECTED_LEN bytes for the GNU build ID
  * of the executable, zero-filled if there is none. May be NULL.
+ * @param[out] platform_info_out What the platform the binary was built for is like, with a
+ * version of 0 if the binary does not say or this firmware cannot read it. May be NULL.
  * @param app_id App install id.
  * @param task @c PebbleTask_App or @c PebbleTask_Worker.
  * @return Result of the check.
  */
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
-                                                        uint8_t *build_id_out, AppInstallId app_id,
-                                                        PebbleTask task);
+                                                        uint8_t *build_id_out,
+                                                        PebblePlatformInfo *platform_info_out,
+                                                        AppInstallId app_id, PebbleTask task);
 
 /**
  * @brief Remove the app, worker and resource files of an app.
