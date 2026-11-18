@@ -15,6 +15,7 @@
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/dis.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
@@ -210,7 +211,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
   }
   pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
   prv_track_quick_airplane_mode_toggles(!enabled);
-  bt_persistent_storage_set_airplane_mode_enabled(enabled);
+  bt_settings_set_airplane_mode(enabled);
   s_comm_airplane_mode_on = enabled;
   bool should_schedule_eval = false;
   if (!s_comm_state_change_eval_is_scheduled) {
@@ -224,7 +225,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 }
 
 void bt_ctl_init(void) {
-  s_comm_airplane_mode_on = bt_persistent_storage_get_airplane_mode_enabled();
+  s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
   s_comm_initialized = true;
 
   gatt_client_subscription_boot();

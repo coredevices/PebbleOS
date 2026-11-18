@@ -9,7 +9,7 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/endpoint_private.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/system/status_codes.h>
 
 #include <kernel/pebble_tasks.h>
@@ -285,7 +285,7 @@ static void prv_handle_database_clear(struct pbl_pp_session *session, const uint
 
   // Mark the device as faithful after successfully flushing
   if (ret == S_SUCCESS) {
-    bt_persistent_storage_set_unfaithful(false /* We are now faithful */);
+    bt_settings_set_unfaithful(false /* We are now faithful */);
   }
 }
 

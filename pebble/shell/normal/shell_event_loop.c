@@ -7,7 +7,6 @@
 #include <pbl/services/app_inbox_service.h>
 #include <pbl/services/app_outbox_service.h>
 #include <pbl/services/blob_db/api.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_endpoint.h>

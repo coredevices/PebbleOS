@@ -13,7 +13,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/activity/insights_settings.h>
-#include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/notifications/notification_image.h>
 #include <pbl/util/byteorder.h>
@@ -143,7 +143,7 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
   versions_msg.system_resources_version = resource_get_system_version();
   resource_version_to_network_endian(&versions_msg.system_resources_version);
 
-  versions_msg.is_unfaithful = bt_persistent_storage_is_unfaithful();
+  versions_msg.is_unfaithful = bt_settings_is_unfaithful();
 #if !defined(CONFIG_RECOVERY_FW)
   versions_msg.activity_insights_version = pbl_be16_make(activity_insights_settings_get_version());
 #endif

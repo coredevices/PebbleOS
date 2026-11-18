@@ -28,6 +28,15 @@ pbl_clar_test(test_bluetooth_persistent_storage
   OVERRIDES dummy_board bluetooth_persistent_storage_v2
 )
 
+pbl_clar_test(test_bt_settings
+  MODULES settings
+  SOURCES
+    pebble/services/bluetooth/bt_settings_normal.c
+    tests/fakes/fake_events.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_prf_store
   SOURCES
     third_party/nimble/store/prf.c
