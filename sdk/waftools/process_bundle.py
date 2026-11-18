@@ -6,6 +6,7 @@ import os
 import mkbundle
 from pebble_package import LibraryPackage
 from pebble_project import no_permissions_warning
+from pebble_sdk_platform import bundle_description
 from process_elf import generate_bin_file
 from resources.types.resource_ball import ResourceBall
 from sdk_helpers import bundled_file_paths
@@ -224,6 +225,7 @@ def make_pbl_bundle(task_gen):
                     "minor": task_gen.bld.env.SDK_VERSION_MINOR,
                 },
                 "subfolder": task_gen.bld.env.BUNDLE_BIN_DIR,
+                "platform": bundle_description(task_gen.bld.env.PLATFORM_NAME),
             }
         )
     task_gen.bld.env = cached_env

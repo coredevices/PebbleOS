@@ -30,7 +30,7 @@ if SDK_TOOLS not in sys.path:
 
 import pebble_project
 from pebble_project import ProjectError
-from pebble_sdk_platform import pebble_platforms
+from pebble_sdk_platform import bundle_description, pebble_platforms
 
 # Platforms whose SDK is older than this are 2.x: no PNG resources, and a
 # different SDK define.
@@ -935,6 +935,7 @@ def bundle(args):
                 "layouts": layouts if os.path.exists(layouts) else None,
                 "sdk_version": dict(zip(("major", "minor"), pinfo["sdk_version"])),
                 "subfolder": pinfo["bundle_dir"],
+                "platform": bundle_description(platform),
             }
         )
 

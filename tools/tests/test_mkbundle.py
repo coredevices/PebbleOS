@@ -62,6 +62,33 @@ class TestMakeWatchappBundle(unittest.TestCase):
             self.assertIn("config.html", z.namelist())
             self.assertIn("src/plugin/index.js", z.namelist())
 
+    def test_binary_manifest_describes_its_platform(self):
+        app = self._write("pebble-app.bin", "app")
+        resources = self._write("app_resources.pbpack", "resources")
+        platform = {"name": "emery", "display": {"width": 200, "height": 228}}
+        binary = {
+            "watchapp": app,
+            "resources": resources,
+            "worker_bin": None,
+            "layouts": None,
+            "sdk_version": {"major": 5, "minor": 86},
+        }
+        mkbundle.make_watchapp_bundle(
+            timestamp=0,
+            appinfo=self.appinfo,
+            binaries=[
+                dict(binary, subfolder="emery", platform=platform),
+                dict(binary, subfolder="basalt"),
+            ],
+            js=[],
+            outfile=self.outfile,
+        )
+        with zipfile.ZipFile(self.outfile) as z:
+            self.assertEqual(
+                json.loads(z.read("emery/manifest.json"))["platform"], platform
+            )
+            self.assertNotIn("platform", json.loads(z.read("basalt/manifest.json")))
+
     def test_nothing_to_bundle(self):
         with self.assertRaises(RuntimeError):
             mkbundle.make_watchapp_bundle(

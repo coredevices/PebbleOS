@@ -94,6 +94,28 @@ class TestPlatformTable(unittest.TestCase):
 
 
 class TestDescriptor(unittest.TestCase):
+    def test_bundle_description(self):
+        self.assertEqual(
+            sdk_platform.bundle_description("flint"),
+            {
+                "version": 1,
+                "name": "flint",
+                "abi": "armv7m",
+                "display": {
+                    "width": 144,
+                    "height": 168,
+                    "shape": "rect",
+                    "color": False,
+                },
+                "features": sdk_platform.pebble_platforms["flint"]["DESCRIPTOR"][
+                    "features"
+                ],
+                "limits": {"app_memory": 65536},
+            },
+        )
+        # Frozen platforms are described too.
+        self.assertEqual(sdk_platform.bundle_description("chalk")["name"], "chalk")
+
     def test_new_platform(self):
         slate = sdk_platform.platform_from_descriptor(SLATE)
         # In the table's order, not the description's.
