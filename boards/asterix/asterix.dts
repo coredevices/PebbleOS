@@ -228,6 +228,7 @@
 	flash0: flash@0 {
 		compatible = "gigadevice,gd25lq255e", "jedec,spi-nor";
 		reg = <0>;
+		vcc-supply = <&ldsw2>;
 		spi-max-frequency = <8000000>;
 		spi-rx-bus-width = <4>;
 		spi-tx-bus-width = <4>;
