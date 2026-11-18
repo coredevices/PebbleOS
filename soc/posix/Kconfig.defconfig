@@ -3,10 +3,6 @@
 
 if SOC_POSIX
 
-choice BT_ID_ADDR_SOURCE
-    default BT_ID_ADDR_STORAGE
-endchoice
-
 # Emulated external flash, backed by a file on the host.
 config FLASH_BASE
     default 0x00000000
