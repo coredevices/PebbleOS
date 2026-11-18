@@ -27,7 +27,7 @@ config NIMBLE_HCI_SF32LB
 
 config NIMBLE_HCI_UART
     bool "H4 over UART"
-    depends on QEMU || SOC_POSIX
+    depends on QEMU || UART_POSIX_BT_HCI
     help
       Talk H4 HCI to an external controller over the board's BT_HCI_UART.
       On QEMU this is the fourth serial port, on native boards the -b
