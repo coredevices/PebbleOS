@@ -14,8 +14,12 @@ config NIMBLE_HCI_NRF52
     depends on SOC_NRF52
     select NIMBLE_CONTROLLER
     select NIMBLE_DRIVER_NRF5X
+    select NIMBLE_TRNG if RNG
     help
       Run the NimBLE link layer in the same image, on the nRF52 radio.
+      It takes its random numbers from the RNG driver when there is one,
+      as that driver owns the peripheral, and drives the peripheral
+      itself otherwise.
 
 config NIMBLE_HCI_SF32LB
     bool "SiFli LCPU over IPC"
