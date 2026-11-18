@@ -333,36 +333,6 @@ void test_shared_prf_storage_v3__root_keys(void) {
   }
 }
 
-void test_shared_prf_storage_v3__local_device_name(void) {
-  cl_assert_equal_b(shared_prf_storage_get_local_device_name(nullptr, 0), false);
-
-  shared_prf_storage_set_local_device_name(DEVICE_NAME);
-
-  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  cl_assert_equal_b(
-      shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
-  cl_assert_equal_s(DEVICE_NAME, device_name_out);
-}
-
-// Test that setting a local_name to NULL will rewrite the field with 0xFF and allow it to
-// be rewritten without causing a new page to be written
-void test_shared_prf_storage_v3__local_device_name_NULL_new_erased_field(void) {
-  shared_prf_storage_set_local_device_name(DEVICE_NAME);
-
-  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  cl_assert_equal_b(
-      shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
-  cl_assert_equal_s(DEVICE_NAME, device_name_out);
-
-  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
-  shared_prf_storage_set_local_device_name(nullptr);
-  cl_assert_equal_b(
-      shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), false);
-  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
-  shared_prf_storage_set_local_device_name(DEVICE_NAME);
-  cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
-}
-
 void test_shared_prf_storage_v3__local_identity_address(void) {
   struct pbl_bt_addr addr_buf;
   cl_assert_equal_b(shared_prf_storage_get_local_identity_address(&addr_buf), false);
@@ -446,7 +416,6 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
 
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
-  shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
   char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
@@ -460,11 +429,6 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
 
   // Check getting started
   cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), GETTING_STARTED_COMPLETE);
-
-  // Check local_name
-  cl_assert_equal_b(
-      shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
-  cl_assert_equal_s(DEVICE_NAME, device_name_out);
 }
 
 void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_still_intact(void) {
@@ -472,7 +436,6 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
 
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
   shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
-  shared_prf_storage_set_local_device_name(DEVICE_NAME);
 
   for (uint32_t i = 0; i < 50; i++) {
     GETTING_STARTED_COMPLETE = !GETTING_STARTED_COMPLETE;
@@ -494,11 +457,6 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
   cl_assert_equal_i(flags, 0xff);
   cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
-
-  // Check local_name
-  cl_assert_equal_b(
-      shared_prf_storage_get_local_device_name(device_name_out, sizeof(device_name_out)), true);
-  cl_assert_equal_s(DEVICE_NAME, device_name_out);
 }
 
 // Sets the getting started field, then corrupts the getting_started crc

@@ -26,17 +26,6 @@ int fake_shared_prf_storage_get_ble_delete_count(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Custom Local Device Name
-
-bool shared_prf_storage_get_local_device_name(char *local_device_name_out, size_t max_size) {
-  return false;
-}
-
-void shared_prf_storage_set_local_device_name(char *local_device_name) {
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //! BLE Root Keys
 
 bool shared_prf_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,

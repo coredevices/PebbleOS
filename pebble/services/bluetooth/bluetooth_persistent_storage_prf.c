@@ -223,14 +223,6 @@ void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   shared_prf_storage_set_root_keys(keys_in);
 }
 
-bool bt_persistent_storage_get_local_device_name(char *local_device_name_out, size_t max_size) {
-  return shared_prf_storage_get_local_device_name(local_device_name_out, max_size);
-}
-
-void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t size) {
-  shared_prf_storage_set_local_device_name(local_device_name);
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Remote Device Info
 

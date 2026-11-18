@@ -314,49 +314,6 @@ void shared_prf_storage_wipe_all(void) {
 }
 
 //!
-//! Custom Local Device Name APIs
-//!
-
-bool shared_prf_storage_get_local_device_name(char *local_device_name_out, size_t max_size) {
-  bool rv;
-  prv_lock();
-  {
-    SprfLocalName data;
-    rv = SPRF_FETCH_FIELD(data, local_name);
-    if (!rv) {
-      goto unlock;
-    }
-
-    if (local_device_name_out) {
-      strncpy(local_device_name_out, data.name, max_size);
-      local_device_name_out[max_size - 1] = 0;
-    }
-
-    // Is not zero length?
-    rv = (data.name[0] != 0);
-  }
-
-unlock:
-  prv_unlock();
-  return rv;
-}
-
-void shared_prf_storage_set_local_device_name(const char *local_device_name) {
-  prv_lock();
-  {
-    SprfLocalName data = {};
-
-    if (local_device_name) {
-      strncpy(data.name, local_device_name, sizeof(data.name));
-      SPRF_PERSIST_FIELD(data, local_name);
-    } else {
-      SPRF_ERASE_FIELD(local_name);
-    }
-  }
-  prv_unlock();
-}
-
-//!
 //! BLE Root Key APIs
 //!
 

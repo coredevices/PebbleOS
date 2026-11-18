@@ -19,23 +19,6 @@
  */
 
 /**
- * @brief Get the custom local device name.
- *
- * @param[out] local_device_name_out Buffer for the name, may be NULL. Set to an empty string when
- *                                   no name is stored.
- * @param max_size Size of @p local_device_name_out in bytes.
- * @return true if a non-empty name is stored.
- */
-bool shared_prf_storage_get_local_device_name(char *local_device_name_out, size_t max_size);
-
-/**
- * @brief Store the custom local device name.
- *
- * @param local_device_name Name to store, or NULL to erase it.
- */
-void shared_prf_storage_set_local_device_name(const char *local_device_name);
-
-/**
  * @brief Get a BLE root key.
  *
  * @param key_type Encryption Root (ER) or Identity Root (IR) key.

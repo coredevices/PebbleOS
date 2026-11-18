@@ -77,7 +77,6 @@ static const char IS_UNFAITHFUL_KEY[] = "IS_UNFAITHFUL";
 //! This key is used to access an array of two struct pbl_bt_sm_key values
 static const char ROOT_KEYS_KEY[] = "ROOT_KEYS";
 //! This key is used to access a char array which holds the device name
-static const char DEVICE_NAME_KEY[] = "DEVICE_NAME";
 //! This key is used to access a bool which stores the current airplane mode state
 static const char AIRPLANE_MODE_KEY[] = "AIRPLANE_MODE";
 //! This key is used to access a uint64_t which stores the most recent system session capabilities
@@ -265,11 +264,6 @@ cleanup:
 //! Shared PRF Storage
 
 static void prv_load_local_data_from_prf(void) {
-  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  if (shared_prf_storage_get_local_device_name(name, PBL_BT_DEVICE_NAME_BUFFER_SIZE)) {
-    bt_persistent_storage_set_local_device_name(name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
-  }
-
   struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   if (shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
                                       &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
@@ -1154,24 +1148,6 @@ void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
                PBL_BT_SM_ROOT_KEY_TYPE_NUM * sizeof(struct pbl_bt_sm_key));
 }
 
-bool bt_persistent_storage_get_local_device_name(char *local_device_name_out, size_t max_size) {
-  int read_size =
-      prv_file_get(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY), local_device_name_out, max_size);
-  if (!read_size) {
-    return false;
-  }
-  return true;
-}
-
-void bt_persistent_storage_set_local_device_name(char *local_device_name, size_t size) {
-  if (!local_device_name) {
-    return;
-  }
-  shared_prf_storage_set_local_device_name(local_device_name);
-
-  prv_file_set(&DEVICE_NAME_KEY, sizeof(DEVICE_NAME_KEY), local_device_name, size);
-}
-
 bool bt_persistent_storage_get_airplane_mode_enabled(void) {
   return prv_file_get_bool(&AIRPLANE_MODE_KEY, sizeof(AIRPLANE_MODE_KEY), false /* default */);
 }
@@ -1395,11 +1371,6 @@ static bool prv_dump_bt_persistent_storage_contents(struct pbl_settings_file *fi
       bool root_keys_match = memcmp(&root_keys, &sprf_root_keys, sizeof(root_keys)) == 0;
       pbl_shell_print(sh, " Root keys match shared prf: %s", bool_to_str(root_keys_match));
     }
-  } else if (memcmp(key, DEVICE_NAME_KEY, info->key_len) == 0) {
-    char dev_name[info->val_len + 1];
-    memcpy(dev_name, val, info->val_len);
-    dev_name[info->val_len] = '\0';
-    pbl_shell_print(sh, "Device Name: %s", dev_name);
   } else if (info->key_len == sizeof(pbl_bt_bonding_id_t)) {
     pbl_bt_bonding_id_t bonding_id;
 
