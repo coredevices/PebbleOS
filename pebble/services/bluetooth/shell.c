@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include <pbl/bluetooth/id.h>
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/shell/shell.h>
 
 #include <comm/ble/gap_le_connection.h>
@@ -74,7 +74,7 @@ PBL_SHELL_SUBCMD_ADD(sub_bt, status, nullptr, "Show the Bluetooth status", prv_c
 
 #ifndef CONFIG_RELEASE
 static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **argv) {
-  shared_prf_storage_wipe_all();
+  pbl_bt_prf_store_wipe();
 #ifdef CONFIG_RECOVERY_FW
   // Reset to get the host and controller caches back in sync
   extern void factory_reset_set_reason_and_reset(void);

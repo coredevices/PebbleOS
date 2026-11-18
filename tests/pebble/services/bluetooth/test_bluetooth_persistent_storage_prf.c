@@ -4,10 +4,10 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/bonding_sync.h>
 #include <pbl/bluetooth/gap_le_connect.h>
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/board/partitions.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -45,12 +45,8 @@ void pbl_bt_cb_pairing_confirm_handle_completed(const struct pbl_bt_pairing_conf
                                                 bool success) {
 }
 
-// The v3 shared_prf_storage implementation (promoted to the sole implementation in commit
-// 990d9a37d, which removed the old v2_sprf) writes to flash synchronously inside
-// shared_prf_storage_store_*(), rather than deferring the write to a regular "writeback" timer as
-// v2 did. There is therefore no shared_prf_storage_get_writeback_timer() to fire: the pairing data
-// is already persisted by the time each store call returns, so the read-back assertions below
-// exercise the same persistence contract directly.
+// The PRF store writes to flash inside its set calls: the pairing data is persisted by the time
+// each call returns, so the read-back assertions below check that directly.
 
 static int s_bonding_change_count;
 static BtPersistBondingOp s_bonding_change_ops[2];
@@ -103,7 +99,7 @@ void test_bluetooth_persistent_storage_prf__initialize(void) {
   bonding_sync_init();
   prv_reset_change_op_tracking();
   fake_spi_flash_init(PART_SHARED_PRF_STORAGE_OFFSET, PART_SHARED_PRF_STORAGE_SIZE);
-  shared_prf_storage_init();
+  pbl_bt_prf_store_init();
   bt_persistent_storage_init();
 }
 

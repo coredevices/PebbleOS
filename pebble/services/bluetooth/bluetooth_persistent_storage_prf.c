@@ -2,13 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/bonding_sync.h>
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/btutil/bt_device.h>
 #include <pbl/btutil/sm_util.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/settings/settings.h>
 
 #include <comm/ble/gap_le_connect.h>
@@ -42,7 +42,7 @@ static pbl_bt_bonding_id_t prv_bt_persistent_storage_store_ble_pairing(
                  new_pairing_info->is_remote_identity_info_valid,
                  new_pairing_info->is_remote_encryption_info_valid,
                  new_pairing_info->is_local_encryption_info_valid);
-    shared_prf_storage_store_ble_pairing_data(new_pairing_info, device_name, flags);
+    pbl_bt_prf_store_set_pairing(new_pairing_info, device_name, flags);
     prv_call_ble_bonding_change_handlers(BLE_BONDING_ID, op);
     return BLE_BONDING_ID;
   }
@@ -60,7 +60,7 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
 
   bool is_updating_existing = false;
   struct pbl_bt_sm_pairing_info existing_pairing_info;
-  if (shared_prf_storage_get_ble_pairing_data(&existing_pairing_info, nullptr, nullptr)) {
+  if (pbl_bt_prf_store_get_pairing(&existing_pairing_info, nullptr, nullptr)) {
     if (sm_is_pairing_info_equal_identity(new_pairing_info, &existing_pairing_info)) {
       // Treat re-pairing an existing device as an "update" instead of deletion+addition,
       // because there is only one bonding ID that gets re-used, a deletion would otherwise cause a
@@ -86,7 +86,7 @@ bool bt_persistent_storage_update_ble_device_name(pbl_bt_bonding_id_t bonding,
   struct pbl_bt_sm_pairing_info data = {};
   char existing_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
   uint8_t flags = 0;
-  if (!shared_prf_storage_get_ble_pairing_data(&data, existing_name, &flags)) {
+  if (!pbl_bt_prf_store_get_pairing(&data, existing_name, &flags)) {
     PBL_LOG_ERR("Tried to store device name, but pairing no longer around.");
     return false;
   }
@@ -110,7 +110,7 @@ static void prv_remove_ble_bonding_from_backend(void) {
   struct pbl_bt_bonding bonding = {
     .is_gateway = true,
   };
-  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, nullptr)) {
+  if (!pbl_bt_prf_store_get_pairing(&bonding.pairing_info, nullptr, nullptr)) {
     return;
   }
   pbl_bt_handle_host_removed_bonding(&bonding);
@@ -119,7 +119,7 @@ static void prv_remove_ble_bonding_from_backend(void) {
 void bt_persistent_storage_delete_ble_pairing_by_id(pbl_bt_bonding_id_t bonding) {
   PBL_LOG_INFO("Deleting stored BLE pairing");
   prv_remove_ble_bonding_from_backend();
-  shared_prf_storage_erase_ble_pairing_data();
+  pbl_bt_prf_store_erase_pairing();
   prv_call_ble_bonding_change_handlers(bonding, BtPersistBondingOpWillDelete);
 }
 
@@ -133,7 +133,7 @@ bool bt_persistent_storage_get_ble_pairing_by_id(pbl_bt_bonding_id_t bonding,
                                                  char *name_out) {
   struct pbl_bt_sm_pairing_info data;
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  if (!shared_prf_storage_get_ble_pairing_data(&data, name, nullptr)) {
+  if (!pbl_bt_prf_store_get_pairing(&data, name, nullptr)) {
     return false;
   }
 
@@ -185,7 +185,7 @@ void bt_persistent_storage_for_each_ble_pairing(BtPersistBondingDBEachBLE cb, vo
 void bt_persistent_storage_register_existing_ble_bondings(void) {
   struct pbl_bt_bonding bonding = {};
   uint8_t flags;
-  if (!shared_prf_storage_get_ble_pairing_data(&bonding.pairing_info, nullptr, &flags)) {
+  if (!pbl_bt_prf_store_get_pairing(&bonding.pairing_info, nullptr, &flags)) {
     PBL_LOG_INFO("No existing BLE bonding to register");
     return;
   }
@@ -216,11 +216,11 @@ void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
 
 bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
                                         struct pbl_bt_sm_key *key_out) {
-  return shared_prf_storage_get_root_key(key_type, key_out);
+  return pbl_bt_prf_store_get_root_key(key_type, key_out);
 }
 
 void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
-  shared_prf_storage_set_root_keys(keys_in);
+  pbl_bt_prf_store_set_root_keys(keys_in);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

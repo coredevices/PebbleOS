@@ -7,9 +7,9 @@
 #include <pbl/kernel/compiler.h>
 
 /**
- * @defgroup services_shared_prf_storage_v3_sprf Shared PRF storage layout
- * @ingroup services_shared_prf_storage
- * @brief On-flash layout of shared PRF storage entries.
+ * @defgroup bluetooth_prf_store_layout PRF store layout
+ * @ingroup bluetooth_prf_store
+ * @brief On-flash layout of the PRF store entries.
  *
  * The region holds a rolling list of @ref SharedPRFData entries of 256 bytes, so that a whole
  * number of them fits in a flash sector. Exactly one entry is valid (or unpopulated); entries

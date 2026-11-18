@@ -95,7 +95,7 @@ expressions, as `BLE_SM_IO_CAP` does.
 
 An option the port can only offer with something of PebbleOS takes a `depends`
 in `config.yml`, a Kconfig expression: `BLE_STORE_CONFIG_PERSIST` depends on
-`SETTINGS`, where the store keeps its file.
+the store having a backend that persists.
 
 ## Areas
 

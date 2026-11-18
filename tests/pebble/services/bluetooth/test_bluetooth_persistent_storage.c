@@ -21,8 +21,8 @@ typedef struct GAPLEConnection GAPLEConnection;
 #include <fake_events.h>
 #include <fake_pbl_malloc.h>
 #include <fake_pfs.h>
+#include <fake_prf_store.h>
 #include <fake_rtc.h>
-#include <fake_shared_prf_storage.h>
 #include <fake_spi_flash.h>
 #include <fake_sys_work.h>
 
@@ -114,7 +114,7 @@ void test_bluetooth_persistent_storage__initialize(void) {
   s_ble_bonding_change_update_count = 0;
   s_ble_bonding_change_delete_count = 0;
 
-  fake_shared_prf_storage_reset_counts();
+  fake_prf_store_reset_counts();
 
   bt_persistent_storage_init();
 }
@@ -158,7 +158,7 @@ void test_bluetooth_persistent_storage__ble_store_and_get(void) {
       &pairing_1, true /* is_gateway */, nullptr, false /* auto_accept_re_pairing */);
   cl_assert(id_1 != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 1);
+  cl_assert_equal_i(fake_prf_store_get_ble_store_count(), 1);
 
   // Read it back
   ret =
@@ -433,13 +433,13 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
       &pairing, true /* is_gateway */, nullptr, false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 1);
+  cl_assert_equal_i(fake_prf_store_get_ble_store_count(), 1);
+  cl_assert_equal_i(fake_prf_store_get_ble_delete_count(), 1);
 
   // Delete the Pairing
   bt_persistent_storage_delete_ble_pairing_by_id(id);
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 2);
+  cl_assert_equal_i(fake_prf_store_get_ble_delete_count(), 2);
 
   // Try to read it back
   ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);
@@ -451,12 +451,12 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
                                                false /* auto_accept_re_pairing */);
   cl_assert(id != PBL_BT_BONDING_ID_INVALID);
   cl_assert_equal_i(s_ble_bonding_change_add_count, 2);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_store_count(), 2);
+  cl_assert_equal_i(fake_prf_store_get_ble_store_count(), 2);
 
   // Delete a pairing that doesn't exist. Delete count should stay at 1
   bt_persistent_storage_delete_ble_pairing_by_id(9);
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 1);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 3);
+  cl_assert_equal_i(fake_prf_store_get_ble_delete_count(), 3);
 
   // Make sure the pairing is actually still there
   ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);
@@ -465,7 +465,7 @@ void test_bluetooth_persistent_storage__delete_ble_pairing_by_id(void) {
   // And delete is again
   bt_persistent_storage_delete_ble_pairing_by_id(id);
   cl_assert_equal_i(s_ble_bonding_change_delete_count, 2);
-  cl_assert_equal_i(fake_shared_prf_storage_get_ble_delete_count(), 4);
+  cl_assert_equal_i(fake_prf_store_get_ble_delete_count(), 4);
 
   // Try to read it back
   ret = bt_persistent_storage_get_ble_pairing_by_id(id, &irk_out, &device_out, nullptr);

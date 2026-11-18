@@ -384,13 +384,6 @@ pbl_clar_test(test_accel_manager
   OVERRIDES dummy_board
 )
 
-pbl_clar_test(test_shared_prf_storage_v3
-  SOURCES
-    pebble/services/shared_prf_storage/shared_prf_storage.c
-    tests/fakes/fake_spi_flash.c
-  PLATFORMS emery
-)
-
 pbl_clar_test(test_app_file
   SOURCES
     pebble/services/process_management/app_file.c

@@ -19,8 +19,8 @@ void nimble_port_pebble_init(void);
 /**
  * @brief Install NimBLE's config store, for the keys of bonded peers and their CCCDs.
  *
- * The store keeps them in RAM and, with BLE_STORE_CONFIG_PERSIST, in a settings file it loads
- * here, along with a local IRK it generates once. Call before nimble_port_pebble_init().
+ * The store keeps them in RAM and, with a backend that persists (NIMBLE_STORE_BACKEND), loads
+ * here what it kept. Call before nimble_port_pebble_init().
  */
 void ble_store_config_init(void);
 #endif

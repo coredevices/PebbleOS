@@ -7,6 +7,7 @@
 //! I'll slowly move initialization routines into here as we continue to refactor services.
 //! For now this will just be woefully incomplete.
 
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/cron/cron.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/app_session.h>
@@ -18,7 +19,6 @@
 #include <pbl/services/put_bytes/put_bytes.h>
 #include <pbl/services/runlevel_impl.h>
 #include <pbl/services/services_common.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/touch/touch.h>
 #include <pbl/services/vibe_pattern.h>
 #include <pbl/util/size.h>
@@ -35,7 +35,7 @@ void services_common_init(void) {
 
   pbl_cron_init();
 
-  shared_prf_storage_init();
+  pbl_bt_prf_store_init();
   bt_persistent_storage_init();
 
 #if !defined(CONFIG_RECOVERY_FW)
