@@ -7,6 +7,24 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/units.h>
+
+static int prv_switch_on(const struct pbl_regulator *reg) {
+  int ret;
+
+  ret = reg->ops->enable(reg);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (reg->enable_time_us >= PBL_USEC_PER_MSEC) {
+    pbl_sleep_us(reg->enable_time_us);
+  } else if (reg->enable_time_us != 0U) {
+    pbl_busy_wait_us(reg->enable_time_us);
+  }
+
+  return 0;
+}
 
 int pbl_regulator_dev_init(const struct pbl_device *dev) {
   const struct pbl_regulator *reg = container_of(dev, const struct pbl_regulator, dev);
@@ -22,14 +40,14 @@ int pbl_regulator_dev_init(const struct pbl_device *dev) {
     }
   }
 
-  return reg->always_on ? reg->ops->enable(reg) : reg->ops->disable(reg);
+  return reg->always_on ? prv_switch_on(reg) : reg->ops->disable(reg);
 }
 
 static int prv_enable_locked(const struct pbl_regulator *reg) {
   int ret;
 
   if (reg->state->use_count == 0) {
-    ret = reg->ops->enable(reg);
+    ret = prv_switch_on(reg);
     if (ret != 0) {
       return ret;
     }
@@ -99,7 +117,7 @@ int pbl_regulator_power_cycle(const struct pbl_regulator *reg, uint32_t off_ms) 
     ret = reg->ops->disable(reg);
     if (ret == 0) {
       pbl_sleep_ms(off_ms);
-      ret = reg->ops->enable(reg);
+      ret = prv_switch_on(reg);
     }
   }
   pbl_mutex_unlock(&reg->state->mutex);
