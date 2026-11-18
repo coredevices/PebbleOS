@@ -21,6 +21,7 @@
 
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
+#include <process_management/pebble_process_md.h>
 #include <resource/resource.h>
 #include <resource/system_resource.h>
 #include <shell/system_app_ids.auto.h>
@@ -33,6 +34,8 @@
 
 #define VERSION_REQUEST  0x00
 #define VERSION_RESPONSE 0x01
+
+#define VERSIONS_PLATFORM_NAME_SIZE 16
 
 struct PBL_PACKED VersionsMessage {
   const uint8_t command;
@@ -52,7 +55,24 @@ struct PBL_PACKED VersionsMessage {
   bool is_unfaithful;
   pbl_be16_t activity_insights_version;
   pbl_be16_t javascript_bytecode_version;
+  //! What the watch is: the fields of a PebblePlatformInfo, and the platform's name. The length
+  //! lets a reader skip what is added later.
+  struct PBL_PACKED {
+    uint8_t version;
+    uint8_t length;
+    uint8_t abi;
+    uint8_t display_shape;
+    pbl_be16_t display_width;
+    pbl_be16_t display_height;
+    uint32_t features;
+    pbl_be16_t app_memory_kib;
+    uint8_t display_color_depth;
+    uint8_t reserved;
+    char name[VERSIONS_PLATFORM_NAME_SIZE]; //!< Padded with zeros, not terminated if full
+  } platform_info;
 };
+
+static_assert(sizeof(((struct VersionsMessage *)0)->platform_info) == 32, "");
 
 static void fixup_string(char *str, unsigned int length) {
   if (memchr(str, 0, length) == nullptr) {
@@ -69,6 +89,35 @@ static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
 static void resource_version_to_network_endian(ResourceVersion *resources_version) {
   resources_version->crc = pbl_cpu_to_be32(resources_version->crc);
   resources_version->timestamp = pbl_cpu_to_be32(resources_version->timestamp);
+}
+
+static uint32_t prv_platform_features(void) {
+  uint32_t features = 0;
+#ifdef CONFIG_PLATFORM_MICROPHONE
+  features |= PLATFORM_FEATURE_MICROPHONE;
+#endif
+#ifdef CONFIG_PLATFORM_SMARTSTRAP
+  features |= PLATFORM_FEATURE_SMARTSTRAP;
+#endif
+#ifdef CONFIG_PLATFORM_SMARTSTRAP_POWER
+  features |= PLATFORM_FEATURE_SMARTSTRAP_POWER;
+#endif
+#ifdef CONFIG_PLATFORM_HEALTH
+  features |= PLATFORM_FEATURE_HEALTH;
+#endif
+#ifdef CONFIG_PLATFORM_COMPASS
+  features |= PLATFORM_FEATURE_COMPASS;
+#endif
+#ifdef CONFIG_PLATFORM_TOUCH
+  features |= PLATFORM_FEATURE_TOUCH;
+#endif
+#ifdef CONFIG_PLATFORM_RGB_BACKLIGHT
+  features |= PLATFORM_FEATURE_RGB_BACKLIGHT;
+#endif
+#ifdef CONFIG_PLATFORM_SPEAKER
+  features |= PLATFORM_FEATURE_SPEAKER;
+#endif
+  return features;
 }
 
 static void prv_send_watch_versions(struct pbl_pp_session *session) {
@@ -147,6 +196,27 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
 #if !defined(CONFIG_RECOVERY_FW)
   versions_msg.activity_insights_version = pbl_be16_make(activity_insights_settings_get_version());
 #endif
+
+  versions_msg.capabilities.platform_info_appended = 1;
+  versions_msg.platform_info.version = PROCESS_PLATFORM_INFO_VERSION;
+  versions_msg.platform_info.length = sizeof(versions_msg.platform_info);
+  versions_msg.platform_info.abi = PLATFORM_ABI_ARMV7M;
+#ifdef CONFIG_PLATFORM_ROUND
+  versions_msg.platform_info.display_shape = PLATFORM_DISPLAY_SHAPE_ROUND;
+#else
+  versions_msg.platform_info.display_shape = PLATFORM_DISPLAY_SHAPE_RECT;
+#endif
+  versions_msg.platform_info.display_width = pbl_be16_make(CONFIG_PLATFORM_DISPLAY_WIDTH);
+  versions_msg.platform_info.display_height = pbl_be16_make(CONFIG_PLATFORM_DISPLAY_HEIGHT);
+  versions_msg.platform_info.features = pbl_cpu_to_be32(prv_platform_features());
+  versions_msg.platform_info.app_memory_kib =
+      pbl_be16_make(CONFIG_PLATFORM_MAX_APP_MEMORY_SIZE / 1024);
+#ifdef CONFIG_PLATFORM_COLOR
+  versions_msg.platform_info.display_color_depth = PLATFORM_DISPLAY_COLOR_DEPTH_64_COLORS;
+#else
+  versions_msg.platform_info.display_color_depth = PLATFORM_DISPLAY_COLOR_DEPTH_BW;
+#endif
+  strncpy(versions_msg.platform_info.name, CONFIG_PLATFORM_NAME, VERSIONS_PLATFORM_NAME_SIZE);
 
   pbl_pp_send(session, PBL_PP_ENDPOINT_SYSTEM_VERSION, (uint8_t *)&versions_msg,
               sizeof(versions_msg), PBL_PP_DEFAULT_TIMEOUT_MS);
