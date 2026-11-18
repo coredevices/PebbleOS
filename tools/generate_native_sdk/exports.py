@@ -43,6 +43,9 @@ class FunctionExport(FullExport):
         self.skip_definition = v.get("skipDefinition", False)
         self.added_revision = int(v["addedRevision"])
         self.sort_name = v.get("sortName", self.name)
+        # The function this one is declared like in headers, see supersede_functions().
+        self.declared_as = None
+        self.declared_definition = None
 
         if v.get("removed", False):
             self.removed = True
@@ -63,6 +66,8 @@ class StubbedFunctionExport(Export):
         )
 
         self.stub_return = v.get("stubReturn", "0")
+        # The function implementing it, for declarations only: a stub has no implementation.
+        self.declared_name = v.get("implName", self.name)
         self.stub_definition = v.get("stubDefinition", None)
         self.added_revision = int(v["addedRevision"])
         self.removed = v.get("removed", False)
@@ -155,6 +160,18 @@ def parse_exports_list(
             and int(e["addedRevision"]) > frozen_revision
         )
 
+        # An entry superseded at a revision the SDK has reached keeps its jump table slot for
+        # existing apps but leaves the headers, like a deprecated one. Platforms frozen before
+        # that revision keep it instead of the entry that replaces it.
+        superseded_revision = e.get("supersededRevision")
+        visible_revision = (
+            frozen_revision if frozen_revision is not None else current_revision
+        )
+        superseded = (
+            superseded_revision is not None
+            and int(superseded_revision) <= visible_revision
+        )
+
         if e["type"] == "group":
             exports.append(
                 Group(
@@ -175,7 +192,11 @@ def parse_exports_list(
                     StubbedFunctionExport(e, app_only, worker_only, deprecated)
                 )
             else:
-                exports.append(FunctionExport(e, app_only, worker_only, deprecated))
+                f = FunctionExport(e, app_only, worker_only, deprecated or superseded)
+                if superseded:
+                    # Its slot keeps the name apps know it by out of the shim library.
+                    f.name = "{}__pre{}".format(e["name"], superseded_revision)
+                exports.append(f)
         elif e["type"] == "type" or e["type"] == "define":
             exports.append(FullExport(e, app_only, worker_only, deprecated))
         else:
@@ -200,8 +221,39 @@ def parse_export_file(filename, internal_sdk_build, frozen_revision=None):
             current_revision,
             frozen_revision=frozen_revision,
         )
+        supersede_functions(exports)
 
     return shim_defs["files"], exports
+
+
+def supersede_functions(exports_tree):
+    """Settle functions that share a name because one supersedes another.
+
+    Only one of them may be declared in a header: the one already visible on this platform wins
+    over a stub of its replacement. It is declared and documented like the replacement, so apps
+    see the same declaration on every platform; only the jump table slot differs.
+    """
+    by_name = {}
+
+    def collect(e):
+        if isinstance(e, (FunctionExport, StubbedFunctionExport)) and not e.deprecated:
+            by_name.setdefault(e.name, []).append(e)
+
+    walk_tree(exports_tree, collect)
+
+    for entries in by_name.values():
+        if len(entries) < 2:
+            continue
+        entries.sort(
+            key=lambda e: (isinstance(e, StubbedFunctionExport), e.added_revision)
+        )
+        kept = entries[0]
+        for e in entries[1:]:
+            e.skip_definition = True
+            if isinstance(kept, FunctionExport):
+                kept.declared_as = getattr(e, "impl_name", None) or getattr(
+                    e, "declared_name", None
+                )
 
 
 def walk_tree(exports_tree, func, include_groups=False):

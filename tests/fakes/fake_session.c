@@ -61,9 +61,15 @@ static struct pbl_pp_session *prv_get_by_type(enum pbl_pp_session_type type) {
                                             (void *)(uintptr_t)type);
 }
 
+static uint32_t s_capabilities = UINT32_MAX;
+
+void fake_comm_session_set_capabilities(uint32_t capabilities) {
+  s_capabilities = capabilities;
+}
+
 bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
                                    enum pbl_pp_capability capability) {
-  return true;
+  return (s_capabilities & capability) != 0;
 }
 
 uint32_t pbl_pp_session_get_capabilities(const struct pbl_pp_session *session) {
@@ -469,6 +475,7 @@ void fake_comm_session_init(void) {
   s_session_close_call_count = 0;
   s_session_open_call_count = 0;
   s_last_responsiveness_granted_handler = nullptr;
+  s_capabilities = UINT32_MAX;
 }
 
 void fake_comm_session_cleanup(void) {

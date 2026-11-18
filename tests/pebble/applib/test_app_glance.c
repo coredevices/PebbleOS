@@ -10,6 +10,7 @@
 #include <pbl/util/uuid.h>
 
 #include <applib/app_glance.h>
+#include <applib/app_time32.h>
 #include <clar.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
@@ -123,6 +124,80 @@ void test_app_glance__basic_reload(void) {
     },
   };
   cl_assert_equal_m(&glance, &expected_glance, sizeof(AppGlance));
+}
+
+// 2040-06-01T12:00:00Z
+#define TEST_TIME_2040 ((time_t)2222164800LL)
+
+static void prv_reload_after_2038_cb(AppGlanceReloadSession *session, size_t limit, void *context) {
+  s_test_state.reload_callback_was_called = true;
+  s_test_state.resource_is_valid = true;
+
+  // An app built with a 64-bit time_t
+  const AppGlanceSlice slice = {
+    .expiration_time = TEST_TIME_2040 + 10,
+    .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+  };
+  cl_assert_equal_i(app_glance_add_slice(session, slice), APP_GLANCE_RESULT_SUCCESS);
+
+  // An app built with a 32-bit time_t, whose time() wrapped
+  const AppGlanceSlice32 slice32 = {
+    .expiration_time = pbl_time_to_time32(TEST_TIME_2040 + 20),
+    .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+  };
+  cl_assert(slice32.expiration_time < 0);
+  cl_assert_equal_i(app_glance_add_slice_time32(session, slice32), APP_GLANCE_RESULT_SUCCESS);
+}
+
+void test_app_glance__reload_after_2038(void) {
+  fake_rtc_init(0, TEST_TIME_2040);
+  app_glance_reload(prv_reload_after_2038_cb, s_test_state.context);
+  cl_assert_equal_b(s_test_state.reload_callback_was_called, true);
+
+  AppGlance glance = {};
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(glance.num_slices, 2);
+  cl_assert(glance.slices[0].expiration_time == TEST_TIME_2040 + 10);
+  cl_assert(glance.slices[1].expiration_time == TEST_TIME_2040 + 20);
+}
+
+static void prv_reload_time32_edges_cb(AppGlanceReloadSession *session, size_t limit,
+                                       void *context) {
+  s_test_state.reload_callback_was_called = true;
+  s_test_state.resource_is_valid = true;
+
+  const AppGlanceSlice32 forever32 = {
+    .expiration_time = APP_GLANCE_SLICE_NO_EXPIRATION,
+    .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+  };
+  cl_assert_equal_i(app_glance_add_slice_time32(session, forever32), APP_GLANCE_RESULT_SUCCESS);
+
+  const AppGlanceSlice32 expired32 = {
+    .expiration_time = pbl_time_to_time32(TEST_TIME_2040 - 10),
+    .layout.icon = APP_GLANCE_SLICE_DEFAULT_ICON,
+  };
+  cl_assert_equal_i(app_glance_add_slice_time32(session, expired32),
+                    APP_GLANCE_RESULT_EXPIRES_IN_THE_PAST);
+}
+
+void test_app_glance__reload_time32_edges(void) {
+  fake_rtc_init(0, TEST_TIME_2040);
+  app_glance_reload(prv_reload_time32_edges_cb, s_test_state.context);
+  cl_assert_equal_b(s_test_state.reload_callback_was_called, true);
+
+  AppGlance glance = {};
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(glance.num_slices, 1);
+  cl_assert(glance.slices[0].expiration_time == APP_GLANCE_SLICE_NO_EXPIRATION);
+}
+
+void test_app_glance__slice_abi(void) {
+  // Apps built with a 32-bit time_t pass this by value.
+  if (sizeof(void *) == 4) {
+    cl_assert_equal_i(sizeof(AppGlanceSlice32), 12);
+  }
+  cl_assert_equal_i(sizeof(((AppGlanceSlice32 *)0)->expiration_time), 4);
+  cl_assert_equal_i(sizeof(((AppGlanceSlice *)0)->expiration_time), 8);
 }
 
 void prv_reload_with_validation_cb(AppGlanceReloadSession *session, size_t limit, void *context) {

@@ -294,7 +294,7 @@ static void prv_deferred_sync_callback(void *data) {
 //!
 //! This callback is coalesced - multiple setting changes result in at most one
 //! queued callback, preventing background work queue queue overflow.
-static void prv_settings_change_callback(const void *key, size_t key_len, uint32_t last_modified,
+static void prv_settings_change_callback(const void *key, size_t key_len, time_t last_modified,
                                          void *user_data) {
   const struct prv_syncable_keys *syncable = user_data;
 

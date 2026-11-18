@@ -268,7 +268,7 @@
                      "the resources it uses need to be moved out of MCU flash  (only 3.x)"]
     }, {
         "name": "HealthServiceCache",
-        "size_3x_padding": 740,
+        "size_3x_padding": 676,
         "size_3x": 2048,
         "dependencies": [],
         "_comment": ["Cache to speed up frequent health service API calls (only 3.9+)"]
