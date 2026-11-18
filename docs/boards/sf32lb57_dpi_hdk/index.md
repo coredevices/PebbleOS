@@ -60,10 +60,10 @@ takes ARGB2222 framebuffers unless the application picks
 
 The board is flashed with the `sftool` runner, over the debug UART, which
 needs sftool 0.2.5 or later. sftool attaches through the SoC debugger, which
-listens to the receiver of USART1 on PA18 and PA19 while it is on. If sftool
-does not connect, as when the firmware has turned that receiver off, turn the
-`BOOT` switch on and press `RESET`, so that the boot ROM stays in download
-mode.
+listens to the receiver of USART1 on PA18 and PA19, which the USART driver
+keeps on. If sftool does not connect, as when the firmware is in deep sleep
+or hung, turn the `BOOT` switch on and press `RESET`, so that the boot ROM
+stays in download mode.
 
 The firmware boots from the flash table at the start of the SoC flash,
 which replaces the one of the factory firmware.
