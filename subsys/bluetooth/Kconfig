@@ -6,6 +6,7 @@ menu "Bluetooth"
 config BT
     bool "Bluetooth"
     select BTUTIL
+    select BT_GATT_CLIENT
     select NIMBLE
     select NIMBLE_STORE_CONFIG
     select TASK_WDT
@@ -41,5 +42,7 @@ config BT_REPEAT_PAIRING_ALWAYS
 rsource "services/Kconfig"
 
 endif
+
+rsource "clients/Kconfig"
 
 endmenu

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "nimble_gattc_op_queue.h"
+#include "clients/op_queue.h"
 #include "nimble_type_conversions.h"
 
 #include <pbl/bluetooth/gap_le_device_name.h>

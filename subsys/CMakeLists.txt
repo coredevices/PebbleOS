@@ -3,7 +3,7 @@
 
 pbl_include_directories(.)
 pbl_add_subdirectory_ifdef(CONFIG_ANALYTICS analytics)
-pbl_add_subdirectory_ifdef(CONFIG_BT bluetooth)
+add_subdirectory(bluetooth)
 pbl_add_subdirectory_ifdef(CONFIG_CONSOLE console)
 pbl_add_subdirectory_ifdef(CONFIG_COREDUMP coredump)
 pbl_add_subdirectory_ifdef(CONFIG_CRC crc)

@@ -13,13 +13,12 @@
 //! guarantees only one GATT client procedure runs at a time.
 //!
 //! Ops are started from the NimBLE host task, so pushing is safe from any
-//! context, including with bt_lock held.
+//! context.
 
-//! Starts the operation. Called from the NimBLE host task without bt_lock
-//! held. Returns 0 if the operation was started, in which case its completion
-//! path must call nimble_gattc_op_queue_complete() exactly once. On a non-zero
-//! return the op is dropped and the next one runs; error reporting is the
-//! starter's responsibility.
+//! Starts the operation. Called from the NimBLE host task. Returns 0 if the operation was started,
+//! in which case its completion path must call nimble_gattc_op_queue_complete() exactly once. On a
+//! non-zero return the op is dropped and the next one runs; error reporting is the starter's
+//! responsibility.
 typedef int (*NimbleGattClientOpStartFn)(void *ctx);
 
 //! Enqueues an operation. ctx must be heap-allocated (or NULL); it is
