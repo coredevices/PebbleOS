@@ -12,7 +12,3 @@ pbl_library_sources_ifdef(CONFIG_NIMBLE_ID_ADDR_SF32LB52_EFUSE id_addr_sf32lb52.
 if(CONFIG_NIMBLE_ID_ADDR_POSIX)
   pbl_host_sources(id_addr_posix_bottom.c)
 endif()
-
-if(CONFIG_NIMBLE_HCI_SF32LB_TRACE_LOG)
-  pbl_library_compile_definitions(NIMBLE_HCI_SF32LB_TRACE NIMBLE_HCI_SF32LB_TRACE_LOG)
-endif()
