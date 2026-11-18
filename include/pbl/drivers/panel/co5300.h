@@ -18,8 +18,8 @@
  *
  * The panel has its own frame memory, written in RGB565 over quad SPI by its @ref drivers_mipi_dbi
  * host, in pairs of rows. Being an AMOLED, it has no backlight: its brightness is a DCS command,
- * which the driver gives as a @ref drivers_backlight of the panel, @c sym_backlight. A brightness
- * set while the panel is off is sent when it turns on.
+ * which the driver gives as a @ref drivers_backlight of the panel, @c sym_backlight. The panel
+ * starts at its brightest, and a brightness set while it is off is sent when it turns on.
  * @{
  */
 
@@ -74,7 +74,9 @@ int pbl_panel_co5300_init(const struct pbl_device *dev);
 #define PBL_PANEL_CO5300_DEFINE(sym, _name, _dbi, _reset, _bus_max_hz, _width, _height, _x, _y) \
   extern const struct pbl_backlight sym##_backlight;                                            \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                 \
-  static struct pbl_panel_co5300_state sym##_co5300_state;                                      \
+  static struct pbl_panel_co5300_state sym##_co5300_state = {                                   \
+    .brightness = PBL_BACKLIGHT_BRIGHTNESS_MAX,                                                 \
+  };                                                                                            \
   static const struct pbl_panel_timing sym##_timing = {                                         \
     .hactive = (_width),                                                                        \
     .hback_porch = (_x),                                                                        \
