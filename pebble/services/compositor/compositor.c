@@ -316,7 +316,8 @@ void compositor_render_app(void) {
 
   // Fill entire framebuffer with black first to avoid artifacts
   GBitmap dest_bitmap = compositor_get_framebuffer_as_bitmap();
-  memset(dest_bitmap.addr, GColorBlack.argb, framebuffer_get_size_bytes(&s_framebuffer));
+  memset(dest_bitmap.addr, PBL_IF_COLOR_ELSE(GColorBlack.argb, 0),
+         framebuffer_get_size_bytes(&s_framebuffer));
 
   prv_scaled_app_fb_copy(GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
                          false /* copy_relative_to_origin */, 0 /* offset_y */, &fit);
@@ -762,6 +763,30 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
   prv_scaled_app_fb_copy(update_rect, copy_relative_to_origin, offset_y, &fit);
 }
 
+//! Set the pixels [start_x, end_x) of a row of the system framebuffer to black.
+static void prv_fill_row_black(GBitmap *bitmap, int16_t y, int16_t start_x, int16_t end_x) {
+  const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
+  start_x = MAX(start_x, row_info.min_x);
+  end_x = MIN(end_x, row_info.max_x + 1);
+  if (end_x <= start_x) {
+    return;
+  }
+#if PBL_COLOR
+  memset(&row_info.data[start_x], GColorBlack.argb, end_x - start_x);
+#else
+  for (int16_t x = start_x; x < end_x;) {
+    if ((x % 8 == 0) && (end_x - x >= 8)) {
+      const int16_t num_bytes = (end_x - x) / 8;
+      memset(&row_info.data[x / 8], 0, num_bytes);
+      x += num_bytes * 8;
+    } else {
+      row_info.data[x / 8] &= ~(1 << (x % 8));
+      x++;
+    }
+  }
+#endif
+}
+
 static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_to_origin,
                                    int16_t offset_y, const AppFrameFit *fit) {
   GBitmap src_bitmap = compositor_get_app_framebuffer_as_bitmap();
@@ -775,11 +800,10 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
     return;
   }
 
-#if PBL_COLOR
   const int16_t app_width = src_bitmap.bounds.size.w;
   const int16_t app_height = src_bitmap.bounds.size.h;
 
-#if defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
+#if PBL_COLOR && defined(CONFIG_APP_SCALING) && !defined(CONFIG_RECOVERY_FW)
   const int16_t disp_width = dst_bitmap.bounds.size.w;
   const int16_t disp_height = dst_bitmap.bounds.size.h;
   // Check if we should use scaling mode for legacy apps
@@ -960,24 +984,21 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
   } else
 #endif
   {
-    // Original bezel mode - center with black bezel
+    // Bezel mode: centered in a black bezel. The app is as wide or as high as the display when
+    // only the other direction is smaller.
     const int16_t bezel_width = (PBL_DISPLAY_WIDTH - app_width) / 2;
     const int16_t bezel_height = (PBL_DISPLAY_HEIGHT - app_height) / 2;
     const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
     const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
-    PBL_ASSERTN((bezel_width > 0) && (bezel_height > 0));
+    PBL_ASSERTN((bezel_width >= 0) && (bezel_height >= 0));
 
-    // memset the entire region to be updated to black
+    // set the entire region to be updated to black
     int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
     int16_t last_row =
         CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
     for (int16_t y = first_row; y < last_row; y++) {
-      GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
-      const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
-      const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
-      if (end_x > start_x) {
-        memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
-      }
+      prv_fill_row_black(&dst_bitmap, y, update_rect.origin.x,
+                         update_rect.origin.x + update_rect.size.w);
     }
 
     // bitblt the region of the app framebuffer into the display framebuffer
@@ -1005,5 +1026,4 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
       bitblt_bitmap_into_bitmap(&dst_bitmap, &sub_bitmap, dst_offset, GCompOpAssign, GColorWhite);
     }
   }
-#endif
 }
