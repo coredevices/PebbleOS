@@ -32,8 +32,6 @@ file(GLOB sources CONFIGURE_DEPENDS
   ${nimble}/nimble/host/services/gatt/src/*.c
   ${nimble}/nimble/transport/src/*.c
   ${nimble}/nimble/transport/common/hci_h4/src/*.c
-  port/src/nimble_port_pebble.c
-  port/src/npl_os_pebble.c
 )
 if(CONFIG_NIMBLE_BLE_SVC_BAS)
   list(APPEND sources ${nimble}/nimble/host/services/bas/src/ble_svc_bas.c)
@@ -67,30 +65,8 @@ if(CONFIG_NIMBLE_DRIVER_NRF5X)
 endif()
 
 if(CONFIG_NIMBLE_HCI_NRF52)
-  list(APPEND sources
-    ${nimble}/porting/nimble/src/hal_timer.c
-    port/src/nrf52.c
-  )
+  list(APPEND sources ${nimble}/porting/nimble/src/hal_timer.c)
   list(APPEND defines FREERTOS=1 PEBBLEOS NRF52_SERIES)
-elseif(CONFIG_NIMBLE_HCI_SF32LB)
-  list(APPEND sources
-    transport/hci_sf32lb.c
-  )
-  if(CONFIG_NIMBLE_HCI_SF32LB_TRACE_LOG)
-    pbl_compile_definitions(NIMBLE_HCI_SF32LB_TRACE NIMBLE_HCI_SF32LB_TRACE_LOG)
-  endif()
-elseif(CONFIG_NIMBLE_HCI_UART)
-  list(APPEND sources transport/hci_uart.c)
-elseif(CONFIG_NIMBLE_HCI_FAKE)
-  list(APPEND sources transport/hci_fake.c)
-endif()
-
-if(CONFIG_NIMBLE_ID_ADDR_SF32LB52_EFUSE)
-  list(APPEND sources port/src/id_addr_sf32lb52.c)
-endif()
-
-if(CONFIG_NIMBLE_TRNG)
-  list(APPEND sources port/src/trng.c)
 endif()
 
 pbl_include_directories(${includes})
@@ -106,3 +82,7 @@ pbl_library_compile_options(
   -Wno-unused-but-set-global
   -Wimplicit-fallthrough=1
 )
+
+# The PebbleOS side, built with the usual warnings.
+add_subdirectory(port)
+add_subdirectory(transport)

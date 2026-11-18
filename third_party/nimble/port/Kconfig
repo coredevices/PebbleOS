@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config NIMBLE_HOST_THREAD_STACK_SIZE
+    int "Host thread stack size in bytes"
+    default 5000
+
+config NIMBLE_HOST_THREAD_PRIO
+    int "Host thread priority"
+    default 3
+
+config NIMBLE_LL_THREAD_STACK_SIZE
+    int "Link layer thread stack size in bytes"
+    depends on NIMBLE_CONTROLLER
+    default 1384
+
+config NIMBLE_LL_THREAD_PRIO
+    int "Link layer thread priority"
+    depends on NIMBLE_CONTROLLER
+    default 4
