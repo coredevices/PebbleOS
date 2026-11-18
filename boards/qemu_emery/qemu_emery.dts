@@ -103,3 +103,7 @@
 &flash0 {
 	status = "okay";
 };
+
+&psram {
+	status = "okay";
+};
