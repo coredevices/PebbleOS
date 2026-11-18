@@ -1,0 +1,4 @@
+description: The widgets demo of LVGL, tabs of controls driven by the touchscreen and the keys
+expect:
+  - 'lvgl: widgets on \d+x\d+'
+roles: [display]

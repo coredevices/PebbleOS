@@ -1,0 +1,7 @@
+description: The stress demo of LVGL, a round of objects created, animated and deleted
+expect:
+  - 'lvgl: stress on \d+x\d+'
+  - 'lvgl: one round, at most \d+ bytes of memory used'
+  - 'Sample done'
+timeout: 300
+roles: [display]

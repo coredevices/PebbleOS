@@ -1,0 +1,7 @@
+description: The benchmark demo of LVGL, a series of scenes with the frame rate and render time of each
+expect:
+  - 'lvgl: benchmark on \d+x\d+'
+  - 'lvgl: \d+ scenes: \d+ fps, \d+% CPU, render \d+ ms, flush \d+ ms'
+  - 'Sample done'
+timeout: 300
+roles: [display]

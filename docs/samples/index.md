@@ -100,7 +100,12 @@ rust/index.md
 
 third_party/lvgl/hello_world.md
 third_party/lvgl/input.md
+third_party/lvgl/benchmark.md
+third_party/lvgl/keypad_encoder.md
 third_party/lvgl/music.md
+third_party/lvgl/render.md
+third_party/lvgl/stress.md
+third_party/lvgl/widgets.md
 ```
 
 ```{toctree}
