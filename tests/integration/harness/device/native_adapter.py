@@ -31,12 +31,14 @@ class NativeAdapter(DeviceAdapter):
         self._bt_hci = None
 
     def _command_line(self):
+        bt_addr = self._bt_addr("CONFIG_NIMBLE_ID_ADDR_POSIX")
         return [
             self.build.executable,
             "-f", os.path.join(self.workdir, FLASH_IMAGE),
             "-c", str(self.console_port),
             "-p", str(self.pebble_port),
             *(["-b", str(self._bt_hci)] if self._bt_hci else []),
+            *(["-a", bt_addr] if bt_addr else []),
         ]  # fmt: skip
 
     def _start(self):
