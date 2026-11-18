@@ -10,9 +10,9 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-#include <pbl/pp/session.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage.h>
 #include <pbl/services/bluetooth/bluetooth_persistent_storage_debug.h>
+#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/math.h>
@@ -72,21 +72,11 @@ typedef struct PBL_PACKED {
 
 //! This key is used to access the pbl_bt_bonding_id_t of the current active gateway
 static const char ACTIVE_GATEWAY_KEY[] = "ACTIVE_GATEWAY";
-//! This key is used to access a bool which stores if we have recently changed active gateways
-static const char IS_UNFAITHFUL_KEY[] = "IS_UNFAITHFUL";
 //! This key is used to access an array of two struct pbl_bt_sm_key values
 static const char ROOT_KEYS_KEY[] = "ROOT_KEYS";
 //! This key is used to access a char array which holds the device name
-//! This key is used to access a bool which stores the current airplane mode state
-static const char AIRPLANE_MODE_KEY[] = "AIRPLANE_MODE";
-//! This key is used to access a uint64_t which stores the most recent system session capabilities
-static const char SYSTEM_CAPABILITIES_KEY[] = "SYSTEM_CAPABILITIES";
 
 static PBL_MUTEX_DEFINE(s_db_mutex);
-
-//! Cache of the last connected system session capabilities. Updated in flash when we get new flags
-//! @note prv_lock() must be held when accessing this variable.
-static struct pbl_pp_capabilities s_cached_system_capabilities;
 
 static void prv_lock(void) {
   pbl_mutex_lock(&s_db_mutex, PBL_FOREVER);
@@ -144,18 +134,6 @@ static int prv_file_get(const void *key, size_t key_len, void *data_out, size_t 
 cleanup:
   prv_unlock();
   return data_len;
-}
-
-//! @return the value that was read at that key or `default_value` if the key does not exist,
-//! or if the stored data has been corrupted.
-static bool prv_file_get_bool(const void *key, size_t key_len, bool default_value) {
-  uint8_t bool_data;
-  int read_size = prv_file_get(key, key_len, (void *)&bool_data, sizeof(bool_data));
-  if (!read_size || ((bool_data != (uint8_t)true) && (bool_data != (uint8_t)false))) {
-    return default_value;
-  }
-  // Default to false in the case of data corruption (anything other than 0x1 or 0x0).
-  return bool_data;
 }
 
 //! Returns true if the set was successful
@@ -637,7 +615,7 @@ pbl_bt_bonding_id_t bt_persistent_storage_store_ble_pairing(
   // In practice we only support a single BLE pairing at a time, so if we add a new one,
   // set ourselves as unfaithful.
   if (op == BtPersistBondingOpDidAdd) {
-    bt_persistent_storage_set_unfaithful(true);
+    bt_settings_set_unfaithful(true);
   }
 
   prv_call_ble_bonding_change_handlers(key, op);
@@ -1084,8 +1062,8 @@ void bt_persistent_storage_set_active_gateway(pbl_bt_bonding_id_t bonding) {
 
   if (!read_size || old_active_gateway != bonding) {
     prv_file_set(&ACTIVE_GATEWAY_KEY, sizeof(ACTIVE_GATEWAY_KEY), &bonding, sizeof(bonding));
-    bt_persistent_storage_set_unfaithful(true);
-    bt_persistent_storage_set_cached_system_capabilities(nullptr);
+    bt_settings_set_unfaithful(true);
+    bt_settings_set_capabilities(nullptr);
   }
 }
 
@@ -1107,16 +1085,6 @@ bool bt_persistent_storage_get_active_gateway(pbl_bt_bonding_id_t *bonding_out,
   }
 
   return true;
-}
-
-bool bt_persistent_storage_is_unfaithful(void) {
-  return prv_file_get_bool(&IS_UNFAITHFUL_KEY, sizeof(IS_UNFAITHFUL_KEY), true /* default */);
-}
-
-void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
-  PBL_LOG_INFO("Marking the watch as %s", is_unfaithful ? "unfaithful" : "faithful");
-  prv_file_set(&IS_UNFAITHFUL_KEY, sizeof(IS_UNFAITHFUL_KEY), &is_unfaithful,
-               sizeof(is_unfaithful));
 }
 
 bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
@@ -1148,86 +1116,6 @@ void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
                PBL_BT_SM_ROOT_KEY_TYPE_NUM * sizeof(struct pbl_bt_sm_key));
 }
 
-bool bt_persistent_storage_get_airplane_mode_enabled(void) {
-  return prv_file_get_bool(&AIRPLANE_MODE_KEY, sizeof(AIRPLANE_MODE_KEY), false /* default */);
-}
-
-void bt_persistent_storage_set_airplane_mode_enabled(bool new_state) {
-  prv_file_set(&AIRPLANE_MODE_KEY, sizeof(AIRPLANE_MODE_KEY), &new_state, sizeof(bool));
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Remote Device Info
-
-static void prv_load_cached_system_capabilities(struct pbl_pp_capabilities *capabilities_out) {
-  if (!capabilities_out) {
-    return;
-  }
-
-  const int read_size = prv_file_get(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY),
-                                     capabilities_out, sizeof(struct pbl_pp_capabilities));
-  // Default to zero capabilities if no entry found
-  if (!read_size) {
-    *capabilities_out = (struct pbl_pp_capabilities){};
-  }
-}
-
-void bt_persistent_storage_get_cached_system_capabilities(
-    struct pbl_pp_capabilities *capabilities_out) {
-  if (!capabilities_out) {
-    return;
-  }
-
-  prv_lock();
-  {
-    *capabilities_out = s_cached_system_capabilities;
-  }
-  prv_unlock();
-}
-
-void bt_persistent_storage_set_cached_system_capabilities(
-    const struct pbl_pp_capabilities *capabilities) {
-  struct pbl_pp_capabilities diff = {};
-
-  prv_lock();
-  {
-    // If we were passed a null pointer, we'll just clear the cached capability bits
-    if (capabilities) {
-      diff.flags = s_cached_system_capabilities.flags ^ capabilities->flags;
-      s_cached_system_capabilities = *capabilities;
-    } else {
-      diff.flags = s_cached_system_capabilities.flags;
-      s_cached_system_capabilities = (struct pbl_pp_capabilities){};
-    }
-  }
-  prv_unlock();
-
-  // Only update the cache if the capability flags changed
-  if (diff.flags) {
-    prv_file_set(&SYSTEM_CAPABILITIES_KEY, sizeof(SYSTEM_CAPABILITIES_KEY), capabilities,
-                 sizeof(struct pbl_pp_capabilities));
-
-    PebbleEvent event = {
-      .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
-      .capabilities.flags_diff = diff,
-    };
-    event_put(&event);
-  }
-}
-
-static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
-                           void *user_data) {
-  if (event == PBL_PP_SESSION_CAPABILITIES && pbl_pp_session_is_system(session)) {
-    const struct pbl_pp_capabilities capabilities = {
-      .flags = pbl_pp_session_get_capabilities(session),
-    };
-
-    bt_persistent_storage_set_cached_system_capabilities(&capabilities);
-  }
-}
-
-PBL_PP_SESSION_LISTENER_DEFINE(bt_persistent_storage, prv_session_cb, nullptr);
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Common
 
@@ -1240,9 +1128,6 @@ void bt_persistent_storage_init(void) {
   // Clean up any leftover state where the bonding DB ended up with more than one BLE pairing
   // (e.g. inherited from an older firmware build, or a PRF pairing layered on an existing one).
   prv_prune_stale_ble_bondings();
-
-  // Load cached capability bits from flash
-  prv_load_cached_system_capabilities(&s_cached_system_capabilities);
 }
 
 static void prv_delete_all_pairings_itr(struct pbl_settings_file *old_file,
@@ -1349,11 +1234,6 @@ static bool prv_dump_bt_persistent_storage_contents(struct pbl_settings_file *fi
     pbl_bt_bonding_id_t id;
     memcpy(&id, val, sizeof(pbl_bt_bonding_id_t));
     pbl_shell_print(sh, "%s : %d", ACTIVE_GATEWAY_KEY, (int)id);
-  } else if (memcmp(key, IS_UNFAITHFUL_KEY, info->key_len) == 0) {
-    PBL_ASSERTN(info->val_len == sizeof(bool));
-    bool is_unfaithful;
-    memcpy(&is_unfaithful, val, sizeof(bool));
-    pbl_shell_print(sh, "%s  : %d", IS_UNFAITHFUL_KEY, (int)is_unfaithful);
   } else if (memcmp(key, ROOT_KEYS_KEY, info->key_len) == 0) {
     struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM],
         sprf_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];

@@ -187,14 +187,6 @@ bool bt_persistent_storage_get_active_gateway(pbl_bt_bonding_id_t *bonding_out,
   return false;
 }
 
-bool bt_persistent_storage_is_unfaithful(void) {
-  return true;
-}
-
-void bt_persistent_storage_set_unfaithful(bool is_unfaithful) {
-  return;
-}
-
 bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
                                         struct pbl_bt_sm_key *key_out) {
   return pbl_bt_prf_store_get_root_key(key_type, key_out);
@@ -202,17 +194,6 @@ bool bt_persistent_storage_get_root_key(enum pbl_bt_sm_root_key_type key_type,
 
 void bt_persistent_storage_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   pbl_bt_prf_store_set_root_keys(keys_in);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Remote Device Info
-
-void bt_persistent_storage_get_cached_system_capabilities(
-    struct pbl_pp_capabilities *capabilities_out) {
-}
-
-void bt_persistent_storage_set_cached_system_capabilities(
-    const struct pbl_pp_capabilities *capabilities) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
