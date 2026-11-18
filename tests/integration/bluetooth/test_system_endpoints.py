@@ -28,6 +28,24 @@ GET_BYTES_ENDPOINT = 9000
 PUT_BYTES_ENDPOINT = 0xBEEF
 MUSIC_ENDPOINT = 0x0020
 
+# In a version response: the capabilities, and the platform's description
+# after everything earlier firmware sends.
+VERSION_CAPABILITIES_OFFSET = 142
+VERSION_PLATFORM_INFO_OFFSET = 155
+CAPABILITY_PLATFORM_INFO = 1 << 30
+PLATFORM_ABI_ARMV7M = 1
+# In the order of their bits.
+PLATFORM_FEATURES = (
+    "MICROPHONE",
+    "SMARTSTRAP",
+    "SMARTSTRAP_POWER",
+    "HEALTH",
+    "COMPASS",
+    "TOUCH",
+    "RGB_BACKLIGHT",
+    "SPEAKER",
+)
+
 META_UNHANDLED = 0xDC
 # The phone app on iOS, as a version response's platform flags give it.
 PLATFORM_IOS = 0x01
@@ -89,6 +107,47 @@ def test_watch_version(phone, prompt, build):
     assert response.resource_crc == int(shown["CRC"], 16)
     address = ":".join(f"{b:02X}" for b in reversed(bytes(response.bt_address)))
     assert address.replace(":", "") in "".join(prompt("bt mac")).replace(":", "")
+
+
+def test_watch_platform(phone, build):
+    """The version response ends with what the watch's platform is like, for
+    a phone that has not heard of the platform to pick an app's binary by."""
+    since = phone.inbox.mark()
+    phone.send(VERSION_ENDPOINT, b"\x00")
+    response = phone.inbox.wait(
+        VERSION_ENDPOINT, lambda p: p[0] == 0x01, timeout=10, since=since
+    )
+    (capabilities,) = struct.unpack_from("<Q", response, VERSION_CAPABILITIES_OFFSET)
+    assert capabilities & CAPABILITY_PLATFORM_INFO
+
+    config = build.config
+    info = response[VERSION_PLATFORM_INFO_OFFSET:]
+    assert len(info) == 32
+    (
+        version,
+        length,
+        abi,
+        shape,
+        width,
+        height,
+        features,
+        app_memory_kib,
+        color_depth,
+        reserved,
+        name,
+    ) = struct.unpack(">BBBBHHIHBB16s", info)
+    assert (version, length, abi, reserved) == (1, 32, PLATFORM_ABI_ARMV7M, 0)
+    assert shape == (1 if config.get("CONFIG_PLATFORM_ROUND") else 0)
+    assert width == int(config["CONFIG_PLATFORM_DISPLAY_WIDTH"])
+    assert height == int(config["CONFIG_PLATFORM_DISPLAY_HEIGHT"])
+    assert features == sum(
+        1 << bit
+        for bit, feature in enumerate(PLATFORM_FEATURES)
+        if config.get(f"CONFIG_PLATFORM_{feature}")
+    )
+    assert app_memory_kib == int(config["CONFIG_PLATFORM_MAX_APP_MEMORY_SIZE"]) // 1024
+    assert color_depth == (6 if config.get("CONFIG_PLATFORM_COLOR") else 1)
+    assert name.rstrip(b"\x00").decode() == build.platform
 
 
 def test_phone_app_version(dut, phone):

@@ -144,6 +144,9 @@ struct PBL_PACKED pbl_pp_capabilities {
       bool notification_window_state_support : 1;
       bool app_permissions_support : 1;
       bool multiple_language_packs_support : 1;
+      uint8_t even_more_padded_bits : 1;
+      /** A description of the watch's platform ends the version response. */
+      bool platform_info_appended : 1;
     };
     /** All capability bits. */
     uint64_t flags;

@@ -163,6 +163,34 @@ binary to a watch without knowing the platform's name:
 It is the part of `platform.json` a binary is matched by. A directory whose
 manifest has no `platform` is of the platform it is named after.
 
+## What a watch says
+
+A watch says what its own platform is like in its answer to the version
+request (Pebble protocol endpoint `0x0010`), so a phone or tool can pick a
+binary for a platform it has never heard of. The description follows
+everything the answer held before, 155 bytes in, and capability bit 30 of
+the same answer says it is there. Readers that do not know it ignore the
+extra bytes.
+
+| Offset | Size | Field |
+| --- | --- | --- |
+| 0 | 1 | version (1) |
+| 1 | 1 | length of the description in bytes (32) |
+| 2 | 1 | ABI |
+| 3 | 1 | display shape |
+| 4 | 2 | display width |
+| 6 | 2 | display height |
+| 8 | 4 | features |
+| 12 | 2 | app memory the watch gives an app, in KiB |
+| 14 | 1 | bits of colour of a pixel |
+| 15 | 1 | reserved, zero |
+| 16 | 16 | name of the platform, padded with zeros |
+
+The fields before the name are those of `PebblePlatformInfo`, with the same
+values, but big endian like the rest of the answer. Here too fields are only
+added at the end, and the length grows with them. A watch whose answer has
+no description is of the platform its hardware revision stands for.
+
 ## Apps built for a smaller display
 
 A watch runs an app built for a display of its own shape that is no larger
