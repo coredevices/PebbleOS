@@ -168,6 +168,33 @@ static const struct pbl_bt_sm_pairing_info PAIRING_INFO = (const struct pbl_bt_s
 
 // Helpers
 ///////////////////////////////////////////////////////////
+// A field to set and read back as a flag: the root keys, as one of two values.
+static const struct pbl_bt_sm_key ROOT_KEYS_SET[PBL_BT_SM_ROOT_KEY_TYPE_NUM] = {
+  {.data = {0x11}},
+  {.data = {0x22}},
+};
+static const struct pbl_bt_sm_key ROOT_KEYS_CLEAR[PBL_BT_SM_ROOT_KEY_TYPE_NUM] = {
+  {.data = {0x33}},
+  {.data = {0x44}},
+};
+
+static void prv_set_field(bool set) {
+  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+
+  memcpy(keys, set ? ROOT_KEYS_SET : ROOT_KEYS_CLEAR, sizeof(keys));
+  shared_prf_storage_set_root_keys(keys);
+}
+
+static bool prv_get_field(void) {
+  struct pbl_bt_sm_key key;
+
+  if (!shared_prf_storage_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, &key)) {
+    return false;
+  }
+
+  return memcmp(&key, &ROOT_KEYS_SET[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY], sizeof(key)) == 0;
+}
+
 static void prv_fill_flash_random_data(void) {
   uint8_t *buf = pbl_malloc_check(SPRF_REGION_SIZE);
   fake_spi_flash_erase();
@@ -196,8 +223,8 @@ void test_shared_prf_storage_v3__init_all_zeros(void) {
   uint8_t *flash_buf = pbl_zalloc(SPRF_REGION_SIZE);
   pbl_flash_write(FLASH, PART_SHARED_PRF_STORAGE_OFFSET, flash_buf, SPRF_REGION_SIZE);
   shared_prf_storage_init();
-  shared_prf_storage_set_getting_started_complete(true);
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), true);
+  prv_set_field(true);
+  cl_assert_equal_b(prv_get_field(), true);
 }
 
 void test_shared_prf_storage_v3__find_first_valid_sector(void) {
@@ -252,15 +279,6 @@ void test_shared_prf_storage_v3__wipe_all(void) {
   shared_prf_storage_wipe_all();
 
   cl_assert_equal_b(shared_prf_storage_get_ble_pairing_data(nullptr, nullptr, nullptr), false);
-}
-
-void test_shared_prf_storage_v3__getting_started_complete(void) {
-  shared_prf_storage_wipe_all();
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), false);
-  shared_prf_storage_set_getting_started_complete(true);
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), true);
-  shared_prf_storage_wipe_all();
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), false);
 }
 
 void test_shared_prf_storage_v3__ble_pairing(void) {
@@ -357,8 +375,8 @@ void test_shared_prf_storage_v3__local_identity_address_absent_in_old_page(void)
 void test_shared_prf_storage_v3__local_identity_address_survives_rewrites(void) {
   shared_prf_storage_set_local_identity_address(&DEVICE_ADDR);
 
-  shared_prf_storage_set_getting_started_complete(true);
-  shared_prf_storage_set_getting_started_complete(false);
+  prv_set_field(true);
+  prv_set_field(false);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
 
   struct pbl_bt_addr addr_buf;
@@ -401,8 +419,8 @@ void test_shared_prf_storage_v3__rewrite_pages_and_wrap_around(void) {
     toggle = false;
     // Iterate through all possible pages and keep writing new data, confirm it's the right data.
     for (uint32_t i = 0; i < SPRF_NUM_PAGES; i++) {
-      shared_prf_storage_set_getting_started_complete(toggle);
-      cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), toggle);
+      prv_set_field(toggle);
+      cl_assert_equal_b(prv_get_field(), toggle);
 
       cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), i);
 
@@ -412,10 +430,10 @@ void test_shared_prf_storage_v3__rewrite_pages_and_wrap_around(void) {
 }
 
 void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
-  const bool GETTING_STARTED_COMPLETE = true;
+  const bool FIELD_SET = true;
 
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
-  shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+  prv_set_field(FIELD_SET);
 
   char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
@@ -427,21 +445,21 @@ void test_shared_prf_storage_v3__save_all_data_confirm_all_data_correct(void) {
   cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
 
-  // Check getting started
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), GETTING_STARTED_COMPLETE);
+  // Check the root keys
+  cl_assert_equal_b(prv_get_field(), FIELD_SET);
 }
 
-void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_still_intact(void) {
-  bool GETTING_STARTED_COMPLETE = true;
+void test_shared_prf_storage_v3__write_in_loop_confirm_data_still_intact(void) {
+  bool FIELD_SET = true;
 
   shared_prf_storage_store_ble_pairing_data(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
-  shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+  prv_set_field(FIELD_SET);
 
   for (uint32_t i = 0; i < 50; i++) {
-    GETTING_STARTED_COMPLETE = !GETTING_STARTED_COMPLETE;
+    FIELD_SET = !FIELD_SET;
 
     cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), i % SPRF_NUM_PAGES);
-    shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+    prv_set_field(FIELD_SET);
     cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), (i + 1) % SPRF_NUM_PAGES);
   }
 
@@ -459,58 +477,58 @@ void test_shared_prf_storage_v3__write_in_loop_getting_started_confirm_data_stil
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
 }
 
-// Sets the getting started field, then corrupts the getting_started crc
+// Sets the root keys, then corrupts their crc
 void test_shared_prf_storage_v3__handle_corrupt_field_same(void) {
-  bool GETTING_STARTED_COMPLETE = true;
-  shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+  bool FIELD_SET = true;
+  prv_set_field(FIELD_SET);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
 
   SharedPRFData data;
   pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
                  (uint8_t *)&data, sizeof(data));
-  cl_assert(data.getting_started.crc != 0xFFFFFFFF);
+  cl_assert(data.root_keys.crc != 0xFFFFFFFF);
 
   uint32_t new_crc = 0;
   pbl_flash_write(FLASH,
                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()) +
-                      offsetof(SharedPRFData, getting_started) + offsetof(SprfGettingStarted, crc),
+                      offsetof(SharedPRFData, root_keys) + offsetof(SprfRootKeys, crc),
                   (uint8_t *)&new_crc, sizeof(new_crc));
 
   // Confirm new CRC was written
   pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
                  (uint8_t *)&data, sizeof(data));
-  cl_assert_equal_i(data.getting_started.crc, new_crc);
+  cl_assert_equal_i(data.root_keys.crc, new_crc);
 
   // Should be corrupt, so it should return false
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), false);
+  cl_assert_equal_b(prv_get_field(), false);
   // Should have moved to the next page
   cl_assert_equal_b(shared_prf_storage_get_valid_page_number(), 1);
 
   // Let's do it again, but move the valid page to index NUM_PAGES - 1 so we force a wrap around
   fake_spi_flash_erase();
   shared_prf_storage_set_valid_page_number(SPRF_NUM_PAGES - 1);
-  shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+  prv_set_field(FIELD_SET);
   pbl_flash_write(FLASH,
                   SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()) +
-                      offsetof(SharedPRFData, getting_started) + offsetof(SprfGettingStarted, crc),
+                      offsetof(SharedPRFData, root_keys) + offsetof(SprfRootKeys, crc),
                   (uint8_t *)&new_crc, sizeof(new_crc));
   // Should be corrupt, so it should return false
-  cl_assert_equal_b(shared_prf_storage_get_getting_started_complete(), false);
+  cl_assert_equal_b(prv_get_field(), false);
   // Should have moved to the next page, which is ZERO since we had to wrap around.
   cl_assert_equal_b(shared_prf_storage_get_valid_page_number(), 0);
 }
 
-// Sets the getting started field, then corrupts the ble_pairing_data crc
+// Sets the root keys, then corrupts the ble_pairing_data crc
 // This tests that when setting a value, all fields in the struct must be valid.
 void test_shared_prf_storage_v3__handle_corrupt_field_during_setting(void) {
-  bool GETTING_STARTED_COMPLETE = true;
-  shared_prf_storage_set_getting_started_complete(GETTING_STARTED_COMPLETE);
+  bool FIELD_SET = true;
+  prv_set_field(FIELD_SET);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
 
   SharedPRFData data;
   pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(shared_prf_storage_get_valid_page_number()),
                  (uint8_t *)&data, sizeof(data));
-  cl_assert(data.getting_started.crc != 0xFFFFFFFF);
+  cl_assert(data.root_keys.crc != 0xFFFFFFFF);
 
   uint32_t new_crc = 0;
   pbl_flash_write(FLASH,
@@ -525,7 +543,7 @@ void test_shared_prf_storage_v3__handle_corrupt_field_during_setting(void) {
 
   // Should be corrupt, so after a 'set', the page number should increment even though we are
   // setting the same value
-  shared_prf_storage_set_getting_started_complete(true);
+  prv_set_field(true);
   // Should have moved to the next page
   cl_assert_equal_b(shared_prf_storage_get_valid_page_number(), 1);
 }
@@ -565,14 +583,14 @@ void test_shared_prf_storage_v3__write_ble_data_name_delete_rewrite(void) {
 
 // Test that if we try to write the same data, the system does not force a rewrite of the page
 void test_shared_prf_storage_v3__write_repeated_data_same_page(void) {
-  shared_prf_storage_set_getting_started_complete(false);
+  prv_set_field(false);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
-  shared_prf_storage_set_getting_started_complete(false);
+  prv_set_field(false);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 0);
-  shared_prf_storage_set_getting_started_complete(true);
+  prv_set_field(true);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
-  shared_prf_storage_set_getting_started_complete(true);
+  prv_set_field(true);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 1);
-  shared_prf_storage_set_getting_started_complete(false);
+  prv_set_field(false);
   cl_assert_equal_i(shared_prf_storage_get_valid_page_number(), 2);
 }

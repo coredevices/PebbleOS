@@ -535,35 +535,6 @@ void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *add
 }
 
 //!
-//! Getting started bit
-//!
-
-bool shared_prf_storage_get_getting_started_complete(void) {
-  bool rv;
-  prv_lock();
-  {
-    SprfGettingStarted data;
-    rv = SPRF_FETCH_FIELD(data, getting_started);
-    if (!rv) {
-      goto unlock;
-    }
-    rv = data.is_complete;
-  }
-unlock:
-  prv_unlock();
-  return rv;
-}
-
-void shared_prf_storage_set_getting_started_complete(bool set) {
-  prv_lock();
-  {
-    SprfGettingStarted data = {.is_complete = set};
-    SPRF_PERSIST_FIELD(data, getting_started);
-  }
-  prv_unlock();
-}
-
-//!
 //! Unit test functions
 //!
 

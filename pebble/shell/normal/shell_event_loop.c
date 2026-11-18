@@ -12,7 +12,6 @@
 #include <pbl/services/music.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/notifications/do_not_disturb.h>
-#include <pbl/services/shared_prf_storage/shared_prf_storage.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/event.h>
 
@@ -68,17 +67,6 @@ void shell_event_loop_init(void) {
     activity_start_tracking(false /*test_mode*/);
   }
   workout_service_init();
-
-  bool factory_reset_or_first_use = !shared_prf_storage_get_getting_started_complete();
-  // We are almost done booting, welcome the user if applicable. This _must_ occur before setting
-  // the getting started completed below.
-  if (factory_reset_or_first_use) {
-    bt_persistent_storage_set_unfaithful(true);
-  }
-
-  // As soon as we boot normally for the first time, we've therefore completed first use mode and
-  // we don't need to go through it again until we factory reset.
-  shared_prf_storage_set_getting_started_complete(true /* complete */);
 }
 
 void shell_event_loop_handle_event(PebbleEvent *e) {

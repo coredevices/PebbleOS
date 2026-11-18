@@ -35,9 +35,6 @@ void shared_prf_storage_dump_contents(const struct pbl_shell *sh) {
   } else {
     pbl_shell_print(sh, "Missing IRK and/or ERK root key(s)!");
   }
-
-  pbl_shell_print(sh, "Started Complete: %s",
-                  bool_to_str(shared_prf_storage_get_getting_started_complete()));
 }
 
 #endif
