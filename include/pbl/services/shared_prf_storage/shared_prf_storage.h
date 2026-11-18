@@ -80,20 +80,6 @@ bool shared_prf_storage_get_local_identity_address(struct pbl_bt_addr *address_o
  */
 void shared_prf_storage_set_local_identity_address(const struct pbl_bt_addr *address);
 
-/**
- * @brief Check whether onboarding (getting started) has been completed.
- *
- * @return true if completed.
- */
-bool shared_prf_storage_get_getting_started_complete(void);
-
-/**
- * @brief Set whether onboarding (getting started) has been completed.
- *
- * @param set true if completed.
- */
-void shared_prf_storage_set_getting_started_complete(bool set);
-
 /** @brief Erase all shared data, for a factory reset. */
 void shared_prf_storage_wipe_all(void);
 

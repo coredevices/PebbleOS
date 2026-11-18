@@ -24,12 +24,5 @@ PBL_WEAK void shared_prf_storage_store_ble_pairing_data(
     const struct pbl_bt_sm_pairing_info *pairing_info, const char *name, uint8_t flags) {
 }
 
-PBL_WEAK bool shared_prf_storage_get_getting_started_complete(void) {
-  return false;
-}
-
-PBL_WEAK void shared_prf_storage_set_getting_started_complete(bool set) {
-}
-
 PBL_WEAK void shared_prf_storage_wipe_all(void) {
 }

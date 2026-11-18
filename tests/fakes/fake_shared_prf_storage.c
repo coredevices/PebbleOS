@@ -56,17 +56,6 @@ void shared_prf_storage_erase_ble_pairing_data(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//! Getting Started Is Complete
-
-bool shared_prf_storage_get_getting_started_complete(void) {
-  return true;
-}
-
-void shared_prf_storage_set_getting_started_complete(bool set) {
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Factory Reset
 
 void shared_prf_storage_wipe_all(void) {
