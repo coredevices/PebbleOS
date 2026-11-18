@@ -475,6 +475,8 @@ class Def:
         )
         # Defaults contributed by `syscfg.vals` blocks, most specific first.
         self.overrides = []
+        # A Kconfig expression the port needs for the option, from config.yml.
+        self.depends = None
         self.kconfig = None
         self.kind = None
         self.default = None
@@ -667,6 +669,8 @@ class Model:
                 entry.value = spec["value"]
             if "description" in spec:
                 entry.description = spec["description"]
+            if "depends" in spec:
+                entry.depends = spec["depends"]
 
     def check_booleans(self):
         """Reject entries in booleans.yml that NimBLE's own files disprove.
@@ -871,6 +875,8 @@ def render_option(entry, renderer, model):
     out = [f"config {entry.sym}", f'    {entry.kconfig} "{prompt(entry)}"']
     if entry.condition:
         out.append(f"    depends on {renderer.condition(parse_expr(entry.condition))}")
+    if entry.depends:
+        out.append(f"    depends on {entry.depends}")
     out += render_range(entry, renderer)
     out += model.defaults(entry, renderer)
     return out + help_text(entry)

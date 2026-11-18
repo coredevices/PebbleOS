@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config NIMBLE_STORE_SETTINGS_FILE_SIZE
+    int "Store file size in bytes"
+    depends on NIMBLE_BLE_STORE_CONFIG_PERSIST
+    default 4096
+    help
+      Space the settings file of the store may use. The store keeps the
+      keys of up to BLE_STORE_MAX_BONDS peers and BLE_STORE_MAX_CCCDS
+      subscriptions; the file needs room to rewrite them as they change.

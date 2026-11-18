@@ -93,6 +93,10 @@ skipped. To make such an option configurable anyway, give it an `enum` in
 `config.yml`: that turns it into a Kconfig choice whose members map to C
 expressions, as `BLE_SM_IO_CAP` does.
 
+An option the port can only offer with something of PebbleOS takes a `depends`
+in `config.yml`, a Kconfig expression: `BLE_STORE_CONFIG_PERSIST` depends on
+`SETTINGS`, where the store keeps its file.
+
 ## Areas
 
 Each area in `config.yml` groups packages into one `Kconfig.<id>`. An area
