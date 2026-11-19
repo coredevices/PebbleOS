@@ -32,6 +32,7 @@ import pebble_project
 from pebble_project import ProjectError
 from pebble_sdk_platform import (
     PlatformError,
+    bezel_platforms,
     bundle_description,
     flexible_name,
     flexible_targets,
@@ -71,6 +72,28 @@ def _write_if_changed(path, content):
 
 def _warn(msg):
     print(f"warning: {msg}", file=sys.stderr)
+
+
+def _note(msg):
+    print(f"note: {msg}", file=sys.stderr)
+
+
+def _bezel_note(platforms, installed):
+    """Tell a project built for fixed displays which watches it does not
+    fill."""
+    report = bezel_platforms(platforms, installed)
+    if not report:
+        return
+    parts = [f"{p} shows the {b} binary in a bezel" for p, b in report.items() if b]
+    none = [p for p, b in report.items() if b is None]
+    if none:
+        parts.append(f"there is no binary for {', '.join(none)}")
+    _note(
+        f"this project is built for fixed displays: {'; '.join(parts)}. A watch "
+        'with any other display shows it in a bezel too. "flexible": true in '
+        "package.json builds it for every display, and `pebble doctor` finds "
+        "what in the source stands in the way."
+    )
 
 
 def _load_project(path):
@@ -420,6 +443,9 @@ def configure(args):
             f"No valid targetPlatforms specified in package.json. Valid options are "
             f"{', '.join(installed)}"
         )
+
+    if platforms and not info.get("flexible") and not args.platforms:
+        _bezel_note(platforms, installed)
 
     platform_info = {}
     for p in platforms:
