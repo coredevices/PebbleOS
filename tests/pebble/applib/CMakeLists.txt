@@ -170,6 +170,12 @@ pbl_clar_test(test_template_string
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_platform
+  SOURCES
+    pebble/applib/platform.c
+  PLATFORMS emery flint gabbro
+)
+
 pbl_clar_test(test_dict
   SOURCES
     pebble/applib/dict.c
