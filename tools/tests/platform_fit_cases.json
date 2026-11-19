@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Which binaries of a pbw fit a watch, best first. See docs/sdk/platforms.md, 'Which binary a watch runs'. A case names its watch and binaries in 'platforms'; a binary's directory in the pbw is its name.",
+  "about": "Which binaries of a pbw fit a watch, best first. See docs/sdk/platforms.md, 'Which binary a watch runs'. A case names its watch and binaries in 'platforms'; a binary's directory in the pbw is its name. A flexible binary has no display size and lists the features it requires.",
   "age": ["aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro"],
   "platforms": {
     "aplite": {"name": "aplite", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": ["compass"], "limits": {"app_memory": 24576}},
@@ -20,7 +20,14 @@
     "orb": {"name": "orb", "abi": "armv7m", "display": {"width": 360, "height": 360, "shape": "round", "color": true}, "features": [], "limits": {"app_memory": 131072}},
     "chalkboard": {"name": "chalkboard", "abi": "armv7m", "display": {"width": 240, "height": 240, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
     "riscv": {"name": "riscv", "abi": "rv32", "display": {"width": 144, "height": 168, "shape": "rect", "color": false}, "features": [], "limits": {"app_memory": 65536}},
-    "hex": {"name": "hex", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "hexagon", "color": false}, "features": [], "limits": {"app_memory": 65536}}
+    "hex": {"name": "hex", "abi": "armv7m", "display": {"width": 144, "height": 168, "shape": "hexagon", "color": false}, "features": [], "limits": {"app_memory": 65536}},
+    "rect-color": {"name": "rect-color", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": true}, "requires": [], "limits": {"app_memory": 65536}},
+    "rect-color+mic": {"name": "rect-color+mic", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": true}, "requires": ["microphone"], "limits": {"app_memory": 65536}},
+    "rect-color+mic+health": {"name": "rect-color+mic+health", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": true}, "requires": ["microphone", "health"], "limits": {"app_memory": 65536}},
+    "rect-color+laser": {"name": "rect-color+laser", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": true}, "requires": ["laser"], "limits": {"app_memory": 65536}},
+    "rect-color@128k": {"name": "rect-color", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": true}, "requires": [], "limits": {"app_memory": 131072}},
+    "rect-bw": {"name": "rect-bw", "abi": "armv7m", "flexible": true, "display": {"shape": "rect", "color": false}, "requires": [], "limits": {"app_memory": 65536}},
+    "round-color": {"name": "round-color", "abi": "armv7m", "flexible": true, "display": {"shape": "round", "color": true}, "requires": [], "limits": {"app_memory": 65536}}
   },
   "cases": [
     {
@@ -136,6 +143,78 @@
       "watch": "slate",
       "binaries": ["shale", "granite", "emery"],
       "expected": ["granite", "shale", "emery"]
+    },
+    {
+      "name": "A flexible binary of the watch's class beats one for a smaller display",
+      "watch": "slate",
+      "binaries": ["emery", "basalt", "rect-color"],
+      "expected": ["rect-color", "emery", "basalt"]
+    },
+    {
+      "name": "The watch's own platform and its very display come before a flexible binary",
+      "watch": "slate",
+      "binaries": ["rect-color", "emery", "granite", "slate"],
+      "expected": ["slate", "granite", "rect-color", "emery"]
+    },
+    {
+      "name": "Emery takes its own binary before the flexible one",
+      "watch": "emery",
+      "binaries": ["rect-color", "basalt", "emery"],
+      "expected": ["emery", "rect-color", "basalt"]
+    },
+    {
+      "name": "A flexible binary does not fit a watch without a feature it requires",
+      "watch": "slate",
+      "binaries": ["rect-color+mic", "rect-color"],
+      "expected": ["rect-color"]
+    },
+    {
+      "name": "Of the flexible binaries the one that requires the most",
+      "watch": "emery",
+      "binaries": ["basalt", "rect-color", "rect-color+mic", "rect-color+mic+health"],
+      "expected": ["rect-color+mic+health", "rect-color+mic", "rect-color", "basalt"]
+    },
+    {
+      "name": "A required feature the reader does not know is one the watch lacks",
+      "watch": "emery",
+      "binaries": ["rect-color+laser", "basalt"],
+      "expected": ["basalt"]
+    },
+    {
+      "name": "A flexible binary is of one shape",
+      "watch": "gabbro",
+      "binaries": ["rect-color", "round-color", "chalk"],
+      "expected": ["round-color", "chalk"]
+    },
+    {
+      "name": "A new round platform takes the flexible binary before Gabbro's",
+      "watch": "orb",
+      "binaries": ["gabbro", "round-color"],
+      "expected": ["round-color", "gabbro"]
+    },
+    {
+      "name": "A black and white flexible binary fills a colour display, after one of the watch's class",
+      "watch": "slate",
+      "binaries": ["flint", "emery", "rect-bw", "rect-color"],
+      "expected": ["rect-color", "rect-bw", "emery", "flint"]
+    },
+    {
+      "name": "A black and white watch takes no colour flexible binary",
+      "watch": "paper",
+      "binaries": ["rect-color", "rect-bw", "flint"],
+      "expected": ["rect-bw", "flint"]
+    },
+    {
+      "name": "A flexible binary that asks for more app memory than the watch gives does not fit",
+      "watch": "shale",
+      "binaries": ["rect-color@128k", "basalt"],
+      "expected": ["basalt"]
+    },
+    {
+      "name": "A flexible binary that asks for the app memory the watch gives",
+      "watch": "slate",
+      "binaries": ["emery", "rect-color@128k"],
+      "expected": ["rect-color", "emery"]
     }
   ]
 }
