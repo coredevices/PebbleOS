@@ -287,22 +287,6 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data) {
 
 // -------------------------------------------------------------------------------------------------
 
-void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway) {
-  connection->is_gateway = is_gateway;
-}
-
-// -------------------------------------------------------------------------------------------------
-
-static bool prv_find_gateway(GAPLEConnection *connection, void *data) {
-  return connection->is_gateway;
-}
-
-GAPLEConnection *gap_le_connection_get_gateway(void) {
-  return gap_le_connection_find(prv_find_gateway, nullptr);
-}
-
-// -------------------------------------------------------------------------------------------------
-
 static bool prv_find_connection_with_identity(GAPLEConnection *connection, void *data) {
   const struct pbl_bt_device_internal *addr = data;
   return connection->is_bonded && bt_device_internal_equal(&connection->identity, addr);

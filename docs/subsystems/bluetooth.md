@@ -9,8 +9,8 @@ API is `include/pbl/bluetooth/`, enabled by `CONFIG_BT`; the
 `pebble/comm/ble/` is the host-side BLE layer and carries substantial design
 prose:
 
-- `gap_le_connect.c` — connection management and the "connection intent"
-  abstraction that virtualizes the link across multiple clients.
+- `gap_le_connect.c` — connection management: the bonded phone, once its
+  link is encrypted, is the gateway whose services the firmware uses.
 - `gap_le_connect_params.c` — a primer on connection intervals, slave
   latency and supervision timeouts, and why the firmware deviates from the
   spec-recommended parameter-update pause for iOS.

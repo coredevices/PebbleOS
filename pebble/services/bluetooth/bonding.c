@@ -8,6 +8,7 @@
 #include <pbl/btutil/bt_device.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/advertising.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
@@ -16,9 +17,6 @@
 
 #include <comm/ble/gap_le_connect.h>
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_device_name.h>
-#include <comm/ble/kernel_le_client/kernel_le_client.h>
-#include <comm/bt_lock.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -215,22 +213,8 @@ void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
     return;
   }
 
-  bt_lock();
-  GAPLEConnection *connection = gap_le_connection_by_addr(&info->addr.address);
-  if (connection == nullptr && info->irk_valid) {
-    connection = gap_le_connection_find_by_irk(&info->irk);
-  }
-  if (connection != nullptr) {
-    connection->is_bonded = true;
-    connection->identity = info->addr;
-    connection->is_gateway = true;
-    gap_le_device_name_request(&connection->device);
-  } else {
-    PBL_LOG_ERR("Couldn't find connection for bond!");
-  }
-  bt_unlock();
-
-  kernel_le_client_handle_bond_added(info);
+  gap_le_connect_handle_bond_added(info);
+  bt_advertising_set_reconnectable(true);
   bt_pairability_update_due_to_bonding_change();
 }
 
@@ -257,6 +241,6 @@ void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
 
   gap_le_connection_handle_bond_deleted(addr);
   gap_le_connect_handle_bond_deleted(addr);
-  kernel_le_client_handle_bond_deleted(addr);
+  bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
   bt_pairability_update_due_to_bonding_change();
 }

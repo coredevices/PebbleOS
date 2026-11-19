@@ -43,6 +43,10 @@ void pbl_bt_foreach_bond(pbl_bt_bond_cb_t func, void *user_data) {
   }
 }
 
+size_t pbl_bt_bond_count(void) {
+  return s_num_bonds;
+}
+
 int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info) {
   return prv_find(addr) < 0 ? -ENOENT : 0;
 }
@@ -107,27 +111,16 @@ void bt_lock(void) {
 void bt_unlock(void) {
 }
 
-GAPLEConnection *gap_le_connection_by_addr(const struct pbl_bt_addr *addr) {
-  return nullptr;
-}
-
-GAPLEConnection *gap_le_connection_find_by_irk(const struct pbl_bt_sm_key *irk) {
-  return nullptr;
-}
-
-void gap_le_device_name_request(const struct pbl_bt_device_internal *address) {
-}
-
 void gap_le_connection_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
 }
 
 void gap_le_connect_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
 }
 
-void kernel_le_client_handle_bond_added(const struct pbl_bt_bond_info *info) {
+void gap_le_connect_handle_bond_added(const struct pbl_bt_bond_info *info) {
 }
 
-void kernel_le_client_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
+void bt_advertising_set_reconnectable(bool reconnectable) {
 }
 
 void bt_pairability_update_due_to_bonding_change(void) {

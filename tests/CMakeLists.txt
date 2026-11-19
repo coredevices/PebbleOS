@@ -203,7 +203,6 @@ pbl_test_broken(
   # Crash (round-display segfault) and build (rect/round, platform)
   # issues are fixed; what is left is missing gabbro golden .pbi images
   # that need visual review before they can be regenerated.
-  test_gap_le_connect
 )
 
 include(modules.cmake)

@@ -53,7 +53,7 @@ typedef struct GAPLEConnection {
   //! Whether GATT service discovery is in progress
   bool gatt_is_service_discovery_in_progress : 1;
 
-  //! Whether the connected device is our gateway (aka "the phone running Pebble app")
+  //! Whether the connection was reported as the gateway's (the bonded phone, once encrypted)
   bool is_gateway : 1;
 
   //! Whether the device is bonded, see @ref identity.
@@ -174,15 +174,9 @@ void gap_le_connection_for_each(GAPLEConnectionForEachCallback cb, void *data);
 //! @note deep-copies the IRK.
 void gap_le_connection_set_irk(GAPLEConnection *connection, const struct pbl_bt_sm_key *irk);
 
-//! Sets whether the connection is to the gateway device (aka "the phone").
-//! Updates the is_gateway flag on any associated bonding as well.
-void gap_le_connection_set_gateway(GAPLEConnection *connection, bool is_gateway);
-
 //! Marks the connection to a peer whose bond got deleted as no longer bonded.
 //! Takes bt_lock.
 void gap_le_connection_handle_bond_deleted(const struct pbl_bt_device_internal *addr);
-
-GAPLEConnection *gap_le_connection_get_gateway(void);
 
 void gap_le_connection_copy_device_name(const GAPLEConnection *connection, char *name_out,
                                         size_t namelen);
