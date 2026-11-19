@@ -124,7 +124,9 @@ def build_shim(shim_s, dest_dir):
         _compile(ENTRY_SRC, objs[1], ENTRY_CFLAGS)
 
         ar_process = subprocess.Popen(
-            ["arm-none-eabi-ar", "rcs", shim_a, *objs],
+            # D: no timestamps or owners, the library is the same wherever
+            # and whenever it is built.
+            ["arm-none-eabi-ar", "rcsD", shim_a, *objs],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
