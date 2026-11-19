@@ -8,7 +8,7 @@ import struct
 import pebble_project
 from pebble_package import LibraryPackage
 from pebble_project import ProjectError
-from pebble_sdk_platform import pebble_platforms
+from pebble_sdk_platform import pebble_platforms, sdk_component
 from pebble_sdk_version import set_env_sdk_version
 from resources.types.resource_object import ResourceObject
 from waflib import Logs
@@ -76,15 +76,16 @@ def _get_supported_platforms(ctx):
         "include",
         "include/pebble.h",
     ]
-    supported_platforms = os.listdir(ctx.env.PEBBLE_SDK_ROOT)
+    # A directory of the SDK that is not a platform holds what platforms
+    # share: the headers and library of an ABI, the tools.
+    supported_platforms = [
+        name for name in os.listdir(ctx.env.PEBBLE_SDK_ROOT) if name in pebble_platforms
+    ]
 
     invalid_platforms = []
     for platform in supported_platforms:
-        pebble_sdk_platform = ctx.root.find_node(ctx.env.PEBBLE_SDK_ROOT).find_node(
-            platform
-        )
         for node in sdk_check_nodes:
-            if pebble_sdk_platform.find_node(node) is None and (
+            if sdk_component(ctx.env.PEBBLE_SDK_ROOT, platform, node) is None and (
                 ctx.root.find_node(ctx.env.PEBBLE_SDK_COMMON).find_node(node)
                 is None
             ):
@@ -142,6 +143,8 @@ def configure_platform(ctx, platform):
     pebble_sdk_root = get_node_from_abspath(ctx, ctx.env.PEBBLE_SDK_ROOT)
     ctx.env.PLATFORM = pebble_platforms[platform]
     ctx.env.PEBBLE_SDK_PLATFORM = pebble_sdk_root.find_node(str(platform)).abspath()
+    # What the platforms of an ABI share, unless the platform has its own.
+    ctx.env.PEBBLE_SDK_ABI = pebble_sdk_root.make_node(ctx.env.PLATFORM["ABI"]).abspath()
     ctx.env.PLATFORM_NAME = ctx.env.PLATFORM["NAME"]
 
     for attribute in ["DEFINES"]:  # Attributes with list values
@@ -152,8 +155,8 @@ def configure_platform(ctx, platform):
 
     ctx.msg(f"Found Pebble SDK for {platform} in:", ctx.env.PEBBLE_SDK_PLATFORM)
 
-    process_info = pebble_sdk_root.find_node(str(platform)).find_node(
-        "include/pebble_process_info.h"
+    process_info = find_sdk_component(ctx, ctx.env, "include").find_node(
+        "pebble_process_info.h"
     )
     set_env_sdk_version(ctx, process_info)
 
@@ -167,15 +170,19 @@ def configure_platform(ctx, platform):
 
 def find_sdk_component(ctx, env, component):
     """
-    This method finds an SDK component, either in the platform SDK folder, or the 'common' folder
+    This method finds an SDK component, either in the platform SDK folder, the folder of the
+    platform's ABI, or the 'common' folder
     :param ctx: the Context object
     :param env: the environment which contains platform SDK folder path for the current platform
     :param component: the SDK component being sought
     :return: the path to the SDK component being sought
     """
-    return ctx.root.find_node(env.PEBBLE_SDK_PLATFORM).find_node(
-        component
-    ) or ctx.root.find_node(env.PEBBLE_SDK_COMMON).find_node(component)
+    for directory in (env.PEBBLE_SDK_PLATFORM, env.PEBBLE_SDK_ABI, env.PEBBLE_SDK_COMMON):
+        node = ctx.root.find_node(directory)
+        found = node and node.find_node(component)
+        if found:
+            return found
+    return None
 
 
 def get_node_from_abspath(ctx, path):

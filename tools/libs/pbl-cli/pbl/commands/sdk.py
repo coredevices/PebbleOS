@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import filecmp
 import json
 import os
 import shutil
@@ -88,14 +89,20 @@ class Sdk(PblCommand):
                 self.cmake_build(build, "sdk_emulator")
 
             platform = build.config.PLATFORM_NAME
+            abi = build.config.CONFIG_PLATFORM_ABI
             if platform in packaged:
                 self.die(f"{board} and {packaged[platform]} are both of {platform}")
             # The first build brings what the platforms share.
             if not packaged:
-                shutil.copytree(build.join("sdk"), pebble)
+                shutil.copytree(build.join("sdk"), pebble, symlinks=True)
             else:
                 shutil.copytree(
-                    build.join("sdk", platform), os.path.join(pebble, platform)
+                    build.join("sdk", platform),
+                    os.path.join(pebble, platform),
+                    symlinks=True,
+                )
+                self._merge_abi(
+                    build.join("sdk", abi), os.path.join(pebble, abi), board
                 )
             packaged[platform] = board
             self.inf(f"Packaged {platform} from {board}")
@@ -174,6 +181,30 @@ class Sdk(PblCommand):
         if not names:
             self.die(f"{path} lists no board")
         return names
+
+    def _merge_abi(self, source, dest, board):
+        """The headers and library of an ABI are the same from whichever
+        board they are built: a build only adds what the others lack, such
+        as the headers of a feature its platform alone has."""
+        if not os.path.isdir(dest):
+            shutil.copytree(source, dest)
+            return
+        for root, _, files in os.walk(source):
+            rel = os.path.relpath(root, source)
+            os.makedirs(os.path.join(dest, rel), exist_ok=True)
+            for name in files:
+                src = os.path.join(root, name)
+                dst = os.path.join(dest, rel, name)
+                if not os.path.exists(dst):
+                    shutil.copy2(src, dst)
+                # The Doxyfile names the build directory it was written in.
+                elif not name.startswith("Doxyfile") and not filecmp.cmp(
+                    src, dst, shallow=False
+                ):
+                    self.die(
+                        f"{os.path.normpath(os.path.join(rel, name))} of {board} "
+                        "differs from that of the boards before it"
+                    )
 
     def _add_frozen(self, source, pebble, platform):
         lib = os.path.join(source, platform, "lib", "libpebble.a")

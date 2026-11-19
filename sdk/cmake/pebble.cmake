@@ -74,7 +74,6 @@ function(_pebble_platform p)
     return()
   endif()
   set(build ${CMAKE_BINARY_DIR})
-  set(sdk ${PEBBLE_${p}_SDK_DIR})
 
   add_library(pebble_${p} INTERFACE)
   target_compile_options(pebble_${p} INTERFACE
@@ -94,7 +93,7 @@ function(_pebble_platform p)
     $<$<BOOL:${PEBBLE_${p}_OWN_TIME_H}>:_TIME_H_;time_t=long>
   )
   target_include_directories(pebble_${p} INTERFACE
-    ${sdk}/include
+    ${PEBBLE_${p}_SDK_INCLUDE}
     ${build}/${p}
     ${build}/include
     ${PEBBLE_${p}_PACKAGE_INCLUDES}
@@ -108,7 +107,7 @@ function(_pebble_platform p)
   )
   # Packages call each other and the SDK in whatever order they like.
   target_link_libraries(pebble_${p} INTERFACE
-    -Wl,--start-group ${sdk}/lib/libpebble.a ${PEBBLE_${p}_PACKAGE_ARCHIVES} -Wl,--end-group
+    -Wl,--start-group ${PEBBLE_${p}_SDK_LIB}/libpebble.a ${PEBBLE_${p}_PACKAGE_ARCHIVES} -Wl,--end-group
   )
 
   set(outputs ${build}/${p}/src/resource_ids.auto.h ${build}/${p}/src/resource_ids.auto.c

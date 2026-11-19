@@ -138,20 +138,40 @@ def _check_bundled_waftools(work_dir):
                 raise SystemExit(f"the bundled {name} does not compile: {e}")
 
 
+def _link_shared(platform_dir, abi, name):
+    """Tools that predate the directory the platforms of an ABI share look
+    for the headers and the library in the platform's own."""
+    link = os.path.join(platform_dir, name)
+    if os.path.islink(link):
+        os.unlink(link)
+    elif os.path.isdir(link):
+        # What a build from before the shared directory left behind.
+        shutil.rmtree(link)
+    os.symlink(os.path.join(os.pardir, abi, name), link)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, help="SDK root to assemble")
     parser.add_argument("--platform", required=True, help="SDK platform name")
+    parser.add_argument("--abi", required=True, help="ABI of the platform")
     parser.add_argument("--work-dir", required=True,
                         help="Scratch directory the bundled waf is built in")
     args = parser.parse_args()
 
     common = os.path.join(args.output, "common")
     platform_dir = os.path.join(args.output, args.platform)
+    abi_dir = os.path.join(args.output, args.abi)
 
-    # Everything but the platform directory, which holds the shims the
-    # firmware build generated.
+    # Everything but the ABI directory, which holds the headers and shims
+    # the firmware build generated.
     shutil.rmtree(common, ignore_errors=True)
+    os.makedirs(platform_dir, exist_ok=True)
+    for name in ("include", "lib"):
+        _link_shared(platform_dir, args.abi, name)
+    stale = os.path.join(platform_dir, "Doxyfile-SDK.auto")
+    if os.path.exists(stale):
+        os.remove(stale)
 
     _copy(os.path.join(SDK_ROOT, "sdk_requirements.txt"),
           os.path.join(args.output, "requirements.txt"))
@@ -161,8 +181,8 @@ def main():
           os.path.join(args.output, "use_requirements.json"))
 
     _substitute(os.path.join(SDK_ROOT, "Doxyfile-SDK.template"),
-                os.path.join(platform_dir, "Doxyfile-SDK.auto"),
-                TINTIN_ROOT=REPO_ROOT, PLATFORM_PATH=platform_dir)
+                os.path.join(abi_dir, "Doxyfile-SDK.auto"),
+                TINTIN_ROOT=REPO_ROOT, PLATFORM_PATH=abi_dir)
 
     _copy_tree(os.path.join(SDK_ROOT, "include"), os.path.join(common, "include"))
     for name in ("pebble_app.ld.template", "pebble_app_init_arrays.ld"):

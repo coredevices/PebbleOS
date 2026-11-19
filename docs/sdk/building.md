@@ -11,18 +11,26 @@ and test builds skip it). It exports the white-listed functions, `typedef`s
 and `#define`s from the firmware tree and produces the files needed to build
 native watchapps, all under `build/`:
 
-- `build/sdk/<platform>/include/pebble.h` — typedefs, defines and function
+- `build/sdk/<abi>/include/pebble.h` — typedefs, defines and function
   prototypes for apps (plus `pebble_worker.h` for background workers and a
   few version/fonts headers). Exported declarations are copied verbatim and
   use `pbl/kernel/compiler.h` macros rather than raw `__attribute__`; the
   generator rewrites those into their GCC spellings, so the SDK ships no
   firmware headers. Only macros that alias an attribute or forward their
   arguments to a builtin can be exported.
-- `build/sdk/<platform>/lib/libpebble.a` — static library containing
+- `build/sdk/<abi>/lib/libpebble.a` — static library containing
   trampolines that call the exported functions in flash
 - `build/pebble/pebble.auto.c` — `g_pbl_system_tbl`, the table of function
   pointers the trampolines use to find an exported function's address;
   compiled into the firmware image
+
+The headers and the library are those of the ABI, `armv7m`, not of the
+platform the firmware is built for: every board of the ABI generates the
+same ones. The few defines that differ between platforms, such as
+`PBL_IF_COLOR_ELSE` and `PBL_PLATFORM_TYPE_CURRENT`, are decided in the
+header by the defines the app build passes for the platform it builds for
+(`PBL_COLOR`, `PBL_PLATFORM_EMERY`, ...), see {doc}`exporting`. The generator
+checks that this gives the build's platform what its firmware has.
 
 ## Packaging
 
@@ -47,7 +55,14 @@ It also writes `build/sdk/<platform>/platform.json`, the description of the
 platform out of the build's Kconfig. The SDK has no other record of what
 its platforms are like: the app build derives the `PBL_*` defines, resource
 tags and size limits of each platform from that file. An SDK put together
-from several firmware builds needs the `platform.json` of each.
+from several firmware builds needs the `platform.json` of each, and nothing
+else of them: a platform's directory needs no headers and no library.
+
+The app build takes the headers and the library from the platform's own
+directory if it has them, and from the directory of its ABI otherwise. The
+frozen platforms have their own, as their headers stop at the SDK revision
+they were frozen at. For tools that only look in a platform's directory,
+`include` and `lib` there are links to those of the ABI.
 
 ## The whole SDK
 
@@ -66,7 +81,8 @@ each of them the command configures a build of the SDK shell firmware and builds
   firmware, the SPI flash image with the system resources, and the timeline
   layouts.
 
-It then adds the frozen platforms, whose headers `tools/build_sdk.py`
+The headers and the library of the ABI have to come out the same from every
+board, and the command stops if they do not. It then adds the frozen platforms, whose headers `tools/build_sdk.py`
 generates at the SDK revision each was frozen at, and whose `libpebble.a`
 and emulator come from the directory given with `--frozen`, as they are the
 ones those platforms were frozen with. The result is `build-sdk/sdk-core/`:
@@ -77,7 +93,9 @@ sdk-core/
   package.json, requirements.txt, use_requirements.json
   pebble/
     cmake/, common/, waf   what the platforms share
-    <platform>/            include/, lib/, qemu/, platform.json
+    armv7m/                include/, lib/: what the platforms of the ABI share
+    <platform>/            platform.json, qemu/, links to include/ and lib/
+    <frozen platform>/     include/, lib/, qemu/
 ```
 
 Both app builds read `package.json` through `sdk/tools/pebble_project.py`;

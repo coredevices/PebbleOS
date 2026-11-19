@@ -58,6 +58,9 @@ _LIMITS = {
 }
 _REQUIRED_LIMITS = tuple(k for k in _LIMITS if k != "resources_appstore_2x")
 
+# What an SDK holds beside its platforms, and the directories of the ABIS.
+_SDK_DIRECTORIES = ("cmake", "common")
+
 _FROZEN_LIMITS = {
     "app_binary": 0x10000,
     "app_memory": 0x10000,
@@ -142,6 +145,8 @@ def validate_descriptor(desc):
         )
     if desc.get("abi") not in ABIS:
         raise PlatformError(f"platform {name}: unknown ABI {desc.get('abi')!r}")
+    if name in ABIS or name in _SDK_DIRECTORIES:
+        raise PlatformError(f"platform name {name!r} is a directory of the SDK")
     display = desc.get("display")
     if not isinstance(display, dict):
         raise PlatformError(f"platform {name}: no display")
@@ -206,6 +211,7 @@ def platform_from_descriptor(desc):
 
     platform = {
         "NAME": name,
+        "ABI": desc["abi"],
         "DEFINES": defines,
         "BUILD_DIR": name,
         "BUNDLE_BIN_DIR": name,
@@ -333,6 +339,22 @@ def sdk_descriptors(sdk_root):
         os.path.join(sdk_root, name, "platform.json") for name in os.listdir(sdk_root)
     )
     return [load_descriptor(path) for path in files if os.path.isfile(path)]
+
+
+def sdk_component(sdk_root, platform_name, component):
+    """Where an SDK keeps `component` ("include", "lib") for a platform: in
+    the platform's own directory if it has one, otherwise in the directory
+    the platforms of its ABI share. A frozen platform has only its own: what
+    is shared is of a later revision."""
+    platform = pebble_platforms[platform_name]
+    directories = [platform_name]
+    if "FROZEN_AT_REVISION" not in platform:
+        directories.append(platform["ABI"])
+    for directory in directories:
+        path = os.path.join(sdk_root, directory, component)
+        if os.path.exists(path):
+            return path
+    return None
 
 
 def _load_platforms():
