@@ -17,6 +17,8 @@ struct discovery {
   const ble_uuid_t *svc_uuid;
   const ble_uuid_t *const *chr_uuids;
   uint8_t num_chrs;
+  uint8_t instance;
+  uint8_t num_instances;
   pbl_bt_gattc_discover_cb_t cb;
   void *arg;
   uint16_t start_handle;
@@ -113,8 +115,7 @@ static int prv_svc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
   int rc;
 
   if (error->status == 0) {
-    /* The first one, should the peer have several. */
-    if (d->start_handle == 0) {
+    if (d->num_instances++ == d->instance) {
       d->start_handle = svc->start_handle;
       d->end_handle = svc->end_handle;
     }
@@ -161,7 +162,7 @@ bool pbl_bt_gattc_notify_rx(uint16_t conn_handle, uint16_t attr_handle, struct o
   return false;
 }
 
-int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid,
+int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint8_t instance,
                           const ble_uuid_t *const *chr_uuids, uint8_t num_chrs,
                           pbl_bt_gattc_discover_cb_t cb, void *arg) {
   struct discovery *d;
@@ -178,6 +179,7 @@ int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid,
   d->svc_uuid = svc_uuid;
   d->chr_uuids = chr_uuids;
   d->num_chrs = num_chrs;
+  d->instance = instance;
   d->cb = cb;
   d->arg = arg;
 
@@ -307,8 +309,8 @@ int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_h
   *op = (struct service_op){.svc = svc, .generation = ++svc->generation};
   pbl_mutex_unlock(&s_service_lock);
 
-  rc = pbl_bt_gattc_discover(conn_handle, svc->svc_uuid, svc->chr_uuids, svc->num_chrs,
-                             prv_service_discovered, op);
+  rc = pbl_bt_gattc_discover(conn_handle, svc->svc_uuid, svc->instance, svc->chr_uuids,
+                             svc->num_chrs, prv_service_discovered, op);
   if (rc != 0) {
     pbl_free(op);
     pbl_bt_gattc_service_stop(svc);
@@ -375,8 +377,8 @@ int pbl_bt_gattc_service_rediscover(struct pbl_bt_gattc_service *svc) {
     return -ENOTCONN;
   }
 
-  rc = pbl_bt_gattc_discover(conn_handle, svc->svc_uuid, svc->chr_uuids, svc->num_chrs,
-                             prv_service_rediscovered, op);
+  rc = pbl_bt_gattc_discover(conn_handle, svc->svc_uuid, svc->instance, svc->chr_uuids,
+                             svc->num_chrs, prv_service_rediscovered, op);
   if (rc != 0) {
     pbl_free(op);
   }
@@ -454,10 +456,10 @@ done:
 static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum service_op_type type,
                           const void *data, uint16_t len) {
   const bool on_cccd = (type == SERVICE_OP_SUBSCRIBE || type == SERVICE_OP_UNSUBSCRIBE);
-  const uint16_t cccd = htole16(type == SERVICE_OP_SUBSCRIBE ? BLE_GATT_CCCD_NOTIFY : 0);
   struct service_op *op;
   uint16_t conn_handle;
   uint16_t handle = 0;
+  uint16_t cccd = 0;
   int rc;
 
   op = pbl_malloc(sizeof(*op));
@@ -469,6 +471,12 @@ static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum se
   conn_handle = svc->conn_handle;
   if (svc->started && chr < svc->num_chrs) {
     handle = on_cccd ? svc->chrs[chr].cccd_handle : svc->chrs[chr].val_handle;
+    /* Notifications when the characteristic has them, indications otherwise. */
+    if (type == SERVICE_OP_SUBSCRIBE) {
+      cccd = (svc->chrs[chr].properties & BLE_GATT_CHR_PROP_NOTIFY) ? BLE_GATT_CCCD_NOTIFY
+                                                                    : BLE_GATT_CCCD_INDICATE;
+    }
+    cccd = htole16(cccd);
   }
   *op = (struct service_op){.svc = svc, .generation = svc->generation, .chr = chr, .type = type};
   pbl_mutex_unlock(&s_service_lock);
@@ -500,6 +508,25 @@ int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr
 int pbl_bt_gattc_service_write(struct pbl_bt_gattc_service *svc, uint8_t chr, const void *data,
                                uint16_t len) {
   return prv_service_op(svc, chr, SERVICE_OP_WRITE, data, len);
+}
+
+int pbl_bt_gattc_service_write_no_rsp(struct pbl_bt_gattc_service *svc, uint8_t chr,
+                                      const void *data, uint16_t len) {
+  uint16_t conn_handle;
+  uint16_t handle = 0;
+
+  pbl_mutex_lock(&s_service_lock, PBL_FOREVER);
+  conn_handle = svc->conn_handle;
+  if (svc->started && chr < svc->num_chrs) {
+    handle = svc->chrs[chr].val_handle;
+  }
+  pbl_mutex_unlock(&s_service_lock);
+
+  if (handle == 0) {
+    return -ENOTCONN;
+  }
+
+  return prv_status(ble_gattc_write_no_rsp_flat(conn_handle, handle, data, len));
 }
 
 int pbl_bt_gattc_service_read(struct pbl_bt_gattc_service *svc, uint8_t chr) {
