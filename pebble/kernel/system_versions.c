@@ -19,6 +19,7 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/string.h>
 
+#include <applib/platform.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
 #include <process_management/pebble_process_md.h>
@@ -89,35 +90,6 @@ static void prv_fixup_firmware_metadata(FirmwareMetadata *fw_metadata) {
 static void resource_version_to_network_endian(ResourceVersion *resources_version) {
   resources_version->crc = pbl_cpu_to_be32(resources_version->crc);
   resources_version->timestamp = pbl_cpu_to_be32(resources_version->timestamp);
-}
-
-static uint32_t prv_platform_features(void) {
-  uint32_t features = 0;
-#ifdef CONFIG_PLATFORM_MICROPHONE
-  features |= PLATFORM_FEATURE_MICROPHONE;
-#endif
-#ifdef CONFIG_PLATFORM_SMARTSTRAP
-  features |= PLATFORM_FEATURE_SMARTSTRAP;
-#endif
-#ifdef CONFIG_PLATFORM_SMARTSTRAP_POWER
-  features |= PLATFORM_FEATURE_SMARTSTRAP_POWER;
-#endif
-#ifdef CONFIG_PLATFORM_HEALTH
-  features |= PLATFORM_FEATURE_HEALTH;
-#endif
-#ifdef CONFIG_PLATFORM_COMPASS
-  features |= PLATFORM_FEATURE_COMPASS;
-#endif
-#ifdef CONFIG_PLATFORM_TOUCH
-  features |= PLATFORM_FEATURE_TOUCH;
-#endif
-#ifdef CONFIG_PLATFORM_RGB_BACKLIGHT
-  features |= PLATFORM_FEATURE_RGB_BACKLIGHT;
-#endif
-#ifdef CONFIG_PLATFORM_SPEAKER
-  features |= PLATFORM_FEATURE_SPEAKER;
-#endif
-  return features;
 }
 
 static void prv_send_watch_versions(struct pbl_pp_session *session) {
@@ -208,7 +180,7 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
 #endif
   versions_msg.platform_info.display_width = pbl_be16_make(CONFIG_PLATFORM_DISPLAY_WIDTH);
   versions_msg.platform_info.display_height = pbl_be16_make(CONFIG_PLATFORM_DISPLAY_HEIGHT);
-  versions_msg.platform_info.features = pbl_cpu_to_be32(prv_platform_features());
+  versions_msg.platform_info.features = pbl_cpu_to_be32(platform_get_features());
   versions_msg.platform_info.app_memory_kib =
       pbl_be16_make(CONFIG_PLATFORM_MAX_APP_MEMORY_SIZE / 1024);
 #ifdef CONFIG_PLATFORM_COLOR

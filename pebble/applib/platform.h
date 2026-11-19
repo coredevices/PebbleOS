@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdint.h>
+
 typedef enum PlatformType {
   PlatformTypeAplite,
   PlatformTypeBasalt,
@@ -12,6 +15,37 @@ typedef enum PlatformType {
   PlatformTypeFlint,
   PlatformTypeGabbro
 } PlatformType;
+
+//! Hardware a watch may have. An app that runs on more than one kind of watch asks whether the
+//! one it is running on has a feature with \ref platform_has_feature.
+typedef enum PlatformFeature {
+  //! A microphone, for dictation
+  PlatformFeatureMicrophone,
+  //! A smartstrap connector
+  PlatformFeatureSmartstrap,
+  //! A smartstrap connector that can power an accessory
+  PlatformFeatureSmartstrapPower,
+  //! Step counting and sleep tracking
+  PlatformFeatureHealth,
+  //! A compass
+  PlatformFeatureCompass,
+  //! A touch screen
+  PlatformFeatureTouch,
+  //! A backlight that can change its colour
+  PlatformFeatureRGBBacklight,
+  //! A speaker
+  PlatformFeatureSpeaker,
+} PlatformFeature;
+
+//! Whether the watch the app is running on has a feature.
+//! @param feature The feature to ask for
+//! @return true if the watch has the feature, false if it does not or the feature is not known
+//! to its firmware
+bool platform_has_feature(PlatformFeature feature);
+
+//! @internal
+//! The features of the platform, as the bits of PebblePlatformFeature.
+uint32_t platform_get_features(void);
 
 // Unit tests and the firmware don't define the SDK platform defines because reasons.
 // Therefore, we need to switch on the platform for the platform type.
