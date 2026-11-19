@@ -228,6 +228,40 @@ def platform_from_descriptor(desc):
     return platform
 
 
+def display_class(display):
+    """The class of a display: its shape and colour depth, "rect-color"."""
+    return f"{display['shape']}-{'color' if display['color'] else 'bw'}"
+
+
+def flexible_build(shape, color, requires=()):
+    """What a flexible binary is built with. It is of a class instead of a
+    platform, and runs on every display of that class: it is given no
+    display size and no platform name. Of the features it is only given
+    those it requires, which every watch it runs on then has; it asks the
+    watch for the others."""
+    unknown = sorted(set(requires) - set(FEATURES))
+    if unknown:
+        raise PlatformError(f"unknown features {', '.join(unknown)}")
+    display = {"shape": shape, "color": color}
+    defines = [
+        "PBL_FLEXIBLE",
+        "PBL_COLOR" if color else "PBL_BW",
+        "PBL_ROUND" if shape == "round" else "PBL_RECT",
+    ]
+    tags = ["color" if color else "bw", shape]
+    for feature, (define, tag) in FEATURES.items():
+        if feature in requires:
+            defines.append(define)
+            if tag:
+                tags.append(tag)
+    return {
+        "NAME": display_class(display),
+        "DEFINES": defines,
+        "TAGS": tags,
+        "REQUIRES": [f for f in FEATURES if f in requires],
+    }
+
+
 def descriptor_from_kconfig(symbols):
     """A platform's description out of its Kconfig.platform symbols, given
     as {name: value} without the CONFIG_ prefix; unset bools are left out."""

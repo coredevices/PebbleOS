@@ -119,9 +119,19 @@ def define_text(e, shared):
     if e.selected_by is not None:
         first, second, _ = selected_argument(e)
         signature = f"#define {e.name}({first}, {second})"
+        # A flexible binary runs on watches with and without a feature it
+        # does not require, and asks the watch.
+        runtime = ""
+        if e.runtime_feature is not None:
+            runtime = (
+                "#elif defined(PBL_FLEXIBLE)\n"
+                f"{signature} \\\n"
+                f"  (platform_has_feature({e.runtime_feature}) ? ({first}) : ({second}))\n"
+            )
         return (
             f"#if defined({e.selected_by})\n"
             f"{signature} ({first})\n"
+            f"{runtime}"
             "#else\n"
             f"{signature} ({second})\n"
             "#endif"

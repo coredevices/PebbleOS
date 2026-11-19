@@ -225,6 +225,42 @@ class TestDescriptor(unittest.TestCase):
             self.assertIsNone(sdk_platform.sdk_component(sdk, "basalt", "include"))
 
 
+class TestFlexible(unittest.TestCase):
+    def test_class_of_a_platform(self):
+        def of(name):
+            return sdk_platform.display_class(
+                pebble_platforms[name]["DESCRIPTOR"]["display"]
+            )
+
+        self.assertEqual(of("emery"), "rect-color")
+        self.assertEqual(of("basalt"), "rect-color")
+        self.assertEqual(of("flint"), "rect-bw")
+        self.assertEqual(of("gabbro"), "round-color")
+        # No platform is named like a class.
+        with self.assertRaises(PlatformError):
+            sdk_platform.validate_descriptor(dict(SLATE, name="rect-color"))
+
+    def test_built_without_a_size_or_a_name(self):
+        build = sdk_platform.flexible_build("rect", True)
+        self.assertEqual(build["NAME"], "rect-color")
+        self.assertEqual(build["DEFINES"], ["PBL_FLEXIBLE", "PBL_COLOR", "PBL_RECT"])
+        self.assertEqual(build["TAGS"], ["color", "rect"])
+        self.assertEqual(build["REQUIRES"], [])
+
+    def test_required_features_are_given(self):
+        build = sdk_platform.flexible_build(
+            "round", False, requires=["speaker", "microphone"]
+        )
+        self.assertEqual(
+            build["DEFINES"],
+            ["PBL_FLEXIBLE", "PBL_BW", "PBL_ROUND", "PBL_MICROPHONE", "PBL_SPEAKER"],
+        )
+        self.assertEqual(build["TAGS"], ["bw", "round", "mic", "speaker"])
+        self.assertEqual(build["REQUIRES"], ["microphone", "speaker"])
+        with self.assertRaises(PlatformError):
+            sdk_platform.flexible_build("rect", True, requires=["laser"])
+
+
 class TestTargetPlatforms(unittest.TestCase):
     def test_by_name(self):
         self.assertTrue(sdk_platform.platform_matches("emery", ["flint", "emery"]))

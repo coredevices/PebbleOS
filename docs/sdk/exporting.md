@@ -107,6 +107,9 @@ instead, by the defines an app is built with:
   Without it the macro is its second argument.
 - `sdkDefinition` is the lines to put in the header, a chain of
   `#if defined(...)`.
+- `runtimeFeature`, with `selectedBy`, names the `PlatformFeature` a
+  flexible binary asks the watch for when the define is not given
+  ({doc}`platforms`).
 
 The generator fails if either gives the build's platform something else
 than its firmware has. Headers of the frozen platforms keep the plain

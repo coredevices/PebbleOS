@@ -115,6 +115,39 @@ platform is added to an SDK by adding a directory with this file and nothing
 else. A project picks among them by
 name, with `targetPlatforms` ({doc}`app_build`).
 
+## Flexible binaries
+
+A binary built for a platform is right for one display, and a watch with
+another display shows it in a bezel. A flexible binary is built for a
+*class* instead, a display shape and colour depth such as `rect-color`, and
+is meant for every watch of that class. `flexible_build()` in
+`tools/pebble_sdk_platform.py` says what it is compiled with:
+
+- `PBL_FLEXIBLE`, `PBL_COLOR` or `PBL_BW`, and `PBL_RECT` or `PBL_ROUND`.
+  Shape and colour depth are the class, so `PBL_IF_ROUND_ELSE`,
+  `PBL_IF_COLOR_ELSE`, `COLOR_FALLBACK`, `ACTION_BAR_WIDTH` and
+  `STATUS_BAR_LAYER_HEIGHT` are the constants they are in any build.
+- No `PBL_DISPLAY_WIDTH` and `PBL_DISPLAY_HEIGHT`, so a size written into
+  the source does not compile. The app lays out from the bounds of its
+  window.
+- No `PBL_PLATFORM_<NAME>`. `PBL_PLATFORM_TYPE_CURRENT` is the platform
+  the class is most like.
+- No feature define, as watches of a class differ in their features. The
+  app asks the watch it runs on with `platform_has_feature()`, and
+  `PBL_IF_MICROPHONE_ELSE` and `PBL_IF_HEALTH_ELSE` do so too: both of
+  their arguments are compiled, and they are no longer constants.
+  `PBL_IF_SMARTSTRAP_ELSE` stays the constant it is without the define.
+- The define of each feature the binary *requires*. Such a binary is only
+  for watches that have the feature, so there it is the constant it is in a
+  build for a platform.
+
+`platform_has_feature()` is answered by the firmware from its platform's
+description, without a system call. It is part of the SDK since revision
+116, in every build.
+
+The app builds do not build flexible binaries yet: how a binary says that
+it is one, and where it goes in a pbw, are not defined.
+
 ## What an app binary says
 
 An app binary says what the platform it was built for is like, in a 16-byte
