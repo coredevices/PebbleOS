@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(sources
+  advertising.c
   bluetooth_ctl.c
   bonding.c
   dis.c

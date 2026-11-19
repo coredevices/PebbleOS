@@ -3,10 +3,10 @@
 
 #include "gap_le.h"
 
-#include "gap_le_advert.h"
 #include "gap_le_connect.h"
 #include "gap_le_connection.h"
-#include "gap_le_slave_discovery.h"
+
+#include <pbl/services/bluetooth/advertising.h>
 
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/bt_lock.h>
@@ -15,9 +15,7 @@ void gap_le_init(void) {
   bt_lock();
   {
     gap_le_connection_init();
-    gap_le_advert_init();
-    gap_le_slave_discovery_init();
-    // Depends on gap_le_advert:
+    bt_advertising_init();
     gap_le_connect_init();
 
     kernel_le_client_init();
@@ -31,8 +29,7 @@ void gap_le_deinit(void) {
     kernel_le_client_deinit();
 
     gap_le_connect_deinit();
-    gap_le_slave_discovery_deinit();
-    gap_le_advert_deinit();
+    bt_advertising_deinit();
     gap_le_connection_deinit();
   }
   bt_unlock();

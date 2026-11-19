@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#include <pbl/bluetooth/advert.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/kernel/assert.h>
@@ -49,40 +49,6 @@ static int prv_device_name_read_op_start(void *ctx) {
   }
 
   return rc;
-}
-
-void pbl_bt_advert_advertising_disable(void) {
-  int rc;
-
-  if (ble_gap_adv_active() == 0) {
-    return;
-  }
-
-  rc = ble_gap_adv_stop();
-  PBL_ASSERT(rc == 0, "Failed to stop advertising (0x%04x)", (uint16_t)rc);
-}
-
-bool pbl_bt_advert_client_get_tx_power(int8_t *tx_power) {
-  return false;
-}
-
-bool pbl_bt_advert_set_advertising_data(const struct pbl_bt_ad_data *ad_data) {
-  int rc;
-
-  rc = ble_gap_adv_set_data((uint8_t *)&ad_data->data, ad_data->ad_data_length);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to set advertising data (0x%04x)", (uint16_t)rc);
-    return false;
-  }
-
-  rc = ble_gap_adv_rsp_set_data((uint8_t *)&ad_data->data[ad_data->ad_data_length],
-                                ad_data->scan_resp_data_length);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to set scan response data (0x%04x)", (uint16_t)rc);
-    return false;
-  }
-
-  return true;
 }
 
 static void prv_handle_connection_event(struct ble_gap_event *event) {
@@ -379,7 +345,7 @@ static void prv_handle_phy_update_event(struct ble_gap_event *event) {
               event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
 }
 
-static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
+int pbl_bt_gap_event_handler(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
       PBL_LOG_DBG("BLE_GAP_EVENT_CONNECT");
@@ -444,30 +410,4 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
       break;
   }
   return 0;
-}
-
-bool pbl_bt_advert_advertising_enable(uint32_t min_interval_ms, uint32_t max_interval_ms) {
-  int rc;
-  uint8_t own_addr_type;
-  struct ble_gap_adv_params advp = {
-    .conn_mode = BLE_GAP_CONN_MODE_UND,
-    .disc_mode = BLE_GAP_DISC_MODE_GEN,
-    .itvl_min = BLE_GAP_ADV_ITVL_MS(min_interval_ms),
-    .itvl_max = BLE_GAP_ADV_ITVL_MS(max_interval_ms),
-  };
-
-  rc = ble_hs_id_infer_auto(0, &own_addr_type);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to infer own address type (%d)", rc);
-    return false;
-  }
-
-  rc = ble_gap_adv_start(own_addr_type, nullptr, BLE_HS_FOREVER, &advp, prv_handle_gap_event,
-                         nullptr);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to start advertising (0x%04x)", (uint16_t)rc);
-    return false;
-  }
-
-  return true;
 }

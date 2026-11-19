@@ -6,10 +6,10 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/advertising.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/pairability.h>
 
-#include <comm/ble/gap_le_slave_discovery.h>
 #include <kernel/pebble_tasks.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -32,7 +32,7 @@ static void evaluate_pairing_refcount(void *data) {
 
   pbl_bt_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
   if (s_last_ble_discoverable_state != is_ble_pairable_and_discoverable) {
-    gap_le_slave_set_discoverable(is_ble_pairable_and_discoverable);
+    bt_advertising_set_discoverable(is_ble_pairable_and_discoverable);
     s_last_ble_discoverable_state = is_ble_pairable_and_discoverable;
   }
 }
@@ -101,7 +101,7 @@ void bt_pairability_update_due_to_bonding_change(void) {
 
 void bt_pairability_init(void) {
   // Reset cached discoverable state: the advertising infrastructure was torn down
-  // before this init, so we must re-drive gap_le_slave_set_discoverable() if needed.
+  // before this init, so we must re-drive bt_advertising_set_discoverable() if needed.
   s_last_ble_discoverable_state = false;
   bt_pairability_update_due_to_bonding_change();
   prv_schedule_evaluation();

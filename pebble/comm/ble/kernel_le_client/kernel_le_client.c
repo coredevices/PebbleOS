@@ -22,9 +22,9 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/gatt.h>
+#include <pbl/services/bluetooth/advertising.h>
 
 #include <comm/ble/gap_le_connect.h>
-#include <comm/ble/gap_le_slave_reconnect.h>
 #include <comm/ble/gatt_client_accessors.h>
 #include <comm/ble/gatt_client_discovery.h>
 #include <comm/ble/gatt_client_operations.h>
@@ -426,7 +426,6 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     pbl_pp_gatt_create();
 #endif
 
-    gap_le_slave_reconnect_stop();
     gatt_client_discovery_discover_all(&device);
 
   } else {
@@ -441,7 +440,6 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     ancs_destroy();
 #endif
     app_launch_handle_disconnection();
-    gap_le_slave_reconnect_start();
     gatt_client_op_cleanup();
   }
 }
@@ -468,7 +466,7 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 
 // -------------------------------------------------------------------------------------------------
 static void prv_connect_gateway(const struct pbl_bt_device_internal *addr) {
-  gap_le_slave_reconnect_start();
+  bt_advertising_set_reconnectable(true);
   gap_le_connect_connect_by_bond(addr, true /* auto_reconnect */, true /* is_pairing_required */);
 }
 
@@ -490,9 +488,7 @@ void kernel_le_client_handle_bond_added(const struct pbl_bt_bond_info *info) {
 
 // -------------------------------------------------------------------------------------------------
 void kernel_le_client_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
-  if (pbl_bt_bond_count() == 0) {
-    gap_le_slave_reconnect_stop();
-  }
+  bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
   gap_le_connect_cancel_by_bond(addr);
 }
 
@@ -521,7 +517,6 @@ void kernel_le_client_deinit(void) {
   // Cleanup clients: their code must execute on KernelMain, so add callback:
   launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
 
-  gap_le_slave_reconnect_stop();
   gap_le_connect_cancel_all();
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   pbl_pp_gatt_destroy();

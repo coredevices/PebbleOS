@@ -11,10 +11,6 @@ prose:
 
 - `gap_le_connect.c` — connection management and the "connection intent"
   abstraction that virtualizes the link across multiple clients.
-- `gap_le_advert.c` — round-robin scheduling of multiple advertising jobs
-  onto a controller that only holds one payload at a time (the comment
-  predates the current controllers, but the scheduler it describes is still
-  in use).
 - `gap_le_connect_params.c` — a primer on connection intervals, slave
   latency and supervision timeouts, and why the firmware deviates from the
   spec-recommended parameter-update pause for iOS.
@@ -95,6 +91,14 @@ The firmware builds on that in its Bluetooth service:
 - The recovery firmware has no filesystem and uses the PRF backend.
 - Both take the local IRK from the root keys in the PRF store, so that a phone
   sees one watch. The phone's name is kept there as well.
+
+## Advertising
+
+The firmware advertises with NimBLE directly, from its Bluetooth service
+(`pebble/services/bluetooth/advertising.c`): to be discovered while there is
+no bond or a pairing screen is open, and for the bonded phone to reconnect
+otherwise, with an empty payload. It starts at a 20 ms interval and falls back
+to 1022.5 ms, and is silent while connected.
 
 ## Modules
 
