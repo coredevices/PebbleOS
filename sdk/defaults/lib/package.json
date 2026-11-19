@@ -8,13 +8,14 @@
   "pebble": {
     "projectType": "package",
     "sdkVersion": "${sdk_version}",
+    "flexible": true,
     "targetPlatforms": [
+      "rect",
+      "round",
       "aplite",
       "basalt",
       "chalk",
-      "diorite",
-      "emery",
-      "flint"
+      "diorite"
     ],
     "resources": {
       "media": []

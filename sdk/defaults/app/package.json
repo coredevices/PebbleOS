@@ -10,13 +10,14 @@
     "uuid": "${uuid}",
     "sdkVersion": "${sdk_version}",
     "enableMultiJS": true,
+    "flexible": true,
     "targetPlatforms": [
+      "rect",
+      "round",
       "aplite",
       "basalt",
       "chalk",
-      "diorite",
-      "emery",
-      "flint"
+      "diorite"
     ],
     "watchapp": {
       "watchface": false
