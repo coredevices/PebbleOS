@@ -91,6 +91,12 @@ watch of that class.
 - `appMemory` is what the flexible binaries get for their code and heap, in
   bytes, in place of 64K. They then only fit watches that give that much.
 
+A Pebble package can be flexible too, and then ships a library for each
+class beside those for platforms. A flexible app needs that of each package
+it uses: its binary of a class links the package's library of that class,
+and one that requires features takes the library of the class without them
+when the package has none for those features.
+
 The source of a flexible project has no display size to go by and asks for
 features when it runs; `pebble doctor` finds what stands in the way. The
 deprecated waf build does not build flexible projects.
