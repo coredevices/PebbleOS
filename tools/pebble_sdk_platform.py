@@ -233,33 +233,112 @@ def display_class(display):
     return f"{display['shape']}-{'color' if display['color'] else 'bw'}"
 
 
+# What a flexible binary is given for its code and heap unless its project
+# asks for more: what every platform gives.
+FLEXIBLE_APP_MEMORY = 0x10000
+
+_FLEXIBLE_NAME = re.compile(r"(rect|round)-(bw|color)((?:\+[a-z]+)*)")
+
+
+def flexible_name(shape, color, requires=()):
+    """The name of a flexible build, and of its directory in a pbw: its
+    class and the resource tags of the features it requires,
+    "rect-color+mic"."""
+    tags = [FEATURES[f][1] for f in FEATURES if f in requires]
+    return "+".join([display_class({"shape": shape, "color": color}), *tags])
+
+
+def parse_flexible_name(name):
+    """The shape, colour and required features a flexible build is named
+    after, or None if the name is not that of one."""
+    m = _FLEXIBLE_NAME.fullmatch(name)
+    if not m:
+        return None
+    by_tag = {tag: feature for feature, (_, tag) in FEATURES.items() if tag}
+    tags = m.group(3).split("+")[1:]
+    if any(tag not in by_tag for tag in tags):
+        return None
+    requires = [by_tag[tag] for tag in tags]
+    # One name for one build.
+    if name != flexible_name(m.group(1), m.group(2) == "color", requires):
+        return None
+    return m.group(1), m.group(2) == "color", requires
+
+
+def _flexible_limits(shape, color):
+    """What a flexible binary may take: no more than any platform of its
+    class gives."""
+    display = {"shape": shape, "color": color}
+    of_class = [
+        p["DESCRIPTOR"]["limits"]
+        for p in pebble_platforms.values()
+        if "FROZEN_AT_REVISION" not in p
+        and display_class(p["DESCRIPTOR"]["display"]) == display_class(display)
+    ] or [_FROZEN_LIMITS]
+    limits = {key: min(limits[key] for limits in of_class) for key in _REQUIRED_LIMITS}
+    limits["app_binary"] = limits["app_memory"] = FLEXIBLE_APP_MEMORY
+    return limits
+
+
 def flexible_build(shape, color, requires=()):
-    """What a flexible binary is built with. It is of a class instead of a
-    platform, and runs on every display of that class: it is given no
-    display size and no platform name. Of the features it is only given
-    those it requires, which every watch it runs on then has; it asks the
-    watch for the others."""
+    """What a flexible binary is built with, as the builds read a platform.
+    It is of a class instead of a platform, and runs on every display of
+    that class: it is given no display size and no platform name. Of the
+    features it is only given those it requires, which every watch it runs
+    on then has; it asks the watch for the others."""
     unknown = sorted(set(requires) - set(FEATURES))
     if unknown:
         raise PlatformError(f"unknown features {', '.join(unknown)}")
-    display = {"shape": shape, "color": color}
+    untagged = sorted(f for f in requires if FEATURES[f][1] is None)
+    if untagged:
+        raise PlatformError(f"{', '.join(untagged)} cannot be required")
+    requires = [f for f in FEATURES if f in requires]
+    name = flexible_name(shape, color, requires)
     defines = [
         "PBL_FLEXIBLE",
         "PBL_COLOR" if color else "PBL_BW",
         "PBL_ROUND" if shape == "round" else "PBL_RECT",
     ]
     tags = ["color" if color else "bw", shape]
-    for feature, (define, tag) in FEATURES.items():
-        if feature in requires:
-            defines.append(define)
-            if tag:
-                tags.append(tag)
-    return {
-        "NAME": display_class(display),
+    for feature in requires:
+        define, tag = FEATURES[feature]
+        defines.append(define)
+        tags.append(tag)
+    limits = _flexible_limits(shape, color)
+    platform = {
+        "NAME": name,
+        "ABI": ABIS[0],
         "DEFINES": defines,
+        "BUILD_DIR": name,
+        "BUNDLE_BIN_DIR": name,
+        "ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H": [],
         "TAGS": tags,
-        "REQUIRES": [f for f in FEATURES if f in requires],
+        "REQUIRES": requires,
+        "FLEXIBLE": True,
+        "DESCRIPTOR": {
+            "version": DESCRIPTOR_VERSION,
+            "name": name,
+            "abi": ABIS[0],
+            "flexible": True,
+            "display": {"shape": shape, "color": color},
+            "requires": requires,
+            "limits": limits,
+        },
     }
+    for key, value in limits.items():
+        platform[_LIMITS[key]] = value
+    return platform
+
+
+class _Platforms(dict):
+    """The platforms by name. A flexible build is looked up by its name
+    like a platform, but is not one of them: it is not listed."""
+
+    def __missing__(self, name):
+        parsed = parse_flexible_name(name)
+        if parsed is None:
+            raise KeyError(name)
+        return flexible_build(*parsed)
 
 
 def descriptor_from_kconfig(symbols):
@@ -402,13 +481,27 @@ def _load_platforms():
         # In an SDK this is <sdk>/common/tools.
         descriptors += sdk_descriptors(os.path.dirname(os.path.dirname(here)))
 
-    return {desc["name"]: platform_from_descriptor(desc) for desc in descriptors}
+    return _Platforms(
+        (desc["name"], platform_from_descriptor(desc)) for desc in descriptors
+    )
 
 
-def bundle_description(platform_name):
+def bundle_description(platform_name, app_memory=None):
     """What a pbw says of the platform one of its binaries was built for: the
-    part of the platform's description a binary is matched to a watch by."""
+    part of the platform's description a binary is matched to a watch by. A
+    flexible binary has no display size, and says what it requires in place
+    of what its platform has; `app_memory` is what its project asks for."""
     desc = pebble_platforms[platform_name]["DESCRIPTOR"]
+    if desc.get("flexible"):
+        return {
+            "version": DESCRIPTOR_VERSION,
+            "name": desc["name"],
+            "abi": desc["abi"],
+            "flexible": True,
+            "display": dict(desc["display"]),
+            "requires": list(desc["requires"]),
+            "limits": {"app_memory": app_memory or desc["limits"]["app_memory"]},
+        }
     return {
         "version": DESCRIPTOR_VERSION,
         "name": desc["name"],
@@ -423,9 +516,13 @@ def platform_matches(platform_name, selectors):
     """Whether a platform is one a targetPlatforms list asks for. An entry
     names a platform or the capabilities it has to have, as the tags
     resource file names use: "emery", "round", "color~rect"."""
-    platform = pebble_platforms.get(platform_name)
-    if platform is None:
-        return platform_name in selectors
+    # By its own name, which for a flexible build is not one of its tags.
+    if platform_name in selectors:
+        return True
+    try:
+        platform = pebble_platforms[platform_name]
+    except KeyError:
+        return False
     tags = set(platform["TAGS"])
     return any(set(selector.split("~")) <= tags for selector in selectors)
 

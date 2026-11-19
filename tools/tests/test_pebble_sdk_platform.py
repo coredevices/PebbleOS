@@ -251,6 +251,7 @@ class TestFlexible(unittest.TestCase):
         build = sdk_platform.flexible_build(
             "round", False, requires=["speaker", "microphone"]
         )
+        self.assertEqual(build["NAME"], "round-bw+mic+speaker")
         self.assertEqual(
             build["DEFINES"],
             ["PBL_FLEXIBLE", "PBL_BW", "PBL_ROUND", "PBL_MICROPHONE", "PBL_SPEAKER"],
@@ -259,6 +260,79 @@ class TestFlexible(unittest.TestCase):
         self.assertEqual(build["REQUIRES"], ["microphone", "speaker"])
         with self.assertRaises(PlatformError):
             sdk_platform.flexible_build("rect", True, requires=["laser"])
+        # A feature without a resource tag has no name to go by.
+        with self.assertRaises(PlatformError):
+            sdk_platform.flexible_build("rect", True, requires=["rgb_backlight"])
+
+    def test_names(self):
+        parse = sdk_platform.parse_flexible_name
+        self.assertEqual(parse("rect-bw"), ("rect", False, []))
+        self.assertEqual(
+            parse("round-color+mic+health"), ("round", True, ["microphone", "health"])
+        )
+        # One name for one build: features in their own order, each once.
+        self.assertIsNone(parse("round-color+health+mic"))
+        self.assertIsNone(parse("rect-color+mic+mic"))
+        self.assertIsNone(parse("rect-color+laser"))
+        self.assertIsNone(parse("rect-color+"))
+        self.assertIsNone(parse("rect-color~mic"))
+        self.assertIsNone(parse("emery"))
+        self.assertIsNone(parse("rect"))
+
+    def test_looked_up_like_a_platform(self):
+        build = pebble_platforms["rect-color+mic"]
+        self.assertEqual(
+            build, sdk_platform.flexible_build("rect", True, ["microphone"])
+        )
+        # But it is not one of the platforms.
+        self.assertNotIn("rect-color+mic", pebble_platforms)
+        self.assertNotIn("rect-color+mic", list(pebble_platforms))
+        with self.assertRaises(KeyError):
+            pebble_platforms["rect-color+laser"]
+        with self.assertRaises(KeyError):
+            pebble_platforms["slate"]
+
+    def test_limits(self):
+        # 64K whatever the platforms of the class give, and otherwise no more
+        # than any of them does.
+        build = pebble_platforms["rect-color"]
+        self.assertEqual(build["MAX_APP_MEMORY_SIZE"], 0x10000)
+        self.assertEqual(build["MAX_APP_BINARY_SIZE"], 0x10000)
+        emery = pebble_platforms["emery"]
+        for key in (
+            "MAX_RESOURCES_SIZE",
+            "MAX_WORKER_MEMORY_SIZE",
+            "MAX_FONT_GLYPH_SIZE",
+        ):
+            self.assertLessEqual(build[key], emery[key])
+        # A class no platform of the SDK is of still builds.
+        self.assertEqual(pebble_platforms["round-bw"]["MAX_FONT_GLYPH_SIZE"], 256)
+
+    def test_what_a_pbw_says(self):
+        self.assertEqual(
+            sdk_platform.bundle_description("rect-color+mic"),
+            {
+                "version": 1,
+                "name": "rect-color+mic",
+                "abi": "armv7m",
+                "flexible": True,
+                "display": {"shape": "rect", "color": True},
+                "requires": ["microphone"],
+                "limits": {"app_memory": 0x10000},
+            },
+        )
+        description = sdk_platform.bundle_description("rect-bw", app_memory=0x20000)
+        self.assertEqual(description["limits"], {"app_memory": 0x20000})
+
+    def test_resources_by_tag(self):
+        self.assertTrue(sdk_platform.platform_matches("rect-color+mic", ["mic"]))
+        self.assertTrue(sdk_platform.platform_matches("rect-color", ["color~rect"]))
+        self.assertFalse(sdk_platform.platform_matches("rect-color", ["mic"]))
+        self.assertFalse(sdk_platform.platform_matches("rect-color", ["emery"]))
+        # What takes a build's own name for "every build" still gets it.
+        self.assertTrue(
+            sdk_platform.platform_matches("rect-color+mic", ["rect-color+mic"])
+        )
 
 
 class TestTargetPlatforms(unittest.TestCase):
