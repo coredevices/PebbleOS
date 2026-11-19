@@ -70,7 +70,77 @@ def apply_renames(text, renames):
     return pattern.sub(lambda m: renames[m.group(1)], text)
 
 
-def make_app_header(exports_tree, output_filename, header_type, inject_text):
+SELECTED_DEFINE_RE = re.compile(r"#define (\w+)\((\w+), (\w+)\)\s+\((\w+)\)")
+
+
+def selected_argument(e):
+    """Of a define that picks one of its two arguments, the names of both
+    and whether the first is the one picked."""
+    m = SELECTED_DEFINE_RE.fullmatch(e.full_definition.strip())
+    if not m or m.group(4) not in m.group(2, 3):
+        raise RuntimeError(
+            f"{e.name}: a define with selectedBy takes two arguments and is one of them"
+        )
+    return m.group(2), m.group(3), m.group(4) == m.group(2)
+
+
+CONDITION_RE = re.compile(r"#(if|elif) defined\((\w+)\)")
+
+
+def active_lines(lines, defined):
+    """The lines of a one-level #if defined() chain a set of defines leaves."""
+    active = []
+    taken = False
+    current = False
+    for line in lines:
+        m = CONDITION_RE.fullmatch(line)
+        if m:
+            current = not taken and m.group(2) in defined
+        elif line == "#else":
+            current = not taken
+        elif line == "#endif":
+            current = False
+        elif line.startswith(("#if", "#elif")):
+            raise RuntimeError(f"sdkDefinition: only '#if defined(X)' chains: {line}")
+        elif current:
+            active.append(line)
+        taken = taken or current
+    return active
+
+
+def define_text(e, shared):
+    """A define as the SDK header states it. The firmware's own definition
+    is the one of its platform. A header shared by every platform of an ABI
+    has what depends on the platform go by the defines of the app build."""
+    if not shared:
+        return e.full_definition
+    if e.sdk_definition is not None:
+        return "\n".join(e.sdk_definition)
+    if e.selected_by is not None:
+        first, second, _ = selected_argument(e)
+        signature = f"#define {e.name}({first}, {second})"
+        return (
+            f"#if defined({e.selected_by})\n"
+            f"{signature} ({first})\n"
+            "#else\n"
+            f"{signature} ({second})\n"
+            "#endif"
+        )
+    return e.full_definition
+
+
+# Without the defines of the platform a shared header would quietly be that
+# of a platform that has nothing.
+PLATFORM_DEFINES_CHECK = """\
+#if defined(PBL_COLOR) == defined(PBL_BW) || defined(PBL_RECT) == defined(PBL_ROUND)
+#error "Build with the defines of the platform, see its platform.json"
+#endif
+"""
+
+
+def make_app_header(
+    exports_tree, output_filename, header_type, inject_text, shared=True
+):
     output_filename_dir = os.path.dirname(output_filename)
     if not os.path.exists(output_filename_dir):
         os.makedirs(output_filename_dir)
@@ -79,6 +149,9 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
     with io.StringIO() as f:
         writeline(f, "#pragma once")
         writeline(f)
+        if shared:
+            f.write(PLATFORM_DEFINES_CHECK)
+            writeline(f)
         if inject_text is not None:
             f.write(inject_text)
             writeline(f)
@@ -155,7 +228,7 @@ def make_app_header(exports_tree, output_filename, header_type, inject_text):
                     return
                 if e.comment is not None:
                     writeline(f, strip_internal_comments(e.comment))
-                writeline(f, e.full_definition)
+                writeline(f, define_text(e, shared))
                 writeline(f)
             elif e.type == "type":
                 if skip:

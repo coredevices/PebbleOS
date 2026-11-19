@@ -59,6 +59,7 @@ class TestPlatformTable(unittest.TestCase):
                 "PBL_SPEAKER",
                 "PBL_DISPLAY_WIDTH=200",
                 "PBL_DISPLAY_HEIGHT=228",
+                "PBL_MODDABLE",
             },
         )
         self.assertEqual(emery["MAX_APP_MEMORY_SIZE"], 0x20000)

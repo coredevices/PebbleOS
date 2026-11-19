@@ -201,6 +201,8 @@ def platform_from_descriptor(desc):
     tags += [f"{display['width']}w", f"{display['height']}h"]
     if frozen is not None:
         defines.append("PBL_SDK_FROZEN")
+    if desc.get("moddable"):
+        defines.append("PBL_MODDABLE")
 
     platform = {
         "NAME": name,

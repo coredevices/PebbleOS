@@ -287,6 +287,31 @@
             }, {
               "type": "define",
               "name": "PBL_PLATFORM_TYPE_CURRENT",
+              "sdkDefinition": [
+                "#if defined(PBL_PLATFORM_APLITE)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeAplite",
+                "#elif defined(PBL_PLATFORM_BASALT)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt",
+                "#elif defined(PBL_PLATFORM_CHALK)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk",
+                "#elif defined(PBL_PLATFORM_DIORITE)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite",
+                "#elif defined(PBL_PLATFORM_EMERY)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery",
+                "#elif defined(PBL_PLATFORM_FLINT)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint",
+                "#elif defined(PBL_PLATFORM_GABBRO)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro",
+                "#elif defined(PBL_ROUND)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeGabbro",
+                "#elif defined(PBL_COLOR)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery",
+                "#elif defined(PBL_BW)",
+                "#define PBL_PLATFORM_TYPE_CURRENT PlatformTypeFlint",
+                "#else",
+                "#error \"No PBL_PLATFORM_* defined: build with the defines of a platform\"",
+                "#endif"
+              ],
               "addedRevision": "87"
             }, {
               "type": "define",
@@ -807,7 +832,8 @@
               "addedRevision": "77"
             }, {
               "type": "define",
-              "name": "PBL_IF_HEALTH_ELSE"
+              "name": "PBL_IF_HEALTH_ELSE",
+              "selectedBy": "PBL_HEALTH"
             }, {
               "type": "type",
               "name": "MeasurementSystem"
@@ -1096,7 +1122,8 @@
               "addedRevision": "69"
             }, {
               "type": "define",
-              "name": "PBL_IF_MICROPHONE_ELSE"
+              "name": "PBL_IF_MICROPHONE_ELSE",
+              "selectedBy": "PBL_MICROPHONE"
             }
           ]
         }, {
@@ -1703,19 +1730,24 @@
               "addedRevision": "60"
             }, {
               "type": "define",
-              "name": "COLOR_FALLBACK"
+              "name": "COLOR_FALLBACK",
+              "selectedBy": "PBL_COLOR"
             }, {
               "type": "define",
-              "name": "PBL_IF_RECT_ELSE"
+              "name": "PBL_IF_RECT_ELSE",
+              "selectedBy": "PBL_RECT"
             }, {
               "type": "define",
-              "name": "PBL_IF_ROUND_ELSE"
+              "name": "PBL_IF_ROUND_ELSE",
+              "selectedBy": "PBL_ROUND"
             }, {
               "type": "define",
-              "name": "PBL_IF_BW_ELSE"
+              "name": "PBL_IF_BW_ELSE",
+              "selectedBy": "PBL_BW"
             }, {
               "type": "define",
-              "name": "PBL_IF_COLOR_ELSE"
+              "name": "PBL_IF_COLOR_ELSE",
+              "selectedBy": "PBL_COLOR"
             }, {
               "type": "type",
               "name": "GPoint"
@@ -2452,7 +2484,8 @@
             "name": "SMARTSTRAP_RAW_DATA_ATTRIBUTE_ID"
           }, {
             "type": "define",
-            "name": "PBL_IF_SMARTSTRAP_ELSE"
+            "name": "PBL_IF_SMARTSTRAP_ELSE",
+            "selectedBy": "PBL_SMARTSTRAP"
           }, {
             "type": "type",
             "name": "SmartstrapResult"

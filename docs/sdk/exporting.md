@@ -97,6 +97,21 @@ additional flags (`internal`, `removed`, `deprecated`, `appOnly`,
 `workerOnly`, `implName`, `skipDefinition`) — see existing entries and
 `tools/generate_native_sdk/exports.py` for their meaning.
 
+A `define` whose value depends on the platform cannot be copied from the
+firmware, which only has the value of the platform it is built for, while the
+header serves every platform of an ABI. It says how the header decides
+instead, by the defines an app is built with:
+
+- `selectedBy` names the define that picks the first of the macro's two
+  arguments, as in `PBL_IF_COLOR_ELSE(if_true, if_false)` with `PBL_COLOR`.
+  Without it the macro is its second argument.
+- `sdkDefinition` is the lines to put in the header, a chain of
+  `#if defined(...)`.
+
+The generator fails if either gives the build's platform something else
+than its firmware has. Headers of the frozen platforms keep the plain
+definition.
+
 Notes:
 
 - Functions are sorted by `addedRevision`, then alphabetically (by `sortName`

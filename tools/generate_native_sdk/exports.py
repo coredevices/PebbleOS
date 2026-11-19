@@ -30,6 +30,9 @@ class FullExport(Export):
 
         self.full_definition = None
         self.impl_name = v.get("implName", self.name)
+        # A define whose value depends on the platform, see docs/sdk/exporting.md.
+        self.selected_by = v.get("selectedBy")
+        self.sdk_definition = v.get("sdkDefinition")
 
     def complete(self):
         return self.full_definition is not None
