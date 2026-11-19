@@ -23,5 +23,14 @@ int16_t action_bar_layer_get_content_origin_x(void);
 //! Copy of \a bounds with the action-bar strip removed from the button side.
 GRect action_bar_layer_preferred_inset_bounds(GRect bounds);
 
+//! Copy of \a bounds for content centred on the display, with room for the
+//! action bar on either edge. On round displays the bar overlays the display
+//! edge, so its width is reserved symmetrically.
+GRect action_bar_layer_centered_content_bounds(GRect bounds);
+
+//! X origin that centres content \a width wide on the display. Mirrored when
+//! the action bar is on the left, so left-hand layouts are exact mirrors.
+int16_t action_bar_layer_centered_origin_x(int16_t width);
+
 //! Horizontal insets that leave \a other_margin on the content side and room for the bar.
 GEdgeInsets action_bar_layer_content_insets(int16_t other_margin);
