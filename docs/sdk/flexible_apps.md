@@ -178,7 +178,15 @@ Which to pick:
 - A resource's own `targetPlatforms` has to say what it is for with tags. One
   that names platforms is in no flexible binary, and configuring the project
   warns about it.
-- Size tags (`~200w`) name one display and match no flexible binary.
+- A size tag is a breakpoint in a flexible project: `icon~200w.png` is for
+  displays at least 200 wide, `icon~260w~260h.png` for those at least 260
+  both ways, and a display gets the file for the largest size that is no
+  larger than it is. The untagged file is for the smallest displays.
+- The build makes a resource pack for each of those sizes, and whatever
+  installs the app sends the one for the watch. The binary is the same: it
+  loads `RESOURCE_ID_ICON` and gets the file for its display. The binaries
+  for platforms pick by the same breakpoints.
+- In a project that is not flexible a size tag keeps naming one display.
 
 ## Packages
 

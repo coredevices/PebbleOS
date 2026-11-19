@@ -96,6 +96,11 @@ watch of that class.
 - `appMemory` is what the flexible binaries get for their code and heap, in
   bytes, in place of 64K. They then only fit watches that give that much.
 
+A resource file with a size tag (`icon~200w.png`) is for displays at least
+that large in a flexible project. Each flexible binary gets a resource pack
+per such size beside its default one, in `<build>/<name>/packs/`, and the
+pbw carries them all ({doc}`platforms`).
+
 A Pebble package can be flexible too, and then ships a library for each
 class beside those for platforms. A flexible app needs that of each package
 it uses: its binary of a class links the package's library of that class,

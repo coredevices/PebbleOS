@@ -51,7 +51,10 @@ def platform_info_initializer(desc, app_memory=None):
         # What an app of the platform is given, rounded up
         str(-(-app_memory // 1024)),
         str(color_depth),
-        "PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE" if flexible else "0",
+        # It works with whichever of its resource packs it is installed with.
+        "PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE | PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET"
+        if flexible
+        else "0",
     )
     return f"{{ {', '.join(fields)} }}"
 
