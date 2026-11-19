@@ -3,7 +3,6 @@
 
 #include "gap_le_connect.h"
 
-#include "gap_le_advert.h"
 #include "gap_le_connect_params.h"
 #include "gap_le_connection.h"
 
@@ -14,6 +13,7 @@
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/advertising.h>
 
 #include <comm/bluetooth_analytics.h>
 #include <comm/bt_conn_mgr.h>
@@ -300,7 +300,7 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
 
       if (!local_is_master) {
         s_is_connected_as_slave = true;
-        gap_le_advert_handle_connect_as_slave();
+        bt_advertising_handle_connect();
 
         prv_put_legacy_connection_event(&event->peer_address, true /* connected */);
       }
@@ -416,7 +416,7 @@ void pbl_bt_handle_le_disconnection_complete_event(
 
       if (!local_is_master) {
         s_is_connected_as_slave = false;
-        gap_le_advert_handle_disconnect_as_slave();
+        bt_advertising_handle_disconnect();
 
         prv_put_legacy_connection_event(&event->peer_address, false /* disconnected */);
       }

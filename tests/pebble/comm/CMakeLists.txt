@@ -18,15 +18,6 @@ pbl_clar_test(test_ams_util
     pebble/comm/ble/kernel_le_client/ams/ams_util.c
 )
 
-pbl_clar_test(test_gap_le_advert
-  SOURCES
-    pebble/comm/ble/gap_le_advert.c
-    tests/fakes/fake_bt_advert.c
-    tests/fakes/fake_rtc.c
-    pebble/services/clock/time.c
-  OVERRIDES dummy_board
-)
-
 pbl_clar_test(test_bt_conn_mgr
   SOURCES
     pebble/comm/internals/bt_conn_mgr.c

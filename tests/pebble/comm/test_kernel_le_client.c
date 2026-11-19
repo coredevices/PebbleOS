@@ -5,7 +5,6 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_advert.h>
 #include <comm/ble/gatt_client_subscriptions.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/ble/kernel_le_client/test/test_definition.h>
@@ -45,9 +44,6 @@ size_t pbl_bt_bond_count(void) {
   return s_has_gateway_bonding ? 1 : 0;
 }
 
-void gap_le_advert_unschedule_job_types(GAPLEAdvertisingJobTag *tag_types, size_t num_types) {
-}
-
 void gap_le_connect_cancel_all(void) {
 }
 
@@ -60,13 +56,10 @@ enum pbl_bt_errno gap_le_connect_connect_by_bond(const struct pbl_bt_device_inte
   return PBL_BT_ERRNO_OK;
 }
 
-void gap_le_slave_reconnect_start(void) {
-}
+static bool s_reconnectable;
 
-static int s_reconnect_stop_count;
-
-void gap_le_slave_reconnect_stop(void) {
-  ++s_reconnect_stop_count;
+void bt_advertising_set_reconnectable(bool reconnectable) {
+  s_reconnectable = reconnectable;
 }
 
 enum pbl_bt_errno gatt_client_discovery_discover_all(const struct pbl_bt_device_internal *device) {
@@ -231,7 +224,6 @@ void test_kernel_le_client__initialize(void) {
   s_notifications_handled = 0;
   s_has_gateway_bonding = true;
   kernel_le_client_init();
-  s_reconnect_stop_count = 0;
 }
 
 void test_kernel_le_client__cleanup(void) {
@@ -337,12 +329,12 @@ void test_kernel_le_client__deleting_last_bond_stops_reconnecting(void) {
 
   s_has_gateway_bonding = false;
   kernel_le_client_handle_bond_deleted(&addr);
-  cl_assert_equal_i(s_reconnect_stop_count, 1);
+  cl_assert(!s_reconnectable);
 }
 
 void test_kernel_le_client__deleting_other_bond_keeps_reconnecting(void) {
   const struct pbl_bt_device_internal addr = {};
 
   kernel_le_client_handle_bond_deleted(&addr);
-  cl_assert_equal_i(s_reconnect_stop_count, 0);
+  cl_assert(s_reconnectable);
 }

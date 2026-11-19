@@ -327,50 +327,12 @@ struct PBL_PACKED pbl_bt_device_internal {
 static_assert(sizeof(struct pbl_bt_device_internal) == sizeof(struct pbl_bt_device),
               "struct pbl_bt_device_internal should be equal in size to struct pbl_bt_device");
 
-struct pbl_bt_ad_data;
-
-/** @brief Maximum size in bytes of advertising data or scan response data. */
-#define PBL_BT_AD_REPORT_DATA_MAX_LENGTH (31)
-
-/**
- * @name Advertising flags
- * Bits of the Flags AD type, see Supplement to the Bluetooth Core Specification, Part A, 1.3.
- * @{
- */
-/** @brief LE Limited Discoverable Mode. */
-#define PBL_BT_AD_FLAGS_LIM_DISCOVERABLE_MASK (1 << 0)
-/** @brief LE General Discoverable Mode. */
-#define PBL_BT_AD_FLAGS_GEN_DISCOVERABLE_MASK (1 << 1)
-/** @brief BR/EDR Not Supported. */
-#define PBL_BT_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK (1 << 2)
-/** @brief Simultaneous LE and BR/EDR to Same Device Capable (Controller). */
-#define PBL_BT_AD_FLAGS_LE_BR_EDR_SIMULT_CONTROLLER_MASK (1 << 3)
-/** @brief Simultaneous LE and BR/EDR to Same Device Capable (Host). */
-#define PBL_BT_AD_FLAGS_LE_BR_EDR_SIMULT_HOST_MASK (1 << 4)
-/** @} */
-
 /** @brief Minimum connection interval, in 1.25 ms slots. */
 #define PBL_BT_LL_CONN_INTV_MIN_SLOTS (6) // 1.25ms / slot
 /** @brief Maximum connection interval, in 1.25 ms slots. */
 #define PBL_BT_LL_CONN_INTV_MAX_SLOTS (3200) // 1.25ms / slot
 /** @brief Minimum supervision timeout in milliseconds. */
 #define PBL_BT_LL_SUPERVISION_TIMEOUT_MIN_MS (100)
-
-/**
- * @brief Advertising data and scan response data.
- *
- * Variable length: allocate it with room for both payloads after the header.
- */
-struct pbl_bt_ad_data {
-  /** Length of the advertising data in bytes. */
-  uint8_t ad_data_length;
-
-  /** Length of the scan response data in bytes. */
-  uint8_t scan_resp_data_length;
-
-  /** The raw advertising data, followed by the raw scan response data. */
-  uint8_t data[0];
-};
 
 /**
  * @brief Compile-time version of bt_uuid_expand_32bit() and bt_uuid_expand_16bit().
