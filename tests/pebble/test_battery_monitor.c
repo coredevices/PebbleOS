@@ -51,6 +51,9 @@ bool firmware_update_is_in_progress(void) {
 void battery_force_charge_enable(bool is_charging) {
 }
 
+void battery_charge_limit_evaluate(PreciseBatteryChargeState state) {
+}
+
 static void periodic_timer_trigger(int count) {
   struct pbl_delayed_work *timer = battery_state_get_periodic_timer();
   cl_assert(fake_work_is_scheduled(timer));

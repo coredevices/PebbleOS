@@ -96,6 +96,12 @@ pbl_clar_test(test_alarm_smart
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_battery_charge_limit
+  SOURCES
+    pebble/services/battery/battery_charge_limit.c
+  DEFINES CONFIG_SERVICE_BATTERY_LOG_LEVEL=0
+)
+
 pbl_clar_test(test_battery_monitor
   SOURCES
     pebble/services/battery/voltage/battery_state.c

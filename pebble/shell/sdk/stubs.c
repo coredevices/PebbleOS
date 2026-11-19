@@ -140,6 +140,13 @@ const PebbleProcessMd *alarms_app_get_info(void) {
   return (const PebbleProcessMd *)&s_alarms_app_info;
 }
 
+uint8_t shell_prefs_get_charge_limit_pct(void) {
+  return 0;
+}
+
+void shell_prefs_set_charge_limit_pct(uint8_t pct) {
+}
+
 bool shell_prefs_get_stationary_enabled(void) {
   return false;
 }

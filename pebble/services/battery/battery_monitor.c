@@ -6,6 +6,7 @@
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_charge_limit.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/util/ratio.h>
@@ -217,6 +218,8 @@ void battery_monitor_handle_state_change_event(PreciseBatteryChargeState state) 
   prv_transition(new_state);
 
   prv_log_battery_state(state);
+
+  battery_charge_limit_evaluate(state);
 
   s_first_run = false;
 }

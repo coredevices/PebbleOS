@@ -38,6 +38,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
+#include <pbl/services/battery/battery_charge_limit.h>
 #include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
@@ -190,6 +191,9 @@ static uint32_t s_backlight_ambient_threshold = CONFIG_SERVICE_LIGHT_DARK_THRESH
 
 #define PREF_KEY_STATIONARY "stationaryMode"
 static bool s_stationary_mode_enabled = true;
+
+#define PREF_KEY_CHARGE_LIMIT_PCT "chargeLimitPct"
+static uint8_t s_charge_limit_pct = CHARGE_LIMIT_PCT_OFF;
 
 #define PREF_KEY_DEFAULT_WORKER "workerId"
 static Uuid s_default_worker = UUID_INVALID_INIT;
@@ -637,6 +641,16 @@ static bool prv_set_s_display_orientation_left(bool *left) {
 static bool prv_set_s_stationary_mode_enabled(bool *enabled) {
   s_stationary_mode_enabled = *enabled;
   stationary_handle_prefs_changed();
+  return true;
+}
+
+static bool prv_set_s_charge_limit_pct(uint8_t *pct) {
+  if (*pct != CHARGE_LIMIT_PCT_OFF &&
+      (*pct < CHARGE_LIMIT_PCT_MIN || *pct > CHARGE_LIMIT_PCT_MAX)) {
+    s_charge_limit_pct = CHARGE_LIMIT_PCT_OFF;
+    return false;
+  }
+  s_charge_limit_pct = *pct;
   return true;
 }
 
@@ -1779,6 +1793,14 @@ bool shell_prefs_get_stationary_enabled(void) {
 
 void shell_prefs_set_stationary_enabled(bool enabled) {
   prv_pref_set(PREF_KEY_STATIONARY, &enabled, sizeof(enabled));
+}
+
+uint8_t shell_prefs_get_charge_limit_pct(void) {
+  return s_charge_limit_pct;
+}
+
+void shell_prefs_set_charge_limit_pct(uint8_t pct) {
+  prv_pref_set(PREF_KEY_CHARGE_LIMIT_PCT, &pct, sizeof(pct));
 }
 
 AppInstallId worker_preferences_get_default_worker(void) {
