@@ -10,7 +10,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/action_chaining_window.h>
@@ -46,7 +45,6 @@
 #include <kernel/events.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/modals/modal_manager.h>
-#include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <popups/notifications/notification_window.h>
 #include <process_state/app_state/app_state.h>
 
@@ -637,21 +635,6 @@ static void prv_do_action_analytics(const TimelineItem *pin, const ActionMenuIte
   }
 }
 
-#ifdef CONFIG_SERVICE_BLE_HRM
-static void prv_invoke_ble_hrm_stop_sharing_action(ActionMenu *action_menu,
-                                                   const TimelineItem *item) {
-  ble_hrm_revoke_all();
-
-  const TimelineItemAction *dismiss_action = timeline_item_find_dismiss_action(item);
-  if (dismiss_action) {
-    timeline_invoke_action(item, dismiss_action, nullptr);
-  }
-
-  SimpleDialog *stopped_sharing_dialog = ble_hrm_stop_sharing_popup_create();
-  action_menu_set_result_window(action_menu, &stopped_sharing_dialog->dialog.window);
-}
-#endif
-
 PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
                                                  const TimelineItemAction *action,
                                                  const TimelineItem *pin, const char *label) {
@@ -679,15 +662,8 @@ PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
       return prv_invoke_remote_action(action_menu, action, pin, (void *)label);
     case TimelineItemActionTypeEmpty:
     case TimelineItemActionTypeUnknown:
-      break;
-#ifdef CONFIG_SERVICE_BLE_HRM
-    case TimelineItemActionTypeBLEHRMStopSharing:
-      prv_invoke_ble_hrm_stop_sharing_action(action_menu, pin);
-      return nullptr;
-#else
     case TimelineItemActionTypeBLEHRMStopSharing:
       break;
-#endif
   }
 
   PBL_LOG_ERR("Unsupported action type %d", action->type);

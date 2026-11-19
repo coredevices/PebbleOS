@@ -38,12 +38,6 @@ config BT_REPEAT_PAIRING_ALWAYS
       without secure connections and user confirmation. For firmware with
       no other way to forget a pairing.
 
-config BT_HRM_SERVICE
-    bool
-    help
-      The backend implements the Heart Rate Service
-      (pbl/bluetooth/hrm_service.h).
-
 rsource "services/Kconfig"
 
 endif

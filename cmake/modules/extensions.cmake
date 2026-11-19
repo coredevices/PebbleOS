@@ -109,7 +109,7 @@ endfunction()
 # Drop sources matching one of the given patterns, the way the waf
 # ant_glob() excl= lists did. A pattern is either a glob relative to the
 # current directory ("prompt.c", "voice/*.c", "**/system_nrf*.c") or a
-# directory whose whole subtree goes away ("vendor", "ble_hrm/**").
+# directory whose whole subtree goes away ("vendor", "legacy/**").
 function(pbl_filter_sources var)
   cmake_parse_arguments(ARG "" "" "EXCLUDE" ${ARGN})
   set(sources ${${var}})

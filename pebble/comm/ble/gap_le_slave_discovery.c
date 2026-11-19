@@ -11,7 +11,6 @@
 #include <pbl/btutil/bt_uuid.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/util/size.h>
 #include <pbl/version.h>
@@ -53,16 +52,8 @@ static void prv_schedule_ad_job(void) {
   // *DO NOT* use pbl_bt_pebble_uuid_expand() here!
   // ble_ad_set_service_uuids() will be "smart" and include only the 16-bit UUID, but only if the
   // BT SIG Base UUID is used.
-  Uuid service_uuids[2];
+  Uuid service_uuids[1];
   size_t num_uuids = 0;
-
-#ifdef CONFIG_SERVICE_BLE_HRM
-  // NOTE: The HRM service has to be first in the list because otherwise the Pebble won't
-  // show up as an HRM device in Strava for Android...
-  if (ble_hrm_is_supported_and_enabled()) {
-    service_uuids[num_uuids++] = bt_uuid_expand_16bit(0x180D); // Heart Rate Service
-  }
-#endif
 
   // Pebble Pairing Service UUID:
   service_uuids[num_uuids++] = bt_uuid_expand_16bit(PBL_BT_PPS_UUID_16BIT);

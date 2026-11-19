@@ -14,7 +14,6 @@
 #include <pbl/btutil/sm_util.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 
 #include <comm/bluetooth_analytics.h>
 #include <comm/bt_conn_mgr.h>
@@ -402,9 +401,6 @@ void pbl_bt_handle_le_disconnection_complete_event(
         PBL_LOG_DBG("LE Disconn: no connection for hdl=%u", event->handle);
         break;
       }
-#ifdef CONFIG_SERVICE_BLE_HRM
-      ble_hrm_handle_disconnection(connection);
-#endif
       const bool local_is_master = connection->local_is_master;
 
       PBL_LOG_INFO("LE Disconn: addr=" PBL_BT_ADDR_FMT ", is_random_addr=%u,",

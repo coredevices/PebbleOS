@@ -63,10 +63,6 @@ typedef struct GAPLEConnection {
   bool is_subscribed_to_connection_status_notifications : 1;
   bool is_subscribed_to_gatt_mtu_notifications : 1;
 
-  //! Whether the device is subscribed to heart rate monitor value updates (the other device has
-  //! enabled the "Notifications" bit of the CCCD).
-  bool hrm_service_is_subscribed : 1;
-
   //! The number of service discovery retries.
   //! See field `gatt_service_discovery_watchdog_timer`
   uint8_t gatt_service_discovery_retries : GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;

@@ -38,7 +38,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_insights.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/peek.h>
 #include <pbl/settings/settings.h>
@@ -852,9 +851,6 @@ static bool prv_set_s_activity_hrm_preferences(ActivityHRMSettings *new_settings
 #ifdef CONFIG_HRM
   hrm_manager_handle_prefs_changed();
 #endif // CONFIG_HRM
-#ifdef CONFIG_SERVICE_BLE_HRM
-  ble_hrm_handle_activity_prefs_heart_rate_is_enabled(new_settings->enabled);
-#endif // CONFIG_SERVICE_BLE_HRM
   return true;
 }
 

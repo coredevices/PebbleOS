@@ -401,26 +401,6 @@
       "file": "normal/snowy/images/Pebble_25x25_Smart_alarm.svg"
     },
     {
-      "type": "png",
-      "name": "BLE_HRM_SHARE_REQUEST_LARGE",
-      "file": "normal/silk/images/ble_hrm_share_request.png"
-    },
-    {
-      "type": "pdc",
-      "name": "BLE_HRM_SHARED",
-      "file": "normal/silk/images/ble_hrm_shared.svg"
-    },
-    {
-      "type": "png",
-      "name": "BLE_HRM_NOT_SHARED",
-      "file": "normal/silk/images/ble_hrm_not_shared.png"
-    },
-    {
-      "type": "png",
-      "name": "CONNECTIVITY_SHARING_HRM",
-      "file": "normal/silk/images/ble_hrm_sharing_app_glance.png"
-    },
-    {
      "type": "pdc",
      "name": "MENU_ICON_HEALTH",
      "file": "normal/base/images/menu_icon_health.svg"

@@ -60,8 +60,6 @@ struct PBL_PACKED pbl_bt_config {
   struct pbl_bt_dis_info dis_info;
   /** Identity address. Not used by the NimBLE backend, see pbl_bt_id_addr_get(). */
   struct pbl_bt_addr identity_addr;
-  /** Whether the heart rate service may be exposed. Not used by the NimBLE backend. */
-  bool is_hrm_supported_and_enabled;
 };
 
 /**

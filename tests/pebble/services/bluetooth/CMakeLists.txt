@@ -1,13 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-pbl_clar_test(test_ble_hrm
-  SOURCES
-    pebble/services/bluetooth/ble_hrm.c
-    tests/fakes/fake_events.c
-  DEFINES CONFIG_HRM
-)
-
 pbl_clar_test(test_bonding
   SOURCES
     pebble/services/bluetooth/bonding.c

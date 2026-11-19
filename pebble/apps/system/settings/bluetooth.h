@@ -15,9 +15,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 typedef struct StoredRemoteBLE {
   struct pbl_bt_device_internal identity;
   GAPLEConnection *connection;
-#ifdef CONFIG_HRM
-  bool is_sharing_heart_rate;
-#endif
 } StoredRemoteBLE;
 
 typedef struct StoredRemote {
@@ -31,8 +28,6 @@ struct SettingsBluetoothData;
 void settings_bluetooth_update_remotes(struct SettingsBluetoothData *data);
 
 const SettingsModuleMetadata *settings_bluetooth_get_info(void);
-
-bool settings_bluetooth_is_sharing_heart_rate_for_stored_remote(StoredRemote *remote);
 
 #define BT_FORGET_PAIRING_STR \
   pbl_i18n_noop("Remember to also forget your Pebble's Bluetooth connection from your phone.")

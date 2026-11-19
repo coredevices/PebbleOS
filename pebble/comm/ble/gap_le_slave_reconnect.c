@@ -21,12 +21,10 @@
 //! bt_lock() needs to be taken before accessing this variable.
 static GAPLEAdvertisingJobRef s_reconnect_advert_job;
 static bool s_is_basic_reconnection_enabled;
-static bool s_is_hrm_reconnection_enabled;
 
 typedef enum {
   ReconnectType_None,  // Not advertising for reconnection
   ReconnectType_Plain, // Advertising for reconnection with empty payload
-  ReconnectType_BleHrm // Advertising for reconnection with HRM payload
 } ReconnectType;
 
 //! When the master reconnects and drops repeatedly (e.g. supervision timeouts
@@ -64,9 +62,6 @@ static bool prv_is_advertising_for_reconnection(void) {
 }
 
 static ReconnectType prv_current_reconnect_type(void) {
-  if (s_is_hrm_reconnection_enabled) {
-    return ReconnectType_BleHrm;
-  }
   if (s_is_basic_reconnection_enabled) {
     return ReconnectType_Plain;
   }
@@ -91,45 +86,26 @@ static void prv_evaluate(ReconnectType prev_type) {
   if (cur_type != ReconnectType_None) {
     prv_unschedule_adv_if_needed();
 
-#ifdef CONFIG_HRM
-    const bool use_hrm_payload = (cur_type == ReconnectType_BleHrm);
-#else
-    const bool use_hrm_payload = false;
-#endif
+    // [MT] Advertise with an empty payload to save battery life with these
+    // reconnection ad packets. This should be enough for the other
+    // device to be able to reconnect. With iOS it works, need to test Android.
 
-    struct pbl_bt_ad_data *ad;
-    if (use_hrm_payload) {
-      // Create adv payload with only flags + HR service UUID. This is enough for various mobile
-      // fitness apps to be able to reconnect to Pebble as BLE HRM.
-      ad = ble_ad_create();
-      // BLE-only watch: advertise "BR/EDR Not Supported" so dual-mode hosts use LE.
-      ble_ad_set_flags(
-          ad, PBL_BT_AD_FLAGS_GEN_DISCOVERABLE_MASK | PBL_BT_AD_FLAGS_BR_EDR_NOT_SUPPORTED_MASK);
-      Uuid service_uuid = bt_uuid_expand_16bit(0x180D);
-      ble_ad_set_service_uuids(ad, &service_uuid, 1);
-    } else {
-      // [MT] Advertise with an empty payload to save battery life with these
-      // reconnection ad packets. This should be enough for the other
-      // device to be able to reconnect. With iOS it works, need to test Android.
+    // [MT] Note we leave out the Flags AD. According to the spec you have to
+    // include flags if any are non-zero. To abide, Pebble ought to always
+    // include the SIMULTANEOUS_LE_BR_EDR_TO_SAME_DEVICE_CONTROLLER and
+    // SIMULTANEOUS_LE_BR_EDR_TO_SAME_DEVICE_HOST flags. However, we have never
+    // done this (ignorance) and gotten by, by using a "random" address (the
+    // public address, but then inverted) as a work-around for the problems
+    // leaving out these flags caused with Android.
+    // I intend to use use the "Peripheral privacy feature" some time in the
+    // near future. With this, these flags and the issues on Android become
+    // a non-issue (because addresses will be private). Therefore I decided to
+    // still leave out the flags.
 
-      // [MT] Note we leave out the Flags AD. According to the spec you have to
-      // include flags if any are non-zero. To abide, Pebble ought to always
-      // include the SIMULTANEOUS_LE_BR_EDR_TO_SAME_DEVICE_CONTROLLER and
-      // SIMULTANEOUS_LE_BR_EDR_TO_SAME_DEVICE_HOST flags. However, we have never
-      // done this (ignorance) and gotten by, by using a "random" address (the
-      // public address, but then inverted) as a work-around for the problems
-      // leaving out these flags caused with Android.
-      // I intend to use use the "Peripheral privacy feature" some time in the
-      // near future. With this, these flags and the issues on Android become
-      // a non-issue (because addresses will be private). Therefore I decided to
-      // still leave out the flags.
-
-      static struct pbl_bt_ad_data payload = {
-        .ad_data_length = 0,
-        .scan_resp_data_length = 0,
-      };
-      ad = &payload;
-    }
+    static struct pbl_bt_ad_data payload = {
+      .ad_data_length = 0,
+      .scan_resp_data_length = 0,
+    };
 
     // Values chosen according to Apple Accessory Design Guidelines
     const GAPLEAdvertisingJobTerm advert_terms[] = {
@@ -145,20 +121,15 @@ static void prv_evaluate(ReconnectType prev_type) {
 
     const GAPLEAdvertisingJobTerm *terms = advert_terms;
     uint8_t num_terms = ARRAY_LENGTH(advert_terms);
-    // HRM reconnection is user-initiated and time-bounded, don't back it off.
-    if (!use_hrm_payload && prv_should_skip_short_interval()) {
+    if (prv_should_skip_short_interval()) {
       PBL_LOG_WRN("Reconnect churn: advertising at long interval only");
       terms = &advert_terms[1];
       num_terms = 1;
     }
 
     s_reconnect_advert_job =
-        gap_le_advert_schedule(ad, terms, num_terms, prv_advert_job_unscheduled_callback, nullptr,
-                               GAPLEAdvertisingJobTagReconnection);
-
-    if (use_hrm_payload) {
-      ble_ad_destroy(ad);
-    }
+        gap_le_advert_schedule(&payload, terms, num_terms, prv_advert_job_unscheduled_callback,
+                               nullptr, GAPLEAdvertisingJobTagReconnection);
   } else {
     prv_unschedule_adv_if_needed();
   }
@@ -206,48 +177,3 @@ void gap_le_slave_reconnect_start(void) {
 unlock:
   bt_unlock();
 }
-
-#ifdef CONFIG_HRM
-
-#define RECONNECT_HRM_TIMEOUT_SECS (60)
-
-static struct pbl_wallclock_work s_hrm_reconnect_work;
-
-static void prv_hrm_reconnect_timeout_kernel_main_callback(void *data) {
-  gap_le_slave_reconnect_hrm_stop();
-}
-
-static void prv_hrm_reconnect_timeout_fn(struct pbl_work *work) {
-  launcher_task_add_callback(prv_hrm_reconnect_timeout_kernel_main_callback, nullptr);
-}
-
-// -----------------------------------------------------------------------------
-void gap_le_slave_reconnect_hrm_restart(void) {
-  bt_lock();
-  {
-    prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, true);
-
-    // Always restart the timer:
-    if (!pbl_wallclock_work_is_running(&s_hrm_reconnect_work)) {
-      pbl_wallclock_work_init(&s_hrm_reconnect_work, prv_hrm_reconnect_timeout_fn);
-      pbl_wallclock_work_start(&pbl_sys_workq_high, &s_hrm_reconnect_work, 1,
-                               RECONNECT_HRM_TIMEOUT_SECS);
-    }
-  }
-  bt_unlock();
-}
-
-// -----------------------------------------------------------------------------
-void gap_le_slave_reconnect_hrm_stop(void) {
-  bt_lock();
-  {
-    prv_set_and_evaluate(&s_is_hrm_reconnection_enabled, false);
-
-    if (pbl_wallclock_work_is_running(&s_hrm_reconnect_work)) {
-      pbl_wallclock_work_stop(&s_hrm_reconnect_work);
-    }
-  }
-  bt_unlock();
-}
-
-#endif
