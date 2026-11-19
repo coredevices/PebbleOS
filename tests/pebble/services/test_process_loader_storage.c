@@ -447,6 +447,28 @@ void test_process_loader_storage__no_platform_info_without_build_id(void) {
   prv_assert_no_platform_info();
 }
 
+//! A binary for every display of a class: no display size, and the features it needs
+static PebblePlatformInfo prv_flexible_platform_info(uint32_t features) {
+  PebblePlatformInfo platform_info = s_platform_info;
+  platform_info.display_width = 0;
+  platform_info.display_height = 0;
+  platform_info.features = features;
+  platform_info.app_memory_kib = 64;
+  platform_info.flags = PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE;
+  return platform_info;
+}
+
+void test_process_loader_storage__reads_flexible_platform_info(void) {
+  const PebblePlatformInfo flexible = prv_flexible_platform_info(PLATFORM_FEATURE_MICROPHONE);
+  prv_build_image_with_platform_info(&flexible);
+
+  PebbleProcessInfo info;
+  PebblePlatformInfo platform_info;
+  cl_assert_equal_i(app_storage_get_process_info(&info, nullptr, &platform_info, 1, PebbleTask_App),
+                    GET_APP_INFO_SUCCESS);
+  cl_assert_equal_m(&platform_info, &flexible, sizeof(platform_info));
+}
+
 void test_process_loader_storage__ignores_platform_info_it_cannot_read(void) {
   PebblePlatformInfo platform_info = s_platform_info;
   platform_info.version = PROCESS_PLATFORM_INFO_VERSION + 1;

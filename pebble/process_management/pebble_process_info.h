@@ -297,10 +297,14 @@ typedef struct PBL_PACKED {
   uint16_t app_memory_kib; //!< Memory the process needs for its code and heap, in KiB
   //! Bits of colour a pixel has: 1 on a black and white display, 6 for 64 colours
   uint8_t display_color_depth;
-  uint8_t reserved; //!< Zero
+  uint8_t flags; //!< Bitwise OR of PROCESS_PLATFORM_INFO_FLAG_*
 } PebblePlatformInfo;
 
 #define PROCESS_PLATFORM_INFO_VERSION 1
+
+//! The process is built for every display of its shape and colour depth: it has no display size,
+//! and its features are those it cannot run without.
+#define PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE (1 << 0)
 
 //! The app CRC runs from here to the end of the image. It is the end of the 0x10.0x00 header, so
 //! the CRC takes in load_size_hi and virtual_size_hi, and every struct version checks the same

@@ -183,15 +183,22 @@ status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *en
   return s_app_db_get_app_entry_for_install_id__result;
 }
 
+bool process_metadata_has_required_features(const PebbleProcessMd *md, uint32_t features) {
+  return true;
+}
+
 static int s_process_metadata_get_res_bank_num__result;
 int process_metadata_get_res_bank_num(const PebbleProcessMd *md) {
   return s_process_metadata_get_res_bank_num__result;
 }
 
+// The event is on the stack of whoever puts it: keep a copy to look at afterwards
+static PebbleEvent s_event_put__copy;
 static PebbleEvent *s_event_put__event;
 void event_put(PebbleEvent *event) {
-  s_event_put__event = event;
   cl_assert(event != nullptr);
+  s_event_put__copy = *event;
+  s_event_put__event = &s_event_put__copy;
 }
 
 void event_put_from_app(PebbleEvent *event) {
