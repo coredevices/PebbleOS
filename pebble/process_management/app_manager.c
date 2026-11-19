@@ -346,8 +346,10 @@ static bool prv_app_start(const PebbleProcessMd *app_md, const void *args,
 
   const ResAppNum res_bank_num = process_metadata_get_res_bank_num(app_md);
   if (res_bank_num != SYSTEM_APP) {
-    const ResourceVersion res_version = process_metadata_get_res_version(app_md);
-    if (!resource_init_app(res_bank_num, &res_version)) {
+    // Which resources are the app's is for its metadata to say; the store checks they are intact
+    const ResourceVersion res_version = resource_get_version(res_bank_num, 0);
+    if (!process_metadata_resources_match(app_md, &res_version) ||
+        !resource_init_app(res_bank_num, nullptr)) {
       // The resources are busted! Abort starting this app.
       APP_LOG(APP_LOG_LEVEL_ERROR, "Checksum for resources differs.");
       return false;

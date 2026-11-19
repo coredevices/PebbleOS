@@ -301,6 +301,16 @@ static bool prv_app_display_fits(GSize size, bool round) {
 #endif
 }
 
+bool process_metadata_resources_match(const PebbleProcessMd *md, const ResourceVersion *version) {
+  const ResourceVersion built_with = process_metadata_get_res_version(md);
+  const PebblePlatformInfo *platform_info = process_metadata_get_platform_info(md);
+  if (platform_info && (platform_info->flags & PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET)) {
+    // No pack has an ID of zero: it is the timestamp of every pack that is of no set
+    return (built_with.timestamp != 0) && (version->timestamp == built_with.timestamp);
+  }
+  return version->crc == built_with.crc;
+}
+
 bool process_metadata_has_required_features(const PebbleProcessMd *md, uint32_t features) {
   const PebblePlatformInfo *platform_info = process_metadata_get_platform_info(md);
   // One built for a platform says what that platform has, which is not what it needs

@@ -184,6 +184,32 @@ void test_pebble_process_md__framebuffer_of_flexible_app(void) {
   prv_assert_framebuffer_size(&md, s_display_size);
 }
 
+void test_pebble_process_md__resources_match(void) {
+  // The one pack the app was built with, by its CRC
+  PebbleProcessMdFlash md = prv_md_for_display(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, OUR_SHAPE);
+  md.res_version = (ResourceVersion){.crc = 0x1234, .timestamp = 77};
+  cl_assert(process_metadata_resources_match(&md.common, &(ResourceVersion){.crc = 0x1234}));
+  cl_assert(!process_metadata_resources_match(&md.common,
+                                              &(ResourceVersion){.crc = 0x4321, .timestamp = 77}));
+
+  // Any pack of the app's set, by the set's ID
+  md.platform_info.flags = PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET;
+  cl_assert(process_metadata_resources_match(&md.common,
+                                             &(ResourceVersion){.crc = 0x4321, .timestamp = 77}));
+  cl_assert(!process_metadata_resources_match(&md.common,
+                                              &(ResourceVersion){.crc = 0x1234, .timestamp = 78}));
+  // A pack of no set has no ID
+  cl_assert(!process_metadata_resources_match(&md.common, &(ResourceVersion){.crc = 0x1234}));
+  md.res_version.timestamp = 0;
+  cl_assert(!process_metadata_resources_match(&md.common, &(ResourceVersion){.crc = 0x1234}));
+
+  // An app without a record goes by the CRC
+  md = prv_md_for_platform(PROCESS_INFO_PLATFORM_BASALT);
+  md.res_version = (ResourceVersion){.crc = 0x1234};
+  cl_assert(process_metadata_resources_match(&md.common, &(ResourceVersion){.crc = 0x1234}));
+  cl_assert(!process_metadata_resources_match(&md.common, &(ResourceVersion){.crc = 0x1235}));
+}
+
 void test_pebble_process_md__required_features(void) {
   const uint32_t watch = PLATFORM_FEATURE_MICROPHONE | PLATFORM_FEATURE_HEALTH;
 
