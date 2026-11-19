@@ -24,37 +24,39 @@ def generate_appinfo(input_filename, output_filename):
     generate_appinfo_c(app_info, output_filename)
 
 
-def platform_info_initializer(desc):
-    """The PebblePlatformInfo of a platform, from its description."""
+def platform_info_initializer(desc, app_memory=None):
+    """The PebblePlatformInfo of a platform, from its description. A flexible
+    binary has no display size, and its features are those it requires;
+    `app_memory` is what its project asks for in place of the default."""
     from pebble_sdk_platform import ABIS, FEATURES
 
+    flexible = desc.get("flexible", False)
     display = desc["display"]
     # PebblePlatformDisplayShape
     shape = {"rect": 0, "round": 1}[display["shape"]]
     # 64 colours, or black and white
     color_depth = 6 if display["color"] else 1
-    features = sum(
-        1 << bit
-        for bit, feature in enumerate(FEATURES)
-        if feature in desc.get("features", [])
-    )
+    has = desc["requires"] if flexible else desc.get("features", [])
+    features = sum(1 << bit for bit, feature in enumerate(FEATURES) if feature in has)
+    if not (flexible and app_memory):
+        app_memory = desc["limits"]["app_memory"]
     fields = (
         "PROCESS_PLATFORM_INFO_VERSION",
         "sizeof(PebblePlatformInfo)",
         str(ABIS.index(desc["abi"]) + 1),
         str(shape),
-        str(display["width"]),
-        str(display["height"]),
+        str(display.get("width", 0)),
+        str(display.get("height", 0)),
         f"{features:#x}",
         # What an app of the platform is given, rounded up
-        str(-(-desc["limits"]["app_memory"] // 1024)),
+        str(-(-app_memory // 1024)),
         str(color_depth),
-        "0",
+        "PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE" if flexible else "0",
     )
     return f"{{ {', '.join(fields)} }}"
 
 
-def _platform_info(platform_name):
+def _platform_info(platform_name, app_info):
     """The PebblePlatformInfo of a platform, or None for a frozen one: the
     firmware knows those, and their SDK does not know the record."""
     from pebble_sdk_platform import pebble_platforms
@@ -62,7 +64,9 @@ def _platform_info(platform_name):
     platform = pebble_platforms[platform_name]
     if "FROZEN_AT_REVISION" in platform:
         return None
-    return platform_info_initializer(platform["DESCRIPTOR"])
+    return platform_info_initializer(
+        platform["DESCRIPTOR"], app_info.get("appMemory")
+    )
 
 
 def generate_appinfo_c(app_info, output_filename, platform_name=None):
@@ -165,7 +169,7 @@ def generate_appinfo_c(app_info, output_filename, platform_name=None):
     elif platform_name:
         flags.append("PROCESS_INFO_PLATFORM_OTHER")
     if platform_name:
-        platform_info = _platform_info(platform_name)
+        platform_info = _platform_info(platform_name, app_info)
         if platform_info:
             flags.append("PROCESS_INFO_HAS_PLATFORM_INFO")
 

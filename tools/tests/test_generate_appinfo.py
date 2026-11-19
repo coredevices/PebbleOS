@@ -80,6 +80,22 @@ class TestGenerateAppinfo(unittest.TestCase):
         self.assertNotIn("PLATFORM_INFO", source)
         self.assertNotIn(".pbl_platform", source)
 
+    def test_flexible_build(self):
+        source = self.generate("rect-color+mic")
+        self.assertIn(
+            "PROCESS_INFO_PLATFORM_OTHER | PROCESS_INFO_HAS_PLATFORM_INFO", source
+        )
+        # No display size, the feature it requires, 64K
+        self.assertIn(
+            "1, 0, 0, 0, 0x1, 64, 6, PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE }", source
+        )
+
+    def test_flexible_build_that_asks_for_memory(self):
+        with patch.dict(APP_INFO, appMemory=131072):
+            self.assertIn(", 0x0, 128, 1, ", self.generate("round-bw"))
+            # A platform gives what it gives
+            self.assertIn(", 128, 6, 0 }", self.generate("emery"))
+
     def test_no_platform(self):
         source = self.generate(None)
         self.assertIn(".flags = 0,", source)
