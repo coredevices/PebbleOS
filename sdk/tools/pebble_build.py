@@ -30,7 +30,12 @@ if SDK_TOOLS not in sys.path:
 
 import pebble_project
 from pebble_project import ProjectError
-from pebble_sdk_platform import bundle_description, pebble_platforms, platform_matches
+from pebble_sdk_platform import (
+    bundle_description,
+    pebble_platforms,
+    platform_matches,
+    sdk_component,
+)
 
 # Platforms whose SDK is older than this are 2.x: no PNG resources, and a
 # different SDK define.
@@ -69,9 +74,9 @@ def _load_project(path):
         return json.load(f)
 
 
-def _sdk_version(platform_dir):
+def _sdk_version(include_dir):
     major = minor = None
-    with open(os.path.join(platform_dir, "include", "pebble_process_info.h")) as f:
+    with open(os.path.join(include_dir, "pebble_process_info.h")) as f:
         for line in f:
             if "PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR" in line:
                 major = int(line.split()[2], 16)
@@ -84,9 +89,8 @@ def _installed_platforms(sdk_root):
     """The platforms this SDK can build for."""
     platforms = []
     for name in sorted(os.listdir(sdk_root)):
-        platform_dir = os.path.join(sdk_root, name)
         if name in pebble_platforms and all(
-            os.path.exists(os.path.join(platform_dir, p))
+            sdk_component(sdk_root, name, p)
             for p in ("include/pebble.h", "lib/libpebble.a")
         ):
             platforms.append(name)
@@ -327,10 +331,11 @@ def configure(args):
     platform_info = {}
     for p in platforms:
         desc = pebble_platforms[p]
-        sdk_dir = os.path.join(sdk_root, p)
-        major, minor = _sdk_version(sdk_dir)
+        include_dir = sdk_component(sdk_root, p, "include")
+        major, minor = _sdk_version(include_dir)
         platform_info[p] = {
-            "sdk_dir": sdk_dir,
+            "sdk_include": include_dir,
+            "sdk_lib": sdk_component(sdk_root, p, "lib"),
             "sdk_version": [major, minor],
             "frozen": "FROZEN_AT_REVISION" in desc,
             "defines": desc["DEFINES"],
@@ -463,7 +468,8 @@ def configure(args):
     emit("PEBBLE_CONFIGURE_DEPENDS", configure_depends)
     for p, pinfo in platform_info.items():
         sdk_version = tuple(pinfo["sdk_version"])
-        emit(f"PEBBLE_{p}_SDK_DIR", pinfo["sdk_dir"])
+        emit(f"PEBBLE_{p}_SDK_INCLUDE", pinfo["sdk_include"])
+        emit(f"PEBBLE_{p}_SDK_LIB", pinfo["sdk_lib"])
         emit(f"PEBBLE_{p}_FROZEN", pinfo["frozen"])
         emit(
             f"PEBBLE_{p}_DEFINES",

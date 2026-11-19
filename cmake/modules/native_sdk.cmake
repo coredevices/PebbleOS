@@ -3,14 +3,15 @@
 #
 # The native SDK shims. The same generator produces the firmware side of
 # the syscall boundary (pebble.auto.c) and the app side (libpebble.a plus
-# the SDK headers), so the firmware build depends on it as well.
+# the SDK headers), so the firmware build depends on it as well. The app
+# side is the same for every platform of an ABI, and goes to build/sdk/<abi>.
 # The rest of the shippable SDK is packaged by the `sdk` target; see
 # cmake/modules/sdk.cmake and docs/sdk/building.md.
 
 function(pbl_native_sdk)
   set(script ${PBL_BASE}/tools/generate_native_sdk/generate_pebble_native_sdk_files.py)
   set(symbols ${PBL_BASE}/tools/generate_native_sdk/exported_symbols.json)
-  set(sdk_dir ${PROJECT_BINARY_DIR}/sdk/${PBL_PLATFORM_NAME})
+  set(sdk_dir ${PROJECT_BINARY_DIR}/sdk/${CONFIG_PLATFORM_ABI})
 
   # The headers the generator parses, as listed in exported_symbols.json.
   execute_process(

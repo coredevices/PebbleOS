@@ -92,7 +92,7 @@ otherwise.
 ## In the SDK
 
 `pbl build sdk` writes the description of the build's platform to
-`build/sdk/<platform>/platform.json`, beside its headers and library:
+`build/sdk/<platform>/platform.json`:
 
 ```json
 {
@@ -109,8 +109,10 @@ otherwise.
 }
 ```
 
-The app build lists the platforms of an SDK from these files, so a platform
-is added to an SDK by adding its directory. A project picks among them by
+The app build lists the platforms of an SDK from these files. The headers
+and the library are shared by the platforms of an ABI ({doc}`building`), so a
+platform is added to an SDK by adding a directory with this file and nothing
+else. A project picks among them by
 name, with `targetPlatforms` ({doc}`app_build`).
 
 ## What an app binary says

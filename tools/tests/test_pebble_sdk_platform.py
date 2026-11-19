@@ -62,6 +62,7 @@ class TestPlatformTable(unittest.TestCase):
                 "PBL_MODDABLE",
             },
         )
+        self.assertEqual(emery["ABI"], "armv7m")
         self.assertEqual(emery["MAX_APP_MEMORY_SIZE"], 0x20000)
         self.assertEqual(emery["MAX_FONT_GLYPH_SIZE"], 512)
         self.assertTrue(emery["HAS_MODDABLE_XS"])
@@ -151,6 +152,9 @@ class TestDescriptor(unittest.TestCase):
 
     def test_invalid(self):
         self._invalid(name="Slate")
+        # Directories an SDK has beside its platforms.
+        self._invalid(name="armv7m")
+        self._invalid(name="common")
         self._invalid(abi="riscv")
         self._invalid(display=None)
         self._invalid(display=dict(SLATE["display"], shape="square"))
@@ -188,6 +192,37 @@ class TestDescriptor(unittest.TestCase):
                 json.dump(dict(SLATE, version=2), f)
             with self.assertRaises(PlatformError):
                 sdk_platform.sdk_descriptors(sdk)
+
+    def test_sdk_component(self):
+        with tempfile.TemporaryDirectory() as sdk:
+            # Flint has nothing of its own, Emery has its own headers.
+            for d in ("armv7m/include", "armv7m/lib", "emery/include", "flint"):
+                os.makedirs(os.path.join(sdk, d))
+            self.assertEqual(
+                sdk_platform.sdk_component(sdk, "flint", "include"),
+                os.path.join(sdk, "armv7m", "include"),
+            )
+            self.assertEqual(
+                sdk_platform.sdk_component(sdk, "emery", "include"),
+                os.path.join(sdk, "emery", "include"),
+            )
+            self.assertEqual(
+                sdk_platform.sdk_component(sdk, "emery", "lib"),
+                os.path.join(sdk, "armv7m", "lib"),
+            )
+            self.assertIsNone(sdk_platform.sdk_component(sdk, "flint", "qemu"))
+
+    def test_sdk_component_frozen(self):
+        with tempfile.TemporaryDirectory() as sdk:
+            # A frozen platform never takes what the ABI directory has.
+            for d in ("armv7m/include", "armv7m/lib", "aplite/include"):
+                os.makedirs(os.path.join(sdk, d))
+            self.assertEqual(
+                sdk_platform.sdk_component(sdk, "aplite", "include"),
+                os.path.join(sdk, "aplite", "include"),
+            )
+            self.assertIsNone(sdk_platform.sdk_component(sdk, "aplite", "lib"))
+            self.assertIsNone(sdk_platform.sdk_component(sdk, "basalt", "include"))
 
 
 class TestTargetPlatforms(unittest.TestCase):
