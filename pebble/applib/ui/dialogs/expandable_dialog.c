@@ -100,15 +100,13 @@ static void prv_expandable_dialog_load(Window *window) {
   static const uint16_t CONTENT_DOWN_ARROW_HEIGHT = PBL_IF_RECT_ELSE(16, 10);
 
   // Small margin is shown when we have an action bar to fit more text on the line.
+#if PBL_RECT
   const uint16_t SM_LEFT_MARGIN_PX = 4;
+#endif
   // Normal margin shown when there is no action bar in the expandable dialog.
   const uint16_t NM_LEFT_MARGIN_PX = 10;
 
   bool show_action_bar = expandable_dialog->show_action_bar;
-  const bool action_bar_on_right = action_bar_layer_is_on_right();
-
-  uint16_t left_margin_px = show_action_bar ? SM_LEFT_MARGIN_PX : NM_LEFT_MARGIN_PX;
-  uint16_t right_margin_px = left_margin_px;
 
   bool has_header = *expandable_dialog->header ? true : false;
 
@@ -116,12 +114,20 @@ static void prv_expandable_dialog_load(Window *window) {
   int32_t header_content_height = has_header ? PBL_DISPLAY_HEIGHT : 0;
 
   uint16_t status_layer_offset = dialog->show_status_layer * STATUS_BAR_LAYER_HEIGHT;
+#if PBL_RECT
   uint16_t action_bar_offset = show_action_bar * ACTION_BAR_WIDTH;
+  const bool action_bar_on_right = action_bar_layer_is_on_right();
   uint16_t content_x_start = (show_action_bar && !action_bar_on_right) ? action_bar_offset : 0;
+  const uint16_t left_margin_px = show_action_bar ? SM_LEFT_MARGIN_PX : NM_LEFT_MARGIN_PX;
+  const uint16_t right_margin_px = left_margin_px;
 
-  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
+  uint16_t x = content_x_start;
+  uint16_t w = frame.size.w - action_bar_offset;
+#else
+  uint16_t x = 0;
+  uint16_t w = frame.size.w;
+#endif
   uint16_t y = 0;
-  uint16_t w = PBL_IF_RECT_ELSE(frame.size.w - action_bar_offset, frame.size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;
 
   if (dialog->show_status_layer) {
@@ -145,21 +151,25 @@ static void prv_expandable_dialog_load(Window *window) {
   layer_add_child(&window->layer, &scroll_layer->layer);
 
   // Set up the header if this dialog is set to have one.
-  GTextAlignment alignment = PBL_IF_RECT_ELSE(
-      GTextAlignmentLeft,
-      (show_action_bar ? (action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft)
-                       : GTextAlignmentCenter));
-  uint16_t right_aligned_box_reduction = PBL_IF_RECT_ELSE(0, show_action_bar ? 10 : 0);
+#if PBL_ROUND
+  // Centre the content on the round display. The action bar overlays the edge
+  // of the display, so reserve its width on both sides when present.
+  const GRect content_bounds =
+      show_action_bar
+          ? action_bar_layer_centered_content_bounds(frame)
+          : GRect(NM_LEFT_MARGIN_PX, 0, frame.size.w - 2 * NM_LEFT_MARGIN_PX, frame.size.h);
+  const uint16_t content_x = content_bounds.origin.x;
+  const uint16_t content_w = content_bounds.size.w;
+  const GTextAlignment alignment = GTextAlignmentCenter;
+#else
+  const uint16_t content_x = content_x_start + left_margin_px;
+  const uint16_t content_w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset;
+  const GTextAlignment alignment = GTextAlignmentLeft;
+#endif
   if (has_header) {
     const uint16_t HEADER_OFFSET = 6;
-#if PBL_RECT
-    x = content_x_start + left_margin_px;
-    w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
-        right_aligned_box_reduction;
-#else
-    w = frame.size.w - right_margin_px - action_bar_offset - right_aligned_box_reduction;
-    x = (show_action_bar && !action_bar_on_right) ? frame.size.w - w : 0;
-#endif
+    x = content_x;
+    w = content_w;
     y = icon ? icon_offset + icon_size.h : -HEADER_OFFSET;
 
     TextLayer *header_layer = &expandable_dialog->header_layer;
@@ -185,15 +195,9 @@ static void prv_expandable_dialog_load(Window *window) {
 
   // Set up the text.
   const uint16_t TEXT_OFFSET = 6;
-  x = content_x_start + left_margin_px;
+  x = content_x;
   y = (icon ? icon_offset + icon_size.h : -TEXT_OFFSET) + header_content_height;
-  w = frame.size.w - right_margin_px - left_margin_px - action_bar_offset -
-      right_aligned_box_reduction;
-#if PBL_ROUND
-  if (show_action_bar && !action_bar_on_right) {
-    x = frame.size.w - left_margin_px - w;
-  }
-#endif
+  w = content_w;
   h = INT16_MAX; // height is clamped to content size
   GFont font = expandable_dialog->body_font;
 
@@ -257,14 +261,11 @@ static void prv_expandable_dialog_load(Window *window) {
     window_set_click_config_provider_with_context(window, prv_config_provider, expandable_dialog);
   }
 
-  [[maybe_unused]] const uint16_t icon_right_x = frame.size.w - right_margin_px - left_margin_px -
-                                                 action_bar_offset - right_aligned_box_reduction -
-                                                 icon_size.h;
-  x = PBL_IF_RECT_ELSE(
-      content_x_start + left_margin_px,
-      (show_action_bar)
-          ? (action_bar_on_right ? icon_right_x : frame.size.w - icon_right_x - icon_size.w)
-          : (90 - icon_size.h / 2));
+#if PBL_RECT
+  x = content_x_start + left_margin_px;
+#else
+  x = action_bar_layer_centered_origin_x(icon_size.w);
+#endif
   y = icon_offset + PBL_IF_RECT_ELSE(0, 5);
   if (dialog_init_icon_layer(dialog, icon, GPoint(x, y), false /* not animated */)) {
     scroll_layer_add_child(scroll_layer, &dialog->icon_layer.layer);

@@ -28,16 +28,9 @@ static void prv_workout_dialog_load(Window *window) {
   const GRect *bounds = &window_root_layer->bounds;
   const uint16_t icon_single_line_text_offset_px = 9;
   const uint16_t small_icon_offset = (icon_size.h < 60) ? 7 : 0;
-  const uint16_t left_margin_px = PBL_IF_RECT_ELSE(5, 0);
+#if PBL_RECT
   const uint16_t action_bar_width = show_action_bar ? ACTION_BAR_WIDTH : 0;
-  const uint16_t content_x_start =
-      (show_action_bar && !action_bar_layer_is_on_right()) ? action_bar_width : 0;
-#if PBL_ROUND
-  const bool action_bar_on_right = action_bar_layer_is_on_right();
 #endif
-  const uint16_t content_and_action_bar_horizontal_spacing =
-      PBL_IF_RECT_ELSE(left_margin_px, show_action_bar ? 11 : left_margin_px);
-  const uint16_t right_margin_px = action_bar_width + content_and_action_bar_horizontal_spacing;
   const uint16_t text_single_line_text_offset_px = 17;
   const int16_t text_layer_line_spacing_delta = -4;
   const GFont dialog_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
@@ -50,18 +43,36 @@ static void prv_workout_dialog_load(Window *window) {
   uint16_t subtext_top_margin_px = text_top_margin_px + single_line_text_height_px;
   uint16_t icon_top_margin_px = PBL_IF_RECT_ELSE(18, 22);
   uint16_t text_height;
-  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
+#if PBL_RECT
+  const uint16_t content_x_start =
+      (show_action_bar && !action_bar_layer_is_on_right()) ? action_bar_width : 0;
+  uint16_t x = content_x_start;
+  uint16_t w = bounds->size.w - action_bar_width;
+#else
+  uint16_t x = 0;
+  uint16_t w = bounds->size.w;
+#endif
   uint16_t y = 0;
-  uint16_t w = PBL_IF_RECT_ELSE(bounds->size.w - action_bar_width, bounds->size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;
 
   if (dialog->show_status_layer) {
     dialog_add_status_bar_layer(dialog, &GRect(x, y, w, h));
   }
 
+#if PBL_ROUND
+  if (show_action_bar) {
+    const GRect content_bounds = action_bar_layer_centered_content_bounds(*bounds);
+    x = content_bounds.origin.x;
+    w = content_bounds.size.w;
+  }
+#else
+  const uint16_t left_margin_px = 5;
+  const uint16_t content_and_action_bar_horizontal_spacing = left_margin_px;
+  const uint16_t right_margin_px = action_bar_width + content_and_action_bar_horizontal_spacing;
   x = content_x_start +
       (action_bar_layer_is_on_right() ? left_margin_px : content_and_action_bar_horizontal_spacing);
   w = bounds->size.w - left_margin_px - right_margin_px;
+#endif
 
   GTextAttributes *text_attributes = nullptr;
 #if PBL_ROUND
@@ -74,10 +85,7 @@ static void prv_workout_dialog_load(Window *window) {
   // Check if the text takes up more than one line. If the dialog has a single line of text,
   // the icon and line of text are positioned lower so as to be more vertically centered.
   GContext *ctx = graphics_context_get_current_context();
-  const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(
-      GTextAlignmentCenter, show_action_bar
-                                ? (action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft)
-                                : GTextAlignmentCenter);
+  const GTextAlignment text_alignment = GTextAlignmentCenter;
   {
     // do all this in a block so we enforce that nobody uses these variables outside of the block
     // when dealing with round displays, sizes change depending on location.
@@ -132,17 +140,12 @@ static void prv_workout_dialog_load(Window *window) {
 
   // Icon
   // On rectangular displays we just center it horizontally b/w the left edge of the display and
-  // the left edge of the action bar
+  // the left edge of the action bar. On round displays the action bar overlays the display edge,
+  // so center it on the display itself.
 #if PBL_RECT
   x = content_x_start + (grect_get_max_x(bounds) - action_bar_width - icon_size.w) / 2;
 #else
-  if (show_action_bar) {
-    x = action_bar_on_right ? (grect_get_max_x(bounds) - action_bar_width -
-                               content_and_action_bar_horizontal_spacing - icon_size.w)
-                            : (content_x_start + content_and_action_bar_horizontal_spacing);
-  } else {
-    x = (grect_get_max_x(bounds) - action_bar_width - icon_size.w) / 2;
-  }
+  x = action_bar_layer_centered_origin_x(icon_size.w);
 #endif
 
   y = icon_top_margin_px;

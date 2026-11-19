@@ -26,31 +26,44 @@ static void prv_actionable_dialog_load(Window *window) {
   const GSize icon_size = icon ? kino_reel_get_size(icon) : GSizeZero;
 
   const GRect *bounds = &window_root_layer->bounds;
-  const uint16_t left_margin_px = PBL_IF_RECT_ELSE(5, 0);
-  const uint16_t content_and_action_bar_horizontal_spacing = PBL_IF_RECT_ELSE(5, 7);
+#if PBL_RECT
   const uint16_t content_x_start = action_bar_layer_get_content_origin_x();
-#if PBL_ROUND
-  const bool action_bar_on_right = action_bar_layer_is_on_right();
 #endif
-  const uint16_t right_margin_px = ACTION_BAR_WIDTH + content_and_action_bar_horizontal_spacing;
   const GFont dialog_text_font = actionable_dialog->text_font
                                      ? actionable_dialog->text_font
                                      : fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
   const uint16_t icon_text_spacing_px = 4;
 
-  uint16_t x = PBL_IF_RECT_ELSE(content_x_start, 0);
+#if PBL_RECT
+  uint16_t x = content_x_start;
+  uint16_t w = bounds->size.w - ACTION_BAR_WIDTH;
+#else
+  uint16_t x = 0;
+  uint16_t w = bounds->size.w;
+#endif
   uint16_t y = 0;
-  uint16_t w = PBL_IF_RECT_ELSE(bounds->size.w - ACTION_BAR_WIDTH, bounds->size.w);
   uint16_t h = STATUS_BAR_LAYER_HEIGHT;
 
   if (dialog->show_status_layer) {
     dialog_add_status_bar_layer(dialog, &GRect(x, y, w, h));
   }
 
+#if PBL_ROUND
+  // Centre the content on the round display. The action bar overlays the edge
+  // of the display, so reserve its width on both sides to keep centred
+  // content clear of it.
+  const GRect content_bounds = action_bar_layer_centered_content_bounds(*bounds);
+  x = content_bounds.origin.x;
+  w = content_bounds.size.w;
+#else
+  const uint16_t left_margin_px = 5;
+  const uint16_t content_and_action_bar_horizontal_spacing = 5;
+  const uint16_t right_margin_px = ACTION_BAR_WIDTH + content_and_action_bar_horizontal_spacing;
   x = content_x_start +
       (action_bar_layer_is_on_right() ? left_margin_px : content_and_action_bar_horizontal_spacing);
   w = bounds->size.w - left_margin_px - right_margin_px;
+#endif
 
   GTextAttributes *text_attributes = nullptr;
 #if PBL_ROUND
@@ -63,8 +76,7 @@ static void prv_actionable_dialog_load(Window *window) {
 
   // Probe text height to vertically center icon + text in the available space
   GContext *ctx = graphics_context_get_current_context();
-  const GTextAlignment text_alignment = PBL_IF_RECT_ELSE(
-      GTextAlignmentCenter, action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft);
+  const GTextAlignment text_alignment = GTextAlignmentCenter;
   const GRect probe_rect = GRect(x, 0, w, max_text_line_height_px);
   const uint16_t text_height = graphics_text_layout_get_max_used_size(
                                    ctx, dialog->buffer, dialog_text_font, probe_rect,
@@ -130,13 +142,12 @@ static void prv_actionable_dialog_load(Window *window) {
 
   // Icon
   // On rectangular displays we just center it horizontally b/w the left edge of the display and
-  // the left edge of the action bar
+  // the left edge of the action bar. On round displays the action bar overlays the display edge,
+  // so center it on the display itself.
 #if PBL_RECT
   x = content_x_start + (grect_get_max_x(bounds) - ACTION_BAR_WIDTH - icon_size.w) / 2;
 #else
-  x = action_bar_on_right ? (grect_get_max_x(bounds) - ACTION_BAR_WIDTH -
-                             content_and_action_bar_horizontal_spacing - icon_size.w)
-                          : (content_x_start + content_and_action_bar_horizontal_spacing);
+  x = action_bar_layer_centered_origin_x(icon_size.w);
 #endif
 
   y = icon_top_margin_px;

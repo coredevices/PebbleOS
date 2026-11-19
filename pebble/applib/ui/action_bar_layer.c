@@ -91,6 +91,22 @@ GRect action_bar_layer_preferred_inset_bounds(GRect bounds) {
   return prv_inset_bounds(bounds, action_bar_layer_is_on_right());
 }
 
+GRect action_bar_layer_centered_content_bounds(GRect bounds) {
+#if PBL_ROUND
+  const int16_t width = prv_width();
+  bounds.origin.x += width;
+  bounds.size.w -= 2 * width;
+  return bounds;
+#else
+  return action_bar_layer_preferred_inset_bounds(bounds);
+#endif
+}
+
+int16_t action_bar_layer_centered_origin_x(int16_t width) {
+  const int16_t x = (PBL_DISPLAY_WIDTH - width) / 2;
+  return action_bar_layer_is_on_right() ? x : (PBL_DISPLAY_WIDTH - x - width);
+}
+
 GEdgeInsets action_bar_layer_content_insets(int16_t other_margin) {
   const int16_t bar_margin = prv_width() + other_margin;
   if (action_bar_layer_is_on_right()) {
