@@ -33,7 +33,9 @@ from pebble_project import ProjectError
 from pebble_sdk_platform import (
     PlatformError,
     bundle_description,
+    flexible_name,
     flexible_targets,
+    parse_flexible_name,
     pebble_platforms,
     platform_matches,
     sdk_component,
@@ -221,6 +223,34 @@ def _mod_path(project, platform):
     return os.path.join(project["build_dir"], "mods", platform, "mc.xsa")
 
 
+def _package_build(lib, platform):
+    """The build of a Pebble package that goes into a build of the project,
+    or None. A flexible binary that requires features also takes what the
+    package built for its class without them: that asks the watch for the
+    features, which only costs the check."""
+    candidates = [platform]
+    parsed = parse_flexible_name(platform)
+    if parsed and parsed[2]:
+        candidates.append(flexible_name(parsed[0], parsed[1]))
+    for name in candidates:
+        if os.path.isdir(os.path.join(lib["path"], "include", lib["name"], name)):
+            return name
+    return None
+
+
+def _required_package_build(lib, platform):
+    build = _package_build(lib, platform)
+    if build is None:
+        hint = ""
+        if parse_flexible_name(platform):
+            hint = ": it has to be built as a flexible project too"
+        raise ProjectError(
+            f"The Pebble package '{lib['name']}' doesn't support the '{platform}' "
+            f"platform{hint}"
+        )
+    return build
+
+
 def _package_resources(project, platform):
     """The resources the project's Pebble packages bring for one platform, as
     {name: .reso path}."""
@@ -229,7 +259,9 @@ def _package_resources(project, platform):
         media = lib.get("pebble", {}).get("resources", {}).get("media")
         if not media:
             continue
-        resources_dir = os.path.join(lib["path"], "resources", platform)
+        resources_dir = os.path.join(
+            lib["path"], "resources", _required_package_build(lib, platform)
+        )
         if not os.path.isdir(resources_dir):
             raise ProjectError(
                 f"Package {lib['name']} is missing resources for the {platform} platform"
@@ -361,8 +393,6 @@ def configure(args):
     if info.get("flexible") and project_type == "moddable":
         raise ProjectError("A Moddable project cannot be flexible yet")
     if info.get("flexible"):
-        if project_type == "package":
-            raise ProjectError("A package cannot be flexible yet")
         platforms = _flexible_builds(info, installed, sdk_root)
         # What installs the pbw only knows platforms by name.
         names = [p for p in platforms if p in pebble_platforms]
@@ -552,17 +582,13 @@ def configure(args):
         includes = []
         for lib in pebble_libs:
             lib_include = os.path.join(lib["path"], "include")
-            lib_platform_include = os.path.join(lib_include, lib["name"], p)
-            if not os.path.isdir(lib_platform_include):
-                raise ProjectError(
-                    f"The Pebble package '{lib['name']}' doesn't support the '{p}' platform"
-                )
-            includes += [lib_include, lib_platform_include]
+            lib_build = _required_package_build(lib, p)
+            includes += [lib_include, os.path.join(lib_include, lib["name"], lib_build)]
         emit(f"PEBBLE_{p}_PACKAGE_INCLUDES", includes)
         archives = []
         for lib in pebble_libs:
             if os.path.isdir(os.path.join(lib["path"], "binaries")):
-                archive = _package_archive(lib, p)
+                archive = _package_archive(lib, _required_package_build(lib, p))
                 if archive is None:
                     raise ProjectError(
                         f"Package {lib['name']} is missing a binary for the {p} platform"
