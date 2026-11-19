@@ -9,7 +9,6 @@
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 
 #include <applib/app_malloc.h>
 #include <applib/ui/action_menu_window_private.h>
@@ -19,14 +18,10 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/ui.h>
 #include <kernel/ui/system_icons.h>
-#include <popups/ble_hrm/ble_hrm_stop_sharing_popup.h>
 #include <resource/resource_ids.auto.h>
 
 enum {
   RemoteMenuForget = 0,
-#ifdef CONFIG_SERVICE_BLE_HRM
-  RemoteMenuStopSharingHeartRate,
-#endif
   RemoteMenu_Count
 };
 
@@ -80,18 +75,6 @@ static void prv_forget_item(ActionMenu *action_menu, const ActionMenuItem *item,
   prv_show_dialog(context);
 }
 
-#ifdef CONFIG_SERVICE_BLE_HRM
-static void prv_stop_sharing_heart_rate(ActionMenu *action_menu, const ActionMenuItem *item,
-                                        void *context) {
-  SettingsRemoteData *remote_data = (SettingsRemoteData *)context;
-  StoredRemote *remote = &remote_data->remote;
-
-  ble_hrm_revoke_sharing_permission_for_connection(remote->ble.connection);
-
-  app_simple_dialog_push(ble_hrm_stop_sharing_popup_create());
-}
-#endif // CONFIG_SERVICE_BLE_HRM
-
 void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemote *stored_remote) {
   SettingsRemoteData *data = app_malloc_check(sizeof(SettingsRemoteData));
 
@@ -106,13 +89,7 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .did_close = prv_remote_menu_cleanup,
   };
 
-#ifdef CONFIG_SERVICE_BLE_HRM
-  const bool is_sharing_hr =
-      settings_bluetooth_is_sharing_heart_rate_for_stored_remote(stored_remote);
-  const size_t num_items = RemoteMenu_Count - (is_sharing_hr ? 0 : 1);
-#else
   const size_t num_items = RemoteMenu_Count;
-#endif
   ActionMenuLevel *level =
       app_zalloc_check(sizeof(ActionMenuLevel) + num_items * sizeof(ActionMenuItem));
   *level = (ActionMenuLevel){
@@ -125,16 +102,6 @@ void settings_remote_menu_push(struct SettingsBluetoothData *bt_data, StoredRemo
     .perform_action = prv_forget_item,
     .action_data = data,
   };
-
-#ifdef CONFIG_SERVICE_BLE_HRM
-  if (is_sharing_hr) {
-    level->items[RemoteMenuStopSharingHeartRate] = (ActionMenuItem){
-      .label = pbl_i18n_get("Stop Sharing Heart Rate", data),
-      .perform_action = prv_stop_sharing_heart_rate,
-      .action_data = data,
-    };
-  }
-#endif
 
   data->action_menu.root_level = level;
   app_action_menu_open(&data->action_menu);

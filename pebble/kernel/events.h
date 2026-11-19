@@ -89,7 +89,6 @@ typedef enum {
   PEBBLE_BLE_CONNECTION_EVENT,
   PEBBLE_BLE_GATT_CLIENT_EVENT,
   PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT,
-  PEBBLE_BLE_HRM_SHARING_STATE_UPDATED_EVENT,
   PEBBLE_WAKEUP_EVENT,
   PEBBLE_BLOBDB_EVENT,
   PEBBLE_VOICE_SERVICE_EVENT,
@@ -263,10 +262,6 @@ typedef struct PBL_PACKED { // 8 bytes
   uint64_t bt_device_bits : 50;
   bool connected : 1;
 } PebbleBLEConnectionEvent;
-
-typedef struct PBL_PACKED { // 4 bytes
-  int subscription_count;
-} PebbleBLEHRMSharingStateUpdatedEvent;
 
 typedef enum {
   PebbleBLEGATTClientEventTypeServiceChange,
@@ -800,7 +795,6 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
         PebbleBLEConnectionEvent connection;
         PebbleBLEGATTClientEvent gatt_client;
         PebbleBLEGATTClientServiceEvent gatt_client_service;
-        PebbleBLEHRMSharingStateUpdatedEvent hrm_sharing_state;
       } le;
     } bluetooth;
     PebbleAncsChangedEvent ancs_changed;

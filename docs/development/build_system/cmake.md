@@ -40,7 +40,7 @@ pbl_library_sources(service.c util.c)
 : Add the sources matching glob patterns, re-evaluated when the build
   regenerates. An `EXCLUDE` pattern is a glob relative to the directory
   (`voice/*.c`, `**/system_nrf*.c`) or a directory whose whole subtree is
-  dropped (`vendor`, `ble_hrm/**`).
+  dropped (`vendor`, `legacy/**`).
 
 `pbl_library_include_directories(dir...)`, `pbl_library_compile_definitions(def...)`, `pbl_library_compile_options(opt...)`
 : Compile settings private to the current library.

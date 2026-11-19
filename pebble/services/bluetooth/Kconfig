@@ -30,14 +30,6 @@ config BT_ANCS_CLIENT
       Build the ANCS GATT client (iOS notifications). Off in the recovery
       firmware, which has no notification UI.
 
-config SERVICE_BLE_HRM
-    bool "Heart rate sharing over BLE"
-    default y
-    depends on HRM && BT_HRM_SERVICE && !RECOVERY_FW
-    help
-      Share heart rate measurements with paired devices through the GATT
-      Heart Rate Service, with the sharing permission popups and settings.
-
 config BT_AMS_CLIENT
     bool "AMS (Apple Media Service) client"
     default y if !RECOVERY_FW

@@ -9,8 +9,8 @@
  * @brief Firmware-side Bluetooth management on top of the Bluetooth stack.
  *
  * Covers starting and stopping the stack, the local identity and
- * address, pairability, and the GATT services the firmware implements (battery, heart rate,
- * device information).
+ * address, pairability, and the GATT services the firmware implements (battery, device
+ * information).
  *
  * The stack runs while it is enabled (by the runlevel system) and either airplane mode is off
  * or the override forces it on:

@@ -12,7 +12,6 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/qemu.h>
 #include <pbl/services/bluetooth/battery_level.h>
-#include <pbl/services/bluetooth/ble_hrm.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
@@ -72,10 +71,6 @@ static void prv_comm_start(void) {
   // Heap allocated to reduce stack usage
   struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
-#ifdef CONFIG_SERVICE_BLE_HRM
-  config->is_hrm_supported_and_enabled = ble_hrm_is_supported_and_enabled();
-  PBL_LOG_INFO("BLE HRM sharing prefs: is_enabled=%u", config->is_hrm_supported_and_enabled);
-#endif
   bt_bonding_get_root_keys(config->root_keys);
 
   s_comm_is_running = pbl_bt_start(config);
@@ -84,9 +79,6 @@ static void prv_comm_start(void) {
   if (s_comm_is_running) {
     gap_le_init();
     bt_local_id_configure_driver();
-#ifdef CONFIG_SERVICE_BLE_HRM
-    ble_hrm_init();
-#endif
 #ifdef CONFIG_BT_SERVICE_BAS
     bt_battery_level_start();
 #endif
@@ -105,9 +97,6 @@ static void prv_comm_stop(void) {
   }
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
-#endif
-#ifdef CONFIG_SERVICE_BLE_HRM
-  ble_hrm_deinit();
 #endif
   gap_le_deinit();
 #ifdef CONFIG_PP_TRANSPORT_QEMU

@@ -144,7 +144,7 @@ void hrm_manager_handle_prefs_changed(void);
  * @brief Check whether a live subscriber keeps the green optical path on continuously.
  *
  * That is, a BPM or HRV subscriber with an interval within @ref HRM_SENSOR_SPIN_UP_SEC (live
- * workout heart rate, the BLE heart rate relay, a foreground app). Background SpO2 readers use
+ * workout heart rate, a foreground app). Background SpO2 readers use
  * it to defer their measurement window instead of taking the optical path away.
  *
  * @return true if such a subscriber exists.
