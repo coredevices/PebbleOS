@@ -392,6 +392,48 @@ def flexible_targets(selectors, installed):
     return builds
 
 
+def bezel_platforms(built, installed):
+    """Which of an SDK's platforms a project that builds for fixed displays
+    does not fill: {platform: the built platform whose binary it shows in a
+    bezel, or None if it runs none of them}. A platform the project builds
+    for, and a frozen one, is not in it."""
+    report = {}
+    for name in installed:
+        platform = pebble_platforms[name]
+        if name in built or "FROZEN_AT_REVISION" in platform:
+            continue
+        display = platform["DESCRIPTOR"]["display"]
+        fitting = []
+        for other in built:
+            try:
+                desc = pebble_platforms[other]["DESCRIPTOR"]
+            except KeyError:
+                continue
+            if desc.get("flexible"):
+                continue
+            built_for = desc["display"]
+            if (
+                built_for["shape"] == display["shape"]
+                and built_for["width"] <= display["width"]
+                and built_for["height"] <= display["height"]
+                and (display["color"] or not built_for["color"])
+                and desc["limits"]["app_memory"]
+                <= platform["DESCRIPTOR"]["limits"]["app_memory"]
+            ):
+                # The largest, and of those the one of the platform's colours.
+                fitting.append(
+                    (
+                        built_for["width"] * built_for["height"],
+                        built_for["color"] == display["color"],
+                        other,
+                    )
+                )
+        if any(f[0] == display["width"] * display["height"] for f in fitting):
+            continue
+        report[name] = max(fitting)[2] if fitting else None
+    return report
+
+
 class _Platforms(dict):
     """The platforms by name. A flexible build is looked up by its name
     like a platform, but is not one of them: it is not listed."""

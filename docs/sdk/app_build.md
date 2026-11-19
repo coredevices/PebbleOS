@@ -64,6 +64,11 @@ with a microphone. A resource's own `targetPlatforms` reads the same way.
 The built `appinfo.json` lists platforms by name. The deprecated waf build
 only takes names.
 
+A project that is not flexible is built for fixed displays. When the SDK has
+a platform it does not fill, one that would show a binary of a smaller
+display in a bezel or has no binary at all, configuring the project says so
+in a note.
+
 ### Flexible projects
 
 A project with `"flexible": true` in the `pebble` object of its

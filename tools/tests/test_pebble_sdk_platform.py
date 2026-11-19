@@ -390,6 +390,33 @@ class TestFlexibleTargets(unittest.TestCase):
             self.targets(None, ["basalt"])
 
 
+class TestBezelPlatforms(unittest.TestCase):
+    ALL = ("aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro")
+
+    def test_a_platform_shows_the_largest_binary_that_fits(self):
+        report = sdk_platform.bezel_platforms(["aplite", "basalt", "chalk"], self.ALL)
+        self.assertEqual(report, {"emery": "basalt", "gabbro": "chalk"})
+        # Of two as large, the one of the watch's colour depth.
+        report = sdk_platform.bezel_platforms(["basalt", "diorite"], ["emery"])
+        self.assertEqual(report, {"emery": "basalt"})
+
+    def test_a_binary_for_the_same_display_fills_it(self):
+        # Flint has Diorite's display, and Aplite's.
+        self.assertEqual(sdk_platform.bezel_platforms(["diorite"], ["flint"]), {})
+        self.assertEqual(sdk_platform.bezel_platforms(["aplite"], ["flint"]), {})
+
+    def test_a_platform_that_runs_none(self):
+        report = sdk_platform.bezel_platforms(["emery"], self.ALL)
+        self.assertEqual(report, {"flint": None, "gabbro": None})
+
+    def test_nothing_to_say(self):
+        self.assertEqual(sdk_platform.bezel_platforms(self.ALL, self.ALL), {})
+        # Frozen platforms are not held against a project.
+        self.assertEqual(
+            sdk_platform.bezel_platforms(["emery"], ["basalt", "emery"]), {}
+        )
+
+
 class TestTargetPlatforms(unittest.TestCase):
     def test_by_name(self):
         self.assertTrue(sdk_platform.platform_matches("emery", ["flint", "emery"]))
