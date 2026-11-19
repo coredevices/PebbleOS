@@ -31,7 +31,9 @@ if SDK_TOOLS not in sys.path:
 import pebble_project
 from pebble_project import ProjectError
 from pebble_sdk_platform import (
+    PlatformError,
     bundle_description,
+    flexible_targets,
     pebble_platforms,
     platform_matches,
     sdk_component,
@@ -98,6 +100,57 @@ def _installed_platforms(sdk_root):
 
 
 # --- configure ----------------------------------------------------------------
+
+
+def _app_memory(info):
+    """What a flexible project asks for its code and heap, or None."""
+    app_memory = info.get("appMemory")
+    if app_memory is None:
+        return None
+    if not info.get("flexible"):
+        raise ProjectError(
+            "appMemory is for flexible projects: a platform gives what it gives"
+        )
+    if (
+        isinstance(app_memory, bool)
+        or not isinstance(app_memory, int)
+        or not 0 < app_memory <= 0xFFFF * 1024
+        or app_memory % 1024
+    ):
+        raise ProjectError("appMemory is a number of bytes, a multiple of 1024")
+    return app_memory
+
+
+def _flexible_builds(info, installed, sdk_root):
+    """What a flexible project builds."""
+    try:
+        builds = flexible_targets(info.get("targetPlatforms"), installed)
+    except PlatformError as e:
+        raise ProjectError(str(e)) from None
+    if builds and sdk_component(sdk_root, builds[0], "include/pebble.h") is None:
+        raise ProjectError("This SDK cannot build flexible binaries")
+    # A binary that asks for more than every watch of its class gives runs
+    # on none of them.
+    app_memory = info.get("appMemory") or 0
+    for build in builds:
+        desc = pebble_platforms[build]["DESCRIPTOR"]
+        if not desc.get("flexible"):
+            continue
+        gives = [
+            pebble_platforms[p]["MAX_APP_MEMORY_SIZE"]
+            for p in installed
+            if "FROZEN_AT_REVISION" not in pebble_platforms[p]
+            and pebble_platforms[p]["DESCRIPTOR"]["display"]["shape"]
+            == desc["display"]["shape"]
+            and pebble_platforms[p]["DESCRIPTOR"]["display"]["color"]
+            == desc["display"]["color"]
+        ]
+        if gives and app_memory > max(gives):
+            _warn(
+                f"appMemory is {app_memory} bytes, and no platform of this SDK that "
+                f"{build} is for gives more than {max(gives)}: that binary runs on none"
+            )
+    return builds
 
 
 class _Bld:
@@ -303,13 +356,23 @@ def configure(args):
     # In the order they are asked for; an entry may ask for capabilities, and
     # so for several platforms.
     requested = info.get("targetPlatforms") or installed
+    app_memory = _app_memory(info)
     platforms, names = [], []
-    for selector in requested:
-        matched = [p for p in installed if platform_matches(p, [selector])]
-        platforms += [p for p in matched if p not in platforms]
+    if info.get("flexible") and project_type == "moddable":
+        raise ProjectError("A Moddable project cannot be flexible yet")
+    if info.get("flexible"):
+        if project_type == "package":
+            raise ProjectError("A package cannot be flexible yet")
+        platforms = _flexible_builds(info, installed, sdk_root)
         # What installs the pbw only knows platforms by name.
-        by_name = selector in pebble_platforms or not matched
-        names += [n for n in ([selector] if by_name else matched) if n not in names]
+        names = [p for p in platforms if p in pebble_platforms]
+    else:
+        for selector in requested:
+            matched = [p for p in installed if platform_matches(p, [selector])]
+            platforms += [p for p in matched if p not in platforms]
+            # What installs the pbw only knows platforms by name.
+            by_name = selector in pebble_platforms or not matched
+            names += [n for n in ([selector] if by_name else matched) if n not in names]
     if "targetPlatforms" in info:
         info["targetPlatforms"] = names
     if args.platforms:
@@ -343,9 +406,14 @@ def configure(args):
             "max_app_memory_size": desc["MAX_APP_MEMORY_SIZE"],
             "max_worker_memory_size": desc["MAX_WORKER_MEMORY_SIZE"],
             "max_app_binary_size": desc["MAX_APP_BINARY_SIZE"],
+            "flexible": desc.get("FLEXIBLE", False),
             "max_resources_size": desc["MAX_RESOURCES_SIZE"],
             "max_resources_size_appstore": desc["MAX_RESOURCES_SIZE_APPSTORE"],
         }
+        # A flexible binary is given what its project asks for.
+        if desc.get("FLEXIBLE") and app_memory:
+            platform_info[p]["max_app_memory_size"] = app_memory
+            platform_info[p]["max_app_binary_size"] = app_memory
 
     project = {
         "type": project_type,
@@ -628,7 +696,9 @@ def resources(args):
     bld = _Bld(project["project_dir"], build_dir, platform)
     if project["type"] == "moddable" and os.path.exists(_mod_path(project, platform)):
         with open(_mod_path(project, platform), "rb") as f:
-            error = pebble_project.undeclared_moddable_health_error(project["info"], f.read())
+            error = pebble_project.undeclared_moddable_health_error(
+                project["info"], f.read()
+            )
         if error:
             raise ProjectError(error)
 
@@ -953,7 +1023,9 @@ def bundle(args):
                 "layouts": layouts if os.path.exists(layouts) else None,
                 "sdk_version": dict(zip(("major", "minor"), pinfo["sdk_version"])),
                 "subfolder": pinfo["bundle_dir"],
-                "platform": bundle_description(platform),
+                "platform": bundle_description(
+                    platform, project["info"].get("appMemory")
+                ),
             }
         )
 

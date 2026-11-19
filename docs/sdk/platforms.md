@@ -145,8 +145,13 @@ is meant for every watch of that class. `flexible_build()` in
 description, without a system call. It is part of the SDK since revision
 116, in every build.
 
-The app builds do not build flexible binaries yet: how a binary says that
-it is one, and where it goes in a pbw, are not defined.
+A flexible build has a name, its class and the resource tags of the
+features it requires joined by `+`: `rect-color`, `rect-color+mic`. The
+builds look it up by that name like a platform, and it is the binary's
+directory in the pbw. It is given 64K for its code and heap, which every
+platform gives, unless its project asks for more; its other limits are the
+smallest any platform of its class in the SDK has. {doc}`app_build` says how
+a project asks for flexible binaries.
 
 ## What an app binary says
 
@@ -167,13 +172,22 @@ header's flags says the record is there.
 | 0xB0 | 4 | features, one bit each in the order of the list above |
 | 0xB4 | 2 | app memory the binary needs, in KiB |
 | 0xB6 | 1 | bits of colour of a pixel: 1 for black and white, 6 for 64 colours |
-| 0xB7 | 1 | reserved, zero |
+| 0xB7 | 1 | flags: bit 0 is set in a flexible binary |
 
 Fields are only added at the end and the length grows with them, so a reader
 skips what it does not know. It also ignores the feature bits it does not
 know, and takes a display shape it does not know as one it cannot show.
 
-A platform that `PebbleProcessInfoFlags` has no value for is
+A flexible binary has a display width and height of zero, and the app
+memory it asks for. Its features are those it *requires*: the firmware does
+not launch it on a watch that lacks one of them and tells the user so, and
+gives it a framebuffer of the display's size. The features of any other binary say what its platform
+has and are not held against the watch. Firmware that predates the flag
+cannot read a record without a display size and takes the binary to be for
+its own platform.
+
+A platform that `PebbleProcessInfoFlags` has no value for, and every
+flexible binary, is
 `PROCESS_INFO_PLATFORM_OTHER` there. Firmware that predates the record takes
 such an app to be for its own platform. Apps for the frozen platforms carry
 no record: the firmware knows those platforms, and their SDK does not know
@@ -198,6 +212,24 @@ binary to a watch without knowing the platform's name:
 
 It is the part of `platform.json` a binary is matched by. A directory whose
 manifest has no `platform` is of the platform it is named after.
+
+A flexible binary has no display size, and lists the features it requires
+in place of those of a platform:
+
+```json
+"platform": {
+  "version": 1,
+  "name": "rect-color+mic",
+  "abi": "armv7m",
+  "flexible": true,
+  "display": { "shape": "rect", "color": true },
+  "requires": ["microphone"],
+  "limits": { "app_memory": 65536 }
+}
+```
+
+A reader that predates flexible binaries cannot read a display without a
+size, and passes the directory over.
 
 ## What a watch says
 
@@ -258,16 +290,22 @@ A binary **fits** a watch when
 - it has no colour if the watch has none, and
 - it needs no more app memory than the watch gives.
 
-Features are not part of the rule: the firmware answers for hardware that
+A flexible binary has no display size to compare. It fits when the watch
+also has every feature it requires, and a feature the installer has not
+heard of is one the watch lacks. The features of a binary built for a
+platform are not part of the rule: the firmware answers for hardware that
 is missing. Among the binaries that fit, the best is, in this order,
 
 1. that of the watch's own platform,
 2. one for the very display of the watch,
-3. one for the largest display,
-4. one of the watch's colour depth,
-5. that of the newest platform, where a platform the installer has not
+3. a flexible one of the watch's colour depth, and of several the one that
+   requires the most features,
+4. one for the largest display, where a flexible binary counts as one for
+   the watch's display,
+5. one of the watch's colour depth,
+6. that of the newest platform, where a platform the installer has not
    heard of is newer than those it has, and
-6. the first by name.
+7. the first by name.
 
 Watches of the frozen platforms are not asked: they take the directories
 they always took.
@@ -275,5 +313,6 @@ they always took.
 `tools/tests/platform_fit_cases.json` is a table of watches, binaries and
 the order they come out in, which every implementation of the rule is held
 to. `tools/platform_fit.py` is one, there to check the table. The native
-simulator, which installs a pbw itself, goes by directory names in the same
-order.
+simulator, which installs a pbw itself, goes by directory names: after the
+binary of its own platform it takes a flexible one whose name lists only
+features it has, then the binaries of other platforms in the order above.

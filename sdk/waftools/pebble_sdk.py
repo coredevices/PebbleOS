@@ -152,6 +152,9 @@ def configure(conf):
         project_info.setdefault("resources", {"media": []})
         project_info.setdefault("watchapp", {"watchface": False})
 
+    if project_info.get("flexible"):
+        conf.fatal("Flexible projects build with CMake: run `pebble convert-project`")
+
     conf.env.PROJECT_INFO = project_info
     if project_type == "moddable":
         conf.env.BUILD_TYPE = "moddable"

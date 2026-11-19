@@ -64,6 +64,37 @@ with a microphone. A resource's own `targetPlatforms` reads the same way.
 The built `appinfo.json` lists platforms by name. The deprecated waf build
 only takes names.
 
+### Flexible projects
+
+A project with `"flexible": true` in the `pebble` object of its
+`package.json` builds flexible binaries ({doc}`platforms`): one for each
+class of display the SDK has a platform of, which runs natively on every
+watch of that class.
+
+```json
+"flexible": true,
+"targetPlatforms": ["color~rect~mic", "round", "basalt"],
+"appMemory": 131072
+```
+
+- Without `targetPlatforms` it builds every class.
+- An entry of `rect`, `round`, `color` and `bw` picks classes. A feature in
+  it is one the binary requires: it is a constant in that binary again, and
+  the binary is only for watches that have it. Here that is
+  `rect-color+mic` and `round-color`.
+- An entry that names a platform builds a binary for that display, which a
+  watch of the platform prefers. The frozen platforms are only built for
+  when named.
+- Whatever installs a pbw has to know flexible binaries to pick one. Until
+  all of them do, the platforms of each class that have the required
+  features are built for as well.
+- `appMemory` is what the flexible binaries get for their code and heap, in
+  bytes, in place of 64K. They then only fit watches that give that much.
+
+The source of a flexible project has no display size to go by and asks for
+features when it runs; `pebble doctor` finds what stands in the way. The
+deprecated waf build does not build flexible projects.
+
 One build directory builds every platform the project targets. The code is
 described once, on an interface target, and built once per platform with
 that platform's `pebble.h` and flags:
