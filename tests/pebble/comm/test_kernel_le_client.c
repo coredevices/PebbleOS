@@ -32,28 +32,8 @@ void app_launch_handle_disconnection(void) {
 
 static bool s_has_gateway_bonding;
 
-void pbl_bt_foreach_bond(pbl_bt_bond_cb_t func, void *user_data) {
-  const struct pbl_bt_bond_info info = {};
-
-  if (s_has_gateway_bonding) {
-    func(&info, user_data);
-  }
-}
-
 size_t pbl_bt_bond_count(void) {
   return s_has_gateway_bonding ? 1 : 0;
-}
-
-void gap_le_connect_cancel_all(void) {
-}
-
-enum pbl_bt_errno gap_le_connect_cancel_by_bond(const struct pbl_bt_device_internal *addr) {
-  return PBL_BT_ERRNO_OK;
-}
-
-enum pbl_bt_errno gap_le_connect_connect_by_bond(const struct pbl_bt_device_internal *addr,
-                                                 bool auto_reconnect, bool is_pairing_required) {
-  return PBL_BT_ERRNO_OK;
 }
 
 static bool s_reconnectable;
@@ -322,19 +302,4 @@ void test_kernel_le_client__service_added(void) {
   cl_assert_equal_i(s_services_discovered_count, 1);
 
   pbl_free(info);
-}
-
-void test_kernel_le_client__deleting_last_bond_stops_reconnecting(void) {
-  const struct pbl_bt_device_internal addr = {};
-
-  s_has_gateway_bonding = false;
-  kernel_le_client_handle_bond_deleted(&addr);
-  cl_assert(!s_reconnectable);
-}
-
-void test_kernel_le_client__deleting_other_bond_keeps_reconnecting(void) {
-  const struct pbl_bt_device_internal addr = {};
-
-  kernel_le_client_handle_bond_deleted(&addr);
-  cl_assert(s_reconnectable);
 }

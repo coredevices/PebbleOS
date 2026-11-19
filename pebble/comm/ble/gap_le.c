@@ -16,7 +16,6 @@ void gap_le_init(void) {
   {
     gap_le_connection_init();
     bt_advertising_init();
-    gap_le_connect_init();
 
     kernel_le_client_init();
   }

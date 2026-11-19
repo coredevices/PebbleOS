@@ -123,20 +123,6 @@ pbl_clar_test(test_kernel_le_client
     pebble/comm/ble/kernel_le_client/kernel_le_client.c
 )
 
-# Skipped for now; see pbl_test_broken() in tests/CMakeLists.txt.
-pbl_clar_test(test_gap_le_connect
-  SOURCES
-    pebble/comm/ble/gap_le_connect.c
-    pebble/comm/ble/gap_le_connection.c
-    pebble/comm/internals/bt_conn_mgr.c
-    tests/fakes/fake_events.c
-    tests/fakes/fake_GAPAPI.c
-    tests/fakes/fake_gap_le_connect_params.c
-    tests/fakes/fake_HCIAPI.c
-    tests/fakes/fake_rtc.c
-  OVERRIDES dummy_board
-)
-
 pbl_clar_test(test_qemu_serial
   SOURCES
     pebble/comm/qemu/serial_util.c

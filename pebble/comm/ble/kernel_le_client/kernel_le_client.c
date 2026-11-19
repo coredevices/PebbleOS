@@ -15,6 +15,7 @@
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #endif
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -24,7 +25,6 @@
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/services/bluetooth/advertising.h>
 
-#include <comm/ble/gap_le_connect.h>
 #include <comm/ble/gatt_client_accessors.h>
 #include <comm/ble/gatt_client_discovery.h>
 #include <comm/ble/gatt_client_operations.h>
@@ -465,12 +465,6 @@ void kernel_le_client_handle_event(const PebbleEvent *e) {
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_connect_gateway(const struct pbl_bt_device_internal *addr) {
-  bt_advertising_set_reconnectable(true);
-  gap_le_connect_connect_by_bond(addr, true /* auto_reconnect */, true /* is_pairing_required */);
-}
-
-// -------------------------------------------------------------------------------------------------
 static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 #if defined(CONFIG_BT_ANCS_CLIENT)
   ancs_destroy();
@@ -481,35 +475,12 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_handle_bond_added(const struct pbl_bt_bond_info *info) {
-  // Every bond is the gateway's: only one is kept.
-  prv_connect_gateway(&info->addr);
-}
-
-// -------------------------------------------------------------------------------------------------
-void kernel_le_client_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
-  bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
-  gap_le_connect_cancel_by_bond(addr);
-}
-
-// -------------------------------------------------------------------------------------------------
-static void prv_connect_gateway_cb(const struct pbl_bt_bond_info *info, void *user_data) {
-  bool *connected = user_data;
-
-  if (!*connected) {
-    prv_connect_gateway(&info->addr);
-    *connected = true;
-  }
-}
-
-// -------------------------------------------------------------------------------------------------
 void kernel_le_client_init(void) {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   pbl_pp_gatt_reset_disconnect_counter();
 #endif
 
-  bool connected = false;
-  pbl_bt_foreach_bond(prv_connect_gateway_cb, &connected);
+  bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -517,7 +488,6 @@ void kernel_le_client_deinit(void) {
   // Cleanup clients: their code must execute on KernelMain, so add callback:
   launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
 
-  gap_le_connect_cancel_all();
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   pbl_pp_gatt_destroy();
 #endif
