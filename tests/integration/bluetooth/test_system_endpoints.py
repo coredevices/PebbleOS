@@ -275,20 +275,21 @@ def test_remote_input(dut, phone, build):
     ui.go_home()
 
 
-def _dump_logs(phone, generation, cookie, timeout=30):
-    since = phone.inbox.mark()
+def _dump_logs(phone, generation, cookie, timeout=10):
+    """The answer to a log request, up to the message that ends it;
+    ``timeout`` is for each message, as the log's length varies."""
+    mark = phone.inbox.mark()
     phone.send(DUMP_LOG_ENDPOINT, struct.pack("<BBI", LOG_REQUEST, generation, cookie))
-    phone.inbox.wait(
-        DUMP_LOG_ENDPOINT,
-        lambda p: p[0] != LOG_LINE and p[1:5] == struct.pack("<I", cookie),
-        timeout,
-        since,
-    )
-    return [
-        p
-        for p in phone.inbox.received(DUMP_LOG_ENDPOINT, since)
-        if p[1:5] == struct.pack("<I", cookie)
-    ]
+    messages = []
+    while not messages or messages[-1][0] == LOG_LINE:
+        message, mark = phone.inbox.next(
+            DUMP_LOG_ENDPOINT,
+            lambda p: p[1:5] == struct.pack("<I", cookie),
+            timeout,
+            mark,
+        )
+        messages.append(message)
+    return messages
 
 
 def test_dump_logs(phone):
