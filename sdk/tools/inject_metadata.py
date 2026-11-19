@@ -258,6 +258,10 @@ def inject_metadata(
         with open(resources_file, "rb") as f:
             pbpack = ResourcePack.deserialize(f, is_system=False)
             resource_crc = pbpack.get_content_crc()
+            # A pack of a set has the set's ID for a timestamp, and so does
+            # the binary that works with any pack of it.
+            if pbpack.timestamp:
+                timestamp = pbpack.timestamp
     else:
         resource_crc = 0
 
