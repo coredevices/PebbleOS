@@ -1021,7 +1021,12 @@ static bool prv_set_s_music_show_album_art(bool *enabled) {
 }
 
 static bool prv_set_s_dark_mode(uint8_t *mode) {
-  if (*mode >= DarkModeCount) {
+  bool valid = *mode < DarkModeCount;
+#ifndef CONFIG_BACKLIGHT_HAS_COLOR
+  // No sunrise/sunset times without a color backlight
+  valid = valid && *mode != DarkModeSunset;
+#endif
+  if (!valid) {
     s_dark_mode = DarkModeOff;
     dark_mode_updater_prefs_changed();
     return false;

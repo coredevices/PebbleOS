@@ -24,6 +24,17 @@ void shell_prefs_get_dark_mode_schedule(DarkModeSchedule *schedule_out) {
   *schedule_out = s_schedule;
 }
 
+static uint16_t s_sunrise_minute;
+static uint16_t s_sunset_minute;
+
+uint16_t backlight_get_sunrise_minute(void) {
+  return s_sunrise_minute;
+}
+
+uint16_t backlight_get_sunset_minute(void) {
+  return s_sunset_minute;
+}
+
 static bool s_theme_dark;
 
 void system_theme_set_dark_mode(bool dark_mode) {
@@ -77,6 +88,8 @@ void test_dark_mode_updater__initialize(void) {
   fake_rtc_init(0, 0);
   s_mode = DarkModeOff;
   s_schedule = (DarkModeSchedule){.from_hour = 19, .from_minute = 0, .to_hour = 7};
+  s_sunrise_minute = 7 * 60 + 10;
+  s_sunset_minute = 16 * 60 + 25;
   s_theme_dark = false;
   s_num_events = 0;
 }
@@ -187,4 +200,44 @@ void test_dark_mode_updater__schedule_change_applies_right_away(void) {
   dark_mode_updater_prefs_changed();
   cl_assert(s_theme_dark);
   cl_assert_equal_i(s_num_events, 1);
+}
+
+void test_dark_mode_updater__sunset_follows_backlight_times(void) {
+  prv_set_time(16, 24);
+  s_mode = DarkModeSunset;
+  dark_mode_updater_init();
+  cl_assert(!s_theme_dark);
+  cl_assert(prv_follows_minutes());
+
+  prv_fire_minute(16, 25);
+  cl_assert(s_theme_dark);
+  cl_assert_equal_i(s_num_events, 1);
+
+  prv_fire_minute(7, 9);
+  cl_assert(s_theme_dark);
+
+  prv_fire_minute(7, 10);
+  cl_assert(!s_theme_dark);
+  cl_assert_equal_i(s_num_events, 2);
+}
+
+void test_dark_mode_updater__sunset_picks_up_new_times(void) {
+  prv_set_time(17, 0);
+  s_mode = DarkModeSunset;
+  dark_mode_updater_init();
+  cl_assert(s_theme_dark);
+
+  // The phone moves sunset later, e.g. in spring
+  s_sunset_minute = 17 * 60 + 30;
+  prv_fire_minute(17, 1);
+  cl_assert(!s_theme_dark);
+  cl_assert_equal_i(s_num_events, 1);
+}
+
+void test_dark_mode_updater__sunset_ignores_invalid_times(void) {
+  prv_set_time(23, 0);
+  s_mode = DarkModeSunset;
+  s_sunset_minute = 24 * 60;
+  dark_mode_updater_init();
+  cl_assert(!s_theme_dark);
 }
