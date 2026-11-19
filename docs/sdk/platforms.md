@@ -78,7 +78,8 @@ from the description what the builds read:
 
 - the defines apps are compiled with: `PBL_PLATFORM_SLATE`, `PBL_COLOR` or
   `PBL_BW`, `PBL_RECT` or `PBL_ROUND`, `PBL_DISPLAY_WIDTH` and `_HEIGHT`,
-  and one per feature, such as `PBL_MICROPHONE`;
+  one per feature, such as `PBL_MICROPHONE`, and `PBL_MODDABLE` if it
+  runs Moddable apps;
 - the tags of resource file names: `slate`, `color`, `rect`, `mic`, `240w`,
   `240h`;
 - the size limits.

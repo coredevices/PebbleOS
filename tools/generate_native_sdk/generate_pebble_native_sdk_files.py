@@ -14,7 +14,7 @@ from os import path
 import exports
 from extract_comments import extract_comments
 from extract_symbol_info import extract_symbol_info
-from generate_app_header import make_app_header
+from generate_app_header import active_lines, make_app_header, selected_argument
 from generate_app_sdk_version_header import generate_app_sdk_version_header
 from generate_app_shim import make_app_shim_lib
 from generate_fw_shim import make_fw_shims
@@ -207,11 +207,32 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
 
     exports.walk_tree(exports_tree, check_complete)
 
+    # The header picks these by the defines of the app build: make sure that
+    # gives this platform what its firmware has.
+    platform_defines = {d.split("=")[0] for d in platform_info["DEFINES"]}
+    for e in defines:
+        if e.sdk_definition is not None:
+            chosen = active_lines(e.sdk_definition, platform_defines)
+            if " ".join(chosen).split() != e.full_definition.split():
+                raise RuntimeError(
+                    f"{e.name}: sdkDefinition gives {platform_name} {chosen}, "
+                    f"its firmware has {e.full_definition!r}"
+                )
+        elif e.selected_by is not None and selected_argument(e)[2] != (
+            e.selected_by in platform_defines
+        ):
+            raise RuntimeError(
+                f"{e.name} is not selected by {e.selected_by} on {platform_name}"
+            )
+
     pebble_app_h_text_to_inject = PEBBLE_APP_H_TEXT + "\n".join(
         platform_info["ADDITIONAL_TEXT_LINES_FOR_PEBBLE_H"]
     )
-    if platform_info.get("HAS_MODDABLE_XS"):
-        pebble_app_h_text_to_inject += '\n#include "xsffi.h"\n'
+    # No frozen platform has Moddable.
+    if frozen_revision is None:
+        pebble_app_h_text_to_inject += (
+            '\n#if defined(PBL_MODDABLE)\n#include "xsffi.h"\n#endif\n'
+        )
 
     # Build pebble.h and pebble_worker.h for our apps to include
     for type_name_prefix in [
@@ -221,12 +242,18 @@ Hint: Add appropriate headers to the \"files\" array in exported_symbols.json"""
     ]:
         sdk_header_filename = path.join(sdk_include_dir, type_name_prefix[1])
         make_app_header(
-            exports_tree, sdk_header_filename, type_name_prefix[0], type_name_prefix[2]
+            exports_tree,
+            sdk_header_filename,
+            type_name_prefix[0],
+            type_name_prefix[2],
+            # A frozen platform has headers of its own, at its revision.
+            shared=frozen_revision is None,
         )
 
-    # On platforms with Moddable XS support, ship xsffi.h alongside the SDK so
-    # apps that use the FFI bindings can include it directly.
-    if platform_info.get("HAS_MODDABLE_XS"):
+    # Ship xsffi.h alongside the SDK so apps that use the FFI bindings can
+    # include it directly. The header is that of every platform of the ABI,
+    # so it comes along whether or not this platform has Moddable.
+    if frozen_revision is None:
         xsffi_src = path.join(
             pbl_root_dir,
             "third_party",
