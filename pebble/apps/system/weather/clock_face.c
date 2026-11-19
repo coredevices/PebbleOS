@@ -458,12 +458,21 @@ static int prv_abs_hour_for_pos(int pos_1_to_12) {
   return pos_1_to_12 % 12; // unreachable
 }
 
+// True when abs_hour is today's current hour. That position shows the same
+// "now" reading as the centre, so the two can never disagree.
+static bool prv_is_now_hour(int abs_hour) {
+  return s_cf->day_index == 0 && s_cf->num_days > 0 && abs_hour == prv_cur_hour();
+}
+
 // Map a clock-face hour position (1-12) to the WeatherType for that hour.
 // Uses real hourly data if available, otherwise falls back to daily forecast.
 static WeatherType prv_type_for_pos(int pos_1_to_12) {
   if (!s_cf)
     return WeatherType_Unknown;
   int abs_hour = prv_abs_hour_for_pos(pos_1_to_12);
+  if (prv_is_now_hour(abs_hour) && s_cf->days[0].current_type_now <= WeatherType_RainAndSnow) {
+    return s_cf->days[0].current_type_now;
+  }
   if (s_cf->hourly_valid && abs_hour >= 0 && abs_hour < 24) {
     return (WeatherType)s_cf->hourly_types[abs_hour];
   }
@@ -491,6 +500,11 @@ static bool prv_temp_for_pos(int pos_1_to_12, int *out_temp) {
   if (!s_cf)
     return false;
   int abs_hour = prv_abs_hour_for_pos(pos_1_to_12);
+  if (prv_is_now_hour(abs_hour) &&
+      s_cf->days[0].current_temp_now != WEATHER_SERVICE_LOCATION_FORECAST_UNKNOWN_TEMP) {
+    *out_temp = s_cf->days[0].current_temp_now;
+    return true;
+  }
   if (abs_hour >= 24 && abs_hour < 48 && s_cf->tomorrow_hourly_valid) {
     *out_temp = (int)s_cf->tomorrow_temps[abs_hour - 24]; // v4 minor 5
     return true;
