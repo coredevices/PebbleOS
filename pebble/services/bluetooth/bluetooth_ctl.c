@@ -20,7 +20,6 @@
 #include <pbl/services/bluetooth/pairability.h>
 
 #include <comm/ble/gap_le.h>
-#include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -213,8 +212,6 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 void bt_ctl_init(void) {
   s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
   s_comm_initialized = true;
-
-  gatt_client_subscription_boot();
 }
 
 static void prv_bt_ctl_reset_bluetooth_callback(void *context) {

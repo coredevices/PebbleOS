@@ -266,29 +266,9 @@ static void prv_handle_subscription_event(struct ble_gap_event *event) {
 }
 
 static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
-  struct ble_gap_conn_desc desc;
-
-  if (pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
-                             event->notify_rx.om)) {
-    return;
-  }
-
-  if (ble_gap_conn_find(event->notify_rx.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_notification_rx_event: Failed to find connection descriptor");
-    return;
-  }
-
-  struct pbl_bt_gatt_server_notif_indic_event notification_event = {
-    .attr_handle = event->notify_rx.attr_handle,
-    .attr_val = event->notify_rx.om->om_data,
-    .attr_val_len = event->notify_rx.om->om_len,
-  };
-  nimble_addr_to_pebble_addr(&desc.peer_id_addr, &notification_event.dev_address);
-
-  if (event->notify_rx.indication == 1) {
-    pbl_bt_cb_gatt_handle_indication(&notification_event);
-  } else {
-    pbl_bt_cb_gatt_handle_notification(&notification_event);
+  if (!pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
+                              event->notify_rx.om)) {
+    PBL_LOG_DBG("Notification of handle %u is for no one", event->notify_rx.attr_handle);
   }
 }
 

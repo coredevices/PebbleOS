@@ -84,4 +84,13 @@ void pbl_bt_pebble_uuid_expand(Uuid *uuid, uint32_t value);
       (0xff & ((uint32_t)u) >> 0), 0x32, 0x8E, 0x0F, 0xBB, 0xC6, 0x42, 0x1A, 0xA6, 0x69, 0x9B, \
       0xDA, 0xDA
 
+/**
+ * @brief PBL_BT_PEBBLE_UUID_EXPAND() for the stack: the initializer of a @c ble_uuid128_t.
+ *
+ * @param u The 32-bit (or 16-bit) UUID value.
+ */
+#define PBL_BT_PEBBLE_UUID128_INIT(u)                                                      \
+  BLE_UUID128_INIT(0xDA, 0xDA, 0x9B, 0x69, 0xA6, 0x1A, 0x42, 0xC6, 0xBB, 0x0F, 0x8E, 0x32, \
+                   (u) & 0xff, ((u) >> 8) & 0xff, ((u) >> 16) & 0xff, ((u) >> 24) & 0xff)
+
 /** @} */

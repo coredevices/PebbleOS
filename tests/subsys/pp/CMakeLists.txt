@@ -74,6 +74,7 @@ pbl_clar_test(test_ppogatt_v0
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
   DEFINES USE_PPOGATT_VERSION=0
 )
 
@@ -87,6 +88,7 @@ pbl_clar_test(test_ppogatt_v1
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
   DEFINES USE_PPOGATT_VERSION=1
 )
 
@@ -99,5 +101,6 @@ pbl_clar_test(test_ppogatt_reversed
     tests/fakes/fake_gatt_client_operations.c
     tests/fakes/fake_gatt_client_subscriptions.c
     tests/fakes/fake_session.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
   DEFINES USE_PPOGATT_VERSION=1
 )

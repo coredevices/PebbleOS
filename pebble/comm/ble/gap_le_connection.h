@@ -3,10 +3,6 @@
 
 #pragma once
 
-#include "gatt_client_accessors.h"
-#include "gatt_client_discovery.h"
-#include "gatt_client_subscriptions.h"
-
 #include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
@@ -30,7 +26,6 @@ void gap_le_connection_init(void);
 
 void gap_le_connection_deinit(void);
 
-typedef struct DiscoveryJobQueue DiscoveryJobQueue;
 typedef struct GAPLEConnectRequestParams GAPLEConnectRequestParams;
 typedef struct SMPairingState SMPairingState;
 
@@ -53,9 +48,6 @@ typedef struct GAPLEConnection {
   //! Whether the connection is encrypted or not.
   bool is_encrypted : 1;
 
-  //! Whether GATT service discovery is in progress
-  bool gatt_is_service_discovery_in_progress : 1;
-
   //! Whether the connection was reported as the gateway's (the bonded phone, once encrypted)
   bool is_gateway : 1;
 
@@ -66,13 +58,6 @@ typedef struct GAPLEConnection {
   bool is_subscribed_to_connection_status_notifications : 1;
   bool is_subscribed_to_gatt_mtu_notifications : 1;
 
-  //! The number of service discovery retries.
-  //! See field `gatt_service_discovery_watchdog_timer`
-  uint8_t gatt_service_discovery_retries : GATT_CLIENT_DISCOVERY_MAX_RETRY_BITS;
-
-  //! The generation number of the remote services that have been discovered.
-  uint8_t gatt_service_discovery_generation;
-
   //! Bluetopia's internal identifier for the GATT connection.
   //! This is not a concept that can be found in the Bluetooth specification,
   //! it's internal to Bluetopia.
@@ -82,9 +67,7 @@ typedef struct GAPLEConnection {
   //! that the upper layer entity is capable of accepting."
   uint16_t gatt_mtu;
 
-  //! The ATT handle of the "Service Changed" characteristic.
   //! See gatt_service_changed.c
-  uint16_t gatt_service_changed_att_handle;
   bool has_sent_gatt_service_changed_indication;
   struct pbl_delayed_work gatt_service_changed_indication_work;
 
@@ -97,23 +80,11 @@ typedef struct GAPLEConnection {
   //! @see gap_le_device_name.c
   char *device_name;
 
-  //! List of services that have been discovered on the remote device.
-  GATTServiceNode *gatt_remote_services;
-
-  //! List of subscriptions to notifications/
-  GATTClientSubscriptionNode *gatt_subscriptions;
-
   //! Temporary, connection related pairing data (Bluetopia/cc2564 only)
   SMPairingState *pairing_state;
 
   //! Opaque, used by bt_conn_mgr to decide speed connection should run at
   ConnectionMgrInfo *conn_mgr_info;
-
-  //! Opaque, used by gatt_client_discovery.c
-  DiscoveryJobQueue *discovery_jobs;
-
-  //! Tick at which the current discovery job started, used by gatt_client_discovery.c
-  uint64_t gatt_discovery_start_ticks;
 
   //! @see gap_le_connect_params.c
   struct {
@@ -158,6 +129,9 @@ GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal
 //! @note Bluetopia's GATT API seems to make no difference between public /
 //! private addresses. Therefore, this function does not take a struct pbl_bt_device.
 GAPLEConnection *gap_le_connection_by_addr(const struct pbl_bt_addr *addr);
+
+//! @note !!! To access the returned context bt_lock MUST be held!!!
+GAPLEConnection *gap_le_connection_by_conn_handle(uint16_t conn_handle);
 
 //! Find the GAPLEConnection by Bluetopia GATT ConnectionID.
 //! @note !!! To access the returned context bt_lock MUST be held!!!
