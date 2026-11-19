@@ -28,11 +28,19 @@ SLATE = {
 
 
 class Define:
-    def __init__(self, name, full_definition, selected_by=None, sdk_definition=None):
+    def __init__(
+        self,
+        name,
+        full_definition,
+        selected_by=None,
+        sdk_definition=None,
+        runtime_feature=None,
+    ):
         self.name = name
         self.full_definition = full_definition
         self.selected_by = selected_by
         self.sdk_definition = sdk_definition
+        self.runtime_feature = runtime_feature
 
 
 def _defines(exports):
@@ -68,6 +76,27 @@ class TestDefineText(unittest.TestCase):
         )
         # A header of one platform keeps the definition of that platform.
         self.assertEqual(define_text(e, shared=False), e.full_definition)
+
+    def test_feature_asked_at_run_time(self):
+        e = Define(
+            "PBL_IF_MICROPHONE_ELSE",
+            "#define PBL_IF_MICROPHONE_ELSE(if_true, if_false) (if_true)",
+            "PBL_MICROPHONE",
+            runtime_feature="PlatformFeatureMicrophone",
+        )
+        self.assertEqual(
+            define_text(e, shared=True).splitlines(),
+            [
+                "#if defined(PBL_MICROPHONE)",
+                "#define PBL_IF_MICROPHONE_ELSE(if_true, if_false) (if_true)",
+                "#elif defined(PBL_FLEXIBLE)",
+                "#define PBL_IF_MICROPHONE_ELSE(if_true, if_false) \\",
+                "  (platform_has_feature(PlatformFeatureMicrophone) ? (if_true) : (if_false))",
+                "#else",
+                "#define PBL_IF_MICROPHONE_ELSE(if_true, if_false) (if_false)",
+                "#endif",
+            ],
+        )
 
     def test_selected_has_to_pick_an_argument(self):
         e = Define("FOO", "#define FOO(a, b) (a + b)", "PBL_COLOR")
@@ -126,6 +155,28 @@ class TestExportedDefines(unittest.TestCase):
         self.assertEqual(of(color=False), "PlatformTypeFlint")
         self.assertEqual(of(shape="round"), "PlatformTypeGabbro")
         self.assertEqual(of(shape="round", color=False), "PlatformTypeGabbro")
+
+    def test_platform_type_of_a_flexible_build(self):
+        def of(shape, color):
+            return self._platform_type(sdk_platform.flexible_build(shape, color))
+
+        self.assertEqual(of("rect", True), "PlatformTypeEmery")
+        self.assertEqual(of("rect", False), "PlatformTypeFlint")
+        self.assertEqual(of("round", True), "PlatformTypeGabbro")
+
+    def test_run_time_features_are_features(self):
+        # PlatformFeature<Name> counts the features in the table's order.
+        names = [n.replace("_", "") for n in sdk_platform.FEATURES]
+        for e in self.defines.values():
+            if "runtimeFeature" in e:
+                feature = e["runtimeFeature"].replace("PlatformFeature", "").lower()
+                self.assertIn(feature, names, e["name"])
+                self.assertEqual(
+                    sdk_platform.FEATURES[
+                        list(sdk_platform.FEATURES)[names.index(feature)]
+                    ][0],
+                    e["selectedBy"],
+                )
 
 
 if __name__ == "__main__":

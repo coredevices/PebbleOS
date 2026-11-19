@@ -841,7 +841,8 @@
             }, {
               "type": "define",
               "name": "PBL_IF_HEALTH_ELSE",
-              "selectedBy": "PBL_HEALTH"
+              "selectedBy": "PBL_HEALTH",
+              "runtimeFeature": "PlatformFeatureHealth"
             }, {
               "type": "type",
               "name": "MeasurementSystem"
@@ -1131,7 +1132,8 @@
             }, {
               "type": "define",
               "name": "PBL_IF_MICROPHONE_ELSE",
-              "selectedBy": "PBL_MICROPHONE"
+              "selectedBy": "PBL_MICROPHONE",
+              "runtimeFeature": "PlatformFeatureMicrophone"
             }
           ]
         }, {

@@ -33,6 +33,7 @@ class FullExport(Export):
         # A define whose value depends on the platform, see docs/sdk/exporting.md.
         self.selected_by = v.get("selectedBy")
         self.sdk_definition = v.get("sdkDefinition")
+        self.runtime_feature = v.get("runtimeFeature")
 
     def complete(self):
         return self.full_definition is not None
