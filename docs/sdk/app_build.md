@@ -108,7 +108,8 @@ so has to be built for the features too, with an entry such as
 `"color~rect~mic"` in its own `targetPlatforms`.
 
 The source of a flexible project has no display size to go by and asks for
-features when it runs; `pebble doctor` finds what stands in the way. The
+features when it runs; `pebble doctor` finds what stands in the way, and
+{doc}`flexible_apps` goes through what to change. The
 deprecated waf build does not build flexible projects.
 
 One build directory builds every platform the project targets. The code is
