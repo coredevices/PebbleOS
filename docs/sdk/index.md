@@ -52,6 +52,7 @@ an app's calls reach the firmware.
 :hidden:
 
 app_build.md
+flexible_apps.md
 platforms.md
 how_it_works.md
 exporting.md

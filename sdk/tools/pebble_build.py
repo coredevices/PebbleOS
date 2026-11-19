@@ -471,6 +471,24 @@ def configure(args):
             platform_info[p]["max_app_memory_size"] = app_memory
             platform_info[p]["max_app_binary_size"] = app_memory
 
+    # A resource for platforms by name is in none of the flexible binaries,
+    # whose code then has no ID for it.
+    flexible_builds = [p for p in platforms if platform_info[p]["flexible"]]
+    by_name = [
+        r.get("name", "?")
+        for r in info.get("resources", {}).get("media", [])
+        if r.get("targetPlatforms")
+        and flexible_builds
+        and not any(platform_matches(p, r["targetPlatforms"]) for p in flexible_builds)
+        and any(platform_matches(p, r["targetPlatforms"]) for p in platforms)
+    ]
+    if by_name:
+        _warn(
+            f"the resources {', '.join(by_name)} are for platforms by name and are in "
+            'no flexible binary: say what they are for with tags, as in "color~rect", '
+            "or drop their targetPlatforms"
+        )
+
     project = {
         "type": project_type,
         "name": info["name"],
