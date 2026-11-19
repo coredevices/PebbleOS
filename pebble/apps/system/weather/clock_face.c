@@ -923,7 +923,7 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
         // BOTH shapes : the CURRENT-HOUR temp — the
         // same source as the mainscreen header, so the two screens can never disagree
         // (the synced current_temp once said "23" here while the header said "18").
-        snprintf(stg_buf, sizeof(stg_buf), "%d", s_cf->days[0].current_temp_now);
+        snprintf(stg_buf, sizeof(stg_buf), "%d\xC2\xB0", s_cf->days[0].current_temp_now);
         centre_font = s_cf->temp_font;
       } else {
         weather_fill_weekday_abbrev(s_cf->day_index, nullptr, stg_buf, sizeof(stg_buf));
@@ -932,6 +932,14 @@ static void prv_canvas_draw(Layer *layer, GContext *ctx) {
       GSize nsz = graphics_text_layout_get_content_size(stg_buf, centre_font, GRect(0, 0, 100, 50),
                                                         GTextOverflowModeTrailingEllipsis,
                                                         GTextAlignmentLeft);
+      // Drawn 10% larger below; drop the degree sign when it would push the
+      // text past the glow ring (e.g. 100°F).
+      if (centre_is_temp && nsz.w * 11 / 10 > 2 * CLOCK_GLOW_OUTER_R_TODAY - 4) {
+        snprintf(stg_buf, sizeof(stg_buf), "%d", s_cf->days[0].current_temp_now);
+        nsz = graphics_text_layout_get_content_size(stg_buf, centre_font, GRect(0, 0, 100, 50),
+                                                    GTextOverflowModeTrailingEllipsis,
+                                                    GTextAlignmentLeft);
+      }
       const int left_pad = 4;
       const int right_pad = 4;
       const int stg_w = left_pad + nsz.w + right_pad;
