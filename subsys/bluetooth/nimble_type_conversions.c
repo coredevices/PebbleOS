@@ -78,19 +78,3 @@ void pebble_conn_update_to_nimble(const struct pbl_bt_conn_params_update_req *re
   params->min_ce_len = 0U;
   params->max_ce_len = 0U;
 }
-
-void nimble_uuid_to_pebble(const ble_uuid_any_t *stack_uuid, Uuid *uuid) {
-  switch (stack_uuid->u.type) {
-    case BLE_UUID_TYPE_16:
-      *uuid = bt_uuid_expand_16bit(stack_uuid->u16.value);
-      break;
-    case BLE_UUID_TYPE_32:
-      *uuid = bt_uuid_expand_32bit(stack_uuid->u32.value);
-      break;
-    case BLE_UUID_TYPE_128:
-      *uuid = UuidMakeFromLEBytes(stack_uuid->u128.value);
-      break;
-    default:
-      PBL_ASSERTN(0);
-  }
-}

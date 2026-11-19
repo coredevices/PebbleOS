@@ -100,7 +100,7 @@ def test_session_survives_rediscovery(dut, watch, phones):
     phone = _bonded(watch, phones)
     since = dut.logs.mark()
     dut.prompt(dut.command("bt_rediscover"))
-    dut.wait_for_log(r"Service changed Indication: type: 2", 15, since)
+    dut.wait_for_log(r"Service Changed: looking for the services again", 15, since)
     assert phone.watch_version() is not None
     assert dut.logs.find(SESSION_CLOSED, since) is None
 

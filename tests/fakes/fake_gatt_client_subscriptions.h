@@ -3,7 +3,9 @@
 
 #pragma once
 
-#include <comm/ble/gatt_client_subscriptions.h>
+#include "fake_gatt_client_types.h"
+
+#include <pbl/util/list.h>
 
 void fake_gatt_client_subscriptions_init(void);
 
