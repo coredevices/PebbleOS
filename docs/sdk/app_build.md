@@ -100,7 +100,12 @@ A Pebble package can be flexible too, and then ships a library for each
 class beside those for platforms. A flexible app needs that of each package
 it uses: its binary of a class links the package's library of that class,
 and one that requires features takes the library of the class without them
-when the package has none for those features.
+when the package has none for those features, which configuring the project
+notes. That library asks the watch for a feature where it uses
+`PBL_IF_<FEATURE>_ELSE` or `platform_has_feature()`. What it decides with
+`#ifdef PBL_MICROPHONE` was decided without the feature: a package that does
+so has to be built for the features too, with an entry such as
+`"color~rect~mic"` in its own `targetPlatforms`.
 
 The source of a flexible project has no display size to go by and asks for
 features when it runs; `pebble doctor` finds what stands in the way. The

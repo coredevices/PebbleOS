@@ -611,6 +611,16 @@ def configure(args):
             lib_build = _required_package_build(lib, p)
             includes += [lib_include, os.path.join(lib_include, lib["name"], lib_build)]
         emit(f"PEBBLE_{p}_PACKAGE_INCLUDES", includes)
+        borrowed = [
+            lib["name"] for lib in pebble_libs if _required_package_build(lib, p) != p
+        ]
+        if borrowed:
+            _note(
+                f"{p} links what {', '.join(borrowed)} built without the features it "
+                "requires. That is right for a package that asks for features with "
+                "PBL_IF_<FEATURE>_ELSE or platform_has_feature(), and not for one that "
+                "decides with #ifdef."
+            )
         archives = []
         for lib in pebble_libs:
             if os.path.isdir(os.path.join(lib["path"], "binaries")):
