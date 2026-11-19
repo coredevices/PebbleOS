@@ -306,6 +306,11 @@ typedef struct PBL_PACKED {
 //! and its features are those it cannot run without.
 #define PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE (1 << 0)
 
+//! The process works with any of a set of resource packs, which whatever installs it picks from
+//! by the watch's display. Its resource_timestamp is the ID of the set, which each pack of it has
+//! for a timestamp, and its resource_crc is that of one of them only.
+#define PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET (1 << 1)
+
 //! The app CRC runs from here to the end of the image. It is the end of the 0x10.0x00 header, so
 //! the CRC takes in load_size_hi and virtual_size_hi, and every struct version checks the same
 //! bytes.
