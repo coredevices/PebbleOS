@@ -335,6 +335,61 @@ class TestFlexible(unittest.TestCase):
         )
 
 
+class TestFlexibleTargets(unittest.TestCase):
+    ALL = ("aplite", "basalt", "chalk", "diorite", "emery", "flint", "gabbro")
+
+    def targets(self, selectors, installed=None):
+        return sdk_platform.flexible_targets(selectors, installed or self.ALL)
+
+    def test_every_class_by_default(self):
+        # With the platforms of each class, for what does not know classes.
+        self.assertEqual(
+            self.targets(None),
+            ["rect-color", "emery", "rect-bw", "flint", "round-color", "gabbro"],
+        )
+        self.assertEqual(self.targets([]), self.targets(None))
+        self.assertEqual(self.targets(None, ["flint"]), ["rect-bw", "flint"])
+
+    def test_classes(self):
+        self.assertEqual(self.targets(["round"]), ["round-color", "gabbro"])
+        self.assertEqual(
+            self.targets(["rect"]), ["rect-color", "emery", "rect-bw", "flint"]
+        )
+        self.assertEqual(self.targets(["bw~rect"]), ["rect-bw", "flint"])
+        # No platform of the SDK is of that class.
+        self.assertEqual(self.targets(["bw~round"]), [])
+
+    def test_required_features(self):
+        self.assertEqual(self.targets(["color~rect~mic"]), ["rect-color+mic", "emery"])
+        # Flint has no touch: nothing but the flexible binary.
+        self.assertEqual(self.targets(["bw~touch"]), ["rect-bw+touch"])
+        self.assertEqual(
+            self.targets(["touch~mic"]),
+            [
+                "rect-color+mic+touch",
+                "emery",
+                "rect-bw+mic+touch",
+                "round-color+mic+touch",
+                "gabbro",
+            ],
+        )
+
+    def test_platforms_by_name(self):
+        self.assertEqual(
+            self.targets(["round", "basalt", "gabbro"]),
+            ["round-color", "gabbro", "basalt"],
+        )
+        # One the SDK does not have.
+        self.assertEqual(self.targets(["emery"], ["flint"]), [])
+
+    def test_what_is_neither(self):
+        for selector in ("200w", "laser", "color~slate"):
+            with self.assertRaises(PlatformError):
+                self.targets([selector])
+        with self.assertRaises(PlatformError):
+            self.targets(None, ["basalt"])
+
+
 class TestTargetPlatforms(unittest.TestCase):
     def test_by_name(self):
         self.assertTrue(sdk_platform.platform_matches("emery", ["flint", "emery"]))

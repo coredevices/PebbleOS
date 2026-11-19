@@ -330,6 +330,68 @@ def flexible_build(shape, color, requires=()):
     return platform
 
 
+def flexible_targets(selectors, installed):
+    """What a flexible project builds, out of the platforms an SDK has: a
+    binary for each class of display, and one for each platform it names.
+    A targetPlatforms entry names a platform, or a class by "rect",
+    "round", "color" and "bw", with the features its binary cannot run
+    without: "color~rect~mic". Without entries it is every class.
+
+    Until whatever installs a pbw knows flexible binaries, the platforms of
+    a class that have those features are built for as well."""
+    live = [p for p in installed if "FROZEN_AT_REVISION" not in pebble_platforms[p]]
+
+    def display(platform):
+        return pebble_platforms[platform]["DESCRIPTOR"]["display"]
+
+    # The classes the SDK has a platform of, in the order of the platforms.
+    classes = []
+    for p in live:
+        if (display(p)["shape"], display(p)["color"]) not in classes:
+            classes.append((display(p)["shape"], display(p)["color"]))
+    if not classes:
+        raise PlatformError("This SDK has no platform to build a flexible binary for")
+
+    by_tag = {tag: feature for feature, (_, tag) in FEATURES.items() if tag}
+    builds = []
+
+    def add(name):
+        if name not in builds:
+            builds.append(name)
+
+    for selector in selectors or [""]:
+        if selector in pebble_platforms:
+            if selector in installed:
+                add(selector)
+            continue
+        tags = set(filter(None, selector.split("~")))
+        unknown = sorted(tags - {"rect", "round", "color", "bw"} - set(by_tag))
+        if unknown:
+            raise PlatformError(
+                f"targetPlatforms entry '{selector}': in a flexible project an entry "
+                f"names a platform or a class and the features it requires, and "
+                f"{', '.join(unknown)} is neither"
+            )
+        requires = [by_tag[tag] for tag in tags if tag in by_tag]
+        for shape, color in classes:
+            if not tags.isdisjoint({"rect", "round"}) and shape not in tags:
+                continue
+            if (
+                not tags.isdisjoint({"color", "bw"})
+                and ("color" if color else "bw") not in tags
+            ):
+                continue
+            add(flexible_name(shape, color, requires))
+            for p in live:
+                features = pebble_platforms[p]["DESCRIPTOR"].get("features", [])
+                if (display(p)["shape"], display(p)["color"]) == (
+                    shape,
+                    color,
+                ) and set(requires) <= set(features):
+                    add(p)
+    return builds
+
+
 class _Platforms(dict):
     """The platforms by name. A flexible build is looked up by its name
     like a platform, but is not one of them: it is not listed."""
