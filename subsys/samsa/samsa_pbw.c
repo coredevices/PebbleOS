@@ -21,6 +21,7 @@
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/size.h>
 
+#include <applib/platform.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <pbl_arch_posix.h>
@@ -36,7 +37,8 @@ PBL_LOG_MODULE_DECLARE(samsa, CONFIG_SAMSA_LOG_LEVEL);
 // The platform directories of a .pbw to take an app from, best first: the
 // platform's own, then those of the platforms whose apps fit this one, as
 // docs/sdk/platforms.md ranks them, then the root, where 2.x apps are. By
-// name: a directory is not read for what it says of its platform.
+// name: a directory is not read for what it says of its platform. A
+// flexible binary of this platform's class comes after the first.
 static const char *const s_platforms[] = {
   CONFIG_PLATFORM_NAME "/",
 #if defined(CONFIG_PLATFORM_ROUND)
@@ -238,14 +240,72 @@ static void prv_install_files(void *data) {
   prv_finish(install);
 }
 
+// The directory of a flexible binary is named after its class and the
+// resource tags of the features it requires, in the order of
+// PebblePlatformFeature: rect-color+mic+health.
+#if defined(CONFIG_PLATFORM_ROUND)
+#define FLEXIBLE_CLASS "round-color"
+#elif defined(CONFIG_PLATFORM_COLOR)
+#define FLEXIBLE_CLASS "rect-color"
+#else
+#define FLEXIBLE_CLASS "rect-bw"
+#endif
+
+// By bit of PebblePlatformFeature. One without a tag cannot be required.
+static const char *const s_feature_tags[] = {
+  "mic", "strap", "strappower", "health", "compass", "touch", nullptr, "speaker",
+};
+
+//! The flexible binary of this platform's class that requires the most of
+//! the features the platform has.
+static bool prv_find_flexible(Install *install, char *directory, size_t size) {
+  const uint32_t has = platform_get_features();
+  int best = -1;
+  for (uint32_t requires = 0; requires < (1u << ARRAY_LENGTH(s_feature_tags)); requires++) {
+    const int count = __builtin_popcount(requires);
+    if ((requires & ~has) || count <= best) {
+      continue;
+    }
+    char name[96];
+    int at = snprintf(name, sizeof(name), FLEXIBLE_CLASS);
+    bool tagged = true;
+    for (unsigned bit = 0; bit < ARRAY_LENGTH(s_feature_tags); bit++) {
+      if (!(requires & (1u << bit))) {
+        continue;
+      }
+      if (!s_feature_tags[bit]) {
+        tagged = false;
+        break;
+      }
+      at += snprintf(name + at, sizeof(name) - at, "+%s", s_feature_tags[bit]);
+    }
+    if (!tagged) {
+      continue;
+    }
+    snprintf(name + at, sizeof(name) - at, "/");
+    char file[sizeof(name) + 16];
+    snprintf(file, sizeof(file), "%spebble-app.bin", name);
+    ZipEntry app;
+    if (prv_zip_find(install->pbw, install->len, file, &app)) {
+      best = count;
+      install->app = app;
+      snprintf(directory, size, "%s", name);
+    }
+  }
+  return best >= 0;
+}
+
 static void prv_install(void *data) {
   Install *install = data;
   const char *platform = nullptr;
-  char name[48];
+  char flexible[96];
+  char name[112];
   for (unsigned i = 0; i < ARRAY_LENGTH(s_platforms) && !platform; i++) {
     snprintf(name, sizeof(name), "%spebble-app.bin", s_platforms[i]);
     if (prv_zip_find(install->pbw, install->len, name, &install->app)) {
       platform = s_platforms[i];
+    } else if (i == 0 && prv_find_flexible(install, flexible, sizeof(flexible))) {
+      platform = flexible;
     }
   }
   if (!platform) {

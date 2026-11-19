@@ -177,6 +177,38 @@ void test_pebble_process_md__framebuffer_of_app_that_does_not_fit(void) {
   prv_assert_framebuffer_size(&md, s_display_size);
 }
 
+void test_pebble_process_md__framebuffer_of_flexible_app(void) {
+  // It has no display size of its own and draws to ours
+  PebbleProcessMdFlash md = prv_md_for_display(0, 0, OUR_SHAPE);
+  md.platform_info.flags = PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE;
+  prv_assert_framebuffer_size(&md, s_display_size);
+}
+
+void test_pebble_process_md__required_features(void) {
+  const uint32_t watch = PLATFORM_FEATURE_MICROPHONE | PLATFORM_FEATURE_HEALTH;
+
+  // A flexible app needs every feature it lists
+  PebbleProcessMdFlash md = prv_md_for_display(0, 0, OUR_SHAPE);
+  md.platform_info.flags = PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE;
+  cl_assert(process_metadata_has_required_features(&md.common, watch));
+  md.platform_info.features = PLATFORM_FEATURE_MICROPHONE;
+  cl_assert(process_metadata_has_required_features(&md.common, watch));
+  md.platform_info.features = PLATFORM_FEATURE_MICROPHONE | PLATFORM_FEATURE_TOUCH;
+  cl_assert(!process_metadata_has_required_features(&md.common, watch));
+  // One nobody has defined yet is one no watch has
+  md.platform_info.features = 1u << 31;
+  cl_assert(!process_metadata_has_required_features(&md.common, watch));
+
+  // An app built for a platform only says what that platform has
+  md = prv_md_for_display(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT, OUR_SHAPE);
+  md.platform_info.features = PLATFORM_FEATURE_TOUCH;
+  cl_assert(process_metadata_has_required_features(&md.common, watch));
+
+  // And one without a record says nothing
+  md = prv_md_for_platform(PROCESS_INFO_PLATFORM_BASALT);
+  cl_assert(process_metadata_has_required_features(&md.common, 0));
+}
+
 void test_pebble_process_md__framebuffer_of_app_without_platform_info(void) {
   // Legacy platforms, as before
   PebbleProcessMdFlash md = prv_md_for_platform(PROCESS_INFO_PLATFORM_APLITE);

@@ -149,6 +149,7 @@ pbl_clar_test(test_app_manager
   MODULES rand
   SOURCES
     pebble/applib/app_exit_reason.c
+    pebble/applib/platform.c
     pebble/process_management/process_manager.c
     pebble/process_management/pebble_process_info.c
     pebble/process_management/app_manager.c
@@ -164,6 +165,7 @@ pbl_clar_test(test_app_manager
 
 pbl_clar_test(test_process_manager
   SOURCES
+    pebble/applib/platform.c
     pebble/process_management/pebble_process_info.c
     pebble/process_management/process_manager.c
   OVERRIDES dummy_board

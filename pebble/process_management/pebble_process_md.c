@@ -301,12 +301,25 @@ static bool prv_app_display_fits(GSize size, bool round) {
 #endif
 }
 
+bool process_metadata_has_required_features(const PebbleProcessMd *md, uint32_t features) {
+  const PebblePlatformInfo *platform_info = process_metadata_get_platform_info(md);
+  // One built for a platform says what that platform has, which is not what it needs
+  if (!platform_info || !(platform_info->flags & PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE)) {
+    return true;
+  }
+  return (platform_info->features & ~features) == 0;
+}
+
 GSize process_metadata_get_app_framebuffer_size(const PebbleProcessMd *md) {
   const GSize display_size = GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT);
 
   // An app that says which display it was built for draws to a framebuffer of that size
   const PebblePlatformInfo *platform_info = process_metadata_get_platform_info(md);
   if (platform_info) {
+    // One built for every display of its class draws to this one's
+    if (platform_info->flags & PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE) {
+      return display_size;
+    }
     const GSize size = GSize(platform_info->display_width, platform_info->display_height);
     const bool round = (platform_info->display_shape == PLATFORM_DISPLAY_SHAPE_ROUND);
     // A shape this firmware does not know is one it cannot show

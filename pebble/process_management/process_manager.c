@@ -320,6 +320,31 @@ void process_manager_launch_process(const ProcessLaunchConfig *config) {
   }
 
 #if !defined(CONFIG_RECOVERY_FW)
+  // What installed it should not have offered a binary that requires a feature this watch lacks
+  if (!process_metadata_has_required_features(md, platform_get_features())) {
+    PBL_LOG_WRN("Tried to launch an app that requires features this watch does not have.");
+    if (!is_worker) {
+      AppInstallEntry entry;
+      if (app_install_get_entry_for_install_id(id, &entry) &&
+          app_install_entry_is_watchface(&entry)) {
+        watchface_set_default_install_id(INSTALL_ID_INVALID);
+        watchface_launch_default(nullptr);
+      }
+
+      ExpandableDialog *expandable_dialog = expandable_dialog_create("Unsupported App");
+      Dialog *dialog = expandable_dialog_get_dialog(expandable_dialog);
+      const char *error_text = pbl_i18n_noop("This app needs hardware this watch does not have.");
+      dialog_set_text(dialog, pbl_i18n_get(error_text, expandable_dialog));
+      dialog_set_icon(dialog, RESOURCE_ID_GENERIC_WARNING_SMALL);
+      pbl_i18n_free(error_text, expandable_dialog);
+
+      WindowStack *window_stack = modal_manager_get_window_stack(ModalPriorityAlert);
+      expandable_dialog_push(expandable_dialog, window_stack);
+    }
+    app_install_release_md(md);
+    return;
+  }
+
   if (!is_worker) {
     // Check if the app ram size is valid in order to determine if its SDK version is supported.
     if (!app_manager_is_app_supported(md)) {

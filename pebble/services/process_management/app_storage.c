@@ -23,7 +23,8 @@ PBL_LOG_MODULE_DECLARE(service_process_management, CONFIG_SERVICE_PROCESS_MANAGE
 static bool prv_platform_info_is_valid(const PebblePlatformInfo *platform_info) {
   return (platform_info->version == PROCESS_PLATFORM_INFO_VERSION) &&
          (platform_info->length >= sizeof(PebblePlatformInfo)) &&
-         (platform_info->display_width > 0) && (platform_info->display_height > 0);
+         ((platform_info->flags & PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE) ||
+          ((platform_info->display_width > 0) && (platform_info->display_height > 0)));
 }
 
 AppStorageGetAppInfoResult app_storage_get_process_info(PebbleProcessInfo *app_info,
