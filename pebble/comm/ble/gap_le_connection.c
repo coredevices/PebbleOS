@@ -25,11 +25,6 @@
 // Defined in gatt_service_changed.c
 extern void gatt_service_changed_server_cleanup_by_connection(struct GAPLEConnection *connection);
 
-// Defined in gatt_client_discovery.c
-extern void gatt_client_discovery_cleanup_by_connection(GAPLEConnection *connection,
-                                                        enum pbl_bt_errno reason);
-extern void gatt_client_cleanup_discovery_jobs(GAPLEConnection *connection);
-
 // Defined in gap_le_connect_params.c
 extern void gap_le_connect_params_setup_connection(GAPLEConnection *connection);
 extern void gap_le_connect_params_cleanup_by_connection(GAPLEConnection *connection);
@@ -137,10 +132,6 @@ GAPLEConnection *gap_le_connection_add(const struct pbl_bt_device_internal *devi
 void prv_destroy_connection(GAPLEConnection *connection) {
   gatt_service_changed_server_cleanup_by_connection(connection);
   gap_le_connect_params_cleanup_by_connection(connection);
-  gatt_client_discovery_cleanup_by_connection(connection,
-                                              PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED);
-  gatt_client_subscriptions_cleanup_by_connection(connection, false /* should_unsubscribe */);
-  gatt_client_cleanup_discovery_jobs(connection);
 
   list_remove(&connection->node, (ListNode **)&s_connections, nullptr);
   bt_conn_mgr_info_deinit(&connection->conn_mgr_info);
@@ -269,6 +260,19 @@ GAPLEConnection *gap_le_connection_find(GAPLEConnectionFindCallback filter, void
   for (ListNode *node = &s_connections->node; node != nullptr; node = node->next) {
     if (filter((GAPLEConnection *)node, data)) {
       return (GAPLEConnection *)node;
+    }
+  }
+  return nullptr;
+}
+
+// -------------------------------------------------------------------------------------------------
+
+//! @note !!! To access the returned context bt_lock MUST be held!!!
+GAPLEConnection *gap_le_connection_by_conn_handle(uint16_t conn_handle) {
+  for (GAPLEConnection *connection = s_connections; connection != nullptr;
+       connection = (GAPLEConnection *)connection->node.next) {
+    if (connection->conn_handle == conn_handle) {
+      return connection;
     }
   }
   return nullptr;

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
+#include "fake_gatt_client_types.h"
 
 void fake_gatt_client_op_init(void);
 

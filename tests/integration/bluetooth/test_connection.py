@@ -92,15 +92,17 @@ def test_bonded_phone_reconnects(dut, watch, phones, how):
 
 
 @BOTH
-def test_session_survives_rediscovery(dut, watch, phones):
-    """Rediscovering all of the phone's services, as a Service Changed for
-    its whole database makes the watch do, keeps the session the phone
-    opened on the watch's own service: the phone stays subscribed, so
-    nothing would open it again."""
-    phone = _bonded(watch, phones)
+@pytest.mark.parametrize("ppogatt", ["reversed", "forward"])
+def test_session_survives_rediscovery(dut, watch, phones, ppogatt):
+    """Looking for the phone's services again, as its Service Changed makes
+    the watch do, keeps the session: on the watch's own service the phone
+    stays subscribed, so nothing would open it again, and the phone's
+    service is where it was."""
+    phone = phones(ppogatt=ppogatt).connect()
+    watch.close_success()
     since = dut.logs.mark()
     dut.prompt(dut.command("bt_rediscover"))
-    dut.wait_for_log(r"Service changed Indication: type: 2", 15, since)
+    dut.wait_for_log(r"Service Changed: looking for the services again", 15, since)
     assert phone.watch_version() is not None
     assert dut.logs.find(SESSION_CLOSED, since) is None
 

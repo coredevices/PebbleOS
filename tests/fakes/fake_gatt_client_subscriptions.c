@@ -30,20 +30,6 @@ enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t ch
   return s_subscribe_return_value;
 }
 
-bool gatt_client_subscriptions_get_notification_header(GATTBufferedNotificationHeader *header_out) {
-  return false;
-}
-
-uint16_t gatt_client_subscriptions_consume_notification(
-    pbl_bt_characteristic_t *characteristic_ref_out, uint8_t *value_out,
-    uint16_t *value_length_in_out, bool *has_more_out) {
-  return 0;
-}
-
-void gatt_client_subscriptions_cleanup_by_connection(struct GAPLEConnection *connection,
-                                                     bool should_unsubscribe) {
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Fake Manipulation
 

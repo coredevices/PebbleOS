@@ -37,7 +37,6 @@
 #include <applib/ui/click.h>
 #include <applib/voice/dictation_session.h>
 #include <apps/system/app_fetch_ui.h>
-#include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/app_install_types.h>
 
@@ -87,7 +86,6 @@ typedef enum {
   PEBBLE_PLUGIN_SERVICE_EVENT,
   PEBBLE_WORKER_LAUNCH_EVENT,
   PEBBLE_BLE_CONNECTION_EVENT,
-  PEBBLE_BLE_GATT_CLIENT_EVENT,
   PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT,
   PEBBLE_WAKEUP_EVENT,
   PEBBLE_BLOBDB_EVENT,
@@ -262,84 +260,6 @@ typedef struct PBL_PACKED { // 8 bytes
   uint64_t bt_device_bits : 50;
   bool connected : 1;
 } PebbleBLEConnectionEvent;
-
-typedef enum {
-  PebbleBLEGATTClientEventTypeServiceChange,
-  PebbleBLEGATTClientEventTypeCharacteristicRead,
-  PebbleBLEGATTClientEventTypeCharacteristicWrite,
-  PebbleBLEGATTClientEventTypeCharacteristicSubscribe,
-  PebbleBLEGATTClientEventTypeDescriptorRead,
-  PebbleBLEGATTClientEventTypeDescriptorWrite,
-  PebbleBLEGATTClientEventTypeNotification,
-  PebbleBLEGATTClientEventTypeNum,
-} PebbleBLEGATTClientEventType;
-
-typedef struct PBL_PACKED { // 9 bytes
-  uintptr_t object_ref;
-  union {
-    uint16_t value_length;
-    BLESubscription subscription_type : 2;
-  };
-  enum pbl_bt_gatt_error gatt_error : 16;
-
-  //! This is here to make sure we don't accidentally add more fields here without thinking:
-  uint16_t zero : 2;
-  PebbleBLEGATTClientEventType subtype : 6;
-} PebbleBLEGATTClientEvent;
-
-#define BLE_GATT_MAX_SERVICES_CHANGED_BITS (5) // max. 31
-#define BLE_GATT_MAX_SERVICES_CHANGED      ((1 << BLE_GATT_MAX_SERVICES_CHANGED_BITS) - 1)
-
-#define BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS (3)
-
-typedef enum {
-  PebbleServicesRemoved,
-  PebbleServicesAdded,
-  PebbleServicesInvalidateAll
-} PebbleServiceNotificationType;
-
-typedef struct {
-  uint8_t num_services_added;
-  pbl_bt_service_t services[];
-} PebbleBLEGATTClientServicesAdded;
-
-typedef struct {
-  pbl_bt_service_t service;
-  Uuid uuid;
-  uint8_t num_characteristics;
-  uint8_t num_descriptors;
-  uintptr_t char_and_desc_handles[];
-} PebbleBLEGATTClientServiceHandles;
-
-typedef struct {
-  uint8_t num_services_removed;
-  PebbleBLEGATTClientServiceHandles handles[];
-} PebbleBLEGATTClientServicesRemoved;
-
-typedef struct {
-  PebbleServiceNotificationType type;
-  struct pbl_bt_device_internal device;
-  enum pbl_bt_errno status;
-  union {
-    PebbleBLEGATTClientServicesAdded services_added_data;
-    PebbleBLEGATTClientServicesRemoved services_removed_data;
-  };
-} PebbleBLEGATTClientServiceEventInfo;
-
-typedef struct PBL_PACKED { // 9 bytes
-  PebbleBLEGATTClientServiceEventInfo *info;
-  uint64_t rsvd : 34;
-
-  uint8_t subtype : BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS;
-} PebbleBLEGATTClientServiceEvent;
-
-static_assert((1 << BLE_GATT_CLIENT_EVENT_SUBTYPE_BITS) >= PebbleBLEGATTClientEventTypeNum,
-              "Not enough bits to represent all PebbleBLEGATTClientEventTypes");
-
-#ifdef __arm__
-static_assert(sizeof(PebbleBLEGATTClientServiceEvent) == sizeof(PebbleBLEGATTClientServiceEvent),
-              "PebbleBLEGATTClientEvent and PebbleBLEGATTClientServiceEvent must be the same size");
-#endif
 
 #define PebbleEventToBTDeviceInternal(e) \
   ((const struct pbl_bt_device_internal){.opaque = {.opaque_64 = (e)->bt_device_bits}})
@@ -793,8 +713,6 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
       PebbleRemoteAppInfoEvent app_info_event;
       union {
         PebbleBLEConnectionEvent connection;
-        PebbleBLEGATTClientEvent gatt_client;
-        PebbleBLEGATTClientServiceEvent gatt_client_service;
       } le;
     } bluetooth;
     PebbleAncsChangedEvent ancs_changed;

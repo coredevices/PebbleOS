@@ -121,13 +121,22 @@ used without the rest of the subsystem:
   client (`PBL_BT_AMS_CLIENT_DEFINE()`) serves one connection; the values of
   the service are in `pbl/bluetooth/ams.h`. The same sample shows it.
 
-The firmware's notification and media sessions (queueing, timeouts, the
-liveness check, the music service) sit on top of those two in
-`pebble/comm/ble/kernel_le_client/`, on KernelMain: what a client reports on
-the NimBLE host thread is passed on there.
+The firmware uses them for everything it needs from the phone, which it calls
+the gateway: the bonded peer, once its link is encrypted.
+`pebble/comm/ble/kernel_le_client/` starts a client of each service when the
+gateway connects, and stops them when it goes:
 
-PPoGATT, the other client of the phone's services, still goes through the
-discovery and subscription layer of `pebble/comm/ble/`.
+| Service | Client | What for |
+| --- | --- | --- |
+| PPoGATT | `subsys/pp/transports/gatt/` | Sessions with the phone app, and with other apps: each hosts an instance of the service |
+| Generic Attribute | `kernel_le_client.c` | Service Changed: when the phone indicates it, every client looks for its service again |
+| ANCS | `ancs/`, on the ANCS client | iOS notifications |
+| AMS | `ams/`, on the AMS client | iOS media control |
+
+Each looks for its own service, in that order, so that the session with the
+phone app comes first. What a client reports on the NimBLE host thread is
+passed on to KernelMain, where the sessions (queueing, timeouts, the liveness
+check, the music service, the PPoGATT state machine) run.
 
 ## Advertising
 

@@ -1,12 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
+#include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/pp/transport.h>
 #include <pbl/pp/transports/gatt.h>
 
 #include <clar.h>
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gatt_client_operations.h>
 #include <pp/transports/gatt/ppogatt_internal.h>
 
 // Fakes
@@ -25,8 +27,11 @@ static GAPLEConnection s_connection = {
   .is_encrypted = true,
 };
 static struct pbl_bt_device_internal s_device = {};
-static pbl_bt_characteristic_t s_write_characteristic;
 
+static pbl_bt_characteristic_t s_characteristics[PBL_PP_GATT_CHARACTERISTIC_NUM] = {
+  [PBL_PP_GATT_CHARACTERISTIC_DATA] = 01,
+  [PBL_PP_GATT_CHARACTERISTIC_META] = 02,
+};
 int pbl_bt_gap_le_disconnect(const struct pbl_bt_device_internal *peer_address) {
   return 0;
 }
@@ -35,45 +40,53 @@ uint16_t gap_le_connection_get_gatt_mtu(const struct pbl_bt_device_internal *dev
   return 158;
 }
 
-GAPLEConnection *gap_le_connection_get_gateway(void) {
-  return nullptr;
-}
-
 GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device) {
   return &s_connection;
 }
 
-GAPLEConnection *gatt_client_characteristic_get_connection(
-    pbl_bt_characteristic_t characteristic_ref) {
+GAPLEConnection *gap_le_connection_by_conn_handle(uint16_t conn_handle) {
   return &s_connection;
 }
 
-uint16_t gatt_client_characteristic_get_handle_and_connection(
-    pbl_bt_characteristic_t characteristic_ref, GAPLEConnection **connection_out) {
-  s_write_characteristic = characteristic_ref;
-  *connection_out = &s_connection;
-  return 1;
+bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
+  return conn == &s_connection;
 }
 
-enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection,
-                                                     const uint8_t *value, size_t value_length,
-                                                     uint16_t att_handle) {
-  return gatt_client_op_write_without_response(s_write_characteristic, value, value_length);
+int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_handle,
+                               const struct pbl_bt_gattc_service_cb *cb) {
+  return 0;
+}
+
+int pbl_bt_gattc_service_rediscover(struct pbl_bt_gattc_service *svc) {
+  return 0;
+}
+
+void pbl_bt_gattc_service_stop(struct pbl_bt_gattc_service *svc) {
+}
+
+int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr, bool enable) {
+  return 0;
+}
+
+int pbl_bt_gattc_service_read(struct pbl_bt_gattc_service *svc, uint8_t chr) {
+  return (gatt_client_op_read(s_characteristics[chr]) == PBL_BT_ERRNO_OK) ? 0 : -EIO;
+}
+
+int pbl_bt_gattc_service_write_no_rsp(struct pbl_bt_gattc_service *svc, uint8_t chr,
+                                      const void *data, uint16_t len) {
+  const enum pbl_bt_errno e =
+      gatt_client_op_write_without_response(s_characteristics[chr], data, len);
+  return (e == PBL_BT_ERRNO_OK) ? 0 : -EIO;
+}
+
+bool pbl_bt_gattc_service_notify_rx(struct pbl_bt_gattc_service *svc, uint16_t conn_handle,
+                                    uint16_t attr_handle, struct os_mbuf *om) {
+  return false;
 }
 
 enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
                                               uint16_t len) {
   return PBL_BT_ERRNO_OK;
-}
-
-enum pbl_bt_errno gatt_client_discovery_rediscover_all(
-    const struct pbl_bt_device_internal *device) {
-  return PBL_BT_ERRNO_OK;
-}
-
-struct pbl_bt_device_internal gatt_client_characteristic_get_device(
-    pbl_bt_characteristic_t characteristic_ref) {
-  return s_device;
 }
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
@@ -88,11 +101,6 @@ extern void ppogatt_reversed_handle_subscribed(const struct pbl_bt_device_intern
                                                uint16_t conn_handle);
 extern void ppogatt_reversed_handle_unsubscribed(uint16_t conn_handle);
 extern void ppogatt_reversed_handle_data(uint16_t conn_handle, const uint8_t *buf, size_t len);
-
-static pbl_bt_characteristic_t s_characteristics[PBL_PP_GATT_CHARACTERISTIC_NUM] = {
-  [PBL_PP_GATT_CHARACTERISTIC_DATA] = 01,
-  [PBL_PP_GATT_CHARACTERISTIC_META] = 02,
-};
 
 static void prv_phone_sends_reversed_reset_request(void) {
   const PPoGATTPacket reset_request = {
@@ -143,7 +151,7 @@ void test_ppogatt_reversed__subscription_does_not_block_forward(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   fake_gatt_client_op_assert_read(s_characteristics[PBL_PP_GATT_CHARACTERISTIC_META]);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 }
@@ -151,14 +159,14 @@ void test_ppogatt_reversed__subscription_does_not_block_forward(void) {
 // Once the phone starts the reversed handshake, reversed replaces forward.
 void test_ppogatt_reversed__reset_request_takes_over_forward(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 
   prv_phone_sends_reversed_reset_request();
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Forward PPoG yields to the reversed session from now on.
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 }
 
@@ -170,14 +178,14 @@ void test_ppogatt_reversed__reset_request_without_forward(void) {
 
 void test_ppogatt_reversed__unsubscribe_deletes_reversed(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   ppogatt_reversed_handle_unsubscribed(CONN_HANDLE);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 }
 
 void test_ppogatt_reversed__invalidate_all_keeps_reversed(void) {
   ppogatt_reversed_handle_subscribed(&s_device, CONN_HANDLE);
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   cl_assert_equal_i(ppogatt_client_count(), 2);
 
   pbl_pp_gatt_invalidate_all_references();
@@ -194,7 +202,7 @@ void test_ppogatt_reversed__invalidate_all_keeps_open_reversed_session(void) {
   cl_assert_equal_i(fake_comm_session_open_call_count(), 1);
 
   pbl_pp_gatt_invalidate_all_references();
-  pbl_pp_gatt_handle_service_discovered(s_characteristics);
+  pbl_pp_gatt_handle_service_discovered(0);
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }

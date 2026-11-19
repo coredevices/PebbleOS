@@ -33,5 +33,3 @@ void pebble_conn_update_to_nimble(const struct pbl_bt_conn_params_update_req *re
                                   struct ble_gap_upd_params *params);
 
 enum pbl_bt_hci_status nimble_hs_status_to_hci(int status);
-
-void nimble_uuid_to_pebble(const ble_uuid_any_t *stack_uuid, Uuid *uuid);

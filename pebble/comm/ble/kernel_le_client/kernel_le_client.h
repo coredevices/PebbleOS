@@ -13,6 +13,10 @@
 
 void kernel_le_client_handle_event(const PebbleEvent *event);
 
+//! Makes the clients look for the services of the gateway again, as when it indicates that they
+//! changed. Callable from any task.
+void kernel_le_client_rediscover(void);
+
 void kernel_le_client_init(void);
 
 void kernel_le_client_deinit(void);
