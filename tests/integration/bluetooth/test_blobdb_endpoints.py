@@ -106,7 +106,6 @@ def test_notification(dut, phone, blobdb):
     _wait_modal(ui, NOTIFICATION_WINDOW, present=False)
 
 
-@pytest.mark.xfail(reason="a notification the phone deletes stays on screen")
 def test_deleted_notification_leaves_screen(dut, phone, blobdb):
     ui = Ui(dut)
     item_id = uuid.uuid4()
