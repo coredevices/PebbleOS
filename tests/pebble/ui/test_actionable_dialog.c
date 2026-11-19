@@ -92,6 +92,8 @@ void test_actionable_dialog__cleanup(void) {
 // Helpers
 ////////////////////////////////////
 
+#include "../graphics/util.h"
+
 static ActionableDialog *prv_create_dialog(void) {
   ActionableDialog *actionable_dialog = actionable_dialog_create("Alignment");
   actionable_dialog_set_action_bar_type(actionable_dialog, DialogActionBarConfirm, nullptr);
@@ -111,6 +113,7 @@ static void prv_assert_content_centered(ActionableDialog *actionable_dialog) {
 
   cl_assert_equal_i(icon_frame.origin.x + icon_frame.size.w / 2, PBL_DISPLAY_WIDTH / 2);
   cl_assert_equal_i(text_frame.origin.x + text_frame.size.w / 2, PBL_DISPLAY_WIDTH / 2);
+  cl_assert_equal_i(actionable_dialog->dialog.text_layer.text_alignment, GTextAlignmentCenter);
   cl_assert(text_frame.origin.x >= ACTION_BAR_WIDTH);
   cl_assert(grect_get_max_x(&text_frame) <= PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH);
 }
@@ -120,9 +123,11 @@ static void prv_assert_content_centered(ActionableDialog *actionable_dialog) {
 
 void test_actionable_dialog__content_is_centered(void) {
   prv_assert_content_centered(prv_create_dialog());
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
 
 void test_actionable_dialog__left_hand_content_is_centered(void) {
   display_orientation_set_left(true);
   prv_assert_content_centered(prv_create_dialog());
+  cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
 }
