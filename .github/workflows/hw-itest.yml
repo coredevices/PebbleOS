@@ -78,6 +78,9 @@ jobs:
           - watch: obelix
             board: obelix@pvt
             variant: prf
+          - watch: asterix
+            board: asterix
+            variant: normal
 
     steps:
       - name: Mark Github workspace as safe
@@ -150,6 +153,9 @@ jobs:
           - watch: obelix
             board: obelix@pvt
             variant: prf
+          - watch: asterix
+            board: asterix
+            variant: normal
 
     steps:
       - name: Checkout
@@ -162,12 +168,13 @@ jobs:
       - name: Set up Python
         run: |
           rm -rf .venv
-          /opt/homebrew/bin/python3.14 -m venv .venv
+          python3 -m venv .venv
           .venv/bin/pip install -U pip
           .venv/bin/pip install -r requirements.txt
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Set up sftool
+        if: matrix.watch != 'asterix'
         run: |
           version=$(cat SDK_VERSION)
           sdk="$HOME/.cache/hw-itest/pebbleos-sdk-$version"
