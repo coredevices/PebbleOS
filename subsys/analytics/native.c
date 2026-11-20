@@ -11,6 +11,7 @@
 #include <pbl/services/data_logging/data_logging_service.h>
 #include <pbl/util/build_id.h>
 #include <pbl/util/math.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/uuid.h>
 
 PBL_LOG_MODULE_DEFINE(analytics, CONFIG_ANALYTICS_LOG_LEVEL);
@@ -399,19 +400,19 @@ static int prv_cmd_metrics(const struct pbl_shell *sh, size_t argc, char **argv)
   prv_record_metrics(&record, false);
 
 #define PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED(key) \
-  pbl_shell_print(sh, STRINGIFY(key) "=%" PRIu32, record.metric_##key);
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%" PRIu32, record.metric_##key);
 #define PBL_ANALYTICS_METRIC_DEFINE_SIGNED(key) \
-  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32, record.metric_##key);
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale)                              \
-  pbl_shell_print(sh, STRINGIFY(key) "=%" PRIu32 ".%" PRIu32, record.metric_##key / (scale), \
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%" PRId32, record.metric_##key);
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_UNSIGNED(key, scale)                                  \
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%" PRIu32 ".%" PRIu32, record.metric_##key / (scale), \
                   record.metric_##key - (record.metric_##key / (scale)) * (scale));
-#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)                                \
-  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32 ".%" PRIu32, record.metric_##key / (scale), \
+#define PBL_ANALYTICS_METRIC_DEFINE_SCALED_SIGNED(key, scale)                                    \
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%" PRId32 ".%" PRIu32, record.metric_##key / (scale), \
                   (uint32_t)(record.metric_##key - (record.metric_##key / (scale)) * (scale)));
 #define PBL_ANALYTICS_METRIC_DEFINE_TIMER(key) \
-  pbl_shell_print(sh, STRINGIFY(key) "=%" PRId32 " ms", record.metric_##key);
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%" PRId32 " ms", record.metric_##key);
 #define PBL_ANALYTICS_METRIC_DEFINE_STRING(key, len) \
-  pbl_shell_print(sh, STRINGIFY(key) "=%s", record.metric_##key);
+  pbl_shell_print(sh, PBL_STRINGIFY(key) "=%s", record.metric_##key);
 #include <pbl/analytics/analytics.def>
 #undef PBL_ANALYTICS_METRIC_DEFINE_UNSIGNED
 #undef PBL_ANALYTICS_METRIC_DEFINE_SIGNED

@@ -10,6 +10,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/misc.h>
 
 /**
  * @defgroup logging_log_hashing Log hashing
@@ -37,7 +38,7 @@
  *   modules and are never referenced by a token.
  *
  * Limitations: at most 7 conversions per message, at most 2 of them @c \%s, without flags or
- * width; no @c \%\%; only arguments of 32 bits or less (see SPLIT_64_BIT_ARG()). Formats
+ * width; no @c \%\%; only arguments of 32 bits or less. Formats
  * breaking them are not detected at build time. The code must be built with @c -Os, or the
  * token computation is not folded.
  * @{
@@ -86,21 +87,6 @@
 #define MSGID_CORE_AND_HASH_MASK \
   ((PACKED_CORE_MASK << PACKED_CORE_OFFSET) | (PACKED_HASH_MASK << PACKED_HASH_OFFSET))
 
-#ifndef STRINGIFY
-/**
- * @brief Turn the argument into a string literal without expanding it.
- *
- * @param a Argument.
- */
-#define STRINGIFY_NX(a) #a
-/**
- * @brief Turn the expansion of the argument into a string literal.
- *
- * @param a Argument.
- */
-#define STRINGIFY(a) STRINGIFY_NX(a)
-#endif // STRINGIFY
-
 /** @cond INTERNAL_HIDDEN */
 /* Printf Format argument checking.
  *
@@ -116,7 +102,7 @@ void PBL_LOG_x_printf_arg_check(const char *fmt, ...) PBL_FORMAT_PRINTF(1, 2);
 #define NEW_LOG_HASH(logfunc, level, color, fmt, ...)                                    \
   {                                                                                      \
     static const char str[] PBL_NOCOMMON PBL_SECTION(".log_strings") =                   \
-        __FILE__ ":" STRINGIFY(__LINE__) ":" STRINGIFY(level) ":" color ":" fmt;         \
+        __FILE__ ":" PBL_STRINGIFY(__LINE__) ":" PBL_STRINGIFY(level) ":" color ":" fmt; \
     logfunc((uint32_t)((uintptr_t)str + LOG_SECTION_OFFSET(level, fmt)), ##__VA_ARGS__); \
     if (0)                                                                               \
       PBL_LOG_x_printf_arg_check(fmt, ##__VA_ARGS__);                                    \
