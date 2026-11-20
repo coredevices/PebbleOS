@@ -1,0 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include "stm32h747.dtsi"
+
+// 2 MiB in two banks of 1 MiB, the Cortex-M7 boots from the first
+&flash {
+	internal_flash: flash@8000000 {
+		reg = <0x08000000 0x200000>;
+	};
+};

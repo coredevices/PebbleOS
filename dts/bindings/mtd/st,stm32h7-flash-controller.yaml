@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mtd/st,stm32h7-flash-controller.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: STMicroelectronics STM32H7 embedded flash controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Controller that writes and erases the embedded flash, which the CPUs read
+  and execute from at its own address. The flash is a child node.
+
+properties:
+  compatible:
+    const: st,stm32h7-flash-controller
+
+  reg:
+    maxItems: 1
+
+  "#address-cells":
+    const: 1
+
+  "#size-cells":
+    const: 1
+
+patternProperties:
+  "^flash@[0-9a-f]+$":
+    type: object
+    $ref: /schemas/mtd/mtd.yaml#
+    description: The embedded flash, at its CPU address.
+
+    properties:
+      reg:
+        maxItems: 1
+
+    required:
+      - reg
+
+    unevaluatedProperties: false
+
+required:
+  - compatible
+  - reg
+  - "#address-cells"
+  - "#size-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    flash-controller@52002000 {
+        compatible = "st,stm32h7-flash-controller";
+        reg = <0x52002000 0x1000>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        flash@8000000 {
+            reg = <0x08000000 0x200000>;
+
+            partitions {
+                compatible = "fixed-partitions";
+                #address-cells = <1>;
+                #size-cells = <1>;
+
+                partition@0 {
+                    label = "code";
+                    reg = <0x0 0x100000>;
+                };
+            };
+        };
+    };

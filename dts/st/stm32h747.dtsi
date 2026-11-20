@@ -1,0 +1,18 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+// The STM32H747, from its Cortex-M7
+#include "stm32h7.dtsi"
+
+/ {
+	soc {
+		pwr: power-config@58024800 {
+			compatible = "st,stm32h747-pwr";
+			reg = <0x58024800 0x400>;
+		};
+	};
+};
+
+&rcc {
+	st,syscfg = <&pwr>;
+};
