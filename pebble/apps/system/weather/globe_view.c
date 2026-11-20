@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
+#include <pbl/util/byteorder.h>
 
 #include <applib/applib_malloc.auto.h>
 #include <applib/graphics/gdraw_command_transforms.h>
@@ -1341,7 +1342,7 @@ static void framebuffer_draw_starfield(GBitmap *fb, GlobeView *view, GRect bound
     return;
   }
 
-  uint16_t count = view->starfield_data[0] | ((uint16_t)view->starfield_data[1] << 8);
+  uint16_t count = pbl_get_le16(view->starfield_data);
   size_t available = (view->starfield_size - 2) / 3;
   if (count > available)
     count = (uint16_t)available;
