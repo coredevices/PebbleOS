@@ -2,9 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/analytics/analytics.h>
-#include <pbl/drivers/battery.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/notifications/alerts.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>

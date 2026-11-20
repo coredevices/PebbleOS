@@ -4,12 +4,12 @@
 #include <stdlib.h>
 
 #include <pbl/analytics/analytics.h>
-#include <pbl/drivers/battery.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/accel_manager.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/runlevel.h>
 #include <pbl/services/stationary.h>
 #include <pbl/util/size.h>

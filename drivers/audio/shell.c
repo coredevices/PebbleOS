@@ -5,7 +5,7 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/shell/shell.h>
 #include <pbl/util/math.h>
@@ -40,9 +40,9 @@ struct prv_session {
 static void prv_high_load(bool on) {
 #ifdef CONFIG_CHARGER_HIGH_LOAD
   if (on) {
-    (void)battery_high_load_request();
+    (void)pbl_charger_high_load_request(CHARGER);
   } else {
-    (void)battery_high_load_release();
+    (void)pbl_charger_high_load_release(CHARGER);
   }
 #endif
 }

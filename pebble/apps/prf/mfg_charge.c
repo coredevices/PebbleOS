@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/logging/logging.h>
 
 #include <applib/app.h>
@@ -57,15 +57,15 @@ static void prv_handle_second_tick(struct pbl_tm *tick_time, TimeUnits units_cha
 
   ChargeTestState next_state = data->test_state;
 
-  BatteryConstants battery_const;
-  int ret = battery_get_constants(&battery_const);
+  struct pbl_charger_measurements battery_const;
+  int ret = pbl_charger_get_measurements(CHARGER, &battery_const);
   if (ret < 0) {
     PBL_LOG_ERR("Skipping bad constants reading");
     return;
   }
 
-  const int charge_mv = battery_const.v_mv;
-  const int32_t temp_mc = battery_const.t_mc;
+  const int charge_mv = battery_const.voltage_mv;
+  const int32_t temp_mc = battery_const.temp_mc;
   const BatteryChargeState charge_state = battery_get_charge_state();
 
   switch (data->test_state) {

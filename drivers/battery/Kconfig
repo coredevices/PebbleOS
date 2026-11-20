@@ -8,9 +8,3 @@ config BATTERY_SIMPLE
     help
       The battery cell described in the devicetree, for chargers and fuel
       gauges to read.
-
-config BATTERY
-    bool "Battery"
-    depends on CHARGER
-    help
-      The battery API, on top of the board's charger.

@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/speaker/speaker_service.h>
@@ -142,12 +142,14 @@ void pbl_audio_buf_free(void *buf) {
   free(buf);
 }
 
-int battery_high_load_request(void) {
+const struct pbl_charger *const CHARGER = nullptr;
+
+int pbl_charger_high_load_request(const struct pbl_charger *charger) {
   s_high_load++;
   return 0;
 }
 
-int battery_high_load_release(void) {
+int pbl_charger_high_load_release(const struct pbl_charger *charger) {
   s_high_load--;
   return 0;
 }

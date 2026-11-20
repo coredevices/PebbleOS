@@ -13,7 +13,7 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
@@ -273,9 +273,9 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
 static void prv_high_load(bool on) {
 #ifdef CONFIG_CHARGER_HIGH_LOAD
   if (on) {
-    (void)battery_high_load_request();
+    (void)pbl_charger_high_load_request(CHARGER);
   } else {
-    (void)battery_high_load_release();
+    (void)pbl_charger_high_load_release(CHARGER);
   }
 #endif
 }
