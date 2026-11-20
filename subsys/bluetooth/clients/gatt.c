@@ -199,6 +199,8 @@ enum service_op_type {
 struct service_op {
   struct pbl_bt_gattc_service *svc;
   uint32_t generation;
+  /* Of a rediscovery, which outlives the service moving. */
+  uint32_t session;
   uint8_t chr;
   enum service_op_type type;
   /* What was read so far. */
@@ -301,6 +303,7 @@ int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_h
   svc->conn_handle = conn_handle;
   svc->cb = cb;
   memset(svc->chrs, 0, svc->num_chrs * sizeof(svc->chrs[0]));
+  svc->session++;
   *op = (struct service_op){.svc = svc, .generation = ++svc->generation};
   pbl_mutex_unlock(&s_service_lock);
 
@@ -321,7 +324,7 @@ static void prv_service_rediscovered(uint16_t conn_handle, int status,
   const struct pbl_bt_gattc_service_cb *cb = nullptr;
 
   pbl_mutex_lock(&s_service_lock, PBL_FOREVER);
-  if (svc->started && svc->generation == op->generation) {
+  if (svc->started && svc->session == op->session) {
     bool was_found = false;
 
     for (uint8_t i = 0; i < svc->num_chrs; i++) {
@@ -335,6 +338,10 @@ static void prv_service_rediscovered(uint16_t conn_handle, int status,
     } else if (status != 0 && was_found) {
       memset(svc->chrs, 0, svc->num_chrs * sizeof(svc->chrs[0]));
       cb = svc->cb;
+    }
+    /* What was asked of the service where it was gets no answer. */
+    if (cb != nullptr) {
+      svc->generation++;
     }
   }
   pbl_mutex_unlock(&s_service_lock);
@@ -360,7 +367,7 @@ int pbl_bt_gattc_service_rediscover(struct pbl_bt_gattc_service *svc) {
   pbl_mutex_lock(&s_service_lock, PBL_FOREVER);
   started = svc->started;
   conn_handle = svc->conn_handle;
-  *op = (struct service_op){.svc = svc, .generation = svc->generation};
+  *op = (struct service_op){.svc = svc, .session = svc->session};
   pbl_mutex_unlock(&s_service_lock);
 
   if (!started) {

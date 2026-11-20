@@ -134,6 +134,7 @@ struct pbl_bt_gattc_service {
   uint16_t conn_handle;
   bool started;
   uint32_t generation;
+  uint32_t session;
   /** @endcond */
 };
 
@@ -175,7 +176,8 @@ int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_h
  *
  * What was found stays in use meanwhile. @c discovered is only called if the outcome differs:
  * with 0 if the service is there now or has other handles, and its subscriptions are to be
- * made again, or with why not if it is gone.
+ * made again, or with why not if it is gone. What was asked of the service where it was is
+ * then not answered.
  *
  * @param svc Service client.
  * @retval 0 Looking for it.
