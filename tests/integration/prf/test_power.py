@@ -23,7 +23,10 @@ BACKLIGHT_ON_S = (3.0, 4.0)
 BACKLIGHT_IDLE_S = 6
 BACKLIGHT_PRESS_AT_S = 1
 BACKLIGHT_MEASURE_S = 7
-SMOOTHING_S = 0.01
+# Long enough to flatten radio events, which can draw more than the backlight
+SMOOTHING_S = 0.1
+# Where the backlight is fully on, from the press
+BACKLIGHT_LIT_S = (0.5, 2.5)
 
 # Booting at this VBAT, the fuel gauge estimates under 5%: PRF's low battery.
 LOW_BATTERY_MV = 3500
@@ -56,14 +59,22 @@ def test_connected(dut, phones, power, record_property):
 
 
 def _on_time_s(samples, sample_rate_hz):
-    """How long the current stays in its upper half: the backlight's."""
+    """How long the backlight stays on from the press: the current above
+    halfway between before the press and fully lit."""
     window = int(SMOOTHING_S * sample_rate_hz)
     smooth = np.convolve(samples, np.ones(window) / window, mode="valid")
-    low, high = np.percentile(smooth, [10, 90])
-    above = np.flatnonzero(smooth > (low + high) / 2)
-    if len(above) == 0:
+    press = int(BACKLIGHT_PRESS_AT_S * sample_rate_hz)
+    lit = smooth[press + int(BACKLIGHT_LIT_S[0] * sample_rate_hz) :][
+        : int((BACKLIGHT_LIT_S[1] - BACKLIGHT_LIT_S[0]) * sample_rate_hz)
+    ]
+    threshold = (np.median(smooth[:press]) + np.median(lit)) / 2
+    above = smooth[press:] > threshold
+    start = int(np.argmax(above))
+    if not above[start]:
         return 0.0
-    return (above[-1] - above[0]) / sample_rate_hz
+    off = np.flatnonzero(~above[start:])
+    end = start + int(off[0]) if len(off) else len(above)
+    return (end - start) / sample_rate_hz
 
 
 def test_backlight_timeout(dut, power, record_property):
