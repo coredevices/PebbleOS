@@ -36,6 +36,13 @@ config CLK_SF32LB
     help
       Clock controller of the SiFli SF32LB52 and SF32LB57 HPSYS RCC.
 
+config CLK_STM32H7
+    bool "ST STM32H7 RCC"
+    default y
+    depends on DT_HAS_ST_STM32H743_RCC_ENABLED
+    help
+      Clock controller of the ST STM32H7 RCC.
+
 config CLK_NRF52
     bool "Nordic nRF52 clock control"
     default y
