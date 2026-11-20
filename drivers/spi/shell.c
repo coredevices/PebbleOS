@@ -9,7 +9,7 @@
 
 #define MAX_BYTES 16U
 
-static int prv_cmd_buses(const struct pbl_shell *sh, size_t argc, char **argv) {
+static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_spi_bus_class, dev) {
@@ -86,7 +86,7 @@ static int prv_cmd_xfer(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_spi[] = {
-  PBL_SHELL_CMD(buses, nullptr, "List the buses", prv_cmd_buses),
+  PBL_SHELL_CMD(list, nullptr, "List the buses", prv_cmd_list),
   PBL_SHELL_CMD_ARG(xfer, nullptr,
                     "Write bytes and print the bytes read <bus> <cs> <hz> <mode> <byte>...",
                     prv_cmd_xfer, 6, MAX_BYTES - 1U),
