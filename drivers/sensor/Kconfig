@@ -26,4 +26,57 @@ source "subsys/logging/Kconfig.template.log_level"
 
 endif # SENSOR
 
+menuconfig TEMP
+    bool "Temperature sensors"
+    select SENSOR
+    help
+      Temperature sensor drivers. The board's die temperature sensor is
+      the die_temp role, DIE_TEMP.
+
+if TEMP
+
+config TEMP_NRF5
+    bool "Nordic nRF5"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_TEMP_ENABLED
+    help
+      Support for the Nordic nRF5 die temperature sensor.
+
+config TEMP_SF32LB
+    bool "SiFli SF32LB"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_TSEN_ENABLED
+    select CLK
+    help
+      Support for the SiFli SF32LB temperature sensor.
+
+config TEMP_SIM
+    bool "Simulator"
+    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    help
+      Simulated temperature sensor, reading a value set through its
+      simulator API (pbl/drivers/sensor/sim.h).
+
+endif # TEMP
+
+menuconfig PRESSURE
+    bool "Pressure sensors"
+    select SENSOR
+    help
+      Barometric pressure sensor drivers. The board's pressure sensor is
+      the pressure role, PRESSURE.
+
+if PRESSURE
+
+config PRESSURE_BMP390
+    bool "Bosch BMP380 and BMP390"
+    default y
+    depends on DT_HAS_BOSCH_BMP380_ENABLED
+    select I2C
+    help
+      Support for the Bosch BMP380 and BMP390 barometric pressure sensors
+      (devicetree compatible bosch,bmp380).
+
+endif # PRESSURE
+
 endmenu

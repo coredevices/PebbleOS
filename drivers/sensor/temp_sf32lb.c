@@ -2,24 +2,31 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/temp.h>
-#include <pbl/drivers/temp/sf32lb.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/temp_sf32lb.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_tsen.h>
 
 #define CONVERSION_TIMEOUT_US 20000U
 
-#define SLOPE_NUM (2971) // approximate slope molecule
-#define SLOPE_DEN (40)   // approximate slope denominator
-#define OFFSET    (277539)
-#define ROUND_ADD (SLOPE_DEN / 2)
+// m°C = (DATA + 3000) * 749.2916 / 10100 * 1000 - 277539
+#define SLOPE_NUM 2971
+#define SLOPE_DEN 40
+#define BIAS      (3000 * SLOPE_NUM / SLOPE_DEN - 277539)
 
-static const struct pbl_temp_sf32lb *prv_tsen(const struct pbl_temp *temp) {
-  return PBL_CONTAINER_OF(temp, const struct pbl_temp_sf32lb, temp);
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_TEMP, 0, 0, PBL_SENSOR_FMT_U16_LE, SLOPE_NUM, SLOPE_DEN, BIAS),
+};
+
+static const struct pbl_temp_sf32lb *prv_tsen(const struct pbl_sensor *sensor) {
+  return PBL_CONTAINER_OF(sensor, const struct pbl_temp_sf32lb, sensor);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_temp_sf32lb *tsen, uint32_t offset) {
@@ -30,8 +37,9 @@ static inline void prv_putreg(const struct pbl_temp_sf32lb *tsen, uint32_t offse
   pbl_writel(value, tsen->base + offset);
 }
 
-static int prv_init(const struct pbl_temp *temp) {
-  pbl_modifyl(0U, HPSYS_CFG_ANAU_CR_EN_BG, prv_tsen(temp)->cfg + SF32LB52_HPSYS_CFG_ANAU_CR_OFFSET);
+static int prv_init(const struct pbl_sensor *sensor) {
+  pbl_modifyl(0U, HPSYS_CFG_ANAU_CR_EN_BG,
+              prv_tsen(sensor)->cfg + SF32LB52_HPSYS_CFG_ANAU_CR_OFFSET);
 
   return 0;
 }
@@ -56,8 +64,9 @@ static void prv_tsen_disable(const struct pbl_temp_sf32lb *tsen) {
   prv_putreg(tsen, SF32LB52_TSEN_CTRL_OFFSET, ctrl & ~(TSEN_CTRL_EN | TSEN_CTRL_PU));
 }
 
-static int prv_read(const struct pbl_temp *temp, int32_t *millicelsius) {
-  const struct pbl_temp_sf32lb *tsen = prv_tsen(temp);
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
+  const struct pbl_temp_sf32lb *tsen = prv_tsen(sensor);
   int ret;
 
   ret = pbl_clk_enable(&tsen->clk);
@@ -70,13 +79,11 @@ static int prv_read(const struct pbl_temp *temp, int32_t *millicelsius) {
   ret = PBL_POLL_BUSY_US((prv_getreg(tsen, SF32LB52_TSEN_IRQ_OFFSET) & TSEN_IRQ_IRSR) != 0U, 1,
                          CONVERSION_TIMEOUT_US);
   if (ret == 0) {
-    // The Celsius conversion formula is: (DATA + 3000)/10100 * 749.2916 − 277.5391
-    // In order to calculate milli-Celsius degrees, we can perform the following conversions:
-    // COEF_NUM/COEF_DEN ≃ 749.2916/10100 × 1000
-    // (DATA+3000)*COEF_NUM/COEF_DEN - OFFSET
-    uint32_t raw = prv_getreg(tsen, SF32LB52_TSEN_RDATA_OFFSET) & TSEN_RDATA_MASK;
-    uint32_t num = (raw + 3000U) * SLOPE_NUM + ROUND_ADD;
-    *millicelsius = (int32_t)(num / SLOPE_DEN) - OFFSET;
+    pbl_put_le16((uint16_t)(prv_getreg(tsen, SF32LB52_TSEN_RDATA_OFFSET) & TSEN_RDATA_MASK),
+                 frame->data);
+    frame->chans = s_chans;
+    frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+    frame->timestamp_us = pbl_uptime_us();
   }
 
   prv_putreg(tsen, SF32LB52_TSEN_IRQ_OFFSET,
@@ -87,7 +94,7 @@ static int prv_read(const struct pbl_temp *temp, int32_t *millicelsius) {
   return ret;
 }
 
-const struct pbl_temp_ops pbl_temp_sf32lb_ops = {
+const struct pbl_sensor_ops pbl_temp_sf32lb_ops = {
   .init = prv_init,
   .read = prv_read,
 };

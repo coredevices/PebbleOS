@@ -324,12 +324,12 @@ class header, as `SPEAKER`:
 | `accel` | `accel` | `ACCEL` |
 | `mag` | `mag` | `MAG` |
 | `als` | `als` | `ALS` |
-| `pressure` | `pressure` | `PRESSURE` |
+| `pressure` | `sensor` | `PRESSURE` |
 | `touch` | `touch` | `TOUCH` |
 | `vibe` | `vibe` | `VIBE` |
 | `mic` | `audio` | `MIC` |
 | `speaker` | `audio` | `SPEAKER` |
-| `die_temp` | `temp` | `TEMP` |
+| `die_temp` | `sensor` | `TEMP` |
 | `rtc` | `rtc` | `RTC` |
 | `battery` | `battery` | |
 | `charger` | `charger` | `CHARGER` |

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <pbl/drivers/temp.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/delay.h>
 
 #define READS 5
@@ -16,7 +16,7 @@ int main(void) {
     int ret;
 
     /* DIE_TEMP is the board's die temperature sensor, whatever drives it. */
-    ret = pbl_temp_read(DIE_TEMP, &millicelsius);
+    ret = pbl_sensor_read(DIE_TEMP, PBL_SENSOR_TEMP, &millicelsius, nullptr);
     if (ret != 0) {
       fprintf(stderr, "temp: read failed (%d)\n", ret);
       return ret;

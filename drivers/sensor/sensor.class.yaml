@@ -4,3 +4,6 @@
 class: sensor
 type: struct pbl_sensor
 include: pbl/drivers/sensor.h
+roles:
+  die_temp: TEMP
+  pressure: PRESSURE

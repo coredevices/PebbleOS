@@ -36,7 +36,7 @@ mic:
   include: pbl/drivers/audio/sim.h
 die_temp:
   symbol: SIM_TEMP
-  include: pbl/drivers/temp/sim.h
+  include: pbl/drivers/sensor/sim.h
 rtc:
   symbol: POSIX_RTC
   include: pbl/drivers/rtc/posix.h
