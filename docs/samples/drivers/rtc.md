@@ -1,4 +1,4 @@
-# Real-time clock
+# RTC: Getting and setting the time
 
 This sample reads the board's RTC, sets it to a fixed date, waits two seconds
 to see it count on, then puts the time back, plus the time it spent on the

@@ -1,4 +1,4 @@
-# Heart rate peripheral
+# NimBLE: Heart rate peripheral
 
 This sample is a heart rate sensor, as phones and fitness apps expect one: it
 has the standard Heart Rate service of its own, and NimBLE's Battery and

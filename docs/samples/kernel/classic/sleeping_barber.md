@@ -1,4 +1,4 @@
-# Sleeping barber
+# Synchronization: Sleeping barber
 
 This sample has a barber who sleeps on a semaphore until a customer arrives,
 and a waiting room of three chairs. Five customers arrive at once: three sit

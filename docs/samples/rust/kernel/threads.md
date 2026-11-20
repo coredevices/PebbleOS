@@ -1,4 +1,4 @@
-# Threads in Rust
+# Rust: Threads
 
 The {doc}`threads sample <../../kernel/threads>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

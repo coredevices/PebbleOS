@@ -1,4 +1,4 @@
-# Translations
+# Internationalization: Translations
 
 This sample translates strings with a French gettext catalog, using
 {doc}`internationalization <../../../subsystems/i18n>`. The build compiles

@@ -1,4 +1,4 @@
-# Delayed work in Rust
+# Rust: Delayed work
 
 The {doc}`delayed work sample <../../kernel/delayed_work>` written in
 {doc}`Rust <../../../development/build_system/rust>`, on the `pebbleos`

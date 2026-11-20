@@ -1,4 +1,4 @@
-# External RAM
+# RAM: Pattern test
 
 This sample uses the board's external RAM, the `EXTRAM` device: it becomes
 a user of it with `pbl_ram_get()`, which powers it on, writes a pattern to

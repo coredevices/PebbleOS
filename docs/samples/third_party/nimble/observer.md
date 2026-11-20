@@ -1,4 +1,4 @@
-# Observer
+# NimBLE: Observer
 
 This sample scans for five seconds and lists every device it hears
 advertising once, with its address, signal strength and name, when the

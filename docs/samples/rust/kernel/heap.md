@@ -1,4 +1,4 @@
-# Heap in Rust
+# Rust: Heaps
 
 The {doc}`heap sample <../../kernel/heap>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

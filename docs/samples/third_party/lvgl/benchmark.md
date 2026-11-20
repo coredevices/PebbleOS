@@ -1,4 +1,4 @@
-# LVGL benchmark
+# LVGL: Benchmark
 
 This sample runs the benchmark demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: a series of scenes, from an empty

@@ -1,4 +1,4 @@
-# Peripheral
+# NimBLE: Peripheral
 
 This sample is a connectable peripheral with a GATT service of its own, under
 a 128-bit UUID, that it advertises with its name. The service has two

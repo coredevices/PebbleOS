@@ -1,4 +1,4 @@
-# LVGL keypad and encoder
+# LVGL: Keypad and encoder
 
 This sample runs the keypad and encoder demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: tabs of widgets that are used

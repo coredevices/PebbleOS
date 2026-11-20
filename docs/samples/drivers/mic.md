@@ -1,4 +1,4 @@
-# Microphone
+# Microphone: Audio levels
 
 This sample captures two seconds from the board's microphone, the `MIC`
 audio device, and prints the peak and RMS level of every 200 ms. The class

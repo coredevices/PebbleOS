@@ -1,4 +1,4 @@
-# GPU
+# GPU: Fills and blits
 
 This sample draws into the frame of the display with the GPU, `GPU`: an
 opaque fill, a fill blended over it, a sprite with its own alpha, the same

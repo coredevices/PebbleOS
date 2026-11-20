@@ -1,4 +1,4 @@
-# Idle states
+# Kernel: Idle states
 
 This sample sleeps and reads how long the CPU spent in its shallowest
 {doc}`idle state <../../kernel/idle>` meanwhile. It then blocks that state,

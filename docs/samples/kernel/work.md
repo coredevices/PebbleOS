@@ -1,4 +1,4 @@
-# Work queues
+# Kernel: Work queues
 
 This sample defers work to a {doc}`work queue <../../kernel/work>`: first to
 the system's, then to one it creates. The work item is part of the object it

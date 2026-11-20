@@ -1,4 +1,4 @@
-# Readers and writers
+# Synchronization: Readers and writers
 
 This sample builds a lock that lets any number of threads read a record, or
 one write it. The first reader in takes the room for all readers and the last

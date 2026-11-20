@@ -1,4 +1,4 @@
-# Kernel benchmark
+# Benchmark: Kernel
 
 This sample times the kernel's basic operations with the CPU cycle counter, a
 thousand times each: uncontended semaphore, mutex and queue operations, an

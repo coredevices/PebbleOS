@@ -1,4 +1,4 @@
-# Work queues in Rust
+# Rust: Work queues
 
 The {doc}`work queues sample <../../kernel/work>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

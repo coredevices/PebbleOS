@@ -1,4 +1,4 @@
-# Timers
+# Kernel: Timers
 
 This sample starts a timer that repeats five times by starting itself again
 from its callback, which wakes `main()` with a semaphore when done. It then

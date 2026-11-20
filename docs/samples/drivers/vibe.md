@@ -1,4 +1,4 @@
-# Vibration
+# Vibration: Pulses and braking
 
 This sample buzzes the vibration motor three times. Then, if its driver can
 brake, it buzzes three more times, each time driving the motor at the braking

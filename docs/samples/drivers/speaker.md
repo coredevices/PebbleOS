@@ -1,4 +1,4 @@
-# Speaker
+# Speaker: Streaming a tone
 
 This sample plays a short melody on the board's speaker, the `SPEAKER`
 audio device. It starts a stream over a ring of two periods, and the class

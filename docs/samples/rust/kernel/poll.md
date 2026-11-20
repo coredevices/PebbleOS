@@ -1,4 +1,4 @@
-# Poll in Rust
+# Rust: Poll groups
 
 The {doc}`poll sample <../../kernel/poll>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

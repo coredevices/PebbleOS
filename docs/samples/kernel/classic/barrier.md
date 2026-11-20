@@ -1,4 +1,4 @@
-# Barrier
+# Synchronization: Barrier
 
 This sample builds a barrier from a mutex and a semaphore: three workers get
 ready at their own pace, and none goes on until all have arrived.

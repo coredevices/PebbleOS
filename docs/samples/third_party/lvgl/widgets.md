@@ -1,4 +1,4 @@
-# LVGL widgets
+# LVGL: Widgets
 
 This sample runs the widgets demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: tabs with a profile form, charts

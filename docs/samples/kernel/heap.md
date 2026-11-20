@@ -1,4 +1,4 @@
-# Heaps
+# Kernel: Heaps
 
 This sample gives a 2 KiB buffer a heap of its own, with a mutex as its lock,
 and watches its usage: full, then with every other block freed, where plenty

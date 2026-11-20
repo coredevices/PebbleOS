@@ -1,4 +1,4 @@
-# LVGL input
+# LVGL: Input
 
 This sample puts a counter and two buttons on the display and lets them be
 used for 30 seconds, with what the board has: Up and Down move the focus

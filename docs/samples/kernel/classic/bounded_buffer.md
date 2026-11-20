@@ -1,4 +1,4 @@
-# Bounded buffer
+# Synchronization: Bounded buffer
 
 This sample builds a queue of four items by hand, with a semaphore counting
 the free slots, another counting the items and a mutex for the indices, and

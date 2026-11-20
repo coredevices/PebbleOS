@@ -1,4 +1,4 @@
-# Hello World in Rust
+# Rust: Hello world
 
 The smallest {doc}`Rust application <../../development/build_system/rust>`:
 it prints a message from `main()` with `println!`.

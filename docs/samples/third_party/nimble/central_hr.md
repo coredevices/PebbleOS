@@ -1,6 +1,6 @@
-# Heart rate central
+# NimBLE: Heart rate central
 
-This sample is the client of the {doc}`peripheral_hr` sample, or of any
+This sample is the client of the {doc}`heart rate peripheral <peripheral_hr>` sample, or of any
 heart rate sensor. It scans for a device listing the Heart Rate service in
 its advertisement, connects to it, finds the measurement characteristic and
 its CCCD, and subscribes. It prints ten measurements, reading the rate as

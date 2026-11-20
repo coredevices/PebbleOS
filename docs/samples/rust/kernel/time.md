@@ -1,4 +1,4 @@
-# Time in Rust
+# Rust: Time
 
 The {doc}`time sample <../../kernel/time>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

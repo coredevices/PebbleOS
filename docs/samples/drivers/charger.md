@@ -1,4 +1,4 @@
-# Charger
+# Charger: Battery state
 
 This sample reads the charger three times, a second apart: the battery
 voltage, current and temperature, whether external power is present and the

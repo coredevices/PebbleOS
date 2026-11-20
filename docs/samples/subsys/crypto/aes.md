@@ -1,4 +1,4 @@
-# AES
+# Crypto: AES
 
 This sample encrypts the example block of FIPS 197 with
 {doc}`AES <../../../subsystems/crypto>`-128 and AES-256, from a key schedule

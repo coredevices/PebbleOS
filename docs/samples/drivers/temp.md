@@ -1,4 +1,4 @@
-# Die temperature
+# Temperature: Die readings
 
 This sample reads the temperature of the chip five times, a second apart,
 through `DIE_TEMP`: the board's die temperature sensor, whatever drives it.
