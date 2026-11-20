@@ -62,7 +62,7 @@ class PhoneRunner(Runner):
 
     @classmethod
     def capabilities(cls):
-        return RunnerCaps(commands={"flash"}, flash_resources=True)
+        return RunnerCaps(commands={"flash"}, flash_data=True)
 
     @classmethod
     def do_add_parser(cls, parser):

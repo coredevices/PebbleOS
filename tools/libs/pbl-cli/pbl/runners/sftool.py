@@ -15,7 +15,7 @@ class SfToolRunner(Runner):
 
     @classmethod
     def capabilities(cls):
-        return RunnerCaps(commands={"flash", "erase"}, flash_resources=True)
+        return RunnerCaps(commands={"flash", "erase"}, flash_data=True)
 
     @classmethod
     def do_add_parser(cls, parser):
@@ -39,10 +39,7 @@ class SfToolRunner(Runner):
         base = flash_xip_base(build)
         if command == "flash":
             files = list(self.cfg.flash_files)
-            if self.cfg.resources_file:
-                files.append(
-                    f"{self.cfg.resources_file}@{base + self.cfg.resources_address:#x}"
-                )
+            files += [f"{f}@{base + offset:#x}" for f, offset in self.cfg.data_files]
             self._sftool("write_flash " + self.quote(*files))
         elif command == "erase":
             ranges = [f"{base + a:#x}:{s:#x}" for a, s in self.cfg.erase_ranges]
