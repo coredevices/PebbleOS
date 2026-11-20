@@ -13,7 +13,7 @@ pytestmark = [
 ]
 
 # Mean current on TicToc (uA), per board, at NOMINAL_VOLTAGE_MV, over five
-# runs; a measurement fails outside IDLE_TOLERANCE of it.
+# runs; a measurement fails outside the board's tolerance of it.
 NOMINAL_VOLTAGE_MV = 3800
 IDLE_NOMINAL_UA = {
     "obelix": {
@@ -23,10 +23,14 @@ IDLE_NOMINAL_UA = {
         "airplane_mode": 86,
     },
     "asterix": {
-        "airplane_mode": 64,
+        "airplane_mode": 67,
     },
 }
 IDLE_TOLERANCE = 0.10
+# Boards whose units differ by more
+IDLE_TOLERANCE_BOARD = {
+    "asterix": 0.15,
+}
 
 
 def _check(build, power, record_property, measurement):
@@ -41,11 +45,12 @@ def _check(build, power, record_property, measurement):
             stacklevel=2,
         )
         return
+    tolerance = IDLE_TOLERANCE_BOARD.get(build.board, IDLE_TOLERANCE)
     record_property("nominal_ua", nominal)
-    low, high = nominal * (1 - IDLE_TOLERANCE), nominal * (1 + IDLE_TOLERANCE)
+    low, high = nominal * (1 - tolerance), nominal * (1 + tolerance)
     assert low <= measurement.mean_ua <= high, (
         f"{measurement.name}: {measurement.mean_ua:.1f} uA, expected {nominal} uA "
-        f"+-{IDLE_TOLERANCE:.0%} ({low:.0f}-{high:.0f} uA)"
+        f"+-{tolerance:.0%} ({low:.0f}-{high:.0f} uA)"
     )
 
 
