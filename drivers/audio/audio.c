@@ -81,7 +81,7 @@ int pbl_audio_dai_dev_init(const struct pbl_device *dev) {
 }
 
 int pbl_audio_dev_init(const struct pbl_device *dev) {
-  const struct pbl_audio *audio = container_of(dev, const struct pbl_audio, dev);
+  const struct pbl_audio *audio = PBL_CONTAINER_OF(dev, const struct pbl_audio, dev);
   const struct pbl_audio_codec *codec = prv_codec(audio);
   const struct pbl_audio_amp *amp = prv_amp(audio);
   struct pbl_audio_state *state = audio->state;

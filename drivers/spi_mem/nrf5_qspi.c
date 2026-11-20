@@ -116,7 +116,7 @@ static void prv_psel_set(const struct pbl_spi_mem_nrf5_qspi *qspi, const uint32_
 
 static PBL_ALWAYS_INLINE const struct pbl_spi_mem_nrf5_qspi *prv_qspi(
     const struct pbl_spi_mem *mem) {
-  return container_of(mem, const struct pbl_spi_mem_nrf5_qspi, mem);
+  return PBL_CONTAINER_OF(mem, const struct pbl_spi_mem_nrf5_qspi, mem);
 }
 
 static int prv_read_idx(uint8_t opcode) {

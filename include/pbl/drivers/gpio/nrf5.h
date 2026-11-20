@@ -38,7 +38,7 @@ struct pbl_gpio_nrf5 {
  * @return Absolute pin number.
  */
 static inline uint32_t pbl_gpio_nrf5_pin(const struct pbl_gpio *gpio) {
-  const struct pbl_gpio_nrf5 *port = container_of(gpio->port, const struct pbl_gpio_nrf5, port);
+  const struct pbl_gpio_nrf5 *port = PBL_CONTAINER_OF(gpio->port, const struct pbl_gpio_nrf5, port);
 
   return (port->index * 32U) + gpio->pin;
 }

@@ -203,7 +203,7 @@ static const uint8_t s_sf32lb57_gate_parents[NUM_GATES] = {
 };
 
 static const struct pbl_clk_sf32lb *prv_rcc(const struct pbl_clk_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_clk_sf32lb, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb, ctrl);
 }
 
 static uint32_t prv_read(const struct pbl_clk_controller *ctrl, uint32_t offset) {
@@ -748,7 +748,7 @@ PBL_SECTION_RAM static void prv_idle_exit(pbl_idle_state_id_t state, void *arg) 
 PBL_IDLE_HOOK_LATE_DEFINE(clk_sf32lb_hxt48, prv_idle_enter, prv_idle_exit, nullptr);
 
 static int prv_init(const struct pbl_device *dev) {
-  const struct pbl_clk_sf32lb *rcc = container_of(dev, const struct pbl_clk_sf32lb, ctrl.dev);
+  const struct pbl_clk_sf32lb *rcc = PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb, ctrl.dev);
   int ret;
 
   s_base = rcc->base;

@@ -30,5 +30,5 @@ void test_misc__fourcc(void) {
 
 void test_misc__container_of(void) {
   struct pair p;
-  cl_assert(container_of(&p.b, struct pair, b) == &p);
+  cl_assert(PBL_CONTAINER_OF(&p.b, struct pair, b) == &p);
 }

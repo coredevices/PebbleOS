@@ -35,7 +35,7 @@ static void prv_event_clear(const struct pbl_audio_nrf5_pdm *pdm, uint32_t offse
 }
 
 static const struct pbl_audio_nrf5_pdm *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_nrf5_pdm, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_nrf5_pdm, dai);
 }
 
 static uint32_t prv_gain(int32_t gain_mdb) {

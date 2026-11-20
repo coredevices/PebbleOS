@@ -661,7 +661,8 @@ static void prv_clear_stale_reminders(void *data) {
 }
 
 static void prv_clear_stale_reminders_timer_cb(struct pbl_work *work) {
-  NotificationWindowData *data = container_of(work, NotificationWindowData, reminder_watchdog.work);
+  NotificationWindowData *data =
+      PBL_CONTAINER_OF(work, NotificationWindowData, reminder_watchdog.work);
   // This functionality only exists for popups (modal windows) which currently all
   // run on Kernel Main
   launcher_task_add_callback(prv_clear_stale_reminders, data);

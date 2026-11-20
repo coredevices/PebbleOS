@@ -260,7 +260,7 @@ static int prv_write_seq(const struct pbl_npm1300 *pmic, const struct prv_reg_va
 }
 
 static const struct pbl_charger_npm1300 *prv_chg(const struct pbl_charger *charger) {
-  return container_of(charger, const struct pbl_charger_npm1300, charger);
+  return PBL_CONTAINER_OF(charger, const struct pbl_charger_npm1300, charger);
 }
 
 static int prv_read_register(const struct pbl_charger_npm1300 *chg, uint16_t reg, uint8_t *val) {
@@ -299,7 +299,7 @@ static int prv_set_vbus_current_lim0(const struct pbl_charger_npm1300 *chg) {
 
 static void prv_handle_charge_state_change(struct pbl_work *work) {
   struct pbl_charger_npm1300_data *data =
-      container_of(work, struct pbl_charger_npm1300_data, debounce_timer.work);
+      PBL_CONTAINER_OF(work, struct pbl_charger_npm1300_data, debounce_timer.work);
   const struct pbl_charger_npm1300 *chg = data->chg;
   bool present = false;
   int ret;

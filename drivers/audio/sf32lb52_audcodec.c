@@ -111,7 +111,7 @@ static const struct prv_rate s_rates[] = {
 };
 
 static const struct pbl_audio_sf32lb52_audcodec *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_sf32lb52_audcodec, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_sf32lb52_audcodec, dai);
 }
 
 static inline uint32_t prv_read(uintptr_t reg) {

@@ -21,7 +21,7 @@ void pbl_touch_unlock(const struct pbl_touch *touch) {
 }
 
 int pbl_touch_dev_init(const struct pbl_device *dev) {
-  const struct pbl_touch *touch = container_of(dev, const struct pbl_touch, dev);
+  const struct pbl_touch *touch = PBL_CONTAINER_OF(dev, const struct pbl_touch, dev);
   int ret;
 
   pbl_touch_lock(touch);

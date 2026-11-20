@@ -65,7 +65,7 @@ PBL_LOG_MODULE_DECLARE(driver_vibe, CONFIG_DRIVER_VIBE_LOG_LEVEL);
    DRV2604_CONTROL2_IDISS_TIME(1))
 
 static const struct pbl_drv2604 *prv_get(const struct pbl_vibe *vibe) {
-  return container_of(vibe, const struct pbl_drv2604, vibe);
+  return PBL_CONTAINER_OF(vibe, const struct pbl_drv2604, vibe);
 }
 
 static int prv_read_register(const struct pbl_drv2604 *dev, uint8_t reg, uint8_t *val) {

@@ -73,7 +73,7 @@ static void prv_framebuffer_deinit(const struct pbl_display *disp) {
 }
 
 int pbl_display_dev_init(const struct pbl_device *dev) {
-  const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
+  const struct pbl_display *disp = PBL_CONTAINER_OF(dev, const struct pbl_display, dev);
   int ret;
 
   *disp->state = (struct pbl_display_state){0};
@@ -235,7 +235,7 @@ static void prv_power_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_display_class, dev) {
-    const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
+    const struct pbl_display *disp = PBL_CONTAINER_OF(dev, const struct pbl_display, dev);
 
     (void)pbl_display_clear(disp);
     (void)pbl_display_disable(disp);

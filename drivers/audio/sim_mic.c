@@ -34,7 +34,7 @@ struct pbl_audio_sim_mic {
 };
 
 static const struct pbl_audio_sim_mic *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_sim_mic, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_sim_mic, dai);
 }
 
 static void prv_fill(struct pbl_audio_sim_mic_state *state, int16_t *out, size_t count) {
@@ -57,7 +57,7 @@ static void prv_fill(struct pbl_audio_sim_mic_state *state, int16_t *out, size_t
 
 static void prv_timer_fn(struct pbl_work *work) {
   struct pbl_audio_sim_mic_state *state =
-      container_of(work, struct pbl_audio_sim_mic_state, timer.work);
+      PBL_CONTAINER_OF(work, struct pbl_audio_sim_mic_state, timer.work);
   const struct pbl_audio_sim_mic *mic = state->mic;
   const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&mic->dai)->state;
 

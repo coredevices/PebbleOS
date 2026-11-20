@@ -108,7 +108,7 @@ static const struct prv_reg_seq s_dai_master[] = {
 };
 
 static const struct pbl_audio_da7212 *prv_dev(const struct pbl_audio_codec *codec) {
-  return container_of(codec, const struct pbl_audio_da7212, codec);
+  return PBL_CONTAINER_OF(codec, const struct pbl_audio_da7212, codec);
 }
 
 static int prv_write(const struct pbl_audio_da7212 *dev, uint8_t reg, uint8_t val) {
@@ -169,7 +169,7 @@ static int prv_recover(const struct pbl_audio_da7212 *dev) {
 
 int pbl_audio_da7212_init(const struct pbl_device *dev) {
   const struct pbl_audio_da7212 *da7212 =
-      container_of(dev, const struct pbl_audio_da7212, codec.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_audio_da7212, codec.dev);
   int ret;
 
   ret = pbl_device_init(&da7212->vdd->dev);

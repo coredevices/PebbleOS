@@ -65,7 +65,7 @@ PBL_LOG_MODULE_DECLARE(driver_touch, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 #define CST816_WAKE_SPACING_MS 2000
 
 static inline const struct pbl_cst816 *prv_from_touch(const struct pbl_touch *touch) {
-  return container_of(touch, const struct pbl_cst816, touch);
+  return PBL_CONTAINER_OF(touch, const struct pbl_cst816, touch);
 }
 
 static int prv_read(const struct pbl_cst816 *cst, uint8_t reg, uint8_t *buf, uint32_t len) {
@@ -324,7 +324,7 @@ static int prv_wake(const struct pbl_cst816 *cst) {
 }
 
 static void prv_work(struct pbl_work *work) {
-  struct pbl_cst816_state *state = container_of(work, struct pbl_cst816_state, work);
+  struct pbl_cst816_state *state = PBL_CONTAINER_OF(work, struct pbl_cst816_state, work);
   const struct pbl_cst816 *cst = state->cst;
   uint8_t data[CST816_TOUCH_DATA_SIZE];
   uint16_t gesture_code = 0U;

@@ -13,7 +13,8 @@
 
 static inline uintptr_t prv_reg(const struct pbl_reset_controller *ctrl, uint32_t offset,
                                 uint32_t id) {
-  return container_of(ctrl, const struct pbl_reset_sf32lb, ctrl)->base + offset + ((id >> 5) << 2);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_reset_sf32lb, ctrl)->base + offset +
+         ((id >> 5) << 2);
 }
 
 static int prv_reset_assert(const struct pbl_reset_controller *ctrl, uint32_t id) {

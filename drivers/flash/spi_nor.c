@@ -122,7 +122,7 @@ struct modes {
 };
 
 static const struct pbl_flash_spi_nor *prv_nor(const struct pbl_flash *flash) {
-  return container_of(flash, const struct pbl_flash_spi_nor, flash);
+  return PBL_CONTAINER_OF(flash, const struct pbl_flash_spi_nor, flash);
 }
 
 static int prv_cmd(const struct pbl_flash_spi_nor *nor, uint8_t opcode) {

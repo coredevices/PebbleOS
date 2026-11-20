@@ -19,7 +19,7 @@
 #define CC_DUTY   1U
 
 static const struct pbl_pwm_nrf5_rtc *prv_pwm(const struct pbl_pwm_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_pwm_nrf5_rtc, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_pwm_nrf5_rtc, ctrl);
 }
 
 static inline uintptr_t prv_rtc_reg(const struct pbl_pwm_nrf5_rtc *pwm, uint32_t offset) {
@@ -96,7 +96,8 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
 }
 
 int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev) {
-  const struct pbl_pwm_nrf5_rtc *pwm = container_of(dev, const struct pbl_pwm_nrf5_rtc, ctrl.dev);
+  const struct pbl_pwm_nrf5_rtc *pwm =
+      PBL_CONTAINER_OF(dev, const struct pbl_pwm_nrf5_rtc, ctrl.dev);
   struct pbl_pwm_nrf5_rtc_state *st = pwm->state;
   uint64_t rate_mhz;
   uint32_t pin;

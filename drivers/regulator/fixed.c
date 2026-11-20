@@ -8,7 +8,7 @@
 #include <pbl/util/misc.h>
 
 static const struct pbl_regulator_fixed *prv_fixed(const struct pbl_regulator *reg) {
-  return container_of(reg, const struct pbl_regulator_fixed, reg);
+  return PBL_CONTAINER_OF(reg, const struct pbl_regulator_fixed, reg);
 }
 
 static int prv_set(const struct pbl_regulator_fixed *fixed, bool on) {

@@ -22,7 +22,7 @@
 #define STOP_TIMEOUT_US 300000U
 
 static const struct pbl_pwm_nrf5 *prv_pwm(const struct pbl_pwm_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_pwm_nrf5, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_pwm_nrf5, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_pwm_nrf5 *pwm, uint32_t offset) {
@@ -157,7 +157,7 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
 }
 
 int pbl_pwm_nrf5_init(const struct pbl_device *dev) {
-  const struct pbl_pwm_nrf5 *pwm = container_of(dev, const struct pbl_pwm_nrf5, ctrl.dev);
+  const struct pbl_pwm_nrf5 *pwm = PBL_CONTAINER_OF(dev, const struct pbl_pwm_nrf5, ctrl.dev);
   int ret;
 
   for (uint8_t i = 0U; i < NRF52_PWM_NUM_CHANNELS; i++) {

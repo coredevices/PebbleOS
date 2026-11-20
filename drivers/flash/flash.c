@@ -121,7 +121,7 @@ static void prv_resume(const struct pbl_flash *flash) {
 }
 
 static void prv_resume_timer_fn(struct pbl_work *work) {
-  prv_resume(container_of(work, struct pbl_flash_state, resume_timer.work)->flash);
+  prv_resume(PBL_CONTAINER_OF(work, struct pbl_flash_state, resume_timer.work)->flash);
 }
 
 static void prv_schedule_resume(const struct pbl_flash *flash, uint32_t delay_ms) {
@@ -256,7 +256,7 @@ static void prv_poll(const struct pbl_flash *flash) {
 }
 
 static void prv_poll_timer_fn(struct pbl_work *work) {
-  prv_poll(container_of(work, struct pbl_flash_state, poll_timer.work)->flash);
+  prv_poll(PBL_CONTAINER_OF(work, struct pbl_flash_state, poll_timer.work)->flash);
 }
 
 static int prv_erase_check(const struct pbl_flash *flash, uint32_t addr, size_t *len) {
@@ -376,7 +376,7 @@ static void prv_idle_pm_init(const struct pbl_flash *flash) {
 #endif // CONFIG_FLASH_IDLE_PM
 
 int pbl_flash_dev_init(const struct pbl_device *dev) {
-  const struct pbl_flash *flash = container_of(dev, const struct pbl_flash, dev);
+  const struct pbl_flash *flash = PBL_CONTAINER_OF(dev, const struct pbl_flash, dev);
   struct pbl_flash_state *st = flash->state;
   int ret;
 
@@ -443,7 +443,7 @@ static void prv_sys_off_prepare(enum pbl_sys_off_mode mode, void *user_data) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_flash_class, dev) {
-    pbl_flash_stop(container_of(dev, const struct pbl_flash, dev));
+    pbl_flash_stop(PBL_CONTAINER_OF(dev, const struct pbl_flash, dev));
   }
 }
 

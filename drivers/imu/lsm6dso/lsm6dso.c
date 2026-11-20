@@ -798,7 +798,7 @@ static int prv_init(const struct pbl_accel *accel) {
   int err;
   uint8_t val;
 
-  s_dev = container_of(accel, const struct pbl_lsm6dso, accel);
+  s_dev = PBL_CONTAINER_OF(accel, const struct pbl_lsm6dso, accel);
 
   // Check device ID
   ret = prv_lsm6dso_read(LSM6DSO_WHO_AM_I, &val, 1);

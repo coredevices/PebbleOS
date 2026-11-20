@@ -20,7 +20,7 @@
    PINMUX_PAD_SR | PINMUX_PAD_DS_MASK)
 
 static const struct pbl_pinctrl_sf32lb57 *prv_ctrl(const struct pbl_pinctrl_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_pinctrl_sf32lb57, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_pinctrl_sf32lb57, ctrl);
 }
 
 // Register of a pad, by its index over SA, SB then PA

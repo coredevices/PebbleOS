@@ -38,7 +38,7 @@ static const struct {
 };
 
 static const struct pbl_uart_nrf5 *prv_nrf5(const struct pbl_uart *uart) {
-  return container_of(uart, const struct pbl_uart_nrf5, uart);
+  return PBL_CONTAINER_OF(uart, const struct pbl_uart_nrf5, uart);
 }
 
 static inline uintptr_t prv_reg(const struct pbl_uart_nrf5 *nrf5, uint32_t offset) {

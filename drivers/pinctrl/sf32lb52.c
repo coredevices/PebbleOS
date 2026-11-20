@@ -42,7 +42,7 @@
    PINMUX_PAD_DS_MASK)
 
 static const struct pbl_pinctrl_sf32lb52 *prv_ctrl(const struct pbl_pinctrl_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_pinctrl_sf32lb52, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_pinctrl_sf32lb52, ctrl);
 }
 
 static int prv_pad_value(uint32_t pin, uint32_t pad, bool mode_pad, uint32_t *val) {

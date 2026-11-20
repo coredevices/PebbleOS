@@ -8,7 +8,7 @@
 #include <pbl/util/misc.h>
 
 static const struct pbl_led *prv_led(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_backlight_led, backlight)->led;
+  return PBL_CONTAINER_OF(bl, const struct pbl_backlight_led, backlight)->led;
 }
 
 static uint8_t prv_led_brightness(uint8_t brightness) {

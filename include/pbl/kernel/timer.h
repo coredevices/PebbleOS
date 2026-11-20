@@ -16,7 +16,7 @@
  *
  * @code{.c}
  * static void prv_expired(struct pbl_timer *timer) {
- *   struct foo *foo = container_of(timer, struct foo, timer);
+ *   struct foo *foo = PBL_CONTAINER_OF(timer, struct foo, timer);
  *   ...
  * }
  *

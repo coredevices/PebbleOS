@@ -10,7 +10,7 @@
 PBL_DEVICE_CLASS_DEFINE(pbl_uart_class, "uart");
 
 static const struct pbl_uart *prv_uart(const struct pbl_device *dev) {
-  return container_of(dev, const struct pbl_uart, dev);
+  return PBL_CONTAINER_OF(dev, const struct pbl_uart, dev);
 }
 
 int pbl_uart_dev_init(const struct pbl_device *dev) {

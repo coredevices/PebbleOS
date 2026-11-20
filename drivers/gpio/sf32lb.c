@@ -187,11 +187,11 @@ static const struct pbl_gpio_sf32lb *s_wake_port;
 static uint32_t s_wake;
 
 static const struct pbl_gpio_sf32lb *prv_port(const struct pbl_gpio_port *port) {
-  return container_of(port, const struct pbl_gpio_sf32lb, port);
+  return PBL_CONTAINER_OF(port, const struct pbl_gpio_sf32lb, port);
 }
 
 static const struct pbl_gpio_sf32lb *prv_intc_port(const struct pbl_intc *intc) {
-  return container_of(intc, const struct pbl_gpio_sf32lb_intc, intc)->port;
+  return PBL_CONTAINER_OF(intc, const struct pbl_gpio_sf32lb_intc, intc)->port;
 }
 
 static inline uint32_t prv_getreg(const struct pbl_gpio_sf32lb *gpio, uint32_t bank,
@@ -393,7 +393,8 @@ static void prv_irq_handler(const struct pbl_gpio_sf32lb *gpio) {
 }
 
 static int prv_init(const struct pbl_device *dev) {
-  const struct pbl_gpio_sf32lb *gpio = prv_port(container_of(dev, const struct pbl_gpio_port, dev));
+  const struct pbl_gpio_sf32lb *gpio =
+      prv_port(PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev));
   int ret;
 
   ret = pbl_device_init(&gpio->clk.ctrl->dev);

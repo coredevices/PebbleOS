@@ -22,7 +22,7 @@
  * }
  * level = PBL_CLAMP(level, 0, 100);
  *
- * struct item *item = container_of(node, struct item, list_node);
+ * struct item *item = PBL_CONTAINER_OF(node, struct item, list_node);
  * @endcode
  */
 
@@ -41,7 +41,7 @@
  * @param member Name of the member within @p type.
  * @return Pointer to the containing structure.
  */
-#define container_of(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
+#define PBL_CONTAINER_OF(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 
 /**
  * @brief Swap the values of two lvalues of the same type.

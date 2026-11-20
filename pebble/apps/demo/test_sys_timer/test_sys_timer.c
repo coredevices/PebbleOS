@@ -55,7 +55,7 @@ static PBL_DELAYED_WORK_DEFINE(s_stuck_timer, stuck_timer_callback);
 
 // =================================================================================
 static void timer_callback(struct pbl_work *work) {
-  int idx = container_of(work, struct pbl_delayed_work, work) - s_timers;
+  int idx = PBL_CONTAINER_OF(work, struct pbl_delayed_work, work) - s_timers;
   PBL_ASSERTN(idx >= 0 && idx < NUM_MAX_TIMERS);
   PBL_LOG_DBG("STT normal callback %d executed", idx);
   s_app_data->fired_time[idx] = pbl_uptime_ticks();

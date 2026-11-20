@@ -31,7 +31,7 @@ static int prv_switch_on(const struct pbl_regulator *reg) {
 }
 
 int pbl_regulator_dev_init(const struct pbl_device *dev) {
-  const struct pbl_regulator *reg = container_of(dev, const struct pbl_regulator, dev);
+  const struct pbl_regulator *reg = PBL_CONTAINER_OF(dev, const struct pbl_regulator, dev);
   int ret;
 
   pbl_mutex_init(&reg->state->mutex);

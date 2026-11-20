@@ -12,7 +12,7 @@
 PBL_DEVICE_CLASS_DEFINE(pbl_ram_class, "ram");
 
 int pbl_ram_dev_init(const struct pbl_device *dev) {
-  const struct pbl_ram *ram = container_of(dev, const struct pbl_ram, dev);
+  const struct pbl_ram *ram = PBL_CONTAINER_OF(dev, const struct pbl_ram, dev);
 
   return ram->ops->init(ram);
 }

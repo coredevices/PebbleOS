@@ -73,7 +73,7 @@
 #define CS_LOW_MARGIN 10U
 
 static const struct pbl_hyperbus_sf32lb_mpi *prv_hb(const struct pbl_hyperbus *bus) {
-  return container_of(bus, const struct pbl_hyperbus_sf32lb_mpi, bus);
+  return PBL_CONTAINER_OF(bus, const struct pbl_hyperbus_sf32lb_mpi, bus);
 }
 
 static uint32_t prv_ccr(uint32_t dcyc, uint32_t abmode) {

@@ -19,7 +19,7 @@ struct prv_sync {
 };
 
 int pbl_spi_bus_dev_init(const struct pbl_device *dev) {
-  const struct pbl_spi_bus *bus = container_of(dev, const struct pbl_spi_bus, dev);
+  const struct pbl_spi_bus *bus = PBL_CONTAINER_OF(dev, const struct pbl_spi_bus, dev);
 
   *bus->state = (struct pbl_spi_bus_state){0};
   pbl_sem_init(&bus->state->lock, 1, 1);

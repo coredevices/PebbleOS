@@ -38,7 +38,7 @@ static void prv_event_clear(const struct pbl_audio_nrf5_i2s *i2s, uint32_t offse
 }
 
 static const struct pbl_audio_nrf5_i2s *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_nrf5_i2s, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_nrf5_i2s, dai);
 }
 
 static bool prv_slave(const struct pbl_audio_nrf5_i2s *i2s) {

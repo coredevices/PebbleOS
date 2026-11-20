@@ -35,7 +35,8 @@ void *pbl_sys_work_current_fn(void) {
 }
 
 static void prv_heap_call_fn(struct pbl_work *work) {
-  struct pbl_sys_work__heap_call *call = container_of(work, struct pbl_sys_work__heap_call, work);
+  struct pbl_sys_work__heap_call *call =
+      PBL_CONTAINER_OF(work, struct pbl_sys_work__heap_call, work);
   pbl_work_call_fn_t fn = call->fn;
   void *data = call->data;
 

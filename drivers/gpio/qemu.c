@@ -23,11 +23,11 @@ struct pbl_gpio_qemu_intc {
 };
 
 static const struct pbl_gpio_qemu *prv_port(const struct pbl_gpio_port *port) {
-  return container_of(port, const struct pbl_gpio_qemu, port);
+  return PBL_CONTAINER_OF(port, const struct pbl_gpio_qemu, port);
 }
 
 static const struct pbl_gpio_qemu *prv_intc_port(const struct pbl_intc *intc) {
-  return container_of(intc, const struct pbl_gpio_qemu_intc, intc)->port;
+  return PBL_CONTAINER_OF(intc, const struct pbl_gpio_qemu_intc, intc)->port;
 }
 
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
@@ -100,7 +100,8 @@ static void prv_irq_handler(const struct pbl_gpio_qemu *gpio) {
 }
 
 static int prv_init(const struct pbl_device *dev) {
-  const struct pbl_gpio_qemu *gpio = prv_port(container_of(dev, const struct pbl_gpio_port, dev));
+  const struct pbl_gpio_qemu *gpio =
+      prv_port(PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev));
 
   pbl_writel(PBL_BIT_MASK(gpio->port.num_pins), gpio->base + GPIO_INTSTAT);
   pbl_writel(GPIO_INTCTRL_EN, gpio->base + GPIO_INTCTRL);

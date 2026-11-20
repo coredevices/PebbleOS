@@ -41,14 +41,14 @@ static const struct pbl_uart *prv_find(const struct pbl_shell *sh, const char *n
     return nullptr;
   }
 
-  return container_of(dev, const struct pbl_uart, dev);
+  return PBL_CONTAINER_OF(dev, const struct pbl_uart, dev);
 }
 
 static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_uart_class, dev) {
-    const struct pbl_uart *uart = container_of(dev, const struct pbl_uart, dev);
+    const struct pbl_uart *uart = PBL_CONTAINER_OF(dev, const struct pbl_uart, dev);
     struct pbl_uart_config cfg;
 
     if (pbl_uart_config_get(uart, &cfg) != 0) {

@@ -10,12 +10,12 @@
 #include <pbl/util/misc.h>
 
 static const struct pbl_audio_amp_gpio *prv_amp(const struct pbl_audio_amp *amp) {
-  return container_of(amp, const struct pbl_audio_amp_gpio, amp);
+  return PBL_CONTAINER_OF(amp, const struct pbl_audio_amp_gpio, amp);
 }
 
 int pbl_audio_amp_gpio_init(const struct pbl_device *dev) {
   const struct pbl_audio_amp_gpio *amp =
-      container_of(dev, const struct pbl_audio_amp_gpio, amp.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_audio_amp_gpio, amp.dev);
   int ret;
 
   ret = pbl_device_init(&amp->enable.port->dev);

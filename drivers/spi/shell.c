@@ -13,7 +13,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_spi_bus_class, dev) {
-    const struct pbl_spi_bus *bus = container_of(dev, const struct pbl_spi_bus, dev);
+    const struct pbl_spi_bus *bus = PBL_CONTAINER_OF(dev, const struct pbl_spi_bus, dev);
 
     pbl_shell_print(sh, "%s: %u chip selects%s", dev->name, bus->num_cs,
                     pbl_device_is_ready(dev) ? "" : " (not ready)");
@@ -64,7 +64,7 @@ static int prv_cmd_xfer(const struct pbl_shell *sh, size_t argc, char **argv) {
     buf[i - 5U] = (uint8_t)v;
   }
 
-  dev = (struct pbl_spi_dev)PBL_SPI_DEV(container_of(bus_dev, const struct pbl_spi_bus, dev),
+  dev = (struct pbl_spi_dev)PBL_SPI_DEV(PBL_CONTAINER_OF(bus_dev, const struct pbl_spi_bus, dev),
                                         (uint8_t)cs, (uint32_t)hz, (uint32_t)mode);
   ret = pbl_spi_setup(&dev);
   if (ret != 0) {

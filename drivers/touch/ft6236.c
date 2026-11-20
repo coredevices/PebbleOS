@@ -29,7 +29,7 @@ PBL_LOG_MODULE_DECLARE(driver_touch, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 #define FT6236_DATA_SIZE 5U
 
 static inline const struct pbl_ft6236 *prv_from_touch(const struct pbl_touch *touch) {
-  return container_of(touch, const struct pbl_ft6236, touch);
+  return PBL_CONTAINER_OF(touch, const struct pbl_ft6236, touch);
 }
 
 static int prv_read(const struct pbl_ft6236 *ft, uint8_t reg, uint8_t *buf, uint32_t len) {
@@ -86,7 +86,7 @@ static int prv_wake(const struct pbl_ft6236 *ft) {
 }
 
 static void prv_work(struct pbl_work *work) {
-  struct pbl_ft6236_state *state = container_of(work, struct pbl_ft6236_state, work);
+  struct pbl_ft6236_state *state = PBL_CONTAINER_OF(work, struct pbl_ft6236_state, work);
   const struct pbl_ft6236 *ft = state->ft;
   uint8_t data[FT6236_DATA_SIZE];
   uint16_t x;

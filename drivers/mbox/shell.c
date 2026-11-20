@@ -13,7 +13,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_mbox_class, dev) {
     const struct pbl_mbox_controller *ctrl =
-        container_of(dev, const struct pbl_mbox_controller, dev);
+        PBL_CONTAINER_OF(dev, const struct pbl_mbox_controller, dev);
 
     if (!pbl_device_is_ready(dev)) {
       pbl_shell_print(sh, "%s (not ready)", dev->name);
@@ -47,7 +47,7 @@ static int prv_cmd_send(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -ENODEV;
   }
 
-  chan.ctrl = container_of(dev, const struct pbl_mbox_controller, dev);
+  chan.ctrl = PBL_CONTAINER_OF(dev, const struct pbl_mbox_controller, dev);
   for (size_t i = 2U; i < argc; i++) {
     unsigned long cell;
 

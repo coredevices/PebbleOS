@@ -697,7 +697,7 @@ static int prv_init(const struct pbl_accel *accel) {
   int err;
   uint8_t val;
 
-  s_dev = container_of(accel, const struct pbl_lis2dw12, accel);
+  s_dev = PBL_CONTAINER_OF(accel, const struct pbl_lis2dw12, accel);
 
   // Check device ID
   ret = prv_lis2dw12_read(LIS2DW12_WHO_AM_I, &val, 1);

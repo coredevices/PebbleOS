@@ -58,7 +58,7 @@ struct pbl_adc_sf32lb57_gpadc {
 };
 
 static const struct pbl_adc_sf32lb57_gpadc *prv_gpadc(const struct pbl_adc *adc) {
-  return container_of(adc, const struct pbl_adc_sf32lb57_gpadc, adc);
+  return PBL_CONTAINER_OF(adc, const struct pbl_adc_sf32lb57_gpadc, adc);
 }
 
 static inline uintptr_t prv_reg(const struct pbl_adc_sf32lb57_gpadc *gpadc, uint32_t offset) {

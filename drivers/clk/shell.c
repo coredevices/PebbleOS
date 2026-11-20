@@ -23,14 +23,15 @@ static const struct pbl_clk_controller *prv_ctrl(const struct pbl_shell *sh, con
     return nullptr;
   }
 
-  return container_of(dev, const struct pbl_clk_controller, dev);
+  return PBL_CONTAINER_OF(dev, const struct pbl_clk_controller, dev);
 }
 
 static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_clk_controller_class, dev) {
-    const struct pbl_clk_controller *ctrl = container_of(dev, const struct pbl_clk_controller, dev);
+    const struct pbl_clk_controller *ctrl =
+        PBL_CONTAINER_OF(dev, const struct pbl_clk_controller, dev);
 
     pbl_shell_print(sh, "%s: %u clocks", dev->name, ctrl->num_clks);
     for (uint16_t id = 0U; id < ctrl->num_clks; id++) {

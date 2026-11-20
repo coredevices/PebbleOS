@@ -48,7 +48,7 @@ static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
 }
 
 static void prv_handle_disconnection_debounced(struct pbl_work *work) {
-  struct pbl_wallclock_work *timer = container_of(work, struct pbl_wallclock_work, work);
+  struct pbl_wallclock_work *timer = PBL_CONTAINER_OF(work, struct pbl_wallclock_work, work);
   DebounceConnection conn_id = (DebounceConnection)(timer - s_debounce_timers);
 
   // First, so that a reconnection handled from now on reports itself.

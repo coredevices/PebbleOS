@@ -17,7 +17,7 @@
 #define COUNTRST_TIMEOUT_US 1000U
 
 static const struct pbl_pwm_sf32lb_lptim *prv_lptim(const struct pbl_pwm_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_pwm_sf32lb_lptim, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_pwm_sf32lb_lptim, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_pwm_sf32lb_lptim *lptim, uint32_t offset) {
@@ -89,7 +89,7 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
 
 int pbl_pwm_sf32lb_lptim_init(const struct pbl_device *dev) {
   const struct pbl_pwm_sf32lb_lptim *lptim =
-      container_of(dev, const struct pbl_pwm_sf32lb_lptim, ctrl.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_pwm_sf32lb_lptim, ctrl.dev);
   int ret;
 
   ret = pbl_device_init(&lptim->clk.ctrl->dev);

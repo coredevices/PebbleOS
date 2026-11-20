@@ -67,7 +67,7 @@ int pbl_npm1300_init(const struct pbl_device *dev);
  * @return Core.
  */
 static inline const struct pbl_npm1300 *pbl_npm1300_from_cell(const struct pbl_device *cell) {
-  return container_of(cell->parent, const struct pbl_npm1300, dev);
+  return PBL_CONTAINER_OF(cell->parent, const struct pbl_npm1300, dev);
 }
 
 /**

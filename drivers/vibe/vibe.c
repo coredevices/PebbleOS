@@ -20,7 +20,7 @@ static void prv_unlock(const struct pbl_vibe *vibe) {
 }
 
 int pbl_vibe_dev_init(const struct pbl_device *dev) {
-  const struct pbl_vibe *vibe = container_of(dev, const struct pbl_vibe, dev);
+  const struct pbl_vibe *vibe = PBL_CONTAINER_OF(dev, const struct pbl_vibe, dev);
   int ret;
 
   prv_lock(vibe);

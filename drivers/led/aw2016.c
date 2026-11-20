@@ -51,7 +51,7 @@ PBL_LOG_MODULE_DECLARE(driver_led, CONFIG_DRIVER_LED_LOG_LEVEL);
 #define AW2016_STARTUP_MS 1U
 
 static const struct pbl_aw2016 *prv_get(const struct pbl_led *led) {
-  return container_of(led, const struct pbl_aw2016, led);
+  return PBL_CONTAINER_OF(led, const struct pbl_aw2016, led);
 }
 
 static int prv_read_register(const struct pbl_aw2016 *dev, uint8_t reg, uint8_t *val) {
@@ -154,7 +154,7 @@ static void prv_verify(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t
 }
 
 int pbl_aw2016_init(const struct pbl_device *d) {
-  const struct pbl_aw2016 *dev = prv_get(container_of(d, const struct pbl_led, dev));
+  const struct pbl_aw2016 *dev = prv_get(PBL_CONTAINER_OF(d, const struct pbl_led, dev));
   uint8_t id = 0U;
   int ret;
 

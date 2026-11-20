@@ -7,7 +7,7 @@
 
 static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
                         uint64_t *rate_mhz) {
-  *rate_mhz = (uint64_t)container_of(ctrl, const struct pbl_clk_fixed, ctrl)->rate_hz * 1000U;
+  *rate_mhz = (uint64_t)PBL_CONTAINER_OF(ctrl, const struct pbl_clk_fixed, ctrl)->rate_hz * 1000U;
 
   return 0;
 }

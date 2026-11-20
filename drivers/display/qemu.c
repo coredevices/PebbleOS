@@ -18,7 +18,7 @@
 #define INT_UPDATE_DONE_PENDING (1 << 0)
 
 static const struct pbl_display_qemu *prv_qemu(const struct pbl_display *disp) {
-  return container_of(disp, const struct pbl_display_qemu, disp);
+  return PBL_CONTAINER_OF(disp, const struct pbl_display_qemu, disp);
 }
 
 static uint32_t prv_row_bytes(const struct pbl_display *disp) {

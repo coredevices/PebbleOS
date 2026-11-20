@@ -13,7 +13,7 @@
 #define OFF_TIME_MS        500U
 
 static const struct pbl_panel_jdi_mip *prv_jdi(const struct pbl_panel *panel) {
-  return container_of(panel, const struct pbl_panel_jdi_mip, panel);
+  return PBL_CONTAINER_OF(panel, const struct pbl_panel_jdi_mip, panel);
 }
 
 static int prv_power_off(const struct pbl_panel_jdi_mip *jdi) {
@@ -43,7 +43,7 @@ static int prv_power_off(const struct pbl_panel_jdi_mip *jdi) {
 
 int pbl_panel_jdi_mip_init(const struct pbl_device *dev) {
   const struct pbl_panel_jdi_mip *jdi =
-      container_of(dev, const struct pbl_panel_jdi_mip, panel.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_panel_jdi_mip, panel.dev);
 
   if (pbl_device_init(&jdi->vddp->dev) != 0 || pbl_device_init(&jdi->vlcd->dev) != 0 ||
       pbl_device_init(&jdi->vcom.ctrl->dev) != 0) {

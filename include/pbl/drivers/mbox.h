@@ -17,11 +17,11 @@
  * consumer holds a struct pbl_mbox_chan, what a devicetree @c mboxes entry describes: the
  * controller and its specifier cells, which the controller translates to one of its channels. It
  * requests the channel with a struct pbl_mbox_client, usually embedded in its own state so the
- * callbacks get back to it with container_of():
+ * callbacks get back to it with PBL_CONTAINER_OF():
  *
  * @code{.c}
  * static void prv_rx(const struct pbl_mbox_client *cl, const void *msg) {
- *   const struct foo *foo = container_of(cl, const struct foo, cl);
+ *   const struct foo *foo = PBL_CONTAINER_OF(cl, const struct foo, cl);
  *   // interrupt context
  * }
  *

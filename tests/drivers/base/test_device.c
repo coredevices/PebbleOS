@@ -19,7 +19,7 @@ struct test_dev {
 static char s_order[16];
 
 static int prv_init(const struct pbl_device *dev) {
-  const struct test_dev *td = container_of(dev, const struct test_dev, dev);
+  const struct test_dev *td = PBL_CONTAINER_OF(dev, const struct test_dev, dev);
   size_t n = strlen(s_order);
 
   s_order[n] = td->tag;

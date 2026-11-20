@@ -6,7 +6,7 @@
 #include <pbl/util/misc.h>
 
 static int prv_init(const struct pbl_ram *ram) {
-  const struct pbl_ram_qemu *qram = container_of(ram, const struct pbl_ram_qemu, ram);
+  const struct pbl_ram_qemu *qram = PBL_CONTAINER_OF(ram, const struct pbl_ram_qemu, ram);
 
   ram->state->base = qram->base;
   ram->state->size = qram->size;

@@ -145,8 +145,9 @@ static void prv_send_service_changed_indication(void *ctx) {
 }
 
 static void prv_send_indication_fn(struct pbl_work *work) {
-  pbl_sys_work_call(prv_send_service_changed_indication,
-                    container_of(work, GAPLEConnection, gatt_service_changed_indication_work.work));
+  pbl_sys_work_call(
+      prv_send_service_changed_indication,
+      PBL_CONTAINER_OF(work, GAPLEConnection, gatt_service_changed_indication_work.work));
 }
 
 void pbl_bt_cb_gatt_service_changed_server_subscribe(

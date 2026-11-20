@@ -15,7 +15,7 @@
 #define LINE_BYTES SHARP_LS013B7DH01_LINE_BYTES
 
 static const struct pbl_display_sharp_ls013b7dh01 *prv_sharp(const struct pbl_display *disp) {
-  return container_of(disp, const struct pbl_display_sharp_ls013b7dh01, disp);
+  return PBL_CONTAINER_OF(disp, const struct pbl_display_sharp_ls013b7dh01, disp);
 }
 
 // EXTCOMIN toggles the panel's VCOM on rising edges, so it takes short pulses

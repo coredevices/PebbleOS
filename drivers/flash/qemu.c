@@ -25,7 +25,7 @@
 #define STATUS_BUSY PBL_BIT(0)
 
 static const struct pbl_flash_qemu *prv_qemu(const struct pbl_flash *flash) {
-  return container_of(flash, const struct pbl_flash_qemu, flash);
+  return PBL_CONTAINER_OF(flash, const struct pbl_flash_qemu, flash);
 }
 
 static int prv_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len) {

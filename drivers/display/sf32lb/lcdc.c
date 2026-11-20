@@ -33,7 +33,7 @@ PBL_LOG_MODULE_DECLARE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 #define LCDC_MPI_SBUS_OFFSET 0x50000000U
 
 static const struct pbl_display_sf32lb_lcdc *prv_lcdc(const struct pbl_display *disp) {
-  return container_of(disp, const struct pbl_display_sf32lb_lcdc, disp);
+  return PBL_CONTAINER_OF(disp, const struct pbl_display_sf32lb_lcdc, disp);
 }
 
 static uint32_t prv_read(const struct pbl_display_sf32lb_lcdc *lcdc, uint32_t offset) {

@@ -17,7 +17,7 @@
 #define IS_IN_RAM(p) (((uintptr_t)(p) & 0xe0000000U) == 0x20000000U)
 
 static const struct pbl_i2c_nrf5 *prv_i2c(const struct pbl_i2c_bus *bus) {
-  return container_of(bus, const struct pbl_i2c_nrf5, bus);
+  return PBL_CONTAINER_OF(bus, const struct pbl_i2c_nrf5, bus);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_i2c_nrf5 *i2c, uint32_t offset) {

@@ -14,7 +14,7 @@
  * @ingroup drivers
  * @brief Common core of every hardware device: controllers, buses and the peripherals on them.
  *
- * A device class embeds struct pbl_device, a driver embeds the class struct, and container_of()
+ * A device class embeds struct pbl_device, a driver embeds the class struct, and PBL_CONTAINER_OF()
  * walks back out. Devices are const and live in flash; the only RAM is the state they point to.
  *
  * Instances are defined with the @c PBL_<DRIVER>_DEFINE() macro of their driver, built from
@@ -37,7 +37,7 @@
  * };
  *
  * static int prv_foo_init(const struct pbl_device *dev) {
- *   const struct foo *foo = container_of(dev, const struct foo, dev);
+ *   const struct foo *foo = PBL_CONTAINER_OF(dev, const struct foo, dev);
  *   return prv_probe(foo->addr) ? 0 : -ENODEV;
  * }
  *

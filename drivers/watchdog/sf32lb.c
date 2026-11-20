@@ -147,7 +147,8 @@ struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void) {
 }
 
 int pbl_watchdog_sf32lb_init(const struct pbl_device *dev) {
-  const struct pbl_watchdog_sf32lb *wdt = container_of(dev, const struct pbl_watchdog_sf32lb, dev);
+  const struct pbl_watchdog_sf32lb *wdt =
+      PBL_CONTAINER_OF(dev, const struct pbl_watchdog_sf32lb, dev);
   uint64_t rate_mhz;
   int ret;
 

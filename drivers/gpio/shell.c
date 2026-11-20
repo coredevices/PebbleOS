@@ -20,7 +20,7 @@ static int prv_parse_pin(const struct pbl_shell *sh, char **argv, struct pbl_gpi
     return -ENODEV;
   }
 
-  port = container_of(dev, const struct pbl_gpio_port, dev);
+  port = PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev);
 
   if (!pbl_device_is_ready(&port->dev)) {
     pbl_shell_error(sh, "port '%s' not ready", argv[1]);
@@ -41,7 +41,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_gpio_port_class, dev) {
-    const struct pbl_gpio_port *port = container_of(dev, const struct pbl_gpio_port, dev);
+    const struct pbl_gpio_port *port = PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev);
 
     pbl_shell_print(sh, "%s: %u pins%s%s%s", port->dev.name, port->num_pins,
                     (port->intc != nullptr) ? ", irq " : "",

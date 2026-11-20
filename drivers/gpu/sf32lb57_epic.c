@@ -48,7 +48,7 @@ static const struct prv_format s_formats[PBL_GPU_FORMAT_COUNT] = {
 };
 
 static const struct pbl_gpu_sf32lb57_epic *prv_epic(const struct pbl_gpu *gpu) {
-  return container_of(gpu, const struct pbl_gpu_sf32lb57_epic, gpu);
+  return PBL_CONTAINER_OF(gpu, const struct pbl_gpu_sf32lb57_epic, gpu);
 }
 
 static uint32_t prv_read(const struct pbl_gpu_sf32lb57_epic *epic, uint32_t offset) {

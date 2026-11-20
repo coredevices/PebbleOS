@@ -29,7 +29,7 @@
  * s_jobs = list_prepend(s_jobs, &job->node);
  *
  * for (ListNode *n = s_jobs; n != NULL; n = list_get_next(n)) {
- *   struct job *j = container_of(n, struct job, node);
+ *   struct job *j = PBL_CONTAINER_OF(n, struct job, node);
  *   ...
  * }
  *

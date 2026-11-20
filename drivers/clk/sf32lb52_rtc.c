@@ -11,7 +11,7 @@
 static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                           struct pbl_clk *parent) {
   const struct pbl_clk_sf32lb52_rtc *rtc =
-      container_of(ctrl, const struct pbl_clk_sf32lb52_rtc, ctrl);
+      PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb52_rtc, ctrl);
 
   *parent = (pbl_readl(rtc->base + SF32LB52_RTC_CR_OFFSET) & RTC_CR_LPCKSEL) != 0U ? rtc->lxt32
                                                                                    : rtc->lrc10;

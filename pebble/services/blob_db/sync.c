@@ -63,7 +63,7 @@ static void prv_abandon_kernelbg_callback(void *data) {
 }
 
 static void prv_abandon_timer_callback(struct pbl_work *work) {
-  BlobDBSyncSession *session = container_of(work, BlobDBSyncSession, abandon_timer.work);
+  BlobDBSyncSession *session = PBL_CONTAINER_OF(work, BlobDBSyncSession, abandon_timer.work);
   pbl_sys_work_call(prv_abandon_kernelbg_callback, (void *)(uintptr_t)session->session_id);
 }
 
@@ -86,7 +86,7 @@ static void prv_timeout_kernelbg_callback(void *data) {
 }
 
 static void prv_timeout_timer_callback(struct pbl_work *work) {
-  BlobDBSyncSession *session = container_of(work, BlobDBSyncSession, timeout_timer.work);
+  BlobDBSyncSession *session = PBL_CONTAINER_OF(work, BlobDBSyncSession, timeout_timer.work);
   pbl_sys_work_call(prv_timeout_kernelbg_callback, (void *)(uintptr_t)session->session_id);
 }
 

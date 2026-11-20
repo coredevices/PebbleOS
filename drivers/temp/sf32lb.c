@@ -19,7 +19,7 @@
 #define ROUND_ADD (SLOPE_DEN / 2)
 
 static const struct pbl_temp_sf32lb *prv_tsen(const struct pbl_temp *temp) {
-  return container_of(temp, const struct pbl_temp_sf32lb, temp);
+  return PBL_CONTAINER_OF(temp, const struct pbl_temp_sf32lb, temp);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_temp_sf32lb *tsen, uint32_t offset) {

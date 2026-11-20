@@ -16,7 +16,7 @@
 static_assert(PBL_MBOX_SF32LB_NUM_DOORBELLS == SF32LB52_MAILBOX_NUM_CHANNELS);
 
 static const struct pbl_mbox_sf32lb *prv_mbox(const struct pbl_mbox_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_mbox_sf32lb, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_mbox_sf32lb, ctrl);
 }
 
 static bool prv_is_rx(const struct pbl_mbox_sf32lb *mbox) {
@@ -88,7 +88,8 @@ const struct pbl_mbox_controller_ops pbl_mbox_sf32lb_ops = {
 };
 
 int pbl_mbox_sf32lb_init(const struct pbl_device *dev) {
-  const struct pbl_mbox_sf32lb *mbox = container_of(dev, const struct pbl_mbox_sf32lb, ctrl.dev);
+  const struct pbl_mbox_sf32lb *mbox =
+      PBL_CONTAINER_OF(dev, const struct pbl_mbox_sf32lb, ctrl.dev);
 
   if (mbox->clk.ctrl == nullptr) {
     return 0;

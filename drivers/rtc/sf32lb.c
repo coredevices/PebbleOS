@@ -26,7 +26,7 @@
 static const struct pbl_rtc_sf32lb *s_rtc;
 
 static const struct pbl_rtc_sf32lb *prv_rtc(const struct pbl_rtc *rtc) {
-  return container_of(rtc, const struct pbl_rtc_sf32lb, rtc);
+  return PBL_CONTAINER_OF(rtc, const struct pbl_rtc_sf32lb, rtc);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_rtc_sf32lb *rtc, uint32_t offset) {
@@ -160,7 +160,7 @@ static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
 }
 
 int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
-  const struct pbl_rtc_sf32lb *rtc = container_of(dev, const struct pbl_rtc_sf32lb, rtc.dev);
+  const struct pbl_rtc_sf32lb *rtc = PBL_CONTAINER_OF(dev, const struct pbl_rtc_sf32lb, rtc.dev);
   uint64_t rate_mhz;
   int ret;
 

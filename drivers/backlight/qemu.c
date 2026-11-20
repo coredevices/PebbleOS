@@ -20,7 +20,7 @@
 #define BACKLIGHT_ON_LEVEL  255
 
 static uintptr_t prv_base(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_backlight_qemu, bl)->base;
+  return PBL_CONTAINER_OF(bl, const struct pbl_backlight_qemu, bl)->base;
 }
 
 #ifdef CONFIG_BACKLIGHT_QEMU_COLOR

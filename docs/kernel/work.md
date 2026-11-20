@@ -8,7 +8,7 @@ lock, or a slow job that should not hold up its caller.
 ## Work items
 
 A work item is a `struct pbl_work`, owned by the caller and usually embedded in
-the object it acts on, which its function recovers with `container_of`:
+the object it acts on, which its function recovers with `PBL_CONTAINER_OF`:
 
 ```c
 struct session {
@@ -17,7 +17,7 @@ struct session {
 };
 
 static void prv_tx(struct pbl_work *work) {
-  struct session *session = container_of(work, struct session, tx);
+  struct session *session = PBL_CONTAINER_OF(work, struct session, tx);
   ...
 }
 
