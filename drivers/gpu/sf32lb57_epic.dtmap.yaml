@@ -8,6 +8,8 @@ define: PBL_GPU_SF32LB57_EPIC_DEFINE
 args:
   - name: true
   - reg: 0
+  - dma-window: true
+    default: "{}"
   - irq: 0
   - clock: 0
   - reset: 0
