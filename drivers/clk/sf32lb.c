@@ -450,10 +450,6 @@ static int prv_clk_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id
   return 0;
 }
 
-static bool prv_same(const struct pbl_clk *a, const struct pbl_clk *b) {
-  return a->ctrl == b->ctrl && a->id == b->id;
-}
-
 static uint64_t prv_rate(const struct pbl_clk_controller *ctrl, uint32_t id) {
   uint64_t rate_mhz = 0U;
 
@@ -507,11 +503,11 @@ static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struc
   uint32_t sel;
   int ret;
 
-  if (prv_same(parent, &rcc->hrc48)) {
+  if (pbl_clk_eq(parent, &rcc->hrc48)) {
     sel = HPSYS_RCC_CSR_SEL_SYS_HRC48;
-  } else if (prv_same(parent, &rcc->hxt48)) {
+  } else if (pbl_clk_eq(parent, &rcc->hxt48)) {
     sel = HPSYS_RCC_CSR_SEL_SYS_HXT48;
-  } else if (prv_same(parent, &(struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL1))) {
+  } else if (pbl_clk_eq(parent, &(struct pbl_clk)PBL_CLK(ctrl, SF32LB_HPSYS_CLK_DLL1))) {
     sel = HPSYS_RCC_CSR_SEL_SYS_DLL1;
   } else {
     return -EINVAL;
@@ -590,9 +586,9 @@ static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id
       return -EINVAL;
   }
 
-  if (prv_same(parent, &rcc->hxt48)) {
+  if (pbl_clk_eq(parent, &rcc->hxt48)) {
     sel = HPSYS_RCC_CSR_SEL_PERI;
-  } else if (prv_same(parent, &rcc->hrc48)) {
+  } else if (pbl_clk_eq(parent, &rcc->hrc48)) {
     sel = 0U;
   } else {
     return -EINVAL;

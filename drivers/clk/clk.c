@@ -25,10 +25,6 @@ static bool prv_up(const struct pbl_clk_controller *ctrl) {
   return status == PBL_DEVICE_READY || status == PBL_DEVICE_INITIALIZING;
 }
 
-static bool prv_same(const struct pbl_clk *a, const struct pbl_clk *b) {
-  return a->ctrl == b->ctrl && a->id == b->id;
-}
-
 static int prv_parent(const struct pbl_clk *clk, struct pbl_clk *parent) {
   const struct pbl_clk_controller *ctrl = clk->ctrl;
   int ret;
@@ -225,7 +221,7 @@ int pbl_clk_set_parent(const struct pbl_clk *clk, const struct pbl_clk *parent) 
   pbl_irq_lock();
 
   has_old = prv_parent(clk, &old) == 0;
-  if (has_old && prv_same(&old, parent)) {
+  if (has_old && pbl_clk_eq(&old, parent)) {
     pbl_irq_unlock();
     return 0;
   }
@@ -329,7 +325,7 @@ static bool prv_below(const struct pbl_clk *clk, const struct pbl_clk *top) {
   struct pbl_clk cur = *clk;
 
   for (uint8_t depth = 0U; depth <= MAX_DEPTH; depth++) {
-    if (prv_same(&cur, top)) {
+    if (pbl_clk_eq(&cur, top)) {
       return true;
     }
     if (!prv_valid(&cur) || pbl_clk_get_parent(&cur, &cur) != 0) {
