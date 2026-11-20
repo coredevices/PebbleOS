@@ -12,7 +12,7 @@ static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_pinctrl_class, dev) {
     const struct pbl_pinctrl_controller *ctrl =
-        container_of(dev, const struct pbl_pinctrl_controller, dev);
+        PBL_CONTAINER_OF(dev, const struct pbl_pinctrl_controller, dev);
 
     pbl_shell_print(sh, "%s: %u pads", ctrl->dev.name, ctrl->num_pads);
 

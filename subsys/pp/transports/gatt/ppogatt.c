@@ -872,7 +872,7 @@ static void prv_meta_read_retry_kernelmain_cb(void *data) {
 //! (prv_retry_meta_read also calls into NimBLE, which doesn't belong on the work queue).
 static void prv_meta_read_retry_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_meta_read_retry_kernelmain_cb,
-                             container_of(work, PPoGATTClient, meta_read_retry_work.work));
+                             PBL_CONTAINER_OF(work, PPoGATTClient, meta_read_retry_work.work));
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -1437,7 +1437,7 @@ static void prv_rx_ack_kernelmain_cb(void *data) {
 //! Never block on bt_lock from the work queue; bounce to KernelMain.
 static void prv_rx_ack_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_rx_ack_kernelmain_cb,
-                             container_of(work, PPoGATTClient, rx_ack_work.work));
+                             PBL_CONTAINER_OF(work, PPoGATTClient, rx_ack_work.work));
 }
 
 //! Pumps prv_send_next_packets directly (not via prv_send_next_packets_async)
@@ -1459,7 +1459,7 @@ static void prv_send_retry_kernelmain_cb(void *data) {
 //! to KernelMain, where the rest of the PPoG state machine runs.
 static void prv_send_retry_fn(struct pbl_work *work) {
   launcher_task_add_callback(prv_send_retry_kernelmain_cb,
-                             container_of(work, PPoGATTClient, send_retry_work.work));
+                             PBL_CONTAINER_OF(work, PPoGATTClient, send_retry_work.work));
 }
 
 //! Out of mbufs (e.g. inbound flood during a firmware update). NimBLE has no

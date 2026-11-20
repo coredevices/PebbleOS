@@ -28,7 +28,7 @@
 #define VOUT_SETTLE_US 20U
 
 static const struct pbl_nvmem_sf32lb *prv_efuse(const struct pbl_nvmem *nvmem) {
-  return container_of(nvmem, const struct pbl_nvmem_sf32lb, nvmem);
+  return PBL_CONTAINER_OF(nvmem, const struct pbl_nvmem_sf32lb, nvmem);
 }
 
 static int prv_set_timing(const struct pbl_nvmem_sf32lb *efuse) {

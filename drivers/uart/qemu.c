@@ -27,7 +27,7 @@
 #define DATA_MASK PBL_GENMASK(7, 0)
 
 static const struct pbl_uart_qemu *prv_qemu(const struct pbl_uart *uart) {
-  return container_of(uart, const struct pbl_uart_qemu, uart);
+  return PBL_CONTAINER_OF(uart, const struct pbl_uart_qemu, uart);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_uart_qemu *qemu, uint32_t offset) {

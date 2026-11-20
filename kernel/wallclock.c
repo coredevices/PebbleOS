@@ -26,7 +26,7 @@ static uint64_t prv_boundary(const struct pbl_wallclock_work *w, uint64_t ms, ui
 }
 
 static void prv_expired(struct pbl_timer *timer) {
-  struct pbl_wallclock_work *w = container_of(timer, struct pbl_wallclock_work, timer);
+  struct pbl_wallclock_work *w = PBL_CONTAINER_OF(timer, struct pbl_wallclock_work, timer);
 
   unsigned int key = arch_irq_lock();
   // Stopped, restarted or moved by a clock change since the timer expired.

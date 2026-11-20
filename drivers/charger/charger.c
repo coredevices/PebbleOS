@@ -22,7 +22,7 @@ static void prv_unlock(const struct pbl_charger *charger) {
 }
 
 int pbl_charger_dev_init(const struct pbl_device *dev) {
-  const struct pbl_charger *charger = container_of(dev, const struct pbl_charger, dev);
+  const struct pbl_charger *charger = PBL_CONTAINER_OF(dev, const struct pbl_charger, dev);
   int ret;
 
   if (charger->ops->init == nullptr) {

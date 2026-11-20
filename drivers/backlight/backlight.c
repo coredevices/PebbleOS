@@ -17,7 +17,7 @@ static void prv_unlock(const struct pbl_backlight *bl) {
 }
 
 int pbl_backlight_dev_init(const struct pbl_device *dev) {
-  const struct pbl_backlight *bl = container_of(dev, const struct pbl_backlight, dev);
+  const struct pbl_backlight *bl = PBL_CONTAINER_OF(dev, const struct pbl_backlight, dev);
   int ret;
 
   prv_lock(bl);

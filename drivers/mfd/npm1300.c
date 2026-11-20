@@ -42,7 +42,7 @@ int pbl_npm1300_write(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t val)
 }
 
 int pbl_npm1300_init(const struct pbl_device *dev) {
-  const struct pbl_npm1300 *pmic = container_of(dev, const struct pbl_npm1300, dev);
+  const struct pbl_npm1300 *pmic = PBL_CONTAINER_OF(dev, const struct pbl_npm1300, dev);
 
   pbl_mutex_init(&pmic->state->lock);
 

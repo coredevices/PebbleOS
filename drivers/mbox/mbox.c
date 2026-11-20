@@ -76,7 +76,7 @@ static void prv_txdone(const struct pbl_mbox_controller *ctrl, uint8_t idx, int 
 
 void pbl_mbox_poll(struct pbl_timer *timer) {
   struct pbl_mbox_controller_state *cst =
-      container_of(timer, struct pbl_mbox_controller_state, poll);
+      PBL_CONTAINER_OF(timer, struct pbl_mbox_controller_state, poll);
   const struct pbl_mbox_controller *ctrl = cst->ctrl;
   bool pending = false;
 

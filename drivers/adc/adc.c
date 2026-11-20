@@ -12,7 +12,7 @@ PBL_LOG_MODULE_DEFINE(driver_adc, CONFIG_DRIVER_ADC_LOG_LEVEL);
 PBL_DEVICE_CLASS_DEFINE(pbl_adc_class, "adc");
 
 int pbl_adc_dev_init(const struct pbl_device *dev) {
-  const struct pbl_adc *adc = container_of(dev, const struct pbl_adc, dev);
+  const struct pbl_adc *adc = PBL_CONTAINER_OF(dev, const struct pbl_adc, dev);
   int ret;
 
   if (adc->ops->init == nullptr) {

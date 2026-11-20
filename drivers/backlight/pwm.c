@@ -9,7 +9,7 @@
 #include <pbl/util/misc.h>
 
 static const struct pbl_backlight_pwm *prv_get(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_backlight_pwm, backlight);
+  return PBL_CONTAINER_OF(bl, const struct pbl_backlight_pwm, backlight);
 }
 
 static int prv_init(const struct pbl_backlight *bl) {

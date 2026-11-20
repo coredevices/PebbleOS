@@ -57,7 +57,7 @@ static void prv_schedule(const struct pbl_clk_cal *cal, uint32_t ms) {
 }
 
 static void prv_timer_cb(struct pbl_timer *timer) {
-  struct pbl_clk_cal_state *st = container_of(timer, struct pbl_clk_cal_state, timer);
+  struct pbl_clk_cal_state *st = PBL_CONTAINER_OF(timer, struct pbl_clk_cal_state, timer);
   const struct pbl_clk_cal *cal = st->cal;
   double hz;
   int ret;

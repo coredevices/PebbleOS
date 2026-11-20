@@ -86,7 +86,7 @@ struct lcpu_ke_buf_config {
 static_assert(sizeof(struct lcpu_ke_buf_config) == 44U, "ROM layout");
 
 static const struct pbl_rproc_sf32lb *prv_lcpu(const struct pbl_rproc *rproc) {
-  return container_of(rproc, const struct pbl_rproc_sf32lb, rproc);
+  return PBL_CONTAINER_OF(rproc, const struct pbl_rproc_sf32lb, rproc);
 }
 
 #ifdef CONFIG_SOC_SF32LB57
@@ -360,7 +360,8 @@ const struct pbl_rproc_ops pbl_rproc_sf32lb_ops = {
 };
 
 int pbl_rproc_sf32lb_init(const struct pbl_device *dev) {
-  const struct pbl_rproc_sf32lb *lcpu = container_of(dev, const struct pbl_rproc_sf32lb, rproc.dev);
+  const struct pbl_rproc_sf32lb *lcpu =
+      PBL_CONTAINER_OF(dev, const struct pbl_rproc_sf32lb, rproc.dev);
   int ret;
 
   if (lcpu->mem.size == 0U || lcpu->sram.size < LCPU_EM_OFFSET + LCPU_EM_SIZE) {

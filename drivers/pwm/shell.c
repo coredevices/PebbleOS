@@ -18,7 +18,7 @@ static int prv_parse_pwm(const struct pbl_shell *sh, char **argv, struct pbl_pwm
     return -ENODEV;
   }
 
-  ctrl = container_of(dev, const struct pbl_pwm_controller, dev);
+  ctrl = PBL_CONTAINER_OF(dev, const struct pbl_pwm_controller, dev);
   if (pbl_shell_strtoul(argv[2], &channel) != 0 || channel >= ctrl->num_channels) {
     pbl_shell_error(sh, "invalid channel '%s'", argv[2]);
     return -EINVAL;
@@ -33,7 +33,8 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_pwm_class, dev) {
-    const struct pbl_pwm_controller *ctrl = container_of(dev, const struct pbl_pwm_controller, dev);
+    const struct pbl_pwm_controller *ctrl =
+        PBL_CONTAINER_OF(dev, const struct pbl_pwm_controller, dev);
 
     if (!pbl_device_is_ready(dev)) {
       pbl_shell_print(sh, "%s (not ready)", dev->name);

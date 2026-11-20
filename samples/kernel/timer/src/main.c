@@ -23,7 +23,7 @@ struct blinker {
 
 /* Callbacks run in the tick interrupt: keep them short, and never block. */
 static void prv_blink(struct pbl_timer *timer) {
-  struct blinker *blinker = container_of(timer, struct blinker, timer);
+  struct blinker *blinker = PBL_CONTAINER_OF(timer, struct blinker, timer);
 
   blinker->blinks++;
   blinker->last_ms = pbl_uptime_ms();

@@ -346,7 +346,7 @@ bool pbl_work_is_running(const struct pbl_work *work) {
 // ---- delayed work -----------------------------------------------------------
 
 void pbl_delayed_work_expired(struct pbl_timer *timer) {
-  struct pbl_delayed_work *dwork = container_of(timer, struct pbl_delayed_work, timer);
+  struct pbl_delayed_work *dwork = PBL_CONTAINER_OF(timer, struct pbl_delayed_work, timer);
 
   unsigned int key = arch_irq_lock();
   // An ISR preempting the tick may have canceled or restarted the delay since the timer expired.
@@ -447,7 +447,7 @@ size_t pbl_work_pool_num_free(const struct pbl_work_pool *pool) {
 }
 
 static void prv_call_fn(struct pbl_work *work) {
-  struct pbl_work_call *call = container_of(work, struct pbl_work_call, work);
+  struct pbl_work_call *call = PBL_CONTAINER_OF(work, struct pbl_work_call, work);
   struct pbl_work_pool *pool = call->pool;
   pbl_work_call_fn_t fn = call->fn;
   void *data = call->data;

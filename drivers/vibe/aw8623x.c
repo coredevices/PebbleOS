@@ -74,7 +74,7 @@ PBL_LOG_MODULE_DECLARE(driver_vibe, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 #define AW8623X_LRA_F0_HZ 235U
 
 static const struct pbl_aw8623x *prv_get(const struct pbl_vibe *vibe) {
-  return container_of(vibe, const struct pbl_aw8623x, vibe);
+  return PBL_CONTAINER_OF(vibe, const struct pbl_aw8623x, vibe);
 }
 
 static int prv_read_register(const struct pbl_aw8623x *dev, uint8_t reg, uint8_t *val) {

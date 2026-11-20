@@ -42,7 +42,7 @@ struct pbl_fs_mount *pbl_fs__mount_get(const char *path, const char **name) {
 
   pbl_mutex_lock(&s_mounts_lock, PBL_FOREVER);
   for (ListNode *n = s_mounts; n != nullptr; n = list_get_next(n)) {
-    struct pbl_fs_mount *mp = container_of(n, struct pbl_fs_mount, node);
+    struct pbl_fs_mount *mp = PBL_CONTAINER_OF(n, struct pbl_fs_mount, node);
     size_t len = mp->mnt_point_len;
 
     if ((strncmp(path, mp->mnt_point, len) != 0) || ((path[len] != '\0') && (path[len] != '/'))) {
@@ -74,7 +74,7 @@ static bool prv_path_is(const char *path, const struct pbl_fs_mount *mp, const c
 static void prv_watch_notify(const char *path, uint32_t event) {
   pbl_mutex_lock(&s_watches_lock, PBL_FOREVER);
   for (ListNode *n = s_watches; n != nullptr; n = list_get_next(n)) {
-    struct pbl_fs_watch *w = container_of(n, struct pbl_fs_watch, node);
+    struct pbl_fs_watch *w = PBL_CONTAINER_OF(n, struct pbl_fs_watch, node);
 
     if (((w->events & event) != 0) && (strcmp(w->path, path) == 0)) {
       w->cb(w->user_data);
@@ -96,7 +96,7 @@ int pbl_fs_mount(struct pbl_fs_mount *mp) {
 
   int ret = 0;
   for (ListNode *n = s_mounts; n != nullptr; n = list_get_next(n)) {
-    struct pbl_fs_mount *other = container_of(n, struct pbl_fs_mount, node);
+    struct pbl_fs_mount *other = PBL_CONTAINER_OF(n, struct pbl_fs_mount, node);
 
     if ((other == mp) || (strcmp(other->mnt_point, mnt_point) == 0)) {
       ret = -EBUSY;
@@ -301,7 +301,7 @@ int pbl_fs_close(struct pbl_fs_file *file) {
   if (((file->flags & PBL_FS_O_WRITE) != 0) && (file->name != nullptr)) {
     pbl_mutex_lock(&s_watches_lock, PBL_FOREVER);
     for (ListNode *n = s_watches; n != nullptr; n = list_get_next(n)) {
-      struct pbl_fs_watch *w = container_of(n, struct pbl_fs_watch, node);
+      struct pbl_fs_watch *w = PBL_CONTAINER_OF(n, struct pbl_fs_watch, node);
       w->pending =
           ((w->events & PBL_FS_WATCH_CLOSED) != 0) && prv_path_is(w->path, file->mp, file->name);
       notify |= w->pending;
@@ -318,7 +318,7 @@ int pbl_fs_close(struct pbl_fs_file *file) {
 
   if (notify) {
     for (ListNode *n = s_watches; n != nullptr; n = list_get_next(n)) {
-      struct pbl_fs_watch *w = container_of(n, struct pbl_fs_watch, node);
+      struct pbl_fs_watch *w = PBL_CONTAINER_OF(n, struct pbl_fs_watch, node);
       if (w->pending && (ret == 0)) {
         w->cb(w->user_data);
       }

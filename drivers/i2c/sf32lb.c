@@ -24,7 +24,7 @@
 #define IER_DMA (I2C_IER_DMADONEIE | I2C_IER_BEDIE | I2C_IER_MSDIE)
 
 static const struct pbl_i2c_sf32lb *prv_i2c(const struct pbl_i2c_bus *bus) {
-  return container_of(bus, const struct pbl_i2c_sf32lb, bus);
+  return PBL_CONTAINER_OF(bus, const struct pbl_i2c_sf32lb, bus);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_i2c_sf32lb *i2c, uint32_t offset) {

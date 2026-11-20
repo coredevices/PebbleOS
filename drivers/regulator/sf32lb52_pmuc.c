@@ -9,7 +9,7 @@
 #include <hardware/sf32lb52_pmuc.h>
 
 static const struct pbl_sf32lb52_pmuc_regulator *prv_regulator(const struct pbl_regulator *reg) {
-  return container_of(reg, const struct pbl_sf32lb52_pmuc_regulator, reg);
+  return PBL_CONTAINER_OF(reg, const struct pbl_sf32lb52_pmuc_regulator, reg);
 }
 
 static int prv_enable(const struct pbl_regulator *reg) {

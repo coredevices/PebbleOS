@@ -50,7 +50,7 @@ void timeout_expire(void) {
       sched_timed_out(to->thread);
       arch_irq_unlock(key);
     } else {
-      struct pbl_timer *timer = container_of(to, struct pbl_timer, timeout);
+      struct pbl_timer *timer = PBL_CONTAINER_OF(to, struct pbl_timer, timeout);
       arch_irq_unlock(key);
       timer->fn(timer);
     }

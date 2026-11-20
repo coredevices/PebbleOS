@@ -19,7 +19,7 @@
 #define NPM1300_GPIO_MODE_OUTPUT_LOW  9U
 
 static const struct pbl_npm1300_gpio *prv_gpio(const struct pbl_gpio_port *port) {
-  return container_of(port, const struct pbl_npm1300_gpio, port);
+  return PBL_CONTAINER_OF(port, const struct pbl_npm1300_gpio, port);
 }
 
 static const struct pbl_npm1300 *prv_pmic(const struct pbl_gpio_port *port) {

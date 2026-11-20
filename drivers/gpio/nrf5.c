@@ -39,11 +39,11 @@ static uint32_t s_wake[MAX_PORTS];
 static uintptr_t s_gpiote;
 
 static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
-  return container_of(port, const struct pbl_gpio_nrf5, port);
+  return PBL_CONTAINER_OF(port, const struct pbl_gpio_nrf5, port);
 }
 
 static const struct pbl_gpio_nrf5 *prv_intc_port(const struct pbl_intc *intc) {
-  return container_of(intc, const struct pbl_gpio_nrf5_intc, intc)->port;
+  return PBL_CONTAINER_OF(intc, const struct pbl_gpio_nrf5_intc, intc)->port;
 }
 
 static inline void prv_putreg(const struct pbl_gpio_nrf5 *gpio, uint32_t offset, uint32_t value) {
@@ -305,7 +305,8 @@ static void prv_gpiote_irq_handler(void) {
 PBL_IRQ_CONNECT(GPIOTE, 7, prv_gpiote_irq_handler, , 0);
 
 static int prv_init(const struct pbl_device *dev) {
-  const struct pbl_gpio_nrf5 *gpio = prv_port(container_of(dev, const struct pbl_gpio_port, dev));
+  const struct pbl_gpio_nrf5 *gpio =
+      prv_port(PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev));
 
   if (gpio->index >= MAX_PORTS) {
     return -EINVAL;

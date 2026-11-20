@@ -35,7 +35,7 @@ static bool prv_is_spim3(const struct pbl_spi_nrf5 *spi) {
 }
 
 static const struct pbl_spi_nrf5 *prv_spi(const struct pbl_spi_bus *bus) {
-  return container_of(bus, const struct pbl_spi_nrf5, bus);
+  return PBL_CONTAINER_OF(bus, const struct pbl_spi_nrf5, bus);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_spi_nrf5 *spi, uint32_t offset) {

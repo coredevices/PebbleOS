@@ -227,7 +227,7 @@ size_t pbl_crypto_hw_aes_ecb_decrypt(const uint8_t *key, size_t key_len, uint8_t
 }
 
 int pbl_crypto_sf32lb_init(const struct pbl_device *dev) {
-  s_crypto = container_of(dev, const struct pbl_crypto_sf32lb, dev);
+  s_crypto = PBL_CONTAINER_OF(dev, const struct pbl_crypto_sf32lb, dev);
 
   return 0;
 }

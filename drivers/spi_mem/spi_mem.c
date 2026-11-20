@@ -13,7 +13,7 @@ PBL_LOG_MODULE_DEFINE(driver_spi_mem, CONFIG_DRIVER_SPI_MEM_LOG_LEVEL);
 PBL_DEVICE_CLASS_DEFINE(pbl_spi_mem_class, "spi_mem");
 
 int pbl_spi_mem_dev_init(const struct pbl_device *dev) {
-  const struct pbl_spi_mem *mem = container_of(dev, const struct pbl_spi_mem, dev);
+  const struct pbl_spi_mem *mem = PBL_CONTAINER_OF(dev, const struct pbl_spi_mem, dev);
 
   if (pbl_spi_mem_is_xip(mem) && mem->ops->poll_status == nullptr) {
     return -EINVAL;

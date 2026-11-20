@@ -73,7 +73,7 @@ static const struct pbl_audio *prv_find(const struct pbl_shell *sh, const char *
     return nullptr;
   }
 
-  audio = container_of(dev, const struct pbl_audio, dev);
+  audio = PBL_CONTAINER_OF(dev, const struct pbl_audio, dev);
   if (pbl_audio_dir(audio) != dir) {
     pbl_shell_error(sh, "%s is not a %s device", name,
                     dir == PBL_AUDIO_PLAYBACK ? "playback" : "capture");
@@ -87,7 +87,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_audio_class, dev) {
-    const struct pbl_audio *audio = container_of(dev, const struct pbl_audio, dev);
+    const struct pbl_audio *audio = PBL_CONTAINER_OF(dev, const struct pbl_audio, dev);
     struct pbl_audio_caps caps;
 
     if (pbl_audio_get_caps(audio, &caps) != 0) {

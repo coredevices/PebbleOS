@@ -25,7 +25,7 @@
  * s_waiters = slist_prepend(s_waiters, &w->node);
  *
  * for (SingleListNode *n = s_waiters; n != NULL; n = slist_get_next(n)) {
- *   struct waiter *it = container_of(n, struct waiter, node);
+ *   struct waiter *it = PBL_CONTAINER_OF(n, struct waiter, node);
  *   ...
  * }
  *

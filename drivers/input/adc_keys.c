@@ -35,7 +35,7 @@ static const struct pbl_adc_keys_key *prv_nearest(const struct pbl_adc_keys *key
 }
 
 static void prv_scan(struct pbl_work *work) {
-  struct pbl_adc_keys_state *state = container_of(work, struct pbl_adc_keys_state, scan.work);
+  struct pbl_adc_keys_state *state = PBL_CONTAINER_OF(work, struct pbl_adc_keys_state, scan.work);
   const struct pbl_adc_keys *keys = state->keys;
   int32_t uv;
 
@@ -72,7 +72,7 @@ static void prv_edge(void *arg) {
 }
 
 int pbl_adc_keys_init(const struct pbl_device *dev) {
-  const struct pbl_adc_keys *keys = container_of(dev, const struct pbl_adc_keys, dev);
+  const struct pbl_adc_keys *keys = PBL_CONTAINER_OF(dev, const struct pbl_adc_keys, dev);
   struct pbl_adc_keys_state *state = keys->state;
   int ret;
 

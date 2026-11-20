@@ -204,7 +204,7 @@ static int prv_init(const struct pbl_mag *mag) {
   uint8_t whoami;
   int ret;
 
-  s_dev = container_of(mag, const struct pbl_mmc5603nj, mag);
+  s_dev = PBL_CONTAINER_OF(mag, const struct pbl_mmc5603nj, mag);
   pbl_delayed_work_init(&s_dev->state->poll_timer, prv_poll_fn);
 
   ret = prv_read(MMC5603NJ_REG_WHO_AM_I, &whoami, 1);

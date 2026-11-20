@@ -77,7 +77,7 @@ static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_clk_sf32lb52_hxt *h
 
 int pbl_clk_sf32lb52_hxt_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb52_hxt *hxt =
-      container_of(dev, const struct pbl_clk_sf32lb52_hxt, dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb52_hxt, dev);
   uint8_t cfg[CFG_MAX_SIZE];
   uint8_t rec[sizeof(uint32_t)];
 

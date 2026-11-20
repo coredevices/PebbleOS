@@ -58,7 +58,7 @@ struct ccr_op {
 };
 
 static const struct pbl_spi_mem_sf32lb_mpi *prv_mpi(const struct pbl_spi_mem *mem) {
-  return container_of(mem, const struct pbl_spi_mem_sf32lb_mpi, mem);
+  return PBL_CONTAINER_OF(mem, const struct pbl_spi_mem_sf32lb_mpi, mem);
 }
 
 static uintptr_t prv_base(const struct pbl_spi_mem_sf32lb_mpi *mpi) {

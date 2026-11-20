@@ -16,7 +16,7 @@ struct sensor {
 };
 
 static void prv_sensor_work(struct pbl_work *work) {
-  struct sensor *sensor = container_of(work, struct sensor, work);
+  struct sensor *sensor = PBL_CONTAINER_OF(work, struct sensor, work);
 
   /* One run serves every event since the last one, however often it was submitted. */
   printf("%s: handling %u events on %s\n", sensor->name, sensor->pending_events,

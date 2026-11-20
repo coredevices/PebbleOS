@@ -27,7 +27,7 @@
 #define AW9364E_OFF_TIME_US 2600U
 
 static const struct pbl_aw9364e *prv_get(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_aw9364e, backlight);
+  return PBL_CONTAINER_OF(bl, const struct pbl_aw9364e, backlight);
 }
 
 //! Emit dimming pulses. A low period stretched past 500us puts the chip in

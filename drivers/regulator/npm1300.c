@@ -39,7 +39,7 @@ PBL_LOG_MODULE_DECLARE(driver_regulator, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
 #define NPM1300_VOUT_STEP_MV 100U
 
 static const struct pbl_npm1300_regulator *prv_rail(const struct pbl_regulator *reg) {
-  return container_of(reg, const struct pbl_npm1300_regulator, reg);
+  return PBL_CONTAINER_OF(reg, const struct pbl_npm1300_regulator, reg);
 }
 
 static const struct pbl_npm1300 *prv_pmic(const struct pbl_regulator *reg) {

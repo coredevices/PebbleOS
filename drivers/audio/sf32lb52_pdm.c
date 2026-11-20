@@ -50,7 +50,7 @@ static const struct prv_rate s_rates[] = {
 };
 
 static const struct pbl_audio_sf32lb52_pdm *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_sf32lb52_pdm, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_sf32lb52_pdm, dai);
 }
 
 static const struct prv_rate *prv_find_rate(uint32_t rate) {

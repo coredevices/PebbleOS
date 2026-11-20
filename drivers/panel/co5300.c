@@ -57,7 +57,7 @@ static const struct prv_cmd s_init_seq[] = {
 };
 
 static const struct pbl_panel_co5300 *prv_co5300(const struct pbl_panel *panel) {
-  return container_of(panel, const struct pbl_panel_co5300, panel);
+  return PBL_CONTAINER_OF(panel, const struct pbl_panel_co5300, panel);
 }
 
 static int prv_write(const struct pbl_panel_co5300 *co5300, uint8_t cmd, const uint8_t *data,
@@ -79,7 +79,7 @@ static int prv_set_brightness(const struct pbl_panel_co5300 *co5300, uint8_t bri
 
 int pbl_panel_co5300_init(const struct pbl_device *dev) {
   const struct pbl_panel_co5300 *co5300 =
-      container_of(dev, const struct pbl_panel_co5300, panel.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_panel_co5300, panel.dev);
   int ret;
 
   ret = pbl_device_init(&co5300->reset.port->dev);
@@ -227,7 +227,7 @@ const struct pbl_panel_ops pbl_panel_co5300_ops = {
 };
 
 static const struct pbl_panel_co5300 *prv_bl_co5300(const struct pbl_backlight *bl) {
-  return container_of(bl, const struct pbl_panel_co5300_backlight, backlight)->co5300;
+  return PBL_CONTAINER_OF(bl, const struct pbl_panel_co5300_backlight, backlight)->co5300;
 }
 
 static int prv_bl_init(const struct pbl_backlight *bl) {

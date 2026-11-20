@@ -20,7 +20,7 @@
 #define ICR_ERRORS (UART_ICR_PECF | UART_ICR_FECF | UART_ICR_NCF | UART_ICR_ORECF)
 
 static const struct pbl_uart_sf32lb *prv_sf32lb(const struct pbl_uart *uart) {
-  return container_of(uart, const struct pbl_uart_sf32lb, uart);
+  return PBL_CONTAINER_OF(uart, const struct pbl_uart_sf32lb, uart);
 }
 
 static inline uintptr_t prv_reg(const struct pbl_uart_sf32lb *usart, uint32_t offset) {

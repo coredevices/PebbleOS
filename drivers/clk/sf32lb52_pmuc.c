@@ -204,7 +204,7 @@ static const struct pbl_clk_cal_ops s_cal_ops = {
 };
 
 static const struct pbl_clk_sf32lb52_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_clk_sf32lb52_pmuc, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb52_pmuc, ctrl);
 }
 
 static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t parent_mhz,
@@ -379,7 +379,7 @@ static int prv_hrc48_calibrate(const struct pbl_clk_sf32lb52_pmuc *pmuc) {
 
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb52_pmuc *pmuc =
-      container_of(dev, const struct pbl_clk_sf32lb52_pmuc, ctrl.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb52_pmuc, ctrl.dev);
   int ret;
 
   s_pmuc = pmuc;

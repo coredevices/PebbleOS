@@ -34,7 +34,7 @@
  * };
  *
  * static void prv_flush(struct pbl_work *work) {
- *   struct foo *foo = container_of(work, struct foo, flush.work);
+ *   struct foo *foo = PBL_CONTAINER_OF(work, struct foo, flush.work);
  *   ...
  * }
  *

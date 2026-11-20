@@ -23,7 +23,7 @@
 static struct pbl_idle_latency_request s_hfxo_latency;
 
 static const struct pbl_clk_nrf52 *prv_clock(const struct pbl_clk_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_clk_nrf52, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_nrf52, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_clk_nrf52 *clock, uint32_t offset) {

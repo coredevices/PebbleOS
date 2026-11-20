@@ -71,7 +71,7 @@ static EventedTimerID prv_next_id(void) {
 }
 
 static void prv_free_work(struct pbl_work *work) {
-  pbl_free(container_of(work, EventedTimer, work.work));
+  pbl_free(PBL_CONTAINER_OF(work, EventedTimer, work.work));
 }
 
 //! Unlinks and frees a timer, never blocking: prv_work can hold up the queue posting to the very
@@ -158,7 +158,7 @@ static void prv_evented_timer_event_callback(void *data) {
 //! The timer stays allocated until this returns: see prv_release_timer.
 static void prv_work(struct pbl_work *work) {
   PBL_ASSERT_TASK(PebbleTask_SysWorkqHigh);
-  EventedTimer *timer = container_of(work, EventedTimer, work.work);
+  EventedTimer *timer = PBL_CONTAINER_OF(work, EventedTimer, work.work);
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 

@@ -53,7 +53,7 @@ static const struct {
 };
 
 static const struct pbl_ram_hyperram *prv_ram(const struct pbl_ram *ram) {
-  return container_of(ram, const struct pbl_ram_hyperram, ram);
+  return PBL_CONTAINER_OF(ram, const struct pbl_ram_hyperram, ram);
 }
 
 static int prv_update(const struct pbl_hyperbus *bus, uint32_t reg, uint16_t clear, uint16_t set) {

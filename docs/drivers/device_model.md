@@ -10,7 +10,7 @@ implemented in `drivers/base/`.
 
 The model follows the Linux kernel: a device class embeds `struct pbl_device`
 in its own struct, a driver embeds the class struct in a driver-specific one,
-and `container_of()` walks back out.
+and `PBL_CONTAINER_OF()` walks back out.
 
 ```{mermaid}
 classDiagram
@@ -147,6 +147,6 @@ lock to order against it.
 
 1. Define the driver struct embedding the class struct, the class ops and
    an init that recovers the driver struct with
-   `container_of(dev, const struct <driver>, <class>.dev)`.
+   `PBL_CONTAINER_OF(dev, const struct <driver>, <class>.dev)`.
 2. Provide the `PBL_<DRIVER>_DEFINE()` macro.
 3. Instantiate the device in the board or SoC file.

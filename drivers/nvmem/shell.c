@@ -13,7 +13,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_nvmem_class, dev) {
-    const struct pbl_nvmem *nvmem = container_of(dev, const struct pbl_nvmem, dev);
+    const struct pbl_nvmem *nvmem = PBL_CONTAINER_OF(dev, const struct pbl_nvmem, dev);
 
     pbl_shell_print(sh, "%s: %zu bytes, word %u, stride %u%s", dev->name, nvmem->size,
                     nvmem->word_size, nvmem->stride,
@@ -41,7 +41,8 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -EINVAL;
   }
 
-  ret = pbl_nvmem_device_read(container_of(dev, const struct pbl_nvmem, dev), offset, bytes, buf);
+  ret =
+      pbl_nvmem_device_read(PBL_CONTAINER_OF(dev, const struct pbl_nvmem, dev), offset, bytes, buf);
   if (ret != 0) {
     pbl_shell_error(sh, "read failed (%d)", ret);
     return ret;

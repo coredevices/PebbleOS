@@ -119,7 +119,7 @@ static const uint8_t s_sine_cycle[] = {
 };
 
 static const struct pbl_aw86225 *prv_get(const struct pbl_vibe *vibe) {
-  return container_of(vibe, const struct pbl_aw86225, vibe);
+  return PBL_CONTAINER_OF(vibe, const struct pbl_aw86225, vibe);
 }
 
 static int prv_read_register(const struct pbl_aw86225 *dev, uint8_t reg, uint8_t *val) {

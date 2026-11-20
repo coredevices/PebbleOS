@@ -8,7 +8,7 @@
 #include <pbl/util/misc.h>
 
 static const struct pbl_audio_dmic *prv_dmic(const struct pbl_audio_codec *codec) {
-  return container_of(codec, const struct pbl_audio_dmic, codec);
+  return PBL_CONTAINER_OF(codec, const struct pbl_audio_dmic, codec);
 }
 
 static int prv_prepare(const struct pbl_audio_codec *codec) {

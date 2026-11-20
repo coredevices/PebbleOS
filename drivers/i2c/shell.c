@@ -25,7 +25,7 @@ static int prv_parse_dev(const struct pbl_shell *sh, char **argv, struct pbl_i2c
     return -EINVAL;
   }
 
-  *dev = (struct pbl_i2c_dev)PBL_I2C_DEV(container_of(bus_dev, const struct pbl_i2c_bus, dev),
+  *dev = (struct pbl_i2c_dev)PBL_I2C_DEV(PBL_CONTAINER_OF(bus_dev, const struct pbl_i2c_bus, dev),
                                          (uint16_t)addr);
 
   return 0;
@@ -65,7 +65,7 @@ static int prv_cmd_scan(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   for (uint16_t addr = ADDR_FIRST; addr <= ADDR_LAST; addr++) {
     struct pbl_i2c_dev dev =
-        PBL_I2C_DEV(container_of(bus_dev, const struct pbl_i2c_bus, dev), addr);
+        PBL_I2C_DEV(PBL_CONTAINER_OF(bus_dev, const struct pbl_i2c_bus, dev), addr);
 
     if (pbl_i2c_write(&dev, nullptr, 0U) == 0) {
       pbl_shell_print(sh, "0x%02x", addr);

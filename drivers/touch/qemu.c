@@ -22,7 +22,7 @@
 #define TOUCH_INT_EVENT  PBL_BIT(0)
 
 static const struct pbl_touch_qemu *prv_qemu(const struct pbl_touch *touch) {
-  return container_of(touch, const struct pbl_touch_qemu, touch);
+  return PBL_CONTAINER_OF(touch, const struct pbl_touch_qemu, touch);
 }
 
 static void prv_work(void *arg) {

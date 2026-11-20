@@ -100,7 +100,7 @@ static const struct w1160_reg_val s_config[] = {
 };
 
 static const struct pbl_w1160 *prv_get(const struct pbl_als *als) {
-  return container_of(als, const struct pbl_w1160, als);
+  return PBL_CONTAINER_OF(als, const struct pbl_w1160, als);
 }
 
 static int prv_read_register(const struct pbl_w1160 *dev, uint8_t reg, uint8_t *val) {

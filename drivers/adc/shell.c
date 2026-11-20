@@ -12,7 +12,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_adc_class, dev) {
-    const struct pbl_adc *adc = container_of(dev, const struct pbl_adc, dev);
+    const struct pbl_adc *adc = PBL_CONTAINER_OF(dev, const struct pbl_adc, dev);
 
     pbl_shell_print(sh, "%s: %u channels%s", adc->dev.name, adc->num_channels,
                     pbl_device_is_ready(&adc->dev) ? "" : " (not ready)");
@@ -38,8 +38,8 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -EINVAL;
   }
 
-  channel = (struct pbl_adc_channel)PBL_ADC_CHANNEL(container_of(dev, const struct pbl_adc, dev),
-                                                    (uint32_t)id);
+  channel = (struct pbl_adc_channel)PBL_ADC_CHANNEL(
+      PBL_CONTAINER_OF(dev, const struct pbl_adc, dev), (uint32_t)id);
   ret = pbl_adc_read(&channel, &uv);
   if (ret != 0) {
     pbl_shell_error(sh, "read failed (%d)", ret);

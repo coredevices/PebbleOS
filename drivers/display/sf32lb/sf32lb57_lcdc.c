@@ -37,7 +37,7 @@ PBL_LOG_MODULE_DECLARE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 #define QSPI_OP_READ         0x03U
 
 static const struct pbl_display_sf32lb57_lcdc *prv_lcdc(const struct pbl_display *disp) {
-  return container_of(disp, const struct pbl_display_sf32lb57_lcdc, disp);
+  return PBL_CONTAINER_OF(disp, const struct pbl_display_sf32lb57_lcdc, disp);
 }
 
 static uint32_t prv_read(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t offset) {
@@ -186,7 +186,7 @@ static int prv_bus_lock(const struct pbl_display_sf32lb57_lcdc *lcdc) {
 static int prv_dbi_write(const struct pbl_mipi_dbi *dbi, uint8_t cmd, const uint8_t *data,
                          size_t len) {
   const struct pbl_display_sf32lb57_lcdc *lcdc =
-      container_of(dbi, const struct pbl_display_sf32lb57_lcdc_dbi, dbi)->lcdc;
+      PBL_CONTAINER_OF(dbi, const struct pbl_display_sf32lb57_lcdc_dbi, dbi)->lcdc;
   int ret;
 
   ret = prv_bus_lock(lcdc);
@@ -203,7 +203,7 @@ static int prv_dbi_write(const struct pbl_mipi_dbi *dbi, uint8_t cmd, const uint
 
 static int prv_dbi_read(const struct pbl_mipi_dbi *dbi, uint8_t cmd, uint8_t *data, size_t len) {
   const struct pbl_display_sf32lb57_lcdc *lcdc =
-      container_of(dbi, const struct pbl_display_sf32lb57_lcdc_dbi, dbi)->lcdc;
+      PBL_CONTAINER_OF(dbi, const struct pbl_display_sf32lb57_lcdc_dbi, dbi)->lcdc;
   uint32_t div;
   uint32_t value;
   int ret;
@@ -487,7 +487,7 @@ static void prv_update_end(const struct pbl_display_sf32lb57_lcdc *lcdc, int sta
 
 static void prv_end_work(struct pbl_work *work) {
   struct pbl_display_sf32lb57_lcdc_state *state =
-      container_of(work, struct pbl_display_sf32lb57_lcdc_state, work);
+      PBL_CONTAINER_OF(work, struct pbl_display_sf32lb57_lcdc_state, work);
 
   prv_update_end(state->lcdc, state->status);
 }

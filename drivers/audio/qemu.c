@@ -28,7 +28,7 @@
 #define MDB_PER_PERCENT (-GAIN_MIN_MDB / VOLUME_MAX)
 
 static const struct pbl_audio_qemu *prv_dev(const struct pbl_audio_dai *dai) {
-  return container_of(dai, const struct pbl_audio_qemu, dai);
+  return PBL_CONTAINER_OF(dai, const struct pbl_audio_qemu, dai);
 }
 
 static void prv_write(const struct pbl_audio_qemu *dev, uint32_t reg, uint32_t value) {

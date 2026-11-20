@@ -22,7 +22,7 @@ static_assert(PBL_DMA_SF32LB_NUM_CHANNELS == SF32LB52_DMAC_NUM_CHANNELS);
 #define MPI_CBUS_2_SBUS 0x50000000U
 
 static const struct pbl_dma_sf32lb *prv_dmac(const struct pbl_dma_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_dma_sf32lb, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_dma_sf32lb, ctrl);
 }
 
 static inline uint32_t prv_getreg(const struct pbl_dma_controller *ctrl, uint32_t offset) {
@@ -187,7 +187,7 @@ void pbl_dma_sf32lb_irq_handler(const struct pbl_dma_sf32lb_chan_irq *irq) {
 }
 
 int pbl_dma_sf32lb_init(const struct pbl_device *dev) {
-  const struct pbl_dma_sf32lb *dmac = container_of(dev, const struct pbl_dma_sf32lb, ctrl.dev);
+  const struct pbl_dma_sf32lb *dmac = PBL_CONTAINER_OF(dev, const struct pbl_dma_sf32lb, ctrl.dev);
   int ret = pbl_device_init(&dmac->clk.ctrl->dev);
 
   if (ret != 0) {

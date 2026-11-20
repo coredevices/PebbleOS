@@ -89,7 +89,7 @@ static void prv_trims(uint8_t *s0, uint8_t *s1) {
 static int prv_set_performance_state(const struct pbl_power_domain_provider *provider, uint32_t id,
                                      uint32_t level) {
   const struct pbl_pd_sf32lb_pmuc *pmuc =
-      container_of(provider, const struct pbl_pd_sf32lb_pmuc, provider);
+      PBL_CONTAINER_OF(provider, const struct pbl_pd_sf32lb_pmuc, provider);
   const uintptr_t syscr = pmuc->cfg + CFG(SYSCR);
   const struct hpsys_mode *mode;
   uint8_t s0;

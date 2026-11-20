@@ -24,7 +24,7 @@ struct rx {
 };
 
 static const struct pbl_uart_posix *prv_posix(const struct pbl_uart *uart) {
-  return container_of(uart, const struct pbl_uart_posix, uart);
+  return PBL_CONTAINER_OF(uart, const struct pbl_uart_posix, uart);
 }
 
 static void prv_rx_isr(void *arg) {

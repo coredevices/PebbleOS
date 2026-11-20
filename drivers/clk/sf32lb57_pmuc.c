@@ -60,7 +60,7 @@ static uintptr_t s_rcc;
 static uint64_t s_gate_start_ms;
 
 static const struct pbl_clk_sf32lb57_pmuc *prv_pmuc(const struct pbl_clk_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_clk_sf32lb57_pmuc, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb57_pmuc, ctrl);
 }
 
 static inline uint32_t prv_cal_result(void) {
@@ -264,7 +264,7 @@ static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
 
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb57_pmuc *pmuc =
-      container_of(dev, const struct pbl_clk_sf32lb57_pmuc, ctrl.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb57_pmuc, ctrl.dev);
   int ret;
 
   // The unit itself runs from it

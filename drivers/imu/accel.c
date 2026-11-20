@@ -11,7 +11,7 @@ PBL_LOG_MODULE_DEFINE(driver_accel, CONFIG_DRIVER_IMU_LOG_LEVEL);
 PBL_DEVICE_CLASS_DEFINE(pbl_accel_class, "accel");
 
 int pbl_accel_dev_init(const struct pbl_device *dev) {
-  const struct pbl_accel *accel = container_of(dev, const struct pbl_accel, dev);
+  const struct pbl_accel *accel = PBL_CONTAINER_OF(dev, const struct pbl_accel, dev);
   int ret;
 
   pbl_accel_lock(accel);

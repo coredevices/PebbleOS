@@ -11,7 +11,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_rproc_class, dev) {
-    const struct pbl_rproc *rproc = container_of(dev, const struct pbl_rproc, dev);
+    const struct pbl_rproc *rproc = PBL_CONTAINER_OF(dev, const struct pbl_rproc, dev);
 
     if (!pbl_device_is_ready(dev)) {
       pbl_shell_print(sh, "%s (not ready)", dev->name);
@@ -33,7 +33,7 @@ static const struct pbl_rproc *prv_find(const struct pbl_shell *sh, const char *
     return nullptr;
   }
 
-  return container_of(dev, const struct pbl_rproc, dev);
+  return PBL_CONTAINER_OF(dev, const struct pbl_rproc, dev);
 }
 
 static int prv_cmd_boot(const struct pbl_shell *sh, size_t argc, char **argv) {

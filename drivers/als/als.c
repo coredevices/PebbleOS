@@ -38,7 +38,7 @@ static void prv_apply_state_locked(const struct pbl_als *als) {
 }
 
 int pbl_als_dev_init(const struct pbl_device *dev) {
-  const struct pbl_als *als = container_of(dev, const struct pbl_als, dev);
+  const struct pbl_als *als = PBL_CONTAINER_OF(dev, const struct pbl_als, dev);
   int ret;
 
   prv_lock(als);

@@ -9,7 +9,7 @@
 PBL_DEVICE_CLASS_DEFINE(pbl_temp_class, "temp");
 
 int pbl_temp_dev_init(const struct pbl_device *dev) {
-  const struct pbl_temp *temp = container_of(dev, const struct pbl_temp, dev);
+  const struct pbl_temp *temp = PBL_CONTAINER_OF(dev, const struct pbl_temp, dev);
   int ret;
 
   if (temp->ops->init == nullptr) {

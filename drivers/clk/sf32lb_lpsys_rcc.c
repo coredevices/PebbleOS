@@ -29,7 +29,7 @@ struct pbl_clk_sf32lb_lpsys_rcc {
 };
 
 static const struct pbl_clk_sf32lb_lpsys_rcc *prv_rcc(const struct pbl_clk_controller *ctrl) {
-  return container_of(ctrl, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl);
+  return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl);
 }
 
 // LPSYS registers only answer while it is awake
@@ -182,7 +182,7 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
 
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb_lpsys_rcc *rcc =
-      container_of(dev, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl.dev);
+      PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl.dev);
 
   return pbl_clk_assign(rcc->assigned);
 }

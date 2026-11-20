@@ -36,7 +36,7 @@ PBL_LOG_MODULE_DECLARE(driver_als, CONFIG_DRIVER_ALS_LOG_LEVEL);
 #define OPT3001_DEVID_VAL              0x3001
 
 static const struct pbl_opt3001 *prv_get(const struct pbl_als *als) {
-  return container_of(als, const struct pbl_opt3001, als);
+  return PBL_CONTAINER_OF(als, const struct pbl_opt3001, als);
 }
 
 static int prv_read_register(const struct pbl_opt3001 *dev, uint8_t reg, uint16_t *val) {

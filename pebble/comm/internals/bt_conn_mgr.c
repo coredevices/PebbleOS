@@ -250,7 +250,7 @@ static void prv_bt_le_gateway_response_latency_watchdog_fn(struct pbl_work *work
   // offload handling onto SysWorkq so we don't stall the high priority work
   // queue trying to get the bt lock
   pbl_sys_work_call(prv_bt_le_gateway_response_latency_watchdog_handler,
-                    container_of(work, ConnectionMgrInfo, watchdog_work.work));
+                    PBL_CONTAINER_OF(work, ConnectionMgrInfo, watchdog_work.work));
 }
 
 static bool prv_find_source(ListNode *found_node, void *data) {

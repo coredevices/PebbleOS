@@ -198,7 +198,7 @@ static void npl_pebble_callout_do_update_from_eventq(struct ble_npl_event *ev) {
 }
 
 static void os_callout_timer_cb(struct pbl_work *work) {
-  struct ble_npl_callout *co = container_of(work, struct ble_npl_callout, work.work);
+  struct ble_npl_callout *co = PBL_CONTAINER_OF(work, struct ble_npl_callout, work.work);
 
   // check to see if we are pending an update; if so, trigger it and do
   // nothing, since we were already asked to delay until later
