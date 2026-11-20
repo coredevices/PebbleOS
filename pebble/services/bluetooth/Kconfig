@@ -27,12 +27,9 @@ config BLE_GATT_SUBSCRIPTION_DEPTH
 config BT_ANCS_CLIENT
     default y if !RECOVERY_FW
 
+# iOS music control. Off in the recovery firmware, which has no music UI.
 config BT_AMS_CLIENT
-    bool "AMS (Apple Media Service) client"
     default y if !RECOVERY_FW
-    help
-      Build the AMS GATT client (iOS music control). Off in the recovery
-      firmware, which has no music UI.
 
 if SERVICE_BLUETOOTH
 

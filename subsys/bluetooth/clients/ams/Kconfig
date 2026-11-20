@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_AMS_CLIENT
+    bool "AMS client"
+    depends on NIMBLE
+    select BT_GATT_CLIENT
+    help
+      Client of the Apple Media Service of a connected iOS device
+      (pbl/bluetooth/clients/ams.h).

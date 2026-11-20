@@ -9,12 +9,16 @@ static struct pbl_bt_gattc_service *s_svc;
 static const struct pbl_bt_gattc_service_cb *s_cb;
 static FakeGattcServiceWriteHandler s_write_handler;
 static int s_subscribe_rc;
+static int s_read_rc;
+static int s_num_reads;
 
 void fake_gattc_service_init(void) {
   s_svc = nullptr;
   s_cb = nullptr;
   s_write_handler = nullptr;
   s_subscribe_rc = 0;
+  s_read_rc = 0;
+  s_num_reads = 0;
 }
 
 void fake_gattc_service_set_write_handler(FakeGattcServiceWriteHandler handler) {
@@ -23,6 +27,14 @@ void fake_gattc_service_set_write_handler(FakeGattcServiceWriteHandler handler) 
 
 void fake_gattc_service_set_subscribe_rc(int rc) {
   s_subscribe_rc = rc;
+}
+
+void fake_gattc_service_set_read_rc(int rc) {
+  s_read_rc = rc;
+}
+
+int fake_gattc_service_num_reads(void) {
+  return s_num_reads;
 }
 
 bool fake_gattc_service_is_started(void) {
@@ -53,6 +65,12 @@ void fake_gattc_service_written(uint8_t chr, int status) {
   }
 }
 
+void fake_gattc_service_read(uint8_t chr, int status, const void *data, uint16_t len) {
+  if (s_svc != nullptr && s_cb->read != nullptr) {
+    s_cb->read(s_svc, chr, status, data, len);
+  }
+}
+
 int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_handle,
                                const struct pbl_bt_gattc_service_cb *cb) {
   s_svc = svc;
@@ -80,6 +98,14 @@ int pbl_bt_gattc_service_write(struct pbl_bt_gattc_service *svc, uint8_t chr, co
     return -ENOTCONN;
   }
   return (s_write_handler != nullptr) ? s_write_handler(chr, data, len) : 0;
+}
+
+int pbl_bt_gattc_service_read(struct pbl_bt_gattc_service *svc, uint8_t chr) {
+  if (s_svc != svc) {
+    return -ENOTCONN;
+  }
+  s_num_reads++;
+  return s_read_rc;
 }
 
 bool pbl_bt_gattc_service_notify_rx(struct pbl_bt_gattc_service *svc, uint16_t conn_handle,
