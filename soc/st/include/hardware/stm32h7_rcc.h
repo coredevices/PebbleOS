@@ -1,0 +1,60 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets. The enable registers are those of the CPU accessing them. */
+
+#define STM32H7_RCC_CR_OFFSET       0x0000
+#define STM32H7_RCC_CFGR_OFFSET     0x0010
+#define STM32H7_RCC_D1CFGR_OFFSET   0x0018
+#define STM32H7_RCC_D2CFGR_OFFSET   0x001c
+#define STM32H7_RCC_D3CFGR_OFFSET   0x0020
+#define STM32H7_RCC_D2CCIP2R_OFFSET 0x0054
+#define STM32H7_RCC_AHB4ENR_OFFSET  0x00e0
+#define STM32H7_RCC_APB1LENR_OFFSET 0x00e8
+#define STM32H7_RCC_APB2ENR_OFFSET  0x00f0
+
+/* Register bit definitions */
+
+#define RCC_CR_HSION       PBL_BIT(0)
+#define RCC_CR_HSIRDY      PBL_BIT(2)
+#define RCC_CR_HSIDIV_MASK PBL_GENMASK(4, 3)
+#define RCC_CR_CSION       PBL_BIT(7)
+#define RCC_CR_CSIRDY      PBL_BIT(8)
+#define RCC_CR_HSEON       PBL_BIT(16)
+#define RCC_CR_HSERDY      PBL_BIT(17)
+
+#define RCC_CFGR_SW_MASK  PBL_GENMASK(2, 0)
+#define RCC_CFGR_SWS_MASK PBL_GENMASK(5, 3)
+#define RCC_CFGR_SW_HSI   0U
+#define RCC_CFGR_SW_CSI   1U
+#define RCC_CFGR_SW_HSE   2U
+#define RCC_CFGR_SW_PLL1  3U
+#define RCC_CFGR_TIMPRE   PBL_BIT(15)
+
+#define RCC_D1CFGR_HPRE_MASK   PBL_GENMASK(3, 0)
+#define RCC_D1CFGR_D1PPRE_MASK PBL_GENMASK(6, 4)
+#define RCC_D1CFGR_D1CPRE_MASK PBL_GENMASK(11, 8)
+
+#define RCC_D2CFGR_D2PPRE1_MASK PBL_GENMASK(6, 4)
+#define RCC_D2CFGR_D2PPRE2_MASK PBL_GENMASK(10, 8)
+
+#define RCC_D3CFGR_D3PPRE_MASK PBL_GENMASK(6, 4)
+
+#define RCC_D2CCIP2R_USART234578SEL_MASK PBL_GENMASK(2, 0)
+#define RCC_D2CCIP2R_USART16SEL_MASK     PBL_GENMASK(5, 3)
+#define RCC_D2CCIP2R_USARTSEL_PCLK       0U
+#define RCC_D2CCIP2R_USARTSEL_HSI_KER    3U
+#define RCC_D2CCIP2R_USARTSEL_CSI_KER    4U
+#define RCC_D2CCIP2R_USARTSEL_LSE        5U
+
+/* Bus prescaler fields: 0xxx is 1, 1000 to 1111 are 2 to 512 without 32 (HPRE, D1CPRE) */
+#define RCC_AHB_PRE_DIVIDED PBL_BIT(3)
+/* 0xx is 1, 100 to 111 are 2 to 16 (PPRE) */
+#define RCC_APB_PRE_DIVIDED PBL_BIT(2)
+
+#define STM32H7_HSI_HZ 64000000U
+#define STM32H7_CSI_HZ 4000000U

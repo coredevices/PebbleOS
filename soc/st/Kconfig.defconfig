@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_STM32H7
+
+# The embedded flash, whose size is the part's.
+config FLASH_BASE
+    default 0x08000000
+
+# 512 KiB of AXI SRAM, which every bus master reaches.
+config SRAM_BASE
+    default 0x24000000
+
+config SRAM_SIZE
+    default 0x80000
+
+config NUM_IRQS
+    default 150
+
+config NUM_IRQ_PRIO_BITS
+    default 4
+
+endif # SOC_STM32H7

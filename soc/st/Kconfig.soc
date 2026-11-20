@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_STM32H747
+    bool "ST STM32H747, Cortex-M7"
+    select SOC_STM32H7

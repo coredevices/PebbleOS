@@ -9,6 +9,7 @@ choice
 
 rsource "nrf/Kconfig.soc"
 rsource "sf32lb/Kconfig.soc"
+rsource "st/Kconfig.soc"
 rsource "qemu/Kconfig.soc"
 
 config SOC_POSIX
@@ -51,6 +52,7 @@ config SOC
     default "NRF52" if SOC_NRF52
     default "SF32LB52" if SOC_SF32LB52
     default "SF32LB57" if SOC_SF32LB57
+    default "STM32H747" if SOC_STM32H747
     help
       Stringified SoC name, for places that need the name as a token
       (e.g. sftool -c). Empty on QEMU and POSIX boards.
@@ -87,3 +89,4 @@ config QEMU
 rsource "nrf/Kconfig"
 rsource "qemu/Kconfig"
 rsource "sf32lb/Kconfig"
+rsource "st/Kconfig"
