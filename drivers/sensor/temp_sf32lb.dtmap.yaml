@@ -3,7 +3,7 @@
 
 compatible: sifli,sf32lb52-tsen
 config: TEMP_SF32LB
-class: temp
+class: sensor
 define: PBL_TEMP_SF32LB_DEFINE
 args:
   - name: true

@@ -3,7 +3,7 @@
 
 compatible: st,stm32h7-adc
 config: TEMP_STM32H7_ADC
-class: temp
+class: sensor
 symbol: "{sym}_temp"
 define: PBL_TEMP_STM32H7_ADC_DEFINE
 args:

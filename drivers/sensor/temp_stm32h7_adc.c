@@ -7,8 +7,11 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/adc.h>
 #include <pbl/drivers/nvmem.h>
-#include <pbl/drivers/temp.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/kernel/time.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
 // Internal channels of ADC3
 #define CHANNEL_VSENSE  18U
@@ -26,7 +29,7 @@ struct pbl_temp_stm32h7_adc_state {
 };
 
 struct pbl_temp_stm32h7_adc {
-  struct pbl_temp temp;
+  struct pbl_sensor sensor;
   const struct pbl_adc *adc;
   struct pbl_nvmem_cell vrefint;
   struct pbl_nvmem_cell ts_cal1;
@@ -34,11 +37,15 @@ struct pbl_temp_stm32h7_adc {
   struct pbl_temp_stm32h7_adc_state *state;
 };
 
-static const struct pbl_temp_stm32h7_adc *prv_temp(const struct pbl_temp *temp) {
-  return PBL_CONTAINER_OF(temp, const struct pbl_temp_stm32h7_adc, temp);
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_TEMP, 0, 0, PBL_SENSOR_FMT_S32_LE, 1, 1, 0),
+};
+
+static const struct pbl_temp_stm32h7_adc *prv_temp(const struct pbl_sensor *sensor) {
+  return PBL_CONTAINER_OF(sensor, const struct pbl_temp_stm32h7_adc, sensor);
 }
 
-static int prv_init(const struct pbl_temp *dev) {
+static int prv_init(const struct pbl_sensor *dev) {
   const struct pbl_temp_stm32h7_adc *temp = prv_temp(dev);
   struct pbl_temp_stm32h7_adc_state *st = temp->state;
   int ret;
@@ -64,7 +71,8 @@ static int prv_init(const struct pbl_temp *dev) {
 
 // The sensor as it would read at 3.3 V: its ratio to VREFINT, scaled by VREFINT at 3.3 V,
 // whatever VREF+ is, then a line through the two calibration points
-static int prv_read(const struct pbl_temp *dev, int32_t *millicelsius) {
+static int prv_read(const struct pbl_sensor *dev, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
   const struct pbl_temp_stm32h7_adc *temp = prv_temp(dev);
   const struct pbl_temp_stm32h7_adc_state *st = temp->state;
   const struct pbl_adc_channel vsense = PBL_ADC_CHANNEL(temp->adc, CHANNEL_VSENSE);
@@ -87,23 +95,29 @@ static int prv_read(const struct pbl_temp *dev, int32_t *millicelsius) {
   }
 
   raw = (int64_t)sense_uv * st->vrefint_cal / ref_uv;
-  *millicelsius =
-      (int32_t)(CAL1_MC + (raw - st->ts_cal1) * (CAL2_MC - CAL1_MC) / (st->ts_cal2 - st->ts_cal1));
+  pbl_put_le32(
+      (uint32_t)(CAL1_MC + (raw - st->ts_cal1) * (CAL2_MC - CAL1_MC) / (st->ts_cal2 - st->ts_cal1)),
+      frame->data);
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+  frame->timestamp_us = pbl_uptime_us();
 
   return 0;
 }
 
-static const struct pbl_temp_ops s_ops = {
+static const struct pbl_sensor_ops s_ops = {
   .init = prv_init,
   .read = prv_read,
 };
 
-#define PBL_TEMP_STM32H7_ADC_DEFINE(sym, _name, _adc, _vrefint, _ts_cal1, _ts_cal2)         \
-  PBL_TEMP_STATE_DEFINE(sym);                                                               \
-  static struct pbl_temp_stm32h7_adc_state sym##_adc_state;                                 \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_temp_stm32h7_adc, struct pbl_temp, temp) {            \
-    .temp = PBL_TEMP_INIT(sym, _name, nullptr, &s_ops), .adc = (_adc), .vrefint = _vrefint, \
-    .ts_cal1 = _ts_cal1, .ts_cal2 = _ts_cal2, .state = &sym##_adc_state,                    \
+#define PBL_TEMP_STM32H7_ADC_DEFINE(sym, _name, _adc, _vrefint, _ts_cal1, _ts_cal2)      \
+  PBL_SENSOR_STATE_DEFINE(sym);                                                          \
+  static struct pbl_temp_stm32h7_adc_state sym##_adc_state;                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_temp_stm32h7_adc, struct pbl_sensor, sensor) {     \
+    .sensor = PBL_SENSOR_INIT(sym, _name, nullptr, &s_ops, PBL_BIT(PBL_SENSOR_TEMP), 0U, \
+                              PBL_SENSOR_MOUNT_IDENTITY),                                \
+    .adc = (_adc), .vrefint = _vrefint, .ts_cal1 = _ts_cal1, .ts_cal2 = _ts_cal2,        \
+    .state = &sym##_adc_state,                                                           \
   }
 
-#include PBL_DT_INSTANCES(st_stm32h7_adc_temp)
+#include PBL_DT_INSTANCES(st_stm32h7_adc_sensor)

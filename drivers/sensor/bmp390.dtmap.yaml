@@ -3,7 +3,7 @@
 
 compatible: bosch,bmp380
 config: PRESSURE_BMP390
-class: pressure
+class: sensor
 define: PBL_BMP390_DEFINE
 args:
   - parent: i2c

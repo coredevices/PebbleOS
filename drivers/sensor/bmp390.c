@@ -5,17 +5,19 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/pressure.h>
-#include <pbl/drivers/pressure/bmp390.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/bmp390.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
-PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_sensor, CONFIG_DRIVER_SENSOR_LOG_LEVEL);
 
 #define BMP390_CHIP_ID              0x00
 #define BMP380_CHIP_ID_VAL          0x50
@@ -51,8 +53,12 @@ PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 #define STARTUP_MS     2U
 #define CMD_TIMEOUT_MS 10U
 
-static const struct pbl_bmp390 *prv_get(const struct pbl_pressure *pressure) {
-  return PBL_CONTAINER_OF(pressure, const struct pbl_bmp390, pressure);
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_PRESSURE, 0, 0, PBL_SENSOR_FMT_S32_LE, 1, 1, 0),
+};
+
+static const struct pbl_bmp390 *prv_get(const struct pbl_sensor *sensor) {
+  return PBL_CONTAINER_OF(sensor, const struct pbl_bmp390, sensor);
 }
 
 static void prv_parse_calib(const uint8_t raw[BMP390_CALIB_LEN], struct pbl_bmp390_calib *calib) {
@@ -74,7 +80,7 @@ static void prv_parse_calib(const uint8_t raw[BMP390_CALIB_LEN], struct pbl_bmp3
 
 // Datasheet compensation (BMP390 datasheet, section 8.4 to 8.6) in single precision, which the
 // FPU runs. The temperature only serves the compensation. The terms stay far below the 2^24 integer
-// limit where it matters (raw_temp - t1).
+// limit where it matters (raw_temp - t1). Returns millipascals.
 static uint32_t prv_compensate(const struct pbl_bmp390_calib *c, uint32_t raw_press,
                                uint32_t raw_temp) {
   const float t2 = c->par_t2 / 1073741824.0f;
@@ -97,15 +103,15 @@ static uint32_t prv_compensate(const struct pbl_bmp390_calib *c, uint32_t raw_pr
   const float sensitivity = p1 + t * (p2 + t * (p3 + t * p4));
   const float p = offset + up * sensitivity + up * up * (p9 + t * p10) + up * up * up * p11;
 
-  return p > 0.0f ? (uint32_t)(p + 0.5f) : 0U;
+  return p > 0.0f ? (uint32_t)(p * 1000.0f + 0.5f) : 0U;
 }
 
 static int prv_read_status(const struct pbl_bmp390 *dev, uint8_t *status) {
   return pbl_i2c_reg_read_byte(&dev->i2c, BMP390_STATUS, status);
 }
 
-static int prv_init(const struct pbl_pressure *pressure) {
-  const struct pbl_bmp390 *dev = prv_get(pressure);
+static int prv_init(const struct pbl_sensor *sensor) {
+  const struct pbl_bmp390 *dev = prv_get(sensor);
   uint8_t raw[BMP390_CALIB_LEN];
   uint8_t val = 0U;
   int ret;
@@ -143,8 +149,9 @@ static int prv_init(const struct pbl_pressure *pressure) {
                                     PBL_FIELD_PREP(BMP390_OSR_T_MASK, OSR_T_LOG2));
 }
 
-static int prv_read(const struct pbl_pressure *pressure, uint32_t *pa) {
-  const struct pbl_bmp390 *dev = prv_get(pressure);
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
+  const struct pbl_bmp390 *dev = prv_get(sensor);
   const uint8_t drdy = BMP390_STATUS_DRDY_PRESS | BMP390_STATUS_DRDY_TEMP;
   uint8_t data[6];
   uint8_t status = 0U;
@@ -183,12 +190,16 @@ static int prv_read(const struct pbl_pressure *pressure, uint32_t *pa) {
     return ret;
   }
 
-  *pa = prv_compensate(dev->calib, pbl_get_le24(&data[0]), pbl_get_le24(&data[3]));
+  pbl_put_le32(prv_compensate(dev->calib, pbl_get_le24(&data[0]), pbl_get_le24(&data[3])),
+               frame->data);
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+  frame->timestamp_us = pbl_uptime_us();
 
   return 0;
 }
 
-const struct pbl_pressure_ops pbl_bmp390_ops = {
+const struct pbl_sensor_ops pbl_bmp390_ops = {
   .init = prv_init,
   .read = prv_read,
 };

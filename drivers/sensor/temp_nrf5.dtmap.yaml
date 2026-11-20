@@ -3,7 +3,7 @@
 
 compatible: nordic,nrf52832-temp
 config: TEMP_NRF5
-class: temp
+class: sensor
 define: PBL_TEMP_NRF5_DEFINE
 args:
   - name: true

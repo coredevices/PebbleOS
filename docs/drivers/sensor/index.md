@@ -87,6 +87,12 @@ Events such as shakes and double taps are enabled with
 `PBL_SENSOR_ATTR_SHAKE_SENSITIVITY`. The driver reports them with the axis in
 its own frame, and the class remaps them to the watch frame.
 
+## Roles
+
+The board's sensors are reached through roles: `die_temp` as `DIE_TEMP` and
+`pressure` as `PRESSURE`. The Kconfig menu of each sensor type, `TEMP` and
+`PRESSURE`, groups its drivers and requires its role.
+
 ## Shell
 
 The `sensor` shell command, with `CONFIG_SENSOR_SHELL`, lists every sensor,

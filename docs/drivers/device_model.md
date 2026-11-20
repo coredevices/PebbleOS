@@ -555,7 +555,7 @@ are their own layer, independent of how devices are defined:
 each role whose symbol is enabled:
 
 ```c
-const struct pbl_temp *const DIE_TEMP = &dt_temp0;
+const struct pbl_sensor *const TEMP = &dt_temp0;
 const struct pbl_accel *const ACCEL = SIM_ACCEL;
 ```
 

@@ -27,4 +27,33 @@ source "subsys/logging/Kconfig.template.log_level"
 
 endif # SENSOR
 
+menuconfig TEMP
+    bool "Temperature sensors"
+    select SENSOR
+    help
+      Temperature sensor drivers. The board's die temperature sensor is
+      the die_temp role, TEMP.
+
+if TEMP
+
+rsource "Kconfig.temp_nrf5"
+rsource "Kconfig.temp_sf32lb"
+rsource "Kconfig.temp_stm32h7_adc"
+rsource "Kconfig.temp_sim"
+
+endif # TEMP
+
+menuconfig PRESSURE
+    bool "Pressure sensors"
+    select SENSOR
+    help
+      Barometric pressure sensor drivers. The board's pressure sensor is
+      the pressure role, PRESSURE.
+
+if PRESSURE
+
+rsource "Kconfig.bmp390"
+
+endif # PRESSURE
+
 endmenu
