@@ -4,7 +4,6 @@
 #include <pbl/board.h>
 #include <pbl/drivers/gpio/sf32lb.h>
 #include <pbl/drivers/pmic/npm1300.h>
-#include <pbl/drivers/remoteproc/sf32lb.h>
 #include <pbl/kernel/irq.h>
 
 #ifdef CONFIG_HRM
@@ -15,11 +14,6 @@
 
 const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 3, 2, 1};
 const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
-
-#ifdef CONFIG_REMOTEPROC_SF32LB
-const struct pbl_rproc_sf32lb *const LCPU =
-    container_of(&dt_lcpu, const struct pbl_rproc_sf32lb, rproc);
-#endif // CONFIG_REMOTEPROC_SF32LB
 
 #ifdef CONFIG_PMIC_NPM1300
 const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;

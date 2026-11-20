@@ -3,7 +3,4 @@
 
 #pragma once
 
-#ifdef CONFIG_REMOTEPROC_SF32LB
-extern const struct pbl_rproc_sf32lb *const LCPU;
-#endif // CONFIG_REMOTEPROC_SF32LB
 extern HRMDevice *const HRM;
