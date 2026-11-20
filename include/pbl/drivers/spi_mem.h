@@ -263,17 +263,17 @@ struct pbl_spi_mem {
  * @param sym Symbol of the controller instance, with its state defined by
  * PBL_SPI_MEM_STATE_DEFINE().
  * @param _name Name.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
+ * @param _parent Parent device, as the memory controller the function is part of, or NULL.
  * @param _ops Driver operations.
  * @param _flags Flags, @c PBL_SPI_MEM_*.
  */
-#define PBL_SPI_MEM_INIT(sym, _name, _deps, _ops, _flags)                          \
-  {                                                                                \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_mem_dev_init, nullptr, _deps, \
-                                 &pbl_spi_mem_class),                              \
-    .ops = (_ops),                                                                 \
-    .state = &sym##_spi_mem_state,                                                 \
-    .flags = (_flags),                                                             \
+#define PBL_SPI_MEM_INIT(sym, _name, _parent, _ops, _flags)                          \
+  {                                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_mem_dev_init, _parent, nullptr, \
+                                 &pbl_spi_mem_class),                                \
+    .ops = (_ops),                                                                   \
+    .state = &sym##_spi_mem_state,                                                   \
+    .flags = (_flags),                                                               \
   }
 
 /**
