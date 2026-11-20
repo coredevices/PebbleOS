@@ -112,14 +112,14 @@ used without the rest of the subsystem:
   the responses that come in parts, and performs their actions. A client
   (`PBL_BT_ANCS_CLIENT_DEFINE()`) serves one connection and runs one request
   at a time; the values of the service are in `pbl/bluetooth/ancs.h`. The
-  {doc}`ANCS client sample <../samples/subsys/bluetooth/ancs_client>` shows
+  {doc}`iOS clients sample <../samples/subsys/bluetooth/ios_clients>` shows
   it.
 - `pbl/bluetooth/clients/ams.h` (`BT_AMS_CLIENT`) is the client of the Apple
   Media Service: it sends commands to the media player, registers for
   attributes of the player, the queue and the track and reports their values
   as the device updates them, and reads the whole of a value that was cut. A
   client (`PBL_BT_AMS_CLIENT_DEFINE()`) serves one connection; the values of
-  the service are in `pbl/bluetooth/ams.h`.
+  the service are in `pbl/bluetooth/ams.h`. The same sample shows it.
 
 The firmware's notification and media sessions (queueing, timeouts, the
 liveness check, the music service) sit on top of those two in

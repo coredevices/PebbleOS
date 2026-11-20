@@ -4,6 +4,14 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(PebbleOS REQUIRED HINTS $ENV{PEBBLEOS_BASE})
-project(ancs_client)
+project(ios_clients)
 
 target_sources(app PRIVATE src/main.c)
+
+if(CONFIG_SAMPLE_ANCS)
+  target_sources(app PRIVATE src/ancs.c)
+endif()
+
+if(CONFIG_SAMPLE_AMS)
+  target_sources(app PRIVATE src/ams.c)
+endif()

@@ -5,7 +5,7 @@ Samples of the {doc}`subsystems <../../subsystems/index>`, in `samples/subsys`.
 ```{toctree}
 :maxdepth: 1
 
-bluetooth/ancs_client.md
+bluetooth/ios_clients.md
 crc/checksums.md
 crypto/sha256.md
 crypto/aes.md

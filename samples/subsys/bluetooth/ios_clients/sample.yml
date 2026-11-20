@@ -1,0 +1,3 @@
+description: A peripheral that pairs with an iOS device and prints its notifications with the ANCS client and what it plays with the AMS client
+expect:
+  - 'ios_clients: advertising as PebbleOS'
