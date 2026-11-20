@@ -700,10 +700,6 @@ void battery_set_charge_enable(bool charging_enabled) {
   pmic_set_charger_state(charging_enabled);
 }
 
-void battery_set_fast_charge(bool fast_charge_enabled) {
-  /* the PMIC handles this for us */
-}
-
 bool pmic_is_charging(void) {
   uint8_t status;
   if (prv_read_register(NPM1300_BCHGCHARGESTATUS, &status) != 0) {
@@ -730,26 +726,6 @@ bool pmic_is_usb_connected(void) {
 
 bool battery_is_usb_connected_impl(void) {
   return pmic_is_usb_connected();
-}
-
-void pmic_read_chip_info(uint8_t *chip_id, uint8_t *chip_revision, uint8_t *buck1_vset) {
-}
-
-bool pmic_enable_battery_measure(void) {
-  return true;
-}
-
-bool pmic_disable_battery_measure(void) {
-  return true;
-}
-
-void set_ldo3_power_state(bool enabled) {
-}
-
-void set_4V5_power_state(bool enabled) {
-}
-
-void set_6V6_power_state(bool enabled) {
 }
 
 int battery_charge_status_get(BatteryChargeStatus *status) {
