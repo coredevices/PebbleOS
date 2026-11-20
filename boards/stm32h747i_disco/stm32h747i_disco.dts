@@ -72,6 +72,15 @@
 	clock-frequency = <25000000>;
 };
 
+// The CPU at 400 MHz from PLL1 on HSE, AHB at 200 MHz and APB at 100 MHz
+&rcc {
+	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
+			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK4>;
+	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>;
+	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
+			       <100000000>;
+};
+
 // The SMPS supplies VCORE, as the kit ships
 &pwr {
 	st,supply-config = "direct-smps";

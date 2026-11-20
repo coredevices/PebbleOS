@@ -22,8 +22,9 @@ system timer, the LEDs and the joystick work so far.
   booting from bank 1, and 512 KiB AXI SRAM, which PebbleOS runs from
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit
   ships (`st,supply-config = "direct-smps"`)
-- **Clocks**: 25 MHz HSE and 32.768 kHz LSE crystals; the SoC runs on its
-  64 MHz HSI oscillator so far
+- **Clocks**: 25 MHz HSE and 32.768 kHz LSE crystals; PLL1 runs the
+  Cortex-M7 at 400 MHz from HSE, with the AHB at 200 MHz and the APB buses at
+  100 MHz
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX)
 
