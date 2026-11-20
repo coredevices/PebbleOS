@@ -45,8 +45,8 @@ class RunnerCaps:
     """Declares what a runner class can do."""
 
     commands: set = field(default_factory=lambda: {"flash"})
-    # Whether flash() can also program system resources.
-    flash_resources: bool = False
+    # Whether flash() can also write files to the flash, e.g. resources.
+    flash_data: bool = False
 
     def __post_init__(self):
         invalid = self.commands - set(COMMANDS)
@@ -65,8 +65,7 @@ class RunnerConfig(NamedTuple):
     bin_file: str | None = None
     pbpack_file: str | None = None  # None on PRF builds
     firmware_slot: int | None = None  # None without multiple slots
-    resources_file: str | None = None
-    resources_address: int | None = None  # offset in the flash
+    data_files: tuple = ()  # (file, offset in the flash), flashed after the images
     erase_ranges: tuple = ()  # (offset, size) in the flash
     sftool: str = "sftool"
     gdb: str | None = None
@@ -127,9 +126,9 @@ class Runner(ABC):
             raise UnsupportedOperation(
                 f"{self.name} runner does not support {command}"
             )
-        if command == "flash" and self.cfg.resources_file and not caps.flash_resources:
+        if command == "flash" and self.cfg.data_files and not caps.flash_data:
             raise UnsupportedOperation(
-                f"{self.name} runner does not support flashing resources"
+                f"{self.name} runner does not support writing files to the flash"
             )
         if self.cfg.dry_run:
             return self.do_run(command)

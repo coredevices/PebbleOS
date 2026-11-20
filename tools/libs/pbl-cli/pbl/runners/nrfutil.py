@@ -18,7 +18,7 @@ class NrfUtilRunner(Runner):
     def capabilities(cls):
         return RunnerCaps(
             commands={"flash", "erase"},
-            flash_resources=True,
+            flash_data=True,
         )
 
     @property
@@ -52,17 +52,14 @@ class NrfUtilRunner(Runner):
             end = start + size - 1
             self._nrfutil(f"erase --pages {start:#x}-{end:#x}", ext_mem=True)
 
-    def _program_resources(self):
+    def _program_data(self, file, offset):
         with tempfile.TemporaryDirectory() as tmp:
-            hex_file = os.path.join(tmp, "resources.hex")
+            hex_file = os.path.join(tmp, "data.hex")
             if not self.cfg.dry_run:
                 from intelhex import IntelHex
 
                 image = IntelHex()
-                image.loadbin(
-                    self.cfg.resources_file,
-                    offset=QSPI_XIP_BASE + self.cfg.resources_address,
-                )
+                image.loadbin(file, offset=QSPI_XIP_BASE + offset)
                 image.write_hex_file(hex_file)
             self._nrfutil(
                 f"program --firmware {self.quote(hex_file)} --options "
@@ -73,12 +70,12 @@ class NrfUtilRunner(Runner):
 
     def do_run(self, command):
         if command == "flash":
-            if self.cfg.resources_file:
-                self._check_ext_mem("flash resources")
+            if self.cfg.data_files:
+                self._check_ext_mem("write files to the flash")
             for hex_file in self.cfg.flash_files:
                 self._program(hex_file)
-            if self.cfg.resources_file:
-                self._program_resources()
+            for file, offset in self.cfg.data_files:
+                self._program_data(file, offset)
             self._nrfutil("reset")
         elif command == "erase":
             self._erase_ranges()

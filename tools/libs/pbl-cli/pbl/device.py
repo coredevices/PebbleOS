@@ -57,12 +57,11 @@ def make_runner(
     gives the ports the command line leaves out. ``images`` names the images
     of the build to flash, all of them by default.
     """
-    resources_file = None
-    resources_address = None
+    data_files = []
     if resources and build.variant != "prf":
-        resources_file = build.pbpack
         # The bank the firmware checks first
-        resources_address, _ = build.flash_region("SYSTEM_RESOURCES_BANK_0")
+        offset, _ = build.flash_region("SYSTEM_RESOURCES_BANK_0")
+        data_files.append((build.pbpack, offset))
 
     cfg = runners.RunnerConfig(
         board_dir=os.path.join(build.topdir, "boards", build.board_spec.name),
@@ -75,8 +74,7 @@ def make_runner(
         firmware_slot=build.config.CONFIG_FIRMWARE_SLOT
         if build.config.CONFIG_PBLBOOT
         else None,
-        resources_file=resources_file,
-        resources_address=resources_address,
+        data_files=tuple(data_files),
         erase_ranges=tuple(erase_ranges),
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),

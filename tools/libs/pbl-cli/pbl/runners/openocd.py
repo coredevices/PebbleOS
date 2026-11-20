@@ -33,7 +33,7 @@ class OpenOcdRunner(Runner):
     def capabilities(cls):
         return RunnerCaps(
             commands={"flash", "erase", "debug", "debugserver"},
-            flash_resources=True,
+            flash_data=True,
         )
 
     def locks(self, command):
@@ -67,26 +67,25 @@ class OpenOcdRunner(Runner):
     def _program(self):
         return "".join(f"program {{{f}}}; " for f in self.cfg.flash_files)
 
-    def _flash_resources(self):
-        self._check_flash_cfg("flash resources")
+    def _flash_data(self):
+        self._check_flash_cfg("write files to the flash")
+        writes = "".join(f"pbl_write {{{f}}} {o:#x}; " for f, o in self.cfg.data_files)
         self._run_command(
             f"init; reset halt; {self._program()}"
-            f"source {{{self._flash_cfg}}}; "
-            f"pbl_flash_resources {{{self.cfg.resources_file}}} "
-            f"{self.cfg.resources_address:#x}; "
-            "echo {Resources Finished}; reset;",
+            f"source {{{self._flash_cfg}}}; {writes}"
+            "echo {Data Finished}; reset;",
             expect=[
                 "Programming Started",
                 "Programming Finished",
-                "Resources Finished",
+                "Data Finished",
                 "shutdown",
             ],
             enforce_expect=True,
         )
 
     def do_run(self, command):
-        if command == "flash" and self.cfg.resources_file:
-            self._flash_resources()
+        if command == "flash" and self.cfg.data_files:
+            self._flash_data()
         elif command == "flash":
             self._run_command(
                 f"init; reset halt; {self._program()}reset;",
