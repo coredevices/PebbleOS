@@ -12,6 +12,7 @@ charger.md
 display.md
 flash.md
 gpu.md
+led.md
 mag.md
 mic.md
 pressure.md

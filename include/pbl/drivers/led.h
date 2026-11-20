@@ -42,6 +42,9 @@ struct pbl_led {
 extern const struct pbl_device_class pbl_led_class;
 /** @endcond */
 
+/** @brief The board's status LED. */
+extern const struct pbl_led *const STATUS_LED;
+
 /**
  * @brief Initialize a struct pbl_led.
  *
