@@ -1264,12 +1264,12 @@ static void prv_fill_bezel_arc(GContext *ctx, const GRect *bounds, int32_t from_
   const uint16_t thickness = ART_ROUND_RING_THICKNESS + 1;
   if (to_deg <= 360) {
     graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness,
-                         DEG_TO_TRIGANGLE(from_deg), DEG_TO_TRIGANGLE(to_deg));
+                         PBL_DEG_TO_TRIGANGLE(from_deg), PBL_DEG_TO_TRIGANGLE(to_deg));
   } else {
     graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness,
-                         DEG_TO_TRIGANGLE(from_deg), TRIG_MAX_ANGLE);
+                         PBL_DEG_TO_TRIGANGLE(from_deg), TRIG_MAX_ANGLE);
     graphics_fill_radial(ctx, ring_bounds, GOvalScaleModeFitCircle, thickness, 0,
-                         DEG_TO_TRIGANGLE(to_deg - 360));
+                         PBL_DEG_TO_TRIGANGLE(to_deg - 360));
   }
 }
 

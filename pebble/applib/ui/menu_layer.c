@@ -120,8 +120,8 @@ static void prv_refresh_theme_colors(MenuLayer *menu_layer) {
 #if PBL_ROUND
 //! Curved scrollbar (Wear OS style): the track is an arc hugging the bezel, spanning
 //! ±30° around the 3 o'clock position.
-#define MENU_LAYER_SCROLLBAR_TRACK_SWEEP     DEG_TO_TRIGANGLE(60)
-#define MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP DEG_TO_TRIGANGLE(10)
+#define MENU_LAYER_SCROLLBAR_TRACK_SWEEP     PBL_DEG_TO_TRIGANGLE(60)
+#define MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP PBL_DEG_TO_TRIGANGLE(10)
 
 //! Thumb start/end angles for the curved scrollbar; false if the content doesn't scroll.
 PBL_T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t content_top_y,
@@ -137,7 +137,7 @@ PBL_T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t cont
                                         MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP, track_sweep);
   // Center-focused menus over-scroll past the ends (offset clipping disabled); clamp to the track.
   const int32_t progress_y = PBL_CLAMP(content_top_y, 0, scrollable_h);
-  const int32_t track_start = DEG_TO_TRIGANGLE(90) - (track_sweep / 2);
+  const int32_t track_start = PBL_DEG_TO_TRIGANGLE(90) - (track_sweep / 2);
   *angle_start = track_start + (((track_sweep - thumb_sweep) * progress_y) / scrollable_h);
   *angle_end = *angle_start + thumb_sweep;
   return true;
@@ -184,7 +184,7 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
       (PBL_MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2) - MENU_LAYER_SCROLLBAR_MARGIN;
   // The full track first, subdued, so the thumb reads as a position within it; the track also
   // provides the contrast backing for the thumb, so no halo is needed.
-  const int32_t track_start = DEG_TO_TRIGANGLE(90) - (MENU_LAYER_SCROLLBAR_TRACK_SWEEP / 2);
+  const int32_t track_start = PBL_DEG_TO_TRIGANGLE(90) - (MENU_LAYER_SCROLLBAR_TRACK_SWEEP / 2);
   graphics_context_set_fill_color(ctx, prv_scrollbar_track_color(menu_layer));
   prv_scrollbar_fill_capped_arc(ctx, center, radius_outer, MENU_LAYER_SCROLLBAR_WIDTH, track_start,
                                 track_start + MENU_LAYER_SCROLLBAR_TRACK_SWEEP);

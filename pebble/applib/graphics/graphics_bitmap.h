@@ -47,8 +47,8 @@ void graphics_draw_bitmap_in_rect(GContext *ctx, const GBitmap *bitmap, const GR
 //! @param src The source bitmap to draw
 //! @param src_ic Instance center (single point unaffected by rotation) relative to source bitmap
 //! @param rotation Angle of rotation. Rotation is an integer between 0 (no rotation)
-//! and TRIG_MAX_ANGLE (360 degree rotation). Use \ref DEG_TO_TRIGANGLE to easily convert degrees
-//! to the appropriate value.
+//! and TRIG_MAX_ANGLE (360 degree rotation). Use \ref PBL_DEG_TO_TRIGANGLE to easily convert
+//! degrees to the appropriate value.
 //! @param dest_ic Where to draw the instance center of the rotated bitmap in the context.
 void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, int rotation,
                                   GPoint dest_ic);

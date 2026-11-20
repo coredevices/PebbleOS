@@ -136,7 +136,7 @@ void test_graphics_circle__grect_centered_from_polar(void) {
   // Odd-length width and height for container rect, 180 degree angle
   const GRect container_rect3 = GRect(2, 2, 5, 5);
   const GRect resulting_rect3 =
-      grect_centered_from_polar(container_rect3, mode, DEG_TO_TRIGANGLE(180), GSize(2, 4));
+      grect_centered_from_polar(container_rect3, mode, PBL_DEG_TO_TRIGANGLE(180), GSize(2, 4));
   cl_assert_equal_grect(resulting_rect3, GRect(3, 4, 2, 4));
 }
 
@@ -381,36 +381,36 @@ void test_graphics_circle__stroke_large_radius(void) {
 }
 
 void test_graphics_circle__DEG_TO_TRIGANGLE(void) {
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(720), TRIG_MAX_ANGLE * 2);
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(-720), -TRIG_MAX_ANGLE * 2);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(720), TRIG_MAX_ANGLE * 2);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(-720), -TRIG_MAX_ANGLE * 2);
 
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(360), TRIG_MAX_ANGLE);
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(-360), -TRIG_MAX_ANGLE);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(360), TRIG_MAX_ANGLE);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(-360), -TRIG_MAX_ANGLE);
 
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(180), TRIG_PI);
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(-180), -TRIG_PI);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(180), TRIG_PI);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(-180), -TRIG_PI);
 
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(90), TRIG_PI / 2);
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(-90), -TRIG_PI / 2);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(90), TRIG_PI / 2);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(-90), -TRIG_PI / 2);
 
-  cl_assert_equal_i(DEG_TO_TRIGANGLE(0), 0);
+  cl_assert_equal_i(PBL_DEG_TO_TRIGANGLE(0), 0);
 }
 
 void test_graphics_circle__TRIGANGLE_TO_DEG(void) {
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE * 2), 720);
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE * 2), -720);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE * 2), 720);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE * 2), -720);
 
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE), 360);
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE), -360);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE), 360);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE), -360);
 
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(TRIG_PI / 2), 90);
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(-TRIG_PI / 2), -90);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(TRIG_PI / 2), 90);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(-TRIG_PI / 2), -90);
 
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE / 2), 180);
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE / 2), -180);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(TRIG_MAX_ANGLE / 2), 180);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(-TRIG_MAX_ANGLE / 2), -180);
 
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(TRIG_PI), 180);
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(-TRIG_PI), -180);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(TRIG_PI), 180);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(-TRIG_PI), -180);
 
-  cl_assert_equal_i(TRIGANGLE_TO_DEG(0), 0);
+  cl_assert_equal_i(PBL_TRIGANGLE_TO_DEG(0), 0);
 }

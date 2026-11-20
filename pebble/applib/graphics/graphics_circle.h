@@ -77,8 +77,8 @@ typedef enum {
 //!        stroke color and antialiasing setting.
 //! @param rect The reference rectangle to derive the center point and radius (see scale_mode).
 //! @param scale_mode Determines how rect will be used to derive the center point and radius.
-//! @param angle_start Radial starting angle. Use \ref DEG_TO_TRIGANGLE to easily convert degrees
-//! to the appropriate value.
+//! @param angle_start Radial starting angle. Use \ref PBL_DEG_TO_TRIGANGLE to easily convert
+//! degrees to the appropriate value.
 //! @param angle_end Radial finishing angle. If smaller than `angle_start`, nothing will be drawn.
 void graphics_draw_arc(GContext *ctx, GRect rect, GOvalScaleMode scale_mode, int32_t angle_start,
                        int32_t angle_end);
@@ -100,8 +100,8 @@ void graphics_draw_arc_internal(GContext *ctx, GPoint center, uint16_t radius, i
 //! @param scale_mode Determines how rect will be used to derive the center point and radius.
 //! @param inset_thickness Describes how thick in pixels the radial will be drawn towards its
 //!        center measured from the outside.
-//! @param angle_start Radial starting angle. Use \ref DEG_TO_TRIGANGLE to easily convert degrees
-//! to the appropriate value.
+//! @param angle_start Radial starting angle. Use \ref PBL_DEG_TO_TRIGANGLE to easily convert
+//! degrees to the appropriate value.
 //! @param angle_end Radial finishing angle. If smaller than `angle_start`, nothing will be drawn.
 void graphics_fill_radial(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
                           uint16_t inset_thickness, int32_t angle_start, int32_t angle_end);
@@ -118,7 +118,7 @@ void graphics_fill_oval(GContext *ctx, GRect rect, GOvalScaleMode scale_mode);
 //! @param rect The reference rectangle to derive the center point and radius (see scale_mode).
 //! @param scale_mode Determines how rect will be used to derive the center point and radius.
 //! @param angle The angle at which the point on the circle's perimeter should be calculated.
-//! Use \ref DEG_TO_TRIGANGLE to easily convert degrees to the appropriate value.
+//! Use \ref PBL_DEG_TO_TRIGANGLE to easily convert degrees to the appropriate value.
 //! @return The point on the circle's perimeter.
 GPoint gpoint_from_polar(GRect rect, GOvalScaleMode scale_mode, int32_t angle);
 
@@ -138,7 +138,7 @@ GPointPrecise gpoint_from_polar_precise(const GPointPrecise *precise_center,
 //! @param scale_mode Determines how rect will be used to derive the circle's center point and
 //!        radius.
 //! @param angle The angle at which the point on the circle's perimeter should be calculated.
-//! Use \ref DEG_TO_TRIGANGLE to easily convert degrees to the appropriate value.
+//! Use \ref PBL_DEG_TO_TRIGANGLE to easily convert degrees to the appropriate value.
 //! @param size Width and height of the desired rectangle.
 //! @return The rectangle centered on the circle's perimeter.
 GRect grect_centered_from_polar(GRect rect, GOvalScaleMode scale_mode, int32_t angle, GSize size);

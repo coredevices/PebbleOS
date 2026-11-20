@@ -60,7 +60,7 @@ void test_graphics_fast_paths__cleanup(void) {
 
 static void prv_rotated(GCompOp op, int degrees, GPoint src_ic, GPoint dest_ic) {
   graphics_context_set_compositing_mode(&s_ctx, op);
-  graphics_draw_rotated_bitmap(&s_ctx, s_src, src_ic, DEG_TO_TRIGANGLE(degrees), dest_ic);
+  graphics_draw_rotated_bitmap(&s_ctx, s_src, src_ic, PBL_DEG_TO_TRIGANGLE(degrees), dest_ic);
 }
 
 void test_graphics_fast_paths__rotated_set(void) {

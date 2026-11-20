@@ -65,7 +65,7 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__types_gtransformnumber(void) {
   cl_assert(gtransform_is_equal(&t_c, (const GTransform*)&test_array));
 
   // Test to make sure implemented rotation calculation is correct
-  int32_t angle = DEG_TO_TRIGANGLE(45);
+  int32_t angle = PBL_DEG_TO_TRIGANGLE(45);
   int32_t cosine = cos_lookup(angle);
   GTransformNumber num = GTransformNumberFromNumber((float)cosine / TRIG_MAX_RATIO);
   GTransformNumber num2 = 
@@ -124,7 +124,7 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__init(void) {
   cl_assert(gtransform_is_equal(&t, &t_c));
 
   // Test Rotation Matrix
-  int32_t angle = DEG_TO_TRIGANGLE(45);
+  int32_t angle = PBL_DEG_TO_TRIGANGLE(45);
   t = GTransformRotation(angle);
 
   int32_t cosine = cos_lookup(angle);
@@ -138,7 +138,7 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__init(void) {
                    GTransformNumberZero);
   cl_assert(gtransform_is_equal(&t, &t_c));
 
-  angle = DEG_TO_TRIGANGLE(46);
+  angle = PBL_DEG_TO_TRIGANGLE(46);
   cosine = cos_lookup(angle);
   sine = sin_lookup(angle);
 
@@ -268,12 +268,12 @@ void test_graphics_gtransform_${BIT_DEPTH_NAME}__rotation(void) {
                    GTransformNumberFromNumber(10),
                    GTransformNumberFromNumber(10));
 
-  gtransform_rotate(&t_new, &t1, DEG_TO_TRIGANGLE(45));
+  gtransform_rotate(&t_new, &t1, PBL_DEG_TO_TRIGANGLE(45));
   cl_assert(gtransform_is_equal(&t_new, &t_c));
   cl_assert(gtransform_is_equal(&t1, &t2)); // ensure t1 has not changed
 
   // Test pointer re-use
-  gtransform_rotate(&t1, &t1, DEG_TO_TRIGANGLE(45));
+  gtransform_rotate(&t1, &t1, PBL_DEG_TO_TRIGANGLE(45));
   cl_assert(gtransform_is_equal(&t1, &t_c));
 }
 

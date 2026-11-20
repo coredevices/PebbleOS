@@ -130,13 +130,13 @@ static void init_arrow_layer_for_button(AppData *data, ButtonId id) {
   // Down button: bottom-right, 30 deg from horizontal = -30 deg
   const int32_t BUTTON_ANGLES[] = {
     // BACK: left side, pointing left
-    DEG_TO_TRIGANGLE(180),
+    PBL_DEG_TO_TRIGANGLE(180),
     // UP: top-right, 30 deg
-    DEG_TO_TRIGANGLE(30),
+    PBL_DEG_TO_TRIGANGLE(30),
     // SELECT: center right, 0 deg
-    DEG_TO_TRIGANGLE(0),
+    PBL_DEG_TO_TRIGANGLE(0),
     // DOWN: bottom-right, -30 deg
-    DEG_TO_TRIGANGLE(-30),
+    PBL_DEG_TO_TRIGANGLE(-30),
   };
 
   int32_t angle = BUTTON_ANGLES[id];
