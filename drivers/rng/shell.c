@@ -5,6 +5,7 @@
 #include <inttypes.h>
 
 #include <pbl/drivers/rng.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/shell/shell.h>
@@ -71,7 +72,7 @@ static int prv_cmd_stats(const struct pbl_shell *sh, size_t argc, char **argv) {
     if (i > 0UL && val == prev) {
       repeats++;
     }
-    ones += (uint64_t)__builtin_popcount(val);
+    ones += (uint64_t)PBL_POPCOUNT(val);
     prev = val;
   }
 

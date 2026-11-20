@@ -8,6 +8,7 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
 #include <pbl/drivers/power_domain.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
@@ -682,7 +683,7 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
       bool pclk2 = id == SF32LB_HPSYS_CLK_PCLK2;
       uint32_t mask = pclk2 ? HPSYS_RCC_CFGR_PDIV2_MASK : HPSYS_RCC_CFGR_PDIV1_MASK;
       uint32_t max_hz = pclk2 ? PCLK2_MAX_HZ : PCLK_MAX_HZ;
-      uint32_t pdiv = (uint32_t)__builtin_ctz(div);
+      uint32_t pdiv = (uint32_t)PBL_CTZ(div);
 
       // PDIV2 cannot be 0
       if ((div & (div - 1U)) != 0U || pdiv > PDIV_MAX || (pclk2 && pdiv == 0U) ||

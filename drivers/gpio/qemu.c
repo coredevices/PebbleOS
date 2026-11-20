@@ -5,6 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/gpio/qemu.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -93,7 +94,7 @@ static void prv_irq_handler(const struct pbl_gpio_qemu *gpio) {
 
   pending = edges & state->enabled & ((level & state->rising) | (~level & state->falling));
   while (pending != 0U) {
-    pbl_intc_dispatch(gpio->port.intc, (uint32_t)__builtin_ctz(pending));
+    pbl_intc_dispatch(gpio->port.intc, (uint32_t)PBL_CTZ(pending));
     pending &= pending - 1U;
   }
 }

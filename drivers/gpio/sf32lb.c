@@ -386,7 +386,7 @@ static void prv_irq_handler(const struct pbl_gpio_sf32lb *gpio) {
     prv_clear_wakeup(gpio, bank, pending);
 
     while (pending != 0U) {
-      pbl_intc_dispatch(gpio->port.intc, bank * 32U + (uint32_t)__builtin_ctz(pending));
+      pbl_intc_dispatch(gpio->port.intc, bank * 32U + (uint32_t)PBL_CTZ(pending));
       pending &= pending - 1U;
     }
   }
