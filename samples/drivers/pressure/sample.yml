@@ -1,0 +1,9 @@
+description: The air pressure, read five times a second apart
+expect:
+  - 'pressure: \d+\.\d\d hPa'
+  - 'pressure: \d+\.\d\d hPa'
+  - 'pressure: \d+\.\d\d hPa'
+  - 'pressure: \d+\.\d\d hPa'
+  - 'pressure: \d+\.\d\d hPa'
+  - 'Sample done'
+roles: [pressure]

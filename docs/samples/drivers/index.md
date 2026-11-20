@@ -14,6 +14,7 @@ flash.md
 gpu.md
 mag.md
 mic.md
+pressure.md
 ram.md
 rng.md
 rtc.md
