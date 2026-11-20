@@ -5,7 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/cal.h>
-#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/drivers/clk/sf32lb57_pmuc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
@@ -39,16 +39,6 @@ static const struct pbl_freq_track_params s_params = {
   .rw = 1.1e-6,
   .reject_sigma = 5.0,
   .max_rejects = 3U,
-};
-
-struct pbl_clk_sf32lb57_pmuc {
-  struct pbl_clk_controller ctrl;
-  uintptr_t base;
-  // HPSYS RCC, whose counter measures LRC10
-  uintptr_t rcc;
-  struct pbl_clk hxt48;
-  struct pbl_clk lxt32;
-  const struct pbl_clk_assigned *assigned;
 };
 
 static const struct pbl_clk_cal_ops s_cal_ops;
@@ -262,7 +252,7 @@ static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
   return 0;
 }
 
-static int prv_init(const struct pbl_device *dev) {
+int pbl_clk_sf32lb57_pmuc_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb57_pmuc *pmuc =
       PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb57_pmuc, ctrl.dev);
   int ret;
@@ -284,20 +274,12 @@ static int prv_init(const struct pbl_device *dev) {
   return 0;
 }
 
-static const struct pbl_clk_controller_ops s_ops = {
+const struct pbl_clk_controller_ops pbl_clk_sf32lb57_pmuc_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
   .set_parent = prv_set_parent,
 };
-
-#define PBL_CLK_SF32LB57_PMUC_DEFINE(sym, _name, _base, _rcc, _hxt48, _lxt32, ...)           \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB57_PMUC_NUM_CLKS);                              \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb57_pmuc, struct pbl_clk_controller, ctrl) {  \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base), \
-    .rcc = (_rcc), .hxt48 = _hxt48, .lxt32 = _lxt32, .assigned = sym##_assigned,             \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_pmuc_clk)
