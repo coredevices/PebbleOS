@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include <pbl/kernel/delay.h>
@@ -35,7 +36,9 @@ int main(void) {
     lv_demo_render((lv_demo_render_scene_t)scene, LV_OPA_COVER);
     /* A scene that is drawn leaves LVGL nothing to do: it would wait forever. */
     while (pbl_uptime_ms() < end) {
-      pbl_sleep_ms(LV_MIN(lv_timer_handler(), POLL_MS));
+      uint32_t next_ms = lv_timer_handler();
+
+      pbl_sleep_ms(LV_MIN(next_ms, POLL_MS));
     }
 
     printf("lvgl: %s\n", lv_demo_render_get_scene_name((lv_demo_render_scene_t)scene));
