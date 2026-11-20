@@ -512,7 +512,7 @@ args:
 | `header` | Driver headers the `provides` templates need, e.g. for the modes of the parts a panel driver supports |
 | `ids` | How the abstract IDs of a binding map to the numbers of the driver; see below |
 | `pinctrl` | For pin controllers: how pins and their configuration become C. `pin` formats each of `pins` with `{pin}` and `{function}`, `pinmux` each cell of `pinmux` with `{value}`; `flags` and `values` add the C of the configuration properties |
-| `children` | For devices made of named children, such as the regulators of a PMIC |
+| `children` | For devices made of children, each an instance: those named in `names`, such as the regulators of a PMIC, or those with the property `property`, such as the ports of a pin controller, under the node or under its child `node` |
 | `drives` | Compatibles of the child a node must have for the driver to bind to it, for a controller with a driver per kind of memory it can drive |
 
 Several drivers may bind to one compatible, each with its own spec, class and
