@@ -254,8 +254,8 @@ static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv)
 
   uint8_t mcu_serial[32];
   size_t mcu_serial_size = sizeof(mcu_serial);
-  StatusCode err = mcu_get_serial(mcu_serial, &mcu_serial_size);
-  if (err != S_SUCCESS) {
+  int err = mcu_get_serial(mcu_serial, &mcu_serial_size);
+  if (err != 0) {
     pbl_shell_print(sh, "MCU Serial: N/A (%d)", err);
   } else {
     char serial_str[sizeof(mcu_serial) * 2 + 1];
