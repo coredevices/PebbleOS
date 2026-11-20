@@ -17,11 +17,12 @@ config PRESSURE_SHELL
       The pressure shell command, to run one conversion.
 
 config PRESSURE_BMP390
-    bool "Bosch BMP390"
-    default DT_HAS_BOSCH_BMP390_ENABLED
+    bool "Bosch BMP380 and BMP390"
+    default DT_HAS_BOSCH_BMP380_ENABLED
     select I2C
     help
-      Support for the Bosch BMP390 barometric pressure sensor.
+      Support for the Bosch BMP380 and BMP390 barometric pressure sensors
+      (devicetree compatible bosch,bmp380).
 
 module = DRIVER_PRESSURE
 module-str = Pressure Sensor
