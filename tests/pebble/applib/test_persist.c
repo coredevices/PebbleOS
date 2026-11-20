@@ -180,14 +180,14 @@ void test_persist__size(void) {
 }
 
 void test_persist__exists(void) {
-  cl_assert_equal_i(persist_exists(0), S_FALSE);
-  cl_assert(PASSED(persist_write_int(0, 0)));
+  cl_assert(!persist_exists(0));
+  cl_assert(persist_write_int(0, 0) >= 0);
   cl_assert_equal_i(persist_exists(0), S_TRUE);
 }
 
 void test_persist__delete(void) {
   cl_assert_equal_i(persist_delete(0), E_DOES_NOT_EXIST);
-  cl_assert(PASSED(persist_write_int(0, 0)));
+  cl_assert(persist_write_int(0, 0) >= 0);
   cl_assert_equal_i(persist_delete(0), S_TRUE);
   cl_assert_equal_i(persist_delete(0), E_DOES_NOT_EXIST);
 }
@@ -207,9 +207,9 @@ void test_persist__overwrite(void) {
  * Confirm that overwriting with a smaller data size does not break tuple finding.
  */
 void test_persist__overwrite_shrink(void) {
-  cl_assert(PASSED(persist_write_int(0, 1)));
-  cl_assert(PASSED(persist_write_bool(0, false)));
-  cl_assert(PASSED(persist_write_int(1, 2)));
+  cl_assert(persist_write_int(0, 1) >= 0);
+  cl_assert(persist_write_bool(0, false) >= 0);
+  cl_assert(persist_write_int(1, 2) >= 0);
   cl_assert(persist_read_int(1) == 2);
 }
 

@@ -691,14 +691,4 @@ static inline void _pbl_log_unused(const char *fmt, ...) {
  */
 #define PBL_LOG_HEXDUMP_VERBOSE(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, length)
 
-/**
- * @def RETURN_STATUS_UP
- * @brief Return a status code to the caller, turning @c E_INVALID_ARGUMENT into @c E_INTERNAL.
- *
- * An invalid argument passed down by this layer is an internal error for its caller.
- *
- * @param st Status code.
- */
-#define RETURN_STATUS_UP(st) return ((st) == E_INVALID_ARGUMENT ? E_INTERNAL : (st))
-
 /** @} */
