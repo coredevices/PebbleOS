@@ -93,6 +93,11 @@ on what the device is to its callers:
   the device model may be unreadable, does not check: its users already
   know it is up, and the check could not run.
 
+A driver may still leave to the first use of its device the work that only
+matters once something uses it, such as turning on a clock that would
+otherwise run with nothing behind it: the device is ready after its init,
+and what is left stays inside the driver.
+
 Hardware needed before the kernel runs, such as clocks
 (`pbl_soc_early_init()`), stays outside the model, as in Linux.
 
