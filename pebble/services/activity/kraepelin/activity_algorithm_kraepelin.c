@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stddef.h>
 
 #include <pbl/fs/fs.h>
@@ -31,7 +32,6 @@
 
 #include <applib/accel_service.h>
 #include <applib/data_logging.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -455,12 +455,11 @@ static struct pbl_settings_file *prv_validate_and_trim_minute_file(struct pbl_se
 
   // Rewrite the settings file, keeping only the keys we need
   PBL_LOG_DBG("Compacting minute file down to %" PRIu16 " records", max_records);
-  status_t status =
-      status_from_errno(pbl_settings_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context));
+  int status = pbl_settings_rewrite_filtered(file, prv_minute_file_rewrite_cb, &context);
 
   // Error re-writing?
-  if (status != S_SUCCESS) {
-    PBL_LOG_ERR("Encountered error %" PRIi32 " rewriting settings file", (int32_t)status);
+  if (status < 0) {
+    PBL_LOG_ERR("Encountered error %d rewriting settings file", status);
     nuke_file = true;
   } else {
     s_alg_state->num_minute_records = context.num_keys_kept;
@@ -530,9 +529,8 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
   }
 
   uint32_t key = prv_minute_file_get_settings_key(file_record->hdr.time_utc);
-  status_t status = status_from_errno(
-      pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record)));
-  if (status == E_OUT_OF_STORAGE) {
+  int status = pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
+  if (status == -ENOSPC) {
     uint16_t max_records = s_alg_state->num_minute_records / 2;
     PBL_LOG_INFO("Compacting minute file from %" PRIu16 " records to %" PRIu16 "",
                  s_alg_state->num_minute_records, max_records);
@@ -541,13 +539,12 @@ static bool prv_write_minute_file_record(AlgMinuteFileRecord *file_record) {
       goto exit;
     }
 
-    status = status_from_errno(
-        pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record)));
+    status = pbl_settings_set(minute_file, &key, sizeof(key), file_record, sizeof(*file_record));
   }
 
   // Was there an error writing the value out?
-  if (status != S_SUCCESS) {
-    PBL_LOG_ERR("Error %" PRIi32 " writing out minute data to minute file", (int32_t)status);
+  if (status < 0) {
+    PBL_LOG_ERR("Error %d writing out minute data to minute file", status);
   } else {
     s_alg_state->num_minute_records++;
     success = true;
