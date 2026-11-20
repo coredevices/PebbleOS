@@ -4,8 +4,9 @@
 #ifdef CONFIG_ACCEL_SIM
 #include <pbl/drivers/imu/sim.h>
 #endif
-#ifdef CONFIG_BATTERY_SIM
-#include <pbl/drivers/battery/sim.h>
+#ifdef CONFIG_CHARGER_SIM
+#include <pbl/drivers/charger/sim.h>
+#include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/battery/battery_state.h>
 #ifdef CONFIG_QEMU
 #include <comm/qemu/settings.h>
@@ -144,7 +145,7 @@ static void prv_compass_msg_callback(const uint8_t *data, uint32_t len) {
   event_put(&e);
 }
 
-#ifdef CONFIG_BATTERY_SIM
+#ifdef CONFIG_CHARGER_SIM
 // -----------------------------------------------------------------------------------------
 // Handle incoming battery packet data (QemuProtocol_Battery)
 static void prv_battery_msg_callback(const uint8_t *data, uint32_t len) {
@@ -157,7 +158,10 @@ static void prv_battery_msg_callback(const uint8_t *data, uint32_t len) {
   PBL_LOG_DBG("Got battery msg: pct: %d, charger_connected:%d", hdr->battery_pct,
               hdr->charger_connected);
 
-  pbl_battery_sim_set(hdr->battery_pct, hdr->charger_connected != 0);
+  pbl_charger_sim_set(
+      hdr->battery_pct,
+      battery_curve_lookup_voltage_by_percent(hdr->battery_pct, hdr->charger_connected != 0),
+      hdr->charger_connected != 0);
 
   // Make the new values take effect immediately
   battery_state_reset_filter();
@@ -308,7 +312,7 @@ static const QemuMessageHandler s_qemu_endpoints[] = {
   {QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback},
 #endif
   {QemuProtocol_Compass, prv_compass_msg_callback},
-#ifdef CONFIG_BATTERY_SIM
+#ifdef CONFIG_CHARGER_SIM
   {QemuProtocol_Battery, prv_battery_msg_callback},
 #endif
 #ifdef CONFIG_ACCEL_SIM
@@ -371,9 +375,12 @@ void qemu_serial_init(void) {
   (void)pbl_uart_configure(QEMU_UART, &cfg);
   (void)pbl_uart_rx_enable(QEMU_UART, prv_uart_rx, nullptr);
 
-#if defined(CONFIG_BATTERY_SIM) && defined(CONFIG_QEMU)
-  pbl_battery_sim_set(pbl_battery_sim_get_percent(),
-                      qemu_setting_get(QemuSetting_DefaultPluggedIn) != 0);
+#if defined(CONFIG_CHARGER_SIM) && defined(CONFIG_QEMU)
+  bool plugged = qemu_setting_get(QemuSetting_DefaultPluggedIn) != 0;
+
+  pbl_charger_sim_set(
+      pbl_charger_sim_get_percent(),
+      battery_curve_lookup_voltage_by_percent(pbl_charger_sim_get_percent(), plugged), plugged);
 #endif
 #ifdef CONFIG_VIBE_SIM
   pbl_vibe_sim_set_observer(VIBE, prv_vibe_observer, nullptr);

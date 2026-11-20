@@ -8,7 +8,7 @@ config SERVICE_BATTERY
 
 choice BATTERY_SOC
     prompt "State-of-charge estimation"
-    default NRF_FUEL_GAUGE if PMIC_NPM1300
+    default NRF_FUEL_GAUGE if CHARGER_NPM1300
     default BATTERY_SOC_VOLTAGE
 
 config BATTERY_SOC_VOLTAGE
@@ -18,7 +18,7 @@ config BATTERY_SOC_VOLTAGE
 
 config NRF_FUEL_GAUGE
     bool "Nordic nRF Fuel Gauge"
-    depends on PMIC_NPM1300
+    depends on CHARGER_NPM1300
     help
       Use the Nordic nRF Fuel Gauge library for state-of-charge
       estimation. Requires the nPM1300 PMIC; selects both the prebuilt
@@ -26,7 +26,7 @@ config NRF_FUEL_GAUGE
 
 config BATTERY_SOC_FUEL_GAUGE
     bool "Fuel gauge"
-    depends on PMIC_NPM1300
+    depends on CHARGER_NPM1300
     depends on BATTERY_SIMPLE
     select FUEL_GAUGE
     help

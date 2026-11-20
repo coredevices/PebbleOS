@@ -7,8 +7,6 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/pmic.h>
-#include <pbl/drivers/pmic/npm1300.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/time.h>
@@ -303,7 +301,7 @@ static void prv_update_state(void *force_update) {
   // Enable battery charging after fuel gauge state has been updated for the first time
   if (!s_charger_enabled) {
     s_charger_enabled = true;
-    pmic_set_charger_state(true);
+    battery_set_charge_enable(true);
   }
 }
 
@@ -352,15 +350,14 @@ void battery_state_init(void) {
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_CHARGE_CURRENT_LIMIT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-        .charge_current_limit =
-            (float)NPM1300_CHARGER->battery->constant_charge_current_ua / 1000000.0f
+        .charge_current_limit = (float)BATTERY->constant_charge_current_ua / 1000000.0f
       });
   PBL_ASSERTN(ret == 0);
 
   ret = nrf_fuel_gauge_ext_state_update(
       NRF_FUEL_GAUGE_EXT_STATE_INFO_TERM_CURRENT,
       &(union nrf_fuel_gauge_ext_state_info_data){
-        .charge_term_current = (float)NPM1300_CHARGER->battery->charge_term_current_ua / 1000000.0f
+        .charge_term_current = (float)BATTERY->charge_term_current_ua / 1000000.0f
       });
   PBL_ASSERTN(ret == 0);
 

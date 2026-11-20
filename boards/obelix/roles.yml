@@ -15,5 +15,6 @@ speaker: speaker
 die_temp: tsen
 rtc: rtc
 battery: battery
+charger: pmic
 extram: psram
 bt_controller: lcpu

@@ -7,7 +7,6 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/pmic.h>
 #include <pbl/fuel_gauge/fuel_gauge.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -293,7 +292,7 @@ static void prv_update_state(void *force_update) {
   // Enable battery charging after fuel gauge state has been updated for the first time
   if (!s_charger_enabled) {
     s_charger_enabled = true;
-    pmic_set_charger_state(true);
+    battery_set_charge_enable(true);
   }
 }
 
