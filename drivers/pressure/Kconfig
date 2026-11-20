@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PRESSURE
+    bool "Pressure Sensor"
+    help
+      Barometric pressure sensor drivers (pbl/drivers/pressure.h). The
+      board instantiates the sensor it has and exports it as PRESSURE.
+
+if PRESSURE
+
+config PRESSURE_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The pressure shell command, to run one conversion.
+
+config PRESSURE_BMP390
+    bool "Bosch BMP390"
+    default DT_HAS_BOSCH_BMP390_ENABLED
+    select I2C
+    help
+      Support for the Bosch BMP390 barometric pressure sensor.
+
+module = DRIVER_PRESSURE
+module-str = Pressure Sensor
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # PRESSURE
