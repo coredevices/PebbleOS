@@ -26,7 +26,7 @@ CalendarStartIcon g_calendar_start_icon = {
       {
         .type = GDrawCommandTypePath,
         .fill_color = {.argb = GColorBlackARGB8},
-        .num_points = STATIC_ARRAY_LENGTH(GPoint, START_ICON_POINTS),
+        .num_points = PBL_STATIC_ARRAY_SIZE(GPoint, START_ICON_POINTS),
       },
   .points = START_ICON_POINTS,
 };
@@ -42,7 +42,7 @@ CalendarEndIcon g_calendar_end_icon = {
       {
         .type = GDrawCommandTypePath,
         .fill_color = {.argb = GColorBlackARGB8},
-        .num_points = STATIC_ARRAY_LENGTH(GPoint, END_ICON_POINTS),
+        .num_points = PBL_STATIC_ARRAY_SIZE(GPoint, END_ICON_POINTS),
       },
   .points = END_ICON_POINTS,
 };

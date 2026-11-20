@@ -61,7 +61,7 @@ typedef struct PBL_PACKED {
   /** Path command. */
   CalendarIconPath command;
   /** Path points. */
-  GPoint points[STATIC_ARRAY_LENGTH(GPoint, START_ICON_POINTS)];
+  GPoint points[PBL_STATIC_ARRAY_SIZE(GPoint, START_ICON_POINTS)];
 } CalendarStartIcon;
 
 /** @brief Icon next to the start time. */
@@ -77,7 +77,7 @@ typedef struct PBL_PACKED {
   /** Path command. */
   CalendarIconPath command;
   /** Path points. */
-  GPoint points[STATIC_ARRAY_LENGTH(GPoint, END_ICON_POINTS)];
+  GPoint points[PBL_STATIC_ARRAY_SIZE(GPoint, END_ICON_POINTS)];
 } CalendarEndIcon;
 
 /** @brief Icon next to the end time. */

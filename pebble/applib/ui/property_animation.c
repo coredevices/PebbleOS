@@ -536,7 +536,7 @@ bool property_animation_from(PropertyAnimation *property_animation_h, void *valu
   if (!property_animation) {
     return false;
   }
-  if (size > MEMBER_SIZE(PropertyAnimationPrivate, values.from)) {
+  if (size > PBL_SIZEOF_FIELD(PropertyAnimationPrivate, values.from)) {
     APP_LOG(APP_LOG_LEVEL_WARNING, "invalid size");
     return false;
   }
@@ -572,7 +572,7 @@ bool property_animation_to(PropertyAnimation *property_animation_h, void *value,
   if (!property_animation) {
     return false;
   }
-  if (size > MEMBER_SIZE(PropertyAnimationPrivate, values.to)) {
+  if (size > PBL_SIZEOF_FIELD(PropertyAnimationPrivate, values.to)) {
     APP_LOG(APP_LOG_LEVEL_WARNING, "invalid size");
     return false;
   }
