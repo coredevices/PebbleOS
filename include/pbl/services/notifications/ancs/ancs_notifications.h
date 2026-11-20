@@ -60,26 +60,21 @@ enum ancs_app_attr {
  * @param notif The notification, as the phone told of it.
  * @param recovered Whether it predates the session, seen right after reconnecting: it may
  * have been missed while disconnected.
- * @param ios_9 Whether the phone runs iOS 9 or later.
  * @param notif_attributes Notification attributes, indexed by enum ancs_notif_attr.
  * @param app_attributes App attributes, indexed by enum ancs_app_attr.
  */
 void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bool recovered,
-                                       bool ios_9,
                                        const struct pbl_bt_ancs_attr *const *notif_attributes,
                                        const struct pbl_bt_ancs_attr *const *app_attributes);
 
 /**
  * @brief Handle the removal of a notification from the iOS notification center.
  *
- * Only honored on iOS 9 and later: the stored notification is marked dismissed, and an incoming
- * call UI is hidden.
+ * The stored notification is marked dismissed, and an incoming call UI is hidden.
  *
  * @param notif The removed notification, as the phone told of it.
- * @param ios_9 Whether the phone runs iOS 9 or later.
  */
-void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif,
-                                                    bool ios_9);
+void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif);
 
 /**
  * @brief Tell the user that iOS refuses to share notifications with this watch.

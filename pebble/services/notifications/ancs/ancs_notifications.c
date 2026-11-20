@@ -300,7 +300,6 @@ static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
 }
 
 void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bool is_recovered,
-                                       bool ios_9,
                                        const struct pbl_bt_ancs_attr *const *notif_attributes,
                                        const struct pbl_bt_ancs_attr *const *app_attributes) {
   PBL_ASSERTN(notif_attributes && app_attributes);
@@ -348,7 +347,7 @@ void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bo
   const bool has_missed_call_property = (notif->category == PBL_BT_ANCS_CATEGORY_MISSED_CALL);
   if (is_notification_from_phone_app) {
     if (has_incoming_call_property) {
-      ancs_phone_call_handle_incoming(uid, ios_9, notif_attributes);
+      ancs_phone_call_handle_incoming(uid, notif_attributes);
       goto cleanup;
     }
 
@@ -413,14 +412,7 @@ void ancs_notifications_handle_session_lost(void) {
   s_session_lost_time = pbl_realtime();
 }
 
-void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif,
-                                                    bool ios_9) {
-  // Dismissal from phone is only properly supported on iOS 9 and up
-  // The presence of the DIS service tells us we have at least iOS 9
-  if (!ios_9) {
-    return;
-  }
-
+void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif) {
   const uint32_t ancs_uid = notif->uid;
 
   Uuid *notification_id = pbl_malloc_check(sizeof(Uuid));
@@ -437,7 +429,7 @@ void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_not
   }
 
   if (notif->category == PBL_BT_ANCS_CATEGORY_INCOMING_CALL) {
-    ancs_phone_call_handle_removed(ancs_uid, ios_9);
+    ancs_phone_call_handle_removed(ancs_uid);
   }
 }
 
