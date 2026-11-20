@@ -69,7 +69,7 @@ struct pbl_sf32lb_mpi {
   static struct pbl_sf32lb_mpi_state sym##_mpi_state;                                        \
   PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
   const struct pbl_sf32lb_mpi sym = {                                                        \
-    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr),                           \
+    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr),                                    \
     .base = (_base),                                                                         \
     .mem_base = (_mem_base),                                                                 \
     .mem_size = (_mem_size),                                                                 \

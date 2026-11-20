@@ -70,11 +70,11 @@ struct pbl_pinctrl_controller {
  * @param _ops Driver operations.
  * @param _num_pads Number of pads.
  */
-#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _ops, _num_pads)                             \
-  {                                                                                          \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, nullptr, &pbl_pinctrl_class), \
-    .ops = (_ops),                                                                           \
-    .num_pads = (_num_pads),                                                                 \
+#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _ops, _num_pads)                    \
+  {                                                                                 \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, &pbl_pinctrl_class), \
+    .ops = (_ops),                                                                  \
+    .num_pads = (_num_pads),                                                        \
   }
 
 /** @brief A pin state. */

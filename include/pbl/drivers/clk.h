@@ -107,12 +107,12 @@ extern const struct pbl_device_class pbl_clk_controller_class;
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_CLK_CONTROLLER_INIT(sym, _name, _init, _parent, _ops)                                 \
-  {                                                                                               \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_clk_controller_class), \
-    .ops = (_ops),                                                                                \
-    .use_counts = sym##_clk_use_counts,                                                           \
-    .num_clks = sizeof(sym##_clk_use_counts),                                                     \
+#define PBL_CLK_CONTROLLER_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                                      \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_clk_controller_class), \
+    .ops = (_ops),                                                                       \
+    .use_counts = sym##_clk_use_counts,                                                  \
+    .num_clks = sizeof(sym##_clk_use_counts),                                            \
   }
 
 /** @brief A clock, as used by a consumer. */

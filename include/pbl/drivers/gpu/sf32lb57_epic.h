@@ -68,7 +68,7 @@ extern const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops;
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym, struct pbl_gpu_sf32lb57_epic, struct pbl_gpu, gpu){                    \
     .gpu = PBL_GPU_INIT(                                                                          \
-        sym, _name, &pbl_gpu_sf32lb57_epic_ops, nullptr,                                          \
+        sym, _name, &pbl_gpu_sf32lb57_epic_ops,                                                   \
         .dst_formats = PBL_BIT(PBL_GPU_FORMAT_RGB565) | PBL_BIT(PBL_GPU_FORMAT_RGB888),           \
         .src_formats = PBL_BIT(PBL_GPU_FORMAT_RGB565) | PBL_BIT(PBL_GPU_FORMAT_RGB888) |          \
                        PBL_BIT(PBL_GPU_FORMAT_ARGB8888) | PBL_BIT(PBL_GPU_FORMAT_A8),             \

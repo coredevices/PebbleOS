@@ -94,13 +94,12 @@ extern const struct pbl_vibe *const VIBE;
  * @param _ops Driver operations.
  * @param _braking_strength Strength that brakes the motor, or @ref VIBE_STRENGTH_OFF.
  */
-#define PBL_VIBE_INIT(sym, _name, _parent, _ops, _braking_strength)                              \
-  {                                                                                              \
-    .dev =                                                                                       \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_vibe_dev_init, _parent, nullptr, &pbl_vibe_class), \
-    .ops = (_ops),                                                                               \
-    .state = &sym##_vibe_state,                                                                  \
-    .braking_strength = (_braking_strength),                                                     \
+#define PBL_VIBE_INIT(sym, _name, _parent, _ops, _braking_strength)                        \
+  {                                                                                        \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_vibe_dev_init, _parent, &pbl_vibe_class), \
+    .ops = (_ops),                                                                         \
+    .state = &sym##_vibe_state,                                                            \
+    .braking_strength = (_braking_strength),                                               \
   }
 
 /**

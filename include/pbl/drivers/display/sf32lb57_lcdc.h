@@ -131,8 +131,8 @@ extern const struct pbl_mipi_dbi_ops pbl_display_sf32lb57_lcdc_dbi_ops;
     .lock = PBL_MUTEX_INITIALIZER,                                                                \
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_sf32lb57_lcdc, struct pbl_display, disp){           \
-    .disp = PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, &pbl_display_sf32lb57_lcdc_ops, nullptr,     \
-                                         _width, _height, PBL_DISPLAY_SF32LB57_LCDC_FORMAT,       \
+    .disp = PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, &pbl_display_sf32lb57_lcdc_ops, _width,      \
+                                         _height, PBL_DISPLAY_SF32LB57_LCDC_FORMAT,               \
                                          (_rotation) == 180, _fb, _fb_size, _fb_ram),             \
     .state = &sym##_lcdc_state,                                                                   \
     .base = (_base),                                                                              \

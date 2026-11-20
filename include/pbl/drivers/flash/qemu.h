@@ -49,8 +49,8 @@ extern const struct pbl_flash_ops pbl_flash_qemu_ops;
     .subsector_erase_ms = 1U,                                                                   \
   };                                                                                            \
   PBL_DEVICE_INSTANCE(sym, struct pbl_flash_qemu, struct pbl_flash, flash) {                    \
-    .flash = PBL_FLASH_INIT(sym, _name, nullptr, nullptr, &pbl_flash_qemu_ops, &sym##_geometry, \
-                            nullptr, nullptr),                                                  \
+    .flash = PBL_FLASH_INIT(sym, _name, nullptr, &pbl_flash_qemu_ops, &sym##_geometry, nullptr, \
+                            nullptr),                                                           \
     .base = (_base), .mem = (_mem),                                                             \
   }
 

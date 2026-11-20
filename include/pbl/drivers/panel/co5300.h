@@ -84,7 +84,7 @@ int pbl_panel_co5300_init(const struct pbl_device *dev);
     .vback_porch = (_y),                                                                        \
   };                                                                                            \
   PBL_DEVICE_INSTANCE(sym, struct pbl_panel_co5300, struct pbl_panel, panel){                   \
-    .panel = PBL_PANEL_INIT(sym, _name, pbl_panel_co5300_init, &pbl_panel_co5300_ops, nullptr,  \
+    .panel = PBL_PANEL_INIT(sym, _name, pbl_panel_co5300_init, &pbl_panel_co5300_ops,           \
                             &sym##_timing, PBL_PANEL_BUS_FORMAT_QSPI_RGB565,                    \
                             .bus_max_hz = (_bus_max_hz), .row_multiple = 2U),                   \
     .state = &sym##_co5300_state,                                                               \

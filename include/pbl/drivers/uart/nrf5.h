@@ -79,7 +79,7 @@ extern const struct pbl_uart_ops pbl_uart_nrf5_ops;
   PBL_UART_STATE_DEFINE(sym);                                                      \
   static struct pbl_uart_nrf5_state sym##_nrf5_state;                              \
   PBL_DEVICE_INSTANCE(sym, struct pbl_uart_nrf5, struct pbl_uart, uart){           \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_nrf5_ops, _baudrate, nullptr),     \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_nrf5_ops, _baudrate),              \
     .state = &sym##_nrf5_state,                                                    \
     .base = (_base),                                                               \
     .irq = (_irq),                                                                 \

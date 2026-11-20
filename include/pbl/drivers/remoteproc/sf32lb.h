@@ -166,7 +166,7 @@ void pbl_rproc_sf32lb_coredump_prepare(void);
   PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                   \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb, struct pbl_rproc, rproc) {                     \
-    .rproc = PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb_init, nullptr, &pbl_rproc_sf32lb_ops),    \
+    .rproc = PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb_init, &pbl_rproc_sf32lb_ops),             \
     .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                           \
     .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size),   \
     .ranges = {{(_r0_da), (_r0_pa), (_r0_size)}, {(_r1_da), (_r1_pa), (_r1_size)}}, .hclk = _hclk, \

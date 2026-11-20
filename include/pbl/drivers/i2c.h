@@ -150,14 +150,12 @@ struct pbl_i2c_dev {
  * @param sym Symbol of the bus instance, with its state defined by PBL_I2C_BUS_STATE_DEFINE().
  * @param _name Name.
  * @param _ops Driver operations.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_I2C_BUS_INIT(sym, _name, _ops, _deps)                                  \
-  {                                                                                \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_i2c_bus_dev_init, nullptr, _deps, \
-                                 &pbl_i2c_bus_class),                              \
-    .ops = (_ops),                                                                 \
-    .state = &sym##_i2c_state,                                                     \
+#define PBL_I2C_BUS_INIT(sym, _name, _ops)                                                       \
+  {                                                                                              \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_i2c_bus_dev_init, nullptr, &pbl_i2c_bus_class), \
+    .ops = (_ops),                                                                               \
+    .state = &sym##_i2c_state,                                                                   \
   }
 
 /**

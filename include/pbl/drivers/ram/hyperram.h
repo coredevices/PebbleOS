@@ -43,11 +43,11 @@ extern const struct pbl_ram_ops pbl_ram_hyperram_ops;
  * @param _bus Controller, a @ref drivers_hyperbus device.
  * @param _vcc Supply, or NULL.
  */
-#define PBL_RAM_HYPERRAM_DEFINE(sym, _name, _bus, _vcc)                                           \
-  PBL_RAM_STATE_DEFINE(sym);                                                                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_ram_hyperram, struct pbl_ram, ram) {                        \
-    .ram = PBL_RAM_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_ram_hyperram_ops), .bus = (_bus), \
-    .vcc = (_vcc),                                                                                \
+#define PBL_RAM_HYPERRAM_DEFINE(sym, _name, _bus, _vcc)                                  \
+  PBL_RAM_STATE_DEFINE(sym);                                                             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_ram_hyperram, struct pbl_ram, ram) {               \
+    .ram = PBL_RAM_INIT(sym, _name, &(_bus)->dev, &pbl_ram_hyperram_ops), .bus = (_bus), \
+    .vcc = (_vcc),                                                                       \
   }
 
 /** @} */

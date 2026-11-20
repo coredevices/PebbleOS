@@ -71,26 +71,26 @@ int pbl_panel_jdi_mip_init(const struct pbl_device *dev);
  * @param _enable_end Last column of the ENB pulse.
  * @param ... VCOM inversion signal, from PBL_PWM().
  */
-#define PBL_PANEL_JDI_MIP_DEFINE(sym, _name, _vddp, _vlcd, _clock_hz, _hactive, _hback_porch,    \
-                                 _hfront_porch, _vactive, _vback_porch, _vfront_porch,           \
-                                 _enable_start, _enable_end, ...)                                \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_panel_jdi_mip_state sym##_jdi_state;                                         \
-  static const struct pbl_panel_timing sym##_timing = {                                          \
-    .clock_hz = (_clock_hz),                                                                     \
-    .hactive = (_hactive),                                                                       \
-    .hback_porch = (_hback_porch),                                                               \
-    .hfront_porch = (_hfront_porch),                                                             \
-    .vactive = (_vactive),                                                                       \
-    .vback_porch = (_vback_porch),                                                               \
-    .vfront_porch = (_vfront_porch),                                                             \
-    .enable_start = (_enable_start),                                                             \
-    .enable_end = (_enable_end),                                                                 \
-  };                                                                                             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_panel_jdi_mip, struct pbl_panel, panel) {                  \
-    .panel = PBL_PANEL_INIT(sym, _name, pbl_panel_jdi_mip_init, &pbl_panel_jdi_mip_ops, nullptr, \
-                            &sym##_timing, PBL_PANEL_BUS_FORMAT_JDI_RGB222),                     \
-    .state = &sym##_jdi_state, .vddp = (_vddp), .vlcd = (_vlcd), .vcom = __VA_ARGS__,            \
+#define PBL_PANEL_JDI_MIP_DEFINE(sym, _name, _vddp, _vlcd, _clock_hz, _hactive, _hback_porch, \
+                                 _hfront_porch, _vactive, _vback_porch, _vfront_porch,        \
+                                 _enable_start, _enable_end, ...)                             \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                               \
+  static struct pbl_panel_jdi_mip_state sym##_jdi_state;                                      \
+  static const struct pbl_panel_timing sym##_timing = {                                       \
+    .clock_hz = (_clock_hz),                                                                  \
+    .hactive = (_hactive),                                                                    \
+    .hback_porch = (_hback_porch),                                                            \
+    .hfront_porch = (_hfront_porch),                                                          \
+    .vactive = (_vactive),                                                                    \
+    .vback_porch = (_vback_porch),                                                            \
+    .vfront_porch = (_vfront_porch),                                                          \
+    .enable_start = (_enable_start),                                                          \
+    .enable_end = (_enable_end),                                                              \
+  };                                                                                          \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_panel_jdi_mip, struct pbl_panel, panel) {               \
+    .panel = PBL_PANEL_INIT(sym, _name, pbl_panel_jdi_mip_init, &pbl_panel_jdi_mip_ops,       \
+                            &sym##_timing, PBL_PANEL_BUS_FORMAT_JDI_RGB222),                  \
+    .state = &sym##_jdi_state, .vddp = (_vddp), .vlcd = (_vlcd), .vcom = __VA_ARGS__,         \
   }
 
 /** @} */

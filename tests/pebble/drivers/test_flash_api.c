@@ -122,12 +122,12 @@ static const struct pbl_flash_geometry s_geometry = {
 
 PBL_FLASH_STATE_DEFINE(s_sync);
 static const struct pbl_flash s_sync =
-    PBL_FLASH_INIT(s_sync, "sync", nullptr, nullptr, &s_sync_ops, &s_geometry, nullptr, nullptr);
+    PBL_FLASH_INIT(s_sync, "sync", nullptr, &s_sync_ops, &s_geometry, nullptr, nullptr);
 PBL_DEVICE_REGISTER(s_sync, &s_sync.dev);
 
 PBL_FLASH_STATE_DEFINE(s_async);
 static const struct pbl_flash s_async =
-    PBL_FLASH_INIT(s_async, "async", nullptr, nullptr, &s_async_ops, &s_geometry, nullptr, nullptr);
+    PBL_FLASH_INIT(s_async, "async", nullptr, &s_async_ops, &s_geometry, nullptr, nullptr);
 PBL_DEVICE_REGISTER(s_async, &s_async.dev);
 
 static int s_cb_status;

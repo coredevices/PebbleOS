@@ -75,14 +75,13 @@ extern const struct pbl_temp *const DIE_TEMP;
  * @param sym Symbol of the instance, as passed to PBL_TEMP_STATE_DEFINE().
  * @param _name Device name.
  * @param _parent Parent device, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_TEMP_INIT(sym, _name, _parent, _deps, _ops)                                           \
-  {                                                                                               \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_temp_dev_init, _parent, _deps, &pbl_temp_class), \
-    .ops = (_ops),                                                                                \
-    .state = &sym##_temp_state,                                                                   \
+#define PBL_TEMP_INIT(sym, _name, _parent, _ops)                                           \
+  {                                                                                        \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_temp_dev_init, _parent, &pbl_temp_class), \
+    .ops = (_ops),                                                                         \
+    .state = &sym##_temp_state,                                                            \
   }
 
 /**

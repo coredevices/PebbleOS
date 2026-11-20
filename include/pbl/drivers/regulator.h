@@ -84,14 +84,14 @@ extern const struct pbl_device_class pbl_regulator_class;
  * @param _enable_time_us Time from switching on until the rail is up, in microseconds.
  * @param _always_on Switched on at init and never off.
  */
-#define PBL_REGULATOR_INIT(sym, _name, _parent, _ops, _enable_time_us, _always_on)     \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_regulator_dev_init, _parent, nullptr, \
-                                 &pbl_regulator_class),                                \
-    .ops = (_ops),                                                                     \
-    .state = &sym##_regulator_state,                                                   \
-    .enable_time_us = (_enable_time_us),                                               \
-    .always_on = (_always_on),                                                         \
+#define PBL_REGULATOR_INIT(sym, _name, _parent, _ops, _enable_time_us, _always_on)                \
+  {                                                                                               \
+    .dev =                                                                                        \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_regulator_dev_init, _parent, &pbl_regulator_class), \
+    .ops = (_ops),                                                                                \
+    .state = &sym##_regulator_state,                                                              \
+    .enable_time_us = (_enable_time_us),                                                          \
+    .always_on = (_always_on),                                                                    \
   }
 
 /**

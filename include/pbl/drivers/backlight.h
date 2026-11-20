@@ -114,12 +114,12 @@ extern const struct pbl_backlight *const BACKLIGHT;
  * @param _parent Parent device.
  * @param _ops Driver operations.
  */
-#define PBL_BACKLIGHT_INIT(sym, _name, _parent, _ops)                                  \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_backlight_dev_init, _parent, nullptr, \
-                                 &pbl_backlight_class),                                \
-    .ops = (_ops),                                                                     \
-    .state = &sym##_backlight_state,                                                   \
+#define PBL_BACKLIGHT_INIT(sym, _name, _parent, _ops)                                             \
+  {                                                                                               \
+    .dev =                                                                                        \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_backlight_dev_init, _parent, &pbl_backlight_class), \
+    .ops = (_ops),                                                                                \
+    .state = &sym##_backlight_state,                                                              \
   }
 
 /**

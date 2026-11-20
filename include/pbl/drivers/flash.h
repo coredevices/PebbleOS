@@ -271,21 +271,19 @@ static inline const struct pbl_flash_geometry *pbl_flash_get_geometry(
  * @param sym Symbol of the flash instance, with its state defined by PBL_FLASH_STATE_DEFINE().
  * @param _name Name.
  * @param _parent Parent device, e.g. the memory controller, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _ops Driver operations.
  * @param _geometry Geometry.
  * @param _otp OTP organization, or NULL.
  * @param _otp_layout OTP cells, or NULL.
  */
-#define PBL_FLASH_INIT(sym, _name, _parent, _deps, _ops, _geometry, _otp, _otp_layout)           \
-  {                                                                                              \
-    .dev =                                                                                       \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_flash_dev_init, _parent, _deps, &pbl_flash_class), \
-    .ops = (_ops),                                                                               \
-    .state = &sym##_flash_state,                                                                 \
-    .geometry = (_geometry),                                                                     \
-    .otp = (_otp),                                                                               \
-    .otp_layout = (_otp_layout),                                                                 \
+#define PBL_FLASH_INIT(sym, _name, _parent, _ops, _geometry, _otp, _otp_layout)              \
+  {                                                                                          \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_flash_dev_init, _parent, &pbl_flash_class), \
+    .ops = (_ops),                                                                           \
+    .state = &sym##_flash_state,                                                             \
+    .geometry = (_geometry),                                                                 \
+    .otp = (_otp),                                                                           \
+    .otp_layout = (_otp_layout),                                                             \
   }
 
 /**

@@ -54,12 +54,12 @@ int pbl_pwm_sf32lb_lptim_init(const struct pbl_device *dev);
  * @param _clk Counter clock, from PBL_CLK().
  * @param _pinctrl Pin state with the outputs, from PBL_PINCTRL_STATE_DEFINE().
  */
-#define PBL_PWM_SF32LB_LPTIM_DEFINE(sym, _name, _base, _clk, _pinctrl)                     \
-  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                                 \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_sf32lb_lptim, struct pbl_pwm_controller, ctrl) { \
-    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_sf32lb_lptim_init, nullptr,        \
-                                    &pbl_pwm_sf32lb_lptim_ops),                            \
-    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0), .base = (_base), .clk = _clk,            \
+#define PBL_PWM_SF32LB_LPTIM_DEFINE(sym, _name, _base, _clk, _pinctrl)                             \
+  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_sf32lb_lptim, struct pbl_pwm_controller, ctrl) {         \
+    .ctrl =                                                                                        \
+        PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_sf32lb_lptim_init, &pbl_pwm_sf32lb_lptim_ops), \
+    .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0), .base = (_base), .clk = _clk,                    \
   }
 
 /** @} */

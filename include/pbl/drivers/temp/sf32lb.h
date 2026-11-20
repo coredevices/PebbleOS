@@ -40,11 +40,11 @@ extern const struct pbl_temp_ops pbl_temp_sf32lb_ops;
  * @param _clk Clock, from PBL_CLK().
  * @param _cfg HPSYS configuration registers.
  */
-#define PBL_TEMP_SF32LB_DEFINE(sym, _name, _base, _clk, _cfg)                                   \
-  PBL_TEMP_STATE_DEFINE(sym);                                                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_temp_sf32lb, struct pbl_temp, temp) {                     \
-    .temp = PBL_TEMP_INIT(sym, _name, nullptr, nullptr, &pbl_temp_sf32lb_ops), .base = (_base), \
-    .clk = _clk, .cfg = (_cfg),                                                                 \
+#define PBL_TEMP_SF32LB_DEFINE(sym, _name, _base, _clk, _cfg)                          \
+  PBL_TEMP_STATE_DEFINE(sym);                                                          \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_temp_sf32lb, struct pbl_temp, temp) {            \
+    .temp = PBL_TEMP_INIT(sym, _name, nullptr, &pbl_temp_sf32lb_ops), .base = (_base), \
+    .clk = _clk, .cfg = (_cfg),                                                        \
   }
 
 /** @} */

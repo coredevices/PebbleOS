@@ -20,9 +20,9 @@
  * Instances are defined with the @c PBL_<DRIVER>_DEFINE() macro of their driver, built from
  * PBL_DEVICE_STATE_DEFINE(), PBL_DEVICE_INIT() and PBL_DEVICE_REGISTER(). The kernel brings
  * every registered device up before main(), dependencies first, whatever their order in the
- * table: a device's parent and deps are initialized before it, as are the devices its devicetree
- * node refers to, listed by PBL_DEVICE_DEPENDS(). A driver's init calls pbl_device_init() on
- * any other device it uses.
+ * table: a device's parent is initialized before it, as are the devices listed next to it with
+ * PBL_DEVICE_DEPENDS(), which the devicetree writes for what a node refers to. A driver's init
+ * calls pbl_device_init() on any other device it uses.
  *
  * An init returning @c -ENODEV means the device is not present: that is not logged as an error.
  *
@@ -43,10 +43,11 @@
  *
  * PBL_DEVICE_STATE_DEFINE(s_foo);
  * static const struct foo s_foo = {
- *   .dev = PBL_DEVICE_INIT(s_foo, "foo", prv_foo_init, &s_bus.dev, PBL_DEVICE_DEPS(&s_ldo.dev)),
+ *   .dev = PBL_DEVICE_INIT(s_foo, "foo", prv_foo_init, &s_bus.dev),
  *   .addr = 0x18,
  * };
  * PBL_DEVICE_REGISTER(s_foo, &s_foo.dev);
+ * PBL_DEVICE_DEPENDS(s_foo, &s_foo.dev, &s_ldo.dev);
  * @endcode
  * @{
  */
@@ -93,8 +94,6 @@ struct pbl_device {
   int (*init)(const struct pbl_device *dev);
   /** Optional. Bus or multi-function device the device sits on, initialized first. */
   const struct pbl_device *parent;
-  /** Optional, NULL-terminated. Further devices initialized first. */
-  const struct pbl_device *const *deps;
   /** Optional. Class of the device. */
   const struct pbl_device_class *cls;
   /** Runtime state. */
@@ -120,7 +119,7 @@ struct pbl_mem_region {
  */
 #define PBL_MEM_REGION(_base, _size) {.base = (_base), .size = (_size)}
 
-/** @brief Static dependency list for struct pbl_device::deps. */
+/** @brief Static NULL-terminated list of devices. */
 #define PBL_DEVICE_DEPS(...) ((const struct pbl_device *const[]){__VA_ARGS__, nullptr})
 
 /**
@@ -139,17 +138,15 @@ struct pbl_mem_region {
  * @param _name Name.
  * @param _init Init function, or NULL.
  * @param _parent Parent device, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _cls Class.
  */
-#define PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _deps, _cls) \
-  {                                                                    \
-    .name = (_name),                                                   \
-    .init = (_init),                                                   \
-    .parent = (_parent),                                               \
-    .deps = (_deps),                                                   \
-    .cls = (_cls),                                                     \
-    .state = &sym##_device_state,                                      \
+#define PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _cls) \
+  {                                                             \
+    .name = (_name),                                            \
+    .init = (_init),                                            \
+    .parent = (_parent),                                        \
+    .cls = (_cls),                                              \
+    .state = &sym##_device_state,                               \
   }
 
 /**
@@ -159,10 +156,9 @@ struct pbl_mem_region {
  * @param _name Name.
  * @param _init Init function, or NULL.
  * @param _parent Parent device, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_DEVICE_INIT(sym, _name, _init, _parent, _deps) \
-  PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _deps, nullptr)
+#define PBL_DEVICE_INIT(sym, _name, _init, _parent) \
+  PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr)
 
 /**
  * @brief Add a device to the table pbl_device_init_all() walks.
@@ -174,7 +170,7 @@ struct pbl_mem_region {
   static const struct pbl_device *const sym##_device_entry PBL_ITERABLE_SECTION( \
       const struct pbl_device *const, devices, #sym) = (dev)
 
-/** @brief Devices that device @c dev needs, on top of its parent and deps. */
+/** @brief Devices that device @c dev needs, on top of its parent. */
 struct pbl_device_depends {
   /** Device. */
   const struct pbl_device *dev;
@@ -185,8 +181,8 @@ struct pbl_device_depends {
 /**
  * @brief List devices a device needs, without touching its definition.
  *
- * pbl_device_init() initializes them first, as struct pbl_device::deps. The list is constant
- * and takes no RAM. The instances of a devicetree get theirs from what their node refers to.
+ * pbl_device_init() initializes them first. The list is constant and takes no RAM. The instances of
+ * a devicetree get theirs from what their node refers to.
  *
  * @param sym Symbol of the device instance.
  * @param _dev Pointer to its struct pbl_device.
@@ -258,7 +254,7 @@ struct pbl_device_depends {
   const type sym##_inst =
 
 /**
- * @brief Initialize a device, its parent and deps first, with those of PBL_DEVICE_DEPENDS().
+ * @brief Initialize a device, its parent and the devices of its PBL_DEVICE_DEPENDS() first.
  *
  * A no-op once the device is ready or has failed. A dependency cycle asserts.
  *

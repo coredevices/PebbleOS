@@ -69,19 +69,19 @@ void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm);
  * @param _clk Clock pin, from PBL_GPIO().
  * @param _din Data pin, from PBL_GPIO().
  */
-#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _base, _irq, _hfclk, _clk, _din)                  \
-  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                              \
-  static struct pbl_audio_nrf5_pdm_state sym##_pdm_state;                                       \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_pdm, struct pbl_audio_dai, dai){               \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_nrf5_pdm_ops, nullptr), \
-    .base = (_base),                                                                            \
-    .irq = (_irq),                                                                              \
-    .hfclk = _hfclk,                                                                            \
-    .clk = _clk,                                                                                \
-    .din = _din,                                                                                \
-    .state = &sym##_pdm_state,                                                                  \
-  };                                                                                            \
-  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_PDM_IRQ_PRIO, pbl_audio_nrf5_pdm_irq_handler,     \
+#define PBL_AUDIO_NRF5_PDM_DEFINE(sym, _name, _base, _irq, _hfclk, _clk, _din)              \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                          \
+  static struct pbl_audio_nrf5_pdm_state sym##_pdm_state;                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_pdm, struct pbl_audio_dai, dai){           \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_nrf5_pdm_ops),      \
+    .base = (_base),                                                                        \
+    .irq = (_irq),                                                                          \
+    .hfclk = _hfclk,                                                                        \
+    .clk = _clk,                                                                            \
+    .din = _din,                                                                            \
+    .state = &sym##_pdm_state,                                                              \
+  };                                                                                        \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_PDM_IRQ_PRIO, pbl_audio_nrf5_pdm_irq_handler, \
                       &sym##_inst, 0)
 
 /** @brief Stereo frames of an I2S bounce buffer. */
@@ -143,21 +143,21 @@ void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
  * @param _mck Master clock pin, from PBL_GPIO().
  * @param _sdout Data out pin, from PBL_GPIO().
  */
-#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _hfclk, _sck, _lrck, _mck, _sdout)    \
-  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                               \
-  static struct pbl_audio_nrf5_i2s_state sym##_i2s_state;                                        \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_i2s, struct pbl_audio_dai, dai){                \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_nrf5_i2s_ops, nullptr), \
-    .base = (_base),                                                                             \
-    .irq = (_irq),                                                                               \
-    .hfclk = _hfclk,                                                                             \
-    .sck = _sck,                                                                                 \
-    .lrck = _lrck,                                                                               \
-    .mck = _mck,                                                                                 \
-    .sdout = _sdout,                                                                             \
-    .state = &sym##_i2s_state,                                                                   \
-  };                                                                                             \
-  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_I2S_IRQ_PRIO, pbl_audio_nrf5_i2s_irq_handler,      \
+#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _hfclk, _sck, _lrck, _mck, _sdout) \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                            \
+  static struct pbl_audio_nrf5_i2s_state sym##_i2s_state;                                     \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_i2s, struct pbl_audio_dai, dai){             \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_nrf5_i2s_ops),       \
+    .base = (_base),                                                                          \
+    .irq = (_irq),                                                                            \
+    .hfclk = _hfclk,                                                                          \
+    .sck = _sck,                                                                              \
+    .lrck = _lrck,                                                                            \
+    .mck = _mck,                                                                              \
+    .sdout = _sdout,                                                                          \
+    .state = &sym##_i2s_state,                                                                \
+  };                                                                                          \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_I2S_IRQ_PRIO, pbl_audio_nrf5_i2s_irq_handler,   \
                       &sym##_inst, 0)
 
 /** @} */

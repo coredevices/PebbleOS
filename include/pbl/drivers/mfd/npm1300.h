@@ -50,14 +50,14 @@ int pbl_npm1300_init(const struct pbl_device *dev);
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  */
-#define PBL_NPM1300_DEFINE(sym, _bus, _addr)                                         \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                      \
-  static struct pbl_npm1300_state sym##_npm1300_state;                               \
-  const struct pbl_npm1300 sym = {                                                   \
-    .dev = PBL_DEVICE_INIT(sym, "npm1300", pbl_npm1300_init, &(_bus)->dev, nullptr), \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                                 \
-    .state = &sym##_npm1300_state,                                                   \
-  };                                                                                 \
+#define PBL_NPM1300_DEFINE(sym, _bus, _addr)                                \
+  PBL_DEVICE_STATE_DEFINE(sym);                                             \
+  static struct pbl_npm1300_state sym##_npm1300_state;                      \
+  const struct pbl_npm1300 sym = {                                          \
+    .dev = PBL_DEVICE_INIT(sym, "npm1300", pbl_npm1300_init, &(_bus)->dev), \
+    .i2c = PBL_I2C_DEV(_bus, _addr),                                        \
+    .state = &sym##_npm1300_state,                                          \
+  };                                                                        \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 /**

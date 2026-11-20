@@ -150,6 +150,6 @@ static const struct pbl_flash_ops s_ops = {
 };
 
 PBL_FLASH_STATE_DEFINE(pbl_flash_posix);
-const struct pbl_flash pbl_flash_posix = PBL_FLASH_INIT(pbl_flash_posix, "flash", nullptr, nullptr,
-                                                        &s_ops, &s_geometry, nullptr, nullptr);
+const struct pbl_flash pbl_flash_posix =
+    PBL_FLASH_INIT(pbl_flash_posix, "flash", nullptr, &s_ops, &s_geometry, nullptr, nullptr);
 PBL_DEVICE_REGISTER(pbl_flash_posix, &pbl_flash_posix.dev);

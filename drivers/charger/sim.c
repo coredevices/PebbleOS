@@ -66,5 +66,5 @@ static const struct pbl_charger_ops s_ops = {
 
 PBL_CHARGER_STATE_DEFINE(pbl_charger_sim);
 const struct pbl_charger pbl_charger_sim =
-    PBL_CHARGER_INIT(pbl_charger_sim, "charger", nullptr, nullptr, &s_ops);
+    PBL_CHARGER_INIT(pbl_charger_sim, "charger", nullptr, &s_ops);
 PBL_DEVICE_REGISTER(pbl_charger_sim, &pbl_charger_sim.dev);

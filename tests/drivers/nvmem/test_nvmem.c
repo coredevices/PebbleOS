@@ -32,11 +32,11 @@ static const struct pbl_nvmem_ops s_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_nvmem);
 static const struct pbl_nvmem s_nvmem =
-    PBL_NVMEM_INIT(s_nvmem, "mem", nullptr, nullptr, &s_ops, MEM_SIZE, 4U, 4U);
+    PBL_NVMEM_INIT(s_nvmem, "mem", nullptr, &s_ops, MEM_SIZE, 4U, 4U);
 
 PBL_DEVICE_STATE_DEFINE(s_nvmem_not_init);
 static const struct pbl_nvmem s_nvmem_not_init =
-    PBL_NVMEM_INIT(s_nvmem_not_init, "absent", nullptr, nullptr, &s_ops, MEM_SIZE, 4U, 4U);
+    PBL_NVMEM_INIT(s_nvmem_not_init, "absent", nullptr, &s_ops, MEM_SIZE, 4U, 4U);
 
 static const struct pbl_nvmem_cell s_cell = PBL_NVMEM_CELL(&s_nvmem, 8U, 4U);
 static const struct pbl_nvmem_cell s_cell_oob = PBL_NVMEM_CELL(&s_nvmem, 12U, 8U);

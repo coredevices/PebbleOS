@@ -175,7 +175,7 @@ static const struct pbl_audio_amp_ops s_amp_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_codec);
 static const struct pbl_audio_codec s_codec = {
-  .dev = PBL_DEVICE_INIT(s_codec, "codec", nullptr, nullptr, nullptr),
+  .dev = PBL_DEVICE_INIT(s_codec, "codec", nullptr, nullptr),
   .ops = &s_codec_ops,
 };
 
@@ -196,35 +196,35 @@ static const struct pbl_audio_codec_ops s_dmic_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_dmic);
 static const struct pbl_audio_codec s_dmic = {
-  .dev = PBL_DEVICE_INIT(s_dmic, "dmic", nullptr, nullptr, nullptr),
+  .dev = PBL_DEVICE_INIT(s_dmic, "dmic", nullptr, nullptr),
   .ops = &s_dmic_ops,
 };
 
 PBL_DEVICE_STATE_DEFINE(s_amp);
 static const struct pbl_audio_amp s_amp = {
-  .dev = PBL_DEVICE_INIT(s_amp, "amp", nullptr, nullptr, nullptr),
+  .dev = PBL_DEVICE_INIT(s_amp, "amp", nullptr, nullptr),
   .ops = &s_amp_ops,
 };
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_out_dai);
 static const struct pbl_audio_dai s_out_dai =
-    PBL_AUDIO_DAI_INIT(s_out_dai, "out_dai", PBL_AUDIO_PLAYBACK, &s_ops, nullptr);
+    PBL_AUDIO_DAI_INIT(s_out_dai, "out_dai", PBL_AUDIO_PLAYBACK, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_out, "out", &s_out_dai, nullptr, nullptr, 0, 0);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_in_dai);
 static const struct pbl_audio_dai s_in_dai =
-    PBL_AUDIO_DAI_INIT(s_in_dai, "in_dai", PBL_AUDIO_CAPTURE, &s_ops, nullptr);
+    PBL_AUDIO_DAI_INIT(s_in_dai, "in_dai", PBL_AUDIO_CAPTURE, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_in, "in", &s_in_dai, nullptr, nullptr, 0, 0);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_linked_dai);
 static const struct pbl_audio_dai s_linked_dai =
-    PBL_AUDIO_DAI_INIT(s_linked_dai, "linked_dai", PBL_AUDIO_PLAYBACK, &s_ops, nullptr);
+    PBL_AUDIO_DAI_INIT(s_linked_dai, "linked_dai", PBL_AUDIO_PLAYBACK, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_linked, "linked", &s_linked_dai, &s_codec, &s_amp, PBL_AUDIO_FMT_I2S,
                       PBL_AUDIO_FMT_CODEC_MASTER);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_mic_dai);
 static const struct pbl_audio_dai s_mic_dai =
-    PBL_AUDIO_DAI_INIT(s_mic_dai, "mic_dai", PBL_AUDIO_CAPTURE, &s_ops, nullptr);
+    PBL_AUDIO_DAI_INIT(s_mic_dai, "mic_dai", PBL_AUDIO_CAPTURE, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_mic_dai, &s_dmic, nullptr, 0, 0);
 
 static void prv_period_done(const struct pbl_audio *audio, void *period,

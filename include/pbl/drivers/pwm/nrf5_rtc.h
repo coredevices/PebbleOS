@@ -66,14 +66,13 @@ int pbl_pwm_nrf5_rtc_init(const struct pbl_device *dev);
  * @param _lfclk LFCLK, from PBL_CLK().
  * @param _out Output, from PBL_GPIO().
  */
-#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _base, _gpiote, _lfclk, _out)              \
-  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                             \
-  static struct pbl_pwm_nrf5_rtc_state sym##_nrf5_rtc_state;                           \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5_rtc, struct pbl_pwm_controller, ctrl) { \
-    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_rtc_init, nullptr,        \
-                                    &pbl_pwm_nrf5_rtc_ops),                            \
-    .state = &sym##_nrf5_rtc_state, .out = _out, .base = (_base), .gpiote = (_gpiote), \
-    .lfclk = _lfclk,                                                                   \
+#define PBL_PWM_NRF5_RTC_DEFINE(sym, _name, _base, _gpiote, _lfclk, _out)                      \
+  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 1);                                                     \
+  static struct pbl_pwm_nrf5_rtc_state sym##_nrf5_rtc_state;                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5_rtc, struct pbl_pwm_controller, ctrl) {         \
+    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_rtc_init, &pbl_pwm_nrf5_rtc_ops), \
+    .state = &sym##_nrf5_rtc_state, .out = _out, .base = (_base), .gpiote = (_gpiote),         \
+    .lfclk = _lfclk,                                                                           \
   }
 
 /** @} */

@@ -81,10 +81,10 @@ extern const struct pbl_device_class pbl_hyperbus_class;
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_HYPERBUS_INIT(sym, _name, _parent, _ops)                                          \
-  {                                                                                           \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, _parent, nullptr, &pbl_hyperbus_class), \
-    .ops = (_ops),                                                                            \
+#define PBL_HYPERBUS_INIT(sym, _name, _parent, _ops)                                 \
+  {                                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, _parent, &pbl_hyperbus_class), \
+    .ops = (_ops),                                                                   \
   }
 
 /**

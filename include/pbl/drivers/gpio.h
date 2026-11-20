@@ -120,12 +120,12 @@ struct pbl_gpio_port {
  * @param _num_pins Number of pins.
  * @param _intc Interrupt controller of the pins, or NULL.
  */
-#define PBL_GPIO_PORT_INIT(sym, _name, _init, _parent, _ops, _num_pins, _intc)               \
-  {                                                                                          \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_gpio_port_class), \
-    .ops = (_ops),                                                                           \
-    .num_pins = (_num_pins),                                                                 \
-    .intc = (_intc),                                                                         \
+#define PBL_GPIO_PORT_INIT(sym, _name, _init, _parent, _ops, _num_pins, _intc)      \
+  {                                                                                 \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_gpio_port_class), \
+    .ops = (_ops),                                                                  \
+    .num_pins = (_num_pins),                                                        \
+    .intc = (_intc),                                                                \
   }
 
 /**

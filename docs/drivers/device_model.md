@@ -16,7 +16,7 @@ and `container_of()` walks back out.
 classDiagram
   direction LR
   class pbl_device {
-    name, init, parent, deps, state
+    name, init, parent, cls, state
     include/pbl/device.h
   }
   class pbl_gpio_port {
@@ -46,7 +46,7 @@ A driver provides a `PBL_<DRIVER>_DEFINE(sym, ...)` macro built from three
 core pieces:
 
 - `PBL_DEVICE_STATE_DEFINE(sym)` allocates the runtime state;
-- `PBL_DEVICE_INIT(sym, name, init, parent, deps)` initializes the embedded
+- `PBL_DEVICE_INIT(sym, name, init, parent)` initializes the embedded
   `struct pbl_device`;
 - `PBL_DEVICE_REGISTER(sym, dev)` adds a pointer to the device to the device
   table, the `devices` iterable section.
@@ -67,12 +67,12 @@ table position:
   children up from its own init with `pbl_device_init_children()`;
 - a driver's init calls `pbl_device_init()` on the other devices it uses, so
   structural dependencies are not written down twice;
-- anything else, such as a supply that has to be up first, goes in the
-  instance's `PBL_DEVICE_DEPS()`;
-- an instance defined from devicetree also gets the devices its node refers
-  to, listed next to it with `PBL_DEVICE_DEPENDS()` in the `dev_deps`
-  iterable section. `CONFIG_DEVICE_INIT_REVERSE` walks the table backwards, to check
-  that nothing relies on its position.
+- anything else, such as a supply that has to be up first, is listed next to
+  the instance with `PBL_DEVICE_DEPENDS()`, in the `dev_deps` iterable
+  section. The devicetree writes these for the devices a node refers to.
+
+`CONFIG_DEVICE_INIT_REVERSE` walks the table backwards, to check that nothing
+relies on its position.
 
 This is a synchronous take on Linux's deferred probe and `fw_devlink`.
 `pbl_device_init()` is idempotent, so a device is initialized exactly once

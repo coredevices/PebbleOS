@@ -115,16 +115,15 @@ struct pbl_panel {
  * @param _name Name.
  * @param _init Driver device init.
  * @param _ops Driver operations.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _timing Timing.
  * @param _bus_format Bus format.
  * @param ... Other fields, designated initializers of struct pbl_panel.
  */
-#define PBL_PANEL_INIT(sym, _name, _init, _ops, _deps, _timing, _bus_format, ...)     \
-  {.dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, _deps, &pbl_panel_class), \
-   .ops = (_ops),                                                                     \
-   .timing = (_timing),                                                               \
-   .bus_format = (_bus_format),                                                       \
+#define PBL_PANEL_INIT(sym, _name, _init, _ops, _timing, _bus_format, ...)     \
+  {.dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_panel_class), \
+   .ops = (_ops),                                                              \
+   .timing = (_timing),                                                        \
+   .bus_format = (_bus_format),                                                \
    __VA_ARGS__}
 
 /**

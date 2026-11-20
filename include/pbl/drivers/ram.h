@@ -87,11 +87,11 @@ extern const struct pbl_ram *const EXTRAM;
   PBL_DEVICE_STATE_DEFINE(sym);   \
   static struct pbl_ram_state sym##_ram_state = {.lock = PBL_MUTEX_INITIALIZER}
 
-#define PBL_RAM_INIT(sym, _name, _parent, _deps, _ops)                                          \
-  {                                                                                             \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_ram_dev_init, _parent, _deps, &pbl_ram_class), \
-    .ops = (_ops),                                                                              \
-    .state = &sym##_ram_state,                                                                  \
+#define PBL_RAM_INIT(sym, _name, _parent, _ops)                                          \
+  {                                                                                      \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_ram_dev_init, _parent, &pbl_ram_class), \
+    .ops = (_ops),                                                                       \
+    .state = &sym##_ram_state,                                                           \
   }
 
 /**

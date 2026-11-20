@@ -73,12 +73,12 @@ int pbl_adc_dev_init(const struct pbl_device *dev);
   PBL_DEVICE_STATE_DEFINE(sym);   \
   static struct pbl_adc_state sym##_adc_state = {.lock = PBL_MUTEX_INITIALIZER}
 
-#define PBL_ADC_INIT(sym, _name, _parent, _deps, _ops, _num_channels)                           \
-  {                                                                                             \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_adc_dev_init, _parent, _deps, &pbl_adc_class), \
-    .ops = (_ops),                                                                              \
-    .state = &sym##_adc_state,                                                                  \
-    .num_channels = (_num_channels),                                                            \
+#define PBL_ADC_INIT(sym, _name, _parent, _ops, _num_channels)                           \
+  {                                                                                      \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_adc_dev_init, _parent, &pbl_adc_class), \
+    .ops = (_ops),                                                                       \
+    .state = &sym##_adc_state,                                                           \
+    .num_channels = (_num_channels),                                                     \
   }
 /** @endcond */
 

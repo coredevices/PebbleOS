@@ -77,14 +77,13 @@ struct pbl_rproc {
  * @param sym Remote processor symbol, with its PBL_RPROC_STATE_DEFINE().
  * @param _name Device name.
  * @param _init Device init function.
- * @param _deps Device dependencies.
  * @param _ops Operations.
  */
-#define PBL_RPROC_INIT(sym, _name, _init, _deps, _ops)                                 \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, _deps, &pbl_rproc_class), \
-    .ops = (_ops),                                                                     \
-    .state = &sym##_rproc_state,                                                       \
+#define PBL_RPROC_INIT(sym, _name, _init, _ops)                                 \
+  {                                                                             \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_rproc_class), \
+    .ops = (_ops),                                                              \
+    .state = &sym##_rproc_state,                                                \
   }
 
 /**
