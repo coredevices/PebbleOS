@@ -25,12 +25,38 @@ static_assert(STM32H7_CLK_HSE_CK == HSE_CK && STM32H7_CLK_LSE_CK == LSE_CK &&
 static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_CK &&
               STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
               STM32H7_CLK_USART1_CK == USART1_CK);
+static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
+              STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
 
+extern uint32_t SystemCoreClock;
+
+// The system clock goes to PLL1 P once PLL1 starts
+static bool s_sys_on_pll1;
+
 #define MHZ_PER_HZ 1000ULL
+#define MHZ(n)     ((uint64_t)(n) * 1000000ULL * MHZ_PER_HZ)
 
 // The core supply settles within a few hundred microseconds
 #define ACTVOSRDY_TIMEOUT_US 10000U
+// The HSE crystal starts within a few milliseconds, the PLL within a few hundred microseconds
+#define HSERDY_TIMEOUT_US  100000U
+#define PLL1RDY_TIMEOUT_US 10000U
+
+// Maximums at VOS1
+#define CPU_MAX_MHZ  MHZ(400)
+#define HCLK_MAX_MHZ MHZ(240)
+#define PCLK_MAX_MHZ MHZ(120)
+
+// PLL1 reference and wide-range VCO limits
+#define PLL_REF_MIN_MHZ MHZ(2)
+#define PLL_REF_MAX_MHZ MHZ(16)
+#define PLL_VCO_MIN_MHZ MHZ(192)
+#define PLL_VCO_MAX_MHZ MHZ(836)
+#define PLL_DIVM_MAX    63U
+#define PLL_DIVN_MIN    4U
+#define PLL_DIVN_MAX    512U
+#define PLL_DIVPQR_MAX  128U
 
 // An enable bit of a peripheral clock
 struct gate {
@@ -67,6 +93,11 @@ static inline uint32_t prv_getreg(const struct pbl_clk_stm32h7 *rcc, uint32_t of
   return pbl_readl(rcc->base + offset);
 }
 
+static inline void prv_modify(const struct pbl_clk_stm32h7 *rcc, uint32_t offset, uint32_t mask,
+                              uint32_t value) {
+  pbl_modifyl(mask, PBL_FIELD_PREP(mask, value), rcc->base + offset);
+}
+
 static bool prv_is_gate(uint32_t id) {
   return id < PBL_ARRAY_SIZE(s_gates) && s_gates[id].reg != 0U;
 }
@@ -91,8 +122,58 @@ static uint32_t prv_apb_div(uint32_t pre) {
   return 1U << ((pre & ~RCC_APB_PRE_DIVIDED) + 1U);
 }
 
+// The HPRE and D1CPRE field of a division, or -EINVAL
+static int prv_ahb_pre(uint32_t div) {
+  static const uint16_t s_divs[] = {2, 4, 8, 16, 64, 128, 256, 512};
+
+  if (div == 1U) {
+    return 0;
+  }
+  for (uint32_t i = 0U; i < PBL_ARRAY_SIZE(s_divs); i++) {
+    if (s_divs[i] == div) {
+      return (int)(RCC_AHB_PRE_DIVIDED | i);
+    }
+  }
+
+  return -EINVAL;
+}
+
+// The PPRE field of a division, or -EINVAL
+static int prv_apb_pre(uint32_t div) {
+  for (uint32_t i = 0U; i < 4U; i++) {
+    if (div == (2U << i)) {
+      return (int)(RCC_APB_PRE_DIVIDED | i);
+    }
+  }
+
+  return div == 1U ? 0 : -EINVAL;
+}
+
+static int prv_hse_on(const struct pbl_clk_stm32h7 *rcc) {
+  pbl_modifyl(0U, RCC_CR_HSEON, rcc->base + STM32H7_RCC_CR_OFFSET);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_HSERDY) != 0U, 10U,
+                          HSERDY_TIMEOUT_US);
+}
+
+static bool prv_pll1_on(const struct pbl_clk_stm32h7 *rcc) {
+  return (prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLL1ON) != 0U;
+}
+
+static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
+  uint64_t rate_mhz;
+
+  if (pbl_clk_get_rate(&(struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_SYS_D1CPRE), &rate_mhz) == 0) {
+    SystemCoreClock = (uint32_t)(rate_mhz / MHZ_PER_HZ);
+  }
+}
+
 static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+
+  if (id == STM32H7_CLK_HSE_CK) {
+    return prv_hse_on(rcc);
+  }
 
   if (!prv_is_gate(id)) {
     return 0;
@@ -130,6 +211,26 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
     case STM32H7_CLK_HSI_CK:
     case STM32H7_CLK_CSI_CK:
       return -ENOENT;
+    case STM32H7_CLK_PLLSRC:
+      switch (
+          PBL_FIELD_GET(RCC_PLLCKSELR_PLLSRC_MASK, prv_getreg(rcc, STM32H7_RCC_PLLCKSELR_OFFSET))) {
+        case RCC_PLLCKSELR_PLLSRC_HSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HSI_CK);
+          return 0;
+        case RCC_PLLCKSELR_PLLSRC_CSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_CSI_CK);
+          return 0;
+        case RCC_PLLCKSELR_PLLSRC_HSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HSE_CK);
+          return 0;
+        default:
+          return -ENOENT;
+      }
+    case STM32H7_CLK_PLL1_P:
+    case STM32H7_CLK_PLL1_Q:
+    case STM32H7_CLK_PLL1_R:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLLSRC);
+      return 0;
     case STM32H7_CLK_SYS_CK:
       switch (PBL_FIELD_GET(RCC_CFGR_SWS_MASK, prv_getreg(rcc, STM32H7_RCC_CFGR_OFFSET))) {
         case RCC_CFGR_SW_HSI:
@@ -142,7 +243,8 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HSE_CK);
           return 0;
         default:
-          return -ENOTSUP;
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_P);
+          return 0;
       }
     case STM32H7_CLK_SYS_D1CPRE:
       *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_SYS_CK);
@@ -207,6 +309,24 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
     case STM32H7_CLK_CSI_CK:
       *rate_mhz = STM32H7_CSI_HZ * MHZ_PER_HZ;
       return 0;
+    case STM32H7_CLK_PLL1_P:
+    case STM32H7_CLK_PLL1_Q:
+    case STM32H7_CLK_PLL1_R: {
+      uint32_t divm =
+          PBL_FIELD_GET(RCC_PLLCKSELR_DIVM1_MASK, prv_getreg(rcc, STM32H7_RCC_PLLCKSELR_OFFSET));
+      uint32_t divr = prv_getreg(rcc, STM32H7_RCC_PLL1DIVR_OFFSET);
+      uint32_t mask = id == STM32H7_CLK_PLL1_P   ? RCC_PLL1DIVR_P1_MASK
+                      : id == STM32H7_CLK_PLL1_Q ? RCC_PLL1DIVR_Q1_MASK
+                                                 : RCC_PLL1DIVR_R1_MASK;
+
+      if (!prv_pll1_on(rcc) || divm == 0U) {
+        *rate_mhz = 0U;
+        return 0;
+      }
+      *rate_mhz = parent_mhz / divm * (PBL_FIELD_GET(RCC_PLL1DIVR_N1_MASK, divr) + 1U) /
+                  (PBL_FIELD_GET(mask, divr) + 1U);
+      return 0;
+    }
     case STM32H7_CLK_SYS_D1CPRE:
       *rate_mhz = parent_mhz / prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_D1CPRE_MASK, d1cfgr));
       return 0;
@@ -232,26 +352,305 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
   }
 }
 
+static int prv_set_pllsrc(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_HSI_CK:
+      sel = RCC_PLLCKSELR_PLLSRC_HSI;
+      break;
+    case STM32H7_CLK_CSI_CK:
+      sel = RCC_PLLCKSELR_PLLSRC_CSI;
+      break;
+    case STM32H7_CLK_HSE_CK:
+      sel = RCC_PLLCKSELR_PLLSRC_HSE;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  // Every PLL takes it, so it changes only while they are off
+  if (prv_pll1_on(rcc)) {
+    return PBL_FIELD_GET(RCC_PLLCKSELR_PLLSRC_MASK,
+                         prv_getreg(rcc, STM32H7_RCC_PLLCKSELR_OFFSET)) == sel
+               ? 0
+               : -EBUSY;
+  }
+
+  if (sel == RCC_PLLCKSELR_PLLSRC_HSE) {
+    int ret = prv_hse_on(rcc);
+
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  prv_modify(rcc, STM32H7_RCC_PLLCKSELR_OFFSET, RCC_PLLCKSELR_PLLSRC_MASK, sel);
+
+  return 0;
+}
+
+// Divides the system clock down, so that the bus clocks stay within their maximums at its rate
+static void prv_limit_buses(const struct pbl_clk_stm32h7 *rcc, uint64_t sys_mhz) {
+  uint32_t d1cfgr = prv_getreg(rcc, STM32H7_RCC_D1CFGR_OFFSET);
+  uint64_t cpu_mhz = sys_mhz / prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_D1CPRE_MASK, d1cfgr));
+  uint64_t hclk_mhz = cpu_mhz / prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_HPRE_MASK, d1cfgr));
+  uint32_t hdiv = 1U;
+  uint32_t pdiv = 1U;
+
+  while (hclk_mhz > HCLK_MAX_MHZ * hdiv && hdiv < 512U) {
+    hdiv *= 2U;
+  }
+  if (hdiv > 1U) {
+    prv_modify(
+        rcc, STM32H7_RCC_D1CFGR_OFFSET, RCC_D1CFGR_HPRE_MASK,
+        (uint32_t)prv_ahb_pre(prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_HPRE_MASK, d1cfgr)) * hdiv));
+    hclk_mhz /= hdiv;
+  }
+
+  while (hclk_mhz > PCLK_MAX_MHZ * pdiv && pdiv < 16U) {
+    pdiv *= 2U;
+  }
+  if (pdiv > 1U) {
+    uint32_t pre = (uint32_t)prv_apb_pre(pdiv);
+
+    prv_modify(rcc, STM32H7_RCC_D1CFGR_OFFSET, RCC_D1CFGR_D1PPRE_MASK, pre);
+    prv_modify(rcc, STM32H7_RCC_D2CFGR_OFFSET, RCC_D2CFGR_D2PPRE1_MASK, pre);
+    prv_modify(rcc, STM32H7_RCC_D2CFGR_OFFSET, RCC_D2CFGR_D2PPRE2_MASK, pre);
+    prv_modify(rcc, STM32H7_RCC_D3CFGR_OFFSET, RCC_D3CFGR_D3PPRE_MASK, pre);
+  }
+}
+
+static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint64_t rate_mhz;
+  uint32_t sw;
+  int ret;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_HSI_CK:
+      sw = RCC_CFGR_SW_HSI;
+      break;
+    case STM32H7_CLK_CSI_CK:
+      sw = RCC_CFGR_SW_CSI;
+      break;
+    case STM32H7_CLK_HSE_CK:
+      sw = RCC_CFGR_SW_HSE;
+      ret = prv_hse_on(rcc);
+      if (ret != 0) {
+        return ret;
+      }
+      break;
+    case STM32H7_CLK_PLL1_P:
+      sw = RCC_CFGR_SW_PLL1;
+      // Assigned parents come before assigned rates: the rate of PLL1 P starts it, then switches
+      if ((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLL1RDY) == 0U) {
+        s_sys_on_pll1 = true;
+        return 0;
+      }
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  ret = pbl_clk_get_rate(parent, &rate_mhz);
+  if (ret != 0) {
+    return ret;
+  }
+  if (rate_mhz / prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_D1CPRE_MASK,
+                                           prv_getreg(rcc, STM32H7_RCC_D1CFGR_OFFSET))) >
+      CPU_MAX_MHZ) {
+    return -EINVAL;
+  }
+
+  prv_limit_buses(rcc, rate_mhz);
+  prv_modify(rcc, STM32H7_RCC_CFGR_OFFSET, RCC_CFGR_SW_MASK, sw);
+  while (PBL_FIELD_GET(RCC_CFGR_SWS_MASK, prv_getreg(rcc, STM32H7_RCC_CFGR_OFFSET)) != sw) {
+  }
+  prv_update_core_clock(ctrl);
+
+  return 0;
+}
+
+static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
+                          const struct pbl_clk *parent) {
+  switch (id) {
+    case STM32H7_CLK_PLLSRC:
+      return prv_set_pllsrc(ctrl, parent);
+    case STM32H7_CLK_SYS_CK:
+      return prv_set_sys_parent(ctrl, parent);
+    default:
+      return -EINVAL;
+  }
+}
+
+// Configures PLL1 for its P output, with an even P divider, the first reference within limits and
+// Q and R at P, then starts it. It must not run the system clock.
+static int prv_pll1_set_rate(const struct pbl_clk_stm32h7 *rcc, uint64_t rate_mhz,
+                             uint64_t src_mhz) {
+  uint32_t rge;
+
+  if (src_mhz == 0U || rate_mhz == 0U) {
+    return -EINVAL;
+  }
+
+  if (PBL_FIELD_GET(RCC_CFGR_SWS_MASK, prv_getreg(rcc, STM32H7_RCC_CFGR_OFFSET)) ==
+      RCC_CFGR_SW_PLL1) {
+    return -EBUSY;
+  }
+
+  for (uint32_t p = 2U; p <= PLL_DIVPQR_MAX; p += 2U) {
+    uint64_t vco_mhz = rate_mhz * p;
+
+    if (vco_mhz < PLL_VCO_MIN_MHZ || vco_mhz > PLL_VCO_MAX_MHZ) {
+      continue;
+    }
+
+    for (uint32_t m = 1U; m <= PLL_DIVM_MAX; m++) {
+      uint64_t ref_mhz = src_mhz / m;
+      uint32_t n;
+
+      if (src_mhz % m != 0U || ref_mhz < PLL_REF_MIN_MHZ || ref_mhz > PLL_REF_MAX_MHZ ||
+          vco_mhz % ref_mhz != 0U) {
+        continue;
+      }
+      n = (uint32_t)(vco_mhz / ref_mhz);
+      if (n < PLL_DIVN_MIN || n > PLL_DIVN_MAX) {
+        continue;
+      }
+
+      if (ref_mhz < MHZ(4)) {
+        rge = RCC_PLLCFGR_PLL1RGE_2_4MHZ;
+      } else if (ref_mhz < MHZ(8)) {
+        rge = RCC_PLLCFGR_PLL1RGE_4_8MHZ;
+      } else {
+        rge = RCC_PLLCFGR_PLL1RGE_8_16MHZ;
+      }
+
+      pbl_modifyl(RCC_CR_PLL1ON, 0U, rcc->base + STM32H7_RCC_CR_OFFSET);
+      while ((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLL1RDY) != 0U) {
+      }
+
+      prv_modify(rcc, STM32H7_RCC_PLLCKSELR_OFFSET, RCC_PLLCKSELR_DIVM1_MASK, m);
+      pbl_modifyl(RCC_PLLCFGR_PLL1VCOSEL | RCC_PLLCFGR_PLL1RGE_MASK | RCC_PLLCFGR_DIVP1EN |
+                      RCC_PLLCFGR_DIVQ1EN | RCC_PLLCFGR_DIVR1EN,
+                  PBL_FIELD_PREP(RCC_PLLCFGR_PLL1RGE_MASK, rge) | RCC_PLLCFGR_DIVP1EN |
+                      RCC_PLLCFGR_DIVQ1EN | RCC_PLLCFGR_DIVR1EN,
+                  rcc->base + STM32H7_RCC_PLLCFGR_OFFSET);
+      pbl_writel(PBL_FIELD_PREP(RCC_PLL1DIVR_N1_MASK, n - 1U) |
+                     PBL_FIELD_PREP(RCC_PLL1DIVR_P1_MASK, p - 1U) |
+                     PBL_FIELD_PREP(RCC_PLL1DIVR_Q1_MASK, p - 1U) |
+                     PBL_FIELD_PREP(RCC_PLL1DIVR_R1_MASK, p - 1U),
+                 rcc->base + STM32H7_RCC_PLL1DIVR_OFFSET);
+
+      pbl_modifyl(0U, RCC_CR_PLL1ON, rcc->base + STM32H7_RCC_CR_OFFSET);
+
+      return PBL_POLL_BUSY_US((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLL1RDY) != 0U, 10U,
+                              PLL1RDY_TIMEOUT_US);
+    }
+  }
+
+  return -EINVAL;
+}
+
+static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint64_t rate_mhz,
+                        uint64_t parent_mhz) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t div;
+  int pre;
+
+  if (id == STM32H7_CLK_PLL1_P) {
+    int ret = prv_pll1_set_rate(rcc, rate_mhz, parent_mhz);
+
+    if (ret == 0 && s_sys_on_pll1) {
+      s_sys_on_pll1 = false;
+      ret = prv_set_sys_parent(ctrl, &(struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_P));
+    }
+    return ret;
+  }
+
+  if (rate_mhz == 0U || parent_mhz % rate_mhz != 0U) {
+    return -EINVAL;
+  }
+  div = (uint32_t)(parent_mhz / rate_mhz);
+
+  switch (id) {
+    case STM32H7_CLK_SYS_D1CPRE:
+    case STM32H7_CLK_HCLK:
+      pre = prv_ahb_pre(div);
+      if (pre < 0 || rate_mhz > (id == STM32H7_CLK_HCLK ? HCLK_MAX_MHZ : CPU_MAX_MHZ)) {
+        return -EINVAL;
+      }
+      prv_modify(rcc, STM32H7_RCC_D1CFGR_OFFSET,
+                 id == STM32H7_CLK_HCLK ? RCC_D1CFGR_HPRE_MASK : RCC_D1CFGR_D1CPRE_MASK,
+                 (uint32_t)pre);
+      prv_update_core_clock(ctrl);
+      return 0;
+    case STM32H7_CLK_PCLK1:
+    case STM32H7_CLK_PCLK2:
+    case STM32H7_CLK_PCLK4:
+      pre = prv_apb_pre(div);
+      if (pre < 0 || rate_mhz > PCLK_MAX_MHZ) {
+        return -EINVAL;
+      }
+      if (id == STM32H7_CLK_PCLK4) {
+        prv_modify(rcc, STM32H7_RCC_D3CFGR_OFFSET, RCC_D3CFGR_D3PPRE_MASK, (uint32_t)pre);
+      } else {
+        prv_modify(rcc, STM32H7_RCC_D2CFGR_OFFSET,
+                   id == STM32H7_CLK_PCLK1 ? RCC_D2CFGR_D2PPRE1_MASK : RCC_D2CFGR_D2PPRE2_MASK,
+                   (uint32_t)pre);
+      }
+      return 0;
+    default:
+      return -EINVAL;
+  }
+}
+
 const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
+  .set_parent = prv_set_parent,
+  .set_rate = prv_set_rate,
 };
 
-// The configuration takes once per power-on: a different one written before stays
+// The supply configuration takes once per power-on: a different one written before stays
 int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
   const struct pbl_clk_stm32h7 *rcc = PBL_CONTAINER_OF(dev, const struct pbl_clk_stm32h7, ctrl.dev);
   uintptr_t cr3 = rcc->pwr + STM32H7_PWR_CR3_OFFSET;
+  int ret;
 
   pbl_modifyl(PWR_CR3_SUPPLY_MASK, rcc->supply, cr3);
   if ((pbl_readl(cr3) & PWR_CR3_SUPPLY_MASK) != rcc->supply) {
     return -EIO;
   }
 
-  return PBL_POLL_BUSY_US(
-      (pbl_readl(rcc->pwr + STM32H7_PWR_CSR1_OFFSET) & PWR_CSR1_ACTVOSRDY) != 0U, 10U,
-      ACTVOSRDY_TIMEOUT_US);
+  ret = PBL_POLL_BUSY_US((pbl_readl(rcc->pwr + STM32H7_PWR_CSR1_OFFSET) & PWR_CSR1_ACTVOSRDY) != 0U,
+                         10U, ACTVOSRDY_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // Any rate runs at VOS1
+  pbl_modifyl(PWR_D3CR_VOS_MASK, PBL_FIELD_PREP(PWR_D3CR_VOS_MASK, PWR_D3CR_VOS_SCALE1),
+              rcc->pwr + STM32H7_PWR_D3CR_OFFSET);
+  ret = PBL_POLL_BUSY_US((pbl_readl(rcc->pwr + STM32H7_PWR_D3CR_OFFSET) & PWR_D3CR_VOSRDY) != 0U,
+                         10U, ACTVOSRDY_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return pbl_clk_assign(rcc->assigned);
 }
 
 #include PBL_DT_INSTANCES(st_stm32h743_rcc)

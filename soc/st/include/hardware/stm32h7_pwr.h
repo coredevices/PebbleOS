@@ -9,10 +9,15 @@
 
 #define STM32H7_PWR_CSR1_OFFSET 0x0004
 #define STM32H7_PWR_CR3_OFFSET  0x000c
+#define STM32H7_PWR_D3CR_OFFSET 0x0018
 
 /* Register bit definitions */
 
 #define PWR_CSR1_ACTVOSRDY PBL_BIT(13)
+
+#define PWR_D3CR_VOSRDY     PBL_BIT(13)
+#define PWR_D3CR_VOS_MASK   PBL_GENMASK(15, 14)
+#define PWR_D3CR_VOS_SCALE1 3U
 
 #define PWR_CR3_BYPASS       PBL_BIT(0)
 #define PWR_CR3_LDOEN        PBL_BIT(1)

@@ -25,3 +25,5 @@ args:
       bypass: PBL_CLK_STM32H7_SUPPLY_BYPASS
   - clock: 0
   - clock: 1
+  - assigned-clocks: PBL_CLK_ASSIGNED
+    optional: true
