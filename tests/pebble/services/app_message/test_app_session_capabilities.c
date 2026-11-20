@@ -6,7 +6,6 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/app_session.h>
 #include <pbl/settings/settings.h>
-#include <pbl/system/status_codes.h>
 
 #include <clar.h>
 #include <fff.h>
@@ -89,7 +88,7 @@ void test_app_session_capabilities__cleanup(void) {
 }
 
 void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
-  pbl_settings_open_fake.return_val = E_ERROR;
+  pbl_settings_open_fake.return_val = -EIO;
   bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(false, has_cap);
   cl_assert_equal_i(pbl_settings_get_fake.call_count, 0);
@@ -97,7 +96,7 @@ void test_app_session_capabilities__no_cache_file_and_not_connected(void) {
 }
 
 void test_app_session_capabilities__no_cache_file_but_connected(void) {
-  pbl_settings_open_fake.return_val = E_ERROR;
+  pbl_settings_open_fake.return_val = -EIO;
   app_session_get_current_fake.return_val = s_fake_app_session;
   bool has_cap = app_session_has_capability(PBL_PP_CAP_INFINITE_LOG_DUMPING);
   cl_assert_equal_b(true, has_cap);

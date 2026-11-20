@@ -9,7 +9,6 @@
 
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
-#include <system/status_errno.h>
 
 #define APP_SESSION_CAPABILITIES_CACHE_FILENAME "/app_comm"
 
@@ -17,18 +16,18 @@
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
-static status_t prv_open(struct pbl_settings_file *settings_file) {
-  return status_from_errno(pbl_settings_open(settings_file, APP_SESSION_CAPABILITIES_CACHE_FILENAME,
-                                             APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE));
+static int prv_open(struct pbl_settings_file *settings_file) {
+  return pbl_settings_open(settings_file, APP_SESSION_CAPABILITIES_CACHE_FILENAME,
+                           APP_SESSION_CAPABILITIES_CACHE_FILE_MAX_USED_SPACE);
 }
 
-static status_t prv_open_locked(struct pbl_settings_file *settings_file) {
+static int prv_open_locked(struct pbl_settings_file *settings_file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t status = prv_open(settings_file);
-  if (FAILED(status)) {
+  int ret = prv_open(settings_file);
+  if (ret < 0) {
     pbl_mutex_unlock(&s_mutex);
   }
-  return status;
+  return ret;
 }
 
 static void prv_close_and_unlock(struct pbl_settings_file *settings_file) {
@@ -42,8 +41,7 @@ bool app_session_has_capability(enum pbl_pp_capability capability) {
   const Uuid app_uuid = app_manager_get_current_app_md()->uuid;
 
   struct pbl_settings_file settings_file;
-  status_t open_status = prv_open_locked(&settings_file);
-  bool file_open = PASSED(open_status);
+  bool file_open = prv_open_locked(&settings_file) == 0;
 
   uint64_t cached_capabilities = 0;
   if (file_open) {
@@ -83,7 +81,7 @@ static void prv_rewrite_cb(struct pbl_settings_file *old_file, struct pbl_settin
 
 void app_session_capabilities_evict(const Uuid *app_uuid) {
   struct pbl_settings_file settings_file;
-  if (PASSED(prv_open_locked(&settings_file))) {
+  if (prv_open_locked(&settings_file) == 0) {
     pbl_settings_delete(&settings_file, app_uuid, sizeof(*app_uuid));
     prv_close_and_unlock(&settings_file);
   }
@@ -91,7 +89,7 @@ void app_session_capabilities_evict(const Uuid *app_uuid) {
 
 void app_session_capabilities_init(void) {
   struct pbl_settings_file settings_file;
-  if (PASSED(prv_open_locked(&settings_file))) {
+  if (prv_open_locked(&settings_file) == 0) {
     pbl_settings_rewrite(&settings_file, prv_rewrite_cb, nullptr);
     prv_close_and_unlock(&settings_file);
   }
