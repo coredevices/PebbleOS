@@ -22,6 +22,10 @@ uint64_t pbl_uptime_ms(void) {
   return pbl_uptime_ticks() * 1000U / PBL_TICK_HZ;
 }
 
+uint64_t pbl_uptime_us(void) {
+  return pbl_uptime_ticks() * 1000000U / PBL_TICK_HZ;
+}
+
 static uint32_t s_cycles_per_sec;
 
 PBL_SECTION_RAM uint32_t pbl_cycles_per_sec(void) {
