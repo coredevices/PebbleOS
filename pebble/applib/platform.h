@@ -35,6 +35,8 @@ typedef enum PlatformFeature {
   PlatformFeatureRGBBacklight,
   //! A speaker
   PlatformFeatureSpeaker,
+  //! A barometer, see \ref pressure_service_peek
+  PlatformFeatureBarometer,
 } PlatformFeature;
 
 //! Whether the watch the app is running on has a feature.
