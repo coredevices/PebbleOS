@@ -42,7 +42,7 @@ void pbl_irq_init(void) {
       ARM_SCB_AIRCR);
 
   PBL_ITERABLE_SECTION_FOREACH(const struct arch_irq_prio, irq_prio, p) {
-    arch_writeb((uint8_t)(p->prio << (8U - CONFIG_NUM_IRQ_PRIO_BITS)), ARCH_NVIC_IPR(p->irq));
+    arch_writeb((uint8_t)(p->prio << (8U - ARCH_IRQ_PRIO_BITS)), ARCH_NVIC_IPR(p->irq));
   }
 }
 

@@ -56,7 +56,6 @@
  * one.
  */
 #define PBL_IRQ_PRIO_MAX_SYSCALL CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL
-
 /**
  * @brief Mask interrupts up to @ref PBL_IRQ_PRIO_MAX_SYSCALL.
  *
@@ -101,6 +100,9 @@ typedef uint16_t pbl_irq_t;
 #define PBL_IRQ_ZERO_LATENCY (1U << 0)
 
 #include <pbl_arch_irq.h>
+
+/** @brief Least urgent priority of the interrupt controller, in controller units. */
+#define PBL_IRQ_PRIO_LOWEST ARCH_IRQ_PRIO_LOWEST
 
 /**
  * @brief Bind a SoC interrupt line to a handler at build time.

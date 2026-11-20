@@ -769,6 +769,16 @@ instances. The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
 
+A property code needs before devices, or without any, is listed the same way
+under `props`, and becomes `PBL_DT_PROP_<LABEL>_<PROPERTY>`, from its one cell:
+
+```yaml
+config: CPU_CORTEX_M
+props:
+  - label: nvic
+    prop: arm,num-irq-priority-bits
+```
+
 ## Tests
 
 The generator has unit tests, run on the host:

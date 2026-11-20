@@ -39,6 +39,7 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
 	};
 
 	reserved-memory {
@@ -146,8 +147,10 @@
 			sifli,bt-rfc = <&bt_rfc>;
 			sifli,bt-phy = <&bt_phy>;
 			sifli,bt-mac = <&bt_mac>;
-			sifli,gpadc = <&gpadc>;
-			sifli,dmac = <&dmac2>;
+			io-channels = <&gpadc 0>;
+			io-channel-names = "rfcal";
+			dmas = <&dmac2 7 0 0>;
+			dma-names = "rfcal";
 			sifli,lpsys-rcc = <&lpsys_rcc>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,pmuc = <&pmuc>;

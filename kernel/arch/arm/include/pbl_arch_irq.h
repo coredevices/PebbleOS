@@ -9,16 +9,19 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/section.h>
 
+#include <devicetree/regs.h>
 #include <pbl_arch_mmio.h>
 #include <soc_irqs.h>
+
+#define ARCH_IRQ_PRIO_BITS   PBL_DT_PROP_NVIC_ARM_NUM_IRQ_PRIORITY_BITS
+#define ARCH_IRQ_PRIO_LOWEST ((1U << ARCH_IRQ_PRIO_BITS) - 1U)
 
 struct arch_irq_prio {
   uint16_t irq;
   uint8_t prio;
 };
 
-#define ARCH_IRQ_PRIO_MAX_SYSCALL \
-  (CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL >> (8 - CONFIG_NUM_IRQ_PRIO_BITS))
+#define ARCH_IRQ_PRIO_MAX_SYSCALL (CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL >> (8 - ARCH_IRQ_PRIO_BITS))
 
 #define ARCH_IRQ_HANDLER(_n)  ARCH_IRQ_HANDLER_(_n)
 #define ARCH_IRQ_HANDLER_(_n) pbl_isr_##_n
@@ -26,7 +29,7 @@ struct arch_irq_prio {
 #define ARCH_IRQ_PRIO_(_n)    pbl_irq_prio_##_n
 
 #define ARCH_IRQ_DECLARE(_n, _name, _prio, _flags)                                             \
-  static_assert((_prio) >= 0 && (_prio) < (1 << CONFIG_NUM_IRQ_PRIO_BITS),                     \
+  static_assert((_prio) >= 0 && (_prio) < (1 << ARCH_IRQ_PRIO_BITS),                           \
                 _name ": priority out of range");                                              \
   static_assert(((_flags) & PBL_IRQ_ZERO_LATENCY) || (_prio) >= ARCH_IRQ_PRIO_MAX_SYSCALL,     \
                 _name ": priority above PBL_IRQ_PRIO_MAX_SYSCALL needs PBL_IRQ_ZERO_LATENCY"); \
@@ -55,7 +58,7 @@ struct arch_irq_prio {
 
 // Priority of the kernel's own interrupts as the NVIC stores it, unimplemented bits clear
 #define ARCH_IRQ_PRIO_KERNEL_HW \
-  (CONFIG_KERNEL_IRQ_PRIO_KERNEL & ~((1U << (8U - CONFIG_NUM_IRQ_PRIO_BITS)) - 1U))
+  (CONFIG_KERNEL_IRQ_PRIO_KERNEL & ~((1U << (8U - ARCH_IRQ_PRIO_BITS)) - 1U))
 
 static PBL_ALWAYS_INLINE unsigned int arch_irq_disable_all(void) {
   unsigned int primask;
