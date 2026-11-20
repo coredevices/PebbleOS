@@ -318,6 +318,7 @@ class header, as `SPEAKER`:
 | `accel` | `accel` | `ACCEL` |
 | `mag` | `mag` | `MAG` |
 | `als` | `als` | `ALS` |
+| `pressure` | `pressure` | `PRESSURE` |
 | `touch` | `touch` | `TOUCH` |
 | `vibe` | `vibe` | `VIBE` |
 | `mic` | `audio` | `MIC` |

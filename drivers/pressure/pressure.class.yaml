@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: pressure
+type: struct pbl_pressure
+include: pbl/drivers/pressure.h
+roles:
+  pressure: PRESSURE

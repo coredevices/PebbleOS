@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: bosch,bmp390
+config: PRESSURE_BMP390
+class: pressure
+define: PBL_BMP390_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
