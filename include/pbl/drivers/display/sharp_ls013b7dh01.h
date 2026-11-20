@@ -82,9 +82,9 @@ extern const struct pbl_display_ops pbl_display_sharp_ls013b7dh01_ops;
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
   static struct pbl_display_sharp_ls013b7dh01_state sym##_sharp_state;                             \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_sharp_ls013b7dh01, struct pbl_display, disp) {       \
-    .disp =                                                                                        \
-        PBL_DISPLAY_INIT(sym, _name, &pbl_display_sharp_ls013b7dh01_ops, SHARP_LS013B7DH01_WIDTH,  \
-                         SHARP_LS013B7DH01_HEIGHT, PBL_DISPLAY_FORMAT_MONO, (_rotation) == 180),   \
+    .disp = PBL_DISPLAY_INIT(sym, _name, nullptr, &pbl_display_sharp_ls013b7dh01_ops,              \
+                             SHARP_LS013B7DH01_WIDTH, SHARP_LS013B7DH01_HEIGHT,                    \
+                             PBL_DISPLAY_FORMAT_MONO, (_rotation) == 180),                         \
     .state = &sym##_sharp_state, .spi = PBL_SPI_DEV(_bus, _cs, _max_hz, _mode), .enable = _enable, \
     .extcomin = __VA_ARGS__,                                                                       \
   }

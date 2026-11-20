@@ -178,7 +178,7 @@ static const struct pbl_audio_dai_ops s_ops = {
 PBL_AUDIO_DAI_STATE_DEFINE(s_sim_mic);
 static struct pbl_audio_sim_mic_state s_sim_mic_state;
 static const struct pbl_audio_sim_mic s_sim_mic = {
-  .dai = PBL_AUDIO_DAI_INIT(s_sim_mic, "sim_mic", PBL_AUDIO_CAPTURE, &s_ops),
+  .dai = PBL_AUDIO_DAI_INIT(s_sim_mic, "sim_mic", nullptr, &s_ops, PBL_AUDIO_CAPTURE),
   .state = &s_sim_mic_state,
 };
 PBL_DEVICE_REGISTER(s_sim_mic, &s_sim_mic.dai.dev);

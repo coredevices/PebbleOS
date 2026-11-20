@@ -58,16 +58,17 @@ int pbl_mbox_sf32lb_init(const struct pbl_device *dev);
  * @param _num_chans Doorbells used, up to PBL_MBOX_SF32LB_NUM_DOORBELLS.
  * @param ... Interrupt, if it reaches this CPU.
  */
-#define PBL_MBOX_SF32LB_DEFINE(sym, _name, _base, _clk, _num_chans, ...)                          \
-  static_assert((_num_chans) <= PBL_MBOX_SF32LB_NUM_DOORBELLS);                                   \
-  PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans);                                              \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_mbox_sf32lb, struct pbl_mbox_controller, ctrl){             \
-    .ctrl = PBL_MBOX_CONTROLLER_INIT(sym, _name, pbl_mbox_sf32lb_init, &pbl_mbox_sf32lb_ops, 1U), \
-    .base = (_base),                                                                              \
-    .irqn = PBL_MBOX_SF32LB_FIRST_(__VA_ARGS__ __VA_OPT__(, ) PBL_MBOX_SF32LB_NO_IRQ),            \
-    .clk = _clk,                                                                                  \
-  };                                                                                              \
-  __VA_OPT__(PBL_IRQ_CONNECT_NUM(__VA_ARGS__, CONFIG_MBOX_SF32LB_IRQ_PRIO,                        \
+#define PBL_MBOX_SF32LB_DEFINE(sym, _name, _base, _clk, _num_chans, ...)               \
+  static_assert((_num_chans) <= PBL_MBOX_SF32LB_NUM_DOORBELLS);                        \
+  PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans);                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_mbox_sf32lb, struct pbl_mbox_controller, ctrl){  \
+    .ctrl = PBL_MBOX_CONTROLLER_INIT(sym, _name, pbl_mbox_sf32lb_init, nullptr,        \
+                                     &pbl_mbox_sf32lb_ops, 1U),                        \
+    .base = (_base),                                                                   \
+    .irqn = PBL_MBOX_SF32LB_FIRST_(__VA_ARGS__ __VA_OPT__(, ) PBL_MBOX_SF32LB_NO_IRQ), \
+    .clk = _clk,                                                                       \
+  };                                                                                   \
+  __VA_OPT__(PBL_IRQ_CONNECT_NUM(__VA_ARGS__, CONFIG_MBOX_SF32LB_IRQ_PRIO,             \
                                  pbl_mbox_sf32lb_irq_handler, &sym##_inst, 0))
 
 /**

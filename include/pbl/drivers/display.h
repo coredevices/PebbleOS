@@ -191,6 +191,7 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param sym Symbol of the display instance, with its state defined by
  *            PBL_DISPLAY_STATE_DEFINE().
  * @param _name Name.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _width Width, in pixels.
  * @param _height Height, in pixels.
@@ -201,10 +202,10 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param _fb_ram RAM device the memory is in, kept powered by the display, or NULL.
  * @param ... Other properties, designated initializers of struct pbl_display_props.
  */
-#define PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, _ops, _width, _height, _format, _rotated, _fb,  \
-                                     _fb_size, _fb_ram, ...)                                     \
+#define PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, _parent, _ops, _width, _height, _format,        \
+                                     _rotated, _fb, _fb_size, _fb_ram, ...)                      \
   {                                                                                              \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_dev_init, nullptr, &pbl_display_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_dev_init, _parent, &pbl_display_class), \
     .ops = (_ops),                                                                               \
     .state = &sym##_display_state,                                                               \
     .props =                                                                                     \
@@ -224,6 +225,7 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param sym Symbol of the display instance, with its state defined by
  *            PBL_DISPLAY_STATE_DEFINE().
  * @param _name Name.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _width Width, in pixels.
  * @param _height Height, in pixels.
@@ -231,9 +233,9 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param _rotated Panel mounted upside down.
  * @param ... Other properties, designated initializers of struct pbl_display_props.
  */
-#define PBL_DISPLAY_INIT(sym, _name, _ops, _width, _height, _format, _rotated, ...)          \
-  PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, _ops, _width, _height, _format, _rotated, 0U, 0U, \
-                               nullptr, __VA_ARGS__)
+#define PBL_DISPLAY_INIT(sym, _name, _parent, _ops, _width, _height, _format, _rotated, ...)      \
+  PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, _parent, _ops, _width, _height, _format, _rotated, 0U, \
+                               0U, nullptr, __VA_ARGS__)
 
 /**
  * @brief Device init of every display: sets the class state up, then calls the driver's init.

@@ -58,11 +58,12 @@ extern const struct pbl_rtc *const RTC;
  * @param sym Symbol of the instance, with its state defined by PBL_DEVICE_STATE_DEFINE().
  * @param _name Device name.
  * @param _init Init function, or NULL.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_RTC_INIT(sym, _name, _init, _ops)                                 \
+#define PBL_RTC_INIT(sym, _name, _init, _parent, _ops)                        \
   {                                                                           \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_rtc_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_rtc_class), \
     .ops = (_ops),                                                            \
   }
 

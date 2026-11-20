@@ -53,10 +53,10 @@ static const struct pbl_clockevent_ops s_fake_ce_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_fake_cs);
 static const struct pbl_clocksource s_fake_cs =
-    PBL_CLOCKSOURCE_INIT(s_fake_cs, "fake", prv_fake_cs_init, &s_fake_cs_ops, 32);
+    PBL_CLOCKSOURCE_INIT(s_fake_cs, "fake", prv_fake_cs_init, nullptr, &s_fake_cs_ops, 32);
 PBL_DEVICE_STATE_DEFINE(s_fake_ce);
-static const struct pbl_clockevent s_fake_ce =
-    PBL_CLOCKEVENT_INIT(s_fake_ce, "fake", prv_fake_ce_init, &s_fake_ce_ops, 1, UINT32_MAX);
+static const struct pbl_clockevent s_fake_ce = PBL_CLOCKEVENT_INIT(
+    s_fake_ce, "fake", prv_fake_ce_init, nullptr, &s_fake_ce_ops, 1, UINT32_MAX);
 
 const struct pbl_clocksource *const pbl_system_clocksource = &s_fake_cs;
 const struct pbl_clockevent *const pbl_system_clockevent = &s_fake_ce;

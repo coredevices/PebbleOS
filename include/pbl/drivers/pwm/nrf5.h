@@ -59,12 +59,12 @@ int pbl_pwm_nrf5_init(const struct pbl_device *dev);
  * @param _base Registers.
  * @param ... Outputs of channels 0 to 3, from PBL_GPIO().
  */
-#define PBL_PWM_NRF5_DEFINE(sym, _name, _base, ...)                                    \
-  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 4);                                             \
-  static struct pbl_pwm_nrf5_state sym##_nrf5_state;                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5, struct pbl_pwm_controller, ctrl) {     \
-    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_init, &pbl_pwm_nrf5_ops), \
-    .state = &sym##_nrf5_state, .out = {__VA_ARGS__}, .base = (_base),                 \
+#define PBL_PWM_NRF5_DEFINE(sym, _name, _base, ...)                                             \
+  PBL_PWM_CONTROLLER_STATE_DEFINE(sym, 4);                                                      \
+  static struct pbl_pwm_nrf5_state sym##_nrf5_state;                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pwm_nrf5, struct pbl_pwm_controller, ctrl) {              \
+    .ctrl = PBL_PWM_CONTROLLER_INIT(sym, _name, pbl_pwm_nrf5_init, nullptr, &pbl_pwm_nrf5_ops), \
+    .state = &sym##_nrf5_state, .out = {__VA_ARGS__}, .base = (_base),                          \
   }
 
 /** @} */

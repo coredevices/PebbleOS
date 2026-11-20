@@ -169,23 +169,24 @@ void pbl_dma_sf32lb_irq_handler(const struct pbl_dma_sf32lb_chan_irq *irq);
 
 /** @cond INTERNAL_HIDDEN */
 // The clock goes last, as its initializer holds commas
-#define PBL_DMA_SF32LB_DEFINE_(sym, _gpdma, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4, \
-                               _irq5, _irq6, _irq7, ...)                                     \
-  PBL_DMA_CONTROLLER_STATE_DEFINE(sym, PBL_DMA_SF32LB_NUM_CHANNELS);                         \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_dma_sf32lb, struct pbl_dma_controller, ctrl){          \
-    .ctrl = PBL_DMA_CONTROLLER_INIT(sym, _name, pbl_dma_sf32lb_init, &pbl_dma_sf32lb_ops),   \
-    .base = (_base),                                                                         \
-    .clk = __VA_ARGS__,                                                                      \
-    .irqs = {_irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, _irq7},                        \
-    .gpdma = (_gpdma),                                                                       \
-  };                                                                                         \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 0, _irq0);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 1, _irq1);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 2, _irq2);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 3, _irq3);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 4, _irq4);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 5, _irq5);                                                    \
-  PBL_DMA_SF32LB_CHAN_IRQ(sym, 6, _irq6);                                                    \
+#define PBL_DMA_SF32LB_DEFINE_(sym, _gpdma, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4,    \
+                               _irq5, _irq6, _irq7, ...)                                        \
+  PBL_DMA_CONTROLLER_STATE_DEFINE(sym, PBL_DMA_SF32LB_NUM_CHANNELS);                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_dma_sf32lb, struct pbl_dma_controller, ctrl){             \
+    .ctrl =                                                                                     \
+        PBL_DMA_CONTROLLER_INIT(sym, _name, pbl_dma_sf32lb_init, nullptr, &pbl_dma_sf32lb_ops), \
+    .base = (_base),                                                                            \
+    .clk = __VA_ARGS__,                                                                         \
+    .irqs = {_irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, _irq7},                           \
+    .gpdma = (_gpdma),                                                                          \
+  };                                                                                            \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 0, _irq0);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 1, _irq1);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 2, _irq2);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 3, _irq3);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 4, _irq4);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 5, _irq5);                                                       \
+  PBL_DMA_SF32LB_CHAN_IRQ(sym, 6, _irq6);                                                       \
   PBL_DMA_SF32LB_CHAN_IRQ(sym, 7, _irq7)
 /** @endcond */
 

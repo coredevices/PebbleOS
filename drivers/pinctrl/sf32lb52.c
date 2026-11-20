@@ -257,13 +257,13 @@ static const struct pbl_pinctrl_controller_ops s_ops = {
   .get = prv_get,
 };
 
-#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon)                       \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb52, struct pbl_pinctrl_controller, ctrl) { \
-    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, &s_ops, NUM_SA_PADS + NUM_PA_PADS),        \
-    .pad_sa = (_base) + SF32LB52_PINMUX_PAD_SA_OFFSET(0),                                      \
-    .pad_pa = (_base) + SF32LB52_PINMUX_PAD_PA_OFFSET(0), .cfg = (_cfg), .rtc = (_rtc),        \
-    .aon = (_aon),                                                                             \
+#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon)                         \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb52, struct pbl_pinctrl_controller, ctrl) {   \
+    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &s_ops, NUM_SA_PADS + NUM_PA_PADS), \
+    .pad_sa = (_base) + SF32LB52_PINMUX_PAD_SA_OFFSET(0),                                        \
+    .pad_pa = (_base) + SF32LB52_PINMUX_PAD_PA_OFFSET(0), .cfg = (_cfg), .rtc = (_rtc),          \
+    .aon = (_aon),                                                                               \
   }
 
 #define PBL_PINCTRL_SF32LB52_DT_STATE(sym, ...)       \

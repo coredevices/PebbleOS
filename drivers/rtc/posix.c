@@ -46,5 +46,5 @@ static const struct pbl_rtc_ops s_ops = {
 };
 
 PBL_DEVICE_STATE_DEFINE(pbl_rtc_posix);
-const struct pbl_rtc pbl_rtc_posix = PBL_RTC_INIT(pbl_rtc_posix, "rtc", nullptr, &s_ops);
+const struct pbl_rtc pbl_rtc_posix = PBL_RTC_INIT(pbl_rtc_posix, "rtc", nullptr, nullptr, &s_ops);
 PBL_DEVICE_REGISTER(pbl_rtc_posix, &pbl_rtc_posix.dev);

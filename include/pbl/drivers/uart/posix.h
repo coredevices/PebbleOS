@@ -43,12 +43,12 @@ extern const struct pbl_uart_ops pbl_uart_posix_ops;
  * @param _channel Host end, one of @c PBL_UART_POSIX_*.
  * @param _baudrate Initial baud rate, in bits per second.
  */
-#define PBL_UART_POSIX_DEFINE(sym, _name, _channel, _baudrate)         \
-  PBL_UART_STATE_DEFINE(sym);                                          \
-  const struct pbl_uart_posix sym = {                                  \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_posix_ops, _baudrate), \
-    .channel = (_channel),                                             \
-  };                                                                   \
+#define PBL_UART_POSIX_DEFINE(sym, _name, _channel, _baudrate)                  \
+  PBL_UART_STATE_DEFINE(sym);                                                   \
+  const struct pbl_uart_posix sym = {                                           \
+    .uart = PBL_UART_INIT(sym, _name, nullptr, &pbl_uart_posix_ops, _baudrate), \
+    .channel = (_channel),                                                      \
+  };                                                                            \
   PBL_DEVICE_REGISTER(sym, &sym.uart.dev)
 
 /** @cond INTERNAL_HIDDEN */

@@ -54,5 +54,5 @@ static const struct pbl_rtc_ops s_ops = {
 };
 
 PBL_DEVICE_STATE_DEFINE(pbl_rtc_qemu);
-const struct pbl_rtc pbl_rtc_qemu = PBL_RTC_INIT(pbl_rtc_qemu, "rtc", prv_init, &s_ops);
+const struct pbl_rtc pbl_rtc_qemu = PBL_RTC_INIT(pbl_rtc_qemu, "rtc", prv_init, nullptr, &s_ops);
 PBL_DEVICE_REGISTER(pbl_rtc_qemu, &pbl_rtc_qemu.dev);

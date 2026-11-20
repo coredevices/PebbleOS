@@ -68,18 +68,19 @@ struct pbl_nvmem {
  * @param sym Memory symbol, with its PBL_DEVICE_STATE_DEFINE().
  * @param _name Device name.
  * @param _init Device init function, or NULL.
+ * @param _parent Parent device, or NULL.
  * @param _ops Operations.
  * @param _size Size in bytes.
  * @param _word_size Minimum read size in bytes.
  * @param _stride Minimum read alignment in bytes.
  */
-#define PBL_NVMEM_INIT(sym, _name, _init, _ops, _size, _word_size, _stride)     \
-  {                                                                             \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_nvmem_class), \
-    .ops = (_ops),                                                              \
-    .size = (_size),                                                            \
-    .word_size = (_word_size),                                                  \
-    .stride = (_stride),                                                        \
+#define PBL_NVMEM_INIT(sym, _name, _init, _parent, _ops, _size, _word_size, _stride) \
+  {                                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_nvmem_class),      \
+    .ops = (_ops),                                                                   \
+    .size = (_size),                                                                 \
+    .word_size = (_word_size),                                                       \
+    .stride = (_stride),                                                             \
   }
 
 /** @brief A data item in a memory, as used by a consumer. */
