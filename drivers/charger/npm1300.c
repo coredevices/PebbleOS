@@ -7,7 +7,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/battery.h>
-#include <pbl/drivers/charger.h>
+#include <pbl/drivers/charger/npm1300.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/kernel/delay.h>
@@ -158,39 +158,6 @@ PBL_LOG_MODULE_DECLARE(driver_charger, CONFIG_DRIVER_CHARGER_LOG_LEVEL);
 #define NPM1300_BCHGISET_LSB_MASK PBL_BIT(0)
 
 #define DISCHG_LIMIT_MA_MAX 1000U
-
-struct pbl_charger_npm1300_config {
-  // Discharge current limit in mA, 200 or 1000
-  uint16_t dischg_limit_ma;
-  // Charge termination voltage in the warm and cool regions in mV
-  uint16_t vterm_reduced_mv;
-  uint16_t thermistor_beta;
-  // VBUS current limits in mA with USB connected and at startup, 0 for the default
-  uint16_t vbus_current_lim0;
-  uint16_t vbus_current_startup;
-  // NTC thermistor nominal resistance in kOhm: 10, 47 or 100
-  uint8_t ntc_kohm;
-  // Charging stops above it
-  uint8_t ntc_hot_celsius;
-  // Ship mode cuts the power of the system
-  bool system_power_controller;
-};
-
-struct pbl_charger_npm1300_data {
-  const struct pbl_charger_npm1300 *chg;
-  uint32_t dischg_limit_ma;
-  struct pbl_delayed_work debounce_timer;
-};
-
-struct pbl_charger_npm1300 {
-  struct pbl_charger charger;
-  struct pbl_charger_npm1300_config cfg;
-  // Charge current 32 to 800 mA in 2 mA steps, termination current 10 or 20% of it
-  const struct pbl_battery *battery;
-  // From the PMIC's GPIO1
-  struct pbl_irq_spec irq;
-  struct pbl_charger_npm1300_data *data;
-};
 
 static uint16_t prv_ntc_threshold_code(const struct pbl_charger_npm1300_config *cfg,
                                        uint8_t celsius) {
@@ -489,7 +456,7 @@ static int prv_init(const struct pbl_charger *charger) {
   return 0;
 }
 
-static int prv_power_cut_check(void *user_data) {
+int pbl_charger_npm1300_power_cut_check(void *user_data) {
   const struct pbl_charger_npm1300 *chg = user_data;
   bool present;
   int ret;
@@ -508,7 +475,7 @@ static int prv_power_cut_check(void *user_data) {
 }
 
 // Ship mode: everything but the RTC loses power until a button press
-static void prv_power_cut(enum pbl_sys_off_mode mode, void *user_data) {
+void pbl_charger_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data) {
   int ret;
 
   // I2C transfers need the scheduler
@@ -516,7 +483,7 @@ static void prv_power_cut(enum pbl_sys_off_mode mode, void *user_data) {
     return;
   }
 
-  ret = prv_power_cut_check(user_data);
+  ret = pbl_charger_npm1300_power_cut_check(user_data);
   if (ret != 0) {
     PBL_LOG_ERR("Cannot enter ship mode (%d)", ret);
     return;
@@ -765,7 +732,7 @@ static int prv_set_high_load(const struct pbl_charger *charger, bool high_load) 
   return prv_set_dischg_limit_ma(chg, high_load ? DISCHG_LIMIT_MA_MAX : chg->cfg.dischg_limit_ma);
 }
 
-static const struct pbl_charger_ops s_ops = {
+const struct pbl_charger_ops pbl_charger_npm1300_ops = {
   .init = prv_init,
   .is_online = prv_is_online,
   .get_status = prv_get_status,
@@ -773,30 +740,5 @@ static const struct pbl_charger_ops s_ops = {
   .enable = prv_enable,
   .set_high_load = prv_set_high_load,
 };
-
-#define PBL_CHARGER_NPM1300_DEFINE(sym, _pmic, _irq, _battery, _vterm_reduced_uv, _ntc_ohms,    \
-                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua, \
-                                   _system_power_controller)                                    \
-  PBL_CHARGER_STATE_DEFINE(sym);                                                                \
-  static struct pbl_charger_npm1300_data sym##_data;                                            \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_charger_npm1300, struct pbl_charger, charger){            \
-    .charger = PBL_CHARGER_INIT(sym, "npm1300_charger", &(_pmic)->dev, &s_ops),                 \
-    .cfg =                                                                                      \
-        {                                                                                       \
-          .dischg_limit_ma = (_dischg_ua) / 1000,                                               \
-          .vterm_reduced_mv = (_vterm_reduced_uv) / 1000,                                       \
-          .thermistor_beta = (_beta),                                                           \
-          .vbus_current_lim0 = (_vbus_ua) / 1000,                                               \
-          .vbus_current_startup = (_vbus_startup_ua) / 1000,                                    \
-          .ntc_kohm = (_ntc_ohms) / 1000,                                                       \
-          .ntc_hot_celsius = (_hot_celsius),                                                    \
-          .system_power_controller = (_system_power_controller),                                \
-        },                                                                                      \
-    .battery = (_battery),                                                                      \
-    .irq = _irq,                                                                                \
-    .data = &sym##_data,                                                                        \
-  };                                                                                            \
-  PBL_SYS_OFF_POWER_CUT_HANDLER_DEFINE(sym##_power_cut, PBL_SYS_OFF_PRIO_DEFAULT,               \
-                                       prv_power_cut_check, prv_power_cut, (void *)&sym##_inst)
 
 #include PBL_DT_INSTANCES(nordic_npm1300_charger)
