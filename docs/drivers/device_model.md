@@ -135,12 +135,10 @@ ordinary `PBL_GPIO(&s_npm1300_gpio.port, ...)`.
 ## Reporting to consumers
 
 Drivers never call into the services that consume their data. A class that
-produces data, such as the accelerometer or the sensor class, lets a
-consumer register a listener (`pbl_accel_set_listener()`,
-`pbl_sensor_set_listener()`), and its drivers report through the class
-(`pbl_accel_report_samples()`, `pbl_accel_report_event()`,
-`pbl_sensor_report()`), as IIO producers push to buffers and events on
-Linux. Shake and double tap are accelerometer
+produces data, such as the sensor class, lets a consumer register a listener
+(`pbl_sensor_set_listener()`), and its drivers report through the class
+(`pbl_sensor_report()`, `pbl_sensor_report_event()`), as IIO producers push
+to buffers and events on Linux. Shake and double tap are accelerometer
 events, not input events: they carry the axis and direction they were
 detected on.
 

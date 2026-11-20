@@ -374,11 +374,12 @@ pbl_clar_test(test_accel_manager
   SOURCES
     drivers/base/device.c
     drivers/timer/timer.c
-    drivers/imu/accel.c
+    drivers/sensor/sensor.c
     pebble/services/accel_manager/service.c
     tests/fakes/fake_events.c
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
+    CONFIG_DRIVER_SENSOR_LOG_LEVEL=0
     CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES=25
     CONFIG_DEVICE_LOG_LEVEL=0
   OVERRIDES dummy_board

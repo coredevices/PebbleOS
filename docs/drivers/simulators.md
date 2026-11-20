@@ -7,7 +7,7 @@ devices they do not emulate, and any board can swap one in for testing.
 
 | Class | Kconfig | Device | API |
 | --- | --- | --- | --- |
-| Accelerometer | `ACCEL_SIM` | `SIM_ACCEL` | `pbl/drivers/imu/sim.h` |
+| Accelerometer | `ACCEL_SIM` | `SIM_ACCEL` | `pbl/drivers/sensor/sim.h` |
 | Ambient light | `ALS_SIM` | `SIM_ALS` | `pbl/drivers/als/sim.h` |
 | Audio capture | `AUDIO_SIM_MIC` | `SIM_MIC` | `pbl/drivers/audio/sim.h` |
 | Charger | `CHARGER_SIM` | `SIM_CHARGER` | `pbl/drivers/charger/sim.h` |
@@ -23,7 +23,7 @@ Kconfig:
 ```yaml
 accel:
   symbol: SIM_ACCEL
-  include: pbl/drivers/imu/sim.h
+  include: pbl/drivers/sensor/sim.h
 ```
 
 Simulators know nothing of where their data comes from. On the emulator and

@@ -381,6 +381,9 @@ struct pbl_sensor {
   struct pbl_sensor_mount mount;
 };
 
+/** @brief The board's accelerometer, which may also measure angular rate. */
+extern const struct pbl_sensor *const ACCEL;
+
 /** @brief The board's magnetometer. */
 extern const struct pbl_sensor *const MAG;
 

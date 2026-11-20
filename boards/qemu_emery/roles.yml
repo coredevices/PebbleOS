@@ -10,7 +10,7 @@ flash: flash0
 extram: psram
 accel:
   symbol: SIM_ACCEL
-  include: pbl/drivers/imu/sim.h
+  include: pbl/drivers/sensor/sim.h
 als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h

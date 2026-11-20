@@ -67,7 +67,7 @@ commits.
 The title has the form `area: description`:
 
 - `area` names the part of the tree the change touches, in lowercase, as
-  a path when that is clearer, e.g. `drivers/imu/mmc5603nj` or
+  a path when that is clearer, e.g. `drivers/sensor/mmc5603nj` or
   `include/pbl/kernel`. Follow what `git log` shows for the same files.
 - `description` says what the change does, in the imperative, without a
   trailing period.

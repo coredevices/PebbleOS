@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 #include <pbl/analytics/analytics.h>
-#include <pbl/drivers/accel.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -34,9 +34,17 @@ typedef struct {
 
 // The maximum history we need to keep is based on the maximum time between accel samples (the
 // lowest sampling rate) in milliseconds and the maximum number of accel samples per update.
-#define MAX_HISTORY_MS (pbl_accel_get_max_num_samples(ACCEL) * 1000 / ACCEL_MINIMUM_SAMPLING_RATE)
-#define END_NOT_SET    0
+#define MAX_HISTORY_MS    (prv_accel_max_batch() * 1000 / ACCEL_MINIMUM_SAMPLING_RATE)
+#define END_NOT_SET       0
 #define HISTORY_CLEAR_ALL 0
+
+static uint32_t prv_accel_max_batch(void) {
+  int32_t val = 0;
+
+  (void)pbl_sensor_attr_get(ACCEL, PBL_SENSOR_ACCEL, PBL_SENSOR_ATTR_BATCH_MAX, &val);
+
+  return (uint32_t)val;
+}
 
 static PBL_MUTEX_DEFINE(s_vibe_history_mutex);
 static VibeHistory *s_vibe_history = nullptr;
