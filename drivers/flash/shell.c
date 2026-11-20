@@ -57,7 +57,7 @@ static int prv_parse_range(const struct pbl_shell *sh, const char *addr_str, con
 static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_flash_geometry *geo = pbl_flash_get_geometry(FLASH);
 
-  pbl_shell_print(sh, "%s: %" PRIu32 " bytes%s", FLASH->dev.name, geo->size,
+  pbl_shell_print(sh, "%s: %" PRIu32 " bytes%s", pbl_device_name(&FLASH->dev), geo->size,
                   pbl_device_is_ready(&FLASH->dev) ? "" : " (not ready)");
   pbl_shell_print(sh, "page %" PRIu32 ", sector %" PRIu32 ", subsector %" PRIu32, geo->page_size,
                   geo->sector_size, geo->subsector_size);

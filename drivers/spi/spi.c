@@ -174,7 +174,7 @@ int pbl_spi_transfer(const struct pbl_spi_dev *dev, const struct pbl_spi_xfer *x
   pbl_sem_deinit(&sync.done);
 
   if (ret != 0) {
-    PBL_LOG_DBG("Transfer on %s failed (%d)", dev->bus->dev.name, ret);
+    PBL_LOG_DBG("Transfer on %s failed (%d)", pbl_device_name(&dev->bus->dev), ret);
   }
 
   return ret;

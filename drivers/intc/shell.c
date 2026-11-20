@@ -12,7 +12,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   PBL_DEVICE_CLASS_FOREACH(&pbl_intc_class, dev) {
     const struct pbl_intc *intc = container_of(dev, const struct pbl_intc, dev);
 
-    pbl_shell_print(sh, "%s: %u lines%s", intc->dev.name, intc->num_irqs,
+    pbl_shell_print(sh, "%s: %u lines%s", pbl_device_name(&intc->dev), intc->num_irqs,
                     pbl_device_is_ready(&intc->dev) ? "" : " (not ready)");
 
     for (uint16_t hwirq = 0U; hwirq < intc->num_irqs; hwirq++) {

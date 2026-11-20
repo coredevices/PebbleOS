@@ -23,7 +23,7 @@ config REMOTEPROC_SF32LB
 config REMOTEPROC_SHELL
     bool "Remote processor shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The rproc shell command, to list the remote processors and boot or
       shut them down.

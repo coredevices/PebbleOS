@@ -7,6 +7,14 @@ module = DEVICE
 module-str = Device model
 source "subsys/logging/Kconfig.template.log_level"
 
+config DEVICE_NAMES
+    bool "Device names"
+    default y
+    help
+      Keep the name of each device, for logs, the driver shells and
+      pbl_device_find(). Without them, each device takes 4 bytes less and
+      their names are left out of the image.
+
 config DEVICE_INIT_REVERSE
     bool "Initialize devices in reverse table order"
     help

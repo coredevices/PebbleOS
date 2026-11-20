@@ -52,11 +52,11 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     struct pbl_uart_config cfg;
 
     if (pbl_uart_config_get(uart, &cfg) != 0) {
-      pbl_shell_print(sh, "%s: not ready", dev->name);
+      pbl_shell_print(sh, "%s: not ready", pbl_device_name(dev));
       continue;
     }
 
-    pbl_shell_print(sh, "%s: %lu baud, parity %s, flow control %s, rx %s", dev->name,
+    pbl_shell_print(sh, "%s: %lu baud, parity %s, flow control %s, rx %s", pbl_device_name(dev),
                     (unsigned long)cfg.baudrate, s_parities[cfg.parity],
                     s_flow_ctrls[cfg.flow_ctrl], uart->state->rx_enabled ? "on" : "off");
   }

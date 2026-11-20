@@ -14,11 +14,11 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     const struct pbl_rproc *rproc = container_of(dev, const struct pbl_rproc, dev);
 
     if (!pbl_device_is_ready(dev)) {
-      pbl_shell_print(sh, "%s (not ready)", dev->name);
+      pbl_shell_print(sh, "%s (not ready)", pbl_device_name(dev));
       continue;
     }
 
-    pbl_shell_print(sh, "%s: %s (%u)", dev->name,
+    pbl_shell_print(sh, "%s: %s (%u)", pbl_device_name(dev),
                     pbl_rproc_is_running(rproc) ? "running" : "offline", rproc->state->power);
   }
 

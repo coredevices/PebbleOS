@@ -11,7 +11,7 @@ static bool s_shell_enabled;
 static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_touch_props *props = pbl_touch_get_props(TOUCH);
 
-  pbl_shell_print(sh, "device: %s (%s)", TOUCH->dev.name,
+  pbl_shell_print(sh, "device: %s (%s)", pbl_device_name(&TOUCH->dev),
                   pbl_device_is_ready(&TOUCH->dev) ? "ready" : "not ready");
   pbl_shell_print(sh, "size: %ux%u", props->size_x, props->size_y);
   pbl_shell_print(sh, "inverted: x=%d y=%d, swapped: %d", props->inverted_x, props->inverted_y,

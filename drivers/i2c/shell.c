@@ -48,7 +48,8 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_i2c_bus_class, dev) {
-    pbl_shell_print(sh, "%s%s", dev->name, pbl_device_is_ready(dev) ? "" : " (not ready)");
+    pbl_shell_print(sh, "%s%s", pbl_device_name(dev),
+                    pbl_device_is_ready(dev) ? "" : " (not ready)");
   }
 
   return 0;

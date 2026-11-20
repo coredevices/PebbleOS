@@ -36,11 +36,11 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     const struct pbl_pwm_controller *ctrl = container_of(dev, const struct pbl_pwm_controller, dev);
 
     if (!pbl_device_is_ready(dev)) {
-      pbl_shell_print(sh, "%s (not ready)", dev->name);
+      pbl_shell_print(sh, "%s (not ready)", pbl_device_name(dev));
       continue;
     }
 
-    pbl_shell_print(sh, "%s", dev->name);
+    pbl_shell_print(sh, "%s", pbl_device_name(dev));
     for (uint8_t ch = 0U; ch < ctrl->num_channels; ch++) {
       const struct pbl_pwm_state *state = &ctrl->states[ch];
 

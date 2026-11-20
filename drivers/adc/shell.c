@@ -14,7 +14,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   PBL_DEVICE_CLASS_FOREACH(&pbl_adc_class, dev) {
     const struct pbl_adc *adc = container_of(dev, const struct pbl_adc, dev);
 
-    pbl_shell_print(sh, "%s: %u channels%s", adc->dev.name, adc->num_channels,
+    pbl_shell_print(sh, "%s: %u channels%s", pbl_device_name(&adc->dev), adc->num_channels,
                     pbl_device_is_ready(&adc->dev) ? "" : " (not ready)");
   }
 
