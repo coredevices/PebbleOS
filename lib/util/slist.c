@@ -200,7 +200,7 @@ void slist_debug_dump(SingleListNode *head) {
   char buffer[20];
   while (iter) {
     snprintf(buffer, sizeof(buffer), "node %p (%p)", iter, iter->next);
-    UTIL_LOG(buffer);
+    PBL_UTIL_LOG(buffer);
     iter = iter->next;
   }
 }

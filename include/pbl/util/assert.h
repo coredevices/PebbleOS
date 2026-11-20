@@ -23,7 +23,7 @@
 /** @endcond */
 
 /**
- * @brief Handle a failed UTIL_ASSERT().
+ * @brief Handle a failed PBL_UTIL_ASSERT().
  *
  * The library provides a weak implementation that logs and exits; the firmware overrides it to
  * crash with a core dump.
@@ -40,7 +40,7 @@
  *
  * @param expr Expression.
  */
-#define UTIL_ASSERT(expr)                             \
+#define PBL_UTIL_ASSERT(expr)                         \
   do {                                                \
     if (PBL_UNLIKELY(!(expr))) {                      \
       util_assertion_failed(__FILE_NAME__, __LINE__); \

@@ -299,7 +299,7 @@ ListNode *list_concatenate(ListNode *list_a, ListNode *list_b);
 void list_foreach(ListNode *head, ListForEachCallback each_cb, void *context);
 
 /**
- * @brief Log every node from a node to the tail with UTIL_LOG().
+ * @brief Log every node from a node to the tail with PBL_UTIL_LOG().
  *
  * @param head Starting node.
  */

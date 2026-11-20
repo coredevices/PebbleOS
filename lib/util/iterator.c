@@ -9,11 +9,11 @@ void iter_init(Iterator *iter, IteratorCallback next, IteratorCallback prev, Ite
 }
 
 bool iter_next(Iterator *iter) {
-  UTIL_ASSERT(iter->next);
+  PBL_UTIL_ASSERT(iter->next);
   return iter->next(iter->state);
 }
 
 bool iter_prev(Iterator *iter) {
-  UTIL_ASSERT(iter->prev);
+  PBL_UTIL_ASSERT(iter->prev);
   return iter->prev(iter->state);
 }

@@ -1223,7 +1223,7 @@ bool pbl_kraepelin_init(struct pbl_kraepelin *state, const struct pbl_kraepelin_
                         pbl_kraepelin_stats_cb_t stats_cb) {
   static const struct pbl_kraepelin_params default_params = PBL_KRAEPELIN_PARAMS_DEFAULT;
 
-  UTIL_ASSERT(state != nullptr);
+  PBL_UTIL_ASSERT(state != nullptr);
   if (params == nullptr) {
     params = &default_params;
   }
@@ -1239,8 +1239,8 @@ bool pbl_kraepelin_init(struct pbl_kraepelin *state, const struct pbl_kraepelin_
   state->not_worn_params.min_worn_vmc = params->not_worn_min_worn_vmc;
   state->not_worn_params.max_low_vmc_run_m = params->not_worn_max_low_vmc_run_m;
 
-  UTIL_ASSERT((state->sleep_params.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
-              PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M);
+  PBL_UTIL_ASSERT((state->sleep_params.max_wake_minutes_early + KALG_SLEEP_HALF_WIDTH + 1) ==
+                  PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M);
   return true;
 }
 
@@ -1248,7 +1248,7 @@ bool pbl_kraepelin_init(struct pbl_kraepelin *state, const struct pbl_kraepelin_
 uint32_t pbl_kraepelin_analyze_samples(struct pbl_kraepelin *state,
                                        const struct pbl_kraepelin_sample *data,
                                        uint32_t num_samples, uint32_t *consumed_samples) {
-  UTIL_ASSERT(state != nullptr);
+  PBL_UTIL_ASSERT(state != nullptr);
   uint32_t new_steps = 0;
   *consumed_samples = 0;
 
@@ -1278,7 +1278,7 @@ uint32_t pbl_kraepelin_analyze_samples(struct pbl_kraepelin *state,
 // ------------------------------------------------------------------------------------
 void pbl_kraepelin_minute_stats(struct pbl_kraepelin *state, uint16_t *vmc, uint8_t *orientation,
                                 bool *still) {
-  UTIL_ASSERT(state != nullptr);
+  PBL_UTIL_ASSERT(state != nullptr);
   // -----------------------------------------
   // Compute the orientation
   // We want to fit the encoding into a byte, so
@@ -1314,7 +1314,7 @@ void pbl_kraepelin_minute_stats(struct pbl_kraepelin *state, uint16_t *vmc, uint
 
 // ------------------------------------------------------------------------------------
 uint32_t pbl_kraepelin_analyze_finish_epoch(struct pbl_kraepelin *state) {
-  UTIL_ASSERT(state != nullptr);
+  PBL_UTIL_ASSERT(state != nullptr);
   uint32_t new_steps = 0;
 
   if (state->num_samples) {
@@ -1456,7 +1456,7 @@ static void prv_deep_sleep_register_sessions(struct pbl_kraepelin *alg_state, ti
 
   KALG_LOG("DS: time: %s, rcv %s", prv_log_time(alg_state, sample_time),
            ongoing ? "register" : (abort ? "abort" : "end"));
-  UTIL_ASSERT(state->sleep_start_time != KALG_START_TIME_NONE);
+  PBL_UTIL_ASSERT(state->sleep_start_time != KALG_START_TIME_NONE);
 
   // Register/delete previous sessions we captured
   for (uint8_t i = 0; i < state->num_sessions; i++) {
@@ -1507,7 +1507,7 @@ static void prv_deep_sleep_update(struct pbl_kraepelin *alg_state, time_t sample
     case KAlgDeepSleepAction_Start:
       KALG_LOG("DS: time: %s, rcv start of new sleep", prv_log_time(alg_state, sample_time));
       // Start of a new sleep session
-      UTIL_ASSERT(state->sleep_start_time == KALG_START_TIME_NONE);
+      PBL_UTIL_ASSERT(state->sleep_start_time == KALG_START_TIME_NONE);
       *state = (KAlgDeepSleepActivityState){
         .sleep_start_time = sample_time,
       };
@@ -1587,7 +1587,7 @@ static void prv_deep_sleep_update(struct pbl_kraepelin *alg_state, time_t sample
         state->len_m[state->num_sessions] = len_m;
         state->num_sessions++;
       } else {
-        UTIL_LOG("No more room for another deep sleep session");
+        PBL_UTIL_LOG("No more room for another deep sleep session");
       }
       // Wait for another session
       state->deep_start_time = KALG_START_TIME_NONE;
@@ -1917,7 +1917,7 @@ static const KAlgActivityAttributes *prv_get_step_activity_attributes(
     {130, 255}, // PBL_KRAEPELIN_ACTIVITY_RUN
   };
 
-  UTIL_ASSERT(activity < PBL_KRAEPELIN_ACTIVITY_COUNT);
+  PBL_UTIL_ASSERT(activity < PBL_KRAEPELIN_ACTIVITY_COUNT);
   return &k_attributes[activity];
 }
 
@@ -1992,7 +1992,7 @@ static void prv_step_activity_update(struct pbl_kraepelin *alg_state, KAlgStepAc
     state->active_calories += active_calories;
     state->distance_mm += distance_mm;
 
-    UTIL_ASSERT(state->start_time < utc_now);
+    PBL_UTIL_ASSERT(state->start_time < utc_now);
     uint32_t duration_secs = utc_now - state->start_time;
 
     // If we've reached the minimum activity length, register/update it
@@ -2046,7 +2046,7 @@ void pbl_kraepelin_activities_update(struct pbl_kraepelin *state, time_t utc_now
   // state
   if ((utc_now < state->last_activity_update_utc) ||
       (utc_now > (state->last_activity_update_utc + (5 * PBL_SEC_PER_MIN)))) {
-    UTIL_LOG("Resetting state due to time travel");
+    PBL_UTIL_LOG("Resetting state due to time travel");
     prv_reset_state(state, sessions_cb, context);
   };
   state->last_activity_update_utc = utc_now;
@@ -2089,7 +2089,7 @@ time_t pbl_kraepelin_activity_last_processed_time(struct pbl_kraepelin *state,
     case PBL_KRAEPELIN_ACTIVITY_COUNT:
       break;
   }
-  UTIL_ASSERT(false);
+  PBL_UTIL_ASSERT(false);
   return 0;
 }
 
@@ -2097,7 +2097,8 @@ time_t pbl_kraepelin_activity_last_processed_time(struct pbl_kraepelin *state,
 void pbl_kraepelin_get_step_activity(struct pbl_kraepelin *alg_state,
                                      enum pbl_kraepelin_activity activity,
                                      struct pbl_kraepelin_step_activity *step_activity) {
-  UTIL_ASSERT(activity == PBL_KRAEPELIN_ACTIVITY_WALK || activity == PBL_KRAEPELIN_ACTIVITY_RUN);
+  PBL_UTIL_ASSERT(activity == PBL_KRAEPELIN_ACTIVITY_WALK ||
+                  activity == PBL_KRAEPELIN_ACTIVITY_RUN);
   const KAlgStepActivityState *state =
       (activity == PBL_KRAEPELIN_ACTIVITY_WALK) ? &alg_state->walk_state : &alg_state->run_state;
 

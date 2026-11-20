@@ -261,7 +261,7 @@ ListNode *list_find_next(ListNode *node, ListFilterCallback filter_callback, boo
     }
     cursor = cursor->next;
   }
-  UTIL_ASSERT(0);
+  PBL_UTIL_ASSERT(0);
   return nullptr;
 }
 
@@ -290,7 +290,7 @@ ListNode *list_find_prev(ListNode *node, ListFilterCallback filter_callback, boo
     }
     cursor = cursor->prev;
   }
-  UTIL_ASSERT(0);
+  PBL_UTIL_ASSERT(0);
   return nullptr;
 }
 
@@ -339,7 +339,7 @@ void list_debug_dump(ListNode *head) {
   char buffer[30];
   while (iter) {
     snprintf(buffer, sizeof(buffer), "node %p (%p, %p)", iter, iter->prev, iter->next);
-    UTIL_LOG(buffer);
+    PBL_UTIL_LOG(buffer);
     iter = iter->next;
   }
 }
