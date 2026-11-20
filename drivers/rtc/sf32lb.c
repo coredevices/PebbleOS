@@ -11,6 +11,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/services/time.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_hpsys_cfg.h>
 #include <hardware/sf32lb52_rtc.h>
@@ -21,20 +22,24 @@
 
 #define TIMEOUT_US 1000000U
 
-extern const struct pbl_rtc_sf32lb pbl_rtc_sf32lb_inst;
+// The clock notifier has no context, and the SoC has one RTC
+static const struct pbl_rtc_sf32lb *s_rtc;
 
-static const struct pbl_rtc_sf32lb *const s_rtc = &pbl_rtc_sf32lb_inst;
-
-static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(s_rtc->base + offset);
+static const struct pbl_rtc_sf32lb *prv_rtc(const struct pbl_rtc *rtc) {
+  return container_of(rtc, const struct pbl_rtc_sf32lb, rtc);
 }
 
-static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, s_rtc->base + offset);
+static inline uint32_t prv_getreg(const struct pbl_rtc_sf32lb *rtc, uint32_t offset) {
+  return pbl_readl(rtc->base + offset);
 }
 
-static inline void prv_modreg(uint32_t offset, uint32_t clear, uint32_t set) {
-  pbl_modifyl(clear, set, s_rtc->base + offset);
+static inline void prv_putreg(const struct pbl_rtc_sf32lb *rtc, uint32_t offset, uint32_t value) {
+  pbl_writel(value, rtc->base + offset);
+}
+
+static inline void prv_modreg(const struct pbl_rtc_sf32lb *rtc, uint32_t offset, uint32_t clear,
+                              uint32_t set) {
+  pbl_modifyl(clear, set, rtc->base + offset);
 }
 
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz);
@@ -48,37 +53,38 @@ static uint8_t prv_bcd2bin(uint32_t tens, uint32_t units) {
   return (uint8_t)(tens * 10U + units);
 }
 
-static int prv_enter_init(void) {
-  prv_modreg(SF32LB52_RTC_ISR_OFFSET, 0U, RTC_ISR_INIT);
+static int prv_enter_init(const struct pbl_rtc_sf32lb *rtc) {
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, 0U, RTC_ISR_INIT);
 
-  return PBL_POLL_BUSY_US((prv_getreg(SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_INITF) != 0U, 0U,
+  return PBL_POLL_BUSY_US((prv_getreg(rtc, SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_INITF) != 0U, 0U,
                           TIMEOUT_US);
 }
 
 // The prescaler can be written while the calendar runs.
-static void prv_set_prescaler(uint64_t rate_mhz) {
+static void prv_set_prescaler(const struct pbl_rtc_sf32lb *rtc, uint64_t rate_mhz) {
   uint64_t diva = (rate_mhz << DIVA_FRAC_BITS) / (1000U * DIVB);
 
-  prv_putreg(SF32LB52_RTC_PSCLR_OFFSET,
+  prv_putreg(rtc, SF32LB52_RTC_PSCLR_OFFSET,
              PBL_FIELD_PREP(RTC_PSCLR_DIVA_INT_MASK, diva >> DIVA_FRAC_BITS) |
                  PBL_FIELD_PREP(RTC_PSCLR_DIVA_FRAC_MASK, diva) |
                  PBL_FIELD_PREP(RTC_PSCLR_DIVB_MASK, DIVB));
 }
 
 static void prv_rate_changed(struct pbl_clk_notifier *nb, uint64_t rate_mhz) {
-  prv_set_prescaler(rate_mhz);
+  prv_set_prescaler(s_rtc, rate_mhz);
 }
 
 // Leaves initialization mode and waits for the calendar shadow registers to catch up.
-static int prv_exit_init(void) {
-  prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
-  prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_RSF | RTC_ISR_TSOVF, 0U);
+static int prv_exit_init(const struct pbl_rtc_sf32lb *rtc) {
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_RSF | RTC_ISR_TSOVF, 0U);
 
-  return PBL_POLL_BUSY_US((prv_getreg(SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_RSF) != 0U, 0U,
+  return PBL_POLL_BUSY_US((prv_getreg(rtc, SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_RSF) != 0U, 0U,
                           TIMEOUT_US);
 }
 
-static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
+static int prv_get_time(const struct pbl_rtc *dev, time_t *t) {
+  const struct pbl_rtc_sf32lb *rtc = prv_rtc(dev);
   uint32_t tr;
   uint32_t dr;
   int ret;
@@ -86,17 +92,18 @@ static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
   // The shadow registers can lag the calendar by over a second, RSF set or not: clear RSF and
   // wait for the next update. RSF stays clear in initialization mode; the registers are read as
   // they are then.
-  prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_RSF, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_RSF, 0U);
   ret = PBL_POLL_BUSY_US(
-      (prv_getreg(SF32LB52_RTC_ISR_OFFSET) & (RTC_ISR_RSF | RTC_ISR_INITF)) != 0U, 0U, TIMEOUT_US);
+      (prv_getreg(rtc, SF32LB52_RTC_ISR_OFFSET) & (RTC_ISR_RSF | RTC_ISR_INITF)) != 0U, 0U,
+      TIMEOUT_US);
   if (ret != 0) {
     return ret;
   }
 
   // The date reads with ERR set when it rolled over since the time was read.
   do {
-    tr = pbl_readl(s_rtc->cfg + SF32LB52_HPSYS_CFG_RTC_TR_OFFSET);
-    dr = pbl_readl(s_rtc->cfg + SF32LB52_HPSYS_CFG_RTC_DR_OFFSET);
+    tr = pbl_readl(rtc->cfg + SF32LB52_HPSYS_CFG_RTC_TR_OFFSET);
+    dr = pbl_readl(rtc->cfg + SF32LB52_HPSYS_CFG_RTC_DR_OFFSET);
   } while ((dr & RTC_DR_ERR) != 0U);
 
   struct pbl_tm tm = {
@@ -114,7 +121,8 @@ static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
   return 0;
 }
 
-static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
+static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
+  const struct pbl_rtc_sf32lb *rtc = prv_rtc(dev);
   struct pbl_tm tm;
   uint32_t tr;
   uint32_t dr;
@@ -140,18 +148,19 @@ static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
        PBL_FIELD_PREP(RTC_DR_YT_MASK, (tm.tm_year % 100) / 10) |
        PBL_FIELD_PREP(RTC_DR_YU_MASK, tm.tm_year % 10) | RTC_DR_CB;
 
-  ret = prv_enter_init();
+  ret = prv_enter_init(rtc);
   if (ret != 0) {
     return ret;
   }
 
-  prv_putreg(SF32LB52_RTC_TR_OFFSET, tr);
-  prv_putreg(SF32LB52_RTC_DR_OFFSET, dr);
+  prv_putreg(rtc, SF32LB52_RTC_TR_OFFSET, tr);
+  prv_putreg(rtc, SF32LB52_RTC_DR_OFFSET, dr);
 
-  return prv_exit_init();
+  return prv_exit_init(rtc);
 }
 
 int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
+  const struct pbl_rtc_sf32lb *rtc = container_of(dev, const struct pbl_rtc_sf32lb, rtc.dev);
   uint64_t rate_mhz;
   int ret;
 
@@ -160,23 +169,24 @@ int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  ret = prv_enter_init();
+  ret = prv_enter_init(rtc);
   if (ret != 0) {
     return ret;
   }
 
   // 24-hour format, calibration output off.
-  prv_modreg(SF32LB52_RTC_CR_OFFSET, RTC_CR_FMT | RTC_CR_OSEL_MASK | RTC_CR_POL, 0U);
-  prv_modreg(SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_CR_OFFSET, RTC_CR_FMT | RTC_CR_OSEL_MASK | RTC_CR_POL, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_INIT, 0U);
 
   ret = pbl_clk_get_rate(&s_clk_nb.clk, &rate_mhz);
   if (ret != 0) {
     return ret;
   }
-  prv_set_prescaler(rate_mhz);
+  prv_set_prescaler(rtc, rate_mhz);
+  s_rtc = rtc;
   pbl_clk_notifier_register(&s_clk_nb);
 
-  return prv_exit_init();
+  return prv_exit_init(rtc);
 }
 
 const struct pbl_rtc_ops pbl_rtc_sf32lb_ops = {
