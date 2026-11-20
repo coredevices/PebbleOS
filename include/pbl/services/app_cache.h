@@ -5,8 +5,6 @@
 
 #include <stdint.h>
 
-#include <pbl/system/status_codes.h>
-
 #include <process_management/app_install_types.h>
 
 /**
@@ -36,17 +34,19 @@ void app_cache_init(void);
  *
  * @param app_id App to add.
  * @param total_size Size of the app's binaries, in bytes.
- * @return S_SUCCESS or an error from the settings file.
+ * @retval 0 Success.
+ * @return Negative errno from the settings file on failure.
  */
-status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size);
+int app_cache_add_entry(AppInstallId app_id, uint32_t total_size);
 
 /**
  * @brief Remove an app's entry and delete its binaries.
  *
  * @param app_id App to remove.
- * @return S_SUCCESS or an error from the settings file.
+ * @retval 0 Success.
+ * @return Negative errno from the settings file on failure.
  */
-status_t app_cache_remove_entry(AppInstallId app_id);
+int app_cache_remove_entry(AppInstallId app_id);
 
 /**
  * @brief Check whether an app has an entry in the cache.
@@ -65,19 +65,20 @@ bool app_cache_entry_exists(AppInstallId app_id);
  * deleted.
  *
  * @param app_id Launched app.
- * @return S_SUCCESS or an error from the settings file.
+ * @retval 0 Success.
+ * @return Negative errno from the settings file on failure.
  */
-status_t app_cache_app_launched(AppInstallId app_id);
+int app_cache_app_launched(AppInstallId app_id);
 
 /**
  * @brief Evict apps until at least @p bytes_needed bytes of binaries are freed.
  *
  * @param bytes_needed Number of bytes to free.
- * @retval S_SUCCESS Success.
- * @retval E_INVALID_ARGUMENT @p bytes_needed is 0.
- * @return Other errors come from the settings file.
+ * @retval 0 Success.
+ * @retval -EINVAL @p bytes_needed is 0.
+ * @return Other negative errno values come from the settings file.
  */
-status_t app_cache_free_up_space(uint32_t bytes_needed);
+int app_cache_free_up_space(uint32_t bytes_needed);
 
 /**
  * @brief Clear the whole cache and delete all cached app binaries.

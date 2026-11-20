@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/system/status_codes.h>
 
 #include <process_management/app_install_types.h>
 
@@ -14,19 +13,19 @@ PBL_WEAK void app_cache_init(void) {
   return;
 }
 
-PBL_WEAK status_t app_cache_add_entry(AppInstallId app_id) {
+PBL_WEAK int app_cache_add_entry(AppInstallId app_id) {
   return 0;
 }
 
-PBL_WEAK status_t app_cache_entry_exists(AppInstallId app_id) {
+PBL_WEAK bool app_cache_entry_exists(AppInstallId app_id) {
   return true;
 }
 
-PBL_WEAK status_t app_cache_app_launched(AppInstallId app_id) {
+PBL_WEAK int app_cache_app_launched(AppInstallId app_id) {
   return 0;
 }
 
-PBL_WEAK status_t app_cache_remove_entry(AppInstallId app_id) {
+PBL_WEAK int app_cache_remove_entry(AppInstallId app_id) {
   return 0;
 }
 

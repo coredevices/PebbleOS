@@ -224,7 +224,7 @@ static void prv_install_files(void *data) {
   }
   if (ok) {
     const uint32_t total = install->app.size + install->worker.size + install->res.size;
-    ok = app_cache_add_entry(install->id, total) == S_SUCCESS;
+    ok = app_cache_add_entry(install->id, total) == 0;
   }
   if (ok) {
     PBL_LOG_INFO("Installed %s as app %" PRId32, install->info.name, install->id);

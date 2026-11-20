@@ -101,12 +101,12 @@ int pin_db_delete_with_parent(const TimelineItemId *parent_id) {
   return -ENOTSUP;
 }
 
-status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
-  return E_INVALID_OPERATION;
+int app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
+  return -ENOTSUP;
 }
 
-status_t app_cache_remove_entry(AppInstallId id) {
-  return E_INVALID_OPERATION;
+int app_cache_remove_entry(AppInstallId id) {
+  return -ENOTSUP;
 }
 
 int app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
