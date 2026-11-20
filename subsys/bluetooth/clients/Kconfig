@@ -7,3 +7,9 @@ config BT_GATT_CLIENT
     help
       What clients of a peer's GATT services share
       (pbl/bluetooth/clients/gatt.h). It only needs NimBLE.
+
+menu "Clients"
+
+rsource "ancs/Kconfig"
+
+endmenu
