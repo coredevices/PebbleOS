@@ -169,15 +169,6 @@ bool battery_is_usb_connected(void);
 void battery_set_charge_enable(bool charging_enabled);
 
 /**
- * @brief Enable or disable fast charging.
- *
- * A no-op on chargers that manage the charge current themselves.
- *
- * @param fast_charge_enabled True to allow fast charging.
- */
-void battery_set_fast_charge(bool fast_charge_enabled);
-
-/**
  * @brief Driver implementation of battery_is_usb_connected().
  *
  * Ignores battery_force_charge_enable().

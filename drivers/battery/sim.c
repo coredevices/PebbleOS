@@ -56,6 +56,3 @@ bool battery_is_usb_connected_impl(void) {
 
 void battery_set_charge_enable(bool charging_enabled) {
 }
-
-void battery_set_fast_charge(bool fast_charge_enabled) {
-}
