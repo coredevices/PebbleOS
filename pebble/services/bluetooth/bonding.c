@@ -169,7 +169,7 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
     for (size_t j = 0U; j < sizeof(keys[i].data); j += sizeof(uint32_t)) {
       uint32_t word;
 
-      if (!rng_rand(&word)) {
+      if (rng_rand(&word) != 0) {
         PBL_LOG_ERR("Could not generate the root keys");
         memset(keys, 0, PBL_BT_SM_ROOT_KEY_TYPE_NUM * sizeof(*keys));
         return;

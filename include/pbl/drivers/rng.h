@@ -16,8 +16,8 @@
  * @brief Generate a 32-bit random number.
  *
  * @param[out] rand_out Random number.
- * @return true on success, false on failure.
+ * @return 0 or a negative errno.
  */
-bool rng_rand(uint32_t *rand_out);
+int rng_rand(uint32_t *rand_out);
 
 /** @} */

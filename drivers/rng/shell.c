@@ -39,7 +39,7 @@ static int prv_cmd_get(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   for (unsigned long i = 0UL; i < count; i++) {
-    if (!rng_rand(&val)) {
+    if (rng_rand(&val) != 0) {
       pbl_shell_error(sh, "generation failed");
       return -EIO;
     }
@@ -64,7 +64,7 @@ static int prv_cmd_stats(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   start = pbl_uptime_ticks();
   for (unsigned long i = 0UL; i < count; i++) {
-    if (!rng_rand(&val)) {
+    if (rng_rand(&val) != 0) {
       fails++;
       continue;
     }
