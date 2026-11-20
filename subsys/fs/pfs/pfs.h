@@ -4,9 +4,9 @@
 #pragma once
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 
-#include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
 /*
@@ -43,7 +43,7 @@
 #define OP_FLAG_SKIP_HDR_CRC_CHECK (1 << 3)
 /** @brief Cache the translation from file pages to flash pages. */
 #define OP_FLAG_USE_PAGE_CACHE (1 << 4)
-/** @brief With @ref OP_FLAG_WRITE, fail with @c E_DOES_NOT_EXIST instead of creating the file. */
+/** @brief With @ref OP_FLAG_WRITE, fail with @c -ENOENT instead of creating the file. */
 #define OP_FLAG_NO_CREATE (1 << 5)
 /**
  * @brief Create the file, or the overwrite version, only on pfs_create_deferred().
@@ -104,12 +104,14 @@ typedef struct {
  * @param op_flags @c OP_FLAG_* flags.
  * @param file_type File type, used only when the file is created or overwritten.
  * @param start_size File size in bytes, used only when the file is created or overwritten.
- * @return File descriptor (>= 0) on success, negative @c status_t on failure.
- * @retval E_INVALID_ARGUMENT Invalid name, or invalid type or zero size on creation.
- * @retval E_DOES_NOT_EXIST The file does not exist and was not to be created.
- * @retval E_BUSY The file is already open.
- * @retval E_OUT_OF_RESOURCES No free file descriptor.
- * @retval E_OUT_OF_STORAGE Not enough space to create the file.
+ * @return File descriptor (>= 0) on success, negative errno on failure.
+ * @retval -EINVAL Invalid name, or invalid type or zero size on creation.
+ * @retval -ENOENT The file does not exist and was not to be created.
+ * @retval -EBUSY The file is already open.
+ * @retval -EMFILE No free file descriptor.
+ * @retval -ENOSPC Not enough space to create the file.
+ * @retval -ENOMEM Out of memory.
+ * @retval -EIO Corrupt file header.
  */
 extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_t start_size);
 
@@ -118,12 +120,12 @@ extern int pfs_open(const char *name, uint8_t op_flags, uint8_t file_type, size_
  *
  * @param fd File descriptor.
  * @param size File size in bytes.
- * @retval S_SUCCESS File created.
- * @retval E_INVALID_ARGUMENT Invalid descriptor or zero size.
- * @retval E_INVALID_OPERATION The file was already created.
- * @retval E_OUT_OF_STORAGE Not enough space to create the file.
+ * @retval 0 File created.
+ * @retval -EINVAL Invalid descriptor or zero size.
+ * @retval -EALREADY The file was already created.
+ * @retval -ENOSPC Not enough space to create the file.
  */
-extern status_t pfs_create_deferred(int fd, size_t size);
+extern int pfs_create_deferred(int fd, size_t size);
 
 /**
  * @brief Write at the current position, then advance it.
@@ -131,9 +133,10 @@ extern status_t pfs_create_deferred(int fd, size_t size);
  * @param fd File descriptor opened for writing or overwriting.
  * @param buf Data to write.
  * @param size Number of bytes to write, at most the size of @p buf.
- * @return Number of bytes written, or negative @c status_t on failure.
- * @retval E_INVALID_ARGUMENT Invalid descriptor, not writable, or empty buffer.
- * @retval E_RANGE The write goes past the end of the file.
+ * @return Number of bytes written, or negative errno on failure.
+ * @retval -EINVAL Invalid descriptor, not writable, or empty buffer.
+ * @retval -EFBIG The write goes past the end of the file.
+ * @retval -EIO Corrupt page chain.
  */
 extern int pfs_write(int fd, const void *buf, size_t size);
 
@@ -143,9 +146,10 @@ extern int pfs_write(int fd, const void *buf, size_t size);
  * @param fd File descriptor opened for reading.
  * @param[out] buf Destination buffer.
  * @param size Number of bytes to read, at most the size of @p buf.
- * @return Number of bytes read, or negative @c status_t on failure.
- * @retval E_INVALID_ARGUMENT Invalid descriptor, not readable, or empty buffer.
- * @retval E_RANGE The read goes past the end of the file.
+ * @return Number of bytes read, or negative errno on failure.
+ * @retval -EINVAL Invalid descriptor, not readable, or empty buffer.
+ * @retval -ERANGE The read goes past the end of the file.
+ * @retval -EIO Corrupt page chain.
  */
 extern int pfs_read(int fd, void *buf, size_t size);
 
@@ -155,9 +159,8 @@ extern int pfs_read(int fd, void *buf, size_t size);
  * @param fd File descriptor.
  * @param offset Offset relative to @p seek_type.
  * @param seek_type Reference point.
- * @return New position on success, negative @c status_t on failure.
- * @retval E_INVALID_ARGUMENT Invalid descriptor.
- * @retval E_RANGE Position outside 0 to the file size.
+ * @return New position on success, negative errno on failure.
+ * @retval -EINVAL Invalid descriptor, or position outside 0 to the file size.
  */
 extern int pfs_seek(int fd, int offset, FSeekType seek_type);
 
@@ -167,39 +170,41 @@ extern int pfs_seek(int fd, int offset, FSeekType seek_type);
  * Commits an overwrite.
  *
  * @param fd File descriptor.
- * @retval S_SUCCESS File closed.
- * @retval E_INVALID_ARGUMENT Invalid descriptor.
+ * @retval 0 File closed.
+ * @retval -EINVAL Invalid descriptor.
  */
-extern status_t pfs_close(int fd);
+extern int pfs_close(int fd);
 
 /**
  * @brief Close and remove a file.
  *
  * @param fd File descriptor.
- * @return @c S_SUCCESS or negative @c status_t, as pfs_close() and pfs_remove().
+ * @return 0 or a negative errno, as pfs_close() and pfs_remove().
  */
-extern status_t pfs_close_and_remove(int fd);
+extern int pfs_close_and_remove(int fd);
 
 /**
  * @brief Remove a file.
  *
  * @param name File name.
- * @retval S_SUCCESS File removed.
- * @retval E_INVALID_ARGUMENT Invalid name.
- * @return Other negative @c status_t on failure.
+ * @retval 0 File removed.
+ * @retval -EINVAL Invalid name.
+ * @retval -ENOENT The file does not exist.
+ * @retval -EIO Corrupt page chain.
  */
-extern status_t pfs_remove(const char *name);
+extern int pfs_remove(const char *name);
 
 /**
  * @brief Check whether a file exists and get its size, without opening it.
  *
  * @param name File name.
  * @param[out] size Size in bytes.
- * @retval S_SUCCESS The file exists.
- * @retval E_DOES_NOT_EXIST The file does not exist.
- * @return Other negative @c status_t on failure.
+ * @retval 0 The file exists.
+ * @retval -EINVAL Invalid name.
+ * @retval -ENOENT The file does not exist.
+ * @retval -EIO Corrupt file header.
  */
-extern status_t pfs_stat(const char *name, size_t *size);
+extern int pfs_stat(const char *name, size_t *size);
 
 /**
  * @brief Get the name of an open file.
@@ -224,9 +229,9 @@ extern size_t pfs_get_file_size(int fd);
  * pre-erases some space.
  *
  * @param run_filesystem_check Format the flash if PFS is not active on it.
- * @retval S_SUCCESS Always.
+ * @retval 0 Always.
  */
-extern status_t pfs_init(bool run_filesystem_check);
+extern int pfs_init(bool run_filesystem_check);
 
 /**
  * @brief Clean up after a reboot, once and before any file operation.

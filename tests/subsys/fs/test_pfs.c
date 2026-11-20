@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -119,7 +120,7 @@ void test_pfs__garbage_collection(void) {
     cl_assert(fd >= 0);
     cl_assert_equal_i(pfs_read(fd, &buf[0], sizeof(buf)), sizeof(buf));
     cl_assert(memcmp(buf, bufcmp, sizeof(buf)) == 0);
-    cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+    cl_assert_equal_i(pfs_close(fd), 0);
   }
 }
 
@@ -130,11 +131,11 @@ void test_pfs__garbage_collection_when_full(void) {
   while (1) {
     snprintf(file_name, sizeof(file_name), "file%d", num++);
     fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(file_name));
-    cl_assert((fd >= 0) || (fd == E_OUT_OF_STORAGE));
-    if (fd == E_OUT_OF_STORAGE) {
+    cl_assert((fd >= 0) || (fd == -ENOSPC));
+    if (fd == -ENOSPC) {
       break;
     }
-    cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+    cl_assert_equal_i(pfs_close(fd), 0);
   }
 
   // the file system is full, lets delete a file
@@ -151,15 +152,15 @@ void test_pfs__garbage_collection_when_full(void) {
   fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(file_name));
   cl_assert_equal_i(target_start_page, test_get_file_start_page(fd));
   cl_assert(fd >= 0);
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
 }
 
 void test_pfs__open(void) {
   int fd = pfs_open("dne", OP_FLAG_READ, 0, 0);
-  cl_assert(fd == E_DOES_NOT_EXIST);
+  cl_assert(fd == -ENOENT);
 
   fd = pfs_open("dne", OP_FLAG_OVERWRITE, FILE_TYPE_STATIC, 0);
-  cl_assert(fd == E_DOES_NOT_EXIST);
+  cl_assert(fd == -ENOENT);
 
   char name[] = {'a'};
   int fds[100]; // arbitrarily large # of FDs
@@ -171,9 +172,9 @@ void test_pfs__open(void) {
       break;
     }
   }
-  cl_assert(fds[i] == E_OUT_OF_RESOURCES);
+  cl_assert(fds[i] == -EMFILE);
   for (int j = 0; j < i; j++) {
-    cl_assert(pfs_close(fds[j]) == S_SUCCESS);
+    cl_assert(pfs_close(fds[j]) == 0);
   }
 
   fd = pfs_open("newfile", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
@@ -185,17 +186,17 @@ void test_pfs__open(void) {
   pfs_close(fd2);
 
   fd = pfs_open("toobig", OP_FLAG_WRITE, FILE_TYPE_STATIC, 256 * 1024 * 1024);
-  cl_assert(fd == E_OUT_OF_STORAGE);
+  cl_assert(fd == -ENOSPC);
 
   fd = pfs_open("toobig", OP_FLAG_READ, 0, 0);
-  cl_assert(fd == E_DOES_NOT_EXIST);
+  cl_assert(fd == -ENOENT);
 
   fd = pfs_open(nullptr, OP_FLAG_READ, 0, 0);
-  cl_assert(fd == E_INVALID_ARGUMENT);
+  cl_assert(fd == -EINVAL);
 
   fd = pfs_open("newfile2", OP_FLAG_WRITE, FILE_TYPE_STATIC, 8000);
   cl_assert(fd >= 0);
-  cl_assert(pfs_close(fd) == S_SUCCESS);
+  cl_assert(pfs_close(fd) == 0);
 }
 
 void test_pfs__page_lookup_cache(void) {
@@ -210,10 +211,10 @@ void test_pfs__page_lookup_cache(void) {
     int fd = pfs_open(file_small, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
     cl_assert(fd >= 0);
     cl_assert(pfs_write(fd, (uint8_t *)buf_small, len) == len);
-    cl_assert(pfs_close(fd) == S_SUCCESS);
+    cl_assert(pfs_close(fd) == 0);
     // delete every few files and a bunch of pages near the end
     if (((i & 0x1) == 0) || ((i > ((num_pages() * 7) / 10)) && (i < ((num_pages() * 8) / 10)))) {
-      cl_assert(pfs_remove(file_small) == S_SUCCESS);
+      cl_assert(pfs_remove(file_small) == 0);
     }
   }
 
@@ -245,13 +246,13 @@ void test_pfs__page_lookup_cache(void) {
 
 void test_pfs__write(void) {
   int rv = pfs_write(-1, nullptr, 0);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   rv = pfs_write(1000000, nullptr, 0);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   rv = pfs_write(0, nullptr, 0);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   uint8_t buf[10];
   int fd = pfs_open("newfile", OP_FLAG_WRITE | OP_FLAG_READ, FILE_TYPE_STATIC, sizeof(buf));
@@ -259,7 +260,7 @@ void test_pfs__write(void) {
     buf[i] = i;
   }
   rv = pfs_write(fd, nullptr, sizeof(buf));
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
   rv = pfs_write(fd, buf, sizeof(buf) / 2);
   int off = sizeof(buf) / 2;
   rv = pfs_write(fd, &buf[off], sizeof(buf) - off);
@@ -270,7 +271,7 @@ void test_pfs__write(void) {
   memset(buf, 0x00, sizeof(buf));
   uint8_t bigbuf[11];
   rv = pfs_write(fd, bigbuf, sizeof(bigbuf));
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -EFBIG);
 
   rv = pfs_read(fd, buf, sizeof(buf));
   cl_assert(rv == sizeof(buf));
@@ -281,7 +282,7 @@ void test_pfs__write(void) {
 
   fd = pfs_open("newfile", OP_FLAG_READ, 0, 0);
   rv = pfs_write(fd, buf, sizeof(buf));
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 }
 
 void test_pfs__overwrite(void) {
@@ -311,7 +312,7 @@ void test_pfs__overwrite(void) {
   cl_assert(tmp_fd >= 0);
   rv = pfs_write(tmp_fd, (uint8_t *)overwrite_string, strlen(overwrite_string));
   cl_assert_equal_i(rv, strlen(overwrite_string));
-  cl_assert_equal_i(pfs_close(tmp_fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(tmp_fd), 0);
 
   uint8_t new_buf[strlen(overwrite_string)];
   fd = pfs_open(file, OP_FLAG_READ, 0, 0);
@@ -336,16 +337,16 @@ void test_pfs__seek(void) {
   cl_assert(rv == (len - 5));
 
   rv = pfs_seek(fd, -6, FSeekCur);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -EINVAL);
   rv = pfs_seek(fd, 0, FSeekSet);
   cl_assert(rv == 0);
   rv = pfs_seek(fd, len + 1, FSeekCur);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -EINVAL);
 
   rv = pfs_seek(fd, len + 1, FSeekSet);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -EINVAL);
   rv = pfs_seek(fd, -1, FSeekSet);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -EINVAL);
 }
 
 void test_pfs__seek_walks_forward_from_current_page(void) {
@@ -361,7 +362,7 @@ void test_pfs__seek_walks_forward_from_current_page(void) {
   int fd = pfs_open("big", OP_FLAG_WRITE, FILE_TYPE_STATIC, file_size);
   cl_assert(fd >= 0);
   cl_assert_equal_i(pfs_write(fd, data, file_size), file_size);
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
 
   fd = pfs_open("big", OP_FLAG_READ | OP_FLAG_WRITE, FILE_TYPE_STATIC, 0);
   cl_assert(fd >= 0);
@@ -395,7 +396,7 @@ void test_pfs__seek_walks_forward_from_current_page(void) {
   cl_assert_equal_i(pfs_read(fd, readback, file_size % 4096), file_size % 4096);
   cl_assert_equal_m(readback, data, file_size);
 
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
   free(readback);
   free(data);
 }
@@ -404,66 +405,66 @@ void test_pfs__read(void) {
   const int rd_len = 10;
 
   int rv = pfs_read(-1, nullptr, rd_len);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   rv = pfs_read(0, nullptr, rd_len);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   int fd = pfs_open("newfile", OP_FLAG_WRITE, FILE_TYPE_STATIC, rd_len);
   cl_assert(fd >= 0);
   uint8_t buf[rd_len];
   rv = pfs_read(fd, buf, rd_len);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
   pfs_close(fd);
 
   fd = pfs_open("newfile", OP_FLAG_READ, 0, 0);
   rv = pfs_read(fd, buf, rd_len);
   cl_assert(rv == rd_len);
   rv = pfs_read(fd, buf, 1);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -ERANGE);
   rv = pfs_seek(fd, 0, FSeekSet);
   cl_assert(rv == 0);
   rv = pfs_read(fd, nullptr, rd_len);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
   rv = pfs_read(fd, buf, rd_len + 1);
-  cl_assert(rv == E_RANGE);
+  cl_assert(rv == -ERANGE);
 }
 
 void test_pfs__close(void) {
   // shouldn't be able to close fds that are not open
   int rv = pfs_close(-1);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
   rv = pfs_close(0);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
   rv = pfs_close(1000000);
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 
   int fd = pfs_open("file", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
   cl_assert(fd >= 0);
   rv = pfs_close(fd);
-  cl_assert(rv == S_SUCCESS);
+  cl_assert(rv == 0);
   rv = pfs_close(fd); // should not be able to double close an fd
-  cl_assert(rv == E_INVALID_ARGUMENT);
+  cl_assert(rv == -EINVAL);
 }
 
 void test_pfs__remove(void) {
-  cl_assert(pfs_remove(nullptr) == E_INVALID_ARGUMENT);
+  cl_assert(pfs_remove(nullptr) == -EINVAL);
 
   char *fname = "abc";
   int fd = pfs_open(fname, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10 * 1024);
   cl_assert(fd >= 0);
-  cl_assert(pfs_close(fd) == S_SUCCESS);
-  cl_assert(pfs_remove(fname) == S_SUCCESS);
+  cl_assert(pfs_close(fd) == 0);
+  cl_assert(pfs_remove(fname) == 0);
 
-  cl_assert(pfs_remove(fname) == E_DOES_NOT_EXIST);
-  cl_assert(pfs_open(fname, OP_FLAG_READ, 0, 0) == E_DOES_NOT_EXIST);
+  cl_assert(pfs_remove(fname) == -ENOENT);
+  cl_assert(pfs_open(fname, OP_FLAG_READ, 0, 0) == -ENOENT);
 }
 
 #define NUM_ENTRIES 3
 void test_pfs__close_and_remove(void) {
-  cl_assert(pfs_close_and_remove(-1) == E_INVALID_ARGUMENT);
+  cl_assert(pfs_close_and_remove(-1) == -EINVAL);
   // there shouldn't be any fd open at this point
-  cl_assert(pfs_close_and_remove(2) == E_INVALID_ARGUMENT);
+  cl_assert(pfs_close_and_remove(2) == -EINVAL);
 
   int fd[NUM_ENTRIES];
   char *fname[NUM_ENTRIES] = {"a", "b", "c"};
@@ -476,13 +477,13 @@ void test_pfs__close_and_remove(void) {
 
   // test close and remove
   for (int i = (NUM_ENTRIES - 1); i >= 0; i--) {
-    cl_assert_equal_i(pfs_close_and_remove(fd[i]), S_SUCCESS);
+    cl_assert_equal_i(pfs_close_and_remove(fd[i]), 0);
   }
 
   // now make sure none of the files exist
   for (int i = 0; i < NUM_ENTRIES; i++) {
     int temp_fd = pfs_open(fname[i], OP_FLAG_READ, 0, 0);
-    cl_assert(temp_fd == E_DOES_NOT_EXIST);
+    cl_assert(temp_fd == -ENOENT);
   }
 }
 
@@ -500,9 +501,9 @@ void test_pfs__discontiguous_page_test(void) {
     int fd = pfs_open(file_small, OP_FLAG_WRITE, FILE_TYPE_STATIC, len);
     cl_assert(fd >= 0);
     cl_assert(pfs_write(fd, (uint8_t *)buf, len) == len);
-    cl_assert(pfs_close(fd) == S_SUCCESS);
+    cl_assert(pfs_close(fd) == 0);
     if ((i % 2) == 0) {
-      cl_assert(pfs_remove(file_small) == S_SUCCESS);
+      cl_assert(pfs_remove(file_small) == 0);
     }
   }
 
@@ -526,7 +527,7 @@ void test_pfs__discontiguous_page_test(void) {
     printf("the fd is: %d\n", fd);
     cl_assert(fd >= 0);
     cl_assert(pfs_write(fd, bigbuf, large_file_size) == large_file_size);
-    cl_assert(pfs_close(fd) == S_SUCCESS);
+    cl_assert(pfs_close(fd) == 0);
   }
   free(bigbuf);
 
@@ -548,7 +549,7 @@ void test_pfs__discontiguous_page_test(void) {
       curr++;
     }
 
-    cl_assert(pfs_close(fd) == S_SUCCESS);
+    cl_assert(pfs_close(fd) == 0);
     free(b);
   }
 }
@@ -566,8 +567,8 @@ void test_pfs__file_span_regions(void) {
   printf("%d\n", pfs_get_size() - 1024);
 
   cl_assert(fd >= 0);
-  cl_assert(pfs_close(fd) == S_SUCCESS);
-  cl_assert(pfs_remove(name) == S_SUCCESS);
+  cl_assert(pfs_close(fd) == 0);
+  cl_assert(pfs_remove(name) == 0);
 }
 
 void test_pfs__active_regions(void) {
@@ -584,7 +585,7 @@ void test_pfs__active_regions(void) {
     snprintf(file_name, sizeof(file_name), "file%d", i);
     int fd = pfs_open(file_name, OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
     cl_assert(fd >= 0);
-    cl_assert(pfs_close(fd) == S_SUCCESS);
+    cl_assert(pfs_close(fd) == 0);
   }
 
   cl_assert(pfs_active_in_region(0, pfs_get_size()));
@@ -592,7 +593,7 @@ void test_pfs__active_regions(void) {
   // delete every page and make sure pfs is active
   for (int i = 0; i < num_pages(); i++) {
     snprintf(file_name, sizeof(file_name), "file%d", i);
-    cl_assert(pfs_remove(file_name) == S_SUCCESS);
+    cl_assert(pfs_remove(file_name) == 0);
   }
   cl_assert(pfs_active_in_region(0, pfs_get_size()));
 
@@ -600,7 +601,7 @@ void test_pfs__active_regions(void) {
   pfs_format(true);
   int fd = pfs_open("testfile", OP_FLAG_WRITE, FILE_TYPE_STATIC, 68000);
   cl_assert(fd >= 0);
-  cl_assert(pfs_close(fd) == S_SUCCESS);
+  cl_assert(pfs_close(fd) == 0);
   cl_assert(pfs_active_in_region(32000, 68000));
 }
 
@@ -629,7 +630,7 @@ int run_full_flash_region_test(void) {
     idx++;
   }
 
-  cl_assert_equal_i((status_t)fd, E_OUT_OF_STORAGE);
+  cl_assert_equal_i(fd, -ENOSPC);
 
   // read back files to make sure they are all correct
   st_val = 0;
@@ -666,7 +667,7 @@ void test_pfs__out_of_space(void) {
     for (int i = (files_written - 1); i >= 0; i--) {
       char name[128];
       snprintf(name, sizeof(name), "file%d", i);
-      cl_assert_equal_i(pfs_remove(name), S_SUCCESS);
+      cl_assert_equal_i(pfs_remove(name), 0);
     }
   }
 }
@@ -679,7 +680,7 @@ void test_pfs__get_size(void) {
   cl_assert(pfs_get_size() == (ftl_get_size() - SECTOR_SIZE_BYTES));
 }
 
-extern status_t test_scan_for_last_written(void);
+extern int test_scan_for_last_written(void);
 void test_pfs__last_written_page(void) {
   pfs_format(true);
   pfs_init(false);
@@ -769,7 +770,7 @@ void test_pfs__reboot_during_gc(void) {
     cl_assert(fd >= 0);
     cl_assert_equal_i(pfs_read(fd, &buf[0], sizeof(buf)), sizeof(buf));
     cl_assert(memcmp(buf, bufcmp, sizeof(buf)) == 0);
-    cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+    cl_assert_equal_i(pfs_close(fd), 0);
   }
 }
 
@@ -830,12 +831,12 @@ static bool prv_file_exists(char *name) {
 
 void test_pfs__stat(void) {
   size_t size = 0;
-  cl_assert_equal_i(pfs_stat("st", &size), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(pfs_stat("st", &size), -ENOENT);
 
   int fd = pfs_open("st", OP_FLAG_WRITE, FILE_TYPE_STATIC, 42);
   cl_assert(fd >= 0);
   // Open files are found in the descriptor cache
-  cl_assert_equal_i(pfs_stat("st", &size), S_SUCCESS);
+  cl_assert_equal_i(pfs_stat("st", &size), 0);
   cl_assert_equal_i(size, 42);
   pfs_close(fd);
 
@@ -843,14 +844,14 @@ void test_pfs__stat(void) {
   pfs_reset_all_state();
   pfs_init(false);
   size = 0;
-  cl_assert_equal_i(pfs_stat("st", &size), S_SUCCESS);
+  cl_assert_equal_i(pfs_stat("st", &size), 0);
   cl_assert_equal_i(size, 42);
-  cl_assert_equal_i(pfs_stat("", &size), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(pfs_stat("", &size), -EINVAL);
 }
 
 void test_pfs__no_create(void) {
   int fd = pfs_open("nc", OP_FLAG_READ | OP_FLAG_WRITE | OP_FLAG_NO_CREATE, FILE_TYPE_STATIC, 10);
-  cl_assert_equal_i(fd, E_DOES_NOT_EXIST);
+  cl_assert_equal_i(fd, -ENOENT);
   cl_assert(!prv_file_exists("nc"));
 
   fd = pfs_open("nc", OP_FLAG_WRITE, FILE_TYPE_STATIC, 10);
@@ -872,19 +873,19 @@ void test_pfs__deferred_create(void) {
 
   // The name is taken, but the file is not on the flash yet
   size_t size;
-  cl_assert_equal_i(pfs_stat("dc", &size), E_DOES_NOT_EXIST);
-  cl_assert_equal_i(pfs_open("dc", OP_FLAG_READ, FILE_TYPE_STATIC, 0), E_BUSY);
+  cl_assert_equal_i(pfs_stat("dc", &size), -ENOENT);
+  cl_assert_equal_i(pfs_open("dc", OP_FLAG_READ, FILE_TYPE_STATIC, 0), -EBUSY);
   uint8_t buf[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  cl_assert_equal_i(pfs_write(fd, buf, 1), E_RANGE);
-  cl_assert_equal_i(pfs_read(fd, buf, 1), E_RANGE);
+  cl_assert_equal_i(pfs_write(fd, buf, 1), -EFBIG);
+  cl_assert_equal_i(pfs_read(fd, buf, 1), -ERANGE);
 
-  cl_assert_equal_i(pfs_create_deferred(fd, 0), E_INVALID_ARGUMENT);
-  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), S_SUCCESS);
-  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), E_INVALID_OPERATION);
+  cl_assert_equal_i(pfs_create_deferred(fd, 0), -EINVAL);
+  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), 0);
+  cl_assert_equal_i(pfs_create_deferred(fd, sizeof(buf)), -EALREADY);
   cl_assert_equal_i(pfs_get_file_size(fd), sizeof(buf));
   cl_assert(get_available_pfs_space() < space);
   cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
 
   pfs_reset_all_state();
   pfs_init(false);
@@ -901,7 +902,7 @@ void test_pfs__deferred_create_never_created(void) {
 
   int fd = pfs_open("dn", OP_FLAG_WRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
   cl_assert(fd >= 0);
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
 
   cl_assert(!prv_file_exists("dn"));
   cl_assert_equal_i(get_available_pfs_space(), space);
@@ -935,7 +936,7 @@ void test_pfs__deferred_overwrite_never_created(void) {
   int fd = pfs_open("do", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
   cl_assert(fd >= 0);
   prv_assert_file("do", 0x11, 20);
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
   prv_assert_file("do", 0x11, 20);
 
   pfs_reset_all_state();
@@ -945,12 +946,12 @@ void test_pfs__deferred_overwrite_never_created(void) {
 
 void test_pfs__deferred_overwrite(void) {
   cl_assert_equal_i(pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0),
-                    E_DOES_NOT_EXIST);
+                    -ENOENT);
 
   prv_create_file("dw", 0x11, 20);
   int fd = pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
   cl_assert(fd >= 0);
-  cl_assert_equal_i(pfs_create_deferred(fd, 30), S_SUCCESS);
+  cl_assert_equal_i(pfs_create_deferred(fd, 30), 0);
   uint8_t buf[30];
   memset(buf, 0x22, sizeof(buf));
   cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
@@ -963,9 +964,9 @@ void test_pfs__deferred_overwrite(void) {
 
   fd = pfs_open("dw", OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE, FILE_TYPE_STATIC, 0);
   cl_assert(fd >= 0);
-  cl_assert_equal_i(pfs_create_deferred(fd, 30), S_SUCCESS);
+  cl_assert_equal_i(pfs_create_deferred(fd, 30), 0);
   cl_assert_equal_i(pfs_write(fd, buf, sizeof(buf)), sizeof(buf));
-  cl_assert_equal_i(pfs_close(fd), S_SUCCESS);
+  cl_assert_equal_i(pfs_close(fd), 0);
   prv_assert_file("dw", 0x22, 30);
 }
 
@@ -1041,7 +1042,7 @@ static void prv_corrupt_page_hdr_crc(uint16_t page) {
 }
 
 // A failed header check on a cached fd must fall back to the flash scan
-// instead of failing the open with the raw header status (E_ERROR).
+// instead of failing the open with the raw header status.
 void test_pfs__corrupt_cached_header_falls_back_to_scan(void) {
   int fd = pfs_open(TEST_FILE_A_NAME, OP_FLAG_READ, 0, 0);
   cl_assert(fd >= 0);
@@ -1053,7 +1054,7 @@ void test_pfs__corrupt_cached_header_falls_back_to_scan(void) {
   // The cached-header check fails, the scan finds no valid copy, and the
   // read-only open reports the file as missing.
   fd = pfs_open(TEST_FILE_A_NAME, OP_FLAG_READ, 0, 0);
-  cl_assert_equal_i(fd, E_DOES_NOT_EXIST);
+  cl_assert_equal_i(fd, -ENOENT);
 }
 
 // A corrupt page which still matches a file name must get unlinked once a
