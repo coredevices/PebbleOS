@@ -1268,12 +1268,6 @@ GRAPH_DTS = """/dts-v1/;
         reg = <0x1000 0x100>;
         gpio-controller;
         #gpio-cells = <2>;
-        gpio-ranges = <&pinmux 0 0 32>;
-    };
-
-    pinmux: pinmux@2000 {
-        compatible = "acme,pinmux";
-        reg = <0x2000 0x100>;
     };
 
     timer@3000 {
@@ -1355,13 +1349,6 @@ GRAPH_SPECS = {
         "class": "port",
         "define": "PORT_DEFINE",
     },
-    "acme,pinmux": {
-        "compatible": "acme,pinmux",
-        "config": "PINMUX",
-        "class": "pinctrl",
-        "define": "PINMUX_DEFINE",
-        "args": [{"referrer": "gpio-ranges", "as": "gpio-controller"}],
-    },
     "acme,timer-pwm": {
         "compatible": "acme,timer-pwm",
         "config": "TPWM",
@@ -1423,10 +1410,9 @@ def test_graph_supplies_and_pwms(tmp_path):
     assert "FIXED_DEFINE(dt_vdd, PIN(&dt_gpio, 4, 0), true);" in out
 
 
-def test_function_of_a_block_and_referrer(tmp_path):
+def test_function_of_a_block(tmp_path):
     out = body(graph_generate(tmp_path))
     assert "TPWM_DEFINE(dt_tpwm, 0x3000);" in out
-    assert "PINMUX_DEFINE(dt_pinmux, &dt_gpio);" in out
 
 
 def test_disabled_remote_fails(tmp_path):

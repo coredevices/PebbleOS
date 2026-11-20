@@ -84,7 +84,6 @@ ARG_KINDS = {
     "power-domain",
     "pwm",
     "supply",
-    "referrer",
     "consumers",
     "phandle",
     "reset",
@@ -1061,21 +1060,6 @@ class Generator:
             )
         return target
 
-    def _referrer(self, dev, prop):
-        """The enabled node whose property points at this one, as a GPIO controller's gpio-ranges."""
-        phandle = dev.node.u32("phandle") if dev.node.has("phandle") else None
-        found = [
-            n
-            for n in self.tree.nodes()
-            if phandle is not None
-            and n.has(prop)
-            and enabled(n)
-            and n.u32s(prop)[0] == phandle
-        ]
-        if len(found) > 1:
-            raise dev.error(f"several nodes refer to it with '{prop}'")
-        return found[0] if found else None
-
     def _consumers(self, dev, prop, cell):
         """One more than the highest specifier cell that enabled nodes give this one in prop."""
         cells_prop = CONSUMER_CELLS[prop]
@@ -1301,11 +1285,6 @@ class Generator:
         if kind == "consumers":
             count = self._consumers(dev, key, int(arg.get("index", 0)))
             return None if count is None else str(count)
-        if kind == "referrer":
-            target = self._referrer(dev, key)
-            if target is None:
-                return None
-            return self._provided(dev, target, arg.get("as", key), [])
         if kind == "gpio":
             prop = f"{key}-gpios" if key else "gpios"
             if not node.has(prop):
