@@ -59,7 +59,7 @@ PRV_SAME_ID(USBC_K);
 static_assert(SF32LB57_HPSYS_CLK_MPI3_K == SF32LB_HPSYS_CLK_MPI3_K);
 
 // What differs between the series
-struct prv_soc {
+struct pbl_clk_sf32lb_soc {
   const uint8_t *gate_parents;
   // CSR.SEL_SYS_LP, 0 if none
   uint32_t sel_sys_lp;
@@ -77,19 +77,6 @@ static uintptr_t s_cfg;
 static uint32_t s_sel_sys_lp;
 static uint32_t s_bg_offset;
 static uint32_t s_bg_en;
-
-struct pbl_clk_sf32lb {
-  struct pbl_clk_controller ctrl;
-  const struct prv_soc *soc;
-  uintptr_t base;
-  uintptr_t cfg;
-  struct pbl_clk hrc48;
-  struct pbl_clk hxt48;
-  struct pbl_clk hxt48_dll;
-  struct pbl_power_domain pd;
-  uint32_t pd_level;
-  const struct pbl_clk_assigned *assigned;
-};
 
 // The clock each gate gates. The audio blocks pick their own kernel clock, HXT48 or the audio
 // PLL, so their gates are on the bus clock.
@@ -184,7 +171,7 @@ static const uint8_t s_sf32lb57_gate_parents[NUM_GATES] = {
   [SF32LB57_HPSYS_CLK_I2C4] = SF32LB_HPSYS_CLK_PERI,
 };
 
-[[maybe_unused]] static const struct prv_soc s_sf32lb52 = {
+const struct pbl_clk_sf32lb_soc pbl_clk_sf32lb52_soc = {
   .gate_parents = s_sf32lb52_gate_parents,
   .sel_sys_lp = HPSYS_RCC_CSR_SEL_SYS_LP,
   .dll_in_div2 = HPSYS_RCC_DLLCR_IN_DIV2_EN,
@@ -193,7 +180,7 @@ static const uint8_t s_sf32lb57_gate_parents[NUM_GATES] = {
   .bg_en = HPSYS_CFG_CAU2_CR_HPBG_VDDPSW_EN | HPSYS_CFG_CAU2_CR_HPBG_EN,
 };
 
-[[maybe_unused]] static const struct prv_soc s_sf32lb57 = {
+const struct pbl_clk_sf32lb_soc pbl_clk_sf32lb57_soc = {
   .gate_parents = s_sf32lb57_gate_parents,
   .dll_in_div2 = SF32LB57_HPSYS_RCC_DLLCR_IN_DIV2_EN,
   .dll_out_div2 = SF32LB57_HPSYS_RCC_DLLCR_OUT_DIV2_EN,
@@ -232,7 +219,7 @@ static bool prv_is_dll(uint32_t id) {
   return id == SF32LB_HPSYS_CLK_DLL1 || id == SF32LB_HPSYS_CLK_DLL2;
 }
 
-static bool prv_sys_on_dll1(const struct prv_soc *soc, uint32_t csr) {
+static bool prv_sys_on_dll1(const struct pbl_clk_sf32lb_soc *soc, uint32_t csr) {
   return (csr & soc->sel_sys_lp) == 0U &&
          PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK, csr) == HPSYS_RCC_CSR_SEL_SYS_DLL1;
 }
@@ -250,7 +237,7 @@ static bool prv_dll_feeds_peripheral(const struct pbl_clk_controller *ctrl, uint
 }
 
 static int prv_dll_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
-  const struct prv_soc *soc = prv_rcc(ctrl)->soc;
+  const struct pbl_clk_sf32lb_soc *soc = prv_rcc(ctrl)->soc;
   uint32_t offset = prv_dll_offset(id);
   uint32_t cr = prv_read(ctrl, offset);
 
@@ -747,7 +734,7 @@ PBL_SECTION_RAM static void prv_idle_exit(pbl_idle_state_id_t state, void *arg) 
 
 PBL_IDLE_HOOK_LATE_DEFINE(clk_sf32lb_hxt48, prv_idle_enter, prv_idle_exit, nullptr);
 
-static int prv_init(const struct pbl_device *dev) {
+int pbl_clk_sf32lb_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb *rcc = PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb, ctrl.dev);
   int ret;
 
@@ -774,7 +761,7 @@ static int prv_init(const struct pbl_device *dev) {
   return pbl_clk_assign(rcc->assigned);
 }
 
-static const struct pbl_clk_controller_ops s_clk_ops = {
+const struct pbl_clk_controller_ops pbl_clk_sf32lb_ops = {
   .enable = prv_clk_enable,
   .disable = prv_clk_disable,
   .get_rate = prv_clk_get_rate,
@@ -782,26 +769,6 @@ static const struct pbl_clk_controller_ops s_clk_ops = {
   .set_parent = prv_clk_set_parent,
   .set_rate = prv_clk_set_rate,
 };
-
-#define PBL_CLK_SF32LB52_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd,    \
-                                _pd_level, ...)                                              \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                               \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {         \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),              \
-    .soc = &s_sf32lb52, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48,    \
-    .hxt48_dll = _hxt48_dll, .pd = _pd, .pd_level = (_pd_level), .assigned = sym##_assigned, \
-  }
-
-#define PBL_CLK_SF32LB57_DEFINE(sym, _name, _base, _cfg, _hrc48, _hxt48, _hxt48_dll, _pd,    \
-                                _pd_level, ...)                                              \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB_HPSYS_NUM_CLKS);                               \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb, struct pbl_clk_controller, ctrl) {         \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_clk_ops),              \
-    .soc = &s_sf32lb57, .base = (_base), .cfg = (_cfg), .hrc48 = _hrc48, .hxt48 = _hxt48,    \
-    .hxt48_dll = _hxt48_dll, .pd = _pd, .pd_level = (_pd_level), .assigned = sym##_assigned, \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_clk)
 #include PBL_DT_INSTANCES(sifli_sf32lb57_hpsys_rcc_clk)

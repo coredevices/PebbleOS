@@ -107,4 +107,25 @@ int pbl_pinctrl_sf32lb57_modify(uint32_t pin, uint32_t mask);
 /** HPSYS pin controller. */
 #define SF32LB57_PINCTRL (&pbl_pinctrl_sf32lb57_hpsys)
 
+/** @cond INTERNAL_HIDDEN */
+#define PBL_PINCTRL_SF32LB57__NUM_PADS (13U + 13U + 58U)
+
+extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb57_ops;
+/** @endcond */
+
+/**
+ * @brief Define the SF32LB57 pin controller.
+ *
+ * @param sym Symbol of the controller.
+ * @param _name Name.
+ * @param _base Pinmux registers.
+ */
+#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base)                                         \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb57, struct pbl_pinctrl_controller, ctrl) { \
+    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_sf32lb57_ops,        \
+                                        PBL_PINCTRL_SF32LB57__NUM_PADS),                       \
+    .base = (_base),                                                                           \
+  }
+
 /** @} */

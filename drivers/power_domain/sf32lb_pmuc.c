@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/power_domain.h>
+#include <pbl/drivers/power_domain/sf32lb_pmuc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -41,7 +41,7 @@
 #define LDO_VSEL  HPSYS_CFG_SYSCR_LDO_VSEL
 #endif
 
-#define NUM_DOMAINS (PD_HPSYS + 1U)
+static_assert(PD_HPSYS + 1U == PBL_PD_SF32LB_PMUC__NUM_DOMAINS);
 
 // The buck takes this long to settle on a higher voltage
 #define BUCK_SETTLE_US 250U
@@ -53,12 +53,6 @@
 #else
 #define S1_LDO_DEFAULT 0xdU
 #endif
-
-struct pbl_pd_sf32lb_pmuc {
-  struct pbl_power_domain_provider provider;
-  uintptr_t base;
-  uintptr_t cfg;
-};
 
 // The voltages and memory timings of each mode. The S modes take the LDO reference of their own
 // trim, the D modes an offset from the S0 one.
@@ -125,17 +119,9 @@ static int prv_set_performance_state(const struct pbl_power_domain_provider *pro
   return 0;
 }
 
-static const struct pbl_power_domain_provider_ops s_ops = {
+const struct pbl_power_domain_provider_ops pbl_pd_sf32lb_pmuc_ops = {
   .set_performance_state = prv_set_performance_state,
 };
-
-#define PBL_PD_SF32LB_PMUC_DEFINE(sym, _name, _base, _cfg)                              \
-  PBL_POWER_DOMAIN_PROVIDER_STATE_DEFINE(sym, NUM_DOMAINS);                             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pd_sf32lb_pmuc, struct pbl_power_domain_provider, \
-                      provider) {                                                       \
-    .provider = PBL_POWER_DOMAIN_PROVIDER_INIT(sym, _name, nullptr, nullptr, &s_ops),   \
-    .base = (_base), .cfg = (_cfg),                                                     \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pmuc_power_domain)
 #include PBL_DT_INSTANCES(sifli_sf32lb57_pmuc_power_domain)

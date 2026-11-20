@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/drivers/clk/sf32lb_lpsys_rcc.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -19,14 +19,6 @@
 #define PDIV_MAX       7U
 #define PCLK_MAX_HZ    24000000U
 #define MILLIHZ_PER_HZ 1000U
-
-struct pbl_clk_sf32lb_lpsys_rcc {
-  struct pbl_clk_controller ctrl;
-  uintptr_t base;
-  struct pbl_clk hrc48;
-  struct pbl_clk hxt48;
-  const struct pbl_clk_assigned *assigned;
-};
 
 static const struct pbl_clk_sf32lb_lpsys_rcc *prv_rcc(const struct pbl_clk_controller *ctrl) {
   return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl);
@@ -180,26 +172,18 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
   return 0;
 }
 
-static int prv_init(const struct pbl_device *dev) {
+int pbl_clk_sf32lb_lpsys_rcc_init(const struct pbl_device *dev) {
   const struct pbl_clk_sf32lb_lpsys_rcc *rcc =
       PBL_CONTAINER_OF(dev, const struct pbl_clk_sf32lb_lpsys_rcc, ctrl.dev);
 
   return pbl_clk_assign(rcc->assigned);
 }
 
-static const struct pbl_clk_controller_ops s_ops = {
+const struct pbl_clk_controller_ops pbl_clk_sf32lb_lpsys_rcc_ops = {
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
   .set_parent = prv_set_parent,
   .set_rate = prv_set_rate,
 };
-
-#define PBL_CLK_SF32LB_LPSYS_RCC_DEFINE(sym, _name, _base, _hrc48, _hxt48, ...)                \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, SF32LB52_LPSYS_NUM_CLKS);                               \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                        \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb_lpsys_rcc, struct pbl_clk_controller, ctrl) { \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops), .base = (_base),   \
-    .hrc48 = _hrc48, .hxt48 = _hxt48, .assigned = sym##_assigned,                              \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_lpsys_rcc)
