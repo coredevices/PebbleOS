@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
-/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 
-#pragma once
+#ifndef _DT_BINDINGS_CLOCK_SIFLI_SF32LB52_HPSYS_RCC_H
+#define _DT_BINDINGS_CLOCK_SIFLI_SF32LB52_HPSYS_RCC_H
 
 /* Abstract IDs: new clocks go at the end. */
 #define SF32LB52_HPSYS_RCC_CLK_DMAC1     0
@@ -53,3 +54,5 @@
 #define SF32LB52_HPSYS_RCC_CLK_MPI1_K    46
 #define SF32LB52_HPSYS_RCC_CLK_MPI2_K    47
 #define SF32LB52_HPSYS_RCC_CLK_USBC_K    48
+
+#endif /* _DT_BINDINGS_CLOCK_SIFLI_SF32LB52_HPSYS_RCC_H */

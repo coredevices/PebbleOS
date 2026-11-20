@@ -180,6 +180,12 @@ other way around:
   the instances are generated, and an ID the driver does not know fails the
   build.
 
+  A header is named after the compatible it serves, and carries the license
+  of the bindings, `(GPL-2.0-only OR BSD-2-Clause)`, with `_DT_BINDINGS_*`
+  include guards, as upstream's do. The generic ones, as the GPIO flags, are
+  our own copies of the upstream values rather than the upstream headers,
+  which C code includes too and most of which are GPL-2.0-only.
+
   ```dts
   #include <dt-bindings/clock/vendor,soc-rcc.h>
 

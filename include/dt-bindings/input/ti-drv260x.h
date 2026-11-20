@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
-/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 
-#pragma once
+#ifndef _DT_BINDINGS_INPUT_TI_DRV260X_H
+#define _DT_BINDINGS_INPUT_TI_DRV260X_H
 
 /* Actuator modes and effect libraries, the values of the upstream binding */
 #define DRV260X_LRA_MODE        0x00
@@ -15,3 +16,5 @@
 #define DRV260X_ERM_LIB_D 0x04
 #define DRV260X_ERM_LIB_E 0x05
 #define DRV260X_LIB_LRA   0x06
+
+#endif /* _DT_BINDINGS_INPUT_TI_DRV260X_H */
