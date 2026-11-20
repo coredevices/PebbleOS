@@ -7,6 +7,11 @@ pbl_clar_test(test_interval_timer
     tests/fakes/fake_rtc.c
 )
 
+pbl_clar_test(test_kernel_applib_state
+  SOURCES
+    pebble/kernel/kernel_applib_state.c
+)
+
 pbl_clar_test(test_remote_input
   SOURCES
     pebble/kernel/remote_input.c

@@ -13,6 +13,9 @@
 static PBL_MUTEX_DEFINE(s_log_state_mutex);
 static bool s_log_state_mutex_ready;
 static bool s_log_state_task_entered[NumPebbleTask]; // which tasks have entered
+// Taken by the current holder
+static bool s_log_state_locked;
+static PebbleTask s_log_state_task;
 
 // ---------------------------------------------------------------------------------------------
 CompassServiceConfig **kernel_applib_get_compass_config(void) {
@@ -92,6 +95,8 @@ LogState *kernel_applib_get_log_state(void) {
   }
 
   sys_log_state.in_progress = true;
+  s_log_state_locked = use_mutex;
+  s_log_state_task = task;
   return &sys_log_state;
 
 exit_fail:
@@ -102,16 +107,18 @@ exit_fail:
 // --------------------------------------------------------------------------------------------
 // Release the LogState buffer obtained by kernel_applib_get_log_state()
 void kernel_applib_release_log_state(LogState *state) {
+  // Read before releasing the state
+  const bool locked = s_log_state_locked;
+  const PebbleTask task = s_log_state_task;
+
   state->in_progress = false;
 
-  // For phase 1 & when in an ISR, there is no mutex available
-  if (!pbl_irq_is_locked() && !mcu_state_is_isr() && (pbl_kernel_is_running()) &&
-      s_log_state_mutex_ready) {
+  // For phase 1 & when in an ISR, no mutex was taken
+  if (locked) {
     pbl_mutex_unlock(&s_log_state_mutex);
   }
 
-  // Clear the re-entrancy flag for this task
-  PebbleTask task = prv_get_current_task();
+  // Clear the re-entrancy flag of the task that set it
   s_log_state_task_entered[task] = false;
 }
 
