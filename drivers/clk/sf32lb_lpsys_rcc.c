@@ -6,6 +6,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
@@ -173,7 +174,7 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
     return -EINVAL;
   }
 
-  pdiv = (uint32_t)__builtin_ctz(div);
+  pdiv = (uint32_t)PBL_CTZ(div);
   if ((div & (div - 1U)) != 0U || pdiv > PDIV_MAX) {
     return -EINVAL;
   }

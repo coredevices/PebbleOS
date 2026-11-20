@@ -114,7 +114,7 @@ static PBL_ALWAYS_INLINE bool arch_irq_window_pending(unsigned int key) {
     uint32_t pending = arch_readl(ARCH_NVIC_ISPR(i)) & arch_readl(ARCH_NVIC_ISER(i));
 
     while (pending != 0U) {
-      const uint32_t n = (i * 32U) + (uint32_t)__builtin_ctz(pending);
+      const uint32_t n = (i * 32U) + (uint32_t)PBL_CTZ(pending);
 
       if (arch_readb(ARCH_NVIC_IPR(n)) < level) {
         return true;

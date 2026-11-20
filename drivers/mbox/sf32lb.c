@@ -5,6 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/mbox/sf32lb.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -102,7 +103,7 @@ void pbl_mbox_sf32lb_irq_handler(const struct pbl_mbox_sf32lb *mbox) {
   pbl_writel(status, mbox->base + SF32LB52_MAILBOX_C1ICR_OFFSET);
 
   while (status != 0U) {
-    uint8_t bit = (uint8_t)__builtin_ctz(status);
+    uint8_t bit = (uint8_t)PBL_CTZ(status);
 
     pbl_mbox_chan_received(&mbox->ctrl, bit, nullptr);
     status &= status - 1U;
