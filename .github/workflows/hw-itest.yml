@@ -81,6 +81,9 @@ jobs:
           - watch: asterix
             board: asterix
             variant: normal
+          - watch: asterix
+            board: asterix
+            variant: prf
 
     steps:
       - name: Mark Github workspace as safe
@@ -124,6 +127,7 @@ jobs:
             build/.config
             build/pebbleos.elf
             build/pebbleos.hex
+            build/pebbleos.bin
             build/system_resources.pbpack
             build/log.dict.json
             build/generated/include/devicetree/partitions.h
@@ -156,6 +160,9 @@ jobs:
           - watch: asterix
             board: asterix
             variant: normal
+          - watch: asterix
+            board: asterix
+            variant: prf
 
     steps:
       - name: Checkout
