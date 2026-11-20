@@ -61,7 +61,7 @@ SPEC_KEYS = {
 CHILDREN_KEYS = {"node", "names"}
 CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
 ROLE_KEYS = {"symbol", "include"}
-PINCTRL_KEYS = {"define", "pin", "flags", "values"}
+PINCTRL_KEYS = {"define", "pin", "pinmux", "flags", "values"}
 IDS_KEYS = {"cell", "header", "prefix", "values"}
 IDS_VALUES_KEYS = {"header", "prefix"}
 ARG_KINDS = {
@@ -223,9 +223,9 @@ class Spec:
         if any(trailing[i] and not all(trailing[i:]) for i in range(len(trailing))):
             raise self._error("optional and list arguments must come last")
         if self.pinctrl is not None:
-            check_keys(
-                self._error, self.pinctrl, PINCTRL_KEYS, "pinctrl", ("define", "pin")
-            )
+            check_keys(self._error, self.pinctrl, PINCTRL_KEYS, "pinctrl", ("define",))
+            if ("pin" in self.pinctrl) == ("pinmux" in self.pinctrl):
+                raise self._error("'pinctrl' needs one of 'pin' and 'pinmux'")
             if len(self.classes) != 1:
                 raise self._error("'pinctrl' needs exactly one class")
         # Models named by a compatible argument, which Kconfig can build only when present
@@ -1013,10 +1013,18 @@ class Generator:
         spec = pinctrl
         flags = spec.get("flags", {})
         values = spec.get("values", {})
-        unknown = set(group.props) - {"pins", "function", "phandle", *flags, *values}
+        if "pinmux" in spec:
+            known = {"pinmux", "phandle"}
+            first = spec["pinmux"].format(value=pin)
+        else:
+            known = {"pins", "function", "phandle"}
+            first = spec["pin"].format(
+                pin=pin, function=group.string("function").upper()
+            )
+        unknown = set(group.props) - {*known, *flags, *values}
         if unknown:
             raise DtError(f"{group.path}: unsupported {sorted(unknown)}")
-        parts = [spec["pin"].format(pin=pin, function=group.string("function").upper())]
+        parts = [first]
         parts += [name for prop, name in flags.items() if group.has(prop)]
         parts += [
             name.format(value=group.u32(prop))
@@ -1057,7 +1065,11 @@ class Generator:
         pins = [
             self._pin(spec.pinctrl, pin, group)
             for group in state.children
-            for pin in group.strings("pins")
+            for pin in (
+                group.u32s("pinmux")
+                if "pinmux" in spec.pinctrl
+                else group.strings("pins")
+            )
         ]
         out = self.outputs[instance_file(spec)]
         out.includes.add("devicetree/devices.h")

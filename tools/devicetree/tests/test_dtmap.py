@@ -230,6 +230,46 @@ def test_pin_states_go_to_the_pin_controller(tmp_path):
     assert "extern const struct pin_state dt_bus_default;" in gen.header()
 
 
+def test_pin_states_from_pinmux_cells(tmp_path):
+    data = {
+        **SPECS["acme,pinctrl"],
+        "pinctrl": {
+            "define": "PIN_STATE",
+            "pinmux": "PINMUX({value:#x})",
+            "flags": {"bias-disable": "NO_PULL"},
+            "values": {"slew-rate": "SLEW_{value}"},
+        },
+    }
+    dts = DTS.replace(
+        """                pins = "PA1";
+                function = "scl";
+                input-enable;
+                drive-strength = <8>;""",
+        """                pinmux = <0x0905>, <0x0a05>;
+                bias-disable;
+                slew-rate = <2>;""",
+        1,
+    )
+    gen = generate(
+        tmp_path, specs={"acme,pinctrl": spec("acme,pinctrl", data)}, dts=dts
+    )
+    pinctrl = instances(gen, "acme_pinctrl")
+    assert (
+        "PIN_STATE(dt_bus_default, PINMUX(0x905) | NO_PULL | SLEW_2, PINMUX(0xa05) | NO_PULL | "
+        "SLEW_2);" in pinctrl
+    )
+
+
+def test_pin_controller_needs_one_pin_format():
+    data = {**SPECS["acme,pinctrl"]}
+    data["pinctrl"] = {**data["pinctrl"], "pinmux": "PINMUX({value})"}
+    with pytest.raises(DtError, match="one of 'pin' and 'pinmux'"):
+        spec("acme,pinctrl", data)
+    data["pinctrl"] = {"define": "PIN_STATE"}
+    with pytest.raises(DtError, match="one of 'pin' and 'pinmux'"):
+        spec("acme,pinctrl", data)
+
+
 def test_unused_pin_states_are_left_out(tmp_path):
     gen = generate(tmp_path)
     assert "PA2" not in body(gen)
