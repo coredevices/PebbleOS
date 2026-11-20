@@ -40,6 +40,14 @@ PBL_WEAK pbl_tick_t pbl_delayed_work_remaining(const struct pbl_delayed_work *dw
   return 0U;
 }
 
+PBL_WEAK void pbl_work_init(struct pbl_work *work, pbl_work_fn_t fn) {
+  *work = (struct pbl_work)PBL_WORK_INITIALIZER(fn);
+}
+
+PBL_WEAK bool pbl_work_submit(struct pbl_workq *q, struct pbl_work *work) {
+  return true;
+}
+
 PBL_WEAK bool pbl_work_is_running(const struct pbl_work *work) {
   return false;
 }

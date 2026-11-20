@@ -4,7 +4,7 @@
 #ifdef CONFIG_ORIENTATION_MANAGER
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/display.h>
-#include <pbl/drivers/mag.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/services/compositor/compositor_private.h>
 #include <pbl/services/orientation_manager.h>
 
@@ -23,7 +23,7 @@ void prv_change_orientation(bool rotated) {
   input_buttons_set_rotated(rotated);
   (void)pbl_accel_set_rotated(ACCEL, rotated);
 #ifdef CONFIG_MAG
-  (void)pbl_mag_set_rotated(MAG, rotated);
+  pbl_sensor_set_rotated(MAG, rotated);
 #endif
 #ifdef CONFIG_SERVICE_TOUCH
   touch_set_rotated(rotated);
