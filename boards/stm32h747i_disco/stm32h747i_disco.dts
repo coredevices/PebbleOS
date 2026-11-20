@@ -1,0 +1,41 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "st/stm32h747xi.dtsi"
+#include "stm32h747i_disco-pinctrl.dtsi"
+
+/ {
+	model = "STMicroelectronics STM32H747I-DISCO";
+	compatible = "st,stm32h747i-disco", "st,stm32h747";
+};
+
+&clk_hse {
+	clock-frequency = <25000000>;
+};
+
+// The SMPS supplies VCORE, as the kit ships
+&pwr {
+	st,supply-config = "direct-smps";
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&internal_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		// Bank 1, where the Cortex-M7 boots from
+		partition@0 {
+			label = "code";
+			reg = <0x0 0x100000>;
+		};
+	};
+};

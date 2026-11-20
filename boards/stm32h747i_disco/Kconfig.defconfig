@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# 2 MiB of embedded flash: bank 1 for the Cortex-M7, bank 2 for the Cortex-M4.
+config FLASH_SIZE
+    default 0x200000
