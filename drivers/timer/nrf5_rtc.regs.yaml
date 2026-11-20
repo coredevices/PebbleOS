@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The system timer runs before the devices are up
+config: TIMER_NRF5_RTC
+labels:
+  - rtc1
