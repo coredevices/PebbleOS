@@ -68,7 +68,8 @@ extern const struct pbl_audio_dai_ops pbl_audio_sf32lb52_audcodec_ops;
   PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                                \
   static struct pbl_audio_sf32lb52_audcodec_state sym##_audcodec_state;                           \
   PBL_DEVICE_INSTANCE(sym, struct pbl_audio_sf32lb52_audcodec, struct pbl_audio_dai, dai) {       \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_PLAYBACK, &pbl_audio_sf32lb52_audcodec_ops),  \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_sf32lb52_audcodec_ops,              \
+                              PBL_AUDIO_PLAYBACK),                                                \
     .base = (_base), .clk = _clk, .dma = (_dma), .pmuc = (_pmuc), .state = &sym##_audcodec_state, \
   }
 
@@ -114,21 +115,22 @@ extern const struct pbl_audio_dai_ops pbl_audio_sf32lb52_pdm_ops;
  * @param _dma DMA channel.
  * @param _pinctrl Default state of the clock and data pins.
  */
-#define PBL_AUDIO_SF32LB52_PDM_DEFINE(sym, _name, _base, _irq, _clk, _rst, _dma, _pinctrl) \
-  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                         \
-  static struct pbl_audio_sf32lb52_pdm_state sym##_pdm_state;                              \
-  static const struct pbl_pinctrl sym##_pdm_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_sf32lb52_pdm, struct pbl_audio_dai, dai){      \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, PBL_AUDIO_CAPTURE, &pbl_audio_sf32lb52_pdm_ops), \
-    .base = (_base),                                                                       \
-    .irq = (_irq),                                                                         \
-    .clk = _clk,                                                                           \
-    .rst = _rst,                                                                           \
-    .dma = (_dma),                                                                         \
-    .pinctrl = &sym##_pdm_pins,                                                            \
-    .state = &sym##_pdm_state,                                                             \
-  };                                                                                       \
-  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_SF32LB52_PDM_IRQ_PRIO,                            \
+#define PBL_AUDIO_SF32LB52_PDM_DEFINE(sym, _name, _base, _irq, _clk, _rst, _dma, _pinctrl)       \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                               \
+  static struct pbl_audio_sf32lb52_pdm_state sym##_pdm_state;                                    \
+  static const struct pbl_pinctrl sym##_pdm_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_sf32lb52_pdm, struct pbl_audio_dai, dai){            \
+    .dai =                                                                                       \
+        PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_sf32lb52_pdm_ops, PBL_AUDIO_CAPTURE), \
+    .base = (_base),                                                                             \
+    .irq = (_irq),                                                                               \
+    .clk = _clk,                                                                                 \
+    .rst = _rst,                                                                                 \
+    .dma = (_dma),                                                                               \
+    .pinctrl = &sym##_pdm_pins,                                                                  \
+    .state = &sym##_pdm_state,                                                                   \
+  };                                                                                             \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_SF32LB52_PDM_IRQ_PRIO,                                  \
                       pbl_audio_sf32lb52_pdm_irq_handler, &sym##_inst, 0)
 
 /**

@@ -400,13 +400,14 @@ extern const struct pbl_audio *const MIC;
  *
  * @param sym Symbol of the instance, as passed to PBL_AUDIO_DAI_STATE_DEFINE().
  * @param _name Device name.
- * @param _dir Direction, one of @ref pbl_audio_dir.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
+ * @param _dir Direction, one of @ref pbl_audio_dir.
  */
-#define PBL_AUDIO_DAI_INIT(sym, _name, _dir, _ops)                                                \
+#define PBL_AUDIO_DAI_INIT(sym, _name, _parent, _ops, _dir)                                       \
   {                                                                                               \
     .dev =                                                                                        \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, nullptr, &pbl_audio_dai_class), \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, _parent, &pbl_audio_dai_class), \
     .ops = (_ops),                                                                                \
     .state = &sym##_dai_state,                                                                    \
     .dir = (_dir),                                                                                \

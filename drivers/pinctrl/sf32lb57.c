@@ -106,12 +106,12 @@ static const struct pbl_pinctrl_controller_ops s_ops = {
   .get = prv_get,
 };
 
-#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base)                                            \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb57, struct pbl_pinctrl_controller, ctrl) {    \
-    .ctrl =                                                                                       \
-        PBL_PINCTRL_CONTROLLER_INIT(sym, _name, &s_ops, NUM_SA_PADS + NUM_SB_PADS + NUM_PA_PADS), \
-    .base = (_base),                                                                              \
+#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base)                                         \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb57, struct pbl_pinctrl_controller, ctrl) { \
+    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &s_ops,                           \
+                                        NUM_SA_PADS + NUM_SB_PADS + NUM_PA_PADS),              \
+    .base = (_base),                                                                           \
   }
 
 #define PBL_PINCTRL_SF32LB57_DT_STATE(sym, ...)       \

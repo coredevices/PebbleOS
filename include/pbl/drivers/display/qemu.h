@@ -50,7 +50,7 @@ extern const struct pbl_display_ops pbl_display_qemu_ops;
   PBL_DISPLAY_STATE_DEFINE(sym);                                                       \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_qemu, struct pbl_display, disp) {        \
     .disp = PBL_DISPLAY_INIT(                                                          \
-        sym, _name, &pbl_display_qemu_ops, _width, _height,                            \
+        sym, _name, nullptr, &pbl_display_qemu_ops, _width, _height,                   \
         ((_bpp) == 1) ? PBL_DISPLAY_FORMAT_MONO : PBL_DISPLAY_FORMAT_ARGB2222, false,  \
         .round_mask = (_round) ? pbl_panel_ls013b7dd02_round_mask : nullptr),          \
     .base = (_base), .fb = (_fb),                                                      \

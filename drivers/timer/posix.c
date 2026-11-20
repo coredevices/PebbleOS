@@ -29,7 +29,7 @@ static const struct pbl_clocksource_ops s_cs_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_host_cs);
 static const struct pbl_clocksource s_host_cs =
-    PBL_CLOCKSOURCE_INIT(s_host_cs, "host", prv_cs_init, &s_cs_ops, 32);
+    PBL_CLOCKSOURCE_INIT(s_host_cs, "host", prv_cs_init, nullptr, &s_cs_ops, 32);
 
 const struct pbl_clocksource *const pbl_system_clocksource = &s_host_cs;
 
@@ -61,7 +61,7 @@ static const struct pbl_clockevent_ops s_ce_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_host_ce);
 static const struct pbl_clockevent s_host_ce =
-    PBL_CLOCKEVENT_INIT(s_host_ce, "host", prv_ce_init, &s_ce_ops, 1U, UINT32_MAX);
+    PBL_CLOCKEVENT_INIT(s_host_ce, "host", prv_ce_init, nullptr, &s_ce_ops, 1U, UINT32_MAX);
 
 const struct pbl_clockevent *const pbl_system_clockevent = &s_host_ce;
 

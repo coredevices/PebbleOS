@@ -38,11 +38,11 @@ extern const struct pbl_rtc pbl_rtc_sf32lb;
  * @param _base Registers.
  * @param _cfg HPSYS configuration registers.
  */
-#define PBL_RTC_SF32LB_DEFINE(sym, _name, _base, _cfg)                                          \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                 \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rtc_sf32lb, struct pbl_rtc, rtc) {                        \
-    .rtc = PBL_RTC_INIT(sym, _name, pbl_rtc_sf32lb_init, &pbl_rtc_sf32lb_ops), .base = (_base), \
-    .cfg = (_cfg),                                                                              \
+#define PBL_RTC_SF32LB_DEFINE(sym, _name, _base, _cfg)                                  \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rtc_sf32lb, struct pbl_rtc, rtc) {                \
+    .rtc = PBL_RTC_INIT(sym, _name, pbl_rtc_sf32lb_init, nullptr, &pbl_rtc_sf32lb_ops), \
+    .base = (_base), .cfg = (_cfg),                                                     \
   }
 
 /** @brief The SF32LB RTC. */

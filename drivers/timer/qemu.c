@@ -21,7 +21,7 @@ static int prv_init(const struct pbl_device *dev);
 
 PBL_DEVICE_STATE_DEFINE(s_rtc_counter);
 static const struct pbl_clocksource s_rtc_counter =
-    PBL_CLOCKSOURCE_INIT(s_rtc_counter, "rtc-counter", prv_init, &s_ops, 32);
+    PBL_CLOCKSOURCE_INIT(s_rtc_counter, "rtc-counter", prv_init, nullptr, &s_ops, 32);
 
 const struct pbl_clocksource *const pbl_system_clocksource = &s_rtc_counter;
 

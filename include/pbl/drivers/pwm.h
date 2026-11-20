@@ -135,11 +135,12 @@ struct pbl_pwm_controller {
  * PBL_PWM_CONTROLLER_STATE_DEFINE().
  * @param _name Name.
  * @param _init Device init function, or NULL.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_PWM_CONTROLLER_INIT(sym, _name, _init, _ops)                      \
+#define PBL_PWM_CONTROLLER_INIT(sym, _name, _init, _parent, _ops)             \
   {                                                                           \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_pwm_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_pwm_class), \
     .ops = (_ops),                                                            \
     .states = sym##_pwm_states,                                               \
     .num_channels = sizeof(sym##_pwm_states) / sizeof(sym##_pwm_states[0]),   \

@@ -51,6 +51,11 @@ core pieces:
 - `PBL_DEVICE_REGISTER(sym, dev)` adds a pointer to the device to the device
   table, the `devices` iterable section.
 
+A device class wraps `PBL_DEVICE_INIT_CLASS()` in its own init macro, which
+takes `(sym, name, init, parent, ops, ...)`: the device init only for classes
+whose drivers bring the device up themselves, the parent always, `NULL` for
+none, then what the class needs.
+
 Things that are not devices of their own (a pin, a bus address) are plain
 structs that point at their device.
 

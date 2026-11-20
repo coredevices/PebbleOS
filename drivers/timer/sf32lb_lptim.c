@@ -72,11 +72,11 @@ static const struct pbl_clockevent_ops s_ce_ops = {
 
 PBL_DEVICE_STATE_DEFINE(s_lptim1_cs);
 static const struct pbl_clocksource s_lptim1_cs =
-    PBL_CLOCKSOURCE_INIT(s_lptim1_cs, "lptim1", prv_init, &s_cs_ops, 24);
+    PBL_CLOCKSOURCE_INIT(s_lptim1_cs, "lptim1", prv_init, nullptr, &s_cs_ops, 24);
 
 PBL_DEVICE_STATE_DEFINE(s_lptim1_ce);
-static const struct pbl_clockevent s_lptim1_ce =
-    PBL_CLOCKEVENT_INIT(s_lptim1_ce, "lptim1", prv_init, &s_ce_ops, MIN_DELTA, LPTIM_ARR_MASK / 2U);
+static const struct pbl_clockevent s_lptim1_ce = PBL_CLOCKEVENT_INIT(
+    s_lptim1_ce, "lptim1", prv_init, nullptr, &s_ce_ops, MIN_DELTA, LPTIM_ARR_MASK / 2U);
 
 const struct pbl_clocksource *const pbl_system_clocksource = &s_lptim1_cs;
 const struct pbl_clockevent *const pbl_system_clockevent = &s_lptim1_ce;

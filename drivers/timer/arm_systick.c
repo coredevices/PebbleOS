@@ -49,7 +49,7 @@ static int prv_init(const struct pbl_device *dev);
 
 PBL_DEVICE_STATE_DEFINE(s_systick);
 static const struct pbl_clockevent s_systick =
-    PBL_CLOCKEVENT_INIT(s_systick, "systick", prv_init, &s_ops, 64U, SYST_RVR_MAX);
+    PBL_CLOCKEVENT_INIT(s_systick, "systick", prv_init, nullptr, &s_ops, 64U, SYST_RVR_MAX);
 
 const struct pbl_clockevent *const pbl_system_clockevent = &s_systick;
 

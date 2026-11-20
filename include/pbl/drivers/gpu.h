@@ -199,12 +199,13 @@ extern const struct pbl_gpu *const GPU;
  *
  * @param sym Symbol of the GPU instance, with its state defined by PBL_GPU_STATE_DEFINE().
  * @param _name Name.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param ... Capabilities, designated initializers of struct pbl_gpu_caps.
  */
-#define PBL_GPU_INIT(sym, _name, _ops, ...)                                              \
+#define PBL_GPU_INIT(sym, _name, _parent, _ops, ...)                                     \
   {                                                                                      \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_dev_init, nullptr, &pbl_gpu_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_dev_init, _parent, &pbl_gpu_class), \
     .ops = (_ops), .state = &sym##_gpu_state, .caps = {                                  \
       __VA_ARGS__                                                                        \
     }                                                                                    \

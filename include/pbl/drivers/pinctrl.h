@@ -67,12 +67,13 @@ struct pbl_pinctrl_controller {
  * @param sym Symbol of the controller instance, with its state defined by
  * PBL_DEVICE_STATE_DEFINE().
  * @param _name Name.
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _num_pads Number of pads.
  */
-#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _ops, _num_pads)                    \
+#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _parent, _ops, _num_pads)           \
   {                                                                                 \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, &pbl_pinctrl_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, _parent, &pbl_pinctrl_class), \
     .ops = (_ops),                                                                  \
     .num_pads = (_num_pads),                                                        \
   }

@@ -88,12 +88,13 @@ struct pbl_clockevent {
  * @param _name Name.
  * @param _init Init function, which must set the rate with pbl_clocksource_set_hz() or
  *              pbl_clocksource_set_mhz().
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _bits Counter width.
  */
-#define PBL_CLOCKSOURCE_INIT(sym, _name, _init, _ops, _bits)                          \
+#define PBL_CLOCKSOURCE_INIT(sym, _name, _init, _parent, _ops, _bits)                 \
   {                                                                                   \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_clocksource_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_clocksource_class), \
     .ops = (_ops),                                                                    \
     .mask = (uint32_t)((1ULL << (_bits)) - 1U),                                       \
   }
@@ -104,13 +105,14 @@ struct pbl_clockevent {
  * @param sym Symbol of the device instance, with its state defined by PBL_DEVICE_STATE_DEFINE().
  * @param _name Name.
  * @param _init Init function, which must set the rate with pbl_clockevent_set_hz().
+ * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _min Shortest delay, in cycles.
  * @param _max Longest delay, in cycles.
  */
-#define PBL_CLOCKEVENT_INIT(sym, _name, _init, _ops, _min, _max)                     \
+#define PBL_CLOCKEVENT_INIT(sym, _name, _init, _parent, _ops, _min, _max)            \
   {                                                                                  \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_clockevent_class), \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_clockevent_class), \
     .ops = (_ops),                                                                   \
     .min_delta = (_min),                                                             \
     .max_delta = (_max),                                                             \

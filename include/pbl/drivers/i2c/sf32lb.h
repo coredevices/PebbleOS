@@ -97,7 +97,7 @@ extern const struct pbl_i2c_bus_ops pbl_i2c_sf32lb_ops;
   PBL_I2C_BUS_STATE_DEFINE(sym);                                                        \
   static struct pbl_i2c_sf32lb_state sym##_sf32lb_state;                                \
   PBL_DEVICE_INSTANCE(sym, struct pbl_i2c_sf32lb, struct pbl_i2c_bus, bus){             \
-    .bus = PBL_I2C_BUS_INIT(sym, _name, &pbl_i2c_sf32lb_ops),                           \
+    .bus = PBL_I2C_BUS_INIT(sym, _name, nullptr, &pbl_i2c_sf32lb_ops),                  \
     .state = &sym##_sf32lb_state,                                                       \
     .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),                                       \
     .dma = (_dma),                                                                      \

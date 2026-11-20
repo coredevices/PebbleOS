@@ -165,17 +165,18 @@ void pbl_mbox_poll(struct pbl_timer *timer);
  * @param sym Controller symbol, with its PBL_MBOX_CONTROLLER_STATE_DEFINE().
  * @param _name Device name.
  * @param _init Device init function.
+ * @param _parent Parent device, or NULL.
  * @param _ops Operations.
  * @param _txpoll_period_ms Completion poll period in milliseconds, 0 for none.
  */
-#define PBL_MBOX_CONTROLLER_INIT(sym, _name, _init, _ops, _txpoll_period_ms)   \
-  {                                                                            \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_mbox_class), \
-    .ops = (_ops),                                                             \
-    .state = &sym##_mbox_ctrl_state,                                           \
-    .chans = sym##_mbox_chans,                                                 \
-    .num_chans = sizeof(sym##_mbox_chans) / sizeof(sym##_mbox_chans[0]),       \
-    .txpoll_period_ms = (_txpoll_period_ms),                                   \
+#define PBL_MBOX_CONTROLLER_INIT(sym, _name, _init, _parent, _ops, _txpoll_period_ms) \
+  {                                                                                   \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_mbox_class),        \
+    .ops = (_ops),                                                                    \
+    .state = &sym##_mbox_ctrl_state,                                                  \
+    .chans = sym##_mbox_chans,                                                        \
+    .num_chans = sizeof(sym##_mbox_chans) / sizeof(sym##_mbox_chans[0]),              \
+    .txpoll_period_ms = (_txpoll_period_ms),                                          \
   }
 
 /**
