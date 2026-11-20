@@ -27,7 +27,6 @@
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
 #include <process_management/app_install_manager.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
@@ -163,8 +162,7 @@ static PBL_MUTEX_DEFINE(s_mutex);
 static bool prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = status_from_errno(pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE));
-  bool success = rv == S_SUCCESS;
+  bool success = pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE) == 0;
   if (!success) {
     pbl_mutex_unlock(&s_mutex);
   }
@@ -253,8 +251,7 @@ static time_t prv_get_alarm_time(const Alarm *alarm, time_t cron_time) {
 
 // ----------------------------------------------------------------------------------------------
 //! Pin add helper
-static status_t prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time,
-                            Uuid *uuid_out) {
+static int prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time, Uuid *uuid_out) {
   const AlarmType type = config->is_smart ? AlarmType_Smart : AlarmType_Basic;
   return alarm_pin_add(alarm_time, id, type, config->kind, uuid_out);
 }
@@ -285,11 +282,11 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
       pbl_localtime_r(&alarm_time, local_alarm_time);
       if (alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
         Uuid *pinid = (Uuid *)&settings_file_buffer[num_pin_adds * UUID_SIZE];
-        status_t rv = prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
-        if (rv == S_SUCCESS) {
+        int rv = prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
+        if (rv == 0) {
           num_pin_adds++;
         } else {
-          PBL_LOG_ERR("Could not add alarm %u pin: %" PRId32, alarm->id, rv);
+          PBL_LOG_ERR("Could not add alarm %u pin: %d", alarm->id, rv);
         }
       }
     }
@@ -298,10 +295,10 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
-  status_t rv = status_from_errno(
-      pbl_settings_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds));
-  if (rv != S_SUCCESS) {
-    PBL_LOG_ERR("Could not save alarm %u pin IDs: %" PRId32, alarm->id, rv);
+  int rv =
+      pbl_settings_set(file, &key, sizeof(key), settings_file_buffer, UUID_SIZE * num_pin_adds);
+  if (rv < 0) {
+    PBL_LOG_ERR("Could not save alarm %u pin IDs: %d", alarm->id, rv);
     for (int i = 0; i < num_pin_adds; ++i) {
       alarm_pin_remove((Uuid *)&settings_file_buffer[i * UUID_SIZE]);
     }
@@ -390,10 +387,10 @@ static void prv_persist_armed_alarm(struct pbl_settings_file *file) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) {
+static int prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) {
   Uuid *tracked = pbl_malloc_check(MAX_CONFIGURED_ALARMS * ALARM_ENTRY_SIZE);
   size_t tracked_count = 0;
-  status_t rv = S_SUCCESS;
+  int rv = 0;
 
   for (AlarmId id = 0; id < MAX_CONFIGURED_ALARMS; ++id) {
     AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
@@ -405,15 +402,14 @@ static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) 
     if (size == 0 || size > ALARM_ENTRY_SIZE || size % UUID_SIZE != 0) {
       continue;
     }
-    rv =
-        status_from_errno(pbl_settings_get(file, &key, sizeof(key), &tracked[tracked_count], size));
-    if (rv != S_SUCCESS) {
+    rv = pbl_settings_get(file, &key, sizeof(key), &tracked[tracked_count], size);
+    if (rv < 0) {
       break;
     }
     tracked_count += size / UUID_SIZE;
   }
 
-  if (rv == S_SUCCESS) {
+  if (rv == 0) {
     rv = alarm_pin_remove_untracked_future(pbl_realtime(), tracked, tracked_count);
   }
   pbl_free(tracked);
@@ -426,9 +422,9 @@ static status_t prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) 
 static bool prv_reload_alarms(struct pbl_settings_file *file) {
   bool alarm_found = false;
 
-  status_t rv = prv_remove_untracked_alarm_pins(file);
-  if (rv != S_SUCCESS) {
-    PBL_LOG_ERR("Could not remove untracked alarm pins: %" PRId32, rv);
+  int rv = prv_remove_untracked_alarm_pins(file);
+  if (rv < 0) {
+    PBL_LOG_ERR("Could not remove untracked alarm pins: %d", rv);
   }
 
   s_next_alarm_time = 0;
