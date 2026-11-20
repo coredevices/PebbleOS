@@ -3,24 +3,25 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/devicetree.h>
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/imu/lis2dw12/lis2dw12.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/lis2dw12/lis2dw12.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/imu/units.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DECLARE(driver_accel, CONFIG_DRIVER_IMU_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_sensor, CONFIG_DRIVER_SENSOR_LOG_LEVEL);
 
 // The single instance, for interrupt and timer contexts
 static const struct pbl_lis2dw12 *s_dev;
@@ -30,6 +31,8 @@ static const struct pbl_lis2dw12 *s_dev;
 // - Peeking returns the last FIFO sample when sampling is active, otherwise
 //   single-shot mode is used to perform the measurement
 // - Low-power mode 1 (12-bit) is always used (minimum power mode)
+// - Frames are reported in the sensor axes; the class applies the mount matrix
+//   and the rotation.
 // - ODR is limited to the [12.5, 200] Hz range
 // - Shake detection uses 12.5Hz when no active sampling is ongoing
 // - Wake-up duration absolute time depends on the ODR, a parameter that can
@@ -161,6 +164,20 @@ static const struct pbl_lis2dw12 *s_dev;
 #define LIS2DW12_CTRL7_INTERRUPTS_ENABLE PBL_BIT(5)
 #define LIS2DW12_CTRL7_INT2_ON_INT1      PBL_BIT(6)
 
+// Samples are 12-bit left-justified within a 16-bit little-endian word, so the raw word is the
+// 12-bit value << 4: raw words to micro-g
+#define LIS2DW12_UG_NUM (CONFIG_ACCEL_LIS2DW12_SCALE_MG * 1000)
+#define LIS2DW12_UG_DEN (LIS2DW12_S12_SCALE_RANGE << 4U)
+
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,11 +190,11 @@ static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
   return pbl_i2c_burst_read(&s_dev->i2c, reg, data, len) == 0;
 }
 
-static bool prv_lis2dw12_read_fifo(uint8_t samples) {
+static bool prv_lis2dw12_read_fifo(uint8_t *buf, uint8_t samples) {
   uint8_t reg = LIS2DW12_OUT_X_L;
   struct pbl_i2c_msg msgs[] = {
     {.buf = &reg, .len = 1U, .flags = PBL_I2C_MSG_WRITE},
-    {.buf = s_dev->state->raw_sample_buf,
+    {.buf = buf,
      .len = samples * LIS2DW12_SAMPLE_SIZE_BYTES,
      .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
   };
@@ -185,78 +202,37 @@ static bool prv_lis2dw12_read_fifo(uint8_t samples) {
   return pbl_i2c_transfer(&s_dev->i2c, msgs, PBL_ARRAY_SIZE(msgs)) == 0;
 }
 
-static int16_t prv_raw_to_s12(const uint8_t *raw) {
-  uint16_t val;
+// Report the samples read into buf, a buffer from pbl_sensor_buf_alloc(). Kept free of device
+// I/O so it can run after the I2C reads instead of in between them.
+static void prv_lis2dw12_process_samples(uint8_t *buf, uint8_t num_samples, uint64_t timestamp_us) {
+  struct pbl_lis2dw12_state *state = s_dev->state;
 
-  val = PBL_FIELD_GET(PBL_GENMASK(7, 4), raw[0]) | (raw[1] << 4U);
-  if (val & PBL_BIT(11)) {
-    val |= PBL_GENMASK(15, 12);
+  // Keep the most recent sample around for reads.
+  memcpy(state->last_sample, &buf[(num_samples - 1U) * LIS2DW12_SAMPLE_SIZE_BYTES],
+         LIS2DW12_SAMPLE_SIZE_BYTES);
+  state->last_sample_timestamp_us = timestamp_us;
+  state->last_sample_valid = true;
+
+  pbl_sensor_report(&s_dev->sensor, &(const struct pbl_sensor_batch){
+                                      .data = buf,
+                                      .chans = s_chans,
+                                      .num_chans = PBL_ARRAY_SIZE(s_chans),
+                                      .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
+                                      .num_frames = num_samples,
+                                      .timestamp_us = timestamp_us,
+                                      .interval_us = state->sampling_interval_us,
+                                    });
+}
+
+//! Buffer for a FIFO read, or NULL if the listener still holds all of them
+static uint8_t *prv_alloc_buf(void) {
+  uint8_t *buf = pbl_sensor_buf_alloc(&s_dev->sensor, nullptr);
+
+  if (buf == nullptr) {
+    PBL_LOG_WRN("No free buffer, leaving samples in the FIFO");
   }
 
-  return (int16_t)val;
-}
-
-static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
-  uint8_t offset;
-  int16_t val;
-
-  offset = s_dev->axis_map[axis];
-
-  val = s_dev->axis_dir[axis] *
-        (prv_raw_to_s12(&raw[offset * 2U]) * (int16_t)CONFIG_ACCEL_LIS2DW12_SCALE_MG) /
-        (int16_t)LIS2DW12_S12_SCALE_RANGE;
-
-  if (s_dev->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
-    val *= -1;
-  }
-
-  return val;
-}
-
-static void prv_raw_to_mg(const uint8_t *raw, struct pbl_accel_sample *sample) {
-  sample->x = prv_axis_raw_mg(AXIS_X, raw);
-  sample->y = prv_axis_raw_mg(AXIS_Y, raw);
-  sample->z = prv_axis_raw_mg(AXIS_Z, raw);
-}
-
-static uint64_t prv_get_curr_system_time_us(void) {
-  return pbl_realtime_ms() * 1000ULL;
-}
-
-// Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
-// device I/O so it can run after the I2C reads instead of in between them.
-static void prv_lis2dw12_process_samples(uint8_t num_samples, uint64_t timestamp_us) {
-  // Samples are 12-bit left-justified within a 16-bit little-endian word, so the
-  // raw word equals the 12-bit value << 4; scale the denominator by 16 to match.
-  int8_t rotate = s_dev->state->rotated ? -1 : 1;
-  AccelRawBatch batch = {
-    .data = s_dev->state->raw_sample_buf,
-    .num_samples = num_samples,
-    .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
-    .axis =
-        {
-          [AXIS_X] =
-              {.offset = s_dev->axis_map[AXIS_X] * 2U,
-               .sign = (int8_t)(s_dev->axis_dir[AXIS_X] * rotate)},
-          [AXIS_Y] =
-              {.offset = s_dev->axis_map[AXIS_Y] * 2U,
-               .sign = (int8_t)(s_dev->axis_dir[AXIS_Y] * rotate)},
-          [AXIS_Z] = {.offset = s_dev->axis_map[AXIS_Z] * 2U, .sign = s_dev->axis_dir[AXIS_Z]},
-        },
-    .scale_num = CONFIG_ACCEL_LIS2DW12_SCALE_MG,
-    .scale_den = LIS2DW12_S12_SCALE_RANGE << 4U,
-    .first_timestamp_us = timestamp_us,
-    .sampling_interval_us = s_dev->state->sampling_interval_us,
-  };
-
-  pbl_accel_report_samples(&s_dev->accel, &batch);
-
-  // Keep the most recent sample around for peeks.
-  uint8_t *last = &s_dev->state->raw_sample_buf[(num_samples - 1) * LIS2DW12_SAMPLE_SIZE_BYTES];
-  prv_raw_to_mg(last, &s_dev->state->last_sample);
-  s_dev->state->last_sample.timestamp_us =
-      timestamp_us + (num_samples - 1) * s_dev->state->sampling_interval_us;
-  s_dev->state->last_sample_valid = true;
+  return buf;
 }
 
 static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
@@ -298,54 +274,56 @@ static void prv_lis2dw12_drain_fifo(void) {
     return;
   }
 
-  if (!prv_lis2dw12_read_fifo(samples)) {
+  uint8_t *buf = prv_alloc_buf();
+  if (buf == nullptr) {
+    return;
+  }
+
+  if (!prv_lis2dw12_read_fifo(buf, samples)) {
+    pbl_sensor_buf_free(&s_dev->sensor, buf);
     PBL_LOG_ERR("Failed to read samples");
     return;
   }
 
-  prv_lis2dw12_process_samples(samples, prv_get_curr_system_time_us());
+  prv_lis2dw12_process_samples(buf, samples, pbl_uptime_us());
   s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
 }
 
 static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
-  struct pbl_accel_sample sample = {};
-  IMUCoordinateAxis axis = AXIS_Z;
+  uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES] = {0U};
+  uint8_t axis = PBL_SENSOR_AXIS_Z;
   int16_t val = 0;
   bool found = false;
 
   if (s_dev->state->num_samples > 0U) {
     prv_lis2dw12_drain_fifo();
     if (s_dev->state->last_sample_valid) {
-      sample = s_dev->state->last_sample;
+      memcpy(raw, s_dev->state->last_sample, sizeof(raw));
     }
-  } else {
-    uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
-
-    if (prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw))) {
-      prv_raw_to_mg(raw, &sample);
-    } else {
-      PBL_LOG_ERR("Failed to read sample");
-    }
+  } else if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw))) {
+    PBL_LOG_ERR("Failed to read sample");
   }
 
-  const int16_t vals[] = {[AXIS_X] = sample.x, [AXIS_Y] = sample.y, [AXIS_Z] = sample.z};
-  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
-    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(s_dev->axis_map[a])) == 0U) {
+  for (uint8_t a = PBL_SENSOR_AXIS_X; a <= PBL_SENSOR_AXIS_Z; a++) {
+    int16_t v;
+
+    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(a)) == 0U) {
       continue;
     }
 
-    if (!found || PBL_ABS(vals[a]) > PBL_ABS(val)) {
+    v = (int16_t)pbl_get_le16(&raw[a * 2U]);
+    if (!found || PBL_ABS(v) > PBL_ABS(val)) {
       axis = a;
-      val = vals[a];
+      val = v;
       found = true;
     }
   }
 
-  pbl_accel_report_event(&s_dev->accel, &(const struct pbl_accel_event){
-                                          .type = PBL_ACCEL_EVENT_SHAKE,
-                                          .axis = axis,
-                                          .direction = (val < 0) ? -1 : 1,
-                                        });
+  pbl_sensor_report_event(&s_dev->sensor, &(const struct pbl_sensor_event){
+                                            .type = PBL_SENSOR_EVENT_SHAKE,
+                                            .axis = axis,
+                                            .direction = (val < 0) ? -1 : 1,
+                                          });
 }
 
 static void prv_lis2dw12_recover(void);
@@ -361,6 +339,7 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
   bool shake = false;
   uint8_t samples = 0U;
   uint64_t timestamp_us = 0U;
+  uint8_t *buf = nullptr;
 
   // Read all device registers back-to-back to keep the I2C critical section
   // short, then convert/dispatch below. The sample processing has no dependency
@@ -378,11 +357,18 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
     } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
       samples = PBL_FIELD_GET(LIS2DW12_FIFO_SAMPLES_DIFF_MASK, val);
       if (samples > 0U) {
-        if (!prv_lis2dw12_read_fifo(samples)) {
+        buf = prv_alloc_buf();
+        if (buf == nullptr) {
+          // Nothing lost, the samples stay queued until a buffer is free
+          return true;
+        }
+
+        if (!prv_lis2dw12_read_fifo(buf, samples)) {
+          pbl_sensor_buf_free(&s_dev->sensor, buf);
           PBL_LOG_ERR("Failed to read samples");
           return false;
         }
-        timestamp_us = prv_get_curr_system_time_us();
+        timestamp_us = pbl_uptime_us();
         s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
       }
     }
@@ -392,6 +378,9 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
     ret = prv_lis2dw12_read(LIS2DW12_WAKE_UP_SRC, &wake_up_src, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
+      if (buf != nullptr) {
+        pbl_sensor_buf_free(&s_dev->sensor, buf);
+      }
       return false;
     }
 
@@ -404,7 +393,7 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
     action_taken = true;
     *fifo_progress = true;
   } else if (samples > 0U) {
-    prv_lis2dw12_process_samples(samples, timestamp_us);
+    prv_lis2dw12_process_samples(buf, samples, timestamp_us);
     action_taken = true;
     *fifo_progress = true;
   }
@@ -429,9 +418,9 @@ static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
 static void prv_work_cb(void *data) {
   void (*work)(void) = data;
 
-  pbl_accel_lock(&s_dev->accel);
+  pbl_sensor_lock(&s_dev->sensor);
   work();
-  pbl_accel_unlock(&s_dev->accel);
+  pbl_sensor_unlock(&s_dev->sensor);
 }
 
 //! Run driver work on the timer task, with the device lock held
@@ -692,12 +681,12 @@ static void prv_int1_wdt_cb(struct pbl_work *work) {
 // Accelerometer interface
 ////////////////////////////////////////////////////////////////////////////////
 
-static int prv_init(const struct pbl_accel *accel) {
+static int prv_init(const struct pbl_sensor *sensor) {
   bool ret;
   int err;
   uint8_t val;
 
-  s_dev = PBL_CONTAINER_OF(accel, const struct pbl_lis2dw12, accel);
+  s_dev = PBL_CONTAINER_OF(sensor, const struct pbl_lis2dw12, sensor);
 
   // Check device ID
   ret = prv_lis2dw12_read(LIS2DW12_WHO_AM_I, &val, 1);
@@ -829,8 +818,7 @@ static int prv_init(const struct pbl_accel *accel) {
   return 0;
 }
 
-static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
-                                     uint32_t *actual_us) {
+static int prv_set_sampling_interval(uint32_t interval_us, uint32_t *actual_us) {
   // FIXME: we should technically stop and drain the FIFO here, otherwise
   // we may report existing samples in the FIFO buffer with an incorrect timestamp
 
@@ -853,15 +841,7 @@ static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t int
   return 0;
 }
 
-static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
-  return s_dev->state->sampling_interval_us;
-}
-
-static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
-  return LIS2DW12_FIFO_SIZE;
-}
-
-static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
+static int prv_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;
 
@@ -925,13 +905,17 @@ static bool prv_data_ready(bool *read_ok) {
   return !*read_ok || (status & LIS2DW12_STATUS_DRDY) != 0U;
 }
 
-static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data) {
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;
   uint8_t ctrl1_bck;
   uint8_t ctrl3;
-  uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES];
+  uint8_t *raw = frame->data;
+
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
 
   // If sampling is active, the FIFO batches samples for subscribers, so the
   // cached sample can be a full watermark period old. The FIFO is read through
@@ -951,7 +935,8 @@ static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data
     if (!s_dev->state->last_sample_valid) {
       return -EIO;
     }
-    *data = s_dev->state->last_sample;
+    memcpy(raw, s_dev->state->last_sample, LIS2DW12_SAMPLE_SIZE_BYTES);
+    frame->timestamp_us = s_dev->state->last_sample_timestamp_us;
     return 0;
   }
 
@@ -1001,16 +986,14 @@ static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data
   }
 
   // Read sample
-  ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw));
+  ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, LIS2DW12_SAMPLE_SIZE_BYTES);
   if (!ret) {
     PBL_LOG_ERR("Failed to read sample");
     err = -EIO;
     goto end;
   }
 
-  // Convert to mg and populate timestamp
-  prv_raw_to_mg(raw, data);
-  data->timestamp_us = prv_get_curr_system_time_us();
+  frame->timestamp_us = pbl_uptime_us();
 
 end:
   // Restore CTRL1 (back to previous state, e.g. power-down or shake ODR)
@@ -1019,7 +1002,7 @@ end:
   return err;
 }
 
-static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
+static int prv_set_shake_detection(bool on) {
   bool ret;
 
   if (on && s_dev->int1.intc == nullptr) {
@@ -1060,25 +1043,7 @@ static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
   return 0;
 }
 
-static int prv_set_shake_sensitivity_high(const struct pbl_accel *accel, bool sensitivity_high) {
-  bool ret;
-  uint8_t val;
-
-  val = PBL_FIELD_PREP(LIS2DW12_WAKE_UP_THS_WK_THS_MASK, sensitivity_high
-                                                             ? CONFIG_ACCEL_LIS2DW12_WK_THS_MIN
-                                                             : s_dev->state->wk_ths_curr);
-  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
-    return -EIO;
-  }
-
-  PBL_LOG_DBG("Configured shake sensitivity to %s", sensitivity_high ? "high" : "normal");
-
-  return 0;
-}
-
-static int prv_set_shake_sensitivity_percent(const struct pbl_accel *accel, uint8_t percent) {
+static int prv_set_shake_sensitivity_percent(uint8_t percent) {
   bool ret;
   uint8_t val;
   uint8_t raw;
@@ -1102,24 +1067,64 @@ static int prv_set_shake_sensitivity_percent(const struct pbl_accel *accel, uint
   return 0;
 }
 
-static int prv_set_rotated(const struct pbl_accel *accel, bool rotated) {
-  s_dev->state->rotated = rotated;
-  PBL_LOG_DBG("Set rotated state to %s", rotated ? "true" : "false");
+static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  uint32_t actual_us;
+  int ret;
 
-  return 0;
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      if (*val < 0) {
+        return -EINVAL;
+      }
+      ret = prv_set_sampling_interval((uint32_t)*val, &actual_us);
+      if (ret == 0) {
+        *val = (int32_t)actual_us;
+      }
+      return ret;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = PBL_CLAMP(*val, 0, LIS2DW12_FIFO_SIZE);
+      return prv_set_num_samples((uint32_t)*val);
+    case PBL_SENSOR_ATTR_SHAKE_SENSITIVITY:
+      *val = PBL_CLAMP(*val, 0, 100);
+      return prv_set_shake_sensitivity_percent((uint8_t)*val);
+    default:
+      return -ENOTSUP;
+  }
 }
 
-const struct pbl_accel_ops pbl_lis2dw12_ops = {
+static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      *val = (int32_t)s_dev->state->sampling_interval_us;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = s_dev->state->num_samples;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH_MAX:
+      *val = LIS2DW12_FIFO_SIZE;
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_set_event(const struct pbl_sensor *sensor, enum pbl_sensor_event_type type,
+                         bool on) {
+  if (type != PBL_SENSOR_EVENT_SHAKE) {
+    return -ENOTSUP;
+  }
+
+  return prv_set_shake_detection(on);
+}
+
+const struct pbl_sensor_ops pbl_lis2dw12_ops = {
   .init = prv_init,
-  .set_rotated = prv_set_rotated,
-  .set_sampling_interval = prv_set_sampling_interval,
-  .get_sampling_interval = prv_get_sampling_interval,
-  .set_num_samples = prv_set_num_samples,
-  .get_max_num_samples = prv_get_max_num_samples,
-  .peek = prv_peek,
-  .set_shake_detection = prv_set_shake_detection,
-  .set_shake_sensitivity_high = prv_set_shake_sensitivity_high,
-  .set_shake_sensitivity_percent = prv_set_shake_sensitivity_percent,
+  .read = prv_read,
+  .attr_set = prv_attr_set,
+  .attr_get = prv_attr_get,
+  .set_event = prv_set_event,
 };
 
 #include PBL_DT_INSTANCES(st_lis2dw12)

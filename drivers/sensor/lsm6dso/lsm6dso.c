@@ -6,22 +6,21 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/devicetree.h>
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/imu/lsm6dso/lsm6dso.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/lsm6dso/lsm6dso.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/imu/units.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DECLARE(driver_accel, CONFIG_DRIVER_IMU_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_sensor, CONFIG_DRIVER_SENSOR_LOG_LEVEL);
 
 // The single instance, for interrupt and timer contexts
 static const struct pbl_lsm6dso *s_dev;
@@ -29,6 +28,8 @@ static const struct pbl_lsm6dso *s_dev;
 // Implementation notes:
 //
 // - Gyroscope is unused; only the accelerometer is configured.
+// - Frames are reported in the sensor axes; the class applies the mount matrix
+//   and the rotation.
 // - Peeking returns the last FIFO sample when sampling is active, otherwise a
 //   single-shot measurement is performed.
 // - Ultra-low-power mode (XL_ULP_EN) is always used (minimum power). It is
@@ -69,7 +70,7 @@ static const struct pbl_lsm6dso *s_dev;
 #define LSM6DSO_SHAKE_STUCK_PASSES_MAX 3U
 
 // Scale range for 16-bit two's complement samples
-#define LSM6DSO_S16_SCALE_RANGE PBL_BIT(15)
+#define LSM6DSO_S16_SCALE_RANGE 32768
 
 // FIFO tag identifying an accelerometer (XL) sample
 #define LSM6DSO_FIFO_TAG_XL_NC 0x02U
@@ -178,6 +179,19 @@ static const struct pbl_lsm6dso *s_dev;
 // MD1_CFG fields
 #define LSM6DSO_MD1_CFG_INT1_WU PBL_BIT(5)
 
+// Raw counts to micro-g
+#define LSM6DSO_UG_NUM (CONFIG_ACCEL_LSM6DSO_SCALE_MG * 1000)
+
+// Channels of a sample, both in the output registers and past the tag of a FIFO word
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
+                  LSM6DSO_S16_SCALE_RANGE, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
+                  LSM6DSO_S16_SCALE_RANGE, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
+                  LSM6DSO_S16_SCALE_RANGE, 0),
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +204,11 @@ static bool prv_lsm6dso_read(uint8_t reg, uint8_t *data, uint16_t len) {
   return pbl_i2c_burst_read(&s_dev->i2c, reg, data, len) == 0;
 }
 
-static bool prv_lsm6dso_read_fifo(uint16_t samples) {
+static bool prv_lsm6dso_read_fifo(uint8_t *buf, uint16_t samples) {
   uint8_t reg = LSM6DSO_FIFO_DATA_OUT_TAG;
   struct pbl_i2c_msg msgs[] = {
     {.buf = &reg, .len = 1U, .flags = PBL_I2C_MSG_WRITE},
-    {.buf = s_dev->state->raw_sample_buf,
+    {.buf = buf,
      .len = samples * LSM6DSO_FIFO_WORD_SIZE_BYTES,
      .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
   };
@@ -217,64 +231,31 @@ static uint8_t prv_fs_bits(void) {
   }
 }
 
-static int16_t prv_raw_to_s16(const uint8_t *raw) {
-  return (int16_t)pbl_get_le16(raw);
+// Report the samples read into buf, a buffer from pbl_sensor_buf_alloc(). Kept free of device
+// I/O so it can run after the I2C reads instead of in between them.
+static void prv_lsm6dso_process_samples(uint8_t *buf, uint16_t num_samples, uint64_t timestamp_us) {
+  // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
+  // first data byte and step over the tags with the stride.
+  pbl_sensor_report(&s_dev->sensor, &(const struct pbl_sensor_batch){
+                                      .data = &buf[1],
+                                      .chans = s_chans,
+                                      .num_chans = PBL_ARRAY_SIZE(s_chans),
+                                      .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
+                                      .num_frames = num_samples,
+                                      .timestamp_us = timestamp_us,
+                                      .interval_us = s_dev->state->sampling_interval_us,
+                                    });
 }
 
-static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
-  uint8_t offset;
-  int16_t val;
+//! Buffer for a FIFO read, or NULL if the listener still holds all of them
+static uint8_t *prv_alloc_buf(void) {
+  uint8_t *buf = pbl_sensor_buf_alloc(&s_dev->sensor, nullptr);
 
-  offset = s_dev->axis_map[axis];
-
-  val = s_dev->axis_dir[axis] * (int16_t)(((int32_t)prv_raw_to_s16(&raw[offset * 2U]) *
-                                           (int32_t)CONFIG_ACCEL_LSM6DSO_SCALE_MG) /
-                                          (int32_t)LSM6DSO_S16_SCALE_RANGE);
-
-  if (s_dev->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
-    val *= -1;
+  if (buf == nullptr) {
+    PBL_LOG_WRN("No free buffer, leaving samples in the FIFO");
   }
 
-  return val;
-}
-
-static void prv_raw_to_mg(const uint8_t *raw, struct pbl_accel_sample *sample) {
-  sample->x = prv_axis_raw_mg(AXIS_X, raw);
-  sample->y = prv_axis_raw_mg(AXIS_Y, raw);
-  sample->z = prv_axis_raw_mg(AXIS_Z, raw);
-}
-
-static uint64_t prv_get_curr_system_time_us(void) {
-  return pbl_realtime_ms() * 1000ULL;
-}
-
-// Convert and dispatch the samples already sitting in raw_sample_buf. Kept free of
-// device I/O so it can run after the I2C reads instead of in between them.
-static void prv_lsm6dso_process_samples(uint16_t num_samples, uint64_t timestamp_us) {
-  // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
-  // first data byte and let the service step over the tags via the stride.
-  int8_t rotate = s_dev->state->rotated ? -1 : 1;
-  AccelRawBatch batch = {
-    .data = &s_dev->state->raw_sample_buf[1],
-    .num_samples = num_samples,
-    .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
-    .axis =
-        {
-          [AXIS_X] =
-              {.offset = s_dev->axis_map[AXIS_X] * 2U,
-               .sign = (int8_t)(s_dev->axis_dir[AXIS_X] * rotate)},
-          [AXIS_Y] =
-              {.offset = s_dev->axis_map[AXIS_Y] * 2U,
-               .sign = (int8_t)(s_dev->axis_dir[AXIS_Y] * rotate)},
-          [AXIS_Z] = {.offset = s_dev->axis_map[AXIS_Z] * 2U, .sign = s_dev->axis_dir[AXIS_Z]},
-        },
-    .scale_num = CONFIG_ACCEL_LSM6DSO_SCALE_MG,
-    .scale_den = LSM6DSO_S16_SCALE_RANGE,
-    .first_timestamp_us = timestamp_us,
-    .sampling_interval_us = s_dev->state->sampling_interval_us,
-  };
-
-  pbl_accel_report_samples(&s_dev->accel, &batch);
+  return buf;
 }
 
 static uint8_t prv_get_bdr(uint32_t sampling_interval_us) {
@@ -360,12 +341,18 @@ static void prv_lsm6dso_drain_fifo(void) {
       return;
     }
 
-    if (!prv_lsm6dso_read_fifo(samples)) {
+    uint8_t *buf = prv_alloc_buf();
+    if (buf == nullptr) {
+      return;
+    }
+
+    if (!prv_lsm6dso_read_fifo(buf, samples)) {
+      pbl_sensor_buf_free(&s_dev->sensor, buf);
       PBL_LOG_ERR("Failed to read samples");
       return;
     }
 
-    prv_lsm6dso_process_samples(samples, prv_get_curr_system_time_us());
+    prv_lsm6dso_process_samples(buf, samples, pbl_uptime_us());
     s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
   }
 }
@@ -375,7 +362,7 @@ static uint32_t prv_ms_since_last_fifo_read(void);
 
 static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
   uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES] = {0U};
-  IMUCoordinateAxis axis = AXIS_Z;
+  uint8_t axis = PBL_SENSOR_AXIS_Z;
   int16_t val = 0;
   bool found = false;
 
@@ -383,14 +370,14 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
     PBL_LOG_ERR("Failed to read sample");
   }
 
-  for (IMUCoordinateAxis a = AXIS_X; a <= AXIS_Z; a++) {
+  for (uint8_t a = PBL_SENSOR_AXIS_X; a <= PBL_SENSOR_AXIS_Z; a++) {
     int16_t v;
 
-    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(s_dev->axis_map[a])) == 0U) {
+    if ((wake_up_src & LSM6DSO_WAKE_UP_SRC_AXIS_WU(a)) == 0U) {
       continue;
     }
 
-    v = prv_axis_raw_mg(a, raw);
+    v = (int16_t)pbl_get_le16(&raw[a * 2U]);
     if (!found || PBL_ABS(v) > PBL_ABS(val)) {
       axis = a;
       val = v;
@@ -398,11 +385,11 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
     }
   }
 
-  pbl_accel_report_event(&s_dev->accel, &(const struct pbl_accel_event){
-                                          .type = PBL_ACCEL_EVENT_SHAKE,
-                                          .axis = axis,
-                                          .direction = (val < 0) ? -1 : 1,
-                                        });
+  pbl_sensor_report_event(&s_dev->sensor, &(const struct pbl_sensor_event){
+                                            .type = PBL_SENSOR_EVENT_SHAKE,
+                                            .axis = axis,
+                                            .direction = (val < 0) ? -1 : 1,
+                                          });
 }
 
 //! INT1 servicing pass kind, logged by the no-action diagnostic
@@ -423,6 +410,7 @@ static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
   bool shake = false;
   uint16_t samples = 0U;
   uint64_t timestamp_us = 0U;
+  uint8_t *buf = nullptr;
 
   // Read all device registers back-to-back to keep the I2C critical section
   // short, then convert/dispatch below. The sample processing has no dependency
@@ -447,11 +435,18 @@ static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
       }
 
       if (samples > 0U) {
-        if (!prv_lsm6dso_read_fifo(samples)) {
+        buf = prv_alloc_buf();
+        if (buf == nullptr) {
+          // Nothing lost, the samples stay queued until a buffer is free
+          return true;
+        }
+
+        if (!prv_lsm6dso_read_fifo(buf, samples)) {
+          pbl_sensor_buf_free(&s_dev->sensor, buf);
           PBL_LOG_ERR("Failed to read samples");
           return false;
         }
-        timestamp_us = prv_get_curr_system_time_us();
+        timestamp_us = pbl_uptime_us();
         s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
       }
     }
@@ -461,6 +456,9 @@ static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
     ret = prv_lsm6dso_read(LSM6DSO_WAKE_UP_SRC, &wake_up_src, 1);
     if (!ret) {
       PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
+      if (buf != nullptr) {
+        pbl_sensor_buf_free(&s_dev->sensor, buf);
+      }
       return false;
     }
 
@@ -473,7 +471,7 @@ static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
     action_taken = true;
     *fifo_progress = true;
   } else if (samples > 0U) {
-    prv_lsm6dso_process_samples(samples, timestamp_us);
+    prv_lsm6dso_process_samples(buf, samples, timestamp_us);
     action_taken = true;
     *fifo_progress = true;
   }
@@ -505,9 +503,9 @@ static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
 static void prv_work_cb(void *data) {
   void (*work)(void) = data;
 
-  pbl_accel_lock(&s_dev->accel);
+  pbl_sensor_lock(&s_dev->sensor);
   work();
-  pbl_accel_unlock(&s_dev->accel);
+  pbl_sensor_unlock(&s_dev->sensor);
 }
 
 //! Run driver work on the timer task, with the device lock held
@@ -790,15 +788,15 @@ static void prv_int1_wdt_cb(struct pbl_work *work) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Accelerometer interface
+// Sensor interface
 ////////////////////////////////////////////////////////////////////////////////
 
-static int prv_init(const struct pbl_accel *accel) {
+static int prv_init(const struct pbl_sensor *sensor) {
   bool ret;
   int err;
   uint8_t val;
 
-  s_dev = PBL_CONTAINER_OF(accel, const struct pbl_lsm6dso, accel);
+  s_dev = PBL_CONTAINER_OF(sensor, const struct pbl_lsm6dso, sensor);
 
   // Check device ID
   ret = prv_lsm6dso_read(LSM6DSO_WHO_AM_I, &val, 1);
@@ -917,8 +915,7 @@ static int prv_init(const struct pbl_accel *accel) {
   return 0;
 }
 
-static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
-                                     uint32_t *actual_us) {
+static int prv_set_sampling_interval(uint32_t interval_us, uint32_t *actual_us) {
   // FIXME: we should technically stop and drain the FIFO here, otherwise
   // we may report existing samples in the FIFO buffer with an incorrect timestamp
 
@@ -941,15 +938,7 @@ static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t int
   return 0;
 }
 
-static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
-  return s_dev->state->sampling_interval_us;
-}
-
-static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
-  return LSM6DSO_FIFO_THRESHOLD;
-}
-
-static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
+static int prv_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;
 
@@ -1007,12 +996,16 @@ static bool prv_data_ready(bool *read_ok) {
   return !*read_ok || (status & LSM6DSO_STATUS_REG_XLDA) != 0U;
 }
 
-static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data) {
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;
   uint8_t ctrl1_bck;
-  uint8_t raw[LSM6DSO_SAMPLE_SIZE_BYTES];
+  uint8_t *raw = frame->data;
+
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
 
   // If sampling is active, the FIFO batches samples for subscribers, so the
   // cached sample can be a full watermark period old. Read the output
@@ -1025,14 +1018,13 @@ static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data
       prv_queue_work(prv_stall_check_work_cb);
     }
 
-    ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw));
+    ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, LSM6DSO_SAMPLE_SIZE_BYTES);
     if (!ret) {
       PBL_LOG_ERR("Failed to read sample");
       return -EIO;
     }
 
-    prv_raw_to_mg(raw, data);
-    data->timestamp_us = prv_get_curr_system_time_us();
+    frame->timestamp_us = pbl_uptime_us();
 
     return 0;
   }
@@ -1068,16 +1060,14 @@ static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data
   }
 
   // Read sample
-  ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, sizeof(raw));
+  ret = prv_lsm6dso_read(LSM6DSO_OUTX_L_A, raw, LSM6DSO_SAMPLE_SIZE_BYTES);
   if (!ret) {
     PBL_LOG_ERR("Failed to read sample");
     err = -EIO;
     goto end;
   }
 
-  // Convert to mg and populate timestamp
-  prv_raw_to_mg(raw, data);
-  data->timestamp_us = prv_get_curr_system_time_us();
+  frame->timestamp_us = pbl_uptime_us();
 
 end:
   // Restore CTRL1_XL (back to previous state, e.g. power-down or shake ODR)
@@ -1086,7 +1076,7 @@ end:
   return err;
 }
 
-static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
+static int prv_set_shake_detection(bool on) {
   bool ret;
 
   // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
@@ -1123,25 +1113,7 @@ static int prv_set_shake_detection(const struct pbl_accel *accel, bool on) {
   return 0;
 }
 
-static int prv_set_shake_sensitivity_high(const struct pbl_accel *accel, bool sensitivity_high) {
-  bool ret;
-  uint8_t val;
-
-  val = PBL_FIELD_PREP(LSM6DSO_WAKE_UP_THS_WK_THS_MASK, sensitivity_high
-                                                            ? CONFIG_ACCEL_LSM6DSO_WK_THS_MIN
-                                                            : s_dev->state->wk_ths_curr);
-  ret = prv_lsm6dso_write(LSM6DSO_WAKE_UP_THS, &val, 1);
-  if (!ret) {
-    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
-    return -EIO;
-  }
-
-  PBL_LOG_DBG("Configured shake sensitivity to %s", sensitivity_high ? "high" : "normal");
-
-  return 0;
-}
-
-static int prv_set_shake_sensitivity_percent(const struct pbl_accel *accel, uint8_t percent) {
+static int prv_set_shake_sensitivity_percent(uint8_t percent) {
   bool ret;
   uint8_t val;
   uint8_t raw;
@@ -1165,24 +1137,64 @@ static int prv_set_shake_sensitivity_percent(const struct pbl_accel *accel, uint
   return 0;
 }
 
-static int prv_set_rotated(const struct pbl_accel *accel, bool rotated) {
-  s_dev->state->rotated = rotated;
-  PBL_LOG_DBG("Set rotated state to %s", rotated ? "true" : "false");
+static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  uint32_t actual_us;
+  int ret;
 
-  return 0;
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      if (*val < 0) {
+        return -EINVAL;
+      }
+      ret = prv_set_sampling_interval((uint32_t)*val, &actual_us);
+      if (ret == 0) {
+        *val = (int32_t)actual_us;
+      }
+      return ret;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = PBL_CLAMP(*val, 0, LSM6DSO_FIFO_THRESHOLD);
+      return prv_set_num_samples((uint32_t)*val);
+    case PBL_SENSOR_ATTR_SHAKE_SENSITIVITY:
+      *val = PBL_CLAMP(*val, 0, 100);
+      return prv_set_shake_sensitivity_percent((uint8_t)*val);
+    default:
+      return -ENOTSUP;
+  }
 }
 
-const struct pbl_accel_ops pbl_lsm6dso_ops = {
+static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      *val = (int32_t)s_dev->state->sampling_interval_us;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = s_dev->state->num_samples;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH_MAX:
+      *val = LSM6DSO_FIFO_THRESHOLD;
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_set_event(const struct pbl_sensor *sensor, enum pbl_sensor_event_type type,
+                         bool on) {
+  if (type != PBL_SENSOR_EVENT_SHAKE) {
+    return -ENOTSUP;
+  }
+
+  return prv_set_shake_detection(on);
+}
+
+const struct pbl_sensor_ops pbl_lsm6dso_ops = {
   .init = prv_init,
-  .set_rotated = prv_set_rotated,
-  .set_sampling_interval = prv_set_sampling_interval,
-  .get_sampling_interval = prv_get_sampling_interval,
-  .set_num_samples = prv_set_num_samples,
-  .get_max_num_samples = prv_get_max_num_samples,
-  .peek = prv_peek,
-  .set_shake_detection = prv_set_shake_detection,
-  .set_shake_sensitivity_high = prv_set_shake_sensitivity_high,
-  .set_shake_sensitivity_percent = prv_set_shake_sensitivity_percent,
+  .read = prv_read,
+  .attr_set = prv_attr_set,
+  .attr_get = prv_attr_get,
+  .set_event = prv_set_event,
 };
 
 #include PBL_DT_INSTANCES(st_lsm6dso)

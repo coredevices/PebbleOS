@@ -27,6 +27,21 @@ source "subsys/logging/Kconfig.template.log_level"
 
 endif # SENSOR
 
+menuconfig ACCEL
+    bool "Accelerometers"
+    select SENSOR
+    help
+      Accelerometer drivers. The board's accelerometer is the accel role,
+      ACCEL.
+
+if ACCEL
+
+rsource "Kconfig.lis2dw12"
+rsource "Kconfig.lsm6dso"
+rsource "Kconfig.accel_sim"
+
+endif # ACCEL
+
 menuconfig TEMP
     bool "Temperature sensors"
     select SENSOR

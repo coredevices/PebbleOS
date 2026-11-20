@@ -2,18 +2,18 @@
 
 An accelerometer reports batches of samples, shakes and double taps to the
 listener a consumer registers, the accelerometer service in the Pebble
-firmware. Drivers keep no buffers and hide the hardware state, such as FIFO
-modes: the consumer asks for a sampling interval and a batch size, and the
+firmware. Drivers fill buffers the sensor class owns and hide the hardware
+state, such as FIFO modes: the consumer asks for a sampling interval and a batch size, and the
 driver picks the configuration.
 
 | | |
 | --- | --- |
-| Directory | `drivers/imu` |
-| Header | `pbl/drivers/accel.h` |
-| Kconfig | `CONFIG_ACCEL`, enabled by the application |
+| Directory | `drivers/sensor` |
+| Header | `pbl/drivers/sensor.h` |
+| Kconfig | `CONFIG_ACCEL`, enabled by the application, selects `CONFIG_SENSOR` |
 | Role | `ACCEL` |
 | Sample | {doc}`../samples/drivers/accel` |
-| API | {apidoc}`API reference <drivers_accel>` |
+| API | {apidoc}`API reference <drivers_sensor>` |
 
 ## Drivers
 

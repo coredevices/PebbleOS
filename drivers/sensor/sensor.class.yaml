@@ -5,6 +5,7 @@ class: sensor
 type: struct pbl_sensor
 include: pbl/drivers/sensor.h
 roles:
+  accel: ACCEL
   die_temp: TEMP
   mag: MAG
   pressure: PRESSURE

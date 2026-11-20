@@ -326,7 +326,7 @@ class header, as `SPEAKER`:
 | `backlight` | `backlight` | `BACKLIGHT` |
 | `status_led` | `led` | |
 | `flash` | `flash` | `FLASH` |
-| `accel` | `accel` | `ACCEL` |
+| `accel` | `sensor` | `ACCEL` |
 | `mag` | `sensor` | `MAG` |
 | `als` | `als` | `ALS` |
 | `pressure` | `sensor` | `PRESSURE` |
@@ -351,7 +351,7 @@ console_uart: uart2
 flash: flash0
 accel:
   symbol: SIM_ACCEL
-  include: pbl/drivers/imu/sim.h
+  include: pbl/drivers/sensor/sim.h
 ```
 
 The add-ons of the board add theirs in their `roles.yml`; see
@@ -366,7 +366,7 @@ several classes, as a display with its backlight, can have several roles.
 enabled:
 
 ```c
-const struct pbl_accel *const ACCEL = &dt_lsm6dso;
+const struct pbl_sensor *const ACCEL = &dt_lsm6dso;
 ```
 
 An enabled symbol whose role has no device, or a device with no driver, fails

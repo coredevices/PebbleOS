@@ -89,10 +89,10 @@ its own frame, and the class remaps them to the watch frame.
 
 ## Roles
 
-The board's sensors are reached through roles: `mag` as `MAG`, `die_temp` as
-`DIE_TEMP` and `pressure` as `PRESSURE`. The Kconfig menu of each sensor
-type, `MAG`, `TEMP` and `PRESSURE`, groups its drivers and requires its
-role.
+The board's sensors are reached through roles: `accel` as `ACCEL`, `mag` as
+`MAG`, `die_temp` as `DIE_TEMP` and `pressure` as `PRESSURE`. The Kconfig menu
+of each sensor type, `ACCEL`, `MAG`, `TEMP` and `PRESSURE`, groups its drivers
+and requires its role.
 
 ## Shell
 

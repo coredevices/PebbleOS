@@ -8,4 +8,4 @@ config ACCEL_SIM
     select KERNEL_SYS_WORKQ_HIGH
     help
       Simulated accelerometer, replaying samples and events fed through
-      its simulator API (pbl/drivers/imu/sim.h).
+      its simulator API (pbl/drivers/sensor/sim.h).
