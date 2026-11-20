@@ -9,6 +9,7 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
 
 #ifdef CONFIG_ALS_OPT3001_ALWAYS_ON
@@ -47,15 +48,16 @@ static int prv_read_register(const struct pbl_opt3001 *dev, uint8_t reg, uint16_
     return ret;
   }
 
-  *val = (uint16_t)((buf[0] << 8) | buf[1]);
+  *val = pbl_get_be16(buf);
 
   return 0;
 }
 
 static int prv_write_register(const struct pbl_opt3001 *dev, uint8_t reg, uint16_t val) {
-  const uint8_t buf[2] = {val >> 8, val & 0xFFU};
+  uint8_t buf[2];
   int ret;
 
+  pbl_put_be16(val, buf);
   ret = pbl_i2c_burst_write(&dev->i2c, reg, buf, sizeof(buf));
 
   return ret;

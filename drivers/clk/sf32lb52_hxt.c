@@ -17,6 +17,7 @@
 #include <pbl/kernel/section.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -101,8 +102,7 @@ int pbl_clk_sf32lb52_hxt_init(const struct pbl_device *dev) {
       continue;
     }
 
-    cbank = (uint32_t)rec[0] | ((uint32_t)rec[1] << 8) | ((uint32_t)rec[2] << 16) |
-            ((uint32_t)rec[3] << 24);
+    cbank = pbl_get_le32(rec);
     if (cbank == 0U || cbank == CBANK_INVALID) {
       return 0;
     }

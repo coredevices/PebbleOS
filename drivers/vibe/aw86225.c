@@ -12,6 +12,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
@@ -343,17 +344,20 @@ static int prv_write_ram_image(const struct pbl_aw86225 *dev) {
   const uint16_t base = AW862XX_RAM_BASE_ADDR;
   const uint16_t start = base + AW862XX_RAM_HEADER_LEN;
   const uint16_t end = start + sizeof(s_sine_cycle) - 1;
-  const uint8_t addr[] = {base >> 8, base & 0xFF};
   const uint8_t fifo[] = {
     (((base >> 1) >> 4) & 0xF0) | (((base - (base >> 2)) >> 8) & 0x0F),
     (base >> 1) & 0xFF,
     (base - (base >> 2)) & 0xFF,
   };
   uint8_t image[AW862XX_RAM_HEADER_LEN + sizeof(s_sine_cycle)] = {
-    AW862XX_RAM_HEADER_VERSION, start >> 8, start & 0xFF, end >> 8, end & 0xFF,
+    AW862XX_RAM_HEADER_VERSION,
   };
+  uint8_t addr[2];
   int ret;
 
+  pbl_put_be16(base, addr);
+  pbl_put_be16(start, &image[1]);
+  pbl_put_be16(end, &image[3]);
   prv_scale_cycle(dev, &image[AW862XX_RAM_HEADER_LEN]);
 
   ret = prv_update_bits(dev, AW862XX_REG_RTPCFG1, AW862XX_RTPCFG1_ADDRH_MASK,

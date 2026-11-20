@@ -14,6 +14,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -419,7 +420,10 @@ static int prv_update_start(const struct pbl_display_sf32lb57_lcdc *lcdc) {
 
   const uint16_t py0 = timing->vback_porch + y0;
   const uint16_t py1 = timing->vback_porch + y1;
-  const uint8_t rows[] = {py0 >> 8, py0 & 0xFFU, py1 >> 8, py1 & 0xFFU};
+  uint8_t rows[4];
+
+  pbl_put_be16(py0, &rows[0]);
+  pbl_put_be16(py1, &rows[2]);
 
   ret = prv_command_write(lcdc, QSPI_OP_WRITE_CMD, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows,
                           sizeof(rows), true);
