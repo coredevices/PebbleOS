@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CHARGER
+    bool "Charger"
+    help
+      Battery charger class (pbl/drivers/charger.h).
+
+if CHARGER
+
+config CHARGER_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The charger shell command, to show whether external power is
+      present, the charge status and the battery measurements.
+
+config CHARGER_HIGH_LOAD
+    bool
+    help
+      The charger driver limits the discharge current, and lifts the
+      limit on pbl_charger_high_load_request().
+
+module = DRIVER_CHARGER
+module-str = Charger
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # CHARGER
