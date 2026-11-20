@@ -3,6 +3,8 @@
 
 #include "model.h"
 
+#include <errno.h>
+
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 
@@ -187,18 +189,18 @@ void timeline_model_init(time_t timestamp, TimelineModel *model) {
   s_model_data = model;
 
   // build the timeline
-  status_t rv = timeline_init(&s_model_data->timeline);
-  PBL_ASSERTN(PASSED(rv));
+  int rv = timeline_init(&s_model_data->timeline);
+  PBL_ASSERTN(rv >= 0);
 
   s_model_data->first_index = 0;
   s_model_data->last_index = TIMELINE_NUM_VISIBLE_ITEMS;
   for (int i = 0; i < TIMELINE_NUM_VISIBLE_ITEMS; i++) {
     rv = timeline_iter_init(prv_get_iter(i), timeline_model_get_iter_state(i),
                             &s_model_data->timeline, s_model_data->direction, timestamp);
-    if (FAILED(rv)) {
+    if ((rv < 0) && (rv != -ENOENT)) {
       PBL_LOG_ERR("Timeline iterator failed to init!");
     }
-    if (FAILED(rv) || rv == S_NO_MORE_ITEMS) {
+    if (rv < 0) {
       timeline_model_get_iter_state(i)->node = nullptr;
     }
     bool iter_at_final_position = true;

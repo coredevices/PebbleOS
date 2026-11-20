@@ -1,17 +1,16 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/contacts/contacts.h>
 #include <pbl/settings/settings.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
-
-#include <system/status_errno.h>
 
 #define SETTINGS_FILE_NAME "/contactsdb"
 #define SETTINGS_FILE_SIZE (PBL_KIB(30))
@@ -25,11 +24,11 @@ static struct {
 // Settings helpers
 //////////////////////
 
-static status_t prv_lock_mutex_and_open_file(void) {
+static int prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_settings_open_growable(
-      &s_contacts_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
-  if (rv != S_SUCCESS) {
+  int rv = pbl_settings_open_growable(&s_contacts_db.settings_file, SETTINGS_FILE_NAME,
+                                      SETTINGS_FILE_SIZE, PBL_KIB(4));
+  if (rv != 0) {
     pbl_mutex_unlock(&s_contacts_db.mutex);
   }
   return rv;
@@ -47,8 +46,8 @@ static void prv_close_file_and_unlock_mutex(void) {
 int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **contact_out) {
   *contact_out = nullptr;
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return 0;
   }
 
@@ -65,10 +64,10 @@ int contacts_db_get_serialized_contact(const Uuid *uuid, SerializedContact **con
     return 0;
   }
 
-  rv = status_from_errno(pbl_settings_get(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE,
-                                          (void *)*contact_out, contact_len));
+  rv = pbl_settings_get(&s_contacts_db.settings_file, (uint8_t *)uuid, UUID_SIZE,
+                        (void *)*contact_out, contact_len);
   prv_close_file_and_unlock_mutex();
-  if (rv != S_SUCCESS) {
+  if (rv != 0) {
     pbl_free(*contact_out);
     return 0;
   }
@@ -89,18 +88,17 @@ void contacts_db_init(void) {
   pbl_mutex_init(&s_contacts_db.mutex);
 }
 
-status_t contacts_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int contacts_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (key_len != UUID_SIZE || val_len < (int)sizeof(SerializedContact)) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv =
-      status_from_errno(pbl_settings_set(&s_contacts_db.settings_file, key, key_len, val, val_len));
+  rv = pbl_settings_set(&s_contacts_db.settings_file, key, key_len, val, val_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -111,8 +109,8 @@ int contacts_db_get_len(const uint8_t *key, int key_len) {
     return 0;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
@@ -122,52 +120,51 @@ int contacts_db_get_len(const uint8_t *key, int key_len) {
   return rv;
 }
 
-status_t contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
+int contacts_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
   if (key_len != UUID_SIZE || val_out == nullptr) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(
-      pbl_settings_get(&s_contacts_db.settings_file, key, key_len, val_out, val_out_len));
+  rv = pbl_settings_get(&s_contacts_db.settings_file, key, key_len, val_out, val_out_len);
   prv_close_file_and_unlock_mutex();
 
   return rv;
 }
 
-status_t contacts_db_delete(const uint8_t *key, int key_len) {
+int contacts_db_delete(const uint8_t *key, int key_len) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_delete(&s_contacts_db.settings_file, key, key_len));
+  rv = pbl_settings_delete(&s_contacts_db.settings_file, key, key_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;
 }
 
-status_t contacts_db_flush(void) {
+int contacts_db_flush(void) {
   pbl_mutex_lock(&s_contacts_db.mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_fs_unlink(SETTINGS_FILE_NAME));
+  int rv = pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_contacts_db.mutex);
   return rv;
 }
 
-status_t contacts_db_compact(void) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int contacts_db_compact(void) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
-  rv = status_from_errno(pbl_settings_compact(&s_contacts_db.settings_file));
+  rv = pbl_settings_compact(&s_contacts_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }

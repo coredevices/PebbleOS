@@ -174,7 +174,7 @@ static PBL_NOINLINE LoadedNotificationNode *prv_loaded_notification_list_load_it
   // Read the associated pin's app id
   TimelineItem pin;
   if (timeline_resources_is_system(timeline_res_id) ||
-      pin_db_read_item_header(&pin, &notification.header.parent_id) != S_SUCCESS) {
+      pin_db_read_item_header(&pin, &notification.header.parent_id) != 0) {
     pin.header.parent_id = (Uuid)UUID_INVALID;
   }
 

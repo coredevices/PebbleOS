@@ -37,8 +37,8 @@ extern struct pbl_delayed_work s_snooze_timer;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Stubs
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
+int reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return 0;
 }
 
 const PebbleProcessMd *alarms_app_get_info() {
@@ -172,14 +172,14 @@ const char *timeline_get_private_data_source(Uuid *parent_id) {
   return nullptr;
 }
 
-status_t pin_db_insert_item_without_event(TimelineItem *item) {
+int pin_db_insert_item_without_event(TimelineItem *item) {
   s_num_timeline_adds++;
   timeline_item_destroy(s_last_timeline_item_added);
   s_last_timeline_item_added = timeline_item_copy(item);
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t pin_db_delete(const uint8_t *key, int key_len) {
+int pin_db_delete(const uint8_t *key, int key_len) {
   s_num_timeline_removes++;
   s_last_timeline_item_removed_uuid = *(Uuid *)key;
   for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_pin_records); ++i) {
@@ -187,10 +187,10 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
       s_fake_pin_records[i].exists = false;
     }
   }
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
+int pin_db_each(TimelineItemStorageEachCallback each, void *data) {
   struct pbl_settings_file file;
   cl_must_pass(pbl_settings_open(&file, "/fakepins", 4096));
   for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_pin_records); ++i) {
@@ -203,7 +203,7 @@ status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
   pbl_settings_each(&file, each, data);
   pbl_settings_close(&file);
   cl_must_pass(pbl_fs_unlink("/fakepins"));
-  return S_SUCCESS;
+  return 0;
 }
 
 void event_put(PebbleEvent *event) {

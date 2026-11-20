@@ -18,8 +18,8 @@ static AttributeList *s_expected_attributes = nullptr;
 static TimelineItemActionGroup *s_expected_actions = nullptr;
 static bool s_performed_store = false;
 
-status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
-                                       TimelineItemActionGroup *action_group) {
+int ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
+                                  TimelineItemActionGroup *action_group) {
   const int buf_size = 256;
   uint8_t buf1[buf_size];
   uint8_t buf2[buf_size];
@@ -30,7 +30,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
       attributes_actions_get_serialized_payload_size(s_expected_attributes, s_expected_actions));
 
   s_performed_store = true;
-  return S_SUCCESS;
+  return 0;
 }
 
 static uint32_t s_expected_uid = 0;

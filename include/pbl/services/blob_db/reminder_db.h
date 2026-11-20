@@ -7,7 +7,6 @@
 #include "timeline_item_storage.h"
 
 #include <pbl/services/timeline/item.h>
-#include <pbl/system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_reminder_db Reminder database
@@ -24,21 +23,21 @@
  *
  * @param[out] item_out Reminder; free its buffer with timeline_item_free_allocated_buffer().
  * @param id Reminder UUID.
- * @retval S_SUCCESS Read.
- * @retval E_DOES_NOT_EXIST No such reminder.
- * @return Other error codes on failure.
+ * @retval 0 Read.
+ * @retval -ENOENT No such reminder.
+ * @return Other negative errno values on failure.
  */
-status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id);
+int reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id);
 
 /**
  * @brief Read the header of the earliest reminder that has not fired yet.
  *
  * @param[out] next_item_out Item with only the header filled in.
- * @retval S_SUCCESS Found.
- * @retval S_NO_MORE_ITEMS No pending reminder.
- * @return Other error codes on failure.
+ * @retval 0 Found.
+ * @retval -ENOENT No pending reminder.
+ * @return Other negative errno values on failure.
  */
-status_t reminder_db_next_item_header(TimelineItem *next_item_out);
+int reminder_db_next_item_header(TimelineItem *next_item_out);
 
 /**
  * @brief Serialize and insert a reminder created on the watch.
@@ -46,26 +45,26 @@ status_t reminder_db_next_item_header(TimelineItem *next_item_out);
  * The record is marked dirty and synced to the phone.
  *
  * @param item Reminder, of type @c TimelineItemTypeReminder.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_insert_item(TimelineItem *item);
+int reminder_db_insert_item(TimelineItem *item);
 
 /**
  * @brief Delete a reminder.
  *
  * @param id Reminder UUID.
  * @param send_event If true, also notify the reminders service as reminder_db_delete() does.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_delete_item(const TimelineItemId *id, bool send_event);
+int reminder_db_delete_item(const TimelineItemId *id, bool send_event);
 
 /**
  * @brief Delete the reminders of a parent pin.
  *
  * @param parent_id Parent pin UUID.
- * @return @c S_SUCCESS if all reminders were deleted, an error code otherwise.
+ * @return 0 if all reminders were deleted, a negative errno otherwise.
  */
-status_t reminder_db_delete_with_parent(const TimelineItemId *parent_id);
+int reminder_db_delete_with_parent(const TimelineItemId *parent_id);
 
 /**
  * @brief Check whether the reminder database is empty.
@@ -79,9 +78,9 @@ bool reminder_db_is_empty(void);
  *
  * @param id Reminder UUID.
  * @param status New status bits.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_set_status_bits(const TimelineItemId *id, uint8_t status);
+int reminder_db_set_status_bits(const TimelineItemId *id, uint8_t status);
 
 /**
  * @brief Find a reminder with a given time and title.
@@ -117,9 +116,9 @@ void reminder_db_deinit(void);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record in the reminder database.
@@ -128,7 +127,7 @@ status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if not found, or a negative error code.
+ * @return Length of the value in bytes, 0 if not found, or a negative errno.
  */
 int reminder_db_get_len(const uint8_t *key, int key_len);
 
@@ -141,9 +140,9 @@ int reminder_db_get_len(const uint8_t *key, int key_len);
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer for the value.
  * @param val_out_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
+int reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
 
 /**
  * @brief Delete a record from the reminder database.
@@ -152,33 +151,33 @@ status_t reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_delete(const uint8_t *key, int key_len);
+int reminder_db_delete(const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records of the reminder database.
  *
  * Reminders created on the watch are kept.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_flush(void);
+int reminder_db_flush(void);
 
 /**
  * @brief Compact the settings file backing the reminder database.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_compact(void);
+int reminder_db_compact(void);
 
 /**
  * @brief Check whether the reminder database holds records not yet synced to the phone.
  *
  * @param[out] is_dirty_out Set to true if at least one record is dirty.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_is_dirty(bool *is_dirty_out);
+int reminder_db_is_dirty(bool *is_dirty_out);
 
 /**
  * @brief Build the list of records of the reminder database not yet synced to the phone.
@@ -194,8 +193,8 @@ BlobDBDirtyItem *reminder_db_get_dirty_list(void);
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t reminder_db_mark_synced(const uint8_t *key, int key_len);
+int reminder_db_mark_synced(const uint8_t *key, int key_len);
 
 /** @} */

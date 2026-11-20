@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
@@ -18,7 +19,6 @@
 
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -355,9 +355,9 @@ void settings_blob_db_init(void) {
               (unsigned int)s_num_syncable_settings);
 }
 
-status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -379,14 +379,14 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
     memcpy(key_str, key, copy_len);
     key_str[copy_len] = '\0';
     PBL_LOG_WRN("Rejecting non-whitelisted setting: %s", key_str);
-    return E_INVALID_OPERATION;
+    return -ENOTSUP;
   }
 
   prv_lock_for_file(is_notif_pref);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif_pref);
     return status;
   }
@@ -395,9 +395,9 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
+  status = pbl_settings_set(&file, key, key_len, val, val_len);
 
-  if (PASSED(status)) {
+  if (status >= 0) {
     // Mark as synced - the record came from the phone so it's already in sync
     pbl_settings_mark_synced(&file, key, key_len);
   }
@@ -407,7 +407,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
   prv_unlock_for_file(is_notif_pref);
 
   // Update the in-memory prefs state after successful write
-  if (PASSED(status)) {
+  if (status >= 0) {
     PebbleBlobDBEvent event = {
       .db_id = BlobDBIdSettings,
       .type = BlobDBEventTypeInsert,
@@ -427,7 +427,7 @@ status_t settings_blob_db_insert(const uint8_t *key, int key_len, const uint8_t 
 
 int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -447,8 +447,8 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif);
     return status;
   }
@@ -460,9 +460,9 @@ int settings_blob_db_get_len(const uint8_t *key, int key_len) {
   return len;
 }
 
-status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+int settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -482,22 +482,22 @@ status_t settings_blob_db_read(const uint8_t *key, int key_len, uint8_t *val_out
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = status_from_errno(pbl_settings_get(&file, key, key_len, val_out, val_len));
+  status = pbl_settings_get(&file, key, key_len, val_out, val_len);
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
   return status;
 }
 
-status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
+int settings_blob_db_delete(const uint8_t *key, int key_len) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -513,19 +513,19 @@ status_t settings_blob_db_delete(const uint8_t *key, int key_len) {
     file_len = SHELL_PREFS_FILE_LEN;
   } else {
     // Only allow whitelisted settings to be deleted
-    return E_INVALID_OPERATION;
+    return -ENOTSUP;
   }
 
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = status_from_errno(pbl_settings_delete(&file, key, key_len));
+  status = pbl_settings_delete(&file, key, key_len);
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
@@ -586,9 +586,8 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
   // Iterate shell prefs file
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status =
-      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
-  if (PASSED(status)) {
+  int status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  if (status >= 0) {
     pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
     pbl_settings_close(&file);
   }
@@ -596,8 +595,8 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
 
   // Iterate notif prefs file
   alerts_preferences_lock();
-  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
-  if (PASSED(status)) {
+  status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  if (status >= 0) {
     pbl_settings_each(&file, prv_build_dirty_list_callback, &ctx);
     pbl_settings_close(&file);
   }
@@ -606,9 +605,9 @@ BlobDBDirtyItem *settings_blob_db_get_dirty_list(void) {
   return ctx.dirty_list;
 }
 
-status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
+int settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -626,13 +625,13 @@ status_t settings_blob_db_mark_synced(const uint8_t *key, int key_len) {
   prv_lock_for_file(is_notif);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif);
     return status;
   }
 
-  status = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
+  status = pbl_settings_mark_synced(&file, key, key_len);
   pbl_settings_close(&file);
 
   prv_unlock_for_file(is_notif);
@@ -663,9 +662,9 @@ static bool prv_is_dirty_callback(struct pbl_settings_file *file, struct pbl_set
   return true; // Continue
 }
 
-status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
+int settings_blob_db_is_dirty(bool *is_dirty_out) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Quick check: iterate and return true on first dirty whitelisted setting
@@ -674,9 +673,8 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   // Check shell prefs file
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status =
-      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
-  if (PASSED(status)) {
+  int status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  if (status >= 0) {
     pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
     pbl_settings_close(&file);
   }
@@ -685,9 +683,8 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   // If already found dirty, no need to check notif prefs
   if (!ctx.found_dirty) {
     alerts_preferences_lock();
-    status =
-        status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
-    if (PASSED(status)) {
+    status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+    if (status >= 0) {
       pbl_settings_each(&file, prv_is_dirty_callback, &ctx);
       pbl_settings_close(&file);
     }
@@ -695,37 +692,36 @@ status_t settings_blob_db_is_dirty(bool *is_dirty_out) {
   }
 
   *is_dirty_out = ctx.found_dirty;
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t settings_blob_db_flush(void) {
+int settings_blob_db_flush(void) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // struct pbl_settings_file writes are already atomic, no explicit flush needed
   PBL_LOG_DBG("Settings BlobDB flush (no-op for struct pbl_settings_file)");
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t settings_blob_db_mark_all_dirty(void) {
+int settings_blob_db_mark_all_dirty(void) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   PBL_LOG_INFO("Marking all settings as dirty for full sync");
 
-  status_t result = S_SUCCESS;
+  int result = 0;
 
   // Mark shell prefs file dirty
   prefs_private_lock();
   struct pbl_settings_file file;
-  status_t status =
-      status_from_errno(pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN));
-  if (PASSED(status)) {
-    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
+  int status = pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN);
+  if (status >= 0) {
+    status = pbl_settings_mark_all_dirty(&file);
     pbl_settings_close(&file);
-    if (FAILED(status)) {
+    if (status < 0) {
       result = status;
     }
   } else {
@@ -735,11 +731,11 @@ status_t settings_blob_db_mark_all_dirty(void) {
 
   // Mark notif prefs file dirty
   alerts_preferences_lock();
-  status = status_from_errno(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN));
-  if (PASSED(status)) {
-    status = status_from_errno(pbl_settings_mark_all_dirty(&file));
+  status = pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN);
+  if (status >= 0) {
+    status = pbl_settings_mark_all_dirty(&file);
     pbl_settings_close(&file);
-    if (FAILED(status) && PASSED(result)) {
+    if (status < 0 && result >= 0) {
       result = status;
     }
   }
@@ -776,10 +772,10 @@ static bool prv_get_timestamp_callback(struct pbl_settings_file *file,
   return true; // Continue
 }
 
-status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
-                                                int val_len, time_t timestamp) {
+int settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len, const uint8_t *val,
+                                           int val_len, time_t timestamp) {
   if (!s_initialized) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   // Determine which file to use based on key type
@@ -795,14 +791,14 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     file_name = SHELL_PREFS_FILE_NAME;
     file_len = SHELL_PREFS_FILE_LEN;
   } else {
-    return E_INVALID_OPERATION;
+    return -ENOTSUP;
   }
 
   prv_lock_for_file(is_notif_pref);
 
   struct pbl_settings_file file;
-  status_t status = status_from_errno(pbl_settings_open(&file, file_name, file_len));
-  if (FAILED(status)) {
+  int status = pbl_settings_open(&file, file_name, file_len);
+  if (status < 0) {
     prv_unlock_for_file(is_notif_pref);
     return status;
   }
@@ -822,7 +818,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
     prv_unlock_for_file(is_notif_pref);
     PBL_LOG_DBG("Rejecting stale data: watch=%lu phone=%lu", (unsigned long)ctx.last_modified,
                 (unsigned long)timestamp);
-    return E_INVALID_OPERATION;
+    return -ESTALE;
   }
 
   // Phone data is newer or equal, or key doesn't exist - do the insert
@@ -830,9 +826,9 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   // Keep suppressed through prefs_private_handle_blob_db_event() because validation failures
   // can trigger prefs_private_write_backing() which would fire the callback again.
   s_suppress_change_callback = true;
-  status = status_from_errno(pbl_settings_set(&file, key, key_len, val, val_len));
+  status = pbl_settings_set(&file, key, key_len, val, val_len);
 
-  if (PASSED(status)) {
+  if (status >= 0) {
     // Mark as synced - the record came from the phone so it's already in sync
     pbl_settings_mark_synced(&file, key, key_len);
   }
@@ -842,7 +838,7 @@ status_t settings_blob_db_insert_with_timestamp(const uint8_t *key, int key_len,
   prv_unlock_for_file(is_notif_pref);
 
   // Update the in-memory prefs state after successful write
-  if (PASSED(status)) {
+  if (status >= 0) {
     PebbleBlobDBEvent event = {
       .db_id = BlobDBIdSettings,
       .type = BlobDBEventTypeInsert,

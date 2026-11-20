@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/reminder_db.h>
@@ -114,16 +116,16 @@ void test_reminders__initialize(void) {
   fake_pfs_mount();
   reminder_db_init();
 
-  cl_assert_equal_i(reminders_init(), S_SUCCESS);
+  cl_assert_equal_i(reminders_init(), 0);
 
   // add all four explicitly out of order
-  cl_assert(S_SUCCESS == reminders_insert(&item4));
+  cl_assert(0 == reminders_insert(&item4));
 
-  cl_assert(S_SUCCESS == reminders_insert(&item2));
+  cl_assert(0 == reminders_insert(&item2));
 
-  cl_assert(S_SUCCESS == reminders_insert(&item1));
+  cl_assert(0 == reminders_insert(&item1));
 
-  cl_assert(S_SUCCESS == reminders_insert(&item3));
+  cl_assert(0 == reminders_insert(&item3));
 }
 
 void test_reminders__cleanup(void) {
@@ -147,7 +149,7 @@ void test_reminders__timer_test(void) {
   cl_assert_equal_i(get_reminder_timestamp(), 100);
 
   // ...until we insert item 1 back; it has timestamp 0 (in the past).
-  cl_assert(S_SUCCESS == reminders_insert(&item1));
+  cl_assert(0 == reminders_insert(&item1));
   cl_assert(get_reminder_armed());
   cl_assert_equal_m(&item1.header.id, get_reminder_id(), sizeof(TimelineItemId));
   cl_assert_equal_i(get_reminder_timestamp(), 0);
@@ -211,11 +213,11 @@ static TimelineItem s_stale_reminder = {
 
 void test_reminders__stale_item_insert(void) {
   now = 3 * 60 * 60; // 3 hours after stale_reminder
-  cl_assert_equal_i(reminders_insert(&s_stale_reminder), E_INVALID_OPERATION);
+  cl_assert_equal_i(reminders_insert(&s_stale_reminder), -ESTALE);
 }
 
 void test_reminders__stale_item_init(void) {
-  cl_assert_equal_i(reminders_insert(&s_stale_reminder), S_SUCCESS);
+  cl_assert_equal_i(reminders_insert(&s_stale_reminder), 0);
 
   now = 1 * 60 * 60;
   reminders_init();
@@ -257,8 +259,8 @@ static TimelineItem s_reminder_before_all_day_reminder = {
 
 void test_reminders__all_day(void) {
   time_util_update_timezone(&s_tz, 0, 0);
-  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), S_SUCCESS);
-  cl_assert_equal_i(reminders_insert(&s_reminder_before_all_day_reminder), S_SUCCESS);
+  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), 0);
+  cl_assert_equal_i(reminders_insert(&s_reminder_before_all_day_reminder), 0);
 
   // set time to 16:00 PST March 4
   now = 1425513600;
@@ -278,13 +280,13 @@ void test_reminders__stale_all_day(void) {
   time_util_update_timezone(&s_tz, 0, 0);
   // set time to 21:00 PST March 5, when s_all_day_reminder should be rejected for being stale
   now = 1425618000;
-  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), E_INVALID_OPERATION);
+  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), -ESTALE);
 
   // set time to 21:00 PST March 4
   now = 1425531600;
   // if the timestamp of s_all_day_reminder isn't adjusted, it would be rejected for being stale
   // since it "seems" to be timestamped at 15:30 PST, but it should be accepted
-  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), S_SUCCESS);
+  cl_assert_equal_i(reminders_insert(&s_all_day_reminder), 0);
 }
 
 void test_reminders__scheduled_at_the_reminder_time(void) {

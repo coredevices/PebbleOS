@@ -17,7 +17,7 @@ void test_db_init(void) {
   s_test_db.ram_storage = ram_storage_create();
 }
 
-status_t test_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int test_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   return ram_storage_insert(&s_test_db.ram_storage, key, key_len, val, val_len);
 }
 
@@ -25,19 +25,19 @@ int test_db_get_len(const uint8_t *key, int key_len) {
   return ram_storage_get_len(&s_test_db.ram_storage, key, key_len);
 }
 
-status_t test_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+int test_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   return ram_storage_read(&s_test_db.ram_storage, key, key_len, val_out, val_len);
 }
 
-status_t test_db_delete(const uint8_t *key, int key_len) {
+int test_db_delete(const uint8_t *key, int key_len) {
   return ram_storage_delete(&s_test_db.ram_storage, key, key_len);
 }
 
-status_t test_db_flush(void) {
+int test_db_flush(void) {
   return ram_storage_flush(&s_test_db.ram_storage);
 }
 
-status_t test_db_is_dirty(bool *is_dirty_out) {
+int test_db_is_dirty(bool *is_dirty_out) {
   return ram_storage_is_dirty(&s_test_db.ram_storage, is_dirty_out);
 }
 
@@ -60,6 +60,6 @@ BlobDBDirtyItem *test_db_get_dirty_list(void) {
   return dirty_items;
 }
 
-status_t test_db_mark_synced(uint8_t *key, int key_len) {
+int test_db_mark_synced(uint8_t *key, int key_len) {
   return ram_storage_mark_synced(&s_test_db.ram_storage, key, key_len);
 }

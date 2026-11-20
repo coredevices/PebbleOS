@@ -836,6 +836,21 @@ void test_blob_db_endpoint__handle_clear_command_success(void) {
   cl_assert_equal_i((resp_ptr - s_data), s_sending_data_length);
 }
 
+static BlobDBResponse prv_clear_response(uint8_t db_id) {
+  const uint8_t cmd[] = {BLOB_DB_COMMAND_CLEAR, 0x17, 0x00, db_id};
+  const uint8_t *resp_ptr = process_blob_db_command(cmd, sizeof(cmd));
+  cl_assert_equal_i(0x17, *(uint16_t *)resp_ptr);
+  return resp_ptr[sizeof(uint16_t)];
+}
+
+void test_blob_db_endpoint__handle_clear_command_invalid_database(void) {
+  cl_assert_equal_i(BLOB_DB_INVALID_DATABASE_ID, prv_clear_response(NumBlobDBs));
+}
+
+void test_blob_db_endpoint__handle_clear_command_unsupported(void) {
+  cl_assert_equal_i(BLOB_DB_DATA_STALE, prv_clear_response(BlobDBIdTest));
+}
+
 /*************************************
  * Checking for invalid operation *
  *************************************/

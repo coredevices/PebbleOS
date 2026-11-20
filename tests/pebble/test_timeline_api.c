@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/timeline/attribute.h>
@@ -26,7 +28,7 @@
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
 
-status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
+int blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
   return pin_db_delete(key, key_len);
 }
 
@@ -38,8 +40,8 @@ bool ancs_notifications_is_bulk_action_mode_enabled(void) {
   return false;
 }
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
+int reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return 0;
 }
 
 void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
@@ -153,7 +155,7 @@ void test_timeline_api__item_pin_to_timeline(void) {
 
   cl_assert(timeline_remove(&id));
   cl_assert(!timeline_exists(&id));
-  cl_assert_equal_i(pin_db_get(&id, &item_temp), -9);
+  cl_assert_equal_i(pin_db_get(&id, &item_temp), -ENOENT);
 }
 
 void test_timeline_api__item_attributes_pin_to_timeline(void) {
@@ -182,5 +184,5 @@ void test_timeline_api__item_attributes_pin_to_timeline(void) {
 
   cl_assert(timeline_remove(&id));
   cl_assert(!timeline_exists(&id));
-  cl_assert_equal_i(pin_db_get(&id, &item_temp), -9);
+  cl_assert_equal_i(pin_db_get(&id, &item_temp), -ENOENT);
 }

@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/services/timeline/item.h>
-#include <pbl/system/status_codes.h>
 
 /**
  * @defgroup services_blob_db_notif_db Notification database
@@ -27,9 +26,9 @@ void notif_db_init(void);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record in the notification database.
@@ -38,22 +37,22 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if not found, or a negative error code.
+ * @return Length of the value in bytes, 0 if not found, or a negative errno.
  */
 int notif_db_get_len(const uint8_t *key, int key_len);
 
 /**
  * @brief Read a record from the notification database.
  *
- * Not implemented: returns @c S_SUCCESS without writing to @p val_out.
+ * Not implemented: returns @c 0 without writing to @p val_out.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer for the value.
  * @param val_out_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t notif_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
+int notif_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
 
 /**
  * @brief Delete a record from the notification database.
@@ -62,15 +61,15 @@ status_t notif_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int va
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t notif_db_delete(const uint8_t *key, int key_len);
+int notif_db_delete(const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records of the notification database.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t notif_db_flush(void);
+int notif_db_flush(void);
 
 /** @} */

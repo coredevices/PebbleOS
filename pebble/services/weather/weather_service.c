@@ -174,9 +174,9 @@ static void prv_update_default_location_cache(void) {
     goto cleanup;
   }
   WeatherDBEntry *entry = pbl_zalloc_check(entry_len);
-  status_t rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
-                                (uint8_t *)entry, entry_len);
-  if (rv != S_SUCCESS) {
+  int rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
+                           (uint8_t *)entry, entry_len);
+  if (rv != 0) {
     goto free_entry;
   }
   WeatherLocationForecast *forecast_out = pbl_zalloc_check(sizeof(WeatherLocationForecast));

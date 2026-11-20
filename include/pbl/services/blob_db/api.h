@@ -10,7 +10,6 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
 /**
@@ -26,7 +25,7 @@
  * Each database implements the @c BlobDB*Impl callbacks and is registered with its id in
  * the @c s_blob_dbs table of @c pebble/services/blob_db/api.c. Callbacks are blocking and return
  * once the command has been executed; a database is not guaranteed to persist across
- * reboots. Unimplemented operations return @c E_INVALID_OPERATION.
+ * reboots. Unimplemented operations return @c -ENOTSUP.
  *
  * Databases that track dirty records (records written on the watch and not yet acknowledged
  * by the phone) can be written back to the phone with the sync API (see
@@ -34,8 +33,7 @@
  *
  * @code{.c}
  * const Uuid key = ...;
- * status_t rv = blob_db_insert(BlobDBIdContacts, (const uint8_t *)&key, sizeof(key), val,
- *                              val_len);
+ * int rv = blob_db_insert(BlobDBIdContacts, (const uint8_t *)&key, sizeof(key), val, val_len);
  *
  * int len = blob_db_get_len(BlobDBIdContacts, (const uint8_t *)&key, sizeof(key));
  * if (len > 0) {
@@ -113,17 +111,16 @@ typedef void (*BlobDBInitImpl)(void);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise (see @c StatusCode).
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBInsertImpl)(const uint8_t *key, int key_len, const uint8_t *val,
-                                     int val_len);
+typedef int (*BlobDBInsertImpl)(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record's value.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if the key does not exist, or a negative error code.
+ * @return Length of the value in bytes, 0 if the key does not exist, or a negative errno.
  */
 typedef int (*BlobDBGetLenImpl)(const uint8_t *key, int key_len);
 
@@ -136,9 +133,9 @@ typedef int (*BlobDBGetLenImpl)(const uint8_t *key, int key_len);
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer of @p val_len bytes.
  * @param val_len Number of bytes to copy.
- * @return @c S_SUCCESS on success, an error code otherwise (see @c StatusCode).
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBReadImpl)(const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
+typedef int (*BlobDBReadImpl)(const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
 
 /**
  * @brief Delete a record.
@@ -147,27 +144,27 @@ typedef status_t (*BlobDBReadImpl)(const uint8_t *key, int key_len, uint8_t *val
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise (see @c StatusCode).
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBDeleteImpl)(const uint8_t *key, int key_len);
+typedef int (*BlobDBDeleteImpl)(const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records.
  *
  * Blocking.
  *
- * @return @c S_SUCCESS on success, an error code otherwise (see @c StatusCode).
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBFlushImpl)(void);
+typedef int (*BlobDBFlushImpl)(void);
 
 /**
  * @brief Check whether the database holds records not yet synced to the phone.
  *
  * @param[out] is_dirty_out Set to true if there is at least one dirty record. Undefined on
  * failure.
- * @return @c S_SUCCESS if the query succeeded, an error code otherwise.
+ * @return 0 if the query succeeded, a negative errno otherwise.
  */
-typedef status_t (*BlobDBIsDirtyImpl)(bool *is_dirty_out);
+typedef int (*BlobDBIsDirtyImpl)(bool *is_dirty_out);
 
 /**
  * @brief Build the list of records not yet synced to the phone.
@@ -183,18 +180,18 @@ typedef BlobDBDirtyItem *(*BlobDBGetDirtyListImpl)(void);
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBMarkSyncedImpl)(const uint8_t *key, int key_len);
+typedef int (*BlobDBMarkSyncedImpl)(const uint8_t *key, int key_len);
 
 /**
  * @brief Reclaim unused space in the backing settings file.
  *
  * Blocking. Only databases backed by a settings file implement it.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-typedef status_t (*BlobDBCompactImpl)(void);
+typedef int (*BlobDBCompactImpl)(void);
 
 /**
  * @brief Emit a @c PEBBLE_BLOBDB_EVENT.
@@ -237,13 +234,13 @@ void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @retval S_SUCCESS Inserted.
- * @retval E_RANGE Invalid or disabled database.
- * @retval E_INVALID_OPERATION Operation not supported by the database.
- * @return Other error codes from ::BlobDBInsertImpl.
+ * @retval 0 Inserted.
+ * @retval -ENODEV Invalid or disabled database.
+ * @retval -ENOTSUP Operation not supported by the database.
+ * @return Other negative errno values from ::BlobDBInsertImpl.
  */
-status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
-                        int val_len);
+int blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
+                   int val_len);
 
 /**
  * @brief Get the length of a record's value.
@@ -251,8 +248,8 @@ status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const u
  * @param db_id Database.
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length in bytes, 0 if the key does not exist, or a negative error code
- * (@c E_RANGE for an invalid database, @c E_INVALID_OPERATION if unsupported).
+ * @return Length in bytes, 0 if the key does not exist, or a negative errno (@c -ENODEV for an
+ * invalid database, @c -ENOTSUP if unsupported).
  */
 int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len);
 
@@ -264,13 +261,12 @@ int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len);
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer of @p val_len bytes.
  * @param val_len Number of bytes to copy, usually from blob_db_get_len().
- * @retval S_SUCCESS Read.
- * @retval E_RANGE Invalid or disabled database.
- * @retval E_INVALID_OPERATION Operation not supported by the database.
- * @return Other error codes from ::BlobDBReadImpl.
+ * @retval 0 Read.
+ * @retval -ENODEV Invalid or disabled database.
+ * @retval -ENOTSUP Operation not supported by the database.
+ * @return Other negative errno values from ::BlobDBReadImpl.
  */
-status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out,
-                      int val_len);
+int blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out, int val_len);
 
 /**
  * @brief Delete a record.
@@ -280,12 +276,12 @@ status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *
  * @param db_id Database.
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @retval S_SUCCESS Deleted.
- * @retval E_RANGE Invalid or disabled database.
- * @retval E_INVALID_OPERATION Operation not supported by the database.
- * @return Other error codes from ::BlobDBDeleteImpl.
+ * @retval 0 Deleted.
+ * @retval -ENODEV Invalid or disabled database.
+ * @retval -ENOTSUP Operation not supported by the database.
+ * @return Other negative errno values from ::BlobDBDeleteImpl.
  */
-status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len);
+int blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records of a database.
@@ -293,12 +289,12 @@ status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len);
  * Emits a ::BlobDBEventTypeFlush event on success.
  *
  * @param db_id Database.
- * @retval S_SUCCESS Flushed.
- * @retval E_RANGE Invalid or disabled database.
- * @retval E_INVALID_OPERATION Operation not supported by the database.
- * @return Other error codes from ::BlobDBFlushImpl.
+ * @retval 0 Flushed.
+ * @retval -ENODEV Invalid or disabled database.
+ * @retval -ENOTSUP Operation not supported by the database.
+ * @return Other negative errno values from ::BlobDBFlushImpl.
  */
-status_t blob_db_flush(BlobDBId db_id);
+int blob_db_flush(BlobDBId db_id);
 
 /**
  * @brief Get the records of a database that have not been synced to the phone.
@@ -320,11 +316,11 @@ BlobDBDirtyItem *blob_db_get_dirty_list(BlobDBId db_id);
  * @param db_id Database.
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @retval S_SUCCESS Marked.
- * @retval E_RANGE Invalid or disabled database.
- * @retval E_INVALID_OPERATION Operation not supported by the database.
- * @return Other error codes from ::BlobDBMarkSyncedImpl.
+ * @retval 0 Marked.
+ * @retval -ENODEV Invalid or disabled database.
+ * @retval -ENOTSUP Operation not supported by the database.
+ * @return Other negative errno values from ::BlobDBMarkSyncedImpl.
  */
-status_t blob_db_mark_synced(BlobDBId db_id, uint8_t *key, int key_len);
+int blob_db_mark_synced(BlobDBId db_id, uint8_t *key, int key_len);
 
 /** @} */

@@ -10,21 +10,20 @@ PBL_WEAK void reminder_db_init(void) {
   return;
 }
 
-PBL_WEAK status_t reminder_db_insert_item(TimelineItem *item) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_insert_item(TimelineItem *item) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
-                                     int val_len) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+  return 0;
 }
 
 PBL_WEAK int reminder_db_get_len(const uint8_t *key, int key_len) {
   return 1;
 }
 
-PBL_WEAK status_t reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+  return 0;
 }
 
 PBL_WEAK bool reminder_db_find_by_timestamp_title(time_t timestamp, const char *title,
@@ -33,46 +32,46 @@ PBL_WEAK bool reminder_db_find_by_timestamp_title(time_t timestamp, const char *
   return false;
 }
 
-PBL_WEAK status_t reminder_db_delete(const uint8_t *key, int key_len) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_delete(const uint8_t *key, int key_len) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_flush(void) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_flush(void) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_each(pbl_settings_each_cb_t each, void *data) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_each(pbl_settings_each_cb_t each, void *data) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_read_item(TimelineItem *item_out, TimelineItemId *id) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_delete_item(const TimelineItemId *id, bool send_event) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_delete_item(const TimelineItemId *id, bool send_event) {
+  return 0;
 }
 
 PBL_WEAK bool reminder_db_is_empty(void) {
   return false;
 }
 
-PBL_WEAK status_t reminder_db_delete_with_parent(const TimelineItemId *parent_id) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_delete_with_parent(const TimelineItemId *parent_id) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_is_dirty(bool *is_dirty_out) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_is_dirty(bool *is_dirty_out) {
+  return 0;
 }
 
 PBL_WEAK BlobDBDirtyItem *reminder_db_get_dirty_list(void) {
   return nullptr;
 }
 
-PBL_WEAK status_t reminder_db_mark_synced(const uint8_t *key, int key_len) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_mark_synced(const uint8_t *key, int key_len) {
+  return 0;
 }
 
-PBL_WEAK status_t reminder_db_compact(void) {
-  return S_SUCCESS;
+PBL_WEAK int reminder_db_compact(void) {
+  return 0;
 }

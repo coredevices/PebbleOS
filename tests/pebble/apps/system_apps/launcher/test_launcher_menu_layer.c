@@ -385,7 +385,7 @@ void test_launcher_menu_layer__no_icon_app_with_glance(void) {
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
                         &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),
-                    S_SUCCESS);
+                    0);
 
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_NoIcon);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -416,8 +416,7 @@ static void prv_insert_glances_for_app_selected_and_apps_above_and_below_with_gl
     snprintf(glance.slices[0].icon_and_subtitle.template_string,
              sizeof(glance.slices[0].icon_and_subtitle.template_string), "%s glance",
              s_fake_app_nodes[i].node.name);
-    cl_assert_equal_i(app_glance_db_insert_glance(&s_fake_app_nodes[i].node.uuid, &glance),
-                      S_SUCCESS);
+    cl_assert_equal_i(app_glance_db_insert_glance(&s_fake_app_nodes[i].node.uuid, &glance), 0);
   }
 }
 
@@ -502,7 +501,7 @@ void test_launcher_menu_layer__no_icon_app_with_glance_pdc(void) {
   };
   cl_assert_equal_i(app_glance_db_insert_glance(
                         &s_fake_app_nodes[LauncherMenuLayerTestApp_NoIcon].node.uuid, &glance),
-                    S_SUCCESS);
+                    0);
 
   prv_render_launcher_menu_layer(LauncherMenuLayerTestApp_NoIcon);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));

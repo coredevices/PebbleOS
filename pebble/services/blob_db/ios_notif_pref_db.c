@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -14,8 +16,6 @@
 #include <pbl/settings/settings.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
-
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -31,12 +31,12 @@ typedef struct PBL_PACKED {
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
-static status_t prv_file_open_and_lock(struct pbl_settings_file *file) {
+static int prv_file_open_and_lock(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  status_t rv = status_from_errno(pbl_settings_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME,
-                                                             iOS_NOTIF_PREF_MAX_SIZE, PBL_KIB(4)));
-  if (rv != S_SUCCESS) {
+  int rv = pbl_settings_open_growable(file, iOS_NOTIF_PREF_DB_FILE_NAME, iOS_NOTIF_PREF_MAX_SIZE,
+                                      PBL_KIB(4));
+  if (rv != 0) {
     pbl_mutex_unlock(&s_mutex);
   }
 
@@ -49,18 +49,18 @@ static void prv_file_close_and_unlock(struct pbl_settings_file *file) {
 }
 
 //! Assumes the file is opened and locked
-static status_t prv_save_serialized_prefs(struct pbl_settings_file *file, const void *key,
-                                          size_t key_len, const void *val, size_t val_len) {
+static int prv_save_serialized_prefs(struct pbl_settings_file *file, const void *key,
+                                     size_t key_len, const void *val, size_t val_len) {
   // Invert flags before writing to flash
   ((SerializedNotifPrefs *)val)->flags = ~(((SerializedNotifPrefs *)val)->flags);
 
-  return status_from_errno(pbl_settings_set(file, key, key_len, val, val_len));
+  return pbl_settings_set(file, key, key_len, val, val_len);
 }
 
 //! Assumes the file is opened and locked
-static status_t prv_read_serialized_prefs(struct pbl_settings_file *file, const void *key,
-                                          size_t key_len, void *val_out, size_t val_out_len) {
-  status_t rv = status_from_errno(pbl_settings_get(file, key, key_len, val_out, val_out_len));
+static int prv_read_serialized_prefs(struct pbl_settings_file *file, const void *key,
+                                     size_t key_len, void *val_out, size_t val_out_len) {
+  int rv = pbl_settings_get(file, key, key_len, val_out, val_out_len);
 
   // The flags for inverted before writing, revert them back
   ((SerializedNotifPrefs *)val_out)->flags = ~(((SerializedNotifPrefs *)val_out)->flags);
@@ -82,8 +82,8 @@ static int prv_get_serialized_prefs(struct pbl_settings_file *file, const uint8_
     return 0;
   }
 
-  status_t rv = prv_read_serialized_prefs(file, app_id, key_len, (void *)*prefs_out, prefs_len);
-  if (rv != S_SUCCESS) {
+  int rv = prv_read_serialized_prefs(file, app_id, key_len, (void *)*prefs_out, prefs_len);
+  if (rv != 0) {
     pbl_free(*prefs_out);
     return 0;
   }
@@ -97,8 +97,8 @@ static void prv_free_serialized_prefs(SerializedNotifPrefs *prefs) {
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int key_len) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return 0;
   }
 
@@ -167,11 +167,11 @@ void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
   pbl_free(prefs);
 }
 
-status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
-                                       TimelineItemActionGroup *action_group) {
+int ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
+                                  TimelineItemActionGroup *action_group) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
@@ -189,7 +189,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
   prv_file_close_and_unlock(&file);
   prv_free_serialized_prefs(new_prefs);
 
-  if (rv == S_SUCCESS) {
+  if (rv == 0) {
     char buffer[length + 1];
     strncpy(buffer, (const char *)app_id, length);
     buffer[length] = '\0';
@@ -204,27 +204,26 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
 void ios_notif_pref_db_init(void) {
 }
 
-status_t ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
-                                  int val_len) {
+int ios_notif_pref_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (key_len == 0 || val_len == 0 || val_len < (int)sizeof(SerializedNotifPrefs)) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
   rv = prv_save_serialized_prefs(&file, key, key_len, val, val_len);
-  if (rv == S_SUCCESS) {
+  if (rv == 0) {
     char buffer[key_len + 1];
     strncpy(buffer, (const char *)key, key_len);
     buffer[key_len] = '\0';
     PBL_LOG_DBG("iOS notif pref insert <%s>", buffer);
 
     // All records inserted from the phone are not dirty (the phone is the source of truth)
-    rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
+    rv = pbl_settings_mark_synced(&file, key, key_len);
   }
 
   prv_file_close_and_unlock(&file);
@@ -238,8 +237,8 @@ int ios_notif_pref_db_get_len(const uint8_t *key, int key_len) {
   }
 
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return 0;
   }
 
@@ -250,11 +249,10 @@ int ios_notif_pref_db_get_len(const uint8_t *key, int key_len) {
   return length;
 }
 
-status_t ios_notif_pref_db_read(const uint8_t *key, int key_len, uint8_t *val_out,
-                                int val_out_len) {
+int ios_notif_pref_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
@@ -265,46 +263,46 @@ status_t ios_notif_pref_db_read(const uint8_t *key, int key_len, uint8_t *val_ou
   return rv;
 }
 
-status_t ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
+int ios_notif_pref_db_delete(const uint8_t *key, int key_len) {
   if (key_len == 0) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_delete(&file, key, key_len));
+  rv = pbl_settings_delete(&file, key, key_len);
 
   prv_file_close_and_unlock(&file);
 
   return rv;
 }
 
-status_t ios_notif_pref_db_flush(void) {
+int ios_notif_pref_db_flush(void) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_fs_unlink(iOS_NOTIF_PREF_DB_FILE_NAME));
+  int rv = pbl_fs_unlink(iOS_NOTIF_PREF_DB_FILE_NAME);
   pbl_mutex_unlock(&s_mutex);
   return rv;
 }
 
-status_t ios_notif_pref_db_compact(void) {
+int ios_notif_pref_db_compact(void) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
-  rv = status_from_errno(pbl_settings_compact(&file));
+  rv = pbl_settings_compact(&file);
   prv_file_close_and_unlock(&file);
   return rv;
 }
 
-status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
+int ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
@@ -318,7 +316,7 @@ status_t ios_notif_pref_db_is_dirty(bool *is_dirty_out) {
 
 BlobDBDirtyItem *ios_notif_pref_db_get_dirty_list(void) {
   struct pbl_settings_file file;
-  if (S_SUCCESS != prv_file_open_and_lock(&file)) {
+  if (prv_file_open_and_lock(&file) != 0) {
     return nullptr;
   }
 
@@ -330,18 +328,18 @@ BlobDBDirtyItem *ios_notif_pref_db_get_dirty_list(void) {
   return dirty_list;
 }
 
-status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
+int ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
   if (key_len == 0) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_mark_synced(&file, key, key_len));
+  rv = pbl_settings_mark_synced(&file, key, key_len);
 
   prv_file_close_and_unlock(&file);
 
@@ -352,8 +350,8 @@ status_t ios_notif_pref_db_mark_synced(const uint8_t *key, int key_len) {
 #if UNITTEST
 uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
   struct pbl_settings_file file;
-  status_t rv = prv_file_open_and_lock(&file);
-  if (rv != S_SUCCESS) {
+  int rv = prv_file_open_and_lock(&file);
+  if (rv != 0) {
     return 0;
   }
 
@@ -367,8 +365,6 @@ uint32_t ios_notif_pref_db_get_flags(const uint8_t *app_id, int key_len) {
 #endif
 
 #if defined(CONFIG_SHELL) && !defined(CONFIG_RECOVERY_FW)
-#include <errno.h>
-
 #include <pbl/shell/shell.h>
 
 static bool prv_print_notif_pref_db(struct pbl_settings_file *file,
@@ -399,7 +395,7 @@ static bool prv_print_notif_pref_db(struct pbl_settings_file *file,
 
 static int prv_cmd_prefs(const struct pbl_shell *sh, size_t argc, char **argv) {
   struct pbl_settings_file file;
-  if (S_SUCCESS != prv_file_open_and_lock(&file)) {
+  if (prv_file_open_and_lock(&file) != 0) {
     pbl_shell_error(sh, "failed to open the database");
     return -EIO;
   }

@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/alarms/alarm_pin.h>
@@ -47,23 +49,23 @@ static bool prv_collect_untracked_future_pin(struct pbl_settings_file *file,
   return pins->count < ALARM_PIN_REMOVE_BATCH_SIZE;
 }
 
-status_t alarm_pin_remove_untracked_future(time_t now, const Uuid *tracked, size_t tracked_count) {
+int alarm_pin_remove_untracked_future(time_t now, const Uuid *tracked, size_t tracked_count) {
   UntrackedAlarmPins pins = {.now = now, .tracked = tracked, .tracked_count = tracked_count};
   do {
     pins.count = 0;
-    status_t rv = pin_db_each(prv_collect_untracked_future_pin, &pins);
-    if (rv != S_SUCCESS) {
+    int rv = pin_db_each(prv_collect_untracked_future_pin, &pins);
+    if (rv != 0) {
       return rv;
     }
     for (size_t i = 0; i < pins.count; ++i) {
       rv = pin_db_delete((const uint8_t *)&pins.ids[i], sizeof(Uuid));
-      if (rv != S_SUCCESS) {
+      if (rv != 0) {
         return rv;
       }
     }
   } while (pins.count == ALARM_PIN_REMOVE_BATCH_SIZE);
 
-  return S_SUCCESS;
+  return 0;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -90,8 +92,7 @@ static void prv_set_edit_action_attributes(AttributeList *list, AlarmId id) {
 }
 
 // ----------------------------------------------------------------------------------------------
-status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind,
-                       Uuid *uuid_out) {
+int alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind kind, Uuid *uuid_out) {
   const unsigned num_actions = 1; // We are just supporting "edit" for now
   TimelineItemActionGroup action_group = {
     .num_actions = num_actions,
@@ -116,12 +117,12 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
     attribute_list_destroy_list(&pin_attr_list);
     attribute_list_destroy_list(&edit_attr_list);
     pbl_free(action_group.actions);
-    return E_OUT_OF_MEMORY;
+    return -ENOMEM;
   }
   item->header.from_watch = true;
   item->header.parent_id = (Uuid)UUID_ALARMS_DATA_SOURCE;
 
-  status_t rv = pin_db_insert_item_without_event(item);
+  int rv = pin_db_insert_item_without_event(item);
 
   pbl_i18n_free_all(&pin_attr_list);
   pbl_i18n_free_all(&edit_attr_list);
@@ -129,7 +130,7 @@ status_t alarm_pin_add(time_t alarm_time, AlarmId id, AlarmType type, AlarmKind 
   attribute_list_destroy_list(&edit_attr_list);
   pbl_free(action_group.actions);
 
-  if (rv == S_SUCCESS && uuid_out) {
+  if (rv == 0 && uuid_out) {
     *uuid_out = item->header.id;
   }
 

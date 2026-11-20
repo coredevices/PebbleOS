@@ -23,7 +23,7 @@
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
 #define APP_GLANCE_TEST_UUID                                                                       \
@@ -90,7 +90,7 @@ void test_app_glance_service__get_current_slice_basic(void) {
       },
     },
   };
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   // This is the slice we expect to get when we request the current slice
   // Note that we don't expect the pointer to the slice but rather the data behind the pointer
@@ -130,7 +130,7 @@ void test_app_glance_service__get_current_slice_from_glance_with_multiple_unsort
       },
     },
   };
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   // This is the slice we expect to get when we request the current slice
   // Note that we don't expect the pointer to the slice but rather the data behind the pointer
@@ -173,7 +173,7 @@ void test_app_glance_service__slice_with_no_expiration(void) {
       },
     },
   };
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   // We expect the slice with the defined expiration time when we request the current slice
   // Note that we don't expect the pointer to the slice but rather the data behind the pointer

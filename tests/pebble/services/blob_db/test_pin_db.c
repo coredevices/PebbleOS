@@ -125,7 +125,7 @@ void test_pin_db__is_dirty_insert_from_phone(void) {
                 sizeof(TimelineItem));
 
   bool is_dirty = true;
-  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   BlobDBDirtyItem *dirty_list = pin_db_get_dirty_list();
@@ -141,14 +141,14 @@ void test_pin_db__is_dirty_insert_locally(void) {
   pin_db_insert_item(&item4);
 
   bool is_dirty = true;
-  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   BlobDBDirtyItem *dirty_list = pin_db_get_dirty_list();
   cl_assert(!dirty_list);
 
   pin_db_insert_item(&reminder_app_item);
-  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), 0);
   cl_assert(is_dirty);
 
   dirty_list = pin_db_get_dirty_list();
@@ -159,7 +159,7 @@ void test_pin_db__is_dirty_insert_locally(void) {
   pin_db_mark_synced((uint8_t *)&reminder_app_item.header.id, sizeof(TimelineItemId));
 
   // And nothing should be dirty
-  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(pin_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   dirty_list = pin_db_get_dirty_list();

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 
 #include <pbl/services/blob_db/reminder_db.h>
@@ -129,13 +130,13 @@ static TimelineItem title_item2 = {
 
 static void prv_insert_default_reminders(void) {
   // add all four explicitly out of order
-  cl_assert_equal_i(S_SUCCESS, reminder_db_insert_item(&item4));
+  cl_assert_equal_i(0, reminder_db_insert_item(&item4));
 
-  cl_assert_equal_i(S_SUCCESS, reminder_db_insert_item(&item2));
+  cl_assert_equal_i(0, reminder_db_insert_item(&item2));
 
-  cl_assert_equal_i(S_SUCCESS, reminder_db_insert_item(&item1));
+  cl_assert_equal_i(0, reminder_db_insert_item(&item1));
 
-  cl_assert_equal_i(S_SUCCESS, reminder_db_insert_item(&item3));
+  cl_assert_equal_i(0, reminder_db_insert_item(&item3));
 }
 
 // Setup
@@ -162,66 +163,66 @@ void test_reminder_db__basic_test(void) {
   cl_assert(reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(Uuid)) > 0);
 
   // remove #1 and confirm it's deleted
-  cl_assert(S_SUCCESS == reminder_db_delete((uint8_t *)&item1.header.id, sizeof(Uuid)));
+  cl_assert(0 == reminder_db_delete((uint8_t *)&item1.header.id, sizeof(Uuid)));
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
 
   // add 1 back so it's clean
-  cl_assert(S_SUCCESS == reminder_db_insert_item(&item1));
+  cl_assert(0 == reminder_db_insert_item(&item1));
   TimelineItem temp = {};
-  cl_assert(S_SUCCESS == reminder_db_read((uint8_t *)&item1.header.id, sizeof(Uuid),
-                                          (uint8_t *)&temp, sizeof(CommonTimelineItemHeader)));
+  cl_assert(0 == reminder_db_read((uint8_t *)&item1.header.id, sizeof(Uuid), (uint8_t *)&temp,
+                                  sizeof(CommonTimelineItemHeader)));
 
   // Note: we set things to null because it makes it easier to compare two
   // TimelineItems with memcmp
   // check item 1
   memset(&temp, 0, sizeof(TimelineItem));
-  cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
+  cl_assert(0 == reminder_db_next_item_header(&temp));
   cl_assert(uuid_equal(&item1.header.id, &temp.header.id));
   temp.attr_list.attributes = nullptr;
   cl_assert(memcmp(&item1, &temp, sizeof(TimelineItem)) == 0);
-  cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+  cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
 
   // check item 2
   memset(&temp, 0, sizeof(TimelineItem));
-  cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
+  cl_assert(0 == reminder_db_next_item_header(&temp));
   cl_assert(uuid_equal(&item2.header.id, &temp.header.id));
   temp.attr_list.attributes = nullptr;
   cl_assert(memcmp(&item2, &temp, sizeof(TimelineItem)) == 0);
-  cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+  cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
   cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) == 0);
 
   // check item 3 or 4
   memset(&temp, 0, sizeof(TimelineItem));
-  cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
+  cl_assert(0 == reminder_db_next_item_header(&temp));
   if (uuid_equal(&item3.header.id, &temp.header.id)) {
     temp.attr_list.attributes = nullptr;
     timeline_item_free_allocated_buffer(&temp);
     cl_assert(memcmp(&item3, &temp, sizeof(TimelineItem)) == 0);
-    cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+    cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item3, sizeof(Uuid)) == 0);
 
     memset(&temp, 0, sizeof(TimelineItem));
-    cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
+    cl_assert(0 == reminder_db_next_item_header(&temp));
     temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item4, &temp, sizeof(TimelineItem)) == 0);
-    cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+    cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item4.header.id, sizeof(Uuid)) == 0);
   } else {
     temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item4, &temp, sizeof(TimelineItem)) == 0);
-    cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+    cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item4, sizeof(Uuid)) == 0);
 
     memset(&temp, 0, sizeof(TimelineItem));
-    cl_assert(S_SUCCESS == reminder_db_next_item_header(&temp));
+    cl_assert(0 == reminder_db_next_item_header(&temp));
     temp.attr_list.attributes = nullptr;
     cl_assert(memcmp(&item3, &temp, sizeof(TimelineItem)) == 0);
-    cl_assert(S_SUCCESS == reminder_db_delete_item(&temp.header.id, true /* send_event */));
+    cl_assert(0 == reminder_db_delete_item(&temp.header.id, true /* send_event */));
     cl_assert(reminder_db_get_len((uint8_t *)&item3.header.id, sizeof(Uuid)) == 0);
   }
 
-  cl_assert(S_NO_MORE_ITEMS == reminder_db_next_item_header(&temp));
+  cl_assert(-ENOENT == reminder_db_next_item_header(&temp));
 }
 
 void test_reminder_db__size_test(void) {
@@ -249,7 +250,7 @@ void test_reminder_db__wrong_type_test(void) {
     }
   };
 
-  cl_assert(E_INVALID_ARGUMENT == reminder_db_insert_item(&not_a_reminder));
+  cl_assert(-EINVAL == reminder_db_insert_item(&not_a_reminder));
 }
 
 void test_reminder_db__delete_parent(void) {
@@ -260,7 +261,7 @@ void test_reminder_db__delete_parent(void) {
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) > 0);
   cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) > 0);
   // remove the two that share a parent
-  cl_assert_equal_i(reminder_db_delete_with_parent(parent_id), S_SUCCESS);
+  cl_assert_equal_i(reminder_db_delete_with_parent(parent_id), 0);
   // confirm the two are gone
   cl_assert(reminder_db_get_len((uint8_t *)&item1.header.id, sizeof(Uuid)) == 0);
   cl_assert(reminder_db_get_len((uint8_t *)&item2.header.id, sizeof(Uuid)) == 0);
@@ -270,21 +271,21 @@ void test_reminder_db__delete_parent(void) {
 }
 
 void test_reminder_db__bad_item(void) {
-  cl_assert(S_SUCCESS != reminder_db_insert((uint8_t *)&bad_item.common.id, UUID_SIZE,
-                                            (uint8_t *)&bad_item, sizeof(bad_item)));
+  cl_assert(0 != reminder_db_insert((uint8_t *)&bad_item.common.id, UUID_SIZE, (uint8_t *)&bad_item,
+                                    sizeof(bad_item)));
 }
 
 void test_reminder_db__read_nonexistant(void) {
   TimelineItem item = {};
-  cl_assert_equal_i(E_DOES_NOT_EXIST, reminder_db_read_item(&item, &bad_item.common.id));
+  cl_assert_equal_i(-ENOENT, reminder_db_read_item(&item, &bad_item.common.id));
 }
 
 void test_reminder_db__find_by_timestamp_title(void) {
   prv_insert_default_reminders();
 
   // Add items with title attributes for searching (out of order for worst-case scenario)
-  cl_assert(S_SUCCESS == reminder_db_insert_item(&title_item2));
-  cl_assert(S_SUCCESS == reminder_db_insert_item(&title_item1));
+  cl_assert(0 == reminder_db_insert_item(&title_item2));
+  cl_assert(0 == reminder_db_insert_item(&title_item1));
 
   TimelineItem reminder;
 
@@ -323,7 +324,7 @@ void test_reminder_db__is_dirty_insert_from_phone(void) {
                      sizeof(TimelineItem));
 
   bool is_dirty = true;
-  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   BlobDBDirtyItem *dirty_list = reminder_db_get_dirty_list();
@@ -340,7 +341,7 @@ void test_reminder_db__is_dirty_insert_locally(void) {
   reminder_db_insert_item(&item4);
 
   bool is_dirty = false;
-  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), 0);
   cl_assert(is_dirty);
 
   BlobDBDirtyItem *dirty_list = reminder_db_get_dirty_list();
@@ -352,7 +353,7 @@ void test_reminder_db__is_dirty_insert_locally(void) {
   reminder_db_mark_synced((uint8_t *)&item3.header.id, sizeof(TimelineItemId));
 
   // We should now only have 2 dirty items
-  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), 0);
   cl_assert(is_dirty);
 
   dirty_list = reminder_db_get_dirty_list();
@@ -364,7 +365,7 @@ void test_reminder_db__is_dirty_insert_locally(void) {
   reminder_db_mark_synced((uint8_t *)&item4.header.id, sizeof(TimelineItemId));
 
   // And nothing should be dirty
-  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(reminder_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   dirty_list = reminder_db_get_dirty_list();

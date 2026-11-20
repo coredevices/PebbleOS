@@ -57,7 +57,7 @@ void sys_timeline_resources_get_id(const TimelineResourceInfo *timeline_res,
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
 // Setup
@@ -103,7 +103,7 @@ void test_app_glance__basic_reload(void) {
 
   // Read the glance back
   AppGlance glance = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   // Compare the glance read back with the expected glance below
   AppGlance expected_glance = (AppGlance){
@@ -252,7 +252,7 @@ static void prv_glance_clear_test(AppGlanceReloadCallback reload_cb) {
       },
     },
   };
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   // Request the current slice for this glance; this should match the earliest-expiring slice in
   // the glance we just inserted above
@@ -268,7 +268,7 @@ static void prv_glance_clear_test(AppGlanceReloadCallback reload_cb) {
 
   // Read the glance back and check that it doesn't have any slices anymore
   AppGlance glance_read = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance_read), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &glance_read), 0);
   cl_assert_equal_i(glance_read.num_slices, 0);
   for (unsigned int i = 0; i < sizeof(glance_read.slices); i++) {
     const uint8_t byte = ((uint8_t *)glance_read.slices)[i];

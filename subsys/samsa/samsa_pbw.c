@@ -357,10 +357,10 @@ static void prv_install(void *data) {
   };
   memcpy(&entry.uuid, &install->info.uuid, sizeof(entry.uuid));
   strncpy(entry.name, install->info.name, PBL_MIN(sizeof(entry.name), sizeof(install->info.name)));
-  const status_t status = app_db_insert((const uint8_t *)&entry.uuid, sizeof(entry.uuid),
-                                        (const uint8_t *)&entry, sizeof(entry));
-  if (status != S_SUCCESS) {
-    PBL_LOG_ERR("Could not add %s to the app database: %" PRId32, install->info.name, status);
+  const int rv = app_db_insert((const uint8_t *)&entry.uuid, sizeof(entry.uuid),
+                               (const uint8_t *)&entry, sizeof(entry));
+  if (rv != 0) {
+    PBL_LOG_ERR("Could not add %s to the app database: %d", install->info.name, rv);
     prv_finish(install);
     return;
   }

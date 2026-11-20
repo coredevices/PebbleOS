@@ -1196,7 +1196,7 @@ static bool PBL_NOINLINE prv_setup_timeline_app(void) {
   TimelineItem pin;
   bool launch_into_pin = false;
   if (args && args->launch_into_pin && !uuid_is_invalid(&args->pin_id) &&
-      pin_db_get(&args->pin_id, &pin) == S_SUCCESS) {
+      pin_db_get(&args->pin_id, &pin) == 0) {
     launch_into_pin = true;
     if (!args->stay_in_list_view) {
       // Launching directly into the pin, change the direction to match

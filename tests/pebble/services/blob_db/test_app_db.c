@@ -108,14 +108,14 @@ void test_app_db__initialize(void) {
   app_db_init();
 
   // add all three
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1, sizeof(AppDBEntry)));
 
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2, sizeof(AppDBEntry)));
 
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app3.uuid, sizeof(Uuid), (uint8_t *)&app3,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app3.uuid, sizeof(Uuid), (uint8_t *)&app3, sizeof(AppDBEntry)));
 }
 
 void test_app_db__cleanup(void) {
@@ -132,34 +132,34 @@ void test_app_db__basic_test(void) {
   cl_assert(app_db_get_len((uint8_t *)&app3.uuid, sizeof(Uuid)) > 0);
 
   // remove #1 and confirm it's deleted
-  cl_assert_equal_i(S_SUCCESS, app_db_delete((uint8_t *)&app1.uuid, sizeof(Uuid)));
+  cl_assert_equal_i(0, app_db_delete((uint8_t *)&app1.uuid, sizeof(Uuid)));
   cl_assert_equal_i(0, app_db_get_len((uint8_t *)&app1.uuid, sizeof(Uuid)));
 
   // add 1 back so it's clean
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1, sizeof(AppDBEntry)));
 
   AppDBEntry temp;
-  cl_assert_equal_i(S_SUCCESS, app_db_read((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&temp,
-                                           sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_read((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&temp, sizeof(AppDBEntry)));
 
   cl_assert_equal_i(5, app_db_check_next_unique_id());
 
   // check app 1
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app1.uuid, &temp.uuid));
   cl_assert_equal_i(0, strncmp((char *)&app1.name, (char *)&temp.name, APP_NAME_SIZE_BYTES));
 
   // check app 2
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app1.uuid, &temp.uuid));
   cl_assert_equal_i(0, strncmp((char *)&app1.name, (char *)&temp.name, APP_NAME_SIZE_BYTES));
 
   // check app 3
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app3.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app3.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app3.uuid, &temp.uuid));
   cl_assert_equal_i(0, strncmp((char *)&app3.name, (char *)&temp.name, APP_NAME_SIZE_BYTES));
 }
@@ -171,21 +171,21 @@ void test_app_db__retrieve_app_db_entries_by_install_id(void) {
   memset(&temp, 0, sizeof(AppDBEntry));
   AppInstallId app_one_id = app_db_get_install_id_for_uuid(&app1.uuid);
   cl_assert(app_one_id > 0);
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_install_id(app_one_id, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_install_id(app_one_id, &temp));
   cl_assert_equal_b(true, uuid_equal(&app1.uuid, &temp.uuid));
 
   // check app_db_get_install_id_for_uuid for app 2
   memset(&temp, 0, sizeof(AppDBEntry));
   AppInstallId app_two_id = app_db_get_install_id_for_uuid(&app2.uuid);
   cl_assert(app_one_id > 0);
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_install_id(app_two_id, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_install_id(app_two_id, &temp));
   cl_assert_equal_b(true, uuid_equal(&app2.uuid, &temp.uuid));
 
   // check app_db_get_install_id_for_uuid for app 3
   memset(&temp, 0, sizeof(AppDBEntry));
   AppInstallId app_three_id = app_db_get_install_id_for_uuid(&app3.uuid);
   cl_assert(app_one_id > 0);
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_install_id(app_three_id, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_install_id(app_three_id, &temp));
   cl_assert_equal_b(true, uuid_equal(&app3.uuid, &temp.uuid));
 }
 
@@ -194,35 +194,35 @@ void test_app_db__retrieve_app_db_entries_by_uuid(void) {
 
   // check app_db_get_install_id_for_uuid for app 1
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app1.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app1.uuid, &temp.uuid));
 
   // check app_db_get_install_id_for_uuid for app 2
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app2.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app2.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app2.uuid, &temp.uuid));
 
   // check app_db_get_install_id_for_uuid for app 3
   memset(&temp, 0, sizeof(AppDBEntry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app3.uuid, &temp));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app3.uuid, &temp));
   cl_assert_equal_b(true, uuid_equal(&app3.uuid, &temp.uuid));
 }
 
 void test_app_db__overwrite(void) {
   // add 3 of the same. Confirm that the entry was overwritten by checking next ID.
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1,
-                                             sizeof(AppDBEntry)));
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1,
-                                             sizeof(AppDBEntry)));
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1, sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1, sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app1.uuid, sizeof(Uuid), (uint8_t *)&app1, sizeof(AppDBEntry)));
   cl_assert(app_db_check_next_unique_id() == 4);
 
   // add two more duplicates of a different app. Confirm it only increments by 1.
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2,
-                                             sizeof(AppDBEntry)));
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2,
-                                             sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2, sizeof(AppDBEntry)));
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&app2.uuid, sizeof(Uuid), (uint8_t *)&app2, sizeof(AppDBEntry)));
   cl_assert(app_db_check_next_unique_id() == 4);
 }
 
@@ -270,10 +270,10 @@ void test_app_db__reads_legacy_stored_records_without_grant(void) {
   pbl_settings_close(&file);
   AppDBEntry entry;
   memset(&entry, 0xff, sizeof(entry));
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_uuid(&app1.uuid, &entry));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_uuid(&app1.uuid, &entry));
   cl_assert_equal_i(0, entry.permissions);
   cl_assert_equal_m(&app1, &entry, APP_DB_LEGACY_ENTRY_SIZE);
-  cl_assert_equal_i(S_SUCCESS, app_db_get_app_entry_for_install_id(id, &entry));
+  cl_assert_equal_i(0, app_db_get_app_entry_for_install_id(id, &entry));
   cl_assert_equal_i(0, entry.permissions);
   app_db_enumerate_entries(prv_assert_legacy_grant_denied, NULL);
 }

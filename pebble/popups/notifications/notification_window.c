@@ -532,7 +532,7 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
   } else if (type == NotificationReminder) {
     // validate reminder
     int rv = reminder_db_read_item(item, id);
-    if (rv != S_SUCCESS) {
+    if (rv != 0) {
       PBL_LOG_ERR("Failed to read reminder");
       goto cleanup;
     }
@@ -543,7 +543,7 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
       attribute_get_uint32(&item->attr_list, AttributeIdIconTiny, TIMELINE_RESOURCE_INVALID);
   TimelineItem pin;
   if (timeline_resources_is_system(icon) ||
-      pin_db_read_item_header(&pin, &item->header.parent_id) != S_SUCCESS) {
+      pin_db_read_item_header(&pin, &item->header.parent_id) != 0) {
     data->notification_app_id = (Uuid)UUID_INVALID;
   } else {
     data->notification_app_id = pin.header.parent_id;
@@ -634,13 +634,13 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   }
 
   TimelineItem reminder;
-  if (S_SUCCESS != reminder_db_read_item(&reminder, id)) {
+  if (reminder_db_read_item(&reminder, id) != 0) {
     return;
   }
   timeline_item_free_allocated_buffer(&reminder);
 
   TimelineItem item;
-  if (S_SUCCESS != pin_db_get(&reminder.header.parent_id, &item)) {
+  if (pin_db_get(&reminder.header.parent_id, &item) != 0) {
     return;
   }
   timeline_item_free_allocated_buffer(&item);
@@ -742,8 +742,8 @@ static void prv_snooze_reminder_cb(ActionMenu *action_menu, const ActionMenuItem
   TimelineItem *item = prv_get_current_notification(window_data);
 
   // Snooze reminder.
-  // It's highly unlikely we'll get E_INVALID_OPERATION based on the snooze logic parameters.
-  if (reminders_snooze((Reminder *)item) == S_SUCCESS) {
+  // It's highly unlikely we'll get -ENOTSUP based on the snooze logic parameters.
+  if (reminders_snooze((Reminder *)item) == 0) {
     prv_push_snooze_dialog();
   }
 

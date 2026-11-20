@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdatomic.h>
 #include <time.h>
 
@@ -14,7 +15,6 @@
 #include <pbl/services/timeline/calendar.h>
 #include <pbl/services/timeline/event.h>
 #include <pbl/services/timeline/peek.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/units.h>
 
 #include <kernel/events.h>
@@ -131,12 +131,12 @@ static void prv_update_status(void) {
 
   // Filter
   TimelineItem item = {};
-  const status_t rv = pin_db_next_item_header(&item, prv_item_header_filter);
+  const int rv = pin_db_next_item_header(&item, prv_item_header_filter);
   uint32_t timeout_ms = 0;
-  if ((rv != S_SUCCESS) && (rv != S_NO_MORE_ITEMS)) {
+  if ((rv < 0) && (rv != -ENOENT)) {
     // A failure occurred. Call the update functions with a NULL item
     PBL_LOG_ERR("Failed to find next event.");
-  } else if (rv != S_NO_MORE_ITEMS) {
+  } else if (rv == 0) {
     // Calculate the timeout before the item buffer is re-used
     timeout_ms = prv_calc_timeout(&item);
   }

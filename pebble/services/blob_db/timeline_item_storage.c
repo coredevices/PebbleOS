@@ -1,14 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/timeline_item_storage.h>
 #include <pbl/services/time.h>
 #include <pbl/util/units.h>
-
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -152,8 +152,8 @@ bool timeline_item_storage_is_empty(TimelineItemStorage *storage) {
   return rv;
 }
 
-status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
-                                         TimelineItemStorageFilterCallback filter_cb) {
+int timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
+                                    TimelineItemStorageFilterCallback filter_cb) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
   NextInfo next_info = {};
@@ -161,15 +161,15 @@ status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_
   next_info.max_age = storage->max_item_age;
   next_info.filter_cb = filter_cb;
 
-  status_t rv;
+  int rv;
   pbl_settings_each(&storage->file, prv_each_first_item, &next_info);
   if (!next_info.found) {
-    rv = S_NO_MORE_ITEMS;
+    rv = -ENOENT;
     goto cleanup;
   }
 
   *id_out = next_info.id;
-  rv = S_SUCCESS;
+  rv = 0;
 
 cleanup:
   prv_storage_unlock(storage, lock_ticks, __func__);
@@ -190,7 +190,7 @@ bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, cons
   return info.num_children > 0;
 }
 
-status_t timeline_item_storage_delete_with_parent(
+int timeline_item_storage_delete_with_parent(
     TimelineItemStorage *storage, const Uuid *parent_id,
     TimelineItemStorageChildDeleteCallback child_delete_cb) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
@@ -202,12 +202,12 @@ status_t timeline_item_storage_delete_with_parent(
   };
   pbl_settings_each(&storage->file, prv_each_find_children, &info);
 
-  status_t rv = S_SUCCESS;
+  int rv = 0;
   for (int i = 0; i < info.num_children; ++i) {
     const void *key = &info.children_ids[i];
-    rv = status_from_errno(pbl_settings_delete(&storage->file, key, sizeof(Uuid)));
+    rv = pbl_settings_delete(&storage->file, key, sizeof(Uuid));
 
-    if (rv != S_SUCCESS) {
+    if (rv != 0) {
       goto cleanup;
     }
 
@@ -222,12 +222,12 @@ cleanup:
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
-status_t timeline_item_storage_each(TimelineItemStorage *storage,
-                                    TimelineItemStorageEachCallback each, void *data) {
+int timeline_item_storage_each(TimelineItemStorage *storage, TimelineItemStorageEachCallback each,
+                               void *data) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
   pbl_settings_each(&storage->file, each, data);
   prv_storage_unlock(storage, lock_ticks, __func__);
-  return S_SUCCESS;
+  return 0;
 }
 
 void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, uint32_t max_size,
@@ -238,10 +238,9 @@ void timeline_item_storage_init(TimelineItemStorage *storage, char *filename, ui
     .max_item_age = max_age,
   };
   pbl_mutex_init(&storage->mutex);
-  status_t rv = status_from_errno(
-      pbl_settings_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8)));
-  if (FAILED(rv)) {
-    PBL_LOG_ERR("Unable to create settings file %s, rv = %" PRId32 "!", filename, rv);
+  int rv = pbl_settings_open_growable(&storage->file, storage->name, storage->max_size, PBL_KIB(8));
+  if (rv < 0) {
+    PBL_LOG_ERR("Unable to create settings file %s, rv = %d!", filename, rv);
   }
 }
 
@@ -249,24 +248,24 @@ void timeline_item_storage_deinit(TimelineItemStorage *storage) {
   pbl_settings_close(&storage->file);
 }
 
-status_t timeline_item_storage_compact(TimelineItemStorage *storage) {
+int timeline_item_storage_compact(TimelineItemStorage *storage) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = status_from_errno(pbl_settings_compact(&storage->file));
+  int rv = pbl_settings_compact(&storage->file);
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
-status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_t *key, int key_len,
-                                      const uint8_t *val, int val_len, bool mark_as_synced) {
+int timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                                 const uint8_t *val, int val_len, bool mark_as_synced) {
   if (key_len != UUID_SIZE || val_len > PBL_SETTINGS_VAL_MAX_LEN ||
       val_len < (int)sizeof(SerializedTimelineItemHeader)) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Check that the layout has the correct items
   if (!timeline_item_verify_layout_serialized(val, val_len)) {
     PBL_LOG_WRN("Timeline item does not have the correct attributes");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   SerializedTimelineItemHeader *hdr = (SerializedTimelineItemHeader *)val;
@@ -276,7 +275,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
   time_t end_timestamp = timestamp + hdr->common.duration * PBL_SEC_PER_MIN;
   if (end_timestamp < (int)(now - storage->max_item_age)) {
     PBL_LOG_WRN("Rejecting stale timeline item %ld seconds old", (long)(now - timestamp));
-    return E_INVALID_OPERATION;
+    return -ESTALE;
   }
 
   // Invert flags & status to store on flash.
@@ -285,7 +284,7 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
   hdr->common.status = ~hdr->common.status;
 
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = status_from_errno(pbl_settings_set(&storage->file, key, key_len, val, val_len));
+  int rv = pbl_settings_set(&storage->file, key, key_len, val, val_len);
 
   // Restore flags & status
   hdr->common.flags = ~hdr->common.flags;
@@ -302,21 +301,21 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
 int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *key, int key_len) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = pbl_settings_get_len(&storage->file, key, key_len);
+  int rv = pbl_settings_get_len(&storage->file, key, key_len);
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
-status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
-                                    uint8_t *val_out, int val_len) {
+int timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                               uint8_t *val_out, int val_len) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = status_from_errno(pbl_settings_get(&storage->file, key, key_len, val_out, val_len));
+  int rv = pbl_settings_get(&storage->file, key, key_len, val_out, val_len);
 
   // Restore flags & status
   SerializedTimelineItemHeader *hdr = (SerializedTimelineItemHeader *)val_out;
@@ -327,9 +326,9 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t 
   return rv;
 }
 
-status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file *file,
-                                                        struct pbl_settings_record *info,
-                                                        TimelineItem *item) {
+int timeline_item_storage_get_from_settings_record(struct pbl_settings_file *file,
+                                                   struct pbl_settings_record *info,
+                                                   TimelineItem *item) {
   uint8_t *read_buf = pbl_zalloc_check(info->val_len);
   pbl_settings_read_val(file, read_buf, info->val_len);
 
@@ -338,16 +337,16 @@ status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file
   header->common.flags = ~header->common.flags;
   header->common.status = ~header->common.status;
   uint8_t *payload = read_buf + sizeof(SerializedTimelineItemHeader);
-  status_t rv = timeline_item_deserialize_item(item, header, payload) ? S_SUCCESS : E_INTERNAL;
+  int rv = timeline_item_deserialize_item(item, header, payload) ? 0 : -EIO;
 
   pbl_free(read_buf);
   return rv;
 }
 
-status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, const uint8_t *key,
-                                               int key_len, uint8_t status) {
+int timeline_item_storage_set_status_bits(TimelineItemStorage *storage, const uint8_t *key,
+                                          int key_len, uint8_t status) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
@@ -355,36 +354,34 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, con
   int offset = offsetof(SerializedTimelineItemHeader, common.status);
   // Invert status to store on flash
   status = ~status;
-  status_t rv =
-      status_from_errno(pbl_settings_set_byte(&storage->file, key, key_len, offset, status));
+  int rv = pbl_settings_set_byte(&storage->file, key, key_len, offset, status);
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
-status_t timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_t *key,
-                                      int key_len) {
+int timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_t *key, int key_len) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = status_from_errno(pbl_settings_delete(&storage->file, key, key_len));
+  int rv = pbl_settings_delete(&storage->file, key, key_len);
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
 
-status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const uint8_t *key,
-                                           int key_len) {
+int timeline_item_storage_mark_synced(TimelineItemStorage *storage, const uint8_t *key,
+                                      int key_len) {
   if (key_len == 0) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
 
-  status_t rv = status_from_errno(pbl_settings_mark_synced(&storage->file, key, key_len));
+  int rv = pbl_settings_mark_synced(&storage->file, key, key_len);
 
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
@@ -401,10 +398,9 @@ static bool prv_flush_filter_cb(void *key, size_t key_len, void *val, size_t val
   return (~hdr->common.flags & TimelineItemFlagFromWatch) != 0;
 }
 
-status_t timeline_item_storage_flush(TimelineItemStorage *storage) {
+int timeline_item_storage_flush(TimelineItemStorage *storage) {
   uint64_t lock_ticks = prv_storage_lock(storage, __func__);
-  status_t rv = status_from_errno(
-      pbl_settings_rewrite_filtered(&storage->file, prv_flush_filter_cb, nullptr));
+  int rv = pbl_settings_rewrite_filtered(&storage->file, prv_flush_filter_cb, nullptr);
   prv_storage_unlock(storage, lock_ticks, __func__);
   return rv;
 }
