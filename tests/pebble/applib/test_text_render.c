@@ -37,7 +37,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t id, uint32_t 
   if (start_bytes >= sizeof(s_font_data)) {
     return 0;
   }
-  num_bytes = MIN(num_bytes, sizeof(s_font_data) - start_bytes);
+  num_bytes = PBL_MIN(num_bytes, sizeof(s_font_data) - start_bytes);
   memcpy(buffer, &s_font_data[start_bytes], num_bytes);
   return num_bytes;
 }

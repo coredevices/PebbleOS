@@ -83,7 +83,7 @@ static void prv_manipulate_launcher_in_system_framebuffer(GContext *ctx,
   // Move the selection rectangle
   prv_move_region_of_bitmap_horizontally(&ctx->dest_bitmap, selection_rect, delta);
 
-  const int16_t abs_delta = (int16_t)ABS(delta);
+  const int16_t abs_delta = (int16_t)PBL_ABS(delta);
 
   // Move everything above the selection rectangle (if there is anything) and stretch the selection
   // color up

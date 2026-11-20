@@ -135,7 +135,7 @@ static status_t prv_copy_file(const char *from, const char *to) {
   } else {
     size_t remaining = size;
     while (remaining > 0) {
-      size_t n = MIN(remaining, chunk_size);
+      size_t n = PBL_MIN(remaining, chunk_size);
       if ((ret = pbl_fs_read(&from_file, buf, n)) != (int)n) {
         rv = (ret >= 0) ? E_INTERNAL : status_from_errno(ret);
         break;

@@ -20,7 +20,7 @@ static uint8_t s_buf[CHUNK];
  */
 int main(void) {
   const struct pbl_flash_geometry *geo = pbl_flash_get_geometry(FLASH);
-  uint32_t len = MIN(CHECK_LEN, geo->size);
+  uint32_t len = PBL_MIN(CHECK_LEN, geo->size);
   uint32_t crc = 0U;
   uint64_t start;
   int ret;

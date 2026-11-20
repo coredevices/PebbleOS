@@ -83,7 +83,7 @@ static void prv_accel_msg_callback(const uint8_t *data, uint32_t len) {
   // Live senders stream as they sample, so the latest message replaces what is still queued
   pbl_accel_sim_flush(ACCEL);
   for (size_t i = 0U; i < hdr->num_samples; i += PBL_ARRAY_SIZE(samples)) {
-    size_t count = MIN(PBL_ARRAY_SIZE(samples), hdr->num_samples - i);
+    size_t count = PBL_MIN(PBL_ARRAY_SIZE(samples), hdr->num_samples - i);
 
     for (size_t j = 0U; j < count; j++) {
       samples[j] = (struct pbl_accel_sim_sample){
@@ -280,7 +280,7 @@ static void prv_heart_rate_msg_callback(const uint8_t *data, uint32_t len) {
     .hrm_bpm = hdr->bpm,
     .hrm_confidence = off_wrist
                           ? 0
-                          : s_confidence_for_grade[MIN(
+                          : s_confidence_for_grade[PBL_MIN(
                                 hdr->quality, (int8_t)PBL_ARRAY_SIZE(s_confidence_for_grade) - 1)],
   };
   hrm_manager_new_data_cb(&hrm_data);

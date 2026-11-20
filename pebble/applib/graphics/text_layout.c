@@ -96,7 +96,7 @@ static int8_t prv_unicode_space_advance(FontCache *font_cache, const GFont font,
     case NARROW_NO_BREAK_SPACE_CODEPOINT:
       return em / 5;
     case HAIR_SPACE_CODEPOINT:
-      return MAX(em / 12, 1);
+      return PBL_MAX(em / 12, 1);
     case MEDIUM_MATHEMATICAL_SPACE_CODEPOINT:
       return (em * 4) / 18;
     case FIGURE_SPACE_CODEPOINT:
@@ -123,7 +123,7 @@ static int8_t prv_codepoint_get_horizontal_advance(FontCache *const font_cache, 
     return space_advance;
   }
   horiz_advance = text_resources_get_glyph_horiz_advance(font_cache, codepoint, font);
-  return MAX(horiz_advance, 0);
+  return PBL_MAX(horiz_advance, 0);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1147,7 +1147,7 @@ void update_all_layout_update_cb(TextLayout *layout, Line *line,
   if (layout) {
     layout->max_used_size.h = (line->origin.y - layout->box.origin.y) + line->height_px +
                               text_box_params->line_spacing_delta;
-    layout->max_used_size.w = MAX(line->width_px, layout->max_used_size.w);
+    layout->max_used_size.w = PBL_MAX(line->width_px, layout->max_used_size.w);
   }
 }
 
@@ -1182,7 +1182,7 @@ bool is_clip_box_overflow_stop_condition_cb(GContext *ctx, Line *line,
 // Gothic 14 ascent = 864, descent 144
 // Bitham ascent = 800, descend = 200
 // DroidSerif Bold ascent = 1638, descent = 410
-#define TEXT_LINE_DESCENDER_LINE(line) DIVIDE_CEIL((line)->height_px, 5) // 1/5th rounded up
+#define TEXT_LINE_DESCENDER_LINE(line) PBL_DIV_ROUND_UP((line)->height_px, 5) // 1/5th rounded up
 
 PBL_T_STATIC PBL_NOINLINE PBL_T_MOCKABLE void prv_debug_perimeter(GContext *ctx,
                                                                   const GRangeHorizontal *h_range,

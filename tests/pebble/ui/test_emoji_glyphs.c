@@ -66,7 +66,7 @@ size_t sys_resource_load_range(ResAppNum app_num, uint32_t resource_id, uint32_t
   if (resource_id != s_font_resource_id || offset >= s_font_size) {
     return 0;
   }
-  const size_t count = MIN(num_bytes, s_font_size - offset);
+  const size_t count = PBL_MIN(num_bytes, s_font_size - offset);
   memcpy(buffer, s_font_data + offset, count);
   return count;
 }
@@ -151,10 +151,10 @@ static GRect prv_glyphs_bounds(FontInfo *font, const Codepoint *codepoints, size
     if (frame.size.w <= 0 || frame.size.h <= 0) {
       continue;
     }
-    min_x = MIN(min_x, frame.origin.x);
-    min_y = MIN(min_y, frame.origin.y);
-    max_x = MAX(max_x, frame.origin.x + frame.size.w);
-    max_y = MAX(max_y, frame.origin.y + frame.size.h);
+    min_x = PBL_MIN(min_x, frame.origin.x);
+    min_y = PBL_MIN(min_y, frame.origin.y);
+    max_x = PBL_MAX(max_x, frame.origin.x + frame.size.w);
+    max_y = PBL_MAX(max_y, frame.origin.y + frame.size.h);
   }
   return GRect(min_x, min_y, max_x - min_x, max_y - min_y);
 }

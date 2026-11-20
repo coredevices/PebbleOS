@@ -78,7 +78,7 @@ static void prv_port_hole_transition_animation_update(GContext *ctx, Animation *
     }
   }
 
-  compositor_port_hole_transition_draw_outer_ring(ctx, ABS(current_offset_px), GColorBlack);
+  compositor_port_hole_transition_draw_outer_ring(ctx, PBL_ABS(current_offset_px), GColorBlack);
   s_data.animation_offset_px = current_offset_px;
 }
 

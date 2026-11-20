@@ -43,7 +43,7 @@ PBL_T_STATIC uint16_t prv_scroll_layer_get_paging_height(ScrollLayer *scroll_lay
   if (!prv_scroll_layer_is_paging_enabled(scroll_layer)) {
     return 0;
   }
-  return MAX(0, scroll_layer->layer.frame.size.h);
+  return PBL_MAX(0, scroll_layer->layer.frame.size.h);
 }
 
 //! Return callback_context or if NULL,
@@ -67,7 +67,7 @@ void scroll_layer_draw_shadow_sublayer(Layer *shadow_sublayer, GContext *ctx) {
   const int16_t layer_h = shadow_sublayer->bounds.size.h;
   const int16_t shadow_top_bitmap_h = shadow_top->bounds.size.h;
   const int16_t shadow_top_y_offset =
-      -shadow_top_bitmap_h - CLIP(content_offset.y, -shadow_top_bitmap_h, 0);
+      -shadow_top_bitmap_h - PBL_CLAMP(content_offset.y, -shadow_top_bitmap_h, 0);
   if (shadow_top_y_offset >= -shadow_top_bitmap_h) {
     graphics_draw_bitmap_in_rect(ctx, shadow_top,
                                  &GRect(0, shadow_top_y_offset, layer_w, shadow_top_bitmap_h));
@@ -75,7 +75,8 @@ void scroll_layer_draw_shadow_sublayer(Layer *shadow_sublayer, GContext *ctx) {
   // Draw bottom shadow, if (partially) visible:
   const int16_t shadow_bottom_bitmap_h = shadow_top->bounds.size.h;
   const int16_t bottom_clipped_height = (content_size.h + content_offset.y) - frame_size.h;
-  const int16_t shadow_bottom_y_offset = -CLIP(bottom_clipped_height, 0, shadow_bottom_bitmap_h);
+  const int16_t shadow_bottom_y_offset =
+      -PBL_CLAMP(bottom_clipped_height, 0, shadow_bottom_bitmap_h);
   if (shadow_bottom_y_offset < 0) {
     graphics_draw_bitmap_in_rect(
         ctx, shadow_bottom,
@@ -145,8 +146,8 @@ bool scroll_layer_touch_is_gesture_target(const ScrollLayer *scroll_layer) {
 static int16_t prv_scroll_touch_clamp_offset_y(ScrollLayer *scroll_layer, int16_t y) {
   const int16_t frame_h = scroll_layer->layer.frame.size.h;
   const int16_t content_h = scroll_layer_get_content_size(scroll_layer).h;
-  const int16_t min_y = MIN((int16_t)(frame_h - content_h), (int16_t)0);
-  return CLIP(y, min_y, (int16_t)0);
+  const int16_t min_y = PBL_MIN((int16_t)(frame_h - content_h), (int16_t)0);
+  return PBL_CLAMP(y, min_y, (int16_t)0);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -160,12 +161,12 @@ void scroll_layer_touch_handle_pan_update(ScrollLayer *scroll_layer, GPoint base
   // Paging layers keep the hard clamp (rubber-banding would fight page alignment); so does
   // content that fits the frame (nothing to scroll, nothing to bounce).
   if (scroll_layer_get_paging(scroll_layer) || content_h <= frame_h) {
-    const int16_t clamped_y =
-        prv_scroll_touch_clamp_offset_y(scroll_layer, (int16_t)CLIP(raw_y, INT16_MIN, INT16_MAX));
+    const int16_t clamped_y = prv_scroll_touch_clamp_offset_y(
+        scroll_layer, (int16_t)PBL_CLAMP(raw_y, INT16_MIN, INT16_MAX));
     scroll_layer_set_content_offset(scroll_layer, GPoint(0, clamped_y), false);
     return;
   }
-  const int16_t min_y = MIN((int16_t)(frame_h - content_h), (int16_t)0);
+  const int16_t min_y = PBL_MIN((int16_t)(frame_h - content_h), (int16_t)0);
   const int16_t new_y = scroll_layer_touch_overscroll_damp(raw_y, min_y, 0, frame_h);
   scroll_layer_touch_set_content_offset_overscrolled(scroll_layer, new_y);
 }
@@ -192,11 +193,11 @@ void scroll_layer_touch_handle_snap(ScrollLayer *scroll_layer, GPoint base, GPoi
   // absorbed into the animation instead of jumping instantly at liftoff. Paging keeps its snap
   // semantics (a coast would break page alignment).
   const int32_t v =
-      CLIP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S, TOUCH_FLING_MAX_VELOCITY_PX_S);
-  if (ABS(v) >= TOUCH_FLING_MIN_VELOCITY_PX_S && !scroll_layer_get_paging(scroll_layer)) {
+      PBL_CLAMP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S, TOUCH_FLING_MAX_VELOCITY_PX_S);
+  if (PBL_ABS(v) >= TOUCH_FLING_MIN_VELOCITY_PX_S && !scroll_layer_get_paging(scroll_layer)) {
     const int32_t projected_y = released_y + (v * TOUCH_FLING_TAU_MS) / 1000;
     const int16_t target_y = prv_scroll_touch_clamp_offset_y(
-        scroll_layer, (int16_t)CLIP(projected_y, INT16_MIN, INT16_MAX));
+        scroll_layer, (int16_t)PBL_CLAMP(projected_y, INT16_MIN, INT16_MAX));
     if (scroll_layer_touch_fling_start(scroll_layer, target_y, (int16_t)v,
                                        prv_scroll_touch_fling_stopped, scroll_layer)) {
       return;
@@ -427,13 +428,13 @@ PBL_T_STATIC void prv_scroll_layer_set_content_offset_internal(ScrollLayer *scro
     uint16_t page_height = prv_scroll_layer_get_paging_height(scroll_layer);
     if (page_height) {
       // showing full page-aligned contents of last page
-      min_y_offset = ROUND_TO_MOD_CEIL(min_y_offset, page_height);
+      min_y_offset = PBL_ROUNDUP(min_y_offset, page_height);
     }
   }
 
   if (scroll_layer_get_clips_content_offset(scroll_layer)) {
-    bounds.origin.x = CLIP(offset.x, MIN(min_x_offset, 0), 0);
-    bounds.origin.y = CLIP(offset.y, MIN(min_y_offset, 0), 0);
+    bounds.origin.x = PBL_CLAMP(offset.x, PBL_MIN(min_x_offset, 0), 0);
+    bounds.origin.y = PBL_CLAMP(offset.y, PBL_MIN(min_y_offset, 0), 0);
   } else {
     bounds.origin = offset;
   }
@@ -584,7 +585,7 @@ int16_t scroll_layer_touch_overscroll_damp(int32_t raw_y, int16_t min_y, int16_t
   }
   // Asymptotic rubber band: the content follows at half the finger's speed at first and
   // saturates at ~1/6 of the frame height.
-  const int32_t max_over = MAX(frame_h / 6, 1);
+  const int32_t max_over = PBL_MAX(frame_h / 6, 1);
   const int32_t damped = (excess * max_over) / (excess + (2 * max_over));
   return (int16_t)(edge + (sign * damped));
 }
@@ -639,7 +640,7 @@ bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y,
                                     AnimationStoppedHandler stopped, void *stopped_context) {
   const int16_t current_y = scroll_layer_get_content_offset(scroll_layer).y;
   const int32_t distance = (int32_t)target_y - current_y;
-  if (ABS(distance) < TOUCH_FLING_MIN_DISTANCE_PX || velocity_y == 0) {
+  if (PBL_ABS(distance) < TOUCH_FLING_MIN_DISTANCE_PX || velocity_y == 0) {
     return false;
   }
   const GPoint target = GPoint(0, target_y);
@@ -664,8 +665,8 @@ bool scroll_layer_touch_fling_start(ScrollLayer *scroll_layer, int16_t target_y,
   // edge-truncated distance shortens T proportionally, preserving the launch speed instead of
   // crawling into the clamp.
   const int32_t duration_ms =
-      CLIP((3000 * ABS(distance)) / ABS((int32_t)velocity_y), (int32_t)TOUCH_FLING_MIN_DURATION_MS,
-           (int32_t)TOUCH_FLING_MAX_DURATION_MS);
+      PBL_CLAMP((3000 * PBL_ABS(distance)) / PBL_ABS((int32_t)velocity_y),
+                (int32_t)TOUCH_FLING_MIN_DURATION_MS, (int32_t)TOUCH_FLING_MAX_DURATION_MS);
   animation_set_duration(animation, (uint32_t)duration_ms);
   animation_set_custom_curve(animation, prv_fling_ease_out_cubic);
   animation_set_handlers(animation, (AnimationHandlers){.stopped = stopped}, stopped_context);
@@ -710,7 +711,7 @@ void scroll_layer_scroll(ScrollLayer *scroll_layer, ScrollDirection direction, b
     uint16_t page_height = prv_scroll_layer_get_paging_height(scroll_layer);
     if (page_height) {
       // Force offset to start (and stay) page aligned
-      offset.y = ROUND_TO_MOD_CEIL(offset.y, page_height);
+      offset.y = PBL_ROUNDUP(offset.y, page_height);
       scroll_height = page_height;
     }
   }

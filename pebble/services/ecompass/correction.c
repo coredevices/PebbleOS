@@ -249,8 +249,9 @@ static bool pt_to_plane_dist_under_thresh(int idx_pln_a, int idx_pln_b, int idx_
                   plane_eq[2] * s_samples[0][2]);
 
   // Distance^2 = (a * xo + b * yo + c * zo + d) / (a^2 + b^2 + c^2)
-  int64_t distance = ABS((plane_eq[0] * s_samples[idx_pt][0] + plane_eq[1] * s_samples[idx_pt][1] +
-                          plane_eq[2] * s_samples[idx_pt][2] + plane_eq[3]));
+  int64_t distance =
+      PBL_ABS((plane_eq[0] * s_samples[idx_pt][0] + plane_eq[1] * s_samples[idx_pt][1] +
+               plane_eq[2] * s_samples[idx_pt][2] + plane_eq[3]));
   int32_t r = integer_sqrt(plane_eq[0] * plane_eq[0] + plane_eq[1] * plane_eq[1] +
                            plane_eq[2] * plane_eq[2]);
 
@@ -292,9 +293,9 @@ static MagCalStatus check_correction_value(int16_t *solution, int16_t *saved_sol
 
   // is the new solution close to what we already have saved?
   if (saved_solution != nullptr) {
-    x_delta = ABS(saved_solution[0] - solution[0]);
-    y_delta = ABS(saved_solution[1] - solution[1]);
-    z_delta = ABS(saved_solution[2] - solution[2]);
+    x_delta = PBL_ABS(saved_solution[0] - solution[0]);
+    y_delta = PBL_ABS(saved_solution[1] - solution[1]);
+    z_delta = PBL_ABS(saved_solution[2] - solution[2]);
     if ((x_delta < max_delta_thresh) && (y_delta < max_delta_thresh) &&
         (z_delta < max_delta_thresh)) {
       s_saved_sample_match++;
@@ -349,7 +350,7 @@ MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample, int16_t *saved_corr,
   // calibration stays feasible in weak fields regardless of motion pattern
   if (s_samples_collected_for_fit > 300) {
     if (s_thresh > THRESH_MIN) {
-      s_thresh = MAX(s_thresh - THRESH_STEP, THRESH_MIN);
+      s_thresh = PBL_MAX(s_thresh - THRESH_STEP, THRESH_MIN);
       PBL_LOG_DBG("Lowering magnetometer distance threshold to %d", (int)s_thresh);
     }
 

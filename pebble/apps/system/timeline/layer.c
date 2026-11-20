@@ -221,7 +221,7 @@ static int16_t prv_get_height_offset(TimelineLayer *layer, const TimelineLayerSt
 
 static void prv_get_frame_for_style(TimelineLayer *layer, const TimelineLayerStyle *style,
                                     int index, GRect *frame) {
-  index = CLIP(index, 0, TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1);
+  index = PBL_CLAMP(index, 0, TIMELINE_NUM_ITEMS_IN_TIMELINE_LAYER - 1);
   const int16_t width = layer->layer.bounds.size.w - (style->left_margin + style->right_margin);
   const uint16_t height = (prv_get_mode(index) == LayoutLayerModePinnedThin)
                               ? style->thin_pin_height
@@ -666,7 +666,7 @@ static void prv_draw_round_flip(GContext *ctx, const GRect *layer_bounds, const 
   if (sidebar_x <= flip_point_x) {
     // Don't draw the circle in the flip region overlap; we want an instantaneous jump past this
     // region during the flip
-    const int16_t circle_left_edge_x = MIN(sidebar_x, flip_point_x);
+    const int16_t circle_left_edge_x = PBL_MIN(sidebar_x, flip_point_x);
     GPoint circle_center = GPoint(circle_left_edge_x + circle_radius, bounds_center.y);
     if (!on_right) {
       circle_center.x = layer_bounds->size.w - circle_center.x;

@@ -96,7 +96,7 @@ static size_t prv_send_job_impl_copy(const struct pbl_pp_send_job *send_job, siz
 
   const size_t length_available = prv_get_length(app_message_send_job);
   const size_t length_after_offset = (length_available - start_offset);
-  const size_t length_to_copy = MIN(length_after_offset, length);
+  const size_t length_to_copy = PBL_MIN(length_after_offset, length);
 
   size_t length_remaining = length_to_copy;
   while (length_remaining) {
@@ -105,7 +105,7 @@ static size_t prv_send_job_impl_copy(const struct pbl_pp_send_job *send_job, siz
     size_t part_length = prv_get_read_pointer(
         app_message_send_job, app_message_send_job->consumed_length + start_offset + data_out_pos,
         &part_data);
-    part_length = MIN(part_length, length_remaining);
+    part_length = PBL_MIN(part_length, length_remaining);
     memcpy(data_out + data_out_pos, part_data, part_length);
     length_remaining -= part_length;
   }

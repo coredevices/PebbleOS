@@ -1038,7 +1038,8 @@ static void prv_update_track_progress(MusicAppData *data) {
   } else {
     unsigned int percent = 0;
     if (data->track_length > 0) {
-      percent = MIN((unsigned int)(((uint64_t)data->track_pos * 100) / data->track_length), 100);
+      percent =
+          PBL_MIN((unsigned int)(((uint64_t)data->track_pos * 100) / data->track_length), 100);
     }
     progress_layer_set_progress(&data->track_pos_bar, percent);
     prv_copy_time_period(data->position_buffer, sizeof(data->position_buffer), data->track_pos);
@@ -1129,7 +1130,7 @@ static GRect prv_art_title_rect(void) {
   const int16_t radius = PBL_DISPLAY_WIDTH / 2;
   const int32_t dy = (y + h - 2) - radius;
   const int16_t half_chord = integer_sqrt((int64_t)radius * radius - (int64_t)dy * dy);
-  const int16_t x = MAX(radius - half_chord + 4, ART_ROUND_TEXT_MARGIN);
+  const int16_t x = PBL_MAX(radius - half_chord + 4, ART_ROUND_TEXT_MARGIN);
   const int16_t right = PBL_DISPLAY_WIDTH - x;
 #endif
   return GRect(x, y, right - x, h);
@@ -1212,7 +1213,7 @@ static void prv_title_update_proc(Layer *layer, GContext *ctx) {
   // The -4 backs out the glyph box's dead space above the caps so the INK centres in the region
   // (which is itself centred on the display), lining a one-line title up with the action bar's
   // middle icon.
-  const int16_t off = MAX((box.size.h - used.h) / 2 - 4, 0);
+  const int16_t off = PBL_MAX((box.size.h - used.h) / 2 - 4, 0);
   box.origin.y += off;
   box.size.h -= off;
   if (data->has_album_art) {
@@ -1286,7 +1287,7 @@ static void prv_draw_round_progress(GContext *ctx, const GRect *bounds) {
     const int32_t sweep = ART_ROUND_ARC_END_DEG - ART_ROUND_ARC_START_DEG;
     const int32_t end =
         ART_ROUND_ARC_START_DEG +
-        MIN((int32_t)(((int64_t)sweep * data->track_pos) / data->track_length), sweep);
+        PBL_MIN((int32_t)(((int64_t)sweep * data->track_pos) / data->track_length), sweep);
     graphics_context_set_fill_color(ctx, GColorRed);
     prv_fill_bezel_arc(ctx, bounds, ART_ROUND_ARC_START_DEG, end);
   }

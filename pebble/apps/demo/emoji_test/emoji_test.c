@@ -87,7 +87,7 @@ static void prv_refresh(AppState *data) {
 
   utf8_t *cursor = (utf8_t *)data->emojis;
   const unsigned int first = data->page * EMOJIS_PER_PAGE;
-  const unsigned int last = MIN(first + EMOJIS_PER_PAGE, data->emoji_count);
+  const unsigned int last = PBL_MIN(first + EMOJIS_PER_PAGE, data->emoji_count);
   for (unsigned int i = first; i < last; ++i) {
     cursor += utf8_encode_codepoint(prv_codepoint_at(i), cursor);
     *cursor++ = ((i - first + 1) % 8) ? ' ' : '\n';

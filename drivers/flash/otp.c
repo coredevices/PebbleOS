@@ -67,7 +67,7 @@ int pbl_flash_otp_read(const struct pbl_flash *flash, uint32_t offs, void *buf, 
 
   while (len > 0U && ret == 0) {
     uint32_t roffs = offs % region_len;
-    size_t chunk = MIN(len, region_len - roffs);
+    size_t chunk = PBL_MIN(len, region_len - roffs);
 
     ret = flash->ops->otp_read(flash, (uint8_t)(offs / region_len), roffs, dst, chunk);
     offs += chunk;
@@ -105,7 +105,7 @@ int pbl_flash_otp_write(const struct pbl_flash *flash, uint32_t offs, const void
   while (len > 0U) {
     uint8_t region = (uint8_t)(offs / region_len);
     uint32_t roffs = offs % region_len;
-    size_t chunk = MIN(len, region_len - roffs);
+    size_t chunk = PBL_MIN(len, region_len - roffs);
 
     ret = flash->ops->otp_is_locked(flash, region, &locked);
     if (ret == 0 && locked) {

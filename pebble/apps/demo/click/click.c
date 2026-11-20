@@ -80,7 +80,7 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, Window *w
 
   // Let's try shortening the repeat interval as we go:
   ClickConfig *config = click_recognizer_get_config(recognizer);
-  config->click.repeat_interval_ms = MAX((config->click.repeat_interval_ms / 2), 100);
+  config->click.repeat_interval_ms = PBL_MAX((config->click.repeat_interval_ms / 2), 100);
 }
 
 static void select_long_click_handler(ClickRecognizerRef recognizer, Window *window) {

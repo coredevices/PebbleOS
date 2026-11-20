@@ -74,7 +74,7 @@ bool pb_storage_raw_get_status(PutBytesObjectType obj_type, PbInstallStatus *sta
   // written.
   while (curr_read_address > stop_read_address) {
     size_t bytes_left = curr_read_address - stop_read_address;
-    size_t bytes_to_read = MIN(bytes_left, read_buffer_size);
+    size_t bytes_to_read = PBL_MIN(bytes_left, read_buffer_size);
     curr_read_address -= bytes_to_read;
 
     pbl_flash_read(FLASH, curr_read_address, read_buffer, bytes_to_read);

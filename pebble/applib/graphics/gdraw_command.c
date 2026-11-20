@@ -242,7 +242,7 @@ bool gdraw_command_get_hidden(GDrawCommand *command) {
 
 size_t gdraw_command_copy_points(GDrawCommand *command, GPoint *points, const size_t max_bytes) {
   const size_t actual_size = gdraw_command_get_num_points(command) * sizeof(GPoint);
-  const size_t size = MIN(max_bytes, actual_size);
+  const size_t size = PBL_MIN(max_bytes, actual_size);
   memcpy(points, command->points, size);
   return size;
 }

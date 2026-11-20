@@ -305,7 +305,7 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   }
 
   // Watermark threshold WTM[8:0]: low 8 bits in FIFO_CTRL1, MSB in FIFO_CTRL2
-  wtm = MIN(num_samples, LSM6DSO_FIFO_WTM_MAX);
+  wtm = PBL_MIN(num_samples, LSM6DSO_FIFO_WTM_MAX);
 
   val = PBL_FIELD_GET(PBL_GENMASK(7, 0), wtm);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL1, &val, 1);
@@ -355,7 +355,7 @@ static void prv_lsm6dso_drain_fifo(void) {
     }
 
     samples = (PBL_FIELD_GET(LSM6DSO_FIFO_STATUS2_DIFF_HI_MASK, status[1]) << 8U) | status[0];
-    samples = MIN(samples, LSM6DSO_FIFO_SIZE);
+    samples = PBL_MIN(samples, LSM6DSO_FIFO_SIZE);
     if (samples == 0U) {
       return;
     }
@@ -391,7 +391,7 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
     }
 
     v = prv_axis_raw_mg(a, raw);
-    if (!found || ABS(v) > ABS(val)) {
+    if (!found || PBL_ABS(v) > PBL_ABS(val)) {
       axis = a;
       val = v;
       found = true;
@@ -717,7 +717,7 @@ static uint32_t prv_ms_since_last_fifo_read(void) {
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
-  return MAX(LSM6DSO_STALL_MARGIN * s_dev->state->int1_period_ms, LSM6DSO_STALL_MIN_MS);
+  return PBL_MAX(LSM6DSO_STALL_MARGIN * s_dev->state->int1_period_ms, LSM6DSO_STALL_MIN_MS);
 }
 
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
@@ -731,7 +731,7 @@ static void prv_update_int1_watchdog(void) {
     s_dev->state->int1_period_ms =
         (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
-                             MAX(DIVIDE_CEIL(s_dev->state->int1_period_ms, 1000UL), 1U));
+                             PBL_MAX(PBL_DIV_ROUND_UP(s_dev->state->int1_period_ms, 1000UL), 1U));
   } else if (s_dev->state->shake_detection_enabled) {
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
                              LSM6DSO_SHAKE_WDT_PERIOD_S);

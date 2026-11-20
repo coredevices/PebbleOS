@@ -61,10 +61,10 @@ static bool prv_legacy_firmware_update_get_percent_progress(uint32_t *progress) 
 
   LegacyFwUpdateCompletionStatus *status = &s_current_completion_status.legacy_status;
   if (s_is_recovery_fw) {
-    *progress = MIN(100, status->recovery_percent_completion);
+    *progress = PBL_MIN(100, status->recovery_percent_completion);
   } else {
-    *progress =
-        MIN(100, (status->resource_percent_completion + status->firmware_percent_completion) / 2);
+    *progress = PBL_MIN(
+        100, (status->resource_percent_completion + status->firmware_percent_completion) / 2);
   }
 
   return true;

@@ -103,8 +103,8 @@ typedef struct {
 //! 2. Each launch earns the app a day of grace, up to LAUNCH_BONUS_MAX_LAUNCHES, so an app used
 //!    regularly outlives one installed more recently but never opened.
 static uint32_t prv_calculate_priority(AppCacheEntry *entry) {
-  const uint32_t last_used = (uint32_t)MAX(entry->last_launch, entry->install_date);
-  const uint32_t launches = MIN(entry->launch_count, LAUNCH_BONUS_MAX_LAUNCHES);
+  const uint32_t last_used = (uint32_t)PBL_MAX(entry->last_launch, entry->install_date);
+  const uint32_t launches = PBL_MIN(entry->launch_count, LAUNCH_BONUS_MAX_LAUNCHES);
   return last_used + (launches * LAUNCH_BONUS_PER_LAUNCH_S);
 }
 
@@ -272,7 +272,7 @@ static bool prv_each_free_up_space(struct pbl_settings_file *file, struct pbl_se
   *node = (EvictListNode){
     .id = id,
     .size = entry.total_size,
-    .priority = MAX(priority, prv_calculate_priority(&entry)),
+    .priority = PBL_MAX(priority, prv_calculate_priority(&entry)),
   };
 
   data->list = (EvictListNode *)list_sorted_add((ListNode *)data->list, (ListNode *)node,

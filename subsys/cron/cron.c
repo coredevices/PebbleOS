@@ -45,7 +45,7 @@ static void prv_arm_wakeup(void) {
     timeout_ms += CRON_ARM_MARGIN_MS;
   }
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_wakeup_timer,
-                              PBL_MSEC((uint32_t)MIN(timeout_ms, CRON_ARM_MAX_MS)));
+                              PBL_MSEC((uint32_t)PBL_MIN(timeout_ms, CRON_ARM_MAX_MS)));
 }
 
 // -------------------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ void pbl_cron_handle_clock_change(int32_t utc_time_delta, int32_t gmt_offset_del
 
   const bool must_recalc = gmt_offset_delta != 0 || dst_changed;
   // Because it's ABS, it'll be unsigned. This makes the compiler behave.
-  const uint32_t change_diff = ABS(utc_time_delta);
+  const uint32_t change_diff = PBL_ABS(utc_time_delta);
   // Need to re-build the list somewhere else
   ListNode *newlist = nullptr;
   while (s_scheduled_jobs != nullptr) {
@@ -438,8 +438,8 @@ static time_t prv_get_execute_time_from_epoch(const struct pbl_cron_job *job, ti
     // If the day has been adjusted, we need to re-set hour+minute+second.
     // Since we are definitely in the future on an adjustment, fields with 'any' should be
     // set to 0, otherwise set to the spec value.
-    cron_tm.tm_hour = MAX(job->hour, 0);
-    cron_tm.tm_min = MAX(job->minute, 0);
+    cron_tm.tm_hour = PBL_MAX(job->hour, 0);
+    cron_tm.tm_min = PBL_MAX(job->minute, 0);
     // Second is always 0 when we're in the future.
     cron_tm.tm_sec = 0;
   }

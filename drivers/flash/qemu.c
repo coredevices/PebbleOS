@@ -42,7 +42,7 @@ static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *b
   addr += qemu->mem;
 
   while (len > 0U) {
-    size_t chunk = MIN(len, page_size - (addr % page_size));
+    size_t chunk = PBL_MIN(len, page_size - (addr % page_size));
     volatile uint8_t *dst = (volatile uint8_t *)(uintptr_t)addr;
 
     for (size_t i = 0U; i < chunk; i++) {

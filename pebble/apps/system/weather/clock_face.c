@@ -54,8 +54,8 @@
 #define CLOCK_ICON_SIZE         PBL_IF_ROUND_ELSE(25, (CLOCK_SMALL_RECT ? 20 : ICON_SIZE))
 #define SWIPE_THRESHOLD         20
 #define CLOCK_INTRO_DURATION_MS 520
-// Rect: 50ms. ROUND (gabbro smoothness step 4): 66ms = exactly 2 animation-service ticks,
-// so every glow step lands ON a display frame instead of beating against the 33ms interval.
+// Rect: 50ms. PBL_DIV_ROUND_CLOSEST (gabbro smoothness step 4): 66ms = exactly 2 animation-service
+// ticks, so every glow step lands ON a display frame instead of beating against the 33ms interval.
 // CLOCK_GLOW_IDLE_TICKS derives from this (round: 75 ticks ≈ 4.95s — the 5s intent holds);
 // the active sweep's per-tick advance is scaled to keep degrees-per-ms (see prv_glow_step).
 // The idle wrap-out flourish keeps its tick counts (runs ~30% longer on round — accepted;
@@ -1355,8 +1355,8 @@ static void prv_click_provider(void *ctx) {
 
 // ---- Window lifecycle ----
 static void prv_window_load(Window *window) {
-  // ROUND (gabbro smoothness step 3): transparent — the root-layer proc fills the whole
-  // window with the bg colour every frame unless transparent, and prv_canvas_draw always
+  // PBL_DIV_ROUND_CLOSEST (gabbro smoothness step 3): transparent — the root-layer proc fills the
+  // whole window with the bg colour every frame unless transparent, and prv_canvas_draw always
   // paints every pixel (its own white fill / the squash resample). See forecast_list's
   // matching change. The !s_cf early-return keeps a white guard.
 #if PBL_ROUND

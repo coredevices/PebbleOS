@@ -220,16 +220,16 @@ static void prv_wakeup_timer_next_pending(void) {
       // next catchup_enabled state before modifying time_difference
       s_catchup_enabled = (time_difference < 0) ? true : false;
       // Enforces the catchup gap to be at least WAKEUP_CATCHUP_WINDOW gap
-      time_difference = MAX(time_difference, WAKEUP_CATCHUP_WINDOW);
+      time_difference = PBL_MAX(time_difference, WAKEUP_CATCHUP_WINDOW);
     }
 
     // Space out events of different apps that fall close together
     if (s_dispatched) {
       int32_t spacing = s_last_dispatch_time + WAKEUP_CATCHUP_WINDOW - current_time;
-      time_difference = MAX(time_difference, MIN(spacing, WAKEUP_CATCHUP_WINDOW));
+      time_difference = PBL_MAX(time_difference, PBL_MIN(spacing, WAKEUP_CATCHUP_WINDOW));
     }
 
-    time_difference = MIN(time_difference, WAKEUP_TIMER_MAX_S);
+    time_difference = PBL_MIN(time_difference, WAKEUP_TIMER_MAX_S);
 
     // timers are in milliseconds, set main callback dispatch for wakeup
     // WakeupId is used to save/restore/lookup wakeup events
@@ -350,7 +350,7 @@ void wakeup_init(void) {
 
   event_service_init(PEBBLE_WAKEUP_EVENT, nullptr, nullptr);
 
-  s_wakeup_state.next_wakeup_id = CLIP(pbl_realtime(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
+  s_wakeup_state.next_wakeup_id = PBL_CLAMP(pbl_realtime(), WAKEUP_ID_MIN, WAKEUP_ID_MAX);
   s_wakeup_state.timestamp = -1;
 
   struct pbl_settings_file wakeup_settings;

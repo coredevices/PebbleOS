@@ -49,7 +49,7 @@ static void prv_do_update(void) {
   uint8_t buffer[512];
   uint32_t offset = 0;
   while (offset < total_length) {
-    const uint32_t chunk_size = MIN(sizeof(buffer), (total_length - offset));
+    const uint32_t chunk_size = PBL_MIN(sizeof(buffer), (total_length - offset));
 
     pbl_flash_partition_read(PART_FIRMWARE_DEST, offset, buffer, chunk_size);
     pbl_flash_partition_write(PART_SAFE_FIRMWARE, offset, buffer, chunk_size);

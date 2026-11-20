@@ -83,8 +83,8 @@ PBL_T_STATIC void prv_assign_horizontal_line_raw(GContext *ctx, int16_t y, Fixed
 
   // Clip the line to the bitmap data row's range
   const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, y);
-  x1.raw_value = MAX(x1.raw_value, data_row_info.min_x << FIXED_S16_3_PRECISION);
-  x2.raw_value = MIN(x2.raw_value, data_row_info.max_x << FIXED_S16_3_PRECISION);
+  x1.raw_value = PBL_MAX(x1.raw_value, data_row_info.min_x << FIXED_S16_3_PRECISION);
+  x2.raw_value = PBL_MIN(x2.raw_value, data_row_info.max_x << FIXED_S16_3_PRECISION);
   if (x1.integer > x2.integer) {
     return;
   }
@@ -137,7 +137,7 @@ PBL_T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S
   const unsigned int data_row_offset = data_row_info.data - (uint8_t *)framebuffer->addr;
   if (y1.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, data_row_info.min_x, data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, data_row_info.min_x, data_row_info.max_x)) {
       graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, color, x,
                                               (uint8_t)(FIXED_S16_3_ONE.raw_value - y1.fraction));
     }
@@ -149,7 +149,7 @@ PBL_T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S
   // middle pixels
   while (y1.integer <= y2.integer) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, data_row_info.min_x, data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, data_row_info.min_x, data_row_info.max_x)) {
       prv_set_color(ctx, output, data_row_offset, x, 1, color);
     }
     y1.integer++;
@@ -160,7 +160,7 @@ PBL_T_STATIC void prv_assign_vertical_line_raw(GContext *ctx, int16_t x, Fixed_S
   // last pixel with blending (don't render first *and* last pixel if line length is 1)
   if (y2.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, data_row_info.min_x, data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, data_row_info.min_x, data_row_info.max_x)) {
       graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, color, x,
                                               (uint8_t)y2.fraction);
     }
@@ -175,8 +175,8 @@ PBL_T_STATIC void prv_blend_horizontal_line_raw(GContext *ctx, int16_t y, int16_
   GBitmap *framebuffer = &ctx->dest_bitmap;
   // Clip the line to the bitmap data row's range
   const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, y);
-  x1 = MAX(x1, data_row_info.min_x);
-  x2 = MIN(x2, data_row_info.max_x);
+  x1 = PBL_MAX(x1, data_row_info.min_x);
+  x2 = PBL_MIN(x2, data_row_info.max_x);
 
 #if PBL_COLOR
   for (int i = x1; i <= x2; i++) {
@@ -199,7 +199,7 @@ PBL_T_STATIC void prv_blend_vertical_line_raw(GContext *ctx, int16_t x, int16_t 
   for (int i = y1; i < y2; i++) {
     // Skip over pixels outside the bitmap data row's range
     const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, i);
-    if (!WITHIN(x, data_row_info.min_x, data_row_info.max_x)) {
+    if (!PBL_IN_RANGE(x, data_row_info.min_x, data_row_info.max_x)) {
       continue;
     }
     GColor *output = (GColor *)(data_row_info.data + x);
@@ -228,8 +228,8 @@ PBL_T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
 
   // Clip the clip box to the bitmap data row's range
   const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, y);
-  clip_box_min_x = MAX(clip_box_min_x, data_row_info.min_x);
-  clip_box_max_x = MIN(clip_box_max_x, data_row_info.max_x);
+  clip_box_min_x = PBL_MAX(clip_box_min_x, data_row_info.min_x);
+  clip_box_max_x = PBL_MIN(clip_box_max_x, data_row_info.max_x);
   // If x1 is further outside the clip box than the left gradient width, we need to move x1 up
   // to clip_box_min_x and proceed such that we don't draw the left gradient
   int16_t x1_distance_outside_clip_box = clip_box_min_x - x1.integer;
@@ -239,7 +239,7 @@ PBL_T_STATIC void prv_assign_horizontal_line_delta_raw(GContext *ctx, int16_t y,
   }
 
   // Clip x2 to clip_box_max_x
-  x2.integer = MIN(clip_box_max_x, x2.integer);
+  x2.integer = PBL_MIN(clip_box_max_x, x2.integer);
 
   // Return early if there's nothing to draw
   if (x1.integer > x2.integer) {

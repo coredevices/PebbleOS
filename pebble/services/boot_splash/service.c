@@ -46,7 +46,7 @@ static uint32_t prv_pitch(void) {
   const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
 
   if (props->format == PBL_DISPLAY_FORMAT_MONO) {
-    return ROUND_TO_MOD_CEIL(props->width, 32U) / 8U;
+    return PBL_ROUNDUP(props->width, 32U) / 8U;
   }
 
   return props->width;

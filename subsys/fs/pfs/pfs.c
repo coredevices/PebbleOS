@@ -923,7 +923,7 @@ static status_t scan_to_offset(File *f, uint32_t *pg_offset) {
         continue;
       }
 
-      uint16_t contig_pgs = MIN(pgc->contiguous_pgs, target_vpg - pgc->virtual_pg);
+      uint16_t contig_pgs = PBL_MIN(pgc->contiguous_pgs, target_vpg - pgc->virtual_pg);
       if ((pgc->virtual_pg + contig_pgs) > vpg) {
         vpg = pgc->virtual_pg + contig_pgs;
         next_page = pgc->physical_pg + contig_pgs;
@@ -1098,7 +1098,8 @@ int pfs_read(int fd, void *buf_ptr, size_t size) {
   // we have found the page from which to start reading data from
   size_t bytes_read = 0;
   while (bytes_read < size) {
-    size_t bytes_to_read = MIN(free_bytes_in_page(file->curr_page) - pg_offset, size - bytes_read);
+    size_t bytes_to_read =
+        PBL_MIN(free_bytes_in_page(file->curr_page) - pg_offset, size - bytes_read);
 
     prv_flash_read(buf + bytes_read, bytes_to_read,
                    prv_page_to_flash_offset(file->curr_page) + AVAIL_BYTES_OFFSET + pg_offset);
@@ -1184,7 +1185,7 @@ int pfs_write(int fd, const void *buf_ptr, size_t size) {
   size_t bytes_written = 0;
   while (bytes_written < size) {
     size_t bytes_to_write =
-        MIN(free_bytes_in_page(file->curr_page) - pg_offset, size - bytes_written);
+        PBL_MIN(free_bytes_in_page(file->curr_page) - pg_offset, size - bytes_written);
 
     prv_flash_write(buf + bytes_written, bytes_to_write,
                     prv_page_to_flash_offset(file->curr_page) + AVAIL_BYTES_OFFSET + pg_offset);
@@ -1895,7 +1896,7 @@ static status_t copy_or_recover_gc_data(int fd, GCData *gcdata, bool do_copy) {
 
     base_addr += sizeof(PageHeader);
     for (int i = 0; i < (int)data_len; i += copy_buf_size) {
-      size_t to_copy = MIN(data_len - i, copy_buf_size);
+      size_t to_copy = PBL_MIN(data_len - i, copy_buf_size);
       if (do_copy) {
         prv_flash_read(buf, to_copy, base_addr + i);
         pfs_write(fd, buf, to_copy);

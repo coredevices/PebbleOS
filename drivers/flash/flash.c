@@ -58,7 +58,7 @@ static bool prv_is_blank(const struct pbl_flash *flash, uint32_t addr, size_t le
   uint8_t buf[BLANK_CHECK_CHUNK];
 
   while (len > 0U) {
-    size_t chunk = MIN(sizeof(buf), len);
+    size_t chunk = PBL_MIN(sizeof(buf), len);
     int ret;
 
     ret = flash->ops->read(flash, addr, buf, chunk);
@@ -162,7 +162,7 @@ static int prv_erase_step_locked(const struct pbl_flash *flash, uint32_t *wait_m
   if (st->erase.in_progress) {
     ret = flash->ops->erase_status(flash);
     if (ret == -EBUSY || ret == -EAGAIN) {
-      *wait_ms = MAX(1U, st->erase.expected_ms / 8U);
+      *wait_ms = PBL_MAX(1U, st->erase.expected_ms / 8U);
       return -EINPROGRESS;
     }
 
@@ -214,7 +214,7 @@ static int prv_erase_step_locked(const struct pbl_flash *flash, uint32_t *wait_m
   st->erase.expected_ms = (unit == flash->geometry->sector_size)
                               ? flash->geometry->sector_erase_ms
                               : flash->geometry->subsector_erase_ms;
-  *wait_ms = MAX(1U, (st->erase.expected_ms * 7U) / 8U);
+  *wait_ms = PBL_MAX(1U, (st->erase.expected_ms * 7U) / 8U);
 
   return -EINPROGRESS;
 }

@@ -445,7 +445,7 @@ void light_handle_clock_change(void) {
 static void prv_change_brightness(uint8_t new_brightness) {
   // Scale the 0-100% to the maximum value allowed in hardware
   uint8_t scaled_brightness =
-      DIVIDE_CEIL(new_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
+      PBL_DIV_ROUND_UP(new_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
 
   // Bleed-through gate around backlight 0↔on edges: while the LED is
   // illuminating the cover glass, the W1160 photodiode would latch
@@ -493,7 +493,7 @@ static void prv_change_brightness(uint8_t new_brightness) {
 static uint8_t prv_hw_level(uint8_t intensity) {
   return pbl_backlight_get_level(
       BACKLIGHT,
-      DIVIDE_CEIL(intensity * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U));
+      PBL_DIV_ROUND_UP(intensity * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U));
 }
 
 //! Build the descending ladder of intensities below `from` that each produce
@@ -506,7 +506,7 @@ static uint8_t prv_build_fade_ladder(uint8_t from, uint8_t *levels) {
     return 0U;
   }
 
-  const uint8_t step = DIVIDE_CEIL(from, LIGHT_FADE_MAX_STEPS);
+  const uint8_t step = PBL_DIV_ROUND_UP(from, LIGHT_FADE_MAX_STEPS);
   uint8_t count = 0;
   uint8_t prev_hw = prv_hw_level(from);
 

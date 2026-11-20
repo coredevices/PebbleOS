@@ -213,7 +213,7 @@ static int prv_fw_update(const struct pbl_cst816 *cst) {
     uint8_t addr[2];
 
     pbl_put_le16(start_addr, addr);
-    page_len = MIN(length, CST816_FW_PAGE_SIZE);
+    page_len = PBL_MIN(length, CST816_FW_PAGE_SIZE);
     PBL_LOG_DBG("Writing 0x%04x, %u bytes", start_addr, page_len);
 
     ret = prv_boot_write(cst, CST816_FW_START_ADDR_REG, addr, sizeof(addr));
@@ -303,7 +303,7 @@ static void prv_count_irq(struct pbl_cst816_state *state) {
 
   // Each interrupt keeps the chip in active scan for the wake window.
   if (state->last_irq_ticks != 0U) {
-    PBL_ANALYTICS_ADD(touch_driver_awake_time_ms, pbl_ticks_to_ms(MIN(gap, wake_spacing)));
+    PBL_ANALYTICS_ADD(touch_driver_awake_time_ms, pbl_ticks_to_ms(PBL_MIN(gap, wake_spacing)));
   }
 
   state->last_irq_ticks = now;

@@ -38,7 +38,7 @@
  *
  * pbl_accel_set_listener(ACCEL, &s_listener);
  * pbl_accel_set_sampling_interval(ACCEL, 40000, &interval_us);
- * pbl_accel_set_num_samples(ACCEL, MIN(25, pbl_accel_get_max_num_samples(ACCEL)));
+ * pbl_accel_set_num_samples(ACCEL, PBL_MIN(25, pbl_accel_get_max_num_samples(ACCEL)));
  * @endcode
  * @{
  */

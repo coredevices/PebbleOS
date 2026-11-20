@@ -119,8 +119,8 @@ static GPoint prv_compute_velocity(const PanRecognizerData *data) {
 // horizontal. Ambiguous (diagonal) movement returns is_dominant == false.
 static bool prv_axis_dominance(const PanRecognizerData *data, GPoint total_delta,
                                bool *out_is_horizontal) {
-  const int32_t adx = ABS(total_delta.x);
-  const int32_t ady = ABS(total_delta.y);
+  const int32_t adx = PBL_ABS(total_delta.x);
+  const int32_t ady = PBL_ABS(total_delta.y);
   const int32_t factor = data->config.axis_dominance;
   if (adx > (ady * factor)) {
     *out_is_horizontal = true;
@@ -170,7 +170,7 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
           break;
         }
         // (b) Threshold on the dominant axis must be crossed before we decide.
-        const int32_t major = is_horizontal ? ABS(total_delta.x) : ABS(total_delta.y);
+        const int32_t major = is_horizontal ? PBL_ABS(total_delta.x) : PBL_ABS(total_delta.y);
         if (major <= data->config.start_threshold_px) {
           break;
         }

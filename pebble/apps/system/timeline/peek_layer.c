@@ -64,7 +64,7 @@ static void prv_layout_text(PeekLayer *peek_layer) {
 
   GPoint cursor = {
     (layer_bounds.size.w - subtitle_size.w) / 2,
-    -(subtitle_size.h + MAX(number_size.h, title_size.h)) / 2
+    -(subtitle_size.h + PBL_MAX(number_size.h, title_size.h)) / 2
   };
   const int font_height_fuzz = 5; // Replace with font descenders
   layer_set_frame((Layer *)&peek_layer->subtitle.text_layer,

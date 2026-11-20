@@ -108,7 +108,7 @@ void pbl_pp_session_send_queue_consume(struct pbl_pp_session *session, size_t le
 
   while (job != nullptr && length > 0U) {
     const size_t job_length = job->api->get_length(job);
-    const size_t consumed = MIN(length, job_length);
+    const size_t consumed = PBL_MIN(length, job_length);
     struct pbl_pp_send_job *next = prv_next(job);
 
     job->api->consume(job, consumed);

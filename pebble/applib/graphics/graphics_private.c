@@ -23,7 +23,7 @@ PBL_T_STATIC inline void set_pixel_raw_8bit(GContext *ctx, GPoint point) {
   }
 
   const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(&ctx->dest_bitmap, point.y);
-  if (!WITHIN(point.x, data_row_info.min_x, data_row_info.max_x)) {
+  if (!PBL_IN_RANGE(point.x, data_row_info.min_x, data_row_info.max_x)) {
     return;
   }
   uint8_t *line = data_row_info.data;
@@ -86,9 +86,9 @@ void prv_assign_line_horizontal_non_aa(GContext *ctx, int16_t y, int16_t x1, int
   const int x_min = ctx->draw_state.clip_box.origin.x;
   const int x_max = grect_get_max_x(&ctx->draw_state.clip_box) - 1;
 
-  x1 = MAX(x1, x_min);
-  x2 = MIN(x2, x_max);
-  if (!WITHIN(y, y_min, y_max) || x1 > x2) {
+  x1 = PBL_MAX(x1, x_min);
+  x2 = PBL_MIN(x2, x_max);
+  if (!PBL_IN_RANGE(y, y_min, y_max) || x1 > x2) {
     // Outside of drawing bounds..
     return;
   }
@@ -121,9 +121,9 @@ void prv_assign_line_vertical_non_aa(GContext *ctx, int16_t x, int16_t y1, int16
   const int x_min = ctx->draw_state.clip_box.origin.x;
   const int x_max = grect_get_max_x(&ctx->draw_state.clip_box) - 1;
 
-  y1 = MAX(y1, y_min);
-  y2 = MIN(y2, y_max + 1); // Thats because we added one to end of the line
-  if (!WITHIN(x, x_min, x_max) || y1 > y2) {
+  y1 = PBL_MAX(y1, y_min);
+  y2 = PBL_MIN(y2, y_max + 1); // Thats because we added one to end of the line
+  if (!PBL_IN_RANGE(x, x_min, x_max) || y1 > y2) {
     // Outside of drawing bounds..
     return;
   }
@@ -152,7 +152,7 @@ void graphics_private_draw_horizontal_line_prepared(GContext *ctx, GBitmap *fram
   }
 
   // look for clipbox
-  if (!WITHIN(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
+  if (!PBL_IN_RANGE(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
     return;
   }
 
@@ -195,7 +195,7 @@ void graphics_private_draw_vertical_line_prepared(GContext *ctx, GBitmap *frameb
   }
 
   // look for clipbox
-  if (!WITHIN(x, clip_box->origin.x, grect_get_max_x(clip_box) - 1)) {
+  if (!PBL_IN_RANGE(x, clip_box->origin.x, grect_get_max_x(clip_box) - 1)) {
     return;
   }
 
@@ -306,7 +306,7 @@ void graphics_private_plot_pixel(GBitmap *framebuffer, GRect *clip_box, int x, i
 #if PBL_COLOR
   // Checking for data row min/max x
   const GBitmapDataRowInfo data_row_info = gbitmap_get_data_row_info(framebuffer, y);
-  if (!WITHIN(x, data_row_info.min_x, data_row_info.max_x)) {
+  if (!PBL_IN_RANGE(x, data_row_info.min_x, data_row_info.max_x)) {
     return;
   }
   GColor *output = (GColor *)(data_row_info.data + x);
@@ -328,11 +328,11 @@ void graphics_private_plot_horizontal_line_prepared(GContext *ctx, GBitmap *fram
   // Pixel position have to be adjusted to drawing_box before calling this!
 
   // Checking for clip_box
-  if (!WITHIN(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
+  if (!PBL_IN_RANGE(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
     return;
   }
-  const int16_t x_min = MAX(MIN(x0, x1), clip_box->origin.x);
-  const int16_t x_max = MIN(MAX(x0, x1), grect_get_max_x(clip_box));
+  const int16_t x_min = PBL_MAX(PBL_MIN(x0, x1), clip_box->origin.x);
+  const int16_t x_max = PBL_MIN(PBL_MAX(x0, x1), grect_get_max_x(clip_box));
 
 #if PBL_COLOR
   color.a = (uint8_t)(MAX_PLOT_BRIGHTNESS - opacity);
@@ -353,12 +353,12 @@ void graphics_private_plot_vertical_line_prepared(GContext *ctx, GBitmap *frameb
   // Pixel position have to be adjusted to drawing_box before calling this!
 
   // Checking for clip_box
-  if (!WITHIN(x, clip_box->origin.x, grect_get_max_x(clip_box) - 1)) {
+  if (!PBL_IN_RANGE(x, clip_box->origin.x, grect_get_max_x(clip_box) - 1)) {
     return;
   }
 
-  int16_t y_min = MAX(MIN(y0, y1), clip_box->origin.y);
-  int16_t y_max = MIN(MAX(y0, y1), clip_box->origin.y + clip_box->size.h);
+  int16_t y_min = PBL_MAX(PBL_MIN(y0, y1), clip_box->origin.y);
+  int16_t y_max = PBL_MIN(PBL_MAX(y0, y1), clip_box->origin.y + clip_box->size.h);
 
 #if PBL_COLOR
   color.a = (uint8_t)(MAX_PLOT_BRIGHTNESS - opacity);
@@ -477,7 +477,7 @@ void graphics_private_draw_horizontal_line_delta_prepared(GContext *ctx, GBitmap
   x2.integer -= right_aa_offset / 2;
 
   // look for clipbox
-  if (!WITHIN(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
+  if (!PBL_IN_RANGE(y, clip_box->origin.y, grect_get_max_y(clip_box) - 1)) {
     return;
   }
 
@@ -583,14 +583,14 @@ void graphics_private_move_pixels_horizontally(GBitmap *bitmap, int16_t delta_x,
 
   const int bpp = gbitmap_get_bits_per_pixel(bitmap->info.format);
 
-  const int16_t abs_delta = ABS(delta_x);
+  const int16_t abs_delta = PBL_ABS(delta_x);
   const bool delta_neg = (delta_x < 0);
   const int16_t min_y = bitmap->bounds.origin.y;
   const int16_t max_y = grect_get_max_y(&bitmap->bounds) - 1;
   for (int16_t y = min_y; y <= max_y; y++) {
     const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
-    const int16_t min_x = MAX(row_info.min_x, bitmap->bounds.origin.x);
-    const int16_t max_x = MIN(row_info.max_x, grect_get_max_x(&bitmap->bounds) - 1);
+    const int16_t min_x = PBL_MAX(row_info.min_x, bitmap->bounds.origin.x);
+    const int16_t max_x = PBL_MIN(row_info.max_x, grect_get_max_x(&bitmap->bounds) - 1);
     const int16_t num_pix_data_row = max_x - min_x + 1;
     const int16_t pixels_to_move = num_pix_data_row - abs_delta;
     switch (bpp) {
@@ -701,7 +701,7 @@ void graphics_private_move_pixels_vertically(GBitmap *bitmap, int16_t delta_y) {
   const int bpp = gbitmap_get_bits_per_pixel(bitmap->info.format);
 
   const bool delta_neg = (delta_y < 0);
-  const int16_t abs_delta = ABS(delta_y);
+  const int16_t abs_delta = PBL_ABS(delta_y);
   const int16_t min_y = bitmap->bounds.origin.y;
   const int16_t max_y = grect_get_max_y(&bitmap->bounds) - 1;
   const int16_t max_x = grect_get_max_x(&bitmap->bounds) - 1;
@@ -727,16 +727,16 @@ void graphics_private_move_pixels_vertically(GBitmap *bitmap, int16_t delta_y) {
         break;
       }
       case 8: {
-        const int16_t dst_min_x = MAX(dst_row_info.min_x, bitmap->bounds.origin.x);
-        const int16_t dst_max_x = MIN(dst_row_info.max_x, max_x);
+        const int16_t dst_min_x = PBL_MAX(dst_row_info.min_x, bitmap->bounds.origin.x);
+        const int16_t dst_max_x = PBL_MIN(dst_row_info.max_x, max_x);
         const int16_t dst_pixels = dst_max_x - dst_min_x + 1;
 
-        const int16_t src_min_x = MAX(src_row_info.min_x, bitmap->bounds.origin.x);
-        const int16_t src_max_x = MIN(src_row_info.max_x, max_x);
+        const int16_t src_min_x = PBL_MAX(src_row_info.min_x, bitmap->bounds.origin.x);
+        const int16_t src_max_x = PBL_MIN(src_row_info.max_x, max_x);
         const int16_t src_pixels = src_max_x - src_min_x + 1;
 
         const int16_t x_offset = src_min_x - dst_min_x;
-        const int16_t copy_pixels = MIN(src_pixels, dst_pixels);
+        const int16_t copy_pixels = PBL_MIN(src_pixels, dst_pixels);
         memmove(dst_row_info.data + dst_min_x + x_offset, src_row_info.data + src_min_x,
                 (size_t)copy_pixels);
         break;

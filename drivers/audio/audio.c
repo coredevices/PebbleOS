@@ -145,7 +145,7 @@ int pbl_audio_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *cap
 size_t pbl_audio_ring_bytes(const struct pbl_audio_stream *stream) {
   size_t bytes = stream->period_frames * stream->channels * sizeof(int16_t) * stream->periods;
 
-  return DIVIDE_CEIL(bytes, PBL_AUDIO_BUF_ALIGN) * PBL_AUDIO_BUF_ALIGN;
+  return PBL_DIV_ROUND_UP(bytes, PBL_AUDIO_BUF_ALIGN) * PBL_AUDIO_BUF_ALIGN;
 }
 
 void *pbl_audio_buf_alloc(size_t size) {
@@ -156,7 +156,8 @@ void *pbl_audio_buf_alloc(size_t size) {
     return nullptr;
   }
 
-  aligned = DIVIDE_CEIL((uintptr_t)raw + sizeof(void *), PBL_AUDIO_BUF_ALIGN) * PBL_AUDIO_BUF_ALIGN;
+  aligned =
+      PBL_DIV_ROUND_UP((uintptr_t)raw + sizeof(void *), PBL_AUDIO_BUF_ALIGN) * PBL_AUDIO_BUF_ALIGN;
   ((void **)aligned)[-1] = raw;
   memset((void *)aligned, 0, size);
 
@@ -186,7 +187,7 @@ static int prv_check_stream(const struct pbl_audio *audio, const struct pbl_audi
 }
 
 static int32_t prv_clamp_gain(const struct pbl_audio_caps *caps, int32_t gain_mdb) {
-  int32_t gain = CLIP(gain_mdb, caps->gain_min_mdb, caps->gain_max_mdb);
+  int32_t gain = PBL_CLAMP(gain_mdb, caps->gain_min_mdb, caps->gain_max_mdb);
 
   if (caps->gain_step_mdb > 0) {
     gain =

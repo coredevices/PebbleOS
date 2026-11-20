@@ -133,10 +133,10 @@ PBL_T_STATIC bool prv_scrollbar_thumb_angles(MenuLayer *menu_layer, int16_t cont
     return false;
   }
   const int32_t track_sweep = MENU_LAYER_SCROLLBAR_TRACK_SWEEP;
-  const int32_t thumb_sweep = CLIP((track_sweep * frame_size.h) / content_h,
-                                   MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP, track_sweep);
+  const int32_t thumb_sweep = PBL_CLAMP((track_sweep * frame_size.h) / content_h,
+                                        MENU_LAYER_SCROLLBAR_MIN_THUMB_SWEEP, track_sweep);
   // Center-focused menus over-scroll past the ends (offset clipping disabled); clamp to the track.
-  const int32_t progress_y = CLIP(content_top_y, 0, scrollable_h);
+  const int32_t progress_y = PBL_CLAMP(content_top_y, 0, scrollable_h);
   const int32_t track_start = DEG_TO_TRIGANGLE(90) - (track_sweep / 2);
   *angle_start = track_start + (((track_sweep - thumb_sweep) * progress_y) / scrollable_h);
   *angle_end = *angle_start + thumb_sweep;
@@ -181,7 +181,7 @@ static void prv_scrollbar_draw(MenuLayer *menu_layer, GContext *ctx, int16_t con
   const GPoint center = GPoint((PBL_DISPLAY_WIDTH / 2) - global_frame.origin.x,
                                content_top_y + ((PBL_DISPLAY_HEIGHT / 2) - global_frame.origin.y));
   const uint16_t radius_outer =
-      (MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2) - MENU_LAYER_SCROLLBAR_MARGIN;
+      (PBL_MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2) - MENU_LAYER_SCROLLBAR_MARGIN;
   // The full track first, subdued, so the thumb reads as a position within it; the track also
   // provides the contrast backing for the thumb, so no halo is needed.
   const int32_t track_start = DEG_TO_TRIGANGLE(90) - (MENU_LAYER_SCROLLBAR_TRACK_SWEEP / 2);
@@ -202,10 +202,10 @@ PBL_T_STATIC GRect prv_scrollbar_thumb_rect(MenuLayer *menu_layer, int16_t conte
   if (scrollable_h <= 0 || track_h <= MENU_LAYER_SCROLLBAR_MIN_THUMB_HEIGHT) {
     return GRectZero;
   }
-  const int16_t thumb_h = CLIP((int16_t)(((int32_t)track_h * frame_size.h) / content_h),
-                               MENU_LAYER_SCROLLBAR_MIN_THUMB_HEIGHT, track_h);
+  const int16_t thumb_h = PBL_CLAMP((int16_t)(((int32_t)track_h * frame_size.h) / content_h),
+                                    MENU_LAYER_SCROLLBAR_MIN_THUMB_HEIGHT, track_h);
   // Center-focused menus over-scroll past the ends (offset clipping disabled); clamp to the track.
-  const int16_t progress_y = CLIP(content_top_y, 0, scrollable_h);
+  const int16_t progress_y = PBL_CLAMP(content_top_y, 0, scrollable_h);
   const int16_t thumb_y =
       MENU_LAYER_SCROLLBAR_MARGIN + (((int32_t)(track_h - thumb_h) * progress_y) / scrollable_h);
   return GRect(frame_size.w - MENU_LAYER_SCROLLBAR_MARGIN - MENU_LAYER_SCROLLBAR_WIDTH,
@@ -1157,7 +1157,7 @@ void menu_layer_set_click_config_onto_window(MenuLayer *menu_layer, struct Windo
 
 //! @returns 0 if A and B are equal, 1 if A has a higher section & row combination than B or else -1
 int16_t menu_index_compare(const MenuIndex *a, const MenuIndex *b) {
-  const int16_t max_rows = MAX(a->row, b->row) + 1;
+  const int16_t max_rows = PBL_MAX(a->row, b->row) + 1;
   const int32_t a_abs = ((a->section * max_rows) + a->row);
   const int32_t b_abs = ((b->section * max_rows) + b->row);
   if (a_abs > b_abs) {
@@ -1852,7 +1852,7 @@ static void prv_menu_touch_offset_bounds(MenuLayer *menu_layer, int16_t *min_y, 
   // half a frame otherwise (mid-list, where the bounds are not in play).
   const int16_t frame_h = menu_layer->scroll_layer.layer.frame.size.h;
   const int16_t content_h = scroll_layer_get_content_size(&menu_layer->scroll_layer).h;
-  *min_y = MIN((int16_t)(frame_h - content_h), (int16_t)0);
+  *min_y = PBL_MIN((int16_t)(frame_h - content_h), (int16_t)0);
   *max_y = 0;
   if (menu_layer->center_focused) {
     const int16_t sel_rest_y = (int16_t)((frame_h - menu_layer->selection.h) / 2);
@@ -1868,7 +1868,7 @@ static void prv_menu_touch_offset_bounds(MenuLayer *menu_layer, int16_t *min_y, 
 static int16_t prv_menu_touch_clamp_offset_y(MenuLayer *menu_layer, int16_t y) {
   int16_t min_y, max_y;
   prv_menu_touch_offset_bounds(menu_layer, &min_y, &max_y);
-  return CLIP(y, min_y, max_y);
+  return PBL_CLAMP(y, min_y, max_y);
 }
 
 //! Derive the overscroll highlight stretch from the current (possibly rubber-banded) offset:
@@ -1887,7 +1887,7 @@ static void prv_menu_update_overscroll_stretch(MenuLayer *menu_layer) {
       !process_manager_compiled_with_legacy2_sdk()) {
     const int16_t frame_h = menu_layer->scroll_layer.layer.frame.size.h;
     const int16_t content_h = scroll_layer_get_content_size(&menu_layer->scroll_layer).h;
-    const int16_t min_y = MIN((int16_t)(frame_h - content_h), (int16_t)0);
+    const int16_t min_y = PBL_MIN((int16_t)(frame_h - content_h), (int16_t)0);
     const int16_t offset_y = scroll_layer_get_content_offset(&menu_layer->scroll_layer).y;
     if (content_h > frame_h && offset_y > 0 && menu_layer->selection.y == 0) {
       // Pulled past the top with the first cell selected: extend up to the viewport top.
@@ -2169,7 +2169,7 @@ void menu_layer_touch_handle_pan_update(MenuLayer *menu_layer, GPoint base,
   const bool scrollable = scroll_layer_get_content_size(&menu_layer->scroll_layer).h > frame_h;
   const int16_t new_y = scrollable
                             ? scroll_layer_touch_overscroll_damp(raw_y, min_y, max_y, frame_h)
-                            : (int16_t)CLIP(raw_y, min_y, max_y);
+                            : (int16_t)PBL_CLAMP(raw_y, min_y, max_y);
   prv_scrollbar_kick(menu_layer);
   scroll_layer_touch_set_content_offset_overscrolled(&menu_layer->scroll_layer, new_y);
   if (menu_layer->center_focused) {
@@ -2203,8 +2203,8 @@ static void prv_menu_touch_fling_stopped(Animation *animation, bool finished, vo
 // Coast toward the velocity projection, clamped by the menu's own (possibly widened) clamp.
 static void prv_menu_touch_fling(MenuLayer *menu_layer, int16_t released_y, int32_t velocity_y) {
   const int32_t projected_y = released_y + (velocity_y * TOUCH_FLING_TAU_MS) / 1000;
-  const int16_t target_y =
-      prv_menu_touch_clamp_offset_y(menu_layer, (int16_t)CLIP(projected_y, INT16_MIN, INT16_MAX));
+  const int16_t target_y = prv_menu_touch_clamp_offset_y(
+      menu_layer, (int16_t)PBL_CLAMP(projected_y, INT16_MIN, INT16_MAX));
   if (scroll_layer_touch_fling_start(&menu_layer->scroll_layer, target_y, (int16_t)velocity_y,
                                      prv_menu_touch_fling_stopped, menu_layer)) {
     menu_layer->touch_fling_active = true;
@@ -2226,8 +2226,8 @@ void menu_layer_touch_handle_snap(MenuLayer *menu_layer, GPoint base, GPoint fin
     return;
   }
   const int32_t v =
-      CLIP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S, TOUCH_FLING_MAX_VELOCITY_PX_S);
-  if (ABS(v) >= TOUCH_FLING_MIN_VELOCITY_PX_S) {
+      PBL_CLAMP((int32_t)velocity.y, -TOUCH_FLING_MAX_VELOCITY_PX_S, TOUCH_FLING_MAX_VELOCITY_PX_S);
+  if (PBL_ABS(v) >= TOUCH_FLING_MIN_VELOCITY_PX_S) {
     // Fast liftoff: coast toward the projection from the released offset. The coast starts from
     // the current (last throttled) offset, so the unthrottled residual is absorbed into the
     // animation instead of jumping instantly at liftoff. Plain menus coast the content only (the

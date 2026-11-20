@@ -124,7 +124,7 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
 
   // Draw the last bunch that fit in the window
   int first_idx = (int)READ_HISTORY_ENTRIES - PLOT_WIDTH;
-  first_idx = MAX(first_idx, 0);
+  first_idx = PBL_MAX(first_idx, 0);
 
   // Get the min and max
   bool first_valid = true;
@@ -140,8 +140,8 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
       data->min_temp = data->max_temp = s_temp_readings[i];
       first_valid = false;
     } else {
-      data->min_temp = MIN(data->min_temp, s_temp_readings[i]);
-      data->max_temp = MAX(data->max_temp, s_temp_readings[i]);
+      data->min_temp = PBL_MIN(data->min_temp, s_temp_readings[i]);
+      data->max_temp = PBL_MAX(data->max_temp, s_temp_readings[i]);
     }
   }
   if (first_non_zero_idx < 0) {
@@ -149,7 +149,7 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
   }
   PBL_LOG_DBG("min temp: %d, max temp: %d", data->min_temp, data->max_temp);
   int temp_range = data->max_temp - data->min_temp;
-  temp_range = MAX(10, temp_range);
+  temp_range = PBL_MAX(10, temp_range);
 
   for (int i = first_non_zero_idx, x_pos = 0; i < (int)READ_HISTORY_ENTRIES; i++, x_pos++) {
     int reading = s_temp_readings[i];

@@ -287,21 +287,21 @@ BatteryChargeState battery_get_charge_state(void) {
 #ifdef CONFIG_CHARGER_SIM
   // Read the exact percent the simulator was set to, skipping the lossy voltage-curve roundtrip
   // and the low-power-reserve remap so the watch displays exactly what was requested.
-  int32_t percent = MIN((int32_t)pbl_charger_sim_get_percent(), 100);
+  int32_t percent = PBL_MIN((int32_t)pbl_charger_sim_get_percent(), 100);
   int32_t percent_normalized = percent;
   uint8_t charge_percent = (uint8_t)percent;
 #else
   int32_t percent = pbl_ratio32_to_percent(s_last_battery_state.percent);
 
   // subtract low power reserve, so developer will see 0% when we're approaching low power mode
-  int32_t percent_normalized = MAX((percent - CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT +
-                                    percent / (100 / CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT)),
-                                   0);
+  int32_t percent_normalized = PBL_MAX((percent - CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT +
+                                        percent / (100 / CONFIG_SERVICE_BATTERY_LOW_POWER_PERCENT)),
+                                       0);
 
   // massage rounding factor so that between 100% to 50% charge the SOC reported is biased to a
   // higher charge percent bin.
-  int32_t rounding_factor = 5 + MAX(((percent - 50) / 10), 0);
-  uint8_t charge_percent = MIN(10 * ((percent_normalized + rounding_factor) / 10), 100);
+  int32_t rounding_factor = 5 + PBL_MAX(((percent - 50) / 10), 0);
+  uint8_t charge_percent = PBL_MIN(10 * ((percent_normalized + rounding_factor) / 10), 100);
 #endif
   BatteryChargeState state = {
     .charge_percent = charge_percent,
@@ -339,7 +339,7 @@ static void prv_collect_battery(void) {
   PBL_ANALYTICS_SET_SIGNED(battery_voltage_delta, d_mv);
   s_analytics_previous_mv = battery_mv;
 
-  d_soc_cpct = MAX((int32_t)s_analytics_last_cpct - (int32_t)battery_soc_cpct, 0);
+  d_soc_cpct = PBL_MAX((int32_t)s_analytics_last_cpct - (int32_t)battery_soc_cpct, 0);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc_cpct);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc_cpct);
   s_analytics_last_cpct = battery_soc_cpct;

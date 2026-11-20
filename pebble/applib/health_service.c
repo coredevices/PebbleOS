@@ -261,7 +261,8 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   // If the average is 0 (this can happen if we don't have any history), set the averages based
   // on today's total so far
   time_t seconds_today = now_utc - sys_time_start_of_today();
-  HealthValue per_day_default = (daily_totals.totals[0] * PBL_SEC_PER_DAY) / MAX(1, seconds_today);
+  HealthValue per_day_default =
+      (daily_totals.totals[0] * PBL_SEC_PER_DAY) / PBL_MAX(1, seconds_today);
   if (stats->weekday.sum == 0) {
     stats->weekday = (HealthServiceStats){
       .sum = per_day_default,
@@ -285,8 +286,8 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   stats->daily.sum = stats->weekday.sum + stats->weekend.sum;
   stats->daily.count = stats->weekday.count + stats->weekend.count;
   stats->daily.avg = stats->daily.count ? stats->daily.sum / stats->daily.count : 0;
-  stats->daily.min = MIN(stats->weekday.min, stats->weekend.min);
-  stats->daily.max = MAX(stats->weekday.max, stats->weekend.max);
+  stats->daily.min = PBL_MIN(stats->weekday.min, stats->weekend.min);
+  stats->daily.max = PBL_MAX(stats->weekday.max, stats->weekend.max);
 
   return true;
 }
@@ -376,7 +377,7 @@ static HealthValue prv_sum_intraday_averages(ActivityMetricAverages *averages, t
   while (chunk_start_time < time_end) {
     int seconds_left = time_end - chunk_start_time;
     int seconds_in_chunk = k_seconds_per_step_avg - (second_idx % k_seconds_per_step_avg);
-    seconds_in_chunk = MIN(seconds_left, seconds_in_chunk);
+    seconds_in_chunk = PBL_MIN(seconds_left, seconds_in_chunk);
 
     if (averages->average[chunk_idx] != ACTIVITY_METRIC_AVERAGES_UNKNOWN) {
       if (seconds_in_chunk == k_seconds_per_step_avg) {
@@ -421,9 +422,9 @@ PBL_T_STATIC bool prv_calculate_time_range(time_t time_start, time_t time_end,
   const time_t midnight_after_now = prv_get_midnight_of_local_time(now) + PBL_SEC_PER_DAY;
 
   // never work with values in the future
-  time_end = MIN(time_end, now);
+  time_end = PBL_MIN(time_end, now);
   // never work with values older than the supported history of data
-  time_start = MAX(time_start, midnight_after_now - (PBL_SEC_PER_DAY * ACTIVITY_HISTORY_DAYS));
+  time_start = PBL_MAX(time_start, midnight_after_now - (PBL_SEC_PER_DAY * ACTIVITY_HISTORY_DAYS));
   if (time_end < time_start) {
     return false;
   }
@@ -541,21 +542,21 @@ static HealthValue prv_compute_aggregate_using_daily_totals(HealthServiceState *
         result += daily_history.totals[i + time_range.last_day_idx];
       }
       if (aggregation == HealthAggregationAvg) {
-        result = ROUND(result, time_range.num_days);
+        result = PBL_DIV_ROUND_CLOSEST(result, time_range.num_days);
       }
       break;
 
     case HealthAggregationMax:
       result = INT32_MIN;
       for (uint32_t i = 0; i < time_range.num_days; i++) {
-        result = MAX(result, daily_history.totals[i + time_range.last_day_idx]);
+        result = PBL_MAX(result, daily_history.totals[i + time_range.last_day_idx]);
       }
       break;
 
     case HealthAggregationMin:
       result = INT32_MAX;
       for (uint32_t i = 0; i < time_range.num_days; i++) {
-        result = MIN(result, daily_history.totals[i + time_range.last_day_idx]);
+        result = PBL_MIN(result, daily_history.totals[i + time_range.last_day_idx]);
       }
       break;
   }
@@ -699,10 +700,10 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
           value += minute_data[i].heart_rate_bpm;
           break;
         case HealthAggregationMax:
-          value = MAX(value, minute_data[i].heart_rate_bpm);
+          value = PBL_MAX(value, minute_data[i].heart_rate_bpm);
           break;
         case HealthAggregationMin:
-          value = MIN(value, minute_data[i].heart_rate_bpm);
+          value = PBL_MIN(value, minute_data[i].heart_rate_bpm);
           break;
         case HealthAggregationSum:
           pbl_panic();
@@ -714,7 +715,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
   // Post-process the metric if necessary
   if (aggregation == HealthAggregationAvg) {
     if (num_samples > 0) {
-      value = ROUND(value, num_samples);
+      value = PBL_DIV_ROUND_CLOSEST(value, num_samples);
     }
   }
   if (num_samples == 0) {
@@ -1130,7 +1131,7 @@ static HealthValue prv_aggregate_averaged(HealthMetric metric, time_t time_start
       result = 0;
     }
     if (num_sums > 0) {
-      result = ROUND(result, num_sums);
+      result = PBL_DIV_ROUND_CLOSEST(result, num_sums);
     }
     return result;
   }
@@ -1256,7 +1257,7 @@ static bool prv_update_hrm_subscription(HealthServiceState *state) {
   }
   uint16_t interval_sec;
   if ((hr_sec != 0) && (hrv_sec != 0)) {
-    interval_sec = MIN(hr_sec, hrv_sec);
+    interval_sec = PBL_MIN(hr_sec, hrv_sec);
   } else {
     interval_sec = (hr_sec != 0) ? hr_sec : hrv_sec;
   }
@@ -1358,7 +1359,7 @@ uint32_t health_service_get_minute_history(HealthMinuteData *minute_data, uint32
     const time_t upper_bounded_end = time_end + PBL_SEC_PER_MIN - 1;
     const uint32_t needed_partial_minutes =
         (upper_bounded_end - lower_bounded_start) / PBL_SEC_PER_MIN;
-    num_records = MIN(num_records, needed_partial_minutes);
+    num_records = PBL_MIN(num_records, needed_partial_minutes);
   }
 
   const bool success = sys_activity_get_minute_history(minute_data, &num_records, &time_start);
@@ -1436,7 +1437,8 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, pbl_tim
     return;
   }
 
-  const uint32_t actual_num_sessions = MIN(num_sessions, PBL_ARRAY_SIZE(state->cache->sessions));
+  const uint32_t actual_num_sessions =
+      PBL_MIN(num_sessions, PBL_ARRAY_SIZE(state->cache->sessions));
   prv_sessions_sort(state->cache->sessions, actual_num_sessions, direction);
 
   for (uint32_t idx = 0; idx < actual_num_sessions; idx++) {

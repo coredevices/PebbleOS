@@ -174,9 +174,9 @@ static bool prv_supports_op(const struct pbl_spi_mem *mem, const struct pbl_spi_
 
 static int prv_adjust_op_size(const struct pbl_spi_mem *mem, struct pbl_spi_mem_op *op) {
   if (s_cinstr_controller && !prv_is_array_op(op->cmd.opcode)) {
-    op->data.nbytes = MIN(op->data.nbytes, CINSTR_MAX - op->addr.nbytes - op->dummy.nbytes);
+    op->data.nbytes = PBL_MIN(op->data.nbytes, CINSTR_MAX - op->addr.nbytes - op->dummy.nbytes);
   } else {
-    op->data.nbytes = MIN(op->data.nbytes, MAX_RUN);
+    op->data.nbytes = PBL_MIN(op->data.nbytes, MAX_RUN);
   }
 
   return 0;
@@ -397,7 +397,7 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
       continue;
     }
 
-    s_min_resume_to_suspend = MIN(s_min_resume_to_suspend, t - resumed);
+    s_min_resume_to_suspend = PBL_MIN(s_min_resume_to_suspend, t - resumed);
     cl_assert_equal_i(prv_exec_op(mem, &susp->suspend), 0);
     t += susp->suspend_us;
     do {
@@ -423,7 +423,7 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
     return -ENOTSUP;
   }
 
-  desc->length = MIN(desc->length, WINDOW_SIZE - desc->offset);
+  desc->length = PBL_MIN(desc->length, WINDOW_SIZE - desc->offset);
 
   return 0;
 }

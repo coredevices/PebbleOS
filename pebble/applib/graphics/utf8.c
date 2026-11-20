@@ -276,7 +276,8 @@ size_t utf8_truncate_with_ellipsis(const char *in_string, char *out_buffer, size
     return 0;
   }
   const size_t in_length_bytes = strlen(in_string) + 1;
-  const size_t clamped_in_length_bytes = MIN(in_length_bytes, max_length - (ellipsis_length - 1));
+  const size_t clamped_in_length_bytes =
+      PBL_MIN(in_length_bytes, max_length - (ellipsis_length - 1));
   if (in_length_bytes > max_length) {
     // finds where the ellipsis should start, by asking utf8_get_size_truncate
     const size_t ellipsis_start_offset = utf8_get_size_truncate(in_string, clamped_in_length_bytes);

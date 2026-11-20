@@ -83,7 +83,7 @@ void pbl_pp_session_receive(struct pbl_pp_session *session, const uint8_t *data,
 
   while (length > 0U) {
     if (rx->bytes_to_ignore > 0U) {
-      const size_t ignored = MIN(length, rx->bytes_to_ignore);
+      const size_t ignored = PBL_MIN(length, rx->bytes_to_ignore);
 
       rx->bytes_to_ignore -= ignored;
       data += ignored;
@@ -92,7 +92,7 @@ void pbl_pp_session_receive(struct pbl_pp_session *session, const uint8_t *data,
     }
 
     if (rx->bytes_received < sizeof(struct pbl_pp_header)) {
-      const size_t copied = MIN(sizeof(struct pbl_pp_header) - rx->bytes_received, length);
+      const size_t copied = PBL_MIN(sizeof(struct pbl_pp_header) - rx->bytes_received, length);
 
       memcpy(&rx->header[rx->bytes_received], data, copied);
       rx->bytes_received += copied;
@@ -110,7 +110,7 @@ void pbl_pp_session_receive(struct pbl_pp_session *session, const uint8_t *data,
     }
 
     const size_t received =
-        MIN(length, rx->payload_length + sizeof(struct pbl_pp_header) - rx->bytes_received);
+        PBL_MIN(length, rx->payload_length + sizeof(struct pbl_pp_header) - rx->bytes_received);
 
     rx->receiver_api->write(rx->receiver, data, received);
     rx->bytes_received += received;

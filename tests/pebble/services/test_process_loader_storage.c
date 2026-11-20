@@ -55,7 +55,7 @@ int pbl_fs_open(struct pbl_fs_file *file, const char *path, uint32_t flags) {
 }
 
 ssize_t pbl_fs_read(struct pbl_fs_file *file, void *buf, size_t len) {
-  len = MIN(len, s_image_len - s_read_offset);
+  len = PBL_MIN(len, s_image_len - s_read_offset);
   memcpy(buf, &s_image[s_read_offset], len);
   s_read_offset += len;
   return (ssize_t)len;
@@ -95,7 +95,7 @@ size_t resource_load_byte_range_system(ResAppNum app_num, uint32_t resource_id,
   if (start_offset > s_image_len) {
     return 0;
   }
-  const size_t len = MIN(num_bytes, s_image_len - start_offset);
+  const size_t len = PBL_MIN(num_bytes, s_image_len - start_offset);
   memcpy(data, &s_image[start_offset], len);
   return len;
 }

@@ -97,8 +97,9 @@ void health_progress_bar_fill(GContext *ctx, HealthProgressBar *progress_bar, GC
       continue;
     }
 
-    const int from_total = MAX(start, amount_traversed) - amount_traversed;
-    const int to_total = MIN(end, amount_traversed + segment->amount_of_total) - amount_traversed;
+    const int from_total = PBL_MAX(start, amount_traversed) - amount_traversed;
+    const int to_total =
+        PBL_MIN(end, amount_traversed + segment->amount_of_total) - amount_traversed;
 
     const int from = prv_total_offset_to_segment_offset(segment, from_total);
     const int to = prv_total_offset_to_segment_offset(segment, to_total);

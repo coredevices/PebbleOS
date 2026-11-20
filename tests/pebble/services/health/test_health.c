@@ -163,8 +163,8 @@ bool sys_activity_get_sessions(uint32_t *num_sessions, ActivitySession *sessions
   cl_assert(s_sys_activity_get_sessions_values.out.num_sessions <=
             PBL_ARRAY_SIZE(s_sys_activity_get_sessions_values.out.sessions));
 
-  for (uint32_t i = 0; i < MIN(*num_sessions, s_sys_activity_get_sessions_values.out.num_sessions);
-       i++) {
+  for (uint32_t i = 0;
+       i < PBL_MIN(*num_sessions, s_sys_activity_get_sessions_values.out.num_sessions); i++) {
     sessions[i] = s_sys_activity_get_sessions_values.out.sessions[i];
   }
 
@@ -266,7 +266,7 @@ bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *nu
     return false;
   }
 
-  *num_records = MIN(out->num_records, *num_records);
+  *num_records = PBL_MIN(out->num_records, *num_records);
   *utc_start = out->utc_start;
   for (uint32_t i = 0; i < *num_records; i++) {
     minute_data[i] = out->records[i];
@@ -1445,8 +1445,8 @@ void test_health__peek_current_value(void) {
 
 static void prv_update_stats(HealthServiceStats *stats, HealthValue value) {
   stats->sum += value;
-  stats->min = MIN(value, stats->min);
-  stats->max = MAX(value, stats->max);
+  stats->min = PBL_MIN(value, stats->min);
+  stats->max = PBL_MAX(value, stats->max);
   stats->count++;
   stats->avg = stats->sum / stats->count;
 }
@@ -1645,8 +1645,8 @@ void test_health__heart_rate_scope_once(void) {
   int32_t count = 0;
   uint8_t value = 50;
   for (unsigned i = 0; i < num_minutes_per_call; i++) {
-    min_value = MIN(min_value, value);
-    max_value = MAX(max_value, value);
+    min_value = PBL_MIN(min_value, value);
+    max_value = PBL_MAX(max_value, value);
     sum += value;
     count++;
     s_sys_activity_get_minute_history_values.out[0].records[i].heart_rate_bpm = value;
@@ -1656,8 +1656,8 @@ void test_health__heart_rate_scope_once(void) {
     }
   }
   for (unsigned i = 0; i < num_minutes_per_call; i++) {
-    min_value = MIN(min_value, value);
-    max_value = MAX(max_value, value);
+    min_value = PBL_MIN(min_value, value);
+    max_value = PBL_MAX(max_value, value);
     sum += value;
     count++;
     s_sys_activity_get_minute_history_values.out[1].records[i].heart_rate_bpm = value;
@@ -1666,7 +1666,7 @@ void test_health__heart_rate_scope_once(void) {
       value = 50;
     }
   }
-  int32_t avg_value = ROUND(sum, count);
+  int32_t avg_value = PBL_DIV_ROUND_CLOSEST(sum, count);
 
   // Test each aggregation
   for (HealthAggregation agg = HealthAggregationAvg; agg <= HealthAggregationMax; agg++) {

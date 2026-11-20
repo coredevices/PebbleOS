@@ -39,10 +39,10 @@ static bool prv_clip(const struct pbl_gpu_buffer *buf, const struct pbl_gpu_rect
   int32_t y1 = buf->height;
 
   if (rect != nullptr) {
-    x0 = MAX(x0, (int32_t)rect->x);
-    y0 = MAX(y0, (int32_t)rect->y);
-    x1 = MIN(x1, (int32_t)rect->x + rect->width);
-    y1 = MIN(y1, (int32_t)rect->y + rect->height);
+    x0 = PBL_MAX(x0, (int32_t)rect->x);
+    y0 = PBL_MAX(y0, (int32_t)rect->y);
+    x1 = PBL_MIN(x1, (int32_t)rect->x + rect->width);
+    y1 = PBL_MIN(y1, (int32_t)rect->y + rect->height);
   }
 
   if (x0 >= x1 || y0 >= y1) {

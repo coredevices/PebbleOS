@@ -781,7 +781,7 @@ static bool prv_read_string_attributes(const SerializedTimelineItemHeader *heade
     remaining -= attribute.length;
 
     Attribute *dest = attribute_find(attr_list, attribute.id);
-    const size_t length = dest ? MIN(attribute.length, buffer_size - 1) : 0;
+    const size_t length = dest ? PBL_MIN(attribute.length, buffer_size - 1) : 0;
     if ((length > 0) && (pbl_fs_read(file, (uint8_t *)dest->cstring, length) != (ssize_t)length)) {
       return false;
     }

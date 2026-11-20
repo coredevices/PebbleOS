@@ -205,7 +205,7 @@ static uint32_t prv_get_total_duration(AnimationState *state, AnimationPrivate *
       if (child_duration == PLAY_DURATION_INFINITE) {
         return PLAY_DURATION_INFINITE;
       }
-      max_child_duration = MAX(max_child_duration, child_duration);
+      max_child_duration = PBL_MAX(max_child_duration, child_duration);
     }
     duration += max_child_duration;
 
@@ -296,7 +296,7 @@ static void prv_reschedule_timer(AnimationState *state, uint32_t rate_control_de
   }
   const uint32_t now = prv_get_ms_since_system_start();
   const int32_t delta_ms = serial_distance32(now, animation->abs_start_time_ms);
-  const uint32_t interval_ms = MAX(delta_ms, 0) + rate_control_delay_ms;
+  const uint32_t interval_ms = PBL_MAX(delta_ms, 0) + rate_control_delay_ms;
 
   // The animation service will call animation_private_timer_callback() when the timer fires
   animation_service_timer_schedule(interval_ms);
@@ -678,7 +678,7 @@ static uint32_t prv_get_time_normalized_raw(const AnimationPrivate *animation, u
     // animation->duration_ms/2 added in for round to nearest
     time_normalized_raw = (ANIMATION_NORMALIZED_MAX * rel_ms_running + animation->duration_ms / 2) /
                           animation->duration_ms;
-    time_normalized_raw = MIN(time_normalized_raw, ANIMATION_NORMALIZED_MAX);
+    time_normalized_raw = PBL_MIN(time_normalized_raw, ANIMATION_NORMALIZED_MAX);
   }
   return time_normalized_raw;
 }
@@ -1116,8 +1116,8 @@ void animation_private_timer_callback(void *context) {
   const int32_t frame_interval_ms = serial_distance32(state->aux->last_frame_time_ms, now);
   const int32_t error_ms = frame_interval_ms - CONFIG_PLATFORM_ANIMATION_RENDER_INTERVAL_MS;
   const int32_t theoretic_delay_ms = state->aux->last_delay_ms - error_ms;
-  const uint32_t delay_ms =
-      CLIP(theoretic_delay_ms, (int32_t)0, (int32_t)CONFIG_PLATFORM_ANIMATION_RENDER_INTERVAL_MS);
+  const uint32_t delay_ms = PBL_CLAMP(theoretic_delay_ms, (int32_t)0,
+                                      (int32_t)CONFIG_PLATFORM_ANIMATION_RENDER_INTERVAL_MS);
 
   prv_reschedule_timer(state, delay_ms);
   state->aux->last_delay_ms = delay_ms;
@@ -1700,7 +1700,7 @@ bool animation_set_elapsed(Animation *parent_h, uint32_t elapsed_ms) {
     if (remaining == 0) {
       break;
     }
-    virtual_now += MIN(ANIMATION_TARGET_FRAME_INTERVAL_MS, remaining);
+    virtual_now += PBL_MIN(ANIMATION_TARGET_FRAME_INTERVAL_MS, remaining);
   }
 
   // Now, go and backup the abs_start_time_ms of the animations we skipped ahead on

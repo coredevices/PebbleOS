@@ -100,7 +100,7 @@ bool attributes_actions_deep_copy(AttributeList *src_attr_list, AttributeList *d
 
   if (src_attr_list && dest_attr_list) {
     rv = attribute_list_copy(dest_attr_list, src_attr_list, buffer,
-                             MIN(buffer + attr_list_size, buf_end));
+                             PBL_MIN(buffer + attr_list_size, buf_end));
     if (!rv) {
       PBL_LOG_ERR("Error deep-copying pin attribute list");
       return false;

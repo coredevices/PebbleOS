@@ -62,7 +62,7 @@ int32_t integer_sqrt(int64_t x) {
 
 static void solution_and_estimate_match(int16_t *solution, int16_t *correction) {
   for (int i = 0; i < 3; i++) {
-    int diff = ABS(solution[i] - correction[i]);
+    int diff = PBL_ABS(solution[i] - correction[i]);
     cl_assert(diff < 2);
   }
 }
@@ -216,7 +216,7 @@ void test_compass_cal__weak_field_converges(void) {
 
   cl_assert(locked_at > 0);
   for (int i = 0; i < 3; i++) {
-    cl_assert(ABS(solution[i] - center[i]) <= 30);
+    cl_assert(PBL_ABS(solution[i] - center[i]) <= 30);
   }
 }
 
@@ -251,7 +251,7 @@ void test_compass_cal__normal_field_converges_quickly(void) {
   cl_assert(locked_at > 0);
   cl_assert(locked_at < 300); // locked within the first (strict) window
   for (int i = 0; i < 3; i++) {
-    cl_assert(ABS(solution[i] - center[i]) <= 20);
+    cl_assert(PBL_ABS(solution[i] - center[i]) <= 20);
   }
 }
 

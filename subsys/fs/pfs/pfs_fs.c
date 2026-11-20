@@ -121,7 +121,7 @@ static ssize_t prv_read(struct pbl_fs_file *file, void *buf, size_t len) {
     return prv_errno(offset);
   }
 
-  len = MIN(len, pfs_get_file_size(fd) - (size_t)offset);
+  len = PBL_MIN(len, pfs_get_file_size(fd) - (size_t)offset);
   if (len == 0) {
     return 0;
   }

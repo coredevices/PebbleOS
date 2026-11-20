@@ -116,7 +116,7 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
       // Session disconnected in the mean time
       packet_len = 0;
     } else {
-      data_len = MIN(remaining_bytes, max_buf_len - sizeof(GetBytesRspObjectData));
+      data_len = PBL_MIN(remaining_bytes, max_buf_len - sizeof(GetBytesRspObjectData));
       packet_len = data_len + sizeof(GetBytesRspObjectData);
     }
   } else {

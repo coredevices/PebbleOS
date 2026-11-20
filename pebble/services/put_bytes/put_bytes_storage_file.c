@@ -88,7 +88,7 @@ uint32_t pb_storage_file_calculate_crc(PutBytesStorage *storage, PutBytesCrcType
     pbl_fs_seek(&pb_file->file, 0, PBL_FS_SEEK_SET);
     while (num_bytes > 0) {
       const ssize_t bytes_read =
-          pbl_fs_read(&pb_file->file, buffer, MIN(num_bytes, sizeof(buffer)));
+          pbl_fs_read(&pb_file->file, buffer, PBL_MIN(num_bytes, sizeof(buffer)));
       if (bytes_read <= 0) {
         break;
       }

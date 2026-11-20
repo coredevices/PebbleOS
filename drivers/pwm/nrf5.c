@@ -44,7 +44,7 @@ static int prv_timing(uint32_t period, uint32_t *prescaler, uint32_t *top) {
     p++;
   }
 
-  *top = MIN(prv_counts(period, p), PWM_COUNTERTOP_MAX);
+  *top = PBL_MIN(prv_counts(period, p), PWM_COUNTERTOP_MAX);
   if (*top < PWM_COUNTERTOP_MIN) {
     return -EINVAL;
   }
@@ -141,7 +141,7 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
     prv_putreg(pwm, NRF52_PWM_COUNTERTOP_OFFSET, top);
   }
 
-  st->seq[channel] = (uint16_t)MIN(prv_counts(state->duty_cycle, prescaler), top);
+  st->seq[channel] = (uint16_t)PBL_MIN(prv_counts(state->duty_cycle, prescaler), top);
   if (!inversed) {
     st->seq[channel] |= PWM_SEQ_FALLING_EDGE;
   }

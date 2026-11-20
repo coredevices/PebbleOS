@@ -223,7 +223,7 @@ typedef struct BinLogMessage_UnhashedBody {
 } BinLogMessage_UnhashedBody;
 
 /*
-int len = MAX(strlen(log_string), 255 - sizeof(BinLogMessage_Header_vX))
+int len = PBL_MAX(strlen(log_string), 255 - sizeof(BinLogMessage_Header_vX))
 typedef struct BinLogMessage_SimpleBody {
   uint8_t string[len];
   uint8_t padding[((sizeof(BinLogMessage_Header_vX) + len + 3) % 4)];

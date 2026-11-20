@@ -53,7 +53,7 @@ static void prv_render_progress_bar(GContext *ctx, Layer *base_layer) {
   health_progress_bar_fill(ctx, &data->progress_bar, PROGRESS_BACKGROUND_COLOR, 0,
                            HEALTH_PROGRESS_BAR_MAX_VALUE);
 
-  const int32_t progress_max = MAX(data->current_steps, data->daily_average_steps);
+  const int32_t progress_max = PBL_MAX(data->current_steps, data->daily_average_steps);
   if (!progress_max) {
     health_progress_bar_outline(ctx, &data->progress_bar, PROGRESS_OUTLINE_COLOR);
     return;

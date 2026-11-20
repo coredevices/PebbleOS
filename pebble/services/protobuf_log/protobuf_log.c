@@ -376,7 +376,7 @@ bool protobuf_log_session_add_measurements(ProtobufLogRef session_ref, time_t sa
   PLogSession *session = (PLogSession *)session_ref;
   PBL_ASSERTN(session->config.type == ProtobufLogType_Measurements);
   int32_t offset_sec = sample_utc - session->start_utc;
-  offset_sec = MAX(0, offset_sec);
+  offset_sec = PBL_MAX(0, offset_sec);
 
   // error check
   PBL_ASSERT(num_values == session->config.measurements.num_types, "Wrong number of values passed");

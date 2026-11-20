@@ -45,7 +45,7 @@ static size_t prv_total(void) {
   size_t size;
 
   pbl_ram_get_region(EXTRAM, &base, &size);
-  return MIN(GRANULES, size / GRANULE);
+  return PBL_MIN(GRANULES, size / GRANULE);
 }
 
 static bool prv_test(const uint32_t *map, size_t i) {
@@ -69,8 +69,8 @@ static void prv_set(uint32_t *map, size_t i, bool set) {
     return;
   }
 
-  for (size_t i = (MAX(rbase, base) - base) / GRANULE;
-       i < (MIN(rend, end) - base + GRANULE - 1U) / GRANULE; i++) {
+  for (size_t i = (PBL_MAX(rbase, base) - base) / GRANULE;
+       i < (PBL_MIN(rend, end) - base + GRANULE - 1U) / GRANULE; i++) {
     if (!prv_test(s_used, i)) {
       prv_set(s_used, i, true);
       prv_set(s_last, i, true);
@@ -107,7 +107,7 @@ static size_t prv_find(size_t n, size_t *largest) {
       continue;
     }
     run = prv_test(s_used, i) ? 0U : run + 1U;
-    *largest = MAX(*largest, run);
+    *largest = PBL_MAX(*largest, run);
     if ((n > 0U) && (run == n)) {
       return i + 1U - n;
     }
@@ -140,7 +140,7 @@ void *pbl_scratch_malloc(size_t size) {
   prv_set(s_last, first + n - 1U, true);
   s_allocations++;
   s_used_granules += n;
-  s_peak_granules = MAX(s_peak_granules, s_used_granules);
+  s_peak_granules = PBL_MAX(s_peak_granules, s_used_granules);
   pbl_mutex_unlock(&s_lock);
 
   return (void *)(prv_base() + first * GRANULE);

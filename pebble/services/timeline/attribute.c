@@ -113,9 +113,9 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
       uint16_t attr_length;
       if (attribute->id <= AttributeIdBody) {
         // Valid attribute IDs start at 1 but MAX_ATTRIBUTE_LENGTHS indexes starts at 0, so -1
-        attr_length = MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length);
+        attr_length = PBL_MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length);
       } else if (attribute->id == AttributeIdSubtitleTemplateString) {
-        attr_length = MIN((uint16_t)ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN, attribute->length);
+        attr_length = PBL_MIN((uint16_t)ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN, attribute->length);
       } else {
         attr_length = attribute->length;
       }
@@ -146,7 +146,7 @@ static bool prv_deserialize_attribute(char **buffer, char *const buf_end, const 
     case AttributeTypeStringList: {
       notif_attr->string_list = (struct pbl_string_list *)*buffer;
       notif_attr->string_list->serialized_byte_length =
-          MIN((uint16_t)MAX_LENGTH_CANNED_RESPONSES, attribute->length);
+          PBL_MIN((uint16_t)MAX_LENGTH_CANNED_RESPONSES, attribute->length);
       uint16_t data_length = notif_attr->string_list->serialized_byte_length +
                              (uint16_t)sizeof(char); // terminator after last string
       *buffer += sizeof(struct pbl_string_list) + data_length;
@@ -190,16 +190,17 @@ static int32_t prv_get_buffer_size_for_serialized_attribute(const uint8_t **curs
   switch (prv_attribute_type(attribute->id)) {
     case AttributeTypeString:
       if (attribute->id <= AttributeIdBody) {
-        string_alloc_size += MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length) + 1;
+        string_alloc_size +=
+            PBL_MIN(MAX_ATTRIBUTE_LENGTHS[attribute->id - 1], attribute->length) + 1;
       } else if (attribute->id == AttributeIdSubtitleTemplateString) {
-        string_alloc_size += MIN(ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN, attribute->length) + 1;
+        string_alloc_size += PBL_MIN(ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN, attribute->length) + 1;
       } else {
         string_alloc_size += attribute->length + 1;
       }
       break;
     case AttributeTypeStringList:
-      string_alloc_size +=
-          sizeof(struct pbl_string_list) + MIN(MAX_LENGTH_CANNED_RESPONSES, attribute->length) + 1;
+      string_alloc_size += sizeof(struct pbl_string_list) +
+                           PBL_MIN(MAX_LENGTH_CANNED_RESPONSES, attribute->length) + 1;
       break;
     case AttributeTypeUint32List:
       string_alloc_size += attribute->length;

@@ -231,7 +231,7 @@ static void prv_feed_steps_min(uint32_t minutes) {
 
   uint32_t minute_idx = samples_remaining / (60 * SAMPLES_PER_SECOND);
   while (samples_remaining) {
-    uint32_t chunk_size = MIN(samples_remaining, SAMPLES_PER_SECOND);
+    uint32_t chunk_size = PBL_MIN(samples_remaining, SAMPLES_PER_SECOND);
 
     AccelRawData data[SAMPLES_PER_SECOND];
     for (uint32_t i = 0; i < chunk_size; i++) {
@@ -525,7 +525,7 @@ static void prv_test_nap(void *context) {
   const time_t nap_time_end = midnight_utc + (ALG_PRIMARY_EVENING_MINUTE * PBL_SEC_PER_MIN);
 
   // Go to one hour after the time sleeps are considered naps if we aren't currently in it
-  if (!WITHIN(now_utc, nap_time_start, nap_time_end)) {
+  if (!PBL_IN_RANGE(now_utc, nap_time_start, nap_time_end)) {
     const time_t next_nap_time =
         (nap_time_start < now_utc ? nap_time_start + PBL_SEC_PER_DAY : nap_time_start) +
         PBL_SEC_PER_HOUR;

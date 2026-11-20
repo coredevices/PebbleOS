@@ -87,7 +87,7 @@ static bool prv_read_byte(ColorGlyphReader *r, uint8_t *byte) {
     if (r->offset >= r->end) {
       return false;
     }
-    r->len = MIN(sizeof(r->buf), r->end - r->offset);
+    r->len = PBL_MIN(sizeof(r->buf), r->end - r->offset);
     r->pos = 0;
     if (!prv_read(r, r->buf, r->len)) {
       return false;
@@ -256,8 +256,9 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 
   // The number of bits to be clipped off the edges
   const int left_clip = clipped_glyph_target.origin.x - glyph_target.origin.x;
-  const int right_clip = MIN(glyph_target.size.w,
-                             MAX(0, glyph_target.size.w - clipped_glyph_target.size.w - left_clip));
+  const int right_clip =
+      PBL_MIN(glyph_target.size.w,
+              PBL_MAX(0, glyph_target.size.w - clipped_glyph_target.size.w - left_clip));
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // Set base address to 0 for 8-bit as this will be later translated to the destination bitmap
@@ -268,7 +269,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 #endif
 
   const uint32_t *const dest_block_x_begin =
-      base_addr + (left_clip ? MAX(0, (((x + left_clip + 31) / 32) - 1)) : (x / 32));
+      base_addr + (left_clip ? PBL_MAX(0, (((x + left_clip + 31) / 32) - 1)) : (x / 32));
 
   if (clipped_glyph_target.size.h == 0 || clipped_glyph_target.size.w == 0) {
     return;
@@ -374,7 +375,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 
       // bitblt part of glyph_block:
       const uint8_t number_of_bits =
-          MIN(32 - dest_shift, MIN(glyph_line_bits_left, glyph_block_bits_left));
+          PBL_MIN(32 - dest_shift, PBL_MIN(glyph_line_bits_left, glyph_block_bits_left));
       // number_of_bits may be 32: shifting a 32-bit 1 that far is undefined.
       const uint32_t mask = (uint32_t)((((uint64_t)1 << number_of_bits) - 1) << dest_shift);
 

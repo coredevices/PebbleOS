@@ -221,7 +221,7 @@ RemoteInputResult remote_input_button_set(uint8_t buttons) {
 #define REMOTE_INPUT_SWIPE_TRAVEL_NUM 3
 #define REMOTE_INPUT_SWIPE_TRAVEL_DEN 5
 
-static_assert((MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
+static_assert((PBL_MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) * REMOTE_INPUT_SWIPE_TRAVEL_NUM) /
                       REMOTE_INPUT_SWIPE_TRAVEL_DEN >=
                   SWIPE_MIN_LENGTH_PX,
               "swipe travel is below the swipe recognizer's minimum length");
@@ -319,7 +319,7 @@ RemoteInputResult remote_input_touch(int16_t x1, int16_t y1, int16_t x2, int16_t
 
   // A finger that stays put lifts without moving: a tap, or a long press.
   const uint8_t steps = ((x1 == x2) && (y1 == y2)) ? 0 : REMOTE_INPUT_PATH_STEPS;
-  return prv_start_path(x1, y1, x2, y2, steps, MAX(1, duration_ms / (steps + 1)));
+  return prv_start_path(x1, y1, x2, y2, steps, PBL_MAX(1, duration_ms / (steps + 1)));
 }
 
 RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16_t duration_ms) {
@@ -358,7 +358,7 @@ RemoteInputResult remote_input_swipe(RemoteInputSwipeDirection direction, uint16
   // at all. At least 1ms per step, or the chained timers never separate the velocity samples.
   return prv_start_path(x1, y1, (int16_t)(x1 + (vertical ? 0 : sign * travel)),
                         (int16_t)(y1 + (vertical ? sign * travel : 0)), REMOTE_INPUT_PATH_STEPS,
-                        MAX(1, duration_ms / (REMOTE_INPUT_PATH_STEPS + 2)));
+                        PBL_MAX(1, duration_ms / (REMOTE_INPUT_PATH_STEPS + 2)));
 }
 
 #else // !CONFIG_SERVICE_TOUCH

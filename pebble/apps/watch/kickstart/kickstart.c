@@ -108,8 +108,8 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
 static GPoint prv_inset_point(GRect *frame, GPoint outer_point, int32_t inset_amount) {
   // Insets the given point by the specified amount
   return (GPoint){
-    .x = MAX(inset_amount - 1, MIN(outer_point.x, frame->size.w - inset_amount)),
-    .y = MAX(inset_amount - 1, MIN(outer_point.y, frame->size.h - inset_amount))
+    .x = PBL_MAX(inset_amount - 1, PBL_MIN(outer_point.x, frame->size.w - inset_amount)),
+    .y = PBL_MAX(inset_amount - 1, PBL_MIN(outer_point.y, frame->size.h - inset_amount))
   };
 }
 #endif
@@ -435,7 +435,7 @@ static void prv_base_layer_update_proc(Layer *layer, GContext *ctx) {
   const int goal_line_width = 4;
 
   // draw yellow goal line
-  prv_draw_goal_line(ctx, data->typical_steps, MAX(data->daily_steps_avg, data->typical_steps),
+  prv_draw_goal_line(ctx, data->typical_steps, PBL_MAX(data->daily_steps_avg, data->typical_steps),
                      goal_line_length, goal_line_width, bounds, GColorYellow);
 
   const bool has_bpm = (data->current_bpm > 0);
@@ -508,7 +508,7 @@ static void prv_normalize_data(KickstartData *data) {
   // to a slightly more reasonable number.
   // This fixes an integer rounding problem when the value is very small
   const int min_daily_steps_avg = 100;
-  data->daily_steps_avg = MAX(data->daily_steps_avg, min_daily_steps_avg);
+  data->daily_steps_avg = PBL_MAX(data->daily_steps_avg, min_daily_steps_avg);
 
   // increase daily avg 5% more than current steps if current steps is more than 95% of daily avg
   if (data->current_steps >= (data->daily_steps_avg * 95 / 100)) {

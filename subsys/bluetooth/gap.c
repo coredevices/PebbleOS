@@ -33,7 +33,7 @@ static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_
     return 0;
   }
 
-  size_t len = MIN(OS_MBUF_PKTLEN(attr->om), sizeof(s_device_name) - 1);
+  size_t len = PBL_MIN(OS_MBUF_PKTLEN(attr->om), sizeof(s_device_name) - 1);
   os_mbuf_copydata(attr->om, 0, len, s_device_name);
   s_device_name[len] = '\0';
 

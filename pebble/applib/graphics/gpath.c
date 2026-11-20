@@ -333,8 +333,8 @@ static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *poi
   const int16_t clip_min_y =
       ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
   const int16_t clip_max_y = ctx->draw_state.clip_box.size.h + clip_min_y;
-  min_y = MAX(min_y, clip_min_y);
-  max_y = MIN(max_y, clip_max_y);
+  min_y = PBL_MAX(min_y, clip_min_y);
+  max_y = PBL_MIN(max_y, clip_max_y);
 
   // filling color hack
   GColor tmp = ctx->draw_state.stroke_color;
@@ -380,7 +380,7 @@ static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *poi
           };
 
           Fixed_S16_3 delta =
-              (Fixed_S16_3){.raw_value = ABS(delta_x / delta_y) * FIXED_S16_3_ONE.raw_value};
+              (Fixed_S16_3){.raw_value = PBL_ABS(delta_x / delta_y) * FIXED_S16_3_ONE.raw_value};
 
           if (delta.integer > 1) {
             // this is where we try to fix edges diving in and out of paths
@@ -417,7 +417,7 @@ static void prv_fill_points_with_cb_aa(GContext *ctx, const GPointUnaligned *poi
     sortIntersections(intersections_down, intersection_down_count);
 
     // draw the line segments
-    for (int j = 0; j < MIN(intersection_up_count, intersection_down_count); j++) {
+    for (int j = 0; j < PBL_MIN(intersection_up_count, intersection_down_count); j++) {
       Intersection x_a = intersections_up[j];
       Intersection x_b = intersections_down[j];
       if (x_a.x.integer != x_b.x.integer) {
@@ -522,8 +522,8 @@ static void prv_fill_points_with_cb(GContext *ctx, const GPointUnaligned *points
   const int16_t clip_min_y =
       ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
   const int16_t clip_max_y = ctx->draw_state.clip_box.size.h + clip_min_y;
-  min_y = MAX(min_y, clip_min_y);
-  max_y = MIN(max_y, clip_max_y);
+  min_y = PBL_MAX(min_y, clip_min_y);
+  max_y = PBL_MIN(max_y, clip_max_y);
 
   // find all of the horizontal intersections and draw them
   for (int16_t i = min_y; i <= max_y; ++i) {
@@ -571,7 +571,7 @@ static void prv_fill_points_with_cb(GContext *ctx, const GPointUnaligned *points
     sort16(intersections_down, intersection_down_count);
 
     // draw the line segments
-    for (int j = 0; j < MIN(intersection_up_count, intersection_down_count); j++) {
+    for (int j = 0; j < PBL_MIN(intersection_up_count, intersection_down_count); j++) {
       int16_t x_a = intersections_up[j];
       int16_t x_b = intersections_down[j];
       if (x_a != x_b) {

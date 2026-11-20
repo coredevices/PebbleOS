@@ -43,8 +43,8 @@ static void prv_modal_transition_pop_update(GContext *ctx, uint32_t distance_nor
   // This is the offset where the modal is to be drawn after the operations below.
   // NOTE: It has to be clipped since our moook interpolate function goes past the destination
   //       and would cause us to write into an invalid memory address in the framebuffer.
-  const int32_t new_modal_offset_y =
-      MIN(DISP_ROWS_LAST_INDEX, interpolate_int16(distance_normalized, 0, DISP_ROWS_LAST_INDEX));
+  const int32_t new_modal_offset_y = PBL_MIN(
+      DISP_ROWS_LAST_INDEX, interpolate_int16(distance_normalized, 0, DISP_ROWS_LAST_INDEX));
   // This is the delta between the new offset and the previous offset.
   const int32_t modal_offset_delta_y = new_modal_offset_y - s_data.cur_modal_offset_y;
 

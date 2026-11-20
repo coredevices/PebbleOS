@@ -671,13 +671,13 @@ static inline int16_t grect_get_max_y(const GRect *rect) {
 //! @internal
 //! Convenience function to return the length of the longest side of a rect
 static inline int16_t grect_longest_side(const GRect rect) {
-  return MAX(ABS(rect.size.w), ABS(rect.size.h));
+  return PBL_MAX(PBL_ABS(rect.size.w), PBL_ABS(rect.size.h));
 }
 
 //! @internal
 //! Convenience function to return the length of the shortest side of a rect
 static inline int16_t grect_shortest_side(const GRect rect) {
-  return MIN(ABS(rect.size.w), ABS(rect.size.h));
+  return PBL_MIN(PBL_ABS(rect.size.w), PBL_ABS(rect.size.h));
 }
 
 //! @internal

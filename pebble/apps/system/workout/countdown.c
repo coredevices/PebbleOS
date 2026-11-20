@@ -212,7 +212,7 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     window->touch_active = false;
     const int dx = event->x - window->touch_start.x;
     const int dy = event->y - window->touch_start.y;
-    if (dx > 30 && dx > ABS(dy)) {
+    if (dx > 30 && dx > PBL_ABS(dy)) {
       window_stack_remove(&window->window, false);
     }
   }

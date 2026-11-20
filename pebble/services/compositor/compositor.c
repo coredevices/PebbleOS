@@ -148,9 +148,9 @@ void compositor_app_framebuffer_fill_callback(GContext *ctx, int16_t y, Fixed_S1
   const int16_t fb_width = app_framebuffer.bounds.size.w;
   const int16_t fb_height = app_framebuffer.bounds.size.h;
 
-  const int16_t x1 = CLIP(x_range_begin.integer - offset->x, 0, fb_width);
-  const int16_t clipped_y = CLIP(y - offset->y, 0, fb_height);
-  const int16_t x2 = CLIP(x_range_end.integer - offset->x, 0, fb_width);
+  const int16_t x1 = PBL_CLAMP(x_range_begin.integer - offset->x, 0, fb_width);
+  const int16_t clipped_y = PBL_CLAMP(y - offset->y, 0, fb_height);
+  const int16_t x2 = PBL_CLAMP(x_range_end.integer - offset->x, 0, fb_width);
 
   compositor_scaled_app_fb_copy(GRect(x1, clipped_y, x2 - x1, 1), true /* copy_relative_to_origin */
   );
@@ -230,8 +230,8 @@ static bool prv_narrow_to_changed_rows(GRect *rect) {
   for (int16_t y = rect->origin.y; y < grect_get_max_y(rect); y++) {
     const GBitmapDataRowInfo app_row = gbitmap_get_data_row_info(&app_bitmap, y);
     const GBitmapDataRowInfo sys_row = gbitmap_get_data_row_info(&sys_bitmap, y);
-    const int16_t x0 = MAX(rect->origin.x, app_row.min_x);
-    const int16_t x1 = MIN(x_max, app_row.max_x);
+    const int16_t x0 = PBL_MAX(rect->origin.x, app_row.min_x);
+    const int16_t x1 = PBL_MIN(x_max, app_row.max_x);
     if (x0 > x1) {
       continue;
     }
@@ -787,8 +787,8 @@ void compositor_scaled_app_fb_copy_offset(const GRect update_rect, bool copy_rel
 //! Set the pixels [start_x, end_x) of a row of the system framebuffer to black.
 static void prv_fill_row_black(GBitmap *bitmap, int16_t y, int16_t start_x, int16_t end_x) {
   const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
-  start_x = MAX(start_x, row_info.min_x);
-  end_x = MIN(end_x, row_info.max_x + 1);
+  start_x = PBL_MAX(start_x, row_info.min_x);
+  end_x = PBL_MIN(end_x, row_info.max_x + 1);
   if (end_x <= start_x) {
     return;
   }
@@ -843,14 +843,14 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
                                : compositor_get_scaled_app_frame(src_bitmap.bounds.size);
 
     if (shift_scaled_watchface_for_peek) {
-      int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+      int16_t first_row = PBL_CLAMP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
       int16_t last_row =
-          CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
+          PBL_CLAMP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
       for (int16_t y = first_row; y < last_row; y++) {
         GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
-        const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
+        const int16_t start_x = PBL_MAX(update_rect.origin.x, dst_row_info.min_x);
         const int16_t end_x =
-            MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
+            PBL_MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
         if (end_x > start_x) {
           memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
         }
@@ -884,7 +884,8 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
             continue;
           }
         } else {
-          dst_y_coord = copy_relative_to_origin ? CLIP(dst_y_offset, 0, disp_height - 1) : dst_y;
+          dst_y_coord =
+              copy_relative_to_origin ? PBL_CLAMP(dst_y_offset, 0, disp_height - 1) : dst_y;
         }
         dst_y_coord -= scale_to.origin.y;
         if (dst_y_coord < 0 || dst_y_coord >= scale_to.size.h) {
@@ -904,7 +905,7 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
       GBitmapDataRowInfo src_row_info = gbitmap_get_data_row_info(&src_bitmap, src_y);
 
       // For bilinear, also get the next row (clamped to bounds)
-      const int16_t src_y1 = MIN(src_y + 1, app_height - 1);
+      const int16_t src_y1 = PBL_MIN(src_y + 1, app_height - 1);
       GBitmapDataRowInfo src_row_info_next;
       if (bilinear && src_y1 != src_y) {
         src_row_info_next = gbitmap_get_data_row_info(&src_bitmap, src_y1);
@@ -930,7 +931,7 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
         // The column within scale_to
         const int16_t dst_x_coord =
             (fit->squish_for_peek      ? dst_x_offset
-             : copy_relative_to_origin ? CLIP(dst_x_offset, 0, disp_width - 1)
+             : copy_relative_to_origin ? PBL_CLAMP(dst_x_offset, 0, disp_width - 1)
                                        : dst_x) -
             scale_to.origin.x;
         if (dst_x_coord < 0 || dst_x_coord >= scale_to.size.w) {
@@ -950,7 +951,7 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
           dst_line[dst_x_offset] = src_row_info.data[src_x];
         } else {
           // Bilinear interpolation on ARGB2222 pixels
-          const int16_t src_x1 = MIN(src_x + 1, app_width - 1);
+          const int16_t src_x1 = PBL_MIN(src_x + 1, app_width - 1);
 
           // Sample 2x2 neighborhood
           const uint8_t p00 = src_row_info.data[src_x];
@@ -997,13 +998,14 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
     const GRect shifted_region = GRect(app_offset_x, app_offset_y, app_width, app_height);
     const GRect unobstructed_region = GRect(0, 0, disp_width, timeline_peek_get_origin_y());
 
-    int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+    int16_t first_row = PBL_CLAMP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
     int16_t last_row =
-        CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
+        PBL_CLAMP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
     for (int16_t y = first_row; y < last_row; y++) {
       GBitmapDataRowInfo dst_row_info = gbitmap_get_data_row_info(&dst_bitmap, y);
-      const int16_t start_x = MAX(update_rect.origin.x, dst_row_info.min_x);
-      const int16_t end_x = MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
+      const int16_t start_x = PBL_MAX(update_rect.origin.x, dst_row_info.min_x);
+      const int16_t end_x =
+          PBL_MIN(update_rect.origin.x + update_rect.size.w, dst_row_info.max_x + 1);
       if (end_x > start_x) {
         memset(&dst_row_info.data[start_x], GColorBlack.argb, end_x - start_x);
       }
@@ -1029,13 +1031,13 @@ static void prv_scaled_app_fb_copy(const GRect update_rect, bool copy_relative_t
     const int16_t bezel_width = (PBL_DISPLAY_WIDTH - app_width) / 2;
     const int16_t bezel_height = (PBL_DISPLAY_HEIGHT - app_height) / 2;
     const int16_t app_peek_offset_y = timeline_peek_get_origin_y() - app_height;
-    const int16_t app_offset_y = CLIP(app_peek_offset_y, 0, bezel_height);
+    const int16_t app_offset_y = PBL_CLAMP(app_peek_offset_y, 0, bezel_height);
     PBL_ASSERTN((bezel_width >= 0) && (bezel_height >= 0));
 
     // set the entire region to be updated to black
-    int16_t first_row = CLIP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
+    int16_t first_row = PBL_CLAMP(update_rect.origin.y, 0, PBL_DISPLAY_HEIGHT - 1);
     int16_t last_row =
-        CLIP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
+        PBL_CLAMP(update_rect.origin.y + update_rect.size.h, first_row, PBL_DISPLAY_HEIGHT);
     for (int16_t y = first_row; y < last_row; y++) {
       prv_fill_row_black(&dst_bitmap, y, update_rect.origin.x,
                          update_rect.origin.x + update_rect.size.w);

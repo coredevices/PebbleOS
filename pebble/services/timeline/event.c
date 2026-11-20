@@ -71,7 +71,7 @@ static uint32_t prv_calc_timeout(const TimelineItem *item) {
     return 0;
   }
   const uint32_t timeout_s = ((start > now) ? start : end) - now;
-  return MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
+  return PBL_MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
 }
 
 static void prv_set_timer(unsigned int timeout_ms) {
@@ -154,7 +154,7 @@ static void prv_update_status(void) {
     const uint32_t other_timeout_ms =
         state->impl->update(has_item ? &item : nullptr, &state->context);
     if (other_timeout_ms) {
-      timeout_ms = timeout_ms ? MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
+      timeout_ms = timeout_ms ? PBL_MIN(timeout_ms, other_timeout_ms) : other_timeout_ms;
     }
   }
 

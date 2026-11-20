@@ -124,7 +124,7 @@ static enum pbl_bt_response_time_state prv_determine_latency_for_connection(
     uint32_t curr_ticks = pbl_uptime_ticks();
     if (curr_ticks < timeout) {
       uint16_t wait_time = (timeout - curr_ticks) / PBL_TICK_HZ;
-      *secs_to_wait = MAX(1, wait_time);
+      *secs_to_wait = PBL_MAX(1, wait_time);
     } else {
       *secs_to_wait = 0;
     }

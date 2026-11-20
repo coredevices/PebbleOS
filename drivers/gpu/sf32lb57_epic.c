@@ -328,10 +328,10 @@ static bool prv_video(const struct pbl_gpu_blit *blit, struct prv_video *video) 
         const int32_t x = (int32_t)((cos * xs[i] - sin * ys[j]) / TRIG_MAX_RATIO) + tf->pivot_x;
         const int32_t y = (int32_t)((sin * xs[i] + cos * ys[j]) / TRIG_MAX_RATIO) + tf->pivot_y;
 
-        x0 = MIN(x0, x);
-        y0 = MIN(y0, y);
-        x1 = MAX(x1, x);
-        y1 = MAX(y1, y);
+        x0 = PBL_MIN(x0, x);
+        y0 = PBL_MIN(y0, y);
+        x1 = PBL_MAX(x1, x);
+        y1 = PBL_MAX(y1, y);
       }
     }
     x0 -= 1;
@@ -350,8 +350,8 @@ static bool prv_video(const struct pbl_gpu_blit *blit, struct prv_video *video) 
     video->pivot_y += dy;
     video->src_x = dx;
     video->src_y = dy;
-    video->rot_max_col = MAX(video->width - 1, dx + src->width - 1) - MIN(0, dx);
-    video->rot_max_line = MAX(video->height - 1, dy + src->height - 1) - MIN(0, dy);
+    video->rot_max_col = PBL_MAX(video->width - 1, dx + src->width - 1) - PBL_MIN(0, dx);
+    video->rot_max_line = PBL_MAX(video->height - 1, dy + src->height - 1) - PBL_MIN(0, dy);
 
     // The quadrant comes from the degrees, which the boundaries would leave undefined
     video->deg = (uint32_t)(angle / 10);
@@ -405,11 +405,11 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
   // Only what the layer covers of the clip is drawn: the layer ends there, but starts where it
   // does
   area = (struct pbl_gpu_rect){
-    .x = (int16_t)MAX(video.x, (int32_t)clip->x),
-    .y = (int16_t)MAX(video.y, (int32_t)clip->y),
+    .x = (int16_t)PBL_MAX(video.x, (int32_t)clip->x),
+    .y = (int16_t)PBL_MAX(video.y, (int32_t)clip->y),
   };
-  x1 = MIN(video.x + video.width, (int32_t)clip->x + clip->width);
-  y1 = MIN(video.y + video.height, (int32_t)clip->y + clip->height);
+  x1 = PBL_MIN(video.x + video.width, (int32_t)clip->x + clip->width);
+  y1 = PBL_MIN(video.y + video.height, (int32_t)clip->y + clip->height);
   if (area.x >= x1 || area.y >= y1) {
     return 0;
   }
@@ -422,10 +422,10 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
   y0 = video.y;
   if (x1 - x0 > EPIC_TRANSFORM_SPAN_MAX || y1 - y0 > EPIC_TRANSFORM_SPAN_MAX ||
       video.rot_max_col > EPIC_TRANSFORM_POS_MAX || video.rot_max_line > EPIC_TRANSFORM_POS_MAX ||
-      MAX(video.pivot_x, -video.pivot_x) > EPIC_TRANSFORM_POS_MAX ||
-      MAX(video.pivot_y, -video.pivot_y) > EPIC_TRANSFORM_POS_MAX ||
-      MAX(video.src_x, -video.src_x) > EPIC_TRANSFORM_POS_MAX ||
-      MAX(video.src_y, -video.src_y) > EPIC_TRANSFORM_POS_MAX) {
+      PBL_MAX(video.pivot_x, -video.pivot_x) > EPIC_TRANSFORM_POS_MAX ||
+      PBL_MAX(video.pivot_y, -video.pivot_y) > EPIC_TRANSFORM_POS_MAX ||
+      PBL_MAX(video.src_x, -video.src_x) > EPIC_TRANSFORM_POS_MAX ||
+      PBL_MAX(video.src_y, -video.src_y) > EPIC_TRANSFORM_POS_MAX) {
     return -ENOTSUP;
   }
 
@@ -502,10 +502,10 @@ static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
                     const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit) {
   const struct pbl_gpu_sf32lb57_epic *epic = prv_epic(gpu);
   const struct pbl_gpu_buffer *src = blit->src;
-  const int32_t x0 = MAX((int32_t)clip->x, (int32_t)blit->x);
-  const int32_t y0 = MAX((int32_t)clip->y, (int32_t)blit->y);
-  const int32_t x1 = MIN((int32_t)clip->x + clip->width, (int32_t)blit->x + src->width);
-  const int32_t y1 = MIN((int32_t)clip->y + clip->height, (int32_t)blit->y + src->height);
+  const int32_t x0 = PBL_MAX((int32_t)clip->x, (int32_t)blit->x);
+  const int32_t y0 = PBL_MAX((int32_t)clip->y, (int32_t)blit->y);
+  const int32_t x1 = PBL_MIN((int32_t)clip->x + clip->width, (int32_t)blit->x + src->width);
+  const int32_t y1 = PBL_MIN((int32_t)clip->y + clip->height, (int32_t)blit->y + src->height);
   struct pbl_gpu_rect rect;
   const uint8_t *first;
   int ret;

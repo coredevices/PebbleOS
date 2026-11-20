@@ -218,7 +218,7 @@ static void prv_perftest_text_main(void *data) {
   }
 
   size_t length = s_perftest_text_strings[args->text_index].lengths[font_index];
-  length = MIN(length, sizeof(s_text_test_str) - 1);
+  length = PBL_MIN(length, sizeof(s_text_test_str) - 1);
   strncpy(s_text_test_str, s_perftest_text_strings[args->text_index].string, length);
   s_text_test_str[length] = '\0';
 

@@ -44,12 +44,12 @@ static int prv_apply(const struct pbl_pwm_controller *ctrl, uint8_t channel,
   }
   freq /= 1000U;
 
-  period = (uint32_t)MIN((state->period * freq) / PBL_NSEC_PER_SEC, LPTIM_ARR_MASK + 1ULL);
+  period = (uint32_t)PBL_MIN((state->period * freq) / PBL_NSEC_PER_SEC, LPTIM_ARR_MASK + 1ULL);
   if (period < 2U) {
     return -EINVAL;
   }
 
-  duty = (uint32_t)MIN((state->duty_cycle * freq) / PBL_NSEC_PER_SEC, period);
+  duty = (uint32_t)PBL_MIN((state->duty_cycle * freq) / PBL_NSEC_PER_SEC, period);
 
   // Running, the output is high up to the compare value with WAVPOL set and low with it
   // cleared; stopped, it is at the WAVPOL level

@@ -92,8 +92,8 @@ static bool prv_needs_expiring_event(HRMSubscriberState *state, time_t utc_now) 
     return false;
   }
   return (state->expire_utc &&
-          (utc_now >= state->expire_utc - MAX(HRM_SUBSCRIPTION_EXPIRING_WARNING_SEC,
-                                              (int)state->update_interval_s)));
+          (utc_now >= state->expire_utc - PBL_MAX(HRM_SUBSCRIPTION_EXPIRING_WARNING_SEC,
+                                                  (int)state->update_interval_s)));
 }
 
 PBL_T_STATIC void prv_read_event_from_buffer_and_consume(CircularBuffer *buffer,
@@ -353,7 +353,7 @@ static void prv_arm_update_timer(int64_t ticks) {
     pbl_delayed_work_cancel(&s_manager_state.update_enable_timer);
     return;
   }
-  ticks = CLIP(ticks, 1, INT32_MAX);
+  ticks = PBL_CLAMP(ticks, 1, INT32_MAX);
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_manager_state.update_enable_timer,
                               PBL_TICKS((pbl_tick_t)ticks));
 }
@@ -402,8 +402,8 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         if (state->expire_utc) {
           // Stop sampling for this subscriber once its lease lapses
           next_check_ticks =
-              MIN(next_check_ticks,
-                  (int64_t)pbl_ms_to_ticks((state->expire_utc - utc_now) * PBL_MSEC_PER_SEC));
+              PBL_MIN(next_check_ticks,
+                      (int64_t)pbl_ms_to_ticks((state->expire_utc - utc_now) * PBL_MSEC_PER_SEC));
         }
         const HRMFeature sub_features = prv_subscriber_allowed_features(state, prefs_allowed);
         if (sub_features == 0) {
@@ -425,7 +425,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
         // inherits on-time from another reader or from before a sensor restart.
         if (state->is_due && sensor_on &&
             ((int64_t)(cur_ticks -
-                       MAX(state->due_since_ticks, s_manager_state.sensor_on_since_ticks)) >=
+                       PBL_MAX(state->due_since_ticks, s_manager_state.sensor_on_since_ticks)) >=
              unserved_timeout_ticks)) {
           // The sensor ran a whole serve window without producing a Good-quality reading for
           // this subscriber. Mark it served so it waits out its interval instead of pinning the
@@ -460,7 +460,7 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
           turn_sensor_on = true;
         } else {
           state->is_due = false;
-          next_check_ticks = MIN(next_check_ticks, subscriber_remaining_ticks);
+          next_check_ticks = PBL_MIN(next_check_ticks, subscriber_remaining_ticks);
         }
       }
     }
@@ -493,13 +493,13 @@ static void prv_update_hrm_enable_system_cb(void *unused) {
     if (turn_sensor_on && active_features != 0 && !hrm_is_enabled(HRM) &&
         s_manager_state.enable_failure_count < HRM_MAX_ENABLE_FAILURES) {
       // The enable failed; retry after a backoff rather than busy-looping on SysWorkq
-      next_check_ticks = MIN(next_check_ticks, spin_up_ticks);
+      next_check_ticks = PBL_MIN(next_check_ticks, spin_up_ticks);
     } else if (serve_pending && hrm_is_enabled(HRM)) {
       // Defer the waiting subscriber even if the driver goes silent
       const uint64_t window_start_ticks =
-          MAX(serve_due_since_ticks, s_manager_state.sensor_on_since_ticks);
-      next_check_ticks =
-          MIN(next_check_ticks, (int64_t)(window_start_ticks - cur_ticks) + unserved_timeout_ticks);
+          PBL_MAX(serve_due_since_ticks, s_manager_state.sensor_on_since_ticks);
+      next_check_ticks = PBL_MIN(
+          next_check_ticks, (int64_t)(window_start_ticks - cur_ticks) + unserved_timeout_ticks);
     }
     prv_arm_update_timer(next_check_ticks);
   }
@@ -996,9 +996,9 @@ PBL_SYSCALL(bool, sys_hrm_manager_get_subscription_info, (VAL, HRMSessionRef, se
     if (expire_s) {
       int16_t expire_in_s = 0;
       if (state->expire_utc != 0) {
-        expire_in_s = MAX(0, state->expire_utc - pbl_realtime());
+        expire_in_s = PBL_MAX(0, state->expire_utc - pbl_realtime());
       }
-      *expire_s = MAX(0, expire_in_s);
+      *expire_s = PBL_MAX(0, expire_in_s);
     }
     if (features) {
       *features = state->features;

@@ -375,17 +375,17 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_aa_sw(void) 
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_aa_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax_aa_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax1_aa_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax2_aa_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // AA = true, SW = 11
@@ -410,18 +410,18 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_aa_sw(void) 
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax1_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax2_aa_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 #endif
 }
@@ -448,17 +448,17 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax1_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 1);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax2_sw1_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // AA = false, SW = 11
@@ -479,17 +479,17 @@ void test_graphics_draw_round_rect_${BIT_DEPTH_NAME}__origin_radius_sw(void) {
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_r3_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) - 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax1_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 
   // Should not draw anything
   setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, false, 11);
-  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
+  graphics_draw_round_rect(&ctx, &ORIGIN_DRAW_RECT_NO_CLIP, ((PBL_MIN(RECT_WIDTH, RECT_HEIGHT)) / 2) + 1);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_round_rect_origin_rmax2_sw11_no_clip.${BIT_DEPTH_NAME}.pbi"));
 }
 

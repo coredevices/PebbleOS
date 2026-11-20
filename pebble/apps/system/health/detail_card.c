@@ -675,7 +675,7 @@ void health_detail_card_configure(HealthDetailCard *detail_card,
     detail_card->subtitles = config->subtitles;
   }
   detail_card->daily_avg = config->daily_avg;
-  detail_card->max_progress = MAX(config->weekly_max, detail_card->daily_avg);
+  detail_card->max_progress = PBL_MAX(config->weekly_max, detail_card->daily_avg);
   detail_card->max_progress = detail_card->max_progress * 11 / 10; // add 10%;
   if (config->num_zones) {
     detail_card->num_zones = config->num_zones;

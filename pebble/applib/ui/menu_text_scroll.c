@@ -75,7 +75,8 @@ int16_t menu_text_scroll_get_offset(const Layer *cell_layer, int16_t overflow) {
   if (t < PAUSE_MS) {
     return 0;
   }
-  return (int16_t)MIN((int32_t)(((t - PAUSE_MS) * PIXELS_PER_SECOND) / 1000), (int32_t)overflow);
+  return (int16_t)PBL_MIN((int32_t)(((t - PAUSE_MS) * PIXELS_PER_SECOND) / 1000),
+                          (int32_t)overflow);
 }
 
 void menu_text_scroll_layer_deinit(const Layer *content_layer) {

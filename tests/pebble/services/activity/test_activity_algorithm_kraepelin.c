@@ -686,7 +686,7 @@ void test_activity_algorithm_kraepelin__get_flash_minute_history(void) {
   start = start_utc;
   while (num_records_left) {
     uint32_t chunk;
-    chunk = MIN(10, num_records_left);
+    chunk = PBL_MIN(10, num_records_left);
     time_t first_ts = start;
     activity_algorithm_get_minute_history(&retrieve[num_records_found], &chunk, &first_ts);
     cl_assert_equal_i(start, first_ts);

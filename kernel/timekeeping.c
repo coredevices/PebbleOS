@@ -33,8 +33,8 @@ static void prv_limits_update(void) {
   if (s_cs == nullptr || s_cs_mhz == 0U || s_ce_hz == 0U) {
     return;
   }
-  s_max_ticks = MIN(((uint64_t)(s_cs->mask / 2U) * PBL_TICK_HZ * 1000U) / s_cs_mhz,
-                    ((uint64_t)s_ce->max_delta * PBL_TICK_HZ) / s_ce_hz);
+  s_max_ticks = PBL_MIN(((uint64_t)(s_cs->mask / 2U) * PBL_TICK_HZ * 1000U) / s_cs_mhz,
+                        ((uint64_t)s_ce->max_delta * PBL_TICK_HZ) / s_ce_hz);
 }
 
 // Brings the clock source time up to date.
@@ -100,7 +100,7 @@ static void prv_program(uint64_t ticks) {
 
   delta = whole * s_ce_hz + (((uint64_t)frac * s_ce_hz + UINT32_MAX) >> FRAC_BITS);
   delta = (delta + PBL_TICK_HZ - 1U) / PBL_TICK_HZ;
-  delta = CLIP(delta, s_ce->min_delta, s_ce->max_delta);
+  delta = PBL_CLAMP(delta, s_ce->min_delta, s_ce->max_delta);
 
   s_ce->ops->set_next(s_ce, (uint32_t)delta);
 }
@@ -189,7 +189,7 @@ uint64_t timekeeping_idle_begin(pbl_tick_t ticks, pbl_tick_t exit_ticks) {
 
   unsigned int key = arch_irq_lock();
   if (ticks != PBL_TICK_FOREVER) {
-    wake = sched_uptime_ticks() + ticks - MIN(exit_ticks, ticks - 1U);
+    wake = sched_uptime_ticks() + ticks - PBL_MIN(exit_ticks, ticks - 1U);
   }
   prv_program(wake);
   now_us = prv_now_us();

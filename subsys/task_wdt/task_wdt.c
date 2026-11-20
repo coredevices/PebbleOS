@@ -276,7 +276,7 @@ static uint32_t prv_check(void) {
 #endif
   }
   prv_feed_hw(debugger);
-  return MIN(CONFIG_TASK_WDT_GRACE_MS, CONFIG_TASK_WDT_CHECK_PERIOD_MS);
+  return PBL_MIN(CONFIG_TASK_WDT_GRACE_MS, CONFIG_TASK_WDT_CHECK_PERIOD_MS);
 }
 
 static void prv_thread_entry(void *arg) {

@@ -117,15 +117,15 @@ static void prv_assert_title_centered(Window *window, TimelineLayout *layout) {
   const int16_t right = PBL_DISPLAY_WIDTH - timeline_layer_get_ideal_sidebar_width() - 15;
   for (int16_t y = PBL_DISPLAY_HEIGHT / 4; y < 3 * PBL_DISPLAY_HEIGHT / 4; y++) {
     const GBitmapDataRowInfo row = gbitmap_get_data_row_info(bitmap, y);
-    for (int16_t x = row.min_x; x < MIN(row.max_x + 1, right); x++) {
+    for (int16_t x = row.min_x; x < PBL_MIN(row.max_x + 1, right); x++) {
       if (row.data[x] == GColorBlackARGB8) {
-        top = MIN(top, y);
-        bottom = MAX(bottom, y);
+        top = PBL_MIN(top, y);
+        bottom = PBL_MAX(bottom, y);
       }
     }
   }
   cl_assert(top <= bottom);
-  cl_assert(ABS(top + bottom - PBL_DISPLAY_HEIGHT) <= 4);
+  cl_assert(PBL_ABS(top + bottom - PBL_DISPLAY_HEIGHT) <= 4);
   for (size_t i = 0; i < num_other_text; i++) {
     other_text[i]->color = colors[i];
   }

@@ -159,22 +159,22 @@ static void prv_build_transcription_dialog_text(ReminderAppData *data) {
   strncpy(data->dialog_text, data->reminder_str, sentence_len);
   // Having to call MAX everytime is a bit silly, but the strn function expect a size_t (unsigned).
   // Calling MAX ensures that a negative value isn't passed in which gets cast to something positive
-  buf_space_remaining = MAX(buf_space_remaining - sentence_len, 0);
+  buf_space_remaining = PBL_MAX(buf_space_remaining - sentence_len, 0);
 
   strncat(data->dialog_text, "\n\n", buf_space_remaining);
-  buf_space_remaining = MAX(buf_space_remaining - 2, 0);
+  buf_space_remaining = PBL_MAX(buf_space_remaining - 2, 0);
 
   char tmp[date_time_len];
   clock_get_friendly_date(tmp, date_time_len, data->timestamp);
   strncat(data->dialog_text, tmp, buf_space_remaining);
-  buf_space_remaining = MAX(buf_space_remaining - strlen(tmp), 0);
+  buf_space_remaining = PBL_MAX(buf_space_remaining - strlen(tmp), 0);
   strncat(data->dialog_text, " ", buf_space_remaining);
-  buf_space_remaining = MAX(buf_space_remaining - 1, 0);
+  buf_space_remaining = PBL_MAX(buf_space_remaining - 1, 0);
   ;
 
   clock_get_time_number(tmp, date_time_len, data->timestamp);
   strncat(data->dialog_text, tmp, buf_space_remaining);
-  buf_space_remaining = MAX(buf_space_remaining - strlen(tmp), 0);
+  buf_space_remaining = PBL_MAX(buf_space_remaining - strlen(tmp), 0);
 
   clock_get_time_word(tmp, date_time_len, data->timestamp);
   strncat(data->dialog_text, tmp, buf_space_remaining);

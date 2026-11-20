@@ -60,7 +60,7 @@ static void prv_send_next(struct pbl_pp_session *session) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   if (session == s_transport.session && s_transport.tx_len == 0U) {
-    const size_t len = MIN(pbl_pp_session_send_queue_length(session), MSS);
+    const size_t len = PBL_MIN(pbl_pp_session_send_queue_length(session), MSS);
 
     if (len > 0U) {
       s_transport.tx_len = len;

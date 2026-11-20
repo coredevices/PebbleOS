@@ -49,7 +49,7 @@ static uint64_t prv_running_us(const struct cpu_stats *delta) {
 }
 
 static uint16_t prv_pct100(uint64_t part, uint64_t total) {
-  return (total > 0U) ? (uint16_t)MIN((part * 10000U) / total, 10000U) : 0U;
+  return (total > 0U) ? (uint16_t)PBL_MIN((part * 10000U) / total, 10000U) : 0U;
 }
 
 static void prv_collect_cpu_stats(void) {

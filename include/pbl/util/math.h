@@ -18,41 +18,37 @@
  * effects.
  *
  * @code{.c}
- * int32_t clamped = CLIP(value, -100, 100);
- * uint32_t pages = DIVIDE_CEIL(len, PAGE_SIZE);
- * if (WITHIN(c, '0', '9')) {
+ * int32_t clamped = PBL_CLAMP(value, -100, 100);
+ * uint32_t pages = PBL_DIV_ROUND_UP(len, PAGE_SIZE);
+ * if (PBL_IN_RANGE(c, '0', '9')) {
  *   ...
  * }
  * @endcode
  * @{
  */
 
-#ifndef MIN
 /**
  * @brief Get the smaller of two values.
  *
  * @param a First value.
  * @param b Second value.
  */
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
+#define PBL_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#ifndef MAX
 /**
  * @brief Get the larger of two values.
  *
  * @param a First value.
  * @param b Second value.
  */
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#endif
+#define PBL_MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 /**
  * @brief Get the absolute value.
  *
  * @param a Value.
  */
-#define ABS(a) (((a) > 0) ? (a) : -1 * (a))
+#define PBL_ABS(a) (((a) > 0) ? (a) : -1 * (a))
 /**
  * @brief Clamp a value to a range.
  *
@@ -60,14 +56,14 @@
  * @param min Lower bound.
  * @param max Upper bound.
  */
-#define CLIP(n, min, max) ((n) < (min) ? (min) : ((n) > (max) ? (max) : (n)))
+#define PBL_CLAMP(n, min, max) ((n) < (min) ? (min) : ((n) > (max) ? (max) : (n)))
 /**
  * @brief Divide, rounding half up, for non-negative operands.
  *
  * @param num Numerator.
  * @param denom Denominator.
  */
-#define ROUND(num, denom) (((num) + ((denom) / 2)) / (denom))
+#define PBL_DIV_ROUND_CLOSEST(num, denom) (((num) + ((denom) / 2)) / (denom))
 /**
  * @brief Check whether a value is within a closed range.
  *
@@ -75,48 +71,30 @@
  * @param min Lower bound, included.
  * @param max Upper bound, included.
  */
-#define WITHIN(n, min, max) ((n) >= (min) && (n) <= (max))
-/**
- * @brief Check whether a range is within another closed range.
- *
- * @param n_min Lower bound of the inner range.
- * @param n_max Upper bound of the inner range.
- * @param min Lower bound of the outer range, included.
- * @param max Upper bound of the outer range, included.
- */
-#define RANGE_WITHIN(n_min, n_max, min, max) ((n_min) >= (min) && (n_max) <= (max))
+#define PBL_IN_RANGE(n, min, max) ((n) >= (min) && (n) <= (max))
 
 /**
  * @brief Divide, rounding up for positive results.
  *
- * Negative results round towards zero: DIVIDE_CEIL(3, 4) is 1 and DIVIDE_CEIL(-3, 4) is 0.
+ * Negative results round towards zero: PBL_DIV_ROUND_UP(3, 4) is 1 and PBL_DIV_ROUND_UP(-3, 4) is
+ * 0.
  *
  * @param num Numerator.
  * @param denom Denominator, positive.
  */
-#define DIVIDE_CEIL(num, denom) (((num) + ((denom) - 1)) / (denom))
+#define PBL_DIV_ROUND_UP(num, denom) (((num) + ((denom) - 1)) / (denom))
 
 /**
  * @brief Round a value away from zero to a multiple of a modulus.
  *
- * ROUND_TO_MOD_CEIL(152, 32) is 160 and ROUND_TO_MOD_CEIL(-32, 90) is -90.
+ * PBL_ROUNDUP(152, 32) is 160 and PBL_ROUNDUP(-32, 90) is -90.
  *
  * @param val Value.
  * @param mod Modulus; its sign is ignored.
  */
-#define ROUND_TO_MOD_CEIL(val, mod)                                     \
-  (((val) >= 0) ? ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)) \
-                : -((((-val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod)))
-
-/**
- * @brief Round an unsigned value up to a multiple of a modulus.
- *
- * ROUND_TO_MOD_CEIL_U(152, 32) is 160.
- *
- * @param val Value.
- * @param mod Modulus; its sign is ignored.
- */
-#define ROUND_TO_MOD_CEIL_U(val, mod) ((((val) + ABS(ABS(mod) - 1)) / ABS(mod)) * ABS(mod))
+#define PBL_ROUNDUP(val, mod)                                                           \
+  (((val) >= 0) ? ((((val) + PBL_ABS(PBL_ABS(mod) - 1)) / PBL_ABS(mod)) * PBL_ABS(mod)) \
+                : -((((-val) + PBL_ABS(PBL_ABS(mod) - 1)) / PBL_ABS(mod)) * PBL_ABS(mod)))
 
 /**
  * @brief Sign-extend the low bits of a value.
@@ -162,16 +140,12 @@ int ceil_log_two(uint32_t n);
  */
 int32_t integer_sqrt(int64_t x);
 
-/*
- * The -Wtype-limits flag generated an error with the previous IS_SIGNED macro.
- * If an unsigned number was passed in the macro would check if the unsigned number was less than 0.
- */
 /**
  * Determine whether a variable is signed or not.
  * @param var The variable to evaluate.
  * @return true if the variable is signed.
  */
-#define IS_SIGNED(var)                                                                       \
+#define PBL_IS_SIGNED(var)                                                                   \
   (PBL_CHOOSE_EXPR(                                                                          \
       PBL_TYPES_COMPATIBLE(__typeof__(var), unsigned char), false,                           \
       PBL_CHOOSE_EXPR(                                                                       \
@@ -255,7 +229,7 @@ static inline int positive_modulo(int i, int n) {
 static inline int distance_to_mod_boundary(int32_t i, uint16_t n) {
   const int mod = positive_modulo(i, n);
   const int half = n / 2;
-  return ABS((mod + half) % n - half);
+  return PBL_ABS((mod + half) % n - half);
 }
 
 /**

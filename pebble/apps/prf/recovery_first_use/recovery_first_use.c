@@ -136,7 +136,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 
   // Set the name text
   if (data->is_showing_version) {
-    size_t len = MIN(strlen(PBL_VERSION_TAG), sizeof(data->name_text_buffer) - 1);
+    size_t len = PBL_MIN(strlen(PBL_VERSION_TAG), sizeof(data->name_text_buffer) - 1);
     memcpy(data->name_text_buffer, PBL_VERSION_TAG, len);
     data->name_text_buffer[len] = '\0';
   } else if ((pbl_pp_session_get_system() != nullptr) && (gap_conn != nullptr)) {

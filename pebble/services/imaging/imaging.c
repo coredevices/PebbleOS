@@ -185,8 +185,8 @@ bool imaging_request_album_art(uint8_t token, ImagingFormat format, uint16_t wid
     return false;
   }
   struct pbl_pp_session *session = pbl_pp_session_get_system();
-  const size_t title_len = title ? MIN(strlen(title), 255) : 0;
-  const size_t artist_len = artist ? MIN(strlen(artist), 255) : 0;
+  const size_t title_len = title ? PBL_MIN(strlen(title), 255) : 0;
+  const size_t artist_len = artist ? PBL_MIN(strlen(artist), 255) : 0;
   uint8_t payload[sizeof(ImagingRequestHeader) + 2 + 255 + 255];
   ImagingRequestHeader *hdr = (ImagingRequestHeader *)payload;
   hdr->cmd = ImagingCmdIDRequest;

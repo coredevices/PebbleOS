@@ -119,7 +119,7 @@ void test_unobstructed_area_service__will_change(void) {
   unobstructed_area_service_will_change(from_area.size.h, to_area.size.h);
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_will_change_calls, 1);
-  const GRect to_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, MIN(200, PBL_DISPLAY_HEIGHT));
+  const GRect to_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_MIN(200, PBL_DISPLAY_HEIGHT));
   cl_assert_equal_grect(s_data.last_will_change_final_area, to_area_expected);
 }
 
@@ -143,7 +143,7 @@ void test_unobstructed_area_service__will_change_twice(void) {
   fake_event_service_handle_last();
   cl_assert_equal_i(s_data.num_did_change_calls, 1);
   cl_assert_equal_i(s_data.num_will_change_calls, 2);
-  const GRect from_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, MIN(400, PBL_DISPLAY_HEIGHT));
+  const GRect from_area_expected = GRect(0, 0, PBL_DISPLAY_WIDTH, PBL_MIN(400, PBL_DISPLAY_HEIGHT));
   cl_assert_equal_grect(s_data.last_will_change_final_area, from_area_expected);
 
   unobstructed_area_service_did_change(from_area.size.h);

@@ -45,9 +45,9 @@ PBL_LOG_MODULE_DEFINE(service_speaker, CONFIG_SERVICE_SPEAKER_LOG_LEVEL);
 #define SPEAKER_FIFO_BYTES ((SPEAKER_SAMPLE_RATE * SPEAKER_FIFO_MS / MS_PER_S) * sizeof(int16_t))
 
 // Silent periods the device keeps streaming after playback before it stops
-#define SPEAKER_STANDBY_PERIODS                                                  \
-  DIVIDE_CEIL(CONFIG_SERVICE_SPEAKER_STANDBY_MS *SPEAKER_SAMPLE_RATE / MS_PER_S, \
-              SPEAKER_PERIOD_FRAMES)
+#define SPEAKER_STANDBY_PERIODS                                                       \
+  PBL_DIV_ROUND_UP(CONFIG_SERVICE_SPEAKER_STANDBY_MS *SPEAKER_SAMPLE_RATE / MS_PER_S, \
+                   SPEAKER_PERIOD_FRAMES)
 
 // Volume 1 sits this far below volume 100, or at the lowest gain of the device if it is closer
 #define SPEAKER_VOLUME_FLOOR_MDB (-48000)
@@ -255,7 +255,7 @@ static PBL_WORK_DEFINE(s_bottom_half_work, prv_bottom_half);
 static void prv_period_done(const struct pbl_audio *audio, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   uint16_t avail = circular_buffer_get_read_space_remaining(&s_state.fifo);
-  uint16_t bytes = MIN(avail, SPEAKER_PERIOD_FRAMES * sizeof(int16_t));
+  uint16_t bytes = PBL_MIN(avail, SPEAKER_PERIOD_FRAMES * sizeof(int16_t));
 
   if (bytes > 0) {
     (void)circular_buffer_copy(&s_state.fifo, period, bytes);
@@ -349,8 +349,8 @@ static void prv_apply_volume(uint8_t vol) {
   }
 
   if (pbl_audio_get_caps(SPEAKER, &caps) == 0 && caps.gain_step_mdb > 0) {
-    const int32_t top = MIN(caps.gain_max_mdb, 0);
-    const int32_t floor = MAX(caps.gain_min_mdb, SPEAKER_VOLUME_FLOOR_MDB);
+    const int32_t top = PBL_MIN(caps.gain_max_mdb, 0);
+    const int32_t floor = PBL_MAX(caps.gain_min_mdb, SPEAKER_VOLUME_FLOOR_MDB);
     const int32_t span_steps = (top - floor) / caps.gain_step_mdb;
     const int32_t steps = (SPEAKER_VOLUME_MAX - (int32_t)vol) * span_steps / SPEAKER_VOLUME_MAX;
 
@@ -555,7 +555,7 @@ static uint32_t prv_pcm_bytes_per_sample(void) {
 static uint32_t prv_pcm_input_samples(uint32_t max_out_samples) {
   bool is_16khz = (s_state.pcm_format & 1);
   uint32_t needed = is_16khz ? max_out_samples : (max_out_samples / 2);
-  return MIN(needed, sizeof(s_state.raw_buf) / prv_pcm_bytes_per_sample());
+  return PBL_MIN(needed, sizeof(s_state.raw_buf) / prv_pcm_bytes_per_sample());
 }
 
 //! Convert num_samples input samples (zeros when raw is NULL) to 16kHz 16-bit output.
@@ -606,7 +606,7 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
     return 0;
   }
 
-  uint32_t tail = MIN(s_state.pcm_tail_samples, input_samples);
+  uint32_t tail = PBL_MIN(s_state.pcm_tail_samples, input_samples);
   s_state.pcm_tail_samples -= tail;
   return prv_convert_pcm(out, nullptr, tail);
 }

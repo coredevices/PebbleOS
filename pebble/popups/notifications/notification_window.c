@@ -623,7 +623,7 @@ static void prv_pop_notification_window_after_delay(NotificationWindowData *data
 
 static time_t prv_get_stale_time(TimelineItem *item) {
   // Reminders become stale 10 minutes after their start time, or when the event is over
-  return item->header.timestamp + MAX(10, item->header.duration) * PBL_SEC_PER_MIN;
+  return item->header.timestamp + PBL_MAX(10, item->header.duration) * PBL_SEC_PER_MIN;
 }
 
 static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *cb_data) {
@@ -648,7 +648,7 @@ static void prv_clear_if_stale_reminder(Uuid *id, NotificationType type, void *c
   // Use the latest stale time to auto-hide the reminder.
   const time_t reminder_stale_time = prv_get_stale_time(&reminder);
   const time_t event_stale_time = prv_get_stale_time(&item);
-  const time_t stale_time = MAX(reminder_stale_time, event_stale_time);
+  const time_t stale_time = PBL_MAX(reminder_stale_time, event_stale_time);
   const time_t now = pbl_realtime();
 
   if (stale_time <= now && window_data->is_modal) {
@@ -1261,7 +1261,7 @@ static void prv_set_dnd_icon_visible(bool is_visible) {
   const uint16_t icon_layer_x_offset = PBL_IF_ROUND_ELSE(new_icon_layer_x_offset, 6);
   const GRect status_frame = data->status_layer.layer.frame;
   const int16_t icon_layer_y_offset =
-      status_frame.origin.y + MAX((status_frame.size.h - icon_rect.size.h) / 2, 0);
+      status_frame.origin.y + PBL_MAX((status_frame.size.h - icon_rect.size.h) / 2, 0);
   const GRect dnd_frame = (GRect){
     .origin = GPoint(icon_layer_x_offset, icon_layer_y_offset),
     .size = icon_rect.size,

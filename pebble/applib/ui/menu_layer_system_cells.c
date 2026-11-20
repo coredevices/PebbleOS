@@ -48,7 +48,7 @@ int16_t menu_text_scroll_get_overflow(GContext *ctx, const char *text, GFont fon
   const GSize size =
       graphics_text_layout_get_max_used_size(ctx, text, font, GRect(0, 0, max_width, box->size.h),
                                              GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
-  return MAX(0, size.w - box->size.w);
+  return PBL_MAX(0, size.w - box->size.w);
 }
 
 void menu_text_scroll_draw_text(GContext *ctx, const char *text, GFont font, const GRect *box,
@@ -64,7 +64,7 @@ void menu_text_scroll_draw_text(GContext *ctx, const char *text, GFont font, con
   ctx->draw_state.clip_box = clip_box;
 
   GRect text_box = *box;
-  text_box.origin.x -= MIN(offset, overflow);
+  text_box.origin.x -= PBL_MIN(offset, overflow);
   text_box.size.w += overflow;
   graphics_draw_text(ctx, text, font, text_box, GTextOverflowModeFill, GTextAlignmentLeft, nullptr);
 
@@ -215,7 +215,7 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
     value_box.origin.y = box.origin.y;
   } else {
     // Value box is centered when drawing with GTextOverflowModeWordWrap.
-    value_box.origin.y = MIN(box.size.h - full_height, title_height) / 2;
+    value_box.origin.y = PBL_MIN(box.size.h - full_height, title_height) / 2;
   }
 
   if (is_legacy2) {
@@ -249,7 +249,7 @@ static void prv_menu_cell_basic_draw_custom_rect(GContext *ctx, const Layer *cel
     subtitle_overflow =
         config->subtitle ? menu_text_scroll_get_overflow(ctx, config->subtitle, subtitle_font, &box)
                          : 0;
-    const int16_t overflow = MAX(title_overflow, subtitle_overflow);
+    const int16_t overflow = PBL_MAX(title_overflow, subtitle_overflow);
     if (overflow > 0) {
       scroll_offset = menu_text_scroll_get_offset(cell_layer, overflow);
     }
@@ -396,7 +396,7 @@ static PBL_ALWAYS_INLINE GRect prv_menu_cell_basic_draw_custom_one_column_round(
     container_height += icon_frame_size.h;
   } else if (render_icon && (icon_align == GAlignLeft)) {
     // Let the icon extend the container height if it's taller than the title/subtitle combo
-    container_height = MAX(icon_frame_size.h, container_height);
+    container_height = PBL_MAX(icon_frame_size.h, container_height);
   }
   GRect container_rect = (GRect){.size = GSize(cell_layer_bounds_size.w, container_height)};
 

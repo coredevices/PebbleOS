@@ -42,7 +42,8 @@ static void prv_fill(struct pbl_audio_sim_mic_state *state, int16_t *out, size_t
 
   pbl_mutex_lock(&state->lock, PBL_FOREVER);
   while (state->ring != nullptr && filled < count && state->ring_count > 0U) {
-    size_t run = MIN(count - filled, MIN(state->ring_count, RING_SAMPLES - state->ring_read));
+    size_t run =
+        PBL_MIN(count - filled, PBL_MIN(state->ring_count, RING_SAMPLES - state->ring_read));
 
     memcpy(&out[filled], &state->ring[state->ring_read], run * sizeof(int16_t));
     filled += run;
@@ -99,7 +100,7 @@ void pbl_audio_sim_mic_write(const struct pbl_audio *mic, const void *pcm, size_
 
   write = (state->ring_read + state->ring_count) % RING_SAMPLES;
   while (count > 0U) {
-    size_t run = MIN(count, RING_SAMPLES - write);
+    size_t run = PBL_MIN(count, RING_SAMPLES - write);
 
     memcpy(&state->ring[write], data, run * sizeof(int16_t));
     data += run * sizeof(int16_t);
@@ -139,7 +140,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
                      int32_t gain_mdb, bool mute) {
   const struct pbl_audio_sim_mic *mic = prv_dev(dai);
   struct pbl_audio_sim_mic_state *state = mic->state;
-  uint32_t period_ms = DIVIDE_CEIL(stream->period_frames * MS_PER_S, stream->rate);
+  uint32_t period_ms = PBL_DIV_ROUND_UP(stream->period_frames * MS_PER_S, stream->rate);
 
   // Without the ring the host audio is dropped and the client records silence
   pbl_mutex_lock(&state->lock, PBL_FOREVER);

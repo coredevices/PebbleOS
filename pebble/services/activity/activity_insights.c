@@ -1438,7 +1438,7 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
   }
 
   char *body = pbl_malloc_check(max_notif_length);
-  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), steps_total, ABS(percentage));
+  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), steps_total, PBL_ABS(percentage));
   pbl_i18n_free_all(body);
 
   const NotificationConfig config = {
@@ -1624,7 +1624,7 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
   }
 
   char *body = pbl_malloc_check(max_notif_length);
-  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), hours, minutes, ABS(percentage));
+  snprintf(body, max_notif_length, pbl_i18n_get(fmt, body), hours, minutes, PBL_ABS(percentage));
   pbl_i18n_free_all(body);
 
   const NotificationConfig config = {
@@ -1787,7 +1787,7 @@ static void prv_add_metric_duration_info(struct pbl_string_list *headings, int h
   char duration_str[duration_buffer_size];
 
   const int duration_s = session->length_min * PBL_SEC_PER_MIN;
-  const int duration_m = ROUND(duration_s, PBL_SEC_PER_MIN);
+  const int duration_m = PBL_DIV_ROUND_CLOSEST(duration_s, PBL_SEC_PER_MIN);
   if (duration_m <= PBL_MIN_PER_HOUR) {
     snprintf(duration_str, duration_buffer_size, pbl_i18n_get("%d Min", headings), duration_m);
   } else {
@@ -1879,21 +1879,21 @@ static void prv_add_hr_metric_info(struct pbl_string_list *headings, int heading
   }
 
   if (hr_zone_time_s) {
-    const int zone_1_minutes = ROUND(hr_zone_time_s[HRZone_Zone1], PBL_SEC_PER_MIN);
+    const int zone_1_minutes = PBL_DIV_ROUND_CLOSEST(hr_zone_time_s[HRZone_Zone1], PBL_SEC_PER_MIN);
     if (zone_1_minutes) {
       snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_1_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Fat Burn", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
-    const int zone_2_minutes = ROUND(hr_zone_time_s[HRZone_Zone2], PBL_SEC_PER_MIN);
+    const int zone_2_minutes = PBL_DIV_ROUND_CLOSEST(hr_zone_time_s[HRZone_Zone2], PBL_SEC_PER_MIN);
     if (zone_2_minutes) {
       snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_2_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Endurance", headings),
                                  headings_buf_size);
       pbl_string_list_add_string(values, values_buf_size, hr_str, values_buf_size);
     }
-    const int zone_3_minutes = ROUND(hr_zone_time_s[HRZone_Zone3], PBL_SEC_PER_MIN);
+    const int zone_3_minutes = PBL_DIV_ROUND_CLOSEST(hr_zone_time_s[HRZone_Zone3], PBL_SEC_PER_MIN);
     if (zone_3_minutes) {
       snprintf(hr_str, hr_buf_size, pbl_i18n_get("%d Min", headings), zone_3_minutes);
       pbl_string_list_add_string(headings, headings_buf_size, pbl_i18n_get("Performance", headings),
@@ -2013,7 +2013,7 @@ static void prv_get_session_hr(const ActivitySession *session, int32_t *avg_hr,
       hr_zone_time_s[hr_util_get_hr_zone(bpm[i])] += PBL_SEC_PER_MIN;
     }
     if (count) {
-      *avg_hr = ROUND(sum, count);
+      *avg_hr = PBL_DIV_ROUND_CLOSEST(sum, count);
     }
   }
   pbl_free(bpm);

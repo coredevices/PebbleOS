@@ -46,7 +46,7 @@ static void prv_put_peek_event(PeekUpdateContext *update, TimelineItemId *item_i
     .timeline_peek = {
       .time_type = time_type,
       .item_id = item_id_copy,
-      .num_concurrent = MAX((int)update->num_peeking - 1, 0),
+      .num_concurrent = PBL_MAX((int)update->num_peeking - 1, 0),
       .is_first_event = (!is_all_day_event_visible && is_first_event),
       .is_future_empty = (!is_all_day_event_visible && !update->future_has_event),
     },
@@ -68,7 +68,7 @@ static void prv_peek_did_update(void **context) {
 static bool prv_is_in_peeking_time_window(SerializedTimelineItemHeader *header, time_t now) {
   const unsigned int duration_s = header->common.duration * PBL_SEC_PER_MIN;
   const unsigned int show_duration_after_start_s =
-      header->common.persistent ? duration_s : MIN(TIMELINE_PEEK_HIDE_AFTER_TIME_S, duration_s);
+      header->common.persistent ? duration_s : PBL_MIN(TIMELINE_PEEK_HIDE_AFTER_TIME_S, duration_s);
   // As soon as an event begins, it should peek, hence the show-before time being inclusive
   return timeline_event_starts_within(&header->common, now, -show_duration_after_start_s,
                                       s_peek_event_data.show_before_time_s + 1 /* inclusive */);
@@ -88,7 +88,7 @@ static bool prv_peek_filter(SerializedTimelineItemHeader *header, void **context
   const time_t start = header->common.timestamp;
   const time_t end = start + (header->common.duration * PBL_SEC_PER_MIN);
   if (timeline_event_is_all_day(&header->common)) {
-    if (WITHIN(now, start, end)) {
+    if (PBL_IN_RANGE(now, start, end)) {
       update->today_has_all_day_event = true;
     }
     return false;
@@ -172,7 +172,7 @@ static uint32_t prv_calc_timeout(CommonTimelineItemHeader *item,
   if (time_type_out) {
     *time_type_out = time_type;
   }
-  return MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
+  return PBL_MIN(timeout_s, UINT32_MAX / PBL_MSEC_PER_SEC) * PBL_MSEC_PER_SEC;
 
 none:
   if (time_type_out) {
@@ -201,7 +201,7 @@ static uint32_t prv_peek_update(TimelineItem *item, void **context) {
   const uint32_t timeout_ms = prv_calc_timeout(&item->header, &time_type);
   prv_put_peek_event(update, timeout_ms ? &item->header.id : nullptr, time_type);
   const uint32_t next_timeout_ms = update->next_timeout_ms;
-  return next_timeout_ms ? MIN(next_timeout_ms, timeout_ms) : timeout_ms;
+  return next_timeout_ms ? PBL_MIN(next_timeout_ms, timeout_ms) : timeout_ms;
 }
 
 const TimelineEventImpl *timeline_peek_get_event_service(void) {

@@ -18,9 +18,9 @@
  * static const uint16_t s_rates[] = {10, 25, 50, 100};
  *
  * for (size_t i = 0; i < PBL_ARRAY_SIZE(s_rates); i++) {
- *   max_rate = MAX(max_rate, s_rates[i]);
+ *   max_rate = PBL_MAX(max_rate, s_rates[i]);
  * }
- * level = CLIP(level, 0, 100);
+ * level = PBL_CLAMP(level, 0, 100);
  *
  * struct item *item = container_of(node, struct item, list_node);
  * @endcode

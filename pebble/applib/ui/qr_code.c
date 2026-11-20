@@ -77,7 +77,8 @@ static void prv_qr_code_update_proc(Layer *layer, GContext *ctx) {
 
   // Compute module size
   qr_size = qrcodegen_getSize(qr_code_buf);
-  mod_size = MIN(qr_code->layer.bounds.size.w / qr_size, qr_code->layer.bounds.size.h / qr_size);
+  mod_size =
+      PBL_MIN(qr_code->layer.bounds.size.w / qr_size, qr_code->layer.bounds.size.h / qr_size);
   if (mod_size == 0) {
     applib_free(tmp_buf);
     applib_free(qr_code_buf);

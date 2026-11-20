@@ -177,7 +177,7 @@ static void prv_dma_chunk(const struct pbl_i2c_sf32lb *i2c) {
   uint32_t left = state->msgs[state->idx].len - state->pos;
   uint32_t cr = I2C_CR_DMAEN;
 
-  state->chunk = MIN(left, I2C_DNR_NDT_MASK);
+  state->chunk = PBL_MIN(left, I2C_DNR_NDT_MASK);
   if (state->chunk == left) {
     cr |= I2C_CR_LASTNACK;
     if (prv_is_last(state, state->idx)) {

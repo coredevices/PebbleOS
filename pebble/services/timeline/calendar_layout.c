@@ -172,7 +172,7 @@ static void prv_set_glance_time_line_round(const TimelineLayout *layout, char *b
     const int max_delimiter_i18n_size = 16;
     const size_t delimiter_size = strnlen(delimiter, max_delimiter_i18n_size);
     strncpy(buffer + pos, delimiter, buffer_size - pos);
-    (buffer + pos)[MIN(delimiter_size, buffer_size - pos - 1)] = '\0';
+    (buffer + pos)[PBL_MIN(delimiter_size, buffer_size - pos - 1)] = '\0';
     pos += delimiter_size;
   }
   prv_format_glance_end_time(layout, buffer + pos, buffer_size - pos);
@@ -370,7 +370,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   static const IconLabelContext s_glance_end_icon_label_context = {
     .image = (GDrawCommandImage *)&g_calendar_end_icon,
     .callback = prv_format_glance_end_time,
-    .buffer_size = MAX(TIME_STRING_TIME_LENGTH, TIME_STRING_DATE_LENGTH),
+    .buffer_size = PBL_MAX(TIME_STRING_TIME_LENGTH, TIME_STRING_DATE_LENGTH),
     .one_line = true,
   };
   [[maybe_unused]] static const LayoutNodeConstructorConfig s_glance_end_time_with_icon_config = {

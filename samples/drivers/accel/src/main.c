@@ -78,7 +78,7 @@ int main(void) {
   }
 
   /* Up to BATCH samples per report, so the sensor can sleep between them. */
-  batch = MIN(BATCH, pbl_accel_get_max_num_samples(ACCEL));
+  batch = PBL_MIN(BATCH, pbl_accel_get_max_num_samples(ACCEL));
   ret = pbl_accel_set_num_samples(ACCEL, batch);
   if (ret != 0) {
     fprintf(stderr, "accel: could not start sampling (%d)\n", ret);

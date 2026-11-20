@@ -107,7 +107,7 @@ static void prv_draw_hero(GContext *ctx, const GRect *bounds, void *context) {
   const int16_t gap = 4;
   const int16_t bar_w =
       (w - 2 * HERO_INSET - (card_data->num_zones - 1) * gap) / card_data->num_zones;
-  const int32_t max_progress = MAX(card_data->weekly_max, card_data->daily_avg) * 11 / 10;
+  const int32_t max_progress = PBL_MAX(card_data->weekly_max, card_data->daily_avg) * 11 / 10;
   for (int i = 0; i < card_data->num_zones; i++) {
     const HealthDetailZone *zone = &card_data->zones[i];
     const int16_t x = HERO_INSET + i * (bar_w + gap);

@@ -331,20 +331,20 @@ static bool prv_compute_sleep_stats(time_t now_utc, time_t min_end_utc, time_t m
       }
       // Only regular sleep (not naps) should affect the enter and exit times
       if (session->type == ActivitySessionType_Sleep) {
-        stats->enter_utc = (stats->enter_utc != 0) ? MIN(session->start_utc, stats->enter_utc)
+        stats->enter_utc = (stats->enter_utc != 0) ? PBL_MIN(session->start_utc, stats->enter_utc)
                                                    : session->start_utc;
         if ((session_exit_utc > stats->today_exit_utc) && (session_exit_utc <= max_end_utc)) {
           stats->today_exit_utc = session_exit_utc;
         }
       }
-      stats->last_exit_utc = MAX(session_exit_utc, stats->last_exit_utc);
+      stats->last_exit_utc = PBL_MAX(session_exit_utc, stats->last_exit_utc);
     } else if ((session->type == ActivitySessionType_RestfulSleep) ||
                (session->type == ActivitySessionType_RestfulNap)) {
       if (session_exit_utc <= max_end_utc) {
         // Accumulate restful sleep stats
         stats->restful_minutes += session->length_min;
       }
-      stats->last_deep_exit_utc = MAX(stats->last_deep_exit_utc, session_exit_utc);
+      stats->last_deep_exit_utc = PBL_MAX(stats->last_deep_exit_utc, session_exit_utc);
     }
   }
 

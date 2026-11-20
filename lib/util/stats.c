@@ -131,7 +131,7 @@ void pbl_stats_calculate(enum pbl_stats_op op, const int32_t *data, size_t num_d
     basic_out[out_index++] = num_values;
   }
   if (op & PBL_STATS_OP_CONSECUTIVE) {
-    basic_out[out_index++] = MAX(consecutive_max, consecutive_current);
+    basic_out[out_index++] = PBL_MAX(consecutive_max, consecutive_current);
   }
   if (op & PBL_STATS_OP_CONSECUTIVE_FIRST) {
     basic_out[out_index++] = consecutive_first;

@@ -282,8 +282,8 @@ void layer_set_frame(Layer *layer, const GRect *frame) {
     const int16_t visible_width = layer->bounds.size.w + layer->bounds.origin.x;
     const int16_t visible_height = layer->bounds.size.h + layer->bounds.origin.y;
     if (frame->size.w > visible_width || frame->size.h > visible_height) {
-      layer->bounds.size.w += MAX(frame->size.w - visible_width, 0);
-      layer->bounds.size.h += MAX(frame->size.h - visible_height, 0);
+      layer->bounds.size.w += PBL_MAX(frame->size.w - visible_width, 0);
+      layer->bounds.size.h += PBL_MAX(frame->size.h - visible_height, 0);
     }
   }
 
@@ -361,8 +361,8 @@ bool layer_get_mic_accessory_bounds(const Layer *layer, GRect *bounds_out) {
   // moves with the indicator instead of squashing
   GRect bounds;
   layer_get_bounds(layer, &bounds);
-  const int16_t left = MAX(area.origin.x, bounds.origin.x);
-  const int16_t right = MIN(grect_get_max_x(&area), grect_get_max_x(&bounds));
+  const int16_t left = PBL_MAX(area.origin.x, bounds.origin.x);
+  const int16_t right = PBL_MIN(grect_get_max_x(&area), grect_get_max_x(&bounds));
   if (right <= left) {
     return false;
   }

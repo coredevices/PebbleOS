@@ -63,7 +63,7 @@ static uint32_t prv_flash_ops(void) {
 
 void pbl_task_wdt_feed_self(void) {
   uint32_t ops = prv_flash_ops();
-  s_max_flash_ops_between_feeds = MAX(s_max_flash_ops_between_feeds, ops - s_flash_ops_at_feed);
+  s_max_flash_ops_between_feeds = PBL_MAX(s_max_flash_ops_between_feeds, ops - s_flash_ops_at_feed);
   s_flash_ops_at_feed = ops;
 }
 
@@ -130,7 +130,7 @@ static void prv_data_log_chain(DataLoggingSessionRef logging_session, uint8_t *b
       // Must be unbuffered
       chunk_size = item_size;
     } else {
-      chunk_size = MIN(num_bytes, DLS_SESSION_MAX_BUFFERED_ITEM_SIZE);
+      chunk_size = PBL_MIN(num_bytes, DLS_SESSION_MAX_BUFFERED_ITEM_SIZE);
       chunk_size -= (chunk_size % item_size);
     }
     PBL_ASSERTN(chunk_size <= num_bytes);
@@ -400,7 +400,7 @@ void test_data_logging__interleave(void) {
     did_some = false;
     for (int i = 0; i < 10; i++) {
       unsigned int nb = rand() % 300;
-      nb = MIN(nb, bytes_left[i]);
+      nb = PBL_MIN(nb, bytes_left[i]);
       if (!nb) {
         continue;
       }

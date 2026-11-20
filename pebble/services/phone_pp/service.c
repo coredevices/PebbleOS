@@ -53,12 +53,12 @@ static bool get_call_info_from_msg(const uint8_t *msg, unsigned int length, Pebb
   msg_length += 4;
 
   uint8_t caller_number_size = *msg++;
-  memcpy(&info->caller_number, msg, MIN(caller_number_size, sizeof(info->caller_number)));
+  memcpy(&info->caller_number, msg, PBL_MIN(caller_number_size, sizeof(info->caller_number)));
   msg += caller_number_size;
   msg_length += caller_number_size + 1;
 
   uint8_t caller_name_size = *msg++;
-  memcpy(&info->caller_name, msg, MIN(caller_name_size, sizeof(info->caller_name)));
+  memcpy(&info->caller_name, msg, PBL_MIN(caller_name_size, sizeof(info->caller_name)));
   msg_length += caller_name_size + 1;
 
   // Ensure that we haven't run off the end of our buffer

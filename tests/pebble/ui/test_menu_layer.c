@@ -1257,7 +1257,7 @@ void test_menu_layer__touch_clamp_center_focused_widens(void) {
   // not the last row, so the bottom bound keeps the coarse half-frame widen.
   const int16_t widened_max = (int16_t)((frame_h - 44) / 2);
   const int16_t widened_min =
-      MIN((int16_t)(frame_h - content_h), (int16_t)0) - (int16_t)(frame_h / 2);
+      PBL_MIN((int16_t)(frame_h - content_h), (int16_t)0) - (int16_t)(frame_h / 2);
 
   // center_focused widens the bounds so the terminal rows can reach the centre; past the widened
   // edge the pan rubber-bands by the shared damp mapping instead of hard-clamping.

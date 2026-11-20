@@ -287,7 +287,7 @@ static int prv_read_table(const struct pbl_flash_spi_nor *nor, const uint8_t *ph
                           uint8_t max_dwords, uint8_t *ndwords) {
   uint8_t raw[SFDP_BFPT_MAX_DWORDS * sizeof(uint32_t)];
   uint32_t ptp = pbl_get_le24(&ph[4]);
-  uint8_t n = MIN(ph[3], max_dwords);
+  uint8_t n = PBL_MIN(ph[3], max_dwords);
   int ret;
 
   ret = prv_read_sfdp(nor, ptp, raw, n * sizeof(uint32_t));
@@ -323,7 +323,7 @@ static int prv_read_sfdp_tables(const struct pbl_flash_spi_nor *nor, struct sfdp
     return 0;
   }
 
-  nph = MIN(hdr[6] + 1U, SFDP_MAX_HEADERS);
+  nph = PBL_MIN(hdr[6] + 1U, SFDP_MAX_HEADERS);
   ret = prv_read_sfdp(nor, SFDP_HEADER_LEN, params, nph * SFDP_PARAM_HEADER);
   if (ret != 0) {
     return ret;
@@ -855,10 +855,10 @@ static int prv_read(const struct pbl_flash *flash, uint32_t offs, void *buf, siz
     size_t chunk;
 
     if (offs >= dm->offset && (offs - dm->offset) < dm->length) {
-      chunk = MIN(len, dm->length - (offs - dm->offset));
+      chunk = PBL_MIN(len, dm->length - (offs - dm->offset));
       ret = pbl_spi_mem_dirmap_read(nor->bus, dm, offs, dst, chunk);
     } else {
-      chunk = (offs < dm->offset) ? MIN(len, dm->offset - offs) : len;
+      chunk = (offs < dm->offset) ? PBL_MIN(len, dm->offset - offs) : len;
       ret = prv_read_op(nor, offs, dst, chunk);
     }
 
@@ -887,7 +887,7 @@ static int prv_write(const struct pbl_flash *flash, uint32_t start, const void *
     struct pbl_spi_mem_op op =
         PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(data->pp_opcode, 1),
                        PBL_SPI_MEM_OP_ADDR(data->addr_nbytes, offset, 1), PBL_SPI_MEM_OP_NO_DUMMY,
-                       PBL_SPI_MEM_OP_DATA_OUT(MIN(len, page_size - (offset % page_size)), src,
+                       PBL_SPI_MEM_OP_DATA_OUT(PBL_MIN(len, page_size - (offset % page_size)), src,
                                                data->pp_data_width));
 
     ret = pbl_spi_mem_adjust_op_size(nor->bus, &op);
@@ -1068,7 +1068,7 @@ static int prv_otp_write(const struct pbl_flash *flash, uint8_t region, uint32_t
     struct pbl_spi_mem_op op = PBL_SPI_MEM_OP(
         PBL_SPI_MEM_OP_CMD(PBL_FLASH_NOR_CMD_PRSCUR, 1),
         PBL_SPI_MEM_OP_ADDR(nor->data->reg_addr_nbytes, addr, 1), PBL_SPI_MEM_OP_NO_DUMMY,
-        PBL_SPI_MEM_OP_DATA_OUT(MIN(len, OTP_PAGE_SIZE - (addr % OTP_PAGE_SIZE)), src, 1));
+        PBL_SPI_MEM_OP_DATA_OUT(PBL_MIN(len, OTP_PAGE_SIZE - (addr % OTP_PAGE_SIZE)), src, 1));
 
     ret = pbl_spi_mem_adjust_op_size(nor->bus, &op);
     if (ret != 0) {

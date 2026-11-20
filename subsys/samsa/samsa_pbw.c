@@ -20,6 +20,7 @@
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/process_management/app_storage.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/platform.h>
@@ -355,7 +356,7 @@ static void prv_install(void *data) {
     .sdk_version = install->info.sdk_version,
   };
   memcpy(&entry.uuid, &install->info.uuid, sizeof(entry.uuid));
-  strncpy(entry.name, install->info.name, MIN(sizeof(entry.name), sizeof(install->info.name)));
+  strncpy(entry.name, install->info.name, PBL_MIN(sizeof(entry.name), sizeof(install->info.name)));
   const status_t status = app_db_insert((const uint8_t *)&entry.uuid, sizeof(entry.uuid),
                                         (const uint8_t *)&entry, sizeof(entry));
   if (status != S_SUCCESS) {

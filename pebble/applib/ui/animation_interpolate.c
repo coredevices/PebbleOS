@@ -24,17 +24,17 @@ int64_t interpolate_int64(int32_t normalized, int64_t from, int64_t to) {
 
 int16_t interpolate_int16(int32_t normalized, int16_t from, int16_t to) {
   const int64_t interpolated = interpolate_int64(normalized, from, to);
-  return (int16_t)CLIP(interpolated, INT16_MIN, INT16_MAX);
+  return (int16_t)PBL_CLAMP(interpolated, INT16_MIN, INT16_MAX);
 }
 
 uint32_t interpolate_uint32(int32_t normalized, uint32_t from, uint32_t to) {
   const int64_t interpolated = interpolate_int64(normalized, from, to);
-  return (uint32_t)CLIP(interpolated, 0, UINT32_MAX);
+  return (uint32_t)PBL_CLAMP(interpolated, 0, UINT32_MAX);
 }
 
 Fixed_S32_16 interpolate_fixed32(int32_t normalized, Fixed_S32_16 from, Fixed_S32_16 to) {
   const int64_t interpolated = interpolate_int64(normalized, from.raw_value, to.raw_value);
-  const int32_t raw_value = (int32_t)CLIP(interpolated, INT32_MIN, INT32_MAX);
+  const int32_t raw_value = (int32_t)PBL_CLAMP(interpolated, INT32_MIN, INT32_MAX);
   return Fixed_S32_16(raw_value);
 }
 
@@ -105,7 +105,7 @@ static int64_t prv_interpolate_moook(int32_t normalized, int64_t from, int64_t t
   int32_t frame_idx =
       ((normalized * num_frames_total + (ANIMATION_NORMALIZED_MAX / (2 * num_frames_total))) /
        ANIMATION_NORMALIZED_MAX);
-  frame_idx = CLIP(frame_idx, 0, (int)num_frames_total - 1);
+  frame_idx = PBL_CLAMP(frame_idx, 0, (int)num_frames_total - 1);
 
   if (normalized == ANIMATION_NORMALIZED_MAX) {
     return to;

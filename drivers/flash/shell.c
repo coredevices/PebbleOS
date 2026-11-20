@@ -96,7 +96,7 @@ static int prv_cmd_dump(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   while (len > 0U) {
-    uint32_t chunk = MIN(len, sizeof(buf));
+    uint32_t chunk = PBL_MIN(len, sizeof(buf));
 
     ret = pbl_flash_read(FLASH, addr, buf, chunk);
     if (ret != 0) {
@@ -163,14 +163,14 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
     return ret;
   }
 
-  buf = pbl_malloc(MIN(MAX_READ_SIZE, len));
+  buf = pbl_malloc(PBL_MIN(MAX_READ_SIZE, len));
   if (buf == nullptr) {
     pbl_shell_error(sh, "unable to allocate read buffer");
     return -ENOMEM;
   }
 
   while (len > 0U) {
-    uint32_t chunk = MIN(len, MAX_READ_SIZE);
+    uint32_t chunk = PBL_MIN(len, MAX_READ_SIZE);
 
     ret = pbl_flash_read(FLASH, addr, buf, chunk);
     if (ret != 0) {
@@ -213,7 +213,7 @@ static int prv_cmd_fill(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   while (len > 0U) {
-    uint32_t chunk = MIN(len, FILL_CHUNK_SIZE);
+    uint32_t chunk = PBL_MIN(len, FILL_CHUNK_SIZE);
 
     ret = pbl_flash_write(FLASH, addr, chunk_buf, chunk);
     if (ret != 0) {
@@ -327,7 +327,7 @@ static int prv_cmd_otp_read(const struct pbl_shell *sh, size_t argc, char **argv
   }
 
   while (len > 0U) {
-    uint32_t chunk = MIN(len, sizeof(buf));
+    uint32_t chunk = PBL_MIN(len, sizeof(buf));
 
     ret = pbl_flash_otp_read(FLASH, offs, buf, chunk);
     if (ret != 0) {

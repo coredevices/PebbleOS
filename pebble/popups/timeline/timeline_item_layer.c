@@ -56,7 +56,7 @@ static int16_t prv_get_first_scroll_offset(TimelineItemLayer *item_layer) {
   if (!item_layer->timeline_layout->has_page_break) {
     return 0;
   }
-  return MAX(prv_get_frame_size(item_layer).h, 0);
+  return PBL_MAX(prv_get_frame_size(item_layer).h, 0);
 }
 
 static int16_t prv_get_min_scroll_offset(TimelineItemLayer *item_layer) {
@@ -67,9 +67,9 @@ static int16_t prv_get_max_scroll_offset(TimelineItemLayer *item_layer) {
   int16_t max_scroll = prv_get_height(item_layer) - prv_get_frame_size(item_layer).h;
   if (max_scroll > 0) {
     int16_t first_scroll = prv_get_first_scroll_offset(item_layer);
-    return MAX(first_scroll, max_scroll);
+    return PBL_MAX(first_scroll, max_scroll);
   } else {
-    return MAX(max_scroll, 0);
+    return PBL_MAX(max_scroll, 0);
   }
 }
 
@@ -149,7 +149,7 @@ PBL_T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *con
   const int16_t first_scroll = prv_get_first_scroll_offset(item_layer);
   int16_t current_scroll = item_layer->scroll_offset_pixels;
 #if PBL_ROUND // align current_scroll with paging for text flow
-  current_scroll = ROUND_TO_MOD_CEIL(current_scroll, SCROLL_AMOUNT);
+  current_scroll = PBL_ROUNDUP(current_scroll, SCROLL_AMOUNT);
 #endif
 
   if (max_scroll >= first_scroll && current_scroll < first_scroll) {
@@ -157,7 +157,7 @@ PBL_T_STATIC void prv_handle_down_click(ClickRecognizerRef recognizer, void *con
   } else if (current_scroll + SCROLL_AMOUNT + SCROLL_FUDGE_AMOUNT >= max_scroll) {
 #if PBL_ROUND
     // scroll down to page aligned end of content
-    max_scroll = ROUND_TO_MOD_CEIL(max_scroll, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT);
+    max_scroll = PBL_ROUNDUP(max_scroll, PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT);
 #endif
     prv_update_scroll_offset(item_layer, max_scroll, false);
   } else {
@@ -192,7 +192,7 @@ static void prv_handle_up_click(ClickRecognizerRef recognizer, void *context) {
   const int16_t first_scroll = prv_get_first_scroll_offset(item_layer);
   int16_t current_scroll = item_layer->scroll_offset_pixels;
 #if PBL_ROUND // align current_scroll with paging for text flow
-  current_scroll = ROUND_TO_MOD_CEIL(current_scroll, SCROLL_AMOUNT);
+  current_scroll = PBL_ROUNDUP(current_scroll, SCROLL_AMOUNT);
 #endif
 
   if (current_scroll <= first_scroll) {

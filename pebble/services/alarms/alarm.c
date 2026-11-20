@@ -614,7 +614,7 @@ static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
   }
 
   AlarmConfig config = {};
-  const int load_size = MIN(size, (int)sizeof(config));
+  const int load_size = PBL_MIN(size, (int)sizeof(config));
   if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) == 0) {
     if (config.hour > 23 || config.minute > 59) {
       PBL_LOG_DBG(

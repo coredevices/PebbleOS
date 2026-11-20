@@ -603,7 +603,7 @@ static void prv_text_graph(const char *type_str, int16_t *d, int16_t start, int1
   // Find the max value
   int16_t max_value = 0;
   for (int16_t i = start; i <= end; i++) {
-    max_value = MAX(max_value, abs(d[i]));
+    max_value = PBL_MAX(max_value, abs(d[i]));
   }
 
   // Create a string of stars for the bar graph
@@ -620,7 +620,7 @@ static void prv_text_graph(const char *type_str, int16_t *d, int16_t start, int1
     if (max_value > 0) {
       num_stars = k_max_stars * abs(d[i]) / max_value;
     }
-    num_stars = MIN(num_stars, k_max_stars);
+    num_stars = PBL_MIN(num_stars, k_max_stars);
     stars_str[num_stars] = 0;
     KALG_LOG("%s: %3" PRIi16 ": mag: %+3" PRIi16 ": %s", type_str, i, d[i], stars_str);
     stars_str[num_stars] = '*';
@@ -1298,7 +1298,7 @@ void pbl_kraepelin_minute_stats(struct pbl_kraepelin *state, uint16_t *vmc, uint
 
   uint32_t real_vmc = prv_real_counts_from_raw(prv_calc_raw_vmc(state->summary_pim));
   // Clip to a max of uint16_t
-  *vmc = MIN(real_vmc, UINT16_MAX);
+  *vmc = PBL_MIN(real_vmc, UINT16_MAX);
 
   // If we have a way of reliably distinguishing sleep from complete stillness (watch not being
   // worn), we will set this flag.
@@ -1423,8 +1423,8 @@ static bool prv_not_worn_during_session(struct pbl_kraepelin *alg_state, time_t 
         state->potential_not_worn_start[i] + (state->potential_not_worn_len_m[i] * PBL_SEC_PER_MIN);
 
     // If this sleep session overlaps a very long section of potential not worn, it is not-worn
-    time_t overlap_start = MAX(state->potential_not_worn_start[i], session_start_utc);
-    time_t overlap_end = MIN(not_worn_end, session_end);
+    time_t overlap_start = PBL_MAX(state->potential_not_worn_start[i], session_start_utc);
+    time_t overlap_end = PBL_MIN(not_worn_end, session_end);
     if ((overlap_end - overlap_start) >= (k_min_not_worn_len_m * PBL_SEC_PER_MIN)) {
       return true;
     }
@@ -1576,13 +1576,13 @@ static void prv_deep_sleep_update(struct pbl_kraepelin *alg_state, time_t sample
     if ((state->non_deep_score_count > 0) && (last_deep_run_size < params->min_deep_score_count)) {
       // We reached the end of it last_deep_run_size minutes ago
       end_time = sample_time - (last_deep_run_size * PBL_SEC_PER_MIN);
-      uint16_t len_m = MAX((end_time - start_time) / PBL_SEC_PER_MIN, 0);
+      uint16_t len_m = PBL_MAX((end_time - start_time) / PBL_SEC_PER_MIN, 0);
       KALG_LOG("Detected deep sleep of %" PRIu16 " minutes starting at %s ", len_m,
                prv_log_time(alg_state, start_time));
 
       // Store the session we just found as a complete one now that we have the end
       if (state->num_sessions < PBL_ARRAY_SIZE(state->start_delta_sec)) {
-        uint16_t delta_sec = MAX(start_time - state->sleep_start_time, 0);
+        uint16_t delta_sec = PBL_MAX(start_time - state->sleep_start_time, 0);
         state->start_delta_sec[state->num_sessions] = delta_sec;
         state->len_m[state->num_sessions] = len_m;
         state->num_sessions++;
@@ -1658,7 +1658,7 @@ static bool prv_sleep_activity_update_stats(struct pbl_kraepelin *alg_state, tim
     state->current_stats.num_non_zero_minutes++;
   }
   if (state->current_stats.start_time != KALG_START_TIME_NONE) {
-    state->current_stats.vmc_sum += MIN(params->vmc_clip, vmc);
+    state->current_stats.vmc_sum += PBL_MIN(params->vmc_clip, vmc);
   }
 
   state->last_sample_utc = sample_utc;
@@ -1932,7 +1932,7 @@ static void prv_end_step_activity(KAlgStepActivityState *state, time_t utc_now,
 
   int32_t duration_secs =
       utc_now - state->start_time - (state->inactive_minute_count * PBL_SEC_PER_MIN);
-  duration_secs = MAX(0, duration_secs);
+  duration_secs = PBL_MAX(0, duration_secs);
   if ((uint32_t)duration_secs >= KALG_MIN_STEP_ACTIVITY_SECS) {
     KALG_LOG("Ending activity %d: steps: %" PRIu16 ", rest_cal: %" PRIu32
              ", "

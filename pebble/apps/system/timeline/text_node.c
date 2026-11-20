@@ -350,7 +350,7 @@ static bool prv_did_draw_container_child(GTextNodeDrawContext *ctx, GTextNode *c
   const GAxis axis = prv_container(ctx->node)->axis;
   const GAxis max_axis = prv_get_opposite_axis(axis);
   ToGValue(&ctx->size)[axis] += size[axis];
-  ToGValue(&ctx->size)[max_axis] = MAX(ToGValue(&ctx->size)[max_axis], size[max_axis]);
+  ToGValue(&ctx->size)[max_axis] = PBL_MAX(ToGValue(&ctx->size)[max_axis], size[max_axis]);
   ctx->box.size = ctx->node->cached_size;
   ToGValue(&ctx->box.origin)[axis] += size[axis];
   ToGValue(&ctx->box.size)[axis] -= size[axis];

@@ -140,7 +140,7 @@ PBL_T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(
   const PreferredContentSize to_platform_default_size =
       s_platform_default_content_sizes[to_platform];
   const int resulting_size = size + (to_platform_default_size - from_platform_default_size);
-  return (PreferredContentSize)CLIP(resulting_size, 0, (NumPreferredContentSizes - 1));
+  return (PreferredContentSize)PBL_CLAMP(resulting_size, 0, (NumPreferredContentSizes - 1));
 }
 
 PreferredContentSize system_theme_get_default_content_size_for_runtime_platform(void) {

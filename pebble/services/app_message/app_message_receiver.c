@@ -83,7 +83,7 @@ static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
   }
   rcv->session = session;
 
-  const size_t header_bytes_remaining = MIN(MAX_HEADER_SIZE, total_payload_size);
+  const size_t header_bytes_remaining = PBL_MIN(MAX_HEADER_SIZE, total_payload_size);
   rcv->header_bytes_remaining = header_bytes_remaining;
 
   // Always forward the header to default system receiver as well, we'll cancel it later on if the
@@ -125,7 +125,7 @@ static void prv_app_message_receiver_write(struct pbl_pp_receiver *receiver, con
                                     PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
 
   if (rcv->header_bytes_remaining > 0) {
-    const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
+    const size_t header_bytes_to_write = PBL_MIN(rcv->header_bytes_remaining, length);
     pbl_pp_kernel_receiver.write(rcv->kernel_receiver, data, header_bytes_to_write);
     rcv->header_bytes_remaining -= header_bytes_to_write;
   }

@@ -541,9 +541,9 @@ void test_scroll_layer_touch__dispatch_no_trigger_leaves_manager_idle(void) {
 // =============================================================================================
 // Inertial fling on liftoff. All physics run through scroll_layer_touch_handle_snap: the released
 // offset settles instantly (as before), then the coast animation is scheduled toward the clamped
-// projection target = released + v * TAU / 1000 with duration = CLIP(2000 * |d| / |v|, MIN, MAX).
-// The stubbed animation never moves the content, so the offset assertions see the released value
-// while the target/duration assertions pin the physics.
+// projection target = released + v * TAU / 1000 with duration = PBL_CLAMP(2000 * |d| / |v|, MIN,
+// MAX). The stubbed animation never moves the content, so the offset assertions see the released
+// value while the target/duration assertions pin the physics.
 
 // Below the fling threshold a liftoff settles the offset and schedules nothing (today's behavior).
 void test_scroll_layer_touch__snap_below_threshold_settles_only(void) {

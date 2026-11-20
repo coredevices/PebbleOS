@@ -288,7 +288,7 @@ static void prv_touch_event_handler(const TouchEvent *event, void *context) {
 static void prv_init_dots(AppData *data) {
 #if PBL_ROUND
   const GPoint center = GPoint(PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_HEIGHT / 2);
-  const int32_t radius = MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2;
+  const int32_t radius = PBL_MIN(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT) / 2;
   const int32_t dot_radius = radius - ROUND_EDGE_INSET_PX;
 
   data->num_dots = 0;
@@ -298,7 +298,7 @@ static void prv_init_dots(AppData *data) {
     int32_t half_width = integer_sqrt(dot_radius * dot_radius - dy * dy);
     // As many columns as the chord fits at the nominal spacing, at least the
     // two chord ends
-    uint8_t cols = CLIP(1 + (2 * half_width) / GRID_SPACING_X, 2, GRID_COLS);
+    uint8_t cols = PBL_CLAMP(1 + (2 * half_width) / GRID_SPACING_X, 2, GRID_COLS);
     uint8_t first = data->num_dots;
 
     for (uint8_t col = 0; col < cols; col++) {
@@ -319,11 +319,11 @@ static void prv_init_dots(AppData *data) {
       GPoint row_start = data->dots[first];
       if (row % 2 == 1) {
         // Rows connect on the right: wall spans from the left chord end
-        int16_t gate_x = MIN(prev_end.x, row_start.x) - PATH_TOLERANCE_PX;
+        int16_t gate_x = PBL_MIN(prev_end.x, row_start.x) - PATH_TOLERANCE_PX;
         data->wall_start[row - 1] = GPoint(center.x - wall_half, wall_y);
         data->wall_end[row - 1] = GPoint(gate_x, wall_y);
       } else {
-        int16_t gate_x = MAX(prev_end.x, row_start.x) + PATH_TOLERANCE_PX;
+        int16_t gate_x = PBL_MAX(prev_end.x, row_start.x) + PATH_TOLERANCE_PX;
         data->wall_start[row - 1] = GPoint(gate_x, wall_y);
         data->wall_end[row - 1] = GPoint(center.x + wall_half, wall_y);
       }

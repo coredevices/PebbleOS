@@ -53,7 +53,7 @@ static void prv_redraw_timer_cb(void *cb_data) {
   op_3) System sends the system frame buffer to the display hardware (using DMA).
 
   op_3 can happen in parallel with op_1, so the effective frame period is:
-     frame_period = MAX(op_1_time + op_2_time, op2_time + op_3_time)
+     frame_period = PBL_MAX(op_1_time + op_2_time, op2_time + op_3_time)
 
   This app measures op_1_time + op_2_time and does so by counting the number of times
   the app window's update callback got called within a set amount of time. The window update

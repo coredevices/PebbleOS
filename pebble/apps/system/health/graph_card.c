@@ -138,7 +138,7 @@ static void prv_draw_day_bar_wide(GContext *ctx, const GRect *box, const GRect *
 static void prv_draw_day_bar_thin(GContext *ctx, const GRect *box, int weekday, GColor bar_color) {
   GRect thin_box = *box;
   // Nudge the bars before Thursday (inclusive). Note that Sunday is on the right side, at the end
-  const int thin_offset_x = WITHIN(weekday, PBL_MONDAY, PBL_THURSDAY) ? 1 : 0;
+  const int thin_offset_x = PBL_IN_RANGE(weekday, PBL_MONDAY, PBL_THURSDAY) ? 1 : 0;
   const int thin_width = 5;
   thin_box.origin.x += thin_offset_x + (box->size.w - thin_width) / 2;
   thin_box.size.w = thin_width;
@@ -224,7 +224,7 @@ static void prv_draw_avg_line(HealthGraphCard *graph_card, GContext *ctx, int32_
     return;
   }
   const int offset_y =
-      LABEL_OFFSET_Y - MAX(prv_convert_to_graph_height(graph_card, avg), AVG_LINE_HEIGHT / 2);
+      LABEL_OFFSET_Y - PBL_MAX(prv_convert_to_graph_height(graph_card, avg), AVG_LINE_HEIGHT / 2);
   graphics_context_set_fill_color(ctx, AVG_LINE_COLOR);
   graphics_fill_rect(
       ctx, &(GRect){{offset_x, offset_y - AVG_LINE_HEIGHT / 2}, {width, AVG_LINE_HEIGHT}});
@@ -425,7 +425,7 @@ void health_graph_card_configure(HealthGraphCard *graph_card, const HealthGraphC
     memcpy(graph_card->day_data, config->graph_data->day_data, sizeof(graph_card->day_data));
     graph_card->data_timestamp = config->graph_data->timestamp;
     graph_card->data_max =
-        MAX(config->graph_data->default_max, config->graph_data->stats.daily.max);
+        PBL_MAX(config->graph_data->default_max, config->graph_data->stats.daily.max);
   }
   if (config->info_update) {
     graph_card->info_update = config->info_update;

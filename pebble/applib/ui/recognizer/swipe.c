@@ -116,8 +116,8 @@ static GPoint prv_compute_velocity(const SwipeRecognizerData *data) {
 // Resolve the swipe direction from the total delta, using the dominant axis. Screen y grows
 // downward, so a positive y delta is downward.
 static SwipeDirection prv_direction_from_delta(GPoint delta) {
-  const int32_t adx = ABS(delta.x);
-  const int32_t ady = ABS(delta.y);
+  const int32_t adx = PBL_ABS(delta.x);
+  const int32_t ady = PBL_ABS(delta.y);
   if (adx >= ady) {
     return (delta.x >= 0) ? SwipeDirection_Right : SwipeDirection_Left;
   }
@@ -148,10 +148,10 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
       data->state.last_point = point;
 
       const GPoint total_delta = gpoint_sub(point, data->state.touch_down_point);
-      const int32_t adx = ABS(total_delta.x);
-      const int32_t ady = ABS(total_delta.y);
-      const int32_t major = MAX(adx, ady);
-      const int32_t minor = MIN(adx, ady);
+      const int32_t adx = PBL_ABS(total_delta.x);
+      const int32_t ady = PBL_ABS(total_delta.y);
+      const int32_t major = PBL_MAX(adx, ady);
+      const int32_t minor = PBL_MIN(adx, ady);
 
       // Too crooked: once the path is committed (major axis past the drag threshold), the
       // minor-axis projection must stay within half the major axis, otherwise this is not a
@@ -172,10 +172,10 @@ static void prv_handle_touch_event(Recognizer *recognizer, const TouchEvent *tou
       // Liftoff coordinates are ignored (the driver reports finger-up at (0, 0)); the gesture end
       // is the last position update.
       const GPoint total_delta = gpoint_sub(data->state.last_point, data->state.touch_down_point);
-      const int32_t adx = ABS(total_delta.x);
-      const int32_t ady = ABS(total_delta.y);
-      const int32_t major = MAX(adx, ady);
-      const int32_t minor = MIN(adx, ady);
+      const int32_t adx = PBL_ABS(total_delta.x);
+      const int32_t ady = PBL_ABS(total_delta.y);
+      const int32_t major = PBL_MAX(adx, ady);
+      const int32_t minor = PBL_MIN(adx, ady);
 
       const bool long_enough = (major >= SWIPE_MIN_LENGTH_PX);
       const bool fast_enough = (prv_touch_duration_ms(data) <= SWIPE_MAX_DURATION_MS);

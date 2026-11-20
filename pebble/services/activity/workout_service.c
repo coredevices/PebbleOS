@@ -107,8 +107,8 @@ static int32_t prv_get_avg_hr(void) {
     return 0;
   }
 
-  return ROUND(s_workout_data.current_workout->hr_samples_sum,
-               s_workout_data.current_workout->hr_samples_count);
+  return PBL_DIV_ROUND_CLOSEST(s_workout_data.current_workout->hr_samples_sum,
+                               s_workout_data.current_workout->hr_samples_count);
 }
 
 static void prv_update_duration(void) {
@@ -537,7 +537,7 @@ bool workout_service_stop_workout(void) {
     // creates a notification (blob_db flash write) that can take long enough
     if (wrkt->duration_s >= PBL_SEC_PER_MIN) {
       const time_t len_min =
-          MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN, wrkt->duration_s / PBL_SEC_PER_MIN);
+          PBL_MIN(ACTIVITY_SESSION_MAX_LENGTH_MIN, wrkt->duration_s / PBL_SEC_PER_MIN);
       session_to_save = (ActivitySession){
         .type = wrkt->type,
         .start_utc = wrkt->start_utc,
@@ -546,9 +546,10 @@ bool workout_service_stop_workout(void) {
         .manual = true,
         .step_data.steps = wrkt->steps,
         .step_data.distance_meters = wrkt->distance_m,
-        .step_data.active_kcalories = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
-        .step_data.resting_kcalories =
-            ROUND(activity_private_compute_resting_calories(len_min), ACTIVITY_CALORIES_PER_KCAL),
+        .step_data.active_kcalories =
+            PBL_DIV_ROUND_CLOSEST(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+        .step_data.resting_kcalories = PBL_DIV_ROUND_CLOSEST(
+            activity_private_compute_resting_calories(len_min), ACTIVITY_CALORIES_PER_KCAL),
       };
       avg_hr_to_save = prv_get_avg_hr();
       memcpy(hr_zone_time_s_to_save, wrkt->hr_zone_time_s, sizeof(hr_zone_time_s_to_save));
@@ -700,7 +701,7 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
       .current_hr_zone = wrkt->current_hr_zone,
       .hr_samples = wrkt->hr_samples_count,
       .avg_bpm = prv_get_avg_hr(),
-      .active_kcal = ROUND(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+      .active_kcal = PBL_DIV_ROUND_CLOSEST(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
     };
     memcpy(metrics_out->hr_zone_time_s, wrkt->hr_zone_time_s, sizeof(wrkt->hr_zone_time_s));
   }
@@ -736,7 +737,8 @@ bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_ou
 
 void workout_service_get_active_kcalories(int32_t *active) {
   if (workout_service_is_workout_ongoing()) {
-    *active = ROUND(s_workout_data.current_workout->active_calories, ACTIVITY_CALORIES_PER_KCAL);
+    *active = PBL_DIV_ROUND_CLOSEST(s_workout_data.current_workout->active_calories,
+                                    ACTIVITY_CALORIES_PER_KCAL);
   }
 }
 

@@ -74,7 +74,7 @@ static void prv_set_char_index(void *subject, int16_t index) {
     GPoint offset = {.y = bounds->size.h - new_height};
 #if PBL_ROUND
     // do paging on round display
-    offset.y = ROUND_TO_MOD_CEIL(offset.y, scroll_layer->layer.frame.size.h);
+    offset.y = PBL_ROUNDUP(offset.y, scroll_layer->layer.frame.size.h);
 #endif
     scroll_layer_set_content_size(scroll_layer,
                                   (GSize){scroll_layer->layer.frame.size.w, new_height});

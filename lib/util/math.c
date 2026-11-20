@@ -107,7 +107,7 @@ uint32_t next_exponential_backoff(uint32_t *attempt, uint32_t initial_value, uin
   }
   uint32_t backoff_multiplier = 0x1 << (*attempt)++;
   uint32_t next_value = initial_value * backoff_multiplier;
-  return MIN(next_value, max_value);
+  return PBL_MIN(next_value, max_value);
 }
 
 uint32_t gcd(uint32_t a, uint32_t b) {

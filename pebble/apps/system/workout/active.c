@@ -542,8 +542,8 @@ static void prv_grow_bars(WorkoutActiveWindow *window) {
 static int prv_bar_progress(WorkoutActiveWindow *window, int index) {
   const int delay = index * ANIMATION_NORMALIZED_MAX / 8;
   const int span = ANIMATION_NORMALIZED_MAX - 3 * ANIMATION_NORMALIZED_MAX / 8;
-  return CLIP((int64_t)(window->bars_progress - delay) * ANIMATION_NORMALIZED_MAX / span, 0,
-              ANIMATION_NORMALIZED_MAX);
+  return PBL_CLAMP((int64_t)(window->bars_progress - delay) * ANIMATION_NORMALIZED_MAX / span, 0,
+                   ANIMATION_NORMALIZED_MAX);
 }
 
 #if PBL_COLOR
@@ -961,7 +961,7 @@ static GRect prv_row_box(GSize size, int avail, int inset, int y, int h) {
 #if PBL_ROUND
   const int r = size.w / 2;
   const int dy = y + h / 2 - size.h / 2;
-  w = MIN(w, 2 * integer_sqrt(MAX(0, r * r - dy * dy)) - 16);
+  w = PBL_MIN(w, 2 * integer_sqrt(PBL_MAX(0, r * r - dy * dy)) - 16);
 #endif
   return GRect((avail - w) / 2, y, w, h);
 }
@@ -1028,7 +1028,7 @@ static int prv_zone_position(int bpm) {
   }
   for (int i = 0; i < 4; i++) {
     if (bpm < bounds[i + 1]) {
-      return (i * 1000 + 1000 * (bpm - bounds[i]) / MAX(1, bounds[i + 1] - bounds[i])) / 4;
+      return (i * 1000 + 1000 * (bpm - bounds[i]) / PBL_MAX(1, bounds[i + 1] - bounds[i])) / 4;
     }
   }
   return 1000;
@@ -1037,7 +1037,7 @@ static int prv_zone_position(int bpm) {
 static void prv_dashboard_heart_icon(GContext *ctx, WorkoutActiveWindow *window, GRect box,
                                      GColor color) {
   if (window->beat) {
-    box = grect_inset(box, GEdgeInsets(-MAX(2, box.size.w / 8)));
+    box = grect_inset(box, GEdgeInsets(-PBL_MAX(2, box.size.w / 8)));
   }
   workout_fill_heart(ctx, box, color);
 }
@@ -1139,8 +1139,8 @@ static void prv_draw_hr_band(GContext *ctx, WorkoutActiveWindow *window, GSize s
   graphics_context_set_fill_color(ctx, GColorBlack);
   for (int i = 0; i < 4; i++) {
     const int grown = segment_w * prv_bar_progress(window, i) / ANIMATION_NORMALIZED_MAX;
-    GRect segment =
-        GRect(scale.origin.x + i * (segment_w + 3), scale.origin.y, MAX(1, grown), scale.size.h);
+    GRect segment = GRect(scale.origin.x + i * (segment_w + 3), scale.origin.y, PBL_MAX(1, grown),
+                          scale.size.h);
     if (bpm > 0 && i == (int)zone) {
       graphics_fill_rect(ctx, &segment);
     } else {
@@ -1251,7 +1251,7 @@ static void prv_draw_zones(GContext *ctx, WorkoutActiveWindow *window, GSize siz
   for (int i = 0; i < HRZoneCount; i++) {
     times[i] = window->workout_controller->get_metric_value(WorkoutMetricType_HrZone0Time + i,
                                                             window->workout_data);
-    longest = MAX(longest, times[i]);
+    longest = PBL_MAX(longest, times[i]);
   }
   const int bpm = prv_dashboard_bpm(window);
   const int current = window->finished || bpm <= 0 ? -1 : (int)hr_util_get_hr_zone(bpm);
@@ -1287,7 +1287,7 @@ static void prv_draw_zones(GContext *ctx, WorkoutActiveWindow *window, GSize siz
 #else
     graphics_fill_rect(ctx, &track);
 #endif
-    const int length = times[zone] ? MAX(2, bar_w * times[zone] / longest) : 0;
+    const int length = times[zone] ? PBL_MAX(2, bar_w * times[zone] / longest) : 0;
     const int grown = length * prv_bar_progress(window, i) / ANIMATION_NORMALIZED_MAX;
     if (grown > 0) {
       graphics_context_set_fill_color(ctx, color);
@@ -1320,7 +1320,7 @@ static void prv_draw_gauge_ring(GContext *ctx, WorkoutActiveWindow *window, GRec
   for (int i = 0; i < 4; i++) {
     const bool active = bpm > 0 && i == (int)zone;
     const int32_t start = prv_gauge_angle(i * 250) + DEG_TO_TRIGANGLE(2);
-    const int32_t end = MIN(prv_gauge_angle((i + 1) * 250) - DEG_TO_TRIGANGLE(2), sweep_end);
+    const int32_t end = PBL_MIN(prv_gauge_angle((i + 1) * 250) - DEG_TO_TRIGANGLE(2), sweep_end);
     if (end <= start) {
       continue;
     }
@@ -1364,7 +1364,7 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
   prv_draw_rule(ctx, GPoint(left, (top + bottom) / 2), GPoint(right, (top + bottom) / 2));
   prv_draw_rule(ctx, GPoint(left, bottom), GPoint(right, bottom));
 
-  const int column_w = MAX(1, (right - left) / WORKOUT_HR_HISTORY_SECONDS);
+  const int column_w = PBL_MAX(1, (right - left) / WORKOUT_HR_HISTORY_SECONDS);
   for (unsigned i = 0; window->hr_history && i < window->hr_history->count; i++) {
     const WorkoutHrSample *sample = workout_hr_history_get(window->hr_history, i);
     const int age = elapsed - sample->elapsed_s;
@@ -1373,7 +1373,7 @@ static void prv_draw_hr_chart(GContext *ctx, WorkoutActiveWindow *window, GRect 
     }
     const int x = right - (age + 1) * (right - left) / WORKOUT_HR_HISTORY_SECONDS;
     const int full = 4 + (sample->bpm - minimum) * (bottom - top - 4) / (maximum - minimum);
-    const int height = MAX(1, full * progress / ANIMATION_NORMALIZED_MAX);
+    const int height = PBL_MAX(1, full * progress / ANIMATION_NORMALIZED_MAX);
     graphics_context_set_fill_color(ctx, prv_zone_color(hr_util_get_hr_zone(sample->bpm), false));
     graphics_fill_rect(ctx, &GRect(x, bottom - height, column_w, height));
   }
@@ -1408,8 +1408,8 @@ static void prv_draw_gauge(GContext *ctx, WorkoutActiveWindow *window, GSize siz
     prv_draw_hr_chart(ctx, window, box, window->hr_plot_progress);
     return;
   }
-  const int diameter =
-      PBL_IF_ROUND_ELSE(size.w - 8, MIN(w - 2 * (PAGE_INDICATOR_X(size) + 8), size.h - top - 4));
+  const int diameter = PBL_IF_ROUND_ELSE(
+      size.w - 8, PBL_MIN(w - 2 * (PAGE_INDICATOR_X(size) + 8), size.h - top - 4));
   const GRect ring = GRect((w - diameter) / 2, PBL_IF_ROUND_ELSE(4, top + 4), diameter, diameter);
   const GPoint center = grect_center_point(&ring);
   const int bpm = prv_dashboard_bpm(window);
@@ -1723,8 +1723,8 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
     return;
   }
   if (event->type == TouchEvent_PositionUpdate) {
-    if (ABS(event->x - active_window->touch_start.x) > 20 ||
-        ABS(event->y - active_window->touch_start.y) > 20) {
+    if (PBL_ABS(event->x - active_window->touch_start.x) > 20 ||
+        PBL_ABS(event->y - active_window->touch_start.y) > 20) {
       prv_cancel_long_press(active_window);
     }
     return;
@@ -1737,7 +1737,7 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
   const int dx = event->x - active_window->touch_start.x;
   const int dy = event->y - active_window->touch_start.y;
   const bool paused = !active_window->finished && active_window->workout_controller->is_paused();
-  if (ABS(dy) > 20 && ABS(dy) > ABS(dx)) {
+  if (PBL_ABS(dy) > 20 && PBL_ABS(dy) > PBL_ABS(dx)) {
     if (!paused) {
       if (dy > 0) {
         prv_up_click_handler(nullptr, active_window);
@@ -1745,7 +1745,7 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
         prv_down_click_handler(nullptr, active_window);
       }
     }
-  } else if (ABS(dx) > 20 && ABS(dx) > ABS(dy)) {
+  } else if (PBL_ABS(dx) > 20 && PBL_ABS(dx) > PBL_ABS(dy)) {
     if (!paused) {
       if (dx > 0) {
         prv_previous_page(active_window);
@@ -1754,7 +1754,7 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
         prv_update_ui(active_window);
       }
     }
-  } else if (ABS(dx) <= 20 && ABS(dy) <= 20 && paused) {
+  } else if (PBL_ABS(dx) <= 20 && PBL_ABS(dy) <= 20 && paused) {
     // Pausing is button only; taps just reach the sidebar actions.
     const int h = active_window->window.layer.bounds.size.h;
     const int w = active_window->window.layer.bounds.size.w;

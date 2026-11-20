@@ -41,7 +41,7 @@ static uint8_t *read_file_into_ram(struct pbl_settings_raw_iter *iter) {
   // In case reading the whole file is not possible due to RAM limitations,
   // read the portions nearest the current seek position, as they are most
   // likely to be the culprit.
-  int end_offset = MIN(pos + read_size / 2, file_size);
+  int end_offset = PBL_MIN(pos + read_size / 2, file_size);
   int start_offset = end_offset - read_size;
   int status = pbl_fs_seek(&iter->file, start_offset, PBL_FS_SEEK_SET);
   if (status < 0) {

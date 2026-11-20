@@ -63,7 +63,7 @@ void battery_curve_set_full_voltage(uint16_t voltage) {
   if (s_discharge_full_voltage_default == 0) {
     s_discharge_full_voltage_default = discharge_curve[NUM_DISCHARGE_POINTS - 1].voltage;
   }
-  voltage = MAX(voltage, discharge_curve[NUM_DISCHARGE_POINTS - 2].voltage + 1);
+  voltage = PBL_MAX(voltage, discharge_curve[NUM_DISCHARGE_POINTS - 2].voltage + 1);
   discharge_curve[NUM_DISCHARGE_POINTS - 1].voltage = voltage;
 }
 

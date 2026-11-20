@@ -125,7 +125,7 @@ uint8_t *qemu_serial_private_assemble_message(QemuSerialGlobals *state, uint32_t
       case QemuRecvState_WaitingData: {
         uint16_t bytes_needed = state->hdr.len - state->msg_buffer_bytes;
         pbl_shared_cbuf_read_consume(&state->isr_buffer, &state->isr_buffer_client,
-                                     MIN(bytes_avail, bytes_needed),
+                                     PBL_MIN(bytes_avail, bytes_needed),
                                      state->msg_buffer + state->msg_buffer_bytes, &bytes_read);
         state->msg_buffer_bytes += bytes_read;
         bytes_avail -= bytes_read;

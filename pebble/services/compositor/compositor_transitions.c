@@ -119,8 +119,8 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
 
   // Clip the line to the bitmap data row's range, taking into account fractions
   const GBitmapDataRowInfo destination_data_row_info = gbitmap_get_data_row_info(framebuffer, y);
-  x1.raw_value = MAX(x1.raw_value, destination_data_row_info.min_x << FIXED_S16_3_PRECISION);
-  x2.raw_value = MIN(x2.raw_value, destination_data_row_info.max_x << FIXED_S16_3_PRECISION);
+  x1.raw_value = PBL_MAX(x1.raw_value, destination_data_row_info.min_x << FIXED_S16_3_PRECISION);
+  x2.raw_value = PBL_MIN(x2.raw_value, destination_data_row_info.max_x << FIXED_S16_3_PRECISION);
   if (x1.integer > x2.integer) {
     return;
   }
@@ -138,8 +138,8 @@ void prv_app_fb_fill_assign_horizontal_line(GContext *ctx, int16_t y, Fixed_S16_
   const GBitmapDataRowInfo source_data_row_info = gbitmap_get_data_row_info(&app_framebuffer, y);
 
   // Clip to the intersection of source and destination bounds
-  x1.raw_value = MAX(x1.raw_value, source_data_row_info.min_x << FIXED_S16_3_PRECISION);
-  x2.raw_value = MIN(x2.raw_value, source_data_row_info.max_x << FIXED_S16_3_PRECISION);
+  x1.raw_value = PBL_MAX(x1.raw_value, source_data_row_info.min_x << FIXED_S16_3_PRECISION);
+  x2.raw_value = PBL_MIN(x2.raw_value, source_data_row_info.max_x << FIXED_S16_3_PRECISION);
   if (x1.integer > x2.integer) {
     return;
   }
@@ -212,7 +212,7 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
       (unsigned int)(destination_data_row_info.data - (uint8_t *)framebuffer->addr);
   if (y1.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
       graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, *input, x,
                                               (uint8_t)(FIXED_S16_3_ONE.raw_value - y1.fraction));
     }
@@ -226,7 +226,7 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   // middle pixels
   while (y1.integer <= y2.integer) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
       *output = *input;
     }
     y1.integer++;
@@ -239,7 +239,7 @@ void prv_app_fb_fill_assign_vertical_line(GContext *ctx, int16_t x, Fixed_S16_3 
   // last pixel with blending (don't render first *and* last pixel if line length is 1)
   if (y2.fraction != 0) {
     // Only draw the pixel if its within the bitmap data row range
-    if (WITHIN(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
+    if (PBL_IN_RANGE(x, destination_data_row_info.min_x, destination_data_row_info.max_x)) {
       graphics_private_raw_blend_color_factor(ctx, output, data_row_offset, *input, x,
                                               (uint8_t)y2.fraction);
     }

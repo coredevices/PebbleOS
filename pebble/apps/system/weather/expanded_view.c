@@ -214,10 +214,10 @@ static void prv_set_from_forecast(const WeatherLocationForecast *f, int16_t lat_
 }
 
 // ---- UV / precipitation gauge (ported from detail_face.c) ------------------
-// ---- ROUND (gabbro) sunset-card grid ------------------------------------------------------
-// The weather icon + "Sunset H:MM" + "high/low°" are ONE GROUP, centred on the screen's
-// vertical midline. Measured ink after the shift: icon 73..125, sunset 140..153, temp
-// 163..187 -> group 73..187, centre exactly 130.
+// ---- PBL_DIV_ROUND_CLOSEST (gabbro) sunset-card grid
+// ------------------------------------------------------ The weather icon + "Sunset H:MM" +
+// "high/low°" are ONE GROUP, centred on the screen's vertical midline. Measured ink after the
+// shift: icon 73..125, sunset 140..153, temp 163..187 -> group 73..187, centre exactly 130.
 //
 // That needed 38px of downward room, which only exists once the dials shrink AND pull
 // inward+down. At the old r=25 the arithmetic is impossible: a dial's footprint is 57px

@@ -449,7 +449,7 @@ static void prv_set_caller_id_text(PebblePhoneCaller *caller) {
 #endif
   s_phone_ui_data->caller_id_text_layer.layer.bounds.size.h = content_height;
   s_phone_ui_data->caller_id_text_layer.layer.frame.size.h =
-      MAX(s_phone_ui_data->style->caller_id_height, content_height);
+      PBL_MAX(s_phone_ui_data->style->caller_id_height, content_height);
   text_layer_set_text(&s_phone_ui_data->caller_id_text_layer, s_phone_ui_data->caller_id_text_buf);
 }
 
@@ -499,7 +499,7 @@ static void prv_start_ringing(void) {
   }
   unsigned int vibe_interval_ms = vibe_score_get_duration_ms(s_phone_ui_data->vibe_score) +
                                   vibe_score_get_repeat_delay_ms(s_phone_ui_data->vibe_score);
-  vibe_repeat_interval_sec = MAX(DIVIDE_CEIL(vibe_interval_ms, PBL_MSEC_PER_SEC), 1U);
+  vibe_repeat_interval_sec = PBL_MAX(PBL_DIV_ROUND_UP(vibe_interval_ms, PBL_MSEC_PER_SEC), 1U);
   prv_ring(nullptr);
   pbl_wallclock_work_start(&pbl_sys_workq_high, &s_phone_ui_data->ring_timer, 1,
                            vibe_repeat_interval_sec);

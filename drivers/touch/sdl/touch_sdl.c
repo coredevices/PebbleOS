@@ -31,8 +31,8 @@ static void prv_touch_isr(void *arg) {
 
   s_last = (struct prv_touch_event){
     .pressed = e->pressed,
-    .x = CLIP(e->x, 0, CONFIG_TOUCH_SDL_SIZE_X - 1),
-    .y = CLIP(e->y, 0, CONFIG_TOUCH_SDL_SIZE_Y - 1),
+    .x = PBL_CLAMP(e->x, 0, CONFIG_TOUCH_SDL_SIZE_X - 1),
+    .y = PBL_CLAMP(e->y, 0, CONFIG_TOUCH_SDL_SIZE_Y - 1),
   };
 
   if (!s_enabled || s_work_pending) {

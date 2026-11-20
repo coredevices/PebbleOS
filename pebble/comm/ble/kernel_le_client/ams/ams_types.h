@@ -143,8 +143,9 @@ typedef enum {
   NumAMSTrackAttributeID,
 } AMSTrackAttributeID;
 
-#define AMS_MAX_NUM_ATTRIBUTE_ID \
-  (MAX(MAX((int)NumAMSTrackAttributeID, (int)NumAMSQueueAttributeID), (int)NumAMSPlayerAttributeID))
+#define AMS_MAX_NUM_ATTRIBUTE_ID                                              \
+  (PBL_MAX(PBL_MAX((int)NumAMSTrackAttributeID, (int)NumAMSQueueAttributeID), \
+           (int)NumAMSPlayerAttributeID))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Packet Formats

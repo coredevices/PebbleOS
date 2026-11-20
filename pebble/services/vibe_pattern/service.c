@@ -221,7 +221,7 @@ static void prv_vibes_set_vibe_strength(int32_t new_strength) {
 
   // Track strength for analytics (convert to percentage: -100..100 -> 0..100%)
   // Take absolute value since we care about vibration intensity, not direction
-  uint8_t new_strength_pct = (ABS(new_strength) * 100) / VIBE_STRENGTH_MAX;
+  uint8_t new_strength_pct = (PBL_ABS(new_strength) * 100) / VIBE_STRENGTH_MAX;
   prv_update_strength_analytics(new_strength_pct);
 
   if (new_strength != VIBE_STRENGTH_OFF) {
@@ -345,8 +345,8 @@ bool prv_vibe_pattern_enqueue_step_raw(uint32_t duration_ms, int32_t strength) {
   }
 
   list_init((ListNode *)step);
-  step->duration_ms = MIN(duration_ms, MAX_VIBE_DURATION_MS);
-  step->strength = CLIP(strength, VIBE_STRENGTH_MIN, VIBE_STRENGTH_MAX);
+  step->duration_ms = PBL_MIN(duration_ms, MAX_VIBE_DURATION_MS);
+  step->strength = PBL_CLAMP(strength, VIBE_STRENGTH_MIN, VIBE_STRENGTH_MAX);
 
   if (s_vibe_queue_head == nullptr) {
     // Fresh queue: take the explicitly-set owner, else default by task.
@@ -473,7 +473,7 @@ static void prv_collect_vibe_stats(void) {
   pbl_mutex_lock(&s_vibe_pattern_mutex, PBL_FOREVER);
 
   // Capture one final sample to account for time since last strength change
-  uint8_t current_strength_pct = (ABS(s_vibe_strength) * 100) / VIBE_STRENGTH_MAX;
+  uint8_t current_strength_pct = (PBL_ABS(s_vibe_strength) * 100) / VIBE_STRENGTH_MAX;
   prv_update_strength_analytics(current_strength_pct);
 
   // Calculate time-weighted average strength using internally tracked on-time

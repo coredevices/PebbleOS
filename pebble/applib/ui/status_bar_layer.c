@@ -462,8 +462,8 @@ static void prv_round_visible_range(GContext *ctx, GFont font, int16_t text_y, i
   }
   const int32_t half = (dy < radius) ? integer_sqrt(radius * radius - dy * dy) : 0;
   const int16_t center_x = radius - ctx->draw_state.drawing_box.origin.x;
-  *min_x = MAX(*min_x, center_x - half + ROUND_TITLE_EDGE_MARGIN);
-  *max_x = MIN(*max_x, center_x + half - ROUND_TITLE_EDGE_MARGIN);
+  *min_x = PBL_MAX(*min_x, center_x - half + ROUND_TITLE_EDGE_MARGIN);
+  *max_x = PBL_MIN(*max_x, center_x + half - ROUND_TITLE_EDGE_MARGIN);
 }
 
 // Returns false if the title fits the visible part of a round display
@@ -481,7 +481,7 @@ static bool prv_render_round_title(GContext *ctx, const StatusBarTextFormat *tex
   const GSize text_size = graphics_text_layout_get_max_used_size(
       ctx, text, text_format->font, GRect(0, 0, INT16_MAX, height), GTextOverflowModeFill,
       GTextAlignmentLeft, nullptr);
-  const int16_t span = MAX(text_size.w - vis_w, 0);
+  const int16_t span = PBL_MAX(text_size.w - vis_w, 0);
 
   if (status_bar_layer && (!status_bar_layer->marquee || span != status_bar_layer->marquee->span)) {
     prv_marquee_stop(status_bar_layer);
@@ -529,7 +529,7 @@ static void prv_status_bar_layer_render_text(GContext *ctx, const StatusBarLayer
   const int16_t left_width = center - min_x;
   const int16_t right_width = max_x - center;
   // Use larger distance from the center to min_x or max_x as half of the width (odd num pixels)
-  const int16_t width = 2 * MAX(left_width, right_width);
+  const int16_t width = 2 * PBL_MAX(left_width, right_width);
   // starting point of text needs to be half width left of the center.
   const int16_t x_start = center - width / 2;
   int16_t y;

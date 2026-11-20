@@ -218,13 +218,13 @@ static void prv_get_prev_dst(const TimezoneInfo *tz_info, time_t *prev_start, ti
   for (int year = start_tm.tm_year - 1; year <= start_tm.tm_year; year++) {
     const time_t end = prv_clock_dstrule_to_timestamp(true, tz_info, &dst_rule_end, year);
     if (end < tz_info->dst_start) {
-      *prev_end = MAX(*prev_end, end);
+      *prev_end = PBL_MAX(*prev_end, end);
     }
   }
   for (int year = start_tm.tm_year - 1; year <= start_tm.tm_year; year++) {
     const time_t start = prv_clock_dstrule_to_timestamp(false, tz_info, &dst_rule_begin, year);
     if (start < *prev_end) {
-      *prev_start = MAX(*prev_start, start);
+      *prev_start = PBL_MAX(*prev_start, start);
     }
   }
 #endif
@@ -729,7 +729,8 @@ void clock_get_timezone_region(char *region_name, const size_t buffer_size) {
       int hour_offset = gmt_offset_m / PBL_MIN_PER_HOUR;
 
       char min_buf[4] = {};
-      int min_offset_percent = ((ABS(gmt_offset_m) % PBL_MIN_PER_HOUR) * 100) / PBL_MIN_PER_HOUR;
+      int min_offset_percent =
+          ((PBL_ABS(gmt_offset_m) % PBL_MIN_PER_HOUR) * 100) / PBL_MIN_PER_HOUR;
       if (min_offset_percent) {
         snprintf(min_buf, sizeof(min_buf), ".%d", min_offset_percent);
       }
@@ -1031,7 +1032,7 @@ size_t clock_get_month_named_abbrev_date(char *buffer, size_t buffer_size, time_
 
 void clock_get_since_time(char *buffer, int buf_size, time_t timestamp) {
   const time_t now = pbl_realtime();
-  const time_t clamped_timestamp = MIN(now, timestamp);
+  const time_t clamped_timestamp = PBL_MIN(now, timestamp);
   prv_clock_get_relative_time_string(buffer, buf_size, clamped_timestamp, false, PBL_HOUR_PER_DAY,
                                      true);
 }
@@ -1053,7 +1054,7 @@ void clock_get_until_time_without_fulltime(char *buffer, int buf_size, time_t ti
 PBL_SYSCALL(void, sys_clock_get_timezone, (OUT_BUF, char *, timezone, TIMEZONE_NAME_LENGTH),
             (VAL, size_t, buffer_size)) {
   if (from_user) {
-    buffer_size = MIN(buffer_size, TIMEZONE_NAME_LENGTH);
+    buffer_size = PBL_MIN(buffer_size, TIMEZONE_NAME_LENGTH);
   }
   clock_get_timezone_region(timezone, buffer_size);
 }

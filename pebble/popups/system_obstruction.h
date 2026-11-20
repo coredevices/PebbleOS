@@ -23,10 +23,10 @@ typedef enum SystemOverlay {
 static inline int16_t system_obstruction_compose(SystemOverlay overlay, int16_t overlay_y) {
   int16_t y = overlay_y;
   if (overlay != SystemOverlayTimelinePeek) {
-    y = MIN(y, timeline_peek_get_obstruction_origin_y());
+    y = PBL_MIN(y, timeline_peek_get_obstruction_origin_y());
   }
   if (overlay != SystemOverlayMicBanner) {
-    y = MIN(y, mic_banner_get_obstruction_origin_y());
+    y = PBL_MIN(y, mic_banner_get_obstruction_origin_y());
   }
   return y;
 }

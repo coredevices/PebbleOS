@@ -165,7 +165,7 @@ static void prv_regions_write(bool late) {
 
     for (size_t offset = 0; offset < region->size; offset += REGION_WRITE_SIZE) {
       prv_output((const uint8_t *)region->start + offset,
-                 MIN(region->size - offset, REGION_WRITE_SIZE));
+                 PBL_MIN(region->size - offset, REGION_WRITE_SIZE));
       watchdog_feed();
     }
   }

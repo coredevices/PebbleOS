@@ -42,8 +42,8 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 // How many records we need to store in our circular buffer
 // +1 for mgmt overhead
-#define ALG_MINUTE_CBUF_NUM_RECORDS                               \
-  (MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + \
+#define ALG_MINUTE_CBUF_NUM_RECORDS                                   \
+  (PBL_MAX(ALG_MINUTES_PER_DLS_RECORD, ALG_MINUTES_PER_FILE_RECORD) + \
    PBL_KRAEPELIN_MAX_UNCERTAIN_SLEEP_M + 1)
 
 #ifdef CONFIG_HRM
@@ -255,9 +255,9 @@ static void prv_create_activity_session_cb(void *context, enum pbl_kraepelin_act
     .ongoing = ongoing,
     .step_data = {
       .steps = steps,
-      .active_kcalories = ROUND(active_calories, ACTIVITY_CALORIES_PER_KCAL),
-      .resting_kcalories = ROUND(resting_calories, ACTIVITY_CALORIES_PER_KCAL),
-      .distance_meters = ROUND(distance_mm, PBL_MM_PER_M),
+      .active_kcalories = PBL_DIV_ROUND_CLOSEST(active_calories, ACTIVITY_CALORIES_PER_KCAL),
+      .resting_kcalories = PBL_DIV_ROUND_CLOSEST(resting_calories, ACTIVITY_CALORIES_PER_KCAL),
+      .distance_meters = PBL_DIV_ROUND_CLOSEST(distance_mm, PBL_MM_PER_M),
     },
   };
   if (delete) {
@@ -446,7 +446,7 @@ static struct pbl_settings_file *prv_validate_and_trim_minute_file(struct pbl_se
   time_t utc = pbl_realtime();
   uint32_t newest_valid_key = prv_minute_file_get_settings_key(utc) + 1;
   int32_t oldest_valid_key = (int32_t)newest_valid_key - max_records;
-  oldest_valid_key = MAX(0, oldest_valid_key);
+  oldest_valid_key = PBL_MAX(0, oldest_valid_key);
   AlgMinuteFileRewriteContext context = (AlgMinuteFileRewriteContext){
     .oldest_valid_key = oldest_valid_key,
     .newest_valid_key = newest_valid_key,
@@ -603,7 +603,7 @@ static void PBL_NOINLINE prv_set_dls_minute_record_entry(AlgMinuteDLSRecord *dls
     PBL_LOG_DBG("Subtracting %" PRIu8 " steps that occurred during sleep",
                 dls_record->samples[sample_idx].base.steps);
     s_alg_state->steps -= dls_record->samples[sample_idx].base.steps;
-    s_alg_state->steps = MAX(0, s_alg_state->steps);
+    s_alg_state->steps = PBL_MAX(0, s_alg_state->steps);
     dls_record->samples[sample_idx].base.steps = 0;
     dls_record->samples[sample_idx].base.active = false;
     dls_record->samples[sample_idx].active_calories = 0;
@@ -633,7 +633,7 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
       (pbl_shared_cbuf_get_read_space_remaining(&s_alg_state->minute_data_cbuf, cbuf_client) /
        sizeof(AlgMinuteRecord)) -
       uncertain_m;
-  int minutes_this_record = MIN(certain_m, minutes_per_record);
+  int minutes_this_record = PBL_MIN(certain_m, minutes_per_record);
   if (minutes_this_record == 0) {
     // nothing to send, even if we really wanted to
     return false;
@@ -656,7 +656,7 @@ static bool PBL_NOINLINE prv_prepare_minute_data(uint16_t uncertain_m, time_t sl
     // <= end_value, so we need to subtract one minute from the end to see if the start of this
     // test minute is entirely within the sleep range.
     bool was_sleeping =
-        WITHIN(cbuf_record->utc_sec, sleep_start_utc, sleep_end_utc - PBL_SEC_PER_MIN);
+        PBL_IN_RANGE(cbuf_record->utc_sec, sleep_start_utc, sleep_end_utc - PBL_SEC_PER_MIN);
 
     // Handle writing the record out to PFS
     if (file_record) {
@@ -832,8 +832,8 @@ void activity_algorithm_post_process_sleep_sessions(uint16_t num_input_sessions,
     }
 
     if ((session->length_min > ALG_MAX_NAP_MINUTES) ||
-        !WITHIN(start_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE) ||
-        !WITHIN(end_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE)) {
+        !PBL_IN_RANGE(start_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE) ||
+        !PBL_IN_RANGE(end_minute, ALG_PRIMARY_MORNING_MINUTE, ALG_PRIMARY_EVENING_MINUTE)) {
       // If too long, or not within the primary sleep range, can't be a nap
       PBL_LOG_DBG("Not within nap time bounds or duration");
       continue;
@@ -1020,14 +1020,15 @@ static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLS
   m_rec->base.vmc = vmc;
   m_rec->base.orientation = orientation;
 
-  m_rec->base.steps = MIN(s_alg_state->minute_steps, UINT8_MAX);
+  m_rec->base.steps = PBL_MIN(s_alg_state->minute_steps, UINT8_MAX);
 
   // Scale the reading into the 8-bit light field; saturate rather than wrap so a
   // sensor whose range exceeds the field doesn't alias bright light down to
   // "dark". The light service value is screen-compensated and in lux, matching
   // the domain light_level_to_enum() expects when reading back.
   const uint32_t light_level = light_get_ambient_lux();
-  m_rec->base.light = MIN(ROUND(light_level, ALG_RAW_LIGHT_SENSOR_DIVIDE_BY), UINT8_MAX);
+  m_rec->base.light =
+      PBL_MIN(PBL_DIV_ROUND_CLOSEST(light_level, ALG_RAW_LIGHT_SENSOR_DIVIDE_BY), UINT8_MAX);
 
   // Are we connected to a charger?
   const BatteryChargeState charge_state = battery_get_charge_state();
@@ -1046,7 +1047,7 @@ static uint32_t PBL_NOINLINE prv_fill_minute_record(time_t utc_sec, AlgMinuteDLS
   const uint32_t distance_mm = activity_metrics_prv_get_distance_mm();
   const uint32_t minute_distance_mm = distance_mm - s_alg_state->prev_distance_mm;
   const int k_mm_per_cm = 10;
-  m_rec->distance_cm = ROUND(minute_distance_mm, k_mm_per_cm);
+  m_rec->distance_cm = PBL_DIV_ROUND_CLOSEST(minute_distance_mm, k_mm_per_cm);
 
   // Fill in heart rate, heart rate sample weight, then reset it
   int32_t median, heart_rate_total_weight_x100;
@@ -1359,7 +1360,7 @@ static bool prv_read_minutes(AlgReadMinutesContext *context, time_t oldest_reque
   const time_t utc_now = pbl_realtime();
   const time_t oldest_possible =
       utc_now - ALG_MINUTE_FILE_MAX_ENTRIES * ALG_MINUTES_PER_FILE_RECORD * PBL_SEC_PER_MIN;
-  oldest_requested_utc = MAX(oldest_possible, oldest_requested_utc);
+  oldest_requested_utc = PBL_MAX(oldest_possible, oldest_requested_utc);
 
   context->oldest_key = prv_minute_file_get_settings_key(oldest_requested_utc) - 1;
   context->newest_key = prv_minute_file_get_settings_key(utc_now) + 1;

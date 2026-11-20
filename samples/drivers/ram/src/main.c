@@ -37,7 +37,7 @@ int main(void) {
 
   /* Memory-mapped: plain loads and stores. Its contents are undefined until written. */
   mem = (volatile uint32_t *)base;
-  words = MIN(CHECK_LEN, size) / sizeof(uint32_t);
+  words = PBL_MIN(CHECK_LEN, size) / sizeof(uint32_t);
 
   start = pbl_uptime_ms();
   for (size_t i = 0U; i < words; i++) {

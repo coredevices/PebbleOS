@@ -103,7 +103,7 @@ static int prv_short_row_start(const ActionMenuLayer *aml, int row) {
     return 0;
   }
   // Distribute the remainder across the first pages instead of leaving an orphan page.
-  return row * (aml->num_short_items / pages) + MIN(row, aml->num_short_items % pages);
+  return row * (aml->num_short_items / pages) + PBL_MIN(row, aml->num_short_items % pages);
 }
 
 #if PBL_ROUND
@@ -151,10 +151,10 @@ static void prv_draw_scaled_glyph(GContext *ctx, const char *label, GFont font, 
   for (int y = 0; y < GLYPH_SCRATCH_SIZE; ++y) {
     for (int x = 0; x < GLYPH_SCRATCH_SIZE; ++x) {
       if (pixels[y * GLYPH_SCRATCH_SIZE + x] >> 6) {
-        min_x = MIN(min_x, x);
-        min_y = MIN(min_y, y);
-        max_x = MAX(max_x, x);
-        max_y = MAX(max_y, y);
+        min_x = PBL_MIN(min_x, x);
+        min_y = PBL_MIN(min_y, y);
+        max_x = PBL_MAX(max_x, x);
+        max_y = PBL_MAX(max_y, y);
       }
     }
   }
@@ -309,7 +309,7 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
       const int16_t text_padding = 4;
       const int16_t width = (text_size.w <= bg_rect.size.h)
                                 ? bg_rect.size.h
-                                : MIN(text_size.w + 2 * text_padding, bg_rect.size.w);
+                                : PBL_MIN(text_size.w + 2 * text_padding, bg_rect.size.w);
       bg_rect.origin.x += (bg_rect.size.w - width) / 2;
       bg_rect.size.w = width;
 #endif
@@ -581,7 +581,7 @@ static void prv_draw_indicator_round(GContext *ctx, const ActionMenuLayer *aml,
                                      const GRect *label_text_container) {
   const int indicator_height = fonts_get_font_height(aml->layout_cache.font);
   const int text_height = aml->layout_cache.item_heights[aml->selected_index];
-  const int content_height = MIN(label_text_container->size.h, text_height + indicator_height);
+  const int content_height = PBL_MIN(label_text_container->size.h, text_height + indicator_height);
 
   GRect content_frame = (GRect){.size = GSize(label_text_container->size.w, content_height)};
   GRect indicator_frame = (GRect){.size = GSize(label_text_container->size.w, indicator_height)};
@@ -678,7 +678,7 @@ static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell
     const int base_idx = prv_short_row_start(aml, short_row);
     const int sel_idx = aml->selected_index - (base_idx + aml->num_items);
     const int num_items =
-        MIN(aml->num_short_items, prv_short_row_start(aml, short_row + 1)) - base_idx;
+        PBL_MIN(aml->num_short_items, prv_short_row_start(aml, short_row + 1)) - base_idx;
     prv_cell_column_draw(ctx, cell_layer, aml, (ActionMenuItem *)&aml->short_items[base_idx],
                          num_items, sel_idx);
   }
@@ -709,7 +709,7 @@ static void prv_selection_changed(ActionMenuLayer *aml) {
 
 static void prv_set_selected_index_with_align(ActionMenuLayer *aml, int new_selected_index,
                                               MenuRowAlign align, bool animated) {
-  new_selected_index = CLIP(new_selected_index, 0, aml->num_items + aml->num_short_items - 1);
+  new_selected_index = PBL_CLAMP(new_selected_index, 0, aml->num_items + aml->num_short_items - 1);
   const bool selection_changed = (new_selected_index != aml->selected_index);
 
   if (selection_changed) {
@@ -780,7 +780,7 @@ static int prv_touch_find_glyph(ActionMenuLayer *aml, GPoint point_on_screen) {
   }
   const int short_row = span.index.row - aml->num_items;
   const int base = prv_short_row_start(aml, short_row);
-  const int count = MIN(aml->num_short_items, prv_short_row_start(aml, short_row + 1)) - base;
+  const int count = PBL_MIN(aml->num_short_items, prv_short_row_start(aml, short_row + 1)) - base;
   const bool round = prv_is_honeycomb(aml);
   const int column_width = round ? (frame.size.w - 16) / 4 : frame.size.w / SHORT_COL_COUNT;
   int row_counts[3] = {count};
@@ -845,7 +845,7 @@ static void prv_touch_pan_update(void *widget, GPoint base, GPoint delta) {
   } else {
     // Follow the finger, with at most one page traversed per gesture.
     const int stride = menu->selection.h + GLYPH_CELL_GAP;
-    const int y = base.y + CLIP(delta.y, -stride, stride);
+    const int y = base.y + PBL_CLAMP(delta.y, -stride, stride);
     scroll_layer_set_content_offset(&menu->scroll_layer, GPoint(0, y), false);
   }
 }
@@ -861,20 +861,20 @@ static void prv_touch_pan_snap(void *widget, GPoint base, GPoint delta, GPoint v
     return;
   }
   const int page = prv_get_menu_layer_row(aml, aml->selected_index) - aml->num_items;
-  const bool flick = ABS((int32_t)velocity.y) >= TOUCH_FLING_MIN_VELOCITY_PX_S;
+  const bool flick = PBL_ABS((int32_t)velocity.y) >= TOUCH_FLING_MIN_VELOCITY_PX_S;
   const int direction = flick ? velocity.y : delta.y;
   const int next_page = page + (direction < 0 ? 1 : -1);
   int index = aml->selected_index;
-  if ((ABS(delta.y) >= GLYPH_PAGE_SWIPE_MIN || flick) && next_page >= 0 &&
+  if ((PBL_ABS(delta.y) >= GLYPH_PAGE_SWIPE_MIN || flick) && next_page >= 0 &&
       next_page < prv_short_row_count(aml)) {
     index = aml->num_items + prv_short_row_start(aml, next_page);
   }
   prv_set_selected_index_with_align(aml, index, MenuRowAlignNone, false);
   const GPoint target = GPoint(
       0, (menu->scroll_layer.layer.frame.size.h - menu->selection.h) / 2 - menu->selection.y);
-  const int distance = ABS(target.y - scroll_layer_get_content_offset(&menu->scroll_layer).y);
-  const int duration = flick ? CLIP(2000 * distance / ABS((int32_t)velocity.y),
-                                    GLYPH_PAGE_SETTLE_MIN_MS, GLYPH_PAGE_SETTLE_MAX_MS)
+  const int distance = PBL_ABS(target.y - scroll_layer_get_content_offset(&menu->scroll_layer).y);
+  const int duration = flick ? PBL_CLAMP(2000 * distance / PBL_ABS((int32_t)velocity.y),
+                                         GLYPH_PAGE_SETTLE_MIN_MS, GLYPH_PAGE_SETTLE_MAX_MS)
                              : GLYPH_PAGE_SETTLE_MAX_MS;
   scroll_layer_touch_settle(&menu->scroll_layer, target, duration);
 }
@@ -923,7 +923,8 @@ static int16_t prv_get_cell_padding(ActionMenuLayer *aml) {
   return default_sep_height;
 #else
   const int16_t line_height = fonts_get_font_height(aml->layout_cache.font);
-  const int16_t sep_height = MAX(prv_small_cell_height(aml) - line_height, default_sep_height) + 1;
+  const int16_t sep_height =
+      PBL_MAX(prv_small_cell_height(aml) - line_height, default_sep_height) + 1;
   return prv_aml_is_short(aml) ? sep_height - SHORT_CELL_EXTRA : sep_height;
 #endif
 }
@@ -948,7 +949,7 @@ static int16_t prv_get_cell_height_cb(struct MenuLayer *menu_layer, MenuIndex *c
 #else
   const int16_t max_visible_height = line_height * MAX_NUM_VISIBLE_LINES;
   const int16_t actual_height = aml->layout_cache.item_heights[cell_index->row];
-  return (VERTICAL_PADDING * 2) + MIN(max_visible_height, actual_height);
+  return (VERTICAL_PADDING * 2) + PBL_MIN(max_visible_height, actual_height);
 #endif
 }
 
@@ -1030,12 +1031,12 @@ static int16_t prv_get_header_height_cb(struct MenuLayer *menu_layer, uint16_t s
 
   for (int16_t idx = 0; idx < aml->num_items; idx++) {
     int16_t item_height = aml->layout_cache.item_heights[idx];
-    total_h += MIN(max_visible_height, item_height);
+    total_h += PBL_MIN(max_visible_height, item_height);
   }
 
   const int16_t header_padding = 6 * aml->num_items;
   const int16_t header_height = ((bounds->size.h - total_h) / 2) - padding;
-  return MAX(header_height - header_padding, 0);
+  return PBL_MAX(header_height - header_padding, 0);
 }
 
 static void prv_draw_header_cb(GContext *ctx, const Layer *cell_layer, uint16_t section_index,
@@ -1077,7 +1078,7 @@ static void prv_changed_proc(Layer *layer) {
     const int16_t font_height = prv_get_cell_height_cb(&aml->menu_layer, &index, aml);
     const int16_t cell_padding = prv_get_cell_padding(aml);
     const int num_visible_rows =
-        MIN(prv_get_num_rows(&aml->menu_layer, 0, aml), SHORT_ITEM_MAX_ROWS_SPALDING);
+        PBL_MIN(prv_get_num_rows(&aml->menu_layer, 0, aml), SHORT_ITEM_MAX_ROWS_SPALDING);
     menu_layer_frame.size.h =
         (font_height * num_visible_rows) + (cell_padding * (num_visible_rows - 1));
     grect_align(&menu_layer_frame, aml_bounds, GAlignCenter, true /* clip */);

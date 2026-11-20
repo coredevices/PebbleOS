@@ -99,9 +99,9 @@ void rot_bitmap_set_src_ic(RotBitmapLayer *image, GPoint ic) {
 
   // adjust the frame so the whole image will still be visible
   const int32_t right = abs(image->bitmap->bounds.size.w - ic.x);
-  const int32_t horiz = MAX(ic.x, right);
+  const int32_t horiz = PBL_MAX(ic.x, right);
   const int32_t bottom = abs(image->bitmap->bounds.size.h - ic.y);
-  const int32_t vert = MAX(ic.y, bottom);
+  const int32_t vert = PBL_MAX(ic.y, bottom);
 
   GRect r = image->layer.frame;
   const int32_t new_dist = integer_sqrt(horiz * horiz + vert * vert) * 2;

@@ -638,7 +638,7 @@ void test_app_message__throttle_repeated_outbox_begin_calls(void) {
   for (int i = 1; i <= 128; i *= 2) {
     DictionaryIterator *iter;
     cl_assert_equal_i(app_message_outbox_begin(&iter), APP_MSG_BUSY);
-    cl_assert_equal_i(MIN(i, 100), s_sys_psleep_last_millis);
+    cl_assert_equal_i(PBL_MIN(i, 100), s_sys_psleep_last_millis);
   }
 }
 
