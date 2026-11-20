@@ -65,10 +65,10 @@ enum pbl_device_status {
 
 /** @brief Runtime state of a device. */
 struct pbl_device_state {
+  /** Result of the initialization, 0 or a negative errno. */
+  int16_t res;
   /** One of @ref pbl_device_status. */
   uint8_t status;
-  /** Result of the initialization. */
-  int res;
 };
 
 /** @brief A device class. */

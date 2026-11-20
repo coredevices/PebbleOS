@@ -76,7 +76,7 @@ int pbl_device_init(const struct pbl_device *dev) {
     }
   }
 
-  state->res = res;
+  state->res = (int16_t)res;
   state->status = (res == 0) ? PBL_DEVICE_READY : PBL_DEVICE_FAILED;
 
   return res;
