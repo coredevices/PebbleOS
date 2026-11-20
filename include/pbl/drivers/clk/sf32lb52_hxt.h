@@ -51,18 +51,18 @@ int pbl_clk_sf32lb52_hxt_init(const struct pbl_device *dev);
  * @param _flash Flash, a struct pbl_flash.
  * @param ... Names of the OTP cells holding the configuration, in search order.
  */
-#define PBL_CLK_SF32LB52_HXT_DEFINE(sym, _name, _base, _flash, ...)                         \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                             \
-  static const char *const sym##_cells[] = {__VA_ARGS__};                                   \
-  extern const struct pbl_clk_sf32lb52_hxt sym##_inst;                                      \
-  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                         \
-  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_clk_sf32lb52_hxt, struct pbl_device, dev);   \
-  const struct pbl_clk_sf32lb52_hxt sym##_inst = {                                          \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_clk_sf32lb52_hxt_init, &(_flash)->dev, nullptr), \
-    .base = (_base),                                                                        \
-    .flash = (_flash),                                                                      \
-    .cells = sym##_cells,                                                                   \
-    .num_cells = ARRAY_LENGTH(sym##_cells),                                                 \
+#define PBL_CLK_SF32LB52_HXT_DEFINE(sym, _name, _base, _flash, ...)                       \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                           \
+  static const char *const sym##_cells[] = {__VA_ARGS__};                                 \
+  extern const struct pbl_clk_sf32lb52_hxt sym##_inst;                                    \
+  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                       \
+  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_clk_sf32lb52_hxt, struct pbl_device, dev); \
+  const struct pbl_clk_sf32lb52_hxt sym##_inst = {                                        \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_clk_sf32lb52_hxt_init, &(_flash)->dev),        \
+    .base = (_base),                                                                      \
+    .flash = (_flash),                                                                    \
+    .cells = sym##_cells,                                                                 \
+    .num_cells = ARRAY_LENGTH(sym##_cells),                                               \
   }
 
 /** @} */

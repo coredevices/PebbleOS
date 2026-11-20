@@ -121,15 +121,13 @@ extern const struct pbl_charger *const CHARGER;
  * @param sym Symbol of the instance, as passed to PBL_CHARGER_STATE_DEFINE().
  * @param _name Device name.
  * @param _parent Parent device, or NULL.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_CHARGER_INIT(sym, _name, _parent, _deps, _ops)                         \
-  {                                                                                \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_charger_dev_init, _parent, _deps, \
-                                 &pbl_charger_class),                              \
-    .ops = (_ops),                                                                 \
-    .state = &sym##_charger_state,                                                 \
+#define PBL_CHARGER_INIT(sym, _name, _parent, _ops)                                              \
+  {                                                                                              \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_charger_dev_init, _parent, &pbl_charger_class), \
+    .ops = (_ops),                                                                               \
+    .state = &sym##_charger_state,                                                               \
   }
 
 /**

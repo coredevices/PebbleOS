@@ -583,7 +583,7 @@ description gives, never an index into a table in the driver:
   PBL_I2C_BUS_STATE_DEFINE(sym);                                                \
   static struct pbl_i2c_soc_state sym##_soc_state;                              \
   PBL_DEVICE_INSTANCE(sym, struct pbl_i2c_soc, struct pbl_i2c_bus, bus){        \
-    .bus = PBL_I2C_BUS_INIT(sym, _name, &pbl_i2c_soc_ops, nullptr),             \
+    .bus = PBL_I2C_BUS_INIT(sym, _name, &pbl_i2c_soc_ops),                      \
     ...                                                                         \
   };                                                                            \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_I2C_SOC_IRQ_PRIO, pbl_i2c_soc_irq_handler, &sym##_inst, 0)

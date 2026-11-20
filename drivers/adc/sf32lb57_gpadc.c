@@ -214,12 +214,12 @@ static const struct pbl_adc_ops s_ops = {
   .read = prv_read,
 };
 
-#define PBL_ADC_SF32LB57_GPADC_DEFINE(sym, _name, _base, _cfg, _clk, _cal)                    \
-  PBL_ADC_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_adc_sf32lb57_gpadc_state sym##_gpadc_state;                               \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_adc_sf32lb57_gpadc, struct pbl_adc, adc) {              \
-    .adc = PBL_ADC_INIT(sym, _name, nullptr, nullptr, &s_ops, NUM_CHANNELS), .base = (_base), \
-    .cfg = (_cfg), .clk = _clk, .cal = _cal, .state = &sym##_gpadc_state,                     \
+#define PBL_ADC_SF32LB57_GPADC_DEFINE(sym, _name, _base, _cfg, _clk, _cal)           \
+  PBL_ADC_STATE_DEFINE(sym);                                                         \
+  static struct pbl_adc_sf32lb57_gpadc_state sym##_gpadc_state;                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_adc_sf32lb57_gpadc, struct pbl_adc, adc) {     \
+    .adc = PBL_ADC_INIT(sym, _name, nullptr, &s_ops, NUM_CHANNELS), .base = (_base), \
+    .cfg = (_cfg), .clk = _clk, .cal = _cal, .state = &sym##_gpadc_state,            \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_gpadc)

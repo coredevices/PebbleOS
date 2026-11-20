@@ -45,22 +45,20 @@ extern const struct pbl_nvmem pbl_nvmem_sf32lb57_efuse;
  * @param _clk Clock, from PBL_CLK().
  * @param _pmuc PMUC registers.
  */
-#define PBL_NVMEM_SF32LB52_DEFINE(sym, _name, _base, _clk, _pmuc)                                \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_nvmem_sf32lb, struct pbl_nvmem, nvmem) {                   \
-    .nvmem =                                                                                     \
-        PBL_NVMEM_INIT(sym, _name, nullptr, nullptr, &pbl_nvmem_sf32lb_ops, SF32LB52_EFUSE_SIZE, \
-                       SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),                      \
-    .base = (_base), .clk = _clk, .pmuc = (_pmuc), .read_timing = true,                          \
+#define PBL_NVMEM_SF32LB52_DEFINE(sym, _name, _base, _clk, _pmuc)                            \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_nvmem_sf32lb, struct pbl_nvmem, nvmem) {               \
+    .nvmem = PBL_NVMEM_INIT(sym, _name, nullptr, &pbl_nvmem_sf32lb_ops, SF32LB52_EFUSE_SIZE, \
+                            SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),             \
+    .base = (_base), .clk = _clk, .pmuc = (_pmuc), .read_timing = true,                      \
   }
 
-#define PBL_NVMEM_SF32LB57_DEFINE(sym, _name, _base, _clk)                                       \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_nvmem_sf32lb, struct pbl_nvmem, nvmem) {                   \
-    .nvmem =                                                                                     \
-        PBL_NVMEM_INIT(sym, _name, nullptr, nullptr, &pbl_nvmem_sf32lb_ops, SF32LB57_EFUSE_SIZE, \
-                       SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),                      \
-    .base = (_base), .clk = _clk,                                                                \
+#define PBL_NVMEM_SF32LB57_DEFINE(sym, _name, _base, _clk)                                   \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_nvmem_sf32lb, struct pbl_nvmem, nvmem) {               \
+    .nvmem = PBL_NVMEM_INIT(sym, _name, nullptr, &pbl_nvmem_sf32lb_ops, SF32LB57_EFUSE_SIZE, \
+                            SF32LB52_EFUSE_WORD_SIZE, SF32LB52_EFUSE_WORD_SIZE),             \
+    .base = (_base), .clk = _clk,                                                            \
   }
 
 /** eFuse size: four 32-byte banks. */

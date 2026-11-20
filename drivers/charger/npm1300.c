@@ -780,7 +780,7 @@ static const struct pbl_charger_ops s_ops = {
   PBL_CHARGER_STATE_DEFINE(sym);                                                                \
   static struct pbl_charger_npm1300_data sym##_data;                                            \
   PBL_DEVICE_INSTANCE(sym, struct pbl_charger_npm1300, struct pbl_charger, charger){            \
-    .charger = PBL_CHARGER_INIT(sym, "npm1300_charger", &(_pmic)->dev, nullptr, &s_ops),        \
+    .charger = PBL_CHARGER_INIT(sym, "npm1300_charger", &(_pmic)->dev, &s_ops),                 \
     .cfg =                                                                                      \
         {                                                                                       \
           .dischg_limit_ma = (_dischg_ua) / 1000,                                               \

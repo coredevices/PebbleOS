@@ -117,13 +117,13 @@ struct pbl_intc {
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_INTC_INIT(sym, _name, _init, _parent, _ops)                                 \
-  {                                                                                     \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_intc_class), \
-    .ops = (_ops),                                                                      \
-    .lines = sym##_intc_lines,                                                          \
-    .enabled = sym##_intc_enabled,                                                      \
-    .num_irqs = ARRAY_LENGTH(sym##_intc_lines),                                         \
+#define PBL_INTC_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                            \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_intc_class), \
+    .ops = (_ops),                                                             \
+    .lines = sym##_intc_lines,                                                 \
+    .enabled = sym##_intc_enabled,                                             \
+    .num_irqs = ARRAY_LENGTH(sym##_intc_lines),                                \
   }
 
 /** @brief An interrupt line, as used by a consumer. */

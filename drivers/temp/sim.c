@@ -21,5 +21,5 @@ static const struct pbl_temp_ops s_ops = {
 };
 
 PBL_TEMP_STATE_DEFINE(pbl_temp_sim);
-const struct pbl_temp pbl_temp_sim = PBL_TEMP_INIT(pbl_temp_sim, "temp", nullptr, nullptr, &s_ops);
+const struct pbl_temp pbl_temp_sim = PBL_TEMP_INIT(pbl_temp_sim, "temp", nullptr, &s_ops);
 PBL_DEVICE_REGISTER(pbl_temp_sim, &pbl_temp_sim.dev);

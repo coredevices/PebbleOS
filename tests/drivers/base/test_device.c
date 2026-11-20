@@ -28,15 +28,15 @@ static int prv_init(const struct pbl_device *dev) {
   return td->res;
 }
 
-#define TEST_DEV(sym, _tag, _init, _parent, _deps)            \
-  PBL_DEVICE_STATE_DEFINE(sym);                               \
-  static struct test_dev sym = {                              \
-    .dev = PBL_DEVICE_INIT(sym, #sym, _init, _parent, _deps), \
-    .tag = _tag,                                              \
+#define TEST_DEV(sym, _tag, _init, _parent)            \
+  PBL_DEVICE_STATE_DEFINE(sym);                        \
+  static struct test_dev sym = {                       \
+    .dev = PBL_DEVICE_INIT(sym, #sym, _init, _parent), \
+    .tag = _tag,                                       \
   }
 
-#define TEST_DEV_REGISTERED(sym, _tag, _init, _parent, _deps) \
-  TEST_DEV(sym, _tag, _init, _parent, _deps);                 \
+#define TEST_DEV_REGISTERED(sym, _tag, _init, _parent) \
+  TEST_DEV(sym, _tag, _init, _parent);                 \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 // gpio <- i2c <- pmic <- mfd (MFD bringing its child up), sensor on i2c using gpio, absent on i2c
@@ -48,31 +48,35 @@ static int prv_mfd_init(const struct pbl_device *dev) {
   return (res != 0) ? res : pbl_device_init_children(dev);
 }
 
-TEST_DEV_REGISTERED(s_sensor, 's', prv_init, &s_i2c.dev, PBL_DEVICE_DEPS(&s_gpio.dev));
-TEST_DEV_REGISTERED(s_gpio, 'g', prv_init, nullptr, nullptr);
-TEST_DEV_REGISTERED(s_pmic, 'p', prv_init, &s_i2c.dev, nullptr);
-TEST_DEV_REGISTERED(s_i2c, 'i', prv_init, nullptr, PBL_DEVICE_DEPS(&s_gpio.dev));
-TEST_DEV_REGISTERED(s_mfd_child, 'c', prv_init, &s_mfd.dev, nullptr);
-TEST_DEV_REGISTERED(s_mfd, 'm', prv_mfd_init, &s_pmic.dev, nullptr);
-TEST_DEV_REGISTERED(s_absent, 'a', prv_init, &s_i2c.dev, nullptr);
-TEST_DEV_REGISTERED(s_noinit, 'n', nullptr, nullptr, nullptr);
+TEST_DEV_REGISTERED(s_sensor, 's', prv_init, &s_i2c.dev);
+PBL_DEVICE_DEPENDS(s_sensor, &s_sensor.dev, &s_gpio.dev);
+TEST_DEV_REGISTERED(s_gpio, 'g', prv_init, nullptr);
+TEST_DEV_REGISTERED(s_pmic, 'p', prv_init, &s_i2c.dev);
+TEST_DEV_REGISTERED(s_i2c, 'i', prv_init, nullptr);
+PBL_DEVICE_DEPENDS(s_i2c, &s_i2c.dev, &s_gpio.dev);
+TEST_DEV_REGISTERED(s_mfd_child, 'c', prv_init, &s_mfd.dev);
+TEST_DEV_REGISTERED(s_mfd, 'm', prv_mfd_init, &s_pmic.dev);
+TEST_DEV_REGISTERED(s_absent, 'a', prv_init, &s_i2c.dev);
+TEST_DEV_REGISTERED(s_noinit, 'n', nullptr, nullptr);
 
 // a <-> b, not registered
-TEST_DEV(s_cycle_a, 'x', prv_init, nullptr, nullptr);
-TEST_DEV(s_cycle_b, 'y', prv_init, nullptr, PBL_DEVICE_DEPS(&s_cycle_a.dev));
+TEST_DEV(s_cycle_a, 'x', prv_init, nullptr);
+TEST_DEV(s_cycle_b, 'y', prv_init, nullptr);
+PBL_DEVICE_DEPENDS(s_cycle_a, &s_cycle_a.dev, &s_cycle_b.dev);
+PBL_DEVICE_DEPENDS(s_cycle_b, &s_cycle_b.dev, &s_cycle_a.dev);
 
 // listed needs gpio and absent's sibling pmic without naming them in its definition
-TEST_DEV(s_listed, 'l', prv_init, nullptr, nullptr);
+TEST_DEV(s_listed, 'l', prv_init, nullptr);
 PBL_DEVICE_DEPENDS(s_listed, &s_listed.dev, &s_gpio.dev, &s_pmic.dev);
 
 // Two registered devices of a class and an unregistered one
 static PBL_DEVICE_CLASS_DEFINE(s_port_class, "port");
 static PBL_DEVICE_CLASS_DEFINE(s_empty_class, "empty");
 
-#define TEST_CLASS_DEV(sym, _name)                                                      \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
-  static struct test_dev sym = {                                                        \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, nullptr, &s_port_class), \
+#define TEST_CLASS_DEV(sym, _name)                                             \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                \
+  static struct test_dev sym = {                                               \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, nullptr, &s_port_class), \
   }
 
 TEST_CLASS_DEV(s_port_a, "port_a");
@@ -172,9 +176,7 @@ void test_device__absent(void) {
 }
 
 void test_device__cycle_asserts(void) {
-  s_cycle_a.dev.deps = PBL_DEVICE_DEPS(&s_cycle_b.dev);
   cl_assert_panic(pbl_device_init(&s_cycle_a.dev));
-  s_cycle_a.dev.deps = nullptr;
 }
 
 void test_device__class_foreach(void) {

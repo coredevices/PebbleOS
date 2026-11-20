@@ -51,6 +51,5 @@ static const struct pbl_temp_ops s_ops = {
 };
 
 PBL_TEMP_STATE_DEFINE(pbl_temp_nrf5);
-const struct pbl_temp pbl_temp_nrf5 =
-    PBL_TEMP_INIT(pbl_temp_nrf5, "temp", nullptr, nullptr, &s_ops);
+const struct pbl_temp pbl_temp_nrf5 = PBL_TEMP_INIT(pbl_temp_nrf5, "temp", nullptr, &s_ops);
 PBL_DEVICE_REGISTER(pbl_temp_nrf5, &pbl_temp_nrf5.dev);

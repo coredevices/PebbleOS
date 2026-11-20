@@ -95,7 +95,7 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
     __VA_OPT__(.cells = sym##_otp_cells, .num_cells = ARRAY_LENGTH(sym##_otp_cells))    \
   };                                                                                    \
   PBL_DEVICE_INSTANCE(sym, struct pbl_flash_spi_nor, struct pbl_flash, flash) {         \
-    .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, nullptr, &pbl_flash_spi_nor_ops,  \
+    .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, &pbl_flash_spi_nor_ops,           \
                             &sym##_data.geometry, &sym##_data.otp, &sym##_otp_layout),  \
     .data = &sym##_data, .bus = (_bus), .part = (_part), .vcc = (_vcc),                 \
   }

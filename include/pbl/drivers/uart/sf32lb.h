@@ -88,7 +88,7 @@ extern const struct pbl_uart_ops pbl_uart_sf32lb_ops;
   __VA_OPT__(                                                                                      \
       static uint8_t sym##_rx_buf[PBL_UART_SF32LB_RX_BUF_SIZE] PBL_ALIGNED(PBL_DCACHE_LINE_SIZE);) \
   PBL_DEVICE_INSTANCE(sym, struct pbl_uart_sf32lb, struct pbl_uart, uart){                         \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_sf32lb_ops, _baudrate, nullptr),                   \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_sf32lb_ops, _baudrate),                            \
     .state = &sym##_sf32lb_state,                                                                  \
     .base = (_base),                                                                               \
     .irq = (_irq),                                                                                 \

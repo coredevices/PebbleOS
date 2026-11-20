@@ -123,12 +123,12 @@ extern const struct pbl_device_class pbl_als_class;
  * @param _ops Driver operations.
  * @param _scale Lux calibration, or NULL.
  */
-#define PBL_ALS_INIT(sym, _name, _parent, _ops, _scale)                                           \
-  {                                                                                               \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_als_dev_init, _parent, nullptr, &pbl_als_class), \
-    .ops = (_ops),                                                                                \
-    .state = &sym##_als_state,                                                                    \
-    .scale = (_scale),                                                                            \
+#define PBL_ALS_INIT(sym, _name, _parent, _ops, _scale)                                  \
+  {                                                                                      \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_als_dev_init, _parent, &pbl_als_class), \
+    .ops = (_ops),                                                                       \
+    .state = &sym##_als_state,                                                           \
+    .scale = (_scale),                                                                   \
   }
 
 /** @cond INTERNAL_HIDDEN */

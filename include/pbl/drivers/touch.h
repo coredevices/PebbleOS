@@ -132,13 +132,12 @@ static inline const struct pbl_touch_props *pbl_touch_get_props(const struct pbl
  * @param _ops Driver operations.
  * @param ... Properties, designated initializers of struct pbl_touch_props.
  */
-#define PBL_TOUCH_INIT(sym, _name, _parent, _ops, ...)                                             \
-  {                                                                                                \
-    .dev =                                                                                         \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_touch_dev_init, _parent, nullptr, &pbl_touch_class), \
-    .ops = (_ops),                                                                                 \
-    .state = &sym##_touch_state,                                                                   \
-    .props = {__VA_ARGS__},                                                                        \
+#define PBL_TOUCH_INIT(sym, _name, _parent, _ops, ...)                                       \
+  {                                                                                          \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_touch_dev_init, _parent, &pbl_touch_class), \
+    .ops = (_ops),                                                                           \
+    .state = &sym##_touch_state,                                                             \
+    .props = {__VA_ARGS__},                                                                  \
   }
 
 /**

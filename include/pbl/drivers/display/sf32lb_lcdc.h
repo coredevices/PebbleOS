@@ -92,7 +92,7 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                  \
   static struct pbl_display_sf32lb_lcdc_state sym##_lcdc_state;                                   \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_sf32lb_lcdc, struct pbl_display, disp){             \
-    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sf32lb_lcdc_ops, nullptr, _width, _height,  \
+    .disp = PBL_DISPLAY_INIT(sym, _name, &pbl_display_sf32lb_lcdc_ops, _width, _height,           \
                              PBL_DISPLAY_FORMAT_ARGB2222, (_rotation) == 180,                     \
                              .round_mask = (_round_mask)),                                        \
     .state = &sym##_lcdc_state,                                                                   \

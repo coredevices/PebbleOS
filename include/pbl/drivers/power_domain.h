@@ -73,13 +73,12 @@ extern const struct pbl_device_class pbl_power_domain_provider_class;
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_POWER_DOMAIN_PROVIDER_INIT(sym, _name, _init, _parent, _ops) \
-  {                                                                      \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr,    \
-                                 &pbl_power_domain_provider_class),      \
-    .ops = (_ops),                                                       \
-    .levels = sym##_pd_levels,                                           \
-    .num_domains = sizeof(sym##_pd_levels) / sizeof(sym##_pd_levels[0]), \
+#define PBL_POWER_DOMAIN_PROVIDER_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                                             \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_power_domain_provider_class), \
+    .ops = (_ops),                                                                              \
+    .levels = sym##_pd_levels,                                                                  \
+    .num_domains = sizeof(sym##_pd_levels) / sizeof(sym##_pd_levels[0]),                        \
   }
 
 /** @brief A power domain, as used by a consumer. */

@@ -172,12 +172,12 @@ struct pbl_dma_controller {
  * @param _init Device init function, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_DMA_CONTROLLER_INIT(sym, _name, _init, _ops)                               \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, nullptr, &pbl_dma_class), \
-    .ops = (_ops),                                                                     \
-    .chans = sym##_dma_chans,                                                          \
-    .num_channels = sizeof(sym##_dma_chans) / sizeof(sym##_dma_chans[0]),              \
+#define PBL_DMA_CONTROLLER_INIT(sym, _name, _init, _ops)                      \
+  {                                                                           \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_dma_class), \
+    .ops = (_ops),                                                            \
+    .chans = sym##_dma_chans,                                                 \
+    .num_channels = sizeof(sym##_dma_chans) / sizeof(sym##_dma_chans[0]),     \
   }
 
 /**

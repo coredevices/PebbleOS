@@ -267,13 +267,12 @@ struct pbl_spi_mem {
  * @param _ops Driver operations.
  * @param _flags Flags, @c PBL_SPI_MEM_*.
  */
-#define PBL_SPI_MEM_INIT(sym, _name, _parent, _ops, _flags)                          \
-  {                                                                                  \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_mem_dev_init, _parent, nullptr, \
-                                 &pbl_spi_mem_class),                                \
-    .ops = (_ops),                                                                   \
-    .state = &sym##_spi_mem_state,                                                   \
-    .flags = (_flags),                                                               \
+#define PBL_SPI_MEM_INIT(sym, _name, _parent, _ops, _flags)                                      \
+  {                                                                                              \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_mem_dev_init, _parent, &pbl_spi_mem_class), \
+    .ops = (_ops),                                                                               \
+    .state = &sym##_spi_mem_state,                                                               \
+    .flags = (_flags),                                                                           \
   }
 
 /**

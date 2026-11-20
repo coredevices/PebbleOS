@@ -36,11 +36,10 @@ extern const struct pbl_ram_ops pbl_ram_qemu_ops;
  * @param _base CPU address of the memory.
  * @param _size Size of the memory, in bytes.
  */
-#define PBL_RAM_QEMU_DEFINE(sym, _name, _base, _size)                                      \
-  PBL_RAM_STATE_DEFINE(sym);                                                               \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_ram_qemu, struct pbl_ram, ram) {                     \
-    .ram = PBL_RAM_INIT(sym, _name, nullptr, nullptr, &pbl_ram_qemu_ops), .base = (_base), \
-    .size = (_size),                                                                       \
+#define PBL_RAM_QEMU_DEFINE(sym, _name, _base, _size)                                              \
+  PBL_RAM_STATE_DEFINE(sym);                                                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_ram_qemu, struct pbl_ram, ram) {                             \
+    .ram = PBL_RAM_INIT(sym, _name, nullptr, &pbl_ram_qemu_ops), .base = (_base), .size = (_size), \
   }
 
 /** @} */

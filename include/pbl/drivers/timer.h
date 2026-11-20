@@ -91,11 +91,11 @@ struct pbl_clockevent {
  * @param _ops Driver operations.
  * @param _bits Counter width.
  */
-#define PBL_CLOCKSOURCE_INIT(sym, _name, _init, _ops, _bits)                                   \
-  {                                                                                            \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, nullptr, &pbl_clocksource_class), \
-    .ops = (_ops),                                                                             \
-    .mask = (uint32_t)((1ULL << (_bits)) - 1U),                                                \
+#define PBL_CLOCKSOURCE_INIT(sym, _name, _init, _ops, _bits)                          \
+  {                                                                                   \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_clocksource_class), \
+    .ops = (_ops),                                                                    \
+    .mask = (uint32_t)((1ULL << (_bits)) - 1U),                                       \
   }
 
 /**
@@ -108,12 +108,12 @@ struct pbl_clockevent {
  * @param _min Shortest delay, in cycles.
  * @param _max Longest delay, in cycles.
  */
-#define PBL_CLOCKEVENT_INIT(sym, _name, _init, _ops, _min, _max)                              \
-  {                                                                                           \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, nullptr, &pbl_clockevent_class), \
-    .ops = (_ops),                                                                            \
-    .min_delta = (_min),                                                                      \
-    .max_delta = (_max),                                                                      \
+#define PBL_CLOCKEVENT_INIT(sym, _name, _init, _ops, _min, _max)                     \
+  {                                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, nullptr, &pbl_clockevent_class), \
+    .ops = (_ops),                                                                   \
+    .min_delta = (_min),                                                             \
+    .max_delta = (_max),                                                             \
   }
 
 /** @cond INTERNAL_HIDDEN */

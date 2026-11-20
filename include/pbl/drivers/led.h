@@ -51,10 +51,10 @@ extern const struct pbl_device_class pbl_led_class;
  * @param _parent Parent device, e.g. the bus of the controller, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_LED_INIT(sym, _name, _init, _parent, _ops)                                 \
-  {                                                                                    \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_led_class), \
-    .ops = (_ops),                                                                     \
+#define PBL_LED_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                           \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_led_class), \
+    .ops = (_ops),                                                            \
   }
 
 /**

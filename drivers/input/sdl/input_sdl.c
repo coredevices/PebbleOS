@@ -42,5 +42,5 @@ static int prv_init(const struct pbl_device *dev) {
 
 PBL_DEVICE_STATE_DEFINE(input_sdl);
 static const struct pbl_device input_sdl =
-    PBL_DEVICE_INIT(input_sdl, "input_sdl", prv_init, nullptr, nullptr);
+    PBL_DEVICE_INIT(input_sdl, "input_sdl", prv_init, nullptr);
 PBL_DEVICE_REGISTER(input_sdl, &input_sdl);

@@ -35,10 +35,6 @@ static int prv_init_deps(const struct pbl_device *dev) {
     return -ENODEV;
   }
 
-  if (dev->deps != nullptr && prv_init_list(dev, dev->deps) != 0) {
-    return -ENODEV;
-  }
-
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_device_depends, dev_deps, d) {
     if (d->dev == dev && prv_init_list(dev, d->deps) != 0) {
       return -ENODEV;

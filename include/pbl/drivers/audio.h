@@ -295,10 +295,10 @@ extern const struct pbl_device_class pbl_audio_amp_class;
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_AUDIO_CODEC_INIT(sym, _name, _init, _parent, _ops)                                 \
-  {                                                                                            \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_audio_codec_class), \
-    .ops = (_ops),                                                                             \
+#define PBL_AUDIO_CODEC_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                                   \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_audio_codec_class), \
+    .ops = (_ops),                                                                    \
   }
 
 /**
@@ -310,10 +310,10 @@ extern const struct pbl_device_class pbl_audio_amp_class;
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_AUDIO_AMP_INIT(sym, _name, _init, _parent, _ops)                                 \
-  {                                                                                          \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_audio_amp_class), \
-    .ops = (_ops),                                                                           \
+#define PBL_AUDIO_AMP_INIT(sym, _name, _init, _parent, _ops)                        \
+  {                                                                                 \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, &pbl_audio_amp_class), \
+    .ops = (_ops),                                                                  \
   }
 
 /** @brief What a device is wired to. */
@@ -402,15 +402,14 @@ extern const struct pbl_audio *const MIC;
  * @param _name Device name.
  * @param _dir Direction, one of @ref pbl_audio_dir.
  * @param _ops Driver operations.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_AUDIO_DAI_INIT(sym, _name, _dir, _ops, _deps)                            \
-  {                                                                                  \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, nullptr, _deps, \
-                                 &pbl_audio_dai_class),                              \
-    .ops = (_ops),                                                                   \
-    .state = &sym##_dai_state,                                                       \
-    .dir = (_dir),                                                                   \
+#define PBL_AUDIO_DAI_INIT(sym, _name, _dir, _ops)                                                \
+  {                                                                                               \
+    .dev =                                                                                        \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, nullptr, &pbl_audio_dai_class), \
+    .ops = (_ops),                                                                                \
+    .state = &sym##_dai_state,                                                                    \
+    .dir = (_dir),                                                                                \
   }
 
 /**
@@ -424,21 +423,20 @@ extern const struct pbl_audio *const MIC;
  * @param _fmt Link framing, @ref PBL_AUDIO_FMT_I2S or 0.
  * @param _clocks Who drives the clocks, @ref PBL_AUDIO_FMT_CODEC_MASTER or 0.
  */
-#define PBL_AUDIO_CARD_DEFINE(sym, _name, _dai, _codec, _amp, _fmt, _clocks)            \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
-  static struct pbl_audio_state sym##_audio_state;                                      \
-  static const struct pbl_audio_link sym##_link = {                                     \
-    .codec = (_codec),                                                                  \
-    .amp = (_amp),                                                                      \
-    .fmt = (_fmt) | (_clocks),                                                          \
-  };                                                                                    \
-  const struct pbl_audio sym = {                                                        \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dev_init, &(_dai)->dev, nullptr, \
-                                 &pbl_audio_class),                                     \
-    .dai = (_dai),                                                                      \
-    .state = &sym##_audio_state,                                                        \
-    .link = &sym##_link,                                                                \
-  };                                                                                    \
+#define PBL_AUDIO_CARD_DEFINE(sym, _name, _dai, _codec, _amp, _fmt, _clocks)                      \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
+  static struct pbl_audio_state sym##_audio_state;                                                \
+  static const struct pbl_audio_link sym##_link = {                                               \
+    .codec = (_codec),                                                                            \
+    .amp = (_amp),                                                                                \
+    .fmt = (_fmt) | (_clocks),                                                                    \
+  };                                                                                              \
+  const struct pbl_audio sym = {                                                                  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dev_init, &(_dai)->dev, &pbl_audio_class), \
+    .dai = (_dai),                                                                                \
+    .state = &sym##_audio_state,                                                                  \
+    .link = &sym##_link,                                                                          \
+  };                                                                                              \
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 /**

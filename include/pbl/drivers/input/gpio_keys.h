@@ -94,13 +94,13 @@ int pbl_gpio_keys_init(const struct pbl_device *dev);
  * @param _name Device name.
  * @param ... Keys, each a @ref PBL_GPIO_KEYS_KEY.
  */
-#define PBL_GPIO_KEYS_DEFINE(sym, _name, ...)                                                     \
-  static const struct pbl_gpio_keys_key sym##_keys[] = {__VA_ARGS__};                             \
-  static struct pbl_gpio_keys_key_state sym##_key_state[ARRAY_LENGTH(sym##_keys)];                \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
-  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_gpio_keys) {                                            \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_gpio_keys_init, nullptr, nullptr), .keys = sym##_keys, \
-    .state = sym##_key_state, .num_keys = ARRAY_LENGTH(sym##_keys),                               \
+#define PBL_GPIO_KEYS_DEFINE(sym, _name, ...)                                            \
+  static const struct pbl_gpio_keys_key sym##_keys[] = {__VA_ARGS__};                    \
+  static struct pbl_gpio_keys_key_state sym##_key_state[ARRAY_LENGTH(sym##_keys)];       \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                          \
+  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_gpio_keys) {                                   \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_gpio_keys_init, nullptr), .keys = sym##_keys, \
+    .state = sym##_key_state, .num_keys = ARRAY_LENGTH(sym##_keys),                      \
   }
 
 /** @} */

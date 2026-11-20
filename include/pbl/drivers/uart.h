@@ -159,14 +159,13 @@ struct pbl_uart {
  * @param _name Name.
  * @param _ops Driver operations.
  * @param _baudrate Initial baud rate, in bits per second.
- * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_UART_INIT(sym, _name, _ops, _baudrate, _deps)                                         \
-  {                                                                                               \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_uart_dev_init, nullptr, _deps, &pbl_uart_class), \
-    .ops = (_ops),                                                                                \
-    .state = &sym##_uart_state,                                                                   \
-    .baudrate = (_baudrate),                                                                      \
+#define PBL_UART_INIT(sym, _name, _ops, _baudrate)                                         \
+  {                                                                                        \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_uart_dev_init, nullptr, &pbl_uart_class), \
+    .ops = (_ops),                                                                         \
+    .state = &sym##_uart_state,                                                            \
+    .baudrate = (_baudrate),                                                               \
   }
 
 /**

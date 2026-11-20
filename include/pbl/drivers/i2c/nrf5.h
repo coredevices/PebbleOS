@@ -82,7 +82,7 @@ extern const struct pbl_i2c_bus_ops pbl_i2c_nrf5_ops;
   PBL_I2C_BUS_STATE_DEFINE(sym);                                            \
   static struct pbl_i2c_nrf5_state sym##_nrf5_state;                        \
   PBL_DEVICE_INSTANCE(sym, struct pbl_i2c_nrf5, struct pbl_i2c_bus, bus){   \
-    .bus = PBL_I2C_BUS_INIT(sym, _name, &pbl_i2c_nrf5_ops, nullptr),        \
+    .bus = PBL_I2C_BUS_INIT(sym, _name, &pbl_i2c_nrf5_ops),                 \
     .state = &sym##_nrf5_state,                                             \
     .base = (_base),                                                        \
     .irq = (_irq),                                                          \

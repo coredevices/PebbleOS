@@ -54,7 +54,7 @@ static const struct pbl_ram_ops s_ops = {
 };
 
 PBL_RAM_STATE_DEFINE(s_ram);
-static const struct pbl_ram s_ram = PBL_RAM_INIT(s_ram, "ram", nullptr, nullptr, &s_ops);
+static const struct pbl_ram s_ram = PBL_RAM_INIT(s_ram, "ram", nullptr, &s_ops);
 
 static void prv_deep_sleep(void) {
   pbl_ram_suspend(&s_ram);

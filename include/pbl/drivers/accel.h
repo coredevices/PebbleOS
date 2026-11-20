@@ -200,12 +200,11 @@ extern const struct pbl_device_class pbl_accel_class;
  * @param _parent Parent device, such as the I2C bus, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_ACCEL_INIT(sym, _name, _parent, _ops)                                                  \
-  {                                                                                                \
-    .dev =                                                                                         \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_accel_dev_init, _parent, nullptr, &pbl_accel_class), \
-    .ops = (_ops),                                                                                 \
-    .state = &sym##_accel_state,                                                                   \
+#define PBL_ACCEL_INIT(sym, _name, _parent, _ops)                                            \
+  {                                                                                          \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_accel_dev_init, _parent, &pbl_accel_class), \
+    .ops = (_ops),                                                                           \
+    .state = &sym##_accel_state,                                                             \
   }
 
 /**

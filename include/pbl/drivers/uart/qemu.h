@@ -41,13 +41,13 @@ extern const struct pbl_uart_ops pbl_uart_qemu_ops;
  * @param _irq Interrupt line.
  * @param _baudrate Initial baud rate, in bits per second.
  */
-#define PBL_UART_QEMU_DEFINE(sym, _name, _base, _irq, _baudrate)               \
-  PBL_UART_STATE_DEFINE(sym);                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_qemu, struct pbl_uart, uart){       \
-    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_qemu_ops, _baudrate, nullptr), \
-    .base = (_base),                                                           \
-    .irqn = (_irq),                                                            \
-  };                                                                           \
+#define PBL_UART_QEMU_DEFINE(sym, _name, _base, _irq, _baudrate)         \
+  PBL_UART_STATE_DEFINE(sym);                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_uart_qemu, struct pbl_uart, uart){ \
+    .uart = PBL_UART_INIT(sym, _name, &pbl_uart_qemu_ops, _baudrate),    \
+    .base = (_base),                                                     \
+    .irqn = (_irq),                                                      \
+  };                                                                     \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UART_QEMU_IRQ_PRIO, pbl_uart_qemu_irq_handler, &sym##_inst, 0)
 
 /**
