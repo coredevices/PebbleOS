@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: nordic,npm1300
-config: PMIC_NPM1300
-class: npm1300_charger
-define: PBL_NPM1300_CHARGER_DEFINE
+config: CHARGER_NPM1300
+class: charger
+define: PBL_CHARGER_NPM1300_DEFINE
 symbol: "{sym}_charger"
 args:
   - self: npm1300

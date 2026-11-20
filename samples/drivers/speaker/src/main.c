@@ -108,7 +108,7 @@ int main(void) {
 
   printf("speaker: playing %d notes at %d Hz\n", (int)ARRAY_LENGTH(s_notes), (int)RATE);
 
-#ifdef CONFIG_BATTERY_HIGH_LOAD
+#ifdef CONFIG_CHARGER_HIGH_LOAD
   /* The speaker draws more than the battery gives by default. */
   (void)battery_high_load_request();
 #endif
@@ -119,7 +119,7 @@ int main(void) {
     (void)pbl_audio_stop(SPEAKER);
   }
 
-#ifdef CONFIG_BATTERY_HIGH_LOAD
+#ifdef CONFIG_CHARGER_HIGH_LOAD
   (void)battery_high_load_release();
 #endif
 

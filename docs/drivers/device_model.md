@@ -106,7 +106,7 @@ in the subsystem of its class.
 | Part | Driver | Device |
 | --- | --- | --- |
 | Core | `drivers/mfd/npm1300.c` | `struct pbl_npm1300` |
-| Charger | `drivers/pmic/npm1300.c` | `struct pbl_npm1300_charger` |
+| Charger | `drivers/charger/npm1300.c` | `struct pbl_charger_npm1300` (a `struct pbl_charger`) |
 | GPIOs | `drivers/gpio/npm1300.c` | `struct pbl_npm1300_gpio` (a `struct pbl_gpio_port`) |
 | Rails | `drivers/regulator/npm1300.c` | `struct pbl_npm1300_regulator` (a `struct pbl_regulator`) |
 

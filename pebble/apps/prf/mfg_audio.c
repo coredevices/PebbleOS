@@ -196,7 +196,7 @@ static struct prv_session *s_playback;
 
 //! The speaker draws more than the default battery discharge limit allows
 static void prv_high_load(bool on) {
-#ifdef CONFIG_BATTERY_HIGH_LOAD
+#ifdef CONFIG_CHARGER_HIGH_LOAD
   if (on) {
     (void)battery_high_load_request();
   } else {

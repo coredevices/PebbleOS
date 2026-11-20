@@ -37,3 +37,6 @@ die_temp:
 rtc:
   symbol: POSIX_RTC
   include: pbl/drivers/rtc/posix.h
+charger:
+  symbol: SIM_CHARGER
+  include: pbl/drivers/charger/sim.h

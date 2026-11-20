@@ -12,7 +12,7 @@
  * @ingroup drivers
  * @brief Battery and charger driver interface.
  *
- * Implemented by the PMIC driver. The battery state service builds state of charge and
+ * Implemented on the board's charger. The battery state service builds state of charge and
  * charging state on top of it.
  * @{
  */
@@ -209,7 +209,7 @@ int battery_charge_status_get(BatteryChargeStatus *status);
  * @brief Request a high discharge current, e.g. for the speaker.
  *
  * Requests nest: the battery may supply a high current until each request is released. Provided
- * by drivers that select @c BATTERY_HIGH_LOAD.
+ * with chargers that select @c CHARGER_HIGH_LOAD.
  *
  * @return 0 or a negative errno.
  */

@@ -18,18 +18,8 @@
  * The core is a struct pbl_npm1300 device on its I2C bus. It owns the register access, under a
  * lock so its cells cannot interleave read-modify-write sequences, and brings its cells up from
  * its init. Each cell is a child device in its own subsystem: the charger
- * (@ref drivers_pmic_npm1300), the GPIO port (@ref drivers_gpio_npm1300) and one regulator per
+ * (@ref drivers_charger), the GPIO port (@ref drivers_gpio_npm1300) and one regulator per
  * rail (@ref drivers_regulator_npm1300).
- *
- * @code{.c}
- * PBL_NPM1300_DEFINE(s_npm1300, &s_i2c1, 0x6B);
- * PBL_BATTERY_DEFINE(s_battery, 0, 0, 128000, 12800, 4200000);
- * PBL_NPM1300_CHARGER_DEFINE(s_npm1300_charger, &s_npm1300, PBL_IRQ_SPEC(&s_gpio1_intc, 12, 1),
- *                            &s_battery, 4000000, 10000, 3380, 45, 200000, 0, 0, true);
- * PBL_NPM1300_GPIO_DEFINE(s_npm1300_gpio, &s_npm1300);
- * PBL_NPM1300_REGULATOR_DEFINE(s_ldo2, "ldo2", &s_npm1300, PBL_NPM1300_LDSW2, 3300000, true, 0,
- *                              false);
- * @endcode
  * @{
  */
 

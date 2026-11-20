@@ -10,7 +10,7 @@ devices they do not emulate, and any board can swap one in for testing.
 | Accelerometer | `ACCEL_SIM` | `SIM_ACCEL` | `pbl/drivers/imu/sim.h` |
 | Ambient light | `ALS_SIM` | `SIM_ALS` | `pbl/drivers/als/sim.h` |
 | Audio capture | `AUDIO_SIM_MIC` | `SIM_MIC` | `pbl/drivers/audio/sim.h` |
-| Battery | `BATTERY_SIM` | | `pbl/drivers/battery/sim.h` |
+| Charger | `CHARGER_SIM` | `SIM_CHARGER` | `pbl/drivers/charger/sim.h` |
 | Magnetometer | `MAG_SIM` | `SIM_MAG` | `pbl/drivers/imu/sim.h` |
 | Temperature | `TEMP_SIM` | `SIM_TEMP` | `pbl/drivers/temp/sim.h` |
 | Vibration | `VIBE_SIM` | `SIM_VIBE` | `pbl/drivers/vibe/sim.h` |

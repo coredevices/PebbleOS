@@ -1,12 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config BATTERY_HIGH_LOAD
-    bool
-    help
-      The battery driver implements battery_high_load_request() and
-      battery_high_load_release().
-
 config BATTERY_SIMPLE
     bool
     default y
@@ -15,18 +9,8 @@ config BATTERY_SIMPLE
       The battery cell described in the devicetree, for chargers and fuel
       gauges to read.
 
-menuconfig BATTERY
+config BATTERY
     bool "Battery"
+    depends on CHARGER
     help
-      Battery Drivers
-
-if BATTERY
-
-config BATTERY_SIM
-    bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
-    help
-      Simulated battery, set through its simulator API
-      (pbl/drivers/battery/sim.h).
-
-endif # BATTERY
+      The battery API, on top of the board's charger.

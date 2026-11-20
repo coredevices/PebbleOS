@@ -2,8 +2,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/board.h>
+#include <pbl/drivers/gpio.h>
 #include <pbl/drivers/gpio/sf32lb.h>
-#include <pbl/drivers/pmic/npm1300.h>
+#include <pbl/drivers/i2c.h>
+#include <pbl/drivers/intc.h>
 #include <pbl/kernel/irq.h>
 
 #ifdef CONFIG_HRM
@@ -14,10 +16,6 @@
 
 const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 3, 2, 1};
 const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
-
-#ifdef CONFIG_PMIC_NPM1300
-const struct pbl_npm1300_charger *const NPM1300_CHARGER = &dt_pmic_charger;
-#endif
 
 #ifdef CONFIG_HRM
 static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&dt_i2c4, 0x14);
