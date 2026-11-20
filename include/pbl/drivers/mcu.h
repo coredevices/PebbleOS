@@ -6,8 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/system/status_codes.h>
-
 /**
  * @defgroup drivers_mcu MCU information
  * @ingroup drivers
@@ -20,9 +18,10 @@
  *
  * @param[out] buf Buffer receiving the ID.
  * @param[in,out] buf_sz Size of @p buf in bytes; set to the ID length on success.
- * @retval S_SUCCESS ID read.
- * @retval E_OUT_OF_MEMORY @p buf is too small.
+ * @retval 0 ID read.
+ * @retval -ENOSPC @p buf is too small.
+ * @retval -errno Other errors.
  */
-StatusCode mcu_get_serial(void *buf, size_t *buf_sz);
+int mcu_get_serial(void *buf, size_t *buf_sz);
 
 /** @} */
