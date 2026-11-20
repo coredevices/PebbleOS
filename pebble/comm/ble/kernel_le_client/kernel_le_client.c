@@ -9,7 +9,6 @@
 #if defined(CONFIG_BT_AMS_CLIENT)
 #include <comm/ble/kernel_le_client/ams/ams.h>
 #endif
-#include <comm/ble/kernel_le_client/app_launch/app_launch_definition.h>
 #include <comm/ble/kernel_le_client/dis/dis_definition.h>
 #if UNITTEST
 #include <comm/ble/kernel_le_client/test/test_definition.h>
@@ -46,7 +45,6 @@ enum {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   KernelLEClientPPoGATT,
 #endif
-  KernelLEClientAppLaunch,
   KernelLEClientDIS,
 #endif
   KernelLEClientNum,
@@ -123,18 +121,6 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
         .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
       },
 #endif
-  [KernelLEClientAppLaunch] =
-      {
-        .debug_name = "Lnch",
-        .service_uuid = &s_app_launch_service_uuid,
-        .characteristic_uuids = s_app_launch_characteristic_uuids,
-        .num_characteristics = AppLaunchCharacteristicNum,
-        .handle_service_discovered = app_launch_handle_service_discovered,
-        .handle_service_removed = app_launch_handle_service_removed,
-        .invalidate_all_references = app_launch_invalidate_all_references,
-        .can_handle_characteristic = app_launch_can_handle_characteristic,
-        .handle_read_or_notification = nullptr,
-      },
   [KernelLEClientDIS] = {
     .debug_name = "DIS",
     .service_uuid = &s_dis_service_uuid,
@@ -432,7 +418,6 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 #if defined(CONFIG_BT_ANCS_CLIENT)
     ancs_destroy();
 #endif
-    app_launch_handle_disconnection();
     gatt_client_op_cleanup();
   }
 }
