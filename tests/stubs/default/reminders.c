@@ -3,14 +3,13 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/timeline/reminders.h>
-#include <pbl/system/status_codes.h>
 
-status_t PBL_WEAK reminders_update_timer(void) {
-  return S_SUCCESS;
+int PBL_WEAK reminders_update_timer(void) {
+  return 0;
 }
 
-status_t PBL_WEAK reminders_init(void) {
-  return S_SUCCESS;
+int PBL_WEAK reminders_init(void) {
+  return 0;
 }
 
 void PBL_WEAK reminders_handle_reminder_updated(const Uuid *reminder_id) {
@@ -21,6 +20,6 @@ bool PBL_WEAK reminders_can_snooze(Reminder *reminder) {
   return false;
 }
 
-status_t PBL_WEAK reminders_snooze(Reminder *reminder) {
-  return S_SUCCESS;
+int PBL_WEAK reminders_snooze(Reminder *reminder) {
+  return 0;
 }

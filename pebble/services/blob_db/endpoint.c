@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/analytics/analytics.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
@@ -10,7 +12,6 @@
 #include <pbl/services/blob_db/endpoint_private.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
 #include <pbl/services/bluetooth/bt_settings.h>
-#include <pbl/system/status_codes.h>
 
 #include <kernel/pebble_tasks.h>
 
@@ -78,19 +79,23 @@ static void prv_send_response(struct pbl_pp_session *session, BlobDBToken token,
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-static BlobDBResponse prv_interpret_db_ret_val(status_t ret_val) {
+static BlobDBResponse prv_interpret_db_ret_val(int ret_val) {
   switch (ret_val) {
-    case S_SUCCESS:
+    case 0:
       return BLOB_DB_SUCCESS;
-    case E_DOES_NOT_EXIST:
+    case -ENOENT:
       return BLOB_DB_KEY_DOES_NOT_EXIST;
-    case E_RANGE:
+    case -ENODEV:
+    case -ERANGE:
+    case -EFBIG:
       return BLOB_DB_INVALID_DATABASE_ID;
-    case E_INVALID_ARGUMENT:
+    case -EINVAL:
+    case -ENAMETOOLONG:
       return BLOB_DB_INVALID_DATA;
-    case E_OUT_OF_STORAGE:
+    case -ENOSPC:
       return BLOB_DB_DATABASE_FULL;
-    case E_INVALID_OPERATION:
+    case -ENOTSUP:
+    case -ESTALE:
       return BLOB_DB_DATA_STALE;
     default:
       PBL_LOG_WRN("BlobDB return value caught by default case");
@@ -175,7 +180,7 @@ static void prv_handle_database_insert(struct pbl_pp_session *session, const uin
   }
 
   // perform action on database and return result
-  status_t ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
+  int ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
 
@@ -224,14 +229,14 @@ static void prv_handle_database_insert_with_timestamp(struct pbl_pp_session *ses
   // Only Settings BlobDB supports timestamped insert
   if (db_id != BlobDBIdSettings) {
     // Fall back to regular insert for other databases
-    status_t ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
+    int ret = blob_db_insert(db_id, key_bytes, key_size, value_bytes, value_size);
     prv_send_response(session, token, prv_interpret_db_ret_val(ret));
     return;
   }
 
   // Use timestamped insert for Settings - will reject if watch data is newer
-  status_t ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size, value_bytes,
-                                                        value_size, (time_t)timestamp);
+  int ret = settings_blob_db_insert_with_timestamp(key_bytes, key_size, value_bytes, value_size,
+                                                   (time_t)timestamp);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
 
@@ -262,7 +267,7 @@ static void prv_handle_database_delete(struct pbl_pp_session *session, const uin
   }
 
   // perform action on database and return result
-  status_t ret = blob_db_delete(db_id, key_bytes, key_size);
+  int ret = blob_db_delete(db_id, key_bytes, key_size);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 }
 
@@ -280,11 +285,11 @@ static void prv_handle_database_clear(struct pbl_pp_session *session, const uint
   endpoint_private_read_token_db_id(data, &token, &db_id);
 
   // perform action on database and return result
-  status_t ret = blob_db_flush(db_id);
+  int ret = blob_db_flush(db_id);
   prv_send_response(session, token, prv_interpret_db_ret_val(ret));
 
   // Mark the device as faithful after successfully flushing
-  if (ret == S_SUCCESS) {
+  if (ret == 0) {
     bt_settings_set_unfaithful(false /* We are now faithful */);
   }
 }

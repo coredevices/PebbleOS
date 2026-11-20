@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
@@ -77,81 +79,77 @@ void test_watch_app_prefs_db__insert_send_text(void) {
   const int data_len = sizeof(s_send_text_prefs);
 
   cl_assert_equal_i(
-      watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs, data_len), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), data_len);
 
   // Make sure we get back the correct data
   uint8_t send_text_prefs_out[data_len];
   cl_assert_equal_i(
-      watch_app_prefs_db_read(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, send_text_prefs_out, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_read(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, send_text_prefs_out, data_len), 0);
   cl_assert_equal_m(s_send_text_prefs, send_text_prefs_out, data_len);
 
   // Make sure we reject malformed data (not aligned to list size)
   cl_assert_equal_i(watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs,
                                               (data_len + 1)),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 
   // Make sure we reject data that is too small to hold all entries
   cl_assert_equal_i(watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs,
                                               (data_len - sizeof(SerializedSendTextContact))),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 
   // Make sure we reject keys we don't recognize
   cl_assert_equal_i(
       watch_app_prefs_db_insert(INVALID_KEY, INVALID_KEY_LEN, s_send_text_prefs, data_len),
-      E_INVALID_ARGUMENT);
+      -EINVAL);
 }
 
 void test_watch_app_prefs_db__insert_weather(void) {
   const int data_len = sizeof(s_weather_prefs);
 
   cl_assert_equal_i(
-      watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs, data_len), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(WEATHER_KEY, WEATHER_KEY_LEN), data_len);
 
   // Make sure we get back the correct data
   uint8_t weather_prefs_out[data_len];
   cl_assert_equal_i(
-      watch_app_prefs_db_read(WEATHER_KEY, WEATHER_KEY_LEN, weather_prefs_out, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_read(WEATHER_KEY, WEATHER_KEY_LEN, weather_prefs_out, data_len), 0);
   cl_assert_equal_m(s_weather_prefs, weather_prefs_out, data_len);
 
   // Make sure we reject malformed data (not aligned to list size)
   cl_assert_equal_i(
       watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs, (data_len + 1)),
-      E_INVALID_ARGUMENT);
+      -EINVAL);
 
   // Make sure we reject data that is too small to hold all entries
   cl_assert_equal_i(watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs,
                                               (data_len - sizeof(SerializedWeatherAppPrefs))),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_watch_app_prefs_db__insert_remove(void) {
   cl_assert_equal_i(watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs,
                                               sizeof(s_send_text_prefs)),
-                    S_SUCCESS);
-  cl_assert_equal_i(watch_app_prefs_db_delete(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), S_SUCCESS);
+                    0);
+  cl_assert_equal_i(watch_app_prefs_db_delete(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), 0);
 
   cl_assert_equal_i(watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs,
                                               sizeof(s_weather_prefs)),
-                    S_SUCCESS);
-  cl_assert_equal_i(watch_app_prefs_db_delete(WEATHER_KEY, WEATHER_KEY_LEN), S_SUCCESS);
+                    0);
+  cl_assert_equal_i(watch_app_prefs_db_delete(WEATHER_KEY, WEATHER_KEY_LEN), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(WEATHER_KEY, WEATHER_KEY_LEN), 0);
 }
 
 void test_watch_app_prefs_db__flush(void) {
   cl_assert_equal_i(watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs,
                                               sizeof(s_send_text_prefs)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs,
                                               sizeof(s_weather_prefs)),
-                    S_SUCCESS);
-  cl_assert_equal_i(watch_app_prefs_db_flush(), S_SUCCESS);
+                    0);
+  cl_assert_equal_i(watch_app_prefs_db_flush(), 0);
   fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(watch_app_prefs_db_get_len(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), 0);
 }
@@ -160,8 +158,7 @@ void test_watch_app_prefs_db__get_send_text(void) {
   const int data_len = sizeof(s_send_text_prefs);
 
   cl_assert_equal_i(
-      watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_insert(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN, s_send_text_prefs, data_len), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(SEND_TEXT_KEY, SEND_TEXT_KEY_LEN), data_len);
 
   SerializedSendTextPrefs *send_text_prefs_out = watch_app_prefs_get_send_text();
@@ -173,8 +170,7 @@ void test_watch_app_prefs_db__get_weather(void) {
   const int data_len = sizeof(s_weather_prefs);
 
   cl_assert_equal_i(
-      watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs, data_len),
-      S_SUCCESS);
+      watch_app_prefs_db_insert(WEATHER_KEY, WEATHER_KEY_LEN, s_weather_prefs, data_len), 0);
   cl_assert_equal_i(watch_app_prefs_db_get_len(WEATHER_KEY, WEATHER_KEY_LEN), data_len);
 
   SerializedWeatherAppPrefs *weather_prefs_out = watch_app_prefs_get_weather();

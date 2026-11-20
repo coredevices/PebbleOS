@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/blob_db/notif_db.h>
@@ -12,9 +14,9 @@ PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 void notif_db_init(void) {
 }
 
-status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (key_len != UUID_SIZE || val_len < (int)sizeof(SerializedTimelineItemHeader)) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // [FBO] this is a little bit silly: we deserialize the item to then re-serialize it in
@@ -27,7 +29,7 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
 
   TimelineItem notification = {};
   if (!timeline_item_deserialize_item(&notification, hdr, payload)) {
-    return E_INTERNAL;
+    return -EIO;
   }
 
   Uuid *id = pbl_malloc_check(sizeof(Uuid));
@@ -59,7 +61,7 @@ status_t notif_db_insert(const uint8_t *key, int key_len, const uint8_t *val, in
   }
 
   timeline_item_free_allocated_buffer(&notification);
-  return S_SUCCESS;
+  return 0;
 }
 
 int notif_db_get_len(const uint8_t *key, int key_len) {
@@ -70,23 +72,23 @@ int notif_db_get_len(const uint8_t *key, int key_len) {
   return notification_storage_get_len((Uuid *)key);
 }
 
-status_t notif_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
+int notif_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
   // NYI
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t notif_db_delete(const uint8_t *key, int key_len) {
+int notif_db_delete(const uint8_t *key, int key_len) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   notification_storage_remove((Uuid *)key);
   notifications_handle_notification_removed((Uuid *)key);
 
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t notif_db_flush(void) {
+int notif_db_flush(void) {
   notification_storage_reset_and_init();
-  return S_SUCCESS;
+  return 0;
 }

@@ -26,8 +26,8 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
 }
 
-status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
-  return S_SUCCESS;
+int blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
+  return 0;
 }
 
 void timeline_pin_window_push_modal(TimelineItem *item) {

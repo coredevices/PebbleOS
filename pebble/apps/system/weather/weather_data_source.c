@@ -83,12 +83,12 @@ static void prv_overlay_v4(WxDsForecast *out, int location_id) {
     return;
   }
   WeatherDBEntry *entry = app_zalloc_check(len);
-  const status_t rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
+  const int rv = weather_db_read((uint8_t *)&key, sizeof(key), (uint8_t *)entry, len);
   // Version alone isn't enough: a truncated/corrupt record can carry version==4 with a
   // v3-sized payload (weather_db_insert validates length, insert_stale does not) — reading
   // the v4 fields below would then run past the allocation. Gate on the minor-0 base size;
   // minor-1 appended fields get their own length gate below.
-  if ((rv == S_SUCCESS) && (entry->version == WEATHER_DB_CURRENT_VERSION) &&
+  if ((rv == 0) && (entry->version == WEATHER_DB_CURRENT_VERSION) &&
       (len >= (int)WEATHER_DB_V4_0_FIXED_SIZE)) {
     out->is_v4 = true;
     if (entry->today_uv_index_x10 >= 0) {

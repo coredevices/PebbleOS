@@ -37,8 +37,8 @@ bool ancs_notifications_is_bulk_action_mode_enabled(void) {
   return false;
 }
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
+int reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return 0;
 }
 
 void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,

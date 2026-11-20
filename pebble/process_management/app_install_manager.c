@@ -735,7 +735,7 @@ bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEnt
     return rv;
   } else if (app_db_exists_install_id(install_id)) {
     AppDBEntry *db_entry = pbl_malloc_check(sizeof(AppDBEntry));
-    bool rv = (app_db_get_app_entry_for_install_id(install_id, db_entry) == S_SUCCESS);
+    bool rv = (app_db_get_app_entry_for_install_id(install_id, db_entry) == 0);
     if (rv) {
       rv = prv_app_install_entry_from_app_db_entry(install_id, db_entry, entry);
     }

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/analytics/analytics.h>
@@ -13,7 +14,6 @@
 #include <pbl/services/blob_db/endpoint_private.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
 #include <pbl/services/blob_db/sync.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/testing.h>
 
 #include <kernel/pebble_tasks.h>
@@ -101,16 +101,15 @@ static void prv_handle_start_sync(struct pbl_pp_session *session, const uint8_t 
   endpoint_private_read_token_db_id(data, &token, &db_id);
   response.token = token;
 
-  status_t rv = blob_db_sync_db(db_id);
+  int rv = blob_db_sync_db(db_id);
   switch (rv) {
-    case S_SUCCESS:
-    case S_NO_ACTION_REQUIRED:
+    case 0:
       response.result = BLOB_DB_SUCCESS;
       break;
-    case E_INVALID_ARGUMENT:
+    case -EINVAL:
       response.result = BLOB_DB_INVALID_DATABASE_ID;
       break;
-    case E_BUSY:
+    case -EBUSY:
       response.result = BLOB_DB_TRY_LATER;
       break;
     default:
@@ -231,8 +230,8 @@ static void prv_handle_dirty_all(struct pbl_pp_session *session, const uint8_t *
     return;
   }
 
-  status_t ret = settings_blob_db_mark_all_dirty();
-  response.result = (ret == S_SUCCESS) ? BLOB_DB_SUCCESS : BLOB_DB_GENERAL_FAILURE;
+  int ret = settings_blob_db_mark_all_dirty();
+  response.result = (ret == 0) ? BLOB_DB_SUCCESS : BLOB_DB_GENERAL_FAILURE;
   prv_send_response(session, (uint8_t *)&response, sizeof(response));
 }
 

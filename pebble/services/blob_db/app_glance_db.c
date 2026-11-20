@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/fatal.h>
@@ -20,7 +22,6 @@
 #include <kernel/events.h>
 #include <process_management/app_install_manager.h>
 #include <resource/resource_ids.auto.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -313,10 +314,10 @@ cleanup:
   return success;
 }
 
-static status_t prv_deserialize_glance(SerializedAppGlanceHeader *serialized_glance,
-                                       size_t serialized_glance_size, AppGlance *glance_out) {
+static int prv_deserialize_glance(SerializedAppGlanceHeader *serialized_glance,
+                                  size_t serialized_glance_size, AppGlance *glance_out) {
   if (!serialized_glance || !glance_out) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Zero out the output glance
@@ -329,10 +330,10 @@ static status_t prv_deserialize_glance(SerializedAppGlanceHeader *serialized_gla
   if (!prv_slice_for_each(serialized_glance, serialized_glance_size, prv_deserialize_slice,
                           &context) ||
       context.deserialization_failed) {
-    return E_ERROR;
+    return -EIO;
   }
 
-  return S_SUCCESS;
+  return 0;
 }
 
 //////////////////////////////////
@@ -344,16 +345,16 @@ typedef struct SliceSerializationAttributeListData {
   size_t attr_list_size;
 } SliceSerializationAttributeListData;
 
-//! Returns S_SUCCESS if the provided glance was successfully serialized into serialized_glance_out
+//! Returns 0 if the provided glance was successfully serialized into serialized_glance_out
 //! and its serialized size copied to serialized_glance_size_out.
-//! @note If function returns S_SUCCESS, client must call  `pbl_free()` on the pointer provided
+//! @note If function returns 0, client must call  `pbl_free()` on the pointer provided
 //! for `serialized_glance_out`.
-static status_t prv_serialize_glance(const AppGlance *glance,
-                                     SerializedAppGlanceHeader **serialized_glance_out,
-                                     size_t *serialized_glance_size_out) {
+static int prv_serialize_glance(const AppGlance *glance,
+                                SerializedAppGlanceHeader **serialized_glance_out,
+                                size_t *serialized_glance_size_out) {
   if (!glance || (glance->num_slices > APP_GLANCE_DB_MAX_SLICES_PER_GLANCE) ||
       !serialized_glance_out || !serialized_glance_size_out) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Allocate a buffer for data about each slice's attribute list, but only if we have at least
@@ -363,11 +364,11 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   if (glance->num_slices > 0) {
     attr_lists = pbl_zalloc(sizeof(SliceSerializationAttributeListData) * glance->num_slices);
     if (!attr_lists) {
-      return E_OUT_OF_MEMORY;
+      return -ENOMEM;
     }
   }
 
-  status_t rv;
+  int rv;
 
   // Iterate over the glance slices, creating attribute lists and summing the size we need for the
   // overall serialized slice
@@ -379,7 +380,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
     if (!prv_is_slice_type_valid(current_slice->type)) {
       PBL_LOG_WRN("Tried to serialize a glance containing a slice with invalid type: %d",
                   current_slice->type);
-      rv = E_INVALID_ARGUMENT;
+      rv = -EINVAL;
       goto cleanup;
     }
 
@@ -400,7 +401,7 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   // Allocate a buffer for the serialized glance
   SerializedAppGlanceHeader *serialized_glance = pbl_zalloc(serialized_glance_size);
   if (!serialized_glance) {
-    rv = E_OUT_OF_MEMORY;
+    rv = -ENOMEM;
     goto cleanup;
   }
 
@@ -446,8 +447,8 @@ static status_t prv_serialize_glance(const AppGlance *glance,
   }
 
   // Check that we fully populated the serialized glance buffer
-  rv = (glance_buffer_cursor == glance_buffer_end) ? S_SUCCESS : E_ERROR;
-  if (rv == S_SUCCESS) {
+  rv = (glance_buffer_cursor == glance_buffer_end) ? 0 : -EIO;
+  if (rv == 0) {
     *serialized_glance_out = serialized_glance;
     *serialized_glance_size_out = serialized_glance_size;
   } else {
@@ -526,15 +527,15 @@ static bool prv_validate_slice(SerializedAppGlanceSliceHeader *serialized_slice,
 // AppGlanceDB API
 /////////////////////////
 
-status_t app_glance_db_insert_glance(const Uuid *uuid, const AppGlance *glance) {
+int app_glance_db_insert_glance(const Uuid *uuid, const AppGlance *glance) {
   if (!uuid || !glance) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   SerializedAppGlanceHeader *serialized_glance = nullptr;
   size_t serialized_glance_size = 0;
-  status_t rv = prv_serialize_glance(glance, &serialized_glance, &serialized_glance_size);
-  if (rv == S_SUCCESS) {
+  int rv = prv_serialize_glance(glance, &serialized_glance, &serialized_glance_size);
+  if (rv == 0) {
     rv = app_glance_db_insert((uint8_t *)uuid, UUID_SIZE, (uint8_t *)serialized_glance,
                               serialized_glance_size);
   }
@@ -544,9 +545,9 @@ status_t app_glance_db_insert_glance(const Uuid *uuid, const AppGlance *glance) 
   return rv;
 }
 
-status_t app_glance_db_read_glance(const Uuid *uuid, AppGlance *glance_out) {
+int app_glance_db_read_glance(const Uuid *uuid, AppGlance *glance_out) {
   if (!uuid || !glance_out) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   const uint8_t *key = (uint8_t *)uuid;
@@ -554,18 +555,18 @@ status_t app_glance_db_read_glance(const Uuid *uuid, AppGlance *glance_out) {
 
   const int serialized_glance_size = app_glance_db_get_len(key, key_size);
   if (!serialized_glance_size) {
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   } else if (serialized_glance_size < 0) {
     pbl_panic();
   }
 
   uint8_t *serialized_glance = pbl_zalloc((size_t)serialized_glance_size);
   if (!serialized_glance) {
-    return E_OUT_OF_MEMORY;
+    return -ENOMEM;
   }
 
-  status_t rv = app_glance_db_read(key, key_size, serialized_glance, serialized_glance_size);
-  if (rv != S_SUCCESS) {
+  int rv = app_glance_db_read(key, key_size, serialized_glance, serialized_glance_size);
+  if (rv != 0) {
     goto cleanup;
   }
 
@@ -577,22 +578,22 @@ cleanup:
   return rv;
 }
 
-status_t app_glance_db_read_creation_time(const Uuid *uuid, time_t *time_out) {
+int app_glance_db_read_creation_time(const Uuid *uuid, time_t *time_out) {
   if (!uuid || !time_out) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   SerializedAppGlanceHeader serialized_glance_header = {};
-  const status_t rv =
+  const int rv =
       app_glance_db_read((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&serialized_glance_header,
                          sizeof(serialized_glance_header));
-  if (rv == S_SUCCESS) {
+  if (rv == 0) {
     *time_out = serialized_glance_header.creation_time;
   }
   return rv;
 }
 
-status_t app_glance_db_delete_glance(const Uuid *uuid) {
+int app_glance_db_delete_glance(const Uuid *uuid) {
   return app_glance_db_delete((uint8_t *)uuid, UUID_SIZE);
 }
 
@@ -600,11 +601,11 @@ status_t app_glance_db_delete_glance(const Uuid *uuid) {
 // Settings helpers
 //////////////////////
 
-static status_t prv_lock_mutex_and_open_file(void) {
+static int prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
-  const status_t rv = status_from_errno(pbl_settings_open_growable(
-      &s_app_glance_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
-  if (rv != S_SUCCESS) {
+  const int rv = pbl_settings_open_growable(&s_app_glance_db.settings_file, SETTINGS_FILE_NAME,
+                                            SETTINGS_FILE_SIZE, PBL_KIB(4));
+  if (rv != 0) {
     pbl_mutex_unlock(&s_app_glance_db.mutex);
   }
   return rv;
@@ -623,27 +624,26 @@ void app_glance_db_init(void) {
   pbl_mutex_init(&s_app_glance_db.mutex);
 }
 
-status_t app_glance_db_flush(void) {
+int app_glance_db_flush(void) {
   pbl_mutex_lock(&s_app_glance_db.mutex, PBL_FOREVER);
   pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_app_glance_db.mutex);
 
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t app_glance_db_compact(void) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int app_glance_db_compact(void) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
-  rv = status_from_errno(pbl_settings_compact(&s_app_glance_db.settings_file));
+  rv = pbl_settings_compact(&s_app_glance_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }
 
-static status_t prv_validate_glance(const Uuid *app_uuid,
-                                    const SerializedAppGlanceHeader *serialized_glance,
-                                    size_t *len) {
+static int prv_validate_glance(const Uuid *app_uuid,
+                               const SerializedAppGlanceHeader *serialized_glance, size_t *len) {
   // Change this block if we support multiple app glance versions in the future
   // For now report an error if the glance's version isn't the current database version
   if (serialized_glance->version != APP_GLANCE_DB_CURRENT_VERSION) {
@@ -651,19 +651,19 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
         "Tried to insert AppGlanceDB entry with invalid version!"
         " Entry version: %" PRIu8 ", AppGlanceDB version: %u",
         serialized_glance->version, APP_GLANCE_DB_CURRENT_VERSION);
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Check that the creation_time of this new glance value is newer than any existing glance value
   SerializedAppGlanceHeader existing_glance = {};
-  status_t rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
-                                   sizeof(existing_glance));
-  if ((rv == S_SUCCESS) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
+  int rv = app_glance_db_read((uint8_t *)app_uuid, UUID_SIZE, (uint8_t *)&existing_glance,
+                              sizeof(existing_glance));
+  if ((rv == 0) && (serialized_glance->creation_time <= existing_glance.creation_time)) {
     PBL_LOG_WRN("Tried to insert AppGlanceDB entry with older creation_time (%" PRIu32
                 ")"
                 " than existing entry (%" PRIu32 ")",
                 serialized_glance->creation_time, existing_glance.creation_time);
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Validate the slices (which also records a `validated_size` we'll use to trim excess slices)
@@ -678,10 +678,10 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
   if (!iteration_succeeded) {
     PBL_LOG_WRN(
         "Tried to insert AppGlanceDB entry but failed to iterate over the serialized slices");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   } else if (validation_context.is_at_least_one_slice_invalid) {
     PBL_LOG_WRN("Tried to insert AppGlanceDB entry with at least one invalid slice");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // Trim the serialized glance of excess slices by shrinking `val_len` to `validated_size`
@@ -694,19 +694,19 @@ static status_t prv_validate_glance(const Uuid *app_uuid,
     PBL_LOG_WRN("Trimming AppGlanceDB entry of excess slices before insertion");
     *len = validation_context.validated_size;
   }
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if ((key_len != UUID_SIZE) || (val_len < (int)sizeof(SerializedAppGlanceHeader))) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   const Uuid *app_uuid = (const Uuid *)key;
   const SerializedAppGlanceHeader *serialized_glance = (const SerializedAppGlanceHeader *)val;
   size_t len = val_len;
-  status_t rv = prv_validate_glance(app_uuid, serialized_glance, &len);
-  if (rv != S_SUCCESS) {
+  int rv = prv_validate_glance(app_uuid, serialized_glance, &len);
+  if (rv != 0) {
     return rv;
   }
 
@@ -739,16 +739,16 @@ status_t app_glance_db_insert(const uint8_t *key, int key_len, const uint8_t *va
     PBL_LOG_WRN("Attempted app glance insert for an app that's not installed. UUID: %s",
                 app_uuid_string);
     pbl_free(app_uuid_string);
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
 
   rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_set(&s_app_glance_db.settings_file, key, (size_t)key_len,
-                                          serialized_glance, len));
+  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, (size_t)key_len, serialized_glance,
+                        len);
 
   prv_close_file_and_unlock_mutex();
 
@@ -760,8 +760,8 @@ int app_glance_db_get_len(const uint8_t *key, int key_len) {
     return 0;
   }
 
-  const status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  const int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return 0;
   }
 
@@ -772,19 +772,19 @@ int app_glance_db_get_len(const uint8_t *key, int key_len) {
   return length;
 }
 
-status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
+int app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
   if ((key_len != UUID_SIZE) || val_out == nullptr) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_get(&s_app_glance_db.settings_file, key, (size_t)key_len,
-                                          val_out, (size_t)val_out_len));
-  if (rv == S_SUCCESS) {
+  rv = pbl_settings_get(&s_app_glance_db.settings_file, key, (size_t)key_len, val_out,
+                        (size_t)val_out_len);
+  if (rv == 0) {
     SerializedAppGlanceHeader *serialized_app_glance = (SerializedAppGlanceHeader *)val_out;
 
     // Change this block if we support multiple app glance versions in the future
@@ -792,7 +792,7 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
       // Clear out the stale entry
       PBL_LOG_WRN("Read a AppGlanceDB entry with an outdated version; deleting it");
       pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
-      rv = E_DOES_NOT_EXIST;
+      rv = -ENOENT;
     }
   }
 
@@ -801,21 +801,20 @@ status_t app_glance_db_read(const uint8_t *key, int key_len, uint8_t *val_out, i
   return rv;
 }
 
-status_t app_glance_db_delete(const uint8_t *key, int key_len) {
+int app_glance_db_delete(const uint8_t *key, int key_len) {
   if (key_len != UUID_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
   if (pbl_settings_exists(&s_app_glance_db.settings_file, key, (size_t)key_len)) {
-    rv = status_from_errno(
-        pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len));
+    rv = pbl_settings_delete(&s_app_glance_db.settings_file, key, (size_t)key_len);
   } else {
-    rv = S_SUCCESS;
+    rv = 0;
   }
 
   prv_close_file_and_unlock_mutex();
@@ -833,17 +832,15 @@ void app_glance_db_deinit(void) {
   pbl_mutex_deinit(&s_app_glance_db.mutex);
 }
 
-status_t app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val,
-                                    int val_len) {
+int app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Quick and dirty insert which doesn't do any error checking. Used to insert stale entries
   // for testing
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(
-      pbl_settings_set(&s_app_glance_db.settings_file, key, key_len, val, val_len));
+  rv = pbl_settings_set(&s_app_glance_db.settings_file, key, key_len, val, val_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;

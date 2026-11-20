@@ -9,6 +9,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
+#include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
 #include <process_management/app_run_state.h>

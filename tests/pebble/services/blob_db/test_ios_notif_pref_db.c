@@ -211,7 +211,7 @@ void test_ios_notif_pref_db__is_dirty_insert_from_phone(void) {
   }
 
   bool is_dirty = true;
-  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   BlobDBDirtyItem *dirty_list = ios_notif_pref_db_get_dirty_list();
@@ -229,7 +229,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
   }
 
   bool is_dirty = false;
-  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), 0);
   cl_assert(is_dirty);
 
   BlobDBDirtyItem *dirty_list = ios_notif_pref_db_get_dirty_list();
@@ -242,7 +242,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
   ios_notif_pref_db_mark_synced((uint8_t *)keys[2], key_len);
 
   // We should now only have 2 dirty items
-  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), 0);
   cl_assert(is_dirty);
 
   dirty_list = ios_notif_pref_db_get_dirty_list();
@@ -254,7 +254,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
   ios_notif_pref_db_mark_synced((uint8_t *)keys[4], key_len);
 
   // And nothing should be dirty
-  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), S_SUCCESS);
+  cl_assert_equal_i(ios_notif_pref_db_is_dirty(&is_dirty), 0);
   cl_assert(!is_dirty);
 
   dirty_list = ios_notif_pref_db_get_dirty_list();

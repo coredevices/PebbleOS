@@ -238,7 +238,7 @@ static bool prv_needs_fetch(AppInstallId id, const PebbleProcessMd **md, bool is
   // previous install leaves a stale binary at this ID, whose metadata comes from its own header --
   // so without this check we would silently launch the wrong app. Drop it and fetch the real one.
   AppDBEntry entry;
-  if (*md && (app_db_get_app_entry_for_install_id(id, &entry) == S_SUCCESS) &&
+  if (*md && (app_db_get_app_entry_for_install_id(id, &entry) == 0) &&
       !uuid_equal(&(*md)->uuid, &entry.uuid)) {
     char cached_uuid[UUID_STRING_BUFFER_LENGTH];
     char expected_uuid[UUID_STRING_BUFFER_LENGTH];

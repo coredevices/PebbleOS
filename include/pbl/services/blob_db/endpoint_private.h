@@ -30,15 +30,15 @@ typedef enum PBL_PACKED {
   BLOB_DB_GENERAL_FAILURE = 0x02,
   /** Unknown or unsupported command. */
   BLOB_DB_INVALID_OPERATION = 0x03,
-  /** Invalid or disabled database (@c E_RANGE). */
+  /** Invalid or disabled database (@c -ENODEV). */
   BLOB_DB_INVALID_DATABASE_ID = 0x04,
-  /** Malformed message or rejected record (@c E_INVALID_ARGUMENT). */
+  /** Malformed message or rejected record (@c -EINVAL). */
   BLOB_DB_INVALID_DATA = 0x05,
-  /** Key not found (@c E_DOES_NOT_EXIST). */
+  /** Key not found (@c -ENOENT). */
   BLOB_DB_KEY_DOES_NOT_EXIST = 0x06,
-  /** Out of storage (@c E_OUT_OF_STORAGE). */
+  /** Out of storage (@c -ENOSPC). */
   BLOB_DB_DATABASE_FULL = 0x07,
-  /** Watch copy is newer (@c E_INVALID_OPERATION). */
+  /** Watch copy is newer (@c -ESTALE). */
   BLOB_DB_DATA_STALE = 0x08,
   /** Database not supported. */
   BLOB_DB_DB_NOT_SUPPORTED = 0x09,

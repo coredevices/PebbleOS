@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -25,7 +27,7 @@
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
 static bool s_app_cache_entry_exists = true;
@@ -33,7 +35,7 @@ bool app_cache_entry_exists(AppInstallId app_id) {
   return s_app_cache_entry_exists;
 }
 
-FAKE_VALUE_FUNC(status_t, app_cache_app_launched, AppInstallId);
+FAKE_VALUE_FUNC(int, app_cache_app_launched, AppInstallId);
 
 static AppInstallId s_app_install_id = 1;
 AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
@@ -229,13 +231,13 @@ void test_app_glance_db__blob_insertion_with_invalid_key_or_val_length_fails(voi
   cl_assert_equal_i(
       app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, invalid_key_length,
                            (uint8_t *)&s_app_glance_basic, sizeof(s_app_glance_basic)),
-      E_INVALID_ARGUMENT);
+      -EINVAL);
 
   // Invalid val length should fail
   const size_t invalid_val_size = sizeof(SerializedAppGlanceHeader) - 1;
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&s_app_glance_basic, invalid_val_size),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__basic_glance_blob_insert_and_read(void) {
@@ -243,14 +245,13 @@ void test_app_glance_db__basic_glance_blob_insert_and_read(void) {
 
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&s_app_glance_basic, glance_size),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(app_glance_db_get_len((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE),
                     glance_size);
 
   uint8_t *glance_out = pbl_malloc(glance_size);
   cl_assert_equal_i(
-      app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE, glance_out, glance_size),
-      S_SUCCESS);
+      app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE, glance_out, glance_size), 0);
   cl_assert_equal_m(glance_out, (uint8_t *)s_app_glance_basic, glance_size);
   pbl_free(glance_out);
 }
@@ -266,13 +267,13 @@ void test_app_glance_db__blob_read_with_invalid_key_length_or_null_val_out_fails
   const size_t invalid_key_length = 1337;
   cl_assert_equal_i(app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, invalid_key_length,
                                        glance_out, glance_size),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 
   // Trying to read the basic glance blob back with a NULL glance_out argument should fail
   uint8_t *invalid_glance_out = nullptr;
   cl_assert_equal_i(app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                        invalid_glance_out, glance_size),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__basic_glance_blob_delete(void) {
@@ -280,7 +281,7 @@ void test_app_glance_db__basic_glance_blob_delete(void) {
   test_app_glance_db__basic_glance_blob_insert_and_read();
 
   // Delete the basic glance blob
-  cl_assert_equal_i(app_glance_db_delete((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_delete((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE), 0);
 
   const size_t glance_size = sizeof(s_app_glance_basic);
   uint8_t glance_out[glance_size];
@@ -288,12 +289,12 @@ void test_app_glance_db__basic_glance_blob_delete(void) {
   // Trying to read the basic glance blob now should fail because it should no longer exist
   cl_assert_equal_i(
       app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE, glance_out, glance_size),
-      E_DOES_NOT_EXIST);
+      -ENOENT);
 }
 
 void test_app_glance_db__delete_non_existing_blob_does_nothing(void) {
   // Trying to delete a glance that is not actually in the database should do nothing
-  cl_assert_equal_i(app_glance_db_delete((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_delete((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE), 0);
 }
 
 void test_app_glance_db__delete_blob_with_invalid_key_length_fails(void) {
@@ -303,7 +304,7 @@ void test_app_glance_db__delete_blob_with_invalid_key_length_fails(void) {
   // Trying to delete the basic glance blob with an invalid key length should fail
   const size_t invalid_key_length = 1337;
   cl_assert_equal_i(app_glance_db_delete((uint8_t *)&APP_GLANCE_TEST_UUID, invalid_key_length),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__glance_blob_with_older_creation_time_than_existing_not_inserted(void) {
@@ -315,7 +316,7 @@ void test_app_glance_db__glance_blob_with_older_creation_time_than_existing_not_
   const size_t glance_1_size = sizeof(app_glance_1);
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&app_glance_1, glance_1_size),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(app_glance_db_get_len((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE),
                     glance_1_size);
 
@@ -327,7 +328,7 @@ void test_app_glance_db__glance_blob_with_older_creation_time_than_existing_not_
   const size_t glance_2_size = sizeof(app_glance_2);
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&app_glance_2, glance_2_size),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__glance_blob_with_too_many_slices_inserted_but_trimmed(void) {
@@ -339,7 +340,7 @@ void test_app_glance_db__glance_blob_with_too_many_slices_inserted_but_trimmed(v
   cl_assert_equal_i(
       app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                            (uint8_t *)&s_app_glance_with_too_many_slices, original_glance_size),
-      S_SUCCESS);
+      0);
   // But the length we read back should be trimmed of the excess slices
   cl_assert_equal_i(app_glance_db_get_len((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE),
                     trimmed_glance_size);
@@ -348,7 +349,7 @@ void test_app_glance_db__glance_blob_with_too_many_slices_inserted_but_trimmed(v
   uint8_t glance_out[trimmed_glance_size];
   cl_assert_equal_i(app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE, glance_out,
                                        trimmed_glance_size),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_m(glance_out, (uint8_t *)s_app_glance_with_too_many_slices, trimmed_glance_size);
 }
 
@@ -359,7 +360,7 @@ static void prv_check_invalid_version_code_blob_not_inserted(uint8_t version) {
 
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&app_glance, sizeof(app_glance)),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__lower_version_blob_not_inserted(void) {
@@ -372,7 +373,7 @@ void test_app_glance_db__higher_version_not_blob_inserted(void) {
   prv_check_invalid_version_code_blob_not_inserted(APP_GLANCE_DB_CURRENT_VERSION + 1);
 }
 
-static status_t prv_insert_dummy_glance_blob_with_size(uint16_t blob_size) {
+static int prv_insert_dummy_glance_blob_with_size(uint16_t blob_size) {
   const uint8_t dummy_app_glance[] = {
     // Version
     APP_GLANCE_DB_CURRENT_VERSION,
@@ -392,23 +393,22 @@ static status_t prv_insert_dummy_glance_blob_with_size(uint16_t blob_size) {
 
 void test_app_glance_db__check_too_small_blob_not_inserted(void) {
   cl_assert_equal_i(prv_insert_dummy_glance_blob_with_size(APP_GLANCE_DB_SLICE_MIN_SIZE - 1),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__check_too_large_blob_not_inserted(void) {
   cl_assert_equal_i(prv_insert_dummy_glance_blob_with_size(APP_GLANCE_DB_SLICE_MAX_SIZE + 1),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__check_invalid_slice_total_sizes_blob_not_inserted(void) {
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&s_app_glance_with_invalid_slice_total_sizes,
                                          sizeof(s_app_glance_with_invalid_slice_total_sizes)),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
-status_t app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val,
-                                    int val_len);
+int app_glance_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 void test_app_glance_db__read_stale_glance_blob(void) {
   // Force the insertion of a stale glance blob (outdated version)
@@ -417,13 +417,13 @@ void test_app_glance_db__read_stale_glance_blob(void) {
   };
   cl_assert_equal_i(app_glance_db_insert_stale((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                                (uint8_t *)&app_glance, sizeof(app_glance)),
-                    S_SUCCESS);
+                    0);
 
   // Verify that trying to read the blob back fails due to it not existing
   SerializedAppGlanceHeader glance_out = {};
   cl_assert_equal_i(app_glance_db_read((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                        (uint8_t *)&glance_out, sizeof(SerializedAppGlanceHeader)),
-                    E_DOES_NOT_EXIST);
+                    -ENOENT);
 }
 
 void test_app_glance_db__glance_blob_with_slice_missing_expiration_time_gets_default_value(void) {
@@ -474,10 +474,10 @@ void test_app_glance_db__glance_blob_with_slice_missing_expiration_time_gets_def
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          (uint8_t *)&app_glance_with_slice_missing_expiration_time,
                                          app_glance_with_slice_missing_expiration_time_size),
-                    S_SUCCESS);
+                    0);
 
   AppGlance read_back_glance = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), 0);
   cl_assert_equal_i(read_back_glance.slices[0].expiration_time, APP_GLANCE_SLICE_NO_EXPIRATION);
 }
 
@@ -507,35 +507,34 @@ void test_app_glance_db__basic_glance_insert_and_read(void) {
       },
     },
   };
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance), 0);
 
   AppGlance read_back_glance = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), 0);
   cl_assert_equal_m(&glance, &read_back_glance, sizeof(AppGlance));
 }
 
 void test_app_glance_db__reading_nonexistent_glance_returns_does_not_exist(void) {
   AppGlance glance = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&UUID_INVALID, &glance), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(app_glance_db_read_glance(&UUID_INVALID, &glance), -ENOENT);
 }
 
 void test_app_glance_db__reading_glance_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   AppGlance glance_out = {};
-  cl_assert_equal_i(app_glance_db_read_glance(nullptr, &glance_out), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_glance(nullptr, &glance_out), -EINVAL);
 
   // NULL glance_out fails
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, nullptr), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, nullptr), -EINVAL);
 }
 
 void test_app_glance_db__inserting_glance_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   const AppGlance glance = {};
-  cl_assert_equal_i(app_glance_db_insert_glance(nullptr, &glance), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_insert_glance(nullptr, &glance), -EINVAL);
 
   // NULL glance fails
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, nullptr),
-                    E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, nullptr), -EINVAL);
 
   // Glance with too many slices fails
   const AppGlance glance_with_too_many_slices = (AppGlance){
@@ -543,8 +542,7 @@ void test_app_glance_db__inserting_glance_with_invalid_arguments_fails(void) {
   };
   cl_assert(glance_with_too_many_slices.num_slices > APP_GLANCE_DB_MAX_SLICES_PER_GLANCE);
   cl_assert_equal_i(
-      app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance_with_too_many_slices),
-      E_INVALID_ARGUMENT);
+      app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &glance_with_too_many_slices), -EINVAL);
 
   // Glance containing a slice with an invalid type fails
   const AppGlance glance_containing_slice_with_invalid_type = (AppGlance){
@@ -559,30 +557,28 @@ void test_app_glance_db__inserting_glance_with_invalid_arguments_fails(void) {
   cl_assert(glance_containing_slice_with_invalid_type.slices[0].type >= AppGlanceSliceTypeCount);
   cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID,
                                                 &glance_containing_slice_with_invalid_type),
-                    E_INVALID_ARGUMENT);
+                    -EINVAL);
 }
 
 void test_app_glance_db__read_glance_creation_time(void) {
   time_t time_out;
 
   // Reading the creation time of a glance that doesn't exist should return "does not exist"
-  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out),
-                    E_DOES_NOT_EXIST);
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out), -ENOENT);
 
   // Insert a glance and check that the creation time we read back matches
   test_app_glance_db__basic_glance_blob_insert_and_read();
-  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, &time_out), 0);
   cl_assert_equal_i(time_out, 1464734484);
 }
 
 void test_app_glance_db__read_glance_creation_time_with_invalid_arguments_fails(void) {
   // NULL UUID fails
   time_t time_out;
-  cl_assert_equal_i(app_glance_db_read_creation_time(nullptr, &time_out), E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_creation_time(nullptr, &time_out), -EINVAL);
 
   // NULL time_out fails
-  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, nullptr),
-                    E_INVALID_ARGUMENT);
+  cl_assert_equal_i(app_glance_db_read_creation_time(&APP_GLANCE_TEST_UUID, nullptr), -EINVAL);
 }
 
 void test_app_glance_db__empty_glance_insert_after_basic_glance_insert_succeeds(void) {
@@ -594,9 +590,9 @@ void test_app_glance_db__empty_glance_insert_after_basic_glance_insert_succeeds(
 
   // Try inserting an empty glance; this should succeed and clear the glance
   AppGlance empty_glance = {};
-  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &empty_glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_insert_glance(&APP_GLANCE_TEST_UUID, &empty_glance), 0);
   AppGlance read_back_glance = {};
-  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), S_SUCCESS);
+  cl_assert_equal_i(app_glance_db_read_glance(&APP_GLANCE_TEST_UUID, &read_back_glance), 0);
   cl_assert_equal_m(&empty_glance, &read_back_glance, sizeof(AppGlance));
 }
 
@@ -604,7 +600,7 @@ void test_app_glance_db__insert_no_app_installed(void) {
   s_app_install_id = INSTALL_ID_INVALID;
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          s_app_glance_basic, sizeof(s_app_glance_basic)),
-                    E_DOES_NOT_EXIST);
+                    -ENOENT);
 }
 
 void test_app_glance_db__insert_app_not_in_cache(void) {
@@ -612,7 +608,7 @@ void test_app_glance_db__insert_app_not_in_cache(void) {
   s_app_cache_entry_exists = false;
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          s_app_glance_basic, sizeof(s_app_glance_basic)),
-                    S_SUCCESS);
+                    0);
 
   cl_assert_equal_i(fake_event_get_count(), 1);
   PebbleEvent e = fake_event_get_last();
@@ -624,6 +620,6 @@ void test_app_glance_db__insert_app_not_in_cache(void) {
 void test_app_glance_db__insert_app_in_cache(void) {
   cl_assert_equal_i(app_glance_db_insert((uint8_t *)&APP_GLANCE_TEST_UUID, UUID_SIZE,
                                          s_app_glance_basic, sizeof(s_app_glance_basic)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(app_cache_app_launched_fake.call_count, 1);
 }

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/system/status_codes.h>
+#include <stdint.h>
 
 /**
  * @defgroup services_blob_db_prefs_db Preferences database
@@ -24,18 +24,18 @@ void prefs_db_init(void);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t prefs_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int prefs_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record in the preferences database.
  *
- * Returns @c E_INVALID_ARGUMENT for unknown keys.
+ * Returns @c -EINVAL for unknown keys.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if not found, or a negative error code.
+ * @return Length of the value in bytes, 0 if not found, or a negative errno.
  */
 int prefs_db_get_len(const uint8_t *key, int key_len);
 
@@ -46,28 +46,28 @@ int prefs_db_get_len(const uint8_t *key, int key_len);
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer for the value.
  * @param val_out_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
+int prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
 
 /**
  * @brief Delete a record from the preferences database.
  *
- * Not supported: always returns @c E_INVALID_OPERATION.
+ * Not supported: always returns @c -ENOTSUP.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t prefs_db_delete(const uint8_t *key, int key_len);
+int prefs_db_delete(const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records of the preferences database.
  *
- * Not supported: always returns @c E_INVALID_OPERATION.
+ * Not supported: always returns @c -ENOTSUP.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t prefs_db_flush(void);
+int prefs_db_flush(void);
 
 /** @} */

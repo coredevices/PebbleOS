@@ -176,9 +176,9 @@ const PebbleProcessMd *app_install_get_md(AppInstallId id, bool worker) {
 void app_install_release_md(const PebbleProcessMd *md) {
 }
 
-static status_t s_app_db_get_app_entry_for_install_id__result;
+static int s_app_db_get_app_entry_for_install_id__result;
 static AppDBEntry s_app_db_get_app_entry_for_install_id__entry;
-status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
+int app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
   *entry = s_app_db_get_app_entry_for_install_id__entry;
   return s_app_db_get_app_entry_for_install_id__result;
 }
@@ -213,7 +213,7 @@ void event_reset_from_process_queue(PebbleTask task) {
 
 void test_process_manager__initialize(void) {
   s_app_install_get_md__result = nullptr;
-  s_app_db_get_app_entry_for_install_id__result = E_DOES_NOT_EXIST;
+  s_app_db_get_app_entry_for_install_id__result = -ENOENT;
   s_app_db_get_app_entry_for_install_id__entry = (AppDBEntry){};
   s_process_metadata_get_res_bank_num__result = 123;
   s_app_manager_launch_new_app__callcount = 0;
@@ -246,7 +246,7 @@ void test_process_manager__stale_cache_entry_is_refetched(void) {
 
   // app_db says install ID 1 should be uuid A, but the cached binary is uuid B
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
-  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+  s_app_db_get_app_entry_for_install_id__result = 0;
 
   process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
@@ -262,7 +262,7 @@ void test_process_manager__matching_cache_entry_launches(void) {
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
 
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
-  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+  s_app_db_get_app_entry_for_install_id__result = 0;
 
   process_manager_launch_process(&(ProcessLaunchConfig){.id = 1});
 
@@ -276,7 +276,7 @@ void test_process_manager__requested_kill_reaches_the_app_manager(void) {
   s_good_md.common.uuid = s_uuid_a;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_good_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
-  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+  s_app_db_get_app_entry_for_install_id__result = 0;
 
   process_manager_launch_process(
       &(ProcessLaunchConfig){.id = 1, .forcefully = true, .kill_requested = true});
@@ -292,7 +292,7 @@ void test_process_manager__requested_kill_survives_a_fetch(void) {
   s_stale_md.common.uuid = s_uuid_b;
   s_app_install_get_md__result = (PebbleProcessMd *)&s_stale_md;
   s_app_db_get_app_entry_for_install_id__entry.uuid = s_uuid_a;
-  s_app_db_get_app_entry_for_install_id__result = S_SUCCESS;
+  s_app_db_get_app_entry_for_install_id__result = 0;
 
   process_manager_launch_process(
       &(ProcessLaunchConfig){.id = 1, .forcefully = true, .kill_requested = true});

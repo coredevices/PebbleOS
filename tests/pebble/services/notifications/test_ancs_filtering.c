@@ -64,8 +64,8 @@ static void prv_set_rules(FilteringRules *rules, const char *data, uint16_t leng
 
 static FilteringRules s_empty_filtering_rules;
 
-status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
-                                       TimelineItemActionGroup *action_group) {
+int ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, AttributeList *attr_list,
+                                  TimelineItemActionGroup *action_group) {
   s_performed_store = true;
   if (s_expected_attributes) {
     const int buf_size = 256;
@@ -78,7 +78,7 @@ status_t ios_notif_pref_db_store_prefs(const uint8_t *app_id, int length, Attrib
         expected_buf, actual_buf,
         attributes_actions_get_serialized_payload_size(s_expected_attributes, s_expected_actions));
   }
-  return S_SUCCESS;
+  return 0;
 }
 
 void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {

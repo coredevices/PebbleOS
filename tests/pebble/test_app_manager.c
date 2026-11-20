@@ -1,9 +1,12 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/heap.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/vibe_pattern.h>
+#include <pbl/system/status_codes.h>
 
 #include <applib/app_comm.h>
 #include <applib/graphics/framebuffer.h>
@@ -187,8 +190,8 @@ status_t app_cache_remove_entry(AppInstallId app_id) {
   return S_SUCCESS;
 }
 
-status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
-  return E_DOES_NOT_EXIST;
+int app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
+  return -ENOENT;
 }
 
 const PebbleProcessMd *app_fetch_ui_get_app_info(void) {

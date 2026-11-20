@@ -43,7 +43,7 @@ static const LayoutColors *prv_layout_get_colors(const LayoutLayer *layout);
 
 static time_t prv_get_parent_timestamp(TimelineItem *reminder) {
   TimelineItem pin;
-  if (S_SUCCESS != pin_db_get(&reminder->header.parent_id, &pin)) {
+  if (pin_db_get(&reminder->header.parent_id, &pin) != 0) {
     return reminder->header.timestamp;
   }
   timeline_item_free_allocated_buffer(&pin);

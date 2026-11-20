@@ -6,8 +6,8 @@
 
 #include <kernel/events.h>
 
-status_t PBL_WEAK blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
-  return S_SUCCESS;
+int PBL_WEAK blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
+  return 0;
 }
 
 void PBL_WEAK blob_db_event_put(enum BlobDBEventType type, BlobDBId db_id, const uint8_t *key,

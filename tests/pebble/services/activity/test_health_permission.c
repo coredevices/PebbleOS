@@ -31,7 +31,7 @@ const PebbleProcessMd *worker_manager_get_current_worker_md(void) {
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
 void app_install_clear_app_db(void) {
@@ -49,7 +49,7 @@ bool app_install_do_callbacks(InstallEventType type, AppInstallId id, Uuid *uuid
 
 static void prv_insert(const Uuid *uuid, uint32_t permissions, size_t len) {
   AppDBEntry entry = {.uuid = *uuid, .permissions = permissions};
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&entry, len));
+  cl_assert_equal_i(0, app_db_insert((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&entry, len));
 }
 
 void test_health_permission__initialize(void) {

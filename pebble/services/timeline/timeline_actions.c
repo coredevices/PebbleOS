@@ -1144,7 +1144,7 @@ typedef struct {
 
 static bool prv_dismiss_all_load_item(NotificationInfo *info, TimelineItem *item) {
   if (info->type == NotificationReminder) {
-    if (reminder_db_read_item(item, &info->id) != S_SUCCESS) {
+    if (reminder_db_read_item(item, &info->id) != 0) {
       PBL_LOG_ERR("Trying to dismiss all an invalid reminder");
       return false;
     }

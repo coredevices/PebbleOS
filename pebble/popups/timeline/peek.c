@@ -505,13 +505,13 @@ void timeline_peek_dismiss(void) {
     return;
   }
   TimelineItem *item = peek->peek_layout->item;
-  const status_t rv = pin_db_set_status_bits(&item->header.id, TimelineItemStatusDismissed);
-  if (rv == S_SUCCESS) {
+  const int rv = pin_db_set_status_bits(&item->header.id, TimelineItemStatusDismissed);
+  if (rv == 0) {
     timeline_event_refresh();
   } else {
     char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
     uuid_to_string(&item->header.id, uuid_buffer);
-    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %" PRIi32 ")", uuid_buffer, rv);
+    PBL_LOG_WRN("Failed to dismiss Timeline Peek event %s (status: %d)", uuid_buffer, rv);
   }
 }
 
@@ -585,10 +585,10 @@ void timeline_peek_handle_peek_event(PebbleTimelinePeekEvent *event) {
   }
   TimelineItem item = {};
   if (show) {
-    const status_t rv = pin_db_get(event->item_id, &item);
+    const int rv = pin_db_get(event->item_id, &item);
     // We failed to read the pin since it may have been deleted immediately. We will probably
     // momentarily recover from another peek event resulting from the delete.
-    show = (rv == S_SUCCESS);
+    show = (rv == 0);
   }
   if (show) {
     timeline_peek_set_item(&item, started, event->num_concurrent, event->is_first_event,

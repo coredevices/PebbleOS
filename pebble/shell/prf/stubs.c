@@ -7,6 +7,8 @@
 //! to exist because systems that were common to both PRF and normal firmware wouldn't try to
 //! use something that only exists in normal, but we're not quite there yet.
 
+#include <errno.h>
+
 #include <pbl/services/light.h>
 #include <pbl/services/notifications/alerts_private.h>
 #include <pbl/services/notifications/do_not_disturb.h>
@@ -95,8 +97,8 @@ bool phone_call_is_using_ANCS(void) {
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
-  return E_INVALID_OPERATION;
+int pin_db_delete_with_parent(const TimelineItemId *parent_id) {
+  return -ENOTSUP;
 }
 
 status_t app_cache_add_entry(AppInstallId app_id, uint32_t total_size) {
@@ -107,12 +109,12 @@ status_t app_cache_remove_entry(AppInstallId id) {
   return E_INVALID_OPERATION;
 }
 
-status_t app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
-  return E_INVALID_OPERATION;
+int app_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+  return -ENOTSUP;
 }
 
-status_t app_db_delete(const uint8_t *key, int key_len) {
-  return E_INVALID_OPERATION;
+int app_db_delete(const uint8_t *key, int key_len) {
+  return -ENOTSUP;
 }
 
 AppInstallId app_db_check_next_unique_id(void) {
@@ -126,8 +128,8 @@ AppInstallId app_db_get_install_id_for_uuid(const Uuid *uuid) {
   return 0;
 }
 
-status_t app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
-  return E_INVALID_OPERATION;
+int app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
+  return -ENOTSUP;
 }
 
 bool app_db_exists_install_id(AppInstallId app_id) {

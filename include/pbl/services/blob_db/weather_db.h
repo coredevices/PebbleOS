@@ -10,7 +10,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_types.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/pstring.h>
 #include <pbl/util/uuid.h>
 
@@ -344,9 +343,9 @@ typedef void (*WeatherDBIteratorCallback)(WeatherDBKey *key, WeatherDBEntry *ent
  *
  * @param cb Callback.
  * @param context User data passed to @p cb.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_for_each(WeatherDBIteratorCallback cb, void *context);
+int weather_db_for_each(WeatherDBIteratorCallback cb, void *context);
 
 /** @brief Initialize the weather database. */
 void weather_db_init(void);
@@ -354,34 +353,34 @@ void weather_db_init(void);
 /**
  * @brief Delete all records of the weather database.
  *
- * Returns @c E_RANGE when the phone does not support the weather service, so it stops sending
+ * Returns @c -ENODEV when the phone does not support the weather service, so it stops sending
  * records.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_flush(void);
+int weather_db_flush(void);
 
 /**
  * @brief Compact the settings file backing the weather database.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_compact(void);
+int weather_db_compact(void);
 
 /**
  * @brief Insert or replace a record in the weather database.
  *
  * The key is the location UUID and the value a v3 or v4 record, bounds-checked against its
- * version. Returns @c E_RANGE when the phone does not support the weather service, so it stops
+ * version. Returns @c -ENODEV when the phone does not support the weather service, so it stops
  * sending records.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record in the weather database.
@@ -390,7 +389,7 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if not found, or a negative error code.
+ * @return Length of the value in bytes, 0 if not found, or a negative errno.
  */
 int weather_db_get_len(const uint8_t *key, int key_len);
 
@@ -398,26 +397,26 @@ int weather_db_get_len(const uint8_t *key, int key_len);
  * @brief Read a record from the weather database.
  *
  * The key is the location UUID. Unsupported records are deleted and reported as
- * @c E_DOES_NOT_EXIST.
+ * @c -ENOENT.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer for the value.
  * @param val_out_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
+int weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
 
 /**
  * @brief Delete a record from the weather database.
  *
- * The key is the location UUID. Returns @c E_RANGE when the phone does not support the weather
+ * The key is the location UUID. Returns @c -ENODEV when the phone does not support the weather
  * service, so it stops sending records.
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t weather_db_delete(const uint8_t *key, int key_len);
+int weather_db_delete(const uint8_t *key, int key_len);
 
 /** @} */

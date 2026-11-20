@@ -48,8 +48,8 @@ const char *app_custom_get_title(AppInstallId app_id) {
   return "";
 }
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
-  return S_SUCCESS;
+int pin_db_delete_with_parent(const TimelineItemId *parent_id) {
+  return 0;
 }
 
 bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {

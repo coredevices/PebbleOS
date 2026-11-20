@@ -8,7 +8,6 @@
 #include <pbl/services/app_glances/app_glance_service.h>
 #include <pbl/services/blob_db/app_glance_db.h>
 #include <pbl/services/time.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
@@ -161,8 +160,8 @@ bool app_glance_service_get_current_slice(const Uuid *app_uuid, AppGlanceSliceIn
   bool success;
   // Try to read the app's glance, first checking the cache
   AppGlance *app_glance = pbl_zalloc_check(sizeof(*app_glance));
-  const status_t rv = app_glance_db_read_glance(app_uuid, app_glance);
-  if (rv != S_SUCCESS) {
+  const int rv = app_glance_db_read_glance(app_uuid, app_glance);
+  if (rv != 0) {
     success = false;
     goto cleanup;
   }
@@ -219,7 +218,7 @@ PBL_SYSCALL(bool, sys_app_glance_update, (IN, const Uuid *, uuid),
     glance = user_glance;
   }
 
-  const bool success = (app_glance_db_insert_glance(uuid, glance) == S_SUCCESS);
+  const bool success = (app_glance_db_insert_glance(uuid, glance) == 0);
   pbl_free(user_glance);
   if (success) {
     prv_glance_event_put(uuid);

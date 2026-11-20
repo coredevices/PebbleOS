@@ -83,9 +83,9 @@ void blob_db_sync_cancel(BlobDBSyncSession *session) {
   did_sync_cancel = true;
 }
 
-status_t blob_db_sync_db(BlobDBId db_id) {
+int blob_db_sync_db(BlobDBId db_id) {
   did_sync_db = true;
-  return S_SUCCESS;
+  return 0;
 }
 
 // A fake dirty item is needed because the error path of the write/writeback response handler

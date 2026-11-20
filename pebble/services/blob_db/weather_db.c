@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -10,8 +12,6 @@
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/units.h>
-
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -33,11 +33,11 @@ typedef struct WeatherDBIteratorData {
 // Weather DB API
 ///////////////////////////
 
-static status_t prv_lock_mutex_and_open_file(void) {
+static int prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_settings_open_growable(
-      &s_weather_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
-  if (rv != S_SUCCESS) {
+  int rv = pbl_settings_open_growable(&s_weather_db.settings_file, SETTINGS_FILE_NAME,
+                                      SETTINGS_FILE_SIZE, PBL_KIB(4));
+  if (rv != 0) {
     pbl_mutex_unlock(&s_weather_db.mutex);
   }
   return rv;
@@ -102,9 +102,9 @@ cleanup:
   return true;
 }
 
-status_t weather_db_for_each(WeatherDBIteratorCallback callback, void *context) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int weather_db_for_each(WeatherDBIteratorCallback callback, void *context) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
@@ -113,7 +113,7 @@ status_t weather_db_for_each(WeatherDBIteratorCallback callback, void *context) 
   pbl_settings_each(&s_weather_db.settings_file, prv_weather_db_for_each_cb, &data);
 
   prv_close_file_and_unlock_mutex();
-  return S_SUCCESS;
+  return 0;
 }
 
 /////////////////////////
@@ -126,42 +126,42 @@ void weather_db_init(void) {
   pbl_mutex_init(&s_weather_db.mutex);
 }
 
-status_t weather_db_flush(void) {
+int weather_db_flush(void) {
   if (!weather_service_supported_by_phone()) {
-    // return E_RANGE, so the phone receives BLOB_DB_INVALID_DATABASE_ID and stops sending
+    // return -ENODEV, so the phone receives BLOB_DB_INVALID_DATABASE_ID and stops sending
     // unwelcome weather records
-    return E_RANGE;
+    return -ENODEV;
   }
   pbl_mutex_lock(&s_weather_db.mutex, PBL_FOREVER);
   pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_weather_db.mutex);
 
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t weather_db_compact(void) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int weather_db_compact(void) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
-  rv = status_from_errno(pbl_settings_compact(&s_weather_db.settings_file));
+  rv = pbl_settings_compact(&s_weather_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }
 
-status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   if (!weather_service_supported_by_phone()) {
-    return E_RANGE;
+    return -ENODEV;
   }
   if (key_len != sizeof(WeatherDBKey) || val_len < (int)MIN_ENTRY_SIZE ||
       val_len > (int)MAX_ENTRY_SIZE) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   const WeatherDBEntry *entry = (WeatherDBEntry *)val;
   if (!weather_db_entry_is_supported(entry)) {
     PBL_LOG_WRN("Unsupported weather entry on insert: %" PRIu8, entry->version);
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
   // The record must carry the fixed fields for ITS version+minor (per-MINOR, never
   // "the newest": demanding the current minor's size rejects every record from a
@@ -172,23 +172,23 @@ status_t weather_db_insert(const uint8_t *key, int key_len, const uint8_t *val, 
   if (!prv_strings_block_is_valid(val, (size_t)val_len, strings_offset)) {
     PBL_LOG_WRN("Malformed v%" PRIu8 ".%" PRIu8 " weather record (len %d)", entry->version, minor,
                 val_len);
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
+  rv = pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;
 }
 
 int weather_db_get_len(const uint8_t *key, int key_len) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return 0;
   }
 
@@ -200,46 +200,45 @@ int weather_db_get_len(const uint8_t *key, int key_len) {
   return entry_len;
 }
 
-status_t weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int weather_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
   PBL_ASSERTN(key_len == sizeof(WeatherDBKey));
 
-  rv = status_from_errno(
-      pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len));
-  if ((rv == S_SUCCESS) && !weather_db_entry_is_supported((WeatherDBEntry *)val_out)) {
+  rv = pbl_settings_get(&s_weather_db.settings_file, key, key_len, val_out, val_out_len);
+  if ((rv == 0) && !weather_db_entry_is_supported((WeatherDBEntry *)val_out)) {
     // We might as well clear out the unparseable entry
     PBL_LOG_WRN("Read an unsupported weather DB entry");
     pbl_settings_delete(&s_weather_db.settings_file, key, key_len);
-    rv = E_DOES_NOT_EXIST;
+    rv = -ENOENT;
   }
 
   prv_close_file_and_unlock_mutex();
   return rv;
 }
 
-status_t weather_db_delete(const uint8_t *key, int key_len) {
+int weather_db_delete(const uint8_t *key, int key_len) {
   if (!weather_service_supported_by_phone()) {
-    return E_RANGE;
+    return -ENODEV;
   }
   if (key_len != sizeof(WeatherDBKey)) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
   if (!pbl_settings_exists(&s_weather_db.settings_file, key, key_len)) {
     prv_close_file_and_unlock_mutex();
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
 
-  rv = status_from_errno(pbl_settings_delete(&s_weather_db.settings_file, key, key_len));
+  rv = pbl_settings_delete(&s_weather_db.settings_file, key, key_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;
@@ -275,9 +274,9 @@ static bool prv_each_inspect_keys(struct pbl_settings_file *file, struct pbl_set
   return true;
 }
 
-status_t weather_db_get_num_keys(uint16_t *val_out) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int weather_db_get_num_keys(uint16_t *val_out) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
@@ -289,12 +288,12 @@ status_t weather_db_get_num_keys(uint16_t *val_out) {
   *val_out = key_helper.key_count;
 
   prv_close_file_and_unlock_mutex();
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t weather_db_get_keys(WeatherDBKey *keys) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int weather_db_get_keys(WeatherDBKey *keys) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
@@ -305,18 +304,18 @@ status_t weather_db_get_keys(WeatherDBKey *keys) {
   pbl_settings_each(&s_weather_db.settings_file, prv_each_inspect_keys, &key_helper);
 
   prv_close_file_and_unlock_mutex();
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Quick and dirty insert which doesn't do any error checking. Used to insert stale entries
   // for testing
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
 
-  rv = status_from_errno(pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len));
+  rv = pbl_settings_set(&s_weather_db.settings_file, key, key_len, val, val_len);
 
   prv_close_file_and_unlock_mutex();
   return rv;

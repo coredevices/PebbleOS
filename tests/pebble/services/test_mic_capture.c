@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/fs/fs.h>
@@ -51,7 +52,7 @@ ModalProperty modal_manager_get_properties(void) {
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
 bool mic_source_start(MicDataHandlerCB handler, void *context, int16_t *buffer, size_t len) {
@@ -101,7 +102,7 @@ static void prv_snapshot(const Uuid *first, const Uuid *second) {
       entry.permissions = APP_DB_PERMISSION_MICROPHONE;
     }
     cl_assert_equal_i(
-        S_SUCCESS, app_db_insert((uint8_t *)apps[i], UUID_SIZE, (uint8_t *)&entry, sizeof(entry)));
+        0, app_db_insert((uint8_t *)apps[i], UUID_SIZE, (uint8_t *)&entry, sizeof(entry)));
   }
 }
 
@@ -197,7 +198,7 @@ void test_mic_capture__empty_snapshot_and_clear_revoke_capture(void) {
   prv_snapshot(nullptr, nullptr);
   prv_stopped(session, MicCaptureStopReasonPermissionRevoked);
   session = prv_start();
-  cl_assert_equal_i(S_SUCCESS, app_db_flush());
+  cl_assert_equal_i(0, app_db_flush());
   prv_stopped(session, MicCaptureStopReasonPermissionRevoked);
 }
 
@@ -271,7 +272,7 @@ void test_mic_capture__a_stale_session_or_another_app_cannot_read_or_stop(void) 
 
 static void prv_insert(const Uuid *uuid, uint32_t permissions, size_t len) {
   AppDBEntry entry = {.uuid = *uuid, .permissions = permissions};
-  cl_assert_equal_i(S_SUCCESS, app_db_insert((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&entry, len));
+  cl_assert_equal_i(0, app_db_insert((uint8_t *)uuid, UUID_SIZE, (uint8_t *)&entry, len));
 }
 
 void test_mic_capture__legacy_and_permission_only_metadata_updates(void) {
@@ -321,11 +322,10 @@ void test_mic_capture__records_keep_the_legacy_size(void) {
   // Older firmware copies the stored length into its smaller AppDBEntry
   cl_assert_equal_i(APP_DB_LEGACY_ENTRY_SIZE, app_db_get_len((uint8_t *)&s_app, UUID_SIZE));
   AppDBEntry entry;
-  cl_assert_equal_i(S_SUCCESS,
-                    app_db_read((uint8_t *)&s_app, UUID_SIZE, (uint8_t *)&entry, sizeof(entry)));
+  cl_assert_equal_i(0, app_db_read((uint8_t *)&s_app, UUID_SIZE, (uint8_t *)&entry, sizeof(entry)));
   cl_assert_equal_i(APP_DB_PERMISSION_MICROPHONE, entry.permissions);
   // Deleting the app drops the grant with it
-  cl_assert_equal_i(S_SUCCESS, app_db_delete((uint8_t *)&s_app, UUID_SIZE));
+  cl_assert_equal_i(0, app_db_delete((uint8_t *)&s_app, UUID_SIZE));
   prv_insert(&s_app, 0, APP_DB_LEGACY_ENTRY_SIZE);
   cl_assert(!app_db_microphone_granted(&s_app));
 }
@@ -348,16 +348,16 @@ void test_mic_capture__refused_while_streaming(void) {
 
 void test_mic_capture__malformed_metadata_does_not_grant_permission(void) {
   AppDBEntry entry = {.uuid = s_app, .permissions = APP_DB_PERMISSION_MICROPHONE};
-  cl_assert_equal_i(E_INVALID_ARGUMENT, app_db_insert((uint8_t *)&s_other, UUID_SIZE,
-                                                      (uint8_t *)&entry, sizeof(entry)));
-  cl_assert_equal_i(E_INVALID_ARGUMENT, app_db_insert((uint8_t *)&s_app, UUID_SIZE,
-                                                      (uint8_t *)&entry, sizeof(entry) - 1));
+  cl_assert_equal_i(
+      -EINVAL, app_db_insert((uint8_t *)&s_other, UUID_SIZE, (uint8_t *)&entry, sizeof(entry)));
+  cl_assert_equal_i(
+      -EINVAL, app_db_insert((uint8_t *)&s_app, UUID_SIZE, (uint8_t *)&entry, sizeof(entry) - 1));
   cl_assert(!app_db_microphone_granted(&s_app));
 }
 
 void test_mic_capture__removing_app_metadata_revokes_capture(void) {
   uint32_t session = prv_start();
-  cl_assert_equal_i(S_SUCCESS, app_db_delete((uint8_t *)&s_app, UUID_SIZE));
+  cl_assert_equal_i(0, app_db_delete((uint8_t *)&s_app, UUID_SIZE));
   prv_stopped(session, MicCaptureStopReasonPermissionRevoked);
 }
 

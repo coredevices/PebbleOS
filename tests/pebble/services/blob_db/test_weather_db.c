@@ -3,6 +3,8 @@
 
 #include "weather_data_shared.h"
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
@@ -51,16 +53,15 @@ static void prv_db_iterator_cb(WeatherDBKey *key, WeatherDBEntry *entry, void *u
 }
 
 void test_weather_db__get_entries(void) {
-  cl_assert_equal_i(S_SUCCESS, weather_db_for_each(prv_db_iterator_cb, nullptr));
+  cl_assert_equal_i(0, weather_db_for_each(prv_db_iterator_cb, nullptr));
 }
 
 void test_weather_db__check_records_in_db(void) {
   for (int index = 0; index < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; index++) {
     WeatherDBEntry *to_check = pbl_zalloc_check(weather_shared_data_get_entry_size(index));
     const WeatherDBKey *key = weather_shared_data_get_key(index);
-    cl_assert_equal_i(S_SUCCESS,
-                      weather_db_read((uint8_t *)key, sizeof(WeatherDBKey), (uint8_t *)to_check,
-                                      weather_shared_data_get_entry_size(index)));
+    cl_assert_equal_i(0, weather_db_read((uint8_t *)key, sizeof(WeatherDBKey), (uint8_t *)to_check,
+                                         weather_shared_data_get_entry_size(index)));
 
     WeatherDBEntry *original = weather_shared_data_get_entry(index);
     weather_shared_data_assert_entries_equal(key, to_check, original);
@@ -73,8 +74,8 @@ void test_weather_db__check_small_record_not_inserted(void) {
   void *entry = pbl_zalloc_check(entry_size);
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5};
 
-  cl_assert_equal_i(E_INVALID_ARGUMENT, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
-                                                          (uint8_t *)entry, entry_size));
+  cl_assert_equal_i(-EINVAL, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
+                                               (uint8_t *)entry, entry_size));
   pbl_free(entry);
 }
 
@@ -83,8 +84,8 @@ void test_weather_db__check_too_large_record_not_inserted(void) {
   void *entry = pbl_zalloc_check(entry_size);
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5};
 
-  cl_assert_equal_i(E_INVALID_ARGUMENT, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
-                                                          (uint8_t *)entry, entry_size));
+  cl_assert_equal_i(-EINVAL, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
+                                               (uint8_t *)entry, entry_size));
   pbl_free(entry);
 }
 
@@ -97,8 +98,8 @@ static void prv_check_invalid_version_code_not_inserted(uint8_t version) {
   new_entry->version = version;
 
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5};
-  cl_assert_equal_i(E_INVALID_ARGUMENT, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
-                                                          (uint8_t *)new_entry, entry_size));
+  cl_assert_equal_i(-EINVAL, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
+                                               (uint8_t *)new_entry, entry_size));
   pbl_free(new_entry);
 }
 
@@ -124,8 +125,8 @@ void test_weather_db__newer_minor_not_inserted(void) {
   new_entry->minor_version = WEATHER_DB_CURRENT_MINOR_VERSION + 1;
 
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5};
-  cl_assert_equal_i(E_INVALID_ARGUMENT, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
-                                                          (uint8_t *)new_entry, entry_size));
+  cl_assert_equal_i(-EINVAL, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
+                                               (uint8_t *)new_entry, entry_size));
   pbl_free(new_entry);
 }
 
@@ -155,25 +156,25 @@ void test_weather_db__legacy_v3_inserted(void) {
   weather_shared_data_write_strings(&entry->pstring16s, location, phrase);
 
   WeatherDBKey key = (WeatherDBKey){0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6};
-  cl_assert_equal_i(S_SUCCESS, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey),
-                                                 (uint8_t *)entry, entry_size));
-  cl_assert_equal_i(S_SUCCESS, weather_db_delete((uint8_t *)&key, sizeof(WeatherDBKey)));
+  cl_assert_equal_i(
+      0, weather_db_insert((uint8_t *)&key, sizeof(WeatherDBKey), (uint8_t *)entry, entry_size));
+  cl_assert_equal_i(0, weather_db_delete((uint8_t *)&key, sizeof(WeatherDBKey)));
   pbl_free(entry);
 }
 
-status_t weather_db_get_num_keys(uint16_t *val_out);
+int weather_db_get_num_keys(uint16_t *val_out);
 
 void test_weather_db__test_get_num_keys(void) {
   uint16_t num_keys;
-  cl_assert_equal_i(S_SUCCESS, weather_db_get_num_keys(&num_keys));
+  cl_assert_equal_i(0, weather_db_get_num_keys(&num_keys));
   cl_assert_equal_i(num_keys, WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES);
 }
 
-status_t weather_db_get_keys(WeatherDBKey *keys);
+int weather_db_get_keys(WeatherDBKey *keys);
 
 void test_weather_db__test_get_keys(void) {
   WeatherDBKey keys[WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES];
-  cl_assert_equal_i(S_SUCCESS, weather_db_get_keys(keys));
+  cl_assert_equal_i(0, weather_db_get_keys(keys));
 
   for (int x = 0; x < WEATHER_DATA_SHARED_WEATHER_DB_NUM_DB_ENTRIES; x++) {
     cl_assert(weather_shared_data_get_key_exists(&keys[x]));
@@ -185,6 +186,6 @@ void test_weather_db__read_stale_entries(void) {
   size_t entry_size = weather_shared_data_insert_stale_entry(&key);
   uint8_t *buf = pbl_zalloc_check(entry_size);
 
-  cl_assert_equal_i(E_DOES_NOT_EXIST,
+  cl_assert_equal_i(-ENOENT,
                     weather_db_read((uint8_t *)&key, sizeof(WeatherDBKey), buf, entry_size));
 }

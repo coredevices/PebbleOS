@@ -158,8 +158,8 @@ static void prv_initialize_entries(void) {
     if (idx == WEATHER_DATA_SHARED_NUM_VALID_TIMESTAMP_ENTRIES) {
       entry->last_update_time_utc = (time_start_of_today() - PBL_SEC_PER_DAY - 1);
     }
-    cl_assert_equal_i(S_SUCCESS, weather_db_insert((uint8_t *)&s_keys[idx], sizeof(WeatherDBKey),
-                                                   (uint8_t *)entry, s_entry_sizes[idx]));
+    cl_assert_equal_i(0, weather_db_insert((uint8_t *)&s_keys[idx], sizeof(WeatherDBKey),
+                                           (uint8_t *)entry, s_entry_sizes[idx]));
     s_entries[idx] = entry;
   }
 }
@@ -178,7 +178,7 @@ void weather_shared_data_cleanup(void) {
   }
 
   // Flush DB
-  cl_assert_equal_i(S_SUCCESS, weather_db_flush());
+  cl_assert_equal_i(0, weather_db_flush());
 }
 
 const WeatherDBKey *weather_shared_data_get_key(int index) {
@@ -252,7 +252,7 @@ bool weather_shared_data_get_key_exists(WeatherDBKey *key) {
   return weather_shared_data_get_index_of_key(key) != -1;
 }
 
-status_t weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int weather_db_insert_stale(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 size_t weather_shared_data_insert_stale_entry(WeatherDBKey *key) {
   const WeatherDBEntry stale_entry = {
@@ -271,7 +271,7 @@ size_t weather_shared_data_insert_stale_entry(WeatherDBKey *key) {
   WeatherDBEntry *entry =
       prv_create_entry(&stale_entry, s_entry_names[0], s_entry_phrases[0], &s_entry_sizes[0]);
 
-  cl_assert_equal_i(S_SUCCESS, weather_db_insert_stale((uint8_t *)key, sizeof(WeatherDBKey),
-                                                       (uint8_t *)entry, s_entry_sizes[0]));
+  cl_assert_equal_i(0, weather_db_insert_stale((uint8_t *)key, sizeof(WeatherDBKey),
+                                               (uint8_t *)entry, s_entry_sizes[0]));
   return s_entry_sizes[0];
 }

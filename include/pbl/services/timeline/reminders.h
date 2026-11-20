@@ -4,7 +4,6 @@
 #pragma once
 
 #include <pbl/services/timeline/item.h>
-#include <pbl/system/status_codes.h>
 
 /**
  * @defgroup services_timeline_reminders Reminders
@@ -25,32 +24,32 @@ typedef TimelineItemId ReminderId;
 /**
  * @brief Arm the reminder timer for the next stored reminder.
  *
- * @return S_SUCCESS, also when there are no reminders, or an error.
+ * @return 0, also when there are no reminders, or a negative errno.
  */
-status_t reminders_update_timer(void);
+int reminders_update_timer(void);
 
 /**
  * @brief Insert a reminder into the Reminders database.
  *
  * @param reminder Reminder to insert.
- * @return S_SUCCESS or an error.
+ * @return 0 or a negative errno.
  */
-status_t reminders_insert(Reminder *reminder);
+int reminders_insert(Reminder *reminder);
 
 /**
  * @brief Initialize reminders and arm the timer.
  *
- * @return S_SUCCESS or an error.
+ * @return 0 or a negative errno.
  */
-status_t reminders_init(void);
+int reminders_init(void);
 
 /**
  * @brief Delete a reminder, emitting a BlobDB event.
  *
  * @param reminder_id Id of the reminder.
- * @return S_SUCCESS or an error.
+ * @return 0 or a negative errno.
  */
-status_t reminders_delete(ReminderId *reminder_id);
+int reminders_delete(ReminderId *reminder_id);
 
 /**
  * @brief Check whether a reminder can be snoozed.
@@ -68,11 +67,11 @@ bool reminders_can_snooze(Reminder *reminder);
  * its reminded status cleared.
  *
  * @param reminder Reminder to snooze.
- * @retval S_SUCCESS Snoozed.
- * @retval E_INVALID_OPERATION The reminder cannot be snoozed.
- * @return Another error if reinserting failed.
+ * @retval 0 Snoozed.
+ * @retval -ENOTSUP The reminder cannot be snoozed.
+ * @return Another negative errno if reinserting failed.
  */
-status_t reminders_snooze(Reminder *reminder);
+int reminders_snooze(Reminder *reminder);
 
 /**
  * @brief Post an event telling that a reminder was removed.

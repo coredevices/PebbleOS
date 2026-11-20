@@ -78,9 +78,9 @@ void timeline_item_storage_deinit(TimelineItemStorage *storage);
  * @brief Compact and shrink the backing settings file.
  *
  * @param storage Storage.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_compact(TimelineItemStorage *storage);
+int timeline_item_storage_compact(TimelineItemStorage *storage);
 
 /**
  * @brief Check whether any item has a given parent.
@@ -95,9 +95,9 @@ bool timeline_item_storage_exists_with_parent(TimelineItemStorage *storage, cons
  * @brief Delete all items except those created on the watch.
  *
  * @param storage Storage.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_flush(TimelineItemStorage *storage);
+int timeline_item_storage_flush(TimelineItemStorage *storage);
 
 /**
  * @brief Delete an item.
@@ -105,10 +105,9 @@ status_t timeline_item_storage_flush(TimelineItemStorage *storage);
  * @param storage Storage.
  * @param key Item UUID.
  * @param key_len Length of @p key, must be @c UUID_SIZE.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_t *key,
-                                      int key_len);
+int timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_t *key, int key_len);
 
 /**
  * @brief Read a serialized item.
@@ -120,10 +119,10 @@ status_t timeline_item_storage_delete(TimelineItemStorage *storage, const uint8_
  * @param key_len Length of @p key, must be @c UUID_SIZE.
  * @param[out] val_out Buffer for the serialized item.
  * @param val_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
-                                    uint8_t *val_out, int val_len);
+int timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                               uint8_t *val_out, int val_len);
 
 /**
  * @brief Deserialize the item of a settings file record, from an each callback.
@@ -133,11 +132,11 @@ status_t timeline_item_storage_read(TimelineItemStorage *storage, const uint8_t 
  * @param file Settings file being iterated.
  * @param info Current record.
  * @param[out] item Item; free its buffer with timeline_item_free_allocated_buffer().
- * @return @c S_SUCCESS on success, @c E_INTERNAL if the record cannot be deserialized.
+ * @return 0 on success, @c -EIO if the record cannot be deserialized.
  */
-status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file *file,
-                                                        struct pbl_settings_record *info,
-                                                        TimelineItem *item);
+int timeline_item_storage_get_from_settings_record(struct pbl_settings_file *file,
+                                                   struct pbl_settings_record *info,
+                                                   TimelineItem *item);
 
 /**
  * @brief Overwrite the status bits of an item in place.
@@ -146,10 +145,10 @@ status_t timeline_item_storage_get_from_settings_record(struct pbl_settings_file
  * @param key Item UUID.
  * @param key_len Length of @p key, must be @c UUID_SIZE.
  * @param status New status bits.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, const uint8_t *key,
-                                               int key_len, uint8_t status);
+int timeline_item_storage_set_status_bits(TimelineItemStorage *storage, const uint8_t *key,
+                                          int key_len, uint8_t status);
 
 /**
  * @brief Get the length of a serialized item.
@@ -157,7 +156,7 @@ status_t timeline_item_storage_set_status_bits(TimelineItemStorage *storage, con
  * @param storage Storage.
  * @param key Item UUID.
  * @param key_len Length of @p key in bytes.
- * @return Length in bytes, 0 if not found, or a negative error code.
+ * @return Length in bytes, 0 if not found, or a negative errno.
  */
 int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *key, int key_len);
 
@@ -173,13 +172,13 @@ int timeline_item_storage_get_len(TimelineItemStorage *storage, const uint8_t *k
  * @param val Serialized item. Modified during the call and restored before returning.
  * @param val_len Length of @p val in bytes.
  * @param mark_as_synced Store the record as synced, i.e. not to be written back to the phone.
- * @retval S_SUCCESS Inserted.
- * @retval E_INVALID_ARGUMENT Malformed key or item.
- * @retval E_INVALID_OPERATION Item too old.
- * @return Other error codes on failure.
+ * @retval 0 Inserted.
+ * @retval -EINVAL Malformed key or item.
+ * @retval -ESTALE Item too old.
+ * @return Other negative errno values on failure.
  */
-status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_t *key, int key_len,
-                                      const uint8_t *val, int val_len, bool mark_as_synced);
+int timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_t *key, int key_len,
+                                 const uint8_t *val, int val_len, bool mark_as_synced);
 
 /**
  * @brief Call a function for every record, with the storage locked.
@@ -190,10 +189,10 @@ status_t timeline_item_storage_insert(TimelineItemStorage *storage, const uint8_
  * @param storage Storage.
  * @param each Callback.
  * @param data User data passed to @p each.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_each(TimelineItemStorage *storage,
-                                    TimelineItemStorageEachCallback each, void *data);
+int timeline_item_storage_each(TimelineItemStorage *storage, TimelineItemStorageEachCallback each,
+                               void *data);
 
 /**
  * @brief Mark an item as synced.
@@ -201,10 +200,10 @@ status_t timeline_item_storage_each(TimelineItemStorage *storage,
  * @param storage Storage.
  * @param key Item UUID.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const uint8_t *key,
-                                           int key_len);
+int timeline_item_storage_mark_synced(TimelineItemStorage *storage, const uint8_t *key,
+                                      int key_len);
 
 /**
  * @brief Delete the children of a parent.
@@ -214,9 +213,9 @@ status_t timeline_item_storage_mark_synced(TimelineItemStorage *storage, const u
  * @param storage Storage.
  * @param parent_id Parent UUID.
  * @param child_delete_cb Optional callback invoked for each deleted child.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t timeline_item_storage_delete_with_parent(
+int timeline_item_storage_delete_with_parent(
     TimelineItemStorage *storage, const Uuid *parent_id,
     TimelineItemStorageChildDeleteCallback child_delete_cb);
 
@@ -226,12 +225,12 @@ status_t timeline_item_storage_delete_with_parent(
  * @param storage Storage.
  * @param[out] id_out UUID of the item.
  * @param filter_cb Optional filter.
- * @retval S_SUCCESS Found.
- * @retval S_NO_MORE_ITEMS No matching item.
- * @return Other error codes on failure.
+ * @retval 0 Found.
+ * @retval -ENOENT No matching item.
+ * @return Other negative errno values on failure.
  */
-status_t timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
-                                         TimelineItemStorageFilterCallback filter_cb);
+int timeline_item_storage_next_item(TimelineItemStorage *storage, Uuid *id_out,
+                                    TimelineItemStorageFilterCallback filter_cb);
 
 /**
  * @brief Check whether the storage holds no valid item.

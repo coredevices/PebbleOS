@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/notifications/notifications.h>
@@ -49,8 +51,8 @@ bool ancs_notifications_is_bulk_action_mode_enabled(void) {
   return false;
 }
 
-status_t reminder_db_delete_with_parent(const TimelineItemId *id) {
-  return S_SUCCESS;
+int reminder_db_delete_with_parent(const TimelineItemId *id) {
+  return 0;
 }
 
 void timeline_action_endpoint_invoke_action(const Uuid *id, uint8_t action_id,
@@ -504,7 +506,8 @@ void test_timeline__none_forwards(void) {
   TimelineNode *head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421188000), 2);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1421188000),
+      -ENOENT);
 }
 
 void test_timeline__all_backwards(void) {
@@ -544,7 +547,7 @@ void test_timeline__none_backwards(void) {
   TimelineNode *head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421178000), 2);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421178000), -ENOENT);
 }
 
 void test_timeline__middle_forwards(void) {
@@ -676,8 +679,7 @@ void test_timeline__gc_past(void) {
   head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421395200),
-      S_NO_MORE_ITEMS);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421395200), -ENOENT);
 
   fake_pbl_malloc_clear_tracking();
   // Thursday Jan 16 14:00:00 PST 2015
@@ -686,8 +688,7 @@ void test_timeline__gc_past(void) {
   head = nullptr;
   timeline_init(&head);
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421445600),
-      S_NO_MORE_ITEMS);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast, 1421445600), -ENOENT);
 
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
 }
@@ -903,7 +904,7 @@ void test_timeline__extra_case_none_backwards(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionPast,
                                        s_feb_5_midnight + 5 * 60 * 60),
-                    2);
+                    -ENOENT);
 }
 
 // 8:16 am. 8:15 event is in future but not 8:00 event
@@ -981,7 +982,7 @@ void test_timeline__extra_case_none_forwards(void) {
   timeline_init(&head);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        s_feb_5_midnight + 11 * 60 * 60),
-                    2);
+                    -ENOENT);
 }
 
 void test_timeline__two_iterators(void) {
@@ -1126,11 +1127,10 @@ void test_timeline__multiday(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   // 1425272400 is 21:00 March 1 2015 PST
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
-      S_SUCCESS);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400), 0);
   time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1182,11 +1182,11 @@ void test_timeline__all_day_single_day(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        time_21_00_march_1_pst),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_march_3_pst = 1425369600;
 
   // day 1
@@ -1226,11 +1226,11 @@ void test_timeline__24h_non_all_day_starting_mid_day(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        time_21_00_march_1_pst),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1280,11 +1280,11 @@ void test_timeline__24h_non_all_day_starting_midnight(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        time_21_00_march_1_pst),
-                    S_SUCCESS);
+                    0);
 
   // day 1
   cl_assert(uuid_equal(&state.pin.header.id, &all_day_item.header.id));
@@ -1335,11 +1335,10 @@ void test_timeline__all_day_multiday(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   // 1425272400 is 21:00 March 1 2015 PST
   cl_assert_equal_i(
-      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400),
-      S_SUCCESS);
+      timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture, 1425272400), 0);
   time_t midnight_march_2_pst = 1425283200;
 
   // day 1
@@ -1404,10 +1403,10 @@ void test_timeline__all_day_ios_bug(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        1430236800 - 60 * 60),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_apr_28_pst = 1430208000;
 
   cl_assert_equal_i(state.node->timestamp, midnight_apr_28_pst);
@@ -1452,10 +1451,10 @@ void test_timeline__all_day_ios_bug_2(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        1430200800 - 60 * 60),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_apr_28_msk = 1430168400;
 
   cl_assert_equal_i(state.node->timestamp, midnight_apr_28_msk);
@@ -1482,11 +1481,11 @@ void test_timeline__0_duration_all_day(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        time_21_00_march_1_pst),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_march_3_pst = 1425369600;
 
   // day 1
@@ -1526,11 +1525,11 @@ void test_timeline__0_duration(void) {
   TimelineIterState state = {};
   TimelineNode *head = nullptr;
 
-  cl_assert_equal_i(timeline_init(&head), S_SUCCESS);
+  cl_assert_equal_i(timeline_init(&head), 0);
   const time_t time_21_00_march_1_pst = 1425272400;
   cl_assert_equal_i(timeline_iter_init(&iterator, &state, &head, TimelineIterDirectionFuture,
                                        time_21_00_march_1_pst),
-                    S_SUCCESS);
+                    0);
   const time_t midnight_march_2_pst = 1425283200;
 
   // day 1

@@ -11,7 +11,6 @@
 
 #include <clar.h>
 #include <fake_settings.h>
-#include <system/status_errno.h>
 
 // Stubs
 ////////////////////////////////////////////////////////////////
@@ -20,12 +19,12 @@
 
 int pbl_fs_unlink(const char *path) {
   fake_settings_reset();
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
-                        int val_len) {
-  return status_from_errno(pbl_settings_set(nullptr, key, key_len, val, val_len));
+int blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
+                   int val_len) {
+  return pbl_settings_set(nullptr, key, key_len, val, val_len);
 }
 
 uint64_t pbl_uptime_ticks(void) {
@@ -185,7 +184,7 @@ void test_health_db__blob_db_api(void) {
   // insert one
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
 
   // check
   int32_t val_out;
@@ -193,7 +192,7 @@ void test_health_db__blob_db_api(void) {
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalSleepDuration]);
 
   // delete
-  cl_assert_equal_i(health_db_delete((uint8_t *)key, strlen(key)), S_SUCCESS);
+  cl_assert_equal_i(health_db_delete((uint8_t *)key, strlen(key)), 0);
 
   // check
   cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
@@ -201,14 +200,14 @@ void test_health_db__blob_db_api(void) {
   // insert again
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
 
   // check
   cl_assert(health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
   cl_assert_equal_i(val_out, s_sleep_data[SD_TypicalSleepDuration]);
 
   // flush
-  cl_assert_equal_i(health_db_flush(), S_SUCCESS);
+  cl_assert_equal_i(health_db_flush(), 0);
 
   // check
   cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
@@ -216,7 +215,7 @@ void test_health_db__blob_db_api(void) {
   // insert something with an older version (this will succeed)
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_invalid_sleep_data,
                                      sizeof(s_sleep_data)),
-                    S_SUCCESS);
+                    0);
   // check
   cl_assert(!health_db_get_typical_value(ActivityMetricSleepTotalSeconds, PBL_MONDAY, &val_out));
 }
@@ -225,7 +224,7 @@ void test_health_db__movement_data(void) {
   const char *key = "monday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
 
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
 
@@ -247,7 +246,7 @@ void test_health_db__sleep_data(void) {
   const char *key = "monday_sleepData";
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
 
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_SLEEP_METRICS);
 
@@ -271,7 +270,7 @@ void test_health_db__hr_zone_data(void) {
   const char *key = "monday_heartRateZoneData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_hr_zone_data,
                                      sizeof(s_hr_zone_data)),
-                    S_SUCCESS);
+                    0);
 
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_HR_ZONE_METRICS);
 
@@ -338,7 +337,7 @@ void test_health_db__step_averages(void) {
   for (int i = 0; i < PBL_ARRAY_SIZE(entries); ++i) {
     cl_assert_equal_i(health_db_insert((uint8_t *)entries[i].key, strlen(entries[i].key),
                                        (uint8_t *)entries[i].val, strlen(entries[i].val)),
-                      S_SUCCESS);
+                      0);
 
     ActivityMetricAverages averages;
     health_db_get_typical_step_averages(i, &averages);
@@ -356,7 +355,7 @@ void test_health_db__monthly_averages(void) {
   int32_t average_steps_val = 123456;
   cl_assert_equal_i(health_db_insert((uint8_t *)average_step_key, strlen(average_step_key),
                                      (uint8_t *)&average_steps_val, sizeof(average_steps_val)),
-                    S_SUCCESS);
+                    0);
 
   cl_assert(health_db_get_monthly_average_value(ActivityMetricStepCount, &val_out));
   cl_assert_equal_i(val_out, average_steps_val);
@@ -365,7 +364,7 @@ void test_health_db__monthly_averages(void) {
   int32_t average_sleep_val = 654321;
   cl_assert_equal_i(health_db_insert((uint8_t *)average_sleep_key, strlen(average_sleep_key),
                                      (uint8_t *)&average_sleep_val, sizeof(average_sleep_val)),
-                    S_SUCCESS);
+                    0);
 
   cl_assert(health_db_get_monthly_average_value(ActivityMetricSleepTotalSeconds, &val_out));
   cl_assert_equal_i(val_out, average_sleep_val);
@@ -378,56 +377,56 @@ void test_health_db__notify_listeners(void) {
   key = "tuesday_sleepData";
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_SLEEP_METRICS);
 
   s_metric_updated_count = 0;
   key = "wednesday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
 
   s_metric_updated_count = 0;
   key = "thursday_sleepData";
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_SLEEP_METRICS);
 
   s_metric_updated_count = 0;
   key = "friday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
 
   s_metric_updated_count = 0;
   key = "saturday_sleepData";
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_SLEEP_METRICS);
 
   s_metric_updated_count = 0;
   key = "sunday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
 
   s_metric_updated_count = 0;
   key = "monday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_MOVEMENT_METRICS);
 
   s_metric_updated_count = 0;
   key = "monday_sleepData";
   cl_assert_equal_i(
       health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_sleep_data, sizeof(s_sleep_data)),
-      S_SUCCESS);
+      0);
   cl_assert_equal_i(s_metric_updated_count, NUM_CURRENT_SLEEP_METRICS);
 
   // Test inserting something which is more than a week old.
@@ -436,14 +435,14 @@ void test_health_db__notify_listeners(void) {
   key = "monday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_old_movement_data,
                                      sizeof(s_old_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, 0);
 
   s_metric_updated_count = 0;
   key = "monday_sleepData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_old_sleep_data,
                                      sizeof(s_old_sleep_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, 0);
 
   // Insert something which has a future timestamp
@@ -451,6 +450,6 @@ void test_health_db__notify_listeners(void) {
   key = "monday_movementData";
   cl_assert_equal_i(health_db_insert((uint8_t *)key, strlen(key), (uint8_t *)s_future_movement_data,
                                      sizeof(s_movement_data)),
-                    S_SUCCESS);
+                    0);
   cl_assert_equal_i(s_metric_updated_count, 0);
 }

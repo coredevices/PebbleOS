@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/bluetooth/ancs.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
@@ -389,14 +391,14 @@ static bool prv_iter_next(IteratorState state) {
   timeline_item_free_allocated_buffer(&timeline_iter_state->pin);
   timeline_iter_state->pin = (TimelineItem){};
 
-  status_t rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
+  int rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
   timeline_iter_state->current_day =
       time_util_get_midnight_of(timeline_iter_state->node->timestamp);
   timeline_iter_state->index = timeline_iter_state->node->index;
 #ifdef TIMELINE_SERVICE_DEBUG
   prv_debug_print_pins(timeline_iter_state->node);
 #endif
-  return (rv == S_SUCCESS);
+  return (rv == 0);
 }
 
 static bool prv_iter_prev(IteratorState state) {
@@ -420,14 +422,14 @@ static bool prv_iter_prev(IteratorState state) {
   timeline_item_free_allocated_buffer(&timeline_iter_state->pin);
   timeline_iter_state->pin = (TimelineItem){};
 
-  status_t rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
+  int rv = pin_db_get(&timeline_iter_state->node->id, &timeline_iter_state->pin);
   timeline_iter_state->current_day =
       time_util_get_midnight_of(timeline_iter_state->node->timestamp);
   timeline_iter_state->index = timeline_iter_state->node->index;
 #ifdef TIMELINE_SERVICE_DEBUG
   prv_debug_print_pins(timeline_iter_state->node);
 #endif
-  return (rv == S_SUCCESS);
+  return (rv == 0);
 }
 
 static void prv_prune_ordered_timeline_list(TimelineNode **head) {
@@ -467,9 +469,9 @@ static void prv_put_outgoing_call_event(uint32_t call_identifier, const char *ca
 // Public functions
 //////////////////////////////////////////////////
 
-status_t timeline_init(TimelineNode **timeline) {
+int timeline_init(TimelineNode **timeline) {
   PBL_LOG_DBG("Starting to build list.");
-  status_t rv = pin_db_each(prv_each, timeline);
+  int rv = pin_db_each(prv_each, timeline);
   prv_prune_ordered_timeline_list(timeline);
   prv_set_indices(*timeline);
   PBL_LOG_DBG("Finished building list.");
@@ -480,7 +482,7 @@ status_t timeline_init(TimelineNode **timeline) {
 }
 
 bool timeline_add(TimelineItem *item) {
-  return (S_SUCCESS == pin_db_insert_item(item));
+  return (0 == pin_db_insert_item(item));
 }
 
 bool timeline_exists(Uuid *id) {
@@ -489,7 +491,7 @@ bool timeline_exists(Uuid *id) {
 
 bool timeline_remove(const Uuid *id) {
   // Use BlobDB directly in order to emit the BlobDB delete event
-  return (S_SUCCESS == blob_db_delete(BlobDBIdPins, (uint8_t *)id, UUID_SIZE));
+  return (0 == blob_db_delete(BlobDBIdPins, (uint8_t *)id, UUID_SIZE));
 }
 
 TimelineIterDirection timeline_direction_for_item(TimelineItem *item, TimelineNode *timeline,
@@ -523,7 +525,7 @@ bool timeline_get_originator_id(const TimelineItem *item, Uuid *uuid) {
   switch (item->header.type) {
     case TimelineItemTypeReminder:
       // Follow the parent id to get to the owner pin
-      if (pin_db_get(&item->header.parent_id, &pin) != S_SUCCESS) {
+      if (pin_db_get(&item->header.parent_id, &pin) != 0) {
         *uuid = UUID_INVALID;
         return false;
       }
@@ -532,7 +534,7 @@ bool timeline_get_originator_id(const TimelineItem *item, Uuid *uuid) {
     case TimelineItemTypePin:
     case TimelineItemTypeNotification:
       // Some notifications have parent pins, some don't. If this one has a parent pin, follow it
-      if (pin_db_get(&item->header.parent_id, &pin) == S_SUCCESS) {
+      if (pin_db_get(&item->header.parent_id, &pin) == 0) {
         pin_p = &pin;
       } else {
         pin_p = item;
@@ -573,8 +575,8 @@ bool timeline_iter_remove_node_with_id(TimelineNode **head, Uuid *key) {
   }
 }
 
-status_t timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, TimelineNode **head,
-                            TimelineIterDirection direction, time_t timestamp) {
+int timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, TimelineNode **head,
+                       TimelineIterDirection direction, time_t timestamp) {
   iter_state->direction = direction;
   iter_state->start_time = timestamp;
   iter_state->midnight = time_util_get_midnight_of(timestamp);
@@ -585,11 +587,11 @@ status_t timeline_iter_init(Iterator *iter, TimelineIterState *iter_state, Timel
                                       iter_state->show_all_day_events);
   if (node == nullptr) {
     iter_init(iter, prv_iter_dummy, prv_iter_dummy, iter_state);
-    return S_NO_MORE_ITEMS;
+    return -ENOENT;
   }
 
-  status_t rv = pin_db_get(&node->id, &iter_state->pin);
-  if (rv != S_SUCCESS) {
+  int rv = pin_db_get(&node->id, &iter_state->pin);
+  if (rv != 0) {
     iter_state->pin = (TimelineItem){};
     iter_init(iter, prv_iter_dummy, prv_iter_dummy, iter_state);
     return rv;
@@ -756,7 +758,7 @@ static void prv_perform_ancs_negative_action(const TimelineItem *item,
 static void prv_get_pin_and_push_pin_window(void *data) {
   Uuid *parent_id = data;
   TimelineItem *pin = applib_malloc(sizeof(TimelineItem)); // cleaned-up by the modal
-  if (pin && pin_db_get(parent_id, pin) == S_SUCCESS) {
+  if (pin && pin_db_get(parent_id, pin) == 0) {
     timeline_pin_window_push_modal(pin);
   } else {
     PBL_LOG_ERR("Failed to fetch parent pin");

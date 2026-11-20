@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
@@ -30,27 +32,26 @@ static TimelineItemStorage s_pin_db_storage;
 // Pin DB specific API
 /////////////////////////
 
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id) {
+int pin_db_delete_with_parent(const TimelineItemId *parent_id) {
   return (timeline_item_storage_delete_with_parent(&s_pin_db_storage, parent_id, nullptr));
 }
 
 //! Caution: CommonTimelineItemHeader .flags & .status are stored inverted and not auto-restored
-status_t pin_db_each(pbl_settings_each_cb_t each, void *data) {
+int pin_db_each(pbl_settings_each_cb_t each, void *data) {
   return timeline_item_storage_each(&s_pin_db_storage, each, data);
 }
 
-static status_t prv_insert_serialized_item(const uint8_t *key, int key_len, const uint8_t *val,
-                                           int val_len, bool mark_synced) {
+static int prv_insert_serialized_item(const uint8_t *key, int key_len, const uint8_t *val,
+                                      int val_len, bool mark_synced) {
   CommonTimelineItemHeader *hdr = (CommonTimelineItemHeader *)val;
   if (hdr->layout == LayoutIdNotification || hdr->layout == LayoutIdReminder) {
     // pins do not support these layouts
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv =
-      timeline_item_storage_insert(&s_pin_db_storage, key, key_len, val, val_len, mark_synced);
+  int rv = timeline_item_storage_insert(&s_pin_db_storage, key, key_len, val, val_len, mark_synced);
 
-  if (rv == S_SUCCESS) {
+  if (rv == 0) {
     TimelineItemId parent_id = ((CommonTimelineItemHeader *)val)->parent_id;
     if (timeline_get_private_data_source(&parent_id)) {
       goto done;
@@ -91,9 +92,9 @@ done:
   return rv;
 }
 
-static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
+static int prv_insert_item(TimelineItem *item, bool emit_event) {
   if (item->header.type != TimelineItemTypePin) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   // allocate a buffer big enough for serialized item
@@ -107,9 +108,9 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
 
   // serialize the attributes / actions
   size_t bytes_serialized = timeline_item_serialize_payload(item, write_ptr, payload_size);
-  status_t rv;
+  int rv;
   if (bytes_serialized != payload_size) {
-    rv = E_INVALID_ARGUMENT;
+    rv = -EINVAL;
     goto cleanup;
   }
 
@@ -118,7 +119,7 @@ static status_t prv_insert_item(TimelineItem *item, bool emit_event) {
   const bool mark_synced = !uuid_equal(&item->header.parent_id, &reminders_data_source_uuid);
   rv = prv_insert_serialized_item((uint8_t *)&item->header.id, sizeof(TimelineItemId), buffer,
                                   sizeof(SerializedTimelineItemHeader) + payload_size, mark_synced);
-  if (rv == S_SUCCESS && emit_event) {
+  if (rv == 0 && emit_event) {
     blob_db_event_put(BlobDBEventTypeInsert, BlobDBIdPins, (uint8_t *)&item->header.id,
                       sizeof(TimelineItemId));
   }
@@ -133,38 +134,38 @@ cleanup:
   return rv;
 }
 
-status_t pin_db_insert_item(TimelineItem *item) {
+int pin_db_insert_item(TimelineItem *item) {
   return prv_insert_item(item, true /* emit_event */);
 }
 
-status_t pin_db_insert_item_without_event(TimelineItem *item) {
+int pin_db_insert_item_without_event(TimelineItem *item) {
   return prv_insert_item(item, false /* emit_event */);
 }
-status_t pin_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
+int pin_db_set_status_bits(const TimelineItemId *id, uint8_t status) {
   return timeline_item_storage_set_status_bits(&s_pin_db_storage, (uint8_t *)id, sizeof(*id),
                                                status);
 }
 
-status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
+int pin_db_get(const TimelineItemId *id, TimelineItem *pin) {
   int size = pin_db_get_len((uint8_t *)id, UUID_SIZE);
   if (size <= 0) {
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
   uint8_t *read_buf = pbl_malloc_check(size);
-  status_t status = pin_db_read((uint8_t *)id, UUID_SIZE, read_buf, size);
-  if (status != S_SUCCESS) {
+  int status = pin_db_read((uint8_t *)id, UUID_SIZE, read_buf, size);
+  if (status != 0) {
     goto cleanup;
   }
 
   SerializedTimelineItemHeader *header = (SerializedTimelineItemHeader *)read_buf;
   uint8_t *payload = read_buf + sizeof(SerializedTimelineItemHeader);
   if (!timeline_item_deserialize_item(pin, header, payload)) {
-    status = E_INTERNAL;
+    status = -EIO;
     goto cleanup;
   }
 
   pbl_free(read_buf);
-  return (S_SUCCESS);
+  return 0;
 
 cleanup:
   pbl_free(read_buf);
@@ -175,18 +176,17 @@ bool pin_db_exists_with_parent(const TimelineItemId *parent_id) {
   return timeline_item_storage_exists_with_parent(&s_pin_db_storage, parent_id);
 }
 
-status_t pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
+int pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id) {
   SerializedTimelineItemHeader hdr = {};
-  status_t rv = pin_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
-                            sizeof(SerializedTimelineItemHeader));
+  int rv = pin_db_read((uint8_t *)id, sizeof(TimelineItemId), (uint8_t *)&hdr,
+                       sizeof(SerializedTimelineItemHeader));
   timeline_item_deserialize_header(item_out, &hdr);
   return rv;
 }
 
-status_t pin_db_next_item_header(TimelineItem *next_item_out,
-                                 TimelineItemStorageFilterCallback filter) {
+int pin_db_next_item_header(TimelineItem *next_item_out, TimelineItemStorageFilterCallback filter) {
   TimelineItemId id;
-  status_t rv = timeline_item_storage_next_item(&s_pin_db_storage, &id, filter);
+  int rv = timeline_item_storage_next_item(&s_pin_db_storage, &id, filter);
   if (rv) {
     return rv;
   }
@@ -207,7 +207,7 @@ void pin_db_deinit(void) {
   timeline_item_storage_deinit(&s_pin_db_storage);
 }
 
-status_t pin_db_compact(void) {
+int pin_db_compact(void) {
   return timeline_item_storage_compact(&s_pin_db_storage);
 }
 
@@ -215,7 +215,7 @@ bool pin_db_has_entry_expired(time_t pin_end_timestamp) {
   return (pin_end_timestamp < (pbl_realtime() - PIN_DB_MAX_AGE));
 }
 
-status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
+int pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   // Records inserted from the phone are already synced
   const bool mark_synced = true;
   return prv_insert_serialized_item(key, key_len, val, val_len, mark_synced);
@@ -225,13 +225,13 @@ int pin_db_get_len(const uint8_t *key, int key_len) {
   return timeline_item_storage_get_len(&s_pin_db_storage, key, key_len);
 }
 
-status_t pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
+int pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   return timeline_item_storage_read(&s_pin_db_storage, key, key_len, val_out, val_len);
 }
 
-status_t pin_db_delete(const uint8_t *key, int key_len) {
-  status_t rv = timeline_item_storage_delete(&s_pin_db_storage, key, key_len);
-  if (rv == S_SUCCESS) {
+int pin_db_delete(const uint8_t *key, int key_len) {
+  int rv = timeline_item_storage_delete(&s_pin_db_storage, key, key_len);
+  if (rv == 0) {
     //! remove reminders that are children of this pin
     reminder_db_delete_with_parent((TimelineItemId *)key);
   }
@@ -239,11 +239,11 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
   return rv;
 }
 
-status_t pin_db_flush(void) {
+int pin_db_flush(void) {
   return timeline_item_storage_flush(&s_pin_db_storage);
 }
 
-status_t pin_db_is_dirty(bool *is_dirty_out) {
+int pin_db_is_dirty(bool *is_dirty_out) {
   *is_dirty_out = false;
   return timeline_item_storage_each(&s_pin_db_storage, sync_util_is_dirty_cb, is_dirty_out);
 }
@@ -255,6 +255,6 @@ BlobDBDirtyItem *pin_db_get_dirty_list(void) {
   return dirty_list;
 }
 
-status_t pin_db_mark_synced(const uint8_t *key, int key_len) {
+int pin_db_mark_synced(const uint8_t *key, int key_len) {
   return timeline_item_storage_mark_synced(&s_pin_db_storage, key, key_len);
 }

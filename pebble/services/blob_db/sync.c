@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
@@ -108,18 +110,17 @@ static void prv_send_writeback(BlobDBSyncSession *session) {
 
   // read item into a temporary buffer
   void *item_buf = pbl_malloc_check(item_size);
-  status_t status =
-      blob_db_read(session->db_id, dirty_item->key, dirty_item->key_len, item_buf, item_size);
+  int rv = blob_db_read(session->db_id, dirty_item->key, dirty_item->key_len, item_buf, item_size);
   // Both blob_db_sync_next() and blob_db_sync_cancel() can free the session, so
   // neither it nor dirty_item may be touched after calling them.
-  if (status == E_DOES_NOT_EXIST) {
+  if (rv == -ENOENT) {
     // item was removed
     pbl_free(item_buf);
     blob_db_sync_next(session);
     return;
-  } else if (!PASSED(status)) {
+  } else if (rv < 0) {
     // something went terribly wrong
-    PBL_LOG_ERR("Failed to read blob DB during sync. Error code: 0x%" PRIx32, status);
+    PBL_LOG_ERR("Failed to read blob DB during sync. Error code: %d", rv);
     pbl_free(item_buf);
     blob_db_sync_cancel(session);
     return;
@@ -173,38 +174,38 @@ BlobDBSyncSession *blob_db_sync_get_session_for_token(uint16_t token) {
       (ListNode *)s_sync_sessions, prv_session_token_filter_callback, (void *)(uintptr_t)token);
 }
 
-status_t blob_db_sync_db(BlobDBId db_id) {
+int blob_db_sync_db(BlobDBId db_id) {
   if (db_id >= NumBlobDBs) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
   PBL_LOG_DBG("Starting BlobDB db sync: %d", db_id);
 
   if (blob_db_sync_get_session_for_id(db_id)) {
-    return E_BUSY;
+    return -EBUSY;
   }
 
   BlobDBDirtyItem *dirty_list = blob_db_get_dirty_list(db_id);
   if (!dirty_list) {
     blob_db_endpoint_send_sync_done(db_id);
-    return S_NO_ACTION_REQUIRED;
+    return 0;
   }
 
   BlobDBSyncSession *session = prv_create_sync_session(db_id, dirty_list, BlobDBSyncSessionTypeDB);
 
   prv_send_writeback(session);
 
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_t last_updated) {
+int blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_t last_updated) {
   if (db_id >= NumBlobDBs) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(db_id);
   if (session) {
     // This will get picked up by the current session when it is done with its dirty list
-    return S_SUCCESS;
+    return 0;
   }
 
   char buffer[key_len + 1];
@@ -222,7 +223,7 @@ status_t blob_db_sync_record(BlobDBId db_id, const void *key, int key_len, time_
 
   prv_send_writeback(session);
 
-  return S_SUCCESS;
+  return 0;
 }
 
 void blob_db_sync_cancel(BlobDBSyncSession *session) {

@@ -9,7 +9,6 @@
 #include <stdint.h>
 
 #include <pbl/services/timeline/item.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/iterator.h>
 
 /**
@@ -26,11 +25,11 @@
  *
  * @param id Pin UUID.
  * @param[out] pin Pin; free its buffer with timeline_item_free_allocated_buffer().
- * @retval S_SUCCESS Read.
- * @retval E_DOES_NOT_EXIST No such pin.
- * @return Other error codes on failure.
+ * @retval 0 Read.
+ * @retval -ENOENT No such pin.
+ * @return Other negative errno values on failure.
  */
-status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin);
+int pin_db_get(const TimelineItemId *id, TimelineItem *pin);
 
 /**
  * @brief Serialize and insert a pin, emitting a BlobDB insert event.
@@ -38,9 +37,9 @@ status_t pin_db_get(const TimelineItemId *id, TimelineItem *pin);
  * Pins from the reminders app data source are marked dirty and synced to the phone.
  *
  * @param item Pin, of type @c TimelineItemTypePin.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_insert_item(TimelineItem *item);
+int pin_db_insert_item(TimelineItem *item);
 
 /**
  * @brief pin_db_insert_item() without the BlobDB event.
@@ -48,18 +47,18 @@ status_t pin_db_insert_item(TimelineItem *item);
  * Meant for tests inserting many generated pins, which would otherwise flood the event queue.
  *
  * @param item Pin, of type @c TimelineItemTypePin.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_insert_item_without_event(TimelineItem *item);
+int pin_db_insert_item_without_event(TimelineItem *item);
 
 /**
  * @brief Overwrite the status bits of a pin.
  *
  * @param id Pin UUID.
  * @param status New status bits.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_set_status_bits(const TimelineItemId *id, uint8_t status);
+int pin_db_set_status_bits(const TimelineItemId *id, uint8_t status);
 
 /**
  * @brief Call a function for every record in the pin database.
@@ -69,17 +68,17 @@ status_t pin_db_set_status_bits(const TimelineItemId *id, uint8_t status);
  *
  * @param each Callback.
  * @param data User data passed to @p each.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_each(TimelineItemStorageEachCallback each, void *data);
+int pin_db_each(TimelineItemStorageEachCallback each, void *data);
 
 /**
  * @brief Delete the pins of a parent (app or data source).
  *
  * @param parent_id Parent UUID.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_delete_with_parent(const TimelineItemId *parent_id);
+int pin_db_delete_with_parent(const TimelineItemId *parent_id);
 
 /**
  * @brief Check whether a parent has pins.
@@ -94,21 +93,20 @@ bool pin_db_exists_with_parent(const TimelineItemId *parent_id);
  *
  * @param[out] item_out Item with only the header filled in.
  * @param id Pin UUID.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id);
+int pin_db_read_item_header(TimelineItem *item_out, TimelineItemId *id);
 
 /**
  * @brief Read the header of the earliest pin within the maximum age.
  *
  * @param[out] next_item_out Item with only the header filled in.
  * @param filter Optional filter, returns false to skip an item.
- * @retval S_SUCCESS Found.
- * @retval S_NO_MORE_ITEMS No matching pin.
- * @return Other error codes on failure.
+ * @retval 0 Found.
+ * @retval -ENOENT No matching pin.
+ * @return Other negative errno values on failure.
  */
-status_t pin_db_next_item_header(TimelineItem *next_item_out,
-                                 TimelineItemStorageFilterCallback filter);
+int pin_db_next_item_header(TimelineItem *next_item_out, TimelineItemStorageFilterCallback filter);
 
 /**
  * @brief Check whether a pin is older than the pin database keeps.
@@ -135,9 +133,9 @@ void pin_db_deinit(void);
  * @param key_len Length of @p key in bytes.
  * @param val Value data.
  * @param val_len Length of @p val in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
+int pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len);
 
 /**
  * @brief Get the length of a record in the pin database.
@@ -146,7 +144,7 @@ status_t pin_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int 
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return Length of the value in bytes, 0 if not found, or a negative error code.
+ * @return Length of the value in bytes, 0 if not found, or a negative errno.
  */
 int pin_db_get_len(const uint8_t *key, int key_len);
 
@@ -159,9 +157,9 @@ int pin_db_get_len(const uint8_t *key, int key_len);
  * @param key_len Length of @p key in bytes.
  * @param[out] val_out Buffer for the value.
  * @param val_out_len Size of @p val_out in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
+int pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len);
 
 /**
  * @brief Delete a record from the pin database.
@@ -170,33 +168,33 @@ status_t pin_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_delete(const uint8_t *key, int key_len);
+int pin_db_delete(const uint8_t *key, int key_len);
 
 /**
  * @brief Delete all records of the pin database.
  *
  * Pins created on the watch are kept.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_flush(void);
+int pin_db_flush(void);
 
 /**
  * @brief Compact the settings file backing the pin database.
  *
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_compact(void);
+int pin_db_compact(void);
 
 /**
  * @brief Check whether the pin database holds records not yet synced to the phone.
  *
  * @param[out] is_dirty_out Set to true if at least one record is dirty.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_is_dirty(bool *is_dirty_out);
+int pin_db_is_dirty(bool *is_dirty_out);
 
 /**
  * @brief Build the list of records of the pin database not yet synced to the phone.
@@ -212,8 +210,8 @@ BlobDBDirtyItem *pin_db_get_dirty_list(void);
  *
  * @param key Key data.
  * @param key_len Length of @p key in bytes.
- * @return @c S_SUCCESS on success, an error code otherwise.
+ * @return 0 on success, a negative errno otherwise.
  */
-status_t pin_db_mark_synced(const uint8_t *key, int key_len);
+int pin_db_mark_synced(const uint8_t *key, int key_len);
 
 /** @} */

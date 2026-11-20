@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <stddef.h>
 
@@ -222,8 +223,8 @@ void blob_db_compact_growable_dbs(void) {
     if (!db->compact) {
       continue;
     }
-    const status_t rv = db->compact();
-    PBL_LOG_INFO("blob_db_compact_growable_dbs: %s -> %" PRIi32, db->name ? db->name : "?", rv);
+    const int rv = db->compact();
+    PBL_LOG_INFO("blob_db_compact_growable_dbs: %s -> %d", db->name ? db->name : "?", rv);
   }
   PBL_LOG_INFO("blob_db_compact_growable_dbs: done");
 }
@@ -233,35 +234,35 @@ void blob_db_get_dirty_dbs(uint8_t *ids, uint8_t *num_ids) {
   *num_ids = 0;
   for (uint8_t i = 0; i < NumBlobDBs; ++i, ++db) {
     bool is_dirty = false;
-    if (db->is_dirty && (db->is_dirty(&is_dirty) == S_SUCCESS) && is_dirty) {
+    if (db->is_dirty && (db->is_dirty(&is_dirty) == 0) && is_dirty) {
       ids[*num_ids] = i;
       *num_ids += 1;
     }
   }
 }
 
-status_t blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
-                        int val_len) {
+int blob_db_insert(BlobDBId db_id, const uint8_t *key, int key_len, const uint8_t *val,
+                   int val_len) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
   if (db->insert) {
-    status_t rv = db->insert(key, key_len, val, val_len);
-    if (rv == S_SUCCESS) {
+    int rv = db->insert(key, key_len, val, val_len);
+    if (rv == 0) {
       blob_db_event_put(BlobDBEventTypeInsert, db_id, key, key_len);
     }
 
     return rv;
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }
 
 int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
@@ -269,13 +270,12 @@ int blob_db_get_len(BlobDBId db_id, const uint8_t *key, int key_len) {
     return db->get_len(key, key_len);
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }
 
-status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out,
-                      int val_len) {
+int blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *val_out, int val_len) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
@@ -283,42 +283,42 @@ status_t blob_db_read(BlobDBId db_id, const uint8_t *key, int key_len, uint8_t *
     return db->read(key, key_len, val_out, val_len);
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }
 
-status_t blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
+int blob_db_delete(BlobDBId db_id, const uint8_t *key, int key_len) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
   if (db->del) {
-    status_t rv = db->del(key, key_len);
-    if (rv == S_SUCCESS) {
+    int rv = db->del(key, key_len);
+    if (rv == 0) {
       blob_db_event_put(BlobDBEventTypeDelete, db_id, key, key_len);
     }
     return rv;
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }
 
-status_t blob_db_flush(BlobDBId db_id) {
+int blob_db_flush(BlobDBId db_id) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
   if (db->flush) {
-    status_t rv = db->flush();
-    if (rv == S_SUCCESS) {
+    int rv = db->flush();
+    if (rv == 0) {
       PBL_LOG_INFO("Flushing BlobDB with Id %d", db_id);
       blob_db_event_put(BlobDBEventTypeFlush, db_id, nullptr, 0);
     }
     return rv;
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }
 
 BlobDBDirtyItem *blob_db_get_dirty_list(BlobDBId db_id) {
@@ -334,17 +334,17 @@ BlobDBDirtyItem *blob_db_get_dirty_list(BlobDBId db_id) {
   return nullptr;
 }
 
-status_t blob_db_mark_synced(BlobDBId db_id, uint8_t *key, int key_len) {
+int blob_db_mark_synced(BlobDBId db_id, uint8_t *key, int key_len) {
   if (!prv_db_valid(db_id)) {
-    return E_RANGE;
+    return -ENODEV;
   }
 
   const BlobDB *db = &s_blob_dbs[db_id];
   if (db->mark_synced) {
-    status_t rv = db->mark_synced(key, key_len);
+    int rv = db->mark_synced(key, key_len);
     // TODO event?
     return rv;
   }
 
-  return E_INVALID_OPERATION;
+  return -ENOTSUP;
 }

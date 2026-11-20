@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <clar.h>
 
 // Fakes
@@ -86,14 +88,14 @@ void test_blob_db_sync__no_dirty(void) {
   // insert one
   char *key = "key";
   char *value = "value";
-  cl_assert_equal_i(S_SUCCESS, blob_db_insert(BlobDBIdTest, (uint8_t *)key, strlen(key),
-                                              (uint8_t *)value, strlen(value)));
+  cl_assert_equal_i(0, blob_db_insert(BlobDBIdTest, (uint8_t *)key, strlen(key), (uint8_t *)value,
+                                      strlen(value)));
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 1);
   cl_assert(blob_db_get_dirty_list(BlobDBIdTest) != nullptr);
 
   // mark it synced
-  cl_assert_equal_i(S_SUCCESS, blob_db_mark_synced(BlobDBIdTest, (uint8_t *)key, strlen(key)));
+  cl_assert_equal_i(0, blob_db_mark_synced(BlobDBIdTest, (uint8_t *)key, strlen(key)));
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 0);
   cl_assert(blob_db_get_dirty_list(BlobDBIdTest) == nullptr);
@@ -159,7 +161,7 @@ void test_blob_db_sync__sync_all(void) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
   prv_generate_responses_from_phone();
 
   cl_assert_equal_i(s_num_writebacks, 5);
@@ -176,7 +178,7 @@ void test_blob_db_sync__sync_oom(void) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
 
   // We have built the dirty list, add more entries.
   // This mimics us performing writes while the sync is ongoing or not having enough memory to
@@ -208,7 +210,7 @@ void test_blob_db_sync__sync_some(void) {
     }
   }
 
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
   prv_generate_responses_from_phone();
 
   cl_assert_equal_i(s_num_writebacks, 3);
@@ -227,7 +229,7 @@ void test_blob_db_sync__timeout_and_retry(void) {
 
   s_num_until_timeout = 3;
   s_num_writebacks = 0;
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
   prv_generate_responses_from_phone();
   cl_assert_equal_i(s_num_writebacks, s_num_until_timeout);
 
@@ -237,7 +239,7 @@ void test_blob_db_sync__timeout_and_retry(void) {
   blob_db_sync_cancel(session);
 
   s_num_until_timeout = 0;
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
   prv_generate_responses_from_phone();
   cl_assert_equal_i(s_num_writebacks, 5);
 }
@@ -252,11 +254,11 @@ void test_blob_db_sync__sync_while_syncing(void) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
 
   // We should throw an error if we get a sync while a db sync in in progress
   int net_allocs = fake_pbl_malloc_num_net_allocs();
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == E_BUSY);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == -EBUSY);
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), net_allocs);
 
   // Generate some responses so the sync session gets cleaned up
@@ -273,7 +275,7 @@ static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
-  cl_assert(blob_db_sync_db(BlobDBIdTest) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(BlobDBIdTest) == 0);
   BlobDBSyncSession *session = blob_db_sync_get_session_for_id(BlobDBIdTest);
   cl_assert(session != nullptr);
   return session;
@@ -358,7 +360,7 @@ static void prv_fill_stop_return_session(BlobDBId id) {
     blob_db_insert(id, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
   s_num_writebacks = 0;
-  cl_assert(blob_db_sync_db(id) == S_SUCCESS);
+  cl_assert(blob_db_sync_db(id) == 0);
 }
 
 void test_blob_db_sync__find_session(void) {

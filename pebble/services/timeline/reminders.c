@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -80,25 +82,25 @@ static void prv_job_callback(struct pbl_cron_job *job, void *data) {
   }
 }
 
-static status_t prv_set_timer(Reminder *item) {
+static int prv_set_timer(Reminder *item) {
   s_next_reminder_id = item->header.id;
   s_next_reminder_timestamp = item->header.timestamp;
   s_reminder_armed = true;
   pbl_cron_job_schedule_at(&s_reminder_job, s_next_reminder_timestamp);
   PBL_LOG_DBG("Set reminder for %ld", (long)s_next_reminder_timestamp);
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t reminders_update_timer(void) {
+int reminders_update_timer(void) {
   PBL_LOG_DBG("Attempting to update timer.");
   s_reminder_armed = false;
   pbl_cron_job_unschedule(&s_reminder_job);
 
   TimelineItem item = {};
-  status_t rv = reminder_db_next_item_header(&item);
-  if (rv == S_NO_MORE_ITEMS) {
+  int rv = reminder_db_next_item_header(&item);
+  if (rv == -ENOENT) {
     PBL_LOG_DBG("No more reminders to add to queue.");
-    return S_SUCCESS;
+    return 0;
   } else if (rv) {
     return rv;
   }
@@ -106,16 +108,16 @@ status_t reminders_update_timer(void) {
   return prv_set_timer(&item);
 }
 
-status_t reminders_insert(Reminder *reminder) {
-  status_t rv = reminder_db_insert_item(reminder);
+int reminders_insert(Reminder *reminder) {
+  int rv = reminder_db_insert_item(reminder);
   return rv;
 }
 
-status_t reminders_init(void) {
+int reminders_init(void) {
   return reminders_update_timer();
 }
 
-status_t reminders_delete(ReminderId *reminder_id) {
+int reminders_delete(ReminderId *reminder_id) {
   return reminder_db_delete_item(reminder_id, true /* send_event */);
 }
 
@@ -131,8 +133,8 @@ PBL_T_STATIC uint32_t prv_calculate_snooze_delay(TimelineItem *item) {
   // Get parent pin
   const TimelineItemId *parent_id = &item->header.parent_id;
   TimelineItem parent_item;
-  status_t status = pin_db_get(parent_id, &parent_item);
-  if (status != S_SUCCESS) {
+  int status = pin_db_get(parent_id, &parent_item);
+  if (status != 0) {
     return INVALID_SNOOZE_DELAY;
   }
 
@@ -164,10 +166,10 @@ bool reminders_can_snooze(Reminder *reminder) {
   return (prv_calculate_snooze_delay((TimelineItem *)reminder) > 0);
 }
 
-status_t reminders_snooze(Reminder *reminder) {
+int reminders_snooze(Reminder *reminder) {
   uint32_t snooze_delay = prv_calculate_snooze_delay((TimelineItem *)reminder);
   if (snooze_delay == 0) {
-    return E_INVALID_OPERATION;
+    return -ENOTSUP;
   }
 
   // Modify reminder timestamp
@@ -199,6 +201,6 @@ ReminderId *get_reminder_id(void) {
 }
 
 bool reminders_mark_has_reminded(ReminderId *reminder_id) {
-  status_t rv = reminder_db_set_status_bits(reminder_id, TimelineItemStatusReminded);
-  return (rv == S_SUCCESS);
+  int rv = reminder_db_set_status_bits(reminder_id, TimelineItemStatusReminded);
+  return (rv == 0);
 }

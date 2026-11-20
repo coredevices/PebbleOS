@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
@@ -8,12 +10,9 @@
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/weather/weather_service_private.h>
 #include <pbl/settings/settings.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
-
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_blob_db, CONFIG_SERVICE_BLOB_DB_LOG_LEVEL);
 
@@ -35,11 +34,11 @@ PBL_T_STATIC const char *PREF_KEY_SEND_TEXT_APP = "sendTextApp";
 // Settings helpers
 ////////////////////////////////////////////////////////////////////////////////
 
-static status_t prv_lock_mutex_and_open_file(void) {
+static int prv_lock_mutex_and_open_file(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_settings_open_growable(
-      &s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE, PBL_KIB(4)));
-  if (rv != S_SUCCESS) {
+  int rv = pbl_settings_open_growable(&s_watch_app_prefs_db.settings_file, SETTINGS_FILE_NAME,
+                                      SETTINGS_FILE_SIZE, PBL_KIB(4));
+  if (rv != 0) {
     pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   }
   return rv;
@@ -54,8 +53,8 @@ static void prv_close_file_and_unlock_mutex(void) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void *prv_get_prefs(const char *pref_key) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return nullptr;
   }
 
@@ -64,9 +63,9 @@ static void *prv_get_prefs(const char *pref_key) {
   void *prefs = pbl_zalloc(len);
 
   if (prefs) {
-    rv = status_from_errno(pbl_settings_get(&s_watch_app_prefs_db.settings_file, pref_key,
-                                            strlen(pref_key), prefs, len));
-    if (rv != S_SUCCESS) {
+    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, pref_key, strlen(pref_key), prefs,
+                          len);
+    if (rv != 0) {
       pbl_free(prefs);
       prefs = nullptr;
     }
@@ -132,15 +131,14 @@ static bool prv_is_key_valid(const uint8_t *received_key, size_t received_key_le
          (memcmp(received_key, system_key, received_key_len) == 0);
 }
 
-status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_t *val,
-                                   int val_len) {
+int watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_t *val, int val_len) {
   const bool is_valid_send_text_key = prv_is_key_valid(key, key_len, PREF_KEY_SEND_TEXT_APP);
   const bool is_valid_weather_key = prv_is_key_valid(key, key_len, PREF_KEY_WEATHER_APP);
   const bool is_valid_reminder_key = prv_is_key_valid(key, key_len, PREF_KEY_REMINDER_APP);
 
   if (!is_valid_send_text_key && !is_valid_weather_key && !is_valid_reminder_key) {
     PBL_LOG_ERR("Error inserting app_prefs: invalid key");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   if (is_valid_send_text_key &&
@@ -148,7 +146,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
                                   ((SerializedSendTextPrefs *)val)->num_contacts,
                                   sizeof(SerializedSendTextContact))) {
     PBL_LOG_ERR("Error inserting app_prefs: invalid send text contact list");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   if (is_valid_weather_key &&
@@ -156,18 +154,16 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
                                   ((SerializedWeatherAppPrefs *)val)->num_locations,
                                   sizeof(Uuid))) {
     PBL_LOG_ERR("Error inserting app_prefs: invalid weather list");
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv == S_SUCCESS) {
-    rv = status_from_errno(
-        pbl_settings_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len));
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv == 0) {
+    rv = pbl_settings_set(&s_watch_app_prefs_db.settings_file, key, key_len, val, val_len);
 
     // Cache the data we just set if it was for the Reminders app
     const int expected_reminder_app_prefs_size = sizeof(SerializedReminderAppPrefs);
-    if ((rv == S_SUCCESS) && is_valid_reminder_key &&
-        (val_len == expected_reminder_app_prefs_size)) {
+    if ((rv == 0) && is_valid_reminder_key && (val_len == expected_reminder_app_prefs_size)) {
       s_watch_app_prefs_db.is_cached_reminder_app_prefs_valid = true;
       memcpy(&s_watch_app_prefs_db.cached_reminder_app_prefs, val,
              (size_t)expected_reminder_app_prefs_size);
@@ -180,7 +176,7 @@ status_t watch_app_prefs_db_insert(const uint8_t *key, int key_len, const uint8_
 
 int watch_app_prefs_db_get_len(const uint8_t *key, int key_len) {
   int len = 0;
-  if (prv_lock_mutex_and_open_file() == S_SUCCESS) {
+  if (prv_lock_mutex_and_open_file() == 0) {
     len = pbl_settings_get_len(&s_watch_app_prefs_db.settings_file, key, key_len);
     prv_close_file_and_unlock_mutex();
   }
@@ -188,45 +184,43 @@ int watch_app_prefs_db_get_len(const uint8_t *key, int key_len) {
   return len;
 }
 
-status_t watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_out,
-                                 int val_out_len) {
+int watch_app_prefs_db_read(const uint8_t *key, int key_len, uint8_t *val_out, int val_out_len) {
   if (!val_out) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv == S_SUCCESS) {
-    rv = status_from_errno(
-        pbl_settings_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len));
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv == 0) {
+    rv = pbl_settings_get(&s_watch_app_prefs_db.settings_file, key, key_len, val_out, val_out_len);
     prv_close_file_and_unlock_mutex();
   }
 
   return rv;
 }
 
-status_t watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv == S_SUCCESS) {
-    rv = status_from_errno(pbl_settings_delete(&s_watch_app_prefs_db.settings_file, key, key_len));
+int watch_app_prefs_db_delete(const uint8_t *key, int key_len) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv == 0) {
+    rv = pbl_settings_delete(&s_watch_app_prefs_db.settings_file, key, key_len);
     prv_close_file_and_unlock_mutex();
   }
 
   return rv;
 }
 
-status_t watch_app_prefs_db_flush(void) {
+int watch_app_prefs_db_flush(void) {
   pbl_mutex_lock(&s_watch_app_prefs_db.mutex, PBL_FOREVER);
-  status_t rv = status_from_errno(pbl_fs_unlink(SETTINGS_FILE_NAME));
+  int rv = pbl_fs_unlink(SETTINGS_FILE_NAME);
   pbl_mutex_unlock(&s_watch_app_prefs_db.mutex);
   return rv;
 }
 
-status_t watch_app_prefs_db_compact(void) {
-  status_t rv = prv_lock_mutex_and_open_file();
-  if (rv != S_SUCCESS) {
+int watch_app_prefs_db_compact(void) {
+  int rv = prv_lock_mutex_and_open_file();
+  if (rv != 0) {
     return rv;
   }
-  rv = status_from_errno(pbl_settings_compact(&s_watch_app_prefs_db.settings_file));
+  rv = pbl_settings_compact(&s_watch_app_prefs_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
 }

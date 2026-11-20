@@ -3,6 +3,7 @@
 
 #include "ram_storage.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
@@ -36,8 +37,8 @@ static void prv_delete(RamStorageEntry **entries, RamStorageEntry *entry) {
   pbl_free(entry);
 }
 
-status_t ram_storage_insert(RamStorage *storage, const uint8_t *key, int key_len,
-                            const uint8_t *val, int val_len) {
+int ram_storage_insert(RamStorage *storage, const uint8_t *key, int key_len, const uint8_t *val,
+                       int val_len) {
   // delete entry if it already exists
   RamStorageEntry *entry = prv_get_entry(storage->entries, key, key_len);
   if (entry) {
@@ -67,36 +68,36 @@ int ram_storage_get_len(RamStorage *storage, const uint8_t *key, int key_len) {
     return entry->val_len;
   }
 
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t ram_storage_read(RamStorage *storage, const uint8_t *key, int key_len, uint8_t *val_out,
-                          int val_len) {
+int ram_storage_read(RamStorage *storage, const uint8_t *key, int key_len, uint8_t *val_out,
+                     int val_len) {
   RamStorageEntry *entry = prv_get_entry(storage->entries, key, key_len);
   if (entry) {
     memcpy(val_out, entry->val, val_len);
-    return S_SUCCESS;
+    return 0;
   }
 
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t ram_storage_delete(RamStorage *storage, const uint8_t *key, int key_len) {
+int ram_storage_delete(RamStorage *storage, const uint8_t *key, int key_len) {
   RamStorageEntry *entry = prv_get_entry(storage->entries, key, key_len);
   if (entry) {
     prv_delete(&storage->entries, entry);
-    return S_SUCCESS;
+    return 0;
   }
 
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t ram_storage_flush(RamStorage *storage) {
+int ram_storage_flush(RamStorage *storage) {
   while (storage->entries) {
     prv_delete(&storage->entries, storage->entries);
   }
 
-  return S_SUCCESS;
+  return 0;
 }
 
 RamStorage ram_storage_create(void) {
@@ -110,22 +111,22 @@ static bool prv_find_dirty(ListNode *found_node, void *data) {
   return !!(entry->flags & RamStorageFlagDirty);
 }
 
-status_t ram_storage_is_dirty(RamStorage *storage, bool *is_dirty_out) {
+int ram_storage_is_dirty(RamStorage *storage, bool *is_dirty_out) {
   *is_dirty_out = (list_find((ListNode *)storage->entries, prv_find_dirty, nullptr) != nullptr);
-  return S_SUCCESS;
+  return 0;
 }
 
-status_t ram_storage_mark_synced(RamStorage *storage, uint8_t *key, int key_len) {
+int ram_storage_mark_synced(RamStorage *storage, uint8_t *key, int key_len) {
   RamStorageEntry *entry = prv_get_entry(storage->entries, key, key_len);
   if (entry) {
     entry->flags &= ~RamStorageFlagDirty;
-    return S_SUCCESS;
+    return 0;
   }
 
-  return E_DOES_NOT_EXIST;
+  return -ENOENT;
 }
 
-status_t ram_storage_each(RamStorage *storage, RamStorageEachCb cb, void *context) {
+int ram_storage_each(RamStorage *storage, RamStorageEachCb cb, void *context) {
   RamStorageEntry *cur = storage->entries;
   while (cur) {
     if (!cb(cur, context)) {
@@ -134,5 +135,5 @@ status_t ram_storage_each(RamStorage *storage, RamStorageEachCb cb, void *contex
     cur = (RamStorageEntry *)cur->node.next;
   }
 
-  return S_SUCCESS;
+  return 0;
 }
