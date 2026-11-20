@@ -331,3 +331,7 @@
 	sdout-gpios = <&gpio0 13 0>;
 	status = "okay";
 };
+
+&temp {
+	status = "okay";
+};

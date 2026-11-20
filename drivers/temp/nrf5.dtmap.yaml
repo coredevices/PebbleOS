@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-temp
+config: TEMP_NRF5
+class: temp
+define: PBL_TEMP_NRF5_DEFINE
+args:
+  - name: true
+  - reg: 0
