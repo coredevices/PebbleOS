@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_ANCS_CLIENT
+    bool "ANCS client"
+    depends on NIMBLE
+    select BT_GATT_CLIENT
+    help
+      Client of the Apple Notification Center Service of a connected iOS
+      device (pbl/bluetooth/clients/ancs.h): its notifications, their
+      attributes and their actions.

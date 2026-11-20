@@ -3,7 +3,6 @@
 
 add_subdirectory(clients)
 
-
 if(CONFIG_BT)
   file(GLOB sources CONFIGURE_DEPENDS *.c)
   pbl_library()
