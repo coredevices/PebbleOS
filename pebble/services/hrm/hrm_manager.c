@@ -18,6 +18,7 @@
 #ifdef CONFIG_SERVICE_ACTIVITY
 #include <pbl/services/activity/health_permission.h>
 #endif
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/util/math.h>

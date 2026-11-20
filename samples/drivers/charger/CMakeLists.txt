@@ -4,6 +4,6 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(PebbleOS REQUIRED HINTS $ENV{PEBBLEOS_BASE})
-project(battery)
+project(charger)
 
 target_sources(app PRIVATE src/main.c)

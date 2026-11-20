@@ -14,11 +14,11 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/console/console.h>
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/battery.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/mcu/fpu.h>
 #include <pbl/pp/transports/qemu.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/clock.h>
@@ -587,16 +587,6 @@ static void PBL_NOINLINE prv_handle_event(PebbleEvent *e) {
   shell_event_loop_handle_event(e);
 }
 
-static void prv_battery_connection_handler(bool is_connected) {
-  PebbleEvent event = {
-    .type = PEBBLE_BATTERY_CONNECTION_EVENT,
-    .battery_connection = {
-      .is_connected = is_connected,
-    },
-  };
-  event_put(&event);
-}
-
 static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   process_manager_init();
   app_manager_init();
@@ -607,7 +597,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   // arm it once vibes_init() has run; it must never fire before this point.
   clock_hourly_chime_arm();
 #endif
-  battery_set_connection_handler(prv_battery_connection_handler);
+  battery_charger_init();
   battery_monitor_init();
   evented_timer_init();
 #ifdef CONFIG_MAG

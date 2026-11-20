@@ -11,7 +11,7 @@
 #include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/drivers/mag.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
@@ -234,7 +234,7 @@ static void prv_enter_fail(AppData *data, const char *reason) {
   prv_cleanup_component(data);
   // Restore charging in case we disabled it during the charge+cycle phase,
   // so the device is left in a normal state on exit.
-  battery_set_charge_enable(true);
+  (void)pbl_charger_enable(CHARGER, true);
   data->state = AgingStateFail;
   snprintf(data->fail_reason, sizeof(data->fail_reason), "%s", reason);
   PBL_LOG_ERR("Aging test FAIL: %s", reason);
@@ -326,30 +326,30 @@ static void prv_run_component_display(AppData *data) {
       break;
   }
 
-  BatteryConstants bc;
-  battery_get_constants(&bc);
+  struct pbl_charger_measurements bc;
+  (void)pbl_charger_get_measurements(CHARGER, &bc);
   BatteryChargeState cs = battery_get_charge_state();
 
-  int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-  uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+  int8_t temp_c = (int8_t)(bc.temp_mc / 1000);
+  uint8_t temp_c_frac = ((bc.temp_mc > 0 ? bc.temp_mc : -bc.temp_mc) % 1000) / 10;
 
-  BatteryChargeStatus charge_status;
-  battery_charge_status_get(&charge_status);
+  enum pbl_charger_status charge_status;
+  (void)pbl_charger_get_status(CHARGER, &charge_status);
   const char *chg_str;
   if (!cs.is_charging) {
     chg_str = "Idle";
   } else {
     switch (charge_status) {
-      case BatteryChargeStatusComplete:
+      case PBL_CHARGER_STATUS_FULL:
         chg_str = "Cmpl";
         break;
-      case BatteryChargeStatusTrickle:
+      case PBL_CHARGER_STATUS_TRICKLE:
         chg_str = "Trk";
         break;
-      case BatteryChargeStatusCC:
+      case PBL_CHARGER_STATUS_CONSTANT_CURRENT:
         chg_str = "CC";
         break;
-      case BatteryChargeStatusCV:
+      case PBL_CHARGER_STATUS_CONSTANT_VOLTAGE:
         chg_str = "CV";
         break;
       default:
@@ -369,8 +369,8 @@ static void prv_run_component_display(AppData *data) {
            "%" PRId8 ".%02" PRIu8
            "C\n"
            "%s",
-           comp_name, data->cycle_count, time_str, rem_str, bc.v_mv, cs.charge_percent, chg_str,
-           temp_c, temp_c_frac, comp_detail);
+           comp_name, data->cycle_count, time_str, rem_str, bc.voltage_mv, cs.charge_percent,
+           chg_str, temp_c, temp_c_frac, comp_detail);
 }
 
 static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
@@ -401,8 +401,8 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
       data->phase_elapsed_sec++;
       data->component_elapsed_sec++;
 
-      BatteryConstants bc;
-      battery_get_constants(&bc);
+      struct pbl_charger_measurements bc;
+      (void)pbl_charger_get_measurements(CHARGER, &bc);
       BatteryChargeState cs = battery_get_charge_state();
 
       if (!cs.is_plugged) {
@@ -410,7 +410,7 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
         break;
       }
 
-      if (bc.t_mc < TEMP_MIN_MC || bc.t_mc > TEMP_MAX_MC) {
+      if (bc.temp_mc < TEMP_MIN_MC || bc.temp_mc > TEMP_MAX_MC) {
         prv_enter_fail(data, "Temperature out\nof range");
         break;
       }
@@ -429,7 +429,7 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
           // cycling phase, which is gentler on the cell. The battery may sag a
           // little under cycling load with charging off; that's expected, and
           // charge retention is validated separately by the idle phase.
-          battery_set_charge_enable(false);
+          (void)pbl_charger_enable(CHARGER, false);
         } else if (data->phase_elapsed_sec >= CHARGE_TIMEOUT_SEC) {
           prv_enter_fail(data, "Charge timeout\n(90min)");
           break;
@@ -443,7 +443,7 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
           break;
         }
         prv_cleanup_component(data);
-        battery_set_charge_enable(true);
+        (void)pbl_charger_enable(CHARGER, true);
         data->state = AgingStateWaitUnplug;
         break;
       }
@@ -482,8 +482,8 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
     case AgingStateDraining: {
       data->phase_elapsed_sec += PBL_SEC_PER_MIN;
 
-      BatteryConstants bc;
-      battery_get_constants(&bc);
+      struct pbl_charger_measurements bc;
+      (void)pbl_charger_get_measurements(CHARGER, &bc);
       BatteryChargeState cs = battery_get_charge_state();
 
       if (cs.is_plugged) {
@@ -502,8 +502,8 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
       char time_str[16];
       prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
 
-      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+      int8_t temp_c = (int8_t)(bc.temp_mc / 1000);
+      uint8_t temp_c_frac = ((bc.temp_mc > 0 ? bc.temp_mc : -bc.temp_mc) % 1000) / 10;
 
       snprintf(data->status_string, sizeof(data->status_string),
                "DRAINING\nTime: %s\n\n"
@@ -512,15 +512,16 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
                "%" PRId8 ".%02" PRIu8
                "C\n\n"
                "Target: %d%%",
-               time_str, bc.v_mv, cs.charge_percent, temp_c, temp_c_frac, DRAIN_TARGET_PERCENT);
+               time_str, bc.voltage_mv, cs.charge_percent, temp_c, temp_c_frac,
+               DRAIN_TARGET_PERCENT);
       break;
     }
 
     case AgingStateSettling: {
       data->phase_elapsed_sec += PBL_SEC_PER_MIN;
 
-      BatteryConstants bc;
-      battery_get_constants(&bc);
+      struct pbl_charger_measurements bc;
+      (void)pbl_charger_get_measurements(CHARGER, &bc);
       BatteryChargeState cs = battery_get_charge_state();
 
       if (cs.is_plugged) {
@@ -534,7 +535,7 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
         data->state = AgingStateIdle;
         data->phase_elapsed_sec = 0;
         data->initial_percent = cs.charge_percent;
-        data->initial_voltage_mv = bc.v_mv;
+        data->initial_voltage_mv = bc.voltage_mv;
         snprintf(data->status_string, sizeof(data->status_string), "IDLE\nStarting...");
         break;
       }
@@ -543,8 +544,8 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
       prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
       prv_format_time(rem_str, sizeof(rem_str), SETTLE_DURATION_SEC - data->phase_elapsed_sec);
 
-      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+      int8_t temp_c = (int8_t)(bc.temp_mc / 1000);
+      uint8_t temp_c_frac = ((bc.temp_mc > 0 ? bc.temp_mc : -bc.temp_mc) % 1000) / 10;
 
       snprintf(data->status_string, sizeof(data->status_string),
                "SETTLING\n"
@@ -553,15 +554,15 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
                "%" PRId32 "mV %" PRIu8
                "%%\n"
                "%" PRId8 ".%02" PRIu8 "C",
-               time_str, rem_str, bc.v_mv, cs.charge_percent, temp_c, temp_c_frac);
+               time_str, rem_str, bc.voltage_mv, cs.charge_percent, temp_c, temp_c_frac);
       break;
     }
 
     case AgingStateIdle: {
       data->phase_elapsed_sec += PBL_SEC_PER_MIN;
 
-      BatteryConstants bc;
-      battery_get_constants(&bc);
+      struct pbl_charger_measurements bc;
+      (void)pbl_charger_get_measurements(CHARGER, &bc);
       BatteryChargeState cs = battery_get_charge_state();
 
       if (cs.is_plugged) {
@@ -576,10 +577,10 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
 
       // Phase done?
       if (data->phase_elapsed_sec >= IDLE_DURATION_SEC) {
-        int32_t drop_mv = data->initial_voltage_mv - bc.v_mv;
+        int32_t drop_mv = data->initial_voltage_mv - bc.voltage_mv;
         PBL_LOG_INFO("Aging idle: SoC %u -> %u, %" PRId32 "mV -> %" PRId32 "mV",
                      (unsigned int)data->initial_percent, (unsigned int)cs.charge_percent,
-                     data->initial_voltage_mv, bc.v_mv);
+                     data->initial_voltage_mv, bc.voltage_mv);
 
         if (drop > IDLE_MAX_DROP_PERCENT) {
           char reason[64];
@@ -602,8 +603,8 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
       prv_format_time(time_str, sizeof(time_str), data->phase_elapsed_sec);
       prv_format_time(rem_str, sizeof(rem_str), IDLE_DURATION_SEC - data->phase_elapsed_sec);
 
-      int8_t temp_c = (int8_t)(bc.t_mc / 1000);
-      uint8_t temp_c_frac = ((bc.t_mc > 0 ? bc.t_mc : -bc.t_mc) % 1000) / 10;
+      int8_t temp_c = (int8_t)(bc.temp_mc / 1000);
+      uint8_t temp_c_frac = ((bc.temp_mc > 0 ? bc.temp_mc : -bc.temp_mc) % 1000) / 10;
 
       snprintf(data->status_string, sizeof(data->status_string),
                "IDLE\n"
@@ -614,7 +615,7 @@ static void prv_handle_tick(struct pbl_tm *tick_time, TimeUnits units_changed) {
                "%" PRId8 ".%02" PRIu8
                "C\n"
                "Start:%" PRIu8 "%% Drop:%" PRId8 "/%d%%",
-               time_str, rem_str, bc.v_mv, cs.charge_percent, temp_c, temp_c_frac,
+               time_str, rem_str, bc.voltage_mv, cs.charge_percent, temp_c, temp_c_frac,
                data->initial_percent, drop, IDLE_MAX_DROP_PERCENT);
       break;
     }
@@ -638,7 +639,7 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context)
     prv_drain_light_enable(data, false);
   } else if (data->state == AgingStateChargingAndCycling) {
     prv_cleanup_component(data);
-    battery_set_charge_enable(true);
+    (void)pbl_charger_enable(CHARGER, true);
   }
 
   tick_timer_service_unsubscribe();
@@ -679,7 +680,7 @@ static void prv_handle_init(void) {
 
   // Make sure charging is enabled at start of test in case a previous run
   // left it disabled.
-  battery_set_charge_enable(true);
+  (void)pbl_charger_enable(CHARGER, true);
 
   Window *window = &data->window;
   window_init(window, "");

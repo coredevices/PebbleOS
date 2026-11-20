@@ -1,0 +1,10 @@
+description: The battery voltage, current and temperature, and the charger state, read three times
+expect:
+  - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'charger: external power (present|absent), charge [a-z ]+'
+  - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'charger: external power (present|absent), charge [a-z ]+'
+  - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
+  - 'charger: external power (present|absent), charge [a-z ]+'
+  - 'Sample done'
+roles: [charger]

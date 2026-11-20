@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/audio.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/util/size.h>
 #include <pbl/util/trig.h>
@@ -110,7 +110,7 @@ int main(void) {
 
 #ifdef CONFIG_CHARGER_HIGH_LOAD
   /* The speaker draws more than the battery gives by default. */
-  (void)battery_high_load_request();
+  (void)pbl_charger_high_load_request(CHARGER);
 #endif
 
   ret = pbl_audio_start(SPEAKER, &stream);
@@ -120,7 +120,7 @@ int main(void) {
   }
 
 #ifdef CONFIG_CHARGER_HIGH_LOAD
-  (void)battery_high_load_release();
+  (void)pbl_charger_high_load_release(CHARGER);
 #endif
 
   pbl_audio_buf_free(stream.buf);

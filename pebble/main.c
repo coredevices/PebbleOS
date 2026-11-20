@@ -6,7 +6,6 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/board/partitions.h>
-#include <pbl/drivers/battery.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/vibe.h>
@@ -65,8 +64,6 @@ static void print_splash_screen(void) {
 }
 
 static void init_drivers(void) {
-  battery_init();
-
   (void)pbl_flash_partition_protect(PART_SAFE_FIRMWARE);
 
   uint8_t vibe_cali = mfg_info_get_vibe_cali();

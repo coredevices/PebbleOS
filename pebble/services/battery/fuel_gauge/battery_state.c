@@ -7,6 +7,7 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/fuel_gauge/fuel_gauge.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -14,6 +15,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/util/ratio.h>
 
@@ -50,7 +52,7 @@ static PBL_DELAYED_WORK_DEFINE(s_periodic_timer, prv_update_callback);
 static volatile bool s_update_pending = false;
 static volatile bool s_pending_force_update = false;
 
-static BatteryChargeStatus s_last_chg_status;
+static enum pbl_charger_status s_last_chg_status;
 static uint64_t prv_ref_time;
 static int32_t s_last_voltage_mv;
 static int32_t s_last_temp_mc;
@@ -94,11 +96,19 @@ static void prv_save_state(void) {
 
 static void prv_schedule_update(uint32_t delay);
 
-static struct pbl_fuel_gauge_meas prv_meas(const BatteryConstants *constants) {
+static bool prv_charger_online(void) {
+  bool online = false;
+
+  (void)pbl_charger_is_online(CHARGER, &online);
+
+  return online;
+}
+
+static struct pbl_fuel_gauge_meas prv_meas(const struct pbl_charger_measurements *constants) {
   return (struct pbl_fuel_gauge_meas){
-    .v = (float)constants->v_mv / 1000.0f,
-    .i = (float)constants->i_ua / 1000000.0f,
-    .t = (float)constants->t_mc / 1000.0f,
+    .v = (float)constants->voltage_mv / 1000.0f,
+    .i = (float)constants->current_ua / 1000000.0f,
+    .t = (float)constants->temp_mc / 1000.0f,
   };
 }
 
@@ -127,7 +137,7 @@ static void prv_cell_init(void) {
   };
 }
 
-static void prv_fuel_gauge_init(const BatteryConstants *constants) {
+static void prv_fuel_gauge_init(const struct pbl_charger_measurements *constants) {
   const struct pbl_fuel_gauge_meas meas = prv_meas(constants);
   const struct pbl_fuel_gauge_state *saved = nullptr;
   int ret;
@@ -152,18 +162,18 @@ static void prv_fuel_gauge_init(const BatteryConstants *constants) {
 }
 
 static enum pbl_fuel_gauge_charge_state prv_charge_state(bool is_plugged,
-                                                         BatteryChargeStatus chg_status) {
+                                                         enum pbl_charger_status chg_status) {
   if (!is_plugged) {
     return PBL_FUEL_GAUGE_DISCHARGING;
   }
 
   switch (chg_status) {
-    case BatteryChargeStatusComplete:
+    case PBL_CHARGER_STATUS_FULL:
       return PBL_FUEL_GAUGE_CHARGE_COMPLETE;
-    case BatteryChargeStatusTrickle:
-    case BatteryChargeStatusCC:
+    case PBL_CHARGER_STATUS_TRICKLE:
+    case PBL_CHARGER_STATUS_CONSTANT_CURRENT:
       return PBL_FUEL_GAUGE_CHARGING_CC;
-    case BatteryChargeStatusCV:
+    case PBL_CHARGER_STATUS_CONSTANT_VOLTAGE:
       return PBL_FUEL_GAUGE_CHARGING_CV;
     default:
       return PBL_FUEL_GAUGE_DISCHARGING;
@@ -182,8 +192,8 @@ static void prv_battery_state_put_change_event(PreciseBatteryChargeState state) 
 
 static void prv_update_state(void *force_update) {
   enum pbl_fuel_gauge_charge_state fg_state;
-  BatteryChargeStatus chg_status;
-  BatteryConstants constants;
+  enum pbl_charger_status chg_status;
+  struct pbl_charger_measurements constants;
   uint64_t now;
   float delta;
   uint8_t pct_int;
@@ -197,13 +207,13 @@ static void prv_update_state(void *force_update) {
   update = (force_update != nullptr) || s_pending_force_update;
   s_pending_force_update = false;
 
-  ret = battery_get_constants(&constants);
+  ret = pbl_charger_get_measurements(CHARGER, &constants);
   if (ret < 0) {
     PBL_LOG_ERR("Could not obtain constants, skipping update (%d)", ret);
     return;
   }
 
-  is_plugged = battery_is_usb_connected_impl();
+  is_plugged = prv_charger_online();
   if (is_plugged != s_last_battery_charge_state.is_plugged) {
     s_last_battery_charge_state.is_plugged = is_plugged;
     if (is_plugged) {
@@ -214,7 +224,7 @@ static void prv_update_state(void *force_update) {
     update = true;
   }
 
-  ret = battery_charge_status_get(&chg_status);
+  ret = pbl_charger_get_status(CHARGER, &chg_status);
   if (ret < 0) {
     PBL_LOG_ERR("Could not obtain charge status, skipping update (%d)", ret);
     return;
@@ -222,8 +232,8 @@ static void prv_update_state(void *force_update) {
 
   s_last_chg_status = chg_status;
 
-  is_charging = is_plugged && !(chg_status == BatteryChargeStatusComplete ||
-                                chg_status == BatteryChargeStatusUnknown);
+  is_charging = is_plugged && !(chg_status == PBL_CHARGER_STATUS_FULL ||
+                                chg_status == PBL_CHARGER_STATUS_UNKNOWN);
   if (is_charging != s_last_battery_charge_state.is_charging) {
     s_last_battery_charge_state.is_charging = is_charging;
     if (is_charging) {
@@ -234,8 +244,8 @@ static void prv_update_state(void *force_update) {
     update = true;
   }
 
-  s_last_voltage_mv = constants.v_mv;
-  s_last_temp_mc = constants.t_mc;
+  s_last_voltage_mv = constants.voltage_mv;
+  s_last_temp_mc = constants.temp_mc;
 
   now = pbl_uptime_ticks();
   delta = (float)(now - prv_ref_time) / (float)PBL_TICK_HZ;
@@ -272,8 +282,8 @@ static void prv_update_state(void *force_update) {
   // Hashed logging takes at most 7 arguments, so the estimate goes on its own
   // line.
   PBL_LOG_VERBOSE("Battery state: v_mv: %ld, i_ua: %ld, t_mc: %ld, td_ms: %lu, fg: %d",
-                  constants.v_mv, constants.i_ua, constants.t_mc, (uint32_t)(delta * 1000.0f),
-                  (int)fg_state);
+                  constants.voltage_mv, constants.current_ua, constants.temp_mc,
+                  (uint32_t)(delta * 1000.0f), (int)fg_state);
   PBL_LOG_VERBOSE("Battery estimate: soc: %u, tte: %lu, ttf: %lu", s_last_battery_charge_state.pct,
                   s_last_tte, s_last_ttf);
 
@@ -282,8 +292,8 @@ static void prv_update_state(void *force_update) {
     PBL_LOG_INFO("Percent: %" PRIu8 ", V: %" PRId32 " mV, I: %" PRId32
                  " uA, "
                  "T: %" PRId32 " mC, charging: %s, plugged: %s",
-                 s_last_battery_charge_state.pct, constants.v_mv, constants.i_ua, constants.t_mc,
-                 s_last_battery_charge_state.is_charging ? "yes" : "no",
+                 s_last_battery_charge_state.pct, constants.voltage_mv, constants.current_ua,
+                 constants.temp_mc, s_last_battery_charge_state.is_charging ? "yes" : "no",
                  s_last_battery_charge_state.is_plugged ? "yes" : "no");
     prv_battery_state_put_change_event(s_last_battery_charge_state);
     s_last_log = now;
@@ -292,7 +302,7 @@ static void prv_update_state(void *force_update) {
   // Enable battery charging after fuel gauge state has been updated for the first time
   if (!s_charger_enabled) {
     s_charger_enabled = true;
-    battery_set_charge_enable(true);
+    (void)pbl_charger_enable(CHARGER, true);
   }
 }
 
@@ -326,26 +336,26 @@ void battery_state_force_update(void) {
 }
 
 void battery_state_init(void) {
-  BatteryConstants constants;
+  struct pbl_charger_measurements constants;
   int ret;
 
-  ret = battery_get_constants(&constants);
+  ret = pbl_charger_get_measurements(CHARGER, &constants);
   PBL_ASSERTN(ret == 0);
 
-  s_last_voltage_mv = constants.v_mv;
+  s_last_voltage_mv = constants.voltage_mv;
 
   s_fg_config.term_current = (float)BATTERY->charge_term_current_ua / 1000000.0f;
   s_fg_config.term_voltage = (float)BATTERY->constant_charge_voltage_uv / 1000000.0f;
   prv_cell_init();
   prv_fuel_gauge_init(&constants);
 
-  ret = battery_charge_status_get(&s_last_chg_status);
+  ret = pbl_charger_get_status(CHARGER, &s_last_chg_status);
   PBL_ASSERTN(ret == 0);
 
-  s_last_battery_charge_state.is_plugged = battery_is_usb_connected_impl();
-  s_last_battery_charge_state.is_charging = s_last_battery_charge_state.is_plugged &&
-                                            !(s_last_chg_status == BatteryChargeStatusComplete ||
-                                              s_last_chg_status == BatteryChargeStatusUnknown);
+  s_last_battery_charge_state.is_plugged = prv_charger_online();
+  s_last_battery_charge_state.is_charging =
+      s_last_battery_charge_state.is_plugged && !(s_last_chg_status == PBL_CHARGER_STATUS_FULL ||
+                                                  s_last_chg_status == PBL_CHARGER_STATUS_UNKNOWN);
 
   const struct pbl_fuel_gauge_meas meas = prv_meas(&constants);
   float pct = pbl_fuel_gauge_update(

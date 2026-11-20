@@ -2,7 +2,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/cron/cron.h>
-#include <pbl/drivers/battery.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/fs/fs.h>
 #include <pbl/kernel/assert.h>
@@ -20,6 +19,7 @@
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/activity/health_permission.h>
 #include <pbl/services/alarms/alarm.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/blob_db/health_db.h>
 #include <pbl/services/hrm/hrm_manager_private.h>
 #include <pbl/services/protobuf_log/protobuf_log.h>

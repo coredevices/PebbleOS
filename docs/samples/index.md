@@ -59,7 +59,7 @@ subsys/task_wdt/stall.md
 drivers/accel.md
 drivers/als.md
 drivers/backlight.md
-drivers/battery.md
+drivers/charger.md
 drivers/display.md
 drivers/flash.md
 drivers/gpu.md

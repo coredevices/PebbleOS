@@ -9,12 +9,13 @@
 #endif
 
 #include <pbl/analytics/analytics.h>
-#include <pbl/drivers/battery.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/util/math.h>
 #include <pbl/util/ratio.h>
@@ -69,6 +70,16 @@ static uint32_t s_analytics_last_cpct = 0;
 static void prv_schedule_update(uint32_t delay, bool force_update);
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state);
 
+static uint16_t prv_get_millivolts(void) {
+  struct pbl_charger_measurements meas;
+
+  if (pbl_charger_get_measurements(CHARGER, &meas) != 0) {
+    return 0;
+  }
+
+  return (uint16_t)meas.voltage_mv;
+}
+
 static void prv_transition(BatteryState *state, ConnectionStateID next_state) {
   state->connection = next_state;
   s_transitions[state->connection].enter();
@@ -117,7 +128,7 @@ static void battery_state_put_change_event(PreciseBatteryChargeState state) {
 }
 
 void battery_state_reset_filter(void) {
-  s_last_battery_state.voltage = battery_get_millivolts();
+  s_last_battery_state.voltage = prv_get_millivolts();
   // Reset the stabilization timer in case we encountered a current spike during the reset
   s_last_battery_state.init_time = pbl_uptime_ticks();
 }
@@ -177,7 +188,7 @@ static void prv_update_state(void *force_update) {
   }
 
   s_last_battery_state.voltage =
-      prv_filter_voltage(s_last_battery_state.voltage, battery_get_millivolts());
+      prv_filter_voltage(s_last_battery_state.voltage, prv_get_millivolts());
   bool charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged);
 
   // Update Percent & Filtering

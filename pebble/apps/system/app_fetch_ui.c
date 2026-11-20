@@ -6,11 +6,11 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include <pbl/drivers/battery.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/app_fetch_endpoint.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/compositor/compositor_transitions.h>
 
 #include <applib/app.h>

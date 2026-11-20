@@ -3,6 +3,8 @@
 
 #include "fake_battery.h"
 
+#include <pbl/drivers/charger.h>
+
 #include <kernel/events.h>
 
 static int s_millivolts = 0;
@@ -37,8 +39,15 @@ void fake_battery_set_charging(bool charging) {
   s_charging = charging;
 }
 
-int battery_get_millivolts(void) {
-  return s_millivolts;
+const struct pbl_charger *const CHARGER = nullptr;
+
+int pbl_charger_get_measurements(const struct pbl_charger *charger,
+                                 struct pbl_charger_measurements *meas) {
+  meas->voltage_mv = s_millivolts;
+  meas->current_ua = 0;
+  meas->temp_mc = 25000;
+
+  return 0;
 }
 
 bool battery_is_usb_connected(void) {

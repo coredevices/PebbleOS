@@ -3,7 +3,6 @@
 
 #include <inttypes.h>
 
-#include <pbl/drivers/battery.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
@@ -12,6 +11,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/accel_manager.h>
+#include <pbl/services/battery/battery_charger.h>
 #include <pbl/util/byteorder.h>
 
 #include <applib/ui/dialogs/dialog.h>
