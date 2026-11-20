@@ -13,7 +13,7 @@ description: |
   The FPC of SiFli development kits for quad SPI display modules, of 16, 22 or
   40 pins depending on the kit, which modules reach through a cable: the quad
   SPI bus of a display controller, an I2C bus for the touchscreen, and the
-  signals of dt-bindings/connector/sifli-lcd-qspi.h, as GPIOs and the
+  signals of dt-bindings/connector/sifli,lcd-qspi-connector.h, as GPIOs and the
   touchscreen interrupt.
 
   The node maps those signals to the pins of the board, so that a module
@@ -46,7 +46,7 @@ unevaluatedProperties: false
 
 examples:
   - |
-    #include <dt-bindings/connector/sifli-lcd-qspi.h>
+    #include <dt-bindings/connector/sifli,lcd-qspi-connector.h>
     #include <dt-bindings/interrupt-controller/irq.h>
     connector {
         compatible = "sifli,lcd-qspi-connector";

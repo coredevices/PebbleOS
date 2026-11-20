@@ -3,7 +3,7 @@
 
 // SiFli 1.85" 390x450 AMOLED module: a CO5300 panel and an FT6146 touchscreen
 
-#include <dt-bindings/connector/sifli-lcd-qspi.h>
+#include <dt-bindings/connector/sifli,lcd-qspi-connector.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 
