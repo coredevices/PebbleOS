@@ -14,9 +14,8 @@ int main(void) {
     uint32_t pa;
     int ret;
 
-    /* Each read runs one conversion; the sensor sleeps in between. The
-     * temperature it also measures only serves its compensation. */
-    ret = pbl_pressure_read(PRESSURE, &pa, nullptr);
+    /* Each read runs one conversion; the sensor sleeps in between. */
+    ret = pbl_pressure_read(PRESSURE, &pa);
     if (ret != 0) {
       fprintf(stderr, "pressure: read failed (%d)\n", ret);
       return ret;

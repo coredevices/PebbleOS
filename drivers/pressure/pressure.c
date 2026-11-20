@@ -19,8 +19,7 @@ int pbl_pressure_dev_init(const struct pbl_device *dev) {
   return ret;
 }
 
-int pbl_pressure_read(const struct pbl_pressure *pressure, uint32_t *pa, int32_t *millicelsius) {
-  int32_t unused;
+int pbl_pressure_read(const struct pbl_pressure *pressure, uint32_t *pa) {
   int ret;
 
   if (!pbl_device_is_ready(&pressure->dev)) {
@@ -28,7 +27,7 @@ int pbl_pressure_read(const struct pbl_pressure *pressure, uint32_t *pa, int32_t
   }
 
   pbl_mutex_lock(&pressure->state->lock, PBL_FOREVER);
-  ret = pressure->ops->read(pressure, pa, millicelsius != nullptr ? millicelsius : &unused);
+  ret = pressure->ops->read(pressure, pa);
   pbl_mutex_unlock(&pressure->state->lock);
 
   return ret;

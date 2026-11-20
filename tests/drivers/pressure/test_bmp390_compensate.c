@@ -1,12 +1,18 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <math.h>
 #include <stdint.h>
 
 #include <pbl/drivers/pressure/bmp390.h>
 
 #include <clar.h>
+
+// The driver is linked in; only its compensation is tested here
+int pbl_i2c_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_msg *msgs, uint8_t num_msgs) {
+  return -EIO;
+}
 
 // Trimming bytes of a BMP390, registers 0x31 to 0x45
 static const uint8_t s_raw_calib[21] = {
@@ -66,19 +72,17 @@ void test_bmp390_compensate__matches_datasheet(void) {
   for (uint32_t raw_temp = 5750000U; raw_temp <= 10000000U; raw_temp += 250000U) {
     for (uint32_t raw_press = 4000000U; raw_press <= 9000000U; raw_press += 250000U) {
       uint32_t pa_out;
-      int32_t millicelsius;
       double celsius;
       double pa;
 
-      pbl_bmp390_compensate(&c, raw_press, raw_temp, &pa_out, &millicelsius);
+      pa_out = pbl_bmp390_compensate(&c, raw_press, raw_temp);
       prv_reference(&c, raw_press, raw_temp, &celsius, &pa);
 
       if (celsius < -40.0 || celsius > 85.0 || pa < 30000.0 || pa > 125000.0) {
         continue;
       }
 
-      // Within rounding: catches rounding negative values the wrong way
-      cl_assert(fabs(millicelsius / 1000.0 - celsius) < 0.0006);
+      // Within rounding of the double-precision reference
       cl_assert(fabs(pa_out - pa) < 1.0);
       checked++;
     }

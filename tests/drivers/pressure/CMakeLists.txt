@@ -3,5 +3,5 @@
 
 pbl_clar_test(test_bmp390_compensate
   SOURCES
-    drivers/pressure/bmp390_compensate.c
+    drivers/pressure/bmp390.c
 )
