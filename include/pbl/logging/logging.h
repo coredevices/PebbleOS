@@ -51,15 +51,6 @@
  * @{
  */
 
-/**
- * @brief Expand a 64-bit value into two 32-bit arguments, high word first.
- *
- * Hashed logs only take 32-bit arguments; print the result with two conversions.
- *
- * @param x 64-bit value.
- */
-#define SPLIT_64_BIT_ARG(x) (uint32_t)((x >> 32) & 0xFFFFFFFF), (uint32_t)(x & 0xFFFFFFFF)
-
 /** @brief Size of the buffer a log message is formatted into, header included. */
 #define LOG_BUFFER_LENGTH 128
 
@@ -326,28 +317,6 @@ int pbl_log_get_bin_format(char *buffer, int buffer_len, const uint8_t log_level
 /** @brief Color of @ref LOG_LEVEL_DEBUG_VERBOSE messages. */
 #define LOG_COLOR_FOR_VERBOSE LOG_COLOR_GREY
 /** @} */
-
-#ifndef STRINGIFY
-/**
- * @brief Turn the argument into a string literal without expanding it.
- *
- * @param a Argument.
- */
-#define STRINGIFY_NX(a) #a
-/**
- * @brief Turn the expansion of the argument into a string literal.
- *
- * @param a Argument.
- */
-#define STRINGIFY(a) STRINGIFY_NX(a)
-#endif // STRINGIFY
-
-/**
- * @brief Turn the expansion of a status code into a string literal.
- *
- * @param s Status code.
- */
-#define STATUS_STRING(s) STRINGIFY(s)
 
 /** @cond INTERNAL_HIDDEN */
 // Per-module compile-time log level and name. PBL_LOG_MODULE_DEFINE /
@@ -724,12 +693,6 @@ static inline void _pbl_log_unused(const char *fmt, ...) {
 #define PBL_LOG_HEXDUMP_VERBOSE(data, length) PBL_LOG_HEXDUMP(LOG_LEVEL_DEBUG_VERBOSE, data, length)
 
 /**
- * @def RETURN_STATUS
- * @brief Return a status code, logging a warning if it is a failure.
- *
- * @param st Status code.
- */
-/**
  * @def RETURN_STATUS_UP
  * @brief Return a status code to the caller, turning @c E_INVALID_ARGUMENT into @c E_INTERNAL.
  *
@@ -737,19 +700,6 @@ static inline void _pbl_log_unused(const char *fmt, ...) {
  *
  * @param st Status code.
  */
-#ifdef CONFIG_LOG
-#define RETURN_STATUS(st)           \
-  do {                              \
-    if (FAILED(st)) {               \
-      PBL_LOG_WRN("%d", (int)(st)); \
-    }                               \
-    return st;                      \
-  } while (0)
-
-#define RETURN_STATUS_UP(st) return ((st) != E_INVALID_ARGUMENT ? (st) : E_INTERNAL)
-#else // CONFIG_LOG
-#define RETURN_STATUS(st)    return (st)
 #define RETURN_STATUS_UP(st) return ((st) == E_INVALID_ARGUMENT ? E_INTERNAL : (st))
-#endif // CONFIG_LOG
 
 /** @} */

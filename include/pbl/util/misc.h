@@ -43,6 +43,17 @@
  */
 #define PBL_CONTAINER_OF(ptr, type, member) ((type *)((char *)(ptr) - offsetof(type, member)))
 
+/** @cond INTERNAL_HIDDEN */
+#define PBL_STRINGIFY_NX(a) #a
+/** @endcond */
+
+/**
+ * @brief Turn the expansion of the argument into a string literal.
+ *
+ * @param a Argument.
+ */
+#define PBL_STRINGIFY(a) PBL_STRINGIFY_NX(a)
+
 /**
  * @brief Swap the values of two lvalues of the same type.
  *
