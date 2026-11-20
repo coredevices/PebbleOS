@@ -11,6 +11,7 @@
 #include <pbl/crypto/sha256.h>
 #include <pbl/drivers/crypto.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DEFINE(crypto, CONFIG_CRYPTO_LOG_LEVEL);
 
@@ -53,8 +54,7 @@ static int prv_check_sha256(void) {
   memset(blocks, 0, sizeof(blocks));
   memcpy(blocks, msg, sizeof(msg) - 1U);
   blocks[sizeof(msg) - 1U] = 0x80;
-  blocks[sizeof(blocks) - 2U] = (uint8_t)(((sizeof(msg) - 1U) * 8U) >> 8);
-  blocks[sizeof(blocks) - 1U] = (uint8_t)((sizeof(msg) - 1U) * 8U);
+  pbl_put_be16((sizeof(msg) - 1U) * 8U, &blocks[sizeof(blocks) - 2U]);
 
   memcpy(whole, h0, sizeof(whole));
   memcpy(resumed, h0, sizeof(resumed));

@@ -19,6 +19,7 @@
 #include <pbl/services/app_cache.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/process_management/app_storage.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/size.h>
 
 #include <applib/platform.h>
@@ -86,14 +87,6 @@ static Install s_install;
 // ----------------------------------------------------------------------------
 // Zip
 
-static uint16_t prv_rd16(const uint8_t *p) {
-  return (uint16_t)(p[0] | p[1] << 8);
-}
-
-static uint32_t prv_rd32(const uint8_t *p) {
-  return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
-}
-
 //! Find a file in the zip's central directory.
 static bool prv_zip_find(const uint8_t *zip, size_t len, const char *name, ZipEntry *out) {
   // The end of central directory record, before an optional comment.
@@ -101,35 +94,37 @@ static bool prv_zip_find(const uint8_t *zip, size_t len, const char *name, ZipEn
     return false;
   }
   size_t eocd = len - 22;
-  while (prv_rd32(zip + eocd) != 0x06054b50) {
+  while (pbl_get_le32(zip + eocd) != 0x06054b50) {
     if (eocd == 0 || len - eocd > 22 + 0xffff) {
       return false;
     }
     eocd--;
   }
-  const uint16_t count = prv_rd16(zip + eocd + 10);
-  size_t at = prv_rd32(zip + eocd + 16);
+  const uint16_t count = pbl_get_le16(zip + eocd + 10);
+  size_t at = pbl_get_le32(zip + eocd + 16);
   const size_t name_len = strlen(name);
   for (uint16_t i = 0; i < count; i++) {
-    if (at + 46 > len || prv_rd32(zip + at) != 0x02014b50) {
+    if (at + 46 > len || pbl_get_le32(zip + at) != 0x02014b50) {
       return false;
     }
-    const uint16_t this_len = prv_rd16(zip + at + 28);
-    const size_t next = at + 46 + this_len + prv_rd16(zip + at + 30) + prv_rd16(zip + at + 32);
+    const uint16_t this_len = pbl_get_le16(zip + at + 28);
+    const size_t next =
+        at + 46 + this_len + pbl_get_le16(zip + at + 30) + pbl_get_le16(zip + at + 32);
     if (next > len) {
       return false;
     }
     if (this_len == name_len && memcmp(zip + at + 46, name, name_len) == 0) {
-      const size_t local = prv_rd32(zip + at + 42);
-      if (local + 30 > len || prv_rd32(zip + local) != 0x04034b50) {
+      const size_t local = pbl_get_le32(zip + at + 42);
+      if (local + 30 > len || pbl_get_le32(zip + local) != 0x04034b50) {
         return false;
       }
-      const size_t data = local + 30 + prv_rd16(zip + local + 26) + prv_rd16(zip + local + 28);
+      const size_t data =
+          local + 30 + pbl_get_le16(zip + local + 26) + pbl_get_le16(zip + local + 28);
       *out = (ZipEntry){
         .data = zip + data,
-        .compressed_size = prv_rd32(zip + at + 20),
-        .size = prv_rd32(zip + at + 24),
-        .method = prv_rd16(zip + at + 10),
+        .compressed_size = pbl_get_le32(zip + at + 20),
+        .size = pbl_get_le32(zip + at + 24),
+        .method = pbl_get_le16(zip + at + 10),
       };
       return data + out->compressed_size <= len && (out->method == 0 || out->method == 8);
     }
