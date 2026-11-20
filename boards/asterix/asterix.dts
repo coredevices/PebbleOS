@@ -149,6 +149,11 @@
 			       "-1", "0", "0",
 			       "0", "0", "1";
 	};
+
+	bmp390: pressure@76 {
+		compatible = "bosch,bmp390";
+		reg = <0x76>;
+	};
 };
 
 &i2c1 {

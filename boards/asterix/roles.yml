@@ -8,6 +8,7 @@ flash: flash0
 accel: lsm6dso
 mag: mmc5603nj
 als: opt3001
+pressure: bmp390
 vibe: drv2604
 mic: mic
 speaker: speaker
