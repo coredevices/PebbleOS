@@ -161,12 +161,12 @@ struct pbl_uart {
  * @param _baudrate Initial baud rate, in bits per second.
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_UART_INIT(sym, _name, _ops, _baudrate, _deps)                                     \
-  {                                                                                           \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_uart_init, nullptr, _deps, &pbl_uart_class), \
-    .ops = (_ops),                                                                            \
-    .state = &sym##_uart_state,                                                               \
-    .baudrate = (_baudrate),                                                                  \
+#define PBL_UART_INIT(sym, _name, _ops, _baudrate, _deps)                                         \
+  {                                                                                               \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_uart_dev_init, nullptr, _deps, &pbl_uart_class), \
+    .ops = (_ops),                                                                                \
+    .state = &sym##_uart_state,                                                                   \
+    .baudrate = (_baudrate),                                                                      \
   }
 
 /**
@@ -176,7 +176,7 @@ struct pbl_uart {
  * @param dev Port device.
  * @return 0 or a negative errno.
  */
-int pbl_uart_init(const struct pbl_device *dev);
+int pbl_uart_dev_init(const struct pbl_device *dev);
 
 /**
  * @brief Hand a received byte to the receive callback.

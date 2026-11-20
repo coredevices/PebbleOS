@@ -13,7 +13,7 @@ static const struct pbl_uart *prv_uart(const struct pbl_device *dev) {
   return container_of(dev, const struct pbl_uart, dev);
 }
 
-int pbl_uart_init(const struct pbl_device *dev) {
+int pbl_uart_dev_init(const struct pbl_device *dev) {
   const struct pbl_uart *uart = prv_uart(dev);
   struct pbl_uart_state *state = uart->state;
   int ret;

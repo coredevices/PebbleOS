@@ -59,7 +59,7 @@ static bool prv_clip(const struct pbl_gpu_buffer *buf, const struct pbl_gpu_rect
   return true;
 }
 
-int pbl_gpu_init(const struct pbl_device *dev) {
+int pbl_gpu_dev_init(const struct pbl_device *dev) {
   const struct pbl_gpu *gpu = container_of(dev, const struct pbl_gpu, dev);
 
   return gpu->ops->init(gpu);

@@ -192,14 +192,14 @@ struct pbl_spi_dev {
  * @param _ops Driver operations.
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  */
-#define PBL_SPI_BUS_INIT(sym, _name, _ops, _deps)                                                \
-  {                                                                                              \
-    .dev =                                                                                       \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_bus_init, nullptr, _deps, &pbl_spi_bus_class), \
-    .ops = (_ops),                                                                               \
-    .state = &sym##_spi_state,                                                                   \
-    .cs_gpios = sym##_cs_gpios,                                                                  \
-    .num_cs = ARRAY_LENGTH(sym##_cs_gpios),                                                      \
+#define PBL_SPI_BUS_INIT(sym, _name, _ops, _deps)                                  \
+  {                                                                                \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_spi_bus_dev_init, nullptr, _deps, \
+                                 &pbl_spi_bus_class),                              \
+    .ops = (_ops),                                                                 \
+    .state = &sym##_spi_state,                                                     \
+    .cs_gpios = sym##_cs_gpios,                                                    \
+    .num_cs = ARRAY_LENGTH(sym##_cs_gpios),                                        \
   }
 
 /**
@@ -208,7 +208,7 @@ struct pbl_spi_dev {
  * @param dev Bus device.
  * @return 0 or a negative errno.
  */
-int pbl_spi_bus_init(const struct pbl_device *dev);
+int pbl_spi_bus_dev_init(const struct pbl_device *dev);
 
 /**
  * @brief Report the outcome of the transfer in flight.
