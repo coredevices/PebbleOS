@@ -535,6 +535,7 @@ An argument takes its value from one place:
 | `parent: <kind>` | What the parent provides, as the bus of a device on it |
 | `self: <kind>` | What a node provides, with `remote`, the device at the other end of a port |
 | `phandle: <property>` | What the node this phandle property points to provides, as the battery of `monitored-battery` |
+| `dma-window: true` | The one entry of the `dma-ranges` of the node's bus that moves addresses, as `PBL_DMA_WINDOW(cpu, dma, size)`: a memory window a bus master reaches at another address than the CPU, absent without one |
 | `consumers: <property>` | One more than the highest specifier cell, `index` (0 by default), that the enabled nodes give this one in that property, absent without any: how many channels of a mailbox are used, from `mboxes` |
 | `list: [<compatible>, ...]` | One `item` per enabled child of the node reached through children of these compatibles, or of the node itself for `[]`: a template of the child's `reg` cells and name, or a `define` with `args` read from the child, as the keys of `gpio-keys` |
 | `id: true` | For `children`, the ID of the child |

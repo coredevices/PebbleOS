@@ -90,6 +90,7 @@ ARG_KINDS = {
     "pwm",
     "supply",
     "consumers",
+    "dma-window",
     "phandle",
     "reset",
     "flags",
@@ -484,6 +485,33 @@ def translate(node, address):
                 )
         bus = bus.parent
     return address
+
+
+def dma_window(node):
+    """(CPU address, bus address, size) of the one dma-ranges entry of the bus a bus master is on
+    that moves addresses, as a memory window it reaches elsewhere than the CPU, or None."""
+    bus = node.parent
+    while bus is not None and not bus.has("dma-ranges"):
+        bus = bus.parent
+    if bus is None:
+        return None
+    entries = bus.u32s("dma-ranges") if bus.props["dma-ranges"] else []
+    child_cells = bus.cells_of("#address-cells", 2)
+    parent_cells = bus.address_cells
+    size_cells = bus.cells_of("#size-cells", 1)
+    step = child_cells + parent_cells + size_cells
+    moved = []
+    for start in range(0, len(entries), step):
+        child = cells_number(entries[start : start + child_cells])
+        parent = cells_number(
+            entries[start + child_cells : start + child_cells + parent_cells]
+        )
+        size = cells_number(entries[start + child_cells + parent_cells : start + step])
+        if child != parent:
+            moved.append((parent, child, size))
+    if len(moved) > 1:
+        raise DtError(f"{node.path}: {bus.path} moves more than one dma-ranges window")
+    return moved[0] if moved else None
 
 
 def enabled(node):
@@ -1287,6 +1315,11 @@ class Generator:
                 return None
             target = self.tree.phandle(node.u32(key), f"{node.path}: '{key}'")
             return self._provided(dev, target, arg.get("as", key), [])
+        if kind == "dma-window":
+            window = dma_window(node)
+            if window is None:
+                return None
+            return "PBL_DMA_WINDOW({:#x}, {:#x}, {:#x})".format(*window)
         if kind == "consumers":
             count = self._consumers(dev, key, int(arg.get("index", 0)))
             return None if count is None else str(count)

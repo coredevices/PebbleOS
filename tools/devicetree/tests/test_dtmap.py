@@ -2925,3 +2925,64 @@ def test_consumers_size_a_provider(tmp_path):
     out = instances(gen, "acme_mailbox")
     assert "MBOX_DEFINE(dt_mb1, 0x1000, 4);" in out
     assert "MBOX_DEFINE(dt_mb2, 0x2000, 2);" in out
+
+
+DMA_DTS = """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    soc {
+        compatible = "simple-bus";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        dma-ranges = <0x20000000 0x20000000 0x40000000>,
+                     <0x60000000 0x10000000 0x10000000>;
+        dma1: dma@1000 {
+            compatible = "acme,dma";
+            reg = <0x1000 0x100>;
+        };
+    };
+    dma2: dma@2000 {
+        compatible = "acme,dma";
+        reg = <0x2000 0x100>;
+    };
+};
+"""
+
+
+def dma_generate(tmp_path, text=DMA_DTS):
+    path, dtb = tmp_path / "d.dts", tmp_path / "d.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    spec = {
+        "compatible": "acme,dma",
+        "config": "DMA",
+        "class": "sensor",
+        "define": "DMA_DEFINE",
+        "args": [{"reg": 0}, {"dma-window": True, "default": "{}"}],
+    }
+    specs = {"acme,dma": dtmap.Spec("acme,dma", spec, CLASSES)}
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"DMA"})
+    gen.run()
+    return instances(gen, "acme_dma")
+
+
+def test_dma_window_from_the_bus(tmp_path):
+    out = dma_generate(tmp_path)
+    window = "PBL_DMA_WINDOW(0x10000000, 0x60000000, 0x10000000)"
+    assert f"DMA_DEFINE(dt_dma1, 0x1000, {window});" in out
+    assert "DMA_DEFINE(dt_dma2, 0x2000, {});" in out
+
+
+def test_dma_window_must_be_one(tmp_path):
+    text = DMA_DTS.replace(
+        "<0x60000000 0x10000000 0x10000000>;",
+        "<0x60000000 0x10000000 0x10000000>, <0x70000000 0x0 0x1000>;",
+    )
+    with pytest.raises(DtError, match="more than one dma-ranges window"):
+        dma_generate(tmp_path, text)
