@@ -58,7 +58,7 @@ SPEC_KEYS = {
     "header",
     "drives",
 }
-CHILDREN_KEYS = {"node", "names"}
+CHILDREN_KEYS = {"node", "names", "property"}
 CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
 ROLE_KEYS = {"symbol", "include"}
 PINCTRL_KEYS = {"define", "pin", "pinmux", "flags", "values"}
@@ -173,9 +173,9 @@ class Spec:
         self.drives = as_list(data.get("drives", []))
         self.children = data.get("children")
         if self.children is not None:
-            check_keys(
-                self._error, self.children, CHILDREN_KEYS, "children", ("names",)
-            )
+            check_keys(self._error, self.children, CHILDREN_KEYS, "children")
+            if ("names" in self.children) == ("property" in self.children):
+                raise self._error("'children' needs one of 'names' and 'property'")
             if not self.define:
                 raise self._error("'children' needs 'define'")
         self.sources = []
@@ -591,10 +591,12 @@ class Generator:
             if owner is None:
                 continue
             for spec in self._device(owner).specs:
-                children = spec.children or {}
-                if children.get("node") == container and name in children.get(
-                    "names", {}
-                ):
+                children = spec.children
+                if children is None or children.get("node") != container:
+                    continue
+                if "property" in children and node.has(children["property"]):
+                    return Device(node, [spec], owner=self._device(owner))
+                if name in children.get("names", {}):
                     return Device(
                         node,
                         [spec],
@@ -699,16 +701,22 @@ class Generator:
             self.declarations.append(declaration)
 
     def _instantiate_children(self, dev, spec):
-        """One instance per child, matched by name, as the regulators of a PMIC."""
+        """One instance per child, matched by name, as the regulators of a PMIC, or having a
+        property, as the ports of a pin controller."""
         container = dev.node
         if "node" in spec.children:
             name = spec.children["node"]
             container = next((c for c in dev.node.children if c.name == name), None)
             if container is None:
                 return
-        names = spec.children["names"]
+        prop = spec.children.get("property")
+        names = spec.children.get("names", {})
         for child in container.children:
             if not enabled(child):
+                continue
+            if prop is not None:
+                if child.has(prop):
+                    self._instantiate(self._device(child), spec)
                 continue
             name = child.name.split("@")[0]
             if name not in names:

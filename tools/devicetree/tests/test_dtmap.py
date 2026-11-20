@@ -1599,6 +1599,90 @@ def test_children_are_providers(tmp_path):
     assert "BACKLIGHT_DEFINE(dt_node_backlight, &dt_status_led);" in body(gen)
 
 
+def test_children_with_a_property(tmp_path):
+    path, dtb = tmp_path / "c.dts", tmp_path / "c.dtb"
+    path.write_text(
+        """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    pinctrl: pinctrl@1000 {
+        compatible = "acme,pinctrl";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges = <0 0x1000 0x800>;
+        gpioa: gpio@0 {
+            gpio-controller;
+            #gpio-cells = <2>;
+            reg = <0x0 0x400>;
+        };
+        gpiob: gpio@400 {
+            gpio-controller;
+            #gpio-cells = <2>;
+            reg = <0x400 0x400>;
+        };
+        uart_default: uart-0 {
+        };
+    };
+    sensor {
+        compatible = "acme,sensor";
+        enable-gpios = <&gpiob 3 0>;
+    };
+};
+"""
+    )
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    specs = {
+        "acme,pinctrl": spec(
+            "acme,pinctrl",
+            {
+                "compatible": "acme,pinctrl",
+                "config": "GPIO",
+                "class": "gpio",
+                "define": "PORT_DEFINE",
+                "children": {"property": "gpio-controller"},
+                "args": [{"name": True}, {"reg": 0}],
+            },
+        ),
+        "acme,sensor": spec(
+            "acme,sensor",
+            {
+                "compatible": "acme,sensor",
+                "config": "SENSOR",
+                "class": "sensor",
+                "define": "SENSOR_DEFINE",
+                "args": [{"gpio": "enable"}],
+            },
+        ),
+    }
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"GPIO", "SENSOR"})
+    gen.run()
+    ports = instances(gen, "acme_pinctrl")
+    assert 'PORT_DEFINE(dt_gpioa, "gpioa", 0x1000);' in ports
+    assert 'PORT_DEFINE(dt_gpiob, "gpiob", 0x1400);' in ports
+    assert "uart" not in ports
+    assert "SENSOR_DEFINE(dt_node_sensor, PIN(&dt_gpiob, 3, 0));" in body(gen)
+
+
+def test_children_need_names_or_a_property():
+    data = {
+        "compatible": "a,b",
+        "config": "X",
+        "class": "gpio",
+        "define": "D",
+        "children": {"names": {"a": 0}, "property": "p"},
+    }
+    with pytest.raises(DtError, match="one of 'names' and 'property'"):
+        spec("a,b", data)
+    data["children"] = {"node": "x"}
+    with pytest.raises(DtError, match="one of 'names' and 'property'"):
+        spec("a,b", data)
+
+
 GPIO_SPEC = {
     "compatible": "acme,gpio",
     "config": "GPIO",
