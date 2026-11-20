@@ -53,6 +53,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_PCLK1 2
 /** APB2 clock, rcc_pclk2. */
 #define STM32H7_CLK_PCLK2 3
+/** APB4 clock, rcc_pclk4. */
+#define STM32H7_CLK_PCLK4 5
 /** GPIO port A to K clocks. */
 #define STM32H7_CLK_GPIOA_CK 86
 #define STM32H7_CLK_GPIOB_CK 85
@@ -67,6 +69,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_GPIOK_CK 76
 /** TIM5 kernel clock. */
 #define STM32H7_CLK_TIM5_CK 95
+/** SYSCFG clock. */
+#define STM32H7_CLK_SYSCFG_CK 111
 /** USART1 kernel clock. */
 #define STM32H7_CLK_USART1_CK 156
 /** @} */

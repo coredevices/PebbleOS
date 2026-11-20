@@ -17,12 +17,14 @@
 
 // The driver numbers its clocks as the binding does
 static_assert(STM32H7_CLK_SYS_D1CPRE == SYS_D1CPRE && STM32H7_CLK_HCLK == HCLK &&
-              STM32H7_CLK_PCLK1 == PCLK1 && STM32H7_CLK_PCLK2 == PCLK2);
+              STM32H7_CLK_PCLK1 == PCLK1 && STM32H7_CLK_PCLK2 == PCLK2 &&
+              STM32H7_CLK_PCLK4 == PCLK4);
 static_assert(STM32H7_CLK_HSE_CK == HSE_CK && STM32H7_CLK_LSE_CK == LSE_CK &&
               STM32H7_CLK_HSI_CK == HSI_CK && STM32H7_CLK_CSI_CK == CSI_CK &&
               STM32H7_CLK_SYS_CK == SYS_CK);
 static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_CK &&
-              STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_USART1_CK == USART1_CK);
+              STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
+              STM32H7_CLK_USART1_CK == USART1_CK);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
 
 #define MHZ_PER_HZ 1000ULL
@@ -53,6 +55,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOJ_CK] = GATE(AHB4ENR, 9, HCLK),
   [STM32H7_CLK_GPIOK_CK] = GATE(AHB4ENR, 10, HCLK),
   [STM32H7_CLK_TIM5_CK] = GATE(APB1LENR, 3, PCLK1),
+  [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
 };
 
@@ -149,6 +152,7 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
       return 0;
     case STM32H7_CLK_PCLK1:
     case STM32H7_CLK_PCLK2:
+    case STM32H7_CLK_PCLK4:
       *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HCLK);
       return 0;
     case STM32H7_CLK_USART1_CK:
@@ -193,6 +197,7 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
   uint32_t d1cfgr = prv_getreg(rcc, STM32H7_RCC_D1CFGR_OFFSET);
   uint32_t d2cfgr = prv_getreg(rcc, STM32H7_RCC_D2CFGR_OFFSET);
+  uint32_t d3cfgr = prv_getreg(rcc, STM32H7_RCC_D3CFGR_OFFSET);
 
   switch (id) {
     case STM32H7_CLK_HSI_CK:
@@ -213,6 +218,9 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
       return 0;
     case STM32H7_CLK_PCLK2:
       *rate_mhz = parent_mhz / prv_apb_div(PBL_FIELD_GET(RCC_D2CFGR_D2PPRE2_MASK, d2cfgr));
+      return 0;
+    case STM32H7_CLK_PCLK4:
+      *rate_mhz = parent_mhz / prv_apb_div(PBL_FIELD_GET(RCC_D3CFGR_D3PPRE_MASK, d3cfgr));
       return 0;
     case STM32H7_CLK_TIM5_CK:
       *rate_mhz = prv_timer_rate(rcc, prv_apb_div(PBL_FIELD_GET(RCC_D2CFGR_D2PPRE1_MASK, d2cfgr)),
