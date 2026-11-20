@@ -242,6 +242,22 @@ struct pbl_device_depends {
   const type sym##_inst =
 
 /**
+ * @brief Start the definition of a registered instance of a device in no class, followed by its
+ * initializer.
+ *
+ * As PBL_DEVICE_INSTANCE(), for a driver struct whose first member is its struct pbl_device,
+ * @c dev: @c sym is that struct pbl_device.
+ *
+ * @param sym Symbol of the instance.
+ * @param type Type of the instance.
+ */
+#define PBL_DEVICE_INSTANCE_DEV(sym, type)                         \
+  extern const type sym##_inst;                                    \
+  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                \
+  PBL_DEVICE_ALIAS(sym, sym##_inst, type, struct pbl_device, dev); \
+  const type sym##_inst =
+
+/**
  * @brief Initialize a device, its parent and deps first, with those of PBL_DEVICE_DEPENDS().
  *
  * A no-op once the device is ready or has failed. A dependency cycle asserts.
