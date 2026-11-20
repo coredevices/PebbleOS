@@ -49,6 +49,15 @@ uint64_t pbl_uptime_ticks(void);
 uint64_t pbl_uptime_ms(void);
 
 /**
+ * @brief Get the time since the scheduler started, in microseconds.
+ *
+ * Callable from ISRs.
+ *
+ * @return Microseconds elapsed, with tick resolution.
+ */
+uint64_t pbl_uptime_us(void);
+
+/**
  * @brief Get the wall clock time.
  *
  * @return UTC time in seconds since the epoch.
