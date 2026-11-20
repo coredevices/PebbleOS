@@ -113,9 +113,7 @@ used without the rest of the subsystem:
   (`PBL_BT_ANCS_CLIENT_DEFINE()`) serves one connection and runs one request
   at a time; the values of the service are in `pbl/bluetooth/ancs.h`. The
   {doc}`ANCS client sample <../samples/subsys/bluetooth/ancs_client>` shows
-  it. The firmware's notification session (queueing, timeouts, the liveness
-  check) sits on top of it in `pebble/comm/ble/kernel_le_client/ancs/`, on
-  KernelMain.
+  it.
 - `pbl/bluetooth/clients/ams.h` (`BT_AMS_CLIENT`) is the client of the Apple
   Media Service: it sends commands to the media player, registers for
   attributes of the player, the queue and the track and reports their values
@@ -123,9 +121,14 @@ used without the rest of the subsystem:
   client (`PBL_BT_AMS_CLIENT_DEFINE()`) serves one connection; the values of
   the service are in `pbl/bluetooth/ams.h`.
 
-The other clients of the phone's services (media, app launch, device
-information, PPoGATT) still go through the discovery and subscription layer
-of `pebble/comm/ble/`.
+The firmware's notification and media sessions (queueing, timeouts, the
+liveness check, the music service) sit on top of those two in
+`pebble/comm/ble/kernel_le_client/`, on KernelMain: what a client reports on
+the NimBLE host thread is passed on there.
+
+The other clients of the phone's services (app launch, device information,
+PPoGATT) still go through the discovery and subscription layer of
+`pebble/comm/ble/`.
 
 ## Advertising
 

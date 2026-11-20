@@ -5,11 +5,12 @@ pbl_clar_test(test_ams
   SOURCES
     pebble/comm/ble/kernel_le_client/ams/ams_util.c
     pebble/comm/ble/kernel_le_client/ams/ams.c
+    subsys/bluetooth/clients/ams/ams.c
     pebble/services/music/service.c
     tests/fakes/fake_events.c
-    tests/fakes/fake_gatt_client_operations.c
-    tests/fakes/fake_gatt_client_subscriptions.c
+    tests/fakes/fake_gattc_service.c
     tests/fakes/fake_rtc.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
   DEFINES CONFIG_MUSIC_ALBUM_ART_RECENTS=0
 )
 

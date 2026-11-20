@@ -1,10 +1,15 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/bluetooth/clients/ams.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_internal.h>
 
 #include <clar.h>
+#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/ams/ams.h>
 #include <comm/bt_conn_mgr.h>
 
@@ -12,8 +17,8 @@
 ///////////////////////////////////////////////////////////
 
 #include <fake_events.h>
-#include <fake_gatt_client_operations.h>
-#include <fake_gatt_client_subscriptions.h>
+#include <fake_gattc_service.h>
+#include <fake_pbl_malloc.h>
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
 
@@ -29,28 +34,24 @@ void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consu
   s_conn_mgr_states[consumer].max_period_secs = max_period_secs;
 }
 
-GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device) {
-  return nullptr;
+#define CONN_HANDLE 1
+
+GAPLEConnection *gap_le_connection_any(void) {
+  static GAPLEConnection s_connection = {.conn_handle = CONN_HANDLE};
+  return &s_connection;
 }
 
-struct pbl_bt_device_internal gatt_client_characteristic_get_device(
-    pbl_bt_characteristic_t characteristic_ref) {
-  return (struct pbl_bt_device_internal){
-    .address.octets = {
-      0x11,
-      0x22,
-      0x33,
-      0x44,
-      0x55,
-      0x66,
-    },
-  };
-}
-
+//! When set, callbacks for KernelMain wait for prv_process_launcher_task_callback().
+static bool s_defer_launcher_task_callbacks;
 static void (*s_launcher_task_callback)(void *data);
 static void *s_launcher_task_callback_data;
 
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+  if (!s_defer_launcher_task_callbacks) {
+    callback(data);
+    return;
+  }
+
   // Simple fake, can only handle one call
   cl_assert_equal_p(s_launcher_task_callback, nullptr);
 
@@ -58,96 +59,103 @@ void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   s_launcher_task_callback_data = data;
 }
 
-// Tests: Discover AMS
+static void prv_process_launcher_task_callback(void) {
+  void (*callback)(void *data) = s_launcher_task_callback;
+
+  cl_assert(callback != nullptr);
+  s_launcher_task_callback = nullptr;
+  callback(s_launcher_task_callback_data);
+}
+
+// The peer
 ///////////////////////////////////////////////////////////
-#define NUM_AMS_INSTANCES 2
-static pbl_bt_characteristic_t s_characteristics[NUM_AMS_INSTANCES][NumAMSCharacteristic] = {
-  // AMS instance one:
-  [0] =
-      {
-        [AMSCharacteristicRemoteCommand] = 1,
-        [AMSCharacteristicEntityUpdate] = 2,
-        [AMSCharacteristicEntityAttribute] = 3,
-      },
-  // AMS instance two:
-  [1] = {
-    [AMSCharacteristicRemoteCommand] = 4,
-    [AMSCharacteristicEntityUpdate] = 5,
-    [AMSCharacteristicEntityAttribute] = 6,
-  },
+
+// The characteristics of the service, as the client has them.
+enum {
+  ChrRemoteCommand,
+  ChrEntityUpdate,
+  ChrEntityAttribute,
 };
 
-static const pbl_bt_characteristic_t s_unknown_characteristic = 999;
+static uint8_t s_written_chr;
+static uint8_t s_written[16];
+static uint16_t s_written_len;
+static int s_num_writes;
+static int s_write_rc;
 
-static void prv_assert_can_handle_characteristics(uint32_t instance_idx, bool expect_can_handle) {
-  for (AMSCharacteristic c = 0; c < NumAMSCharacteristic; ++c) {
-    cl_assert_equal_b(ams_can_handle_characteristic(s_characteristics[instance_idx][c]),
-                      expect_can_handle);
+static int prv_handle_write(uint8_t chr, const uint8_t *data, uint16_t len) {
+  if (s_write_rc != 0) {
+    return s_write_rc;
   }
+  cl_assert(len <= sizeof(s_written));
+  s_written_chr = chr;
+  memcpy(s_written, data, len);
+  s_written_len = len;
+  s_num_writes++;
+  return 0;
 }
 
-static void prv_discover_ams(uint8_t num_instances) {
-  cl_assert(num_instances <= 2);
-  if (num_instances) {
-    for (int i = 0; i < num_instances && i < NUM_AMS_INSTANCES; i++) {
-      ams_handle_service_discovered(&s_characteristics[i][0]);
-    }
-  } else {
-    ams_invalidate_all_references();
-  }
+static void prv_assert_write(uint8_t chr, const uint8_t *data, uint16_t len) {
+  cl_assert_equal_i(s_num_writes, 1);
+  cl_assert_equal_i(s_written_chr, chr);
+  cl_assert_equal_i(s_written_len, len);
+  cl_assert_equal_m(s_written, data, len);
+  s_num_writes = 0;
 }
 
-void test_ams__cannot_handle_any_characteristic_after_destroy(void) {
-  prv_discover_ams(1);
-  ams_destroy();
-  prv_assert_can_handle_characteristics(0, false /* expect_can_handle */);
+static void prv_assert_no_write(void) {
+  cl_assert_equal_i(s_num_writes, 0);
 }
 
-void test_ams__cannot_handle_unknown_characteristic(void) {
-  prv_discover_ams(1);
-  cl_assert_equal_b(ams_can_handle_characteristic(s_unknown_characteristic), false);
+// Tests: Discover AMS
+///////////////////////////////////////////////////////////
+
+static void prv_discover_ams(void) {
+  fake_gattc_service_discovered(0);
+}
+
+static void prv_subscribed(int status) {
+  fake_gattc_service_subscribed(ChrEntityUpdate, true, status);
+}
+
+static void prv_registered(int status) {
+  fake_gattc_service_written(ChrEntityUpdate, status);
 }
 
 void test_ams__discover_of_ams_should_subscribe_to_entity_update_characteristic(void) {
-  // Pass in 2 instances, it should be able to cope with this
-  prv_discover_ams(2 /* num_instances */);
+  // Subscribing fails: the service is not used.
+  fake_gattc_service_set_subscribe_rc(-EIO);
+  prv_discover_ams();
+  cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 
-  // Assert ams.c can now handle the characteristic reference for the first instance:
-  prv_assert_can_handle_characteristics(0, true /* expect_can_handle */);
-
-  // Assert ams.c can not handle the characteristic reference for the second instance:
-  prv_assert_can_handle_characteristics(1, false /* expect_can_handle */);
-
-  // The first instance is expected to be used.
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  fake_gatt_client_subscriptions_assert_subscribe(entity_update, BLESubscriptionNotifications);
+  // The service is found again, as after the phone's services changed:
+  fake_gattc_service_set_subscribe_rc(0);
+  prv_discover_ams();
+  prv_subscribed(0);
+  cl_assert_equal_s(music_get_connected_server_debug_name(), ams_music_server_debug_name());
 }
 
 void test_ams__connect_to_music_service_upon_subscribing_entity_update_characteristic(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
   // Not connected yet (still need to subscribe):
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
 
   // Music service should be connected now:
   cl_assert_equal_s(music_get_connected_server_debug_name(), ams_music_server_debug_name());
 
-  // Rediscovery will disconnect music service (until resubscribed):
-  ams_invalidate_all_references();
-  prv_discover_ams(1 /* num_instances */);
+  // The service moving will disconnect music service (until resubscribed):
+  prv_discover_ams();
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 }
 
 void test_ams__dont_connect_music_service_if_subscribe_entity_update_characteristic_fails(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
 
   // Simulate failed subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications,
-                       PBL_BT_GATT_ERROR_UNLIKELY_ERROR);
+  prv_subscribed(0x0E);
 
   // Not connected because subscription failed:
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
@@ -155,11 +163,13 @@ void test_ams__dont_connect_music_service_if_subscribe_entity_update_characteris
 
 void test_ams__update_characteristics_ams_not_found(void) {
   // AMS Found:
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
+  prv_subscribed(0);
+  cl_assert_equal_s(music_get_connected_server_debug_name(), ams_music_server_debug_name());
   // AMS Disappeared:
-  prv_discover_ams(0 /* num_instances */);
-  // Verify ams.c cannot handle the previous characteristics any more:
-  prv_assert_can_handle_characteristics(0, false /* expect_can_handle */);
+  fake_gattc_service_discovered(-ENOENT);
+  // Verify ams.c is no longer the music server:
+  cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 }
 
 // Tests: Register for Entity Updates
@@ -178,69 +188,76 @@ static const uint8_t s_register_queue_entity[] = {0x01, 0x00, 0x01, 0x02, 0x03};
 static const uint8_t s_register_track_entity[] = {0x02, 0x00, 0x01, 0x02, 0x03};
 
 void test_ams__register_for_entity_updates(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
 
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), false);
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
 
   // Expect to have written the command to register for the Player entity:
-  fake_gatt_client_op_assert_write(entity_update, s_register_player_entity,
-                                   sizeof(s_register_player_entity),
-                                   true /* is_response_required */);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_assert_write(ChrEntityUpdate, s_register_player_entity, sizeof(s_register_player_entity));
+  prv_registered(0);
 
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), false);
 
   // Expect to have written the command to register for the Queue entity:
-  fake_gatt_client_op_assert_write(entity_update, s_register_queue_entity,
-                                   sizeof(s_register_queue_entity),
-                                   true /* is_response_required */);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_assert_write(ChrEntityUpdate, s_register_queue_entity, sizeof(s_register_queue_entity));
+  prv_registered(0);
 
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), false);
 
   // Expect to have written the command to register for the Track entity:
-  fake_gatt_client_op_assert_write(entity_update, s_register_track_entity,
-                                   sizeof(s_register_track_entity),
-                                   true /* is_response_required */);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_assert_write(ChrEntityUpdate, s_register_track_entity, sizeof(s_register_track_entity));
+  prv_registered(0);
 
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), true);
 
-  // After GATT re-discovery, the registration needs to happen again
-  ams_invalidate_all_references();
-  prv_discover_ams(1 /* num_instances */);
+  // After the service moved, the registration needs to happen again
+  prv_discover_ams();
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), false);
 }
 
+void test_ams__register_for_entity_updates_restarts_when_the_service_moves(void) {
+  prv_discover_ams();
+  prv_subscribed(0);
+  prv_assert_write(ChrEntityUpdate, s_register_player_entity, sizeof(s_register_player_entity));
+
+  // The service moves while the registration is under way; its answer comes late:
+  prv_discover_ams();
+  prv_registered(0);
+  prv_assert_no_write();
+
+  prv_subscribed(0);
+  prv_assert_write(ChrEntityUpdate, s_register_player_entity, sizeof(s_register_player_entity));
+  prv_registered(0);
+  prv_assert_write(ChrEntityUpdate, s_register_queue_entity, sizeof(s_register_queue_entity));
+}
+
 void test_ams__register_for_entity_updates_retry_if_out_of_resources(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
 
   // Simulate not having enough resources to process the request:
-  fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES);
+  s_write_rc = -ENOMEM;
+  s_defer_launcher_task_callbacks = true;
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
+  prv_process_launcher_task_callback();
 
   // Nothing should have been written because out of resources:
-  fake_gatt_client_op_assert_no_write();
+  prv_assert_no_write();
 
   // Resources come available again:
-  fake_gatt_client_op_set_write_return_value(PBL_BT_ERRNO_OK);
+  s_write_rc = 0;
 
   // Simulate processing the callback to retry:
-  cl_assert(s_launcher_task_callback != nullptr);
-  s_launcher_task_callback(s_launcher_task_callback_data);
+  prv_process_launcher_task_callback();
 
   // Expect to have written the command to register for the Player entity:
-  fake_gatt_client_op_assert_write(entity_update, s_register_player_entity,
-                                   sizeof(s_register_player_entity),
-                                   true /* is_response_required */);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_assert_write(ChrEntityUpdate, s_register_player_entity, sizeof(s_register_player_entity));
+  s_defer_launcher_task_callbacks = false;
+  prv_registered(0);
 }
 
 static const MusicServerImplementation s_dummy_server_implementation = {};
@@ -249,18 +266,17 @@ static void prv_set_dummy_server_connected(bool connected) {
 }
 
 void test_ams__dont_register_if_another_music_server_is_already_connected(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
   // Not connected yet (still need to subscribe):
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 
   prv_set_dummy_server_connected(true /* connected */);
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
 
   // Nothing should have been written, because there's already a music server connected.
-  fake_gatt_client_op_assert_no_write();
+  prv_assert_no_write();
 
   // Clean up after ourselves:
   prv_set_dummy_server_connected(false /* connected */);
@@ -270,20 +286,19 @@ void test_ams__dont_register_if_another_music_server_is_already_connected(void) 
 ///////////////////////////////////////////////////////////
 
 static void prv_connect_ams(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
 
   // Simulate successful write responses (for the Entity Update registration write requests):
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
-  ams_handle_write_response(entity_update, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_registered(0);
+  prv_registered(0);
+  prv_registered(0);
 
   cl_assert_equal_b(ams_is_registered_for_all_entity_updates(), true);
 
-  fake_gatt_client_op_clear_write_list();
+  s_num_writes = 0;
 }
 
 static uint8_t prv_ams_command_for_music_command(MusicCommand command) {
@@ -329,18 +344,16 @@ void test_ams__send_remote_command(void) {
   for (MusicCommand music_cmd = 0; music_cmd < NumMusicCommand; ++music_cmd) {
     music_command_send(music_cmd);
 
-    pbl_bt_characteristic_t remote_command = s_characteristics[0][AMSCharacteristicRemoteCommand];
     const uint8_t ams_cmd = prv_ams_command_for_music_command(music_cmd);
-    fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd),
-                                     true /* is_response_required */);
+    prv_assert_write(ChrRemoteCommand, &ams_cmd, sizeof(ams_cmd));
 
     // Simulate receiving the response:
-    ams_handle_write_response(remote_command, PBL_BT_GATT_ERROR_SUCCESS);
+    fake_gattc_service_written(ChrRemoteCommand, 0);
   }
 
   // Invalid/Unsupported command:
   music_command_send(NumMusicCommand);
-  fake_gatt_client_op_assert_no_write();
+  prv_assert_no_write();
 }
 
 void test_ams__send_remote_command_non_kernel_main_task(void) {
@@ -348,17 +361,15 @@ void test_ams__send_remote_command_non_kernel_main_task(void) {
 
   // Simulate Music app calling music_command_send():
   stub_pebble_tasks_set_current(PebbleTask_App);
+  s_defer_launcher_task_callbacks = true;
   music_command_send(MusicCommandPlay);
 
   // Process the KernelMain callback:
-  cl_assert(s_launcher_task_callback != nullptr);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
-  s_launcher_task_callback(s_launcher_task_callback_data);
+  prv_process_launcher_task_callback();
 
-  pbl_bt_characteristic_t remote_command = s_characteristics[0][AMSCharacteristicRemoteCommand];
   const uint8_t ams_cmd = prv_ams_command_for_music_command(MusicCommandPlay);
-  fake_gatt_client_op_assert_write(remote_command, &ams_cmd, sizeof(ams_cmd),
-                                   true /* is_response_required */);
+  prv_assert_write(ChrRemoteCommand, &ams_cmd, sizeof(ams_cmd));
 }
 
 void test_ams__send_remote_command_non_kernel_main_task_then_disconnect(void) {
@@ -366,18 +377,18 @@ void test_ams__send_remote_command_non_kernel_main_task_then_disconnect(void) {
 
   // Simulate Music app calling music_command_send():
   stub_pebble_tasks_set_current(PebbleTask_App);
+  s_defer_launcher_task_callbacks = true;
   music_command_send(MusicCommandPlay);
 
   // Simulate disconnecting:
   ams_destroy();
 
   // Process the KernelMain callback:
-  cl_assert(s_launcher_task_callback != nullptr);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
-  s_launcher_task_callback(s_launcher_task_callback_data);
+  prv_process_launcher_task_callback();
 
   // No crashes, no writes
-  fake_gatt_client_op_assert_no_write();
+  prv_assert_no_write();
 }
 
 // Tests: music_needs_user_to_start_playback_on_phone
@@ -428,8 +439,7 @@ void test_ams__music_request_low_latency_for_period(void) {
 ///////////////////////////////////////////////////////////
 
 static void prv_receive_entity_update(const uint8_t *update, uint16_t update_length) {
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_read_or_notification(entity_update, update, update_length, PBL_BT_GATT_ERROR_SUCCESS);
+  fake_gattc_service_notified(ChrEntityUpdate, update, update_length);
 }
 
 void test_ams__receive_player_name_update(void) {
@@ -672,12 +682,12 @@ void test_ams__supported_capabilities(void) {
 ///////////////////////////////////////////////////////////
 
 void test_ams__create_again_trips_assert(void) {
-  cl_assert_panic(ams_create());
+  cl_assert_panic(ams_create(CONN_HANDLE));
 }
 
 void test_ams__create_works_again_after_destroy(void) {
   ams_destroy();
-  ams_create();
+  ams_create(CONN_HANDLE);
   // No assert hit.
 }
 
@@ -688,11 +698,10 @@ void test_ams__destroy_after_destroy_is_fine(void) {
 }
 
 void test_ams__destroy_disconnects_from_music_service(void) {
-  prv_discover_ams(1 /* num_instances */);
+  prv_discover_ams();
 
   // Simulate successful subscription:
-  pbl_bt_characteristic_t entity_update = s_characteristics[0][AMSCharacteristicEntityUpdate];
-  ams_handle_subscribe(entity_update, BLESubscriptionNotifications, PBL_BT_GATT_ERROR_SUCCESS);
+  prv_subscribed(0);
 
   ams_destroy();
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
@@ -703,18 +712,19 @@ void test_ams__destroy_disconnects_from_music_service(void) {
 
 void test_ams__initialize(void) {
   s_launcher_task_callback = nullptr;
+  s_defer_launcher_task_callbacks = false;
+  s_num_writes = 0;
+  s_write_rc = 0;
   memset(s_conn_mgr_states, 0, sizeof(s_conn_mgr_states));
   fake_rtc_init(1234, 5678);
   fake_event_init();
-  fake_gatt_client_subscriptions_init();
-  fake_gatt_client_op_init();
+  fake_gattc_service_init();
+  fake_gattc_service_set_write_handler(prv_handle_write);
   stub_pebble_tasks_set_current(PebbleTask_KernelMain);
-  ams_create();
+  ams_create(CONN_HANDLE);
   cl_assert_equal_s(music_get_connected_server_debug_name(), nullptr);
 }
 
 void test_ams__cleanup(void) {
   ams_destroy();
-  fake_gatt_client_op_deinit();
-  fake_gatt_client_subscriptions_deinit();
 }

@@ -6,21 +6,21 @@
 #include "ams_analytics.h"
 #include "ams_util.h"
 
+#include <errno.h>
+#include <stdatomic.h>
 #include <string.h>
 
-#include <pbl/btutil/bt_device.h>
+#include <pbl/bluetooth/clients/ams.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/music_internal.h>
+#include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gatt_client_accessors.h>
-#include <comm/ble/gatt_client_operations.h>
-#include <comm/ble/gatt_client_subscriptions.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
@@ -38,61 +38,73 @@ static void prv_perform_on_kernel_main_task(void (*callback)(void *), void *data
 
 typedef struct {
   bool connected;
-  pbl_bt_characteristic_t characteristics[NumAMSCharacteristic];
-  AMSEntityID next_entity_to_register;
+  uint16_t conn_handle;
+  //! Whether the service was found: its characteristics can be used.
+  bool discovered;
+  //! Index in s_registrations.
+  uint8_t next_entity_to_register;
+  //! Whether a registration awaits its answer.
+  bool registering;
 } AMSClient;
 
 //! All accesses should happen from KernelMain. Therefore no locking is needed.
 static AMSClient *s_ams_client;
 
+PBL_BT_AMS_CLIENT_DEFINE(s_client);
+
+//! No command.
+#define COMMAND_INVALID (-1)
+
+static void prv_send_command(int command);
+
 // -------------------------------------------------------------------------------------------------
 // MusicServerImplementation
 
-static AMSRemoteCommandID prv_ams_command_for_music_command(MusicCommand command) {
+static int prv_ams_command_for_music_command(MusicCommand command) {
   switch (command) {
     case MusicCommandPlay:
-      return AMSRemoteCommandIDPlay;
+      return PBL_BT_AMS_COMMAND_PLAY;
     case MusicCommandPause:
-      return AMSRemoteCommandIDPause;
+      return PBL_BT_AMS_COMMAND_PAUSE;
     case MusicCommandTogglePlayPause:
-      return AMSRemoteCommandIDTogglePlayPause;
+      return PBL_BT_AMS_COMMAND_TOGGLE_PLAY_PAUSE;
     case MusicCommandNextTrack:
-      return AMSRemoteCommandIDNextTrack;
+      return PBL_BT_AMS_COMMAND_NEXT_TRACK;
     case MusicCommandPreviousTrack:
-      return AMSRemoteCommandIDPreviousTrack;
+      return PBL_BT_AMS_COMMAND_PREVIOUS_TRACK;
     case MusicCommandVolumeUp:
-      return AMSRemoteCommandIDVolumeUp;
+      return PBL_BT_AMS_COMMAND_VOLUME_UP;
     case MusicCommandVolumeDown:
-      return AMSRemoteCommandIDVolumeDown;
+      return PBL_BT_AMS_COMMAND_VOLUME_DOWN;
     case MusicCommandAdvanceRepeatMode:
-      return AMSRemoteCommandIDAdvanceRepeatMode;
+      return PBL_BT_AMS_COMMAND_ADVANCE_REPEAT_MODE;
     case MusicCommandAdvanceShuffleMode:
-      return AMSRemoteCommandIDAdvanceShuffleMode;
+      return PBL_BT_AMS_COMMAND_ADVANCE_SHUFFLE_MODE;
     case MusicCommandSkipForward:
-      return AMSRemoteCommandIDSkipForward;
+      return PBL_BT_AMS_COMMAND_SKIP_FORWARD;
     case MusicCommandSkipBackward:
-      return AMSRemoteCommandIDSkipBackward;
+      return PBL_BT_AMS_COMMAND_SKIP_BACKWARD;
     case MusicCommandLike:
-      return AMSRemoteCommandIDLike;
+      return PBL_BT_AMS_COMMAND_LIKE_TRACK;
     case MusicCommandDislike:
-      return AMSRemoteCommandIDDislike;
+      return PBL_BT_AMS_COMMAND_DISLIKE_TRACK;
     case MusicCommandBookmark:
-      return AMSRemoteCommandIDBookmark;
+      return PBL_BT_AMS_COMMAND_BOOKMARK_TRACK;
     default:
-      return AMSRemoteCommandIDInvalid;
+      return COMMAND_INVALID;
   }
 }
 
 static bool prv_music_is_command_supported(MusicCommand command) {
-  return (prv_ams_command_for_music_command(command) != AMSRemoteCommandIDInvalid);
+  return (prv_ams_command_for_music_command(command) != COMMAND_INVALID);
 }
 
 static void prv_music_command_send(MusicCommand command) {
-  const AMSRemoteCommandID ams_command = prv_ams_command_for_music_command(command);
-  if (ams_command == AMSRemoteCommandIDInvalid) {
+  const int ams_command = prv_ams_command_for_music_command(command);
+  if (ams_command == COMMAND_INVALID) {
     return;
   }
-  ams_send_command(ams_command);
+  prv_send_command(ams_command);
 }
 
 static MusicServerCapability prv_music_get_capability_bitset(void) {
@@ -109,12 +121,9 @@ static void prv_request_response_time(enum pbl_bt_consumer consumer,
                                       uint16_t max_period_secs) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   bt_lock();
-  if (s_ams_client) {
-    const pbl_bt_characteristic_t characteristic = s_ams_client->characteristics[0];
-    const struct pbl_bt_device_internal device =
-        gatt_client_characteristic_get_device(characteristic);
-    if (!bt_device_internal_equal(&device, &PBL_BT_DEVICE_INTERNAL_INVALID)) {
-      GAPLEConnection *connection = gap_le_connection_by_device(&device);
+  if (s_ams_client && s_ams_client->discovered) {
+    GAPLEConnection *connection = gap_le_connection_any();
+    if (connection && connection->conn_handle == s_ams_client->conn_handle) {
       conn_mgr_set_ble_conn_response_time(connection, consumer, state, max_period_secs);
     }
   }
@@ -167,74 +176,48 @@ static void prv_perform_on_kernel_main_task(void (*callback)(void *), void *data
   }
 }
 
-static AMSCharacteristic prv_get_id_for_characteristic(
-    pbl_bt_characteristic_t characteristic_to_find) {
-  if (!s_ams_client) {
-    return AMSCharacteristicInvalid;
-  }
-  const pbl_bt_characteristic_t *characteristic = s_ams_client->characteristics;
-  for (AMSCharacteristic id = 0; id < NumAMSCharacteristic; ++id, ++characteristic) {
-    if (*characteristic == characteristic_to_find) {
-      return id;
-    }
-  }
-  return AMSCharacteristicInvalid;
-}
+static const uint8_t s_player_attrs[] = {
+  // Apple bug #21283910
+  // http://www.openradar.me/radar?id=6752237204275200
+  // Registering for the Player Name attribute can cause BTLEServer to crash repeatedly.
+  // (verified in iOS 8.3 and iOS 9 beta 1)
+  // PBL_BT_AMS_PLAYER_ATTR_NAME,
+  PBL_BT_AMS_PLAYER_ATTR_PLAYBACK_INFO,
+  PBL_BT_AMS_PLAYER_ATTR_VOLUME,
+};
 
-static const uint8_t *prv_get_registration_cmd_for_entity(AMSEntityID entity_id,
-                                                          uint8_t *cmd_length_out) {
-  static const uint8_t register_for_player_entity_updates_cmd[] = {
-    AMSEntityIDPlayer,
-    // Apple bug #21283910
-    // http://www.openradar.me/radar?id=6752237204275200
-    // Registering for the Player Name attribute can cause BTLEServer to crash repeatedly.
-    // (verified in iOS 8.3 and iOS 9 beta 1)
-    // AMSPlayerAttributeIDName,
-    AMSPlayerAttributeIDPlaybackInfo,
-    AMSPlayerAttributeIDVolume,
-  };
-  static const uint8_t register_for_queue_entity_updates_cmd[] = {
-    AMSEntityIDQueue,
-    AMSQueueAttributeIDIndex,
-    AMSQueueAttributeIDCount,
-    AMSQueueAttributeIDShuffleMode,
-    AMSQueueAttributeIDRepeatMode,
-  };
-  static const uint8_t register_for_track_entity_updates_cmd[] = {
-    AMSEntityIDTrack,         AMSTrackAttributeIDArtist,   AMSTrackAttributeIDAlbum,
-    AMSTrackAttributeIDTitle, AMSTrackAttributeIDDuration,
-  };
-  static const struct {
-    const uint8_t length;
-    const uint8_t *const value;
-  } packet_length_and_data[NumAMSEntityID] = {
-    [AMSEntityIDPlayer] =
-        {
-          .length = sizeof(register_for_player_entity_updates_cmd),
-          .value = register_for_player_entity_updates_cmd,
-        },
-    [AMSEntityIDQueue] =
-        {
-          .length = sizeof(register_for_queue_entity_updates_cmd),
-          .value = register_for_queue_entity_updates_cmd,
-        },
-    [AMSEntityIDTrack] = {
-      .length = sizeof(register_for_track_entity_updates_cmd),
-      .value = register_for_track_entity_updates_cmd,
-    },
-  };
-  if (cmd_length_out) {
-    *cmd_length_out = packet_length_and_data[entity_id].length;
-  }
-  return packet_length_and_data[entity_id].value;
-}
+static const uint8_t s_queue_attrs[] = {
+  PBL_BT_AMS_QUEUE_ATTR_INDEX,
+  PBL_BT_AMS_QUEUE_ATTR_COUNT,
+  PBL_BT_AMS_QUEUE_ATTR_SHUFFLE_MODE,
+  PBL_BT_AMS_QUEUE_ATTR_REPEAT_MODE,
+};
+
+static const uint8_t s_track_attrs[] = {
+  PBL_BT_AMS_TRACK_ATTR_ARTIST,
+  PBL_BT_AMS_TRACK_ATTR_ALBUM,
+  PBL_BT_AMS_TRACK_ATTR_TITLE,
+  PBL_BT_AMS_TRACK_ATTR_DURATION,
+};
+
+//! What is registered for, in this order.
+static const struct {
+  enum pbl_bt_ams_entity entity;
+  const uint8_t *attrs;
+  uint8_t num_attrs;
+} s_registrations[] = {
+  {PBL_BT_AMS_ENTITY_PLAYER, s_player_attrs, PBL_ARRAY_SIZE(s_player_attrs)},
+  {PBL_BT_AMS_ENTITY_QUEUE, s_queue_attrs, PBL_ARRAY_SIZE(s_queue_attrs)},
+  {PBL_BT_AMS_ENTITY_TRACK, s_track_attrs, PBL_ARRAY_SIZE(s_track_attrs)},
+};
 
 static void prv_reset_next_entity_to_register(void) {
-  s_ams_client->next_entity_to_register = AMSEntityIDPlayer;
+  s_ams_client->next_entity_to_register = 0;
+  s_ams_client->registering = false;
 }
 
 static bool prv_is_entity_update_registration_done(void) {
-  return (s_ams_client->next_entity_to_register == AMSEntityIDInvalid);
+  return (s_ams_client->next_entity_to_register >= PBL_ARRAY_SIZE(s_registrations));
 }
 
 static void prv_register_next_entity(void *unused) {
@@ -242,18 +225,14 @@ static void prv_register_next_entity(void *unused) {
     return;
   }
 
-  // Make the Bluetopia heap consumption of this module as minimal and predictable as possible,
-  // by having only one outstanding GATT operation queued up at any moment in time (instead of
-  // queueing up all the writes in one go):
-  const AMSEntityID entity_id = s_ams_client->next_entity_to_register;
-  const pbl_bt_characteristic_t entity_update_characteristic =
-      s_ams_client->characteristics[AMSCharacteristicEntityUpdate];
-  uint8_t cmd_length = 0;
-  const uint8_t *cmd_value = prv_get_registration_cmd_for_entity(entity_id, &cmd_length);
-  const enum pbl_bt_errno e =
-      gatt_client_op_write(entity_update_characteristic, cmd_value, cmd_length);
-  if (e != PBL_BT_ERRNO_OK) {
-    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
+  // One registration at a time, to keep few operations waiting.
+  const uint8_t idx = s_ams_client->next_entity_to_register;
+  const int e =
+      pbl_bt_ams_client_register(&s_client, s_registrations[idx].entity, s_registrations[idx].attrs,
+                                 s_registrations[idx].num_attrs);
+  s_ams_client->registering = (e == 0);
+  if (e != 0) {
+    if (e == -ENOMEM) {
       // Need to wait for space to become available
       launcher_task_add_callback(&prv_register_next_entity, nullptr);
     } else {
@@ -285,20 +264,26 @@ void ams_music_disconnect(void) {
 // -------------------------------------------------------------------------------------------------
 // Player entity update handlers
 
-static void prv_handle_player_name_update(const AMSEntityUpdateNotification *update,
-                                          const uint16_t value_length) {
-  music_update_player_name(update->value_str, value_length);
+//! The values of the playback info, in the order they come.
+enum {
+  PlaybackInfoIdxState,
+  PlaybackInfoIdxRate,
+  PlaybackInfoIdxElapsedTime,
+};
+
+static void prv_handle_player_name_update(const struct pbl_bt_ams_update *update) {
+  music_update_player_name((const char *)update->value, update->len);
 }
 
 static MusicPlayState prv_music_playstate_for_ams_playback_state(int32_t ams_playback_state) {
   switch (ams_playback_state) {
-    case AMSPlaybackStatePaused:
+    case PBL_BT_AMS_PLAYBACK_STATE_PAUSED:
       return MusicPlayStatePaused;
-    case AMSPlaybackStatePlaying:
+    case PBL_BT_AMS_PLAYBACK_STATE_PLAYING:
       return MusicPlayStatePlaying;
-    case AMSPlaybackStateRewinding:
+    case PBL_BT_AMS_PLAYBACK_STATE_REWINDING:
       return MusicPlayStateRewinding;
-    case AMSPlaybackStateForwarding:
+    case PBL_BT_AMS_PLAYBACK_STATE_FAST_FORWARDING:
       return MusicPlayStateForwarding;
     default:
       return MusicPlayStateUnknown;
@@ -310,23 +295,23 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
   // Non-Apple AMS servers can format the floats with a comma decimal separator
   // (e.g. "1,00"), yielding extra CSV fields. Stop parsing instead of
   // asserting; the caller rejects the update based on the field count.
-  if (idx > AMSPlaybackInfoIdxElapsedTime) {
+  if (idx > PlaybackInfoIdxElapsedTime) {
     return false /* should_continue */;
   }
 
   // Default to -1 for playback state, or 0 otherwise, in case "value" is an empty string:
   // This will cause the playback state to be set to MusicPlayStateUnknown.
-  int32_t value_out = (idx == AMSPlaybackInfoIdxState) ? -1 : 0;
+  int32_t value_out = (idx == PlaybackInfoIdxState) ? -1 : 0;
 
   const int32_t multiplier[] = {
-    // First value is the AMSPlaybackState enum, so unity multiplier:
-    [AMSPlaybackInfoIdxState] = 1,
+    // First value is the playback state, so unity multiplier:
+    [PlaybackInfoIdxState] = 1,
 
     // Second value is the playback rate [0.0, 1.0]. We store as percent, so 100x multiplier:
-    [AMSPlaybackInfoIdxRate] = 100,
+    [PlaybackInfoIdxRate] = 100,
 
     // Third value is the elapsed time in seconds. We store as ms, so 1000x multiplier:
-    [AMSPlaybackInfoIdxElapsedTime] = 1000,
+    [PlaybackInfoIdxElapsedTime] = 1000,
   };
   if (value_length &&
       !ams_util_float_string_parse(value, value_length, multiplier[idx], &value_out)) {
@@ -338,16 +323,16 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
 
   MusicPlayerStateUpdate *state = (MusicPlayerStateUpdate *)context;
   switch (idx) {
-    case AMSPlaybackInfoIdxState: {
+    case PlaybackInfoIdxState: {
       state->playback_state = prv_music_playstate_for_ams_playback_state(value_out);
       break;
     }
 
-    case AMSPlaybackInfoIdxRate:
+    case PlaybackInfoIdxRate:
       state->playback_rate_percent = value_out;
       break;
 
-    case AMSPlaybackInfoIdxElapsedTime:
+    case PlaybackInfoIdxElapsedTime:
       state->elapsed_time_ms = value_out;
       break;
 
@@ -357,17 +342,16 @@ static bool prv_handle_player_playback_info_value(const char *value, uint32_t va
   return true /* should_continue */;
 }
 
-static void prv_handle_player_playback_info_update(const AMSEntityUpdateNotification *update,
-                                                   const uint16_t value_length) {
+static void prv_handle_player_playback_info_update(const struct pbl_bt_ams_update *update) {
   MusicPlayerStateUpdate state = {};
-  const uint8_t num_results = ams_util_csv_parse(update->value_str, value_length, &state,
+  const uint8_t num_results = ams_util_csv_parse((const char *)update->value, update->len, &state,
                                                  prv_handle_player_playback_info_value);
   const bool success = (num_results == 3);
   if (success) {
     music_update_player_playback_state(&state);
   } else {
     PBL_LOG_ERR("Expected CSV with 3 values:");
-    PBL_LOG_HEXDUMP_ERR((const uint8_t *)update->value_str, value_length);
+    PBL_LOG_HEXDUMP_ERR(update->value, update->len);
   }
 }
 
@@ -381,10 +365,10 @@ static bool prv_float_string_parse(const char *value, const uint16_t value_lengt
   return true;
 }
 
-static void prv_handle_player_volume_update(const AMSEntityUpdateNotification *update,
-                                            const uint16_t value_length) {
+static void prv_handle_player_volume_update(const struct pbl_bt_ams_update *update) {
   int32_t value_out = 0;
-  const bool success = prv_float_string_parse(update->value_str, value_length, 100, &value_out);
+  const bool success =
+      prv_float_string_parse((const char *)update->value, update->len, 100, &value_out);
   if (success) {
     music_update_player_volume_percent(value_out);
   }
@@ -399,30 +383,28 @@ static int32_t prv_parse_queue_value(const char *value, const uint16_t value_len
   return value_out;
 }
 
-static void prv_handle_queue_index_update(const AMSEntityUpdateNotification *update,
-                                          const uint16_t value_length) {
-  const int32_t idx = prv_parse_queue_value(update->value_str, value_length);
+static void prv_handle_queue_index_update(const struct pbl_bt_ams_update *update) {
+  const int32_t idx = prv_parse_queue_value((const char *)update->value, update->len);
   PBL_LOG_DBG("Queue index update: %" PRId32, idx);
   // TODO: Do something with this info
 }
 
-static void prv_handle_queue_count_update(const AMSEntityUpdateNotification *update,
-                                          const uint16_t value_length) {
-  const int32_t count = prv_parse_queue_value(update->value_str, value_length);
+static void prv_handle_queue_count_update(const struct pbl_bt_ams_update *update) {
+  const int32_t count = prv_parse_queue_value((const char *)update->value, update->len);
   PBL_LOG_DBG("Queue count update: %" PRId32, count);
   // TODO: Do something with this info
 }
 
-static void prv_handle_queue_shuffle_mode_update(const AMSEntityUpdateNotification *update,
-                                                 const uint16_t value_length) {
-  const AMSShuffleMode shuffle_mode = prv_parse_queue_value(update->value_str, value_length);
+static void prv_handle_queue_shuffle_mode_update(const struct pbl_bt_ams_update *update) {
+  const enum pbl_bt_ams_shuffle_mode shuffle_mode =
+      prv_parse_queue_value((const char *)update->value, update->len);
   PBL_LOG_DBG("Queue shuffle mode update: %d", shuffle_mode);
   // TODO: Do something with this info
 }
 
-static void prv_handle_queue_repeat_mode_update(const AMSEntityUpdateNotification *update,
-                                                const uint16_t value_length) {
-  const AMSRepeatMode repeat_mode = prv_parse_queue_value(update->value_str, value_length);
+static void prv_handle_queue_repeat_mode_update(const struct pbl_bt_ams_update *update) {
+  const enum pbl_bt_ams_repeat_mode repeat_mode =
+      prv_parse_queue_value((const char *)update->value, update->len);
   PBL_LOG_DBG("Queue repeat mode update: %d", repeat_mode);
   // TODO: Do something with this info
 }
@@ -430,27 +412,23 @@ static void prv_handle_queue_repeat_mode_update(const AMSEntityUpdateNotificatio
 // -------------------------------------------------------------------------------------------------
 // Track entity update handlers
 
-static void prv_handle_track_artist_update(const AMSEntityUpdateNotification *update,
-                                           const uint16_t value_length) {
-  music_update_track_artist(update->value_str, value_length);
+static void prv_handle_track_artist_update(const struct pbl_bt_ams_update *update) {
+  music_update_track_artist((const char *)update->value, update->len);
 }
 
-static void prv_handle_track_album_update(const AMSEntityUpdateNotification *update,
-                                          const uint16_t value_length) {
-  music_update_track_album(update->value_str, value_length);
+static void prv_handle_track_album_update(const struct pbl_bt_ams_update *update) {
+  music_update_track_album((const char *)update->value, update->len);
 }
 
-static void prv_handle_track_title_update(const AMSEntityUpdateNotification *update,
-                                          const uint16_t value_length) {
-  music_update_track_title(update->value_str, value_length);
+static void prv_handle_track_title_update(const struct pbl_bt_ams_update *update) {
+  music_update_track_title((const char *)update->value, update->len);
 }
 
-static void prv_handle_track_duration_update(const AMSEntityUpdateNotification *update,
-                                             const uint16_t value_length) {
+static void prv_handle_track_duration_update(const struct pbl_bt_ams_update *update) {
   int32_t duration_ms = 0; // Default to 0 in case value_length is 0
   const bool success =
-      (!value_length || ams_util_float_string_parse(update->value_str, value_length,
-                                                    PBL_MSEC_PER_SEC, &duration_ms));
+      (update->len == 0 || ams_util_float_string_parse((const char *)update->value, update->len,
+                                                       PBL_MSEC_PER_SEC, &duration_ms));
   if (success) {
     music_update_track_duration(duration_ms);
   } else {
@@ -461,22 +439,18 @@ static void prv_handle_track_duration_update(const AMSEntityUpdateNotification *
 // -------------------------------------------------------------------------------------------------
 // Update handler dispatch table
 
-typedef void (*AMSUpdateHandler)(const AMSEntityUpdateNotification *update,
-                                 const uint16_t value_length);
-
-static void prv_handle_update(const AMSEntityUpdateNotification *update,
-                              const uint16_t value_length) {
-  switch (update->entity_id) {
-    case AMSEntityIDPlayer:
-      switch (update->attribute_id) {
-        case AMSPlayerAttributeIDName:
-          prv_handle_player_name_update(update, value_length);
+static void prv_handle_update(const struct pbl_bt_ams_update *update) {
+  switch (update->entity) {
+    case PBL_BT_AMS_ENTITY_PLAYER:
+      switch (update->attr) {
+        case PBL_BT_AMS_PLAYER_ATTR_NAME:
+          prv_handle_player_name_update(update);
           return;
-        case AMSPlayerAttributeIDPlaybackInfo:
-          prv_handle_player_playback_info_update(update, value_length);
+        case PBL_BT_AMS_PLAYER_ATTR_PLAYBACK_INFO:
+          prv_handle_player_playback_info_update(update);
           return;
-        case AMSPlayerAttributeIDVolume:
-          prv_handle_player_volume_update(update, value_length);
+        case PBL_BT_AMS_PLAYER_ATTR_VOLUME:
+          prv_handle_player_volume_update(update);
           return;
 
         default:
@@ -484,19 +458,19 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
       }
       break;
 
-    case AMSEntityIDQueue:
-      switch (update->attribute_id) {
-        case AMSQueueAttributeIDIndex:
-          prv_handle_queue_index_update(update, value_length);
+    case PBL_BT_AMS_ENTITY_QUEUE:
+      switch (update->attr) {
+        case PBL_BT_AMS_QUEUE_ATTR_INDEX:
+          prv_handle_queue_index_update(update);
           return;
-        case AMSQueueAttributeIDCount:
-          prv_handle_queue_count_update(update, value_length);
+        case PBL_BT_AMS_QUEUE_ATTR_COUNT:
+          prv_handle_queue_count_update(update);
           return;
-        case AMSQueueAttributeIDShuffleMode:
-          prv_handle_queue_shuffle_mode_update(update, value_length);
+        case PBL_BT_AMS_QUEUE_ATTR_SHUFFLE_MODE:
+          prv_handle_queue_shuffle_mode_update(update);
           return;
-        case AMSQueueAttributeIDRepeatMode:
-          prv_handle_queue_repeat_mode_update(update, value_length);
+        case PBL_BT_AMS_QUEUE_ATTR_REPEAT_MODE:
+          prv_handle_queue_repeat_mode_update(update);
           return;
 
         default:
@@ -504,21 +478,21 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
       }
       break;
 
-    case AMSEntityIDTrack:
-      switch (update->attribute_id) {
-        case AMSTrackAttributeIDArtist:
-          prv_handle_track_artist_update(update, value_length);
+    case PBL_BT_AMS_ENTITY_TRACK:
+      switch (update->attr) {
+        case PBL_BT_AMS_TRACK_ATTR_ARTIST:
+          prv_handle_track_artist_update(update);
           return;
-        case AMSTrackAttributeIDAlbum:
-          prv_handle_track_album_update(update, value_length);
+        case PBL_BT_AMS_TRACK_ATTR_ALBUM:
+          prv_handle_track_album_update(update);
           return;
-        case AMSTrackAttributeIDTitle:
-          prv_handle_track_title_update(update, value_length);
+        case PBL_BT_AMS_TRACK_ATTR_TITLE:
+          prv_handle_track_title_update(update);
           // New track: reset the position until the next playback info update.
           music_update_track_position(0);
           return;
-        case AMSTrackAttributeIDDuration:
-          prv_handle_track_duration_update(update, value_length);
+        case PBL_BT_AMS_TRACK_ATTR_DURATION:
+          prv_handle_track_duration_update(update);
           return;
 
         default:
@@ -530,86 +504,35 @@ static void prv_handle_update(const AMSEntityUpdateNotification *update,
       break;
   }
 
-  PBL_LOG_ERR("Unknown EntityID:%u + AttrID:%u", update->entity_id, update->attribute_id);
+  PBL_LOG_ERR("Unknown EntityID:%u + AttrID:%u", update->entity, update->attr);
 }
 
 // -------------------------------------------------------------------------------------------------
-// Interface towards kernel_le_client.c
+// What the client reports, on KernelMain
 
-void ams_create(void) {
-  PBL_ASSERTN(!s_ams_client);
-  s_ams_client = (AMSClient *)pbl_zalloc_check(sizeof(AMSClient));
-}
-
-void ams_invalidate_all_references(void) {
-  // We've gotten new characteristic references,
-  // this means the old ones will have been unsubscribed, so we're disconnected from AMS:
+static void prv_invalidate_all_references(void) {
+  // The service is gone, and with it the subscription, so we're disconnected from AMS:
   prv_set_connected(false);
 
   // We also need to register for entity updates again:
   prv_reset_next_entity_to_register();
 
-  for (int c = 0; c < NumAMSCharacteristic; c++) {
-    s_ams_client->characteristics[c] = PBL_BT_CHARACTERISTIC_INVALID;
-  }
+  s_ams_client->discovered = false;
 }
 
-void ams_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                uint8_t num_characteristics) {
-  ams_invalidate_all_references();
-}
+static void prv_handle_service_discovered(void) {
+  s_ams_client->discovered = true;
 
-void ams_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
-  if (!s_ams_client) {
-    return;
-  }
-
-  PBL_LOG_DBG("In AMS service discovery CB");
-  PBL_ASSERTN(characteristics);
-
-  if (s_ams_client->characteristics[0] != PBL_BT_CHARACTERISTIC_INVALID) {
-    PBL_LOG_WRN("Multiple AMS instances registered!?");
-    return;
-  }
-
-  // Keep around the pbl_bt_characteristic_t references:
-  memcpy(s_ams_client->characteristics, characteristics,
-         sizeof(pbl_bt_characteristic_t) * NumAMSCharacteristic);
-
-  const pbl_bt_characteristic_t entity_update_characteristic =
-      characteristics[AMSCharacteristicEntityUpdate];
-  const enum pbl_bt_errno e = gatt_client_subscriptions_subscribe(entity_update_characteristic,
-                                                                  BLESubscriptionNotifications);
-  // Reject the service if subscribing fails instead of asserting (e.g. a "fake
-  // AMS" without CCCD).
-  if (e != PBL_BT_ERRNO_OK) {
+  // Reject the service if subscribing fails instead of asserting.
+  const int e = pbl_bt_ams_client_subscribe(&s_client, PBL_BT_AMS_SOURCE_ENTITY_UPDATE, true);
+  if (e != 0) {
     PBL_LOG_WRN("Failed to subscribe AMS (err=%d), ignoring service", e);
-    ams_invalidate_all_references();
-    return;
+    prv_invalidate_all_references();
   }
 }
 
-bool ams_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
-  if (!s_ams_client) {
-    return false;
-  }
-  for (int c = 0; c < NumAMSCharacteristic; ++c) {
-    if (s_ams_client->characteristics[c] == characteristic) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void ams_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
-                          BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
-  AMSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
-  if (characteristic_id != AMSCharacteristicEntityUpdate) {
-    // Only Entity Update characteristic is expected to be subscribed to
-    pbl_panic();
-  }
-
-  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
+static void prv_handle_subscribed(int status) {
+  if (status != 0) {
     PBL_LOG_ERR("Failed to subscribe AMS");
     return;
   }
@@ -621,48 +544,174 @@ void ams_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
   prv_register_next_entity(nullptr);
 }
 
-void ams_handle_write_response(pbl_bt_characteristic_t characteristic,
-                               enum pbl_bt_gatt_error error) {
-  if (!s_ams_client) {
+static void prv_handle_registered(int status) {
+  // An answer from before the service moved is not for the registration under way.
+  if (!s_ams_client->registering) {
     return;
   }
-  const bool is_entity_update_characteristic =
-      (characteristic == s_ams_client->characteristics[AMSCharacteristicEntityUpdate]);
-
-  const bool has_error = (error != PBL_BT_GATT_ERROR_SUCCESS);
-
-  if (!is_entity_update_characteristic) {
-    // We only need to act upon getting a write response of the Entity Update characteristic.
-    // Just ignore write responses for the Remote Command characteristic.
-    return;
-  }
-  const AMSEntityID entity_id = s_ams_client->next_entity_to_register;
-  if (has_error) {
-    PBL_LOG_ERR("AMS Failed to register entity_id=%u: %u", entity_id, error);
-    // TODO: Log error event
+  s_ams_client->registering = false;
+  const uint8_t idx = s_ams_client->next_entity_to_register;
+  if (status != 0) {
+    PBL_LOG_ERR("AMS Failed to register entity_id=%u: %d", s_registrations[idx].entity, status);
     // Don't retry here, chances of succeeding are slim.
     return;
   }
-  PBL_LOG_DBG("AMS Registered for entity_id=%u", entity_id);
+  PBL_LOG_DBG("AMS Registered for entity_id=%u", s_registrations[idx].entity);
   ++s_ams_client->next_entity_to_register;
   prv_register_next_entity(nullptr);
 }
 
-void ams_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                     size_t value_length, enum pbl_bt_gatt_error error) {
-  if (!s_ams_client ||
-      s_ams_client->characteristics[AMSCharacteristicEntityUpdate] != characteristic) {
-    PBL_LOG_ERR("Unexpected characteristic (s_ams_client=%p)", s_ams_client);
+// -------------------------------------------------------------------------------------------------
+// The client calls back on the host task; the session runs on KernelMain.
+
+typedef enum {
+  ClientEventDiscovered,
+  ClientEventSubscribed,
+  ClientEventRegistered,
+  ClientEventUpdate,
+} ClientEventType;
+
+typedef struct {
+  ClientEventType type;
+  uint32_t session;
+  int status;
+  struct pbl_bt_ams_update update;
+  uint8_t value[];
+} ClientEvent;
+
+//! At most this many events wait for KernelMain; updates past it are dropped.
+#define CLIENT_EVENTS_MAX 32
+
+//! Tells the events of a session that ended from those of the current one.
+static uint32_t s_session;
+static atomic_uint s_num_client_events;
+
+static void prv_client_event_kernel_main_cb(void *data) {
+  ClientEvent *event = data;
+
+  atomic_fetch_sub(&s_num_client_events, 1);
+
+  if (s_ams_client && event->session == s_session) {
+    switch (event->type) {
+      case ClientEventDiscovered:
+        // The service moved or went, if it was found before.
+        if (s_ams_client->discovered) {
+          prv_invalidate_all_references();
+        }
+        if (event->status == 0) {
+          prv_handle_service_discovered();
+        } else {
+          PBL_LOG_DBG("No AMS (%d)", event->status);
+        }
+        break;
+      case ClientEventSubscribed:
+        prv_handle_subscribed(event->status);
+        break;
+      case ClientEventRegistered:
+        prv_handle_registered(event->status);
+        break;
+      case ClientEventUpdate:
+        if (s_ams_client->discovered) {
+          prv_handle_update(&event->update);
+        }
+        break;
+    }
+  }
+
+  pbl_free(event);
+}
+
+static void prv_put_client_event(ClientEventType type, int status,
+                                 const struct pbl_bt_ams_update *update) {
+  if (atomic_fetch_add(&s_num_client_events, 1) >= CLIENT_EVENTS_MAX && type == ClientEventUpdate) {
+    atomic_fetch_sub(&s_num_client_events, 1);
+    PBL_LOG_WRN("Dropping AMS update");
     return;
   }
-  const AMSEntityUpdateNotification *update = (const AMSEntityUpdateNotification *)value;
-  prv_handle_update(update, value_length - sizeof(*update));
+
+  // On the host task: an event is lost rather than the watch reset when memory is short.
+  const uint16_t length = (update != nullptr) ? update->len : 0;
+  // The value is terminated for the parsers, which look one character ahead.
+  ClientEvent *event = pbl_malloc(sizeof(*event) + length + 1);
+  if (event == nullptr) {
+    atomic_fetch_sub(&s_num_client_events, 1);
+    PBL_LOG_WRN("Dropping AMS event %d: out of memory", type);
+    return;
+  }
+  *event = (ClientEvent){
+    .type = type,
+    .session = s_session,
+    .status = status,
+  };
+  if (update != nullptr) {
+    event->update = *update;
+    event->update.value = event->value;
+    memcpy(event->value, update->value, length);
+    event->value[length] = '\0';
+  }
+  launcher_task_add_callback(prv_client_event_kernel_main_cb, event);
+}
+
+static void prv_client_discovered(struct pbl_bt_ams_client *client, int status) {
+  prv_put_client_event(ClientEventDiscovered, status, nullptr);
+}
+
+static void prv_client_subscribed(struct pbl_bt_ams_client *client, enum pbl_bt_ams_source source,
+                                  bool enable, int status) {
+  if (enable && source == PBL_BT_AMS_SOURCE_ENTITY_UPDATE) {
+    prv_put_client_event(ClientEventSubscribed, status, nullptr);
+  }
+}
+
+static void prv_client_update(struct pbl_bt_ams_client *client,
+                              const struct pbl_bt_ams_update *update) {
+  prv_put_client_event(ClientEventUpdate, 0, update);
+}
+
+static void prv_client_registered(struct pbl_bt_ams_client *client, int status) {
+  prv_put_client_event(ClientEventRegistered, status, nullptr);
+}
+
+static const struct pbl_bt_ams_client_cb s_client_cb = {
+  .discovered = prv_client_discovered,
+  .subscribed = prv_client_subscribed,
+  .update = prv_client_update,
+  .registered = prv_client_registered,
+};
+
+// -------------------------------------------------------------------------------------------------
+// Interface towards kernel_le_client.c
+
+void ams_create(uint16_t conn_handle) {
+  PBL_ASSERTN(!s_ams_client);
+  s_ams_client = (AMSClient *)pbl_zalloc_check(sizeof(AMSClient));
+  s_ams_client->conn_handle = conn_handle;
+
+  ++s_session;
+  const int rc = pbl_bt_ams_client_start(&s_client, conn_handle, &s_client_cb);
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not look for AMS (%d)", rc);
+  }
+}
+
+void ams_handle_services_changed(void) {
+  if (!s_ams_client) {
+    return;
+  }
+
+  // The session goes on if the service is still where it was.
+  const int rc = pbl_bt_ams_client_rediscover(&s_client);
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not look for AMS again (%d)", rc);
+  }
 }
 
 void ams_destroy(void) {
   if (!s_ams_client) {
     return;
   }
+  pbl_bt_ams_client_stop(&s_client);
+  ++s_session;
   prv_set_connected(false);
 
   pbl_free(s_ams_client);
@@ -673,19 +722,14 @@ static void prv_send_command_kernel_main_task_cb(void *data) {
   if (!s_ams_client) {
     return;
   }
-  const AMSRemoteCommandID command_id = (uintptr_t)data;
-  pbl_bt_characteristic_t characteristic =
-      s_ams_client->characteristics[AMSCharacteristicRemoteCommand];
-  enum pbl_bt_errno error = gatt_client_op_write(characteristic, (const uint8_t *)&command_id, 1);
-  const bool has_error = (error != PBL_BT_ERRNO_OK);
-  if (has_error) {
+  const int error = pbl_bt_ams_client_send_command(&s_client, (uintptr_t)data);
+  if (error != 0) {
     PBL_LOG_ERR("Couldn't write command: %d", error);
   }
 }
 
-void ams_send_command(AMSRemoteCommandID command_id) {
-  prv_perform_on_kernel_main_task(prv_send_command_kernel_main_task_cb,
-                                  (void *)(uintptr_t)command_id);
+static void prv_send_command(int command) {
+  prv_perform_on_kernel_main_task(prv_send_command_kernel_main_task_cb, (void *)(uintptr_t)command);
 }
 
 const char *ams_music_server_debug_name(void) {
@@ -696,5 +740,5 @@ bool ams_is_registered_for_all_entity_updates(void) {
   if (!s_ams_client) {
     return false;
   }
-  return (s_ams_client->next_entity_to_register == AMSEntityIDInvalid);
+  return prv_is_entity_update_registration_done();
 }

@@ -7,7 +7,7 @@
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
-#include <comm/ble/kernel_le_client/ams/ams_definition.h>
+#include <comm/ble/kernel_le_client/ams/ams.h>
 #endif
 #include <comm/ble/kernel_le_client/app_launch/app_launch_definition.h>
 #include <comm/ble/kernel_le_client/dis/dis_definition.h>
@@ -45,9 +45,6 @@ enum {
 #else
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   KernelLEClientPPoGATT,
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-  KernelLEClientAMS,
 #endif
   KernelLEClientAppLaunch,
   KernelLEClientDIS,
@@ -124,22 +121,6 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
         .handle_write_response = nullptr,
         .handle_subscribe = pbl_pp_gatt_handle_subscribe,
         .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
-      },
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-  [KernelLEClientAMS] =
-      {
-        .debug_name = "AMS",
-        .service_uuid = &s_ams_service_uuid,
-        .characteristic_uuids = s_ams_characteristic_uuids,
-        .num_characteristics = NumAMSCharacteristic,
-        .handle_service_discovered = ams_handle_service_discovered,
-        .handle_service_removed = ams_handle_service_removed,
-        .invalidate_all_references = ams_invalidate_all_references,
-        .can_handle_characteristic = ams_can_handle_characteristic,
-        .handle_write_response = ams_handle_write_response,
-        .handle_subscribe = ams_handle_subscribe,
-        .handle_read_or_notification = ams_handle_read_or_notification,
       },
 #endif
   [KernelLEClientAppLaunch] =
@@ -230,6 +211,9 @@ static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_se
 static void prv_handle_services_changed(void) {
 #if defined(CONFIG_BT_ANCS_CLIENT)
   ancs_handle_services_changed();
+#endif
+#if defined(CONFIG_BT_AMS_CLIENT)
+  ams_handle_services_changed();
 #endif
 }
 
@@ -416,7 +400,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     // First, so that the clients that look for their service themselves do not hold it up.
     gatt_client_discovery_discover_all(&device);
 
-#if defined(CONFIG_BT_ANCS_CLIENT)
+#if defined(CONFIG_BT_ANCS_CLIENT) || defined(CONFIG_BT_AMS_CLIENT)
     uint16_t conn_handle = 0;
     bool found = false;
     bt_lock();
@@ -426,12 +410,16 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
       found = true;
     }
     bt_unlock();
+#endif
+#if defined(CONFIG_BT_ANCS_CLIENT)
     if (found) {
       ancs_create(conn_handle);
     }
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
-    ams_create();
+    if (found) {
+      ams_create(conn_handle);
+    }
 #endif
   } else {
     PBL_LOG_DBG("Disconnected from Gateway!");

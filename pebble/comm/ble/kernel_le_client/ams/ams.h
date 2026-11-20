@@ -3,88 +3,27 @@
 
 #pragma once
 
-#include "ams_types.h"
+#include <stdint.h>
 
-#include <comm/ble/gatt_client_subscriptions.h>
+//! @file ams.h The session with the Apple Media Service of the phone: it registers for the
+//! player, the queue and the track with the AMS client, and is the music server the music
+//! service controls the phone through. KernelMain only.
 
-//! @file ams.h Module implementing an AMS client.
-//! See http://bit.ly/ams-spec for Apple's documentation of AMS.
-//!
-//! @note Most of the functions must be called from KernelMain. Forcing all accesses to happen
-//! from one task avoids the need for a mutex.
+//! Starts a session on the connection of the phone: looks for the service, and subscribes to
+//! it when the phone has it.
+void ams_create(uint16_t conn_handle);
 
-//! Enum indexing the AMS characteristics
-//! @note The order is actually important for ams.c's implementation. Don't shuffle!
-typedef enum {
-  //! Writable.
-  //! Used to send commands to the AMS.
-  //! @see AMSRemoteCommandID
-  AMSCharacteristicRemoteCommand = 0,
-
-  //! Writable w/o Response, Notifiable.
-  //! Used to register for attribute updates (by writing w/o response).
-  //! Also used to receive attribute updates (as GATT notifications).
-  AMSCharacteristicEntityUpdate = 1,
-
-  //! Writable, Readable.
-  //! @note Currently left unused. This characteristic is used to fetch a complete value,
-  //! in case it got truncated in the update notification.
-  AMSCharacteristicEntityAttribute = 2,
-  NumAMSCharacteristic,
-
-  AMSCharacteristicInvalid = NumAMSCharacteristic,
-} AMSCharacteristic;
-
-//! Creates the AMS client.
-//! Must only be called from KernelMain!
-void ams_create(void);
-
-//! Updates the pbl_bt_characteristic_t references, in case new ones have been obtained after a
-//! re-discovery of the remote services.
-//! @param characteristics Matrix of characteristics references of the AMS service
-//! @note This module only uses the first service instance, any others will be ignored.
-//! Must only be called from KernelMain!
-void ams_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
-
-void ams_invalidate_all_references(void);
-
-void ams_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                uint8_t num_characteristics);
-
-//! @param characteristic The characteristic for which to test whether the AMS module handles
-//! reads/writes/notifications for it.
-//! @return True whether the AMS module handles reads/writes/etc for it, false if not
-bool ams_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
-
-//! Handles GATT subscriptions
-//! Must only be called from KernelMain!
-void ams_handle_subscribe(pbl_bt_characteristic_t characteristic, BLESubscription subscription_type,
-                          enum pbl_bt_gatt_error error);
-
-//! Handles GATT write responses
-//! Must only be called from KernelMain!
-void ams_handle_write_response(pbl_bt_characteristic_t characteristic,
-                               enum pbl_bt_gatt_error error);
-
-//! Handles GATT notifications
-//! Must only be called from KernelMain!
-void ams_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                     size_t value_length, enum pbl_bt_gatt_error error);
-
-//! Destroys the AMS client.
-//! Must only be called from KernelMain!
+//! Ends the session.
 void ams_destroy(void);
+
+//! The services of the phone changed: looks for the service again.
+void ams_handle_services_changed(void);
 
 //! Disconnect AMS from the music service if currently registered. No-op otherwise.
 //! Some Android phones expose something that looks like an AMS GATT service,
 //! letting AMS grab the music slot before we learn the remote is Android. The PP
 //! music endpoint calls this on Android-detect so it can take over the slot.
-//! Must only be called from KernelMain!
 void ams_music_disconnect(void);
-
-//! This function is exported only for (unit) testing purposes!
-//! OK to call from any task.
-void ams_send_command(AMSRemoteCommandID command_id);
 
 //! For testing purposes.
 //! @return The debug name with which AMS registers itself with the music.c service.
