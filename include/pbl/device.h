@@ -290,25 +290,23 @@ int pbl_device_init_all(void);
  */
 int pbl_device_init_children(const struct pbl_device *parent);
 
-/**
- * @brief Get the next registered device of a class.
- *
- * @param cls Class.
- * @param prev Previous device, or NULL for the first one.
- * @return Device, or NULL after the last one.
- */
-const struct pbl_device *pbl_device_class_next(const struct pbl_device_class *cls,
-                                               const struct pbl_device *prev);
+/** @cond INTERNAL_HIDDEN */
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device *const, devices);
+/** @endcond */
 
 /**
  * @brief Iterate over the registered devices of a class.
  *
- * @param cls Class.
- * @param dev Loop variable, a const struct pbl_device pointer.
+ * @param _cls Class.
+ * @param _dev Loop variable, a const struct pbl_device pointer, NULL after the loop.
  */
-#define PBL_DEVICE_CLASS_FOREACH(cls, dev)                              \
-  for ((dev) = pbl_device_class_next((cls), nullptr); (dev) != nullptr; \
-       (dev) = pbl_device_class_next((cls), (dev)))
+#define PBL_DEVICE_CLASS_FOREACH(_cls, _dev)                                                 \
+  for (const struct pbl_device *const *pbl_device__it = PBL_ITERABLE_SECTION_START(devices); \
+       ((_dev) = (pbl_device__it < PBL_ITERABLE_SECTION_END(devices)) ? *pbl_device__it      \
+                                                                      : nullptr) != nullptr; \
+       pbl_device__it++)                                                                     \
+    if ((_dev)->cls != (_cls)) {                                                             \
+    } else
 
 /**
  * @brief Find a registered device of a class by name.

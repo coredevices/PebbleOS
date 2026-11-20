@@ -11,7 +11,6 @@
 
 PBL_LOG_MODULE_DEFINE(device, CONFIG_DEVICE_LOG_LEVEL);
 
-PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device *const, devices);
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device_depends, dev_deps);
 
 static int prv_init_list(const struct pbl_device *dev, const struct pbl_device *const *deps) {
@@ -109,26 +108,6 @@ int pbl_device_init_children(const struct pbl_device *parent) {
   }
 
   return failures;
-}
-
-const struct pbl_device *pbl_device_class_next(const struct pbl_device_class *cls,
-                                               const struct pbl_device *prev) {
-  const struct pbl_device *const *dev = PBL_ITERABLE_SECTION_START(devices);
-
-  if (prev != nullptr) {
-    while (dev < PBL_ITERABLE_SECTION_END(devices) && *dev != prev) {
-      dev++;
-    }
-    dev++;
-  }
-
-  for (; dev < PBL_ITERABLE_SECTION_END(devices); dev++) {
-    if ((*dev)->cls == cls) {
-      return *dev;
-    }
-  }
-
-  return nullptr;
 }
 
 const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, const char *name) {
