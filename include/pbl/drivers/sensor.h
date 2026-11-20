@@ -381,6 +381,9 @@ struct pbl_sensor {
   struct pbl_sensor_mount mount;
 };
 
+/** @brief The board's magnetometer. */
+extern const struct pbl_sensor *const MAG;
+
 /** @brief The board's die temperature sensor. */
 extern const struct pbl_sensor *const DIE_TEMP;
 

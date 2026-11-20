@@ -1,17 +1,17 @@
 # Magnetometer
 
-A magnetometer reports each new sample to the listener a consumer registers,
-the compass service in the Pebble firmware, or returns the latest one to
-consumers that poll.
+A magnetometer reports batches of samples to the listener a consumer
+registers, the compass service in the Pebble firmware, or runs a single
+measurement for consumers that read it.
 
 | | |
 | --- | --- |
-| Directory | `drivers/imu` |
-| Header | `pbl/drivers/mag.h` |
-| Kconfig | `CONFIG_MAG`, enabled by the application |
+| Directory | `drivers/sensor` |
+| Header | `pbl/drivers/sensor.h` |
+| Kconfig | `CONFIG_MAG`, enabled by the application, selects `CONFIG_SENSOR` |
 | Role | `MAG` |
 | Sample | {doc}`../samples/drivers/mag` |
-| API | {apidoc}`API reference <drivers_mag>` |
+| API | {apidoc}`API reference <drivers_sensor>` |
 
 ## Drivers
 

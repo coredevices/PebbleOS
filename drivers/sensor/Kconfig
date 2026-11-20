@@ -43,6 +43,20 @@ rsource "Kconfig.temp_sim"
 
 endif # TEMP
 
+menuconfig MAG
+    bool "Magnetometers"
+    select SENSOR
+    help
+      Magnetometer drivers. The board's magnetometer is the mag role,
+      MAG.
+
+if MAG
+
+rsource "Kconfig.mmc5603nj"
+rsource "Kconfig.mag_sim"
+
+endif # MAG
+
 menuconfig PRESSURE
     bool "Pressure sensors"
     select SENSOR

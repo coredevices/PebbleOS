@@ -8,8 +8,7 @@ config IMU_SHELL
     default DRIVER_SHELL
     depends on SHELL
     help
-      The imu shell command, to read the accelerometer and magnetometer
-      drivers directly.
+      The imu shell command, to read the accelerometer driver directly.
 
 menuconfig ACCEL
     bool "Accelerometer"
@@ -24,19 +23,6 @@ rsource "Kconfig.lsm6dso"
 rsource "Kconfig.accel_sim"
 
 endif # ACCEL
-
-menuconfig MAG
-    bool "Magnetometer"
-    help
-      Magnetometer drivers (pbl/drivers/mag.h). The board instantiates
-      the magnetometer it has and exports it as MAG.
-
-if MAG
-
-rsource "Kconfig.mmc5603nj"
-rsource "Kconfig.mag_sim"
-
-endif # MAG
 
 module = DRIVER_IMU
 module-str = IMU

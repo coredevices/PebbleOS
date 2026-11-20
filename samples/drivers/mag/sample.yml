@@ -1,8 +1,9 @@
 description: The magnetic field, sampled five times a second for 3 seconds
 expect:
-  - 'mag: before sampling: no data'
+  - 'mag: single: x=-?\d+ y=-?\d+ z=-?\d+ nT'
   - 'mag: sampling every \d+ us'
-  - 'mag: x=-?\d+ y=-?\d+ z=-?\d+ mG, \d+ samples so far'
+  - 'mag: latest: x=-?\d+ y=-?\d+ z=-?\d+ nT'
+  - 'mag: \d+ samples so far'
   - 'mag: \d+ samples'
   - 'Sample done'
 roles: [mag]

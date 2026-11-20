@@ -327,7 +327,7 @@ class header, as `SPEAKER`:
 | `status_led` | `led` | |
 | `flash` | `flash` | `FLASH` |
 | `accel` | `accel` | `ACCEL` |
-| `mag` | `mag` | `MAG` |
+| `mag` | `sensor` | `MAG` |
 | `als` | `als` | `ALS` |
 | `pressure` | `sensor` | `PRESSURE` |
 | `touch` | `touch` | `TOUCH` |

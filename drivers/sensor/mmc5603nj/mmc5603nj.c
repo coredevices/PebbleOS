@@ -6,19 +6,39 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/i2c.h>
-#include <pbl/drivers/imu/mmc5603nj/mmc5603nj.h>
-#include <pbl/drivers/imu/mmc5603nj/registers.h>
-#include <pbl/drivers/mag.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/mmc5603nj/mmc5603nj.h>
+#include <pbl/drivers/sensor/mmc5603nj/registers.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
-#include <pbl/services/imu/units.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DECLARE(driver_mag, CONFIG_DRIVER_IMU_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_sensor, CONFIG_DRIVER_SENSOR_LOG_LEVEL);
 
 #define MMC5603NJ_RATE_HZ_MAX 255U
+
+#define MMC5603NJ_FRAME_SIZE 6U
+
+// Single measurement time at the 6.6 ms bandwidth, with margin
+#define MMC5603NJ_MEAS_TIMEOUT_MS 20U
+
+// Unsigned, offset by 2^15, 1024 counts per gauss: 100000 / 1024 nT per count
+#define NT_NUM  100000
+#define NT_DEN  1024
+#define NT_BIAS (-(32768 / NT_DEN) * NT_NUM)
+
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_MAGN, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_U16_BE, NT_NUM, NT_DEN,
+                  NT_BIAS),
+  PBL_SENSOR_CHAN(PBL_SENSOR_MAGN, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_U16_BE, NT_NUM, NT_DEN,
+                  NT_BIAS),
+  PBL_SENSOR_CHAN(PBL_SENSOR_MAGN, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_U16_BE, NT_NUM, NT_DEN,
+                  NT_BIAS),
+};
 
 static const struct pbl_mmc5603nj *s_dev;
 
@@ -58,37 +78,8 @@ static int prv_is_data_ready(bool *ready) {
   return 0;
 }
 
-static int16_t prv_get_axis(const int16_t raw[3], IMUCoordinateAxis axis) {
-  int16_t val = s_dev->axis_dir[axis] * raw[s_dev->axis_map[axis]];
-
-  if (s_dev->state->rotated && (axis == AXIS_X || axis == AXIS_Y)) {
-    val = -val;
-  }
-
-  // 1024 counts per gauss in 16-bit mode
-  return (int16_t)(((int32_t)val * 1000) / 1024);
-}
-
-static int prv_read_sample(MagData *sample) {
-  uint8_t data[6];
-  int16_t raw[3];
-  int ret;
-
-  ret = prv_read(MMC5603NJ_REG_XOUT0, data, sizeof(data));
-  if (ret != 0) {
-    return ret;
-  }
-
-  // Unsigned, offset by 2^15
-  for (uint8_t i = 0U; i < 3U; i++) {
-    raw[i] = (int16_t)(pbl_get_be16(&data[2U * i]) - (1U << 15));
-  }
-
-  sample->x = prv_get_axis(raw, AXIS_X);
-  sample->y = prv_get_axis(raw, AXIS_Y);
-  sample->z = prv_get_axis(raw, AXIS_Z);
-
-  return 0;
+static int prv_read_sample(uint8_t *frame) {
+  return prv_read(MMC5603NJ_REG_XOUT0, frame, MMC5603NJ_FRAME_SIZE);
 }
 
 static int prv_reset(void) {
@@ -121,7 +112,7 @@ static int prv_reset(void) {
 }
 
 static int prv_set_rate_hw(uint8_t rate_hz) {
-  MagData discard;
+  uint8_t discard[MMC5603NJ_FRAME_SIZE];
   bool ready;
   int ret;
 
@@ -133,7 +124,7 @@ static int prv_set_rate_hw(uint8_t rate_hz) {
 
   // Clear any pending data-ready flag
   if (prv_is_data_ready(&ready) == 0 && ready) {
-    (void)prv_read_sample(&discard);
+    (void)prv_read_sample(discard);
   }
 
   if (rate_hz == 0U) {
@@ -162,11 +153,11 @@ static pbl_tick_t prv_poll_period_ticks(uint8_t rate_hz) {
 
 static void prv_poll_fn(struct pbl_work *work) {
   struct pbl_mmc5603nj_state *state = s_dev->state;
-  MagData sample;
+  uint8_t *frame;
   bool ready;
   int ret;
 
-  pbl_mag_lock(&s_dev->mag);
+  pbl_sensor_lock(&s_dev->sensor);
 
   if (state->rate_hz == 0U) {
     goto out;
@@ -177,11 +168,17 @@ static void prv_poll_fn(struct pbl_work *work) {
     goto out;
   }
 
+  frame = pbl_sensor_buf_alloc(&s_dev->sensor, nullptr);
+  if (frame == nullptr) {
+    goto out;
+  }
+
   if (ret == 0) {
-    ret = prv_read_sample(&sample);
+    ret = prv_read_sample(frame);
   }
 
   if (ret != 0) {
+    pbl_sensor_buf_free(&s_dev->sensor, frame);
     PBL_LOG_WRN("Read failed (%d), restarting sampling", ret);
     if (prv_set_rate_hw(0U) == 0) {
       (void)prv_set_rate_hw(state->rate_hz);
@@ -189,7 +186,15 @@ static void prv_poll_fn(struct pbl_work *work) {
     goto out;
   }
 
-  pbl_mag_report_sample(&s_dev->mag, &sample);
+  pbl_sensor_report(&s_dev->sensor, &(const struct pbl_sensor_batch){
+                                      .data = frame,
+                                      .chans = s_chans,
+                                      .num_chans = PBL_ARRAY_SIZE(s_chans),
+                                      .stride = MMC5603NJ_FRAME_SIZE,
+                                      .num_frames = 1U,
+                                      .timestamp_us = pbl_uptime_us(),
+                                      .interval_us = 1000000U / state->rate_hz,
+                                    });
 
 out:
   // Rate changes hold the lock too
@@ -197,14 +202,14 @@ out:
     pbl_delayed_work_schedule_next(&state->poll_timer, prv_poll_period_ticks(state->rate_hz));
   }
 
-  pbl_mag_unlock(&s_dev->mag);
+  pbl_sensor_unlock(&s_dev->sensor);
 }
 
-static int prv_init(const struct pbl_mag *mag) {
+static int prv_init(const struct pbl_sensor *sensor) {
   uint8_t whoami;
   int ret;
 
-  s_dev = PBL_CONTAINER_OF(mag, const struct pbl_mmc5603nj, mag);
+  s_dev = PBL_CONTAINER_OF(sensor, const struct pbl_mmc5603nj, sensor);
   pbl_delayed_work_init(&s_dev->state->poll_timer, prv_poll_fn);
 
   ret = prv_read(MMC5603NJ_REG_WHO_AM_I, &whoami, 1);
@@ -226,21 +231,18 @@ static int prv_init(const struct pbl_mag *mag) {
   return 0;
 }
 
-static int prv_set_rotated(const struct pbl_mag *mag, bool rotated) {
-  s_dev->state->rotated = rotated;
-
-  return 0;
-}
-
-static int prv_set_sampling_interval(const struct pbl_mag *mag, uint32_t interval_us,
-                                     uint32_t *actual_us) {
+static int prv_set_interval(int32_t *interval_us) {
   struct pbl_mmc5603nj_state *state = s_dev->state;
   uint8_t rate_hz = 0U;
   int ret;
 
-  if (interval_us > 0U) {
-    rate_hz =
-        (uint8_t)PBL_CLAMP(PBL_DIV_ROUND_UP(1000000U, interval_us), 1U, MMC5603NJ_RATE_HZ_MAX);
+  if (*interval_us < 0) {
+    return -EINVAL;
+  }
+
+  if (*interval_us > 0) {
+    rate_hz = (uint8_t)PBL_CLAMP(PBL_DIV_ROUND_UP(1000000U, (uint32_t)*interval_us), 1U,
+                                 MMC5603NJ_RATE_HZ_MAX);
   }
 
   if (rate_hz != state->rate_hz) {
@@ -261,24 +263,81 @@ static int prv_set_sampling_interval(const struct pbl_mag *mag, uint32_t interva
     }
   }
 
-  *actual_us = (rate_hz == 0U) ? 0U : 1000000U / rate_hz;
+  *interval_us = (rate_hz == 0U) ? 0 : (int32_t)(1000000U / rate_hz);
 
   return 0;
 }
 
-static int prv_peek(const struct pbl_mag *mag, MagData *sample) {
-  if (s_dev->state->rate_hz == 0U) {
-    return -ENODATA;
+static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  if (attr != PBL_SENSOR_ATTR_INTERVAL) {
+    return -ENOTSUP;
   }
 
-  return prv_read_sample(sample);
+  return prv_set_interval(val);
 }
 
-const struct pbl_mag_ops pbl_mmc5603nj_ops = {
+static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  uint8_t rate_hz = s_dev->state->rate_hz;
+
+  if (attr != PBL_SENSOR_ATTR_INTERVAL) {
+    return -ENOTSUP;
+  }
+
+  *val = (rate_hz == 0U) ? 0 : (int32_t)(1000000U / rate_hz);
+
+  return 0;
+}
+
+static int prv_measure(void) {
+  bool ready = false;
+  int ret;
+
+  // Same polarity as the periodic SET of continuous mode
+  ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_DO_SET);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_sleep_ms(MMC5603NJ_SET_DELAY_MS);
+
+  ret = prv_write(MMC5603NJ_REG_CTRL0, MMC5603NJ_CTRL0_TAKE_MEAS_M);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return PBL_POLL_SLEEP_MS(prv_is_data_ready(&ready) != 0 || ready, 1, MMC5603NJ_MEAS_TIMEOUT_MS);
+}
+
+static int prv_sensor_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                           struct pbl_sensor_frame *frame) {
+  int ret;
+
+  if (s_dev->state->rate_hz == 0U) {
+    ret = prv_measure();
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_read_sample(frame->data);
+  if (ret != 0) {
+    return ret;
+  }
+
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+  frame->timestamp_us = pbl_uptime_us();
+
+  return 0;
+}
+
+const struct pbl_sensor_ops pbl_mmc5603nj_ops = {
   .init = prv_init,
-  .set_rotated = prv_set_rotated,
-  .set_sampling_interval = prv_set_sampling_interval,
-  .peek = prv_peek,
+  .read = prv_sensor_read,
+  .attr_set = prv_attr_set,
+  .attr_get = prv_attr_get,
 };
 
 #include PBL_DT_INSTANCES(memsic_mmc5603)
