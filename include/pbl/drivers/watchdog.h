@@ -44,14 +44,14 @@ bool watchdog_check_reset_flag(void);
  *
  * @return Reset cause, also cached for watchdog_get_reset_flag().
  */
-McuRebootReason watchdog_clear_reset_flag(void);
+struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void);
 
 /**
  * @brief Get the reset cause read by the last watchdog_clear_reset_flag().
  *
  * @return Cached reset cause.
  */
-McuRebootReason watchdog_get_reset_flag(void);
+struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void);
 
 #else
 
@@ -67,11 +67,11 @@ static inline void watchdog_feed(void) {
 static inline bool watchdog_check_reset_flag(void) {
   return false;
 }
-static inline McuRebootReason watchdog_clear_reset_flag(void) {
-  return (McuRebootReason){};
+static inline struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void) {
+  return (struct pbl_mcu_reboot_reason){};
 }
-static inline McuRebootReason watchdog_get_reset_flag(void) {
-  return (McuRebootReason){};
+static inline struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void) {
+  return (struct pbl_mcu_reboot_reason){};
 }
 /** @endcond */
 

@@ -135,7 +135,7 @@ int main(void) {
   boot_bit_clear(BOOT_BIT_RECOVERY_START_IN_PROGRESS);
 #endif
 
-  static McuRebootReason s_mcu_reboot_reason;
+  static struct pbl_mcu_reboot_reason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
 
   task_init();

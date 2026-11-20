@@ -5,6 +5,6 @@
 
 #include <pbl/drivers/mcu_reboot_reason.h>
 
-void debug_init(McuRebootReason reason);
+void debug_init(struct pbl_mcu_reboot_reason reason);
 
 void debug_print_last_launched_app(void);
