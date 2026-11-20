@@ -6,24 +6,24 @@
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/mmio.h>
 
-#include <hardware/nrf52_memorymap.h>
+#include <devicetree/regs.h>
 #include <hardware/nrf52_power.h>
 #include <hardware/nrf52_wdt.h>
 
 static inline uint32_t prv_wdt_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_WDT_BASE + offset);
+  return pbl_readl(PBL_DT_REG_WDT + offset);
 }
 
 static inline void prv_wdt_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_WDT_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_WDT + offset);
 }
 
 static inline uint32_t prv_power_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_POWER_BASE + offset);
+  return pbl_readl(PBL_DT_REG_CLOCK + offset);
 }
 
 static inline void prv_power_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_POWER_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_CLOCK + offset);
 }
 
 void watchdog_init(void) {
