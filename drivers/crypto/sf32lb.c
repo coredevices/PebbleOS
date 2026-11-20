@@ -14,6 +14,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_aes.h>
 
@@ -31,9 +32,8 @@
 
 #define HASH_SETTING PBL_FIELD_PREP(AES_HASH_SETTING_MODE_MASK, AES_HASH_SETTING_MODE_SHA256)
 
-extern const struct pbl_crypto_sf32lb pbl_crypto_sf32lb_inst;
-
-static const struct pbl_crypto_sf32lb *const s_crypto = &pbl_crypto_sf32lb_inst;
+// The API takes no device, and the SoC has one engine
+static const struct pbl_crypto_sf32lb *s_crypto;
 
 // The engine masters the bus: data goes through a buffer in SRAM, which needs no address
 // translation and owns its cache lines.
@@ -208,18 +208,28 @@ static size_t prv_aes(bool encrypt, const uint8_t *key, size_t key_len, uint8_t 
   return done;
 }
 
+static bool prv_ready(void) {
+  return s_crypto != nullptr && pbl_device_is_ready(&s_crypto->dev);
+}
+
 size_t pbl_crypto_hw_sha256_blocks(uint32_t state[8], const void *data, size_t nblocks) {
-  return pbl_device_is_ready(&s_crypto->dev) ? prv_sha256(state, data, nblocks) : 0;
+  return prv_ready() ? prv_sha256(state, data, nblocks) : 0;
 }
 
 size_t pbl_crypto_hw_aes_ecb_encrypt(const uint8_t *key, size_t key_len, uint8_t *out,
                                      const uint8_t *in, size_t nblocks) {
-  return pbl_device_is_ready(&s_crypto->dev) ? prv_aes(true, key, key_len, out, in, nblocks) : 0;
+  return prv_ready() ? prv_aes(true, key, key_len, out, in, nblocks) : 0;
 }
 
 size_t pbl_crypto_hw_aes_ecb_decrypt(const uint8_t *key, size_t key_len, uint8_t *out,
                                      const uint8_t *in, size_t nblocks) {
-  return pbl_device_is_ready(&s_crypto->dev) ? prv_aes(false, key, key_len, out, in, nblocks) : 0;
+  return prv_ready() ? prv_aes(false, key, key_len, out, in, nblocks) : 0;
+}
+
+int pbl_crypto_sf32lb_init(const struct pbl_device *dev) {
+  s_crypto = container_of(dev, const struct pbl_crypto_sf32lb, dev);
+
+  return 0;
 }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_aes)
