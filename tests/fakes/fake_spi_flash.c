@@ -9,7 +9,6 @@
 
 #include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
-#include <pbl/system/status_codes.h>
 
 #include <clar_asserts.h>
 #include <sys/stat.h>
@@ -67,19 +66,6 @@ void fake_flash_assert_untouched_outside(uint32_t begin, uint32_t end) {
     }
     cl_assert(s_state.storage[addr - s_state.offset] == 0xff);
   }
-}
-
-int32_t fake_spi_flash_find_next_write(int32_t offset) {
-  if (offset < s_state.offset || offset >= s_state.offset + s_state.length) {
-    return E_RANGE;
-  }
-  do {
-    if (s_state.storage[offset] != 0xff) {
-      return offset;
-    }
-    offset++;
-  } while (offset < s_state.offset + s_state.length);
-  return E_DOES_NOT_EXIST;
 }
 
 void fake_spi_flash_populate_from_file(char *path, uint32_t offset) {

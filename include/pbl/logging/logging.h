@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include <pbl/kernel/compiler.h>
-#include <pbl/system/status_codes.h>
 
 /**
  * @defgroup logging Logging
