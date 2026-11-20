@@ -10,6 +10,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
@@ -52,23 +53,19 @@ static const struct pbl_bmp390 *prv_get(const struct pbl_pressure *pressure) {
   return PBL_CONTAINER_OF(pressure, const struct pbl_bmp390, pressure);
 }
 
-static uint16_t prv_u16(const uint8_t *p) {
-  return (uint16_t)((p[1] << 8) | p[0]);
-}
-
-void pbl_bmp390_parse_calib(const uint8_t raw[21], struct pbl_bmp390_calib *calib) {
-  calib->par_t1 = prv_u16(&raw[0]);
-  calib->par_t2 = prv_u16(&raw[2]);
+static void prv_parse_calib(const uint8_t raw[BMP390_CALIB_LEN], struct pbl_bmp390_calib *calib) {
+  calib->par_t1 = pbl_get_le16(&raw[0]);
+  calib->par_t2 = pbl_get_le16(&raw[2]);
   calib->par_t3 = (int8_t)raw[4];
-  calib->par_p1 = (int16_t)prv_u16(&raw[5]);
-  calib->par_p2 = (int16_t)prv_u16(&raw[7]);
+  calib->par_p1 = (int16_t)pbl_get_le16(&raw[5]);
+  calib->par_p2 = (int16_t)pbl_get_le16(&raw[7]);
   calib->par_p3 = (int8_t)raw[9];
   calib->par_p4 = (int8_t)raw[10];
-  calib->par_p5 = prv_u16(&raw[11]);
-  calib->par_p6 = prv_u16(&raw[13]);
+  calib->par_p5 = pbl_get_le16(&raw[11]);
+  calib->par_p6 = pbl_get_le16(&raw[13]);
   calib->par_p7 = (int8_t)raw[15];
   calib->par_p8 = (int8_t)raw[16];
-  calib->par_p9 = (int16_t)prv_u16(&raw[17]);
+  calib->par_p9 = (int16_t)pbl_get_le16(&raw[17]);
   calib->par_p10 = (int8_t)raw[19];
   calib->par_p11 = (int8_t)raw[20];
 }
@@ -76,7 +73,7 @@ void pbl_bmp390_parse_calib(const uint8_t raw[21], struct pbl_bmp390_calib *cali
 // Datasheet compensation (BMP390 datasheet, section 8.4 to 8.6) in single precision, which the
 // FPU runs. The temperature only serves the compensation. The terms stay far below the 2^24 integer
 // limit where it matters (raw_temp - t1).
-uint32_t pbl_bmp390_compensate(const struct pbl_bmp390_calib *c, uint32_t raw_press,
+static uint32_t prv_compensate(const struct pbl_bmp390_calib *c, uint32_t raw_press,
                                uint32_t raw_temp) {
   const float t2 = c->par_t2 / 1073741824.0f;
   const float t3 = c->par_t3 / 281474976710656.0f;
@@ -136,7 +133,7 @@ static int prv_init(const struct pbl_pressure *pressure) {
     return ret;
   }
 
-  pbl_bmp390_parse_calib(raw, dev->calib);
+  prv_parse_calib(raw, dev->calib);
 
   // Reset leaves the IIR filter off and the sensor in sleep mode
   return pbl_i2c_reg_write_byte(&dev->i2c, BMP390_OSR,
@@ -184,9 +181,7 @@ static int prv_read(const struct pbl_pressure *pressure, uint32_t *pa) {
     return ret;
   }
 
-  *pa = pbl_bmp390_compensate(
-      dev->calib, (uint32_t)data[0] | ((uint32_t)data[1] << 8) | ((uint32_t)data[2] << 16),
-      (uint32_t)data[3] | ((uint32_t)data[4] << 8) | ((uint32_t)data[5] << 16));
+  *pa = prv_compensate(dev->calib, pbl_get_le24(&data[0]), pbl_get_le24(&data[3]));
 
   return 0;
 }
