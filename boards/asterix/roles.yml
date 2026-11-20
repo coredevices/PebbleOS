@@ -14,7 +14,7 @@ mic: mic
 speaker: speaker
 die_temp:
   symbol: NRF5_TEMP
-  include: pbl/drivers/temp/nrf5.h
+  include: pbl/drivers/sensor/temp_nrf5.h
 rtc:
   symbol: RETAINED_RTC
   include: pbl/drivers/rtc/retained.h

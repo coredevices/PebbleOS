@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include <pbl/drivers/temp.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -74,7 +74,7 @@ static void click_config_provider(void *context) {
 static int32_t prv_read_temp(void) {
   int32_t temp;
 
-  return (pbl_temp_read(DIE_TEMP, &temp) == 0) ? temp : INT32_MIN;
+  return (pbl_sensor_read(DIE_TEMP, PBL_SENSOR_TEMP, &temp, nullptr) == 0) ? temp : INT32_MIN;
 }
 
 // -------------------------------------------------------------------------------

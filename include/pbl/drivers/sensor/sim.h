@@ -1,0 +1,32 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <stdint.h>
+
+#include <pbl/drivers/sensor.h>
+
+/**
+ * @defgroup drivers_sensor_sim Simulators
+ * @ingroup drivers_sensor
+ * @brief Simulated sensors, measuring what their simulator API sets.
+ * @{
+ */
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_sensor pbl_temp_sim;
+/** @endcond */
+
+/** @brief The simulated temperature sensor, at 25 degrees Celsius until set. */
+#define SIM_TEMP (&pbl_temp_sim)
+
+/**
+ * @brief Set the temperature the simulated temperature sensor reads.
+ *
+ * @param sensor Sensor.
+ * @param millicelsius Temperature in millidegrees Celsius.
+ */
+void pbl_temp_sim_set(const struct pbl_sensor *sensor, int32_t millicelsius);
+
+/** @} */

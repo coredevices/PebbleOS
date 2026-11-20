@@ -381,6 +381,12 @@ struct pbl_sensor {
   struct pbl_sensor_mount mount;
 };
 
+/** @brief The board's die temperature sensor. */
+extern const struct pbl_sensor *const DIE_TEMP;
+
+/** @brief The board's barometric pressure sensor. */
+extern const struct pbl_sensor *const PRESSURE;
+
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_device_class pbl_sensor_class;
 int pbl_sensor_dev_init(const struct pbl_device *dev);

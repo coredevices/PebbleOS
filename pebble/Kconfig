@@ -85,9 +85,9 @@ config SHELL
     default y
     depends on CONSOLE
 
-config TEMP_SHELL
+config SENSOR_SHELL
     default n if RECOVERY_FW
-    depends on TEMP && SHELL
+    depends on SENSOR && SHELL
 
 config USERSPACE
     default y

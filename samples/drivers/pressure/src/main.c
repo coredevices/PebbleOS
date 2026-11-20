@@ -4,24 +4,24 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/pressure.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/delay.h>
 
 #define READS 5
 
 int main(void) {
   for (int i = 0; i < READS; i++) {
-    uint32_t pa;
+    int32_t mpa;
     int ret;
 
     /* Each read runs one conversion; the sensor sleeps in between. */
-    ret = pbl_pressure_read(PRESSURE, &pa);
+    ret = pbl_sensor_read(PRESSURE, PBL_SENSOR_PRESSURE, &mpa, nullptr);
     if (ret != 0) {
       fprintf(stderr, "pressure: read failed (%d)\n", ret);
       return ret;
     }
 
-    printf("pressure: %d.%02d hPa\n", (int)(pa / 100U), (int)(pa % 100U));
+    printf("pressure: %d.%02d hPa\n", (int)(mpa / 100000), (int)(mpa / 1000 % 100));
 
     pbl_sleep_ms(1000);
   }

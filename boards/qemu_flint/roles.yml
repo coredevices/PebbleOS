@@ -22,7 +22,7 @@ mic:
 speaker: speaker
 die_temp:
   symbol: SIM_TEMP
-  include: pbl/drivers/temp/sim.h
+  include: pbl/drivers/sensor/sim.h
 rtc:
   symbol: QEMU_RTC
   include: pbl/drivers/rtc/qemu.h

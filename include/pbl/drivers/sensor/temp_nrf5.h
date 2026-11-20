@@ -3,17 +3,17 @@
 
 #pragma once
 
-#include <pbl/drivers/temp.h>
+#include <pbl/drivers/sensor.h>
 
 /**
- * @defgroup drivers_temp_nrf5 nRF5
- * @ingroup drivers_temp
+ * @defgroup drivers_sensor_temp_nrf5 nRF5 TEMP
+ * @ingroup drivers_sensor
  * @brief Nordic nRF5 die temperature sensor (TEMP).
  * @{
  */
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_temp pbl_temp_nrf5;
+extern const struct pbl_sensor pbl_temp_nrf5;
 /** @endcond */
 
 /** @brief The nRF5 die temperature sensor. */
