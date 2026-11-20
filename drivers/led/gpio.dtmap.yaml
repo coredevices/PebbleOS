@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: gpio-leds
+config: LED_GPIO
+class: led
+define: PBL_LED_GPIO_DEFINE
+children:
+  property: gpios
+args:
+  - name: true
+  - gpio: ""

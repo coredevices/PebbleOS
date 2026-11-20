@@ -22,6 +22,14 @@ config LED_AW2016
     help
       Support for the Awinic AW2016 RGB LED controller.
 
+config LED_GPIO
+    bool "GPIO LEDs"
+    default y
+    depends on DT_HAS_GPIO_LEDS_ENABLED
+    select GPIO
+    help
+      Support for LEDs switched by GPIOs.
+
 module = DRIVER_LED
 module-str = LED
 source "subsys/logging/Kconfig.template.log_level"
