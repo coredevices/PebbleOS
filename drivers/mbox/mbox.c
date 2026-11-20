@@ -10,8 +10,6 @@
 
 PBL_DEVICE_CLASS_DEFINE(pbl_mbox_class, "mbox");
 
-static void prv_poll(struct pbl_timer *timer);
-
 static int prv_xlate(const struct pbl_mbox_chan *chan) {
   int idx = chan->ctrl->ops->xlate(chan->ctrl, chan);
 
@@ -76,7 +74,7 @@ static void prv_txdone(const struct pbl_mbox_controller *ctrl, uint8_t idx, int 
   }
 }
 
-static void prv_poll(struct pbl_timer *timer) {
+void pbl_mbox_poll(struct pbl_timer *timer) {
   struct pbl_mbox_controller_state *cst =
       container_of(timer, struct pbl_mbox_controller_state, poll);
   const struct pbl_mbox_controller *ctrl = cst->ctrl;
@@ -120,10 +118,6 @@ int pbl_mbox_request(const struct pbl_mbox_chan *chan, const struct pbl_mbox_cli
   if (st->cl != nullptr) {
     pbl_irq_unlock();
     return -EBUSY;
-  }
-  if (ctrl->state->ctrl == nullptr) {
-    ctrl->state->ctrl = ctrl;
-    pbl_timer_init(&ctrl->state->poll, prv_poll);
   }
   st->cl = cl;
   st->tx_active = false;
