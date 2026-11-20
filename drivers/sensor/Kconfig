@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Sensors"
+
+config SENSOR
+    bool "Sensor class"
+    help
+      Sensor class (pbl/drivers/sensor.h): accelerometers, gyroscopes,
+      magnetometers, temperature and pressure sensors. Selected by the
+      sensor type menus below.
+
+if SENSOR
+
+config SENSOR_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The sensor shell command, to list the sensors, read them and set
+      their attributes.
+
+module = DRIVER_SENSOR
+module-str = Sensor
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SENSOR
+
+endmenu
