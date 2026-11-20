@@ -65,7 +65,7 @@ static void prv_notification(struct pbl_bt_ancs_client *client,
                              const struct pbl_bt_ancs_notif *notif) {
   static const char *const events[] = {"added", "modified", "removed"};
 
-  if (notif->event >= ARRAY_LENGTH(events)) {
+  if (notif->event >= PBL_ARRAY_SIZE(events)) {
     return;
   }
 
@@ -75,7 +75,7 @@ static void prv_notification(struct pbl_bt_ancs_client *client,
 
   /* One request at a time: the attributes of a notification that comes meanwhile are not got. */
   if (notif->event != PBL_BT_ANCS_EVENT_REMOVED) {
-    (void)pbl_bt_ancs_client_get_notif_attrs(client, notif->uid, s_attrs, ARRAY_LENGTH(s_attrs));
+    (void)pbl_bt_ancs_client_get_notif_attrs(client, notif->uid, s_attrs, PBL_ARRAY_SIZE(s_attrs));
   }
 }
 

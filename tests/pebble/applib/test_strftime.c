@@ -1316,7 +1316,7 @@ void test_strftime__full_iso8601(void) {
 
   struct pbl_tm wrk = {};
 
-  for (int i = 0; i < ARRAY_LENGTH(s_iso8601_data); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_iso8601_data); i++) {
     pbl_gmtime_r(&s_iso8601_data[i].stamp, &wrk);
     printf("%d: %ld(%d,%d,%d,%d), ", i, s_iso8601_data[i].stamp, wrk.tm_yday, wrk.tm_year,
            wrk.tm_mon, wrk.tm_mday);

@@ -25,7 +25,7 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
 }
 
 static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
-  return ARRAY_LENGTH(s_strings);
+  return PBL_ARRAY_SIZE(s_strings);
 }
 
 static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Layer *cell_layer,

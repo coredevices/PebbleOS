@@ -1119,7 +1119,7 @@ static void prv_periodic_fn(struct pbl_work *work) {
   if (s_periodic_busy > 0U) {
     pbl_thread_sleep(PBL_TICKS(s_periodic_busy));
   }
-  if (s_periodic_runs < (int)ARRAY_LENGTH(s_periodic_at)) {
+  if (s_periodic_runs < (int)PBL_ARRAY_SIZE(s_periodic_at)) {
     pbl_delayed_work_schedule_next(&s_dwork, 10);
   }
 }

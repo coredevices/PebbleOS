@@ -135,7 +135,7 @@ static void prv_get_store_entry(ResAppNum app_num, uint32_t resource_id,
     .id = resource_id,
     .length = ENTRY_LENGTH_UNSET,
   };
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_resource_store_impls); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_resource_store_impls); i++) {
     entry->impl = s_resource_store_impls[i];
     PBL_ASSERTN(entry->impl->find_resource);
     if (entry->impl->find_resource(entry, app_num, resource_id)) {
@@ -230,7 +230,7 @@ bool resource_storage_check(ResAppNum app_num, uint32_t resource_id,
 }
 
 void resource_storage_init(void) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_resource_store_impls); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_resource_store_impls); i++) {
     if (s_resource_store_impls[i]->init) {
       s_resource_store_impls[i]->init();
     }

@@ -15,7 +15,7 @@
 #include <devicetree/devices.h>
 
 const uint8_t BOARD_DISPLAY_CORNERS[] = {3, 3, 2, 1};
-const uint8_t BOARD_DISPLAY_NUM_CORNERS = ARRAY_LENGTH(BOARD_DISPLAY_CORNERS);
+const uint8_t BOARD_DISPLAY_NUM_CORNERS = PBL_ARRAY_SIZE(BOARD_DISPLAY_CORNERS);
 
 #ifdef CONFIG_HRM
 static const struct pbl_i2c_dev s_i2c_gh3x2x = PBL_I2C_DEV(&dt_i2c4, 0x14);

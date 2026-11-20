@@ -76,7 +76,7 @@ void dark_mode_menu_push(DarkModeMenu *menu) {
   };
   const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("DARK MODE"), pbl_i18n_noop("Dark Mode"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_dark_mode_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_dark_mode_labels), true /* icons_enabled */,
                             (const char **)s_dark_mode_labels, menu);
 }
 

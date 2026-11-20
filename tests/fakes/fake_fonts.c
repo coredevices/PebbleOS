@@ -56,7 +56,7 @@ static FontHelper s_font_helpers[] = {
 };
 
 static FontHelper *prv_font_helper_from_font_key(const char *font_key) {
-  for (int i = 0; i < ARRAY_LENGTH(s_font_helpers); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_font_helpers); i++) {
     if (!strcmp(font_key, s_font_helpers[i].key)) {
       return &s_font_helpers[i];
     }
@@ -88,7 +88,7 @@ static const struct {
 };
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
-  for (uint32_t i = 0; i < ARRAY_LENGTH(s_emoji_fonts); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(s_emoji_fonts); i++) {
     if (font_height >= s_emoji_fonts[i].min_height) {
       return prv_get_font(s_emoji_fonts[i].key_name);
     }

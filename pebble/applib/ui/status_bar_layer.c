@@ -587,7 +587,7 @@ static void prv_render(GContext *ctx, const GRect *bounds, StatusBarLayerConfig 
   int16_t y_offset_top = bounds->origin.y;
   int16_t y_offset_bottom = y_offset_top + bounds->size.h;
   //  TODO: x offset for ICON_MARGINs
-  //  for (uint8_t i = 0; i < ARRAY_LENGTH(s_left_icons); ++i) {
+  //  for (uint8_t i = 0; i < PBL_ARRAY_SIZE(s_left_icons); ++i) {
   //    x_offset_l += s_left_icons[i](ctx, x_offset_l, GAlignLeft);
   //  }
 

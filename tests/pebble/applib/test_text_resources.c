@@ -842,7 +842,7 @@ void test_text_resources__test_glyph_decompression(void) {
   // Load the uncompressed glyph into this local glyph_buffer, and use the font cache for the
   // compressed glyph.
   uint8_t glyph_buffer[sizeof(GlyphHeaderData) + CACHE_GLYPH_SIZE];
-  for (unsigned index = 0; index < ARRAY_LENGTH(codepoint_range); ++index) {
+  for (unsigned index = 0; index < PBL_ARRAY_SIZE(codepoint_range); ++index) {
     for (unsigned codepoint = codepoint_range[index].start; codepoint <= codepoint_range[index].end;
          ++codepoint) {
       const GlyphData *glyph =

@@ -199,7 +199,7 @@ static bool prv_lsm6dso_read_fifo(uint16_t samples) {
      .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
   };
 
-  return pbl_i2c_transfer(&s_dev->i2c, msgs, ARRAY_LENGTH(msgs)) == 0;
+  return pbl_i2c_transfer(&s_dev->i2c, msgs, PBL_ARRAY_SIZE(msgs)) == 0;
 }
 
 static uint8_t prv_fs_bits(void) {

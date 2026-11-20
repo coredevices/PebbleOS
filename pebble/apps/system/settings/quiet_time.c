@@ -88,13 +88,13 @@ static const AlertMask s_dnd_mask_cycle[] = {
 static AlertMask prv_cycle_dnd_mask(void) {
   AlertMask mask = alerts_get_dnd_mask();
   int index = 0;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_dnd_mask_cycle); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_dnd_mask_cycle); i++) {
     if (s_dnd_mask_cycle[i] == mask) {
       index = i;
       break;
     }
   }
-  mask = s_dnd_mask_cycle[(index + 1) % ARRAY_LENGTH(s_dnd_mask_cycle)];
+  mask = s_dnd_mask_cycle[(index + 1) % PBL_ARRAY_SIZE(s_dnd_mask_cycle)];
   alerts_set_dnd_mask(mask);
   return mask;
 }

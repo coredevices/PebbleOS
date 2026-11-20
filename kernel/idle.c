@@ -21,7 +21,7 @@ typedef uint32_t idle_hook_mask_t;
 const struct pbl_idle_state pbl_soc_idle_states[] = {
   {.name = "wfi", .min_ticks = 1, .exit_ticks = 0, .enter = pbl_cpu_idle},
 };
-const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
+const size_t pbl_soc_num_idle_states = PBL_ARRAY_SIZE(pbl_soc_idle_states);
 #endif
 
 static uint64_t s_residency_us[PBL_IDLE_STATES_MAX];

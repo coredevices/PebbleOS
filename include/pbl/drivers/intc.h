@@ -123,7 +123,7 @@ struct pbl_intc {
     .ops = (_ops),                                                             \
     .lines = sym##_intc_lines,                                                 \
     .enabled = sym##_intc_enabled,                                             \
-    .num_irqs = ARRAY_LENGTH(sym##_intc_lines),                                \
+    .num_irqs = PBL_ARRAY_SIZE(sym##_intc_lines),                              \
   }
 
 /** @brief An interrupt line, as used by a consumer. */

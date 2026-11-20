@@ -38,4 +38,4 @@ const struct pbl_mpu_region pbl_soc_mpu_regions[] = {
     .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_NC,
   },
 };
-const size_t pbl_soc_num_mpu_regions = ARRAY_LENGTH(pbl_soc_mpu_regions);
+const size_t pbl_soc_num_mpu_regions = PBL_ARRAY_SIZE(pbl_soc_mpu_regions);

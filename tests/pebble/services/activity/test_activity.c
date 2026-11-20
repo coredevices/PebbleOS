@@ -225,7 +225,7 @@ DataLoggingResult dls_log(DataLoggingSession *logging_session, const void *data,
 
     ActivityRawSamplesRecord *records = (ActivityRawSamplesRecord *)data;
     for (int i = 0; i < num_items; i++) {
-      cl_assert(s_num_dls_accel_records < ARRAY_LENGTH(s_dls_accel_records));
+      cl_assert(s_num_dls_accel_records < PBL_ARRAY_SIZE(s_dls_accel_records));
       s_dls_accel_records[s_num_dls_accel_records++] = records[i];
     }
 
@@ -237,7 +237,7 @@ DataLoggingResult dls_log(DataLoggingSession *logging_session, const void *data,
       if (s_num_dls_activity_records >= 100) {
         cl_assert(false);
       }
-      cl_assert(s_num_dls_activity_records < ARRAY_LENGTH(s_dls_activity_records));
+      cl_assert(s_num_dls_activity_records < PBL_ARRAY_SIZE(s_dls_activity_records));
       s_dls_activity_records[s_num_dls_activity_records++] = records[i];
     }
 
@@ -1797,7 +1797,7 @@ void test_activity__get_minute_history_timeout(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_sys_work_stalled = true;
-  uint32_t num_records = ARRAY_LENGTH(minutes);
+  uint32_t num_records = PBL_ARRAY_SIZE(minutes);
   cl_assert(!activity_get_minute_history(minutes, &num_records, &utc_start));
   cl_assert_equal_i(num_records, 0);
   cl_assert_equal_i(utc_start, 0);
@@ -1838,7 +1838,7 @@ void test_activity__get_minute_heart_rate_too_long(void) {
 
   static uint8_t bpm[ACTIVITY_MINUTE_HEART_RATE_MAX_MINUTES + 1];
   stub_pebble_tasks_set_current(PebbleTask_App);
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, PBL_ARRAY_SIZE(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_sys_work_count_callbacks(), 0);
 }
 
@@ -1855,7 +1855,7 @@ void test_activity__get_minute_heart_rate_timeout(void) {
 
   stub_pebble_tasks_set_current(PebbleTask_App);
   s_sys_work_stalled = true;
-  cl_assert(!activity_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), pbl_realtime()));
+  cl_assert(!activity_get_minute_heart_rate(bpm, PBL_ARRAY_SIZE(bpm), pbl_realtime()));
   cl_assert_equal_i(fake_sys_work_count_callbacks(), 1);
 
   s_sys_work_stalled = false;
@@ -2361,11 +2361,11 @@ void test_activity__distance(void) {
   pbl_realtime_set(utc_sec);
   fake_sys_work_callbacks_invoke_pending();
 
-  int act_distance[ARRAY_LENGTH(tests)];
+  int act_distance[PBL_ARRAY_SIZE(tests)];
   const int k_elapsed_sec = 2 * PBL_SEC_PER_MIN;
 
   // Evaluate each test case
-  for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(tests); i++) {
     DistanceTestParams *params = &tests[i];
 
     // Advance to new day to reset the distance
@@ -2415,7 +2415,7 @@ void test_activity__distance(void) {
   printf("\ntest  height  steps  seconds  cadence  exp_dist  exp_dist_2min  act_dist_2min   %%err");
   printf("\n------------------------------------------------------------------------------------");
   float pct_err_sum = 0;
-  for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(tests); i++) {
     DistanceTestParams *params = &tests[i];
 
     int steps_per_minute = (int)((float)params->steps / params->seconds * PBL_SEC_PER_MIN);
@@ -2429,7 +2429,7 @@ void test_activity__distance(void) {
   }
 
   printf("\n--------------------------");
-  float avg_pct_err = pct_err_sum / ARRAY_LENGTH(tests);
+  float avg_pct_err = pct_err_sum / PBL_ARRAY_SIZE(tests);
   printf("\nAVERAGE PCT ERROR: %.2f", avg_pct_err);
 
   // Check the overall percent error

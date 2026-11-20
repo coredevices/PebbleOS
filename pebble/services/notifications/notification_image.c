@@ -29,7 +29,7 @@ void notification_image_service_init(void) {
 }
 
 bool notification_image_claim(const Uuid *item_id, uint8_t *token_out) {
-  const size_t last = ARRAY_LENGTH(s_images) - 1;
+  const size_t last = PBL_ARRAY_SIZE(s_images) - 1;
 
   if (!item_id || !token_out) {
     return false;
@@ -103,7 +103,7 @@ bool notification_image_store(uint8_t token, GBitmap *bitmap) {
 
 void notification_image_clear(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  for (size_t i = 0; i < ARRAY_LENGTH(s_images); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_images); i++) {
     imaging_image_destroy(s_images[i].bitmap);
     s_images[i].bitmap = nullptr;
   }

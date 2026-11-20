@@ -947,7 +947,7 @@ static const PrivateDataSourceInfo s_data_sources[] = {
 };
 
 const char *timeline_get_private_data_source(Uuid *parent_id) {
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_data_sources); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_data_sources); i++) {
     if (uuid_equal(parent_id, &s_data_sources[i].id)) {
       return s_data_sources[i].name;
     }

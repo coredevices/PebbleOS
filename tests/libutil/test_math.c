@@ -380,7 +380,7 @@ void test_math__integer_sqrt_limits(void) {
     1LL << 52,
     INT64_MAX,
   };
-  for (size_t i = 0; i < ARRAY_LENGTH(values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(values); i++) {
     prv_check_integer_sqrt(values[i]);
   }
 }

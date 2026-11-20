@@ -56,7 +56,7 @@ void test_pfs__initialize(void) {
   pfs_close(fd);
 
   fd = pfs_open(TEST_FILE_C_NAME, OP_FLAG_WRITE, FILE_TYPE_STATIC, sizeof(s_test_file_c));
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_test_file_c); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_test_file_c); ++i) {
     s_test_file_c[i] = 'c';
   }
   pfs_write(fd, (uint8_t *)s_test_file_c, sizeof(s_test_file_c));

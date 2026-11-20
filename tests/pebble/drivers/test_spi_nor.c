@@ -504,7 +504,7 @@ static void prv_build_sfdp(void) {
   s_sfdp[5] = 1U;
   s_sfdp[6] = s_has_4bait ? 1U : 0U;
   s_sfdp[7] = 0xFFU;
-  prv_param_header(&s_sfdp[8], 0xFF00U, ARRAY_LENGTH(bfpt), SFDP_BFPT_ADDR);
+  prv_param_header(&s_sfdp[8], 0xFF00U, PBL_ARRAY_SIZE(bfpt), SFDP_BFPT_ADDR);
   if (s_has_4bait) {
     prv_param_header(&s_sfdp[16], 0xFF84U, 2U, SFDP_4BAIT_ADDR);
     prv_put32(&s_sfdp[SFDP_4BAIT_ADDR], PBL_BIT(1) | PBL_BIT(4) | PBL_BIT(5) | PBL_BIT(6) |
@@ -523,7 +523,7 @@ static void prv_build_sfdp(void) {
   bfpt[10] = 8U << 4;
   bfpt[14] = 1U << 20;
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(bfpt); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(bfpt); i++) {
     prv_put32(&s_sfdp[SFDP_BFPT_ADDR + (i * 4U)], bfpt[i]);
   }
 }
@@ -1059,7 +1059,7 @@ static void prv_check_slot_addresses(const struct pbl_flash *flash, uint32_t fir
 
   cl_assert_equal_i(pbl_flash_otp_get_info(flash, &info), 0);
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(names); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(names); i++) {
     const struct pbl_flash_otp_cell *cell = pbl_flash_otp_cell_get(flash, names[i]);
     uint8_t byte = (uint8_t)(0x10U + i);
     uint32_t phys = (first_reg << 12) + (slots[i] * 32U);
@@ -1105,7 +1105,7 @@ void test_spi_nor__soc_config_addresses_gd25q256e(void) {
   prv_reset(CHIP_GD25Q256E);
   flash = prv_init(&s_nor_q);
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(cells); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(cells); i++) {
     const struct pbl_flash_otp_cell *cell = pbl_flash_otp_cell_get(flash, cells[i].name);
     uint32_t last = cells[i].phys + cells[i].len - 1U;
     uint8_t byte = (uint8_t)(0x20U + i);

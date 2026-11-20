@@ -78,7 +78,7 @@ static void prv_heartbeat_sys_work_cb(void *data) {
     c->collect();
   }
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_heartbeat); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_heartbeat); i++) {
     s_heartbeat[i]();
   }
 }
@@ -89,7 +89,7 @@ static void prv_heartbeat_timer_cb(struct pbl_work *work) {
 }
 
 void pbl_analytics_init(void) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_init); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_init); i++) {
     s_init[i]();
   }
 
@@ -113,7 +113,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_set_signed, (VAL, enum pbl_analytics_key, ke
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->set_signed(key, signed_value);
   }
 }
@@ -123,7 +123,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_set_unsigned, (VAL, enum pbl_analytics_key, 
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->set_unsigned(key, unsigned_value);
   }
 }
@@ -134,7 +134,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_set_string, (VAL, enum pbl_analytics_key, ke
     return;
   }
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->set_string(key, value);
   }
 }
@@ -143,7 +143,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_timer_start, (VAL, enum pbl_analytics_key, k
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->timer_start(key);
   }
 }
@@ -152,7 +152,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_timer_stop, (VAL, enum pbl_analytics_key, ke
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->timer_stop(key);
   }
 }
@@ -162,7 +162,7 @@ PBL_SYSCALL(void, sys_pbl_analytics_add, (VAL, enum pbl_analytics_key, key),
   if (!prv_analytics_key_in_range(key)) {
     return;
   }
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_backend_ops); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_backend_ops); i++) {
     s_backend_ops[i]->add(key, amount);
   }
 }

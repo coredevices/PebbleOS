@@ -800,7 +800,7 @@ void test_do_not_disturb__invalid_slots_rejected(void) {
     {.kind = DoNotDisturbScheduleKindEveryday, .schedule = {.from_hour = 24}},
     {.kind = DoNotDisturbScheduleKindEveryday, .schedule = {.to_minute = 60}},
   };
-  for (unsigned int i = 0; i < ARRAY_LENGTH(invalid); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(invalid); i++) {
     cl_assert(!do_not_disturb_schedule_slot_is_valid(&invalid[i]));
     cl_assert_equal_i(do_not_disturb_add_schedule_slot(&invalid[i]), -EINVAL);
     cl_assert_equal_i(do_not_disturb_set_schedule_slot(0, &invalid[i]), -EINVAL);

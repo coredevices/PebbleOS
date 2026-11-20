@@ -480,7 +480,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_1(int *len) {
     { 0, 0x67, 32},
     { 0, 0x55, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -1268,7 +1268,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_watch_on_table(int *len) {
     { 0, 0x8b, 0},
     { 0, 0x8b, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -2035,7 +2035,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_2(int *len) {
     { 0, 0x6f, 30},
     { 0, 0x6f, 21},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -2650,7 +2650,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_3(int *len) {
     { 0, 0x73, 0},
     { 0, 0x73, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -3430,7 +3430,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_4(int *len) {
     { 0, 0x85, 40},
     { 0, 0x8f, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -4079,7 +4079,7 @@ AlgDlsMinuteData *activity_sample_sleep_v1_5(int *len) {
     { 0, 0x42, 51},
     { 12, 0x54, 62},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

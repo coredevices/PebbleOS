@@ -271,7 +271,7 @@ size_t utf8_get_size_truncate(const char *text, size_t max_size) {
 
 size_t utf8_truncate_with_ellipsis(const char *in_string, char *out_buffer, size_t max_length) {
   const char ellipsis[] = UTF8_ELLIPSIS_STRING;
-  const size_t ellipsis_length = ARRAY_LENGTH(ellipsis);
+  const size_t ellipsis_length = PBL_ARRAY_SIZE(ellipsis);
   if (max_length < ellipsis_length) {
     return 0;
   }

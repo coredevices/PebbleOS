@@ -110,7 +110,7 @@ void prv_update_proc(Layer *layer, GContext *ctx) {
                      (TextLayout *)&cached_label_layout);
 
   char value_output_buffer[12];
-  snprintf(value_output_buffer, ARRAY_LENGTH(value_output_buffer), "%" PRId32, nw->value);
+  snprintf(value_output_buffer, PBL_ARRAY_SIZE(value_output_buffer), "%" PRId32, nw->value);
 
   frame.origin.y += cached_label_layout.max_used_size.h;
 #if PBL_RECT

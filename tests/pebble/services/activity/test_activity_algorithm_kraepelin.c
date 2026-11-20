@@ -213,7 +213,7 @@ DataLoggingResult dls_log(DataLoggingSession *logging_session, const void *data,
 
   AlgMinuteDLSRecord *records = (AlgMinuteDLSRecord *)data;
   for (int i = 0; i < num_items; i++) {
-    cl_assert(s_num_dls_records < ARRAY_LENGTH(s_dls_records));
+    cl_assert(s_num_dls_records < PBL_ARRAY_SIZE(s_dls_records));
     s_dls_records[s_num_dls_records++] = records[i];
   }
 
@@ -720,7 +720,7 @@ void test_activity_algorithm_kraepelin__get_minute_heart_rate(void) {
   memset(bpm, 0xA5, sizeof(bpm));
   // Starting just past the minute to test that it is rounded down
   const time_t start = start_utc - (num_empty * PBL_SEC_PER_MIN) + 5;
-  cl_assert(activity_algorithm_get_minute_heart_rate(bpm, ARRAY_LENGTH(bpm), start));
+  cl_assert(activity_algorithm_get_minute_heart_rate(bpm, PBL_ARRAY_SIZE(bpm), start));
   for (int i = 0; i < num_empty; i++) {
     cl_assert_equal_i(bpm[i], 0);
   }
@@ -828,7 +828,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Nap);
     cl_assert_equal_i(sessions[1].type, ActivitySessionType_RestfulNap);
@@ -843,7 +843,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Sleep);
   }
@@ -862,7 +862,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Nap);
     cl_assert_equal_i(sessions[1].type, ActivitySessionType_Nap);
@@ -877,7 +877,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Sleep);
   }
@@ -891,7 +891,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Sleep);
   }
@@ -912,7 +912,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
         .ongoing = true,
       },
     };
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Sleep);
     cl_assert_equal_i(sessions[1].type, ActivitySessionType_RestfulSleep);
@@ -927,7 +927,7 @@ void test_activity_algorithm_kraepelin__sleep_post_process(void) {
       },
     };
 
-    uint16_t session_entries = ARRAY_LENGTH(sessions);
+    uint16_t session_entries = PBL_ARRAY_SIZE(sessions);
     activity_algorithm_post_process_sleep_sessions(session_entries, sessions);
     cl_assert_equal_i(sessions[0].type, ActivitySessionType_Sleep);
   }

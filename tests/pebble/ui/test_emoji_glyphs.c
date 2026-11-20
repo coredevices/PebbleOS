@@ -273,7 +273,7 @@ void test_emoji_glyphs__atlases(void) {
     const size_t len = strlen(entry->d_name);
     if (strncmp(entry->d_name, "EMOJI_", strlen("EMOJI_")) == 0 && len > strlen(".pbf") &&
         strcmp(entry->d_name + len - strlen(".pbf"), ".pbf") == 0) {
-      cl_assert(num_names < ARRAY_LENGTH(names));
+      cl_assert(num_names < PBL_ARRAY_SIZE(names));
       names[num_names++] = strdup(entry->d_name);
     }
   }

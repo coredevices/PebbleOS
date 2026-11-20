@@ -137,7 +137,7 @@ struct pbl_kraepelin_sample *activity_sample_30_steps(int *len) {
     {-945, 643, 140},   {-825, 713, 168},    {-854, 725, 255},   {-891, 784, 293},
     {-835, 912, 310},   {-788, 924, 269},    {-691, 953, 207},   {-603, 999, 171},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -334,7 +334,7 @@ struct pbl_kraepelin_sample *activity_sample_working_at_desk(int *len) {
     {-80, -254, -967},   {-161, -333, -997}, {-178, -481, -976}, {-214, -405, -1138},
     {-154, -458, -1102}, {-19, -162, -1051},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -647,6 +647,6 @@ struct pbl_kraepelin_sample *activity_sample_not_moving(int *len) {
     {56, 16, -1000}, {56, 24, -1000}, {56, 16, -992},  {56, 16, -1000}, {56, 24, -1000},
     {56, 24, -1000}, {56, 24, -1000},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }

@@ -68,7 +68,7 @@ void test_animation_interpolate__override_gets_clipped(void) {
 
 void test_animation_interpolate__moook(void) {
   const int expected[] = {-20000, -19999, -19980, 20004, 20002, 20001, 20000};
-  const int num_frames = ARRAY_LENGTH(expected);
+  const int num_frames = PBL_ARRAY_SIZE(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
     cl_assert_equal_i(interpolate_moook((i * ANIMATION_NORMALIZED_MAX) / num_frames, -20000, 20000),
@@ -78,7 +78,7 @@ void test_animation_interpolate__moook(void) {
 
 void test_animation_interpolate__moook_in(void) {
   const int expected[] = {-20000, -19999, -19980};
-  const int num_frames = ARRAY_LENGTH(expected);
+  const int num_frames = PBL_ARRAY_SIZE(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
     cl_assert_equal_i(
@@ -90,7 +90,7 @@ void test_animation_interpolate__moook_in(void) {
 
 void test_animation_interpolate__moook_out(void) {
   const int expected[] = {20004, 20002, 20001, 20000};
-  const int num_frames = ARRAY_LENGTH(expected);
+  const int num_frames = PBL_ARRAY_SIZE(expected);
   for (int i = 0; i < num_frames; i++) {
     printf("frame: %d\n", i);
     cl_assert_equal_i(
@@ -115,9 +115,9 @@ static const int32_t s_custom_moook_in[] = {0, 2, 8};
 static const int32_t s_custom_moook_out[] = {21, 9, 3, 0};
 static const MoookConfig s_custom_moook = {
   .frames_in = s_custom_moook_in,
-  .num_frames_in = ARRAY_LENGTH(s_custom_moook_in),
+  .num_frames_in = PBL_ARRAY_SIZE(s_custom_moook_in),
   .frames_out = s_custom_moook_out,
-  .num_frames_out = ARRAY_LENGTH(s_custom_moook_out),
+  .num_frames_out = PBL_ARRAY_SIZE(s_custom_moook_out),
   .num_frames_mid = 3,
 };
 

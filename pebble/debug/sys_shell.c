@@ -202,7 +202,7 @@ static int prv_cmd_audit_delay(const struct pbl_shell *sh, size_t argc, char **a
   static uint32_t s_took_ns[500];
   pbl_irq_lock();
   pbl_busy_wait_us(1); // warm the cache
-  for (uint32_t i = 0; i < ARRAY_LENGTH(s_took_ns); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(s_took_ns); i++) {
     uint32_t start = pbl_cycle_get_32();
     pbl_busy_wait_us(2 * i + 1);
     s_took_ns[i] =
@@ -212,7 +212,7 @@ static int prv_cmd_audit_delay(const struct pbl_shell *sh, size_t argc, char **a
 
   uint32_t short_waits = 0;
   uint32_t max_over_ns = 0;
-  for (uint32_t i = 0; i < ARRAY_LENGTH(s_took_ns); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(s_took_ns); i++) {
     uint32_t ns = (2 * i + 1) * 1000U;
     if (s_took_ns[i] < ns) {
       pbl_shell_print(sh, "busy wait %" PRIu32 " us: took %" PRIu32 " ns", ns / 1000U,

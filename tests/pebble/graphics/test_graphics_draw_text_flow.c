@@ -255,7 +255,7 @@ void test_graphics_draw_text_flow__avoid_repeat_text_to_avoid_orphans(void) {
     third_page_one_line, third_page_two_lines, third_page_full,       fourth_page_one_line,
   };
 
-  const int16_t num_steps = ARRAY_LENGTH(texts);
+  const int16_t num_steps = PBL_ARRAY_SIZE(texts);
   const GSize size = GSize(144, 300);
 
   prv_prepare_fb_steps_xy(size, num_steps, 1);

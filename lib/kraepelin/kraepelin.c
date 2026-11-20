@@ -1082,7 +1082,7 @@ static uint16_t prv_calc_steps_in_epoch(struct pbl_kraepelin *state, int16_t num
     const char *names[] = {"steps", "freq", "vmc", "score_0", "score_hf", "score_lf", "total"};
     int32_t values[] = {return_steps, max_mag_hz, real_vmc_5s, score_0,
                         score_hf,     score_lf,   total_energy};
-    state->stats_cb(ARRAY_LENGTH(names), names, values);
+    state->stats_cb(PBL_ARRAY_SIZE(names), names, values);
   }
 
   // Update state
@@ -1581,7 +1581,7 @@ static void prv_deep_sleep_update(struct pbl_kraepelin *alg_state, time_t sample
                prv_log_time(alg_state, start_time));
 
       // Store the session we just found as a complete one now that we have the end
-      if (state->num_sessions < ARRAY_LENGTH(state->start_delta_sec)) {
+      if (state->num_sessions < PBL_ARRAY_SIZE(state->start_delta_sec)) {
         uint16_t delta_sec = MAX(start_time - state->sleep_start_time, 0);
         state->start_delta_sec[state->num_sessions] = delta_sec;
         state->len_m[state->num_sessions] = len_m;
@@ -1614,7 +1614,7 @@ static bool prv_sleep_activity_update_stats(struct pbl_kraepelin *alg_state, tim
   KAlgSleepActivityState *state = &alg_state->sleep_state;
 
   // Add this data to our history
-  const unsigned int history_capacity = ARRAY_LENGTH(state->minute_history);
+  const unsigned int history_capacity = PBL_ARRAY_SIZE(state->minute_history);
   if (state->num_history_entries >= history_capacity) {
     memmove(state->minute_history, state->minute_history + 1,
             (history_capacity - 1) * sizeof(KAlgSleepMinute));

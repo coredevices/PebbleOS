@@ -105,7 +105,7 @@ static void prv_migrate(void) {
   }
 
   if (pbl_settings_open(&legacy, LEGACY_FILE_NAME, LEGACY_FILE_SIZE) == 0) {
-    for (size_t i = 0; i < ARRAY_LENGTH(s_legacy_keys); i++) {
+    for (size_t i = 0; i < PBL_ARRAY_SIZE(s_legacy_keys); i++) {
       uint8_t val[sizeof(struct pbl_pp_capabilities)];
       size_t len;
 

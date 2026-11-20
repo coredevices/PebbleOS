@@ -1889,7 +1889,7 @@ static uint32_t bt_rfc_txdc_cal(uint32_t rslt_start_addr, uint8_t cal_power_enab
 
   prv_and(RFC(TRF_EDR_REG1), ~BT_RFC_TRF_EDR_REG1_BRF_TRF_EDR_TMXBUF_IBLD_LV_MASK);
 
-  for (i = 0; i < ARRAY_LENGTH(g_cos_bw); i++)
+  for (i = 0; i < PBL_ARRAY_SIZE(g_cos_bw); i++)
     pbl_writel(g_cos_bw[i], PHY(RCOS_CFG0) + i * 4U);
 
   uint32_t reg_addr = rslt_start_addr;

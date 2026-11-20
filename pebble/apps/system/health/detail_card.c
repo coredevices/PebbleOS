@@ -336,7 +336,7 @@ static void prv_draw_progress_bar_in_zone(GContext *ctx, const GRect *zone_rect,
   };
 
   HealthProgressBar progress_bar = {
-    .num_segments = ARRAY_LENGTH(segments),
+    .num_segments = PBL_ARRAY_SIZE(segments),
     .segments = segments,
   };
 
@@ -453,7 +453,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
     };
 
     HealthProgressBar progress_bar = {
-      .num_segments = ARRAY_LENGTH(segments),
+      .num_segments = PBL_ARRAY_SIZE(segments),
       .segments = segments,
     };
 

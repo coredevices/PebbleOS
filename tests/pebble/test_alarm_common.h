@@ -114,7 +114,7 @@ static FakePinRecord s_fake_pin_records[4];
 
 static inline void prv_fake_pin_record_add(Uuid id, Uuid parent, time_t timestamp,
                                            LayoutId layout) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_pin_records); ++i) {
     if (!s_fake_pin_records[i].exists) {
       s_fake_pin_records[i] = (FakePinRecord){
         .id = id,
@@ -182,7 +182,7 @@ status_t pin_db_insert_item_without_event(TimelineItem *item) {
 status_t pin_db_delete(const uint8_t *key, int key_len) {
   s_num_timeline_removes++;
   s_last_timeline_item_removed_uuid = *(Uuid *)key;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_pin_records); ++i) {
     if (s_fake_pin_records[i].exists && uuid_equal(&s_fake_pin_records[i].id, (Uuid *)key)) {
       s_fake_pin_records[i].exists = false;
     }
@@ -193,7 +193,7 @@ status_t pin_db_delete(const uint8_t *key, int key_len) {
 status_t pin_db_each(TimelineItemStorageEachCallback each, void *data) {
   struct pbl_settings_file file;
   cl_must_pass(pbl_settings_open(&file, "/fakepins", 4096));
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_pin_records); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_pin_records); ++i) {
     if (s_fake_pin_records[i].exists) {
       cl_must_pass(pbl_settings_set(&file, &s_fake_pin_records[i].id, UUID_SIZE,
                                     &s_fake_pin_records[i].header,

@@ -26,32 +26,32 @@ static void prv_draw_vertical_lines(GContext *ctx, unsigned int num_lines,
 
 void peek_animations_draw_compositor_foreground_speed_lines(GContext *ctx, GPoint offset) {
   static const uint16_t s_upper_heights[] = {48, 73, 78, 48, 48, 48, 61, 48};
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_upper_heights), nullptr /* offsets_y */,
+  prv_draw_vertical_lines(ctx, PBL_ARRAY_SIZE(s_upper_heights), nullptr /* offsets_y */,
                           s_upper_heights, LINE_WIDTH, LINE_SPACING, offset);
 
   static const uint16_t s_lower_offsets_y[] = {24, 24, 0, 19, 7, 0, 0, 24};
   static const uint16_t s_lower_heights[] = {48, 48, 72, 53, 65, 72, 72, 48};
   offset.y += 90;
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_lower_heights), s_lower_offsets_y, s_lower_heights,
+  prv_draw_vertical_lines(ctx, PBL_ARRAY_SIZE(s_lower_heights), s_lower_offsets_y, s_lower_heights,
                           LINE_WIDTH, LINE_SPACING, offset);
 }
 
 void peek_animations_draw_compositor_background_speed_lines(GContext *ctx, GPoint offset) {
   static const uint16_t s_heights[] = {0, PBL_DISPLAY_HEIGHT, PBL_DISPLAY_HEIGHT, 0, 0,
                                        0, PBL_DISPLAY_HEIGHT};
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_heights), nullptr /* offsets_y */, s_heights,
+  prv_draw_vertical_lines(ctx, PBL_ARRAY_SIZE(s_heights), nullptr /* offsets_y */, s_heights,
                           LINE_WIDTH, LINE_SPACING, offset);
 }
 
 void peek_animations_draw_timeline_speed_lines(GContext *ctx, GPoint offset) {
   static const uint16_t s_upper_offsets_y[] = {12, 0, 0, 12, 12, 12, 12, 12};
   static const uint16_t s_upper_heights[] = {53, 65, 65, 53, 53, 53, 53, 53};
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_upper_heights), s_upper_offsets_y, s_upper_heights,
+  prv_draw_vertical_lines(ctx, PBL_ARRAY_SIZE(s_upper_heights), s_upper_offsets_y, s_upper_heights,
                           LINE_WIDTH, LINE_SPACING, offset);
 
   static const uint16_t s_lower_offsets_y[] = {5, 5, 0, 0, 5, 5, 5, 5};
   static const uint16_t s_lower_heights[] = {53, 87, 87, 53, 53, 53, 53, 53};
   offset.y += 65;
-  prv_draw_vertical_lines(ctx, ARRAY_LENGTH(s_lower_heights), s_lower_offsets_y, s_lower_heights,
+  prv_draw_vertical_lines(ctx, PBL_ARRAY_SIZE(s_lower_heights), s_lower_offsets_y, s_lower_heights,
                           LINE_WIDTH, LINE_SPACING, offset);
 }

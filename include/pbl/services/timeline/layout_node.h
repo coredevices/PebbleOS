@@ -45,7 +45,7 @@
  * static const LayoutNodeVerticalConfig s_vertical_config = {
  *   .container.extent.node.type = LayoutNodeType_Vertical,
  *   .container.nodes = (LayoutNodeConfig **)s_vertical_nodes,
- *   .container.num_nodes = ARRAY_LENGTH(s_vertical_nodes),
+ *   .container.num_nodes = PBL_ARRAY_SIZE(s_vertical_nodes),
  * };
  *
  * GTextNode *view = layout_create_text_node_from_config(layout,

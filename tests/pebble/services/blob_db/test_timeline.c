@@ -424,7 +424,7 @@ void test_timeline__initialize(void) {
   pin_db_init();
   time_util_update_timezone(&tz, 0, 0);
   uint8_t num_net_allocs = fake_pbl_malloc_num_net_allocs();
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_items); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_items); ++i) {
     cl_assert_equal_i(pin_db_insert_item(&s_items[i]), 0);
   }
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), num_net_allocs);
@@ -591,7 +591,7 @@ void test_timeline__middle_backwards(void) {
 
 static void prv_insert_long_items(void) {
   cl_assert_equal_i(pin_db_flush(), 0);
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_long_items); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_long_items); i++) {
     cl_assert_equal_i(pin_db_insert_item(&s_long_items[i]), 0);
   }
 }
@@ -693,7 +693,7 @@ void test_timeline__gc_past(void) {
 }
 
 static void prv_insert_all_day_items(void) {
-  for (int i = 0; i < ARRAY_LENGTH(s_all_day_items); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_all_day_items); i++) {
     cl_assert_equal_i(pin_db_insert_item(&s_all_day_items[i]), 0);
   }
 }
@@ -863,7 +863,7 @@ void test_timeline__all_day_middle_past(void) {
 
 static void prv_insert_extra_case_items(void) {
   pin_db_flush();
-  for (int i = 0; i < ARRAY_LENGTH(s_extra_case_items); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_extra_case_items); i++) {
     cl_assert_equal_i(pin_db_insert_item(&s_extra_case_items[i]), 0);
   }
 }
@@ -997,13 +997,15 @@ void test_timeline__two_iterators(void) {
   cl_assert_equal_i(
       timeline_iter_init(&iterator1, &state1, &head, TimelineIterDirectionFuture, 1421178000), 0);
   // should have one alloc for each node in list, + 1 for the current timelineitem
-  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), init_net_allocs + ARRAY_LENGTH(s_items) + 1);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(),
+                    init_net_allocs + PBL_ARRAY_SIZE(s_items) + 1);
 
   // second iterator should not alloc any more memory
   cl_assert_equal_i(
       timeline_iter_init(&iterator2, &state2, &head, TimelineIterDirectionFuture, 1421178000), 0);
   // should have one alloc for each node in list, + 1 for the current timelineitem
-  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), init_net_allocs + ARRAY_LENGTH(s_items) + 2);
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(),
+                    init_net_allocs + PBL_ARRAY_SIZE(s_items) + 2);
 
   // deinit should free all the memory
   timeline_iter_deinit(&iterator1, &state1, &head);

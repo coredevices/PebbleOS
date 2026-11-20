@@ -71,7 +71,7 @@ typedef struct {
 } AppState;
 
 static Codepoint prv_codepoint_at(unsigned int index) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_ranges); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_ranges); ++i) {
     const unsigned int count = s_ranges[i].last - s_ranges[i].first + 1;
     if (index < count) {
       return s_ranges[i].first + index;
@@ -133,7 +133,7 @@ static void prv_window_load(Window *window) {
 
 static void prv_main(void) {
   AppState *data = app_zalloc_check(sizeof(*data));
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_ranges); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_ranges); ++i) {
     data->emoji_count += s_ranges[i].last - s_ranges[i].first + 1;
   }
   app_state_set_user_data(data);

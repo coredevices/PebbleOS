@@ -255,19 +255,19 @@ static TimelineItemAction actions[] = {
   {.id = 0,
    .type = TimelineItemActionTypeGeneric,
    .attr_list =
-       {.num_attributes = ARRAY_LENGTH(action1_attributes), .attributes = action1_attributes}},
+       {.num_attributes = PBL_ARRAY_SIZE(action1_attributes), .attributes = action1_attributes}},
   {.id = 1,
    .type = TimelineItemActionTypeGeneric,
    .attr_list = {
-     .num_attributes = ARRAY_LENGTH(action2_attributes), .attributes = action2_attributes
+     .num_attributes = PBL_ARRAY_SIZE(action2_attributes), .attributes = action2_attributes
    }},
 };
 
 void test_timeline_item__serialize_payload(void) {
   TimelineItem item = {
-    .attr_list.num_attributes = ARRAY_LENGTH(attributes),
+    .attr_list.num_attributes = PBL_ARRAY_SIZE(attributes),
     .attr_list.attributes = attributes,
-    .action_group.num_actions = ARRAY_LENGTH(actions),
+    .action_group.num_actions = PBL_ARRAY_SIZE(actions),
     .action_group.actions = actions,
   };
 
@@ -379,7 +379,7 @@ void test_timeline_item__find_action_with_id(void) {
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), nullptr);
 
   // Make sure we actually find the items we're looking for
-  item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
+  item.action_group.num_actions = PBL_ARRAY_SIZE(s_basic_action_list);
   item.action_group.actions = s_basic_action_list;
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 0), &s_basic_action_list[0]);
   cl_assert_equal_p(timeline_item_find_action_with_id(&item, 1), &s_basic_action_list[1]);
@@ -401,7 +401,7 @@ void test_timeline_item__find_action_by_type(void) {
                     nullptr);
 
   // Make sure we actually find the items we're looking for
-  item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
+  item.action_group.num_actions = PBL_ARRAY_SIZE(s_basic_action_list);
   item.action_group.actions = s_basic_action_list;
   cl_assert_equal_p(timeline_item_find_action_by_type(&item, TimelineItemActionTypeGeneric),
                     &s_basic_action_list[0]);
@@ -427,7 +427,7 @@ void test_timeline_item__find_dismiss_action(void) {
   // Copy the action list since it's easiest to just modify it
   TimelineItemAction *action_list = malloc(sizeof(s_basic_action_list));
   memcpy(action_list, s_basic_action_list, sizeof(s_basic_action_list));
-  item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
+  item.action_group.num_actions = PBL_ARRAY_SIZE(s_basic_action_list);
   item.action_group.actions = action_list;
 
   // Make sure we don't return anything if the action doesn't exist
@@ -456,7 +456,7 @@ void test_timeline_item__find_reply_action(void) {
   // Copy the action list since it's easiest to just modify it
   TimelineItemAction *action_list = malloc(sizeof(s_basic_action_list));
   memcpy(action_list, s_basic_action_list, sizeof(s_basic_action_list));
-  item.action_group.num_actions = ARRAY_LENGTH(s_basic_action_list);
+  item.action_group.num_actions = PBL_ARRAY_SIZE(s_basic_action_list);
   item.action_group.actions = action_list;
 
   // Make sure we don't return anything if the action doesn't exist

@@ -256,7 +256,7 @@ static const char *const s_feature_tags[] = {
 static bool prv_find_flexible(Install *install, char *directory, size_t size) {
   const uint32_t has = platform_get_features();
   int best = -1;
-  for (uint32_t requires = 0; requires < (1u << ARRAY_LENGTH(s_feature_tags)); requires++) {
+  for (uint32_t requires = 0; requires < (1u << PBL_ARRAY_SIZE(s_feature_tags)); requires++) {
     const int count = __builtin_popcount(requires);
     if ((requires & ~has) || count <= best) {
       continue;
@@ -264,7 +264,7 @@ static bool prv_find_flexible(Install *install, char *directory, size_t size) {
     char name[96];
     int at = snprintf(name, sizeof(name), FLEXIBLE_CLASS);
     bool tagged = true;
-    for (unsigned bit = 0; bit < ARRAY_LENGTH(s_feature_tags); bit++) {
+    for (unsigned bit = 0; bit < PBL_ARRAY_SIZE(s_feature_tags); bit++) {
       if (!(requires & (1u << bit))) {
         continue;
       }
@@ -295,7 +295,7 @@ static void prv_install(void *data) {
   const char *platform = nullptr;
   char flexible[96];
   char name[112];
-  for (unsigned i = 0; i < ARRAY_LENGTH(s_platforms) && !platform; i++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(s_platforms) && !platform; i++) {
     snprintf(name, sizeof(name), "%spebble-app.bin", s_platforms[i]);
     if (prv_zip_find(install->pbw, install->len, name, &install->app)) {
       platform = s_platforms[i];

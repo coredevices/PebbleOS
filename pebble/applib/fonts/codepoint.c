@@ -131,7 +131,7 @@ bool codepoint_is_unicode_space(const Codepoint codepoint) {
 }
 
 bool codepoint_is_formatting_indicator(const Codepoint codepoint) {
-  return codepoint_in_list(codepoint, FORMATTING_CODEPOINTS, ARRAY_LENGTH(FORMATTING_CODEPOINTS));
+  return codepoint_in_list(codepoint, FORMATTING_CODEPOINTS, PBL_ARRAY_SIZE(FORMATTING_CODEPOINTS));
 }
 
 bool codepoint_is_ideograph(const Codepoint codepoint) {
@@ -146,7 +146,8 @@ bool codepoint_is_ideograph(const Codepoint codepoint) {
 
 // see http://www.unicode.org/reports/tr14/ for the whole enchilada
 bool codepoint_is_end_of_word(const Codepoint codepoint) {
-  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS, ARRAY_LENGTH(END_OF_WORD_CODEPOINTS));
+  return codepoint_in_list(codepoint, END_OF_WORD_CODEPOINTS,
+                           PBL_ARRAY_SIZE(END_OF_WORD_CODEPOINTS));
 }
 
 // see http://unicode.org/reports/tr51/ section 2.2 "Diversity"
@@ -165,7 +166,7 @@ bool codepoint_should_skip(const Codepoint codepoint) {
 }
 
 bool codepoint_is_zero_width(const Codepoint codepoint) {
-  return codepoint_in_list(codepoint, ZERO_WIDTH_CODEPOINTS, ARRAY_LENGTH(ZERO_WIDTH_CODEPOINTS));
+  return codepoint_in_list(codepoint, ZERO_WIDTH_CODEPOINTS, PBL_ARRAY_SIZE(ZERO_WIDTH_CODEPOINTS));
 }
 
 bool codepoint_is_latin(const Codepoint codepoint) {
@@ -176,7 +177,7 @@ bool codepoint_is_latin(const Codepoint codepoint) {
 bool codepoint_is_emoji(const Codepoint codepoint) {
   // search for the codepoint in the list of nonstandard emoji codepoints first.
   const bool found = codepoint_in_list(codepoint, NONSTANDARD_EMOJI_CODEPOINTS,
-                                       ARRAY_LENGTH(NONSTANDARD_EMOJI_CODEPOINTS));
+                                       PBL_ARRAY_SIZE(NONSTANDARD_EMOJI_CODEPOINTS));
   if (found) {
     return true;
   }

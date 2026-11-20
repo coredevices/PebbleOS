@@ -70,11 +70,11 @@ static const int32_t s_delta_moook_out[] = {INTERPOLATE_MOOOK_BOUNCE_BACK, 2, 1,
 
 // TODO: export these as interpolation functions as well
 uint32_t interpolate_moook_in_duration() {
-  return ARRAY_LENGTH(s_delta_moook_in) * ANIMATION_TARGET_FRAME_INTERVAL_MS;
+  return PBL_ARRAY_SIZE(s_delta_moook_in) * ANIMATION_TARGET_FRAME_INTERVAL_MS;
 }
 
 uint32_t interpolate_moook_out_duration() {
-  return ARRAY_LENGTH(s_delta_moook_out) * ANIMATION_TARGET_FRAME_INTERVAL_MS;
+  return PBL_ARRAY_SIZE(s_delta_moook_out) * ANIMATION_TARGET_FRAME_INTERVAL_MS;
 }
 
 uint32_t interpolate_moook_duration() {
@@ -130,31 +130,31 @@ static int64_t prv_interpolate_moook(int32_t normalized, int64_t from, int64_t t
 
 int64_t interpolate_moook_in(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_to) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), nullptr, num_frames_to, 0, true);
+                               PBL_ARRAY_SIZE(s_delta_moook_in), nullptr, num_frames_to, 0, true);
 }
 
 int64_t interpolate_moook_in_only(int32_t normalized, int64_t from, int64_t to) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), nullptr, 0, 0, true);
+                               PBL_ARRAY_SIZE(s_delta_moook_in), nullptr, 0, 0, true);
 }
 
 int64_t interpolate_moook_out(int32_t normalized, int64_t from, int64_t to, int32_t num_frames_from,
                               bool bounce_back) {
   return prv_interpolate_moook(normalized, from, to, nullptr, num_frames_from, s_delta_moook_out,
-                               ARRAY_LENGTH(s_delta_moook_out), 0, bounce_back);
+                               PBL_ARRAY_SIZE(s_delta_moook_out), 0, bounce_back);
 }
 
 int64_t interpolate_moook(int32_t normalized, int64_t from, int64_t to) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), s_delta_moook_out,
-                               ARRAY_LENGTH(s_delta_moook_out), 0, true);
+                               PBL_ARRAY_SIZE(s_delta_moook_in), s_delta_moook_out,
+                               PBL_ARRAY_SIZE(s_delta_moook_out), 0, true);
 }
 
 int64_t interpolate_moook_soft(int32_t normalized, int64_t from, int64_t to,
                                int32_t num_frames_mid) {
   return prv_interpolate_moook(normalized, from, to, s_delta_moook_in,
-                               ARRAY_LENGTH(s_delta_moook_in), s_delta_moook_out,
-                               ARRAY_LENGTH(s_delta_moook_out), num_frames_mid, true);
+                               PBL_ARRAY_SIZE(s_delta_moook_in), s_delta_moook_out,
+                               PBL_ARRAY_SIZE(s_delta_moook_out), num_frames_mid, true);
 }
 
 int64_t interpolate_moook_custom(int32_t normalized, int64_t from, int64_t to,

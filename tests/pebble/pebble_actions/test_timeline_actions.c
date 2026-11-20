@@ -199,14 +199,14 @@ void test_timeline_actions__displayed_item_needs_phone_support(void) {
 // Dismiss all sends one dismiss at a time from the background work queue, never from KernelMain.
 void test_timeline_actions__dismiss_all_sends_from_sys_work(void) {
   NotificationInfo notifications[3];
-  for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
+  for (unsigned int i = 0U; i < PBL_ARRAY_SIZE(notifications); i++) {
     notifications[i] = (NotificationInfo){.type = NotificationMobile, .id = {.byte0 = i + 1U}};
   }
 
-  timeline_actions_dismiss_all(notifications, ARRAY_LENGTH(notifications), nullptr, nullptr,
+  timeline_actions_dismiss_all(notifications, PBL_ARRAY_SIZE(notifications), nullptr, nullptr,
                                nullptr);
 
-  for (unsigned int i = 0U; i < ARRAY_LENGTH(notifications); i++) {
+  for (unsigned int i = 0U; i < PBL_ARRAY_SIZE(notifications); i++) {
     cl_assert_equal_i(s_send_count, i);
     cl_assert_equal_i(list_count(s_sys_work_callback_head), 2);
     cl_assert_equal_i(s_num_launcher_callbacks, 0);
@@ -219,7 +219,7 @@ void test_timeline_actions__dismiss_all_sends_from_sys_work(void) {
     prv_run_launcher_callback();
   }
 
-  cl_assert_equal_i(s_send_count, ARRAY_LENGTH(notifications));
+  cl_assert_equal_i(s_send_count, PBL_ARRAY_SIZE(notifications));
   cl_assert_equal_i(list_count(s_sys_work_callback_head), 0);
   cl_assert_equal_i(s_num_launcher_callbacks, 0);
 }

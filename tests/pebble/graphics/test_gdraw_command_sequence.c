@@ -82,7 +82,7 @@ size_t prv_create_test_sequence(GDrawCommandSequence **sequence_ptr) {
     .stroke_width = 1,
     .fill_color = GColorBlue,
     .path_open = false,
-    .num_points = ARRAY_LENGTH(points1),
+    .num_points = PBL_ARRAY_SIZE(points1),
   };
   memcpy(command->points, points1, sizeof(points1));
 
@@ -107,7 +107,7 @@ size_t prv_create_test_sequence(GDrawCommandSequence **sequence_ptr) {
     .stroke_width = 1,
     .fill_color = GColorPurple,
     .path_open = false,
-    .num_points = ARRAY_LENGTH(points2),
+    .num_points = PBL_ARRAY_SIZE(points2),
   };
   memcpy(command->points, points2, sizeof(points2));
 
@@ -125,7 +125,7 @@ size_t prv_create_test_sequence(GDrawCommandSequence **sequence_ptr) {
     .stroke_width = 5,
     .fill_color = GColorBlack,
     .path_open = false,
-    .num_points = ARRAY_LENGTH(points2),
+    .num_points = PBL_ARRAY_SIZE(points2),
   };
   memcpy(command->points, points2, sizeof(points2));
 

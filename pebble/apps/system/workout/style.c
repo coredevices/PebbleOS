@@ -47,12 +47,12 @@ void workout_fill_heart(GContext *ctx, GRect box, GColor color) {
   static const GPoint shape[] = {
     {0, 16}, {0, 8}, {8, 0}, {14, 6}, {15, 6}, {21, 0}, {29, 8}, {29, 16}, {15, 30}, {14, 30},
   };
-  GPoint points[ARRAY_LENGTH(shape)];
-  for (size_t i = 0; i < ARRAY_LENGTH(shape); i++) {
+  GPoint points[PBL_ARRAY_SIZE(shape)];
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(shape); i++) {
     points[i] = GPoint(box.origin.x + shape[i].x * (box.size.w - 1) / 29,
                        box.origin.y + shape[i].y * (box.size.h - 1) / 30);
   }
-  GPath path = {.num_points = ARRAY_LENGTH(points), .points = points};
+  GPath path = {.num_points = PBL_ARRAY_SIZE(points), .points = points};
   graphics_context_set_fill_color(ctx, color);
   graphics_context_set_antialiased(ctx, true);
   gpath_draw_filled(ctx, &path);

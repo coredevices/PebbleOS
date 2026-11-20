@@ -113,7 +113,7 @@ PBL_T_STATIC void prv_generate_address(struct pbl_bt_addr *addr_out) {
 
 void bt_local_id_generate_address_from_serial(struct pbl_bt_addr *addr_out) {
   prv_generate_address(addr_out);
-  addr_out->octets[ARRAY_LENGTH(addr_out->octets) - 1] |= 0b11000000;
+  addr_out->octets[PBL_ARRAY_SIZE(addr_out->octets) - 1] |= 0b11000000;
 
   // Addresses with all 0's or 1's
   const struct pbl_bt_addr zero_addr = {.octets = {0x00, 0x00, 0x00, 0x00, 0x00, 0xC0}};

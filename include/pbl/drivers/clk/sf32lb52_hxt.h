@@ -62,7 +62,7 @@ int pbl_clk_sf32lb52_hxt_init(const struct pbl_device *dev);
     .base = (_base),                                                                      \
     .flash = (_flash),                                                                    \
     .cells = sym##_cells,                                                                 \
-    .num_cells = ARRAY_LENGTH(sym##_cells),                                               \
+    .num_cells = PBL_ARRAY_SIZE(sym##_cells),                                             \
   }
 
 /** @} */

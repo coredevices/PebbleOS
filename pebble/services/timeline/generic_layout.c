@@ -120,7 +120,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   static const LayoutNodeVerticalConfig s_icon_vertical_container_config = {
     .vertical_alignment = LayoutVerticalAlignment_Center,
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_icon_vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_icon_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_icon_vertical_config_nodes,
   };
   static const LayoutNodeConfig *const s_time_vertical_config_nodes[] = {
@@ -129,7 +129,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   static const LayoutNodeVerticalConfig s_time_vertical_container_config = {
     .vertical_alignment = LayoutVerticalAlignment_Center,
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_time_vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_time_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_time_vertical_config_nodes,
   };
   static const LayoutNodeConfig *const s_horizontal_config_nodes[] = {
@@ -138,7 +138,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeHorizontalConfig s_horizontal_config = {
     .container.extent.node.type = LayoutNodeType_Horizontal,
-    .container.num_nodes = ARRAY_LENGTH(s_horizontal_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_horizontal_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_horizontal_config_nodes,
   };
 #endif
@@ -154,7 +154,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeVerticalConfig s_vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
     .container.extent.offset.y = CARD_MARGIN_TOP,
     .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,

@@ -21,7 +21,7 @@ static int s_fake_work_num_arm_calls;
 static int s_fake_work_num_cancel_calls;
 
 static void prv_fake_work_remove(struct pbl_delayed_work *dwork) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_work_pending); i++) {
     if (s_fake_work_pending[i] == dwork) {
       s_fake_work_pending[i] = nullptr;
     }
@@ -36,7 +36,7 @@ static void prv_fake_work_arm(struct pbl_workq *q, struct pbl_delayed_work *dwor
   dwork->work.armed = true;
   dwork->timer.timeout.expires = ticks;
   s_fake_work_num_arm_calls++;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_work_pending); i++) {
     if (s_fake_work_pending[i] == nullptr) {
       s_fake_work_pending[i] = dwork;
       return;
@@ -114,7 +114,7 @@ static inline uint32_t fake_work_timeout_ms(const struct pbl_delayed_work *dwork
 static inline struct pbl_delayed_work *fake_work_get_next(void) {
   struct pbl_delayed_work *next = nullptr;
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_work_pending); i++) {
     struct pbl_delayed_work *dwork = s_fake_work_pending[i];
     if (dwork != nullptr &&
         (next == nullptr || dwork->timer.timeout.expires < next->timer.timeout.expires)) {
@@ -140,7 +140,7 @@ static inline void fake_work_set_running(const struct pbl_delayed_work *dwork) {
 
 //! Forgets every pending item. Call from the test's cleanup.
 static inline void fake_work_cleanup(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_work_pending); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_work_pending); i++) {
     if (s_fake_work_pending[i] != nullptr) {
       prv_fake_work_remove(s_fake_work_pending[i]);
     }
@@ -163,7 +163,7 @@ void pbl_wallclock_work_init(struct pbl_wallclock_work *w, pbl_work_fn_t fn) {
 bool pbl_wallclock_work_stop(struct pbl_wallclock_work *w) {
   const bool was_running = w->running;
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     if (s_fake_wallclock_started[i] == w) {
       s_fake_wallclock_started[i] = nullptr;
     }
@@ -180,7 +180,7 @@ void pbl_wallclock_work_start(struct pbl_workq *q, struct pbl_wallclock_work *w,
   w->every = every;
   w->due_ms = every;
   w->running = true;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     if (s_fake_wallclock_started[i] == nullptr) {
       s_fake_wallclock_started[i] = w;
       return;
@@ -196,7 +196,7 @@ bool pbl_wallclock_work_is_running(const struct pbl_wallclock_work *w) {
 //! Lets @p n boundaries of @p unit_s seconds pass, running each item as it becomes due.
 static inline void fake_wallclock_work_advance(uint32_t unit_s, uint32_t n) {
   while (n-- > 0U) {
-    for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+    for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
       struct pbl_wallclock_work *w = s_fake_wallclock_started[i];
       if (w != nullptr && w->unit_ms == unit_s * 1000U && --w->due_ms == 0U) {
         w->due_ms = w->every;
@@ -214,7 +214,7 @@ static inline void fake_wallclock_work_fire(struct pbl_wallclock_work *w) {
 
 //! Forgets every started item. Call from the test's cleanup.
 static inline void fake_wallclock_work_cleanup(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     if (s_fake_wallclock_started[i] != nullptr) {
       s_fake_wallclock_started[i]->running = false;
       s_fake_wallclock_started[i] = nullptr;

@@ -33,7 +33,7 @@ static TimelineResourceId s_weather_type_timeline_resource_ids[] = {
 #include <pbl/services/weather/weather_type_tuples.def>
 };
 
-static const size_t s_num_weather_types = ARRAY_LENGTH(s_weather_type_names);
+static const size_t s_num_weather_types = PBL_ARRAY_SIZE(s_weather_type_names);
 
 static size_t prv_get_array_index_of_type(WeatherType type) {
   return (type == WeatherType_Unknown) ? (s_num_weather_types - 1) : type;

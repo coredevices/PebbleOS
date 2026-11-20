@@ -54,7 +54,7 @@ static const char *prv_dir_name(const struct pbl_audio *audio) {
 static uint32_t prv_pick_rate(const struct pbl_audio_caps *caps) {
   static const uint32_t preferred[] = {16000U, 48000U, 8000U};
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(preferred); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(preferred); i++) {
     if ((pbl_audio_rate_bit(preferred[i]) & caps->rates) != 0U) {
       return preferred[i];
     }

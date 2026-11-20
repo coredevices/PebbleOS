@@ -295,7 +295,7 @@ static void prv_information_window_push(SettingsSystemData *data) {
   *info = (SystemInformationData){};
 
   bool success = version_copy_recovery_fw_version(info->recovery_version_string,
-                                                  ARRAY_LENGTH(info->recovery_version_string));
+                                                  PBL_ARRAY_SIZE(info->recovery_version_string));
   if (success == false) {
     info->recovery_version_string[0] = '\0';
   }
@@ -450,12 +450,12 @@ static int prv_motion_sensitivity_get_selection_index() {
   const uint8_t sensitivity = shell_prefs_get_motion_sensitivity();
 
   // Find closest match
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_motion_sensitivity_values); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_motion_sensitivity_values); i++) {
     if (sensitivity <= s_motion_sensitivity_values[i]) {
       return i;
     }
   }
-  return ARRAY_LENGTH(s_motion_sensitivity_values) - 1;
+  return PBL_ARRAY_SIZE(s_motion_sensitivity_values) - 1;
 }
 
 static void prv_motion_sensitivity_menu_select(OptionMenu *option_menu, int selection,
@@ -471,7 +471,7 @@ static void prv_motion_sensitivity_menu_push(SettingsSystemData *data) {
   };
   const char *title = pbl_i18n_noop("Motion Sensitivity");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_motion_sensitivity_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_motion_sensitivity_labels), true /* icons_enabled */,
                             s_motion_sensitivity_labels, data);
 }
 #endif
@@ -484,7 +484,7 @@ static const char *s_sleep_algorithm_labels[] = {
   pbl_i18n_noop("Kraepelin"),
   pbl_i18n_noop("van Hees"),
 };
-static_assert(ARRAY_LENGTH(s_sleep_algorithm_labels) == ActivitySleepAlgorithmCount);
+static_assert(PBL_ARRAY_SIZE(s_sleep_algorithm_labels) == ActivitySleepAlgorithmCount);
 
 static void prv_sleep_algorithm_menu_select(OptionMenu *option_menu, int selection, void *context) {
   if (selection >= 0 && selection < ActivitySleepAlgorithmCount) {
@@ -500,7 +500,7 @@ static void prv_sleep_algorithm_menu_push(SettingsSystemData *data) {
   const char *title = pbl_i18n_noop("Sleep Algorithm");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine,
                             activity_prefs_get_sleep_algorithm(), &callbacks,
-                            ARRAY_LENGTH(s_sleep_algorithm_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_sleep_algorithm_labels), true /* icons_enabled */,
                             s_sleep_algorithm_labels, data);
 }
 

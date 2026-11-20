@@ -128,7 +128,7 @@ static int prv_init(const struct pbl_vibe *vibe) {
     return -ENODEV;
   }
 
-  ret = prv_write_registers(dev, s_config, ARRAY_LENGTH(s_config));
+  ret = prv_write_registers(dev, s_config, PBL_ARRAY_SIZE(s_config));
 
   // Disabling the chip keeps its registers
   (void)pbl_gpio_set(&dev->enable, false);
@@ -180,7 +180,7 @@ static int prv_calibrate(const struct pbl_vibe *vibe, uint8_t *cali) {
     {DRV2604_GO, DRV2604_GO_GO},
   };
 
-  return prv_write_registers(prv_get(vibe), s_autocal, ARRAY_LENGTH(s_autocal));
+  return prv_write_registers(prv_get(vibe), s_autocal, PBL_ARRAY_SIZE(s_autocal));
 }
 
 const struct pbl_vibe_ops pbl_drv2604_ops = {

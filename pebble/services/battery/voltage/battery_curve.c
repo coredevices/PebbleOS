@@ -48,8 +48,8 @@ static const VoltagePoint charge_curve[] = {
   {100, 4260}
 };
 
-static const uint8_t NUM_DISCHARGE_POINTS = ARRAY_LENGTH(discharge_curve);
-static const uint8_t NUM_CHARGE_POINTS = ARRAY_LENGTH(charge_curve);
+static const uint8_t NUM_DISCHARGE_POINTS = PBL_ARRAY_SIZE(discharge_curve);
+static const uint8_t NUM_CHARGE_POINTS = PBL_ARRAY_SIZE(charge_curve);
 
 static int s_battery_compensation_values[BATTERY_CURVE_COMPENSATE_COUNT];
 

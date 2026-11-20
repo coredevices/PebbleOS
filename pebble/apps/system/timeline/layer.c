@@ -345,7 +345,7 @@ static void prv_destroy_layout(TimelineLayer *layer, int index) {
 }
 
 static void prv_destroy_nonvisible_items(TimelineLayer *layer) {
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_nonvisible_items); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_nonvisible_items); i++) {
     TimelineLayout *timeline_layout = layer->layouts[s_nonvisible_items[i]];
     if (timeline_layout) {
       prv_destroy_layout(layer, s_nonvisible_items[i]);
@@ -377,7 +377,7 @@ static void prv_hide_non_current_day_items(TimelineLayer *layer) {
 
 static void prv_reset_layouts(TimelineLayer *layer) {
   int num_items = timeline_model_get_num_items();
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_visible_items); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_visible_items); i++) {
     if (layer->layouts[s_visible_items[i]]) {
       prv_destroy_layout(layer, s_visible_items[i]);
     }
@@ -393,7 +393,7 @@ static void prv_reset_layouts(TimelineLayer *layer) {
 }
 
 static void prv_update_pins_mode(TimelineLayer *layer) {
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_visible_items); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_visible_items); i++) {
     TimelineLayout *timeline_layout = layer->layouts[s_visible_items[i]];
     if (timeline_layout) {
       LayoutLayerMode mode = prv_get_mode(i + 1);

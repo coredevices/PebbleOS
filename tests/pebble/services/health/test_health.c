@@ -116,7 +116,7 @@ static sys_activity_get_metric_values s_sys_activity_get_metric_values;
 
 // mock that simply copies values from static vars and stores args for later inspection
 bool sys_activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
-  cl_assert(history_len <= ARRAY_LENGTH(s_sys_activity_get_metric_values.out.history));
+  cl_assert(history_len <= PBL_ARRAY_SIZE(s_sys_activity_get_metric_values.out.history));
 
   s_sys_activity_get_metric_values.in.metric = metric;
   s_sys_activity_get_metric_values.in.history_len = history_len;
@@ -161,7 +161,7 @@ bool sys_activity_get_sessions(uint32_t *num_sessions, ActivitySession *sessions
   cl_assert(num_sessions);
   cl_assert(sessions);
   cl_assert(s_sys_activity_get_sessions_values.out.num_sessions <=
-            ARRAY_LENGTH(s_sys_activity_get_sessions_values.out.sessions));
+            PBL_ARRAY_SIZE(s_sys_activity_get_sessions_values.out.sessions));
 
   for (uint32_t i = 0; i < MIN(*num_sessions, s_sys_activity_get_sessions_values.out.num_sessions);
        i++) {
@@ -250,7 +250,7 @@ static sys_activity_get_minute_history_values s_sys_activity_get_minute_history_
 bool sys_activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_records,
                                      time_t *utc_start) {
   int stage = s_sys_activity_get_minute_history_values.stage++;
-  cl_assert(stage < ARRAY_LENGTH(s_sys_activity_get_minute_history_values.out));
+  cl_assert(stage < PBL_ARRAY_SIZE(s_sys_activity_get_minute_history_values.out));
   sys_activity_get_minute_history_out_values *out =
       &s_sys_activity_get_minute_history_values.out[stage];
 
@@ -522,7 +522,7 @@ void test_health__process_range(void) {
   };
 
   // make sure we treat first and last day correctly (last == idx 0)
-  prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
+  prv_adjust_value_boundaries(values, PBL_ARRAY_SIZE(values), &range);
   cl_assert_equal_i(values[0], 1000 / 5);
   cl_assert_equal_i(values[1], 1000);
   cl_assert_equal_i(values[2], 1000 / 10);
@@ -531,7 +531,7 @@ void test_health__process_range(void) {
   values[0] = 1000;
   values[2] = 1000;
   range.seconds_total_last_day = PBL_SEC_PER_DAY / 4;
-  prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
+  prv_adjust_value_boundaries(values, PBL_ARRAY_SIZE(values), &range);
   cl_assert_equal_i(values[0], 4 * 1000 / 5);
   cl_assert_equal_i(values[1], 1000);
   cl_assert_equal_i(values[2], 1000 / 10);
@@ -540,7 +540,7 @@ void test_health__process_range(void) {
   values[0] = 1000;
   values[2] = 1000;
   range.num_days = 1;
-  prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
+  prv_adjust_value_boundaries(values, PBL_ARRAY_SIZE(values), &range);
   cl_assert_equal_i(values[0], 4 * 1000 / 5);
   cl_assert_equal_i(values[1], 1000);
   cl_assert_equal_i(values[2], 1000);
@@ -562,7 +562,7 @@ void test_health__process_range(void) {
 
   // ensure we can handle empty ranges
   range.num_days = 0;
-  prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
+  prv_adjust_value_boundaries(values, PBL_ARRAY_SIZE(values), &range);
   cl_assert_equal_i(values[0], 1000);
   cl_assert_equal_i(values[1], 1000);
   cl_assert_equal_i(values[2], 1000);
@@ -575,7 +575,7 @@ void test_health__process_range(void) {
     .seconds_last_day = PBL_SEC_PER_DAY / 5,
     .seconds_total_last_day = PBL_SEC_PER_DAY,
   };
-  prv_adjust_value_boundaries(values, ARRAY_LENGTH(values), &range);
+  prv_adjust_value_boundaries(values, PBL_ARRAY_SIZE(values), &range);
   cl_assert_equal_i(values[0], 1000);
   cl_assert_equal_i(values[1], 1000 / 5);
   cl_assert_equal_i(values[2], 1000);
@@ -721,7 +721,7 @@ void test_health__metric_hr_averaged_accessible(void) {
 
   // Run all the tests
   HealthServiceAccessibilityMask accessible;
-  for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(tests); i++) {
     const TestInputOutput *test = &tests[i];
     s_activity_prefs_heart_rate_enabled = !test->in.hr_disabled;
     accessible = health_service_metric_averaged_accessible(test->in.metric, test->in.time_start,
@@ -795,7 +795,7 @@ void test_health__metric_hr_aggregate_averaged_accessible(void) {
 
   // Run all the tests
   HealthServiceAccessibilityMask accessible;
-  for (int i = 0; i < ARRAY_LENGTH(tests); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(tests); i++) {
     const TestInputOutput *test = &tests[i];
     s_activity_prefs_heart_rate_enabled = !test->in.hr_disabled;
     accessible = health_service_metric_aggregate_averaged_accessible(
@@ -1048,7 +1048,8 @@ void test_health__get_minute_history_edge_case_args(void) {
   // null pointer
   pbl_time32_t time_start = now - 10 * 60 - 30;
   pbl_time32_t time_end = now - 20;
-  written = health_service_get_minute_history(nullptr, ARRAY_LENGTH(data), &time_start, &time_end);
+  written =
+      health_service_get_minute_history(nullptr, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(0, written);
 
   // empty boundary
@@ -1056,12 +1057,12 @@ void test_health__get_minute_history_edge_case_args(void) {
   cl_assert_equal_i(0, written);
 
   // empty start
-  written = health_service_get_minute_history(data, ARRAY_LENGTH(data), nullptr, &time_end);
+  written = health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), nullptr, &time_end);
   cl_assert_equal_i(0, written);
 
   // empty end before start
   pbl_time32_t early_end = time_start - 20 * PBL_SEC_PER_MIN;
-  written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &early_end);
+  written = health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &early_end);
   cl_assert_equal_i(0, written);
 
   // empty end works just fine
@@ -1071,7 +1072,7 @@ void test_health__get_minute_history_edge_case_args(void) {
       .result = true,
     },
   };
-  written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, nullptr);
+  written = health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, nullptr);
   cl_assert_equal_i(2, written);
 }
 
@@ -1096,7 +1097,7 @@ void test_health__get_minute_history(void) {
   // pass time that's not exactly on a boundary
   pbl_time32_t time_start = now - 10 * PBL_SEC_PER_MIN - 30;
   pbl_time32_t time_end = now - 20;
-  written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  written = health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(3, written);
   cl_assert_equal_i(now - 10 * PBL_SEC_PER_MIN, time_start);
   cl_assert_equal_i(time_start + written * PBL_SEC_PER_MIN, time_end);
@@ -1107,7 +1108,7 @@ void test_health__get_minute_history(void) {
   // if internal sys_activity returns false, no records were written
   s_sys_activity_get_minute_history_values.stage = 0;
   s_sys_activity_get_minute_history_values.out[0].result = false;
-  written = health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  written = health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(0, written);
 }
 
@@ -1128,21 +1129,21 @@ void test_health__get_minute_history_respects_time_end(void) {
   // respects time_end, 2.5 minutes => 3 records
   time_start = time_on_boundary;
   time_end = time_start + (5 * PBL_SEC_PER_MIN / 2);
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(3, s_sys_activity_get_minute_history_values.in[0].num_records);
 
   // respects time_end, 1 minute => 1 records
   s_sys_activity_get_minute_history_values.stage = 0;
   time_start = time_on_boundary;
   time_end = time_start + PBL_SEC_PER_MIN;
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(1, s_sys_activity_get_minute_history_values.in[0].num_records);
 
   // respects time_end == time_start => 0 records
   s_sys_activity_get_minute_history_values.stage = 0;
   time_start = time_on_boundary;
   time_end = time_start;
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(0, s_sys_activity_get_minute_history_values.in[0].num_records);
 
   ////////////
@@ -1152,21 +1153,21 @@ void test_health__get_minute_history_respects_time_end(void) {
   // respects time_end, 2.5 minutes => 3 records
   time_start = time_almost_next_minute;
   time_end = time_start + (5 * PBL_SEC_PER_MIN / 2);
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(4, s_sys_activity_get_minute_history_values.in[0].num_records);
 
   // respects time_end, 1 minute => 1 records
   s_sys_activity_get_minute_history_values.stage = 0;
   time_start = time_almost_next_minute;
   time_end = time_start + PBL_SEC_PER_MIN;
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(2, s_sys_activity_get_minute_history_values.in[0].num_records);
 
   // respects time_end == time_start => 0 records
   s_sys_activity_get_minute_history_values.stage = 0;
   time_start = time_almost_next_minute;
   time_end = time_start;
-  health_service_get_minute_history(data, ARRAY_LENGTH(data), &time_start, &time_end);
+  health_service_get_minute_history(data, PBL_ARRAY_SIZE(data), &time_start, &time_end);
   cl_assert_equal_i(1, s_sys_activity_get_minute_history_values.in[0].num_records);
 }
 
@@ -1311,7 +1312,7 @@ void test_health__avg_partial_days(void) {
   };
 
   for (int i = 0;
-       i < ARRAY_LENGTH(s_sys_activity_get_step_averages_values_weekday.out.averages.average);
+       i < PBL_ARRAY_SIZE(s_sys_activity_get_step_averages_values_weekday.out.averages.average);
        i++) {
     s_sys_activity_get_step_averages_values_weekday.out.averages.average[i] = i * 10;
     s_sys_activity_get_step_averages_values_weekend.out.averages.average[i] = i * 5;
@@ -1624,7 +1625,7 @@ void test_health__heart_rate_scope_once(void) {
   // ----------------------------------------------------------------
   // Put in our minute history
   HealthServiceCache *cache = nullptr;
-  unsigned num_minutes_per_call = ARRAY_LENGTH(cache->minute_data);
+  unsigned num_minutes_per_call = PBL_ARRAY_SIZE(cache->minute_data);
   s_sys_activity_get_minute_history_values = (sys_activity_get_minute_history_values){
     .out[0] =
         {

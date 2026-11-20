@@ -232,7 +232,7 @@ static int prv_probe(const struct pbl_w1160 *dev) {
     return -ENODEV;
   }
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_config); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_config); i++) {
     ret = prv_write_register(dev, s_config[i].reg, s_config[i].val);
     if (ret != 0) {
       return ret;

@@ -117,14 +117,14 @@ static int prv_cmd_conf(const struct pbl_shell *sh, size_t argc, char **argv) {
   for (size_t i = 3; i < argc; i++) {
     size_t j;
 
-    for (j = 0; j < ARRAY_LENGTH(s_conf_flags); j++) {
+    for (j = 0; j < PBL_ARRAY_SIZE(s_conf_flags); j++) {
       if (strcmp(argv[i], s_conf_flags[j].name) == 0) {
         flags |= s_conf_flags[j].flags;
         break;
       }
     }
 
-    if (j == ARRAY_LENGTH(s_conf_flags)) {
+    if (j == PBL_ARRAY_SIZE(s_conf_flags)) {
       pbl_shell_error(sh, "unknown flag '%s' (in out low high pu pd od)", argv[i]);
       return -EINVAL;
     }
@@ -210,13 +210,13 @@ static int prv_cmd_irq(const struct pbl_shell *sh, size_t argc, char **argv) {
     return ret;
   }
 
-  for (i = 0; i < ARRAY_LENGTH(s_irq_types); i++) {
+  for (i = 0; i < PBL_ARRAY_SIZE(s_irq_types); i++) {
     if (strcmp(argv[3], s_irq_types[i].name) == 0) {
       break;
     }
   }
 
-  if (i == ARRAY_LENGTH(s_irq_types)) {
+  if (i == PBL_ARRAY_SIZE(s_irq_types)) {
     pbl_shell_error(sh, "unknown type '%s' (rising falling both high low)", argv[3]);
     return -EINVAL;
   }

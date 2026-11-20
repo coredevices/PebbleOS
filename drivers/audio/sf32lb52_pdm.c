@@ -54,7 +54,7 @@ static const struct pbl_audio_sf32lb52_pdm *prv_dev(const struct pbl_audio_dai *
 }
 
 static const struct prv_rate *prv_find_rate(uint32_t rate) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     if (s_rates[i].rate == rate) {
       return &s_rates[i];
     }
@@ -154,7 +154,7 @@ static int prv_init(const struct pbl_audio_dai *dai) {
 }
 
 static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     caps->rates |= pbl_audio_rate_bit(s_rates[i].rate);
   }
   caps->min_channels = 1U;

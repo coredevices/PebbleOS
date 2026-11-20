@@ -104,7 +104,7 @@ struct others {
 static void prv_collect_others_cb(const struct pbl_bt_bond_info *info, void *user_data) {
   struct others *others = user_data;
 
-  if (others->count < ARRAY_LENGTH(others->addrs) &&
+  if (others->count < PBL_ARRAY_SIZE(others->addrs) &&
       !bt_device_internal_equal(&info->addr, others->keep)) {
     others->addrs[others->count++] = info->addr;
   }

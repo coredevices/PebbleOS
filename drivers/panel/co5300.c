@@ -117,7 +117,7 @@ static int prv_prepare(const struct pbl_panel *panel) {
 
   PBL_LOG_DBG("ID %02x %02x %02x", id[0], id[1], id[2]);
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_init_seq); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_init_seq); i++) {
     ret = prv_write(co5300, s_init_seq[i].cmd, &s_init_seq[i].param, 1U);
     if (ret != 0) {
       return ret;

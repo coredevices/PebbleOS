@@ -743,7 +743,7 @@ AlgDlsMinuteData *activity_sample_2016_05_16_00_30_00(int *len) {
     { 0, 0x67, 4966, 163, 0},
     { 0, 0x57, 2831, 168, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

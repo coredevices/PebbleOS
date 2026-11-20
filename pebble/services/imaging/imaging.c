@@ -70,14 +70,14 @@ void imaging_image_destroy(GBitmap *bitmap) {
 }
 
 static void prv_rx_reset(uint8_t type) {
-  if (type < ARRAY_LENGTH(s_rx)) {
+  if (type < PBL_ARRAY_SIZE(s_rx)) {
     imaging_image_destroy(s_rx[type].bitmap);
     s_rx[type] = (Reassembly){};
   }
 }
 
 void imaging_register_handler(ImagingImageType image_type, ImagingReceivedHandler handler) {
-  if (image_type < ARRAY_LENGTH(s_handlers)) {
+  if (image_type < PBL_ARRAY_SIZE(s_handlers)) {
     s_handlers[image_type] = handler;
   }
 }
@@ -98,7 +98,7 @@ static void prv_check_stalled(void *data) {
   const uint64_t now = pbl_uptime_ms();
   bool active = false;
 
-  for (uint8_t type = 0; type < ARRAY_LENGTH(s_rx); type++) {
+  for (uint8_t type = 0; type < PBL_ARRAY_SIZE(s_rx); type++) {
     Reassembly *rx = &s_rx[type];
     if (!rx->active) {
       continue;
@@ -132,7 +132,7 @@ static void prv_drop(uint8_t type, uint8_t token, uint32_t size, const char *rea
               (unsigned int)stats.max_free);
 
   prv_rx_reset(type);
-  ImagingTransferFailedHandler handler = (type < ARRAY_LENGTH(s_transfer_failed_handlers))
+  ImagingTransferFailedHandler handler = (type < PBL_ARRAY_SIZE(s_transfer_failed_handlers))
                                              ? s_transfer_failed_handlers[type]
                                              : nullptr;
   if (handler) {
@@ -148,7 +148,7 @@ static uint8_t prv_response_type(const ImagingResponseHeader *hdr) {
 }
 
 static void prv_deliver(uint8_t token, uint8_t type, GBitmap *bitmap) {
-  ImagingReceivedHandler handler = (type < ARRAY_LENGTH(s_handlers)) ? s_handlers[type] : nullptr;
+  ImagingReceivedHandler handler = (type < PBL_ARRAY_SIZE(s_handlers)) ? s_handlers[type] : nullptr;
   if (handler) {
     handler(token, bitmap);
   } else {
@@ -277,7 +277,7 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     return;
   }
 
-  if (type >= ARRAY_LENGTH(s_rx)) {
+  if (type >= PBL_ARRAY_SIZE(s_rx)) {
     PBL_LOG_WRN("Drop chunk of unknown type=%u", type);
     return;
   }
@@ -315,7 +315,7 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
     }
 
     ImagingWillReceiveHandler will_receive =
-        (type < ARRAY_LENGTH(s_will_receive_handlers)) ? s_will_receive_handlers[type] : nullptr;
+        (type < PBL_ARRAY_SIZE(s_will_receive_handlers)) ? s_will_receive_handlers[type] : nullptr;
     if (will_receive) {
       will_receive(hdr->token);
     }
@@ -396,7 +396,7 @@ void imaging_handle_comm_session_event(const PebbleCommSessionEvent *event) {
   // the endpoint receiver, so touching s_rx is safe. Also clear the unsupported-type latch here
   // rather than relying solely on the pointer comparison in prv_type_latched_unsupported: a
   // future session could be allocated at the address of the freed one.
-  for (uint8_t type = 0; type < ARRAY_LENGTH(s_rx); type++) {
+  for (uint8_t type = 0; type < PBL_ARRAY_SIZE(s_rx); type++) {
     if (s_rx[type].active) {
       prv_drop(type, s_rx[type].token, s_rx[type].total_bytes, "session closed");
     } else {

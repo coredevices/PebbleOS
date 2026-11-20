@@ -77,7 +77,7 @@ static const TestNotification notifications[] = {
   }
 };
 
-#define NUM_NOTIFS ((int)ARRAY_LENGTH(notifications))
+#define NUM_NOTIFS ((int)PBL_ARRAY_SIZE(notifications))
 
 typedef struct SwapLayerDemoData {
   Window window;

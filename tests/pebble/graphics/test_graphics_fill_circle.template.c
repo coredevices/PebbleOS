@@ -314,7 +314,7 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__quadrants_aa(void) {
   };
 
   // note: not the prettiest, fast a quick way to render all the scenarios Nitin was interested in
-  for (int i = 0; i < ARRAY_LENGTH(test_config); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_config); i++) {
     TestConfig c = test_config[i];
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
@@ -427,7 +427,7 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__radial(void){
     }
   };
 
-  for (int i = 0; i < ARRAY_LENGTH(test_angles); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_angles); i++) {
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
     uint16_t inner_radius = 0;
@@ -451,7 +451,7 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__radial(void){
     cl_check_(gbitmap_pbi_eq(&ctx.dest_bitmap, filename), filename);
   }
 
-  for (int i = 0; i < ARRAY_LENGTH(test_angles); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_angles); i++) {
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
     uint16_t inner_radius = 0;
@@ -534,8 +534,8 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__radial(void){
   GPoint center = GPoint(72, 84);
 
   // Cases for quadrant joints
-  for (int i = 0; i < ARRAY_LENGTH(test_radiuses); i++) {
-    for (int j = 0; j < ARRAY_LENGTH(test_quadrants); j++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_radiuses); i++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(test_quadrants); j++) {
       setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
       int offset_angle = 0;
 
@@ -736,8 +736,8 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__radial_grect(void) {
   GContext ctx;
   test_graphics_context_init(&ctx, fb);
 
-  for (int rect_id=0; rect_id < ARRAY_LENGTH(test_radial_rects); rect_id++) {
-    for (int angle_id=0; angle_id < ARRAY_LENGTH(test_radial_angles); angle_id++) {
+  for (int rect_id=0; rect_id < PBL_ARRAY_SIZE(test_radial_rects); rect_id++) {
+    for (int angle_id=0; angle_id < PBL_ARRAY_SIZE(test_radial_angles); angle_id++) {
       setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
 
       prv_draw_radial_in_rect_debugged(&ctx,

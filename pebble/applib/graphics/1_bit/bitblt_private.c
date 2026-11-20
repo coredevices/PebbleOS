@@ -49,7 +49,7 @@ PBL_T_STATIC void prv_calc_two_row_look_ups(TwoRowLookUp *look_up, GCompOp compo
       color = gcolor_tint_using_luminance_and_multiply_alpha(color, tint_color);
     }
     color = gcolor_get_grayscale(color);
-    for (unsigned int row_number = 0; row_number < ARRAY_LENGTH(*look_up); row_number++) {
+    for (unsigned int row_number = 0; row_number < PBL_ARRAY_SIZE(*look_up); row_number++) {
       (*look_up)[row_number].palette_pattern[palette_index] =
           graphics_private_get_1bit_grayscale_pattern(color, row_number);
       (*look_up)[row_number].transparent_mask[palette_index] =

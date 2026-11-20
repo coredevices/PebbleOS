@@ -151,7 +151,7 @@ static const struct pbl_bt_ancs_client_cb s_cb = {
 
 static void prv_get_notif_attrs(void) {
   cl_assert_equal_i(
-      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, ARRAY_LENGTH(s_attr_reqs)),
+      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, PBL_ARRAY_SIZE(s_attr_reqs)),
       0);
 }
 
@@ -167,7 +167,7 @@ static void prv_assert_notif_rsp(void) {
   cl_assert_equal_i(s_num_results, 1);
   cl_assert_equal_i(s_status, 0);
   cl_assert_equal_i(s_uid, UID);
-  cl_assert_equal_i(s_num_attrs, ARRAY_LENGTH(s_attr_reqs));
+  cl_assert_equal_i(s_num_attrs, PBL_ARRAY_SIZE(s_attr_reqs));
   cl_assert_equal_i(s_attr_lens[0], -1);
   cl_assert_equal_i(s_attr_lens[1], 3);
   cl_assert_equal_i(s_attr_lens[2], 2);
@@ -209,7 +209,7 @@ void test_ancs_client__start_and_stop(void) {
   pbl_bt_ancs_client_stop(&s_client);
   cl_assert(!fake_gattc_service_is_started());
   cl_assert_equal_i(
-      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, ARRAY_LENGTH(s_attr_reqs)),
+      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, PBL_ARRAY_SIZE(s_attr_reqs)),
       -ENOTCONN);
   cl_assert_equal_i(pbl_bt_ancs_client_start(&s_client, 2, &s_cb), 0);
 }
@@ -371,7 +371,7 @@ void test_ancs_client__response_to_something_else(void) {
 void test_ancs_client__one_request_at_a_time(void) {
   prv_get_notif_attrs();
   cl_assert_equal_i(
-      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, ARRAY_LENGTH(s_attr_reqs)),
+      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, PBL_ARRAY_SIZE(s_attr_reqs)),
       -EBUSY);
   cl_assert_equal_i(pbl_bt_ancs_client_perform_action(&s_client, UID, PBL_BT_ANCS_ACTION_POSITIVE),
                     -EBUSY);
@@ -391,7 +391,7 @@ void test_ancs_client__one_request_at_a_time(void) {
 void test_ancs_client__request_refused(void) {
   s_write_rc = -EIO;
   cl_assert_equal_i(
-      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, ARRAY_LENGTH(s_attr_reqs)),
+      pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs, PBL_ARRAY_SIZE(s_attr_reqs)),
       -EIO);
   cl_assert_equal_i(pbl_bt_ancs_client_get_notif_attrs(&s_client, UID, s_attr_reqs,
                                                        PBL_BT_ANCS_CLIENT_ATTRS_MAX + 1),
@@ -422,7 +422,7 @@ void test_ancs_client__app_attrs(void) {
   cl_assert_equal_i(pbl_bt_ancs_client_get_app_attrs(&s_client, "a.b", 3, s_app_attr_reqs, 0),
                     -EINVAL);
   cl_assert_equal_i(pbl_bt_ancs_client_get_app_attrs(&s_client, "a.b", 3, s_app_attr_reqs,
-                                                     ARRAY_LENGTH(s_app_attr_reqs)),
+                                                     PBL_ARRAY_SIZE(s_app_attr_reqs)),
                     0);
   cl_assert_equal_i(s_written_len, sizeof(s_app_cmd));
   cl_assert_equal_m(s_written, s_app_cmd, sizeof(s_app_cmd));

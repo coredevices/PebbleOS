@@ -481,7 +481,7 @@ static int prv_set_quad_enable(const struct pbl_flash_spi_nor *nor) {
 // The 4-byte address counterpart of an opcode, or 0 if the part does not have it
 static uint8_t prv_opcode_4b(const struct pbl_flash_spi_nor *nor, const struct sfdp *sfdp,
                              uint8_t op3) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_4b_opcodes); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_4b_opcodes); i++) {
     if (s_4b_opcodes[i].op3 != op3) {
       continue;
     }

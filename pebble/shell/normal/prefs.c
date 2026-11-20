@@ -969,7 +969,7 @@ static bool prv_is_valid_theme_color(GColor color) {
     GColorShockingPinkARGB8,   // Magenta
     GColorBrilliantRoseARGB8,  // Pink
   };
-  for (size_t i = 0; i < ARRAY_LENGTH(valid_colors); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(valid_colors); i++) {
     if (color.argb == valid_colors[i]) {
       return true;
     }
@@ -1210,7 +1210,7 @@ void shell_prefs_init(void) {
 #endif
 
   // Init state for each pref from our backing store
-  uint32_t num_entries = ARRAY_LENGTH(s_prefs_table);
+  uint32_t num_entries = PBL_ARRAY_SIZE(s_prefs_table);
   const PrefsTableEntry *entry = s_prefs_table;
   for (uint32_t i = 0; i < num_entries; i++, entry++) {
     // Keys in the backing store include the null terminator, so we add 1 to key_len
@@ -1299,7 +1299,7 @@ void shell_prefs_init(void) {
 // ------------------------------------------------------------------------------------
 // Find the PrefsTableEntry for the given key
 static const PrefsTableEntry *prv_prefs_entry(const uint8_t *key, size_t key_len) {
-  uint32_t num_entries = ARRAY_LENGTH(s_prefs_table);
+  uint32_t num_entries = PBL_ARRAY_SIZE(s_prefs_table);
   const PrefsTableEntry *entry = s_prefs_table;
   for (uint32_t i = 0; i < num_entries; i++, entry++) {
     if (!strncmp((const char *)key, entry->key, key_len)) {

@@ -209,9 +209,9 @@ void test_accel_manager__subscription_sampling_rates(void) {
   int sample_rates[] = {
     ACCEL_SAMPLING_10HZ, ACCEL_SAMPLING_25HZ, ACCEL_SAMPLING_50HZ, ACCEL_SAMPLING_100HZ
   };
-  prv_validate_sample_rates(sample_rates, ARRAY_LENGTH(sample_rates));
+  prv_validate_sample_rates(sample_rates, PBL_ARRAY_SIZE(sample_rates));
 
-  int poss_rates = ARRAY_LENGTH(sample_rates);
+  int poss_rates = PBL_ARRAY_SIZE(sample_rates);
   int max_permutations = 0x1 << poss_rates;
 
   for (int mask = 0; mask < max_permutations; mask++) {
@@ -249,7 +249,7 @@ void test_accel_manager__jitterfree(void) {
   AccelManagerState *state = sys_accel_manager_data_subscribe(
       ACCEL_SAMPLING_25HZ, prv_noop_sample_handler, nullptr, PebbleTask_KernelMain);
   uint32_t resulting_mhz = accel_manager_set_jitterfree_sampling_rate(state, 12500);
-  sys_accel_manager_set_sample_buffer(state, fake_buf, ARRAY_LENGTH(fake_buf));
+  sys_accel_manager_set_sample_buffer(state, fake_buf, PBL_ARRAY_SIZE(fake_buf));
 
   cl_assert_equal_i(resulting_mhz, 12500);
 
@@ -258,7 +258,7 @@ void test_accel_manager__jitterfree(void) {
 
   cl_assert_equal_i(num, 1);
   cl_assert_equal_i(den, 10);
-  cl_assert_equal_i(samples_per_update, ARRAY_LENGTH(fake_buf));
+  cl_assert_equal_i(samples_per_update, PBL_ARRAY_SIZE(fake_buf));
 }
 
 void test_accel_manager__batched_samples(void) {

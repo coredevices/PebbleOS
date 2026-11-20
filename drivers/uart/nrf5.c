@@ -130,13 +130,13 @@ static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_conf
     return -ENOTSUP;
   }
 
-  for (i = 0U; i < ARRAY_LENGTH(s_baudrates); i++) {
+  for (i = 0U; i < PBL_ARRAY_SIZE(s_baudrates); i++) {
     if (s_baudrates[i].baudrate == cfg->baudrate) {
       break;
     }
   }
 
-  if (i == ARRAY_LENGTH(s_baudrates)) {
+  if (i == PBL_ARRAY_SIZE(s_baudrates)) {
     return -ENOTSUP;
   }
 

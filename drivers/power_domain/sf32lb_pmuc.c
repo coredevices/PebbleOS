@@ -95,7 +95,7 @@ static int prv_set_performance_state(const struct pbl_power_domain_provider *pro
   uint8_t s0;
   uint8_t s1;
 
-  if (id != PD_HPSYS || level < HPSYS_D0 || level >= ARRAY_LENGTH(s_modes)) {
+  if (id != PD_HPSYS || level < HPSYS_D0 || level >= PBL_ARRAY_SIZE(s_modes)) {
     return -EINVAL;
   }
 

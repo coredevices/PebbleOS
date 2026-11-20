@@ -275,7 +275,7 @@ void test_kernel_le_client__notifications_drained_with_room_in_kernel_queue(void
 }
 
 void test_kernel_le_client__service_added(void) {
-  uint8_t num_services_added = ARRAY_LENGTH(s_service_handles);
+  uint8_t num_services_added = PBL_ARRAY_SIZE(s_service_handles);
   PebbleBLEGATTClientServiceEventInfo *info =
       pbl_malloc(sizeof(PebbleBLEGATTClientServiceEventInfo) +
                  (num_services_added * sizeof(pbl_bt_service_t)));

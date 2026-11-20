@@ -148,7 +148,7 @@ static size_t prv_create_menu_items(SimpleMenuItem **out_menu_items) {
   *out_menu_items = app_malloc(sizeof(s_menu_items));
   memcpy(*out_menu_items, s_menu_items, sizeof(s_menu_items));
 
-  size_t num_items = ARRAY_LENGTH(s_menu_items);
+  size_t num_items = PBL_ARRAY_SIZE(s_menu_items);
 
   return num_items;
 }

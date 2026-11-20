@@ -238,7 +238,7 @@ void test_light__scales_getafix_presets_upward(void) {
     {0, 0}, {10, 3}, {25, 7}, {50, 13}, {100, 25},
   };
 
-  for (size_t i = 0; i < ARRAY_LENGTH(cases); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(cases); i++) {
     s_backlight_intensity = cases[i].intensity;
     light_enable(true);
     cl_assert_equal_i(s_backlight_brightness, cases[i].scaled);

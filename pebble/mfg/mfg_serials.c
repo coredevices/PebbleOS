@@ -18,7 +18,7 @@ static const char DUMMY_PCBA_SERIAL[MFG_PCBA_SERIAL_NUMBER_SIZE + 1] = "XXXXXXXX
 
 const char *mfg_get_serial_number(void) {
   // Trying from "most recent" slot to "least recent":
-  for (int i = ARRAY_LENGTH(OTP_SERIAL_SLOT_INDICES) - 1; i >= 0; --i) {
+  for (int i = PBL_ARRAY_SIZE(OTP_SERIAL_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_SERIAL_SLOT_INDICES[i];
     if (otp_is_locked(index)) {
       return otp_get_slot(index);
@@ -29,7 +29,7 @@ const char *mfg_get_serial_number(void) {
 
 const char *mfg_get_hw_version(void) {
   // Trying from "most recent" slot to "least recent":
-  for (int i = ARRAY_LENGTH(OTP_HWVER_SLOT_INDICES) - 1; i >= 0; --i) {
+  for (int i = PBL_ARRAY_SIZE(OTP_HWVER_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_HWVER_SLOT_INDICES[i];
     if (otp_is_locked(index)) {
       return otp_get_slot(index);
@@ -40,7 +40,7 @@ const char *mfg_get_hw_version(void) {
 
 const char *mfg_get_pcba_serial_number(void) {
   // Trying from "most recent" slot to "least recent":
-  for (int i = ARRAY_LENGTH(OTP_PCBA_SLOT_INDICES) - 1; i >= 0; --i) {
+  for (int i = PBL_ARRAY_SIZE(OTP_PCBA_SLOT_INDICES) - 1; i >= 0; --i) {
     const uint8_t index = OTP_PCBA_SLOT_INDICES[i];
     if (otp_is_locked(index)) {
       return otp_get_slot(index);
@@ -70,8 +70,9 @@ MfgSerialsResult mfg_write_serial_number(const char *serial, size_t serial_size,
     return MfgSerialsResultFailIncorrectLength;
   }
 
-  return prv_mfg_write_data_to_slot(OTP_SERIAL_SLOT_INDICES, ARRAY_LENGTH(OTP_SERIAL_SLOT_INDICES),
-                                    serial, serial_size, out_index);
+  return prv_mfg_write_data_to_slot(OTP_SERIAL_SLOT_INDICES,
+                                    PBL_ARRAY_SIZE(OTP_SERIAL_SLOT_INDICES), serial, serial_size,
+                                    out_index);
 }
 
 MfgSerialsResult mfg_write_pcba_serial_number(const char *serial, size_t serial_size,
@@ -80,7 +81,7 @@ MfgSerialsResult mfg_write_pcba_serial_number(const char *serial, size_t serial_
     return MfgSerialsResultFailIncorrectLength;
   }
 
-  return prv_mfg_write_data_to_slot(OTP_PCBA_SLOT_INDICES, ARRAY_LENGTH(OTP_PCBA_SLOT_INDICES),
+  return prv_mfg_write_data_to_slot(OTP_PCBA_SLOT_INDICES, PBL_ARRAY_SIZE(OTP_PCBA_SLOT_INDICES),
                                     serial, serial_size, out_index);
 }
 
@@ -88,7 +89,7 @@ MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint
   if ((hwver_size > MFG_HW_VERSION_SIZE) || hwver[hwver_size] != '\0') {
     return MfgSerialsResultFailIncorrectLength;
   }
-  return prv_mfg_write_data_to_slot(OTP_HWVER_SLOT_INDICES, ARRAY_LENGTH(OTP_HWVER_SLOT_INDICES),
+  return prv_mfg_write_data_to_slot(OTP_HWVER_SLOT_INDICES, PBL_ARRAY_SIZE(OTP_HWVER_SLOT_INDICES),
                                     hwver, hwver_size, out_index);
 }
 

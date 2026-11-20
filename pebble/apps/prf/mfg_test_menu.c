@@ -75,7 +75,7 @@ static const MfgTestMenuEntry s_all_entries[] = {
 #undef FI
 
 // Filtered entries for the active mode (built at startup)
-static const MfgTestMenuEntry *s_entries[ARRAY_LENGTH(s_all_entries)];
+static const MfgTestMenuEntry *s_entries[PBL_ARRAY_SIZE(s_all_entries)];
 static size_t s_num_entries;
 
 static uint8_t s_active_mode;
@@ -120,7 +120,7 @@ static const char *prv_get_status_prefix(MfgTestId test) {
 
 static void prv_build_filtered_entries(uint8_t mode) {
   s_num_entries = 0;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_all_entries); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_all_entries); i++) {
     if (s_all_entries[i].modes & mode) {
       s_entries[s_num_entries++] = &s_all_entries[i];
     }
@@ -197,7 +197,7 @@ bool mfg_test_menu_should_relaunch(void) {
 }
 
 bool mfg_test_menu_is_test_available(MfgTestId test_id) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_all_entries); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_all_entries); i++) {
     if (s_all_entries[i].test_id == test_id) {
       return (s_all_entries[i].modes & s_active_mode) != 0;
     }

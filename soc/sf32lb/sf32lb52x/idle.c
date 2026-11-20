@@ -117,7 +117,7 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
     .enter = prv_enter_deepsleep
   },
 };
-const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
+const size_t pbl_soc_num_idle_states = PBL_ARRAY_SIZE(pbl_soc_idle_states);
 
 PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
   uint32_t status;

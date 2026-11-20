@@ -715,7 +715,7 @@ AlgDlsMinuteData *activity_sample_run_shut_down_1(int *len) {
     { 0, 0x7c, 0, 188, 1},
     { 0, 0x7c, 0, 188, 1},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -1435,7 +1435,7 @@ AlgDlsMinuteData *activity_sample_run_shut_down_2(int *len) {
     { 0, 0x7c, 0, 188, 1},
     { 0, 0x7c, 0, 188, 1},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

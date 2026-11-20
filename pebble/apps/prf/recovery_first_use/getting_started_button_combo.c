@@ -72,7 +72,7 @@ static void prv_update_state(GettingStartedButtonComboState *state) {
 #endif
   };
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(BUTTON_COMBOS); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(BUTTON_COMBOS); ++i) {
     if (state->buttons_held_bitset == BUTTON_COMBOS[i].desired_bitset) {
       PBL_LOG_DBG("Starting timer for combo #%d", i);
 

@@ -49,15 +49,15 @@ static TimelineItemAction actions[] = {
   {.id = 0,
    .type = TimelineItemActionTypeResponse,
    .attr_list =
-       {.num_attributes = ARRAY_LENGTH(action1_attributes), .attributes = action1_attributes}},
+       {.num_attributes = PBL_ARRAY_SIZE(action1_attributes), .attributes = action1_attributes}},
   {.id = 1,
    .type = TimelineItemActionTypeResponse,
    .attr_list =
-       {.num_attributes = ARRAY_LENGTH(action2_attributes), .attributes = action2_attributes}},
+       {.num_attributes = PBL_ARRAY_SIZE(action2_attributes), .attributes = action2_attributes}},
   {.id = 2,
    .type = TimelineItemActionTypeResponse,
    .attr_list = {
-     .num_attributes = ARRAY_LENGTH(action3_attributes), .attributes = action3_attributes
+     .num_attributes = PBL_ARRAY_SIZE(action3_attributes), .attributes = action3_attributes
    }},
 };
 
@@ -152,7 +152,7 @@ static Attribute s_string_attributes[] = {
   {.id = AttributeIdSender, .cstring = s_sender_buffer},
 };
 static AttributeList s_string_attr_list = {
-  .num_attributes = ARRAY_LENGTH(s_string_attributes),
+  .num_attributes = PBL_ARRAY_SIZE(s_string_attributes),
   .attributes = s_string_attributes,
 };
 
@@ -183,7 +183,7 @@ static bool prv_recovering_items_iterator_callback(void *data,
                                                    const TimelineItem *item) {
   RecoveringNotificationItemsIteratorContext *context = data;
   cl_assert(item);
-  cl_assert(context->item_count < ARRAY_LENGTH(context->expected_ids));
+  cl_assert(context->item_count < PBL_ARRAY_SIZE(context->expected_ids));
   cl_assert(uuid_equal(&item->header.id, &context->expected_ids[context->item_count]));
   context->item_count++;
   return true;
@@ -204,11 +204,11 @@ void test_notification_storage__basic(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -286,7 +286,7 @@ void test_notification_storage__iterate_strings_after_skips_old_and_deleted_payl
           .layout = LayoutIdGeneric,
         },
     .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
+      .num_attributes = PBL_ARRAY_SIZE(attributes),
       .attributes = attributes,
     },
   };
@@ -333,7 +333,7 @@ void test_notification_storage__iterate_strings_after_skips_corrupt_record(void)
           .layout = LayoutIdGeneric,
         },
     .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
+      .num_attributes = PBL_ARRAY_SIZE(attributes),
       .attributes = attributes,
     },
   };
@@ -355,7 +355,7 @@ void test_notification_storage__iterate_strings_after_skips_corrupt_record(void)
   notification_storage_iterate_strings_after(0, &s_string_attr_list, sizeof(s_title_buffer),
                                              prv_recovering_items_iterator_callback, &context);
 
-  cl_assert_equal_i(context.item_count, ARRAY_LENGTH(context.expected_ids));
+  cl_assert_equal_i(context.item_count, PBL_ARRAY_SIZE(context.expected_ids));
 }
 
 void test_notification_storage__multiple(void) {
@@ -373,11 +373,11 @@ void test_notification_storage__multiple(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -470,11 +470,11 @@ void test_notification_storage__remove_single(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -502,7 +502,7 @@ void test_notification_storage__exists_matches_deleted(void) {
           .timestamp = 0x53f0dda5,
         },
     .attr_list = {
-      .num_attributes = ARRAY_LENGTH(attributes),
+      .num_attributes = PBL_ARRAY_SIZE(attributes),
       .attributes = attributes,
     },
   };
@@ -536,11 +536,11 @@ void test_notification_storage__set_actioned_flag(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -577,11 +577,11 @@ void test_notification_storage__remove_multiple_first(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -637,11 +637,11 @@ void test_notification_storage__remove_add(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -745,11 +745,11 @@ void test_notification_storage__remove_add_compress(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -875,11 +875,11 @@ void test_notification_storage__find_ancs_id(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -966,11 +966,11 @@ void test_notification_storage__find_by_timestamp(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -1072,11 +1072,11 @@ void test_notification_storage__should_detect_corruption(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };
@@ -1134,11 +1134,11 @@ void test_notification_storage__rewrite_skips_deleted(void) {
         },
     .attr_list =
         {
-          .num_attributes = ARRAY_LENGTH(attributes),
+          .num_attributes = PBL_ARRAY_SIZE(attributes),
           .attributes = attributes,
         },
     .action_group = {
-      .num_actions = ARRAY_LENGTH(actions),
+      .num_actions = PBL_ARRAY_SIZE(actions),
       .actions = actions,
     }
   };

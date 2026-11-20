@@ -226,7 +226,7 @@ static void prv_feed_steps_min(uint32_t minutes) {
   uint32_t samples_remaining = minutes * 60 * SAMPLES_PER_SECOND;
 
   AccelRawData *step_samples = s_walk_30_steps;
-  uint32_t num_step_samples = ARRAY_LENGTH(s_walk_30_steps);
+  uint32_t num_step_samples = PBL_ARRAY_SIZE(s_walk_30_steps);
   uint32_t step_sample_idx = 0;
 
   uint32_t minute_idx = samples_remaining / (60 * SAMPLES_PER_SECOND);
@@ -296,12 +296,12 @@ static void prv_test_steps(void *context) {
   activity_test_reset(true /*reset_settings*/, true /*tracking_on*/, nullptr, nullptr);
 
   // Fill the steps pipeline then capture step count before
-  activity_test_feed_samples(s_walk_30_steps, ARRAY_LENGTH(s_walk_30_steps));
+  activity_test_feed_samples(s_walk_30_steps, PBL_ARRAY_SIZE(s_walk_30_steps));
   int32_t before;
   activity_get_metric(ActivityMetricStepCount, 1, &before);
 
   // Walk 30 steps
-  activity_test_feed_samples(s_walk_30_steps, ARRAY_LENGTH(s_walk_30_steps));
+  activity_test_feed_samples(s_walk_30_steps, PBL_ARRAY_SIZE(s_walk_30_steps));
 
   // Check new step count
   int32_t steps;
@@ -483,7 +483,7 @@ static void prv_count_sleep_sessions(time_t after_time, int *num_sleep, int *num
   *num_nap = 0;
 
   ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
-  uint32_t session_entries = ARRAY_LENGTH(sessions);
+  uint32_t session_entries = PBL_ARRAY_SIZE(sessions);
   bool success = activity_get_sessions(&session_entries, sessions);
   if (!success) {
     return;
@@ -835,7 +835,7 @@ static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = window_layer->bounds;
 
-  uint32_t num_tests = ARRAY_LENGTH(s_test_entries);
+  uint32_t num_tests = PBL_ARRAY_SIZE(s_test_entries);
 
   // Create the menu items
   SimpleMenuItem *menu_items = app_malloc_check(num_tests * sizeof(SimpleMenuItem));

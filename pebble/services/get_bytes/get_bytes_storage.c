@@ -67,7 +67,7 @@ GetBytesStorageType prv_get_storage_type_for_object(GetBytesObjectType object_ty
 
 bool gb_storage_setup(GetBytesStorage *storage, GetBytesObjectType object_type,
                       GetBytesStorageInfo *info) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_get_bytes_impls); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_get_bytes_impls); i++) {
     if (s_get_bytes_impls[i].type == prv_get_storage_type_for_object(object_type)) {
       storage->impl = &s_get_bytes_impls[i];
 

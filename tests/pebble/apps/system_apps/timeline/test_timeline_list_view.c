@@ -135,7 +135,7 @@ static void prv_assert_title_centered(Window *window, TimelineLayout *layout) {
 static void prv_create_list_view_and_render(ListViewConfig *config) {
   pin_db_init();
 
-  for (int i = 0; i < (int)ARRAY_LENGTH(config->pins); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(config->pins); i++) {
     if (config->pins[i]) {
       prv_add_timeline_item(config->pins[i], config->past, i);
     }

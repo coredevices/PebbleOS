@@ -74,7 +74,7 @@ static void prv_dump_cfsr(uint32_t cfsr) {
   const uint32_t ufsr = cfsr >> 16;
   if (ufsr != 0U) {
     PBL_LOG_FAULT("  Usage Fault Status Register:");
-    prv_dump_bits(ufsr, s_ufsr_bits, ARRAY_LENGTH(s_ufsr_bits));
+    prv_dump_bits(ufsr, s_ufsr_bits, PBL_ARRAY_SIZE(s_ufsr_bits));
   }
 
   const uint32_t bfsr = (cfsr >> 8) & 0xFFU;
@@ -83,7 +83,7 @@ static void prv_dump_cfsr(uint32_t cfsr) {
     if (cfsr & ARM_SCB_CFSR_BFARVALID) {
       PBL_LOG_FAULT("    BFARVALID = yes 0x%" PRIx32, arch_readl(ARM_SCB_BFAR));
     }
-    prv_dump_bits(bfsr, s_bfsr_bits, ARRAY_LENGTH(s_bfsr_bits));
+    prv_dump_bits(bfsr, s_bfsr_bits, PBL_ARRAY_SIZE(s_bfsr_bits));
   }
 
   const uint32_t mmfsr = cfsr & 0xFFU;
@@ -92,7 +92,7 @@ static void prv_dump_cfsr(uint32_t cfsr) {
     if (cfsr & ARM_SCB_CFSR_MMARVALID) {
       PBL_LOG_FAULT("    MMFARVALID = yes 0x%" PRIx32, arch_readl(ARM_SCB_MMFAR));
     }
-    prv_dump_bits(mmfsr, s_mmfsr_bits, ARRAY_LENGTH(s_mmfsr_bits));
+    prv_dump_bits(mmfsr, s_mmfsr_bits, PBL_ARRAY_SIZE(s_mmfsr_bits));
   }
 }
 

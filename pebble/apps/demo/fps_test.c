@@ -97,7 +97,7 @@ static const char *prv_row_texts[] = {
 
 static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
-  return ARRAY_LENGTH(prv_row_texts);
+  return PBL_ARRAY_SIZE(prv_row_texts);
 }
 
 static void prv_draw_row(GContext *ctx, const Layer *cell_layer, char const *title,

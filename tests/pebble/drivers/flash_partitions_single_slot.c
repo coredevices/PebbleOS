@@ -21,4 +21,4 @@ const struct pbl_flash_partition g_single_slot_partitions[] = {
   LAYOUT_ENTRY(MFG_BATTERY_STATE),
   LAYOUT_ENTRY(SHARED_PRF_STORAGE),
 };
-const size_t g_single_slot_partitions_len = ARRAY_LENGTH(g_single_slot_partitions);
+const size_t g_single_slot_partitions_len = PBL_ARRAY_SIZE(g_single_slot_partitions);

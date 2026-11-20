@@ -41,7 +41,7 @@ void test_circular_cache__initialize(void) {
   memset(s_cache_buffer, 0, sizeof(s_cache_buffer));
   circular_cache_init(&s_test_cache, (uint8_t *)s_cache_buffer, sizeof(TestCacheItem),
                       NUM_TEST_ITEMS, prv_comparator);
-  for (int i = 0; i < ARRAY_LENGTH(s_test_item); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_test_item); i++) {
     s_free_flags[i] = false;
   }
 }

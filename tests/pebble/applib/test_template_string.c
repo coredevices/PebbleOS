@@ -125,7 +125,7 @@ static const struct {
 };
 
 void test_template_string__truncation(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_truncation_tests); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_truncation_tests); i++) {
 #if DEBUG_PRINTING
     printf("size: %zu\n", s_truncation_tests[i].size);
     printf("intime: %jd\n", s_truncation_tests[i].intime);
@@ -259,7 +259,7 @@ static const struct {
 };
 
 void test_template_string__time_since_until(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_time_since_tests); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_time_since_tests); i++) {
 #if DEBUG_PRINTING
     printf("current_time: %ld\n", s_time_since_tests[i].current_time);
     printf("parameter: \"%s\"\n", s_time_since_tests[i].params);
@@ -604,7 +604,7 @@ static const FormatTestData s_format_tests[] = {
 };
 
 void test_template_string__format(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_format_tests); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_format_tests); i++) {
     const FormatTestData *test = &s_format_tests[i];
 
     prv_state_init();
@@ -869,7 +869,7 @@ static const struct {
 };
 
 void test_template_string__full_test(void) {
-  for (int i = 0; i < ARRAY_LENGTH(s_full_tests); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_full_tests); i++) {
     TemplateStringVars vars = {};
     TemplateStringError err = {};
     TemplateStringEvalConditions cond = {};

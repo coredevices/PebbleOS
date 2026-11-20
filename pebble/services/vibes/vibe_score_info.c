@@ -34,7 +34,7 @@ static const VibeScoreInfo S_VIBE_MAP[] = {
 };
 #undef VIBE_DEF
 
-#define VIBE_MAP_SIZE ARRAY_LENGTH(S_VIBE_MAP)
+#define VIBE_MAP_SIZE PBL_ARRAY_SIZE(S_VIBE_MAP)
 
 static const VibeScoreInfo *prv_vibe_score_find_info(VibeScoreId id) {
   for (unsigned int x = 0; x < VIBE_MAP_SIZE; x++) {

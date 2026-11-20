@@ -209,8 +209,8 @@ static int16_t prv_get_row_height_for_index(int i) {
 
 static int16_t prv_calculate_overall_grid_height(void) {
   int16_t sum = 0;
-  const unsigned int num_distinct_rows = ARRAY_LENGTH(s_menu_system_cell_test_row_data);
-  const unsigned int num_row_heights = ARRAY_LENGTH(s_menu_system_cell_test_row_heights);
+  const unsigned int num_distinct_rows = PBL_ARRAY_SIZE(s_menu_system_cell_test_row_data);
+  const unsigned int num_row_heights = PBL_ARRAY_SIZE(s_menu_system_cell_test_row_heights);
   for (int i = 0; i < num_row_heights; i++) {
     sum += GRID_CELL_PADDING + prv_get_row_height_for_index(i);
   }
@@ -301,8 +301,8 @@ void prv_prepare_canvas_and_render_cells(MenuCellType cell_type, int16_t cell_wi
                                          unsigned int num_columns, bool is_legacy2) {
   gbitmap_destroy(s_dest_bitmap);
 
-  const unsigned int num_row_heights = ARRAY_LENGTH(s_menu_system_cell_test_row_heights);
-  const unsigned int num_rows = ARRAY_LENGTH(s_menu_system_cell_test_row_data);
+  const unsigned int num_row_heights = PBL_ARRAY_SIZE(s_menu_system_cell_test_row_heights);
+  const unsigned int num_rows = PBL_ARRAY_SIZE(s_menu_system_cell_test_row_data);
 
   // Multiply num_columns * 2 to account for drawing both focused and unfocused side-by-side
   const int num_columns_accounting_for_focused_unfocused = num_columns * 2;
@@ -360,7 +360,7 @@ void test_menu_layer_system_cells__basic_cell_width_144_legacy2(void) {
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(MenuCellType_Basic, cell_width,
                                       s_menu_system_basic_cell_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_basic_cell_test_column_data),
                                       /* is_legacy2 */ true);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 #endif
@@ -370,7 +370,7 @@ void test_menu_layer_system_cells__basic_cell_width_144(void) {
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(MenuCellType_Basic, cell_width,
                                       s_menu_system_basic_cell_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_basic_cell_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_basic_cell_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
@@ -379,7 +379,7 @@ void test_menu_layer_system_cells__basic_custom_cell_width_144(void) {
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(MenuCellType_BasicCustom, cell_width,
                                       s_menu_system_cell_layer_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_cell_layer_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
@@ -389,7 +389,7 @@ void test_menu_layer_system_cells__cell_width_32(void) {
   const int16_t cell_width = 32;
   prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
                                       s_menu_system_cell_layer_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_cell_layer_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 #endif
@@ -399,7 +399,7 @@ void test_menu_layer_system_cells__cell_width_100(void) {
   const int16_t cell_width = 100;
   prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
                                       s_menu_system_cell_layer_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_cell_layer_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
@@ -408,7 +408,7 @@ void test_menu_layer_system_cells__cell_width_144(void) {
   const int16_t cell_width = 144;
   prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
                                       s_menu_system_cell_layer_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_cell_layer_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
@@ -417,7 +417,7 @@ void test_menu_layer_system_cells__cell_width_180(void) {
   const int16_t cell_width = 180;
   prv_prepare_canvas_and_render_cells(MenuCellType_CellLayer, cell_width,
                                       s_menu_system_cell_layer_test_column_data,
-                                      ARRAY_LENGTH(s_menu_system_cell_layer_test_column_data),
+                                      PBL_ARRAY_SIZE(s_menu_system_cell_layer_test_column_data),
                                       /* is_legacy2 */ false);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
 }
@@ -426,7 +426,7 @@ void test_menu_layer_system_cells__cell_width_180(void) {
 //! side-by-side) to verify that fonts and cell heights follow the user's content size.
 void test_menu_layer_system_cells__basic_cell_content_sizes(void) {
   const int16_t cell_width = 144;
-  const unsigned int num_rows = ARRAY_LENGTH(s_menu_system_cell_test_row_data);
+  const unsigned int num_rows = PBL_ARRAY_SIZE(s_menu_system_cell_test_row_data);
 
   gbitmap_destroy(s_dest_bitmap);
 
@@ -497,7 +497,7 @@ void test_menu_layer_system_cells__scrolling_text(void) {
   gbitmap_destroy(s_dest_bitmap);
   const GSize bitmap_size =
       GSize(GRID_CELL_PADDING + num_columns * (cell_width + GRID_CELL_PADDING),
-            GRID_CELL_PADDING + ARRAY_LENGTH(rows) * (row_height + GRID_CELL_PADDING));
+            GRID_CELL_PADDING + PBL_ARRAY_SIZE(rows) * (row_height + GRID_CELL_PADDING));
   s_dest_bitmap =
       gbitmap_create_blank(bitmap_size, PBL_IF_COLOR_ELSE(GBitmapFormat8Bit, GBitmapFormat1Bit));
   s_ctx.dest_bitmap = *s_dest_bitmap;
@@ -506,7 +506,7 @@ void test_menu_layer_system_cells__scrolling_text(void) {
   memset(s_dest_bitmap->addr, GColorShockingPinkARGB8,
          s_dest_bitmap->row_size_bytes * s_dest_bitmap->bounds.size.h);
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(rows); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(rows); i++) {
     GRect cell_bounds =
         GRect(GRID_CELL_PADDING, GRID_CELL_PADDING + i * (row_height + GRID_CELL_PADDING),
               cell_width, row_height);
@@ -719,7 +719,7 @@ void test_menu_layer_system_cells__single_line_content_sizes(void) {
     system_theme_set_content_size(size);
     const int16_t row_height = menu_cell_basic_cell_height();
     int16_t y_offset = 0;
-    for (unsigned int i = 0; i < ARRAY_LENGTH(titles); i++) {
+    for (unsigned int i = 0; i < PBL_ARRAY_SIZE(titles); i++) {
       const MenuLayerSystemCellTestRowData row_data = {
         .title = (char *)titles[i],
         .icon_align = DEFAULT_ICON_ALIGN,

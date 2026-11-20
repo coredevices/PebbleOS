@@ -234,7 +234,7 @@ static int prv_cmd_bench(const struct pbl_shell *sh, size_t argc, char **argv) {
     return 0;
   }
 
-  for (size_t i = 0; i < ARRAY_LENGTH(lens); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(lens); i++) {
     prv_bench(sh, lens[i]);
   }
 
@@ -252,7 +252,7 @@ static int prv_cmd_selftest(const struct pbl_shell *sh, size_t argc, char **argv
   };
   int ret = 0;
 
-  for (size_t i = 0; i < ARRAY_LENGTH(algs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(algs); i++) {
     const int err = pbl_crypto_selftest(algs[i].alg);
 
     pbl_shell_print(sh, "%s: %s", algs[i].name,

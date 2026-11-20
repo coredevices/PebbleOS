@@ -88,14 +88,17 @@ static void prv_check_attribute_list_serialize(AttributeList *attr_list_to_seria
 
 void test_attribute__serialize_attr_list(void) {
   AttributeList attr_list1 = {
-    .num_attributes = ARRAY_LENGTH(action1_attributes),
+    .num_attributes = PBL_ARRAY_SIZE(action1_attributes),
     .attributes = action1_attributes
   };
   AttributeList attr_list2 = {
-    .num_attributes = ARRAY_LENGTH(action2_attributes),
+    .num_attributes = PBL_ARRAY_SIZE(action2_attributes),
     .attributes = action2_attributes
   };
-  AttributeList attr_list3 = {.num_attributes = ARRAY_LENGTH(attributes), .attributes = attributes};
+  AttributeList attr_list3 = {
+    .num_attributes = PBL_ARRAY_SIZE(attributes),
+    .attributes = attributes
+  };
 
   static uint8_t attr_list1_serialized[] = {
     // Action Attributes
@@ -339,7 +342,7 @@ void test_attribute__app_glance_subtitle_in_attribute_list(void) {
     {.id = AttributeIdSubtitleTemplateString, .cstring = "Your app at a glance!"},
   };
   AttributeList app_glance_subtitle_attribute_list = {
-    .num_attributes = ARRAY_LENGTH(app_glance_subtitle_attributes),
+    .num_attributes = PBL_ARRAY_SIZE(app_glance_subtitle_attributes),
     .attributes = app_glance_subtitle_attributes,
   };
   const uint8_t app_glance_subtitle_attribute_list_serialized[] = {
@@ -403,7 +406,7 @@ void test_attribute__too_long_app_glance_subtitle_in_attribute_list(void) {
             ATTRIBUTE_APP_GLANCE_SUBTITLE_MAX_LEN);
 
   AttributeList app_glance_subtitle_attribute_list = {
-    .num_attributes = ARRAY_LENGTH(app_glance_subtitle_attributes),
+    .num_attributes = PBL_ARRAY_SIZE(app_glance_subtitle_attributes),
     .attributes = app_glance_subtitle_attributes,
   };
   const uint8_t app_glance_subtitle_attribute_list_serialized[] = {

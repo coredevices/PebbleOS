@@ -325,10 +325,10 @@ static void prv_render_emoji_picker(unsigned int selected_index, bool glyph_grid
     "😃", "😉", "😂", "😍", "😘", "\xe2\x9d\xa4", "😇", "😎", "😛", "😟", "😩",
     "😭", "😴", "😐", "😯", "👍", "👎",           "👌", "💩", "🎉", "🍺",
   };
-  ActionMenuLevel *root_level = action_menu_level_create(ARRAY_LENGTH(thin_values));
+  ActionMenuLevel *root_level = action_menu_level_create(PBL_ARRAY_SIZE(thin_values));
   root_level->display_mode =
       glyph_grid ? ActionMenuLevelDisplayModeGlyphGrid : ActionMenuLevelDisplayModeThin;
-  for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(thin_values); i++) {
     action_menu_level_add_action(root_level, thin_values[i], prv_noop_action_callback, nullptr);
   }
 
@@ -405,9 +405,9 @@ void test_action_menu_window__thin_display_mode_two_row(void) {
     return; // no monochrome baseline
   }
   static const char *thin_values[] = {"a", "b", "c", "d", "e"};
-  ActionMenuLevel *root_level = action_menu_level_create(ARRAY_LENGTH(thin_values));
+  ActionMenuLevel *root_level = action_menu_level_create(PBL_ARRAY_SIZE(thin_values));
   action_menu_level_set_display_mode(root_level, ActionMenuLevelDisplayModeThin);
-  for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(thin_values); i++) {
     action_menu_level_add_action(root_level, thin_values[i], prv_noop_action_callback, nullptr);
   }
 
@@ -421,9 +421,9 @@ void test_action_menu_window__thin_display_mode_one_row(void) {
     return; // no monochrome baseline
   }
   static const char *thin_values[] = {"Y", "N"};
-  ActionMenuLevel *root_level = action_menu_level_create(ARRAY_LENGTH(thin_values));
+  ActionMenuLevel *root_level = action_menu_level_create(PBL_ARRAY_SIZE(thin_values));
   action_menu_level_set_display_mode(root_level, ActionMenuLevelDisplayModeThin);
-  for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(thin_values); i++) {
     action_menu_level_add_action(root_level, thin_values[i], prv_noop_action_callback, nullptr);
   }
 
@@ -437,9 +437,9 @@ void test_action_menu_window__thin_display_mode_one_item(void) {
     return; // no monochrome baseline
   }
   static const char *thin_values[] = {"Y"};
-  ActionMenuLevel *root_level = action_menu_level_create(ARRAY_LENGTH(thin_values));
+  ActionMenuLevel *root_level = action_menu_level_create(PBL_ARRAY_SIZE(thin_values));
   action_menu_level_set_display_mode(root_level, ActionMenuLevelDisplayModeThin);
-  for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(thin_values); i++) {
     action_menu_level_add_action(root_level, thin_values[i], prv_noop_action_callback, nullptr);
   }
 

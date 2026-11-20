@@ -203,7 +203,7 @@ void test_expandable_dialog__left_hand_content_mirrors_right_hand_margins(void) 
       expandable->dialog.text_layer.layer.frame,
       expandable->dialog.icon_layer.layer.frame,
     };
-    for (unsigned i = 0; i < ARRAY_LENGTH(frames); ++i) {
+    for (unsigned i = 0; i < PBL_ARRAY_SIZE(frames); ++i) {
       if (!left) {
         right_frames[i] = frames[i];
       } else {

@@ -43,12 +43,12 @@ static const ColorDefinition s_color_definitions[11] = {
   {"Magenta", GColorShockingPink},
   {"Pink", GColorBrilliantRose},
 };
-static const char *color_names[ARRAY_LENGTH(s_color_definitions)];
+static const char *color_names[PBL_ARRAY_SIZE(s_color_definitions)];
 static bool color_names_initialized = false;
 
 static const char **prv_get_color_names(bool short_list) {
   if (!color_names_initialized) {
-    for (size_t i = 0; i < ARRAY_LENGTH(s_color_definitions); i++) {
+    for (size_t i = 0; i < PBL_ARRAY_SIZE(s_color_definitions); i++) {
       color_names[i] = (char *)s_color_definitions[i].name;
     }
     color_names_initialized = true;
@@ -60,7 +60,7 @@ static int prv_color_to_index(GColor color, GColor default_color) {
   if (color.argb == GColorClear.argb || color.argb == default_color.argb) {
     return 0;
   }
-  for (size_t i = 0; i < ARRAY_LENGTH(s_color_definitions); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_color_definitions); i++) {
     GColor selected_color = s_color_definitions[i].color;
     if ((uint8_t)(color.argb) == (uint8_t)(selected_color.argb)) {
       return i;
@@ -121,7 +121,7 @@ static OptionMenu *prv_push_color_menu(void) {
   }
   OptionMenu *const option_menu = settings_option_menu_push(
       title, OptionMenuContentType_SingleLine, selected, &callbacks,
-      ARRAY_LENGTH(s_color_definitions), true /* icons_enabled */, color_names, nullptr);
+      PBL_ARRAY_SIZE(s_color_definitions), true /* icons_enabled */, color_names, nullptr);
 
   if (option_menu) {
     if (selected == 0) {

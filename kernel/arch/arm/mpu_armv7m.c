@@ -123,7 +123,7 @@ void arch_mpu_enable(void) {
 void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *region, uint32_t *rbar,
                            uint32_t *attr) {
   PBL_ASSERTN((region->base & 0x1f) == 0);
-  PBL_ASSERTN((region->attr & PBL_MPU_ACCESS_MSK) < ARRAY_LENGTH(s_access_to_ap));
+  PBL_ASSERTN((region->attr & PBL_MPU_ACCESS_MSK) < PBL_ARRAY_SIZE(s_access_to_ap));
 
   const BlockLayout layout = compute_block_layout(region->base, region->size);
 

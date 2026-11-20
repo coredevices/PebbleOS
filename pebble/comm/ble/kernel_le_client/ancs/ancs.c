@@ -705,7 +705,7 @@ static void prv_get_app_attributes(const struct pbl_bt_ancs_attr *app_id) {
   prv_op_timeout_start();
 
   const int rc = pbl_bt_ancs_client_get_app_attrs(&s_client, app_id->value, app_id->len,
-                                                  s_app_attr_reqs, ARRAY_LENGTH(s_app_attr_reqs));
+                                                  s_app_attr_reqs, PBL_ARRAY_SIZE(s_app_attr_reqs));
   if (rc != 0) {
     PBL_LOG_WRN("Failed to fetch app attributes for notification");
     const struct pbl_bt_ancs_attr *empty_attrs[ANCS_APP_ATTR_COUNT] = {};
@@ -725,7 +725,7 @@ static void prv_get_notification_attributes(uint32_t uid) {
   prv_op_timeout_start();
 
   const int rc = pbl_bt_ancs_client_get_notif_attrs(&s_client, uid, s_notif_attr_reqs,
-                                                    ARRAY_LENGTH(s_notif_attr_reqs));
+                                                    PBL_ARRAY_SIZE(s_notif_attr_reqs));
   if (rc != 0) {
     PBL_LOG_DBG("Control point write error: %d", rc);
     if (retrying) {

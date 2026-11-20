@@ -184,7 +184,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   const LayoutNodeVerticalConfig s_vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
     .container.extent.offset.y = CARD_MARGIN_TOP,
     .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,

@@ -137,7 +137,7 @@ int pbl_msgq_put(struct pbl_msgq *q, const void *msg, pbl_timeout_t timeout) {
   if (s_queue_full) {
     return -EBUSY;
   }
-  if (s_event_count < ARRAY_LENGTH(s_events_received)) {
+  if (s_event_count < PBL_ARRAY_SIZE(s_events_received)) {
     s_events_received[s_event_count] = *((const PebbleEvent *)msg);
   }
   ++s_event_count;
@@ -191,7 +191,7 @@ static void prv_fake_send_new_data(void) {
 static PebbleHRMEvent s_cb_events_1[16];
 static int s_num_cb_events_1 = 0;
 static void prv_fake_hrm_1_cb(PebbleHRMEvent *event, void *context) {
-  if (s_num_cb_events_1 >= ARRAY_LENGTH(s_cb_events_1)) {
+  if (s_num_cb_events_1 >= PBL_ARRAY_SIZE(s_cb_events_1)) {
     return;
   }
   s_cb_events_1[s_num_cb_events_1++] = *event;
@@ -200,7 +200,7 @@ static void prv_fake_hrm_1_cb(PebbleHRMEvent *event, void *context) {
 static PebbleHRMEvent s_cb_events_2[16];
 static int s_num_cb_events_2 = 0;
 static void prv_fake_hrm_2_cb(PebbleHRMEvent *event, void *context) {
-  if (s_num_cb_events_2 >= ARRAY_LENGTH(s_cb_events_2)) {
+  if (s_num_cb_events_2 >= PBL_ARRAY_SIZE(s_cb_events_2)) {
     return;
   }
   s_cb_events_2[s_num_cb_events_2++] = *event;

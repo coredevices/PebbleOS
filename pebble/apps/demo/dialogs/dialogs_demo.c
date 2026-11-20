@@ -338,7 +338,7 @@ static const DialogNode nodes[] = {
   }
 };
 
-static const uint16_t NUM_ITEMS = ARRAY_LENGTH(nodes);
+static const uint16_t NUM_ITEMS = PBL_ARRAY_SIZE(nodes);
 
 //////////////
 // MenuLayer callbacks

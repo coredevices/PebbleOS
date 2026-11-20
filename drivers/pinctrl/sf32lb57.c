@@ -119,7 +119,7 @@ static const struct pbl_pinctrl_controller_ops s_ops = {
   const struct pbl_pinctrl_state sym = {              \
     .ctrl = SF32LB57_PINCTRL,                         \
     .pins = sym##_pins,                               \
-    .num_pins = ARRAY_LENGTH(sym##_pins),             \
+    .num_pins = PBL_ARRAY_SIZE(sym##_pins),           \
   }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_pinctrl_pinctrl_controller)

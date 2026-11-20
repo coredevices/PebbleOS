@@ -147,13 +147,13 @@ struct pbl_bt_gattc_service {
  * @param _notifying Bit mask of the characteristics that must have a CCCD.
  */
 #define PBL_BT_GATTC_SERVICE_DEFINE(_name, _svc_uuid, _chr_uuids, _optional, _notifying) \
-  static struct pbl_bt_gattc_chr _name##_chrs[ARRAY_LENGTH(_chr_uuids)];                 \
+  static struct pbl_bt_gattc_chr _name##_chrs[PBL_ARRAY_SIZE(_chr_uuids)];               \
   static struct pbl_bt_gattc_service _name = {                                           \
     .svc_uuid = (_svc_uuid),                                                             \
     .chr_uuids = (_chr_uuids),                                                           \
     .optional_chrs = (_optional),                                                        \
     .notifying_chrs = (_notifying),                                                      \
-    .num_chrs = ARRAY_LENGTH(_chr_uuids),                                                \
+    .num_chrs = PBL_ARRAY_SIZE(_chr_uuids),                                              \
     .chrs = _name##_chrs,                                                                \
   }
 

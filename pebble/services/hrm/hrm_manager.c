@@ -161,7 +161,7 @@ static void prv_handle_accel_data(void *data) {
         sys_accel_manager_get_num_samples(s_manager_state.accel_state, &timestamp_ms, &generation);
 
     // Only read as many as we have space to store
-    const size_t MAX_BUFFERED_SAMPLES = ARRAY_LENGTH(s_manager_state.accel_data.data);
+    const size_t MAX_BUFFERED_SAMPLES = PBL_ARRAY_SIZE(s_manager_state.accel_data.data);
     uint32_t num_samples_to_copy = num_new_samples;
     if ((s_manager_state.accel_data.num_samples + num_new_samples) > MAX_BUFFERED_SAMPLES) {
       num_samples_to_copy = MAX_BUFFERED_SAMPLES - s_manager_state.accel_data.num_samples;

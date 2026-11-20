@@ -233,7 +233,7 @@ void test_prf_store__find_first_valid_sector(void) {
   // before the valid one.
   uint8_t page_idx[] = {0, 1, SPRF_NUM_PAGES / 2, SPRF_NUM_PAGES - 1};
 
-  for (uint32_t i = 0; i < ARRAY_LENGTH(page_idx); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(page_idx); i++) {
     fake_spi_flash_erase();
 
     // Invalidate all entries before it to simulate logging style

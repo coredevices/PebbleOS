@@ -38,7 +38,7 @@
  * static void prv_notification(struct pbl_bt_ancs_client *client,
  *                              const struct pbl_bt_ancs_notif *notif) {
  *   if (notif->event == PBL_BT_ANCS_EVENT_ADDED) {
- *     pbl_bt_ancs_client_get_notif_attrs(client, notif->uid, s_attrs, ARRAY_LENGTH(s_attrs));
+ *     pbl_bt_ancs_client_get_notif_attrs(client, notif->uid, s_attrs, PBL_ARRAY_SIZE(s_attrs));
  *   }
  * }
  *

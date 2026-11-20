@@ -56,7 +56,7 @@ static const SimpleMenuItem s_rate_items[] = {
 };
 
 static const SimpleMenuSection s_rate_sections[] = {
-  {.title = "Sample rate", .items = s_rate_items, .num_items = ARRAY_LENGTH(s_rate_items)},
+  {.title = "Sample rate", .items = s_rate_items, .num_items = PBL_ARRAY_SIZE(s_rate_items)},
 };
 
 static const SimpleMenuItem s_batch_items[] = {
@@ -67,7 +67,7 @@ static const SimpleMenuItem s_batch_items[] = {
 };
 
 static const SimpleMenuSection s_batch_sections[] = {
-  {.title = "Batched samples", .items = s_batch_items, .num_items = ARRAY_LENGTH(s_batch_items)},
+  {.title = "Batched samples", .items = s_batch_items, .num_items = PBL_ARRAY_SIZE(s_batch_items)},
 };
 
 static char prv_axis_char(AccelAxisType axis) {
@@ -164,7 +164,7 @@ static void prv_data_window_unload(Window *window) {
 static void prv_batch_window_load(Window *window) {
   AccelDemoAppData *data = app_state_get_user_data();
   simple_menu_layer_init(&data->batch_menu, &window->layer.bounds, window, s_batch_sections,
-                         ARRAY_LENGTH(s_batch_sections), data);
+                         PBL_ARRAY_SIZE(s_batch_sections), data);
   layer_add_child(&window->layer, simple_menu_layer_get_layer(&data->batch_menu));
 }
 
@@ -176,7 +176,7 @@ static void prv_batch_window_unload(Window *window) {
 static void prv_rate_window_load(Window *window) {
   AccelDemoAppData *data = app_state_get_user_data();
   simple_menu_layer_init(&data->rate_menu, &window->layer.bounds, window, s_rate_sections,
-                         ARRAY_LENGTH(s_rate_sections), data);
+                         PBL_ARRAY_SIZE(s_rate_sections), data);
   layer_add_child(&window->layer, simple_menu_layer_get_layer(&data->rate_menu));
 }
 

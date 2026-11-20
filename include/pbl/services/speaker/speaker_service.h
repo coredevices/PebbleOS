@@ -34,7 +34,7 @@
  *   {.midi_note = 79, .waveform = SpeakerWaveformSine, .duration_ms = 300},
  * };
  *
- * speaker_service_play_note_seq(s_chime, ARRAY_LENGTH(s_chime), SpeakerPriorityNotification, 80);
+ * speaker_service_play_note_seq(s_chime, PBL_ARRAY_SIZE(s_chime), SpeakerPriorityNotification, 80);
  * @endcode
  *
  * Streaming PCM:

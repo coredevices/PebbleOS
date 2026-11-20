@@ -260,7 +260,7 @@ Layer *health_sleep_summary_card_create(HealthData *health_data) {
     .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_SLEEP),
     .progress_bar =
         {
-          .num_segments = ARRAY_LENGTH(s_sleep_summary_progress_segments),
+          .num_segments = PBL_ARRAY_SIZE(s_sleep_summary_progress_segments),
           .segments = s_sleep_summary_progress_segments,
         },
     .health_data = health_data,

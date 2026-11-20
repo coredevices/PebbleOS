@@ -631,7 +631,7 @@ void activity_sessions_prv_init(struct pbl_settings_file *file, time_t utc_now) 
   // Scan to see how many valid activities we have.
   ActivitySession *session = state->activity_sessions;
   ActivitySession null_session = {};
-  for (unsigned i = 0; i < ARRAY_LENGTH(state->activity_sessions); i++, session++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(state->activity_sessions); i++, session++) {
     if (!memcmp(session, &null_session, sizeof(null_session))) {
       // Empty session detected, we are done
       break;

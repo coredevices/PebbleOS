@@ -26,7 +26,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(
 #include <pbl/services/notifications/ancs/ancs_known_apps.h>
   };
 
-  for (unsigned int index = 0; index < ARRAY_LENGTH(map); ++index) {
+  for (unsigned int index = 0; index < PBL_ARRAY_SIZE(map); ++index) {
     const struct ANCSAppMetadata *mapping = &map[index];
     if (ancs_attr_equal_cstring(app_id, mapping->app_id)) {
       return mapping;

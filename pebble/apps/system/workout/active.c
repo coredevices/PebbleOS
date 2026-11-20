@@ -646,7 +646,7 @@ static void prv_hr_measuring_timer_callback(void *data) {
   WorkoutActiveWindow *active_window = data;
 
   active_window->cur_hr_measuring_width_idx =
-      (active_window->cur_hr_measuring_width_idx + 1) % ARRAY_LENGTH(s_hr_measuring_widths);
+      (active_window->cur_hr_measuring_width_idx + 1) % PBL_ARRAY_SIZE(s_hr_measuring_widths);
 
   prv_update_ui(active_window);
 
@@ -889,7 +889,7 @@ static GRect prv_dashboard_value(GContext *ctx, WorkoutActiveWindow *active_wind
     FONT_KEY_LECO_42_NUMBERS, FONT_KEY_LECO_32_BOLD_NUMBERS, FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
     FONT_KEY_LECO_20_BOLD_NUMBERS, FONT_KEY_GOTHIC_18_BOLD
   };
-  for (size_t i = 0; text_size.w > box.size.w && i < ARRAY_LENGTH(fallbacks); i++) {
+  for (size_t i = 0; text_size.w > box.size.w && i < PBL_ARRAY_SIZE(fallbacks); i++) {
     if (fonts_get_font_height(fonts_get_system_font(fallbacks[i])) >= preferred_height) {
       continue;
     }
@@ -1156,7 +1156,7 @@ static void prv_draw_hr_band(GContext *ctx, WorkoutActiveWindow *window, GSize s
       {marker_x + r, marker_y - r},
       {marker_x, marker_y}
     };
-    GPath path = {.num_points = ARRAY_LENGTH(points), .points = points};
+    GPath path = {.num_points = PBL_ARRAY_SIZE(points), .points = points};
     gpath_draw_filled(ctx, &path);
   }
 }
@@ -1489,7 +1489,7 @@ static void prv_draw_confetti(GContext *ctx, WorkoutActiveWindow *window, GSize 
     const int y =
         top + (vy * t + gravity * t / ANIMATION_NORMALIZED_MAX * t / 2) / ANIMATION_NORMALIZED_MAX;
     const bool tall = ((i + t / 4096) & 1) != 0;
-    graphics_context_set_fill_color(ctx, colors[i % ARRAY_LENGTH(colors)]);
+    graphics_context_set_fill_color(ctx, colors[i % PBL_ARRAY_SIZE(colors)]);
     graphics_fill_rect(ctx, &GRect(x, y, tall ? 3 : 6, tall ? 6 : 3));
   }
 #endif

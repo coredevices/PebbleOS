@@ -28,7 +28,7 @@ static const int16_t sine_wave_4k[] = {
 
 static size_t prv_audio_fill(int16_t *samples, size_t count) {
   for (size_t i = 0; i < count; i++) {
-    samples[i] = sine_wave_4k[i % ARRAY_LENGTH(sine_wave_4k)];
+    samples[i] = sine_wave_4k[i % PBL_ARRAY_SIZE(sine_wave_4k)];
   }
   return count;
 }

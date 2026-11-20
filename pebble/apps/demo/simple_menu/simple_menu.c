@@ -40,7 +40,7 @@ static const SimpleMenuItem s_menu_items[] = {
 };
 
 static const SimpleMenuSection s_menu_sections[] = {
-  {.title = nullptr, .items = s_menu_items, .num_items = ARRAY_LENGTH(s_menu_items)}
+  {.title = nullptr, .items = s_menu_items, .num_items = PBL_ARRAY_SIZE(s_menu_items)}
 };
 
 static void prv_window_load(Window *window) {
@@ -48,7 +48,7 @@ static void prv_window_load(Window *window) {
 
   SimpleMenuLayer *menu = &data->menu;
   simple_menu_layer_init(menu, &(GRect){{0, 0}, window->layer.frame.size}, window, s_menu_sections,
-                         ARRAY_LENGTH(s_menu_sections), data);
+                         PBL_ARRAY_SIZE(s_menu_sections), data);
   layer_add_child(&window->layer, simple_menu_layer_get_layer(menu));
 }
 

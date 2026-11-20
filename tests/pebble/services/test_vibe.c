@@ -151,7 +151,7 @@ void test_vibe__check_vibe_history(void) {
   const uint32_t custom_pattern_durations[] = {10, 12, 100, 123, 25, 5};
   const VibePattern custom_pattern = (VibePattern){
     .durations = custom_pattern_durations,
-    .num_segments = ARRAY_LENGTH(custom_pattern_durations)
+    .num_segments = PBL_ARRAY_SIZE(custom_pattern_durations)
   };
   uint64_t time_start = prv_get_current_time();
   sys_vibe_history_start_collecting();
@@ -166,11 +166,11 @@ void test_vibe__check_vibe_history_multiple(void) {
   const uint32_t custom_pattern_durations_2[] = {24, 50, 130, 112, 52, 9};
   const VibePattern custom_pattern_1 = (VibePattern){
     .durations = custom_pattern_durations_1,
-    .num_segments = ARRAY_LENGTH(custom_pattern_durations_1)
+    .num_segments = PBL_ARRAY_SIZE(custom_pattern_durations_1)
   };
   const VibePattern custom_pattern_2 = (VibePattern){
     .durations = custom_pattern_durations_2,
-    .num_segments = ARRAY_LENGTH(custom_pattern_durations_2)
+    .num_segments = PBL_ARRAY_SIZE(custom_pattern_durations_2)
   };
 
   sys_vibe_history_start_collecting();
@@ -298,7 +298,7 @@ void test_vibe__custom_pattern_with_amplitudes(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = amplitudes,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
   prv_run_vibes();
@@ -314,7 +314,7 @@ void test_vibe__custom_pattern_with_amplitudes_clamped(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = amplitudes,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
   prv_run_vibes();
@@ -328,7 +328,7 @@ void test_vibe__custom_pattern_with_null_amplitudes(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = nullptr,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   // Should return without crashing (early return on null amplitudes)
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
@@ -369,7 +369,7 @@ void test_vibe__custom_pattern_with_zero_amplitude(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = amplitudes,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
   prv_run_vibes();
@@ -387,7 +387,7 @@ void test_vibe__custom_pattern_with_amplitudes_verifies_strength(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = amplitudes,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
   prv_run_vibes();
@@ -437,7 +437,7 @@ void test_vibe__custom_pattern_ramp_down(void) {
   const VibePatternWithAmplitudes pattern = {
     .durations = durations,
     .amplitudes = amplitudes,
-    .num_segments = ARRAY_LENGTH(durations),
+    .num_segments = PBL_ARRAY_SIZE(durations),
   };
   vibes_enqueue_custom_pattern_with_amplitudes(pattern);
   prv_run_vibes();

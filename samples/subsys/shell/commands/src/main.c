@@ -107,7 +107,7 @@ static const char *const s_lines[] = {
 };
 
 int main(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_lines); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_lines); i++) {
     int ret;
 
     printf("shell> %s\n", s_lines[i]);

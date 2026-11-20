@@ -647,10 +647,10 @@ static uint32_t bt_rfc_init(void) {
   prv_and(PHY(TX_CTRL), ~BT_PHY_TX_CTRL_MMDIV_SEL);
   prv_or(PHY(TX_CTRL), PBL_FIELD_PREP(BT_PHY_TX_CTRL_MMDIV_SEL, 0x1));
 
-  for (i = 0; i < ARRAY_LENGTH(polar_pwr_tbl); i++)
+  for (i = 0; i < PBL_ARRAY_SIZE(polar_pwr_tbl); i++)
     pbl_writel(polar_pwr_tbl[i], s_rf.rfc + RFC_MEM_POLAR + i * 4U);
 
-  for (i = 0; i < ARRAY_LENGTH(dig_factor_tbl); i++)
+  for (i = 0; i < PBL_ARRAY_SIZE(dig_factor_tbl); i++)
     pbl_writel(dig_factor_tbl[i], s_rf.rfc + RFC_MEM_DIG_FACTOR + i * 4U);
 
   prv_or(RFC(INCCAL_REG1),
@@ -1761,7 +1761,7 @@ static uint32_t bt_rfc_txdc_cal(uint32_t rslt_start_addr) {
 
   pbl_writel(0x400, RFC(TMXBUF_GC_CP_FACTOR_0));
 
-  for (i = 0; i < ARRAY_LENGTH(dig_factor_tx_tbl); i++)
+  for (i = 0; i < PBL_ARRAY_SIZE(dig_factor_tx_tbl); i++)
     pbl_writel(dig_factor_tx_tbl[i], s_rf.rfc + RFC_MEM_DIG_FACTOR + i * 4U);
 
   prv_modify(RFC(TBB_REG), BT_RFC_TBB_REG_BRF_DAC_LSB_CNT_LV_MASK,
@@ -2296,11 +2296,11 @@ static uint32_t bt_rf_get_pwr_level_para(const struct bt_rf_tx_pwr *tbl, size_t 
 }
 
 static uint32_t bt_rf_iq_get_pwr_level_para(int8_t pwr) {
-  return bt_rf_get_pwr_level_para(rf_iq_value_table, ARRAY_LENGTH(rf_iq_value_table), pwr);
+  return bt_rf_get_pwr_level_para(rf_iq_value_table, PBL_ARRAY_SIZE(rf_iq_value_table), pwr);
 }
 
 static uint32_t bt_rf_polar_get_pwr_level_para(int8_t pwr) {
-  return bt_rf_get_pwr_level_para(rf_polar_value_table, ARRAY_LENGTH(rf_polar_value_table), pwr);
+  return bt_rf_get_pwr_level_para(rf_polar_value_table, PBL_ARRAY_SIZE(rf_polar_value_table), pwr);
 }
 
 static void rf_power_field_set(const struct rf_power_inf *inf, uint8_t index, uint32_t value) {
@@ -2405,7 +2405,7 @@ void pbl_rproc_sf32lb57__rf_cal(const struct pbl_rproc_sf32lb__rf *rf) {
     pbl_writel(0x400U * gain_factor2 / 256U, RFC(TMXBUF_GC_CP_FACTOR_2));
   }
 
-  for (i = 0; i < ARRAY_LENGTH(dig_factor_tx_tbl); i++)
+  for (i = 0; i < PBL_ARRAY_SIZE(dig_factor_tx_tbl); i++)
     pbl_writel(dig_factor_tx_tbl[i], s_rf.rfc + RFC_MEM_DIG_FACTOR + i * 4U);
 
   prv_and(RFC(MISC_CTRL_REG), ~BT_RFC_MISC_CTRL_REG_ADC_CLK_SEL_FRC_EN);

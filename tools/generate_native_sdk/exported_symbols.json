@@ -129,7 +129,12 @@
   "exports": [
     {
       "type": "define",
-      "name": "ARRAY_LENGTH"
+      "name": "IS_ARRAY",
+      "implName": "PBL_IS_ARRAY"
+    }, {
+      "type": "define",
+      "name": "ARRAY_LENGTH",
+      "implName": "PBL_ARRAY_SIZE"
     }, {
       "type": "forward_struct",
       "name": "tm"

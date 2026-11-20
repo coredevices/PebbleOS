@@ -317,7 +317,7 @@ void click_recognizer_handle_button_up(ClickRecognizer *recognizer) {
 }
 
 void click_manager_init(ClickManager *click_manager) {
-  for (unsigned int button_id = 0; button_id < ARRAY_LENGTH(click_manager->recognizers);
+  for (unsigned int button_id = 0; button_id < PBL_ARRAY_SIZE(click_manager->recognizers);
        ++button_id) {
     ClickRecognizer *recognizer = &click_manager->recognizers[button_id];
     recognizer->button = button_id;
@@ -326,7 +326,7 @@ void click_manager_init(ClickManager *click_manager) {
 }
 
 void click_manager_clear(ClickManager *click_manager) {
-  for (unsigned int button_id = 0; button_id < ARRAY_LENGTH(click_manager->recognizers);
+  for (unsigned int button_id = 0; button_id < PBL_ARRAY_SIZE(click_manager->recognizers);
        ++button_id) {
     prv_click_reset(&click_manager->recognizers[button_id]);
     click_manager->recognizers[button_id].config = (ClickConfig){};

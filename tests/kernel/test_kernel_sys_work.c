@@ -174,7 +174,7 @@ void test_kernel_sys_work__blocked_calls_are_refused(void) {
 void test_kernel_sys_work__a_thread_with_its_own_slots_uses_them(void) {
   static struct pbl_work_call slots[2];
   static struct pbl_work_pool pool;
-  pbl_work_pool_init(&pool, slots, ARRAY_LENGTH(slots));
+  pbl_work_pool_init(&pool, slots, PBL_ARRAY_SIZE(slots));
   s_main_pool = &pool;
   s_first_fn = prv_stop;
   prv_run();

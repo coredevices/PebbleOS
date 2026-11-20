@@ -47,8 +47,8 @@ static const ColorTable s_color_table[] = {
 static const char *prv_get_color_short_name(WatchInfoColor color) {
   // Pointer-based iteration so an empty table (boards with no color list)
   // compiles without a `< 0` unsigned comparison warning.
-  for (const ColorTable *entry = s_color_table; entry < s_color_table + ARRAY_LENGTH(s_color_table);
-       entry++) {
+  for (const ColorTable *entry = s_color_table;
+       entry < s_color_table + PBL_ARRAY_SIZE(s_color_table); entry++) {
     if (entry->color == color) {
       return entry->short_name;
     }

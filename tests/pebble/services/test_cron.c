@@ -660,14 +660,14 @@ void test_cron__scheduled_after(void) {
   pbl_cron_clear_all_jobs();
   cl_assert_equal_i(pbl_cron_get_job_count(), 0);
 
-  for (int i = 0; i < ARRAY_LENGTH(jobs); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(jobs); ++i) {
     pbl_cron_job_schedule(&jobs[i]);
   }
   pbl_cron_job_schedule_after(&jobs[0], &new_job);
 
   cl_assert_equal_i((uintptr_t)jobs[0].cb_data, 0);
   cl_assert_equal_i((uintptr_t)new_job.cb_data, 0);
-  cl_assert_equal_i(pbl_cron_get_job_count(), ARRAY_LENGTH(jobs) + 1);
+  cl_assert_equal_i(pbl_cron_get_job_count(), PBL_ARRAY_SIZE(jobs) + 1);
 
   fake_rtc_increment_time(0);
 

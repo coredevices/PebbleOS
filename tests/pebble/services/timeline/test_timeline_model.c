@@ -253,7 +253,7 @@ void test_timeline_model__initialize(void) {
   pin_db_init();
   time_util_update_timezone(&tz, 0, 0);
   fake_pbl_malloc_clear_tracking();
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_items); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_items); ++i) {
     cl_assert_equal_i(pin_db_insert_item(&s_items[i]), 0);
   }
   cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), 0);
@@ -467,7 +467,7 @@ void test_timeline_model__graceful_delete_all(void) {
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
   timeline_model_init(first_time, &model);
 
-  for (int i = 0; i < ARRAY_LENGTH(s_items); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_items); i++) {
     timeline_model_remove(&s_items[i].header.id);
   }
   cl_assert_equal_i(timeline_model_get_num_items(), 0);
@@ -484,7 +484,7 @@ void test_timeline_model__is_empty(void) {
 
   cl_assert(!timeline_model_is_empty());
 
-  for (int i = 0; i < ARRAY_LENGTH(s_items); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_items); i++) {
     timeline_model_remove(&s_items[i].header.id);
   }
 
@@ -496,7 +496,7 @@ void test_timeline_model__is_empty_immediate(void) {
   model.direction = TimelineIterDirectionFuture;
   time_t first_time = 1421178000;
   // Note: 1421178000 = Tue Jan 13 11:40:00 PST 2015
-  for (int i = 0; i < ARRAY_LENGTH(s_items); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_items); i++) {
     pin_db_delete((uint8_t *)&s_items[i].header.id, sizeof(TimelineItemId));
   }
 

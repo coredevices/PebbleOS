@@ -15660,7 +15660,7 @@ AccelRawData *activity_sample_non_walk_pbl_27713_1(int *len) {
     { -80, 560, -880},
     { -112, 576, -872},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

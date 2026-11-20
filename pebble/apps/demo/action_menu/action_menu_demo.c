@@ -108,9 +108,9 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
     action_menu_level_add_action(multicolumn_two, thin_values[i], prv_action_callback, nullptr);
   }
   // ah ah ah
-  ActionMenuLevel *multicolumn_many = action_menu_level_create(ARRAY_LENGTH(thin_values));
+  ActionMenuLevel *multicolumn_many = action_menu_level_create(PBL_ARRAY_SIZE(thin_values));
   action_menu_level_set_display_mode(multicolumn_many, ActionMenuLevelDisplayModeThin);
-  for (size_t i = 0; i < ARRAY_LENGTH(thin_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(thin_values); i++) {
     action_menu_level_add_action(multicolumn_many, thin_values[i], prv_action_callback, nullptr);
   }
   // ah ah ah
