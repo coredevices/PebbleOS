@@ -40,6 +40,22 @@ config UART_SF32LB_IRQ_PRIO
     help
       Priority of the port interrupts.
 
+config UART_STM32
+    bool "ST STM32 UART Controller"
+    default y
+    depends on DT_HAS_ST_STM32H7_UART_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for the ST STM32H7 USART and UART controllers.
+
+config UART_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UART_STM32
+    help
+      Priority of the port interrupts.
+
 config UART_QEMU
     bool "QEMU Simple UART"
     default y
