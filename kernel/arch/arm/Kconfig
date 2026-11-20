@@ -15,6 +15,11 @@ config CPU_CORTEX_M4
 	select CPU_CORTEX_M
 	select ARMV7_M
 
+config CPU_CORTEX_M7
+	bool
+	select CPU_CORTEX_M
+	select ARMV7_M
+
 config CPU_CORTEX_M33
 	bool
 	select CPU_CORTEX_M
@@ -59,7 +64,14 @@ config CPU_CORTEX_M_HAS_SPLIM
 config CPU_HAS_FPU
 	bool
 	help
-	  Single-precision FPU: FPv4-SP on ARMv7-M, FPv5-SP on ARMv8-M.
+	  Single-precision FPU: FPv4-SP on the Cortex-M4, FPv5-SP on the
+	  Cortex-M7 and ARMv8-M.
+
+config CPU_HAS_FPU_DOUBLE
+	bool
+	depends on CPU_HAS_FPU
+	help
+	  The FPU does double precision too: FPv5-D16.
 
 config FP_SOFTFP_ABI
 	bool
@@ -82,13 +94,13 @@ config CPU_HAS_DCACHE
 config ICACHE_LINE_SIZE
 	int
 	depends on CPU_HAS_ICACHE
-	default 32 if CPU_STAR_MC1
+	default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
 	help
 	  Instruction cache line size in bytes.
 
 config DCACHE_LINE_SIZE
 	int
 	depends on CPU_HAS_DCACHE
-	default 32 if CPU_STAR_MC1
+	default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
 	help
 	  Data cache line size in bytes.

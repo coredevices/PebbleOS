@@ -84,9 +84,10 @@ priority levels the kernel uses, the thread limit, the TLS slot count and the
 stack alignment the MPU guard needs.
 
 `kernel/arch/arm/Kconfig` describes the CPU: each SoC selects
-its core (`CPU_CORTEX_M4`, `CPU_CORTEX_M33`, `CPU_STAR_MC1`) and features
-(`CPU_HAS_FPU`), the core selects its architecture (`ARMV7_M`,
-`ARMV8_M_MAINLINE`) and the architecture its traits (`CPU_CORTEX_M_HAS_SPLIM`).
+its core (`CPU_CORTEX_M4`, `CPU_CORTEX_M7`, `CPU_CORTEX_M33`, `CPU_STAR_MC1`)
+and features (`CPU_HAS_FPU`, `CPU_HAS_FPU_DOUBLE`), the core selects its
+architecture (`ARMV7_M`, `ARMV8_M_MAINLINE`) and the architecture its traits
+(`CPU_CORTEX_M_HAS_SPLIM`).
 The compiler flags and the MPU backend are derived from these symbols.
 Floating-point arguments go in FPU registers (`-mfloat-abi=hard`) unless
 `FP_SOFTFP_ABI` is selected, as the Pebble firmware does for its soft-float apps. QEMU boards

@@ -156,6 +156,7 @@ The configuration decides how the crate is compiled:
 | Configuration | Rust |
 | --- | --- |
 | Cortex-M4 | `thumbv7em-none-eabi`, with `-Ctarget-cpu=cortex-m4` when it has an FPU |
+| Cortex-M7 | `thumbv7em-none-eabi`, with `-Ctarget-cpu=cortex-m7` when it has an FPU, without `fp64` for a single-precision one |
 | Cortex-M33, STAR-MC1 | `thumbv8m.main-none-eabi`, with `-Ctarget-cpu=cortex-m33` when it has an FPU and the DSP extension |
 | An FPU, without `CONFIG_FP_SOFTFP_ABI` | The `eabihf` target of the core |
 | `CONFIG_ARCH_POSIX` | The host's target |
