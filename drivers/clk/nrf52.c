@@ -20,13 +20,6 @@
 // What runs on HFXO, as the radio or audio, is served within this long of its interrupts
 #define HFXO_WAKE_LATENCY_US 1000U
 
-struct pbl_clk_nrf52 {
-  struct pbl_clk_controller ctrl;
-  uintptr_t base;
-  struct pbl_clk hfxo;
-  struct pbl_clk lfxo;
-};
-
 static struct pbl_idle_latency_request s_hfxo_latency;
 
 static const struct pbl_clk_nrf52 *prv_clock(const struct pbl_clk_controller *ctrl) {
@@ -122,18 +115,11 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
   }
 }
 
-static const struct pbl_clk_controller_ops s_ops = {
+const struct pbl_clk_controller_ops pbl_clk_nrf52_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .get_rate = prv_get_rate,
   .get_parent = prv_get_parent,
 };
-
-#define PBL_CLK_NRF52_DEFINE(sym, _name, _base, _hfxo, _lfxo)                               \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, 2);                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_nrf52, struct pbl_clk_controller, ctrl) {         \
-    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, nullptr, nullptr, &s_ops), .base = (_base), \
-    .hfxo = _hfxo, .lfxo = _lfxo,                                                           \
-  }
 
 #include PBL_DT_INSTANCES(nordic_nrf52832_clock)
