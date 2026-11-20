@@ -6,7 +6,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
-#include <hardware/nrf52_memorymap.h>
+#include <devicetree/regs.h>
 #include <hardware/nrf52_rtc.h>
 
 #define CC_EVENT 0U
@@ -19,11 +19,11 @@ static const struct pbl_clk s_lfclk = PBL_CLK(NRF52_CLOCK, NRF52_CLK_LFCLK);
 static uint32_t s_rate_hz;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_RTC1_BASE + offset);
+  return pbl_readl(PBL_DT_REG_RTC1 + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_RTC1_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_RTC1 + offset);
 }
 
 static uint32_t prv_read(const struct pbl_clocksource *cs) {

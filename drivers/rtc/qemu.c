@@ -5,7 +5,7 @@
 #include <pbl/drivers/rtc/qemu.h>
 #include <pbl/kernel/mmio.h>
 
-#include <hardware/qemu_memorymap.h>
+#include <devicetree/regs.h>
 
 #define RTC_TIME_LO_OFFSET 0x00U
 #define RTC_CTRL_OFFSET    0x0CU
@@ -17,33 +17,33 @@
 
 void RTC_WriteBackupRegister(uint32_t reg_id, uint32_t value) {
   if (reg_id < RTC_BACKUP_REGS) {
-    pbl_writel(value, QEMU_RTC_BASE + RTC_BACKUP_OFFSET + reg_id * 4U);
+    pbl_writel(value, PBL_DT_REG_RTC + RTC_BACKUP_OFFSET + reg_id * 4U);
   }
 }
 
 uint32_t RTC_ReadBackupRegister(uint32_t reg_id) {
   if (reg_id < RTC_BACKUP_REGS) {
-    return pbl_readl(QEMU_RTC_BASE + RTC_BACKUP_OFFSET + reg_id * 4U);
+    return pbl_readl(PBL_DT_REG_RTC + RTC_BACKUP_OFFSET + reg_id * 4U);
   }
   return 0U;
 }
 
 static int prv_get_time(const struct pbl_rtc *rtc, time_t *t) {
-  *t = (time_t)pbl_readl(QEMU_RTC_BASE + RTC_TIME_LO_OFFSET);
+  *t = (time_t)pbl_readl(PBL_DT_REG_RTC + RTC_TIME_LO_OFFSET);
 
   return 0;
 }
 
 static int prv_set_time(const struct pbl_rtc *rtc, time_t t) {
-  pbl_writel((uint32_t)t, QEMU_RTC_BASE + RTC_TIME_LO_OFFSET);
+  pbl_writel((uint32_t)t, PBL_DT_REG_RTC + RTC_TIME_LO_OFFSET);
 
   return 0;
 }
 
 static int prv_init(const struct pbl_device *dev) {
   // Clear a pending alarm, then disable it.
-  pbl_writel(RTC_CTRL_ALARM_IE, QEMU_RTC_BASE + RTC_CTRL_OFFSET);
-  pbl_writel(0U, QEMU_RTC_BASE + RTC_CTRL_OFFSET);
+  pbl_writel(RTC_CTRL_ALARM_IE, PBL_DT_REG_RTC + RTC_CTRL_OFFSET);
+  pbl_writel(0U, PBL_DT_REG_RTC + RTC_CTRL_OFFSET);
 
   return 0;
 }

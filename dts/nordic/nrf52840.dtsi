@@ -30,6 +30,16 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		ficr: ficr@10000000 {
+			compatible = "nordic,nrf52840-ficr", "nordic,nrf52832-ficr";
+			reg = <0x10000000 0x1000>;
+		};
+
+		uicr: uicr@10001000 {
+			compatible = "nordic,nrf52840-uicr", "nordic,nrf52832-uicr";
+			reg = <0x10001000 0x1000>;
+		};
+
 		clock: clock-controller@40000000 {
 			compatible = "nordic,nrf52840-clock", "nordic,nrf52832-clock";
 			reg = <0x40000000 0x1000>;
@@ -120,6 +130,25 @@
 				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
+		};
+
+		temp: thermal-sensor@4000c000 {
+			compatible = "nordic,nrf52840-temp", "nordic,nrf52832-temp";
+			reg = <0x4000c000 0x1000>;
+			interrupts = <12>;
+			status = "disabled";
+		};
+
+		rng: rng@4000d000 {
+			compatible = "nordic,nrf52840-rng", "nordic,nrf52832-rng";
+			reg = <0x4000d000 0x1000>;
+			interrupts = <13>;
+		};
+
+		wdt: watchdog@40010000 {
+			compatible = "nordic,nrf52840-wdt", "nordic,nrf52832-wdt";
+			reg = <0x40010000 0x1000>;
+			interrupts = <16>;
 		};
 
 		rtc1: rtc@40011000 {
@@ -259,7 +288,7 @@
 		};
 
 		spi3: spi@4002f000 {
-			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			compatible = "nordic,nrf52840-spim3", "nordic,nrf52832-spim";
 			reg = <0x4002f000 0x1000>;
 			interrupts = <47>;
 			#address-cells = <1>;

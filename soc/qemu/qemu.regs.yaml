@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Blocks of the machine the drivers, the Bluetooth glue and the firmware reach
+# without a device of their own
+config: SOC_QEMU_PEBBLE
+labels:
+  - rtc
+  - sysctrl
+  - wdog
+  - label: flash0
+    reg: mem

@@ -12,9 +12,7 @@ pressure: bmp390
 vibe: drv2604
 mic: mic
 speaker: speaker
-die_temp:
-  symbol: NRF5_TEMP
-  include: pbl/drivers/temp/nrf5.h
+die_temp: temp
 rtc:
   symbol: RETAINED_RTC
   include: pbl/drivers/rtc/retained.h

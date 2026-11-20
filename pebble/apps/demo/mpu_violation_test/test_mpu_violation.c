@@ -22,9 +22,9 @@
 #include <syscall/syscall.h>
 
 #ifdef CONFIG_QEMU
-#include <hardware/qemu_memorymap.h>
+#include <devicetree/regs.h>
 
-#define FLASH_MAP_BASE QEMU_EXTFLASH_XIP_BASE
+#define FLASH_MAP_BASE PBL_DT_REG_FLASH0_MEM
 #else
 #define FLASH_MAP_BASE CONFIG_FLASH_BASE
 #endif

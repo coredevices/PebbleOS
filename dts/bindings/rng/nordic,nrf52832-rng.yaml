@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/rng/nordic,nrf52832-rng.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 random number generator
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Random number generator from thermal noise, with optional bias correction.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-rng
+      - items:
+          - enum:
+              - nordic,nrf52833-rng
+              - nordic,nrf52840-rng
+          - const: nordic,nrf52832-rng
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    rng@4000d000 {
+        compatible = "nordic,nrf52840-rng", "nordic,nrf52832-rng";
+        reg = <0x4000d000 0x1000>;
+        interrupts = <13>;
+    };

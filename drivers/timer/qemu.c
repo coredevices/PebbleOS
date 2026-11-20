@@ -4,13 +4,13 @@
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/mmio.h>
 
-#include <hardware/qemu_memorymap.h>
+#include <devicetree/regs.h>
 
 #define RTC_TICKS_OFFSET 0x10U
 #define RTC_TICKS_HZ     1000U
 
 static uint32_t prv_read(const struct pbl_clocksource *cs) {
-  return pbl_readl(QEMU_RTC_BASE + RTC_TICKS_OFFSET);
+  return pbl_readl(PBL_DT_REG_RTC + RTC_TICKS_OFFSET);
 }
 
 static const struct pbl_clocksource_ops s_ops = {

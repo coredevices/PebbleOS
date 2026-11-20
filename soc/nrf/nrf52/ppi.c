@@ -8,7 +8,7 @@
 #include <pbl/soc/nrf/ppi.h>
 #include <pbl/util/bits.h>
 
-#include <hardware/nrf52_memorymap.h>
+#include <devicetree/regs.h>
 #include <hardware/nrf52_ppi.h>
 
 #ifdef CONFIG_NIMBLE_DRIVER_NRF5X
@@ -40,15 +40,15 @@ int soc_nrf_ppi_alloc(uint8_t *channel) {
 }
 
 void soc_nrf_ppi_setup(uint8_t channel, uintptr_t eep, uintptr_t tep, uintptr_t fork_tep) {
-  pbl_writel(eep, NRF52_PPI_BASE + NRF52_PPI_CH_EEP_OFFSET(channel));
-  pbl_writel(tep, NRF52_PPI_BASE + NRF52_PPI_CH_TEP_OFFSET(channel));
-  pbl_writel(fork_tep, NRF52_PPI_BASE + NRF52_PPI_FORK_TEP_OFFSET(channel));
+  pbl_writel(eep, PBL_DT_REG_PPI + NRF52_PPI_CH_EEP_OFFSET(channel));
+  pbl_writel(tep, PBL_DT_REG_PPI + NRF52_PPI_CH_TEP_OFFSET(channel));
+  pbl_writel(fork_tep, PBL_DT_REG_PPI + NRF52_PPI_FORK_TEP_OFFSET(channel));
 }
 
 void soc_nrf_ppi_enable(uint32_t mask) {
-  pbl_writel(mask, NRF52_PPI_BASE + NRF52_PPI_CHENSET_OFFSET);
+  pbl_writel(mask, PBL_DT_REG_PPI + NRF52_PPI_CHENSET_OFFSET);
 }
 
 void soc_nrf_ppi_disable(uint32_t mask) {
-  pbl_writel(mask, NRF52_PPI_BASE + NRF52_PPI_CHENCLR_OFFSET);
+  pbl_writel(mask, PBL_DT_REG_PPI + NRF52_PPI_CHENCLR_OFFSET);
 }

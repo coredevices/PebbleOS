@@ -27,6 +27,7 @@ properties:
           - enum:
               - nordic,nrf52833-spim
               - nordic,nrf52840-spim
+              - nordic,nrf52840-spim3
           - const: nordic,nrf52832-spim
 
   reg:
