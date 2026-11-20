@@ -212,7 +212,7 @@ PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
 }
 
 // Faults and the most urgent interrupts stay enabled.
-#define HEAP_LOCK_BASEPRI (2 << (8 - CONFIG_NUM_IRQ_PRIO_BITS))
+#define HEAP_LOCK_BASEPRI (2 << (8 - ARCH_IRQ_PRIO_BITS))
 
 static bool s_heap_locked;
 static uint32_t s_heap_basepri;
