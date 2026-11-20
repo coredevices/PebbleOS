@@ -203,5 +203,11 @@
  * @param x Value.
  */
 #define PBL_BSWAP32(x) PBL_BSWAP32_IMPL(x)
+/**
+ * @brief Reverse the bytes of a 64-bit value.
+ *
+ * @param x Value.
+ */
+#define PBL_BSWAP64(x) PBL_BSWAP64_IMPL(x)
 
 /** @} */
