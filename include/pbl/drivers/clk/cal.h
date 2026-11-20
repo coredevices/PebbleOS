@@ -27,8 +27,7 @@
  * pbl_clk_cal_hold() fixes the published rate; the @c clk shell command exposes both.
  *
  * @code{.c}
- * static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(&s_cal_ops, &s_params,
- *                                                    PBL_CLK(&s_ctrl, 0), 2000, 60000);
+ * PBL_CLK_CAL_DEFINE(s_cal, &s_cal_ops, &s_params, PBL_CLK(&s_ctrl, 0), 2000, 60000);
  *
  * static int prv_init(const struct pbl_device *dev) {
  *   pbl_clk_cal_start(&s_cal, 32768.0);
@@ -51,13 +50,31 @@ struct pbl_clk_cal_ops {
    * Start a gate of @p cycles oscillator cycles. Returns 0, @c -EBUSY to be retried a second
    * later, or another negative errno to skip this period.
    */
-  int (*start)(struct pbl_clk_cal *cal, uint32_t cycles);
+  int (*start)(const struct pbl_clk_cal *cal, uint32_t cycles);
   /**
    * Read the gate started last, of @p cycles cycles, once its time has passed, and release the
    * hardware. Returns 0 with the measured frequency in Hz, @c -EINPROGRESS if the gate has not
    * ended yet, to be read again shortly, or another negative errno once it cannot end.
    */
-  int (*finish)(struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
+  int (*finish)(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
+};
+
+/** @brief Runtime state of a calibrated clock. */
+struct pbl_clk_cal_state {
+  /** @cond INTERNAL_HIDDEN */
+  const struct pbl_clk_cal *cal;
+  const struct pbl_clk_cal *next;
+  struct pbl_freq_track ft;
+  struct pbl_timer timer;
+  uint64_t rate_mhz;
+  uint64_t held_mhz;
+  uint32_t accepted;
+  uint32_t rejected;
+  uint32_t failed;
+  bool gate_running;
+  bool paused;
+  uint8_t retries;
+  /** @endcond */
 };
 
 /** @brief A calibrated clock. */
@@ -72,19 +89,8 @@ struct pbl_clk_cal {
   uint32_t gate_cycles;
   /** Time between gates, in milliseconds. */
   uint32_t period_ms;
-  /** @cond INTERNAL_HIDDEN */
-  struct pbl_clk_cal *next;
-  struct pbl_freq_track ft;
-  struct pbl_timer timer;
-  uint64_t rate_mhz;
-  uint64_t held_mhz;
-  uint32_t accepted;
-  uint32_t rejected;
-  uint32_t failed;
-  bool gate_running;
-  bool paused;
-  uint8_t retries;
-  /** @endcond */
+  /** Runtime state. */
+  struct pbl_clk_cal_state *state;
 };
 
 /** @brief Calibration state, for diagnostics. */
@@ -106,21 +112,24 @@ struct pbl_clk_cal_status {
 };
 
 /**
- * @brief Initializer for a struct pbl_clk_cal.
+ * @brief Define a calibrated clock and its state.
  *
+ * @param sym Symbol of the calibrated clock.
  * @param _ops Gate operations.
  * @param _params Noise model, a struct pbl_freq_track_params.
  * @param _clk Clock whose notifiers follow the rate, from PBL_CLK().
  * @param _gate_cycles Gate length, in oscillator cycles.
  * @param _period_ms Time between gates, in milliseconds.
  */
-#define PBL_CLK_CAL_INIT(_ops, _params, _clk, _gate_cycles, _period_ms) \
-  {                                                                     \
-    .ops = (_ops),                                                      \
-    .params = (_params),                                                \
-    .clk = _clk,                                                        \
-    .gate_cycles = (_gate_cycles),                                      \
-    .period_ms = (_period_ms),                                          \
+#define PBL_CLK_CAL_DEFINE(sym, _ops, _params, _clk, _gate_cycles, _period_ms) \
+  static struct pbl_clk_cal_state sym##_state;                                 \
+  static const struct pbl_clk_cal sym = {                                      \
+    .ops = (_ops),                                                             \
+    .params = (_params),                                                       \
+    .clk = _clk,                                                               \
+    .gate_cycles = (_gate_cycles),                                             \
+    .period_ms = (_period_ms),                                                 \
+    .state = &sym##_state,                                                     \
   }
 
 /**
@@ -129,7 +138,7 @@ struct pbl_clk_cal_status {
  * @param cal Calibrated clock.
  * @param nominal_hz Rate until the first gate succeeds.
  */
-void pbl_clk_cal_start(struct pbl_clk_cal *cal, double nominal_hz);
+void pbl_clk_cal_start(const struct pbl_clk_cal *cal, double nominal_hz);
 
 /**
  * @brief Find a calibrated clock by the name of its controller.
@@ -137,7 +146,7 @@ void pbl_clk_cal_start(struct pbl_clk_cal *cal, double nominal_hz);
  * @param name Controller device name.
  * @return Calibrated clock, or NULL if none is started under that name.
  */
-struct pbl_clk_cal *pbl_clk_cal_find(const char *name);
+const struct pbl_clk_cal *pbl_clk_cal_find(const char *name);
 
 /**
  * @brief Take one raw gate, outside the periodic calibration, which waits meanwhile.
@@ -149,7 +158,7 @@ struct pbl_clk_cal *pbl_clk_cal_find(const char *name);
  * @param[out] hz Measured frequency.
  * @return 0 or a negative errno.
  */
-int pbl_clk_cal_sample(struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
+int pbl_clk_cal_sample(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
 
 /**
  * @brief Publish a fixed rate, or the tracked one again.
@@ -160,7 +169,7 @@ int pbl_clk_cal_sample(struct pbl_clk_cal *cal, uint32_t cycles, double *hz);
  * @param cal Calibrated clock.
  * @param rate_mhz Rate to publish in mHz, or 0 to follow the tracker again.
  */
-void pbl_clk_cal_hold(struct pbl_clk_cal *cal, uint64_t rate_mhz);
+void pbl_clk_cal_hold(const struct pbl_clk_cal *cal, uint64_t rate_mhz);
 
 /**
  * @brief Get the calibration state.
