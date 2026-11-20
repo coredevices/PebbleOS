@@ -331,3 +331,7 @@
 	sdout-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
+
+&timer2 {
+	status = "okay";
+};
