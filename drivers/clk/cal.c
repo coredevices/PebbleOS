@@ -12,7 +12,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 
-PBL_LOG_MODULE_DEFINE(clk_cal, CONFIG_CLK_CAL_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_clk, CONFIG_DRIVER_CLK_LOG_LEVEL);
 
 #define RETRY_MS    1000U
 #define MAX_RETRIES 5U
