@@ -12,10 +12,11 @@
 
 static PBL_MUTEX_DEFINE(s_log_state_mutex);
 static bool s_log_state_mutex_ready;
-static bool s_log_state_task_entered[NumPebbleTask]; // which tasks have entered
+// Which tasks have entered; threads without a task share the last one
+static bool s_log_state_task_entered[NumPebbleTask + 1];
 // Taken by the current holder
 static bool s_log_state_locked;
-static PebbleTask s_log_state_task;
+static unsigned int s_log_state_slot;
 
 // ---------------------------------------------------------------------------------------------
 CompassServiceConfig **kernel_applib_get_compass_config(void) {
@@ -29,13 +30,14 @@ AnimationState *kernel_applib_get_animation_state(void) {
   return &s_kernel_animation_state;
 }
 
-// Get the current task. If FreeRTOS has not been initialized yet, set to KernelMain
-static PebbleTask prv_get_current_task(void) {
+// Before the main thread is registered, everything runs as KernelMain
+static unsigned int prv_get_current_slot(void) {
   if (pebble_task_get_thread(PebbleTask_KernelMain) == nullptr) {
     return PebbleTask_KernelMain;
-  } else {
-    return pebble_task_get_current();
   }
+
+  PebbleTask task = pebble_task_get_current();
+  return (task < NumPebbleTask) ? task : NumPebbleTask;
 }
 
 // --------------------------------------------------------------------------------------------
@@ -48,11 +50,11 @@ LogState *kernel_applib_get_log_state(void) {
 
   // Return right away if we re-entered from the same task For example, if we hit an assert while
   // trying to grab the s_log_state_mutex mutex below and tried to log an error.
-  PebbleTask task = prv_get_current_task();
-  if (s_log_state_task_entered[task]) {
+  unsigned int slot = prv_get_current_slot();
+  if (s_log_state_task_entered[slot]) {
     return nullptr;
   }
-  s_log_state_task_entered[task] = true;
+  s_log_state_task_entered[slot] = true;
 
   // We have 3 possible phases of operation:
   //   1.) Before FreeRTOS has been initialized - only 1 "task", no mutexes available
@@ -96,11 +98,11 @@ LogState *kernel_applib_get_log_state(void) {
 
   sys_log_state.in_progress = true;
   s_log_state_locked = use_mutex;
-  s_log_state_task = task;
+  s_log_state_slot = slot;
   return &sys_log_state;
 
 exit_fail:
-  s_log_state_task_entered[task] = false;
+  s_log_state_task_entered[slot] = false;
   return nullptr;
 }
 
@@ -109,7 +111,7 @@ exit_fail:
 void kernel_applib_release_log_state(LogState *state) {
   // Read before releasing the state
   const bool locked = s_log_state_locked;
-  const PebbleTask task = s_log_state_task;
+  const unsigned int slot = s_log_state_slot;
 
   state->in_progress = false;
 
@@ -119,7 +121,7 @@ void kernel_applib_release_log_state(LogState *state) {
   }
 
   // Clear the re-entrancy flag of the task that set it
-  s_log_state_task_entered[task] = false;
+  s_log_state_task_entered[slot] = false;
 }
 
 // ---------------------------------------------------------------------------------------------
