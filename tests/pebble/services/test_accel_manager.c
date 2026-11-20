@@ -77,7 +77,7 @@ static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
   return 32;
 }
 
-static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
+static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *sample) {
   return 0;
 }
 
@@ -289,7 +289,7 @@ static uint64_t s_now_us;
 // Feeds samples in from the driver, one sampling interval apart
 static void prv_feed(int count) {
   for (int i = 0; i < count; i++) {
-    AccelDriverSample sample = {.x = i, .timestamp_us = s_now_us};
+    struct pbl_accel_sample sample = {.x = i, .timestamp_us = s_now_us};
     s_now_us += 1000000 / ACCEL_SAMPLING_25HZ;
     pbl_accel_lock(ACCEL);
     pbl_accel_report_sample(ACCEL, &sample);

@@ -397,7 +397,7 @@ void accel_manager_init(void) {
 #endif
 }
 
-static void prv_copy_accel_sample_to_accel_data(AccelDriverSample const *accel_sample,
+static void prv_copy_accel_sample_to_accel_data(const struct pbl_accel_sample *accel_sample,
                                                 AccelData *accel_data) {
   *accel_data = (AccelData){
     .x = accel_sample->x,
@@ -408,7 +408,7 @@ static void prv_copy_accel_sample_to_accel_data(AccelDriverSample const *accel_s
   };
 }
 
-static void prv_update_last_accel_data(AccelDriverSample const *data) {
+static void prv_update_last_accel_data(const struct pbl_accel_sample *data) {
   prv_copy_accel_sample_to_accel_data(data, &s_last_accel_data);
 }
 
@@ -417,7 +417,7 @@ PBL_SYSCALL(int, sys_accel_manager_peek, (OUT, AccelData *, accel_data)) {
 
   pbl_accel_lock(ACCEL);
 
-  AccelDriverSample data;
+  struct pbl_accel_sample data;
   int result = pbl_accel_peek(ACCEL, &data);
   if (result == 0 /* success */) {
     prv_copy_accel_sample_to_accel_data(&data, accel_data);
@@ -760,7 +760,7 @@ static void prv_samples_cb(const struct pbl_accel *accel, const AccelRawBatch *b
 
   // The most recent sample is the last one in the batch.
   const uint8_t *last = batch->data + (batch->num_samples - 1) * batch->stride;
-  AccelDriverSample last_sample = {
+  struct pbl_accel_sample last_sample = {
     .x = prv_scale_raw_axis(last, batch, AXIS_X),
     .y = prv_scale_raw_axis(last, batch, AXIS_Y),
     .z = prv_scale_raw_axis(last, batch, AXIS_Z),

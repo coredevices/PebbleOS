@@ -26,7 +26,7 @@
 #define LIS2DW12_SAMPLE_SIZE_BYTES 6
 
 /** @brief LIS2DW12 driver state, owned by the driver. */
-typedef struct LIS2DW12State {
+struct pbl_lis2dw12_state {
   /** Watch mounted rotated 180 degrees: X and Y are inverted. */
   bool rotated;
   /** Shake detection requested. */
@@ -53,21 +53,21 @@ typedef struct LIS2DW12State {
   /** Consecutive watchdog passes with INT1 stuck high in shake-only mode. */
   uint8_t shake_stuck_passes;
   /** Most recent sample, returned by peeks while streaming. */
-  AccelDriverSample last_sample;
+  struct pbl_accel_sample last_sample;
   /** @ref last_sample holds a sample. */
   bool last_sample_valid;
   /** A stream recovery is queued. */
   bool recovery_pending;
   /** Wake-up condition currently asserted, to report a shake once per assertion. */
   bool wu_active;
-} LIS2DW12State;
+};
 
 /** @brief LIS2DW12 accelerometer. */
 struct pbl_lis2dw12 {
   /** Accelerometer, child of the I2C bus. */
   struct pbl_accel accel;
   /** Driver state. */
-  LIS2DW12State *state;
+  struct pbl_lis2dw12_state *state;
   /** I2C device. */
   struct pbl_i2c_dev i2c;
   /**
@@ -100,7 +100,7 @@ extern const struct pbl_accel_ops pbl_lis2dw12_ops;
  */
 #define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                                \
   PBL_ACCEL_STATE_DEFINE(sym);                                                    \
-  static LIS2DW12State sym##_lis2dw12_state;                                      \
+  static struct pbl_lis2dw12_state sym##_lis2dw12_state;                          \
   PBL_DEVICE_INSTANCE(sym, struct pbl_lis2dw12, struct pbl_accel, accel) {        \
     .accel = PBL_ACCEL_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops),    \
     .state = &sym##_lis2dw12_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \

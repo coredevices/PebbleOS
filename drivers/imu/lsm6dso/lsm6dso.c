@@ -237,7 +237,7 @@ static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
   return val;
 }
 
-static void prv_raw_to_mg(const uint8_t *raw, AccelDriverSample *sample) {
+static void prv_raw_to_mg(const uint8_t *raw, struct pbl_accel_sample *sample) {
   sample->x = prv_axis_raw_mg(AXIS_X, raw);
   sample->y = prv_axis_raw_mg(AXIS_Y, raw);
   sample->z = prv_axis_raw_mg(AXIS_Z, raw);
@@ -405,15 +405,15 @@ static void prv_lsm6dso_dispatch_shake(uint8_t wake_up_src) {
 }
 
 //! INT1 servicing pass kind, logged by the no-action diagnostic
-typedef enum {
-  Lsm6dsoInt1PassInitial = 0,
-  Lsm6dsoInt1PassRequeue = 1,
-  Lsm6dsoInt1PassRetry = 2,
-} Lsm6dsoInt1Pass;
+enum int1_pass {
+  INT1_PASS_INITIAL = 0,
+  INT1_PASS_REQUEUE = 1,
+  INT1_PASS_RETRY = 2,
+};
 
 //! Single INT1 servicing pass; returns true if any INT source was handled.
 //! fifo_progress is set when FIFO data was consumed (samples or overrun).
-static bool prv_lsm6dso_service_int1(Lsm6dsoInt1Pass pass, bool *fifo_progress) {
+static bool prv_lsm6dso_service_int1(enum int1_pass pass, bool *fifo_progress) {
   bool ret;
   uint8_t fifo_status[2] = {0U, 0U};
   uint8_t wake_up_src = 0U;
@@ -522,8 +522,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   bool fifo_progress = false;
   // Best-effort pass tagging: an ISR enqueue racing a pending requeue gets
   // labeled as a requeue; diagnostic only
-  Lsm6dsoInt1Pass pass =
-      s_dev->state->int1_requeued ? Lsm6dsoInt1PassRequeue : Lsm6dsoInt1PassInitial;
+  enum int1_pass pass = s_dev->state->int1_requeued ? INT1_PASS_REQUEUE : INT1_PASS_INITIAL;
   bool action_taken;
 
   s_dev->state->int1_requeued = false;
@@ -551,7 +550,7 @@ static void prv_lsm6dso_int1_work_handler(void) {
   // Retry the servicing pass once (a latched wake-up or a fresh FIFO
   // threshold is visible on re-read) and only recover if the pad is still
   // high with nothing serviced.
-  action_taken = prv_lsm6dso_service_int1(Lsm6dsoInt1PassRetry, &fifo_progress);
+  action_taken = prv_lsm6dso_service_int1(INT1_PASS_RETRY, &fifo_progress);
   if (fifo_progress) {
     s_dev->state->int1_requeued = true;
     prv_queue_work(prv_lsm6dso_int1_work_handler);
@@ -1007,7 +1006,7 @@ static bool prv_data_ready(bool *read_ok) {
   return !*read_ok || (status & LSM6DSO_STATUS_REG_XLDA) != 0U;
 }
 
-static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
+static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;

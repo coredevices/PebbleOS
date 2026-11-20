@@ -63,7 +63,7 @@ typedef struct {
 static void prv_update_display(void *context) {
   AppData *data = context;
 
-  AccelDriverSample sample;
+  struct pbl_accel_sample sample;
   int ret = pbl_accel_peek(ACCEL, &sample);
 
   if (ret != 0) {

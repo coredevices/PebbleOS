@@ -44,7 +44,7 @@
  */
 
 /** @brief Accelerometer sample. */
-typedef struct {
+struct pbl_accel_sample {
   /** Sample time in microseconds since the epoch, with no guaranteed precision. */
   uint64_t timestamp_us;
   /** Acceleration along the x axis, in milli-g. */
@@ -53,7 +53,7 @@ typedef struct {
   int16_t y;
   /** Acceleration along the z axis, in milli-g. */
   int16_t z;
-} AccelDriverSample;
+};
 
 /**
  * @brief Batch of raw samples in a driver-owned buffer.
@@ -141,7 +141,7 @@ struct pbl_accel_ops {
   /** Get the depth of the hardware FIFO. */
   uint32_t (*get_max_num_samples)(const struct pbl_accel *accel);
   /** Read the most recent sample. */
-  int (*peek)(const struct pbl_accel *accel, AccelDriverSample *sample);
+  int (*peek)(const struct pbl_accel *accel, struct pbl_accel_sample *sample);
   /** Optional. Enable or disable shake detection. */
   int (*set_shake_detection)(const struct pbl_accel *accel, bool on);
   /** Optional. Enable or disable double tap detection. */
@@ -304,7 +304,7 @@ uint32_t pbl_accel_get_max_num_samples(const struct pbl_accel *accel);
  * @param[out] sample Most recent sample.
  * @return 0 on success, or a negative errno.
  */
-int pbl_accel_peek(const struct pbl_accel *accel, AccelDriverSample *sample);
+int pbl_accel_peek(const struct pbl_accel *accel, struct pbl_accel_sample *sample);
 
 /**
  * @brief Enable or disable shake detection.
@@ -384,7 +384,7 @@ void pbl_accel_report_samples(const struct pbl_accel *accel, const AccelRawBatch
  * @param accel Accelerometer.
  * @param sample Sample.
  */
-void pbl_accel_report_sample(const struct pbl_accel *accel, const AccelDriverSample *sample);
+void pbl_accel_report_sample(const struct pbl_accel *accel, const struct pbl_accel_sample *sample);
 
 /**
  * @brief Report an event to the listener.
