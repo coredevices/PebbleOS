@@ -13,6 +13,7 @@
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -290,8 +291,8 @@ void imaging_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
       prv_drop(type, hdr->token, length, "short image header");
       return;
     }
-    const uint16_t width = cursor[0] | (cursor[1] << 8);
-    const uint16_t height = cursor[2] | (cursor[3] << 8);
+    const uint16_t width = pbl_get_le16(&cursor[0]);
+    const uint16_t height = pbl_get_le16(&cursor[2]);
     const uint8_t format = cursor[4];
     const uint8_t palette_count = cursor[5];
     cursor += 6;

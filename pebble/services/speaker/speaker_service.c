@@ -23,6 +23,7 @@
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/do_not_disturb.h>
 #include <pbl/services/speaker/note_sequence.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/circular_buffer.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
@@ -525,7 +526,7 @@ static void prv_bottom_half(struct pbl_work *work) {
 //! Convert a raw sample from the input buffer to 16-bit signed.
 static int16_t prv_decode_sample(const uint8_t *raw, uint32_t index, bool is_16bit) {
   if (is_16bit) {
-    return (int16_t)(raw[index * 2] | (raw[index * 2 + 1] << 8));
+    return (int16_t)pbl_get_le16(&raw[index * 2]);
   }
   // 8-bit signed -> 16-bit signed: scale [-128,127] to [-32768,32512]
   return (int16_t)((int8_t)raw[index]) << 8;

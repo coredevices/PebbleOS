@@ -5,6 +5,8 @@
 
 #include <string.h>
 
+#include <pbl/util/byteorder.h>
+
 static uint32_t s_sample_rate;
 
 static uint32_t prv_sample_input_rate(SpeakerPcmFormat fmt) {
@@ -17,7 +19,7 @@ static uint32_t prv_sample_bytes_per(SpeakerPcmFormat fmt) {
 
 static int16_t prv_decode_sample_at(const uint8_t *raw, uint32_t idx, bool is_16bit) {
   if (is_16bit) {
-    return (int16_t)(raw[idx * 2] | (raw[idx * 2 + 1] << 8));
+    return (int16_t)pbl_get_le16(&raw[idx * 2]);
   }
   // 8-bit signed to 16-bit signed
   return (int16_t)((int8_t)raw[idx]) << 8;

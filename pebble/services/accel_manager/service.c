@@ -18,6 +18,7 @@
 #include <pbl/services/event_service.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/services/vibe_pattern.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/shared_cbuf.h>
 
@@ -746,8 +747,7 @@ static bool prv_shared_buffer_empty(void) {
 }
 
 static int16_t prv_scale_raw_axis(const uint8_t *sample, const AccelRawBatch *batch, uint8_t axis) {
-  const uint8_t *p = sample + batch->axis[axis].offset;
-  int16_t raw = (int16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8U));
+  int16_t raw = (int16_t)pbl_get_le16(sample + batch->axis[axis].offset);
   int32_t mg = (int32_t)raw * batch->scale_num / batch->scale_den;
   return (int16_t)(batch->axis[axis].sign * mg);
 }
