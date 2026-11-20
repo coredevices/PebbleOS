@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "iOS clients sample"
+
+source "Kconfig.pebbleos"
+
+config SAMPLE_ANCS
+    bool "Notifications, with the ANCS client"
+    default y
+    select BT_ANCS_CLIENT
+
+config SAMPLE_AMS
+    bool "Media, with the AMS client"
+    default y
+    select BT_AMS_CLIENT
