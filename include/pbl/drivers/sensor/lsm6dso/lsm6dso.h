@@ -5,38 +5,25 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/intc.h>
-#include <pbl/kernel/cache.h>
-#include <pbl/kernel/compiler.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/work.h>
 
 /**
- * @defgroup drivers_imu IMU
- * @ingroup drivers
- * @brief Inertial and magnetic sensor drivers.
- *
- * Accelerometer drivers implement @ref drivers_accel and the magnetometer driver implements
- * @ref drivers_mag. The headers here describe what a board provides to each of them: bus,
- * interrupt and axis mapping.
+ * @defgroup drivers_sensor_lsm6dso LSM6DSO
+ * @ingroup drivers_sensor
+ * @brief ST LSM6DSO accelerometer and gyroscope; only the accelerometer is used.
  *
  * @code{.c}
  * PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2, 0x6A,
+ *                    PBL_SENSOR_MOUNT_MATRIX(-1, 0, 0, 0, 1, 0, 0, 0, 1),
  *                    .int1 = ...,
- *                    .int1_in = ...,
- *                    .axis_map = {0, 1, 2},
- *                    .axis_dir = {1, 1, 1});
+ *                    .int1_in = ...);
  *
- * const struct pbl_accel *const ACCEL = &s_lsm6dso;
+ * const struct pbl_sensor *const ACCEL = &s_lsm6dso;
  * @endcode
- */
-
-/**
- * @defgroup drivers_imu_lsm6dso LSM6DSO
- * @ingroup drivers_imu
- * @brief ST LSM6DSO @ref drivers_accel driver.
  * @{
  */
 
@@ -48,11 +35,11 @@
 #define LSM6DSO_FIFO_THRESHOLD 128
 /** @brief Read buffer capacity in samples, sized to the watermark. */
 #define LSM6DSO_FIFO_SIZE LSM6DSO_FIFO_THRESHOLD
+/** @brief Number of FIFO read buffers. */
+#define LSM6DSO_NUM_BUFS 2
 
 /** @brief LSM6DSO driver state, owned by the driver. */
 struct pbl_lsm6dso_state {
-  /** Watch mounted rotated 180 degrees: X and Y are inverted. */
-  bool rotated;
   /** Shake detection requested. */
   bool shake_detection_enabled;
   /** Double tap detection requested. */
@@ -61,9 +48,6 @@ struct pbl_lsm6dso_state {
   uint32_t sampling_interval_us;
   /** Samples per FIFO batch requested by the subscribers, 0 when not streaming. */
   uint16_t num_samples;
-  /** Raw FIFO read buffer, filled through DMA, see @ref PBL_I2C_MSG_DMA_SAFE. */
-  uint8_t raw_sample_buf[PBL_DCACHE_ROUND_UP(
-      LSM6DSO_FIFO_SIZE * LSM6DSO_FIFO_WORD_SIZE_BYTES)] PBL_ALIGNED(PBL_DCACHE_LINE_SIZE);
   /** Watchdog timer detecting a stalled INT1 stream. */
   struct pbl_wallclock_work int1_wdt_timer;
   /** Time of the last FIFO read. */
@@ -88,8 +72,8 @@ struct pbl_lsm6dso_state {
 
 /** @brief LSM6DSO accelerometer. */
 struct pbl_lsm6dso {
-  /** Accelerometer, child of the I2C bus. */
-  struct pbl_accel accel;
+  /** Sensor, child of the I2C bus. */
+  struct pbl_sensor sensor;
   /** Driver state. */
   struct pbl_lsm6dso_state *state;
   /** I2C device. */
@@ -98,14 +82,10 @@ struct pbl_lsm6dso {
   struct pbl_irq_spec int1;
   /** INT1 input, to read back the pad level. */
   struct pbl_gpio int1_in;
-  /** Sensor axis feeding each watch axis (0: X, 1: Y, 2: Z). */
-  uint8_t axis_map[3];
-  /** Direction of each watch axis: 1 or -1. */
-  int8_t axis_dir[3];
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_accel_ops pbl_lsm6dso_ops;
+extern const struct pbl_sensor_ops pbl_lsm6dso_ops;
 /** @endcond */
 
 /**
@@ -113,18 +93,20 @@ extern const struct pbl_accel_ops pbl_lsm6dso_ops;
  *
  * Only one instance is supported.
  *
- * @param sym Symbol of the instance, a struct pbl_accel.
+ * @param sym Symbol of the instance, a struct pbl_sensor.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
- * @param ... Designated initializers of the remaining fields: @c int1, @c int1_in, @c axis_map
- *            and @c axis_dir.
+ * @param _mount Mounting, from PBL_SENSOR_MOUNT_MATRIX().
+ * @param ... Designated initializers of the remaining fields: @c int1 and @c int1_in.
  */
-#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, ...)                                \
-  PBL_ACCEL_STATE_DEFINE(sym);                                                   \
-  static struct pbl_lsm6dso_state sym##_lsm6dso_state;                           \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_accel, accel) {        \
-    .accel = PBL_ACCEL_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops),     \
-    .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \
+#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, _mount, ...)                                          \
+  PBL_SENSOR_STREAM_STATE_DEFINE(sym, LSM6DSO_NUM_BUFS,                                            \
+                                 LSM6DSO_FIFO_SIZE *LSM6DSO_FIFO_WORD_SIZE_BYTES);                 \
+  static struct pbl_lsm6dso_state sym##_lsm6dso_state;                                             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_sensor, sensor) {                        \
+    .sensor = PBL_SENSOR_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops,                      \
+                              PBL_BIT(PBL_SENSOR_ACCEL), PBL_BIT(PBL_SENSOR_EVENT_SHAKE), _mount), \
+    .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__,                   \
   }
 
 /** @} */

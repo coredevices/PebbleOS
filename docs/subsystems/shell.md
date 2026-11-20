@@ -30,8 +30,8 @@ negative errno; `-EINPROGRESS` keeps the shell busy until
 `pbl_shell_cmd_done()`, for commands that finish from a callback.
 
 Shell code is wrapped in `#ifdef CONFIG_SHELL`, and modules with a group of
-commands can gate them further; for example `drivers/imu/shell.c`
-builds with `CONFIG_IMU_SHELL`. Such options are off by default, as most of
+commands can gate them further; for example `drivers/sensor/shell.c`
+builds with `CONFIG_SENSOR_SHELL`. Such options are off by default, as most of
 these commands are bring-up tools; only the commands the integration tests
 rely on are built with `CONFIG_SHELL` alone. `CONFIG_DRIVER_SHELL` and
 `CONFIG_SUBSYS_SHELL` turn on every driver or subsystem command group at

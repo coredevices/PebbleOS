@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/charger.h>
@@ -253,11 +252,11 @@ static void prv_run_component_display(AppData *data) {
   char comp_detail[48] = "";
   switch (data->component) {
     case ComponentAccel: {
-      struct pbl_accel_sample sample;
-      pbl_accel_peek(ACCEL, &sample);
+      int32_t ug[3] = {0};
+      (void)pbl_sensor_read(ACCEL, PBL_SENSOR_ACCEL, ug, nullptr);
       comp_name = "Accel";
-      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x,
-               sample.y, sample.z);
+      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi32 " Y:%" PRIi32 " Z:%" PRIi32,
+               ug[0] / 1000, ug[1] / 1000, ug[2] / 1000);
       break;
     }
 #ifdef CONFIG_MAG

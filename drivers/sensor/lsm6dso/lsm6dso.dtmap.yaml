@@ -3,21 +3,16 @@
 
 compatible: st,lsm6dso
 config: ACCEL_LSM6DSO
-class: accel
+class: sensor
 define: PBL_LSM6DSO_DEFINE
 args:
   - parent: i2c
   - reg: 0
+  - strings: mount-matrix
+    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+    wrap: PBL_SENSOR_MOUNT_MATRIX
   - irq: 0
     field: int1
   - irq: 0
     as: irq-gpio
     field: int1_in
-  - strings: mount-matrix
-    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-    wrap: PBL_MOUNT_MATRIX_MAP
-    field: axis_map
-  - strings: mount-matrix
-    default: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-    wrap: PBL_MOUNT_MATRIX_DIR
-    field: axis_dir

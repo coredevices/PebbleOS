@@ -5,18 +5,24 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/intc.h>
-#include <pbl/kernel/cache.h>
-#include <pbl/kernel/compiler.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/work.h>
 
 /**
- * @defgroup drivers_imu_lis2dw12 LIS2DW12
- * @ingroup drivers_imu
- * @brief ST LIS2DW12 @ref drivers_accel driver.
+ * @defgroup drivers_sensor_lis2dw12 LIS2DW12
+ * @ingroup drivers_sensor
+ * @brief ST LIS2DW12 accelerometer.
+ *
+ * @code{.c}
+ * PBL_LIS2DW12_DEFINE(s_lis2dw12, &s_i2c1, 0x19, PBL_SENSOR_MOUNT_IDENTITY,
+ *                     .int1 = ...,
+ *                     .int1_in = ...);
+ *
+ * const struct pbl_sensor *const ACCEL = &s_lis2dw12;
+ * @endcode
  * @{
  */
 
@@ -24,11 +30,11 @@
 #define LIS2DW12_FIFO_SIZE 32
 /** @brief Sample size in bytes (X, Y, Z, 16 bits each). */
 #define LIS2DW12_SAMPLE_SIZE_BYTES 6
+/** @brief Number of FIFO read buffers. */
+#define LIS2DW12_NUM_BUFS 2
 
 /** @brief LIS2DW12 driver state, owned by the driver. */
 struct pbl_lis2dw12_state {
-  /** Watch mounted rotated 180 degrees: X and Y are inverted. */
-  bool rotated;
   /** Shake detection requested. */
   bool shake_detection_enabled;
   /** Double tap detection requested. */
@@ -37,9 +43,6 @@ struct pbl_lis2dw12_state {
   uint32_t sampling_interval_us;
   /** Samples per FIFO batch requested by the subscribers, 0 when not streaming. */
   uint8_t num_samples;
-  /** Raw FIFO read buffer, filled through DMA, see @ref PBL_I2C_MSG_DMA_SAFE. */
-  uint8_t raw_sample_buf[PBL_DCACHE_ROUND_UP(
-      LIS2DW12_FIFO_SIZE * LIS2DW12_SAMPLE_SIZE_BYTES)] PBL_ALIGNED(PBL_DCACHE_LINE_SIZE);
   /** Watchdog timer detecting a stalled INT1 stream. */
   struct pbl_wallclock_work int1_wdt_timer;
   /** Time of the last FIFO read. */
@@ -52,8 +55,10 @@ struct pbl_lis2dw12_state {
   uint8_t wk_ths_curr;
   /** Consecutive watchdog passes with INT1 stuck high in shake-only mode. */
   uint8_t shake_stuck_passes;
-  /** Most recent sample, returned by peeks while streaming. */
-  struct pbl_accel_sample last_sample;
+  /** Most recent raw sample, returned by reads while streaming. */
+  uint8_t last_sample[LIS2DW12_SAMPLE_SIZE_BYTES];
+  /** Time of @ref last_sample, in microseconds of uptime. */
+  uint64_t last_sample_timestamp_us;
   /** @ref last_sample holds a sample. */
   bool last_sample_valid;
   /** A stream recovery is queued. */
@@ -64,8 +69,8 @@ struct pbl_lis2dw12_state {
 
 /** @brief LIS2DW12 accelerometer. */
 struct pbl_lis2dw12 {
-  /** Accelerometer, child of the I2C bus. */
-  struct pbl_accel accel;
+  /** Sensor, child of the I2C bus. */
+  struct pbl_sensor sensor;
   /** Driver state. */
   struct pbl_lis2dw12_state *state;
   /** I2C device. */
@@ -77,14 +82,10 @@ struct pbl_lis2dw12 {
   struct pbl_irq_spec int1;
   /** INT1 input, to read back the pad level, none without @ref int1. */
   struct pbl_gpio int1_in;
-  /** Sensor axis feeding each watch axis (0: X, 1: Y, 2: Z). */
-  uint8_t axis_map[3];
-  /** Direction of each watch axis: 1 or -1. */
-  int8_t axis_dir[3];
 };
 
 /** @cond INTERNAL_HIDDEN */
-extern const struct pbl_accel_ops pbl_lis2dw12_ops;
+extern const struct pbl_sensor_ops pbl_lis2dw12_ops;
 /** @endcond */
 
 /**
@@ -92,18 +93,20 @@ extern const struct pbl_accel_ops pbl_lis2dw12_ops;
  *
  * Only one instance is supported.
  *
- * @param sym Symbol of the instance, a struct pbl_accel.
+ * @param sym Symbol of the instance, a struct pbl_sensor.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
- * @param ... Designated initializers of the remaining fields: @c axis_map, @c axis_dir and,
- *            optionally, @c int1 and @c int1_in.
+ * @param _mount Mounting, from PBL_SENSOR_MOUNT_MATRIX().
+ * @param ... Designated initializers of the optional fields: @c int1 and @c int1_in.
  */
-#define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, ...)                                \
-  PBL_ACCEL_STATE_DEFINE(sym);                                                    \
-  static struct pbl_lis2dw12_state sym##_lis2dw12_state;                          \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_lis2dw12, struct pbl_accel, accel) {        \
-    .accel = PBL_ACCEL_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops),    \
-    .state = &sym##_lis2dw12_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \
+#define PBL_LIS2DW12_DEFINE(sym, _bus, _addr, _mount, ...)                                         \
+  PBL_SENSOR_STREAM_STATE_DEFINE(sym, LIS2DW12_NUM_BUFS,                                           \
+                                 LIS2DW12_FIFO_SIZE *LIS2DW12_SAMPLE_SIZE_BYTES);                  \
+  static struct pbl_lis2dw12_state sym##_lis2dw12_state;                                           \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_lis2dw12, struct pbl_sensor, sensor) {                       \
+    .sensor = PBL_SENSOR_INIT(sym, "lis2dw12", &(_bus)->dev, &pbl_lis2dw12_ops,                    \
+                              PBL_BIT(PBL_SENSOR_ACCEL), PBL_BIT(PBL_SENSOR_EVENT_SHAKE), _mount), \
+    .state = &sym##_lis2dw12_state, .i2c = PBL_I2C_DEV(_bus, _addr) __VA_OPT__(, ) __VA_ARGS__,    \
   }
 
 /** @} */

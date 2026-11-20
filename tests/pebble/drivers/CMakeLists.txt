@@ -33,11 +33,12 @@ pbl_clar_test(test_spi_nor
 pbl_clar_test(test_accel_sim
   SOURCES
     drivers/base/device.c
-    drivers/imu/accel.c
-    drivers/imu/accel_sim.c
+    drivers/sensor/sensor.c
+    drivers/sensor/accel_sim.c
     tests/fakes/fake_rtc.c
   DEFINES
     CONFIG_DEVICE_LOG_LEVEL=0
+    CONFIG_DRIVER_SENSOR_LOG_LEVEL=0
   OVERRIDES dummy_board
 )
 

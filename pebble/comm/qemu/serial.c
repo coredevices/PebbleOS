@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #ifdef CONFIG_ACCEL_SIM
-#include <pbl/drivers/imu/sim.h>
+#include <pbl/drivers/sensor/sim.h>
 #endif
 #ifdef CONFIG_CHARGER_SIM
 #include <pbl/drivers/charger/sim.h>
@@ -52,16 +52,16 @@ static QemuSerialGlobals s_qemu_state;
 // Handle incoming Tap packet data (QemuProtocol_Tap)
 static void prv_tap_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolTapHeader *hdr = (QemuProtocolTapHeader *)data;
-  if (len != sizeof(*hdr) || hdr->axis > AXIS_Z) {
+  if (len != sizeof(*hdr) || hdr->axis > PBL_SENSOR_AXIS_Z) {
     PBL_LOG_ERR("Invalid packet");
     return;
   }
 
   PBL_LOG_DBG("Got tap msg: axis: %d, direction: %d", hdr->axis, hdr->direction);
-  const struct pbl_accel_event event = {
-    .type = PBL_ACCEL_EVENT_SHAKE,
-    .axis = (IMUCoordinateAxis)hdr->axis,
-    .direction = hdr->direction,
+  const struct pbl_sensor_event event = {
+    .type = PBL_SENSOR_EVENT_SHAKE,
+    .axis = (enum pbl_sensor_axis)hdr->axis,
+    .direction = (int8_t)hdr->direction,
   };
 
   pbl_accel_sim_report_event(ACCEL, &event);
