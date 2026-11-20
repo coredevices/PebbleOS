@@ -30,6 +30,7 @@
 #define PBL_POPCOUNT_IMPL(x)            __builtin_popcount(x)
 #define PBL_BSWAP16_IMPL(x)             __builtin_bswap16(x)
 #define PBL_BSWAP32_IMPL(x)             __builtin_bswap32(x)
+#define PBL_BSWAP64_IMPL(x)             __builtin_bswap64(x)
 
 #define PBL_NO_SANITIZE_ADDRESS_IMPL __attribute__((__no_sanitize_address__))
 
