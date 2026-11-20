@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
@@ -22,7 +24,6 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <syscall/syscall.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_wakeup, CONFIG_SERVICE_WAKEUP_LOG_LEVEL);
 
@@ -70,7 +71,7 @@ struct prv_missed_events_s {
 
 struct prv_check_app_and_wakeup_event_s {
   time_t wakeup_timestamp; //!< Timestamp of the WakeupEntry
-  int wakeup_count;        //!< wakeup event count for app, negative for error (StatusCode)
+  int wakeup_count;        //!< wakeup event count for app, negative errno on error
 };
 
 // Local prototypes
@@ -406,7 +407,7 @@ PBL_SYSCALL(WakeupId, sys_wakeup_schedule, (VAL, time_t, timestamp), (VAL, int32
 
   // Disallow scheduling past events
   if (time_difference <= 0) {
-    return E_INVALID_ARGUMENT;
+    return -EINVAL;
   }
 
   Uuid uuid = sys_process_manager_get_current_process_md()->uuid;
@@ -489,7 +490,7 @@ static bool prv_check_count_and_availability_callback(struct pbl_settings_file *
   pbl_settings_read_val(file, (uint8_t *)&entry, sizeof(WakeupEntry));
 
   // If we have already flagged an error, just skip the rest
-  if (check->wakeup_count < S_SUCCESS) {
+  if (check->wakeup_count < 0) {
     return true; // continue iterating
   }
 
@@ -501,7 +502,7 @@ static bool prv_check_count_and_availability_callback(struct pbl_settings_file *
   // If the wakeup_id is with the same minute as another wakeup event of the app
   if ((entry.timestamp - WAKEUP_EVENT_WINDOW < check->wakeup_timestamp) &&
       (check->wakeup_timestamp < (entry.timestamp + WAKEUP_EVENT_WINDOW))) {
-    check->wakeup_count = E_RANGE;
+    check->wakeup_count = -ERANGE;
   }
 
   return true; // continue iterating
@@ -533,22 +534,21 @@ static WakeupId prv_wakeup_settings_add_entry(WakeupEntry entry) {
       };
       pbl_settings_each(&wakeup_settings, prv_check_count_and_availability_callback, &check);
 
-      if (check.wakeup_count < S_SUCCESS) {
+      if (check.wakeup_count < 0) {
         status = check.wakeup_count;
       } else if (check.wakeup_count >= MAX_WAKEUP_EVENTS_PER_APP) {
-        status = E_OUT_OF_RESOURCES;
+        status = -EDQUOT;
       } else {
         WakeupId wakeup_id = prv_wakeup_id_alloc(&wakeup_settings);
-        status = status_from_errno(pbl_settings_set(&wakeup_settings, (uint8_t *)&wakeup_id,
-                                                    sizeof(WakeupId), (uint8_t *)&entry,
-                                                    sizeof(WakeupEntry)));
-        if (status == S_SUCCESS) {
+        status = pbl_settings_set(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                                  (uint8_t *)&entry, sizeof(WakeupEntry));
+        if (status == 0) {
           status = wakeup_id;
         }
       }
       pbl_settings_close(&wakeup_settings);
     } else {
-      status = E_INTERNAL;
+      status = -EIO;
     }
   }
   pbl_mutex_unlock(&s_mutex);
@@ -601,11 +601,11 @@ PBL_SYSCALL(void, sys_wakeup_cancel_all_for_app) {
 }
 
 PBL_SYSCALL(time_t, sys_wakeup_query, (VAL, WakeupId, wakeup_id)) {
-  status_t status = E_DOES_NOT_EXIST;
+  int status;
   WakeupEntry entry = {};
 
   if (wakeup_id < 0) {
-    return status;
+    return -ENOENT;
   }
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -613,23 +613,22 @@ PBL_SYSCALL(time_t, sys_wakeup_query, (VAL, WakeupId, wakeup_id)) {
     struct pbl_settings_file wakeup_settings;
     if (pbl_settings_open(&wakeup_settings, SETTINGS_FILE_NAME, SETTINGS_FILE_SIZE) == 0) {
       // Check if the wakeup id is valid by seeing if it is in the wakeup settings_file
-      status = status_from_errno(pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id,
-                                                  sizeof(WakeupId), (uint8_t *)&entry,
-                                                  sizeof(WakeupEntry)));
+      status = pbl_settings_get(&wakeup_settings, (uint8_t *)&wakeup_id, sizeof(WakeupId),
+                                (uint8_t *)&entry, sizeof(WakeupEntry));
       pbl_settings_close(&wakeup_settings);
     } else {
-      status = E_INTERNAL;
+      status = -EIO;
     }
   }
   pbl_mutex_unlock(&s_mutex);
 
-  if (status != S_SUCCESS) {
+  if (status < 0) {
     return status;
   }
 
   // timer doesn't belong to this app
   if (!uuid_equal(&sys_process_manager_get_current_process_md()->uuid, &entry.uuid)) {
-    return E_DOES_NOT_EXIST;
+    return -ENOENT;
   }
 
   time_t return_time = entry.timestamp;

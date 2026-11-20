@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <time.h>
 
 #include <pbl/fs/fs.h>
@@ -113,7 +114,7 @@ void test_wakeup__basic_checks(void) {
 
   // Cancel wakeup event
   sys_wakeup_delete(wakeup_id);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 
   // Schedule again
   wakeup_id = sys_wakeup_schedule(sys_get_time() + 10, 0, false);
@@ -121,7 +122,7 @@ void test_wakeup__basic_checks(void) {
 
   // Cancel all wakeup events
   sys_wakeup_cancel_all_for_app();
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 }
 
 void test_wakeup__max_events(void) {
@@ -134,10 +135,11 @@ void test_wakeup__max_events(void) {
     cl_assert_equal_i(sys_wakeup_query(wakeup_id), sys_get_time() + (i * WAKEUP_EVENT_WINDOW));
   }
 
-  // Test that the 9th wakeup event fails to schedule (E_DOES_NOT_EXIST)
+  // Test that the 9th wakeup event fails to schedule
   wakeup_id = sys_wakeup_schedule(
       sys_get_time() + ((MAX_WAKEUP_EVENTS_PER_APP + 1) * WAKEUP_EVENT_WINDOW), 0, false);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(wakeup_id, -EDQUOT);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 }
 
 void test_wakeup__gap(void) {
@@ -148,13 +150,13 @@ void test_wakeup__gap(void) {
   wakeup_id = sys_wakeup_schedule(sys_get_time() + WAKEUP_EVENT_WINDOW, 0, false);
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), sys_get_time() + WAKEUP_EVENT_WINDOW);
 
-  // Test that another event < 1 minute away fails to schedule (E_DOES_NOT_EXIST)
+  // Test that another event < 1 minute away fails to schedule
   wakeup_id = sys_wakeup_schedule(sys_get_time() + WAKEUP_EVENT_WINDOW + 59, 0, false);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 
-  // Test that another event < 1 minute away fails to schedule (E_DOES_NOT_EXIST)
+  // Test that another event < 1 minute away fails to schedule
   wakeup_id = sys_wakeup_schedule(sys_get_time() + 1, 0, false);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 }
 
 // work around pbl_sys_work_call
@@ -188,7 +190,7 @@ void test_wakeup__out_of_order_schedule(void) {
   wakeup_dispatcher_sys_work((void *)(uintptr_t)early_wakeup_id);
 
   // Make sure early_wakeup_id not scheduled
-  cl_assert_equal_i(sys_wakeup_query(early_wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(early_wakeup_id), -ENOENT);
   cl_assert_equal_i(sys_wakeup_query(late_wakeup_id), late_event);
 
   // Make sure that the next scheduled timer is now the late wakeup id.
@@ -206,7 +208,7 @@ void test_wakeup__out_of_order_schedule(void) {
   wakeup_dispatcher_sys_work((void *)(uintptr_t)late_wakeup_id);
 
   // There should now be no scheduled wakeups
-  cl_assert_equal_i(sys_wakeup_query(late_wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(late_wakeup_id), -ENOENT);
 }
 
 void test_wakeup__time_jump(void) {
@@ -278,7 +280,7 @@ void test_wakeup__handle_clock_change_not_scheduled(void) {
   wakeup_handle_clock_change();
 
   // Make sure no wakeup event is scheduled
-  cl_assert_equal_i(sys_wakeup_query(wakeup_get_next_scheduled()), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_get_next_scheduled()), -ENOENT);
   // There should be no wakeup event missed or popup displayed
   cl_assert_equal_b(s_popup_occurred, false);
 }
@@ -314,7 +316,7 @@ void test_wakeup__handle_clock_change_scheduled_jump(void) {
   // There should be a missed wakeup event and a popup displayed
   cl_assert_equal_b(s_popup_occurred, true);
   // Make sure the wakeup event is no longer scheduled
-  cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(first_wakeup_id), -ENOENT);
 }
 
 void test_wakeup__id_independent_of_timestamp(void) {
@@ -349,7 +351,7 @@ void test_wakeup__id_wraps_and_skips_used(void) {
   stub_app_set_uuid(OTHER_UUID);
   cl_assert_equal_i(sys_wakeup_query(INT32_MAX), other_time);
   cl_assert_equal_i(sys_wakeup_query(1), other_time + WAKEUP_EVENT_WINDOW);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
   stub_app_set_uuid(TEST_UUID);
 }
 
@@ -386,7 +388,7 @@ void test_wakeup__gap_only_within_app(void) {
   cl_assert_equal_i(sys_wakeup_query(wakeup_id), event_time);
 
   // The window still applies to the app's own events
-  cl_assert_equal_i(sys_wakeup_schedule(event_time + WAKEUP_EVENT_WINDOW - 1, 0, false), E_RANGE);
+  cl_assert_equal_i(sys_wakeup_schedule(event_time + WAKEUP_EVENT_WINDOW - 1, 0, false), -ERANGE);
 }
 
 void test_wakeup__simultaneous_events_spaced(void) {
@@ -452,5 +454,5 @@ void test_wakeup__dispatch_leaves_stationary(void) {
   pbl_realtime_set(event_time);
   wakeup_dispatcher_sys_work((void *)(uintptr_t)wakeup_id);
   cl_assert_equal_i(s_stationary_wake_up_count, 1);
-  cl_assert_equal_i(sys_wakeup_query(wakeup_id), E_DOES_NOT_EXIST);
+  cl_assert_equal_i(sys_wakeup_query(wakeup_id), -ENOENT);
 }
