@@ -2867,3 +2867,64 @@ def test_unknown_addons_fail(tmp_path):
         dtmap.configure(
             srcdir, tmp_path / "build", "board", None, "cc", None, ["missing"]
         )
+
+
+MBOX_DTS = """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    mb1: mailbox@1000 {
+        compatible = "acme,mailbox";
+        reg = <0x1000 0x100>;
+        #mbox-cells = <1>;
+    };
+    mb2: mailbox@2000 {
+        compatible = "acme,mailbox";
+        reg = <0x2000 0x100>;
+        #mbox-cells = <1>;
+    };
+    cpu-a {
+        mboxes = <&mb1 0>, <&mb2 1>;
+    };
+    cpu-b {
+        mboxes = <&mb1 3>;
+    };
+    cpu-c {
+        mboxes = <&mb2 7>;
+        status = "disabled";
+    };
+};
+"""
+
+MBOX_CLASSES = {
+    **CLASSES,
+    "mbox": {
+        "class": "mbox",
+        "type": "struct mbox",
+        "include": "mbox.h",
+        "provides": {"mbox": "CHAN(&{sym}, {0})"},
+    },
+}
+
+
+def test_consumers_size_a_provider(tmp_path):
+    path, dtb = tmp_path / "m.dts", tmp_path / "m.dtb"
+    path.write_text(MBOX_DTS)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    spec = {
+        "compatible": "acme,mailbox",
+        "config": "MBOX",
+        "class": "mbox",
+        "define": "MBOX_DEFINE",
+        "args": [{"reg": 0}, {"consumers": "mboxes", "default": "1"}],
+    }
+    specs = {"acme,mailbox": dtmap.Spec("acme,mailbox", spec, MBOX_CLASSES)}
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"MBOX"})
+    gen.run()
+    out = instances(gen, "acme_mailbox")
+    assert "MBOX_DEFINE(dt_mb1, 0x1000, 4);" in out
+    assert "MBOX_DEFINE(dt_mb2, 0x2000, 2);" in out

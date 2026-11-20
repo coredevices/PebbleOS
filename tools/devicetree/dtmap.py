@@ -85,11 +85,13 @@ ARG_KINDS = {
     "pwm",
     "supply",
     "referrer",
+    "consumers",
     "phandle",
     "reset",
     "flags",
     "compatible",
 }
+CONSUMER_CELLS = {"mboxes": "#mbox-cells"}
 ARG_OPTIONS = {
     "default",
     "as",
@@ -208,7 +210,9 @@ class Spec:
         self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
         trailing = [
-            bool(arg.get("optional")) or "list" in arg or ("prop" in arg and "item" in arg)
+            bool(arg.get("optional"))
+            or "list" in arg
+            or ("prop" in arg and "item" in arg)
             for arg in self.args
         ]
         if any(trailing[i] and not all(trailing[i:]) for i in range(len(trailing))):
@@ -295,7 +299,9 @@ def load_class(path, data):
     check_keys(error, data, CLASS_KEYS, "class", ("class", "type", "include"))
     roles = data.get("roles", {})
     if not isinstance(roles, dict):
-        raise error("roles: not a mapping of each role to the Kconfig symbol needing it")
+        raise error(
+            "roles: not a mapping of each role to the Kconfig symbol needing it"
+        )
     for role, config in roles.items():
         if not re.fullmatch(r"[a-z][a-z0-9_]*", str(role)):
             raise error(f"role '{role}': not a lowercase C identifier")
@@ -1070,6 +1076,18 @@ class Generator:
             raise dev.error(f"several nodes refer to it with '{prop}'")
         return found[0] if found else None
 
+    def _consumers(self, dev, prop, cell):
+        """One more than the highest specifier cell that enabled nodes give this one in prop."""
+        cells_prop = CONSUMER_CELLS[prop]
+        found = [
+            cells[cell]
+            for n in self.tree.nodes()
+            if n.has(prop) and enabled(n)
+            for target, cells in self._phandles(Device(n, []), prop, cells_prop)
+            if target is dev.node
+        ]
+        return max(found) + 1 if found else None
+
     def _value(self, dev, arg):
         """The argument as C, or None when the node does not have it."""
         kind = next(iter(arg.keys() & ARG_KINDS))
@@ -1280,6 +1298,9 @@ class Generator:
                 return None
             target = self.tree.phandle(node.u32(key), f"{node.path}: '{key}'")
             return self._provided(dev, target, arg.get("as", key), [])
+        if kind == "consumers":
+            count = self._consumers(dev, key, int(arg.get("index", 0)))
+            return None if count is None else str(count)
         if kind == "referrer":
             target = self._referrer(dev, key)
             if target is None:
@@ -1385,7 +1406,9 @@ def table_partitions(table):
         offset = cells_number(cells[: part.address_cells])
         size = cells_number(cells[part.address_cells :])
         parts.append((label, offset, size, part))
-    regions = sorted((offset, offset + size, part.path) for _, offset, size, part in parts)
+    regions = sorted(
+        (offset, offset + size, part.path) for _, offset, size, part in parts
+    )
     for (_, end, path), (start, _, other) in itertools.pairwise(regions):
         if start < end:
             raise DtError(f"{other}: overlaps {path}")
@@ -1409,7 +1432,9 @@ def flash_table(tree, flash=None):
     if flash is not None:
         tables = [t for t in tables if flash in t.parent.labels]
     elif len(tables) > 1:
-        raise DtError(f"{tables[1].path}: several flashes have partitions, but no flash role")
+        raise DtError(
+            f"{tables[1].path}: several flashes have partitions, but no flash role"
+        )
     return tables[0] if tables else None
 
 
@@ -1420,7 +1445,9 @@ def partitions_header(tree, flash=None):
     table = flash_table(tree, flash)
     if table is not None:
         lines += ["", "#include <pbl/util/units.h>"]
-        for label, offset, size, _ in sorted(table_partitions(table), key=lambda p: p[1]):
+        for label, offset, size, _ in sorted(
+            table_partitions(table), key=lambda p: p[1]
+        ):
             name = "PART_" + c_ident(label).upper()
             lines += [
                 "",
@@ -1535,7 +1562,10 @@ def role_files(srcdir, board, revision, appdir=None, addons=()):
         paths.append(Path(srcdir) / "boards" / board / f"roles.{revision}.yml")
     paths += [addon_dir(srcdir, addon) / ROLES_FILE for addon in addons]
     if appdir is not None:
-        paths += [Path(appdir) / ROLES_FILE, Path(appdir) / "boards" / f"{board}.{ROLES_FILE}"]
+        paths += [
+            Path(appdir) / ROLES_FILE,
+            Path(appdir) / "boards" / f"{board}.{ROLES_FILE}",
+        ]
     return paths
 
 
@@ -1562,7 +1592,9 @@ def merge_roles(paths):
                     ("symbol",),
                 )
             elif not isinstance(device, str):
-                raise DtError(f"{path}: role '{role}': {device!r} is not a label or a symbol")
+                raise DtError(
+                    f"{path}: role '{role}': {device!r} is not a label or a symbol"
+                )
             roles[role] = device
     return roles
 
@@ -1604,7 +1636,9 @@ def roles_source(gen, roles, chosen, config):
         lines.append(f"const {cls['type']} *const {role.upper()} = {target};")
     for role, (_, needed_by) in sorted(roles.items()):
         if needed_by in config and role not in chosen:
-            raise DtError(f"role '{role}' has no device, and CONFIG_{needed_by} needs it")
+            raise DtError(
+                f"role '{role}' has no device, and CONFIG_{needed_by} needs it"
+            )
     out = ["/* Generated from the device roles of the board. */", ""]
     out += [f"#include <{include}>" for include in sorted(includes)]
     if lines:
@@ -1664,7 +1698,9 @@ def addon_connectors(srcdir, addon):
 
     check_keys(error, data, {"connectors"}, "add-on", ("connectors",))
     connectors = data["connectors"]
-    if not isinstance(connectors, list) or not all(isinstance(c, str) for c in connectors):
+    if not isinstance(connectors, list) or not all(
+        isinstance(c, str) for c in connectors
+    ):
         raise error("connectors: not a list of compatibles")
     return connectors
 
@@ -1674,7 +1710,10 @@ def addon_overlays(srcdir, board, addons):
     paths = []
     for addon in addons:
         directory = addon_dir(srcdir, addon)
-        paths += [directory / f"{addon}.overlay", directory / "boards" / f"{board}.overlay"]
+        paths += [
+            directory / f"{addon}.overlay",
+            directory / "boards" / f"{board}.overlay",
+        ]
     return paths
 
 
@@ -1709,7 +1748,9 @@ def compile_dts(dts, cc, include_dirs, outdir, overlays=()):
     source = Path(dts)
     if overlays:
         source = outdir / "board.overlaid.dts"
-        text = "".join(f'#include "{Path(path).resolve()}"\n' for path in [dts, *overlays])
+        text = "".join(
+            f'#include "{Path(path).resolve()}"\n' for path in [dts, *overlays]
+        )
         write_if_changed(source, text.encode())
     pre, depfile, dtb = (
         outdir / "board.dts.pre",
@@ -1765,7 +1806,9 @@ def kconfig_symbol(compatible):
 
 def kconfig_compatibles(specs):
     """Those with a DT_HAS symbol: of the drivers, the models they name, and the partitions."""
-    models = {model for group in specs.values() for spec in group for model in spec.models}
+    models = {
+        model for group in specs.values() for spec in group for model in spec.models
+    }
     return sorted({*specs, *models, PARTITIONS})
 
 
@@ -1803,15 +1846,22 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     deps += [str(addon_dir(srcdir, addon) / ADDON_FILE) for addon in addons]
     overlays = [
         path
-        for path in [*addon_overlays(srcdir, board, addons), *overlay_files(board, appdir)]
+        for path in [
+            *addon_overlays(srcdir, board, addons),
+            *overlay_files(board, appdir),
+        ]
         if path.exists()
     ]
     root = Path(srcdir)
     include_dirs = [root / "boards", root / "dts", root / "include"]
     if dts is not None and addons:
         base, _ = compile_dts(dts, cc, include_dirs, outdir / "board")
-        for addon, lacking in missing_connectors(fdt.load(base), srcdir, addons).items():
-            raise DtError(f"add-on {addon} needs a {', '.join(lacking)} connector: {board} has none")
+        for addon, lacking in missing_connectors(
+            fdt.load(base), srcdir, addons
+        ).items():
+            raise DtError(
+                f"add-on {addon} needs a {', '.join(lacking)} connector: {board} has none"
+            )
     if dts is not None:
         dtb, sources = compile_dts(dts, cc, include_dirs, outdir, overlays)
         deps += sources
@@ -1827,7 +1877,9 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     paths = role_files(srcdir, board, revision, appdir, addons)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
-    write_if_changed(outdir / ROLES_FILE, yaml.safe_dump(roles, sort_keys=True).encode())
+    write_if_changed(
+        outdir / ROLES_FILE, yaml.safe_dump(roles, sort_keys=True).encode()
+    )
     outputs = [
         PARTITIONS_HEADER,
         IDLE_STATES_HEADER,
@@ -1857,7 +1909,9 @@ def main():
     )
     parser.add_argument("--dtb", help="the compiled tree, if the board has one")
     parser.add_argument("--config", required=True, help="the .config file")
-    parser.add_argument("--roles", help="the device of each role, merged at configuration")
+    parser.add_argument(
+        "--roles", help="the device of each role, merged at configuration"
+    )
     parser.add_argument(
         "--outdir", required=True, help="include directory to generate into"
     )
@@ -1879,7 +1933,10 @@ def main():
         reserved_memory = reserved_memory_header(tree)
         regs = regs_header(tree, load_regs(args.srcdir, args.appdir), config)
         roles = roles_source(
-            generator, load_roles(load_classes(args.srcdir, args.appdir)), chosen, config
+            generator,
+            load_roles(load_classes(args.srcdir, args.appdir)),
+            chosen,
+            config,
         )
     except DtError as error:
         sys.exit(f"devicetree: {error}")
