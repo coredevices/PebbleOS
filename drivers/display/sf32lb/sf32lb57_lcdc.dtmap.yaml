@@ -15,13 +15,13 @@ args:
   - clock: 0
   - reset: 0
   - self: panel
-    child: panel
+    child: panel@0
   - prop: hactive
-    child: panel/panel-timing
+    child: panel@0/panel-timing
   - prop: vactive
-    child: panel/panel-timing
+    child: panel@0/panel-timing
   - prop: rotation
-    child: panel
+    child: panel@0
     default: 0
   - reg: 0
     of: memory-region

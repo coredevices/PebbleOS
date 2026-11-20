@@ -49,9 +49,17 @@ properties:
     $ref: /schemas/graph.yaml#/properties/port
     description: Output to the panel.
 
-  panel:
+  '#address-cells':
+    const: 1
+
+  '#size-cells':
+    const: 0
+
+  panel@0:
     type: object
-    description: Panel with frame memory, of which the controller is the host.
+    description:
+      Panel with frame memory, of which the controller is the host, on its
+      only chip select.
 
   memory-region:
     maxItems: 1
@@ -75,13 +83,15 @@ allOf:
       required:
         - port
       properties:
-        panel: false
+        panel@0: false
     else:
       oneOf:
         - required:
             - port
         - required:
-            - panel
+            - '#address-cells'
+            - '#size-cells'
+            - panel@0
 
 additionalProperties: false
 
