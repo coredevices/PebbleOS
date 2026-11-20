@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h743-pinctrl
+config: PINCTRL_STM32
+class: pinctrl
+pinctrl:
+  define: PBL_PINCTRL_STM32_DT_STATE
+  pinmux: "PBL_PINCTRL_STM32_PINMUX({value:#06x})"
+  flags:
+    bias-disable: PBL_PINCTRL_STM32_NO_PULL
+    bias-pull-up: PBL_PINCTRL_STM32_PULL_UP
+    bias-pull-down: PBL_PINCTRL_STM32_PULL_DOWN
+    drive-push-pull: PBL_PINCTRL_STM32_PUSH_PULL
+    drive-open-drain: PBL_PINCTRL_STM32_OPEN_DRAIN
+  values:
+    slew-rate: "PBL_PINCTRL_STM32_SPEED({value})"
