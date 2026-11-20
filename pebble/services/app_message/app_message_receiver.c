@@ -33,6 +33,9 @@ extern const struct pbl_pp_receiver_api g_app_message_receiver_implementation;
 typedef struct {
   bool is_writing_to_app_inbox;
 
+  //! Set when the message is over APP_MESSAGE_FAST_CONNECTION_MIN_SIZE.
+  bool wants_fast_connection;
+
   struct pbl_pp_session *session;
 
   //! Used to keep track of how many header bytes are remaining to either forward to the default
@@ -71,7 +74,8 @@ static void prv_write(const uint8_t *data, size_t length) {
 static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
     struct pbl_pp_session *session, const struct pbl_pp_endpoint *endpoint,
     size_t total_payload_size) {
-  if (total_payload_size > 500) {
+  const bool wants_fast_connection = (total_payload_size > APP_MESSAGE_FAST_CONNECTION_MIN_SIZE);
+  if (wants_fast_connection) {
     pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                       PBL_BT_RESPONSE_TIME_MIN,
                                       PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
@@ -82,6 +86,7 @@ static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
     return nullptr;
   }
   rcv->session = session;
+  rcv->wants_fast_connection = wants_fast_connection;
 
   const size_t header_bytes_remaining = MIN(MAX_HEADER_SIZE, total_payload_size);
   rcv->header_bytes_remaining = header_bytes_remaining;
@@ -120,9 +125,11 @@ static void prv_app_message_receiver_write(struct pbl_pp_receiver *receiver, con
                                            size_t length) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
-  pbl_pp_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+  if (rcv->wants_fast_connection) {
+    pbl_pp_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+  }
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = MIN(rcv->header_bytes_remaining, length);
