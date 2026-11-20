@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/drivers/clk.h>
 
 /**
@@ -321,5 +323,37 @@ extern const struct pbl_clk_controller pbl_clk_sf32lb52_rtc;
 /** @cond INTERNAL_HIDDEN */
 #define SF32LB52_LPSYS_NUM_CLKS 5
 /** @endcond */
+
+/** @brief clk_rtc of the SF32LB52 RTC. */
+struct pbl_clk_sf32lb52_rtc {
+  /** Clock controller. */
+  struct pbl_clk_controller ctrl;
+  /** Registers. */
+  uintptr_t base;
+  /** LRC10 oscillator. */
+  struct pbl_clk lrc10;
+  /** LXT32 crystal. */
+  struct pbl_clk lxt32;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_clk_controller_ops pbl_clk_sf32lb52_rtc_ops;
+/** @endcond */
+
+/**
+ * @brief Define clk_rtc of the SF32LB52 RTC.
+ *
+ * @param sym Symbol of the controller.
+ * @param _name Name.
+ * @param _base RTC registers.
+ * @param _lrc10 LRC10 oscillator, from PBL_CLK().
+ * @param _lxt32 LXT32 crystal, from PBL_CLK().
+ */
+#define PBL_CLK_SF32LB52_RTC_DEFINE(sym, _name, _base, _lrc10, _lxt32)                        \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, 1);                                                    \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_clk_sf32lb52_rtc, struct pbl_clk_controller, ctrl) {    \
+    .ctrl = PBL_CLK_CONTROLLER_INIT(sym, _name, nullptr, nullptr, &pbl_clk_sf32lb52_rtc_ops), \
+    .base = (_base), .lrc10 = _lrc10, .lxt32 = _lxt32,                                        \
+  }
 
 /** @} */
