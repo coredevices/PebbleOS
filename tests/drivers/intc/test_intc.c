@@ -101,6 +101,7 @@ void test_intc__initialize(void) {
   s_handler_calls = 0;
   s_handler_arg = nullptr;
   memset(s_intc_intc_lines, 0, sizeof(s_intc_intc_lines));
+  memset(s_intc_intc_enabled, 0, sizeof(s_intc_intc_enabled));
   cl_assert_equal_i(pbl_device_init(&s_intc.dev), 0);
 }
 
@@ -114,7 +115,7 @@ void test_intc__request(void) {
   cl_assert_equal_i(pbl_intc_request(&s_line1, prv_handler, &arg), 0);
   cl_assert_equal_i(s_types[1], PBL_IRQ_TYPE_EDGE_FALLING);
   cl_assert_equal_i(s_unmasked, 0x0);
-  cl_assert(!s_intc.lines[1].enabled);
+  cl_assert((s_intc.enabled[0] & (1U << 1)) == 0U);
 
   pbl_intc_dispatch(&s_intc, 1);
   cl_assert_equal_i(s_handler_calls, 1);
@@ -186,7 +187,7 @@ void test_intc__free(void) {
   cl_assert(s_intc.lines[1].handler == nullptr);
 
   cl_assert_equal_i(pbl_intc_request(&s_line1, prv_handler, nullptr), 0);
-  cl_assert(!s_intc.lines[1].enabled);
+  cl_assert((s_intc.enabled[0] & (1U << 1)) == 0U);
   cl_assert_equal_i(s_lock_depth, 0);
 }
 

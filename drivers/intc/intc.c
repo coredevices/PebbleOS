@@ -6,6 +6,7 @@
 #include <pbl/drivers/intc.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/util/bits.h>
 
 PBL_DEVICE_CLASS_DEFINE(pbl_intc_class, "intc");
 
@@ -13,6 +14,18 @@ static bool prv_type_valid(uint32_t type) {
   return (type == PBL_IRQ_TYPE_EDGE_RISING) || (type == PBL_IRQ_TYPE_EDGE_FALLING) ||
          (type == PBL_IRQ_TYPE_EDGE_BOTH) || (type == PBL_IRQ_TYPE_LEVEL_HIGH) ||
          (type == PBL_IRQ_TYPE_LEVEL_LOW);
+}
+
+static bool prv_enabled(const struct pbl_intc *intc, uint16_t hwirq) {
+  return (intc->enabled[hwirq / 32U] & PBL_BIT(hwirq % 32U)) != 0U;
+}
+
+static void prv_mark_enabled(const struct pbl_intc *intc, uint16_t hwirq, bool enabled) {
+  if (enabled) {
+    intc->enabled[hwirq / 32U] |= PBL_BIT(hwirq % 32U);
+  } else {
+    intc->enabled[hwirq / 32U] &= ~PBL_BIT(hwirq % 32U);
+  }
 }
 
 static struct pbl_intc_line *prv_requested_line(const struct pbl_irq_spec *spec) {
@@ -53,8 +66,7 @@ int pbl_intc_request(const struct pbl_irq_spec *spec, pbl_intc_handler_t handler
 
   line->handler = handler;
   line->arg = arg;
-  line->type = spec->type;
-  line->enabled = false;
+  prv_mark_enabled(intc, spec->hwirq, false);
 
   pbl_irq_unlock();
 
@@ -73,7 +85,7 @@ int pbl_intc_free(const struct pbl_irq_spec *spec) {
     return -EINVAL;
   }
 
-  if (line->enabled) {
+  if (prv_enabled(spec->intc, spec->hwirq)) {
     ret = spec->intc->ops->disable(spec->intc, spec->hwirq);
     if (ret != 0) {
       pbl_irq_unlock();
@@ -83,7 +95,7 @@ int pbl_intc_free(const struct pbl_irq_spec *spec) {
 
   line->handler = nullptr;
   line->arg = nullptr;
-  line->enabled = false;
+  prv_mark_enabled(spec->intc, spec->hwirq, false);
 
   pbl_irq_unlock();
 
@@ -92,21 +104,19 @@ int pbl_intc_free(const struct pbl_irq_spec *spec) {
 
 static int prv_set_enabled(const struct pbl_irq_spec *spec, bool enable) {
   const struct pbl_intc *intc = spec->intc;
-  struct pbl_intc_line *line;
   int ret = 0;
 
   pbl_irq_lock();
 
-  line = prv_requested_line(spec);
-  if (line == nullptr) {
+  if (prv_requested_line(spec) == nullptr) {
     pbl_irq_unlock();
     return -EINVAL;
   }
 
-  if (line->enabled != enable) {
+  if (prv_enabled(intc, spec->hwirq) != enable) {
     ret = enable ? intc->ops->enable(intc, spec->hwirq) : intc->ops->disable(intc, spec->hwirq);
     if (ret == 0) {
-      line->enabled = enable;
+      prv_mark_enabled(intc, spec->hwirq, enable);
     }
   }
 

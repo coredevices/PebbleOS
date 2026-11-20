@@ -80,10 +80,6 @@ struct pbl_intc_line {
   pbl_intc_handler_t handler;
   /** Handler argument. */
   void *arg;
-  /** Trigger type. */
-  uint8_t type;
-  /** Whether the line is enabled. */
-  bool enabled;
 };
 
 /** @brief An interrupt controller. */
@@ -94,6 +90,8 @@ struct pbl_intc {
   const struct pbl_intc_ops *ops;
   /** State of each line. */
   struct pbl_intc_line *lines;
+  /** Enabled lines, one bit each. */
+  uint32_t *enabled;
   /** Number of lines. */
   uint16_t num_irqs;
 };
@@ -104,9 +102,10 @@ struct pbl_intc {
  * @param sym Symbol of the controller instance.
  * @param _num_irqs Number of lines.
  */
-#define PBL_INTC_STATE_DEFINE(sym, _num_irqs) \
-  PBL_DEVICE_STATE_DEFINE(sym);               \
-  static struct pbl_intc_line sym##_intc_lines[_num_irqs]
+#define PBL_INTC_STATE_DEFINE(sym, _num_irqs)              \
+  PBL_DEVICE_STATE_DEFINE(sym);                            \
+  static struct pbl_intc_line sym##_intc_lines[_num_irqs]; \
+  static uint32_t sym##_intc_enabled[((_num_irqs) + 31U) / 32U]
 
 /**
  * @brief Initializer for the struct pbl_intc of controller @p sym.
@@ -123,6 +122,7 @@ struct pbl_intc {
     .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_intc_class), \
     .ops = (_ops),                                                                      \
     .lines = sym##_intc_lines,                                                          \
+    .enabled = sym##_intc_enabled,                                                      \
     .num_irqs = ARRAY_LENGTH(sym##_intc_lines),                                         \
   }
 
