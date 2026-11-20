@@ -8,6 +8,7 @@
 #include <pbl/util/misc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_mag, CONFIG_DRIVER_IMU_LOG_LEVEL);
+PBL_DEVICE_CLASS_DEFINE(pbl_mag_class, "mag");
 
 int pbl_mag_dev_init(const struct pbl_device *dev) {
   const struct pbl_mag *mag = container_of(dev, const struct pbl_mag, dev);

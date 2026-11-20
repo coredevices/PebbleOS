@@ -55,15 +55,12 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev);
  * @param _supply Supply, or NULL.
  * @param ... Further fields: @c mode_pulses, @c pulse_us, @c settle_us.
  */
-#define PBL_AUDIO_AMP_GPIO_DEFINE(sym, _name, _enable, _supply, ...)                     \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                          \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {       \
-    .amp =                                                                               \
-        {                                                                                \
-          .dev = PBL_DEVICE_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, nullptr), \
-          .ops = &pbl_audio_amp_gpio_ops,                                                \
-        },                                                                               \
-    .enable = _enable, .supply = (_supply), __VA_ARGS__                                  \
+#define PBL_AUDIO_AMP_GPIO_DEFINE(sym, _name, _enable, _supply, ...)                               \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {                 \
+    .amp =                                                                                         \
+        PBL_AUDIO_AMP_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, &pbl_audio_amp_gpio_ops), \
+    .enable = _enable, .supply = (_supply), __VA_ARGS__                                            \
   }
 
 /**
@@ -75,17 +72,14 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev);
  * @param _mode Mode, as the number of rising edges: 1, 2 or 4.
  * @param _supply Supply, or NULL.
  */
-#define PBL_AUDIO_AW8155_DEFINE(sym, _name, _mode_gpio, _mode, _supply)                    \
-  static_assert((_mode) == 1 || (_mode) == 2 || (_mode) == 4, "mode 1, 2 or 4");           \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                            \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {         \
-    .amp =                                                                                 \
-        {                                                                                  \
-          .dev = PBL_DEVICE_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, nullptr),   \
-          .ops = &pbl_audio_amp_gpio_ops,                                                  \
-        },                                                                                 \
-    .enable = _mode_gpio, .supply = (_supply), .mode_pulses = (_mode) - 1, .pulse_us = 2U, \
-    .settle_us = 2000U,                                                                    \
+#define PBL_AUDIO_AW8155_DEFINE(sym, _name, _mode_gpio, _mode, _supply)                            \
+  static_assert((_mode) == 1 || (_mode) == 2 || (_mode) == 4, "mode 1, 2 or 4");                   \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {                 \
+    .amp =                                                                                         \
+        PBL_AUDIO_AMP_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, &pbl_audio_amp_gpio_ops), \
+    .enable = _mode_gpio, .supply = (_supply), .mode_pulses = (_mode) - 1, .pulse_us = 2U,         \
+    .settle_us = 2000U,                                                                            \
   }
 
 /** @} */
