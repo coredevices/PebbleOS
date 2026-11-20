@@ -11,7 +11,8 @@ if MBOX
 
 config MBOX_SF32LB
     bool "SiFli SF32LB mailbox"
-    default DT_HAS_SIFLI_SF32LB52_MAILBOX_ENABLED
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_MAILBOX_ENABLED
     select CLK
     help
       SF32LB52 and SF32LB57 mailbox blocks (MAILBOX1, MAILBOX2), channel 1

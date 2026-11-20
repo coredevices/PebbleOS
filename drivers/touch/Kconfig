@@ -19,7 +19,8 @@ config TOUCH_SHELL
 
 config TOUCH_CST816
     bool "Hynitron CST816"
-    default DT_HAS_HYNITRON_CST816S_ENABLED
+    default y
+    depends on DT_HAS_HYNITRON_CST816S_ENABLED
     select I2C
     select CST816_FW
     select PINCTRL
@@ -28,7 +29,8 @@ config TOUCH_CST816
 
 config TOUCH_FT6236
     bool "FocalTech FT6x36"
-    default DT_HAS_FOCALTECH_FT6236_ENABLED
+    default y
+    depends on DT_HAS_FOCALTECH_FT6236_ENABLED
     select I2C
     select PINCTRL
     help
@@ -37,8 +39,8 @@ config TOUCH_FT6236
 
 config TOUCH_QEMU
     bool "QEMU Touchscreen"
-    default DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
-    depends on SOC_QEMU_PEBBLE
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
     help
       Support for the QEMU touchscreen peripheral.
 

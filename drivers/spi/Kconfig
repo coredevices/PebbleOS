@@ -10,8 +10,8 @@ if SPI
 
 config SPI_NRF5
     bool "Nordic nRF5 SPI Controller"
-    default DT_HAS_NORDIC_NRF52832_SPIM_ENABLED
-    depends on SOC_NRF52
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_SPIM_ENABLED
     help
       Support for the Nordic nRF5 SPIM controller.
 

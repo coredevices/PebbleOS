@@ -10,8 +10,8 @@ if DISPLAY
 
 config DISPLAY_SF32LB_LCDC
     bool "SiFli SF32LB LCD controller"
-    default DT_HAS_SIFLI_SF32LB52_LCDC_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_LCDC_ENABLED
     select CLK
     select PANEL
     select PINCTRL
@@ -29,8 +29,8 @@ config DISPLAY_SF32LB_LCDC_IRQ_PRIO
 
 config DISPLAY_SF32LB57_LCDC
     bool "SiFli SF32LB57 LCD controller"
-    default DT_HAS_SIFLI_SF32LB57_LCDC_ENABLED
-    depends on SOC_SF32LB57
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_LCDC_ENABLED
     select CLK
     select MIPI_DBI
     select PANEL
@@ -69,7 +69,8 @@ endchoice
 
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
-    default DT_HAS_SHARP_LS013B7DH01_ENABLED
+    default y
+    depends on DT_HAS_SHARP_LS013B7DH01_ENABLED
     select PWM
     select SPI
     help
@@ -77,8 +78,8 @@ config DISPLAY_SHARP_LS013B7DH01
 
 config DISPLAY_QEMU
     bool "QEMU Framebuffer Display"
-    default DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
-    depends on SOC_QEMU_PEBBLE
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
     help
       Support for the QEMU framebuffer display peripheral.
 

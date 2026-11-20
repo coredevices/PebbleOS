@@ -22,7 +22,8 @@ if AUDIO
 
 config AUDIO_AMP_GPIO
     bool "GPIO amplifier"
-    default DT_HAS_AWINIC_AW8155_ENABLED
+    default y
+    depends on DT_HAS_AWINIC_AW8155_ENABLED
     select GPIO
     select REGULATOR
     help
@@ -31,8 +32,8 @@ config AUDIO_AMP_GPIO
 
 config AUDIO_SF32LB52_AUDCODEC
     bool "SiFli SF32LB52 audio codec"
-    default DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED
     select CLK
     select DMA
     select PINCTRL
@@ -42,8 +43,8 @@ config AUDIO_SF32LB52_AUDCODEC
 
 config AUDIO_SF32LB52_PDM
     bool "SiFli SF32LB52 PDM"
-    default DT_HAS_SIFLI_SF32LB52_PDM_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PDM_ENABLED
     select CLK
     select DMA
     select PINCTRL
@@ -60,8 +61,8 @@ config AUDIO_SF32LB52_PDM_IRQ_PRIO
 
 config AUDIO_QEMU
     bool "QEMU audio device"
-    default DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
-    depends on SOC_QEMU_PEBBLE
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
     help
       Playback through the QEMU audio device.
 
@@ -81,16 +82,16 @@ config AUDIO_SIM_MIC
 
 config AUDIO_NRF5_PDM
     bool "Nordic nRF5 PDM"
-    default DT_HAS_NORDIC_NRF52832_PDM_ENABLED
-    depends on SOC_NRF52
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_PDM_ENABLED
     select CLK
     help
       Capture from digital microphones on the nRF5 PDM interface.
 
 config AUDIO_NRF5_I2S
     bool "Nordic nRF5 I2S"
-    default DT_HAS_NORDIC_NRF52832_I2S_ENABLED
-    depends on SOC_NRF52
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_I2S_ENABLED
     select CLK
     help
       Playback through the nRF5 I2S interface.
@@ -111,14 +112,16 @@ config AUDIO_NRF5_I2S_IRQ_PRIO
 
 config AUDIO_DMIC
     bool "Digital microphones"
-    default DT_HAS_DMIC_CODEC_ENABLED
+    default y
+    depends on DT_HAS_DMIC_CODEC_ENABLED
     select REGULATOR
     help
       Digital microphones on a PDM interface, powered while recording.
 
 config AUDIO_DA7212
     bool "Dialog DA7212 codec"
-    default DT_HAS_DLG_DA7212_ENABLED
+    default y
+    depends on DT_HAS_DLG_DA7212_ENABLED
     select I2C
     select REGULATOR
     help

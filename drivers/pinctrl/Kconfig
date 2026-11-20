@@ -11,7 +11,8 @@ if PINCTRL
 
 config PINCTRL_SF32LB52
     bool "SiFli SF32LB52 pin controller"
-    default DT_HAS_SIFLI_SF32LB52_PINCTRL_ENABLED
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PINCTRL_ENABLED
     help
       Pin multiplexer and pad configuration of the SiFli SF32LB52 HPSYS
       pads.
@@ -24,7 +25,8 @@ config PINCTRL_SF32LB52_OUTPUT_LOW
 
 config PINCTRL_SF32LB57
     bool "SiFli SF32LB57 pin controller"
-    default DT_HAS_SIFLI_SF32LB57_PINCTRL_ENABLED
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_PINCTRL_ENABLED
     help
       Pin multiplexer and pad configuration of the SiFli SF32LB57 HPSYS
       pads.

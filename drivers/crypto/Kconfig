@@ -12,8 +12,8 @@ if CRYPTO_HW
 
 config CRYPTO_SF32LB
     bool "SiFli SF32LB AES and hash accelerator"
-    default DT_HAS_SIFLI_SF32LB52_AES_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_AES_ENABLED
     select CLK
     select CRYPTO_SHA256_HW_ACCEL
     select CRYPTO_AES_HW_ACCEL

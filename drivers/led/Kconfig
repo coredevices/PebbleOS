@@ -15,7 +15,8 @@ config LED_HAS_COLOR
 
 config LED_AW2016
     bool "Awinic AW2016"
-    default DT_HAS_AWINIC_AW2016_ENABLED
+    default y
+    depends on DT_HAS_AWINIC_AW2016_ENABLED
     select I2C
     select LED_HAS_COLOR
     help

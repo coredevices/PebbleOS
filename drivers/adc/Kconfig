@@ -18,7 +18,8 @@ config ADC_SHELL
 
 config ADC_SF32LB57_GPADC
     bool "SiFli SF32LB57 GPADC"
-    default DT_HAS_SIFLI_SF32LB57_GPADC_ENABLED
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_GPADC_ENABLED
     select CLK
     select NVMEM
     help
