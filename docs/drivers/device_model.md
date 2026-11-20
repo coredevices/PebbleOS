@@ -81,8 +81,17 @@ however many others depend on it. A failed init marks the device
 their own init. An init returning `-ENODEV` means the device is not present,
 which is not logged as an error. A dependency cycle asserts.
 
-Runtime APIs assert that their device is ready and never initialize on
-demand: bring-up is deterministic and happens in one place.
+Runtime APIs never initialize on demand: bring-up is deterministic and
+happens in one place. What they do with a device that is not ready depends
+on what the device is to its callers:
+
+- a device other devices are built on asserts it, as its consumers only
+  come up once it is: a call on it before then is a bug;
+- a device a caller may find absent or failed returns `-ENODEV`, which the
+  caller handles;
+- a device used before the devices come up, or while the memory holding
+  the device model may be unreadable, does not check: its users already
+  know it is up, and the check could not run.
 
 Hardware needed before the kernel runs, such as clocks
 (`pbl_soc_early_init()`), stays outside the model, as in Linux.
