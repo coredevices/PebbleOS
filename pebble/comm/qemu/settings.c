@@ -6,10 +6,10 @@
 #include <pbl/kernel/fatal.h>
 
 #include <comm/qemu/settings.h>
-#include <hardware/qemu_memorymap.h>
+#include <devicetree/regs.h>
 
-// QEMU RTC backup registers at RTC_BASE + 0x40
-#define QEMU_RTC_BACKUP_BASE (QEMU_RTC_BASE + 0x40)
+// QEMU RTC backup registers at the RTC base + 0x40
+#define QEMU_RTC_BACKUP_BASE (PBL_DT_REG_RTC + 0x40)
 #define QEMU_BACKUP_REG(n)   (*(volatile uint32_t *)(QEMU_RTC_BACKUP_BASE + (n) * 4))
 
 // QEMU backup registers and bit indices. These are also defined in the qemu project in
