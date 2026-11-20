@@ -76,7 +76,7 @@ static uint32_t prv_file_common_get_crc(struct pbl_fs_file *file, int ret, uint3
   uint8_t buffer[128];
   pbl_fs_seek(file, RESOURCE_STORE_METADATA_BYTES + entry_offset, PBL_FS_SEEK_SET);
   while (num_bytes > 0) {
-    const ssize_t bytes_read = pbl_fs_read(file, buffer, MIN(num_bytes, sizeof(buffer)));
+    const ssize_t bytes_read = pbl_fs_read(file, buffer, PBL_MIN(num_bytes, sizeof(buffer)));
     if (bytes_read <= 0) {
       break;
     }
@@ -212,7 +212,7 @@ static void resource_storage_file_init(void) {
     const uint32_t first_resource_id = g_file_resource_stores[i].first_resource_id;
     const uint32_t num_entries = resource_storage_get_num_entries(SYSTEM_APP, first_resource_id);
     const uint32_t last_resource_id =
-        MIN(g_file_resource_stores[i].last_resource_id, first_resource_id + num_entries - 1);
+        PBL_MIN(g_file_resource_stores[i].last_resource_id, first_resource_id + num_entries - 1);
 
     // Now check each entry in the file
     for (uint32_t resource_id = first_resource_id; resource_id <= last_resource_id; resource_id++) {

@@ -86,7 +86,7 @@ static int prv_clock_div(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t 
 // The interface and SPI dividers with the smallest product not under the total, the interface
 // one as large as it can be
 static void prv_set_div(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t div) {
-  uint32_t intf = MIN(div, LCDC_INTF_CLK_DIV_MAX);
+  uint32_t intf = PBL_MIN(div, LCDC_INTF_CLK_DIV_MAX);
   uint32_t sdr = (div + intf - 1U) / intf;
 
   for (uint32_t i = intf - 1U; i >= 2U && intf * sdr > div; i--) {
@@ -148,7 +148,7 @@ static int prv_command_write(const struct pbl_display_sf32lb57_lcdc *lcdc, uint8
   }
 
   while (len > 0U) {
-    uint32_t chunk = MIN(len, 4U);
+    uint32_t chunk = PBL_MIN(len, 4U);
     uint32_t value = 0U;
 
     for (uint32_t i = 0U; i < chunk; i++) {
@@ -335,7 +335,7 @@ static int prv_panel_off(const struct pbl_display_sf32lb57_lcdc *lcdc) {
 }
 
 static uint16_t prv_row_multiple(const struct pbl_display_sf32lb57_lcdc *lcdc) {
-  return MAX(lcdc->panel->row_multiple, 1U);
+  return PBL_MAX(lcdc->panel->row_multiple, 1U);
 }
 
 static bool prv_rgb565(const struct pbl_display_sf32lb57_lcdc *lcdc) {

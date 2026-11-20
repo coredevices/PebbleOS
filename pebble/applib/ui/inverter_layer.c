@@ -17,8 +17,8 @@ inline static void prv_inverter_layer_update_proc_color(GContext *ctx) {
   grect_clip(&rect, &ctx->dest_bitmap.bounds); // clip to display bounds
   for (int16_t y = rect.origin.y; y < rect.origin.y + rect.size.h; y++) {
     const GBitmapDataRowInfo row = gbitmap_get_data_row_info(&ctx->dest_bitmap, y);
-    const int16_t x_begin = MAX(rect.origin.x, row.min_x);
-    const int16_t x_end = MIN(rect.origin.x + rect.size.w - 1, row.max_x);
+    const int16_t x_begin = PBL_MAX(rect.origin.x, row.min_x);
+    const int16_t x_end = PBL_MIN(rect.origin.x + rect.size.w - 1, row.max_x);
     for (int16_t x = x_begin; x <= x_end; x++) {
       uint8_t *pixel_addr = &row.data[x];
       // Only invert the RGB and not the alpha

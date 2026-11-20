@@ -441,7 +441,7 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, u
       ActivitySession *session =
           &s_test_alg_state.minute_data
                .sessions[s_test_alg_state.minute_data.sleep_current_container_idx];
-      session->length_min = ROUND(now_secs - session->start_utc, PBL_SEC_PER_MIN);
+      session->length_min = PBL_DIV_ROUND_CLOSEST(now_secs - session->start_utc, PBL_SEC_PER_MIN);
       // Inform the activity service of the new state
       activity_sessions_prv_add_activity_session(session);
     }
@@ -451,7 +451,7 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, u
       ActivitySession *session =
           &s_test_alg_state.minute_data
                .sessions[s_test_alg_state.minute_data.num_sessions_created - 1];
-      session->length_min = ROUND(now_secs - session->start_utc, PBL_SEC_PER_MIN);
+      session->length_min = PBL_DIV_ROUND_CLOSEST(now_secs - session->start_utc, PBL_SEC_PER_MIN);
       // Inform the activity service of the new state
       activity_sessions_prv_add_activity_session(session);
     }
@@ -893,7 +893,7 @@ static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_s
   s_health_sessions[s_health_sessions_count] = (ActivitySession){
     .type = session_type,
     .start_utc = time_start,
-    .length_min = ROUND(time_end - time_start, PBL_SEC_PER_MIN),
+    .length_min = PBL_DIV_ROUND_CLOSEST(time_end - time_start, PBL_SEC_PER_MIN),
   };
   s_health_sessions_count += 1;
 
@@ -1026,7 +1026,7 @@ void test_activity__init_history(void) {
   activity_get_metric(ActivityMetricRestingKCalories, 1, &min_resting_kcalories);
 
   // Wait long enough for our recompute sleep and periodic update logic to run.
-  uint32_t wait_min = MAX(ACTIVITY_SESSION_UPDATE_MIN, ACTIVITY_SETTINGS_UPDATE_MIN);
+  uint32_t wait_min = PBL_MAX(ACTIVITY_SESSION_UPDATE_MIN, ACTIVITY_SETTINGS_UPDATE_MIN);
   prv_feed_canned_accel_data(PBL_SEC_PER_MIN * wait_min, 0, ActivitySleepStateAwake);
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
                               ((const uint32_t[ACTIVITY_HISTORY_DAYS]){100, 0, 0, 0, 0, 0, 0}));
@@ -1044,7 +1044,7 @@ void test_activity__init_history(void) {
   // The expected resting calories
   int minutes_today = 17 * PBL_MIN_PER_HOUR + 3 + wait_min;
   const int exp_resting_kcalories_now =
-      ROUND(s_exp_full_day_resting_kcalories * minutes_today, PBL_MIN_PER_DAY);
+      PBL_DIV_ROUND_CLOSEST(s_exp_full_day_resting_kcalories * minutes_today, PBL_MIN_PER_DAY);
   exp_resting_kcalories[0] = exp_resting_kcalories_now;
   ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricRestingKCalories, exp_resting_kcalories);
 
@@ -1212,7 +1212,7 @@ void test_activity__day_rollover(void) {
       // All tests start at 5pm, we we just entered 3 minutes of data.
       uint32_t minutes_today = 17 * PBL_MIN_PER_HOUR + 3 + ACTIVITY_SESSION_UPDATE_MIN;
       exp_resting_kcalories[i] =
-          ROUND(s_exp_full_day_resting_kcalories * minutes_today, PBL_MIN_PER_DAY);
+          PBL_DIV_ROUND_CLOSEST(s_exp_full_day_resting_kcalories * minutes_today, PBL_MIN_PER_DAY);
     } else {
       exp_resting_kcalories[i] = s_exp_full_day_resting_kcalories;
     }
@@ -1267,8 +1267,8 @@ void test_activity__day_rollover(void) {
     if (i == 0) {
       exp_resting_kcalories[i] = 1;
     } else if (i == 1) {
-      exp_resting_kcalories[i] =
-          ROUND(s_exp_full_day_resting_kcalories * (PBL_MIN_PER_DAY - 1), PBL_MIN_PER_DAY);
+      exp_resting_kcalories[i] = PBL_DIV_ROUND_CLOSEST(
+          s_exp_full_day_resting_kcalories * (PBL_MIN_PER_DAY - 1), PBL_MIN_PER_DAY);
     } else {
       exp_resting_kcalories[i] = s_exp_full_day_resting_kcalories;
     }
@@ -1324,8 +1324,8 @@ void test_activity__step_derived_metrics(void) {
   //    1388 * 1020/1440 = 1023 kcalories
   activity_get_metric(ActivityMetricRestingKCalories, 1, &value);
   const int k_bmr_cal = 1388 * ACTIVITY_CALORIES_PER_KCAL;
-  cl_assert_equal_i(
-      value, ROUND(k_bmr_cal * k_minute_start / PBL_MIN_PER_DAY, ACTIVITY_CALORIES_PER_KCAL));
+  cl_assert_equal_i(value, PBL_DIV_ROUND_CLOSEST(k_bmr_cal * k_minute_start / PBL_MIN_PER_DAY,
+                                                 ACTIVITY_CALORIES_PER_KCAL));
   cl_assert_equal_i(health_service_sum_today(HealthMetricRestingKCalories), value);
 
   // Feed in 100 steps/minute over 1 hour (walking rate)
@@ -1351,7 +1351,7 @@ void test_activity__step_derived_metrics(void) {
   const int exp_resting_calories =
       k_bmr_cal * (k_minute_start + PBL_MIN_PER_HOUR) / PBL_MIN_PER_DAY;
   activity_get_metric(ActivityMetricRestingKCalories, 1, &value);
-  cl_assert_equal_i(value, ROUND(exp_resting_calories, ACTIVITY_CALORIES_PER_KCAL));
+  cl_assert_equal_i(value, PBL_DIV_ROUND_CLOSEST(exp_resting_calories, ACTIVITY_CALORIES_PER_KCAL));
 
   // Test that ActivityMetricStepMinutes responds correctly
   prv_feed_canned_accel_data(1 * PBL_SEC_PER_MIN, 100, ActivitySleepStateAwake);
@@ -1389,8 +1389,8 @@ void test_activity__step_derived_metrics(void) {
   //    1859 * 1020/1440 = 1328 kcalories
   activity_get_metric(ActivityMetricRestingKCalories, 1, &value);
   const int k_bmr_cal_2 = 1859 * ACTIVITY_CALORIES_PER_KCAL;
-  cl_assert_equal_i(
-      value, ROUND(k_bmr_cal_2 * k_minute_start / PBL_MIN_PER_DAY, ACTIVITY_CALORIES_PER_KCAL));
+  cl_assert_equal_i(value, PBL_DIV_ROUND_CLOSEST(k_bmr_cal_2 * k_minute_start / PBL_MIN_PER_DAY,
+                                                 ACTIVITY_CALORIES_PER_KCAL));
 
   // Feed in 125 steps/minute over 60 minutes
   prv_feed_canned_accel_data(60 * PBL_SEC_PER_MIN, 125, ActivitySleepStateAwake);
@@ -1412,7 +1412,8 @@ void test_activity__step_derived_metrics(void) {
   const int exp_resting_calories_2 =
       k_bmr_cal_2 * (k_minute_start + PBL_MIN_PER_HOUR) / PBL_MIN_PER_DAY;
   activity_get_metric(ActivityMetricRestingKCalories, 1, &value);
-  cl_assert_equal_i(value, ROUND(exp_resting_calories_2, ACTIVITY_CALORIES_PER_KCAL));
+  cl_assert_equal_i(value,
+                    PBL_DIV_ROUND_CLOSEST(exp_resting_calories_2, ACTIVITY_CALORIES_PER_KCAL));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -2385,13 +2386,15 @@ void test_activity__distance(void) {
     // Feed in the test cadence for 2 minutes. Compute the expected distance in 2 minutes
     // as well
     int steps_per_minute = (int)((float)params->steps / params->seconds * PBL_SEC_PER_MIN);
-    int exp_distance_m = ROUND(params->exp_distance_m * k_elapsed_sec, params->seconds);
+    int exp_distance_m =
+        PBL_DIV_ROUND_CLOSEST(params->exp_distance_m * k_elapsed_sec, params->seconds);
 
     // Feed in the test cadence for the given amount of time
     prv_feed_canned_accel_data(k_elapsed_sec, steps_per_minute, ActivitySleepStateAwake);
 
     activity_get_metric(ActivityMetricStepCount, 1, &value);
-    cl_assert_near(value, ROUND(steps_per_minute * k_elapsed_sec, PBL_SEC_PER_MIN), 5);
+    cl_assert_near(value, PBL_DIV_ROUND_CLOSEST(steps_per_minute * k_elapsed_sec, PBL_SEC_PER_MIN),
+                   5);
 
     activity_get_metric(ActivityMetricDistanceMeters, 1, &value);
     act_distance[i] = value;
@@ -2419,7 +2422,8 @@ void test_activity__distance(void) {
     DistanceTestParams *params = &tests[i];
 
     int steps_per_minute = (int)((float)params->steps / params->seconds * PBL_SEC_PER_MIN);
-    int exp_distance_m = ROUND(params->exp_distance_m * k_elapsed_sec, params->seconds);
+    int exp_distance_m =
+        PBL_DIV_ROUND_CLOSEST(params->exp_distance_m * k_elapsed_sec, params->seconds);
     float err = act_distance[i] - exp_distance_m;
     float pct_err = err * 100.0 / exp_distance_m;
     printf("\n%4d  %5d   %4d   %7.2f  %7d   %7d  %13d  %13d    %+.2f", i, params->height_in,

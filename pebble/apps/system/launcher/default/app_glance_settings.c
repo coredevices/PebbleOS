@@ -108,7 +108,7 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
     for (int16_t y = 0; y < h; y++) {
       const ChargingIconRow *row = &rows[y * num_rows / h];
       const int16_t x = row->x * h / num_rows;
-      const int16_t w = MAX(1, (row->x + row->w) * h / num_rows - x);
+      const int16_t w = PBL_MAX(1, (row->x + row->w) * h / num_rows - x);
       graphics_fill_rect(ctx,
                          &GRect(rect->origin.x + x, rect->origin.y + digits.origin.y + y, w, 1));
     }
@@ -130,7 +130,7 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   const GRect digits = prv_get_digit_frame(ctx, structured_glance);
   const int16_t h = digits.size.h;
   const int16_t w = h * 16 / 9;
-  const int16_t border = MAX(2, h * 2 / 9);
+  const int16_t border = PBL_MAX(2, h * 2 / 9);
   const int16_t tip_w = border;
 
   if (render) {
@@ -176,7 +176,7 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
     // Adjust fill width for charge percentage, never filling below 10%
     uint8_t clipped_charge_percent =
         settings_glance->glance_state.battery_charge_state.charge_percent;
-    clipped_charge_percent = CLIP(clipped_charge_percent, (uint8_t)10, (uint8_t)100);
+    clipped_charge_percent = PBL_CLAMP(clipped_charge_percent, (uint8_t)10, (uint8_t)100);
     battery_fill_rect.size.w = battery_fill_rect.size.w * clipped_charge_percent / (int16_t)100;
     // Fill the battery silhouette based on the charge percent
     graphics_context_set_fill_color(ctx, battery_fill_color);
@@ -196,7 +196,7 @@ static void prv_battery_percent_dynamic_text_node_update(
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
   if (settings_glance) {
-    buffer_size = MIN(sizeof(settings_glance->battery_percent_text), buffer_size);
+    buffer_size = PBL_MIN(sizeof(settings_glance->battery_percent_text), buffer_size);
     strncpy(buffer, settings_glance->battery_percent_text, buffer_size);
     buffer[buffer_size - 1] = '\0';
   }

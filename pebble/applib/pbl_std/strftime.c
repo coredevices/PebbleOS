@@ -279,7 +279,7 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
         } else {
           intfmt = "%*d";
         }
-        width = MAX(width, cpyint_len);
+        width = PBL_MAX(width, cpyint_len);
         length = snprintf(nullptr, 0, intfmt, width, cpyint_val);
         if (left <= length) {
           goto _out_of_size;

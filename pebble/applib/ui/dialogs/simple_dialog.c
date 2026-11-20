@@ -60,7 +60,7 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
   const uint16_t icon_top_default_margin_px = 18 + status_layer_offset;
 #endif
   const uint16_t frame_height_claimed = icon_height + TEXT_MAX_HEIGHT_PX + status_layer_offset;
-  const uint16_t icon_top_adjusted_margin_px = MAX(window_height - frame_height_claimed, 0);
+  const uint16_t icon_top_adjusted_margin_px = PBL_MAX(window_height - frame_height_claimed, 0);
   if (icon_top_adjusted_margin_px < icon_top_default_margin_px) {
     return icon_top_adjusted_margin_px;
   }
@@ -68,7 +68,7 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
   // than the default layout assumes, by splitting the leftover space evenly above and below.
   // Text-only dialogs keep the default top margin so layouts tuned for them aren't disturbed.
   if (icon_height > 0) {
-    return MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
+    return PBL_MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
   }
   return icon_top_default_margin_px;
 }
@@ -82,7 +82,7 @@ static void prv_get_text_box(GSize frame_size, GSize icon_size, int icon_top_mar
 #endif
 
   const uint16_t text_x = TEXT_LEFT_MARGIN_PX;
-  const uint16_t text_y = icon_top_margin_px + MAX(icon_size.h, 6) + icon_text_spacing_px;
+  const uint16_t text_y = icon_top_margin_px + PBL_MAX(icon_size.h, 6) + icon_text_spacing_px;
   const uint16_t text_w = frame_size.w - TEXT_LEFT_MARGIN_PX - TEXT_RIGHT_MARGIN_PX;
   // Limit to 2 lines if there is an icon
   const uint16_t text_h = icon_size.h ? TEXT_MAX_HEIGHT_PX : frame_size.h - text_y;

@@ -67,7 +67,7 @@ PBL_SYSCALL(int, persist_read_data, (VAL, const uint32_t, key),
     RETURN_STATUS_UP(len);
   }
 
-  const size_t restricted_size = MIN(buffer_size, (size_t)len);
+  const size_t restricted_size = PBL_MIN(buffer_size, (size_t)len);
   const status_t read_result =
       status_from_errno(pbl_settings_get(store, &key, sizeof(key), buffer, restricted_size));
   if (FAILED(read_result)) {
@@ -110,7 +110,7 @@ PBL_SYSCALL(status_t, persist_write_int, (VAL, const uint32_t, key), (VAL, const
 
 PBL_SYSCALL(int, persist_write_data, (VAL, const uint32_t, key),
             (IN_BUF, const void *, buffer, buffer_size), (VAL, const size_t, buffer_size)) {
-  const size_t restricted_size = MIN(buffer_size, PERSIST_DATA_MAX_LENGTH);
+  const size_t restricted_size = PBL_MIN(buffer_size, PERSIST_DATA_MAX_LENGTH);
   LOCK_AND_GET_STORE(store);
   int result =
       status_from_errno(pbl_settings_set(store, &key, sizeof(key), buffer, restricted_size));

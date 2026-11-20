@@ -386,10 +386,10 @@ static PBL_ALWAYS_INLINE size_t prv_adjust_len(const void *buf, size_t len, size
 
   // Up to the next word boundary of the buffer, or what the bounce buffer holds
   if (IS_IN_RAM(buf) && misalign != 0U) {
-    return MIN(len, WORD_SIZE - misalign);
+    return PBL_MIN(len, WORD_SIZE - misalign);
   }
 
-  return MIN(len, bounce_size);
+  return PBL_MIN(len, bounce_size);
 }
 
 static int prv_adjust_op_size(const struct pbl_spi_mem *mem, struct pbl_spi_mem_op *op) {
@@ -398,7 +398,8 @@ static int prv_adjust_op_size(const struct pbl_spi_mem *mem, struct pbl_spi_mem_
   } else if (prv_is_program(op)) {
     op->data.nbytes = prv_adjust_len(op->data.buf.out, op->data.nbytes, sizeof(s_bounce_buf));
   } else if (prv_is_cinstr_shape(op)) {
-    op->data.nbytes = MIN(op->data.nbytes, CINSTR_MAX_DATA - op->addr.nbytes - op->dummy.nbytes);
+    op->data.nbytes =
+        PBL_MIN(op->data.nbytes, CINSTR_MAX_DATA - op->addr.nbytes - op->dummy.nbytes);
   }
 
   return 0;

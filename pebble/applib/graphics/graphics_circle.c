@@ -664,8 +664,8 @@ static void prv_draw_scanline_collision_points(GContext *ctx, int16_t y, int16_t
                                                int16_t ending_edge, bool ignore_close_angles) {
   if (starting_edge > ending_edge || (ignore_close_angles && starting_edge == ending_edge)) {
     // Two separate drawings...
-    starting_edge = MAX(starting_edge, left);
-    ending_edge = MIN(ending_edge, right);
+    starting_edge = PBL_MAX(starting_edge, left);
+    ending_edge = PBL_MIN(ending_edge, right);
 
     if (left <= ending_edge) {
       graphics_private_draw_horizontal_line(
@@ -679,8 +679,8 @@ static void prv_draw_scanline_collision_points(GContext *ctx, int16_t y, int16_t
           (Fixed_S16_3){.raw_value = right - FIXED_S16_3_ONE.raw_value});
     }
   } else {
-    starting_edge = (MAX(left, starting_edge));
-    ending_edge = (MIN(right, ending_edge));
+    starting_edge = (PBL_MAX(left, starting_edge));
+    ending_edge = (PBL_MIN(right, ending_edge));
 
     if (starting_edge <= ending_edge) {
       graphics_private_draw_horizontal_line(
@@ -808,8 +808,8 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center, Fixed_S16
   const bool ignore_close_angles = (angle_end - angle_start > (TRIG_MAX_ANGLE / 2));
 
   // Clipping insets to prevent negative values
-  radius_inner_x.raw_value = MAX(radius_inner_x.raw_value, 0);
-  radius_inner_y.raw_value = MAX(radius_inner_y.raw_value, 0);
+  radius_inner_x.raw_value = PBL_MAX(radius_inner_x.raw_value, 0);
+  radius_inner_y.raw_value = PBL_MAX(radius_inner_y.raw_value, 0);
 
   // This flag prevents from calculation of the inner circle (and bugs related to it)
   const bool no_inner_ellipsis = (radius_inner_x.raw_value == 0 || radius_inner_y.raw_value == 0);
@@ -874,25 +874,25 @@ static void prv_fill_oval_precise(GContext *ctx, GPointPrecise center, Fixed_S16
   GRect clip_box = ctx->draw_state.clip_box;
 
   // Clip adjusted values by clip_box
-  adjusted_top = MAX(adjusted_top, clip_box.origin.y);
-  adjusted_top = MIN(adjusted_top, clip_box.origin.y + clip_box.size.h);
-  adjusted_bottom = MAX(adjusted_bottom, clip_box.origin.y);
-  adjusted_bottom = MIN(adjusted_bottom, clip_box.origin.y + clip_box.size.h);
+  adjusted_top = PBL_MAX(adjusted_top, clip_box.origin.y);
+  adjusted_top = PBL_MIN(adjusted_top, clip_box.origin.y + clip_box.size.h);
+  adjusted_bottom = PBL_MAX(adjusted_bottom, clip_box.origin.y);
+  adjusted_bottom = PBL_MIN(adjusted_bottom, clip_box.origin.y + clip_box.size.h);
 
   // Remove offset from adjusted values
   adjusted_top -= ctx->draw_state.drawing_box.origin.y;
   adjusted_bottom -= ctx->draw_state.drawing_box.origin.y;
 
   // Calculate distances from the middle of the circle (discard negative values)
-  int draw_max_top = MAX(center.y.integer - adjusted_top, 0);
-  int draw_max_bottom = MAX(adjusted_bottom - center.y.integer, 0);
-  int draw_min_top = MAX(center.y.integer - adjusted_bottom, 0);
+  int draw_max_top = PBL_MAX(center.y.integer - adjusted_top, 0);
+  int draw_max_bottom = PBL_MAX(adjusted_bottom - center.y.integer, 0);
+  int draw_min_top = PBL_MAX(center.y.integer - adjusted_bottom, 0);
   // In case of odd line, center is with half pixel so we have to subtract one more more full line
-  int draw_min_bottom = MAX(adjusted_top - center.y.integer - 1, 0);
+  int draw_min_bottom = PBL_MAX(adjusted_top - center.y.integer - 1, 0);
 
   // Apply clipped distances
-  draw_max = MIN(draw_max, MAX(draw_max_top, draw_max_bottom));
-  draw_min = MAX(draw_min, MAX(draw_min_top, draw_min_bottom));
+  draw_max = PBL_MIN(draw_max, PBL_MAX(draw_max_top, draw_max_bottom));
+  draw_min = PBL_MAX(draw_min, PBL_MAX(draw_min_top, draw_min_bottom));
 
   // Scanline offset in precise point for calculation of edges
   Fixed_S16_3 y = (Fixed_S16_3){.integer = draw_min};
@@ -1191,7 +1191,7 @@ PBL_T_MOCKABLE void graphics_draw_arc_precise_internal(GContext *ctx, GPointPrec
   Fixed_S16_3 half_stroke_width =
       (Fixed_S16_3){.raw_value = (ctx->draw_state.stroke_width << FIXED_S16_3_PRECISION) / 2};
   Fixed_S16_3 radius_inner =
-      (Fixed_S16_3){.raw_value = MAX(0, radius.raw_value - half_stroke_width.raw_value)};
+      (Fixed_S16_3){.raw_value = PBL_MAX(0, radius.raw_value - half_stroke_width.raw_value)};
   Fixed_S16_3 radius_outer =
       (Fixed_S16_3){.raw_value = radius.raw_value + half_stroke_width.raw_value};
 
@@ -1298,7 +1298,7 @@ void graphics_fill_radial(GContext *ctx, GRect rect, GOvalScaleMode scale_mode,
 }
 
 void graphics_fill_oval(GContext *ctx, GRect rect, GOvalScaleMode scale_mode) {
-  const int32_t inset_thickness = MAX(ABS(rect.size.h), ABS(rect.size.w));
+  const int32_t inset_thickness = PBL_MAX(PBL_ABS(rect.size.h), PBL_ABS(rect.size.w));
   // Fill radial doesn't mind overlarge inset thickness
   graphics_fill_radial(ctx, rect, scale_mode, inset_thickness, 0, TRIG_MAX_ANGLE);
 }
@@ -1361,8 +1361,8 @@ GPoint gpoint_from_polar(GRect rect, GOvalScaleMode scale_mode, int32_t angle) {
 }
 
 GRect grect_centered_internal(const GPointPrecise *center, GSize size) {
-  size.w = ABS(size.w);
-  size.h = ABS(size.h);
+  size.w = PBL_ABS(size.w);
+  size.h = PBL_ABS(size.h);
   const int16_t FIXED_HALF = FIXED_S16_3_HALF.raw_value;
   return (GRect){
     // Adding 0.5 to x and y here will ensure we have rounded up when we throw away the fraction
@@ -1402,7 +1402,7 @@ void grect_polar_calc_values(const GRect *r, GOvalScaleMode scale_mode, GPointPr
         pbl_panic();
     }
     const int16_t radius_value = ((side + 1) * FIXED_ONE) / 2 - FIXED_ONE;
-    *radius = Fixed_S16_3(MAX(0, radius_value));
+    *radius = Fixed_S16_3(PBL_MAX(0, radius_value));
   }
   if (center) {
     // origin + (origin + len)/2 - 0.5 == (origin * 2 + len) / 2 - 0.5

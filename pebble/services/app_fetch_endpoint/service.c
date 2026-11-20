@@ -129,7 +129,7 @@ static uint8_t prv_compute_progress_percent(PutBytesObjectType type, unsigned in
   percent += (type_percent / 3);
 
   // store value
-  return MIN(100, percent);
+  return PBL_MIN(100, percent);
 }
 
 //! Cleans up the state of the app fetch endpoint. Always called from the background work queue

@@ -56,7 +56,7 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
 
   switch (id) {
     case SF32LB52_LPSYS_CLK_HCLK:
-      *rate_mhz = parent_mhz / MAX(PBL_FIELD_GET(LPSYS_RCC_CFGR_HDIV1_MASK, cfgr), 1U);
+      *rate_mhz = parent_mhz / PBL_MAX(PBL_FIELD_GET(LPSYS_RCC_CFGR_HDIV1_MASK, cfgr), 1U);
       break;
     case SF32LB52_LPSYS_CLK_PCLK:
       *rate_mhz = parent_mhz >> PBL_FIELD_GET(LPSYS_RCC_CFGR_PDIV1_MASK, cfgr);

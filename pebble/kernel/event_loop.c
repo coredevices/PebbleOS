@@ -508,7 +508,7 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
       // the timezone has changed or a 'substantial' time has passed, or DST
       // state has changed.
       if (set_time_info->gmt_offset_delta != 0 || set_time_info->dst_changed ||
-          ABS(set_time_info->utc_time_delta) > 15) {
+          PBL_ABS(set_time_info->utc_time_delta) > 15) {
         alarm_handle_clock_change();
         wakeup_handle_significant_clock_change();
         pbl_cron_handle_clock_change(set_time_info->utc_time_delta, set_time_info->gmt_offset_delta,

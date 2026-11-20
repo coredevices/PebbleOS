@@ -121,7 +121,7 @@ static int prv_read_locked(const struct pbl_nvmem_sf32lb *efuse, unsigned int of
 
   while (bytes > 0U) {
     const unsigned int bank_offset = offset % SF32LB52_EFUSEC_BANK_SIZE;
-    const size_t len = MIN(bytes, SF32LB52_EFUSEC_BANK_SIZE - bank_offset);
+    const size_t len = PBL_MIN(bytes, SF32LB52_EFUSEC_BANK_SIZE - bank_offset);
 
     ret = prv_read_bank(efuse, offset / SF32LB52_EFUSEC_BANK_SIZE, bank_offset, val, len);
     if (ret != 0) {

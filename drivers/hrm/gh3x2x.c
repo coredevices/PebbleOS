@@ -171,7 +171,7 @@ void gh3x2x_hr_result_report(uint8_t bpm, uint8_t valid_score) {
     PBL_LOG_WRN("GH3X2X dropping implausible BPM %" PRIu8, bpm);
   } else {
     hrm_data.hrm_bpm = bpm;
-    hrm_data.hrm_confidence = MIN(valid_score, 100U);
+    hrm_data.hrm_confidence = PBL_MIN(valid_score, 100U);
   }
 
   hrm_manager_new_data_cb(&hrm_data);
@@ -191,7 +191,7 @@ void gh3x2x_spo2_result_report(uint8_t pct, uint8_t confidence, uint8_t valid_le
 
   // Always carry the algorithm values through; valid_level is for debugging only.
   hrm_data.spo2_percent = pct;
-  hrm_data.spo2_confidence = MIN(confidence, 100U);
+  hrm_data.spo2_confidence = PBL_MIN(confidence, 100U);
   hrm_data.spo2_valid_level = valid_level;
   hrm_data.spo2_invalid = (invalid_flg != 0);
   hrm_data.off_wrist = !HRM->state->is_wear;
@@ -220,7 +220,7 @@ void gh3x2x_hrv_result_report(const int32_t *rri, int32_t confidence, int32_t va
     HRMData hrm_data = {};
     hrm_data.features = HRMFeature_HRV;
     hrm_data.hrv_ppi_ms = (uint16_t)rri[i];
-    hrm_data.hrv_confidence = (uint8_t)CLIP(confidence, 0, 100);
+    hrm_data.hrv_confidence = (uint8_t)PBL_CLAMP(confidence, 0, 100);
     hrm_manager_new_data_cb(&hrm_data);
   }
 }

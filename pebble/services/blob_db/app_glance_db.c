@@ -469,8 +469,8 @@ cleanup:
 
 static bool prv_is_serialized_slice_valid(const SerializedAppGlanceSliceHeader *serialized_slice) {
   if (!serialized_slice || !prv_is_slice_type_valid(serialized_slice->type) ||
-      !WITHIN(serialized_slice->total_size, APP_GLANCE_DB_SLICE_MIN_SIZE,
-              APP_GLANCE_DB_SLICE_MAX_SIZE)) {
+      !PBL_IN_RANGE(serialized_slice->total_size, APP_GLANCE_DB_SLICE_MIN_SIZE,
+                    APP_GLANCE_DB_SLICE_MAX_SIZE)) {
     return false;
   }
 

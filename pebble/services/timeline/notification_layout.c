@@ -223,7 +223,7 @@ static bool prv_should_enlarge_emoji(NotificationLayout *layout) {
 static bool prv_image_fits_circle(int16_t width, uint8_t aspect) {
   const int32_t half_w = width / 2;
   const int32_t half_h = ((int32_t)width * aspect) / 32;
-  const int32_t dy = ABS(NOTIFICATION_IMAGE_PAGE_CENTRE_Y - PBL_DISPLAY_HEIGHT / 2) + half_h;
+  const int32_t dy = PBL_ABS(NOTIFICATION_IMAGE_PAGE_CENTRE_Y - PBL_DISPLAY_HEIGHT / 2) + half_h;
   const int32_t r = NOTIFICATION_IMAGE_RADIUS;
   return (half_w * half_w) + (dy * dy) <= (r * r);
 }
@@ -234,7 +234,8 @@ static bool prv_image_fits_circle(int16_t width, uint8_t aspect) {
 static uint8_t prv_image_aspect(const NotificationLayout *layout) {
   const uint8_t aspect =
       attribute_get_uint8(layout->layout.attributes, AttributeIdImageAspectRatio, 0);
-  return aspect ? CLIP(aspect, NOTIFICATION_IMAGE_MIN_ASPECT, NOTIFICATION_IMAGE_MAX_ASPECT) : 0;
+  return aspect ? PBL_CLAMP(aspect, NOTIFICATION_IMAGE_MIN_ASPECT, NOTIFICATION_IMAGE_MAX_ASPECT)
+                : 0;
 }
 
 //! Size of the image itself for a content box `width` wide. Derived from the attribute rather than
@@ -557,12 +558,13 @@ static void prv_draw_banner_round(NotificationLayout *notification_layout, GCont
   graphics_context_set_fill_color(ctx, colors.bg_color);
   const int32_t saved_clip_box_size_h = ctx->draw_state.clip_box.size.h;
   const int32_t saved_clip_box_origin_y = ctx->draw_state.clip_box.origin.y;
-  ctx->draw_state.clip_box.origin.y = MAX(ctx->draw_state.clip_box.origin.y - status_bar_height, 0);
+  ctx->draw_state.clip_box.origin.y =
+      PBL_MAX(ctx->draw_state.clip_box.origin.y - status_bar_height, 0);
   ctx->draw_state.clip_box.size.h = PBL_DISPLAY_HEIGHT;
   grect_clip(&ctx->draw_state.clip_box, &DISP_FRAME);
 
-  const int32_t banner_movement_raw_offset =
-      CLIP(banner_peek_static_y - notification_layout_frame->origin.y, 0, banner_peek_static_y);
+  const int32_t banner_movement_raw_offset = PBL_CLAMP(
+      banner_peek_static_y - notification_layout_frame->origin.y, 0, banner_peek_static_y);
   const int32_t banner_radius =
       prv_interpolate_linear(BOTTOM_BANNER_CIRCLE_RADIUS, BANNER_CIRCLE_RADIUS, 0,
                              banner_peek_static_y, banner_movement_raw_offset);
@@ -594,7 +596,7 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
     prv_hide_or_show_banner_icon(&layout->icon_layer, notification_layout_frame);
     prv_draw_banner_round(layout, ctx, notification_layout_frame, *colors);
     // work around the clip box and smaller layout_height for circular text paging
-    ctx->draw_state.clip_box.size.h = MIN(ctx->draw_state.clip_box.size.h, LAYOUT_HEIGHT);
+    ctx->draw_state.clip_box.size.h = PBL_MIN(ctx->draw_state.clip_box.size.h, LAYOUT_HEIGHT);
 #else
     static const GRect banner_box = {.size = {PBL_DISPLAY_WIDTH, LAYOUT_BANNER_HEIGHT_RECT}};
     graphics_fill_rect(ctx, &banner_box);
@@ -603,9 +605,9 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
 
 #if PBL_ROUND
   const bool text_visible =
-      (render && WITHIN(notification_layout_frame->origin.y,
-                        TEXT_VISIBLE_LOWER_THRESHOLD(notification_layout_frame->size.h),
-                        TEXT_VISIBLE_UPPER_THRESHOLD));
+      (render && PBL_IN_RANGE(notification_layout_frame->origin.y,
+                              TEXT_VISIBLE_LOWER_THRESHOLD(notification_layout_frame->size.h),
+                              TEXT_VISIBLE_UPPER_THRESHOLD));
 #else
   const bool text_visible = render;
 #endif
@@ -639,7 +641,7 @@ static PBL_NOINLINE void prv_card_render_internal(NotificationLayout *layout, GC
 
 #if PBL_ROUND
   // Notification text is paged by LAYOUT_HEIGHT, so make full page height
-  layout->view_size.h = ROUND_TO_MOD_CEIL(layout->view_size.h, LAYOUT_HEIGHT);
+  layout->view_size.h = PBL_ROUNDUP(layout->view_size.h, LAYOUT_HEIGHT);
   // Notifications are swapped using frame height, so last page includes additional arrow height
   layout->view_size.h += LAYOUT_ARROW_HEIGHT;
 #else

@@ -41,7 +41,7 @@ AnimationProgress animation_timing_interpolate32(AnimationProgress time_normaliz
 AnimationProgress animation_timing_curve(AnimationProgress time_normalized, AnimationCurve curve);
 
 static inline AnimationProgress animation_timing_clip(AnimationProgress time_normalized) {
-  return CLIP(time_normalized, 0, ANIMATION_NORMALIZED_MAX);
+  return PBL_CLAMP(time_normalized, 0, ANIMATION_NORMALIZED_MAX);
 }
 
 //! Rescales a given time as with respect to a given interval

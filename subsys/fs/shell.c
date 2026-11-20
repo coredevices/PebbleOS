@@ -101,7 +101,7 @@ static int prv_cmd_read(const struct pbl_shell *sh, size_t argc, char **argv) {
   uint8_t buf[64];
   ret = pbl_fs_seek(&file, offset, PBL_FS_SEEK_SET);
   while ((ret >= 0) && (len > 0)) {
-    ret = pbl_fs_read(&file, buf, MIN(len, sizeof(buf)));
+    ret = pbl_fs_read(&file, buf, PBL_MIN(len, sizeof(buf)));
     if (ret <= 0) {
       break;
     }

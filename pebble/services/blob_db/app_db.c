@@ -140,7 +140,7 @@ static bool prv_each_inspect_ids(struct pbl_settings_file *file, struct pbl_sett
   AppInstallId app_id;
   pbl_settings_read_key(file, (uint8_t *)&app_id, sizeof(AppInstallId));
 
-  data->max_id = MAX(data->max_id, app_id);
+  data->max_id = PBL_MAX(data->max_id, app_id);
   data->num_apps++;
 
   return true; // continue iterating

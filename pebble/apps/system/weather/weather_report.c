@@ -18,7 +18,7 @@
 // condition phrase, rain/wind, right-railed icon discs, dotted rule, next-day
 // block, chevron, arc day-flip, fin). Same host shape as the round arm.
 //
-// ROUND (gabbro/getafix): the classic condensed layout host — hold UP/DOWN
+// PBL_DIV_ROUND_CLOSEST (gabbro/getafix): the classic condensed layout host — hold UP/DOWN
 // scrolls the week through weather_app_layout.
 
 // Hard-cut latch: the unfold transition scene already delivered the entrance, so the

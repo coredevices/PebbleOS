@@ -125,7 +125,7 @@ void music_init(void) {
 //! sequence. Backing off mid-sequence keeps the stored string valid UTF-8, which lets the phone
 //! prefix-match the title it gets back in an album-art request exactly (see the imaging service).
 static size_t prv_utf8_crop_length(const char *src, size_t src_length) {
-  size_t cropped = MIN(MUSIC_BUFFER_LENGTH - 1, src ? src_length : 0);
+  size_t cropped = PBL_MIN(MUSIC_BUFFER_LENGTH - 1, src ? src_length : 0);
   if (src && cropped < src_length) {
     // We cut: if it landed inside a multi-byte sequence, drop the partial trailing bytes.
     while (cropped > 0 && ((uint8_t)src[cropped] & 0xC0) == 0x80) {
@@ -436,7 +436,7 @@ void music_get_pos(uint32_t *track_pos_ms, uint32_t *track_length_ms) {
   const int32_t pos_ms = s_music_ctx.track_pos_ms + track_time_elapsed;
   const int32_t length_ms = s_music_ctx.track_length_ms;
 
-  *track_pos_ms = CLIP(pos_ms, 0, length_ms);
+  *track_pos_ms = PBL_CLAMP(pos_ms, 0, length_ms);
   *track_length_ms = length_ms;
 
   pbl_mutex_unlock(&s_music_ctx.mutex);

@@ -238,7 +238,7 @@ static int prv_calibrate(uintptr_t base, uint8_t *sck, uint8_t *dqs) {
 
 // Clock cycles covering a time, less the one the controller adds
 static uint32_t prv_cycles(uint32_t ns, uint32_t rate_hz) {
-  return (uint32_t)DIVIDE_CEIL((uint64_t)ns * rate_hz, 1000000000ULL) - 1U;
+  return (uint32_t)PBL_DIV_ROUND_UP((uint64_t)ns * rate_hz, 1000000000ULL) - 1U;
 }
 
 static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperbus_config *cfg,

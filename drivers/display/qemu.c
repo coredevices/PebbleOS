@@ -23,7 +23,7 @@ static const struct pbl_display_qemu *prv_qemu(const struct pbl_display *disp) {
 
 static uint32_t prv_row_bytes(const struct pbl_display *disp) {
   if (disp->props.format == PBL_DISPLAY_FORMAT_MONO) {
-    return ROUND_TO_MOD_CEIL(disp->props.width, 32U) / 8U;
+    return PBL_ROUNDUP(disp->props.width, 32U) / 8U;
   }
 
   return disp->props.width;

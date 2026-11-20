@@ -323,9 +323,9 @@ void test_workout_service__takeover_activity_session(void) {
   // Compute our own version of active_kcalories
   const int32_t distance_delta_m = (new_distance_m - distance_m);
   const int32_t calculated_active_kcalories =
-      ROUND(activity_private_compute_active_calories(distance_delta_m * PBL_MM_PER_M,
-                                                     600 * PBL_MSEC_PER_SEC),
-            ACTIVITY_CALORIES_PER_KCAL);
+      PBL_DIV_ROUND_CLOSEST(activity_private_compute_active_calories(
+                                distance_delta_m * PBL_MM_PER_M, 600 * PBL_MSEC_PER_SEC),
+                            ACTIVITY_CALORIES_PER_KCAL);
 
   // Make sure that the new_active_kcalories has increased
   workout_service_get_active_kcalories(&new_active_kcalories);
@@ -342,9 +342,10 @@ void test_workout_service__takeover_activity_session(void) {
   cl_assert_equal_i(stored_session->length_min, 20);
   cl_assert_equal_i(stored_session->step_data.steps, 3800);
   cl_assert_equal_i(stored_session->step_data.active_kcalories, 200 + calculated_active_kcalories);
-  cl_assert_equal_i(stored_session->step_data.resting_kcalories,
-                    ROUND(activity_private_compute_resting_calories(stored_session->length_min),
-                          ACTIVITY_CALORIES_PER_KCAL));
+  cl_assert_equal_i(
+      stored_session->step_data.resting_kcalories,
+      PBL_DIV_ROUND_CLOSEST(activity_private_compute_resting_calories(stored_session->length_min),
+                            ACTIVITY_CALORIES_PER_KCAL));
   cl_assert_equal_b(stored_session->manual, true);
   cl_assert(stored_session->step_data.distance_meters > 2000);
 }

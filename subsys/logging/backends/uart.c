@@ -142,7 +142,7 @@ static void prv_isr_flush(struct pbl_work *work) {
 static PBL_WORK_DEFINE(s_isr_flush_work, prv_isr_flush);
 
 static void prv_isr_enqueue(uint8_t level, const char *text) {
-  const size_t len = MIN(strlen(text), ISR_MSG_MAX);
+  const size_t len = PBL_MIN(strlen(text), ISR_MSG_MAX);
 
   pbl_irq_lock();
   const bool was_empty = (circular_buffer_get_read_space_remaining(&s_isr_buffer) == 0U);

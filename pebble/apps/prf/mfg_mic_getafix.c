@@ -27,10 +27,6 @@
 #include <system/firmware_storage.h>
 
 // Kiss FFT from Speex library - must include config and os_support before kiss_fft headers
-// Save and undefine ABS to avoid redefinition warning with Speex's arch.h
-#ifdef ABS
-#undef ABS
-#endif
 #include <config.h>
 #include <kiss_fftr.h>
 #include <os_support_custom.h>
@@ -47,7 +43,7 @@
 #define BLOCK_SIZE        (N_SAMPLES * SAMPLE_SIZE_BYTES)
 
 #define FLASH_START PART_FIRMWARE_DEST_OFFSET
-#define FLASH_END (PART_FIRMWARE_DEST_OFFSET + ROUND_TO_MOD_CEIL(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
+#define FLASH_END   (PART_FIRMWARE_DEST_OFFSET + PBL_ROUNDUP(BLOCK_SIZE, SUBSECTOR_SIZE_BYTES))
 
 // Target frequency: 1 kHz ± 100 Hz
 #define TARGET_FREQ_HZ    1000

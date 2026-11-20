@@ -193,7 +193,7 @@ static int prv_num_nodes_for_serialized_item(CommonTimelineItemHeader *header) {
     const time_t full_span = end_span - start_span;
     num_days = full_span / PBL_SEC_PER_DAY;
   }
-  return MAX(num_days, 1);
+  return PBL_MAX(num_days, 1);
 }
 
 static void prv_set_nodes(TimelineNode *nodes[], CommonTimelineItemHeader *header, int num_nodes) {

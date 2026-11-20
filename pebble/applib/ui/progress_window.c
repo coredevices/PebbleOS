@@ -177,7 +177,7 @@ static void prv_cancel_fake_progress_timer(ProgressWindow *data) {
 }
 
 static void prv_set_progress(ProgressWindow *data, int16_t progress) {
-  data->progress_percent = CLIP(progress, data->progress_percent, MAX_PROGRESS_PERCENT);
+  data->progress_percent = PBL_CLAMP(progress, data->progress_percent, MAX_PROGRESS_PERCENT);
   progress_layer_set_progress(&data->progress_layer, data->progress_percent);
 }
 
@@ -201,7 +201,7 @@ static void prv_fake_update_progress(void *context) {
 
 void progress_window_set_max_fake_progress(ProgressWindow *window,
                                            int16_t max_fake_progress_percent) {
-  window->max_fake_progress_percent = CLIP(max_fake_progress_percent, 0, MAX_PROGRESS_PERCENT);
+  window->max_fake_progress_percent = PBL_CLAMP(max_fake_progress_percent, 0, MAX_PROGRESS_PERCENT);
 }
 
 void progress_window_set_progress(ProgressWindow *window, int16_t progress) {

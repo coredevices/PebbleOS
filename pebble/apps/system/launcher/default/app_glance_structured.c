@@ -275,8 +275,8 @@ static bool prv_get_text_scroll_vars(GContext *ctx, uint32_t cumulative_elapsed_
   int64_t elapsed_ms = cumulative_elapsed_ms % scroll_duration_ms;
   const uint32_t end_of_normal_scroll_duration_ms = pause_at_start_ms + normal_scroll_duration_ms;
   bool rewind = false;
-  if (WITHIN(elapsed_ms, 0, end_of_normal_scroll_duration_ms)) {
-    elapsed_ms = MAX(elapsed_ms - pause_at_start_ms, 0);
+  if (PBL_IN_RANGE(elapsed_ms, 0, end_of_normal_scroll_duration_ms)) {
+    elapsed_ms = PBL_MAX(elapsed_ms - pause_at_start_ms, 0);
   } else if (elapsed_ms < end_of_normal_scroll_duration_ms + pause_at_end_ms) {
     elapsed_ms = normal_scroll_duration_ms;
   } else {
@@ -295,8 +295,8 @@ static bool prv_get_text_scroll_vars(GContext *ctx, uint32_t cumulative_elapsed_
 //! Makes the selection animation last as long as the longer of the title and subtitle scrolls
 static void prv_update_selection_animation_duration(
     LauncherAppGlanceStructured *structured_glance) {
-  const uint32_t duration_ms = MAX(structured_glance->title_scroll_duration_ms,
-                                   structured_glance->subtitle_scroll_duration_ms);
+  const uint32_t duration_ms = PBL_MAX(structured_glance->title_scroll_duration_ms,
+                                       structured_glance->subtitle_scroll_duration_ms);
   const uint32_t previous_duration_ms = structured_glance->selection_animation_duration_ms;
   if (duration_ms == previous_duration_ms) {
     return;
@@ -395,8 +395,8 @@ static GTextNode *prv_create_structured_glance_title_subtitle_node(
   // Clamped: near the round display edge the arc inset can leave less room than the icon needs,
   // and a negative width must not reach text layout
   vertical_node->container.size.w =
-      MAX(0, glance_frame->size.w - structured_glance->icon_horizontal_margin -
-                 structured_glance->icon_max_size.w);
+      PBL_MAX(0, glance_frame->size.w - structured_glance->icon_horizontal_margin -
+                     structured_glance->icon_max_size.w);
 
   return &vertical_node->container.node;
 }
@@ -465,7 +465,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
   const int32_t y_offset_sq = (int32_t)y_offset_from_center * y_offset_from_center;
   const int32_t radius_sq = (int32_t)radius * radius;
   // Clamp to avoid negative sqrt when row is outside the circle (during scroll animations)
-  const int32_t sqrt_arg = MAX(0, radius_sq - y_offset_sq);
+  const int32_t sqrt_arg = PBL_MAX(0, radius_sq - y_offset_sq);
   const int16_t circle_inset = radius - integer_sqrt(sqrt_arg);
   // The style's inset pads the glance from the actual circle edge
   const int16_t horizontal_inset = style->glance_inset + circle_inset;

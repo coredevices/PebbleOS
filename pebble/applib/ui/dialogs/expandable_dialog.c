@@ -133,7 +133,7 @@ static void prv_expandable_dialog_load(Window *window) {
   KinoReel *icon = dialog_create_icon(dialog);
   const GSize icon_size = icon ? kino_reel_get_size(icon) : GSizeZero;
   uint16_t icon_offset =
-      icon ? MAX((int16_t)ICON_TOP_MARGIN_PX - (int16_t)status_layer_offset, 0) : 0;
+      icon ? PBL_MAX((int16_t)ICON_TOP_MARGIN_PX - (int16_t)status_layer_offset, 0) : 0;
 
   x = 0;
   y = status_layer_offset;

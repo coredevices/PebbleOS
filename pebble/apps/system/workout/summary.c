@@ -246,11 +246,11 @@ static void prv_touch_handler(const TouchEvent *event, void *context) {
   summary_window->touch_active = false;
   const int dx = event->x - summary_window->touch_start.x;
   const int dy = event->y - summary_window->touch_start.y;
-  if (ABS(dy) > 20 && ABS(dy) > ABS(dx)) {
+  if (PBL_ABS(dy) > 20 && PBL_ABS(dy) > PBL_ABS(dx)) {
     prv_cycle_activity(summary_window, dy < 0 ? 1 : -1);
-  } else if (ABS(dx) > 20 && ABS(dx) > ABS(dy)) {
+  } else if (PBL_ABS(dx) > 20 && PBL_ABS(dx) > PBL_ABS(dy)) {
     prv_cycle_activity(summary_window, dx < 0 ? 1 : -1);
-  } else if (ABS(dx) <= 20 && ABS(dy) <= 20) {
+  } else if (PBL_ABS(dx) <= 20 && PBL_ABS(dy) <= 20) {
     prv_select_click_handler(nullptr, summary_window);
   }
 }

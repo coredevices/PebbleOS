@@ -597,7 +597,8 @@ bool text_resources_init_font(ResAppNum app_num, uint32_t font_resource, uint32_
                                             true /* is_extended */);
   }
 
-  font_info->max_height = MAX(font_info->extension.md.max_height, font_info->base.md.max_height);
+  font_info->max_height =
+      PBL_MAX(font_info->extension.md.max_height, font_info->base.md.max_height);
   font_info->loaded = true;
   return true;
 }
@@ -646,7 +647,7 @@ static int16_t prv_baseline_adjust(const FontInfo *font_info, const FontInfo *ow
   if (owner == nullptr || owner == font_info) {
     return 0;
   }
-  return MAX(0, (int16_t)font_info->base.md.max_height - (int16_t)owner->base.md.max_height);
+  return PBL_MAX(0, (int16_t)font_info->base.md.max_height - (int16_t)owner->base.md.max_height);
 }
 
 // The returned glyph always lives in glyph_buffer, whose resource_offset locates it

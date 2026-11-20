@@ -131,10 +131,10 @@ GRect grect_union(const GRect *r1, const GRect *r2) {
   GRect s_r2 = *r2;
   grect_standardize(&s_r1);
   grect_standardize(&s_r2);
-  const int16_t min_x = MIN(s_r2.origin.x, s_r1.origin.x);
-  const int16_t min_y = MIN(s_r2.origin.y, s_r1.origin.y);
-  const int16_t max_x = MAX(s_r2.origin.x + s_r2.size.w, s_r1.origin.x + s_r1.size.w);
-  const int16_t max_y = MAX(s_r2.origin.y + s_r2.size.h, s_r1.origin.y + s_r1.size.h);
+  const int16_t min_x = PBL_MIN(s_r2.origin.x, s_r1.origin.x);
+  const int16_t min_y = PBL_MIN(s_r2.origin.y, s_r1.origin.y);
+  const int16_t max_x = PBL_MAX(s_r2.origin.x + s_r2.size.w, s_r1.origin.x + s_r1.size.w);
+  const int16_t max_y = PBL_MAX(s_r2.origin.y + s_r2.size.h, s_r1.origin.y + s_r1.size.h);
   GRect result = GRect(min_x, min_y, max_x - min_x, max_y - min_y);
   return result;
 }
@@ -741,8 +741,8 @@ GColor8Component gcolor_component_multiply(GColor8Component a, GColor8Component 
 void grange_clip(GRange *range_to_clip, const GRange *const range_clipper) {
   int16_t start = range_to_clip->origin;
   int16_t end = range_to_clip->origin + range_to_clip->size;
-  start = CLIP(start, range_clipper->origin, range_clipper->origin + range_clipper->size);
-  end = CLIP(end, range_clipper->origin, range_clipper->origin + range_clipper->size);
+  start = PBL_CLAMP(start, range_clipper->origin, range_clipper->origin + range_clipper->size);
+  end = PBL_CLAMP(end, range_clipper->origin, range_clipper->origin + range_clipper->size);
   range_to_clip->origin = start;
   range_to_clip->size = end - start;
 }

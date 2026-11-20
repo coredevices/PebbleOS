@@ -370,8 +370,8 @@ static bool prv_measure_title_glyph(int index, Codepoint codepoint, void *contex
       text_resources_get_glyph(&metrics->ctx->font_cache, codepoint, metrics->font, &location);
   if (glyph && glyph->header.width_px && glyph->header.height_px) {
     const int16_t top = glyph->header.top_offset_px + location.baseline_adjust;
-    metrics->top = MIN(metrics->top, top);
-    metrics->bottom = MAX(metrics->bottom, top + glyph->header.height_px);
+    metrics->top = PBL_MIN(metrics->top, top);
+    metrics->bottom = PBL_MAX(metrics->bottom, top + glyph->header.height_px);
   }
   return true;
 }
@@ -391,7 +391,7 @@ static void prv_anchor_title(TimelineLayout *layout) {
     container->node.offset.y = -container->node.cached_size.h / 2;
     return;
   }
-  const int16_t last_line_offset = MAX(
+  const int16_t last_line_offset = PBL_MAX(
       title->node.cached_size.h - title->node.margin.h - font_height - title->line_spacing_delta,
       0);
   const int16_t title_center = (metrics.top + metrics.bottom + last_line_offset) / 2;
@@ -735,7 +735,7 @@ static void prv_get_pin_view_bounds(TimelineLayout *layout, GRect *box_out) {
         fonts_get_font_height(system_theme_get_font(TextStyleFont_TimeHeaderNumbers)) -
         fonts_get_font_height(
             system_theme_get_font_for_default_size(TextStyleFont_TimeHeaderNumbers));
-    box_out->size.h += MAX(time_growth_h, 0);
+    box_out->size.h += PBL_MAX(time_growth_h, 0);
     // The title's glyph center is anchored to the icon's resting position within the pin, so
     // the title scrolls with the pin while the icon animates separately.
     const GRect pin_frame = {{0, timeline_layer_get_icon_offset_y()}, box_out->size};
@@ -753,7 +753,7 @@ static void prv_get_card_view_bounds(TimelineLayout *layout, GRect *box_out) {
   if (!timeline_layer_sidebar_is_on_right()) {
     // Keep the text clear of the action button on the left edge
     const int16_t action_button_gap = 2;
-    left_margin = MAX(left_margin, action_button_get_visible_width() + action_button_gap);
+    left_margin = PBL_MAX(left_margin, action_button_get_visible_width() + action_button_gap);
   }
 #endif
   *box_out = GRect(left_margin, 0, frame->size.w - left_margin - TIMELINE_CARD_MARGIN,

@@ -39,8 +39,8 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(GBitmap *dest_bitmap, const GB
   const uint8_t src_shift_at_line_begin =
       ((src_bitmap->bounds.origin.x + src_origin_offset.x) % 32);
   const uint8_t src_bits_left_at_line_begin =
-      MIN(32 - src_shift_at_line_begin,
-          MIN(dest_rect.size.w + src_origin_offset.x, src_bitmap->bounds.size.w));
+      PBL_MIN(32 - src_shift_at_line_begin,
+              PBL_MIN(dest_rect.size.w + src_origin_offset.x, src_bitmap->bounds.size.w));
 
   // how many 32-bit blocks do we need to bitblt on this row:
   const int16_t dest_end_x = (dest_rect.origin.x + dest_rect.size.w);
@@ -71,7 +71,8 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_1bit(GBitmap *dest_bitmap, const GB
     const uint32_t *src_block_end = src_block + src_row_length_words;
 
     while (dest_block != dest_block_end) {
-      const uint8_t number_of_bits = MIN(32 - dest_shift, MIN(row_bits_left, src_bits_left));
+      const uint8_t number_of_bits =
+          PBL_MIN(32 - dest_shift, PBL_MIN(row_bits_left, src_bits_left));
       const uint32_t mask_outer_bit = ((number_of_bits < 31) ? (1 << number_of_bits) : 0);
       const uint32_t mask = ((mask_outer_bit - 1) << dest_shift);
 

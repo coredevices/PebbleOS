@@ -152,7 +152,7 @@ static char **generate_unique_logs(size_t space_avail, size_t log_len, int *num_
     snprintf(buf, sizeof(buf), "%x", uniq_msg_id);
 
     for (int j = 0; j < log_len; j += strlen(buf)) {
-      memcpy(&msg[j], buf, MIN(strlen(buf), log_len - j));
+      memcpy(&msg[j], buf, PBL_MIN(strlen(buf), log_len - j));
     }
 
     msg[log_len] = '\0';
@@ -255,7 +255,7 @@ void test_log_flash__generations(void) {
     snprintf(log, 100, "Generation 0x%x", i);
     setup_and_test_expected_msg(&log, 0, 0, 1);
 
-    for (int gen = 0; gen < MIN(gens_avail, i); gen++) {
+    for (int gen = 0; gen < PBL_MIN(gens_avail, i); gen++) {
       // Check to make sure the most recent log gens are around
       snprintf(log, 100, "Generation 0x%x", i - gen);
       setup_and_test_expected_msg(&log, gen, 1, 1);
@@ -381,7 +381,7 @@ void test_log_flash__multi_writes_per_log(void) {
     char *curr_msg = logs[i];
     bool rv;
     for (int j = 0; j < PBL_ARRAY_SIZE(write_sizes); j++) {
-      int bytes_to_write = MIN(bytes_remaining, write_sizes[j]);
+      int bytes_to_write = PBL_MIN(bytes_remaining, write_sizes[j]);
       int offset = log_len - bytes_remaining;
 
       rv = pbl_log__flash_storage_write((uint8_t *)&curr_msg[offset], addr, bytes_to_write);

@@ -1849,7 +1849,7 @@ void test_animation__sequence_unschedule(void) {
   const int duration_b = 200;
   const int duration_c = 500;
   const int repeat_count = 5;
-  int duration_total = duration_a + MAX(duration_b, duration_c);
+  int duration_total = duration_a + PBL_MAX(duration_b, duration_c);
 
   // Create 3 animations
   Animation *a = prv_create_test_animation();
@@ -2041,7 +2041,7 @@ void test_animation__complex_clone(void) {
   const int duration_b = 200;
   const int duration_c = 500;
   const int repeat_count = 5;
-  int duration_total = duration_a + MAX(duration_b, duration_c);
+  int duration_total = duration_a + PBL_MAX(duration_b, duration_c);
 
   // Create 3 animations
   Animation *a = prv_create_test_animation();
@@ -2189,22 +2189,26 @@ static void prv_test_sequence_of_spawns(int create_order[4]) {
   // Make sure the all the spawn a stopped handlers got called before any of the spawn b
   // started handlers
   uint32_t last_fire_a = 0;
-  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a0)->fire_order);
-  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a1)->fire_order);
-  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a2)->fire_order);
-  last_fire_a = MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a3)->fire_order);
   last_fire_a =
-      MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, spawn_a)->fire_order);
+      PBL_MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a0)->fire_order);
+  last_fire_a =
+      PBL_MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a1)->fire_order);
+  last_fire_a =
+      PBL_MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a2)->fire_order);
+  last_fire_a =
+      PBL_MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, a3)->fire_order);
+  last_fire_a =
+      PBL_MAX(last_fire_a, prv_last_handler_entry(&s_stopped_handler_calls, spawn_a)->fire_order);
 
   uint32_t first_fire_b = prv_last_handler_entry(&s_started_handler_calls, b0)->fire_order;
   first_fire_b =
-      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b1)->fire_order);
+      PBL_MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b1)->fire_order);
   first_fire_b =
-      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b2)->fire_order);
+      PBL_MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b2)->fire_order);
   first_fire_b =
-      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b3)->fire_order);
+      PBL_MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, b3)->fire_order);
   first_fire_b =
-      MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, spawn_b)->fire_order);
+      PBL_MIN(first_fire_b, prv_last_handler_entry(&s_started_handler_calls, spawn_b)->fire_order);
 
   cl_assert(last_fire_a < first_fire_b);
 
@@ -2321,7 +2325,7 @@ void test_animation__spawn_delay(void) {
   const int duration_b = 500;
   const int delay_b = 200;
   const int delay_spawn = 150;
-  int duration_total = MAX(duration_a + delay_a, duration_b + delay_b) + delay_spawn;
+  int duration_total = PBL_MAX(duration_a + delay_a, duration_b + delay_b) + delay_spawn;
 
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
@@ -2370,7 +2374,7 @@ void test_animation__spawn_delay(void) {
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, b), 0);
 
   // Start B
-  prv_advance_to_ms_with_timers(start_ms + delay_spawn + MAX(delay_a, delay_b) +
+  prv_advance_to_ms_with_timers(start_ms + delay_spawn + PBL_MAX(delay_a, delay_b) +
                                 2 * MIN_FRAME_INTERVAL_MS);
   cl_assert_equal_i(prv_count_handler_entries(&s_started_handler_calls, a), 1);
   cl_assert_equal_i(prv_count_handler_entries(&s_stopped_handler_calls, a), 0);
@@ -2804,7 +2808,8 @@ void test_animation__spawn_get_duration(void) {
   const int delay_spawn = 150;
   const int play_count_spawn = 2;
 
-  int duration_total = play_count_spawn * (MAX(total_duration_a, total_duration_b) + delay_spawn);
+  int duration_total =
+      play_count_spawn * (PBL_MAX(total_duration_a, total_duration_b) + delay_spawn);
 
   // Create 2 test animations
   Animation *a = prv_create_test_animation();
@@ -2835,11 +2840,11 @@ void test_animation__spawn_get_duration(void) {
   cl_assert_equal_i(animation_get_duration(b, true, true), total_duration_b);
 
   cl_assert_equal_i(animation_get_duration(spawn, false, false),
-                    MAX(total_duration_a, total_duration_b));
+                    PBL_MAX(total_duration_a, total_duration_b));
   cl_assert_equal_i(animation_get_duration(spawn, false, true),
-                    play_count_spawn * (MAX(total_duration_a, total_duration_b)));
+                    play_count_spawn * (PBL_MAX(total_duration_a, total_duration_b)));
   cl_assert_equal_i(animation_get_duration(spawn, true, false),
-                    delay_spawn + MAX(total_duration_a, total_duration_b));
+                    delay_spawn + PBL_MAX(total_duration_a, total_duration_b));
   cl_assert_equal_i(animation_get_duration(spawn, true, true), duration_total);
 
   animation_destroy(spawn);

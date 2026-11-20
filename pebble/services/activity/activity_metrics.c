@@ -299,10 +299,11 @@ static void prv_update_real_time_derived_metrics(void) {
   ActivityState *state = activity_private_state();
   pbl_mutex_lock(&state->mutex, PBL_FOREVER);
   {
-    state->step_data.distance_meters = ROUND(state->distance_mm, PBL_MM_PER_M);
+    state->step_data.distance_meters = PBL_DIV_ROUND_CLOSEST(state->distance_mm, PBL_MM_PER_M);
     PBL_LOG_DBG("new distance: %" PRIu32 "", state->step_data.distance_meters);
 
-    state->step_data.active_kcalories = ROUND(state->active_calories, ACTIVITY_CALORIES_PER_KCAL);
+    state->step_data.active_kcalories =
+        PBL_DIV_ROUND_CLOSEST(state->active_calories, ACTIVITY_CALORIES_PER_KCAL);
     PBL_LOG_DBG("new active kcal: %" PRIu32 "", state->step_data.active_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
@@ -341,7 +342,8 @@ static void PBL_NOINLINE prv_update_step_derived_metrics(time_t utc_sec) {
 
     // Update the resting calories
     state->resting_calories = activity_private_compute_resting_calories(minute_of_day);
-    state->step_data.resting_kcalories = ROUND(state->resting_calories, ACTIVITY_CALORIES_PER_KCAL);
+    state->step_data.resting_kcalories =
+        PBL_DIV_ROUND_CLOSEST(state->resting_calories, ACTIVITY_CALORIES_PER_KCAL);
     PBL_LOG_DBG("resting kcalories: %" PRIu32 "", state->step_data.resting_kcalories);
   }
   pbl_mutex_unlock(&state->mutex);
@@ -529,7 +531,7 @@ static uint8_t prv_get_hr_confidence_weight(HRMBPMData bpm) {
   if (bpm.off_wrist) {
     return 0;
   }
-  const uint32_t confidence = MIN(bpm.confidence, 100U);
+  const uint32_t confidence = PBL_MIN(bpm.confidence, 100U);
   return (uint8_t)((confidence * confidence) / 100);
 }
 
@@ -667,8 +669,8 @@ void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now) {
 
       // In case we change the length of the history, fetch the old size
       size_t fetch_size =
-          MIN(sizeof(old_history),
-              pbl_settings_get_len(file, &m_info.settings_key, sizeof(m_info.settings_key)));
+          PBL_MIN(sizeof(old_history),
+                  pbl_settings_get_len(file, &m_info.settings_key, sizeof(m_info.settings_key)));
       pbl_settings_get(file, &m_info.settings_key, sizeof(m_info.settings_key), &old_history,
                        fetch_size);
 
@@ -684,9 +686,11 @@ void activity_metrics_prv_init(struct pbl_settings_file *file, time_t utc_now) {
             uint32_t elapsed_minutes = time_util_get_minute_of_day(utc_now);
             uint32_t cur_day_resting_calories =
                 activity_private_compute_resting_calories(elapsed_minutes);
-            new_history.values[i] = ROUND(cur_day_resting_calories, ACTIVITY_CALORIES_PER_KCAL);
+            new_history.values[i] =
+                PBL_DIV_ROUND_CLOSEST(cur_day_resting_calories, ACTIVITY_CALORIES_PER_KCAL);
           } else {
-            new_history.values[i] = ROUND(full_day_resting_calories, ACTIVITY_CALORIES_PER_KCAL);
+            new_history.values[i] =
+                PBL_DIV_ROUND_CLOSEST(full_day_resting_calories, ACTIVITY_CALORIES_PER_KCAL);
           }
         }
       }
@@ -746,7 +750,7 @@ bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *h
     }
 
     // Clip history length
-    history_len = MIN(history_len, ACTIVITY_HISTORY_DAYS);
+    history_len = PBL_MIN(history_len, ACTIVITY_HISTORY_DAYS);
     if (!m_info.has_history) {
       history_len = 1;
     }

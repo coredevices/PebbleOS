@@ -272,9 +272,9 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
     for (uint32_t y = y_origin; y < y_origin + png_decoder_data->previous_height; y++) {
       const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, y);
       const uint32_t x_origin = bitmap->bounds.origin.x + png_decoder_data->previous_xoffset;
-      const int16_t min_x = MAX((uint32_t)row_info.min_x, x_origin);
+      const int16_t min_x = PBL_MAX((uint32_t)row_info.min_x, x_origin);
       const int16_t max_x =
-          MIN((uint32_t)row_info.max_x, (x_origin + png_decoder_data->previous_width - 1));
+          PBL_MIN((uint32_t)row_info.max_x, (x_origin + png_decoder_data->previous_width - 1));
 
       const int16_t num_bytes = max_x - min_x + 1;
       if (num_bytes > 0) {
@@ -328,8 +328,8 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
       const uint16_t corrected_dst_y = fctl.y_offset + y + bitmap->bounds.origin.y;
       const GBitmapDataRowInfo row_info = gbitmap_get_data_row_info(bitmap, corrected_dst_y);
       int16_t delta_x = fctl.x_offset + bitmap->bounds.origin.x;
-      for (int32_t x = MAX(0, row_info.min_x - delta_x);
-           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
+      for (int32_t x = PBL_MAX(0, row_info.min_x - delta_x);
+           x < PBL_MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
         const uint32_t corrected_dst_x = x + delta_x;
         const uint8_t palette_index =
             raw_image_get_value_for_bitdepth(upng_buffer, x, y, row_stride_bytes, bpp);
@@ -354,8 +354,8 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
       const int16_t delta_x = fctl.x_offset + bitmap->bounds.origin.x;
 
       // for each pixel in this frame, clipping to the bitmap geometry
-      for (int32_t x = MAX(0, row_info.min_x - delta_x);
-           x < MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
+      for (int32_t x = PBL_MAX(0, row_info.min_x - delta_x);
+           x < PBL_MIN((int32_t)fctl.width, row_info.max_x - delta_x + 1); x++) {
         const uint32_t corrected_dst_x = x + delta_x;
         uint8_t channel =
             raw_image_get_value_for_bitdepth(upng_buffer, x, y, row_stride_bytes, bpp);

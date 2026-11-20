@@ -558,7 +558,7 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
     client->out.tx_window_size = (PPOGATT_SN_MOD_DIV - 1);
 
     const uint8_t desired_rx_window =
-        MIN(PPOGATT_V1_DESIRED_RX_WINDOW_SIZE, PPOGATT_SN_MOD_DIV - 1);
+        PBL_MIN(PPOGATT_V1_DESIRED_RX_WINDOW_SIZE, PPOGATT_SN_MOD_DIV - 1);
     client->out.rx_window_size = desired_rx_window;
   } else {
     client->out.tx_window_size = client->out.rx_window_size = PPOGATT_V0_WINDOW_SIZE;
@@ -665,8 +665,10 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
       PBL_LOG_DBG("PPoGATT Remote RxWindow: %d TxWindow %d", payload->ppogatt_max_rx_window,
                   payload->ppogatt_max_tx_window);
 
-      client->out.tx_window_size = MIN(client->out.tx_window_size, payload->ppogatt_max_rx_window);
-      client->out.rx_window_size = MIN(client->out.rx_window_size, payload->ppogatt_max_tx_window);
+      client->out.tx_window_size =
+          PBL_MIN(client->out.tx_window_size, payload->ppogatt_max_rx_window);
+      client->out.rx_window_size =
+          PBL_MIN(client->out.rx_window_size, payload->ppogatt_max_tx_window);
     }
   }
 
@@ -907,7 +909,7 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
 #endif
 
   // Use the highest version that both ends support:
-  client->version = MIN(meta->ppogatt_max_version, PPOGATT_MAX_VERSION);
+  client->version = PBL_MIN(meta->ppogatt_max_version, PPOGATT_MAX_VERSION);
 
   // Parse additional v1 metadata fields:
   PPoGATTSessionType session_type = PPoGATTSessionType_InferredFromUuid;
@@ -1470,8 +1472,9 @@ static void prv_retry_send_later(PPoGATTClient *client) {
     PBL_LOG_DBG("PPoGATT out of buffers, retrying");
   }
   // Double the delay per retry; the inner MIN only bounds the shift.
-  const uint32_t delay_ms = MIN(PPOGATT_SEND_RETRY_DELAY_MS << MIN(client->send_retry_count, 16),
-                                PPOGATT_SEND_RETRY_MAX_DELAY_MS);
+  const uint32_t delay_ms =
+      PBL_MIN(PPOGATT_SEND_RETRY_DELAY_MS << PBL_MIN(client->send_retry_count, 16),
+              PPOGATT_SEND_RETRY_MAX_DELAY_MS);
   client->send_retry_count++;
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &client->send_retry_work, PBL_MSEC(delay_ms));
 }
@@ -1531,7 +1534,7 @@ static const PPoGATTPacket *prv_prepare_next_packet(PPoGATTClient *client,
     }
 
     // Cap to the size that the GATT MTU allows:
-    payload_size = MIN(payload_size, max_payload_size);
+    payload_size = PBL_MIN(payload_size, max_payload_size);
   }
 
   PPoGATTPacket *packet = prv_lazily_allocate_packet_if_needed(client, heap_packet_in_out);

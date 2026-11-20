@@ -108,7 +108,7 @@ static uint32_t prv_get_duration(KinoReelTransformData *data) {
     // If we have a 'to_reel' then ignore infinite duration requests because we will never get to
     // it and burn a lot of power along the way!
     if ((data->to_reel == nullptr) || (from_duration != PLAY_DURATION_INFINITE)) {
-      duration = MAX(duration, from_duration);
+      duration = PBL_MAX(duration, from_duration);
     }
   }
 
@@ -116,7 +116,7 @@ static uint32_t prv_get_duration(KinoReelTransformData *data) {
     // We want to make sure the transform duration is at least as long as the to_reel duration
     // so that the resource transition runs to completion if it's animated
     const uint32_t to_duration = kino_reel_get_duration(data->to_reel);
-    duration = MAX(duration, to_duration);
+    duration = PBL_MAX(duration, to_duration);
   }
   return duration;
 }

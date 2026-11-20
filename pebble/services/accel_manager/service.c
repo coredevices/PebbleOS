@@ -81,7 +81,7 @@ static uint8_t s_double_tap_subscribers_count = 0;
 static struct pbl_shared_cbuf s_buffer;
 //! Storage for s_buffer, sized to hold ~2 batches plus headroom, with a floor
 //! that keeps buffering room for high-rate app subscribers.
-static uint8_t s_buffer_storage[MAX(200, 2 * CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES + 50) *
+static uint8_t s_buffer_storage[PBL_MAX(200, 2 * CONFIG_SERVICE_ACCEL_MANAGER_BATCH_SAMPLES + 50) *
                                 sizeof(AccelManagerBufferData)];
 
 static uint64_t s_last_empty_timestamp_ms = 0;
@@ -175,12 +175,12 @@ static uint32_t prv_get_sample_interval_info(uint32_t *lowest_interval_us,
 
   AccelManagerState *state = (AccelManagerState *)s_data_subscribers;
   while (state) {
-    *lowest_interval_us = MIN(state->sampling_interval_us, *lowest_interval_us);
-    *max_n_samples = MAX(state->samples_per_update, *max_n_samples);
+    *lowest_interval_us = PBL_MIN(state->sampling_interval_us, *lowest_interval_us);
+    *max_n_samples = PBL_MAX(state->samples_per_update, *max_n_samples);
 
     if (state->samples_per_update > 0) {
       uint32_t us_per_update = state->samples_per_update * state->sampling_interval_us;
-      lowest_us_per_update = MIN(lowest_us_per_update, us_per_update);
+      lowest_us_per_update = PBL_MIN(lowest_us_per_update, us_per_update);
     }
     state = (AccelManagerState *)state->list_node.next;
   }
@@ -191,7 +191,7 @@ static uint32_t prv_get_sample_interval_info(uint32_t *lowest_interval_us,
   }
 
   uint32_t num_samples = lowest_us_per_update / (*lowest_interval_us);
-  num_samples = MIN(num_samples, pbl_accel_get_max_num_samples(ACCEL));
+  num_samples = PBL_MIN(num_samples, pbl_accel_get_max_num_samples(ACCEL));
 
   return num_samples;
 }

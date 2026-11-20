@@ -76,9 +76,9 @@ PBL_T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radi
       (corner_mask & GCornerTopRight) ? round_top_corner_lookup[radius] : 0;
 
   const unsigned int top_cropped_rows_count = clipped_rect.origin.y - rect.origin.y;
-  const int32_t left_cropped_columns_count = MAX(0, clipped_rect.origin.x - rect.origin.x);
+  const int32_t left_cropped_columns_count = PBL_MAX(0, clipped_rect.origin.x - rect.origin.x);
   const int32_t right_cropped_columns_count =
-      MAX(0, rect.size.w - clipped_rect.size.w - left_cropped_columns_count);
+      PBL_MAX(0, rect.size.w - clipped_rect.size.w - left_cropped_columns_count);
 
   if (top_cropped_rows_count) {
     // Skip over rows for each one that's cropped off the top; past 8 rows,
@@ -108,8 +108,10 @@ PBL_T_STATIC void prv_fill_rect_legacy2(GContext *ctx, GRect rect, uint16_t radi
       }
     }
 
-    int32_t left_side = MAX((int32_t)(corner_insets_left & 0xf) - left_cropped_columns_count, 0);
-    int32_t right_side = MAX((int32_t)(corner_insets_right & 0xf) - right_cropped_columns_count, 0);
+    int32_t left_side =
+        PBL_MAX((int32_t)(corner_insets_left & 0xf) - left_cropped_columns_count, 0);
+    int32_t right_side =
+        PBL_MAX((int32_t)(corner_insets_right & 0xf) - right_cropped_columns_count, 0);
 
     int32_t corner_insets = left_side + right_side;
     int32_t width = corner_insets < clipped_rect.size.w ? (clipped_rect.size.w - corner_insets) : 0;
@@ -133,7 +135,7 @@ PBL_T_STATIC uint16_t prv_clamp_corner_radius(GSize size, GCornerMask corner_mas
     return 0;
   }
 
-  int16_t min_size = MIN(size.w, size.h);
+  int16_t min_size = PBL_MIN(size.w, size.h);
 
   if (min_size >= 2 * radius) {
     return radius;

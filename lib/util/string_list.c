@@ -54,7 +54,7 @@ int pbl_string_list_add_string(struct pbl_string_list *list, size_t max_list_siz
   }
   const bool has_last_terminator = (list->serialized_byte_length > 0);
   char *cursor = &list->data[list->serialized_byte_length + (has_last_terminator ? 1 : 0)];
-  const size_t bytes_written = MIN(str_length, (size_t)size_remaining - 1);
+  const size_t bytes_written = PBL_MIN(str_length, (size_t)size_remaining - 1);
   strncpy(cursor, buffer, bytes_written);
   cursor[bytes_written] = '\0';
   list->serialized_byte_length += (has_last_terminator ? 1 : 0) + bytes_written;

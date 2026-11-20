@@ -59,9 +59,9 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_8bit(GBitmap *dest_bitmap,
 
     const GBitmapDataRowInfo dest_row_info = gbitmap_get_data_row_info(dest_bitmap, dest_y);
     uint8_t *dest = dest_row_info.data;
-    const int16_t dest_delta_begin_x = MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
+    const int16_t dest_delta_begin_x = PBL_MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
     const int16_t dest_begin_x = dest_delta_begin_x ? dest_row_info.min_x : dest_rect.origin.x;
-    const int16_t dest_end_x = MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
+    const int16_t dest_end_x = PBL_MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
     if (dest_end_x < dest_begin_x) {
       continue;
     }
@@ -70,14 +70,15 @@ void bitblt_bitmap_into_bitmap_tiled_palette_to_8bit(GBitmap *dest_bitmap,
     const uint8_t *src = src_row_info.data;
     // This is the initial position that takes into account destination delta shift
     const int16_t src_initial_x = src_bitmap->bounds.origin.x + dest_delta_begin_x;
-    const int16_t src_begin_x = MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
-    const int16_t src_end_x = MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
+    const int16_t src_begin_x = PBL_MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
+    const int16_t src_end_x = PBL_MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
 
     int16_t src_x = src_initial_x + src_origin_offset.x;
     for (int16_t dest_x = dest_begin_x; dest_x < dest_end_x; ++dest_x, ++src_x) {
-      if (!WITHIN(src_x, src_begin_x, src_end_x - 1)) {
+      if (!PBL_IN_RANGE(src_x, src_begin_x, src_end_x - 1)) {
         // Check if content should wrap (under and over) for tiling
-        if (!WITHIN(src_x, src_bitmap->bounds.origin.x, grect_get_max_x(&src_bitmap->bounds) - 1)) {
+        if (!PBL_IN_RANGE(src_x, src_bitmap->bounds.origin.x,
+                          grect_get_max_x(&src_bitmap->bounds) - 1)) {
           // keep correct bounds alignment for circular when tiling
           src_x = src_bitmap->bounds.origin.x +
                   ((src_x - src_bitmap->bounds.origin.x) % src_bitmap->bounds.size.w);
@@ -148,9 +149,9 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
 
         const GBitmapDataRowInfo dest_row_info = gbitmap_get_data_row_info(dest_bitmap, dest_y);
         uint8_t *dest = dest_row_info.data;
-        const int16_t dest_delta_begin_x = MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
+        const int16_t dest_delta_begin_x = PBL_MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
         const int16_t dest_begin_x = dest_delta_begin_x ? dest_row_info.min_x : dest_rect.origin.x;
-        const int16_t dest_end_x = MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
+        const int16_t dest_end_x = PBL_MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
         if (dest_end_x < dest_begin_x) {
           continue;
         }
@@ -159,8 +160,9 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
         const uint8_t *src = src_row_info.data;
         // This is the initial position that takes into account destination delta shift
         const int16_t src_initial_x = src_bitmap->bounds.origin.x + dest_delta_begin_x;
-        const int16_t src_begin_x = MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
-        const int16_t src_end_x = MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
+        const int16_t src_begin_x = PBL_MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
+        const int16_t src_end_x =
+            PBL_MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
 
         int16_t src_x = src_initial_x + src_origin_offset.x;
         const int16_t width = dest_end_x - dest_begin_x;
@@ -171,10 +173,10 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
         }
 
         for (int16_t dest_x = dest_begin_x; dest_x < dest_end_x; ++dest_x, ++src_x) {
-          if (!WITHIN(src_x, src_begin_x, src_end_x - 1)) {
+          if (!PBL_IN_RANGE(src_x, src_begin_x, src_end_x - 1)) {
             // Check if content should wrap (under and over) for tiling
-            if (!WITHIN(src_x, src_bitmap->bounds.origin.x,
-                        grect_get_max_x(&src_bitmap->bounds) - 1)) {
+            if (!PBL_IN_RANGE(src_x, src_bitmap->bounds.origin.x,
+                              grect_get_max_x(&src_bitmap->bounds) - 1)) {
               // keep correct bounds alignment for circular when tiling
               src_x = src_bitmap->bounds.origin.x +
                       ((src_x - src_bitmap->bounds.origin.x) % src_bitmap->bounds.size.w);
@@ -206,9 +208,9 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
 
         const GBitmapDataRowInfo dest_row_info = gbitmap_get_data_row_info(dest_bitmap, dest_y);
         uint8_t *dest = dest_row_info.data;
-        const int16_t dest_delta_begin_x = MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
+        const int16_t dest_delta_begin_x = PBL_MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
         const int16_t dest_begin_x = dest_delta_begin_x ? dest_row_info.min_x : dest_rect.origin.x;
-        const int16_t dest_end_x = MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
+        const int16_t dest_end_x = PBL_MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
         if (dest_end_x < dest_begin_x) {
           continue;
         }
@@ -217,15 +219,16 @@ void bitblt_bitmap_into_bitmap_tiled_8bit_to_8bit(GBitmap *dest_bitmap, const GB
         const uint8_t *src = src_row_info.data;
         // This is the initial position that takes into account destination delta shift
         const int16_t src_initial_x = src_bitmap->bounds.origin.x + dest_delta_begin_x;
-        const int16_t src_begin_x = MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
-        const int16_t src_end_x = MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
+        const int16_t src_begin_x = PBL_MAX(src_row_info.min_x, src_bitmap->bounds.origin.x);
+        const int16_t src_end_x =
+            PBL_MIN(grect_get_max_x(&src_bitmap->bounds), src_row_info.max_x + 1);
 
         int16_t src_x = src_initial_x + src_origin_offset.x;
         for (int16_t dest_x = dest_begin_x; dest_x < dest_end_x; ++dest_x, ++src_x) {
-          if (!WITHIN(src_x, src_begin_x, src_end_x - 1)) {
+          if (!PBL_IN_RANGE(src_x, src_begin_x, src_end_x - 1)) {
             // Check if content should wrap (under and over) for tiling
-            if (!WITHIN(src_x, src_bitmap->bounds.origin.x,
-                        grect_get_max_x(&src_bitmap->bounds) - 1)) {
+            if (!PBL_IN_RANGE(src_x, src_bitmap->bounds.origin.x,
+                              grect_get_max_x(&src_bitmap->bounds) - 1)) {
               // keep correct bounds alignment for circular when tiling
               src_x = src_bitmap->bounds.origin.x +
                       (((src_x - src_bitmap->bounds.origin.x)) % src_bitmap->bounds.size.w);
@@ -267,9 +270,9 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(GBitmap *dest_bitmap, const GB
 
     const GBitmapDataRowInfo dest_row_info = gbitmap_get_data_row_info(dest_bitmap, dest_y);
     uint8_t *dest = dest_row_info.data;
-    const int16_t dest_delta_begin_x = MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
+    const int16_t dest_delta_begin_x = PBL_MAX(dest_row_info.min_x - dest_rect.origin.x, 0);
     const int16_t dest_begin_x = dest_delta_begin_x ? dest_row_info.min_x : dest_rect.origin.x;
-    const int16_t dest_end_x = MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
+    const int16_t dest_end_x = PBL_MIN(grect_get_max_x(&dest_rect), dest_row_info.max_x + 1);
     if (dest_end_x < dest_begin_x) {
       continue;
     }
@@ -281,8 +284,9 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(GBitmap *dest_bitmap, const GB
     const uint8_t src_line_start_idx = corrected_src_x % 32;
     const uint8_t src_line_wrap_idx = (src_bitmap->bounds.origin.x + dest_delta_begin_x) % 32;
     const uint8_t src_line_start_end_idx =
-        MIN(32, src_bitmap->bounds.size.w + src_line_start_idx - (src_origin_offset.x % 32));
-    const uint8_t src_line_wrap_end_idx = MIN(32, src_bitmap->bounds.size.w + src_line_wrap_idx);
+        PBL_MIN(32, src_bitmap->bounds.size.w + src_line_start_idx - (src_origin_offset.x % 32));
+    const uint8_t src_line_wrap_end_idx =
+        PBL_MIN(32, src_bitmap->bounds.size.w + src_line_wrap_idx);
 
     int16_t row_bits_left = dest_rect.size.w;
     uint32_t *const src_block_begin =
@@ -291,7 +295,7 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(GBitmap *dest_bitmap, const GB
     uint32_t src = *src_block;
 
     uint8_t src_start_idx = src_line_start_idx;
-    uint8_t src_end_idx = MIN(src_line_start_end_idx, src_line_start_idx + row_bits_left);
+    uint8_t src_end_idx = PBL_MIN(src_line_start_end_idx, src_line_start_idx + row_bits_left);
     if (src_start_idx > src_end_idx) {
       continue;
     }
@@ -382,10 +386,10 @@ void bitblt_bitmap_into_bitmap_tiled_1bit_to_8bit(GBitmap *dest_bitmap, const GB
           src_block = src_block_begin;
 
           src_start_idx = src_line_wrap_idx;
-          src_end_idx = MIN(src_line_wrap_end_idx, src_start_idx + row_bits_left);
+          src_end_idx = PBL_MIN(src_line_wrap_end_idx, src_start_idx + row_bits_left);
         } else {
           src_start_idx = 0;
-          src_end_idx = MIN(32, row_bits_left);
+          src_end_idx = PBL_MIN(32, row_bits_left);
         }
         src = *src_block;
       }

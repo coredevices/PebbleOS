@@ -124,7 +124,7 @@ int32_t atan2_lookup(int16_t y, int16_t x) {
 }
 
 uint32_t normalize_angle(int32_t angle) {
-  uint32_t normalized_angle = ABS(angle) % TRIG_MAX_ANGLE;
+  uint32_t normalized_angle = PBL_ABS(angle) % TRIG_MAX_ANGLE;
   if (angle < 0) {
     normalized_angle = TRIG_MAX_ANGLE - normalized_angle;
   }

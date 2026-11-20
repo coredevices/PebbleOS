@@ -76,7 +76,7 @@ static void set_icon(const CustomizableAppType app_type, const uint16_t row_size
                      const uint16_t image_data_length) {
   AppCustomizeInfo *info = &s_info[app_type];
   const uint16_t desired_size = row_size_bytes * bounds.size.h;
-  const uint16_t available_size = MIN(desired_size, image_data_length);
+  const uint16_t available_size = PBL_MIN(desired_size, image_data_length);
   if (info->image_data && memcmp(info->image_data, image_data, available_size) == 0 &&
       info->icon.bounds.origin.x == bounds.origin.x &&
       info->icon.bounds.origin.y == bounds.origin.y && info->icon.bounds.size.w == bounds.size.w &&

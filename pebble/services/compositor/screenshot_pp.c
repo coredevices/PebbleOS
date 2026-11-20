@@ -106,7 +106,7 @@ static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,
     const size_t framebuffer_row_max_pixel = PBL_DISPLAY_WIDTH - 1 - framebuffer_row_min_pixel;
     for (uint32_t i = 0; i < remaining_framebuffer_row_bytes; i++) {
       const uint32_t i_with_offset = i + framebuffer_current_column;
-      if (WITHIN(i_with_offset, framebuffer_row_min_pixel, framebuffer_row_max_pixel)) {
+      if (PBL_IN_RANGE(i_with_offset, framebuffer_row_min_pixel, framebuffer_row_max_pixel)) {
         output_buffer_with_offset[i] = framebuffer_row_data[i_with_offset];
       } else {
         output_buffer_with_offset[i] = GColorClear.argb;

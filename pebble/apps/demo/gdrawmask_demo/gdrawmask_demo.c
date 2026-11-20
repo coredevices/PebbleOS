@@ -83,7 +83,7 @@ static void prv_layer_update_proc(Layer *layer, GContext *ctx) {
   const GColor mask_colors[3] = {GColorLightGray, GColorDarkGray, GColorBlack};
   const unsigned int num_mask_levels = PBL_ARRAY_SIZE(mask_colors);
 
-  const int16_t shape_width = (int16_t)(MIN(layer_bounds.size.w, layer_bounds.size.h) / 2);
+  const int16_t shape_width = (int16_t)(PBL_MIN(layer_bounds.size.w, layer_bounds.size.h) / 2);
   const GSize shape_size = GSize(shape_width, shape_width);
 
   for (unsigned int i = 0; i < num_mask_levels; i++) {

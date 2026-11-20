@@ -721,7 +721,7 @@ static void prv_do_init(void) {
 
   // Generate a token
   const uint32_t r = rand();
-  s_pb_state.token = MAX(1, r);
+  s_pb_state.token = PBL_MAX(1, r);
 
   PBL_LOG_DBG("PutBytes Init CB. Type: %d, Idx: %" PRIu32 ", Size: %" PRIu32 " Tok: %" PRIu32,
               (int)s_pb_state.type, s_pb_state.index, s_pb_state.total_size, s_pb_state.token);

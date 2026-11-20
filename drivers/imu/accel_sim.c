@@ -68,7 +68,7 @@ size_t pbl_accel_sim_feed(const struct pbl_accel *accel, const struct pbl_accel_
                           size_t count) {
   pbl_accel_lock(accel);
 
-  count = MIN(count, PBL_ACCEL_SIM_QUEUE_SIZE - s_queue_count);
+  count = PBL_MIN(count, PBL_ACCEL_SIM_QUEUE_SIZE - s_queue_count);
   for (size_t i = 0U; i < count; i++) {
     s_queue[(s_queue_read + s_queue_count) % PBL_ACCEL_SIM_QUEUE_SIZE] = samples[i];
     s_queue_count++;

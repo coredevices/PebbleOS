@@ -51,8 +51,8 @@ static const RecognizerImpl s_tap_recognizer_impl = {
 };
 
 static bool prv_moved_too_far(const TapRecognizerData *data, const TouchEvent *touch_event) {
-  const int16_t dx = ABS(touch_event->x - data->state.touch_down_point.x);
-  const int16_t dy = ABS(touch_event->y - data->state.touch_down_point.y);
+  const int16_t dx = PBL_ABS(touch_event->x - data->state.touch_down_point.x);
+  const int16_t dy = PBL_ABS(touch_event->y - data->state.touch_down_point.y);
   return (dx > data->config.movement_threshold.x) || (dy > data->config.movement_threshold.y);
 }
 

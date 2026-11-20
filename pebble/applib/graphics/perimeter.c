@@ -9,12 +9,12 @@
 #if PBL_ROUND
 static uint16_t prv_triangle_side(uint16_t hypotenuse, uint16_t side) {
   // third side of triangle based on pythagorean theorem
-  return integer_sqrt(ABS(((uint32_t)hypotenuse * hypotenuse) - ((uint32_t)side * side)));
+  return integer_sqrt(PBL_ABS(((uint32_t)hypotenuse * hypotenuse) - ((uint32_t)side * side)));
 }
 
 PBL_T_STATIC GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range, GPoint center,
                                                    int32_t radius) {
-  radius = MAX(0, radius);
+  radius = PBL_MAX(0, radius);
   int32_t height = 0;
   int32_t width = 0;
 
@@ -29,18 +29,18 @@ PBL_T_STATIC GRangeHorizontal perimeter_for_circle(GRangeVertical vertical_range
     return (GRangeHorizontal){0, 0};
   }
 
-  range_start = CLIP(range_start, top, bottom);
-  range_end = CLIP(range_end, top, bottom);
+  range_start = PBL_CLAMP(range_start, top, bottom);
+  range_end = PBL_CLAMP(range_end, top, bottom);
 
   // height of triangle from center to range start
-  height = ABS(center.y - range_start);
+  height = PBL_ABS(center.y - range_start);
   const int32_t start_width = prv_triangle_side(radius, height);
 
   // height of triangle from center to range end
-  height = ABS(center.y - range_end);
+  height = PBL_ABS(center.y - range_end);
   const int32_t end_width = prv_triangle_side(radius, height);
 
-  width = MIN(start_width, end_width);
+  width = PBL_MIN(start_width, end_width);
 
   return (GRangeHorizontal){.origin_x = center.x - width, .size_w = width * 2};
 }
@@ -61,7 +61,7 @@ PBL_T_STATIC GRangeHorizontal perimeter_for_display_rect(const GPerimeter *perim
                                                          const GSize *ctx_size,
                                                          GRangeVertical vertical_range,
                                                          uint16_t inset) {
-  return (GRangeHorizontal){.origin_x = inset, .size_w = MAX(0, ctx_size->w - 2 * inset)};
+  return (GRangeHorizontal){.origin_x = inset, .size_w = PBL_MAX(0, ctx_size->w - 2 * inset)};
 }
 #endif
 

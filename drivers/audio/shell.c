@@ -110,13 +110,13 @@ static void prv_record_done(const struct pbl_audio *audio, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   struct prv_session *s = arg;
   const int16_t *samples = period;
-  size_t frames = MIN(s->period_frames, s->frames_left);
+  size_t frames = PBL_MIN(s->period_frames, s->frames_left);
 
   for (size_t i = 0U; i < frames; i++) {
     for (uint8_t ch = 0U; ch < s->channels; ch++) {
       int32_t v = samples[i * s->channels + ch];
 
-      s->peak[ch] = MAX(s->peak[ch], (int16_t)MIN(ABS(v), INT16_MAX));
+      s->peak[ch] = PBL_MAX(s->peak[ch], (int16_t)PBL_MIN(PBL_ABS(v), INT16_MAX));
       s->sum_sq[ch] += (uint64_t)(v * v);
     }
   }
@@ -132,7 +132,7 @@ static void prv_record_done(const struct pbl_audio *audio, void *period,
 }
 
 static void prv_tone_fill(struct prv_session *s, int16_t *samples) {
-  size_t frames = MIN(s->period_frames, s->frames_left);
+  size_t frames = PBL_MIN(s->period_frames, s->frames_left);
 
   for (size_t i = 0U; i < frames; i++) {
     int16_t v = (int16_t)(sin_lookup((int32_t)(s->phase >> 16)) * TONE_AMPLITUDE / TRIG_MAX_RATIO);
@@ -219,7 +219,7 @@ static int prv_setup(const struct pbl_shell *sh, const struct pbl_audio *audio,
 
   *s = (struct prv_session){
     .rate = prv_pick_rate(&caps),
-    .channels = channels != 0U ? channels : MIN(caps.max_channels, MAX_CHANNELS),
+    .channels = channels != 0U ? channels : PBL_MIN(caps.max_channels, MAX_CHANNELS),
   };
   s->period_frames = s->rate * PERIOD_MS / MS_PER_S;
 
@@ -270,7 +270,7 @@ static int prv_cmd_rec(const struct pbl_shell *sh, size_t argc, char **argv) {
                   s.xruns);
   for (uint8_t ch = 0U; ch < s.channels; ch++) {
     pbl_shell_print(sh, "ch%u: peak %d rms %" PRId32, ch, s.peak[ch],
-                    integer_sqrt((int64_t)(s.sum_sq[ch] / MAX(s.frames, 1U))));
+                    integer_sqrt((int64_t)(s.sum_sq[ch] / PBL_MAX(s.frames, 1U))));
   }
 
   return 0;

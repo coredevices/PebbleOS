@@ -369,7 +369,7 @@ static void prv_quit_app_after_pp_msg_byte(uint32_t num_bytes) {
   assert_consumed(AppMessageSenderErrorSuccess, 1);
 
   // Expect at least the PebbleProtocol header or more to be intact:
-  size_t intact_size = MAX(num_bytes, sizeof(struct pbl_pp_header));
+  size_t intact_size = PBL_MAX(num_bytes, sizeof(struct pbl_pp_header));
   cl_assert_equal_m(bytes_out, TEST_EXPECTED_PP_MSG, intact_size);
 
   // Expect the remainder to be filled with zeroes:

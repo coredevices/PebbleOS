@@ -279,7 +279,7 @@ void test_ancs_client__notif_attrs_in_parts(void) {
   prv_ack(0);
   for (size_t i = 0; i < sizeof(s_notif_rsp); i += 7) {
     cl_assert_equal_i(s_num_results, 0);
-    prv_data(&s_notif_rsp[i], MIN(7, sizeof(s_notif_rsp) - i));
+    prv_data(&s_notif_rsp[i], PBL_MIN(7, sizeof(s_notif_rsp) - i));
   }
   prv_assert_notif_rsp();
 }

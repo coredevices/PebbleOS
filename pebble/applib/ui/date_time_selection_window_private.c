@@ -44,13 +44,13 @@ int date_time_selection_truncate_date(int year, int month, int day) {
 
   // pbl_time_days_in_month expects Jan == 1, but this function expects Jan == 0
   int max_days = pbl_time_days_in_month(month + 1, is_leap_year);
-  return MIN(day, max_days);
+  return PBL_MIN(day, max_days);
 }
 
 int date_time_selection_step_year(int year, int delta) {
   year += delta;
-  return CLIP(year, MIN_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN,
-              MAX_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN);
+  return PBL_CLAMP(year, MIN_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN,
+                   MAX_SELECTABLE_YEAR - PBL_TM_YEAR_ORIGIN);
 }
 
 char *date_time_selection_get_text(TimeData *data, TimeInputIndex index, char *buf) {

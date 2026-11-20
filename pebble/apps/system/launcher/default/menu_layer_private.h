@@ -10,7 +10,7 @@
 
 #if PBL_RECT
 #define LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS \
-  (DIVIDE_CEIL(PBL_DISPLAY_HEIGHT, SYSTEM_THEME_LAUNCHER_MIN_CELL_HEIGHT))
+  (PBL_DIV_ROUND_UP(PBL_DISPLAY_HEIGHT, SYSTEM_THEME_LAUNCHER_MIN_CELL_HEIGHT))
 #else
 //! One centered "focused" cell with as many "unfocused" cells above and below as fit
 #define LAUNCHER_MENU_LAYER_NUM_VISIBLE_ROWS                                       \

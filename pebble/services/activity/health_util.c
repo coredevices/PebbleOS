@@ -117,7 +117,7 @@ void health_util_duration_to_hours_and_minutes_text_node(int duration_s, void *i
 
 void health_util_convert_fraction_to_whole_and_decimal_part(int numerator, int denominator,
                                                             int *whole_part, int *decimal_part) {
-  const int figure = ROUND(numerator * 100, denominator * 10);
+  const int figure = PBL_DIV_ROUND_CLOSEST(numerator * 100, denominator * 10);
   *whole_part = figure / 10;
   *decimal_part = figure % 10;
 }
@@ -176,5 +176,5 @@ time_t health_util_get_pace(int time_s, int distance_meter) {
     return 0;
   }
 
-  return ROUND(time_s * health_util_get_distance_factor(), distance_meter);
+  return PBL_DIV_ROUND_CLOSEST(time_s * health_util_get_distance_factor(), distance_meter);
 }

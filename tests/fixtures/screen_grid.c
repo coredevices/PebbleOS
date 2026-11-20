@@ -32,8 +32,8 @@ static const char *const s_screen_grid_size_names[NumPreferredContentSizes] = {
 void screen_grid_init(ScreenGrid *grid, unsigned int num_rows) {
   cl_assert(num_rows <= SCREEN_GRID_MAX_ROWS);
   *grid = (ScreenGrid){
-    .first_size = MAX(PreferredContentSizeDefault - 1, PreferredContentSizeSmall),
-    .last_size = MIN(PreferredContentSizeDefault + 1, PreferredContentSizeExtraLarge),
+    .first_size = PBL_MAX(PreferredContentSizeDefault - 1, PreferredContentSizeSmall),
+    .last_size = PBL_MIN(PreferredContentSizeDefault + 1, PreferredContentSizeExtraLarge),
     .num_rows = num_rows,
   };
 }

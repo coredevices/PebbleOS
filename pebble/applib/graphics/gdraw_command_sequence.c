@@ -178,7 +178,7 @@ void gdraw_command_sequence_set_play_count(GDrawCommandSequence *sequence, uint3
     return;
   }
 
-  sequence->play_count = MIN(play_count, GDRAW_COMMAND_SEQUENCE_PLAY_COUNT_INFINITE_STORED);
+  sequence->play_count = PBL_MIN(play_count, GDRAW_COMMAND_SEQUENCE_PLAY_COUNT_INFINITE_STORED);
 }
 
 uint32_t gdraw_command_sequence_get_total_duration(GDrawCommandSequence *sequence) {

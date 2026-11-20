@@ -80,11 +80,11 @@ static int prv_get_range(const HealthHrChartData *data, uint8_t *min_bpm, uint8_
   *max_bpm = 0;
   *num_readings = 0;
   int latest_minute = -1;
-  for (int i = 0; i < MIN(data->num_minutes, PBL_MIN_PER_DAY); i++) {
+  for (int i = 0; i < PBL_MIN(data->num_minutes, PBL_MIN_PER_DAY); i++) {
     const uint8_t bpm = data->minute_bpm[i];
     if (bpm) {
-      *min_bpm = MIN(*min_bpm, bpm);
-      *max_bpm = MAX(*max_bpm, bpm);
+      *min_bpm = PBL_MIN(*min_bpm, bpm);
+      *max_bpm = PBL_MAX(*max_bpm, bpm);
       (*num_readings)++;
       latest_minute = i;
     }
@@ -98,7 +98,7 @@ static size_t prv_cluster_bucket(const HealthHrChartData *data, int bucket,
   uint8_t readings[BUCKET_MINUTES];
   size_t num_readings = 0;
   const int start = bucket * BUCKET_MINUTES;
-  const int end = MIN(start + BUCKET_MINUTES, MIN(data->num_minutes, PBL_MIN_PER_DAY));
+  const int end = PBL_MIN(start + BUCKET_MINUTES, PBL_MIN(data->num_minutes, PBL_MIN_PER_DAY));
   for (int i = start; i < end; i++) {
     if (data->minute_bpm[i]) {
       readings[num_readings++] = data->minute_bpm[i];
@@ -180,7 +180,7 @@ static void prv_draw_grid_line(GContext *ctx, GPoint start, GPoint end) {
 }
 
 static int16_t prv_bar_width(int16_t pitch) {
-  return CLIP(pitch - 1, 1, MAX_BAR_WIDTH);
+  return PBL_CLAMP(pitch - 1, 1, MAX_BAR_WIDTH);
 }
 
 //! Width of the cell between two grid lines, sized so its bars clear both lines by GRID_GAP
@@ -324,7 +324,7 @@ void health_hr_chart_draw(GContext *ctx, const GRect *bounds, HealthHrChart *cha
   plot.size.w -= label_column_w;
   plot.size.h -= font_h + LABEL_PADDING;
 
-  int16_t pitch = MAX(plot.size.w / NUM_BUCKETS, 1);
+  int16_t pitch = PBL_MAX(plot.size.w / NUM_BUCKETS, 1);
   while (pitch > 1 && (NUM_GRID_CELLS * prv_grid_spacing(pitch)) > plot.size.w) {
     pitch--;
   }
@@ -354,7 +354,7 @@ void health_hr_chart_draw(GContext *ctx, const GRect *bounds, HealthHrChart *cha
   snprintf(max_text, sizeof(max_text), "%d", layout.hi_bpm);
   snprintf(min_text, sizeof(min_text), "%d", layout.lo_bpm);
   const int16_t text_w =
-      MAX(prv_text_width(ctx, max_text, font), prv_text_width(ctx, min_text, font));
+      PBL_MAX(prv_text_width(ctx, max_text, font), prv_text_width(ctx, min_text, font));
   const int16_t line_end_x =
       label_column.origin.x + label_column.size.w - text_w - AXIS_LINE_PADDING;
   prv_draw_axis_line(ctx, &layout, max_y, line_end_x);

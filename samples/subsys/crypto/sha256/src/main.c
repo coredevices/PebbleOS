@@ -40,7 +40,7 @@ int main(void) {
   /* Partial blocks are kept in the context until the next update completes them. */
   pbl_sha256_init(&ctx);
   while (off < DATA_LEN) {
-    size_t len = MIN(chunk, DATA_LEN - off);
+    size_t len = PBL_MIN(chunk, DATA_LEN - off);
 
     pbl_sha256_update(&ctx, &s_data[off], len);
     off += len;

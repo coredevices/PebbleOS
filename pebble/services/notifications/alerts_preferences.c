@@ -546,7 +546,7 @@ void alerts_preferences_set_alert_mask(AlertMask mask) {
 }
 
 uint32_t alerts_preferences_get_notification_window_timeout_ms(void) {
-  return MAX(s_notif_window_timeout_ms, NOTIF_WINDOW_TIMEOUT_MIN);
+  return PBL_MAX(s_notif_window_timeout_ms, NOTIF_WINDOW_TIMEOUT_MIN);
 }
 
 void alerts_preferences_set_notification_window_timeout_ms(uint32_t timeout_ms) {

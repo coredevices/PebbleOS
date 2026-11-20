@@ -138,15 +138,15 @@ static bool prv_draw_rotated_8bit(GBitmap *dest, const GBitmap *src, GRect clip,
   }
 
   grect_clip(&clip, &dest->bounds);
-  const int32_t src_w = MIN(src->bounds.size.w, grect_get_max_x(&src->bounds));
+  const int32_t src_w = PBL_MIN(src->bounds.size.w, grect_get_max_x(&src->bounds));
   const int32_t src_h = src->bounds.size.h;
   const uint8_t *src_data = src->addr;
   const size_t src_row_size = src->row_size_bytes;
 
   for (int y = clip.origin.y; y < grect_get_max_y(&clip); ++y) {
     const GBitmapDataRowInfo dest_info = gbitmap_get_data_row_info(dest, y);
-    const int x_begin = MAX(clip.origin.x, dest_info.min_x);
-    const int x_end = MIN(grect_get_max_x(&clip) - 1, dest_info.max_x);
+    const int x_begin = PBL_MAX(clip.origin.x, dest_info.min_x);
+    const int x_end = PBL_MIN(grect_get_max_x(&clip) - 1, dest_info.max_x);
     if (x_begin > x_end) {
       continue;
     }
@@ -246,10 +246,10 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
     // i.e. in case the anchor point is on the edge then it would be twice
     // Also need to account for the dest_ic offset
 
-    const int16_t max_width =
-        MAX(src->bounds.origin.x + src->bounds.size.w - src_ic.x, src_ic.x - src->bounds.origin.x);
-    const int16_t max_height =
-        MAX(src->bounds.origin.y + src->bounds.size.h - src_ic.y, src_ic.y - src->bounds.origin.y);
+    const int16_t max_width = PBL_MAX(src->bounds.origin.x + src->bounds.size.w - src_ic.x,
+                                      src_ic.x - src->bounds.origin.x);
+    const int16_t max_height = PBL_MAX(src->bounds.origin.y + src->bounds.size.h - src_ic.y,
+                                       src_ic.y - src->bounds.origin.y);
     const int32_t width = 2 * (max_width + 1);   // Add one more pixel in case on the edge
     const int32_t height = 2 * (max_height + 1); // Add one more pixel in case on the edge
 
@@ -280,7 +280,7 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
     for (int x = dest_clip.origin.x; x < dest_clip.origin.x + dest_clip.size.w; ++x) {
       // only draw if within the dest range
       const GBitmapDataRowInfo dest_info = gbitmap_get_data_row_info(dest_bitmap, y);
-      if (!WITHIN(x, dest_info.min_x, dest_info.max_x)) {
+      if (!PBL_IN_RANGE(x, dest_info.min_x, dest_info.max_x)) {
         continue;
       }
 
@@ -295,8 +295,9 @@ void graphics_draw_rotated_bitmap(GContext *ctx, GBitmap *src, GPoint src_ic, in
 
       // only draw if within the src range
       const GBitmapDataRowInfo src_info = gbitmap_get_data_row_info(src, src_y);
-      if (!(WITHIN(src_x, 0, src->bounds.size.w - 1) && WITHIN(src_y, 0, src->bounds.size.h - 1) &&
-            WITHIN(src_x, src_info.min_x, src_info.max_x))) {
+      if (!(PBL_IN_RANGE(src_x, 0, src->bounds.size.w - 1) &&
+            PBL_IN_RANGE(src_y, 0, src->bounds.size.h - 1) &&
+            PBL_IN_RANGE(src_x, src_info.min_x, src_info.max_x))) {
         continue;
       }
 

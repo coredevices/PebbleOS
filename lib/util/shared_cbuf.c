@@ -156,7 +156,7 @@ bool pbl_shared_cbuf_read(const struct pbl_shared_cbuf *buffer,
   *data_out = &buffer->buffer[client->read_index];
 
   const uint16_t bytes_read = buffer->buffer_size - client->read_index;
-  *length_out = MIN(bytes_read, length);
+  *length_out = PBL_MIN(bytes_read, length);
 
   return true;
 }
@@ -193,7 +193,7 @@ bool pbl_shared_cbuf_read_consume(struct pbl_shared_cbuf *buffer,
                                   struct pbl_shared_cbuf_client *client, uint16_t length,
                                   uint8_t *data, uint16_t *length_out) {
   uint16_t data_length = prv_get_data_length(buffer, client);
-  uint16_t bytes_left = MIN(length, data_length);
+  uint16_t bytes_left = PBL_MIN(length, data_length);
 
   *length_out = bytes_left;
   while (bytes_left) {
@@ -249,7 +249,7 @@ size_t pbl_shared_cbuf_read_subsampled(struct pbl_shared_cbuf *buffer,
 
   // Optimized case when no subsampling
   if (client->numerator == client->denominator) {
-    num_items = MIN(num_items, bytes_available / item_size);
+    num_items = PBL_MIN(num_items, bytes_available / item_size);
     uint16_t bytes_out;
     pbl_shared_cbuf_read_consume(buffer, &client->buffer_client, num_items * item_size,
                                  (uint8_t *)data, &bytes_out);

@@ -60,11 +60,13 @@ uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms) {
   //  stride_len = (a * steps * 1000 * 60 / milliseconds + b) * height
   // Compute the "(a * steps * 1000 * 60 / milliseconds + b)" component:
   uint64_t stride_len_component =
-      ROUND(k_a_x10000 * steps_64 * PBL_MSEC_PER_SEC * PBL_SEC_PER_MIN, ms_64) + k_b_x10000;
+      PBL_DIV_ROUND_CLOSEST(k_a_x10000 * steps_64 * PBL_MSEC_PER_SEC * PBL_SEC_PER_MIN, ms_64) +
+      k_b_x10000;
 
   // Multiply by height to get stride_len, then by steps to get distance, then factor out our
   // constant multiplier at the very end to minimize rounding errors.
-  uint32_t distance_mm = ROUND(stride_len_component * height_mm_64 * steps, k_x10000);
+  uint32_t distance_mm =
+      PBL_DIV_ROUND_CLOSEST(stride_len_component * height_mm_64 * steps, k_x10000);
 
   // Return distance in mm
   PBL_LOG_DBG("Got delta distance of %" PRIu32 " mm", distance_mm);
@@ -125,8 +127,8 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
 
   uint64_t weight_dag = activity_prefs_get_weight_dag(); // 10 grams = 1 dag
 
-  uint32_t calories = ROUND(k_constant_x1000 * (uint64_t)distance_mm * weight_dag,
-                            1000 * PBL_MM_PER_M * ACTIVITY_DAG_PER_KG);
+  uint32_t calories = PBL_DIV_ROUND_CLOSEST(k_constant_x1000 * (uint64_t)distance_mm * weight_dag,
+                                            1000 * PBL_MM_PER_M * ACTIVITY_DAG_PER_KG);
 
   // Return calories
   PBL_LOG_DBG("Got delta active calories of %" PRIu32 " ", calories);
@@ -156,7 +158,8 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
   }
 
   // Scale by the requested number of minutes
-  uint32_t resting_calories = ROUND(calories_per_day * elapsed_minutes, PBL_MIN_PER_DAY);
+  uint32_t resting_calories =
+      PBL_DIV_ROUND_CLOSEST(calories_per_day * elapsed_minutes, PBL_MIN_PER_DAY);
   PBL_LOG_DBG("resting_calories: %" PRIu32 "", resting_calories);
   return resting_calories;
 }

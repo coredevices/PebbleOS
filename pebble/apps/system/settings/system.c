@@ -885,7 +885,7 @@ static void prv_draw_regulatory_marks_cell(GContext *ctx, const Layer *cell_laye
   GSize overall_size = GSize(MARK_PADDING * (num_marks + 1), 0);
   for (uint32_t i = 0; i < num_marks; i++) {
     const GSize mark_size = cd->regulatory_marks[start_idx + i]->bounds.size;
-    overall_size.h = MAX(overall_size.h, mark_size.h);
+    overall_size.h = PBL_MAX(overall_size.h, mark_size.h);
     overall_size.w += mark_size.w;
   }
   GRect regulatory_marks_rect = (GRect){.size = overall_size};

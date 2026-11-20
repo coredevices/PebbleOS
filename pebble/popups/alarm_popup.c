@@ -284,7 +284,7 @@ static void prv_start_vibes(void) {
         low_power_is_active() ? (PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC / TINTIN_LPM_VIBES_PER_MINUTE)
                               : TINTIN_VIBE_REPEAT_INTERVAL_MS;
   }
-  s_alarm_popup_data->max_vibes = DIVIDE_CEIL(VIBE_DURATION, vibe_repeat_interval_ms);
+  s_alarm_popup_data->max_vibes = PBL_DIV_ROUND_UP(VIBE_DURATION, vibe_repeat_interval_ms);
   PBL_LOG_DBG("Alarm vibe: start, low_power=%d, interval=%ums, max=%d", low_power_is_active(),
               vibe_repeat_interval_ms, s_alarm_popup_data->max_vibes);
   launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);

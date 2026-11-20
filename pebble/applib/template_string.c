@@ -524,7 +524,7 @@ PBL_T_STATIC const char *prv_template_format_specifier(TemplateStringState *stat
     case 'T': { // H:M:S
       char macro_spec[16];
       // Always show the last unit, even if it's 0.
-      macro_units = MIN(macro_units, macro_end - 1);
+      macro_units = PBL_MIN(macro_units, macro_end - 1);
 
       for (int i = macro_units; i < macro_end; i++) {
         char *macro_ptr = macro_spec;
@@ -778,7 +778,7 @@ static void prv_template_eval(TemplateStringState *state) {
 
     // Copy out the filter name
     char filter_name[MAX_FILTER_NAME_LENGTH];
-    size_t len = MIN(MAX_FILTER_NAME_LENGTH - 1, filter_name_paren - state->position);
+    size_t len = PBL_MIN(MAX_FILTER_NAME_LENGTH - 1, filter_name_paren - state->position);
     strncpy(filter_name, state->position, len);
     filter_name[len] = '\0';
 

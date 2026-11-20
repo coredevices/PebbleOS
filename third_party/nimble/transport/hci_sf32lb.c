@@ -201,14 +201,14 @@ static size_t prv_ring_put(volatile struct ring *ring, const uint8_t *data, size
   uint32_t space = size - prv_ring_used(ring->rd_idx, wr, size);
   size_t first;
 
-  len = MIN(len, space);
+  len = PBL_MIN(len, space);
   if (len == 0U) {
     return 0U;
   }
 
   pbl_mb();
 
-  first = MIN(len, size - idx);
+  first = PBL_MIN(len, size - idx);
   memcpy(&pool[idx], data, first);
   memcpy(pool, &data[first], len - first);
 
@@ -244,7 +244,7 @@ static size_t prv_ring_peek(const uint8_t **data) {
   pbl_rmb();
   *data = (const uint8_t *)rx->rd_buf + idx;
 
-  return MIN(used, size - idx);
+  return PBL_MIN(used, size - idx);
 }
 
 static void prv_ring_consume(size_t len) {

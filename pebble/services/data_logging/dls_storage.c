@@ -153,7 +153,7 @@ static uint32_t prv_get_desired_free_bytes(DataLoggingSession *session) {
   uint32_t free_bytes = session->storage.num_bytes / 2;
 
   // Set some lower and upper bounds
-  free_bytes = CLIP(free_bytes, DLS_MIN_FILE_FREE_BYTES, DLS_MAX_FILE_FREE_BYTES);
+  free_bytes = PBL_CLAMP(free_bytes, DLS_MIN_FILE_FREE_BYTES, DLS_MAX_FILE_FREE_BYTES);
   return free_bytes;
 }
 
@@ -199,7 +199,7 @@ static bool prv_compact_session_cb(DataLoggingSession *session, void *data) {
     // We have more than the desired number of free bytes in this file, so it is a candidate
     // for compaction.
     uint32_t new_size = session->storage.num_bytes + target_free_bytes;
-    new_size = MAX(new_size, DLS_FILE_INIT_SIZE_BYTES);
+    new_size = PBL_MAX(new_size, DLS_FILE_INIT_SIZE_BYTES);
     prv_release_session_file(session);
     if (new_size != cur_size || session->storage.read_offset > sizeof(DLSFileHeader)) {
       prv_realloc_storage(session, new_size);
@@ -351,7 +351,7 @@ static bool prv_get_session_file(DataLoggingSession *session, uint32_t space_nee
   // reallocating anyways, take this chance to optimize the amount of free space in the file.
   uint32_t target_file_size =
       session->storage.num_bytes + space_needed + prv_get_desired_free_bytes(session);
-  target_file_size = MAX(target_file_size, DLS_FILE_INIT_SIZE_BYTES);
+  target_file_size = PBL_MAX(target_file_size, DLS_FILE_INIT_SIZE_BYTES);
   uint32_t optimum_delta_size = target_file_size - file_size;
 
   bool have_space_to_grow = prv_make_file_system_space(optimum_delta_size);
@@ -378,12 +378,12 @@ static bool prv_get_session_file(DataLoggingSession *session, uint32_t space_nee
   // Lop off old data at the beginning of the file if there is enough there.
   success = false;
   // If we are going to consume, we have to be prepared to consume at least 1 data chunk
-  min_delta_size = MAX(min_delta_size, DLS_MAX_CHUNK_SIZE_BYTES);
+  min_delta_size = PBL_MAX(min_delta_size, DLS_MAX_CHUNK_SIZE_BYTES);
   if (session->storage.num_bytes <= min_delta_size) {
     // Lopping off the used bytes won't satisfy space_needed
     goto exit;
   }
-  uint32_t consume_bytes = MAX(session->storage.num_bytes / 2, min_delta_size);
+  uint32_t consume_bytes = PBL_MAX(session->storage.num_bytes / 2, min_delta_size);
   if (dls_storage_consume(session, consume_bytes) < 0) {
     // We failed to lop off the used bytes
     goto exit;
@@ -413,7 +413,7 @@ static bool prv_write_data(DataLoggingSessionStorage *storage, const void *data,
 
   // Write out in chunks
   while (remaining_bytes > 0) {
-    uint8_t data_chunk_length = MIN(DLS_MAX_CHUNK_SIZE_BYTES, remaining_bytes);
+    uint8_t data_chunk_length = PBL_MIN(DLS_MAX_CHUNK_SIZE_BYTES, remaining_bytes);
 
     // Write the data first, so if an error occurs, the header is left in the uninitialized state
     if (!prv_file_seek(&storage->file, storage->write_offset + sizeof(DLSChunkHeader),
@@ -454,7 +454,7 @@ static bool prv_copy_unread_data(DataLoggingSession *session, struct pbl_fs_file
   }
 
   while (offset < end) {
-    const uint32_t len = MIN(buf_size, end - offset);
+    const uint32_t len = PBL_MIN(buf_size, end - offset);
     if (!prv_file_read(&session->storage.file, buf, len)) {
       return false;
     }

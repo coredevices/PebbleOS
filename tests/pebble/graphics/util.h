@@ -300,8 +300,8 @@ bool gbitmap_eq(GBitmap *actual_bmp, GBitmap *expected_bmp, const char *filename
 
     // Needs to be prv_gbitmap_get_data_row_info to avoid unit test mocked version
     const GBitmapDataRowInfo dest_row_info = prv_gbitmap_get_data_row_info(actual_bmp, y);
-    const int16_t start_x = MAX(actual_bmp->bounds.origin.x, dest_row_info.min_x);
-    const int16_t end_x = MIN(grect_get_max_x(&actual_bmp->bounds), dest_row_info.max_x + 1);
+    const int16_t start_x = PBL_MAX(actual_bmp->bounds.origin.x, dest_row_info.min_x);
+    const int16_t end_x = PBL_MIN(grect_get_max_x(&actual_bmp->bounds), dest_row_info.max_x + 1);
     const int16_t y_line = 0; // line is constant zero below now that we are retrieving row
     if (end_x < start_x) {
       continue;

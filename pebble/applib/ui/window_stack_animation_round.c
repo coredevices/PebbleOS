@@ -20,8 +20,8 @@
 static uint16_t prv_window_distance_from_screen_bounds(const Window *window, GContext *ctx) {
   const GPoint origin = window->layer.frame.origin;
   const GSize fb_size = graphics_context_get_framebuffer_size(ctx);
-  return MAX(distance_to_mod_boundary(origin.x, fb_size.w),
-             distance_to_mod_boundary(origin.y, fb_size.h));
+  return PBL_MAX(distance_to_mod_boundary(origin.x, fb_size.w),
+                 distance_to_mod_boundary(origin.y, fb_size.h));
 }
 
 static void prv_window_transition_render(WindowTransitioningContext *context, GContext *ctx) {

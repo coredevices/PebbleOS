@@ -128,7 +128,7 @@ static void prv_throttle(AppMessageCtxOutbox *outbox) {
   if (outbox->not_ready_throttle_ms == 0) {
     outbox->not_ready_throttle_ms = 1;
   } else {
-    outbox->not_ready_throttle_ms = MIN(outbox->not_ready_throttle_ms * 2, 100 /*ms*/);
+    outbox->not_ready_throttle_ms = PBL_MIN(outbox->not_ready_throttle_ms * 2, 100 /*ms*/);
   }
   sys_psleep(outbox->not_ready_throttle_ms);
 }

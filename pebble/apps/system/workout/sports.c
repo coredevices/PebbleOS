@@ -114,7 +114,7 @@ static void prv_sync_tuple_changed_callback(uint32_t key, const Tuple *new_tuple
       strncpy(data->duration_string, new_tuple->value->cstring, sizeof(data->duration_string));
       break;
     case SPORTS_LABEL_KEY: {
-      const bool is_pace = MIN(new_tuple->value->uint8, 1);
+      const bool is_pace = PBL_MIN(new_tuple->value->uint8, 1);
       WorkoutMetricType metric_type = is_pace ? WorkoutMetricType_Pace : WorkoutMetricType_Speed;
       if (metric_type != data->pace_speed_metric) {
         data->pace_speed_metric = metric_type;
@@ -209,20 +209,20 @@ static void prv_metric_to_string(WorkoutMetricType type, char *buffer, size_t bu
     }
     case WorkoutMetricType_Speed:
     case WorkoutMetricType_Pace: {
-      strncpy(buffer, data->pace_string, MIN(buffer_size, sizeof(data->pace_string)));
+      strncpy(buffer, data->pace_string, PBL_MIN(buffer_size, sizeof(data->pace_string)));
       break;
     }
     case WorkoutMetricType_Distance: {
-      strncpy(buffer, data->distance_string, MIN(buffer_size, sizeof(data->distance_string)));
+      strncpy(buffer, data->distance_string, PBL_MIN(buffer_size, sizeof(data->distance_string)));
       break;
     }
     case WorkoutMetricType_Duration: {
-      strncpy(buffer, data->duration_string, MIN(buffer_size, sizeof(data->duration_string)));
+      strncpy(buffer, data->duration_string, PBL_MIN(buffer_size, sizeof(data->duration_string)));
       break;
     }
     case WorkoutMetricType_Custom: {
       strncpy(buffer, data->custom_value_string,
-              MIN(buffer_size, sizeof(data->custom_value_string)));
+              PBL_MIN(buffer_size, sizeof(data->custom_value_string)));
       break;
     }
     // Not supported by the sports API
@@ -259,7 +259,7 @@ static const char *prv_get_distance_string(const char *miles_string, const char 
   const Tuple *metric_tuple = app_sync_get(&data->sync, SPORTS_UNITS_KEY);
   uint8_t is_metric = 1;
   if (metric_tuple != nullptr) {
-    is_metric = MIN(metric_tuple->value->uint8, 1);
+    is_metric = PBL_MIN(metric_tuple->value->uint8, 1);
   }
 
   if (is_metric) {

@@ -61,7 +61,7 @@ static void prv_do_data_handle(PebbleEvent *e, void *context) {
 
   CompassServiceConfig *config = *prv_get_config(PebbleTask_Unknown);
   if (config->compass_cb != nullptr) {
-    if (ABS(config->last_angle - data.magnetic_heading) > config->compass_filter) {
+    if (PBL_ABS(config->last_angle - data.magnetic_heading) > config->compass_filter) {
       config->compass_cb(data);
       config->last_angle = data.magnetic_heading;
     }

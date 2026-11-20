@@ -268,8 +268,8 @@ static void prv_assert_sent_reset_complete(pbl_bt_characteristic_t characteristi
                                    s_client_reset_complete_size, false /* is_response_required */);
 
   if (s_ppogatt_version > 0) {
-    s_tx_window_size = MIN(s_tx_window_size, expected_response.payload.ppogatt_max_tx_window);
-    s_rx_window_size = MIN(s_rx_window_size, expected_response.payload.ppogatt_max_rx_window);
+    s_tx_window_size = PBL_MIN(s_tx_window_size, expected_response.payload.ppogatt_max_tx_window);
+    s_rx_window_size = PBL_MIN(s_rx_window_size, expected_response.payload.ppogatt_max_rx_window);
   } else {
     s_tx_window_size = s_rx_window_size = PPOGATT_V0_WINDOW_SIZE;
   }
@@ -830,7 +830,7 @@ void test_ppogatt__send_data_max_payload_size(void) {
   memset(data, 0x55, MAX_PAYLOAD_SIZE);
 
   // The fake send buffer holds a V0 window of these:
-  const uint8_t num_packets = MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
+  const uint8_t num_packets = PBL_MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
   struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
   for (uint8_t sn = 0; sn < num_packets; ++sn) {
     cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, data, MAX_PAYLOAD_SIZE),
@@ -937,7 +937,7 @@ void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(v
     for (int i = 0; i < 6; ++i) {
       fake_gatt_client_op_assert_no_write();
       cl_assert_equal_i(fake_work_timeout_ms(fake_work_get_next()),
-                        MIN(delay_ms, PPOGATT_SEND_RETRY_MAX_DELAY_MS));
+                        PBL_MIN(delay_ms, PPOGATT_SEND_RETRY_MAX_DELAY_MS));
       fake_work_fire(fake_work_get_next());
       delay_ms *= 2;
     }

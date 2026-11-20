@@ -17,7 +17,7 @@ GBitmapDataRowInfo gbitmap_get_data_row_info(const GBitmap *bitmap, uint16_t y) 
   // If fake data row handling is enabled, clip the row to a diamond mask
   if (s_fake_data_row_handling) {
     const int16_t diamond_offset =
-        ABS((bitmap->bounds.size.w / 2) - (y * bitmap->bounds.size.w / bitmap->bounds.size.h));
+        PBL_ABS((bitmap->bounds.size.w / 2) - (y * bitmap->bounds.size.w / bitmap->bounds.size.h));
     const int16_t min_x = bitmap->bounds.origin.x + diamond_offset;
     // vertically flip unless disabled
     if (!s_fake_data_row_handling_disable_vertical_flip) {

@@ -382,7 +382,7 @@ typedef struct Tuplet {
 //! @param _integer The integer value
 #define TupletInteger(_key, _integer)                           \
   ((const Tuplet){                                              \
-    .type = IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT,       \
+    .type = PBL_IS_SIGNED(_integer) ? TUPLE_INT : TUPLE_UINT,   \
     .key = _key,                                                \
     .integer = {.storage = _integer, .width = sizeof(_integer)} \
   })

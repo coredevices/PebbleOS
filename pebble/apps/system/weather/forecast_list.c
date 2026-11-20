@@ -1633,9 +1633,9 @@ static void prv_draw_bottom_stats(GContext *ctx, const WeatherLocationForecast *
 // while the redraw rate is halved — the full-screen redraw was over the per-frame budget on
 // real hardware and backed up the task that services touch. The rain/snow derive a tick
 // count from the accumulated angle so their fall speed follows automatically.
-// ROUND (gabbro smoothness step 4): 66 ms = exactly 2 ticks of the animation service's 33ms
-// frame interval, so every icon step lands ON a display frame. 80ms landed on alternating
-// 66/99ms boundaries — a visible advance/skip/advance micro-judder. The per-tick phase
+// PBL_DIV_ROUND_CLOSEST (gabbro smoothness step 4): 66 ms = exactly 2 ticks of the animation
+// service's 33ms frame interval, so every icon step lands ON a display frame. 80ms landed on
+// alternating 66/99ms boundaries — a visible advance/skip/advance micro-judder. The per-tick phase
 // advance is scaled (see prv_sun_step) so the visual speed is unchanged.
 #define R5_SUN_PERIOD_MS  PBL_IF_ROUND_ELSE(66, 80)
 #define R5_SUN_ANGLE_STEP (TRIG_MAX_ANGLE / 168)
@@ -3808,8 +3808,8 @@ static void prv_forecast_list_push(const WeatherLocationForecast *days, size_t n
   }
 
   s_list->window = window_create();
-  // ROUND (gabbro smoothness step 3): transparent — window.c's root-layer proc fills the
-  // whole window with the bg colour EVERY frame unless it is transparent (~53KB of writes
+  // PBL_DIV_ROUND_CLOSEST (gabbro smoothness step 3): transparent — window.c's root-layer proc
+  // fills the whole window with the bg colour EVERY frame unless it is transparent (~53KB of writes
   // on the 260px glass), and every branch of prv_canvas_draw already paints every pixel
   // (scene white-fill first / report white card / squash resample full-coverage), so the
   // window fill was pure duplicate work. The !s_list early-return keeps a white guard.

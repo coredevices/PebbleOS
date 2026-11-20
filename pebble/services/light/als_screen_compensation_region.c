@@ -22,15 +22,15 @@ uint16_t als_compensation_region_luminance(const GBitmap *fb, int16_t rx, int16_
 
   const int16_t fb_w = fb->bounds.size.w;
   const int16_t fb_h = fb->bounds.size.h;
-  const int16_t y0 = MAX(ry, (int16_t)0);
-  const int16_t y1 = MIN((int16_t)(ry + rh), fb_h);
+  const int16_t y0 = PBL_MAX(ry, (int16_t)0);
+  const int16_t y1 = PBL_MIN((int16_t)(ry + rh), fb_h);
 
   uint32_t sum = 0;
   uint32_t count = 0;
   for (int16_t y = y0; y < y1; y++) {
     const GBitmapDataRowInfo row = gbitmap_get_data_row_info(fb, y);
-    const int16_t x0 = MAX(MAX(rx, row.min_x), (int16_t)0);
-    const int16_t x1 = MIN(MIN((int16_t)(rx + rw), (int16_t)(row.max_x + 1)), fb_w);
+    const int16_t x0 = PBL_MAX(PBL_MAX(rx, row.min_x), (int16_t)0);
+    const int16_t x1 = PBL_MIN(PBL_MIN((int16_t)(rx + rw), (int16_t)(row.max_x + 1)), fb_w);
     for (int16_t x = x0; x < x1; x++) {
       const GColor8 c = (GColor8){.argb = row.data[x]};
       sum += ALS_COMP_LUM_TO_255(gcolor_get_luminance(c));

@@ -183,7 +183,7 @@ void pbl_idle_state_release(pbl_idle_state_id_t state) {
 static void prv_latency_update(void) {
   s_latency_ticks = PBL_TICK_FOREVER;
   for (const struct pbl_idle_latency_request *req = s_requests; req != nullptr; req = req->next) {
-    s_latency_ticks = MIN(s_latency_ticks, req->ticks);
+    s_latency_ticks = PBL_MIN(s_latency_ticks, req->ticks);
   }
 }
 

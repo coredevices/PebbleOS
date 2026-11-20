@@ -88,7 +88,7 @@ void *realloc_and_track(void *ptr, size_t bytes, void *lr) {
   if (new_ptr && ptr) {
     ListNode *node = list_find((ListNode *)s_pointer_list, prv_pointer_list_filter, ptr);
     cl_assert(node);
-    memcpy(new_ptr, ptr, MIN(((PointerListNode *)node)->bytes, bytes));
+    memcpy(new_ptr, ptr, PBL_MIN(((PointerListNode *)node)->bytes, bytes));
     free_and_track(ptr);
   }
   return new_ptr;

@@ -1345,7 +1345,7 @@ bool activity_get_sessions(uint32_t *session_entries, ActivitySession *sessions)
   pbl_mutex_lock(&s_activity_state.mutex, PBL_FOREVER);
   {
     uint32_t num_sessions_to_return =
-        MIN(*session_entries, s_activity_state.activity_sessions_count);
+        PBL_MIN(*session_entries, s_activity_state.activity_sessions_count);
 
     memcpy(sessions, s_activity_state.activity_sessions,
            num_sessions_to_return * sizeof(ActivitySession));
@@ -1424,7 +1424,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
 
   // Fetch in bounded chunks into kernel memory, padding gaps between chunks with invalid records
   while (written < requested) {
-    const uint32_t chunk = MIN(requested - written, ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS);
+    const uint32_t chunk = PBL_MIN(requested - written, ACTIVITY_MINUTE_HISTORY_CHUNK_RECORDS);
     ActivityMinuteHistoryRequest *req = pbl_zalloc(sizeof(*req) + chunk * sizeof(HealthMinuteData));
     if (!req) {
       success = (written > 0);
@@ -1454,7 +1454,7 @@ bool activity_get_minute_history(HealthMinuteData *minute_data, uint32_t *num_re
       } else {
         memset(&minute_data[written], 0xFF, gap * sizeof(HealthMinuteData));
         written += gap;
-        const uint32_t n = MIN(req->num_records, requested - written);
+        const uint32_t n = PBL_MIN(req->num_records, requested - written);
         memcpy(&minute_data[written], req->minute_data, n * sizeof(HealthMinuteData));
         written += n;
         next_utc = first_utc + (time_t)written * PBL_SEC_PER_MIN;
@@ -1662,7 +1662,7 @@ bool activity_test_feed_samples(AccelRawData *data, uint32_t num_samples) {
       sys_psleep(1); // Wait for kernelBG to process prior data
     }
 
-    uint32_t chunk_size = MIN(CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES, num_samples);
+    uint32_t chunk_size = PBL_MIN(CONFIG_SERVICE_ACTIVITY_BATCH_SAMPLES, num_samples);
 
     // Allocate space for the samples
     uint16_t req_size = sizeof(ActivityFeedSamples) + chunk_size * sizeof(AccelRawData);

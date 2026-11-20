@@ -180,7 +180,7 @@ static void prv_lookup(const char *msgid, struct pbl_i18n__domain *db, size_t *r
         if (rstring) { // If we want the translated string, copy it out.
           // Make sure we don't read out more than the length of the buffer we're reading into.
           // Leave space for the null-terminator as well.
-          const size_t read_length = MIN(tentry.len, rstring_len - 1);
+          const size_t read_length = PBL_MIN(tentry.len, rstring_len - 1);
 
           if (!prv_read(&db->catalog, tentry.off, rstring, read_length)) {
             return;
@@ -462,7 +462,7 @@ static const char *prv_get_locked(const char *msgid, const void *owner) {
   prv_lookup(msgid, db, &len, nullptr, 0);
 
   if (len) {
-    const size_t size = MIN(len, I18N_MAX_TRANSLATION_LEN) + 1;
+    const size_t size = PBL_MIN(len, I18N_MAX_TRANSLATION_LEN) + 1;
     char *translated = pbl_malloc_check(size);
     translated[0] = '\0';
     prv_lookup(msgid, db, &len, translated, size);
@@ -634,7 +634,7 @@ int pbl_i18n_catalog_get_info(const struct pbl_i18n_catalog *catalog,
   }
 
   char *header = pbl_malloc_check(HEADER_BUFFER_SIZE);
-  const size_t length = MIN(translation.len, HEADER_BUFFER_SIZE - 1);
+  const size_t length = PBL_MIN(translation.len, HEADER_BUFFER_SIZE - 1);
   int ret = -EIO;
   if (prv_read(catalog, translation.off, header, length)) {
     header[length] = '\0';

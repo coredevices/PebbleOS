@@ -157,7 +157,7 @@ static int prv_set_rate_hw(uint8_t rate_hz) {
 }
 
 static pbl_tick_t prv_poll_period_ticks(uint8_t rate_hz) {
-  return pbl_ms_to_ticks(DIVIDE_CEIL(1000U, rate_hz));
+  return pbl_ms_to_ticks(PBL_DIV_ROUND_UP(1000U, rate_hz));
 }
 
 static void prv_poll_fn(struct pbl_work *work) {
@@ -239,7 +239,8 @@ static int prv_set_sampling_interval(const struct pbl_mag *mag, uint32_t interva
   int ret;
 
   if (interval_us > 0U) {
-    rate_hz = (uint8_t)CLIP(DIVIDE_CEIL(1000000U, interval_us), 1U, MMC5603NJ_RATE_HZ_MAX);
+    rate_hz =
+        (uint8_t)PBL_CLAMP(PBL_DIV_ROUND_UP(1000000U, interval_us), 1U, MMC5603NJ_RATE_HZ_MAX);
   }
 
   if (rate_hz != state->rate_hz) {

@@ -293,7 +293,7 @@ static void prv_lis2dw12_drain_fifo(void) {
     return;
   }
 
-  samples = MIN(PBL_FIELD_GET(LIS2DW12_FIFO_SAMPLES_DIFF_MASK, val), LIS2DW12_FIFO_SIZE);
+  samples = PBL_MIN(PBL_FIELD_GET(LIS2DW12_FIFO_SAMPLES_DIFF_MASK, val), LIS2DW12_FIFO_SIZE);
   if (samples == 0U) {
     return;
   }
@@ -334,7 +334,7 @@ static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
       continue;
     }
 
-    if (!found || ABS(vals[a]) > ABS(val)) {
+    if (!found || PBL_ABS(vals[a]) > PBL_ABS(val)) {
       axis = a;
       val = vals[a];
       found = true;
@@ -625,7 +625,7 @@ static uint32_t prv_ms_since_last_fifo_read(void) {
 }
 
 static uint32_t prv_stall_threshold_ms(void) {
-  return MAX(LIS2DW12_STALL_MARGIN * s_dev->state->int1_period_ms, LIS2DW12_STALL_MIN_MS);
+  return PBL_MAX(LIS2DW12_STALL_MARGIN * s_dev->state->int1_period_ms, LIS2DW12_STALL_MIN_MS);
 }
 
 //! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
@@ -639,7 +639,7 @@ static void prv_update_int1_watchdog(void) {
     s_dev->state->int1_period_ms =
         (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
-                             MAX(DIVIDE_CEIL(s_dev->state->int1_period_ms, 1000UL), 1U));
+                             PBL_MAX(PBL_DIV_ROUND_UP(s_dev->state->int1_period_ms, 1000UL), 1U));
   } else if (s_dev->state->shake_detection_enabled) {
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
                              LIS2DW12_SHAKE_WDT_PERIOD_S);

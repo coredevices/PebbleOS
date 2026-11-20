@@ -145,7 +145,7 @@ static void animation_legacy2_reschedule_timer(
   }
   const uint32_t now = animation_legacy2_get_ms_since_system_start();
   const int32_t delta_ms = serial_distance32(now, animation->abs_start_time_ms);
-  const uint32_t interval_ms = MAX(delta_ms, 0) + rate_control_delay_ms;
+  const uint32_t interval_ms = PBL_MAX(delta_ms, 0) + rate_control_delay_ms;
 
   if (animation_legacy2_scheduler->timer_handle != nullptr) {
     app_timer_reschedule(animation_legacy2_scheduler->timer_handle, interval_ms);
@@ -288,7 +288,7 @@ static void animation_legacy2_private_run(AnimationLegacy2Scheduler *animation_l
           (animation->duration_ms != 0)
               ? ((ANIMATION_NORMALIZED_MAX * rel_ms_running) / animation->duration_ms)
               : ANIMATION_NORMALIZED_MAX;
-      const uint32_t time_normalized = MIN(time_normalized_raw, ANIMATION_NORMALIZED_MAX);
+      const uint32_t time_normalized = PBL_MIN(time_normalized_raw, ANIMATION_NORMALIZED_MAX);
       uint32_t distance_normalized;
       if (animation->curve >= AnimationCurveCustomFunction) {
         distance_normalized =
@@ -317,8 +317,8 @@ static void animation_legacy2_private_run(AnimationLegacy2Scheduler *animation_l
       serial_distance32(animation_legacy2_scheduler->last_frame_time, now);
   const int32_t error_ms = frame_interval_ms - ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2;
   const int32_t theoretic_delay_ms = animation_legacy2_scheduler->last_delay_ms - error_ms;
-  const uint32_t delay_ms =
-      CLIP(theoretic_delay_ms, (int32_t)0, (int32_t)ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2);
+  const uint32_t delay_ms = PBL_CLAMP(theoretic_delay_ms, (int32_t)0,
+                                      (int32_t)ANIMATION_TARGET_FRAME_INTERVAL_MS_LEGACY2);
 
   animation_legacy2_reschedule_timer(animation_legacy2_scheduler, delay_ms);
   animation_legacy2_scheduler->last_delay_ms = delay_ms;

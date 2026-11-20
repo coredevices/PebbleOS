@@ -41,7 +41,7 @@ static size_t prv_find_record(const uint8_t *cfg, size_t size, uint8_t id, uint8
     size_t len = cfg[i + 1U];
 
     if (cfg[i] == id) {
-      len = MIN(len, MIN(out_size, size - (i + CFG_HDR_SIZE)));
+      len = PBL_MIN(len, PBL_MIN(out_size, size - (i + CFG_HDR_SIZE)));
       memcpy(out, &cfg[i + CFG_HDR_SIZE], len);
       return len;
     }

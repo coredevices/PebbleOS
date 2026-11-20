@@ -435,7 +435,7 @@ static void prv_collect_battery(void) {
   s_soc_cpct_min = battery_soc_cpct;
   s_analytics_last_voltage_mv = battery_mv;
 
-  d_soc_cpct = MAX((int32_t)s_analytics_last_cpct - (int32_t)battery_soc_cpct, 0);
+  d_soc_cpct = PBL_MAX((int32_t)s_analytics_last_cpct - (int32_t)battery_soc_cpct, 0);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct, battery_soc_cpct);
   PBL_ANALYTICS_SET_UNSIGNED(battery_soc_pct_drop, d_soc_cpct);
   s_analytics_last_cpct = battery_soc_cpct;

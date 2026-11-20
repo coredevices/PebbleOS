@@ -333,7 +333,7 @@ static int prv_clk_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
     case SF32LB_HPSYS_CLK_DLL2:
       return prv_dll_rate(ctrl, SF32LB52_HPSYS_RCC_DLL2CR_OFFSET, rate_mhz);
     case SF32LB_HPSYS_CLK_HCLK:
-      div = MAX(PBL_FIELD_GET(HPSYS_RCC_CFGR_HDIV_MASK, cfgr), 1U);
+      div = PBL_MAX(PBL_FIELD_GET(HPSYS_RCC_CFGR_HDIV_MASK, cfgr), 1U);
       *rate_mhz = parent_mhz / div;
       break;
     case SF32LB_HPSYS_CLK_PCLK:
@@ -348,7 +348,7 @@ static int prv_clk_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
     case SF32LB_HPSYS_CLK_USBC_K:
       div =
           PBL_FIELD_GET(HPSYS_RCC_USBCR_DIV_MASK, prv_read(ctrl, SF32LB52_HPSYS_RCC_USBCR_OFFSET));
-      *rate_mhz = parent_mhz / MAX(div, 1U);
+      *rate_mhz = parent_mhz / PBL_MAX(div, 1U);
       break;
     default:
       *rate_mhz = parent_mhz;
@@ -462,7 +462,7 @@ static uint64_t prv_rate(const struct pbl_clk_controller *ctrl, uint32_t id) {
 static void prv_limit_pclks(const struct pbl_clk_controller *ctrl, uint64_t hclk_mhz) {
   uint32_t cfgr = prv_read(ctrl, SF32LB52_HPSYS_RCC_CFGR_OFFSET);
   uint32_t pdiv1 = PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV1_MASK, cfgr);
-  uint32_t pdiv2 = MAX(PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV2_MASK, cfgr), 1U);
+  uint32_t pdiv2 = PBL_MAX(PBL_FIELD_GET(HPSYS_RCC_CFGR_PDIV2_MASK, cfgr), 1U);
 
   while ((hclk_mhz >> pdiv1) > (uint64_t)PCLK_MAX_HZ * MILLIHZ_PER_HZ && pdiv1 < PDIV_MAX) {
     pdiv1++;
@@ -487,7 +487,7 @@ static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
 
 // Switches clk_hpsys, keeping the APB clocks within their limits whatever the new rate
 static void prv_sys_select(const struct pbl_clk_controller *ctrl, uint32_t sel, uint64_t sys_mhz) {
-  uint32_t hdiv = MAX(
+  uint32_t hdiv = PBL_MAX(
       PBL_FIELD_GET(HPSYS_RCC_CFGR_HDIV_MASK, prv_read(ctrl, SF32LB52_HPSYS_RCC_CFGR_OFFSET)), 1U);
 
   prv_limit_pclks(ctrl, sys_mhz / hdiv);

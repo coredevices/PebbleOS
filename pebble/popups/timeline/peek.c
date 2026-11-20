@@ -42,7 +42,7 @@ static unsigned int prv_get_concurrent_height(unsigned int num_concurrent) {
 }
 
 unsigned int timeline_peek_get_concurrent_height(unsigned int num_concurrent) {
-  return prv_get_concurrent_height(MIN(num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT));
+  return prv_get_concurrent_height(PBL_MIN(num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT));
 }
 
 static void prv_draw_background(GContext *ctx, const GRect *frame_orig, unsigned int num_concurrent,
@@ -99,8 +99,9 @@ void timeline_peek_draw_background(GContext *ctx, const GRect *frame, unsigned i
 static void prv_timeline_peek_update_proc(Layer *layer, GContext *ctx) {
   TimelinePeek *peek = (TimelinePeek *)layer;
   const unsigned int num_concurrent =
-      peek->peek_layout ? MIN(peek->peek_layout->info.num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT)
-                        : 0;
+      peek->peek_layout
+          ? PBL_MIN(peek->peek_layout->info.num_concurrent, TIMELINE_PEEK_MAX_CONCURRENT)
+          : 0;
   // Match the side the cached layout was built for, not the live preference
   const bool icon_on_right =
       peek->peek_layout ? peek->peek_layout->icon_on_right : action_bar_layer_is_on_right();
@@ -208,7 +209,7 @@ static int16_t prv_scale_y_to_framebuffer(int16_t display_y) {
   // From display coordinates to framebuffer coordinates, through where the app is shown
   const GRect frame = compositor_get_scaled_app_frame(app_framebuffer_size);
   const int16_t y = ((display_y - frame.origin.y) * app_framebuffer_size.h) / frame.size.h;
-  return CLIP(y, 0, app_framebuffer_size.h);
+  return PBL_CLAMP(y, 0, app_framebuffer_size.h);
 }
 
 static int16_t prv_compose_obstruction_y(int16_t peek_y) {

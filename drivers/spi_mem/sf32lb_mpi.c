@@ -152,7 +152,7 @@ static bool prv_supports_op(const struct pbl_spi_mem *mem, const struct pbl_spi_
 
 static int prv_adjust_op_size(const struct pbl_spi_mem *mem, struct pbl_spi_mem_op *op) {
   if (op->data.dir == PBL_SPI_MEM_DATA_OUT) {
-    op->data.nbytes = MIN(op->data.nbytes, sizeof(s_bounce));
+    op->data.nbytes = PBL_MIN(op->data.nbytes, sizeof(s_bounce));
   }
 
   return 0;
@@ -411,9 +411,9 @@ static uint32_t prv_settle_cycles(void) {
 
 // Divider that takes a clock down to a bus clock or less
 static uint32_t prv_div(uint64_t rate_mhz, uint64_t bus_mhz) {
-  const uint64_t div = (rate_mhz + bus_mhz - 1U) / MAX(bus_mhz, 1U);
+  const uint64_t div = (rate_mhz + bus_mhz - 1U) / PBL_MAX(bus_mhz, 1U);
 
-  return (uint32_t)MIN(MAX(div, 1U), MPI_PSCLR_DIV_MASK);
+  return (uint32_t)PBL_MIN(PBL_MAX(div, 1U), MPI_PSCLR_DIV_MASK);
 }
 
 static bool prv_clock_late(const struct pbl_spi_mem *mem) {
@@ -525,7 +525,7 @@ static int prv_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_o
     size_t len = op->data.nbytes;
 
     while (len > 0U) {
-      size_t chunk = MIN(len, FIFO_SIZE);
+      size_t chunk = PBL_MIN(len, FIFO_SIZE);
 
       prv_ram_read(base, &cmd, buf, chunk);
       cmd.addr += chunk;
@@ -601,7 +601,7 @@ static int prv_dirmap_create(const struct pbl_spi_mem *mem, struct pbl_spi_mem_d
     return -ENOTSUP;
   }
 
-  desc->length = MIN(desc->length, mpi->mpi->mem_size - desc->offset);
+  desc->length = PBL_MIN(desc->length, mpi->mpi->mem_size - desc->offset);
   desc->ptr = (const void *)(prv_mem_base(mpi) + desc->offset);
 
   if (PBL_FIELD_GET(MPI_HCMDR_RCMD_MASK, pbl_readl(base + SF32LB52_MPI_HCMDR_OFFSET)) ==
@@ -673,7 +673,7 @@ static void prv_dirmap_invalidate(const struct pbl_spi_mem *mem,
     return;
   }
 
-  len = MIN(len, desc->offset + desc->length - offs);
+  len = PBL_MIN(len, desc->offset + desc->length - offs);
   addr = prv_mem_base(prv_mpi(mem)) + offs;
   pbl_dcache_invalidate_range((void *)addr, len);
   pbl_icache_invalidate_range((const void *)addr, len);

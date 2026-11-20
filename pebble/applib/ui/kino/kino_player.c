@@ -52,7 +52,7 @@ PBL_T_STATIC void prv_play_animation_update(Animation *animation,
   } else if (is_animation_infinite && !is_reel_infinite && is_animation_reversed) {
     // If animation is infinite, reel is not infinite and animation is reversed
     animation_get_elapsed(animation, &animation_elapsed_ms);
-    elapsed_ms = MAX(0, (int32_t)player->to_elapsed_ms - animation_elapsed_ms);
+    elapsed_ms = PBL_MAX(0, (int32_t)player->to_elapsed_ms - animation_elapsed_ms);
 
   } else {
     elapsed_ms = player->to_elapsed_ms;

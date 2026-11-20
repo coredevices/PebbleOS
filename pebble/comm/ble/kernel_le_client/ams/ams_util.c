@@ -63,7 +63,7 @@ bool ams_util_float_string_parse(const char *number_str, uint32_t number_str_len
 
   if (decimal_divisor > 1) {
     result /= (decimal_divisor / base);
-    const bool round_up = ((ABS(result) % base) >= (base / 2));
+    const bool round_up = ((PBL_ABS(result) % base) >= (base / 2));
     result /= base;
     if (round_up) {
       if (result > 0) {

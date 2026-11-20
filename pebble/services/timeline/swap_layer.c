@@ -122,8 +122,8 @@ static LayoutLayer *prv_fetch_next_layout(SwapLayer *swap_layer, int8_t rel_chan
     // Calculate the size of the layout we were given and set the frame.
     GSize size = layout_get_size(graphics_context_get_current_context(), layout);
     prv_layout_set_frame(layout, &(GRect){
-                                   .size.w = MAX(swap_layer->layer.frame.size.w, size.w),
-                                   .size.h = MAX(swap_layer->layer.frame.size.h, size.h),
+                                   .size.w = PBL_MAX(swap_layer->layer.frame.size.w, size.w),
+                                   .size.h = PBL_MAX(swap_layer->layer.frame.size.h, size.h),
                                  });
     return layout;
   }
@@ -192,10 +192,10 @@ static void prv_update_status_bar_color(SwapLayer *swap_layer) {
     const GRect *cur_frame = &swap_layer->current->layer.frame;
 #if PBL_RECT
     // status_bar can be off, so detect within range, updated a frame later.
-    color_status_bar = WITHIN(cur_frame->origin.y, -(3 * LAYOUT_BANNER_HEIGHT_RECT / 2) - 1,
-                              LAYOUT_BANNER_HEIGHT_RECT / 2 - 1);
+    color_status_bar = PBL_IN_RANGE(cur_frame->origin.y, -(3 * LAYOUT_BANNER_HEIGHT_RECT / 2) - 1,
+                                    LAYOUT_BANNER_HEIGHT_RECT / 2 - 1);
 #else
-    color_status_bar = WITHIN(cur_frame->origin.y, -96, 66) || swap_layer->swap_in_progress;
+    color_status_bar = PBL_IN_RANGE(cur_frame->origin.y, -96, 66) || swap_layer->swap_in_progress;
 #endif
     bg_color = layout_get_colors(swap_layer->current)->bg_color;
 
@@ -227,8 +227,8 @@ static void prv_update_arrow(SwapLayer *swap_layer) {
 #if PBL_ROUND
     const bool at_bottom = (cur_frame->origin.y < (-cur_frame->size.h + PBL_DISPLAY_HEIGHT));
     const bool text_visible =
-        WITHIN(cur_frame->origin.y, TEXT_VISIBLE_LOWER_THRESHOLD(cur_frame->size.h),
-               TEXT_VISIBLE_UPPER_THRESHOLD);
+        PBL_IN_RANGE(cur_frame->origin.y, TEXT_VISIBLE_LOWER_THRESHOLD(cur_frame->size.h),
+                     TEXT_VISIBLE_UPPER_THRESHOLD);
     if (!viewing_entire_notif && !at_bottom && text_visible) {
       hide_it = false;
     }
@@ -559,11 +559,11 @@ static int16_t prv_get_max_scroll_dy(SwapLayer *swap_layer) {
   } else {
 #if PBL_ROUND
     // The last notification has to be able to scroll past content to stay page aligned
-    max_dy = ROUND_TO_MOD_CEIL(max_dy, LAYOUT_HEIGHT);
+    max_dy = PBL_ROUNDUP(max_dy, LAYOUT_HEIGHT);
 #endif
   }
 
-  max_dy = MAX(max_dy, 0);
+  max_dy = PBL_MAX(max_dy, 0);
   return max_dy;
 }
 
@@ -857,7 +857,7 @@ void swap_layer_touch_scroll_by(SwapLayer *swap_layer, int16_t dy) {
   const int16_t offset = prv_get_current_notification_offset(swap_layer); // >= 0
   const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);               // >= 0
   // offset == -origin.y; dy is the requested change to origin.y, so the new offset is offset - dy.
-  const int16_t new_offset = CLIP(offset - dy, 0, max_dy);
+  const int16_t new_offset = PBL_CLAMP(offset - dy, 0, max_dy);
 
   GRect current_frame = swap_layer->current->layer.frame;
   current_frame.origin.y = -new_offset;
@@ -877,7 +877,7 @@ void swap_layer_touch_scroll_by(SwapLayer *swap_layer, int16_t dy) {
 
 SwapTouchLiftoffAction swap_layer_touch_liftoff_action(int16_t base_offset, int16_t delta_y,
                                                        int16_t max_dy) {
-  if (ABS(delta_y) < DRAG_THRESHOLD_PX) {
+  if (PBL_ABS(delta_y) < DRAG_THRESHOLD_PX) {
     // Sub-threshold: not a drag, so neither scroll nor swap.
     return SwapTouchLiftoff_None;
   }
@@ -894,13 +894,13 @@ SwapTouchLiftoffAction swap_layer_touch_liftoff_action(int16_t base_offset, int1
 
 int16_t swap_layer_touch_settle_offset(int16_t base_offset, int16_t delta_y, int16_t max_dy,
                                        int16_t page_h) {
-  int16_t target = CLIP(base_offset - delta_y, 0, max_dy);
+  int16_t target = PBL_CLAMP(base_offset - delta_y, 0, max_dy);
   if (page_h > 0) {
     // Land on the nearest page boundary, never past the last one (max_dy may include the
     // next-notification peek, which is not a rest position).
     const int16_t last_page = (int16_t)((max_dy / page_h) * page_h);
     target = (int16_t)(((target + page_h / 2) / page_h) * page_h);
-    target = MIN(target, last_page);
+    target = PBL_MIN(target, last_page);
   }
   return target;
 }
@@ -908,7 +908,7 @@ int16_t swap_layer_touch_settle_offset(int16_t base_offset, int16_t delta_y, int
 // Apply a live drag: move to clamp(base_offset - delta_y). Sub-threshold movement is a no-op so the
 // notification does not creep on a tap.
 static void prv_swap_touch_apply_drag(SwapLayer *swap_layer, int16_t base_offset, int16_t delta_y) {
-  if (!swap_layer->current || ABS(delta_y) < DRAG_THRESHOLD_PX) {
+  if (!swap_layer->current || PBL_ABS(delta_y) < DRAG_THRESHOLD_PX) {
     // No notification loaded yet (registration can happen before the layout loads), or
     // sub-threshold.
     return;

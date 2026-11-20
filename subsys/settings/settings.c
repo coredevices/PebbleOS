@@ -258,7 +258,7 @@ int pbl_settings_rewrite_filtered(struct pbl_settings_file *file,
   // One reusable buffer for key+val per record, sized to the largest record
   // rather than the worst case: a ~2 KiB allocation can fail on a fragmented
   // kernel heap, and then every write to a full file fails too.
-  const size_t kv_buf_len = MAX(prv_max_live_key_val_len(file), 1U);
+  const size_t kv_buf_len = PBL_MAX(prv_max_live_key_val_len(file), 1U);
   uint8_t *kv_buf = pbl_malloc(kv_buf_len);
   char *name = pbl_strdup(file->name);
   if (!kv_buf || !name) {

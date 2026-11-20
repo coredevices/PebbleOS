@@ -233,8 +233,8 @@ static void prv_calc_cap_prepared(Fixed_S16_3 cap_center, Fixed_S16_3 cap_center
       circle_max = p_offset + r8 - lookup_val.raw_value;
     }
 
-    min->raw_value = MIN(min->raw_value, circle_min);
-    max->raw_value = MAX(max->raw_value, circle_max);
+    min->raw_value = PBL_MIN(min->raw_value, circle_min);
+    max->raw_value = PBL_MAX(max->raw_value, circle_max);
   }
 }
 
@@ -348,7 +348,7 @@ static bool prv_calc_far_points(GPointPrecise *p0, GPointPrecise *p1, Fixed_S16_
 
   // Since we already rotated the vector by 90 degrees, delta x is actually delta y
   // therefore if x is bigger than y we have have vertical dominance
-  if (ABS(dx_fixed) > ABS(dy_fixed)) {
+  if (PBL_ABS(dx_fixed) > PBL_ABS(dy_fixed)) {
     return true;
   }
 
@@ -417,8 +417,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
     GPointPrecise rm_p0 = far_top;
     GPointPrecise rm_p1 = far_right;
 
-    const int16_t top_point = MIN(p0.y.raw_value, p1.y.raw_value) - radius.raw_value;
-    const int16_t bottom_point = MAX(p0.y.raw_value, p1.y.raw_value) + radius.raw_value;
+    const int16_t top_point = PBL_MIN(p0.y.raw_value, p1.y.raw_value) - radius.raw_value;
+    const int16_t bottom_point = PBL_MAX(p0.y.raw_value, p1.y.raw_value) + radius.raw_value;
 
     const int8_t fraction_for_top = top_point & fraction_mask;
     const int8_t fraction_for_bottom = bottom_point & fraction_mask;
@@ -429,8 +429,8 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
     const int16_t clip_min_y =
         ctx->draw_state.clip_box.origin.y - ctx->draw_state.drawing_box.origin.y;
     const int16_t clip_max_y = clip_min_y + ctx->draw_state.clip_box.size.h;
-    const int16_t y_min = CLIP(top_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
-    const int16_t y_max = CLIP(bottom_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
+    const int16_t y_min = PBL_CLAMP(top_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
+    const int16_t y_max = PBL_CLAMP(bottom_point >> FIXED_S16_3_PRECISION, clip_min_y, clip_max_y);
 
     // Blending of first line
     if (fraction_for_top != 0) {
@@ -548,9 +548,9 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
     GPointPrecise bm_p1 = far_bottom;
 
     const int8_t fraction_for_left =
-        (MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) & fraction_mask;
+        (PBL_MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) & fraction_mask;
     const int8_t fraction_for_right =
-        (MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) & fraction_mask;
+        (PBL_MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) & fraction_mask;
 
     // Drawing loop: Iterates over vertical lines from left to right
     // As part of optimisation, this algorithm is moving between drawing boundaries,
@@ -558,12 +558,12 @@ void prv_draw_stroked_line_precise(GContext *ctx, GPointPrecise p0, GPointPrecis
     const int16_t clip_min_x =
         ctx->draw_state.clip_box.origin.x - ctx->draw_state.drawing_box.origin.x;
     const int16_t clip_max_x = clip_min_x + ctx->draw_state.clip_box.size.w;
-    const int16_t x_min =
-        CLIP((MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) >> FIXED_S16_3_PRECISION,
-             clip_min_x, clip_max_x);
-    const int16_t x_max =
-        CLIP((MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) >> FIXED_S16_3_PRECISION,
-             clip_min_x, clip_max_x);
+    const int16_t x_min = PBL_CLAMP(
+        (PBL_MIN(p0.x.raw_value, p1.x.raw_value) - radius.raw_value) >> FIXED_S16_3_PRECISION,
+        clip_min_x, clip_max_x);
+    const int16_t x_max = PBL_CLAMP(
+        (PBL_MAX(p0.x.raw_value, p1.x.raw_value) + radius.raw_value) >> FIXED_S16_3_PRECISION,
+        clip_min_x, clip_max_x);
 
     // Blending of first line
     if (fraction_for_left != 0) {

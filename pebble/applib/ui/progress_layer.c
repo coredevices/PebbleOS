@@ -16,7 +16,7 @@ static int16_t scale_progress_bar_width_px(unsigned int progress_percent, int16_
 
 void progress_layer_set_progress(ProgressLayer *progress_layer, unsigned int progress_percent) {
   // Can't use the clip macro here because it fails with uints
-  progress_layer->progress_percent = MIN(100, progress_percent);
+  progress_layer->progress_percent = PBL_MIN(100, progress_percent);
   layer_mark_dirty(&progress_layer->layer);
 }
 

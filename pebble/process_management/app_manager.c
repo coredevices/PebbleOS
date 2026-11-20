@@ -229,8 +229,8 @@ static size_t prv_get_app_segment_size(const PebbleProcessMd *app_md) {
       return CONFIG_APP_RAM_4X_SEGMENT_SIZE;
     case ProcessAppSDKType_System:
       // System apps get the largest of the supported environments.
-      return MAX(CONFIG_APP_RAM_2X_SEGMENT_SIZE,
-                 MAX(CONFIG_APP_RAM_3X_SEGMENT_SIZE, CONFIG_APP_RAM_4X_SEGMENT_SIZE));
+      return PBL_MAX(CONFIG_APP_RAM_2X_SEGMENT_SIZE,
+                     PBL_MAX(CONFIG_APP_RAM_3X_SEGMENT_SIZE, CONFIG_APP_RAM_4X_SEGMENT_SIZE));
     default:
       pbl_panic();
   }

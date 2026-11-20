@@ -158,7 +158,7 @@ static void prv_ftl_operation(uint8_t *buffer, uint32_t size, uint32_t offset,
   for (unsigned int idx = 0; (idx < s_next_region_idx) && (size != 0); idx++) {
     curr_virt_offset_end += prv_region_size(idx);
     if (offset < curr_virt_offset_end) {
-      uint32_t bytes = MIN(curr_virt_offset_end - offset, size);
+      uint32_t bytes = PBL_MIN(curr_virt_offset_end - offset, size);
 
       if (operation == FTLRead) {
         pbl_flash_read(FLASH, s_region_list[idx].start + offset - curr_virt_offset_begin, buffer,

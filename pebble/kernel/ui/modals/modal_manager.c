@@ -294,7 +294,8 @@ Window *modal_manager_get_top_window(void) {
 static void prv_pop_stacks_in_range(ModalPriority low, ModalPriority high) {
   // Discreet modals are transparent and unfocusable, they are not meant to be popped when
   // requesting opaque focusable modals to pop.
-  for (ModalPriority priority = MAX(low, ModalPriorityDiscreet + 1); priority <= high; priority++) {
+  for (ModalPriority priority = PBL_MAX(low, ModalPriorityDiscreet + 1); priority <= high;
+       priority++) {
     ModalContext *m_context = &s_modal_window_stacks[priority];
     window_stack_pop_all(&m_context->window_stack, true /* animated */);
   }

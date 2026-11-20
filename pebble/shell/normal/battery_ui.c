@@ -138,7 +138,7 @@ static const ResourceId s_warning_icon[] = {
 };
 
 static uint32_t prv_charge_stages(uint8_t percent) {
-  return CLIP(DIVIDE_CEIL(percent, CHARGE_STAGE_PERCENT), 1, CHARGE_STAGES);
+  return PBL_CLAMP(PBL_DIV_ROUND_UP(percent, CHARGE_STAGE_PERCENT), 1, CHARGE_STAGES);
 }
 
 static uint32_t prv_charge_cycle_frames(uint8_t percent) {
@@ -149,11 +149,11 @@ static uint32_t prv_charge_cycle_frames(uint8_t percent) {
 //! The last stage covers everything above it.
 static int16_t prv_charge_bar_stage_y(uint8_t percent, int32_t stage) {
   const int32_t range = CHARGE_BAR_EMPTY_Y - CHARGE_BAR_FULL_Y;
-  const int32_t level_y = CHARGE_BAR_EMPTY_Y - range * MIN(percent, 100) / 100;
+  const int32_t level_y = CHARGE_BAR_EMPTY_Y - range * PBL_MIN(percent, 100) / 100;
   if (stage == CHARGE_STAGES - 1) {
     return level_y;
   }
-  return MAX(level_y, CHARGE_BAR_EMPTY_Y - range * (stage + 1) * CHARGE_STAGE_PERCENT / 100);
+  return PBL_MAX(level_y, CHARGE_BAR_EMPTY_Y - range * (stage + 1) * CHARGE_STAGE_PERCENT / 100);
 }
 
 static int16_t prv_charge_ripple_y(int32_t offset, int16_t from_y, int16_t to_y) {
@@ -235,7 +235,7 @@ static uint32_t prv_charge_reel_get_elapsed(KinoReel *reel) {
 static bool prv_charge_reel_set_elapsed(KinoReel *reel, uint32_t elapsed_ms) {
   ChargeReelData *data = kino_reel_custom_get_data(reel);
   data->elapsed_ms = elapsed_ms;
-  bool changed = kino_reel_set_elapsed(data->reel, MIN(elapsed_ms, data->intro_ms));
+  bool changed = kino_reel_set_elapsed(data->reel, PBL_MIN(elapsed_ms, data->intro_ms));
 
   // The icon's intro transform plays first, without the animated parts
   if (elapsed_ms < data->intro_ms) {

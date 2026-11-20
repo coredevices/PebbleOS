@@ -264,7 +264,7 @@ static int16_t prv_group_window_get_cell_height(MenuLayer *menu_layer, MenuIndex
   const GFont subtitle_font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
   const GFont caption_font = system_theme_get_font(TextStyleFont_Caption);
   const int16_t saved_height =
-      MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
+      PBL_MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
   return menu_cell_basic_cell_height() - saved_height;
 }
 
@@ -528,7 +528,7 @@ static void prv_draw_notification_cell_rect(GContext *ctx, const Layer *cell_lay
   // Temporarily inset the cell layer's bounds from the left so the text doesn't draw over any
   // icon on the left
   Layer *mutable_cell_layer = (Layer *)cell_layer;
-  const int text_left_margin = icon_left_margin + MAX(icon_size.w, ATTRIBUTE_ICON_TINY_SIZE_PX);
+  const int text_left_margin = icon_left_margin + PBL_MAX(icon_size.w, ATTRIBUTE_ICON_TINY_SIZE_PX);
   mutable_cell_layer->bounds =
       grect_inset(cell_layer_bounds, GEdgeInsets(0, 5, 0, text_left_margin));
 

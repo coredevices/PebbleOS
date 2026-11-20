@@ -37,7 +37,7 @@ typedef struct {
 #define SPINNER_CIRCLE_RADIUS 9
 
 static int prv_get_background_circle_radius(const GRect *bounds) {
-  const int min_dimension = MIN(bounds->size.w, bounds->size.h);
+  const int min_dimension = PBL_MIN(bounds->size.w, bounds->size.h);
   return (min_dimension * 3) / (4 * 2); // 3/4 of min dimension is diameter
 }
 

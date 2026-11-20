@@ -13,7 +13,7 @@ static int32_t s_mv = 4230;
 void pbl_charger_sim_set(uint8_t percent, int32_t voltage_mv, bool online) {
   bool changed = (online != s_online);
 
-  s_percent = MIN(percent, 100);
+  s_percent = PBL_MIN(percent, 100);
   s_online = online;
   s_mv = voltage_mv;
 

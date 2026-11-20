@@ -41,7 +41,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
   for (size_t i = 0U; i < PERIOD_FRAMES; i++) {
     int32_t v = samples[i];
 
-    s_win.peak = MAX(s_win.peak, ABS(v));
+    s_win.peak = PBL_MAX(s_win.peak, PBL_ABS(v));
     s_win.sum_sq += (uint64_t)(v * v);
   }
   s_win.xrun |= pos->xrun;

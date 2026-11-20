@@ -195,7 +195,7 @@ ButtonId touch_nav_action_bar_zone_button(const TouchNavActionBar *bar, GPoint p
   // Split the bar vertically into three equal zones with half-open bounds: top = UP, middle =
   // SELECT, bottom = DOWN. zone i maps to icon bit i and to button (BUTTON_ID_UP + i).
   int zone = (point.y - bar->frame.origin.y) * 3 / bar->frame.size.h;
-  zone = CLIP(zone, 0, 2);
+  zone = PBL_CLAMP(zone, 0, 2);
   if (!(bar->icon_mask & (1 << zone))) {
     // The zone has no icon.
     return fallback;

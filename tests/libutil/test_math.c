@@ -163,8 +163,8 @@ void test_math__serial_distance3(void) {
 }
 
 void test_math__is_signed_macro(void) {
-  cl_assert(IS_SIGNED((int)-1) == true);
-  cl_assert(IS_SIGNED((unsigned int)1) == false);
+  cl_assert(PBL_IS_SIGNED((int)-1) == true);
+  cl_assert(PBL_IS_SIGNED((unsigned int)1) == false);
 }
 
 void test_math__test_within_macro(void) {
@@ -177,21 +177,21 @@ void test_math__test_within_macro(void) {
   max = 10;
 
   // Min and max themselves should satisfy WITHIN
-  cl_assert_equal_b(WITHIN(min, min, max), true);
-  cl_assert_equal_b(WITHIN(max, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(min, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(max, min, max), true);
 
   // In the middle of the bounds
-  cl_assert_equal_b(WITHIN(7, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(7, min, max), true);
 
   // Just out of bounds
-  cl_assert_equal_b(WITHIN(4, min, max), false);
-  cl_assert_equal_b(WITHIN(11, min, max), false);
+  cl_assert_equal_b(PBL_IN_RANGE(4, min, max), false);
+  cl_assert_equal_b(PBL_IN_RANGE(11, min, max), false);
 
   // Negative out of bounds
-  cl_assert_equal_i(WITHIN(-5, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(-5, min, max), false);
 
   // Positive out of bounds
-  cl_assert_equal_i(WITHIN(0, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(0, min, max), false);
 
   // Min negative, max positive
   ////////////////////////////////
@@ -199,17 +199,17 @@ void test_math__test_within_macro(void) {
   max = 10;
 
   // Min and max themselves should satisfy WITHIN
-  cl_assert_equal_b(WITHIN(min, min, max), true);
-  cl_assert_equal_b(WITHIN(max, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(min, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(max, min, max), true);
 
   // In the middle of the bounds
-  cl_assert_equal_i(WITHIN(-5, min, max), true);
-  cl_assert_equal_i(WITHIN(0, min, max), true);
-  cl_assert_equal_i(WITHIN(5, min, max), true);
+  cl_assert_equal_i(PBL_IN_RANGE(-5, min, max), true);
+  cl_assert_equal_i(PBL_IN_RANGE(0, min, max), true);
+  cl_assert_equal_i(PBL_IN_RANGE(5, min, max), true);
 
   // Just out of bounds
-  cl_assert_equal_i(WITHIN(-11, min, max), false);
-  cl_assert_equal_i(WITHIN(11, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(-11, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(11, min, max), false);
 
   // Min and max are both negative
   ////////////////////////////////
@@ -217,19 +217,19 @@ void test_math__test_within_macro(void) {
   max = -10;
 
   // Min and max themselves should satisfy WITHIN
-  cl_assert_equal_b(WITHIN(min, min, max), true);
-  cl_assert_equal_b(WITHIN(max, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(min, min, max), true);
+  cl_assert_equal_b(PBL_IN_RANGE(max, min, max), true);
 
   // In the middle of the bounds
-  cl_assert_equal_i(WITHIN(-15, min, max), true);
+  cl_assert_equal_i(PBL_IN_RANGE(-15, min, max), true);
 
   // Just out of bounds
-  cl_assert_equal_i(WITHIN(-21, min, max), false);
-  cl_assert_equal_i(WITHIN(-9, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(-21, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(-9, min, max), false);
 
   // Positive out of bounds
-  cl_assert_equal_i(WITHIN(0, min, max), false);
-  cl_assert_equal_i(WITHIN(5, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(0, min, max), false);
+  cl_assert_equal_i(PBL_IN_RANGE(5, min, max), false);
 }
 
 void test_math__distance_to_boundary(void) {

@@ -118,7 +118,7 @@ static int prv_set_discovery_fields(void) {
   name_max = BLE_HS_ADV_MAX_SZ - 3 - (2 + 2 * fields.num_uuids16) - 3 - 2;
   bt_local_id_copy_device_name(name, true);
   name[sizeof(name) - 1] = '\0';
-  fields.name_len = MIN(strlen(name), name_max);
+  fields.name_len = PBL_MIN(strlen(name), name_max);
   fields.name_is_complete = (name[fields.name_len] == '\0');
 
   memcpy(mfg_data.serial_number, mfg_get_serial_number(), MFG_SERIAL_NUMBER_SIZE);
@@ -228,7 +228,7 @@ static void prv_update(void) {
   if (rc != 0) {
     PBL_LOG_ERR("Could not advertise (%d)", rc);
     pbl_delayed_work_reschedule(&pbl_sys_workq, &s_work,
-                                PBL_TICKS(MIN(next - now, (uint64_t)RETRY_S * PBL_TICK_HZ)));
+                                PBL_TICKS(PBL_MIN(next - now, (uint64_t)RETRY_S * PBL_TICK_HZ)));
     return;
   }
 

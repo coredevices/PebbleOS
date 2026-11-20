@@ -131,7 +131,7 @@ static void prv_update_play_state_info(struct pbl_pp_session *session, const uin
       (length > sizeof(MusicEndpointPlayStateInfo)) ? msg[sizeof(MusicEndpointPlayStateInfo)] : 0;
   player_state_update.skip_seeks_within_track = (skip_seeks & MusicEndpointSkipSeeksWithinTrack);
   s_progress_reporting_supported = (play_state_info->track_pos_ms >= 0);
-  player_state_update.elapsed_time_ms = MAX(play_state_info->track_pos_ms, 0);
+  player_state_update.elapsed_time_ms = PBL_MAX(play_state_info->track_pos_ms, 0);
   // TODO: Do something with this info
   // play_state_info->play_shuffle_mode;
   // play_state_info->play_repeat_mode;

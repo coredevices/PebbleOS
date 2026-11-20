@@ -69,7 +69,7 @@ static size_t prv_job_get_length(const struct pbl_pp_send_job *send_job) {
 static size_t prv_job_copy(const struct pbl_pp_send_job *send_job, size_t offset, size_t length,
                            uint8_t *data_out) {
   const struct test_job *job = (const struct test_job *)send_job;
-  const size_t length_to_copy = MIN(prv_get_length(job) - offset, length);
+  const size_t length_to_copy = PBL_MIN(prv_get_length(job) - offset, length);
 
   memcpy(data_out, prv_get_read_pointer(job) + offset, length_to_copy);
   return length_to_copy;

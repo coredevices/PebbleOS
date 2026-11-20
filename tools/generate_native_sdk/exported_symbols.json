@@ -140,7 +140,8 @@
       "name": "tm"
     }, {
       "type": "define",
-      "name": "IS_SIGNED"
+      "name": "IS_SIGNED",
+      "implName": "PBL_IS_SIGNED"
     }, {
       "type": "group",
       "name": "UI",

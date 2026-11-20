@@ -39,7 +39,7 @@ static CompositorTransitionDirection prv_flip_transition_direction(
 //! @param delay value to postpone interpolation (in range 0..ANIMATION_NORMALIZED_MAX)
 static GPoint prv_gpoint_interpolate(int32_t delay, int32_t normalized, const GPoint from,
                                      const GPoint to) {
-  normalized = CLIP(normalized - delay, 0, ANIMATION_NORMALIZED_MAX);
+  normalized = PBL_CLAMP(normalized - delay, 0, ANIMATION_NORMALIZED_MAX);
   normalized = animation_timing_curve(normalized, AnimationCurveEaseInOut);
   GPoint result;
   result.x = interpolate_int16(normalized, from.x, to.x);

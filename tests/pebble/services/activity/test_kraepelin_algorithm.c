@@ -341,7 +341,7 @@ static uint32_t prv_feed_kalg_samples(struct pbl_kraepelin_sample *data, int num
 
   // Run some data through it, 1 minute at a time
   while (num_samples_left) {
-    int chunk_size = MIN(num_samples_left, PBL_KRAEPELIN_SAMPLE_HZ * PBL_SEC_PER_MIN);
+    int chunk_size = PBL_MIN(num_samples_left, PBL_KRAEPELIN_SAMPLE_HZ * PBL_SEC_PER_MIN);
     uint32_t steps;
     uint32_t consumed_samples;
     steps = pbl_kraepelin_analyze_samples(s_kalg_state, data, chunk_size, &consumed_samples);

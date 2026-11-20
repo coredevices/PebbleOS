@@ -442,7 +442,7 @@ void test_menu_layer_system_cells__basic_cell_content_sizes(void) {
     system_theme_set_content_size(size);
     const int16_t column_height =
         GRID_CELL_PADDING + (num_rows * (menu_cell_basic_cell_height() + GRID_CELL_PADDING));
-    bitmap_height = MAX(bitmap_height, column_height);
+    bitmap_height = PBL_MAX(bitmap_height, column_height);
   }
 
   const GSize bitmap_size = GSize(bitmap_width, bitmap_height);
@@ -627,10 +627,10 @@ static unsigned int prv_count_basic_cell_foreground(int16_t cell_height, const c
     for (int16_t x = 0; x < width; x++) {
       if (PBL_IF_COLOR_ELSE(row[x] == GColorBlackARGB8, !((row[x / 8] >> (x % 8)) & 1))) {
         foreground_pixels++;
-        min_x = MIN(min_x, x);
-        min_y = MIN(min_y, y);
-        max_x = MAX(max_x, x);
-        max_y = MAX(max_y, y);
+        min_x = PBL_MIN(min_x, x);
+        min_y = PBL_MIN(min_y, y);
+        max_x = PBL_MAX(max_x, x);
+        max_y = PBL_MAX(max_y, y);
       }
     }
   }
@@ -673,7 +673,7 @@ void test_menu_layer_system_cells__caption_rows_preserve_accents_and_descenders(
     GFont caption_font = system_theme_get_font(TextStyleFont_Caption);
     GFont subtitle_font = system_theme_get_font(TextStyleFont_MenuCellSubtitle);
     const int16_t saved_height =
-        MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
+        PBL_MAX(0, fonts_get_font_height(subtitle_font) - fonts_get_font_height(caption_font));
     const unsigned int reference_pixels = prv_count_basic_cell_foreground(
         128, titles[size], "ÿgj,", caption_font, nullptr, true, nullptr);
     const unsigned int actual_pixels =

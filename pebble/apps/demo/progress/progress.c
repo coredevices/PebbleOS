@@ -30,14 +30,14 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *contex
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Increment
   ProgressAppData *data = context;
-  data->progress = MIN(MAX_PROGRESS_PERCENT, data->progress + PROGRESS_STEP);
+  data->progress = PBL_MIN(MAX_PROGRESS_PERCENT, data->progress + PROGRESS_STEP);
   progress_layer_set_progress(&data->progress_layer, data->progress);
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Decrement
   ProgressAppData *data = context;
-  data->progress = MAX(MIN_PROGRESS_PERCENT, data->progress - PROGRESS_STEP);
+  data->progress = PBL_MAX(MIN_PROGRESS_PERCENT, data->progress - PROGRESS_STEP);
   progress_layer_set_progress(&data->progress_layer, data->progress);
 }
 

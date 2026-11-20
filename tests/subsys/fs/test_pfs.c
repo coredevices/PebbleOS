@@ -218,7 +218,7 @@ void test_pfs__page_lookup_cache(void) {
   }
 
   // We limit this number because we would overflow our uint8_t.
-  const int num_regions = MIN(UINT8_MAX, (num_pages() * 5) / 10);
+  const int num_regions = PBL_MIN(UINT8_MAX, (num_pages() * 5) / 10);
   int fd = pfs_open("page_lookup", OP_FLAG_WRITE, FILE_TYPE_STATIC, PFS_SECTOR_SIZE * num_regions);
   cl_assert(fd >= 0);
 

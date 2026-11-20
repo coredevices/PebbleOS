@@ -28,7 +28,8 @@ static void prv_slice_for_each(AppGlance *glance, SliceForEachCb cb, void *conte
   }
 
   for (unsigned int slice_index = 0;
-       slice_index < MIN(glance->num_slices, APP_GLANCE_DB_MAX_SLICES_PER_GLANCE); slice_index++) {
+       slice_index < PBL_MIN(glance->num_slices, APP_GLANCE_DB_MAX_SLICES_PER_GLANCE);
+       slice_index++) {
     AppGlanceSliceInternal *current_slice = &glance->slices[slice_index];
     // Stop iterating if the client's callback function returns false
     if (!cb(current_slice, context)) {

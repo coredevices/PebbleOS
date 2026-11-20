@@ -31,11 +31,11 @@ static void prv_send_next(struct pbl_pp_session *session) {
   size_t remaining = (session == s_session) ? pbl_pp_session_send_queue_length(session) : 0U;
 
   if (remaining > 0U) {
-    const size_t buffer_size = MIN(remaining, QEMU_MAX_DATA_LEN);
+    const size_t buffer_size = PBL_MIN(remaining, QEMU_MAX_DATA_LEN);
     uint8_t *buffer = pbl_malloc_check(buffer_size);
 
     while (remaining > 0U) {
-      const size_t length = MIN(remaining, buffer_size);
+      const size_t length = PBL_MIN(remaining, buffer_size);
 
       pbl_pp_session_send_queue_copy(session, 0U, length, buffer);
       qemu_serial_send(QemuProtocol_SPP, buffer, length);

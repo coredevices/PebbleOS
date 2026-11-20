@@ -42,8 +42,8 @@ void prv_test_plot_horizontal_line(GBitmap *framebuffer, GRect area, GColor colo
     return;
   }
 
-  int16_t x_min = MAX(MIN(x0, x1), framebuffer->bounds.origin.x);
-  int16_t x_max = MIN(MAX(x0, x1), framebuffer->bounds.origin.x + framebuffer->bounds.size.w);
+  int16_t x_min = PBL_MAX(PBL_MIN(x0, x1), framebuffer->bounds.origin.x);
+  int16_t x_max = PBL_MIN(PBL_MAX(x0, x1), framebuffer->bounds.origin.x + framebuffer->bounds.size.w);
 
   for (int i=x_min; i < x_max; i++) {
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8

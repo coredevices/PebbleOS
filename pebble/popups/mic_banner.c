@@ -90,15 +90,16 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorRed);
   graphics_fill_circle(ctx, GPoint(bounds.size.w / 2, MIC_BANNER_RADIUS), MIC_BANNER_RADIUS);
   const GPoint icon_origin =
-      GPoint((bounds.size.w - icon.w) / 2, MAX((MIC_BANNER_HEIGHT - icon.h) / 2, ICON_MIN_TOP));
+      GPoint((bounds.size.w - icon.w) / 2, PBL_MAX((MIC_BANNER_HEIGHT - icon.h) / 2, ICON_MIN_TOP));
 #else
   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
   graphics_fill_rect(ctx, &bounds);
 
   // Shrinking from the bar into the square, 0 to 1; the mic moves to the square's centre
-  const int32_t progress = CLIP(((PBL_DISPLAY_WIDTH - bounds.size.w) * ANIMATION_NORMALIZED_MAX) /
-                                    (PBL_DISPLAY_WIDTH - SQUARE_SIZE),
-                                0, ANIMATION_NORMALIZED_MAX);
+  const int32_t progress =
+      PBL_CLAMP(((PBL_DISPLAY_WIDTH - bounds.size.w) * ANIMATION_NORMALIZED_MAX) /
+                    (PBL_DISPLAY_WIDTH - SQUARE_SIZE),
+                0, ANIMATION_NORMALIZED_MAX);
   const int16_t square_margin = (SQUARE_SIZE - BORDER - ICON_SIZE) / 2;
   const GPoint icon_origin =
       GPoint(ICON_MARGIN + (((square_margin - ICON_MARGIN) * progress) / ANIMATION_NORMALIZED_MAX),
@@ -160,12 +161,12 @@ static bool prv_is_upscaled_app(const GSize *fb_size) {
 static int16_t prv_obstruction_for_shape_y(int16_t shape_y) {
   GSize fb_size;
   app_manager_get_framebuffer_size(&fb_size);
-  int16_t y = MIN(shape_y, PBL_DISPLAY_HEIGHT);
+  int16_t y = PBL_MIN(shape_y, PBL_DISPLAY_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
     const GRect frame = compositor_get_scaled_app_frame(fb_size);
     y = ((y - frame.origin.y) * fb_size.h) / frame.size.h;
   }
-  return CLIP(y, 0, fb_size.h);
+  return PBL_CLAMP(y, 0, fb_size.h);
 }
 
 static int16_t prv_compose(int16_t banner_y) {
@@ -209,7 +210,7 @@ bool mic_banner_get_accessory_area(GRect *area_out) {
   GRect area = GRect(SQUARE_SIZE, top, PBL_DISPLAY_WIDTH - SQUARE_SIZE, MIC_BANNER_HEIGHT);
   if (prv_is_upscaled_app(&fb_size)) {
     const GRect frame = compositor_get_scaled_app_frame(fb_size);
-    area.origin.x = MAX(((SQUARE_SIZE - frame.origin.x) * fb_size.w) / frame.size.w, 0);
+    area.origin.x = PBL_MAX(((SQUARE_SIZE - frame.origin.x) * fb_size.w) / frame.size.w, 0);
     area.size.w = fb_size.w - area.origin.x;
     area.size.h = (MIC_BANNER_HEIGHT * fb_size.h) / frame.size.h;
   }
@@ -322,7 +323,7 @@ static void prv_slide_to(MicBanner *banner, GRect *to_frame) {
 static int16_t prv_segment(AnimationProgress progress, int32_t start, int32_t end, int16_t from,
                            int16_t to, bool ease_in) {
   const int64_t max = ANIMATION_NORMALIZED_MAX;
-  const int64_t t = CLIP(((int64_t)(progress - start) * max) / (end - start), 0, max);
+  const int64_t t = PBL_CLAMP(((int64_t)(progress - start) * max) / (end - start), 0, max);
   const int64_t eased = ease_in ? (t * t) / max : (t * ((2 * max) - t)) / max;
   return from + (int16_t)(((to - from) * eased) / max);
 }

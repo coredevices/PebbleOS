@@ -70,7 +70,7 @@ static void prv_canvas_layer_update_proc(Layer *layer, GContext *ctx) {
   layer_get_unobstructed_bounds(layer, &unobstructed_bounds);
 
   GPoint center = grect_center_point(&unobstructed_bounds);
-  int clock_radius = MIN(unobstructed_bounds.size.h, unobstructed_bounds.size.w) / 2;
+  int clock_radius = PBL_MIN(unobstructed_bounds.size.h, unobstructed_bounds.size.w) / 2;
 
   Time mode_time = data->last_time;
 

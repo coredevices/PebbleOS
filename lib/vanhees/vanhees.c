@@ -98,7 +98,7 @@ static int32_t prv_epoch_angle(struct pbl_vanhees *state) {
 static void prv_finish_epoch(struct pbl_vanhees *state) {
   const int32_t angle = prv_epoch_angle(state);
   const bool changed =
-      state->have_prev_angle && (ABS(angle - state->prev_angle) > VH_ANGLE_THRESHOLD);
+      state->have_prev_angle && (PBL_ABS(angle - state->prev_angle) > VH_ANGLE_THRESHOLD);
 
   prv_set_changed(state, state->num_epochs, changed);
   state->num_epochs++;

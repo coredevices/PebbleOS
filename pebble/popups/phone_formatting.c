@@ -22,7 +22,7 @@ void phone_format_caller_name(const char *full_name, char *destination, size_t l
     return;
   }
   // Copy the first name to the destination, as long as it fits.
-  size_t pos = MIN((size_t)(space - full_name), length - 1);
+  size_t pos = PBL_MIN((size_t)(space - full_name), length - 1);
   strncpy(destination, full_name, pos);
   // Then keep adding the character after the space until we run out of spaces.
   do {

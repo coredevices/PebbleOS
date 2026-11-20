@@ -149,7 +149,7 @@ uint16_t backlight_get_sunset_minute(void) {
 ///////////////////////////////////////////////////////////
 
 static uint8_t get_expected_brightness() {
-  return DIVIDE_CEIL(
+  return PBL_DIV_ROUND_UP(
       backlight_get_intensity() * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
 }
 
@@ -171,7 +171,7 @@ static void check_on_timed_and_consume_partial(void) {
 
   const uint8_t fade_brightness = 100 - (100 / LIGHT_FADE_STEPS);
   const uint8_t scaled_fade =
-      DIVIDE_CEIL(fade_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
+      PBL_DIV_ROUND_UP(fade_brightness * (uint16_t)CONFIG_SERVICE_LIGHT_BACKLIGHT_ON_PERCENT, 100U);
   cl_assert_equal_i(s_backlight_brightness, scaled_fade);
   cl_assert(fake_work_is_scheduled(s_light_timer));
 }

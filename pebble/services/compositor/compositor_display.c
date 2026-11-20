@@ -154,7 +154,7 @@ void compositor_display_init(void) {
 #ifdef CONFIG_BOARD_DISPLAY_CORNERS
   uint8_t max_width = 0;
   for (uint8_t i = 0; i < BOARD_DISPLAY_NUM_CORNERS; i++) {
-    max_width = MAX(max_width, BOARD_DISPLAY_CORNERS[i]);
+    max_width = PBL_MAX(max_width, BOARD_DISPLAY_CORNERS[i]);
   }
 
   if (max_width > 0) {

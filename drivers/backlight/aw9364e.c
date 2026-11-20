@@ -55,7 +55,7 @@ static uint8_t prv_get_level(const struct pbl_backlight *bl, uint8_t brightness)
   }
 
   return AW9364E_MAX_PULSES -
-         DIVIDE_CEIL(brightness * AW9364E_MAX_PULSES, PBL_BACKLIGHT_BRIGHTNESS_MAX) + 1U;
+         PBL_DIV_ROUND_UP(brightness * AW9364E_MAX_PULSES, PBL_BACKLIGHT_BRIGHTNESS_MAX) + 1U;
 }
 
 static int prv_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
