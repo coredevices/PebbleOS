@@ -410,7 +410,8 @@ figure.
 
 The power tests measure TicToc idling in airplane mode. They wipe the watch
 first (`dut.wipe()`), so run them on a test watch. Each passes within 10% of
-the board's nominal figure in `power/test_idle.py`, measured at 3.8 V, and
+the board's nominal figure in `power/test_idle.py`, measured at 3.8 V (15% on
+asterix, whose units differ more), and
 one out of range is rerun once; update the nominals when a change moves them
 on purpose. Boards without nominals record their figures with a warning.
 Advertising current is not measured: scans from phones and computers nearby
