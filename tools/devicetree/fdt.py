@@ -65,13 +65,6 @@ class Node:
             raise DtError(f"{self.path}: '{prop}' must be a single cell")
         return cells[0]
 
-    def u64(self, prop):
-        hi, lo = self.u32s(prop)
-        return (hi << 32) | lo
-
-    def u8s(self, prop):
-        return list(self.data(prop))
-
     def strings(self, prop):
         data = self.data(prop)
         if not data or data[-1] != 0:
