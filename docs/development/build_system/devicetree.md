@@ -589,8 +589,9 @@ description gives, never an index into a table in the driver:
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_I2C_SOC_IRQ_PRIO, pbl_i2c_soc_irq_handler, &sym##_inst, 0)
 ```
 
-The macro stays usable from C, for boards without a tree. The driver includes
-its instances at its end, and defaults on from the tree:
+The macro sits in the driver's public header, with the ops, init and interrupt
+handler it names, so it stays usable from C, for boards without a tree. The
+driver includes its instances at its end, and defaults on from the tree:
 
 ```c
 #include PBL_DT_INSTANCES(vendor_soc_i2c)
