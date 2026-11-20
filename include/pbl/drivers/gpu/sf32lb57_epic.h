@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
+#include <pbl/drivers/dma.h>
 #include <pbl/drivers/gpu.h>
 #include <pbl/drivers/reset.h>
 #include <pbl/kernel/irq.h>
@@ -39,6 +40,8 @@ struct pbl_gpu_sf32lb57_epic {
   struct pbl_gpu_sf32lb57_epic_state *state;
   /** Registers. */
   uintptr_t base;
+  /** Memory the accelerator reaches at another address than the CPU. */
+  struct pbl_dma_window window;
   /** Interrupt. */
   pbl_irq_t irq;
   /** Clock. */
@@ -57,11 +60,12 @@ extern const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops;
  * @param sym Symbol of the GPU.
  * @param _name Name.
  * @param _base Registers.
+ * @param _window Memory the accelerator reaches at another address, from PBL_DMA_WINDOW().
  * @param _irq Interrupt.
  * @param _clk Clock, from PBL_CLK().
  * @param _rst Reset, from PBL_RESET().
  */
-#define PBL_GPU_SF32LB57_EPIC_DEFINE(sym, _name, _base, _irq, _clk, _rst)                         \
+#define PBL_GPU_SF32LB57_EPIC_DEFINE(sym, _name, _base, _window, _irq, _clk, _rst)                \
   PBL_GPU_STATE_DEFINE(sym);                                                                      \
   static struct pbl_gpu_sf32lb57_epic_state sym##_epic_state = {                                  \
     .done = PBL_SEM_INITIALIZER(0, 1),                                                            \
@@ -75,6 +79,7 @@ extern const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops;
         .flags = PBL_GPU_CAP_ROTATE | PBL_GPU_CAP_SCALE),                                         \
     .state = &sym##_epic_state,                                                                   \
     .base = (_base),                                                                              \
+    .window = _window,                                                                            \
     .irq = (_irq),                                                                                \
     .clk = _clk,                                                                                  \
     .rst = _rst,                                                                                  \

@@ -23,11 +23,6 @@
 #define EPIC_SPIN_US    200U
 #define EPIC_TIMEOUT_MS 500U
 
-// The accelerator reads the memories behind the MPIs through their system bus alias
-#define EPIC_MPI_CBUS_START  0x10000000U
-#define EPIC_MPI_CBUS_END    0x20000000U
-#define EPIC_MPI_SBUS_OFFSET 0x50000000U
-
 // Layers and canvas of a job with a transform span at most this many pixels
 #define EPIC_TRANSFORM_SPAN_MAX 512
 
@@ -64,14 +59,8 @@ static void prv_modify(const struct pbl_gpu_sf32lb57_epic *epic, uint32_t offset
   pbl_modifyl(clear, set, epic->base + offset);
 }
 
-static uint32_t prv_bus_addr(const void *p) {
-  uint32_t addr = (uint32_t)(uintptr_t)p;
-
-  if (addr >= EPIC_MPI_CBUS_START && addr < EPIC_MPI_CBUS_END) {
-    addr += EPIC_MPI_SBUS_OFFSET;
-  }
-
-  return addr;
+static uint32_t prv_bus_addr(const struct pbl_gpu_sf32lb57_epic *epic, const void *p) {
+  return (uint32_t)pbl_dma_window_addr(&epic->window, (uintptr_t)p);
 }
 
 static uint32_t prv_pos(uint32_t x, uint32_t y) {
@@ -98,7 +87,7 @@ static void prv_layer(const struct pbl_gpu_sf32lb57_epic *epic, uint32_t layer,
                       uint16_t width, uint16_t height, uint32_t alpha, uint32_t color) {
   prv_write(epic, layer + SF32LB57_EPIC_LX_TL_POS_OFFSET, prv_pos(x, y));
   prv_write(epic, layer + SF32LB57_EPIC_LX_BR_POS_OFFSET, prv_pos(x + width - 1U, y + height - 1U));
-  prv_write(epic, layer + SF32LB57_EPIC_LX_SRC_OFFSET, prv_bus_addr(first));
+  prv_write(epic, layer + SF32LB57_EPIC_LX_SRC_OFFSET, prv_bus_addr(epic, first));
   prv_write(epic, layer + SF32LB57_EPIC_LX_FILL_OFFSET,
             PBL_FIELD_PREP(SF32LB57_EPIC_FILL_RGB_MASK, color));
   prv_write(epic, layer + SF32LB57_EPIC_LX_CFG_OFFSET, prv_layer_cfg(buf, alpha));
@@ -116,7 +105,7 @@ static void prv_canvas(const struct pbl_gpu_sf32lb57_epic *epic, const struct pb
             PBL_FIELD_PREP(SF32LB57_EPIC_CANVAS_BG_RGB_MASK, background));
   prv_write(epic, SF32LB57_EPIC_AHB_CTRL_OFFSET,
             PBL_FIELD_PREP(SF32LB57_EPIC_AHB_CTRL_O_FORMAT_MASK, format->code));
-  prv_write(epic, SF32LB57_EPIC_AHB_MEM_OFFSET, prv_bus_addr(first));
+  prv_write(epic, SF32LB57_EPIC_AHB_MEM_OFFSET, prv_bus_addr(epic, first));
   prv_write(epic, SF32LB57_EPIC_AHB_STRIDE_OFFSET,
             PBL_FIELD_PREP(SF32LB57_EPIC_AHB_STRIDE_OFFSET_MASK,
                            dst->pitch - (uint32_t)width * format->bytes));
@@ -204,7 +193,7 @@ static int prv_begin(const struct pbl_gpu_sf32lb57_epic *epic, const struct pbl_
   pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
 
   prv_cache(dst, rect, false);
-  if (src != nullptr && prv_bus_addr(src->data) == (uint32_t)(uintptr_t)src->data) {
+  if (src != nullptr && prv_bus_addr(epic, src->data) == (uint32_t)(uintptr_t)src->data) {
     prv_cache(src, src_rect, false);
   }
 
@@ -442,7 +431,7 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
             prv_pos((uint32_t)(video.x - x0), (uint32_t)(video.y - y0)));
   prv_write(epic, SF32LB57_EPIC_VL_BR_POS_OFFSET,
             prv_pos((uint32_t)(x1 - 1 - x0), (uint32_t)(y1 - 1 - y0)));
-  prv_write(epic, SF32LB57_EPIC_VL_SRC_OFFSET, prv_bus_addr(src->data));
+  prv_write(epic, SF32LB57_EPIC_VL_SRC_OFFSET, prv_bus_addr(epic, src->data));
   prv_write(epic, SF32LB57_EPIC_VL_EXTENTS_OFFSET,
             PBL_FIELD_PREP(SF32LB57_EPIC_VL_EXTENTS_MAX_COL_MASK, src->width - 1U) |
                 PBL_FIELD_PREP(SF32LB57_EPIC_VL_EXTENTS_MAX_LINE_MASK, src->height - 1U));
