@@ -37,15 +37,11 @@ int pbl_crypto_sf32lb_init(const struct pbl_device *dev);
  * @param _base Registers.
  * @param _clk Clock, from PBL_CLK().
  */
-#define PBL_CRYPTO_SF32LB_DEFINE(sym, _name, _base, _clk)                              \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                        \
-  extern const struct pbl_crypto_sf32lb sym##_inst;                                    \
-  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                    \
-  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_crypto_sf32lb, struct pbl_device, dev); \
-  const struct pbl_crypto_sf32lb sym##_inst = {                                        \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_crypto_sf32lb_init, nullptr, nullptr),      \
-    .base = (_base),                                                                   \
-    .clk = _clk,                                                                       \
+#define PBL_CRYPTO_SF32LB_DEFINE(sym, _name, _base, _clk)                                          \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
+  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_crypto_sf32lb) {                                         \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_crypto_sf32lb_init, nullptr, nullptr), .base = (_base), \
+    .clk = _clk,                                                                                   \
   }
 
 /** @} */

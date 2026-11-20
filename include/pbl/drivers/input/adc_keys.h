@@ -75,22 +75,14 @@ int pbl_adc_keys_init(const struct pbl_device *dev);
     .press_uv = (_press_uv),                       \
   }
 
-#define PBL_ADC_KEYS_DEFINE(sym, _name, _channel, _keyup_uv, _irq, _pins, ...)    \
-  static const struct pbl_adc_keys_key sym##_keys[] = {__VA_ARGS__};              \
-  static struct pbl_adc_keys_state sym##_adc_keys_state;                          \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                   \
-  extern const struct pbl_adc_keys sym##_inst;                                    \
-  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                               \
-  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_adc_keys, struct pbl_device, dev); \
-  const struct pbl_adc_keys sym##_inst = {                                        \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_adc_keys_init, nullptr, nullptr),      \
-    .channel = _channel,                                                          \
-    .keyup_uv = (_keyup_uv),                                                      \
-    .irq = _irq,                                                                  \
-    .pinctrl = PBL_PINCTRL(_pins, nullptr, 0U),                                   \
-    .keys = sym##_keys,                                                           \
-    .num_keys = ARRAY_LENGTH(sym##_keys),                                         \
-    .state = &sym##_adc_keys_state,                                               \
+#define PBL_ADC_KEYS_DEFINE(sym, _name, _channel, _keyup_uv, _irq, _pins, ...)                    \
+  static const struct pbl_adc_keys_key sym##_keys[] = {__VA_ARGS__};                              \
+  static struct pbl_adc_keys_state sym##_adc_keys_state;                                          \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
+  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_adc_keys) {                                             \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_adc_keys_init, nullptr, nullptr), .channel = _channel, \
+    .keyup_uv = (_keyup_uv), .irq = _irq, .pinctrl = PBL_PINCTRL(_pins, nullptr, 0U),             \
+    .keys = sym##_keys, .num_keys = ARRAY_LENGTH(sym##_keys), .state = &sym##_adc_keys_state,     \
   }
 /** @endcond */
 
