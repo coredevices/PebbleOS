@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_STM32H7
+
+# The embedded flash, whose size is the part's.
+config FLASH_BASE
+    default 0x08000000
+
+config NUM_IRQS
+    default 150
+
+endif # SOC_STM32H7
