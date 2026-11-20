@@ -236,6 +236,7 @@ typedef enum {
   PLATFORM_FEATURE_TOUCH = PBL_BIT(5),
   PLATFORM_FEATURE_RGB_BACKLIGHT = PBL_BIT(6),
   PLATFORM_FEATURE_SPEAKER = PBL_BIT(7),
+  PLATFORM_FEATURE_BAROMETER = PBL_BIT(8),
 } PebblePlatformFeature;
 
 //! The size of the framebuffer an app draws to: that of the display it was built for when ours
