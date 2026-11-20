@@ -103,10 +103,8 @@
 struct pbl_pinctrl_sf32lb52 {
   /** Pin controller. */
   struct pbl_pinctrl_controller ctrl;
-  /** SA pad registers. */
-  uintptr_t pad_sa;
-  /** PA pad registers. */
-  uintptr_t pad_pa;
+  /** Pinmux registers. */
+  uintptr_t base;
   /** HPSYS_CFG registers, holding the PINR crossbar. */
   uintptr_t cfg;
   /** RTC registers, holding the always-on pad pulls and backup outputs. */
@@ -125,5 +123,29 @@ int pbl_pinctrl_sf32lb52_modify(uint32_t pin, uint32_t mask);
 
 /** HPSYS pin controller. */
 #define SF32LB52_PINCTRL (&pbl_pinctrl_sf32lb52_hpsys)
+
+/** @cond INTERNAL_HIDDEN */
+#define PBL_PINCTRL_SF32LB52__NUM_PADS (13U + 45U)
+
+extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb52_ops;
+/** @endcond */
+
+/**
+ * @brief Define the SF32LB52 pin controller.
+ *
+ * @param sym Symbol of the controller.
+ * @param _name Name.
+ * @param _base Pinmux registers.
+ * @param _cfg HPSYS_CFG registers.
+ * @param _rtc RTC registers.
+ * @param _aon HPSYS always-on registers.
+ */
+#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon)                       \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb52, struct pbl_pinctrl_controller, ctrl) { \
+    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_sf32lb52_ops,        \
+                                        PBL_PINCTRL_SF32LB52__NUM_PADS),                       \
+    .base = (_base), .cfg = (_cfg), .rtc = (_rtc), .aon = (_aon),                              \
+  }
 
 /** @} */
