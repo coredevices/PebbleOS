@@ -3,6 +3,8 @@
 
 #include "event_service_client.h"
 
+#include <errno.h>
+
 #include <pbl/services/wakeup.h>
 
 #include <applib/app_time32.h>
@@ -10,6 +12,7 @@
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
+#include <system/status_errno.h>
 
 static void do_handle(PebbleEvent *e, void *context) {
   WakeupHandler wakeup_handler = app_state_get_wakeup_handler();
@@ -35,8 +38,13 @@ void app_wakeup_service_subscribe(WakeupHandler handler) {
   }
 }
 
+static status_t prv_status_from_errno(int err) {
+  return (err == -EDQUOT) ? E_OUT_OF_RESOURCES : status_from_errno(err);
+}
+
 WakeupId app_wakeup_schedule(pbl_time32_t timestamp, int32_t cookie, bool notify_if_missed) {
-  return sys_wakeup_schedule(app_time_from_time32(timestamp), cookie, notify_if_missed);
+  WakeupId id = sys_wakeup_schedule(app_time_from_time32(timestamp), cookie, notify_if_missed);
+  return (id < 0) ? prv_status_from_errno(id) : id;
 }
 
 void app_wakeup_cancel(WakeupId wakeup_id) {
@@ -61,7 +69,10 @@ bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
 }
 
 bool app_wakeup_query(WakeupId wakeup_id, pbl_time32_t *timestamp) {
-  const time_t scheduled_time = sys_wakeup_query(wakeup_id);
+  time_t scheduled_time = sys_wakeup_query(wakeup_id);
+  if (scheduled_time < 0) {
+    scheduled_time = prv_status_from_errno(scheduled_time);
+  }
   if (timestamp != nullptr) {
     *timestamp = pbl_time_to_time32(scheduled_time);
   }
