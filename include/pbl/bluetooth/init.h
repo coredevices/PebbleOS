@@ -18,8 +18,7 @@
  * @c subsys/bluetooth on top of the NimBLE host, which runs in its own task.
  *
  * The API has two directions:
- * - Calls into the stack, such as pbl_bt_start(), ble_gap_adv_start() or
- *   pbl_bt_gatt_read().
+ * - Calls into the stack, such as pbl_bt_start() or ble_gap_adv_start().
  * - Callbacks, declared @c extern and named @c pbl_bt_handle_* or @c pbl_bt_cb_*, that the
  *   firmware implements and the stack invokes to report events. Unless stated otherwise they run
  *   on the NimBLE host task without @c bt_lock() held.

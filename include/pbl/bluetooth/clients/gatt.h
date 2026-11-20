@@ -32,7 +32,7 @@ struct os_mbuf;
  *   }
  * }
  *
- * pbl_bt_gattc_discover(conn_handle, &s_svc_uuid.u, s_chrs, 2, prv_found, nullptr);
+ * pbl_bt_gattc_discover(conn_handle, &s_svc_uuid.u, 0, s_chrs, 2, prv_found, nullptr);
  * @endcode
  * @{
  */
@@ -66,6 +66,7 @@ typedef void (*pbl_bt_gattc_discover_cb_t)(uint16_t conn_handle, int status,
  *
  * @param conn_handle Connection.
  * @param svc_uuid The service.
+ * @param instance Which of the services with that UUID, counting from 0 in handle order.
  * @param chr_uuids The characteristics; the array and the UUIDs must stay valid until @p cb is
  * called.
  * @param num_chrs Number of characteristics.
@@ -73,7 +74,7 @@ typedef void (*pbl_bt_gattc_discover_cb_t)(uint16_t conn_handle, int status,
  * @param arg Passed to @p cb.
  * @return 0 if queued, a @c BLE_HS_* code otherwise.
  */
-int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid,
+int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint8_t instance,
                           const ble_uuid_t *const *chr_uuids, uint8_t num_chrs,
                           pbl_bt_gattc_discover_cb_t cb, void *arg);
 
@@ -127,6 +128,8 @@ struct pbl_bt_gattc_service {
   uint32_t notifying_chrs;
   /** Number of characteristics. */
   uint8_t num_chrs;
+  /** Which of the services with that UUID, counting from 0. */
+  uint8_t instance;
   /** What was found of them. */
   struct pbl_bt_gattc_chr *chrs;
   /** @cond INTERNAL_HIDDEN */
@@ -192,6 +195,8 @@ void pbl_bt_gattc_service_stop(struct pbl_bt_gattc_service *svc);
 /**
  * @brief Subscribe to the notifications of a characteristic, or unsubscribe.
  *
+ * To its indications instead when it has no notifications.
+ *
  * @retval 0 Asked, @c subscribed follows.
  * @retval -ENOTCONN The characteristic, or its CCCD, was not found (yet).
  * @retval -ENOMEM Out of memory.
@@ -209,6 +214,17 @@ int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr
  */
 int pbl_bt_gattc_service_write(struct pbl_bt_gattc_service *svc, uint8_t chr, const void *data,
                                uint16_t len);
+
+/**
+ * @brief Write the value of a characteristic without a response from the peer.
+ *
+ * @retval 0 Handed to the stack.
+ * @retval -ENOTCONN The characteristic was not found (yet).
+ * @retval -ENOMEM The stack is out of buffers: try again later.
+ * @retval -EIO The stack refused.
+ */
+int pbl_bt_gattc_service_write_no_rsp(struct pbl_bt_gattc_service *svc, uint8_t chr,
+                                      const void *data, uint16_t len);
 
 /**
  * @brief Read the value of a characteristic, all of it however long.

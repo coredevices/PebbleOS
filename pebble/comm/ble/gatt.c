@@ -6,16 +6,9 @@
 #include <pbl/logging/logging.h>
 
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gatt_service_changed.h>
 #include <comm/bt_lock.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
-
-//! @see comment in gatt_client_subscriptions.c
-extern void gatt_client_subscriptions_handle_server_notification(GAPLEConnection *connection,
-                                                                 uint16_t att_handle,
-                                                                 const uint8_t *att_value,
-                                                                 uint16_t att_length);
 
 void pbl_bt_cb_gatt_handle_connect(const struct pbl_bt_gatt_device_connection_event *event) {
   bt_lock();
@@ -60,48 +53,4 @@ void pbl_bt_cb_gatt_handle_mtu_update(const struct pbl_bt_gatt_device_mtu_update
   }
 unlock:
   bt_unlock();
-}
-
-void pbl_bt_cb_gatt_handle_notification(const struct pbl_bt_gatt_server_notif_indic_event *event) {
-  GAPLEConnection *connection = nullptr;
-  bt_lock();
-  {
-    connection = gap_le_connection_by_addr(&event->dev_address);
-  }
-  bt_unlock();
-
-  if (connection == nullptr) {
-    return;
-  }
-
-  gatt_client_subscriptions_handle_server_notification(connection, event->attr_handle,
-                                                       event->attr_val, event->attr_val_len);
-  PBL_LOG_VERBOSE("GATT Server Notification for handle %u " PBL_BT_ADDR_FMT, event->attr_handle,
-                  PBL_BT_ADDR_XPLODE(event->dev_address));
-}
-
-void pbl_bt_cb_gatt_handle_indication(const struct pbl_bt_gatt_server_notif_indic_event *event) {
-  GAPLEConnection *connection = nullptr;
-  bool done = false;
-  bt_lock();
-  {
-    connection = gap_le_connection_by_addr(&event->dev_address);
-
-    PBL_LOG_VERBOSE("GATT Server Indication for handle %u " PBL_BT_ADDR_FMT, event->attr_handle,
-                    PBL_BT_ADDR_XPLODE(event->dev_address));
-
-    // We are done if we got disconnected in the meantime or if this is a Service Changed indication
-    // consumed by gatt_service_changed.c
-    done = (connection == nullptr) ||
-           gatt_service_changed_client_handle_indication(connection, event->attr_handle,
-                                                         event->attr_val, event->attr_val_len);
-  }
-  bt_unlock();
-
-  if (done) {
-    return;
-  }
-
-  gatt_client_subscriptions_handle_server_notification(connection, event->attr_handle,
-                                                       event->attr_val, event->attr_val_len);
 }

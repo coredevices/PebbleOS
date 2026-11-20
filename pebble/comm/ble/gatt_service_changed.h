@@ -16,24 +16,10 @@
 //! The server is mostly implemented in Bluetopia's GATT.c, but relies on our FW for some mundane
 //! things like handling subscription events and actually firing off "Service Changed" indications.
 //!
-//! The client part is hooking into the guts of Pebble's gatt.c and gatt_client_discovery.c,
-//! to catch GATT Indications before they reach higher layers and to trigger transparent rediscovery
-//! of remote services.
+//! The client of the remote's characteristic is with the clients of the gateway's services, see
+//! kernel_le_client.c.
 //!
 //! See BT Spec 4.0, Volume 3, Part G, 7.1 "Service Changed" for more information about the service.
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Client -- Pebble consuming the remote's "Service Changed" characteristic
-
-struct GAPLEConnection;
-
-//! Optionally handles GATT Value Indications, in case the ATT handle matches the GATT Service
-//! Changed characteristic value for the connection. When it matches, it will autonomously initiate
-//! GATT Service Discovery to refresh the local GATT cache.
-//! @note bt_lock is assumed to be taken by the caller
-bool gatt_service_changed_client_handle_indication(struct GAPLEConnection *connection,
-                                                   uint16_t att_handle, const uint8_t *value,
-                                                   uint16_t value_length);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server -- Pebble serving up the "Service Changed" characteristic to the remote

@@ -7,7 +7,6 @@
 
 #include <comm/ble/gap_le_connect_params.h>
 #include <comm/ble/gap_le_connection.h>
-#include <comm/ble/kernel_le_client/app_launch/app_launch.h>
 #include <comm/bt_conn_mgr.h>
 #include <comm/bt_lock.h>
 
@@ -97,8 +96,4 @@ void pbl_bt_cb_pps_handle_connection_parameter_write(
   }
 unlock:
   bt_unlock();
-}
-
-void pbl_bt_cb_pps_handle_ios_app_termination_detected(void) {
-  app_launch_trigger();
 }
