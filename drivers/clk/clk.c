@@ -6,6 +6,9 @@
 #include <pbl/drivers/clk.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/logging/logging.h>
+
+PBL_LOG_MODULE_DEFINE(driver_clk, CONFIG_DRIVER_CLK_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_clk_controller_class, "clk");
 

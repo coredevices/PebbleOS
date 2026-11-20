@@ -20,7 +20,7 @@
 #include <hardware/sf32lb52_pmuc.h>
 #include <lpsys.h>
 
-PBL_LOG_MODULE_DEFINE(clk_sf32lb52_pmuc, CONFIG_CLK_SF32LB52_PMUC_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_clk, CONFIG_DRIVER_CLK_LOG_LEVEL);
 
 #define LRC32_HZ 32000U
 // At about 32 kHz, it starts within a few periods
