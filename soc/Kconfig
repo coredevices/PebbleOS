@@ -40,6 +40,7 @@ config SOC
     default "NRF52" if SOC_NRF52
     default "SF32LB52" if SOC_SF32LB52
     default "SF32LB57" if SOC_SF32LB57
+    default "STM32H747" if SOC_STM32H747_M7 || SOC_STM32H747_M4
     help
       Stringified SoC name, for places that need the name as a token
       (e.g. sftool -c). Empty on QEMU and POSIX boards.
