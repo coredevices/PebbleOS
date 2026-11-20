@@ -289,7 +289,7 @@ static LauncherAppGlanceCacheEntry *prv_find_glance_entry_in_cache(
 
 static LauncherAppGlance *prv_find_glance_in_cache(LauncherAppGlanceService *service, Uuid *uuid) {
   const LauncherAppGlanceCacheEntry *entry = prv_find_glance_entry_in_cache(service, uuid);
-  return NULL_SAFE_FIELD_ACCESS(entry, glance, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(entry, glance, nullptr);
 }
 
 //! Request a glance for an icon ID from an "MRU linked list" (list sorted by accesses so that

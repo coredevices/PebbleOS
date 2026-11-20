@@ -185,7 +185,7 @@ static void prv_draw_command_list_processed(GContext *ctx, GDrawCommandList *lis
   GPoint draw_box_origin = ctx->draw_state.drawing_box.origin;
   graphics_context_move_draw_box(ctx, offset);
   gdraw_command_list_draw_processed(
-      ctx, list, NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
+      ctx, list, PBL_NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
   ctx->draw_state.drawing_box.origin = draw_box_origin;
 }
 

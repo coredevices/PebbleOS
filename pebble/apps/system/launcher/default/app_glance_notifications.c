@@ -28,13 +28,13 @@ typedef struct LauncherAppGlanceNotifications {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(notifications_glance, icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(notifications_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceNotifications *notifications_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(notifications_glance, title, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(notifications_glance, title, nullptr);
 }
 
 static void prv_notifications_glance_subtitle_dynamic_text_node_update(
@@ -98,9 +98,9 @@ static void prv_update_glance_for_last_notification_received(
 
   // Determine which string we should use in the glance subtitle
   const char *string_to_use_in_glance_subtitle = "";
-  if (!IS_EMPTY_STRING(title)) {
+  if (!PBL_IS_EMPTY_STRING(title)) {
     string_to_use_in_glance_subtitle = title;
-  } else if (!IS_EMPTY_STRING(subtitle)) {
+  } else if (!PBL_IS_EMPTY_STRING(subtitle)) {
     // Fallback to the subtitle
     string_to_use_in_glance_subtitle = subtitle;
   } else {

@@ -49,7 +49,7 @@ typedef struct LauncherAppGlanceGeneric {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceGeneric *generic_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(generic_glance, displayed_icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(generic_glance, displayed_icon, nullptr);
 }
 
 static void prv_generic_glance_destroy_displayed_icon(LauncherAppGlanceGeneric *generic_glance) {
@@ -261,7 +261,7 @@ static void prv_current_slice_updated(LauncherAppGlance *glance) {
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceGeneric *generic_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(generic_glance, title_buffer, nullptr);
 }
 
 static void prv_generic_glance_dynamic_text_node_update(

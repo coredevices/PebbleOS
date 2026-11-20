@@ -149,7 +149,7 @@ bool prv_is_app_published_resource_valid(const AppResourceInfo *res_info) {
 
 AppInstallId app_install_get_id_for_uuid(const Uuid *uuid) {
   const TimelineResourceTestAppData *data = prv_get_data_for_app_with_uuid(uuid);
-  return NULL_SAFE_FIELD_ACCESS(data, install_entry.install_id, INSTALL_ID_INVALID);
+  return PBL_NULL_SAFE_FIELD_ACCESS(data, install_entry.install_id, INSTALL_ID_INVALID);
 }
 
 bool app_install_get_entry_for_install_id(AppInstallId install_id, AppInstallEntry *entry) {

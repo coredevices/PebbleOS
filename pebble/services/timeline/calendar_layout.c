@@ -262,7 +262,7 @@ static GTextNode *prv_construct_glance_title(const LayoutLayer *layout,
   LayoutNodeTextAttributeConfig title_config =
       *(const LayoutNodeTextAttributeConfig *)config->context;
   const bool has_details =
-      !IS_EMPTY_STRING(attribute_get_string(layout->attributes, AttributeIdLocationName, "")) ||
+      !PBL_IS_EMPTY_STRING(attribute_get_string(layout->attributes, AttributeIdLocationName, "")) ||
       prv_should_draw_recurring((const TimelineLayout *)layout);
   title_config.text.fixed_lines =
       has_details ? CARD_GLANCE_TITLE_LINES_WITH_DETAILS : CARD_GLANCE_TITLE_LINES;

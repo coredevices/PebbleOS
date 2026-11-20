@@ -72,7 +72,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   gdraw_command_frame_draw_processed(
       ctx, dcs_reel->sequence, dcs_reel->current_frame, offset,
-      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
+      PBL_NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
 }
 
 static GDrawCommandSequence *prv_get_gdraw_command_sequence(KinoReel *reel) {

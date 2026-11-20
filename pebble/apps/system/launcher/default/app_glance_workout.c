@@ -34,13 +34,13 @@ typedef struct LauncherAppGlanceWorkout {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWorkout *workout_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(workout_glance, icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(workout_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWorkout *workout_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(workout_glance, title, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(workout_glance, title, nullptr);
 }
 
 static void prv_workout_glance_subtitle_dynamic_text_node_update(
@@ -141,7 +141,7 @@ static void prv_timer_callback(void *data) {
     }
 
     // Clear subtitle if it isn't already
-    if (!IS_EMPTY_STRING(workout_glance->subtitle)) {
+    if (!PBL_IS_EMPTY_STRING(workout_glance->subtitle)) {
       memset(workout_glance->subtitle, 0, sizeof(workout_glance->subtitle));
       glance_changed = true;
     }

@@ -67,13 +67,13 @@ typedef struct LauncherAppGlanceSettings {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(settings_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceSettings *settings_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(settings_glance, title, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(settings_glance, title, nullptr);
 }
 
 //! Returns where the subtitle font draws its digits, relative to the top of a subtitle line

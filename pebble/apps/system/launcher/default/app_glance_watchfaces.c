@@ -22,13 +22,13 @@ typedef struct LauncherAppGlanceWatchfaces {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWatchfaces *watchfaces_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(watchfaces_glance, icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(watchfaces_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWatchfaces *watchfaces_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(watchfaces_glance, title, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(watchfaces_glance, title, nullptr);
 }
 
 static void prv_watchfaces_glance_subtitle_dynamic_text_node_update(

@@ -29,7 +29,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   gdraw_command_image_draw_processed(
       ctx, dci_reel->image, offset,
-      NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
+      PBL_NULL_SAFE_FIELD_ACCESS(processor, draw_command_processor, nullptr));
 }
 
 static GSize prv_get_size(KinoReel *reel) {

@@ -22,7 +22,7 @@ static GTextNodeText *prv_create_text_node_buffer(const char *str) {
 static GTextNodeText *prv_create_text_node_attribute(const LayoutLayer *layout,
                                                      AttributeId attr_id) {
   const char *attr_str = attribute_get_string(layout->attributes, attr_id, "");
-  if (IS_EMPTY_STRING(attr_str) && attr_id != AttributeIdUnused) {
+  if (PBL_IS_EMPTY_STRING(attr_str) && attr_id != AttributeIdUnused) {
     return nullptr;
   }
   GTextNodeText *text_node = graphics_text_node_create_text(0);
@@ -98,7 +98,7 @@ static GTextNodeText *prv_create_text_buffer_node_from_config(
     const LayoutLayer *layout, const LayoutNodeTextBufferConfig *config) {
   GTextNodeText *text_node = nullptr;
   const char *str = config->use_i18n ? pbl_i18n_get(config->str, layout) : config->str;
-  if (!IS_EMPTY_STRING(str)) {
+  if (!PBL_IS_EMPTY_STRING(str)) {
     text_node = prv_create_text_node_buffer(str);
     prv_set_text_node_text_parameters_from_config(text_node, layout, &config->text);
   }

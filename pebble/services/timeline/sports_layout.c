@@ -141,7 +141,7 @@ static GTextNode *prv_broadcaster_header_constructor(const LayoutLayer *layout_r
                                                      const LayoutNodeConstructorConfig *config) {
   const char *broadcaster =
       attribute_get_string(layout_ref->attributes, AttributeIdBroadcaster, "");
-  if (IS_EMPTY_STRING(broadcaster)) {
+  if (PBL_IS_EMPTY_STRING(broadcaster)) {
     return nullptr;
   }
   static const LayoutNodeTextBufferConfig s_broadcaster_header_config = {

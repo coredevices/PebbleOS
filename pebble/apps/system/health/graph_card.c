@@ -368,7 +368,7 @@ static void prv_draw_info(HealthGraphCard *graph_card, GContext *ctx) {
     const int32_t day_point = prv_get_info_data_point(graph_card);
     graph_card->info_update(graph_card, day_point, buffer, sizeof(buffer));
   }
-  if (IS_EMPTY_STRING(buffer)) {
+  if (PBL_IS_EMPTY_STRING(buffer)) {
     return;
   }
   prv_draw_info_with_text(graph_card, ctx, buffer);

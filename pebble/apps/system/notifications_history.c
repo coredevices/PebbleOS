@@ -45,7 +45,7 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
   }
 
   const char *sender = attribute_get_string(&item->attr_list, AttributeIdSender, "");
-  const bool from_title = IS_EMPTY_STRING(sender);
+  const bool from_title = PBL_IS_EMPTY_STRING(sender);
   if (from_title) {
     sender = attribute_get_string(&item->attr_list, AttributeIdTitle, "");
   }
@@ -64,7 +64,7 @@ static const char *prv_group_sender_for_item(const TimelineItem *item, char *buf
     }
   }
 
-  return IS_EMPTY_STRING(start) ? nullptr : start;
+  return PBL_IS_EMPTY_STRING(start) ? nullptr : start;
 }
 
 static NotificationHistoryRow *prv_find_group(NotificationHistory *history, const char *sender) {

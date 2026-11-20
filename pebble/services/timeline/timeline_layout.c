@@ -573,7 +573,7 @@ static GTextNode *prv_create_pin_view_node(TimelineLayout *layout) {
   const TimelineLayoutStyle *style = prv_get_style();
   const bool thin_can_have_secondary = style->thin_can_have_secondary;
   const bool has_secondary =
-      (((is_peek || is_fat || thin_can_have_secondary) && !IS_EMPTY_STRING(secondary_text)) ||
+      (((is_peek || is_fat || thin_can_have_secondary) && !PBL_IS_EMPTY_STRING(secondary_text)) ||
        (is_peek && (pbl_realtime() < layout->info->timestamp)));
   const int peek_text_width =
       PBL_DISPLAY_WIDTH - TIMELINE_PEEK_ICON_BOX_WIDTH - (2 * TIMELINE_PEEK_MARGIN);
