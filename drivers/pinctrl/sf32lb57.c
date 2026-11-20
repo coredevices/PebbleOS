@@ -15,6 +15,8 @@
 #define NUM_SB_PADS 13U
 #define NUM_PA_PADS 58U
 
+static_assert(NUM_SA_PADS + NUM_SB_PADS + NUM_PA_PADS == PBL_PINCTRL_SF32LB57__NUM_PADS);
+
 #define PAD_MSK                                                                           \
   (PINMUX_PAD_FSEL_MASK | PINMUX_PAD_PE | PINMUX_PAD_PS | PINMUX_PAD_IE | PINMUX_PAD_IS | \
    PINMUX_PAD_SR | PINMUX_PAD_DS_MASK)
@@ -101,18 +103,10 @@ int pbl_pinctrl_sf32lb57_modify(uint32_t pin, uint32_t mask) {
   return prv_configure_pin(&pbl_pinctrl_sf32lb57_hpsys_inst, pin, mask);
 }
 
-static const struct pbl_pinctrl_controller_ops s_ops = {
+const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb57_ops = {
   .configure = prv_configure,
   .get = prv_get,
 };
-
-#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base)                                         \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb57, struct pbl_pinctrl_controller, ctrl) { \
-    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &s_ops,                           \
-                                        NUM_SA_PADS + NUM_SB_PADS + NUM_PA_PADS),              \
-    .base = (_base),                                                                           \
-  }
 
 #define PBL_PINCTRL_SF32LB57_DT_STATE(sym, ...)       \
   static const uint32_t sym##_pins[] = {__VA_ARGS__}; \
