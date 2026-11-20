@@ -54,7 +54,7 @@ void pbl_rproc_sf32lb__patch_install(const struct pbl_rproc_sf32lb *lcpu) {
   // The SF32LB57 ROM takes the code at its system bus address
   hdr[2] = code | 1U;
 #else
-  hdr[2] = pbl_rproc_sf32lb_da(lcpu, code) | 1U;
+  hdr[2] = pbl_rproc_sf32lb_da(&lcpu->rproc, code) | 1U;
 #endif
 
   memset((void *)code, 0, PATCH_CODE_SIZE);

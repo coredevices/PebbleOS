@@ -4,3 +4,5 @@
 class: rproc
 type: struct pbl_rproc
 include: pbl/drivers/remoteproc.h
+roles:
+  bt_controller: NIMBLE_HCI_SF32LB

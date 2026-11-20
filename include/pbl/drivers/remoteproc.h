@@ -33,6 +33,9 @@ struct pbl_rproc;
 /** @brief Class of the remote processors. */
 extern const struct pbl_device_class pbl_rproc_class;
 
+/** @brief The board's processor running the Bluetooth controller. */
+extern const struct pbl_rproc *const BT_CONTROLLER;
+
 /** @brief Remote processor operations, implemented by the providers, called with the lock held. */
 struct pbl_rproc_ops {
   /** Start the processor and its firmware. Returns 0 or a negative errno. */

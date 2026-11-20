@@ -85,11 +85,43 @@ struct pbl_rproc_sf32lb {
 /**
  * @brief The address at which the LCPU sees memory of this CPU.
  *
- * @param lcpu LCPU.
+ * @param rproc LCPU.
  * @param pa Address on this CPU.
  * @return The address on the LCPU, or 0 if it cannot reach @p pa.
  */
-uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc_sf32lb *lcpu, uintptr_t pa);
+uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc *rproc, uintptr_t pa);
+
+/**
+ * @brief Get the HCPU RAM reserved for the HCPU to LCPU ring.
+ *
+ * @param rproc LCPU.
+ * @return The region (@c memory-region).
+ */
+const struct pbl_mem_region *pbl_rproc_sf32lb_get_ipc_mem(const struct pbl_rproc *rproc);
+
+/**
+ * @brief Get the LPSYS SRAM region the LCPU works in.
+ *
+ * @param rproc LCPU.
+ * @return The region (@c sram).
+ */
+const struct pbl_mem_region *pbl_rproc_sf32lb_get_sram(const struct pbl_rproc *rproc);
+
+/**
+ * @brief Get the doorbell to the LCPU.
+ *
+ * @param rproc LCPU.
+ * @return The channel (@c mboxes entry @c tx).
+ */
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_tx_chan(const struct pbl_rproc *rproc);
+
+/**
+ * @brief Get the doorbell from the LCPU.
+ *
+ * @param rproc LCPU.
+ * @return The channel (@c mboxes entry @c rx).
+ */
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_rx_chan(const struct pbl_rproc *rproc);
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_rproc_ops pbl_rproc_sf32lb_ops;
