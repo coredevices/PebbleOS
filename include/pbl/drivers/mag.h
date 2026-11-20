@@ -100,6 +100,10 @@ extern const struct pbl_mag *const MAG;
   PBL_DEVICE_STATE_DEFINE(sym);   \
   static struct pbl_mag_state sym##_mag_state = {.lock = PBL_MUTEX_INITIALIZER}
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_device_class pbl_mag_class;
+/** @endcond */
+
 /**
  * @brief Initialize a struct pbl_mag.
  *
@@ -108,11 +112,11 @@ extern const struct pbl_mag *const MAG;
  * @param _parent Parent device.
  * @param _ops Driver operations.
  */
-#define PBL_MAG_INIT(sym, _name, _parent, _ops)                             \
-  {                                                                         \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_mag_dev_init, _parent, nullptr), \
-    .ops = (_ops),                                                          \
-    .state = &sym##_mag_state,                                              \
+#define PBL_MAG_INIT(sym, _name, _parent, _ops)                                                   \
+  {                                                                                               \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_mag_dev_init, _parent, nullptr, &pbl_mag_class), \
+    .ops = (_ops),                                                                                \
+    .state = &sym##_mag_state,                                                                    \
   }
 
 /** @cond INTERNAL_HIDDEN */

@@ -281,6 +281,41 @@ struct pbl_audio_amp {
   const struct pbl_audio_amp_ops *ops;
 };
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_device_class pbl_audio_codec_class;
+extern const struct pbl_device_class pbl_audio_amp_class;
+/** @endcond */
+
+/**
+ * @brief Initializer of a struct pbl_audio_codec.
+ *
+ * @param sym Symbol of the codec.
+ * @param _name Name.
+ * @param _init Init function, or NULL.
+ * @param _parent Parent device, or NULL.
+ * @param _ops Driver operations.
+ */
+#define PBL_AUDIO_CODEC_INIT(sym, _name, _init, _parent, _ops)                                 \
+  {                                                                                            \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_audio_codec_class), \
+    .ops = (_ops),                                                                             \
+  }
+
+/**
+ * @brief Initializer of a struct pbl_audio_amp.
+ *
+ * @param sym Symbol of the amplifier.
+ * @param _name Name.
+ * @param _init Init function, or NULL.
+ * @param _parent Parent device, or NULL.
+ * @param _ops Driver operations.
+ */
+#define PBL_AUDIO_AMP_INIT(sym, _name, _init, _parent, _ops)                                 \
+  {                                                                                          \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_audio_amp_class), \
+    .ops = (_ops),                                                                           \
+  }
+
 /** @brief What a device is wired to. */
 struct pbl_audio_link {
   /** Codec on the link, or NULL. */

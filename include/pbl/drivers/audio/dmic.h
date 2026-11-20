@@ -38,15 +38,11 @@ extern const struct pbl_audio_codec_ops pbl_audio_dmic_ops;
  * @param _vref Reference supply, or NULL.
  * @param _wakeup_delay_ms Time they take to wake up once powered, in ms.
  */
-#define PBL_AUDIO_DMIC_DEFINE(sym, _name, _vref, _wakeup_delay_ms)                 \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                    \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_dmic, struct pbl_audio_codec, codec) { \
-    .codec =                                                                       \
-        {                                                                          \
-          .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr),           \
-          .ops = &pbl_audio_dmic_ops,                                              \
-        },                                                                         \
-    .vref = (_vref), .wakeup_delay_ms = (_wakeup_delay_ms),                        \
+#define PBL_AUDIO_DMIC_DEFINE(sym, _name, _vref, _wakeup_delay_ms)                    \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                       \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_dmic, struct pbl_audio_codec, codec) {    \
+    .codec = PBL_AUDIO_CODEC_INIT(sym, _name, nullptr, nullptr, &pbl_audio_dmic_ops), \
+    .vref = (_vref), .wakeup_delay_ms = (_wakeup_delay_ms),                           \
   }
 
 /** @} */

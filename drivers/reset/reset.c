@@ -7,6 +7,8 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/irq.h>
 
+PBL_DEVICE_CLASS_DEFINE(pbl_reset_controller_class, "reset");
+
 static int prv_call(const struct pbl_reset *rst,
                     int (*op)(const struct pbl_reset_controller *ctrl, uint32_t id)) {
   int ret;

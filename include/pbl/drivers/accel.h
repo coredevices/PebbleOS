@@ -187,6 +187,10 @@ extern const struct pbl_accel *const ACCEL;
   PBL_DEVICE_STATE_DEFINE(sym);     \
   static struct pbl_accel_state sym##_accel_state = {.lock = PBL_MUTEX_INITIALIZER}
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_device_class pbl_accel_class;
+/** @endcond */
+
 /**
  * @brief Initializer for the struct pbl_accel of accelerometer @p sym.
  *
@@ -196,11 +200,12 @@ extern const struct pbl_accel *const ACCEL;
  * @param _parent Parent device, such as the I2C bus, or NULL.
  * @param _ops Driver operations.
  */
-#define PBL_ACCEL_INIT(sym, _name, _parent, _ops)                             \
-  {                                                                           \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_accel_dev_init, _parent, nullptr), \
-    .ops = (_ops),                                                            \
-    .state = &sym##_accel_state,                                              \
+#define PBL_ACCEL_INIT(sym, _name, _parent, _ops)                                                  \
+  {                                                                                                \
+    .dev =                                                                                         \
+        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_accel_dev_init, _parent, nullptr, &pbl_accel_class), \
+    .ops = (_ops),                                                                                 \
+    .state = &sym##_accel_state,                                                                   \
   }
 
 /**

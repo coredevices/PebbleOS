@@ -18,6 +18,8 @@ PBL_LOG_MODULE_DEFINE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_audio_class, "audio");
 PBL_DEVICE_CLASS_DEFINE(pbl_audio_dai_class, "dai");
+PBL_DEVICE_CLASS_DEFINE(pbl_audio_codec_class, "codec");
+PBL_DEVICE_CLASS_DEFINE(pbl_audio_amp_class, "amp");
 
 #define US_PER_S 1000000U
 

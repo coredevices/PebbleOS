@@ -52,6 +52,10 @@ struct pbl_reset_controller {
  */
 #define PBL_RESET_CONTROLLER_STATE_DEFINE(sym) PBL_DEVICE_STATE_DEFINE(sym)
 
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_device_class pbl_reset_controller_class;
+/** @endcond */
+
 /**
  * @brief Initializer for the struct pbl_reset_controller of controller @p sym.
  *
@@ -63,11 +67,12 @@ struct pbl_reset_controller {
  * @param _ops Driver operations.
  * @param _num_resets Number of reset lines.
  */
-#define PBL_RESET_CONTROLLER_INIT(sym, _name, _init, _parent, _ops, _num_resets) \
-  {                                                                              \
-    .dev = PBL_DEVICE_INIT(sym, _name, _init, _parent, nullptr),                 \
-    .ops = (_ops),                                                               \
-    .num_resets = (_num_resets),                                                 \
+#define PBL_RESET_CONTROLLER_INIT(sym, _name, _init, _parent, _ops, _num_resets)                 \
+  {                                                                                              \
+    .dev =                                                                                       \
+        PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, nullptr, &pbl_reset_controller_class), \
+    .ops = (_ops),                                                                               \
+    .num_resets = (_num_resets),                                                                 \
   }
 
 /** @brief A reset line, as used by a consumer. */

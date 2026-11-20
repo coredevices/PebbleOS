@@ -11,6 +11,7 @@
 #include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(driver_regulator, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
+PBL_DEVICE_CLASS_DEFINE(pbl_regulator_class, "regulator");
 
 static int prv_switch_on(const struct pbl_regulator *reg) {
   int ret;
