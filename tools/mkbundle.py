@@ -143,6 +143,21 @@ class PebbleBundle:
         self.has_resources = True
         return True
 
+    def add_resource_pack(self, path, min_width, min_height):
+        """A pack of the same resources for displays of at least a size, for
+        whatever installs the bundle to send in place of the default one."""
+        check_paths(path)
+        self.bundle_files.append(path)
+        self.bundle_manifest.setdefault("resourcePacks", []).append(
+            {
+                "name": os.path.basename(path),
+                "minWidth": min_width,
+                "minHeight": min_height,
+                "size": flen(path),
+                "crc": stm32crc(path),
+            }
+        )
+
     def add_loghash(self, loghash_path):
         if self.has_loghash:
             raise RuntimeError("Added multiple loghash to a single bundle")
@@ -358,6 +373,8 @@ def make_watchapp_bundle(
         'worker_bin' -- (optional) path to the worker binary file
         'sdk_version' -- version of SDK used to build binary
         'subfolder' -- path to subfolder in PBW for platform binary
+        'resource_packs' -- (optional) the resources for larger displays, as
+                            {'file', 'minWidth', 'minHeight'}
         'layouts' -- (optional) path to the platform's layouts.json, by default
                      build/<subfolder>/layouts.json if it exists
         'platform' -- (optional) what the platform the binary was built for is
@@ -405,6 +422,12 @@ def make_watchapp_bundle(
             platform_bundle.add_resources(
                 resources_path, timestamp, binary["sdk_version"], binary.get("layouts")
             )
+            for pack in binary.get("resource_packs") or []:
+                platform_bundle.add_resource_pack(
+                    os.path.expanduser(pack["file"]),
+                    pack["minWidth"],
+                    pack["minHeight"],
+                )
 
         bundle.bundle_files.append(platform_bundle)
 

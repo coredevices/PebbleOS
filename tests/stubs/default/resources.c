@@ -13,6 +13,10 @@ PBL_WEAK bool resource_init_app(ResAppNum app_num, const ResourceVersion *versio
   return true;
 }
 
+PBL_WEAK ResourceVersion resource_get_version(ResAppNum app_num, uint32_t resource_id) {
+  return (ResourceVersion){};
+}
+
 PBL_WEAK size_t resource_size(ResAppNum app_num, uint32_t id) {
   return 0;
 }

@@ -87,7 +87,9 @@ class TestGenerateAppinfo(unittest.TestCase):
         )
         # No display size, the feature it requires, 64K
         self.assertIn(
-            "1, 0, 0, 0, 0x1, 64, 6, PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE }", source
+            "1, 0, 0, 0, 0x1, 64, 6, PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE | "
+            "PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET }",
+            source,
         )
 
     def test_flexible_build_that_asks_for_memory(self):

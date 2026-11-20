@@ -246,6 +246,10 @@ GSize process_metadata_get_app_framebuffer_size(const PebbleProcessMd *md);
 //! @return NULL if the binary does not say: system apps, and apps of SDKs that predate the record
 const PebblePlatformInfo *process_metadata_get_platform_info(const PebbleProcessMd *md);
 
+//! Whether resources of this version are ones the process was built with. They are the one pack
+//! it was built with, or any pack of its set if it has one.
+bool process_metadata_resources_match(const PebbleProcessMd *md, const ResourceVersion *version);
+
 //! Whether a watch with these features, a bitwise OR of PebblePlatformFeature, has all a process
 //! cannot run without. Only a flexible binary says what it requires.
 bool process_metadata_has_required_features(const PebbleProcessMd *md, uint32_t features);

@@ -88,6 +88,17 @@ def build_pbpack(ball_path, output_path, is_system=False):
             pack.add_resource(reso.data)
     with open(output_path, "wb") as f:
         pack.serialize(f)
+    return pack.crc
+
+
+def set_pbpack_set_id(path, set_id):
+    """Mark an app's pack as one of a set, by the ID all packs of the set
+    share: the timestamp of its manifest, which is otherwise 0."""
+    with open(path, "rb") as f:
+        pack = ResourcePack.deserialize(f, is_system=False)
+    pack.timestamp = set_id
+    with open(path, "wb") as f:
+        pack.serialize(f)
 
 
 def build_builtin(ball_path, output_path, resource_id_include):

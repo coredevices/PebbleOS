@@ -71,5 +71,19 @@ class TestPackageBuild(unittest.TestCase):
             self.assertEqual(list(resos), ["ICON"])
 
 
+class TestChosenPack(unittest.TestCase):
+    def test_largest_width_then_height_that_fits(self):
+        packs = [((0, 168), "h"), ((200, 0), "w"), ((200, 228), "wh")]
+        self.assertEqual(pebble_build._chosen_pack(packs, (144, 168), "d"), "h")
+        self.assertEqual(pebble_build._chosen_pack(packs, (200, 180), "d"), "w")
+        self.assertEqual(pebble_build._chosen_pack(packs, (260, 260), "d"), "wh")
+
+    def test_default_when_none_fits(self):
+        self.assertEqual(
+            pebble_build._chosen_pack([((200, 0), "w")], (144, 168), "d"), "d"
+        )
+        self.assertEqual(pebble_build._chosen_pack([], (144, 168), "d"), "d")
+
+
 if __name__ == "__main__":
     unittest.main()
